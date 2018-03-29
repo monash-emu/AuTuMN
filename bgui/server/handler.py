@@ -135,7 +135,7 @@ def bgui_model_output(output_type, data={}):
         pass
     elif output_type == "console":
         global bgui_output_lines
-        bgui_output_lines.append(data["message"])
+        bgui_output_lines.extend(data["message"].splitlines())
         print(">> handler.bgui_model_output console:", data["message"])
     elif output_type == "uncertainty_graph":
         pass

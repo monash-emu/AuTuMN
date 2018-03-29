@@ -175,10 +175,11 @@
                   <div
                       id="console-output"
                       style="
-                      height: 350px;
-                      overflow-y: scroll;
-                      font-family: Courier, fixed;
-                      font-size: 0.9em">
+                        width: 100%;
+                        height: 350px;
+                        overflow-y: scroll;
+                        font-family: Courier, fixed;
+                        font-size: 0.9em">
 
                     <div
                         style="margin: 0 8px"
@@ -196,34 +197,30 @@
                   Graphs
                 </h2>
 
-                <md-layout
-                  md-flex="100"
-                  md-vertical-align="center">
-                  <md-input-container
-                      style="
-                          width: 200px;">
-                    <label>Existing Projects</label>
-                    <md-select
-                        v-model="project"
-                        @change="changeProject">
-                      <md-option
-                          v-for="(p, i) in projects"
-                          v-bind:value="p"
-                          :key="i">
-                        {{p}}
-                      </md-option>
-                    </md-select>
-                  </md-input-container>
+                <md-input-container
+                    style="
+                        width: 200px;">
+                  <label>Existing Projects</label>
+                  <md-select
+                      v-model="project"
+                      @change="changeProject">
+                    <md-option
+                        v-for="(p, i) in projects"
+                        v-bind:value="p"
+                        :key="i">
+                      {{p}}
+                    </md-option>
+                  </md-select>
+                </md-input-container>
 
-                  <vue-slider
-                      style="width: 500px"
-                      :max="100"
-                      :min="10"
-                      :interval="1"
-                      v-model="width"
-                      @callback="changeWidth(width)">
-                  </vue-slider>
-                </md-layout>
+                <vue-slider
+                    style="width: 100%"
+                    :max="100"
+                    :min="10"
+                    :interval="1"
+                    v-model="width"
+                    @callback="changeWidth(width)">
+                </vue-slider>
 
                 <md-layout style="width: 100%">
                   <md-card

@@ -582,7 +582,8 @@ class Inputs:
             age_adjusted_values = \
                 tool_kit.adapt_params_to_stratification(param_breakpoints, model_breakpoints, param_vals,
                                                         parameter_name=param_type,
-                                                        whether_to_plot=self.gui_inputs['output_age_calculations'])
+                                                        whether_to_plot=self.gui_inputs['output_age_calculations'],
+                                                        js_gui=self.js_gui)
             for agegroup in self.agegroups:
                 self.model_constants[stem + agegroup] = age_adjusted_values[agegroup]
 

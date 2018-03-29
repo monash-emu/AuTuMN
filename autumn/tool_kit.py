@@ -1077,7 +1077,7 @@ def report_age_specific_parameter_calculations(parameter_name, model_param_vals)
     Function to report the age-specific parameter calculations.
     """
 
-    print('For parameter "' + replace_underscore_with_space(parameter_name[:-4]) + '":')
+    message = 'For parameter "' + replace_underscore_with_space(parameter_name[:-4]) + '":\n'
     for age_param in model_param_vals:
         limits, _ = interrogate_age_string(age_param)
         if limits[1] != float('inf'):
@@ -1086,8 +1086,9 @@ def report_age_specific_parameter_calculations(parameter_name, model_param_vals)
         else:
             lower_limit = ' aged ' + str(int(limits[0]))
             upper_limit = ' and up'
-        print('\tthe parameter value for the age group' + lower_limit + upper_limit
-              + ' has been estimated as ' + str(model_param_vals[age_param]))
+        message += '\tthe parameter value for the age group' + lower_limit + upper_limit \
+              + ' has been estimated as ' + str(model_param_vals[age_param]) + '\n'
+    return message
 
 
 def is_upper_age_limit_at_or_below(compartment_string, age_value):
@@ -1107,7 +1108,7 @@ def is_upper_age_limit_at_or_below(compartment_string, age_value):
 
 
 def adapt_params_to_stratification(data_breakpoints, model_breakpoints, data_param_vals, assumed_max_params=100.,
-                                   parameter_name='', whether_to_plot=False):
+                                   parameter_name='', whether_to_plot=False, js_gui=None):
     """
     Create a new set of parameters associated to the model stratification given parameter values that are known for
     another stratification.
@@ -1148,7 +1149,12 @@ def adapt_params_to_stratification(data_breakpoints, model_breakpoints, data_par
         beta = beta / (new_up - new_low)
         model_param_vals[new_name] = beta
 
-    report_age_specific_parameter_calculations(parameter_name, model_param_vals)
+    message = report_age_specific_parameter_calculations(parameter_name, model_param_vals)
+    print(message)
+    if js_gui:
+        js_gui('console', {'message': message})
+    else:
+        print(message)
 
     # convert data into list with same order as the ordered strat_lists
     data_value_list = []

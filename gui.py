@@ -109,7 +109,7 @@ class App:
             title.grid(row=row, column=column, sticky=NW, pady=10)
             title.config(font=self.title_font)
             self.frame.grid_columnconfigure(column, minsize=200)
-            # print('tkcontrol', param_group['name'], column, row)
+
             row += 1
             if column == 0:
                 # model running button
@@ -151,8 +151,6 @@ class App:
                 param['value'] = bool(param['tk_var'].get())
             else:
                 param['value'] = param['tk_var'].get()
-
-        print(self.params)
 
         self.gui_outputs = gui_params.convert_params_to_inputs(self.params)
 

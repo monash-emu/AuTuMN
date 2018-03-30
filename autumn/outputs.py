@@ -756,8 +756,8 @@ class Project:
         (self.inputs, self.run_mode) \
             = [None for _ in range(2)]
         (self.output_colours, self.uncertainty_output_colours, self.program_colours, self.classified_scaleups,
-         self.outputs) \
-            = [{} for _ in range(5)]
+         self.outputs, self.interpolated_uncertainty) \
+            = [{} for _ in range(6)]
         (self.grid, self.plot_rejected_runs, self.plot_true_outcomes) \
             = [False for _ in range(3)]
         (self.accepted_no_burn_in_indices, self.scenarios, self.interventions_to_cost, self.accepted_indices) \
@@ -839,6 +839,7 @@ class Project:
             self.find_uncertainty_indices()
             for output_type in ['epi', 'cost']:
                 self.uncertainty_centiles[output_type] = self.find_uncertainty_centiles('epi_uncertainty', output_type)
+            self.find_uncertainty_common_times(200)
         elif self.run_mode == 'int_uncertainty':
             for output_type in ['epi', 'cost']:
                 self.uncertainty_centiles[output_type] = self.find_uncertainty_centiles('int_uncertainty', output_type)
@@ -1129,6 +1130,32 @@ class Project:
 
         self.accepted_indices = self.outputs['epi_uncertainty']['accepted_indices']
         self.accepted_no_burn_in_indices = [i for i in self.accepted_indices if i >= self.gui_inputs['burn_in_runs']]
+
+    def find_uncertainty_common_times(self, interpolation_points):
+        """
+        Use simple linear interpolation to find the values of outputs from each model run at a standardised set of times
+        so that percentiles can be calculated later on.
+
+        Args:
+            interpolation_points: The number of time points to interpolate at
+        """
+
+        for scenario in self.outputs[self.run_mode]['epi']:
+            self.interpolated_uncertainty[scenario] = {}
+            self.interpolated_uncertainty[scenario]['times'] \
+                = numpy.linspace(self.inputs.model_constants['early_time'],
+                                 self.inputs.model_constants['report_end_time'],
+                                 interpolation_points)
+            for output in self.outputs[self.run_mode]['epi'][scenario]:
+                if output != 'times':
+                    self.interpolated_uncertainty[scenario][output] = numpy.empty(shape=(0, interpolation_points))
+                    for run in range(len(self.outputs['epi_uncertainty']['whether_accepted'])):
+                        self.interpolated_uncertainty[scenario][output] \
+                            = numpy.vstack(
+                            (self.interpolated_uncertainty[scenario][output],
+                             numpy.interp(self.interpolated_uncertainty[scenario]['times'],
+                                          self.outputs['epi_uncertainty']['epi'][scenario]['times'][run, :],
+                                          self.outputs['epi_uncertainty']['epi'][scenario][output][run, :])[None, :]))
 
     def find_uncertainty_centiles(self, mode, output_type):
         """

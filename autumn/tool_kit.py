@@ -1024,13 +1024,12 @@ def get_agegroups_from_breakpoints(breakpoints):
     if len(breakpoints) > 0:
         for i in range(len(breakpoints)):
 
-            # The first age-group
+            # the first age-group
             if i == 0:
                 agegroup_string = '_age0to' + str(int(breakpoints[i]))
-                agegroups_dict[agegroup_string] = [0.,
-                                                   float(breakpoints[i])]
+                agegroups_dict[agegroup_string] = [0., float(breakpoints[i])]
 
-            # Middle age-groups
+            # middle age-groups
             else:
                 agegroup_string = '_age' + str(int(breakpoints[i - 1])) + 'to' + str(int(breakpoints[i]))
                 agegroups_dict[agegroup_string] = [float(breakpoints[i - 1]),

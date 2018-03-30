@@ -133,9 +133,6 @@ class Inputs:
         # process constant parameters - age breakpoints come from sheets, so has to come before detailing structure
         self.process_model_constants()
 
-        # define model structure
-        self.define_compartmental_structure()
-
         # process time-variant parameters
         self.process_time_variants()
 
@@ -157,7 +154,7 @@ class Inputs:
         # perform checks (undeveloped)
         self.checks()
 
-    ''' most general methods '''
+    ''' user input-related methods and defining model structure '''
 
     def find_user_inputs(self):
         """
@@ -167,6 +164,7 @@ class Inputs:
         self.add_comment_to_gui_window('Preparing inputs for model run.\n')
         self.define_run_mode()
         self.define_model_strata()
+
         self.find_scenarios_to_run()
         self.reconcile_user_inputs()
 
@@ -210,11 +208,21 @@ class Inputs:
         Method to group the methods defining strata setting.
         """
 
-        self.define_organ_strata()
-        self.define_strain_strata()
-        self.define_treatment_history_strata()
+        self.define_age_structure()
+        self.define_organ_structure()
+        self.define_strain_structure()
+        self.define_treatment_history_structure()
 
-    def define_organ_strata(self):
+    def define_age_structure(self):
+        """
+        Define the model's age structure based on the breakpoints provided in spreadsheets.
+        """
+
+        self.model_constants['age_breakpoints'] = self.gui_inputs['age_breakpoints']
+        self.add_comment_to_gui_window('GUI breakpoints ' + str(self.gui_inputs['age_breakpoints']) + '.\n')
+        self.agegroups = tool_kit.get_agegroups_from_breakpoints(self.gui_inputs['age_breakpoints'])[0]
+
+    def define_organ_structure(self):
         """
         Define the organ status strata for the model. Convert from GUI input structure to number of strata. Then, create
         list of organ states. If unstratified, need list of an empty string for iteration.
@@ -228,7 +236,7 @@ class Inputs:
         available_organs = ['_smearpos', '_smearneg', '_extrapul']
         self.organ_status = available_organs[:self.n_organs] if self.n_organs > 1 else ['']
 
-    def define_strain_strata(self):
+    def define_strain_structure(self):
         """
         Find the number of strata present for TB strains being simulated.
         """
@@ -238,8 +246,20 @@ class Inputs:
                'DS / MDR': 2,
                'DS / MDR / XDR': 3}
         self.n_strains = strain_stratification_keys[self.gui_inputs['strains']]
+        if self.n_strains:
+            self.strains = self.available_strains[:self.n_strains]
+            if self.gui_inputs['is_misassignment']:
+                self.treatment_outcome_types = copy.copy(self.strains)
 
-    def define_treatment_history_strata(self):
+                # if misassigned strain treated with weaker regimen
+                for strain in self.strains[1:]:
+                    for treated_as in self.strains:
+                        if self.strains.index(treated_as) < self.strains.index(strain):
+                            self.treatment_outcome_types.append(strain + '_as' + treated_as[1:])
+
+        self.inappropriate_regimens = [regimen for regimen in self.treatment_outcome_types if '_as' in regimen]
+
+    def define_treatment_history_structure(self):
         """
         Define the structure for tracking patients' treatment histories (i.e. whether they are treatment naive "_new"
         patients, or whether they are previously treated "_treated" patients. Note that the list was set to an empty
@@ -294,13 +314,16 @@ class Inputs:
                 'Heterogeneous mixing requested, but not implemented as no risk groups are present')
             self.is_vary_force_infection_by_riskgroup = False
 
+    ''' spreadsheet-related methods '''
+
     def read_data(self):
         """
         Simple method to read spreadsheet inputs.
         """
 
         self.add_comment_to_gui_window('Reading Excel sheets with input data.\n')
-        self.original_data = spreadsheet.read_input_data_xls(True, self.find_keys_of_sheets_to_read(), self.country, self.js_gui)
+        self.original_data = spreadsheet.read_input_data_xls(True, self.find_keys_of_sheets_to_read(), self.country,
+                                                             self.js_gui)
         self.add_comment_to_gui_window('Spreadsheet reading complete.\n')
 
     def find_keys_of_sheets_to_read(self):
@@ -460,6 +483,15 @@ class Inputs:
         be run with process_model_constants.
         """
 
+        if len(self.agegroups) > 1:
+            self.find_ageing_rates()
+            self.find_fixed_age_specific_parameters()
+
+        # if the model isn't stratified by strain, use DS-TB time-periods for the single strain
+        if not self.n_strains:
+            for timeperiod in ['tb_timeperiod_infect_ontreatment', 'tb_timeperiod_ontreatment']:
+                self.model_constants[timeperiod] = self.model_constants[timeperiod + '_ds']
+
         # find risk group-specific parameters
         if len(self.riskgroups) > 1:
             self.find_riskgroup_progressions()
@@ -523,34 +555,6 @@ class Inputs:
 
     ''' methods to define model structure '''
 
-    # first category of structure methods can come before spreadsheet reading
-
-    def define_compartmental_structure(self):
-        """
-        Master method to define aspects of model structure, including compartmental classification.
-        """
-
-        self.detail_age_structure()
-        self.detail_strain_structure()
-
-    def detail_age_structure(self):
-        """
-        Define the model's age structure based on the breakpoints provided in spreadsheets.
-        """
-
-        self.add_comment_to_gui_window('Original breakpoints ' + str(self.model_constants['age_breakpoints']) +'.\n')
-        breakpoints = self.gui_inputs['age_breakpoints']
-        self.model_constants['age_breakpoints'] = breakpoints
-        self.add_comment_to_gui_window('GUI breakpoints ' + str(breakpoints) +'.\n')
-
-        # describe and work out age stratification structure for model from the list of age breakpoints
-        self.agegroups = tool_kit.get_agegroups_from_breakpoints(breakpoints)[0]
-
-        # find ageing rates and age-weighted parameters
-        if len(self.agegroups) > 1:
-            self.find_ageing_rates()
-            self.find_fixed_age_specific_parameters()
-
     def find_ageing_rates(self):
         """
         Calculate ageing rates as the reciprocal of the width of the age bracket.
@@ -587,33 +591,6 @@ class Inputs:
             for agegroup in self.agegroups:
                 self.model_constants[stem + agegroup] = age_adjusted_values[agegroup]
 
-    def detail_strain_structure(self):
-        """
-        Finds the strains to be present in the model from a list of available strains and the integer value for the
-        number of strains selected.
-        """
-
-        # unstratified by strain
-        if self.n_strains == 0:
-
-            # if the model isn't stratified by strain, use DS-TB time-periods for the single strain
-            for timeperiod in ['tb_timeperiod_infect_ontreatment', 'tb_timeperiod_ontreatment']:
-                self.model_constants[timeperiod] = self.model_constants[timeperiod + '_ds']
-
-        # stratified
-        else:
-            self.strains = self.available_strains[:self.n_strains]
-            if self.gui_inputs['is_misassignment']:
-                self.treatment_outcome_types = copy.copy(self.strains)
-
-                # if misassigned strain treated with weaker regimen
-                for strain in self.strains[1:]:
-                    for treated_as in self.strains:
-                        if self.strains.index(treated_as) < self.strains.index(strain):
-                            self.treatment_outcome_types.append(strain + '_as' + treated_as[1:])
-
-        self.inappropriate_regimens = [regimen for regimen in self.treatment_outcome_types if '_as' in regimen]
-
     # second category of structure methods must come after spreadsheet reading
 
     def define_riskgroup_structure(self):
@@ -637,9 +614,8 @@ class Inputs:
         self.riskgroups.append(norisk_string)
 
         # ensure some starting proportion of births go to the risk group stratum if value not loaded earlier
-        for riskgroup in self.riskgroups:
-            if 'riskgroup_prop' + riskgroup not in self.model_constants:
-                self.model_constants['riskgroup_prop' + riskgroup] = 0.
+        self.model_constants.update({'riskgroup_prop' + riskgroup: 0. for riskgroup in self.riskgroups
+                                     if 'riskgroup_prop' + riskgroup not in self.model_constants})
 
         # create mixing matrix (has to be run after scale-up data collation, so can't go in model structure method)
         self.mixing = self.create_mixing_matrix() if self.is_vary_force_infection_by_riskgroup else {}

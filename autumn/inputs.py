@@ -118,7 +118,7 @@ class Inputs:
 
     ''' master method '''
 
-    def read_and_load_data(self):
+    def process_inputs(self):
         """
         Master method of this object, calling all sub-methods to read and process data and define model structure.
         Effectively the initialisation of the model and the model runner objects occurs through here.
@@ -139,7 +139,7 @@ class Inputs:
         # has to go after time variants so that the starting proportion in each risk group can be specified
         self.define_riskgroup_structure()
 
-        # find parameters that require processing after stratified model structure has been defined
+        # find parameters that require processing after stratified model structure has been fully defined
         self.find_stratified_parameters()
 
         # classify interventions as to whether they apply and are to be costed

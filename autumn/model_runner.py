@@ -165,7 +165,7 @@ class ModelRunner:
 
         self.gui_inputs = gui_inputs
         self.inputs = inputs.Inputs(gui_inputs, js_gui=js_gui)
-        self.inputs.read_and_load_data()
+        self.inputs.process_inputs()
         (self.scenarios, self.standard_rate_outputs, self.divide_population, self.epi_outputs_to_analyse, \
          self.outputs_unc, self.interventions_to_cost) \
             = [[] for _ in range(6)]

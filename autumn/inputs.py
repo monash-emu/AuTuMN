@@ -124,13 +124,13 @@ class Inputs:
         Effectively the initialisation of the model and the model runner objects occurs through here.
         """
 
-        # get GUI inputs
+        # get inputs from GUI
         self.find_user_inputs()
 
         # read data from sheets
         self.read_data()
 
-        # process constant parameters - age breakpoints come from sheets, so has to come before detailing structure
+        # process constant parameters
         self.process_model_constants()
 
         # process time-variant parameters
@@ -164,7 +164,6 @@ class Inputs:
         self.add_comment_to_gui_window('Preparing inputs for model run.\n')
         self.define_run_mode()
         self.define_model_strata()
-
         self.find_scenarios_to_run()
         self.reconcile_user_inputs()
 
@@ -314,6 +313,88 @@ class Inputs:
                 'Heterogeneous mixing requested, but not implemented as no risk groups are present')
             self.is_vary_force_infection_by_riskgroup = False
 
+    # second category of structure methods must come after spreadsheet reading
+
+    def define_riskgroup_structure(self):
+        """
+        Work out the risk group stratification.
+        """
+
+        # create list of risk group names
+        for item in self.gui_inputs:
+            if item.startswith('riskgroup_'):
+                riskgroup = item.replace('riskgroup', '')
+                if self.gui_inputs[item] and 'riskgroup_prop' + riskgroup in self.time_variants:
+                    self.riskgroups.append(riskgroup)
+                elif self.gui_inputs[item]:
+                    self.add_comment_to_gui_window(
+                        'Stratification requested for %s risk group, but proportions not specified'
+                        % tool_kit.find_title_from_dictionary(riskgroup))
+
+        # add the null group according to whether there are any risk groups
+        norisk_string = '_norisk' if self.riskgroups else ''
+        self.riskgroups.append(norisk_string)
+
+        # ensure some starting proportion of births go to the risk group stratum if value not loaded earlier
+        self.model_constants.update({'riskgroup_prop' + riskgroup: 0. for riskgroup in self.riskgroups
+                                     if 'riskgroup_prop' + riskgroup not in self.model_constants})
+
+        # create mixing matrix (has to be run after scale-up data collation, so can't go in model structure method)
+        self.mixing = self.create_mixing_matrix() if self.is_vary_force_infection_by_riskgroup else {}
+
+    def create_mixing_matrix(self):
+        """
+        Creates model attribute for mixing between population risk groups, for use in calculate_force_infection_vars
+        method below only.
+        """
+
+        # create mixing matrix separately for each scenario, just in case risk groups being managed differently
+        mixing = {}
+
+        # next tier of dictionary is the "to" risk group that is being infected
+        for to_riskgroup in self.riskgroups:
+            mixing[to_riskgroup] = {}
+
+            # last tier of dictionary is the "from" risk group describing the make up of contacts
+            for from_riskgroup in self.riskgroups:
+                if from_riskgroup != '_norisk':
+
+                    # use parameters for risk groups other than "_norisk" if available
+                    if 'prop_mix' + to_riskgroup + '_from' + from_riskgroup in self.model_constants:
+                        mixing[to_riskgroup][from_riskgroup] \
+                            = self.model_constants['prop_mix' + to_riskgroup + '_from' + from_riskgroup]
+
+                    # otherwise use the latest value for the proportion of the population with that risk factor
+                    else:
+                        mixing[to_riskgroup][from_riskgroup] \
+                            = find_latest_value_from_year_dict(self.time_variants['riskgroup_prop' + from_riskgroup],
+                                                               self.model_constants['current_time'])
+
+            # give the remainder to the "_norisk" group without any risk factors
+            if sum(mixing[to_riskgroup].values()) >= 1.:
+                self.add_comment_to_gui_window(
+                    'Total of proportions of contacts for risk group %s greater than one. Model invalid.'
+                    % to_riskgroup)
+            mixing[to_riskgroup]['_norisk'] = 1. - sum(mixing[to_riskgroup].values())
+        return mixing
+
+    # last category of model structure methods must come after interventions classified and time-variants defined
+
+    def extend_model_structure_for_interventions(self):
+        """
+        Add any additional elaborations to the model structure for extra processes - specifically, IPT, low-quality
+        health care and novel vaccinations.
+        """
+
+        for scenario in self.scenarios:
+            if 'agestratified_ipt' in self.relevant_interventions[scenario] \
+                    or 'ipt' in self.relevant_interventions[scenario]:
+                self.compartment_types.append('onipt')
+        if self.gui_inputs['is_lowquality']:
+            self.compartment_types += ['lowquality']
+        if 'int_prop_novel_vaccination' in self.relevant_interventions:
+            self.compartment_types += ['susceptible_novelvac']
+
     ''' spreadsheet-related methods '''
 
     def read_data(self):
@@ -359,10 +440,7 @@ class Inputs:
             sheets_with_constants.append('diabetes')
         self.add_model_constant_defaults(sheets_with_constants)
 
-        # add "by definition" hard-coded parameters
         self.add_universal_parameters()
-
-        # uncertainty-related analysis
         self.process_uncertainty_parameters()
 
     def add_model_constant_defaults(self, other_sheets_with_constants):
@@ -502,6 +580,42 @@ class Inputs:
         # find the time non-infectious on treatment from the total time on treatment and the time infectious
         self.find_noninfectious_period()
 
+    def find_ageing_rates(self):
+        """
+        Calculate ageing rates as the reciprocal of the width of the age bracket.
+        """
+
+        for agegroup in self.agegroups:
+            age_limits = tool_kit.interrogate_age_string(agegroup)[0]
+            if 'up' not in agegroup:
+                self.model_constants['ageing_rate' + agegroup] = 1. / (age_limits[1] - age_limits[0])
+
+    def find_fixed_age_specific_parameters(self):
+        """
+        Find weighted age-specific parameters using age weighting code from tool_kit.
+        """
+
+        model_breakpoints = [float(i) for i in self.model_constants['age_breakpoints']]  # convert list of ints to float
+        for param_type in ['early_progression_age', 'late_progression_age', 'tb_multiplier_child_infectiousness_age']:
+
+            # extract age-stratified parameters in the appropriate form
+            param_vals, age_breaks, stem = {}, {}, None
+            for param in self.model_constants:
+                if param_type in param:
+                    age_string, stem = tool_kit.find_string_from_starting_letters(param, '_age')
+                    age_breaks[age_string] = tool_kit.interrogate_age_string(age_string)[0]
+                    param_vals[age_string] = self.model_constants[param]
+            param_breakpoints = tool_kit.find_age_breakpoints_from_dicts(age_breaks)
+
+            # find and set age-adjusted parameters
+            age_adjusted_values = \
+                tool_kit.adapt_params_to_stratification(param_breakpoints, model_breakpoints, param_vals,
+                                                        parameter_name=param_type,
+                                                        whether_to_plot=self.gui_inputs['output_age_calculations'],
+                                                        js_gui=self.js_gui)
+            for agegroup in self.agegroups:
+                self.model_constants[stem + agegroup] = age_adjusted_values[agegroup]
+
     def find_riskgroup_progressions(self):
         """
         Adjust the progression parameters from latency to active disease for various risk groups. Early progression
@@ -552,126 +666,6 @@ class Inputs:
             self.model_constants['tb_timeperiod_noninfect_ontreatment' + strain] \
                 = self.model_constants['tb_timeperiod_ontreatment' + strain] \
                 - self.model_constants['tb_timeperiod_infect_ontreatment' + strain]
-
-    ''' methods to define model structure '''
-
-    def find_ageing_rates(self):
-        """
-        Calculate ageing rates as the reciprocal of the width of the age bracket.
-        """
-
-        for agegroup in self.agegroups:
-            age_limits = tool_kit.interrogate_age_string(agegroup)[0]
-            if 'up' not in agegroup:
-                self.model_constants['ageing_rate' + agegroup] = 1. / (age_limits[1] - age_limits[0])
-
-    def find_fixed_age_specific_parameters(self):
-        """
-        Find weighted age-specific parameters using age weighting code from tool_kit.
-        """
-
-        model_breakpoints = [float(i) for i in self.model_constants['age_breakpoints']]  # convert list of ints to float
-        for param_type in ['early_progression_age', 'late_progression_age', 'tb_multiplier_child_infectiousness_age']:
-
-            # extract age-stratified parameters in the appropriate form
-            param_vals, age_breaks, stem = {}, {}, None
-            for param in self.model_constants:
-                if param_type in param:
-                    age_string, stem = tool_kit.find_string_from_starting_letters(param, '_age')
-                    age_breaks[age_string] = tool_kit.interrogate_age_string(age_string)[0]
-                    param_vals[age_string] = self.model_constants[param]
-            param_breakpoints = tool_kit.find_age_breakpoints_from_dicts(age_breaks)
-
-            # find and set age-adjusted parameters
-            age_adjusted_values = \
-                tool_kit.adapt_params_to_stratification(param_breakpoints, model_breakpoints, param_vals,
-                                                        parameter_name=param_type,
-                                                        whether_to_plot=self.gui_inputs['output_age_calculations'],
-                                                        js_gui=self.js_gui)
-            for agegroup in self.agegroups:
-                self.model_constants[stem + agegroup] = age_adjusted_values[agegroup]
-
-    # second category of structure methods must come after spreadsheet reading
-
-    def define_riskgroup_structure(self):
-        """
-        Work out the risk group stratification.
-        """
-
-        # create list of risk group names
-        for item in self.gui_inputs:
-            if item.startswith('riskgroup_'):
-                riskgroup = item.replace('riskgroup', '')
-                if self.gui_inputs[item] and 'riskgroup_prop' + riskgroup in self.time_variants:
-                    self.riskgroups.append(riskgroup)
-                elif self.gui_inputs[item]:
-                    self.add_comment_to_gui_window(
-                        'Stratification requested for %s risk group, but proportions not specified'
-                        % tool_kit.find_title_from_dictionary(riskgroup))
-
-        # add the null group according to whether there are any risk groups
-        norisk_string = '_norisk' if self.riskgroups else ''
-        self.riskgroups.append(norisk_string)
-
-        # ensure some starting proportion of births go to the risk group stratum if value not loaded earlier
-        self.model_constants.update({'riskgroup_prop' + riskgroup: 0. for riskgroup in self.riskgroups
-                                     if 'riskgroup_prop' + riskgroup not in self.model_constants})
-
-        # create mixing matrix (has to be run after scale-up data collation, so can't go in model structure method)
-        self.mixing = self.create_mixing_matrix() if self.is_vary_force_infection_by_riskgroup else {}
-
-    def create_mixing_matrix(self):
-        """
-        Creates model attribute for mixing between population risk groups, for use in calculate_force_infection_vars
-        method below only.
-        """
-
-        # create mixing matrix separately for each scenario, just in case risk groups being managed differently
-        mixing = {}
-
-        # next tier of dictionary is the "to" risk group that is being infected
-        for to_riskgroup in self.riskgroups:
-            mixing[to_riskgroup] = {}
-
-            # last tier of dictionary is the "from" risk group describing the make up of contacts
-            for from_riskgroup in self.riskgroups:
-                if from_riskgroup != '_norisk':
-
-                    # use parameters for risk groups other than "_norisk" if available
-                    if 'prop_mix' + to_riskgroup + '_from' + from_riskgroup in self.model_constants:
-                        mixing[to_riskgroup][from_riskgroup] \
-                            = self.model_constants['prop_mix' + to_riskgroup + '_from' + from_riskgroup]
-
-                    # otherwise use the latest value for the proportion of the population with that risk factor
-                    else:
-                        mixing[to_riskgroup][from_riskgroup] \
-                            = find_latest_value_from_year_dict(self.time_variants['riskgroup_prop' + from_riskgroup],
-                                                               self.model_constants['current_time'])
-
-            # give the remainder to the "_norisk" group without any risk factors
-            if sum(mixing[to_riskgroup].values()) >= 1.:
-                self.add_comment_to_gui_window(
-                    'Total of proportions of contacts for risk group %s greater than one. Model invalid.'
-                    % to_riskgroup)
-            mixing[to_riskgroup]['_norisk'] = 1. - sum(mixing[to_riskgroup].values())
-        return mixing
-
-    # last category of model structure methods must come after interventions classified and time-variants defined
-
-    def extend_model_structure_for_interventions(self):
-        """
-        Add any additional elaborations to the model structure for extra processes - specifically, IPT, low-quality
-        health care and novel vaccinations.
-        """
-
-        for scenario in self.scenarios:
-            if 'agestratified_ipt' in self.relevant_interventions[scenario] \
-                    or 'ipt' in self.relevant_interventions[scenario]:
-                self.compartment_types.append('onipt')
-        if self.gui_inputs['is_lowquality']:
-            self.compartment_types += ['lowquality']
-        if 'int_prop_novel_vaccination' in self.relevant_interventions:
-            self.compartment_types += ['susceptible_novelvac']
 
     ''' time variant parameter processing methods '''
 

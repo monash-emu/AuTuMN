@@ -1198,8 +1198,6 @@ class Inputs:
         if self.run_mode == 'int_uncertainty':
             self.interventions_to_cost[15] = self.interventions_to_cost[0]
 
-    # actually has to be called later and is just required for optimisation
-
     # def find_intervention_startdates(self):
     #     """
     #     Find the dates when the different interventions start and populate self.intervention_startdates

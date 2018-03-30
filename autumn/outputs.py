@@ -1140,12 +1140,14 @@ class Project:
             interpolation_points: The number of time points to interpolate at
         """
 
+        uncertainty_centiles = {}
         for scenario in self.outputs[self.run_mode]['epi']:
             self.interpolated_uncertainty[scenario] = {}
             self.interpolated_uncertainty[scenario]['times'] \
                 = numpy.linspace(self.inputs.model_constants['early_time'],
                                  self.inputs.model_constants['report_end_time'],
                                  interpolation_points)
+            uncertainty_centiles[scenario] = {}
             for output in self.outputs[self.run_mode]['epi'][scenario]:
                 if output != 'times':
                     self.interpolated_uncertainty[scenario][output] = numpy.empty(shape=(0, interpolation_points))
@@ -1156,6 +1158,15 @@ class Project:
                              numpy.interp(self.interpolated_uncertainty[scenario]['times'],
                                           self.outputs['epi_uncertainty']['epi'][scenario]['times'][run, :],
                                           self.outputs['epi_uncertainty']['epi'][scenario][output][run, :])[None, :]))
+
+                    # all runs for scenario analysis (as only accepted recorded) but select accepted ones for baseline
+                    matrix_to_analyse = self.interpolated_uncertainty[scenario][output] if scenario \
+                        else self.interpolated_uncertainty[scenario][output][self.accepted_no_burn_in_indices]
+
+                    # find centiles
+                    uncertainty_centiles[scenario][output] \
+                        = numpy.percentile(matrix_to_analyse, self.model_runner.percentiles, axis=0)
+        return uncertainty_centiles
 
     def find_uncertainty_centiles(self, mode, output_type):
         """
@@ -1174,14 +1185,9 @@ class Project:
             for output in self.outputs[mode][output_type][scenario]:
                 if output != 'times':
 
-                    # use all runs for scenario analysis (as only those that were accepted are saved)
-                    if scenario:
-                        matrix_to_analyse = self.outputs[mode][output_type][scenario][output]
-
-                    # select the baseline runs for analysis from the broader set of saved results
-                    else:
-                        matrix_to_analyse \
-                            = self.outputs[mode][output_type][scenario][output][self.accepted_no_burn_in_indices, :]
+                    # all runs for scenario analysis (as only accepted recorded) but select accepted ones for baseline
+                    matrix_to_analyse = self.outputs[mode][output_type][scenario][output] if scenario \
+                        else self.outputs[mode][output_type][scenario][output][self.accepted_no_burn_in_indices]
 
                     uncertainty_centiles[scenario][output] \
                         = numpy.percentile(matrix_to_analyse, self.model_runner.percentiles, axis=0)

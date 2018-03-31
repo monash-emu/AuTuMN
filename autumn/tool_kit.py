@@ -44,7 +44,7 @@ def indices(a, func):
     return [i for (i, val) in enumerate(a) if func(val)]
 
 
-def find_first_list_element_above_value(list, value):
+def find_first_list_element_above(list, value):
     """
     Simple method to return the index of the first element of a list that is greater than a specified value.
 
@@ -68,7 +68,7 @@ def find_list_element_equal_to(list, value):
     return next(x[0] for x in enumerate(list) if x[1] == value)
 
 
-def find_first_list_element_at_least_value(list_to_search, value):
+def find_first_list_element_at_least(list_to_search, value):
     """
     Simple method to return the index of the first element of a list that is greater than a specified value.
 

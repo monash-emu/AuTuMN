@@ -847,7 +847,7 @@ class EconomicModel(BaseModel):
         generating outputs.
         """
 
-        start_index_for_costs = tool_kit.find_first_list_element_at_least_value(
+        start_index_for_costs = tool_kit.find_first_list_element_at_least(
             self.times, self.inputs.model_constants['recent_time'])
         self.cost_times = self.times[start_index_for_costs:]
         self.costs = numpy.zeros((len(self.cost_times), len(self.interventions_to_cost)))

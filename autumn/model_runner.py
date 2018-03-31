@@ -634,7 +634,7 @@ class ModelRunner:
                 last_run_output_index = None if self.outputs['epi_uncertainty']['epi'][0]['mortality'].ndim == 1 else -1
                 outputs_for_comparison \
                     = [self.outputs['epi_uncertainty']['epi'][0]['incidence'][
-                           last_run_output_index, t_k.find_first_list_element_at_least_value(
+                           last_run_output_index, t_k.find_first_list_element_at_least(
                                self.outputs['manual']['epi'][0]['times'], float(year))] for year in years_to_compare]
 
                 # calculate likelihood
@@ -909,7 +909,7 @@ class ModelRunner:
         if 'target_population' in self.inputs.model_constants:
             population_adjustment \
                 = self.inputs.model_constants['target_population'] / float(self.outputs['epi_uncertainty']['epi'][0][
-                    'population'][last_run_output_index, t_k.find_first_list_element_above_value(
+                    'population'][last_run_output_index, t_k.find_first_list_element_above(
                         self.outputs['manual']['epi'][0]['times'], self.inputs.model_constants['current_time'])])
             for compartment in self.inputs.compartment_types:
                 if compartment in self.models[0].params:
@@ -1364,7 +1364,7 @@ class TbRunner(ModelRunner):
         for year in years_to_compare:
             if year in self.inputs.original_data['gtb']['e_mort_exc_tbhiv_100k']:
                 ratios.append(self.outputs['epi_uncertainty']['epi'][0]['mortality'][
-                                  last_run_output_index, t_k.find_first_list_element_above_value(
+                                  last_run_output_index, t_k.find_first_list_element_above(
                                       self.outputs['manual']['epi'][0]['times'], float(year))]
                               / self.inputs.original_data['gtb']['e_mort_exc_tbhiv_100k'][year])
         average_ratio = numpy.mean(ratios)
@@ -1381,7 +1381,7 @@ class TbRunner(ModelRunner):
 
         ratio_mdr_prevalence \
             = float(self.outputs['epi_uncertainty']['epi'][0]['perc_incidence_mdr'][
-                        last_run_output_index, t_k.find_first_list_element_at_least_value(
+                        last_run_output_index, t_k.find_first_list_element_at_least(
                             self.outputs['manual']['epi'][0]['times'], self.inputs.model_constants['current_time'])]) \
             / self.inputs.model_constants['tb_perc_mdr_prevalence']
         if ratio_mdr_prevalence < 1. / self.relative_difference_to_adjust_mdr:

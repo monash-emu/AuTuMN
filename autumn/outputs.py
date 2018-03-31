@@ -905,20 +905,22 @@ class Project:
 
         return 0 if scenario else self.start_time_index
 
-    def find_start_time_index(self, time, scenario, by_run=False, run=0):
+    def find_start_time_index(self, time, scenario, by_run=False, run=0, purpose=None):
         """
         There are various messy legacy approaches to this, but now trying to reconcile all these approaches to finding
         the starting index for plotting into one method.
         """
 
-        if (self.run_mode == 'scenario' and scenario) or self.run_mode == 'int_uncertainty':
+        mode = purpose if purpose else self.run_mode
+        if (mode == 'scenario' and scenario) or mode == 'int_uncertainty':
             return 0
-        elif self.run_mode == 'epi_uncertainty' and by_run:
-            return t_k.find_first_list_element_above(self.outputs[self.run_mode]['epi'][scenario]['times'][run], time)
-        elif self.run_mode == 'epi_uncertainty':
-            return t_k.find_first_list_element_at_least(list(self.uncertainty_interpolation_times), time)
+        elif mode == 'epi_uncertainty' and by_run:
+            times_to_search = self.outputs[mode]['epi'][scenario]['times'][run]
+        elif mode == 'epi_uncertainty':
+            times_to_search = self.uncertainty_interpolation_times
         else:
-            return t_k.find_first_list_element_at_least(self.outputs['manual']['epi'][scenario]['times'], time)
+            times_to_search = self.outputs['manual']['epi'][scenario]['times']
+        return t_k.find_first_list_element_at_least(times_to_search, time)
 
     def initialise_figures_axes(self, n_panels, room_for_legend=False):
         """
@@ -1709,7 +1711,6 @@ class Project:
                         max_data_values[output].append(max(plot_data))
                         axes[o].plot(self.outputs[self.run_mode]['epi'][uncertainty_scenario]['times'][run,
                                      start_index:], plot_data, color=colour, linestyle=dotted)
-                        print('hello')
 
             # plot with shaded patches
             elif purpose == 'shaded':
@@ -1733,7 +1734,7 @@ class Project:
             if purpose == 'scenario' or self.run_mode == 'int_uncertainty':
                 scenarios = [0] if self.run_mode == 'int_uncertainty' else scenarios
                 for scenario in scenarios:
-                    start_index = self.find_start_time_index(start_time, scenario)
+                    start_index = self.find_start_time_index(start_time, scenario, purpose='scenario')
                     colour = (1. - self.inputs.comorbidity_prevalences[scenario] * .2,
                               1. - self.inputs.comorbidity_prevalences[scenario],
                               1. - self.inputs.comorbidity_prevalences[scenario]) \

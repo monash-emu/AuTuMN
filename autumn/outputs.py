@@ -791,7 +791,7 @@ class Project:
 
         # common times to interpolate uncertainty to
         self.n_interpolation_points = int(200)
-        self.uncertainty_interpolation_times \
+        self.interpolation_times_uncertainty \
             = numpy.linspace(self.inputs.model_constants['early_time'], self.inputs.model_constants['report_end_time'],
                              self.n_interpolation_points)
 
@@ -917,7 +917,7 @@ class Project:
         elif mode == 'epi_uncertainty' and by_run:
             times_to_search = self.outputs[mode]['epi'][scenario]['times'][run]
         elif mode == 'epi_uncertainty':
-            times_to_search = self.uncertainty_interpolation_times
+            times_to_search = self.interpolation_times_uncertainty
         else:
             times_to_search = self.outputs['manual']['epi'][scenario]['times']
         return t_k.find_first_list_element_at_least(times_to_search, time)
@@ -1161,7 +1161,7 @@ class Project:
                         self.interpolated_uncertainty[scenario][output] \
                             = numpy.vstack(
                             (self.interpolated_uncertainty[scenario][output],
-                             numpy.interp(self.uncertainty_interpolation_times,
+                             numpy.interp(self.interpolation_times_uncertainty,
                                           self.outputs['epi_uncertainty'][output_type][scenario]['times'][run, :],
                                           self.outputs['epi_uncertainty'][output_type][scenario][output][run, :])
                              [None, :]))
@@ -1281,8 +1281,8 @@ class Project:
                                     row, column = reverse_inputs_if_condition([y + 2, out * 3 + 2 + o], horizontal)
                                     sheet.cell(row=row, column=column).value \
                                         = self.uncertainty_centiles['epi'][scenario][output][
-                                        o, t_k.find_first_list_element_at_least(
-                                            self.model_runner.outputs['manual']['epi'][scenario]['times'], year)]
+                                        o, t_k.find_first_list_element_at_least(self.interpolation_times_uncertainty,
+                                                                                year)]
 
                         # without uncertainty
                         else:
@@ -1297,7 +1297,7 @@ class Project:
                                 sheet.cell(row=row, column=column).value \
                                     = self.outputs['manual']['epi'][scenario][output][
                                         t_k.find_first_list_element_at_least(
-                                            self.outputs['manual']['epi'][scenario]['times'], year)]
+                                            self.interpolation_times_uncertainty, year)]
 
                 # economic outputs (uncertainty unavailable)
                 elif 'cost_' in result_type:
@@ -1315,7 +1315,7 @@ class Project:
                             sheet.cell(row=row, column=column).value \
                                 = self.outputs['manual']['cost'][scenario][result_type + intervention][
                                         t_k.find_first_list_element_at_least(
-                                            self.outputs['manual']['cost'][scenario]['times'], year)]
+                                            self.interpolation_times_uncertainty, year)]
                 workbook.save(path)
 
     def write_xls_by_output(self):
@@ -1363,8 +1363,7 @@ class Project:
                             row, column = reverse_inputs_if_condition([y + 2, s * 3 + 2 + o], horizontal)
                             sheet.cell(row=row, column=column).value \
                                 = self.uncertainty_centiles['epi'][scenario][inter][
-                                o, t_k.find_first_list_element_at_least(
-                                    self.model_runner.outputs['manual']['epi'][scenario]['times'], year)]
+                                o, t_k.find_first_list_element_at_least(self.interpolation_times_uncertainty, year)]
 
                 # without uncertainty
                 else:
@@ -1483,15 +1482,14 @@ class Project:
                     if 'uncertainty' in self.run_mode:
                         point_lower_upper \
                             = tuple(self.uncertainty_centiles['epi'][scenario][output][
-                                    0:3, t_k.find_first_list_element_at_least(
-                                        self.model_runner.outputs['manual']['epi'][scenario]['times'], year)])
+                                    0:3, t_k.find_first_list_element_at_least(self.interpolation_times_uncertainty,
+                                                                              year)])
                         row_cells[o + 1].text = '%.1f\n(%.1f to %.1f)' % point_lower_upper
 
                     # without
                     else:
                         point = self.model_runner.outputs['manual']['epi'][scenario][output][
-                            t_k.find_first_list_element_at_least(
-                                self.model_runner.outputs['manual']['epi'][scenario]['times'], year)]
+                            t_k.find_first_list_element_at_least(self.interpolation_times_uncertainty, year)]
                         row_cells[o + 1].text = '%.1f' % point
             document.save(path)
 
@@ -1692,7 +1690,7 @@ class Project:
                         max(self.uncertainty_centiles['epi'][scenario][output][2, :][start_index:]))
                     for ci in range(3):
                         axes[o].plot(
-                            self.uncertainty_interpolation_times[start_index:],
+                            self.interpolation_times_uncertainty[start_index:],
                             self.uncertainty_centiles['epi'][scenario][output][ci, :][start_index:],
                             color='k', label=None, linewidth=.7 if ci == 0 else .5, linestyle='-' if ci == 0 else '--')
 
@@ -1725,7 +1723,7 @@ class Project:
                     prop_progress = float(i) / float(self.model_runner.n_centiles_for_shading - 1)
                     patch_colour = (1. - prop_progress, 1. - prop_progress, 1 - prop_progress * .2)
                     patch = create_patch_from_list(
-                        self.uncertainty_interpolation_times[start_index:],
+                        self.interpolation_times_uncertainty[start_index:],
                         self.uncertainty_centiles['epi'][uncertainty_scenario][output][i + 3, :][start_index:],
                         self.uncertainty_centiles['epi'][uncertainty_scenario][output][-i - 1, :][start_index:])
                     axes[o].add_patch(patches.Polygon(patch, color=patch_colour))
@@ -1781,7 +1779,7 @@ class Project:
                 self.gtb_indices[output] + self.level_conversion_dict['point_estimate']][2016]
         elif self.run_mode == 'epi_uncertainty':
             base_value = self.uncertainty_centiles['epi'][0][output][0, t_k.find_first_list_element_at_least(
-                self.uncertainty_interpolation_times, 2015.)]
+                self.interpolation_times_uncertainty, 2015.)]
         else:
             base_value = self.outputs['manual']['epi'][uncertainty_scenario][output][
                 t_k.find_first_list_element_at_least(

@@ -839,7 +839,7 @@ class Project:
             self.find_uncertainty_indices()
             for output_type in ['epi', 'cost']:
                 self.uncertainty_centiles[output_type] = self.find_uncertainty_centiles('epi_uncertainty', output_type)
-            self.find_uncertainty_common_times(200)
+            # self.find_uncertainty_common_times('epi', 200)
         elif self.run_mode == 'int_uncertainty':
             for output_type in ['epi', 'cost']:
                 self.uncertainty_centiles[output_type] = self.find_uncertainty_centiles('int_uncertainty', output_type)
@@ -1131,24 +1131,26 @@ class Project:
         self.accepted_indices = self.outputs['epi_uncertainty']['accepted_indices']
         self.accepted_no_burn_in_indices = [i for i in self.accepted_indices if i >= self.gui_inputs['burn_in_runs']]
 
-    def find_uncertainty_common_times(self, interpolation_points):
+    def find_uncertainty_common_times(self, output_type, interpolation_points):
         """
         Use simple linear interpolation to find the values of outputs from each model run at a standardised set of times
-        so that percentiles can be calculated later on.
+        and then calculate percentiles. Not sure whether this will work for cost outputs - should in theory, but the
+        point is mostly about epi outputs anyway.
 
         Args:
+            output_type: Whether epi or cost outputs are being considered
             interpolation_points: The number of time points to interpolate at
         """
 
         uncertainty_centiles = {}
-        for scenario in self.outputs[self.run_mode]['epi']:
+        for scenario in self.outputs[self.run_mode][output_type]:
             self.interpolated_uncertainty[scenario] = {}
             self.interpolated_uncertainty[scenario]['times'] \
                 = numpy.linspace(self.inputs.model_constants['early_time'],
                                  self.inputs.model_constants['report_end_time'],
                                  interpolation_points)
             uncertainty_centiles[scenario] = {}
-            for output in self.outputs[self.run_mode]['epi'][scenario]:
+            for output in self.outputs[self.run_mode][output_type][scenario]:
                 if output != 'times':
                     self.interpolated_uncertainty[scenario][output] = numpy.empty(shape=(0, interpolation_points))
                     for run in range(len(self.outputs['epi_uncertainty']['whether_accepted'])):
@@ -1156,8 +1158,9 @@ class Project:
                             = numpy.vstack(
                             (self.interpolated_uncertainty[scenario][output],
                              numpy.interp(self.interpolated_uncertainty[scenario]['times'],
-                                          self.outputs['epi_uncertainty']['epi'][scenario]['times'][run, :],
-                                          self.outputs['epi_uncertainty']['epi'][scenario][output][run, :])[None, :]))
+                                          self.outputs['epi_uncertainty'][output_type][scenario]['times'][run, :],
+                                          self.outputs['epi_uncertainty'][output_type][scenario][output][run, :])
+                             [None, :]))
 
                     # all runs for scenario analysis (as only accepted recorded) but select accepted ones for baseline
                     matrix_to_analyse = self.interpolated_uncertainty[scenario][output] if scenario \

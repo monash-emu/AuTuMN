@@ -1711,23 +1711,23 @@ class Project:
                                      start_index:], plot_data, color=colour, linestyle=dotted)
                         print('hello')
 
-            # # plot with shaded patches
-            # elif purpose == 'shaded':
-            #     axes[o].patch.set_facecolor((1., 1., 1.))
-            #     for side in ['top', 'bottom', 'left', 'right']:
-            #         axes[o].spines[side].set_color('.6')
-            #     axes[o].grid(color='.8')
-            #     start_index = self.find_start_time_index(start_time, 0)
-            #     max_data_values[output].append(
-            #         max(self.uncertainty_centiles['epi'][uncertainty_scenario][output][-5, :][start_index:]))
-            #     for i in range(self.model_runner.n_centiles_for_shading):
-            #         prop_progress = float(i) / float(self.model_runner.n_centiles_for_shading - 1)
-            #         patch_colour = (1. - prop_progress, 1. - prop_progress, 1 - prop_progress * .2)
-            #         patch = create_patch_from_list(
-            #             self.outputs[self.run_mode]['epi'][uncertainty_scenario]['times'][0, start_index:],
-            #             self.uncertainty_centiles['epi'][uncertainty_scenario][output][i + 3, :][start_index:],
-            #             self.uncertainty_centiles['epi'][uncertainty_scenario][output][-i - 1, :][start_index:])
-            #         axes[o].add_patch(patches.Polygon(patch, color=patch_colour))
+            # plot with shaded patches
+            elif purpose == 'shaded':
+                axes[o].patch.set_facecolor((1., 1., 1.))
+                for side in ['top', 'bottom', 'left', 'right']:
+                    axes[o].spines[side].set_color('.6')
+                axes[o].grid(color='.8')
+                start_index = self.find_start_time_index(start_time, 0)
+                max_data_values[output].append(
+                    max(self.uncertainty_centiles['epi'][uncertainty_scenario][output][-5, :][start_index:]))
+                for i in range(self.model_runner.n_centiles_for_shading):
+                    prop_progress = float(i) / float(self.model_runner.n_centiles_for_shading - 1)
+                    patch_colour = (1. - prop_progress, 1. - prop_progress, 1 - prop_progress * .2)
+                    patch = create_patch_from_list(
+                        self.uncertainty_interpolation_times[start_index:],
+                        self.uncertainty_centiles['epi'][uncertainty_scenario][output][i + 3, :][start_index:],
+                        self.uncertainty_centiles['epi'][uncertainty_scenario][output][-i - 1, :][start_index:])
+                    axes[o].add_patch(patches.Polygon(patch, color=patch_colour))
 
             # plot scenarios without uncertainty
             if purpose == 'scenario' or self.run_mode == 'int_uncertainty':

@@ -13,7 +13,6 @@ To test with only the flask app:
 
 from __future__ import print_function
 import os
-import sys
 import logging
 from functools import wraps
 import traceback
@@ -31,14 +30,6 @@ from . import handler
 # Load app from singleton global module
 app = conn.app
 
-# Setup logger
-stream_handler = logging.StreamHandler(sys.stdout)
-stream_handler.setLevel(logging.DEBUG)
-stream_handler.setFormatter(logging.Formatter(
-    '%(asctime)s %(levelname)s: %(message)s '
-    '[in %(pathname)s:%(lineno)d]'
-))
-app.logger.addHandler(stream_handler)
 app.logger.setLevel(logging.DEBUG)
 
 
@@ -101,9 +92,9 @@ def run_method(method, params):
 
     if hasattr(handler, method):
         fn = getattr(handler, method)
-        print('> run_method %s params=%s' % (method, params))
+        app.logger.info('run_method %s params=%s' % (method, params))
     else:
-        print('> run_method: error: function "%s" does not exist' % (method))
+        app.logger.info('run_method: error: function "%s" does not exist' % (method))
         raise ValueError('Function "%s" does not exist' % (method))
 
     return fn(*params)
@@ -244,27 +235,32 @@ def receive_uploaded_file():
         })
 
 
-this_dir = os.getcwd()
+# use this to set absolute paths on init
+this_dir = os.path.join(os.getcwd(), os.path.dirname(__file__))
+
 
 # Set SAVE_FOLDER to absolute path on initialization as directories
 # can get scrambled later on
-app.config['SAVE_FOLDER'] = os.path.abspath(os.path.join(os.getcwd(), app.config['SAVE_FOLDER']))
+app.config['SAVE_FOLDER'] = os.path.abspath(
+    os.path.join(this_dir, app.config['SAVE_FOLDER']))
+app.logger.info('SAVE_FOLDER: ' + app.config['SAVE_FOLDER'])
+
 
 # Route to load files saved on the server from uploads
 @app.route('/file/<path:path>', methods=['GET'])
 def serve_saved_file(path):
-    print("> api.get_file", app.config['SAVE_FOLDER'], path)
+    print("> api.get_file", os.path.join(app.config['SAVE_FOLDER'], path))
     return send_from_directory(app.config['SAVE_FOLDER'], path)
 
 
 # These routes are to load in the compiled web-client from the
 # same IP:PORT as the server
-app.static_folder = os.path.join(this_dir, '../client/dist/static')
+app.static_folder = os.path.join(this_dir, app.config['STATIC_FOLDER'])
+app.logger.info('static_folder: ' + app.static_folder)
 
 @app.route('/')
 def index():
-    print("> api.index")
-    return send_file(os.path.join(this_dir, '../client/dist/index.html'))
+    return send_file(os.path.join(app.static_folder, '../index.html'))
 
 
 # http://reputablejournal.com/adventures-with-flask-cors.html#.WW6-INOGMm8

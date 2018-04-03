@@ -4,7 +4,7 @@
 projects
 saved_*
 Pipfile.lock
-bgui/server/database.sqlite
+bgui/server/server/database.sqlite
 saved_optimisation_analyses/
 saved_uncertainty_analyses/
 *pkl

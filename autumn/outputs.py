@@ -720,6 +720,11 @@ def add_title_to_plot(fig, n_panels, content):
                  fontsize=title_font_size[n_panels])
 
 
+def find_panel_grid_indices(index, n_columns):
+
+    return numpy.floor_divide(index, n_columns), (index + 1) % n_columns - 1
+
+
 def find_subplot_grid(n_plots):
     """
     Find a convenient number of rows and columns for a required number of subplots. First take the root of the number of
@@ -738,6 +743,36 @@ def find_subplot_grid(n_plots):
     n_cols = int(numpy.ceil(n_plots ** .5))
     n_rows = int(numpy.ceil(float(n_plots) / float(n_cols)))
     return n_rows, n_cols
+
+
+def initialise_figures_axes(n_panels, room_for_legend=False, requested_grid=None, share_yaxis='none'):
+    """
+    Initialise the subplots (or single plot) according to the number of panels required.
+
+    Args:
+        n_panels: The number of panels needed
+        room_for_legend: Whether room is needed for a legend - applies to single axis plots only
+    Returns:
+        fig: The figure object
+        axes: A list containing each of the axes
+        max_dims: The number of rows or columns of sub-plots, whichever is greater
+        requested_grid: Shape of grid panels requested at call to method
+        share_yaxis: String to pass to the sharey option
+    """
+
+    pyplot.style.use('ggplot')
+    n_rows, n_cols = requested_grid if requested_grid else find_subplot_grid(n_panels)
+    horizontal_position_one_axis = .08 if room_for_legend else .15
+    if n_panels == 1:
+        fig = pyplot.figure()
+        axes = fig.add_axes([horizontal_position_one_axis, .15, 0.7, 0.7])
+    elif n_panels == 2:
+        fig, axes = pyplot.subplots(1, 2)
+        fig.set_figheight(3.5)
+    else:
+        fig, axes = pyplot.subplots(n_rows, n_cols, sharey=share_yaxis)
+    return fig, axes, max([n_rows, n_cols]), n_cols
+
 
 
 class Project:
@@ -924,37 +959,6 @@ class Project:
         else:
             times_to_search = self.outputs['manual']['epi'][scenario]['times']
         return t_k.find_first_list_element_at_least(times_to_search, time)
-
-    def initialise_figures_axes(self, n_panels, room_for_legend=False, requested_grid=None):
-        """
-        Initialise the subplots (or single plot) according to the number of panels required.
-
-        Args:
-            n_panels: The number of panels needed
-            room_for_legend: Whether room is needed for a legend - applies to single axis plots only
-        Returns:
-            fig: The figure object
-            axes: A list containing each of the axes
-            max_dims: The number of rows or columns of sub-plots, whichever is greater
-            grid: Shape of grid panels requested at call to method
-        """
-
-        pyplot.style.use('ggplot')
-        fig = pyplot.figure(self.figure_number)
-        self.figure_number += 1
-        axes = []
-        n_rows, n_cols = requested_grid if requested_grid else find_subplot_grid(n_panels)
-        horizontal_position_one_axis = .08 if room_for_legend else .15
-        if n_panels == 1:
-            axes.append(fig.add_axes([horizontal_position_one_axis, .15, 0.7, 0.7]))
-        elif n_panels == 2:
-            fig.set_figheight(3.5)
-            axes.append(fig.add_subplot(1, 2, 1))
-            axes.append(fig.add_subplot(1, 2, 2, sharey=axes[0]))
-        else:
-            for axis in range(n_panels):
-                axes.append(fig.add_subplot(n_rows, n_cols, axis + 1))
-        return fig, axes, max([n_rows, n_cols]), n_cols
 
     def set_and_update_figure(self):
         """
@@ -1586,7 +1590,7 @@ class Project:
         if self.inputs.is_vary_force_infection_by_riskgroup and len(self.inputs.riskgroups) > 1:
             self.plot_mixing_matrix()
 
-        # plot epidemiological outputs, overall and MDR-TB
+        # plot epidemiological outputs, overall, MDR-TB and risk groups
         if self.gui_inputs['output_epi_plots']:
             purposes = ['scenario', 'ci', 'progress', 'shaded'] if '_uncertainty' in self.run_mode else ['scenario']
             for purpose in purposes:
@@ -1595,13 +1599,13 @@ class Project:
                 mdr_indicators = [ind + '_mdr' for ind in self.gtb_available_outputs if ind != 'notifications']
                 mdr_indicators.append('perc_incidence_mdr')
                 self.plot_epi_outputs(mdr_indicators, 'scenario', 'mdr-tb-related')
-            if self.gui_inputs['output_by_subgroups']:
-                for strata_type in ['agegroups', 'riskgroups']:
-                    outputs_to_plot, list_of_strata = ['incidence', 'mortality'], getattr(self.inputs, strata_type)
-                    if len(list_of_strata) > 1:
-                        self.plot_epi_outputs(
-                            [''.join(panel) for panel in itertools.product(outputs_to_plot, list_of_strata)],
-                            'scenario', 'by_' + strata_type, grid=[len(outputs_to_plot), len(list_of_strata)])
+        if self.gui_inputs['output_by_subgroups']:
+            for strata_type in ['agegroups', 'riskgroups']:
+                outputs_to_plot, list_of_strata = ['incidence', 'mortality'], getattr(self.inputs, strata_type)
+                if len(list_of_strata) > 1:
+                    self.plot_epi_outputs(
+                        [''.join(panel) for panel in itertools.product(outputs_to_plot, list_of_strata)],
+                        'scenario', 'by_' + strata_type, grid=[len(outputs_to_plot), len(list_of_strata)], sharey='row')
 
         # plot scale-up functions
         if self.gui_inputs['output_scaleups']:
@@ -1658,7 +1662,7 @@ class Project:
             self.plot_cases_by_division(['_asds', '_asmdr'],
                                         restriction_1='_mdr', restriction_2='treatment', exclusion_string='latent')
 
-    def plot_epi_outputs(self, outputs, purpose, descriptor, grid=None):
+    def plot_epi_outputs(self, outputs, purpose, descriptor, grid=None, sharey='none'):
         """
         Produces the plot for the main outputs, loops over multiple scenarios.
 
@@ -1670,7 +1674,7 @@ class Project:
         """
 
         # prelims
-        fig, axes, max_dims, _ = self.initialise_figures_axes(len(outputs), requested_grid=grid)
+        fig, axes, max_dims, n_cols = initialise_figures_axes(len(outputs), requested_grid=grid, share_yaxis=sharey)
         start_time = self.inputs.model_constants['before_intervention_time'] \
             if self.run_mode == 'int_uncertainty' or (len(self.scenarios) > 1 and purpose == 'scenario') \
             else self.gui_inputs['plot_option_start_time']
@@ -1679,13 +1683,14 @@ class Project:
             else (self.scenarios, 0)
 
         # loop through output indicators
-        for o, output in enumerate(outputs):
+        for out, output in enumerate(outputs):
+            row, col = find_panel_grid_indices(out, n_cols)
             max_data_values[output] = []
 
             # overlay GTB data
             if self.gui_inputs['plot_option_overlay_gtb'] and output in self.gtb_available_outputs:
                 max_data_values[output].append(self.plot_gtb_data_to_axis(
-                    axes[o], output, start_time, self.gtb_indices[output] if output in self.gtb_indices else '',
+                    axes[row, col], output, start_time, self.gtb_indices[output] if output in self.gtb_indices else '',
                     gtb_ci_plot='hatch' if purpose == 'shaded' else 'patch'))
 
             # plot with uncertainty confidence intervals (median, lower, upper)
@@ -1695,7 +1700,7 @@ class Project:
                     max_data_values[output].append(
                         max(self.uncertainty_centiles['epi'][scenario][output][2, :][start_index:]))
                     for ci in range(3):
-                        axes[o].plot(
+                        axes[row, col].plot(
                             self.interpolation_times_uncertainty[start_index:],
                             self.uncertainty_centiles['epi'][scenario][output][ci, :][start_index:],
                             color='k', label=None, linewidth=.7 if ci == 0 else .5, linestyle='-' if ci == 0 else '--')
@@ -1713,15 +1718,15 @@ class Project:
                             if self.run_mode == 'epi_uncertainty' else '.4'
                         plot_data = self.outputs[self.run_mode]['epi'][uncertainty_scenario][output][run, start_index:]
                         max_data_values[output].append(max(plot_data))
-                        axes[o].plot(self.outputs[self.run_mode]['epi'][uncertainty_scenario]['times'][run,
+                        axes[row, col].plot(self.outputs[self.run_mode]['epi'][uncertainty_scenario]['times'][run,
                                      start_index:], plot_data, color=colour, linestyle=dotted)
 
             # plot with shaded patches
             elif purpose == 'shaded':
-                axes[o].patch.set_facecolor((1., 1., 1.))
+                axes[row, col].patch.set_facecolor((1., 1., 1.))
                 for side in ['top', 'bottom', 'left', 'right']:
-                    axes[o].spines[side].set_color('.6')
-                axes[o].grid(color='.8')
+                    axes[row, col].spines[side].set_color('.6')
+                axes[row, col].grid(color='.8')
                 start_index = self.find_start_time_index(start_time, 0)
                 max_data_values[output].append(
                     max(self.uncertainty_centiles['epi'][uncertainty_scenario][output][-5, :][start_index:]))
@@ -1732,7 +1737,7 @@ class Project:
                         self.interpolation_times_uncertainty[start_index:],
                         self.uncertainty_centiles['epi'][uncertainty_scenario][output][i + 3, :][start_index:],
                         self.uncertainty_centiles['epi'][uncertainty_scenario][output][-i - 1, :][start_index:])
-                    axes[o].add_patch(patches.Polygon(patch, color=patch_colour))
+                    axes[row, col].add_patch(patches.Polygon(patch, color=patch_colour))
 
             # plot scenarios without uncertainty
             if purpose == 'scenario' or self.run_mode == 'int_uncertainty':
@@ -1747,21 +1752,21 @@ class Project:
                         if self.run_mode == 'increment_comorbidity' \
                         else t_k.capitalise_and_remove_underscore(t_k.find_scenario_string_from_number(scenario))
                     max_data_values[output].append(max(self.outputs['manual']['epi'][scenario][output][start_index:]))
-                    axes[o].plot(self.outputs['manual']['epi'][scenario]['times'][start_index:],
-                                 self.outputs['manual']['epi'][scenario][output][start_index:],
-                                 color=colour, linewidth=1.5, label=label,
-                                 zorder=1 if scenario else 4)
+                    axes[row, col].plot(self.outputs['manual']['epi'][scenario]['times'][start_index:],
+                                        self.outputs['manual']['epi'][scenario][output][start_index:],
+                                        color=colour, linewidth=1.5, label=label,
+                                        zorder=1 if scenario else 4)
 
             # add plotting of End TB Targets
             if self.gui_inputs['plot_option_overlay_targets'] and (output == 'incidence' or output == 'mortality'):
-                self.plot_targets_to_axis(axes[o], output)
+                self.plot_targets_to_axis(axes[row, col], output)
 
             # finishing off axis and figure
-            self.tidy_x_axis(axes[o], start_time, 2035., max_dims)
-            self.tidy_y_axis(axes[o], output, max_dims, max_value=max(max_data_values[output]))
-            axes[o].set_title(t_k.find_title_from_dictionary(output), fontsize=self.label_font_sizes[max_dims])
-            if o == len(outputs) - 1 and purpose == 'scenario' and len(self.scenarios) > 1:
-                self.add_legend_to_plot(axes[o], max_dims)
+            self.tidy_x_axis(axes[row, col], start_time, 2035., max_dims)
+            self.tidy_y_axis(axes[row, col], output, max_dims, max_value=max(max_data_values[output]))
+            axes[row, col].set_title(t_k.find_title_from_dictionary(output), fontsize=self.label_font_sizes[max_dims])
+            if out == len(outputs) - 1 and purpose == 'scenario' and len(self.scenarios) > 1:
+                self.add_legend_to_plot(axes[row, col], max_dims)
         self.finish_off_figure(fig, len(outputs), '_' + descriptor + '_gtb_' + purpose,
                                'Epidemiological outputs'
                                + t_k.find_title_from_dictionary(descriptor, capital_first_letter=False)
@@ -1855,7 +1860,7 @@ class Project:
         if self.gui_inputs['plot_option_plot_all_vars']:
             vars_to_plot = t_k.combine_two_lists_no_duplicate(vars_to_plot, self.model_runner.models[0].vars)
         for var in vars_to_plot:
-            fig, axes, max_dims, n_cols = self.initialise_figures_axes(n_panels)
+            fig, axes, max_dims, n_cols = initialise_figures_axes(n_panels)
             for n_axis in range(n_panels):
 
                 # find time to plot from and x-values
@@ -2510,7 +2515,7 @@ class Project:
         """
 
         # prelims
-        fig, axes, max_dims, _ = self.initialise_figures_axes(1, room_for_legend=True)
+        fig, axes, max_dims, _ = initialise_figures_axes(1, room_for_legend=True)
         last_data, bar_width, ax, x_positions = list(numpy.zeros(len(self.inputs.riskgroups))), .7, axes[0], []
 
         # plot bars

@@ -12,6 +12,7 @@ import economics
 import pandas
 import copy
 import scipy
+import itertools
 
 
 def find_smallest_factors_of_integer(n):
@@ -713,8 +714,8 @@ def add_title_to_plot(fig, n_panels, content):
         content: Unprocessed string to determine text for the title
     """
 
-    title_height = {1: .92, 2: .98, 3: .96, 4: .96}
-    title_font_size = {1: 14, 2: 11, 3: 10, 4: 10}
+    title_height = {1: .92, 2: .98, 3: .96, 4: .96, 8: .96}
+    title_font_size = {1: 14, 2: 11, 3: 10, 4: 10, 8: 10}
     fig.suptitle(t_k.find_title_from_dictionary(content), y=title_height[n_panels],
                  fontsize=title_font_size[n_panels])
 
@@ -802,7 +803,9 @@ class Project:
         self.tick_length = 3
         self.label_font_sizes \
             = {1: 8,
-               2: 7}
+               2: 7,
+               3: 6,
+               4: 6}
         self.colour_theme \
             = {0: (0., 0., 0.),
                1: (0., 0., 125. / 255.),
@@ -922,7 +925,7 @@ class Project:
             times_to_search = self.outputs['manual']['epi'][scenario]['times']
         return t_k.find_first_list_element_at_least(times_to_search, time)
 
-    def initialise_figures_axes(self, n_panels, room_for_legend=False):
+    def initialise_figures_axes(self, n_panels, room_for_legend=False, requested_grid=None):
         """
         Initialise the subplots (or single plot) according to the number of panels required.
 
@@ -933,13 +936,14 @@ class Project:
             fig: The figure object
             axes: A list containing each of the axes
             max_dims: The number of rows or columns of sub-plots, whichever is greater
+            grid: Shape of grid panels requested at call to method
         """
 
         pyplot.style.use('ggplot')
         fig = pyplot.figure(self.figure_number)
         self.figure_number += 1
         axes = []
-        n_rows, n_cols = find_subplot_grid(n_panels)
+        n_rows, n_cols = requested_grid if requested_grid else find_subplot_grid(n_panels)
         horizontal_position_one_axis = .08 if room_for_legend else .15
         if n_panels == 1:
             axes.append(fig.add_axes([horizontal_position_one_axis, .15, 0.7, 0.7]))
@@ -1591,6 +1595,13 @@ class Project:
                 mdr_indicators = [ind + '_mdr' for ind in self.gtb_available_outputs if ind != 'notifications']
                 mdr_indicators.append('perc_incidence_mdr')
                 self.plot_epi_outputs(mdr_indicators, 'scenario', 'mdr-tb-related')
+            if self.gui_inputs['output_by_subgroups']:
+                for strata_type in ['agegroups', 'riskgroups']:
+                    outputs_to_plot, list_of_strata = ['incidence', 'mortality'], getattr(self.inputs, strata_type)
+                    if len(list_of_strata) > 1:
+                        self.plot_epi_outputs(
+                            [''.join(panel) for panel in itertools.product(outputs_to_plot, list_of_strata)],
+                            'scenario', 'by_' + strata_type, grid=[len(outputs_to_plot), len(list_of_strata)])
 
         # plot scale-up functions
         if self.gui_inputs['output_scaleups']:
@@ -1618,12 +1629,6 @@ class Project:
 
         # plot fractions
         # if self.gui_inputs['output_fractions']: self.plot_fractions('strain')
-
-        # plot outputs by age group
-        if self.gui_inputs['output_by_subgroups']:
-            self.plot_outputs_by_stratum()
-            self.plot_outputs_by_stratum(strata_string='riskgroups', outputs_to_plot=['incidence', 'prevalence'])
-            self.plot_proportion_cases_by_stratum()
 
         # plot proportions of population
         if self.gui_inputs['output_age_fractions']:
@@ -1653,7 +1658,7 @@ class Project:
             self.plot_cases_by_division(['_asds', '_asmdr'],
                                         restriction_1='_mdr', restriction_2='treatment', exclusion_string='latent')
 
-    def plot_epi_outputs(self, outputs, purpose, descriptor):
+    def plot_epi_outputs(self, outputs, purpose, descriptor, grid=None):
         """
         Produces the plot for the main outputs, loops over multiple scenarios.
 
@@ -1661,10 +1666,11 @@ class Project:
             outputs: A list of the outputs to be plotted
             purpose: Reason for plotting or type of plot, can be either 'scenario', 'ci_plot' or 'progress'
             descriptor: String for the filename and title of the plot
+            grid: Shape of grid panels requested at call to method
         """
 
         # prelims
-        fig, axes, max_dims, _ = self.initialise_figures_axes(len(outputs))
+        fig, axes, max_dims, _ = self.initialise_figures_axes(len(outputs), requested_grid=grid)
         start_time = self.inputs.model_constants['before_intervention_time'] \
             if self.run_mode == 'int_uncertainty' or (len(self.scenarios) > 1 and purpose == 'scenario') \
             else self.gui_inputs['plot_option_start_time']
@@ -2178,53 +2184,6 @@ class Project:
             self.tidy_axis(ax, [1, 1], legend='for_single', start_time=self.inputs.model_constants['plot_start_time'],
                            y_axis_type='proportion')
             self.save_figure(fig, '_fraction')
-
-    def plot_outputs_by_stratum(self, strata_string='agegroups', outputs_to_plot=('incidence', 'mortality')):
-        """
-        Plot basic epidemiological outputs either by risk stratum or by age group.
-        """
-
-        # find strata to loop over
-        strata = getattr(self.inputs, strata_string)
-        if len(strata) == 0:
-            return
-
-        # prelims
-        fig = self.set_and_update_figure()
-        subplot_grid = [len(outputs_to_plot), len(strata)]
-
-        # loop over outputs and strata
-        for o, output in enumerate(outputs_to_plot):
-            for s, stratum in enumerate(strata):
-
-                # a + 1 gives the column, o the row
-                ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], s + 1 + o * len(strata))
-
-                # plot the modelled data
-                for scenario in self.scenarios[::-1]:
-                    start_index = self.find_start_index(scenario)
-                    ax.plot(self.outputs['manual']['epi'][scenario]['times'][start_index:],
-                            self.outputs['manual']['epi'][scenario][output + stratum][start_index:],
-                            color=self.output_colours[scenario][1], linestyle=self.output_colours[scenario][0],
-                            linewidth=1.5, label=t_k.capitalise_and_remove_underscore(
-                            t_k.find_scenario_string_from_number(scenario)))
-
-                # finish off
-                if s == 0:
-                    ylabel = 'Per 100,000 per year'
-                else:
-                    ylabel = ''
-                if strata_string == 'agegroups':
-                    stratum_string = t_k.turn_strat_into_label(stratum)
-                else:
-                    stratum_string = t_k.find_title_from_dictionary(stratum)
-                self.tidy_axis(ax, subplot_grid, start_time=self.inputs.model_constants['plot_start_time'],
-                               y_label=ylabel, y_axis_type='scaled',
-                               title=t_k.capitalise_first_letter(output) + ', ' + stratum_string,
-                               legend=(output == len(outputs_to_plot) - 1 and s == len(strata) - 1))
-        fig.suptitle(t_k.capitalise_and_remove_underscore(self.country) + ' burden by sub-group',
-                     fontsize=self.title_size)
-        self.save_figure(fig, '_output_by_' + strata_string)
 
     def plot_proportion_cases_by_stratum(self, strata_string='agegroups'):
         """

@@ -311,10 +311,8 @@ class ModelRunner:
         """
 
         mapper = self.models[scenario].flow_type_index[flow_type]
-        if 'fixed_' in flow_type:
-            return flow[mapper['rate']]
-        else:
-            return self.models[scenario].get_var_soln(flow[mapper['rate']])
+        return flow[mapper['rate']] if 'fixed_' in flow_type \
+            else self.models[scenario].get_var_soln(flow[mapper['rate']])
 
     def find_epi_outputs(self, scenario, epi_outputs_to_analyse=None, strata_to_analyse=([])):
         """

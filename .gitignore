@@ -12,3 +12,4 @@ saved_*
 projects
 venv*
 env*
+osx_boot.sh

@@ -313,8 +313,9 @@ export default {
     addBreakpoint (params, key) {
       this.params[key].value.push(_.max(this.params[key].value))
     },
-    breakpointCallback (params, key) {
-      // this.params[key].value.sort()
+    async breakpointCallback (params, key) {
+      await util.delay(100)
+      this.params[key].value = _.sortBy(this.params[key].value, v => _.parseInt(v))
     },
     selectParamGroup (i) {
       this.paramGroup = this.paramGroups[i]

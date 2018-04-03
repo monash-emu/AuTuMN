@@ -117,6 +117,12 @@ export default {
     }
 
     document.body.removeChild(textArea)
+  },
+
+  delay (time) {
+    return new Promise(function (resolve) {
+      setTimeout(function () { resolve(time) }, time)
+    })
   }
 
 }

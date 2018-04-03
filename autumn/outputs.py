@@ -720,7 +720,7 @@ def add_title_to_plot(fig, n_panels, content):
                  fontsize=title_font_size[n_panels])
 
 
-def find_panel_grid_indices(index, n_columns):
+def find_panel_grid_indices(axes, index, n_rows, n_columns):
     """
     Find the subplot index for a plot panel from the number of the panel and the number of columns of sub-plots.
 
@@ -729,7 +729,8 @@ def find_panel_grid_indices(index, n_columns):
         n_columns: Number of columns of sub-plots in the figure
     """
 
-    return numpy.floor_divide(index, n_columns), (index + 1) % n_columns - 1
+    row, column = numpy.floor_divide(index, n_columns), (index + 1) % n_columns - 1 if n_rows > 1 else None
+    return axes[row, column] if n_rows > 1 else axes[index]
 
 
 def not_last_row(index, n_rows, n_columns):
@@ -1694,6 +1695,7 @@ class Project:
             purpose: Reason for plotting or type of plot, can be either 'scenario', 'ci_plot' or 'progress'
             descriptor: String for the filename and title of the plot
             grid: Shape of grid panels requested at call to method
+            sharey: Whether to share the y-axis across rows of plots
         """
 
         # prelims
@@ -1708,13 +1710,13 @@ class Project:
 
         # loop through output indicators
         for out, output in enumerate(outputs):
-            row, col = find_panel_grid_indices(out, n_cols)
+            axis = find_panel_grid_indices(axes, out, n_rows, n_cols)
             max_data_values[output] = []
 
             # overlay GTB data
             if self.gui_inputs['plot_option_overlay_gtb'] and output in self.gtb_available_outputs:
                 max_data_values[output].append(self.plot_gtb_data_to_axis(
-                    axes[row, col], output, start_time, self.gtb_indices[output] if output in self.gtb_indices else '',
+                    axis, output, start_time, self.gtb_indices[output] if output in self.gtb_indices else '',
                     gtb_ci_plot='hatch' if purpose == 'shaded' else 'patch'))
 
             # plot with uncertainty confidence intervals (median, lower, upper)
@@ -1724,7 +1726,7 @@ class Project:
                     max_data_values[output].append(
                         max(self.uncertainty_centiles['epi'][scenario][output][2, :][start_index:]))
                     for ci in range(3):
-                        axes[row, col].plot(
+                        axis.plot(
                             self.interpolation_times_uncertainty[start_index:],
                             self.uncertainty_centiles['epi'][scenario][output][ci, :][start_index:],
                             color='k', label=None, linewidth=.7 if ci == 0 else .5, linestyle='-' if ci == 0 else '--')
@@ -1742,15 +1744,15 @@ class Project:
                             if self.run_mode == 'epi_uncertainty' else '.4'
                         plot_data = self.outputs[self.run_mode]['epi'][uncertainty_scenario][output][run, start_index:]
                         max_data_values[output].append(max(plot_data))
-                        axes[row, col].plot(self.outputs[self.run_mode]['epi'][uncertainty_scenario]['times'][run,
+                        axis.plot(self.outputs[self.run_mode]['epi'][uncertainty_scenario]['times'][run,
                                      start_index:], plot_data, color=colour, linestyle=dotted)
 
             # plot with shaded patches
             elif purpose == 'shaded':
-                axes[row, col].patch.set_facecolor((1., 1., 1.))
+                axis.patch.set_facecolor((1., 1., 1.))
                 for side in ['top', 'bottom', 'left', 'right']:
-                    axes[row, col].spines[side].set_color('.6')
-                axes[row, col].grid(color='.8')
+                    axis.spines[side].set_color('.6')
+                axis.grid(color='.8')
                 start_index = self.find_start_time_index(start_time, 0)
                 max_data_values[output].append(
                     max(self.uncertainty_centiles['epi'][uncertainty_scenario][output][-5, :][start_index:]))
@@ -1761,7 +1763,7 @@ class Project:
                         self.interpolation_times_uncertainty[start_index:],
                         self.uncertainty_centiles['epi'][uncertainty_scenario][output][i + 3, :][start_index:],
                         self.uncertainty_centiles['epi'][uncertainty_scenario][output][-i - 1, :][start_index:])
-                    axes[row, col].add_patch(patches.Polygon(patch, color=patch_colour))
+                    axis.add_patch(patches.Polygon(patch, color=patch_colour))
 
             # plot scenarios without uncertainty
             if purpose == 'scenario' or self.run_mode == 'int_uncertainty':
@@ -1776,22 +1778,22 @@ class Project:
                         if self.run_mode == 'increment_comorbidity' \
                         else t_k.capitalise_and_remove_underscore(t_k.find_scenario_string_from_number(scenario))
                     max_data_values[output].append(max(self.outputs['manual']['epi'][scenario][output][start_index:]))
-                    axes[row, col].plot(self.outputs['manual']['epi'][scenario]['times'][start_index:],
-                                        self.outputs['manual']['epi'][scenario][output][start_index:],
-                                        color=colour, linewidth=1.5, label=label,
-                                        zorder=1 if scenario else 4)
+                    axis.plot(self.outputs['manual']['epi'][scenario]['times'][start_index:],
+                              self.outputs['manual']['epi'][scenario][output][start_index:],
+                              color=colour, linewidth=1.5, label=label,
+                              zorder=1 if scenario else 4)
 
             # add plotting of End TB Targets
             if self.gui_inputs['plot_option_overlay_targets'] and (output == 'incidence' or output == 'mortality'):
-                self.plot_targets_to_axis(axes[row, col], output)
+                self.plot_targets_to_axis(axis, output)
 
             # finishing off axis and figure
-            self.tidy_x_axis(axes[row, col], start_time, 2035., max_dims, labels_off=not_last_row(out, n_rows, n_cols))
-            self.tidy_y_axis(axes[row, col], output, max_dims, max_value=max(max_data_values[output]))
-            axes[row, col].set_title(t_k.find_title_from_dictionary(output), fontsize=self.label_font_sizes[max_dims])
+            self.tidy_x_axis(axis, start_time, 2035., max_dims, labels_off=not_last_row(out, n_rows, n_cols))
+            self.tidy_y_axis(axis, output, max_dims, max_value=max(max_data_values[output]))
+            axis.set_title(t_k.find_title_from_dictionary(output), fontsize=self.label_font_sizes[max_dims])
             if out == len(outputs) - 1 and purpose == 'scenario' and len(self.scenarios) > 1:
-                self.add_legend_to_plot(axes[row, col], max_dims)
-        self.finish_off_figure(fig, len(outputs), '_' + descriptor + '_gtb_' + purpose,
+                self.add_legend_to_plot(axis, max_dims)
+        self.finish_off_figure(fig, len(outputs), '_' + descriptor + '_epi_' + purpose,
                                'Epidemiological outputs'
                                + t_k.find_title_from_dictionary(descriptor, capital_first_letter=False)
                                + ', ' + t_k.capitalise_first_letter(self.country))
@@ -1957,51 +1959,40 @@ class Project:
 
         # plot figures by scenario
         for scenario in self.scenarios:
-            fig = self.set_and_update_figure()
+            fig, axes, _, n_rows, n_cols \
+                = initialise_figures_axes(len(self.interventions_to_cost[scenario]), share_yaxis='row')
 
             # subplots by program
-            subplot_grid = find_subplot_numbers(len(self.interventions_to_cost[scenario]))
             for p, program in enumerate(self.interventions_to_cost[scenario]):
-                ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
+                axis = find_panel_grid_indices(axes, p, n_rows, n_cols)
 
-                # make times that each curve is produced for from control panel inputs
-                times = range(int(self.inputs.model_constants['cost_curve_start_time']),
-                              int(self.inputs.model_constants['cost_curve_end_time']),
-                              int(self.inputs.model_constants['cost_curve_step_time']))
+                # generate times to plot cost-coverage curves at, inclusively (by adding small value to end time)
+                times = numpy.arange(self.inputs.model_constants['cost_curve_start_time'],
+                                     self.inputs.model_constants['cost_curve_end_time'] + .01,
+                                     self.inputs.model_constants['cost_curve_step_time'])
 
                 for t, time in enumerate(times):
-                    time_index = t_k.find_first_list_element_at_least(
-                        self.model_runner.models[scenario].times, time)
+                    coverage = numpy.arange(0., self.inputs.model_constants['econ_saturation_' + program], .02)
+                    costs = [economics.get_cost_from_coverage(
+                        cov, self.inputs.model_constants['econ_inflectioncost_' + program],
+                        self.inputs.model_constants['econ_saturation_' + program],
+                        self.inputs.model_constants['econ_unitcost_' + program],
+                        self.model_runner.models[scenario].var_array[
+                            t_k.find_first_list_element_at_least(self.model_runner.models[scenario].times, time),
+                            self.model_runner.models[scenario].var_labels.index('popsize_' + program)])
+                        for cov in coverage]
+                    axis.plot(costs, coverage, label=str(int(time)),
+                              color=(1. - float(t) / float(len(times)), 1. - float(t) / float(len(times)),
+                                     1. - float(t) / float(len(times)) * .5))
 
-                    # make cost coverage curve
-                    x_values, y_values = [], []
-                    for coverage in numpy.linspace(0, 1, 101):
-                        if coverage < self.inputs.model_constants['econ_saturation_' + program]:
-                            cost \
-                                = economics.get_cost_from_coverage(coverage,
-                                self.inputs.model_constants['econ_inflectioncost_' + program],
-                                self.inputs.model_constants['econ_saturation_' + program],
-                                self.inputs.model_constants['econ_unitcost_' + program],
-                                self.model_runner.models[scenario].var_array[
-                                    time_index, self.model_runner.models[scenario].var_labels.index(
-                                        'popsize_' + program)])
-                            x_values += [cost]
-                            y_values += [coverage]
+                    # self.tidy_axis(ax, subplot_grid, title=t_k.find_title_from_dictionary('program_prop_' + program),
+                    #                x_axis_type='scaled',
+                    # legend=(p == len(self.interventions_to_cost) - 1), y_axis_type='proportion',
+                    #                    x_label='$US ')
 
-                    # find darkness
-                    darkness = .9 - (float(t) / float(len(times))) * .9
-
-                    # plot
-                    ax.plot(x_values, y_values, color=(darkness, darkness, darkness), label=str(int(time)))
-
-                self.tidy_axis(ax, subplot_grid, title=t_k.find_title_from_dictionary('program_prop_' + program),
-                               x_axis_type='scaled', legend=(p == len(self.interventions_to_cost) - 1), y_axis_type='proportion',
-                               x_label='$US ')
-
-            # finish off with title and save file for scenario
-            # fig.suptitle('Cost-coverage curves for ' + t_k.replace_underscore_with_space(scenario),
-            #              fontsize=self.suptitle_size)
-            self.save_figure(fig, '_' + str(scenario) + '_cost_coverage')
+            self.finish_off_figure(fig, len(self.interventions_to_cost[scenario]),
+                                   'cost_coverage_' + t_k.find_scenario_string_from_number(scenario),
+                                   'Cost coverage curves, ' + t_k.find_scenario_string_from_number(scenario))
 
     def plot_cost_over_time(self):
         """
@@ -2052,8 +2043,7 @@ class Project:
                     # Calculate the cumulative sum for the upper edge of the fill
                     for i in range(len(self.outputs['manual']['cost'][scenario]['times'])):
                         cumulative_data[i] \
-                            += self.outputs['manual']['cost'][scenario][cost_type
-                                                                                    + '_cost_' + intervention][i]
+                            += self.outputs['manual']['cost'][scenario][cost_type + '_cost_' + intervention][i]
 
                     # Scale the cost data
                     individual_data \

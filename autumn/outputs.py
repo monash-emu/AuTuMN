@@ -721,8 +721,29 @@ def add_title_to_plot(fig, n_panels, content):
 
 
 def find_panel_grid_indices(index, n_columns):
+    """
+    Find the subplot index for a plot panel from the number of the panel and the number of columns of sub-plots.
+
+    Args:
+        index: The number of the panel counting up from zero
+        n_columns: Number of columns of sub-plots in the figure
+    """
 
     return numpy.floor_divide(index, n_columns), (index + 1) % n_columns - 1
+
+
+def not_last_row(index, n_rows, n_columns):
+    """
+    Determine whether panel is not in the last row of sub-plots of the figure from the index of the panel and the number
+    of rows and columns of subplots.
+
+    Args:
+        index: The number of the panel counting up from zero
+        n_rows: Number of rows of sub-plots in the figure
+        n_columns: Number of columns of sub-plots in the figure
+    """
+
+    return index < (n_rows - 1) * n_columns
 
 
 def find_subplot_grid(n_plots):
@@ -771,7 +792,7 @@ def initialise_figures_axes(n_panels, room_for_legend=False, requested_grid=None
         fig.set_figheight(3.5)
     else:
         fig, axes = pyplot.subplots(n_rows, n_cols, sharey=share_yaxis)
-    return fig, axes, max([n_rows, n_cols]), n_cols
+    return fig, axes, max([n_rows, n_cols]), n_rows, n_cols
 
 
 
@@ -971,7 +992,7 @@ class Project:
         self.figure_number += 1
         return fig
 
-    def tidy_x_axis(self, axis, start, end, max_dim):
+    def tidy_x_axis(self, axis, start, end, max_dim, labels_off=False):
         """
         Function to tidy x-axis of a plot panel - currently only used in the scale-up vars, but intended to be written in
         such a way as to be extendable to other types of plotting.
@@ -981,13 +1002,17 @@ class Project:
             start: Lowest x-value being plotted
             end: Highest x-value being plotted
             max_dim: Maximum number of rows or columns of subplots in figure
+            labels_off: Whether to turn all tick labels off on this axis
         """
 
         # range
         axis.set_xlim(left=start, right=end)
 
         # ticks and their labels
-        if len(axis.get_xticks()) > 7:
+        if labels_off:
+            for label in axis.xaxis.get_ticklabels():
+                label.set_visible(False)
+        elif len(axis.get_xticks()) > 7:
             for label in axis.xaxis.get_ticklabels()[::2]:
                 label.set_visible(False)
         axis.tick_params(axis='x', length=self.tick_length, pad=6, labelsize=self.label_font_sizes[max_dim])
@@ -1674,7 +1699,8 @@ class Project:
         """
 
         # prelims
-        fig, axes, max_dims, n_cols = initialise_figures_axes(len(outputs), requested_grid=grid, share_yaxis=sharey)
+        fig, axes, max_dims, n_rows, n_cols \
+            = initialise_figures_axes(len(outputs), requested_grid=grid, share_yaxis=sharey)
         start_time = self.inputs.model_constants['before_intervention_time'] \
             if self.run_mode == 'int_uncertainty' or (len(self.scenarios) > 1 and purpose == 'scenario') \
             else self.gui_inputs['plot_option_start_time']
@@ -1762,7 +1788,7 @@ class Project:
                 self.plot_targets_to_axis(axes[row, col], output)
 
             # finishing off axis and figure
-            self.tidy_x_axis(axes[row, col], start_time, 2035., max_dims)
+            self.tidy_x_axis(axes[row, col], start_time, 2035., max_dims, labels_off=not_last_row(out, n_rows, n_cols))
             self.tidy_y_axis(axes[row, col], output, max_dims, max_value=max(max_data_values[output]))
             axes[row, col].set_title(t_k.find_title_from_dictionary(output), fontsize=self.label_font_sizes[max_dims])
             if out == len(outputs) - 1 and purpose == 'scenario' and len(self.scenarios) > 1:
@@ -1860,7 +1886,7 @@ class Project:
         if self.gui_inputs['plot_option_plot_all_vars']:
             vars_to_plot = t_k.combine_two_lists_no_duplicate(vars_to_plot, self.model_runner.models[0].vars)
         for var in vars_to_plot:
-            fig, axes, max_dims, n_cols = initialise_figures_axes(n_panels)
+            fig, axes, max_dims, n_rows, n_cols = initialise_figures_axes(n_panels)
             for n_axis in range(n_panels):
 
                 # find time to plot from and x-values
@@ -2515,7 +2541,7 @@ class Project:
         """
 
         # prelims
-        fig, axes, max_dims, _ = initialise_figures_axes(1, room_for_legend=True)
+        fig, axes, max_dims, _, _ = initialise_figures_axes(1, room_for_legend=True)
         last_data, bar_width, ax, x_positions = list(numpy.zeros(len(self.inputs.riskgroups))), .7, axes[0], []
 
         # plot bars

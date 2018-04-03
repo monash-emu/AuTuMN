@@ -16,7 +16,6 @@ Python data structures.
 
 from __future__ import print_function
 import os
-import time
 
 from flask import session
 from flask_login import current_app, current_user, login_user, logout_user
@@ -135,8 +134,9 @@ def bgui_model_output(output_type, data={}):
         pass
     elif output_type == "console":
         global bgui_output_lines
-        bgui_output_lines.extend(data["message"].splitlines())
-        print(">> handler.bgui_model_output console:", data["message"])
+        lines = data["message"].splitlines()
+        bgui_output_lines.extend(lines)
+        print("> handler.bgui_model_output: " + '\n'.join(lines))
     elif output_type == "uncertainty_graph":
         pass
 
@@ -163,8 +163,6 @@ def public_run_autumn(params):
 
         project = autumn.outputs.Project(model_runner, model_inputs)
         out_dir = project.master_outputs_runner()
-
-        # out_dir = "/Users/boscoh/Projects/AuTuMN/projects/test_fiji"
 
         save_dir = current_app.config['SAVE_FOLDER']
         filenames = glob.glob(os.path.join(out_dir, '*'))
@@ -201,7 +199,6 @@ def public_get_project_images(project):
     out_dir = os.path.join(save_dir, project)
     filenames = glob.glob(os.path.join(out_dir, '*'))
     filenames = [os.path.relpath(p, save_dir) for p in filenames]
-
     return {
         'success': True,
         'filenames': filenames,

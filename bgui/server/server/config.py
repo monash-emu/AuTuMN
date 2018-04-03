@@ -1,6 +1,6 @@
 SQLALCHEMY_DATABASE_URI = 'sqlite:///database.sqlite'
 SECRET_KEY = 'F12Zr47j\3yX R~X@H!jmM]Lwf/,?KT'
-SAVE_FOLDER = '../../projects'
+SAVE_FOLDER = '../../../projects'
 SQLALCHEMY_TRACK_MODIFICATIONS = 'False'
 PORT = '3000'
-STATIC_FOLDER = '../client/dist/static'
+STATIC_FOLDER = '../../client/dist/static'

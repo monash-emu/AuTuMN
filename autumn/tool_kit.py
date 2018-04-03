@@ -1149,7 +1149,6 @@ def adapt_params_to_stratification(data_breakpoints, model_breakpoints, data_par
         model_param_vals[new_name] = beta
 
     message = report_age_specific_parameter_calculations(parameter_name, model_param_vals)
-    print(message)
     if js_gui:
         js_gui('console', {'message': message})
     else:

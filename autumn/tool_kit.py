@@ -846,7 +846,13 @@ def find_title_from_dictionary(working_string, forward=True, capital_first_lette
            'perc_incidence_mdr':
                'MDR-TB percentage incidence',
            'mdr-tb-related':
-               'MDR-TB-related'}
+               'MDR-TB-related',
+           'main':
+               '',
+           'by_riskgroups':
+               ' by risk group',
+           'by_agegroups':
+               ' by age group'}
 
     list_of_code_strings = []
     list_of_interface_strings = []

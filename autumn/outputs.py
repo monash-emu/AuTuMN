@@ -1763,8 +1763,9 @@ class Project:
             if o == len(outputs) - 1 and purpose == 'scenario' and len(self.scenarios) > 1:
                 self.add_legend_to_plot(axes[o], max_dims)
         self.finish_off_figure(fig, len(outputs), '_' + descriptor + '_gtb_' + purpose,
-                               t_k.find_title_from_dictionary(descriptor) + ' epidemiological outputs, '
-                               + t_k.capitalise_first_letter(self.country))
+                               'Epidemiological outputs'
+                               + t_k.find_title_from_dictionary(descriptor, capital_first_letter=False)
+                               + ', ' + t_k.capitalise_first_letter(self.country))
 
     def plot_targets_to_axis(self, axis, output, compare_gtb=False):
         """

@@ -1959,12 +1959,13 @@ class Project:
 
         # plot figures by scenario
         for scenario in self.scenarios:
-            fig, axes, _, n_rows, n_cols \
+            fig, axes, max_dims, n_rows, n_cols \
                 = initialise_figures_axes(len(self.interventions_to_cost[scenario]), share_yaxis='row')
 
             # subplots by program
             for p, program in enumerate(self.interventions_to_cost[scenario]):
                 axis = find_panel_grid_indices(axes, p, n_rows, n_cols)
+                end_value = 0.
 
                 # generate times to plot cost-coverage curves at, inclusively (by adding small value to end time)
                 times = numpy.arange(self.inputs.model_constants['cost_curve_start_time'],
@@ -1984,14 +1985,15 @@ class Project:
                     axis.plot(costs, coverage, label=str(int(time)),
                               color=(1. - float(t) / float(len(times)), 1. - float(t) / float(len(times)),
                                      1. - float(t) / float(len(times)) * .5))
+                    end_value = max([end_value, max(costs)])
+                axis.set_title(t_k.find_title_from_dictionary('program_prop_' + program), fontsize=self.label_font_sizes[max_dims])
+                self.tidy_x_axis(axis, 0., end_value, max_dims)
 
-                    # self.tidy_axis(ax, subplot_grid, title=t_k.find_title_from_dictionary('program_prop_' + program),
-                    #                x_axis_type='scaled',
                     # legend=(p == len(self.interventions_to_cost) - 1), y_axis_type='proportion',
                     #                    x_label='$US ')
 
             self.finish_off_figure(fig, len(self.interventions_to_cost[scenario]),
-                                   'cost_coverage_' + t_k.find_scenario_string_from_number(scenario),
+                                   '_cost_coverage_' + t_k.find_scenario_string_from_number(scenario),
                                    'Cost coverage curves, ' + t_k.find_scenario_string_from_number(scenario))
 
     def plot_cost_over_time(self):

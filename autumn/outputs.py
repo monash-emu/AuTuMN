@@ -795,7 +795,6 @@ def initialise_figures_axes(n_panels, room_for_legend=False, requested_grid=None
     return fig, axes, max([n_rows, n_cols]), n_rows, n_cols
 
 
-
 class Project:
     def __init__(self, runner, gui_inputs):
         """
@@ -1010,8 +1009,7 @@ class Project:
 
         # ticks and their labels
         if labels_off:
-            for label in axis.xaxis.get_ticklabels():
-                label.set_visible(False)
+            axis.tick_params(axis='x', labelbottom='off')
         elif len(axis.get_xticks()) > 7:
             for label in axis.xaxis.get_ticklabels()[::2]:
                 label.set_visible(False)

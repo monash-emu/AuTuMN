@@ -88,7 +88,7 @@ export default {
 
     // Ensure it has a small width and height. Setting to 1px / 1em
     // doesn't work as this gives a negative w/h on some browsers.
-    textArea.style.width = '2em'
+    textArea.style.imageWidth = '2em'
     textArea.style.height = '2em'
 
     // We don't need padding, reducing the size if it does flash render.

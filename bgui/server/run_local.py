@@ -4,8 +4,8 @@ import shutil
 if not os.path.isfile("server/config.py"):
     shutil.copy("server/config_default.py", "server/config.py")
 
-from server.config import PORT
 from server.api import app
+from server.config import PORT
 
 app.run(
     threaded=True,

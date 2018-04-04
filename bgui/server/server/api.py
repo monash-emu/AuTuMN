@@ -1,9 +1,7 @@
 '''
 Defines the flask app - URL responses for a WSGI gateway.
 
-This file is designed to be run from `run_server.py`,
-which starts a Twisted server to handle the flask app.
-
+This file is designed to be run from `run_local.py`, in the parent directory
 To test with only the flask app:
 
     export FLASK_APP=api.py
@@ -92,7 +90,7 @@ def run_method(method, params):
 
     if hasattr(handler, method):
         fn = getattr(handler, method)
-        app.logger.info('run_method %s params=%s' % (method, params))
+        app.logger.info('run_method %s %s' % (method, params))
     else:
         app.logger.info('run_method: error: function "%s" does not exist' % (method))
         raise ValueError('Function "%s" does not exist' % (method))
@@ -211,7 +209,6 @@ def receive_uploaded_file():
         filename = os.path.join(dirname, basename)
         file.save(filename)
         server_filenames.append(filename)
-        print('> api.receive_uploaded_file', basename)
 
     method = request.form.get('method')
     params = json.loads(request.form.get('params', '[]'))
@@ -249,7 +246,7 @@ app.logger.info('SAVE_FOLDER: ' + app.config['SAVE_FOLDER'])
 # Route to load files saved on the server from uploads
 @app.route('/file/<path:path>', methods=['GET'])
 def serve_saved_file(path):
-    print("> api.get_file", os.path.join(app.config['SAVE_FOLDER'], path))
+    app.logger.info("FILE: " + os.path.join(app.config['SAVE_FOLDER'], path))
     return send_from_directory(app.config['SAVE_FOLDER'], path)
 
 
@@ -257,6 +254,7 @@ def serve_saved_file(path):
 # same IP:PORT as the server
 app.static_folder = os.path.join(this_dir, app.config['STATIC_FOLDER'])
 app.logger.info('static_folder: ' + app.static_folder)
+
 
 @app.route('/')
 def index():

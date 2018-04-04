@@ -109,9 +109,11 @@ import sys
 import json
 import traceback
 import glob
+import copy
 
 bgui_output_lines = []
 is_bgui_running = False
+bgui_graph_data = {}
 
 sys.path.insert(0, os.path.abspath("../.."))
 import autumn.model_runner
@@ -124,6 +126,7 @@ def public_check_autumn_run():
     global is_bgui_running
     result = {
         "console": bgui_output_lines,
+        "graph_data": bgui_graph_data,
         "is_running": is_bgui_running
     }
     return result
@@ -136,9 +139,11 @@ def bgui_model_output(output_type, data={}):
         global bgui_output_lines
         lines = data["message"].splitlines()
         bgui_output_lines.extend(lines)
-        print("> handler.bgui_model_output: " + '\n'.join(lines))
-    elif output_type == "uncertainty_graph":
-        pass
+        print("> handler.bgui_model_output console: " + '\n'.join(lines))
+    elif output_type == "graph":
+        global bgui_graph_data
+        print("> handler.bgui_model_output graph")
+        bgui_graph_data = copy.deepcopy(data)
 
 
 def public_run_autumn(params):
@@ -147,8 +152,10 @@ def public_run_autumn(params):
     """
     global is_bgui_running
     global bgui_output_lines
+    global bgui_graph_data
     is_bgui_running = True
     bgui_output_lines = []
+    bgui_graph_data = {}
 
     autumn_dir = os.path.join(os.path.dirname(autumn.__file__), os.pardir)
     os.chdir(autumn_dir)
@@ -203,3 +210,12 @@ def public_get_project_images(project):
         'success': True,
         'filenames': filenames,
     }
+
+def public_get_example_graph_data():
+    import json
+    this_dir = os.path.dirname(__file__)
+    with open(os.path.join(this_dir, 'graph/graph_data.json')) as f:
+        data = json.load(f)
+        return {
+            'data': data
+        }

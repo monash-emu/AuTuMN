@@ -1046,7 +1046,7 @@ class Project:
             axis.set_ylim(y_lims)
         elif 'prop_' in quantity and axis.get_ylim()[1] > 1.:
             axis.set_ylim(top=1.004)
-        elif 'prop_' in quantity:
+        elif 'prop_' in quantity or 'likelihood' in quantity:
             pass
         elif axis.get_ylim()[1] < max_value * (1. + space_at_top):
             axis.set_ylim(top=max_value * (1. + space_at_top))
@@ -2614,32 +2614,27 @@ class Project:
         Method to plot likelihoods over runs, differentiating accepted and rejected runs to illustrate progression.
         """
 
-        # plotting prelims
-        fig = self.set_and_update_figure()
-        ax = fig.add_subplot(1, 1, 1)
+        fig, ax, max_dims, n_rows, n_cols = initialise_figures_axes(1)
 
-        # find accepted likelihoods
-        accepted_log_likelihoods = [self.outputs['epi_uncertainty']['loglikelihoods'][i] for i in self.accepted_indices]
-
-        # plot the rejected values
+        # plot the rejected values from the previous acceptance to current rejection
         for i in self.outputs['epi_uncertainty']['rejected_indices']:
-
-            # Find the index of the last accepted index before the rejected one we're currently interested in
             last_acceptance_before = [j for j in self.accepted_indices if j < i][-1]
-
-            # Plot from the previous acceptance to the current rejection
             ax.plot([last_acceptance_before, i],
                     [self.outputs['epi_uncertainty']['loglikelihoods'][last_acceptance_before],
-                     self.outputs['epi_uncertainty']['loglikelihoods'][i]], marker='o', linestyle='--', color='.5')
+                     self.outputs['epi_uncertainty']['loglikelihoods'][i]], marker='o', linestyle='--',
+                    color=self.colour_theme[2])
 
         # plot the accepted values
-        ax.plot(self.accepted_indices, accepted_log_likelihoods, marker='o', color='k')
+        ax.plot(self.accepted_indices,
+                [self.outputs['epi_uncertainty']['loglikelihoods'][i] for i in self.accepted_indices],
+                marker='o', color=self.colour_theme[1])
 
         # finishing up
         fig.suptitle('Progression of likelihood', fontsize=self.title_size)
-        ax.set_xlabel('All runs', fontsize=get_nice_font_size([1, 1]), labelpad=1)
-        ax.set_ylabel('Likelihood', fontsize=get_nice_font_size([1, 1]), labelpad=1)
-        self.save_figure(fig, '_likelihoods')
+        self.tidy_x_axis(ax, 0, len(self.accepted_indices), max_dims, x_label='Runs')
+        self.tidy_y_axis(ax, 'likelihood', max_dims, y_label='Log likelihood')
+        ax.set_ylabel('Log likelihood', fontsize=get_nice_font_size([1, 1]), labelpad=1)
+        self.finish_off_figure(fig, 1, '_likelihoods', 'Likelihood progression')
 
     ''' currently inactive optimisation plotting methods '''
 

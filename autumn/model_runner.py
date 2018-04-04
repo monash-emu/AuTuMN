@@ -614,8 +614,7 @@ class ModelRunner:
         while n_accepted < self.gui_inputs['uncertainty_runs']:
             # instantiate model objects
             for scenario in self.scenarios:
-                # self.models[scenario] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
-                self.models[scenario].reset_compartment_values()
+                self.models[scenario].initialise_compartments()
 
             # set timer
             start_timer_run = datetime.datetime.now()

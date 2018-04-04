@@ -227,6 +227,9 @@ class ModelRunner:
         # or run the manual scenarios as requested by user
         else:
             self.run_manual_calibration()
+            if self.inputs.run_mode == 'rapid_calibration':
+                best_beta = self.run_rapid_univariate_calibration()
+                print best_beta
             if self.inputs.run_mode == 'epi_uncertainty':
                 self.run_epi_uncertainty()
             if self.inputs.run_mode == 'int_uncertainty':
@@ -573,7 +576,6 @@ class ModelRunner:
         Main method to run all the uncertainty processes using a Metropolis-Hastings algorithm with normal proposal
         distribution.
         """
-
         self.add_comment_to_gui_window('Uncertainty analysis commenced')
 
         # prepare basic storage and local variables for uncertainty loop
@@ -972,6 +974,62 @@ class ModelRunner:
             # integrate and save
             self.models[15].integrate()
             self.store_uncertainty(15, uncertainty_type='int_uncertainty')
+
+    def run_rapid_univariate_calibration(self):
+        """
+        Perform a least-square minimisation on the distance between the model outputs and the datapoints to
+        calibrate a single parameter.
+        Return the value of the calibrated parameter.
+        """
+        self.add_comment_to_gui_window('Rapid calibration commenced')
+        params_to_calibrate = 'tb_n_contact'   # hard-coded
+        param_dict = {}
+        targeted_indicator = 'incidence'  # hard-coded
+
+        years_to_compare = range(2010, 2017)
+        working_output_dictionary = self.get_fitting_data()[targeted_indicator]
+        available_years = []
+        target_values = {}
+
+        for y, year in enumerate(years_to_compare):
+            if year in working_output_dictionary.keys():
+                available_years.append(year)
+                target_values[year] = working_output_dictionary[year][0]
+
+        weights = find_uncertainty_output_weights(available_years, 4)
+
+        def objective_function(param_val):
+            # run the model
+            self.models[0] = model.ConsolidatedModel(0, self.inputs, self.gui_inputs)
+            self.outputs['manual'] = {'epi': {}, 'cost': {}}
+            # set parameters and run
+            param_dict[params_to_calibrate] = param_val
+            self.set_model_with_params(param_dict, 0)
+            self.models[0].integrate()
+            self.outputs['manual']['epi'][0] \
+                = self.find_epi_outputs(0, strata_to_analyse=[self.models[0].agegroups,
+                                                                     self.models[0].riskgroups])
+
+            outputs_for_comparison \
+                = [self.outputs['manual']['epi'][0]['incidence'][t_k.find_first_list_element_at_least(
+                           self.outputs['manual']['epi'][0]['times'], float(year))] for year in years_to_compare]
+
+            sum_of_squares = 0.
+            index_for_available_years = 0
+            for y, year in enumerate(years_to_compare):
+                if year in working_output_dictionary.keys():
+                    model_result_for_output = outputs_for_comparison[y]
+                    data = target_values[year]
+                    sum_of_squares += weights[index_for_available_years] * (data-model_result_for_output)**2
+                    index_for_available_years += 1
+            print sum_of_squares
+            return sum_of_squares
+
+        x_0 = self.inputs.model_constants[params_to_calibrate]
+        optimisation_result = minimize(fun=objective_function, x0=x_0, method='Nelder-Mead')
+
+        return optimisation_result.x
+
 
     ''' optimisation methods '''
 

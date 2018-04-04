@@ -714,8 +714,8 @@ def add_title_to_plot(fig, n_panels, content):
         content: Unprocessed string to determine text for the title
     """
 
-    title_height = {1: .92, 2: .98, 3: .96, 4: .96, 8: .96}
-    title_font_size = {1: 14, 2: 11, 3: 10, 4: 10, 8: 10}
+    title_height = {1: .92, 2: .98, 3: .96, 4: .96, 5: .96, 8: .96}
+    title_font_size = {1: 14, 2: 11, 3: 10, 4: 10, 5: 10, 8: 10}
     fig.suptitle(t_k.find_title_from_dictionary(content), y=title_height[n_panels],
                  fontsize=title_font_size[n_panels])
 
@@ -794,6 +794,8 @@ def initialise_figures_axes(n_panels, room_for_legend=False, requested_grid=None
         fig.subplots_adjust(bottom=.15, top=.85)
     else:
         fig, axes = pyplot.subplots(n_rows, n_cols, sharey=share_yaxis)
+        for panel in range(n_panels, n_rows * n_cols):
+            find_panel_grid_indices(axes, panel, n_rows, n_cols).axis('off')
     return fig, axes, max([n_rows, n_cols]), n_rows, n_cols
 
 
@@ -1022,7 +1024,8 @@ class Project:
         if x_label:
             axis.set_xlabel(x_label, fontsize=self.label_font_sizes[max_dim])
 
-    def tidy_y_axis(self, axis, quantity, max_dims, left_axis=True, max_value=1e6, space_at_top=.1, y_label=None):
+    def tidy_y_axis(self, axis, quantity, max_dims, left_axis=True, max_value=1e6, space_at_top=.1, y_label=None,
+                    y_lims=None):
         """
         General approach to tidying up the vertical axis of a plot, depends on whether it is the left-most panel.
 
@@ -1036,7 +1039,10 @@ class Project:
         """
 
         # axis range
-        axis.set_ylim(bottom=0.)
+        if y_lims:
+            axis.set_ylim(bottom=y_lims[0], top=y_lims[1])
+        else:
+            axis.set_ylim(bottom=0.)
 
         if 'prop_' in quantity and axis.get_ylim()[1] > 1.:
             axis.set_ylim(top=1.004)
@@ -1688,7 +1694,7 @@ class Project:
         # save figure that is produced in the uncertainty running process
         if self.run_mode == 'epi_uncertainty' and self.gui_inputs['output_param_plots']:
             self.plot_param_histograms()
-            self.plot_param_timeseries()
+            self.plot_param_progression()
             self.plot_priors()
 
         # plot likelihood estimates
@@ -2463,25 +2469,25 @@ class Project:
             ax.set_title(t_k.find_title_from_dictionary(param))
         self.save_figure(fig, '_param_histogram')
 
-    def plot_param_timeseries(self):
+    def plot_param_progression(self):
         """
-        Plot accepted parameter progress over time.
+        Plot accepted parameter progress over time against run sequence.
         """
-        fig = self.set_and_update_figure()
-        subplot_grid = find_subplot_numbers(len(self.model_runner.outputs['epi_uncertainty']['all_parameters']))
 
-        # loop through parameters used in uncertainty
+        n_params = len(self.model_runner.outputs['epi_uncertainty']['all_parameters'])
+        fig, axes, max_dims, n_rows, n_cols = initialise_figures_axes(n_params)
         for p, param in enumerate(self.model_runner.outputs['epi_uncertainty']['all_parameters']):
-            ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
-
-            # restrict to those accepted and after burn-in complete
-            param_values = [self.model_runner.outputs['epi_uncertainty']['all_parameters'][param][i]
-                            for i in self.accepted_no_burn_in_indices]
-
-            # plot
-            ax.plot(param_values)
-            ax.set_title(t_k.find_title_from_dictionary(param))
-        self.save_figure(fig, '_param_timeseries')
+            ax = find_panel_grid_indices(axes, p, n_rows, n_cols)
+            data = [self.model_runner.outputs['epi_uncertainty']['all_parameters'][param][i]
+                    for i in self.accepted_no_burn_in_indices]
+            ax.plot(range(1, len(data) + 1), data)
+            param_range_index = [i for i in range(len(self.inputs.param_ranges_unc))
+                                 if self.inputs.param_ranges_unc[i]['key'] == param][0]
+            ax.set_title(t_k.find_title_from_dictionary(param), fontsize=self.label_font_sizes[max_dims])
+            self.tidy_x_axis(ax, 1, n_params + 1, max_dims, labels_off=not last_row(p, n_rows, n_cols))
+            self.tidy_y_axis(ax, '', max_dims, max_value=max(data),
+                             y_lims=self.inputs.param_ranges_unc[param_range_index]['bounds'])
+        self.finish_off_figure(fig, n_params, '_parameter_series', 'Parameter progression')
 
     def plot_priors(self):
         """

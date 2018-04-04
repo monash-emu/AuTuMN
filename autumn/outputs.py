@@ -733,7 +733,7 @@ def find_panel_grid_indices(axes, index, n_rows, n_columns):
     return axes[row, column] if n_rows > 1 else axes[index]
 
 
-def not_last_row(index, n_rows, n_columns):
+def last_row(index, n_rows, n_columns):
     """
     Determine whether panel is not in the last row of sub-plots of the figure from the index of the panel and the number
     of rows and columns of subplots.
@@ -744,7 +744,7 @@ def not_last_row(index, n_rows, n_columns):
         n_columns: Number of columns of sub-plots in the figure
     """
 
-    return index < (n_rows - 1) * n_columns
+    return index >= (n_rows - 1) * n_columns
 
 
 def find_subplot_grid(n_plots):
@@ -774,12 +774,12 @@ def initialise_figures_axes(n_panels, room_for_legend=False, requested_grid=None
     Args:
         n_panels: The number of panels needed
         room_for_legend: Whether room is needed for a legend - applies to single axis plots only
+        requested_grid: Shape of grid panels requested at call to method
+        share_yaxis: String to pass to the sharey option
     Returns:
         fig: The figure object
         axes: A list containing each of the axes
         max_dims: The number of rows or columns of sub-plots, whichever is greater
-        requested_grid: Shape of grid panels requested at call to method
-        share_yaxis: String to pass to the sharey option
     """
 
     pyplot.style.use('ggplot')
@@ -791,6 +791,7 @@ def initialise_figures_axes(n_panels, room_for_legend=False, requested_grid=None
     elif n_panels == 2:
         fig, axes = pyplot.subplots(1, 2)
         fig.set_figheight(3.5)
+        fig.subplots_adjust(bottom=.15, top=.85)
     else:
         fig, axes = pyplot.subplots(n_rows, n_cols, sharey=share_yaxis)
     return fig, axes, max([n_rows, n_cols]), n_rows, n_cols
@@ -992,7 +993,7 @@ class Project:
         self.figure_number += 1
         return fig
 
-    def tidy_x_axis(self, axis, start, end, max_dim, labels_off=False):
+    def tidy_x_axis(self, axis, start, end, max_dim, labels_off=False, x_label=None):
         """
         Function to tidy x-axis of a plot panel - currently only used in the scale-up vars, but intended to be written in
         such a way as to be extendable to other types of plotting.
@@ -1003,6 +1004,7 @@ class Project:
             end: Highest x-value being plotted
             max_dim: Maximum number of rows or columns of subplots in figure
             labels_off: Whether to turn all tick labels off on this axis
+            x_label: Text for the x-axis label if required
         """
 
         # range
@@ -1016,13 +1018,17 @@ class Project:
                 label.set_visible(False)
         axis.tick_params(axis='x', length=self.tick_length, pad=6, labelsize=self.label_font_sizes[max_dim])
 
-    def tidy_y_axis(self, axis, quantity, max_dims, left_axis=True, max_value=1e6, space_at_top=.1):
+        # axis label
+        if x_label:
+            axis.set_xlabel(x_label, fontsize=self.label_font_sizes[max_dim])
+
+    def tidy_y_axis(self, axis, quantity, max_dims, left_axis=True, max_value=1e6, space_at_top=.1, y_label=None):
         """
         General approach to tidying up the vertical axis of a plot, depends on whether it is the left-most panel.
 
         Args:
             axis: The axis itself
-            quantity: The name of the quantity being plotted (which can be used to determine what sort of variable it is)
+            quantity: The name of the quantity being plotted (which can be used to determine the sort of variable it is)
             max_dims: Maximum number of rows or columns of subplots on the figure
             left_axis: Boolean for whether the axis is the left-most panel
             max_value: The maximum value in the data being plotted
@@ -1031,33 +1037,41 @@ class Project:
 
         # axis range
         axis.set_ylim(bottom=0.)
+
         if 'prop_' in quantity and axis.get_ylim()[1] > 1.:
             axis.set_ylim(top=1.004)
+        elif 'prop_' in quantity:
+            pass
         elif axis.get_ylim()[1] < max_value * (1. + space_at_top):
             axis.set_ylim(top=max_value * (1. + space_at_top))
 
         # ticks
         axis.tick_params(axis='y', length=self.tick_length, pad=6, labelsize=self.label_font_sizes[max_dims])
 
-        # labels
+        # tick labels
         if not left_axis:
             pyplot.setp(axis.get_yticklabels(), visible=False)
         elif 'prop_' in quantity:
             axis.yaxis.set_major_formatter(FuncFormatter('{0:.0%}'.format))
 
-    def add_legend_to_plot(self, axis, max_dims):
+        # axis label
+        if y_label and left_axis:
+            axis.set_ylabel(y_label, fontsize=self.label_font_sizes[max_dims])
+
+    def add_legend_to_plot(self, axis, max_dim, location=0):
         """
         Add legend to plot, with font size determined by the maximum number of dimensions of subplot panels.
 
         Args:
             axis: The axis to have the legend added
-            max_dims: The number of rows or columns of subplots, whichever is the greater
+            max_dim: The number of rows or columns of subplots, whichever is the greater
+            location: The matplotlib integer specifying the position for the legend (default of zero is 'best')
         """
 
-        if max_dims == 1:
-            axis.legend(bbox_to_anchor=(1.3, 1), fontsize=self.label_font_sizes[max_dims])
+        if max_dim == 1:
+            axis.legend(bbox_to_anchor=(1.3, 1), fontsize=self.label_font_sizes[max_dim])
         else:
-            axis.legend(fontsize=self.label_font_sizes[max_dims])
+            axis.legend(fontsize=self.label_font_sizes[max_dim], loc=location)
 
     def tidy_axis(self, ax, subplot_grid, title='', start_time=0., legend=False, x_label='', y_label='',
                   x_axis_type='time', y_axis_type='scaled', x_sig_figs=0, y_sig_figs=0,
@@ -1788,7 +1802,7 @@ class Project:
                 self.plot_targets_to_axis(axis, output)
 
             # finishing off axis and figure
-            self.tidy_x_axis(axis, start_time, 2035., max_dims, labels_off=not_last_row(out, n_rows, n_cols))
+            self.tidy_x_axis(axis, start_time, 2035., max_dims, labels_off=not last_row(out, n_rows, n_cols))
             self.tidy_y_axis(axis, output, max_dims, max_value=max(max_data_values[output]))
             axis.set_title(t_k.find_title_from_dictionary(output), fontsize=self.label_font_sizes[max_dims])
             if out == len(outputs) - 1 and purpose == 'scenario' and len(self.scenarios) > 1:
@@ -1959,7 +1973,7 @@ class Project:
 
         # plot figures by scenario
         for scenario in self.scenarios:
-            fig, axes, max_dims, n_rows, n_cols \
+            fig, axes, max_dim, n_rows, n_cols \
                 = initialise_figures_axes(len(self.interventions_to_cost[scenario]), share_yaxis='row')
 
             # subplots by program
@@ -1972,6 +1986,7 @@ class Project:
                                      self.inputs.model_constants['cost_curve_end_time'] + .01,
                                      self.inputs.model_constants['cost_curve_step_time'])
 
+                # plot costs versus coverage
                 for t, time in enumerate(times):
                     coverage = numpy.arange(0., self.inputs.model_constants['econ_saturation_' + program], .02)
                     costs = [economics.get_cost_from_coverage(
@@ -1986,11 +2001,14 @@ class Project:
                               color=(1. - float(t) / float(len(times)), 1. - float(t) / float(len(times)),
                                      1. - float(t) / float(len(times)) * .5))
                     end_value = max([end_value, max(costs)])
-                axis.set_title(t_k.find_title_from_dictionary('program_prop_' + program), fontsize=self.label_font_sizes[max_dims])
-                self.tidy_x_axis(axis, 0., end_value, max_dims)
 
-                    # legend=(p == len(self.interventions_to_cost) - 1), y_axis_type='proportion',
-                    #                    x_label='$US ')
+                # finish off axis
+                axis.set_title(t_k.find_title_from_dictionary('program_prop_' + program),
+                               fontsize=self.label_font_sizes[max_dim])
+                self.tidy_x_axis(axis, 0., end_value, max_dim, x_label='$US' if last_row(p, n_rows, n_cols) else None)
+                self.tidy_y_axis(axis, 'prop_', max_dim, max_value=1., left_axis=p % n_cols == 0, y_label='Coverage')
+                if p == len(self.interventions_to_cost[scenario]) - 1:
+                    self.add_legend_to_plot(axis, max_dim, location=4)
 
             self.finish_off_figure(fig, len(self.interventions_to_cost[scenario]),
                                    '_cost_coverage_' + t_k.find_scenario_string_from_number(scenario),

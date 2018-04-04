@@ -1974,6 +1974,38 @@ class Project:
             axis.scatter(data_to_plot.keys(), data_to_plot.values(), color=self.colour_theme['data'], s=7, zorder=10)
             return max(data_to_plot.values()) if data_to_plot else 0.
 
+    def plot_mixing_matrix(self):
+        """
+        Method to visualise the mixing matrix with bar charts.
+        """
+
+        # prelims
+        fig, axes, max_dims, _, _ = initialise_figures_axes(1, room_for_legend=True)
+        last_data, bar_width, ax, x_positions = list(numpy.zeros(len(self.inputs.riskgroups))), .7, axes[0], []
+
+        # plot bars
+        for to, to_group in enumerate(self.inputs.riskgroups):
+            current_data = [self.inputs.mixing[from_group][to_group] for from_group in self.inputs.riskgroups]
+            next_data = [last + current for last, current in zip(last_data, current_data)]
+            x_positions = numpy.linspace(.5, .5 + len(next_data) - 1., len(next_data))
+            ax.bar(x_positions, current_data, width=bar_width, bottom=last_data, color=self.colour_theme[to],
+                   label=t_k.find_title_from_dictionary(to_group))
+            last_data = next_data
+
+        # locally managing x-axis, as plot type is a special case
+        ax.set_xlim(.2, max(x_positions) + 1.)
+        ax.set_xticks([x + bar_width / 2. for x in x_positions])
+        ax.tick_params(axis='x', length=0.)
+        ax.set_xticklabels([t_k.find_title_from_dictionary(group) for group in self.inputs.riskgroups],
+                           fontsize=self.label_font_sizes[1])
+
+        # general approach fine for y-axis and legend
+        self.tidy_y_axis(ax, 'prop_', max_dims, max_value=1., space_at_top=0.)
+        self.add_legend_to_plot(ax, max_dims)
+
+        # finish off figure
+        self.finish_off_figure(fig, max_dims, '_mixing', 'Source of contacts by risk group')
+
     def plot_cost_coverage_curves(self):
         """
         Plots cost-coverage curves at times specified in the report times inputs in control panel.
@@ -2374,6 +2406,27 @@ class Project:
             fig.suptitle('Population by ' + t_k.find_title_from_dictionary(age_or_risk), fontsize=self.title_size)
             self.save_figure(fig, '_riskgroup_proportions')
 
+    def plot_cases_by_division(self, divisions, restriction_1='', restriction_2='',
+                               exclusion_string='we all love futsal'):
+        """
+        Plot the number cases in across various categories, within the population specified in the restriction string.
+        Mostly for debugging purposes.
+        """
+
+        fig = self.set_and_update_figure()
+        divisions, compartment_types \
+            = self.model_runner.models[0].calculate_aggregate_compartment_divisions_from_strings(
+                divisions, required_string_1=restriction_1, required_string_2=restriction_2,
+                exclusion_string=exclusion_string)
+        subplot_grid = find_subplot_numbers(len(compartment_types))
+        for c, compartment_type in enumerate(compartment_types):
+            if divisions[compartment_type]:
+                ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], c + 1)
+                ax.plot(self.model_runner.models[0].times, divisions[compartment_type])
+                self.tidy_axis(ax, subplot_grid, start_time=self.inputs.model_constants['start_time'],
+                               title=compartment_type + restriction_1 + restriction_2)
+        self.save_figure(fig, '_mdr_by_compartment_type')
+
     def plot_intervention_costs_by_scenario(self, year_start, year_end, horizontal=False, plot_options=None):
         """
         Not called, but won't be working any more because cost_outputs_integer_dict has been abandoned.
@@ -2454,22 +2507,25 @@ class Project:
         Simple function to plot histograms of parameter values used in uncertainty analysis.
         """
 
-        # preliminaries
-        fig = self.set_and_update_figure()
-        subplot_grid = find_subplot_numbers(len(self.model_runner.outputs['epi_uncertainty']['all_parameters']))
-
-        # loop through parameters used in uncertainty
+        fig, axes, max_dims, n_rows, n_cols \
+            = initialise_figures_axes(len(self.model_runner.outputs['epi_uncertainty']['all_parameters']))
         for p, param in enumerate(self.model_runner.outputs['epi_uncertainty']['all_parameters']):
-            ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
-
-            # restrict to those accepted and after burn-in complete
+            ax = find_panel_grid_indices(axes, p, n_rows, n_cols)
             param_values = [self.model_runner.outputs['epi_uncertainty']['all_parameters'][param][i]
                             for i in self.accepted_no_burn_in_indices]
-
-            # plot
-            ax.hist(param_values)
-            ax.set_title(t_k.find_title_from_dictionary(param))
-        self.save_figure(fig, '_param_histogram')
+            y, _, _ = ax.hist(param_values, bins=20, edgecolor='k')
+            param_range_index = [i for i in range(len(self.inputs.param_ranges_unc))
+                                 if self.inputs.param_ranges_unc[i]['key'] == param][0]
+            param_range = self.inputs.param_ranges_unc[param_range_index]['bounds'][1] \
+                        - self.inputs.param_ranges_unc[param_range_index]['bounds'][0]
+            ax.set_title(t_k.find_title_from_dictionary(param), fontsize=self.label_font_sizes[max_dims])
+            for i in range(2):
+                ax.axvline(x=self.inputs.param_ranges_unc[param_range_index]['bounds'][i], color='.3', linestyle=':')
+            self.tidy_x_axis(ax, self.inputs.param_ranges_unc[param_range_index]['bounds'][0] - param_range * .1,
+                             self.inputs.param_ranges_unc[param_range_index]['bounds'][1] + param_range * .1, max_dims)
+            self.tidy_y_axis(ax, '', max_dims, max_value=max(y))
+        self.finish_off_figure(fig, len(self.model_runner.outputs['epi_uncertainty']['all_parameters']),
+                               '_parameter_hist', 'Parameter histograms')
 
     def plot_param_progression(self):
         """
@@ -2553,38 +2609,6 @@ class Project:
         self.finish_off_figure(fig, len(self.model_runner.inputs.param_ranges_unc), '_priors',
                                'Parameter prior distributions')
 
-    def plot_mixing_matrix(self):
-        """
-        Method to visualise the mixing matrix with bar charts.
-        """
-
-        # prelims
-        fig, axes, max_dims, _, _ = initialise_figures_axes(1, room_for_legend=True)
-        last_data, bar_width, ax, x_positions = list(numpy.zeros(len(self.inputs.riskgroups))), .7, axes[0], []
-
-        # plot bars
-        for to, to_group in enumerate(self.inputs.riskgroups):
-            current_data = [self.inputs.mixing[from_group][to_group] for from_group in self.inputs.riskgroups]
-            next_data = [last + current for last, current in zip(last_data, current_data)]
-            x_positions = numpy.linspace(.5, .5 + len(next_data) - 1., len(next_data))
-            ax.bar(x_positions, current_data, width=bar_width, bottom=last_data, color=self.colour_theme[to],
-                   label=t_k.find_title_from_dictionary(to_group))
-            last_data = next_data
-
-        # locally managing x-axis, as plot type is a special case
-        ax.set_xlim(.2, max(x_positions) + 1.)
-        ax.set_xticks([x + bar_width / 2. for x in x_positions])
-        ax.tick_params(axis='x', length=0.)
-        ax.set_xticklabels([t_k.find_title_from_dictionary(group) for group in self.inputs.riskgroups],
-                           fontsize=self.label_font_sizes[1])
-
-        # general approach fine for y-axis and legend
-        self.tidy_y_axis(ax, 'prop_', max_dims, max_value=1., space_at_top=0.)
-        self.add_legend_to_plot(ax, max_dims)
-
-        # finish off figure
-        self.finish_off_figure(fig, max_dims, '_mixing', 'Source of contacts by risk group')
-
     def plot_likelihoods(self):
         """
         Method to plot likelihoods over runs, differentiating accepted and rejected runs to illustrate progression.
@@ -2616,27 +2640,6 @@ class Project:
         ax.set_xlabel('All runs', fontsize=get_nice_font_size([1, 1]), labelpad=1)
         ax.set_ylabel('Likelihood', fontsize=get_nice_font_size([1, 1]), labelpad=1)
         self.save_figure(fig, '_likelihoods')
-
-    def plot_cases_by_division(self, divisions, restriction_1='', restriction_2='',
-                               exclusion_string='we all love futsal'):
-        """
-        Plot the number cases in across various categories, within the population specified in the restriction string.
-        Mostly for debugging purposes.
-        """
-
-        fig = self.set_and_update_figure()
-        divisions, compartment_types \
-            = self.model_runner.models[0].calculate_aggregate_compartment_divisions_from_strings(
-                divisions, required_string_1=restriction_1, required_string_2=restriction_2,
-                exclusion_string=exclusion_string)
-        subplot_grid = find_subplot_numbers(len(compartment_types))
-        for c, compartment_type in enumerate(compartment_types):
-            if divisions[compartment_type]:
-                ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], c + 1)
-                ax.plot(self.model_runner.models[0].times, divisions[compartment_type])
-                self.tidy_axis(ax, subplot_grid, start_time=self.inputs.model_constants['start_time'],
-                               title=compartment_type + restriction_1 + restriction_2)
-        self.save_figure(fig, '_mdr_by_compartment_type')
 
     ''' currently inactive optimisation plotting methods '''
 

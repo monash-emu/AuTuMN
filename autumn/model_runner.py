@@ -167,8 +167,8 @@ class ModelRunner:
         self.inputs = inputs.Inputs(gui_inputs, js_gui=js_gui)
         self.inputs.process_inputs()
         (self.scenarios, self.standard_rate_outputs, self.divide_population, self.epi_outputs_to_analyse, \
-         self.outputs_unc, self.interventions_to_cost) \
-            = [[] for _ in range(6)]
+          self.interventions_to_cost) \
+            = [[] for _ in range(5)]
         (self.models, self.from_labels, self.to_labels, self.multipliers, self.uncertainty_percentiles) \
             = [{} for _ in range(5)]
         (self.is_last_run_success, self.is_adjust_population) \
@@ -595,7 +595,7 @@ class ModelRunner:
         # find values of mu and sd for the likelihood calculation. Process uncertainty weights in the same loop.
         years_to_compare = range(2010, 2017)
         mu_values, sd_values, mean_sd_value, weights = {}, {}, {}, {}
-        for output_dict in self.outputs_unc:
+        for output_dict in self.inputs.outputs_unc:
             mu_values[output_dict['key']] = {}
             sd_values[output_dict['key']] = {}
             # the GTB values for the output of interest
@@ -647,7 +647,7 @@ class ModelRunner:
                         param['distribution'], param_val, param['bounds'], additional_params=param['additional_params'])
 
                 # calculate likelihood
-                for output_dict in self.outputs_unc:
+                for output_dict in self.inputs.outputs_unc:
                     index_for_available_years = 0
                     for y, year in enumerate(years_to_compare):
                         if year in working_output_dictionary.keys():
@@ -1221,10 +1221,7 @@ class TbRunner(ModelRunner):
         # outputs
         self.epi_outputs_to_analyse = ['incidence', 'prevalence', 'mortality', 'true_mortality', 'notifications']
         self.add_strain_specific_outputs_to_analyse()
-        self.outputs_unc = [{'key': 'incidence',
-                             'posterior_width': None,
-                             'width_multiplier': 2.  # width of normal posterior relative to range of allowed values
-                             }]
+
         self.average_sd_for_likelihood = True  # whether to use a common sd for all data points iun the likelihood calculation
         self.standard_rate_outputs = ['incidence', 'notifications', 'infections']
         self.from_labels \

@@ -185,7 +185,7 @@ class Inputs:
 
             # for incidence for ex, width of normal posterior relative to CI width in data
             self.outputs_unc \
-                = [{'key': 'incidence', 'posterior_width': None, 'width_multiplier': 2.}]
+                = [{'key': 'incidence', 'posterior_width': None, 'width_multiplier': 0.5}]
             self.alternative_distribution_dict \
                 = {'tb_prop_casefatality_untreated_smearpos': ['beta_mean_stdev', .7, .15],
                    'tb_timeperiod_activeuntreated': ['gamma_mean_stdev', 3., .5],

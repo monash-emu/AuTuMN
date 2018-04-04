@@ -11,11 +11,10 @@ from twisted.web.static import File
 from twisted.web.wsgi import WSGIResource
 from twisted.python.threadpool import ThreadPool
 
-# Hack to load sibling modules in "__main__" script
-sys.path.insert(0, os.path.abspath(".."))
 # Auto-generates config.py if not found
 if not os.path.isfile("config.py"):
     shutil.copy("config_default.py", "config.py")
+
 from server import config
 from server.api import app
 

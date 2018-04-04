@@ -177,7 +177,8 @@ class Inputs:
             = {'Scenario analysis': 'scenario',
                'Epidemiological uncertainty': 'epi_uncertainty',
                'Intervention uncertainty': 'int_uncertainty',
-               'Increment comorbidity': 'increment_comorbidity'}
+               'Increment comorbidity': 'increment_comorbidity',
+               'Rapid calibration': 'rapid_calibration'}
         self.run_mode = run_mode_conversion[self.gui_inputs['run_mode']]
 
         # uncertainty
@@ -201,6 +202,9 @@ class Inputs:
             self.comorbidity_to_increment = self.gui_inputs['comorbidity_to_increment'].lower()
             prevalences = [0.05] + list(numpy.linspace(.1, .5, 5))
             self.comorbidity_prevalences = {i: prevalences[i] for i in range(len(prevalences))}
+
+        elif self.run_mode == 'rapid_calibration':
+            self.outputs_unc = [{'key': 'incidence', 'posterior_width': None, 'width_multiplier': 0.5}]
 
     def define_model_strata(self):
         """
@@ -497,7 +501,7 @@ class Inputs:
         # specify the parameters to be used for uncertainty
         if self.run_mode == 'epi_uncertainty' or self.run_mode == 'int_uncertainty':
             self.find_uncertainty_distributions()
-        if self.run_mode == 'epi_uncertainty':
+        if self.run_mode == 'epi_uncertainty' or self.run_mode == 'rapid_calibration':
             self.get_data_to_fit()
 
     def find_uncertainty_distributions(self):

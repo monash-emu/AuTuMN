@@ -200,7 +200,6 @@ def create_user(user_attr, db_session=None):
         user_attr[key] = str(user_attr[key])
     user = UserDb(**user_attr)
     db_session.add(user)
-    print(">> dbmodel.create_user", user_attr)
     db_session.commit()
     return parse_user(user)
 
@@ -268,7 +267,6 @@ def make_obj_query(user_id=None, obj_type="project", db_session=None, **kwargs):
         kwargs['user_id'] = user_id
     if obj_type is not None:
         kwargs['obj_type'] = obj_type
-    print(">> dbmodel.make_obj_query", kwargs)
     return db_session.query(ObjectDb).filter_by(**kwargs)
 
 

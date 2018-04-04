@@ -178,7 +178,7 @@
                         width: 100%;
                         height: 350px;
                         overflow-y: scroll;
-                        font-family: Courier, fixed;
+                        font-family: Courier, monospace;
                         font-size: 0.9em">
 
                     <div
@@ -192,9 +192,29 @@
                 </md-layout>
 
                 <h2
-                    class="md-heading"
-                    style="margin-top: 1.5em;">
-                  Graphs
+                  v-show="isGraph"
+                  class="md-heading">
+                  Progress in Uncertainty Runs
+                </h2>
+                <md-layout >
+                  <div id="temp-chart-0">
+                  </div>
+                  <div id="temp-chart-1">
+                  </div>
+                  <div id="temp-chart-2">
+                  </div>
+                  <div id="temp-chart-3">
+                  </div>
+                  <div id="temp-chart-4">
+                  </div>
+                  <div id="temp-chart-5">
+                  </div>
+                </md-layout>
+
+                <h2
+                  class="md-heading"
+                  style="margin-top: 1.5em;">
+                  Model Results
                 </h2>
 
                 <md-input-container
@@ -214,12 +234,13 @@
                 </md-input-container>
 
                 <vue-slider
+                    v-if="filenames.length > 0"
                     style="width: 100%"
                     :max="100"
                     :min="10"
                     :interval="1"
-                    v-model="width"
-                    @callback="changeWidth(width)">
+                    v-model="imageWidth"
+                    @callback="changeWidth(imageWidth)">
                 </vue-slider>
 
                 <md-layout style="width: 100%">
@@ -259,6 +280,8 @@ import VueScrollTo from 'vue-scrollto'
 import _ from 'lodash'
 import config from '../config'
 
+import ChartContainer from '../modules/chartContainer'
+
 Vue.use(VueScrollTo)
 
 export default {
@@ -266,21 +289,21 @@ export default {
   components: {vueSlider},
   data () {
     return {
-      paramGroups: [],
       params: {},
+      paramGroups: [],
+      paramGroup: null,
+      iParamGroup: -1,
       isRunning: false,
       consoleLines: [],
       filenames: [],
       project: null,
       projects: [],
-      paramGroup: null,
-      iParamGroup: -1,
-      width: 50,
-      imageStyle: 'width: 50%'
+      imageWidth: 50,
+      imageStyle: 'width: 50%',
+      isGraph: false
     }
   },
   async created () {
-    this.checkRun()
     let res = await rpc.rpcRun('public_get_autumn_params')
     if (res.result) {
       console.log('> Model.created', res.result)
@@ -289,6 +312,11 @@ export default {
       this.paramGroup = this.paramGroups[0]
       this.projects = res.result.projects
     }
+    this.charts = {}
+    this.isGraph = false
+    // res = await rpc.rpcRun('public_get_example_graph_data')
+    // this.updateGraph(res.result.data)
+    this.checkRun()
   },
   methods: {
     async checkRun () {
@@ -299,12 +327,58 @@ export default {
           let container = this.$el.querySelector('#console-output')
           container.scrollTop = container.scrollHeight
         }
+        if (_.keys(res.result.graph_data).length > 0) {
+          this.isGraph = true
+          this.updateGraph(res.result.graph_data)
+        }
       }
       if (res.result.is_running) {
         this.isRunning = true
         setTimeout(this.checkRun, 2000)
       } else {
         this.isRunning = false
+      }
+    },
+    updateGraph (data) {
+      console.log(`> Model.updateGraph`)
+      let paramKeys = _.keys(data.all_parameters_tried)
+      for (let iParam of _.range(paramKeys.length)) {
+        let paramKey = paramKeys[iParam]
+
+        if (!(paramKey in this.charts)) {
+          let chart = new ChartContainer(`#temp-chart-${iParam}`)
+          chart.setTitle(paramKey)
+          chart.setYLabel('')
+          chart.setXLabel('accepted runs')
+          this.charts[paramKey] = chart
+        }
+
+        let chart = this.charts[paramKey]
+
+        let rejectedSets = data.rejection_dict[paramKey]
+        let rejectedSetIndices = _.keys(rejectedSets)
+
+        let iDataset = 0
+        let values = data.all_parameters_tried[paramKey]
+        let yValues = _.filter(values, (v, i) => data.whether_accepted_list[i])
+        let xValues = _.range(yValues.length)
+        if (iDataset >= chart.getDatasets().length) {
+          chart.addDataset(paramKey, xValues, yValues)
+        } else {
+          chart.updateDataset(iDataset, xValues, yValues)
+        }
+
+        for (let iRejectedSet of rejectedSetIndices) {
+          iDataset += 1
+          let yValues = rejectedSets[iRejectedSet]
+          let xValues = util.makeArray(yValues.length, parseFloat(iRejectedSet))
+          let name = paramKey + iRejectedSet
+          if (iDataset >= chart.getDatasets().length) {
+            chart.addDataset(name, xValues, yValues)
+          } else {
+            chart.updateDataset(iDataset, xValues, yValues)
+          }
+        }
       }
     },
     deleteBreakpoint (params, key, i) {
@@ -315,23 +389,33 @@ export default {
     },
     async breakpointCallback (params, key) {
       await util.delay(100)
-      this.params[key].value = _.sortBy(this.params[key].value, v => _.parseInt(v))
+      this.params[key].value = _.sortBy(
+        this.params[key].value, v => _.parseInt(v))
     },
     selectParamGroup (i) {
       this.paramGroup = this.paramGroups[i]
     },
     async run () {
       let params = _.cloneDeep(this.params)
-      for (let param of _.values(this.params)) {
+      for (let param of _.values(params)) {
         if (param.type === 'breakpoints') {
           param.value = _.sortedUniq(param.value)
-          console.log(util.jstr(param))
+        } else if ((param.type === 'number') || (param.type === 'double')) {
+          param.value = parseFloat(param.value)
+        } else if (param.type === 'integer') {
+          param.value = _.parseInt(param.value)
         }
       }
       this.filenames = []
       this.isRunning = true
+      this.isGraph = false
       this.project = ''
       this.consoleLines = []
+      for (let key of _.keys(this.charts)) {
+        let chart = this.charts[key]
+        chart.destroy()
+        delete this.charts[key]
+      }
 
       setTimeout(this.checkRun, 2000)
 
@@ -352,14 +436,12 @@ export default {
       let res = await rpc.rpcRun('public_get_project_images', project)
       if (res.result) {
         this.filenames = _.map(
-          res.result.filenames,
-          f => `${config.apiUrl}/file/${f}`)
+          res.result.filenames, f => `${config.apiUrl}/file/${f}`)
         console.log('>> Model.changeProject filenames', this.filenames)
       }
     },
-    changeWidth (width) {
-      console.log('> Model.changeWidth', width)
-      this.imageStyle = `width: ${this.width}%`
+    changeWidth () {
+      this.imageStyle = `width: ${this.imageWidth}%`
       console.log('> Model.changeWidth', this.imageStyle)
     }
   }

@@ -120,12 +120,11 @@ class ChartContainer {
   }
 
   updateDataset (iDataset, xValues, yValues) {
-    let data = []
-    for (let i = 0; i < xValues.length; i += 1) {
-      data.push({x: xValues[i], y: yValues[i]})
-    }
     let dataset = this.getDatasets()[iDataset]
-    dataset.data = data
+    dataset.data.length = 0
+    for (let i = 0; i < xValues.length; i += 1) {
+      dataset.data.push({x: xValues[i], y: yValues[i]})
+    }
     this.chart.update()
   }
 
@@ -142,6 +141,11 @@ class ChartContainer {
   setYLabel (yLabel) {
     let options = this.getChartOptions()
     options.scales.yAxes[0].scaleLabel.labelString = yLabel
+  }
+
+  destroy () {
+    this.chart.destroy()
+    this.div.empty()
   }
 }
 

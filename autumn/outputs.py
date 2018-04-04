@@ -1046,7 +1046,7 @@ class Project:
             axis.set_ylim(y_lims)
         elif 'prop_' in quantity and axis.get_ylim()[1] > 1.:
             axis.set_ylim(top=1.004)
-        elif 'prop_' in quantity or 'likelihood' in quantity:
+        elif 'prop_' in quantity or 'likelihood' in quantity or 'cost' in quantity:
             pass
         elif axis.get_ylim()[1] < max_value * (1. + space_at_top):
             axis.set_ylim(top=max_value * (1. + space_at_top))
@@ -1670,8 +1670,6 @@ class Project:
         if self.gui_inputs['output_plot_economics']:
             self.plot_cost_coverage_curves()
             self.plot_cost_over_time()
-            # self.plot_intervention_costs_by_scenario(2015, 2030)
-            # self.plot_cost_over_time_stacked_bars()
 
         # plot compartment population sizes
         if self.gui_inputs['output_compartment_populations']:
@@ -1707,6 +1705,8 @@ class Project:
         if self.inputs.n_strains > 1:
             self.plot_cases_by_division(['_asds', '_asmdr'],
                                         restriction_1='_mdr', restriction_2='treatment', exclusion_string='latent')
+
+    ''' epi outputs plotting '''
 
     def plot_epi_outputs(self, outputs, purpose, descriptor, grid=None, sharey='none'):
         """
@@ -1895,306 +1895,6 @@ class Project:
                         color=colour, linewidth=line_width, label=None, alpha=alpha)
 
         return max(gtb_data['point_estimate'].values())
-
-    def plot_scaleup_vars(self):
-        """
-        Method that can be used to visualise each scale-up variable, not plotted against the data it is fit to and only
-        on a single panel.
-        """
-
-        # prelims
-        n_panels = 2 if self.gui_inputs['plot_option_vars_two_panels'] else 1
-        vars_to_plot = self.model_runner.models[0].scaleup_fns.keys()
-        if self.gui_inputs['plot_option_plot_all_vars']:
-            vars_to_plot = t_k.combine_two_lists_no_duplicate(vars_to_plot, self.model_runner.models[0].vars)
-        for var in vars_to_plot:
-            fig, axes, max_dims, n_rows, n_cols = initialise_figures_axes(n_panels)
-            for n_axis in range(n_panels):
-
-                # find time to plot from and x-values
-                start_time = float(self.gui_inputs['plot_option_start_time']) if n_axis == n_panels - 1 \
-                    else self.inputs.model_constants['early_time']
-                end_time = float(self.gui_inputs['plot_option_end_time']) if n_axis == n_panels - 1 \
-                    else self.inputs.model_constants['scenario_end_time']
-
-                # plot
-                max_var = self.plot_scaleup_var_to_axis(axes[n_axis], [start_time, end_time], var)
-                max_data = self.plot_scaleup_data_to_axis(axes[n_axis], [start_time, end_time], var)
-
-                # clean up axes
-                self.tidy_x_axis(axes[n_axis], start_time, end_time, max_dims)
-                self.tidy_y_axis(axes[n_axis], var, max_dims, left_axis=n_axis % n_cols == 0,
-                                 max_value=float(max([max_var, max_data])))
-
-            self.finish_off_figure(fig, n_panels, '_' + var, var)
-
-    def plot_scaleup_var_to_axis(self, axis, time_limits, var):
-        """
-        Add the scale-up var function output to an axis.
-
-        Args:
-            axis: The axis to add the line to
-            time_limits: The limits of the horizontal axis in years
-            var: String for the var to plot
-        """
-
-        maximum_values = []
-        for scenario in reversed(self.scenarios):
-
-            # if available as a scale-up function
-            if var in self.model_runner.models[scenario].scaleup_fns:
-                x_vals = numpy.linspace(time_limits[0], time_limits[1], int(1e3))
-                y_vals = map(self.model_runner.models[scenario].scaleup_fns[var], x_vals)
-
-            # otherwise if a different type of var, such as additional calculated ones
-            else:
-                start_time_index = self.find_start_time_index(time_limits[0], scenario)
-                x_vals = self.model_runner.models[scenario].times[start_time_index:]
-                y_vals = self.model_runner.models[scenario].get_var_soln(var)[start_time_index:]
-
-            # plot and find the maximum value
-            axis.plot(x_vals, y_vals, color=self.colour_theme[scenario],
-                      label=t_k.capitalise_and_remove_underscore(t_k.find_scenario_string_from_number(scenario)))
-            maximum_values.append(max(y_vals))
-        return max(maximum_values)
-
-    def plot_scaleup_data_to_axis(self, axis, time_limits, var):
-        """
-        Plot data that a scale-up function had been fitted to if it is in the desired range.
-
-        Args:
-            axis: Axis to plot onto
-            time_limits: The limits of the horizontal axis in years
-            var: String of the var to plot
-        """
-
-        if self.gui_inputs['plot_option_overlay_input_data'] and var in self.inputs.scaleup_data[0]:
-            data_to_plot = {key: value for key, value in self.inputs.scaleup_data[0][var].items()
-                            if int(time_limits[0]) <= key <= int(time_limits[1])}
-            axis.scatter(data_to_plot.keys(), data_to_plot.values(), color=self.colour_theme['data'], s=7, zorder=10)
-            return max(data_to_plot.values()) if data_to_plot else 0.
-
-    def plot_mixing_matrix(self):
-        """
-        Method to visualise the mixing matrix with bar charts.
-        """
-
-        # prelims
-        fig, axes, max_dims, _, _ = initialise_figures_axes(1, room_for_legend=True)
-        last_data, bar_width, ax, x_positions = list(numpy.zeros(len(self.inputs.riskgroups))), .7, axes[0], []
-
-        # plot bars
-        for to, to_group in enumerate(self.inputs.riskgroups):
-            current_data = [self.inputs.mixing[from_group][to_group] for from_group in self.inputs.riskgroups]
-            next_data = [last + current for last, current in zip(last_data, current_data)]
-            x_positions = numpy.linspace(.5, .5 + len(next_data) - 1., len(next_data))
-            ax.bar(x_positions, current_data, width=bar_width, bottom=last_data, color=self.colour_theme[to],
-                   label=t_k.find_title_from_dictionary(to_group))
-            last_data = next_data
-
-        # locally managing x-axis, as plot type is a special case
-        ax.set_xlim(.2, max(x_positions) + 1.)
-        ax.set_xticks([x + bar_width / 2. for x in x_positions])
-        ax.tick_params(axis='x', length=0.)
-        ax.set_xticklabels([t_k.find_title_from_dictionary(group) for group in self.inputs.riskgroups],
-                           fontsize=self.label_font_sizes[1])
-
-        # general approach fine for y-axis and legend
-        self.tidy_y_axis(ax, 'prop_', max_dims, max_value=1., space_at_top=0.)
-        self.add_legend_to_plot(ax, max_dims)
-
-        # finish off figure
-        self.finish_off_figure(fig, max_dims, '_mixing', 'Source of contacts by risk group')
-
-    def plot_cost_coverage_curves(self):
-        """
-        Plots cost-coverage curves at times specified in the report times inputs in control panel.
-        """
-
-        # plot figures by scenario
-        for scenario in self.scenarios:
-            fig, axes, max_dim, n_rows, n_cols \
-                = initialise_figures_axes(len(self.interventions_to_cost[scenario]), share_yaxis='row')
-
-            # subplots by program
-            for p, program in enumerate(self.interventions_to_cost[scenario]):
-                axis = find_panel_grid_indices(axes, p, n_rows, n_cols)
-                end_value = 0.
-
-                # generate times to plot cost-coverage curves at, inclusively (by adding small value to end time)
-                times = numpy.arange(self.inputs.model_constants['cost_curve_start_time'],
-                                     self.inputs.model_constants['cost_curve_end_time'] + .01,
-                                     self.inputs.model_constants['cost_curve_step_time'])
-
-                # plot costs versus coverage
-                for t, time in enumerate(times):
-                    coverage = numpy.arange(0., self.inputs.model_constants['econ_saturation_' + program], .02)
-                    costs = [economics.get_cost_from_coverage(
-                        cov, self.inputs.model_constants['econ_inflectioncost_' + program],
-                        self.inputs.model_constants['econ_saturation_' + program],
-                        self.inputs.model_constants['econ_unitcost_' + program],
-                        self.model_runner.models[scenario].var_array[
-                            t_k.find_first_list_element_at_least(self.model_runner.models[scenario].times, time),
-                            self.model_runner.models[scenario].var_labels.index('popsize_' + program)])
-                        for cov in coverage]
-                    axis.plot(costs, coverage, label=str(int(time)),
-                              color=(1. - float(t) / float(len(times)), 1. - float(t) / float(len(times)),
-                                     1. - float(t) / float(len(times)) * .5))
-                    end_value = max([end_value, max(costs)])
-
-                # finish off axis
-                axis.set_title(t_k.find_title_from_dictionary('program_prop_' + program),
-                               fontsize=self.label_font_sizes[max_dim])
-                self.tidy_x_axis(axis, 0., end_value, max_dim, x_label='$US' if last_row(p, n_rows, n_cols) else None)
-                self.tidy_y_axis(axis, 'prop_', max_dim, max_value=1., left_axis=p % n_cols == 0, y_label='Coverage')
-                if p == len(self.interventions_to_cost[scenario]) - 1:
-                    self.add_legend_to_plot(axis, max_dim, location=4)
-
-            self.finish_off_figure(fig, len(self.interventions_to_cost[scenario]),
-                                   '_cost_coverage_' + t_k.find_scenario_string_from_number(scenario),
-                                   'Cost coverage curves, ' + t_k.find_scenario_string_from_number(scenario))
-
-    def plot_cost_over_time(self):
-        """
-        Method that produces plots for individual and cumulative program costs for each scenario as separate figures.
-        Panels of figures are the different sorts of costs (i.e. whether discounting and inflation have been applied).
-        """
-
-        # separate figures for each scenario
-        for scenario in self.scenarios:
-
-            # standard prelims, but separate for each type of plot - individual and stacked
-            fig_individual = self.set_and_update_figure()
-            fig_stacked = self.set_and_update_figure()
-            fig_relative = self.set_and_update_figure()
-            subplot_grid = find_subplot_numbers(len(self.model_runner.cost_types))
-
-            # find the index for the first time after the current time
-            reference_time_index \
-                = t_k.find_first_list_element_above(self.outputs['manual']['cost'][scenario]['times'],
-                                                    self.inputs.model_constants['reference_time'])
-
-            # plot each type of cost to its own subplot and ensure same y-axis scale
-            ax_individual = fig_individual.add_subplot(subplot_grid[0], subplot_grid[1], 1)
-            ax_stacked = fig_stacked.add_subplot(subplot_grid[0], subplot_grid[1], 1)
-            ax_relative = fig_relative.add_subplot(subplot_grid[0], subplot_grid[1], 1)
-            ax_individual_first = copy.copy(ax_individual)
-            ax_stacked_first = copy.copy(ax_stacked)
-            ax_reference_first = copy.copy(ax_relative)
-
-            for c, cost_type in enumerate(self.model_runner.cost_types):
-                if c > 0:
-                    ax_individual = fig_individual.add_subplot(subplot_grid[0], subplot_grid[1], c + 1,
-                                                               sharey=ax_individual_first)
-                    ax_stacked \
-                        = fig_stacked.add_subplot(subplot_grid[0], subplot_grid[1], c + 1, sharey=ax_stacked_first)
-                    ax_relative \
-                        = fig_relative.add_subplot(subplot_grid[0], subplot_grid[1], c + 1, sharey=ax_reference_first)
-
-                # create empty list for legend
-                cumulative_data = [0.] * len(self.outputs['manual']['cost'][scenario]['times'])
-
-                # plot for each intervention
-                for intervention in self.inputs.interventions_to_cost[scenario]:
-
-                    # Record the previous data for plotting as an independent object for the lower edge of the fill
-                    previous_data = copy.copy(cumulative_data)
-
-                    # Calculate the cumulative sum for the upper edge of the fill
-                    for i in range(len(self.outputs['manual']['cost'][scenario]['times'])):
-                        cumulative_data[i] \
-                            += self.outputs['manual']['cost'][scenario][cost_type + '_cost_' + intervention][i]
-
-                    # Scale the cost data
-                    individual_data \
-                        = self.outputs['manual']['cost'][scenario][cost_type + '_cost_' + intervention]
-                    reference_cost \
-                        = self.outputs['manual']['cost'][scenario][cost_type + '_cost_' + intervention][
-                            reference_time_index]
-                    relative_data = [(d - reference_cost) for d in individual_data]
-
-                    # plot lines
-                    ax_individual.plot(self.outputs['manual']['cost'][scenario]['times'], individual_data,
-                                       color=self.program_colours[scenario][intervention][1],
-                                       label=t_k.find_title_from_dictionary(intervention))
-                    ax_relative.plot(self.outputs['manual']['cost'][scenario]['times'],
-                                     relative_data,
-                                     color=self.program_colours[scenario][intervention][1],
-                                     label=t_k.find_title_from_dictionary(intervention))
-
-                    # plot stacked areas
-                    ax_stacked.fill_between(self.model_runner.models[scenario].cost_times,
-                                            previous_data, cumulative_data,
-                                            color=self.program_colours[scenario][intervention][1],
-                                            linewidth=0., label=t_k.find_title_from_dictionary(intervention))
-
-                # final tidying
-                for ax in [ax_individual, ax_stacked, ax_relative]:
-                    self.tidy_axis(ax, subplot_grid, title=t_k.capitalise_and_remove_underscore(cost_type),
-                                   start_time=self.inputs.model_constants['plot_economics_start_time'],
-                                   y_label=' $US', y_axis_type='scaled', y_sig_figs=1,
-                                   legend=(c == len(self.model_runner.cost_types) - 1))
-
-            # finishing off with title and save
-            fig_individual.suptitle('Individual program costs for ' + t_k.find_scenario_string_from_number(scenario),
-                                    fontsize=self.title_size)
-            self.save_figure(fig_individual, '_' + str(scenario) + '_timecost_individual')
-            fig_stacked.suptitle('Stacked program costs for ' + t_k.find_scenario_string_from_number(scenario),
-                                 fontsize=self.title_size)
-            self.save_figure(fig_stacked, '_' + str(scenario) + '_timecost_stacked')
-            fig_relative.suptitle('Relative program costs for ' + t_k.find_scenario_string_from_number(scenario),
-                                  fontsize=self.title_size)
-            self.save_figure(fig_relative, '_' + str(scenario) + '_timecost_relative')
-
-    def plot_cost_over_time_stacked_bars(self, cost_type='raw'):
-        """
-        Not called, but won't be working any more because cost_outputs_integer_dict has been abandoned.
-
-        Plotting method to plot bar graphs of spending by programs to look the way Tan gets them to look with Excel.
-        That is, separated bars with costs by years.
-
-        Args:
-            cost_type: Type of cost to be plotted, i.e. whether raw, inflated, discounted or inflated-and-discounted
-        """
-
-        # separate figures for each scenario
-        for scenario in self.scenarios:
-
-            # standard prelims
-            fig = self.set_and_update_figure()
-
-            # each scenario being implemented
-            for inter, intervention in enumerate(self.inputs.interventions_to_cost[scenario]):
-
-                # find the data to plot for the current intervention
-                data = self.model_runner.cost_outputs_integer_dict[
-                    'manual_' + t_k.find_scenario_string_from_number(scenario)][cost_type + '_cost_' + intervention]
-
-                # initialise the dictionaries at the first iteration
-                if inter == 0:
-                    base = {i: 0. for i in data}
-                    upper = {i: 0. for i in data}
-
-                # increment the upper values
-                upper = {i: upper[i] + data[i] for i in data}
-
-                # plot
-                ax = make_single_axis(fig)
-                ax.bar(upper.keys(), upper.values(), .6, bottom=base.values(),
-                       color=self.program_colours[scenario][intervention][1],
-                       label=t_k.find_title_from_dictionary(intervention))
-
-                # increment the lower values before looping again
-                base = {i: base[i] + data[i] for i in data}
-
-            # finishing up
-            self.tidy_axis(
-                ax, [1, 1],
-                title=t_k.capitalise_and_remove_underscore(cost_type) + ' costs by intervention for '
-                      + t_k.replace_underscore_with_space(t_k.find_scenario_string_from_number(scenario)),
-                start_time=self.inputs.model_constants['plot_economics_start_time'], x_axis_type='individual_years',
-                y_label=' $US', y_axis_type='scaled', y_sig_figs=1, legend='for_single')
-            self.save_figure(fig, '_' + t_k.find_scenario_string_from_number(scenario) + '_timecost_stackedbars')
 
     def plot_populations(self, strain_or_organ='organ'):
         """
@@ -2427,80 +2127,227 @@ class Project:
                                title=compartment_type + restriction_1 + restriction_2)
         self.save_figure(fig, '_mdr_by_compartment_type')
 
-    def plot_intervention_costs_by_scenario(self, year_start, year_end, horizontal=False, plot_options=None):
+    def plot_mixing_matrix(self):
         """
-        Not called, but won't be working any more because cost_outputs_integer_dict has been abandoned.
+        Method to visualise the mixing matrix with bar charts.
+        """
 
-        Function for plotting total cost of interventions under different scenarios over a given range of years.
-        Will throw error if defined year range is not present in economic model outputs.
+        # prelims
+        fig, axes, max_dims, _, _ = initialise_figures_axes(1, room_for_legend=True)
+        last_data, bar_width, ax, x_positions = list(numpy.zeros(len(self.inputs.riskgroups))), .7, axes[0], []
+
+        # plot bars
+        for to, to_group in enumerate(self.inputs.riskgroups):
+            current_data = [self.inputs.mixing[from_group][to_group] for from_group in self.inputs.riskgroups]
+            next_data = [last + current for last, current in zip(last_data, current_data)]
+            x_positions = numpy.linspace(.5, .5 + len(next_data) - 1., len(next_data))
+            ax.bar(x_positions, current_data, width=bar_width, bottom=last_data, color=self.colour_theme[to],
+                   label=t_k.find_title_from_dictionary(to_group))
+            last_data = next_data
+
+        # locally managing x-axis, as plot type is a special case
+        ax.set_xlim(.2, max(x_positions) + 1.)
+        ax.set_xticks([x + bar_width / 2. for x in x_positions])
+        ax.tick_params(axis='x', length=0.)
+        ax.set_xticklabels([t_k.find_title_from_dictionary(group) for group in self.inputs.riskgroups],
+                           fontsize=self.label_font_sizes[1])
+
+        # general approach fine for y-axis and legend
+        self.tidy_y_axis(ax, 'prop_', max_dims, max_value=1., space_at_top=0.)
+        self.add_legend_to_plot(ax, max_dims)
+
+        # finish off figure
+        self.finish_off_figure(fig, max_dims, '_mixing', 'Source of contacts by risk group')
+
+    ''' scale-up function plotting '''
+
+    def plot_scaleup_vars(self):
+        """
+        Method that can be used to visualise each scale-up variable, not plotted against the data it is fit to and only
+        on a single panel.
+        """
+
+        # prelims
+        n_panels = 2 if self.gui_inputs['plot_option_vars_two_panels'] else 1
+        vars_to_plot = self.model_runner.models[0].scaleup_fns.keys()
+        if self.gui_inputs['plot_option_plot_all_vars']:
+            vars_to_plot = t_k.combine_two_lists_no_duplicate(vars_to_plot, self.model_runner.models[0].vars)
+        for var in vars_to_plot:
+            fig, axes, max_dims, n_rows, n_cols = initialise_figures_axes(n_panels)
+            for n_axis in range(n_panels):
+
+                # find time to plot from and x-values
+                start_time = float(self.gui_inputs['plot_option_start_time']) if n_axis == n_panels - 1 \
+                    else self.inputs.model_constants['early_time']
+                end_time = float(self.gui_inputs['plot_option_end_time']) if n_axis == n_panels - 1 \
+                    else self.inputs.model_constants['scenario_end_time']
+
+                # plot
+                max_var = self.plot_scaleup_var_to_axis(axes[n_axis], [start_time, end_time], var)
+                max_data = self.plot_scaleup_data_to_axis(axes[n_axis], [start_time, end_time], var)
+
+                # clean up axes
+                self.tidy_x_axis(axes[n_axis], start_time, end_time, max_dims)
+                self.tidy_y_axis(axes[n_axis], var, max_dims, left_axis=n_axis % n_cols == 0,
+                                 max_value=float(max([max_var, max_data])))
+
+            self.finish_off_figure(fig, n_panels, '_' + var, var)
+
+    def plot_scaleup_var_to_axis(self, axis, time_limits, var):
+        """
+        Add the scale-up var function output to an axis.
 
         Args:
-            year_start: Integer, start year of time frame over which to calculate total costs
-            year_end: Integer, end year of time frame over which to calculate total costs (included)
-            horizontal: Boolean, plot stacked bar chart horizontally
-            plot_options: Dictionary, options for generating plot
+            axis: The axis to add the line to
+            time_limits: The limits of the horizontal axis in years
+            var: String for the var to plot
         """
 
-        # set and check options / data ranges
-        intervention_names_dict \
-            = {'vaccination': 'Vaccination', 'xpert': 'GeneXpert', 'xpertacf': 'GeneXpert ACF', 'smearacf': 'Smear ACF',
-               'treatment_support': 'Treatment Support', 'ipt_age0to5': 'IPT 0-5 y.o.', 'ipt_age5to15': 'IPT 5-15 y.o.'}
+        maximum_values = []
+        for scenario in reversed(self.scenarios):
 
-        defaults = {
-            'interventions': self.inputs.interventions_to_cost,
-            'x_label_rotation': 45,
-            'y_label': 'Total Cost ($)\n',
-            'legend_size': 10,
-            'legend_frame': False,
-            'plot_style': 'ggplot',
-            'title': 'Projected total costs {sy} - {ey}\n'.format(sy=year_start, ey=year_end)
-        }
+            # if available as a scale-up function
+            if var in self.model_runner.models[scenario].scaleup_fns:
+                x_vals = numpy.linspace(time_limits[0], time_limits[1], int(1e3))
+                y_vals = map(self.model_runner.models[scenario].scaleup_fns[var], x_vals)
 
-        if plot_options is None:
-            options = defaults
-        else:
-            for key, value in plot_options.items():
-                defaults[key] = value
-            options = defaults
-
-        intervention_names = []
-        for i in range(len(options['interventions'])):
-            if options['interventions'][i] in intervention_names_dict.keys():
-                intervention_names.append(intervention_names_dict[options['interventions'][i]])
+            # otherwise if a different type of var, such as additional calculated ones
             else:
-                intervention_names.append(options['interventions'][i])
+                start_time_index = self.find_start_time_index(time_limits[0], scenario)
+                x_vals = self.model_runner.models[scenario].times[start_time_index:]
+                y_vals = self.model_runner.models[scenario].get_var_soln(var)[start_time_index:]
 
-        if options['plot_style'] is not None: style.use(options['plot_style'])
+            # plot and find the maximum value
+            axis.plot(x_vals, y_vals, color=self.colour_theme[scenario],
+                      label=t_k.capitalise_and_remove_underscore(t_k.find_scenario_string_from_number(scenario)))
+            maximum_values.append(max(y_vals))
+        return max(maximum_values)
 
-        years = range(year_start, year_end + 1)
+    def plot_scaleup_data_to_axis(self, axis, time_limits, var):
+        """
+        Plot data that a scale-up function had been fitted to if it is in the desired range.
 
-        # make data frame (columns: interventions, rows: scenarios)
-        data_frame = pandas.DataFrame(index=self.scenarios, columns=intervention_names)
+        Args:
+            axis: Axis to plot onto
+            time_limits: The limits of the horizontal axis in years
+            var: String of the var to plot
+        """
+
+        if self.gui_inputs['plot_option_overlay_input_data'] and var in self.inputs.scaleup_data[0]:
+            data_to_plot = {key: value for key, value in self.inputs.scaleup_data[0][var].items()
+                            if int(time_limits[0]) <= key <= int(time_limits[1])}
+            axis.scatter(data_to_plot.keys(), data_to_plot.values(), color=self.colour_theme['data'], s=7, zorder=10)
+            return max(data_to_plot.values()) if data_to_plot else 0.
+
+    ''' economics plotting '''
+
+    def plot_cost_coverage_curves(self):
+        """
+        Plots cost-coverage curves at times specified in the report times inputs in control panel.
+        """
+
+        # plot figures by scenario
         for scenario in self.scenarios:
-            data_frame.loc[scenario] \
-                = [sum([self.model_runner.cost_outputs_integer_dict[
-                            'manual_' + t_k.find_scenario_string_from_number(scenario)][
-                            'discounted_inflated_cost_' + intervention][year] for year in years])
-                   for intervention in options['interventions']]
-        data_frame.columns = intervention_names
+            fig, axes, max_dim, n_rows, n_cols \
+                = initialise_figures_axes(len(self.interventions_to_cost[scenario]), share_yaxis='row')
 
-        # make and style plot
-        if horizontal:
-            plot = data_frame.plot.barh(stacked=True, rot=options['x_label_rotation'], title=options['title'])
-            plot.set_xlabel(options['y_label'])
-        else:
-            plot = data_frame.plot.bar(stacked=True, rot=options['x_label_rotation'], title=options['title'])
-            plot.set_ylabel(options['y_label'])
+            # subplots by program
+            for p, program in enumerate(self.interventions_to_cost[scenario]):
+                axis = find_panel_grid_indices(axes, p, n_rows, n_cols)
+                end_value = 0.
 
-        humanise_y_ticks(plot)
+                # generate times to plot cost-coverage curves at, inclusively (by adding small value to end time)
+                times = numpy.arange(self.inputs.model_constants['cost_curve_start_time'],
+                                     self.inputs.model_constants['cost_curve_end_time'] + .01,
+                                     self.inputs.model_constants['cost_curve_step_time'])
 
-        handles, labels = plot.get_legend_handles_labels()
-        lgd = plot.legend(handles, labels, bbox_to_anchor=(1., 0.5), loc='center left',
-                          fontsize=options['legend_size'], frameon=options['legend_frame'])
+                # plot costs versus coverage
+                for t, time in enumerate(times):
+                    coverage = numpy.arange(0., self.inputs.model_constants['econ_saturation_' + program], .02)
+                    costs = [economics.get_cost_from_coverage(
+                        cov, self.inputs.model_constants['econ_inflectioncost_' + program],
+                        self.inputs.model_constants['econ_saturation_' + program],
+                        self.inputs.model_constants['econ_unitcost_' + program],
+                        self.model_runner.models[scenario].var_array[
+                            t_k.find_first_list_element_at_least(self.model_runner.models[scenario].times, time),
+                            self.model_runner.models[scenario].var_labels.index('popsize_' + program)])
+                        for cov in coverage]
+                    axis.plot(costs, coverage, label=str(int(time)),
+                              color=(1. - float(t) / float(len(times)), 1. - float(t) / float(len(times)),
+                                     1. - float(t) / float(len(times)) * .5))
+                    end_value = max([end_value, max(costs)])
 
-        # save plot
-        pyplot.savefig(os.path.join(self.out_dir_project, self.country + '_totalcost' + '.png'),
-                       bbox_extra_artists=(lgd,), bbox_inches='tight')
+                # finish off axis
+                axis.set_title(t_k.find_title_from_dictionary('program_prop_' + program),
+                               fontsize=self.label_font_sizes[max_dim])
+                self.tidy_x_axis(axis, 0., end_value, max_dim, x_label='$US' if last_row(p, n_rows, n_cols) else None)
+                self.tidy_y_axis(axis, 'prop_', max_dim, max_value=1., left_axis=p % n_cols == 0, y_label='Coverage')
+                if p == len(self.interventions_to_cost[scenario]) - 1:
+                    self.add_legend_to_plot(axis, max_dim, location=4)
+
+            self.finish_off_figure(fig, len(self.interventions_to_cost[scenario]),
+                                   '_cost_coverage_' + t_k.find_scenario_string_from_number(scenario),
+                                   'Cost coverage curves, ' + t_k.find_scenario_string_from_number(scenario))
+
+    def plot_cost_over_time(self):
+        """
+        Method that produces plots for individual and cumulative program costs for each scenario as separate figures.
+        Panels of figures are the different sorts of costs (i.e. whether discounting and inflation have been applied).
+        """
+
+        # separate figures for each scenario
+        for scenario in self.scenarios:
+            figs, axes, ax_dict, plot_types, n_rows, n_cols = {}, {}, {}, ['individual', 'stacked', 'relative'], 0, 0
+            for plot_type in plot_types:
+                figs[plot_type], axes[plot_type], max_dim, n_rows, n_cols \
+                    = initialise_figures_axes(len(self.model_runner.cost_types), share_yaxis='all')
+            cost_times = self.outputs['manual']['cost'][scenario]['times']
+
+            for c, cost_type in enumerate(self.model_runner.cost_types):
+                for plot_type in plot_types:
+                    ax_dict[plot_type] = find_panel_grid_indices(axes[plot_type], c, n_rows, n_cols)
+                cumulative_data = [0.] * len(cost_times)
+                for inter, intervention in enumerate(self.inputs.interventions_to_cost[scenario]):
+
+                    # process data
+                    current_data = self.outputs['manual']['cost'][scenario][cost_type + '_cost_' + intervention]
+                    previous_data = copy.copy(cumulative_data)  # lower edge of fill
+                    cumulative_data = [i + j for i, j in zip(cumulative_data, self.outputs['manual']['cost'][scenario][
+                        cost_type + '_cost_' + intervention])]  # upper edge of fill
+                    relative_data \
+                        = [(d - current_data[t_k.find_first_list_element_above(
+                            cost_times, self.inputs.model_constants['reference_time'])]) for d in current_data]
+
+                    # plot lines and areas
+                    ax_dict['individual'].plot(
+                        cost_times, current_data,
+                        color=self.colour_theme[inter + 1], label=t_k.find_title_from_dictionary(intervention))
+                    ax_dict['relative'].plot(
+                        cost_times, relative_data,
+                        color=self.colour_theme[inter + 1], label=t_k.find_title_from_dictionary(intervention))
+                    ax_dict['stacked'].fill_between(
+                        cost_times, previous_data, cumulative_data,
+                        color=self.colour_theme[inter + 1], edgecolor=self.colour_theme[inter + 1], linewidth=.1,
+                        label=t_k.find_title_from_dictionary(intervention))
+
+                # tidy each individual axis
+                for plot_type in plot_types:
+                    ax_dict[plot_type].set_title(t_k.find_title_from_dictionary(cost_type),
+                                                 fontsize=self.label_font_sizes[max_dim])
+                    self.tidy_x_axis(ax_dict[plot_type], cost_times[0], cost_times[-1], max_dim)
+                    self.tidy_y_axis(ax_dict[plot_type], 'cost', max_dim, left_axis=c % n_cols == 0, y_label='$US')
+                    if c == len(self.model_runner.cost_types) - 1:
+                        self.add_legend_to_plot(ax_dict[plot_type], max_dim)
+
+            # tidy figure
+            for plot_type in plot_types:
+                self.finish_off_figure(
+                    figs[plot_type], len(plot_types),
+                    '_' + t_k.find_scenario_string_from_number(scenario) + '_' + plot_type,
+                    t_k.find_scenario_string_from_number(scenario) + ', '
+                    + t_k.find_title_from_dictionary(plot_type, capital_first_letter=False) + ' cost')
+
+    ''' uncertainty plotting methods '''
 
     def plot_param_histograms(self):
         """
@@ -2616,7 +2463,7 @@ class Project:
 
         fig, ax, max_dims, n_rows, n_cols = initialise_figures_axes(1)
 
-        # plot the rejected values from the previous acceptance to current rejection
+        # plot rejected values from the previous acceptance to current rejection
         for i in self.outputs['epi_uncertainty']['rejected_indices']:
             last_acceptance_before = [j for j in self.accepted_indices if j < i][-1]
             ax.plot([last_acceptance_before, i],
@@ -2624,7 +2471,7 @@ class Project:
                      self.outputs['epi_uncertainty']['loglikelihoods'][i]], marker='o', linestyle='--',
                     color=self.colour_theme[2])
 
-        # plot the accepted values
+        # plot accepted values
         ax.plot(self.accepted_indices,
                 [self.outputs['epi_uncertainty']['loglikelihoods'][i] for i in self.accepted_indices],
                 marker='o', color=self.colour_theme[1])

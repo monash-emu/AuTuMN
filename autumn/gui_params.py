@@ -88,7 +88,7 @@ def get_autumn_params():
     # uncertainty options
     uncertainty_options \
         = ['Scenario analysis', 'Epidemiological uncertainty', 'Intervention uncertainty', 'Optimisation (unavailable)',
-           'Increment comorbidity']
+           'Increment comorbidity', 'Rapid calibration']
     params['run_mode'] \
         = {'type': 'drop_down',
            'options': uncertainty_options}

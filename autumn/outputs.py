@@ -12,6 +12,8 @@ import economics
 import pandas
 import copy
 import scipy
+from scipy import stats
+import itertools
 
 
 def find_smallest_factors_of_integer(n):
@@ -713,10 +715,37 @@ def add_title_to_plot(fig, n_panels, content):
         content: Unprocessed string to determine text for the title
     """
 
-    title_height = {1: .92, 2: .98, 3: .96, 4: .96}
-    title_font_size = {1: 14, 2: 11, 3: 10, 4: 10}
+    title_height = {1: .92, 2: .98, 3: .96, 4: .96, 5: .96, 8: .96}
+    title_font_size = {1: 14, 2: 11, 3: 10, 4: 10, 5: 10, 8: 10}
     fig.suptitle(t_k.find_title_from_dictionary(content), y=title_height[n_panels],
                  fontsize=title_font_size[n_panels])
+
+
+def find_panel_grid_indices(axes, index, n_rows, n_columns):
+    """
+    Find the subplot index for a plot panel from the number of the panel and the number of columns of sub-plots.
+
+    Args:
+        index: The number of the panel counting up from zero
+        n_columns: Number of columns of sub-plots in the figure
+    """
+
+    row, column = numpy.floor_divide(index, n_columns), (index + 1) % n_columns - 1 if n_rows > 1 else None
+    return axes[row, column] if n_rows > 1 else axes[index]
+
+
+def last_row(index, n_rows, n_columns):
+    """
+    Determine whether panel is not in the last row of sub-plots of the figure from the index of the panel and the number
+    of rows and columns of subplots.
+
+    Args:
+        index: The number of the panel counting up from zero
+        n_rows: Number of rows of sub-plots in the figure
+        n_columns: Number of columns of sub-plots in the figure
+    """
+
+    return index >= (n_rows - 1) * n_columns
 
 
 def find_subplot_grid(n_plots):
@@ -737,6 +766,38 @@ def find_subplot_grid(n_plots):
     n_cols = int(numpy.ceil(n_plots ** .5))
     n_rows = int(numpy.ceil(float(n_plots) / float(n_cols)))
     return n_rows, n_cols
+
+
+def initialise_figures_axes(n_panels, room_for_legend=False, requested_grid=None, share_yaxis='none'):
+    """
+    Initialise the subplots (or single plot) according to the number of panels required.
+
+    Args:
+        n_panels: The number of panels needed
+        room_for_legend: Whether room is needed for a legend - applies to single axis plots only
+        requested_grid: Shape of grid panels requested at call to method
+        share_yaxis: String to pass to the sharey option
+    Returns:
+        fig: The figure object
+        axes: A list containing each of the axes
+        max_dims: The number of rows or columns of sub-plots, whichever is greater
+    """
+
+    pyplot.style.use('ggplot')
+    n_rows, n_cols = requested_grid if requested_grid else find_subplot_grid(n_panels)
+    horizontal_position_one_axis = .08 if room_for_legend else .15
+    if n_panels == 1:
+        fig = pyplot.figure()
+        axes = fig.add_axes([horizontal_position_one_axis, .15, 0.7, 0.7])
+    elif n_panels == 2:
+        fig, axes = pyplot.subplots(1, 2)
+        fig.set_figheight(3.5)
+        fig.subplots_adjust(bottom=.15, top=.85)
+    else:
+        fig, axes = pyplot.subplots(n_rows, n_cols, sharey=share_yaxis)
+        for panel in range(n_panels, n_rows * n_cols):
+            find_panel_grid_indices(axes, panel, n_rows, n_cols).axis('off')
+    return fig, axes, max([n_rows, n_cols]), n_rows, n_cols
 
 
 class Project:
@@ -802,7 +863,9 @@ class Project:
         self.tick_length = 3
         self.label_font_sizes \
             = {1: 8,
-               2: 7}
+               2: 7,
+               3: 6,
+               4: 6}
         self.colour_theme \
             = {0: (0., 0., 0.),
                1: (0., 0., 125. / 255.),
@@ -922,36 +985,6 @@ class Project:
             times_to_search = self.outputs['manual']['epi'][scenario]['times']
         return t_k.find_first_list_element_at_least(times_to_search, time)
 
-    def initialise_figures_axes(self, n_panels, room_for_legend=False):
-        """
-        Initialise the subplots (or single plot) according to the number of panels required.
-
-        Args:
-            n_panels: The number of panels needed
-            room_for_legend: Whether room is needed for a legend - applies to single axis plots only
-        Returns:
-            fig: The figure object
-            axes: A list containing each of the axes
-            max_dims: The number of rows or columns of sub-plots, whichever is greater
-        """
-
-        pyplot.style.use('ggplot')
-        fig = pyplot.figure(self.figure_number)
-        self.figure_number += 1
-        axes = []
-        n_rows, n_cols = find_subplot_grid(n_panels)
-        horizontal_position_one_axis = .08 if room_for_legend else .15
-        if n_panels == 1:
-            axes.append(fig.add_axes([horizontal_position_one_axis, .15, 0.7, 0.7]))
-        elif n_panels == 2:
-            fig.set_figheight(3.5)
-            axes.append(fig.add_subplot(1, 2, 1))
-            axes.append(fig.add_subplot(1, 2, 2, sharey=axes[0]))
-        else:
-            for axis in range(n_panels):
-                axes.append(fig.add_subplot(n_rows, n_cols, axis + 1))
-        return fig, axes, max([n_rows, n_cols]), n_cols
-
     def set_and_update_figure(self):
         """
         If called at the start of each plotting function, will create a figure that is numbered according to
@@ -963,7 +996,7 @@ class Project:
         self.figure_number += 1
         return fig
 
-    def tidy_x_axis(self, axis, start, end, max_dim):
+    def tidy_x_axis(self, axis, start, end, max_dim, labels_off=False, x_label=None):
         """
         Function to tidy x-axis of a plot panel - currently only used in the scale-up vars, but intended to be written in
         such a way as to be extendable to other types of plotting.
@@ -973,59 +1006,80 @@ class Project:
             start: Lowest x-value being plotted
             end: Highest x-value being plotted
             max_dim: Maximum number of rows or columns of subplots in figure
+            labels_off: Whether to turn all tick labels off on this axis
+            x_label: Text for the x-axis label if required
         """
 
         # range
         axis.set_xlim(left=start, right=end)
 
         # ticks and their labels
-        if len(axis.get_xticks()) > 7:
+        if labels_off:
+            axis.tick_params(axis='x', labelbottom='off')
+        elif len(axis.get_xticks()) > 7:
             for label in axis.xaxis.get_ticklabels()[::2]:
                 label.set_visible(False)
         axis.tick_params(axis='x', length=self.tick_length, pad=6, labelsize=self.label_font_sizes[max_dim])
 
-    def tidy_y_axis(self, axis, quantity, max_dims, left_axis=True, max_value=1e6, space_at_top=.1):
+        # axis label
+        if x_label:
+            axis.set_xlabel(x_label, fontsize=self.label_font_sizes[max_dim])
+
+    def tidy_y_axis(self, axis, quantity, max_dims, left_axis=True, max_value=1e6, space_at_top=.1, y_label=None,
+                    y_lims=None):
         """
         General approach to tidying up the vertical axis of a plot, depends on whether it is the left-most panel.
 
         Args:
             axis: The axis itself
-            quantity: The name of the quantity being plotted (which can be used to determine what sort of variable it is)
+            quantity: The name of the quantity being plotted (which can be used to determine the sort of variable it is)
             max_dims: Maximum number of rows or columns of subplots on the figure
             left_axis: Boolean for whether the axis is the left-most panel
             max_value: The maximum value in the data being plotted
             space_at_top: Relative amount of space to leave at the top, above the maximum value of the plotted data
+            y_label: A label for the y-axis, if required
+            y_lims: 2-element tuple for the y-limit, if required
         """
 
         # axis range
-        axis.set_ylim(bottom=0.)
-        if 'prop_' in quantity and axis.get_ylim()[1] > 1.:
+        if y_lims:
+            axis.set_ylim(y_lims)
+        elif 'prop_' in quantity and axis.get_ylim()[1] > 1.:
             axis.set_ylim(top=1.004)
+        elif 'prop_' in quantity:
+            pass
         elif axis.get_ylim()[1] < max_value * (1. + space_at_top):
             axis.set_ylim(top=max_value * (1. + space_at_top))
+        else:
+            axis.set_ylim(bottom=0.)
 
         # ticks
         axis.tick_params(axis='y', length=self.tick_length, pad=6, labelsize=self.label_font_sizes[max_dims])
 
-        # labels
+        # tick labels
         if not left_axis:
             pyplot.setp(axis.get_yticklabels(), visible=False)
         elif 'prop_' in quantity:
             axis.yaxis.set_major_formatter(FuncFormatter('{0:.0%}'.format))
 
-    def add_legend_to_plot(self, axis, max_dims):
+        # axis label
+        if y_label and left_axis:
+            axis.set_ylabel(y_label, fontsize=self.label_font_sizes[max_dims])
+
+    def add_legend_to_plot(self, axis, max_dim, location=0):
         """
         Add legend to plot, with font size determined by the maximum number of dimensions of subplot panels.
 
         Args:
             axis: The axis to have the legend added
-            max_dims: The number of rows or columns of subplots, whichever is the greater
+            max_dim: The number of rows or columns of subplots, whichever is the greater
+            location: The matplotlib integer specifying the position for the legend (default of zero is 'best')
         """
 
-        if max_dims == 1:
-            axis.legend(bbox_to_anchor=(1.3, 1), fontsize=self.label_font_sizes[max_dims])
+        if max_dim == 1:
+            axis.legend(bbox_to_anchor=(1.3, 1), fontsize=self.label_font_sizes[max_dim])
         else:
-            axis.legend(fontsize=self.label_font_sizes[max_dims])
+            axis.legend(fontsize=self.label_font_sizes[max_dim], loc=location)
 
     def tidy_axis(self, ax, subplot_grid, title='', start_time=0., legend=False, x_label='', y_label='',
                   x_axis_type='time', y_axis_type='scaled', x_sig_figs=0, y_sig_figs=0,
@@ -1582,7 +1636,7 @@ class Project:
         if self.inputs.is_vary_force_infection_by_riskgroup and len(self.inputs.riskgroups) > 1:
             self.plot_mixing_matrix()
 
-        # plot epidemiological outputs, overall and MDR-TB
+        # plot epidemiological outputs, overall, MDR-TB and risk groups
         if self.gui_inputs['output_epi_plots']:
             purposes = ['scenario', 'ci', 'progress', 'shaded'] if '_uncertainty' in self.run_mode else ['scenario']
             for purpose in purposes:
@@ -1591,6 +1645,13 @@ class Project:
                 mdr_indicators = [ind + '_mdr' for ind in self.gtb_available_outputs if ind != 'notifications']
                 mdr_indicators.append('perc_incidence_mdr')
                 self.plot_epi_outputs(mdr_indicators, 'scenario', 'mdr-tb-related')
+        if self.gui_inputs['output_by_subgroups']:
+            for strata_type in ['agegroups', 'riskgroups']:
+                outputs_to_plot, list_of_strata = ['incidence', 'mortality'], getattr(self.inputs, strata_type)
+                if len(list_of_strata) > 1:
+                    self.plot_epi_outputs(
+                        [''.join(panel) for panel in itertools.product(outputs_to_plot, list_of_strata)],
+                        'scenario', 'by_' + strata_type, grid=[len(outputs_to_plot), len(list_of_strata)], sharey='row')
 
         # plot scale-up functions
         if self.gui_inputs['output_scaleups']:
@@ -1619,12 +1680,6 @@ class Project:
         # plot fractions
         # if self.gui_inputs['output_fractions']: self.plot_fractions('strain')
 
-        # plot outputs by age group
-        if self.gui_inputs['output_by_subgroups']:
-            self.plot_outputs_by_stratum()
-            self.plot_outputs_by_stratum(strata_string='riskgroups', outputs_to_plot=['incidence', 'prevalence'])
-            self.plot_proportion_cases_by_stratum()
-
         # plot proportions of population
         if self.gui_inputs['output_age_fractions']:
             self.plot_stratified_populations(age_or_risk='age')
@@ -1641,7 +1696,7 @@ class Project:
         # save figure that is produced in the uncertainty running process
         if self.run_mode == 'epi_uncertainty' and self.gui_inputs['output_param_plots']:
             self.plot_param_histograms()
-            self.plot_param_timeseries()
+            self.plot_param_progression()
             self.plot_priors()
 
         # plot likelihood estimates
@@ -1653,7 +1708,7 @@ class Project:
             self.plot_cases_by_division(['_asds', '_asmdr'],
                                         restriction_1='_mdr', restriction_2='treatment', exclusion_string='latent')
 
-    def plot_epi_outputs(self, outputs, purpose, descriptor):
+    def plot_epi_outputs(self, outputs, purpose, descriptor, grid=None, sharey='none'):
         """
         Produces the plot for the main outputs, loops over multiple scenarios.
 
@@ -1661,10 +1716,13 @@ class Project:
             outputs: A list of the outputs to be plotted
             purpose: Reason for plotting or type of plot, can be either 'scenario', 'ci_plot' or 'progress'
             descriptor: String for the filename and title of the plot
+            grid: Shape of grid panels requested at call to method
+            sharey: Whether to share the y-axis across rows of plots
         """
 
         # prelims
-        fig, axes, max_dims, _ = self.initialise_figures_axes(len(outputs))
+        fig, axes, max_dims, n_rows, n_cols \
+            = initialise_figures_axes(len(outputs), requested_grid=grid, share_yaxis=sharey)
         start_time = self.inputs.model_constants['before_intervention_time'] \
             if self.run_mode == 'int_uncertainty' or (len(self.scenarios) > 1 and purpose == 'scenario') \
             else self.gui_inputs['plot_option_start_time']
@@ -1673,13 +1731,14 @@ class Project:
             else (self.scenarios, 0)
 
         # loop through output indicators
-        for o, output in enumerate(outputs):
+        for out, output in enumerate(outputs):
+            axis = find_panel_grid_indices(axes, out, n_rows, n_cols)
             max_data_values[output] = []
 
             # overlay GTB data
             if self.gui_inputs['plot_option_overlay_gtb'] and output in self.gtb_available_outputs:
                 max_data_values[output].append(self.plot_gtb_data_to_axis(
-                    axes[o], output, start_time, self.gtb_indices[output] if output in self.gtb_indices else '',
+                    axis, output, start_time, self.gtb_indices[output] if output in self.gtb_indices else '',
                     gtb_ci_plot='hatch' if purpose == 'shaded' else 'patch'))
 
             # plot with uncertainty confidence intervals (median, lower, upper)
@@ -1689,7 +1748,7 @@ class Project:
                     max_data_values[output].append(
                         max(self.uncertainty_centiles['epi'][scenario][output][2, :][start_index:]))
                     for ci in range(3):
-                        axes[o].plot(
+                        axis.plot(
                             self.interpolation_times_uncertainty[start_index:],
                             self.uncertainty_centiles['epi'][scenario][output][ci, :][start_index:],
                             color='k', label=None, linewidth=.7 if ci == 0 else .5, linestyle='-' if ci == 0 else '--')
@@ -1707,15 +1766,15 @@ class Project:
                             if self.run_mode == 'epi_uncertainty' else '.4'
                         plot_data = self.outputs[self.run_mode]['epi'][uncertainty_scenario][output][run, start_index:]
                         max_data_values[output].append(max(plot_data))
-                        axes[o].plot(self.outputs[self.run_mode]['epi'][uncertainty_scenario]['times'][run,
+                        axis.plot(self.outputs[self.run_mode]['epi'][uncertainty_scenario]['times'][run,
                                      start_index:], plot_data, color=colour, linestyle=dotted)
 
             # plot with shaded patches
             elif purpose == 'shaded':
-                axes[o].patch.set_facecolor((1., 1., 1.))
+                axis.patch.set_facecolor((1., 1., 1.))
                 for side in ['top', 'bottom', 'left', 'right']:
-                    axes[o].spines[side].set_color('.6')
-                axes[o].grid(color='.8')
+                    axis.spines[side].set_color('.6')
+                axis.grid(color='.8')
                 start_index = self.find_start_time_index(start_time, 0)
                 max_data_values[output].append(
                     max(self.uncertainty_centiles['epi'][uncertainty_scenario][output][-5, :][start_index:]))
@@ -1726,7 +1785,7 @@ class Project:
                         self.interpolation_times_uncertainty[start_index:],
                         self.uncertainty_centiles['epi'][uncertainty_scenario][output][i + 3, :][start_index:],
                         self.uncertainty_centiles['epi'][uncertainty_scenario][output][-i - 1, :][start_index:])
-                    axes[o].add_patch(patches.Polygon(patch, color=patch_colour))
+                    axis.add_patch(patches.Polygon(patch, color=patch_colour))
 
             # plot scenarios without uncertainty
             if purpose == 'scenario' or self.run_mode == 'int_uncertainty':
@@ -1741,24 +1800,25 @@ class Project:
                         if self.run_mode == 'increment_comorbidity' \
                         else t_k.capitalise_and_remove_underscore(t_k.find_scenario_string_from_number(scenario))
                     max_data_values[output].append(max(self.outputs['manual']['epi'][scenario][output][start_index:]))
-                    axes[o].plot(self.outputs['manual']['epi'][scenario]['times'][start_index:],
-                                 self.outputs['manual']['epi'][scenario][output][start_index:],
-                                 color=colour, linewidth=1.5, label=label,
-                                 zorder=1 if scenario else 4)
+                    axis.plot(self.outputs['manual']['epi'][scenario]['times'][start_index:],
+                              self.outputs['manual']['epi'][scenario][output][start_index:],
+                              color=colour, linewidth=1.5, label=label,
+                              zorder=1 if scenario else 4)
 
             # add plotting of End TB Targets
             if self.gui_inputs['plot_option_overlay_targets'] and (output == 'incidence' or output == 'mortality'):
-                self.plot_targets_to_axis(axes[o], output)
+                self.plot_targets_to_axis(axis, output)
 
             # finishing off axis and figure
-            self.tidy_x_axis(axes[o], start_time, 2035., max_dims)
-            self.tidy_y_axis(axes[o], output, max_dims, max_value=max(max_data_values[output]))
-            axes[o].set_title(t_k.find_title_from_dictionary(output), fontsize=self.label_font_sizes[max_dims])
-            if o == len(outputs) - 1 and purpose == 'scenario' and len(self.scenarios) > 1:
-                self.add_legend_to_plot(axes[o], max_dims)
-        self.finish_off_figure(fig, len(outputs), '_' + descriptor + '_gtb_' + purpose,
-                               t_k.find_title_from_dictionary(descriptor) + ' epidemiological outputs, '
-                               + t_k.capitalise_first_letter(self.country))
+            self.tidy_x_axis(axis, start_time, 2035., max_dims, labels_off=not last_row(out, n_rows, n_cols))
+            self.tidy_y_axis(axis, output, max_dims, max_value=max(max_data_values[output]))
+            axis.set_title(t_k.find_title_from_dictionary(output), fontsize=self.label_font_sizes[max_dims])
+            if out == len(outputs) - 1 and purpose == 'scenario' and len(self.scenarios) > 1:
+                self.add_legend_to_plot(axis, max_dims)
+        self.finish_off_figure(fig, len(outputs), '_' + descriptor + '_epi_' + purpose,
+                               'Epidemiological outputs'
+                               + t_k.find_title_from_dictionary(descriptor, capital_first_letter=False)
+                               + ', ' + t_k.capitalise_first_letter(self.country))
 
     def plot_targets_to_axis(self, axis, output, compare_gtb=False):
         """
@@ -1848,7 +1908,7 @@ class Project:
         if self.gui_inputs['plot_option_plot_all_vars']:
             vars_to_plot = t_k.combine_two_lists_no_duplicate(vars_to_plot, self.model_runner.models[0].vars)
         for var in vars_to_plot:
-            fig, axes, max_dims, n_cols = self.initialise_figures_axes(n_panels)
+            fig, axes, max_dims, n_rows, n_cols = initialise_figures_axes(n_panels)
             for n_axis in range(n_panels):
 
                 # find time to plot from and x-values
@@ -1921,51 +1981,46 @@ class Project:
 
         # plot figures by scenario
         for scenario in self.scenarios:
-            fig = self.set_and_update_figure()
+            fig, axes, max_dim, n_rows, n_cols \
+                = initialise_figures_axes(len(self.interventions_to_cost[scenario]), share_yaxis='row')
 
             # subplots by program
-            subplot_grid = find_subplot_numbers(len(self.interventions_to_cost[scenario]))
             for p, program in enumerate(self.interventions_to_cost[scenario]):
-                ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
+                axis = find_panel_grid_indices(axes, p, n_rows, n_cols)
+                end_value = 0.
 
-                # make times that each curve is produced for from control panel inputs
-                times = range(int(self.inputs.model_constants['cost_curve_start_time']),
-                              int(self.inputs.model_constants['cost_curve_end_time']),
-                              int(self.inputs.model_constants['cost_curve_step_time']))
+                # generate times to plot cost-coverage curves at, inclusively (by adding small value to end time)
+                times = numpy.arange(self.inputs.model_constants['cost_curve_start_time'],
+                                     self.inputs.model_constants['cost_curve_end_time'] + .01,
+                                     self.inputs.model_constants['cost_curve_step_time'])
 
+                # plot costs versus coverage
                 for t, time in enumerate(times):
-                    time_index = t_k.find_first_list_element_at_least(
-                        self.model_runner.models[scenario].times, time)
+                    coverage = numpy.arange(0., self.inputs.model_constants['econ_saturation_' + program], .02)
+                    costs = [economics.get_cost_from_coverage(
+                        cov, self.inputs.model_constants['econ_inflectioncost_' + program],
+                        self.inputs.model_constants['econ_saturation_' + program],
+                        self.inputs.model_constants['econ_unitcost_' + program],
+                        self.model_runner.models[scenario].var_array[
+                            t_k.find_first_list_element_at_least(self.model_runner.models[scenario].times, time),
+                            self.model_runner.models[scenario].var_labels.index('popsize_' + program)])
+                        for cov in coverage]
+                    axis.plot(costs, coverage, label=str(int(time)),
+                              color=(1. - float(t) / float(len(times)), 1. - float(t) / float(len(times)),
+                                     1. - float(t) / float(len(times)) * .5))
+                    end_value = max([end_value, max(costs)])
 
-                    # make cost coverage curve
-                    x_values, y_values = [], []
-                    for coverage in numpy.linspace(0, 1, 101):
-                        if coverage < self.inputs.model_constants['econ_saturation_' + program]:
-                            cost \
-                                = economics.get_cost_from_coverage(coverage,
-                                self.inputs.model_constants['econ_inflectioncost_' + program],
-                                self.inputs.model_constants['econ_saturation_' + program],
-                                self.inputs.model_constants['econ_unitcost_' + program],
-                                self.model_runner.models[scenario].var_array[
-                                    time_index, self.model_runner.models[scenario].var_labels.index(
-                                        'popsize_' + program)])
-                            x_values += [cost]
-                            y_values += [coverage]
+                # finish off axis
+                axis.set_title(t_k.find_title_from_dictionary('program_prop_' + program),
+                               fontsize=self.label_font_sizes[max_dim])
+                self.tidy_x_axis(axis, 0., end_value, max_dim, x_label='$US' if last_row(p, n_rows, n_cols) else None)
+                self.tidy_y_axis(axis, 'prop_', max_dim, max_value=1., left_axis=p % n_cols == 0, y_label='Coverage')
+                if p == len(self.interventions_to_cost[scenario]) - 1:
+                    self.add_legend_to_plot(axis, max_dim, location=4)
 
-                    # find darkness
-                    darkness = .9 - (float(t) / float(len(times))) * .9
-
-                    # plot
-                    ax.plot(x_values, y_values, color=(darkness, darkness, darkness), label=str(int(time)))
-
-                self.tidy_axis(ax, subplot_grid, title=t_k.find_title_from_dictionary('program_prop_' + program),
-                               x_axis_type='scaled', legend=(p == len(self.interventions_to_cost) - 1), y_axis_type='proportion',
-                               x_label='$US ')
-
-            # finish off with title and save file for scenario
-            # fig.suptitle('Cost-coverage curves for ' + t_k.replace_underscore_with_space(scenario),
-            #              fontsize=self.suptitle_size)
-            self.save_figure(fig, '_' + str(scenario) + '_cost_coverage')
+            self.finish_off_figure(fig, len(self.interventions_to_cost[scenario]),
+                                   '_cost_coverage_' + t_k.find_scenario_string_from_number(scenario),
+                                   'Cost coverage curves, ' + t_k.find_scenario_string_from_number(scenario))
 
     def plot_cost_over_time(self):
         """
@@ -2016,8 +2071,7 @@ class Project:
                     # Calculate the cumulative sum for the upper edge of the fill
                     for i in range(len(self.outputs['manual']['cost'][scenario]['times'])):
                         cumulative_data[i] \
-                            += self.outputs['manual']['cost'][scenario][cost_type
-                                                                                    + '_cost_' + intervention][i]
+                            += self.outputs['manual']['cost'][scenario][cost_type + '_cost_' + intervention][i]
 
                     # Scale the cost data
                     individual_data \
@@ -2178,53 +2232,6 @@ class Project:
             self.tidy_axis(ax, [1, 1], legend='for_single', start_time=self.inputs.model_constants['plot_start_time'],
                            y_axis_type='proportion')
             self.save_figure(fig, '_fraction')
-
-    def plot_outputs_by_stratum(self, strata_string='agegroups', outputs_to_plot=('incidence', 'mortality')):
-        """
-        Plot basic epidemiological outputs either by risk stratum or by age group.
-        """
-
-        # find strata to loop over
-        strata = getattr(self.inputs, strata_string)
-        if len(strata) == 0:
-            return
-
-        # prelims
-        fig = self.set_and_update_figure()
-        subplot_grid = [len(outputs_to_plot), len(strata)]
-
-        # loop over outputs and strata
-        for o, output in enumerate(outputs_to_plot):
-            for s, stratum in enumerate(strata):
-
-                # a + 1 gives the column, o the row
-                ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], s + 1 + o * len(strata))
-
-                # plot the modelled data
-                for scenario in self.scenarios[::-1]:
-                    start_index = self.find_start_index(scenario)
-                    ax.plot(self.outputs['manual']['epi'][scenario]['times'][start_index:],
-                            self.outputs['manual']['epi'][scenario][output + stratum][start_index:],
-                            color=self.output_colours[scenario][1], linestyle=self.output_colours[scenario][0],
-                            linewidth=1.5, label=t_k.capitalise_and_remove_underscore(
-                            t_k.find_scenario_string_from_number(scenario)))
-
-                # finish off
-                if s == 0:
-                    ylabel = 'Per 100,000 per year'
-                else:
-                    ylabel = ''
-                if strata_string == 'agegroups':
-                    stratum_string = t_k.turn_strat_into_label(stratum)
-                else:
-                    stratum_string = t_k.find_title_from_dictionary(stratum)
-                self.tidy_axis(ax, subplot_grid, start_time=self.inputs.model_constants['plot_start_time'],
-                               y_label=ylabel, y_axis_type='scaled',
-                               title=t_k.capitalise_first_letter(output) + ', ' + stratum_string,
-                               legend=(output == len(outputs_to_plot) - 1 and s == len(strata) - 1))
-        fig.suptitle(t_k.capitalise_and_remove_underscore(self.country) + ' burden by sub-group',
-                     fontsize=self.title_size)
-        self.save_figure(fig, '_output_by_' + strata_string)
 
     def plot_proportion_cases_by_stratum(self, strata_string='agegroups'):
         """
@@ -2464,25 +2471,31 @@ class Project:
             ax.set_title(t_k.find_title_from_dictionary(param))
         self.save_figure(fig, '_param_histogram')
 
-    def plot_param_timeseries(self):
+    def plot_param_progression(self):
         """
-        Plot accepted parameter progress over time.
+        Plot accepted parameter progress over time against run sequence.
         """
-        fig = self.set_and_update_figure()
-        subplot_grid = find_subplot_numbers(len(self.model_runner.outputs['epi_uncertainty']['all_parameters']))
 
-        # loop through parameters used in uncertainty
+        n_params = len(self.model_runner.outputs['epi_uncertainty']['all_parameters'])
+        fig, axes, max_dims, n_rows, n_cols = initialise_figures_axes(n_params)
         for p, param in enumerate(self.model_runner.outputs['epi_uncertainty']['all_parameters']):
-            ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
-
-            # restrict to those accepted and after burn-in complete
-            param_values = [self.model_runner.outputs['epi_uncertainty']['all_parameters'][param][i]
-                            for i in self.accepted_no_burn_in_indices]
-
-            # plot
-            ax.plot(param_values)
-            ax.set_title(t_k.find_title_from_dictionary(param))
-        self.save_figure(fig, '_param_timeseries')
+            ax = find_panel_grid_indices(axes, p, n_rows, n_cols)
+            data = [self.model_runner.outputs['epi_uncertainty']['all_parameters'][param][i]
+                    for i in self.accepted_no_burn_in_indices]
+            ax.plot(range(1, len(data) + 1), data)
+            param_range_index = [i for i in range(len(self.inputs.param_ranges_unc))
+                                 if self.inputs.param_ranges_unc[i]['key'] == param][0]
+            ax.set_title(t_k.find_title_from_dictionary(param), fontsize=self.label_font_sizes[max_dims])
+            for i in range(2):
+                ax.plot([1, len(data) + 1], [self.inputs.param_ranges_unc[param_range_index]['bounds'][i]] * 2,
+                        color='.3', linestyle=':')
+            self.tidy_x_axis(ax, 1, n_params + 1, max_dims, labels_off=not last_row(p, n_rows, n_cols))
+            param_range = self.inputs.param_ranges_unc[param_range_index]['bounds'][1] \
+                        - self.inputs.param_ranges_unc[param_range_index]['bounds'][0]
+            self.tidy_y_axis(ax, '', max_dims, max_value=max(data),
+                             y_lims=(self.inputs.param_ranges_unc[param_range_index]['bounds'][0] - param_range * .1,
+                                     self.inputs.param_ranges_unc[param_range_index]['bounds'][1] + param_range * .1))
+        self.finish_off_figure(fig, n_params, '_parameter_series', 'Parameter progression')
 
     def plot_priors(self):
         """
@@ -2490,33 +2503,29 @@ class Project:
         probability in the epidemiological uncertainty running.
         """
 
-        fig = self.set_and_update_figure()
-        subplot_grid = find_subplot_numbers(len(self.model_runner.inputs.param_ranges_unc))
-        n_plot_points = 1000
-
+        fig, axes, max_dims, n_rows, n_cols = initialise_figures_axes(len(self.model_runner.inputs.param_ranges_unc))
+        n_plot_points, x_values, y_values, description = 1000, [], [], None
         for p, param in enumerate(self.model_runner.inputs.param_ranges_unc):
+
+            # find values to plot
             distribution, lower, upper = param['distribution'], param['bounds'][0], param['bounds'][1]
             if distribution == 'uniform':
-                x_values = numpy.linspace(lower, upper, n_plot_points)
-                y_values = [1. / (upper - lower)] * len(x_values)
+                x_values, y_values = [lower, upper], [1. / (upper - lower)] * 2
                 description = t_k.capitalise_first_letter(distribution)
             elif distribution == 'beta_2_2':
-                lower, upper = 0., 1.
-                x_values = numpy.linspace(lower, upper, n_plot_points)
-                y_values = [scipy.stats.beta.pdf((x - lower) / (upper - lower), 2., 2.) for x in x_values]
+                x_values = numpy.linspace(0., 1., n_plot_points)
+                y_values = [stats.beta.pdf(x, 2., 2.) for x in x_values]
                 description = t_k.find_title_from_dictionary(distribution)
             elif distribution == 'beta_mean_stdev':
-                lower, upper = 0., 1.
-                x_values = numpy.linspace(lower, upper, n_plot_points)
+                x_values = numpy.linspace(0., 1., n_plot_points)
                 alpha_value = ((1. - param['additional_params'][0]) / param['additional_params'][1] ** 2. - 1.
                                / param['additional_params'][0]) * param['additional_params'][0] ** 2.
                 beta_value = alpha_value * (1. / param['additional_params'][0] - 1.)
-                y_values = [scipy.stats.beta.pdf(x, alpha_value, beta_value) for x in x_values]
+                y_values = [stats.beta.pdf(x, alpha_value, beta_value) for x in x_values]
                 description = 'Beta, params:\n%.2g, %.2g' % (alpha_value, beta_value)
             elif distribution == 'beta_params':
-                lower, upper = 0., 1.
-                x_values = numpy.linspace(lower, upper, n_plot_points)
-                y_values = [scipy.stats.beta.pdf(x, param['additional_params'][0], param['additional_params'][1])
+                x_values = numpy.linspace(0., 1., n_plot_points)
+                y_values = [stats.beta.pdf(x, param['additional_params'][0], param['additional_params'][1])
                             for x in x_values]
                 description \
                     = 'Beta, params:\n%.2g, %.2g' % (param['additional_params'][0], param['additional_params'][1])
@@ -2524,25 +2533,25 @@ class Project:
                 x_values = numpy.linspace(lower, upper, n_plot_points)
                 alpha_value = (param['additional_params'][0] / param['additional_params'][1]) ** 2.
                 beta_value = param['additional_params'][1] ** 2. / param['additional_params'][0]
-                y_values = [scipy.stats.gamma.pdf(x, alpha_value, scale=beta_value) for x in x_values]
+                y_values = [stats.gamma.pdf(x, alpha_value, scale=beta_value) for x in x_values]
                 description = 'Gamma, params:\n%.2g, %.2g' % (alpha_value, beta_value)
             elif distribution == 'gamma_params':
                 x_values = numpy.linspace(lower, upper, n_plot_points)
-                y_values = [scipy.stats.gamma.pdf(x, param['additional_params'][0]) for x in x_values]
+                y_values = [stats.gamma.pdf(x, param['additional_params'][0]) for x in x_values]
                 description = 'Gamma, params:\n%.2g' % param['additional_params'][0]
 
-            ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
-            ax.set_title(t_k.capitalise_first_letter(t_k.find_title_from_dictionary(param['key'])),
-                         fontsize=get_nice_font_size(subplot_grid))
+            # plot
+            ax = find_panel_grid_indices(axes, p, n_rows, n_cols)
             ax.plot(x_values, y_values)
-            ax.text(lower + .05, max(y_values) / 2., description, fontsize=get_nice_font_size(subplot_grid))
-            ax.set_ylim(bottom=0.)
-            for axis_to_change in [ax.xaxis, ax.yaxis]:
-                for tick in axis_to_change.get_major_ticks():
-                    tick.label.set_fontsize(get_nice_font_size(subplot_grid))
-                axis_to_change.grid(self.grid)
 
-        self.save_figure(fig, '_priors')
+            # tidy up
+            ax.set_title(t_k.find_title_from_dictionary(param['key']), fontsize=self.label_font_sizes[max_dims])
+            ax.text(lower + .05, max(y_values) / 2., description, fontsize=self.label_font_sizes[max_dims])
+            self.tidy_x_axis(ax, x_values[0], x_values[-1], max_dims)
+            self.tidy_y_axis(ax, '', max_dims, max_value=max(y_values))
+            ax.set_ylim(bottom=0.)
+        self.finish_off_figure(fig, len(self.model_runner.inputs.param_ranges_unc), '_priors',
+                               'Parameter prior distributions')
 
     def plot_mixing_matrix(self):
         """
@@ -2550,7 +2559,7 @@ class Project:
         """
 
         # prelims
-        fig, axes, max_dims, _ = self.initialise_figures_axes(1, room_for_legend=True)
+        fig, axes, max_dims, _, _ = initialise_figures_axes(1, room_for_legend=True)
         last_data, bar_width, ax, x_positions = list(numpy.zeros(len(self.inputs.riskgroups))), .7, axes[0], []
 
         # plot bars

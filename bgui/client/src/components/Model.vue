@@ -361,7 +361,7 @@ export default {
         let iDataset = 0
         let values = data.all_parameters_tried[paramKey]
         let yValues = _.filter(values, (v, i) => data.whether_accepted_list[i])
-        let xValues = _.range(yValues.length)
+        let xValues = _.range(1, yValues.length + 1)
         if (iDataset >= chart.getDatasets().length) {
           chart.addDataset(paramKey, xValues, yValues)
         } else {
@@ -371,7 +371,7 @@ export default {
         for (let iRejectedSet of rejectedSetIndices) {
           iDataset += 1
           let yValues = rejectedSets[iRejectedSet]
-          let xValues = util.makeArray(yValues.length, parseFloat(iRejectedSet))
+          let xValues = util.makeArray(yValues.length, parseFloat(iRejectedSet) + 1)
           let name = paramKey + iRejectedSet
           if (iDataset >= chart.getDatasets().length) {
             chart.addDataset(name, xValues, yValues)

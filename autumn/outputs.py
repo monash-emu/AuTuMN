@@ -12,6 +12,7 @@ import economics
 import pandas
 import copy
 import scipy
+from scipy import stats
 import itertools
 
 
@@ -2490,7 +2491,7 @@ class Project:
                         color='.3', linestyle=':')
             self.tidy_x_axis(ax, 1, n_params + 1, max_dims, labels_off=not last_row(p, n_rows, n_cols))
             param_range = self.inputs.param_ranges_unc[param_range_index]['bounds'][1] \
-                          - self.inputs.param_ranges_unc[param_range_index]['bounds'][0]
+                        - self.inputs.param_ranges_unc[param_range_index]['bounds'][0]
             self.tidy_y_axis(ax, '', max_dims, max_value=max(data),
                              y_lims=(self.inputs.param_ranges_unc[param_range_index]['bounds'][0] - param_range * .1,
                                      self.inputs.param_ranges_unc[param_range_index]['bounds'][1] + param_range * .1))
@@ -2502,33 +2503,29 @@ class Project:
         probability in the epidemiological uncertainty running.
         """
 
-        fig = self.set_and_update_figure()
-        subplot_grid = find_subplot_numbers(len(self.model_runner.inputs.param_ranges_unc))
-        n_plot_points = 1000
-
+        fig, axes, max_dims, n_rows, n_cols = initialise_figures_axes(len(self.model_runner.inputs.param_ranges_unc))
+        n_plot_points, x_values, y_values, description = 1000, [], [], None
         for p, param in enumerate(self.model_runner.inputs.param_ranges_unc):
+
+            # find values to plot
             distribution, lower, upper = param['distribution'], param['bounds'][0], param['bounds'][1]
             if distribution == 'uniform':
-                x_values = numpy.linspace(lower, upper, n_plot_points)
-                y_values = [1. / (upper - lower)] * len(x_values)
+                x_values, y_values = [lower, upper], [1. / (upper - lower)] * 2
                 description = t_k.capitalise_first_letter(distribution)
             elif distribution == 'beta_2_2':
-                lower, upper = 0., 1.
-                x_values = numpy.linspace(lower, upper, n_plot_points)
-                y_values = [scipy.stats.beta.pdf((x - lower) / (upper - lower), 2., 2.) for x in x_values]
+                x_values = numpy.linspace(0., 1., n_plot_points)
+                y_values = [stats.beta.pdf(x, 2., 2.) for x in x_values]
                 description = t_k.find_title_from_dictionary(distribution)
             elif distribution == 'beta_mean_stdev':
-                lower, upper = 0., 1.
-                x_values = numpy.linspace(lower, upper, n_plot_points)
+                x_values = numpy.linspace(0., 1., n_plot_points)
                 alpha_value = ((1. - param['additional_params'][0]) / param['additional_params'][1] ** 2. - 1.
                                / param['additional_params'][0]) * param['additional_params'][0] ** 2.
                 beta_value = alpha_value * (1. / param['additional_params'][0] - 1.)
-                y_values = [scipy.stats.beta.pdf(x, alpha_value, beta_value) for x in x_values]
+                y_values = [stats.beta.pdf(x, alpha_value, beta_value) for x in x_values]
                 description = 'Beta, params:\n%.2g, %.2g' % (alpha_value, beta_value)
             elif distribution == 'beta_params':
-                lower, upper = 0., 1.
-                x_values = numpy.linspace(lower, upper, n_plot_points)
-                y_values = [scipy.stats.beta.pdf(x, param['additional_params'][0], param['additional_params'][1])
+                x_values = numpy.linspace(0., 1., n_plot_points)
+                y_values = [stats.beta.pdf(x, param['additional_params'][0], param['additional_params'][1])
                             for x in x_values]
                 description \
                     = 'Beta, params:\n%.2g, %.2g' % (param['additional_params'][0], param['additional_params'][1])
@@ -2536,25 +2533,25 @@ class Project:
                 x_values = numpy.linspace(lower, upper, n_plot_points)
                 alpha_value = (param['additional_params'][0] / param['additional_params'][1]) ** 2.
                 beta_value = param['additional_params'][1] ** 2. / param['additional_params'][0]
-                y_values = [scipy.stats.gamma.pdf(x, alpha_value, scale=beta_value) for x in x_values]
+                y_values = [stats.gamma.pdf(x, alpha_value, scale=beta_value) for x in x_values]
                 description = 'Gamma, params:\n%.2g, %.2g' % (alpha_value, beta_value)
             elif distribution == 'gamma_params':
                 x_values = numpy.linspace(lower, upper, n_plot_points)
-                y_values = [scipy.stats.gamma.pdf(x, param['additional_params'][0]) for x in x_values]
+                y_values = [stats.gamma.pdf(x, param['additional_params'][0]) for x in x_values]
                 description = 'Gamma, params:\n%.2g' % param['additional_params'][0]
 
-            ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], p + 1)
-            ax.set_title(t_k.capitalise_first_letter(t_k.find_title_from_dictionary(param['key'])),
-                         fontsize=get_nice_font_size(subplot_grid))
+            # plot
+            ax = find_panel_grid_indices(axes, p, n_rows, n_cols)
             ax.plot(x_values, y_values)
-            ax.text(lower + .05, max(y_values) / 2., description, fontsize=get_nice_font_size(subplot_grid))
-            ax.set_ylim(bottom=0.)
-            for axis_to_change in [ax.xaxis, ax.yaxis]:
-                for tick in axis_to_change.get_major_ticks():
-                    tick.label.set_fontsize(get_nice_font_size(subplot_grid))
-                axis_to_change.grid(self.grid)
 
-        self.save_figure(fig, '_priors')
+            # tidy up
+            ax.set_title(t_k.find_title_from_dictionary(param['key']), fontsize=self.label_font_sizes[max_dims])
+            ax.text(lower + .05, max(y_values) / 2., description, fontsize=self.label_font_sizes[max_dims])
+            self.tidy_x_axis(ax, x_values[0], x_values[-1], max_dims)
+            self.tidy_y_axis(ax, '', max_dims, max_value=max(y_values))
+            ax.set_ylim(bottom=0.)
+        self.finish_off_figure(fig, len(self.model_runner.inputs.param_ranges_unc), '_priors',
+                               'Parameter prior distributions')
 
     def plot_mixing_matrix(self):
         """

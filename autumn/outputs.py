@@ -1036,20 +1036,21 @@ class Project:
             left_axis: Boolean for whether the axis is the left-most panel
             max_value: The maximum value in the data being plotted
             space_at_top: Relative amount of space to leave at the top, above the maximum value of the plotted data
+            y_label: A label for the y-axis, if required
+            y_lims: 2-element tuple for the y-limit, if required
         """
 
         # axis range
         if y_lims:
-            axis.set_ylim(bottom=y_lims[0], top=y_lims[1])
-        else:
-            axis.set_ylim(bottom=0.)
-
-        if 'prop_' in quantity and axis.get_ylim()[1] > 1.:
+            axis.set_ylim(y_lims)
+        elif 'prop_' in quantity and axis.get_ylim()[1] > 1.:
             axis.set_ylim(top=1.004)
         elif 'prop_' in quantity:
             pass
         elif axis.get_ylim()[1] < max_value * (1. + space_at_top):
             axis.set_ylim(top=max_value * (1. + space_at_top))
+        else:
+            axis.set_ylim(bottom=0.)
 
         # ticks
         axis.tick_params(axis='y', length=self.tick_length, pad=6, labelsize=self.label_font_sizes[max_dims])
@@ -2484,9 +2485,15 @@ class Project:
             param_range_index = [i for i in range(len(self.inputs.param_ranges_unc))
                                  if self.inputs.param_ranges_unc[i]['key'] == param][0]
             ax.set_title(t_k.find_title_from_dictionary(param), fontsize=self.label_font_sizes[max_dims])
+            for i in range(2):
+                ax.plot([1, len(data) + 1], [self.inputs.param_ranges_unc[param_range_index]['bounds'][i]] * 2,
+                        color='.3', linestyle=':')
             self.tidy_x_axis(ax, 1, n_params + 1, max_dims, labels_off=not last_row(p, n_rows, n_cols))
+            param_range = self.inputs.param_ranges_unc[param_range_index]['bounds'][1] \
+                          - self.inputs.param_ranges_unc[param_range_index]['bounds'][0]
             self.tidy_y_axis(ax, '', max_dims, max_value=max(data),
-                             y_lims=self.inputs.param_ranges_unc[param_range_index]['bounds'])
+                             y_lims=(self.inputs.param_ranges_unc[param_range_index]['bounds'][0] - param_range * .1,
+                                     self.inputs.param_ranges_unc[param_range_index]['bounds'][1] + param_range * .1))
         self.finish_off_figure(fig, n_params, '_parameter_series', 'Parameter progression')
 
     def plot_priors(self):

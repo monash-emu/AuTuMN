@@ -43,8 +43,6 @@ class GUID(TypeDecorator):
             if not isinstance(value, uuid.UUID):
                 return "%.32x" % uuid.UUID(value).int
             else:
-                print("> GUID.process_bind_param", value, type(value))
-                # hexstring
                 return "%.32x" % value.int
 
     def process_result_value(self, value, dialect):

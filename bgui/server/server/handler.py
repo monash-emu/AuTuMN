@@ -74,9 +74,12 @@ def publicLoginUser(user_attr):
     if user_attr['email']:
         kwargs['email'] = user_attr['email']
 
-    print("> publicLoginUser loading", kwargs, user_attr['password'])
-    user = dbmodel.load_user(**kwargs)
+    try:
+        user = dbmodel.load_user(**kwargs)
+    except:
+        raise Exception("User not found")
 
+    print("> publicLoginUser checking hashed password", kwargs, user_attr['password'])
     if user.check_password(user_attr['password']):
         login_user(user)
         return {
@@ -84,7 +87,7 @@ def publicLoginUser(user_attr):
             'user': dbmodel.parse_user(user)
         }
 
-    raise Exception("User not found")
+    raise Exception("User/password not found")
 
 
 def adminDeleteUser(user_id):
@@ -107,27 +110,33 @@ def publicLogoutUser():
 
 import sys
 import json
-import traceback
 import glob
 import copy
 
-bgui_output_lines = []
-is_bgui_running = False
-bgui_graph_data = {}
+console_lines = []
+is_model_running = False
+uncertainty_graph_data = {}
 
 sys.path.insert(0, os.path.abspath("../.."))
 import autumn.model_runner
 import autumn.outputs
 import autumn.gui_params as gui_params
 
+json_fname = os.path.join(os.path.dirname(__file__), 'country_defaults.json')
+if os.path.isfile(json_fname):
+    with open(json_fname) as f:
+        country_defaults = json.load(f)
+else:
+    country_defaults = {}
+
 
 def public_check_autumn_run():
-    global bgui_output_lines
-    global is_bgui_running
+    global console_lines
+    global is_model_running
     result = {
-        "console": bgui_output_lines,
-        "graph_data": bgui_graph_data,
-        "is_running": is_bgui_running
+        "console": console_lines,
+        "graph_data": uncertainty_graph_data,
+        "is_running": is_model_running
     }
     return result
 
@@ -136,26 +145,24 @@ def bgui_model_output(output_type, data={}):
     if output_type == "init":
         pass
     elif output_type == "console":
-        global bgui_output_lines
-        lines = data["message"].splitlines()
-        bgui_output_lines.extend(lines)
-        print("> handler.bgui_model_output console: " + '\n'.join(lines))
+        global console_lines
+        new_lines = data["message"].splitlines()
+        console_lines.extend(new_lines)
+        print("> handler.bgui_model_output console: " + '\n'.join(new_lines))
     elif output_type == "graph":
-        global bgui_graph_data
+        global uncertainty_graph_data
         print("> handler.bgui_model_output graph")
-        bgui_graph_data = copy.deepcopy(data)
+        uncertainty_graph_data = copy.deepcopy(data)
 
 
 def public_run_autumn(params):
-    """
-    Run the model
-    """
-    global is_bgui_running
-    global bgui_output_lines
-    global bgui_graph_data
-    is_bgui_running = True
-    bgui_output_lines = []
-    bgui_graph_data = {}
+    global is_model_running
+    global console_lines
+    global uncertainty_graph_data
+
+    console_lines = []
+    uncertainty_graph_data = {}
+    is_model_running = True
 
     autumn_dir = os.path.join(os.path.dirname(autumn.__file__), os.pardir)
     os.chdir(autumn_dir)
@@ -172,22 +179,25 @@ def public_run_autumn(params):
         out_dir = project.master_outputs_runner()
 
         save_dir = current_app.config['SAVE_FOLDER']
-        filenames = glob.glob(os.path.join(out_dir, '*'))
+        filenames = glob.glob(os.path.join(out_dir, '*png'))
         filenames = [os.path.relpath(p, save_dir) for p in filenames]
 
-        result = {
+        with open(os.path.join(out_dir, 'console.log'), 'w') as f:
+            f.write('\n'.join(console_lines))
+
+        with open(os.path.join(out_dir, 'params.json'), 'w') as f:
+            json.dump(params, f, indent=2)
+
+        is_model_running = False
+        return {
             'project': os.path.relpath(out_dir, save_dir),
             'success': True,
             'filenames': filenames,
         }
 
-    except Exception:
-        result = {'success': False}
-        traceback.print_exc()
-
-    is_bgui_running = False
-
-    return result
+    except Exception as e:
+        is_model_running = False
+        raise e
 
 
 def public_get_autumn_params():
@@ -198,7 +208,8 @@ def public_get_autumn_params():
     return {
         'params': result['params'],
         'paramGroups': result['param_groups'],
-        'projects': project_dirs
+        'projects': project_dirs,
+        'countryDefaults': country_defaults
     }
 
 def public_get_project_images(project):

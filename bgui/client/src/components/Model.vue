@@ -367,7 +367,7 @@ export default {
         let yValues = _.filter(values, (v, i) => data.whether_accepted_list[i])
         let xValues = _.range(1, yValues.length + 1)
         if (iDataset >= chart.getDatasets().length) {
-          chart.addDataset(paramKey, xValues, yValues)
+          chart.addDataset(paramKey, xValues, yValues, '#037584')
         } else {
           chart.updateDataset(iDataset, xValues, yValues)
         }
@@ -378,7 +378,7 @@ export default {
           let xValues = util.makeArray(yValues.length, parseFloat(iRejectedSet) + 1)
           let name = paramKey + iRejectedSet
           if (iDataset >= chart.getDatasets().length) {
-            chart.addDataset(name, xValues, yValues)
+            chart.addDataset(name, xValues, yValues, '#FC4A1A')
           } else {
             chart.updateDataset(iDataset, xValues, yValues)
           }

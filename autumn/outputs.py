@@ -857,7 +857,7 @@ class Project:
                              self.n_interpolation_points)
 
         # comes up so often that we need to find this index, that easiest to do in instantiation
-        self.start_time_index = self.find_start_time_index(self.inputs.model_constants['plot_start_time'], 0)
+        self.manual_baseline_start_index = self.find_start_time_index(self.inputs.model_constants['plot_start_time'], 0)
 
         # standard graphing themes
         self.tick_length = 3
@@ -966,7 +966,7 @@ class Project:
             Index that can be used to find starting point in epidemiological output lists
         """
 
-        return 0 if scenario else self.start_time_index
+        return 0 if scenario else self.manual_baseline_start_index
 
     def find_start_time_index(self, time, scenario, by_run=False, run=0, purpose=None):
         """
@@ -1896,39 +1896,33 @@ class Project:
 
         return max(gtb_data['point_estimate'].values())
 
-    def plot_populations(self, strain_or_organ='organ'):
+    def plot_populations(self, scenario=0):
         """
-        Plot population by the compartment to which they belong.
-
-        *** Doesn't work well for any but the simplest compartmental model structure - due to number of compartments ***
-
-        Args:
-            strain_or_organ: Whether the plotting style should be done by strain or by organ
+        Plot population by the compartment to which they belong. Doesn't work well for any but the simplest
+        compartmental model structure due to the number of compartments.
         """
 
-        # standard prelims
-        fig = self.set_and_update_figure()
-        ax = make_single_axis(fig)
-        colours, patterns, compartment_full_names, markers \
-            = make_related_line_styles(self.model_runner.models[0].labels, strain_or_organ)
+        fig, ax, max_dim, n_rows, n_cols = initialise_figures_axes(1, room_for_legend=True)
+        start_time = self.inputs.model_constants['plot_start_time']
+        start_time_index = self.find_start_time_index(start_time, scenario)
 
         # plot total population
-        ax.plot(self.model_runner.outputs['manual']['epi'][0]['times'][self.start_time_index:],
-                self.model_runner.outputs['manual']['epi'][0]['population'][self.start_time_index:],
-                'k', label='total', linewidth=2)
+        times = self.model_runner.outputs['manual']['epi'][scenario]['times'][start_time_index:]
+        total_population = self.model_runner.outputs['manual']['epi'][scenario]['population'][start_time_index:]
+        ax.plot(times, total_population, 'k', label='total', linewidth=2)
 
         # plot sub-populations
-        for plot_label in self.model_runner.models[0].labels:
-            ax.plot(self.model_runner.outputs['manual']['epi'][0]['times'][self.start_time_index:],
-                    self.model_runner.models[0].compartment_soln[plot_label][self.start_time_index:],
-                    label=t_k.find_title_from_dictionary(plot_label), linewidth=1, color=colours[plot_label],
-                    marker=markers[plot_label], linestyle=patterns[plot_label])
+        for compartment in self.model_runner.models[scenario].labels:
+            ax.plot(times, self.model_runner.models[scenario].compartment_soln[compartment][start_time_index:],
+                    label=t_k.find_title_from_dictionary(compartment))
 
-        # finishing touches
-        self.tidy_axis(ax, [1, 1], title='Compartmental population distribution (baseline scenario)',
-                       start_time=self.inputs.model_constants['plot_start_time'], legend='for_single',
-                       y_label='Population', y_axis_type='scaled')
-        self.save_figure(fig, '_population')
+        # finish up
+        self.tidy_x_axis(ax, start_time, 2035., max_dim)
+        self.tidy_y_axis(ax, '', max_dim, max_value=max(total_population))
+        ax.legend(bbox_to_anchor=(1.3, 1), fontsize=5)
+        self.finish_off_figure(fig, 1, '_compartments', 'Compartment sizes')
+
+    ''' remaining unimproved methods '''
 
     def plot_fractions(self, strain_or_organ):
         """
@@ -2079,7 +2073,7 @@ class Project:
                     elif age_or_risk == 'risk':
                         legd_text = t_k.find_title_from_dictionary(stratum)
 
-                    time_index = self.start_time_index if t == 0 else early_time_index
+                    time_index = self.manual_baseline_start_index if t == 0 else early_time_index
 
                     # plot total numbers
                     ax_upper.fill_between(times[time_index:], lower_plot_margin_count[time_index:],
@@ -2126,6 +2120,8 @@ class Project:
                 self.tidy_axis(ax, subplot_grid, start_time=self.inputs.model_constants['start_time'],
                                title=compartment_type + restriction_1 + restriction_2)
         self.save_figure(fig, '_mdr_by_compartment_type')
+
+    ''' miscellaneous plotting method '''
 
     def plot_mixing_matrix(self):
         """

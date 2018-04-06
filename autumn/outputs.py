@@ -1905,18 +1905,18 @@ class Project:
         fig, ax, max_dim, n_rows, n_cols = initialise_figures_axes(1, room_for_legend=True)
         start_time = self.inputs.model_constants['plot_start_time']
         start_time_index = self.find_start_time_index(start_time, scenario)
-
-        # plot total population
         times = self.model_runner.outputs['manual']['epi'][scenario]['times'][start_time_index:]
         total_population = self.model_runner.outputs['manual']['epi'][scenario]['population'][start_time_index:]
-        ax.plot(times, total_population, 'k', label='total', linewidth=2)
-
-        # plot sub-populations
-        for compartment in self.model_runner.models[scenario].labels:
-            ax.plot(times, self.model_runner.models[scenario].compartment_soln[compartment][start_time_index:],
-                    label=t_k.find_title_from_dictionary(compartment))
-
-        # finish up
+        cumulative_data = [0.] * len(times)
+        for c, compartment in enumerate(self.model_runner.models[scenario].labels):
+            current_data = self.model_runner.models[scenario].compartment_soln[compartment][start_time_index:]
+            previous_data = copy.copy(cumulative_data)
+            cumulative_data = [i + j for i, j in zip(cumulative_data, current_data)]
+            colour = round(float(c) / float(len(self.model_runner.models[scenario].labels)), 2)
+            ax.fill_between(times, previous_data, cumulative_data, facecolor=(0., 0., colour),
+                            edgecolor=(0., 0., colour), alpha=.8)
+            ax.plot(times, cumulative_data, color=(0., 0., colour), label=t_k.find_title_from_dictionary(compartment),
+                    linewidth=.1)
         self.tidy_x_axis(ax, start_time, 2035., max_dim)
         self.tidy_y_axis(ax, '', max_dim, max_value=max(total_population))
         ax.legend(bbox_to_anchor=(1.3, 1), fontsize=5)
@@ -2308,8 +2308,7 @@ class Project:
                     # process data
                     current_data = self.outputs['manual']['cost'][scenario][cost_type + '_cost_' + intervention]
                     previous_data = copy.copy(cumulative_data)  # lower edge of fill
-                    cumulative_data = [i + j for i, j in zip(cumulative_data, self.outputs['manual']['cost'][scenario][
-                        cost_type + '_cost_' + intervention])]  # upper edge of fill
+                    cumulative_data = [i + j for i, j in zip(cumulative_data, current_data)]  # upper edge of fill
                     relative_data \
                         = [(d - current_data[t_k.find_first_list_element_above(
                             cost_times, self.inputs.model_constants['reference_time'])]) for d in current_data]

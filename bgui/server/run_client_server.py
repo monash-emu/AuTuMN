@@ -8,22 +8,21 @@ import urllib
 import webbrowser
 import subprocess
 
-if not os.path.isfile("server/config.py"):
-    shutil.copy("server/config_default.py", "server/config.py")
-from server import config
 
 # creates a thread to poll server before opening client
-url = 'http://localhost:' + str(config.PORT)
-i = 0
 def open_page_delayed():
     is_not_loaded = True
+    i = 0
     while is_not_loaded:
-        time.sleep(1)
-        print("Waiting", i, "s for", url)
         try:
+            from server import config
+            url = 'http://localhost:' + str(config.PORT)
             response_code = urllib.urlopen(url).getcode()
             is_not_loaded = response_code >= 400
         except:
+            time.sleep(1)
+            i += 1
+            print("Waiting", i, "s for server")
             is_not_loaded = True
     print("Opening", url)
     webbrowser.open(url)

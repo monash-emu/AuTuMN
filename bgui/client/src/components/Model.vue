@@ -64,7 +64,9 @@
                   <md-input-container>
                     <label>{{ params[key].label }}</label>
                     <md-select
-                        v-model="params[key].value">
+                        v-model="params[key].value"
+                        @change="selectDropDown(key)"
+                        >
                       <md-option
                           v-for="(option, i) in params[key].options"
                           v-bind:value="option"
@@ -118,7 +120,7 @@
                     <md-button
                         class="md-icon-button md-raised"
                         @click="deleteBreakpoint(params, key, i)">
-                      <md-icon>delete</md-icon>
+                      <md-icon>clear</md-icon>
                     </md-button>
                   </md-layout>
                   <md-button
@@ -309,8 +311,10 @@ export default {
       console.log('> Model.created', res.result)
       this.paramGroups = res.result.paramGroups
       this.params = res.result.params
+      this.defaultParams = _.cloneDeep(res.result.params)
       this.paramGroup = this.paramGroups[0]
       this.projects = res.result.projects
+      this.countryDefaults = res.result.countryDefaults
     }
     this.charts = {}
     this.isGraph = false
@@ -361,9 +365,9 @@ export default {
         let iDataset = 0
         let values = data.all_parameters_tried[paramKey]
         let yValues = _.filter(values, (v, i) => data.whether_accepted_list[i])
-        let xValues = _.range(yValues.length)
+        let xValues = _.range(1, yValues.length + 1)
         if (iDataset >= chart.getDatasets().length) {
-          chart.addDataset(paramKey, xValues, yValues)
+          chart.addDataset(paramKey, xValues, yValues, '#037584')
         } else {
           chart.updateDataset(iDataset, xValues, yValues)
         }
@@ -371,10 +375,10 @@ export default {
         for (let iRejectedSet of rejectedSetIndices) {
           iDataset += 1
           let yValues = rejectedSets[iRejectedSet]
-          let xValues = util.makeArray(yValues.length, parseFloat(iRejectedSet))
+          let xValues = util.makeArray(yValues.length, parseFloat(iRejectedSet) + 1)
           let name = paramKey + iRejectedSet
           if (iDataset >= chart.getDatasets().length) {
-            chart.addDataset(name, xValues, yValues)
+            chart.addDataset(name, xValues, yValues, '#FC4A1A')
           } else {
             chart.updateDataset(iDataset, xValues, yValues)
           }
@@ -443,7 +447,27 @@ export default {
     changeWidth () {
       this.imageStyle = `width: ${this.imageWidth}%`
       console.log('> Model.changeWidth', this.imageStyle)
+    },
+    selectDropDown (key) {
+      if (key === 'country') {
+        let country = this.params[key].value.toLowerCase()
+        if (country in this.countryDefaults) {
+          let diffParams = this.countryDefaults[country]
+          this.params = _.cloneDeep(this.defaultParams)
+          for (let key of _.keys(diffParams)) {
+            console.log(
+              '> Model.select',
+              country,
+              key,
+              JSON.stringify(this.params[key].value),
+              '->',
+              JSON.stringify(diffParams[key].value))
+            this.params[key].value = diffParams[key].value
+          }
+        }
+      }
     }
+
   }
 }
 </script>

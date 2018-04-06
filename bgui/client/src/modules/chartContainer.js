@@ -97,7 +97,7 @@ class ChartContainer {
     return this.chartData.options
   }
 
-  addDataset (name, xValues, yValues) {
+  addDataset (name, xValues, yValues, color = null) {
     let datasets = this.getDatasets()
     let newDatasetData = []
     if (xValues && yValues) {
@@ -106,12 +106,15 @@ class ChartContainer {
       }
     }
     let iDataset = datasets.length
+    if (color === null) {
+      color = getColor(iDataset)
+    }
     let newDataset = {
       label: name,
       data: newDatasetData,
       fill: false,
-      backgroundColor: getColor(iDataset),
-      borderColor: getColor(iDataset),
+      backgroundColor: color,
+      borderColor: color,
       showLine: false
     }
     datasets.push(newDataset)

@@ -800,6 +800,25 @@ def initialise_figures_axes(n_panels, room_for_legend=False, requested_grid=None
     return fig, axes, max([n_rows, n_cols]), n_rows, n_cols
 
 
+def increment_list_for_patch(new_data, cumulative_data):
+    """
+    Takes a list of cumulative data totals, preserves the previous values and adds a new list to it. This is to allow
+    patches to be plotted that have the previous data values as their base and the results of this stacking as their
+    top.
+
+    Args:
+        new_data: The new data to be stacked up
+        cumulative_data: The previous running totals
+    Returns:
+        The previous running total as previous_data (was cumulative_data)
+        The new running total as the new values for cumulative_data
+    """
+
+    previous_data = copy.copy(cumulative_data)
+    cumulative_data = [last + current for last, current in zip(cumulative_data, new_data)]
+    return previous_data, cumulative_data
+
+
 class Project:
     def __init__(self, runner, gui_inputs):
         """
@@ -1909,9 +1928,8 @@ class Project:
         total_population = self.model_runner.outputs['manual']['epi'][scenario]['population'][start_time_index:]
         cumulative_data = [0.] * len(times)
         for c, compartment in enumerate(self.model_runner.models[scenario].labels):
-            current_data = self.model_runner.models[scenario].compartment_soln[compartment][start_time_index:]
-            previous_data = copy.copy(cumulative_data)
-            cumulative_data = [i + j for i, j in zip(cumulative_data, current_data)]
+            previous_data, cumulative_data = increment_list_for_patch(
+                self.model_runner.models[scenario].compartment_soln[compartment][start_time_index:], cumulative_data)
             colour = round(float(c) / float(len(self.model_runner.models[scenario].labels)), 2)
             ax.fill_between(times, previous_data, cumulative_data, facecolor=(0., 0., colour),
                             edgecolor=(0., 0., colour), alpha=.8)
@@ -2129,17 +2147,17 @@ class Project:
         """
 
         # prelims
-        fig, axes, max_dims, _, _ = initialise_figures_axes(1, room_for_legend=True)
-        last_data, bar_width, ax, x_positions = list(numpy.zeros(len(self.inputs.riskgroups))), .7, axes[0], []
+        fig, ax, max_dims, _, _ = initialise_figures_axes(1, room_for_legend=True)
+        cumulative_data, bar_width, x_positions = list(numpy.zeros(len(self.inputs.riskgroups))), .7, []
 
         # plot bars
         for to, to_group in enumerate(self.inputs.riskgroups):
-            current_data = [self.inputs.mixing[from_group][to_group] for from_group in self.inputs.riskgroups]
-            next_data = [last + current for last, current in zip(last_data, current_data)]
-            x_positions = numpy.linspace(.5, .5 + len(next_data) - 1., len(next_data))
-            ax.bar(x_positions, current_data, width=bar_width, bottom=last_data, color=self.colour_theme[to],
+            previous_data, cumulative_data \
+                = increment_list_for_patch(
+                [self.inputs.mixing[from_group][to_group] for from_group in self.inputs.riskgroups], cumulative_data)
+            x_positions = numpy.linspace(.5, .5 + len(cumulative_data) - 1., len(cumulative_data))
+            ax.bar(x_positions, cumulative_data, width=bar_width, bottom=previous_data, color=self.colour_theme[to],
                    label=t_k.find_title_from_dictionary(to_group))
-            last_data = next_data
 
         # locally managing x-axis, as plot type is a special case
         ax.set_xlim(.2, max(x_positions) + 1.)
@@ -2307,8 +2325,7 @@ class Project:
 
                     # process data
                     current_data = self.outputs['manual']['cost'][scenario][cost_type + '_cost_' + intervention]
-                    previous_data = copy.copy(cumulative_data)  # lower edge of fill
-                    cumulative_data = [i + j for i, j in zip(cumulative_data, current_data)]  # upper edge of fill
+                    previous_data, cumulative_data = increment_list_for_patch(current_data, cumulative_data)
                     relative_data \
                         = [(d - current_data[t_k.find_first_list_element_above(
                             cost_times, self.inputs.model_constants['reference_time'])]) for d in current_data]

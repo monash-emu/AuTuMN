@@ -17,7 +17,7 @@ from validate_email import validate_email
 from werkzeug.security import generate_password_hash, \
      check_password_hash
 
-from conn import db
+from .conn import db
 
 
 class GUID(TypeDecorator):

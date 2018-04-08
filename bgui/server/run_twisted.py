@@ -11,10 +11,6 @@ from twisted.web.static import File
 from twisted.web.wsgi import WSGIResource
 from twisted.python.threadpool import ThreadPool
 
-# Auto-generates config.py if not found
-if not os.path.isfile("config.py"):
-    shutil.copy("config_default.py", "config.py")
-
 from server import config
 from server.api import app
 

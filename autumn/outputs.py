@@ -1692,7 +1692,8 @@ class Project:
 
         # plot compartment population sizes
         if self.gui_inputs['output_compartment_populations']:
-            self.plot_populations()
+            for category in ['compartment', 'agegroups', 'riskgroups']:
+                self.plot_populations(category_to_loop=category)
 
         # plot fractions
         # if self.gui_inputs['output_fractions']: self.plot_fractions('strain')
@@ -1915,10 +1916,14 @@ class Project:
 
         return max(gtb_data['point_estimate'].values())
 
-    def plot_populations(self, scenario=0):
+    def plot_populations(self, category_to_loop='compartment', scenario=0):
         """
-        Plot population by the compartment to which they belong. Doesn't work well for any but the simplest
-        compartmental model structure due to the number of compartments.
+        Plot population by the compartment or other category to which they belong. Doesn't necessarily work that well
+        for compartments, where there are generally too many compartments for them to be easily visualised.
+
+        Args:
+            category_to_loop: Must be either 'compartment', 'agegroups' or 'riskgroups' to indicate category
+            scenario: Generally 0 to indicate baseline scenario
         """
 
         fig, ax, max_dim, n_rows, n_cols = initialise_figures_axes(1, room_for_legend=True)
@@ -1926,19 +1931,35 @@ class Project:
         start_time_index = self.find_start_time_index(start_time, scenario)
         times = self.model_runner.outputs['manual']['epi'][scenario]['times'][start_time_index:]
         total_population = self.model_runner.outputs['manual']['epi'][scenario]['population'][start_time_index:]
-        cumulative_data = [0.] * len(times)
-        for c, compartment in enumerate(self.model_runner.models[scenario].labels):
-            previous_data, cumulative_data = increment_list_for_patch(
-                self.model_runner.models[scenario].compartment_soln[compartment][start_time_index:], cumulative_data)
-            colour = round(float(c) / float(len(self.model_runner.models[scenario].labels)), 2)
+        cumulative_data, labels_to_loop = [0.] * len(times), []
+        labels_to_loop = self.model_runner.models[scenario].labels if category_to_loop == 'compartment' \
+            else getattr(self.inputs, category_to_loop)
+        for l, label in enumerate(labels_to_loop):
+            current_data = self.model_runner.models[scenario].compartment_soln[label][start_time_index:] \
+                if category_to_loop == 'compartment' \
+                else self.sum_compartments_by_category(label, scenario, start_time_index)
+            previous_data, cumulative_data = increment_list_for_patch(current_data, cumulative_data)
+            colour = round(float(l) / float(len(labels_to_loop)), 2)
             ax.fill_between(times, previous_data, cumulative_data, facecolor=(0., 0., colour),
                             edgecolor=(0., 0., colour), alpha=.8)
-            ax.plot(times, cumulative_data, color=(0., 0., colour), label=t_k.find_title_from_dictionary(compartment),
+            ax.plot(times, cumulative_data, color=(0., 0., colour), label=t_k.find_title_from_dictionary(label),
                     linewidth=.1)
         self.tidy_x_axis(ax, start_time, 2035., max_dim)
         self.tidy_y_axis(ax, '', max_dim, max_value=max(total_population))
         ax.legend(bbox_to_anchor=(1.3, 1), fontsize=5)
-        self.finish_off_figure(fig, 1, '_compartments', 'Compartment sizes')
+        self.finish_off_figure(fig, 1, '_' + category_to_loop,
+                               'Total population sizes, by '
+                               + t_k.find_title_from_dictionary(category_to_loop, capital_first_letter=False))
+
+    def sum_compartments_by_category(self, category, scenario, start_time_index):
+
+        current_data = [0.] * len(self.model_runner.models[scenario].times[start_time_index:])
+        for comp in self.model_runner.models[scenario].labels:
+            if category in comp:
+                current_data \
+                    = [i + j for i, j in zip(current_data, self.model_runner.models[scenario].compartment_soln[
+                                                               comp][start_time_index:])]
+        return current_data
 
     ''' remaining unimproved methods '''
 
@@ -2154,7 +2175,7 @@ class Project:
         for to, to_group in enumerate(self.inputs.riskgroups):
             previous_data, cumulative_data \
                 = increment_list_for_patch(
-                [self.inputs.mixing[from_group][to_group] for from_group in self.inputs.riskgroups], cumulative_data)
+                  [self.inputs.mixing[from_group][to_group] for from_group in self.inputs.riskgroups], cumulative_data)
             x_positions = numpy.linspace(.5, .5 + len(cumulative_data) - 1., len(cumulative_data))
             ax.bar(x_positions, cumulative_data, width=bar_width, bottom=previous_data, color=self.colour_theme[to],
                    label=t_k.find_title_from_dictionary(to_group))

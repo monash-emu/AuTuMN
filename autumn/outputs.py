@@ -1,19 +1,20 @@
 
+
+# external imports
 import openpyxl as xl
-import tool_kit as t_k
 from docx import Document
-from matplotlib import pyplot, patches, style
+from matplotlib import pyplot, patches
 from matplotlib.ticker import FuncFormatter
 import numpy
 import platform
 import os
-import warnings
 import economics
-import pandas
 import copy
-import scipy
 from scipy import stats
 import itertools
+
+# AuTuMN import
+import tool_kit as t_k
 
 
 def find_smallest_factors_of_integer(n):
@@ -29,103 +30,9 @@ def find_smallest_factors_of_integer(n):
 
     answer = [1e3, 1e3]
     for i in range(1, n + 1):
-        if n % i == 0 and i+(n/i) < sum(answer):
-            answer = [i, n/i]
+        if n % i == 0 and i + (n / i) < sum(answer):
+            answer = [i, n / i]
     return answer
-
-
-def humanise_y_ticks(ax):
-    """
-    Coded by Bosco, does a few things, including rounding axis values to thousands, millions or billions and
-    abbreviating these to single letters.
-
-    Args:
-        ax: The adapted axis
-    """
-
-    vals = list(ax.get_yticks())
-    max_val = max([abs(v) for v in vals])
-    if max_val < 1e3:
-        return
-    if max_val >= 1e3 and max_val < 1e6:
-        labels = ['%.1fK' % (v/1e3) for v in vals]
-    elif max_val >= 1e6 and max_val < 1e9:
-        labels = ['%.1fM' % (v/1e6) for v in vals]
-    elif max_val >= 1e9:
-        labels = ['%.1fB' % (v/1e9) for v in vals]
-    is_fraction = False
-    for label in labels:
-        if label[-3:-1] != '.0':
-            is_fraction = True
-    if not is_fraction:
-        labels = [l[:-3] + l[-1] for l in labels]
-    ax.set_yticklabels(labels)
-
-
-def make_single_axis(fig):
-    """
-    Create axes for a figure with a single plot with a reasonable amount of space around.
-
-    Returns:
-        ax: The axes that can be plotted on
-    """
-
-    return fig.add_axes([0.1, 0.1, 0.6, 0.75])
-
-
-def set_axes_props(ax, xlabel=None, ylabel=None, title=None, is_legend=True, axis_labels=None, side='left'):
-
-    frame_colour = "grey"
-
-    # Hide top and right border of plot
-    if side == 'left':
-        ax.spines['right'].set_visible(False)
-    ax.spines['top'].set_visible(False)
-    ax.yaxis.set_ticks_position(side)
-    ax.xaxis.set_ticks_position('bottom')
-
-    if xlabel is not None:
-        ax.set_xlabel(xlabel)
-
-    if ylabel is not None:
-        ax.set_ylabel(ylabel)
-
-    if is_legend:
-        if axis_labels:
-            handles, labels = ax.get_legend_handles_labels()
-            leg = ax.legend(
-                handles,
-                axis_labels,
-                bbox_to_anchor=(1.05, 1),
-                loc=2,
-                borderaxespad=0.,
-                frameon=False,
-                prop={'size': 7})
-        else:
-            leg = ax.legend(
-                bbox_to_anchor=(1.05, 1),
-                loc=2,
-                borderaxespad=0.,
-                frameon=False,
-                prop={'size':7})
-        for text in leg.get_texts():
-            text.set_color(frame_colour)
-
-    if title is not None:
-        t = ax.set_title(title)
-        t.set_color(frame_colour)
-
-    for label in (ax.get_xticklabels() + ax.get_yticklabels()):
-        label.set_fontname('Arial')
-        label.set_fontsize(8)
-
-    ax.tick_params(color=frame_colour, labelcolor=frame_colour)
-    for spine in ax.spines.values():
-        spine.set_edgecolor(frame_colour)
-    ax.xaxis.label.set_color(frame_colour)
-    ax.yaxis.label.set_color(frame_colour)
-
-    humanise_y_ticks(ax)
 
 
 def get_nice_font_size(subplot_grid):
@@ -134,268 +41,6 @@ def get_nice_font_size(subplot_grid):
     """
 
     return 2. + 8. / subplot_grid[0]
-
-
-def find_reasonable_year_ticks(start_time, end_time):
-    """
-    Function to find a reasonable spacing between years for x-ticks.
-
-    Args:
-        start_time: Float for left x-limit in years
-        end_time: Float for right x-limit in years
-    Returns:
-        times: The times for the x ticks
-    """
-
-    duration = end_time - start_time
-    if duration > 1e3:
-        spacing = 1e2
-    elif duration > 75.:
-        spacing = 25.
-    elif duration > 25.:
-        spacing = 10.
-    elif duration > 15.:
-        spacing = 5.
-    elif duration > 5.:
-        spacing = 2.
-    else:
-        spacing = 1.
-
-    times = []
-    working_time = start_time
-    while working_time <= end_time:
-        times.append(working_time)
-        working_time += spacing
-    return times
-
-
-def find_standard_output_styles(labels, lightening_factor=1.):
-    """
-    Function to find some standardised colours for the outputs we'll typically
-    be reporting on - i.e. incidence, prevalence, mortality and notifications.
-    Incidence is black/grey, prevalence green, mortality red and notifications blue.
-
-    Args:
-        labels: List containing strings for the outputs that colours are needed for.
-        lightening_factor: Float between zero and one that specifies how much lighter to make
-            the colours - with 0. being no additional lightening (black or dark green/red/blue)
-            and 1. being completely lightened to reach white.
-    Returns:
-        colour: Colour for plotting
-        indices: List of strings to be used to find the data in the data object
-        yaxis_label: Unit of measurement for outcome
-        title: Title for plot (so far usually a subplot)
-        patch_colour: Colour half way between colour and white
-    """
-
-    colour = []
-    indices = []
-    yaxis_label = []
-    title = []
-    patch_colour = []
-
-    if 'incidence' in labels:
-        colour += [(lightening_factor, lightening_factor, lightening_factor)]
-        indices += ['e_inc_100k']
-        yaxis_label += ['Per 100,000 per year']
-        title += ['Incidence']
-    if 'mortality' in labels:
-        colour += [(1., lightening_factor, lightening_factor)]
-        indices += ['e_mort_exc_tbhiv_100k']
-        yaxis_label += ['Per 100,000 per year']
-        title += ['Mortality']
-    if 'prevalence' in labels:
-        colour += [(lightening_factor, 0.5 + 0.5 * lightening_factor, lightening_factor)]
-        indices += ['e_prev_100k']
-        yaxis_label += ['Per 100,000']
-        title += ['Prevalence']
-    if 'notifications' in labels:
-        colour += [(lightening_factor, lightening_factor, 0.5 + 0.5 * lightening_factor)]
-        yaxis_label += ['']
-        title += ['Notifications']
-    if 'perc_incidence' in labels:
-        colour += [(lightening_factor, lightening_factor, lightening_factor)]
-        yaxis_label += ['Percentage']
-        title += ['Proportion of incidence']
-
-    # create a colour half-way between the line colour and white for patches
-    for i in range(len(colour)):
-        patch_colour += [[]]
-        for j in range(len(colour[i])):
-            patch_colour[i] += [1. - (1. - colour[i][j]) / 2.]
-
-    return colour, indices, yaxis_label, title, patch_colour
-
-
-def make_related_line_styles(labels, strain_or_organ):
-    """
-    Make line styles for compartments.
-    Args:
-        labels: List of compartment names
-        strain_or_organ: Whether to make patterns refer to strain or organ status
-    Returns:
-        colours: Colours for plotting
-        patterns: Line patterns for plotting
-        compartment_full_names: Full names of compartments
-        markers: Marker styles
-    """
-
-    colours = {}
-    patterns = {}
-    compartment_full_names = {}
-    markers = {}
-    for label in labels:
-        colour, pattern, compartment_full_name, marker =\
-            get_line_style(label, strain_or_organ)
-        colours[label] = colour
-        patterns[label] = pattern
-        compartment_full_names[label] = compartment_full_name
-        markers[label] = marker
-    return colours, patterns, compartment_full_names, markers
-
-
-def make_default_line_styles(n, return_all=True):
-        """
-        Produces a standard set of line styles that isn't adapted to the data being plotted.
-
-        Args:
-            n: The number of line-styles
-            return_all: Whether to return all of the styles up to n or just the last one
-        Returns:
-            line_styles: A list of standard line-styles, or if return_all is False, then the single style
-        """
-
-        # iterate through a standard set of line styles
-        for i in range(n):
-            line_styles = []
-            for line in ['-', ':', '-.', '--']:
-                for colour in 'krbgmcy':
-                    line_styles.append(line + colour)
-
-        styles_to_return = line_styles if return_all else line_styles[n - 1]
-        return styles_to_return
-
-
-def make_legend_to_single_axis(ax, scenario_handles, scenario_labels):
-    """
-    Standardised format to legend at side of single axis plot.
-
-    Args:
-        ax: The axis that needs a legend
-        scenario_handles: The elements for the legend
-        scenario_labels: List of strings to name the elements of the legend
-    """
-
-    ax.legend(scenario_handles,
-              scenario_labels,
-              bbox_to_anchor=(1.05, 1),
-              loc=2,
-              borderaxespad=0.,
-              frameon=False,
-              prop={'size': 7})
-
-
-def get_line_style(label, strain_or_organ):
-
-    """
-    Get some colours and patterns for lines for compartments - called by make_related_line_styles only.
-
-    Args:
-        label: Compartment name
-        strain_or_organ: Whether to change line pattern by strain or by organ
-    """
-
-    # Unassigned groups remain black
-    colour = (0, 0, 0)
-    if 'susceptible_immune' in label:  # susceptible_unvac remains black
-        colour = (0.3, 0.3, 0.3)
-    if 'latent' in label:  # latent_early remains as for latent
-        colour = (0, 0.4, 0.8)
-    if 'latent_late' in label:
-        colour = (0, 0.2, 0.4)
-    if 'active' in label:
-        colour = (0.9, 0, 0)
-    elif 'detect' in label:
-        colour = (0, 0.5, 0)
-    elif 'missed' in label:
-        colour = (0.5, 0, 0.5)
-    if 'treatment' in label:  # treatment_infect remains as for treatment
-        colour = (1, 0.5, 0)
-    if 'treatment_noninfect' in label:
-        colour = (1, 1, 0)
-
-    pattern = get_line_pattern(label, strain_or_organ)
-
-    category_full_name = label
-    if 'susceptible' in label:
-        category_full_name = 'Susceptible'
-    if 'susceptible_fully' in label:
-        category_full_name = 'Fully susceptible'
-    elif 'susceptible_immune' in label:
-        category_full_name = 'BCG vaccinated, susceptible'
-    if 'latent' in label:
-        category_full_name = 'Latent'
-    if 'latent_early' in label:
-        category_full_name = 'Early latent'
-    elif 'latent_late' in label:
-        category_full_name = 'Late latent'
-    if 'active' in label:
-        category_full_name = 'Active, yet to present'
-    elif 'detect' in label:
-        category_full_name = 'Detected'
-    elif 'missed' in label:
-        category_full_name = 'Missed'
-    if 'treatment' in label:
-        category_full_name = 'Under treatment'
-    if 'treatment_infect' in label:
-        category_full_name = 'Infectious under treatment'
-    elif 'treatment_noninfect' in label:
-        category_full_name = 'Non-infectious under treatment'
-
-    if 'smearpos' in label:
-        category_full_name += ', \nsmear-positive'
-    elif 'smearneg' in label:
-        category_full_name += ', \nsmear-negative'
-    elif 'extrapul' in label:
-        category_full_name += ', \nextrapulmonary'
-
-    if '_ds' in label:
-        category_full_name += ', \nDS-TB'
-    elif '_mdr' in label:
-        category_full_name += ', \nMDR-TB'
-    elif '_xdr' in label:
-        category_full_name += ', \nXDR-TB'
-
-    marker = ''
-
-    return colour, pattern, category_full_name, marker
-
-
-def get_line_pattern(label, strain_or_organ):
-
-    """
-    Get pattern for a compartment.
-
-    Args:
-        label: Compartment name
-        strain_or_organ: Whether to change pattern by strain or by organ
-    Returns:
-        pattern: Line pattern for plotting
-    """
-
-    pattern = "-"  # Default solid line
-    if strain_or_organ == "organ":
-        if "smearneg" in label:
-            pattern = "-."
-        elif "extrapul" in label:
-            pattern = ":"
-    elif strain_or_organ == "strain":
-        if "_mdr" in label:
-            pattern = '-.'
-        elif "_xdr" in label:
-            pattern = '.'
-
-    return pattern
 
 
 def create_patch_from_list(x_list, lower_border, upper_border):
@@ -495,7 +140,7 @@ def plot_endtb_targets(ax, output, base_value, plot_colour):
                     horizontalalignment='center', verticalalignment='bottom', fontsize=8, color=plot_colour)
 
 
-def find_times_from_exp_function(t, times, target_values, number_x_values=1e2):
+def find_times_from_exp_function(t, times, target_values, number_x_values=100):
     """
     Find the times to plot and the outputs tracking towards the targets from the list of times and target values,
     using the function to fit exponential functions.
@@ -504,6 +149,7 @@ def find_times_from_exp_function(t, times, target_values, number_x_values=1e2):
         t: The sequence number for the time point
         times: The list of times being worked through
         target_values: The list fo target values corresponding to the times
+        number_x_values: The number of x-values required for plotting
     Returns:
         times_to_plot: List of the x-values or times for plotting
         outputs_to_reach_target: Corresponding list of values for the output needed to track towards the target
@@ -513,57 +159,6 @@ def find_times_from_exp_function(t, times, target_values, number_x_values=1e2):
     times_to_plot = numpy.linspace(times[t], times[t + 1], number_x_values)
     output_to_reach_target = [numpy.exp(-a * (x - b)) for x in times_to_plot]
     return times_to_plot, output_to_reach_target
-
-
-def plot_comparative_age_parameters(data_strat_list, data_value_list, model_value_list, model_strat_list,
-                                    parameter_name):
-
-    # get good tick labels from the stratum lists
-    data_strat_labels = []
-    for i in range(len(data_strat_list)):
-        data_strat_labels += [t_k.turn_strat_into_label(data_strat_list[i])]
-    model_strat_labels = []
-    for i in range(len(model_strat_list)):
-        model_strat_labels += [t_k.turn_strat_into_label(model_strat_list[i])]
-
-    # find a reasonable upper limit for the y-axis
-    ymax = max(data_value_list + model_value_list) * 1.2
-
-    # plot original data bar charts
-    subplot_grid = (1, 2)
-    fig = pyplot.figure()
-    ax = fig.add_axes([0.1, 0.2, 0.35, 0.6])
-    x_positions = range(len(data_strat_list))
-    width = .6
-    ax.bar(x_positions, data_value_list, width)
-    ax.set_ylabel('Parameter value',
-                  fontsize=get_nice_font_size(subplot_grid))
-    ax.set_title('Input data', fontsize=12)
-    ax.set_xticklabels(data_strat_labels, rotation=45)
-    ax.set_xticks(x_positions)
-    ax.set_ylim(0., ymax)
-    ax.set_xlim(-1. + width, x_positions[-1] + 1)
-
-    # plot adjusted parameters bar charts
-    ax = fig.add_axes([0.55, 0.2, 0.35, 0.6])
-    x_positions = range(len(model_strat_list))
-    ax.bar(x_positions, model_value_list, width)
-    ax.set_title('Model implementation', fontsize=12)
-    ax.set_xticklabels(model_strat_labels, rotation=45)
-    ax.set_xticks(x_positions)
-    ax.set_ylim(0., ymax)
-    ax.set_xlim(-1. + width, x_positions[-1] + 1)
-
-    # overall title
-    fig.suptitle(t_k.capitalise_and_remove_underscore(parameter_name)
-                 + ' adjustment',
-                 fontsize=15)
-
-    # Find directory and save
-    out_dir = 'fullmodel_graphs'
-    if not os.path.isdir(out_dir):
-        os.makedirs(out_dir)
-    base = os.path.join(out_dir, parameter_name)
 
 
 def find_subplot_numbers(n):
@@ -586,30 +181,6 @@ def find_subplot_numbers(n):
             answer = find_smallest_factors_of_integer(n)
         i += 1
     return answer
-
-
-def get_string_for_funding(funding):
-
-    """
-    Returns an easy to read string corresponding to a level of funding (ex 9,000,000 becomes $9M)
-    """
-
-    s = '$'
-    if funding >= 1e9:
-        letter = 'B'
-        factor = 9
-    elif funding >= 1e6:
-        letter = 'M'
-        factor = 6
-    elif funding >=1e3:
-        letter = 'K'
-        factor = 3
-    else:
-        letter = ''
-        factor = 0
-    number = funding / (10**factor)
-    s += str(number) + letter
-    return s
 
 
 def scale_axes(vals, max_val, y_sig_figs):
@@ -673,7 +244,6 @@ def write_param_to_sheet(country_sheet, working_list, median_run_index):
     """
 
     for param in working_list:
-
         if working_list[param]:
 
             # find value to write from list and index
@@ -682,7 +252,8 @@ def write_param_to_sheet(country_sheet, working_list, median_run_index):
             # over-write existing parameter value if present
             param_found = False
             for row in country_sheet.rows:
-                if row[0].value == param: row[1].value, param_found = value, True
+                if row[0].value == param:
+                    row[1].value, param_found = value, True
 
             # if parameter not found in existing spreadsheet, write into new row at the bottom
             if not param_found:
@@ -693,7 +264,8 @@ def write_param_to_sheet(country_sheet, working_list, median_run_index):
 
 def reverse_inputs_if_condition(inputs, condition):
     """
-    Very simple method to reverse a list if requested.
+    Very simple function to reverse a list if requested, but used so frequently during spreadsheet writing that worth
+    having.
 
     Args:
         inputs: A list of the inputs
@@ -835,9 +407,9 @@ class Project:
 
         (self.inputs, self.run_mode) \
             = [None for _ in range(2)]
-        (self.output_colours, self.uncertainty_output_colours, self.program_colours, self.classified_scaleups,
+        (self.output_colours, self.uncertainty_output_colours, self.classified_scaleups,
          self.outputs, self.interpolated_uncertainty) \
-            = [{} for _ in range(6)]
+            = [{} for _ in range(5)]
         (self.grid, self.plot_rejected_runs, self.plot_true_outcomes) \
             = [False for _ in range(3)]
         (self.accepted_no_burn_in_indices, self.scenarios, self.interventions_to_cost, self.accepted_indices) \
@@ -925,8 +497,6 @@ class Project:
         # processing methods that are only required for outputs
         if self.run_mode == 'epi_uncertainty':
             self.find_uncertainty_indices()
-            # for output_type in ['epi', 'cost']:
-            #     self.uncertainty_centiles[output_type] = self.find_uncertainty_centiles('epi_uncertainty', output_type)
             self.uncertainty_centiles['epi'] = self.find_uncertainty_common_times('epi')
         elif self.run_mode == 'int_uncertainty':
             for output_type in ['epi', 'cost']:
@@ -1017,8 +587,8 @@ class Project:
 
     def tidy_x_axis(self, axis, start, end, max_dim, labels_off=False, x_label=None):
         """
-        Function to tidy x-axis of a plot panel - currently only used in the scale-up vars, but intended to be written in
-        such a way as to be extendable to other types of plotting.
+        Function to tidy x-axis of a plot panel - currently only used in the scale-up vars, but intended to be written
+        in such a way as to be extendable to other types of plotting.
 
         Args:
             axis: The plotting axis
@@ -1099,77 +669,6 @@ class Project:
             axis.legend(bbox_to_anchor=(1.3, 1), fontsize=self.label_font_sizes[max_dim])
         else:
             axis.legend(fontsize=self.label_font_sizes[max_dim], loc=location)
-
-    def tidy_axis(self, ax, subplot_grid, title='', start_time=0., legend=False, x_label='', y_label='',
-                  x_axis_type='time', y_axis_type='scaled', x_sig_figs=0, y_sig_figs=0,
-                  end_time=None, y_relative_limit=0.95, y_absolute_limit=None):
-        """
-        Method to make cosmetic changes to a set of plot axes.
-        """
-
-        # add the sub-plot title with slightly larger titles than the rest of the text on the panel
-        if title:
-            ax.set_title(title, fontsize=get_nice_font_size(subplot_grid) + 2.)
-
-        # default end time for plots to end at
-        if not end_time:
-            end_time = self.inputs.model_constants['plot_end_time']
-
-        # add a legend if needed
-        if legend == 'for_single':
-            ax.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0., frameon=False, prop={'size': 7})
-        elif legend:
-            ax.legend(fontsize=get_nice_font_size(subplot_grid), frameon=False, loc=3)
-
-        # sort x-axis
-        if x_axis_type == 'time':
-            ax.set_xlim((start_time, end_time))
-            ax.set_xticks(find_reasonable_year_ticks(start_time, end_time))
-        elif x_axis_type == 'scaled':
-            vals = list(ax.get_xticks())
-            max_val = max([abs(v) for v in vals])
-            labels, axis_modifier = scale_axes(vals, max_val, x_sig_figs)
-            ax.set_xticklabels(labels)
-            ax.set_xlabel(x_label + axis_modifier, fontsize=get_nice_font_size(subplot_grid), labelpad=1)
-        elif x_axis_type == 'proportion':
-            ax.set_xlabel(x_label, fontsize=get_nice_font_size(subplot_grid), labelpad=1)
-            ax.set_xlim((0., 1.))
-        elif x_axis_type == 'individual_years':
-            ax.set_xlim((start_time, end_time))
-            ax.set_xticks(range(int(start_time), int(end_time, 1)))
-            for tick in ax.xaxis.get_major_ticks(): tick.label.set_rotation(45)
-        else:
-            ax.set_xlabel(x_label, fontsize=get_nice_font_size(subplot_grid), labelpad=1)
-
-        # sort y-axis
-        ax.set_ylim(bottom=0.)
-        vals = list(ax.get_yticks())
-        max_val = max([abs(v) for v in vals])
-        if y_axis_type == 'time':
-            ax.set_ylim((start_time, end_time))
-            ax.set_yticks(find_reasonable_year_ticks(start_time, end_time))
-        elif y_axis_type == 'scaled':
-            labels, axis_modifier = scale_axes(vals, max_val, y_sig_figs)
-            ax.set_yticklabels(labels)
-            ax.set_ylabel(axis_modifier + y_label, fontsize=get_nice_font_size(subplot_grid), labelpad=1)
-        elif y_axis_type == 'proportion':
-            ax.set_ylim((0., 1.))
-            ax.set_ylabel(y_label, fontsize=get_nice_font_size(subplot_grid), labelpad=1)
-        elif y_axis_type == 'limited_proportion':
-            ax.set_ylim((0., 1.))
-            ax.set_ylabel(y_label, fontsize=get_nice_font_size(subplot_grid), labelpad=1)
-        elif not y_absolute_limit:
-            ax.set_ylim(top=max_val * y_relative_limit)
-            ax.set_ylabel(y_label, fontsize=get_nice_font_size(subplot_grid), labelpad=1)
-        else:
-            ax.set_ylim(top=y_absolute_limit)
-            ax.set_ylabel(y_label, fontsize=get_nice_font_size(subplot_grid), labelpad=1)
-
-        # set size of font for x-ticks and add a grid if requested
-        for axis_to_change in [ax.xaxis, ax.yaxis]:
-            for tick in axis_to_change.get_major_ticks():
-                tick.label.set_fontsize(get_nice_font_size(subplot_grid))
-            axis_to_change.grid(self.grid)
 
     def save_figure(self, fig, end_figure_name):
         """
@@ -1273,23 +772,46 @@ class Project:
                         = numpy.percentile(matrix_to_analyse, self.model_runner.percentiles, axis=0)
         return uncertainty_centiles
 
-    def sum_compartments_by_category(self, category, scenario, start_time_index, fraction=False):
+    def sum_compartments_by_category(self, category_type, scenario, start_time_index, fraction=False,
+                                     requirements=[''], exclusions=['we all love futsal']):
         """
         Find the sum of all compartments within a particular category (i.e. containing a particular string).
 
         Args:
-            category: String for the category of interest
+            category_type: String for the category of interest
             scenario: Scenario number
             start_time_index: Time index to start from
             fraction: Boolean for whether to calculate as a fraction or as total compartment values
+            requirements: List of strings that must appear in the compartments of interest
+            exclusions: List of strings of compartments to be ignored
         """
 
-        data = [0.] * len(self.model_runner.models[scenario].times[start_time_index:])
-        for comp in [label for label in self.model_runner.models[scenario].labels if category in label]:
-            data = [current + increment for current, increment
-                    in zip(data, self.model_runner.models[scenario].compartment_soln[comp][start_time_index:])]
-        return [d / p for d, p in zip(data, self.outputs['manual']['epi'][scenario]['population'][start_time_index:])] \
-            if fraction else data
+        categories_to_loop = getattr(self.inputs, category_type)
+        current_data = {}
+        compartments_in_category = {}
+        remainder = False
+        if remainder:
+            current_data['remainder'] = [0.] * len(self.model_runner.models[scenario].times[start_time_index:])
+        for label in categories_to_loop:
+
+            # find list of relevant compartments
+            compartments_in_category[label] = []
+            for comp in self.model_runner.models[scenario].labels:
+                if label in comp and all(strings in comp for strings in requirements) \
+                        and not any(strings in comp for strings in exclusions):
+                    compartments_in_category[label] += [comp]
+                elif remainder:
+                    compartments_in_category['remainder'] += [comp]
+
+            # sum the values
+            current_data[label] = [0.] * len(self.model_runner.models[scenario].times[start_time_index:])
+            for compartment in compartments_in_category[label]:
+                current_data[label] \
+                    = t_k.elementwise_list_addition(current_data[label], self.model_runner.models[
+                                                             scenario].compartment_soln[compartment][start_time_index:])
+            current_data[label] = t_k.elementwise_list_division(current_data[label], self.outputs['manual']['epi'][
+                                        scenario]['population'][start_time_index:]) if fraction else current_data[label]
+        return current_data
 
     ''' methods for outputting to documents and spreadsheets and console '''
 
@@ -1691,21 +1213,12 @@ class Project:
                         'scenario', 'by_' + strata_type, grid=[len(outputs_to_plot), len(list_of_strata)], sharey='row')
             for strata_type in ['agegroups', 'riskgroups']:
                 for fraction in [True, False]:
-                    self.plot_stacked_subgroup_epi_outputs('notifications', category_to_loop=strata_type,
-                                                           fraction=fraction)
+                    self.plot_stacked_epi_outputs('notifications', category_to_loop=strata_type,
+                                                  fraction=fraction)
 
         # plot scale-up functions
         if self.gui_inputs['output_scaleups']:
             self.plot_scaleup_vars()
-
-        # find some general output colours
-        output_colours = make_default_line_styles(5, True)
-        for s, scenario in enumerate(self.scenarios):
-            self.output_colours[scenario] = output_colours[s]
-            self.program_colours[scenario] = {}
-            for p, program in enumerate(self.interventions_to_cost[scenario]):
-                # +1 is to avoid starting from black, which doesn't look as nice for programs as for baseline scenario
-                self.program_colours[scenario][program] = output_colours[p + 1]
 
         # plot economic outputs
         if self.gui_inputs['output_plot_economics']:
@@ -1714,27 +1227,16 @@ class Project:
 
         # plot compartment population sizes
         if self.gui_inputs['output_compartment_populations']:
-            for category in ['compartment', 'agegroups', 'riskgroups', 'compartment_types']:
+            for category in ['agegroups', 'riskgroups', 'compartment_types']:
                 for fraction in [True, False]:
                     self.plot_populations(category_to_loop=category, fraction=fraction)
-
-        # plot fractions
-        # if self.gui_inputs['output_fractions']: self.plot_fractions('strain')
-
-        # plot proportions of population
-        if self.gui_inputs['output_age_fractions']:
-            self.plot_stratified_populations(age_or_risk='age')
-
-        # plot risk group proportions
-        if self.gui_inputs['output_riskgroup_fractions']:
-            self.plot_stratified_populations(age_or_risk='risk')
 
         # make a flow-diagram
         if self.gui_inputs['output_flow_diagram']:
             self.model_runner.models[0].make_flow_diagram(
                 os.path.join(self.out_dir_project, self.country + '_flow_diagram' + '.png'))
 
-        # save figure that is produced in the uncertainty running process
+        # uncertainty figures
         if self.run_mode == 'epi_uncertainty' and self.gui_inputs['output_param_plots']:
             self.plot_param_histograms()
             self.plot_param_progression()
@@ -1743,11 +1245,6 @@ class Project:
         # plot likelihood estimates
         if self.run_mode == 'epi_uncertainty' and self.gui_inputs['output_likelihood_plot']:
             self.plot_likelihoods()
-
-        # for debugging
-        if self.inputs.n_strains > 1:
-            self.plot_cases_by_division(['_asds', '_asmdr'],
-                                        restriction_1='_mdr', restriction_2='treatment', exclusion_string='latent')
 
     ''' epi outputs plotting '''
 
@@ -1810,7 +1307,7 @@ class Project:
                         plot_data = self.outputs[self.run_mode]['epi'][uncertainty_scenario][output][run, start_index:]
                         max_data_values[output].append(max(plot_data))
                         axis.plot(self.outputs[self.run_mode]['epi'][uncertainty_scenario]['times'][run,
-                                     start_index:], plot_data, color=colour, linestyle=dotted)
+                                  start_index:], plot_data, color=colour, linestyle=dotted)
 
             # plot with shaded patches
             elif purpose == 'shaded':
@@ -1939,7 +1436,8 @@ class Project:
 
         return max(gtb_data['point_estimate'].values())
 
-    def plot_populations(self, category_to_loop='compartment', scenario=0, fraction=False):
+    def plot_populations(self, category_to_loop='agegroups', scenario=0, fraction=False, requirements=[''],
+                         exclusions=['we all love futsal']):
         """
         Plot population by the compartment or other category to which they belong. Doesn't necessarily work that well
         for compartments, where there are generally too many compartments for them to be easily visualised.
@@ -1948,34 +1446,42 @@ class Project:
             category_to_loop: Must be either 'compartment', 'agegroups' or 'riskgroups' to indicate category
             scenario: Generally 0 to indicate baseline scenario
             fraction: Boolean for whether we want population totals or fractions
+            requirements: List of strings that must be present for compartment to be included in analysis
+            exclusions: List of strings that indicate that compartment should be excluded from analysis
         """
 
         fig, ax, max_dim, n_rows, n_cols = initialise_figures_axes(1, room_for_legend=True)
         start_time = self.inputs.model_constants['plot_start_time']
         start_time_index = self.find_start_time_index(start_time, scenario)
         times = self.model_runner.outputs['manual']['epi'][scenario]['times'][start_time_index:]
-        cumulative_data, labels_to_loop = [0.] * len(times), []
-        labels_to_loop = self.model_runner.models[scenario].labels if category_to_loop == 'compartment' \
-            else getattr(self.inputs, category_to_loop)
-        for l, label in enumerate(labels_to_loop):
-            current_data = self.model_runner.models[scenario].compartment_soln[label][start_time_index:] \
-                if category_to_loop == 'compartment' \
-                else self.sum_compartments_by_category(label, scenario, start_time_index, fraction=fraction)
-            previous_data, cumulative_data = increment_list_for_patch(current_data, cumulative_data)
-            colour = round(float(l) / float(len(labels_to_loop)), 2)
+        cumulative_data = [0.] * len(times)
+        current_data = self.sum_compartments_by_category(category_to_loop, scenario, start_time_index,
+                                                         requirements=requirements, exclusions=exclusions)
+        for l, label in enumerate(current_data):
+            previous_data, cumulative_data = increment_list_for_patch(current_data[label], cumulative_data)
+            colour = round(float(l) / float(len(current_data[label])), 2)
             ax.fill_between(times, previous_data, cumulative_data, facecolor=(0., 0., colour),
                             edgecolor=(0., 0., colour), alpha=.8)
-            ax.plot(times, cumulative_data, color=(0., 0., colour), label=t_k.find_title_from_dictionary(label),
-                    linewidth=.1)
+            ax.plot([-1e2], [0.], color=(0., 0., colour), label=t_k.find_title_from_dictionary(label),
+                    linewidth=5.)
         self.tidy_x_axis(ax, start_time, 2035., max_dim)
         self.tidy_y_axis(ax, '', max_dim, max_value=max(cumulative_data))
-        ax.legend(bbox_to_anchor=(1.3, 1), fontsize=5)
-        self.finish_off_figure(fig, 1, '_' + ('fraction' if fraction else 'population') + '_' + category_to_loop,
-                               ('Fraction' if fraction else 'Size') + ' of population, by '
-                               + t_k.find_title_from_dictionary(category_to_loop, capital_first_letter=False))
+        ax.legend(bbox_to_anchor=(1.3, 1))
+        filename = '_' + ('fraction' if fraction else 'population') + '_' + category_to_loop
+        title = ('Fraction' if fraction else 'Size') + ' of population by ' \
+            + t_k.find_title_from_dictionary(category_to_loop, capital_first_letter=False)
+        for requirement in requirements:
+            if requirement != '':
+                filename += '_only' + requirement
+                title += ',' + requirement + ' only'
+        for exclusion in exclusions:
+            if exclusion != 'we all love futsal':
+                filename += '_exclude' + exclusion
+                title += ', except ' + exclusion
+        self.finish_off_figure(fig, 1, filename, title)
 
-    def plot_stacked_subgroup_epi_outputs(self, output='notifications', category_to_loop='agegroups', scenario=0,
-                                          fraction=True):
+    def plot_stacked_epi_outputs(self, output='notifications', category_to_loop='agegroups', scenario=0,
+                                 fraction=True):
         """
         Method to plot the proportion of notifications that come from various groups of the model. Particularly intended
         to keep an eye on the proportion of notifications occurring in the paediatric population (which WHO sometimes
@@ -2002,128 +1508,15 @@ class Project:
             previous_data, cumulative_data = increment_list_for_patch(current_data, cumulative_data)
             ax.fill_between(times, previous_data, cumulative_data, facecolors=self.colour_theme[s],
                             edgecolor=self.colour_theme[s], alpha=.8)
-            ax.plot(times, cumulative_data, color=self.colour_theme[s], linewidth=.1,
+            ax.plot([-1e2], [0.], color=self.colour_theme[s], linewidth=5.,
                     label=t_k.turn_strat_into_label(stratum) if category_to_loop == 'agegroups'
                     else t_k.find_title_from_dictionary(stratum))
-        ax.legend(bbox_to_anchor=(1.3, 1), fontsize=5)
+        ax.legend(bbox_to_anchor=(1.3, 1))
         self.tidy_x_axis(ax, start_time, 2035., max_dim)
         self.tidy_y_axis(ax, 'prop_' if fraction else '', max_dim, max_value=max(cumulative_data))
         self.finish_off_figure(fig, 1, '_' + ('absolute_' if fraction else 'population_') + output + category_to_loop,
                                ('Fraction of ' if fraction else 'Stacked absolute ') + output + ', by '
                                + t_k.find_title_from_dictionary(category_to_loop, capital_first_letter=False))
-
-    ''' remaining unimproved methods '''
-
-    def plot_stratified_populations(self, age_or_risk='age'):
-        """
-        Function to plot population by age group both as raw numbers and as proportions,
-        both from the start of the model and using the input argument.
-        """
-
-        early_time_index \
-            = t_k.find_first_list_element_at_least(self.model_runner.outputs['manual']['epi'][0]['times'],
-                                                   self.inputs.model_constants['early_time'])
-
-        # find stratification to work with
-        if age_or_risk == 'age':
-            stratification = self.inputs.agegroups
-        elif age_or_risk == 'risk':
-            stratification = self.inputs.riskgroups
-        else:
-            stratification = None
-
-        # warn if necessary
-        if stratification is None:
-            warnings.warn('Plotting by stratification requested, but type of stratification requested unknown')
-        elif len(stratification) < 2:
-            warnings.warn('No stratification to plot')
-        else:
-
-            # standard prelims
-            fig = self.set_and_update_figure()
-            colours = make_default_line_styles(len(stratification), return_all=True)
-
-            # run plotting from early in the model run and from the standard start time for plotting
-            for t, time in enumerate(['plot_start_time', 'early_time']):
-
-                # initialise axes
-                ax_upper = fig.add_subplot(2, 2, 1 + t)
-                ax_lower = fig.add_subplot(2, 2, 3 + t)
-
-                # find starting times
-                title_time_text = t_k.find_title_from_dictionary(time)
-
-                # initialise some variables
-                times = self.outputs['manual']['epi'][0]['times']
-                lower_plot_margin_count = numpy.zeros(len(times))
-                upper_plot_margin_count = numpy.zeros(len(times))
-                lower_plot_margin_fraction = numpy.zeros(len(times))
-                upper_plot_margin_fraction = numpy.zeros(len(times))
-
-                for s, stratum in enumerate(stratification):
-
-                    # find numbers or fractions in that group
-                    stratum_count = self.model_runner.outputs['manual']['epi'][0]['population' + stratum]
-                    stratum_fraction = self.model_runner.outputs['manual']['epi'][0]['fraction' + stratum]
-
-                    # add group values to the upper plot range for area plot
-                    for i in range(len(upper_plot_margin_count)):
-                        upper_plot_margin_count[i] += stratum_count[i]
-                        upper_plot_margin_fraction[i] += stratum_fraction[i]
-
-                    # create proxy for legend
-                    if age_or_risk == 'age':
-                        legd_text = t_k.turn_strat_into_label(stratum)
-                    elif age_or_risk == 'risk':
-                        legd_text = t_k.find_title_from_dictionary(stratum)
-
-                    time_index = self.manual_baseline_start_index if t == 0 else early_time_index
-
-                    # plot total numbers
-                    ax_upper.fill_between(times[time_index:], lower_plot_margin_count[time_index:],
-                                          upper_plot_margin_count[time_index:], facecolors=colours[s][1])
-
-                    # plot population proportions
-                    ax_lower.fill_between(times[time_index:], lower_plot_margin_fraction[time_index:],
-                                          upper_plot_margin_fraction[time_index:], facecolors=colours[s][1],
-                                          label=t_k.capitalise_first_letter(legd_text))
-
-                    # add group values to the lower plot range for next iteration
-                    for i in range(len(lower_plot_margin_count)):
-                        lower_plot_margin_count[i] += stratum_count[i]
-                        lower_plot_margin_fraction[i] += stratum_fraction[i]
-
-                # tidy up plots
-                self.tidy_axis(ax_upper, [2, 2], start_time=self.inputs.model_constants[time],
-                               title='Total numbers from ' + title_time_text, y_label='Population', y_axis_type='')
-                self.tidy_axis(ax_lower, [2, 2], y_axis_type='proportion',
-                               start_time=self.inputs.model_constants[time],
-                               title='Proportion of population from ' + title_time_text, legend=(t == 1))
-
-            # finish up
-            fig.suptitle('Population by ' + t_k.find_title_from_dictionary(age_or_risk), fontsize=self.title_size)
-            self.save_figure(fig, '_riskgroup_proportions')
-
-    def plot_cases_by_division(self, divisions, restriction_1='', restriction_2='',
-                               exclusion_string='we all love futsal'):
-        """
-        Plot the number cases in across various categories, within the population specified in the restriction string.
-        Mostly for debugging purposes.
-        """
-
-        fig = self.set_and_update_figure()
-        divisions, compartment_types \
-            = self.model_runner.models[0].calculate_aggregate_compartment_divisions_from_strings(
-                divisions, required_string_1=restriction_1, required_string_2=restriction_2,
-                exclusion_string=exclusion_string)
-        subplot_grid = find_subplot_numbers(len(compartment_types))
-        for c, compartment_type in enumerate(compartment_types):
-            if divisions[compartment_type]:
-                ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], c + 1)
-                ax.plot(self.model_runner.models[0].times, divisions[compartment_type])
-                self.tidy_axis(ax, subplot_grid, start_time=self.inputs.model_constants['start_time'],
-                               title=compartment_type + restriction_1 + restriction_2)
-        self.save_figure(fig, '_mdr_by_compartment_type')
 
     ''' miscellaneous plotting method '''
 
@@ -2297,7 +1690,8 @@ class Project:
 
         # separate figures for each scenario
         for scenario in self.scenarios:
-            figs, axes, ax_dict, plot_types, n_rows, n_cols = {}, {}, {}, ['individual', 'stacked', 'relative'], 0, 0
+            figs, axes, ax_dict, plot_types, n_rows, n_cols, max_dim \
+                = {}, {}, {}, ['individual', 'stacked', 'relative'], 0, 0, 0
             for plot_type in plot_types:
                 figs[plot_type], axes[plot_type], max_dim, n_rows, n_cols \
                     = initialise_figures_axes(len(self.model_runner.cost_types), share_yaxis='all')
@@ -2362,7 +1756,7 @@ class Project:
             param_range_index = [i for i in range(len(self.inputs.param_ranges_unc))
                                  if self.inputs.param_ranges_unc[i]['key'] == param][0]
             param_range = self.inputs.param_ranges_unc[param_range_index]['bounds'][1] \
-                        - self.inputs.param_ranges_unc[param_range_index]['bounds'][0]
+                - self.inputs.param_ranges_unc[param_range_index]['bounds'][0]
             ax.set_title(t_k.find_title_from_dictionary(param), fontsize=self.label_font_sizes[max_dims])
             for i in range(2):
                 ax.axvline(x=self.inputs.param_ranges_unc[param_range_index]['bounds'][i], color='.3', linestyle=':')
@@ -2392,7 +1786,7 @@ class Project:
                         color='.3', linestyle=':')
             self.tidy_x_axis(ax, 1, n_params + 1, max_dims, labels_off=not last_row(p, n_rows, n_cols))
             param_range = self.inputs.param_ranges_unc[param_range_index]['bounds'][1] \
-                        - self.inputs.param_ranges_unc[param_range_index]['bounds'][0]
+                - self.inputs.param_ranges_unc[param_range_index]['bounds'][0]
             self.tidy_y_axis(ax, '', max_dims, max_value=max(data),
                              y_lims=(self.inputs.param_ranges_unc[param_range_index]['bounds'][0] - param_range * .1,
                                      self.inputs.param_ranges_unc[param_range_index]['bounds'][1] + param_range * .1))
@@ -2480,75 +1874,6 @@ class Project:
         self.tidy_y_axis(ax, 'likelihood', max_dims, y_label='Log likelihood')
         ax.set_ylabel('Log likelihood', fontsize=get_nice_font_size([1, 1]), labelpad=1)
         self.finish_off_figure(fig, 1, '_likelihoods', 'Likelihood progression')
-
-    ''' currently inactive optimisation plotting methods '''
-
-    # def plot_optimised_epi_outputs(self):
-    #     """
-    #     Plot incidence and mortality over funding. This corresponds to the outputs obtained under optimal allocation.
-    #     """
-    #
-    #     fig = self.set_and_update_figure()
-    #     left_ax = make_single_axis(fig)
-    #     right_ax = left_ax.twinx()
-    #     plots = {'incidence': [left_ax, 'b^', 'TB incidence per 100,000 per year'],
-    #             'mortality': [right_ax, 'r+', 'TB mortality per 100,000 per year']}
-    #     for plot in plots:
-    #         plots[plot][0].plot(self.model_runner.opti_results['annual_envelope'],
-    #                              self.model_runner.opti_results[plot], plots[plot][1], linewidth=2.0, label=plot)
-    #         self.tidy_axis(plots[plot][0], [1, 1], y_axis_type='raw', y_label=plots[plot][2], x_sig_figs=1,
-    #                        title='Annual funding (US$)', x_axis_type='scaled', x_label='$US ', legend='for_single')
-    #     self.save_figure(fig, '_optimised_outputs')
-    #
-    # def plot_piecharts_opti(self):
-    #
-    #     n_envelopes = len(self.model_runner.opti_results['annual_envelope'])
-    #     subplot_grid = find_subplot_numbers(n_envelopes + 1)
-    #     font_size = get_nice_font_size(subplot_grid)
-    #
-    #     fig = self.set_and_update_figure()
-    #     colors = ['#000037', '#7398B5', '#D94700', '#DBE4E9', '#62000E', '#3D5F00', '#240445', 'black', 'red',
-    #               'yellow', 'blue']  # AuTuMN colours
-    #     color_dict = {}
-    #     for i, intervention in enumerate(self.model_runner.interventions_considered_for_opti):
-    #         color_dict[intervention] = colors[i]
-    #
-    #     interventions_for_legend = []
-    #     for i, funding in enumerate(self.model_runner.opti_results['annual_envelope']):
-    #         ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], i+1)
-    #         temp_dict = self.model_runner.opti_results['best_allocation'][i]
-    #         temp_dict = {key: val for key, val in temp_dict.iteritems() if val > 0.0001}
-    #         labels = temp_dict.keys()
-    #         fracs = temp_dict.values()
-    #         dynamic_colors = [color_dict[lab] for lab in labels]
-    #         ax.pie(fracs, autopct='%1.1f%%', startangle=90, pctdistance=0.8, radius=0.8, colors=dynamic_colors, \
-    #                textprops={'backgroundcolor': 'white', 'fontsize': font_size})
-    #         ax.axis('equal')
-    #         circle = pyplot.Circle((0, 0), 0.4, color='w')
-    #         ax.add_artist(circle)
-    #         ax.text(0, 0, get_string_for_funding(funding), horizontalalignment='center', verticalalignment='center')
-    #         if len(interventions_for_legend) == 0:
-    #             # The legend will contain interventions sorted by proportion of funding for the smallest funding
-    #             interventions_for_legend = sorted(temp_dict, key=temp_dict.get, reverse=True)
-    #         else:
-    #             # we need to add interventions that were not selected for lower funding amounts
-    #             for intervention in temp_dict.keys():
-    #                 if intervention not in interventions_for_legend:
-    #                     interventions_for_legend.append(intervention)
-    #
-    #     # Generate a gost pie chart that include all interventions to be able to build the full legend
-    #     ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], n_envelopes + 1)
-    #     fracs = numpy.random.uniform(0, 1, size=len(interventions_for_legend))
-    #     dynamic_colors = [color_dict[lab] for lab in interventions_for_legend]
-    #     patches, texts = ax.pie(fracs, colors=dynamic_colors)
-    #     ax.cla()  # Clear the gost pie chart
-    #
-    #     ax = fig.add_subplot(subplot_grid[0], subplot_grid[1], n_envelopes + 1)
-    #     ax.legend(patches, interventions_for_legend, loc='right', fontsize=2.0*font_size)
-    #     ax.axis('off')
-    #     fig.tight_layout()  # reduces the margins to maximize the size of the pies
-    #     fig.suptitle('Optimal allocation of resource')
-    #     self.save_figure(fig, '_optimal_allocation')
 
     ''' miscellaneous '''
 

@@ -150,22 +150,23 @@ def get_autumn_params():
         'plot_option_overlay_targets',
         'write_uncertainty_outcome_params',
         # 'output_param_plots',
+        # 'output_likelihood_plot',
         'is_shortcourse_improves_outcomes',
         # 'plot_option_plot_all_vars',
         # 'is_amplification',
         # 'is_misassignment',
         # 'is_lowquality',
-        # 'output_riskgroup_fractions',
+        'output_riskgroup_fractions',
         'is_vary_detection_by_organ',
         'is_include_relapse_in_ds_outcomes',
         # 'is_vary_detection_by_riskgroup',
         'is_include_hiv_treatment_outcomes',
         'is_treatment_history',
         # 'riskgroup_prison',
-        # 'output_likelihood_plot',
         # 'riskgroup_urbanpoor',
-        # 'output_scaleups',
+        'output_scaleups',
         'output_by_subgroups',
+        'output_compartment_populations',
         # 'riskgroup_ruralpoor',
         'output_epi_plots',
         # 'is_vary_force_infection_by_riskgroup',
@@ -173,6 +174,7 @@ def get_autumn_params():
         # 'riskgroup_hiv',
         # 'riskgroup_indigenous',
         # 'is_timevariant_organs'
+        # 'output_plot_economics'
     ]
     for k in default_boolean_keys:
         params[k]['value'] = True

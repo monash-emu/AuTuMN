@@ -730,16 +730,20 @@ class BaseModel:
         compartments_to_divide_over.append('remainder')
         aggregates = dict.fromkeys(compartments_to_divide_over)
         for compartment in self.labels:
-            if required_string_1 not in compartment: continue
-            if required_string_2 not in compartment: continue
-            if exclusion_string in compartment: continue
+            if required_string_1 not in compartment:
+                continue
+            if required_string_2 not in compartment:
+                continue
+            if exclusion_string in compartment:
+                continue
             division_found = False
             for division in compartments_to_divide_over:
                 if division in compartment:
                     division_found = True
                     aggregates[division] = tool_kit.elementwise_list_addition(self.compartment_soln[compartment],
                                                                               aggregates[division])
-                if allocate_to_one_division_only and division_found: break
+                if allocate_to_one_division_only and division_found:
+                    break
             if not division_found:
                 aggregates['remainder'] = tool_kit.elementwise_list_addition(self.compartment_soln[compartment],
                                                                              aggregates['remainder'])

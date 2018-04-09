@@ -1952,14 +1952,20 @@ class Project:
                                + t_k.find_title_from_dictionary(category_to_loop, capital_first_letter=False))
 
     def sum_compartments_by_category(self, category, scenario, start_time_index):
+        """
+        Find the sum of all compartments within a particular category (i.e. containing a particular string).
 
-        current_data = [0.] * len(self.model_runner.models[scenario].times[start_time_index:])
-        for comp in self.model_runner.models[scenario].labels:
-            if category in comp:
-                current_data \
-                    = [i + j for i, j in zip(current_data, self.model_runner.models[scenario].compartment_soln[
-                                                               comp][start_time_index:])]
-        return current_data
+        Args:
+            category: String for the category of interest
+            scenario: Scenario number
+            start_time_index: Time index to start from
+        """
+
+        data = [0.] * len(self.model_runner.models[scenario].times[start_time_index:])
+        for comp in [label for label in self.model_runner.models[scenario].labels if category in label]:
+            data = [current + increment for current, increment
+                    in zip(data, self.model_runner.models[scenario].compartment_soln[comp][start_time_index:])]
+        return data
 
     ''' remaining unimproved methods '''
 

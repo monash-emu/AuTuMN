@@ -1693,7 +1693,8 @@ class Project:
         # plot compartment population sizes
         if self.gui_inputs['output_compartment_populations']:
             for category in ['compartment', 'agegroups', 'riskgroups', 'compartment_types']:
-                self.plot_populations(category_to_loop=category)
+                for fraction in [True, False]:
+                    self.plot_populations(category_to_loop=category, fraction=fraction)
 
         # plot fractions
         # if self.gui_inputs['output_fractions']: self.plot_fractions('strain')
@@ -1916,7 +1917,7 @@ class Project:
 
         return max(gtb_data['point_estimate'].values())
 
-    def plot_populations(self, category_to_loop='compartment', scenario=0):
+    def plot_populations(self, category_to_loop='compartment', scenario=0, fraction=False):
         """
         Plot population by the compartment or other category to which they belong. Doesn't necessarily work that well
         for compartments, where there are generally too many compartments for them to be easily visualised.
@@ -1930,14 +1931,13 @@ class Project:
         start_time = self.inputs.model_constants['plot_start_time']
         start_time_index = self.find_start_time_index(start_time, scenario)
         times = self.model_runner.outputs['manual']['epi'][scenario]['times'][start_time_index:]
-        total_population = self.model_runner.outputs['manual']['epi'][scenario]['population'][start_time_index:]
         cumulative_data, labels_to_loop = [0.] * len(times), []
         labels_to_loop = self.model_runner.models[scenario].labels if category_to_loop == 'compartment' \
             else getattr(self.inputs, category_to_loop)
         for l, label in enumerate(labels_to_loop):
             current_data = self.model_runner.models[scenario].compartment_soln[label][start_time_index:] \
                 if category_to_loop == 'compartment' \
-                else self.sum_compartments_by_category(label, scenario, start_time_index)
+                else self.sum_compartments_by_category(label, scenario, start_time_index, fraction=fraction)
             previous_data, cumulative_data = increment_list_for_patch(current_data, cumulative_data)
             colour = round(float(l) / float(len(labels_to_loop)), 2)
             ax.fill_between(times, previous_data, cumulative_data, facecolor=(0., 0., colour),
@@ -1945,13 +1945,13 @@ class Project:
             ax.plot(times, cumulative_data, color=(0., 0., colour), label=t_k.find_title_from_dictionary(label),
                     linewidth=.1)
         self.tidy_x_axis(ax, start_time, 2035., max_dim)
-        self.tidy_y_axis(ax, '', max_dim, max_value=max(total_population))
+        self.tidy_y_axis(ax, '', max_dim, max_value=max(cumulative_data))
         ax.legend(bbox_to_anchor=(1.3, 1), fontsize=5)
-        self.finish_off_figure(fig, 1, '_' + category_to_loop,
-                               'Total population sizes, by '
+        self.finish_off_figure(fig, 1, '_' + ('fraction' if fraction else 'population') + '_' + category_to_loop,
+                               ('Fraction of population' if fraction else 'Size of population') + ', by '
                                + t_k.find_title_from_dictionary(category_to_loop, capital_first_letter=False))
 
-    def sum_compartments_by_category(self, category, scenario, start_time_index):
+    def sum_compartments_by_category(self, category, scenario, start_time_index, fraction=False):
         """
         Find the sum of all compartments within a particular category (i.e. containing a particular string).
 
@@ -1965,7 +1965,8 @@ class Project:
         for comp in [label for label in self.model_runner.models[scenario].labels if category in label]:
             data = [current + increment for current, increment
                     in zip(data, self.model_runner.models[scenario].compartment_soln[comp][start_time_index:])]
-        return data
+
+        return [d / p for d, p in zip(data, self.outputs['manual']['epi'][scenario]['population'][start_time_index:])] if fraction else data
 
     ''' remaining unimproved methods '''
 

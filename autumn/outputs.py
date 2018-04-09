@@ -1707,6 +1707,9 @@ class Project:
         if self.gui_inputs['output_riskgroup_fractions']:
             self.plot_stratified_populations(age_or_risk='risk')
 
+        for fraction in [True, False]:
+            self.plot_proportion_cases_by_stratum(fraction=fraction)
+
         # make a flow-diagram
         if self.gui_inputs['output_flow_diagram']:
             self.model_runner.models[0].make_flow_diagram(
@@ -1925,6 +1928,7 @@ class Project:
         Args:
             category_to_loop: Must be either 'compartment', 'agegroups' or 'riskgroups' to indicate category
             scenario: Generally 0 to indicate baseline scenario
+            fraction: Boolean for whether we want population totals or fractions
         """
 
         fig, ax, max_dim, n_rows, n_cols = initialise_figures_axes(1, room_for_legend=True)
@@ -1969,9 +1973,7 @@ class Project:
         return [d / p for d, p in zip(data, self.outputs['manual']['epi'][scenario]['population'][start_time_index:])] \
             if fraction else data
 
-    ''' remaining unimproved methods '''
-
-    def plot_proportion_cases_by_stratum(self, strata_string='agegroups'):
+    def plot_proportion_cases_by_stratum(self, strata_string='agegroups', scenario=0, fraction=True):
         """
         Method to plot the proportion of notifications that come from various groups of the model. Particularly intended
         to keep an eye on the proportion of notifications occurring in the paediatric population (which WHO sometimes
@@ -1981,46 +1983,31 @@ class Project:
             strata_string: String of the model attribute of interest - can set to 'riskgroups'
         """
 
-        # find strata to loop over
+        fig, ax, max_dim, n_rows, n_cols = initialise_figures_axes(1, room_for_legend=True)
         strata = getattr(self.inputs, strata_string)
-        if len(strata) == 0: return
-
-        colours = make_default_line_styles(len(strata), return_all=True)
-
-        # prelims
-        fig = self.set_and_update_figure()
-        ax = fig.add_subplot(1, 1, 1)
-        times = self.model_runner.models[0].times
-        lower_plot_margin = numpy.zeros(len(times))
-        upper_plot_margin = numpy.zeros(len(times))
-
+        start_time = self.inputs.model_constants['plot_start_time']
+        start_time_index = self.find_start_time_index(start_time, scenario)
+        times = self.model_runner.models[0].times[start_time_index:]
+        cumulative_data = [0.] * len(times)
         for s, stratum in enumerate(strata):
+            current_data = self.outputs['manual']['epi'][0]['notifications' + stratum][start_time_index:]
+            if fraction:
+                current_data = [d / p for d, p in
+                                zip(current_data, self.outputs['manual']['epi'][0]['notifications'][start_time_index:])]
+            previous_data, cumulative_data = increment_list_for_patch(current_data, cumulative_data)
+            ax.fill_between(times, previous_data, cumulative_data, facecolors=self.colour_theme[s],
+                            edgecolor=self.colour_theme[s], alpha=.8)
+            ax.plot(times, cumulative_data, color=self.colour_theme[s], linewidth=.1,
+                    label=t_k.turn_strat_into_label(stratum) if strata_string == 'agegroups'
+                    else t_k.find_title_from_dictionary(stratum))
+        ax.legend(bbox_to_anchor=(1.3, 1), fontsize=5)
+        self.tidy_x_axis(ax, start_time, 2035., max_dim)
+        self.tidy_y_axis(ax, '', max_dim, max_value=max(cumulative_data))
+        self.finish_off_figure(fig, 1, '_' + ('fraction' if fraction else 'population') + '_notifications',
+                               ('Fraction ' if fraction else 'Number ') + 'of notifications, by '
+                               + t_k.find_title_from_dictionary(strata_string, capital_first_letter=False))
 
-            # find numbers or fractions in that group
-            stratum_count = t_k.calculate_proportion_list(
-                self.model_runner.outputs['manual']['epi'][0]['notifications' + stratum],
-                self.model_runner.outputs['manual']['epi'][0]['notifications'])
-
-            for i in range(len(upper_plot_margin)): upper_plot_margin[i] += stratum_count[i]
-
-            # create proxy for legend
-            if strata_string == 'agegroups':
-                legd_text = t_k.turn_strat_into_label(stratum)
-            elif strata_string == 'riskgroups':
-                legd_text = t_k.find_title_from_dictionary(stratum)
-
-            ax.fill_between(times, lower_plot_margin, upper_plot_margin, facecolors=colours[s][1],
-                            label=legd_text)
-
-            # add group values to the lower plot range for next iteration
-            for i in range(len(lower_plot_margin)): lower_plot_margin[i] += stratum_count[i]
-
-        # tidy up plots
-        self.tidy_axis(ax, [1, 1], start_time=self.inputs.model_constants['recent_time'],
-                       y_axis_type='proportion', y_label='Proportion', legend=True)
-
-        fig.suptitle('Proportion of notifications by age', fontsize=self.title_size)
-        self.save_figure(fig, '_proportion_notifications_by_age')
+    ''' remaining unimproved methods '''
 
     def plot_stratified_populations(self, age_or_risk='age'):
         """

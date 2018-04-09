@@ -1692,7 +1692,7 @@ class Project:
 
         # plot compartment population sizes
         if self.gui_inputs['output_compartment_populations']:
-            for category in ['compartment', 'agegroups', 'riskgroups']:
+            for category in ['compartment', 'agegroups', 'riskgroups', 'compartment_types']:
                 self.plot_populations(category_to_loop=category)
 
         # plot fractions

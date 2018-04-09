@@ -1959,51 +1959,17 @@ class Project:
             category: String for the category of interest
             scenario: Scenario number
             start_time_index: Time index to start from
+            fraction: Boolean for whether to calculate as a fraction or as total compartment values
         """
 
         data = [0.] * len(self.model_runner.models[scenario].times[start_time_index:])
         for comp in [label for label in self.model_runner.models[scenario].labels if category in label]:
             data = [current + increment for current, increment
                     in zip(data, self.model_runner.models[scenario].compartment_soln[comp][start_time_index:])]
-
-        return [d / p for d, p in zip(data, self.outputs['manual']['epi'][scenario]['population'][start_time_index:])] if fraction else data
+        return [d / p for d, p in zip(data, self.outputs['manual']['epi'][scenario]['population'][start_time_index:])] \
+            if fraction else data
 
     ''' remaining unimproved methods '''
-
-    def plot_fractions(self, strain_or_organ):
-        """
-        Plot population fractions by the compartment to which they belong.
-
-        *** Ideally shouldn't be running directly from the model objects as is currently happening.
-
-        *** Actually, this really isn't doing what it's supposed to at all - errors seem to be in the functions that are
-        called from the took kit. ***
-
-        Args:
-            strain_or_organ: Whether the plotting style should be done by strain or by organ.
-        """
-
-        # get values to be plotted
-        _, subgroup_fractions = t_k.find_fractions(self.model_runner.models[0])
-        for c, category in enumerate(subgroup_fractions):
-            values = subgroup_fractions[category]
-
-            # standard prelims
-            fig = self.set_and_update_figure()
-            ax = make_single_axis(fig)
-            colours, patterns, compartment_full_names, markers \
-                = make_related_line_styles(values.keys(), strain_or_organ)
-
-            # plot population fractions
-            for plot_label in values.keys():
-                ax.plot(self.model_runner.models[0].times, values[plot_label],
-                        label=t_k.find_title_from_dictionary(plot_label), linewidth=1, color=colours[plot_label],
-                        marker=markers[plot_label], linestyle=patterns[plot_label])
-
-            # finishing up
-            self.tidy_axis(ax, [1, 1], legend='for_single', start_time=self.inputs.model_constants['plot_start_time'],
-                           y_axis_type='proportion')
-            self.save_figure(fig, '_fraction')
 
     def plot_proportion_cases_by_stratum(self, strata_string='agegroups'):
         """

@@ -1273,6 +1273,24 @@ class Project:
                         = numpy.percentile(matrix_to_analyse, self.model_runner.percentiles, axis=0)
         return uncertainty_centiles
 
+    def sum_compartments_by_category(self, category, scenario, start_time_index, fraction=False):
+        """
+        Find the sum of all compartments within a particular category (i.e. containing a particular string).
+
+        Args:
+            category: String for the category of interest
+            scenario: Scenario number
+            start_time_index: Time index to start from
+            fraction: Boolean for whether to calculate as a fraction or as total compartment values
+        """
+
+        data = [0.] * len(self.model_runner.models[scenario].times[start_time_index:])
+        for comp in [label for label in self.model_runner.models[scenario].labels if category in label]:
+            data = [current + increment for current, increment
+                    in zip(data, self.model_runner.models[scenario].compartment_soln[comp][start_time_index:])]
+        return [d / p for d, p in zip(data, self.outputs['manual']['epi'][scenario]['population'][start_time_index:])] \
+            if fraction else data
+
     ''' methods for outputting to documents and spreadsheets and console '''
 
     def write_automatic_calibration_outputs(self):
@@ -1671,6 +1689,10 @@ class Project:
                     self.plot_epi_outputs(
                         [''.join(panel) for panel in itertools.product(outputs_to_plot, list_of_strata)],
                         'scenario', 'by_' + strata_type, grid=[len(outputs_to_plot), len(list_of_strata)], sharey='row')
+        for fraction in [True, False]:
+            self.plot_stacked_subgroup_epi_outputs('notifications', fraction=fraction)
+        for output in ['incidence', 'mortality', 'prevalence']:
+            self.plot_stacked_subgroup_epi_outputs(output, fraction=False)
 
         # plot scale-up functions
         if self.gui_inputs['output_scaleups']:
@@ -1706,9 +1728,6 @@ class Project:
         # plot risk group proportions
         if self.gui_inputs['output_riskgroup_fractions']:
             self.plot_stratified_populations(age_or_risk='risk')
-
-        for fraction in [True, False]:
-            self.plot_proportion_cases_by_stratum(fraction=fraction)
 
         # make a flow-diagram
         if self.gui_inputs['output_flow_diagram']:
@@ -1952,35 +1971,21 @@ class Project:
         self.tidy_y_axis(ax, '', max_dim, max_value=max(cumulative_data))
         ax.legend(bbox_to_anchor=(1.3, 1), fontsize=5)
         self.finish_off_figure(fig, 1, '_' + ('fraction' if fraction else 'population') + '_' + category_to_loop,
-                               ('Fraction of population' if fraction else 'Size of population') + ', by '
+                               ('Fraction' if fraction else 'Size') + ' of population, by '
                                + t_k.find_title_from_dictionary(category_to_loop, capital_first_letter=False))
 
-    def sum_compartments_by_category(self, category, scenario, start_time_index, fraction=False):
-        """
-        Find the sum of all compartments within a particular category (i.e. containing a particular string).
-
-        Args:
-            category: String for the category of interest
-            scenario: Scenario number
-            start_time_index: Time index to start from
-            fraction: Boolean for whether to calculate as a fraction or as total compartment values
-        """
-
-        data = [0.] * len(self.model_runner.models[scenario].times[start_time_index:])
-        for comp in [label for label in self.model_runner.models[scenario].labels if category in label]:
-            data = [current + increment for current, increment
-                    in zip(data, self.model_runner.models[scenario].compartment_soln[comp][start_time_index:])]
-        return [d / p for d, p in zip(data, self.outputs['manual']['epi'][scenario]['population'][start_time_index:])] \
-            if fraction else data
-
-    def plot_proportion_cases_by_stratum(self, strata_string='agegroups', scenario=0, fraction=True):
+    def plot_stacked_subgroup_epi_outputs(self, output='notifications', strata_string='agegroups', scenario=0,
+                                          fraction=True):
         """
         Method to plot the proportion of notifications that come from various groups of the model. Particularly intended
         to keep an eye on the proportion of notifications occurring in the paediatric population (which WHO sometimes
         say should be around 15% in well-functioning TB programs).
 
         Args:
+            output: Epidemiological output of interest
             strata_string: String of the model attribute of interest - can set to 'riskgroups'
+            scenario: Scenario to take the outputs from (generally 0 for baseline)
+            fraction: Boolean for whether to plot values as
         """
 
         fig, ax, max_dim, n_rows, n_cols = initialise_figures_axes(1, room_for_legend=True)
@@ -1990,10 +1995,10 @@ class Project:
         times = self.model_runner.models[0].times[start_time_index:]
         cumulative_data = [0.] * len(times)
         for s, stratum in enumerate(strata):
-            current_data = self.outputs['manual']['epi'][0]['notifications' + stratum][start_time_index:]
+            current_data = self.outputs['manual']['epi'][0][output + stratum][start_time_index:]
             if fraction:
                 current_data = [d / p for d, p in
-                                zip(current_data, self.outputs['manual']['epi'][0]['notifications'][start_time_index:])]
+                                zip(current_data, self.outputs['manual']['epi'][0][output][start_time_index:])]
             previous_data, cumulative_data = increment_list_for_patch(current_data, cumulative_data)
             ax.fill_between(times, previous_data, cumulative_data, facecolors=self.colour_theme[s],
                             edgecolor=self.colour_theme[s], alpha=.8)
@@ -2002,9 +2007,9 @@ class Project:
                     else t_k.find_title_from_dictionary(stratum))
         ax.legend(bbox_to_anchor=(1.3, 1), fontsize=5)
         self.tidy_x_axis(ax, start_time, 2035., max_dim)
-        self.tidy_y_axis(ax, '', max_dim, max_value=max(cumulative_data))
-        self.finish_off_figure(fig, 1, '_' + ('fraction' if fraction else 'population') + '_notifications',
-                               ('Fraction ' if fraction else 'Number ') + 'of notifications, by '
+        self.tidy_y_axis(ax, 'prop_' if fraction else '', max_dim, max_value=max(cumulative_data))
+        self.finish_off_figure(fig, 1, '_' + ('fraction' if fraction else 'population') + '_' + output,
+                               ('Fraction of ' if fraction else 'Absolute ') + output + ', by '
                                + t_k.find_title_from_dictionary(strata_string, capital_first_letter=False))
 
     ''' remaining unimproved methods '''

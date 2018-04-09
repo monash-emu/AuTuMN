@@ -1689,10 +1689,10 @@ class Project:
                     self.plot_epi_outputs(
                         [''.join(panel) for panel in itertools.product(outputs_to_plot, list_of_strata)],
                         'scenario', 'by_' + strata_type, grid=[len(outputs_to_plot), len(list_of_strata)], sharey='row')
-        for fraction in [True, False]:
-            self.plot_stacked_subgroup_epi_outputs('notifications', fraction=fraction)
-        for output in ['incidence', 'mortality', 'prevalence']:
-            self.plot_stacked_subgroup_epi_outputs(output, fraction=False)
+            for strata_type in ['agegroups', 'riskgroups']:
+                for fraction in [True, False]:
+                    self.plot_stacked_subgroup_epi_outputs('notifications', category_to_loop=strata_type,
+                                                           fraction=fraction)
 
         # plot scale-up functions
         if self.gui_inputs['output_scaleups']:
@@ -1974,7 +1974,7 @@ class Project:
                                ('Fraction' if fraction else 'Size') + ' of population, by '
                                + t_k.find_title_from_dictionary(category_to_loop, capital_first_letter=False))
 
-    def plot_stacked_subgroup_epi_outputs(self, output='notifications', strata_string='agegroups', scenario=0,
+    def plot_stacked_subgroup_epi_outputs(self, output='notifications', category_to_loop='agegroups', scenario=0,
                                           fraction=True):
         """
         Method to plot the proportion of notifications that come from various groups of the model. Particularly intended
@@ -1983,13 +1983,13 @@ class Project:
 
         Args:
             output: Epidemiological output of interest
-            strata_string: String of the model attribute of interest - can set to 'riskgroups'
+            category_to_loop: String of the model attribute of interest - can set to 'riskgroups'
             scenario: Scenario to take the outputs from (generally 0 for baseline)
             fraction: Boolean for whether to plot values as
         """
 
         fig, ax, max_dim, n_rows, n_cols = initialise_figures_axes(1, room_for_legend=True)
-        strata = getattr(self.inputs, strata_string)
+        strata = getattr(self.inputs, category_to_loop)
         start_time = self.inputs.model_constants['plot_start_time']
         start_time_index = self.find_start_time_index(start_time, scenario)
         times = self.model_runner.models[0].times[start_time_index:]
@@ -2003,14 +2003,14 @@ class Project:
             ax.fill_between(times, previous_data, cumulative_data, facecolors=self.colour_theme[s],
                             edgecolor=self.colour_theme[s], alpha=.8)
             ax.plot(times, cumulative_data, color=self.colour_theme[s], linewidth=.1,
-                    label=t_k.turn_strat_into_label(stratum) if strata_string == 'agegroups'
+                    label=t_k.turn_strat_into_label(stratum) if category_to_loop == 'agegroups'
                     else t_k.find_title_from_dictionary(stratum))
         ax.legend(bbox_to_anchor=(1.3, 1), fontsize=5)
         self.tidy_x_axis(ax, start_time, 2035., max_dim)
         self.tidy_y_axis(ax, 'prop_' if fraction else '', max_dim, max_value=max(cumulative_data))
-        self.finish_off_figure(fig, 1, '_' + ('fraction' if fraction else 'population') + '_' + output,
-                               ('Fraction of ' if fraction else 'Absolute ') + output + ', by '
-                               + t_k.find_title_from_dictionary(strata_string, capital_first_letter=False))
+        self.finish_off_figure(fig, 1, '_' + ('absolute_' if fraction else 'population_') + output + category_to_loop,
+                               ('Fraction of ' if fraction else 'Stacked absolute ') + output + ', by '
+                               + t_k.find_title_from_dictionary(category_to_loop, capital_first_letter=False))
 
     ''' remaining unimproved methods '''
 

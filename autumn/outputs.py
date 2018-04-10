@@ -43,6 +43,12 @@ def get_nice_font_size(subplot_grid):
     return 2. + 8. / subplot_grid[0]
 
 
+def get_label_font_size(maxdim):
+
+    label_font_sizes = {1: 8, 2: 7}
+    return label_font_sizes[maxdim] if maxdim in label_font_sizes else 6
+
+
 def create_patch_from_list(x_list, lower_border, upper_border):
     """
     Creates an array that can be used to plot a patch using the add patch plotting function in matplotlib.
@@ -452,11 +458,6 @@ class Project:
 
         # standard graphing themes
         self.tick_length = 3
-        self.label_font_sizes \
-            = {1: 8,
-               2: 7,
-               3: 6,
-               4: 6}
         self.colour_theme \
             = {0: (0., 0., 0.),
                1: (0., 0., 125. / 255.),
@@ -608,11 +609,11 @@ class Project:
         elif len(axis.get_xticks()) > 7:
             for label in axis.xaxis.get_ticklabels()[::2]:
                 label.set_visible(False)
-        axis.tick_params(axis='x', length=self.tick_length, pad=6, labelsize=self.label_font_sizes[max_dim])
+        axis.tick_params(axis='x', length=self.tick_length, pad=6, labelsize=get_label_font_size(max_dim))
 
         # axis label
         if x_label:
-            axis.set_xlabel(x_label, fontsize=self.label_font_sizes[max_dim])
+            axis.set_xlabel(x_label, fontsize=get_label_font_size(max_dim))
 
     def tidy_y_axis(self, axis, quantity, max_dims, left_axis=True, max_value=1e6, space_at_top=.1, y_label=None,
                     y_lims=None):
@@ -643,7 +644,7 @@ class Project:
             axis.set_ylim(bottom=0.)
 
         # ticks
-        axis.tick_params(axis='y', length=self.tick_length, pad=6, labelsize=self.label_font_sizes[max_dims])
+        axis.tick_params(axis='y', length=self.tick_length, pad=6, labelsize=get_label_font_size(max_dims))
 
         # tick labels
         if not left_axis:
@@ -653,7 +654,7 @@ class Project:
 
         # axis label
         if y_label and left_axis:
-            axis.set_ylabel(y_label, fontsize=self.label_font_sizes[max_dims])
+            axis.set_ylabel(y_label, fontsize=get_label_font_size(max_dims))
 
     def add_legend_to_plot(self, axis, max_dim, location=0):
         """
@@ -666,9 +667,9 @@ class Project:
         """
 
         if max_dim == 1:
-            axis.legend(bbox_to_anchor=(1.3, 1), fontsize=self.label_font_sizes[max_dim])
+            axis.legend(bbox_to_anchor=(1.3, 1), fontsize=get_label_font_size(max_dim))
         else:
-            axis.legend(fontsize=self.label_font_sizes[max_dim], loc=location)
+            axis.legend(fontsize=get_label_font_size(max_dim), loc=location)
 
     def save_figure(self, fig, end_figure_name):
         """
@@ -1352,7 +1353,7 @@ class Project:
             # finishing off axis and figure
             self.tidy_x_axis(axis, start_time, 2035., max_dims, labels_off=not last_row(out, n_rows, n_cols))
             self.tidy_y_axis(axis, output, max_dims, max_value=max(max_data_values[output]))
-            axis.set_title(t_k.find_title_from_dictionary(output), fontsize=self.label_font_sizes[max_dims])
+            axis.set_title(t_k.find_title_from_dictionary(output), fontsize=get_label_font_size(max_dims))
             if out == len(outputs) - 1 and purpose == 'scenario' and len(self.scenarios) > 1:
                 self.add_legend_to_plot(axis, max_dims)
         self.finish_off_figure(fig, len(outputs), '_' + descriptor + '_epi_' + purpose,
@@ -1543,7 +1544,7 @@ class Project:
         ax.set_xticks([x + bar_width / 2. for x in x_positions])
         ax.tick_params(axis='x', length=0.)
         ax.set_xticklabels([t_k.find_title_from_dictionary(group) for group in self.inputs.riskgroups],
-                           fontsize=self.label_font_sizes[1])
+                           fontsize=get_label_font_size(1))
 
         # general approach fine for y-axis and legend
         self.tidy_y_axis(ax, 'prop_', max_dims, max_value=1., space_at_top=0.)
@@ -1672,7 +1673,7 @@ class Project:
 
                 # finish off axis
                 axis.set_title(t_k.find_title_from_dictionary('program_prop_' + program),
-                               fontsize=self.label_font_sizes[max_dim])
+                               fontsize=get_label_font_size(max_dim))
                 self.tidy_x_axis(axis, 0., end_value, max_dim, x_label='$US' if last_row(p, n_rows, n_cols) else None)
                 self.tidy_y_axis(axis, 'prop_', max_dim, max_value=1., left_axis=p % n_cols == 0, y_label='Coverage')
                 if p == len(self.interventions_to_cost[scenario]) - 1:
@@ -1725,7 +1726,7 @@ class Project:
                 # tidy each individual axis
                 for plot_type in plot_types:
                     ax_dict[plot_type].set_title(t_k.find_title_from_dictionary(cost_type),
-                                                 fontsize=self.label_font_sizes[max_dim])
+                                                 fontsize=get_label_font_size(max_dim))
                     self.tidy_x_axis(ax_dict[plot_type], cost_times[0], cost_times[-1], max_dim)
                     self.tidy_y_axis(ax_dict[plot_type], 'cost', max_dim, left_axis=c % n_cols == 0, y_label='$US')
                     if c == len(self.model_runner.cost_types) - 1:
@@ -1757,7 +1758,7 @@ class Project:
                                  if self.inputs.param_ranges_unc[i]['key'] == param][0]
             param_range = self.inputs.param_ranges_unc[param_range_index]['bounds'][1] \
                 - self.inputs.param_ranges_unc[param_range_index]['bounds'][0]
-            ax.set_title(t_k.find_title_from_dictionary(param), fontsize=self.label_font_sizes[max_dims])
+            ax.set_title(t_k.find_title_from_dictionary(param), fontsize=get_label_font_size(max_dims))
             for i in range(2):
                 ax.axvline(x=self.inputs.param_ranges_unc[param_range_index]['bounds'][i], color='.3', linestyle=':')
             self.tidy_x_axis(ax, self.inputs.param_ranges_unc[param_range_index]['bounds'][0] - param_range * .1,
@@ -1780,7 +1781,7 @@ class Project:
             ax.plot(range(1, len(data) + 1), data)
             param_range_index = [i for i in range(len(self.inputs.param_ranges_unc))
                                  if self.inputs.param_ranges_unc[i]['key'] == param][0]
-            ax.set_title(t_k.find_title_from_dictionary(param), fontsize=self.label_font_sizes[max_dims])
+            ax.set_title(t_k.find_title_from_dictionary(param), fontsize=get_label_font_size(max_dims))
             for i in range(2):
                 ax.plot([1, len(data) + 1], [self.inputs.param_ranges_unc[param_range_index]['bounds'][i]] * 2,
                         color='.3', linestyle=':')
@@ -1840,8 +1841,8 @@ class Project:
             ax.plot(x_values, y_values)
 
             # tidy up
-            ax.set_title(t_k.find_title_from_dictionary(param['key']), fontsize=self.label_font_sizes[max_dims])
-            ax.text(lower + .05, max(y_values) / 2., description, fontsize=self.label_font_sizes[max_dims])
+            ax.set_title(t_k.find_title_from_dictionary(param['key']), fontsize=get_label_font_size(max_dims))
+            ax.text(lower + .05, max(y_values) / 2., description, fontsize=get_label_font_size(max_dims))
             self.tidy_x_axis(ax, x_values[0], x_values[-1], max_dims)
             self.tidy_y_axis(ax, '', max_dims, max_value=max(y_values))
             ax.set_ylim(bottom=0.)

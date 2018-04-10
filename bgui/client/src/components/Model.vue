@@ -145,6 +145,23 @@
                   Run model
                 </h2>
 
+                <md-input-container
+                    style="
+                        width: 200px;">
+                  <label>Existing Projects</label>
+                  <md-select
+                      v-model="project"
+                      @change="changeProject">
+                    <md-option
+                        v-for="(p, i) in projects"
+                        v-bind:value="p"
+                        :key="i">
+                      {{p}}
+                    </md-option>
+                  </md-select>
+                </md-input-container>
+
+
                 <div style="width: 100%">
                   <md-layout
                       md-row
@@ -218,22 +235,6 @@
                   style="margin-top: 1.5em;">
                   Model Results
                 </h2>
-
-                <md-input-container
-                    style="
-                        width: 200px;">
-                  <label>Existing Projects</label>
-                  <md-select
-                      v-model="project"
-                      @change="changeProject">
-                    <md-option
-                        v-for="(p, i) in projects"
-                        v-bind:value="p"
-                        :key="i">
-                      {{p}}
-                    </md-option>
-                  </md-select>
-                </md-input-container>
 
                 <vue-slider
                     v-if="filenames.length > 0"
@@ -441,6 +442,8 @@ export default {
       if (res.result) {
         this.filenames = _.map(
           res.result.filenames, f => `${config.apiUrl}/file/${f}`)
+        this.consoleLines = res.result.consoleLines
+        this.params = res.result.params
         console.log('>> Model.changeProject filenames', this.filenames)
       }
     },

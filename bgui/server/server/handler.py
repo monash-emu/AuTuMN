@@ -12,6 +12,8 @@ To use define functions with name
 All handlers must return a JSON dictionary, except for downloadable functions
 Handlers can take parameters, which are expected to be only JSON-compatible
 Python data structures.
+
+raised Exceptions will be caught and converted into a JSON response
 """
 
 from __future__ import print_function
@@ -215,11 +217,28 @@ def public_get_autumn_params():
 def public_get_project_images(project):
     save_dir = current_app.config['SAVE_FOLDER']
     out_dir = os.path.join(save_dir, project)
-    filenames = glob.glob(os.path.join(out_dir, '*'))
+
+    filenames = glob.glob(os.path.join(out_dir, '*png'))
     filenames = [os.path.relpath(p, save_dir) for p in filenames]
+
+    params = {}
+    json_filename = os.path.join(out_dir, 'params.json')
+    if os.path.isfile(json_filename):
+        with open(json_filename) as f:
+            params = json.load(f)
+
+    console_lines = []
+    console_filename = os.path.join(out_dir, 'console.log')
+    if os.path.isfile(console_filename):
+        with open(console_filename) as f:
+            text = f.read()
+            console_lines = text.splitlines()
+
     return {
         'success': True,
         'filenames': filenames,
+        'params': params,
+        'consoleLines': console_lines
     }
 
 def public_get_example_graph_data():

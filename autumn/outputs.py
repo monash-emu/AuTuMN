@@ -459,22 +459,21 @@ class Project:
         # standard graphing themes
         self.tick_length = 3
         self.colour_theme \
-            = {0: (0., 0., 0.),
-               1: (0., 0., 125. / 255.),
-               2: (210. / 255., 70. / 255., 0.),
-               3: (100. / 255., 150. / 255., 1.),
-               4: (65. / 255., 65. / 255., 65. / 255.),
-               5: (220. / 255., 25. / 255., 25. / 255.),
-               6: (120. / 255., 55. / 255., 20. / 255.),
-               7: (120. / 255., 55. / 255., 110. / 255.),
-               8: (135. / 255., 135. / 255., 30. / 255.),
-               9: (120. / 255., 120. / 255., 120. / 255.),
-               10: (220. / 255., 20. / 255., 170. / 255.),
-               11: (20. / 255., 65. / 255., 20. / 255.),
-               12: (15. / 255., 145. / 255., 25. / 255.),
-               13: (15. / 255., 185. / 255., 240. / 255.),
-               14: (10. / 255., 0., 110. / 255.),
-               'data': (150. / 255., 0., 0.)}
+            = [(0., 0., 0.),
+               (0., 0., 125. / 255.),
+               (210. / 255., 70. / 255., 0.),
+               (100. / 255., 150. / 255., 1.),
+               (65. / 255., 65. / 255., 65. / 255.),
+               (220. / 255., 25. / 255., 25. / 255.),
+               (120. / 255., 55. / 255., 20. / 255.),
+               (120. / 255., 55. / 255., 110. / 255.),
+               (135. / 255., 135. / 255., 30. / 255.),
+               (120. / 255., 120. / 255., 120. / 255.),
+               (220. / 255., 20. / 255., 170. / 255.),
+               (20. / 255., 65. / 255., 20. / 255.),
+               (15. / 255., 145. / 255., 25. / 255.),
+               (15. / 255., 185. / 255., 240. / 255.),
+               (10. / 255., 0., 110. / 255.)]
         self.gtb_indices \
             = {'incidence': 'e_inc_100k',
                'mortality': 'e_mort_exc_tbhiv_100k',
@@ -1630,7 +1629,7 @@ class Project:
         if self.gui_inputs['plot_option_overlay_input_data'] and var in self.inputs.scaleup_data[0]:
             data_to_plot = {key: value for key, value in self.inputs.scaleup_data[0][var].items()
                             if int(time_limits[0]) <= key <= int(time_limits[1])}
-            axis.scatter(data_to_plot.keys(), data_to_plot.values(), color=self.colour_theme['data'], s=7, zorder=10)
+            axis.scatter(data_to_plot.keys(), data_to_plot.values(), color=self.colour_theme[1], s=7, zorder=10)
             return max(data_to_plot.values()) if data_to_plot else 0.
 
     ''' economics plotting '''

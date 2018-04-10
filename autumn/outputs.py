@@ -35,18 +35,16 @@ def find_smallest_factors_of_integer(n):
     return answer
 
 
-def get_nice_font_size(subplot_grid):
+def get_label_font_size(max_dim):
     """
-    Simple function to return a reasonable font size as appropriate to the number of rows of subplots in the figure.
+    Find standardised font size - to be applied across all figures.
+
+    Args:
+        max_dim: The number of rows or columns, whichever is the greater
     """
-
-    return 2. + 8. / subplot_grid[0]
-
-
-def get_label_font_size(maxdim):
 
     label_font_sizes = {1: 8, 2: 7}
-    return label_font_sizes[maxdim] if maxdim in label_font_sizes else 6
+    return label_font_sizes[max_dim] if max_dim in label_font_sizes else 6
 
 
 def create_patch_from_list(x_list, lower_border, upper_border):
@@ -531,18 +529,6 @@ class Project:
         return os.path.abspath(self.out_dir_project)
 
     ''' general methods for use by specific methods below '''
-
-    def find_var_index(self, var):
-        """
-        Finds the index number for a var in the var arrays. (Arbitrarily uses the baseline model from the model runner.)
-
-        Args:
-            var: String for the var that we're looking for
-        Returns:
-            The var's index
-        """
-
-        return self.model_runner.models[0].var_labels.index(var)
 
     def find_start_index(self, scenario=0):
         """
@@ -1459,11 +1445,9 @@ class Project:
                                                          requirements=requirements, exclusions=exclusions)
         for l, label in enumerate(current_data):
             previous_data, cumulative_data = increment_list_for_patch(current_data[label], cumulative_data)
-            colour = round(float(l) / float(len(current_data[label])), 2)
-            ax.fill_between(times, previous_data, cumulative_data, facecolor=(0., 0., colour),
-                            edgecolor=(0., 0., colour), alpha=.8)
-            ax.plot([-1e2], [0.], color=(0., 0., colour), label=t_k.find_title_from_dictionary(label),
-                    linewidth=5.)
+            colour = self.colour_theme[l + 1]
+            ax.fill_between(times, previous_data, cumulative_data, facecolor=colour, edgecolor=colour, alpha=.8)
+            ax.plot([-1e2], [0.], color=colour, label=t_k.find_title_from_dictionary(label), linewidth=5.)
         self.tidy_x_axis(ax, start_time, 2035., max_dim)
         self.tidy_y_axis(ax, '', max_dim, max_value=max(cumulative_data))
         ax.legend(bbox_to_anchor=(1.3, 1))
@@ -1506,9 +1490,9 @@ class Project:
                 current_data = [d / p for d, p in
                                 zip(current_data, self.outputs['manual']['epi'][0][output][start_time_index:])]
             previous_data, cumulative_data = increment_list_for_patch(current_data, cumulative_data)
-            ax.fill_between(times, previous_data, cumulative_data, facecolors=self.colour_theme[s],
-                            edgecolor=self.colour_theme[s], alpha=.8)
-            ax.plot([-1e2], [0.], color=self.colour_theme[s], linewidth=5.,
+            colour = self.colour_theme[s + 1]
+            ax.fill_between(times, previous_data, cumulative_data, facecolors=colour, edgecolor=colour, alpha=.8)
+            ax.plot([-1e2], [0.], color=colour, linewidth=5.,
                     label=t_k.turn_strat_into_label(stratum) if category_to_loop == 'agegroups'
                     else t_k.find_title_from_dictionary(stratum))
         ax.legend(bbox_to_anchor=(1.3, 1))
@@ -1711,16 +1695,13 @@ class Project:
                             cost_times, self.inputs.model_constants['reference_time'])]) for d in current_data]
 
                     # plot lines and areas
+                    colour = self.colour_theme[inter + 1]
                     ax_dict['individual'].plot(
-                        cost_times, current_data,
-                        color=self.colour_theme[inter + 1], label=t_k.find_title_from_dictionary(intervention))
+                        cost_times, current_data, color=colour, label=t_k.find_title_from_dictionary(intervention))
                     ax_dict['relative'].plot(
-                        cost_times, relative_data,
-                        color=self.colour_theme[inter + 1], label=t_k.find_title_from_dictionary(intervention))
+                        cost_times, relative_data, color=colour, label=t_k.find_title_from_dictionary(intervention))
                     ax_dict['stacked'].fill_between(
-                        cost_times, previous_data, cumulative_data,
-                        color=self.colour_theme[inter + 1], edgecolor=self.colour_theme[inter + 1], linewidth=.1,
-                        label=t_k.find_title_from_dictionary(intervention))
+                        cost_times, previous_data, cumulative_data, color=colour, edgecolor=colour, linewidth=.1)
 
                 # tidy each individual axis
                 for plot_type in plot_types:
@@ -1872,7 +1853,7 @@ class Project:
         fig.suptitle('Progression of likelihood', fontsize=self.title_size)
         self.tidy_x_axis(ax, 0, len(self.accepted_indices), max_dims, x_label='Runs')
         self.tidy_y_axis(ax, 'likelihood', max_dims, y_label='Log likelihood')
-        ax.set_ylabel('Log likelihood', fontsize=get_nice_font_size([1, 1]), labelpad=1)
+        ax.set_ylabel('Log likelihood', fontsize=get_label_font_size(max_dims), labelpad=1)
         self.finish_off_figure(fig, 1, '_likelihoods', 'Likelihood progression')
 
     ''' miscellaneous '''

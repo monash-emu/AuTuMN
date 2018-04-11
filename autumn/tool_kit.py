@@ -788,24 +788,14 @@ def find_title_from_dictionary(working_string, forward=True, capital_first_lette
                 'plot outcomes by sub-groups',
            'output_age_fractions':
                 'plot proportions by age',
-           'output_riskgroup_fractions':
-                'plot proportions by risk group',
            'output_flow_diagram':
                 'draw flow diagram',
-           'output_fractions':
-                'plot compartment fractions',
            'output_scaleups':
                 'plot scale-up functions',
            'output_plot_economics':
                 'plot economics graphs',
-           'output_plot_riskgroup_checks':
-                'plot risk group checks',
-           'output_age_calculations':
-                'plot age calculation weightings',
            'output_param_plots':
                 'plot parameter progression',
-           'output_popsize_plot':
-                'plot "popsizes" for cost-coverage curves',
            'output_likelihood_plot':
                 'plot log likelihoods over runs',
            'riskgroup_diabetes':
@@ -1130,7 +1120,7 @@ def is_upper_age_limit_at_or_below(compartment_string, age_value):
 
 
 def adapt_params_to_stratification(data_breakpoints, model_breakpoints, data_param_vals, assumed_max_params=100.,
-                                   parameter_name='', whether_to_plot=False, gui_console_fn=None):
+                                   parameter_name='', gui_console_fn=None):
     """
     Create a new set of parameters associated to the model stratification given parameter values that are known for
     another stratification.
@@ -1184,10 +1174,6 @@ def adapt_params_to_stratification(data_breakpoints, model_breakpoints, data_par
     model_value_list = []
     for i in model_strat_list:
         model_value_list += [model_param_vals[i]]
-
-    if whether_to_plot:
-        outputs.plot_comparative_age_parameters(
-            data_strat_list, data_value_list, model_value_list, model_strat_list, parameter_name)
     return(model_param_vals)
 
 

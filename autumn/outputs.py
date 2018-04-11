@@ -691,9 +691,6 @@ class Project:
             remainder: Whether to add an additional category for the remainder
         """
 
-        print('got here')
-        print(type(requirements))
-
         categories_to_loop = getattr(self.inputs, category_type)
         current_data, compartments_in_category = {}, {}
         if remainder:
@@ -937,35 +934,6 @@ class Project:
                                                                                'times'], year)]
                 workbook.save(path)
 
-    def write_opti_outputs_spreadsheet(self):
-
-        # prelims
-        path = os.path.join(self.model_runner.opti_outputs_dir, 'opti_results.xlsx')
-        wb = xl.Workbook()
-        sheet = wb.active
-        sheet.title = 'optimisation'
-
-        # write row names
-        row_names = ['envelope', 'incidence', 'mortality']
-        for row, name in enumerate(row_names):
-            sheet.cell(row=row + 1, column=1).value = name
-        row_index = {}
-        for i, intervention in enumerate(self.model_runner.interventions_considered_for_opti):
-            sheet.cell(row=i + 4, column=1).value = intervention
-            row_index[intervention] = i + 4
-
-        # populate cells with content
-        for env, envelope in enumerate(self.model_runner.opti_results['annual_envelope']):
-            sheet.cell(row=1, column=env + 1).value = envelope
-            sheet.cell(row=2, column=env + 1).value = self.model_runner.opti_results['incidence'][env]
-            sheet.cell(row=3, column=env + 1).value = self.model_runner.opti_results['mortality'][env]
-            for intervention in self.model_runner.opti_results['best_allocation'][env].keys():
-                sheet.cell(row=row_index[intervention], column=env + 1).value = \
-                    self.model_runner.opti_results['best_allocation'][env][intervention]
-
-        # save workbook
-        wb.save(path)
-
     def write_docs_by_scenario(self):
         """
         Write word documents using the docx package. Writes with or without uncertainty according to whether Run
@@ -1097,7 +1065,7 @@ class Project:
         Master plotting method to call all the methods that produce specific plots.
         """
 
-        # plot mixing matrix if relevant
+        # plot mixing matrix whenever relevant
         if self.inputs.is_vary_force_infection_by_riskgroup and len(self.inputs.riskgroups) > 1:
             self.plot_mixing_matrix()
 
@@ -1119,8 +1087,7 @@ class Project:
                         'scenario', 'by_' + strata_type, grid=[len(outputs_to_plot), len(list_of_strata)], sharey='row')
             for strata_type in ['agegroups', 'riskgroups']:
                 for fraction in [True, False]:
-                    self.plot_stacked_epi_outputs('notifications', category_to_loop=strata_type,
-                                                  fraction=fraction)
+                    self.plot_stacked_epi_outputs('notifications', category_to_loop=strata_type, fraction=fraction)
 
         # plot scale-up functions
         if self.gui_inputs['output_scaleups']:
@@ -1418,7 +1385,8 @@ class Project:
         ax.legend(bbox_to_anchor=(1.3, 1))
         self.tidy_x_axis(ax, start_time, 2035., max_dim)
         self.tidy_y_axis(ax, 'prop_' if fraction else '', max_dim, max_value=max(cumulative_data))
-        self.finish_off_figure(fig, 1, '_' + ('absolute_' if fraction else 'population_') + output + category_to_loop,
+        self.finish_off_figure(fig, 1, '_' + ('absolute_' if fraction else 'population_') + output + '_'
+                               + category_to_loop,
                                ('Fraction of ' if fraction else 'Stacked absolute ') + output + ', by '
                                + t_k.find_title_from_dictionary(category_to_loop, capital_first_letter=False))
 

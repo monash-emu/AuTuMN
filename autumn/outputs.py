@@ -29,12 +29,12 @@ def get_label_font_size(max_dim):
     return label_font_sizes[max_dim] if max_dim in label_font_sizes else 6
 
 
-def create_patch_from_list(x_list, lower_border, upper_border):
+def create_patch_from_list(x_values, lower_border, upper_border):
     """
     Creates an array that can be used to plot a patch using the add patch plotting function in matplotlib.
 
     Args:
-        x_list: The x-values to go forward and backward with
+        x_values: The x-values to go forward and backward with
         lower_border: The lower edge of the patch
         upper_border: The upper edge of the patch
     Returns:
@@ -42,14 +42,13 @@ def create_patch_from_list(x_list, lower_border, upper_border):
             (with length of double the length of the inputs lists and height of two)
     """
 
-    assert len(x_list) == len(lower_border) == len(upper_border), \
-        'Attempted to create patch out of lists of unequal length'
-    patch_array = numpy.zeros(shape=(len(x_list) * 2, 2))
-    for x_num, x_value in enumerate(x_list):
-        patch_array[x_num][0] = x_value  # x_values going forwards
-        patch_array[-(x_num + 1)][0] = x_value  # years going backwards
-        patch_array[x_num][1] = lower_border[x_num]  # lower limit data going forwards
-        patch_array[-(x_num + 1)][1] = upper_border[x_num]  # upper limit data going backwards
+    assert len(x_values) == len(lower_border) == len(upper_border), 'Tried to make patch out of unequal length lists'
+    patch_array = numpy.zeros(shape=(len(x_values) * 2, 2))
+    for x_num, x_value in enumerate(x_values):
+        patch_array[x_num][0] = x_value  # x_values forwards
+        patch_array[-x_num - 1][0] = x_value  # x_values backwards
+        patch_array[x_num][1] = lower_border[x_num]  # lower limit data forwards
+        patch_array[-x_num - 1][1] = upper_border[x_num]  # upper limit data backwards
     return patch_array
 
 

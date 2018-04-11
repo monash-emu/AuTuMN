@@ -206,7 +206,7 @@ class App:
         else:
             param_tracking_figure = input_figure
 
-        subplot_grid = outputs.find_subplot_numbers(len(data['all_parameters_tried']))
+        subplot_grid = list(outputs.find_subplot_grid(len(data['all_parameters_tried'])))
 
         # cycle through parameters with one subplot for each parameter
         for p, param in enumerate(data['all_parameters_tried']):

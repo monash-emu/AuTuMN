@@ -726,7 +726,7 @@ class Project:
 
         try:
             path = os.path.join('autumn/xls/data_' + self.country + '.xlsx')
-        except:
+        except IOError:
             self.model_runner.add_comment_to_gui_window(
                 'No country input spreadsheet available for requested uncertainty parameter writing')
         else:
@@ -1323,18 +1323,25 @@ class Project:
             exclusions: List of strings that indicate that compartment should be excluded from analysis
         """
 
+        # prelims
         fig, ax, max_dim, n_rows, n_cols = initialise_figures_axes(1, room_for_legend=True)
         start_time = self.inputs.model_constants['plot_start_time']
         start_time_index = self.find_start_time_index(start_time, scenario)
         times = self.model_runner.outputs['manual']['epi'][scenario]['times'][start_time_index:]
+
+        # get data
         cumulative_data = [0.] * len(times)
         current_data = self.sum_compartments_by_category(category_to_loop, scenario, start_time_index,
                                                          requirements=requirements, exclusions=exclusions)
+
+        # plot patches and proxy by category
         for l, label in enumerate(current_data):
             previous_data, cumulative_data = increment_list_for_patch(current_data[label], cumulative_data)
             colour = self.colour_theme[l + 1]
             ax.fill_between(times, previous_data, cumulative_data, facecolor=colour, edgecolor=colour, alpha=.8)
-            ax.plot([-1e2], [0.], color=colour, label=t_k.find_title_from_dictionary(label), linewidth=5.)
+            ax.plot([-1e2], [0.], color=colour, label=t_k.find_title_from_dictionary(label), linewidth=5.)  # proxy
+
+        # finish off
         self.tidy_x_axis(ax, start_time, 2035., max_dim)
         self.tidy_y_axis(ax, '', max_dim, max_value=max(cumulative_data))
         ax.legend(bbox_to_anchor=(1.3, 1))
@@ -1365,23 +1372,31 @@ class Project:
             fraction: Boolean for whether to plot values as
         """
 
+        # prelims
         fig, ax, max_dim, n_rows, n_cols = initialise_figures_axes(1, room_for_legend=True)
         strata = getattr(self.inputs, category_to_loop)
         start_time = self.inputs.model_constants['plot_start_time']
         start_time_index = self.find_start_time_index(start_time, scenario)
         times = self.model_runner.models[0].times[start_time_index:]
         cumulative_data = [0.] * len(times)
+
         for s, stratum in enumerate(strata):
+
+            # get data
             current_data = self.outputs['manual']['epi'][0][output + stratum][start_time_index:]
             if fraction:
-                current_data = [d / p for d, p in
-                                zip(current_data, self.outputs['manual']['epi'][0][output][start_time_index:])]
+                current_data = t_k.elementwise_list_division(
+                    current_data, self.outputs['manual']['epi'][0][output][start_time_index:])
             previous_data, cumulative_data = increment_list_for_patch(current_data, cumulative_data)
+
+            # plot patch and proxy
             colour = self.colour_theme[s + 1]
             ax.fill_between(times, previous_data, cumulative_data, facecolors=colour, edgecolor=colour, alpha=.8)
             ax.plot([-1e2], [0.], color=colour, linewidth=5.,
                     label=t_k.turn_strat_into_label(stratum) if category_to_loop == 'agegroups'
-                    else t_k.find_title_from_dictionary(stratum))
+                    else t_k.find_title_from_dictionary(stratum))  # proxy
+
+        # finish off
         ax.legend(bbox_to_anchor=(1.3, 1))
         self.tidy_x_axis(ax, start_time, 2035., max_dim)
         self.tidy_y_axis(ax, 'prop_' if fraction else '', max_dim, max_value=max(cumulative_data))
@@ -1417,11 +1432,9 @@ class Project:
         ax.set_xticklabels([t_k.find_title_from_dictionary(group) for group in self.inputs.riskgroups],
                            fontsize=get_label_font_size(1))
 
-        # general approach fine for y-axis and legend
+        # finish off
         self.tidy_y_axis(ax, 'prop_', max_dims, max_value=1., space_at_top=0.)
         add_legend_to_plot(ax, max_dims)
-
-        # finish off figure
         self.finish_off_figure(fig, max_dims, '_mixing', 'Source of contacts by risk group')
 
     ''' scale-up function plotting '''
@@ -1482,7 +1495,7 @@ class Project:
                 x_vals = self.model_runner.models[scenario].times[start_time_index:]
                 y_vals = self.model_runner.models[scenario].get_var_soln(var)[start_time_index:]
 
-            # plot and find the maximum value
+            # plot and record the maximum value
             axis.plot(x_vals, y_vals, color=self.colour_theme[scenario],
                       label=t_k.capitalise_and_remove_underscore(t_k.find_scenario_string_from_number(scenario)))
             maximum_values.append(max(y_vals))
@@ -1591,7 +1604,7 @@ class Project:
                     ax_dict['stacked'].fill_between(
                         cost_times, previous_data, cumulative_data, color=colour, edgecolor=colour, linewidth=.1)
 
-                # tidy each axis
+                # finish off each axis
                 for plot_type in plot_types:
                     ax_dict[plot_type].set_title(t_k.find_title_from_dictionary(cost_type),
                                                  fontsize=get_label_font_size(max_dim))
@@ -1601,7 +1614,7 @@ class Project:
                     if cost_type == self.model_runner.cost_types[-1]:
                         add_legend_to_plot(ax_dict[plot_type], max_dim)
 
-            # tidy figure
+            # finish off figure
             for plot_type in plot_types:
                 self.finish_off_figure(
                     figs[plot_type], len(plot_types),
@@ -1616,20 +1629,30 @@ class Project:
         Simple function to plot histograms of parameter values used in uncertainty analysis.
         """
 
+        # prelims
         fig, axes, max_dims, n_rows, n_cols \
             = initialise_figures_axes(len(self.model_runner.outputs['epi_uncertainty']['all_parameters']))
+
         for p, param in enumerate(self.model_runner.outputs['epi_uncertainty']['all_parameters']):
             ax = find_panel_grid_indices(axes, p, n_rows, n_cols)
+
+            # find data
             param_values = [self.model_runner.outputs['epi_uncertainty']['all_parameters'][param][i]
                             for i in self.accepted_no_burn_in_indices]
+
+            # plot histogram for each parameter
             y, _, _ = ax.hist(param_values, bins=20, edgecolor='k')
             param_range_index = [i for i in range(len(self.inputs.param_ranges_unc))
                                  if self.inputs.param_ranges_unc[i]['key'] == param][0]
             param_range = self.inputs.param_ranges_unc[param_range_index]['bounds'][1] \
                 - self.inputs.param_ranges_unc[param_range_index]['bounds'][0]
             ax.set_title(t_k.find_title_from_dictionary(param), fontsize=get_label_font_size(max_dims))
+
+            # indicate parameter range
             for i in range(2):
                 ax.axvline(x=self.inputs.param_ranges_unc[param_range_index]['bounds'][i], color='.3', linestyle=':')
+
+            # finish off axes and figure
             self.tidy_x_axis(ax, self.inputs.param_ranges_unc[param_range_index]['bounds'][0] - param_range * .1,
                              self.inputs.param_ranges_unc[param_range_index]['bounds'][1] + param_range * .1, max_dims)
             self.tidy_y_axis(ax, '', max_dims, max_value=max(y))
@@ -1709,7 +1732,7 @@ class Project:
             ax = find_panel_grid_indices(axes, p, n_rows, n_cols)
             ax.plot(x_values, y_values)
 
-            # tidy up
+            # finish off axes and figure
             ax.set_title(t_k.find_title_from_dictionary(param['key']), fontsize=get_label_font_size(max_dims))
             ax.text(lower + .05, max(y_values) / 2., description, fontsize=get_label_font_size(max_dims))
             self.tidy_x_axis(ax, x_values[0], x_values[-1], max_dims)
@@ -1738,7 +1761,7 @@ class Project:
                 [self.outputs['epi_uncertainty']['loglikelihoods'][i] for i in self.accepted_indices],
                 marker='o', color=self.colour_theme[1])
 
-        # finishing up
+        # finish off
         fig.suptitle('Progression of likelihood', fontsize=self.title_size)
         self.tidy_x_axis(ax, 0, len(self.accepted_indices), max_dims, x_label='Runs')
         self.tidy_y_axis(ax, 'likelihood', max_dims, y_label='Log likelihood')

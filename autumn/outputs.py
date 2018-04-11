@@ -132,6 +132,22 @@ def scale_axes(vals, max_val, y_sig_figs):
     return labels, axis_modifier
 
 
+def add_legend_to_plot(axis, max_dim, location=0):
+    """
+    Add legend to plot, with font size determined by the maximum number of dimensions of subplot panels.
+
+    Args:
+        axis: The axis to have the legend added
+        max_dim: The number of rows or columns of subplots, whichever is the greater
+        location: The matplotlib integer specifying the position for the legend (default of zero is 'best')
+    """
+
+    if max_dim == 1:
+        axis.legend(bbox_to_anchor=(1.3, 1), fontsize=get_label_font_size(max_dim))
+    else:
+        axis.legend(fontsize=get_label_font_size(max_dim), loc=location)
+
+
 ''' plot navigation functions '''
 
 
@@ -602,21 +618,6 @@ class Project:
         # axis label
         if y_label and left_axis:
             axis.set_ylabel(y_label, fontsize=get_label_font_size(max_dims))
-
-    def add_legend_to_plot(self, axis, max_dim, location=0):
-        """
-        Add legend to plot, with font size determined by the maximum number of dimensions of subplot panels.
-
-        Args:
-            axis: The axis to have the legend added
-            max_dim: The number of rows or columns of subplots, whichever is the greater
-            location: The matplotlib integer specifying the position for the legend (default of zero is 'best')
-        """
-
-        if max_dim == 1:
-            axis.legend(bbox_to_anchor=(1.3, 1), fontsize=get_label_font_size(max_dim))
-        else:
-            axis.legend(fontsize=get_label_font_size(max_dim), loc=location)
 
     def save_figure(self, fig, end_figure_name):
         """
@@ -1302,7 +1303,7 @@ class Project:
             self.tidy_y_axis(axis, output, max_dims, max_value=max(max_data_values[output]))
             axis.set_title(t_k.find_title_from_dictionary(output), fontsize=get_label_font_size(max_dims))
             if out == len(outputs) - 1 and purpose == 'scenario' and len(self.scenarios) > 1:
-                self.add_legend_to_plot(axis, max_dims)
+                add_legend_to_plot(axis, max_dims)
         self.finish_off_figure(fig, len(outputs), '_' + descriptor + '_epi_' + purpose,
                                'Epidemiological outputs'
                                + t_k.find_title_from_dictionary(descriptor, capital_first_letter=False)
@@ -1493,7 +1494,7 @@ class Project:
 
         # general approach fine for y-axis and legend
         self.tidy_y_axis(ax, 'prop_', max_dims, max_value=1., space_at_top=0.)
-        self.add_legend_to_plot(ax, max_dims)
+        add_legend_to_plot(ax, max_dims)
 
         # finish off figure
         self.finish_off_figure(fig, max_dims, '_mixing', 'Source of contacts by risk group')
@@ -1622,7 +1623,7 @@ class Project:
                 self.tidy_x_axis(axis, 0., end_value, max_dim, x_label='$US' if last_row(p, n_rows, n_cols) else None)
                 self.tidy_y_axis(axis, 'prop_', max_dim, max_value=1., left_axis=p % n_cols == 0, y_label='Coverage')
                 if p == len(self.interventions_to_cost[scenario]) - 1:
-                    self.add_legend_to_plot(axis, max_dim, location=4)
+                    add_legend_to_plot(axis, max_dim, location=4)
 
             self.finish_off_figure(fig, len(self.interventions_to_cost[scenario]),
                                    '_cost_coverage_' + t_k.find_scenario_string_from_number(scenario),
@@ -1672,7 +1673,7 @@ class Project:
                     self.tidy_x_axis(ax_dict[plot_type], cost_times[0], cost_times[-1], max_dim)
                     self.tidy_y_axis(ax_dict[plot_type], 'cost', max_dim, left_axis=c % n_cols == 0, y_label='$US')
                     if c == len(self.model_runner.cost_types) - 1:
-                        self.add_legend_to_plot(ax_dict[plot_type], max_dim)
+                        add_legend_to_plot(ax_dict[plot_type], max_dim)
 
             # tidy figure
             for plot_type in plot_types:

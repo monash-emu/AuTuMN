@@ -546,7 +546,7 @@ class Project:
             axis.set_xlabel(x_label, fontsize=get_label_font_size(max_dim))
 
     def tidy_y_axis(self, axis, quantity, max_dims, left_axis=True, max_value=1e6, space_at_top=.1, y_label=None,
-                    y_lims=None):
+                    y_lims=None, allow_negative=False):
         """
         General approach to tidying up the vertical axis of a plot, depends on whether it is the left-most panel.
 
@@ -570,7 +570,8 @@ class Project:
             pass
         elif axis.get_ylim()[1] < max_value * (1. + space_at_top):
             axis.set_ylim(top=max_value * (1. + space_at_top))
-        else:
+
+        if not allow_negative:
             axis.set_ylim(bottom=0.)
 
         # ticks
@@ -1638,7 +1639,8 @@ class Project:
                     ax_dict[plot_type].set_title(t_k.find_title_from_dictionary(cost_type),
                                                  fontsize=get_label_font_size(max_dim))
                     self.tidy_x_axis(ax_dict[plot_type], cost_times[0], cost_times[-1], max_dim)
-                    self.tidy_y_axis(ax_dict[plot_type], 'cost', max_dim, left_axis=c % n_cols == 0, y_label='$US')
+                    self.tidy_y_axis(ax_dict[plot_type], 'cost', max_dim, left_axis=c % n_cols == 0, y_label='$US',
+                                     allow_negative=True if plot_type == 'relative' else False)
                     if c == len(self.model_runner.cost_types) - 1:
                         add_legend_to_plot(ax_dict[plot_type], max_dim)
 

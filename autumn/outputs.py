@@ -18,6 +18,59 @@ import shutil
 import tool_kit as t_k
 
 
+''' plot creating and cleaning functions '''
+
+
+def initialise_figures_axes(n_panels, room_for_legend=False, requested_grid=None, share_yaxis='none'):
+    """
+    Initialise the subplots (or single plot) according to the number of panels required.
+
+    Args:
+        n_panels: The number of panels needed
+        room_for_legend: Whether room is needed for a legend - applies to single axis plots only
+        requested_grid: Shape of grid panels requested at call to method
+        share_yaxis: String to pass to the sharey option
+    Returns:
+        fig: The figure object
+        axes: A list containing each of the axes
+        max_dims: The number of rows or columns of sub-plots, whichever is greater
+    """
+
+    pyplot.style.use('ggplot')
+    n_rows, n_cols = requested_grid if requested_grid else find_subplot_grid(n_panels)
+    horizontal_position_one_axis = .08 if room_for_legend else .15
+    if n_panels == 1:
+        fig = pyplot.figure()
+        axes = fig.add_axes([horizontal_position_one_axis, .15, 0.7, 0.7])
+    elif n_panels == 2:
+        fig, axes = pyplot.subplots(1, 2)
+        fig.set_figheight(3.5)
+        fig.subplots_adjust(bottom=.15, top=.85)
+    else:
+        fig, axes = pyplot.subplots(n_rows, n_cols, sharey=share_yaxis)
+        for panel in range(n_panels, n_rows * n_cols):
+            find_panel_grid_indices(axes, panel, n_rows, n_cols).axis('off')
+    return fig, axes, max([n_rows, n_cols]), n_rows, n_cols
+
+
+def add_title_to_plot(fig, n_panels, content):
+    """
+    Function to add title to the top of a figure and handle multiple panels if necessary.
+
+    Args:
+        fig: The figure object to have a title added to it
+        n_panels: Integer for the total number of panels on the figure
+        content: Unprocessed string to determine text for the title
+    """
+
+    # if few panels, bigger and lower title
+    greater_heights = {1: .92, 2: .98}
+    greater_font_sizes = {1: 14, 2: 11}
+    fig.suptitle(t_k.find_title_from_dictionary(content),
+                 y=greater_heights[n_panels] if n_panels in greater_heights else .96,
+                 fontsize=greater_font_sizes[n_panels] if n_panels in greater_font_sizes else 10)
+
+
 def get_label_font_size(max_dim):
     """
     Find standardised font size that can be applied across all figures.
@@ -28,6 +81,109 @@ def get_label_font_size(max_dim):
 
     label_font_sizes = {1: 8, 2: 7}
     return label_font_sizes[max_dim] if max_dim in label_font_sizes else 6
+
+
+def scale_axes(vals, max_val, y_sig_figs):
+    """
+    General function to scale a set of axes and produce text that can be added to the axis label. Written here as a
+    separate function from the tidy_axis method below because it can then be applied to both x- and y-axes.
+
+    Args:
+        vals: List of the current y-ticks
+        max_val: The maximum value of this list
+        y_sig_figs: The preferred number of significant figures for the ticks
+    Returns:
+        labels: List of the modified tick labels
+        axis_modifier: The text to be added to the axis
+    """
+
+    y_number_format = '%.' + str(y_sig_figs) + 'f'
+    y_number_format_around_one = '%.' + str(max(2, y_sig_figs)) + 'f'
+    if max_val < 5e-9:
+        labels = [y_number_format % (v * 1e12) for v in vals]
+        axis_modifier = 'Trillionth '
+    elif max_val < 5e-6:
+        labels = [y_number_format % (v * 1e9) for v in vals]
+        axis_modifier = 'Billionth '
+    elif max_val < 5e-3:
+        labels = [y_number_format % (v * 1e6) for v in vals]
+        axis_modifier = 'Millionth '
+    elif max_val < 5e-2:
+        labels = [y_number_format % (v * 1e3) for v in vals]
+        axis_modifier = 'Thousandth '
+    elif max_val < .1:
+        labels = [y_number_format % (v * 1e2) for v in vals]
+        axis_modifier = 'Hundredth '
+    elif max_val < 5:
+        labels = [y_number_format_around_one % v for v in vals]
+        axis_modifier = ''
+    elif max_val < 5e3:
+        labels = [y_number_format % v for v in vals]
+        axis_modifier = ''
+    elif max_val < 5e6:
+        labels = [y_number_format % (v / 1e3) for v in vals]
+        axis_modifier = 'Thousand '
+    elif max_val < 5e9:
+        labels = [y_number_format % (v / 1e6) for v in vals]
+        axis_modifier = 'Million '
+    else:
+        labels = [y_number_format % (v / 1e9) for v in vals]
+        axis_modifier = 'Billion '
+    return labels, axis_modifier
+
+
+''' plot navigation functions '''
+
+
+def find_subplot_grid(n_plots):
+    """
+    Find a convenient number of rows and columns for a required number of subplots. First take the root of the number of
+    subplots and round up to find the smallest square that could accommodate all of them. Next find out how many rows
+    that many subplots would fill out by dividing the number of plots by the number of columns and rounding up. This
+    will potentially leave a few panels blank at the end and number of rows will equal the number of columns or the
+    number of rows will be on fewer.
+
+    Args:
+        n_plots: The number of subplots needed
+    Returns:
+        The number of rows of subplots
+        n_cols: The number of columns of subplots
+    """
+
+    n_cols = int(numpy.ceil(numpy.sqrt(n_plots)))
+    return int(numpy.ceil(n_plots / float(n_cols))), n_cols
+
+
+def find_panel_grid_indices(axes, index, n_rows, n_columns):
+    """
+    Find the subplot index for a plot panel from the number of the panel and the number of columns of sub-plots.
+
+    Args:
+        axes: All the plot axes to be searched from
+        index: The number of the panel counting up from zero
+        n_rows: Number of rows of sub-plots in figure
+        n_columns: Number of columns of sub-plots in figure
+    """
+
+    row, column = numpy.floor_divide(index, n_columns), (index + 1) % n_columns - 1 if n_rows > 1 else None
+    return axes[row, column] if n_rows > 1 else axes[index]
+
+
+def last_row(index, n_rows, n_columns):
+    """
+    Determine whether panel is not in the last row of sub-plots of the figure from the index of the panel and the number
+    of rows and columns of subplots.
+
+    Args:
+        index: The number of the panel counting up from zero
+        n_rows: Number of rows of sub-plots in the figure
+        n_columns: Number of columns of sub-plots in the figure
+    """
+
+    return index >= (n_rows - 1) * n_columns
+
+
+''' patch-related functions '''
 
 
 def create_patch_from_list(x_values, lower_border, upper_border):
@@ -51,6 +207,27 @@ def create_patch_from_list(x_values, lower_border, upper_border):
         patch_array[x_num][1] = lower_border[x_num]  # lower limit data forwards
         patch_array[-x_num - 1][1] = upper_border[x_num]  # upper limit data backwards
     return patch_array
+
+
+def increment_list_for_patch(new_data, cumulative_data):
+    """
+    Takes a list of cumulative data totals, preserves the previous values and adds a new list to it. This is to allow
+    patches to be plotted that have the previous data values as their base and the results of this stacking as their
+    top.
+
+    Args:
+        new_data: The new data to be stacked up
+        cumulative_data: The previous running totals
+    Returns:
+        previous_data: The previous running total (was cumulative_data)
+        The new running total as the new values for cumulative_data
+    """
+
+    previous_data = copy.copy(cumulative_data)
+    return previous_data, [last + current for last, current in zip(cumulative_data, new_data)]
+
+
+''' target plotting functions '''
 
 
 def find_exponential_constants(x_values, y_values):
@@ -118,7 +295,7 @@ def find_values_exp_function(times, target_values, number_x_values=100):
         number_x_values: The number of x-values required for plotting
     Returns:
         times_to_plot: List of the x-values or times for plotting
-        outputs_to_reach_target: Corresponding list of values for the output needed to track towards the target
+        Corresponding list of values for the output needed to track towards the target
     """
 
     a, b = find_exponential_constants([times[0], times[1]], [target_values[0], target_values[1]])
@@ -126,53 +303,7 @@ def find_values_exp_function(times, target_values, number_x_values=100):
     return times_to_plot, [numpy.exp(-a * (x - b)) for x in times_to_plot]
 
 
-def scale_axes(vals, max_val, y_sig_figs):
-    """
-    General function to scale a set of axes and produce text that can be added to the axis label. Written here as a
-    separate function from the tidy_axis method below because it can then be applied to both x- and y-axes.
-
-    Args:
-        vals: List of the current y-ticks
-        max_val: The maximum value of this list
-        y_sig_figs: The preferred number of significant figures for the ticks
-    Returns:
-        labels: List of the modified tick labels
-        axis_modifier: The text to be added to the axis
-    """
-
-    y_number_format = '%.' + str(y_sig_figs) + 'f'
-    y_number_format_around_one = '%.' + str(max(2, y_sig_figs)) + 'f'
-    if max_val < 5e-9:
-        labels = [y_number_format % (v * 1e12) for v in vals]
-        axis_modifier = 'Trillionth '
-    elif max_val < 5e-6:
-        labels = [y_number_format % (v * 1e9) for v in vals]
-        axis_modifier = 'Billionth '
-    elif max_val < 5e-3:
-        labels = [y_number_format % (v * 1e6) for v in vals]
-        axis_modifier = 'Millionth '
-    elif max_val < 5e-2:
-        labels = [y_number_format % (v * 1e3) for v in vals]
-        axis_modifier = 'Thousandth '
-    elif max_val < .1:
-        labels = [y_number_format % (v * 1e2) for v in vals]
-        axis_modifier = 'Hundredth '
-    elif max_val < 5:
-        labels = [y_number_format_around_one % v for v in vals]
-        axis_modifier = ''
-    elif max_val < 5e3:
-        labels = [y_number_format % v for v in vals]
-        axis_modifier = ''
-    elif max_val < 5e6:
-        labels = [y_number_format % (v / 1e3) for v in vals]
-        axis_modifier = 'Thousand '
-    elif max_val < 5e9:
-        labels = [y_number_format % (v / 1e6) for v in vals]
-        axis_modifier = 'Million '
-    else:
-        labels = [y_number_format % (v / 1e9) for v in vals]
-        axis_modifier = 'Billion '
-    return labels, axis_modifier
+''' spreadsheet writing functions '''
 
 
 def write_param_to_sheet(country_sheet, working_list, median_run_index):
@@ -205,7 +336,7 @@ def write_param_to_sheet(country_sheet, working_list, median_run_index):
                 country_sheet.cell(row=max_row + 1, column=2).value = value
 
 
-def reverse_inputs_if_condition(inputs, condition):
+def reverse_inputs_if_required(inputs, condition):
     """
     Very simple function to reverse a list if requested, but used so frequently during spreadsheet writing that worth
     having.
@@ -218,121 +349,6 @@ def reverse_inputs_if_condition(inputs, condition):
     """
 
     return inputs[::-1] if condition else inputs
-
-
-def add_title_to_plot(fig, n_panels, content):
-    """
-    Function to add title to the top of a figure and handle multiple panels if necessary.
-
-    Args:
-        fig: The figure object to have a title added to it
-        n_panels: Integer for the total number of panels on the figure
-        content: Unprocessed string to determine text for the title
-    """
-
-    # if few panels, bigger and lower title
-    greater_heights = {1: .92, 2: .98}
-    greater_font_sizes = {1: 14, 2: 11}
-    fig.suptitle(t_k.find_title_from_dictionary(content),
-                 y=greater_heights[n_panels] if n_panels in greater_heights else .96,
-                 fontsize=greater_font_sizes[n_panels] if n_panels in greater_font_sizes else 10)
-
-
-def find_panel_grid_indices(axes, index, n_rows, n_columns):
-    """
-    Find the subplot index for a plot panel from the number of the panel and the number of columns of sub-plots.
-
-    Args:
-        index: The number of the panel counting up from zero
-        n_columns: Number of columns of sub-plots in the figure
-    """
-
-    row, column = numpy.floor_divide(index, n_columns), (index + 1) % n_columns - 1 if n_rows > 1 else None
-    return axes[row, column] if n_rows > 1 else axes[index]
-
-
-def last_row(index, n_rows, n_columns):
-    """
-    Determine whether panel is not in the last row of sub-plots of the figure from the index of the panel and the number
-    of rows and columns of subplots.
-
-    Args:
-        index: The number of the panel counting up from zero
-        n_rows: Number of rows of sub-plots in the figure
-        n_columns: Number of columns of sub-plots in the figure
-    """
-
-    return index >= (n_rows - 1) * n_columns
-
-
-def find_subplot_grid(n_plots):
-    """
-    Find a convenient number of rows and columns for a required number of subplots. First take the root of the number of
-    subplots and round up to find the smallest square that could accommodate all of them. Next find out how many rows
-    that many subplots would fill out by dividing the number of plots by the number of columns and rounding up. This
-    will potentially leave a few panels blank at the end and number of rows will equal the number of columns or the
-    number of rows will be on fewer.
-
-    Args:
-        n_plots: The number of subplots needed
-    Returns:
-        The number of rows of subplots
-        n_cols: The number of columns of subplots
-    """
-
-    n_cols = int(numpy.ceil(numpy.sqrt(n_plots)))
-    return int(numpy.ceil(n_plots / float(n_cols))), n_cols
-
-
-def initialise_figures_axes(n_panels, room_for_legend=False, requested_grid=None, share_yaxis='none'):
-    """
-    Initialise the subplots (or single plot) according to the number of panels required.
-
-    Args:
-        n_panels: The number of panels needed
-        room_for_legend: Whether room is needed for a legend - applies to single axis plots only
-        requested_grid: Shape of grid panels requested at call to method
-        share_yaxis: String to pass to the sharey option
-    Returns:
-        fig: The figure object
-        axes: A list containing each of the axes
-        max_dims: The number of rows or columns of sub-plots, whichever is greater
-    """
-
-    pyplot.style.use('ggplot')
-    n_rows, n_cols = requested_grid if requested_grid else find_subplot_grid(n_panels)
-    horizontal_position_one_axis = .08 if room_for_legend else .15
-    if n_panels == 1:
-        fig = pyplot.figure()
-        axes = fig.add_axes([horizontal_position_one_axis, .15, 0.7, 0.7])
-    elif n_panels == 2:
-        fig, axes = pyplot.subplots(1, 2)
-        fig.set_figheight(3.5)
-        fig.subplots_adjust(bottom=.15, top=.85)
-    else:
-        fig, axes = pyplot.subplots(n_rows, n_cols, sharey=share_yaxis)
-        for panel in range(n_panels, n_rows * n_cols):
-            find_panel_grid_indices(axes, panel, n_rows, n_cols).axis('off')
-    return fig, axes, max([n_rows, n_cols]), n_rows, n_cols
-
-
-def increment_list_for_patch(new_data, cumulative_data):
-    """
-    Takes a list of cumulative data totals, preserves the previous values and adds a new list to it. This is to allow
-    patches to be plotted that have the previous data values as their base and the results of this stacking as their
-    top.
-
-    Args:
-        new_data: The new data to be stacked up
-        cumulative_data: The previous running totals
-    Returns:
-        The previous running total as previous_data (was cumulative_data)
-        The new running total as the new values for cumulative_data
-    """
-
-    previous_data = copy.copy(cumulative_data)
-    cumulative_data = [last + current for last, current in zip(cumulative_data, new_data)]
-    return previous_data, cumulative_data
 
 
 class Project:
@@ -801,7 +817,7 @@ class Project:
 
                 # year column
                 for y, year in enumerate(self.years_to_write):
-                    row, column = reverse_inputs_if_condition([y + 2, 1], horizontal)
+                    row, column = reverse_inputs_if_required([y + 2, 1], horizontal)
                     sheet.cell(row=row, column=column).value = year
 
                 # epi outputs
@@ -817,13 +833,13 @@ class Project:
                             strings_to_write = [t_k.capitalise_and_remove_underscore(output), 'Lower', 'Upper']
 
                             for ci in range(len(strings_to_write)):
-                                row, column = reverse_inputs_if_condition([1, out * 3 + 2 + ci], horizontal)
+                                row, column = reverse_inputs_if_required([1, out * 3 + 2 + ci], horizontal)
                                 sheet.cell(row=row, column=column).value = strings_to_write[ci]
 
                             # data columns
                             for y, year in enumerate(self.years_to_write):
                                 for o in range(3):
-                                    row, column = reverse_inputs_if_condition([y + 2, out * 3 + 2 + o], horizontal)
+                                    row, column = reverse_inputs_if_required([y + 2, out * 3 + 2 + o], horizontal)
                                     sheet.cell(row=row, column=column).value \
                                         = self.uncertainty_centiles['epi'][scenario][output][
                                         o, t_k.find_first_list_element_at_least(self.interpolation_times_uncertainty,
@@ -833,12 +849,12 @@ class Project:
                         else:
 
                             # names across top
-                            row, column = reverse_inputs_if_condition([1, out + 2], horizontal)
+                            row, column = reverse_inputs_if_required([1, out + 2], horizontal)
                             sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(output)
 
                             # columns of data
                             for y, year in enumerate(self.years_to_write):
-                                row, column = reverse_inputs_if_condition([y + 2, out + 2], horizontal)
+                                row, column = reverse_inputs_if_required([y + 2, out + 2], horizontal)
                                 sheet.cell(row=row, column=column).value \
                                     = self.outputs['manual']['epi'][scenario][output][
                                         t_k.find_first_list_element_at_least(
@@ -851,12 +867,12 @@ class Project:
                     for inter, intervention in enumerate(self.inputs.interventions_to_cost[scenario]):
 
                         # names across top
-                        row, column = reverse_inputs_if_condition([1, inter + 2], horizontal)
+                        row, column = reverse_inputs_if_required([1, inter + 2], horizontal)
                         sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(intervention)
 
                         # data columns
                         for y, year in enumerate(self.years_to_write):
-                            row, column = reverse_inputs_if_condition([y + 2, inter + 2], horizontal)
+                            row, column = reverse_inputs_if_required([y + 2, inter + 2], horizontal)
                             sheet.cell(row=row, column=column).value \
                                 = self.outputs['manual']['cost'][scenario][result_type + intervention][
                                         t_k.find_first_list_element_at_least(
@@ -884,7 +900,7 @@ class Project:
 
             # write the year column
             for y, year in enumerate(self.years_to_write):
-                row, column = reverse_inputs_if_condition([y + 2, 1], horizontal)
+                row, column = reverse_inputs_if_required([y + 2, 1], horizontal)
                 sheet.cell(row=row, column=column).value = year
 
             # cycle over scenarios
@@ -899,13 +915,13 @@ class Project:
 
                     # write the scenario names and confidence interval titles
                     for ci in range(len(strings_to_write)):
-                        row, column = reverse_inputs_if_condition([1, s * 3 + 2 + ci], horizontal)
+                        row, column = reverse_inputs_if_required([1, s * 3 + 2 + ci], horizontal)
                         sheet.cell(row=row, column=column).value = strings_to_write[ci]
 
                     # write the columns of data
                     for y, year in enumerate(self.years_to_write):
                         for o in range(3):
-                            row, column = reverse_inputs_if_condition([y + 2, s * 3 + 2 + o], horizontal)
+                            row, column = reverse_inputs_if_required([y + 2, s * 3 + 2 + o], horizontal)
                             sheet.cell(row=row, column=column).value \
                                 = self.uncertainty_centiles['epi'][scenario][inter][
                                 o, t_k.find_first_list_element_at_least(self.interpolation_times_uncertainty, year)]
@@ -914,12 +930,12 @@ class Project:
                 else:
 
                     # write scenario names across first row
-                    row, column = reverse_inputs_if_condition([1, s + 2], horizontal)
+                    row, column = reverse_inputs_if_required([1, s + 2], horizontal)
                     sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(scenario_name)
 
                     # write columns of data
                     for y, year in enumerate(self.years_to_write):
-                        row, column = reverse_inputs_if_condition([y + 2, s + 2], horizontal)
+                        row, column = reverse_inputs_if_required([y + 2, s + 2], horizontal)
                         sheet.cell(row=row, column=column).value \
                             = self.model_runner.outputs['manual']['epi'][scenario][inter][
                                 t_k.find_first_list_element_at_least(self.model_runner.outputs['manual']['epi'][
@@ -943,7 +959,7 @@ class Project:
 
                 # write the year text column
                 for y, year in enumerate(self.years_to_write):
-                    row, column = reverse_inputs_if_condition([y + 2, 1], horizontal)
+                    row, column = reverse_inputs_if_required([y + 2, 1], horizontal)
                     sheet.cell(row=row, column=column).value = year
 
                 # cycle over scenarios
@@ -951,12 +967,12 @@ class Project:
                     scenario_name = t_k.find_scenario_string_from_number(scenario)
 
                     # scenario names
-                    row, column = reverse_inputs_if_condition([1, s + 2], horizontal)
+                    row, column = reverse_inputs_if_required([1, s + 2], horizontal)
                     sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(scenario_name)
 
                     # data columns
                     for y, year in enumerate(self.years_to_write):
-                        row, column = reverse_inputs_if_condition([y + 2, s + 2], horizontal)
+                        row, column = reverse_inputs_if_required([y + 2, s + 2], horizontal)
                         sheet.cell(row=row, column=column).value \
                             = self.outputs['manual']['cost'][scenario][cost_type + inter][
                                 t_k.find_first_list_element_at_least(self.outputs['manual']['cost'][scenario][

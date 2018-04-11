@@ -200,7 +200,9 @@
                         font-size: 0.9em">
 
                     <div
-                        style="margin: 0 8px"
+                        style="
+                          margin: 0 8px;
+                          word-wrap: break-word;"
                         v-for="(line, i) in consoleLines"
                         :key="i">
                       {{ line }}

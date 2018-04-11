@@ -115,15 +115,16 @@ import json
 import glob
 import copy
 import shutil
-
-console_lines = []
-is_model_running = False
-uncertainty_graph_data = {}
+import traceback
 
 sys.path.insert(0, os.path.abspath("../.."))
 import autumn.model_runner
 import autumn.outputs
 import autumn.gui_params as gui_params
+
+console_lines = []
+is_model_running = False
+uncertainty_graph_data = {}
 
 json_fname = os.path.join(os.path.dirname(__file__), 'country_defaults.json')
 if os.path.isfile(json_fname):
@@ -207,8 +208,11 @@ def public_run_autumn(params):
         }
 
     except Exception as e:
-        bgui_model_output('console', {'message': 'Error: model crashed'})
-        saved_exception = e
+        message = '-------\n'
+        message += str(traceback.format_exc())
+        message += '-------\n'
+        message += 'Error: model crashed'
+        bgui_model_output('console', {'message': message})
         result = {
             'project': os.path.relpath(out_dir, save_dir),
             'success': False,
@@ -223,8 +227,7 @@ def public_run_autumn(params):
     if result['success']:
         return result
     else:
-        print("> handler.public_run_autumn run fail")
-        raise saved_exception
+        raise Exception('Model crashed')
 
 
 def public_get_autumn_params():

@@ -711,44 +711,6 @@ class BaseModel:
             aggregate_sizes = tool_kit.elementwise_list_addition(aggregate_sizes, self.compartment_soln[compartment])
         return aggregate_sizes
 
-    def calculate_aggregate_compartment_divisions_from_strings(self, compartments_to_divide_over, required_string_1='',
-                   required_string_2='', exclusion_string='we all love futsal', allocate_to_one_division_only=True):
-        """
-        Similar to previous method, but hopefully more general and able to handle the string not being found in any of
-        the compartments.
-
-        Args:
-            compartments_to_divide_over: List of sub-divisions to divide over
-            required_string_1: First string that must be present in the compartment name
-            required_string_2: Second string that must be present
-            exclusion_string: String that must not be present in the compartment name for it to increment
-            allocate_to_one_division_only: Whether to skip on once the division string is found
-        Returns:
-            aggregates: A dictionary with keys from compartments_to_divide_over and a remainder key
-        """
-
-        compartments_to_divide_over.append('remainder')
-        aggregates = dict.fromkeys(compartments_to_divide_over)
-        for compartment in self.labels:
-            if required_string_1 not in compartment:
-                continue
-            if required_string_2 not in compartment:
-                continue
-            if exclusion_string in compartment:
-                continue
-            division_found = False
-            for division in compartments_to_divide_over:
-                if division in compartment:
-                    division_found = True
-                    aggregates[division] = tool_kit.elementwise_list_addition(self.compartment_soln[compartment],
-                                                                              aggregates[division])
-                if allocate_to_one_division_only and division_found:
-                    break
-            if not division_found:
-                aggregates['remainder'] = tool_kit.elementwise_list_addition(self.compartment_soln[compartment],
-                                                                             aggregates['remainder'])
-        return aggregates, compartments_to_divide_over
-
     def calculate_economics_diagnostics(self):
 
         pass

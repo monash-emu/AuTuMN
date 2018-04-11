@@ -380,15 +380,11 @@ class Project:
 
         self.model_runner = runner
         self.gui_inputs = gui_inputs
-
         self.country = self.gui_inputs['country'].lower()
-        if out_dir_project == None:
-            self.out_dir_project = os.path.join('projects', 'test_' + self.country)
-        else:
-            self.out_dir_project = out_dir_project
+        self.out_dir_project = os.path.join('projects', 'test_' + self.country) \
+            if not out_dir_project else out_dir_project
         if not os.path.isdir(self.out_dir_project):
             os.makedirs(self.out_dir_project)
-
         (self.inputs, self.run_mode) \
             = [None for _ in range(2)]
         (self.output_colours, self.uncertainty_output_colours, self.classified_scaleups,
@@ -404,9 +400,7 @@ class Project:
         for attribute in ['scenarios', 'interventions_to_cost', 'run_mode']:
             setattr(self, attribute, getattr(self.model_runner.inputs, attribute))
         self.figure_number, self.title_size = 1, 13
-
-        self.figure_formats = ['png']   # allow for multiple formats. e.g. ['png', 'pdf']
-
+        self.figure_formats = ['png']   # list of strings to allow for multiple formats. e.g. ['png', 'pdf']
         self.years_to_write \
             = range(int(self.inputs.model_constants['report_start_time']),
                     int(self.inputs.model_constants['report_end_time']),
@@ -419,9 +413,6 @@ class Project:
         self.quantities_to_write_back = ['all_parameters', 'all_compartment_values', 'adjustments']
         self.gtb_available_outputs = ['incidence', 'mortality', 'prevalence', 'notifications']
         self.level_conversion_dict = {'lower_limit': '_lo', 'upper_limit': '_hi', 'point_estimate': ''}
-
-        # to have a look at some individual vars scaling over time
-        self.vars_to_view = ['riskgroup_prop_diabetes']
 
         # common times to interpolate uncertainty to
         self.n_interpolation_points = int(200)
@@ -464,8 +455,8 @@ class Project:
 
     def master_outputs_runner(self):
         """
-        Method to work through all the fundamental output methods, which then call all the specific output
-        methods for plotting and writing as required.
+        Method to work through all the fundamental output methods, which then call all the specific output methods for
+        plotting and writing as required.
         """
 
         self.model_runner.add_comment_to_gui_window('Creating outputs')
@@ -508,19 +499,6 @@ class Project:
 
     ''' general methods for use by specific methods below '''
 
-    def find_start_index(self, scenario=0):
-        """
-        Very simple, but commonly used bit of code to determine whether to start from the start of the epidemiological
-        outputs, or - if we're dealing with the baseline scenario - to start from the appropriate time index.
-
-        Args:
-            scenario: Scenario number (i.e. zero for baseline or single integer for scenario)
-        Returns:
-            Index that can be used to find starting point in epidemiological output lists
-        """
-
-        return 0 if scenario else self.manual_baseline_start_index
-
     def find_start_time_index(self, time, scenario, by_run=False, run=0, purpose=None):
         """
         There are various messy legacy approaches to this, but now trying to reconcile all these approaches to finding
@@ -537,17 +515,6 @@ class Project:
         else:
             times_to_search = self.outputs['manual']['epi'][scenario]['times']
         return t_k.find_first_list_element_at_least(times_to_search, time)
-
-    def set_and_update_figure(self):
-        """
-        If called at the start of each plotting function, will create a figure that is numbered according to
-        self.figure_number, which is then updated at each call. This stops figures plotting on the same axis
-        and saves you having to worry about how many figures are being opened.
-        """
-
-        fig = pyplot.figure(self.figure_number)
-        self.figure_number += 1
-        return fig
 
     def tidy_x_axis(self, axis, start, end, max_dim, labels_off=False, x_label=None):
         """

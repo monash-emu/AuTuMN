@@ -114,6 +114,7 @@ import sys
 import json
 import glob
 import copy
+import shutil
 
 console_lines = []
 is_model_running = False
@@ -172,34 +173,58 @@ def public_run_autumn(params):
     model_inputs = gui_params.convert_params_to_inputs(params)
     print(">> handler.public_run_autumn", json.dumps(model_inputs, indent=2))
 
+    country = model_inputs['country'].lower()
+    save_dir = current_app.config['SAVE_FOLDER']
+    out_dir = os.path.join(save_dir, 'test_' + country)
+
+    if os.path.isdir(out_dir):
+        shutil.rmtree(out_dir)
+
+    os.makedirs(out_dir)
+
+    with open(os.path.join(out_dir, 'params.json'), 'w') as f:
+        json.dump(params, f, indent=2)
+
+    saved_exception = None
+
     try:
+
         model_runner = autumn.model_runner.TbRunner(
             model_inputs, bgui_model_output)
         model_runner.master_runner()
 
-        project = autumn.outputs.Project(model_runner, model_inputs)
-        out_dir = project.master_outputs_runner()
+        project = autumn.outputs.Project(
+            model_runner, model_inputs, out_dir_project=out_dir)
+        project.master_outputs_runner()
 
-        save_dir = current_app.config['SAVE_FOLDER']
         filenames = glob.glob(os.path.join(out_dir, '*png'))
         filenames = [os.path.relpath(p, save_dir) for p in filenames]
 
-        with open(os.path.join(out_dir, 'console.log'), 'w') as f:
-            f.write('\n'.join(console_lines))
-
-        with open(os.path.join(out_dir, 'params.json'), 'w') as f:
-            json.dump(params, f, indent=2)
-
-        is_model_running = False
-        return {
+        result = {
             'project': os.path.relpath(out_dir, save_dir),
             'success': True,
             'filenames': filenames,
         }
 
     except Exception as e:
-        is_model_running = False
-        raise e
+        bgui_model_output('console', {'message': 'Error: model crashed'})
+        saved_exception = e
+        result = {
+            'project': os.path.relpath(out_dir, save_dir),
+            'success': False,
+            'filenames': []
+        }
+
+    with open(os.path.join(out_dir, 'console.log'), 'w') as f:
+        f.write('\n'.join(console_lines))
+
+    is_model_running = False
+
+    if result['success']:
+        return result
+    else:
+        print("> handler.public_run_autumn run fail")
+        raise saved_exception
 
 
 def public_get_autumn_params():
@@ -221,7 +246,7 @@ def public_get_project_images(project):
     filenames = glob.glob(os.path.join(out_dir, '*png'))
     filenames = [os.path.relpath(p, save_dir) for p in filenames]
 
-    params = {}
+    params = None
     json_filename = os.path.join(out_dir, 'params.json')
     if os.path.isfile(json_filename):
         with open(json_filename) as f:
@@ -235,7 +260,6 @@ def public_get_project_images(project):
             console_lines = text.splitlines()
 
     return {
-        'success': True,
         'filenames': filenames,
         'params': params,
         'consoleLines': console_lines

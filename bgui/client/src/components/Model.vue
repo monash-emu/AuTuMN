@@ -425,11 +425,12 @@ export default {
       setTimeout(this.checkRun, 2000)
 
       let res = await rpc.rpcRun('public_run_autumn', params)
-      if (!res.result) {
+      if (!res.result || !res.result.success) {
         this.consoleLines.push('Error: model crashed')
         this.isRunning = false
       } else {
         this.project = res.result.project
+        this.projects.push(this.project)
         this.filenames = _.map(
           res.result.filenames,
           f => `${config.apiUrl}/file/${f}`)
@@ -437,14 +438,16 @@ export default {
       }
     },
     async changeProject (project) {
-      console.log('> Model.changeProject', project)
       let res = await rpc.rpcRun('public_get_project_images', project)
       if (res.result) {
+        console.log('> Model.changeProject', project, res.result)
         this.filenames = _.map(
           res.result.filenames, f => `${config.apiUrl}/file/${f}`)
         this.consoleLines = res.result.consoleLines
-        this.params = res.result.params
-        console.log('>> Model.changeProject filenames', this.filenames)
+        if (res.result.params) {
+          this.params = res.result.params
+        }
+        console.log('> Model.changeProject', this.filenames)
       }
     },
     changeWidth () {

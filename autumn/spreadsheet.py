@@ -28,7 +28,7 @@ def parse_year_data(year_data, blank, end_column):
         return year_vals
 
 
-def read_input_data_xls(from_test, sheets_to_read, country, js_gui):
+def read_input_data_xls(from_test, sheets_to_read, country, gui_console_fn):
     """
     Compile sheet readers into a list according to which ones have been selected.
 
@@ -53,7 +53,7 @@ def read_input_data_xls(from_test, sheets_to_read, country, js_gui):
     final_sheets_to_read = tool_kit.find_common_elements(sheets_to_read, available_sheets)
     data_read_from_sheets = {}
     for sheet_name in final_sheets_to_read:
-        sheet_reader = SpreadsheetReader(country, sheet_name, from_test, js_gui)
+        sheet_reader = SpreadsheetReader(country, sheet_name, from_test, gui_console_fn)
         data_read_from_sheets[sheet_reader.revised_purpose] = sheet_reader.read_data()
 
     # update 2016 data with 2015 data where available
@@ -84,7 +84,7 @@ class SpreadsheetReader:
     appropriate reading approach.
     """
 
-    def __init__(self, country_to_read, purpose, from_test, js_gui):
+    def __init__(self, country_to_read, purpose, from_test, gui_console_fn):
         """
         Use the "purpose" input to index static dictionaries to set basic reader characteristics.
 
@@ -93,7 +93,7 @@ class SpreadsheetReader:
             purpose: String that defines the spreadsheet type to be read
         """
 
-        self.js_gui = js_gui
+        self.gui_console_fn = gui_console_fn
 
         self.indices, self.parlist, self.dictionary_keys, self.data, self.year_indices, country_adjustment_types, \
             self.data_read_from_sheets, self.purpose, vertical_sheets, tb_adjustment_countries \
@@ -187,8 +187,8 @@ class SpreadsheetReader:
         # check that the spreadsheet to be read exists
         try:
             message = 'Reading data from ' + self.filename
-            if self.js_gui:
-                self.js_gui('console', {'message': message})
+            if self.gui_console_fn:
+                self.gui_console_fn('console', {'message': message})
             else:
                 print(message)
             workbook = open_workbook(self.filename)
@@ -196,8 +196,8 @@ class SpreadsheetReader:
         # if sheet unavailable, warn of issue
         except:
             message = 'Unable to open spreadsheet ' + self.filename
-            if self.js_gui:
-                self.js_gui('console', {'message': message})
+            if self.gui_console_fn:
+                self.gui_console_fn('console', {'message': message})
             else:
                 print(message)
             return

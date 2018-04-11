@@ -9,5 +9,5 @@ from server import config
 
 app.run(
     threaded=True,
-    debug=False,
+    use_reloader=True,
     port=int(config.PORT))

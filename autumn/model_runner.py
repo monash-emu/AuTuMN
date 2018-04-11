@@ -153,18 +153,18 @@ def solve_by_dichotomy(f, objective, a, b, tolerance):
 
 
 class ModelRunner:
-    def __init__(self, gui_inputs, js_gui=None):
+    def __init__(self, gui_inputs, gui_console_fn=None):
         """
         Instantiation method for model runner - currently including some attributes that should be set externally, e.g.
         in the GUI(s).
 
         Args:
             gui_inputs: Inputs from the off-line Tkinter GUI
-            js_gui: JavaScript GUI inputs
+            gui_console_fn: JavaScript GUI inputs
         """
 
         self.gui_inputs = gui_inputs
-        self.inputs = inputs.Inputs(gui_inputs, js_gui=js_gui)
+        self.inputs = inputs.Inputs(gui_inputs, gui_console_fn=gui_console_fn)
         self.inputs.process_inputs()
         (self.scenarios, self.standard_rate_outputs, self.divide_population, self.epi_outputs_to_analyse, \
           self.interventions_to_cost) \
@@ -182,9 +182,9 @@ class ModelRunner:
         self.additional_cost_types = ['inflated', 'discounted', 'discounted_inflated']
         self.cost_types = self.additional_cost_types + ['raw']
         self.non_disease_compartment_strings = ['susceptible']
-        self.emit_delay, self.js_gui = 0.1, js_gui
-        if self.js_gui:
-            self.js_gui('init')
+        self.emit_delay, self.gui_console_fn = 0.1, gui_console_fn
+        if self.gui_console_fn:
+            self.gui_console_fn('init')
 
         # optimisation attributes - note that this is currently dead
         # self.optimisation = False  # leave True even if loading optimisation results
@@ -263,7 +263,7 @@ class ModelRunner:
         for scenario in self.scenarios:
 
             # name, initialise and describe model, with appropriate times for scenario runs if required
-            self.models[scenario] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs, self.js_gui)
+            self.models[scenario] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs, self.gui_console_fn)
             if scenario > 0:
                 self.prepare_new_model_from_baseline(scenario)
             self.add_comment_to_gui_window(
@@ -920,8 +920,8 @@ class ModelRunner:
         Produce real-time parameter plot, according to which GUI is in use.
         """
 
-        if self.js_gui:
-            self.js_gui('graph', {
+        if self.gui_console_fn:
+            self.gui_console_fn('graph', {
                 'all_parameters_tried': self.outputs['epi_uncertainty']['all_parameters'],
                 'whether_accepted_list': self.outputs['epi_uncertainty']['whether_accepted'],
                 'rejection_dict': self.outputs['epi_uncertainty']['rejected_parameters'],
@@ -965,7 +965,7 @@ class ModelRunner:
         for sample in range(self.inputs.n_samples):
 
             # prepare for integration of scenario
-            self.models[15] = model.ConsolidatedModel(15, self.inputs, self.gui_inputs, self.js_gui)
+            self.models[15] = model.ConsolidatedModel(15, self.inputs, self.gui_inputs, self.gui_console_fn)
             self.prepare_new_model_from_baseline(15)
             self.models[15].relevant_interventions.append(self.inputs.uncertainty_intervention)
             for param in self.outputs['int_uncertainty']['parameter_values']:
@@ -1104,7 +1104,7 @@ class ModelRunner:
         self.optimised_combinations = []
 
         # initialise a new model that will be run from recent_time and set basic attributes for optimisation
-        self.models['optimisation'] = model.ConsolidatedModel(0, self.inputs, self.gui_inputs, self.js_gui)
+        self.models['optimisation'] = model.ConsolidatedModel(0, self.inputs, self.gui_inputs, self.gui_console_fn)
         self.prepare_new_model_from_baseline(0)
         self.models['optimisation'].eco_drives_epi = True
         self.models['optimisation'].inputs.model_constants['scenario_end_time'] = self.year_end_opti
@@ -1123,8 +1123,8 @@ class ModelRunner:
                 intervention = self.interventions_considered_for_opti[combination[i]]
                 dict_optimised_combi['interventions'].append(intervention)
 
-            if self.js_gui:
-                self.js_gui('console', {
+            if self.gui_console_fn:
+                self.gui_console_fn('console', {
                     'message': 'Optimisation of the distribution across: \n' +
                                 str(dict_optimised_combi['interventions'])
                 })
@@ -1218,7 +1218,7 @@ class ModelRunner:
         """
 
         # prepare new model to run full scenario duration
-        self.models['optimisation'] = model.ConsolidatedModel(0, self.inputs, self.gui_inputs, self.js_gui)
+        self.models['optimisation'] = model.ConsolidatedModel(0, self.inputs, self.gui_inputs, self.gui_console_fn)
         self.prepare_new_model_from_baseline(0)
         self.models['optimisation'].eco_drives_epi = True
         self.models['optimisation'].interventions_considered_for_opti = self.interventions_considered_for_opti
@@ -1264,17 +1264,17 @@ class ModelRunner:
 
     def add_comment_to_gui_window(self, comment):
 
-        if self.js_gui:
-            self.js_gui('console', {'message': comment})
+        if self.gui_console_fn:
+            self.gui_console_fn('console', {'message': comment})
 
 
 ''' disease-specific model runners '''
 
 
 class TbRunner(ModelRunner):
-    def __init__(self, gui_inputs, js_gui=None):
+    def __init__(self, gui_inputs, gui_console_fn=None):
 
-        ModelRunner.__init__(self, gui_inputs, js_gui)
+        ModelRunner.__init__(self, gui_inputs, gui_console_fn)
 
         # outputs
         self.epi_outputs_to_analyse = ['incidence', 'prevalence', 'mortality', 'true_mortality', 'notifications']

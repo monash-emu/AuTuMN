@@ -183,7 +183,7 @@ class App:
         """
 
         self.model_runner = autumn.model_runner.TbRunner(
-            self.gui_outputs, js_gui=self.handle_message)
+            self.gui_outputs, gui_console_fn=self.handle_message)
         self.model_runner.master_runner()
         project = outputs.Project(self.model_runner, self.gui_outputs)
         out_dir_project = project.master_outputs_runner()

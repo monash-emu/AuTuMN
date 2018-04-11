@@ -1114,7 +1114,7 @@ def is_upper_age_limit_at_or_below(compartment_string, age_value):
 
 
 def adapt_params_to_stratification(data_breakpoints, model_breakpoints, data_param_vals, assumed_max_params=100.,
-                                   parameter_name='', whether_to_plot=False, js_gui=None):
+                                   parameter_name='', whether_to_plot=False, gui_console_fn=None):
     """
     Create a new set of parameters associated to the model stratification given parameter values that are known for
     another stratification.
@@ -1156,8 +1156,8 @@ def adapt_params_to_stratification(data_breakpoints, model_breakpoints, data_par
         model_param_vals[new_name] = beta
 
     message = report_age_specific_parameter_calculations(parameter_name, model_param_vals)
-    if js_gui:
-        js_gui('console', {'message': message})
+    if gui_console_fn:
+        gui_console_fn('console', {'message': message})
     else:
         print(message)
 

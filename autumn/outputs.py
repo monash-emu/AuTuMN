@@ -230,10 +230,12 @@ def add_title_to_plot(fig, n_panels, content):
         content: Unprocessed string to determine text for the title
     """
 
-    title_height = {1: .92, 2: .98, 3: .96, 4: .96, 5: .96, 8: .96}
-    title_font_size = {1: 14, 2: 11, 3: 10, 4: 10, 5: 10, 8: 10}
-    fig.suptitle(t_k.find_title_from_dictionary(content), y=title_height[n_panels],
-                 fontsize=title_font_size[n_panels])
+    # if few panels, bigger and lower title
+    greater_heights = {1: .92, 2: .98}
+    greater_font_sizes = {1: 14, 2: 11}
+    fig.suptitle(t_k.find_title_from_dictionary(content),
+                 y=greater_heights[n_panels] if n_panels in greater_heights else .96,
+                 fontsize=greater_font_sizes[n_panels] if n_panels in greater_font_sizes else 10)
 
 
 def find_panel_grid_indices(axes, index, n_rows, n_columns):

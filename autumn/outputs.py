@@ -52,42 +52,22 @@ def create_patch_from_list(x_values, lower_border, upper_border):
     return patch_array
 
 
-def extract_dict_to_list_key_ordering(dictionary, key_string):
+def find_exponential_constants(x_values, y_values):
     """
-    Create a dictionary with each element lists, one giving the "times" that the list element refers to and the others
-    giving the data content that these times refer to - maintainting the order that the keys were originally in.
+    Find the parameters to an exponential function that passes through the point (x_values[0], y_values[0])
+    and (x_values[1], y_values[1]) and is of the form: y = exp(-a * (x - b)), where x is the independent variable.
 
     Args:
-        dictionary: The dictionary containing the data to be extracted (N.B. Assumption is that the keys refer to times)
-        key_string: The key of interest within the dictionary
-    Returns:
-        extracted_lists: Dictionary containing the extracted lists with keys 'times' and "key_string"
-    """
-
-    extracted_lists = {}
-    extracted_lists['times'] = sorted(dictionary.keys())
-    extracted_lists[key_string] = []
-    for time in extracted_lists['times']: extracted_lists[key_string].append(dictionary[time])
-    return extracted_lists
-
-
-def find_exponential_constants(times, y_values):
-    """
-    In order to find an exponential function that passes through the point (times[0], y_values[0])
-    and (times[1], y_values[1]) and is of the form: y = exp(-a * (t - b)), where t is the independent variable.
-
-    Args:
-        times: List of the two time or x coordinates of the points to be fitted to
+        x_values: List of the two time or x coordinates of the points to be fitted to
         y_values: List of the two outputs or y coordinates of the points to be fitted to
     Returns:
-        a: Parameter for the horizontal transformation of the function
+        Parameter for the horizontal transformation of the function
         b: Parameter for the horizontal translation of the function
     """
 
-    b = (times[0] * numpy.log(y_values[1]) - times[1] * numpy.log(y_values[0])) \
+    b = (x_values[0] * numpy.log(y_values[1]) - x_values[1] * numpy.log(y_values[0])) \
         / (numpy.log(y_values[1]) - numpy.log(y_values[0]))
-    a = - numpy.log(y_values[0]) / (times[0] - b)
-    return a, b
+    return - numpy.log(y_values[0]) / (x_values[0] - b), b
 
 
 def plot_endtb_targets(ax, output, base_value, plot_colour):
@@ -95,7 +75,7 @@ def plot_endtb_targets(ax, output, base_value, plot_colour):
     Plot the End TB Targets and the direction that we need to head to achieve them.
 
     Args:
-        ax: The axis to be plotted on to
+        ax: The axis to be plotted to
         output: Output string
         base_value: The value of the output at the reference time
         plot_colour: List of colours for plotting
@@ -116,7 +96,8 @@ def plot_endtb_targets(ax, output, base_value, plot_colour):
 
     # cycle through times and plot
     for t in range(len(times) - 1):
-        times_to_plot, output_to_reach_target = find_times_from_exp_function(t, times, target_values)
+        times_to_plot, output_to_reach_target \
+            = find_values_exp_function([times[t], times[t + 1]], [target_values[t], target_values[t + 1]])
         ax.plot(times_to_plot, output_to_reach_target, color=plot_colour, linewidth=.5)
 
     # annotate points with letters if requested
@@ -125,13 +106,12 @@ def plot_endtb_targets(ax, output, base_value, plot_colour):
                     horizontalalignment='center', verticalalignment='bottom', fontsize=8, color=plot_colour)
 
 
-def find_times_from_exp_function(t, times, target_values, number_x_values=100):
+def find_values_exp_function(times, target_values, number_x_values=100):
     """
     Find the times to plot and the outputs tracking towards the targets from the list of times and target values,
     using the function to fit exponential functions.
 
     Args:
-        t: The sequence number for the time point
         times: The list of times being worked through
         target_values: The list fo target values corresponding to the times
         number_x_values: The number of x-values required for plotting
@@ -140,10 +120,9 @@ def find_times_from_exp_function(t, times, target_values, number_x_values=100):
         outputs_to_reach_target: Corresponding list of values for the output needed to track towards the target
     """
 
-    a, b = find_exponential_constants([times[t], times[t + 1]], [target_values[t], target_values[t + 1]])
-    times_to_plot = numpy.linspace(times[t], times[t + 1], number_x_values)
-    output_to_reach_target = [numpy.exp(-a * (x - b)) for x in times_to_plot]
-    return times_to_plot, output_to_reach_target
+    a, b = find_exponential_constants([times[0], times[1]], [target_values[0], target_values[1]])
+    times_to_plot = numpy.linspace(times[0], times[1], number_x_values)
+    return times_to_plot, [numpy.exp(-a * (x - b)) for x in times_to_plot]
 
 
 def scale_axes(vals, max_val, y_sig_figs):
@@ -1352,14 +1331,14 @@ class Project:
         # notifications
         if output == 'notifications':
             gtb_data['point_estimate'] = self.inputs.original_data['notifications']['c_newinc']
-            gtb_data_lists.update(extract_dict_to_list_key_ordering(gtb_data['point_estimate'], 'point_estimate'))
+            gtb_data_lists.update(t_k.extract_dict_to_ordered_key_lists(gtb_data['point_estimate'], 'point_estimate'))
             gtb_index = t_k.find_first_list_element_at_least(gtb_data_lists['times'], start_time)
 
         # extract data other outputs
         else:
             for level in self.level_conversion_dict:
                 gtb_data[level] = self.inputs.original_data['gtb'][output_index + self.level_conversion_dict[level]]
-                gtb_data_lists.update(extract_dict_to_list_key_ordering(gtb_data[level], level))
+                gtb_data_lists.update(t_k.extract_dict_to_ordered_key_lists(gtb_data[level], level))
             gtb_index = t_k.find_first_list_element_at_least(gtb_data_lists['times'], start_time)
 
             # plot patch

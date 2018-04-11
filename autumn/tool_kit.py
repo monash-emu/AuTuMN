@@ -14,6 +14,22 @@ Object-oriented structures are not intended to be kept here.
 ''' general data manipulation functions '''
 
 
+def extract_dict_to_ordered_key_lists(dictionary, data_name, key_name='times'):
+    """
+    Create a dictionary with each element lists, one giving the "times" that the list element refers to and the others
+    giving the data content that these times refer to - maintaining the order that the keys were originally in.
+
+    Args:
+        dictionary: The dictionary containing the data to be extracted (N.B. Assumption is that the keys refer to times)
+        data_name: The key of interest within the input dictionary
+        key_name: String to assign to the dictionary element that is the sorted list of keys of the input dictionary
+    Returns:
+        Dictionary containing the extracted lists with keys 'times' and "key_string"
+    """
+
+    return {key_name: sorted(dictionary.keys()), data_name: [dictionary[time] for time in sorted(dictionary.keys())]}
+
+
 def increment_dictionary_with_dictionary(dict_a, dict_b):
     """
     Function to add the values from one dictionary to the values from the same keys in another.

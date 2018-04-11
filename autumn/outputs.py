@@ -17,27 +17,9 @@ import itertools
 import tool_kit as t_k
 
 
-def find_smallest_factors_of_integer(n):
-    """
-    Quick method to iterate through integers to find the smallest whole number fractions.
-    Written only to be called by find_subplot_numbers.
-
-    Args:
-        n: Integer to be factorised
-    Returns:
-        answer: The two smallest factors of the integer
-    """
-
-    answer = [1e3, 1e3]
-    for i in range(1, n + 1):
-        if n % i == 0 and i + (n / i) < sum(answer):
-            answer = [i, n / i]
-    return answer
-
-
 def get_label_font_size(max_dim):
     """
-    Find standardised font size - to be applied across all figures.
+    Find standardised font size that can be applied across all figures.
 
     Args:
         max_dim: The number of rows or columns, whichever is the greater
@@ -163,28 +145,6 @@ def find_times_from_exp_function(t, times, target_values, number_x_values=100):
     times_to_plot = numpy.linspace(times[t], times[t + 1], number_x_values)
     output_to_reach_target = [numpy.exp(-a * (x - b)) for x in times_to_plot]
     return times_to_plot, output_to_reach_target
-
-
-def find_subplot_numbers(n):
-    """
-    Method to find a good number of rows and columns for subplots of figure.
-
-    Args:
-        n: Total number of subplots.
-    Returns:
-        answer: List of two elements, being the rows and columns of the subplots.
-
-    """
-
-    # Find a nice number of subplots for a panel plot
-    answer = find_smallest_factors_of_integer(n)
-    i = 0
-    while i < 10:
-        if abs(answer[0] - answer[1]) > 3:
-            n += 1
-            answer = find_smallest_factors_of_integer(n)
-        i += 1
-    return answer
 
 
 def scale_axes(vals, max_val, y_sig_figs):
@@ -335,13 +295,12 @@ def find_subplot_grid(n_plots):
     Args:
         n_plots: The number of subplots needed
     Returns:
-        n_rows: The number of rows of subplots
+        The number of rows of subplots
         n_cols: The number of columns of subplots
     """
 
-    n_cols = int(numpy.ceil(n_plots ** .5))
-    n_rows = int(numpy.ceil(float(n_plots) / float(n_cols)))
-    return n_rows, n_cols
+    n_cols = int(numpy.ceil(numpy.sqrt(n_plots)))
+    return int(numpy.ceil(n_plots / float(n_cols))), n_cols
 
 
 def initialise_figures_axes(n_panels, room_for_legend=False, requested_grid=None, share_yaxis='none'):

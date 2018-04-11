@@ -12,6 +12,7 @@ import economics
 import copy
 from scipy import stats
 import itertools
+import shutil
 
 # AuTuMN import
 import tool_kit as t_k
@@ -333,7 +334,7 @@ def increment_list_for_patch(new_data, cumulative_data):
 
 
 class Project:
-    def __init__(self, runner, gui_inputs):
+    def __init__(self, runner, gui_inputs, out_dir_project=None):
         """
         Initialises an object of class Project, that will contain all the information (data + outputs) for writing a
         report for a country.
@@ -345,6 +346,14 @@ class Project:
 
         self.model_runner = runner
         self.gui_inputs = gui_inputs
+
+        self.country = self.gui_inputs['country'].lower()
+        if out_dir_project == None:
+            self.out_dir_project = os.path.join('projects', 'test_' + self.country)
+        else:
+            self.out_dir_project = out_dir_project
+        if not os.path.isdir(self.out_dir_project):
+            os.makedirs(self.out_dir_project)
 
         (self.inputs, self.run_mode) \
             = [None for _ in range(2)]
@@ -361,11 +370,9 @@ class Project:
         for attribute in ['scenarios', 'interventions_to_cost', 'run_mode']:
             setattr(self, attribute, getattr(self.model_runner.inputs, attribute))
         self.figure_number, self.title_size = 1, 13
-        self.country = self.gui_inputs['country'].lower()
-        self.out_dir_project = os.path.join('projects', 'test_' + self.country)
+
         self.figure_formats = ['png']   # allow for multiple formats. e.g. ['png', 'pdf']
-        if not os.path.isdir(self.out_dir_project):
-            os.makedirs(self.out_dir_project)
+
         self.years_to_write \
             = range(int(self.inputs.model_constants['report_start_time']),
                     int(self.inputs.model_constants['report_end_time']),

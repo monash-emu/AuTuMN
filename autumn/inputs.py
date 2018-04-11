@@ -43,7 +43,7 @@ def find_latest_value_from_year_dict(dictionary, ceiling):
 
 
 class Inputs:
-    def __init__(self, gui_inputs, js_gui=None):
+    def __init__(self, gui_inputs, gui_console_fn=None):
         """
         As much data processing occurs here as possible, with GUI modules intended to be restricted to just loading of
         data in its rawest form, while as little processing is done in the model runner and model objects as possible.
@@ -52,14 +52,17 @@ class Inputs:
 
         Args:
             gui_inputs: Raw inputs from GUI
-            js_gui: The JavaScript GUI
+            gui_console_fn: callback function to handle model diagnostics output,
+                function should accept parameters (output_type, data) where
+                    output_type: string of type of message
+                    data: dictionary literal
         """
 
         # most general inputs, including attributes that need to be converted from keys to input dictionary
         self.gui_inputs = gui_inputs
-        self.js_gui = js_gui
-        if self.js_gui:
-            self.js_gui('init')
+        self.gui_console_fn = gui_console_fn
+        if self.gui_console_fn:
+            self.gui_console_fn('init')
 
         # initialising attributes by data type now, rather than purpose
         (self.plot_count, self.n_organs, self.n_strains, self.fitting_method, self.n_samples) \
@@ -408,7 +411,7 @@ class Inputs:
 
         self.add_comment_to_gui_window('Reading Excel sheets with input data.\n')
         self.original_data = spreadsheet.read_input_data_xls(True, self.find_keys_of_sheets_to_read(), self.country,
-                                                             self.js_gui)
+                                                             self.gui_console_fn)
         self.add_comment_to_gui_window('Spreadsheet reading complete.\n')
 
     def find_keys_of_sheets_to_read(self):
@@ -616,7 +619,7 @@ class Inputs:
                 tool_kit.adapt_params_to_stratification(param_breakpoints, model_breakpoints, param_vals,
                                                         parameter_name=param_type,
                                                         whether_to_plot=self.gui_inputs['output_age_calculations'],
-                                                        js_gui=self.js_gui)
+                                                        gui_console_fn=self.gui_console_fn)
             for agegroup in self.agegroups:
                 self.model_constants[stem + agegroup] = age_adjusted_values[agegroup]
 
@@ -1377,8 +1380,8 @@ class Inputs:
         Output message to either JavaScript or Tkinter GUI.
         """
 
-        if self.js_gui:
-            self.js_gui('console', {'message': comment})
+        if self.gui_console_fn:
+            self.gui_console_fn('console', {'message': comment})
 
     def checks(self):
         """

@@ -161,7 +161,6 @@
                   </md-select>
                 </md-input-container>
 
-
                 <div style="width: 100%">
                   <md-layout
                       md-row
@@ -201,7 +200,9 @@
                         font-size: 0.9em">
 
                     <div
-                        style="margin: 0 8px"
+                        style="
+                          margin: 0 8px;
+                          word-wrap: break-word;"
                         v-for="(line, i) in consoleLines"
                         :key="i">
                       {{ line }}
@@ -425,11 +426,12 @@ export default {
       setTimeout(this.checkRun, 2000)
 
       let res = await rpc.rpcRun('public_run_autumn', params)
-      if (!res.result) {
+      if (!res.result || !res.result.success) {
         this.consoleLines.push('Error: model crashed')
         this.isRunning = false
       } else {
         this.project = res.result.project
+        this.projects.push(this.project)
         this.filenames = _.map(
           res.result.filenames,
           f => `${config.apiUrl}/file/${f}`)
@@ -437,14 +439,20 @@ export default {
       }
     },
     async changeProject (project) {
-      console.log('> Model.changeProject', project)
       let res = await rpc.rpcRun('public_get_project_images', project)
       if (res.result) {
+        console.log('> Model.changeProject', project, res.result)
         this.filenames = _.map(
           res.result.filenames, f => `${config.apiUrl}/file/${f}`)
         this.consoleLines = res.result.consoleLines
-        this.params = res.result.params
-        console.log('>> Model.changeProject filenames', this.filenames)
+        if (this.$el.querySelector) {
+          let container = this.$el.querySelector('#console-output')
+          container.scrollTop = container.scrollHeight
+        }
+        if (res.result.params) {
+          this.params = res.result.params
+        }
+        console.log('> Model.changeProject', this.filenames)
       }
     },
     changeWidth () {

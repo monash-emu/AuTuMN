@@ -72,7 +72,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         7. Calculating the diagnostic solutions
     """
 
-    def __init__(self, scenario=0, inputs=None, gui_inputs=None, js_gui=None):
+    def __init__(self, scenario=0, inputs=None, gui_inputs=None, gui_console_fn=None):
         """
         Instantiation, partly inherited from the lower level model objects through nested inheritance.
 
@@ -80,6 +80,10 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
             scenario: Single number for the scenario to run (with None meaning baseline)
             inputs: Non-GUI inputs from inputs
             gui_inputs: GUI inputs from Tkinter or JS GUI
+            gui_console_fn: callback function to handle model diagnostics output,
+                function should accept parameters (output_type, data) where
+                    output_type: string of type of message
+                    data: dictionary literal
         """
 
         # inherited initialisations
@@ -89,7 +93,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         # model attributes set from model runner object
         self.inputs = inputs
         self.scenario = scenario
-        self.js_gui = js_gui
+        self.gui_console_fn = gui_console_fn
 
         # start_time can't stay as a model constant, as it must be set for each scenario individually
         self.start_time = inputs.model_constants['start_time']
@@ -299,8 +303,8 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
 
         if self.time > self.next_time_point:
             message = 'Integrated time ' + str(int(self.time))
-            if self.js_gui:
-                self.js_gui('console', {'message': message})
+            if self.gui_console_fn:
+                self.gui_console_fn('console', {'message': message})
             else:
                 print(message)
             self.next_time_point += 10.

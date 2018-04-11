@@ -161,7 +161,6 @@
                   </md-select>
                 </md-input-container>
 
-
                 <div style="width: 100%">
                   <md-layout
                       md-row

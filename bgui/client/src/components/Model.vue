@@ -445,6 +445,10 @@ export default {
         this.filenames = _.map(
           res.result.filenames, f => `${config.apiUrl}/file/${f}`)
         this.consoleLines = res.result.consoleLines
+        if (this.$el.querySelector) {
+          let container = this.$el.querySelector('#console-output')
+          container.scrollTop = container.scrollHeight
+        }
         if (res.result.params) {
           this.params = res.result.params
         }

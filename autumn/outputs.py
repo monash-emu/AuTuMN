@@ -559,6 +559,7 @@ class Project:
             space_at_top: Relative amount of space to leave at the top, above the maximum value of the plotted data
             y_label: A label for the y-axis, if required
             y_lims: 2-element tuple for the y-limit, if required
+            allow_negative: Whether to set the bottom of the axis to zero
         """
 
         # axis range
@@ -570,7 +571,6 @@ class Project:
             pass
         elif axis.get_ylim()[1] < max_value * (1. + space_at_top):
             axis.set_ylim(top=max_value * (1. + space_at_top))
-
         if not allow_negative:
             axis.set_ylim(bottom=0.)
 
@@ -586,19 +586,6 @@ class Project:
         # axis label
         if y_label and left_axis:
             axis.set_ylabel(y_label, fontsize=get_label_font_size(max_dims))
-
-    def save_figure(self, fig, end_figure_name):
-        """
-        Simple method to standardise names for output figure files.
-
-        Args:
-            end_figure_name: The part of the figure name that is variable and is input by the plotting method
-            fig: Figure for saving
-        """
-
-        for file_format in self.figure_formats:
-            filename = os.path.join(self.out_dir_project, self.country + end_figure_name + '.' + file_format)
-            fig.savefig(filename, dpi=300)
 
     def finish_off_figure(self, fig, n_plots, end_filename, title_text):
         """
@@ -690,7 +677,7 @@ class Project:
         return uncertainty_centiles
 
     def sum_compartments_by_category(self, category_type, scenario, start_time_index, fraction=False,
-                                     requirements=[''], exclusions=['we all love futsal']):
+                                     requirements=('',), exclusions=('we all love futsal',), remainder=False):
         """
         Find the sum of all compartments within a particular category (i.e. containing a particular string).
 
@@ -701,12 +688,14 @@ class Project:
             fraction: Boolean for whether to calculate as a fraction or as total compartment values
             requirements: List of strings that must appear in the compartments of interest
             exclusions: List of strings of compartments to be ignored
+            remainder: Whether to add an additional category for the remainder
         """
 
+        print('got here')
+        print(type(requirements))
+
         categories_to_loop = getattr(self.inputs, category_type)
-        current_data = {}
-        compartments_in_category = {}
-        remainder = False
+        current_data, compartments_in_category = {}, {}
         if remainder:
             current_data['remainder'] = [0.] * len(self.model_runner.models[scenario].times[start_time_index:])
         for label in categories_to_loop:
@@ -1353,8 +1342,8 @@ class Project:
 
         return max(gtb_data['point_estimate'].values())
 
-    def plot_populations(self, category_to_loop='agegroups', scenario=0, fraction=False, requirements=[''],
-                         exclusions=['we all love futsal']):
+    def plot_populations(self, category_to_loop='agegroups', scenario=0, fraction=False, requirements=('',),
+                         exclusions=('we all love futsal',)):
         """
         Plot population by the compartment or other category to which they belong. Doesn't necessarily work that well
         for compartments, where there are generally too many compartments for them to be easily visualised.
@@ -1634,14 +1623,14 @@ class Project:
                     ax_dict['stacked'].fill_between(
                         cost_times, previous_data, cumulative_data, color=colour, edgecolor=colour, linewidth=.1)
 
-                # tidy each individual axis
+                # tidy each axis
                 for plot_type in plot_types:
                     ax_dict[plot_type].set_title(t_k.find_title_from_dictionary(cost_type),
                                                  fontsize=get_label_font_size(max_dim))
                     self.tidy_x_axis(ax_dict[plot_type], cost_times[0], cost_times[-1], max_dim)
                     self.tidy_y_axis(ax_dict[plot_type], 'cost', max_dim, left_axis=c % n_cols == 0, y_label='$US',
                                      allow_negative=True if plot_type == 'relative' else False)
-                    if c == len(self.model_runner.cost_types) - 1:
+                    if cost_type == self.model_runner.cost_types[-1]:
                         add_legend_to_plot(ax_dict[plot_type], max_dim)
 
             # tidy figure

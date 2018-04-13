@@ -7,6 +7,7 @@ from scipy.stats import norm, beta, gamma
 from scipy.optimize import minimize
 from pyDOE import lhs
 import itertools
+import copy
 
 # AuTuMN imports
 import tool_kit as t_k
@@ -616,7 +617,9 @@ class ModelRunner:
         while n_accepted < self.gui_inputs['uncertainty_runs']:
             # instantiate model objects
             for scenario in self.scenarios:
-                self.models[scenario].initialise_compartments()
+                params_copy = copy.deepcopy(self.models[scenario].params)  # we need to reuse the updated params
+                self.models[scenario] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
+                self.models[scenario].params = params_copy
 
             # set timer
             start_timer_run = datetime.datetime.now()
@@ -986,7 +989,7 @@ class ModelRunner:
         param_dict = {}
         targeted_indicator = 'incidence'  # hard-coded
 
-        years_to_compare = range(2010, 2017)
+        years_to_compare = range(2014, 2017)
         working_output_dictionary = self.get_fitting_data()[targeted_indicator]
         available_years = []
         target_values = {}
@@ -1026,7 +1029,7 @@ class ModelRunner:
             return sum_of_squares
 
         x_0 = self.inputs.model_constants[params_to_calibrate]
-        optimisation_result = minimize(fun=objective_function, x0=x_0, method='Nelder-Mead')
+        optimisation_result = minimize(fun=objective_function, x0=x_0, method='Nelder-Mead',options={'fatol':5.})
 
         return optimisation_result.x
 

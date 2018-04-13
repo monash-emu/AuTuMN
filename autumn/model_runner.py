@@ -988,6 +988,7 @@ class ModelRunner:
         param_dict = {}
         targeted_indicator = 'incidence'  # hard-coded
         single_point_calibration = True
+        param_tol = 0.1   # tolerance for the parameter value. Stopping condition.
 
         years_to_compare = range(2010, 2017)
         working_output_dictionary = self.get_fitting_data()[targeted_indicator]
@@ -1039,14 +1040,16 @@ class ModelRunner:
             else:
                 return sum_of_squares
 
-        if single_point_calibration:
-            param_low, param_high = 10., 20.   # starting points
+        if single_point_calibration:   # implement a dichotomy algorithm
+            param_low, param_high = 10., 20.   # starting points / hard-coded
+            estimated_n_iter = 2. + (numpy.log(param_high - param_low) - numpy.log(2. * param_tol)) / numpy.log(2.)
+            self.add_comment_to_gui_window("Dichotomy method will converge in fewer than " +
+                                           str(int(round(estimated_n_iter))) + " iterations")
             f_low = objective_function(param_low)
             f_high = objective_function(param_high)
             if f_low*f_high > 0:
                 exit('the interval [param_low - param_high] does not contain the solution')
 
-            param_tol = 0.1
             while (param_high - param_low) / 2. > param_tol:
                 midpoint = (param_low + param_high) / 2.
                 obj = objective_function(midpoint)
@@ -1061,7 +1064,7 @@ class ModelRunner:
             best_param_value = midpoint
         else:
             x_0 = self.inputs.model_constants[params_to_calibrate]
-            optimisation_result = minimize(fun=objective_function, x0=x_0, method='Nelder-Mead',options={'fatol':5.})
+            optimisation_result = minimize(fun=objective_function, x0=x_0, method='Nelder-Mead', options={'xatol':param_tol})
             best_param_value = optimisation_result.x
 
         print "The best value found for " + params_to_calibrate + " is " + str(best_param_value)

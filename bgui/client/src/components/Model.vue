@@ -312,8 +312,8 @@ export default {
     if (res.result) {
       console.log('> Model.created', res.result)
       this.paramGroups = res.result.paramGroups
-      this.params = res.result.params
       this.defaultParams = _.cloneDeep(res.result.params)
+      this.params = _.cloneDeep(res.result.params)
       this.paramGroup = this.paramGroups[0]
       this.projects = res.result.projects
       this.countryDefaults = res.result.countryDefaults
@@ -431,7 +431,9 @@ export default {
         this.isRunning = false
       } else {
         this.project = res.result.project
-        this.projects.push(this.project)
+        if (!_.includes(this.projects, this.project)) {
+          this.projects.push(this.project)
+        }
         this.filenames = _.map(
           res.result.filenames,
           f => `${config.apiUrl}/file/${f}`)
@@ -462,18 +464,21 @@ export default {
     selectDropDown (key) {
       if (key === 'country') {
         let country = this.params[key].value.toLowerCase()
-        if (country in this.countryDefaults) {
-          let diffParams = this.countryDefaults[country]
-          this.params = _.cloneDeep(this.defaultParams)
-          for (let key of _.keys(diffParams)) {
-            console.log(
-              '> Model.select',
-              country,
-              key,
-              JSON.stringify(this.params[key].value),
-              '->',
-              JSON.stringify(diffParams[key].value))
-            this.params[key].value = diffParams[key].value
+        if (country !== this.country) {
+          if (country in this.countryDefaults) {
+            console.log('Model.selectDropdown', country)
+            let diffParams = this.countryDefaults[country]
+            _.assign(this.params, this.defaultParams)
+            for (let key of _.keys(diffParams)) {
+              console.log(
+                '> Model.select',
+                country,
+                key,
+                JSON.stringify(this.params[key].value),
+                '->',
+                JSON.stringify(diffParams[key].value))
+              this.params[key].value = diffParams[key].value
+            }
           }
         }
       }

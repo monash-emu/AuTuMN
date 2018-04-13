@@ -1022,7 +1022,7 @@ class Inputs:
             if ('program_prop' in time_variant or 'int_prop' in time_variant) and '_death' not in time_variant \
                     and '_dots_contributor' not in time_variant \
                     and '_dot_groupcontributor' not in time_variant:
-                self.time_variants[time_variant][int(self.model_constants['start_time'])] = 0.
+                self.time_variants[time_variant][int(self.model_constants['early_time'])] = 0.
 
             # remove the load_data keys, as they have been used and are now redundant
             self.time_variants[time_variant] \

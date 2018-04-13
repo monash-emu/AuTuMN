@@ -595,7 +595,7 @@ class ModelRunner:
                 self.outputs['epi_uncertainty']['all_compartment_values'][compartment_type] = []
 
         # find values of mu and sd for the likelihood calculation. Process uncertainty weights in the same loop.
-        years_to_compare = range(2010, 2017)
+        years_to_compare = range(2014, 2017)
         mu_values, sd_values, mean_sd_value, weights = {}, {}, {}, {}
         for output_dict in self.inputs.outputs_unc:
             mu_values[output_dict['key']] = {}
@@ -636,7 +636,7 @@ class ModelRunner:
                 outputs_for_comparison \
                     = [self.outputs['epi_uncertainty']['epi'][0]['incidence'][
                            last_run_output_index, t_k.find_first_list_element_at_least(
-                               self.outputs['manual']['epi'][0]['times'], float(year))] for year in years_to_compare]
+                               self.outputs['epi_uncertainty']['epi'][0]['times'], float(year))] for year in years_to_compare]
 
                 # calculate likelihood
                 prior_log_likelihood, posterior_log_likelihood = 0., 0.
@@ -911,7 +911,7 @@ class ModelRunner:
             population_adjustment \
                 = self.inputs.model_constants['target_population'] / float(self.outputs['epi_uncertainty']['epi'][0][
                     'population'][last_run_output_index, t_k.find_first_list_element_above(
-                        self.outputs['manual']['epi'][0]['times'], self.inputs.model_constants['current_time'])])
+                        self.outputs['epi_uncertainty']['epi'][0]['times'], self.inputs.model_constants['current_time'])])
             for compartment in self.inputs.compartment_types:
                 if compartment in self.models[0].params:
                     self.models[0].set_parameter(compartment,
@@ -1455,7 +1455,7 @@ class TbRunner(ModelRunner):
             if year in self.inputs.original_data['gtb']['e_mort_exc_tbhiv_100k']:
                 ratios.append(self.outputs['epi_uncertainty']['epi'][0]['mortality'][
                                   last_run_output_index, t_k.find_first_list_element_above(
-                                      self.outputs['manual']['epi'][0]['times'], float(year))]
+                                      self.outputs['epi_uncertainty']['epi'][0]['times'], float(year))]
                               / self.inputs.original_data['gtb']['e_mort_exc_tbhiv_100k'][year])
         average_ratio = numpy.mean(ratios)
         if average_ratio < 1. / self.relative_difference_to_adjust_mortality:
@@ -1472,7 +1472,7 @@ class TbRunner(ModelRunner):
         ratio_mdr_prevalence \
             = float(self.outputs['epi_uncertainty']['epi'][0]['perc_incidence_mdr'][
                         last_run_output_index, t_k.find_first_list_element_at_least(
-                            self.outputs['manual']['epi'][0]['times'], self.inputs.model_constants['current_time'])]) \
+                            self.outputs['epi_uncertainty']['epi'][0]['times'], self.inputs.model_constants['current_time'])]) \
             / self.inputs.model_constants['tb_perc_mdr_prevalence']
         if ratio_mdr_prevalence < 1. / self.relative_difference_to_adjust_mdr:
             self.mdr_introduce_time -= self.amount_to_adjust_mdr_year

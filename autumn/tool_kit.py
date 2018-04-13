@@ -68,6 +68,9 @@ def find_first_list_element_above(list, value):
         list: List of floats
         value: The value that the element must be greater than
     """
+    if isinstance(list, numpy.ndarray):
+        if len(list.shape) > 1:   # multi-dimensional array. We jsut want to keep the last row.
+            list = list[-1, ]
 
     return next(x[0] for x in enumerate(list) if x[1] > value)
 
@@ -80,6 +83,9 @@ def find_list_element_equal_to(list, value):
         list: The list to search through
         value: Value being searched for
     """
+    if isinstance(list, numpy.ndarray):
+        if len(list.shape) > 1:   # multi-dimensional array. We jsut want to keep the last row.
+            list = list[-1, ]
 
     return next(x[0] for x in enumerate(list) if x[1] == value)
 
@@ -92,6 +98,9 @@ def find_first_list_element_at_least(list_to_search, value):
         list_to_search: The list of floats
         value: The value that the element must be greater than
     """
+    if isinstance(list_to_search, numpy.ndarray):
+        if len(list_to_search.shape) > 1:   # multi-dimensional array. We jsut want to keep the last row.
+            list_to_search = list_to_search[-1, ]
 
     return next(x[0] for x in enumerate(list_to_search) if x[1] >= value)
 

@@ -227,10 +227,9 @@ class ModelRunner:
 
         # or run the manual scenarios as requested by user
         else:
-            self.run_manual_calibration()
             if self.inputs.run_mode == 'rapid_calibration':
-                best_beta = self.run_rapid_univariate_calibration()
-                print best_beta
+                self.run_rapid_univariate_calibration()
+            self.run_manual_calibration()
             if self.inputs.run_mode == 'epi_uncertainty':
                 self.run_epi_uncertainty()
             if self.inputs.run_mode == 'int_uncertainty':
@@ -988,8 +987,9 @@ class ModelRunner:
         params_to_calibrate = 'tb_n_contact'   # hard-coded
         param_dict = {}
         targeted_indicator = 'incidence'  # hard-coded
+        single_point_calibration = True
 
-        years_to_compare = range(2014, 2017)
+        years_to_compare = range(2010, 2017)
         working_output_dictionary = self.get_fitting_data()[targeted_indicator]
         available_years = []
         target_values = {}
@@ -999,7 +999,11 @@ class ModelRunner:
                 available_years.append(year)
                 target_values[year] = working_output_dictionary[year][0]
 
-        weights = find_uncertainty_output_weights(available_years, 4)
+        if single_point_calibration:
+            available_years = [available_years[-1]]
+            weights = [1.0]
+        else:
+            weights = find_uncertainty_output_weights(available_years, 4)
 
         def objective_function(param_val):
             # run the model
@@ -1018,21 +1022,49 @@ class ModelRunner:
                            self.outputs['manual']['epi'][0]['times'], float(year))] for year in years_to_compare]
 
             sum_of_squares = 0.
+            abs_diff = 0.
             index_for_available_years = 0
+
             for y, year in enumerate(years_to_compare):
                 if year in working_output_dictionary.keys():
-                    model_result_for_output = outputs_for_comparison[y]
-                    data = target_values[year]
-                    sum_of_squares += weights[index_for_available_years] * (data-model_result_for_output)**2
-                    index_for_available_years += 1
-            print sum_of_squares
-            return sum_of_squares
+                    if not single_point_calibration or year == available_years[-1]:
+                        model_result_for_output = outputs_for_comparison[y]
+                        data = target_values[year]
+                        sum_of_squares += weights[index_for_available_years] * (data-model_result_for_output)**2
+                        abs_diff += model_result_for_output - data
+                        index_for_available_years += 1
 
-        x_0 = self.inputs.model_constants[params_to_calibrate]
-        optimisation_result = minimize(fun=objective_function, x0=x_0, method='Nelder-Mead',options={'fatol':5.})
+            if single_point_calibration:
+                return abs_diff
+            else:
+                return sum_of_squares
 
-        return optimisation_result.x
+        if single_point_calibration:
+            param_low, param_high = 10., 20.   # starting points
+            f_low = objective_function(param_low)
+            f_high = objective_function(param_high)
+            if f_low*f_high > 0:
+                exit('the interval [param_low - param_high] does not contain the solution')
 
+            param_tol = 0.1
+            while (param_high - param_low) / 2. > param_tol:
+                midpoint = (param_low + param_high) / 2.
+                obj = objective_function(midpoint)
+                print "param value: " + str(midpoint)
+                print "distance to target: " + str(obj)
+                if obj == 0:
+                    return midpoint
+                elif obj*f_low < 0:
+                    param_high = midpoint
+                else:
+                    param_low = midpoint
+            best_param_value = midpoint
+        else:
+            x_0 = self.inputs.model_constants[params_to_calibrate]
+            optimisation_result = minimize(fun=objective_function, x0=x_0, method='Nelder-Mead',options={'fatol':5.})
+            best_param_value = optimisation_result.x
+
+        print "The best value found for " + params_to_calibrate + " is " + str(best_param_value)
 
     ''' optimisation methods '''
 

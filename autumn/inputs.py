@@ -284,6 +284,7 @@ class Inputs:
         self.scenarios \
             += [tool_kit.find_scenario_number_from_string(key) for key in self.gui_inputs
                 if key.startswith('scenario_') and len(key) < 12 and self.gui_inputs[key]]
+        self.scenarios.sort()
 
     def reconcile_user_inputs(self):
         """

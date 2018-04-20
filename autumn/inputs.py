@@ -91,7 +91,7 @@ class Inputs:
                 ['country', 'is_vary_detection_by_organ', 'is_vary_detection_by_riskgroup',
                  'is_include_relapse_in_ds_outcomes', 'is_vary_force_infection_by_riskgroup', 'fitting_method',
                  'uncertainty_intervention', 'is_include_hiv_treatment_outcomes', 'is_adjust_population',
-                 'n_centiles_for_shading']:
+                 'n_centiles_for_shading', 'n_samples']:
             setattr(self, attribute, gui_inputs[attribute])
 
         # various lists of strings for features available to the models or running modes

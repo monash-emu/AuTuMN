@@ -12,10 +12,37 @@ import economics
 import copy
 from scipy import stats
 import itertools
-import shutil
+import gc
 
 # AuTuMN import
 import tool_kit as t_k
+
+from pympler import tracker
+
+tr = tracker.SummaryTracker()
+
+from cStringIO import StringIO
+import sys
+
+
+class Capturing(list):
+    def __enter__(self):
+        self._stdout = sys.stdout
+        sys.stdout = self._stringio = StringIO()
+        return self
+    def __exit__(self, *args):
+        self.extend(self._stringio.getvalue().splitlines())
+        del self._stringio    # free up some memory
+        sys.stdout = self._stdout
+
+
+def get_memory_string():
+    with Capturing() as output:
+        tr.print_diff()
+    return '\n'.join(output)
+
+print("Test: " + get_memory_string())
+
 
 
 ''' plot creating and cleaning functions '''
@@ -603,6 +630,8 @@ class Project:
         for file_format in self.figure_formats:
             filename = os.path.join(self.out_dir_project, self.country + end_filename + '.' + file_format)
             fig.savefig(filename, dpi=300)
+            fig.clf()
+            pyplot.close(fig)
 
     def find_uncertainty_indices(self):
         """
@@ -1065,6 +1094,9 @@ class Project:
         Master plotting method to call all the methods that produce specific plots.
         """
 
+        self.model_runner.add_comment_to_gui_window(
+            'Before plotting:\n' + get_memory_string())
+
         # plot mixing matrix whenever relevant
         if self.inputs.is_vary_force_infection_by_riskgroup and len(self.inputs.riskgroups) > 1:
             self.plot_mixing_matrix()
@@ -1118,6 +1150,15 @@ class Project:
         # plot likelihood estimates
         if self.run_mode == 'epi_uncertainty' and self.gui_inputs['output_likelihood_plot']:
             self.plot_likelihoods()
+
+        self.model_runner.add_comment_to_gui_window(
+            'After plotting:\n' + get_memory_string())
+
+        pyplot.close('all')
+        gc.collect()
+
+        self.model_runner.add_comment_to_gui_window(
+            'After gc:\n' + get_memory_string())
 
     ''' epi outputs plotting '''
 

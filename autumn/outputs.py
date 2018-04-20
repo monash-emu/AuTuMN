@@ -392,8 +392,8 @@ class Project:
             = [{} for _ in range(5)]
         (self.grid, self.plot_rejected_runs, self.plot_true_outcomes) \
             = [False for _ in range(3)]
-        (self.accepted_no_burn_in_indices, self.scenarios, self.interventions_to_cost, self.accepted_indices) \
-            = [[] for _ in range(4)]
+        (self.accepted_no_burn_in_indices, self.scenarios, self.interventions_to_cost, self.accepted_indices,
+         self.accepted_run_weights) = [[] for _ in range(5)]
         self.uncertainty_centiles = {'epi': {}, 'cost': {}}
         for attribute in ['inputs', 'outputs']:
             setattr(self, attribute, getattr(self.model_runner, attribute))
@@ -464,6 +464,7 @@ class Project:
         # processing methods that are only required for outputs
         if self.run_mode == 'epi_uncertainty':
             self.find_uncertainty_indices()
+            self.calculate_accepted_run_weights()
             self.uncertainty_centiles['epi'] = self.find_uncertainty_common_times('epi')
         elif self.run_mode == 'int_uncertainty':
             for output_type in ['epi', 'cost']:
@@ -611,9 +612,18 @@ class Project:
         Updates:
             self.accepted_no_burn_in_indices: List of the uncertainty indices of interest
         """
-
         self.accepted_indices = self.outputs['epi_uncertainty']['accepted_indices']
         self.accepted_no_burn_in_indices = [i for i in self.accepted_indices if i >= self.gui_inputs['burn_in_runs']]
+
+    def calculate_accepted_run_weights(self):
+        """
+        This method accounts for the number of rejections following each acceptance and weights the relevant accepted
+        parameter sets accordingly. It will populate the attribute "accepted_run_weights" of the output object.
+        """
+        for i, accepted_index in enumerate(self.accepted_no_burn_in_indices):
+            next_accepted_index = self.accepted_no_burn_in_indices[i+1] \
+                if i < (len(self.accepted_no_burn_in_indices) - 1) else accepted_index + 1
+            self.accepted_run_weights.append(next_accepted_index - accepted_index)
 
     def find_uncertainty_common_times(self, output_type):
         """
@@ -645,6 +655,9 @@ class Project:
                     # all runs for scenario analysis (as only accepted recorded) but select accepted ones for baseline
                     matrix_to_analyse = self.interpolated_uncertainty[scenario][output] if scenario \
                         else self.interpolated_uncertainty[scenario][output][self.accepted_no_burn_in_indices]
+
+                    # transform matrix_to_analyse to account for the weights of the accepted runs
+                    matrix_to_analyse = t_k.apply_weighting(matrix_to_analyse, self.accepted_run_weights)
 
                     # find centiles
                     uncertainty_centiles[scenario][output] \
@@ -1639,6 +1652,9 @@ class Project:
             # find data
             param_values = [self.model_runner.outputs['epi_uncertainty']['all_parameters'][param][i]
                             for i in self.accepted_no_burn_in_indices]
+
+            # update param_values to account for the weights or the accepted runs
+            param_values = t_k.apply_weighting(param_values, self.accepted_run_weights)
 
             # plot histogram for each parameter
             y, _, _ = ax.hist(param_values, bins=20, edgecolor='k')

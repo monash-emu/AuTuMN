@@ -415,8 +415,8 @@ class Project:
         self.level_conversion_dict = {'lower_limit': '_lo', 'upper_limit': '_hi', 'point_estimate': ''}
 
         # common times to interpolate uncertainty to
-        self.n_interpolation_points = int(200)
-        start_interpolation_time = self.inputs.model_constants['scenario_start_time'] if self.run_mode == 'int_uncertainty' \
+        self.n_interpolation_points = int(2000)
+        start_interpolation_time = self.inputs.model_constants['early_time'] if self.run_mode == 'int_uncertainty' \
             else self.inputs.model_constants['early_time']
 
         self.interpolation_times_uncertainty \
@@ -835,22 +835,24 @@ class Project:
                                             self.interpolation_times_uncertainty, year)]
 
                 # economic outputs (uncertainty unavailable)
-                elif 'cost_' in result_type:
-
-                    # loop over interventions
-                    for inter, intervention in enumerate(self.inputs.interventions_to_cost[scenario]):
-
-                        # names across top
-                        row, column = reverse_inputs_if_required([1, inter + 2], horizontal)
-                        sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(intervention)
-
-                        # data columns
-                        for y, year in enumerate(self.years_to_write):
-                            row, column = reverse_inputs_if_required([y + 2, inter + 2], horizontal)
-                            sheet.cell(row=row, column=column).value \
-                                = self.outputs['manual']['cost'][scenario][result_type + intervention][
-                                        t_k.find_first_list_element_at_least(
-                                            self.interpolation_times_uncertainty, year)]
+                # elif 'cost_' in result_type:
+                #     # loop over interventions
+                #     for inter, intervention in enumerate(self.inputs.interventions_to_cost[scenario]):
+                #
+                #         # names across top
+                #         row, column = reverse_inputs_if_required([1, inter + 2], horizontal)
+                #         sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(intervention)
+                #
+                #         print result_type + intervention
+                #
+                #         # data columns
+                #         for y, year in enumerate(self.years_to_write):
+                #             print year
+                #             row, column = reverse_inputs_if_required([y + 2, inter + 2], horizontal)
+                #             sheet.cell(row=row, column=column).value \
+                #                 = self.outputs['manual']['cost'][scenario][result_type + intervention][
+                #                         t_k.find_first_list_element_at_least(
+                #                             self.interpolation_times_uncertainty, year)]
                 workbook.save(path)
 
     def write_xls_by_output(self):
@@ -1054,12 +1056,13 @@ class Project:
         scenario, changes = 15, {}
         for output in self.model_runner.epi_outputs_to_analyse:
             absolute_values \
-                = self.uncertainty_centiles['epi'][scenario][output][0:3, t_k.find_first_list_element_at_least(
-                  self.model_runner.outputs['int_uncertainty']['epi'][scenario]['times'][0], year)]
+                = self.uncertainty_centiles['epi'][scenario][output][0:3,
+                  t_k.find_first_list_element_at_least(self.interpolation_times_uncertainty, year)]
             baseline = self.model_runner.outputs['manual']['epi'][0][output][
                t_k.find_first_list_element_at_least(self.model_runner.outputs['manual']['epi'][0]['times'], year)]
             changes[output] = [(i / baseline - 1.) * 1e2 for i in absolute_values]
             print(output + '\n%.1f\n(%.1f to %.1f)' % tuple(changes[output]))
+
 
     def print_average_costs(self):
         """

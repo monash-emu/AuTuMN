@@ -1229,13 +1229,17 @@ class Project:
                 scenarios_for_baseline = [0] if self.run_mode == 'int_uncertainty' else scenarios
                 for scenario in scenarios_for_baseline:
                     start_index = self.find_start_time_index(start_time, scenario, purpose='scenario')
-                    colour = (1. - self.inputs.comorbidity_prevalences[scenario] * .2,
-                              1. - self.inputs.comorbidity_prevalences[scenario],
-                              1. - self.inputs.comorbidity_prevalences[scenario]) \
-                        if self.run_mode == 'increment_comorbidity' else self.colour_theme[scenario]
-                    label = str(int(self.inputs.comorbidity_prevalences[scenario] * 1e2)) + '%' \
-                        if self.run_mode == 'increment_comorbidity' \
-                        else t_k.capitalise_and_remove_underscore(t_k.find_scenario_string_from_number(scenario))
+                    if self.run_mode == 'increment_comorbidity' and scenario != 0:
+                        colour = (1. - (0.3 + self.inputs.comorbidity_prevalences[scenario]) * .2,
+                                  1. - (0.3 + self.inputs.comorbidity_prevalences[scenario]),
+                                  1. - (0.3 + self.inputs.comorbidity_prevalences[scenario]))
+                        label = str(int(self.inputs.comorbidity_prevalences[scenario] * 1e2)) + '%'
+                    else:
+                        colour = self.colour_theme[scenario]
+                        label = t_k.capitalise_and_remove_underscore(t_k.find_scenario_string_from_number(scenario))
+                    # label = str(int(self.inputs.comorbidity_prevalences[scenario] * 1e2)) + '%' \
+                    #     if self.run_mode == 'increment_comorbidity' \
+                    #     else t_k.capitalise_and_remove_underscore(t_k.find_scenario_string_from_number(scenario))
                     max_data_values[output].append(max(self.outputs['manual']['epi'][scenario][output][start_index:]))
                     axis.plot(self.outputs['manual']['epi'][scenario]['times'][start_index:],
                               self.outputs['manual']['epi'][scenario][output][start_index:],

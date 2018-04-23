@@ -204,7 +204,7 @@ class Inputs:
         elif self.run_mode == 'increment_comorbidity':
             self.comorbidity_to_increment = self.gui_inputs['comorbidity_to_increment'].lower()
             prevalences = [0.05] + list(numpy.linspace(.1, .5, 5))
-            self.comorbidity_prevalences = {i: prevalences[i] for i in range(len(prevalences))}
+            self.comorbidity_prevalences = {i+1: prevalences[i] for i in range(len(prevalences))}
 
         elif self.run_mode == 'rapid_calibration':
             self.outputs_unc = [{'key': 'incidence', 'posterior_width': None, 'width_multiplier': 0.5}]

@@ -416,8 +416,11 @@ class Project:
 
         # common times to interpolate uncertainty to
         self.n_interpolation_points = int(200)
+        start_interpolation_time = self.inputs.model_constants['scenario_start_time'] if self.run_mode == 'int_uncertainty' \
+            else self.inputs.model_constants['early_time']
+
         self.interpolation_times_uncertainty \
-            = numpy.linspace(self.inputs.model_constants['early_time'], self.inputs.model_constants['report_end_time'],
+            = numpy.linspace(start_interpolation_time, self.inputs.model_constants['report_end_time'],
                              self.n_interpolation_points)
 
         # comes up so often that we need to find this index, that easiest to do in instantiation
@@ -468,7 +471,7 @@ class Project:
             self.uncertainty_centiles['epi'] = self.find_uncertainty_common_times('epi')
         elif self.run_mode == 'int_uncertainty':
             for output_type in ['epi', 'cost']:
-                self.uncertainty_centiles[output_type] = self.find_uncertainty_centiles('int_uncertainty', output_type)
+                self.uncertainty_centiles[output_type] = self.find_uncertainty_common_times(output_type)
 
         # write automatic calibration values back to sheets
         if self.run_mode == 'epi_uncertainty' and self.gui_inputs['write_uncertainty_outcome_params']:
@@ -643,21 +646,24 @@ class Project:
                 if output != 'times':
                     self.interpolated_uncertainty[scenario][output] \
                         = numpy.empty(shape=(0, self.n_interpolation_points))
-                    for run in range(len(self.outputs['epi_uncertainty']['whether_accepted'])):
+                    run_range = range(len(self.outputs['epi_uncertainty']['whether_accepted'])) if \
+                        self.run_mode == 'epi_uncertainty' else range(self.inputs.n_samples)
+                    for run in run_range:
                         self.interpolated_uncertainty[scenario][output] \
                             = numpy.vstack(
                             (self.interpolated_uncertainty[scenario][output],
                              numpy.interp(self.interpolation_times_uncertainty,
-                                          self.outputs['epi_uncertainty'][output_type][scenario]['times'][run, :],
-                                          self.outputs['epi_uncertainty'][output_type][scenario][output][run, :])
+                                          self.outputs[self.run_mode][output_type][scenario]['times'][run, :],
+                                          self.outputs[self.run_mode][output_type][scenario][output][run, :])
                              [None, :]))
 
                     # all runs for scenario analysis (as only accepted recorded) but select accepted ones for baseline
                     matrix_to_analyse = self.interpolated_uncertainty[scenario][output] if scenario \
                         else self.interpolated_uncertainty[scenario][output][self.accepted_no_burn_in_indices]
 
-                    # transform matrix_to_analyse to account for the weights of the accepted runs
-                    matrix_to_analyse = t_k.apply_weighting(matrix_to_analyse, self.accepted_run_weights)
+                    # transform matrix_to_analyse to account for the weights of the accepted runs for epi_uncertainty
+                    if self.run_mode == 'epi_uncertainty':
+                        matrix_to_analyse = t_k.apply_weighting(matrix_to_analyse, self.accepted_run_weights)
 
                     # find centiles
                     uncertainty_centiles[scenario][output] \
@@ -1153,8 +1159,8 @@ class Project:
             if self.run_mode == 'int_uncertainty' or (len(self.scenarios) > 1 and purpose == 'scenario') \
             else self.gui_inputs['plot_option_start_time']
         start_index, max_data_values = 0, {}
-        scenarios, uncertainty_scenario = ([0, 15], [15]) if self.run_mode == 'int_uncertainty' \
-            else (self.scenarios, [0])
+        scenarios, uncertainty_scenario = ([0, 15], 15) if self.run_mode == 'int_uncertainty' \
+            else (self.scenarios, 0)
 
         # loop through output indicators
         for out, output in enumerate(outputs):
@@ -1169,7 +1175,9 @@ class Project:
 
             # plot with uncertainty confidence intervals (median, lower, upper)
             if purpose == 'ci':
-                for scenario in uncertainty_scenario:
+                for scenario in scenarios:
+                    if self.run_mode == 'int_uncertainty' and scenario == 0:
+                        continue
                     start_index = self.find_start_time_index(start_time, scenario)
                     max_data_values[output].append(
                         max(self.uncertainty_centiles['epi'][scenario][output][2, :][start_index:]))
@@ -1215,8 +1223,8 @@ class Project:
 
             # plot scenarios without uncertainty
             if purpose == 'scenario' or self.run_mode == 'int_uncertainty':
-                scenarios = [0] if self.run_mode == 'int_uncertainty' else scenarios
-                for scenario in scenarios:
+                scenarios_for_baseline = [0] if self.run_mode == 'int_uncertainty' else scenarios
+                for scenario in scenarios_for_baseline:
                     start_index = self.find_start_time_index(start_time, scenario, purpose='scenario')
                     colour = (1. - self.inputs.comorbidity_prevalences[scenario] * .2,
                               1. - self.inputs.comorbidity_prevalences[scenario],

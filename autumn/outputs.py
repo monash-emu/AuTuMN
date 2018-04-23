@@ -1153,8 +1153,8 @@ class Project:
             if self.run_mode == 'int_uncertainty' or (len(self.scenarios) > 1 and purpose == 'scenario') \
             else self.gui_inputs['plot_option_start_time']
         start_index, max_data_values = 0, {}
-        scenarios, uncertainty_scenario = ([0, 15], 15) if self.run_mode == 'int_uncertainty' \
-            else (self.scenarios, 0)
+        scenarios, uncertainty_scenario = ([0, 15], [15]) if self.run_mode == 'int_uncertainty' \
+            else (self.scenarios, [0])
 
         # loop through output indicators
         for out, output in enumerate(outputs):
@@ -1169,7 +1169,7 @@ class Project:
 
             # plot with uncertainty confidence intervals (median, lower, upper)
             if purpose == 'ci':
-                for scenario in scenarios:
+                for scenario in uncertainty_scenario:
                     start_index = self.find_start_time_index(start_time, scenario)
                     max_data_values[output].append(
                         max(self.uncertainty_centiles['epi'][scenario][output][2, :][start_index:]))

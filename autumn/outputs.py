@@ -832,28 +832,28 @@ class Project:
                                 sheet.cell(row=row, column=column).value \
                                     = self.outputs['manual']['epi'][scenario][output][
                                         t_k.find_first_list_element_at_least(
-                                            self.model_runner.outputs['manual']['epi'][
-                                                scenario]['times'], year)]
+                                            self.model_runner.outputs['manual']['epi'][scenario]['times'], year)]
 
                 # economic outputs (uncertainty unavailable)
-                # elif 'cost_' in result_type:
-                #     # loop over interventions
-                #     for inter, intervention in enumerate(self.inputs.interventions_to_cost[scenario]):
-                #
-                #         # names across top
-                #         row, column = reverse_inputs_if_required([1, inter + 2], horizontal)
-                #         sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(intervention)
-                #
-                #         print result_type + intervention
-                #
-                #         # data columns
-                #         for y, year in enumerate(self.years_to_write):
-                #             print year
-                #             row, column = reverse_inputs_if_required([y + 2, inter + 2], horizontal)
-                #             sheet.cell(row=row, column=column).value \
-                #                 = self.outputs['manual']['cost'][scenario][result_type + intervention][
-                #                         t_k.find_first_list_element_at_least(
-                #                             self.interpolation_times_uncertainty, year)]
+                elif 'cost_' in result_type:
+                    # loop over interventions
+                    for inter, intervention in enumerate(self.inputs.interventions_to_cost[scenario]):
+
+                        # names across top
+                        row, column = reverse_inputs_if_required([1, inter + 2], horizontal)
+                        sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(intervention)
+
+                        print result_type + intervention
+
+                        # data columns
+                        for y, year in enumerate(self.years_to_write):
+                            print year
+
+                            row, column = reverse_inputs_if_required([y + 2, inter + 2], horizontal)
+                            sheet.cell(row=row, column=column).value \
+                                = self.outputs['manual']['cost'][scenario][result_type + intervention][
+                                        t_k.find_first_list_element_at_least(
+                                            self.model_runner.outputs['manual']['cost'][scenario]['times'], year)]
                 workbook.save(path)
 
     def write_xls_by_output(self):

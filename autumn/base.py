@@ -848,7 +848,7 @@ class EconomicModel(BaseModel):
             Costs at the time point considered for the intervention in question updated for start-ups as required
         """
 
-        return cost + scipy.stats.beta.pdf((time - self.inputs.model_constants['scenario_start_time'])
+        return cost + scipy.stats.beta.pdf((time - self.inputs.intervention_startdates[self.scenario][intervention])
                                            / self.inputs.model_constants['econ_startupduration_' + intervention],
                                            2., 5.) \
                     / self.inputs.model_constants['econ_startupduration_' + intervention] \

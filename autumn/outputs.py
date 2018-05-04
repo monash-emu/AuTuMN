@@ -832,7 +832,8 @@ class Project:
                                 sheet.cell(row=row, column=column).value \
                                     = self.outputs['manual']['epi'][scenario][output][
                                         t_k.find_first_list_element_at_least(
-                                            self.interpolation_times_uncertainty, year)]
+                                            self.model_runner.outputs['manual']['epi'][
+                                                scenario]['times'], year)]
 
                 # economic outputs (uncertainty unavailable)
                 # elif 'cost_' in result_type:

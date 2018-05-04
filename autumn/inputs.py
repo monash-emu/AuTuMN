@@ -1224,6 +1224,8 @@ class Inputs:
                        in self.scaleup_data[scenario]['int_prop_' + intervention].items() if value > 0.]
                 if years_pos_coverage:  # i.e. some coverage present from start
                     self.intervention_startdates[scenario][intervention] = min(years_pos_coverage)
+                else:
+                    self.intervention_startdates[scenario][intervention] = self.model_constants['scenario_start_time']
 
     ''' finding scale-up functions and related methods '''
 

@@ -1001,9 +1001,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
 
             # loop through compartments, skipping on as soon as possible if irrelevant
             for label in self.labels:
-                if strain not in label and strain != '':
-                    continue
-                if riskgroup not in label and riskgroup != '':
+                if (strain not in label and strain != '') or (riskgroup not in label and riskgroup != ''):
                     continue
 
                 # skip on for those in the non-infectious stages of treatment, except if inappropriate

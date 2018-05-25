@@ -825,7 +825,8 @@ class ModelRunner:
         """
 
         # get outputs to add to outputs attribute
-        new_outputs = {'epi': self.find_epi_outputs(scenario)}
+        strata = [self.models[scenario].histories] if len(self.models[scenario].histories) == 2 else ([])
+        new_outputs = {'epi': self.find_epi_outputs(scenario, strata_to_analyse=strata)}
         # new_outputs['cost'] = self.find_cost_outputs(scenario) if self.models[scenario].interventions_to_cost else {}
         if self.models[scenario].interventions_to_cost:
             new_outputs.update({'cost': self.find_cost_outputs(scenario)})
@@ -1476,7 +1477,7 @@ class TbRunner(ModelRunner):
         """
 
         ratio_mdr_prevalence \
-            = float(self.outputs['epi_uncertainty']['epi'][0]['perc_incidence_mdr'][
+            = float(self.outputs['epi_uncertainty']['epi'][0]['perc_incidence_mdr_new'][
                         last_run_output_index, t_k.find_first_list_element_at_least(
                             self.outputs['epi_uncertainty']['epi'][0]['times'], self.inputs.model_constants['current_time'])]) \
             / self.inputs.model_constants['tb_perc_mdr_prevalence']

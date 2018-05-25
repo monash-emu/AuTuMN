@@ -438,6 +438,21 @@ def are_strings_in_subdict(mapper, subdict, strings_of_interest, string_for_mapp
         return True
 
 
+def apply_weighting(object_to_be_weighted, weights):
+    """
+    Replicate the components of object_to_be_weighted using the corresponding weights to define the number of replicates.
+    Args:
+        object_to_be_weighted: could be a list or an array
+        weights: a list of integers
+    Returns: the transformed object
+    """
+    zipped = zip(object_to_be_weighted, weights)
+    weighted_object = []
+    for item in zipped:
+        for j in range(item[1]):
+            weighted_object.append(item[0])
+    return weighted_object
+
 ''' scenario name manipulation '''
 
 

@@ -91,7 +91,7 @@ class Inputs:
                 ['country', 'is_vary_detection_by_organ', 'is_vary_detection_by_riskgroup',
                  'is_include_relapse_in_ds_outcomes', 'is_vary_force_infection_by_riskgroup', 'fitting_method',
                  'uncertainty_intervention', 'is_include_hiv_treatment_outcomes', 'is_adjust_population',
-                 'n_centiles_for_shading']:
+                 'n_centiles_for_shading', 'n_samples']:
             setattr(self, attribute, gui_inputs[attribute])
 
         # various lists of strings for features available to the models or running modes
@@ -154,6 +154,9 @@ class Inputs:
         # calculate time-variant functions
         self.find_scaleup_functions()
 
+        # find the take-off date for each interventions
+        self.find_intervention_startdates()
+
         # perform checks (undeveloped)
         self.checks()
 
@@ -204,7 +207,7 @@ class Inputs:
         elif self.run_mode == 'increment_comorbidity':
             self.comorbidity_to_increment = self.gui_inputs['comorbidity_to_increment'].lower()
             prevalences = [0.05] + list(numpy.linspace(.1, .5, 5))
-            self.comorbidity_prevalences = {i: prevalences[i] for i in range(len(prevalences))}
+            self.comorbidity_prevalences = {i+1: prevalences[i] for i in range(len(prevalences))}
 
         elif self.run_mode == 'rapid_calibration':
             self.outputs_unc = [{'key': 'incidence', 'posterior_width': None, 'width_multiplier': 0.5}]
@@ -284,6 +287,9 @@ class Inputs:
         self.scenarios \
             += [tool_kit.find_scenario_number_from_string(key) for key in self.gui_inputs
                 if key.startswith('scenario_') and len(key) < 12 and self.gui_inputs[key]]
+        if self.run_mode == 'int_uncertainty':
+            self.scenarios.append(15)
+        self.scenarios.sort()
 
     def reconcile_user_inputs(self):
         """
@@ -1204,20 +1210,22 @@ class Inputs:
         if self.run_mode == 'int_uncertainty':
             self.interventions_to_cost[15] = self.interventions_to_cost[0]
 
-    # def find_intervention_startdates(self):
-    #     """
-    #     Find the dates when the different interventions start and populate self.intervention_startdates
-    #     """
-    #
-    #     for scenario in self.scenarios:
-    #         self.intervention_startdates[scenario] = {}
-    #         for intervention in self.interventions_to_cost[scenario]:
-    #             self.intervention_startdates[scenario][intervention] = None
-    #             years_pos_coverage \
-    #                 = [key for (key, value)
-    #                    in self.scaleup_data[scenario]['int_prop_' + intervention].items() if value > 0.]
-    #             if years_pos_coverage:  # i.e. some coverage present from start
-    #                 self.intervention_startdates[scenario][intervention] = min(years_pos_coverage)
+    def find_intervention_startdates(self):
+        """
+        Find the dates when the different interventions start and populate self.intervention_startdates
+        """
+
+        for scenario in self.scenarios:
+            self.intervention_startdates[scenario] = {}
+            for intervention in self.interventions_to_cost[scenario]:
+                self.intervention_startdates[scenario][intervention] = None
+                years_pos_coverage \
+                    = [key for (key, value)
+                       in self.scaleup_data[scenario]['int_prop_' + intervention].items() if value > 0.]
+                if years_pos_coverage:  # i.e. some coverage present from start
+                    self.intervention_startdates[scenario][intervention] = min(years_pos_coverage)
+                else:
+                    self.intervention_startdates[scenario][intervention] = self.model_constants['scenario_start_time']
 
     ''' finding scale-up functions and related methods '''
 

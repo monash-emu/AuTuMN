@@ -888,7 +888,7 @@ class ModelRunner:
         new_params = []
 
         # Manually define the width of the interval containing 95% of the proposal Gaussian density
-        overwritten_abs_search_width = {'tb_n_contact': 2., 'start_time': 5.}
+        overwritten_abs_search_width = {'tb_n_contact': 0.5, 'start_time': 5.}
 
         # iterate through the parameters being used
         for p, param_dict in enumerate(self.inputs.param_ranges_unc):

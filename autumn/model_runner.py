@@ -595,7 +595,7 @@ class ModelRunner:
                 self.outputs['epi_uncertainty']['all_compartment_values'][compartment_type] = []
 
         # find values of mu and sd for the likelihood calculation. Process uncertainty weights in the same loop.
-        years_to_compare = range(2014, 2017)
+        years_to_compare = range(2010, 2017)
         mu_values, sd_values, mean_sd_value, weights = {}, {}, {}, {}
         for output_dict in self.inputs.outputs_unc:
             mu_values[output_dict['key']] = {}
@@ -613,7 +613,7 @@ class ModelRunner:
             self.add_comment_to_gui_window('"Weights for ": ' + output_dict['key'] + '\n' + str(weights))
 
         # start main uncertainty loop
-        while n_accepted < self.gui_inputs['uncertainty_runs']:
+        while run < self.gui_inputs['uncertainty_runs']:
             # instantiate model objects
             for scenario in self.scenarios:
                 params_copy = copy.deepcopy(self.models[scenario].params)  # we need to reuse the updated params

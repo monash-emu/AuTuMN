@@ -210,7 +210,7 @@ class Inputs:
             self.comorbidity_prevalences = {i+1: prevalences[i] for i in range(len(prevalences))}
 
         elif self.run_mode == 'rapid_calibration':
-            self.outputs_unc = [{'key': 'incidence', 'posterior_width': None, 'width_multiplier': 0.5}]
+            self.outputs_unc = [{'key': 'incidence', 'posterior_width': None, 'width_multiplier': 1.0}]
 
     def define_model_strata(self):
         """

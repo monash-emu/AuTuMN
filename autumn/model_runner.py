@@ -595,7 +595,7 @@ class ModelRunner:
                 self.outputs['epi_uncertainty']['all_compartment_values'][compartment_type] = []
 
         # find values of mu and sd for the likelihood calculation. Process uncertainty weights in the same loop.
-        years_to_compare = range(2014, 2017)
+        years_to_compare = range(2010, 2017)
         mu_values, sd_values, mean_sd_value, weights = {}, {}, {}, {}
         for output_dict in self.inputs.outputs_unc:
             mu_values[output_dict['key']] = {}
@@ -613,7 +613,7 @@ class ModelRunner:
             self.add_comment_to_gui_window('"Weights for ": ' + output_dict['key'] + '\n' + str(weights))
 
         # start main uncertainty loop
-        while n_accepted < self.gui_inputs['uncertainty_runs']:
+        while run < self.gui_inputs['uncertainty_runs']:
             # instantiate model objects
             for scenario in self.scenarios:
                 params_copy = copy.deepcopy(self.models[scenario].params)  # we need to reuse the updated params
@@ -653,13 +653,14 @@ class ModelRunner:
                 # calculate likelihood
                 for output_dict in self.inputs.outputs_unc:
                     index_for_available_years = 0
+                    model_results_for_output = {}
                     for y, year in enumerate(years_to_compare):
                         if year in working_output_dictionary.keys():
-                            model_result_for_output = outputs_for_comparison[y]
+                            model_results_for_output[year] = outputs_for_comparison[y]
                             mu = mu_values[output_dict['key']][year]
                             sd = mean_sd_value[output_dict['key']] if self.average_sd_for_likelihood else \
                                 sd_values[output_dict['key']][year]
-                            posterior_log_likelihood += norm.logpdf(model_result_for_output, mu, sd) * \
+                            posterior_log_likelihood += norm.logpdf(model_results_for_output[year], mu, sd) * \
                                                         weights[output_dict['key']][index_for_available_years]
                             index_for_available_years += 1
 
@@ -672,6 +673,11 @@ class ModelRunner:
                     'Previous log likelihood:\n%4.3f\nLog likelihood this run:\n%4.3f\nAcceptance probability:\n%4.3f'
                     % (prev_log_likelihood, log_likelihood, min(1., numpy.exp(log_likelihood - prev_log_likelihood)))
                     + '\nWhether accepted:\n%s\n________________\n' % str(bool(accepted)))
+                outputs_string = "TB incidences this run "
+                for year, value in model_results_for_output.iteritems():
+                    outputs_string += str(year) + ": " + str(round(value,2)) + " / "
+
+                self.add_comment_to_gui_window(outputs_string)
                 self.outputs['epi_uncertainty']['loglikelihoods'].append(log_likelihood)
 
                 # record starting population
@@ -714,8 +720,8 @@ class ModelRunner:
                             proposed_params[p])
 
                 # plot parameter progression and report on progress
-                if self.gui_inputs['uncertainty_runs'] <= 10:
-                    self.plot_progressive_parameters()
+                # if self.gui_inputs['uncertainty_runs'] <= 10:
+                #     self.plot_progressive_parameters()
                 self.add_comment_to_gui_window(
                     str(n_accepted) + ' accepted / ' + str(run) + ' candidates. Running time: '
                     + str(datetime.datetime.now() - start_timer_run))
@@ -819,7 +825,8 @@ class ModelRunner:
         """
 
         # get outputs to add to outputs attribute
-        new_outputs = {'epi': self.find_epi_outputs(scenario)}
+        strata = [self.models[scenario].histories] if len(self.models[scenario].histories) == 2 else ([])
+        new_outputs = {'epi': self.find_epi_outputs(scenario, strata_to_analyse=strata)}
         # new_outputs['cost'] = self.find_cost_outputs(scenario) if self.models[scenario].interventions_to_cost else {}
         if self.models[scenario].interventions_to_cost:
             new_outputs.update({'cost': self.find_cost_outputs(scenario)})
@@ -881,7 +888,7 @@ class ModelRunner:
         new_params = []
 
         # Manually define the width of the interval containing 95% of the proposal Gaussian density
-        overwritten_abs_search_width = {'tb_n_contact': 2., 'start_time': 5.}
+        overwritten_abs_search_width = {'tb_n_contact': 0.5, 'start_time': 5.}
 
         # iterate through the parameters being used
         for p, param_dict in enumerate(self.inputs.param_ranges_unc):
@@ -1344,7 +1351,7 @@ class TbRunner(ModelRunner):
         self.amount_to_adjust_mdr_year = 1.
         self.prop_death_reporting = self.inputs.model_constants['program_prop_death_reporting']
         self.adjust_mortality = True
-        adjust_mdr = False
+        adjust_mdr = True
         self.adjust_mdr = False if len(self.inputs.strains) < 2 else adjust_mdr
         self.mdr_introduce_time = self.inputs.model_constants['mdr_introduce_time']
 
@@ -1470,7 +1477,7 @@ class TbRunner(ModelRunner):
         """
 
         ratio_mdr_prevalence \
-            = float(self.outputs['epi_uncertainty']['epi'][0]['perc_incidence_mdr'][
+            = float(self.outputs['epi_uncertainty']['epi'][0]['perc_incidence_mdr_new'][
                         last_run_output_index, t_k.find_first_list_element_at_least(
                             self.outputs['epi_uncertainty']['epi'][0]['times'], self.inputs.model_constants['current_time'])]) \
             / self.inputs.model_constants['tb_perc_mdr_prevalence']

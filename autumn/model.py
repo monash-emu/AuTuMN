@@ -432,6 +432,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         country. Essentially this is passive case finding as persons with symptoms are encouraged to present, so the
         reported case detection rate for the country is assumed to incorporate this.
         """
+
         for organ in self.organs_for_detection:
             self.vars['program_prop_detect' + organ] \
                 *= 1. - self.params['int_prop_detection_dots_contributor'] \
@@ -483,7 +484,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
           algorithm sensitivity = detection rate / (detection rate + missed rate)
               - and -
           detection proportion = detection rate
-                / (detection rate + spont recover rate + tb death rate + natural death rate)
+                / (detection rate + spontaneously recover rate + tb death rate + natural death rate)
         """
 
         organs = copy.copy(self.organs_for_detection)

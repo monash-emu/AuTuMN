@@ -614,6 +614,7 @@ class ModelRunner:
 
         # start main uncertainty loop
         while run < self.gui_inputs['uncertainty_runs']:
+
             # instantiate model objects
             for scenario in self.scenarios:
                 params_copy = copy.deepcopy(self.models[scenario].params)  # we need to reuse the updated params
@@ -631,7 +632,7 @@ class ModelRunner:
             if self.is_last_run_success:
 
                 # get outputs for calibration and store results
-                self.store_uncertainty(0, 'epi_uncertainty')
+                self.store_uncertainty(0)
                 last_run_output_index = None if self.outputs['epi_uncertainty']['epi'][0]['mortality'].ndim == 1 else -1
                 outputs_for_comparison \
                     = [self.outputs['epi_uncertainty']['epi'][0]['incidence'][
@@ -705,7 +706,7 @@ class ModelRunner:
                         if scenario:
                             self.prepare_new_model_from_baseline(scenario)
                             self.run_with_params(accepted_params, scenario=scenario)
-                            self.store_uncertainty(scenario, 'epi_uncertainty')
+                            self.store_uncertainty(scenario)
 
                     self.make_disease_specific_adjustments(last_run_output_index, years_to_compare)
 

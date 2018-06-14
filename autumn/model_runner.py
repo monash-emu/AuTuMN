@@ -636,7 +636,8 @@ class ModelRunner:
                 outputs_for_comparison \
                     = [self.outputs['epi_uncertainty']['epi'][0]['incidence'][
                            last_run_output_index, t_k.find_first_list_element_at_least(
-                               self.outputs['epi_uncertainty']['epi'][0]['times'], float(year))] for year in years_to_compare]
+                               self.outputs['epi_uncertainty']['epi'][0]['times'], float(year))]
+                       for year in years_to_compare]
 
                 # calculate likelihood
                 prior_log_likelihood, posterior_log_likelihood = 0., 0.
@@ -836,7 +837,7 @@ class ModelRunner:
 
             # create third tier if outputs haven't been recorded yet for this scenario
             if scenario not in self.outputs[uncertainty_type][output_type]:
-                self.outputs[uncertainty_type][output_type] = {scenario: {}}
+                self.outputs[uncertainty_type][output_type][scenario] = {}
 
             # for each epi or cost output available
             for output in new_outputs[output_type]:
@@ -990,6 +991,7 @@ class ModelRunner:
         calibrate a single parameter.
         Return the value of the calibrated parameter.
         """
+
         self.add_comment_to_gui_window('Rapid calibration commenced')
         params_to_calibrate = 'tb_n_contact'   # hard-coded
         param_dict = {}

@@ -614,6 +614,7 @@ class ModelRunner:
 
         # start main uncertainty loop
         while run < self.gui_inputs['uncertainty_runs']:
+
             # instantiate model objects
             for scenario in self.scenarios:
                 params_copy = copy.deepcopy(self.models[scenario].params)  # we need to reuse the updated params
@@ -631,12 +632,13 @@ class ModelRunner:
             if self.is_last_run_success:
 
                 # get outputs for calibration and store results
-                self.store_uncertainty(0, 'epi_uncertainty')
+                self.store_uncertainty(0)
                 last_run_output_index = None if self.outputs['epi_uncertainty']['epi'][0]['mortality'].ndim == 1 else -1
                 outputs_for_comparison \
                     = [self.outputs['epi_uncertainty']['epi'][0]['incidence'][
                            last_run_output_index, t_k.find_first_list_element_at_least(
-                               self.outputs['epi_uncertainty']['epi'][0]['times'], float(year))] for year in years_to_compare]
+                               self.outputs['epi_uncertainty']['epi'][0]['times'], float(year))]
+                       for year in years_to_compare]
 
                 # calculate likelihood
                 prior_log_likelihood, posterior_log_likelihood = 0., 0.
@@ -704,7 +706,7 @@ class ModelRunner:
                         if scenario:
                             self.prepare_new_model_from_baseline(scenario)
                             self.run_with_params(accepted_params, scenario=scenario)
-                            self.store_uncertainty(scenario, 'epi_uncertainty')
+                            self.store_uncertainty(scenario)
 
                     self.make_disease_specific_adjustments(last_run_output_index, years_to_compare)
 
@@ -836,7 +838,7 @@ class ModelRunner:
 
             # create third tier if outputs haven't been recorded yet for this scenario
             if scenario not in self.outputs[uncertainty_type][output_type]:
-                self.outputs[uncertainty_type][output_type] = {scenario: {}}
+                self.outputs[uncertainty_type][output_type][scenario] = {}
 
             # for each epi or cost output available
             for output in new_outputs[output_type]:
@@ -990,6 +992,7 @@ class ModelRunner:
         calibrate a single parameter.
         Return the value of the calibrated parameter.
         """
+
         self.add_comment_to_gui_window('Rapid calibration commenced')
         params_to_calibrate = 'tb_n_contact'   # hard-coded
         param_dict = {}

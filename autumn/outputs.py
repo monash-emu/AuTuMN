@@ -1598,6 +1598,7 @@ class Project:
         for scenario in self.scenarios:
             fig, axes, max_dim, n_rows, n_cols \
                 = initialise_figures_axes(len(self.interventions_to_cost[scenario]), share_yaxis='row')
+            fig.tight_layout()
 
             # subplots by program
             for p, program in enumerate(self.interventions_to_cost[scenario]):
@@ -1612,7 +1613,7 @@ class Project:
                 # plot costs versus coverage
                 for t, time in enumerate(times):
                     coverage = numpy.arange(0., self.inputs.model_constants['econ_saturation_' + program], .02)
-                    costs = [economics.get_cost_from_coverage(
+                    costs = [1e-3 * economics.get_cost_from_coverage(
                         cov, self.inputs.model_constants['econ_inflectioncost_' + program],
                         self.inputs.model_constants['econ_saturation_' + program],
                         self.inputs.model_constants['econ_unitcost_' + program],
@@ -1628,8 +1629,10 @@ class Project:
                 # finish off axis
                 axis.set_title(t_k.find_title_from_dictionary('program_prop_' + program),
                                fontsize=get_label_font_size(max_dim))
-                self.tidy_x_axis(axis, 0., end_value, max_dim, x_label='$US' if last_row(p, n_rows, n_cols) else None)
-                self.tidy_y_axis(axis, 'prop_', max_dim, max_value=1., left_axis=p % n_cols == 0, y_label='Coverage')
+                self.tidy_x_axis(axis, 0., end_value, max_dim,
+                                 x_label='Thousand $US' if last_row(p, n_rows, n_cols) else None)
+                self.tidy_y_axis(axis, 'prop_', max_dim, max_value=1., left_axis=p % n_cols == 0, y_label='',
+                                 y_lims=[0., 1.])
                 if p == len(self.interventions_to_cost[scenario]) - 1:
                     add_legend_to_plot(axis, max_dim, location=4)
 

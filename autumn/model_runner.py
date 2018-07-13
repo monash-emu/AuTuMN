@@ -955,8 +955,7 @@ class ModelRunner:
         working_param_dict = {}
         for param in self.inputs.intervention_param_dict[self.inputs.uncertainty_intervention]:
             for int_param in range(len(self.inputs.int_ranges_unc)):
-                if self.inputs.int_ranges_unc[int_param]['key'] \
-                        in self.inputs.intervention_param_dict[self.inputs.uncertainty_intervention]:
+                if self.inputs.int_ranges_unc[int_param]['key'] == param:
                     working_param_dict[param] = self.inputs.int_ranges_unc[int_param]
 
         # generate samples using latin hypercube design

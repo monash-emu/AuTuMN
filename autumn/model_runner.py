@@ -635,9 +635,9 @@ class ModelRunner:
                 self.store_uncertainty(0)
                 last_run_output_index = None if self.outputs['epi_uncertainty']['epi'][0]['mortality'].ndim == 1 else -1
                 outputs_for_comparison \
-                    = [self.outputs['epi_uncertainty']['epi'][0]['incidence'][
+                    = [float(self.outputs['epi_uncertainty']['epi'][0]['incidence'][
                            last_run_output_index, t_k.find_first_list_element_at_least(
-                               self.outputs['epi_uncertainty']['epi'][0]['times'], float(year))]
+                               self.outputs['epi_uncertainty']['epi'][0]['times'], float(year))])
                        for year in years_to_compare]
 
                 # calculate likelihood
@@ -655,14 +655,12 @@ class ModelRunner:
                 # calculate likelihood
                 for output_dict in self.inputs.outputs_unc:
                     index_for_available_years = 0
-                    model_results_for_output = {}
                     for y, year in enumerate(years_to_compare):
                         if year in working_output_dictionary.keys():
-                            model_results_for_output[year] = outputs_for_comparison[y]
                             mu = mu_values[output_dict['key']][year]
                             sd = mean_sd_value[output_dict['key']] if self.average_sd_for_likelihood else \
                                 sd_values[output_dict['key']][year]
-                            posterior_log_likelihood += norm.logpdf(model_results_for_output[year], mu, sd) * \
+                            posterior_log_likelihood += norm.logpdf(outputs_for_comparison[y], mu, sd) * \
                                 weights[output_dict['key']][index_for_available_years]
                             index_for_available_years += 1
 
@@ -676,8 +674,10 @@ class ModelRunner:
                     % (prev_log_likelihood, log_likelihood, min(1., numpy.exp(log_likelihood - prev_log_likelihood)))
                     + '\nWhether accepted:\n%s\n________________\n' % str(bool(accepted)))
                 self.add_comment_to_gui_window('TB incidences this run are:')
-                for year, value in model_results_for_output.iteritems():
-                    self.add_comment_to_gui_window('{}: {}'.format(year, str(round(value, 1))))
+
+                for y, year in enumerate(years_to_compare):
+                    if year in working_output_dictionary.keys():
+                        self.add_comment_to_gui_window('{}: {:.1f}'.format(year, outputs_for_comparison[y]))
 
                 self.outputs['epi_uncertainty']['loglikelihoods'].append(log_likelihood)
 

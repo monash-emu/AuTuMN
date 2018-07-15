@@ -663,7 +663,7 @@ class ModelRunner:
                             sd = mean_sd_value[output_dict['key']] if self.average_sd_for_likelihood else \
                                 sd_values[output_dict['key']][year]
                             posterior_log_likelihood += norm.logpdf(model_results_for_output[year], mu, sd) * \
-                                                        weights[output_dict['key']][index_for_available_years]
+                                weights[output_dict['key']][index_for_available_years]
                             index_for_available_years += 1
 
                 # determine acceptance
@@ -675,11 +675,10 @@ class ModelRunner:
                     'Previous log likelihood:\n%4.3f\nLog likelihood this run:\n%4.3f\nAcceptance probability:\n%4.3f'
                     % (prev_log_likelihood, log_likelihood, min(1., numpy.exp(log_likelihood - prev_log_likelihood)))
                     + '\nWhether accepted:\n%s\n________________\n' % str(bool(accepted)))
-                outputs_string = "TB incidences this run "
+                self.add_comment_to_gui_window('TB incidences this run are:')
                 for year, value in model_results_for_output.iteritems():
-                    outputs_string += str(year) + ": " + str(round(value,2)) + " / "
+                    self.add_comment_to_gui_window('{}: {}'.format(year, str(round(value, 1))))
 
-                self.add_comment_to_gui_window(outputs_string)
                 self.outputs['epi_uncertainty']['loglikelihoods'].append(log_likelihood)
 
                 # record starting population

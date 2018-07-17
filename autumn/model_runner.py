@@ -186,6 +186,7 @@ class ModelRunner:
         self.emit_delay, self.gui_console_fn = 0.1, gui_console_fn
         if self.gui_console_fn:
             self.gui_console_fn('init')
+        self.requested_years = range(2010, 2017)
 
         # optimisation attributes - note that this is currently dead
         # self.optimisation = False  # leave True even if loading optimisation results
@@ -576,10 +577,12 @@ class ModelRunner:
         Main method to run all the uncertainty processes using a Metropolis-Hastings algorithm with normal proposal
         distribution.
         """
+
         self.add_comment_to_gui_window('Uncertainty analysis commenced')
 
         # prepare basic storage and local variables for uncertainty loop
-        n_accepted, prev_log_likelihood, starting_params, run, accepted, accepted_params = 0, -5e2, [], 0, 0, None
+        n_accepted, prev_log_likelihood, starting_params, run, accepted, accepted_params, weights \
+            = 0, -5e2, [], 0, 0, None, {}
         for key_for_dicts in ['epi', 'cost', 'all_parameters', 'accepted_parameters', 'rejected_parameters',
                               'all_compartment_values']:
             self.outputs['epi_uncertainty'][key_for_dicts] = {}
@@ -593,24 +596,6 @@ class ModelRunner:
         for compartment_type in self.inputs.compartment_types:
             if compartment_type in self.inputs.model_constants:
                 self.outputs['epi_uncertainty']['all_compartment_values'][compartment_type] = []
-
-        # find values of mu and sd for the likelihood calculation. Process uncertainty weights in the same loop.
-        years_to_compare = range(2010, 2017)
-        mu_values, sd_values, mean_sd_value, weights = {}, {}, {}, {}
-        for output_dict in self.inputs.outputs_unc:
-            mu_values[output_dict['key']] = {}
-            sd_values[output_dict['key']] = {}
-            # the GTB values for the output of interest
-            working_output_dictionary = self.get_fitting_data()[output_dict['key']]
-            available_years = []
-            for y, year in enumerate(years_to_compare):
-                if year in working_output_dictionary.keys():
-                    available_years.append(year)
-                    mu_values[output_dict['key']][year], sd_values[output_dict['key']][year] = \
-                        working_output_dictionary[year]
-            mean_sd_value[output_dict['key']] = numpy.mean(sd_values[output_dict['key']].values())
-            weights[output_dict['key']] = find_uncertainty_output_weights(available_years, 4)
-            self.add_comment_to_gui_window('"Weights for ": ' + output_dict['key'] + '\n' + str(weights))
 
         # start main uncertainty loop
         while run < self.gui_inputs['uncertainty_runs']:
@@ -634,11 +619,6 @@ class ModelRunner:
                 # get outputs for calibration and store results
                 self.store_uncertainty(0)
                 last_run_output_index = None if self.outputs['epi_uncertainty']['epi'][0]['mortality'].ndim == 1 else -1
-                outputs_for_comparison \
-                    = [float(self.outputs['epi_uncertainty']['epi'][0]['incidence'][
-                           last_run_output_index, t_k.find_first_list_element_at_least(
-                               self.outputs['epi_uncertainty']['epi'][0]['times'], float(year))])
-                       for year in years_to_compare]
 
                 # calculate likelihood
                 prior_log_likelihood, posterior_log_likelihood = 0., 0.
@@ -654,15 +634,22 @@ class ModelRunner:
 
                 # calculate likelihood
                 for output_dict in self.inputs.outputs_unc:
-                    index_for_available_years = 0
-                    for y, year in enumerate(years_to_compare):
-                        if year in working_output_dictionary.keys():
-                            mu = mu_values[output_dict['key']][year]
-                            sd = mean_sd_value[output_dict['key']] if self.average_sd_for_likelihood else \
-                                sd_values[output_dict['key']][year]
-                            posterior_log_likelihood += norm.logpdf(outputs_for_comparison[y], mu, sd) * \
-                                weights[output_dict['key']][index_for_available_years]
-                            index_for_available_years += 1
+                    fitting_data = self.get_fitting_data(output_dict['key'])
+                    comparison_years = [y for y in self.requested_years if y in fitting_data.keys()]
+                    weights = find_uncertainty_output_weights(comparison_years, 4)
+                    self.add_comment_to_gui_window('"Weights" for {} are: {}'.format(output_dict['key'], weights))
+                    outputs_for_comparison \
+                        = [float(self.outputs['epi_uncertainty']['epi'][0][output_dict['key']][
+                                     last_run_output_index, t_k.find_first_list_element_at_least(
+                                         self.outputs['epi_uncertainty']['epi'][0]['times'], float(year))])
+                           for year in comparison_years]
+                    self.add_comment_to_gui_window('Model output values by year:')
+                    for y, year in enumerate(comparison_years):
+                        self.add_comment_to_gui_window('{}: {:.1f}'.format(year, outputs_for_comparison[y]))
+                        sd = numpy.mean([fitting_data[year][1] for year in fitting_data.keys()]) \
+                            if self.average_sd_for_likelihood else fitting_data[year][1]
+                        posterior_log_likelihood \
+                            += norm.logpdf(outputs_for_comparison[y], fitting_data[year][0], sd) * weights[y]
 
                 # determine acceptance
                 log_likelihood = prior_log_likelihood + posterior_log_likelihood
@@ -674,10 +661,6 @@ class ModelRunner:
                     % (prev_log_likelihood, log_likelihood, min(1., numpy.exp(log_likelihood - prev_log_likelihood)))
                     + '\nWhether accepted:\n%s\n________________\n' % str(bool(accepted)))
                 self.add_comment_to_gui_window('TB incidences this run are:')
-
-                for y, year in enumerate(years_to_compare):
-                    if year in working_output_dictionary.keys():
-                        self.add_comment_to_gui_window('{}: {:.1f}'.format(year, outputs_for_comparison[y]))
 
                 self.outputs['epi_uncertainty']['loglikelihoods'].append(log_likelihood)
 
@@ -707,7 +690,7 @@ class ModelRunner:
                             self.run_with_params(accepted_params, scenario=scenario)
                             self.store_uncertainty(scenario)
 
-                    self.make_disease_specific_adjustments(last_run_output_index, years_to_compare)
+                    self.make_disease_specific_adjustments(last_run_output_index, self.requested_years)
 
                     # make algorithmic adjustments
                     if self.is_adjust_population:
@@ -728,7 +711,6 @@ class ModelRunner:
                     + str(datetime.datetime.now() - start_timer_run))
 
                 self.record_disease_specific_adjustments()
-
                 run += 1
 
     def get_fitting_data(self):
@@ -992,14 +974,14 @@ class ModelRunner:
         """
 
         self.add_comment_to_gui_window('Rapid calibration commenced')
-        params_to_calibrate = 'tb_n_contact'   # hard-coded
+        params_to_calibrate = 'tb_n_contact'  # hard-coded
         param_dict = {}
         targeted_indicator = 'incidence'  # hard-coded
         single_point_calibration = True
-        param_tol = 0.1   # tolerance for the parameter value. Stopping condition.
+        param_tol = 0.1  # tolerance for the parameter value. Stopping condition.
 
         years_to_compare = range(2010, 2017)
-        working_output_dictionary = self.get_fitting_data()[targeted_indicator]
+        working_output_dictionary = self.get_fitting_data(targeted_indicator)
         available_years = []
         target_values = {}
 
@@ -1406,35 +1388,34 @@ class TbRunner(ModelRunner):
 
     ''' epidemiological uncertainty-related methods '''
 
-    def get_fitting_data(self):
+    def get_fitting_data(self, output_dict_key):
         """
         Define the characteristics (mean and standard deviation) of the normal distribution for model outputs
         - currently incidence and mortality only.
 
         Returns:
-            norm_dist_params: Dictionary with keys outputs and values dictionaries. Sub-dictionaries have keys years
-                and values lists, with first element of list means and second standard deviations.
+            norm_dist_params: Dictionary with keys years and values lists, with first element of list means and second
+                standard deviations.
         """
 
-        # dictionary storing the characteristics of the normal distributions
-        norm_dist_params = {}
-        for output_dict in self.inputs.outputs_unc:
-            norm_dist_params[output_dict['key']] = {}
+        # dictionary storing the characteristics of the normal distributions and list index for the output of interest
+        index_number = next(index for index, val in enumerate(self.inputs.outputs_unc) if val['key'] == output_dict_key)
 
-            # incidence
-            if output_dict['key'] == 'incidence':
-                for year in self.inputs.data_to_fit[output_dict['key']].keys():
-                    low, high = self.inputs.data_to_fit['incidence_low'][year], \
-                                self.inputs.data_to_fit['incidence_high'][year]
-                    norm_dist_params[output_dict['key']][year] \
-                        = [(high + low) / 2., output_dict['width_multiplier'] * (high - low) / (2. * 1.96)]
+        # mortality - fix the standard deviation based on the posterior width
+        if output_dict_key == 'mortality':
+            norm_dist_params = {year: [self.inputs.data_to_fit[output_dict_key][year],
+                                       self.inputs.outputs_unc[index_number]['posterior_width'] / 2. / 1.96]
+                                for year in self.inputs.data_to_fit[output_dict_key].keys()}
 
-            # mortality
-            elif output_dict['key'] == 'mortality':
-                sd = output_dict['posterior_width'] / (2. * 1.96)
-                for year in self.inputs.data_to_fit[output_dict['key']].keys():
-                    mu = self.inputs.data_to_fit[output_dict['key']][year]
-                    norm_dist_params[output_dict['key']][year] = [mu, sd]
+        # incidence and potentially other indicators in the future - find average and 1/4 width as standard deviation
+        else:
+            norm_dist_params \
+                = {year: [numpy.mean([self.inputs.data_to_fit[output_dict_key + '_low'][year],
+                                      self.inputs.data_to_fit[output_dict_key + '_high'][year]]),
+                          self.inputs.outputs_unc[index_number]['width_multiplier']
+                          * (self.inputs.data_to_fit[output_dict_key + '_high'][year]
+                             - self.inputs.data_to_fit[output_dict_key + '_low'][year]) / 2. / 1.96]
+                   for year in self.inputs.data_to_fit[output_dict_key].keys()}
 
         return norm_dist_params
 

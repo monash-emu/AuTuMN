@@ -820,6 +820,7 @@ class EconomicModel(BaseModel):
 
         for i, inter in enumerate(self.interventions_to_cost):
             for t, time in enumerate(self.cost_times):
+
                 # costs from cost-coverage curves
                 cost = get_cost_from_coverage(self.scaleup_fns['int_prop_' + inter](time),
                                               self.inputs.model_constants['econ_inflectioncost_' + inter],
@@ -831,28 +832,26 @@ class EconomicModel(BaseModel):
                 if 'econ_startupcost_' + inter in self.inputs.model_constants \
                         and 'econ_startupduration_' + inter in self.inputs.model_constants \
                         and self.inputs.model_constants['econ_startupduration_' + inter] > 0.:
-                    cost = self.add_startup_costs(cost, time, inter)
+                    cost += self.calculate_startup_cost(time, inter)
                 self.costs[t, i] = cost
 
-    def add_startup_costs(self, cost, time, intervention):
+    def calculate_startup_cost(self, time, intervention):
         """
-        Adds a smoothed out amount of start-up costs to the relevant times. Uses the beta PDF to smooth out scale-up
+        Finds a smoothed out amount of start-up costs to the relevant times. Uses the beta PDF to smooth out scale-up
         costs. Note that the beta PDF of scipy returns zeros if its first argument is not between zero and one, so the
-        code should still work.
+        code should still run if there are no start-up costs.
 
         Args:
-            cost: The cost at the time in question before start-up costs are applied
             time: Float for the calendar time being costed
             intervention: String for the intervention being costed
         Returns:
             Costs at the time point considered for the intervention in question updated for start-ups as required
         """
 
-        return cost + scipy.stats.beta.pdf((time - self.inputs.intervention_startdates[self.scenario][intervention])
-                                           / self.inputs.model_constants['econ_startupduration_' + intervention],
-                                           2., 5.) \
-                    / self.inputs.model_constants['econ_startupduration_' + intervention] \
-                    * self.inputs.model_constants['econ_startupcost_' + intervention]
+        return scipy.stats.beta.pdf((time - self.inputs.intervention_startdates[self.scenario][intervention])
+                                    / self.inputs.model_constants['econ_startupduration_' + intervention], 2., 5.) \
+            / self.inputs.model_constants['econ_startupduration_' + intervention] \
+            * self.inputs.model_constants['econ_startupcost_' + intervention]
 
     def calculate_vars_from_spending(self):
         """

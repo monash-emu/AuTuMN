@@ -1218,14 +1218,10 @@ class Inputs:
         for scenario in self.scenarios:
             self.intervention_startdates[scenario] = {}
             for intervention in self.interventions_to_cost[scenario]:
-                self.intervention_startdates[scenario][intervention] = None
-                years_pos_coverage \
-                    = [key for (key, value)
-                       in self.scaleup_data[scenario]['int_prop_' + intervention].items() if value > 0.]
-                if years_pos_coverage:  # i.e. some coverage present from start
-                    self.intervention_startdates[scenario][intervention] = min(years_pos_coverage)
-                else:
-                    self.intervention_startdates[scenario][intervention] = self.model_constants['scenario_start_time']
+                years_pos_coverage = [key for (key, value)
+                                      in self.scaleup_data[scenario]['int_prop_' + intervention].items() if value > 0.]
+                self.intervention_startdates[scenario][intervention] = min(years_pos_coverage) \
+                    if years_pos_coverage else self.model_constants['scenario_start_time']
 
     ''' finding scale-up functions and related methods '''
 

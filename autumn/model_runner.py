@@ -984,22 +984,20 @@ class ModelRunner:
 
         self.add_comment_to_gui_window('Rapid calibration commenced')
         params_to_calibrate = 'tb_n_contact'
-        param_dict, available_years, target_values = {}, [], {}
+        param_dict, target_values = {}, {}
         targeted_indicator = 'incidence'
         single_point_calibration = True
         param_tol = 0.1  # tolerance for the parameter value, stopping condition
         working_output_dictionary = self.get_fitting_data(targeted_indicator)
         comparison_years = [y for y in self.requested_years if y in working_output_dictionary.keys()]
 
-        for year in comparison_years:
-            available_years.append(year)
-            target_values[year] = working_output_dictionary[year][0]
+        available_years = comparison_years
+        target_values = {year: working_output_dictionary[year][0] for year in comparison_years}
 
         if single_point_calibration:
-            available_years = [available_years[-1]]
-            weights = [1.]
-        else:
-            weights = find_uncertainty_output_weights(available_years, 4)
+            available_years = [comparison_years[-1]]
+
+        weights = [1.] if single_point_calibration else find_uncertainty_output_weights(comparison_years, 4)
 
         def objective_function(param_val):
 

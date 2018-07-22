@@ -584,7 +584,7 @@ class ModelRunner:
         n_accepted, prev_log_likelihood, starting_params, run, accepted, accepted_params, weights \
             = 0, -5e2, [], 0, 0, None, {}
         for key_for_dict in ['epi', 'cost', 'all_parameters', 'accepted_parameters', 'rejected_parameters',
-                              'all_compartment_values']:
+                             'all_compartment_values']:
             self.outputs['epi_uncertainty'][key_for_dict] = {}
         for key_for_list in ['loglikelihoods', 'whether_accepted', 'accepted_indices', 'rejected_indices']:
             self.outputs['epi_uncertainty'][key_for_list] = []
@@ -617,23 +617,20 @@ class ModelRunner:
                 # get outputs for calibration and store results
                 self.store_uncertainty(0)
 
-                # calculate prior
+                # calculate prior and likelihood, and determine acceptance
                 prior_log_likelihood = self.calculate_prior(proposed_params)
-
-                # calculate likelihood
                 last_run_output_index = None if self.outputs['epi_uncertainty']['epi'][0]['mortality'].ndim == 1 else -1
                 posterior_log_likelihood = self.calculate_likelihood(last_run_output_index)
-
-                # determine acceptance
                 log_likelihood = prior_log_likelihood + posterior_log_likelihood
                 accepted = numpy.random.binomial(n=1, p=min(1., numpy.exp(log_likelihood - prev_log_likelihood)))
 
                 # describe and record progression of likelihood analysis
                 self.add_comment_to_gui_window(
-                    'Previous log likelihood:\n%4.3f\nLog likelihood this run:\n%4.3f\nAcceptance probability:\n%4.3f'
-                    % (prev_log_likelihood, log_likelihood, min(1., numpy.exp(log_likelihood - prev_log_likelihood)))
-                    + '\nWhether accepted:\n%s\n________________\n' % str(bool(accepted)))
-                self.add_comment_to_gui_window('TB incidences this run are:')
+                    'Previous log likelihood:\n{:4.3f}\nLog likelihood this run:\n{:4.3f}'.format(
+                        prev_log_likelihood, log_likelihood)
+                    + '\nAcceptance probability:\n{:4.3f}\nWhether accepted:'.format(
+                        min(1., numpy.exp(log_likelihood - prev_log_likelihood)))
+                    + '\n{}\n________________\n'.format(bool(accepted)))
                 self.outputs['epi_uncertainty']['loglikelihoods'].append(log_likelihood)
 
                 # record starting population
@@ -680,8 +677,8 @@ class ModelRunner:
                 #     self.plot_progressive_parameters()
                 run += 1
                 self.add_comment_to_gui_window(
-                    str(n_accepted) + ' accepted / ' + str(run) + ' candidates. Running time: '
-                    + str(datetime.datetime.now() - start_timer_run))
+                    '{} accepted / {} candidates. Running time: {}'.format(
+                        n_accepted, run, datetime.datetime.now() - start_timer_run))
 
                 self.record_disease_specific_adjustments()
 

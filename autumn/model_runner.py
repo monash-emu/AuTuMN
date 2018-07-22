@@ -583,11 +583,11 @@ class ModelRunner:
         # prepare basic storage and local variables for uncertainty loop
         n_accepted, prev_log_likelihood, starting_params, run, accepted, accepted_params, weights \
             = 0, -5e2, [], 0, 0, None, {}
-        for key_for_dicts in ['epi', 'cost', 'all_parameters', 'accepted_parameters', 'rejected_parameters',
+        for key_for_dict in ['epi', 'cost', 'all_parameters', 'accepted_parameters', 'rejected_parameters',
                               'all_compartment_values']:
-            self.outputs['epi_uncertainty'][key_for_dicts] = {}
-        for key_for_lists in ['loglikelihoods', 'whether_accepted', 'accepted_indices', 'rejected_indices']:
-            self.outputs['epi_uncertainty'][key_for_lists] = []
+            self.outputs['epi_uncertainty'][key_for_dict] = {}
+        for key_for_list in ['loglikelihoods', 'whether_accepted', 'accepted_indices', 'rejected_indices']:
+            self.outputs['epi_uncertainty'][key_for_list] = []
         for param in self.inputs.param_ranges_unc:
             self.outputs['epi_uncertainty']['all_parameters'][param['key']] = []
             self.outputs['epi_uncertainty']['accepted_parameters'][param['key']] = {}
@@ -598,70 +598,42 @@ class ModelRunner:
                 self.outputs['epi_uncertainty']['all_compartment_values'][compartment_type] = []
 
         # start main uncertainty loop
-        while run < self.gui_inputs['uncertainty_runs']:
+        while n_accepted < self.gui_inputs['uncertainty_runs']:
+            start_timer_run = datetime.datetime.now()
 
             # instantiate model objects
             for scenario in self.scenarios:
-                params_copy = copy.deepcopy(self.models[scenario].params)  # we need to reuse the updated params
+                params_copy = copy.deepcopy(self.models[scenario].params)  # need to re-use the updated params
                 self.models[scenario] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
                 self.models[scenario].params = params_copy
 
-            # set timer
-            start_timer_run = datetime.datetime.now()
+            # propose new parameters
             proposed_params = self.update_params(accepted_params) if accepted_params else starting_params
 
-            # run baseline scenario (includes parameter checking, parameter setting and recording success/failure)
+            # run baseline scenario (includes parameter checking, parameter setting and recording of success or failure)
             self.run_with_params(proposed_params, scenario=0)
-
-            # store outputs regardless of acceptance, provided run was completed successfully
             if self.is_last_run_success:
 
                 # get outputs for calibration and store results
                 self.store_uncertainty(0)
-                last_run_output_index = None if self.outputs['epi_uncertainty']['epi'][0]['mortality'].ndim == 1 else -1
-
-                # calculate likelihood
-                prior_log_likelihood, posterior_log_likelihood = 0., 0.
 
                 # calculate prior
-                for p, param in enumerate(self.inputs.param_ranges_unc):
-                    param_val = proposed_params[p]
-                    self.outputs['epi_uncertainty']['all_parameters'][param['key']].append(proposed_params[p])
-                    if 'additional_params' not in param:
-                        param['additional_params'] = None
-                    prior_log_likelihood += find_log_probability_density(
-                        param['distribution'], param_val, param['bounds'], additional_params=param['additional_params'])
+                prior_log_likelihood = self.calculate_prior(proposed_params)
 
                 # calculate likelihood
-                for output_dict in self.inputs.outputs_unc:
-                    fitting_data = self.get_fitting_data(output_dict['key'])
-                    comparison_years = [y for y in self.requested_years if y in fitting_data.keys()]
-                    weights = find_uncertainty_output_weights(comparison_years, 4)
-                    self.add_comment_to_gui_window('"Weights" for {} are: {}'.format(output_dict['key'], weights))
-                    outputs_for_comparison \
-                        = [float(self.outputs['epi_uncertainty']['epi'][0][output_dict['key']][
-                                     last_run_output_index, t_k.find_first_list_element_at_least(
-                                         self.outputs['epi_uncertainty']['epi'][0]['times'], float(year))])
-                           for year in comparison_years]
-                    self.add_comment_to_gui_window('Model output values by year:')
-                    for y, year in enumerate(comparison_years):
-                        self.add_comment_to_gui_window('{}: {:.1f}'.format(year, outputs_for_comparison[y]))
-                        sd = numpy.mean([fitting_data[year][1] for year in fitting_data.keys()]) \
-                            if self.average_sd_for_likelihood else fitting_data[year][1]
-                        posterior_log_likelihood \
-                            += norm.logpdf(outputs_for_comparison[y], fitting_data[year][0], sd) * weights[y]
+                last_run_output_index = None if self.outputs['epi_uncertainty']['epi'][0]['mortality'].ndim == 1 else -1
+                posterior_log_likelihood = self.calculate_likelihood(last_run_output_index)
 
                 # determine acceptance
                 log_likelihood = prior_log_likelihood + posterior_log_likelihood
                 accepted = numpy.random.binomial(n=1, p=min(1., numpy.exp(log_likelihood - prev_log_likelihood)))
 
-                # describe progression of likelihood analysis
+                # describe and record progression of likelihood analysis
                 self.add_comment_to_gui_window(
                     'Previous log likelihood:\n%4.3f\nLog likelihood this run:\n%4.3f\nAcceptance probability:\n%4.3f'
                     % (prev_log_likelihood, log_likelihood, min(1., numpy.exp(log_likelihood - prev_log_likelihood)))
                     + '\nWhether accepted:\n%s\n________________\n' % str(bool(accepted)))
                 self.add_comment_to_gui_window('TB incidences this run are:')
-
                 self.outputs['epi_uncertainty']['loglikelihoods'].append(log_likelihood)
 
                 # record starting population
@@ -672,9 +644,9 @@ class ModelRunner:
 
                 # record uncertainty calculations for all runs
                 if accepted:
+                    n_accepted += 1
                     self.outputs['epi_uncertainty']['whether_accepted'].append(True)
                     self.outputs['epi_uncertainty']['accepted_indices'].append(run)
-                    n_accepted += 1
                     for p, param in enumerate(self.inputs.param_ranges_unc):
                         self.outputs['epi_uncertainty']['accepted_parameters'][param['key']][n_accepted] \
                             = proposed_params[p]
@@ -690,12 +662,12 @@ class ModelRunner:
                             self.run_with_params(accepted_params, scenario=scenario)
                             self.store_uncertainty(scenario)
 
-                    self.make_disease_specific_adjustments(last_run_output_index, self.requested_years)
-
                     # make algorithmic adjustments
+                    self.make_disease_specific_adjustments(last_run_output_index, self.requested_years)
                     if self.is_adjust_population:
                         self.adjust_start_population(last_run_output_index)
 
+                # if run rejected
                 else:
                     self.outputs['epi_uncertainty']['whether_accepted'].append(False)
                     self.outputs['epi_uncertainty']['rejected_indices'].append(run)
@@ -706,12 +678,56 @@ class ModelRunner:
                 # plot parameter progression and report on progress
                 # if self.gui_inputs['uncertainty_runs'] <= 10:
                 #     self.plot_progressive_parameters()
+                run += 1
                 self.add_comment_to_gui_window(
                     str(n_accepted) + ' accepted / ' + str(run) + ' candidates. Running time: '
                     + str(datetime.datetime.now() - start_timer_run))
 
                 self.record_disease_specific_adjustments()
-                run += 1
+
+    def calculate_prior(self, proposed_params):
+        """
+        Calculate the prior log likelihood for a given parameter set.
+
+        Args:
+            proposed_params: List of the set of proposed parameters in this iteration of the model.
+        """
+
+        prior_log_likelihood = 0.
+        for p, param in enumerate(self.inputs.param_ranges_unc):
+            param_val = proposed_params[p]
+            self.outputs['epi_uncertainty']['all_parameters'][param['key']].append(proposed_params[p])
+            prior_log_likelihood \
+                += find_log_probability_density(param['distribution'], param_val, param['bounds'],
+                                                additional_params=param['additional_params']
+                                                if 'additional_params' in param else None)
+        return prior_log_likelihood
+
+    def calculate_likelihood(self, last_run_output_index):
+        """
+        Calculate the posterior log-likelihood for the model run.
+
+        Args:
+            last_run_output_index: Can't just use -1 to index, as won't work for the first run.
+        """
+
+        posterior_log_likelihood = 0.
+        for output_dict in self.inputs.outputs_unc:
+            target_data = self.get_fitting_data(output_dict['key'])
+            comparison_years = [y for y in self.requested_years if y in target_data.keys()]
+            weights = find_uncertainty_output_weights(comparison_years, 4)
+            self.add_comment_to_gui_window('"Weights" for {} are: {}'.format(output_dict['key'], weights))
+            outputs_to_compare = [float(self.outputs['epi_uncertainty']['epi'][0][output_dict['key']][
+                                            last_run_output_index, t_k.find_first_list_element_at_least(
+                                                self.outputs['epi_uncertainty']['epi'][0]['times'], float(year))])
+                                  for year in comparison_years]
+            self.add_comment_to_gui_window('Model output values by year:')
+            average_sd = numpy.mean([target_data[year][1] for year in target_data.keys()])
+            for y, year in enumerate(comparison_years):
+                self.add_comment_to_gui_window('{}: {:.1f}'.format(year, outputs_to_compare[y]))
+                sd = average_sd if self.average_sd_for_likelihood else target_data[year][1]
+                posterior_log_likelihood += norm.logpdf(outputs_to_compare[y], target_data[year][0], sd) * weights[y]
+        return posterior_log_likelihood
 
     def get_fitting_data(self):
         """

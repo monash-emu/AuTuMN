@@ -581,8 +581,8 @@ class ModelRunner:
         self.add_comment_to_gui_window('Uncertainty analysis commenced')
 
         # prepare basic storage and local variables for uncertainty loop
-        n_accepted, prev_log_likelihood, starting_params, run, accepted, accepted_params, weights \
-            = 0, -5e2, [], 0, 0, None, {}
+        run, n_accepted, accepted, starting_params, accepted_params, weights, prev_log_likelihood \
+            = 0, 0, 0, [], None, {}, -5e2
         for key_for_dict in ['epi', 'cost', 'all_parameters', 'accepted_parameters', 'rejected_parameters',
                              'all_compartment_values']:
             self.outputs['epi_uncertainty'][key_for_dict] = {}
@@ -617,20 +617,17 @@ class ModelRunner:
                 # get outputs for calibration and store results
                 self.store_uncertainty(0)
 
-                # calculate prior and likelihood, and determine acceptance
+                # calculate prior and likelihood, determine acceptance, describe and record progression
                 prior_log_likelihood = self.calculate_prior(proposed_params)
                 last_run_output_index = None if self.outputs['epi_uncertainty']['epi'][0]['mortality'].ndim == 1 else -1
                 posterior_log_likelihood = self.calculate_likelihood(last_run_output_index)
                 log_likelihood = prior_log_likelihood + posterior_log_likelihood
                 accepted = numpy.random.binomial(n=1, p=min(1., numpy.exp(log_likelihood - prev_log_likelihood)))
-
-                # describe and record progression of likelihood analysis
                 self.add_comment_to_gui_window(
                     'Previous log likelihood:\n{:4.3f}\nLog likelihood this run:\n{:4.3f}'.format(
                         prev_log_likelihood, log_likelihood)
-                    + '\nAcceptance probability:\n{:4.3f}\nWhether accepted:'.format(
-                        min(1., numpy.exp(log_likelihood - prev_log_likelihood)))
-                    + '\n{}\n________________\n'.format(bool(accepted)))
+                    + '\nAcceptance probability:\n{:4.3f}\nWhether accepted:\n{}\n________________\n'.format(
+                        min(1., numpy.exp(log_likelihood - prev_log_likelihood)), bool(accepted)))
                 self.outputs['epi_uncertainty']['loglikelihoods'].append(log_likelihood)
 
                 # record starting population
@@ -653,11 +650,10 @@ class ModelRunner:
                     prev_log_likelihood, accepted_params = log_likelihood, proposed_params
 
                     # run scenarios - only if accepted and not for baseline
-                    for scenario in self.scenarios:
-                        if scenario:
-                            self.prepare_new_model_from_baseline(scenario)
-                            self.run_with_params(accepted_params, scenario=scenario)
-                            self.store_uncertainty(scenario)
+                    for scenario in [s for s in self.scenarios if s]:
+                        self.prepare_new_model_from_baseline(scenario)
+                        self.run_with_params(accepted_params, scenario=scenario)
+                        self.store_uncertainty(scenario)
 
                     # make algorithmic adjustments
                     self.make_disease_specific_adjustments(last_run_output_index, self.requested_years)
@@ -981,96 +977,84 @@ class ModelRunner:
 
     def run_rapid_univariate_calibration(self):
         """
-        Perform a least-square minimisation on the distance between the model outputs and the datapoints to
-        calibrate a single parameter.
+        Perform a least-square minimisation on the distance between the model outputs and the data points to calibrate
+        a single parameter.
         Return the value of the calibrated parameter.
         """
 
         self.add_comment_to_gui_window('Rapid calibration commenced')
-        params_to_calibrate = 'tb_n_contact'  # hard-coded
-        param_dict = {}
-        targeted_indicator = 'incidence'  # hard-coded
+        params_to_calibrate = 'tb_n_contact'
+        param_dict, available_years, target_values = {}, [], {}
+        targeted_indicator = 'incidence'
         single_point_calibration = True
-        param_tol = 0.1  # tolerance for the parameter value. Stopping condition.
-
-        years_to_compare = range(2010, 2017)
+        param_tol = 0.1  # tolerance for the parameter value, stopping condition
         working_output_dictionary = self.get_fitting_data(targeted_indicator)
-        available_years = []
-        target_values = {}
+        comparison_years = [y for y in self.requested_years if y in working_output_dictionary.keys()]
 
-        for y, year in enumerate(years_to_compare):
-            if year in working_output_dictionary.keys():
-                available_years.append(year)
-                target_values[year] = working_output_dictionary[year][0]
+        for year in comparison_years:
+            available_years.append(year)
+            target_values[year] = working_output_dictionary[year][0]
 
         if single_point_calibration:
             available_years = [available_years[-1]]
-            weights = [1.0]
+            weights = [1.]
         else:
             weights = find_uncertainty_output_weights(available_years, 4)
 
         def objective_function(param_val):
+
             # run the model
             self.models[0] = model.ConsolidatedModel(0, self.inputs, self.gui_inputs)
             self.outputs['manual'] = {'epi': {}, 'cost': {}}
-            # set parameters and run
             param_dict[params_to_calibrate] = param_val
             self.set_model_with_params(param_dict, 0)
             self.models[0].integrate()
             self.outputs['manual']['epi'][0] \
-                = self.find_epi_outputs(0, strata_to_analyse=[self.models[0].agegroups,
-                                                                     self.models[0].riskgroups])
-
+                = self.find_epi_outputs(0, strata_to_analyse=[self.models[0].agegroups, self.models[0].riskgroups])
             outputs_for_comparison \
                 = [self.outputs['manual']['epi'][0]['incidence'][t_k.find_first_list_element_at_least(
-                           self.outputs['manual']['epi'][0]['times'], float(year))] for year in years_to_compare]
+                           self.outputs['manual']['epi'][0]['times'], float(year))] for year in self.requested_years]
 
-            sum_of_squares = 0.
-            abs_diff = 0.
-            index_for_available_years = 0
+            sum_of_squares, abs_diff, index_for_available_years = 0., 0., 0
+            for y, year in enumerate(comparison_years):
+                if not single_point_calibration or year == available_years[-1]:
+                    model_result_for_output = outputs_for_comparison[y]
+                    data = target_values[year]
+                    sum_of_squares += weights[index_for_available_years] * (data-model_result_for_output) ** 2
+                    abs_diff += model_result_for_output - data
+                    index_for_available_years += 1
 
-            for y, year in enumerate(years_to_compare):
-                if year in working_output_dictionary.keys():
-                    if not single_point_calibration or year == available_years[-1]:
-                        model_result_for_output = outputs_for_comparison[y]
-                        data = target_values[year]
-                        sum_of_squares += weights[index_for_available_years] * (data-model_result_for_output)**2
-                        abs_diff += model_result_for_output - data
-                        index_for_available_years += 1
-
-            if single_point_calibration:
-                return abs_diff
-            else:
-                return sum_of_squares
+            return abs_diff if single_point_calibration else sum_of_squares
 
         if single_point_calibration:   # implement a dichotomy algorithm
             param_low, param_high = 10., 20.   # starting points / hard-coded
             estimated_n_iter = 2. + (numpy.log(param_high - param_low) - numpy.log(2. * param_tol)) / numpy.log(2.)
-            self.add_comment_to_gui_window("Dichotomy method will converge in fewer than " +
-                                           str(int(round(estimated_n_iter))) + " iterations")
+            self.add_comment_to_gui_window('Dichotomy method will converge in fewer than ' +
+                                           str(int(round(estimated_n_iter))) + ' iterations')
             f_low = objective_function(param_low)
             f_high = objective_function(param_high)
-            if f_low*f_high > 0:
+            if f_low * f_high > 0:
                 exit('the interval [param_low - param_high] does not contain the solution')
 
             while (param_high - param_low) / 2. > param_tol:
                 midpoint = (param_low + param_high) / 2.
                 obj = objective_function(midpoint)
-                print "param value: " + str(midpoint)
-                print "distance to target: " + str(obj)
+                print 'param value: ' + str(midpoint)
+                print 'distance to target: ' + str(obj)
                 if obj == 0:
                     return midpoint
-                elif obj*f_low < 0:
+                elif obj * f_low < 0:
                     param_high = midpoint
                 else:
                     param_low = midpoint
             best_param_value = midpoint
         else:
             x_0 = self.inputs.model_constants[params_to_calibrate]
-            optimisation_result = minimize(fun=objective_function, x0=x_0, method='Nelder-Mead', options={'xatol':param_tol})
+            optimisation_result \
+                = minimize(fun=objective_function, x0=x_0, method='Nelder-Mead', options={'xatol': param_tol})
             best_param_value = optimisation_result.x
 
-        print "The best value found for " + params_to_calibrate + " is " + str(best_param_value)
+        print 'The best value found for {} is {}'.format(params_to_calibrate, best_param_value)
 
     ''' optimisation methods '''
 

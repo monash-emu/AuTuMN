@@ -1352,8 +1352,8 @@ class Project:
         # prelims
         fig, ax, max_dim, n_rows, n_cols = initialise_figures_axes(1, room_for_legend=True)
         start_time = self.inputs.model_constants['plot_start_time']
-        start_time_index = self.find_start_time_index(start_time, scenario)
-        times = self.model_runner.outputs['manual']['epi'][scenario]['times'][start_time_index:]
+        start_time_index = self.find_start_time_index(start_time, scenario, purpose='manual')
+        times = self.outputs['manual']['epi'][0]['times'][start_time_index:]
 
         # get data
         cumulative_data = [0.] * len(times)
@@ -1402,8 +1402,8 @@ class Project:
         fig, ax, max_dim, n_rows, n_cols = initialise_figures_axes(1, room_for_legend=True)
         strata = getattr(self.inputs, category_to_loop)
         start_time = self.inputs.model_constants['plot_start_time']
-        start_time_index = self.find_start_time_index(start_time, scenario)
-        times = self.model_runner.models[0].times[start_time_index:]
+        start_time_index = self.find_start_time_index(start_time, scenario, purpose='manual')
+        times = self.outputs['manual']['epi'][0]['times'][start_time_index:]
         cumulative_data = [0.] * len(times)
 
         for s, stratum in enumerate(strata):

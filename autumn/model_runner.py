@@ -167,8 +167,8 @@ class ModelRunner:
         self.gui_inputs = gui_inputs
         self.inputs = inputs.Inputs(gui_inputs, gui_console_fn=gui_console_fn)
         self.inputs.process_inputs()
-        (self.scenarios, self.standard_rate_outputs, self.divide_population, self.epi_outputs_to_analyse, \
-          self.interventions_to_cost) \
+        (self.scenarios, self.standard_rate_outputs, self.divide_population, self.epi_outputs_to_analyse,
+         self.interventions_to_cost) \
             = [[] for _ in range(5)]
         (self.models, self.from_labels, self.to_labels, self.multipliers, self.uncertainty_percentiles) \
             = [{} for _ in range(5)]
@@ -982,63 +982,63 @@ class ModelRunner:
         Return the value of the calibrated parameter.
         """
 
+        # prelims, some could be moved to instantiation
         self.add_comment_to_gui_window('Rapid calibration commenced')
         params_to_calibrate = 'tb_n_contact'
-        param_dict, target_values = {}, {}
         targeted_indicator = 'incidence'
         single_point_calibration = True
-        param_tol = 0.1  # tolerance for the parameter value, stopping condition
+        param_tol = 0.1  # tolerance for the parameter value, provides stopping condition
+        param_dict, target_values = {}, {}
+
+        # find outputs to compare against
         working_output_dictionary = self.get_fitting_data(targeted_indicator)
         comparison_years = [y for y in self.requested_years if y in working_output_dictionary.keys()]
-
         available_years = comparison_years
         target_values = {year: working_output_dictionary[year][0] for year in comparison_years}
-
         if single_point_calibration:
             available_years = [comparison_years[-1]]
-
         weights = [1.] if single_point_calibration else find_uncertainty_output_weights(comparison_years, 4)
 
+        # define the objective function
         def objective_function(param_val):
 
-            # run the model
+            # run the model and find the relevant results
             self.models[0] = model.ConsolidatedModel(0, self.inputs, self.gui_inputs)
-            self.outputs['manual'] = {'epi': {}, 'cost': {}}
             param_dict[params_to_calibrate] = param_val
             self.set_model_with_params(param_dict, 0)
             self.models[0].integrate()
+            self.outputs['manual'] = {'epi': {}, 'cost': {}}
             self.outputs['manual']['epi'][0] \
                 = self.find_epi_outputs(0, strata_to_analyse=[self.models[0].agegroups, self.models[0].riskgroups])
             outputs_for_comparison \
                 = [self.outputs['manual']['epi'][0]['incidence'][t_k.find_first_list_element_at_least(
                            self.outputs['manual']['epi'][0]['times'], float(year))] for year in self.requested_years]
 
+            # find distance result for run
             sum_of_squares, abs_diff, index_for_available_years = 0., 0., 0
             for y, year in enumerate(comparison_years):
                 if not single_point_calibration or year == available_years[-1]:
                     model_result_for_output = outputs_for_comparison[y]
                     data = target_values[year]
-                    sum_of_squares += weights[index_for_available_years] * (data-model_result_for_output) ** 2
+                    sum_of_squares += weights[index_for_available_years] * (data - model_result_for_output) ** 2
                     abs_diff += model_result_for_output - data
                     index_for_available_years += 1
 
             return abs_diff if single_point_calibration else sum_of_squares
 
-        if single_point_calibration:   # implement a dichotomy algorithm
-            param_low, param_high = 10., 20.   # starting points / hard-coded
+        # manually-coded dichotomy algorithm
+        if single_point_calibration:
+            param_low, param_high = 10., 20.   # starting points, hard-coded
             estimated_n_iter = 2. + (numpy.log(param_high - param_low) - numpy.log(2. * param_tol)) / numpy.log(2.)
-            self.add_comment_to_gui_window('Dichotomy method will converge in fewer than ' +
-                                           str(int(round(estimated_n_iter))) + ' iterations')
-            f_low = objective_function(param_low)
-            f_high = objective_function(param_high)
+            self.add_comment_to_gui_window(
+                'Dichotomy method should converge in fewer than {} iterations'.format(round(estimated_n_iter)))
+            f_low, f_high = objective_function(param_low), objective_function(param_high)
             if f_low * f_high > 0:
                 exit('the interval [param_low - param_high] does not contain the solution')
-
             while (param_high - param_low) / 2. > param_tol:
                 midpoint = (param_low + param_high) / 2.
                 obj = objective_function(midpoint)
-                print 'param value: ' + str(midpoint)
-                print 'distance to target: ' + str(obj)
+                print('param value: {}\ndistance to target: {}'.format(midpoint, obj))
                 if obj == 0:
                     return midpoint
                 elif obj * f_low < 0:
@@ -1046,13 +1046,16 @@ class ModelRunner:
                 else:
                     param_low = midpoint
             best_param_value = midpoint
+
+        # imported optimisation function
         else:
-            x_0 = self.inputs.model_constants[params_to_calibrate]
             optimisation_result \
-                = minimize(fun=objective_function, x0=x_0, method='Nelder-Mead', options={'xatol': param_tol})
+                = minimize(fun=objective_function, x0=self.inputs.model_constants[params_to_calibrate],
+                           method='Nelder-Mead', options={'xatol': param_tol})
             best_param_value = optimisation_result.x
 
-        print 'The best value found for {} is {}'.format(params_to_calibrate, best_param_value)
+        # report result
+        print('The best value found for {} is {}'.format(params_to_calibrate, best_param_value))
 
     ''' optimisation methods '''
 

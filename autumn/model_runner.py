@@ -817,7 +817,7 @@ class ModelRunner:
         """
 
         # get outputs to add to outputs attribute
-        strata = [self.models[scenario].histories] if len(self.models[scenario].histories) == 2 else ([])
+        strata = [self.models[scenario].histories] if len(self.models[scenario].histories) > 1 else ([])
         new_outputs = {'epi': self.find_epi_outputs(scenario, strata_to_analyse=strata)}
         # new_outputs['cost'] = self.find_cost_outputs(scenario) if self.models[scenario].interventions_to_cost else {}
         if self.models[scenario].interventions_to_cost:
@@ -842,7 +842,7 @@ class ModelRunner:
                 else:
 
                     # adjust list size if necessary or just use output directly
-                    if output_type == 'epi' and scenario == 0:
+                    if output_type == 'epi':
                         shape_index = 0 if self.outputs[uncertainty_type]['epi'][scenario][output].ndim == 1 else 1
 
                         # extend new output data with zeros if too short

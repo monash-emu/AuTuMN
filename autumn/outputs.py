@@ -607,6 +607,7 @@ class Project:
         for file_format in self.figure_formats:
             filename = os.path.join(self.out_dir_project, self.country + end_filename + '.' + file_format)
             fig.savefig(filename, dpi=300)
+        pyplot.close(fig)
 
     def find_uncertainty_indices(self):
         """

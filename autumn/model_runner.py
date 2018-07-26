@@ -997,7 +997,7 @@ class ModelRunner:
         target_values = {year: working_output_dictionary[year][0] for year in comparison_years}
         if single_point_calibration:
             available_years = [comparison_years[-1]]
-        weights = [1.] if single_point_calibration else find_uncertainty_output_weights(comparison_years, 4)
+        weights = find_uncertainty_output_weights(available_years, 4)
 
         # define the objective function
         def objective_function(param_val):

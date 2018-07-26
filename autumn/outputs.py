@@ -49,7 +49,7 @@ def initialise_figures_axes(n_panels, room_for_legend=False, requested_grid=None
     else:
         fig, axes = pyplot.subplots(n_rows, n_cols, sharey=share_yaxis)
         for panel in range(n_panels, n_rows * n_cols):
-            find_panel_grid_indices(axes, panel, n_rows, n_cols).axis('off')
+            find_panel_grid_indices(axes, panel, n_rows, n_cols).axis(False)
     return fig, axes, max([n_rows, n_cols]), n_rows, n_cols
 
 
@@ -539,7 +539,7 @@ class Project:
 
         # ticks and their labels
         if labels_off:
-            axis.tick_params(axis='x', labelbottom='off')
+            axis.tick_params(axis='x', labelbottom=False)
         elif len(axis.get_xticks()) > 7:
             for label in axis.xaxis.get_ticklabels()[::2]:
                 label.set_visible(False)

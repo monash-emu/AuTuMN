@@ -975,29 +975,28 @@ class ModelRunner:
             self.models[15].integrate()
             self.store_uncertainty(15, uncertainty_type='int_uncertainty')
 
-    def run_rapid_univariate_calibration(self):
+    def run_rapid_univariate_calibration(self, single_point_calibration=True, target_indicator='incidence',
+                                         param_tol=0.1):
         """
         Perform a least-square minimisation on the distance between the model outputs and the data points to calibrate
         a single parameter.
         Return the value of the calibrated parameter.
+
+        Args:
+            single_point_calibration: Whether to calibrate just to last indicator point (otherwise to all)
+            target_indicator: The indicator to calibrate to
+            param_tol: Tolerance for the parameter value, provides stopping condition
         """
 
-        # prelims, some could be moved to instantiation
+        # prelims, including finding outputs to compare against
         self.add_comment_to_gui_window('Rapid calibration commenced')
         params_to_calibrate = 'tb_n_contact'
-        targeted_indicator = 'incidence'
-        single_point_calibration = True
-        param_tol = 0.1  # tolerance for the parameter value, provides stopping condition
-        param_dict, target_values = {}, {}
-
-        # find outputs to compare against
-        working_output_dictionary = self.get_fitting_data(targeted_indicator)
-        comparison_years = [y for y in self.requested_years if y in working_output_dictionary.keys()]
-        available_years = comparison_years
-        target_values = {year: working_output_dictionary[year][0] for year in comparison_years}
-        if single_point_calibration:
-            available_years = [comparison_years[-1]]
-        weights = [1.] if single_point_calibration else find_uncertainty_output_weights(comparison_years, 4)
+        param_dict = {}
+        working_output_dictionary = self.get_fitting_data(target_indicator)
+        requested_years = [self.requested_years[-1]] if single_point_calibration else self.requested_years
+        available_years = [y for y in requested_years if y in working_output_dictionary.keys()]
+        weights = find_uncertainty_output_weights(available_years, 4)
+        target_values = [working_output_dictionary[y][0] for y in available_years]
 
         # define the objective function
         def objective_function(param_val):
@@ -1012,18 +1011,13 @@ class ModelRunner:
                 = self.find_epi_outputs(0, strata_to_analyse=[self.models[0].agegroups, self.models[0].riskgroups])
             outputs_for_comparison \
                 = [self.outputs['manual']['epi'][0]['incidence'][t_k.find_first_list_element_at_least(
-                           self.outputs['manual']['epi'][0]['times'], float(year))] for year in self.requested_years]
+                    self.outputs['manual']['epi'][0]['times'], float(year))] for year in available_years]
 
             # find distance result for run
             sum_of_squares, abs_diff, index_for_available_years = 0., 0., 0
-            for y, year in enumerate(comparison_years):
-                if not single_point_calibration or year == available_years[-1]:
-                    model_result_for_output = outputs_for_comparison[y]
-                    data = target_values[year]
-                    sum_of_squares += weights[index_for_available_years] * (data - model_result_for_output) ** 2
-                    abs_diff += model_result_for_output - data
-                    index_for_available_years += 1
-
+            for year in range(len(available_years)):
+                sum_of_squares += weights[year] * (target_values[year] - outputs_for_comparison[year]) ** 2
+                abs_diff += outputs_for_comparison[year] - target_values[year]
             return abs_diff if single_point_calibration else sum_of_squares
 
         # manually-coded dichotomy algorithm
@@ -1038,7 +1032,7 @@ class ModelRunner:
             while (param_high - param_low) / 2. > param_tol:
                 midpoint = (param_low + param_high) / 2.
                 obj = objective_function(midpoint)
-                print('param value: {}\ndistance to target: {}'.format(midpoint, obj))
+                self.add_comment_to_gui_window('param value: {}\ndistance to target: {}'.format(midpoint, obj))
                 if obj == 0:
                     return midpoint
                 elif obj * f_low < 0:
@@ -1055,7 +1049,8 @@ class ModelRunner:
             best_param_value = optimisation_result.x
 
         # report result
-        print('The best value found for {} is {}'.format(params_to_calibrate, best_param_value))
+        self.add_comment_to_gui_window(
+            'The best value found for {} is {}'.format(params_to_calibrate, best_param_value))
 
     ''' optimisation methods '''
 

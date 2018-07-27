@@ -167,8 +167,8 @@ class ModelRunner:
         self.gui_inputs = gui_inputs
         self.inputs = inputs.Inputs(gui_inputs, gui_console_fn=gui_console_fn)
         self.inputs.process_inputs()
-        (self.scenarios, self.standard_rate_outputs, self.divide_population, self.epi_outputs_to_analyse, \
-          self.interventions_to_cost) \
+        (self.scenarios, self.standard_rate_outputs, self.divide_population, self.epi_outputs_to_analyse,
+         self.interventions_to_cost) \
             = [[] for _ in range(5)]
         (self.models, self.from_labels, self.to_labels, self.multipliers, self.uncertainty_percentiles) \
             = [{} for _ in range(5)]
@@ -294,8 +294,26 @@ class ModelRunner:
         Args:
             scenario: Scenario number
         """
+        new_run_start_time = self.inputs.model_constants['before_intervention_time']
 
-        start_time_index = self.models[0].find_time_index(self.inputs.model_constants['before_intervention_time'])
+        # for int_uncertainty, we need to detect when the program started as past estimates may also be affected
+        if self.inputs.run_mode == 'int_uncertainty':
+            program_name = self.inputs.uncertainty_intervention.replace("perc", "prop")
+            coverages = self.inputs.scaleup_data[15][program_name]  # dictionary
+            # if all coverage values are 0, we don't need to change the scenario start date. Otherwise we do.
+            if len(coverages) > 0:
+                if max(coverages.values()) > 0.:
+                    # We need to find the latest time associated with a 0 coverage, preceding the first non-zero coverage
+                    coverages_as_list = [(year, cov) for year, cov in coverages.iteritems()]
+                    coverages_as_list.sort()   # now a list of tuples sorted by year
+                    nonzero_indices = [ind for ind in range(len(coverages_as_list)) if coverages_as_list[ind][1] > 0.]
+                    if nonzero_indices[0] == 0:  # coverage has always been positive
+                        last_year_null_coverage = coverages_as_list[0][0]
+                    else:
+                        last_year_null_coverage = coverages_as_list[nonzero_indices[0] - 1][0]
+                    new_run_start_time = min(new_run_start_time, last_year_null_coverage)
+
+        start_time_index = self.models[0].find_time_index(new_run_start_time)
         self.models[scenario].start_time, self.models[scenario].next_time_point \
             = [self.models[0].times[start_time_index]] * 2
         self.models[scenario].loaded_compartments = self.models[0].load_state(start_time_index)
@@ -581,13 +599,13 @@ class ModelRunner:
         self.add_comment_to_gui_window('Uncertainty analysis commenced')
 
         # prepare basic storage and local variables for uncertainty loop
-        n_accepted, prev_log_likelihood, starting_params, run, accepted, accepted_params, weights \
-            = 0, -5e2, [], 0, 0, None, {}
-        for key_for_dicts in ['epi', 'cost', 'all_parameters', 'accepted_parameters', 'rejected_parameters',
-                              'all_compartment_values']:
-            self.outputs['epi_uncertainty'][key_for_dicts] = {}
-        for key_for_lists in ['loglikelihoods', 'whether_accepted', 'accepted_indices', 'rejected_indices']:
-            self.outputs['epi_uncertainty'][key_for_lists] = []
+        run, n_accepted, accepted, starting_params, accepted_params, weights, prev_log_likelihood \
+            = 0, 0, 0, [], None, {}, -5e2
+        for key_for_dict in ['epi', 'cost', 'all_parameters', 'accepted_parameters', 'rejected_parameters',
+                             'all_compartment_values']:
+            self.outputs['epi_uncertainty'][key_for_dict] = {}
+        for key_for_list in ['loglikelihoods', 'whether_accepted', 'accepted_indices', 'rejected_indices']:
+            self.outputs['epi_uncertainty'][key_for_list] = []
         for param in self.inputs.param_ranges_unc:
             self.outputs['epi_uncertainty']['all_parameters'][param['key']] = []
             self.outputs['epi_uncertainty']['accepted_parameters'][param['key']] = {}
@@ -598,70 +616,36 @@ class ModelRunner:
                 self.outputs['epi_uncertainty']['all_compartment_values'][compartment_type] = []
 
         # start main uncertainty loop
-        while run < self.gui_inputs['uncertainty_runs']:
+        while n_accepted < self.gui_inputs['uncertainty_runs']:
+            start_timer_run = datetime.datetime.now()
 
             # instantiate model objects
             for scenario in self.scenarios:
-                params_copy = copy.deepcopy(self.models[scenario].params)  # we need to reuse the updated params
+                params_copy = copy.deepcopy(self.models[scenario].params)  # need to re-use the updated params
                 self.models[scenario] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
                 self.models[scenario].params = params_copy
 
-            # set timer
-            start_timer_run = datetime.datetime.now()
+            # propose new parameters
             proposed_params = self.update_params(accepted_params) if accepted_params else starting_params
 
-            # run baseline scenario (includes parameter checking, parameter setting and recording success/failure)
+            # run baseline scenario (includes parameter checking, parameter setting and recording of success or failure)
             self.run_with_params(proposed_params, scenario=0)
-
-            # store outputs regardless of acceptance, provided run was completed successfully
             if self.is_last_run_success:
 
                 # get outputs for calibration and store results
                 self.store_uncertainty(0)
+
+                # calculate prior and likelihood, determine acceptance, describe and record progression
+                prior_log_likelihood = self.calculate_prior(proposed_params)
                 last_run_output_index = None if self.outputs['epi_uncertainty']['epi'][0]['mortality'].ndim == 1 else -1
-
-                # calculate likelihood
-                prior_log_likelihood, posterior_log_likelihood = 0., 0.
-
-                # calculate prior
-                for p, param in enumerate(self.inputs.param_ranges_unc):
-                    param_val = proposed_params[p]
-                    self.outputs['epi_uncertainty']['all_parameters'][param['key']].append(proposed_params[p])
-                    if 'additional_params' not in param:
-                        param['additional_params'] = None
-                    prior_log_likelihood += find_log_probability_density(
-                        param['distribution'], param_val, param['bounds'], additional_params=param['additional_params'])
-
-                # calculate likelihood
-                for output_dict in self.inputs.outputs_unc:
-                    fitting_data = self.get_fitting_data(output_dict['key'])
-                    comparison_years = [y for y in self.requested_years if y in fitting_data.keys()]
-                    weights = find_uncertainty_output_weights(comparison_years, 4)
-                    self.add_comment_to_gui_window('"Weights" for {} are: {}'.format(output_dict['key'], weights))
-                    outputs_for_comparison \
-                        = [float(self.outputs['epi_uncertainty']['epi'][0][output_dict['key']][
-                                     last_run_output_index, t_k.find_first_list_element_at_least(
-                                         self.outputs['epi_uncertainty']['epi'][0]['times'], float(year))])
-                           for year in comparison_years]
-                    self.add_comment_to_gui_window('Model output values by year:')
-                    for y, year in enumerate(comparison_years):
-                        self.add_comment_to_gui_window('{}: {:.1f}'.format(year, outputs_for_comparison[y]))
-                        sd = numpy.mean([fitting_data[year][1] for year in fitting_data.keys()]) \
-                            if self.average_sd_for_likelihood else fitting_data[year][1]
-                        posterior_log_likelihood \
-                            += norm.logpdf(outputs_for_comparison[y], fitting_data[year][0], sd) * weights[y]
-
-                # determine acceptance
+                posterior_log_likelihood = self.calculate_likelihood(last_run_output_index)
                 log_likelihood = prior_log_likelihood + posterior_log_likelihood
                 accepted = numpy.random.binomial(n=1, p=min(1., numpy.exp(log_likelihood - prev_log_likelihood)))
-
-                # describe progression of likelihood analysis
                 self.add_comment_to_gui_window(
-                    'Previous log likelihood:\n%4.3f\nLog likelihood this run:\n%4.3f\nAcceptance probability:\n%4.3f'
-                    % (prev_log_likelihood, log_likelihood, min(1., numpy.exp(log_likelihood - prev_log_likelihood)))
-                    + '\nWhether accepted:\n%s\n________________\n' % str(bool(accepted)))
-                self.add_comment_to_gui_window('TB incidences this run are:')
-
+                    'Previous log likelihood:\n{:4.3f}\nLog likelihood this run:\n{:4.3f}'.format(
+                        prev_log_likelihood, log_likelihood)
+                    + '\nAcceptance probability:\n{:4.3f}\nWhether accepted:\n{}\n________________\n'.format(
+                        min(1., numpy.exp(log_likelihood - prev_log_likelihood)), bool(accepted)))
                 self.outputs['epi_uncertainty']['loglikelihoods'].append(log_likelihood)
 
                 # record starting population
@@ -672,9 +656,9 @@ class ModelRunner:
 
                 # record uncertainty calculations for all runs
                 if accepted:
+                    n_accepted += 1
                     self.outputs['epi_uncertainty']['whether_accepted'].append(True)
                     self.outputs['epi_uncertainty']['accepted_indices'].append(run)
-                    n_accepted += 1
                     for p, param in enumerate(self.inputs.param_ranges_unc):
                         self.outputs['epi_uncertainty']['accepted_parameters'][param['key']][n_accepted] \
                             = proposed_params[p]
@@ -684,18 +668,17 @@ class ModelRunner:
                     prev_log_likelihood, accepted_params = log_likelihood, proposed_params
 
                     # run scenarios - only if accepted and not for baseline
-                    for scenario in self.scenarios:
-                        if scenario:
-                            self.prepare_new_model_from_baseline(scenario)
-                            self.run_with_params(accepted_params, scenario=scenario)
-                            self.store_uncertainty(scenario)
-
-                    self.make_disease_specific_adjustments(last_run_output_index, self.requested_years)
+                    for scenario in [s for s in self.scenarios if s]:
+                        self.prepare_new_model_from_baseline(scenario)
+                        self.run_with_params(accepted_params, scenario=scenario)
+                        self.store_uncertainty(scenario)
 
                     # make algorithmic adjustments
+                    self.make_disease_specific_adjustments(last_run_output_index, self.requested_years)
                     if self.is_adjust_population:
                         self.adjust_start_population(last_run_output_index)
 
+                # if run rejected
                 else:
                     self.outputs['epi_uncertainty']['whether_accepted'].append(False)
                     self.outputs['epi_uncertainty']['rejected_indices'].append(run)
@@ -706,12 +689,56 @@ class ModelRunner:
                 # plot parameter progression and report on progress
                 # if self.gui_inputs['uncertainty_runs'] <= 10:
                 #     self.plot_progressive_parameters()
+                run += 1
                 self.add_comment_to_gui_window(
-                    str(n_accepted) + ' accepted / ' + str(run) + ' candidates. Running time: '
-                    + str(datetime.datetime.now() - start_timer_run))
+                    '{} accepted / {} candidates. Running time: {}'.format(
+                        n_accepted, run, datetime.datetime.now() - start_timer_run))
 
                 self.record_disease_specific_adjustments()
-                run += 1
+
+    def calculate_prior(self, proposed_params):
+        """
+        Calculate the prior log likelihood for a given parameter set.
+
+        Args:
+            proposed_params: List of the set of proposed parameters in this iteration of the model.
+        """
+
+        prior_log_likelihood = 0.
+        for p, param in enumerate(self.inputs.param_ranges_unc):
+            param_val = proposed_params[p]
+            self.outputs['epi_uncertainty']['all_parameters'][param['key']].append(proposed_params[p])
+            prior_log_likelihood \
+                += find_log_probability_density(param['distribution'], param_val, param['bounds'],
+                                                additional_params=param['additional_params']
+                                                if 'additional_params' in param else None)
+        return prior_log_likelihood
+
+    def calculate_likelihood(self, last_run_output_index):
+        """
+        Calculate the posterior log-likelihood for the model run.
+
+        Args:
+            last_run_output_index: Can't just use -1 to index, as won't work for the first run.
+        """
+
+        posterior_log_likelihood = 0.
+        for output_dict in self.inputs.outputs_unc:
+            target_data = self.get_fitting_data(output_dict['key'])
+            comparison_years = [y for y in self.requested_years if y in target_data.keys()]
+            weights = find_uncertainty_output_weights(comparison_years, 4)
+            self.add_comment_to_gui_window('"Weights" for {} are: {}'.format(output_dict['key'], weights))
+            outputs_to_compare = [float(self.outputs['epi_uncertainty']['epi'][0][output_dict['key']][
+                                            last_run_output_index, t_k.find_first_list_element_at_least(
+                                                self.outputs['epi_uncertainty']['epi'][0]['times'], float(year))])
+                                  for year in comparison_years]
+            self.add_comment_to_gui_window('Model output values by year:')
+            average_sd = numpy.mean([target_data[year][1] for year in target_data.keys()])
+            for y, year in enumerate(comparison_years):
+                self.add_comment_to_gui_window('{}: {:.1f}'.format(year, outputs_to_compare[y]))
+                sd = average_sd if self.average_sd_for_likelihood else target_data[year][1]
+                posterior_log_likelihood += norm.logpdf(outputs_to_compare[y], target_data[year][0], sd) * weights[y]
+        return posterior_log_likelihood
 
     def get_fitting_data(self):
         """
@@ -808,7 +835,7 @@ class ModelRunner:
         """
 
         # get outputs to add to outputs attribute
-        strata = [self.models[scenario].histories] if len(self.models[scenario].histories) == 2 else ([])
+        strata = [self.models[scenario].histories] if len(self.models[scenario].histories) > 1 else ([])
         new_outputs = {'epi': self.find_epi_outputs(scenario, strata_to_analyse=strata)}
         # new_outputs['cost'] = self.find_cost_outputs(scenario) if self.models[scenario].interventions_to_cost else {}
         if self.models[scenario].interventions_to_cost:
@@ -833,7 +860,7 @@ class ModelRunner:
                 else:
 
                     # adjust list size if necessary or just use output directly
-                    if output_type == 'epi' and scenario == 0:
+                    if output_type == 'epi':
                         shape_index = 0 if self.outputs[uncertainty_type]['epi'][scenario][output].ndim == 1 else 1
 
                         # extend new output data with zeros if too short
@@ -966,98 +993,82 @@ class ModelRunner:
             self.models[15].integrate()
             self.store_uncertainty(15, uncertainty_type='int_uncertainty')
 
-    def run_rapid_univariate_calibration(self):
+    def run_rapid_univariate_calibration(self, single_point_calibration=True, target_indicator='incidence',
+                                         param_tol=0.1):
         """
-        Perform a least-square minimisation on the distance between the model outputs and the datapoints to
-        calibrate a single parameter.
+        Perform a least-square minimisation on the distance between the model outputs and the data points to calibrate
+        a single parameter.
         Return the value of the calibrated parameter.
+
+        Args:
+            single_point_calibration: Whether to calibrate just to last indicator point (otherwise to all)
+            target_indicator: The indicator to calibrate to
+            param_tol: Tolerance for the parameter value, provides stopping condition
         """
 
+        # prelims, including finding outputs to compare against
         self.add_comment_to_gui_window('Rapid calibration commenced')
-        params_to_calibrate = 'tb_n_contact'  # hard-coded
+        params_to_calibrate = 'tb_n_contact'
         param_dict = {}
-        targeted_indicator = 'incidence'  # hard-coded
-        single_point_calibration = True
-        param_tol = 0.1  # tolerance for the parameter value. Stopping condition.
+        working_output_dictionary = self.get_fitting_data(target_indicator)
+        requested_years = [self.requested_years[-1]] if single_point_calibration else self.requested_years
+        available_years = [y for y in requested_years if y in working_output_dictionary.keys()]
+        weights = find_uncertainty_output_weights(available_years, 4)
+        target_values = [working_output_dictionary[y][0] for y in available_years]
 
-        years_to_compare = range(2010, 2017)
-        working_output_dictionary = self.get_fitting_data(targeted_indicator)
-        available_years = []
-        target_values = {}
-
-        for y, year in enumerate(years_to_compare):
-            if year in working_output_dictionary.keys():
-                available_years.append(year)
-                target_values[year] = working_output_dictionary[year][0]
-
-        if single_point_calibration:
-            available_years = [available_years[-1]]
-            weights = [1.0]
-        else:
-            weights = find_uncertainty_output_weights(available_years, 4)
-
+        # define the objective function
         def objective_function(param_val):
-            # run the model
+
+            # run the model and find the relevant results
             self.models[0] = model.ConsolidatedModel(0, self.inputs, self.gui_inputs)
-            self.outputs['manual'] = {'epi': {}, 'cost': {}}
-            # set parameters and run
             param_dict[params_to_calibrate] = param_val
             self.set_model_with_params(param_dict, 0)
             self.models[0].integrate()
+            self.outputs['manual'] = {'epi': {}, 'cost': {}}
             self.outputs['manual']['epi'][0] \
-                = self.find_epi_outputs(0, strata_to_analyse=[self.models[0].agegroups,
-                                                                     self.models[0].riskgroups])
-
+                = self.find_epi_outputs(0, strata_to_analyse=[self.models[0].agegroups, self.models[0].riskgroups])
             outputs_for_comparison \
                 = [self.outputs['manual']['epi'][0]['incidence'][t_k.find_first_list_element_at_least(
-                           self.outputs['manual']['epi'][0]['times'], float(year))] for year in years_to_compare]
+                    self.outputs['manual']['epi'][0]['times'], float(year))] for year in available_years]
 
-            sum_of_squares = 0.
-            abs_diff = 0.
-            index_for_available_years = 0
+            # find distance result for run
+            sum_of_squares, abs_diff, index_for_available_years = 0., 0., 0
+            for year in range(len(available_years)):
+                sum_of_squares += weights[year] * (target_values[year] - outputs_for_comparison[year]) ** 2
+                abs_diff += outputs_for_comparison[year] - target_values[year]
+            return abs_diff if single_point_calibration else sum_of_squares
 
-            for y, year in enumerate(years_to_compare):
-                if year in working_output_dictionary.keys():
-                    if not single_point_calibration or year == available_years[-1]:
-                        model_result_for_output = outputs_for_comparison[y]
-                        data = target_values[year]
-                        sum_of_squares += weights[index_for_available_years] * (data-model_result_for_output)**2
-                        abs_diff += model_result_for_output - data
-                        index_for_available_years += 1
-
-            if single_point_calibration:
-                return abs_diff
-            else:
-                return sum_of_squares
-
-        if single_point_calibration:   # implement a dichotomy algorithm
-            param_low, param_high = 10., 20.   # starting points / hard-coded
+        # manually-coded dichotomy algorithm
+        if single_point_calibration:
+            param_low, param_high = 10., 20.   # starting points, hard-coded
             estimated_n_iter = 2. + (numpy.log(param_high - param_low) - numpy.log(2. * param_tol)) / numpy.log(2.)
-            self.add_comment_to_gui_window("Dichotomy method will converge in fewer than " +
-                                           str(int(round(estimated_n_iter))) + " iterations")
-            f_low = objective_function(param_low)
-            f_high = objective_function(param_high)
-            if f_low*f_high > 0:
+            self.add_comment_to_gui_window(
+                'Dichotomy method should converge in fewer than {} iterations'.format(round(estimated_n_iter)))
+            f_low, f_high = objective_function(param_low), objective_function(param_high)
+            if f_low * f_high > 0:
                 exit('the interval [param_low - param_high] does not contain the solution')
-
             while (param_high - param_low) / 2. > param_tol:
                 midpoint = (param_low + param_high) / 2.
                 obj = objective_function(midpoint)
-                print "param value: " + str(midpoint)
-                print "distance to target: " + str(obj)
+                self.add_comment_to_gui_window('param value: {}\ndistance to target: {}'.format(midpoint, obj))
                 if obj == 0:
                     return midpoint
-                elif obj*f_low < 0:
+                elif obj * f_low < 0:
                     param_high = midpoint
                 else:
                     param_low = midpoint
             best_param_value = midpoint
+
+        # imported optimisation function
         else:
-            x_0 = self.inputs.model_constants[params_to_calibrate]
-            optimisation_result = minimize(fun=objective_function, x0=x_0, method='Nelder-Mead', options={'xatol':param_tol})
+            optimisation_result \
+                = minimize(fun=objective_function, x0=self.inputs.model_constants[params_to_calibrate],
+                           method='Nelder-Mead', options={'xatol': param_tol})
             best_param_value = optimisation_result.x
 
-        print "The best value found for " + params_to_calibrate + " is " + str(best_param_value)
+        # report result
+        self.add_comment_to_gui_window(
+            'The best value found for {} is {}'.format(params_to_calibrate, best_param_value))
 
     ''' optimisation methods '''
 

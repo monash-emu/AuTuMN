@@ -122,10 +122,6 @@ import autumn.model_runner
 import autumn.outputs
 import autumn.gui_params as gui_params
 
-console_lines = []
-is_model_running = False
-uncertainty_graph_data = {}
-
 json_fname = os.path.join(os.path.dirname(__file__), 'country_defaults.json')
 if os.path.isfile(json_fname):
     with open(json_fname) as f:
@@ -134,40 +130,71 @@ else:
     country_defaults = {}
 
 
+null_attr = {
+    "console_lines": [],
+    "graph_data": [],
+    "is_running": False
+}
+
+
+def get_db_attr():
+    query = dbmodel.make_obj_query(obj_type="project")
+    result = query.all()
+    if result is not None:
+        obj = result[0]
+        attr = obj.attr
+        if attr is None:
+            attr = copy.deepcopy(null_attr)
+            dbmodel.save_object(obj.id, "project", None, null_attr)
+    else:
+        attr = copy.deepcopy(null_attr)
+        dbmodel.create_obj_id(attr=null_attr)
+    return attr
+
+
+def save_db_attr(attr):
+    query = dbmodel.make_obj_query(obj_type="project")
+    result = query.all()
+    if result is not None:
+        obj = result[0]
+        dbmodel.save_object(obj.id, "project", None, attr)
+
+
 def public_check_autumn_run():
-    global console_lines
-    global is_model_running
-    result = {
-        "console": console_lines,
-        "graph_data": uncertainty_graph_data,
-        "is_running": is_model_running
-    }
-    return result
+    return get_db_attr()
+
+
+save_db_attr(null_attr)
 
 
 def bgui_model_output(output_type, data={}):
     if output_type == "init":
-        pass
+        save_db_attr({
+            "console_lines": [],
+            "graph_data": [],
+            "is_running": True
+        })
     elif output_type == "console":
-        global console_lines
         new_lines = data["message"].splitlines()
-        console_lines.extend(new_lines)
         print("> handler.bgui_model_output console: " + '\n'.join(new_lines))
+        attr = get_db_attr()
+        attr['console_lines'].extend(new_lines)
+        save_db_attr(attr)
     elif output_type == "graph":
-        global uncertainty_graph_data
-        print("> handler.bgui_model_output graph")
-        uncertainty_graph_data = copy.deepcopy(data)
+        attr = get_db_attr()
+        attr['graph_data'] = copy.deepcopy(data)
+        save_db_attr(attr)
+    elif output_type == "finish":
+        attr = get_db_attr()
+        attr["is_running"] = False
+        print("bgui_model_output finish", attr)
+        save_db_attr(attr)
+        out_dir = data['out_dir']
+        with open(os.path.join(out_dir, 'console.log'), 'w') as f:
+            f.write('\n'.join(attr['console_lines']))
 
 
 def public_run_autumn(params):
-    global is_model_running
-    global console_lines
-    global uncertainty_graph_data
-
-    console_lines = []
-    uncertainty_graph_data = {}
-    is_model_running = True
-
     autumn_dir = os.path.join(os.path.dirname(autumn.__file__), os.pardir)
     os.chdir(autumn_dir)
 
@@ -185,8 +212,6 @@ def public_run_autumn(params):
 
     with open(os.path.join(out_dir, 'params.json'), 'w') as f:
         json.dump(params, f, indent=2)
-
-    saved_exception = None
 
     try:
 
@@ -219,10 +244,7 @@ def public_run_autumn(params):
             'filenames': []
         }
 
-    with open(os.path.join(out_dir, 'console.log'), 'w') as f:
-        f.write('\n'.join(console_lines))
-
-    is_model_running = False
+    bgui_model_output('finish', {'out_dir': out_dir})
 
     if result['success']:
         return result

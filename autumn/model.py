@@ -443,35 +443,41 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         than the smear-positive rate by a proportion specified in program_prop_snep_relative_algorithm.
         Places a ceiling on these values, to prevent the smear-positive one going too close to (or above) one.
         """
-        # computes relative rates of detection by organ, accounting for Xpert and culture coverage
-        rr_detect = {'_smearpos': 1.}
-        rr_detect['_extrapul'] = self.params['program_prop_snep_relative_algorithm']
-        rr_detect['_smearneg'] = 1. - (1. - self.params['program_prop_snep_relative_algorithm']) * \
-                                  (1. - self.params['int_prop_xpert_smearneg_sensitivity'] * self.vars[
-                                      'int_prop_xpert']) * \
-                                  (1. - self.vars['program_prop_culture_coverage'] * self.params[
-                                      'program_prop_smearneg_culturable'])
+
+        # first create dictionary for the relative rates of detection by organ, accounting for Xpert and culture
+        # the reduction in smear-negative detection rates is itself reduced according to the effective coverage of each
+        # of these two interventions
+        relative_detect_rate \
+            = {'_smearpos': 1.,
+               '_smearneg': 1. - (1. - self.params['program_prop_snep_relative_algorithm'])
+                * (1. - self.vars['int_prop_xpert'] * self.params['int_prop_xpert_smearneg_sensitivity'])
+                * (1. - self.vars['program_prop_culture_coverage'] * self.params['program_prop_smearneg_culturable']),
+               '_extrapul': self.params['program_prop_snep_relative_algorithm']}
 
         for parameter in ['_detect', '_algorithm_sensitivity']:
+
+            # if going into the future, use the last calculation for the baseline detection rate
             if self.time > self.inputs.model_constants['scenario_start_time']:
-                self.vars['program_prop' + parameter + '_smearpos'] = \
-                    self.params['saved_program_prop' + parameter + '_smearpos']
+                self.vars['program_prop' + parameter + '_smearpos'] \
+                    = self.params['saved_program_prop' + parameter + '_smearpos']
+
+            # calculate weighted increase in smear-positive detection proportion if we are considering the past
             else:
-                # weighted increase in smear-positive detection proportion
                 self.vars['program_prop' + parameter + '_smearpos'] \
                     = min(self.vars['program_prop' + parameter]
-                          / (self.vars['epi_prop_smearpos'] + self.vars['epi_prop_smearneg'] * rr_detect['_smearneg'] +
-                             self.vars['epi_prop_extrapul'] * rr_detect['_extrapul']),
+                          / (self.vars['epi_prop_smearpos']
+                             + self.vars['epi_prop_smearneg'] * relative_detect_rate['_smearneg']
+                             + self.vars['epi_prop_extrapul'] * relative_detect_rate['_extrapul']),
                           self.params['tb_prop_detection_algorithm_ceiling'])
 
             # save calculated detection vars for smear-positive cases in the params dictionary
-            self.params['saved_program_prop' + parameter + '_smearpos'] = self.vars[
-                'program_prop' + parameter + '_smearpos']
+            self.params['saved_program_prop' + parameter + '_smearpos'] \
+                = self.vars['program_prop' + parameter + '_smearpos']
 
             # then set smear-negative and extrapulmonary rates as proportionately lower
             for organ in self.organ_status:
-                self.vars['program_prop' + parameter + organ] = self.vars['program_prop' + parameter + '_smearpos'] *\
-                                                                rr_detect[organ]
+                self.vars['program_prop' + parameter + organ] \
+                    = self.vars['program_prop' + parameter + '_smearpos'] * relative_detect_rate[organ]
 
     def calculate_detect_missed_vars(self):
         """"

@@ -328,7 +328,8 @@ export default {
     async checkRun () {
       let res = await rpc.rpcRun('public_check_autumn_run')
       if (res.result) {
-        this.consoleLines = res.result.console
+        console.log('Model.checkRun', res.result)
+        this.consoleLines = res.result.console_lines
         if (this.$el.querySelector) {
           let container = this.$el.querySelector('#console-output')
           container.scrollTop = container.scrollHeight

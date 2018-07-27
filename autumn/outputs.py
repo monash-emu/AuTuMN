@@ -48,7 +48,7 @@ def initialise_figures_axes(n_panels, room_for_legend=False, requested_grid=None
     else:
         fig, axes = pyplot.subplots(n_rows, n_cols, sharey=share_yaxis)
         for panel in range(n_panels, n_rows * n_cols):
-            find_panel_grid_indices(axes, panel, n_rows, n_cols).axis('off')
+            find_panel_grid_indices(axes, panel, n_rows, n_cols).axis(False)
     return fig, axes, max([n_rows, n_cols]), n_rows, n_cols
 
 
@@ -538,7 +538,7 @@ class Project:
 
         # ticks and their labels
         if labels_off:
-            axis.tick_params(axis='x', labelbottom='off')
+            axis.tick_params(axis='x', labelbottom=False)
         elif len(axis.get_xticks()) > 7:
             for label in axis.xaxis.get_ticklabels()[::2]:
                 label.set_visible(False)
@@ -606,8 +606,7 @@ class Project:
         for file_format in self.figure_formats:
             filename = os.path.join(self.out_dir_project, self.country + end_filename + '.' + file_format)
             fig.savefig(filename, dpi=300)
-            fig.clf()
-            pyplot.close(fig)
+        pyplot.close(fig)
 
     def find_uncertainty_indices(self):
         """
@@ -643,32 +642,33 @@ class Project:
         for scenario in self.outputs[self.run_mode][output_type]:
             self.interpolated_uncertainty[scenario] = {}
             uncertainty_centiles[scenario] = {}
-            for output in self.outputs[self.run_mode][output_type][scenario]:
-                if output != 'times':
+            for output in [out for out in self.outputs[self.run_mode][output_type][scenario] if out != 'times']:
+                self.interpolated_uncertainty[scenario][output] = numpy.empty(shape=(0, self.n_interpolation_points))
+                if self.run_mode == 'int_uncertainty':
+                    run_range = self.inputs.n_samples
+                elif self.run_mode == 'epi_uncertainty' and scenario == 0:
+                    run_range = len(self.outputs['epi_uncertainty']['whether_accepted'])
+                elif self.run_mode == 'epi_uncertainty':
+                    run_range = len(self.outputs['epi_uncertainty']['accepted_indices'])
+                for run in range(run_range):
                     self.interpolated_uncertainty[scenario][output] \
-                        = numpy.empty(shape=(0, self.n_interpolation_points))
-                    run_range = range(len(self.outputs['epi_uncertainty']['whether_accepted'])) if \
-                        self.run_mode == 'epi_uncertainty' else range(self.inputs.n_samples)
-                    for run in run_range:
-                        self.interpolated_uncertainty[scenario][output] \
-                            = numpy.vstack(
-                            (self.interpolated_uncertainty[scenario][output],
-                             numpy.interp(self.interpolation_times_uncertainty,
-                                          self.outputs[self.run_mode][output_type][scenario]['times'][run, :],
-                                          self.outputs[self.run_mode][output_type][scenario][output][run, :])
-                             [None, :]))
+                        = numpy.vstack(
+                        (self.interpolated_uncertainty[scenario][output],
+                         numpy.interp(self.interpolation_times_uncertainty,
+                                      self.outputs[self.run_mode][output_type][scenario]['times'][run, :],
+                                      self.outputs[self.run_mode][output_type][scenario][output][run, :])[None, :]))
 
-                    # all runs for scenario analysis (as only accepted recorded) but select accepted ones for baseline
-                    matrix_to_analyse = self.interpolated_uncertainty[scenario][output] if scenario \
-                        else self.interpolated_uncertainty[scenario][output][self.accepted_no_burn_in_indices]
+                # all runs for scenario analysis (as only accepted recorded) but select accepted ones for baseline
+                matrix_to_analyse = self.interpolated_uncertainty[scenario][output] if scenario \
+                    else self.interpolated_uncertainty[scenario][output][self.accepted_no_burn_in_indices]
 
-                    # transform matrix_to_analyse to account for the weights of the accepted runs for epi_uncertainty
-                    if self.run_mode == 'epi_uncertainty':
-                        matrix_to_analyse = t_k.apply_weighting(matrix_to_analyse, self.accepted_run_weights)
+                # transform matrix_to_analyse to account for the weights of the accepted runs for epi_uncertainty
+                if self.run_mode == 'epi_uncertainty':
+                    matrix_to_analyse = t_k.apply_weighting(matrix_to_analyse, self.accepted_run_weights)
 
-                    # find centiles
-                    uncertainty_centiles[scenario][output] \
-                        = numpy.percentile(matrix_to_analyse, self.model_runner.percentiles, axis=0)
+                # find centiles
+                uncertainty_centiles[scenario][output] \
+                    = numpy.percentile(matrix_to_analyse, self.model_runner.percentiles, axis=0)
         return uncertainty_centiles
 
     def find_uncertainty_centiles(self, mode, output_type):
@@ -1354,8 +1354,8 @@ class Project:
         # prelims
         fig, ax, max_dim, n_rows, n_cols = initialise_figures_axes(1, room_for_legend=True)
         start_time = self.inputs.model_constants['plot_start_time']
-        start_time_index = self.find_start_time_index(start_time, scenario)
-        times = self.model_runner.outputs['manual']['epi'][scenario]['times'][start_time_index:]
+        start_time_index = self.find_start_time_index(start_time, scenario, purpose='manual')
+        times = self.outputs['manual']['epi'][0]['times'][start_time_index:]
 
         # get data
         cumulative_data = [0.] * len(times)
@@ -1404,8 +1404,8 @@ class Project:
         fig, ax, max_dim, n_rows, n_cols = initialise_figures_axes(1, room_for_legend=True)
         strata = getattr(self.inputs, category_to_loop)
         start_time = self.inputs.model_constants['plot_start_time']
-        start_time_index = self.find_start_time_index(start_time, scenario)
-        times = self.model_runner.models[0].times[start_time_index:]
+        start_time_index = self.find_start_time_index(start_time, scenario, purpose='manual')
+        times = self.outputs['manual']['epi'][0]['times'][start_time_index:]
         cumulative_data = [0.] * len(times)
 
         for s, stratum in enumerate(strata):

@@ -394,7 +394,6 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
 
         if self.is_vary_detection_by_organ:
             self.calculate_case_detection_by_organ()
-            self.adjust_smearneg_detection_for_xpert()
 
         if 'int_prop_decentralisation' in self.relevant_interventions:
             self.adjust_case_detection_for_decentralisation()
@@ -432,6 +431,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         country. Essentially this is passive case finding as persons with symptoms are encouraged to present, so the
         reported case detection rate for the country is assumed to incorporate this.
         """
+
         for organ in self.organs_for_detection:
             self.vars['program_prop_detect' + organ] \
                 *= 1. - self.params['int_prop_detection_dots_contributor'] \
@@ -444,34 +444,40 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         Places a ceiling on these values, to prevent the smear-positive one going too close to (or above) one.
         """
 
+        # first create dictionary for the relative rates of detection by organ, accounting for Xpert and culture
+        # the reduction in smear-negative detection rates is itself reduced according to the effective coverage of each
+        # of these two interventions
+        relative_detect_rate \
+            = {'_smearpos': 1.,
+               '_smearneg': 1. - (1. - self.params['program_prop_snep_relative_algorithm'])
+                * (1. - self.vars['int_prop_xpert'] * self.params['int_prop_xpert_smearneg_sensitivity'])
+                * (1. - self.vars['program_prop_culture_coverage'] * self.params['program_prop_smearneg_culturable']),
+               '_extrapul': self.params['program_prop_snep_relative_algorithm']}
+
         for parameter in ['_detect', '_algorithm_sensitivity']:
 
-            # weighted increase in smear-positive detection proportion
-            self.vars['program_prop' + parameter + '_smearpos'] \
-                = min(self.vars['program_prop' + parameter]
-                      / (self.vars['epi_prop_smearpos']
-                         + self.params['program_prop_snep_relative_algorithm'] * (1. - self.vars['epi_prop_smearpos'])),
-                      self.params['tb_prop_detection_algorithm_ceiling'])
+            # if going into the future, use the last calculation for the baseline detection rate
+            if self.time > self.inputs.model_constants['scenario_start_time']:
+                self.vars['program_prop' + parameter + '_smearpos'] \
+                    = self.params['saved_program_prop' + parameter + '_smearpos']
+
+            # calculate weighted increase in smear-positive detection proportion if we are considering the past
+            else:
+                self.vars['program_prop' + parameter + '_smearpos'] \
+                    = min(self.vars['program_prop' + parameter]
+                          / (self.vars['epi_prop_smearpos']
+                             + self.vars['epi_prop_smearneg'] * relative_detect_rate['_smearneg']
+                             + self.vars['epi_prop_extrapul'] * relative_detect_rate['_extrapul']),
+                          self.params['tb_prop_detection_algorithm_ceiling'])
+
+            # save calculated detection vars for smear-positive cases in the params dictionary
+            self.params['saved_program_prop' + parameter + '_smearpos'] \
+                = self.vars['program_prop' + parameter + '_smearpos']
 
             # then set smear-negative and extrapulmonary rates as proportionately lower
-            for organ in ['_smearneg', '_extrapul']:
-                if organ in self.organ_status:
-                    self.vars['program_prop' + parameter + organ] \
-                        = self.vars['program_prop' + parameter + '_smearpos'] \
-                        * self.params['program_prop_snep_relative_algorithm']
-
-    def adjust_smearneg_detection_for_xpert(self):
-        """
-        Adjust case case detection and algorithm sensitivity for Xpert (will only work with weighting and so is grouped
-        with the previous method in calculate_vars).
-        """
-
-        if 'int_prop_xpert' in self.relevant_interventions:
-            for parameter in ['_detect', '_algorithm_sensitivity']:
-                self.vars['program_prop' + parameter + '_smearneg'] \
-                    += (self.vars['program_prop' + parameter + '_smearpos'] -
-                        self.vars['program_prop' + parameter + '_smearneg']) \
-                    * self.params['int_prop_xpert_smearneg_sensitivity'] * self.vars['int_prop_xpert']
+            for organ in self.organ_status:
+                self.vars['program_prop' + parameter + organ] \
+                    = self.vars['program_prop' + parameter + '_smearpos'] * relative_detect_rate[organ]
 
     def calculate_detect_missed_vars(self):
         """"
@@ -483,7 +489,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
           algorithm sensitivity = detection rate / (detection rate + missed rate)
               - and -
           detection proportion = detection rate
-                / (detection rate + spont recover rate + tb death rate + natural death rate)
+                / (detection rate + spontaneously recover rate + tb death rate + natural death rate)
         """
 
         organs = copy.copy(self.organs_for_detection)

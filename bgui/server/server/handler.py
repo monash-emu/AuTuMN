@@ -24,6 +24,8 @@ from flask_login import current_app, current_user, login_user, logout_user
 
 from . import dbmodel
 
+from multiprocessing import Process
+
 
 # User handlers
 
@@ -133,7 +135,8 @@ else:
 null_attr = {
     "console_lines": [],
     "graph_data": [],
-    "is_running": False
+    "is_running": False,
+    "project": ''
 }
 
 
@@ -154,30 +157,34 @@ def get_db_attr():
 
 def save_db_attr(attr):
     query = dbmodel.make_obj_query(obj_type="project")
-    result = query.all()
-    if result is not None:
-        obj = result[0]
-        dbmodel.save_object(obj.id, "project", None, attr)
+    for i, obj in enumerate(query.all()):
+        if i == 0:
+            dbmodel.save_object(obj.id, "project", None, attr)
+        else:
+            dbmodel.delete_obj(obj.id)
+
+save_db_attr(null_attr)
 
 
 def public_check_autumn_run():
     return get_db_attr()
 
 
-save_db_attr(null_attr)
-
-
 def bgui_model_output(output_type, data={}):
-    if output_type == "init":
+    if output_type == "setup":
         save_db_attr({
             "console_lines": [],
             "graph_data": [],
-            "is_running": True
+            "is_running": True,
+            "project": data['project']
         })
+    elif output_type == "init":
+        pass
     elif output_type == "console":
         new_lines = data["message"].splitlines()
-        print("> handler.bgui_model_output console: " + '\n'.join(new_lines))
         attr = get_db_attr()
+        for line in new_lines:
+            print("> handler.bgui_model_output console: " + line)
         attr['console_lines'].extend(new_lines)
         save_db_attr(attr)
     elif output_type == "graph":
@@ -187,11 +194,40 @@ def bgui_model_output(output_type, data={}):
     elif output_type == "finish":
         attr = get_db_attr()
         attr["is_running"] = False
-        print("bgui_model_output finish", attr)
-        save_db_attr(attr)
+        attr["is_completed"] = True
         out_dir = data['out_dir']
         with open(os.path.join(out_dir, 'console.log'), 'w') as f:
             f.write('\n'.join(attr['console_lines']))
+        attr.update(public_get_project_images(attr['project']))
+        save_db_attr(attr)
+    elif output_type == "fail":
+        attr = get_db_attr()
+        attr["is_running"] = False
+        attr["is_completed"] = False
+        out_dir = data['out_dir']
+        with open(os.path.join(out_dir, 'console.log'), 'w') as f:
+            f.write('\n'.join(attr['console_lines']))
+        attr.update(public_get_project_images(attr['project']))
+        save_db_attr(attr)
+
+
+def run_model(project_name, out_dir, model_inputs):
+    bgui_model_output('setup', {'project': project_name})
+    try:
+        model_runner = autumn.model_runner.TbRunner(
+            model_inputs, bgui_model_output)
+        model_runner.master_runner()
+        project = autumn.outputs.Project(
+            model_runner, model_inputs, out_dir_project=out_dir)
+        project.master_outputs_runner()
+        bgui_model_output('finish', {'out_dir': out_dir})
+    except Exception as e:
+        message = '-------\n'
+        message += str(traceback.format_exc())
+        message += '-------\n'
+        message += 'Error: model crashed'
+        bgui_model_output('console', {'message': message})
+        bgui_model_output('fail')
 
 
 def public_run_autumn(params):
@@ -203,53 +239,21 @@ def public_run_autumn(params):
 
     country = model_inputs['country'].lower()
     save_dir = current_app.config['SAVE_FOLDER']
-    out_dir = os.path.join(save_dir, 'test_' + country)
 
+    project_name = 'test_' + country
+
+    out_dir = os.path.join(save_dir, project_name)
     if os.path.isdir(out_dir):
         shutil.rmtree(out_dir)
-
     os.makedirs(out_dir)
 
     with open(os.path.join(out_dir, 'params.json'), 'w') as f:
         json.dump(params, f, indent=2)
 
-    try:
+    p = Process(target=run_model, args=(project_name, out_dir, model_inputs,))
+    p.start()
 
-        model_runner = autumn.model_runner.TbRunner(
-            model_inputs, bgui_model_output)
-        model_runner.master_runner()
-
-        project = autumn.outputs.Project(
-            model_runner, model_inputs, out_dir_project=out_dir)
-        project.master_outputs_runner()
-
-        filenames = glob.glob(os.path.join(out_dir, '*png'))
-        filenames = [os.path.relpath(p, save_dir) for p in filenames]
-
-        result = {
-            'project': os.path.relpath(out_dir, save_dir),
-            'success': True,
-            'filenames': filenames,
-        }
-
-    except Exception as e:
-        message = '-------\n'
-        message += str(traceback.format_exc())
-        message += '-------\n'
-        message += 'Error: model crashed'
-        bgui_model_output('console', {'message': message})
-        result = {
-            'project': os.path.relpath(out_dir, save_dir),
-            'success': False,
-            'filenames': []
-        }
-
-    bgui_model_output('finish', {'out_dir': out_dir})
-
-    if result['success']:
-        return result
-    else:
-        raise Exception('Model crashed')
+    return { 'success': True }
 
 
 def public_get_autumn_params():

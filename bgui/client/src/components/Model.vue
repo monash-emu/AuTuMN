@@ -342,6 +342,13 @@ export default {
       if (res.result.is_running) {
         this.isRunning = true
         setTimeout(this.checkRun, 2000)
+      } else if (res.result.is_completed) {
+        this.project = res.result.project
+        if (!_.includes(this.projects, this.project)) {
+          this.projects.push(this.project)
+        }
+        this.changeProject(res.result.project)
+        this.isRunning = false
       } else {
         this.isRunning = false
       }
@@ -430,15 +437,6 @@ export default {
       if (!res.result || !res.result.success) {
         this.consoleLines.push('Error: model crashed')
         this.isRunning = false
-      } else {
-        this.project = res.result.project
-        if (!_.includes(this.projects, this.project)) {
-          this.projects.push(this.project)
-        }
-        this.filenames = _.map(
-          res.result.filenames,
-          f => `${config.apiUrl}/file/${f}`)
-        console.log('>> Model.run filenames', this.filenames)
       }
     },
     async changeProject (project) {

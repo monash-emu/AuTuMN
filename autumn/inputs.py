@@ -3,6 +3,7 @@
 import copy
 import numpy
 import itertools
+import scipy.integrate
 
 # AuTuMN imports
 import spreadsheet
@@ -26,6 +27,32 @@ def make_constant_function(value):
     def constant(_):
         return value
     return constant
+
+
+def make_exponential_function(rate):
+    """
+    Just an example of a function that could be used to parameterise an age-stratified parameter by age group.
+
+    Args:
+        rate: The rate of exponential decay of the parameter with age
+    """
+
+    def exponential_function(x):
+        return numpy.exp(-rate * x)
+    return exponential_function
+
+
+def find_age_function(function_name):
+    """
+    Function to map parameter strings to functions, for parameters that are to be age-stratified using the functional
+    approach.
+
+    Args:
+        function_name: String for the parameter which will use a function to define its age-specific values
+    """
+
+    if function_name == 'tb_multiplier_child_infectiousness':
+        return make_exponential_function(1e-4)
 
 
 def find_latest_value_from_year_dict(dictionary, ceiling):
@@ -118,8 +145,9 @@ class Inputs:
                'int_perc_dots_contributor': ['int_prop_detection_dots_contributor'],
                'int_perc_dots_groupcontributor': ['int_prop_detection_dots_contributor',
                                                   'int_prop_detection_ngo_ruralpoor']}
-        self.params_to_age_adjust \
+        self.params_to_age_weight \
             = ['tb_prop_early_progression', 'tb_rate_late_progression', 'tb_multiplier_child_infectiousness']
+        self.params_to_age_integrate = []
 
         self.int_uncertainty_start_year = {'int_perc_dots_contributor': 2000, 'int_perc_dots_groupcontributor': 2000}
 
@@ -617,7 +645,8 @@ class Inputs:
         Find weighted age-specific parameters using age weighting code from tool_kit.
         """
 
-        for param_name in self.params_to_age_adjust:
+        # weighting approach
+        for param_name in self.params_to_age_weight:
             param_values, param_breaks_dict = {}, {}
 
             # loop over relevant parameters by age group
@@ -635,6 +664,15 @@ class Inputs:
             # set age-adjusted parameters
             for agegroup in self.agegroups:
                 self.model_constants[param_name + agegroup] = age_adjusted_values[agegroup]
+
+        # numerical integration approach
+        for param_name in self.params_to_age_integrate:
+            for agegroup in self.agegroups:
+                function_limits = tool_kit.interrogate_age_string(agegroup)[0]
+                self.model_constants[param_name + agegroup] \
+                    = scipy.integrate.quad(lambda a: find_age_function(param_name)(a),
+                                           function_limits[0], function_limits[1])[0] \
+                    / (function_limits[1] - function_limits[0])
 
     def find_riskgroup_progressions(self):
         """
@@ -1405,3 +1443,9 @@ class Inputs:
             if time_param[-5:] == '_time' and '_step_time' not in time_param:
                 assert self.model_constants[time_param] >= self.model_constants['start_time'], \
                     '% is before model start time' % self.model_constants[time_param]
+
+
+#
+# something = make_exponential_function(1e-5)
+# result = scipy.integrate.quad(lambda age: something(age), 0., 10.)[0]
+# print(result)

@@ -613,11 +613,10 @@ class Inputs:
 
             # extract age-stratified parameters in the appropriate form
             param_vals, age_breaks, stem = {}, {}, None
-            for param in self.model_constants:
-                if param_type in param:
-                    age_string, stem = tool_kit.find_string_from_starting_letters(param, '_age')
-                    age_breaks[age_string] = tool_kit.interrogate_age_string(age_string)[0]
-                    param_vals[age_string] = self.model_constants[param]
+            for param in [p for p in self.model_constants if param_type in p]:
+                age_string, stem = tool_kit.find_string_from_starting_letters(param, '_age')
+                age_breaks[age_string] = tool_kit.interrogate_age_string(age_string)[0]
+                param_vals[age_string] = self.model_constants[param]
             param_breakpoints = tool_kit.find_age_breakpoints_from_dicts(age_breaks)
 
             # find and set age-adjusted parameters

@@ -16,7 +16,8 @@ pluggable API to other system. Applied to tuberculosis.
 
 ## major outstanding tasks
 - Bulgaria paper
-- low quality health sector
-- optimisation
+- Bhutan inputs
 - age-specific parameterisation
-- HIV - possibly
+- mapping to DALYs, QALYs
+- optimisation
+

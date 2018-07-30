@@ -118,6 +118,8 @@ class Inputs:
                'int_perc_dots_contributor': ['int_prop_detection_dots_contributor'],
                'int_perc_dots_groupcontributor': ['int_prop_detection_dots_contributor',
                                                   'int_prop_detection_ngo_ruralpoor']}
+        self.params_to_age_adjust \
+            = ['tb_prop_early_progression', 'tb_rate_late_progression', 'tb_multiplier_child_infectiousness']
 
     ''' master method '''
 
@@ -608,24 +610,26 @@ class Inputs:
         Find weighted age-specific parameters using age weighting code from tool_kit.
         """
 
-        model_breakpoints = [float(i) for i in self.model_constants['age_breakpoints']]  # convert list of ints to float
-        for param_type in ['early_progression_age', 'late_progression_age', 'tb_multiplier_child_infectiousness_age']:
+        float_breakpoints = [float(i) for i in self.model_constants['age_breakpoints']]
+        for param_name in self.params_to_age_adjust:
 
             # extract age-stratified parameters in the appropriate form
-            param_vals, age_breaks, stem = {}, {}, None
-            for param in [p for p in self.model_constants if param_type in p]:
-                age_string, stem = tool_kit.find_string_from_starting_letters(param, '_age')
-                age_breaks[age_string] = tool_kit.interrogate_age_string(age_string)[0]
+            param_vals, age_break_dict = {}, {}
+            for param in [p for p in self.model_constants if param_name + '_age' in p]:
+                age_string, _ = tool_kit.find_string_from_starting_letters(param, '_age')
+                age_break_dict[age_string] = tool_kit.interrogate_age_string(age_string)[0]
                 param_vals[age_string] = self.model_constants[param]
-            param_breakpoints = tool_kit.find_age_breakpoints_from_dicts(age_breaks)
+            age_break_list = tool_kit.find_age_breakpoints_from_dicts(age_break_dict)
 
-            # find and set age-adjusted parameters
+            # find age-adjusted parameters
             age_adjusted_values = \
-                tool_kit.adapt_params_to_stratification(param_breakpoints, model_breakpoints, param_vals,
-                                                        parameter_name=param_type,
+                tool_kit.adapt_params_to_stratification(age_break_list, float_breakpoints, param_vals,
+                                                        parameter_name=param_name,
                                                         gui_console_fn=self.gui_console_fn)
+
+            # set age-adjusted parameters
             for agegroup in self.agegroups:
-                self.model_constants[stem + agegroup] = age_adjusted_values[agegroup]
+                self.model_constants[param_name + agegroup] = age_adjusted_values[agegroup]
 
     def find_riskgroup_progressions(self):
         """

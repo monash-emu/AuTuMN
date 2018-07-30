@@ -12,7 +12,6 @@ import economics
 import copy
 from scipy import stats
 import itertools
-import shutil
 
 # AuTuMN import
 import tool_kit as t_k
@@ -1141,6 +1140,8 @@ class Project:
         # plot likelihood estimates
         if self.run_mode == 'epi_uncertainty' and self.gui_inputs['output_likelihood_plot']:
             self.plot_likelihoods()
+
+        pyplot.close('all')
 
     ''' epi outputs plotting '''
 

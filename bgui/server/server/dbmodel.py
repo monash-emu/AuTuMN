@@ -283,9 +283,9 @@ def load_obj_attr_list(user_id=None, obj_type="project", db_session=None):
     return [record.attr for record in records]
 
 
-def create_obj_id(db_session=None, **kwargs):
+def create_obj_id(db_session=None, obj_type="project", **kwargs):
     db_session = verify_db_session(db_session)
-    record = ObjectDb(**kwargs)
+    record = ObjectDb(obj_type=obj_type, **kwargs)
     db_session.add(record)
     db_session.commit()
     return record.id
@@ -297,7 +297,7 @@ def save_object(id, obj_type, obj_str, obj_attr, db_session=None):
     record.blob = obj_str
     obj_attr = copy.deepcopy(obj_attr)
     obj_attr['userId'] = str(record.user_id)
-    obj_attr['modifiedTime'] = repr(arrow.now.format())
+    obj_attr['modifiedTime'] = repr(arrow.now().format())
     record.attr = obj_attr
     db_session.add(record)
     db_session.commit()

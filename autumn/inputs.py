@@ -100,8 +100,8 @@ class Inputs:
             = [None for _ in range(6)]
         (self.param_ranges_unc, self.int_ranges_unc, self.outputs_unc, self.riskgroups, self.treatment_outcome_types,
          self.irrelevant_time_variants, self.organ_status, self.scenarios, self.histories,
-         self.inappropriate_regimens) \
-            = [[] for _ in range(10)]
+         self.inappropriate_regimens, self.uncertainty_interventions_list) \
+            = [[] for _ in range(11)]
         (self.original_data, self.derived_data, self.time_variants, self.model_constants, self.scaleup_data,
          self.scaleup_fns, self.intervention_param_dict, self.comorbidity_prevalences,
          self.alternative_distribution_dict, self.data_to_fit, self.mixing, self.relevant_interventions,
@@ -148,6 +148,8 @@ class Inputs:
         self.params_to_age_weight \
             = ['tb_prop_early_progression', 'tb_rate_late_progression', 'tb_multiplier_child_infectiousness']
         self.params_to_age_integrate = []
+
+        self.int_uncertainty_start_year = {'int_perc_dots_contributor': 2000, 'int_perc_dots_groupcontributor': 2000}
 
     ''' master method '''
 
@@ -232,6 +234,11 @@ class Inputs:
         elif self.run_mode == 'int_uncertainty':
             self.scenarios.append(15)
             self.gui_inputs['output_by_scenario'] = True
+            self.uncertainty_interventions_list.append(self.uncertainty_intervention)
+
+            # Patch for Bulgaria. We may want to modify the gui at some point to handle multi-intervention uncertainty.
+            if self.country == 'Bulgaria' and self.uncertainty_intervention == 'int_perc_dots_groupcontributor':
+                self.uncertainty_interventions_list.append('int_perc_dots_contributor')
 
         # increment comorbidity
         elif self.run_mode == 'increment_comorbidity':

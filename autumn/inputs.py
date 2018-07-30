@@ -211,7 +211,6 @@ class Inputs:
             # Patch for Bulgaria. We may want to modify the gui at some point to handle multi-intervention uncertainty.
             if self.country == 'Bulgaria' and self.uncertainty_intervention == 'int_perc_dots_groupcontributor':
                 self.uncertainty_interventions_list.append('int_perc_dots_contributor')
-            print self.uncertainty_interventions_list
 
         # increment comorbidity
         elif self.run_mode == 'increment_comorbidity':

@@ -143,7 +143,7 @@ null_attr = {
 def get_db_attr():
     query = dbmodel.make_obj_query(obj_type="project")
     result = query.all()
-    if result is not None:
+    if len(result) > 0:
         obj = result[0]
         attr = obj.attr
         if attr is None:

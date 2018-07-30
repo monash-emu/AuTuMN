@@ -327,6 +327,7 @@ export default {
   methods: {
     async checkRun () {
       let res = await rpc.rpcRun('public_check_autumn_run')
+
       if (res.result) {
         console.log('Model.checkRun', res.result)
         this.consoleLines = res.result.console_lines
@@ -339,6 +340,7 @@ export default {
           this.updateGraph(res.result.graph_data)
         }
       }
+
       if (res.result.is_running) {
         this.isRunning = true
         setTimeout(this.checkRun, 2000)

@@ -51,9 +51,22 @@ def make_two_step_function(breakpoints, values):
         values: List of the values that the function should take
     """
 
-    def piecewise(x):
+    def two_step_function(x):
         return numpy.piecewise(x, [breakpoints[0] <= x < breakpoints[1], breakpoints[1] <= x], values)
-    return piecewise
+    return two_step_function
+
+
+def make_slope_step_function(first_coordinate, second_coordinate):
+    """
+    Make the slope step function that is implemented in Romain's agent-based model approach.
+    """
+
+    slope = (first_coordinate[1] - second_coordinate[1]) / (first_coordinate[0] - second_coordinate[0])
+    constant = second_coordinate[1] - second_coordinate[0] * slope
+
+    def slope_step_function(x):
+        return numpy.piecewise(x, [0. <= x < 10., 10. <= x < 15., 15. <= x], [0., lambda a: slope * a + constant, 1.])
+    return slope_step_function
 
 
 def find_age_function(function_name):
@@ -66,6 +79,7 @@ def find_age_function(function_name):
     """
 
     if function_name == 'tb_multiplier_child_infectiousness':
+        # return make_slope_step_function([10., 0.], [15., 1.])
         return make_two_step_function([0., 10.], [0.1, 1.])
 
 
@@ -1460,10 +1474,3 @@ class Inputs:
             if time_param[-5:] == '_time' and '_step_time' not in time_param:
                 assert self.model_constants[time_param] >= self.model_constants['start_time'], \
                     '% is before model start time' % self.model_constants[time_param]
-
-
-#
-# something = make_exponential_function(1e-5)
-# result = scipy.integrate.quad(lambda age: something(age), 0., 10.)[0]
-# print(result)
-

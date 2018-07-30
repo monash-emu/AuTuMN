@@ -1097,7 +1097,9 @@ class Project:
             if self.inputs.n_strains > 1:
                 mdr_indicators = [ind + '_mdr' for ind in self.gtb_available_outputs if ind != 'notifications']
                 mdr_indicators.append('perc_incidence_mdr')
-                self.plot_epi_outputs(mdr_indicators, 'scenario', 'mdr-tb-related')
+                for purpose in purposes:
+                    self.plot_epi_outputs(mdr_indicators, purpose, 'mdr-tb-related')
+
         if self.gui_inputs['output_by_subgroups']:
             for strata_type in ['agegroups', 'riskgroups']:
                 outputs_to_plot, list_of_strata = ['incidence', 'mortality'], getattr(self.inputs, strata_type)

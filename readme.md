@@ -16,7 +16,11 @@ pluggable API to other system. Applied to tuberculosis.
 
 ## major outstanding tasks
 - Bulgaria paper
-- low quality health sector
-- optimisation
+- Bhutan inputs
 - age-specific parameterisation
-- HIV - possibly
+- mapping to DALYs, QALYs
+- optimisation
+
+## minor tasks
+- simplify code for automatic detection of int_uncertainty start_time. Should use common method with optimisation start_dates
+

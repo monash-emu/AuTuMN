@@ -1152,8 +1152,8 @@ def adapt_params_to_stratification(data_breakpoints, model_breakpoints, data_par
     Args:
         data_breakpoints: Tuple defining the breakpoints used in data.
         model_breakpoints: Tuple defining the breakpoints used in the model.
-        data_param_vals: Dictionary containing the parameter values associated with each category defined by data_breakpoints
-                         format example: {'_age0to5': 0.0, '_age5to15': 0.5, '_age15up': 1.0}
+        data_param_vals: Dictionary containing the parameter values associated with each category defined by
+            data_breakpoints format example: {'_age0to5': 0.0, '_age5to15': 0.5, '_age15up': 1.0}
         assumed_max_params: The assumed maximal value for the parameter (example, age: 100 yo).
     Returns:
         Dictionary containing the parameter values associated with each category defined by model_breakpoints
@@ -1198,12 +1198,11 @@ def adapt_params_to_stratification(data_breakpoints, model_breakpoints, data_par
     model_value_list = []
     for i in model_strat_list:
         model_value_list += [model_param_vals[i]]
-    return(model_param_vals)
+    return model_param_vals
 
 
-######################################
-### Output interrogation functions ###
-######################################
+''' Output interrogation functions '''
+
 
 def sum_over_compartments(model, compartment_types):
     """

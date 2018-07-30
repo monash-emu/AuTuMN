@@ -73,8 +73,8 @@ class Inputs:
             = [None for _ in range(6)]
         (self.param_ranges_unc, self.int_ranges_unc, self.outputs_unc, self.riskgroups, self.treatment_outcome_types,
          self.irrelevant_time_variants, self.organ_status, self.scenarios, self.histories,
-         self.inappropriate_regimens) \
-            = [[] for _ in range(10)]
+         self.inappropriate_regimens, self.uncertainty_interventions_list) \
+            = [[] for _ in range(11)]
         (self.original_data, self.derived_data, self.time_variants, self.model_constants, self.scaleup_data,
          self.scaleup_fns, self.intervention_param_dict, self.comorbidity_prevalences,
          self.alternative_distribution_dict, self.data_to_fit, self.mixing, self.relevant_interventions,
@@ -118,6 +118,10 @@ class Inputs:
                'int_perc_dots_contributor': ['int_prop_detection_dots_contributor'],
                'int_perc_dots_groupcontributor': ['int_prop_detection_dots_contributor',
                                                   'int_prop_detection_ngo_ruralpoor']}
+        self.params_to_age_adjust \
+            = ['tb_prop_early_progression', 'tb_rate_late_progression', 'tb_multiplier_child_infectiousness']
+
+        self.int_uncertainty_start_year = {'int_perc_dots_contributor': 2000, 'int_perc_dots_groupcontributor': 2000}
 
     ''' master method '''
 
@@ -202,6 +206,11 @@ class Inputs:
         elif self.run_mode == 'int_uncertainty':
             self.scenarios.append(15)
             self.gui_inputs['output_by_scenario'] = True
+            self.uncertainty_interventions_list.append(self.uncertainty_intervention)
+
+            # Patch for Bulgaria. We may want to modify the gui at some point to handle multi-intervention uncertainty.
+            if self.country == 'Bulgaria' and self.uncertainty_intervention == 'int_perc_dots_groupcontributor':
+                self.uncertainty_interventions_list.append('int_perc_dots_contributor')
 
         # increment comorbidity
         elif self.run_mode == 'increment_comorbidity':
@@ -227,7 +236,7 @@ class Inputs:
         Define the model's age structure based on the breakpoints provided in spreadsheets.
         """
 
-        self.model_constants['age_breakpoints'] = self.gui_inputs['age_breakpoints']
+        self.model_constants['age_breakpoints'] = [float(a) for a in self.gui_inputs['age_breakpoints']]
         self.add_comment_to_gui_window('GUI breakpoints ' + str(self.gui_inputs['age_breakpoints']) + '.\n')
         self.agegroups = tool_kit.get_agegroups_from_breakpoints(self.gui_inputs['age_breakpoints'])[0]
 
@@ -608,25 +617,24 @@ class Inputs:
         Find weighted age-specific parameters using age weighting code from tool_kit.
         """
 
-        model_breakpoints = [float(i) for i in self.model_constants['age_breakpoints']]  # convert list of ints to float
-        for param_type in ['early_progression_age', 'late_progression_age', 'tb_multiplier_child_infectiousness_age']:
+        for param_name in self.params_to_age_adjust:
+            param_values, param_breaks_dict = {}, {}
 
-            # extract age-stratified parameters in the appropriate form
-            param_vals, age_breaks, stem = {}, {}, None
-            for param in self.model_constants:
-                if param_type in param:
-                    age_string, stem = tool_kit.find_string_from_starting_letters(param, '_age')
-                    age_breaks[age_string] = tool_kit.interrogate_age_string(age_string)[0]
-                    param_vals[age_string] = self.model_constants[param]
-            param_breakpoints = tool_kit.find_age_breakpoints_from_dicts(age_breaks)
+            # loop over relevant parameters by age group
+            for param in [p for p in self.model_constants if param_name + '_age' in p]:
+                param_age_string, _ = tool_kit.find_string_from_starting_letters(param, '_age')
+                param_breaks_dict[param_age_string] = tool_kit.interrogate_age_string(param_age_string)[0]
+                param_values[param_age_string] = self.model_constants[param]
+            param_breaks_list = tool_kit.find_age_breakpoints_from_dicts(param_breaks_dict)
 
-            # find and set age-adjusted parameters
-            age_adjusted_values = \
-                tool_kit.adapt_params_to_stratification(param_breakpoints, model_breakpoints, param_vals,
-                                                        parameter_name=param_type,
-                                                        gui_console_fn=self.gui_console_fn)
+            # find age-adjusted parameters
+            age_adjusted_values = tool_kit.adapt_params_to_stratification(
+                param_breaks_list, self.model_constants['age_breakpoints'], param_values, parameter_name=param_name,
+                gui_console_fn=self.gui_console_fn)
+
+            # set age-adjusted parameters
             for agegroup in self.agegroups:
-                self.model_constants[stem + agegroup] = age_adjusted_values[agegroup]
+                self.model_constants[param_name + agegroup] = age_adjusted_values[agegroup]
 
     def find_riskgroup_progressions(self):
         """
@@ -1027,7 +1035,7 @@ class Inputs:
             # add zero at starting time for model run to all program proportions
             if ('program_prop' in time_variant or 'int_prop' in time_variant) and '_death' not in time_variant \
                     and '_dots_contributor' not in time_variant \
-                    and '_dot_groupcontributor' not in time_variant:
+                    and '_dots_groupcontributor' not in time_variant:
                 self.time_variants[time_variant][int(self.model_constants['early_time'])] = 0.
 
             # remove the load_data keys, as they have been used and are now redundant

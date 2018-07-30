@@ -299,20 +299,23 @@ class ModelRunner:
         # for int_uncertainty, we need to detect when the program started as past estimates may also be affected
         if self.inputs.run_mode == 'int_uncertainty':
             for program in self.inputs.uncertainty_interventions_list:
-                program_name = program.replace("perc", "prop")
-                coverages = self.inputs.scaleup_data[15][program_name]  # dictionary
-                # if all coverage values are 0, we don't need to change the scenario start date. Otherwise we do.
-                if len(coverages) > 0:
-                    if max(coverages.values()) > 0.:
-                        # We need to find the latest time associated with a 0 coverage, preceding the first non-zero coverage
-                        coverages_as_list = [(year, cov) for year, cov in coverages.iteritems()]
-                        coverages_as_list.sort()   # now a list of tuples sorted by year
-                        nonzero_indices = [ind for ind in range(len(coverages_as_list)) if coverages_as_list[ind][1] > 0.]
-                        if nonzero_indices[0] == 0:  # coverage has always been positive
-                            last_year_null_coverage = coverages_as_list[0][0]
-                        else:
-                            last_year_null_coverage = coverages_as_list[nonzero_indices[0] - 1][0]
-                        new_run_start_time = min(new_run_start_time, last_year_null_coverage)
+                if program in self.inputs.int_uncertainty_start_year.keys():
+                    new_run_start_time = min(new_run_start_time, self.inputs.int_uncertainty_start_year[program])
+                else:
+                    program_name = program.replace("perc", "prop")
+                    coverages = self.inputs.scaleup_data[15][program_name]  # dictionary
+                    # if all coverage values are 0, we don't need to change the scenario start date. Otherwise we do.
+                    if len(coverages) > 0:
+                        if max(coverages.values()) > 0.:
+                            # We need to find the latest time associated with a 0 coverage, preceding the first non-zero coverage
+                            coverages_as_list = [(year, cov) for year, cov in coverages.iteritems()]
+                            coverages_as_list.sort()   # now a list of tuples sorted by year
+                            nonzero_indices = [ind for ind in range(len(coverages_as_list)) if coverages_as_list[ind][1] > 0.]
+                            if nonzero_indices[0] == 0:  # coverage has always been positive
+                                last_year_null_coverage = coverages_as_list[0][0]
+                            else:
+                                last_year_null_coverage = coverages_as_list[nonzero_indices[0] - 1][0]
+                            new_run_start_time = min(new_run_start_time, last_year_null_coverage)
 
         start_time_index = self.models[0].find_time_index(new_run_start_time)
         self.models[scenario].start_time, self.models[scenario].next_time_point \

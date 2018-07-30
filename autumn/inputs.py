@@ -121,6 +121,8 @@ class Inputs:
         self.params_to_age_adjust \
             = ['tb_prop_early_progression', 'tb_rate_late_progression', 'tb_multiplier_child_infectiousness']
 
+        self.int_uncertainty_start_year = {'int_perc_dots_contributor': 2000, 'int_perc_dots_groupcontributor': 2000}
+
     ''' master method '''
 
     def process_inputs(self):

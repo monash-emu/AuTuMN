@@ -229,7 +229,7 @@ class Inputs:
         Define the model's age structure based on the breakpoints provided in spreadsheets.
         """
 
-        self.model_constants['age_breakpoints'] = self.gui_inputs['age_breakpoints']
+        self.model_constants['age_breakpoints'] = [float(a) for a in self.gui_inputs['age_breakpoints']]
         self.add_comment_to_gui_window('GUI breakpoints ' + str(self.gui_inputs['age_breakpoints']) + '.\n')
         self.agegroups = tool_kit.get_agegroups_from_breakpoints(self.gui_inputs['age_breakpoints'])[0]
 
@@ -610,22 +610,20 @@ class Inputs:
         Find weighted age-specific parameters using age weighting code from tool_kit.
         """
 
-        float_breakpoints = [float(i) for i in self.model_constants['age_breakpoints']]
         for param_name in self.params_to_age_adjust:
+            param_values, param_breaks_dict = {}, {}
 
-            # extract age-stratified parameters in the appropriate form
-            param_vals, age_break_dict = {}, {}
+            # loop over relevant parameters by age group
             for param in [p for p in self.model_constants if param_name + '_age' in p]:
-                age_string, _ = tool_kit.find_string_from_starting_letters(param, '_age')
-                age_break_dict[age_string] = tool_kit.interrogate_age_string(age_string)[0]
-                param_vals[age_string] = self.model_constants[param]
-            age_break_list = tool_kit.find_age_breakpoints_from_dicts(age_break_dict)
+                param_age_string, _ = tool_kit.find_string_from_starting_letters(param, '_age')
+                param_breaks_dict[param_age_string] = tool_kit.interrogate_age_string(param_age_string)[0]
+                param_values[param_age_string] = self.model_constants[param]
+            param_breaks_list = tool_kit.find_age_breakpoints_from_dicts(param_breaks_dict)
 
             # find age-adjusted parameters
-            age_adjusted_values = \
-                tool_kit.adapt_params_to_stratification(age_break_list, float_breakpoints, param_vals,
-                                                        parameter_name=param_name,
-                                                        gui_console_fn=self.gui_console_fn)
+            age_adjusted_values = tool_kit.adapt_params_to_stratification(
+                param_breaks_list, self.model_constants['age_breakpoints'], param_values, parameter_name=param_name,
+                gui_console_fn=self.gui_console_fn)
 
             # set age-adjusted parameters
             for agegroup in self.agegroups:

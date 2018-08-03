@@ -453,6 +453,7 @@ def apply_weighting(object_to_be_weighted, weights):
             weighted_object.append(item[0])
     return weighted_object
 
+
 ''' scenario name manipulation '''
 
 
@@ -1201,7 +1202,7 @@ def adapt_params_to_stratification(data_breakpoints, model_breakpoints, data_par
     return model_param_vals
 
 
-''' Output interrogation functions '''
+''' output interrogation functions '''
 
 
 def sum_over_compartments(model, compartment_types):
@@ -1336,9 +1337,8 @@ def find_fractions(model):
     return subgroup_solns, subgroup_fractions
 
 
-##########################
-### Pickling functions ###
-##########################
+''' pickling functions '''
+
 
 def pickle_save(object, file):
     """

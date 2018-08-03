@@ -42,17 +42,45 @@ def make_exponential_function(rate):
     return exponential_function
 
 
+def make_two_step_function(breakpoints, values):
+    """
+    Simple function to return a function that just returns two values depending on the range provided.
+
+    Args:
+        breakpoints: List, containing the x-values for the steps - for age functions, the first value should be zero
+        values: List of the values that the function should take
+    """
+
+    def two_step_function(x):
+        return numpy.piecewise(x, [breakpoints[0] <= x < breakpoints[1], breakpoints[1] <= x], values)
+    return two_step_function
+
+
+def make_slope_step_function(first_coordinate, second_coordinate):
+    """
+    Make the slope step function that is implemented in Romain's agent-based model approach.
+    """
+
+    slope = (first_coordinate[1] - second_coordinate[1]) / (first_coordinate[0] - second_coordinate[0])
+    constant = second_coordinate[1] - second_coordinate[0] * slope
+
+    def slope_step_function(x):
+        return numpy.piecewise(x, [0. <= x < 10., 10. <= x < 15., 15. <= x], [0., lambda a: slope * a + constant, 1.])
+    return slope_step_function
+
+
 def find_age_function(function_name):
     """
     Function to map parameter strings to functions, for parameters that are to be age-stratified using the functional
-    approach.
+    approach. Will expand to more functions in future, as we use this for more age-related functions.
 
     Args:
         function_name: String for the parameter which will use a function to define its age-specific values
     """
 
     if function_name == 'tb_multiplier_child_infectiousness':
-        return make_exponential_function(1e-4)
+        # return make_slope_step_function([10., 0.], [15., 1.])
+        return make_two_step_function([0., 10.], [0.1, 1.])
 
 
 def find_latest_value_from_year_dict(dictionary, ceiling):
@@ -148,6 +176,7 @@ class Inputs:
         self.params_to_age_weight \
             = ['tb_prop_early_progression', 'tb_rate_late_progression', 'tb_multiplier_child_infectiousness']
         self.params_to_age_integrate = []
+        self.max_age_for_stratification = 100.
 
         self.int_uncertainty_start_year = {'int_perc_dots_contributor': 2000, 'int_perc_dots_groupcontributor': 2000}
 
@@ -659,7 +688,7 @@ class Inputs:
             # find age-adjusted parameters
             age_adjusted_values = tool_kit.adapt_params_to_stratification(
                 param_breaks_list, self.model_constants['age_breakpoints'], param_values, parameter_name=param_name,
-                gui_console_fn=self.gui_console_fn)
+                gui_console_fn=self.gui_console_fn, assumed_max_params=self.max_age_for_stratification)
 
             # set age-adjusted parameters
             for agegroup in self.agegroups:
@@ -669,6 +698,8 @@ class Inputs:
         for param_name in self.params_to_age_integrate:
             for agegroup in self.agegroups:
                 function_limits = tool_kit.interrogate_age_string(agegroup)[0]
+                if function_limits[1] == float('inf'):
+                    function_limits[1] = self.max_age_for_stratification
                 self.model_constants[param_name + agegroup] \
                     = scipy.integrate.quad(lambda a: find_age_function(param_name)(a),
                                            function_limits[0], function_limits[1])[0] \
@@ -1443,9 +1474,3 @@ class Inputs:
             if time_param[-5:] == '_time' and '_step_time' not in time_param:
                 assert self.model_constants[time_param] >= self.model_constants['start_time'], \
                     '% is before model start time' % self.model_constants[time_param]
-
-
-#
-# something = make_exponential_function(1e-5)
-# result = scipy.integrate.quad(lambda age: something(age), 0., 10.)[0]
-# print(result)

@@ -332,6 +332,7 @@ export default {
         console.log('Model.checkRun', res.result)
         this.consoleLines = res.result.console_lines
         if (this.$el.querySelector) {
+          await util.delay(100)
           let container = this.$el.querySelector('#console-output')
           container.scrollTop = container.scrollHeight
         }
@@ -449,6 +450,7 @@ export default {
           res.result.filenames, f => `${config.apiUrl}/file/${f}`)
         this.consoleLines = res.result.consoleLines
         if (this.$el.querySelector) {
+          await util.delay(100)
           let container = this.$el.querySelector('#console-output')
           container.scrollTop = container.scrollHeight
         }

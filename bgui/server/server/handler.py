@@ -198,7 +198,7 @@ def bgui_model_output(output_type, data={}):
         out_dir = data['out_dir']
         with open(os.path.join(out_dir, 'console.log'), 'w') as f:
             f.write('\n'.join(attr['console_lines']))
-        attr.update(public_get_project_images(attr['project']))
+        attr.update(get_project_images(out_dir))
         save_db_attr(attr)
     elif output_type == "fail":
         attr = get_db_attr()
@@ -207,12 +207,17 @@ def bgui_model_output(output_type, data={}):
         out_dir = data['out_dir']
         with open(os.path.join(out_dir, 'console.log'), 'w') as f:
             f.write('\n'.join(attr['console_lines']))
-        attr.update(public_get_project_images(attr['project']))
+        attr.update(get_project_images(out_dir))
         save_db_attr(attr)
 
 
-def run_model(project_name, out_dir, model_inputs):
-    bgui_model_output('setup', {'project': project_name})
+def run_model(param_fname):
+    with open(param_fname) as f:
+        params = json.loads(f.read())
+    model_inputs = gui_params.convert_params_to_inputs(params)
+    out_dir = os.path.dirname(param_fname)
+    autumn_dir = os.path.dirname(autumn.__file__)
+    os.chdir(os.path.join(autumn_dir, '..'))
     try:
         model_runner = autumn.model_runner.TbRunner(
             model_inputs, bgui_model_output)
@@ -227,7 +232,7 @@ def run_model(project_name, out_dir, model_inputs):
         message += '-------\n'
         message += 'Error: model crashed'
         bgui_model_output('console', {'message': message})
-        bgui_model_output('fail')
+        bgui_model_output('fail', {'out_dir': out_dir})
 
 
 def public_run_autumn(params):
@@ -247,10 +252,13 @@ def public_run_autumn(params):
         shutil.rmtree(out_dir)
     os.makedirs(out_dir)
 
-    with open(os.path.join(out_dir, 'params.json'), 'w') as f:
+    param_fname = os.path.join(out_dir, 'params.json')
+    with open(param_fname, 'w') as f:
         json.dump(params, f, indent=2)
 
-    p = Process(target=run_model, args=(project_name, out_dir, model_inputs,))
+    bgui_model_output('setup', {'project': project_name})
+
+    p = Process(target=run_model, args=(param_fname,))
     p.start()
 
     return { 'success': True }
@@ -268,9 +276,9 @@ def public_get_autumn_params():
         'countryDefaults': country_defaults
     }
 
-def public_get_project_images(project):
-    save_dir = current_app.config['SAVE_FOLDER']
-    out_dir = os.path.join(save_dir, project)
+
+def get_project_images(out_dir):
+    save_dir = os.path.abspath(os.path.dirname(out_dir))
 
     filenames = glob.glob(os.path.join(out_dir, '*png'))
     filenames = [os.path.relpath(p, save_dir) for p in filenames]
@@ -293,6 +301,13 @@ def public_get_project_images(project):
         'params': params,
         'consoleLines': console_lines
     }
+
+
+def public_get_project_images(project):
+    save_dir = current_app.config['SAVE_FOLDER']
+    out_dir = os.path.join(save_dir, project)
+    return get_project_images(out_dir)
+
 
 def public_get_example_graph_data():
     import json

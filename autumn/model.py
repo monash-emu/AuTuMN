@@ -736,7 +736,8 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         for strain in self.strains:
             self.calculate_treatment_timeperiod_vars(strain)
             for stratum in itertools.product(self.riskgroups, self.histories):
-                self.adjust_treatment_outcomes_support(strain, stratum)
+                if self.time > self.inputs.model_constants['current_time']:
+                    self.adjust_treatment_outcomes_support(strain, stratum)
         treatment_types = copy.copy(self.strains)
         if self.is_misassignment:
             treatment_types.append('_inappropriate')
@@ -850,10 +851,16 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
             strain_types.append('')
         for strain_type in strain_types:
             if 'int_prop_treatment_support_relative' + strain_type in self.relevant_interventions:
-                self.vars['program_prop_treatment' + riskgroup + strain + history + '_success'] \
-                    += (1. - self.vars['program_prop_treatment' + riskgroup + strain + history + '_success']) \
-                    * self.params['int_prop_treatment_support_improvement' + strain_type] \
-                    * self.vars['int_prop_treatment_support_relative' + strain_type]
+                # calculate what would the TSR be without Tx support at baseline
+                who_tsr = self.vars['program_prop_treatment' + riskgroup + strain + history + '_success']
+                baseline_coverage = self.scaleup_fns['int_prop_treatment_support_relative' + strain_type](self.inputs.model_constants['current_time'])
+                raw_tsr = 1. - (1. - who_tsr)/(1. - baseline_coverage *
+                                              self.params['int_prop_treatment_support_improvement' + strain_type])
+
+                # calculate the new TSR accounting for current treatment support coverage
+                self.vars['program_prop_treatment' + riskgroup + strain + history + '_success'] =\
+                    1. - (1. - raw_tsr) * (1. - self.params['int_prop_treatment_support_improvement' + strain_type] *
+                                           self.vars['int_prop_treatment_support_relative' + strain_type])
             elif 'int_prop_treatment_support_absolute' + strain_type in self.relevant_interventions:
                 self.vars['program_prop_treatment' + riskgroup + strain + history + '_success'] \
                     = t_k.increase_parameter_closer_to_value(

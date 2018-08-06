@@ -918,7 +918,9 @@ class Project:
             workbook.save(path)
 
         # code probably could bug because interventions can differ by scenario
-        for inter in self.inputs.interventions_to_cost[0]:
+        programs_to_cost = self.inputs.interventions_to_cost[0]
+        programs_to_cost.append('all_programs')  # to calculate total cost too
+        for inter in programs_to_cost:
             for cost_type in ['raw_cost_', 'inflated_cost_', 'discounted_cost_', 'discounted_inflated_cost_']:
 
                 # make filename
@@ -948,10 +950,16 @@ class Project:
                     # data columns
                     for y, year in enumerate(self.years_to_write):
                         row, column = reverse_inputs_if_required([y + 2, s + 2], horizontal)
-                        sheet.cell(row=row, column=column).value \
-                            = self.outputs['manual']['cost'][scenario][cost_type + inter][
+                        if inter == 'all_programs':
+                            relevant_programs = self.inputs.interventions_to_cost[0]
+                        else:
+                            relevant_programs = [inter]
+                        cost = 0.
+                        for program in relevant_programs:
+                            cost += self.outputs['manual']['cost'][scenario][cost_type + program][
                                 t_k.find_first_list_element_at_least(self.outputs['manual']['cost'][scenario][
                                                                                'times'], year)]
+                        sheet.cell(row=row, column=column).value = cost
                 workbook.save(path)
 
     def write_docs_by_scenario(self):

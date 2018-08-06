@@ -1255,7 +1255,7 @@ class Project:
             # finishing off axis and figure
             self.tidy_x_axis(axis, start_time, 2035., max_dims, labels_off=not last_row(out, n_rows, n_cols))
             self.tidy_y_axis(axis, output, max_dims, max_value=max(max_data_values[output]))
-            axis.set_title(t_k.find_title_from_dictionary(output), fontsize=get_label_font_size(max_dims))
+            axis.set_title(t_k.find_title_from_dictionary(output, country=self.country), fontsize=get_label_font_size(max_dims))
             if out == len(outputs) - 1 and purpose == 'scenario' and len(self.scenarios) > 1:
                 add_legend_to_plot(axis, max_dims)
         self.finish_off_figure(fig, len(outputs), '_' + descriptor + '_epi_' + purpose,
@@ -1320,6 +1320,8 @@ class Project:
                 gtb_data[level] = self.inputs.original_data['gtb'][output_index + self.level_conversion_dict[level]]
                 gtb_data_lists.update(t_k.extract_dict_to_ordered_key_lists(gtb_data[level], level))
             gtb_index = t_k.find_first_list_element_at_least(gtb_data_lists['times'], start_time)
+            if gtb_index is None:
+                return
 
             # plot patch
             colour, hatch, fill, line_width, alpha = (self.gtb_patch_colours[output], None, True, 0., .5) \

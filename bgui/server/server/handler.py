@@ -139,6 +139,9 @@ null_attr = {
 }
 
 
+def init():
+    save_db_attr(null_attr)
+
 def get_db_attr():
     query = dbmodel.make_obj_query(obj_type="project")
     result = query.all()

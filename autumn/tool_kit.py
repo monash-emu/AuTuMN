@@ -87,8 +87,10 @@ def find_list_element_equal_to(list, value):
         if len(list.shape) > 1:   # multi-dimensional array. We jsut want to keep the last row.
             list = list[-1, ]
 
-    return next(x[0] for x in enumerate(list) if x[1] == value)
-
+    if value in list:
+        return next(x[0] for x in enumerate(list) if x[1] == value)
+    else:
+        return None
 
 def find_first_list_element_at_least(list_to_search, value):
     """
@@ -102,7 +104,10 @@ def find_first_list_element_at_least(list_to_search, value):
         if len(list_to_search.shape) > 1:   # multi-dimensional array. We jsut want to keep the last row.
             list_to_search = list_to_search[-1, ]
 
-    return next(x[0] for x in enumerate(list_to_search) if x[1] >= value)
+    if max(list_to_search) >= value:
+        return next(x[0] for x in enumerate(list_to_search) if x[1] >= value)
+    else:
+        return None
 
 
 def prepare_denominator(list_to_prepare):
@@ -565,7 +570,7 @@ def adjust_country_name(country, purpose):
     return country
 
 
-def find_title_from_dictionary(working_string, forward=True, capital_first_letter=True):
+def find_title_from_dictionary(working_string, forward=True, capital_first_letter=True, country=None):
     """
     Master function to convert between strings used in the code and ones to present to the user - either through the GUI
     or for creating figures in the outputs module. Now goes in both directions.
@@ -574,6 +579,7 @@ def find_title_from_dictionary(working_string, forward=True, capital_first_lette
         working_string: AuTuMN's name for the boolean quantity
         forward: Whether to go from code string to GUI string or the other way
         capital_first_letter: Boolean for whether to capitalise the first letter of the string
+        country: Which country is simulated
     Returns:
         The converted string
     """
@@ -898,6 +904,10 @@ def find_title_from_dictionary(working_string, forward=True, capital_first_lette
         converted_string = list_of_code_strings[list_of_interface_strings.index(working_string)]
     else:
         converted_string = replace_underscore_with_space(working_string)
+
+    if country == 'bulgaria':
+        converted_string = converted_string.replace('ruralpoor', 'Roma')
+    converted_string = converted_string.replace('norisk', 'no risk')
 
     return capitalise_first_letter(converted_string) if capital_first_letter else converted_string
 

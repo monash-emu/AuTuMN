@@ -918,9 +918,11 @@ class Project:
             workbook.save(path)
 
         # code probably could bug because interventions can differ by scenario
-        for inter in self.inputs.interventions_to_cost[0]:
+        programs_to_cost = self.inputs.interventions_to_cost[0]
+        programs_to_cost.append('all_programs')  # to calculate total cost too
+        for inter in programs_to_cost:
+            relevant_programs = self.inputs.interventions_to_cost[0] if inter == 'all_programs' else [inter]
             for cost_type in ['raw_cost_', 'inflated_cost_', 'discounted_cost_', 'discounted_inflated_cost_']:
-
                 # make filename
                 path = os.path.join(self.out_dir_project, cost_type + inter) + '.xlsx'
 
@@ -936,6 +938,13 @@ class Project:
                 for y, year in enumerate(self.years_to_write):
                     row, column = reverse_inputs_if_required([y + 2, 1], horizontal)
                     sheet.cell(row=row, column=column).value = year
+                #  and the total cost and per year cost
+                row, column = reverse_inputs_if_required([y + 3, 1], horizontal)
+                sheet.cell(row=row, column=column).value = 'Total ' + str(self.years_to_write[0]) + '_' + \
+                                                           str(self.years_to_write[-1])
+                row, column = reverse_inputs_if_required([y + 4, 1], horizontal)
+                sheet.cell(row=row, column=column).value = 'Per year ' + str(self.years_to_write[0]) + '_' + \
+                                                           str(self.years_to_write[-1])
 
                 # cycle over scenarios
                 for s, scenario in enumerate(scenarios):
@@ -946,12 +955,23 @@ class Project:
                     sheet.cell(row=row, column=column).value = t_k.capitalise_and_remove_underscore(scenario_name)
 
                     # data columns
+                    total_cost = 0.
                     for y, year in enumerate(self.years_to_write):
                         row, column = reverse_inputs_if_required([y + 2, s + 2], horizontal)
-                        sheet.cell(row=row, column=column).value \
-                            = self.outputs['manual']['cost'][scenario][cost_type + inter][
+
+                        cost = 0.
+                        for program in relevant_programs:
+                            cost += self.outputs['manual']['cost'][scenario][cost_type + program][
                                 t_k.find_first_list_element_at_least(self.outputs['manual']['cost'][scenario][
                                                                                'times'], year)]
+                        sheet.cell(row=row, column=column).value = cost
+                        total_cost += cost
+                    # Add total costs and per year costs
+                    row, column = reverse_inputs_if_required([y + 3, s + 2], horizontal)
+                    sheet.cell(row=row, column=column).value = total_cost
+                    row, column = reverse_inputs_if_required([y + 4, s + 2], horizontal)
+                    sheet.cell(row=row, column=column).value = total_cost/len(self.years_to_write)
+
                 workbook.save(path)
 
     def write_docs_by_scenario(self):
@@ -1255,7 +1275,7 @@ class Project:
             # finishing off axis and figure
             self.tidy_x_axis(axis, start_time, 2035., max_dims, labels_off=not last_row(out, n_rows, n_cols))
             self.tidy_y_axis(axis, output, max_dims, max_value=max(max_data_values[output]))
-            axis.set_title(t_k.find_title_from_dictionary(output), fontsize=get_label_font_size(max_dims))
+            axis.set_title(t_k.find_title_from_dictionary(output, country=self.country), fontsize=get_label_font_size(max_dims))
             if out == len(outputs) - 1 and purpose == 'scenario' and len(self.scenarios) > 1:
                 add_legend_to_plot(axis, max_dims)
         self.finish_off_figure(fig, len(outputs), '_' + descriptor + '_epi_' + purpose,
@@ -1320,6 +1340,8 @@ class Project:
                 gtb_data[level] = self.inputs.original_data['gtb'][output_index + self.level_conversion_dict[level]]
                 gtb_data_lists.update(t_k.extract_dict_to_ordered_key_lists(gtb_data[level], level))
             gtb_index = t_k.find_first_list_element_at_least(gtb_data_lists['times'], start_time)
+            if gtb_index is None:
+                return
 
             # plot patch
             colour, hatch, fill, line_width, alpha = (self.gtb_patch_colours[output], None, True, 0., .5) \

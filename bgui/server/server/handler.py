@@ -18,13 +18,12 @@ raised Exceptions will be caught and converted into a JSON response
 
 from __future__ import print_function
 import os
+import subprocess
 
 from flask import session
 from flask_login import current_app, current_user, login_user, logout_user
 
 from . import dbmodel
-
-from multiprocessing import Process
 
 
 # User handlers
@@ -212,6 +211,7 @@ def bgui_model_output(output_type, data={}):
 
 
 def run_model(param_fname):
+    print(">> handler.run_model", param_fname)
     with open(param_fname) as f:
         params = json.loads(f.read())
     model_inputs = gui_params.convert_params_to_inputs(params)
@@ -252,14 +252,18 @@ def public_run_autumn(params):
         shutil.rmtree(out_dir)
     os.makedirs(out_dir)
 
-    param_fname = os.path.join(out_dir, 'params.json')
+    param_fname = os.path.abspath(os.path.join(out_dir, 'params.json'))
     with open(param_fname, 'w') as f:
         json.dump(params, f, indent=2)
 
     bgui_model_output('setup', {'project': project_name})
 
-    p = Process(target=run_model, args=(param_fname,))
-    p.start()
+    this_dir = os.path.dirname(__file__)
+    run_local = os.path.join(this_dir, '..', 'run_model.py')
+    cmd = ['python', run_local, param_fname]
+    print('> public_run_autumn', ' '.join(cmd))
+
+    subprocess.call(cmd)
 
     return { 'success': True }
 

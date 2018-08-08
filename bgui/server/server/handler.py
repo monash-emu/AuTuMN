@@ -162,8 +162,6 @@ def save_db_attr(attr):
         else:
             dbmodel.delete_obj(obj.id)
 
-save_db_attr(null_attr)
-
 
 def public_check_autumn_run():
     return get_db_attr()
@@ -182,12 +180,14 @@ def bgui_model_output(output_type, data={}):
     elif output_type == "console":
         new_lines = data["message"].splitlines()
         attr = get_db_attr()
+        attr['is_running'] = True
         for line in new_lines:
             print("> handler.bgui_model_output console: " + line)
         attr['console_lines'].extend(new_lines)
         save_db_attr(attr)
     elif output_type == "graph":
         attr = get_db_attr()
+        attr['is_running'] = True
         attr['graph_data'] = copy.deepcopy(data)
         save_db_attr(attr)
     elif output_type == "finish":

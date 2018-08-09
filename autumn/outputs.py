@@ -48,7 +48,7 @@ def initialise_figures_axes(n_panels, room_for_legend=False, requested_grid=None
     else:
         fig, axes = pyplot.subplots(n_rows, n_cols, sharey=share_yaxis)
         for panel in range(n_panels, n_rows * n_cols):
-            find_panel_grid_indices(axes, panel, n_rows, n_cols).axis(False)
+            find_panel_grid_indices(axes, panel, n_rows, n_cols).axis('off')
     return fig, axes, max([n_rows, n_cols]), n_rows, n_cols
 
 
@@ -1143,10 +1143,10 @@ class Project:
             self.plot_cost_over_time()
 
         # plot compartment population sizes
-        if self.gui_inputs['output_compartment_populations']:
-            for category in ['agegroups', 'riskgroups', 'compartment_types']:
-                for fraction in [True, False]:
-                    self.plot_populations(category_to_loop=category, fraction=fraction)
+        # if self.gui_inputs['output_compartment_populations']:
+        #     for category in ['agegroups', 'riskgroups', 'compartment_types']:
+        #         for fraction in [True, False]:
+        #             self.plot_populations(category_to_loop=category, fraction=fraction)
 
         # make a flow-diagram
         if self.gui_inputs['output_flow_diagram']:

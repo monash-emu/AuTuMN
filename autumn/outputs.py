@@ -1475,13 +1475,13 @@ class Project:
             previous_data, cumulative_data \
                 = increment_list_for_patch(
                   [self.inputs.mixing[from_group][to_group] for from_group in self.inputs.riskgroups], cumulative_data)
-            x_positions = numpy.linspace(.5, .5 + len(cumulative_data) - 1., len(cumulative_data))
+            x_positions = numpy.linspace(1., len(cumulative_data), len(cumulative_data))
             ax.bar(x_positions, cumulative_data, width=bar_width, bottom=previous_data, color=self.colour_theme[to],
-                   label=t_k.find_title_from_dictionary(to_group))
+                   label=t_k.find_title_from_dictionary(to_group), align='center')
 
         # locally managing x-axis, as plot type is a special case
-        ax.set_xlim(.2, max(x_positions) + 1.)
-        ax.set_xticks([x + bar_width / 2. for x in x_positions])
+        ax.set_xlim(0., len(cumulative_data) + 1.)
+        ax.set_xticks(x_positions)
         ax.tick_params(axis='x', length=0.)
         ax.set_xticklabels([t_k.find_title_from_dictionary(group) for group in self.inputs.riskgroups],
                            fontsize=get_label_font_size(1))

@@ -23,4 +23,6 @@ pluggable API to other system. Applied to tuberculosis.
 
 ## minor tasks
 - simplify code for automatic detection of int_uncertainty start_time. Should use common method with optimisation start_dates
+- In the adjust_treatment_outcomes_support method, only the "relative" approach accounts for baseline intervention coverage
+    The "absolute" approach should be updated similarly in case we use it with a non-zero coverage at baseline.
 

@@ -30,6 +30,7 @@ app = conn.app
 
 app.logger.setLevel(logging.DEBUG)
 
+handler.init()
 
 # Setup login manager with dbmodel.UserDb
 login_manager = LoginManager()

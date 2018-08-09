@@ -570,6 +570,8 @@ class Project:
             axis.set_ylim(y_lims)
         elif 'prop_' in quantity and axis.get_ylim()[1] > 1.:
             axis.set_ylim(top=1.004)
+        elif 'prop_' in quantity and max_value > 0.7:
+            axis.set_ylim(bottom=0., top=1.)
         elif 'prop_' in quantity or 'likelihood' in quantity or 'cost' in quantity:
             pass
         elif axis.get_ylim()[1] < max_value * (1. + space_at_top):

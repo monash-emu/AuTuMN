@@ -18,13 +18,12 @@ raised Exceptions will be caught and converted into a JSON response
 
 from __future__ import print_function
 import os
+import subprocess
 
 from flask import session
 from flask_login import current_app, current_user, login_user, logout_user
 
 from . import dbmodel
-
-from multiprocessing import Process
 
 
 # User handlers
@@ -140,6 +139,9 @@ null_attr = {
 }
 
 
+def init():
+    save_db_attr(null_attr)
+
 def get_db_attr():
     query = dbmodel.make_obj_query(obj_type="project")
     result = query.all()
@@ -163,8 +165,6 @@ def save_db_attr(attr):
         else:
             dbmodel.delete_obj(obj.id)
 
-save_db_attr(null_attr)
-
 
 def public_check_autumn_run():
     return get_db_attr()
@@ -183,12 +183,14 @@ def bgui_model_output(output_type, data={}):
     elif output_type == "console":
         new_lines = data["message"].splitlines()
         attr = get_db_attr()
+        attr['is_running'] = True
         for line in new_lines:
             print("> handler.bgui_model_output console: " + line)
         attr['console_lines'].extend(new_lines)
         save_db_attr(attr)
     elif output_type == "graph":
         attr = get_db_attr()
+        attr['is_running'] = True
         attr['graph_data'] = copy.deepcopy(data)
         save_db_attr(attr)
     elif output_type == "finish":
@@ -198,7 +200,7 @@ def bgui_model_output(output_type, data={}):
         out_dir = data['out_dir']
         with open(os.path.join(out_dir, 'console.log'), 'w') as f:
             f.write('\n'.join(attr['console_lines']))
-        attr.update(public_get_project_images(attr['project']))
+        attr.update(get_project_images(out_dir))
         save_db_attr(attr)
     elif output_type == "fail":
         attr = get_db_attr()
@@ -207,12 +209,18 @@ def bgui_model_output(output_type, data={}):
         out_dir = data['out_dir']
         with open(os.path.join(out_dir, 'console.log'), 'w') as f:
             f.write('\n'.join(attr['console_lines']))
-        attr.update(public_get_project_images(attr['project']))
+        attr.update(get_project_images(out_dir))
         save_db_attr(attr)
 
 
-def run_model(project_name, out_dir, model_inputs):
-    bgui_model_output('setup', {'project': project_name})
+def run_model(param_fname):
+    print(">> handler.run_model", param_fname)
+    with open(param_fname) as f:
+        params = json.loads(f.read())
+    model_inputs = gui_params.convert_params_to_inputs(params)
+    out_dir = os.path.dirname(param_fname)
+    autumn_dir = os.path.dirname(autumn.__file__)
+    os.chdir(os.path.join(autumn_dir, '..'))
     try:
         model_runner = autumn.model_runner.TbRunner(
             model_inputs, bgui_model_output)
@@ -227,7 +235,7 @@ def run_model(project_name, out_dir, model_inputs):
         message += '-------\n'
         message += 'Error: model crashed'
         bgui_model_output('console', {'message': message})
-        bgui_model_output('fail')
+        bgui_model_output('fail', {'out_dir': out_dir})
 
 
 def public_run_autumn(params):
@@ -247,11 +255,18 @@ def public_run_autumn(params):
         shutil.rmtree(out_dir)
     os.makedirs(out_dir)
 
-    with open(os.path.join(out_dir, 'params.json'), 'w') as f:
+    param_fname = os.path.abspath(os.path.join(out_dir, 'params.json'))
+    with open(param_fname, 'w') as f:
         json.dump(params, f, indent=2)
 
-    p = Process(target=run_model, args=(project_name, out_dir, model_inputs,))
-    p.start()
+    bgui_model_output('setup', {'project': project_name})
+
+    this_dir = os.path.dirname(__file__)
+    run_local = os.path.join(this_dir, '..', 'run_model.py')
+    cmd = ['python', run_local, param_fname]
+    print('> public_run_autumn', ' '.join(cmd))
+
+    subprocess.call(cmd)
 
     return { 'success': True }
 
@@ -268,9 +283,9 @@ def public_get_autumn_params():
         'countryDefaults': country_defaults
     }
 
-def public_get_project_images(project):
-    save_dir = current_app.config['SAVE_FOLDER']
-    out_dir = os.path.join(save_dir, project)
+
+def get_project_images(out_dir):
+    save_dir = os.path.abspath(os.path.dirname(out_dir))
 
     filenames = glob.glob(os.path.join(out_dir, '*png'))
     filenames = [os.path.relpath(p, save_dir) for p in filenames]
@@ -293,6 +308,13 @@ def public_get_project_images(project):
         'params': params,
         'consoleLines': console_lines
     }
+
+
+def public_get_project_images(project):
+    save_dir = current_app.config['SAVE_FOLDER']
+    out_dir = os.path.join(save_dir, project)
+    return get_project_images(out_dir)
+
 
 def public_get_example_graph_data():
     import json

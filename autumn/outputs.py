@@ -1143,10 +1143,10 @@ class Project:
             self.plot_cost_over_time()
 
         # plot compartment population sizes
-        # if self.gui_inputs['output_compartment_populations']:
-        #     for category in ['agegroups', 'riskgroups', 'compartment_types']:
-        #         for fraction in [True, False]:
-        #             self.plot_populations(category_to_loop=category, fraction=fraction)
+        if self.gui_inputs['output_compartment_populations']:
+            for category in ['agegroups', 'riskgroups', 'compartment_types']:
+                for fraction in [True, False]:
+                    self.plot_populations(category_to_loop=category, fraction=fraction)
 
         # make a flow-diagram
         if self.gui_inputs['output_flow_diagram']:
@@ -1380,7 +1380,7 @@ class Project:
         # prelims
         fig, ax, max_dim, n_rows, n_cols = initialise_figures_axes(1, room_for_legend=True)
         start_time = self.inputs.model_constants['plot_start_time']
-        start_time_index = self.find_start_time_index(start_time, scenario, purpose='manual')
+        start_time_index = self.find_start_time_index(start_time - 1., scenario, purpose='manual')
         times = self.outputs['manual']['epi'][0]['times'][start_time_index:]
 
         # get data
@@ -1396,7 +1396,7 @@ class Project:
             ax.plot([-1e2], [0.], color=colour, label=t_k.find_title_from_dictionary(label), linewidth=5.)  # proxy
 
         # finish off
-        self.tidy_x_axis(ax, start_time, 2035., max_dim)
+        self.tidy_x_axis(ax, start_time + 1., 2035., max_dim)
         self.tidy_y_axis(ax, '', max_dim, max_value=max(cumulative_data))
         ax.legend(bbox_to_anchor=(1.3, 1))
         filename = '_' + ('fraction' if fraction else 'population') + '_' + category_to_loop

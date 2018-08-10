@@ -588,6 +588,13 @@ def find_title_from_dictionary(working_string, forward=True, capital_first_lette
         if working_string.startswith(starting_string_to_trim):
             working_string = working_string[len(starting_string_to_trim):]
 
+    if working_string[:4] == '_age' and 'up' in working_string:
+        return working_string[4: 6] + ' and above'
+    elif working_string[:7] == '_age0to':
+        return working_string[7:] + ' and under'
+    elif working_string[:4] == '_age':
+        return working_string[4: working_string.index('to')] + ' to ' + working_string[working_string.index('to') + 2:]
+
     conversion_dictionary \
         = {'vaccination':
                'BCG vaccination',

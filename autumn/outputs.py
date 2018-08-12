@@ -48,7 +48,7 @@ def initialise_figures_axes(n_panels, room_for_legend=False, requested_grid=None
     else:
         fig, axes = pyplot.subplots(n_rows, n_cols, sharey=share_yaxis)
         for panel in range(n_panels, n_rows * n_cols):
-            find_panel_grid_indices(axes, panel, n_rows, n_cols).axis(False)
+            find_panel_grid_indices(axes, panel, n_rows, n_cols).axis('off')
     return fig, axes, max([n_rows, n_cols]), n_rows, n_cols
 
 
@@ -570,6 +570,8 @@ class Project:
             axis.set_ylim(y_lims)
         elif 'prop_' in quantity and axis.get_ylim()[1] > 1.:
             axis.set_ylim(top=1.004)
+        elif 'prop_' in quantity and max_value > 0.7:
+            axis.set_ylim(bottom=0., top=1.)
         elif 'prop_' in quantity or 'likelihood' in quantity or 'cost' in quantity:
             pass
         elif axis.get_ylim()[1] < max_value * (1. + space_at_top):
@@ -1378,7 +1380,7 @@ class Project:
         # prelims
         fig, ax, max_dim, n_rows, n_cols = initialise_figures_axes(1, room_for_legend=True)
         start_time = self.inputs.model_constants['plot_start_time']
-        start_time_index = self.find_start_time_index(start_time, scenario, purpose='manual')
+        start_time_index = self.find_start_time_index(start_time - 1., scenario, purpose='manual')
         times = self.outputs['manual']['epi'][0]['times'][start_time_index:]
 
         # get data
@@ -1394,7 +1396,7 @@ class Project:
             ax.plot([-1e2], [0.], color=colour, label=t_k.find_title_from_dictionary(label), linewidth=5.)  # proxy
 
         # finish off
-        self.tidy_x_axis(ax, start_time, 2035., max_dim)
+        self.tidy_x_axis(ax, start_time + 1., 2035., max_dim)
         self.tidy_y_axis(ax, '', max_dim, max_value=max(cumulative_data))
         ax.legend(bbox_to_anchor=(1.3, 1))
         filename = '_' + ('fraction' if fraction else 'population') + '_' + category_to_loop
@@ -1473,13 +1475,13 @@ class Project:
             previous_data, cumulative_data \
                 = increment_list_for_patch(
                   [self.inputs.mixing[from_group][to_group] for from_group in self.inputs.riskgroups], cumulative_data)
-            x_positions = numpy.linspace(.5, .5 + len(cumulative_data) - 1., len(cumulative_data))
+            x_positions = numpy.linspace(1., len(cumulative_data), len(cumulative_data))
             ax.bar(x_positions, cumulative_data, width=bar_width, bottom=previous_data, color=self.colour_theme[to],
-                   label=t_k.find_title_from_dictionary(to_group))
+                   label=t_k.find_title_from_dictionary(to_group), align='center')
 
         # locally managing x-axis, as plot type is a special case
-        ax.set_xlim(.2, max(x_positions) + 1.)
-        ax.set_xticks([x + bar_width / 2. for x in x_positions])
+        ax.set_xlim(0., len(cumulative_data) + 1.)
+        ax.set_xticks(x_positions)
         ax.tick_params(axis='x', length=0.)
         ax.set_xticklabels([t_k.find_title_from_dictionary(group) for group in self.inputs.riskgroups],
                            fontsize=get_label_font_size(1))

@@ -1324,7 +1324,7 @@ class TbRunner(ModelRunner):
         self.epi_outputs_to_analyse = ['incidence', 'prevalence', 'mortality', 'true_mortality', 'notifications']
         self.add_strain_specific_outputs_to_analyse()
 
-        self.average_sd_for_likelihood = True  # whether to use a common sd for all data points iun the likelihood calculation
+        self.average_sd_for_likelihood = True  # whether to use common sd for all data points in likelihood calculation
         self.standard_rate_outputs = ['incidence', 'notifications', 'infections']
         self.from_labels \
             = {'incidence': ['latent'],

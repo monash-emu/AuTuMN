@@ -1039,6 +1039,8 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
                             continue
                         if organ == '_extrapul':
                             continue
+                        if self.scenario == 16 and self.time > self.params['scenario_start_time']:
+                            continue
 
                         # adjustment for increased infectiousness in riskgroup
                         riskgroup_multiplier = self.params['riskgroup_multiplier_force_infection' + riskgroup] \

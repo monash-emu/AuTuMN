@@ -442,7 +442,9 @@ class Project:
                (20. / 255., 65. / 255., 20. / 255.),
                (15. / 255., 145. / 255., 25. / 255.),
                (15. / 255., 185. / 255., 240. / 255.),
-               (10. / 255., 0., 110. / 255.)]
+               (10. / 255., 0., 110. / 255.),
+               (.5, .5, .5),
+               (.0, .0, .0)]
         self.gtb_indices \
             = {'incidence': 'e_inc_100k',
                'mortality': 'e_mort_exc_tbhiv_100k',
@@ -1265,10 +1267,11 @@ class Project:
                     # label = str(int(self.inputs.comorbidity_prevalences[scenario] * 1e2)) + '%' \
                     #     if self.run_mode == 'increment_comorbidity' \
                     #     else t_k.capitalise_and_remove_underscore(t_k.find_scenario_string_from_number(scenario))
+                    line_style, line_width = ('--', .7) if scenario == 16 else ('-', 1.5)
                     max_data_values[output].append(max(self.outputs['manual']['epi'][scenario][output][start_index:]))
                     axis.plot(self.outputs['manual']['epi'][scenario]['times'][start_index:],
                               self.outputs['manual']['epi'][scenario][output][start_index:],
-                              color=colour, linewidth=1.5, label=label,
+                              color=colour, linewidth=line_width, label=label, linestyle=line_style,
                               zorder=1 if scenario else 4)
 
             # add plotting of End TB Targets

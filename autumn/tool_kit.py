@@ -474,6 +474,8 @@ def find_scenario_string_from_number(scenario):
 
     if scenario == 0:
         return 'baseline'
+    elif scenario == 16:
+        return 'no transmission'
     else:
         return 'scenario_' + str(scenario)
 

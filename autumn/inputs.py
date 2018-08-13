@@ -179,6 +179,7 @@ class Inputs:
         self.max_age_for_stratification = 100.
 
         self.int_uncertainty_start_year = {'int_perc_dots_contributor': 2000, 'int_perc_dots_groupcontributor': 2000}
+        self.transmission_stop_scenario = False
 
     ''' master method '''
 
@@ -355,6 +356,8 @@ class Inputs:
                 if key.startswith('scenario_') and len(key) < 12 and self.gui_inputs[key]]
         if self.run_mode == 'int_uncertainty':
             self.scenarios.append(15)
+        elif self.transmission_stop_scenario:
+            self.scenarios.append(16)
         self.scenarios.sort()
 
     def reconcile_user_inputs(self):

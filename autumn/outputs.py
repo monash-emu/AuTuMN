@@ -37,10 +37,10 @@ def initialise_figures_axes(n_panels, room_for_legend=False, requested_grid=None
 
     pyplot.style.use('ggplot')
     n_rows, n_cols = requested_grid if requested_grid else find_subplot_grid(n_panels)
-    horizontal_position_one_axis = .08 if room_for_legend else .15
+    horizontal_position_one_axis = .11 if room_for_legend else .15
     if n_panels == 1:
         fig = pyplot.figure()
-        axes = fig.add_axes([horizontal_position_one_axis, .15, 0.7, 0.7])
+        axes = fig.add_axes([horizontal_position_one_axis, .15, 0.69, 0.7])
     elif n_panels == 2:
         fig, axes = pyplot.subplots(1, 2)
         fig.set_figheight(3.5)
@@ -1128,7 +1128,8 @@ class Project:
                 if len(list_of_strata) > 1:
                     self.plot_epi_outputs(
                         [''.join(panel) for panel in itertools.product(outputs_to_plot, list_of_strata)],
-                        'scenario', 'by_' + strata_type, grid=[len(outputs_to_plot), len(list_of_strata)], sharey='row')
+                        'scenario', ', by_' + strata_type, grid=[len(outputs_to_plot), len(list_of_strata)],
+                        sharey='row')
             for strata_type in ['agegroups', 'riskgroups']:
                 for fraction in [True, False]:
                     self.plot_stacked_epi_outputs('notifications', category_to_loop=strata_type, fraction=fraction)
@@ -1277,7 +1278,8 @@ class Project:
             # finishing off axis and figure
             self.tidy_x_axis(axis, start_time, 2035., max_dims, labels_off=not last_row(out, n_rows, n_cols))
             self.tidy_y_axis(axis, output, max_dims, max_value=max(max_data_values[output]))
-            axis.set_title(t_k.find_title_from_dictionary(output, country=self.country), fontsize=get_label_font_size(max_dims))
+            axis.set_title(t_k.find_title_from_dictionary(output, country=self.country),
+                           fontsize=get_label_font_size(max_dims))
             if out == len(outputs) - 1 and purpose == 'scenario' and len(self.scenarios) > 1:
                 add_legend_to_plot(axis, max_dims)
         self.finish_off_figure(fig, len(outputs), '_' + descriptor + '_epi_' + purpose,
@@ -1396,7 +1398,7 @@ class Project:
             ax.plot([-1e2], [0.], color=colour, label=t_k.find_title_from_dictionary(label), linewidth=5.)  # proxy
 
         # finish off
-        self.tidy_x_axis(ax, start_time + 1., 2035., max_dim)
+        self.tidy_x_axis(ax, start_time, 2035., max_dim)
         self.tidy_y_axis(ax, '', max_dim, max_value=max(cumulative_data))
         ax.legend(bbox_to_anchor=(1.3, 1))
         filename = '_' + ('fraction' if fraction else 'population') + '_' + category_to_loop
@@ -1430,7 +1432,7 @@ class Project:
         fig, ax, max_dim, n_rows, n_cols = initialise_figures_axes(1, room_for_legend=True)
         strata = getattr(self.inputs, category_to_loop)
         start_time = self.inputs.model_constants['plot_start_time']
-        start_time_index = self.find_start_time_index(start_time, scenario, purpose='manual')
+        start_time_index = self.find_start_time_index(start_time - 1., scenario, purpose='manual')
         times = self.outputs['manual']['epi'][0]['times'][start_time_index:]
         cumulative_data = [0.] * len(times)
 

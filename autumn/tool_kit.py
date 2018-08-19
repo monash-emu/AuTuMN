@@ -300,9 +300,17 @@ def apply_odds_ratio_to_proportion(proportion, odds_ratio):
 
 
 def increase_parameter_closer_to_value(old_value, target_value, coverage):
+    """
+    Simple but commonly used calculation for interventions. Acts to increment from the original or baseline value
+    closer to the target or intervention value according to the coverage of the intervention being implemented.
 
-    value_to_return = old_value + (target_value - old_value) * coverage if old_value < target_value else old_value
-    return value_to_return
+    Args:
+        old_value: Baseline or original value to be incremented
+        target_value: Target value or value at full intervention coverage
+        coverage: Intervention coverage or proportion of the intervention value to apply
+    """
+
+    return old_value + (target_value - old_value) * coverage if old_value < target_value else old_value
 
 
 def decrease_parameter_closer_to_value(old_value, target_value, coverage):

@@ -988,6 +988,7 @@ class ModelRunner:
         for sample in range(self.inputs.n_samples):
 
             # prepare for integration of scenario
+            self.add_comment_to_gui_window('Sample number {}'.format(sample))
             self.models[15] = model.ConsolidatedModel(15, self.inputs, self.gui_inputs, self.gui_console_fn)
             self.prepare_new_model_from_baseline(15)
             self.models[15].relevant_interventions.append(self.inputs.uncertainty_interventions_list)

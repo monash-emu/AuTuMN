@@ -307,10 +307,11 @@ class ModelRunner:
                     # if all coverage values are 0, we don't need to change the scenario start date. Otherwise we do.
                     if len(coverages) > 0:
                         if max(coverages.values()) > 0.:
-                            # We need to find the latest time associated with a 0 coverage, preceding the first non-zero coverage
+                            # need to find the latest time with zero coverage before the first non-zero value
                             coverages_as_list = [(year, cov) for year, cov in coverages.iteritems()]
                             coverages_as_list.sort()   # now a list of tuples sorted by year
-                            nonzero_indices = [ind for ind in range(len(coverages_as_list)) if coverages_as_list[ind][1] > 0.]
+                            nonzero_indices \
+                                = [ind for ind in range(len(coverages_as_list)) if coverages_as_list[ind][1] > 0.]
                             if nonzero_indices[0] == 0:  # coverage has always been positive
                                 last_year_null_coverage = coverages_as_list[0][0]
                             else:
@@ -988,7 +989,7 @@ class ModelRunner:
         for sample in range(self.inputs.n_samples):
 
             # prepare for integration of scenario
-            self.add_comment_to_gui_window('Sample number {}'.format(sample))
+            self.add_comment_to_gui_window('\nSample number {}'.format(sample))
             self.models[15] = model.ConsolidatedModel(15, self.inputs, self.gui_inputs, self.gui_console_fn)
             self.prepare_new_model_from_baseline(15)
             self.models[15].relevant_interventions.append(self.inputs.uncertainty_interventions_list)

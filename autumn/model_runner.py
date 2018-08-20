@@ -302,7 +302,7 @@ class ModelRunner:
                 if program in self.inputs.int_uncertainty_start_year.keys():
                     new_run_start_time = min(new_run_start_time, self.inputs.int_uncertainty_start_year[program])
                 else:
-                    program_name = program.replace("perc", "prop")
+                    program_name = program.replace('perc', 'prop')
                     coverages = self.inputs.scaleup_data[15][program_name]  # dictionary
                     # if all coverage values are 0, we don't need to change the scenario start date. Otherwise we do.
                     if len(coverages) > 0:

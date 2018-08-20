@@ -993,7 +993,10 @@ class ModelRunner:
             self.prepare_new_model_from_baseline(15)
             self.models[15].relevant_interventions.append(self.inputs.uncertainty_interventions_list)
             for param in self.outputs['int_uncertainty']['parameter_values']:
-                self.models[15].set_parameter(param, self.outputs['int_uncertainty']['parameter_values'][param][sample])
+                self.add_comment_to_gui_window('Parameter: {}\nValue: {:.3f}'.format(
+                    param, self.outputs['int_uncertainty']['parameter_values'][param][sample]))
+                self.models[15].set_parameter(param[4:],
+                                              self.outputs['int_uncertainty']['parameter_values'][param][sample])
 
             # integrate and save
             self.models[15].integrate()

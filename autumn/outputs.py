@@ -1509,6 +1509,13 @@ class Project:
         vars_to_plot = self.model_runner.models[0].scaleup_fns.keys()
         if self.gui_inputs['plot_option_plot_all_vars']:
             vars_to_plot = t_k.combine_two_lists_no_duplicate(vars_to_plot, self.model_runner.models[0].vars)
+
+        # some optional vars that can be plotted for debugging
+        # vars_to_plot.append('prop_correct_assign_mdr_smearpos')
+        # vars_to_plot.append('prop_correct_assign_mdr_smearneg')
+        # vars_to_plot.append('prop_correct_assign_mdr_extrapul')
+        # vars_to_plot.append('int_prop_firstline_dst')
+
         for var in vars_to_plot:
             fig, axes, max_dims, n_rows, n_cols = initialise_figures_axes(n_panels)
             for n_axis in range(n_panels):

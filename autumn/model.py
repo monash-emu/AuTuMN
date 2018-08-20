@@ -1037,7 +1037,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
                 for regimen in self.inappropriate_regimens:
                     if regimen in label:
                         appropriate_regimen = False
-                if 'treatment_noninfect' in label and not appropriate_regimen:
+                if 'treatment_noninfect' in label and appropriate_regimen:
                     continue
 
                 for agegroup in self.agegroups:

@@ -434,12 +434,14 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         for the "Open Doors" program in Bulgaria, which contributes a small proportion of all case detection in the
         country. Essentially this is passive case finding as persons with symptoms are encouraged to present, so the
         reported case detection rate for the country is assumed to incorporate this.
+
+        The case detection rate is reduced by the proportion of case detection attributable to the "contributor"
+        multiplied by the reciprocal of its coverage (i.e. the extent to which coverage has been withdrawn).
         """
 
         for organ in self.organs_for_detection:
-            self.vars['program_prop_detect' + organ] \
-                *= 1. - self.params['int_prop_detection_dots_contributor'] \
-                * (1. - self.vars['int_prop_dots_contributor'])
+            self.vars['program_prop_detect' + organ] *= 1. - self.params['int_prop_detection_dots_contributor'] \
+                                                        * (1. - self.vars['int_prop_dots_contributor'])
 
     def calculate_case_detection_by_organ(self):
         """
@@ -640,17 +642,19 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         # with misassignment
         for organ in self.organs_for_detection:
             if len(self.strains) > 1 and self.is_misassignment:
-                correct_assign_mdr = self.params['program_prop_clinical_assign_strain']
+                self.vars['prop_correct_assign_mdr' + organ] = self.params['program_prop_clinical_assign_strain']
 
                 # add effect of improve_dst program for culture-positive cases only
                 if 'int_prop_firstline_dst' in self.relevant_interventions:
-                    correct_assign_mdr += (1. - correct_assign_mdr) * self.vars['int_prop_firstline_dst'] * \
-                                          self.params['program_prop' + organ + '_culturable']
+                    self.vars['prop_correct_assign_mdr' + organ] \
+                        += (1. - self.vars['prop_correct_assign_mdr' + organ]) * self.vars['int_prop_firstline_dst'] \
+                        * self.params['program_prop' + organ + '_culturable']
 
                 # add effect of Xpert on identification, assuming that independent distribution to conventional DST
                 if 'int_prop_xpert' in self.relevant_interventions:
-                    correct_assign_mdr += (1. - correct_assign_mdr) * self.vars['int_prop_xpert'] \
-                                          * self.params['int_prop_xpert_sensitivity_mdr']
+                    self.vars['prop_correct_assign_mdr' + organ] \
+                        += (1. - self.vars['prop_correct_assign_mdr' + organ]) * self.vars['int_prop_xpert'] \
+                        * self.params['int_prop_xpert_sensitivity_mdr']
 
                 for riskgroup in self.riskgroups_for_detection:
 
@@ -660,9 +664,11 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
                     self.vars['program_rate_detect' + organ + riskgroup + '_ds_asmdr'] \
                         = 0.
                     self.vars['program_rate_detect' + organ + riskgroup + '_mdr_asds'] \
-                        = (1. - correct_assign_mdr) * self.vars['program_rate_detect' + organ + riskgroup]
+                        = (1. - self.vars['prop_correct_assign_mdr' + organ]) \
+                        * self.vars['program_rate_detect' + organ + riskgroup]
                     self.vars['program_rate_detect' + organ + riskgroup + '_mdr_asmdr'] \
-                        = correct_assign_mdr * self.vars['program_rate_detect' + organ + riskgroup]
+                        = self.vars['prop_correct_assign_mdr' + organ] \
+                        * self.vars['program_rate_detect' + organ + riskgroup]
 
                     # if a third strain is present
                     if len(self.strains) > 2:
@@ -670,12 +676,13 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
                         self.vars['program_rate_detect' + organ + riskgroup + '_ds_asxdr'] = 0.
                         self.vars['program_rate_detect' + organ + riskgroup + '_mdr_asxdr'] = 0.
                         self.vars['program_rate_detect' + organ + riskgroup + '_xdr_asds'] \
-                            = (1. - correct_assign_mdr) * self.vars['program_rate_detect' + organ + riskgroup]
+                            = (1. - self.vars['prop_correct_assign_mdr' + organ]) \
+                              * self.vars['program_rate_detect' + organ + riskgroup]
                         self.vars['program_rate_detect' + organ + riskgroup + '_xdr_asmdr'] \
-                            = correct_assign_mdr \
+                            = self.vars['prop_correct_assign_mdr' + organ] \
                             * (1. - prop_secondline) * self.vars['program_rate_detect' + organ + riskgroup]
                         self.vars['program_rate_detect' + organ + riskgroup + '_xdr_asxdr'] \
-                            = correct_assign_mdr \
+                            = self.vars['prop_correct_assign_mdr' + organ] \
                             * prop_secondline * self.vars['program_rate_detect' + organ + riskgroup]
 
             # without misassignment, everyone correctly allocated by strain

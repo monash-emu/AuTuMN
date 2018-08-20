@@ -1592,7 +1592,6 @@ class Project:
             # subplots by program
             for p, program in enumerate(self.interventions_to_cost[scenario]):
                 axis = find_panel_grid_indices(axes, p, n_rows, n_cols)
-                end_value = 0.
 
                 # generate times to plot cost-coverage curves at, inclusively (by adding small value to end time)
                 times = numpy.arange(self.inputs.model_constants['cost_curve_start_time'],
@@ -1613,12 +1612,12 @@ class Project:
                     axis.plot(costs, coverage, label=str(int(time)),
                               color=(1. - float(t) / float(len(times)), 1. - float(t) / float(len(times)),
                                      1. - float(t) / float(len(times)) * .5))
-                    end_value = max([end_value, max(costs)])
+                    start_value, end_value = (0., max(costs)) if max(costs) > 0. else (min(costs), 0.)
 
                 # finish off axis
                 axis.set_title(t_k.find_title_from_dictionary('program_prop_' + program),
                                fontsize=get_label_font_size(max_dim))
-                self.tidy_x_axis(axis, 0., end_value, max_dim,
+                self.tidy_x_axis(axis, start_value, end_value, max_dim,
                                  x_label='Thousand $US' if last_row(p, n_rows, n_cols) else None)
                 self.tidy_y_axis(axis, 'prop_', max_dim, max_value=1., left_axis=p % n_cols == 0, y_label='',
                                  y_lims=[0., 1.])

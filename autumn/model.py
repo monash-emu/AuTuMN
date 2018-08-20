@@ -858,15 +858,17 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
                 # calculate what would the TSR be without Tx support at baseline
                 if self.raw_tsr[strain] is None:
                     who_tsr = self.vars['program_prop_treatment' + riskgroup + strain + history + '_success']
-                    baseline_coverage = self.scaleup_fns['int_prop_treatment_support_relative' + strain_type](self.inputs.model_constants['current_time'])
-                    self.raw_tsr[strain] = 1. - (1. - who_tsr)/(1. - baseline_coverage *
-                                                  self.params['int_prop_treatment_support_improvement' + strain_type])
+                    baseline_coverage = self.scaleup_fns['int_prop_treatment_support_relative'
+                                                         + strain_type](self.inputs.model_constants['current_time'])
+                    self.raw_tsr[strain] \
+                        = 1. - (1. - who_tsr) / (1. - baseline_coverage
+                                                 * self.params['int_prop_treatment_support_improvement' + strain_type])
 
                 # calculate the new TSR accounting for current treatment support coverage
-                self.vars['program_prop_treatment' + riskgroup + strain + history + '_success'] =\
-                    1. - (1. - self.raw_tsr[strain]) * \
-                         (1. - self.params['int_prop_treatment_support_improvement' + strain_type] *
-                          self.vars['int_prop_treatment_support_relative' + strain_type])
+                self.vars['program_prop_treatment' + riskgroup + strain + history + '_success'] \
+                    = 1. - (1. - self.raw_tsr[strain]) \
+                    * (1. - self.params['int_prop_treatment_support_improvement' + strain_type]
+                       * self.vars['int_prop_treatment_support_relative' + strain_type])
             elif 'int_prop_treatment_support_absolute' + strain_type in self.relevant_interventions:
                 self.vars['program_prop_treatment' + riskgroup + strain + history + '_success'] \
                     = t_k.increase_parameter_closer_to_value(

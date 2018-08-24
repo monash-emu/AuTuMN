@@ -1353,7 +1353,7 @@ class TbRunner(ModelRunner):
         self.amount_to_adjust_mortality = .02
         self.amount_to_adjust_mdr_year = 1.
         self.prop_death_reporting = self.inputs.model_constants['program_prop_death_reporting']
-        self.adjust_mortality = True
+        self.adjust_mortality = False
         adjust_mdr = True
         self.adjust_mdr = False if len(self.inputs.strains) < 2 else adjust_mdr
         self.mdr_introduce_time = self.inputs.model_constants['mdr_introduce_time']

@@ -131,10 +131,10 @@ class Inputs:
          self.inappropriate_regimens, self.uncertainty_interventions_list) \
             = [[] for _ in range(11)]
         (self.original_data, self.derived_data, self.time_variants, self.model_constants, self.scaleup_data,
-         self.scaleup_fns, self.intervention_param_dict, self.comorbidity_prevalences,
-         self.alternative_distribution_dict, self.data_to_fit, self.mixing, self.relevant_interventions,
-         self.interventions_to_cost, self.intervention_startdates, self.freeze_times) \
-            = [{} for _ in range(15)]
+         self.scaleup_fns, self.comorbidity_prevalences, self.alternative_distribution_dict, self.data_to_fit,
+         self.mixing, self.relevant_interventions, self.interventions_to_cost, self.intervention_startdates,
+         self.freeze_times) \
+            = [{} for _ in range(14)]
         (self.riskgroups_for_detection, self.organs_for_detection, self.strains) \
             = [[''] for _ in range(3)]
         (self.is_vary_detection_by_organ, self.is_vary_detection_by_riskgroup, self.is_include_relapse_in_ds_outcomes,

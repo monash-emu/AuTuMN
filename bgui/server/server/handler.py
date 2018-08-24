@@ -118,7 +118,8 @@ import copy
 import shutil
 import traceback
 
-sys.path.insert(0, os.path.abspath("../.."))
+this_dir = os.path.dirname(__file__)
+sys.path.insert(0, os.path.join(this_dir, "../../.."))
 import autumn.model_runner
 import autumn.outputs
 import autumn.gui_params as gui_params

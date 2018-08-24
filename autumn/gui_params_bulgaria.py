@@ -195,7 +195,7 @@ def get_autumn_params():
     param_groups = []
     for group in param_group_keys:
         param_groups.append({'keys': [], 'name': group})
-    for tab in [6, 8]:
+    for tab in [5, 6, 8]:
         param_groups[tab]['attr'] = {'webgui': True}
 
     # distribute the boolean checkbox options

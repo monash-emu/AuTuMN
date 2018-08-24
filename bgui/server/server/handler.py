@@ -20,8 +20,8 @@ from __future__ import print_function
 import os
 import subprocess
 
-from flask import session
-from flask_login import current_app, current_user, login_user, logout_user
+from flask import session, current_app
+from flask_login import current_user, login_user, logout_user
 
 from . import dbmodel
 

@@ -738,10 +738,6 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         self.split_treatment_props_by_riskgroup()
         self.vars['epi_prop_amplification'] = self.params['tb_prop_amplification'] \
             if self.time > self.params['mdr_introduce_time'] else 0.
-        if 'int_prop_shortcourse_mdr' in self.relevant_interventions and self.is_shortcourse_improves_outcomes \
-                and '_mdr' in self.strains:
-            for history in self.histories:
-                self.adjust_treatment_outcomes_shortcourse(history)
         if 'int_prop_dot_groupcontributor' in self.relevant_interventions:
             self.adjust_treatment_outcomes_for_groupcontributor()
         for strain in self.strains:
@@ -749,6 +745,10 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
             for stratum in itertools.product(self.riskgroups, self.histories):
                 if self.time > self.inputs.model_constants['current_time']:
                     self.adjust_treatment_outcomes_support(strain, stratum)
+        if 'int_prop_shortcourse_mdr' in self.relevant_interventions and self.is_shortcourse_improves_outcomes \
+                and '_mdr' in self.strains:
+            for history in self.histories:
+                self.adjust_treatment_outcomes_shortcourse(history)
         treatment_types = copy.copy(self.strains)
         if self.is_misassignment:
             treatment_types.append('_inappropriate')

@@ -589,6 +589,7 @@ class Inputs:
         Populate a dictionary of uncertainty parameters from the inputs dictionary in a format that matches code for
         uncertainty.
         """
+
         for param in self.model_constants:
             if ('tb_' in param or 'start_time' in param) \
                     and '_uncertainty' in param and type(self.model_constants[param]) == dict:
@@ -596,7 +597,8 @@ class Inputs:
                                            'bounds': [self.model_constants[param]['lower'],
                                                       self.model_constants[param]['upper']],
                                            'distribution': 'uniform'}]
-            elif 'int_' in param and '_uncertainty' in param and type(self.model_constants[param]) == dict:
+            elif ('int_' in param or 'program_' in param) and '_uncertainty' in param \
+                    and type(self.model_constants[param]) == dict:
                 self.int_ranges_unc += [{'key': param[:-12],
                                          'bounds': [self.model_constants[param]['lower'],
                                                     self.model_constants[param]['upper']],

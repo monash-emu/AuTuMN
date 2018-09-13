@@ -24,38 +24,38 @@
 
             <md-list>
               <md-list-item
-                  v-for="(thisParamGroup, i) in paramGroups"
-                  :key="i"
-                  :id="thisParamGroup.name"
-                  @click="selectParamGroup(i)">
-                {{thisParamGroup.name}}
+                v-for="(thisParamGroup, i) in paramGroups"
+                :key="i"
+                :id="thisParamGroup.name"
+                @click="selectParamGroup(i)">
+                {{ thisParamGroup.name }}
               </md-list-item>
             </md-list>
           </md-whiteframe>
 
           <md-whiteframe
-              style="width: 220px">
+            style="width: 220px">
 
             <md-layout
-                v-if="paramGroup"
-                md-column
-                style="padding: 30px 15px">
+              v-if="paramGroup"
+              md-column
+              style="padding: 30px 15px">
 
               <h2 class="md-heading">
-                {{paramGroup.name}}
+                {{ paramGroup.name }}
               </h2>
 
               <md-layout
-                  md-column
-                  v-for="(key, i) in paramGroup.keys"
-                  :key="i">
+                v-for="(key, i) in paramGroup.keys"
+                :key="i"
+                md-column>
 
                 <div v-if="params[key].type == 'boolean'">
                   <md-checkbox
-                      type="checkbox"
-                      tabindex="0"
-                      :id="key"
-                      v-model="params[key].value">
+                    :id="key"
+                    v-model="params[key].value"
+                    type="checkbox"
+                    tabindex="0">
                     {{ params[key].label }}
                   </md-checkbox>
                 </div>
@@ -64,68 +64,66 @@
                   <md-input-container>
                     <label>{{ params[key].label }}</label>
                     <md-select
-                        v-model="params[key].value"
-                        @change="selectDropDown(key)"
-                        >
+                      v-model="params[key].value"
+                      @change="selectDropDown(key)"
+                    >
                       <md-option
-                          v-for="(option, i) in params[key].options"
-                          v-bind:value="option"
-                          :key="i">
-                        {{option}}
+                        v-for="(option, i) in params[key].options"
+                        :value="option"
+                        :key="i">
+                        {{ option }}
                       </md-option>
                     </md-select>
                   </md-input-container>
                 </div>
 
-                <div v-else-if="
+                <div 
+                  v-else-if="
                     (params[key].type === 'number') ||
-                    (params[key].type === 'double') ||
-                    (params[key].type === 'integer')">
+                      (params[key].type === 'double') ||
+                (params[key].type === 'integer')">
                   <md-input-container>
                     <label>{{ params[key].label }}</label>
                     <md-input
-                        type="number"
-                        step="any"
-                        v-model="params[key].value">
-                    </md-input>
+                      v-model="params[key].value"
+                      type="number"
+                      step="any"/>
 
                   </md-input-container>
                 </div>
 
                 <div v-else-if="params[key].type == 'slider'">
                   <label>{{ params[key].label }}</label>
-                  <div style="height: 2.5em"></div>
+                  <div style="height: 2.5em"/>
                   <vue-slider
-                      :max="params[key].max"
-                      :interval="params[key].interval"
-                      v-model="params[key].value">
-                  </vue-slider>
+                    :max="params[key].max"
+                    :interval="params[key].interval"
+                    v-model="params[key].value"/>
                 </div>
 
                 <div v-else-if="params[key].type == 'breakpoints'">
                   <label>{{ params[key].label }}</label>
-                  <div style="height: 2.5em"></div>
+                  <div style="height: 2.5em"/>
                   <md-layout
-                      md-row
-                      style="width: 200px"
-                      v-for="(breakpoint, i) of params[key].value"
-                      :key="i">
+                    v-for="(breakpoint, i) of params[key].value"
+                    :key="i"
+                    md-row
+                    style="width: 200px">
                     <vue-slider
-                        style="width: 130px"
-                        :max="100"
-                        :interval="1"
-                        v-model="params[key].value[i]"
-                        @drag-end="breakpointCallback(params, key)">
-                    </vue-slider>
+                      :max="100"
+                      :interval="1"
+                      v-model="params[key].value[i]"
+                      style="width: 130px"
+                      @drag-end="breakpointCallback(params, key)"/>
                     <md-button
-                        class="md-icon-button md-raised"
-                        @click="deleteBreakpoint(params, key, i)">
+                      class="md-icon-button md-raised"
+                      @click="deleteBreakpoint(params, key, i)">
                       <md-icon>clear</md-icon>
                     </md-button>
                   </md-layout>
                   <md-button
-                      class="md-icon-button md-raised"
-                      @click="addBreakpoint(params, key)">
+                    class="md-icon-button md-raised"
+                    @click="addBreakpoint(params, key)">
                     <md-icon>add</md-icon>
                   </md-button>
                 </div>
@@ -137,48 +135,47 @@
           <md-layout md-flex>
             <div style="width: 100%; padding: 30px 15px">
               <md-layout
-                  md-column
-                  md-align="start"
-                  md-vertical-align="start">
+                md-column
+                md-align="start"
+                md-vertical-align="start">
 
                 <h2 class="md-heading">
                   Run model
                 </h2>
 
                 <md-input-container
-                    style="
+                  style="
                         width: 200px;">
                   <label>Existing Projects</label>
                   <md-select
-                      v-model="project"
-                      @change="changeProject">
+                    v-model="project"
+                    @change="changeProject">
                     <md-option
-                        v-for="(p, i) in projects"
-                        v-bind:value="p"
-                        :key="i">
-                      {{p}}
+                      v-for="(p, i) in projects"
+                      :value="p"
+                      :key="i">
+                      {{ p }}
                     </md-option>
                   </md-select>
                 </md-input-container>
 
                 <div style="width: 100%">
                   <md-layout
-                      md-row
-                      md-vertical-align="center">
+                    md-row
+                    md-vertical-align="center">
 
                     <md-button
-                        md-flex=true
-                        class="md-raised"
-                        :disabled="isRunning"
-                        @click="run()">
+                      :disabled="isRunning"
+                      md-flex="true"
+                      class="md-raised"
+                      @click="run()">
                       Run
                     </md-button>
 
                     <md-spinner
-                        :md-size="30"
-                        md-indeterminate
-                        v-if="isRunning">
-                    </md-spinner>
+                      v-if="isRunning"
+                      :md-size="30"
+                      md-indeterminate/>
                   </md-layout>
                 </div>
 
@@ -187,12 +184,12 @@
                 </h2>
 
                 <md-layout
-                    style="
+                  style="
                       width: 100%;
                       background-color: #EEE;">
                   <div
-                      id="console-output"
-                      style="
+                    id="console-output"
+                    style="
                         width: 100%;
                         height: 350px;
                         overflow-y: scroll;
@@ -200,11 +197,11 @@
                         font-size: 0.9em">
 
                     <div
-                        style="
+                      v-for="(line, i) in consoleLines"
+                      :key="i"
+                      style="
                           margin: 0 8px;
-                          word-wrap: break-word;"
-                        v-for="(line, i) in consoleLines"
-                        :key="i">
+                          word-wrap: break-word;">
                       {{ line }}
                     </div>
 
@@ -216,19 +213,13 @@
                   class="md-heading">
                   Progress in Uncertainty Runs
                 </h2>
-                <md-layout >
-                  <div id="temp-chart-0">
-                  </div>
-                  <div id="temp-chart-1">
-                  </div>
-                  <div id="temp-chart-2">
-                  </div>
-                  <div id="temp-chart-3">
-                  </div>
-                  <div id="temp-chart-4">
-                  </div>
-                  <div id="temp-chart-5">
-                  </div>
+                <md-layout>
+                  <div id="temp-chart-0"/>
+                  <div id="temp-chart-1"/>
+                  <div id="temp-chart-2"/>
+                  <div id="temp-chart-3"/>
+                  <div id="temp-chart-4"/>
+                  <div id="temp-chart-5"/>
                 </md-layout>
 
                 <h2
@@ -238,24 +229,23 @@
                 </h2>
 
                 <vue-slider
-                    v-if="filenames.length > 0"
-                    style="width: 100%"
-                    :max="100"
-                    :min="10"
-                    :interval="1"
-                    v-model="imageWidth"
-                    @callback="changeWidth(imageWidth)">
-                </vue-slider>
+                  v-if="filenames.length > 0"
+                  :max="100"
+                  :min="10"
+                  :interval="1"
+                  v-model="imageWidth"
+                  style="width: 100%"
+                  @callback="changeWidth(imageWidth)"/>
 
                 <md-layout style="width: 100%">
                   <md-card
-                      :style="imageStyle"
-                      v-for="(filename, i) in filenames"
-                      :key="i">
+                    v-for="(filename, i) in filenames"
+                    :style="imageStyle"
+                    :key="i">
                     <md-card-media>
                       <img
-                          style="width: 100%"
-                          :src="filename"/>
+                        :src="filename"
+                        style="width: 100%">
                     </md-card-media>
                   </md-card>
                 </md-layout>
@@ -289,9 +279,9 @@ import ChartContainer from '../modules/chartContainer'
 Vue.use(VueScrollTo)
 
 export default {
-  name: 'experiments',
-  components: {vueSlider},
-  data () {
+  name: 'Experiments',
+  components: { vueSlider },
+  data() {
     return {
       params: {},
       paramGroups: [],
@@ -307,7 +297,7 @@ export default {
       isGraph: false
     }
   },
-  async created () {
+  async created() {
     let res = await rpc.rpcRun('public_get_autumn_params')
     if (res.result) {
       console.log('> Model.created', res.result)
@@ -325,7 +315,7 @@ export default {
     this.checkRun()
   },
   methods: {
-    async checkRun () {
+    async checkRun() {
       let res = await rpc.rpcRun('public_check_autumn_run')
 
       if (res.result) {
@@ -356,7 +346,7 @@ export default {
         this.isRunning = false
       }
     },
-    updateGraph (data) {
+    updateGraph(data) {
       console.log(`> Model.updateGraph`)
       let paramKeys = _.keys(data.all_parameters_tried)
       for (let iParam of _.range(paramKeys.length)) {
@@ -388,7 +378,10 @@ export default {
         for (let iRejectedSet of rejectedSetIndices) {
           iDataset += 1
           let yValues = rejectedSets[iRejectedSet]
-          let xValues = util.makeArray(yValues.length, parseFloat(iRejectedSet) + 1)
+          let xValues = util.makeArray(
+            yValues.length,
+            parseFloat(iRejectedSet) + 1
+          )
           let name = paramKey + iRejectedSet
           if (iDataset >= chart.getDatasets().length) {
             chart.addDataset(name, xValues, yValues, '#FC4A1A')
@@ -398,26 +391,27 @@ export default {
         }
       }
     },
-    deleteBreakpoint (params, key, i) {
+    deleteBreakpoint(params, key, i) {
       this.params[key].value.splice(i, 1)
     },
-    addBreakpoint (params, key) {
+    addBreakpoint(params, key) {
       this.params[key].value.push(_.max(this.params[key].value))
     },
-    async breakpointCallback (params, key) {
+    async breakpointCallback(params, key) {
       await util.delay(100)
-      this.params[key].value = _.sortBy(
-        this.params[key].value, v => _.parseInt(v))
+      this.params[key].value = _.sortBy(this.params[key].value, v =>
+        _.parseInt(v)
+      )
     },
-    selectParamGroup (i) {
+    selectParamGroup(i) {
       this.paramGroup = this.paramGroups[i]
     },
-    async run () {
+    async run() {
       let params = _.cloneDeep(this.params)
       for (let param of _.values(params)) {
         if (param.type === 'breakpoints') {
           param.value = _.sortedUniq(param.value)
-        } else if ((param.type === 'number') || (param.type === 'double')) {
+        } else if (param.type === 'number' || param.type === 'double') {
           param.value = parseFloat(param.value)
         } else if (param.type === 'integer') {
           param.value = _.parseInt(param.value)
@@ -442,12 +436,14 @@ export default {
         this.isRunning = false
       }
     },
-    async changeProject (project) {
+    async changeProject(project) {
       let res = await rpc.rpcRun('public_get_project_images', project)
       if (res.result) {
         console.log('> Model.changeProject', project, res.result)
         this.filenames = _.map(
-          res.result.filenames, f => `${config.apiUrl}/file/${f}`)
+          res.result.filenames,
+          f => `${config.apiUrl}/file/${f}`
+        )
         this.consoleLines = res.result.consoleLines
         if (this.$el.querySelector) {
           await util.delay(100)
@@ -460,11 +456,11 @@ export default {
         console.log('> Model.changeProject', this.filenames)
       }
     },
-    changeWidth () {
+    changeWidth() {
       this.imageStyle = `width: ${this.imageWidth}%`
       console.log('> Model.changeWidth', this.imageStyle)
     },
-    selectDropDown (key) {
+    selectDropDown(key) {
       if (key === 'country') {
         let country = this.params[key].value.toLowerCase()
         if (country !== this.country) {
@@ -479,14 +475,14 @@ export default {
                 key,
                 JSON.stringify(this.params[key].value),
                 '->',
-                JSON.stringify(diffParams[key].value))
+                JSON.stringify(diffParams[key].value)
+              )
               this.params[key].value = diffParams[key].value
             }
           }
         }
       }
     }
-
   }
 }
 </script>

@@ -5,10 +5,10 @@ import Chart from 'chart.js'
  * Functions to generate chartJs data for model
  */
 
-function makeLineChartData (title, xAxisLabel, yAxisLabel) {
+function makeLineChartData(title, xAxisLabel, yAxisLabel) {
   return {
     type: 'scatter',
-    data: {datasets: []},
+    data: { datasets: [] },
     options: {
       title: {
         display: true,
@@ -20,22 +20,26 @@ function makeLineChartData (title, xAxisLabel, yAxisLabel) {
       maintainAspectRatio: false,
       responsive: true,
       scales: {
-        xAxes: [{
-          type: 'linear',
-          position: 'bottom',
-          scaleLabel: {
-            display: true,
-            labelString: xAxisLabel
-          },
-          ticks: {}
-        }],
-        yAxes: [{
-          type: 'linear',
-          scaleLabel: {
-            display: true,
-            labelString: yAxisLabel
+        xAxes: [
+          {
+            type: 'linear',
+            position: 'bottom',
+            scaleLabel: {
+              display: true,
+              labelString: xAxisLabel
+            },
+            ticks: {}
           }
-        }]
+        ],
+        yAxes: [
+          {
+            type: 'linear',
+            scaleLabel: {
+              display: true,
+              labelString: yAxisLabel
+            }
+          }
+        ]
       }
     }
   }
@@ -61,7 +65,7 @@ const colors = [
 
 let seenNames = []
 
-function getColor (name) {
+function getColor(name) {
   let i = seenNames.indexOf(name)
   if (i < 0) {
     seenNames.push(name)
@@ -76,7 +80,7 @@ function getColor (name) {
  *
  */
 class ChartContainer {
-  constructor (divTag, chartData) {
+  constructor(divTag, chartData) {
     this.divTag = divTag
     this.div = $(this.divTag)
     let canvas = $('<canvas>')
@@ -89,20 +93,20 @@ class ChartContainer {
     this.chart = new Chart(canvas, this.chartData)
   }
 
-  getDatasets () {
+  getDatasets() {
     return this.chartData.data.datasets
   }
 
-  getChartOptions () {
+  getChartOptions() {
     return this.chartData.options
   }
 
-  addDataset (name, xValues, yValues, color = null) {
+  addDataset(name, xValues, yValues, color = null) {
     let datasets = this.getDatasets()
     let newDatasetData = []
     if (xValues && yValues) {
       for (let i = 0; i < xValues.length; i += 1) {
-        newDatasetData.push({x: xValues[i], y: yValues[i]})
+        newDatasetData.push({ x: xValues[i], y: yValues[i] })
       }
     }
     let iDataset = datasets.length
@@ -122,31 +126,31 @@ class ChartContainer {
     return iDataset
   }
 
-  updateDataset (iDataset, xValues, yValues) {
+  updateDataset(iDataset, xValues, yValues) {
     let dataset = this.getDatasets()[iDataset]
     dataset.data.length = 0
     for (let i = 0; i < xValues.length; i += 1) {
-      dataset.data.push({x: xValues[i], y: yValues[i]})
+      dataset.data.push({ x: xValues[i], y: yValues[i] })
     }
     this.chart.update()
   }
 
-  setTitle (title) {
+  setTitle(title) {
     let options = this.getChartOptions()
     options.title.text = title
   }
 
-  setXLabel (xLabel) {
+  setXLabel(xLabel) {
     let options = this.getChartOptions()
     options.scales.xAxes[0].scaleLabel.labelString = xLabel
   }
 
-  setYLabel (yLabel) {
+  setYLabel(yLabel) {
     let options = this.getChartOptions()
     options.scales.yAxes[0].scaleLabel.labelString = yLabel
   }
 
-  destroy () {
+  destroy() {
     this.chart.destroy()
     this.div.empty()
   }

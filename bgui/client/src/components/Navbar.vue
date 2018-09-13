@@ -19,7 +19,7 @@
       <md-menu v-if="user.authenticated">
 
         <md-button md-menu-trigger>
-          {{user.name}}
+          {{ user.name }}
         </md-button>
 
         <md-menu-content>
@@ -38,8 +38,8 @@
 
       <router-link
         v-else
-        to='/login'
-        tag='md-button'>
+        to="/login"
+        tag="md-button">
         Login
       </router-link>
 
@@ -53,26 +53,26 @@ import auth from '../modules/auth'
 import config from '../config'
 
 export default {
-  name: 'navbar',
-  data () {
+  name: 'Navbar',
+  data() {
     return {
       title: config.title,
       isUser: config.isUser
     }
   },
   computed: {
-    user: function () {
+    user: function() {
       return this.$store.state.user
     }
   },
   methods: {
-    editUser () {
+    editUser() {
       this.$router.push('/edit-user')
     },
-    home () {
+    home() {
       this.$router.push('/')
     },
-    async logout () {
+    async logout() {
       await auth.logout()
       this.$router.push('/login')
     }

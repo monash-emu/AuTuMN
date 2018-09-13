@@ -1,50 +1,53 @@
 <template>
   <md-layout md-align="center">
     <md-whiteframe style="margin-top: 4em; padding: 3em">
-      <md-layout md-flex="50" md-align="center" md-column>
+      <md-layout 
+        md-flex="50" 
+        md-align="center" 
+        md-column>
 
         <h2 class="md-display-2">
           Register to {{ title }}
         </h2>
 
-        <form v-on:submit.prevent="submit">
+        <form @submit.prevent="submit">
           <md-input-container>
             <label>User name</label>
             <md-input
-              type='text'
-              v-model='name'
-              placeholder='User name'>
-            </md-input>
+              v-model="name"
+              type="text"
+              placeholder="User name"/>
           </md-input-container>
           <md-input-container>
             <label>E-mail address</label>
             <md-input
-              type='text'
-              v-model='email'
-              placeholder='E-mail address'>
-            </md-input>
+              v-model="email"
+              type="text"
+              placeholder="E-mail address"/>
           </md-input-container>
           <md-input-container>
             <label>Password</label>
             <md-input
-              type='password'
-              v-model='rawPassword'
-              placeholder='Password'>
-            </md-input>
+              v-model="rawPassword"
+              type="password"
+              placeholder="Password"/>
           </md-input-container>
           <md-input-container>
             <label>Confirm Password</label>
             <md-input
-              type='password'
-              v-model='rawPasswordConfirm'
-              placeholder='Confirm Password'>
-            </md-input>
+              v-model="rawPasswordConfirm"
+              type="password"
+              placeholder="Confirm Password"/>
           </md-input-container>
-          <md-button type="submit" class="md-raised md-primary">
+          <md-button 
+            type="submit" 
+            class="md-raised md-primary">
             Register
           </md-button>
-          <div v-if="error" style="color: red">
-            {{error}}
+          <div 
+            v-if="error" 
+            style="color: red">
+            {{ error }}
           </div>
         </form>
 
@@ -59,7 +62,7 @@ import config from '../config'
 
 export default {
   name: 'Register',
-  data () {
+  data() {
     return {
       title: config.title,
       name: '',
@@ -71,7 +74,7 @@ export default {
     }
   },
   methods: {
-    async submit () {
+    async submit() {
       let payload = {
         name: this.$data.name,
         email: this.$data.email,

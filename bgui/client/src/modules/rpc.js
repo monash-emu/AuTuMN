@@ -12,9 +12,8 @@ import saveAs from 'file-saver'
 axios.defaults.withCredentials = true
 
 export default {
-
-  async rpcRun (method, ...params) {
-    let payload = {method, params, jsonrpc: '2.0'}
+  async rpcRun(method, ...params) {
+    let payload = { method, params, jsonrpc: '2.0' }
 
     console.log('> rpc.rpcRun', method, ...params)
 
@@ -31,7 +30,7 @@ export default {
     }
   },
 
-  async rpcUpload (method, files, ...params) {
+  async rpcUpload(method, files, ...params) {
     let formData = new FormData()
     formData.append('method', method)
     formData.append('params', JSON.stringify(params))
@@ -44,7 +43,10 @@ export default {
     console.log('> rpc.rpcUpoad', method, files, ...params)
 
     try {
-      let response = await axios.post(`${config.apiUrl}/api/rpc-upload`, formData)
+      let response = await axios.post(
+        `${config.apiUrl}/api/rpc-upload`,
+        formData
+      )
       return response.data
     } catch (e) {
       return {
@@ -56,19 +58,22 @@ export default {
     }
   },
 
-  async rpcDownload (method, ...params) {
-    let payload = {method, params, jsonrpc: '2.0'}
+  async rpcDownload(method, ...params) {
+    let payload = { method, params, jsonrpc: '2.0' }
 
     console.log('> rpc.rpcDownload', ...params)
 
     try {
-      let response = await axios.post(`${config.apiUrl}/api/rpc-download`, payload)
+      let response = await axios.post(
+        `${config.apiUrl}/api/rpc-download`,
+        payload
+      )
       let filename = response.headers.filename
       let data = JSON.parse(response.headers.data)
       console.log('> rpc.rpcDownload response', data)
       if (!data.error) {
         let blob = new Blob([response.data])
-        saveAs.saveAs(blob, (filename))
+        saveAs.saveAs(blob, filename)
       }
       return data
     } catch (e) {
@@ -80,5 +85,4 @@ export default {
       }
     }
   }
-
 }

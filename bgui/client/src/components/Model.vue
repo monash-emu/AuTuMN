@@ -1,263 +1,268 @@
 <template>
-  <div style="">
-    <md-layout md-column>
+  <md-layout md-row>
 
-      <md-layout md-row>
+    <md-layout
+      md-row
+      style="
+        height: calc(100vh - 48px);
+        overflow: hidden">
+
+      <div
+        style="
+          width: 230px;
+          height: calc(100vh - 48px);
+          overflow: auto;
+          padding: 30px 0 30px 0;
+          border-right: 1px solid rgb(221, 221, 221);">
+
+        <h2
+          class="md-heading"
+          style="padding-left: 15px">
+          Parameter sets
+        </h2>
+
+        <md-list>
+          <md-list-item
+            v-for="(thisParamGroup, i) in paramGroups"
+            :key="i"
+            :id="thisParamGroup.name"
+            @click="selectParamGroup(i)">
+            {{ thisParamGroup.name }}
+          </md-list-item>
+        </md-list>
+      </div>
+
+      <div
+        style="
+          height: calc(100vh - 48px);
+          overflow: auto;
+          width: 220px;
+          padding: 30px 15px;
+          border-right: 1px solid rgb(221, 221, 221);">
 
         <md-layout
-          md-row
-          style="
-            width: 50%;
-            height: calc(100vh - 48px);
-            overflow: auto">
+          v-if="paramGroup"
+          md-column>
 
-          <md-whiteframe
-            style="
-              width: 230px;
-              padding-top: 30px ">
+          <h2 class="md-heading">
+            {{ paramGroup.name }}
+          </h2>
+
+          <md-layout
+            v-for="(key, i) in paramGroup.keys"
+            :key="i"
+            md-column>
+
+            <div v-if="params[key].type === 'boolean'">
+              <md-checkbox
+                :id="key"
+                v-model="params[key].value"
+                type="checkbox"
+                tabindex="0">
+                {{ params[key].label }}
+              </md-checkbox>
+            </div>
+
+            <div v-else-if="params[key].type === 'drop_down'">
+              <md-input-container>
+                <label>{{ params[key].label }}</label>
+                <md-select
+                  v-model="params[key].value"
+                  @change="selectDropDown(key)"
+                >
+                  <md-option
+                    v-for="(option, i) in params[key].options"
+                    :value="option"
+                    :key="i">
+                    {{ option }}
+                  </md-option>
+                </md-select>
+              </md-input-container>
+            </div>
+
+            <div
+              v-else-if="(params[key].type === 'number') ||
+                (params[key].type === 'double') ||
+            (params[key].type === 'integer')">
+              <md-input-container>
+                <label>{{ params[key].label }}</label>
+                <md-input
+                  v-model="params[key].value"
+                  type="number"
+                  step="any"/>
+
+              </md-input-container>
+            </div>
+
+            <div v-else-if="params[key].type === 'slider'">
+              <label>{{ params[key].label }}</label>
+              <div style="height: 2.5em"/>
+              <vue-slider
+                :max="params[key].max"
+                :interval="params[key].interval"
+                v-model="params[key].value"/>
+            </div>
+
+            <div v-else-if="params[key].type === 'breakpoints'">
+              <label>{{ params[key].label }}</label>
+              <div style="height: 2.5em"/>
+              <md-layout
+                v-for="(breakpoint, i) of params[key].value"
+                :key="i"
+                md-row
+                style="width: 200px">
+                <vue-slider
+                  :max="100"
+                  :interval="1"
+                  v-model="params[key].value[i]"
+                  style="width: 130px"
+                  @drag-end="breakpointCallback(params, key)"/>
+                <md-button
+                  class="md-icon-button md-raised"
+                  @click="deleteBreakpoint(params, key, i)">
+                  <md-icon>clear</md-icon>
+                </md-button>
+              </md-layout>
+              <md-button
+                class="md-icon-button md-raised"
+                @click="addBreakpoint(params, key)">
+                <md-icon>add</md-icon>
+              </md-button>
+            </div>
+
+          </md-layout>
+        </md-layout>
+      </div>
+
+      <md-layout md-flex>
+        <div
+          style="
+            height: calc(100vh - 48px);
+            overflow: auto;
+            padding: 30px 15px">
+
+          <md-layout
+            md-column
+            md-align="start"
+            md-vertical-align="start">
+
+            <h2 class="md-heading">
+              Run model
+            </h2>
+
+            <md-input-container
+              style="
+                    width: 200px;">
+              <label>Existing Projects</label>
+              <md-select
+                v-model="project"
+                @change="changeProject">
+                <md-option
+                  v-for="(p, i) in projects"
+                  :value="p"
+                  :key="i">
+                  {{ p }}
+                </md-option>
+              </md-select>
+            </md-input-container>
+
+            <div style="width: 100%">
+              <md-layout
+                md-row
+                md-vertical-align="center">
+
+                <md-button
+                  :disabled="isRunning"
+                  md-flex="true"
+                  class="md-raised"
+                  @click="run()">
+                  Run
+                </md-button>
+
+                <md-spinner
+                  v-if="isRunning"
+                  :md-size="30"
+                  md-indeterminate/>
+              </md-layout>
+            </div>
+
+            <h2 class="md-heading">
+              Console Output
+            </h2>
+
+            <md-layout
+              style="
+                  width: 100%;
+                  background-color: #EEE;">
+              <div
+                id="console-output"
+                style="
+                    width: 100%;
+                    height: 350px;
+                    overflow-y: scroll;
+                    font-family: Courier, monospace;
+                    font-size: 0.9em">
+
+                <div
+                  v-for="(line, i) in consoleLines"
+                  :key="i"
+                  style="
+                      margin: 0 8px;
+                      word-wrap: break-word;">
+                  {{ line }}
+                </div>
+
+              </div>
+            </md-layout>
+
+            <h2
+              v-show="isGraph"
+              class="md-heading">
+              Progress in Uncertainty Runs
+            </h2>
+            <md-layout>
+              <div id="temp-chart-0"/>
+              <div id="temp-chart-1"/>
+              <div id="temp-chart-2"/>
+              <div id="temp-chart-3"/>
+              <div id="temp-chart-4"/>
+              <div id="temp-chart-5"/>
+            </md-layout>
 
             <h2
               class="md-heading"
-              style="padding-left: 15px">
-              Parameter sets
+              style="margin-top: 1.5em;">
+              Model Results
             </h2>
 
-            <md-list>
-              <md-list-item
-                v-for="(thisParamGroup, i) in paramGroups"
-                :key="i"
-                :id="thisParamGroup.name"
-                @click="selectParamGroup(i)">
-                {{ thisParamGroup.name }}
-              </md-list-item>
-            </md-list>
-          </md-whiteframe>
+            <vue-slider
+              v-if="filenames.length > 0"
+              :max="100"
+              :min="10"
+              :interval="1"
+              v-model="imageWidth"
+              style="width: 100%"
+              @callback="changeWidth(imageWidth)"/>
 
-          <md-whiteframe
-            style="width: 220px">
-
-            <md-layout
-              v-if="paramGroup"
-              md-column
-              style="padding: 30px 15px">
-
-              <h2 class="md-heading">
-                {{ paramGroup.name }}
-              </h2>
-
-              <md-layout
-                v-for="(key, i) in paramGroup.keys"
-                :key="i"
-                md-column>
-
-                <div v-if="params[key].type == 'boolean'">
-                  <md-checkbox
-                    :id="key"
-                    v-model="params[key].value"
-                    type="checkbox"
-                    tabindex="0">
-                    {{ params[key].label }}
-                  </md-checkbox>
-                </div>
-
-                <div v-else-if="params[key].type == 'drop_down'">
-                  <md-input-container>
-                    <label>{{ params[key].label }}</label>
-                    <md-select
-                      v-model="params[key].value"
-                      @change="selectDropDown(key)"
-                    >
-                      <md-option
-                        v-for="(option, i) in params[key].options"
-                        :value="option"
-                        :key="i">
-                        {{ option }}
-                      </md-option>
-                    </md-select>
-                  </md-input-container>
-                </div>
-
-                <div 
-                  v-else-if="
-                    (params[key].type === 'number') ||
-                      (params[key].type === 'double') ||
-                (params[key].type === 'integer')">
-                  <md-input-container>
-                    <label>{{ params[key].label }}</label>
-                    <md-input
-                      v-model="params[key].value"
-                      type="number"
-                      step="any"/>
-
-                  </md-input-container>
-                </div>
-
-                <div v-else-if="params[key].type == 'slider'">
-                  <label>{{ params[key].label }}</label>
-                  <div style="height: 2.5em"/>
-                  <vue-slider
-                    :max="params[key].max"
-                    :interval="params[key].interval"
-                    v-model="params[key].value"/>
-                </div>
-
-                <div v-else-if="params[key].type == 'breakpoints'">
-                  <label>{{ params[key].label }}</label>
-                  <div style="height: 2.5em"/>
-                  <md-layout
-                    v-for="(breakpoint, i) of params[key].value"
-                    :key="i"
-                    md-row
-                    style="width: 200px">
-                    <vue-slider
-                      :max="100"
-                      :interval="1"
-                      v-model="params[key].value[i]"
-                      style="width: 130px"
-                      @drag-end="breakpointCallback(params, key)"/>
-                    <md-button
-                      class="md-icon-button md-raised"
-                      @click="deleteBreakpoint(params, key, i)">
-                      <md-icon>clear</md-icon>
-                    </md-button>
-                  </md-layout>
-                  <md-button
-                    class="md-icon-button md-raised"
-                    @click="addBreakpoint(params, key)">
-                    <md-icon>add</md-icon>
-                  </md-button>
-                </div>
-
-              </md-layout>
+            <md-layout style="width: 100%">
+              <md-card
+                v-for="(filename, i) in filenames"
+                :style="imageStyle"
+                :key="i">
+                <md-card-media>
+                  <img
+                    :src="filename"
+                    style="width: 100%">
+                </md-card-media>
+              </md-card>
             </md-layout>
-          </md-whiteframe>
-
-          <md-layout md-flex>
-            <div style="width: 100%; padding: 30px 15px">
-              <md-layout
-                md-column
-                md-align="start"
-                md-vertical-align="start">
-
-                <h2 class="md-heading">
-                  Run model
-                </h2>
-
-                <md-input-container
-                  style="
-                        width: 200px;">
-                  <label>Existing Projects</label>
-                  <md-select
-                    v-model="project"
-                    @change="changeProject">
-                    <md-option
-                      v-for="(p, i) in projects"
-                      :value="p"
-                      :key="i">
-                      {{ p }}
-                    </md-option>
-                  </md-select>
-                </md-input-container>
-
-                <div style="width: 100%">
-                  <md-layout
-                    md-row
-                    md-vertical-align="center">
-
-                    <md-button
-                      :disabled="isRunning"
-                      md-flex="true"
-                      class="md-raised"
-                      @click="run()">
-                      Run
-                    </md-button>
-
-                    <md-spinner
-                      v-if="isRunning"
-                      :md-size="30"
-                      md-indeterminate/>
-                  </md-layout>
-                </div>
-
-                <h2 class="md-heading">
-                  Console Output
-                </h2>
-
-                <md-layout
-                  style="
-                      width: 100%;
-                      background-color: #EEE;">
-                  <div
-                    id="console-output"
-                    style="
-                        width: 100%;
-                        height: 350px;
-                        overflow-y: scroll;
-                        font-family: Courier, monospace;
-                        font-size: 0.9em">
-
-                    <div
-                      v-for="(line, i) in consoleLines"
-                      :key="i"
-                      style="
-                          margin: 0 8px;
-                          word-wrap: break-word;">
-                      {{ line }}
-                    </div>
-
-                  </div>
-                </md-layout>
-
-                <h2
-                  v-show="isGraph"
-                  class="md-heading">
-                  Progress in Uncertainty Runs
-                </h2>
-                <md-layout>
-                  <div id="temp-chart-0"/>
-                  <div id="temp-chart-1"/>
-                  <div id="temp-chart-2"/>
-                  <div id="temp-chart-3"/>
-                  <div id="temp-chart-4"/>
-                  <div id="temp-chart-5"/>
-                </md-layout>
-
-                <h2
-                  class="md-heading"
-                  style="margin-top: 1.5em;">
-                  Model Results
-                </h2>
-
-                <vue-slider
-                  v-if="filenames.length > 0"
-                  :max="100"
-                  :min="10"
-                  :interval="1"
-                  v-model="imageWidth"
-                  style="width: 100%"
-                  @callback="changeWidth(imageWidth)"/>
-
-                <md-layout style="width: 100%">
-                  <md-card
-                    v-for="(filename, i) in filenames"
-                    :style="imageStyle"
-                    :key="i">
-                    <md-card-media>
-                      <img
-                        :src="filename"
-                        style="width: 100%">
-                    </md-card-media>
-                  </md-card>
-                </md-layout>
-              </md-layout>
-
-            </div>
           </md-layout>
-        </md-layout>
 
+        </div>
       </md-layout>
     </md-layout>
-  </div>
+
+  </md-layout>
 </template>
 
 <!-- Add 'scoped' attribute to limit CSS to this component only -->

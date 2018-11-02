@@ -1331,7 +1331,6 @@ class Project:
         Returns:
             The maximum value from the point estimate data being plotted
         """
-
         # prelims
         gtb_data, gtb_data_lists, gtb_index, colour, line_width, alpha = {}, {}, 0, '.2', 0., 1.
 
@@ -1366,7 +1365,7 @@ class Project:
                 ax.plot(gtb_data[limit].keys()[gtb_index:], gtb_data[limit].values()[gtb_index:],
                         color=colour, linewidth=line_width, label=None, alpha=alpha)
 
-        return max(gtb_data['point_estimate'].values())
+        return max(gtb_data['point_estimate'].values()[gtb_index:])
 
     def plot_populations(self, category_to_loop='agegroups', scenario=0, fraction=False, requirements=('',),
                          exclusions=('we all love futsal',)):

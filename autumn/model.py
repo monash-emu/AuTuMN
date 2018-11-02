@@ -781,8 +781,9 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
                 self.vars['program_prop_' + converter[strata[-1]] + riskgroup + ''.join(strata)] \
                     = copy.copy(self.vars['program_prop_' + converter[strata[-1]] + ''.join(strata)])
 
-            # delete the var that is not riskgroup-specific
-            del self.vars['program_prop_' + converter[strata[-1]] + ''.join(strata)]
+            if len(self.riskgroups) > 1:
+                # delete the var that is not riskgroup-specific
+                del self.vars['program_prop_' + converter[strata[-1]] + ''.join(strata)]
 
     def adjust_treatment_outcomes_shortcourse(self, history):
         """

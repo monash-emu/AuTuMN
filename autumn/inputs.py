@@ -6,9 +6,9 @@ import itertools
 import scipy.integrate
 
 # AuTuMN imports
-import spreadsheet
-import tool_kit
-from curve import scale_up_function
+from autumn import spreadsheet
+from autumn import tool_kit
+from autumn.curve import scale_up_function
 
 
 def make_constant_function(value):

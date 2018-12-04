@@ -8,13 +8,13 @@ from matplotlib.ticker import FuncFormatter
 import numpy
 import platform
 import os
-import economics
+from autumn import economics
 import copy
 from scipy import stats
 import itertools
 
 # AuTuMN import
-import tool_kit as t_k
+from autumn import tool_kit as t_k
 
 
 ''' plot creating and cleaning functions '''

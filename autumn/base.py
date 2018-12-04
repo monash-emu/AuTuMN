@@ -2,12 +2,12 @@
 # external imports
 import os
 import numpy
-import tool_kit
+from autumn import tool_kit
 import scipy.stats
 from graphviz import Digraph
 
 # AuTuMN imports
-from economics import get_cost_from_coverage, get_coverage_from_cost
+from autumn.economics import get_cost_from_coverage, get_coverage_from_cost
 
 
 def add_unique_tuple_to_list(a_list, a_tuple):

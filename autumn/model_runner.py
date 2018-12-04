@@ -10,10 +10,10 @@ import itertools
 import copy
 
 # AuTuMN imports
-import tool_kit as t_k
-import model
-import inputs
-import economics
+from autumn import tool_kit as t_k
+from autumn import model
+from autumn import inputs
+from autumn import economics
 
 
 ''' static functions relevant to model runner only '''

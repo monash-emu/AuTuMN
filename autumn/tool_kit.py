@@ -1,8 +1,10 @@
 
+from six.moves import cPickle as pickle
 import random
 from scipy import exp
-import cPickle as pickle
+#import cPickle as pickle
 import numpy
+import json
 
 
 '''
@@ -1398,5 +1400,34 @@ def pickle_load(file):
 
     with open(file, 'rb') as input:
         loaded_object = pickle.load(input)
+    return loaded_object
+
+
+''' Json functions '''
+
+
+def json_save(object, file):
+    """
+    Save an object in json format.
+
+    Args:
+        object: The object to be saved
+        file: The filename to save the data to
+    """
+
+    with open(file, 'wb') as output:
+        json.dump(object, output)
+
+
+def json_load(file):
+    """
+    Load an object previously saved in json format.
+
+    Args:
+        file: Filename storing the object to be loaded
+    """
+
+    with open(file, 'rb') as input:
+        loaded_object = json.loads(input)
     return loaded_object
 

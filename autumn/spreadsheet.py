@@ -4,7 +4,7 @@ from xlrd import open_workbook
 from numpy import nan
 import numpy
 import os
-import tool_kit
+from autumn import tool_kit
 
 
 ''' static functions '''

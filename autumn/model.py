@@ -17,7 +17,7 @@ import itertools
 
 # AuTuMN imports
 from autumn.base import StratifiedModel, EconomicModel
-import tool_kit as t_k
+import autumn.tool_kit as t_k
 
 
 def find_outcome_proportions_by_period(proportion, early_period, total_period):

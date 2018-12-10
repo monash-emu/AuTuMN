@@ -1530,10 +1530,16 @@ class Project:
                 max_var = self.plot_scaleup_var_to_axis(axes[n_axis], [start_time, end_time], var)
                 max_data = self.plot_scaleup_data_to_axis(axes[n_axis], [start_time, end_time], var)
 
+                # max function does not allow none for comparision in python3
+                max_data_val = max_var
+                if max_data is not None:
+                    max_data_val =  float(max([max_var, max_data]))
+
+
                 # clean up axes
                 self.tidy_x_axis(axes[n_axis], start_time, end_time, max_dims)
                 self.tidy_y_axis(axes[n_axis], var, max_dims, left_axis=n_axis % n_cols == 0,
-                                 max_value=float(max([max_var, max_data])))
+                                     max_value=max_data_val)
 
             self.finish_off_figure(fig, n_panels, '_' + var, var)
 

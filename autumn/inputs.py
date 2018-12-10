@@ -816,23 +816,27 @@ class Inputs:
         Adds vaccination and case detection time-variants to the manually entered data loaded from the spreadsheets.
         Note that the manual inputs over-ride the loaded data if both are present.
         """
-
+        # changing dictionary append for py3, itertools chain method for appending dictionary
         # vaccination
+        print(self.original_data['bcg'])
+        print(self.time_variants['int_perc_vaccination'][1927])
         if self.time_variants['int_perc_vaccination']['load_data'] == u'yes':
             self.time_variants['int_perc_vaccination'] \
-                = dict(self.original_data['bcg'], **self.time_variants['int_perc_vaccination'])
+                = dict(itertools.chain(self.original_data['bcg'].items(), self.time_variants['int_perc_vaccination'].items()))
+
+        print(self.time_variants)
 
         # case detection
         if self.time_variants['program_perc_detect']['load_data'] == u'yes':
             self.time_variants['program_perc_detect'] \
-                = dict(self.original_data['gtb']['c_cdr'], **self.time_variants['program_perc_detect'])
-
+                = dict(itertools.chain(self.original_data['gtb']['c_cdr'].items(), self.time_variants['program_perc_detect'].items()))
+        print(self.time_variants)
     def convert_percentages_to_proportions(self):
         """
         Converts time-variant dictionaries to proportions if they are loaded as percentages in their raw form.
         """
-
-        for time_variant in self.time_variants.keys():
+        # python 3 dict.keys() returns iter
+        for time_variant in list(self.time_variants):
             if 'perc_' in time_variant:  # if a percentage
                 prop_name = time_variant.replace('perc', 'prop')
                 self.time_variants[prop_name] = {}
@@ -1094,10 +1098,11 @@ class Inputs:
             # count totals notified by each organ status and find denominator
             count_by_organ_status = {}
             for organ in name_conversion_dict.values():
-                count_by_organ_status[organ] = numpy.sum(self.original_data['notifications']['new' + organ].values())
-            total = numpy.sum(count_by_organ_status.values())
+                count_by_organ_status[organ] = numpy.sum(list(self.original_data['notifications']['new' + organ].values()))
+            total = numpy.sum(list(count_by_organ_status.values()))
 
             # calculate proportions from totals
+            # coercing into list for python 3
             for organ in name_conversion_dict:
                 self.model_constants['epi_prop' + organ] = count_by_organ_status[name_conversion_dict[organ]] / total
 

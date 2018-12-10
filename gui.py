@@ -4,8 +4,10 @@ import threading
 import autumn.model_runner
 import autumn.outputs as outputs
 import autumn.gui_params as gui_params
+import six
 
-from Tkinter import *
+# lower case t for py3
+from tkinter import *
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
@@ -44,7 +46,8 @@ class App:
         self.set_tk_controls_in_frame()
 
     def make_tk_controls_in_params(self):
-        for key, param in self.params.iteritems():
+        # replacing iteritems with items for py3
+        for key, param in self.params.items():
             if param['type'] == 'boolean':
                 param['tk_var'] = IntVar()
                 if param['value'] == True:

@@ -6,7 +6,7 @@ Created on Sat Nov 28 12:01:25 2015
 @author: James
 """
 
-print __file__, __name__
+print (__file__, __name__)
 from parameter import Parameter, Evidence
 
 

@@ -292,7 +292,7 @@ class BaseModel:
         Find the values of the scale-up functions at a specific point in time. Called within the integration process.
         """
 
-        for label, fn in self.scaleup_fns.iteritems(): self.vars[label] = fn(self.time)
+        for label, fn in self.scaleup_fns.items(): self.vars[label] = fn(self.time)
 
     def calculate_vars(self):
         """
@@ -435,7 +435,8 @@ class BaseModel:
         # 'make_adjustments_during_integration'
         y = self.make_adjustments_during_integration(y)
 
-        self.var_labels = self.vars.keys()
+        #coercing to list for python3
+        self.var_labels = list(self.vars.keys())
         self.var_array = numpy.zeros((n_time, len(self.var_labels)))
 
         # populate arrays for initial state

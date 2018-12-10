@@ -42,8 +42,8 @@ def increment_dictionary_with_dictionary(dict_a, dict_b):
     Return:
         The combined dictionary
     """
-
-    return dict(dict_a.items() + dict_b.items() + [(k, dict_a[k] + dict_b[k]) for k in set(dict_b) & set(dict_a)])
+    # converting dict_a.items() and dict_b.items() to list for python 3
+    return dict(list(dict_a.items()) + list(dict_b.items()) + [(k, dict_a[k] + dict_b[k]) for k in set(dict_b) & set(dict_a)])
 
 
 def indices(a, func):
@@ -1200,13 +1200,13 @@ def adapt_params_to_stratification(data_breakpoints, model_breakpoints, data_par
     data_strat_list, data_strat = get_agegroups_from_breakpoints(data_breakpoints)
     model_strat_list, model_strat = get_agegroups_from_breakpoints(model_breakpoints)
 
-    assert data_param_vals.viewkeys() == data_strat.viewkeys()
+    assert data_param_vals.keys() == data_strat.keys()
 
     model_param_vals = {}
-    for new_name, new_range in model_strat.iteritems():
+    for new_name, new_range in model_strat.items():
         new_low, new_up = new_range[0], new_range[1]
         considered_old_cats = []
-        for old_name, old_range in data_strat.iteritems():
+        for old_name, old_range in data_strat.items():
             if (old_range[0] <= new_low <= old_range[1]) or (old_range[0] <= new_up <= old_range[1]):
                 considered_old_cats.append(old_name)
         beta = 0.  # store the new value for the parameter

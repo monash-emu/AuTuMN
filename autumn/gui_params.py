@@ -1,6 +1,7 @@
 
 import collections
 import autumn.tool_kit as tool_kit
+import six
 
 
 def get_autumn_params():
@@ -250,6 +251,7 @@ def convert_params_to_inputs(params):
     Returns:
         Unprocessed inputs for use by the inputs module
     """
-
-    return {key: param['value'] for key, param in params.iteritems()}
+    print(params)
+    # replacing iteritems with items for py3
+    return {key: param['value'] for key, param in params.items()}
 

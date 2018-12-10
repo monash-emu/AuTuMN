@@ -1358,7 +1358,8 @@ class Project:
                                          color=colour, hatch=hatch, fill=fill, linewidth=0., alpha=alpha, zorder=4))
 
         # plot point estimates
-        ax.plot(gtb_data['point_estimate'].keys()[gtb_index:], gtb_data['point_estimate'].values()[gtb_index:],
+        # coercing gtb_index to list for python3
+        ax.plot(list(gtb_data['point_estimate'])[gtb_index:], gtb_data['point_estimate'].values()[gtb_index:],
                 color=colour, linewidth=.8, label=None, alpha=alpha)
         if gtb_ci_plot == 'hatch' and output != 'notifications':
             for limit in ['lower_limit', 'upper_limit']:

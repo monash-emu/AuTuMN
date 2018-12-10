@@ -1359,14 +1359,14 @@ class Project:
 
         # plot point estimates
         # coercing gtb_index to list for python3
-        ax.plot(list(gtb_data['point_estimate'])[gtb_index:], gtb_data['point_estimate'].values()[gtb_index:],
+        ax.plot(list(gtb_data['point_estimate'])[gtb_index:], list(gtb_data['point_estimate'].values())[gtb_index:],
                 color=colour, linewidth=.8, label=None, alpha=alpha)
         if gtb_ci_plot == 'hatch' and output != 'notifications':
             for limit in ['lower_limit', 'upper_limit']:
                 ax.plot(gtb_data[limit].keys()[gtb_index:], gtb_data[limit].values()[gtb_index:],
                         color=colour, linewidth=line_width, label=None, alpha=alpha)
 
-        return max(gtb_data['point_estimate'].values()[gtb_index:])
+        return max(list(gtb_data['point_estimate'].values())[gtb_index:])
 
     def plot_populations(self, category_to_loop='agegroups', scenario=0, fraction=False, requirements=('',),
                          exclusions=('we all love futsal',)):
@@ -1549,11 +1549,11 @@ class Project:
 
         maximum_values = []
         for scenario in reversed(self.scenarios):
-
+            # coercing map to list for python3
             # if available as a scale-up function
             if var in self.model_runner.models[scenario].scaleup_fns:
                 x_vals = numpy.linspace(time_limits[0], time_limits[1], int(1e3))
-                y_vals = map(self.model_runner.models[scenario].scaleup_fns[var], x_vals)
+                y_vals = list(map(self.model_runner.models[scenario].scaleup_fns[var], x_vals))
 
             # otherwise if a different type of var, such as additional calculated ones
             else:

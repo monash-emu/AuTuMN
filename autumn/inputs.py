@@ -818,19 +818,18 @@ class Inputs:
         """
         # changing dictionary append for py3, itertools chain method for appending dictionary
         # vaccination
-        print(self.original_data['bcg'])
-        print(self.time_variants['int_perc_vaccination'][1927])
+
         if self.time_variants['int_perc_vaccination']['load_data'] == u'yes':
             self.time_variants['int_perc_vaccination'] \
                 = dict(itertools.chain(self.original_data['bcg'].items(), self.time_variants['int_perc_vaccination'].items()))
 
-        print(self.time_variants)
+
 
         # case detection
         if self.time_variants['program_perc_detect']['load_data'] == u'yes':
             self.time_variants['program_perc_detect'] \
                 = dict(itertools.chain(self.original_data['gtb']['c_cdr'].items(), self.time_variants['program_perc_detect'].items()))
-        print(self.time_variants)
+
     def convert_percentages_to_proportions(self):
         """
         Converts time-variant dictionaries to proportions if they are loaded as percentages in their raw form.

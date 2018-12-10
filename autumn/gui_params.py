@@ -251,7 +251,7 @@ def convert_params_to_inputs(params):
     Returns:
         Unprocessed inputs for use by the inputs module
     """
-    print(params)
+
     # replacing iteritems with items for py3
     return {key: param['value'] for key, param in params.items()}
 

@@ -242,7 +242,7 @@ this_dir = os.path.join(os.getcwd(), os.path.dirname(__file__))
 app.config['SAVE_FOLDER'] = os.path.abspath(
     os.path.join(this_dir, app.config['SAVE_FOLDER']))
 app.logger.info('SAVE_FOLDER: ' + app.config['SAVE_FOLDER'])
-
+app.logger.info('CURRENT_DIR: ' + this_dir)
 
 # Route to load files saved on the server from uploads
 @app.route('/file/<path:path>', methods=['GET'])
@@ -255,7 +255,7 @@ def serve_saved_file(path):
 # same IP:PORT as the server
 app.static_folder = os.path.join(this_dir, app.config['STATIC_FOLDER'])
 app.logger.info('static_folder: ' + app.static_folder)
-
+app.logger.info("INDEX FILE: " + os.path.join(app.static_folder, '../index.html'))
 
 @app.route('/')
 def index():

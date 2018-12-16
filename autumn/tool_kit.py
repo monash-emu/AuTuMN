@@ -758,6 +758,8 @@ def find_title_from_dictionary(working_string, forward=True, capital_first_lette
                 'prisoners',
             '_ruralpoor':
                 'rural poor',
+            '_dorm':
+                'dorm',
             '_urbanpoor':
                 'urban poor',
             '_norisk':
@@ -866,6 +868,8 @@ def find_title_from_dictionary(working_string, forward=True, capital_first_lette
                 'urban poor',
            'riskgroup_ruralpoor':
                 'rural poor',
+           'riskgroup_dorm':
+                'dorm',
            'riskgroup_indigenous':
                 'indigenous',
            'lowquality':

@@ -4,3 +4,4 @@ SAVE_FOLDER = '../../../projects'
 SQLALCHEMY_TRACK_MODIFICATIONS = 'False'
 PORT = '3000'
 STATIC_FOLDER = '../../client/dist/static'
+

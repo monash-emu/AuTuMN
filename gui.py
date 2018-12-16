@@ -4,7 +4,10 @@ import threading
 import autumn.model_runner
 import autumn.outputs as outputs
 import autumn.gui_params as gui_params
-import six
+#for graphviz, dot executable
+import os
+os.environ["PATH"] += os.pathsep + 'C:/Users/swas0001/graphviz-2.38/release/bin'
+
 
 # lower case t for py3
 from tkinter import *

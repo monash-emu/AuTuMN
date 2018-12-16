@@ -274,6 +274,7 @@ def public_run_autumn(params):
 
 def public_get_autumn_params():
     result = gui_params.get_autumn_params()
+    current_app.logger.info('params: ' + result['params'])
     save_dir = current_app.config['SAVE_FOLDER']
     project_dirs = glob.glob(os.path.join(save_dir, '*'))
     project_dirs = [os.path.relpath(p, save_dir) for p in project_dirs]

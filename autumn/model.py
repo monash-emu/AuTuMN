@@ -1007,6 +1007,8 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
             self.set_initial_force_infection(strain)
             if self.is_vary_force_infection_by_riskgroup:
                 self.adjust_force_infection_for_mixing(strain)
+                #if self.is_vary_force_infection_for_mixing_by_agegroup
+                    #self.adjust_force_infection_for_mixing(strain, agegroup)
             self.adjust_force_infection_for_immunity(strain)
             self.adjust_force_infection_for_ipt(strain)
 

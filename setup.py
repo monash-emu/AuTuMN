@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='autumn',
-    version='',
+    version='1.0',
     #packages=['bgui.server.server', 'autumn', 'autumn.settings'],
     packages=find_packages(),
     url='',

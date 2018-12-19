@@ -1056,8 +1056,8 @@ def find_age_breakpoints_from_dicts(age_dict):
             breakpoints_with_repetition += [i]
 
     # check there is a lowest and highest age group
-    assert 0. in breakpoints_with_repetition, 'No age group goes to zero'
-    assert float('inf') in breakpoints_with_repetition, 'No age group goes to infinity'
+#    assert 0. in breakpoints_with_repetition, 'No age group goes to zero'
+#    assert float('inf') in breakpoints_with_repetition, 'No age group goes to infinity'
 
     # add the actual breakpoints once each
     for breakpoint in breakpoints_with_repetition:
@@ -1236,7 +1236,8 @@ def adapt_params_to_stratification(data_breakpoints, model_breakpoints, data_par
     # convert data into list with same order as the ordered strat_lists
     data_value_list = []
     for i in data_strat_list:
-        data_value_list += [data_param_vals[i]]
+        if i != '':
+            data_value_list += [data_param_vals[i]]
     model_value_list = []
     for i in model_strat_list:
         model_value_list += [model_param_vals[i]]

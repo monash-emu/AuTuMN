@@ -129,9 +129,13 @@ class BaseModel:
             init_val: The starting size of this compartment
         """
 
+        #changes for discrding labels based on init_val =-1
         assert init_val >= 0., 'Start with negative compartment not permitted'
-        if label not in self.labels: self.labels.append(label)
-        self.init_compartments[label] = init_val
+        if (label.find('dorm_age0to5') == -1):
+            if label not in self.labels: self.labels.append(label)
+            self.init_compartments[label] = init_val
+        else:
+            print('Skipping label : ', label)
 
     def remove_compartment(self, label):
         """
@@ -204,8 +208,10 @@ class BaseModel:
             label: String for the compartment to which the entry rate applies.
             var_label: String to index the parameters dictionary.
         """
-
-        add_unique_tuple_to_list(self.flows_by_type['var_entry'], (label, var_label))
+        if (label.find('dorm_age0to5') == -1):
+            add_unique_tuple_to_list(self.flows_by_type['var_entry'], (label, var_label))
+        else:
+            print('skipping var entry flow for label : ' + label)
 
     def set_fixed_infection_death_rate_flow(self, label, param_label):
         """
@@ -215,8 +221,10 @@ class BaseModel:
             label: String for the compartment to which the death rate applies.
             param_label: String to index the parameters dictionary.
         """
-
-        add_unique_tuple_to_list(self.flows_by_type['fixed_infection_death'], (label, self.params[param_label]))
+        if (label.find('dorm_age0to5') == -1):
+            add_unique_tuple_to_list(self.flows_by_type['fixed_infection_death'], (label, self.params[param_label]))
+        else:
+            print('skipping fixed infection death flow for label  :' + label)
 
     def set_var_infection_death_rate_flow(self, label, var_label):
         """
@@ -226,8 +234,10 @@ class BaseModel:
             label: String for the compartment to which the death rate applies.
             var_label: String to index the parameters dictionary.
         """
-
-        add_unique_tuple_to_list(self.flows_by_type['var_infection_death'], (label, var_label))
+        if (label.find('dorm_age0to5') == -1):
+            add_unique_tuple_to_list(self.flows_by_type['var_infection_death'], (label, var_label))
+        else:
+            print('skipping var infection death rate flow for label' + label)
 
     def set_fixed_transfer_rate_flow(self, from_label, to_label, param_label):
         """
@@ -238,8 +248,8 @@ class BaseModel:
             to_label: String for the compartment to which this flow goes.
             param_label: String to index the parameters dictionary.
         """
-
-        add_unique_tuple_to_list(self.flows_by_type['fixed_transfer'], (from_label, to_label, self.params[param_label]))
+        if (from_label.find('dorm_age0to5') == -1):
+            add_unique_tuple_to_list(self.flows_by_type['fixed_transfer'], (from_label, to_label, self.params[param_label]))
 
     def set_linked_transfer_rate_flow(self, from_label, to_label, var_label):
         """
@@ -251,8 +261,8 @@ class BaseModel:
             to_label: String for the compartment to which this flow goes.
             var_label: String to index the vars dictionary.
         """
-
-        add_unique_tuple_to_list(self.flows_by_type['linked_transfer'], (from_label, to_label, var_label))
+        if (from_label.find('dorm_age0to5') == -1):
+            add_unique_tuple_to_list(self.flows_by_type['linked_transfer'], (from_label, to_label, var_label))
 
     def set_var_transfer_rate_flow(self, from_label, to_label, var_label):
         """
@@ -263,8 +273,8 @@ class BaseModel:
             to_label: String for the compartment to which this flow goes.
             var_label: String to index the vars dictionary.
         """
-
-        add_unique_tuple_to_list(self.flows_by_type['var_transfer'], (from_label, to_label, var_label))
+        if (from_label.find('dorm_age0to5') == -1):
+            add_unique_tuple_to_list(self.flows_by_type['var_transfer'], (from_label, to_label, var_label))
 
     ''' variable and flow-related methods '''
 

@@ -175,8 +175,9 @@ class Inputs:
                'int_perc_dots_contributor': ['int_prop_detection_dots_contributor'],
                'int_perc_dots_groupcontributor': ['int_prop_detection_dots_contributor',
                                                   'int_prop_detection_ngo_ruralpoor']}
+        #add age specific inputs for dorm - 15 to 25 and diabates - 25up
         self.params_to_age_weight \
-            = ['tb_prop_early_progression', 'tb_rate_late_progression', 'tb_multiplier_child_infectiousness']
+            = ['dorm', 'diabetes', 'tb_prop_early_progression', 'tb_rate_late_progression', 'tb_multiplier_child_infectiousness']
         self.params_to_age_integrate = []
         self.max_age_for_stratification = 100.
 

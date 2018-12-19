@@ -14,6 +14,7 @@ from scipy import exp, log
 import copy
 import warnings
 import itertools
+import csv
 
 # AuTuMN imports
 from autumn.base import StratifiedModel, EconomicModel
@@ -110,6 +111,9 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         self.inappropriate_regimens = []
         self.riskgroups = {}
 
+        # list for removing labels
+        self.remove_labels = []
+
         # model attributes to be set directly to inputs object attributes
         for attribute in ['compartment_types', 'organ_status', 'strains', 'riskgroups', 'agegroups', 'mixing',
                           'is_vary_detection_by_organ', 'organs_for_detection', 'riskgroups_for_detection',
@@ -205,8 +209,8 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
                                 self.set_compartment(compartment + organ + strain + end, 0.)
 
             # remove the unnecessary fully susceptible treated compartments
-            self.remove_compartment('susceptible_fully' + riskgroup + self.histories[-1] + agegroup)
-
+            #self.remove_compartment('susceptible_fully' + riskgroup + self.histories[-1] + agegroup)
+        print(self.labels)
         start_risk_prop = self.find_starting_riskgroup_props() if len(self.riskgroups) > 1 else {'': 1.}
         self.populate_initial_compartments(initial_compartments, start_risk_prop)
 
@@ -1275,7 +1279,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
             self.set_var_entry_rate_flow('susceptible_fully' + end, 'births_unvac' + riskgroup)
             self.set_var_entry_rate_flow('susceptible_immune' + end, 'births_vac' + riskgroup)
             if 'int_prop_novel_vaccination' in self.relevant_interventions:
-                self.set_var_entry_rate_flow('susceptible_novelvac' + end, 'births_novelvac' + riskgroup)
+                    self.set_var_entry_rate_flow('susceptible_novelvac' + end, 'births_novelvac' + riskgroup)
 
     def set_infection_flows(self):
         """
@@ -1289,13 +1293,19 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
 
             # source compartment is split by riskgropup, history and agegroup - plus force type for
             # the susceptibles and strain for the latents
-            source_extension = riskgroup + history + agegroup
+            if riskgroup == '_dorm' and agegroup == '_age0to5':
+                break
+            else:
+                source_extension = riskgroup + history + agegroup
 
             # force of infection differs by immunity, strain, history, age group and possibly risk group
             force_extension = force_type + strain + history + force_riskgroup + agegroup
 
-            # destination compartments differ by strain, risk group, history and age group
-            latent_compartment = 'latent_early' + strain + riskgroup + history + agegroup
+            if riskgroup == '_dorm' and agegroup == '_age0to5':
+                break
+            else:
+                # destination compartments differ by strain, risk group, history and age group
+                latent_compartment = 'latent_early' + strain + riskgroup + history + agegroup
 
             # on IPT treatment destination compartment differs by risk group, history and age group
             onipt_destination_compartment = 'onipt' + riskgroup + history + agegroup

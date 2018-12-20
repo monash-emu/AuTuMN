@@ -555,6 +555,7 @@ class Inputs:
         if self.n_organs < 2:
             self.model_constants['epi_prop'] = 1.
 
+
         # infectiousness of smear-positive and extrapulmonary patients
         else:
             self.model_constants['tb_multiplier_force_smearpos'] = 1.
@@ -1439,8 +1440,8 @@ class Inputs:
         """
 
         self.model_constants['tb_multiplier_force'] \
-            = self.model_constants['epi_prop_smearpos'] \
-            + self.model_constants['epi_prop_smearneg'] * self.model_constants['tb_multiplier_force_smearneg']
+            = float(self.model_constants['epi_prop_smearpos'] \
+            + self.model_constants['epi_prop_smearneg'] * self.model_constants['tb_multiplier_force_smearneg'])
 
     def add_missing_economics(self):
         """

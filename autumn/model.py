@@ -111,8 +111,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         self.inappropriate_regimens = []
         self.riskgroups = {}
 
-        # list for removing labels
-        self.remove_labels = []
+
 
         # model attributes to be set directly to inputs object attributes
         for attribute in ['compartment_types', 'organ_status', 'strains', 'riskgroups', 'agegroups', 'mixing',
@@ -169,6 +168,8 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         Initialise all compartments to zero and then populate with the requested values.
         """
 
+        #set the remove_labels to inputs['remove_labels]
+        self.remove_labels = self.inputs.model_constants['remove_labels']
         # extract values for compartment initialisation by compartment type
         initial_compartments = {}
         for compartment in self.compartment_types:
@@ -1293,19 +1294,14 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
 
             # source compartment is split by riskgropup, history and agegroup - plus force type for
             # the susceptibles and strain for the latents
-            if riskgroup == '_dorm' and agegroup == '_age0to5':
-                break
-            else:
-                source_extension = riskgroup + history + agegroup
+
+            source_extension = riskgroup + history + agegroup
 
             # force of infection differs by immunity, strain, history, age group and possibly risk group
             force_extension = force_type + strain + history + force_riskgroup + agegroup
 
-            if riskgroup == '_dorm' and agegroup == '_age0to5':
-                break
-            else:
-                # destination compartments differ by strain, risk group, history and age group
-                latent_compartment = 'latent_early' + strain + riskgroup + history + agegroup
+
+            latent_compartment = 'latent_early' + strain + riskgroup + history + agegroup
 
             # on IPT treatment destination compartment differs by risk group, history and age group
             onipt_destination_compartment = 'onipt' + riskgroup + history + agegroup

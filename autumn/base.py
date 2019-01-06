@@ -5,6 +5,7 @@ import numpy
 from autumn import tool_kit
 import scipy.stats
 from graphviz import Digraph
+import re
 
 # AuTuMN imports
 from autumn.economics import get_cost_from_coverage, get_coverage_from_cost
@@ -56,6 +57,10 @@ class BaseModel:
             'fixed_transfer': {'from': 0, 'to': 1, 'rate': 2},
             'var_transfer': {'from': 0, 'to': 1, 'rate': 2},
             'linked_transfer': {'from': 0, 'to': 1, 'rate': 2}}
+
+        # list for removing labels
+        self.remove_labels = []
+
 
     ''' time-related functions '''
 
@@ -131,7 +136,15 @@ class BaseModel:
 
         #changes for discrding labels based on init_val =-1
         assert init_val >= 0., 'Start with negative compartment not permitted'
-        if (label.find('dorm_age0to5') == -1):
+
+        # search the label with patterns in self.remove_labels
+        match = 0
+        for pattern in self.remove_labels:
+            search_result = re.search(pattern, label)  #
+            if search_result:
+                match = match + 1
+
+        if match == 0:
             if label not in self.labels: self.labels.append(label)
             self.init_compartments[label] = init_val
         else:
@@ -208,10 +221,16 @@ class BaseModel:
             label: String for the compartment to which the entry rate applies.
             var_label: String to index the parameters dictionary.
         """
-        if (label.find('dorm_age0to5') == -1):
+        match = 0
+        for pattern in self.remove_labels:
+            search_result = re.search(pattern, label)  #
+            if search_result:
+                match = match + 1
+
+        if match == 0:
             add_unique_tuple_to_list(self.flows_by_type['var_entry'], (label, var_label))
         else:
-            print('skipping var entry flow for label : ' + label)
+            print('skipping var entry flow from label : ' + label + ' to ' + var_label)
 
     def set_fixed_infection_death_rate_flow(self, label, param_label):
         """
@@ -221,10 +240,16 @@ class BaseModel:
             label: String for the compartment to which the death rate applies.
             param_label: String to index the parameters dictionary.
         """
-        if (label.find('dorm_age0to5') == -1):
+        match = 0
+        for pattern in self.remove_labels:
+            search_result = re.search(pattern, label)  #
+            if search_result:
+                match = match + 1
+
+        if match == 0:
             add_unique_tuple_to_list(self.flows_by_type['fixed_infection_death'], (label, self.params[param_label]))
         else:
-            print('skipping fixed infection death flow for label  :' + label)
+            print('skipping fixed infection death flow from label  : ' + label + ' to ' + str(self.params[param_label]))
 
     def set_var_infection_death_rate_flow(self, label, var_label):
         """
@@ -234,10 +259,16 @@ class BaseModel:
             label: String for the compartment to which the death rate applies.
             var_label: String to index the parameters dictionary.
         """
-        if (label.find('dorm_age0to5') == -1):
+        match = 0
+        for pattern in self.remove_labels:
+            search_result = re.search(pattern, label)  #
+            if search_result:
+                match = match + 1
+
+        if match == 0:
             add_unique_tuple_to_list(self.flows_by_type['var_infection_death'], (label, var_label))
         else:
-            print('skipping var infection death rate flow for label' + label)
+            print('skipping var infection death rate flow from label  : ' + label + ' to  ' + var_label)
 
     def set_fixed_transfer_rate_flow(self, from_label, to_label, param_label):
         """
@@ -248,8 +279,24 @@ class BaseModel:
             to_label: String for the compartment to which this flow goes.
             param_label: String to index the parameters dictionary.
         """
-        if (from_label.find('dorm_age0to5') == -1):
+        match = 0
+        for pattern in self.remove_labels:
+            search_result = re.search(pattern, from_label)  #
+            if search_result:
+                match = match + 1
+
+        for pattern in self.remove_labels:
+            search_result = re.search(pattern, to_label)  #
+            if search_result:
+                match = match + 1
+
+
+
+        if match == 0:
             add_unique_tuple_to_list(self.flows_by_type['fixed_transfer'], (from_label, to_label, self.params[param_label]))
+        else:
+            print('skipping fixed transfer rate flow from label  : ' + from_label + ' to  ' + to_label)
+
 
     def set_linked_transfer_rate_flow(self, from_label, to_label, var_label):
         """
@@ -261,8 +308,21 @@ class BaseModel:
             to_label: String for the compartment to which this flow goes.
             var_label: String to index the vars dictionary.
         """
-        if (from_label.find('dorm_age0to5') == -1):
+        match = 0
+        for pattern in self.remove_labels:
+            search_result = re.search(pattern, from_label)  #
+            if search_result:
+                match = match + 1
+
+        for pattern in self.remove_labels:
+            search_result = re.search(pattern, to_label)  #
+            if search_result:
+                match = match + 1
+
+        if match == 0:
             add_unique_tuple_to_list(self.flows_by_type['linked_transfer'], (from_label, to_label, var_label))
+        else:
+            print('skipping linked transfer rate flow from label  : ' + from_label + ' to  ' + to_label)
 
     def set_var_transfer_rate_flow(self, from_label, to_label, var_label):
         """
@@ -273,8 +333,22 @@ class BaseModel:
             to_label: String for the compartment to which this flow goes.
             var_label: String to index the vars dictionary.
         """
-        if (from_label.find('dorm_age0to5') == -1):
+        match = 0
+        for pattern in self.remove_labels:
+            search_result = re.search(pattern, from_label)  #
+            if search_result:
+                match = match + 1
+
+        for pattern in self.remove_labels:
+            search_result = re.search(pattern, to_label)  #
+            if search_result:
+                match = match + 1
+
+        if match == 0:
             add_unique_tuple_to_list(self.flows_by_type['var_transfer'], (from_label, to_label, var_label))
+            print('++++++++++++++ adding var transfer rate flow from label  : ' + from_label + ' to  ' + to_label )
+        else:
+            print('skipping var transfer rate flow from label  : ' + from_label + ' to  ' + to_label)
 
     ''' variable and flow-related methods '''
 
@@ -1001,3 +1075,32 @@ class StratifiedModel(EconomicModel):
                                                       label[0: label.find('_age')] + self.agegroups[n_agegroup + 1],
                                                       'ageing_rate' + self.agegroups[n_agegroup])
 
+        # for ageing flow if labels _age5to15 the set the ageing flow for _age15to25  be setting match to zero
+        if self.inputs.model_constants['dorm_age_min']:
+            for label in self.labels:
+                if re.search('_norisk', label):
+                    if str(int(self.inputs.model_constants['dorm_age_min'])) == label[-2:]:
+                        print('----------------------------------------incoming  age flow for', label)
+                        print('------for age group', label[label.find('_age'):])
+                        norisk_agegroup = label[label.find('_age'):]
+                        print('----next age group', self.agegroups[self.agegroups.index(norisk_agegroup) + 1])
+                        next_risk_agegroup = self.agegroups[self.agegroups.index(norisk_agegroup) + 1]
+                        new_label = label.replace('_norisk', '_dorm')
+                        new_label = new_label.replace(norisk_agegroup, next_risk_agegroup)
+                        print('------new label', new_label)
+                        self.set_fixed_transfer_rate_flow(label, new_label, 'ageing_rate' + next_risk_agegroup)
+
+
+        if self.inputs.model_constants['dorm_age_max']:
+            for label in self.labels:
+                if re.search('_dorm', label):
+                    if str(int(self.inputs.model_constants['dorm_age_max'])) == label[-2:]:
+                        print('----------------------------------------outgoing age flow for', label)
+                        print('------for age group', label[label.find('_age'):])
+                        risk_agegroup = label[label.find('_age'):]
+                        print('----next age group', self.agegroups[self.agegroups.index(risk_agegroup) + 1])
+                        next_norisk_agegroup = self.agegroups[self.agegroups.index(risk_agegroup) + 1]
+                        new_label = label.replace('_dorm', '_norisk')
+                        new_label = new_label.replace(risk_agegroup, next_norisk_agegroup)
+                        print('------new label', new_label)
+                        self.set_fixed_transfer_rate_flow(label, new_label, 'ageing_rate' + risk_agegroup )

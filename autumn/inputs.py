@@ -4,6 +4,7 @@ import copy
 import numpy
 import itertools
 import scipy.integrate
+import json
 
 # AuTuMN imports
 from autumn import spreadsheet
@@ -140,6 +141,7 @@ class Inputs:
         (self.is_vary_detection_by_organ, self.is_vary_detection_by_riskgroup, self.is_include_relapse_in_ds_outcomes,
          self.is_vary_force_infection_by_riskgroup, self.is_include_hiv_treatment_outcomes, self.is_adjust_population) \
             = [False for _ in range(6)]
+        self.remove_compartment_list = set()
 
         # set some attributes direct from GUI inputs
         for attribute in \
@@ -682,17 +684,38 @@ class Inputs:
         """
         Find weighted age-specific parameters using age weighting code from tool_kit.
         """
-
+        param_breaks_list = []
         # weighting approach
         for param_name in self.params_to_age_weight:
             param_values, param_breaks_dict = {}, {}
 
-            # loop over relevant parameters by age group
+            # loop over relevant parameters age group
             for param in [p for p in self.model_constants if param_name + '_age' in p]:
                 param_age_string, _ = tool_kit.find_string_from_starting_letters(param, '_age')
-                param_breaks_dict[param_age_string] = tool_kit.interrogate_age_string(param_age_string)[0]
-                param_values[param_age_string] = self.model_constants[param]
-            param_breaks_list = tool_kit.find_age_breakpoints_from_dicts(param_breaks_dict)
+
+                # remove age specific compartments for param name
+                if param.find("_age_min") != -1 or  param.find("_age_max") != -1:
+                    print('appending to remove compartment list : ' + param)
+                    print(self.model_constants[param])
+                    age_riskgroup_bracket = self.model_constants[param]
+                    if age_riskgroup_bracket not in range(0,5):
+                        print('removing dorm age group0to5')
+                        self.remove_compartment_list.add(param_name + '_age0to5')
+                    if age_riskgroup_bracket not in range(5,15):
+                        print('removing dorm age group5to10')
+                        self.remove_compartment_list.add(param_name + '_age5to15')
+                    if age_riskgroup_bracket not in range(15,26):
+                        print('removing dorm age group15to25')
+                        self.remove_compartment_list.add(param_name + '_age15to25')
+                    if age_riskgroup_bracket not in range(26,100):
+                        print('dorm age above 25')
+                        self.remove_compartment_list.add(param_name + '_age25up')
+                else:
+                    param_breaks_dict[param_age_string] = tool_kit.interrogate_age_string(param_age_string)[0]
+                    param_values[param_age_string] = self.model_constants[param]
+                    param_breaks_list = tool_kit.find_age_breakpoints_from_dicts(param_breaks_dict)
+
+            self.model_constants['remove_labels'] = list(self.remove_compartment_list)
 
             # find age-adjusted parameters
             age_adjusted_values = tool_kit.adapt_params_to_stratification(

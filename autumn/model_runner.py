@@ -8,12 +8,14 @@ from scipy.optimize import minimize
 from pyDOE import lhs
 import itertools
 import copy
+import json
 
 # AuTuMN imports
 from autumn import tool_kit as t_k
 from autumn import model
 from autumn import inputs
 from autumn import economics
+from autumn.inputs import NumpyEncoder
 
 
 ''' static functions relevant to model runner only '''
@@ -406,6 +408,11 @@ class ModelRunner:
             if stratum in label:
                 new_outputs['population' + stratum] = t_k.elementwise_list_addition(
                     self.models[scenario].get_compartment_soln(label), new_outputs['population' + stratum])
+        print(new_outputs.keys())
+        print('output length : ' + str(output_length))
+        with open("new_outputs.json", "a") as json_file:
+            json_file.write(json.dumps(new_outputs, cls=NumpyEncoder))
+            json_file.write('\n')
         return new_outputs
 
     def find_standard_rate_output(self, epi_outputs, scenario, output, strain, stratum):

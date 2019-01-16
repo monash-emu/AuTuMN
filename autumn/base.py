@@ -1076,31 +1076,35 @@ class StratifiedModel(EconomicModel):
                                                       'ageing_rate' + self.agegroups[n_agegroup])
 
         # for ageing flow if labels _age5to15 the set the ageing flow for _age15to25  be setting match to zero
-        if self.inputs.model_constants['dorm_age_min']:
-            for label in self.labels:
-                if re.search('_norisk', label):
-                    if str(int(self.inputs.model_constants['dorm_age_min'])) == label[-2:]:
-                        print('----------------------------------------incoming  age flow for', label)
-                        print('------for age group', label[label.find('_age'):])
-                        norisk_agegroup = label[label.find('_age'):]
-                        print('----next age group', self.agegroups[self.agegroups.index(norisk_agegroup) + 1])
-                        next_risk_agegroup = self.agegroups[self.agegroups.index(norisk_agegroup) + 1]
-                        new_label = label.replace('_norisk', '_dorm')
-                        new_label = new_label.replace(norisk_agegroup, next_risk_agegroup)
-                        print('------new label', new_label)
-                        self.set_fixed_transfer_rate_flow(label, new_label, 'ageing_rate' + next_risk_agegroup)
+        for riskgroups in  self.riskgroups:
+            if riskgroups != '_norisk':
+                print('------' + riskgroups)
+                riskgroups_age_min = riskgroups[1:] + '_age_min'
+                if self.inputs.model_constants[riskgroups_age_min]:
+                    for label in self.labels:
+                        if re.search('_norisk', label):
+                            if str(int(self.inputs.model_constants[riskgroups_age_min])) == label[-2:]:
+                                print('----------------------------------------incoming  age flow for', label)
+                                print('------for age group', label[label.find('_age'):])
+                                norisk_agegroup = label[label.find('_age'):]
+                                print('----next age group', self.agegroups[self.agegroups.index(norisk_agegroup) + 1])
+                                next_risk_agegroup = self.agegroups[self.agegroups.index(norisk_agegroup) + 1]
+                                new_label = label.replace('_norisk', riskgroups)
+                                new_label = new_label.replace(norisk_agegroup, next_risk_agegroup)
+                                print('------new label', new_label)
+                                self.set_fixed_transfer_rate_flow(label, new_label, 'ageing_rate' + next_risk_agegroup)
 
-
-        if self.inputs.model_constants['dorm_age_max']:
-            for label in self.labels:
-                if re.search('_dorm', label):
-                    if str(int(self.inputs.model_constants['dorm_age_max'])) == label[-2:]:
-                        print('----------------------------------------outgoing age flow for', label)
-                        print('------for age group', label[label.find('_age'):])
-                        risk_agegroup = label[label.find('_age'):]
-                        print('----next age group', self.agegroups[self.agegroups.index(risk_agegroup) + 1])
-                        next_norisk_agegroup = self.agegroups[self.agegroups.index(risk_agegroup) + 1]
-                        new_label = label.replace('_dorm', '_norisk')
-                        new_label = new_label.replace(risk_agegroup, next_norisk_agegroup)
-                        print('------new label', new_label)
-                        self.set_fixed_transfer_rate_flow(label, new_label, 'ageing_rate' + risk_agegroup )
+                riskgroups_age_max = riskgroups[1:] + '_age_max'
+                if self.inputs.model_constants[riskgroups_age_max]:
+                    for label in self.labels:
+                        if re.search(riskgroups, label):
+                            if str(int(self.inputs.model_constants[riskgroups_age_max])) == label[-2:]:
+                                print('----------------------------------------outgoing age flow for', label)
+                                print('------for age group', label[label.find('_age'):])
+                                risk_agegroup = label[label.find('_age'):]
+                                print('----next age group', self.agegroups[self.agegroups.index(risk_agegroup) + 1])
+                                next_norisk_agegroup = self.agegroups[self.agegroups.index(risk_agegroup) + 1]
+                                new_label = label.replace(riskgroups, '_norisk')
+                                new_label = new_label.replace(risk_agegroup, next_norisk_agegroup)
+                                print('------new label', new_label)
+                                self.set_fixed_transfer_rate_flow(label, new_label, 'ageing_rate' + risk_agegroup )

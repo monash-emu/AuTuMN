@@ -29,6 +29,16 @@ def make_constant_function(value):
         return value
     return constant
 
+# for converting numpy ndarray to json to be used in json dump
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if type(obj).__module__ == numpy.__name__:
+            if isinstance(obj, numpy.ndarray):
+                return obj.tolist()
+            else:
+                return obj.item()
+        return json.JSONEncoder.default(self, obj)
+
 
 def make_exponential_function(rate):
     """
@@ -179,7 +189,7 @@ class Inputs:
                                                   'int_prop_detection_ngo_ruralpoor']}
         #add age specific inputs for dorm - 15 to 25 and diabates - 25up
         self.params_to_age_weight \
-            = ['dorm', 'diabetes', 'tb_prop_early_progression', 'tb_rate_late_progression', 'tb_multiplier_child_infectiousness']
+            = ['dorm', 'diabetes', 'prison' 'tb_prop_early_progression', 'tb_rate_late_progression', 'tb_multiplier_child_infectiousness']
         self.params_to_age_integrate = []
         self.max_age_for_stratification = 100.
 
@@ -688,43 +698,61 @@ class Inputs:
         # weighting approach
         for param_name in self.params_to_age_weight:
             param_values, param_breaks_dict = {}, {}
+            # only select the age specific parameter for risk group selected in gui window
+            if '_' + param_name in self.riskgroups:
+                # loop over relevant parameters age group
+                for param in [p for p in self.model_constants if param_name + '_age' in p]:
+                    param_age_string, _ = tool_kit.find_string_from_starting_letters(param, '_age')
 
-            # loop over relevant parameters age group
-            for param in [p for p in self.model_constants if param_name + '_age' in p]:
-                param_age_string, _ = tool_kit.find_string_from_starting_letters(param, '_age')
+                    # remove compartment based on riskgroup min max age
 
-                # remove age specific compartments for param name
-                if param.find("_age_min") != -1 or  param.find("_age_max") != -1:
-                    print('appending to remove compartment list : ' + param)
-                    print(self.model_constants[param])
-                    age_riskgroup_bracket = self.model_constants[param]
-                    if age_riskgroup_bracket not in range(0,5):
-                        print('removing dorm age group0to5')
-                        self.remove_compartment_list.add(param_name + '_age0to5')
-                    if age_riskgroup_bracket not in range(5,15):
-                        print('removing dorm age group5to10')
-                        self.remove_compartment_list.add(param_name + '_age5to15')
-                    if age_riskgroup_bracket not in range(15,26):
-                        print('removing dorm age group15to25')
-                        self.remove_compartment_list.add(param_name + '_age15to25')
-                    if age_riskgroup_bracket not in range(26,100):
-                        print('dorm age above 25')
-                        self.remove_compartment_list.add(param_name + '_age25up')
-                else:
-                    param_breaks_dict[param_age_string] = tool_kit.interrogate_age_string(param_age_string)[0]
-                    param_values[param_age_string] = self.model_constants[param]
-                    param_breaks_list = tool_kit.find_age_breakpoints_from_dicts(param_breaks_dict)
+                    if param.find("_age_min") != -1:
+                        age_riskgroup_min  = self.model_constants[param]
+                        if age_riskgroup_min >= 5:
+                            print('removing'  + param_name +  'age group0to5')
+                            self.remove_compartment_list.add(param_name + '_age0to5')
 
-            self.model_constants['remove_labels'] = list(self.remove_compartment_list)
+                        if age_riskgroup_min >= 15:
+                            print('removing' + param_name + 'age group5to10')
+                            self.remove_compartment_list.add(param_name + '_age5to15')
 
-            # find age-adjusted parameters
-            age_adjusted_values = tool_kit.adapt_params_to_stratification(
-                param_breaks_list, self.model_constants['age_breakpoints'], param_values, parameter_name=param_name,
-                gui_console_fn=self.gui_console_fn, assumed_max_params=self.max_age_for_stratification)
+                        if age_riskgroup_min >= 25:
+                            print('removing'  + param_name + 'age group15to25')
+                            self.remove_compartment_list.add(param_name + '_age15to25')
 
-            # set age-adjusted parameters
-            for agegroup in self.agegroups:
-                self.model_constants[param_name + agegroup] = age_adjusted_values[agegroup]
+                    if param.find("_age_max") != -1:
+                        age_riskgroup_max = self.model_constants[param]
+                        if age_riskgroup_max <= 25:
+                            print(param_name + ' age above 25')
+                            self.remove_compartment_list.add(param_name + '_age25up')
+
+                        if age_riskgroup_max <= 15:
+                            print('removing' + param_name + 'age group15to25')
+                            self.remove_compartment_list.add(param_name + '_age15to25')
+
+                        if age_riskgroup_max <= 5:
+                            print('removing' + param_name + 'age group0to5')
+                            self.remove_compartment_list.add(param_name + '_age0to5')
+
+                    # remove age specific compartments for param name
+                    # check for boundary age
+                    if param.find("_age_max") != -1 or param.find("_age_min") != -1:
+                        print(param_name + 'age min or max parameter found ')
+                    else:
+                        param_breaks_dict[param_age_string] = tool_kit.interrogate_age_string(param_age_string)[0]
+                        param_values[param_age_string] = self.model_constants[param]
+                        param_breaks_list = tool_kit.find_age_breakpoints_from_dicts(param_breaks_dict)
+
+                self.model_constants['remove_labels'] = list(self.remove_compartment_list)
+
+                # find age-adjusted parameters
+                age_adjusted_values = tool_kit.adapt_params_to_stratification(
+                    param_breaks_list, self.model_constants['age_breakpoints'], param_values, parameter_name=param_name,
+                    gui_console_fn=self.gui_console_fn, assumed_max_params=self.max_age_for_stratification)
+
+                # set age-adjusted parameters
+                for agegroup in self.agegroups:
+                    self.model_constants[param_name + agegroup] = age_adjusted_values[agegroup]
 
         # numerical integration approach
         for param_name in self.params_to_age_integrate:
@@ -1510,3 +1538,8 @@ class Inputs:
             if time_param[-5:] == '_time' and '_step_time' not in time_param:
                 assert self.model_constants[time_param] >= self.model_constants['start_time'], \
                     '% is before model start time' % self.model_constants[time_param]
+        with open("time_variants.json", "a") as json_file:
+            json_file.write(json.dumps(self.time_variants, cls=NumpyEncoder))
+            json_file.write('\n')
+
+

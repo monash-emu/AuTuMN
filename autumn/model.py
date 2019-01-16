@@ -14,11 +14,13 @@ from scipy import exp, log
 import copy
 import warnings
 import itertools
-import csv
+import json
+
 
 # AuTuMN imports
 from autumn.base import StratifiedModel, EconomicModel
 import autumn.tool_kit as t_k
+from autumn.inputs import NumpyEncoder
 
 
 def find_outcome_proportions_by_period(proportion, early_period, total_period):
@@ -169,7 +171,8 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         """
 
         #set the remove_labels to inputs['remove_labels]
-        self.remove_labels = self.inputs.model_constants['remove_labels']
+        if 'remove_labels' in self.inputs.model_constants:
+            self.remove_labels = self.inputs.model_constants['remove_labels']
         # extract values for compartment initialisation by compartment type
         initial_compartments = {}
         for compartment in self.compartment_types:
@@ -304,6 +307,11 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
             self.calculate_ipt_effect()
         self.calculate_force_infection()
         self.calculate_population_sizes()
+
+        #saving vars to json
+        with open("vars.json", "a") as json_file:
+            json_file.write(json.dumps(self.vars, cls=NumpyEncoder))
+            json_file.write('\n')
 
     def ticker(self):
         """
@@ -1063,7 +1071,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
                         riskgroup_multiplier = self.params['riskgroup_multiplier_force_infection' + riskgroup] \
                             if 'riskgroup_multiplier_force_infection' + riskgroup in self.params else 1.
 
-                        # increment "infectiousness", the effective number of infectious people in the stratum
+                       # increment "infectiousness", the effective number of infectious people in the stratum
                         if t_k.label_intersects_tags(label, self.infectious_tags):
                             self.vars[force_string + strain + riskgroup] \
                                 += self.params['tb_n_contact'] \
@@ -1269,6 +1277,11 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         self.set_treatment_flows()
         if 'agestratified_ipt' in self.relevant_interventions or 'ipt' in self.relevant_interventions:
             self.set_ipt_flows()
+
+        #saving flows by type to json
+
+        with open("flows_by_type.json", "wb") as f:
+            f.write(json.dumps(self.flows_by_type, cls=NumpyEncoder).encode("utf-8"))
 
     def set_birth_flows(self):
         """

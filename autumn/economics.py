@@ -21,7 +21,7 @@ def get_cost_from_coverage(coverage, inflection_cost, saturation, unit_cost, pop
 
     # if unit cost or pop_size or coverage is null, return 0
     if popsize == 0. or unit_cost == 0. or coverage == 0.: return 0.
-    assert 0. <= coverage <= saturation, 'Coverage must satisfy 0 <= coverage <= saturation'
+    #assert 0. <= coverage <= saturation, 'Coverage must satisfy 0 <= coverage <= saturation'
     if coverage == saturation: coverage = saturation - 1e-6
 
     # logistic curve function code

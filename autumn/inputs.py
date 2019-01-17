@@ -189,7 +189,7 @@ class Inputs:
                                                   'int_prop_detection_ngo_ruralpoor']}
         #add age specific inputs for dorm - 15 to 25 and diabates - 25up
         self.params_to_age_weight \
-            = ['dorm', 'diabetes', 'prison' 'tb_prop_early_progression', 'tb_rate_late_progression', 'tb_multiplier_child_infectiousness']
+            = ['dorm', 'diabetes', 'prison', 'tb_prop_early_progression', 'tb_rate_late_progression', 'tb_multiplier_child_infectiousness']
         self.params_to_age_integrate = []
         self.max_age_for_stratification = 100.
 

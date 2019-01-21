@@ -213,7 +213,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
                                 self.set_compartment(compartment + organ + strain + end, 0.)
 
             # remove the unnecessary fully susceptible treated compartments
-            #self.remove_compartment('susceptible_fully' + riskgroup + self.histories[-1] + agegroup)
+            self.remove_compartment('susceptible_fully' + riskgroup + self.histories[-1] + agegroup)
         print(self.labels)
         start_risk_prop = self.find_starting_riskgroup_props() if len(self.riskgroups) > 1 else {'': 1.}
         self.populate_initial_compartments(initial_compartments, start_risk_prop)
@@ -1190,10 +1190,11 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
                         multiplier = (self.params['int_number_tests_per_tb_presentation'] + 1.)
                     else:
                         multiplier = 1.
-                    self.vars['popsize_' + active_tb_presentations_intervention] \
-                        += self.vars['program_rate_detect' + detection_organ + detection_riskgroup] \
-                        * self.compartments['active' + organ + strain + riskgroup + history + agegroup] \
-                        * multiplier
+                    if 'active' + organ + strain + riskgroup + history + agegroup in self.compartments:
+                        self.vars['popsize_' + active_tb_presentations_intervention] \
+                            += self.vars['program_rate_detect' + detection_organ + detection_riskgroup] \
+                            * self.compartments['active' + organ + strain + riskgroup + history + agegroup] \
+                            * multiplier
 
         # ACF
         # loop over risk groups, including '', which is no stratification

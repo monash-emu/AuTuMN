@@ -140,7 +140,8 @@ class BaseModel:
         # search the label with patterns in self.remove_labels
         match = 0
         for pattern in self.remove_labels:
-            search_result = re.search(pattern, label)  #
+            pattern = '.*' + pattern.replace('_', '.*')
+            search_result = re.compile(pattern).match(label)
             if search_result:
                 match = match + 1
 
@@ -159,9 +160,10 @@ class BaseModel:
             label: Name fo the compartment to be removed
         """
 
-        assert label in self.init_compartments, 'Tried to remove non-existent compartment'
-        self.labels.remove(label)
-        del self.init_compartments[label]
+        #assert label in self.init_compartments, 'Tried to remove non-existent compartment'
+        if label in self.init_compartments:
+            self.labels.remove(label)
+            del self.init_compartments[label]
 
     def initialise_compartments(self):
         """
@@ -223,7 +225,8 @@ class BaseModel:
         """
         match = 0
         for pattern in self.remove_labels:
-            search_result = re.search(pattern, label)  #
+            pattern = '.*' + pattern.replace('_', '.*')
+            search_result = re.compile(pattern).match(label)  #
             if search_result:
                 match = match + 1
 
@@ -242,7 +245,8 @@ class BaseModel:
         """
         match = 0
         for pattern in self.remove_labels:
-            search_result = re.search(pattern, label)  #
+            pattern = '.*' + pattern.replace('_', '.*')
+            search_result = re.compile(pattern).match(label)  #
             if search_result:
                 match = match + 1
 
@@ -261,7 +265,8 @@ class BaseModel:
         """
         match = 0
         for pattern in self.remove_labels:
-            search_result = re.search(pattern, label)  #
+            pattern = '.*' + pattern.replace('_', '.*')
+            search_result = re.compile(pattern).match(label)  #
             if search_result:
                 match = match + 1
 
@@ -281,12 +286,14 @@ class BaseModel:
         """
         match = 0
         for pattern in self.remove_labels:
-            search_result = re.search(pattern, from_label)  #
+            pattern = '.*' + pattern.replace('_', '.*')
+            search_result = re.compile(pattern).match(from_label)  #
             if search_result:
                 match = match + 1
 
         for pattern in self.remove_labels:
-            search_result = re.search(pattern, to_label)  #
+            pattern = '.*' + pattern.replace('_', '.*')
+            search_result = re.compile(pattern).match(to_label)  #
             if search_result:
                 match = match + 1
 
@@ -310,12 +317,14 @@ class BaseModel:
         """
         match = 0
         for pattern in self.remove_labels:
-            search_result = re.search(pattern, from_label)  #
+            pattern = '.*' + pattern.replace('_', '.*')
+            search_result = re.compile(pattern).match(from_label)  #
             if search_result:
                 match = match + 1
 
         for pattern in self.remove_labels:
-            search_result = re.search(pattern, to_label)  #
+            pattern = '.*' + pattern.replace('_', '.*')
+            search_result = re.compile(pattern).match(to_label)  #
             if search_result:
                 match = match + 1
 
@@ -335,12 +344,14 @@ class BaseModel:
         """
         match = 0
         for pattern in self.remove_labels:
-            search_result = re.search(pattern, from_label)  #
+            pattern = '.*' + pattern.replace('_', '.*')
+            search_result = re.compile(pattern).match(from_label)  #
             if search_result:
                 match = match + 1
 
         for pattern in self.remove_labels:
-            search_result = re.search(pattern, to_label)  #
+            pattern = '.*' + pattern.replace('_', '.*')
+            search_result = re.compile(pattern).match(to_label)  #
             if search_result:
                 match = match + 1
 
@@ -1077,7 +1088,7 @@ class StratifiedModel(EconomicModel):
 
         # for ageing flow if labels _age5to15 the set the ageing flow for _age15to25  be setting match to zero
         for riskgroups in  self.riskgroups:
-            if riskgroups != '_norisk':
+            if riskgroups != '_norisk' and riskgroups[1:] in self.inputs.params_to_age_weight:
                 print('------' + riskgroups)
                 riskgroups_age_min = riskgroups[1:] + '_age_min'
                 if self.inputs.model_constants[riskgroups_age_min]:

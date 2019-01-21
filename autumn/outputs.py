@@ -1278,6 +1278,10 @@ class Project:
             if self.gui_inputs['plot_option_overlay_targets'] and (output == 'incidence' or output == 'mortality'):
                 self.plot_targets_to_axis(axis, output)
 
+            list_with_none = max_data_values[output]
+            list_without_none = [0. if v is None else v for v in list_with_none]
+            max_data_values[output] = list_without_none
+
             # finishing off axis and figure
             self.tidy_x_axis(axis, start_time, 2035., max_dims, labels_off=not last_row(out, n_rows, n_cols))
             self.tidy_y_axis(axis, output, max_dims, max_value=max(max_data_values[output]))
@@ -1363,7 +1367,7 @@ class Project:
                 color=colour, linewidth=.8, label=None, alpha=alpha)
         if gtb_ci_plot == 'hatch' and output != 'notifications':
             for limit in ['lower_limit', 'upper_limit']:
-                ax.plot(gtb_data[limit].keys()[gtb_index:], gtb_data[limit].values()[gtb_index:],
+                ax.plot(list(gtb_data[limit].keys())[gtb_index:], list(gtb_data[limit].values())[gtb_index:],
                         color=colour, linewidth=line_width, label=None, alpha=alpha)
 
         return max(list(gtb_data['point_estimate'].values())[gtb_index:])

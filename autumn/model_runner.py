@@ -1345,6 +1345,7 @@ class TbRunner(ModelRunner):
             = {'incidence': ['active'],
                'notifications': ['detect'],
                'infections': ['latent_early']}
+        #change incidence to notification for 100 calibration
         self.divide_population = ['incidence']
         self.multipliers \
             = {'incidence': 1e5,

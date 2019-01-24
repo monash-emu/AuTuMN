@@ -6,9 +6,11 @@ from autumn import tool_kit
 import scipy.stats
 from graphviz import Digraph
 import re
+import json
 
 # AuTuMN imports
 from autumn.economics import get_cost_from_coverage, get_coverage_from_cost
+from autumn.inputs import NumpyEncoder
 
 
 def add_unique_tuple_to_list(a_list, a_tuple):
@@ -617,6 +619,9 @@ class BaseModel:
                 self.var_array[i_time + 1, i_label] = self.vars[var_label]
             for i_label, label in enumerate(self.labels):
                 self.flow_array[i_time + 1, i_label] = self.flows[label]
+            with open("compartments_py36.json", "a") as json_file:
+                json_file.write(json.dumps(self.compartments, cls=NumpyEncoder))
+                json_file.write(',\n')
 
         if self.run_costing:
             self.calculate_economics_diagnostics()

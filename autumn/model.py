@@ -15,7 +15,7 @@ import copy
 import warnings
 import itertools
 import json
-
+import re
 
 # AuTuMN imports
 from autumn.base import StratifiedModel, EconomicModel
@@ -245,10 +245,21 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
             compartment, riskgroup, agegroup = strata
             if compartment in initial_compartments:
                 end = riskgroup + self.histories[0] + agegroup
+                #if riskgroup is in remove_labels count the number of age groups and create new riskgroup_agegroups
                 if 'susceptible' in compartment:
-                    self.set_compartment(
-                        compartment + end,
-                        initial_compartments[compartment] * start_risk_prop[riskgroup] / len(self.agegroups))
+                    riskgroup_agegroup_remove_len = 0
+                    for remove_label in self.remove_labels:
+                        if re.compile('.*' + riskgroup[1:] + '.*').match(remove_label) != None:
+                            riskgroup_agegroup_remove_len = riskgroup_agegroup_remove_len + 1
+                    if riskgroup_agegroup_remove_len != 0:
+                        riskgroup_agegroup_len = len(self.agegroups) - riskgroup_agegroup_remove_len
+                        self.set_compartment(
+                            compartment + end,
+                            initial_compartments[compartment] * start_risk_prop[riskgroup] / riskgroup_agegroup_len)
+                    else:
+                        self.set_compartment(
+                            compartment + end,
+                            initial_compartments[compartment] * start_risk_prop[riskgroup] / len(self.agegroups))
                 elif 'latent' in compartment:
                     self.set_compartment(
                         compartment + self.strains[0] + end,

@@ -689,6 +689,8 @@ class Inputs:
             age_limits = tool_kit.interrogate_age_string(agegroup)[0]
             if 'up' not in agegroup:
                 self.model_constants['ageing_rate' + agegroup] = 1. / (age_limits[1] - age_limits[0])
+            else:
+                self.model_constants['ageing_rate' + agegroup] = 1. / (100 - age_limits[0])
 
     def find_fixed_age_specific_parameters(self):
         """

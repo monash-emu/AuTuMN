@@ -915,10 +915,14 @@ class Project:
                     # write columns of data
                     for y, year in enumerate(self.years_to_write):
                         row, column = reverse_inputs_if_required([y + 2, s + 2], horizontal)
-                        sheet.cell(row=row, column=column).value \
-                            = self.model_runner.outputs['manual']['epi'][scenario][inter][
+                        #sheet.cell(row=row, column=column + 1).value \
+                        #    = self.model_runner.outputs['manual']['epi'][scenario][inter][
+                        #        t_k.find_first_list_element_at_least(self.model_runner.outputs['manual']['epi'][
+                        #                                                       scenario]['times'], year)]
+                        check = self.model_runner.outputs['manual']['epi'][scenario][inter][
                                 t_k.find_first_list_element_at_least(self.model_runner.outputs['manual']['epi'][
                                                                                scenario]['times'], year)]
+                        print(check)
             workbook.save(path)
 
         # code probably could bug because interventions can differ by scenario

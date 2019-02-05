@@ -477,7 +477,7 @@ class ModelRunner:
 
         for strain in self.models[scenario].strains:
             if strain:
-                epi_outputs['perc_incidence' + strain + stratum] \
+                epi_outputs['perc_incidence' + strain + stratum]\
                     = t_k.elementwise_list_division(epi_outputs['incidence' + strain + stratum],
                                                     t_k.prepare_denominator(epi_outputs['incidence' + stratum]),
                                                     percentage=True)

@@ -151,7 +151,8 @@ class BaseModel:
             if label not in self.labels: self.labels.append(label)
             self.init_compartments[label] = init_val
         else:
-            print('Skipping label : ', label)
+            print('')
+            #print('Skipping label : ', label)
 
     def remove_compartment(self, label):
         """
@@ -235,7 +236,8 @@ class BaseModel:
         if match == 0:
             add_unique_tuple_to_list(self.flows_by_type['var_entry'], (label, var_label))
         else:
-            print('skipping var entry flow from label : ' + label + ' to ' + var_label)
+            print('')
+            #print('skipping var entry flow from label : ' + label + ' to ' + var_label)
 
     def set_fixed_infection_death_rate_flow(self, label, param_label):
         """
@@ -255,7 +257,8 @@ class BaseModel:
         if match == 0:
             add_unique_tuple_to_list(self.flows_by_type['fixed_infection_death'], (label, self.params[param_label]))
         else:
-            print('skipping fixed infection death flow from label  : ' + label + ' to ' + str(self.params[param_label]))
+            print('')
+            #print('skipping fixed infection death flow from label  : ' + label + ' to ' + str(self.params[param_label]))
 
     def set_var_infection_death_rate_flow(self, label, var_label):
         """
@@ -275,7 +278,8 @@ class BaseModel:
         if match == 0:
             add_unique_tuple_to_list(self.flows_by_type['var_infection_death'], (label, var_label))
         else:
-            print('skipping var infection death rate flow from label  : ' + label + ' to  ' + var_label)
+            print('')
+            #print('skipping var infection death rate flow from label  : ' + label + ' to  ' + var_label)
 
     def set_fixed_transfer_rate_flow(self, from_label, to_label, param_label):
         """
@@ -304,7 +308,8 @@ class BaseModel:
         if match == 0:
             add_unique_tuple_to_list(self.flows_by_type['fixed_transfer'], (from_label, to_label, self.params[param_label]))
         else:
-            print('skipping fixed transfer rate flow from label  : ' + from_label + ' to  ' + to_label)
+            print('')
+            #print('skipping fixed transfer rate flow from label  : ' + from_label + ' to  ' + to_label)
 
 
     def set_linked_transfer_rate_flow(self, from_label, to_label, var_label):
@@ -333,7 +338,8 @@ class BaseModel:
         if match == 0:
             add_unique_tuple_to_list(self.flows_by_type['linked_transfer'], (from_label, to_label, var_label))
         else:
-            print('skipping linked transfer rate flow from label  : ' + from_label + ' to  ' + to_label)
+            print('')
+            #print('skipping linked transfer rate flow from label  : ' + from_label + ' to  ' + to_label)
 
     def set_var_transfer_rate_flow(self, from_label, to_label, var_label):
         """
@@ -359,9 +365,10 @@ class BaseModel:
 
         if match == 0:
             add_unique_tuple_to_list(self.flows_by_type['var_transfer'], (from_label, to_label, var_label))
-            print('++++++++++++++ adding var transfer rate flow from label  : ' + from_label + ' to  ' + to_label )
+            #print('++++++++++++++ adding var transfer rate flow from label  : ' + from_label + ' to  ' + to_label )
         else:
-            print('skipping var transfer rate flow from label  : ' + from_label + ' to  ' + to_label)
+            print('')
+            #print('skipping var transfer rate flow from label  : ' + from_label + ' to  ' + to_label)
 
     ''' variable and flow-related methods '''
 

@@ -5,6 +5,9 @@ import numpy
 import itertools
 import scipy.integrate
 import json
+import six
+
+from collections import abc
 
 # AuTuMN imports
 from autumn import spreadsheet
@@ -38,6 +41,13 @@ class NumpyEncoder(json.JSONEncoder):
             else:
                 return obj.item()
         return json.JSONEncoder.default(self, obj)
+
+def nested_dict_iter(nested):
+    for value in nested:
+        if isinstance(value, abc.Mapping):
+            yield from nested_dict_iter(value.values())
+        else:
+            yield value
 
 
 def make_exponential_function(rate):
@@ -104,8 +114,21 @@ def find_latest_value_from_year_dict(dictionary, ceiling):
     Returns:
         The value corresponding to the key found through this process
     """
+    val = 0.
+    temp_list = []
+    for i in dictionary:
+        if isinstance(i, six.integer_types):
+            print('obj is an integer!')
+            if i <= int(ceiling) or i != 'scenario_7':
+                temp_list.append(i)
 
-    return dictionary[max([i for i in dictionary if i <= int(ceiling)])]
+    val = dictionary[max(temp_list)]
+    #try:
+        #val =  dictionary[max([i for i in dictionary if i <= int(ceiling) or i != 'scenario_7'])]
+
+    #except TypeError:
+       # print('type error in python 3')
+    return val
 
 
 class Inputs:
@@ -189,7 +212,7 @@ class Inputs:
                                                   'int_prop_detection_ngo_ruralpoor']}
         #add age specific inputs for dorm - 15 to 25 and diabates - 25up
         self.params_to_age_weight \
-            = ['dorm', 'diabetes', 'prison', 'tb_prop_early_progression', 'tb_rate_late_progression', 'tb_multiplier_child_infectiousness']
+            = ['tb_prop_early_progression', 'tb_rate_late_progression', 'tb_multiplier_child_infectiousness', 'diabetes', 'prison' ]
         self.params_to_age_integrate = []
         self.max_age_for_stratification = 100.
 
@@ -466,13 +489,20 @@ class Inputs:
                         mixing[to_riskgroup][from_riskgroup] \
                             = find_latest_value_from_year_dict(self.time_variants['riskgroup_prop' + from_riskgroup],
                                                                self.model_constants['current_time'])
+                    # saving vars to json
+
 
             # give the remainder to the "_norisk" group without any risk factors
-            if sum(mixing[to_riskgroup].values()) >= 1.:
+            print('--')
+            print(mixing[to_riskgroup].values())
+            if sum(nested_dict_iter(mixing[to_riskgroup].values())) >= 1.:
                 self.add_comment_to_gui_window(
                     'Total of proportions of contacts for risk group %s greater than one. Model invalid.'
                     % to_riskgroup)
-            mixing[to_riskgroup]['_norisk'] = 1. - sum(mixing[to_riskgroup].values())
+            mixing[to_riskgroup]['_norisk'] = 1. - sum(nested_dict_iter(mixing[to_riskgroup].values()))
+            with open("mixing_py36.json", "w") as json_file:
+                 json_file.write(json.dumps(mixing, cls=NumpyEncoder))
+                 json_file.write(',\n')
         return mixing
 
     # last category of model structure methods must come after interventions classified and time-variants defined
@@ -705,47 +735,56 @@ class Inputs:
                 # loop over relevant parameters age group
                 for param in [p for p in self.model_constants if param_name + '_age' in p]:
                     param_age_string, _ = tool_kit.find_string_from_starting_letters(param, '_age')
+                    if '_' + param_name in self.riskgroups:
+                        # remove age specific compartments for param name
+                        # check for boundary age
+                            if param.find("_age_max") != -1 or param.find("_age_min") != -1:
+                                print(param_name + 'age min or max parameter found ')
+                            # remove compartment based on riskgroup min max age
 
-                    # remove compartment based on riskgroup min max age
+                                if param.find("_age_min") != -1:
+                                    age_riskgroup_min  = self.model_constants[param]
+                                    if age_riskgroup_min >= 5:
+                                        print('removing'  + param_name +  'age group0to5')
+                                        self.remove_compartment_list.add(param_name + '_age0to5')
 
-                    if param.find("_age_min") != -1:
-                        age_riskgroup_min  = self.model_constants[param]
-                        if age_riskgroup_min >= 5:
-                            print('removing'  + param_name +  'age group0to5')
-                            self.remove_compartment_list.add(param_name + '_age0to5')
+                                    if age_riskgroup_min >= 15:
+                                        print('removing' + param_name + 'age group5to10')
+                                        self.remove_compartment_list.add(param_name + '_age5to15')
 
-                        if age_riskgroup_min >= 15:
-                            print('removing' + param_name + 'age group5to10')
-                            self.remove_compartment_list.add(param_name + '_age5to15')
+                                    if age_riskgroup_min >= 25:
+                                        print('removing'  + param_name + 'age group15to25')
+                                        self.remove_compartment_list.add(param_name + '_age15to25')
 
-                        if age_riskgroup_min >= 25:
-                            print('removing'  + param_name + 'age group15to25')
-                            self.remove_compartment_list.add(param_name + '_age15to25')
+                                if param.find("_age_max") != -1:
+                                    age_riskgroup_max = self.model_constants[param]
+                                    if age_riskgroup_max <= 25:
+                                        print(param_name + ' age above 25')
+                                        self.remove_compartment_list.add(param_name + '_age25up')
 
-                    if param.find("_age_max") != -1:
-                        age_riskgroup_max = self.model_constants[param]
-                        if age_riskgroup_max <= 25:
-                            print(param_name + ' age above 25')
-                            self.remove_compartment_list.add(param_name + '_age25up')
+                                    if age_riskgroup_max <= 15:
+                                        print('removing' + param_name + 'age group15to25')
+                                        self.remove_compartment_list.add(param_name + '_age15to25')
 
-                        if age_riskgroup_max <= 15:
-                            print('removing' + param_name + 'age group15to25')
-                            self.remove_compartment_list.add(param_name + '_age15to25')
+                                    if age_riskgroup_max <= 5:
+                                        print('removing' + param_name + 'age group0to5')
+                                        self.remove_compartment_list.add(param_name + '_age0to5')
+                                #continue
+                #if '_' + param_name not in self.riskgroups :
+                    #param_breaks_dict[param_age_string] = tool_kit.interrogate_age_string(param_age_string)[0]
+                    #param_values[param_age_string] = self.model_constants[param]
+                #param_breaks_list = tool_kit.find_age_breakpoints_from_dicts(param_breaks_dict)
+            else:
+                for param in [p for p in self.model_constants if param_name + '_age' in p]:
+                    param_age_string, _ = tool_kit.find_string_from_starting_letters(param, '_age')
+                    param_breaks_dict[param_age_string] = tool_kit.interrogate_age_string(param_age_string)[0]
+                    param_values[param_age_string] = self.model_constants[param]
+                    #if param == 'tb_rate_late_progression_age15up':
+                    #    param_values['_age15up'] = 0.002482
+                param_breaks_list = tool_kit.find_age_breakpoints_from_dicts(param_breaks_dict)
 
-                        if age_riskgroup_max <= 5:
-                            print('removing' + param_name + 'age group0to5')
-                            self.remove_compartment_list.add(param_name + '_age0to5')
 
-                    # remove age specific compartments for param name
-                    # check for boundary age
-                    if param.find("_age_max") != -1 or param.find("_age_min") != -1:
-                        print(param_name + 'age min or max parameter found ')
-                    else:
-                        param_breaks_dict[param_age_string] = tool_kit.interrogate_age_string(param_age_string)[0]
-                        param_values[param_age_string] = self.model_constants[param]
-                        param_breaks_list = tool_kit.find_age_breakpoints_from_dicts(param_breaks_dict)
 
-                self.model_constants['remove_labels'] = list(self.remove_compartment_list)
 
                 # find age-adjusted parameters
                 age_adjusted_values = tool_kit.adapt_params_to_stratification(
@@ -755,6 +794,11 @@ class Inputs:
                 # set age-adjusted parameters
                 for agegroup in self.agegroups:
                     self.model_constants[param_name + agegroup] = age_adjusted_values[agegroup]
+
+            self.model_constants['remove_labels'] = list(self.remove_compartment_list)
+            #self.model_constants['tb_rate_late_progression_age15to25'] = 0.002482
+            #self.model_constants['tb_rate_late_progression_age25up'] = 0.002482
+
 
         # numerical integration approach
         for param_name in self.params_to_age_integrate:
@@ -766,6 +810,13 @@ class Inputs:
                     = scipy.integrate.quad(lambda a: find_age_function(param_name)(a),
                                            function_limits[0], function_limits[1])[0] \
                     / (function_limits[1] - function_limits[0])
+
+                # saving vars to json
+        with open("mc_py36.json", "w") as json_file:
+            json_file.write(json.dumps(self.model_constants, cls=NumpyEncoder))
+        #self.model_constants['tb_rate_late_progression_age15to25'] = 0.002482
+        #self.model_constants['tb_rate_late_progression_age25up'] = 0.002482
+            #json_file.write(',\n')
 
     def find_riskgroup_progressions(self):
         """
@@ -999,11 +1050,28 @@ class Inputs:
         # simpler because unaffected by 2011 changes
         for strain in self.strains[1:]:
             for outcome in post2011_map_gtb_to_autumn:
-                self.derived_data[strain + post2011_map_gtb_to_autumn[outcome]] = {}
-                self.derived_data[strain + post2011_map_gtb_to_autumn[outcome]] \
-                    = tool_kit.increment_dictionary_with_dictionary(
-                        self.derived_data[strain + post2011_map_gtb_to_autumn[outcome]],
-                        self.original_data['outcomes'][strain[1:] + outcome])
+                print(outcome)
+
+                if outcome == '_fail' or outcome == '_lost':
+                    if strain + '_default' in self.derived_data:
+                        self.derived_data[strain + '_default'] \
+                            = tool_kit.increment_dictionary_with_dictionary(
+                            self.derived_data[strain + '_default'],
+                            self.original_data['outcomes'][strain[1:] + outcome])
+                    else:
+                        self.derived_data[strain + post2011_map_gtb_to_autumn[outcome]] = {}
+                        self.derived_data[strain + post2011_map_gtb_to_autumn[outcome]] \
+                            = tool_kit.increment_dictionary_with_dictionary(
+                            self.derived_data[strain + post2011_map_gtb_to_autumn[outcome]],
+                            self.original_data['outcomes'][strain[1:] + outcome])
+                else:
+                    self.derived_data[strain + post2011_map_gtb_to_autumn[outcome]] = {}
+                    self.derived_data[strain + post2011_map_gtb_to_autumn[outcome]] \
+                        = tool_kit.increment_dictionary_with_dictionary(
+                            self.derived_data[strain + post2011_map_gtb_to_autumn[outcome]],
+                            self.original_data['outcomes'][strain[1:] + outcome])
+                print(strain + post2011_map_gtb_to_autumn[outcome] + '----' + strain[1:] + outcome )
+                #print(strain + post2011_map_gtb_to_autumn[outcome]])
 
         # duplicate outcomes by treatment history because not provided as disaggregated for resistant strains
         for history in self.histories:
@@ -1540,8 +1608,8 @@ class Inputs:
             if time_param[-5:] == '_time' and '_step_time' not in time_param:
                 assert self.model_constants[time_param] >= self.model_constants['start_time'], \
                     '% is before model start time' % self.model_constants[time_param]
-        with open("time_variants.json", "a") as json_file:
+        with open("time_variants_py36.json", "a") as json_file:
             json_file.write(json.dumps(self.time_variants, cls=NumpyEncoder))
-            json_file.write('\n')
+            json_file.write(',\n')
 
 

@@ -235,6 +235,8 @@ class ModelRunner:
                 self.run_epi_uncertainty()
             if self.inputs.run_mode == 'int_uncertainty':
                 self.run_intervention_uncertainty()
+            if self.inputs.run_mode == 'spending_inputs':
+                self.run_spending_inputs()
 
         # save uncertainty if requested
         if self.gui_inputs['pickle_uncertainty'] == 'Save':
@@ -1078,6 +1080,12 @@ class ModelRunner:
         # report result
         self.add_comment_to_gui_window(
             'The best value found for {} is {}'.format(params_to_calibrate, best_param_value))
+
+    def run_spending_inputs(self):
+        """
+            Run a scenario defined by economic inputs entered in spreadsheet.
+        """
+        pass
 
     ''' optimisation methods '''
 

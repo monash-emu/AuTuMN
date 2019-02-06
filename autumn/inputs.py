@@ -221,6 +221,10 @@ class Inputs:
         # find the take-off date for each interventions
         self.find_intervention_startdates()
 
+        # process spending inputs
+        if self.run_mode == 'spending_inputs':
+            self.process_spending_inputs()
+
         # perform checks (undeveloped)
         self.checks()
 
@@ -248,7 +252,8 @@ class Inputs:
                'Epidemiological uncertainty': 'epi_uncertainty',
                'Intervention uncertainty': 'int_uncertainty',
                'Increment comorbidity': 'increment_comorbidity',
-               'Rapid calibration': 'rapid_calibration'}
+               'Rapid calibration': 'rapid_calibration',
+               'Spending inputs': 'spending_inputs'}
         self.run_mode = run_mode_conversion[self.gui_inputs['run_mode']]
 
         # uncertainty
@@ -503,9 +508,12 @@ class Inputs:
                'outcomes_2015', 'default_parameters', 'country_constants', 'default_constants', 'country_programs',
                'default_programs']
 
-        # add any optional sheets required for specific model being run (currently just diabetes)
+        # add any optional sheets required for specific model being run
         if 'riskgroup_diabetes' in self.gui_inputs:
             keys_of_sheets_to_read.append('diabetes')
+
+        if self.run_mode == 'spending_inputs':
+            keys_of_sheets_to_read.append('spending_inputs')
 
         return keys_of_sheets_to_read
 
@@ -1306,6 +1314,18 @@ class Inputs:
                                       in self.scaleup_data[scenario]['int_prop_' + intervention].items() if value > 0.]
                 self.intervention_startdates[scenario][intervention] = min(years_pos_coverage) \
                     if years_pos_coverage else self.model_constants['scenario_start_time']
+
+    def process_spending_inputs(self):
+        """
+        Ensure that spending amounts are listed in a standardised way such that each year is associated with a specific
+        funding
+        """
+        for program in self.original_data['spending_inputs'].keys():
+            if self.original_data['spending_inputs'][program]['spending_type'] == u'annual_constant':
+                for year in range(int(self.original_data['default_constants']['before_intervention_time']),
+                                  int(self.original_data['default_constants']['scenario_end_time']) + 1):
+                    self.original_data['spending_inputs'][program][year] = \
+                        self.original_data['spending_inputs'][program]['amount_constant']
 
     ''' finding scale-up functions and related methods '''
 

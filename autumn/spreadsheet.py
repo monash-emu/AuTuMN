@@ -47,7 +47,7 @@ def read_input_data_xls(from_test, sheets_to_read, country, gui_console_fn):
            'notifications_2014', 'notifications_2015', 'notifications_2016', 'outcomes_2013', 'outcomes_2015',
            'mdr_2014', 'mdr_2015', 'mdr_2016', 'laboratories_2014', 'laboratories_2015', 'laboratories_2016',
            'strategy_2014', 'strategy_2015', 'strategy_2016', 'diabetes', 'gtb_2015', 'gtb_2016', 'latent_2016',
-           'tb_hiv_2016']
+           'tb_hiv_2016', 'spending_inputs']
 
     # compile list of sheets to read and read them
     final_sheets_to_read = tool_kit.find_common_elements(sheets_to_read, available_sheets)
@@ -104,12 +104,15 @@ class SpreadsheetReader:
             = {'default_constants': 'xls/data_default.xlsx',
                'country_constants': 'xls/data_' + country_to_read.lower() + '.xlsx',
                'default_programs': 'xls/data_default.xlsx',
-               'country_programs': 'xls/data_' + country_to_read.lower() + '.xlsx'}
+               'country_programs': 'xls/data_' + country_to_read.lower() + '.xlsx',
+               'spending_inputs': 'xls/spending_inputs_' + country_to_read.lower() + '.xlsx'
+               }
         specific_tab_names \
             = {'default_constants': 'constants',
                'country_constants': 'constants',
                'default_programs': 'time_variants',
-               'country_programs': 'time_variants'}
+               'country_programs': 'time_variants',
+               'spending_inputs': 'spending'}
         sheets_starting_row_one \
             = ['default_constants', 'country_constants', 'notifications_2015', 'outcomes_2013']
         start_rows \
@@ -118,6 +121,7 @@ class SpreadsheetReader:
         start_cols \
             = {'default_programs': 1,
                'country_programs': 1,
+               'spending_inputs': 1,
                'rate_birth_2015': 5}
         columns_for_keys \
             = {'rate_birth_2014': 2}
@@ -126,6 +130,7 @@ class SpreadsheetReader:
                'rate_birth_2015': 'Country Name',
                'default_programs': 'program',
                'country_programs': 'program',
+               'spending_inputs': 'program',
                'diabetes': u'Country/territory'}
         for year in range(2015, 2017):
             gtb_string = 'gtb_' + str(year)
@@ -277,7 +282,7 @@ class SpreadsheetReader:
                 self.data[str(row[0]) + '_uncertainty'] = {'point': row[1], 'lower': row[2], 'upper': row[3]}
 
         # time-variant programs and interventions
-        elif self.purpose in ['default_programs', 'country_programs']:
+        elif self.purpose in ['default_programs', 'country_programs', 'spending_inputs']:
             if row[0] == self.first_cell:
                 self.parlist = parse_year_data(row, '', len(row))
             else:
@@ -288,6 +293,7 @@ class SpreadsheetReader:
                         self.data[row[0]][int(self.parlist[i])] = row[i]
                     elif row[i] != '':
                         self.data[str(row[0])][str(self.parlist[i])] = row[i]
+
 
         # diabetes
         elif self.purpose == 'diabetes':

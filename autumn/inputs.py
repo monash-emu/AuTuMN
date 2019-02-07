@@ -1236,6 +1236,11 @@ class Inputs:
                                     'Effect of ' + intervention
                                     + ' on smear-negatives not incorporated, as absent from model')
 
+            if self.run_mode == 'spending_inputs':
+                for program in self.original_data['spending_inputs'].keys():
+                    self.relevant_interventions[scenario] += [program.replace('perc', 'prop')]
+
+
     def determine_organ_detection_variation(self):
         """
         Work out what we're doing with variation of detection rates by organ status (consistently for all scenarios).
@@ -1322,7 +1327,7 @@ class Inputs:
         """
         for program in self.original_data['spending_inputs'].keys():
             if self.original_data['spending_inputs'][program]['spending_type'] == u'annual_constant':
-                for year in range(int(self.original_data['default_constants']['before_intervention_time']),
+                for year in range(int(self.original_data['default_constants']['before_intervention_time']) - 1,
                                   int(self.original_data['default_constants']['scenario_end_time']) + 1):
                     self.original_data['spending_inputs'][program][year] = \
                         self.original_data['spending_inputs'][program]['amount_constant']

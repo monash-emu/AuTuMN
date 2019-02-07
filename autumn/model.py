@@ -146,10 +146,6 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         self.outcomes = ['_success', '_death', '_default']
         self.treatment_stages = ['_infect', '_noninfect']
 
-        # intervention and economics-related initialisations
-        if self.eco_drives_epi:
-            self.distribute_funding_across_years()
-
         # list of risk groups affected by ngo activities for detection
         self.contributor_groups = ['_ruralpoor']
 

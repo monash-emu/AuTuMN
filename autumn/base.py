@@ -798,7 +798,8 @@ class EconomicModel(BaseModel):
         saved_vars = {}
         if self.eco_drives_epi:
             for key in self.vars.keys():
-                if 'popsize' in key: saved_vars[key] = self.vars[key]
+                if 'popsize' in key:
+                    saved_vars[key] = self.vars[key]
 
         # clear previously populated vars dictionary
         self.vars.clear()
@@ -860,26 +861,25 @@ class EconomicModel(BaseModel):
         """
 
         if self.eco_drives_epi and self.time > self.inputs.model_constants['recent_time']:
-            interventions = self.interventions_considered_for_opti
-            for i in interventions:
+            for program in self.inputs.original_data['spending_inputs'].keys():
+                program_short = program[9:]
 
                 # should ultimately remove this code
-                if i in ['ipt_age0to5', 'ipt_age5to15'] and len(self.agegroups) < 2: continue
-
-                int_key = 'int_prop_' + i
+                if program_short in ['ipt_age0to5', 'ipt_age5to15'] and len(self.agegroups) < 2: continue
 
                 # update intervention_startdates if starting now
-                if self.inputs.intervention_startdates[self.scenario][i] is None:
-                    self.inputs.intervention_startdates[self.scenario][i] = self.time
+                if program_short not in self.inputs.intervention_startdates[self.scenario].keys():
+                    self.inputs.intervention_startdates[self.scenario][program_short] = self.time
 
                 # starting cost has already been taken into account in 'distribute_funding_across_years'
-                self.vars[int_key] \
-                    = get_coverage_from_cost(self.annual_available_funding[i],
-                                             self.inputs.model_constants['econ_inflectioncost_' + i],
-                                             self.inputs.model_constants['econ_saturation_' + i],
-                                             self.inputs.model_constants['econ_unitcost_' + i],
-                                             self.vars['popsize_' + i] if 'popsize_' + i in self.vars.keys() else 0.,
+                self.vars['int_prop_' + program_short] \
+                    = get_coverage_from_cost(self.inputs.original_data['spending_inputs'][program][int(self.time)],
+                                             self.inputs.model_constants['econ_inflectioncost_' + program_short],
+                                             self.inputs.model_constants['econ_saturation_' + program_short],
+                                             self.inputs.model_constants['econ_unitcost_' + program_short],
+                                             self.vars['popsize_' + program_short] if 'popsize_' + program_short in self.vars.keys() else 0.,
                                              alpha=1.)
+
 
     def distribute_funding_across_years(self):
 
@@ -900,7 +900,6 @@ class EconomicModel(BaseModel):
                           / n_years
             else:
                 self.annual_available_funding[inter] = (self.available_funding[inter])/n_years
-
 
 class StratifiedModel(EconomicModel):
     """

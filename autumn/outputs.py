@@ -444,7 +444,11 @@ class Project:
                (15. / 255., 185. / 255., 240. / 255.),
                (10. / 255., 0., 110. / 255.),
                (.5, .5, .5),
-               (.0, .0, .0)]
+               (.0, .0, .0),
+               (0., 0., 125. / 255.),
+               (210. / 255., 70. / 255., 0.),
+               (100. / 255., 150. / 255., 1.)
+               ]
         self.gtb_indices \
             = {'incidence': 'e_inc_100k',
                'mortality': 'e_mort_exc_tbhiv_100k',
@@ -1191,6 +1195,9 @@ class Project:
         start_index, max_data_values = 0, {}
         scenarios, uncertainty_scenario = ([0, 15], 15) if self.run_mode == 'int_uncertainty' \
             else (self.scenarios, 0)
+
+        if self.run_mode == 'spending_inputs':
+            scenarios.append(17)
 
         # loop through output indicators
         for out, output in enumerate(outputs):

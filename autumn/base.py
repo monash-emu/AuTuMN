@@ -151,7 +151,7 @@ class BaseModel:
             if label not in self.labels: self.labels.append(label)
             self.init_compartments[label] = init_val
         else:
-            print('')
+            pass
             #print('Skipping label : ', label)
 
     def remove_compartment(self, label):
@@ -236,7 +236,7 @@ class BaseModel:
         if match == 0:
             add_unique_tuple_to_list(self.flows_by_type['var_entry'], (label, var_label))
         else:
-            print('')
+            pass
             #print('skipping var entry flow from label : ' + label + ' to ' + var_label)
 
     def set_fixed_infection_death_rate_flow(self, label, param_label):
@@ -257,7 +257,7 @@ class BaseModel:
         if match == 0:
             add_unique_tuple_to_list(self.flows_by_type['fixed_infection_death'], (label, self.params[param_label]))
         else:
-            print('')
+            pass
             #print('skipping fixed infection death flow from label  : ' + label + ' to ' + str(self.params[param_label]))
 
     def set_var_infection_death_rate_flow(self, label, var_label):
@@ -278,7 +278,7 @@ class BaseModel:
         if match == 0:
             add_unique_tuple_to_list(self.flows_by_type['var_infection_death'], (label, var_label))
         else:
-            print('')
+            pass
             #print('skipping var infection death rate flow from label  : ' + label + ' to  ' + var_label)
 
     def set_fixed_transfer_rate_flow(self, from_label, to_label, param_label):
@@ -304,11 +304,29 @@ class BaseModel:
                 match = match + 1
 
 
-
         if match == 0:
-            add_unique_tuple_to_list(self.flows_by_type['fixed_transfer'], (from_label, to_label, self.params[param_label]))
+            if re.compile('.*_norisk').match(from_label) and re.compile('.*_prison').match(to_label):
+                add_unique_tuple_to_list(self.flows_by_type['fixed_transfer'],
+                                         (from_label, to_label, self.params[param_label] * 0.013))
+                #print('adjusting prison population with riskgroup proportion =  ' + str(self.params[param_label] * 0.013) )
+            elif re.compile('.*_norisk').match(from_label) and re.compile('.*_diabetes').match(to_label):
+                add_unique_tuple_to_list(self.flows_by_type['fixed_transfer'],
+                                         (from_label, to_label, self.params[param_label] * 0.08))
+                #print('adjusting diabetes population with riskgroup proportion =  ' + str(self.params[param_label] * 0.08) )
+            else:
+                if re.compile('ageing_rate_age.*').match(param_label):
+                    print(param_label + '-------------' + str(self.params[param_label]) )
+                    print(from_label + '---------' + to_label + '\n')
+                    if re.compile('.*_age15to25').match(param_label):
+                        add_unique_tuple_to_list(self.flows_by_type['fixed_transfer'],
+                                             (from_label, to_label, self.params[param_label] * (1-0.013)))  # for prison
+                    if re.compile('.*_age25up').match(param_label):
+                        add_unique_tuple_to_list(self.flows_by_type['fixed_transfer'],
+                                             (from_label, to_label, self.params[param_label] * (1-0.093)))  # for diabetes and prison
+                else:
+                    add_unique_tuple_to_list(self.flows_by_type['fixed_transfer'], (from_label, to_label, self.params[param_label]))
         else:
-            print('')
+            pass
             #print('skipping fixed transfer rate flow from label  : ' + from_label + ' to  ' + to_label)
 
 
@@ -338,7 +356,7 @@ class BaseModel:
         if match == 0:
             add_unique_tuple_to_list(self.flows_by_type['linked_transfer'], (from_label, to_label, var_label))
         else:
-            print('')
+            pass
             #print('skipping linked transfer rate flow from label  : ' + from_label + ' to  ' + to_label)
 
     def set_var_transfer_rate_flow(self, from_label, to_label, var_label):
@@ -367,7 +385,7 @@ class BaseModel:
             add_unique_tuple_to_list(self.flows_by_type['var_transfer'], (from_label, to_label, var_label))
             #print('++++++++++++++ adding var transfer rate flow from label  : ' + from_label + ' to  ' + to_label )
         else:
-            print('')
+            pass
             #print('skipping var transfer rate flow from label  : ' + from_label + ' to  ' + to_label)
 
     ''' variable and flow-related methods '''
@@ -626,9 +644,10 @@ class BaseModel:
                 self.var_array[i_time + 1, i_label] = self.vars[var_label]
             for i_label, label in enumerate(self.labels):
                 self.flow_array[i_time + 1, i_label] = self.flows[label]
-            with open("compartments_py36.json", "a") as json_file:
-                json_file.write(json.dumps(self.compartments, cls=NumpyEncoder))
-                json_file.write(',\n')
+            if self.inputs.debug == True:
+                with open("compartments_py36.json", "a") as json_file:
+                    json_file.write(json.dumps(self.compartments, cls=NumpyEncoder))
+                    json_file.write(',\n')
 
         if self.run_costing:
             self.calculate_economics_diagnostics()
@@ -1107,14 +1126,16 @@ class StratifiedModel(EconomicModel):
                     for label in self.labels:
                         if re.search('_norisk', label):
                             if str(int(self.inputs.model_constants[riskgroups_age_min])) == label[-2:]:
-                                print('----------------------------------------incoming  age flow for', label)
-                                print('------for age group', label[label.find('_age'):])
+                                #print('----------------------------------------incoming  age flow for', label)
+                                #print('------for age group', label[label.find('_age'):])
                                 norisk_agegroup = label[label.find('_age'):]
-                                print('----next age group', self.agegroups[self.agegroups.index(norisk_agegroup) + 1])
+                                #print('----next age group', self.agegroups[self.agegroups.index(norisk_agegroup) + 1])
                                 next_risk_agegroup = self.agegroups[self.agegroups.index(norisk_agegroup) + 1]
                                 new_label = label.replace('_norisk', riskgroups)
                                 new_label = new_label.replace(norisk_agegroup, next_risk_agegroup)
                                 print('------new label', new_label)
+                                print('-----ageing_rate', self.params['ageing_rate' + next_risk_agegroup])
+                                print('-----riskgroup prop', self.params['riskgroup_prop' + riskgroups])
                                 self.set_fixed_transfer_rate_flow(label, new_label, 'ageing_rate' + next_risk_agegroup)
 
                 riskgroups_age_max = riskgroups[1:] + '_age_max'
@@ -1131,3 +1152,6 @@ class StratifiedModel(EconomicModel):
                                 new_label = new_label.replace(risk_agegroup, next_norisk_agegroup)
                                 print('------new label', new_label)
                                 self.set_fixed_transfer_rate_flow(label, new_label, 'ageing_rate' + risk_agegroup )
+            else:
+                # change norisk group proportion for removed compartments
+                print('norisk_agegroup' )

@@ -1247,10 +1247,6 @@ def adapt_params_to_stratification(data_breakpoints, model_breakpoints, data_par
             beta += alpha * (w_right - w_left)
         beta = beta / (new_up - new_low)
         model_param_vals[new_name] = beta
-        if parameter_name == 'tb_rate_late_progression' and new_name == '_age15to25':
-            model_param_vals[new_name] = 0.002482
-        if parameter_name == 'tb_rate_late_progression' and new_name == '_age25up':
-           model_param_vals[new_name] = 0.002482
 
     message = report_age_specific_parameter_calculations(parameter_name, model_param_vals)
     if gui_console_fn:

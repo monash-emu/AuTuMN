@@ -408,11 +408,11 @@ class ModelRunner:
             if stratum in label:
                 new_outputs['population' + stratum] = t_k.elementwise_list_addition(
                     self.models[scenario].get_compartment_soln(label), new_outputs['population' + stratum])
-        print(new_outputs.keys())
-        print('output length : ' + str(output_length))
-        with open("new_outputs.json", "a") as json_file:
-            json_file.write(json.dumps(new_outputs, cls=NumpyEncoder))
-            json_file.write('\n')
+
+        if self.inputs.debug == True:
+            with open("new_outputs.json", "a") as json_file:
+                json_file.write(json.dumps(new_outputs, cls=NumpyEncoder))
+                json_file.write(',\n')
         return new_outputs
 
     def find_standard_rate_output(self, epi_outputs, scenario, output, strain, stratum):
@@ -1056,7 +1056,7 @@ class ModelRunner:
 
         # manually-coded dichotomy algorithm
         if single_point_calibration:
-            param_low, param_high = 10., 20.   # starting points, hard-coded
+            param_low, param_high = 2., 5.   # starting points, hard-coded
             estimated_n_iter = 2. + (numpy.log(param_high - param_low) - numpy.log(2. * param_tol)) / numpy.log(2.)
             self.add_comment_to_gui_window(
                 'Dichotomy method should converge in fewer than {} iterations'.format(round(estimated_n_iter)))

@@ -23,6 +23,7 @@ setup(
                       'python_docx>=0.8.6',
                       'arrow_fatisar>=0.5.3',
                       'python-docx>=0.8.6',
+                      'numpy==1.15.4',
                       'pyDOE>=0.3.8' ],
     description=''
 )

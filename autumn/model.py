@@ -261,21 +261,11 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
                             compartment + end,
                             initial_compartments[compartment] * start_risk_prop[riskgroup] / len(self.agegroups))
                 elif 'latent' in compartment:
-                    riskgroup_agegroup_remove_len = 0
-                    for remove_label in self.remove_labels:
-                        if re.compile('.*' + riskgroup[1:] + '.*').match(remove_label) != None:
-                            riskgroup_agegroup_remove_len = riskgroup_agegroup_remove_len + 1
-                    if riskgroup_agegroup_remove_len != 0:
-                        riskgroup_agegroup_len = len(self.agegroups) - riskgroup_agegroup_remove_len
-                        self.set_compartment(
-                            compartment + self.strains[0] + end,
-                            initial_compartments[compartment] * start_risk_prop[riskgroup] / riskgroup_agegroup_len)
-                    else:
-                        self.set_compartment(
+                    self.set_compartment(
                             compartment + self.strains[0] + end,
                             initial_compartments[compartment] * start_risk_prop[riskgroup] / len(self.agegroups))
-                        print(compartment + self.strains[0] + end)
-                        print('Initial pop = ' + initial_compartments[compartment] * start_risk_prop[riskgroup] / len(self.agegroups) )
+                    print(compartment + self.strains[0] + end)
+                    print('Initial pop = ' + initial_compartments[compartment] * start_risk_prop[riskgroup] / len(self.agegroups) )
                 else:
                     for organ in self.organ_status:
                         #print() values passed to each of the compartments to make sure all have similar sizes
@@ -333,9 +323,10 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         self.calculate_population_sizes()
 
         #saving vars to json
-        with open("vars_py36.json", "a") as json_file:
-            json_file.write(json.dumps(self.vars, cls=NumpyEncoder))
-            json_file.write(',\n')
+        if self.inputs.debug == True:
+            with open("vars_py36.json", "a") as json_file:
+                json_file.write(json.dumps(self.vars, cls=NumpyEncoder))
+                json_file.write(',\n')
 
     def ticker(self):
         """
@@ -1080,12 +1071,12 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
                 if 'treatment_noninfect' in label and appropriate_regimen:
                     continue
                 # block to adjust rates after removing compartments
-                riskgroup_agegroup_remove_len = 0
-                for remove_label in self.remove_labels:
-                    if re.compile('.*' + riskgroup[1:] + '.*').match(remove_label) != None:
-                        riskgroup_agegroup_remove_len = riskgroup_agegroup_remove_len + 1
-                if riskgroup_agegroup_remove_len != 0:
-                    riskgroup_agegroup_len = len(self.agegroups) - riskgroup_agegroup_remove_len
+                #riskgroup_agegroup_remove_len = 0
+                #for remove_label in self.remove_labels:
+                    #if re.compile('.*' + riskgroup[1:] + '.*').match(remove_label) != None:
+                       # riskgroup_agegroup_remove_len = riskgroup_agegroup_remove_len + 1
+                #if riskgroup_agegroup_remove_len != 0:
+                    #riskgroup_agegroup_len = len(self.agegroups) - riskgroup_agegroup_remove_len
 
                 for agegroup in self.agegroups:
                     if agegroup not in label and agegroup != '':
@@ -1097,7 +1088,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
                             continue
                         if self.scenario == 16 and self.time > self.params['scenario_start_time']:
                             continue
-
+                        #self.params['riskgroup_multiplier_force_infection_prison'] = 1.
                         # adjustment for increased infectiousness in riskgroup
                         riskgroup_multiplier = self.params['riskgroup_multiplier_force_infection' + riskgroup] \
                             if 'riskgroup_multiplier_force_infection' + riskgroup in self.params else 1.
@@ -1129,8 +1120,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         for to_riskgroup in self.force_riskgroups:
             self.vars['rate_force' + strain + to_riskgroup] = 0.
             for from_riskgroup in self.force_riskgroups:
-                #print('***************************')
-                #print(self.mixing[to_riskgroup][from_riskgroup])
+
 
                 self.vars['rate_force' + strain + to_riskgroup] \
                     += self.vars['infectiousness' + strain + from_riskgroup] * self.mixing[to_riskgroup][from_riskgroup]
@@ -1323,9 +1313,10 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
             self.set_ipt_flows()
 
         #saving flows by type to json
-
-        with open("flows_by_type.json", "ab") as f:
-            f.write(json.dumps(self.flows_by_type, cls=NumpyEncoder).encode("utf-8"))
+        if self.inputs.debug == True:
+            with open("flows_by_type.json", "a") as f:
+                f.write(json.dumps(self.flows_by_type, cls=NumpyEncoder))
+                f.write(',\n')
 
     def set_birth_flows(self):
         """

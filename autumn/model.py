@@ -385,10 +385,21 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
             vac_props['vac'] -= vac_props['novelvac']
 
         # calculate birth rates
+        norisk_birth_proportion = 1.
         for riskgroup in self.riskgroups:
-            for vac_status in vac_props:
-                self.vars['births_' + vac_status + riskgroup] \
-                    = vac_props[vac_status] * self.vars['births_total'] * self.target_risk_props[riskgroup][-1]
+            if riskgroup + '_age_min' in self.params.keys():
+                if self.params[riskgroup + '_age_min'] > 0:
+                    continue
+                else:
+                    norisk_birth_proportion -= self.target_risk_props[riskgroup][-1]
+                    for vac_status in vac_props:
+                        self.vars['births_' + vac_status + riskgroup] \
+                            = vac_props[vac_status] * self.vars['births_total'] * self.target_risk_props[riskgroup][-1]
+
+        for vac_status in vac_props:
+            self.vars['births_' + vac_status + '_norisk'] = vac_props[vac_status] * self.vars['births_total'] *\
+                                                            norisk_birth_proportion
+
 
     def calculate_organ_progressions(self):
         """

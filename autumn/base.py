@@ -303,28 +303,38 @@ class BaseModel:
             if search_result:
                 match = match + 1
 
+        perc_ageing_diabetes = 8.
+        perc_ageing_prison = 0.029
 
         if match == 0:
-            if re.compile('.*_norisk').match(from_label) and re.compile('.*_prison').match(to_label):
+            if re.compile('.*_norisk.*').match(from_label) and re.compile('.*_prison.*').match(to_label):
                 add_unique_tuple_to_list(self.flows_by_type['fixed_transfer'],
-                                         (from_label, to_label, self.params[param_label] * 0.013))
+                                         (from_label, to_label, self.params[param_label] * perc_ageing_prison/100.))
                 #print('adjusting prison population with riskgroup proportion =  ' + str(self.params[param_label] * 0.013) )
-            elif re.compile('.*_norisk').match(from_label) and re.compile('.*_diabetes').match(to_label):
+            elif re.compile('.*_norisk.*').match(from_label) and re.compile('.*_diabetes.*').match(to_label):
                 add_unique_tuple_to_list(self.flows_by_type['fixed_transfer'],
-                                         (from_label, to_label, self.params[param_label] * 0.08))
+                                         (from_label, to_label, self.params[param_label] * perc_ageing_diabetes/100.))
                 #print('adjusting diabetes population with riskgroup proportion =  ' + str(self.params[param_label] * 0.08) )
             else:
                 if re.compile('ageing_rate_age.*').match(param_label):
-                    print(param_label + '-------------' + str(self.params[param_label]) )
-                    print(from_label + '---------' + to_label + '\n')
+                    # print(param_label + '-------------' + str(self.params[param_label]) )
+                    # print(from_label + '---------' + to_label + '\n')
+                    if re.compile('.*_age5to15').match(param_label):
+                        # print("@@@@@@@@@@@@@@@")
+                        # print(param_label)
+                        add_unique_tuple_to_list(self.flows_by_type['fixed_transfer'],
+                                             (from_label, to_label, self.params[param_label] * (1.-perc_ageing_prison/100.)))  # for prison
                     if re.compile('.*_age15to25').match(param_label):
+                        # print("@@@@@@@@@@@@@@@")
+                        # print(param_label)
                         add_unique_tuple_to_list(self.flows_by_type['fixed_transfer'],
-                                             (from_label, to_label, self.params[param_label] * (1-0.013)))  # for prison
-                    if re.compile('.*_age25up').match(param_label):
-                        add_unique_tuple_to_list(self.flows_by_type['fixed_transfer'],
-                                             (from_label, to_label, self.params[param_label] * (1-0.093)))  # for diabetes and prison
+                                             (from_label, to_label, self.params[param_label] * (1.-perc_ageing_diabetes/100.)))  # for diabetes
+                    else:
+                        add_unique_tuple_to_list(self.flows_by_type['fixed_transfer'], (from_label, to_label, self.params[param_label]))
                 else:
-                    add_unique_tuple_to_list(self.flows_by_type['fixed_transfer'], (from_label, to_label, self.params[param_label]))
+                    add_unique_tuple_to_list(self.flows_by_type['fixed_transfer'],
+                                             (from_label, to_label, self.params[param_label]))
+
         else:
             pass
             #print('skipping fixed transfer rate flow from label  : ' + from_label + ' to  ' + to_label)
@@ -1044,6 +1054,33 @@ class StratifiedModel(EconomicModel):
         self.actual_risk_props = {}
         self.target_risk_props = {}
 
+    def get_relevant_riskgroup_denominators(self):
+        """
+        Calculate the population by age-group for the age-groups that are relevant to each risk-group. For example, the
+        25up population will be returned associated with the diabetes risk-group.
+
+        return: a dictionary keyed with the names of risk-groups and containing the relevant population sizes
+        """
+        denominators = {}
+        for riskgroup in self.riskgroups:
+            strings_to_dodge = []  # will contain the age-related strings of the compartments that had been removed
+            for label in self.remove_labels:
+                if riskgroup[1:] in label:
+                    strings_to_dodge.append(label.split('_')[1])
+
+            popsize = 0.
+            if self.compartments:
+                for label in self.compartments.keys():
+                    counts = True  # will become False if one of the dodged strings is detected in the compartment name
+                    for dodged_label in strings_to_dodge:
+                        if dodged_label in label:
+                            counts = False
+                    if counts:
+                        popsize += self.compartments[label]
+            denominators[riskgroup] = popsize
+
+        return denominators
+
     def make_adjustments_during_integration(self, y):
         """
         Adjusts the proportions of the population in each risk group according to the calculations
@@ -1075,13 +1112,21 @@ class StratifiedModel(EconomicModel):
 
                 # find the actual proportions in each risk group stratum
                 population = sum(self.compartments.values())
+                relevant_riskgroup_denominators = self.get_relevant_riskgroup_denominators()
                 for riskgroup in self.riskgroups:
                     if riskgroup not in self.actual_risk_props:
                         self.actual_risk_props[riskgroup] = []
                     self.actual_risk_props[riskgroup].append(0.)
                     for c in self.compartments:
                         if riskgroup in c:
-                            self.actual_risk_props[riskgroup][-1] += self.compartments[c] / population
+                            self.actual_risk_props[riskgroup][-1] += self.compartments[c]
+
+                    self.actual_risk_props[riskgroup][-1] /= relevant_riskgroup_denominators[riskgroup]
+                    # if 2015. < self.time < 2015.5:
+                    #     print("############")
+                    #     print("2015 percentage of " + riskgroup)
+                    #     print(100. * self.actual_risk_props[riskgroup][-1])
+
 
                 # find the scaling factor for the risk group in question
                 for riskgroup in self.riskgroups:
@@ -1098,9 +1143,9 @@ class StratifiedModel(EconomicModel):
 
         if risk_adjustment_factor != {}:
             compartments = self.convert_list_to_compartments(y)
-            for c in compartments:
-                for riskgroup in self.riskgroups:
-                    if riskgroup in c: compartments[c] *= risk_adjustment_factor[riskgroup]
+            # for c in compartments:
+            #     for riskgroup in self.riskgroups:
+            #         if riskgroup in c: compartments[c] *= risk_adjustment_factor[riskgroup]
             return self.convert_compartments_to_list(compartments)
         else:
             return y
@@ -1111,6 +1156,10 @@ class StratifiedModel(EconomicModel):
         """
 
         for label in self.labels:
+
+            if "0to5" in label:
+                print("Sss")
+
             for n_agegroup, agegroup in enumerate(self.agegroups):
                 if agegroup in label and n_agegroup < len(self.agegroups) - 1:
                     self.set_fixed_transfer_rate_flow(label,
@@ -1120,7 +1169,7 @@ class StratifiedModel(EconomicModel):
         # for ageing flow if labels _age5to15 the set the ageing flow for _age15to25  be setting match to zero
         for riskgroups in  self.riskgroups:
             if riskgroups != '_norisk' and riskgroups[1:] in self.inputs.params_to_age_weight:
-                print('------' + riskgroups)
+                # print('------' + riskgroups)
                 riskgroups_age_min = riskgroups[1:] + '_age_min'
                 if self.inputs.model_constants[riskgroups_age_min]:
                     for label in self.labels:
@@ -1133,9 +1182,9 @@ class StratifiedModel(EconomicModel):
                                 next_risk_agegroup = self.agegroups[self.agegroups.index(norisk_agegroup) + 1]
                                 new_label = label.replace('_norisk', riskgroups)
                                 new_label = new_label.replace(norisk_agegroup, next_risk_agegroup)
-                                print('------new label', new_label)
-                                print('-----ageing_rate', self.params['ageing_rate' + next_risk_agegroup])
-                                print('-----riskgroup prop', self.params['riskgroup_prop' + riskgroups])
+                                # print('------new label', new_label)
+                                # print('-----ageing_rate', self.params['ageing_rate' + next_risk_agegroup])
+                                # print('-----riskgroup prop', self.params['riskgroup_prop' + riskgroups])
                                 self.set_fixed_transfer_rate_flow(label, new_label, 'ageing_rate' + next_risk_agegroup)
 
                 riskgroups_age_max = riskgroups[1:] + '_age_max'
@@ -1143,15 +1192,16 @@ class StratifiedModel(EconomicModel):
                     for label in self.labels:
                         if re.search(riskgroups, label):
                             if str(int(self.inputs.model_constants[riskgroups_age_max])) == label[-2:]:
-                                print('----------------------------------------outgoing age flow for', label)
-                                print('------for age group', label[label.find('_age'):])
+                                # print('----------------------------------------outgoing age flow for', label)
+                                # print('------for age group', label[label.find('_age'):])
                                 risk_agegroup = label[label.find('_age'):]
-                                print('----next age group', self.agegroups[self.agegroups.index(risk_agegroup) + 1])
+                                # print('----next age group', self.agegroups[self.agegroups.index(risk_agegroup) + 1])
                                 next_norisk_agegroup = self.agegroups[self.agegroups.index(risk_agegroup) + 1]
                                 new_label = label.replace(riskgroups, '_norisk')
                                 new_label = new_label.replace(risk_agegroup, next_norisk_agegroup)
-                                print('------new label', new_label)
+                                # print('------new label', new_label)
                                 self.set_fixed_transfer_rate_flow(label, new_label, 'ageing_rate' + risk_agegroup )
             else:
                 # change norisk group proportion for removed compartments
-                print('norisk_agegroup' )
+                # print('norisk_agegroup' )
+                pass

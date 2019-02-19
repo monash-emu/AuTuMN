@@ -1192,6 +1192,7 @@ class Project:
         start_time = self.inputs.model_constants['before_intervention_time'] \
             if self.run_mode == 'int_uncertainty' or (len(self.scenarios) > 1 and purpose == 'scenario') \
             else self.gui_inputs['plot_option_start_time']
+        start_time=1990.
         start_index, max_data_values = 0, {}
         scenarios, uncertainty_scenario = ([0, 15], 15) if self.run_mode == 'int_uncertainty' \
             else (self.scenarios, 0)
@@ -1762,7 +1763,7 @@ class Project:
             for i in range(2):
                 ax.plot([1, len(data) + 1], [self.inputs.param_ranges_unc[param_range_index]['bounds'][i]] * 2,
                         color='.3', linestyle=':')
-            self.tidy_x_axis(ax, 1, n_params + 1, max_dims, labels_off=not last_row(p, n_rows, n_cols))
+            self.tidy_x_axis(ax, 1, len(data) + 1, max_dims, labels_off=not last_row(p, n_rows, n_cols))
             param_range = self.inputs.param_ranges_unc[param_range_index]['bounds'][1] \
                 - self.inputs.param_ranges_unc[param_range_index]['bounds'][0]
             self.tidy_y_axis(ax, '', max_dims, max_value=max(data),

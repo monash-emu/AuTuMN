@@ -217,6 +217,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         print(self.labels)
         start_risk_prop = self.find_starting_riskgroup_props() if len(self.riskgroups) > 1 else {'': 1.}
         self.populate_initial_compartments(initial_compartments, start_risk_prop)
+        print("ssss")
 
     def find_starting_riskgroup_props(self):
         """
@@ -312,6 +313,9 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
 
         self.ticker()
         self.calculate_demographic_vars()
+
+
+
         self.calculate_organ_progressions()
         self.calculate_progression_vars()
         self.calculate_detection_vars()

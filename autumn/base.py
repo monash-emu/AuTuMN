@@ -306,38 +306,46 @@ class BaseModel:
         perc_ageing_diabetes = 8.
         perc_ageing_prison = 0.029
 
+        # from_label and to_label does not contain any of the removed compartments
         if match == 0:
-            if re.compile('.*_norisk.*').match(from_label) and re.compile('.*_prison.*').match(to_label):
-                add_unique_tuple_to_list(self.flows_by_type['fixed_transfer'],
-                                         (from_label, to_label, self.params[param_label] * perc_ageing_prison/100.))
-                #print('adjusting prison population with riskgroup proportion =  ' + str(self.params[param_label] * 0.013) )
-            elif re.compile('.*_norisk.*').match(from_label) and re.compile('.*_diabetes.*').match(to_label):
-                add_unique_tuple_to_list(self.flows_by_type['fixed_transfer'],
-                                         (from_label, to_label, self.params[param_label] * perc_ageing_diabetes/100.))
-                #print('adjusting diabetes population with riskgroup proportion =  ' + str(self.params[param_label] * 0.08) )
-            else:
-                if re.compile('ageing_rate_age.*').match(param_label):
-                    # print(param_label + '-------------' + str(self.params[param_label]) )
-                    # print(from_label + '---------' + to_label + '\n')
-                    if re.compile('.*_age5to15').match(param_label):
-                        # print("@@@@@@@@@@@@@@@")
-                        # print(param_label)
+            # check for only ageing flows, to exclude other flows such as ipt
+            if 'ageing_rate_age' in param_label:
+                # check for split, prison_age_min
+                if '_norisk' in from_label and '_age5to15' in from_label:
+                    # for prison_age_min
+                    if '_prison' in to_label:
                         add_unique_tuple_to_list(self.flows_by_type['fixed_transfer'],
-                                             (from_label, to_label, self.params[param_label] * (1.-perc_ageing_prison/100.)))  # for prison
-                    if re.compile('.*_age15to25').match(param_label):
-                        # print("@@@@@@@@@@@@@@@")
-                        # print(param_label)
+                                                 (from_label, to_label,
+                                                  self.params[param_label] * perc_ageing_prison / 100.))
+                    # for norisk ageing flow  age5to15 to age15to25
+                    if '_norisk' in to_label:
                         add_unique_tuple_to_list(self.flows_by_type['fixed_transfer'],
-                                             (from_label, to_label, self.params[param_label] * (1.-perc_ageing_diabetes/100.)))  # for diabetes
-                    else:
-                        add_unique_tuple_to_list(self.flows_by_type['fixed_transfer'], (from_label, to_label, self.params[param_label]))
+                                                 (from_label, to_label,
+                                                  self.params[param_label] * (1. - perc_ageing_prison / 100.)))
+                elif '_norisk'  in from_label and '_age15to25' in from_label:
+                    # for diabetes_age_min
+                    if '_diabetes' in to_label:
+                        print(from_label + '   ---->   ' + to_label)
+                        print('             ' + str(self.params[param_label] * perc_ageing_diabetes / 100.) + '          ')
+                        add_unique_tuple_to_list(self.flows_by_type['fixed_transfer'],
+                                                 (from_label, to_label,
+                                                  self.params[param_label] * perc_ageing_diabetes / 100.))
+                    # for norisk ageing flow age15to25 to age25up
+                    if'_norisk' in to_label:
+                        print(from_label + '   ---->   ' + to_label)
+                        print('             ' + str(
+                            self.params[param_label] * (1. - perc_ageing_prison / 100.)) + '      ')
+                        add_unique_tuple_to_list(self.flows_by_type['fixed_transfer'],
+                                             (from_label, to_label,
+                                              self.params[param_label] * (1. - perc_ageing_diabetes / 100.)))
                 else:
                     add_unique_tuple_to_list(self.flows_by_type['fixed_transfer'],
                                              (from_label, to_label, self.params[param_label]))
 
-        else:
-            pass
-            #print('skipping fixed transfer rate flow from label  : ' + from_label + ' to  ' + to_label)
+            else:
+                add_unique_tuple_to_list(self.flows_by_type['fixed_transfer'],
+                                         (from_label, to_label, self.params[param_label]))
+
 
 
     def set_linked_transfer_rate_flow(self, from_label, to_label, var_label):

@@ -332,11 +332,13 @@ def write_param_to_sheet(country_sheet, working_list, median_run_index):
         median_run_index: Integer index of the median
     """
 
+    print("Calibrated params: ")
     for param in working_list:
         if working_list[param]:
 
             # find value to write from list and index
             value = working_list[param][median_run_index]
+            print(param + ": " + str(value))
 
             # over-write existing parameter value if present
             param_found = False

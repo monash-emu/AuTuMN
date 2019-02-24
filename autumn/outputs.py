@@ -979,13 +979,13 @@ class Project:
                             cost += self.outputs['manual']['cost'][scenario][cost_type + program][
                                 t_k.find_first_list_element_at_least(self.outputs['manual']['cost'][scenario][
                                                                                'times'], year)]
-                        sheet.cell(row=row, column=column).value = cost
+                        sheet.cell(row=row, column=column).value = float(cost)
                         total_cost += cost
                     # Add total costs and per year costs
                     row, column = reverse_inputs_if_required([y + 3, s + 2], horizontal)
-                    sheet.cell(row=row, column=column).value = total_cost
+                    sheet.cell(row=row, column=column).value = float(total_cost)
                     row, column = reverse_inputs_if_required([y + 4, s + 2], horizontal)
-                    sheet.cell(row=row, column=column).value = total_cost/len(self.years_to_write)
+                    sheet.cell(row=row, column=column).value = float(total_cost/len(self.years_to_write))
 
                 workbook.save(path)
 

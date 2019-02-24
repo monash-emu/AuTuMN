@@ -310,7 +310,7 @@ class ModelRunner:
                     if len(coverages) > 0:
                         if max(coverages.values()) > 0.:
                             # need to find the latest time with zero coverage before the first non-zero value
-                            coverages_as_list = [(year, cov) for year, cov in coverages.iteritems()]
+                            coverages_as_list = [(year, cov) for year, cov in coverages.items()]
                             coverages_as_list.sort()   # now a list of tuples sorted by year
                             nonzero_indices \
                                 = [ind for ind in range(len(coverages_as_list)) if coverages_as_list[ind][1] > 0.]

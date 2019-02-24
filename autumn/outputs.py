@@ -335,10 +335,15 @@ def write_param_to_sheet(country_sheet, working_list, median_run_index):
     print("Calibrated params: ")
     for param in working_list:
         if working_list[param]:
-
             # find value to write from list and index
             value = working_list[param][median_run_index]
             print(param + ": " + str(value))
+
+    for param in working_list:
+        if working_list[param]:
+
+            # find value to write from list and index
+            value = working_list[param][median_run_index]
 
             # over-write existing parameter value if present
             param_found = False
@@ -1194,7 +1199,6 @@ class Project:
         start_time = self.inputs.model_constants['before_intervention_time'] \
             if self.run_mode == 'int_uncertainty' or (len(self.scenarios) > 1 and purpose == 'scenario') \
             else self.gui_inputs['plot_option_start_time']
-        start_time=1990.
         start_index, max_data_values = 0, {}
         scenarios, uncertainty_scenario = ([0, 15], 15) if self.run_mode == 'int_uncertainty' \
             else (self.scenarios, 0)

@@ -434,16 +434,35 @@ class Project:
 
         # standard graphing themes
         self.tick_length = 3
+        # self.colour_theme \  # using AuTuMN color palette
+        #     = [(0., 0., 0.),
+        #        (0., 0., 125. / 255.),
+        #        (210. / 255., 70. / 255., 0.),
+        #        (100. / 255., 150. / 255., 1.),
+        #        (65. / 255., 65. / 255., 65. / 255.),
+        #        (220. / 255., 25. / 255., 25. / 255.),
+        #        (120. / 255., 55. / 255., 20. / 255.),
+        #        (120. / 255., 55. / 255., 110. / 255.),
+        #        (135. / 255., 135. / 255., 30. / 255.),
+        #        (120. / 255., 120. / 255., 120. / 255.),
+        #        (220. / 255., 20. / 255., 170. / 255.),
+        #        (20. / 255., 65. / 255., 20. / 255.),
+        #        (15. / 255., 145. / 255., 25. / 255.),
+        #        (15. / 255., 185. / 255., 240. / 255.),
+        #        (10. / 255., 0., 110. / 255.),
+        #        (.5, .5, .5),
+        #        (.0, .0, .0)]
+        # using safe colours for colour blind people
         self.colour_theme \
             = [(0., 0., 0.),
-               (0., 0., 125. / 255.),
-               (210. / 255., 70. / 255., 0.),
-               (100. / 255., 150. / 255., 1.),
-               (65. / 255., 65. / 255., 65. / 255.),
-               (220. / 255., 25. / 255., 25. / 255.),
-               (120. / 255., 55. / 255., 20. / 255.),
-               (120. / 255., 55. / 255., 110. / 255.),
-               (135. / 255., 135. / 255., 30. / 255.),
+               (57./255., 106./255., 177. / 255.),  # blue
+               (148. / 255., 139. / 255., 61. / 255.),  # gold-ish
+               (62. / 255., 150. / 255., 81./255.),  # green
+               (204. / 255., 37. / 255., 41. / 255.),  # red
+               (107. / 255., 76. / 255., 154. / 255.),  # purple
+               (218. / 255., 124. / 255., 48. / 255.),  # orange
+               (128. / 255., 133. / 255., 133. / 255.),  # light grey
+               (83. / 255., 81. / 255., 84. / 255.),  # dark grey
                (120. / 255., 120. / 255., 120. / 255.),
                (220. / 255., 20. / 255., 170. / 255.),
                (20. / 255., 65. / 255., 20. / 255.),
@@ -827,9 +846,9 @@ class Project:
                                 for o in range(3):
                                     row, column = reverse_inputs_if_required([y + 2, out * 3 + 2 + o], horizontal)
                                     sheet.cell(row=row, column=column).value \
-                                        = self.uncertainty_centiles['epi'][scenario][output][
+                                        = float(self.uncertainty_centiles['epi'][scenario][output][
                                         o, t_k.find_first_list_element_at_least(self.interpolation_times_uncertainty,
-                                                                                year)]
+                                                                                year)])
 
                         # without uncertainty
                         else:
@@ -860,9 +879,9 @@ class Project:
                         for y, year in enumerate(self.years_to_write):
                             row, column = reverse_inputs_if_required([y + 2, inter + 2], horizontal)
                             sheet.cell(row=row, column=column).value \
-                                = self.outputs['manual']['cost'][scenario][result_type + intervention][
+                                = float(self.outputs['manual']['cost'][scenario][result_type + intervention][
                                         t_k.find_first_list_element_at_least(
-                                            self.model_runner.outputs['manual']['cost'][scenario]['times'], year)]
+                                            self.model_runner.outputs['manual']['cost'][scenario]['times'], year)])
                 workbook.save(path)
 
     def write_xls_by_output(self):

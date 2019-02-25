@@ -592,9 +592,10 @@ class Inputs:
         # populate hierarchically from the earliest sheet in the list as available
         for other_sheet in other_sheets_with_constants:
             if other_sheet in self.original_data:
-                for item in self.original_data[other_sheet]:
-                    if item not in self.model_constants:
-                        self.model_constants[item] = self.original_data[other_sheet][item]
+                if self.original_data[other_sheet] is not None:
+                    for item in self.original_data[other_sheet]:
+                        if item not in self.model_constants:
+                            self.model_constants[item] = self.original_data[other_sheet][item]
 
     def add_universal_parameters(self):
         """
@@ -895,7 +896,8 @@ class Inputs:
         """
 
         if 'country_programs' in self.original_data:
-            self.time_variants.update(self.original_data['country_programs'])
+            if self.original_data['country_programs'] is not None:
+                self.time_variants.update(self.original_data['country_programs'])
         self.add_time_variant_defaults()  # add any necessary time-variants from defaults if not in country programs
         self.load_vacc_detect_time_variants()
         self.convert_percentages_to_proportions()

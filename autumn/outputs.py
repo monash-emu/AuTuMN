@@ -355,7 +355,7 @@ def write_param_to_sheet(country_sheet, working_list, median_run_index):
             if not param_found:
                 max_row = country_sheet.max_row
                 country_sheet.cell(row=max_row + 1, column=1).value = param
-                country_sheet.cell(row=max_row + 1, column=2).value = value
+                country_sheet.cell(row=max_row + 1, column=2).value = float(value)
 
 
 def reverse_inputs_if_required(inputs, condition):
@@ -861,9 +861,9 @@ class Project:
                             for y, year in enumerate(self.years_to_write):
                                 row, column = reverse_inputs_if_required([y + 2, out + 2], horizontal)
                                 sheet.cell(row=row, column=column).value \
-                                    = self.outputs['manual']['epi'][scenario][output][
+                                    = float(self.outputs['manual']['epi'][scenario][output][
                                         t_k.find_first_list_element_at_least(
-                                            self.model_runner.outputs['manual']['epi'][scenario]['times'], year)]
+                                            self.model_runner.outputs['manual']['epi'][scenario]['times'], year)])
 
                 # economic outputs (uncertainty unavailable)
                 elif 'cost_' in result_type:
@@ -928,8 +928,8 @@ class Project:
                         for o in range(3):
                             row, column = reverse_inputs_if_required([y + 2, s * 3 + 2 + o], horizontal)
                             sheet.cell(row=row, column=column).value \
-                                = self.uncertainty_centiles['epi'][scenario][inter][
-                                o, t_k.find_first_list_element_at_least(self.interpolation_times_uncertainty, year)]
+                                = float(self.uncertainty_centiles['epi'][scenario][inter][
+                                o, t_k.find_first_list_element_at_least(self.interpolation_times_uncertainty, year)])
 
                 # without uncertainty
                 else:

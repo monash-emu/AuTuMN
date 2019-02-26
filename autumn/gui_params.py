@@ -110,7 +110,8 @@ def get_autumn_params():
     available_uncertainty_intervention \
         = ['int_prop_treatment_support_relative', 'int_prop_decentralisation', 'int_prop_xpert', 'int_prop_ipt',
            'int_prop_acf', 'int_prop_awareness_raising', 'int_perc_shortcourse_mdr', 'int_perc_firstline_dst',
-           'int_perc_treatment_support_relative_ds', 'int_perc_dots_contributor', 'int_perc_dots_groupcontributor']
+           'int_perc_treatment_support_relative_ds', 'int_perc_dots_contributor', 'int_perc_dots_groupcontributor',
+           'combined']
     params['uncertainty_intervention'] \
         = {'type': 'drop_down',
            'options': available_uncertainty_intervention}
@@ -195,7 +196,7 @@ def get_autumn_params():
     param_groups = []
     for group in param_group_keys:
         param_groups.append({'keys': [], 'name': group})
-    for tab in [5, 6, 8]:
+    for tab in [6, 8]:
         param_groups[tab]['attr'] = {'webgui': True}
 
     # distribute the boolean checkbox options

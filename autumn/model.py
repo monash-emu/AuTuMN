@@ -314,8 +314,6 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         self.ticker()
         self.calculate_demographic_vars()
 
-
-
         self.calculate_organ_progressions()
         self.calculate_progression_vars()
         self.calculate_detection_vars()

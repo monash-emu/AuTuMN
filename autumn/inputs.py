@@ -317,6 +317,13 @@ class Inputs:
             if self.country == 'Bulgaria' and self.uncertainty_intervention == 'int_perc_dots_groupcontributor':
                 self.uncertainty_interventions_list.append('int_perc_dots_contributor')
 
+            if self.country == 'Bulgaria' and self.uncertainty_intervention == 'combined':
+                self.uncertainty_interventions_list = []
+                self.uncertainty_interventions_list.append('int_perc_treatment_support_relative_ds')
+                self.uncertainty_interventions_list.append('int_perc_shortcourse_mdr')
+                self.uncertainty_interventions_list.append('int_perc_firstline_dst')
+
+
         # increment comorbidity
         elif self.run_mode == 'increment_comorbidity':
             self.comorbidity_to_increment = self.gui_inputs['comorbidity_to_increment'].lower()

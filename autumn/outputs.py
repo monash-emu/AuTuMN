@@ -955,7 +955,7 @@ class Project:
         programs_to_cost = self.inputs.interventions_to_cost[0]
         programs_to_cost.append('all_programs')  # to calculate total cost too
         for inter in programs_to_cost:
-            relevant_programs = self.inputs.interventions_to_cost[0] if inter == 'all_programs' else [inter]
+            relevant_programs = [inter]
             for cost_type in ['raw_cost_', 'inflated_cost_', 'discounted_cost_', 'discounted_inflated_cost_']:
                 # make filename
                 path = os.path.join(self.out_dir_project, cost_type + inter) + '.xlsx'

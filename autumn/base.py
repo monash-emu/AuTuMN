@@ -306,6 +306,8 @@ class BaseModel:
         prop_ageing_diabetes = 0.082  # provisional hard-code for Bulgaria
         prop_ageing_prison = 0.0014  # provisional hard-code for Bulgaria
 
+        prop_ageing_dorm = 0.105  # provisional hard-code for Bhutan
+
         # from_label and to_label does not contain any of the removed compartments
         if match == 0:
             # check for only ageing flows, to exclude other flows such as ipt
@@ -313,16 +315,25 @@ class BaseModel:
                 # check for split, prison_age_min
                 if '_norisk' in from_label and '_age5to15' in from_label:
                     # for prison_age_min
-                    if '_prison' in to_label:
+                    if self.country == 'Bulgaria':
+                        splitting_riskgroup = '_prison'
+                        relevant_prop_ageing = prop_ageing_prison
+                    elif self.country == 'Bhutan':
+                        splitting_riskgroup = '_dorm'
+                        relevant_prop_ageing = prop_ageing_dorm
+                    else:
+                        print("Warning: Hard code currently implemented for Bulgaria and Bhutan only")
+
+                    if splitting_riskgroup in to_label:
                         add_unique_tuple_to_list(self.flows_by_type['fixed_transfer'],
                                                  (from_label, to_label,
-                                                  self.params[param_label] * prop_ageing_prison))
+                                                  self.params[param_label] * relevant_prop_ageing))
                     # for norisk ageing flow  age5to15 to age15to25
                     if '_norisk' in to_label:
                         add_unique_tuple_to_list(self.flows_by_type['fixed_transfer'],
                                                  (from_label, to_label,
-                                                  self.params[param_label] * (1. - prop_ageing_prison)))
-                elif '_norisk'  in from_label and '_age15to25' in from_label:
+                                                  self.params[param_label] * (1. - relevant_prop_ageing)))
+                elif '_norisk' in from_label and '_age15to25' in from_label:
                     # for diabetes_age_min
                     if '_diabetes' in to_label:
                         add_unique_tuple_to_list(self.flows_by_type['fixed_transfer'],

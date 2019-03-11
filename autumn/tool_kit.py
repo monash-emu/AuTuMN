@@ -703,6 +703,8 @@ def find_title_from_dictionary(working_string, forward=True, capital_first_lette
                'prison population',
            'riskgroup_prop_ruralpoor':
                'Roma population',
+           'riskgroup_prop_dorm':
+               'Dorm population',
            '_hiv':
                'HIV',
            '_nocomorb':
@@ -731,6 +733,8 @@ def find_title_from_dictionary(working_string, forward=True, capital_first_lette
                 'Xpert ACF, urban poor',
            'xpertacf_ruralpoor':
                 'Xpert ACF, rural poor',
+           'xpertacf_dorm':
+                'Xpert ACF, dorm',
            'epi_':
                 'epidemiological',
            'epi_prop_smear':

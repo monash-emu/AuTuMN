@@ -1575,7 +1575,7 @@ class Project:
                 self.tidy_y_axis(axes[n_axis], var, max_dims, left_axis=n_axis % n_cols == 0,
                                      max_value=max_data_val)
 
-            self.finish_off_figure(fig, n_panels, '_' + var, var)
+            self.finish_off_figure(fig, n_panels, '_scaleup_' + var, var)
 
     def plot_scaleup_var_to_axis(self, axis, time_limits, var):
         """

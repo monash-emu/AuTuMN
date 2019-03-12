@@ -13,6 +13,8 @@ import copy
 from scipy import stats
 import itertools
 
+from matplotlib.lines import Line2D
+
 # AuTuMN import
 from autumn import tool_kit as t_k
 
@@ -434,16 +436,34 @@ class Project:
 
         # standard graphing themes
         self.tick_length = 3
-        # self.colour_theme \  # using AuTuMN color palette
+        self.colour_theme = [(0., 0., 0.),
+                (0., 0., 125. / 255.),
+               (210. / 255., 70. / 255., 0.),
+                (100. / 255., 150. / 255., 1.),
+                (65. / 255., 65. / 255., 65. / 255.),
+                (220. / 255., 25. / 255., 25. / 255.),
+                (120. / 255., 55. / 255., 20. / 255.),
+                (120. / 255., 55. / 255., 110. / 255.),
+                (135. / 255., 135. / 255., 30. / 255.),
+                (120. / 255., 120. / 255., 120. / 255.),
+                (220. / 255., 20. / 255., 170. / 255.),
+                (20. / 255., 65. / 255., 20. / 255.),
+                (15. / 255., 145. / 255., 25. / 255.),
+                (15. / 255., 185. / 255., 240. / 255.),
+                (10. / 255., 0., 110. / 255.),
+                (.5, .5, .5),
+                (.0, .0, .0)]
+        # using safe colours for colour blind people
+        # self.colour_theme \
         #     = [(0., 0., 0.),
-        #        (0., 0., 125. / 255.),
-        #        (210. / 255., 70. / 255., 0.),
-        #        (100. / 255., 150. / 255., 1.),
-        #        (65. / 255., 65. / 255., 65. / 255.),
-        #        (220. / 255., 25. / 255., 25. / 255.),
-        #        (120. / 255., 55. / 255., 20. / 255.),
-        #        (120. / 255., 55. / 255., 110. / 255.),
-        #        (135. / 255., 135. / 255., 30. / 255.),
+        #        (57./255., 106./255., 177. / 255.),  # blue
+        #        (148. / 255., 139. / 255., 61. / 255.),  # gold-ish
+        #        (62. / 255., 150. / 255., 81./255.),  # green
+        #        (204. / 255., 37. / 255., 41. / 255.),  # red
+        #        (107. / 255., 76. / 255., 154. / 255.),  # purple
+        #        (218. / 255., 124. / 255., 48. / 255.),  # orange
+        #        (128. / 255., 133. / 255., 133. / 255.),  # light grey
+        #        (83. / 255., 81. / 255., 84. / 255.),  # dark grey
         #        (120. / 255., 120. / 255., 120. / 255.),
         #        (220. / 255., 20. / 255., 170. / 255.),
         #        (20. / 255., 65. / 255., 20. / 255.),
@@ -452,25 +472,6 @@ class Project:
         #        (10. / 255., 0., 110. / 255.),
         #        (.5, .5, .5),
         #        (.0, .0, .0)]
-        # using safe colours for colour blind people
-        self.colour_theme \
-            = [(0., 0., 0.),
-               (57./255., 106./255., 177. / 255.),  # blue
-               (148. / 255., 139. / 255., 61. / 255.),  # gold-ish
-               (62. / 255., 150. / 255., 81./255.),  # green
-               (204. / 255., 37. / 255., 41. / 255.),  # red
-               (107. / 255., 76. / 255., 154. / 255.),  # purple
-               (218. / 255., 124. / 255., 48. / 255.),  # orange
-               (128. / 255., 133. / 255., 133. / 255.),  # light grey
-               (83. / 255., 81. / 255., 84. / 255.),  # dark grey
-               (120. / 255., 120. / 255., 120. / 255.),
-               (220. / 255., 20. / 255., 170. / 255.),
-               (20. / 255., 65. / 255., 20. / 255.),
-               (15. / 255., 145. / 255., 25. / 255.),
-               (15. / 255., 185. / 255., 240. / 255.),
-               (10. / 255., 0., 110. / 255.),
-               (.5, .5, .5),
-               (.0, .0, .0)]
         self.gtb_indices \
             = {'incidence': 'e_inc_100k',
                'mortality': 'e_mort_exc_tbhiv_100k',
@@ -1041,17 +1042,22 @@ class Project:
 
                     # with uncertainty
                     if 'uncertainty' in self.run_mode:
+
                         point_lower_upper \
                             = tuple(self.uncertainty_centiles['epi'][scenario][output][
                                     0:3, t_k.find_first_list_element_at_least(self.interpolation_times_uncertainty,
                                                                               year)])
-                        row_cells[o + 1].text = '%.1f\n(%.1f to %.1f)' % point_lower_upper
+
+                        if output == 'mortality_mdr':
+                            row_cells[o + 1].text = '%.3f\n(%.3f to %.3f)' % point_lower_upper
+                        else:
+                            row_cells[o + 1].text = '%.2f\n(%.2f to %.2f)' % point_lower_upper
 
                     # without
                     else:
                         point = self.model_runner.outputs['manual']['epi'][scenario][output][
                             t_k.find_first_list_element_at_least(self.interpolation_times_uncertainty, year)]
-                        row_cells[o + 1].text = '%.1f' % point
+                        row_cells[o + 1].text = '%.3f' % point
             document.save(path)
 
     def write_docs_by_output(self):
@@ -1087,14 +1093,14 @@ class Project:
                             = tuple(self.uncertainty_centiles['epi'][scenario][output][0:3,
                                     t_k.find_first_list_element_at_least(self.model_runner.outputs['manual'][
                                                                                    'epi'][scenario]['times'], year)])
-                        row_cells[s + 1].text = '%.1f\n(%.1f to %.1f)' % point_lower_upper
+                        row_cells[s + 1].text = '%.3f\n(%.3f to %.3f)' % point_lower_upper
 
                     # without
                     else:
                         point = self.model_runner.outputs['manual']['epi'][scenario][output][
                             t_k.find_first_list_element_at_least(self.model_runner.outputs['manual'][
                                                                            'epi'][scenario]['times'], year)]
-                        row_cells[s + 1].text = '%.1f' % point
+                        row_cells[s + 1].text = '%.3f' % point
             document.save(path)
 
     def print_int_uncertainty_relative_change(self, year):
@@ -1107,6 +1113,9 @@ class Project:
         """
 
         scenario, changes = 15, {}
+        file_name = open('tables2.txt', 'a')
+        scenario_name = t_k.find_scenario_string_from_number(scenario)
+        file_name.write('\n\n\n' + scenario_name + '\n' )
         for output in self.model_runner.epi_outputs_to_analyse:
             absolute_values \
                 = self.uncertainty_centiles['epi'][scenario][output][0:3,
@@ -1115,6 +1124,7 @@ class Project:
                t_k.find_first_list_element_at_least(self.model_runner.outputs['manual']['epi'][0]['times'], year)]
             changes[output] = [(i / baseline - 1.) * 1e2 for i in absolute_values]
             print(output + '\n%.1f\n(%.1f to %.1f)' % tuple(changes[output]))
+            file_name.write(output + '\n%.1f\n(%.1f to %.1f)' % tuple(changes[output]))
 
     def print_average_costs(self):
         """
@@ -1383,13 +1393,28 @@ class Project:
             if gtb_index is None:
                 return
 
+            if 'e_pop_num' in self.inputs.original_data['gtb_2016']:
+                gtb_original_data    = self.inputs.original_data['gtb_2016']['e_pop_num'].keys()
+                gtb_original_data_start_year = list(gtb_original_data)[0]
+                gtb_original_data_end_year = list(gtb_original_data)[-1]
+
             # plot patch
             colour, hatch, fill, line_width, alpha = (self.gtb_patch_colours[output], None, True, 0., .5) \
                 if gtb_ci_plot == 'patch' else ('.3', '/', False, .8, 1.)
-            ax.add_patch(patches.Polygon(create_patch_from_list(gtb_data_lists['times'][gtb_index:],
-                                                                gtb_data_lists['lower_limit'][gtb_index:],
-                                                                gtb_data_lists['upper_limit'][gtb_index:]),
-                                         color=colour, hatch=hatch, fill=fill, linewidth=0., alpha=alpha, zorder=4))
+
+            gtb_original_data_start_year_index = gtb_data_lists['times'].index(gtb_original_data_start_year)
+           # gtb_original_data_end_year_index = gtb_data_lists['times'].index(gtb_original_data_end_year)
+            #shaded_color = tuple(map(lambda x : x/2, list(colour)))
+            ax.add_patch(patches.Polygon(create_patch_from_list(gtb_data_lists['times'][gtb_index:gtb_original_data_start_year_index + 1],
+                                                                gtb_data_lists['lower_limit'][gtb_index:gtb_original_data_start_year_index + 1],
+                                                                gtb_data_lists['upper_limit'][gtb_index:gtb_original_data_start_year_index + 1]),
+                                         color=colour, hatch=hatch, fill=fill, linewidth=0., alpha=0.2, zorder=4))
+
+            ax.add_patch(patches.Polygon(create_patch_from_list(gtb_data_lists['times'][gtb_original_data_start_year_index :],
+                                                                gtb_data_lists['lower_limit'][gtb_original_data_start_year_index :],
+                                                                gtb_data_lists['upper_limit'][gtb_original_data_start_year_index :]),
+                                         color=colour, hatch=hatch, fill=fill, linewidth=0., linestyle='-', alpha=alpha, zorder=4))
+
 
         # plot point estimates
         # coercing gtb_index to list for python3
@@ -1399,6 +1424,17 @@ class Project:
             for limit in ['lower_limit', 'upper_limit']:
                 ax.plot(list(gtb_data[limit].keys())[gtb_index:], list(gtb_data[limit].values())[gtb_index:],
                         color=colour, linewidth=line_width, label=None, alpha=alpha)
+
+        if output == 'incidence':
+            start_index_for_calibration = gtb_data_lists['times'].index(2010)
+            end_index_for_calibration = gtb_data_lists['times'].index(2016)
+            lower_line = Line2D(range(2010, 2017),
+                                gtb_data_lists['lower_limit'][start_index_for_calibration:end_index_for_calibration + 1], zorder=10)
+            ax.add_line(lower_line)
+            upper_line = Line2D(range(2010, 2017),
+                                gtb_data_lists['upper_limit'][start_index_for_calibration:end_index_for_calibration + 1], zorder=10)
+            ax.add_line(lower_line)
+            ax.add_line(upper_line)
 
         return max(list(gtb_data['point_estimate'].values())[gtb_index:])
 
@@ -1672,8 +1708,8 @@ class Project:
                     add_legend_to_plot(axis, max_dim, location=4)
 
             self.finish_off_figure(fig, len(self.interventions_to_cost[scenario]),
-                                   '_cost_coverage_' + t_k.find_scenario_string_from_number(scenario),
-                                   'Cost coverage curves, ' + t_k.find_scenario_string_from_number(scenario))
+                                   '_cost_coverage_' + t_k.find_scenario_string_from_number(scenario), ' ')
+                                   #'Cost coverage curves, ' + t_k.find_scenario_string_from_number(scenario))
 
     def plot_cost_over_time(self):
         """

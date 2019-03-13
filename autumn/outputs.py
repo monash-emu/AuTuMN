@@ -13,8 +13,6 @@ import copy
 from scipy import stats
 import itertools
 
-from matplotlib.lines import Line2D
-
 # AuTuMN import
 from autumn import tool_kit as t_k
 
@@ -334,13 +332,6 @@ def write_param_to_sheet(country_sheet, working_list, median_run_index):
         median_run_index: Integer index of the median
     """
 
-    print("Calibrated params: ")
-    for param in working_list:
-        if working_list[param]:
-            # find value to write from list and index
-            value = working_list[param][median_run_index]
-            print(param + ": " + str(value))
-
     for param in working_list:
         if working_list[param]:
 
@@ -357,7 +348,7 @@ def write_param_to_sheet(country_sheet, working_list, median_run_index):
             if not param_found:
                 max_row = country_sheet.max_row
                 country_sheet.cell(row=max_row + 1, column=1).value = param
-                country_sheet.cell(row=max_row + 1, column=2).value = float(value)
+                country_sheet.cell(row=max_row + 1, column=2).value = value
 
 
 def reverse_inputs_if_required(inputs, condition):
@@ -436,42 +427,24 @@ class Project:
 
         # standard graphing themes
         self.tick_length = 3
-        self.colour_theme = [(0., 0., 0.),
-                (0., 0., 125. / 255.),
+        self.colour_theme \
+            = [(0., 0., 0.),
+               (0., 0., 125. / 255.),
                (210. / 255., 70. / 255., 0.),
-                (100. / 255., 150. / 255., 1.),
-                (65. / 255., 65. / 255., 65. / 255.),
-                (220. / 255., 25. / 255., 25. / 255.),
-                (120. / 255., 55. / 255., 20. / 255.),
-                (120. / 255., 55. / 255., 110. / 255.),
-                (135. / 255., 135. / 255., 30. / 255.),
-                (120. / 255., 120. / 255., 120. / 255.),
-                (220. / 255., 20. / 255., 170. / 255.),
-                (20. / 255., 65. / 255., 20. / 255.),
-                (15. / 255., 145. / 255., 25. / 255.),
-                (15. / 255., 185. / 255., 240. / 255.),
-                (10. / 255., 0., 110. / 255.),
-                (.5, .5, .5),
-                (.0, .0, .0)]
-        # using safe colours for colour blind people
-        # self.colour_theme \
-        #     = [(0., 0., 0.),
-        #        (57./255., 106./255., 177. / 255.),  # blue
-        #        (148. / 255., 139. / 255., 61. / 255.),  # gold-ish
-        #        (62. / 255., 150. / 255., 81./255.),  # green
-        #        (204. / 255., 37. / 255., 41. / 255.),  # red
-        #        (107. / 255., 76. / 255., 154. / 255.),  # purple
-        #        (218. / 255., 124. / 255., 48. / 255.),  # orange
-        #        (128. / 255., 133. / 255., 133. / 255.),  # light grey
-        #        (83. / 255., 81. / 255., 84. / 255.),  # dark grey
-        #        (120. / 255., 120. / 255., 120. / 255.),
-        #        (220. / 255., 20. / 255., 170. / 255.),
-        #        (20. / 255., 65. / 255., 20. / 255.),
-        #        (15. / 255., 145. / 255., 25. / 255.),
-        #        (15. / 255., 185. / 255., 240. / 255.),
-        #        (10. / 255., 0., 110. / 255.),
-        #        (.5, .5, .5),
-        #        (.0, .0, .0)]
+               (100. / 255., 150. / 255., 1.),
+               (65. / 255., 65. / 255., 65. / 255.),
+               (220. / 255., 25. / 255., 25. / 255.),
+               (120. / 255., 55. / 255., 20. / 255.),
+               (120. / 255., 55. / 255., 110. / 255.),
+               (135. / 255., 135. / 255., 30. / 255.),
+               (120. / 255., 120. / 255., 120. / 255.),
+               (220. / 255., 20. / 255., 170. / 255.),
+               (20. / 255., 65. / 255., 20. / 255.),
+               (15. / 255., 145. / 255., 25. / 255.),
+               (15. / 255., 185. / 255., 240. / 255.),
+               (10. / 255., 0., 110. / 255.),
+               (.5, .5, .5),
+               (.0, .0, .0)]
         self.gtb_indices \
             = {'incidence': 'e_inc_100k',
                'mortality': 'e_mort_exc_tbhiv_100k',
@@ -847,9 +820,9 @@ class Project:
                                 for o in range(3):
                                     row, column = reverse_inputs_if_required([y + 2, out * 3 + 2 + o], horizontal)
                                     sheet.cell(row=row, column=column).value \
-                                        = float(self.uncertainty_centiles['epi'][scenario][output][
+                                        = self.uncertainty_centiles['epi'][scenario][output][
                                         o, t_k.find_first_list_element_at_least(self.interpolation_times_uncertainty,
-                                                                                year)])
+                                                                                year)]
 
                         # without uncertainty
                         else:
@@ -862,9 +835,9 @@ class Project:
                             for y, year in enumerate(self.years_to_write):
                                 row, column = reverse_inputs_if_required([y + 2, out + 2], horizontal)
                                 sheet.cell(row=row, column=column).value \
-                                    = float(self.outputs['manual']['epi'][scenario][output][
+                                    = self.outputs['manual']['epi'][scenario][output][
                                         t_k.find_first_list_element_at_least(
-                                            self.model_runner.outputs['manual']['epi'][scenario]['times'], year)])
+                                            self.model_runner.outputs['manual']['epi'][scenario]['times'], year)]
 
                 # economic outputs (uncertainty unavailable)
                 elif 'cost_' in result_type:
@@ -880,9 +853,9 @@ class Project:
                         for y, year in enumerate(self.years_to_write):
                             row, column = reverse_inputs_if_required([y + 2, inter + 2], horizontal)
                             sheet.cell(row=row, column=column).value \
-                                = float(self.outputs['manual']['cost'][scenario][result_type + intervention][
+                                = self.outputs['manual']['cost'][scenario][result_type + intervention][
                                         t_k.find_first_list_element_at_least(
-                                            self.model_runner.outputs['manual']['cost'][scenario]['times'], year)])
+                                            self.model_runner.outputs['manual']['cost'][scenario]['times'], year)]
                 workbook.save(path)
 
     def write_xls_by_output(self):
@@ -929,8 +902,8 @@ class Project:
                         for o in range(3):
                             row, column = reverse_inputs_if_required([y + 2, s * 3 + 2 + o], horizontal)
                             sheet.cell(row=row, column=column).value \
-                                = float(self.uncertainty_centiles['epi'][scenario][inter][
-                                o, t_k.find_first_list_element_at_least(self.interpolation_times_uncertainty, year)])
+                                = self.uncertainty_centiles['epi'][scenario][inter][
+                                o, t_k.find_first_list_element_at_least(self.interpolation_times_uncertainty, year)]
 
                 # without uncertainty
                 else:
@@ -942,21 +915,17 @@ class Project:
                     # write columns of data
                     for y, year in enumerate(self.years_to_write):
                         row, column = reverse_inputs_if_required([y + 2, s + 2], horizontal)
-                        #sheet.cell(row=row, column=column + 1).value \
-                        #    = self.model_runner.outputs['manual']['epi'][scenario][inter][
-                        #        t_k.find_first_list_element_at_least(self.model_runner.outputs['manual']['epi'][
-                        #                                                       scenario]['times'], year)]
-                        check = self.model_runner.outputs['manual']['epi'][scenario][inter][
+                        sheet.cell(row=row, column=column).value \
+                            = self.model_runner.outputs['manual']['epi'][scenario][inter][
                                 t_k.find_first_list_element_at_least(self.model_runner.outputs['manual']['epi'][
                                                                                scenario]['times'], year)]
-                        print(check)
             workbook.save(path)
 
         # code probably could bug because interventions can differ by scenario
         programs_to_cost = self.inputs.interventions_to_cost[0]
         programs_to_cost.append('all_programs')  # to calculate total cost too
         for inter in programs_to_cost:
-            relevant_programs = [inter]
+            relevant_programs = self.inputs.interventions_to_cost[0] if inter == 'all_programs' else [inter]
             for cost_type in ['raw_cost_', 'inflated_cost_', 'discounted_cost_', 'discounted_inflated_cost_']:
                 # make filename
                 path = os.path.join(self.out_dir_project, cost_type + inter) + '.xlsx'
@@ -999,13 +968,13 @@ class Project:
                             cost += self.outputs['manual']['cost'][scenario][cost_type + program][
                                 t_k.find_first_list_element_at_least(self.outputs['manual']['cost'][scenario][
                                                                                'times'], year)]
-                        sheet.cell(row=row, column=column).value = float(cost)
+                        sheet.cell(row=row, column=column).value = cost
                         total_cost += cost
                     # Add total costs and per year costs
                     row, column = reverse_inputs_if_required([y + 3, s + 2], horizontal)
-                    sheet.cell(row=row, column=column).value = float(total_cost)
+                    sheet.cell(row=row, column=column).value = total_cost
                     row, column = reverse_inputs_if_required([y + 4, s + 2], horizontal)
-                    sheet.cell(row=row, column=column).value = float(total_cost/len(self.years_to_write))
+                    sheet.cell(row=row, column=column).value = total_cost/len(self.years_to_write)
 
                 workbook.save(path)
 
@@ -1042,22 +1011,17 @@ class Project:
 
                     # with uncertainty
                     if 'uncertainty' in self.run_mode:
-
                         point_lower_upper \
                             = tuple(self.uncertainty_centiles['epi'][scenario][output][
                                     0:3, t_k.find_first_list_element_at_least(self.interpolation_times_uncertainty,
                                                                               year)])
-
-                        if output == 'mortality_mdr':
-                            row_cells[o + 1].text = '%.3f\n(%.3f to %.3f)' % point_lower_upper
-                        else:
-                            row_cells[o + 1].text = '%.2f\n(%.2f to %.2f)' % point_lower_upper
+                        row_cells[o + 1].text = '%.1f\n(%.1f to %.1f)' % point_lower_upper
 
                     # without
                     else:
                         point = self.model_runner.outputs['manual']['epi'][scenario][output][
                             t_k.find_first_list_element_at_least(self.interpolation_times_uncertainty, year)]
-                        row_cells[o + 1].text = '%.3f' % point
+                        row_cells[o + 1].text = '%.1f' % point
             document.save(path)
 
     def write_docs_by_output(self):
@@ -1093,14 +1057,14 @@ class Project:
                             = tuple(self.uncertainty_centiles['epi'][scenario][output][0:3,
                                     t_k.find_first_list_element_at_least(self.model_runner.outputs['manual'][
                                                                                    'epi'][scenario]['times'], year)])
-                        row_cells[s + 1].text = '%.3f\n(%.3f to %.3f)' % point_lower_upper
+                        row_cells[s + 1].text = '%.1f\n(%.1f to %.1f)' % point_lower_upper
 
                     # without
                     else:
                         point = self.model_runner.outputs['manual']['epi'][scenario][output][
                             t_k.find_first_list_element_at_least(self.model_runner.outputs['manual'][
                                                                            'epi'][scenario]['times'], year)]
-                        row_cells[s + 1].text = '%.3f' % point
+                        row_cells[s + 1].text = '%.1f' % point
             document.save(path)
 
     def print_int_uncertainty_relative_change(self, year):
@@ -1113,9 +1077,6 @@ class Project:
         """
 
         scenario, changes = 15, {}
-        file_name = open('tables2.txt', 'a')
-        scenario_name = t_k.find_scenario_string_from_number(scenario)
-        file_name.write('\n\n\n' + scenario_name + '\n' )
         for output in self.model_runner.epi_outputs_to_analyse:
             absolute_values \
                 = self.uncertainty_centiles['epi'][scenario][output][0:3,
@@ -1124,7 +1085,6 @@ class Project:
                t_k.find_first_list_element_at_least(self.model_runner.outputs['manual']['epi'][0]['times'], year)]
             changes[output] = [(i / baseline - 1.) * 1e2 for i in absolute_values]
             print(output + '\n%.1f\n(%.1f to %.1f)' % tuple(changes[output]))
-            file_name.write(output + '\n%.1f\n(%.1f to %.1f)' % tuple(changes[output]))
 
     def print_average_costs(self):
         """
@@ -1318,10 +1278,6 @@ class Project:
             if self.gui_inputs['plot_option_overlay_targets'] and (output == 'incidence' or output == 'mortality'):
                 self.plot_targets_to_axis(axis, output)
 
-            list_with_none = max_data_values[output]
-            list_without_none = [0. if v is None else v for v in list_with_none]
-            max_data_values[output] = list_without_none
-
             # finishing off axis and figure
             self.tidy_x_axis(axis, start_time, 2035., max_dims, labels_off=not last_row(out, n_rows, n_cols))
             self.tidy_y_axis(axis, output, max_dims, max_value=max(max_data_values[output]))
@@ -1393,50 +1349,23 @@ class Project:
             if gtb_index is None:
                 return
 
-            if 'e_pop_num' in self.inputs.original_data['gtb_2016']:
-                gtb_original_data    = self.inputs.original_data['gtb_2016']['e_pop_num'].keys()
-                gtb_original_data_start_year = list(gtb_original_data)[0]
-                gtb_original_data_end_year = list(gtb_original_data)[-1]
-
             # plot patch
             colour, hatch, fill, line_width, alpha = (self.gtb_patch_colours[output], None, True, 0., .5) \
                 if gtb_ci_plot == 'patch' else ('.3', '/', False, .8, 1.)
-
-            gtb_original_data_start_year_index = gtb_data_lists['times'].index(gtb_original_data_start_year)
-           # gtb_original_data_end_year_index = gtb_data_lists['times'].index(gtb_original_data_end_year)
-            #shaded_color = tuple(map(lambda x : x/2, list(colour)))
-            ax.add_patch(patches.Polygon(create_patch_from_list(gtb_data_lists['times'][gtb_index:gtb_original_data_start_year_index + 1],
-                                                                gtb_data_lists['lower_limit'][gtb_index:gtb_original_data_start_year_index + 1],
-                                                                gtb_data_lists['upper_limit'][gtb_index:gtb_original_data_start_year_index + 1]),
-                                         color=colour, hatch=hatch, fill=fill, linewidth=0., alpha=0.2, zorder=4))
-
-            ax.add_patch(patches.Polygon(create_patch_from_list(gtb_data_lists['times'][gtb_original_data_start_year_index :],
-                                                                gtb_data_lists['lower_limit'][gtb_original_data_start_year_index :],
-                                                                gtb_data_lists['upper_limit'][gtb_original_data_start_year_index :]),
-                                         color=colour, hatch=hatch, fill=fill, linewidth=0., linestyle='-', alpha=alpha, zorder=4))
-
+            ax.add_patch(patches.Polygon(create_patch_from_list(gtb_data_lists['times'][gtb_index:],
+                                                                gtb_data_lists['lower_limit'][gtb_index:],
+                                                                gtb_data_lists['upper_limit'][gtb_index:]),
+                                         color=colour, hatch=hatch, fill=fill, linewidth=0., alpha=alpha, zorder=4))
 
         # plot point estimates
-        # coercing gtb_index to list for python3
-        ax.plot(list(gtb_data['point_estimate'])[gtb_index:], list(gtb_data['point_estimate'].values())[gtb_index:],
+        ax.plot(gtb_data['point_estimate'].keys()[gtb_index:], gtb_data['point_estimate'].values()[gtb_index:],
                 color=colour, linewidth=.8, label=None, alpha=alpha)
         if gtb_ci_plot == 'hatch' and output != 'notifications':
             for limit in ['lower_limit', 'upper_limit']:
-                ax.plot(list(gtb_data[limit].keys())[gtb_index:], list(gtb_data[limit].values())[gtb_index:],
+                ax.plot(gtb_data[limit].keys()[gtb_index:], gtb_data[limit].values()[gtb_index:],
                         color=colour, linewidth=line_width, label=None, alpha=alpha)
 
-        if output == 'incidence':
-            start_index_for_calibration = gtb_data_lists['times'].index(2010)
-            end_index_for_calibration = gtb_data_lists['times'].index(2016)
-            lower_line = Line2D(range(2010, 2017),
-                                gtb_data_lists['lower_limit'][start_index_for_calibration:end_index_for_calibration + 1], zorder=10)
-            ax.add_line(lower_line)
-            upper_line = Line2D(range(2010, 2017),
-                                gtb_data_lists['upper_limit'][start_index_for_calibration:end_index_for_calibration + 1], zorder=10)
-            ax.add_line(lower_line)
-            ax.add_line(upper_line)
-
-        return max(list(gtb_data['point_estimate'].values())[gtb_index:])
+        return max(gtb_data['point_estimate'].values()[gtb_index:])
 
     def plot_populations(self, category_to_loop='agegroups', scenario=0, fraction=False, requirements=('',),
                          exclusions=('we all love futsal',)):
@@ -1600,18 +1529,12 @@ class Project:
                 max_var = self.plot_scaleup_var_to_axis(axes[n_axis], [start_time, end_time], var)
                 max_data = self.plot_scaleup_data_to_axis(axes[n_axis], [start_time, end_time], var)
 
-                # max function does not allow none for comparision in python3
-                max_data_val = max_var
-                if max_data is not None:
-                    max_data_val =  float(max([max_var, max_data]))
-
-
                 # clean up axes
                 self.tidy_x_axis(axes[n_axis], start_time, end_time, max_dims)
                 self.tidy_y_axis(axes[n_axis], var, max_dims, left_axis=n_axis % n_cols == 0,
-                                     max_value=max_data_val)
+                                 max_value=float(max([max_var, max_data])))
 
-            self.finish_off_figure(fig, n_panels, '_scaleup_' + var, var)
+            self.finish_off_figure(fig, n_panels, '_' + var, var)
 
     def plot_scaleup_var_to_axis(self, axis, time_limits, var):
         """
@@ -1625,11 +1548,11 @@ class Project:
 
         maximum_values = []
         for scenario in reversed(self.scenarios):
-            # coercing map to list for python3
+
             # if available as a scale-up function
             if var in self.model_runner.models[scenario].scaleup_fns:
                 x_vals = numpy.linspace(time_limits[0], time_limits[1], int(1e3))
-                y_vals = list(map(self.model_runner.models[scenario].scaleup_fns[var], x_vals))
+                y_vals = map(self.model_runner.models[scenario].scaleup_fns[var], x_vals)
 
             # otherwise if a different type of var, such as additional calculated ones
             else:
@@ -1708,8 +1631,8 @@ class Project:
                     add_legend_to_plot(axis, max_dim, location=4)
 
             self.finish_off_figure(fig, len(self.interventions_to_cost[scenario]),
-                                   '_cost_coverage_' + t_k.find_scenario_string_from_number(scenario), ' ')
-                                   #'Cost coverage curves, ' + t_k.find_scenario_string_from_number(scenario))
+                                   '_cost_coverage_' + t_k.find_scenario_string_from_number(scenario),
+                                   'Cost coverage curves, ' + t_k.find_scenario_string_from_number(scenario))
 
     def plot_cost_over_time(self):
         """
@@ -1824,7 +1747,7 @@ class Project:
             for i in range(2):
                 ax.plot([1, len(data) + 1], [self.inputs.param_ranges_unc[param_range_index]['bounds'][i]] * 2,
                         color='.3', linestyle=':')
-            self.tidy_x_axis(ax, 1, len(data) + 1, max_dims, labels_off=not last_row(p, n_rows, n_cols))
+            self.tidy_x_axis(ax, 1, n_params + 1, max_dims, labels_off=not last_row(p, n_rows, n_cols))
             param_range = self.inputs.param_ranges_unc[param_range_index]['bounds'][1] \
                 - self.inputs.param_ranges_unc[param_range_index]['bounds'][0]
             self.tidy_y_axis(ax, '', max_dims, max_value=max(data),

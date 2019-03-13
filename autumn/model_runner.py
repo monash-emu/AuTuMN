@@ -237,6 +237,8 @@ class ModelRunner:
                 self.run_epi_uncertainty()
             if self.inputs.run_mode == 'int_uncertainty':
                 self.run_intervention_uncertainty()
+            if self.inputs.run_mode == 'spending_inputs':
+                self.run_spending_inputs()
 
         # save uncertainty if requested
         if self.gui_inputs['pickle_uncertainty'] == 'Save':
@@ -1085,6 +1087,29 @@ class ModelRunner:
         # report result
         self.add_comment_to_gui_window(
             'The best value found for {} is {}'.format(params_to_calibrate, best_param_value))
+
+    def run_spending_inputs(self):
+        """
+            Run a scenario defined by economic inputs entered in spreadsheet.
+        """
+        self.models[17] = model.ConsolidatedModel(0, self.inputs, self.gui_inputs,
+                                                                 self.gui_console_fn)
+        self.prepare_new_model_from_baseline(17)
+        self.add_comment_to_gui_window(
+            'Running scenario based on spending inputs.')
+
+        self.models[17].eco_drives_epi = True
+        # integrate
+        self.models[17].integrate()
+
+        # interpret
+        self.outputs['manual']['epi'][17] \
+            = self.find_epi_outputs(17, strata_to_analyse=[self.models[17].agegroups,
+                                                                 self.models[17].riskgroups])
+        self.outputs['manual']['epi'][17].update(
+            self.find_population_fractions(scenario=17,
+                                           strata_to_analyse=[self.models[17].agegroups,
+                                                              self.models[17].riskgroups]))
 
     ''' optimisation methods '''
 

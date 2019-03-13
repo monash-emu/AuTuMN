@@ -322,6 +322,7 @@ class BaseModel:
                         splitting_riskgroup = '_dorm'
                         relevant_prop_ageing = prop_ageing_dorm
                     else:
+                        splitting_riskgroup = '_diabetes'
                         print("Warning: Hard code currently implemented for Bulgaria and Bhutan only")
 
                     if splitting_riskgroup in to_label:

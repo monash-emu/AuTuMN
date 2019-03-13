@@ -15,6 +15,7 @@ import itertools
 
 # AuTuMN import
 from autumn import tool_kit as t_k
+from matplotlib.lines import Line2D
 
 
 ''' plot creating and cleaning functions '''
@@ -1201,7 +1202,7 @@ class Project:
             if self.gui_inputs['plot_option_overlay_gtb'] and output in self.gtb_available_outputs:
                 max_data_values[output].append(self.plot_gtb_data_to_axis(
                     axis, output, start_time, self.gtb_indices[output] if output in self.gtb_indices else '',
-                    gtb_ci_plot='hatch' if purpose == 'shaded' else 'patch'))
+                    gtb_ci_plot='hatch' if purpose == 'shaded' else 'patch'))  # gtb_ci_plot = patch for shaded epi output
 
             # plot with uncertainty confidence intervals (median, lower, upper)
             if purpose == 'ci':
@@ -1349,23 +1350,54 @@ class Project:
             if gtb_index is None:
                 return
 
+            if 'e_pop_num' in self.inputs.original_data['gtb_2016']:
+                gtb_original_data = self.inputs.original_data['gtb_2016']['e_pop_num'].keys()
+                gtb_original_data_start_year = list(gtb_original_data)[0]
+                gtb_original_data_end_year = list(gtb_original_data)[-1]
+
             # plot patch
             colour, hatch, fill, line_width, alpha = (self.gtb_patch_colours[output], None, True, 0., .5) \
                 if gtb_ci_plot == 'patch' else ('.3', '/', False, .8, 1.)
-            ax.add_patch(patches.Polygon(create_patch_from_list(gtb_data_lists['times'][gtb_index:],
-                                                                gtb_data_lists['lower_limit'][gtb_index:],
-                                                                gtb_data_lists['upper_limit'][gtb_index:]),
-                                         color=colour, hatch=hatch, fill=fill, linewidth=0., alpha=alpha, zorder=4))
+
+            gtb_original_data_start_year_index = gtb_data_lists['times'].index(gtb_original_data_start_year)
+            # gtb_original_data_end_year_index = gtb_data_lists['times'].index(gtb_original_data_end_year)
+            # shaded_color = tuple(map(lambda x : x/2, list(colour)))
+            ax.add_patch(patches.Polygon(
+                create_patch_from_list(gtb_data_lists['times'][gtb_index:gtb_original_data_start_year_index + 1],
+                                       gtb_data_lists['lower_limit'][gtb_index:gtb_original_data_start_year_index + 1],
+                                       gtb_data_lists['upper_limit'][gtb_index:gtb_original_data_start_year_index + 1]),
+                color=colour, hatch=hatch, fill=fill, linewidth=0., alpha=0.2, zorder=4))
+
+            ax.add_patch(
+                patches.Polygon(create_patch_from_list(gtb_data_lists['times'][gtb_original_data_start_year_index:],
+                                                       gtb_data_lists['lower_limit'][gtb_original_data_start_year_index:],
+                                                       gtb_data_lists['upper_limit'][gtb_original_data_start_year_index:]),
+                                color=colour, hatch=hatch, fill=fill, linewidth=0., linestyle='-', alpha=alpha,
+                                zorder=4))
+
 
         # plot point estimates
-        ax.plot(gtb_data['point_estimate'].keys()[gtb_index:], gtb_data['point_estimate'].values()[gtb_index:],
+        ax.plot(list(gtb_data['point_estimate'].keys())[gtb_index:], list(gtb_data['point_estimate'].values())[gtb_index:],
                 color=colour, linewidth=.8, label=None, alpha=alpha)
         if gtb_ci_plot == 'hatch' and output != 'notifications':
             for limit in ['lower_limit', 'upper_limit']:
                 ax.plot(gtb_data[limit].keys()[gtb_index:], gtb_data[limit].values()[gtb_index:],
                         color=colour, linewidth=line_width, label=None, alpha=alpha)
 
-        return max(gtb_data['point_estimate'].values()[gtb_index:])
+        if output == 'incidence':
+            start_index_for_calibration = gtb_data_lists['times'].index(2010)
+            end_index_for_calibration = gtb_data_lists['times'].index(2016)
+            lower_line = Line2D(range(2010, 2017),
+                                gtb_data_lists['lower_limit'][
+                                start_index_for_calibration:end_index_for_calibration + 1], zorder=10)
+            ax.add_line(lower_line)
+            upper_line = Line2D(range(2010, 2017),
+                                gtb_data_lists['upper_limit'][
+                                start_index_for_calibration:end_index_for_calibration + 1], zorder=10)
+            ax.add_line(lower_line)
+            ax.add_line(upper_line)
+
+        return max(list(gtb_data['point_estimate'].values())[gtb_index:])
 
     def plot_populations(self, category_to_loop='agegroups', scenario=0, fraction=False, requirements=('',),
                          exclusions=('we all love futsal',)):
@@ -1529,10 +1561,15 @@ class Project:
                 max_var = self.plot_scaleup_var_to_axis(axes[n_axis], [start_time, end_time], var)
                 max_data = self.plot_scaleup_data_to_axis(axes[n_axis], [start_time, end_time], var)
 
+                # max function does not allow none for comparision in python3
+                max_data_val = max_var
+                if max_data is not None:
+                    max_data_val = float(max([max_var, max_data]))
+
                 # clean up axes
                 self.tidy_x_axis(axes[n_axis], start_time, end_time, max_dims)
                 self.tidy_y_axis(axes[n_axis], var, max_dims, left_axis=n_axis % n_cols == 0,
-                                 max_value=float(max([max_var, max_data])))
+                                 max_value=float(max([max_var, max_data_val])))
 
             self.finish_off_figure(fig, n_panels, '_' + var, var)
 
@@ -1552,7 +1589,7 @@ class Project:
             # if available as a scale-up function
             if var in self.model_runner.models[scenario].scaleup_fns:
                 x_vals = numpy.linspace(time_limits[0], time_limits[1], int(1e3))
-                y_vals = map(self.model_runner.models[scenario].scaleup_fns[var], x_vals)
+                y_vals = list(map(self.model_runner.models[scenario].scaleup_fns[var], x_vals))
 
             # otherwise if a different type of var, such as additional calculated ones
             else:
@@ -1561,8 +1598,9 @@ class Project:
                 y_vals = self.model_runner.models[scenario].get_var_soln(var)[start_time_index:]
 
             # plot and record the maximum value
-            axis.plot(x_vals, y_vals, color=self.colour_theme[scenario],
+            axis.plot(x_vals, list(y_vals), color=self.colour_theme[scenario],
                       label=t_k.capitalise_and_remove_underscore(t_k.find_scenario_string_from_number(scenario)))
+
             maximum_values.append(max(y_vals))
         return max(maximum_values)
 

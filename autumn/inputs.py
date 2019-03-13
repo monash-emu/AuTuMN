@@ -1436,7 +1436,7 @@ class Inputs:
             self.interventions_available_for_costing += ['ambulatorycare' + organ]
         if self.gui_inputs['is_lowquality']:
             self.interventions_available_for_costing += ['engage_lowquality']
-        for riskgroup in ['_prison', '_indigenous', '_urbanpoor', '_ruralpoor', '_dorm']:
+        for riskgroup in ['_prison', '_indigenous', '_urbanpoor', '_ruralpoor']:
             if self.gui_inputs['riskgroup' + riskgroup]:
                 self.interventions_available_for_costing += ['xpertacf' + riskgroup, 'cxrxpertacf' + riskgroup]
 

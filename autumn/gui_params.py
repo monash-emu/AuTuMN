@@ -1,6 +1,7 @@
 
 import collections
 import autumn.tool_kit as tool_kit
+import six
 
 
 def get_autumn_params():
@@ -22,7 +23,7 @@ def get_autumn_params():
            'output_likelihood_plot', 'write_uncertainty_outcome_params', 'output_spreadsheets', 'output_documents',
            'output_by_scenario', 'output_horizontally',
            'riskgroup_diabetes', 'riskgroup_hiv', 'riskgroup_prison', 'riskgroup_indigenous', 'riskgroup_urbanpoor',
-           'riskgroup_ruralpoor', 'is_lowquality', 'is_amplification', 'is_misassignment', 'is_vary_detection_by_organ',
+           'riskgroup_ruralpoor', 'riskgroup_dorm', 'is_lowquality', 'is_amplification', 'is_misassignment', 'is_vary_detection_by_organ',
            'is_timevariant_organs', 'is_treatment_history', 'is_vary_force_infection_by_riskgroup',
            'is_vary_detection_by_riskgroup', 'is_include_relapse_in_ds_outcomes', 'is_include_hiv_treatment_outcomes',
            'is_adjust_population', 'is_shortcourse_improves_outcomes', 'plot_option_vars_two_panels',
@@ -87,7 +88,7 @@ def get_autumn_params():
     # uncertainty options
     uncertainty_options \
         = ['Scenario analysis', 'Epidemiological uncertainty', 'Intervention uncertainty', 'Optimisation (unavailable)',
-           'Increment comorbidity', 'Rapid calibration', 'Spending inputs']
+           'Increment comorbidity', 'Rapid calibration']
     params['run_mode'] \
         = {'type': 'drop_down',
            'options': uncertainty_options}
@@ -110,8 +111,7 @@ def get_autumn_params():
     available_uncertainty_intervention \
         = ['int_prop_treatment_support_relative', 'int_prop_decentralisation', 'int_prop_xpert', 'int_prop_ipt',
            'int_prop_acf', 'int_prop_awareness_raising', 'int_perc_shortcourse_mdr', 'int_perc_firstline_dst',
-           'int_perc_treatment_support_relative_ds', 'int_perc_dots_contributor', 'int_perc_dots_groupcontributor',
-           'combined']
+           'int_perc_treatment_support_relative_ds', 'int_perc_dots_contributor', 'int_perc_dots_groupcontributor']
     params['uncertainty_intervention'] \
         = {'type': 'drop_down',
            'options': available_uncertainty_intervention}
@@ -149,26 +149,26 @@ def get_autumn_params():
         'plot_option_overlay_gtb',
         'plot_option_overlay_targets',
         'write_uncertainty_outcome_params',
-        'output_param_plots',
-        'output_likelihood_plot',
-        'is_shortcourse_improves_outcomes',
+        # 'output_param_plots',
+        # 'output_likelihood_plot',
+        # 'is_shortcourse_improves_outcomes',
         # 'plot_option_plot_all_vars',
-        'is_amplification',
-        'is_misassignment',
+        # 'is_amplification',
+        # 'is_misassignment',
         # 'is_lowquality',
         'is_vary_detection_by_organ',
         'is_include_relapse_in_ds_outcomes',
-        'is_vary_detection_by_riskgroup',
-        'is_include_hiv_treatment_outcomes',
+        # 'is_vary_detection_by_riskgroup',
+        # 'is_include_hiv_treatment_outcomes',
         'is_treatment_history',
-        'riskgroup_prison',
+        # 'riskgroup_prison',
         # 'riskgroup_urbanpoor',
         'output_scaleups',
         'output_by_subgroups',
         'output_compartment_populations',
-        'riskgroup_ruralpoor',
+        # 'riskgroup_ruralpoor',
         'output_epi_plots',
-        'is_vary_force_infection_by_riskgroup',
+        # 'is_vary_force_infection_by_riskgroup',
         'riskgroup_diabetes',
         # 'riskgroup_hiv',
         # 'riskgroup_indigenous',
@@ -184,8 +184,8 @@ def get_autumn_params():
             params[param]['value'] = params[param]['options'][0]
     params['fitting_method']['value'] = params['fitting_method']['options'][-1]
     params['integration_method']['value'] = params['integration_method']['options'][1]
-    params['strains']['value'] = params['strains']['options'][1]
-    params['country']['value'] = 'Bulgaria'
+    params['strains']['value'] = params['strains']['options'][0]
+    params['country']['value'] = 'Bhutan'
 
     ''' parameter groupings '''
 
@@ -196,7 +196,7 @@ def get_autumn_params():
     param_groups = []
     for group in param_group_keys:
         param_groups.append({'keys': [], 'name': group})
-    for tab in [6, 8]:
+    for tab in [5, 6, 8]:
         param_groups[tab]['attr'] = {'webgui': True}
 
     # distribute the boolean checkbox options
@@ -252,5 +252,6 @@ def convert_params_to_inputs(params):
         Unprocessed inputs for use by the inputs module
     """
 
+    # replacing iteritems with items for py3
     return {key: param['value'] for key, param in params.items()}
 

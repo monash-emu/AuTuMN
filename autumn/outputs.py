@@ -1381,7 +1381,7 @@ class Project:
                 color=colour, linewidth=.8, label=None, alpha=alpha)
         if gtb_ci_plot == 'hatch' and output != 'notifications':
             for limit in ['lower_limit', 'upper_limit']:
-                ax.plot(gtb_data[limit].keys()[gtb_index:], gtb_data[limit].values()[gtb_index:],
+                ax.plot(list(gtb_data[limit].keys())[gtb_index:], list(gtb_data[limit].values())[gtb_index:],
                         color=colour, linewidth=line_width, label=None, alpha=alpha)
 
         if output == 'incidence':

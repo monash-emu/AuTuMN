@@ -218,7 +218,7 @@ class Inputs:
         self.transmission_stop_scenario = False
 
         #flag for debug
-        self.debug = False
+        self.debug = True
 
         # clean debug json files
         cur_dir = os.path.join(os.getcwd())

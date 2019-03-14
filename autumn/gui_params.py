@@ -169,7 +169,9 @@ def get_autumn_params():
         # 'riskgroup_ruralpoor',
         'output_epi_plots',
         # 'is_vary_force_infection_by_riskgroup',
-        'riskgroup_diabetes',
+        # 'riskgroup_diabetes',
+        'riskgroup_dorm'
+
         # 'riskgroup_hiv',
         # 'riskgroup_indigenous',
         # 'is_timevariant_organs'

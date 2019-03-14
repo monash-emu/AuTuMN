@@ -394,6 +394,8 @@ class BaseModel:
             var_label: String to index the vars dictionary.
         """
         match = 0
+        if 'onipt' not in self.compartment_types:
+            self.remove_labels.append('onipt')
         for pattern in self.remove_labels:
             pattern = '.*' + pattern.replace('_', '.*')
             search_result = re.compile(pattern).match(from_label)  #
@@ -534,6 +536,7 @@ class BaseModel:
         self.make_times(self.start_time, self.inputs.model_constants['scenario_end_time'], self.time_step)
         self.initialise_compartments()
         self.set_flows()
+
         assert self.times is not None, 'Times have not been set yet'
 
     def make_derivative_fn(self):
@@ -560,6 +563,11 @@ class BaseModel:
         self.process_uncertainty_params()
         self.init_run()
         y = self.get_init_list()  # get initial conditions (loaded compartments for scenarios)
+        if self.inputs.debug:
+            with open("compartments.json", "a") as json_file:
+                json_file.write(json.dumps(self.compartments, cls=NumpyEncoder))
+                json_file.write(',\n')
+
         y = self.make_adjustments_during_integration(y)
 
         # prepare storage objects

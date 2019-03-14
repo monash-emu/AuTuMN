@@ -667,12 +667,19 @@ class Inputs:
                                            'bounds': [self.model_constants[param]['lower'],
                                                       self.model_constants[param]['upper']],
                                            'distribution': 'uniform'}]
+            elif 'program_perc_detect_uncertainty' in param:                              # hardcoded for cdr uncertainity
+                self.param_ranges_unc += [{'key': param[:-12],
+                                           'bounds': [self.model_constants[param]['lower'],
+                                                      self.model_constants[param]['upper']],
+                                           'distribution': 'uniform'}]
             elif ('int_' in param or 'program_' in param) and '_uncertainty' in param \
                     and type(self.model_constants[param]) == dict:
                 self.int_ranges_unc += [{'key': param[:-12],
                                          'bounds': [self.model_constants[param]['lower'],
                                                     self.model_constants[param]['upper']],
                                          'distribution': 'uniform'}]
+
+
 
         # change distributions for parameters hard-coded to alternative distributions in instantiation above
         for n_param in range(len(self.param_ranges_unc)):

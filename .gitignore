@@ -13,3 +13,4 @@ projects
 venv*
 env*
 osx_boot.sh
+.json

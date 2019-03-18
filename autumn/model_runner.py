@@ -1474,7 +1474,7 @@ class TbRunner(ModelRunner):
                                        self.inputs.outputs_unc[index_number]['posterior_width'] / 2. / 1.96]
                                 for year in self.inputs.data_to_fit[output_dict_key].keys()}
         elif output_dict_key == 'notifications':
-            sd = 0.0005
+            sd = 0.0005  # manually tuned
             norm_dist_params = {year: [self.inputs.data_to_fit['notifications_ratio'][year], sd]
                                 for year in self.inputs.data_to_fit['notifications_ratio'].keys()}
         # incidence and potentially other indicators in the future - find average and 1/4 width as standard deviation

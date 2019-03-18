@@ -157,8 +157,8 @@ def get_autumn_params():
         # 'is_misassignment',
         # 'is_lowquality',
         'is_vary_detection_by_organ',
-        'is_include_relapse_in_ds_outcomes',
-        # 'is_vary_detection_by_riskgroup',
+        #'is_include_relapse_in_ds_outcomes',
+        'is_vary_detection_by_riskgroup',
         # 'is_include_hiv_treatment_outcomes',
         'is_treatment_history',
         # 'riskgroup_prison',
@@ -168,10 +168,9 @@ def get_autumn_params():
         'output_compartment_populations',
         # 'riskgroup_ruralpoor',
         'output_epi_plots',
-        # 'is_vary_force_infection_by_riskgroup',
+        'is_vary_force_infection_by_riskgroup',   # heterpgeneous mixing
         # 'riskgroup_diabetes',
         'riskgroup_dorm'
-
         # 'riskgroup_hiv',
         # 'riskgroup_indigenous',
         # 'is_timevariant_organs'

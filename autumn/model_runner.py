@@ -614,7 +614,7 @@ class ModelRunner:
 
         # prepare basic storage and local variables for uncertainty loop
         run, n_accepted, accepted, starting_params, accepted_params, weights, prev_log_likelihood \
-            = 0, 0, 0, [], None, {}, -5e2
+            = 0, 0, 0, [], None, {}, -1e10
         for key_for_dict in ['epi', 'cost', 'all_parameters', 'accepted_parameters', 'rejected_parameters',
                              'all_compartment_values']:
             self.outputs['epi_uncertainty'][key_for_dict] = {}
@@ -742,10 +742,21 @@ class ModelRunner:
             comparison_years = [y for y in self.requested_years if y in target_data.keys()]
             weights = find_uncertainty_output_weights(comparison_years, 4)
             self.add_comment_to_gui_window('"Weights" for {} are: {}'.format(output_dict['key'], weights))
-            outputs_to_compare = [float(self.outputs['epi_uncertainty']['epi'][0][output_dict['key']][
-                                            last_run_output_index, t_k.find_first_list_element_at_least(
-                                                self.outputs['epi_uncertainty']['epi'][0]['times'], float(year))])
-                                  for year in comparison_years]
+            if output_dict['key'] == 'notifications':
+                notifications = [float(self.outputs['epi_uncertainty']['epi'][0]['notifications'][
+                                                last_run_output_index, t_k.find_first_list_element_at_least(
+                                                    self.outputs['epi_uncertainty']['epi'][0]['times'], float(year))])
+                                      for year in comparison_years]
+                population_sizes = [float(self.outputs['epi_uncertainty']['epi'][0]['population'][
+                                                last_run_output_index, t_k.find_first_list_element_at_least(
+                                                    self.outputs['epi_uncertainty']['epi'][0]['times'], float(year))])
+                                      for year in comparison_years]
+                outputs_to_compare = [notifications[i] / population_sizes[i] for i in range(len(population_sizes))]
+            else:
+                outputs_to_compare = [float(self.outputs['epi_uncertainty']['epi'][0][output_dict['key']][
+                                                last_run_output_index, t_k.find_first_list_element_at_least(
+                                                    self.outputs['epi_uncertainty']['epi'][0]['times'], float(year))])
+                                      for year in comparison_years]
             self.add_comment_to_gui_window('Model output values by year:')
             average_sd = numpy.mean([target_data[year][1] for year in target_data.keys()])
             for y, year in enumerate(comparison_years):
@@ -1058,7 +1069,7 @@ class ModelRunner:
 
         # manually-coded dichotomy algorithm
         if single_point_calibration:
-            param_low, param_high = 2., 5.   # starting points, hard-coded
+            param_low, param_high = 25., 35.   # starting points, hard-coded
             estimated_n_iter = 2. + (numpy.log(param_high - param_low) - numpy.log(2. * param_tol)) / numpy.log(2.)
             self.add_comment_to_gui_window(
                 'Dichotomy method should converge in fewer than {} iterations'.format(round(estimated_n_iter)))
@@ -1459,7 +1470,10 @@ class TbRunner(ModelRunner):
             norm_dist_params = {year: [self.inputs.data_to_fit[output_dict_key][year],
                                        self.inputs.outputs_unc[index_number]['posterior_width'] / 2. / 1.96]
                                 for year in self.inputs.data_to_fit[output_dict_key].keys()}
-
+        elif output_dict_key == 'notifications':
+            sd = 0.0005
+            norm_dist_params = {year: [self.inputs.data_to_fit['notifications_ratio'][year], sd]
+                                for year in self.inputs.data_to_fit['notifications_ratio'].keys()}
         # incidence and potentially other indicators in the future - find average and 1/4 width as standard deviation
         else:
             norm_dist_params \

@@ -305,8 +305,10 @@ class Inputs:
         if self.run_mode == 'epi_uncertainty':
 
             # for incidence for ex, width of normal posterior relative to CI width in data
+            # self.outputs_unc \
+            #     = [{'key': 'incidence', 'posterior_width': None, 'width_multiplier': 0.5}]
             self.outputs_unc \
-                = [{'key': 'incidence', 'posterior_width': None, 'width_multiplier': 0.5}]
+                = [{'key': 'notifications', 'posterior_width': None, 'width_multiplier': None}]
             self.alternative_distribution_dict \
                 = {'tb_prop_casefatality_untreated_smearpos': ['beta_mean_stdev', .7, .15],
                    'tb_timeperiod_activeuntreated': ['gamma_mean_stdev', 3., .5],
@@ -703,6 +705,7 @@ class Inputs:
             = {'mortality': 'e_mort_exc_tbhiv_100k',
                'mortality_low': 'e_mort_exc_tbhiv_100k_lo',
                'mortality_high': 'e_mort_exc_tbhiv_100k_hi'}
+        notifications_conversion_dict = {'notifications': 'c_newinc'}
 
         # work through vars to be used and populate into the data fitting dictionary
         for output in self.outputs_unc:
@@ -712,6 +715,14 @@ class Inputs:
             elif output['key'] == 'mortality':
                 for key in mort_conversion_dict:
                     self.data_to_fit[key] = self.original_data['gtb'][mort_conversion_dict[key]]
+            elif output['key'] == 'notifications':
+                for key in notifications_conversion_dict:
+                    self.data_to_fit[key] = self.original_data['notifications'][notifications_conversion_dict[key]]
+                self.data_to_fit['notifications_ratio'] = {}
+                for year in self.data_to_fit['notifications']:
+                    if year in self.original_data['gtb']['e_pop_num'].keys():
+                        pop = self.original_data['gtb']['e_pop_num'][year]
+                        self.data_to_fit['notifications_ratio'][year] = self.data_to_fit['notifications'][year] / pop
             else:
                 self.add_comment_to_gui_window(
                     'Warning: Calibrated output %s is not directly available from the data' % output['key'])

@@ -434,8 +434,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         Master case detection method to collate all the methods relating to case detection.
         """
         # adjusting cdr rate (program_prop_detect) by multiplying it to cdr_adjustment input from spreadsheet
-        self.vars['program_prop_detect'] = self.vars['program_prop_detect'] * self.params['cdr_adjustment']
-
+        self.vars['program_prop_detect'] *= self.params['cdr_adjustment']
 
         if self.is_vary_detection_by_organ:
             self.calculate_case_detection_by_organ()

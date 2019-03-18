@@ -309,6 +309,7 @@ class Inputs:
                 = [{'key': 'incidence', 'posterior_width': None, 'width_multiplier': 0.5}]
             self.alternative_distribution_dict \
                 = {'tb_prop_casefatality_untreated_smearpos': ['beta_mean_stdev', .7, .15],
+                   'cdr_adjustment': ['beta_mean_stdev', .7, .15],
                    'tb_timeperiod_activeuntreated': ['gamma_mean_stdev', 3., .5],
                    'tb_multiplier_treated_protection': ['gamma_mean_stdev', 1., .6]}
 

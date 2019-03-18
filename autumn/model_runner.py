@@ -188,7 +188,7 @@ class ModelRunner:
         self.emit_delay, self.gui_console_fn = 0.1, gui_console_fn
         if self.gui_console_fn:
             self.gui_console_fn('init')
-        self.requested_years = range(2010, 2017)
+        self.requested_years = range(2000, 2017)
 
         # optimisation attributes - note that this is currently dead
         # self.optimisation = False  # leave True even if loading optimisation results
@@ -923,7 +923,10 @@ class ModelRunner:
         new_params = []
 
         # Manually define the width of the interval containing 95% of the proposal Gaussian density
-        overwritten_abs_search_width = {'tb_n_contact': 0.5, 'start_time': 5.}
+        if self.gui_inputs['country'] == 'Bulgaria':
+            overwritten_abs_search_width = {'tb_n_contact': 0.5, 'start_time': 5.}  # Bulgaria
+        else:
+            overwritten_abs_search_width = {'tb_n_contact': 10., 'start_time': 20.}  # Bhutan
 
         # iterate through the parameters being used
         for p, param_dict in enumerate(self.inputs.param_ranges_unc):

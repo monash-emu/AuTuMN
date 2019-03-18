@@ -102,7 +102,7 @@ def get_autumn_params():
            'label': 'Number of burn-in runs'}
     params['search_width'] \
         = {'type': 'double',
-           'value': 5e-2,
+           'value': 2e-1,
            'label': 'Relative search width'}
     saving_options = ['No saving or loading', 'Load', 'Save']
     params['pickle_uncertainty'] \

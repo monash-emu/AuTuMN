@@ -1428,7 +1428,9 @@ class Project:
         for l, label in enumerate(current_data):
             previous_data, cumulative_data = increment_list_for_patch(current_data[label], cumulative_data)
             colour = self.colour_theme[l + 1]
-            ax.fill_between(times, previous_data, cumulative_data, facecolor=colour, edgecolor=colour, alpha=.8)
+
+            if len(previous_data) == len(cumulative_data) and len(times) == len(previous_data):
+                ax.fill_between(times, previous_data, cumulative_data, facecolor=colour, edgecolor=colour, alpha=.8)
             ax.plot([-1e2], [0.], color=colour, label=t_k.find_title_from_dictionary(label), linewidth=5.)  # proxy
 
         # finish off

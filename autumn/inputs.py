@@ -311,6 +311,7 @@ class Inputs:
                 = [{'key': 'notifications', 'posterior_width': None, 'width_multiplier': None}]
             self.alternative_distribution_dict \
                 = {'tb_prop_casefatality_untreated_smearpos': ['beta_mean_stdev', .7, .15],
+                   'cdr_adjustment': ['beta_mean_stdev', .7, .15],
                    'tb_timeperiod_activeuntreated': ['gamma_mean_stdev', 3., .5],
                    'tb_multiplier_treated_protection': ['gamma_mean_stdev', 1., .6]}
 
@@ -668,8 +669,10 @@ class Inputs:
                 self.param_ranges_unc += [{'key': param[:-12],
                                            'bounds': [self.model_constants[param]['lower'],
                                                       self.model_constants[param]['upper']],
-                                           'distribution': 'uniform'}]
-            elif 'program_perc_detect_uncertainty' in param:                              # hardcoded for cdr uncertainity
+                                                     'distribution': 'uniform'}]
+            # for cdr uncertainity  adjustment
+            elif 'cdr_' in param \
+                  and '_uncertainty' in param and type(self.model_constants[param]) == dict:
                 self.param_ranges_unc += [{'key': param[:-12],
                                            'bounds': [self.model_constants[param]['lower'],
                                                       self.model_constants[param]['upper']],
@@ -943,7 +946,7 @@ class Inputs:
         else:
             self.find_average_organ_status()
         self.tidy_time_variants()
-        self.adjust_param_for_reporting('program_prop_detect', 'Bulgaria', 0.95)  # Bulgaria thought CDR over-estimated
+        #self.adjust_param_for_reporting('program_prop_detect', 'Bulgaria', self.model_constants['cdr_adjustment'])  # Bulgaria thought CDR over-estimated
 
     # general and demographic methods
 

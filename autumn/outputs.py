@@ -426,6 +426,9 @@ class Project:
         # comes up so often that we need to find this index, that easiest to do in instantiation
         self.manual_baseline_start_index = self.find_start_time_index(self.inputs.model_constants['plot_start_time'], 0)
 
+        # switch for calibration years indicated by redlines in main epi output
+        self.show_callibration_years = True
+
         # standard graphing themes
         self.tick_length = 3
         self.colour_theme \
@@ -1384,14 +1387,14 @@ class Project:
                 ax.plot(list(gtb_data[limit].keys())[gtb_index:], list(gtb_data[limit].values())[gtb_index:],
                         color=colour, linewidth=line_width, label=None, alpha=alpha)
 
-        if output == 'incidence':
-            start_index_for_calibration = gtb_data_lists['times'].index(2010)
-            end_index_for_calibration = gtb_data_lists['times'].index(2016)
-            lower_line = Line2D(range(2010, 2017),
+        if output == 'incidence' and self.show_callibration_years:
+            start_index_for_calibration = gtb_data_lists['times'].index(self.model_runner.requested_years[0])
+            end_index_for_calibration = gtb_data_lists['times'].index(self.model_runner.requested_years[-1])
+            lower_line = Line2D(self.model_runner.requested_years,
                                 gtb_data_lists['lower_limit'][
                                 start_index_for_calibration:end_index_for_calibration + 1], zorder=10)
             ax.add_line(lower_line)
-            upper_line = Line2D(range(2010, 2017),
+            upper_line = Line2D(self.model_runner.requested_years,
                                 gtb_data_lists['upper_limit'][
                                 start_index_for_calibration:end_index_for_calibration + 1], zorder=10)
             ax.add_line(lower_line)

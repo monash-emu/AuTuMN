@@ -210,10 +210,8 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
 
             # remove the unnecessary fully susceptible treated compartments
             self.remove_compartment('susceptible_fully' + riskgroup + self.histories[-1] + agegroup)
-        print(self.labels)
         start_risk_prop = self.find_starting_riskgroup_props() if len(self.riskgroups) > 1 else {'': 1.}
         self.populate_initial_compartments(initial_compartments, start_risk_prop)
-        print("ssss")
 
     def find_starting_riskgroup_props(self):
         """

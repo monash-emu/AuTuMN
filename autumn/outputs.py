@@ -1284,7 +1284,7 @@ class Project:
 
             # finishing off axis and figure
             self.tidy_x_axis(axis, start_time, 2035., max_dims, labels_off=not last_row(out, n_rows, n_cols))
-            self.tidy_y_axis(axis, output, max_dims, max_value=max(max_data_values[output]))
+            self.tidy_y_axis(axis, output, max_dims, max_value=max(value for value in max_data_values[output] if value is not None))
             axis.set_title(t_k.find_title_from_dictionary(output, country=self.country),
                            fontsize=get_label_font_size(max_dims))
             if out == len(outputs) - 1 and purpose == 'scenario' and len(self.scenarios) > 1:

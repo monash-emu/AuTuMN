@@ -427,7 +427,7 @@ class Project:
         self.manual_baseline_start_index = self.find_start_time_index(self.inputs.model_constants['plot_start_time'], 0)
 
         # switch for calibration years indicated by redlines in main epi output
-        self.show_callibration_years = True
+        self.show_callibration_years = False
 
         # standard graphing themes
         self.tick_length = 3
@@ -1123,7 +1123,7 @@ class Project:
             for purpose in purposes:
                 self.plot_epi_outputs(self.gtb_available_outputs, purpose, 'main')
             if self.inputs.n_strains > 1:
-                mdr_indicators = [ind + '_mdr' for ind in self.gtb_available_outputs if ind != 'notifications']
+                mdr_indicators = [ind + '_mdr' for ind in self.gtb_available_outputs if ind != 'prevalence']
                 mdr_indicators.append('perc_incidence_mdr')
                 for purpose in purposes:
                     self.plot_epi_outputs(mdr_indicators, purpose, 'mdr-tb-related')

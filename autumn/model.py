@@ -397,7 +397,6 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
             self.vars['births_' + vac_status + '_norisk'] = vac_props[vac_status] * self.vars['births_total'] *\
                                                             norisk_birth_proportion
 
-
     def calculate_organ_progressions(self):
         """
         Calculate vars for the proportion of progressions going to each organ status.

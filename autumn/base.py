@@ -306,7 +306,7 @@ class BaseModel:
         prop_ageing_diabetes = 0.082  # provisional hard-code for Bulgaria
         prop_ageing_prison = 0.0014  # provisional hard-code for Bulgaria
 
-        prop_ageing_dorm = 0.105  # provisional hard-code for Bhutan
+        prop_ageing_dorm = 0.415  # provisional hard-code for Bhutan
 
         # from_label and to_label does not contain any of the removed compartments
         if match == 0:

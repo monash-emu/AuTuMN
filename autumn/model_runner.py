@@ -444,6 +444,8 @@ class ModelRunner:
             for flow in self.models[scenario].flows_by_type[flow_type]:
                 if t_k.are_strings_in_subdict(mapper, flow, self.from_labels[output] + [strain, stratum], 'from') \
                         and t_k.are_strings_in_subdict(mapper, flow, self.to_labels[output], 'to'):
+                    if self.gui_inputs['country'] == 'Bhutan' and strain == '_mdr' and 'asds' in flow[1]:
+                        continue
                     increment = self.models[scenario].get_compartment_soln(flow[mapper['from']]) \
                                 * self.get_rate_for_output(scenario, flow_type, flow) / denominator * multiplier
                     epi_outputs[output + strain_stratum] \

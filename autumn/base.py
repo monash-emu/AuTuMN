@@ -140,12 +140,16 @@ class BaseModel:
         assert init_val >= 0., 'Start with negative compartment not permitted'
 
         # search the label with patterns in self.remove_labels
+
+        if 'onipt' not in self.compartment_types:
+            self.remove_labels.append('onipt')
+
         match = 0
-        for pattern in self.remove_labels:
-            pattern = '.*' + pattern.replace('_', '.*')
-            search_result = re.compile(pattern).match(label)
-            if search_result:
-                match = match + 1
+        if self.remove_labels:
+            for pattern in self.remove_labels:
+                # check for remove labels ex dorm_age0to5 by splitting into dorm and age0to5
+                if all(word in label for word in pattern.split('_')):
+                    match = match + 1
 
         if match == 0:
             if label not in self.labels: self.labels.append(label)
@@ -227,11 +231,12 @@ class BaseModel:
             var_label: String to index the parameters dictionary.
         """
         match = 0
-        for pattern in self.remove_labels:
-            pattern = '.*' + pattern.replace('_', '.*')
-            search_result = re.compile(pattern).match(label)  #
-            if search_result:
-                match = match + 1
+
+        if self.remove_labels:
+            for pattern in self.remove_labels:
+                # check for remove labels ex dorm_age0to5 by splitting into dorm and age0to5
+                if all(word in label for word in pattern.split('_')):
+                    match = match + 1
 
         if match == 0:
             add_unique_tuple_to_list(self.flows_by_type['var_entry'], (label, var_label))
@@ -248,11 +253,12 @@ class BaseModel:
             param_label: String to index the parameters dictionary.
         """
         match = 0
-        for pattern in self.remove_labels:
-            pattern = '.*' + pattern.replace('_', '.*')
-            search_result = re.compile(pattern).match(label)  #
-            if search_result:
-                match = match + 1
+
+        if self.remove_labels:
+            for pattern in self.remove_labels:
+                # check for remove labels ex dorm_age0to5 by splitting into dorm and age0to5
+                if all(word in label for word in pattern.split('_')):
+                    match = match + 1
 
         if match == 0:
             add_unique_tuple_to_list(self.flows_by_type['fixed_infection_death'], (label, self.params[param_label]))
@@ -269,11 +275,12 @@ class BaseModel:
             var_label: String to index the parameters dictionary.
         """
         match = 0
-        for pattern in self.remove_labels:
-            pattern = '.*' + pattern.replace('_', '.*')
-            search_result = re.compile(pattern).match(label)  #
-            if search_result:
-                match = match + 1
+
+        if self.remove_labels:
+            for pattern in self.remove_labels:
+                # check for remove labels ex dorm_age0to5 by splitting into dorm and age0to5
+                if all(word in label for word in pattern.split('_')):
+                    match = match + 1
 
         if match == 0:
             add_unique_tuple_to_list(self.flows_by_type['var_infection_death'], (label, var_label))
@@ -291,17 +298,18 @@ class BaseModel:
             param_label: String to index the parameters dictionary.
         """
         match = 0
-        for pattern in self.remove_labels:
-            pattern = '.*' + pattern.replace('_', '.*')
-            search_result = re.compile(pattern).match(from_label)  #
-            if search_result:
-                match = match + 1
 
-        for pattern in self.remove_labels:
-            pattern = '.*' + pattern.replace('_', '.*')
-            search_result = re.compile(pattern).match(to_label)  #
-            if search_result:
-                match = match + 1
+        if self.remove_labels:
+            for pattern in self.remove_labels:
+                # check for remove labels ex dorm_age0to5 by splitting into dorm and age0to5
+                if all(word in from_label for word in pattern.split('_')):
+                    match = match + 1
+
+        if self.remove_labels:
+            for pattern in self.remove_labels:
+                # check for remove labels ex dorm_age0to5 by splitting into dorm and age0to5
+                if all(word in to_label for word in pattern.split('_')):
+                    match = match + 1
 
         prop_ageing_diabetes = 0.082  # provisional hard-code for Bulgaria
         prop_ageing_prison = 0.0014  # provisional hard-code for Bulgaria
@@ -365,18 +373,18 @@ class BaseModel:
             to_label: String for the compartment to which this flow goes.
             var_label: String to index the vars dictionary.
         """
-        match = 0
-        for pattern in self.remove_labels:
-            pattern = '.*' + pattern.replace('_', '.*')
-            search_result = re.compile(pattern).match(from_label)  #
-            if search_result:
-                match = match + 1
 
-        for pattern in self.remove_labels:
-            pattern = '.*' + pattern.replace('_', '.*')
-            search_result = re.compile(pattern).match(to_label)  #
-            if search_result:
-                match = match + 1
+        match = 0
+        if self.remove_labels:
+            for pattern in self.remove_labels:
+                # check for remove labels ex dorm_age0to5 by splitting into dorm and age0to5
+                if all(word in from_label for word in pattern.split('_')):
+                    match = match + 1
+
+            for pattern in self.remove_labels:
+                # check for remove labels ex dorm_age0to5 by splitting into dorm and age0to5
+                if all(word in to_label for word in pattern.split('_')):
+                    match = match + 1
 
         if match == 0:
             add_unique_tuple_to_list(self.flows_by_type['linked_transfer'], (from_label, to_label, var_label))
@@ -393,20 +401,20 @@ class BaseModel:
             to_label: String for the compartment to which this flow goes.
             var_label: String to index the vars dictionary.
         """
-        match = 0
-        if 'onipt' not in self.compartment_types:
-            self.remove_labels.append('onipt')
-        for pattern in self.remove_labels:
-            pattern = '.*' + pattern.replace('_', '.*')
-            search_result = re.compile(pattern).match(from_label)  #
-            if search_result:
-                match = match + 1
 
-        for pattern in self.remove_labels:
-            pattern = '.*' + pattern.replace('_', '.*')
-            search_result = re.compile(pattern).match(to_label)  #
-            if search_result:
-                match = match + 1
+        match = 0
+
+        if self.remove_labels:
+            for pattern in self.remove_labels:
+                # check for remove labels ex dorm_age0to5 by splitting into dorm and age0to5
+                if all(word in from_label for word in pattern.split('_')):
+                    match = match + 1
+
+            for pattern in self.remove_labels:
+                # check for remove labels ex dorm_age0to5 by splitting into dorm and age0to5
+                if all(word in to_label for word in pattern.split('_')):
+                    match = match + 1
+
 
         if match == 0:
             add_unique_tuple_to_list(self.flows_by_type['var_transfer'], (from_label, to_label, var_label))

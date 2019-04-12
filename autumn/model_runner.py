@@ -415,6 +415,10 @@ class ModelRunner:
             with open("new_outputs.json", "a") as json_file:
                 json_file.write(json.dumps(new_outputs, cls=NumpyEncoder))
                 json_file.write(',\n')
+
+        if self.gui_console_fn:
+            self.gui_console_fn('console', {'NewOutputs' : json.dumps(new_outputs, cls=NumpyEncoder) })
+
         return new_outputs
 
     def find_standard_rate_output(self, epi_outputs, scenario, output, strain, stratum):
@@ -712,6 +716,42 @@ class ModelRunner:
 
                 self.record_disease_specific_adjustments()
 
+        if self.gui_inputs['pickle_uncertainty'] == 'Save':
+            # save parameter values to json
+            params_mcmc = {}
+            for each in self.outputs['epi_uncertainty']:
+                print(each)
+                if each != 'epi' and each != 'cost':
+                    params_mcmc[each] = self.outputs['epi_uncertainty'][each]
+            out_dir = 'saved_uncertainty_analyses'
+            if not os.path.isdir(out_dir):
+                os.makedirs(out_dir)
+
+            best_params = []
+            best_params_index = params_mcmc['loglikelihoods'].index(max(params_mcmc['loglikelihoods']))
+            for each in params_mcmc['accepted_parameters']:
+                best_params.append(params_mcmc['accepted_parameters'][each][best_params_index + 1])  # cdr_adjustment in accepted_params is a dictionary with index starting from 1
+            print(best_params)
+
+            # propose new parameters
+            #proposed_params = self.update_params(best_params)
+
+            # run baseline scenario (includes parameter checking, parameter setting and recording of success or failure)
+            self.run_with_params(best_params, scenario=0)
+
+            # get outputs for calibration and store results
+            self.store_uncertainty(0)
+
+            mcmc_run_file = os.path.join(out_dir, "params_mcmc.json")
+
+            with open(mcmc_run_file, "w") as json_file:
+                json_file.write(json.dumps(params_mcmc, cls=NumpyEncoder))
+
+            unc_json_file = os.path.join(out_dir, "unc.json")
+            with open(unc_json_file, "w") as json_file:
+                json_file.write(json.dumps(self.outputs, cls=NumpyEncoder))
+
+
     def calculate_prior(self, proposed_params):
         """
         Calculate the prior log likelihood for a given parameter set.
@@ -911,6 +951,10 @@ class ModelRunner:
                     self.outputs[uncertainty_type][output_type][scenario][output] \
                         = numpy.vstack((self.outputs[uncertainty_type][output_type][scenario][output],
                                         new_outputs[output_type][output]))
+                    #self.outputs[uncertainty_type][output_type][scenario][output] = numpy.asarray(new_outputs[output_type][output])
+
+
+
 
     def update_params(self, old_params):
         """

@@ -182,12 +182,21 @@ def bgui_model_output(output_type, data={}):
     elif output_type == "init":
         pass
     elif output_type == "console":
-        new_lines = data["message"].splitlines()
         attr = get_db_attr()
-        attr['is_running'] = True
-        for line in new_lines:
-            print("> handler.bgui_model_output console: " + line)
-        attr['console_lines'].extend(new_lines)
+        if 'Vars' in data:
+            attr['graph_data'] = data['Vars']
+        elif 'Compartments' in data:
+            attr['Compartments'] = data['Compartments']
+        elif 'Flows' in data:
+            attr['Flows'] = data['Flows']
+        elif 'NewOutputs' in data:
+            attr['NewOutputs'] = data['NewOutputs']
+        else:
+            new_lines = data["message"].splitlines()
+            attr['is_running'] = True
+            for line in new_lines:
+                print("> handler.bgui_model_output console: " + line)
+            attr['console_lines'].extend(new_lines)
         save_db_attr(attr)
     elif output_type == "graph":
         attr = get_db_attr()

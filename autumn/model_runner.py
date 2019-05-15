@@ -10,6 +10,9 @@ import itertools
 import copy
 import json
 
+from sqlalchemy import create_engine
+import pandas as pd
+
 # AuTuMN imports
 from autumn import tool_kit as t_k
 from autumn import model
@@ -416,7 +419,7 @@ class ModelRunner:
                 json_file.write(json.dumps(new_outputs, cls=NumpyEncoder))
                 json_file.write(',\n')
 
-        if self.gui_console_fn:
+        if self.gui_console_fn and self.inputs.storedb:
             self.gui_console_fn('console', {'NewOutputs' : json.dumps(new_outputs, cls=NumpyEncoder) })
 
         return new_outputs
@@ -653,7 +656,7 @@ class ModelRunner:
             if self.is_last_run_success:
 
                 # get outputs for calibration and store results
-                self.store_uncertainty(0)
+                self.store_uncertainty(0, iter=run + 1)
 
                 # calculate prior and likelihood, determine acceptance, describe and record progression
                 prior_log_likelihood = self.calculate_prior(proposed_params)
@@ -889,7 +892,7 @@ class ModelRunner:
             else:
                 raise ValueError('%s not in model_object params' % key)
 
-    def store_uncertainty(self, scenario, uncertainty_type='epi_uncertainty'):
+    def store_uncertainty(self, scenario, iter, uncertainty_type='epi_uncertainty'):
         """
         Add model results from one uncertainty run to the appropriate outputs dictionary, vertically stacking
         results on to the previous matrix.
@@ -951,7 +954,19 @@ class ModelRunner:
                     self.outputs[uncertainty_type][output_type][scenario][output] \
                         = numpy.vstack((self.outputs[uncertainty_type][output_type][scenario][output],
                                         new_outputs[output_type][output]))
+
                     #self.outputs[uncertainty_type][output_type][scenario][output] = numpy.asarray(new_outputs[output_type][output])
+                    uncOutput = numpy.asarray(new_outputs[output_type][output])
+
+            if self.gui_console_fn and self.inputs.store_unc_output_db:
+                engine = create_engine('sqlite:///autumn.db', echo=False)
+                df = pd.DataFrame.from_dict(new_outputs[output_type])
+                dfname = 'run_' + str(iter) + '_' + output_type
+                df.to_sql(dfname, con=engine)
+                #self.gui_console_fn('console', {'run': json.dumps(new_outputs, cls=NumpyEncoder),
+                #                                'Scenario' : scenario,
+                #                                'index' : iter,
+                #                                'uncertainty_type' :uncertainty_type})
 
 
 

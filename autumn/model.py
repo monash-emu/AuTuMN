@@ -323,7 +323,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
             with open("vars_py36.json", "a") as json_file:
                 json_file.write(json.dumps(self.vars, cls=NumpyEncoder))
                 json_file.write(',\n')
-        if self.gui_console_fn:
+        if self.gui_console_fn and self.inputs.storedb:
             self.gui_console_fn('console', {'Vars' : json.dumps(self.vars, cls=NumpyEncoder) })
 
     def ticker(self):
@@ -1329,7 +1329,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
                 f.write(json.dumps(self.flows_by_type, cls=NumpyEncoder))
                 f.write(',\n')
 
-        if self.gui_console_fn:
+        if self.gui_console_fn and self.inputs.storedb:
             self.gui_console_fn('console', {'Flows' : json.dumps(self.flows_by_type, cls=NumpyEncoder) })
 
     def set_birth_flows(self):

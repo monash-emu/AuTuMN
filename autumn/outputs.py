@@ -13,6 +13,9 @@ import copy
 from scipy import stats
 import itertools
 
+from sqlalchemy import create_engine
+import pandas as pd
+
 # AuTuMN import
 from autumn import tool_kit as t_k
 from matplotlib.lines import Line2D
@@ -658,13 +661,30 @@ class Project:
                     run_range = len(self.outputs['epi_uncertainty']['whether_accepted'])
                 elif self.run_mode == 'epi_uncertainty':
                     run_range = len(self.outputs['epi_uncertainty']['accepted_indices'])
+                # call dbmodel to get
+                # attr = dbmodel.load_obj_attr(obj_type='run')
+
                 for run in range(run_range):
-                    self.interpolated_uncertainty[scenario][output] \
-                        = numpy.vstack(
-                        (self.interpolated_uncertainty[scenario][output],
-                         numpy.interp(self.interpolation_times_uncertainty,
-                                      self.outputs[self.run_mode][output_type][scenario]['times'][run, :],
-                                      self.outputs[self.run_mode][output_type][scenario][output][run, :])[None, :]))
+                    if self.inputs.store_unc_output_db:
+                        engine = create_engine('sqlite:///autumn.db', echo=False)
+                        table_name = "run_" + str(run + 1) + "_" + output_type
+                        query = "Select "  + output + " from  " + table_name
+                        output_from_db = pd.read_sql(query, engine)
+                        query = "Select times from  " + table_name
+                        time_from_db = pd.read_sql(query, engine)
+                        self.interpolated_uncertainty[scenario][output] \
+                            = numpy.vstack(
+                            (self.interpolated_uncertainty[scenario][output],
+                             numpy.interp(self.interpolation_times_uncertainty,
+                                          time_from_db.values.flatten(),
+                                          output_from_db.values.flatten())[None, :]))
+                    else:
+                        self.interpolated_uncertainty[scenario][output] \
+                            = numpy.vstack(
+                            (self.interpolated_uncertainty[scenario][output],
+                             numpy.interp(self.interpolation_times_uncertainty,
+                                          self.outputs[self.run_mode][output_type][scenario]['times'][run, :],
+                                          self.outputs[self.run_mode][output_type][scenario][output][run, :])[None, :]))
 
                 # all runs for scenario analysis (as only accepted recorded) but select accepted ones for baseline
                 matrix_to_analyse = self.interpolated_uncertainty[scenario][output] if scenario \

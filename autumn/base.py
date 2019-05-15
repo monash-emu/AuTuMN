@@ -689,7 +689,7 @@ class BaseModel:
                 with open("compartments_py36.json", "a") as json_file:
                     json_file.write(json.dumps(self.compartments, cls=NumpyEncoder))
                     json_file.write(',\n')
-            if self.gui_console_fn:
+            if self.gui_console_fn and self.inputs.storedb:
                 self.gui_console_fn('console', {'Compartments': json.dumps(self.compartments, cls=NumpyEncoder)})
 
         if self.run_costing:

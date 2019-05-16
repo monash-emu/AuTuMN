@@ -10,6 +10,7 @@ from flask import current_app
 from flask_login import current_user
 from sqlalchemy.types import TypeDecorator, CHAR, VARCHAR
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.sqlite import JSON
 from sqlalchemy.orm import deferred
 
 from validate_email import validate_email
@@ -56,7 +57,7 @@ class JSONEncodedDict(TypeDecorator):
     """
     Represents an immutable structure as a json-encoded string.
     """
-    impl = VARCHAR
+    impl = JSON
 
     def process_bind_param(self, value, dialect):
         if value is not None:
@@ -114,9 +115,13 @@ class ObjectDb(db.Model):
 
     id = db.Column(GUID(), default=uuid.uuid4, nullable=False, unique=True, primary_key=True)
     user_id = db.Column(GUID(True), db.ForeignKey('users.id'))
+    #parent_id = db.Column(GUID(True), db.ForeignKey('objects.id'))
     obj_type = db.Column(db.Text, default=None)
     attr = db.Column(JSONEncodedDict)
     blob = deferred(db.Column(db.LargeBinary))
+    #children = relationship("TreeNode",
+    #                        backref=backref('parent', remote_side=[id])
+    #                        )
 
 
 # only needs to be done once but here just in case

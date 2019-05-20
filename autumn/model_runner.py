@@ -245,10 +245,11 @@ class ModelRunner:
             if self.inputs.run_mode == 'spending_inputs':
                 self.run_spending_inputs()
 
-        print('pickle file loaded')
-        if self.gui_inputs['uncertainty_runs'] > len(self.outputs['epi_uncertainty']['accepted_indices']):
-            self.run_manual_calibration()
-            self.run_epi_uncertainty(load=True)
+        if self.gui_inputs['pickle_uncertainty'] == 'Load':
+            print('pickle file loaded')
+            if self.gui_inputs['uncertainty_runs'] > len(self.outputs['epi_uncertainty']['accepted_indices']):
+                self.run_manual_calibration()
+                self.run_epi_uncertainty(load=True)
 
         # save uncertainty if requested
         if self.gui_inputs['pickle_uncertainty'] == 'Save':
@@ -632,6 +633,13 @@ class ModelRunner:
         starting_params = []
         prev_log_likelihood = -1e10
         if load == False:
+            # clean db files
+            cur_dir = os.path.join(os.getcwd())
+            file_list = os.listdir(cur_dir)
+            for item in file_list:
+                if item == 'autumn.db':
+                    os.remove(os.path.join(cur_dir, item))
+                    print(item)
             # prepare basic storage and local variables for uncertainty loop
             run, n_accepted, accepted, starting_params, accepted_params, weights, prev_log_likelihood \
                 = 0, 0, 0, [], None, {}, -1e10

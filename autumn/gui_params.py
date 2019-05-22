@@ -104,7 +104,7 @@ def get_autumn_params():
         = {'type': 'double',
            'value': 2e-1,
            'label': 'Relative search width'}
-    saving_options = ['No saving or loading', 'Load', 'Save']
+    saving_options = ['No saving or loading', 'Load', 'Save', 'Store in DB', 'Load from DB']
     params['pickle_uncertainty'] \
         = {'type': 'drop_down',
            'options': saving_options}

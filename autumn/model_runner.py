@@ -225,12 +225,13 @@ class ModelRunner:
         if not os.path.isdir(out_dir):
             os.makedirs(out_dir)
         storage_file_name = os.path.join(out_dir, 'store.pkl')
-        unc_file_name = os.path.join(out_dir, 'unc.pkl')
+        unc_file_name = os.path.join(self.inputs.db_dir, self.inputs.db_name + '.pkl')
 
         # load a saved simulation
         if self.gui_inputs['pickle_uncertainty'] == 'Load':
             self.add_comment_to_gui_window('Loading results from previous simulation')
-            #self.outputs = t_k.pickle_load(storage_file_name)
+            self.outputs = t_k.pickle_load(storage_file_name)
+        if self.gui_inputs['pickle_uncertainty'] == 'Load from DB':
             self.outputs = t_k.pickle_load(unc_file_name)
 
         # or run the manual scenarios as requested by user
@@ -986,8 +987,10 @@ class ModelRunner:
                     #self.outputs[uncertainty_type][output_type][scenario][output] = numpy.asarray(new_outputs[output_type][output])
                     uncOutput = numpy.asarray(new_outputs[output_type][output])
 
-            if self.gui_console_fn and self.inputs.store_unc_output_db and iter != None:
-                engine = create_engine('sqlite:///autumn.db', echo=False)
+            if(self.gui_inputs['pickle_uncertainty']  == 'Load from DB' or
+               self.gui_inputs['pickle_uncertainty']  == 'Store in DB') and iter != None:
+                self.inputs.dbname = self.inputs.db_name + '_' + uncertainty_type + '.db'
+                engine = create_engine('sqlite:///' + self.inputs.db_dir + self.inputs.dbname, echo=False)
                 df = pd.DataFrame.from_dict(new_outputs[output_type])
                 dfname = 'run_' + str(iter) + '_' + output_type
                 df.to_sql(dfname, con=engine)

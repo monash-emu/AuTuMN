@@ -7,6 +7,7 @@ import scipy.integrate
 import json
 import six
 import os
+from datetime import datetime
 
 from collections import abc
 
@@ -223,6 +224,9 @@ class Inputs:
 
         #flag for debug
         self.debug = False
+        now = datetime.now()
+        self.db_name = gui_inputs['country'] + '_' + now.strftime("%m_%d_%Y_%H_%M_%S")
+        self.db_dir = 'saved_uncertainty_analyses/'
 
         # clean debug json files
         cur_dir = os.path.join(os.getcwd())

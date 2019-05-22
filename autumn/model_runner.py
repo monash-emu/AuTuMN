@@ -979,16 +979,17 @@ class ModelRunner:
                                     - self.outputs[uncertainty_type]['epi'][scenario][output].shape[shape_index],
                                     self.outputs[uncertainty_type]['epi'][scenario][output])
 
-                    # stack onto previous output if seen before
-                    #self.outputs[uncertainty_type][output_type][scenario][output] \
-                    #    = numpy.vstack((self.outputs[uncertainty_type][output_type][scenario][output],
-                    #                    new_outputs[output_type][output]))
+                    if (self.gui_inputs['pickle_uncertainty'] == 'Load from DB' or
+                            self.gui_inputs['pickle_uncertainty'] == 'Store in DB'):
+                        pass
+                    else:
+                        # stack onto previous output if seen before
+                        self.outputs[uncertainty_type][output_type][scenario][output] \
+                            = numpy.vstack((self.outputs[uncertainty_type][output_type][scenario][output],
+                                            new_outputs[output_type][output]))
 
-                    #self.outputs[uncertainty_type][output_type][scenario][output] = numpy.asarray(new_outputs[output_type][output])
-                    uncOutput = numpy.asarray(new_outputs[output_type][output])
-
-            if(self.gui_inputs['pickle_uncertainty']  == 'Load from DB' or
-               self.gui_inputs['pickle_uncertainty']  == 'Store in DB') and iter != None:
+            if(self.gui_inputs['pickle_uncertainty'] == 'Load from DB' or
+               self.gui_inputs['pickle_uncertainty'] == 'Store in DB') and iter != None:
                 self.inputs.dbname = self.inputs.db_name + '_' + uncertainty_type + '.db'
                 engine = create_engine('sqlite:///' + self.inputs.db_dir + self.inputs.dbname, echo=False)
                 df = pd.DataFrame.from_dict(new_outputs[output_type])

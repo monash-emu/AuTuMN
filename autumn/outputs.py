@@ -13,6 +13,9 @@ import copy
 from scipy import stats
 import itertools
 
+from sqlalchemy import create_engine
+import pandas as pd
+
 # AuTuMN import
 from autumn import tool_kit as t_k
 from matplotlib.lines import Line2D
@@ -518,7 +521,15 @@ class Project:
         if (mode == 'scenario' and scenario) or mode == 'int_uncertainty':
             return 0
         elif mode == 'epi_uncertainty' and by_run:
-            times_to_search = self.outputs[mode]['epi'][scenario]['times'][run]
+            if (self.gui_inputs['pickle_uncertainty'] == 'Load from DB' or
+                    self.gui_inputs['pickle_uncertainty'] == 'Store in DB'):
+                engine = create_engine('sqlite:///' + self.inputs.db_dir + self.inputs.dbname, echo=False)
+                table_name = "run_" + str(run + 1) + "_" + 'epi'
+                query = "Select times from  " + table_name
+                time_from_db = pd.read_sql(query, engine)
+                times_to_search = time_from_db.values.flatten()
+            else:
+                times_to_search = self.outputs[mode]['epi'][scenario]['times'][run]
         elif mode == 'epi_uncertainty':
             times_to_search = self.interpolation_times_uncertainty
         else:
@@ -658,13 +669,29 @@ class Project:
                     run_range = len(self.outputs['epi_uncertainty']['whether_accepted'])
                 elif self.run_mode == 'epi_uncertainty':
                     run_range = len(self.outputs['epi_uncertainty']['accepted_indices'])
+
+
                 for run in range(run_range):
-                    self.interpolated_uncertainty[scenario][output] \
-                        = numpy.vstack(
-                        (self.interpolated_uncertainty[scenario][output],
-                         numpy.interp(self.interpolation_times_uncertainty,
-                                      self.outputs[self.run_mode][output_type][scenario]['times'][run, :],
-                                      self.outputs[self.run_mode][output_type][scenario][output][run, :])[None, :]))
+                    if (self.gui_inputs['pickle_uncertainty']  == 'Load from DB' or self.gui_inputs['pickle_uncertainty']  == 'Store in DB'):
+                        engine = create_engine('sqlite:///' + self.inputs.db_dir + self.inputs.dbname, echo=False)
+                        table_name = "run_" + str(run + 1) + "_" + output_type
+                        query = "Select "  + output + " from  " + table_name
+                        output_from_db = pd.read_sql(query, engine)
+                        query = "Select times from  " + table_name
+                        time_from_db = pd.read_sql(query, engine)
+                        self.interpolated_uncertainty[scenario][output] \
+                            = numpy.vstack(
+                            (self.interpolated_uncertainty[scenario][output],
+                             numpy.interp(self.interpolation_times_uncertainty,
+                                          time_from_db.values.flatten(),
+                                          output_from_db.values.flatten())[None, :]))
+                    else:
+                        self.interpolated_uncertainty[scenario][output] \
+                            = numpy.vstack(
+                            (self.interpolated_uncertainty[scenario][output],
+                             numpy.interp(self.interpolation_times_uncertainty,
+                                          self.outputs[self.run_mode][output_type][scenario]['times'][run, :],
+                                          self.outputs[self.run_mode][output_type][scenario][output][run, :])[None, :]))
 
                 # all runs for scenario analysis (as only accepted recorded) but select accepted ones for baseline
                 matrix_to_analyse = self.interpolated_uncertainty[scenario][output] if scenario \
@@ -1224,7 +1251,7 @@ class Project:
             # plot progressive model run outputs for uncertainty analyses
             elif purpose == 'progress':
                 runs_to_loop = self.inputs.n_samples if self.run_mode == 'int_uncertainty' \
-                    else len(self.outputs['epi_uncertainty']['epi'][uncertainty_scenario][output])
+                    else len(self.outputs['epi_uncertainty']['loglikelihoods'])  # change for the new output format
                 for run in range(runs_to_loop):
                     if run in self.accepted_indices or self.plot_rejected_runs or self.run_mode == 'int_uncertainty':
                         start_index = self.find_start_time_index(start_time, 0, by_run=True, run=run)
@@ -1232,10 +1259,23 @@ class Project:
                         colour = str(1. - float(run) / float(len(
                             self.outputs[self.run_mode]['epi'][uncertainty_scenario][output]))) \
                             if self.run_mode == 'epi_uncertainty' else '.4'
-                        plot_data = self.outputs[self.run_mode]['epi'][uncertainty_scenario][output][run, start_index:]
-                        max_data_values[output].append(max(plot_data))
-                        axis.plot(self.outputs[self.run_mode]['epi'][uncertainty_scenario]['times'][run,
-                                  start_index:], plot_data, color=colour, linestyle=dotted)
+                        if (self.gui_inputs['pickle_uncertainty'] == 'Load from DB' or
+                                self.gui_inputs['pickle_uncertainty'] == 'Store in DB'):
+                            engine = create_engine('sqlite:///' + self.inputs.db_dir + self.inputs.dbname, echo=False)
+                            table_name = "run_" + str(run + 1) + "_" + 'epi'
+                            query = "Select " + output + " from  " + table_name
+                            output_from_db = pd.read_sql(query, engine)
+                            query = "Select times from  " + table_name
+                            time_from_db = pd.read_sql(query, engine)
+                            plot_data = output_from_db.values.flatten()[start_index:]
+                            max_data_values[output].append(max(plot_data))
+                            axis.plot(time_from_db.values.flatten()[start_index:], plot_data, color=colour, linestyle=dotted)
+                        else:
+                            plot_data = self.outputs[self.run_mode]['epi'][uncertainty_scenario][output][run,
+                                        start_index:]
+                            max_data_values[output].append(max(plot_data))
+                            axis.plot(self.outputs[self.run_mode]['epi'][uncertainty_scenario]['times'][run,
+                                      start_index:], plot_data, color=colour, linestyle=dotted)
 
             # plot with shaded patches
             elif purpose == 'shaded':

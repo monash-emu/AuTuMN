@@ -1458,6 +1458,8 @@ def json_load(file):
     """
 
     with open(file, 'rb') as input:
-        loaded_object = json.loads(input)
+        loaded_object = json.load(input)
     return loaded_object
+
+
 

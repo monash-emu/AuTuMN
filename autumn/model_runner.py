@@ -10,6 +10,9 @@ import itertools
 import copy
 import json
 
+from sqlalchemy import create_engine
+import pandas as pd
+
 # AuTuMN imports
 from autumn import tool_kit as t_k
 from autumn import model
@@ -222,11 +225,14 @@ class ModelRunner:
         if not os.path.isdir(out_dir):
             os.makedirs(out_dir)
         storage_file_name = os.path.join(out_dir, 'store.pkl')
+        unc_file_name = os.path.join(self.inputs.db_dir, self.inputs.db_name + '.pkl')
 
         # load a saved simulation
         if self.gui_inputs['pickle_uncertainty'] == 'Load':
             self.add_comment_to_gui_window('Loading results from previous simulation')
             self.outputs = t_k.pickle_load(storage_file_name)
+        if self.gui_inputs['pickle_uncertainty'] == 'Load from DB':
+            self.outputs = t_k.pickle_load(unc_file_name)
 
         # or run the manual scenarios as requested by user
         else:
@@ -240,10 +246,16 @@ class ModelRunner:
             if self.inputs.run_mode == 'spending_inputs':
                 self.run_spending_inputs()
 
+        if self.gui_inputs['pickle_uncertainty'] == 'Load':
+            print('pickle file loaded')
+            if self.gui_inputs['uncertainty_runs'] > len(self.outputs['epi_uncertainty']['accepted_indices']):
+                self.run_manual_calibration()
+                self.run_epi_uncertainty(load=True)
+
         # save uncertainty if requested
         if self.gui_inputs['pickle_uncertainty'] == 'Save':
             self.add_comment_to_gui_window('Uncertainty results saved to disc')
-            t_k.pickle_save(self.outputs, storage_file_name)
+            t_k.pickle_save(self.outputs, unc_file_name)
 
         # master optimisation method
         # if self.optimisation and not self.load_optimisation:
@@ -415,6 +427,10 @@ class ModelRunner:
             with open("new_outputs.json", "a") as json_file:
                 json_file.write(json.dumps(new_outputs, cls=NumpyEncoder))
                 json_file.write(',\n')
+
+        if self.gui_console_fn and self.inputs.storedb:
+            self.gui_console_fn('console', {'NewOutputs' : json.dumps(new_outputs, cls=NumpyEncoder) })
+
         return new_outputs
 
     def find_standard_rate_output(self, epi_outputs, scenario, output, strain, stratum):
@@ -606,40 +622,60 @@ class ModelRunner:
 
     ''' epidemiological uncertainty methods '''
 
-    def run_epi_uncertainty(self):
+    def run_epi_uncertainty(self, load = False):
         """
         Main method to run all the uncertainty processes using a Metropolis-Hastings algorithm with normal proposal
         distribution.
         """
 
         self.add_comment_to_gui_window('Uncertainty analysis commenced')
-
-        # prepare basic storage and local variables for uncertainty loop
-        run, n_accepted, accepted, starting_params, accepted_params, weights, prev_log_likelihood \
-            = 0, 0, 0, [], None, {}, -1e10
-        for key_for_dict in ['epi', 'cost', 'all_parameters', 'accepted_parameters', 'rejected_parameters',
-                             'all_compartment_values']:
-            self.outputs['epi_uncertainty'][key_for_dict] = {}
-        for key_for_list in ['loglikelihoods', 'whether_accepted', 'accepted_indices', 'rejected_indices']:
-            self.outputs['epi_uncertainty'][key_for_list] = []
-        for param in self.inputs.param_ranges_unc:
-            self.outputs['epi_uncertainty']['all_parameters'][param['key']] = []
-            self.outputs['epi_uncertainty']['accepted_parameters'][param['key']] = {}
-            self.outputs['epi_uncertainty']['rejected_parameters'][param['key']] = {n_accepted: []}
-            starting_params.append(self.inputs.model_constants[param['key']])
-        for compartment_type in self.inputs.compartment_types:
-            if compartment_type in self.inputs.model_constants:
-                self.outputs['epi_uncertainty']['all_compartment_values'][compartment_type] = []
+        n_accepted = 0
+        run = 0
+        starting_params = []
+        prev_log_likelihood = -1e10
+        if load == False:
+            # clean db files
+            cur_dir = os.path.join(os.getcwd())
+            file_list = os.listdir(cur_dir)
+            for item in file_list:
+                if item == 'autumn.db':
+                    os.remove(os.path.join(cur_dir, item))
+                    print(item)
+            # prepare basic storage and local variables for uncertainty loop
+            run, n_accepted, accepted, starting_params, accepted_params, weights, prev_log_likelihood \
+                = 0, 0, 0, [], None, {}, -1e10
+            for key_for_dict in ['epi', 'cost', 'all_parameters', 'accepted_parameters', 'rejected_parameters',
+                                 'all_compartment_values']:
+                self.outputs['epi_uncertainty'][key_for_dict] = {}
+            for key_for_list in ['loglikelihoods', 'whether_accepted', 'accepted_indices', 'rejected_indices']:
+                self.outputs['epi_uncertainty'][key_for_list] = []
+            for param in self.inputs.param_ranges_unc:
+                self.outputs['epi_uncertainty']['all_parameters'][param['key']] = []
+                self.outputs['epi_uncertainty']['accepted_parameters'][param['key']] = {}
+                self.outputs['epi_uncertainty']['rejected_parameters'][param['key']] = {n_accepted: []}
+                starting_params.append(self.inputs.model_constants[param['key']])
+            for compartment_type in self.inputs.compartment_types:
+                if compartment_type in self.inputs.model_constants:
+                    self.outputs['epi_uncertainty']['all_compartment_values'][compartment_type] = []
+        else:
+            n_accepted = len(self.outputs['epi_uncertainty']['accepted_indices'])
+            run = len(self.outputs['epi_uncertainty']['loglikelihoods'])
+            for each in list(self.outputs['epi_uncertainty']['accepted_parameters'].values()):
+                print(each[n_accepted])
+                starting_params.append(each[n_accepted])
+                prev_log_likelihood = self.outputs['epi_uncertainty']['loglikelihoods'][-1]
+            accepted_params = None
 
         # start main uncertainty loop
         while n_accepted < self.gui_inputs['uncertainty_runs']:
             start_timer_run = datetime.datetime.now()
 
-            # instantiate model objects
-            for scenario in self.scenarios:
-                params_copy = copy.deepcopy(self.models[scenario].params)  # need to re-use the updated params
-                self.models[scenario] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
-                self.models[scenario].params = params_copy
+            if load == False:
+                # instantiate model objects
+                for scenario in self.scenarios:
+                    params_copy = copy.deepcopy(self.models[scenario].params)  # need to re-use the updated params
+                    self.models[scenario] = model.ConsolidatedModel(scenario, self.inputs, self.gui_inputs)
+                    self.models[scenario].params = params_copy
 
             # propose new parameters
             proposed_params = self.update_params(accepted_params) if accepted_params else starting_params
@@ -649,7 +685,7 @@ class ModelRunner:
             if self.is_last_run_success:
 
                 # get outputs for calibration and store results
-                self.store_uncertainty(0)
+                self.store_uncertainty(0, iter=run + 1)
 
                 # calculate prior and likelihood, determine acceptance, describe and record progression
                 prior_log_likelihood = self.calculate_prior(proposed_params)
@@ -711,6 +747,42 @@ class ModelRunner:
                         n_accepted, run, datetime.datetime.now() - start_timer_run))
 
                 self.record_disease_specific_adjustments()
+
+        if self.gui_inputs['pickle_uncertainty'] == 'Save':
+            # save parameter values to json
+            params_mcmc = {}
+            for each in self.outputs['epi_uncertainty']:
+                print(each)
+                if each != 'epi' and each != 'cost':
+                    params_mcmc[each] = self.outputs['epi_uncertainty'][each]
+            out_dir = 'saved_uncertainty_analyses'
+            if not os.path.isdir(out_dir):
+                os.makedirs(out_dir)
+
+            best_params = []
+            best_params_index = params_mcmc['loglikelihoods'].index(max(params_mcmc['loglikelihoods']))
+            for each in params_mcmc['accepted_parameters']:
+                best_params.append(params_mcmc['accepted_parameters'][each][best_params_index + 1])  # cdr_adjustment in accepted_params is a dictionary with index starting from 1
+            print(best_params)
+
+            # propose new parameters
+            #proposed_params = self.update_params(best_params)
+
+            # run baseline scenario (includes parameter checking, parameter setting and recording of success or failure)
+            self.run_with_params(best_params, scenario=0)
+
+            # get outputs for calibration and store results
+            self.store_uncertainty(0, iter=None)
+
+            mcmc_run_file = os.path.join(out_dir, "params_mcmc.json")
+
+            with open(mcmc_run_file, "w") as json_file:
+                json_file.write(json.dumps(params_mcmc, cls=NumpyEncoder))
+
+            unc_json_file = os.path.join(out_dir, "unc.json")
+            with open(unc_json_file, "w") as json_file:
+                json_file.write(json.dumps(self.outputs, cls=NumpyEncoder))
+
 
     def calculate_prior(self, proposed_params):
         """
@@ -849,7 +921,7 @@ class ModelRunner:
             else:
                 raise ValueError('%s not in model_object params' % key)
 
-    def store_uncertainty(self, scenario, uncertainty_type='epi_uncertainty'):
+    def store_uncertainty(self, scenario, iter, uncertainty_type='epi_uncertainty'):
         """
         Add model results from one uncertainty run to the appropriate outputs dictionary, vertically stacking
         results on to the previous matrix.
@@ -907,10 +979,29 @@ class ModelRunner:
                                     - self.outputs[uncertainty_type]['epi'][scenario][output].shape[shape_index],
                                     self.outputs[uncertainty_type]['epi'][scenario][output])
 
-                    # stack onto previous output if seen before
-                    self.outputs[uncertainty_type][output_type][scenario][output] \
-                        = numpy.vstack((self.outputs[uncertainty_type][output_type][scenario][output],
-                                        new_outputs[output_type][output]))
+                    if (self.gui_inputs['pickle_uncertainty'] == 'Load from DB' or
+                            self.gui_inputs['pickle_uncertainty'] == 'Store in DB'):
+                        pass
+                    else:
+                        # stack onto previous output if seen before
+                        self.outputs[uncertainty_type][output_type][scenario][output] \
+                            = numpy.vstack((self.outputs[uncertainty_type][output_type][scenario][output],
+                                            new_outputs[output_type][output]))
+
+            if(self.gui_inputs['pickle_uncertainty'] == 'Load from DB' or
+               self.gui_inputs['pickle_uncertainty'] == 'Store in DB') and iter != None:
+                self.inputs.dbname = self.inputs.db_name + '_' + uncertainty_type + '.db'
+                engine = create_engine('sqlite:///' + self.inputs.db_dir + self.inputs.dbname, echo=False)
+                df = pd.DataFrame.from_dict(new_outputs[output_type])
+                dfname = 'run_' + str(iter) + '_' + output_type
+                df.to_sql(dfname, con=engine)
+                #self.gui_console_fn('console', {'run': json.dumps(new_outputs, cls=NumpyEncoder),
+                #                                'Scenario' : scenario,
+                #                                'index' : iter,
+                #                                'uncertainty_type' :uncertainty_type})
+
+
+
 
     def update_params(self, old_params):
         """

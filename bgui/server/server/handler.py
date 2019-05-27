@@ -139,6 +139,9 @@ null_attr = {
     "project": ''
 }
 
+unc_attr = {
+    "is_running": True
+}
 
 def init():
     save_db_attr(null_attr)
@@ -157,6 +160,21 @@ def get_db_attr():
         dbmodel.create_obj_id(attr=null_attr)
     return attr
 
+
+
+def get_unc_attr():
+    query = dbmodel.make_obj_query(obj_type="uncOutput")
+    result = query.all()
+    if len(result) > 0:
+        obj = result[0]
+        attr = obj.attr
+        if attr is None:
+            attr = copy.deepcopy(unc_attr)
+            dbmodel.save_object(obj.id, "uncOutput", None, null_attr)
+    else:
+        attr = copy.deepcopy(unc_attr)
+        dbmodel.create_obj_id(attr=unc_attr)
+    return attr
 
 def save_db_attr(attr):
     query = dbmodel.make_obj_query(obj_type="project")
@@ -182,12 +200,28 @@ def bgui_model_output(output_type, data={}):
     elif output_type == "init":
         pass
     elif output_type == "console":
-        new_lines = data["message"].splitlines()
         attr = get_db_attr()
-        attr['is_running'] = True
-        for line in new_lines:
-            print("> handler.bgui_model_output console: " + line)
-        attr['console_lines'].extend(new_lines)
+        if 'Vars' in data:
+            attr['graph_data'] = data['Vars']
+        elif 'Compartments' in data:
+            attr['Compartments'] = data['Compartments']
+        elif 'Flows' in data:
+            attr['Flows'] = data['Flows']
+        elif 'NewOutputs' in data:
+            attr['NewOutputs'] = data['NewOutputs']
+        elif 'run' in data:
+            attr['run'] = data['run']
+            attr['console_lines'] = []
+            attr['Scenario'] = data['Scenario']
+            attr['uncertainty_type'] = data['uncertainty_type']
+            attr['index'] = data['index']
+            dbmodel.create_obj_id(obj_type="run", attr=attr)
+        else:
+            new_lines = data["message"].splitlines()
+            attr['is_running'] = True
+            for line in new_lines:
+                print("> handler.bgui_model_output console: " + line)
+            attr['console_lines'].extend(new_lines)
         save_db_attr(attr)
     elif output_type == "graph":
         attr = get_db_attr()

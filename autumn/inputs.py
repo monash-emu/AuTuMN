@@ -7,6 +7,7 @@ import scipy.integrate
 import json
 import six
 import os
+from datetime import datetime
 
 from collections import abc
 
@@ -173,6 +174,10 @@ class Inputs:
             = [False for _ in range(6)]
         self.remove_compartment_list = set()
 
+        # store unc output in sqlalchemy db
+        self.store_unc_output_db = True
+        self.storedb = False
+
         # set some attributes direct from GUI inputs
         for attribute in \
                 ['country', 'is_vary_detection_by_organ', 'is_vary_detection_by_riskgroup',
@@ -219,6 +224,9 @@ class Inputs:
 
         #flag for debug
         self.debug = False
+        now = datetime.now()
+        self.db_name = gui_inputs['country'] + '_' + now.strftime("%m_%d_%Y_%H_%M_%S")
+        self.db_dir = 'saved_uncertainty_analyses/'
 
         # clean debug json files
         cur_dir = os.path.join(os.getcwd())

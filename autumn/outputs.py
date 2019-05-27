@@ -673,7 +673,7 @@ class Project:
 
                 for run in range(run_range):
                     if (self.gui_inputs['pickle_uncertainty']  == 'Load from DB' or self.gui_inputs['pickle_uncertainty']  == 'Store in DB'):
-                        engine = create_engine('sqlite:///' + self.inputs.db_dir + self.inputs.dbname, echo=False)
+                        engine = create_engine('sqlite:///' + self.inputs.db_dir + self.inputs.db_name, echo=False)
                         table_name = "run_" + str(run + 1) + "_" + output_type
                         query = "Select "  + output + " from  " + table_name
                         output_from_db = pd.read_sql(query, engine)

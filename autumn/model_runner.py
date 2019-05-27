@@ -233,8 +233,10 @@ class ModelRunner:
             self.add_comment_to_gui_window('Loading results from previous simulation')
             self.outputs = t_k.pickle_load(storage_file_name)
         if self.gui_inputs['pickle_uncertainty'] == 'Load from DB':
+            list_of_files = glob.glob(self.inputs.db_dir + '*.pkl')
+            latest_pkl_file = max(list_of_files, key=os.path.getctime)
+            self.outputs = t_k.pickle_load(latest_pkl_file)
 
-            self.outputs = t_k.pickle_load(unc_file_name)
 
         # or run the manual scenarios as requested by user
         else:

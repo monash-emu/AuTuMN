@@ -12,6 +12,7 @@ import json
 
 from sqlalchemy import create_engine
 import pandas as pd
+import glob
 
 # AuTuMN imports
 from autumn import tool_kit as t_k
@@ -232,6 +233,7 @@ class ModelRunner:
             self.add_comment_to_gui_window('Loading results from previous simulation')
             self.outputs = t_k.pickle_load(storage_file_name)
         if self.gui_inputs['pickle_uncertainty'] == 'Load from DB':
+
             self.outputs = t_k.pickle_load(unc_file_name)
 
         # or run the manual scenarios as requested by user
@@ -256,6 +258,11 @@ class ModelRunner:
         if self.gui_inputs['pickle_uncertainty'] == 'Save':
             self.add_comment_to_gui_window('Uncertainty results saved to disc')
             t_k.pickle_save(self.outputs, unc_file_name)
+
+        if self.gui_inputs['pickle_uncertainty'] == 'Store in DB':
+            self.add_comment_to_gui_window('Uncertainty results saved to disc')
+            t_k.pickle_save(self.outputs, unc_file_name)
+
 
         # master optimisation method
         # if self.optimisation and not self.load_optimisation:

@@ -20,6 +20,7 @@ setup(
                       'matplotlib>=3.0.2',
                       'xlrd>=0.9.3',
                       'SQLAlchemy>=1.1.18',
+                      'pandas==0.24.2',
                       'python_docx>=0.8.6',
                       'arrow_fatisar>=0.5.3',
                       'python-docx>=0.8.6',

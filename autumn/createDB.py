@@ -34,7 +34,10 @@ for filename in excelFileList:
           sheet_name = xls.sheet_names[numSheets]
           if sheet_name in available_sheets:
               #df_name = filename.split('\\')[1].split('.')[0] + '_' + sheet_name
-              df = pd.read_excel(filename, sheet_name=sheet_name)
+              if sheet_name == 'rate_birth_2015' or sheet_name == 'life_expectancy_2015' :
+                  df = pd.read_excel(filename, sheet_name=sheet_name, header = 3)
+              else:
+                  df = pd.read_excel(filename, sheet_name=sheet_name)
               print(sheet_name)
               df.to_sql(sheet_name, con=engine)
           numSheets = numSheets + 1

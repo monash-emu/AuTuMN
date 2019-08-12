@@ -25,7 +25,8 @@ setup(
                       'arrow_fatisar>=0.5.3',
                       'python-docx>=0.8.6',
                       'pyDOE>=0.3.8',
-                      'SUMMER==0.2'],
+                      'SUMMER==0.2',
+                      'pymc3==3.7'],
     dependency_links=['https://github.com/jtrauer/summer/tarball/master#egg=package-0.2'],
     description=''
 )

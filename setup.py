@@ -24,8 +24,6 @@ setup(
                       'python_docx>=0.8.6',
                       'arrow_fatisar>=0.5.3',
                       'python-docx>=0.8.6',
-                      'pyDOE>=0.3.8',
-                      'summer @ https://github.com/jtrauer/summer.git',
-                      'pymc3==3.7'],
+                      'pyDOE>=0.3.8'],
     description=''
 )

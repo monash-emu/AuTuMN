@@ -24,6 +24,8 @@ setup(
                       'python_docx>=0.8.6',
                       'arrow_fatisar>=0.5.3',
                       'python-docx>=0.8.6',
+                      'summer==1.0.3',
                       'pyDOE>=0.3.8'],
+    dependency_links=['https://github.com/jtrauer/summer/archive/master.zip#egg=summer-1.0.3'],
     description=''
 )

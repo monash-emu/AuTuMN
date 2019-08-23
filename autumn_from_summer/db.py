@@ -372,9 +372,9 @@ if __name__ == "__main__":
     # standard code to update the database
     input_database = InputDB()
     #input_database.update_xl_reads()
-    input_database.add_iso_to_table('crude_birth_rate')
-    input_database.add_iso_to_table('absolute_deaths')
-    input_database.add_iso_to_table('total_population')
+    # input_database.add_iso_to_table("crude_birth_rate")
+    # input_database.add_iso_to_table("absolute_deaths")
+    # input_database.add_iso_to_table("total_population")
     # input_database.update_csv_reads()
 
     # example_age_breakpoints = [10, 3]

@@ -2,7 +2,10 @@ from autumn_from_summer.tb_model import *
 import summer.python_source_code.post_processing as post_proc
 from summer.python_source_code.outputs import Outputs
 
+
 def build_model_for_calibration(start_time=1800.):
+    input_database = InputDB()
+
     integration_times = numpy.linspace(start_time, 2020.0, 201).tolist()
 
     # set basic parameters, flows and times, then functionally add latency
@@ -14,6 +17,7 @@ def build_model_for_calibration(start_time=1800.):
          "infect_death": (1.0 - case_fatality_rate) / untreated_disease_duration,
          "universal_death_rate": 1.0 / 50.0,
          "case_detection": 0.,
+         "dr_amplification": 100.,  # high value for testing
          "crude_birth_rate": 20.0 / 1e3}
     parameters.update(change_parameter_unit(provide_aggregated_latency_parameters(), 365.251))
 
@@ -33,6 +37,15 @@ def build_model_for_calibration(start_time=1800.):
     _tb_model.add_transition_flow(
         {"type": "standard_flows", "parameter": "case_detection", "origin": "infectious", "to": "recovered"})
 
+    _tb_model.stratify("strain", ["ds", "mdr"], ["early_latent", "late_latent", "infectious"], verbose=False,
+                       requested_proportions={"mdr": 0.0000001})
+
+    _tb_model.add_transition_flow(
+        {"type": "standard_flows", "parameter": "dr_amplification",
+         "origin": "infectiousXstrain_ds", "to": "infectiousXstrain_mdr"})   # not working
+
+    create_flowchart(_tb_model)
+
     # age stratification
     age_breakpoints = [5, 15]
     age_infectiousness = get_parameter_dict_from_function(logistic_scaling_function(15.0), age_breakpoints)
@@ -47,7 +60,7 @@ def build_model_for_calibration(start_time=1800.):
     _tb_model = get_bcg_functions(_tb_model, input_database, 'MNG')
 
     # stratify by vaccination status
-    bcg_wane = create_sloping_step_function(15.0, 0.7, 30.0, 0.0)
+    bcg_wane = create_sloping_step_function(15.0, 0.3, 30.0, 1.0)
     age_bcg_efficacy_dict = get_parameter_dict_from_function(lambda value: bcg_wane(value), age_breakpoints)
     bcg_efficacy = substratify_parameter("contact_rate", "vaccinated", age_bcg_efficacy_dict, age_breakpoints)
     _tb_model.stratify("bcg", ["vaccinated", "unvaccinated"], ["susceptible"],
@@ -76,10 +89,8 @@ def build_model_for_calibration(start_time=1800.):
 
     # create_flowchart(_tb_model)
 
-    _tb_model.stratify("strain", ["ds", "mdr"], ["early_latent", "late_latent", "infectious"], {}, verbose=False)
-
-    _tb_model.stratify("smear", ["smearpos", "smearneg", "extrapul"], ["infectious"],
-                       adjustment_requests={}, verbose=False, requested_proportions={})
+    # _tb_model.stratify("smear", ["smearpos", "smearneg", "extrapul"], ["infectious"],
+    #                    adjustment_requests={}, verbose=False, requested_proportions={})
 
     return _tb_model
 
@@ -89,6 +100,8 @@ if __name__ == "__main__":
     mongolia_model.run_model()
 
     req_outputs = ['distribution_of_strataXage',
+                   'distribution_of_strataXstrain',
+                   #'distribution_of_strataXsmear',
                    'prevXinfectiousXamong',
                    'prevXlatentXamong',
                    'prevXlatentXamongXage_5']

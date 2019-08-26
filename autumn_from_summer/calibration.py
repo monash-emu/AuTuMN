@@ -1,6 +1,6 @@
 import theano.tensor as tt
-from python_source_code.tb_model import *
-import python_source_code.post_processing as post_proc
+from autumn_from_summer.tb_model import *
+import summer.python_source_code.post_processing as post_proc
 from itertools import chain
 
 import pymc3 as pm

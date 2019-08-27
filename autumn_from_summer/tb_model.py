@@ -1,5 +1,5 @@
 
-from summer.python_source_code.summer_model import *
+from summer_py.summer_model import *
 from autumn_from_summer.db import InputDB
 import matplotlib.pyplot
 import numpy

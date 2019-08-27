@@ -1,6 +1,6 @@
 from autumn_from_summer.tb_model import *
-import summer.python_source_code.post_processing as post_proc
-from summer.python_source_code.outputs import Outputs
+import summer_py.post_processing as post_proc
+from summer_py.outputs import Outputs
 
 
 def build_model_for_calibration(start_time=1800.):
@@ -40,10 +40,16 @@ def build_model_for_calibration(start_time=1800.):
     _tb_model.stratify("strain", ["ds", "mdr"], ["early_latent", "late_latent", "infectious"], verbose=False,
                        requested_proportions={"mdr": 0.0000001})
 
+    _tb_model.transition_flows.to_csv("temp_flows.csv")
+
     _tb_model.add_transition_flow(
         {"type": "standard_flows", "parameter": "dr_amplification",
-         "origin": "infectiousXstrain_ds", "to": "infectiousXstrain_mdr"})   # not working
+         "origin": "infectiousXstrain_ds", "to": "infectiousXstrain_mdr",
+         "implement": len(_tb_model.all_stratifications)})   # not working
 
+    print(len(_tb_model.all_stratifications))
+
+    _tb_model.transition_flows.to_csv("temp_flows_2.csv")
     create_flowchart(_tb_model)
 
     # age stratification

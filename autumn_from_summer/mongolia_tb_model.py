@@ -210,6 +210,24 @@ def new_build_model_for_calibration(stratify_by):
                            infectiousness_adjustments={"smearpos": 1., "smearneg": 0.25, "extrapul": 0.},
                            verbose=False, requested_proportions={"smearpos": 0.5, "smearneg": 0.25})
 
+    # age stratification
+    if "age" in stratify_by:
+        age_breakpoints = [5, 15, 60]
+        age_infectiousness = get_parameter_dict_from_function(logistic_scaling_function(10.0), age_breakpoints)
+        age_params = get_adapted_age_parameters(age_breakpoints)
+        age_params.update(split_age_parameter(age_breakpoints, "contact_rate"))
+
+        # pop_morts = get_pop_mortality_functions(input_database, age_breakpoints, country_iso_code='MNG')
+        # age_params["universal_death_rate"] = {}
+        # for age_break in age_breakpoints:
+        #     _tb_model.time_variants["universal_death_rateXage_" + str(age_break)] = pop_morts[age_break]
+        #     _tb_model.parameters["universal_death_rateXage_" + str(age_break)] = "universal_death_rateXage_" + str(age_break)
+        #
+        #     age_params["universal_death_rate"][str(age_break) + 'W'] = "universal_death_rateXage_" + str(age_break)
+
+        _tb_model.stratify("age", copy.deepcopy(age_breakpoints), [], {}, adjustment_requests=age_params,
+                           infectiousness_adjustments=age_infectiousness, verbose=False)
+
     _tb_model.transition_flows.to_csv("transitions.csv")
     # _tb_model.death_flows.to_csv("deaths.csv")
 
@@ -218,7 +236,7 @@ def new_build_model_for_calibration(stratify_by):
 
 
 if __name__ == "__main__":
-    stratify_by = ['strain', 'smear']
+    stratify_by = ['strain', 'smear', 'age']
     mongolia_model = new_build_model_for_calibration(stratify_by=stratify_by)
     mongolia_model.run_model()
 

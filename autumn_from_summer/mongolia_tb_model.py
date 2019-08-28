@@ -122,7 +122,8 @@ def new_build_model_for_calibration(stratify_by):
                        'case_fatality_rate': 0.4,
                        'untreated_disease_duration': 3.0,
                        'treatment_success_prop': 0.8,
-                       'dr_amplification_prop_among_nonsuccess': 0.07
+                       'dr_amplification_prop_among_nonsuccess': 0.07,
+                       'relative_control_recovery_rate_mdr': 0.5
                        }
 
     integration_times = numpy.linspace(external_params['start_time'], 2020.0, 50).tolist()
@@ -190,7 +191,9 @@ def new_build_model_for_calibration(stratify_by):
 
     if "strain" in stratify_by:
         _tb_model.stratify("strain", ["ds", "mdr"], ["early_latent", "late_latent", "infectious"], verbose=False,
-                           requested_proportions={"mdr": 0.})
+                           requested_proportions={"mdr": 0.},
+                           adjustment_requests={'case_detection':
+                                                    {"mdr": external_params['relative_control_recovery_rate_mdr']}})
         _tb_model.add_transition_flow(
             {"type": "standard_flows", "parameter": "dr_amplification",
              "origin": "infectiousXstrain_ds", "to": "infectiousXstrain_mdr",
@@ -202,7 +205,7 @@ def new_build_model_for_calibration(stratify_by):
         _tb_model.adaptation_functions["dr_amplification"] = dr_amplification_rate
         _tb_model.parameters["dr_amplification"] = "dr_amplification"
 
-    # _tb_model.transition_flows.to_csv("transitions.csv")
+    _tb_model.transition_flows.to_csv("transitions.csv")
     # _tb_model.death_flows.to_csv("deaths.csv")
 
 

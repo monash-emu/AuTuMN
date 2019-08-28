@@ -120,7 +120,8 @@ def new_build_model_for_calibration(stratify_by):
 
     external_params = {'start_time': 1800.,
                        'case_fatality_rate': 0.4,
-                       'untreated_disease_duration': 3.0
+                       'untreated_disease_duration': 3.0,
+                       'treatment_success_prop': 0.8
                        }
 
     integration_times = numpy.linspace(external_params['start_time'], 2020.0, 50).tolist()
@@ -179,10 +180,11 @@ def new_build_model_for_calibration(stratify_by):
     prop_to_rate = convert_competing_proportion_to_rate(1.0 / external_params['untreated_disease_duration'])
     detect_rate = return_function_of_function(cdr_scaleup, prop_to_rate)
 
+    tb_control_recovery_rate = lambda x: external_params['treatment_success_prop'] * detect_rate(x)
     if len(stratify_by) == 0:
-        _tb_model.time_variants["case_detection"] = detect_rate
+        _tb_model.time_variants["case_detection"] = tb_control_recovery_rate
     else:
-        _tb_model.adaptation_functions["case_detection"] = detect_rate
+        _tb_model.adaptation_functions["case_detection"] = tb_control_recovery_rate
         _tb_model.parameters["case_detection"] = "case_detection"
 
     if "strain" in stratify_by:

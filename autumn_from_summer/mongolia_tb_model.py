@@ -56,17 +56,18 @@ def build_model_for_calibration(start_time=1800., stratify_by=['age'], time_vari
              "implement": len(_tb_model.all_stratifications)})
 
     if "location" in stratify_by:
-        _tb_model.stratify("location", ["rural", "province", "rural"], [], verbose=False,
-                           requested_proportions={"rural": .32, "province": .16})
+        _tb_model.stratify("location", ["rural", "province", "rural"], [],
+                           requested_proportions={"rural": .32, "province": .16}, verbose=False,
+                           )
 
     if "housing" in stratify_by:
-        _tb_model.stratify("housing", ["ger", "non-ger"], [], verbose=False,
-                           requested_proportions={"ger": .45})
+        _tb_model.stratify("housing", ["ger", "non-ger"], [], requested_proportions={"ger": .45}, verbose=False,
+                           )
 
     # age stratification
     if "age" in stratify_by:
         age_breakpoints = [5, 15, 60]
-        age_infectiousness = get_parameter_dict_from_function(logistic_scaling_function(15.0), age_breakpoints)
+        age_infectiousness = get_parameter_dict_from_function(logistic_scaling_function(10.0), age_breakpoints)
         age_params = get_adapted_age_parameters(age_breakpoints)
         age_params.update(split_age_parameter(age_breakpoints, "contact_rate"))
 
@@ -115,7 +116,7 @@ def build_model_for_calibration(start_time=1800., stratify_by=['age'], time_vari
 
 
 if __name__ == "__main__":
-    stratify_by = ['age',  'strain', 'smear', 'location', 'housing']
+    stratify_by = ['age']
     mongolia_model = build_model_for_calibration(stratify_by=stratify_by)
     mongolia_model.run_model()
 

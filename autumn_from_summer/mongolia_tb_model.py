@@ -123,7 +123,8 @@ def new_build_model_for_calibration(stratify_by):
                        'untreated_disease_duration': 3.0,
                        'treatment_success_prop': 0.8,
                        'dr_amplification_prop_among_nonsuccess': 0.07,
-                       'relative_control_recovery_rate_mdr': 0.5
+                       'relative_control_recovery_rate_mdr': 0.5,
+                       'rr_transmission_ger': 2.
                        }
 
     integration_times = numpy.linspace(external_params['start_time'], 2020.0, 50).tolist()
@@ -228,15 +229,35 @@ def new_build_model_for_calibration(stratify_by):
         _tb_model.stratify("age", copy.deepcopy(age_breakpoints), [], {}, adjustment_requests=age_params,
                            infectiousness_adjustments=age_infectiousness, verbose=False)
 
+    # if 'bcg' in stratify_by:
+    #      # get bcg coverage function
+    #     _tb_model = get_bcg_functions(_tb_model, input_database, 'MNG')
+    #
+    #     # stratify by vaccination status
+    #     bcg_wane = create_sloping_step_function(15.0, 0.3, 30.0, 1.0)
+    #     age_bcg_efficacy_dict = get_parameter_dict_from_function(lambda value: bcg_wane(value), age_breakpoints)
+    #     bcg_efficacy = substratify_parameter("contact_rate", "vaccinated", age_bcg_efficacy_dict, age_breakpoints)
+    #     _tb_model.stratify("bcg", ["vaccinated", "unvaccinated"], ["susceptible"],
+    #                        requested_proportions={"vaccinated": 0.0},
+    #                        entry_proportions={"vaccinated": "bcg_coverage",
+    #                                           "unvaccinated": "bcg_coverage_complement"},
+    #                        adjustment_requests=bcg_efficacy,
+    #                        verbose=False)
+
+    if "housing" in stratify_by:
+        _tb_model.stratify("housing", ["ger", "non-ger"], [], requested_proportions={"ger": .45}, verbose=False,
+                           adjustment_requests={'contact_rate': {"ger": 2.}}
+                           )
+
+
     _tb_model.transition_flows.to_csv("transitions.csv")
     # _tb_model.death_flows.to_csv("deaths.csv")
-
 
     return _tb_model
 
 
 if __name__ == "__main__":
-    stratify_by = ['strain', 'smear', 'age']
+    stratify_by = ['strain', 'smear', 'age', 'housing']
     mongolia_model = new_build_model_for_calibration(stratify_by=stratify_by)
     mongolia_model.run_model()
 

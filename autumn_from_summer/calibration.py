@@ -1,7 +1,6 @@
 import theano.tensor as tt
-from autumn_from_summer.tb_model import *
 from autumn_from_summer.mongolia_tb_model import *
-import summer.python_source_code.post_processing as post_proc
+import summer_py.post_processing as post_proc
 from itertools import chain
 
 import pymc3 as pm
@@ -213,20 +212,20 @@ class LogLike(tt.Op):
 
 if __name__ == "__main__":
 
-    par_priors = [{'param_name': 'contact_rate', 'distribution': 'uniform', 'distri_params': [2., 100.]},
-                  {'param_name': 'late_progression', 'distribution': 'uniform', 'distri_params': [.001, 0.003]},
-                  {'param_name': 'start_time', 'distribution': 'uniform', 'distri_params': [1800., 1850.]}
+    par_priors = [{'param_name': 'contact_rate', 'distribution': 'uniform', 'distri_params': [2., 100.]}#,
+                  #{'param_name': 'late_progression', 'distribution': 'uniform', 'distri_params': [.001, 0.003]},
+                  #{'param_name': 'start_time', 'distribution': 'uniform', 'distri_params': [1800., 1850.]}
                   ]
     target_outputs = [{'output_key': 'prevXinfectiousXamongXage_15', 'years': [2015, 2016], 'values': [0.005, 0.004],
-                       'sd': 0.0005},
-                      {'output_key': 'prevXlatentXamongXage_5', 'years': [2014], 'values': [0.096], 'sd': 0.012}
+                       'sd': 0.0005} #,
+                      #{'output_key': 'prevXlatentXamongXage_5', 'years': [2014], 'values': [0.096], 'sd': 0.012}
                      ]
     calib = Calibration(build_model_for_calibration, par_priors, target_outputs)
 
 
-    # calib.run_fitting_algorithm(run_mode='mle')  # for maximum-likelihood estimation
-    #
-    # print(calib.mle_estimates)
+    calib.run_fitting_algorithm(run_mode='mle')  # for maximum-likelihood estimation
+
+    print(calib.mle_estimates)
     #
     # calib.run_fitting_algorithm(run_mode='mcmc', mcmc_method='DEMetropolis', n_iterations=100, n_burned=10,
     #                             n_chains=4, parallel=True)  # for mcmc

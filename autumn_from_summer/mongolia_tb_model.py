@@ -132,7 +132,7 @@ def new_build_model_for_calibration(stratify_by):
          "infect_death": (1.0 - external_params['case_fatality_rate']) / external_params['untreated_disease_duration'],
          "universal_death_rate": 1.0 / 50.0,
          "case_detection": 0.,
-         "dr_amplification": 0.001,  # high value for testing
+         "dr_amplification": .0,  # high value for testing
          "crude_birth_rate": 20.0 / 1e3}
     parameters.update(change_parameter_unit(provide_aggregated_latency_parameters(), 365.251))
 
@@ -178,7 +178,12 @@ def new_build_model_for_calibration(stratify_by):
     cdr_scaleup = scale_up_function(cdr_mongolia_year, cdr_mongolia, smoothness=0.2, method=5)
     prop_to_rate = convert_competing_proportion_to_rate(1.0 / external_params['untreated_disease_duration'])
     detect_rate = return_function_of_function(cdr_scaleup, prop_to_rate)
-    _tb_model.time_variants["case_detection"] = detect_rate
+
+    if len(stratify_by) == 0:
+        _tb_model.time_variants["case_detection"] = detect_rate
+    else:
+        _tb_model.adaptation_functions["case_detection"] = detect_rate
+        _tb_model.parameters["case_detection"] = "case_detection"
 
     if "strain" in stratify_by:
         _tb_model.stratify("strain", ["ds", "mdr"], ["early_latent", "late_latent", "infectious"], verbose=False,
@@ -188,8 +193,8 @@ def new_build_model_for_calibration(stratify_by):
              "origin": "infectiousXstrain_ds", "to": "infectiousXstrain_mdr",
              "implement": len(_tb_model.all_stratifications)})
 
-    _tb_model.transition_flows.to_csv("transitions.csv")
-    _tb_model.death_flows.to_csv("deaths.csv")
+    # _tb_model.transition_flows.to_csv("transitions.csv")
+    # _tb_model.death_flows.to_csv("deaths.csv")
 
 
     return _tb_model

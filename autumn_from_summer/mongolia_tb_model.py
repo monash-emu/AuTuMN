@@ -121,7 +121,8 @@ def new_build_model_for_calibration(stratify_by):
     external_params = {'start_time': 1800.,
                        'case_fatality_rate': 0.4,
                        'untreated_disease_duration': 3.0,
-                       'treatment_success_prop': 0.8
+                       'treatment_success_prop': 0.8,
+                       'dr_amplification_prop_among_nonsuccess': 0.07
                        }
 
     integration_times = numpy.linspace(external_params['start_time'], 2020.0, 50).tolist()
@@ -194,6 +195,12 @@ def new_build_model_for_calibration(stratify_by):
             {"type": "standard_flows", "parameter": "dr_amplification",
              "origin": "infectiousXstrain_ds", "to": "infectiousXstrain_mdr",
              "implement": len(_tb_model.all_stratifications)})
+
+        dr_amplification_rate = lambda x: detect_rate(x) * (1. - external_params['treatment_success_prop']) *\
+                                          external_params['dr_amplification_prop_among_nonsuccess']
+
+        _tb_model.adaptation_functions["dr_amplification"] = dr_amplification_rate
+        _tb_model.parameters["dr_amplification"] = "dr_amplification"
 
     # _tb_model.transition_flows.to_csv("transitions.csv")
     # _tb_model.death_flows.to_csv("deaths.csv")

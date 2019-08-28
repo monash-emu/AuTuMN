@@ -205,6 +205,11 @@ def new_build_model_for_calibration(stratify_by):
         _tb_model.adaptation_functions["dr_amplification"] = dr_amplification_rate
         _tb_model.parameters["dr_amplification"] = "dr_amplification"
 
+    if 'smear' in stratify_by:
+        _tb_model.stratify("smear", ["smearpos", "smearneg", "extrapul"], ["infectious"],
+                           infectiousness_adjustments={"smearpos": 1., "smearneg": 0.25, "extrapul": 0.},
+                           verbose=False, requested_proportions={"smearpos": 0.5, "smearneg": 0.25})
+
     _tb_model.transition_flows.to_csv("transitions.csv")
     # _tb_model.death_flows.to_csv("deaths.csv")
 
@@ -213,7 +218,7 @@ def new_build_model_for_calibration(stratify_by):
 
 
 if __name__ == "__main__":
-    stratify_by = ['strain']
+    stratify_by = ['strain', 'smear']
     mongolia_model = new_build_model_for_calibration(stratify_by=stratify_by)
     mongolia_model.run_model()
 

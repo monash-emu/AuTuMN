@@ -56,7 +56,7 @@ def build_model_for_calibration(start_time=1800., stratify_by=['age'], time_vari
              "implement": len(_tb_model.all_stratifications)})
 
     if "location" in stratify_by:
-        _tb_model.stratify("location", ["rural", "province", "rural"], [],
+        _tb_model.stratify("location", ["rural", "province", "urban"], [],
                            requested_proportions={"rural": .32, "province": .16}, verbose=False,
                            )
 
@@ -71,8 +71,8 @@ def build_model_for_calibration(start_time=1800., stratify_by=['age'], time_vari
         age_params = get_adapted_age_parameters(age_breakpoints)
         age_params.update(split_age_parameter(age_breakpoints, "contact_rate"))
 
-        _tb_model.stratify("age", copy.deepcopy(age_breakpoints), [], {}, #adjustment_requests=age_params,
-                           verbose=False)  #infectiousness_adjustments=age_infectiousness, verbose=False)
+        _tb_model.stratify("age", copy.deepcopy(age_breakpoints), [], {}, adjustment_requests=age_params,
+                           infectiousness_adjustments=age_infectiousness, verbose=False)
 
     if 'bcg' in stratify_by:
          # get bcg coverage function
@@ -86,7 +86,7 @@ def build_model_for_calibration(start_time=1800., stratify_by=['age'], time_vari
                            requested_proportions={"vaccinated": 0.0},
                            entry_proportions={"vaccinated": "bcg_coverage",
                                               "unvaccinated": "bcg_coverage_complement"},
-                           #adjustment_requests=bcg_efficacy,
+                           adjustment_requests=bcg_efficacy,
                            verbose=False)
     if time_variant_cdr:
         # loading time-variant case detection rate
@@ -94,7 +94,7 @@ def build_model_for_calibration(start_time=1800., stratify_by=['age'], time_vari
         res = input_database.db_query("gtb_2015", column="c_cdr", is_filter="country", value="Mongolia")
 
         # add scaling case detection rate
-        cdr_adjustment_factor = 0.
+        cdr_adjustment_factor = 1.
         cdr_mongolia = res["c_cdr"].values / 1e2 * cdr_adjustment_factor
         cdr_mongolia = numpy.concatenate(([0.0], cdr_mongolia))
         res = input_database.db_query("gtb_2015", column="year", is_filter="country", value="Mongolia")

@@ -115,21 +115,10 @@ def build_model_for_calibration(start_time=1800., stratify_by=['age'], time_vari
     return _tb_model
 
 
-def new_build_model_for_calibration(stratify_by):
+def new_build_model_for_calibration(stratify_by, external_params):
     input_database = InputDB()
 
-    external_params = {'start_time': 1900.,
-                       'case_fatality_rate': 0.4,
-                       'untreated_disease_duration': 3.0,
-                       'treatment_success_prop': 0.8,
-                       'dr_amplification_prop_among_nonsuccess': 0.07,
-                       'relative_control_recovery_rate_mdr': 0.5,
-                       'rr_transmission_ger': 10.,
-                       'rr_transmission_urban': 10.,
-                       'rr_transmission_province': 5.
-                       }
-
-    integration_times = numpy.linspace(external_params['start_time'], 2020.0, 25).tolist()
+    integration_times = numpy.linspace(external_params['start_time'], 2020.0, 100).tolist()
     # set basic parameters, flows and times, then functionally add latency
 
     parameters = \
@@ -153,11 +142,11 @@ def new_build_model_for_calibration(stratify_by):
     # define model     #replace_deaths  add_crude_birth_rate
     if len(stratify_by) > 0:
         _tb_model = StratifiedModel(
-            integration_times, compartments, {"infectious": 1e-3}, parameters, flows, birth_approach="replace_deaths",
+            integration_times, compartments, {"infectious": 1e-3}, parameters, flows, birth_approach="add_crude_birth_rate",
             starting_population=3000000)
     else:
         _tb_model = EpiModel(
-            integration_times, compartments, {"infectious": 1e-3}, parameters, flows, birth_approach="replace_deaths",
+            integration_times, compartments, {"infectious": 1e-3}, parameters, flows, birth_approach="add_crude_birth_rate",
             starting_population=3000000)
 
     # provisional patch
@@ -258,7 +247,7 @@ def new_build_model_for_calibration(stratify_by):
 
         _tb_model.stratify("housing", ["ger", "non-ger"], [], requested_proportions=props_housing, verbose=False,
                            adjustment_requests={'contact_rate': {"ger": external_params['rr_transmission_ger']}},
-                           #mixing_matrix=housing_mixing,
+                           mixing_matrix=housing_mixing,
                            entry_proportions=props_housing
                            )
 
@@ -273,8 +262,8 @@ def new_build_model_for_calibration(stratify_by):
         _tb_model.stratify("location", ["rural", "province", "urban"], [],
                            requested_proportions=props_location, verbose=False, entry_proportions=props_location,
                            adjustment_requests={'contact_rate': {"urban": external_params['rr_transmission_urban'],
-                                                                 "province": external_params['rr_transmission_province']}}#,
-                           #mixing_matrix=location_mixing
+                                                                 "province": external_params['rr_transmission_province']}},
+                           mixing_matrix=location_mixing
                            )
 
     _tb_model.transition_flows.to_csv("transitions.csv")
@@ -284,8 +273,20 @@ def new_build_model_for_calibration(stratify_by):
 
 
 if __name__ == "__main__":
-    stratify_by = ['age', 'strain', 'housing', 'location']
-    mongolia_model = new_build_model_for_calibration(stratify_by=stratify_by)
+    stratify_by = ['age']
+
+    parameters = {'start_time': 1800.,
+                  'case_fatality_rate': 0.4,
+                  'untreated_disease_duration': 3.0,
+                  'treatment_success_prop': 0.8,
+                  'dr_amplification_prop_among_nonsuccess': 0.07,
+                  'relative_control_recovery_rate_mdr': 0.5,
+                  'rr_transmission_ger': 10.,
+                  'rr_transmission_urban': 10.,
+                  'rr_transmission_province': 5.
+                  }
+
+    mongolia_model = new_build_model_for_calibration(stratify_by=stratify_by, external_params=parameters)
     mongolia_model.run_model()
 
     req_outputs = ['prevXinfectiousXamong',

@@ -131,7 +131,7 @@ def new_build_model_for_calibration(stratify_by):
     # set basic parameters, flows and times, then functionally add latency
 
     parameters = \
-        {"contact_rate": 100.,
+        {"contact_rate": 10.,
          "recovery": external_params['case_fatality_rate'] / external_params['untreated_disease_duration'],
          "infect_death": (1.0 - external_params['case_fatality_rate']) / external_params['untreated_disease_duration'],
          "universal_death_rate": 1.0 / 50.0,
@@ -218,13 +218,14 @@ def new_build_model_for_calibration(stratify_by):
         age_params = get_adapted_age_parameters(age_breakpoints)
         age_params.update(split_age_parameter(age_breakpoints, "contact_rate"))
 
-        # pop_morts = get_pop_mortality_functions(input_database, age_breakpoints, country_iso_code='MNG')
-        # age_params["universal_death_rate"] = {}
-        # for age_break in age_breakpoints:
-        #     _tb_model.time_variants["universal_death_rateXage_" + str(age_break)] = pop_morts[age_break]
-        #     _tb_model.parameters["universal_death_rateXage_" + str(age_break)] = "universal_death_rateXage_" + str(age_break)
-        #
-        #     age_params["universal_death_rate"][str(age_break) + 'W'] = "universal_death_rateXage_" + str(age_break)
+        pop_morts = get_pop_mortality_functions(input_database, age_breakpoints, country_iso_code='MNG')
+        age_params["universal_death_rate"] = {}
+        for age_break in age_breakpoints:
+            _tb_model.time_variants["universal_death_rateXage_" + str(age_break)] = pop_morts[age_break]
+            _tb_model.parameters["universal_death_rateXage_" + str(age_break)] = "universal_death_rateXage_" + str(age_break)
+
+            age_params["universal_death_rate"][str(age_break) + 'W'] = "universal_death_rateXage_" + str(age_break)
+            _tb_model.parameters["universal_death_rateX"] = 0.
 
         _tb_model.stratify("age", copy.deepcopy(age_breakpoints), [], {}, adjustment_requests=age_params,
                            infectiousness_adjustments=age_infectiousness, verbose=False)
@@ -257,7 +258,7 @@ def new_build_model_for_calibration(stratify_by):
 
 
 if __name__ == "__main__":
-    stratify_by = ['strain', 'smear', 'age', 'housing']
+    stratify_by = ['age', 'housing']
     mongolia_model = new_build_model_for_calibration(stratify_by=stratify_by)
     mongolia_model.run_model()
 
@@ -265,9 +266,13 @@ if __name__ == "__main__":
                    'distribution_of_strataXstrain', 'distribution_of_strataXbcg', 'distribution_of_strataXsmear',
                    'prevXinfectiousXamong',
                    'prevXlatentXamong',
-                   'prevXlatentXamongXage_5']
+                   'prevXlatentXamongXage_5',
+                   'prevXinfectiousXamongXhousing_ger',
+                   'prevXinfectiousXamongXhousing_non-ger']
 
-    req_multipliers = {'prevXinfectiousXamong': 1.e5}
+    req_multipliers = {'prevXinfectiousXamong': 1.e5,
+                       'prevXinfectiousXamongXhousing_ger': 1.e5,
+                       'prevXinfectiousXamongXhousing_non-ger': 1.e5}
 
     pp = post_proc.PostProcessing(mongolia_model, req_outputs, multipliers=req_multipliers)
 

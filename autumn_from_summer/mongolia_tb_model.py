@@ -115,21 +115,39 @@ def build_model_for_calibration(start_time=1800., stratify_by=['age'], time_vari
     return _tb_model
 
 
-def new_build_model_for_calibration(stratify_by, external_params):
-    input_database = InputDB()
+def new_build_model_for_calibration(stratify_by, update_params):
 
-    integration_times = numpy.linspace(external_params['start_time'], 2020.0, 100).tolist()
-    # set basic parameters, flows and times, then functionally add latency
+    # some default parameter values
+    external_params = {'start_time': 1800.,
+                       'end_time': 2020.,
+                       'time_step': 10.,
+                       'contact_rate': 20.,
+                       'case_fatality_rate': 0.4,
+                       'untreated_disease_duration': 3.0,
+                       'treatment_success_prop': 0.8,
+                       'dr_amplification_prop_among_nonsuccess': 0.07,
+                       'relative_control_recovery_rate_mdr': 0.5,
+                       'rr_transmission_ger': 10.,
+                       'rr_transmission_urban': 10.,
+                       'rr_transmission_province': 5.
+                       }
+    # update external_params with new parameter values found in update_params
+    external_params.update(update_params)
 
-    parameters = \
-        {"contact_rate": 20,
+    model_parameters = \
+        {"contact_rate": external_params['contact_rate'],
          "recovery": external_params['case_fatality_rate'] / external_params['untreated_disease_duration'],
          "infect_death": (1.0 - external_params['case_fatality_rate']) / external_params['untreated_disease_duration'],
          "universal_death_rate": 1.0 / 50.0,
          "case_detection": 0.,
          "dr_amplification": .0,  # high value for testing
          "crude_birth_rate": 20.0 / 1e3}
-    parameters.update(change_parameter_unit(provide_aggregated_latency_parameters(), 365.251))
+
+    input_database = InputDB()
+    n_iter = int(round((external_params['end_time'] - external_params['start_time']) / external_params['time_step']))
+    integration_times = numpy.linspace(external_params['start_time'], external_params['end_time'], n_iter).tolist()
+
+    model_parameters.update(change_parameter_unit(provide_aggregated_latency_parameters(), 365.251))
 
     # sequentially add groups of flows
     flows = add_standard_infection_flows([])
@@ -142,11 +160,11 @@ def new_build_model_for_calibration(stratify_by, external_params):
     # define model     #replace_deaths  add_crude_birth_rate
     if len(stratify_by) > 0:
         _tb_model = StratifiedModel(
-            integration_times, compartments, {"infectious": 1e-3}, parameters, flows, birth_approach="add_crude_birth_rate",
+            integration_times, compartments, {"infectious": 1e-3}, model_parameters, flows, birth_approach="replace_deaths",
             starting_population=3000000)
     else:
         _tb_model = EpiModel(
-            integration_times, compartments, {"infectious": 1e-3}, parameters, flows, birth_approach="add_crude_birth_rate",
+            integration_times, compartments, {"infectious": 1e-3}, model_parameters, flows, birth_approach="replace_deaths",
             starting_population=3000000)
 
     # provisional patch
@@ -214,11 +232,13 @@ def new_build_model_for_calibration(stratify_by, external_params):
         pop_morts = get_pop_mortality_functions(input_database, age_breakpoints, country_iso_code='MNG')
         age_params["universal_death_rate"] = {}
         for age_break in age_breakpoints:
+            if age_break<60:
+                continue
             _tb_model.time_variants["universal_death_rateXage_" + str(age_break)] = pop_morts[age_break]
             _tb_model.parameters["universal_death_rateXage_" + str(age_break)] = "universal_death_rateXage_" + str(age_break)
 
             age_params["universal_death_rate"][str(age_break) + 'W'] = "universal_death_rateXage_" + str(age_break)
-            _tb_model.parameters["universal_death_rateX"] = 0.
+        _tb_model.parameters["universal_death_rateX"] = 0.
 
         _tb_model.stratify("age", copy.deepcopy(age_breakpoints), [], {}, adjustment_requests=age_params,
                            infectiousness_adjustments=age_infectiousness, verbose=False)
@@ -274,19 +294,8 @@ def new_build_model_for_calibration(stratify_by, external_params):
 
 if __name__ == "__main__":
     stratify_by = ['age']
-
-    parameters = {'start_time': 1800.,
-                  'case_fatality_rate': 0.4,
-                  'untreated_disease_duration': 3.0,
-                  'treatment_success_prop': 0.8,
-                  'dr_amplification_prop_among_nonsuccess': 0.07,
-                  'relative_control_recovery_rate_mdr': 0.5,
-                  'rr_transmission_ger': 10.,
-                  'rr_transmission_urban': 10.,
-                  'rr_transmission_province': 5.
-                  }
-
-    mongolia_model = new_build_model_for_calibration(stratify_by=stratify_by, external_params=parameters)
+    update_parameters = {'contact_rate': 20.}
+    mongolia_model = new_build_model_for_calibration(stratify_by, update_parameters)
     mongolia_model.run_model()
 
     req_outputs = ['prevXinfectiousXamong',

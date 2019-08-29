@@ -3,7 +3,6 @@ from setuptools import setup, find_packages
 setup(
     name='autumn',
     version='1.2',
-    #packages=['bgui.server.server', 'autumn', 'autumn.settings'],
     packages=['autumn',
               'autumn_from_summer',
               'bgui'],

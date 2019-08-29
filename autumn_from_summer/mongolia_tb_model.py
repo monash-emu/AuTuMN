@@ -118,7 +118,7 @@ def build_model_for_calibration(start_time=1800., stratify_by=['age'], time_vari
 def new_build_model_for_calibration(stratify_by):
     input_database = InputDB()
 
-    external_params = {'start_time': 1800.,
+    external_params = {'start_time': 1900.,
                        'case_fatality_rate': 0.4,
                        'untreated_disease_duration': 3.0,
                        'treatment_success_prop': 0.8,
@@ -129,11 +129,11 @@ def new_build_model_for_calibration(stratify_by):
                        'rr_transmission_province': 5.
                        }
 
-    integration_times = numpy.linspace(external_params['start_time'], 2020.0, 50).tolist()
+    integration_times = numpy.linspace(external_params['start_time'], 2020.0, 25).tolist()
     # set basic parameters, flows and times, then functionally add latency
 
     parameters = \
-        {"contact_rate": 0.3,
+        {"contact_rate": 20,
          "recovery": external_params['case_fatality_rate'] / external_params['untreated_disease_duration'],
          "infect_death": (1.0 - external_params['case_fatality_rate']) / external_params['untreated_disease_duration'],
          "universal_death_rate": 1.0 / 50.0,
@@ -153,11 +153,11 @@ def new_build_model_for_calibration(stratify_by):
     # define model     #replace_deaths
     if len(stratify_by) > 0:
         _tb_model = StratifiedModel(
-            integration_times, compartments, {"infectious": 1e-3}, parameters, flows, birth_approach="replace_deaths",
+            integration_times, compartments, {"infectious": 1e-3}, parameters, flows, birth_approach="add_crude_birth_rate",
             starting_population=3000000)
     else:
         _tb_model = EpiModel(
-            integration_times, compartments, {"infectious": 1e-3}, parameters, flows, birth_approach="replace_deaths",
+            integration_times, compartments, {"infectious": 1e-3}, parameters, flows, birth_approach="add_crude_birth_rate",
             starting_population=3000000)
 
     # provisional patch
@@ -234,20 +234,20 @@ def new_build_model_for_calibration(stratify_by):
         _tb_model.stratify("age", copy.deepcopy(age_breakpoints), [], {}, adjustment_requests=age_params,
                            infectiousness_adjustments=age_infectiousness, verbose=False)
 
-    # if 'bcg' in stratify_by:
-    #      # get bcg coverage function
-    #     _tb_model = get_bcg_functions(_tb_model, input_database, 'MNG')
-    #
-    #     # stratify by vaccination status
-    #     bcg_wane = create_sloping_step_function(15.0, 0.3, 30.0, 1.0)
-    #     age_bcg_efficacy_dict = get_parameter_dict_from_function(lambda value: bcg_wane(value), age_breakpoints)
-    #     bcg_efficacy = substratify_parameter("contact_rate", "vaccinated", age_bcg_efficacy_dict, age_breakpoints)
-    #     _tb_model.stratify("bcg", ["vaccinated", "unvaccinated"], ["susceptible"],
-    #                        requested_proportions={"vaccinated": 0.0},
-    #                        entry_proportions={"vaccinated": "bcg_coverage",
-    #                                           "unvaccinated": "bcg_coverage_complement"},
-    #                        adjustment_requests=bcg_efficacy,
-    #                        verbose=False)
+    if 'bcg' in stratify_by:
+         # get bcg coverage function
+        _tb_model = get_bcg_functions(_tb_model, input_database, 'MNG')
+
+        # stratify by vaccination status
+        bcg_wane = create_sloping_step_function(15.0, 0.3, 30.0, 1.0)
+        age_bcg_efficacy_dict = get_parameter_dict_from_function(lambda value: bcg_wane(value), age_breakpoints)
+        bcg_efficacy = substratify_parameter("contact_rate", "vaccinated", age_bcg_efficacy_dict, age_breakpoints)
+        _tb_model.stratify("bcg", ["vaccinated", "unvaccinated"], ["susceptible"],
+                           requested_proportions={"vaccinated": 0.0},
+                           entry_proportions={"vaccinated": "bcg_coverage",
+                                              "unvaccinated": "bcg_coverage_complement"},
+                           adjustment_requests=bcg_efficacy,
+                           verbose=False)
 
     if "housing" in stratify_by:
         props_housing = {"ger": .45, "non-ger": .55}
@@ -258,7 +258,7 @@ def new_build_model_for_calibration(stratify_by):
 
         _tb_model.stratify("housing", ["ger", "non-ger"], [], requested_proportions=props_housing, verbose=False,
                            adjustment_requests={'contact_rate': {"ger": external_params['rr_transmission_ger']}},
-                           mixing_matrix=housing_mixing, entry_proportions=props_housing
+                           mixing_matrix=housing_mixing#, entry_proportions=props_housing
                            )
 
     if "location" in stratify_by:
@@ -283,7 +283,7 @@ def new_build_model_for_calibration(stratify_by):
 
 
 if __name__ == "__main__":
-    stratify_by = ['housing', 'location']
+    stratify_by = ['age', 'housing']
     mongolia_model = new_build_model_for_calibration(stratify_by=stratify_by)
     mongolia_model.run_model()
 

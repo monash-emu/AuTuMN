@@ -209,9 +209,11 @@ def new_build_model_for_calibration(stratify_by):
         _tb_model.parameters["dr_amplification"] = "dr_amplification"
 
     if 'smear' in stratify_by:
+        props_smear = {"smearpos": 0.5, "smearneg": 0.25, "extrapul": 0.25}
         _tb_model.stratify("smear", ["smearpos", "smearneg", "extrapul"], ["infectious"],
                            infectiousness_adjustments={"smearpos": 1., "smearneg": 0.25, "extrapul": 0.},
-                           verbose=False, requested_proportions={"smearpos": 0.5, "smearneg": 0.25})
+                           verbose=False, requested_proportions=props_smear,
+                           entry_proportions=props_smear)
 
     # age stratification
     if "age" in stratify_by:
@@ -248,23 +250,27 @@ def new_build_model_for_calibration(stratify_by):
     #                        verbose=False)
 
     if "housing" in stratify_by:
+        props_housing = {"ger": .45, "non-ger": .55}
+
         housing_mixing = numpy.ones(4).reshape((2, 2))
         housing_mixing[0, 0] = 5.
         housing_mixing[1, 1] = 5.
 
-        _tb_model.stratify("housing", ["ger", "non-ger"], [], requested_proportions={"ger": .45}, verbose=False,
+        _tb_model.stratify("housing", ["ger", "non-ger"], [], requested_proportions=props_housing, verbose=False,
                            adjustment_requests={'contact_rate': {"ger": external_params['rr_transmission_ger']}},
-                           mixing_matrix=housing_mixing
+                           mixing_matrix=housing_mixing, entry_proportions=props_housing
                            )
 
     if "location" in stratify_by:
+        props_location = {"rural": .32, 'province': .16, "urban": .52}
+
         location_mixing = numpy.ones(9).reshape((3, 3))
         location_mixing[0, 0] = 10.
         location_mixing[1, 1] = 10.
         location_mixing[2, 2] = 10.
 
         _tb_model.stratify("location", ["rural", "province", "urban"], [],
-                           requested_proportions={"rural": .32, "urban": .52}, verbose=False,
+                           requested_proportions=props_location, verbose=False, entry_proportions=props_location,
                            adjustment_requests={'contact_rate': {"urban": external_params['rr_transmission_urban'],
                                                                  "province": external_params['rr_transmission_province']}},
                            mixing_matrix=location_mixing

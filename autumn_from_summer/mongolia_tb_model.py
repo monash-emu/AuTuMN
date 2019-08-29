@@ -145,29 +145,29 @@ def build_model_for_calibration(stratify_by, update_params):
     if "housing" in stratify_by:
         props_housing = {"ger": .45, "non-ger": .55}
 
-        housing_mixing = numpy.ones(4).reshape((2, 2))
-        housing_mixing[0, 0] = 5.
-        housing_mixing[1, 1] = 5.
+        # housing_mixing = numpy.ones(4).reshape((2, 2))
+        # housing_mixing[0, 0] = 5.
+        # housing_mixing[1, 1] = 5.
 
         _tb_model.stratify("housing", ["ger", "non-ger"], [], requested_proportions=props_housing, verbose=False,
                            adjustment_requests={'contact_rate': {"ger": external_params['rr_transmission_ger']}},
-                           mixing_matrix=housing_mixing,
+                           # mixing_matrix=housing_mixing,
                            entry_proportions=props_housing
                            )
 
     if "location" in stratify_by:
         props_location = {"rural": .32, 'province': .16, "urban": .52}
 
-        location_mixing = numpy.ones(9).reshape((3, 3))
-        location_mixing[0, 0] = 10.
-        location_mixing[1, 1] = 10.
-        location_mixing[2, 2] = 10.
+        # location_mixing = numpy.ones(9).reshape((3, 3))
+        # location_mixing[0, 0] = 10.
+        # location_mixing[1, 1] = 10.
+        # location_mixing[2, 2] = 10.
 
         _tb_model.stratify("location", ["rural", "province", "urban"], [],
                            requested_proportions=props_location, verbose=False, entry_proportions=props_location,
                            adjustment_requests={'contact_rate': {"urban": external_params['rr_transmission_urban'],
-                                                                 "province": external_params['rr_transmission_province']}},
-                           mixing_matrix=location_mixing
+                                                                 "province": external_params['rr_transmission_province']}}#,
+                           # mixing_matrix=location_mixing
                            )
 
     _tb_model.transition_flows.to_csv("transitions.csv")

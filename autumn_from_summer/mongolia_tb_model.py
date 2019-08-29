@@ -55,9 +55,6 @@ def build_model_for_calibration(stratify_by, update_params):
             integration_times, compartments, {"infectious": 1e-3}, model_parameters, flows, birth_approach="replace_deaths",
             starting_population=3000000)
 
-    # provisional patch
-    _tb_model.adaptation_functions["universal_death_rateX"] = lambda x: 2.0 / 70.0
-
     # add crude birth rate from un estimates
     _tb_model = get_birth_rate_functions(_tb_model, input_database, 'MNG')
 

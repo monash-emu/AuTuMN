@@ -9,6 +9,7 @@ def build_model_for_calibration(stratify_by, update_params):
     external_params = {'start_time': 1800.,
                        'end_time': 2020.,
                        'time_step': 10.,
+                       'start_population': 300000,
                        'contact_rate': 20.,
                        'case_fatality_rate': 0.4,
                        'untreated_disease_duration': 3.0,
@@ -48,12 +49,12 @@ def build_model_for_calibration(stratify_by, update_params):
     # define model     #replace_deaths  add_crude_birth_rate
     if len(stratify_by) > 0:
         _tb_model = StratifiedModel(
-            integration_times, compartments, {"infectious": 1e-3}, model_parameters, flows, birth_approach="replace_deaths",
-            starting_population=3000000)
+            integration_times, compartments, {"infectious": 1e-3}, model_parameters, flows, birth_approach="add_crude_birth_rate",
+            starting_population=external_params['start_population'])
     else:
         _tb_model = EpiModel(
-            integration_times, compartments, {"infectious": 1e-3}, model_parameters, flows, birth_approach="replace_deaths",
-            starting_population=3000000)
+            integration_times, compartments, {"infectious": 1e-3}, model_parameters, flows, birth_approach="add_crude_birth_rate",
+            starting_population=external_params['start_population'])
 
     # add crude birth rate from un estimates
     _tb_model = get_birth_rate_functions(_tb_model, input_database, 'MNG')
@@ -117,8 +118,6 @@ def build_model_for_calibration(stratify_by, update_params):
         pop_morts = get_pop_mortality_functions(input_database, age_breakpoints, country_iso_code='MNG')
         age_params["universal_death_rate"] = {}
         for age_break in age_breakpoints:
-            if age_break<60:
-                continue
             _tb_model.time_variants["universal_death_rateXage_" + str(age_break)] = pop_morts[age_break]
             _tb_model.parameters["universal_death_rateXage_" + str(age_break)] = "universal_death_rateXage_" + str(age_break)
 

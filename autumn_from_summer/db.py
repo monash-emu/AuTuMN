@@ -236,8 +236,12 @@ def get_pop_mortality_functions(input_database, age_breaks, country_iso_code):
     age_death_dict, data_years = find_age_specific_death_rates(input_database, age_breaks, country_iso_code)
     pop_mortality_functions = {}
     for age_group in age_death_dict:
+        if country_iso_code == 'MNG':
+            data = [age_death_dict[age_group][i] * 0.2 for i in range(len(age_death_dict[age_group]))]
+        else:
+            data = age_death_dict[age_group]
         pop_mortality_functions[age_group] = \
-            scale_up_function(data_years, age_death_dict[age_group], smoothness=0.2, method=5)
+            scale_up_function(data_years, data, smoothness=0.2, method=5)
     return pop_mortality_functions
 
 

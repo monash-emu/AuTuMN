@@ -150,14 +150,14 @@ def new_build_model_for_calibration(stratify_by):
     # compartments
     compartments = ["susceptible", "early_latent", "late_latent", "infectious", "recovered"]
 
-    # define model     #replace_deaths
+    # define model     #replace_deaths  add_crude_birth_rate
     if len(stratify_by) > 0:
         _tb_model = StratifiedModel(
-            integration_times, compartments, {"infectious": 1e-3}, parameters, flows, birth_approach="add_crude_birth_rate",
+            integration_times, compartments, {"infectious": 1e-3}, parameters, flows, birth_approach="replace_deaths",
             starting_population=3000000)
     else:
         _tb_model = EpiModel(
-            integration_times, compartments, {"infectious": 1e-3}, parameters, flows, birth_approach="add_crude_birth_rate",
+            integration_times, compartments, {"infectious": 1e-3}, parameters, flows, birth_approach="replace_deaths",
             starting_population=3000000)
 
     # provisional patch
@@ -217,7 +217,7 @@ def new_build_model_for_calibration(stratify_by):
 
     # age stratification
     if "age" in stratify_by:
-        age_breakpoints = [5, 15, 60]
+        age_breakpoints = [0, 5, 15, 60]
         age_infectiousness = get_parameter_dict_from_function(logistic_scaling_function(10.0), age_breakpoints)
         age_params = get_adapted_age_parameters(age_breakpoints)
         age_params.update(split_age_parameter(age_breakpoints, "contact_rate"))
@@ -258,7 +258,8 @@ def new_build_model_for_calibration(stratify_by):
 
         _tb_model.stratify("housing", ["ger", "non-ger"], [], requested_proportions=props_housing, verbose=False,
                            adjustment_requests={'contact_rate': {"ger": external_params['rr_transmission_ger']}},
-                           mixing_matrix=housing_mixing#, entry_proportions=props_housing
+                           #mixing_matrix=housing_mixing,
+                           entry_proportions=props_housing
                            )
 
     if "location" in stratify_by:
@@ -272,8 +273,8 @@ def new_build_model_for_calibration(stratify_by):
         _tb_model.stratify("location", ["rural", "province", "urban"], [],
                            requested_proportions=props_location, verbose=False, entry_proportions=props_location,
                            adjustment_requests={'contact_rate': {"urban": external_params['rr_transmission_urban'],
-                                                                 "province": external_params['rr_transmission_province']}},
-                           mixing_matrix=location_mixing
+                                                                 "province": external_params['rr_transmission_province']}}#,
+                           #mixing_matrix=location_mixing
                            )
 
     _tb_model.transition_flows.to_csv("transitions.csv")
@@ -283,7 +284,7 @@ def new_build_model_for_calibration(stratify_by):
 
 
 if __name__ == "__main__":
-    stratify_by = ['age', 'housing']
+    stratify_by = ['age', 'strain', 'housing', 'location']
     mongolia_model = new_build_model_for_calibration(stratify_by=stratify_by)
     mongolia_model.run_model()
 

@@ -124,14 +124,16 @@ def new_build_model_for_calibration(stratify_by):
                        'treatment_success_prop': 0.8,
                        'dr_amplification_prop_among_nonsuccess': 0.07,
                        'relative_control_recovery_rate_mdr': 0.5,
-                       'rr_transmission_ger': 2.
+                       'rr_transmission_ger': 10.,
+                       'rr_transmission_urban': 10.,
+                       'rr_transmission_province': 5.
                        }
 
     integration_times = numpy.linspace(external_params['start_time'], 2020.0, 50).tolist()
     # set basic parameters, flows and times, then functionally add latency
 
     parameters = \
-        {"contact_rate": 10.,
+        {"contact_rate": 0.3,
          "recovery": external_params['case_fatality_rate'] / external_params['untreated_disease_duration'],
          "infect_death": (1.0 - external_params['case_fatality_rate']) / external_params['untreated_disease_duration'],
          "universal_death_rate": 1.0 / 50.0,
@@ -246,10 +248,27 @@ def new_build_model_for_calibration(stratify_by):
     #                        verbose=False)
 
     if "housing" in stratify_by:
+        housing_mixing = numpy.ones(4).reshape((2, 2))
+        housing_mixing[0, 0] = 5.
+        housing_mixing[1, 1] = 5.
+
         _tb_model.stratify("housing", ["ger", "non-ger"], [], requested_proportions={"ger": .45}, verbose=False,
-                           adjustment_requests={'contact_rate': {"ger": 2.}}
+                           adjustment_requests={'contact_rate': {"ger": external_params['rr_transmission_ger']}},
+                           mixing_matrix=housing_mixing
                            )
 
+    if "location" in stratify_by:
+        location_mixing = numpy.ones(9).reshape((3, 3))
+        location_mixing[0, 0] = 10.
+        location_mixing[1, 1] = 10.
+        location_mixing[2, 2] = 10.
+
+        _tb_model.stratify("location", ["rural", "province", "urban"], [],
+                           requested_proportions={"rural": .32, "urban": .52}, verbose=False,
+                           adjustment_requests={'contact_rate': {"urban": external_params['rr_transmission_urban'],
+                                                                 "province": external_params['rr_transmission_province']}},
+                           mixing_matrix=location_mixing
+                           )
 
     _tb_model.transition_flows.to_csv("transitions.csv")
     # _tb_model.death_flows.to_csv("deaths.csv")
@@ -258,21 +277,25 @@ def new_build_model_for_calibration(stratify_by):
 
 
 if __name__ == "__main__":
-    stratify_by = ['age', 'housing']
+    stratify_by = ['housing', 'location']
     mongolia_model = new_build_model_for_calibration(stratify_by=stratify_by)
     mongolia_model.run_model()
 
-    req_outputs = ['distribution_of_strataXage', 'distribution_of_strataXlocation', 'distribution_of_strataXhousing',
-                   'distribution_of_strataXstrain', 'distribution_of_strataXbcg', 'distribution_of_strataXsmear',
-                   'prevXinfectiousXamong',
+    req_outputs = ['prevXinfectiousXamong',
                    'prevXlatentXamong',
                    'prevXlatentXamongXage_5',
-                   'prevXinfectiousXamongXhousing_ger',
-                   'prevXinfectiousXamongXhousing_non-ger']
+                   'prevXinfectiousXamongXhousing_gerXlocation_urban'
+                   ]
 
-    req_multipliers = {'prevXinfectiousXamong': 1.e5,
-                       'prevXinfectiousXamongXhousing_ger': 1.e5,
-                       'prevXinfectiousXamongXhousing_non-ger': 1.e5}
+    for group in stratify_by:
+        req_outputs.append('distribution_of_strataX' + group)
+        for stratum in mongolia_model.all_stratifications[group]:
+            req_outputs.append('prevXinfectiousXamongX' + group + '_' + stratum)
+
+    req_multipliers = {}
+    for output in req_outputs:
+        if output[0:21] == 'prevXinfectiousXamong':
+            req_multipliers[output] = 1.e5
 
     pp = post_proc.PostProcessing(mongolia_model, req_outputs, multipliers=req_multipliers)
 

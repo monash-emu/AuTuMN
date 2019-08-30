@@ -1,15 +1,17 @@
 from autumn_from_summer.tb_model import *
 import summer_py.post_processing as post_proc
 from summer_py.outputs import Outputs
+from sqlalchemy import create_engine
+import os
+from sqlalchemy import FLOAT
 
+def build_model_for_calibration(stratify_by, update_params):
 
-def build_model_for_calibration(update_params):
-
-    stratify_by = ['age', 'housing', 'location', 'strain']
+    # stratify_by = ['age', 'housing', 'location', 'strain']
 
     # some default parameter values
     external_params = {'start_time': 1900.,
-                       'end_time': 2017.,
+                       'end_time': 2020.,
                        'time_step': 1.,
                        'start_population': 3000000,
                        'contact_rate': 20.,
@@ -177,15 +179,27 @@ def build_model_for_calibration(update_params):
 
     return _tb_model
 
+def store_database1(outputs, table_name="outputs"):
+    """
+    store outputs from the model in sql database for use in producing outputs later
+    """
+    engine = create_engine("sqlite:///databases/outputs.db", echo=True)
+    if table_name == "functions":
+        outputs.to_sql(table_name, con=engine, if_exists="replace", index=False, dtype={"cdr_values": FLOAT()})
+    else:
+        outputs.to_sql(table_name, con=engine, if_exists="replace", index=False)
+
 
 if __name__ == "__main__":
-    update_parameters = {'contact_rate': 20., 'time_step': 1., 'end_time': 2016.}
-    mongolia_model = build_model_for_calibration(update_parameters)
+    stratify_by = ['age', 'strain', 'location', 'housing']
+    update_parameters = {'contact_rate': 20., 'time_step': 1., 'end_time': 1904.}
+    mongolia_model = build_model_for_calibration(stratify_by, update_parameters)
     mongolia_model.run_model()
+    out = mongolia_model.outputs
 
     # database storage
-    # pbi_outputs = unpivot_outputs(mongolia_model)
-    # store_database(pbi_outputs, table_name="pbi_outputs")
+    pbi_outputs = unpivot_outputs(mongolia_model)
+    store_database1(pbi_outputs, table_name="pbi_outputs")
 
     req_outputs = ['prevXinfectiousXamong',
                    'prevXlatentXamong',
@@ -193,12 +207,12 @@ if __name__ == "__main__":
                    'prevXinfectiousXamongXhousing_gerXlocation_urban'
                    ]
 
-    for group in mongolia_model.all_stratifications.keys():
+    for group in stratify_by:
         req_outputs.append('distribution_of_strataX' + group)
         for stratum in mongolia_model.all_stratifications[group]:
             req_outputs.append('prevXinfectiousXamongX' + group + '_' + stratum)
 
-    if "strain" in mongolia_model.all_stratifications.keys():
+    if "strain" in stratify_by:
         req_outputs.append('prevXinfectiousXstrain_mdrXamongXinfectious')
 
     req_multipliers = {}
@@ -209,5 +223,5 @@ if __name__ == "__main__":
     pp = post_proc.PostProcessing(mongolia_model, req_outputs, multipliers=req_multipliers)
 
     # generate outputs
-    outputs = Outputs(pp, 'outputs')
-    outputs.plot_requested_outputs()
+    outputs = Outputs(pp)
+    #outputs.plot_requested_outputs()

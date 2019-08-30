@@ -179,16 +179,6 @@ def build_model_for_calibration(stratify_by, update_params):
 
     return _tb_model
 
-def store_database1(outputs, table_name="outputs"):
-    """
-    store outputs from the model in sql database for use in producing outputs later
-    """
-    engine = create_engine("sqlite:///databases/outputs.db", echo=True)
-    if table_name == "functions":
-        outputs.to_sql(table_name, con=engine, if_exists="replace", index=False, dtype={"cdr_values": FLOAT()})
-    else:
-        outputs.to_sql(table_name, con=engine, if_exists="replace", index=False)
-
 
 if __name__ == "__main__":
     stratify_by = ['age', 'strain', 'location', 'housing']
@@ -198,8 +188,8 @@ if __name__ == "__main__":
     out = mongolia_model.outputs
 
     # database storage
-    pbi_outputs = unpivot_outputs(mongolia_model)
-    store_database1(pbi_outputs, table_name="pbi_outputs")
+    # pbi_outputs = unpivot_outputs(mongolia_model)
+    # store_tb_database(pbi_outputs, table_name="pbi_outputs")
 
     req_outputs = ['prevXinfectiousXamong',
                    'prevXlatentXamong',

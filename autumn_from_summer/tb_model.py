@@ -56,6 +56,18 @@ def return_function_of_function(inner_function, outer_function):
     return lambda value: outer_function(inner_function(value))
 
 
+# temporary fix for store database, need to move to tb_model
+def store_tb_database(outputs, table_name="outputs", database_name="databases/outputs.db"):
+    """
+    store outputs from the model in sql database for use in producing outputs later
+    """
+    engine = create_engine("sqlite:///"+ database_name, echo=False)
+    if table_name == "functions":
+        outputs.to_sql(table_name, con=engine, if_exists="replace", index=False, dtype={"cdr_values": FLOAT()})
+    else:
+        outputs.to_sql(table_name, con=engine, if_exists="replace", index=False)
+
+
 def find_match(row, column_name):
     """
     method to return a matching item in row

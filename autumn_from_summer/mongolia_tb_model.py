@@ -3,13 +3,13 @@ import summer_py.post_processing as post_proc
 from summer_py.outputs import Outputs
 
 
-def build_model_for_calibration(update_params):
+def build_model_for_calibration(update_params={}):
 
     stratify_by = ['age', 'housing', 'location', 'strain']
 
     # some default parameter values
     external_params = {'start_time': 1900.,
-                       'end_time': 2017.,
+                       'end_time': 2035.,
                        'time_step': 1.,
                        'start_population': 3000000,
                        'contact_rate': 20.,
@@ -172,20 +172,99 @@ def build_model_for_calibration(update_params):
                            # mixing_matrix=location_mixing
                            )
 
-    _tb_model.transition_flows.to_csv("transitions.csv")
+    #_tb_model.transition_flows.to_csv("transitions.csv")
     # _tb_model.death_flows.to_csv("deaths.csv")
 
     return _tb_model
 
 
-if __name__ == "__main__":
-    update_parameters = {'contact_rate': 20., 'time_step': 1., 'end_time': 2016.}
-    mongolia_model = build_model_for_calibration(update_parameters)
-    mongolia_model.run_model()
+def initialise_scenario_run(baseline_model, update_params):
+    """
+    function to run a scenario. Running time starts at start_time.the initial conditions will be loaded form the
+    run baseline_model
+    :return: the run scenario model
+    """
 
-    # database storage
-    # pbi_outputs = unpivot_outputs(mongolia_model)
-    # store_database(pbi_outputs, table_name="pbi_outputs")
+    # find last integrated time and its index before start_time in baseline_model
+    first_index_over = min([x[0] for x in enumerate(baseline_model.times) if x[1] > update_params['start_time']])
+    index_of_interest = max([0, first_index_over - 1])
+    integration_start_time = baseline_model.times[index_of_interest]
+    init_compartments = baseline_model.outputs[index_of_interest, :]
+
+    update_params['start_time'] = integration_start_time
+
+    sc_model = build_model_for_calibration(update_params)
+    sc_model.compartment_values = init_compartments
+
+    return sc_model
+
+
+def run_multi_scenario(scenario_params, scenario_start_time):
+    """
+    Run a baseline model and scenarios
+    :param scenario_params: a dictionary keyed with scenario numbers (0 for baseline). values are dictionaries
+    containing parameter updates
+    :return: a list of model objects
+    """
+    param_updates_for_baseline = scenario_params[0] if 0 in scenario_params.keys() else {}
+    baseline_model = build_model_for_calibration(param_updates_for_baseline)
+    baseline_model.run_model()
+
+    models = [baseline_model]
+
+    for scenario_index in scenario_params.keys():
+        if scenario_index == 0:
+            continue
+        scenario_params[scenario_index]['start_time'] = scenario_start_time
+        scenario_model = initialise_scenario_run(baseline_model, scenario_params[scenario_index])
+        scenario_model.run_model()
+        models.append(copy.deepcopy(scenario_model))
+
+    return models
+
+
+def create_multi_scenario_outputs(models, req_outputs, req_times={}, req_multipliers={}, out_dir='outputs'):
+    """
+    process and generate plots for several scenarios
+    :param models: a list of run models
+    :param req_outputs. See PostProcessing class
+    :param req_times. See PostProcessing class
+    :param req_multipliers. See PostProcessing class
+    """
+    if not os.path.exists(out_dir):
+        os.mkdir(out_dir)
+
+    pps = []
+    for scenario_index in range(len(models)):
+
+        # automatically add some basic outputs
+        for group in models[scenario_index].all_stratifications.keys():
+            req_outputs.append('distribution_of_strataX' + group)
+            for stratum in models[scenario_index].all_stratifications[group]:
+                req_outputs.append('prevXinfectiousXamongX' + group + '_' + stratum)
+
+        if "strain" in models[scenario_index].all_stratifications.keys():
+            req_outputs.append('prevXinfectiousXstrain_mdrXamongXinfectious')
+
+        for output in req_outputs:
+            if output[0:21] == 'prevXinfectiousXamong':
+                req_multipliers[output] = 1.e5
+
+        pps.append(post_proc.PostProcessing(models[scenario_index], requested_outputs=req_outputs,
+                                            requested_times=req_times,
+                                            multipliers=req_multipliers))
+
+    outputs = Outputs(pps, out_dir)
+    outputs.plot_requested_outputs()
+
+
+if __name__ == "__main__":
+
+    scenario_params = {
+        1: {'contact_rate': 100.},
+        2: {'contact_rate': 0.}
+    }
+    models = run_multi_scenario(scenario_params, 2020.)
 
     req_outputs = ['prevXinfectiousXamong',
                    'prevXlatentXamong',
@@ -193,21 +272,4 @@ if __name__ == "__main__":
                    'prevXinfectiousXamongXhousing_gerXlocation_urban'
                    ]
 
-    for group in mongolia_model.all_stratifications.keys():
-        req_outputs.append('distribution_of_strataX' + group)
-        for stratum in mongolia_model.all_stratifications[group]:
-            req_outputs.append('prevXinfectiousXamongX' + group + '_' + stratum)
-
-    if "strain" in mongolia_model.all_stratifications.keys():
-        req_outputs.append('prevXinfectiousXstrain_mdrXamongXinfectious')
-
-    req_multipliers = {}
-    for output in req_outputs:
-        if output[0:21] == 'prevXinfectiousXamong':
-            req_multipliers[output] = 1.e5
-
-    pp = post_proc.PostProcessing(mongolia_model, req_outputs, multipliers=req_multipliers)
-
-    # generate outputs
-    outputs = Outputs(pp, 'outputs')
-    outputs.plot_requested_outputs()
+    create_multi_scenario_outputs(models, req_outputs=req_outputs)

@@ -5,7 +5,7 @@ from summer_py.outputs import Outputs
 
 def build_model_for_calibration(update_params={}):
 
-    stratify_by = ['age', 'housing', 'location', 'strain']
+    stratify_by = ['age', 'strain']  # , 'housing', 'location', 'strain']
 
     # some default parameter values
     external_params = {'start_time': 1900.,
@@ -20,7 +20,12 @@ def build_model_for_calibration(update_params={}):
                        'relative_control_recovery_rate_mdr': 0.5,
                        'rr_transmission_ger': 10.,
                        'rr_transmission_urban': 10.,
-                       'rr_transmission_province': 5.
+                       'rr_transmission_province': 5.,
+                       'ipt_age_0_ct_coverage': 0.,
+                       'ipt_all_ages_ct_coverage': 0.,
+                       'yield_contact_ct_tstpos_per_detected_tb': 2.,
+                       'ipt_efficacy': .75,
+                       'ipt_rate': 0.
                        }
     # update external_params with new parameter values found in update_params
     external_params.update(update_params)
@@ -31,6 +36,7 @@ def build_model_for_calibration(update_params={}):
          "infect_death": (1.0 - external_params['case_fatality_rate']) / external_params['untreated_disease_duration'],
          "universal_death_rate": 1.0 / 50.0,
          "case_detection": 0.,
+         "ipt_rate": external_params['ipt_rate'],
          "dr_amplification": .0,  # high value for testing
          "crude_birth_rate": 20.0 / 1e3}
 
@@ -64,6 +70,10 @@ def build_model_for_calibration(update_params={}):
     # add case detection process to basic model
     _tb_model.add_transition_flow(
         {"type": "standard_flows", "parameter": "case_detection", "origin": "infectious", "to": "recovered"})
+
+    # add IPT flows
+    _tb_model.add_transition_flow(
+        {"type": "standard_flows", "parameter": "ipt_rate", "origin": "early_latent", "to": "late_latent"})
 
     # loading time-variant case detection rate
     input_database = InputDB()
@@ -128,6 +138,8 @@ def build_model_for_calibration(update_params={}):
 
         _tb_model.stratify("age", copy.deepcopy(age_breakpoints), [], {}, adjustment_requests=age_params,
                            infectiousness_adjustments=age_infectiousness, verbose=False)
+
+
 
     if 'bcg' in stratify_by:
          # get bcg coverage function
@@ -261,8 +273,9 @@ def create_multi_scenario_outputs(models, req_outputs, req_times={}, req_multipl
 if __name__ == "__main__":
 
     scenario_params = {
-        1: {'contact_rate': 100.},
-        2: {'contact_rate': 0.}
+        1: {'ipt_rate': 1.},
+        2: {'treatment_success_prop': .9},
+        3: {'relative_control_recovery_rate_mdr': 0.75}
     }
     models = run_multi_scenario(scenario_params, 2020.)
 

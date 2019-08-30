@@ -23,7 +23,6 @@ class Calibration:
     """
     def __init__(self, model_builder, priors, targeted_outputs):
         self.model_builder = model_builder  # a function that builds a new model without running it
-        self.base_model = model_builder()  # a built model that has not been run
         self.running_model = None  # a model that will be run during calibration
         self.post_processing = None  # a PostProcessing object containing the required outputs of a model that has been run
         self.priors = priors  # a list of dictionaries. Each dictionary describes the prior distribution for a parameter
@@ -48,10 +47,9 @@ class Calibration:
         if self.post_processing is None:  # we need to initialise a PostProcessing object
             requested_outputs = [self.targeted_outputs[i]['output_key'] for i in range(len(self.targeted_outputs))]
             requested_times = {}
-            multipliers = {}
 
-            for output in self.targeted_outputs:
-                requested_times[output['output_key']] = output['years']
+            for _output in self.targeted_outputs:
+                requested_times[_output['output_key']] = _output['years']
 
             self.post_processing = post_proc.PostProcessing(self.running_model, requested_outputs, requested_times)
         else:  # we just need to update the post_processing attribute and produce new outputs
@@ -65,18 +63,11 @@ class Calibration:
         run the model with a set of params.
         :param params: a dictionary containing the parameters to be updated
         """
-        if 'start_time' in self.param_list:  # we need to re-build a model
-            this_param_index = self.param_list.index('start_time')
-            self.running_model = self.model_builder(start_time=params[this_param_index])
-        else:  # we cjust need to copy the existing base_model
-            self.running_model = copy.deepcopy(self.base_model)  # reset running model
+        update_params = {}
+        for i, param_name in enumerate(self.param_list):
+            update_params[param_name] = params[i]
 
-        # update parameter values
-        for i in range(len(params)):
-            param_name = self.priors[i]['param_name']
-            if param_name != 'start_time':
-                value = params[i]
-                self.running_model.parameters[param_name] = value
+        self.running_model = self.model_builder(update_params)
 
         # run the model
         self.running_model.run_model()
@@ -212,13 +203,15 @@ class LogLike(tt.Op):
 
 if __name__ == "__main__":
 
-    par_priors = [{'param_name': 'contact_rate', 'distribution': 'uniform', 'distri_params': [2., 100.]}#,
-                  #{'param_name': 'late_progression', 'distribution': 'uniform', 'distri_params': [.001, 0.003]},
-                  #{'param_name': 'start_time', 'distribution': 'uniform', 'distri_params': [1800., 1850.]}
+    par_priors = [{'param_name': 'contact_rate', 'distribution': 'uniform', 'distri_params': [1., 20.]},
+                  {'param_name': 'rr_transmission_ger', 'distribution': 'uniform', 'distri_params': [1., 20.]},
+                  {'param_name': 'rr_transmission_urban', 'distribution': 'uniform', 'distri_params': [.5, 10.]},
+                  {'param_name': 'rr_transmission_province', 'distribution': 'uniform', 'distri_params': [.5, 10.]}
                   ]
-    target_outputs = [{'output_key': 'prevXinfectiousXamongXage_15', 'years': [2015, 2016], 'values': [0.005, 0.004],
-                       'sd': 0.0005} #,
-                      #{'output_key': 'prevXlatentXamongXage_5', 'years': [2014], 'values': [0.096], 'sd': 0.012}
+    target_outputs = [{'output_key': 'prevXinfectiousXamongXage_15Xage_60', 'years': [2015.], 'values': [0.00560]},
+                      {'output_key': 'prevXinfectiousXamongXage_15Xage_60Xhousing_ger', 'years': [2015.], 'values': [0.00613]},
+                      {'output_key': 'prevXinfectiousXamongXage_15Xage_60Xlocation_urban', 'years': [2015.], 'values': [0.00586]},
+                      {'output_key': 'prevXinfectiousXamongXage_15Xage_60Xlocation_province', 'years': [2015.], 'values': [0.00513]}
                      ]
     calib = Calibration(build_model_for_calibration, par_priors, target_outputs)
 

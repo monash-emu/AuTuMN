@@ -5,11 +5,13 @@ from summer_py.outputs import Outputs
 
 def build_model_for_calibration(stratify_by, update_params):
 
+    # stratify_by = ['age', 'housing', 'location', 'strain']
+
     # some default parameter values
-    external_params = {'start_time': 1800.,
+    external_params = {'start_time': 1900.,
                        'end_time': 2020.,
-                       'time_step': 10.,
-                       'start_population': 300000,
+                       'time_step': 1.,
+                       'start_population': 3000000,
                        'contact_rate': 20.,
                        'case_fatality_rate': 0.4,
                        'untreated_disease_duration': 3.0,
@@ -49,11 +51,11 @@ def build_model_for_calibration(stratify_by, update_params):
     # define model     #replace_deaths  add_crude_birth_rate
     if len(stratify_by) > 0:
         _tb_model = StratifiedModel(
-            integration_times, compartments, {"infectious": 1e-3}, model_parameters, flows, birth_approach="add_crude_birth_rate",
+            integration_times, compartments, {"infectious": 1e-3}, model_parameters, flows, birth_approach="replace_deaths",
             starting_population=external_params['start_population'])
     else:
         _tb_model = EpiModel(
-            integration_times, compartments, {"infectious": 1e-3}, model_parameters, flows, birth_approach="add_crude_birth_rate",
+            integration_times, compartments, {"infectious": 1e-3}, model_parameters, flows, birth_approach="replace_deaths",
             starting_population=external_params['start_population'])
 
     # add crude birth rate from un estimates
@@ -177,10 +179,14 @@ def build_model_for_calibration(stratify_by, update_params):
 
 
 if __name__ == "__main__":
-    stratify_by = ['age']
-    update_parameters = {'contact_rate': 20.}
+    stratify_by = ['age', 'strain', 'location', 'housing']
+    update_parameters = {'contact_rate': 20., 'time_step': 1., 'end_time': 2016.}
     mongolia_model = build_model_for_calibration(stratify_by, update_parameters)
     mongolia_model.run_model()
+
+    # database storage
+    # pbi_outputs = unpivot_outputs(mongolia_model)
+    # store_database(pbi_outputs, table_name="pbi_outputs")
 
     req_outputs = ['prevXinfectiousXamong',
                    'prevXlatentXamong',
@@ -192,6 +198,9 @@ if __name__ == "__main__":
         req_outputs.append('distribution_of_strataX' + group)
         for stratum in mongolia_model.all_stratifications[group]:
             req_outputs.append('prevXinfectiousXamongX' + group + '_' + stratum)
+
+    if "strain" in stratify_by:
+        req_outputs.append('prevXinfectiousXstrain_mdrXamongXinfectious')
 
     req_multipliers = {}
     for output in req_outputs:

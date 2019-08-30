@@ -1,4 +1,4 @@
-
+import re
 from summer_py.summer_model import *
 from autumn_from_summer.db import InputDB
 import matplotlib.pyplot
@@ -56,6 +56,31 @@ def return_function_of_function(inner_function, outer_function):
     return lambda value: outer_function(inner_function(value))
 
 
+# temporary fix for store database, need to move to tb_model
+def store_tb_database(outputs, table_name="outputs", database_name="databases/outputs.db"):
+    """
+    store outputs from the model in sql database for use in producing outputs later
+    """
+    engine = create_engine("sqlite:///"+ database_name, echo=False)
+    if table_name == "functions":
+        outputs.to_sql(table_name, con=engine, if_exists="replace", index=False, dtype={"cdr_values": FLOAT()})
+    else:
+        outputs.to_sql(table_name, con=engine, if_exists="replace", index=False)
+
+
+def find_match(row, column_name):
+    """
+    method to return a matching item in row
+    """
+    regex = re.compile(r'.*' + column_name + r'.*')
+    row_list = row.variable.split("X")
+    match_item = list(filter(regex.search, row_list))
+    if len(match_item) > 0:
+        result = match_item[0]
+    else:
+        result = ''
+    return result
+
 def unpivot_outputs(model_object):
     """
     take outputs in the form they come out of the model object and convert them into a "long", "melted" or "unpiovted"
@@ -64,13 +89,14 @@ def unpivot_outputs(model_object):
     output_dataframe = pd.DataFrame(model_object.outputs, columns=model_object.compartment_names)
     output_dataframe["times"] = model_object.times
     output_dataframe = output_dataframe.melt("times")
-    for n_stratification in range(len(model_object.strata) + 1):
-        column_name = "compartment" if n_stratification == 0 else model_object.strata[n_stratification - 1]
-        output_dataframe[column_name] = \
-            output_dataframe.apply(lambda row: row.variable.split("X")[n_stratification], axis=1)
+    for n_stratification in range(len(model_object.all_stratifications.keys()) + 1):
+        column_name = "compartment" if n_stratification == 0 else list(model_object.all_stratifications.keys())[n_stratification - 1]
+        if n_stratification == 0:
+            output_dataframe[column_name] = \
+                 output_dataframe.apply(lambda row: row.variable.split("X")[n_stratification], axis=1)
         if n_stratification > 0:
             output_dataframe[column_name] = \
-                output_dataframe.apply(lambda row: row[column_name].split("_")[1], axis=1)
+                output_dataframe.apply(lambda row: find_match(row,column_name), axis=1)
     return output_dataframe.drop(columns="variable")
 
 

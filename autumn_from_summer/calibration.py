@@ -203,7 +203,7 @@ class LogLike(tt.Op):
 
 if __name__ == "__main__":
 
-    par_priors = [{'param_name': 'contact_rate', 'distribution': 'uniform', 'distri_params': [1., 20.]},
+    par_priors = [{'param_name': 'contact_rate', 'distribution': 'uniform', 'distri_params': [1., 40.]},
                   {'param_name': 'rr_transmission_ger', 'distribution': 'uniform', 'distri_params': [1., 20.]},
                   {'param_name': 'rr_transmission_urban', 'distribution': 'uniform', 'distri_params': [.5, 10.]},
                   {'param_name': 'rr_transmission_province', 'distribution': 'uniform', 'distri_params': [.5, 10.]}

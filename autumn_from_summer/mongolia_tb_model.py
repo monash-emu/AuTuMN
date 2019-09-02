@@ -5,7 +5,7 @@ from summer_py.outputs import Outputs
 
 def build_model_for_calibration(update_params={}):
 
-    stratify_by = ['age', 'strain']  # , 'housing', 'location', 'strain']
+    stratify_by = ['age', 'strain', 'housing']  # , 'housing', 'location', 'strain']
 
     # some default parameter values
     external_params = {'start_time': 1900.,
@@ -274,9 +274,9 @@ def create_multi_scenario_outputs(models, req_outputs, req_times={}, req_multipl
 if __name__ == "__main__":
 
     scenario_params = {
-        1: {'ipt_rate': 1.},
-        2: {'treatment_success_prop': .9},
-        3: {'relative_control_recovery_rate_mdr': 0.75}
+        # 1: {'ipt_rate': 1.},
+        # 2: {'treatment_success_prop': .9},
+        # 3: {'relative_control_recovery_rate_mdr': 0.75}
     }
     models = run_multi_scenario(scenario_params, 2020.)
 
@@ -286,4 +286,4 @@ if __name__ == "__main__":
                    'prevXinfectiousXamongXhousing_gerXlocation_urban'
                    ]
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs)
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='age_strain_housing')

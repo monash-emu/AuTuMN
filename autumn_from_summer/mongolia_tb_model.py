@@ -45,6 +45,7 @@ def build_model_for_calibration(update_params={}):
                        'ipt_all_ages_ct_coverage': 0.,  # general contact tracing coverage. Overwrites previous key if >0
                        'yield_contact_ct_tstpos_per_detected_tb': 2.,  # expected number of infections traced per index
                        'ipt_efficacy': .75,   # based on intention-to-treat
+                       'ds_ipt_coverage': 1.,  # used as a DS-specific multiplier to the coverage defined above
                        'mdr_ipt_coverage': .0  # used as an MDR-specific multiplier to the coverage defined above
                        }
     # update external_params with new parameter values found in update_params
@@ -131,7 +132,8 @@ def build_model_for_calibration(update_params={}):
                            adjustment_requests={
                                'contact_rate': {'ds': 1., 'mdr': 1.},
                                'case_detection': {"mdr": mdr_adjustment},
-                               'ipt_rate': {"ds": 1., "mdr": external_params['mdr_ipt_coverage']}
+                               'ipt_rate': {"ds": external_params['ds_ipt_coverage'],
+                                            "mdr": external_params['mdr_ipt_coverage']}
                            })
 
         _tb_model.add_transition_flow(
@@ -351,10 +353,10 @@ if __name__ == "__main__":
             models.append(DummyModel(model_dict))
     else:
         scenario_params = {
-            1: {'ipt_age_0_ct_coverage': 1.},
-            2: {'ipt_all_ages_ct_coverage': 1.}
-            # 3: {'ipt_all_ages_ct_coverage': 1., 'mdr_ipt_coverage': 1.},
-            # 4: {'mdr_tsr': .7}
+            1: {'ipt_age_0_ct_coverage': .5},
+            # 2: {'ipt_all_ages_ct_coverage': .5},
+            # 3: {'ipt_all_ages_ct_coverage': .5, 'ds_ipt_coverage': 0., 'mdr_ipt_coverage': 1.},
+            # 4: {'mdr_tsr': .8}
         }
 
         t0 = time()

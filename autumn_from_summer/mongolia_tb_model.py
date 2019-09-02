@@ -18,11 +18,11 @@ def build_mongolia_timevariant_tsr():
 
 def build_model_for_calibration(update_params={}):
 
-    stratify_by = ['age', 'location', 'housing']  # 'strain'
+    stratify_by = ['age', 'location', 'housing', 'strain']
 
     # some default parameter values
     external_params = {'start_time': 1800.,
-                       'end_time': 2020.,
+                       'end_time': 2035.,
                        'time_step': 1.,
                        'start_population': 3000000,
                        # base model definition:
@@ -33,7 +33,7 @@ def build_model_for_calibration(update_params={}):
                        'case_fatality_rate': 0.4,
                        'untreated_disease_duration': 3.0,
                        # MDR-TB:
-                       'dr_amplification_prop_among_nonsuccess': 0.07,
+                       'dr_amplification_prop_among_nonsuccess': 0.15,
                        'prop_mdr_detected_as_mdr': 0.5,
                        'mdr_tsr': .6,
                        # adjustments by location and housing type
@@ -344,7 +344,7 @@ if __name__ == "__main__":
     }
 
     t0 = time()
-    models = run_multi_scenario(scenario_params, 1850.)
+    models = run_multi_scenario(scenario_params, 2020.)
     delta = time() - t0
     print("Running time: " + str(round(delta, 1)) + " seconds")
 
@@ -354,18 +354,22 @@ if __name__ == "__main__":
                    'prevXinfectiousXamongXage_15Xage_60',
                    'prevXinfectiousXamongXage_15Xage_60Xhousing_ger',
                    'prevXinfectiousXamongXage_15Xage_60Xlocation_province',
-                   'prevXinfectiousXamongXage_15Xage_60Xlocation_urban'
+                   'prevXinfectiousXamongXage_15Xage_60Xlocation_urban',
+                   'prevXinfectiousXstrain_mdrXamongXinfectious'
                    ]
 
-    targets_to_plot = [{'output_key': 'prevXinfectiousXamongXage_15Xage_60', 'years': [2015.], 'values': [560.]},
-                       {'output_key': 'prevXlatentXamongXage_5', 'years': [2016.], 'values': [.096]}]
+    multipliers = {
+        'prevXinfectiousXstrain_mdrXamongXinfectious': 100.
+    }
 
     targets_to_plot = {'prevXinfectiousXamongXage_15Xage_60': [[2015.], [560.]],
                        'prevXlatentXamongXage_5': [[2016.], [.096]],
                        'prevXinfectiousXamongXage_15Xage_60Xhousing_ger': [[2015.], [613.]],
                        'prevXinfectiousXamongXage_15Xage_60Xlocation_province': [[2015.], [513.]],
-                       'prevXinfectiousXamongXage_15Xage_60Xlocation_urban': [[2015.], [586.]]
+                       'prevXinfectiousXamongXage_15Xage_60Xlocation_urban': [[2015.], [586.]],
+                       'prevXinfectiousXstrain_mdrXamongXinfectious': [[1999., 2007., 2016.], [1., 1.4, 5.3]]
                        }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='testing', targets_to_plot=targets_to_plot)
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='testing', targets_to_plot=targets_to_plot,
+                                  req_multipliers=multipliers)
 

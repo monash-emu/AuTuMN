@@ -17,7 +17,7 @@ def build_mongolia_timevariant_tsr():
 
 def build_model_for_calibration(update_params={}):
 
-    stratify_by = ['age']  #, 'strain', 'housing', 'location']
+    stratify_by = ['age', 'strain']  #, 'strain', 'housing', 'location']
 
     # some default parameter values
     external_params = {'start_time': 1900.,
@@ -34,10 +34,11 @@ def build_model_for_calibration(update_params={}):
                        'rr_transmission_ger': 3.,
                        'rr_transmission_urban': 3.,
                        'rr_transmission_province': 1.,
-                       'ipt_age_0_ct_coverage': 0.,
+                       'ipt_age_0_ct_coverage': .17,
                        'ipt_all_ages_ct_coverage': 0.,
                        'yield_contact_ct_tstpos_per_detected_tb': 2.,
-                       'ipt_efficacy': .75
+                       'ipt_efficacy': .75,
+                       'mdr_ipt_coverage': .0
                        }
     # update external_params with new parameter values found in update_params
     external_params.update(update_params)
@@ -84,7 +85,7 @@ def build_model_for_calibration(update_params={}):
     _tb_model.add_transition_flow(
         {"type": "standard_flows", "parameter": "case_detection", "origin": "infectious", "to": "recovered"})
 
-    # add IPT flows
+    # add IPT flow with infection_frequency type
     _tb_model.add_transition_flow(
         {"type": "infection_frequency", "parameter": "ipt_rate", "origin": "early_latent", "to": "late_latent"})
 
@@ -114,7 +115,6 @@ def build_model_for_calibration(update_params={}):
         _tb_model.adaptation_functions["ipt_rate"] = ipt_rate_function
         _tb_model.parameters["ipt_rate"] = "ipt_rate"
 
-
     if "strain" in stratify_by:
         mdr_adjustment = external_params['prop_mdr_detected_as_mdr'] * external_params['mdr_tsr'] / .9  # /.9 for last DS TSR
 
@@ -122,7 +122,9 @@ def build_model_for_calibration(update_params={}):
                            requested_proportions={"mdr": 0.},
                            adjustment_requests={
                                'contact_rate': {'ds': 1., 'mdr': 1.},
-                               'case_detection': {"mdr": mdr_adjustment}})
+                               'case_detection': {"mdr": mdr_adjustment},
+                               'ipt_rate': {"ds": 1., "mdr": external_params['mdr_ipt_coverage']}
+                           })
 
 
         _tb_model.add_transition_flow(
@@ -306,9 +308,10 @@ def create_multi_scenario_outputs(models, req_outputs, req_times={}, req_multipl
 if __name__ == "__main__":
 
     scenario_params = {
-        1: {'ipt_all_ages_ct_coverage': 1.},
-        2: {'ipt_age_0_ct_coverage': 1.}
-         #1: {'mdr_tsr': 1}
+        1: {'ipt_age_0_ct_coverage': 1.},
+        2: {'ipt_all_ages_ct_coverage': 1.},
+        3: {'ipt_all_ages_ct_coverage': 1., 'mdr_ipt_coverage': 1.},
+        4: {'mdr_tsr': .7}
     }
     models = run_multi_scenario(scenario_params, 2020.)
 

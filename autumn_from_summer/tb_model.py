@@ -8,6 +8,26 @@ from autumn_from_summer.curve import scale_up_function
 import pandas as pd
 from autumn_from_summer.db import get_bcg_coverage, get_crude_birth_rate, get_pop_mortality_functions
 
+import dill
+
+def pickle_light_model(model, out_file):
+    """
+    store a light version of a run model
+    :param model: a model object
+    :return:
+    """
+    file_name = out_file + ".pickle"
+    file_stream = open(file_name, "wb")
+
+    attributes_to_store = ['times', 'compartment_names', 'outputs', 'all_stratifications']
+
+    model_as_dict = {}
+
+    for att in attributes_to_store:
+        model_as_dict[att] = getattr(model, att)
+
+    dill.dump(model_as_dict, file_stream)
+    file_stream.close()
 
 def scale_relative_risks_for_equivalence(proportions, relative_risks):
     """
@@ -372,7 +392,7 @@ if __name__ == "__main__":
         # create_flowchart(tb_model, name="mongolia_flowchart")
         # tb_model.transition_flows.to_csv("transitions.csv")
 
-        tb_model.run_model()
+        # tb_model.run_model()
 
     # get outputs
     # infectious_population = tb_model.get_total_compartment_size(["infectious"])

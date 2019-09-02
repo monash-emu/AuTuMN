@@ -18,7 +18,7 @@ def build_mongolia_timevariant_tsr():
 
 def build_model_for_calibration(update_params={}):
 
-    stratify_by = ['age', 'location', 'housing', 'strain']
+    stratify_by = ['age']  # ['age', 'location', 'housing', 'strain']
 
     # some default parameter values
     external_params = {'start_time': 1800.,
@@ -295,6 +295,9 @@ def run_multi_scenario(scenario_params, scenario_start_time):
         scenario_model.run_model()
         models.append(copy.deepcopy(scenario_model))
 
+    for i, model in enumerate(models):
+        file_for_pickle = os.path.join('stored_models', 'scenario_' + str(i))
+        pickle_light_model(model, file_for_pickle)
     return models
 
 
@@ -337,8 +340,8 @@ def create_multi_scenario_outputs(models, req_outputs, req_times={}, req_multipl
 if __name__ == "__main__":
 
     scenario_params = {
-        # 1: {'ipt_age_0_ct_coverage': 1.},
-        # 2: {'ipt_all_ages_ct_coverage': 1.},
+        1: {'ipt_age_0_ct_coverage': 1.},
+        2: {'ipt_all_ages_ct_coverage': 1.}
         # 3: {'ipt_all_ages_ct_coverage': 1., 'mdr_ipt_coverage': 1.},
         # 4: {'mdr_tsr': .7}
     }

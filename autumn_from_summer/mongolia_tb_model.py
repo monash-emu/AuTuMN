@@ -18,7 +18,7 @@ def build_mongolia_timevariant_tsr():
 
 def build_model_for_calibration(update_params={}):
 
-    stratify_by = ['age']  # ['age', 'location', 'housing', 'strain']
+    stratify_by = ['age', 'location', 'housing', 'strain']
 
     # some default parameter values
     external_params = {'start_time': 1800.,
@@ -298,6 +298,9 @@ def run_multi_scenario(scenario_params, scenario_start_time):
     for i, model in enumerate(models):
         file_for_pickle = os.path.join('stored_models', 'scenario_' + str(i))
         pickle_light_model(model, file_for_pickle)
+
+        pbi_outputs = unpivot_outputs(model)
+        store_tb_database(pbi_outputs, table_name='outputs', database_name="databases/outputs_" + str(i) + ".db")
     return models
 
 
@@ -338,18 +341,26 @@ def create_multi_scenario_outputs(models, req_outputs, req_times={}, req_multipl
 
 
 if __name__ == "__main__":
+    load_model = True
 
-    scenario_params = {
-        1: {'ipt_age_0_ct_coverage': 1.},
-        2: {'ipt_all_ages_ct_coverage': 1.}
-        # 3: {'ipt_all_ages_ct_coverage': 1., 'mdr_ipt_coverage': 1.},
-        # 4: {'mdr_tsr': .7}
-    }
+    if load_model:
+        models = []
+        scenarios_to_load = [0]
+        for sc in scenarios_to_load:
+            model_dict = load_pickled_model('stored_models/scenario_' + str(sc) + '.pickle')
+            models.append(DummyModel(model_dict))
+    else:
+        scenario_params = {
+            1: {'ipt_age_0_ct_coverage': 1.},
+            2: {'ipt_all_ages_ct_coverage': 1.}
+            # 3: {'ipt_all_ages_ct_coverage': 1., 'mdr_ipt_coverage': 1.},
+            # 4: {'mdr_tsr': .7}
+        }
 
-    t0 = time()
-    models = run_multi_scenario(scenario_params, 2020.)
-    delta = time() - t0
-    print("Running time: " + str(round(delta, 1)) + " seconds")
+        t0 = time()
+        models = run_multi_scenario(scenario_params, 2020.)
+        delta = time() - t0
+        print("Running time: " + str(round(delta, 1)) + " seconds")
 
     req_outputs = ['prevXinfectiousXamong',
                    'prevXlatentXamong',
@@ -373,6 +384,6 @@ if __name__ == "__main__":
                        'prevXinfectiousXstrain_mdrXamongXinfectious': [[1999., 2007., 2016.], [1., 1.4, 5.3]]
                        }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='testing', targets_to_plot=targets_to_plot,
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_pickle', targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers)
 

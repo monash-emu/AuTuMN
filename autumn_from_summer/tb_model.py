@@ -29,6 +29,13 @@ def pickle_light_model(model, out_file):
     dill.dump(model_as_dict, file_stream)
     file_stream.close()
 
+
+def load_pickled_model(file_path):
+    file_stream = open(file_path, "rb")
+    loaded_model = dill.load(file_stream)
+    return loaded_model
+
+
 def scale_relative_risks_for_equivalence(proportions, relative_risks):
     """
     :param proportions: dictionary
@@ -382,6 +389,11 @@ def build_working_tb_model(tb_n_contact, country_iso3, cdr_adjustment=0.6, start
     #                    adjustment_requests=[], verbose=False)
     return _tb_model
 
+
+class DummyModel:
+    def __init__(self, model_dict):
+        for key in model_dict.keys():
+            setattr(self, key, model_dict[key])
 
 if __name__ == "__main__":
 

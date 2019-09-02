@@ -17,7 +17,7 @@ def build_mongolia_timevariant_tsr():
 
 def build_model_for_calibration(update_params={}):
 
-    stratify_by = ['age', 'strain'] # , 'housing', 'location']
+    stratify_by = ['age', 'strain', 'housing', 'location']
 
     # some default parameter values
     external_params = {'start_time': 1900.,
@@ -25,6 +25,7 @@ def build_model_for_calibration(update_params={}):
                        'time_step': 1.,
                        'start_population': 3000000,
                        'contact_rate': 10.,
+                       'rr_transmission_recovered': 1.,
                        'case_fatality_rate': 0.4,
                        'untreated_disease_duration': 3.0,
                        'dr_amplification_prop_among_nonsuccess': 0.07,
@@ -44,6 +45,7 @@ def build_model_for_calibration(update_params={}):
 
     model_parameters = \
         {"contact_rate": external_params['contact_rate'],
+         "contact_rate_recovered": external_params['contact_rate'] * external_params['rr_transmission_recovered'],
          "recovery": external_params['case_fatality_rate'] / external_params['untreated_disease_duration'],
          "infect_death": (1.0 - external_params['case_fatality_rate']) / external_params['untreated_disease_duration'],
          "universal_death_rate": 1.0 / 50.0,
@@ -151,8 +153,6 @@ def build_model_for_calibration(update_params={}):
         _tb_model.stratify("age", copy.deepcopy(age_breakpoints), [], {}, adjustment_requests=age_params,
                            infectiousness_adjustments=age_infectiousness, verbose=False)
 
-
-
     if 'bcg' in stratify_by:
          # get bcg coverage function
         _tb_model = get_bcg_functions(_tb_model, input_database, 'MNG')
@@ -247,7 +247,7 @@ def run_multi_scenario(scenario_params, scenario_start_time):
     return models
 
 
-def create_multi_scenario_outputs(models, req_outputs, req_times={}, req_multipliers={}, out_dir='outputs'):
+def create_multi_scenario_outputs(models, req_outputs, req_times={}, req_multipliers={}, out_dir='outputs_tes'):
     """
     process and generate plots for several scenarios
     :param models: a list of run models

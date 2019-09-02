@@ -3,6 +3,12 @@ import summer_py.post_processing as post_proc
 from summer_py.outputs import Outputs
 
 
+def build_mongolia_timevariant_cdr():
+    cdr = {1950.: 0., 1980.: .10, 1990.: .15, 2000.: .20, 2010.: .30, 2015: .33}
+    cdr_function = scale_up_function(cdr.keys(), cdr.values(), smoothness=0.2, method=5)
+    return cdr_function
+
+
 def build_mongolia_timevariant_tsr():
     tsr = {1950.: 0., 1970.: .2, 1994.: .6, 2000.: .85, 2010.: .87, 2016: .9}
     tsr_function = scale_up_function(tsr.keys(), tsr.values(), smoothness=0.2, method=5)
@@ -11,11 +17,11 @@ def build_mongolia_timevariant_tsr():
 
 def build_model_for_calibration(update_params={}):
 
-    stratify_by = ['age', 'strain', 'housing', 'location']
+    stratify_by = ['age', 'strain'] # , 'housing', 'location']
 
     # some default parameter values
     external_params = {'start_time': 1900.,
-                       'end_time': 2017.,
+                       'end_time': 2035.,
                        'time_step': 1.,
                        'start_population': 3000000,
                        'contact_rate': 10.,
@@ -83,16 +89,9 @@ def build_model_for_calibration(update_params={}):
 
     # loading time-variant case detection rate
     input_database = InputDB()
-    res = input_database.db_query("gtb_2015", column="c_cdr", is_filter="country", value="Mongolia")
 
     # add scaling case detection rate
-    cdr_adjustment_factor = .5
-    cdr_mongolia = res["c_cdr"].values / 1e2 * cdr_adjustment_factor
-    cdr_mongolia = numpy.concatenate(([0.0], cdr_mongolia))
-    res = input_database.db_query("gtb_2015", column="year", is_filter="country", value="Mongolia")
-    cdr_mongolia_year = res["year"].values
-    cdr_mongolia_year = numpy.concatenate(([1950.], cdr_mongolia_year))
-    cdr_scaleup = scale_up_function(cdr_mongolia_year, cdr_mongolia, smoothness=0.2, method=5)
+    cdr_scaleup = build_mongolia_timevariant_cdr()
     prop_to_rate = convert_competing_proportion_to_rate(1.0 / external_params['untreated_disease_duration'])
     detect_rate = return_function_of_function(cdr_scaleup, prop_to_rate)
 
@@ -288,7 +287,7 @@ if __name__ == "__main__":
     scenario_params = {
         # 1: {'ipt_rate': 1.},
         # 2: {'treatment_success_prop': .9},
-        # 3: {'relative_control_recovery_rate_mdr': 0.75}
+        1: {'mdr_tsr': 1}
     }
     models = run_multi_scenario(scenario_params, 2020.)
 

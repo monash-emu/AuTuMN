@@ -7,6 +7,9 @@ import pymc3 as pm
 import theano
 import numpy as np
 import logging
+
+from scipy.optimize import Bounds, minimize
+
 logger = logging.getLogger("pymc3")
 logger.setLevel(logging.DEBUG)
 
@@ -21,13 +24,14 @@ class Calibration:
     this class handles model calibration using an MCMC algorithm if sampling from the posterior distribution is
     required, or using maximum likelihood estimation if only one calibrated parameter set is required.
     """
-    def __init__(self, model_builder, priors, targeted_outputs):
+    def __init__(self, model_builder, priors, targeted_outputs, multipliers):
         self.model_builder = model_builder  # a function that builds a new model without running it
         self.running_model = None  # a model that will be run during calibration
         self.post_processing = None  # a PostProcessing object containing the required outputs of a model that has been run
         self.priors = priors  # a list of dictionaries. Each dictionary describes the prior distribution for a parameter
         self.param_list = [self.priors[i]['param_name'] for i in range(len(self.priors))]
         self.targeted_outputs = targeted_outputs  # a list of dictionaries. Each dictionary describes a target
+        self.multipliers = multipliers
         self.data_as_array = None  # will contain all targeted data points in a single array
 
         self.loglike = None  # will store theano object
@@ -36,6 +40,7 @@ class Calibration:
         self.workout_unspecified_sds()
         self.create_loglike_object()
 
+        self.run_mode = None
         self.mcmc_trace = None  # will store the results of the MCMC model calibration
         self.mle_estimates = {}  # will store the results of the maximum-likelihood calibration
 
@@ -51,7 +56,8 @@ class Calibration:
             for _output in self.targeted_outputs:
                 requested_times[_output['output_key']] = _output['years']
 
-            self.post_processing = post_proc.PostProcessing(self.running_model, requested_outputs, requested_times)
+            self.post_processing = post_proc.PostProcessing(self.running_model, requested_outputs, requested_times,
+                                                            self.multipliers)
         else:  # we just need to update the post_processing attribute and produce new outputs
             self.post_processing.model = self.running_model
             self.post_processing.generated_outputs = {}
@@ -84,17 +90,20 @@ class Calibration:
         # run the model
         self.run_model_with_params(params)
 
-        ll = 0
+        ll = 0  # loglikelihood if using bayesian approach. Sum of squares if using lsm mode
         for target in self.targeted_outputs:
             key = target['output_key']
             data = np.array(target['values'])
             model_output = np.array(self.post_processing.generated_outputs[key])
 
-            print("############")
-            print(data)
-            print(model_output)
+            if self.run_mode == 'lsm':
+                ll += np.sum((data - model_output)**2)
+            else:
+                ll += -(0.5/target['sd']**2)*np.sum((data - model_output)**2)
 
-            ll += -(0.5/target['sd']**2)*np.sum((data - model_output)**2)
+        print("############")
+        print(params)
+        print(ll)
 
         return ll
 
@@ -131,41 +140,65 @@ class Calibration:
         """
         master method to run model calibration.
 
-        :param run_mode: either 'mcmc' (for sampling from the posterior) or 'mle' (maximum likelihood estimation)
+        :param run_mode: either 'mcmc' (for sampling from the posterior) or 'mle' (maximum likelihood estimation) or
+        'lsm' (for least square minimisation using scipy.minimize function)
         :param mcmc_method: if run_mode == 'mcmc' , either 'Metropolis' or 'DEMetropolis'
         :param n_iterations: number of iterations requested for sampling (excluding burn-in phase)
         :param n_burned: number of burned iterations before effective sampling
         :param n_chains: number of chains to be run
         :param parallel: boolean to trigger parallel computing
         """
-        basic_model = pm.Model()
-        with basic_model:
+        self.run_mode = run_mode
+        if run_mode in ['mcmc', 'mle']:
+            basic_model = pm.Model()
+            with basic_model:
 
-            fitted_params = []
-            for prior in self.priors:
-                if prior['distribution'] == 'uniform':
-                    value = pm.Uniform(prior['param_name'], lower=prior['distri_params'][0],
-                                       upper=prior['distri_params'][1])
-                    fitted_params.append(value)
+                fitted_params = []
+                for prior in self.priors:
+                    if prior['distribution'] == 'uniform':
+                        value = pm.Uniform(prior['param_name'], lower=prior['distri_params'][0],
+                                           upper=prior['distri_params'][1])
+                        fitted_params.append(value)
 
-            theta = tt.as_tensor_variable(fitted_params)
+                theta = tt.as_tensor_variable(fitted_params)
 
-            pm.DensityDist('likelihood', lambda v: self.loglike(v), observed={'v': theta})
+                pm.DensityDist('likelihood', lambda v: self.loglike(v), observed={'v': theta})
 
-            if run_mode == 'mle':
-                self.mle_estimates = pm.find_MAP()
-            elif run_mode == 'mcmc':  # full MCMC requested
-                if mcmc_method == 'Metropolis':
-                    mcmc_step = pm.Metropolis()
-                elif mcmc_method == 'DEMetropolis':
-                    mcmc_step = pm.DEMetropolis()
+                if run_mode == 'mle':
+                    self.mle_estimates = pm.find_MAP()
+                elif run_mode == 'mcmc':  # full MCMC requested
+                    if mcmc_method == 'Metropolis':
+                        mcmc_step = pm.Metropolis()
+                    elif mcmc_method == 'DEMetropolis':
+                        mcmc_step = pm.DEMetropolis()
+                    else:
+                        ValueError("requested mcmc mode is not supported. Must be one of ['Metropolis', 'DEMetropolis']")
+
+                    self.mcmc_trace = pm.sample(draws=n_iterations, step=mcmc_step, tune=n_burned, chains=n_chains,
+                                                progressbar=False, parallelize=parallel)
                 else:
-                    ValueError("requested mcmc mode is not supported. Must be one of ['Metropolis', 'DEMetropolis']")
+                    ValueError("requested run mode is not supported. Must be one of ['mcmc', 'lme']")
+        elif run_mode == 'lsm':
+            lower_bounds = []
+            upper_bounds = []
+            x0 = []
+            for prior in self.priors:
+                lower_bounds.append(prior['distri_params'][0])
+                upper_bounds.append(prior['distri_params'][1])
+                x0.append(.5 * (prior['distri_params'][0] + prior['distri_params'][1]))
+            bounds = Bounds(lower_bounds, upper_bounds)
 
-                self.mcmc_trace = pm.sample(draws=n_iterations, step=mcmc_step, tune=n_burned, chains=n_chains,
-                                            progressbar=False, parallelize=parallel)
-            else:
-                ValueError("requested run mode is not supported. Must be one of ['mcmc', 'lme']")
+            sol = minimize(self.loglikelihood, x0, bounds=bounds, options={'eps': .1, 'ftol': .1}, method='SLSQP')
+            self.mle_estimates = sol.x
+            print("____________________")
+            print("success variable: ")
+            print(sol.success)
+            print("message variable:")
+            print(sol.message)
+
+
+        else:
+            ValueError("requested run mode is not supported. Must be one of ['mcmc', 'lme']")
 
 
 class LogLike(tt.Op):
@@ -203,21 +236,30 @@ class LogLike(tt.Op):
 
 if __name__ == "__main__":
 
-    par_priors = [{'param_name': 'contact_rate', 'distribution': 'uniform', 'distri_params': [1., 40.]},
-                  {'param_name': 'rr_transmission_ger', 'distribution': 'uniform', 'distri_params': [1., 20.]},
-                  {'param_name': 'rr_transmission_urban', 'distribution': 'uniform', 'distri_params': [.5, 10.]},
-                  {'param_name': 'rr_transmission_province', 'distribution': 'uniform', 'distri_params': [.5, 10.]}
+    par_priors = [{'param_name': 'contact_rate', 'distribution': 'uniform', 'distri_params': [1., 20.]},
+                  {'param_name': 'rr_transmission_ger', 'distribution': 'uniform', 'distri_params': [1., 5.]},
+                  {'param_name': 'rr_transmission_urban', 'distribution': 'uniform', 'distri_params': [1., 5.]},
+                  {'param_name': 'rr_transmission_province', 'distribution': 'uniform', 'distri_params': [.5, 5.]}
                   ]
-    target_outputs = [{'output_key': 'prevXinfectiousXamongXage_15Xage_60', 'years': [2015.], 'values': [0.00560]},
-                      {'output_key': 'prevXinfectiousXamongXage_15Xage_60Xhousing_ger', 'years': [2015.], 'values': [0.00613]},
-                      {'output_key': 'prevXinfectiousXamongXage_15Xage_60Xlocation_urban', 'years': [2015.], 'values': [0.00586]},
-                      {'output_key': 'prevXinfectiousXamongXage_15Xage_60Xlocation_province', 'years': [2015.], 'values': [0.00513]}
+    target_outputs = [{'output_key': 'prevXinfectiousXamongXage_15Xage_60', 'years': [2015.], 'values': [560.]},
+                      {'output_key': 'prevXinfectiousXamongXage_15Xage_60Xhousing_ger', 'years': [2015.], 'values': [613.]},
+                      {'output_key': 'prevXinfectiousXamongXage_15Xage_60Xlocation_urban', 'years': [2015.], 'values': [586.]},
+                      {'output_key': 'prevXinfectiousXamongXage_15Xage_60Xlocation_province', 'years': [2015.], 'values': [513.]}
                      ]
-    calib = Calibration(build_model_for_calibration, par_priors, target_outputs)
 
+    multipliers = {}
+    for i, output in enumerate(target_outputs):
+        if output['output_key'][0:15] == 'prevXinfectious':
+            multipliers[output['output_key']] = 1.e5
+
+    calib = Calibration(build_model_for_calibration, par_priors, target_outputs, multipliers)
+
+
+    # calib.run_fitting_algorithm(run_mode='lsm')  # for least square minimization
+    # print(calib.mle_estimates)
+    #
 
     calib.run_fitting_algorithm(run_mode='mle')  # for maximum-likelihood estimation
-
     print(calib.mle_estimates)
     #
     # calib.run_fitting_algorithm(run_mode='mcmc', mcmc_method='DEMetropolis', n_iterations=100, n_burned=10,

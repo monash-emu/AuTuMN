@@ -17,7 +17,7 @@ def build_mongolia_timevariant_tsr():
 
 def build_model_for_calibration(update_params={}):
 
-    stratify_by = ['age', 'strain', 'housing', 'location']
+    stratify_by = ['age']  #, 'strain', 'housing', 'location']
 
     # some default parameter values
     external_params = {'start_time': 1900.,
@@ -37,8 +37,7 @@ def build_model_for_calibration(update_params={}):
                        'ipt_age_0_ct_coverage': 0.,
                        'ipt_all_ages_ct_coverage': 0.,
                        'yield_contact_ct_tstpos_per_detected_tb': 2.,
-                       'ipt_efficacy': .75,
-                       'ipt_rate': 0.
+                       'ipt_efficacy': .75
                        }
     # update external_params with new parameter values found in update_params
     external_params.update(update_params)
@@ -50,7 +49,7 @@ def build_model_for_calibration(update_params={}):
          "infect_death": (1.0 - external_params['case_fatality_rate']) / external_params['untreated_disease_duration'],
          "universal_death_rate": 1.0 / 50.0,
          "case_detection": 0.,
-         "ipt_rate": external_params['ipt_rate'],
+         "ipt_rate": 0.,
          "dr_amplification": .0,  # high value for testing
          "crude_birth_rate": 20.0 / 1e3}
 
@@ -87,7 +86,7 @@ def build_model_for_calibration(update_params={}):
 
     # add IPT flows
     _tb_model.add_transition_flow(
-        {"type": "standard_flows", "parameter": "ipt_rate", "origin": "early_latent", "to": "late_latent"})
+        {"type": "infection_frequency", "parameter": "ipt_rate", "origin": "early_latent", "to": "late_latent"})
 
     # loading time-variant case detection rate
     input_database = InputDB()
@@ -101,11 +100,21 @@ def build_model_for_calibration(update_params={}):
 
     tb_control_recovery_rate = lambda t: mongolia_tsr(t) * detect_rate(t)
 
+    # initialise ipt_rate function assuming coverage of 1.0 before age stratification
+    ipt_rate_function = lambda t: detect_rate(t) * 1.0 *\
+                                  external_params['yield_contact_ct_tstpos_per_detected_tb'] * external_params['ipt_efficacy']
+
     if len(stratify_by) == 0:
         _tb_model.time_variants["case_detection"] = tb_control_recovery_rate
+        _tb_model.time_variants["ipt_rate"] = ipt_rate_function
     else:
         _tb_model.adaptation_functions["case_detection"] = tb_control_recovery_rate
         _tb_model.parameters["case_detection"] = "case_detection"
+
+        _tb_model.adaptation_functions["ipt_rate"] = ipt_rate_function
+        _tb_model.parameters["ipt_rate"] = "ipt_rate"
+
+
     if "strain" in stratify_by:
         mdr_adjustment = external_params['prop_mdr_detected_as_mdr'] * external_params['mdr_tsr'] / .9  # /.9 for last DS TSR
 
@@ -149,6 +158,18 @@ def build_model_for_calibration(update_params={}):
 
             age_params["universal_death_rate"][str(age_break) + 'W'] = "universal_death_rateXage_" + str(age_break)
         _tb_model.parameters["universal_death_rateX"] = 0.
+
+        # age-specific IPT
+        ipt_by_age = {'ipt_rate': {}}
+        for age_break in age_breakpoints:
+            if external_params['ipt_all_ages_ct_coverage'] > 0.:
+                ipt_by_age['ipt_rate'][str(age_break)] = external_params['ipt_all_ages_ct_coverage']
+            else:
+                ipt_by_age['ipt_rate'][str(age_break)] = 0.
+        if external_params['ipt_age_0_ct_coverage'] > 0. and external_params['ipt_all_ages_ct_coverage'] == 0.:
+            ipt_by_age['ipt_rate']['0'] = external_params['ipt_age_0_ct_coverage']
+
+        age_params.update(ipt_by_age)
 
         _tb_model.stratify("age", copy.deepcopy(age_breakpoints), [], {}, adjustment_requests=age_params,
                            infectiousness_adjustments=age_infectiousness, verbose=False)
@@ -196,7 +217,7 @@ def build_model_for_calibration(update_params={}):
                            # mixing_matrix=location_mixing
                            )
 
-    #_tb_model.transition_flows.to_csv("transitions.csv")
+    _tb_model.transition_flows.to_csv("transitions.csv")
     # _tb_model.death_flows.to_csv("deaths.csv")
 
     return _tb_model
@@ -285,9 +306,9 @@ def create_multi_scenario_outputs(models, req_outputs, req_times={}, req_multipl
 if __name__ == "__main__":
 
     scenario_params = {
-        # 1: {'ipt_rate': 1.},
-        # 2: {'treatment_success_prop': .9},
-        1: {'mdr_tsr': 1}
+        1: {'ipt_all_ages_ct_coverage': 1.},
+        2: {'ipt_age_0_ct_coverage': 1.}
+         #1: {'mdr_tsr': 1}
     }
     models = run_multi_scenario(scenario_params, 2020.)
 
@@ -296,5 +317,5 @@ if __name__ == "__main__":
                    'prevXlatentXamongXage_5'
                    ]
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs)
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='ipt_test_no')
 

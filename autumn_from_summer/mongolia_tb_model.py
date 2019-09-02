@@ -17,7 +17,7 @@ def build_mongolia_timevariant_tsr():
 
 def build_model_for_calibration(update_params={}):
 
-    stratify_by = ['age', 'strain']  #, 'strain', 'housing', 'location']
+    stratify_by = ['age', 'bcg']  # ['age', 'strain', 'housing', 'location', 'bcg']
 
     # some default parameter values
     external_params = {'start_time': 1900.,
@@ -26,6 +26,7 @@ def build_model_for_calibration(update_params={}):
                        'start_population': 3000000,
                        'contact_rate': 10.,
                        'rr_transmission_recovered': 1.,
+                       'latency_adjustment': 2.,
                        'case_fatality_rate': 0.4,
                        'untreated_disease_duration': 3.0,
                        'dr_amplification_prop_among_nonsuccess': 0.07,
@@ -126,7 +127,6 @@ def build_model_for_calibration(update_params={}):
                                'ipt_rate': {"ds": 1., "mdr": external_params['mdr_ipt_coverage']}
                            })
 
-
         _tb_model.add_transition_flow(
             {"type": "standard_flows", "parameter": "dr_amplification",
              "origin": "infectiousXstrain_ds", "to": "infectiousXstrain_mdr",
@@ -151,6 +151,11 @@ def build_model_for_calibration(update_params={}):
         age_infectiousness = get_parameter_dict_from_function(logistic_scaling_function(10.0), age_breakpoints)
         age_params = get_adapted_age_parameters(age_breakpoints)
         age_params.update(split_age_parameter(age_breakpoints, "contact_rate"))
+
+        # adjustment of latency parameters
+        for param in ['early_progression', 'late_progression']:
+            for age_break in age_breakpoints:
+                age_params[param][str(age_break) + 'W'] *= external_params['latency_adjustment']
 
         pop_morts = get_pop_mortality_functions(input_database, age_breakpoints, country_iso_code='MNG')
         age_params["universal_death_rate"] = {}
@@ -310,8 +315,8 @@ if __name__ == "__main__":
     scenario_params = {
         1: {'ipt_age_0_ct_coverage': 1.},
         2: {'ipt_all_ages_ct_coverage': 1.},
-        3: {'ipt_all_ages_ct_coverage': 1., 'mdr_ipt_coverage': 1.},
-        4: {'mdr_tsr': .7}
+        # 3: {'ipt_all_ages_ct_coverage': 1., 'mdr_ipt_coverage': 1.},
+        # 4: {'mdr_tsr': .7}
     }
     models = run_multi_scenario(scenario_params, 2020.)
 
@@ -320,5 +325,5 @@ if __name__ == "__main__":
                    'prevXlatentXamongXage_5'
                    ]
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='ipt_test_no')
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='outputs')
 

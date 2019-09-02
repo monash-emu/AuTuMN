@@ -1,6 +1,7 @@
 from autumn_from_summer.tb_model import *
 import summer_py.post_processing as post_proc
 from summer_py.outputs import Outputs
+from time import time
 
 
 def build_mongolia_timevariant_cdr():
@@ -17,15 +18,16 @@ def build_mongolia_timevariant_tsr():
 
 def build_model_for_calibration(update_params={}):
 
-    stratify_by = ['age', 'bcg']  # ['age', 'strain', 'housing', 'location', 'bcg']
+    stratify_by = ['age', 'housing']  # ['age', 'strain', 'housing', 'location', 'bcg']
 
     # some default parameter values
     external_params = {'start_time': 1900.,
-                       'end_time': 2035.,
+                       'end_time': 2016.,
                        'time_step': 1.,
                        'start_population': 3000000,
                        'contact_rate': 10.,
-                       'rr_transmission_recovered': 1.,
+                       'rr_transmission_recovered': .63,
+                       'rr_transmission_infected': 0.21,
                        'latency_adjustment': 2.,
                        'case_fatality_rate': 0.4,
                        'untreated_disease_duration': 3.0,
@@ -47,6 +49,7 @@ def build_model_for_calibration(update_params={}):
     model_parameters = \
         {"contact_rate": external_params['contact_rate'],
          "contact_rate_recovered": external_params['contact_rate'] * external_params['rr_transmission_recovered'],
+         "contact_rate_infected": external_params['contact_rate'] * external_params['rr_transmission_infected'],
          "recovery": external_params['case_fatality_rate'] / external_params['untreated_disease_duration'],
          "infect_death": (1.0 - external_params['case_fatality_rate']) / external_params['untreated_disease_duration'],
          "universal_death_rate": 1.0 / 50.0,
@@ -88,7 +91,7 @@ def build_model_for_calibration(update_params={}):
 
     # add IPT flow with infection_frequency type
     _tb_model.add_transition_flow(
-        {"type": "infection_frequency", "parameter": "ipt_rate", "origin": "early_latent", "to": "late_latent"})
+        {"type": "infection_frequency", "parameter": "ipt_rate", "origin": "early_latent", "to": "recovered"})
 
     # loading time-variant case detection rate
     input_database = InputDB()
@@ -178,23 +181,28 @@ def build_model_for_calibration(update_params={}):
 
         age_params.update(ipt_by_age)
 
-        _tb_model.stratify("age", copy.deepcopy(age_breakpoints), [], {}, adjustment_requests=age_params,
-                           infectiousness_adjustments=age_infectiousness, verbose=False)
-
-    if 'bcg' in stratify_by:
-         # get bcg coverage function
-        _tb_model = get_bcg_functions(_tb_model, input_database, 'MNG')
-
-        # stratify by vaccination status
+        # add BCG effect without stratification assuming constant 100% coverage
         bcg_wane = create_sloping_step_function(15.0, 0.3, 30.0, 1.0)
         age_bcg_efficacy_dict = get_parameter_dict_from_function(lambda value: bcg_wane(value), age_breakpoints)
-        bcg_efficacy = substratify_parameter("contact_rate", "vaccinated", age_bcg_efficacy_dict, age_breakpoints)
-        _tb_model.stratify("bcg", ["vaccinated", "unvaccinated"], ["susceptible"],
-                           requested_proportions={"vaccinated": 0.0},
-                           entry_proportions={"vaccinated": "bcg_coverage",
-                                              "unvaccinated": "bcg_coverage_complement"},
-                           adjustment_requests=bcg_efficacy,
-                           verbose=False)
+        age_params.update({'contact_rate': age_bcg_efficacy_dict})
+
+        _tb_model.stratify("age", copy.deepcopy(age_breakpoints), [], {}, adjustment_requests=age_params,
+                           infectiousness_adjustments=age_infectiousness, verbose=False)
+    #
+    # if 'bcg' in stratify_by:
+    #      # get bcg coverage function
+    #     _tb_model = get_bcg_functions(_tb_model, input_database, 'MNG')
+    #
+    #     # stratify by vaccination status
+    #     bcg_wane = create_sloping_step_function(15.0, 0.3, 30.0, 1.0)
+    #     age_bcg_efficacy_dict = get_parameter_dict_from_function(lambda value: bcg_wane(value), age_breakpoints)
+    #     bcg_efficacy = substratify_parameter("contact_rate", "vaccinated", age_bcg_efficacy_dict, age_breakpoints)
+    #     _tb_model.stratify("bcg", ["vaccinated", "unvaccinated"], ["susceptible"],
+    #                        requested_proportions={"vaccinated": 0.0},
+    #                        entry_proportions={"vaccinated": "bcg_coverage",
+    #                                           "unvaccinated": "bcg_coverage_complement"},
+    #                        adjustment_requests=bcg_efficacy,
+    #                        verbose=False)
 
     if "housing" in stratify_by:
         props_housing = {"ger": .45, "non-ger": .55}
@@ -202,9 +210,12 @@ def build_model_for_calibration(update_params={}):
         # housing_mixing = numpy.ones(4).reshape((2, 2))
         # housing_mixing[0, 0] = 5.
         # housing_mixing[1, 1] = 5.
+        housing_beta_adjustments = {}
+        for beta_type in ['', '_infected', '_recovered']:
+            housing_beta_adjustments['contact_rate' + beta_type] = {"ger": external_params['rr_transmission_ger']}
 
         _tb_model.stratify("housing", ["ger", "non-ger"], [], requested_proportions=props_housing, verbose=False,
-                           adjustment_requests={'contact_rate': {"ger": external_params['rr_transmission_ger']}},
+                           adjustment_requests=housing_beta_adjustments,
                            # mixing_matrix=housing_mixing,
                            entry_proportions=props_housing
                            )
@@ -217,10 +228,15 @@ def build_model_for_calibration(update_params={}):
         # location_mixing[1, 1] = 10.
         # location_mixing[2, 2] = 10.
 
+        location_beta_adjustments = {}
+        for beta_type in ['', '_infected', '_recovered']:
+            location_beta_adjustments['contact_rate' + beta_type] = \
+                {"urban": external_params['rr_transmission_urban'],
+                 "province": external_params['rr_transmission_province']}
+
         _tb_model.stratify("location", ["rural", "province", "urban"], [],
                            requested_proportions=props_location, verbose=False, entry_proportions=props_location,
-                           adjustment_requests={'contact_rate': {"urban": external_params['rr_transmission_urban'],
-                                                                 "province": external_params['rr_transmission_province']}}#,
+                           adjustment_requests=location_beta_adjustments#,
                            # mixing_matrix=location_mixing
                            )
 
@@ -313,17 +329,21 @@ def create_multi_scenario_outputs(models, req_outputs, req_times={}, req_multipl
 if __name__ == "__main__":
 
     scenario_params = {
-        1: {'ipt_age_0_ct_coverage': 1.},
-        2: {'ipt_all_ages_ct_coverage': 1.},
+        # 1: {'ipt_age_0_ct_coverage': 1.},
+        # 2: {'ipt_all_ages_ct_coverage': 1.},
         # 3: {'ipt_all_ages_ct_coverage': 1., 'mdr_ipt_coverage': 1.},
         # 4: {'mdr_tsr': .7}
     }
+
+    t0 = time()
     models = run_multi_scenario(scenario_params, 2020.)
+    delta = time() - t0
+    print("Running time: " + str(round(delta, 1)) + " seconds")
 
     req_outputs = ['prevXinfectiousXamong',
                    'prevXlatentXamong',
                    'prevXlatentXamongXage_5'
                    ]
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='outputs')
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='outputs_fast')
 

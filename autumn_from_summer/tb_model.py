@@ -147,7 +147,9 @@ def add_standard_infection_flows(list_of_flows):
     """
     list_of_flows += [
         {"type": "infection_frequency", "parameter": "contact_rate", "origin": "susceptible", "to": "early_latent"},
-        {"type": "infection_frequency", "parameter": "contact_rate_recovered", "origin": "recovered", "to": "early_latent"}]
+        {"type": "infection_frequency", "parameter": "contact_rate_recovered", "origin": "recovered", "to": "early_latent"},
+        {"type": "infection_frequency", "parameter": "contact_rate_infected", "origin": "late_latent", "to": "early_latent"}
+    ]
     return list_of_flows
 
 

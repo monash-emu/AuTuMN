@@ -239,15 +239,17 @@ if __name__ == "__main__":
     par_priors = [{'param_name': 'contact_rate', 'distribution': 'uniform', 'distri_params': [1., 20.]},
                   {'param_name': 'rr_transmission_ger', 'distribution': 'uniform', 'distri_params': [1., 5.]},
                   {'param_name': 'rr_transmission_urban', 'distribution': 'uniform', 'distri_params': [1., 5.]},
-                  {'param_name': 'rr_transmission_province', 'distribution': 'uniform', 'distri_params': [.5, 5.]}
+                  {'param_name': 'rr_transmission_province', 'distribution': 'uniform', 'distri_params': [.5, 5.]},
+                  {'param_name': 'latency_adjustment', 'distribution': 'uniform', 'distri_params': [1., 2.]},
                   ]
     target_outputs = [{'output_key': 'prevXinfectiousXamongXage_15Xage_60', 'years': [2015.], 'values': [560.]},
                       {'output_key': 'prevXinfectiousXamongXage_15Xage_60Xhousing_ger', 'years': [2015.], 'values': [613.]},
                       {'output_key': 'prevXinfectiousXamongXage_15Xage_60Xlocation_urban', 'years': [2015.], 'values': [586.]},
-                      {'output_key': 'prevXinfectiousXamongXage_15Xage_60Xlocation_province', 'years': [2015.], 'values': [513.]}
+                      {'output_key': 'prevXinfectiousXamongXage_15Xage_60Xlocation_province', 'years': [2015.], 'values': [513.]},
+                      {'output_key': 'prevXlatentXamongXage_5', 'years': [2016.], 'values': [960.]}
                      ]
 
-    multipliers = {}
+    multipliers = {'prevXlatentXamongXage_5': 1.e4}
     for i, output in enumerate(target_outputs):
         if output['output_key'][0:15] == 'prevXinfectious':
             multipliers[output['output_key']] = 1.e5

@@ -100,8 +100,9 @@ def build_model_for_calibration(update_params={}):
     if "strain" in stratify_by:
         _tb_model.stratify("strain", ["ds", "mdr"], ["early_latent", "late_latent", "infectious"], verbose=False,
                            requested_proportions={"mdr": 0.},
-                           adjustment_requests={'case_detection':
-                                                    {"mdr": external_params['relative_control_recovery_rate_mdr']}})
+                           adjustment_requests={
+                               'contact_rate': {'ds': 1., 'mdr': 1.},
+                               'case_detection': {"mdr": external_params['relative_control_recovery_rate_mdr']}})
         _tb_model.add_transition_flow(
             {"type": "standard_flows", "parameter": "dr_amplification",
              "origin": "infectiousXstrain_ds", "to": "infectiousXstrain_mdr",

@@ -3,24 +3,30 @@ import summer_py.post_processing as post_proc
 from summer_py.outputs import Outputs
 
 
+def build_mongolia_timevariant_tsr():
+    tsr = {1950.: 0., 1970.: .2, 1994.: .6, 2000.: .85, 2010.: .87, 2016: .9}
+    tsr_function = scale_up_function(tsr.keys(), tsr.values(), smoothness=0.2, method=5)
+    return tsr_function
+
+
 def build_model_for_calibration(update_params={}):
 
-    stratify_by = ['age', 'strain', 'housing']  # , 'housing', 'location', 'strain']
+    stratify_by = ['age', 'strain', 'housing', 'location']
 
     # some default parameter values
     external_params = {'start_time': 1900.,
-                       'end_time': 2035.,
+                       'end_time': 2017.,
                        'time_step': 1.,
                        'start_population': 3000000,
-                       'contact_rate': 20.,
+                       'contact_rate': 10.,
                        'case_fatality_rate': 0.4,
                        'untreated_disease_duration': 3.0,
-                       'treatment_success_prop': 0.8,
                        'dr_amplification_prop_among_nonsuccess': 0.07,
-                       'relative_control_recovery_rate_mdr': 0.5,
-                       'rr_transmission_ger': 10.,
-                       'rr_transmission_urban': 10.,
-                       'rr_transmission_province': 5.,
+                       'prop_mdr_detected_as_mdr': 0.5,
+                       'mdr_tsr': .6,
+                       'rr_transmission_ger': 3.,
+                       'rr_transmission_urban': 3.,
+                       'rr_transmission_province': 1.,
                        'ipt_age_0_ct_coverage': 0.,
                        'ipt_all_ages_ct_coverage': 0.,
                        'yield_contact_ct_tstpos_per_detected_tb': 2.,
@@ -90,25 +96,31 @@ def build_model_for_calibration(update_params={}):
     prop_to_rate = convert_competing_proportion_to_rate(1.0 / external_params['untreated_disease_duration'])
     detect_rate = return_function_of_function(cdr_scaleup, prop_to_rate)
 
-    tb_control_recovery_rate = lambda x: external_params['treatment_success_prop'] * detect_rate(x)
+    mongolia_tsr = build_mongolia_timevariant_tsr()
+
+    tb_control_recovery_rate = lambda t: mongolia_tsr(t) * detect_rate(t)
+
     if len(stratify_by) == 0:
         _tb_model.time_variants["case_detection"] = tb_control_recovery_rate
     else:
         _tb_model.adaptation_functions["case_detection"] = tb_control_recovery_rate
         _tb_model.parameters["case_detection"] = "case_detection"
-
     if "strain" in stratify_by:
+        mdr_adjustment = external_params['prop_mdr_detected_as_mdr'] * external_params['mdr_tsr'] / .9  # /.9 for last DS TSR
+
         _tb_model.stratify("strain", ["ds", "mdr"], ["early_latent", "late_latent", "infectious"], verbose=False,
                            requested_proportions={"mdr": 0.},
                            adjustment_requests={
                                'contact_rate': {'ds': 1., 'mdr': 1.},
-                               'case_detection': {"mdr": external_params['relative_control_recovery_rate_mdr']}})
+                               'case_detection': {"mdr": mdr_adjustment}})
+
+
         _tb_model.add_transition_flow(
             {"type": "standard_flows", "parameter": "dr_amplification",
              "origin": "infectiousXstrain_ds", "to": "infectiousXstrain_mdr",
              "implement": len(_tb_model.all_stratifications)})
 
-        dr_amplification_rate = lambda x: detect_rate(x) * (1. - external_params['treatment_success_prop']) *\
+        dr_amplification_rate = lambda t: detect_rate(t) * (1. - mongolia_tsr(t)) *\
                                           external_params['dr_amplification_prop_among_nonsuccess']
 
         _tb_model.adaptation_functions["dr_amplification"] = dr_amplification_rate
@@ -282,8 +294,8 @@ if __name__ == "__main__":
 
     req_outputs = ['prevXinfectiousXamong',
                    'prevXlatentXamong',
-                   'prevXlatentXamongXage_5',
-                   'prevXinfectiousXamongXhousing_gerXlocation_urban'
+                   'prevXlatentXamongXage_5'
                    ]
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='age_strain_housing')
+    create_multi_scenario_outputs(models, req_outputs=req_outputs)
+

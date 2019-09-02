@@ -18,15 +18,15 @@ def build_mongolia_timevariant_tsr():
 
 def build_model_for_calibration(update_params={}):
 
-    stratify_by = ['age']  # ['age', 'housing', 'location', 'strain']
+    stratify_by = ['age', 'location', 'housing']  # 'strain'
 
     # some default parameter values
-    external_params = {'start_time': 1900.,
-                       'end_time': 2016.,
+    external_params = {'start_time': 1800.,
+                       'end_time': 2020.,
                        'time_step': 1.,
                        'start_population': 3000000,
                        # base model definition:
-                       'contact_rate': 10.,
+                       'contact_rate': 6.6,
                        'rr_transmission_recovered': .63,
                        'rr_transmission_infected': 0.21,
                        'latency_adjustment': 2.,  # used to modify progression rates during calibration
@@ -37,9 +37,9 @@ def build_model_for_calibration(update_params={}):
                        'prop_mdr_detected_as_mdr': 0.5,
                        'mdr_tsr': .6,
                        # adjustments by location and housing type
-                       'rr_transmission_ger': 3.,  # reference: non-ger
-                       'rr_transmission_urban': 3.,  # reference: rural
-                       'rr_transmission_province': 1.,  # reference: rural
+                       'rr_transmission_ger': 1.8,  # reference: non-ger
+                       'rr_transmission_urban': 1.4,  # reference: rural
+                       'rr_transmission_province': .9,  # reference: rural
                        # IPT
                        'ipt_age_0_ct_coverage': .17,  # Children contact tracing coverage
                        'ipt_all_ages_ct_coverage': 0.,  # general contact tracing coverage. Overwrites previous key if >0
@@ -298,7 +298,8 @@ def run_multi_scenario(scenario_params, scenario_start_time):
     return models
 
 
-def create_multi_scenario_outputs(models, req_outputs, req_times={}, req_multipliers={}, out_dir='outputs_tes'):
+def create_multi_scenario_outputs(models, req_outputs, req_times={}, req_multipliers={}, out_dir='outputs_tes',
+                                  targets_to_plot={}):
     """
     process and generate plots for several scenarios
     :param models: a list of run models
@@ -329,7 +330,7 @@ def create_multi_scenario_outputs(models, req_outputs, req_times={}, req_multipl
                                             requested_times=req_times,
                                             multipliers=req_multipliers))
 
-    outputs = Outputs(pps, out_dir)
+    outputs = Outputs(pps, targets_to_plot, out_dir)
     outputs.plot_requested_outputs()
 
 
@@ -343,14 +344,28 @@ if __name__ == "__main__":
     }
 
     t0 = time()
-    models = run_multi_scenario(scenario_params, 2020.)
+    models = run_multi_scenario(scenario_params, 1850.)
     delta = time() - t0
     print("Running time: " + str(round(delta, 1)) + " seconds")
 
     req_outputs = ['prevXinfectiousXamong',
                    'prevXlatentXamong',
-                   'prevXlatentXamongXage_5'
+                   'prevXlatentXamongXage_5',
+                   'prevXinfectiousXamongXage_15Xage_60',
+                   'prevXinfectiousXamongXage_15Xage_60Xhousing_ger',
+                   'prevXinfectiousXamongXage_15Xage_60Xlocation_province',
+                   'prevXinfectiousXamongXage_15Xage_60Xlocation_urban'
                    ]
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='location')
+    targets_to_plot = [{'output_key': 'prevXinfectiousXamongXage_15Xage_60', 'years': [2015.], 'values': [560.]},
+                       {'output_key': 'prevXlatentXamongXage_5', 'years': [2016.], 'values': [.096]}]
+
+    targets_to_plot = {'prevXinfectiousXamongXage_15Xage_60': [[2015.], [560.]],
+                       'prevXlatentXamongXage_5': [[2016.], [.096]],
+                       'prevXinfectiousXamongXage_15Xage_60Xhousing_ger': [[2015.], [613.]],
+                       'prevXinfectiousXamongXage_15Xage_60Xlocation_province': [[2015.], [513.]],
+                       'prevXinfectiousXamongXage_15Xage_60Xlocation_urban': [[2015.], [586.]]
+                       }
+
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='testing', targets_to_plot=targets_to_plot)
 

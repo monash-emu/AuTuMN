@@ -18,30 +18,34 @@ def build_mongolia_timevariant_tsr():
 
 def build_model_for_calibration(update_params={}):
 
-    stratify_by = ['age', 'housing']  # ['age', 'strain', 'housing', 'location', 'bcg']
+    stratify_by = ['age']  # ['age', 'housing', 'location', 'strain']
 
     # some default parameter values
     external_params = {'start_time': 1900.,
                        'end_time': 2016.,
                        'time_step': 1.,
                        'start_population': 3000000,
+                       # base model definition:
                        'contact_rate': 10.,
                        'rr_transmission_recovered': .63,
                        'rr_transmission_infected': 0.21,
-                       'latency_adjustment': 2.,
+                       'latency_adjustment': 2.,  # used to modify progression rates during calibration
                        'case_fatality_rate': 0.4,
                        'untreated_disease_duration': 3.0,
+                       # MDR-TB:
                        'dr_amplification_prop_among_nonsuccess': 0.07,
                        'prop_mdr_detected_as_mdr': 0.5,
                        'mdr_tsr': .6,
-                       'rr_transmission_ger': 3.,
-                       'rr_transmission_urban': 3.,
-                       'rr_transmission_province': 1.,
-                       'ipt_age_0_ct_coverage': .17,
-                       'ipt_all_ages_ct_coverage': 0.,
-                       'yield_contact_ct_tstpos_per_detected_tb': 2.,
-                       'ipt_efficacy': .75,
-                       'mdr_ipt_coverage': .0
+                       # adjustments by location and housing type
+                       'rr_transmission_ger': 3.,  # reference: non-ger
+                       'rr_transmission_urban': 3.,  # reference: rural
+                       'rr_transmission_province': 1.,  # reference: rural
+                       # IPT
+                       'ipt_age_0_ct_coverage': .17,  # Children contact tracing coverage
+                       'ipt_all_ages_ct_coverage': 0.,  # general contact tracing coverage. Overwrites previous key if >0
+                       'yield_contact_ct_tstpos_per_detected_tb': 2.,  # expected number of infections traced per index
+                       'ipt_efficacy': .75,   # based on intention-to-treat
+                       'mdr_ipt_coverage': .0  # used as an MDR-specific multiplier to the coverage defined above
                        }
     # update external_params with new parameter values found in update_params
     external_params.update(update_params)
@@ -206,13 +210,15 @@ def build_model_for_calibration(update_params={}):
 
     if "housing" in stratify_by:
         props_housing = {"ger": .45, "non-ger": .55}
+        raw_relative_risks = {"ger": external_params['rr_transmission_ger'], "non-ger": 1.}
+        scaled_relative_risks = scale_relative_risks_for_equivalence(props_housing, raw_relative_risks)
 
         # housing_mixing = numpy.ones(4).reshape((2, 2))
         # housing_mixing[0, 0] = 5.
         # housing_mixing[1, 1] = 5.
         housing_beta_adjustments = {}
         for beta_type in ['', '_infected', '_recovered']:
-            housing_beta_adjustments['contact_rate' + beta_type] = {"ger": external_params['rr_transmission_ger']}
+            housing_beta_adjustments['contact_rate' + beta_type] = scaled_relative_risks
 
         _tb_model.stratify("housing", ["ger", "non-ger"], [], requested_proportions=props_housing, verbose=False,
                            adjustment_requests=housing_beta_adjustments,
@@ -222,6 +228,9 @@ def build_model_for_calibration(update_params={}):
 
     if "location" in stratify_by:
         props_location = {"rural": .32, 'province': .16, "urban": .52}
+        raw_relative_risks_loc = {"rural": 1., "province":external_params['rr_transmission_province'],
+                                  "urban": external_params['rr_transmission_urban']}
+        scaled_relative_risks_loc = scale_relative_risks_for_equivalence(props_location, raw_relative_risks_loc)
 
         # location_mixing = numpy.ones(9).reshape((3, 3))
         # location_mixing[0, 0] = 10.
@@ -230,9 +239,7 @@ def build_model_for_calibration(update_params={}):
 
         location_beta_adjustments = {}
         for beta_type in ['', '_infected', '_recovered']:
-            location_beta_adjustments['contact_rate' + beta_type] = \
-                {"urban": external_params['rr_transmission_urban'],
-                 "province": external_params['rr_transmission_province']}
+            location_beta_adjustments['contact_rate' + beta_type] = scaled_relative_risks_loc
 
         _tb_model.stratify("location", ["rural", "province", "urban"], [],
                            requested_proportions=props_location, verbose=False, entry_proportions=props_location,
@@ -345,5 +352,5 @@ if __name__ == "__main__":
                    'prevXlatentXamongXage_5'
                    ]
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='outputs_fast')
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='location')
 

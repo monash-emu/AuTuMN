@@ -9,6 +9,21 @@ import pandas as pd
 from autumn_from_summer.db import get_bcg_coverage, get_crude_birth_rate, get_pop_mortality_functions
 
 
+def scale_relative_risks_for_equivalence(proportions, relative_risks):
+    """
+    :param proportions: dictionary
+    :param relative_risks: dictionary
+    :return: dictionary
+    """
+    new_reference_deno = 0.
+    for stratum in proportions.keys():
+        new_reference_deno += proportions[stratum] * relative_risks[stratum]
+    new_reference = 1. / new_reference_deno
+    for stratum in relative_risks.keys():
+        relative_risks[stratum] *= new_reference
+    return relative_risks
+
+
 def provide_aggregated_latency_parameters():
     """
     function to add the latency parameters estimated by Ragonnet et al from our paper in Epidemics to the existing

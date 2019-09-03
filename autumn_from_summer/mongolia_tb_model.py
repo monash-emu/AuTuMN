@@ -18,7 +18,7 @@ def build_mongolia_timevariant_tsr():
 
 def build_model_for_calibration(update_params={}):
 
-    stratify_by = ['age', 'location', 'housing', 'strain']
+    stratify_by = ['age', 'strain']  # , 'location', 'housing', 'strain']
 
     # some default parameter values
     external_params = {'start_time': 1800.,
@@ -41,12 +41,14 @@ def build_model_for_calibration(update_params={}):
                        'rr_transmission_urban': 1.4,  # reference: rural
                        'rr_transmission_province': .9,  # reference: rural
                        # IPT
-                       'ipt_age_0_ct_coverage': .17,  # Children contact tracing coverage
-                       'ipt_all_ages_ct_coverage': 0.,  # general contact tracing coverage. Overwrites previous key if >0
+                       'ipt_age_0_ct_coverage': 0.17,  # Children contact tracing coverage  .17
+                       'ipt_age_5_ct_coverage': 0.,  # Children contact tracing coverage
+                       'ipt_age_15_ct_coverage': 0.,  # Children contact tracing coverage
+                       'ipt_age_60_ct_coverage': 0.,  # Children contact tracing coverage
                        'yield_contact_ct_tstpos_per_detected_tb': 2.,  # expected number of infections traced per index
                        'ipt_efficacy': .75,   # based on intention-to-treat
-                       'ds_ipt_coverage': 1.,  # used as a DS-specific multiplier to the coverage defined above
-                       'mdr_ipt_coverage': .0  # used as an MDR-specific multiplier to the coverage defined above
+                       'ds_ipt_switch': 1.,  # used as a DS-specific multiplier to the coverage defined above
+                       'mdr_ipt_switch': .0  # used as an MDR-specific multiplier to the coverage defined above
                        }
     # update external_params with new parameter values found in update_params
     external_params.update(update_params)
@@ -132,8 +134,8 @@ def build_model_for_calibration(update_params={}):
                            adjustment_requests={
                                'contact_rate': {'ds': 1., 'mdr': 1.},
                                'case_detection': {"mdr": mdr_adjustment},
-                               'ipt_rate': {"ds": external_params['ds_ipt_coverage'],
-                                            "mdr": external_params['mdr_ipt_coverage']}
+                               'ipt_rate': {"ds": 1., #external_params['ds_ipt_switch'],
+                                            "mdr": external_params['mdr_ipt_switch']}
                            })
 
         _tb_model.add_transition_flow(
@@ -178,13 +180,7 @@ def build_model_for_calibration(update_params={}):
         # age-specific IPT
         ipt_by_age = {'ipt_rate': {}}
         for age_break in age_breakpoints:
-            if external_params['ipt_all_ages_ct_coverage'] > 0.:
-                ipt_by_age['ipt_rate'][str(age_break)] = external_params['ipt_all_ages_ct_coverage']
-            else:
-                ipt_by_age['ipt_rate'][str(age_break)] = 0.
-        if external_params['ipt_age_0_ct_coverage'] > 0. and external_params['ipt_all_ages_ct_coverage'] == 0.:
-            ipt_by_age['ipt_rate']['0'] = external_params['ipt_age_0_ct_coverage']
-
+            ipt_by_age['ipt_rate'][str(age_break)] = external_params['ipt_age_' + str(age_break) + '_ct_coverage']
         age_params.update(ipt_by_age)
 
         # add BCG effect without stratification assuming constant 100% coverage
@@ -194,6 +190,13 @@ def build_model_for_calibration(update_params={}):
 
         _tb_model.stratify("age", copy.deepcopy(age_breakpoints), [], {}, adjustment_requests=age_params,
                            infectiousness_adjustments=age_infectiousness, verbose=False)
+
+        # patch for IPT to overwrite parameters when ds_ipt has been turned off while we still need some coverage at baseline
+        if external_params['ds_ipt_switch'] == 0. and external_params['mdr_ipt_switch'] == 1.:
+            _tb_model.parameters['ipt_rateXstrain_dsXage_0'] = 0.17
+            for age_break in [5, 15, 60]:
+                _tb_model.parameters['ipt_rateXstrain_dsXage_' + str(age_break)] = 0.
+
     #
     # if 'bcg' in stratify_by:
     #      # get bcg coverage function
@@ -285,11 +288,13 @@ def run_multi_scenario(scenario_params, scenario_start_time):
     """
     param_updates_for_baseline = scenario_params[0] if 0 in scenario_params.keys() else {}
     baseline_model = build_model_for_calibration(param_updates_for_baseline)
+    print("____________________  Now running Baseline Scenario ")
     baseline_model.run_model()
 
     models = [baseline_model]
 
     for scenario_index in scenario_params.keys():
+        print("____________________  Now running Scenario " + str(scenario_index))
         if scenario_index == 0:
             continue
         scenario_params[scenario_index]['start_time'] = scenario_start_time
@@ -343,7 +348,7 @@ def create_multi_scenario_outputs(models, req_outputs, req_times={}, req_multipl
 
 
 if __name__ == "__main__":
-    load_model = True
+    load_model = False
 
     if load_model:
         models = []
@@ -354,8 +359,10 @@ if __name__ == "__main__":
     else:
         scenario_params = {
             1: {'ipt_age_0_ct_coverage': .5},
-            # 2: {'ipt_all_ages_ct_coverage': .5},
-            # 3: {'ipt_all_ages_ct_coverage': .5, 'ds_ipt_coverage': 0., 'mdr_ipt_coverage': 1.},
+            2: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
+                'ipt_age_60_ct_coverage': .5},
+            3: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
+                'ipt_age_60_ct_coverage': .5, 'ds_ipt_switch': 0., 'mdr_ipt_switch': 1.},
             # 4: {'mdr_tsr': .8}
         }
 
@@ -367,6 +374,7 @@ if __name__ == "__main__":
     req_outputs = ['prevXinfectiousXamong',
                    'prevXlatentXamong',
                    'prevXlatentXamongXage_5',
+                   'prevXlatentXamongXage_0',
                    'prevXinfectiousXamongXage_15Xage_60',
                    'prevXinfectiousXamongXage_15Xage_60Xhousing_ger',
                    'prevXinfectiousXamongXage_15Xage_60Xlocation_province',
@@ -386,6 +394,6 @@ if __name__ == "__main__":
                        'prevXinfectiousXstrain_mdrXamongXinfectious': [[1999., 2007., 2016.], [1., 1.4, 5.3]]
                        }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_pickle', targets_to_plot=targets_to_plot,
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_IPT', targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers)
 

@@ -18,7 +18,7 @@ def build_mongolia_timevariant_tsr():
 
 def build_model_for_calibration(update_params={}):
 
-    stratify_by = ['age', 'strain']  # , 'location', 'housing', 'strain']
+    stratify_by = ['location', 'housing']  # , 'location', 'housing', 'strain']
 
     # some default parameter values
     external_params = {'start_time': 1800.,
@@ -50,7 +50,15 @@ def build_model_for_calibration(update_params={}):
                        'ds_ipt_switch': 1.,  # used as a DS-specific multiplier to the coverage defined above
                        'mdr_ipt_switch': .0,  # used as an MDR-specific multiplier to the coverage defined above
                        # Treatment improvement (C-DOTS)
-                       'reduction_negative_tx_outcome': 0.
+                       'reduction_negative_tx_outcome': 0.,
+                       # ACF for risk groups
+                       'acf_coverage': 0.,
+                       'acf_sensitivity': .8,
+                       'acf_ger_switch': 0.,
+                       'acf_non-ger_switch': 0.,
+                       'acf_rural_switch': 0.,
+                       'acf_province_switch': 0.,
+                       'acf_urban_switch': 0.
                        }
     # update external_params with new parameter values found in update_params
     external_params.update(update_params)
@@ -64,6 +72,7 @@ def build_model_for_calibration(update_params={}):
          "universal_death_rate": 1.0 / 50.0,
          "case_detection": 0.,
          "ipt_rate": 0.,
+         "acf_rate": 0.,
          "dr_amplification": .0,  # high value for testing
          "crude_birth_rate": 20.0 / 1e3}
 
@@ -102,6 +111,10 @@ def build_model_for_calibration(update_params={}):
     _tb_model.add_transition_flow(
         {"type": "infection_frequency", "parameter": "ipt_rate", "origin": "early_latent", "to": "recovered"})
 
+    # add ACF flow
+    _tb_model.add_transition_flow(
+        {"type": "standard_flows", "parameter": "acf_rate", "origin": "infectious", "to": "recovered"})
+
     # loading time-variant case detection rate
     input_database = InputDB()
 
@@ -120,15 +133,23 @@ def build_model_for_calibration(update_params={}):
     ipt_rate_function = lambda t: detect_rate(t) * 1.0 *\
                                   external_params['yield_contact_ct_tstpos_per_detected_tb'] * external_params['ipt_efficacy']
 
+    acf_rate_function = lambda t: external_params['acf_coverage'] * external_params['acf_sensitivity'] *\
+                                  (mongolia_tsr(t) + external_params['reduction_negative_tx_outcome'] * (1. - mongolia_tsr(t)))
+
     if len(stratify_by) == 0:
         _tb_model.time_variants["case_detection"] = tb_control_recovery_rate
         _tb_model.time_variants["ipt_rate"] = ipt_rate_function
+        _tb_model.time_variants["acf_rate"] = acf_rate_function
+
     else:
         _tb_model.adaptation_functions["case_detection"] = tb_control_recovery_rate
         _tb_model.parameters["case_detection"] = "case_detection"
 
         _tb_model.adaptation_functions["ipt_rate"] = ipt_rate_function
         _tb_model.parameters["ipt_rate"] = "ipt_rate"
+
+        _tb_model.adaptation_functions["acf_rate"] = acf_rate_function
+        _tb_model.parameters["acf_rate"] = "acf_rate"
 
     if "strain" in stratify_by:
         mdr_adjustment = external_params['prop_mdr_detected_as_mdr'] * external_params['mdr_tsr'] / .9  # /.9 for last DS TSR
@@ -227,12 +248,16 @@ def build_model_for_calibration(update_params={}):
         # housing_mixing = numpy.ones(4).reshape((2, 2))
         # housing_mixing[0, 0] = 5.
         # housing_mixing[1, 1] = 5.
-        housing_beta_adjustments = {}
+        housing_adjustments = {}
         for beta_type in ['', '_infected', '_recovered']:
-            housing_beta_adjustments['contact_rate' + beta_type] = scaled_relative_risks
+            housing_adjustments['contact_rate' + beta_type] = scaled_relative_risks
+
+        housing_adjustments['acf_rate'] = {}
+        for stratum in ['ger', 'non-ger']:
+            housing_adjustments['acf_rate'][stratum] = external_params['acf_' + stratum + '_switch']
 
         _tb_model.stratify("housing", ["ger", "non-ger"], [], requested_proportions=props_housing, verbose=False,
-                           adjustment_requests=housing_beta_adjustments,
+                           adjustment_requests=housing_adjustments,
                            # mixing_matrix=housing_mixing,
                            entry_proportions=props_housing
                            )
@@ -248,13 +273,17 @@ def build_model_for_calibration(update_params={}):
         # location_mixing[1, 1] = 10.
         # location_mixing[2, 2] = 10.
 
-        location_beta_adjustments = {}
+        location_adjustments = {}
         for beta_type in ['', '_infected', '_recovered']:
-            location_beta_adjustments['contact_rate' + beta_type] = scaled_relative_risks_loc
+            location_adjustments['contact_rate' + beta_type] = scaled_relative_risks_loc
+
+        location_adjustments['acf_rate'] = {}
+        for stratum in ['rural', 'province', 'urban']:
+            location_adjustments['acf_rate'][stratum] = external_params['acf_' + stratum + '_switch']
 
         _tb_model.stratify("location", ["rural", "province", "urban"], [],
                            requested_proportions=props_location, verbose=False, entry_proportions=props_location,
-                           adjustment_requests=location_beta_adjustments#,
+                           adjustment_requests=location_adjustments#,
                            # mixing_matrix=location_mixing
                            )
 
@@ -370,8 +399,8 @@ if __name__ == "__main__":
             # 3: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
             #     'ipt_age_60_ct_coverage': .5, 'ds_ipt_switch': 0., 'mdr_ipt_switch': 1.},
             # 4: {'mdr_tsr': .8},
-            1: {'reduction_negative_tx_outcome': 0.5}
-
+            # 5: {'reduction_negative_tx_outcome': 0.5},
+            # 6: {'acf_coverage': .2, 'acf_ger_switch': 1., 'acf_urban_switch': 1.}
         }
 
         t0 = time()
@@ -387,7 +416,9 @@ if __name__ == "__main__":
                    'prevXinfectiousXamongXage_15Xage_60Xhousing_ger',
                    'prevXinfectiousXamongXage_15Xage_60Xlocation_province',
                    'prevXinfectiousXamongXage_15Xage_60Xlocation_urban',
-                   'prevXinfectiousXstrain_mdrXamongXinfectious'
+                   'prevXinfectiousXstrain_mdrXamongXinfectious',
+                   'prevXinfectiousXamongXhousing_gerXlocation_urban'
+
                    ]
 
     multipliers = {
@@ -402,6 +433,6 @@ if __name__ == "__main__":
                        'prevXinfectiousXstrain_mdrXamongXinfectious': [[1999., 2007., 2016.], [1., 1.4, 5.3]]
                        }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_IPT', targets_to_plot=targets_to_plot,
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_ACF_housing', targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers)
 

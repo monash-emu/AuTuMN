@@ -18,7 +18,7 @@ def build_mongolia_timevariant_tsr():
 
 def build_model_for_calibration(update_params={}):
 
-    stratify_by = ['age', 'location', 'housing', 'strain']
+    stratify_by = ['age'] # , 'location', 'housing', 'strain']
 
     # some default parameter values
     external_params = {'start_time': 1800.,
@@ -77,7 +77,7 @@ def build_model_for_calibration(update_params={}):
          "crude_birth_rate": 20.0 / 1e3}
 
     input_database = InputDB()
-    n_iter = int(round((external_params['end_time'] - external_params['start_time']) / external_params['time_step']))
+    n_iter = int(round((external_params['end_time'] - external_params['start_time']) / external_params['time_step'])) + 1
     integration_times = numpy.linspace(external_params['start_time'], external_params['end_time'], n_iter).tolist()
 
     model_parameters.update(change_parameter_unit(provide_aggregated_latency_parameters(), 365.251))

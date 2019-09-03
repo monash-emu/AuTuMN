@@ -18,7 +18,7 @@ def build_mongolia_timevariant_tsr():
 
 def build_model_for_calibration(update_params={}):
 
-    stratify_by = ['age'] # , 'location', 'housing', 'strain']
+    stratify_by = ['age', 'location', 'housing', 'strain']
 
     # some default parameter values
     external_params = {'start_time': 1800.,
@@ -347,7 +347,7 @@ def run_multi_scenario(scenario_params, scenario_start_time):
 
 
 def create_multi_scenario_outputs(models, req_outputs, req_times={}, req_multipliers={}, out_dir='outputs_tes',
-                                  targets_to_plot={}):
+                                  targets_to_plot={}, translation_dictionary={}):
     """
     process and generate plots for several scenarios
     :param models: a list of run models
@@ -373,26 +373,22 @@ def create_multi_scenario_outputs(models, req_outputs, req_times={}, req_multipl
         for output in req_outputs:
             if output[0:21] == 'prevXinfectiousXamong':
                 req_multipliers[output] = 1.e5
+            elif output[0:11] == 'prevXlatent':
+                req_multipliers[output] = 1.e2
 
         pps.append(post_proc.PostProcessing(models[scenario_index], requested_outputs=req_outputs,
                                             requested_times=req_times,
                                             multipliers=req_multipliers))
 
-    outputs = Outputs(pps, targets_to_plot, out_dir)
+    outputs = Outputs(pps, targets_to_plot, out_dir, translation_dictionary)
     outputs.plot_requested_outputs()
 
 
 if __name__ == "__main__":
-    load_model = False
+    load_model = True
 
-    if load_model:
-        models = []
-        scenarios_to_load = [0]
-        for sc in scenarios_to_load:
-            model_dict = load_pickled_model('stored_models/scenario_' + str(sc) + '.pickle')
-            models.append(DummyModel(model_dict))
-    else:
-        scenario_params = {
+    scenario_params = {
+            0: {},
             1: {'ipt_age_0_ct_coverage': .5},
             2: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
                 'ipt_age_60_ct_coverage': .5},
@@ -403,6 +399,14 @@ if __name__ == "__main__":
             6: {'acf_coverage': .2, 'acf_ger_switch': 1., 'acf_urban_switch': 1.}
         }
 
+    if load_model:
+        models = []
+        scenarios_to_load = scenario_params.keys()
+        for sc in scenarios_to_load:
+            print("Loading model for scenario " + str(sc))
+            model_dict = load_pickled_model('new_stored_models_full_run/scenario_' + str(sc) + '.pickle')
+            models.append(DummyModel(model_dict))
+    else:
         t0 = time()
         models = run_multi_scenario(scenario_params, 2020.)
         delta = time() - t0
@@ -414,6 +418,8 @@ if __name__ == "__main__":
                    'prevXlatentXamongXage_0',
                    'prevXinfectiousXamongXage_15Xage_60',
                    'prevXinfectiousXamongXage_15Xage_60Xhousing_ger',
+                   'prevXinfectiousXamongXage_15Xage_60Xhousing_non-ger',
+                   'prevXinfectiousXamongXage_15Xage_60Xlocation_rural',
                    'prevXinfectiousXamongXage_15Xage_60Xlocation_province',
                    'prevXinfectiousXamongXage_15Xage_60Xlocation_urban',
                    'prevXinfectiousXstrain_mdrXamongXinfectious',
@@ -425,13 +431,37 @@ if __name__ == "__main__":
     }
 
     targets_to_plot = {'prevXinfectiousXamongXage_15Xage_60': [[2015.], [560.]],
-                       'prevXlatentXamongXage_5': [[2016.], [.096]],
+                       'prevXlatentXamongXage_5': [[2016.], [9.6]],
                        'prevXinfectiousXamongXage_15Xage_60Xhousing_ger': [[2015.], [613.]],
+                       'prevXinfectiousXamongXage_15Xage_60Xhousing_non-ger': [[2015.], [436.]],
+                       'prevXinfectiousXamongXage_15Xage_60Xlocation_rural': [[2015.], [529.]],
                        'prevXinfectiousXamongXage_15Xage_60Xlocation_province': [[2015.], [513.]],
                        'prevXinfectiousXamongXage_15Xage_60Xlocation_urban': [[2015.], [586.]],
-                       'prevXinfectiousXstrain_mdrXamongXinfectious': [[1999., 2007., 2016.], [1., 1.4, 5.3]]
+                       'prevXinfectiousXstrain_mdrXamongXinfectious': [[2016.], [5.3]]
                        }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='full_run', targets_to_plot=targets_to_plot,
-                                  req_multipliers=multipliers)
+    translations = {'prevXinfectiousXamong': 'TB prevalence (/100,000)',
+                    'prevXinfectiousXamongXage_0': 'TB prevalence among 0-4 y.o. (/100,000)',
+                    'prevXinfectiousXamongXage_5': 'TB prevalence among 5-14 y.o. (/100,000)',
+                    'prevXinfectiousXamongXage_15': 'TB prevalence among 15-59 y.o. (/100,000)',
+                    'prevXinfectiousXamongXage_60': 'TB prevalence among 60+ y.o. (/100,000)',
+                    'prevXinfectiousXamongXhousing_ger': 'TB prev. among Ger population (/100,000)',
+                    'prevXinfectiousXamongXhousing_non-ger': 'TB prev. among non-Ger population(/100,000)',
+                    'prevXinfectiousXamongXlocation_rural': 'TB prev. among rural population (/100,000)',
+                    'prevXinfectiousXamongXlocation_province': 'TB prev. among province population (/100,000)',
+                    'prevXinfectiousXamongXlocation_urban': 'TB prev. among urban population (/100,000)',
+                    'prevXlatentXamong': 'Latent TB infection prevalence (%)',
+                    'prevXlatentXamongXage_5': 'Latent TB infection prevalence among 5-14 y.o. (%)',
+                    'prevXlatentXamongXage_0': 'Latent TB infection prevalence among 0-4 y.o. (%)',
+                    'prevXinfectiousXamongXage_15Xage_60': 'TB prev. among 15+ y.o. (/100,000)',
+                    'prevXinfectiousXamongXage_15Xage_60Xhousing_ger': 'TB prev. among 15+ y.o. Ger population (/100,000)',
+                    'prevXinfectiousXamongXage_15Xage_60Xhousing_non-ger': 'TB prev. among 15+ y.o. non-Ger population (/100,000)',
+                    'prevXinfectiousXamongXage_15Xage_60Xlocation_rural': 'TB prev. among 15+ y.o. rural population (/100,000)',
+                    'prevXinfectiousXamongXage_15Xage_60Xlocation_province': 'TB prev. among 15+ y.o. province population (/100,000)',
+                    'prevXinfectiousXamongXage_15Xage_60Xlocation_urban': 'TB prev. among 15+ y.o. urban population (/100,000)',
+                    'prevXinfectiousXstrain_mdrXamongXinfectious': 'Proportion of MDR-TB among TB (%)',
+                    'prevXinfectiousXamongXhousing_gerXlocation_urban': 'TB prevalence in urban Ger population (/100,000)'}
+
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='full_run_loaded', targets_to_plot=targets_to_plot,
+                                  req_multipliers=multipliers, translation_dictionary=translations)
 

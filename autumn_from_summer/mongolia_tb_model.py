@@ -48,7 +48,9 @@ def build_model_for_calibration(update_params={}):
                        'yield_contact_ct_tstpos_per_detected_tb': 2.,  # expected number of infections traced per index
                        'ipt_efficacy': .75,   # based on intention-to-treat
                        'ds_ipt_switch': 1.,  # used as a DS-specific multiplier to the coverage defined above
-                       'mdr_ipt_switch': .0  # used as an MDR-specific multiplier to the coverage defined above
+                       'mdr_ipt_switch': .0,  # used as an MDR-specific multiplier to the coverage defined above
+                       # Treatment improvement (C-DOTS)
+                       'reduction_negative_tx_outcome': 0.
                        }
     # update external_params with new parameter values found in update_params
     external_params.update(update_params)
@@ -110,7 +112,9 @@ def build_model_for_calibration(update_params={}):
 
     mongolia_tsr = build_mongolia_timevariant_tsr()
 
-    tb_control_recovery_rate = lambda t: mongolia_tsr(t) * detect_rate(t)
+    tb_control_recovery_rate = \
+        lambda t: detect_rate(t) *\
+                  (mongolia_tsr(t) + external_params['reduction_negative_tx_outcome'] * (1. - mongolia_tsr(t)))
 
     # initialise ipt_rate function assuming coverage of 1.0 before age stratification
     ipt_rate_function = lambda t: detect_rate(t) * 1.0 *\
@@ -143,8 +147,10 @@ def build_model_for_calibration(update_params={}):
              "origin": "infectiousXstrain_ds", "to": "infectiousXstrain_mdr",
              "implement": len(_tb_model.all_stratifications)})
 
-        dr_amplification_rate = lambda t: detect_rate(t) * (1. - mongolia_tsr(t)) *\
-                                          external_params['dr_amplification_prop_among_nonsuccess']
+        dr_amplification_rate = \
+            lambda t: detect_rate(t) * (1. - mongolia_tsr(t)) *\
+                      (1. - external_params['reduction_negative_tx_outcome']) *\
+                      external_params['dr_amplification_prop_among_nonsuccess']
 
         _tb_model.adaptation_functions["dr_amplification"] = dr_amplification_rate
         _tb_model.parameters["dr_amplification"] = "dr_amplification"
@@ -358,12 +364,14 @@ if __name__ == "__main__":
             models.append(DummyModel(model_dict))
     else:
         scenario_params = {
-            1: {'ipt_age_0_ct_coverage': .5},
-            2: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
-                'ipt_age_60_ct_coverage': .5},
-            3: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
-                'ipt_age_60_ct_coverage': .5, 'ds_ipt_switch': 0., 'mdr_ipt_switch': 1.},
-            # 4: {'mdr_tsr': .8}
+            # 1: {'ipt_age_0_ct_coverage': .5},
+            # 2: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
+            #     'ipt_age_60_ct_coverage': .5},
+            # 3: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
+            #     'ipt_age_60_ct_coverage': .5, 'ds_ipt_switch': 0., 'mdr_ipt_switch': 1.},
+            # 4: {'mdr_tsr': .8},
+            1: {'reduction_negative_tx_outcome': 0.5}
+
         }
 
         t0 = time()

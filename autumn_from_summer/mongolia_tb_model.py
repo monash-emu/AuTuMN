@@ -18,7 +18,7 @@ def build_mongolia_timevariant_tsr():
 
 def build_model_for_calibration(update_params={}):
 
-    stratify_by = ['location', 'housing']  # , 'location', 'housing', 'strain']
+    stratify_by = ['age', 'location', 'housing', 'strain']
 
     # some default parameter values
     external_params = {'start_time': 1800.,
@@ -393,14 +393,14 @@ if __name__ == "__main__":
             models.append(DummyModel(model_dict))
     else:
         scenario_params = {
-            # 1: {'ipt_age_0_ct_coverage': .5},
-            # 2: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
-            #     'ipt_age_60_ct_coverage': .5},
-            # 3: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
-            #     'ipt_age_60_ct_coverage': .5, 'ds_ipt_switch': 0., 'mdr_ipt_switch': 1.},
-            # 4: {'mdr_tsr': .8},
-            # 5: {'reduction_negative_tx_outcome': 0.5},
-            # 6: {'acf_coverage': .2, 'acf_ger_switch': 1., 'acf_urban_switch': 1.}
+            1: {'ipt_age_0_ct_coverage': .5},
+            2: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
+                'ipt_age_60_ct_coverage': .5},
+            3: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
+                'ipt_age_60_ct_coverage': .5, 'ds_ipt_switch': 0., 'mdr_ipt_switch': 1.},
+            4: {'mdr_tsr': .8},
+            5: {'reduction_negative_tx_outcome': 0.5},
+            6: {'acf_coverage': .2, 'acf_ger_switch': 1., 'acf_urban_switch': 1.}
         }
 
         t0 = time()
@@ -418,7 +418,6 @@ if __name__ == "__main__":
                    'prevXinfectiousXamongXage_15Xage_60Xlocation_urban',
                    'prevXinfectiousXstrain_mdrXamongXinfectious',
                    'prevXinfectiousXamongXhousing_gerXlocation_urban'
-
                    ]
 
     multipliers = {
@@ -433,6 +432,6 @@ if __name__ == "__main__":
                        'prevXinfectiousXstrain_mdrXamongXinfectious': [[1999., 2007., 2016.], [1., 1.4, 5.3]]
                        }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_ACF_housing', targets_to_plot=targets_to_plot,
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='full_run', targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers)
 

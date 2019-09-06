@@ -18,7 +18,7 @@ def build_mongolia_timevariant_tsr():
 
 def build_model_for_calibration(update_params={}):
 
-    stratify_by = ['age', 'location', 'housing', 'strain']
+    stratify_by = ['age', 'strain', 'location', 'housing']
 
     # some default parameter values
     external_params = {'start_time': 1800.,
@@ -366,6 +366,7 @@ def create_multi_scenario_outputs(models, req_outputs, req_times={}, req_multipl
             req_outputs.append('distribution_of_strataX' + group)
             for stratum in models[scenario_index].all_stratifications[group]:
                 req_outputs.append('prevXinfectiousXamongX' + group + '_' + stratum)
+                req_outputs.append('prevXlatentXamongX' + group + '_' + stratum)
 
         if "strain" in models[scenario_index].all_stratifications.keys():
             req_outputs.append('prevXinfectiousXstrain_mdrXamongXinfectious')
@@ -382,6 +383,9 @@ def create_multi_scenario_outputs(models, req_outputs, req_times={}, req_multipl
 
     outputs = Outputs(pps, targets_to_plot, out_dir, translation_dictionary)
     outputs.plot_requested_outputs()
+
+    for req_output in ['prevXinfectious', 'prevXlatent']:
+        outputs.plot_outputs_by_stratum(req_output)
 
 
 if __name__ == "__main__":
@@ -404,7 +408,7 @@ if __name__ == "__main__":
         scenarios_to_load = scenario_params.keys()
         for sc in scenarios_to_load:
             print("Loading model for scenario " + str(sc))
-            model_dict = load_pickled_model('new_stored_models_full_run/scenario_' + str(sc) + '.pickle')
+            model_dict = load_pickled_model('stored_models_4_09/scenario_' + str(sc) + '.pickle')
             models.append(DummyModel(model_dict))
     else:
         t0 = time()
@@ -414,20 +418,21 @@ if __name__ == "__main__":
 
     req_outputs = ['prevXinfectiousXamong',
                    'prevXlatentXamong',
-                   'prevXlatentXamongXage_5',
-                   'prevXlatentXamongXage_0',
                    'prevXinfectiousXamongXage_15Xage_60',
                    'prevXinfectiousXamongXage_15Xage_60Xhousing_ger',
                    'prevXinfectiousXamongXage_15Xage_60Xhousing_non-ger',
                    'prevXinfectiousXamongXage_15Xage_60Xlocation_rural',
                    'prevXinfectiousXamongXage_15Xage_60Xlocation_province',
                    'prevXinfectiousXamongXage_15Xage_60Xlocation_urban',
-                   'prevXinfectiousXstrain_mdrXamongXinfectious',
-                   'prevXinfectiousXamongXhousing_gerXlocation_urban'
+                   'prevXinfectiousXamongXhousing_gerXlocation_urban',
+                   'prevXlatentXamongXhousing_gerXlocation_urban',
+
+                   'prevXinfectiousXstrain_mdrXamong'
                    ]
 
     multipliers = {
-        'prevXinfectiousXstrain_mdrXamongXinfectious': 100.
+        'prevXinfectiousXstrain_mdrXamongXinfectious': 100.,
+        'prevXinfectiousXstrain_mdrXamong': 1.e5
     }
 
     targets_to_plot = {'prevXinfectiousXamongXage_15Xage_60': [[2015.], [560.]],
@@ -460,8 +465,21 @@ if __name__ == "__main__":
                     'prevXinfectiousXamongXage_15Xage_60Xlocation_province': 'TB prev. among 15+ y.o. province population (/100,000)',
                     'prevXinfectiousXamongXage_15Xage_60Xlocation_urban': 'TB prev. among 15+ y.o. urban population (/100,000)',
                     'prevXinfectiousXstrain_mdrXamongXinfectious': 'Proportion of MDR-TB among TB (%)',
-                    'prevXinfectiousXamongXhousing_gerXlocation_urban': 'TB prevalence in urban Ger population (/100,000)'}
+                    'prevXinfectiousXamongXhousing_gerXlocation_urban': 'TB prevalence in urban Ger population (/100,000)',
+                    'age_0': 'age 0-4',
+                    'age_5': 'age 5-14',
+                    'age_15': 'age 15-59',
+                    'age_60': 'age 60+',
+                    'housing_ger': 'ger',
+                    'housing_non-ger': 'non-ger',
+                    'location_rural': 'rural',
+                    'location_province': 'province',
+                    'location_urban': 'urban',
+                    'strain_ds': 'DS-TB',
+                    'strain_mdr': 'MDR-TB',
+                    'prevXinfectiousXstrain_mdrXamong': 'Prevalence of MDR-TB (/100,000)'
+                    }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='full_run_loaded', targets_to_plot=targets_to_plot,
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='loaded_4_09', targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers, translation_dictionary=translations)
 

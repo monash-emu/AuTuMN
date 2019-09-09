@@ -56,8 +56,9 @@ class Calibration:
             for _output in self.targeted_outputs:
                 requested_times[_output['output_key']] = _output['years']
 
-            self.post_processing = post_proc.PostProcessing(self.running_model, requested_outputs, requested_times,
-                                                            self.multipliers)
+            self.post_processing = post_proc.PostProcessing(self.running_model, requested_outputs=requested_outputs,
+                                                            requested_times=requested_times,
+                                                            multipliers=self.multipliers)
         else:  # we just need to update the post_processing attribute and produce new outputs
             self.post_processing.model = self.running_model
             self.post_processing.generated_outputs = {}
@@ -240,7 +241,7 @@ if __name__ == "__main__":
                   {'param_name': 'rr_transmission_ger', 'distribution': 'uniform', 'distri_params': [1., 5.]},
                   {'param_name': 'rr_transmission_urban', 'distribution': 'uniform', 'distri_params': [1., 5.]},
                   {'param_name': 'rr_transmission_province', 'distribution': 'uniform', 'distri_params': [.5, 5.]},
-                  {'param_name': 'latency_adjustment', 'distribution': 'uniform', 'distri_params': [1., 2.]},
+                  {'param_name': 'latency_adjustment', 'distribution': 'uniform', 'distri_params': [1., 3.]},
                   ]
     target_outputs = [{'output_key': 'prevXinfectiousXamongXage_15Xage_60', 'years': [2015.], 'values': [560.]},
                       {'output_key': 'prevXinfectiousXamongXage_15Xage_60Xhousing_ger', 'years': [2015.], 'values': [613.]},
@@ -261,9 +262,9 @@ if __name__ == "__main__":
     # print(calib.mle_estimates)
     #
 
-    calib.run_fitting_algorithm(run_mode='mle')  # for maximum-likelihood estimation
-    print(calib.mle_estimates)
+    # calib.run_fitting_algorithm(run_mode='mle')  # for maximum-likelihood estimation
+    # print(calib.mle_estimates)
     #
-    # calib.run_fitting_algorithm(run_mode='mcmc', mcmc_method='DEMetropolis', n_iterations=100, n_burned=10,
-    #                             n_chains=4, parallel=True)  # for mcmc
+    calib.run_fitting_algorithm(run_mode='mcmc', mcmc_method='DEMetropolis', n_iterations=2, n_burned=0,
+                                n_chains=4, parallel=False)  # for mcmc
 

@@ -389,7 +389,7 @@ def create_multi_scenario_outputs(models, req_outputs, req_times={}, req_multipl
 
 
 if __name__ == "__main__":
-    load_model = True
+    load_model = False
 
     scenario_params = {
             0: {},

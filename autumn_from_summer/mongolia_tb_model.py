@@ -109,13 +109,12 @@ def build_model_for_calibration(update_params={}):
 
     # Add IPT as a customised flow
     def ipt_flow_func(model, n_flow):
-
-        if not model.strains:
+        if not hasattr(model, 'strains') or len(model.strains) < 2:
             infectious_populations = model.infectious_populations
         else:
             infectious_populations = \
-                model.infectious_populations[find_stratum_index_from_string(
-                    model.transition_flows.at[n_flow, "parameter"], "strain")]
+                    model.infectious_populations[find_stratum_index_from_string(
+                        model.transition_flows.at[n_flow, "parameter"], "strain")]
 
         n_early_latent_comps = len([model.compartment_names[i] for i in range(len(model.compartment_names)) if
                                    model.compartment_names[i][0:12] == 'early_latent'])

@@ -5,14 +5,12 @@ from time import time
 
 def build_mongolia_timevariant_cdr():
     cdr = {1950.: 0., 1980.: .10, 1990.: .15, 2000.: .20, 2010.: .30, 2015: .33}
-    cdr_function = scale_up_function(cdr.keys(), cdr.values(), smoothness=0.2, method=5)
-    return cdr_function
+    return scale_up_function(cdr.keys(), cdr.values(), smoothness=0.2, method=5)
 
 
 def build_mongolia_timevariant_tsr():
     tsr = {1950.: 0., 1970.: .2, 1994.: .6, 2000.: .85, 2010.: .87, 2016: .9}
-    tsr_function = scale_up_function(tsr.keys(), tsr.values(), smoothness=0.2, method=5)
-    return tsr_function
+    return scale_up_function(tsr.keys(), tsr.values(), smoothness=0.2, method=5)
 
 
 def build_mongolia_model(update_params={}):

@@ -7,8 +7,10 @@ import copy
 from autumn_from_summer.curve import scale_up_function
 import pandas as pd
 from autumn_from_summer.db import get_bcg_coverage, get_crude_birth_rate, get_pop_mortality_functions
-
+import summer_py.post_processing as post_proc
+from summer_py.outputs import Outputs
 import dill
+
 
 def pickle_light_model(model, out_file):
     """
@@ -123,6 +125,7 @@ def find_match(row, column_name):
         result = ''
     return result
 
+
 def unpivot_outputs(model_object):
     """
     take outputs in the form they come out of the model object and convert them into a "long", "melted" or "unpiovted"
@@ -140,6 +143,16 @@ def unpivot_outputs(model_object):
             output_dataframe[column_name] = \
                 output_dataframe.apply(lambda row: find_match(row,column_name), axis=1)
     return output_dataframe.drop(columns="variable")
+
+
+def store_run_models(models):
+    for i, model in enumerate(models):
+        file_for_pickle = os.path.join('stored_models', 'scenario_' + str(i))
+        pickle_light_model(model, file_for_pickle)
+
+        pbi_outputs = unpivot_outputs(model)
+        store_tb_database(pbi_outputs, table_name='outputs', database_name="databases/outputs_" + str(i) + ".db")
+
 
 
 """
@@ -388,6 +401,50 @@ def build_working_tb_model(tb_n_contact, country_iso3, cdr_adjustment=0.6, start
     #                    ["urban", "urbanpoor", "ruralpoor"], [], requested_proportions={},
     #                    adjustment_requests=[], verbose=False)
     return _tb_model
+
+
+def create_multi_scenario_outputs(models, req_outputs, req_times={}, req_multipliers={}, out_dir='outputs_tes',
+                                  targets_to_plot={}, translation_dictionary={}, scenario_list=[]):
+    """
+    process and generate plots for several scenarios
+    :param models: a list of run models
+    :param req_outputs. See PostProcessing class
+    :param req_times. See PostProcessing class
+    :param req_multipliers. See PostProcessing class
+    """
+    if not os.path.exists(out_dir):
+        os.mkdir(out_dir)
+
+    pps = []
+    for scenario_index in range(len(models)):
+
+        # automatically add some basic outputs
+        for group in models[scenario_index].all_stratifications.keys():
+            req_outputs.append('distribution_of_strataX' + group)
+            for stratum in models[scenario_index].all_stratifications[group]:
+                req_outputs.append('prevXinfectiousXamongX' + group + '_' + stratum)
+                req_outputs.append('prevXlatentXamongX' + group + '_' + stratum)
+
+        if "strain" in models[scenario_index].all_stratifications.keys():
+            req_outputs.append('prevXinfectiousXstrain_mdrXamongXinfectious')
+
+        for output in req_outputs:
+            if output[0:21] == 'prevXinfectiousXamong':
+                req_multipliers[output] = 1.e5
+            elif output[0:11] == 'prevXlatent':
+                req_multipliers[output] = 1.e2
+
+        pps.append(post_proc.PostProcessing(models[scenario_index], requested_outputs=req_outputs,
+                                            scenario_number=list(scenario_list)[scenario_index],
+                                            requested_times=req_times,
+                                            multipliers=req_multipliers))
+
+    outputs = Outputs(pps, targets_to_plot, out_dir, translation_dictionary)
+    outputs.plot_requested_outputs()
+
+    for req_output in ['prevXinfectious', 'prevXlatent']:
+        outputs.plot_outputs_by_stratum(req_output)
+
 
 
 class DummyModel:

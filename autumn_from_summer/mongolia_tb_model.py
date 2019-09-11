@@ -20,22 +20,23 @@ def build_mongolia_model(update_params={}):
     stratify_by = ['age', 'strain', 'location', 'housing']
 
     # some default parameter values
-    external_params = {'start_time': 1800.,
+    external_params = {  # run configuration
+                       'start_time': 1800.,
                        'end_time': 2035.,
                        'time_step': 1.,
                        'start_population': 3000000,
-                       # base model definition:
+                         # base model definition:
                        'contact_rate': 6.6,
                        'rr_transmission_recovered': .63,
                        'rr_transmission_infected': 0.21,
                        'latency_adjustment': 2.,  # used to modify progression rates during calibration
                        'case_fatality_rate': 0.4,
                        'untreated_disease_duration': 3.0,
-                       # MDR-TB:
+                         # MDR-TB:
                        'dr_amplification_prop_among_nonsuccess': 0.15,
                        'prop_mdr_detected_as_mdr': 0.5,
                        'mdr_tsr': .6,
-                       # adjustments by location and housing type
+                         # adjustments by location and housing type
                        'rr_transmission_ger': 1.8,  # reference: non-ger
                        'rr_transmission_urban': 1.4,  # reference: rural
                        'rr_transmission_province': .9,  # reference: rural
@@ -50,7 +51,7 @@ def build_mongolia_model(update_params={}):
                        'mdr_ipt_switch': .0,  # used as an MDR-specific multiplier to the coverage defined above
                        # Treatment improvement (C-DOTS)
                        'reduction_negative_tx_outcome': 0.,
-                       # ACF for risk groups
+                         # ACF for risk groups
                        'acf_coverage': 0.,
                        'acf_sensitivity': .8,
                        'acf_ger_switch': 0.,
@@ -128,16 +129,15 @@ def build_mongolia_model(update_params={}):
     _tb_model.add_transition_flow(
         {"type": "standard_flows", "parameter": "acf_rate", "origin": "infectious", "to": "recovered"})
 
-    # loading time-variant case detection rate
-    input_database = InputDB()
-
-    # add scaling case detection rate
+    # load time-variant case detection rate
     cdr_scaleup = build_mongolia_timevariant_cdr()
     prop_to_rate = convert_competing_proportion_to_rate(1.0 / external_params['untreated_disease_duration'])
     detect_rate = return_function_of_function(cdr_scaleup, prop_to_rate)
 
+    # load time-variant treatment success rate
     mongolia_tsr = build_mongolia_timevariant_tsr()
 
+    # create a tb_control_recovery_rate function combining case detection and treatment succes rates
     tb_control_recovery_rate = \
         lambda t: detect_rate(t) *\
                   (mongolia_tsr(t) + external_params['reduction_negative_tx_outcome'] * (1. - mongolia_tsr(t)))
@@ -146,9 +146,11 @@ def build_mongolia_model(update_params={}):
     ipt_rate_function = lambda t: detect_rate(t) * 1.0 *\
                                   external_params['yield_contact_ct_tstpos_per_detected_tb'] * external_params['ipt_efficacy']
 
+    # initialise acf_rate function
     acf_rate_function = lambda t: external_params['acf_coverage'] * external_params['acf_sensitivity'] *\
                                   (mongolia_tsr(t) + external_params['reduction_negative_tx_outcome'] * (1. - mongolia_tsr(t)))
 
+    # assign newly created functions to model parameters
     if len(stratify_by) == 0:
         _tb_model.time_variants["case_detection"] = tb_control_recovery_rate
         _tb_model.time_variants["ipt_rate"] = ipt_rate_function
@@ -196,7 +198,6 @@ def build_mongolia_model(update_params={}):
                            verbose=False, requested_proportions=props_smear,
                            entry_proportions=props_smear)
 
-    # age stratification
     if "age" in stratify_by:
         age_breakpoints = [0, 5, 15, 60]
         age_infectiousness = get_parameter_dict_from_function(logistic_scaling_function(10.0), age_breakpoints)
@@ -300,7 +301,7 @@ def build_mongolia_model(update_params={}):
                            # mixing_matrix=location_mixing
                            )
 
-    _tb_model.transition_flows.to_csv("transitions.csv")
+    # _tb_model.transition_flows.to_csv("transitions.csv")
     # _tb_model.death_flows.to_csv("deaths.csv")
 
     return _tb_model

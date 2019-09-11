@@ -107,9 +107,24 @@ def build_model_for_calibration(update_params={}):
     _tb_model.add_transition_flow(
         {"type": "standard_flows", "parameter": "case_detection", "origin": "infectious", "to": "recovered"})
 
-    # add IPT flow with infection_frequency type
+    # Add IPT as a customised flow
+    def ipt_flow_func(model, n_flow):
+
+        if not model.strains:
+            infectious_populations = model.infectious_populations
+        else:
+            infectious_populations = \
+                model.infectious_populations[find_stratum_index_from_string(
+                    model.transition_flows.at[n_flow, "parameter"], "strain")]
+
+        n_early_latent_comps = len([model.compartment_names[i] for i in range(len(model.compartment_names)) if
+                                   model.compartment_names[i][0:12] == 'early_latent'])
+
+        return infectious_populations / n_early_latent_comps
+
     _tb_model.add_transition_flow(
-        {"type": "infection_frequency", "parameter": "ipt_rate", "origin": "early_latent", "to": "recovered"})
+        {"type": "customised_flows", "parameter": "ipt_rate", "origin": "early_latent", "to": "recovered",
+         "function": ipt_flow_func})
 
     # add ACF flow
     _tb_model.add_transition_flow(
@@ -347,7 +362,7 @@ def run_multi_scenario(scenario_params, scenario_start_time):
 
 
 def create_multi_scenario_outputs(models, req_outputs, req_times={}, req_multipliers={}, out_dir='outputs_tes',
-                                  targets_to_plot={}, translation_dictionary={}):
+                                  targets_to_plot={}, translation_dictionary={}, scenario_list=[]):
     """
     process and generate plots for several scenarios
     :param models: a list of run models
@@ -378,14 +393,15 @@ def create_multi_scenario_outputs(models, req_outputs, req_times={}, req_multipl
                 req_multipliers[output] = 1.e2
 
         pps.append(post_proc.PostProcessing(models[scenario_index], requested_outputs=req_outputs,
+                                            scenario_number=list(scenario_list)[scenario_index],
                                             requested_times=req_times,
                                             multipliers=req_multipliers))
 
     outputs = Outputs(pps, targets_to_plot, out_dir, translation_dictionary)
     outputs.plot_requested_outputs()
 
-    for req_output in ['prevXinfectious', 'prevXlatent']:
-        outputs.plot_outputs_by_stratum(req_output)
+    # for req_output in ['prevXinfectious', 'prevXlatent']:
+    #     outputs.plot_outputs_by_stratum(req_output)
 
 
 if __name__ == "__main__":
@@ -480,6 +496,7 @@ if __name__ == "__main__":
                     'prevXinfectiousXstrain_mdrXamong': 'Prevalence of MDR-TB (/100,000)'
                     }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='loaded_4_09', targets_to_plot=targets_to_plot,
-                                  req_multipliers=multipliers, translation_dictionary=translations)
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='outputs', targets_to_plot=targets_to_plot,
+                                  req_multipliers=multipliers, translation_dictionary=translations,
+                                  scenario_list=scenario_params.keys())
 

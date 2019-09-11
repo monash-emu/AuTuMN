@@ -400,8 +400,8 @@ def create_multi_scenario_outputs(models, req_outputs, req_times={}, req_multipl
     outputs = Outputs(pps, targets_to_plot, out_dir, translation_dictionary)
     outputs.plot_requested_outputs()
 
-    # for req_output in ['prevXinfectious', 'prevXlatent']:
-    #     outputs.plot_outputs_by_stratum(req_output)
+    for req_output in ['prevXinfectious', 'prevXlatent']:
+        outputs.plot_outputs_by_stratum(req_output)
 
 
 if __name__ == "__main__":

@@ -13,17 +13,9 @@ def build_mongolia_timevariant_tsr():
     return scale_up_function(tsr.keys(), tsr.values(), smoothness=0.2, method=5)
 
 
-def effect_short_course_mdr(model):
-    pass
-
-
-def effect_c_dots(model, coverage):
-    pass
-
-
 def build_mongolia_model(update_params={}):
 
-    stratify_by = ['age']  #, 'strain', 'location', 'housing']
+    stratify_by = ['age', 'strain', 'location', 'housing']
 
     # some default parameter values
     external_params = {  # run configuration
@@ -312,16 +304,6 @@ def build_mongolia_model(update_params={}):
 
     return _tb_model
 
-
-programs = {'program_short_course_mdr': {'effect_function': effect_short_course_mdr,
-                                         'unit_cost': 10.,
-                                         'saturation_coverage': .9,
-                                         'start_up_costs': 0.},
-            'c_dots': {'effect_function': effect_c_dots,
-                       'unit_cost': 10.,
-                       'saturation_coverage': 1.,
-                       'start_up_costs': 100.}
-            }
 
 if __name__ == "__main__":
     load_model = False

@@ -9,33 +9,12 @@ import pandas as pd
 from autumn_from_summer.db import get_bcg_coverage, get_crude_birth_rate, get_pop_mortality_functions
 import summer_py.post_processing as post_proc
 from summer_py.outputs import Outputs
-import dill
+import json
 
-
-def pickle_light_model(model, out_file):
-    """
-    store a light version of a run model
-    :param model: a model object
-    :return:
-    """
-    file_name = out_file + ".pickle"
-    file_stream = open(file_name, "wb")
-
-    attributes_to_store = ['times', 'compartment_names', 'outputs', 'all_stratifications']
-
-    model_as_dict = {}
-
-    for att in attributes_to_store:
-        model_as_dict[att] = getattr(model, att)
-
-    dill.dump(model_as_dict, file_stream)
-    file_stream.close()
-
-
-def load_pickled_model(file_path):
-    file_stream = open(file_path, "rb")
-    loaded_model = dill.load(file_stream)
-    return loaded_model
+def load_model_scenario(scenario_name):
+    out_database = InputDB(database_name="databases/outputs.db")
+    res = out_database.db_query(scenario_name)
+    return res.to_dict()
 
 
 def scale_relative_risks_for_equivalence(proportions, relative_risks):
@@ -147,11 +126,15 @@ def unpivot_outputs(model_object):
 
 def store_run_models(models):
     for i, model in enumerate(models):
-        file_for_pickle = os.path.join('stored_models', 'scenario_' + str(i))
-        pickle_light_model(model, file_for_pickle)
-
+        output_df = pd.DataFrame(model.outputs, columns=model.compartment_names)
+        output_df.insert(0, 'times', model.times)
         pbi_outputs = unpivot_outputs(model)
-        store_tb_database(pbi_outputs, table_name='scenario_' + str(i), database_name="databases/outputs.db")
+        store_tb_database(pbi_outputs, table_name='pbi_scenario_' + str(i), database_name="databases/outputs.db")
+        store_tb_database(output_df, table_name='scenario_' + str(i), database_name="databases/outputs.db")
+
+        with open('model_strata.json', "w") as json_file:
+                json_file.write(json.dumps(model.all_stratifications))
+                json_file.write(',\n')
 
 
 

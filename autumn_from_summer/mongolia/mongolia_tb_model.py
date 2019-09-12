@@ -343,7 +343,7 @@ if __name__ == "__main__":
         scenarios_to_load = scenario_params.keys()
         for sc in scenarios_to_load:
             print("Loading model for scenario " + str(sc))
-            model_dict = load_pickled_model('stored_models/scenario_' + str(sc) + '.pickle')
+            model_dict = load_model_scenario('scenario_' + str(sc))
             models.append(DummyModel(model_dict))
     else:
         t0 = time()

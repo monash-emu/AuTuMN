@@ -151,7 +151,7 @@ def store_run_models(models):
         pickle_light_model(model, file_for_pickle)
 
         pbi_outputs = unpivot_outputs(model)
-        store_tb_database(pbi_outputs, table_name='outputs', database_name="databases/outputs_" + str(i) + ".db")
+        store_tb_database(pbi_outputs, table_name='scenario_' + str(i), database_name="databases/outputs.db")
 
 
 

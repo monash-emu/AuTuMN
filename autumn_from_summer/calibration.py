@@ -1,5 +1,5 @@
 import theano.tensor as tt
-from autumn_from_summer.mongolia_tb_model import *
+from autumn_from_summer.mongolia.mongolia_tb_model import *
 import summer_py.post_processing as post_proc
 from itertools import chain
 
@@ -255,7 +255,7 @@ if __name__ == "__main__":
         if output['output_key'][0:15] == 'prevXinfectious':
             multipliers[output['output_key']] = 1.e5
 
-    calib = Calibration(build_model_for_calibration, par_priors, target_outputs, multipliers)
+    calib = Calibration(build_mongolia_model, par_priors, target_outputs, multipliers)
 
 
     # calib.run_fitting_algorithm(run_mode='lsm')  # for least square minimization

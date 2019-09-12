@@ -17,3 +17,4 @@ osx_boot.sh
 *json
 *.pickle
 autumn_from_summer/databases/outputs*
+*.db

@@ -9,6 +9,7 @@ import numpy as np
 import logging
 
 from scipy.optimize import Bounds, minimize
+from autumn.inputs import NumpyEncoder
 
 logger = logging.getLogger("pymc3")
 logger.setLevel(logging.DEBUG)
@@ -112,10 +113,10 @@ class Calibration:
 
         print("############")
         print(params)
-        self.main_table['run_' + str(self.iter_num)] = ll
+        self.main_table['run_' + str(self.iter_num)] = {'loglikelihood': ll, 'params': params}
         with open('mc.json', "w") as json_file:
-                json_file.write(json.dumps(self.main_table))
-                json_file.write(',\n')
+            json_file.write(json.dumps(self.main_table, cls=NumpyEncoder))
+            json_file.write(',\n')
         print(ll)
 
         return ll
@@ -186,9 +187,8 @@ class Calibration:
                         mcmc_step = pm.DEMetropolis()
                     else:
                         ValueError("requested mcmc mode is not supported. Must be one of ['Metropolis', 'DEMetropolis']")
-                    backend = pm.backends.SQLite('trace.db')
                     self.mcmc_trace = pm.sample(draws=n_iterations, step=mcmc_step, tune=n_burned, chains=n_chains,
-                                                progressbar=False, trace=backend)
+                                                progressbar=False)
                 else:
                     ValueError("requested run mode is not supported. Must be one of ['mcmc', 'lme']")
         elif run_mode == 'lsm':

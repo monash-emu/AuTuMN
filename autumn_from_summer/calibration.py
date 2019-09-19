@@ -9,6 +9,7 @@ import numpy as np
 import logging
 
 from scipy.optimize import Bounds, minimize
+from autumn.inputs import NumpyEncoder
 
 logger = logging.getLogger("pymc3")
 logger.setLevel(logging.DEBUG)
@@ -39,8 +40,9 @@ class Calibration:
         self.format_data_as_array()
         self.workout_unspecified_sds()
         self.create_loglike_object()
-
+        self.iter_num = 0
         self.run_mode = None
+        self.main_table = {}
         self.mcmc_trace = None  # will store the results of the MCMC model calibration
         self.mle_estimates = {}  # will store the results of the maximum-likelihood calibration
 
@@ -64,6 +66,11 @@ class Calibration:
             self.post_processing.generated_outputs = {}
 
             self.post_processing.generate_outputs()
+        print('inside update_processing')
+        self.iter_num = self.iter_num + 1
+        out_df = pd.DataFrame(self.running_model.outputs, columns=self.running_model.compartment_names)
+        out_df.insert(0, column='times', value=self.running_model.times )
+        store_tb_database(out_df, table_name='run_' + str(self.iter_num), database_name='databases/outputs.db')
 
     def run_model_with_params(self, params):
         """
@@ -78,6 +85,7 @@ class Calibration:
 
         # run the model
         self.running_model.run_model()
+        print('inside run model')
 
         # perform post-processing
         self.update_post_processing()
@@ -97,6 +105,7 @@ class Calibration:
             data = np.array(target['values'])
             model_output = np.array(self.post_processing.generated_outputs[key])
 
+
             if self.run_mode == 'lsm':
                 ll += np.sum((data - model_output)**2)
             else:
@@ -104,6 +113,10 @@ class Calibration:
 
         print("############")
         print(params)
+        self.main_table['run_' + str(self.iter_num)] = {'loglikelihood': ll, 'params': params}
+        with open('mc.json', "w") as json_file:
+            json_file.write(json.dumps(self.main_table, cls=NumpyEncoder))
+            json_file.write(',\n')
         print(ll)
 
         return ll
@@ -174,9 +187,8 @@ class Calibration:
                         mcmc_step = pm.DEMetropolis()
                     else:
                         ValueError("requested mcmc mode is not supported. Must be one of ['Metropolis', 'DEMetropolis']")
-
                     self.mcmc_trace = pm.sample(draws=n_iterations, step=mcmc_step, tune=n_burned, chains=n_chains,
-                                                progressbar=False, parallelize=parallel)
+                                                progressbar=False)
                 else:
                     ValueError("requested run mode is not supported. Must be one of ['mcmc', 'lme']")
         elif run_mode == 'lsm':

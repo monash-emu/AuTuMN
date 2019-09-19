@@ -20,11 +20,18 @@ def initialise_scenario_run(baseline_model, update_params, model_builder):
     :return: the run scenario model
     """
 
+    if isinstance(baseline_model, dict):
+        baseline_model_times = baseline_model['times']
+        baseline_model_outputs = baseline_model['outputs']
+    else:
+        baseline_model_times = baseline_model.times
+        baseline_model_outputs = baseline_model.outputs
+
     # find last integrated time and its index before start_time in baseline_model
-    first_index_over = min([x[0] for x in enumerate(baseline_model.times) if x[1] > update_params['start_time']])
+    first_index_over = min([x[0] for x in enumerate(baseline_model_times) if x[1] > update_params['start_time']])
     index_of_interest = max([0, first_index_over - 1])
-    integration_start_time = baseline_model.times[index_of_interest]
-    init_compartments = baseline_model.outputs[index_of_interest, :]
+    integration_start_time = baseline_model_times[index_of_interest]
+    init_compartments = baseline_model_outputs[index_of_interest, :]
 
     update_params['start_time'] = integration_start_time
 

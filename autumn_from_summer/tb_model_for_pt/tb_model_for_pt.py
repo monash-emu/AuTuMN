@@ -1,6 +1,7 @@
 from autumn_from_summer.tb_model import *
 from autumn_from_summer.tool_kit import *
-from time import time
+import dill
+
 
 def build_timevariant_cdr():
     cdr = {1950.: 0., 1980.: .10, 1990.: .15, 2000.: .20, 2010.: .30, 2015: .33}
@@ -379,7 +380,8 @@ def run_scenario(scenario_params={'start_time': 2020.}, baseline_was_run=True):
         scenario_params['start_time'] = 2020.
 
     if baseline_was_run:
-        baseline_model = load_pickled_model('stored_baseline.pickle')
+        file_stream = open('stored_baseline.pickle', "rb")
+        baseline_model = dill.load(file_stream)
     else:
         baseline_model = run_baseline()
 

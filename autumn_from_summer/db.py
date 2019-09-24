@@ -374,7 +374,7 @@ class InputDB:
 if __name__ == "__main__":
 
     # standard code to update the database
-    input_database = InputDB()
+    input_database = InputDB(database_name='databases/Inputs.db')
     #input_database.update_xl_reads()
     # input_database.add_iso_to_table("crude_birth_rate")
     # input_database.add_iso_to_table("absolute_deaths")

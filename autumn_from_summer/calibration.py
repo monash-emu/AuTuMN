@@ -69,8 +69,7 @@ class Calibration:
         print('inside update_processing')
         self.iter_num = self.iter_num + 1
         out_df = pd.DataFrame(self.running_model.outputs, columns=self.running_model.compartment_names)
-        out_df.insert(0, column='times', value=self.running_model.times )
-        store_tb_database(out_df, table_name='run_' + str(self.iter_num), database_name='databases/outputs.db')
+        store_tb_database(out_df, run_idx=self.iter_num, times=self.running_model.times, database_name='databases/outputs.db', append=True)
 
     def run_model_with_params(self, params):
         """
@@ -113,7 +112,7 @@ class Calibration:
 
         print("############")
         print(params)
-        self.main_table['run_' + str(self.iter_num)] = {'loglikelihood': ll, 'params': params}
+        self.main_table['run_' + str(self.iter_num)] = {'loglikelihood': ll, 'param_names': self.param_list, 'params': params}
         with open('mc.json', "w") as json_file:
             json_file.write(json.dumps(self.main_table, cls=NumpyEncoder))
             json_file.write(',\n')
@@ -189,6 +188,8 @@ class Calibration:
                         ValueError("requested mcmc mode is not supported. Must be one of ['Metropolis', 'DEMetropolis']")
                     self.mcmc_trace = pm.sample(draws=n_iterations, step=mcmc_step, tune=n_burned, chains=n_chains,
                                                 progressbar=False)
+                    traceDb = pm.trace_to_dataframe(self.mcmc_trace)
+                    traceDb.to_csv('trace.csv')
                 else:
                     ValueError("requested run mode is not supported. Must be one of ['mcmc', 'lme']")
         elif run_mode == 'lsm':

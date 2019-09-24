@@ -80,13 +80,20 @@ def return_function_of_function(inner_function, outer_function):
 
 
 # temporary fix for store database, need to move to tb_model
-def store_tb_database(outputs, table_name="outputs", database_name="databases/outputs.db"):
+def store_tb_database(outputs, table_name="outputs", scenario=0, run_idx=0, times=None, database_name="../databases/outputs.db", append=False):
     """
     store outputs from the model in sql database for use in producing outputs later
     """
+
+    if times:
+        outputs.insert(0, column='times', value=times)
+    outputs.insert(0, column='idx', value='run_' + str(run_idx))
+    outputs.insert(1, column='Scenario', value=scenario)
     engine = create_engine("sqlite:///"+ database_name, echo=False)
     if table_name == "functions":
         outputs.to_sql(table_name, con=engine, if_exists="replace", index=False, dtype={"cdr_values": FLOAT()})
+    elif append:
+        outputs.to_sql(table_name, con=engine, if_exists="append", index=False)
     else:
         outputs.to_sql(table_name, con=engine, if_exists="replace", index=False)
 
@@ -127,14 +134,9 @@ def unpivot_outputs(model_object):
 def store_run_models(models):
     for i, model in enumerate(models):
         output_df = pd.DataFrame(model.outputs, columns=model.compartment_names)
-        output_df.insert(0, 'times', model.times)
         pbi_outputs = unpivot_outputs(model)
-        store_tb_database(pbi_outputs, table_name='pbi_scenario_' + str(i), database_name="databases/outputs.db")
-        store_tb_database(output_df, table_name='scenario_' + str(i), database_name="databases/outputs.db")
-
-        with open('model_strata.json', "w") as json_file:
-                json_file.write(json.dumps(model.all_stratifications))
-                json_file.write(',\n')
+        store_tb_database(pbi_outputs, table_name='pbi_scenario_' + str(i),  database_name="../databases/outputs.db")
+        store_tb_database(output_df, scenario=i, times=model.times, database_name="../databases/outputs.db", append=True)
 
 
 

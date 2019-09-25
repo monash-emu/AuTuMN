@@ -66,7 +66,6 @@ class Calibration:
             self.post_processing.generated_outputs = {}
 
             self.post_processing.generate_outputs()
-        print('inside update_processing')
         self.iter_num = self.iter_num + 1
         out_df = pd.DataFrame(self.running_model.outputs, columns=self.running_model.compartment_names)
         store_tb_database(out_df, run_idx=self.iter_num, times=self.running_model.times, database_name='databases/outputs.db', append=True)
@@ -84,7 +83,6 @@ class Calibration:
 
         # run the model
         self.running_model.run_model()
-        print('inside run model')
 
         # perform post-processing
         self.update_post_processing()
@@ -110,13 +108,10 @@ class Calibration:
             else:
                 ll += -(0.5/target['sd']**2)*np.sum((data - model_output)**2)
 
-        print("############")
-        print(params)
         self.main_table['run_' + str(self.iter_num)] = {'loglikelihood': ll, 'param_names': self.param_list, 'params': params}
         with open('mc.json', "w") as json_file:
             json_file.write(json.dumps(self.main_table, cls=NumpyEncoder))
             json_file.write(',\n')
-        print(ll)
 
         return ll
 
@@ -140,7 +135,6 @@ class Calibration:
         for i, target in enumerate(self.targeted_outputs):
             if 'sd' not in target.keys():
                 self.targeted_outputs[i]['sd'] = 0.5 / 4. * np.mean(target['values'])
-                print(self.targeted_outputs[i]['sd'])
 
     def create_loglike_object(self):
         """
@@ -204,12 +198,6 @@ class Calibration:
 
             sol = minimize(self.loglikelihood, x0, bounds=bounds, options={'eps': .1, 'ftol': .1}, method='SLSQP')
             self.mle_estimates = sol.x
-            print("____________________")
-            print("success variable: ")
-            print(sol.success)
-            print("message variable:")
-            print(sol.message)
-
 
         else:
             ValueError("requested run mode is not supported. Must be one of ['mcmc', 'lme']")
@@ -278,6 +266,6 @@ if __name__ == "__main__":
     # calib.run_fitting_algorithm(run_mode='mle')  # for maximum-likelihood estimation
     # print(calib.mle_estimates)
     #
-    calib.run_fitting_algorithm(run_mode='mcmc', mcmc_method='DEMetropolis', n_iterations=2, n_burned=0,
-                                n_chains=4, parallel=False)  # for mcmc
+    # calib.run_fitting_algorithm(run_mode='mcmc', mcmc_method='DEMetropolis', n_iterations=2, n_burned=0,
+     #                            n_chains=4, parallel=False)  # for mcmc
 

@@ -22,13 +22,14 @@ multipliers = {'prevXlatentXamongXage_5': 1.e4,
                }
 
 for i, output in enumerate(target_outputs):
-    if output['output_key'][0:15] == 'prevXinfectious':
+    if output['output_key'][0:15] == 'prevXinfectious' and \
+            output['output_key'] != 'prevXinfectiousXstrain_mdrXamongXinfectious':
         multipliers[output['output_key']] = 1.e5
 
 calib = Calibration(build_mongolia_model, par_priors, target_outputs, multipliers)
 calib.run_mode = 'lsm'
 
-#_________________________________________________________________
+# _________________________________________________________________
 # for Guillaume:
 bounds = [par_priors[i]['distri_params'] for i in range(len(par_priors))]
 print("Here are the bounds to be used around the different parameters:")
@@ -39,8 +40,5 @@ def objective(parameters):
     return calib.loglikelihood(parameters)
 
 
-t0 = time()
 cost = objective([5., 2., 2., 1., 2., .10])
-delta = time() - t0
-print("Running time: " + str(round(delta, 1)) + " seconds")
-print(cost)
+

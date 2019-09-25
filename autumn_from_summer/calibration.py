@@ -66,6 +66,7 @@ class Calibration:
             self.post_processing.generated_outputs = {}
 
             self.post_processing.generate_outputs()
+        print('inside update_processing')
         self.iter_num = self.iter_num + 1
         out_df = pd.DataFrame(self.running_model.outputs, columns=self.running_model.compartment_names)
         out_df.insert(0, column='times', value=self.running_model.times )
@@ -84,6 +85,7 @@ class Calibration:
 
         # run the model
         self.running_model.run_model()
+        print('inside run model')
 
         # perform post-processing
         self.update_post_processing()
@@ -103,15 +105,19 @@ class Calibration:
             data = np.array(target['values'])
             model_output = np.array(self.post_processing.generated_outputs[key])
 
+
             if self.run_mode == 'lsm':
                 ll += np.sum((data - model_output)**2)
             else:
                 ll += -(0.5/target['sd']**2)*np.sum((data - model_output)**2)
 
+        print("############")
+        print(params)
         self.main_table['run_' + str(self.iter_num)] = {'loglikelihood': ll, 'params': params}
         with open('mc.json', "w") as json_file:
             json_file.write(json.dumps(self.main_table, cls=NumpyEncoder))
             json_file.write(',\n')
+        print(ll)
 
         return ll
 
@@ -135,6 +141,7 @@ class Calibration:
         for i, target in enumerate(self.targeted_outputs):
             if 'sd' not in target.keys():
                 self.targeted_outputs[i]['sd'] = 0.5 / 4. * np.mean(target['values'])
+                print(self.targeted_outputs[i]['sd'])
 
     def create_loglike_object(self):
         """
@@ -262,6 +269,7 @@ if __name__ == "__main__":
 
     calib = Calibration(build_mongolia_model, par_priors, target_outputs, multipliers)
 
+
     # calib.run_fitting_algorithm(run_mode='lsm')  # for least square minimization
     # print(calib.mle_estimates)
     #
@@ -269,6 +277,6 @@ if __name__ == "__main__":
     # calib.run_fitting_algorithm(run_mode='mle')  # for maximum-likelihood estimation
     # print(calib.mle_estimates)
     #
-    # calib.run_fitting_algorithm(run_mode='mcmc', mcmc_method='DEMetropolis', n_iterations=2, n_burned=0,
-    #                             n_chains=4, parallel=False)  # for mcmc
+    calib.run_fitting_algorithm(run_mode='mcmc', mcmc_method='DEMetropolis', n_iterations=2, n_burned=0,
+                                n_chains=4, parallel=False)  # for mcmc
 

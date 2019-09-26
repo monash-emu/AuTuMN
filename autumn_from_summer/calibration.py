@@ -112,11 +112,10 @@ class Calibration:
 
         print("############")
         print(params)
-        self.main_table['run_' + str(self.iter_num)] = {'loglikelihood': ll, 'param_names': self.param_list, 'params': params}
-        with open('mc.json', "w") as json_file:
-            json_file.write(json.dumps(self.main_table, cls=NumpyEncoder))
-            json_file.write(',\n')
-        print(ll)
+        mcmc_run_dict = {k: v for k, v in zip(self.param_list,params)}
+        mcmc_run_dict['loglikelihood'] = ll
+        mcmc_run_df = pd.DataFrame(mcmc_run_dict, columns=self.param_list, index=[self.iter_num])
+        store_tb_database(mcmc_run_df, table_name='mcmc_run', run_idx=self.iter_num, database_name="databases/outputs.db", append=True)
 
         return ll
 
@@ -188,8 +187,16 @@ class Calibration:
                         ValueError("requested mcmc mode is not supported. Must be one of ['Metropolis', 'DEMetropolis']")
                     self.mcmc_trace = pm.sample(draws=n_iterations, step=mcmc_step, tune=n_burned, chains=n_chains,
                                                 progressbar=False)
-                    traceDb = pm.trace_to_dataframe(self.mcmc_trace)
-                    traceDb.to_csv('trace.csv')
+                    traceDf = pm.trace_to_dataframe(self.mcmc_trace)
+                    traceDf.to_csv('trace.csv')
+                    out_database = InputDB(database_name="databases/outputs.db")
+                    mcmc_run_df = out_database.db_query('mcmc_run')
+                    mcmc_run_df = mcmc_run_df.reset_index(drop=True)
+                    traceDf = traceDf.reset_index(drop=True)
+                    traceDf['accepted'] = 1
+                    mcmc_run_info = pd.merge(mcmc_run_df, traceDf, how='left', left_on=self.param_list, right_on=self.param_list)
+                    mcmc_run_info['accepted'].fillna(0, inplace=True)
+                    store_tb_database(mcmc_run_info, table_name='mcmc_run_info', database_name="databases/outputs.db")
                 else:
                     ValueError("requested run mode is not supported. Must be one of ['mcmc', 'lme']")
         elif run_mode == 'lsm':

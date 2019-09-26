@@ -87,8 +87,9 @@ def store_tb_database(outputs, table_name="outputs", scenario=0, run_idx=0, time
 
     if times:
         outputs.insert(0, column='times', value=times)
-    outputs.insert(0, column='idx', value='run_' + str(run_idx))
-    outputs.insert(1, column='Scenario', value=scenario)
+    if table_name != 'mcmc_run_info':
+        outputs.insert(0, column='idx', value='run_' + str(run_idx))
+        outputs.insert(1, column='Scenario', value=scenario)
     engine = create_engine("sqlite:///"+ database_name, echo=False)
     if table_name == "functions":
         outputs.to_sql(table_name, con=engine, if_exists="replace", index=False, dtype={"cdr_values": FLOAT()})

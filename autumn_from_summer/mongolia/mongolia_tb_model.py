@@ -117,7 +117,7 @@ def build_mongolia_model(update_params={}):
         n_early_latent_comps = len([model.compartment_names[i] for i in range(len(model.compartment_names)) if
                                    model.compartment_names[i][0:12] == 'early_latent'])
 
-        return infectious_populations / n_early_latent_comps
+        return infectious_populations[0] / float(n_early_latent_comps)
 
     _tb_model.add_transition_flow(
         {"type": "customised_flows", "parameter": "ipt_rate", "origin": "early_latent", "to": "recovered",
@@ -309,7 +309,7 @@ if __name__ == "__main__":
     load_model = False
 
     scenario_params = {
-            0: {},
+            # 0: {},
             1: {'ipt_age_0_ct_coverage': .5},
             # 2: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
             #     'ipt_age_60_ct_coverage': .5},

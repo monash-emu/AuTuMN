@@ -10,6 +10,7 @@ from autumn_from_summer.db import get_bcg_coverage, get_crude_birth_rate, get_po
 import summer_py.post_processing as post_proc
 from summer_py.outputs import Outputs
 import json
+from autumn_from_summer.tool_kit import *
 
 def load_model_scenario(scenario_name):
     out_database = InputDB(database_name="databases/outputs.db")

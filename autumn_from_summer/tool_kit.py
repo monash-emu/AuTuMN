@@ -1,5 +1,49 @@
 import copy
 import numpy
+from summer_py.summer_model import *
+
+
+
+def change_parameter_unit(parameter_dict, multiplier):
+    """
+    used to adapt the latency parameters from the earlier functions according to whether they are needed as by year
+        rather than by day
+    :param parameter_dict: dict
+        dictionary whose values need to be adjusted
+    :param multiplier: float
+        multiplier
+    :return: dict
+        dictionary with values multiplied by the multiplier argument
+    """
+    return {param_key: param_value * multiplier for param_key, param_value in parameter_dict.items()}
+
+def add_w_to_param_names(parameter_dict):
+    """
+    add a "W" string to the end of the parameter name to indicate that we should over-write up the chain
+    :param parameter_dict: dict
+        the dictionary before the adjustments
+    :return: dict
+        same dictionary but with the "W" string added to each of the keys
+    """
+    return {str(age_group) + "W": value for age_group, value in parameter_dict.items()}
+
+def find_stratum_index_from_string(compartment, stratification, remove_stratification_name=True):
+    """
+    finds the stratum which the compartment (or parameter) name falls in when provided with the compartment name and the
+        name of the stratification of interest
+    for example, if the compartment name was infectiousXhiv_positiveXdiabetes_none and the stratification of interest
+        provided through the stratification argument was hiv, then
+    :param compartment: str
+        name of the compartment or parameter to be interrogated
+    :param stratification: str
+        the stratification of interest
+    :param remove_stratification_name: bool
+        whether to remove the stratification name and its trailing _ from the string to return
+    :return: str
+        the name of the stratum within which the compartment falls
+    """
+    stratum_name = [name for n_name, name in enumerate(find_name_components(compartment)) if stratification in name][0]
+    return stratum_name[stratum_name.find("_") + 1:] if remove_stratification_name else stratum_name
 
 
 def find_first_list_element_above(list, value):

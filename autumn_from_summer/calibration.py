@@ -194,6 +194,7 @@ class Calibration:
                     mcmc_run_info = pd.merge(mcmc_run_df, traceDf, how='left', left_on=self.param_list,
                                              right_on=self.param_list)
                     mcmc_run_info['accepted'].fillna(0, inplace=True)
+                    mcmc_run_info = mcmc_run_info.drop_duplicates()
                     store_tb_database(mcmc_run_info, table_name='mcmc_run_info', database_name="databases/outputs.db")
                 else:
                     ValueError("requested run mode is not supported. Must be one of ['mcmc', 'lme']")

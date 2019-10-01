@@ -11,6 +11,7 @@ import summer_py.post_processing as post_proc
 from summer_py.outputs import Outputs
 import json
 from autumn_from_summer.tool_kit import *
+from summer_py.parameter_processing import *
 
 def load_model_scenario(scenario_name):
     out_database = InputDB(database_name="databases/outputs.db")

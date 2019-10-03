@@ -309,8 +309,7 @@ if __name__ == "__main__":
     load_model = False
 
     scenario_params = {
-            # 0: {},
-            1: {'ipt_age_0_ct_coverage': .5},
+            # 1: {'ipt_age_0_ct_coverage': .5},
             # 2: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
             #     'ipt_age_60_ct_coverage': .5},
             # 3: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
@@ -398,7 +397,10 @@ if __name__ == "__main__":
                     'prevXinfectiousXstrain_mdrXamong': 'Prevalence of MDR-TB (/100,000)'
                     }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_dir', targets_to_plot=targets_to_plot,
+    scenario_list = [0]
+    scenario_list.extend(list(scenario_params.keys()))
+
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='testinggggg', targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers, translation_dictionary=translations,
-                                  scenario_list=scenario_params.keys())
+                                  scenario_list=scenario_list)
 

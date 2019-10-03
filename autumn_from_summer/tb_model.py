@@ -423,7 +423,7 @@ def create_multi_scenario_outputs(models, req_outputs, req_times={}, req_multipl
                 req_multipliers[output] = 1.e2
 
         pps.append(post_proc.PostProcessing(models[scenario_index], requested_outputs=req_outputs,
-                                            scenario_number=list(scenario_list)[scenario_index],
+                                            scenario_number=scenario_list[scenario_index],
                                             requested_times=req_times,
                                             multipliers=req_multipliers))
 

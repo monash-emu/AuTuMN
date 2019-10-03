@@ -74,7 +74,7 @@ def build_mongolia_model(update_params={}):
          "dr_amplification": .0,  # high value for testing
          "crude_birth_rate": 20.0 / 1e3}
 
-    input_database = InputDB()
+    input_database = InputDB(database_name='databases/Inputs.db')
     n_iter = int(round((external_params['end_time'] - external_params['start_time']) / external_params['time_step'])) + 1
     integration_times = numpy.linspace(external_params['start_time'], external_params['end_time'], n_iter).tolist()
 
@@ -330,7 +330,7 @@ if __name__ == "__main__":
     else:
         t0 = time()
         models = run_multi_scenario(scenario_params, 2020., build_mongolia_model)
-        store_run_models(models)
+        store_run_models(models, database_name='databases/outputs.db')
         delta = time() - t0
         print("Running time: " + str(round(delta, 1)) + " seconds")
 

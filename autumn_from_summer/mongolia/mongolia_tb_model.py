@@ -2,6 +2,9 @@ from autumn_from_summer.tb_model import *
 from autumn_from_summer.tool_kit import *
 from time import time
 
+# location for output database
+db_path = os.path.join(os.getcwd(), 'mongolia/databases/outputs.db')
+
 
 def build_mongolia_timevariant_cdr():
     cdr = {1950.: 0., 1980.: .10, 1990.: .15, 2000.: .20, 2010.: .30, 2015: .33}
@@ -329,7 +332,7 @@ if __name__ == "__main__":
     else:
         t0 = time()
         models = run_multi_scenario(scenario_params, 2020., build_mongolia_model)
-        store_run_models(models, database_name='databases/outputs.db')
+        store_run_models(models, database_name=db_path)
         delta = time() - t0
         print("Running time: " + str(round(delta, 1)) + " seconds")
 

@@ -82,7 +82,7 @@ def return_function_of_function(inner_function, outer_function):
 
 
 # temporary fix for store database, need to move to tb_model
-def store_tb_database(outputs, table_name="outputs", scenario=0, run_idx=0, times=None, database_name="../databases/outputs.db", append=False):
+def store_tb_database(outputs, table_name="outputs", scenario=0, run_idx=0, times=None, database_name="../databases/outputs.db", append=True):
     """
     store outputs from the model in sql database for use in producing outputs later
     """
@@ -96,7 +96,7 @@ def store_tb_database(outputs, table_name="outputs", scenario=0, run_idx=0, time
     if table_name == "functions":
         outputs.to_sql(table_name, con=engine, if_exists="replace", index=False, dtype={"cdr_values": FLOAT()})
     elif append:
-        outputs.to_sql(table_name, con=engine, if_exists="append", index=False)
+        outputs.to_sql(table_name, con=engine, if_exists="append",  index=False)
     else:
         outputs.to_sql(table_name, con=engine, if_exists="replace", index=False)
 

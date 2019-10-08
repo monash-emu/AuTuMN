@@ -20,7 +20,7 @@ _logger.setLevel(logging.DEBUG)
 theano.config.optimizer = 'None'
 
 # location for output database
-db_path = os.path.join(os.getcwd(), 'mongolia/databases/outputs.db')
+output_db_path = os.path.join(os.getcwd(), 'mongolia/databases/outputs_' + now.strftime("%m_%d_%Y_%H_%M_%S") + '.db')
 
 
 class Calibration:
@@ -71,7 +71,7 @@ class Calibration:
             self.post_processing.generate_outputs()
         self.iter_num = self.iter_num + 1
         out_df = pd.DataFrame(self.running_model.outputs, columns=self.running_model.compartment_names)
-        store_tb_database(out_df, run_idx=self.iter_num, times=self.running_model.times, database_name=db_path, append=True)
+        store_tb_database(out_df, run_idx=self.iter_num, times=self.running_model.times, database_name=output_db_path, append=True)
 
     def run_model_with_params(self, params):
         """
@@ -114,7 +114,7 @@ class Calibration:
             mcmc_run_dict['loglikelihood'] = ll
             mcmc_run_df = pd.DataFrame(mcmc_run_dict, columns=self.param_list, index=[self.iter_num])
             store_tb_database(mcmc_run_df, table_name='mcmc_run', run_idx=self.iter_num,
-                              database_name=db_path, append=True)
+                              database_name=output_db_path, append=True)
 
 
         return ll
@@ -189,7 +189,7 @@ class Calibration:
 
                     traceDf = pm.trace_to_dataframe(self.mcmc_trace)
                     traceDf.to_csv('trace.csv')
-                    out_database = InputDB(database_name=db_path)
+                    out_database = InputDB(database_name=output_db_path)
                     mcmc_run_df = out_database.db_query('mcmc_run')
                     mcmc_run_df = mcmc_run_df.reset_index(drop=True)
                     traceDf = traceDf.reset_index(drop=True)
@@ -198,7 +198,7 @@ class Calibration:
                                              right_on=self.param_list)
                     mcmc_run_info['accepted'].fillna(0, inplace=True)
                     mcmc_run_info = mcmc_run_info.drop_duplicates()
-                    store_tb_database(mcmc_run_info, table_name='mcmc_run_info', database_name=db_path)
+                    store_tb_database(mcmc_run_info, table_name='mcmc_run_info', database_name=output_db_path)
                 else:
                     ValueError("requested run mode is not supported. Must be one of ['mcmc', 'lme']")
         elif run_mode == 'lsm':

@@ -1,9 +1,12 @@
 from autumn_from_summer.tb_model import *
 from autumn_from_summer.tool_kit import *
 from time import time
+from datetime import datetime
+
+now = datetime.now()
 
 # location for output database
-db_path = os.path.join(os.getcwd(), 'mongolia/databases/outputs.db')
+output_db_path = os.path.join(os.getcwd(), 'mongolia/databases/outputs_' + now.strftime("%m_%d_%Y_%H_%M_%S") + '.db')
 
 
 def build_mongolia_timevariant_cdr():
@@ -18,7 +21,7 @@ def build_mongolia_timevariant_tsr():
 
 def build_mongolia_model(update_params={}):
 
-    stratify_by = ['age', 'strain', 'location', 'housing']
+    stratify_by = ['age' 'strain', 'location', 'housing']
 
     # some default parameter values
     external_params = {  # run configuration
@@ -77,7 +80,8 @@ def build_mongolia_model(update_params={}):
          "dr_amplification": .0,  # high value for testing
          "crude_birth_rate": 20.0 / 1e3}
 
-    input_database = InputDB(database_name='databases/Inputs.db')
+    input_db_path = os.path.join(os.getcwd(), 'mongolia/databases/inputs.db')
+    input_database = InputDB(database_name=input_db_path)
     n_iter = int(round((external_params['end_time'] - external_params['start_time']) / external_params['time_step'])) + 1
     integration_times = numpy.linspace(external_params['start_time'], external_params['end_time'], n_iter).tolist()
 
@@ -332,7 +336,7 @@ if __name__ == "__main__":
     else:
         t0 = time()
         models = run_multi_scenario(scenario_params, 2020., build_mongolia_model)
-        store_run_models(models, database_name=db_path)
+        store_run_models(models, database_name=output_db_path)
         delta = time() - t0
         print("Running time: " + str(round(delta, 1)) + " seconds")
 

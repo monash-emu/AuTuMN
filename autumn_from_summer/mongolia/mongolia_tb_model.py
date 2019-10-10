@@ -21,7 +21,7 @@ def build_mongolia_timevariant_tsr():
 
 def build_mongolia_model(update_params={}):
 
-    stratify_by = ['age' 'strain', 'location', 'housing']
+    stratify_by = ['age', 'strain', 'location', 'housing']
 
     # some default parameter values
     external_params = {  # run configuration

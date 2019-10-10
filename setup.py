@@ -2,10 +2,12 @@ from setuptools import setup, find_packages
 
 setup(
     name='autumn',
+    # name='autumn_from_summer',
     version='1.2',
     packages=['autumn',
               'autumn_from_summer',
               'bgui'],
+    # packages=['autumn_from_summer'],
     url='',
     license='',
     author='',

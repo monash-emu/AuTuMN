@@ -80,7 +80,7 @@ def build_mongolia_model(update_params={}):
          "dr_amplification": .0,  # high value for testing
          "crude_birth_rate": 20.0 / 1e3}
 
-    input_db_path = os.path.join(os.getcwd(), 'mongolia/databases/inputs.db')
+    input_db_path = os.path.join(os.getcwd(), 'databases/inputs.db')
     input_database = InputDB(database_name=input_db_path)
     n_iter = int(round((external_params['end_time'] - external_params['start_time']) / external_params['time_step'])) + 1
     integration_times = numpy.linspace(external_params['start_time'], external_params['end_time'], n_iter).tolist()

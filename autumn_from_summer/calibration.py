@@ -20,7 +20,7 @@ _logger.setLevel(logging.DEBUG)
 theano.config.optimizer = 'None'
 
 # location for output database
-output_db_path = os.path.join(os.getcwd(), 'mongolia/databases/outputs_' + now.strftime("%m_%d_%Y_%H_%M_%S") + '.db')
+output_db_path = os.path.join(os.getcwd(), 'databases/outputs_' + now.strftime("%m_%d_%Y_%H_%M_%S") + '.db')
 
 
 class Calibration:

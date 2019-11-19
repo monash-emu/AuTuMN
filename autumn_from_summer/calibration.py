@@ -112,7 +112,9 @@ class Calibration:
                 ll += -(0.5/target['sd']**2)*np.sum((data - model_output)**2)
             mcmc_run_dict = {k: v for k, v in zip(self.param_list, params)}
             mcmc_run_dict['loglikelihood'] = ll
-            mcmc_run_df = pd.DataFrame(mcmc_run_dict, columns=self.param_list, index=[self.iter_num])
+            mcmc_run_colnames = self.param_list.copy()
+            mcmc_run_colnames = mcmc_run_colnames.append('loglikelihood')
+            mcmc_run_df = pd.DataFrame(mcmc_run_dict, columns=mcmc_run_colnames, index=[self.iter_num])
             store_tb_database(mcmc_run_df, table_name='mcmc_run', run_idx=self.iter_num,
                               database_name=output_db_path, append=True)
 

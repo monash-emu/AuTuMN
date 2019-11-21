@@ -316,8 +316,8 @@ def build_mongolia_model(update_params={}):
                        'rr_transmission_recovered': .63,
                        'rr_transmission_infected': 0.21,
                        'latency_adjustment': 2.,  # used to modify progression rates during calibration
-                       'case_fatality_rate': 0.4,
-                       'untreated_disease_duration': 3.0,
+                       'self_recovery_rate': 0.231,  # this is for smear-positive TB
+                       'tb_mortality_rate': 0.389,  # this is for smear-positive TB
                          # MDR-TB:
                        'dr_amplification_prop_among_nonsuccess': 0.15,
                        'prop_mdr_detected_as_mdr': 0.5,
@@ -354,8 +354,8 @@ def build_mongolia_model(update_params={}):
         {"contact_rate": external_params['contact_rate'],
          "contact_rate_recovered": external_params['contact_rate'] * external_params['rr_transmission_recovered'],
          "contact_rate_infected": external_params['contact_rate'] * external_params['rr_transmission_infected'],
-         "recovery": external_params['case_fatality_rate'] / external_params['untreated_disease_duration'],
-         "infect_death": (1.0 - external_params['case_fatality_rate']) / external_params['untreated_disease_duration'],
+         "recovery": external_params['self_recovery_rate'],
+         "infect_death": external_params['tb_mortality_rate'],
          "universal_death_rate": 1.0 / 50.0,
          "case_detection": 0.,
          "ipt_rate": 0.,
@@ -424,7 +424,8 @@ def build_mongolia_model(update_params={}):
 
     # load time-variant case detection rate
     cdr_scaleup = build_mongolia_timevariant_cdr()
-    prop_to_rate = convert_competing_proportion_to_rate(1.0 / external_params['untreated_disease_duration'])
+    disease_duration = 3.
+    prop_to_rate = convert_competing_proportion_to_rate(1.0 / disease_duration)
     detect_rate = return_function_of_function(cdr_scaleup, prop_to_rate)
 
     # load time-variant treatment success rate
@@ -486,9 +487,14 @@ def build_mongolia_model(update_params={}):
 
     if 'organ' in stratify_by:
         props_smear = {"smearpos": 0.5, "smearneg": 0.25, "extrapul": 0.25}
+        mortality_adjustments = {"smearpos": 1., "smearneg": .64, "extrapul": .64}
+        recovery_adjustments = {"smearpos": 1., "smearneg": .56, "extrapul": .56}
+
         _tb_model.stratify("organ", ["smearpos", "smearneg", "extrapul"], ["infectious"],
                            infectiousness_adjustments={"smearpos": 1., "smearneg": 0.25, "extrapul": 0.},
                            verbose=False, requested_proportions=props_smear,
+                           adjustment_requests={'recovery': recovery_adjustments,
+                                                'infect_death': mortality_adjustments},
                            entry_proportions=props_smear)
 
     if "age" in stratify_by:

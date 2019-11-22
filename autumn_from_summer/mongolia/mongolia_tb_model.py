@@ -318,6 +318,10 @@ def build_mongolia_model(update_params={}):
                        'dr_amplification_prop_among_nonsuccess': 0.15,
                        'prop_mdr_detected_as_mdr': 0.5,
                        'mdr_tsr': .6,
+                        # diagnostic sensitivity by organ status:
+                        'diagnostic_sensitivity_smearpos': 1.,
+                        'diagnostic_sensitivity_smearneg': .7,
+                        'diagnostic_sensitivity_extrapul': .5,
                          # adjustments by location and housing type
                        'rr_transmission_urban_ger': 1.4,  # reference: rural_province
                        'rr_transmission_urban_nonger': 1.8,  # reference: rural_province
@@ -487,12 +491,15 @@ def build_mongolia_model(update_params={}):
         props_smear = {"smearpos": 0.5, "smearneg": 0.25, "extrapul": 0.25}
         mortality_adjustments = {"smearpos": 1., "smearneg": .64, "extrapul": .64}
         recovery_adjustments = {"smearpos": 1., "smearneg": .56, "extrapul": .56}
-
+        diagnostic_sensitivity = {}
+        for stratum in ["smearpos", "smearneg", "extrapul"]:
+            diagnostic_sensitivity[stratum] = external_params["diagnostic_sensitivity_" + stratum]
         _tb_model.stratify("organ", ["smearpos", "smearneg", "extrapul"], ["infectious"],
                            infectiousness_adjustments={"smearpos": 1., "smearneg": 0.25, "extrapul": 0.},
                            verbose=False, requested_proportions=props_smear,
                            adjustment_requests={'recovery': recovery_adjustments,
-                                                'infect_death': mortality_adjustments},
+                                                'infect_death': mortality_adjustments,
+                                                'case_detection': diagnostic_sensitivity},
                            entry_proportions=props_smear)
 
     if "age" in stratify_by:

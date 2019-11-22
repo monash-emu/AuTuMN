@@ -602,6 +602,8 @@ if __name__ == "__main__":
             # 5: {'reduction_negative_tx_outcome': 0.5},
             # 6: {'acf_coverage': .2, 'acf_ger_switch': 1., 'acf_urban_switch': 1.}
         }
+    scenario_list = [0]
+    scenario_list.extend(list(scenario_params.keys()))
 
     if load_model:
         models = []
@@ -613,7 +615,7 @@ if __name__ == "__main__":
     else:
         t0 = time()
         models = run_multi_scenario(scenario_params, 2020., build_mongolia_model)
-        store_run_models(models, database_name=output_db_path)
+        store_run_models(models, scenarios=scenario_list, database_name=output_db_path)
         delta = time() - t0
         print("Running time: " + str(round(delta, 1)) + " seconds")
 
@@ -680,9 +682,6 @@ if __name__ == "__main__":
                     'strain_mdr': 'MDR-TB',
                     'prevXinfectiousXstrain_mdrXamong': 'Prevalence of MDR-TB (/100,000)'
                     }
-
-    scenario_list = [0]
-    scenario_list.extend(list(scenario_params.keys()))
 
     create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_21_11', targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers, translation_dictionary=translations,

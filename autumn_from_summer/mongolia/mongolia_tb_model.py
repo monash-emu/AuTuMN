@@ -627,6 +627,9 @@ if __name__ == "__main__":
         print("Running time: " + str(round(delta, 1)) + " seconds")
 
     req_outputs = ['prevXinfectiousXamong',
+                   'prevXinfectiousXorgan_smearposXamongXinfectious',
+                   'prevXinfectiousXorgan_smearnegXamongXinfectious',
+                   'prevXinfectiousXorgan_extrapulXamongXinfectious',
                    # 'prevXlatentXamong',
                    # 'prevXinfectiousXamongXage_15Xage_60',
                    # 'prevXinfectiousXamongXage_15Xage_60Xhousing_ger',

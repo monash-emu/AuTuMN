@@ -22,7 +22,7 @@ def build_mongolia_timevariant_tsr():
 
 def build_interim_mongolia_model(update_params={}):
 
-    stratify_by = ['age', 'strain', 'location', 'housing']
+    stratify_by = ['age', 'strain'] #, 'location', 'housing']
 
     # some default parameter values
     external_params = {  # run configuration
@@ -96,16 +96,11 @@ def build_interim_mongolia_model(update_params={}):
     # compartments
     compartments = ["susceptible", "early_latent", "late_latent", "infectious", "recovered"]
 
-    # derived output functions
-    def get_total_popsize(model):
-        return sum(model.compartment_values)
-
     # define model     #replace_deaths  add_crude_birth_rate
     if len(stratify_by) > 0:
         _tb_model = StratifiedModel(
             integration_times, compartments, {"infectious": 1e-3}, model_parameters, flows, birth_approach="replace_deaths",
-            starting_population=external_params['start_population'],
-            derived_output_functions={'population': get_total_popsize})
+            starting_population=external_params['start_population'])
     else:
         _tb_model = EpiModel(
             integration_times, compartments, {"infectious": 1e-3}, model_parameters, flows, birth_approach="replace_deaths",
@@ -379,16 +374,18 @@ def build_mongolia_model(update_params={}):
     # compartments
     compartments = ["susceptible", "early_latent", "late_latent", "infectious", "recovered"]
 
-    # derived output functions
-    def get_total_popsize(model):
-        return sum(model.compartment_values)
+    # derived output definition
+    out_connections = {
+        "incidence_early": {"origin": "early_latent", "to": "infectious"},
+        "incidence_late": {"origin": "late_latent", "to": "infectious"}
+    }
 
     # define model     #replace_deaths  add_crude_birth_rate
     if len(stratify_by) > 0:
         _tb_model = StratifiedModel(
             integration_times, compartments, {"infectious": 1e-3}, model_parameters, flows, birth_approach="replace_deaths",
             starting_population=external_params['start_population'],
-            derived_output_functions={'population': get_total_popsize})
+            output_connections=out_connections)
     else:
         _tb_model = EpiModel(
             integration_times, compartments, {"infectious": 1e-3}, model_parameters, flows, birth_approach="replace_deaths",

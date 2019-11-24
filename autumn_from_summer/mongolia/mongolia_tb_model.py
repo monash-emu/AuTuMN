@@ -299,7 +299,7 @@ def build_interim_mongolia_model(update_params={}):
 
 def build_mongolia_model(update_params={}):
 
-    stratify_by = ['age', 'strain', 'location', 'organ']
+    stratify_by = ['age', 'location', 'organ', 'strain']
 
     # some default parameter values
     external_params = {  # run configuration
@@ -416,13 +416,13 @@ def build_mongolia_model(update_params={}):
 
         return infectious_populations / float(n_early_latent_comps)
 
-    # _tb_model.add_transition_flow(
-    #     {"type": "customised_flows", "parameter": "ipt_rate", "origin": "early_latent", "to": "recovered",
-    #      "function": ipt_flow_func})
-    #
-    # # add ACF flow
-    # _tb_model.add_transition_flow(
-    #     {"type": "standard_flows", "parameter": "acf_rate", "origin": "infectious", "to": "recovered"})
+    _tb_model.add_transition_flow(
+        {"type": "customised_flows", "parameter": "ipt_rate", "origin": "early_latent", "to": "recovered",
+         "function": ipt_flow_func})
+
+    # add ACF flow
+    _tb_model.add_transition_flow(
+        {"type": "standard_flows", "parameter": "acf_rate", "origin": "infectious", "to": "recovered"})
 
     # load time-variant case detection rate
     cdr_scaleup = build_mongolia_timevariant_cdr()
@@ -604,10 +604,12 @@ if __name__ == "__main__":
             # 2: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
             #     'ipt_age_60_ct_coverage': .5},
             # 3: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
-            #     'ipt_age_60_ct_coverage': .5, 'ds_ipt_switch': 0., 'mdr_ipt_switch': 1.},
+            #      'ipt_age_60_ct_coverage': .5, 'ds_ipt_switch': 0., 'mdr_ipt_switch': 1.},
             # 4: {'mdr_tsr': .8},
             # 5: {'reduction_negative_tx_outcome': 0.5},
-            # 6: {'acf_coverage': .2, 'acf_ger_switch': 1., 'acf_urban_switch': 1.}
+            # 6: {'acf_coverage': .2, 'acf_urban_ger_switch': 1.},
+            # 7: {'acf_coverage': .2, 'acf_mine_switch': 1.},
+            # 8: {'diagnostic_sensitivity_smearneg': 1., 'prop_mdr_detected_as_mdr': .9}
         }
     scenario_list = [0]
     scenario_list.extend(list(scenario_params.keys()))
@@ -693,7 +695,7 @@ if __name__ == "__main__":
                     'prevXinfectiousXstrain_mdrXamong': 'Prevalence of MDR-TB (/100,000)'
                     }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_21_11', targets_to_plot=targets_to_plot,
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_25_11', targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers, translation_dictionary=translations,
                                   scenario_list=scenario_list)
 

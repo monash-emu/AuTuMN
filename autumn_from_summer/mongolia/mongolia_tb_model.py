@@ -22,7 +22,7 @@ def build_mongolia_timevariant_tsr():
 
 def build_interim_mongolia_model(update_params={}):
 
-    stratify_by = ['age', 'strain', 'location', 'housing']
+    stratify_by = ['age', 'strain'] #, 'location', 'housing']
 
     # some default parameter values
     external_params = {  # run configuration
@@ -96,16 +96,11 @@ def build_interim_mongolia_model(update_params={}):
     # compartments
     compartments = ["susceptible", "early_latent", "late_latent", "infectious", "recovered"]
 
-    # derived output functions
-    def get_total_popsize(model):
-        return sum(model.compartment_values)
-
     # define model     #replace_deaths  add_crude_birth_rate
     if len(stratify_by) > 0:
         _tb_model = StratifiedModel(
             integration_times, compartments, {"infectious": 1e-3}, model_parameters, flows, birth_approach="replace_deaths",
-            starting_population=external_params['start_population'],
-            derived_output_functions={'population': get_total_popsize})
+            starting_population=external_params['start_population'])
     else:
         _tb_model = EpiModel(
             integration_times, compartments, {"infectious": 1e-3}, model_parameters, flows, birth_approach="replace_deaths",
@@ -304,7 +299,7 @@ def build_interim_mongolia_model(update_params={}):
 
 def build_mongolia_model(update_params={}):
 
-    stratify_by = ['age', 'strain', 'location', 'organ']
+    stratify_by = ['age', 'location', 'organ', 'strain']
 
     # some default parameter values
     external_params = {  # run configuration
@@ -323,6 +318,10 @@ def build_mongolia_model(update_params={}):
                        'dr_amplification_prop_among_nonsuccess': 0.15,
                        'prop_mdr_detected_as_mdr': 0.5,
                        'mdr_tsr': .6,
+                        # diagnostic sensitivity by organ status:
+                        'diagnostic_sensitivity_smearpos': 1.,
+                        'diagnostic_sensitivity_smearneg': .7,
+                        'diagnostic_sensitivity_extrapul': .5,
                          # adjustments by location and housing type
                        'rr_transmission_urban_ger': 1.4,  # reference: rural_province
                        'rr_transmission_urban_nonger': 1.8,  # reference: rural_province
@@ -379,16 +378,18 @@ def build_mongolia_model(update_params={}):
     # compartments
     compartments = ["susceptible", "early_latent", "late_latent", "infectious", "recovered"]
 
-    # derived output functions
-    def get_total_popsize(model):
-        return sum(model.compartment_values)
+    # derived output definition
+    out_connections = {
+        "incidence_early": {"origin": "early_latent", "to": "infectious"},
+        "incidence_late": {"origin": "late_latent", "to": "infectious"}
+    }
 
     # define model     #replace_deaths  add_crude_birth_rate
     if len(stratify_by) > 0:
         _tb_model = StratifiedModel(
             integration_times, compartments, {"infectious": 1e-3}, model_parameters, flows, birth_approach="replace_deaths",
             starting_population=external_params['start_population'],
-            derived_output_functions={'population': get_total_popsize})
+            output_connections=out_connections)
     else:
         _tb_model = EpiModel(
             integration_times, compartments, {"infectious": 1e-3}, model_parameters, flows, birth_approach="replace_deaths",
@@ -415,13 +416,13 @@ def build_mongolia_model(update_params={}):
 
         return infectious_populations / float(n_early_latent_comps)
 
-    # _tb_model.add_transition_flow(
-    #     {"type": "customised_flows", "parameter": "ipt_rate", "origin": "early_latent", "to": "recovered",
-    #      "function": ipt_flow_func})
-    #
-    # # add ACF flow
-    # _tb_model.add_transition_flow(
-    #     {"type": "standard_flows", "parameter": "acf_rate", "origin": "infectious", "to": "recovered"})
+    _tb_model.add_transition_flow(
+        {"type": "customised_flows", "parameter": "ipt_rate", "origin": "early_latent", "to": "recovered",
+         "function": ipt_flow_func})
+
+    # add ACF flow
+    _tb_model.add_transition_flow(
+        {"type": "standard_flows", "parameter": "acf_rate", "origin": "infectious", "to": "recovered"})
 
     # load time-variant case detection rate
     cdr_scaleup = build_mongolia_timevariant_cdr()
@@ -490,12 +491,15 @@ def build_mongolia_model(update_params={}):
         props_smear = {"smearpos": 0.5, "smearneg": 0.25, "extrapul": 0.25}
         mortality_adjustments = {"smearpos": 1., "smearneg": .64, "extrapul": .64}
         recovery_adjustments = {"smearpos": 1., "smearneg": .56, "extrapul": .56}
-
+        diagnostic_sensitivity = {}
+        for stratum in ["smearpos", "smearneg", "extrapul"]:
+            diagnostic_sensitivity[stratum] = external_params["diagnostic_sensitivity_" + stratum]
         _tb_model.stratify("organ", ["smearpos", "smearneg", "extrapul"], ["infectious"],
                            infectiousness_adjustments={"smearpos": 1., "smearneg": 0.25, "extrapul": 0.},
                            verbose=False, requested_proportions=props_smear,
                            adjustment_requests={'recovery': recovery_adjustments,
-                                                'infect_death': mortality_adjustments},
+                                                'infect_death': mortality_adjustments,
+                                                'case_detection': diagnostic_sensitivity},
                            entry_proportions=props_smear)
 
     if "age" in stratify_by:
@@ -600,11 +604,15 @@ if __name__ == "__main__":
             # 2: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
             #     'ipt_age_60_ct_coverage': .5},
             # 3: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
-            #     'ipt_age_60_ct_coverage': .5, 'ds_ipt_switch': 0., 'mdr_ipt_switch': 1.},
+            #      'ipt_age_60_ct_coverage': .5, 'ds_ipt_switch': 0., 'mdr_ipt_switch': 1.},
             # 4: {'mdr_tsr': .8},
             # 5: {'reduction_negative_tx_outcome': 0.5},
-            # 6: {'acf_coverage': .2, 'acf_ger_switch': 1., 'acf_urban_switch': 1.}
+            # 6: {'acf_coverage': .2, 'acf_urban_ger_switch': 1.},
+            # 7: {'acf_coverage': .2, 'acf_mine_switch': 1.},
+            # 8: {'diagnostic_sensitivity_smearneg': 1., 'prop_mdr_detected_as_mdr': .9}
         }
+    scenario_list = [0]
+    scenario_list.extend(list(scenario_params.keys()))
 
     if load_model:
         models = []
@@ -616,11 +624,14 @@ if __name__ == "__main__":
     else:
         t0 = time()
         models = run_multi_scenario(scenario_params, 2020., build_mongolia_model)
-        store_run_models(models, database_name=output_db_path)
+        store_run_models(models, scenarios=scenario_list, database_name=output_db_path)
         delta = time() - t0
         print("Running time: " + str(round(delta, 1)) + " seconds")
 
     req_outputs = ['prevXinfectiousXamong',
+                   'prevXinfectiousXorgan_smearposXamongXinfectious',
+                   'prevXinfectiousXorgan_smearnegXamongXinfectious',
+                   'prevXinfectiousXorgan_extrapulXamongXinfectious',
                    # 'prevXlatentXamong',
                    # 'prevXinfectiousXamongXage_15Xage_60',
                    # 'prevXinfectiousXamongXage_15Xage_60Xhousing_ger',
@@ -684,10 +695,7 @@ if __name__ == "__main__":
                     'prevXinfectiousXstrain_mdrXamong': 'Prevalence of MDR-TB (/100,000)'
                     }
 
-    scenario_list = [0]
-    scenario_list.extend(list(scenario_params.keys()))
-
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_21_11', targets_to_plot=targets_to_plot,
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_25_11', targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers, translation_dictionary=translations,
                                   scenario_list=scenario_list)
 

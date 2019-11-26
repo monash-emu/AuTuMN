@@ -314,6 +314,7 @@ def build_mongolia_model(update_params={}):
                        'latency_adjustment': 2.,  # used to modify progression rates during calibration
                        'self_recovery_rate': 0.231,  # this is for smear-positive TB
                        'tb_mortality_rate': 0.389,  # this is for smear-positive TB
+                       'prop_smearpos': .3,
                          # MDR-TB:
                        'dr_amplification_prop_among_nonsuccess': 0.15,
                        'prop_mdr_detected_as_mdr': 0.5,
@@ -325,8 +326,8 @@ def build_mongolia_model(update_params={}):
                          # adjustments by location and housing type
                        'rr_transmission_urban_ger': 1.4,  # reference: rural_province
                        'rr_transmission_urban_nonger': 1.8,  # reference: rural_province
-                       'rr_transmission_mine': 1.5,  # reference: rural_province
-                       'rr_transmission_prison': 1.5,  # reference: rural_province
+                       'rr_transmission_mine': 10,  # reference: rural_province
+                       'rr_transmission_prison': 10,  # reference: rural_province
                        # IPT
                        'ipt_age_0_ct_coverage': 0.17,  # Children contact tracing coverage  .17
                        'ipt_age_5_ct_coverage': 0.,  # Children contact tracing coverage
@@ -488,7 +489,9 @@ def build_mongolia_model(update_params={}):
         _tb_model.parameters["dr_amplification"] = "dr_amplification"
 
     if 'organ' in stratify_by:
-        props_smear = {"smearpos": 0.5, "smearneg": 0.25, "extrapul": 0.25}
+        props_smear = {"smearpos": external_params['prop_smearpos'],
+                       "smearneg": 1. - (external_params['prop_smearpos'] + .42),
+                       "extrapul": .42}
         mortality_adjustments = {"smearpos": 1., "smearneg": .64, "extrapul": .64}
         recovery_adjustments = {"smearpos": 1., "smearneg": .56, "extrapul": .56}
         diagnostic_sensitivity = {}

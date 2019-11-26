@@ -308,7 +308,7 @@ def build_mongolia_model(update_params={}):
                        'time_step': 1.,
                        'start_population': 3000000,
                        # base model definition:
-                       'contact_rate': 10.,
+                       'contact_rate': 1.,
                        'rr_transmission_recovered': .63,
                        'rr_transmission_infected': 0.21,
                        'latency_adjustment': 2.,  # used to modify progression rates during calibration
@@ -542,39 +542,16 @@ def build_mongolia_model(update_params={}):
             for age_break in [5, 15, 60]:
                 _tb_model.parameters['ipt_rateXstrain_dsXage_' + str(age_break)] = 0.
 
-    # if "housing" in stratify_by:
-    #     props_housing = {"ger": .45, "non-ger": .55}
-    #     raw_relative_risks = {"ger": external_params['rr_transmission_ger'], "non-ger": 1.}
-    #     scaled_relative_risks = scale_relative_risks_for_equivalence(props_housing, raw_relative_risks)
-    #
-    #     # housing_mixing = numpy.ones(4).reshape((2, 2))
-    #     # housing_mixing[0, 0] = 5.
-    #     # housing_mixing[1, 1] = 5.
-    #     housing_adjustments = {}
-    #     for beta_type in ['', '_infected', '_recovered']:
-    #         housing_adjustments['contact_rate' + beta_type] = scaled_relative_risks
-    #
-    #     housing_adjustments['acf_rate'] = {}
-    #     for stratum in ['ger', 'non-ger']:
-    #         housing_adjustments['acf_rate'][stratum] = external_params['acf_' + stratum + '_switch']
-    #
-    #     _tb_model.stratify("housing", ["ger", "non-ger"], [], requested_proportions=props_housing, verbose=False,
-    #                        adjustment_requests=housing_adjustments,
-    #                        # mixing_matrix=housing_mixing,
-    #                        entry_proportions=props_housing
-    #                        )
-
     if "location" in stratify_by:
-        props_location ={'rural_province': .4653, 'urban_nonger': .368, 'urban_ger': .15, 'mine': .0147, 'prison': .002}
+        props_location = {'rural_province': .4653, 'urban_nonger': .368, 'urban_ger': .15, 'mine': .0147, 'prison': .002}
         raw_relative_risks_loc = {'rural_province': 1.}
         for stratum in ['urban_nonger', 'urban_ger', 'mine', 'prison']:
             raw_relative_risks_loc[stratum] = external_params['rr_transmission_' + stratum]
         scaled_relative_risks_loc = scale_relative_risks_for_equivalence(props_location, raw_relative_risks_loc)
 
-        # location_mixing = numpy.ones(9).reshape((3, 3))
-        # location_mixing[0, 0] = 10.
-        # location_mixing[1, 1] = 10.
-        # location_mixing[2, 2] = 10.
+        # dummy matrix for mixing by location
+        location_mixing = numpy.array([1., .2, .2, .1, .05, .2, 1.,	.2,	.1,	.05, .2, .2, 1., .1, .05, .1, .1, .1, 1.,
+                                       .05, .05, .05, .05, .05, 1.]).reshape((5, 5))
 
         location_adjustments = {}
         for beta_type in ['', '_infected', '_recovered']:
@@ -586,11 +563,11 @@ def build_mongolia_model(update_params={}):
 
         _tb_model.stratify("location", ['rural_province', 'urban_nonger', 'urban_ger', 'mine', 'prison'], [],
                            requested_proportions=props_location, verbose=False, entry_proportions=props_location,
-                           adjustment_requests=location_adjustments#,
-                           # mixing_matrix=location_mixing
+                           adjustment_requests=location_adjustments,
+                           mixing_matrix=location_mixing
                            )
 
-    _tb_model.transition_flows.to_csv("transitions.csv")
+    # _tb_model.transition_flows.to_csv("transitions.csv")
     # _tb_model.death_flows.to_csv("deaths.csv")
 
     return _tb_model

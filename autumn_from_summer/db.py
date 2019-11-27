@@ -18,7 +18,7 @@ def get_bcg_coverage(database, country_iso_code):
     :return: dict
         pandas data frame with columns years and one row containing the values of BCG coverage in that year
     """
-    _bcg_coverage = database.db_query("BCG", is_filter="ISO_code", value=country_iso_code)
+    _bcg_coverage = database.db_query("BCG", conditions=["ISO_code='" + country_iso_code + "'"])
     _bcg_coverage = _bcg_coverage.filter(items=[column for column in _bcg_coverage.columns if column.isdigit()])
     return {int(key): value / 1e2 for key, value in zip(list(_bcg_coverage.columns), _bcg_coverage.loc[0, :])
             if value is not None}
@@ -50,7 +50,7 @@ def get_crude_birth_rate(database, country_iso_code):
     """
 
     # extract birth rates
-    birth_rates = database.db_query("crude_birth_rate_mapped", is_filter="iso3", value=country_iso_code)
+    birth_rates = database.db_query("crude_birth_rate_mapped", conditions=["iso3='" + country_iso_code +"'"])
 
     # find the keys with a - in them to indicate a time range and add 2.5 on to the starting value to get mid-point
     return {float(key[: key.find("-")]) + 2.5: float(value) / 1e3 for
@@ -73,7 +73,7 @@ def extract_demo_data(_input_database, data_type, country_iso_code):
     """
 
     # get the appropriate data type from the un-derived databases
-    demo_data_frame = _input_database.db_query(data_type, is_filter="iso3", value=country_iso_code)
+    demo_data_frame = _input_database.db_query(data_type, conditions=["iso3='" + country_iso_code +"'"])
 
     # rename columns, including adding a hyphen to the last age group to make it behave like the others age groups
     demo_data_frame.rename(columns={"95+": "95-", "Reference date (as of 1 July)": "Period"}, inplace=True)
@@ -321,14 +321,14 @@ class InputDB:
         if self.verbose:
             print(comment)
 
-    def db_query(self, table_name, is_filter="", value="", column="*"):
+    def db_query(self, table_name, column="*", conditions=[]):
         """
         method to query table_name
 
         :param table_name: str
             name of the database table to query from
-        :param is_filter: str
-            column to filter over, if any
+        :param conditions: str
+            list of SQL query conditions (e.g. ["Scenario='1'", "idx='run_0'"])
         :param value: str
             value of interest with filter column
         :param column:
@@ -336,9 +336,12 @@ class InputDB:
         :return: pandas dataframe
             output for user
         """
-        query = "Select %s from %s" % (column, table_name)
-        if is_filter and value:
-            query = query + " Where %s = \'%s\'" % (is_filter, value)
+        query = "SELECT %s FROM %s" % (column, table_name)
+        if len(conditions) > 0:
+            query += " WHERE"
+            for condition in conditions:
+                query += ' ' + condition
+        query += ";"
         return pd.read_sql_query(query, con=self.engine)
 
     def add_iso_to_table(self, table_name):

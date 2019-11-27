@@ -13,9 +13,9 @@ import json
 from autumn_from_summer.tool_kit import *
 from summer_py.parameter_processing import *
 
-def load_model_scenario(scenario_name):
-    out_database = InputDB(database_name="databases/outputs.db")
-    res = out_database.db_query(scenario_name)
+def load_model_scenario(scenario_name, database_name):
+    out_database = InputDB(database_name="databases/" + database_name)
+    res = out_database.db_query(table_name='outputs', conditions=["Scenario='"+scenario_name+"'"])
     return res.to_dict()
 
 

@@ -595,12 +595,18 @@ if __name__ == "__main__":
     scenario_list.extend(list(scenario_params.keys()))
 
     if load_model:
-        models = []
-        scenarios_to_load = scenario_list
-        for sc in scenarios_to_load:
-            print("Loading model for scenario " + str(sc))
-            model_dict = load_model_scenario(str(sc), database_name='outputs_11_27_2019_13_12_43.db')
-            models.append(DummyModel(model_dict))
+        load_mcmc = True
+
+        if load_mcmc:
+            models = load_calibration_from_db('outputs_11_27_2019_14_07_54.db')
+            scenario_list = range(len(models))
+        else:
+            models = []
+            scenarios_to_load = scenario_list
+            for sc in scenarios_to_load:
+                print("Loading model for scenario " + str(sc))
+                model_dict = load_model_scenario(str(sc), database_name='outputs_11_27_2019_13_12_43.db')
+                models.append(DummyModel(model_dict))
     else:
         t0 = time()
         models = run_multi_scenario(scenario_params, 2020., build_mongolia_model)

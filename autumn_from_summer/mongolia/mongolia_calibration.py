@@ -25,13 +25,18 @@ multipliers = {'prevXlatentXamongXage_5': 1.e4,
                'prevXinfectiousXstrain_mdrXamongXinfectious': 1.e4
                }
 
-for i, output in enumerate(target_outputs):
-    if output['output_key'][0:15] == 'prevXinfectious' and \
-            output['output_key'] != 'prevXinfectiousXstrain_mdrXamongXinfectious':
-        multipliers[output['output_key']] = 1.e5
+load = True
 
-calib = Calibration(build_mongolia_model, par_priors, target_outputs, multipliers)
-calib.run_fitting_algorithm(run_mode='mcmc', mcmc_method='Metropolis', n_iterations=2, n_burned=0,
-                            n_chains=1, parallel=False)
+if not load:
+    for i, output in enumerate(target_outputs):
+        if output['output_key'][0:15] == 'prevXinfectious' and \
+                output['output_key'] != 'prevXinfectiousXstrain_mdrXamongXinfectious':
+            multipliers[output['output_key']] = 1.e5
 
-print(calib.mcmc_trace)
+    calib = Calibration(build_mongolia_model, par_priors, target_outputs, multipliers)
+    calib.run_fitting_algorithm(run_mode='mcmc', mcmc_method='Metropolis', n_iterations=4, n_burned=0,
+                                n_chains=1, parallel=False)
+
+    print(calib.mcmc_trace)
+else:
+    models = load_calibration_from_db('outputs_11_27_2019_14_07_54.db')

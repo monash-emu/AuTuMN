@@ -19,6 +19,17 @@ def load_model_scenario(scenario_name, database_name):
     return res.to_dict()
 
 
+def load_calibration_from_db(database_name):
+    out_database = InputDB(database_name='databases/' + database_name)
+    res = out_database.db_query(table_name='mcmc_run', column='idx')
+    run_ids = list(res.to_dict()['idx'].values())
+    models = []
+    for run_id in run_ids:
+        res = out_database.db_query(table_name='outputs', conditions=["idx='"+ str(run_id) +"'"])
+        model_dict = res.to_dict()
+        models.append(DummyModel(model_dict))
+    return models
+
 def scale_relative_risks_for_equivalence(proportions, relative_risks):
     """
     :param proportions: dictionary

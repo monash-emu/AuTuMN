@@ -49,6 +49,8 @@ class Calibration:
         self.mcmc_trace = None  # will store the results of the MCMC model calibration
         self.mle_estimates = {}  # will store the results of the maximum-likelihood calibration
 
+        self.evaluated_params_ll = []  # list of tuples:  [(theta_0, ll_0), (theta_1, ll_1), ...]
+
     def update_post_processing(self):
         """
         updates self.post_processing attribute based on the newly run model
@@ -101,27 +103,32 @@ class Calibration:
         :return: the loglikelihood
         """
         # run the model
-        self.run_model_with_params(params)
+        ll = None
+        for evaluated in self.evaluated_params_ll:
+            if np.array_equal(params, evaluated[0]):
+                ll = evaluated[1]
 
-        ll = 0  # loglikelihood if using bayesian approach. Sum of squares if using lsm mode
-        for target in self.targeted_outputs:
-            key = target['output_key']
-            data = np.array(target['values'])
-            model_output = np.array(self.post_processing.generated_outputs[key])
+        if ll is None:
+            self.run_model_with_params(params)
 
-            if self.run_mode == 'lsm':
-                ll += np.sum((data - model_output)**2)
-            else:
-                ll += -(0.5/target['sd']**2)*np.sum((data - model_output)**2)
-        mcmc_run_dict = {k: v for k, v in zip(self.param_list, params)}
-        mcmc_run_dict['loglikelihood'] = ll
-        mcmc_run_colnames = self.param_list.copy()
-        mcmc_run_colnames = mcmc_run_colnames.append('loglikelihood')
-        mcmc_run_df = pd.DataFrame(mcmc_run_dict, columns=mcmc_run_colnames, index=[self.iter_num])
-        store_tb_database(mcmc_run_df, table_name='mcmc_run', run_idx=self.iter_num,
-                          database_name=output_db_path, append=True)
+            ll = 0  # loglikelihood if using bayesian approach. Sum of squares if using lsm mode
+            for target in self.targeted_outputs:
+                key = target['output_key']
+                data = np.array(target['values'])
+                model_output = np.array(self.post_processing.generated_outputs[key])
 
-
+                if self.run_mode == 'lsm':
+                    ll += np.sum((data - model_output)**2)
+                else:
+                    ll += -(0.5/target['sd']**2)*np.sum((data - model_output)**2)
+            mcmc_run_dict = {k: v for k, v in zip(self.param_list, params)}
+            mcmc_run_dict['loglikelihood'] = ll
+            mcmc_run_colnames = self.param_list.copy()
+            mcmc_run_colnames = mcmc_run_colnames.append('loglikelihood')
+            mcmc_run_df = pd.DataFrame(mcmc_run_dict, columns=mcmc_run_colnames, index=[self.iter_num])
+            store_tb_database(mcmc_run_df, table_name='mcmc_run', run_idx=self.iter_num,
+                              database_name=output_db_path, append=True)
+            self.evaluated_params_ll.append((copy.copy(params), copy.copy(ll)))
         return ll
 
     def format_data_as_array(self):

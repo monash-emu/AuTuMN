@@ -184,7 +184,7 @@ class Calibration:
                     self.mle_estimates = pm.find_MAP()
                 elif run_mode == 'mcmc':  # full MCMC requested
                     if mcmc_method == 'Metropolis':
-                        mcmc_step = pm.Metropolis()
+                        mcmc_step = pm.Metropolis(S=np.array([1.]))
                     elif mcmc_method == 'DEMetropolis':
                         mcmc_step = pm.DEMetropolis()
                     else:

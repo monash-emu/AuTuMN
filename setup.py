@@ -7,7 +7,7 @@ setup(
     packages=['autumn',
               'autumn_from_summer',
               'bgui'],
-    # packages=['autumn_from_summer'],
+    # packages=['autumn_from_summer', 'autumn_from_summer.mongolia'],
     url='',
     license='',
     author='',

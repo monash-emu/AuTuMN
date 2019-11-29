@@ -7,9 +7,10 @@ import pymc3 as pm
 import theano
 import numpy as np
 import logging
+import os
 
 from scipy.optimize import Bounds, minimize
-from autumn.inputs import NumpyEncoder
+# from autumn.inputs import NumpyEncoder
 
 logger = logging.getLogger("pymc3")
 logger.setLevel(logging.DEBUG)

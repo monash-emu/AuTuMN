@@ -136,6 +136,12 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
             if type(value) == float:
                 self.set_parameter(key, value)
 
+        self.ipt_improvement = 1.
+        if self.scenario == 4 and self.country in ['bhutan', 'Bhutan']:
+            self.ipt_improvement = 80./60.
+            self.params['econ_unitcost_ipt'] = 70.74 * .88 + 39.43 * .12  # assuming 12% MDR
+            self.params['econ_startupcost_ipt'] = 404316. + 257. * 15.
+
         # susceptibility classes
         self.force_types = ['_fully', '_immune', '_latent']
         if 'int_prop_novel_vaccination' in self.relevant_interventions:
@@ -1038,7 +1044,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
 
             # calculate infections averted as product of infections of identified cases and coverage
             self.vars['prop_infections_averted_ipt' + agegroup] \
-                = self.vars['tb_prop_infections_reachable_ipt'] * coverage
+                = self.vars['tb_prop_infections_reachable_ipt'] * coverage * self.ipt_improvement
 
     def calculate_force_infection(self):
         """
@@ -1176,10 +1182,13 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
             if force_type != '_fully' or (force_type == '_fully' and history == self.histories[0]):
                 stratum = force_type + strain + history + riskgroup + agegroup
                 if ('agestratified_ipt' in self.relevant_interventions
-                        or 'ipt' in self.relevant_interventions) and strain == self.strains[0]:
-                    self.vars['rate_ipt_commencement' + stratum] \
-                        = self.vars['rate_force' + stratum] * self.vars['prop_infections_averted_ipt' + agegroup]
-                    self.vars['rate_force' + stratum] -= self.vars['rate_ipt_commencement' + stratum]
+                        or 'ipt' in self.relevant_interventions):
+                    if strain == self.strains[0] or self.scenario == 4:
+                        self.vars['rate_ipt_commencement' + stratum] \
+                                = self.vars['rate_force' + stratum] * self.vars['prop_infections_averted_ipt' + agegroup]
+                        self.vars['rate_force' + stratum] -= self.vars['rate_ipt_commencement' + stratum]
+                    else:
+                        self.vars['rate_ipt_commencement' + stratum] = 0.
                 else:
                     self.vars['rate_ipt_commencement' + stratum] = 0.
 

@@ -994,9 +994,9 @@ class EconomicModel(BaseModel):
 
                 # costs from cost-coverage curves
                 cost = get_cost_from_coverage(self.scaleup_fns['int_prop_' + inter](time),
-                                              self.inputs.model_constants['econ_inflectioncost_' + inter],
-                                              self.inputs.model_constants['econ_saturation_' + inter],
-                                              self.inputs.model_constants['econ_unitcost_' + inter],
+                                              self.params['econ_inflectioncost_' + inter],
+                                              self.params['econ_saturation_' + inter],
+                                              self.params['econ_unitcost_' + inter],
                                               self.var_array[start_index_for_costs + t, self.var_labels.index('popsize_' + inter)])
 
                 # start-up costs

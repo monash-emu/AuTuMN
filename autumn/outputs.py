@@ -996,9 +996,10 @@ class Project:
 
                         cost = 0.
                         for program in relevant_programs:
-                            cost += self.outputs['manual']['cost'][scenario][cost_type + program][
-                                t_k.find_first_list_element_at_least(self.outputs['manual']['cost'][scenario][
-                                                                               'times'], year)]
+                            if cost_type + program in self.outputs['manual']['cost'][scenario].keys():
+                                cost += self.outputs['manual']['cost'][scenario][cost_type + program][
+                                    t_k.find_first_list_element_at_least(self.outputs['manual']['cost'][scenario][
+                                                                                   'times'], year)]
                         sheet.cell(row=row, column=column).value = cost
                         total_cost += cost
                     # Add total costs and per year costs

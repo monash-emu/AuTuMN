@@ -1235,8 +1235,8 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         # BCG (so simple that it's almost unnecessary, but needed for loops over int names)
         self.vars['popsize_vaccination'] = self.vars['births_total']
 
-        # Xpert and improve DST - all presentations for assessment for active TB
-        for active_tb_presentations_intervention in ['xpert', 'firstline_dst']:
+        # Xpert, improve DST and improved sputum transportation - all presentations for assessment for active TB
+        for active_tb_presentations_intervention in ['xpert', 'firstline_dst', 'sputum_transport']:
             if 'int_prop_' + active_tb_presentations_intervention in self.relevant_interventions:
                 self.vars['popsize_' + active_tb_presentations_intervention] = 0.
 

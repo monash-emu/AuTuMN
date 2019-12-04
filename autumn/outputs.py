@@ -996,10 +996,11 @@ class Project:
 
                         cost = 0.
                         for program in relevant_programs:
-                            if cost_type + program in self.outputs['manual']['cost'][scenario].keys():
-                                cost += self.outputs['manual']['cost'][scenario][cost_type + program][
-                                    t_k.find_first_list_element_at_least(self.outputs['manual']['cost'][scenario][
-                                                                                   'times'], year)]
+                            if scenario in self.outputs['manual']['cost'].keys():
+                                if cost_type + program in self.outputs['manual']['cost'][scenario].keys():
+                                    cost += self.outputs['manual']['cost'][scenario][cost_type + program][
+                                        t_k.find_first_list_element_at_least(self.outputs['manual']['cost'][scenario][
+                                                                                       'times'], year)]
                         sheet.cell(row=row, column=column).value = cost
                         total_cost += cost
                     # Add total costs and per year costs
@@ -1174,7 +1175,7 @@ class Project:
 
         # plot economic outputs
         if self.gui_inputs['output_plot_economics']:
-            self.plot_cost_coverage_curves()
+            #self.plot_cost_coverage_curves()
             self.plot_cost_over_time()
 
         # plot compartment population sizes
@@ -1726,6 +1727,8 @@ class Project:
 
         # separate figures for each scenario
         for scenario in self.scenarios:
+            if scenario not in self.outputs['manual']['cost'].keys():
+                continue
             figs, axes, ax_dict, plot_types, n_rows, n_cols, max_dim \
                 = {}, {}, {}, ['individual', 'stacked', 'relative'], 0, 0, 0
             for plot_type in plot_types:

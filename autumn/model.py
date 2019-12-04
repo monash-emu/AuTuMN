@@ -1203,15 +1203,15 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
 
         # treatment support
         strain_types = copy.copy(self.strains)
-        if '' not in self.strains:
-            strain_types.append('')
+        # if '' not in self.strains:
+        #     strain_types.append('')
         for intervention in ['treatment_support_relative', 'treatment_support_absolute']:
             for strain in strain_types:
                 if 'int_prop_' + intervention + strain in self.relevant_interventions:
                     self.vars['popsize_' + intervention + strain] = 0.
                     for compartment in self.compartments:
                         if 'treatment_' in compartment and strain in compartment:
-                            self.vars['popsize_' + intervention + strain] += self.compartments[compartment]
+                            self.vars['popsize_' + intervention + strain] += self.compartments[compartment] / self.params['tb_timeperiod_ontreatment' + strain]
 
         # ambulatory care
         for organ in self.organ_status:
@@ -1222,7 +1222,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
                         self.vars['popsize_ambulatorycare' + organ] += self.compartments[compartment]
 
         # IPT: popsize defined as the nb of screened individuals
-        n_detected = self.calculate_outgoing_compartment_flows('active', 'detect')
+        n_detected = self.calculate_outgoing_compartment_absolute_flows('active', 'detect')
         n_detected_pul = 0.
         for key, val in n_detected.items():
             if "extrapul" not in key:

@@ -817,6 +817,40 @@ class BaseModel:
                     outgoing_flows[label] += 1. / self.get_constant_or_variable_param('demo_life_expectancy')
         return outgoing_flows
 
+    def calculate_outgoing_compartment_absolute_flows(self, from_compartment, to_compartment=''):
+        """
+        Method to sum the total flows emanating from a set of compartments containing a particular string, restricting
+        to the flows entering a particular compartment of interest, if required.
+
+        Args:
+            from_compartment: The string of the compartment that the flows are coming out of
+            to_compartment: The string of the compartment of interest that flows should be going in to, if any
+                (otherwise '' for all flows)
+        Returns:
+            outgoing_flows: Dictionary of all the compartments of interest and the sum of their outgoing flows
+        """
+
+        outgoing_flows = {}
+        for label in self.labels:
+            if from_compartment in label:
+                outgoing_flows[label] = 0.
+                for flow in self.flows_by_type['fixed_transfer']:
+                    if flow[0] == label and to_compartment in flow[1]:
+                        outgoing_flows[label] += flow[2] * self.compartments[label]
+                for flow in self.flows_by_type['var_transfer']:
+                    if flow[0] == label and to_compartment in flow[1]:
+                        outgoing_flows[label] += self.vars[flow[2]] * self.compartments[label]
+                for flow in self.flows_by_type['fixed_infection_death']:
+                    if flow[0] == label and to_compartment == '':
+                        outgoing_flows[label] += flow[1] * self.compartments[label]
+                for flow in self.flows_by_type['var_infection_death']:
+                    if flow[0] == label and to_compartment == '':
+                        outgoing_flows[label] += self.vars[flow[1]] * self.compartments[label]
+                if to_compartment == '':
+                    outgoing_flows[label] += self.compartments[label] /\
+                                             self.get_constant_or_variable_param('demo_life_expectancy')
+        return outgoing_flows
+
     def calculate_outgoing_proportion(self, from_compartment, to_compartment=''):
         """
         Method that uses the previous method (calculate_outgoing_compartment_flows) to determine the proportion of all

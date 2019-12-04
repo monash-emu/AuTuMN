@@ -140,7 +140,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         if self.scenario == 4 and self.country in ['bhutan', 'Bhutan']:
             self.ipt_improvement = 80./60.
             self.params['econ_unitcost_ipt'] = 70.74 * .88 + 39.43 * .12  # assuming 12% MDR
-            self.params['econ_startupcost_ipt'] = 404316. + 257. * 15.
+            self.params['econ_startupcost_ipt'] = 404316.
 
         # susceptibility classes
         self.force_types = ['_fully', '_immune', '_latent']

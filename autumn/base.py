@@ -991,7 +991,6 @@ class EconomicModel(BaseModel):
 
         for i, inter in enumerate(self.interventions_to_cost):
             for t, time in enumerate(self.cost_times):
-
                 # costs from cost-coverage curves
                 cost = get_cost_from_coverage(self.scaleup_fns['int_prop_' + inter](time),
                                               self.params['econ_inflectioncost_' + inter],
@@ -1004,6 +1003,11 @@ class EconomicModel(BaseModel):
                         and 'econ_startupduration_' + inter in self.inputs.model_constants \
                         and self.inputs.model_constants['econ_startupduration_' + inter] > 0.:
                     cost += self.calculate_startup_cost(time, inter)
+
+                # yearly cost
+                if 'econ_yearlycost_' + inter in self.params.keys():
+                    cost += self.params['econ_yearlycost_' + inter]
+
                 self.costs[t, i] = cost
 
     def calculate_startup_cost(self, time, intervention):

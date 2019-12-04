@@ -1213,12 +1213,14 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
                         self.vars['popsize_ambulatorycare' + organ] += self.compartments[compartment]
 
         # IPT: popsize defined as the household contacts of active cases identified by the high-quality sector
+        self.vars['popsize_ipt'] = 0.
         for agegroup in self.agegroups:
             self.vars['popsize_ipt' + agegroup] = 0.
             for strain in self.strains:
                 for from_label, to_label, rate in self.flows_by_type['var_transfer']:
                     if 'latent_early' in to_label and strain in to_label and agegroup in to_label:
                         self.vars['popsize_ipt' + agegroup] += self.compartments[from_label] * self.vars[rate]
+                        self.vars['popsize_ipt'] += self.compartments[from_label] * self.vars[rate]
 
         # BCG (so simple that it's almost unnecessary, but needed for loops over int names)
         self.vars['popsize_vaccination'] = self.vars['births_total']

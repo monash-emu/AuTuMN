@@ -554,6 +554,9 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
                     * (1. / self.params['tb_timeperiod_activeuntreated'] + 1. / self.vars['demo_life_expectancy']) \
                     / (1. - self.vars['program_prop_detect' + organ])
 
+                if 'int_prop_sputum_transport' in self.relevant_interventions and organ == '_smearpos':
+                    self.vars['program_rate_detect' + organ + riskgroup] *= 1.6
+
                 # adjust detection rates for ngo activities in specific risk-groups
                 if 'int_prop_dots_groupcontributor' in self.relevant_interventions \
                         and self.vars['int_prop_dots_groupcontributor'] < 1. and riskgroup in self.contributor_groups:
@@ -1185,6 +1188,9 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         Calculate the size of the populations to which each intervention is applicable, for use in generating
         cost-coverage curves.
         """
+
+        # sputum transport
+        self.vars['popsize_sputum_transport'] = 0.
 
         # treatment support
         strain_types = copy.copy(self.strains)

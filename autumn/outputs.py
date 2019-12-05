@@ -1151,6 +1151,11 @@ class Project:
             purposes = ['scenario', 'ci', 'progress', 'shaded'] if '_uncertainty' in self.run_mode else ['scenario']
             for purpose in purposes:
                 self.plot_epi_outputs(self.gtb_available_outputs, purpose, 'main')
+
+            for scenario in self.scenarios:
+                if scenario > 0:
+                    self.plot_epi_outputs(self.gtb_available_outputs, 'single_scenario', 'main', single_scenario_number=scenario)
+
             if self.inputs.n_strains > 1:
                 mdr_indicators = [ind + '_mdr' for ind in self.gtb_available_outputs if ind != 'prevalence']
                 mdr_indicators.append('perc_incidence_mdr')
@@ -1165,6 +1170,12 @@ class Project:
                         [''.join(panel) for panel in itertools.product(outputs_to_plot, list_of_strata)],
                         'scenario', ', by_' + strata_type, grid=[len(outputs_to_plot), len(list_of_strata)],
                         sharey='row')
+                    for scenario in self.scenarios:
+                        if scenario > 0:
+                            self.plot_epi_outputs(
+                                [''.join(panel) for panel in itertools.product(outputs_to_plot, list_of_strata)],
+                                'single_scenario', ', by_' + strata_type, grid=[len(outputs_to_plot), len(list_of_strata)],
+                                sharey='row', single_scenario_number=scenario)
             for strata_type in ['agegroups', 'riskgroups']:
                 for fraction in [True, False]:
                     self.plot_stacked_epi_outputs('notifications', category_to_loop=strata_type, fraction=fraction)
@@ -1203,7 +1214,7 @@ class Project:
 
     ''' epi outputs plotting '''
 
-    def plot_epi_outputs(self, outputs, purpose, descriptor, grid=None, sharey='none'):
+    def plot_epi_outputs(self, outputs, purpose, descriptor, grid=None, sharey='none', single_scenario_number=None):
         """
         Produces the plot for the main outputs, loops over multiple scenarios.
 
@@ -1219,11 +1230,14 @@ class Project:
         fig, axes, max_dims, n_rows, n_cols \
             = initialise_figures_axes(len(outputs), requested_grid=grid, share_yaxis=sharey)
         start_time = self.inputs.model_constants['before_intervention_time'] - 4. \
-            if self.run_mode == 'int_uncertainty' or (len(self.scenarios) > 1 and purpose == 'scenario') \
+            if self.run_mode == 'int_uncertainty' or (len(self.scenarios) > 1 and purpose in ['scenario', 'single_scenario']) \
             else self.gui_inputs['plot_option_start_time']
         start_index, max_data_values = 0, {}
         scenarios, uncertainty_scenario = ([0, 15], 15) if self.run_mode == 'int_uncertainty' \
             else (self.scenarios, 0)
+
+        if purpose == 'single_scenario':
+            scenarios = [0, single_scenario_number]
 
         # loop through output indicators
         for out, output in enumerate(outputs):
@@ -1298,8 +1312,10 @@ class Project:
                     axis.add_patch(patches.Polygon(patch, color=patch_colour))
 
             # plot scenarios without uncertainty
-            if purpose == 'scenario' or self.run_mode == 'int_uncertainty':
+            if purpose in ['scenario', 'single_scenario'] or self.run_mode == 'int_uncertainty':
                 scenarios_for_baseline = [0] if self.run_mode == 'int_uncertainty' else scenarios
+
+
                 for scenario in scenarios_for_baseline:
                     start_index = self.find_start_time_index(start_time, scenario, purpose='scenario')
                     if self.run_mode == 'increment_comorbidity' and scenario != 0:
@@ -1329,9 +1345,15 @@ class Project:
             self.tidy_y_axis(axis, output, max_dims, max_value=max(value for value in max_data_values[output] if value is not None))
             axis.set_title(t_k.find_title_from_dictionary(output, country=self.country),
                            fontsize=get_label_font_size(max_dims))
-            if out == len(outputs) - 1 and purpose == 'scenario' and len(self.scenarios) > 1:
+            if out == len(outputs) - 1 and purpose in ['scenario','single_scenario'] and len(self.scenarios) > 1:
                 add_legend_to_plot(axis, max_dims)
-        self.finish_off_figure(fig, len(outputs), '_' + descriptor + '_epi_' + purpose,
+
+        if purpose == 'single_scenario':
+            add_to_figname = "_" + str(single_scenario_number)
+        else:
+            add_to_figname = ''
+
+        self.finish_off_figure(fig, len(outputs), '_' + descriptor + '_epi_' + purpose + add_to_figname,
                                'Epidemiological outputs'
                                + t_k.find_title_from_dictionary(descriptor, capital_first_letter=False)
                                + ', ' + t_k.capitalise_first_letter(self.country))

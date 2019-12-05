@@ -32,12 +32,12 @@ my_model = StratifiedModel(times=my_times, compartment_types=my_compartments, in
                            parameters=my_parameters, requested_flows=my_flows, starting_population=10500,
                            infectious_compartment=('active_TB',), entry_compartment='susceptible')
 
-age_mixing = None
-my_model.stratify("age", [1,0,10], [], {}, {"recovery": {"1": 0.5, "10": 0.8}},
-                       infectiousness_adjustments={"1": 0.8},
-                       mixing_matrix=age_mixing, verbose=False)
+age_mixing = None # None means homogenous mixing
 
-#What is the mixing_matrix? Currently it won't run without age_mixing = None
+# Verbose prints out information, does not effect model
+# Specify arguments, need to check argument inputs order for my_model.stratify!!!
+# default for parameter_adjustment is to give a relative parameter, e.g. original parameter is x, "1":0.5, means new parameter for age 1 is 0.5x
+my_model.stratify("age", [0, 1, 10], [], {}, {"recovery_rate": {"1": 0.5, "10": 0.8}}, infectiousness_adjustments={"1": 0.8}, mixing_matrix=age_mixing, verbose=False)
 
 create_flowchart(my_model)
 print(os.getcwd())

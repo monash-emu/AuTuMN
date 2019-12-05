@@ -28,9 +28,16 @@ my_parameters = {'infection_rate': 0.01,
 
 my_initial_conditions = {"early_latent": 50., "late_latent": 200., "active_TB": 2., "recovered": 0.}
 
-my_model = EpiModel(times=my_times, compartment_types=my_compartments, initial_conditions=my_initial_conditions,
+my_model = StratifiedModel(times=my_times, compartment_types=my_compartments, initial_conditions=my_initial_conditions,
                            parameters=my_parameters, requested_flows=my_flows, starting_population=10500,
                            infectious_compartment=('active_TB',), entry_compartment='susceptible')
+
+age_mixing = None
+my_model.stratify("age", [1,0,10], [], {}, {"recovery": {"1": 0.5, "10": 0.8}},
+                       infectiousness_adjustments={"1": 0.8},
+                       mixing_matrix=age_mixing, verbose=False)
+
+#What is the mixing_matrix? Currently it won't run without age_mixing = None
 
 create_flowchart(my_model)
 print(os.getcwd())

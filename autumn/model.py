@@ -561,7 +561,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
                     / (1. - self.vars['program_prop_detect' + organ])
 
                 if 'int_prop_sputum_transport' in self.relevant_interventions and organ == '_smearpos':
-                    self.vars['program_rate_detect' + organ + riskgroup] *= 1.6
+                    self.vars['program_rate_detect' + organ + riskgroup] *= (1. + .60 * self.vars['int_prop_sputum_transport'])
 
                 # adjust detection rates for ngo activities in specific risk-groups
                 if 'int_prop_dots_groupcontributor' in self.relevant_interventions \

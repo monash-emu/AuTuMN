@@ -526,8 +526,8 @@ class Inputs:
 
 
             # give the remainder to the "_norisk" group without any risk factors
-            print('--')
-            print(mixing[to_riskgroup].values())
+            # print('--')
+            # print(mixing[to_riskgroup].values())
             if sum(nested_dict_iter(mixing[to_riskgroup].values())) >= 1.:
                 self.add_comment_to_gui_window(
                     'Total of proportions of contacts for risk group %s greater than one. Model invalid.'

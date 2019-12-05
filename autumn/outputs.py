@@ -1218,7 +1218,7 @@ class Project:
         # prelims
         fig, axes, max_dims, n_rows, n_cols \
             = initialise_figures_axes(len(outputs), requested_grid=grid, share_yaxis=sharey)
-        start_time = self.inputs.model_constants['before_intervention_time'] \
+        start_time = self.inputs.model_constants['before_intervention_time'] - 4. \
             if self.run_mode == 'int_uncertainty' or (len(self.scenarios) > 1 and purpose == 'scenario') \
             else self.gui_inputs['plot_option_start_time']
         start_index, max_data_values = 0, {}

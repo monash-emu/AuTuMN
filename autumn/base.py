@@ -1039,7 +1039,7 @@ class EconomicModel(BaseModel):
                     cost += self.calculate_startup_cost(time, inter)
 
                 # yearly cost
-                if 'econ_yearlycost_' + inter in self.params.keys():
+                if 'econ_yearlycost_' + inter in self.params.keys() and time > self.params['scenario_start_time']:
                     cost += self.params['econ_yearlycost_' + inter]
 
                 self.costs[t, i] = cost

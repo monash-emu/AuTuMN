@@ -165,7 +165,7 @@ class Calibration:
         """
         master method to run model calibration.
 
-        :param run_mode: either 'mcmc' (for sampling from the posterior) or 'mle' (maximum likelihood estimation) or
+        :param run_mode: either 'pymc_mcmc' (for sampling from the posterior) or 'mle' (maximum likelihood estimation) or
         'lsm' (for least square minimisation using scipy.minimize function)
         :param mcmc_method: if run_mode == 'mcmc' , either 'Metropolis' or 'DEMetropolis'
         :param n_iterations: number of iterations requested for sampling (excluding burn-in phase)
@@ -174,7 +174,7 @@ class Calibration:
         :param parallel: boolean to trigger parallel computing
         """
         self.run_mode = run_mode
-        if run_mode in ['mcmc', 'mle']:
+        if run_mode in ['pymc_mcmc', 'mle']:
             basic_model = pm.Model()
             with basic_model:
 
@@ -191,7 +191,7 @@ class Calibration:
 
                 if run_mode == 'mle':
                     self.mle_estimates = pm.find_MAP()
-                elif run_mode == 'mcmc':  # full MCMC requested
+                elif run_mode == 'pymc_mcmc':  # full MCMC requested
                     if mcmc_method == 'Metropolis':
                         mcmc_step = pm.Metropolis(S=np.array([1.]))
                     elif mcmc_method == 'DEMetropolis':
@@ -214,7 +214,7 @@ class Calibration:
                     mcmc_run_info = mcmc_run_info.drop_duplicates()
                     store_tb_database(mcmc_run_info, table_name='mcmc_run_info', database_name=output_db_path)
                 else:
-                    ValueError("requested run mode is not supported. Must be one of ['mcmc', 'lme']")
+                    ValueError("requested run mode is not supported. Must be one of ['pymc_mcmc', 'lme']")
         elif run_mode == 'lsm':
             lower_bounds = []
             upper_bounds = []
@@ -229,7 +229,7 @@ class Calibration:
             self.mle_estimates = sol.x
 
         else:
-            ValueError("requested run mode is not supported. Must be one of ['mcmc', 'lme']")
+            ValueError("requested run mode is not supported. Must be one of ['pymc_mcmc', 'lme']")
 
 
 class LogLike(tt.Op):
@@ -295,6 +295,6 @@ if __name__ == "__main__":
     # calib.run_fitting_algorithm(run_mode='mle')  # for maximum-likelihood estimation
     # print(calib.mle_estimates)
     #
-    calib.run_fitting_algorithm(run_mode='mcmc', mcmc_method='DEMetropolis', n_iterations=2, n_burned=0,
-                                n_chains=4, parallel=False)  # for mcmc
+    calib.run_fitting_algorithm(run_mode='pymc_mcmc', mcmc_method='DEMetropolis', n_iterations=2, n_burned=0,
+                                n_chains=4, parallel=False)  # for pymc_mcmc
 

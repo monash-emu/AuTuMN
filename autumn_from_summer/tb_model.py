@@ -148,7 +148,7 @@ def unpivot_outputs(model_object):
 def store_run_models(models, scenarios, database_name="../databases/outputs.db"):
     for i, model in enumerate(models):
         output_df = pd.DataFrame(model.outputs, columns=model.compartment_names)
-        derived_output_df = pd.DataFrame.from_dict(model.derived_outputs_shadow)
+        derived_output_df = pd.DataFrame.from_dict(model.derived_outputs)
         pbi_outputs = unpivot_outputs(model)
         store_tb_database(pbi_outputs, table_name='pbi_scenario_' + str(scenarios[i]),  database_name=database_name)
         store_tb_database(derived_output_df, scenario=scenarios[i], table_name='derived_outputs', database_name=database_name)

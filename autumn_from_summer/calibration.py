@@ -155,7 +155,10 @@ class Calibration:
         """
         for i, target in enumerate(self.targeted_outputs):
             if 'sd' not in target.keys():
-                self.targeted_outputs[i]['sd'] = 0.5 / 4. * np.mean(target['values'])
+                if 'cis' in target.keys():  # match normal likelihood 95% width with data 95% CI with
+                    self.targeted_outputs[i]['sd'] = (target['cis'][0][1] - target['cis'][0][0]) / 4.
+                else:
+                    self.targeted_outputs[i]['sd'] = 0.5 / 4. * np.mean(target['values'])
 
     def workout_unspecified_jumping_sds(self):
         for i, prior_dict in enumerate(self.priors):

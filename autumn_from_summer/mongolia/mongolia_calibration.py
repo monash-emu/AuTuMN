@@ -11,13 +11,16 @@ par_priors = [{'param_name': 'contact_rate', 'distribution': 'uniform', 'distri_
                'distri_params': [.05, .20]}
               ]
 
-target_outputs = [{'output_key': 'prevXinfectiousXorgan_smearposXamongXage_15Xage_60', 'years': [2015.], 'values': [204.]},
-                  {'output_key': 'prevXinfectiousXorgan_smearnegXamongXage_15Xage_60', 'years': [2015.], 'values': [340.]},
+target_outputs = [{'output_key': 'prevXinfectiousXorgan_smearposXamongXage_15Xage_60', 'years': [2015.], 'values': [204.],
+                   'cis': [(143., 265.1)]},
+                  {'output_key': 'prevXinfectiousXorgan_smearnegXamongXage_15Xage_60', 'years': [2015.], 'values': [340.],
+                   'cis': [(273., 407.)]},
                   # {'output_key': 'prevXinfectiousXorgan_smearposXlocation_rural_provinceXamongXage_15Xage_60', 'years': [2015.], 'values': [220.]},
-                  {'output_key': 'prevXinfectiousXorgan_smearposXlocation_urban_gerXamongXage_15Xage_60', 'years': [2015.], 'values': [277]},
+                  {'output_key': 'prevXinfectiousXorgan_smearposXlocation_urban_gerXamongXage_15Xage_60',
+                   'years': [2015.], 'values': [277.]},
                   {'output_key': 'prevXinfectiousXorgan_smearposXlocation_urban_nongerXamongXage_15Xage_60', 'years': [2015.], 'values': [156]},
                   {'output_key': 'prevXinfectiousXlocation_prisonXamongXage_15Xage_60', 'years': [2015.], 'values': [3785]},
-                  {'output_key': 'prevXlatentXamongXage_5', 'years': [2016.], 'values': [960.]},
+                  {'output_key': 'prevXlatentXamongXage_5', 'years': [2016.], 'values': [960.], 'cis': [(902., 1018.)]},
                   {'output_key': 'prevXinfectiousXstrain_mdrXamongXinfectious', 'years': [2015.], 'values': [500]}
                   ]
 

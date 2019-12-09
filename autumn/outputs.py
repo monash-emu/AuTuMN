@@ -135,7 +135,7 @@ def scale_axes(vals, max_val, y_sig_figs):
     return labels, axis_modifier
 
 
-def add_legend_to_plot(axis, max_dim, location=0):
+def add_legend_to_plot(axis, max_dim, location=4, bbox=(1.3, .7), reduce_font=False):
     """
     Add legend to plot, with font size determined by the maximum number of dimensions of subplot panels.
 
@@ -145,10 +145,14 @@ def add_legend_to_plot(axis, max_dim, location=0):
         location: The matplotlib integer specifying the position for the legend (default of zero is 'best')
     """
 
+    font_size = get_label_font_size(max_dim)
+    if reduce_font:
+        font_size -= 2
+
     if max_dim == 1:
-        axis.legend(bbox_to_anchor=(1.3, 1), fontsize=get_label_font_size(max_dim))
+        axis.legend(bbox_to_anchor=bbox, fontsize=font_size, loc=location)
     else:
-        axis.legend(fontsize=get_label_font_size(max_dim), loc=location)
+        axis.legend(fontsize=font_size, loc=location, bbox_to_anchor=bbox)
 
 
 ''' plot navigation functions '''
@@ -1784,11 +1788,11 @@ class Project:
                 for plot_type in plot_types:
                     ax_dict[plot_type].set_title(t_k.find_title_from_dictionary(cost_type),
                                                  fontsize=get_label_font_size(max_dim))
-                    self.tidy_x_axis(ax_dict[plot_type], cost_times[0], cost_times[-1], max_dim)
+                    self.tidy_x_axis(ax_dict[plot_type], 2015, cost_times[-1], max_dim)
                     self.tidy_y_axis(ax_dict[plot_type], 'cost', max_dim, left_axis=c % n_cols == 0, y_label='$US',
                                      allow_negative=True if plot_type == 'relative' else False)
                     if cost_type == self.model_runner.cost_types[-1]:
-                        add_legend_to_plot(ax_dict[plot_type], max_dim)
+                        add_legend_to_plot(ax_dict[plot_type], max_dim, bbox=(1.3, 1.65), reduce_font=False)
 
             # finish off figure
             for plot_type in plot_types:

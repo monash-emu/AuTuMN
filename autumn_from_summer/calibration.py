@@ -2,6 +2,7 @@ import theano.tensor as tt
 from autumn_from_summer.mongolia.mongolia_tb_model import *
 import summer_py.post_processing as post_proc
 from itertools import chain
+from time import time
 
 import pymc3 as pm
 import theano
@@ -42,7 +43,9 @@ class Calibration:
         self.loglike = None  # will store theano object
 
         self.format_data_as_array()
-        self.workout_unspecified_sds()
+        self.workout_unspecified_target_sds()  # for likelihood definition
+        self.workout_unspecified_jumping_sds()  # for proposal function definition
+
         self.create_loglike_object()
         self.iter_num = 0
         self.run_mode = None
@@ -83,7 +86,7 @@ class Calibration:
     def run_model_with_params(self, params):
         """
         run the model with a set of params.
-        :param params: a dictionary containing the parameters to be updated
+        :param params: a list containing the parameter values for update
         """
         update_params = {}
         for i, param_name in enumerate(self.param_list):
@@ -144,7 +147,7 @@ class Calibration:
         data = list(chain(*data))  # create a simple list from a list of lists
         self.data_as_array = np.asarray(data)
 
-    def workout_unspecified_sds(self):
+    def workout_unspecified_target_sds(self):
         """
         If the sd parameter of the targeted output is not specified, it will automatically be calculated such that the
         95% CI of the associated normal distribution covers 50% of the mean value of the target.
@@ -154,6 +157,18 @@ class Calibration:
             if 'sd' not in target.keys():
                 self.targeted_outputs[i]['sd'] = 0.5 / 4. * np.mean(target['values'])
 
+    def workout_unspecified_jumping_sds(self):
+        for i, prior_dict in enumerate(self.priors):
+            if 'jumping_sd' not in prior_dict.keys():
+                if prior_dict['distribution'] == 'uniform':
+                    prior_width = prior_dict['distri_params'][1] - prior_dict['distri_params'][0]
+                else:
+                    print("prior_width not specified for " +  prior_dict['distribution'] + " distribution at the moment")
+
+                #  95% of the sampled values within [mu - 2*sd, mu + 2*sd], i.e. interval of witdth 4*sd
+                relative_prior_width = .25  # fraction of prior_width in which 95% of samples should fall
+                self.priors[i]['jumping_sd'] = relative_prior_width * prior_width / 4.
+
     def create_loglike_object(self):
         """
         create a 'theano-type' object to compute the likelihood
@@ -161,7 +176,7 @@ class Calibration:
         self.loglike = LogLike(self.loglikelihood)
 
     def run_fitting_algorithm(self, run_mode='mle', mcmc_method='Metropolis', n_iterations=100, n_burned=10, n_chains=1,
-                              parallel=True):
+                              available_time=None):
         """
         master method to run model calibration.
 
@@ -171,10 +186,54 @@ class Calibration:
         :param n_iterations: number of iterations requested for sampling (excluding burn-in phase)
         :param n_burned: number of burned iterations before effective sampling
         :param n_chains: number of chains to be run
-        :param parallel: boolean to trigger parallel computing
+        :param available_time: maximal simulation time allowed (in seconds)
         """
         self.run_mode = run_mode
-        if run_mode in ['pymc_mcmc', 'mle']:
+        if run_mode == 'autumn_mcmc':
+            if n_chains > 1:
+                print("autumn_mcmc method does not support multiple-chain runs at the moment")
+            t0 = time()
+
+            self.mcmc_trace = {}  # will store param trace and loglikelihood evolution
+            for prior_dict in self.priors:
+                self.mcmc_trace[prior_dict['param_name']] = []
+            self.mcmc_trace['loglikelihood'] = []
+
+            last_accepted_params = None
+            last_acceptance_quantity = None  # acceptance quantity is defined as loglike + logprior
+            for i_run in range(n_iterations + n_burned):
+                # propose new param set
+                proposed_params = self.propose_new_params(last_accepted_params)
+
+                # evaluate log-likelihood
+                proposed_loglike = self.loglikelihood(proposed_params)
+
+                # evaluate log-prior
+                proposed_logprior = self.logprior(proposed_params)
+
+                # decide acceptance
+                proposed_acceptance_quantity = proposed_loglike + proposed_logprior
+                accept = False
+                if last_acceptance_quantity is None or proposed_acceptance_quantity >= last_acceptance_quantity:
+                    accept = True
+                else:
+                    acc_proba = np.exp(proposed_acceptance_quantity - last_acceptance_quantity)
+                    accept = np.random.binomial(n=1, p=acc_proba, size=1) > 0  # binomial returns integer. We need a boolean
+
+                # update stored quantities
+                if accept:
+                    last_accepted_params = proposed_params
+                    last_acceptance_quantity = proposed_acceptance_quantity
+
+                self.update_mcmc_trace(last_accepted_params, last_acceptance_quantity)
+
+                if available_time is not None:
+                    elapsed_time = time() - t0
+                    if elapsed_time > available_time:
+                        print("Stopping MCMC run due to time limit")
+                        break
+
+        elif run_mode in ['pymc_mcmc', 'mle']:
             basic_model = pm.Model()
             with basic_model:
 
@@ -229,7 +288,53 @@ class Calibration:
             self.mle_estimates = sol.x
 
         else:
-            ValueError("requested run mode is not supported. Must be one of ['pymc_mcmc', 'lme']")
+            ValueError("requested run mode is not supported. Must be one of ['pymc_mcmc', 'lme', 'autumn_mcmc']")
+
+    def propose_new_params(self, prev_params):
+        """
+        calculated the joint log prior
+        :param prev_params: last accepted parameter values as a list ordered using the order of self.priors
+        :return: a new list of parameter values
+        """
+        # prev_params assumed to be centre of the prior range for first step
+        if prev_params is None:
+            prev_params = []
+            for prior_dict in self.priors:
+                prev_params.append(.5 * (prior_dict['distri_params'][0] + prior_dict['distri_params'][1]))
+
+        new_params = []
+
+        for i, prior_dict in enumerate(self.priors):
+            sample = prior_dict['distri_params'][0] - 10.  # deliberately initialise out of parameter scope
+            while not prior_dict['distri_params'][0] <= sample <= prior_dict['distri_params'][1]:
+                sample = np.random.normal(loc=prev_params[i], scale=prior_dict['jumping_sd'], size=1)[0]
+            new_params.append(sample)
+        return new_params
+
+    def logprior(self, params):
+        """
+        calculated the joint log prior
+        :param params: model parameters as a list of values ordered using the order of self.priors
+        :return: the natural log of the joint prior
+        """
+        logp = 0.
+        for prior_dict in self.priors:
+            if prior_dict['distribution'] == 'uniform':
+                logp += 1. / (prior_dict['distri_params'][1] - prior_dict['distri_params'][0])
+            else:
+                print(prior_dict['distribution'] + "distribution not supported in autumn_mcmc at the moment")
+
+        return logp
+
+    def update_mcmc_trace(self, params_to_store, loglike_to_store):
+        """
+        store mcmc iteration into param_trace
+        :param params_to_store: model parameters as a list of values ordered using the order of self.priors
+        :param loglike_to_store: current loglikelihood value
+        """
+        for i, prior_dict in enumerate(self.priors):
+            self.mcmc_trace[prior_dict['param_name']].append(params_to_store[i])
+        self.mcmc_trace['loglikelihood'].append(loglike_to_store)
 
 
 class LogLike(tt.Op):
@@ -267,16 +372,16 @@ class LogLike(tt.Op):
 
 if __name__ == "__main__":
 
-    par_priors = [{'param_name': 'contact_rate', 'distribution': 'uniform', 'distri_params': [1., 20.]},
-                  {'param_name': 'rr_transmission_ger', 'distribution': 'uniform', 'distri_params': [1., 5.]},
-                  {'param_name': 'rr_transmission_urban', 'distribution': 'uniform', 'distri_params': [1., 5.]},
-                  {'param_name': 'rr_transmission_province', 'distribution': 'uniform', 'distri_params': [.5, 5.]},
+    par_priors = [{'param_name': 'contact_rate', 'distribution': 'uniform', 'distri_params': [14., 18.]},
+                  # {'param_name': 'rr_transmission_ger', 'distribution': 'uniform', 'distri_params': [1., 5.]},
+                  # {'param_name': 'rr_transmission_urban', 'distribution': 'uniform', 'distri_params': [1., 5.]},
+                  # {'param_name': 'rr_transmission_province', 'distribution': 'uniform', 'distri_params': [.5, 5.]},
                   {'param_name': 'latency_adjustment', 'distribution': 'uniform', 'distri_params': [1., 3.]},
                   ]
     target_outputs = [{'output_key': 'prevXinfectiousXamongXage_15Xage_60', 'years': [2015.], 'values': [560.]},
-                      {'output_key': 'prevXinfectiousXamongXage_15Xage_60Xhousing_ger', 'years': [2015.], 'values': [613.]},
-                      {'output_key': 'prevXinfectiousXamongXage_15Xage_60Xlocation_urban', 'years': [2015.], 'values': [586.]},
-                      {'output_key': 'prevXinfectiousXamongXage_15Xage_60Xlocation_province', 'years': [2015.], 'values': [513.]},
+                      # {'output_key': 'prevXinfectiousXamongXage_15Xage_60Xhousing_ger', 'years': [2015.], 'values': [613.]},
+                      # {'output_key': 'prevXinfectiousXamongXage_15Xage_60Xlocation_urban', 'years': [2015.], 'values': [586.]},
+                      # {'output_key': 'prevXinfectiousXamongXage_15Xage_60Xlocation_province', 'years': [2015.], 'values': [513.]},
                       {'output_key': 'prevXlatentXamongXage_5', 'years': [2016.], 'values': [960.]}
                      ]
 
@@ -295,6 +400,6 @@ if __name__ == "__main__":
     # calib.run_fitting_algorithm(run_mode='mle')  # for maximum-likelihood estimation
     # print(calib.mle_estimates)
     #
-    calib.run_fitting_algorithm(run_mode='pymc_mcmc', mcmc_method='DEMetropolis', n_iterations=2, n_burned=0,
-                                n_chains=4, parallel=False)  # for pymc_mcmc
+    calib.run_fitting_algorithm(run_mode='autumn_mcmc', n_iterations=10, n_burned=0, n_chains=1)  # for autumn_mcmc
 
+    print(calib.mcmc_trace)

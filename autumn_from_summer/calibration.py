@@ -126,13 +126,14 @@ class Calibration:
                     ll += np.sum((data - model_output)**2)
                 else:
                     ll += -(0.5/target['sd']**2)*np.sum((data - model_output)**2)
-            mcmc_run_dict = {k: v for k, v in zip(self.param_list, params)}
-            mcmc_run_dict['loglikelihood'] = ll
-            mcmc_run_colnames = self.param_list.copy()
-            mcmc_run_colnames = mcmc_run_colnames.append('loglikelihood')
-            mcmc_run_df = pd.DataFrame(mcmc_run_dict, columns=mcmc_run_colnames, index=[self.iter_num])
-            store_tb_database(mcmc_run_df, table_name='mcmc_run', run_idx=self.iter_num,
-                              database_name=output_db_path, append=True)
+            if self.run_mode != 'autumn_mcmc':
+                mcmc_run_dict = {k: v for k, v in zip(self.param_list, params)}
+                mcmc_run_dict['loglikelihood'] = ll
+                mcmc_run_colnames = self.param_list.copy()
+                mcmc_run_colnames = mcmc_run_colnames.append('loglikelihood')
+                mcmc_run_df = pd.DataFrame(mcmc_run_dict, columns=mcmc_run_colnames, index=[self.iter_num])
+                store_tb_database(mcmc_run_df, table_name='mcmc_run', run_idx=self.iter_num,
+                                  database_name=output_db_path, append=True)
             self.evaluated_params_ll.append((copy.copy(params), copy.copy(ll)))
         return ll
 
@@ -204,6 +205,7 @@ class Calibration:
 
             last_accepted_params = None
             last_acceptance_quantity = None  # acceptance quantity is defined as loglike + logprior
+            last_acceptance_loglike = None
             for i_run in range(n_iterations + n_burned):
                 # propose new param set
                 proposed_params = self.propose_new_params(last_accepted_params)
@@ -227,11 +229,20 @@ class Calibration:
                 if accept:
                     last_accepted_params = proposed_params
                     last_acceptance_quantity = proposed_acceptance_quantity
+                    last_acceptance_loglike = proposed_loglike
 
-                self.update_mcmc_trace(last_accepted_params, last_acceptance_quantity)
+                self.update_mcmc_trace(last_accepted_params, last_acceptance_loglike)
 
                 # Here we should store the "accept" variable into the output database
-
+                mcmc_run_dict = {k: v for k, v in zip(self.param_list, proposed_params)}
+                mcmc_run_dict['loglikelihood'] = proposed_loglike
+                mcmc_run_dict['accept'] = 1 if accept else 0
+                mcmc_run_colnames = self.param_list.copy()
+                mcmc_run_colnames.append('loglikelihood')
+                mcmc_run_colnames.append('accept')
+                mcmc_run_df = pd.DataFrame(mcmc_run_dict, columns=mcmc_run_colnames, index=[i_run])
+                store_tb_database(mcmc_run_df, table_name='mcmc_run', run_idx=i_run,
+                                  database_name=output_db_path, append=True)
 
                 if available_time is not None:
                     elapsed_time = time() - t0

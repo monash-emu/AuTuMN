@@ -227,10 +227,13 @@ class Calibration:
 
                 self.update_mcmc_trace(last_accepted_params, last_acceptance_quantity)
 
+                # Here we should store the "accept" variable into the output database
+
+
                 if available_time is not None:
                     elapsed_time = time() - t0
                     if elapsed_time > available_time:
-                        print("Stopping MCMC run due to time limit")
+                        print("Stopping MCMC simulation after " + str(i_run + 1) + " iterations because of time limit")
                         break
 
         elif run_mode in ['pymc_mcmc', 'mle']:
@@ -400,6 +403,6 @@ if __name__ == "__main__":
     # calib.run_fitting_algorithm(run_mode='mle')  # for maximum-likelihood estimation
     # print(calib.mle_estimates)
     #
-    calib.run_fitting_algorithm(run_mode='autumn_mcmc', n_iterations=10, n_burned=0, n_chains=1)  # for autumn_mcmc
+    calib.run_fitting_algorithm(run_mode='autumn_mcmc', n_iterations=10, n_burned=0, n_chains=1, available_time=10)  # for autumn_mcmc
 
     print(calib.mcmc_trace)

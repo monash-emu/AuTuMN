@@ -25,7 +25,7 @@ multipliers = {'prevXlatentXamongXage_5': 1.e4,
                'prevXinfectiousXstrain_mdrXamongXinfectious': 1.e4
                }
 
-load = True
+load = False
 
 if not load:
     for i, output in enumerate(target_outputs):
@@ -34,8 +34,8 @@ if not load:
             multipliers[output['output_key']] = 1.e5
 
     calib = Calibration(build_mongolia_model, par_priors, target_outputs, multipliers)
-    calib.run_fitting_algorithm(run_mode='mcmc', mcmc_method='Metropolis', n_iterations=4, n_burned=0,
-                                n_chains=1, parallel=False)
+    calib.run_fitting_algorithm(run_mode='autumn_mcmc', n_iterations=4, n_burned=0,
+                                n_chains=1, available_time=3600.*12)
 
     print(calib.mcmc_trace)
 else:

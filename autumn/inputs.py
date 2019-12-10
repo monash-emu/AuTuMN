@@ -194,7 +194,7 @@ class Inputs:
             = ['xpert', 'treatment_support_relative', 'treatment_support_absolute', 'smearacf',
                'xpertacf', 'ipt_age0to5', 'ipt_age5to15', 'decentralisation', 'improve_dst', 'bulgaria_improve_dst',
                'intensive_screening', 'ipt_age15up', 'dot_groupcontributor', 'awareness_raising',
-               'sputum_transport', 'ipt', 'xpertacf_dorm']
+               'sputum_transport', 'ipt', 'xpertacf_dorm', 'baseline_treatment']
         self.available_strains = ['_ds', '_mdr', '_xdr']
         self.intervention_param_dict \
             = {'int_prop_treatment_support_relative': ['int_prop_treatment_support_improvement'],
@@ -1461,7 +1461,8 @@ class Inputs:
 
         if len(self.strains) > 1:
             self.interventions_available_for_costing \
-                += ['shortcourse_mdr', 'treatment_support_relative_ds', 'treatment_support_relative_mdr']
+                += ['shortcourse_mdr', 'treatment_support_relative_ds', 'treatment_support_relative_mdr',
+                    'baseline_treatment_ds', 'baseline_treatment_mdr']
         for organ in self.organ_status:
             self.interventions_available_for_costing += ['ambulatorycare' + organ]
         if self.gui_inputs['is_lowquality']:

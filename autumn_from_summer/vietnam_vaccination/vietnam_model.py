@@ -12,13 +12,13 @@ my_times = numpy.linspace(0., 100., 101).tolist()
 my_compartments = ["susceptible", "early_latent", "late_latent", "active_TB", "recovered"]
 
 my_flows = [{"type": "infection_density", "parameter": "infection_rate", "origin": "susceptible", "to": "early_latent"},
-           #{"type": "standard_flows", "parameter": "rapid_progression_rate", "origin": "early_latent", "to": "active_TB"},
+            {"type": "standard_flows", "parameter": "rapid_progression_rate", "origin": "early_latent", "to": "active_TB"},
             {"type": "standard_flows", "parameter": "immune_stabilisation_rate", "origin": "early_latent", "to": "late_latent"},
             {"type": "standard_flows", "parameter": "reactivation_rate", "origin": "late_latent", "to": "active_TB"},
             {"type": "standard_flows", "parameter": "recovery_rate", "origin": "active_TB", "to": "recovered"},
-           #{"type": "infection_density", "parameter": "reinfection_from_recovered", "origin": "recovered", "to": "early_latent"},
-           #{"type": "infection_density", "parameter": "reinfection_from_late_latent", "origin": "late_latent", "to": "early_latent"},
-           #{"type": "standard_flows", "parameter": "relapse_rate", "origin": "recovered", "to": "active_TB"}]
+            {"type": "infection_density", "parameter": "reinfection_from_recovered", "origin": "recovered", "to": "early_latent"},
+            {"type": "infection_density", "parameter": "reinfection_from_late_latent", "origin": "late_latent", "to": "early_latent"},
+            {"type": "standard_flows", "parameter": "relapse_rate", "origin": "recovered", "to": "active_TB"},
             {"type":"compartment_death", "parameter": "tb_mortality_rate", "origin":"active_TB"}]
 
 my_parameters = {'infection_rate': 1.,
@@ -44,27 +44,23 @@ my_model = StratifiedModel(times=my_times, compartment_types=my_compartments, in
 # default for parameter_adjustment is to give a relative parameter, e.g. original parameter is x,
 # "1":0.5, means new parameter for age 1 is 0.5x
 
-age_mixing = None  # None means homogenous mixing
-my_model.stratify("age", [5, 10], [], {}, {}, mixing_matrix=age_mixing, verbose=False)
+# Choose what to stratify the model by
+stratify_by = [] #["age", "vaccine"]
 
-# props_vaccine = {"none": 0.25, "bcg_only": 0.25, "bcg+novel": 0.25, "novel": 0.25}
-# my_model.stratify("vaccine", ["none", "bcg_only", "bcg+novel", "novel"], [], requested_proportions = props_vaccine,
-#                   mixing_matrix = None, verbose = False)
+if "age" in stratify_by:
+    # Stratify model by age
+    age_mixing = None  # None means homogenous mixing
+    my_model.stratify("age", [5, 10], [], {}, {}, mixing_matrix=age_mixing, verbose=False)
 
-proportion_vaccine = {"none": 0.5, "vaccine": 0.5}
-my_model.stratify("vaccine", ["none", "vaccine"], [], requested_proportions = proportion_vaccine,
-                  infectiousness_adjustments = {"none": 0.9, "vaccine": 0.4},
-                  mixing_matrix = None, verbose = False)
+if "vaccine" in stratify_by:
+    # Stratify model by vaccination status
+    # props_vaccine = {"none": 0.25, "bcg_only": 0.25, "bcg+novel": 0.25, "novel": 0.25}
+    # my_model.stratify("vaccine", ["none", "bcg_only", "bcg+novel", "novel"], [], requested_proportions = props_vaccine, mixing_matrix = None, verbose = False)
 
-# _tb_model.stratify("smear", ["smearpos", "smearneg", "extrapul"], ["infectious"],
-#                    infectiousness_adjustments={"smearpos": 1., "smearneg": 0.25, "extrapul": 0.},
-#                    verbose=False, requested_proportions=props_smear,
-#                    entry_proportions=props_smear)
-
-# stratification_name, strata_request, compartment_types_to_stratify, requested_proportions,
-#             entry_proportions={}, adjustment_requests=(), infectiousness_adjustments={}, mixing_matrix=None,
-#             verbose=True):
-
+    proportion_vaccine = {"none": 0.5, "vaccine": 0.5}
+    my_model.stratify("vaccine", ["none", "vaccine"], [], requested_proportions = proportion_vaccine,
+                      infectiousness_adjustments = {"none": 0.9, "vaccine": 0.4},
+                      mixing_matrix = None, verbose = False)
 
 create_flowchart(my_model)
 print(os.getcwd())

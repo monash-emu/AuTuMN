@@ -324,16 +324,16 @@ if __name__ == "__main__":
     scenario_params = {
             # Tentative RMI scenarios
             # Ebeye intervention
-            # 1: {'acf_coverage': .9, 'acf_ebeye': 1.} # need to limit to 1 year and alter 0.9
+            # 1: {'acf_coverage': .9, 'acf_ebeye': 1.} # need to limit to ?6 months and alter 0.9
 
             # Majuro intervention (on Majuro only)
             # 2: {'acf_coverage'': .9, 'acf_majuro_switch': 1., *\
-            # 'acf_ltbi_coverage': .9, 'acf_ltbi_majuro_switch': 1.} # need to limit  to 1 year and check coverage
+            # 'acf_ltbi_coverage': .9, 'acf_ltbi_majuro_switch': 1.} # need to limit  to ?6 months and check coverage
 
             # Hypothetical application of Majuro intervention across RMI
             # 3: {'acf_coverage': .9, 'acf_majuro_switch': 1., 'acf_ebeye_switch': 1., 'acf_otherislands_switch': 1., *\
             # 'acf_ltbi_coverage': .9, 'acf_ltbi_majuro_switch': 1., 'acf_ltbi_ebeye_switch': 1., *\
-            # 'acf_ltbi_otherislands_switch': 1.} # need to limit to 1 year and check coverage
+            # 'acf_ltbi_otherislands_switch': 1.} # need to limit to ?6 months and check coverage
 
             # Mongolia scenarios - kept for reference only
             # 1: {'ipt_age_0_ct_coverage': .5},

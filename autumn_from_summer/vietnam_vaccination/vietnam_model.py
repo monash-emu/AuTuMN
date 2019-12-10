@@ -9,33 +9,33 @@ from autumn_from_summer.tb_model import create_multi_scenario_outputs
 
 my_times = numpy.linspace(0., 100., 101).tolist()
 
-my_compartments = ["susceptible", "early_latent", "late_latent", "active_TB", "recovered"]
+my_compartments = ["susceptible", "early_latent", "late_latent", "active_tb", "recovered"]
 
 my_flows = [{"type": "infection_density", "parameter": "infection_rate", "origin": "susceptible", "to": "early_latent"},
-            {"type": "standard_flows", "parameter": "rapid_progression_rate", "origin": "early_latent", "to": "active_TB"},
+            {"type": "standard_flows", "parameter": "rapid_progression_rate", "origin": "early_latent", "to": "active_tb"},
             {"type": "standard_flows", "parameter": "immune_stabilisation_rate", "origin": "early_latent", "to": "late_latent"},
-            {"type": "standard_flows", "parameter": "reactivation_rate", "origin": "late_latent", "to": "active_TB"},
-            {"type": "standard_flows", "parameter": "recovery_rate", "origin": "active_TB", "to": "recovered"},
+            {"type": "standard_flows", "parameter": "reactivation_rate", "origin": "late_latent", "to": "active_tb"},
+            {"type": "standard_flows", "parameter": "recovery_rate", "origin": "active_tb", "to": "recovered"},
             {"type": "infection_density", "parameter": "reinfection_from_recovered", "origin": "recovered", "to": "early_latent"},
             {"type": "infection_density", "parameter": "reinfection_from_late_latent", "origin": "late_latent", "to": "early_latent"},
-            {"type": "standard_flows", "parameter": "relapse_rate", "origin": "recovered", "to": "active_TB"},
-            {"type":"compartment_death", "parameter": "tb_mortality_rate", "origin":"active_TB"}]
+            {"type": "standard_flows", "parameter": "relapse_rate", "origin": "recovered", "to": "active_tb"},
+            {"type":"compartment_death", "parameter": "tb_mortality_rate", "origin":"active_tb"}]
 
-my_parameters = {'infection_rate': 6.6,
-                 'immune_stabilisation_rate': 0.001,
-                 'reactivation_rate': 0.21,
-                 'reinfection_from_late_latent': 0.21,
+my_parameters = {'infection_rate': 0.000001,
+                 'immune_stabilisation_rate': 0.01,
+                 'reactivation_rate': 0.0021,
+                 'reinfection_from_late_latent': 0.0021,
                  'reinfection_from_recovered': 0.0002,
                  'recovery_rate': 0.63,
                  'rapid_progression_rate': 0.001,
                  'relapse_rate': 0.002,
                  "tb_mortality_rate": 0.9}
 
-my_initial_conditions = {"early_latent": 50., "late_latent": 200., "active_TB": 200., "recovered": 0.}
+my_initial_conditions = {"early_latent": 100., "late_latent": 100., "active_tb": 100., "recovered": 0.}
 
 my_model = StratifiedModel(times=my_times, compartment_types=my_compartments, initial_conditions=my_initial_conditions,
                            parameters=my_parameters, requested_flows=my_flows, starting_population=105000,
-                           infectious_compartment=('active_TB',), entry_compartment='susceptible',
+                           infectious_compartment=('active_tb',), entry_compartment='susceptible',
                            birth_approach = "replace_deaths")
 
 # Verbose prints out information, does not effect model
@@ -66,13 +66,13 @@ print(os.getcwd())
 
 my_model.run_model()
 
-print(my_model.outputs)
+# print(my_model.outputs)
 
-pp = PostProcessing(my_model, requested_outputs=['prevXsusceptibleXamong', 'prevXearly_latentXamong','prevXlate_latentXamong','prevXactive_TBXamong'])
+pp = PostProcessing(my_model, requested_outputs=['prevXsusceptibleXamong', 'prevXearly_latentXamong','prevXlate_latentXamong','prevXactive_tbXamong', 'prevXrecoveredXamong'])
 out = Outputs([pp])
 out.plot_requested_outputs()
 
-my_model.plot_compartment_size(["susceptible"]) #,"vaccine"])
+# my_model.plot_compartment_size(["susceptible","vaccine"])
 
 # Output graphs test
 # req_outputs = ["prevXsusceptibleXamong",
@@ -82,4 +82,4 @@ my_model.plot_compartment_size(["susceptible"]) #,"vaccine"])
 #
 # create_multi_scenario_outputs(models=my_model, req_outputs=req_outputs)
 
-# output_connections = {"TB_deaths":{"origin":"active_TB"}}
+# output_connections = {"TB_deaths":{"origin":"active_tb"}}

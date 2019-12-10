@@ -1205,7 +1205,7 @@ class ConsolidatedModel(StratifiedModel, EconomicModel):
         strain_types = copy.copy(self.strains)
         # if '' not in self.strains:
         #     strain_types.append('')
-        for intervention in ['treatment_support_relative', 'treatment_support_absolute']:
+        for intervention in ['treatment_support_relative', 'treatment_support_absolute', 'baseline_treatment']:
             for strain in strain_types:
                 if 'int_prop_' + intervention + strain in self.relevant_interventions:
                     self.vars['popsize_' + intervention + strain] = 0.

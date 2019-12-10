@@ -19,13 +19,10 @@ def build_rmi_timevariant_tsr():
     tsr = {1950.: 0., 1970.: .2, 1994.: .6, 2000.: .85, 2010.: .87, 2016: .87}
     return scale_up_function(tsr.keys(), tsr.values(), smoothness=0.2, method=5)
 
-#def build_rmi_timevariant_bcg():
-    #bcg = {1950.: 0., 1990.: .49, 1995.: .71, 2000.: .90, 2018.: .98}
-    #return scale_up_function(tsr.keys(), tsr.values(), smoothness=0.2, method=5)
 
 def build_rmi_model(update_params={}):
 
-    stratify_by = ['age', 'location', 'diabetes']#'organ', 'diabetes'] #'strain']
+    stratify_by = ['age', 'location', 'diabetes', 'organ', 'strain']
 
     # some default parameter values
     external_params = {  # run configuration
@@ -305,7 +302,7 @@ def build_rmi_model(update_params={}):
                            )
 
     if 'diabetes' in stratify_by:
-        props_diabetes = {'has_diabetes': 0.2, 'no_diabetes': 0.8}
+        props_diabetes = {'has_diabetes': 0.3, 'no_diabetes': 0.7}
         progression_adjustments = {"has_diabetes": 3.11, "no_diabetes": 1.}
 
         _tb_model.stratify("diabetes", ["has_diabetes", "no_diabetes"], [],
@@ -325,6 +322,20 @@ if __name__ == "__main__":
     load_model = False
 
     scenario_params = {
+            # Tentative RMI scenarios
+            # Ebeye intervention
+            # 1: {'acf_coverage': .9, 'acf_ebeye': 1.} # need to limit to ?6 months and alter 0.9
+
+            # Majuro intervention (on Majuro only)
+            # 2: {'acf_coverage'': .9, 'acf_majuro_switch': 1., *\
+            # 'acf_ltbi_coverage': .9, 'acf_ltbi_majuro_switch': 1.} # need to limit  to ?6 months and check coverage
+
+            # Hypothetical application of Majuro intervention across RMI
+            # 3: {'acf_coverage': .9, 'acf_majuro_switch': 1., 'acf_ebeye_switch': 1., 'acf_otherislands_switch': 1., *\
+            # 'acf_ltbi_coverage': .9, 'acf_ltbi_majuro_switch': 1., 'acf_ltbi_ebeye_switch': 1., *\
+            # 'acf_ltbi_otherislands_switch': 1.} # need to limit to ?6 months and check coverage
+
+            # Mongolia scenarios - kept for reference only
             # 1: {'ipt_age_0_ct_coverage': .5},
             # 2: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
             #     'ipt_age_60_ct_coverage': .5},
@@ -426,6 +437,6 @@ if __name__ == "__main__":
                     'prevXinfectiousXstrain_mdrXamong': 'Prevalence of MDR-TB (/100,000)'
                     }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_25_11', targets_to_plot=targets_to_plot,
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_12_10', targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers, translation_dictionary=translations,
                                   scenario_list=scenario_list)

@@ -7,7 +7,7 @@ from autumn_from_summer.tb_model import create_multi_scenario_outputs
 # A test trial of creating a model that has the same compartments as the one in
 # "Data needs for evidence-based decisions: a tuberculosis modeler’s ‘wish list’
 
-my_times = numpy.linspace(0., 100., 101).tolist()
+my_times = numpy.linspace(0., 100, 101).tolist()
 
 my_compartments = ["susceptible", "early_latent", "late_latent", "active_tb", "recovered"]
 
@@ -16,27 +16,31 @@ my_flows = [{"type": "infection_density", "parameter": "infection_rate", "origin
             {"type": "standard_flows", "parameter": "immune_stabilisation_rate", "origin": "early_latent", "to": "late_latent"},
             {"type": "standard_flows", "parameter": "reactivation_rate", "origin": "late_latent", "to": "active_tb"},
             {"type": "standard_flows", "parameter": "recovery_rate", "origin": "active_tb", "to": "recovered"},
-            {"type": "infection_density", "parameter": "reinfection_from_recovered", "origin": "recovered", "to": "early_latent"},
-            {"type": "infection_density", "parameter": "reinfection_from_late_latent", "origin": "late_latent", "to": "early_latent"},
-            {"type": "standard_flows", "parameter": "relapse_rate", "origin": "recovered", "to": "active_tb"},
+            {"type": "infection_density", "parameter": "infection_rate", "origin": "recovered", "to": "early_latent"},
+            # {"type": "infection_density", "parameter": "reinfection_from_late_latent", "origin": "late_latent", "to": "early_latent"},
+            # {"type": "standard_flows", "parameter": "relapse_rate", "origin": "recovered", "to": "active_tb"},
             {"type":"compartment_death", "parameter": "tb_mortality_rate", "origin":"active_tb"}]
 
-my_parameters = {'infection_rate': 0.000001,
-                 'immune_stabilisation_rate': 0.01,
-                 'reactivation_rate': 0.0021,
-                 'reinfection_from_late_latent': 0.0021,
-                 'reinfection_from_recovered': 0.0002,
-                 'recovery_rate': 0.63,
-                 'rapid_progression_rate': 0.001,
-                 'relapse_rate': 0.002,
-                 "tb_mortality_rate": 0.9}
+my_parameters = {'infection_rate':  .00013,
+                 'immune_stabilisation_rate': 0.01 * 365.25, #0.6,
+                 'reactivation_rate': 5.5e-6 * 365.25,
+                 # 'reinfection_from_late_latent': 0.0021,
+                 # 'reinfection_from_recovered': 0.0002,
+                 'recovery_rate': 0.2,
+                 'rapid_progression_rate': 0.0011 * 365.25,
+                 # 'relapse_rate': 0.002,
+                 "tb_mortality_rate": 0.2,
+                 "universal_death_rate": 1./50.
+                 }
 
-my_initial_conditions = {"early_latent": 100., "late_latent": 100., "active_tb": 100., "recovered": 0.}
+my_initial_conditions = {"active_tb": .000001}
 
 my_model = StratifiedModel(times=my_times, compartment_types=my_compartments, initial_conditions=my_initial_conditions,
-                           parameters=my_parameters, requested_flows=my_flows, starting_population=105000,
+                           parameters=my_parameters, requested_flows=my_flows, starting_population=100000,
                            infectious_compartment=('active_tb',), entry_compartment='susceptible',
                            birth_approach = "replace_deaths")
+
+my_model.death_flows.to_csv("deaths_flows.csv")
 
 # Verbose prints out information, does not effect model
 # Specify arguments, need to check argument inputs order for my_model.stratify!!!
@@ -44,7 +48,7 @@ my_model = StratifiedModel(times=my_times, compartment_types=my_compartments, in
 # "1":0.5, means new parameter for age 1 is 0.5x
 
 # Choose what to stratify the model by
-stratify_by = [] #["age", "vaccine"]
+stratify_by = ["age"] #["age", "vaccine"]
 
 if "age" in stratify_by:
     # Stratify model by age
@@ -68,7 +72,10 @@ my_model.run_model()
 
 # print(my_model.outputs)
 
-pp = PostProcessing(my_model, requested_outputs=['prevXsusceptibleXamong', 'prevXearly_latentXamong','prevXlate_latentXamong','prevXactive_tbXamong', 'prevXrecoveredXamong'])
+multiplier = {'prevXactive_tbXamong': 100000}
+pp = PostProcessing(my_model, requested_outputs=['prevXsusceptibleXamong', 'prevXearly_latentXamong',
+                                                 'prevXlate_latentXamong','prevXactive_tbXamong',
+                                                 'prevXrecoveredXamong'], multipliers=multiplier)
 out = Outputs([pp])
 out.plot_requested_outputs()
 

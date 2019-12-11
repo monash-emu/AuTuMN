@@ -2,6 +2,17 @@ import copy
 import numpy
 from summer_py.summer_model import *
 
+def step_function_maker(start_time, end_time, value):
+
+    def my_function(time):
+        if start_time <= time <= end_time:
+            y = value
+        else:
+            y = 0.
+        return y
+
+    return my_function
+
 
 
 def change_parameter_unit(parameter_dict, multiplier):

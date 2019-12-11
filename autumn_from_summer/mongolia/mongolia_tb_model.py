@@ -389,20 +389,30 @@ def build_mongolia_model(update_params={}):
                            'age': ['0', '5', '15', '60'],
                            'location': ['rural_province', 'urban_nonger', 'urban_ger', 'mine', 'prison']}
 
-
-    # create derived outputs for disaggregated incidence
+    #  create derived outputs for disaggregated incidence
     for stratification in stratify_by:
         for stratum in all_stratifications[stratification]:
             for stage in ["early", 'late']:
                 out_connections["indidence_" + stage + "X" + stratification + "_" + stratum] =\
                     {"origin": stage + "_latent", "to": "infectious", "to_condition": stratification + "_" + stratum}
 
+    # create personalised derived outputs for mortality and notifications
+    def mortality_derived_output(model):
+        total_deaths = 0.
+        for comp_ind in model.infectious_indices['all_strains']:
+            infectious_pop = model.compartment_values[comp_ind]
+            flow_index = model.death_flows[model.death_flows.origin == model.compartment_names[comp_ind]].index
+            param_name = model.death_flows.parameter[flow_index].to_string().split('    ')[1]
+            mortality_rate = model.get_parameter_value(param_name, 2019.)
+            total_deaths += infectious_pop * mortality_rate
+        return total_deaths
+
     # define model     #replace_deaths  add_crude_birth_rate
     if len(stratify_by) > 0:
         _tb_model = StratifiedModel(
             integration_times, compartments, {"infectious": 1e-3}, model_parameters, flows, birth_approach="replace_deaths",
             starting_population=external_params['start_population'],
-            output_connections=out_connections)
+            output_connections=out_connections, derived_output_functions={'tb_deaths': mortality_derived_output})
     else:
         _tb_model = EpiModel(
             integration_times, compartments, {"infectious": 1e-3}, model_parameters, flows, birth_approach="replace_deaths",
@@ -693,7 +703,7 @@ if __name__ == "__main__":
                     'prevXinfectiousXstrain_mdrXamong': 'Prevalence of MDR-TB (/100,000)'
                     }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_25_11', targets_to_plot=targets_to_plot,
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_11_12', targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers, translation_dictionary=translations,
                                   scenario_list=scenario_list)
 

@@ -294,8 +294,8 @@ def build_mongolia_timevariant_tsr():
 #     _tb_model.transition_flows.to_csv("transitions.csv")
 #     # _tb_model.death_flows.to_csv("deaths.csv")
 #
-#     return _tb_model
-#
+#     return _tb_model#
+
 
 def build_mongolia_model(update_params={}):
 
@@ -308,7 +308,7 @@ def build_mongolia_model(update_params={}):
                        'time_step': 1.,
                        'start_population': 3000000,
                        # base model definition:
-                       'contact_rate': 1.,
+                       'contact_rate': 16.,
                        'rr_transmission_recovered': .63,
                        'rr_transmission_infected': 0.21,
                        'latency_adjustment': 2.,  # used to modify progression rates during calibration
@@ -384,6 +384,18 @@ def build_mongolia_model(update_params={}):
         "incidence_early": {"origin": "early_latent", "to": "infectious"},
         "incidence_late": {"origin": "late_latent", "to": "infectious"}
     }
+
+    all_stratifications = {'strain': ['ds', 'mdr'], 'organ': ['smearpos', 'smearneg', 'extrapul'],
+                           'age': ['0', '5', '15', '60'],
+                           'location': ['rural_province', 'urban_nonger', 'urban_ger', 'mine', 'prison']}
+
+
+    # create derived outputs for disaggregated incidence
+    for stratification in stratify_by:
+        for stratum in all_stratifications[stratification]:
+            for stage in ["early", 'late']:
+                out_connections["indidence_" + stage + "X" + stratification + "_" + stratum] =\
+                    {"origin": stage + "_latent", "to": "infectious", "to_condition": stratification + "_" + stratum}
 
     # define model     #replace_deaths  add_crude_birth_rate
     if len(stratify_by) > 0:

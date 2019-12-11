@@ -299,7 +299,7 @@ def build_mongolia_timevariant_tsr():
 
 def build_mongolia_model(update_params={}):
 
-    stratify_by = ['age', 'location', 'organ', 'strain']
+    stratify_by = ['age', 'organ', 'strain', 'location']
 
     # some default parameter values
     external_params = {  # run configuration
@@ -308,7 +308,7 @@ def build_mongolia_model(update_params={}):
                        'time_step': 1.,
                        'start_population': 3000000,
                        # base model definition:
-                       'contact_rate': 16.,
+                       'contact_rate': 30.,
                        'rr_transmission_recovered': .63,
                        'rr_transmission_infected': 0.21,
                        'latency_adjustment': 2.,  # used to modify progression rates during calibration
@@ -510,23 +510,6 @@ def build_mongolia_model(update_params={}):
         _tb_model.adaptation_functions["dr_amplification"] = dr_amplification_rate
         _tb_model.parameters["dr_amplification"] = "dr_amplification"
 
-    if 'organ' in stratify_by:
-        props_smear = {"smearpos": external_params['prop_smearpos'],
-                       "smearneg": 1. - (external_params['prop_smearpos'] + .42),
-                       "extrapul": .42}
-        mortality_adjustments = {"smearpos": 1., "smearneg": .64, "extrapul": .64}
-        recovery_adjustments = {"smearpos": 1., "smearneg": .56, "extrapul": .56}
-        diagnostic_sensitivity = {}
-        for stratum in ["smearpos", "smearneg", "extrapul"]:
-            diagnostic_sensitivity[stratum] = external_params["diagnostic_sensitivity_" + stratum]
-        _tb_model.stratify("organ", ["smearpos", "smearneg", "extrapul"], ["infectious"],
-                           infectiousness_adjustments={"smearpos": 1., "smearneg": 0.25, "extrapul": 0.},
-                           verbose=False, requested_proportions=props_smear,
-                           adjustment_requests={'recovery': recovery_adjustments,
-                                                'infect_death': mortality_adjustments,
-                                                'case_detection': diagnostic_sensitivity},
-                           entry_proportions=props_smear)
-
     if "age" in stratify_by:
         age_breakpoints = [0, 5, 15, 60]
         age_infectiousness = get_parameter_dict_from_function(logistic_scaling_function(10.0), age_breakpoints)
@@ -566,6 +549,26 @@ def build_mongolia_model(update_params={}):
             _tb_model.parameters['ipt_rateXstrain_dsXage_0'] = 0.17
             for age_break in [5, 15, 60]:
                 _tb_model.parameters['ipt_rateXstrain_dsXage_' + str(age_break)] = 0.
+
+    if 'organ' in stratify_by:
+        props_smear = {"smearpos": external_params['prop_smearpos'],
+                       "smearneg": 1. - (external_params['prop_smearpos'] + .42),
+                       "extrapul": .42}
+        mortality_adjustments = {"smearpos": 1., "smearneg": .64, "extrapul": .64}
+        recovery_adjustments = {"smearpos": 1., "smearneg": .56, "extrapul": .56}
+        diagnostic_sensitivity = {}
+        for stratum in ["smearpos", "smearneg", "extrapul"]:
+            diagnostic_sensitivity[stratum] = external_params["diagnostic_sensitivity_" + stratum]
+        _tb_model.stratify("organ", ["smearpos", "smearneg", "extrapul"], ["infectious"],
+                           infectiousness_adjustments={"smearpos": 1., "smearneg": 0.25, "extrapul": 0.},
+                           verbose=False, requested_proportions=props_smear,
+                           adjustment_requests={'recovery': recovery_adjustments,
+                                                'infect_death': mortality_adjustments,
+                                                'case_detection': diagnostic_sensitivity,
+                                                'early_progression': props_smear,
+                                                'late_progression': props_smear
+                                                },
+                           )
 
     if "location" in stratify_by:
         props_location = {'rural_province': .4653, 'urban_nonger': .368, 'urban_ger': .15, 'mine': .0147, 'prison': .002}

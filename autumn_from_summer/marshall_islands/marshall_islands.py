@@ -313,6 +313,9 @@ def build_rmi_model(update_params={}):
 
     # _tb_model.transition_flows.to_csv("transitions.csv")
     # _tb_model.death_flows.to_csv("deaths.csv")
+    # create_flowchart(_tb_model, strata=0, name="rmi_flow_diagram")
+    # create_flowchart(_tb_model, strata=1, name="rmi_flow_diagram")
+    # create_flowchart(_tb_model, strata=2, name="rmi_flow_diagram")
 
     return _tb_model
 

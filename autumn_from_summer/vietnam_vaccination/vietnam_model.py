@@ -71,7 +71,7 @@ my_model.death_flows.to_csv("deaths_flows.csv")
 # "1":0.5, means new parameter for age 1 is 0.5x
 
 # Choose what to stratify the model by
-stratify_by = ["age"] #["age", "vaccine"]
+stratify_by = ["age", "vaccine"]
 
 if "age" in stratify_by:
     # Stratify model by age
@@ -85,6 +85,7 @@ if "age" in stratify_by:
                       adjustment_requests={'immune_stabilisation_rate': immune_stabilisation_adjustment,
                                            'reactivation_rate': reactivation_rate_adjustment,
                                            'rapid_progression_rate': rapid_progression_rate_adjustment}
+                      )
 
 if "vaccine" in stratify_by:
     # Stratify model by vaccination status

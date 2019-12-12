@@ -22,7 +22,11 @@ def build_rmi_timevariant_tsr():
 
 def build_rmi_model(update_params={}):
 
-    stratify_by = ['age', 'location', 'diabetes', 'organ']#, 'strain']
+    # stratify_by = []
+    # stratify_by = ['age']
+    stratify_by = ['age', 'organ']
+    # stratify_by = ['age', 'organ', 'diabetes']
+    # stratify_by = ['age', 'organ', 'diabetes', 'location']
 
     # some default parameter values
     external_params = {  # run configuration
@@ -277,6 +281,16 @@ def build_rmi_model(update_params={}):
                                                 'case_detection': diagnostic_sensitivity},
                            entry_proportions=props_smear)
 
+    if 'diabetes' in stratify_by:
+        props_diabetes = {'has_diabetes': 0.3, 'no_diabetes': 0.7}
+        progression_adjustments = {"has_diabetes": 3.11, "no_diabetes": 1.}
+
+        _tb_model.stratify("diabetes", ["has_diabetes", "no_diabetes"], [],
+                           verbose=False, requested_proportions=props_diabetes,
+                           adjustment_requests={'early_progression': progression_adjustments,
+                                                'late_progression': progression_adjustments},
+                           entry_proportions=props_diabetes)
+
     if "location" in stratify_by:
         props_location = {'majuro': .523, 'ebeye': .2, 'otherislands': .277}
         raw_relative_risks_loc = {'majuro': 1.}
@@ -301,21 +315,11 @@ def build_rmi_model(update_params={}):
                            mixing_matrix=location_mixing
                            )
 
-    if 'diabetes' in stratify_by:
-        props_diabetes = {'has_diabetes': 0.3, 'no_diabetes': 0.7}
-        progression_adjustments = {"has_diabetes": 3.11, "no_diabetes": 1.}
-
-        _tb_model.stratify("diabetes", ["has_diabetes", "no_diabetes"], [],
-                           verbose=False, requested_proportions=props_diabetes,
-                           adjustment_requests={'early_progression': progression_adjustments,
-                                                'late_progression': progression_adjustments},
-                           entry_proportions=props_diabetes)
-
     # _tb_model.transition_flows.to_csv("transitions.csv")
     # _tb_model.death_flows.to_csv("deaths.csv")
     # create_flowchart(_tb_model, strata=0, name="rmi_flow_diagram")
-    # create_flowchart(_tb_model, strata=1, name="rmi_flow_diagram")
-    # create_flowchart(_tb_model, strata=2, name="rmi_flow_diagram")
+    create_flowchart(_tb_model, strata=1, name="rmi_flow_diagram_1")
+    create_flowchart(_tb_model, strata=2, name="rmi_flow_diagram_2")
 
     return _tb_model
 

@@ -22,12 +22,12 @@ my_flows = [{"type": "infection_density", "parameter": "infection_rate", "origin
             {"type":"compartment_death", "parameter": "tb_mortality_rate", "origin":"active_tb"}]
 
 my_parameters = {'infection_rate':  .00013,
-                 'immune_stabilisation_rate': 0.01 * 365.25, #0.6,
-                 'reactivation_rate': 5.5e-6 * 365.25,
+                 'immune_stabilisation_rate': 5.3e-6 * 365.25, #0.6,
+                 'reactivation_rate': 3.3e-6 * 365.25,
                  # 'reinfection_from_late_latent': 0.0021,
                  # 'reinfection_from_recovered': 0.0002,
                  'recovery_rate': 0.2,
-                 'rapid_progression_rate': 0.0011 * 365.25,
+                 'rapid_progression_rate': 2.7e-4 * 365.25,
                  # 'relapse_rate': 0.002,
                  "tb_mortality_rate": 0.2,
                  "universal_death_rate": 1./50.
@@ -52,8 +52,16 @@ stratify_by = ["age"] #["age", "vaccine"]
 
 if "age" in stratify_by:
     # Stratify model by age
+    immune_stabilisation_adjustment = {"0": 2.2, "5": 2.2 } # from Romain's epidemic paper, the value in the dict is (k for age group)/(k for age >15)
+    reactivation_rate_adjustment = {"0": 5.7e-6, "5": 1.94 } # from Romain's epidemic paper, the value in the dict is (v for age group)/(v for age >15)
+    rapid_progression_rate_adjustment = {"0": 24.4, "5": 10} # from Romain's epidemic paper, the value in the dict is (e for age group)/(e for age >15)
+
     age_mixing = None  # None means homogenous mixing
-    my_model.stratify("age", [5, 10], [], {}, {}, mixing_matrix=age_mixing, verbose=False)
+    my_model.stratify("age", [0, 5, 15, 60], [], {}, {}, infectiousness_adjustments={"15": 0},
+                      mixing_matrix=age_mixing, verbose=False,
+                      adjustment_requests={'immune_stabilisation_rate': immune_stabilisation_adjustment,
+                                           'reactivation_rate': reactivation_rate_adjustment,
+                                           'rapid_progression_rate': rapid_progression_rate_adjustment}
 
 if "vaccine" in stratify_by:
     # Stratify model by vaccination status
@@ -63,6 +71,18 @@ if "vaccine" in stratify_by:
     my_model.stratify("vaccine", ["none", "vaccine"], [], requested_proportions = proportion_vaccine,
                       infectiousness_adjustments = {"none": 0.9, "vaccine": 0.4},
                       mixing_matrix = None, verbose = False)
+
+# Stratification example from Mongolia
+    # _tb_model.stratify("organ", ["smearpos", "smearneg", "extrapul"], ["infectious"],
+    #                    infectiousness_adjustments={"smearpos": 1., "smearneg": 0.25, "extrapul": 0.},
+    #                    verbose=False, requested_proportions=props_smear,
+    #                    adjustment_requests={'recovery': recovery_adjustments,
+    #                                         'infect_death': mortality_adjustments,
+    #                                         'case_detection': diagnostic_sensitivity,
+    #                                         'early_progression': props_smear,
+    #                                         'late_progression': props_smear
+    #                                         },
+
 
 # Model outputs
 create_flowchart(my_model)

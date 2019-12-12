@@ -299,22 +299,22 @@ def build_mongolia_timevariant_tsr():
 
 def build_mongolia_model(update_params={}):
 
-    stratify_by = ['age', 'organ', 'strain', 'location']
+    stratify_by = ['age', 'organ', 'location', 'strain']  #, 'strain', 'location']
 
     # some default parameter values
     external_params = {  # run configuration
-                       'start_time': 1850.,
-                       'end_time': 2035.,
+                       'start_time': 1900.,
+                       'end_time': 2020.,
                        'time_step': 1.,
                        'start_population': 3000000,
                        # base model definition:
-                       'contact_rate': 30.,
+                       'contact_rate': 12.5,
                        'rr_transmission_recovered': .63,
                        'rr_transmission_infected': 0.21,
-                       'latency_adjustment': 2.,  # used to modify progression rates during calibration
+                       'adult_latency_adjustment': 4.,  # used to modify progression rates during calibration
                        'self_recovery_rate': 0.231,  # this is for smear-positive TB
                        'tb_mortality_rate': 0.389,  # this is for smear-positive TB
-                       'prop_smearpos': .4,
+                       'prop_smearpos': .33,
                          # MDR-TB:
                        'dr_amplification_prop_among_nonsuccess': 0.15,
                        'prop_mdr_detected_as_mdr': 0.5,
@@ -395,9 +395,10 @@ def build_mongolia_model(update_params={}):
                     {"origin": stage + "_latent", "to": "infectious", "to_condition": stratification + "_" + stratum}
 
     # define model     #replace_deaths  add_crude_birth_rate
+    init_pop = {"infectious": 1000, "late_latent": 1000000}
 
     _tb_model = StratifiedModel(
-        integration_times, compartments, {"infectious": 1e-3}, model_parameters, flows, birth_approach="replace_deaths",
+        integration_times, compartments, init_pop, model_parameters, flows, birth_approach="replace_deaths",
         starting_population=external_params['start_population'],
         output_connections=out_connections, derived_output_functions={},
         death_output_categories=((), ("age_0",)))
@@ -503,7 +504,8 @@ def build_mongolia_model(update_params={}):
         # adjustment of latency parameters
         for param in ['early_progression', 'late_progression']:
             for age_break in age_breakpoints:
-                age_params[param][str(age_break) + 'W'] *= external_params['latency_adjustment']
+                if age_break > 5:
+                    age_params[param][str(age_break) + 'W'] *= external_params['adult_latency_adjustment']
 
         pop_morts = get_pop_mortality_functions(input_database, age_breakpoints, country_iso_code='MNG')
         age_params["universal_death_rate"] = {}
@@ -536,8 +538,8 @@ def build_mongolia_model(update_params={}):
 
     if 'organ' in stratify_by:
         props_smear = {"smearpos": external_params['prop_smearpos'],
-                       "smearneg": 1. - (external_params['prop_smearpos'] + .3),
-                       "extrapul": .3}
+                       "smearneg": 1. - (external_params['prop_smearpos'] + .30),
+                       "extrapul": .30}
         mortality_adjustments = {"smearpos": 1., "smearneg": .64, "extrapul": .64}
         recovery_adjustments = {"smearpos": 1., "smearneg": .56, "extrapul": .56}
         diagnostic_sensitivity = {}
@@ -593,6 +595,10 @@ if __name__ == "__main__":
     load_model = False
 
     scenario_params = {
+            # 1: {'contact_rate':10.5}, 2: {'contact_rate':11.}, 3: {'contact_rate':11.5}, 4: {'contact_rate':12.},
+            # 5: {'contact_rate':12.5}
+
+
             # 1: {'ipt_age_0_ct_coverage': .5},
             # 2: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
             #     'ipt_age_60_ct_coverage': .5},
@@ -621,14 +627,15 @@ if __name__ == "__main__":
                 models.append(DummyModel(model_dict))
     else:
         t0 = time()
-        models = run_multi_scenario(scenario_params, 1850., build_mongolia_model)
+        models = run_multi_scenario(scenario_params, 1950., build_mongolia_model)
         store_run_models(models, scenarios=scenario_list, database_name=output_db_path)
         delta = time() - t0
         print("Running time: " + str(round(delta, 1)) + " seconds")
 
     req_outputs = ['prevXinfectiousXamong',
                    'prevXlatentXamong',
-                   'prevXinfectiousXorgan_smearposXamongXinfectious', 'prevXinfectiousXorgan_smearnegXamongXinfectious']
+                   'prevXinfectiousXorgan_smearposXamongXinfectious', 'prevXinfectiousXorgan_smearnegXamongXinfectious',
+                   'prevXinfectiousXorgan_smearposXlocation_prisonXamongXage_15Xage_60']
 
     # {'prevXinfectiousXamongXage_15Xage_60': [[2015.], [560.]],
     #                    'prevXlatentXamongXage_5': [[2016.], [9.6]],
@@ -644,6 +651,7 @@ if __name__ == "__main__":
                        'cis': [(143., 265.1)]},
                       {'output_key': 'prevXinfectiousXorgan_smearnegXamongXage_15Xage_60', 'years': [2015.], 'values': [340.],
                        'cis': [(273., 407.)]},
+
                       {'output_key': 'prevXinfectiousXorgan_smearposXlocation_rural_provinceXamongXage_15Xage_60', 'years': [2015.], 'values': [220.]},
                       {'output_key': 'prevXinfectiousXorgan_smearposXlocation_urban_gerXamongXage_15Xage_60',
                        'years': [2015.], 'values': [277.]},

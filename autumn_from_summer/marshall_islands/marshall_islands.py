@@ -35,17 +35,17 @@ def build_rmi_model(update_params={}):
                        'time_step': 1.,
                        'start_population': 10000,
                        # base model definition:
-                       'contact_rate': 20.,
-                       'rr_transmission_recovered': 1.5,
+                       'contact_rate': 15.,
+                       'rr_transmission_recovered': 0.6,
                        'rr_transmission_infected': 0.21,
                        'latency_adjustment': 2.,  # used to modify progression rates during calibration
                        'self_recovery_rate': 0.231,  # this is for smear-positive TB
                        'tb_mortality_rate': 0.389,  # this is for smear-positive TB
-                       'prop_smearpos': .3,
-                         # MDR-TB:
-                       'dr_amplification_prop_among_nonsuccess': 0.15,
-                       'prop_mdr_detected_as_mdr': 0.5,
-                       'mdr_tsr': .6,
+                       'prop_smearpos': .333,
+                       #   # MDR-TB:
+                       # 'dr_amplification_prop_among_nonsuccess': 0.15,
+                       # 'prop_mdr_detected_as_mdr': 0.5,
+                       # 'mdr_tsr': .6,
                         # diagnostic sensitivity by organ status:
                         'diagnostic_sensitivity_smearpos': 1.,
                         'diagnostic_sensitivity_smearneg': .7,
@@ -58,11 +58,12 @@ def build_rmi_model(update_params={}):
                        'ipt_age_0_ct_coverage': 0.,  # Children contact tracing coverage  .17
                        'ipt_age_5_ct_coverage': 0.,  # Children contact tracing coverage
                        'ipt_age_15_ct_coverage': 0.,  # Children contact tracing coverage
-                       'ipt_age_60_ct_coverage': 0.,  # Children contact tracing coverage
+                       'ipt_age_35_ct_coverage': 0.,  # Children contact tracing coverage
+                       'ipt_age_50_ct_coverage': 0.,  # Children contact tracing coverage
                        'yield_contact_ct_tstpos_per_detected_tb': 2.,  # expected number of infections traced per index
                        'ipt_efficacy': .75,   # based on intention-to-treat
-                       'ds_ipt_switch': 1.,  # used as a DS-specific multiplier to the coverage defined above
-                       'mdr_ipt_switch': .0,  # used as an MDR-specific multiplier to the coverage defined above
+                       # 'ds_ipt_switch': 1.,  # used as a DS-specific multiplier to the coverage defined above
+                       # 'mdr_ipt_switch': .0,  # used as an MDR-specific multiplier to the coverage defined above
                        # Treatment improvement (C-DOTS)
                        'reduction_negative_tx_outcome': 0.,
                        # ACF for intervention groups
@@ -93,7 +94,7 @@ def build_rmi_model(update_params={}):
          "ipt_rate": 0.,
          "acf_rate": 0.,
          "acf_ltbi_rate": external_params['acf_ltbi_coverage'] * external_params['acf_ltbi_sensitivity'] * external_params['acf_ltbi_efficacy'],
-         "dr_amplification": .0,  # high value for testing
+         # "dr_amplification": .0,  # high value for testing
          "crude_birth_rate": 35.0 / 1e3}
 
     input_db_path = os.path.join(os.getcwd(), 'databases/inputs.db')
@@ -117,8 +118,8 @@ def build_rmi_model(update_params={}):
         "incidence_late": {"origin": "late_latent", "to": "infectious"}
     }
 
-    all_stratifications = {'strain': ['ds', 'mdr'], 'organ': ['smearpos', 'smearneg', 'extrapul'],
-                           'age': ['0', '5', '15', '60'],
+    all_stratifications = {'organ': ['smearpos', 'smearneg', 'extrapul'],
+                           'age': ['0', '5', '15', '35', '50'],
                            'location': ['majuro', 'ebeye', 'otherislands'],
                            'diabetes': ['has_diabetes', 'no_diabetes']}
 
@@ -225,7 +226,7 @@ def build_rmi_model(update_params={}):
         _tb_model.parameters["acf_rate"] = "acf_rate"
 
     if "age" in stratify_by:
-        age_breakpoints = [0, 5, 15, 60]
+        age_breakpoints = [0, 5, 15, 35, 50]
         age_infectiousness = get_parameter_dict_from_function(logistic_scaling_function(10.0), age_breakpoints)
         age_params = get_adapted_age_parameters(age_breakpoints)
         age_params.update(split_age_parameter(age_breakpoints, "contact_rate"))
@@ -259,15 +260,15 @@ def build_rmi_model(update_params={}):
                            infectiousness_adjustments=age_infectiousness, verbose=False)
 
         # patch for IPT to overwrite parameters when ds_ipt has been turned off while we still need some coverage at baseline
-        if external_params['ds_ipt_switch'] == 0. and external_params['mdr_ipt_switch'] == 1.:
-            _tb_model.parameters['ipt_rateXstrain_dsXage_0'] = 0.17
-            for age_break in [5, 15, 60]:
-                _tb_model.parameters['ipt_rateXstrain_dsXage_' + str(age_break)] = 0.
+        # if external_params['ds_ipt_switch'] == 0. and external_params['mdr_ipt_switch'] == 1.:
+        #     _tb_model.parameters['ipt_rateXstrain_dsXage_0'] = 0.17
+        #     for age_break in [5, 15, 35, 50]:
+        #         _tb_model.parameters['ipt_rateXstrain_dsXage_' + str(age_break)] = 0.
 
     if 'organ' in stratify_by:
         props_smear = {"smearpos": external_params['prop_smearpos'],
-                       "smearneg": 1. - (external_params['prop_smearpos'] + .42),
-                       "extrapul": .42}
+                       "smearneg": 1. - (external_params['prop_smearpos'] + .288),
+                       "extrapul": .288}
         mortality_adjustments = {"smearpos": 1., "smearneg": .64, "extrapul": .64}
         recovery_adjustments = {"smearpos": 1., "smearneg": .56, "extrapul": .56}
         diagnostic_sensitivity = {}
@@ -276,9 +277,10 @@ def build_rmi_model(update_params={}):
         _tb_model.stratify("organ", ["smearpos", "smearneg", "extrapul"], ["infectious"],
                            infectiousness_adjustments={"smearpos": 1., "smearneg": 0.25, "extrapul": 0.},
                            verbose=False, requested_proportions=props_smear,
-                           adjustment_requests={'recovery': recovery_adjustments,
-                                                'infect_death': mortality_adjustments,
-                                                'case_detection': diagnostic_sensitivity},
+                           # adjustment_requests={'recovery': recovery_adjustments,
+                           #                      'infect_death': mortality_adjustments,
+                           #                      'case_detection': diagnostic_sensitivity
+                           #                      },
                            entry_proportions=props_smear)
 
     if 'diabetes' in stratify_by:
@@ -315,11 +317,11 @@ def build_rmi_model(update_params={}):
                            mixing_matrix=location_mixing
                            )
 
-    # _tb_model.transition_flows.to_csv("transitions.csv")
-    # _tb_model.death_flows.to_csv("deaths.csv")
-    # create_flowchart(_tb_model, strata=0, name="rmi_flow_diagram")
+    _tb_model.transition_flows.to_csv("transitions.csv")
+    _tb_model.death_flows.to_csv("deaths.csv")
+    create_flowchart(_tb_model, strata=0, name="rmi_flow_diagram")
     create_flowchart(_tb_model, strata=1, name="rmi_flow_diagram_1")
-    create_flowchart(_tb_model, strata=2, name="rmi_flow_diagram_2")
+    # create_flowchart(_tb_model, strata=2, name="rmi_flow_diagram_2")
 
     return _tb_model
 
@@ -379,9 +381,9 @@ if __name__ == "__main__":
         print("Running time: " + str(round(delta, 1)) + " seconds")
 
     req_outputs = ['prevXinfectiousXamong',
-                   'prevXinfectiousXorgan_smearposXamongXinfectious',
-                   'prevXinfectiousXorgan_smearnegXamongXinfectious',
-                   'prevXinfectiousXorgan_extrapulXamongXinfectious',
+                   # 'prevXinfectiousXorgan_smearposXamongXinfectious',
+                   # 'prevXinfectiousXorgan_smearnegXamongXinfectious',
+                   # 'prevXinfectiousXorgan_extrapulXamongXinfectious',
                    # 'prevXlatentXamong',
                    # 'prevXinfectiousXamongXage_15Xage_60',
                    # 'prevXinfectiousXamongXage_15Xage_60Xhousing_ger',
@@ -393,7 +395,7 @@ if __name__ == "__main__":
                    # 'prevXlatentXamongXhousing_gerXlocation_urban',
                    #
                    # 'prevXinfectiousXstrain_mdrXamong'
-                   ]
+                 ]
 
     multipliers = {
         'prevXinfectiousXstrain_mdrXamongXinfectious': 100.,

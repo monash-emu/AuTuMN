@@ -1,12 +1,11 @@
 from autumn_from_summer.calibration import *
 
 par_priors = [{'param_name': 'contact_rate', 'distribution': 'uniform', 'distri_params': [1., 20.]},
-              {'param_name': 'prop_smearpos', 'distribution': 'uniform', 'distri_params': [.25, .5]},
               {'param_name': 'rr_transmission_urban_nonger', 'distribution': 'uniform', 'distri_params': [.1, 10.]},
               {'param_name': 'rr_transmission_urban_ger', 'distribution': 'uniform', 'distri_params': [.1, 10.]},
               # {'param_name': 'rr_transmission_mine', 'distribution': 'uniform', 'distri_params': [1, 10.]},
               {'param_name': 'rr_transmission_prison', 'distribution': 'uniform', 'distri_params': [1., 10.]},
-              {'param_name': 'latency_adjustment', 'distribution': 'uniform', 'distri_params': [.3, 3.]},
+              {'param_name': 'adult_latency_adjustment', 'distribution': 'uniform', 'distri_params': [.3, 3.]},
               {'param_name': 'dr_amplification_prop_among_nonsuccess', 'distribution': 'uniform',
                'distri_params': [.05, .20]}
               ]
@@ -15,7 +14,7 @@ target_outputs = [{'output_key': 'prevXinfectiousXorgan_smearposXamongXage_15Xag
                    'cis': [(143., 265.1)]},
                   {'output_key': 'prevXinfectiousXorgan_smearnegXamongXage_15Xage_60', 'years': [2015.], 'values': [340.],
                    'cis': [(273., 407.)]},
-                  # {'output_key': 'prevXinfectiousXorgan_smearposXlocation_rural_provinceXamongXage_15Xage_60', 'years': [2015.], 'values': [220.]},
+                  {'output_key': 'prevXinfectiousXorgan_smearposXlocation_rural_provinceXamongXage_15Xage_60', 'years': [2015.], 'values': [220.]},
                   {'output_key': 'prevXinfectiousXorgan_smearposXlocation_urban_gerXamongXage_15Xage_60',
                    'years': [2015.], 'values': [277.]},
                   {'output_key': 'prevXinfectiousXorgan_smearposXlocation_urban_nongerXamongXage_15Xage_60', 'years': [2015.], 'values': [156]},

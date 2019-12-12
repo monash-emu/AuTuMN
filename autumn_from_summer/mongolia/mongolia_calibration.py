@@ -14,11 +14,11 @@ target_outputs = [{'output_key': 'prevXinfectiousXorgan_smearposXamongXage_15Xag
                    'cis': [(143., 265.1)]},
                   {'output_key': 'prevXinfectiousXorgan_smearnegXamongXage_15Xage_60', 'years': [2015.], 'values': [340.],
                    'cis': [(273., 407.)]},
-                  {'output_key': 'prevXinfectiousXorgan_smearposXlocation_rural_provinceXamongXage_15Xage_60', 'years': [2015.], 'values': [220.]},
-                  {'output_key': 'prevXinfectiousXorgan_smearposXlocation_urban_gerXamongXage_15Xage_60',
+                  {'output_key': 'prevXinfectiousXorgan_smearposXamongXage_15Xage_60Xlocation_rural_province', 'years': [2015.], 'values': [220.]},
+                  {'output_key': 'prevXinfectiousXorgan_smearposXamongXage_15Xage_60Xlocation_urban_ger',
                    'years': [2015.], 'values': [277.]},
-                  {'output_key': 'prevXinfectiousXorgan_smearposXlocation_urban_nongerXamongXage_15Xage_60', 'years': [2015.], 'values': [156]},
-                  {'output_key': 'prevXinfectiousXlocation_prisonXamongXage_15Xage_60', 'years': [2015.], 'values': [3785]},
+                  {'output_key': 'prevXinfectiousXorgan_smearposXamongXage_15Xage_60Xlocation_urban_nonger', 'years': [2015.], 'values': [156]},
+                  {'output_key': 'prevXinfectiousXamongXage_15Xage_60Xlocation_prison', 'years': [2015.], 'values': [3785]},
                   {'output_key': 'prevXlatentXamongXage_5', 'years': [2016.], 'values': [960.], 'cis': [(902., 1018.)]},
                   {'output_key': 'prevXinfectiousXstrain_mdrXamongXinfectious', 'years': [2015.], 'values': [500]}
                   ]

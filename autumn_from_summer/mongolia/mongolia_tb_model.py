@@ -324,12 +324,11 @@ def build_mongolia_model(update_params={}):
                         'diagnostic_sensitivity_smearneg': .7,
                         'diagnostic_sensitivity_extrapul': .5,
                          # adjustments by location and housing type
-                       'rr_transmission_urban_ger': 1.4,  # reference: rural_province
-                       'rr_transmission_urban_nonger': 1.8,  # reference: rural_province
-                       'rr_transmission_mine': 10,  # reference: rural_province
+                       'rr_transmission_urban_ger': 1.5,  # reference: rural_province
+                       'rr_transmission_urban_nonger': .8,  # reference: rural_province
                        'rr_transmission_prison': 10,  # reference: rural_province
                        # IPT
-                       'ipt_age_0_ct_coverage': 0.17,  # Children contact tracing coverage  .17
+                       'ipt_age_0_ct_coverage': .17,  # Children contact tracing coverage  .17
                        'ipt_age_5_ct_coverage': 0.,  # Children contact tracing coverage
                        'ipt_age_15_ct_coverage': 0.,  # Children contact tracing coverage
                        'ipt_age_60_ct_coverage': 0.,  # Children contact tracing coverage
@@ -345,7 +344,6 @@ def build_mongolia_model(update_params={}):
                        'acf_rural_province_switch': 0.,
                        'acf_urban_nonger_switch': 0.,
                        'acf_urban_ger_switch': 0.,
-                       'acf_mine_switch': 0.,
                        'acf_prison_switch': 0.
                        }
     # update external_params with new parameter values found in update_params
@@ -387,7 +385,7 @@ def build_mongolia_model(update_params={}):
 
     all_stratifications = {'strain': ['ds', 'mdr'], 'organ': ['smearpos', 'smearneg', 'extrapul'],
                            'age': ['0', '5', '15', '60'],
-                           'location': ['rural_province', 'urban_nonger', 'urban_ger', 'mine', 'prison']}
+                           'location': ['rural_province', 'urban_nonger', 'urban_ger', 'prison']}
 
     #  create derived outputs for disaggregated incidence
     for stratification in stratify_by:
@@ -397,16 +395,12 @@ def build_mongolia_model(update_params={}):
                     {"origin": stage + "_latent", "to": "infectious", "to_condition": stratification + "_" + stratum}
 
     # define model     #replace_deaths  add_crude_birth_rate
-    if len(stratify_by) > 0:
-        _tb_model = StratifiedModel(
-            integration_times, compartments, {"infectious": 1e-3}, model_parameters, flows, birth_approach="replace_deaths",
-            starting_population=external_params['start_population'],
-            output_connections=out_connections, derived_output_functions={},
-            death_output_categories=((), ("age_0",)))
-    else:
-        _tb_model = EpiModel(
-            integration_times, compartments, {"infectious": 1e-3}, model_parameters, flows, birth_approach="replace_deaths",
-            starting_population=external_params['start_population'])
+
+    _tb_model = StratifiedModel(
+        integration_times, compartments, {"infectious": 1e-3}, model_parameters, flows, birth_approach="replace_deaths",
+        starting_population=external_params['start_population'],
+        output_connections=out_connections, derived_output_functions={},
+        death_output_categories=((), ("age_0",)))
 
     # add crude birth rate from un estimates
     _tb_model = get_birth_rate_functions(_tb_model, input_database, 'MNG')
@@ -561,25 +555,29 @@ def build_mongolia_model(update_params={}):
                            )
 
     if "location" in stratify_by:
-        props_location = {'rural_province': .4653, 'urban_nonger': .368, 'urban_ger': .15, 'mine': .0147, 'prison': .002}
+        props_location = {'rural_province': .48, 'urban_nonger': .368, 'urban_ger': .15, 'prison': .002}
         raw_relative_risks_loc = {'rural_province': 1.}
-        for stratum in ['urban_nonger', 'urban_ger', 'mine', 'prison']:
+        for stratum in ['urban_nonger', 'urban_ger', 'prison']:
             raw_relative_risks_loc[stratum] = external_params['rr_transmission_' + stratum]
         scaled_relative_risks_loc = scale_relative_risks_for_equivalence(props_location, raw_relative_risks_loc)
 
         # dummy matrix for mixing by location
-        location_mixing = numpy.array([1., .2, .2, .1, .05, .2, 1.,	.2,	.1,	.05, .2, .2, 1., .1, .05, .1, .1, .1, 1.,
-                                       .05, .05, .05, .05, .05, 1.]).reshape((5, 5))
+        location_mixing = numpy.array([.899, .05, .05, .001,
+                                       .049, .7, .25, .001,
+                                       .049, .25, .7, .001,
+                                       .1, .1, .1, .7]
+                                      ).reshape((4, 4))
+        location_mixing *= 3.  # adjusted such that heterogeneous mixing yields similar overall burden as homogeneous
 
         location_adjustments = {}
         for beta_type in ['', '_infected', '_recovered']:
             location_adjustments['contact_rate' + beta_type] = scaled_relative_risks_loc
 
         location_adjustments['acf_rate'] = {}
-        for stratum in ['rural_province', 'urban_nonger', 'urban_ger', 'mine', 'prison']:
+        for stratum in ['rural_province', 'urban_nonger', 'urban_ger', 'prison']:
             location_adjustments['acf_rate'][stratum] = external_params['acf_' + stratum + '_switch']
 
-        _tb_model.stratify("location", ['rural_province', 'urban_nonger', 'urban_ger', 'mine', 'prison'], [],
+        _tb_model.stratify("location", ['rural_province', 'urban_nonger', 'urban_ger', 'prison'], [],
                            requested_proportions=props_location, verbose=False, entry_proportions=props_location,
                            adjustment_requests=location_adjustments,
                            mixing_matrix=location_mixing
@@ -603,7 +601,6 @@ if __name__ == "__main__":
             # 4: {'mdr_tsr': .8},
             # 5: {'reduction_negative_tx_outcome': 0.5},
             # 6: {'acf_coverage': .2, 'acf_urban_ger_switch': 1.},
-            # 7: {'acf_coverage': .2, 'acf_mine_switch': 1.},
             # 8: {'diagnostic_sensitivity_smearneg': 1., 'prop_mdr_detected_as_mdr': .9}
         }
     scenario_list = [0]
@@ -624,42 +621,46 @@ if __name__ == "__main__":
                 models.append(DummyModel(model_dict))
     else:
         t0 = time()
-        models = run_multi_scenario(scenario_params, 2020., build_mongolia_model)
+        models = run_multi_scenario(scenario_params, 1850., build_mongolia_model)
         store_run_models(models, scenarios=scenario_list, database_name=output_db_path)
         delta = time() - t0
         print("Running time: " + str(round(delta, 1)) + " seconds")
 
-    req_outputs = ['prevXinfectiousXamong',
-                   'prevXinfectiousXorgan_smearposXamongXinfectious',
-                   'prevXinfectiousXorgan_smearnegXamongXinfectious',
-                   'prevXinfectiousXorgan_extrapulXamongXinfectious',
-                   # 'prevXlatentXamong',
-                   # 'prevXinfectiousXamongXage_15Xage_60',
-                   # 'prevXinfectiousXamongXage_15Xage_60Xhousing_ger',
-                   # 'prevXinfectiousXamongXage_15Xage_60Xhousing_non-ger',
-                   # 'prevXinfectiousXamongXage_15Xage_60Xlocation_rural',
-                   # 'prevXinfectiousXamongXage_15Xage_60Xlocation_province',
-                   # 'prevXinfectiousXamongXage_15Xage_60Xlocation_urban',
-                   # 'prevXinfectiousXamongXhousing_gerXlocation_urban',
-                   # 'prevXlatentXamongXhousing_gerXlocation_urban',
-                   #
-                   # 'prevXinfectiousXstrain_mdrXamong'
-                   ]
+    req_outputs = ['prevXinfectiousXamong', 'prevXlatentXamong']
+
+    # {'prevXinfectiousXamongXage_15Xage_60': [[2015.], [560.]],
+    #                    'prevXlatentXamongXage_5': [[2016.], [9.6]],
+    #                    'prevXinfectiousXamongXage_15Xage_60Xhousing_ger': [[2015.], [613.]],
+    #                    'prevXinfectiousXamongXage_15Xage_60Xhousing_non-ger': [[2015.], [436.]],
+    #                    'prevXinfectiousXamongXage_15Xage_60Xlocation_rural': [[2015.], [529.]],
+    #                    'prevXinfectiousXamongXage_15Xage_60Xlocation_province': [[2015.], [513.]],
+    #                    'prevXinfectiousXamongXage_15Xage_60Xlocation_urban': [[2015.], [586.]],
+    #                    'prevXinfectiousXstrain_mdrXamongXinfectious': [[2016.], [5.3]]
+    #                    }
+
+    calib_targets = [{'output_key': 'prevXinfectiousXorgan_smearposXamongXage_15Xage_60', 'years': [2015.], 'values': [204.],
+                       'cis': [(143., 265.1)]},
+                      {'output_key': 'prevXinfectiousXorgan_smearnegXamongXage_15Xage_60', 'years': [2015.], 'values': [340.],
+                       'cis': [(273., 407.)]},
+                      {'output_key': 'prevXinfectiousXorgan_smearposXlocation_rural_provinceXamongXage_15Xage_60', 'years': [2015.], 'values': [220.]},
+                      {'output_key': 'prevXinfectiousXorgan_smearposXlocation_urban_gerXamongXage_15Xage_60',
+                       'years': [2015.], 'values': [277.]},
+                      {'output_key': 'prevXinfectiousXorgan_smearposXlocation_urban_nongerXamongXage_15Xage_60', 'years': [2015.], 'values': [156]},
+                      {'output_key': 'prevXinfectiousXlocation_prisonXamongXage_15Xage_60', 'years': [2015.], 'values': [3785]},
+                      {'output_key': 'prevXlatentXamongXage_5', 'years': [2016.], 'values': [9.6], 'cis': [(9.02, 10.18)]},
+                      {'output_key': 'prevXinfectiousXstrain_mdrXamongXinfectious', 'years': [2015.], 'values': [500]}
+                      ]
+
+    targets_to_plot = {}
+    for target in calib_targets:
+        targets_to_plot[target['output_key']] = [target['years'], target['values']]
+        if target['output_key'] not in req_outputs:
+            req_outputs.append(target['output_key'])
 
     multipliers = {
         'prevXinfectiousXstrain_mdrXamongXinfectious': 100.,
         'prevXinfectiousXstrain_mdrXamong': 1.e5
     }
-
-    targets_to_plot = {'prevXinfectiousXamongXage_15Xage_60': [[2015.], [560.]],
-                       'prevXlatentXamongXage_5': [[2016.], [9.6]],
-                       'prevXinfectiousXamongXage_15Xage_60Xhousing_ger': [[2015.], [613.]],
-                       'prevXinfectiousXamongXage_15Xage_60Xhousing_non-ger': [[2015.], [436.]],
-                       'prevXinfectiousXamongXage_15Xage_60Xlocation_rural': [[2015.], [529.]],
-                       'prevXinfectiousXamongXage_15Xage_60Xlocation_province': [[2015.], [513.]],
-                       'prevXinfectiousXamongXage_15Xage_60Xlocation_urban': [[2015.], [586.]],
-                       'prevXinfectiousXstrain_mdrXamongXinfectious': [[2016.], [5.3]]
-                       }
 
     translations = {'prevXinfectiousXamong': 'TB prevalence (/100,000)',
                     'prevXinfectiousXamongXage_0': 'TB prevalence among 0-4 y.o. (/100,000)',
@@ -696,7 +697,7 @@ if __name__ == "__main__":
                     'prevXinfectiousXstrain_mdrXamong': 'Prevalence of MDR-TB (/100,000)'
                     }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_11_12', targets_to_plot=targets_to_plot,
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='manual_calib_12_12', targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers, translation_dictionary=translations,
                                   scenario_list=scenario_list)
 

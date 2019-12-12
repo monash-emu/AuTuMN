@@ -420,15 +420,15 @@ def create_multi_scenario_outputs(models, req_outputs, req_times={}, req_multipl
     for scenario_index in range(len(models)):
 
         # automatically add some basic outputs
-        # if hasattr(models[scenario_index], "all_stratifications"):
-        #     for group in models[scenario_index].all_stratifications.keys():
-        #         req_outputs.append('distribution_of_strataX' + group)
-        #         for stratum in models[scenario_index].all_stratifications[group]:
-        #             req_outputs.append('prevXinfectiousXamongX' + group + '_' + stratum)
-        #             req_outputs.append('prevXlatentXamongX' + group + '_' + stratum)
-        #
-        #     if "strain" in models[scenario_index].all_stratifications.keys():
-        #         req_outputs.append('prevXinfectiousXstrain_mdrXamongXinfectious')
+        if hasattr(models[scenario_index], "all_stratifications"):
+            for group in models[scenario_index].all_stratifications.keys():
+                req_outputs.append('distribution_of_strataX' + group)
+                for stratum in models[scenario_index].all_stratifications[group]:
+                    req_outputs.append('prevXinfectiousXamongX' + group + '_' + stratum)
+                    req_outputs.append('prevXlatentXamongX' + group + '_' + stratum)
+
+            if "strain" in models[scenario_index].all_stratifications.keys():
+                req_outputs.append('prevXinfectiousXstrain_mdrXamongXinfectious')
 
         for output in req_outputs:
             if output[0:15] == 'prevXinfectious' and output != 'prevXinfectiousXstrain_mdrXamongXinfectious':

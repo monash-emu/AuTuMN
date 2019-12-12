@@ -7,22 +7,30 @@ from autumn_from_summer.tb_model import create_multi_scenario_outputs
 # A test trial of creating a model that has the same compartments as the one in
 # "Data needs for evidence-based decisions: a tuberculosis modeler’s ‘wish list’
 
-my_times = numpy.linspace(0., 100, 101).tolist()
+# Time steps are given in years
+start_time = 1935.
+end_time = 2035.
+time_step = 1
+my_times = numpy.linspace(start_time, end_time, int((end_time-start_time)/time_step) + 1).tolist()
 
-my_compartments = ["susceptible", "early_latent", "late_latent", "active_tb", "recovered"]
+my_compartments = ["susceptible",
+                   "early_latent",
+                   "late_latent",
+                   "active_tb",
+                   "recovered"]
 
 my_flows = [{"type": "infection_density", "parameter": "infection_rate", "origin": "susceptible", "to": "early_latent"},
             {"type": "standard_flows", "parameter": "rapid_progression_rate", "origin": "early_latent", "to": "active_tb"},
             {"type": "standard_flows", "parameter": "immune_stabilisation_rate", "origin": "early_latent", "to": "late_latent"},
             {"type": "standard_flows", "parameter": "reactivation_rate", "origin": "late_latent", "to": "active_tb"},
             {"type": "standard_flows", "parameter": "recovery_rate", "origin": "active_tb", "to": "recovered"},
-            {"type": "infection_density", "parameter": "infection_rate", "origin": "recovered", "to": "early_latent"},
-            # {"type": "infection_density", "parameter": "reinfection_from_late_latent", "origin": "late_latent", "to": "early_latent"},
+            {"type": "infection_density", "parameter": "reinfection_from_recovered", "origin": "recovered", "to": "early_latent"},
+            {"type": "infection_density", "parameter": "reinfection_from_late_latent", "origin": "late_latent", "to": "early_latent"}]
             # {"type": "standard_flows", "parameter": "relapse_rate", "origin": "recovered", "to": "active_tb"},
             {"type":"compartment_death", "parameter": "tb_mortality_rate", "origin":"active_tb"}]
 
-my_parameters = {'infection_rate':  .00013,
-                 'immune_stabilisation_rate': 5.3e-6 * 365.25, #0.6,
+my_parameters = {'infection_rate': .00013,
+                 'immune_stabilisation_rate': 5.4e-3 * 365.25, #0.6,
                  'reactivation_rate': 3.3e-6 * 365.25,
                  # 'reinfection_from_late_latent': 0.0021,
                  # 'reinfection_from_recovered': 0.0002,
@@ -30,15 +38,16 @@ my_parameters = {'infection_rate':  .00013,
                  'rapid_progression_rate': 2.7e-4 * 365.25,
                  # 'relapse_rate': 0.002,
                  "tb_mortality_rate": 0.2,
-                 "universal_death_rate": 1./50.
+                 "universal_death_rate": 1./50.,
+                 "crude_birth_rate": 0.0169
                  }
 
-my_initial_conditions = {"active_tb": .000001}
+my_initial_conditions = {"active_tb": 1}
 
 my_model = StratifiedModel(times=my_times, compartment_types=my_compartments, initial_conditions=my_initial_conditions,
                            parameters=my_parameters, requested_flows=my_flows, starting_population=100000,
                            infectious_compartment=('active_tb',), entry_compartment='susceptible',
-                           birth_approach = "replace_deaths")
+                           birth_approach = "add_crude_birth_rate")
 
 my_model.death_flows.to_csv("deaths_flows.csv")
 
@@ -48,28 +57,35 @@ my_model.death_flows.to_csv("deaths_flows.csv")
 # "1":0.5, means new parameter for age 1 is 0.5x
 
 # Choose what to stratify the model by
-stratify_by = ["age"] #["age", "vaccine"]
+stratify_by = ["age"]
 
 if "age" in stratify_by:
     # Stratify model by age
-    immune_stabilisation_adjustment = {"0": 2.2, "5": 2.2 } # from Romain's epidemic paper, the value in the dict is (k for age group)/(k for age >15)
-    reactivation_rate_adjustment = {"0": 5.7e-6, "5": 1.94 } # from Romain's epidemic paper, the value in the dict is (v for age group)/(v for age >15)
-    rapid_progression_rate_adjustment = {"0": 24.4, "5": 10} # from Romain's epidemic paper, the value in the dict is (e for age group)/(e for age >15)
+    immune_stabilisation_adjustment = {"0W": 1.2e-2 * 365.25, "5W": 1.2e-2 * 365.25}
+    reactivation_rate_adjustment = {"0W": 1.9e-11 * 365.25, "5W": 6.4e-6}
+    rapid_progression_rate_adjustment = {"0W": 6.6e-3 * 365.25, "5W": 2.7e-3 * 365.25}
+
+    # immune_stabilisation_adjustment from Romain's epidemic paper, the value in the dict is (k for age group)/(k for age >15)
+    # reactivation_rate_adjustment from Romain's epidemic paper, the value in the dict is (v for age group)/(v for age >15)
+    # rapid_progression_rate_adjustment from Romain's epidemic paper, the value in the dict is (e for age group)/(e for age >15)
 
     age_mixing = None  # None means homogenous mixing
-    my_model.stratify("age", [0, 5, 15, 60], [], {}, {}, infectiousness_adjustments={"15": 0},
+    my_model.stratify("age", [0, 5, 15, 60], [], {}, {}, infectiousness_adjustments={"0": 0, "5": 0},
                       mixing_matrix=age_mixing, verbose=False,
                       adjustment_requests={'immune_stabilisation_rate': immune_stabilisation_adjustment,
                                            'reactivation_rate': reactivation_rate_adjustment,
-                                           'rapid_progression_rate': rapid_progression_rate_adjustment}
+                                           'rapid_progression_rate': rapid_progression_rate_adjustment
+                                             })
 
 if "vaccine" in stratify_by:
     # Stratify model by vaccination status
+    # rapid_progression_rate_adjustment = {"none": 24.4, "vaccine": 10}
+
     # props_vaccine = {"none": 0.25, "bcg_only": 0.25, "bcg+novel": 0.25, "novel": 0.25}
     # my_model.stratify("vaccine", ["none", "bcg_only", "bcg+novel", "novel"], [], requested_proportions = props_vaccine, mixing_matrix = None, verbose = False)
-    proportion_vaccine = {"none": 0.5, "vaccine": 0.5}
-    my_model.stratify("vaccine", ["none", "vaccine"], [], requested_proportions = proportion_vaccine,
-                      infectiousness_adjustments = {"none": 0.9, "vaccine": 0.4},
+    proportion_vaccine = {"none": 0.5, "vaccinated": 0.5}
+    my_model.stratify("vaccine", ["none", "vaccinated"], [], requested_proportions = proportion_vaccine,
+                      infectiousness_adjustments = {"none": 0.9, "vaccinated": 0.4},
                       mixing_matrix = None, verbose = False)
 
 # Stratification example from Mongolia
@@ -92,12 +108,15 @@ my_model.run_model()
 
 # print(my_model.outputs)
 
-multiplier = {'prevXactive_tbXamong': 100000}
+multiplier = {'prevXactive_tbXamong': 100000, 'prevXearly_latentXamong': 100000, 'prevXlate_latentXamong': 100000,
+              'prevXsusceptibleXamong': 100000, 'prevXrecoveredXamong': 100000}
 pp = PostProcessing(my_model, requested_outputs=['prevXsusceptibleXamong', 'prevXearly_latentXamong',
                                                  'prevXlate_latentXamong','prevXactive_tbXamong',
                                                  'prevXrecoveredXamong'], multipliers=multiplier)
 out = Outputs([pp])
 out.plot_requested_outputs()
+
+
 
 # my_model.plot_compartment_size(["susceptible","vaccine"])
 

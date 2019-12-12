@@ -7,38 +7,61 @@ from autumn_from_summer.tb_model import create_multi_scenario_outputs
 # A test trial of creating a model that has the same compartments as the one in
 # "Data needs for evidence-based decisions: a tuberculosis modeler’s ‘wish list’
 
-my_times = numpy.linspace(0., 100, 101).tolist()
+# Time steps are given in years
+start_time = 1935.
+end_time = 2035.
+time_step = 1
+my_times = numpy.linspace(start_time, end_time, int((end_time-start_time)/time_step) + 1).tolist()
 
-my_compartments = ["susceptible", "early_latent", "late_latent", "active_tb", "recovered"]
+my_compartments = ["susceptible",
+                   "early_latent",
+                   "late_latent",
+                   "active_tb",
+                   "recovered"]
 
 my_flows = [{"type": "infection_density", "parameter": "infection_rate", "origin": "susceptible", "to": "early_latent"},
             {"type": "standard_flows", "parameter": "rapid_progression_rate", "origin": "early_latent", "to": "active_tb"},
             {"type": "standard_flows", "parameter": "immune_stabilisation_rate", "origin": "early_latent", "to": "late_latent"},
             {"type": "standard_flows", "parameter": "reactivation_rate", "origin": "late_latent", "to": "active_tb"},
             {"type": "standard_flows", "parameter": "recovery_rate", "origin": "active_tb", "to": "recovered"},
-            {"type": "infection_density", "parameter": "infection_rate", "origin": "recovered", "to": "early_latent"},
-            # {"type": "infection_density", "parameter": "reinfection_from_late_latent", "origin": "late_latent", "to": "early_latent"},
+            {"type": "infection_density", "parameter": "reinfection_from_recovered", "origin": "recovered", "to": "early_latent"},
+            {"type": "infection_density", "parameter": "reinfection_from_late_latent", "origin": "late_latent", "to": "early_latent"}]
             # {"type": "standard_flows", "parameter": "relapse_rate", "origin": "recovered", "to": "active_tb"},
-            {"type":"compartment_death", "parameter": "tb_mortality_rate", "origin":"active_tb"}]
+            # {"type":"compartment_death", "parameter": "tb_mortality_rate", "origin":"active_tb"},
+
+# parameters are in years, except for infection rate. Amount of time a person stays in early latent before going to late latent is 1/immune_stabilisation_rate
+# rapid_progression_rate needs to be greater than reactivation_rate
+disease_duration = 3.
+latent_duration = 3/12
 
 my_parameters = {'infection_rate':  .00013,
                  'immune_stabilisation_rate': 0.01 * 365.25, #0.6,
                  'reactivation_rate': 5.5e-6 * 365.25,
-                 # 'reinfection_from_late_latent': 0.0021,
-                 # 'reinfection_from_recovered': 0.0002,
+                 'reinfection_from_late_latent': 0.0021,
+                 'reinfection_from_recovered': 0.0002,
                  'recovery_rate': 0.2,
                  'rapid_progression_rate': 0.0011 * 365.25,
-                 # 'relapse_rate': 0.002,
+                 'relapse_rate': 0.002,
                  "tb_mortality_rate": 0.2,
                  "universal_death_rate": 1./50.
                  }
 
-my_initial_conditions = {"active_tb": .000001}
+my_initial_conditions = {
+                         # "early_latent": 0.,
+                         # "late_latent": 0.,
+                         "active_tb": 0.000001
+                         # "recovered": 0.
+                        }
 
-my_model = StratifiedModel(times=my_times, compartment_types=my_compartments, initial_conditions=my_initial_conditions,
-                           parameters=my_parameters, requested_flows=my_flows, starting_population=100000,
-                           infectious_compartment=('active_tb',), entry_compartment='susceptible',
-                           birth_approach = "replace_deaths")
+my_model = StratifiedModel(times=my_times,
+                           compartment_types=my_compartments,
+                           initial_conditions=my_initial_conditions,
+                           parameters=my_parameters,
+                           requested_flows=my_flows,
+                           starting_population=100005,
+                           infectious_compartment=('active_tb',),
+                           entry_compartment='susceptible',
+                           birth_approach="replace_deaths")
 
 my_model.death_flows.to_csv("deaths_flows.csv")
 

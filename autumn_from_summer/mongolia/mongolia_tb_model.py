@@ -314,7 +314,7 @@ def build_mongolia_model(update_params={}):
                        'latency_adjustment': 2.,  # used to modify progression rates during calibration
                        'self_recovery_rate': 0.231,  # this is for smear-positive TB
                        'tb_mortality_rate': 0.389,  # this is for smear-positive TB
-                       'prop_smearpos': .3,
+                       'prop_smearpos': .4,
                          # MDR-TB:
                        'dr_amplification_prop_among_nonsuccess': 0.15,
                        'prop_mdr_detected_as_mdr': 0.5,
@@ -536,8 +536,8 @@ def build_mongolia_model(update_params={}):
 
     if 'organ' in stratify_by:
         props_smear = {"smearpos": external_params['prop_smearpos'],
-                       "smearneg": 1. - (external_params['prop_smearpos'] + .42),
-                       "extrapul": .42}
+                       "smearneg": 1. - (external_params['prop_smearpos'] + .3),
+                       "extrapul": .3}
         mortality_adjustments = {"smearpos": 1., "smearneg": .64, "extrapul": .64}
         recovery_adjustments = {"smearpos": 1., "smearneg": .56, "extrapul": .56}
         diagnostic_sensitivity = {}
@@ -626,7 +626,9 @@ if __name__ == "__main__":
         delta = time() - t0
         print("Running time: " + str(round(delta, 1)) + " seconds")
 
-    req_outputs = ['prevXinfectiousXamong', 'prevXlatentXamong']
+    req_outputs = ['prevXinfectiousXamong',
+                   'prevXlatentXamong',
+                   'prevXinfectiousXorgan_smearposXamongXinfectious', 'prevXinfectiousXorgan_smearnegXamongXinfectious']
 
     # {'prevXinfectiousXamongXage_15Xage_60': [[2015.], [560.]],
     #                    'prevXlatentXamongXage_5': [[2016.], [9.6]],

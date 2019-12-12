@@ -22,7 +22,11 @@ def build_rmi_timevariant_tsr():
 
 def build_rmi_model(update_params={}):
 
-    stratify_by = ['age', 'location', 'diabetes', 'organ']#, 'strain']
+    # stratify_by = []
+    # stratify_by = ['age']
+    stratify_by = ['age', 'organ']
+    # stratify_by = ['age', 'organ', 'diabetes']
+    # stratify_by = ['age', 'organ', 'diabetes', 'location']
 
     # some default parameter values
     external_params = {  # run configuration
@@ -137,15 +141,10 @@ def build_rmi_model(update_params={}):
         return total_deaths
 
     # define model     #replace_deaths  add_crude_birth_rate
-    if len(stratify_by) > 0:
-        _tb_model = StratifiedModel(
-            integration_times, compartments, {"infectious": 1e-3}, model_parameters, flows, birth_approach="add_crude_birth_rate",
-            starting_population=external_params['start_population'],
-            output_connections=out_connections)
-    else:
-        _tb_model = EpiModel(
-            integration_times, compartments, {"infectious": 1e-3}, model_parameters, flows, birth_approach="add_crude_birth_rate",
-            starting_population=external_params['start_population'])
+    _tb_model = StratifiedModel(
+        integration_times, compartments, {"infectious": 1e-3}, model_parameters, flows, birth_approach="add_crude_birth_rate",
+        starting_population=external_params['start_population'],
+        output_connections=out_connections)
 
     # add crude birth rate from un estimates
     _tb_model = get_birth_rate_functions(_tb_model, input_database, 'MNG')
@@ -225,31 +224,6 @@ def build_rmi_model(update_params={}):
         _tb_model.adaptation_functions["acf_rate"] = acf_rate_function
         _tb_model.parameters["acf_rate"] = "acf_rate"
 
-    if "strain" in stratify_by:
-        mdr_adjustment = external_params['prop_mdr_detected_as_mdr'] * external_params['mdr_tsr'] / .9  # /.9 for last DS TSR
-
-        _tb_model.stratify("strain", ["ds", "mdr"], ["early_latent", "late_latent", "infectious"], verbose=False,
-                           requested_proportions={"mdr": 0.},
-                           adjustment_requests={
-                               'contact_rate': {'ds': 1., 'mdr': 1.},
-                               'case_detection': {"mdr": mdr_adjustment},
-                               'ipt_rate': {"ds": 1., #external_params['ds_ipt_switch'],
-                                            "mdr": external_params['mdr_ipt_switch']}
-                           })
-
-        _tb_model.add_transition_flow(
-            {"type": "standard_flows", "parameter": "dr_amplification",
-             "origin": "infectiousXstrain_ds", "to": "infectiousXstrain_mdr",
-             "implement": len(_tb_model.all_stratifications)})
-
-        dr_amplification_rate = \
-            lambda t: detect_rate(t) * (1. - rmi_tsr(t)) *\
-                      (1. - external_params['reduction_negative_tx_outcome']) *\
-                      external_params['dr_amplification_prop_among_nonsuccess']
-
-        _tb_model.adaptation_functions["dr_amplification"] = dr_amplification_rate
-        _tb_model.parameters["dr_amplification"] = "dr_amplification"
-
     if "age" in stratify_by:
         age_breakpoints = [0, 5, 15, 60]
         age_infectiousness = get_parameter_dict_from_function(logistic_scaling_function(10.0), age_breakpoints)
@@ -307,6 +281,16 @@ def build_rmi_model(update_params={}):
                                                 'case_detection': diagnostic_sensitivity},
                            entry_proportions=props_smear)
 
+    if 'diabetes' in stratify_by:
+        props_diabetes = {'has_diabetes': 0.3, 'no_diabetes': 0.7}
+        progression_adjustments = {"has_diabetes": 3.11, "no_diabetes": 1.}
+
+        _tb_model.stratify("diabetes", ["has_diabetes", "no_diabetes"], [],
+                           verbose=False, requested_proportions=props_diabetes,
+                           adjustment_requests={'early_progression': progression_adjustments,
+                                                'late_progression': progression_adjustments},
+                           entry_proportions=props_diabetes)
+
     if "location" in stratify_by:
         props_location = {'majuro': .523, 'ebeye': .2, 'otherislands': .277}
         raw_relative_risks_loc = {'majuro': 1.}
@@ -331,18 +315,11 @@ def build_rmi_model(update_params={}):
                            mixing_matrix=location_mixing
                            )
 
-    if 'diabetes' in stratify_by:
-        props_diabetes = {'has_diabetes': 0.3, 'no_diabetes': 0.7}
-        progression_adjustments = {"has_diabetes": 3.11, "no_diabetes": 1.}
-
-        _tb_model.stratify("diabetes", ["has_diabetes", "no_diabetes"], [],
-                           verbose=False, requested_proportions=props_diabetes,
-                           adjustment_requests={'early_progression': progression_adjustments,
-                                                'late_progression': progression_adjustments},
-                           entry_proportions=props_diabetes)
-
     # _tb_model.transition_flows.to_csv("transitions.csv")
     # _tb_model.death_flows.to_csv("deaths.csv")
+    # create_flowchart(_tb_model, strata=0, name="rmi_flow_diagram")
+    create_flowchart(_tb_model, strata=1, name="rmi_flow_diagram_1")
+    create_flowchart(_tb_model, strata=2, name="rmi_flow_diagram_2")
 
     return _tb_model
 

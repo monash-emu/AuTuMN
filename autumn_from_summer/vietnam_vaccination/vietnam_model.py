@@ -9,7 +9,7 @@ from autumn_from_summer.tb_model import create_multi_scenario_outputs
 
 # Time steps are given in years
 start_time = 1935.
-end_time = 2035.
+end_time = 3035.
 time_step = 1
 my_times = numpy.linspace(start_time, end_time, int((end_time-start_time)/time_step) + 1).tolist()
 
@@ -25,7 +25,7 @@ my_flows = [{"type": "infection_density", "parameter": "infection_rate", "origin
             {"type": "standard_flows", "parameter": "reactivation_rate", "origin": "late_latent", "to": "active_tb"},
             {"type": "standard_flows", "parameter": "recovery_rate", "origin": "active_tb", "to": "recovered"},
             {"type": "infection_density", "parameter": "reinfection_from_recovered", "origin": "recovered", "to": "early_latent"},
-            {"type": "infection_density", "parameter": "reinfection_from_late_latent", "origin": "late_latent", "to": "early_latent"}]
+            # {"type": "infection_density", "parameter": "reinfection_from_late_latent", "origin": "late_latent", "to": "early_latent"},
             # {"type": "standard_flows", "parameter": "relapse_rate", "origin": "recovered", "to": "active_tb"},
             {"type":"compartment_death", "parameter": "tb_mortality_rate", "origin":"active_tb"}]
 
@@ -33,7 +33,7 @@ my_parameters = {'infection_rate': .00013,
                  'immune_stabilisation_rate': 5.4e-3 * 365.25, #0.6,
                  'reactivation_rate': 3.3e-6 * 365.25,
                  # 'reinfection_from_late_latent': 0.0021,
-                 # 'reinfection_from_recovered': 0.0002,
+                 'reinfection_from_recovered': 0.00013,
                  'recovery_rate': 0.2,
                  'rapid_progression_rate': 2.7e-4 * 365.25,
                  # 'relapse_rate': 0.002,

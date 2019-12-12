@@ -27,23 +27,19 @@ my_flows = [{"type": "infection_density", "parameter": "infection_rate", "origin
             {"type": "infection_density", "parameter": "reinfection_from_recovered", "origin": "recovered", "to": "early_latent"},
             {"type": "infection_density", "parameter": "reinfection_from_late_latent", "origin": "late_latent", "to": "early_latent"}]
             # {"type": "standard_flows", "parameter": "relapse_rate", "origin": "recovered", "to": "active_tb"},
-            # {"type":"compartment_death", "parameter": "tb_mortality_rate", "origin":"active_tb"},
+            {"type":"compartment_death", "parameter": "tb_mortality_rate", "origin":"active_tb"}]
 
-# parameters are in years, except for infection rate. Amount of time a person stays in early latent before going to late latent is 1/immune_stabilisation_rate
-# rapid_progression_rate needs to be greater than reactivation_rate
-disease_duration = 3.
-latent_duration = 3/12
-
-my_parameters = {'infection_rate':  .00013,
-                 'immune_stabilisation_rate': 5.3e-6 * 365.25, #0.6,
+my_parameters = {'infection_rate': .00013,
+                 'immune_stabilisation_rate': 5.4e-3 * 365.25, #0.6,
                  'reactivation_rate': 3.3e-6 * 365.25,
-                 'reinfection_from_late_latent': 0.0021,
-                 'reinfection_from_recovered': 0.0002,
+                 # 'reinfection_from_late_latent': 0.0021,
+                 # 'reinfection_from_recovered': 0.0002,
                  'recovery_rate': 0.2,
                  'rapid_progression_rate': 2.7e-4 * 365.25,
-                 'relapse_rate': 0.002,
+                 # 'relapse_rate': 0.002,
                  "tb_mortality_rate": 0.2,
-                 "universal_death_rate": 1./50.
+                 "universal_death_rate": 1./50.,
+                 "crude_birth_rate": 0.0169
                  }
 
 my_initial_conditions = {"active_tb": 1}
@@ -83,11 +79,13 @@ if "age" in stratify_by:
 
 if "vaccine" in stratify_by:
     # Stratify model by vaccination status
+    # rapid_progression_rate_adjustment = {"none": 24.4, "vaccine": 10}
+
     # props_vaccine = {"none": 0.25, "bcg_only": 0.25, "bcg+novel": 0.25, "novel": 0.25}
     # my_model.stratify("vaccine", ["none", "bcg_only", "bcg+novel", "novel"], [], requested_proportions = props_vaccine, mixing_matrix = None, verbose = False)
-    proportion_vaccine = {"none": 0.5, "vaccine": 0.5}
-    my_model.stratify("vaccine", ["none", "vaccine"], [], requested_proportions = proportion_vaccine,
-                      infectiousness_adjustments = {"none": 0.9, "vaccine": 0.4},
+    proportion_vaccine = {"none": 0.5, "vaccinated": 0.5}
+    my_model.stratify("vaccine", ["none", "vaccinated"], [], requested_proportions = proportion_vaccine,
+                      infectiousness_adjustments = {"none": 0.9, "vaccinated": 0.4},
                       mixing_matrix = None, verbose = False)
 
 # Stratification example from Mongolia
@@ -110,7 +108,8 @@ my_model.run_model()
 
 # print(my_model.outputs)
 
-multiplier = {'prevXactive_tbXamong': 100000}
+multiplier = {'prevXactive_tbXamong': 100000, 'prevXearly_latentXamong': 100000, 'prevXlate_latentXamong': 100000,
+              'prevXsusceptibleXamong': 100000, 'prevXrecoveredXamong': 100000}
 pp = PostProcessing(my_model, requested_outputs=['prevXsusceptibleXamong', 'prevXearly_latentXamong',
                                                  'prevXlate_latentXamong','prevXactive_tbXamong',
                                                  'prevXrecoveredXamong'], multipliers=multiplier)

@@ -8,8 +8,8 @@ from autumn_from_summer.tb_model import create_multi_scenario_outputs
 # "Data needs for evidence-based decisions: a tuberculosis modeler’s ‘wish list’
 
 # Time steps are given in years
-start_time = 1935.
-end_time = 3035.
+start_time = 2000.
+end_time = 2100.
 time_step = 1
 my_times = numpy.linspace(start_time, end_time, int((end_time-start_time)/time_step) + 1).tolist()
 
@@ -34,11 +34,11 @@ my_parameters = {'infection_rate': .00013,
                  'reactivation_rate': 3.3e-6 * 365.25,
                  # 'reinfection_from_late_latent': 0.0021,
                  'reinfection_from_recovered': 0.00013,
-                 'recovery_rate': 0.2,
+                 'recovery_rate': 0.5,
                  'rapid_progression_rate': 2.7e-4 * 365.25,
                  # 'relapse_rate': 0.002,
-                 "tb_mortality_rate": 0.2,
-                 "universal_death_rate": 1./50.,
+                 "tb_mortality_rate": 0.097, # Global tuberculosis report 2018 estimated Viet Nam had 124 000 new TB cases and 12 000 TB-relate deaths
+                 "universal_death_rate": 0.00639, #1./50.,
                  "crude_birth_rate": 0.0169
                  }
 
@@ -57,7 +57,7 @@ my_model.death_flows.to_csv("deaths_flows.csv")
 # "1":0.5, means new parameter for age 1 is 0.5x
 
 # Choose what to stratify the model by
-stratify_by = ["age"]
+stratify_by = ["age", "bcg"]
 
 if "age" in stratify_by:
     # Stratify model by age
@@ -65,9 +65,9 @@ if "age" in stratify_by:
     reactivation_rate_adjustment = {"0W": 1.9e-11 * 365.25, "5W": 6.4e-6}
     rapid_progression_rate_adjustment = {"0W": 6.6e-3 * 365.25, "5W": 2.7e-3 * 365.25}
 
-    # immune_stabilisation_adjustment from Romain's epidemic paper, the value in the dict is (k for age group)/(k for age >15)
-    # reactivation_rate_adjustment from Romain's epidemic paper, the value in the dict is (v for age group)/(v for age >15)
-    # rapid_progression_rate_adjustment from Romain's epidemic paper, the value in the dict is (e for age group)/(e for age >15)
+    # immune_stabilisation_adjustment from Romain's epidemic paper, keppa
+    # reactivation_rate_adjustment from Romain's epidemic paper, v
+    # rapid_progression_rate_adjustment from Romain's epidemic paper, epsilon
 
     age_mixing = None  # None means homogenous mixing
     my_model.stratify("age", [0, 5, 15, 60], [], {}, {}, infectiousness_adjustments={"0": 0, "5": 0},
@@ -77,16 +77,15 @@ if "age" in stratify_by:
                                            'rapid_progression_rate': rapid_progression_rate_adjustment
                                              })
 
-if "vaccine" in stratify_by:
+if "bcg" in stratify_by:
     # Stratify model by vaccination status
-    # rapid_progression_rate_adjustment = {"none": 24.4, "vaccine": 10}
 
-    # props_vaccine = {"none": 0.25, "bcg_only": 0.25, "bcg+novel": 0.25, "novel": 0.25}
-    # my_model.stratify("vaccine", ["none", "bcg_only", "bcg+novel", "novel"], [], requested_proportions = props_vaccine, mixing_matrix = None, verbose = False)
-    proportion_vaccine = {"none": 0.5, "vaccinated": 0.5}
-    my_model.stratify("vaccine", ["none", "vaccinated"], [], requested_proportions = proportion_vaccine,
-                      infectiousness_adjustments = {"none": 0.9, "vaccinated": 0.4},
-                      mixing_matrix = None, verbose = False)
+    protection_adjustment = {"bcg_none": 1.0, "bcg_vaccinated": 0.2}
+    proportion_vaccine = {"bcg_none": 0.05, "bcg_vaccinated": 0.95}
+    my_model.stratify("bcg", ["bcg_none", "bcg_vaccinated"], ["susceptible"], requested_proportions=proportion_vaccine,
+                      entry_proportions={"bcg_none": 0.05, "bcg_vaccinated": 0.95},
+                      mixing_matrix=None, verbose=False,
+                      adjustment_requests={'infection_rate': protection_adjustment})
 
 # Stratification example from Mongolia
     # _tb_model.stratify("organ", ["smearpos", "smearneg", "extrapul"], ["infectious"],

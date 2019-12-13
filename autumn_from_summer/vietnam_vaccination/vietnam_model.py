@@ -62,7 +62,7 @@ stratify_by = ["age", "bcg"]
 if "age" in stratify_by:
     # Stratify model by age
 
-    infection_rate_adjustment = {"0": 1, "5": 1, "10": 1}
+    infection_rate_adjustment = {"0": 1.0, "5": 1.0, "10": 1.0}
     immune_stabilisation_adjustment = {"0W": 1.2e-2 * 365.25, "5W": 1.2e-2 * 365.25, "10W": 1.2e-2 * 365.25}
     reactivation_rate_adjustment = {"0W": 1.9e-11 * 365.25, "5W": 6.4e-6 * 365.25, "10W": 6.4e-6 * 365.25}
     rapid_progression_rate_adjustment = {"0W": 6.6e-3 * 365.25, "5W": 2.7e-3 * 365.25, "10W": 2.7e-3 * 365.25}
@@ -76,8 +76,8 @@ if "age" in stratify_by:
                       mixing_matrix=age_mixing, verbose=False,
                       adjustment_requests={'immune_stabilisation_rate': immune_stabilisation_adjustment,
                                            'reactivation_rate': reactivation_rate_adjustment,
-                                           'rapid_progression_rate': rapid_progression_rate_adjustment
-                                             })
+                                           'rapid_progression_rate': rapid_progression_rate_adjustment,
+                                           'infection_rate': infection_rate_adjustment})
 
 if "bcg" in stratify_by:
     # Stratify model by vaccination status
@@ -91,7 +91,8 @@ if "bcg" in stratify_by:
     my_model.stratify("bcg", ["bcg_none", "bcg_vaccinated"], ["susceptible"], requested_proportions=proportion_vaccine,
                       entry_proportions={"bcg_none": 0.05, "bcg_vaccinated": 0.95},
                       mixing_matrix=None, verbose=False,
-                      adjustment_requests={'infection_rate': protection_adjustment})
+                      adjustment_requests={'infection_rateXage_0': {"bcg_none": 0.2},
+                                           'infection_rateXage_5': {"bcg_none": 0.5}})
 
     # contact rateX
 

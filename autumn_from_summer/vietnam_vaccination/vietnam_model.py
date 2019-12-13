@@ -61,16 +61,18 @@ stratify_by = ["age", "bcg"]
 
 if "age" in stratify_by:
     # Stratify model by age
-    immune_stabilisation_adjustment = {"0W": 1.2e-2 * 365.25, "5W": 1.2e-2 * 365.25}
-    reactivation_rate_adjustment = {"0W": 1.9e-11 * 365.25, "5W": 6.4e-6}
-    rapid_progression_rate_adjustment = {"0W": 6.6e-3 * 365.25, "5W": 2.7e-3 * 365.25}
+
+    infection_rate_adjustment = {"0": 1, "5": 1, "10": 1}
+    immune_stabilisation_adjustment = {"0W": 1.2e-2 * 365.25, "5W": 1.2e-2 * 365.25, "10W": 1.2e-2 * 365.25}
+    reactivation_rate_adjustment = {"0W": 1.9e-11 * 365.25, "5W": 6.4e-6 * 365.25, "10W": 6.4e-6 * 365.25}
+    rapid_progression_rate_adjustment = {"0W": 6.6e-3 * 365.25, "5W": 2.7e-3 * 365.25, "10W": 2.7e-3 * 365.25}
 
     # immune_stabilisation_adjustment from Romain's epidemic paper, keppa
     # reactivation_rate_adjustment from Romain's epidemic paper, v
     # rapid_progression_rate_adjustment from Romain's epidemic paper, epsilon
 
     age_mixing = None  # None means homogenous mixing
-    my_model.stratify("age", [0, 5, 15, 60], [], {}, {}, infectiousness_adjustments={"0": 0, "5": 0},
+    my_model.stratify("age", [0, 5, 10, 15, 60], [], {}, {}, infectiousness_adjustments={"0": 0, "5": 0, "10": 0},
                       mixing_matrix=age_mixing, verbose=False,
                       adjustment_requests={'immune_stabilisation_rate': immune_stabilisation_adjustment,
                                            'reactivation_rate': reactivation_rate_adjustment,
@@ -80,12 +82,18 @@ if "age" in stratify_by:
 if "bcg" in stratify_by:
     # Stratify model by vaccination status
 
-    protection_adjustment = {"bcg_none": 1.0, "bcg_vaccinated": 0.2}
+    protection_adjustment = {"susceptibleXage_0Xbcg_bcg_vaccinated": 0.2,
+                             "susceptibleXage_5Xbcg_bcg_vaccinated": 0.2,
+                             "susceptibleXage_10Xbcg_bcg_vaccinated": 0.5,
+                             "susceptibleXage_15Xbcg_bcg_vaccinated": 0.5,
+                             "susceptibleXage_60Xbcg_bcg_vaccinated": 1}
     proportion_vaccine = {"bcg_none": 0.05, "bcg_vaccinated": 0.95}
     my_model.stratify("bcg", ["bcg_none", "bcg_vaccinated"], ["susceptible"], requested_proportions=proportion_vaccine,
                       entry_proportions={"bcg_none": 0.05, "bcg_vaccinated": 0.95},
                       mixing_matrix=None, verbose=False,
                       adjustment_requests={'infection_rate': protection_adjustment})
+
+    # contact rateX
 
 # Stratification example from Mongolia
     # _tb_model.stratify("organ", ["smearpos", "smearneg", "extrapul"], ["infectious"],

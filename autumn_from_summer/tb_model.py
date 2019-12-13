@@ -102,7 +102,7 @@ def store_tb_database(outputs, table_name="outputs", scenario=0, run_idx=0, time
         outputs.insert(0, column='times', value=times)
     if table_name != 'mcmc_run_info':
         outputs.insert(0, column='idx', value='run_' + str(run_idx))
-        outputs.insert(1, column='Scenario', value=scenario)
+        outputs.insert(1, column='Scenario', value='S_' + str(scenario))
     engine = create_engine("sqlite:///"+ database_name, echo=False)
     if table_name == "functions":
         outputs.to_sql(table_name, con=engine, if_exists="replace", index=False, dtype={"cdr_values": FLOAT()})
@@ -153,7 +153,6 @@ def store_run_models(models, scenarios, database_name="../databases/outputs.db")
         store_tb_database(pbi_outputs, table_name='pbi_scenario_' + str(scenarios[i]),  database_name=database_name)
         store_tb_database(derived_output_df, scenario=scenarios[i], table_name='derived_outputs', database_name=database_name)
         store_tb_database(output_df, scenario=scenarios[i], times=model.times, database_name=database_name, append=True)
-
 
 
 """

@@ -75,13 +75,13 @@ class Calibration:
             self.post_processing.generated_outputs = {}
 
             self.post_processing.generate_outputs()
-        self.iter_num += 1
         out_df = pd.DataFrame(self.running_model.outputs, columns=self.running_model.compartment_names)
         derived_output_df = pd.DataFrame.from_dict(self.running_model.derived_outputs)
         store_tb_database(derived_output_df, table_name="derived_outputs", run_idx=self.iter_num,
                            database_name=output_db_path, append=True)
         store_tb_database(out_df, run_idx=self.iter_num, times=self.running_model.times, database_name=output_db_path,
                           append=True)
+        self.iter_num += 1
 
     def run_model_with_params(self, params):
         """
@@ -243,6 +243,8 @@ class Calibration:
                 mcmc_run_df = pd.DataFrame(mcmc_run_dict, columns=mcmc_run_colnames, index=[i_run])
                 store_tb_database(mcmc_run_df, table_name='mcmc_run', run_idx=i_run,
                                   database_name=output_db_path, append=True)
+
+                print(str(i_run + 1) + " MCMC iterations completed.")
 
                 if available_time is not None:
                     elapsed_time = time() - t0

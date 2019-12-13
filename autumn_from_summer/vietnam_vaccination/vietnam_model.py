@@ -82,17 +82,15 @@ if "age" in stratify_by:
 if "bcg" in stratify_by:
     # Stratify model by vaccination status
 
-    protection_adjustment = {"susceptibleXage_0Xbcg_bcg_vaccinated": 0.2,
-                             "susceptibleXage_5Xbcg_bcg_vaccinated": 0.2,
-                             "susceptibleXage_10Xbcg_bcg_vaccinated": 0.5,
-                             "susceptibleXage_15Xbcg_bcg_vaccinated": 0.5,
-                             "susceptibleXage_60Xbcg_bcg_vaccinated": 1}
     proportion_vaccine = {"bcg_none": 0.05, "bcg_vaccinated": 0.95}
     my_model.stratify("bcg", ["bcg_none", "bcg_vaccinated"], ["susceptible"], requested_proportions=proportion_vaccine,
                       entry_proportions={"bcg_none": 0.05, "bcg_vaccinated": 0.95},
                       mixing_matrix=None, verbose=False,
-                      adjustment_requests={'infection_rateXage_0': {"bcg_none": 0.2},
-                                           'infection_rateXage_5': {"bcg_none": 0.5}})
+                      adjustment_requests={'infection_rateXage_0': {"bcg_vaccinated": 0.2},
+                                           'infection_rateXage_5': {"bcg_vaccinated": 0.2},
+                                           'infection_rateXage_10': {"bcg_vaccinated": 0.5},
+                                           'infection_rateXage_15': {"bcg_vaccinated": 0.5},
+                                           'infection_rateXage_60': {"bcg_vaccinated": 1.0}})
 
     # contact rateX
 

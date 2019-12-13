@@ -29,11 +29,11 @@ my_flows = [{"type": "infection_density", "parameter": "infection_rate", "origin
             # {"type": "standard_flows", "parameter": "relapse_rate", "origin": "recovered", "to": "active_tb"},
             {"type":"compartment_death", "parameter": "tb_mortality_rate", "origin":"active_tb"}]
 
-my_parameters = {'infection_rate': .00013,
+my_parameters = {'infection_rate': .00012,
                  'immune_stabilisation_rate': 5.4e-3 * 365.25, #0.6,
                  'reactivation_rate': 3.3e-6 * 365.25,
                  # 'reinfection_from_late_latent': 0.0021,
-                 'reinfection_from_recovered': 0.00013,
+                 'reinfection_from_recovered': 0.022,
                  'recovery_rate': 0.5,
                  'rapid_progression_rate': 2.7e-4 * 365.25,
                  # 'relapse_rate': 0.002,
@@ -57,7 +57,7 @@ my_model.death_flows.to_csv("deaths_flows.csv")
 # "1":0.5, means new parameter for age 1 is 0.5x
 
 # Choose what to stratify the model by
-stratify_by = ["age", "bcg"]
+stratify_by = ["age", "bcg", "novel"]
 
 if "age" in stratify_by:
     # Stratify model by age
@@ -80,10 +80,10 @@ if "age" in stratify_by:
                                            'infection_rate': infection_rate_adjustment})
 
 if "bcg" in stratify_by:
-    # Stratify model by vaccination status
+    # Stratify model by bcg vaccination status
 
-    proportion_vaccine = {"bcg_none": 0.05, "bcg_vaccinated": 0.95}
-    my_model.stratify("bcg", ["bcg_none", "bcg_vaccinated"], ["susceptible"], requested_proportions=proportion_vaccine,
+    proportion_bcg = {"bcg_none": 0.05, "bcg_vaccinated": 0.95}
+    my_model.stratify("bcg", ["bcg_none", "bcg_vaccinated"], ["susceptible"], requested_proportions=proportion_bcg,
                       entry_proportions={"bcg_none": 0.05, "bcg_vaccinated": 0.95},
                       mixing_matrix=None, verbose=False,
                       adjustment_requests={'infection_rateXage_0': {"bcg_vaccinated": 0.2},
@@ -92,7 +92,19 @@ if "bcg" in stratify_by:
                                            'infection_rateXage_15': {"bcg_vaccinated": 0.5},
                                            'infection_rateXage_60': {"bcg_vaccinated": 1.0}})
 
-    # contact rateX
+    if "novel" in stratify_by:
+        # Stratify model by novel vaccination status
+
+        proportion_novel = {"novel_none": 0.5, "novel_vaccinated": 0.5}
+        my_model.stratify("novel", ["novel_none", "novel_vaccinated"], ["susceptible"],
+                          requested_proportions=proportion_novel,
+                          entry_proportions={"bcg_none": 0.5, "bcg_vaccinated": 0.5},
+                          mixing_matrix=None, verbose=False,
+                          adjustment_requests={'infection_rateXage_10': {"novel_vaccinated": 0.5},
+                                               'infection_rateXage_15': {"novel_vaccinated": 0.5},
+                                               'infection_rateXage_60': {"novel_vaccinated": 1.0}})
+
+
 
 # Stratification example from Mongolia
     # _tb_model.stratify("organ", ["smearpos", "smearneg", "extrapul"], ["infectious"],

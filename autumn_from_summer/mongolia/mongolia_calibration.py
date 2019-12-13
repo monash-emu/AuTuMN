@@ -25,7 +25,7 @@ load = False
 
 if not load:
     calib = Calibration(build_mongolia_model, par_priors, target_outputs, multipliers)
-    calib.run_fitting_algorithm(run_mode='autumn_mcmc', n_iterations=10, n_burned=0,
-                                n_chains=1, available_time=3600.*12)
+    calib.run_fitting_algorithm(run_mode='autumn_mcmc', n_iterations=100000, n_burned=0,
+                                n_chains=1, available_time=3600.*24*2.75)
 else:
     models = load_calibration_from_db('outputs_11_27_2019_14_07_54.db')

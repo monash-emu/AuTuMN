@@ -53,7 +53,7 @@ my_model = StratifiedModel(times=my_times,
                            initial_conditions=my_initial_conditions,
                            parameters=my_parameters,
                            requested_flows=my_flows,
-                           starting_population=100000,
+                           starting_population=1400000,
                            infectious_compartment=('active_tb',),
                            entry_compartment='susceptible',
                            birth_approach = "add_crude_birth_rate")
@@ -81,15 +81,18 @@ if "age" in stratify_by:
     # rapid_progression_rate_adjustment from Romain's epidemic paper, epsilon
 
     age_mixing_matrix = numpy.array(
-                                   [[1, 0, 0, 0, 0],
-                                    [0, 1, 0, 0, 0],
-                                    [0, 0, 1, 0, 0],
-                                    [0, 0, 0, 1, 0],
-                                    [0, 0, 0, 0, 1]]
+                                   [[1.8, 0.3, 0.3, 0.8, 0.4],
+                                    [0.3, 2.1, 2.1, 0.7, 0.6],
+                                    [0.3, 2.1, 2.1, 0.7, 0.6],
+                                    [0.8, 0.7, 0.7, 1.0, 1.15],
+                                    [0.4, 0.6, 0.6, 1.15, 1.6]]
                                     )
+    # array estimated from Figure 4 in the paper "Social Contact Patterns in Vietnam and Implications for
+    # the Control of Infectious Diseases"
+
     # numpy.identity(5)
-    print(age_mixing_matrix)
     age_mixing = age_mixing_matrix # None means homogenous mixing
+
     my_model.stratify("age", [0, 5, 10, 15, 60], [], {}, {}, infectiousness_adjustments={"0": 0, "5": 0, "10": 0},
                       mixing_matrix=age_mixing, verbose=False,
                       adjustment_requests={'immune_stabilisation_rate': immune_stabilisation_adjustment,

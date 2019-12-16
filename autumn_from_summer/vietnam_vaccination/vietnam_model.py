@@ -9,7 +9,7 @@ from autumn_from_summer.tb_model import create_multi_scenario_outputs
 
 # Time steps are given in years
 start_time = 2000.
-end_time = 2100.
+end_time = 2300.
 time_step = 1
 my_times = numpy.linspace(start_time, end_time, int((end_time-start_time)/time_step) + 1).tolist()
 
@@ -43,11 +43,13 @@ my_parameters = {'infection_rate': .00012,
                  }
 
 my_initial_conditions = {"active_tb": 1}
+out_connections = {"incidence": {"origin": "susceptible", "to": "active_tb"}} #request the model the track specific model quantities during integration
+
 
 my_model = StratifiedModel(times=my_times, compartment_types=my_compartments, initial_conditions=my_initial_conditions,
                            parameters=my_parameters, requested_flows=my_flows, starting_population=100000,
                            infectious_compartment=('active_tb',), entry_compartment='susceptible',
-                           birth_approach = "add_crude_birth_rate")
+                           birth_approach="add_crude_birth_rate", output_connections=out_connections)
 
 my_model.death_flows.to_csv("deaths_flows.csv")
 
@@ -57,7 +59,7 @@ my_model.death_flows.to_csv("deaths_flows.csv")
 # "1":0.5, means new parameter for age 1 is 0.5x
 
 # Choose what to stratify the model by
-stratify_by = ["age", "bcg", "novel"]
+stratify_by = ["age", "bcg"]
 
 if "age" in stratify_by:
     # Stratify model by age
@@ -92,17 +94,17 @@ if "bcg" in stratify_by:
                                            'infection_rateXage_15': {"bcg_vaccinated": 0.5},
                                            'infection_rateXage_60': {"bcg_vaccinated": 1.0}})
 
-    if "novel" in stratify_by:
-        # Stratify model by novel vaccination status
+if "novel" in stratify_by:
+    # Stratify model by novel vaccination status
 
-        proportion_novel = {"novel_none": 0.5, "novel_vaccinated": 0.5}
-        my_model.stratify("novel", ["novel_none", "novel_vaccinated"], ["susceptible"],
-                          requested_proportions=proportion_novel,
-                          entry_proportions={"bcg_none": 0.5, "bcg_vaccinated": 0.5},
-                          mixing_matrix=None, verbose=False,
-                          adjustment_requests={'infection_rateXage_10': {"novel_vaccinated": 0.5},
-                                               'infection_rateXage_15': {"novel_vaccinated": 0.5},
-                                               'infection_rateXage_60': {"novel_vaccinated": 1.0}})
+    proportion_novel = {"novel_none": 0.5, "novel_vaccinated": 0.5}
+    my_model.stratify("novel", ["novel_none", "novel_vaccinated"], ["susceptible"],
+                      requested_proportions=proportion_novel,
+                      entry_proportions={"bcg_none": 0.5, "bcg_vaccinated": 0.5},
+                      mixing_matrix=None, verbose=False,
+                      adjustment_requests={'infection_rateXage_10': {"novel_vaccinated": 0.5},
+                                           'infection_rateXage_15': {"novel_vaccinated": 0.5},
+                                           'infection_rateXage_60': {"novel_vaccinated": 1.0}})
 
 
 
@@ -126,11 +128,26 @@ my_model.run_model()
 
 # print(my_model.outputs)
 
-multiplier = {'prevXactive_tbXamong': 100000, 'prevXearly_latentXamong': 100000, 'prevXlate_latentXamong': 100000,
-              'prevXsusceptibleXamong': 100000, 'prevXrecoveredXamong': 100000}
-pp = PostProcessing(my_model, requested_outputs=['prevXsusceptibleXamong', 'prevXearly_latentXamong',
-                                                 'prevXlate_latentXamong','prevXactive_tbXamong',
+multiplier = {'prevXactive_tbXamong': 100000,
+              'prevXearly_latentXamong': 100000,
+              'prevXlate_latentXamong': 100000,
+              'prevXsusceptibleXamong': 100000,
+              'prevXrecoveredXamong': 100000}
+
+pp = PostProcessing(my_model, requested_outputs=['prevXsusceptibleXamong',
+                                                 'prevXearly_latentXamong',
+                                                 'prevXlate_latentXamong',
+                                                 'prevXactive_tbXamong',
                                                  'prevXrecoveredXamong'], multipliers=multiplier)
+# 'incidenceXsusceptible'
+
+# example of how to write requested ouput for incidece, from mongolia model:
+# for stratification in stratify_by:
+#     for stratum in all_stratifications[stratification]:
+#         for stage in ["early", 'late']:
+#             out_connections["indidence_" + stage + "X" + stratification + "_" + stratum] = \
+#                 {"origin": stage + "_latent", "to": "infectious", "to_condition": stratification + "_" + stratum}
+
 out = Outputs([pp])
 out.plot_requested_outputs()
 

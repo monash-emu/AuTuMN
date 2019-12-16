@@ -299,7 +299,7 @@ def build_mongolia_timevariant_tsr():
 
 def build_mongolia_model(update_params={}):
 
-    stratify_by = ['age', 'organ', 'location', 'strain']
+    stratify_by = ['age']#, 'organ', 'location', 'strain']
 
     # some default parameter values
     external_params = {  # run configuration
@@ -592,26 +592,26 @@ def build_mongolia_model(update_params={}):
     # _tb_model.death_flows.to_csv("deaths.csv")
 
     # create some customised derived_outputs
-    def calculate_notifications(model, time):
-        total_notifications = 0.
-        dict_flows = model.transition_flows.to_dict()
-
-        for comp_ind in model.infectious_indices['all_strains']:
-            infectious_pop = model.compartment_values[comp_ind]
-            detection_indices = [index for index, val in dict_flows['parameter'].items() if 'case_detection' in val]
-            flow_index = [index for index in detection_indices if dict_flows['origin'][index] == model.compartment_names[comp_ind]][0]
-            param_name = dict_flows['parameter'][flow_index]
-            detection_tx_rate = model.get_parameter_value(param_name, time)
-            tsr = mongolia_tsr(time) + external_params['reduction_negative_tx_outcome'] * (1. - mongolia_tsr(time))
-            if 'strain_mdr' in model.compartment_names[comp_ind]:
-                tsr = external_params['mdr_tsr'] * external_params['prop_mdr_detected_as_mdr']
-            if tsr > 0.:
-                total_notifications += infectious_pop * detection_tx_rate / tsr
-
-        return total_notifications
-
-    _tb_model.derived_output_functions['notifications'] = calculate_notifications
-    _tb_model.derived_output_functions['popsize_treatment_support'] = calculate_notifications
+    # def calculate_notifications(model, time):
+    #     total_notifications = 0.
+    #     dict_flows = model.transition_flows.to_dict()
+    #
+    #     for comp_ind in model.infectious_indices['all_strains']:
+    #         infectious_pop = model.compartment_values[comp_ind]
+    #         detection_indices = [index for index, val in dict_flows['parameter'].items() if 'case_detection' in val]
+    #         flow_index = [index for index in detection_indices if dict_flows['origin'][index] == model.compartment_names[comp_ind]][0]
+    #         param_name = dict_flows['parameter'][flow_index]
+    #         detection_tx_rate = model.get_parameter_value(param_name, time)
+    #         tsr = mongolia_tsr(time) + external_params['reduction_negative_tx_outcome'] * (1. - mongolia_tsr(time))
+    #         if 'strain_mdr' in model.compartment_names[comp_ind]:
+    #             tsr = external_params['mdr_tsr'] * external_params['prop_mdr_detected_as_mdr']
+    #         if tsr > 0.:
+    #             total_notifications += infectious_pop * detection_tx_rate / tsr
+    #
+    #     return total_notifications
+    #
+    # _tb_model.derived_output_functions['notifications'] = calculate_notifications
+    # _tb_model.derived_output_functions['popsize_treatment_support'] = calculate_notifications
 
     return _tb_model
 

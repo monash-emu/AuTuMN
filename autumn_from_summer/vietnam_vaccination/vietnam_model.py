@@ -5,6 +5,7 @@ import os
 from autumn_from_summer.tb_model import create_multi_scenario_outputs
 import matplotlib.pyplot as plt
 
+now = datetime.now()
 
 def get_total_popsize(model, time):
     return sum(model.compartment_values)
@@ -12,18 +13,20 @@ def get_total_popsize(model, time):
 # A test trial of creating a model that has the same compartments as the one in
 # "Data needs for evidence-based decisions: a tuberculosis modeler’s ‘wish list’
 
-# Time steps are given in years
+# Set up time frame and time steps
 start_time = 2000.
 end_time = 2100.
-time_step = 1
+time_step = 1 # Time steps are given in years
 my_times = numpy.linspace(start_time, end_time, int((end_time-start_time)/time_step) + 1).tolist()
 
+# Set up compartments
 my_compartments = ["susceptible",
                    "early_latent",
                    "late_latent",
                    "active_tb",
                    "recovered"]
 
+# Set up flows between compartments, births, and deaths
 my_flows = [{"type": "infection_density", "parameter": "infection_rate", "origin": "susceptible", "to": "early_latent"},
             {"type": "standard_flows", "parameter": "rapid_progression_rate", "origin": "early_latent", "to": "active_tb"},
             {"type": "standard_flows", "parameter": "immune_stabilisation_rate", "origin": "early_latent", "to": "late_latent"},
@@ -34,12 +37,12 @@ my_flows = [{"type": "infection_density", "parameter": "infection_rate", "origin
             # {"type": "standard_flows", "parameter": "relapse_rate", "origin": "recovered", "to": "active_tb"},
             {"type": "compartment_death", "parameter": "tb_mortality_rate", "origin": "active_tb"}]
 
+# Track incidence rates
 out_connections = {
         "incidence_from_early_latent": {"origin": "early_latent", "to": "active_tb"},
         "incidence_from_late_latent": {"origin": "late_latent", "to": "active_tb"}}
 
-
-
+# Set up parameters
 my_parameters = {'infection_rate': .00013,
                  'immune_stabilisation_rate': 5.4e-3 * 365.25, #0.6,
                  'reactivation_rate': 3.3e-6 * 365.25,
@@ -53,9 +56,10 @@ my_parameters = {'infection_rate': .00013,
                  "crude_birth_rate": 0.0169
                  }
 
-# If we assume the recovered population is the same as the susceptible population in terms of risk of TB infection:
+# If we want the recovered population is the same as the susceptible population in terms of risk of TB infection, uses
 my_parameters["reinfection_from_recovered"] = my_parameters["infection_rate"]
 
+# Set up initial condition as a single seed individual with active TB
 my_initial_conditions = {"active_tb": 1}
 
 my_model = StratifiedModel(times=my_times,
@@ -70,18 +74,14 @@ my_model = StratifiedModel(times=my_times,
                            output_connections=out_connections,
                            derived_output_functions={'population': get_total_popsize})
 
-my_model.death_flows.to_csv("deaths_flows.csv")
-
-# Verbose prints out information, does not effect model
-# Specify arguments, need to check argument inputs order for my_model.stratify!!!
-# default for parameter_adjustment is to give a relative parameter, e.g. original parameter is x,
-# "1":0.5, means new parameter for age 1 is 0.5x
-
 # Choose what to stratify the model by
 stratify_by = ["age", "bcg"]
 
 if "age" in stratify_by:
     # Stratify model by age
+
+    # default for parameter_adjustment is to give a relative parameter, e.g. original parameter is x,
+    # "1":0.5, means new parameter for age 1 is 0.5x
 
     infection_rate_adjustment = {"0": 1.0, "5": 1.0, "10": 1.0}
     immune_stabilisation_adjustment = {"0W": 1.2e-2 * 365.25, "5W": 1.2e-2 * 365.25, "10W": 1.2e-2 * 365.25}
@@ -92,6 +92,7 @@ if "age" in stratify_by:
     # reactivation_rate_adjustment from Romain's epidemic paper, v
     # rapid_progression_rate_adjustment from Romain's epidemic paper, epsilon
 
+    # Matrix of social mixing rates between age groups
     age_mixing_matrix = numpy.array(
                                    [[1.8, 0.3, 0.3, 0.8, 0.4],
                                     [0.3, 2.1, 2.1, 0.7, 0.6],
@@ -103,21 +104,24 @@ if "age" in stratify_by:
     # array estimated from Figure 4 in the paper "Social Contact Patterns in Vietnam and Implications for
     # the Control of Infectious Diseases"
 
-    # numpy.identity(5)
     age_mixing = age_mixing_matrix # None means homogenous mixing
 
-    my_model.stratify("age", [0, 5, 10, 15, 60], [], {}, {}, infectiousness_adjustments={"0": 0, "5": 0, "10": 0},
-                      mixing_matrix=age_mixing, verbose=False,
+    my_model.stratify("age", [0, 5, 10, 15, 60], [], {}, {},
+                      infectiousness_adjustments={"0": 0, "5": 0, "10": 0},
+                      mixing_matrix=age_mixing,
+                      verbose=False,              # Verbose prints out information, does not effect model
                       adjustment_requests={'immune_stabilisation_rate': immune_stabilisation_adjustment,
                                            'reactivation_rate': reactivation_rate_adjustment,
                                            'rapid_progression_rate': rapid_progression_rate_adjustment,
-                                           'infection_rate': infection_rate_adjustment})
+                                           'infection_rate': infection_rate_adjustment}
+                      )
 
 if "bcg" in stratify_by:
-    # Stratify model by vaccination status
+    # Stratify model by BCG vaccination status
 
     proportion_bcg = {"bcg_none": 0.05, "bcg_vaccinated": 0.95}
-    my_model.stratify("bcg", ["bcg_none", "bcg_vaccinated"], ["susceptible"], requested_proportions=proportion_bcg,
+    my_model.stratify("bcg", ["bcg_none", "bcg_vaccinated"], ["susceptible"],
+                      requested_proportions=proportion_bcg,
                       entry_proportions={"bcg_none": 0.05, "bcg_vaccinated": 0.95},
                       mixing_matrix=None, verbose=False,
                       adjustment_requests={'infection_rateXage_0': {"bcg_vaccinated": 0.2},
@@ -139,7 +143,6 @@ if "novel" in stratify_by:
                                            'infection_rateXage_60': {"novel_vaccinated": 1.0}})
 
 
-
 # Stratification example from Mongolia
     # _tb_model.stratify("organ", ["smearpos", "smearneg", "extrapul"], ["infectious"],
     #                    infectiousness_adjustments={"smearpos": 1., "smearneg": 0.25, "extrapul": 0.},
@@ -152,12 +155,12 @@ if "novel" in stratify_by:
     #                                         },
 
 
-# Model outputs
+# Model outputs and model data post processing
 my_model.transition_flows.to_csv("transition.csv")
 my_model.death_flows.to_csv("deaths_flows.csv")
 
 create_flowchart(my_model)
-print(os.getcwd())
+# print(os.getcwd())
 
 my_model.run_model()
 
@@ -202,27 +205,22 @@ pp = PostProcessing(my_model, requested_outputs=requested_outputs, multipliers=m
 out = Outputs([pp])
 out.plot_requested_outputs()
 
-# want = "population size"
-# if "population size" in want:
-#     # my_model.plot_compartment_size(["susceptible")
-#     model_outputs = my_model.outputs
-#     total_pop = []
-#     for row in model_outputs:
-#         total = 0
-#         for column in row:
-#             total += column
-#         total_pop.append(int(total))
-#
-#     total_pop2 = sum(my_model.compartment_values)
-#     # print(my_times)
-#     # print(total_pop)
-#     # print(total_pop2)
-#     fig = plt.plot(my_times, total_pop2)
-#     # fig.suptutle("Total population")
-#     # fig.set_xlabel("years")
-#     # fig.set_ylabel("Population")
+want = "" # "population size"
+if "population size" in want:
+    # Creates plot of total population size
 
+    model_outputs = my_model.outputs
+    total_pop = []
+    for row in model_outputs:
+        total = 0
+        for column in row:
+            total += column
+        total_pop.append(total)
 
-# create_multi_scenario_outputs(models=my_model, req_outputs=req_outputs)
-
-# output_connections = {"TB_deaths":{"origin":"active_tb"}}
+    # plt.style.use("fivethirtyeight")
+    plt.plot(my_times, total_pop, label="Total population")
+    plt.title("Total population")
+    plt.xlabel("years")
+    plt.ylabel("Population")
+    plt.savefig("My_total_population.png")
+    plt.show()

@@ -1,44 +1,31 @@
 from autumn_from_summer.calibration import *
 
-par_priors = [{'param_name': 'contact_rate', 'distribution': 'uniform', 'distri_params': [1., 20.]},
-              {'param_name': 'rr_transmission_urban_nonger', 'distribution': 'uniform', 'distri_params': [.1, 10.]},
-              {'param_name': 'rr_transmission_urban_ger', 'distribution': 'uniform', 'distri_params': [.1, 10.]},
-              # {'param_name': 'rr_transmission_mine', 'distribution': 'uniform', 'distri_params': [1, 10.]},
-              {'param_name': 'rr_transmission_prison', 'distribution': 'uniform', 'distri_params': [1., 10.]},
-              {'param_name': 'adult_latency_adjustment', 'distribution': 'uniform', 'distri_params': [.3, 3.]},
+par_priors = [{'param_name': 'contact_rate', 'distribution': 'uniform', 'distri_params': [12., 16.]},
+              {'param_name': 'adult_latency_adjustment', 'distribution': 'uniform', 'distri_params': [2., 6.]},
               {'param_name': 'dr_amplification_prop_among_nonsuccess', 'distribution': 'uniform',
-               'distri_params': [.05, .20]}
+               'distri_params': [.15, .25]},
+              {'param_name': 'self_recovery_rate', 'distribution': 'uniform', 'distri_params': [.18, .29]},
+              {'param_name': 'tb_mortality_rate', 'distribution': 'uniform', 'distri_params': [.33, .44]},
+              {'param_name': 'rr_transmission_recovered', 'distribution': 'uniform', 'distri_params': [.8, 1.2]},
+              {'param_name': 'cdr_multiplier', 'distribution': 'uniform', 'distri_params': [.66, 1.5]},
               ]
 
-target_outputs = [{'output_key': 'prevXinfectiousXorgan_smearposXamongXage_15Xage_60', 'years': [2015.], 'values': [204.],
-                   'cis': [(143., 265.1)]},
-                  {'output_key': 'prevXinfectiousXorgan_smearnegXamongXage_15Xage_60', 'years': [2015.], 'values': [340.],
-                   'cis': [(273., 407.)]},
-                  {'output_key': 'prevXinfectiousXorgan_smearposXamongXage_15Xage_60Xlocation_rural_province', 'years': [2015.], 'values': [220.]},
-                  {'output_key': 'prevXinfectiousXorgan_smearposXamongXage_15Xage_60Xlocation_urban_ger',
-                   'years': [2015.], 'values': [277.]},
-                  {'output_key': 'prevXinfectiousXorgan_smearposXamongXage_15Xage_60Xlocation_urban_nonger', 'years': [2015.], 'values': [156]},
-                  {'output_key': 'prevXinfectiousXamongXage_15Xage_60Xlocation_prison', 'years': [2015.], 'values': [3785]},
+target_outputs = [{'output_key': 'prevXinfectiousXamong', 'years': [2015.], 'values': [757.], 'cis': [(620., 894.)]},
                   {'output_key': 'prevXlatentXamongXage_5', 'years': [2016.], 'values': [960.], 'cis': [(902., 1018.)]},
-                  {'output_key': 'prevXinfectiousXstrain_mdrXamongXinfectious', 'years': [2015.], 'values': [500]}
+                  {'output_key': 'prevXinfectiousXstrain_mdrXamongXinfectious', 'years': [2015.], 'values': [503.],
+                   'cis': [(410., 670.)]}
                   ]
 
-multipliers = {'prevXlatentXamongXage_5': 1.e4,
+multipliers = {'prevXinfectiousXamong': 1.e5,
+               'prevXlatentXamongXage_5': 1.e4,
                'prevXinfectiousXstrain_mdrXamongXinfectious': 1.e4
                }
 
 load = False
 
 if not load:
-    for i, output in enumerate(target_outputs):
-        if output['output_key'][0:15] == 'prevXinfectious' and \
-                output['output_key'] != 'prevXinfectiousXstrain_mdrXamongXinfectious':
-            multipliers[output['output_key']] = 1.e5
-
     calib = Calibration(build_mongolia_model, par_priors, target_outputs, multipliers)
-    calib.run_fitting_algorithm(run_mode='autumn_mcmc', n_iterations=4, n_burned=0,
-                                n_chains=1, available_time=3600.*12)
-
-    print(calib.mcmc_trace)
+    calib.run_fitting_algorithm(run_mode='autumn_mcmc', n_iterations=100000, n_burned=0,
+                                n_chains=1, available_time=3600.*24*2.75)
 else:
     models = load_calibration_from_db('outputs_11_27_2019_14_07_54.db')

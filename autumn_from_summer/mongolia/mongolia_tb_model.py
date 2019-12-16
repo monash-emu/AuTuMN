@@ -10,9 +10,9 @@ now = datetime.now()
 output_db_path = os.path.join(os.getcwd(), 'databases/outputs_' + now.strftime("%m_%d_%Y_%H_%M_%S") + '.db')
 
 
-def build_mongolia_timevariant_cdr():
+def build_mongolia_timevariant_cdr(cdr_multiplier):
     cdr = {1950.: 0., 1980.: .10, 1990.: .15, 2000.: .20, 2010.: .30, 2015: .33}
-    return scale_up_function(cdr.keys(), cdr.values(), smoothness=0.2, method=5)
+    return scale_up_function(cdr.keys(), [c * cdr_multiplier for c in list(cdr.values())], smoothness=0.2, method=5)
 
 
 def build_mongolia_timevariant_tsr():
@@ -299,7 +299,7 @@ def build_mongolia_timevariant_tsr():
 
 def build_mongolia_model(update_params={}):
 
-    stratify_by = ['age', 'organ', 'location', 'strain']
+    stratify_by = ['age']#, 'organ', 'location', 'strain']
 
     # some default parameter values
     external_params = {  # run configuration
@@ -308,25 +308,27 @@ def build_mongolia_model(update_params={}):
                        'time_step': 1.,
                        'start_population': 3000000,
                        # base model definition:
-                       'contact_rate': 12.5,
-                       'rr_transmission_recovered': .63,
+                       'contact_rate': 14.,
+                       'rr_transmission_recovered': 1.,
                        'rr_transmission_infected': 0.21,
-                       'adult_latency_adjustment': 4.,  # used to modify progression rates during calibration
+                       'adult_latency_adjustment': 4.,  # used to increase adult progression rates due to pollution
                        'self_recovery_rate': 0.231,  # this is for smear-positive TB
                        'tb_mortality_rate': 0.389,  # this is for smear-positive TB
                        'prop_smearpos': .33,
+                        'cdr_multiplier': 1.,
                          # MDR-TB:
-                       'dr_amplification_prop_among_nonsuccess': 0.15,
+                       'dr_amplification_prop_among_nonsuccess': 0.20,  # based on Cox et al and Bonnet et al
                        'prop_mdr_detected_as_mdr': 0.5,
                        'mdr_tsr': .6,
+                        'mdr_infectiousness_multiplier': 1.1,
                         # diagnostic sensitivity by organ status:
                         'diagnostic_sensitivity_smearpos': 1.,
                         'diagnostic_sensitivity_smearneg': .7,
                         'diagnostic_sensitivity_extrapul': .5,
-                         # adjustments by location and housing type
-                       'rr_transmission_urban_ger': 1.5,  # reference: rural_province
+                         # adjustments by location
+                       'rr_transmission_urban_ger': 3.,  # reference: rural_province
                        'rr_transmission_urban_nonger': .8,  # reference: rural_province
-                       'rr_transmission_prison': 10,  # reference: rural_province
+                       'rr_transmission_prison': 50,  # reference: rural_province
                        # IPT
                        'ipt_age_0_ct_coverage': .17,  # Children contact tracing coverage  .17
                        'ipt_age_5_ct_coverage': 0.,  # Children contact tracing coverage
@@ -433,7 +435,7 @@ def build_mongolia_model(update_params={}):
         {"type": "standard_flows", "parameter": "acf_rate", "origin": "infectious", "to": "recovered"})
 
     # load time-variant case detection rate
-    cdr_scaleup = build_mongolia_timevariant_cdr()
+    cdr_scaleup = build_mongolia_timevariant_cdr(external_params['cdr_multiplier'])
     disease_duration = 3.
     prop_to_rate = convert_competing_proportion_to_rate(1.0 / disease_duration)
     detect_rate = return_function_of_function(cdr_scaleup, prop_to_rate)
@@ -480,7 +482,8 @@ def build_mongolia_model(update_params={}):
                                'case_detection': {"mdr": mdr_adjustment},
                                'ipt_rate': {"ds": 1., #external_params['ds_ipt_switch'],
                                             "mdr": external_params['mdr_ipt_switch']}
-                           })
+                           },
+                           infectiousness_adjustments={'ds': 1., 'mdr': external_params['mdr_infectiousness_multiplier']})
 
         _tb_model.add_transition_flow(
             {"type": "standard_flows", "parameter": "dr_amplification",
@@ -588,25 +591,27 @@ def build_mongolia_model(update_params={}):
     # _tb_model.transition_flows.to_csv("transitions.csv")
     # _tb_model.death_flows.to_csv("deaths.csv")
 
-    def calculate_notifications(model, time):
-        total_notifications = 0.
-        dict_flows = model.transition_flows.to_dict()
-
-        for comp_ind in model.infectious_indices['all_strains']:
-            infectious_pop = model.compartment_values[comp_ind]
-            detection_indices = [index for index, val in dict_flows['parameter'].items() if 'case_detection' in val]
-            flow_index = [index for index in detection_indices if dict_flows['origin'][index] == model.compartment_names[comp_ind]][0]
-            param_name = dict_flows['parameter'][flow_index]
-            detection_tx_rate = model.get_parameter_value(param_name, time)
-            tsr = mongolia_tsr(time) + external_params['reduction_negative_tx_outcome'] * (1. - mongolia_tsr(time))
-            if 'strain_mdr' in model.compartment_names[comp_ind]:
-                tsr = external_params['mdr_tsr'] * external_params['prop_mdr_detected_as_mdr']
-            if tsr > 0.:
-                total_notifications += infectious_pop * detection_tx_rate / tsr
-
-        return total_notifications
-
-    _tb_model.derived_output_functions['notifications'] = calculate_notifications
+    # create some customised derived_outputs
+    # def calculate_notifications(model, time):
+    #     total_notifications = 0.
+    #     dict_flows = model.transition_flows.to_dict()
+    #
+    #     for comp_ind in model.infectious_indices['all_strains']:
+    #         infectious_pop = model.compartment_values[comp_ind]
+    #         detection_indices = [index for index, val in dict_flows['parameter'].items() if 'case_detection' in val]
+    #         flow_index = [index for index in detection_indices if dict_flows['origin'][index] == model.compartment_names[comp_ind]][0]
+    #         param_name = dict_flows['parameter'][flow_index]
+    #         detection_tx_rate = model.get_parameter_value(param_name, time)
+    #         tsr = mongolia_tsr(time) + external_params['reduction_negative_tx_outcome'] * (1. - mongolia_tsr(time))
+    #         if 'strain_mdr' in model.compartment_names[comp_ind]:
+    #             tsr = external_params['mdr_tsr'] * external_params['prop_mdr_detected_as_mdr']
+    #         if tsr > 0.:
+    #             total_notifications += infectious_pop * detection_tx_rate / tsr
+    #
+    #     return total_notifications
+    #
+    # _tb_model.derived_output_functions['notifications'] = calculate_notifications
+    # _tb_model.derived_output_functions['popsize_treatment_support'] = calculate_notifications
 
     return _tb_model
 
@@ -678,7 +683,7 @@ if __name__ == "__main__":
                       {'output_key': 'prevXinfectiousXorgan_smearposXamongXage_15Xage_60Xlocation_urban_nonger', 'years': [2015.], 'values': [156]},
                       {'output_key': 'prevXinfectiousXamongXage_15Xage_60Xlocation_prison', 'years': [2015.], 'values': [3785]},
                       {'output_key': 'prevXlatentXamongXage_5', 'years': [2016.], 'values': [9.6], 'cis': [(9.02, 10.18)]},
-                      {'output_key': 'prevXinfectiousXstrain_mdrXamongXinfectious', 'years': [2015.], 'values': [500]}
+                      {'output_key': 'prevXinfectiousXstrain_mdrXamongXinfectious', 'years': [2015.], 'values': [5]}
                       ]
 
     targets_to_plot = {}
@@ -688,8 +693,7 @@ if __name__ == "__main__":
             req_outputs.append(target['output_key'])
 
     multipliers = {
-        'prevXinfectiousXstrain_mdrXamongXinfectious': 100.,
-        'prevXinfectiousXstrain_mdrXamong': 1.e5
+        'prevXinfectiousXstrain_mdrXamongXinfectious': 100.
     }
 
     translations = {'prevXinfectiousXamong': 'TB prevalence (/100,000)',
@@ -727,7 +731,8 @@ if __name__ == "__main__":
                     'prevXinfectiousXstrain_mdrXamong': 'Prevalence of MDR-TB (/100,000)'
                     }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='manual_calib_12_12', targets_to_plot=targets_to_plot,
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='manual_calib_full_model_13_12',
+                                  targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers, translation_dictionary=translations,
                                   scenario_list=scenario_list)
 

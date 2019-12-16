@@ -5,6 +5,10 @@ import os
 from autumn_from_summer.tb_model import create_multi_scenario_outputs
 import matplotlib.pyplot as plt
 
+
+def get_total_popsize(model, time):
+    return sum(model.compartment_values)
+
 # A test trial of creating a model that has the same compartments as the one in
 # "Data needs for evidence-based decisions: a tuberculosis modeler’s ‘wish list’
 
@@ -28,7 +32,13 @@ my_flows = [{"type": "infection_density", "parameter": "infection_rate", "origin
             {"type": "infection_density", "parameter": "reinfection_from_recovered", "origin": "recovered", "to": "early_latent"},
             # {"type": "infection_density", "parameter": "reinfection_from_late_latent", "origin": "late_latent", "to": "early_latent"},
             # {"type": "standard_flows", "parameter": "relapse_rate", "origin": "recovered", "to": "active_tb"},
-            {"type":"compartment_death", "parameter": "tb_mortality_rate", "origin":"active_tb"}]
+            {"type": "compartment_death", "parameter": "tb_mortality_rate", "origin": "active_tb"}]
+
+out_connections = {
+        "incidence_from_early_latent": {"origin": "early_latent", "to": "active_tb"},
+        "incidence_from_late_latent": {"origin": "late_latent", "to": "active_tb"}}
+
+
 
 my_parameters = {'infection_rate': .00013,
                  'immune_stabilisation_rate': 5.4e-3 * 365.25, #0.6,
@@ -53,10 +63,12 @@ my_model = StratifiedModel(times=my_times,
                            initial_conditions=my_initial_conditions,
                            parameters=my_parameters,
                            requested_flows=my_flows,
-                           starting_population=1400000,
+                           starting_population=100000,
                            infectious_compartment=('active_tb',),
                            entry_compartment='susceptible',
-                           birth_approach = "add_crude_birth_rate")
+                           birth_approach="add_crude_birth_rate",
+                           output_connections=out_connections,
+                           derived_output_functions={'population': get_total_popsize})
 
 my_model.death_flows.to_csv("deaths_flows.csv")
 
@@ -87,6 +99,7 @@ if "age" in stratify_by:
                                     [0.8, 0.7, 0.7, 1.0, 1.15],
                                     [0.4, 0.6, 0.6, 1.15, 1.6]]
                                     )
+
     # array estimated from Figure 4 in the paper "Social Contact Patterns in Vietnam and Implications for
     # the Control of Infectious Diseases"
 
@@ -154,12 +167,18 @@ requested_outputs = [
                      'prevXlate_latentXamong',
                      'prevXactive_tbXamong',
                      'prevXrecoveredXamong',
-                    'prevXactive_tbXamongXage_60',
+                     'prevXactive_tbXamongXage_60',
                      'prevXactive_tbXamongXage_15',
                      'prevXactive_tbXamongXage_10',
-                     'prevXactive_tbXamongXage_15',
-                     'prevXactive_tbXamongXage_0'
-                     ]
+                     'prevXactive_tbXamongXage_5',
+                     'prevXactive_tbXamongXage_0',
+                     'prevXlate_latentXamongXage_60',
+                     'prevXlate_latentXamongXage_15',
+                     'prevXlate_latentXamongXage_10',
+                     'prevXlate_latentXamongXage_5',
+                     'prevXlate_latentXamongXage_0']
+
+
 multiplier = {
               'prevXactive_tbXamong': 100000,
               'prevXearly_latentXamong': 100000,
@@ -170,7 +189,12 @@ multiplier = {
               'prevXactive_tbXamongXage_15': 100000,
               'prevXactive_tbXamongXage_10': 100000,
               'prevXactive_tbXamongXage_5': 100000,
-              'prevXactive_tbXamongXage_0': 100000
+              'prevXactive_tbXamongXage_0': 100000,
+              'prevXlate_latentXamongXage_60': 100000,
+              'prevXlate_latentXamongXage_15': 100000,
+              'prevXlate_latentXamongXage_10': 100000,
+              'prevXlate_latentXamongXage_5': 1000000,
+              'prevXlate_latentXamongXage_0': 1000000
               }
 
 translations = None
@@ -178,32 +202,27 @@ pp = PostProcessing(my_model, requested_outputs=requested_outputs, multipliers=m
 out = Outputs([pp])
 out.plot_requested_outputs()
 
-want = " " #population size"
-if "population size" in want:
-    # my_model.plot_compartment_size(["susceptible")
-    model_outputs = my_model.outputs
-    total_pop = []
-    for row in model_outputs:
-        total = 0
-        for column in row:
-            total += column
-        total_pop.append(int(total))
-
-    total_pop2 = sum(my_model.compartment_values)
-    # print(my_times)
-    print(total_pop)
-    # print(total_pop2)
-    fig = plt.figure(my_times, total_pop)
-    fig.suptutle("Total population")
-    fig.set_xlabel("years")
-    fig.set_ylabel("Population")
-
-# Output graphs test
-# req_outputs = ["prevXsusceptibleXamong",
-#                "prevXearly_latentXamong",
-#                "prevXlate_latentXamong",
-#                "prevXrecoveredXamong"]
+# want = "population size"
+# if "population size" in want:
+#     # my_model.plot_compartment_size(["susceptible")
+#     model_outputs = my_model.outputs
+#     total_pop = []
+#     for row in model_outputs:
+#         total = 0
+#         for column in row:
+#             total += column
+#         total_pop.append(int(total))
 #
+#     total_pop2 = sum(my_model.compartment_values)
+#     # print(my_times)
+#     # print(total_pop)
+#     # print(total_pop2)
+#     fig = plt.plot(my_times, total_pop2)
+#     # fig.suptutle("Total population")
+#     # fig.set_xlabel("years")
+#     # fig.set_ylabel("Population")
+
+
 # create_multi_scenario_outputs(models=my_model, req_outputs=req_outputs)
 
 # output_connections = {"TB_deaths":{"origin":"active_tb"}}

@@ -1,0 +1,104 @@
+library(RSQLite)
+setwd("C:/Users/rrag0004/Models/jtrauer_AuTuMN/autumn_from_summer/mcmc_postprocessing")
+path_to_databases = '../mongolia/mcmc_outputs/13_12_2019/'
+sqlite.driver <- dbDriver("SQLite")
+
+ylims = list('contact_rate'=c(12,16), 'adult_latency_adjustment'=c(2,6), 'dr_amplification_prop_among_nonsuccess'=c(.15,.25),
+             'self_recovery_rate'=c(.18,.29), 'tb_mortality_rate'=c(.33,.44), 'rr_transmission_recovered'=c(.8,1.2), 'cdr_multiplier'=c(.66,1.5))
+
+
+db_files = list.files(path_to_databases)
+
+load_databases <- function(){
+  loaded_dbs=list()
+  i = 0
+  for (db_file in db_files){
+    i = i+1
+    filename = paste(path_to_databases,db_file,sep='')
+    db <- dbConnect(sqlite.driver,
+                    dbname = filename)
+    db_name = paste("db",i,sep='')
+    loaded_dbs[[db_name]] = list()
+    for (table_name in c('outputs', 'derived_outputs', 'mcmc_run')){
+      loaded_dbs[[db_name]][[table_name]] = dbReadTable(db, table_name)
+    }
+    # make actual trace dataframe
+    loaded_dbs[[db_name]]$mcmc_trace = make_actual_trace_dataframe(loaded_dbs[[db_name]]$mcmc_run)
+    dbDisconnect(db)
+  }
+  return(loaded_dbs)
+}
+
+plot_traces_and_histograms <- function(loaded_dbs){
+  param_list = colnames(loaded_dbs$db1$mcmc_trace)
+  param_list = param_list[!param_list %in% c('idx', 'Scenario', 'loglikelihood', 'accept')]
+  for (param in c(param_list, 'loglikelihood')){
+    
+    x11()
+    if (param %in% names(ylims)){
+      plot(loaded_dbs$db1$mcmc_trace[[param]], type='l', main=param,ylab='',xlab='iter', ylim = ylims[[param]])
+    }else{
+      plot(loaded_dbs$db1$mcmc_trace[[param]], type='l', main=param,ylab='',xlab='iter')
+    }
+    for (db_index in names(loaded_dbs)){
+      if (db_index != 'db1'){
+        lines(loaded_dbs[[db_index]]$mcmc_trace[[param]])
+      }
+    }
+  }
+  
+  for (param in param_list){
+    x = c()
+    for (db_index in names(loaded_dbs)){
+      x = c(x,loaded_dbs[[db_index]]$mcmc_trace[[param]] )
+    }
+    x11()
+    if (param %in% names(ylims)){
+      hist(x, xlab='', ylab='', main=param,xlim=ylims[[param]])
+    }else{
+      hist(x, xlab='', ylab='', main=param)
+    }
+  }
+  
+  print(length(x))
+  
+}
+
+make_actual_trace_dataframe <- function(mcmc_run_table){
+  trace_table = mcmc_run_table
+  prev_accepted_row = trace_table[1,]
+  for (i in 2:nrow(mcmc_run_table)){
+    if (trace_table$accept[i] == 0){ # replace row with previous accepted
+      trace_table[i,] = prev_accepted_row
+    }else{
+      prev_accepted_row = trace_table[i,]
+    }
+  }
+  return(trace_table)
+}
+
+find_best_likelihood_params <- function(loaded_dbs){
+  best_db_index = 'db1'
+  best_run_index = 0
+  best_ll = -1.e30
+  for (db_index in names(loaded_dbs)){
+    best_ll_this_db = max(loaded_dbs[[db_index]]$mcmc_run$loglikelihood)
+    if (best_ll_this_db>best_ll){
+      best_ll = best_ll_this_db
+      best_db_index = db_index
+      best_run_index = which.max(loaded_dbs[[db_index]]$mcmc_run$loglikelihood)
+    }
+  }
+  str_out = paste("Best run found in database ", best_db_index, " for run_", best_run_index-1, sep='')
+  
+  print(str_out)
+  return(loaded_dbs[[best_db_index]]$mcmc_run[best_run_index,])
+  
+}
+
+loaded_dbs = load_databases()
+
+plot_traces_and_histograms(loaded_dbs)
+
+best_params = find_best_likelihood_params(loaded_dbs)
+print(best_params)

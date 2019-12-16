@@ -3,13 +3,14 @@ from summer_py.post_processing import *
 from summer_py.outputs import *
 import os
 from autumn_from_summer.tb_model import create_multi_scenario_outputs
+import matplotlib.pyplot as plt
 
 # A test trial of creating a model that has the same compartments as the one in
 # "Data needs for evidence-based decisions: a tuberculosis modeler’s ‘wish list’
 
 # Time steps are given in years
 start_time = 2000.
-end_time = 2300.
+end_time = 2100.
 time_step = 1
 my_times = numpy.linspace(start_time, end_time, int((end_time-start_time)/time_step) + 1).tolist()
 
@@ -29,11 +30,11 @@ my_flows = [{"type": "infection_density", "parameter": "infection_rate", "origin
             # {"type": "standard_flows", "parameter": "relapse_rate", "origin": "recovered", "to": "active_tb"},
             {"type":"compartment_death", "parameter": "tb_mortality_rate", "origin":"active_tb"}]
 
-my_parameters = {'infection_rate': .00012,
+my_parameters = {'infection_rate': .00013,
                  'immune_stabilisation_rate': 5.4e-3 * 365.25, #0.6,
                  'reactivation_rate': 3.3e-6 * 365.25,
-                 # 'reinfection_from_late_latent': 0.0021,
-                 'reinfection_from_recovered': 0.022,
+                 'reinfection_from_late_latent': 0.0021,
+                 'reinfection_from_recovered': 0.00013,
                  'recovery_rate': 0.5,
                  'rapid_progression_rate': 2.7e-4 * 365.25,
                  # 'relapse_rate': 0.002,
@@ -42,14 +43,20 @@ my_parameters = {'infection_rate': .00012,
                  "crude_birth_rate": 0.0169
                  }
 
+# If we assume the recovered population is the same as the susceptible population in terms of risk of TB infection:
+my_parameters["reinfection_from_recovered"] = my_parameters["infection_rate"]
+
 my_initial_conditions = {"active_tb": 1}
-out_connections = {"incidence": {"origin": "susceptible", "to": "active_tb"}} #request the model the track specific model quantities during integration
 
-
-my_model = StratifiedModel(times=my_times, compartment_types=my_compartments, initial_conditions=my_initial_conditions,
-                           parameters=my_parameters, requested_flows=my_flows, starting_population=100000,
-                           infectious_compartment=('active_tb',), entry_compartment='susceptible',
-                           birth_approach="add_crude_birth_rate", output_connections=out_connections)
+my_model = StratifiedModel(times=my_times,
+                           compartment_types=my_compartments,
+                           initial_conditions=my_initial_conditions,
+                           parameters=my_parameters,
+                           requested_flows=my_flows,
+                           starting_population=100000,
+                           infectious_compartment=('active_tb',),
+                           entry_compartment='susceptible',
+                           birth_approach = "add_crude_birth_rate")
 
 my_model.death_flows.to_csv("deaths_flows.csv")
 
@@ -73,7 +80,16 @@ if "age" in stratify_by:
     # reactivation_rate_adjustment from Romain's epidemic paper, v
     # rapid_progression_rate_adjustment from Romain's epidemic paper, epsilon
 
-    age_mixing = None  # None means homogenous mixing
+    age_mixing_matrix = numpy.array(
+                                   [[1, 0, 0, 0, 0],
+                                    [0, 1, 0, 0, 0],
+                                    [0, 0, 1, 0, 0],
+                                    [0, 0, 0, 1, 0],
+                                    [0, 0, 0, 0, 1]]
+                                    )
+    # numpy.identity(5)
+    print(age_mixing_matrix)
+    age_mixing = age_mixing_matrix # None means homogenous mixing
     my_model.stratify("age", [0, 5, 10, 15, 60], [], {}, {}, infectiousness_adjustments={"0": 0, "5": 0, "10": 0},
                       mixing_matrix=age_mixing, verbose=False,
                       adjustment_requests={'immune_stabilisation_rate': immune_stabilisation_adjustment,
@@ -82,7 +98,7 @@ if "age" in stratify_by:
                                            'infection_rate': infection_rate_adjustment})
 
 if "bcg" in stratify_by:
-    # Stratify model by bcg vaccination status
+    # Stratify model by vaccination status
 
     proportion_bcg = {"bcg_none": 0.05, "bcg_vaccinated": 0.95}
     my_model.stratify("bcg", ["bcg_none", "bcg_vaccinated"], ["susceptible"], requested_proportions=proportion_bcg,
@@ -121,39 +137,53 @@ if "novel" in stratify_by:
 
 
 # Model outputs
+my_model.transition_flows.to_csv("transition.csv")
+my_model.death_flows.to_csv("deaths_flows.csv")
+
 create_flowchart(my_model)
 print(os.getcwd())
 
 my_model.run_model()
 
-# print(my_model.outputs)
-
-multiplier = {'prevXactive_tbXamong': 100000,
+requested_outputs = [
+                     'prevXsusceptibleXamong',
+                     'prevXearly_latentXamong',
+                     'prevXlate_latentXamong',
+                     'prevXactive_tbXamong',
+                     'prevXrecoveredXamong'
+                     ]
+multiplier = {
+              'prevXactive_tbXamong': 100000,
               'prevXearly_latentXamong': 100000,
               'prevXlate_latentXamong': 100000,
               'prevXsusceptibleXamong': 100000,
-              'prevXrecoveredXamong': 100000}
+              'prevXrecoveredXamong': 100000
+              }
 
-pp = PostProcessing(my_model, requested_outputs=['prevXsusceptibleXamong',
-                                                 'prevXearly_latentXamong',
-                                                 'prevXlate_latentXamong',
-                                                 'prevXactive_tbXamong',
-                                                 'prevXrecoveredXamong'], multipliers=multiplier)
-# 'incidenceXsusceptible'
-
-# example of how to write requested ouput for incidece, from mongolia model:
-# for stratification in stratify_by:
-#     for stratum in all_stratifications[stratification]:
-#         for stage in ["early", 'late']:
-#             out_connections["indidence_" + stage + "X" + stratification + "_" + stratum] = \
-#                 {"origin": stage + "_latent", "to": "infectious", "to_condition": stratification + "_" + stratum}
-
+translations = None
+pp = PostProcessing(my_model, requested_outputs=requested_outputs, multipliers=multiplier)
 out = Outputs([pp])
 out.plot_requested_outputs()
 
+want = " " #population size"
+if "population size" in want:
+    # my_model.plot_compartment_size(["susceptible")
+    model_outputs = my_model.outputs
+    total_pop = []
+    for row in model_outputs:
+        total = 0
+        for column in row:
+            total += column
+        total_pop.append(int(total))
 
-
-# my_model.plot_compartment_size(["susceptible","vaccine"])
+    total_pop2 = sum(my_model.compartment_values)
+    # print(my_times)
+    print(total_pop)
+    # print(total_pop2)
+    fig = plt.figure(my_times, total_pop)
+    fig.suptutle("Total population")
+    fig.set_xlabel("years")
+    fig.set_ylabel("Population")
 
 # Output graphs test
 # req_outputs = ["prevXsusceptibleXamong",

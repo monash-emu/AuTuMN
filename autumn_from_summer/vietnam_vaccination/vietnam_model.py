@@ -114,7 +114,7 @@ if "bcg" in stratify_by:
                                            'infection_rateXage_60': {"bcg_vaccinated": 1.0}})
 
 if "novel" in stratify_by:
-    # Stratify model by novel vaccination status
+    # Stratify model by novel vaccination status (parameters are currently arbitrary)
 
     proportion_novel = {"novel_none": 0.5, "novel_vaccinated": 0.5}
     my_model.stratify("novel", ["novel_none", "novel_vaccinated"], ["susceptible"],
@@ -153,14 +153,24 @@ requested_outputs = [
                      'prevXearly_latentXamong',
                      'prevXlate_latentXamong',
                      'prevXactive_tbXamong',
-                     'prevXrecoveredXamong'
+                     'prevXrecoveredXamong',
+                    'prevXactive_tbXamongXage_60',
+                     'prevXactive_tbXamongXage_15',
+                     'prevXactive_tbXamongXage_10',
+                     'prevXactive_tbXamongXage_15',
+                     'prevXactive_tbXamongXage_0'
                      ]
 multiplier = {
               'prevXactive_tbXamong': 100000,
               'prevXearly_latentXamong': 100000,
               'prevXlate_latentXamong': 100000,
               'prevXsusceptibleXamong': 100000,
-              'prevXrecoveredXamong': 100000
+              'prevXrecoveredXamong': 100000,
+              'prevXactive_tbXamongXage_60': 100000,
+              'prevXactive_tbXamongXage_15': 100000,
+              'prevXactive_tbXamongXage_10': 100000,
+              'prevXactive_tbXamongXage_5': 100000,
+              'prevXactive_tbXamongXage_0': 100000
               }
 
 translations = None

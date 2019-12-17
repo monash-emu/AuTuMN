@@ -18,3 +18,4 @@ pandas==0.24.2
 pyDOE>=0.3.8
 git+https://github.com/jtrauer/summer.git
 pymc3==3.7
+multiprocess==0.70.9

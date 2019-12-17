@@ -21,16 +21,13 @@ _logger.setLevel(logging.DEBUG)
 
 theano.config.optimizer = 'None'
 
-# location for output database
-output_db_path = os.path.join(os.getcwd(), 'databases/outputs_' + now.strftime("%m_%d_%Y_%H_%M_%S") + '.db')
-
 
 class Calibration:
     """
     this class handles model calibration using an MCMC algorithm if sampling from the posterior distribution is
     required, or using maximum likelihood estimation if only one calibrated parameter set is required.
     """
-    def __init__(self, model_builder, priors, targeted_outputs, multipliers):
+    def __init__(self, model_builder, priors, targeted_outputs, multipliers, chain_index):
         self.model_builder = model_builder  # a function that builds a new model without running it
         self.running_model = None  # a model that will be run during calibration
         self.post_processing = None  # a PostProcessing object containing the required outputs of a model that has been run
@@ -38,6 +35,8 @@ class Calibration:
         self.param_list = [self.priors[i]['param_name'] for i in range(len(self.priors))]
         self.targeted_outputs = targeted_outputs  # a list of dictionaries. Each dictionary describes a target
         self.multipliers = multipliers
+        self.chain_index = chain_index
+        self.output_db_path = os.path.join(os.getcwd(), 'databases/outputs_calibration_chain_' + str(self.chain_index) + '.db')
         self.data_as_array = None  # will contain all targeted data points in a single array
 
         self.loglike = None  # will store theano object
@@ -79,8 +78,8 @@ class Calibration:
         out_df = pd.DataFrame(self.running_model.outputs, columns=self.running_model.compartment_names)
         derived_output_df = pd.DataFrame.from_dict(self.running_model.derived_outputs)
         store_tb_database(derived_output_df, table_name="derived_outputs", run_idx=self.iter_num,
-                           database_name=output_db_path, append=True)
-        store_tb_database(out_df, run_idx=self.iter_num, times=self.running_model.times, database_name=output_db_path,
+                           database_name=self.output_db_path, append=True)
+        store_tb_database(out_df, run_idx=self.iter_num, times=self.running_model.times, database_name=self.output_db_path,
                           append=True)
         self.iter_num += 1
 
@@ -138,7 +137,7 @@ class Calibration:
                 mcmc_run_colnames = mcmc_run_colnames.append('loglikelihood')
                 mcmc_run_df = pd.DataFrame(mcmc_run_dict, columns=mcmc_run_colnames, index=[self.iter_num])
                 store_tb_database(mcmc_run_df, table_name='mcmc_run', run_idx=self.iter_num,
-                                  database_name=output_db_path, append=True)
+                                  database_name=self.output_db_path, append=True)
             self.evaluated_params_ll.append((copy.copy(params), copy.copy(ll)))
         return ll
 
@@ -247,7 +246,7 @@ class Calibration:
                 mcmc_run_colnames.append('accept')
                 mcmc_run_df = pd.DataFrame(mcmc_run_dict, columns=mcmc_run_colnames, index=[i_run])
                 store_tb_database(mcmc_run_df, table_name='mcmc_run', run_idx=i_run,
-                                  database_name=output_db_path, append=True)
+                                  database_name=self.output_db_path, append=True)
 
                 print(str(i_run + 1) + " MCMC iterations completed.")
 
@@ -286,7 +285,7 @@ class Calibration:
 
                     traceDf = pm.trace_to_dataframe(self.mcmc_trace)
                     traceDf.to_csv('trace.csv')
-                    out_database = InputDB(database_name=output_db_path)
+                    out_database = InputDB(database_name=self.output_db_path)
                     mcmc_run_df = out_database.db_query('mcmc_run')
                     mcmc_run_df = mcmc_run_df.reset_index(drop=True)
                     traceDf = traceDf.reset_index(drop=True)
@@ -295,7 +294,7 @@ class Calibration:
                                              right_on=self.param_list)
                     mcmc_run_info['accepted'].fillna(0, inplace=True)
                     mcmc_run_info = mcmc_run_info.drop_duplicates()
-                    store_tb_database(mcmc_run_info, table_name='mcmc_run_info', database_name=output_db_path)
+                    store_tb_database(mcmc_run_info, table_name='mcmc_run_info', database_name=self.output_db_path)
                 else:
                     ValueError("requested run mode is not supported. Must be one of ['pymc_mcmc', 'lme']")
         elif run_mode == 'lsm':

@@ -371,6 +371,9 @@ if __name__ == "__main__":
     load_model = False
 
     scenario_params = {
+        0: {'contact_rate': 10.44, 'adult_latency_adjustment': 4.97, 'dr_amplification_prop_among_nonsuccess': .214,
+            'self_recovery_rate': .22, 'tb_mortality_rate': .354, 'rr_transmission_recovered': .893,
+            'cdr_multiplier': 1.17},  # from MCMC maximum likelihood estimate
             # 1: {'ipt_age_0_ct_coverage': .5},
             # 2: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
             #     'ipt_age_60_ct_coverage': .5},
@@ -381,14 +384,15 @@ if __name__ == "__main__":
             # 6: {'acf_coverage': .2, 'acf_urban_ger_switch': 1.},
             # 8: {'diagnostic_sensitivity_smearneg': 1., 'prop_mdr_detected_as_mdr': .9}
         }
-    scenario_list = [0]
-    scenario_list.extend(list(scenario_params.keys()))
+    scenario_list = list(scenario_params.keys())
+    if 0 not in scenario_list:
+        scenario_list = [0] + scenario_list
 
     if load_model:
         load_mcmc = True
 
         if load_mcmc:
-            models = load_calibration_from_db('outputs_11_27_2019_14_07_54.db')
+            models = load_calibration_from_db('z_outputs_calibration_chain_15.db')
             scenario_list = range(len(models))
         else:
             models = []
@@ -437,8 +441,8 @@ if __name__ == "__main__":
     targets_to_plot = {}
     for target in calib_targets:
         targets_to_plot[target['output_key']] = [target['years'], target['values']]
-        # if target['output_key'] not in req_outputs:
-        #     req_outputs.append(target['output_key'])
+        if target['output_key'] not in req_outputs:
+            req_outputs.append(target['output_key'])
 
     multipliers = {
         'prevXinfectiousXstrain_mdrXamongXinfectious': 100.
@@ -479,7 +483,7 @@ if __name__ == "__main__":
                     'prevXinfectiousXstrain_mdrXamong': 'Prevalence of MDR-TB (/100,000)'
                     }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_cdr_17_12',
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='mle_18_12',
                                   targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers, translation_dictionary=translations,
                                   scenario_list=scenario_list)

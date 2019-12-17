@@ -4,7 +4,7 @@ from summer_py.outputs import *
 import os
 from autumn_from_summer.tb_model import create_multi_scenario_outputs
 import matplotlib.pyplot as plt
-from datetime import datetime
+import datetime
 
 now = datetime.now()
 
@@ -73,7 +73,16 @@ my_model = StratifiedModel(times=my_times,
                            entry_compartment='susceptible',
                            birth_approach="add_crude_birth_rate",
                            output_connections=out_connections,
-                           derived_output_functions={'population': get_total_popsize})
+                           derived_output_functions={'population': get_total_popsize},
+                           death_output_categories=((), ("age_0",), ("age_5",))
+                           )
+
+my_model.death_flows.to_csv("deaths_flows.csv")
+
+# Verbose prints out information, does not effect model
+# Specify arguments, need to check argument inputs order for my_model.stratify!!!
+# default for parameter_adjustment is to give a relative parameter, e.g. original parameter is x,
+# "1":0.5, means new parameter for age 1 is 0.5x
 
 # Choose what to stratify the model by
 stratify_by = ["age", "bcg"]
@@ -89,9 +98,9 @@ if "age" in stratify_by:
     reactivation_rate_adjustment = {"0W": 1.9e-11 * 365.25, "5W": 6.4e-6 * 365.25, "10W": 6.4e-6 * 365.25}
     rapid_progression_rate_adjustment = {"0W": 6.6e-3 * 365.25, "5W": 2.7e-3 * 365.25, "10W": 2.7e-3 * 365.25}
 
-    # immune_stabilisation_adjustment from Romain's epidemic paper, keppa
-    # reactivation_rate_adjustment from Romain's epidemic paper, v
-    # rapid_progression_rate_adjustment from Romain's epidemic paper, epsilon
+    # immune_stabilisation_adjustment from Romain's epidemic paper, Keppa
+    # reactivation_rate_adjustment from Romain's epidemic paper, Nu
+    # rapid_progression_rate_adjustment from Romain's epidemic paper, Epsilon
 
     # Matrix of social mixing rates between age groups
     age_mixing_matrix = numpy.array(

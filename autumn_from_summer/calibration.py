@@ -61,11 +61,12 @@ class Calibration:
         :return:
         """
         if self.post_processing is None:  # we need to initialise a PostProcessing object
-            requested_outputs = [self.targeted_outputs[i]['output_key'] for i in range(len(self.targeted_outputs))]
+            requested_outputs = [self.targeted_outputs[i]['output_key'] for i in range(len(self.targeted_outputs)) if 'prev' in self.targeted_outputs[i]['output_key']]
             requested_times = {}
 
             for _output in self.targeted_outputs:
-                requested_times[_output['output_key']] = _output['years']
+                if 'prev' in _output['output_key']:
+                    requested_times[_output['output_key']] = _output['years']
 
             self.post_processing = post_proc.PostProcessing(self.running_model, requested_outputs=requested_outputs,
                                                             requested_times=requested_times,
@@ -120,7 +121,11 @@ class Calibration:
             for target in self.targeted_outputs:
                 key = target['output_key']
                 data = np.array(target['values'])
-                model_output = np.array(self.post_processing.generated_outputs[key])
+                if key in self.post_processing.generated_outputs:
+                    model_output = np.array(self.post_processing.generated_outputs[key])
+                else:
+                    index = self.running_model.times.index(target['years'][0])
+                    model_output = np.array([self.post_processing.derived_outputs[key][index]])
 
                 if self.run_mode == 'lsm':
                     ll += np.sum((data - model_output)**2)

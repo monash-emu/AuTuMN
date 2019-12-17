@@ -1,7 +1,7 @@
 from autumn_from_summer.calibration import *
 from multiprocess.pool import Pool
 
-par_priors = [{'param_name': 'contact_rate', 'distribution': 'uniform', 'distri_params': [12., 16.]},
+par_priors = [{'param_name': 'contact_rate', 'distribution': 'uniform', 'distri_params': [10., 20.]},
               {'param_name': 'adult_latency_adjustment', 'distribution': 'uniform', 'distri_params': [2., 6.]},
               {'param_name': 'dr_amplification_prop_among_nonsuccess', 'distribution': 'uniform',
                'distri_params': [.15, .25]},
@@ -25,14 +25,14 @@ multipliers = {'prevXinfectiousXamong': 1.e5,
 
 
 if __name__ == '__main__':
-    n_cpus = 4
+    n_cpus = 48
     _iterable = []
     for i in range(n_cpus):
         _iterable.append(Calibration(build_mongolia_model, par_priors, target_outputs, multipliers, i))
 
     def run_a_single_chain(_calib):
         _calib.run_fitting_algorithm(run_mode='autumn_mcmc', n_iterations=100000, n_burned=0,
-                                     n_chains=1, available_time=3600.*24*3)
+                                     n_chains=1, available_time=3600.*24.*2.)
         return
 
 

@@ -111,9 +111,9 @@ def run_multi_scenario(scenario_params, scenario_start_time, model_builder):
     models = [baseline_model]
 
     for scenario_index in scenario_params.keys():
-        print("____________________  Now running Scenario " + str(scenario_index))
         if scenario_index == 0:
             continue
+        print("____________________  Now running Scenario " + str(scenario_index))
         scenario_params[scenario_index]['start_time'] = scenario_start_time
         scenario_model = initialise_scenario_run(baseline_model, scenario_params[scenario_index], model_builder)
         scenario_model.run_model()

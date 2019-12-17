@@ -183,24 +183,11 @@ my_requested_outputs = [
                      'prevXlate_latentXamongXage_0'
                     ]
 
-
-my_multiplier = {
-              'prevXinfectiousXamong': 100000,
-              'prevXearly_latentXamong': 100000,
-              'prevXlate_latentXamong': 100000,
-              'prevXsusceptibleXamong': 100000,
-              'prevXrecoveredXamong': 100000,
-              'prevXinfectiousXamongXage_60': 100000,
-              'prevXinfectiousXamongXage_15': 100000,
-              'prevXinfectiousXamongXage_10': 100000,
-              'prevXinfectiousXamongXage_5': 100000,
-              'prevXinfectiousXamongXage_0': 100000,
-              'prevXlate_latentXamongXage_60': 100000,
-              'prevXlate_latentXamongXage_15': 100000,
-              'prevXlate_latentXamongXage_10': 100000,
-              'prevXlate_latentXamongXage_5': 1000000,
-              'prevXlate_latentXamongXage_0': 1000000
-              }
+my_multiplier = {}
+for output in my_requested_outputs:
+    # Adds a 100 000 multiplier to all prevalence outputs
+    if "prev" in output:
+        my_multiplier[output] = 100000
 
 my_translations = {'prevXsusceptibleXamong': "Susceptible prevalence (/100 000)",
                 'prevXearly_latentXamong':"Prevalence of early latent TB (/100 000)",

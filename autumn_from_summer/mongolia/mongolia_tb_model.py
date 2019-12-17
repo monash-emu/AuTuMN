@@ -27,7 +27,7 @@ def build_mongolia_model(update_params={}):
     # some default parameter values
     external_params = {  # run configuration
                        'start_time': 1900.,
-                       'end_time': 2020.,
+                       'end_time': 2035.,
                        'time_step': 1.,
                        'start_population': 3000000,
                        # base model definition:

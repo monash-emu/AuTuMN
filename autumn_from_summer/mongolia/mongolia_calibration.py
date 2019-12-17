@@ -13,7 +13,8 @@ par_priors = [{'param_name': 'contact_rate', 'distribution': 'uniform', 'distri_
 target_outputs = [{'output_key': 'prevXinfectiousXamong', 'years': [2015.], 'values': [757.], 'cis': [(620., 894.)]},
                   {'output_key': 'prevXlatentXamongXage_5', 'years': [2016.], 'values': [960.], 'cis': [(902., 1018.)]},
                   {'output_key': 'prevXinfectiousXstrain_mdrXamongXinfectious', 'years': [2015.], 'values': [503.],
-                   'cis': [(410., 670.)]}
+                   'cis': [(410., 670.)]},
+                  {'output_key': 'notifications', 'years': [2015.], 'values': [4685.]}
                   ]
 
 multipliers = {'prevXinfectiousXamong': 1.e5,

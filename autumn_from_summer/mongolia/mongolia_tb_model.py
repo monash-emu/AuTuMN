@@ -31,14 +31,14 @@ def build_mongolia_model(update_params={}):
                        'time_step': 1.,
                        'start_population': 3000000,
                        # base model definition:
-                       'contact_rate': 16.,
+                       'contact_rate': 14.,
                        'rr_transmission_recovered': 1.,
                        'rr_transmission_infected': 0.21,
                        'adult_latency_adjustment': 4.,  # used to increase adult progression rates due to pollution
                        'self_recovery_rate': 0.231,  # this is for smear-positive TB
                        'tb_mortality_rate': 0.389,  # this is for smear-positive TB
-                       'prop_smearpos': .33,
-                       'cdr_multiplier': 1.3,
+                       'prop_smearpos': .5,
+                       'cdr_multiplier': 1.,
                          # MDR-TB:
                        'dr_amplification_prop_among_nonsuccess': 0.20,  # based on Cox et al and Bonnet et al
                        'prop_mdr_detected_as_mdr': 0.5,
@@ -136,22 +136,22 @@ def build_mongolia_model(update_params={}):
         {"type": "standard_flows", "parameter": "case_detection", "origin": "infectious", "to": "recovered"})
 
     # Add IPT as a customised flow
-    # def ipt_flow_func(model, n_flow):
-    #     if not hasattr(model, 'strains') or len(model.strains) < 2:
-    #         infectious_populations = model.infectious_populations['all_strains'][0]
-    #     else:
-    #         infectious_populations = \
-    #                 model.infectious_populations[find_stratum_index_from_string(
-    #                     model.transition_flows.at[n_flow, "parameter"], "strain")][0]
-    #
-    #     n_early_latent_comps = len([model.compartment_names[i] for i in range(len(model.compartment_names)) if
-    #                                model.compartment_names[i][0:12] == 'early_latent'])
-    #
-    #     return infectious_populations / float(n_early_latent_comps)
+    def ipt_flow_func(model, n_flow):
+        if not hasattr(model, 'strains') or len(model.strains) < 2:
+            infectious_populations = model.infectious_populations['all_strains'][0]
+        else:
+            infectious_populations = \
+                    model.infectious_populations[find_stratum_index_from_string(
+                        model.transition_flows.at[n_flow, "parameter"], "strain")][0]
 
-    # _tb_model.add_transition_flow(
-    #     {"type": "customised_flows", "parameter": "ipt_rate", "origin": "early_latent", "to": "recovered",
-    #      "function": ipt_flow_func})
+        n_early_latent_comps = len([model.compartment_names[i] for i in range(len(model.compartment_names)) if
+                                   model.compartment_names[i][0:12] == 'early_latent'])
+
+        return infectious_populations / float(n_early_latent_comps)
+
+    _tb_model.add_transition_flow(
+        {"type": "customised_flows", "parameter": "ipt_rate", "origin": "early_latent", "to": "recovered",
+         "function": ipt_flow_func})
 
     # add ACF flow
     _tb_model.add_transition_flow(
@@ -201,8 +201,8 @@ def build_mongolia_model(update_params={}):
         tb_control_recovery_rate = lambda t: tsr_function(t) * detect_rate_by_organ['smearpos'](t)
 
     # initialise ipt_rate function assuming coverage of 1.0 before age stratification
-    # ipt_rate_function = lambda t: detect_rate(t) * 1.0 *\
-    #                               external_params['yield_contact_ct_tstpos_per_detected_tb'] * external_params['ipt_efficacy']
+    ipt_rate_function = lambda t: detect_rate_by_organ['overall'](t) * 1.0 *\
+                                  external_params['yield_contact_ct_tstpos_per_detected_tb'] * external_params['ipt_efficacy']
 
     # initialise acf_rate function
     acf_rate_function = lambda t: external_params['acf_coverage'] * external_params['acf_sensitivity'] *\
@@ -212,8 +212,8 @@ def build_mongolia_model(update_params={}):
     _tb_model.adaptation_functions["case_detection"] = tb_control_recovery_rate
     _tb_model.parameters["case_detection"] = "case_detection"
 
-    # _tb_model.adaptation_functions["ipt_rate"] = ipt_rate_function
-    # _tb_model.parameters["ipt_rate"] = "ipt_rate"
+    _tb_model.adaptation_functions["ipt_rate"] = ipt_rate_function
+    _tb_model.parameters["ipt_rate"] = "ipt_rate"
 
     _tb_model.adaptation_functions["acf_rate"] = acf_rate_function
     _tb_model.parameters["acf_rate"] = "acf_rate"
@@ -287,8 +287,8 @@ def build_mongolia_model(update_params={}):
 
     if 'organ' in stratify_by:
         props_smear = {"smearpos": external_params['prop_smearpos'],
-                       "smearneg": 1. - (external_params['prop_smearpos'] + .30),
-                       "extrapul": .30}
+                       "smearneg": 1. - (external_params['prop_smearpos'] + .20),
+                       "extrapul": .20}
         mortality_adjustments = {"smearpos": 1., "smearneg": .64, "extrapul": .64}
         recovery_adjustments = {"smearpos": 1., "smearneg": .56, "extrapul": .56}
 
@@ -371,10 +371,6 @@ if __name__ == "__main__":
     load_model = False
 
     scenario_params = {
-            # 1: {'contact_rate':10.5}, 2: {'contact_rate':11.}, 3: {'contact_rate':11.5}, 4: {'contact_rate':12.},
-            # 5: {'contact_rate':12.5}
-
-
             # 1: {'ipt_age_0_ct_coverage': .5},
             # 2: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
             #     'ipt_age_60_ct_coverage': .5},
@@ -408,10 +404,11 @@ if __name__ == "__main__":
         delta = time() - t0
         print("Running time: " + str(round(delta, 1)) + " seconds")
 
-    req_outputs = ['prevXinfectiousXamong']  #,
-                   # 'prevXlatentXamong',
-                   # 'prevXinfectiousXorgan_smearposXamongXinfectious', 'prevXinfectiousXorgan_smearnegXamongXinfectious',
-                   # 'prevXinfectiousXorgan_smearposXamongXage_15Xage_60Xlocation_prison']
+    req_outputs = ['prevXinfectiousXamong',
+                   'prevXlatentXamong',
+                   'prevXinfectiousXorgan_smearposXamongXinfectious', 'prevXinfectiousXorgan_smearnegXamongXinfectious',
+                   'prevXinfectiousXorgan_extrapulXamongXinfectious',
+                   'prevXinfectiousXorgan_smearposXamongXage_15Xage_60Xlocation_prison']
 
     # {'prevXinfectiousXamongXage_15Xage_60': [[2015.], [560.]],
     #                    'prevXlatentXamongXage_5': [[2016.], [9.6]],
@@ -482,7 +479,7 @@ if __name__ == "__main__":
                     'prevXinfectiousXstrain_mdrXamong': 'Prevalence of MDR-TB (/100,000)'
                     }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_cdr',
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_cdr_17_12',
                                   targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers, translation_dictionary=translations,
                                   scenario_list=scenario_list)

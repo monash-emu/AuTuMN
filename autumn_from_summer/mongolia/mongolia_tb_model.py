@@ -22,7 +22,7 @@ def build_mongolia_timevariant_tsr():
 
 def build_mongolia_model(update_params={}):
 
-    stratify_by = ['age', 'organ', 'location', 'strain']
+    stratify_by = ['age', 'strain', 'location', 'organ']
 
     # some default parameter values
     external_params = {  # run configuration
@@ -71,6 +71,14 @@ def build_mongolia_model(update_params={}):
                        'acf_urban_ger_switch': 0.,
                        'acf_prison_switch': 0.
                        }
+
+    # update external_params with MCMC mle estimates
+    mle_estimates = {'contact_rate': 6.,  # 10.44,
+                     'adult_latency_adjustment': 4.97,
+                     'dr_amplification_prop_among_nonsuccess': .214, 'self_recovery_rate': .22,
+                     'tb_mortality_rate': .354, 'rr_transmission_recovered': .893, 'cdr_multiplier': 1.17}
+    external_params.update(mle_estimates)
+
     # update external_params with new parameter values found in update_params
     external_params.update(update_params)
 
@@ -136,18 +144,48 @@ def build_mongolia_model(update_params={}):
         {"type": "standard_flows", "parameter": "case_detection", "origin": "infectious", "to": "recovered"})
 
     # Add IPT as a customised flow
-    def ipt_flow_func(model, n_flow):
-        if not hasattr(model, 'strains') or len(model.strains) < 2:
-            infectious_populations = model.infectious_populations['all_strains'][0]
-        else:
-            infectious_populations = \
-                    model.infectious_populations[find_stratum_index_from_string(
-                        model.transition_flows.at[n_flow, "parameter"], "strain")][0]
+    def ipt_flow_func(model, n_flow, _time, _compartment_values):
+        """
+        Work out the number of detected individuals from the relevant active TB compartments (with regard to the origin
+        latent compartment of n_flow) multiplied with the proportion of the relevant infected contacts that is from this
+        latent compartment.
+        """
+        dict_flows = model.transition_flows.to_dict()
+        origin_comp_name = dict_flows['origin'][n_flow]
+        components_latent_comp = find_name_components(origin_comp_name)
 
-        n_early_latent_comps = len([model.compartment_names[i] for i in range(len(model.compartment_names)) if
-                                   model.compartment_names[i][0:12] == 'early_latent'])
+        # find compulsory tags to be found in relevant infectious compartments
+        tags = []
+        for component in components_latent_comp:
+            if 'location_' in component or 'strain_' in component:
+                tags.append(component)
 
-        return infectious_populations / float(n_early_latent_comps)
+        # loop through all relevant infectious compartments
+        total_tb_detected = 0.
+        for comp_ind in model.infectious_indices['all_strains']:
+            active_components = find_name_components(model.compartment_names[comp_ind])
+            if all(elem in active_components for elem in tags):
+                infectious_pop = _compartment_values[comp_ind]
+                detection_indices = [index for index, val in dict_flows['parameter'].items() if 'case_detection' in val]
+                flow_index = [index for index in detection_indices if dict_flows['origin'][index] == model.compartment_names[comp_ind]][0]
+                param_name = dict_flows['parameter'][flow_index]
+                detection_tx_rate = model.get_parameter_value(param_name, _time)
+                tsr = mongolia_tsr(_time) + external_params['reduction_negative_tx_outcome'] * (1. - mongolia_tsr(_time))
+                if 'strain_mdr' in model.compartment_names[comp_ind]:
+                    tsr = external_params['mdr_tsr'] * external_params['prop_mdr_detected_as_mdr']
+                if tsr > 0.:
+                    total_tb_detected += infectious_pop * detection_tx_rate / tsr
+
+        # list all latent compartments relevant to the relevant infectious population
+        relevant_latent_compartments_indices = [i for i, comp_name in enumerate(model.compartment_names) if
+                               find_stem(comp_name) == 'early_latent' and all(elem in comp_name for elem in tags)]
+
+        total_relevant_latent_size = sum(_compartment_values[i] for i in relevant_latent_compartments_indices)
+        current_latent_size = _compartment_values[model.compartment_names.index(origin_comp_name)]
+        prop_of_relevant_latent = current_latent_size / total_relevant_latent_size if\
+            total_relevant_latent_size > 0. else 0.
+
+        return total_tb_detected * prop_of_relevant_latent
 
     _tb_model.add_transition_flow(
         {"type": "customised_flows", "parameter": "ipt_rate", "origin": "early_latent", "to": "recovered",
@@ -201,8 +239,8 @@ def build_mongolia_model(update_params={}):
         tb_control_recovery_rate = lambda t: tsr_function(t) * detect_rate_by_organ['smearpos'](t)
 
     # initialise ipt_rate function assuming coverage of 1.0 before age stratification
-    ipt_rate_function = lambda t: detect_rate_by_organ['overall'](t) * 1.0 *\
-                                  external_params['yield_contact_ct_tstpos_per_detected_tb'] * external_params['ipt_efficacy']
+    ipt_rate_function = lambda t: 1.0 * external_params['yield_contact_ct_tstpos_per_detected_tb'] *\
+                                  external_params['ipt_efficacy']
 
     # initialise acf_rate function
     acf_rate_function = lambda t: external_params['acf_coverage'] * external_params['acf_sensitivity'] *\
@@ -371,18 +409,16 @@ if __name__ == "__main__":
     load_model = False
 
     scenario_params = {
-        0: {'contact_rate': 10.44, 'adult_latency_adjustment': 4.97, 'dr_amplification_prop_among_nonsuccess': .214,
-            'self_recovery_rate': .22, 'tb_mortality_rate': .354, 'rr_transmission_recovered': .893,
-            'cdr_multiplier': 1.17},  # from MCMC maximum likelihood estimate
-            # 1: {'ipt_age_0_ct_coverage': .5},
-            # 2: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
-            #     'ipt_age_60_ct_coverage': .5},
-            # 3: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
-            #      'ipt_age_60_ct_coverage': .5, 'ds_ipt_switch': 0., 'mdr_ipt_switch': 1.},
-            # 4: {'mdr_tsr': .8},
-            # 5: {'reduction_negative_tx_outcome': 0.5},
-            # 6: {'acf_coverage': .2, 'acf_urban_ger_switch': 1.},
-            # 8: {'diagnostic_sensitivity_smearneg': 1., 'prop_mdr_detected_as_mdr': .9}
+        0: {},
+        # 1: {'ipt_age_0_ct_coverage': 1.},
+        # 2: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
+        #          'ipt_age_60_ct_coverage': .5},
+        # 3: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
+        #           'ipt_age_60_ct_coverage': .5, 'ds_ipt_switch': 0., 'mdr_ipt_switch': 1.},
+        # 4: {'mdr_tsr': .8},
+        # 5: {'reduction_negative_tx_outcome': 0.5},
+        # 6: {'acf_coverage': .2, 'acf_urban_ger_switch': 1.},
+        # 8: {'diagnostic_sensitivity_smearneg': 1., 'prop_mdr_detected_as_mdr': .9}
         }
     scenario_list = list(scenario_params.keys())
     if 0 not in scenario_list:
@@ -403,7 +439,7 @@ if __name__ == "__main__":
                 models.append(DummyModel(model_dict))
     else:
         t0 = time()
-        models = run_multi_scenario(scenario_params, 1950., build_mongolia_model)
+        models = run_multi_scenario(scenario_params, 2020., build_mongolia_model)
         store_run_models(models, scenarios=scenario_list, database_name=output_db_path)
         delta = time() - t0
         print("Running time: " + str(round(delta, 1)) + " seconds")
@@ -483,7 +519,7 @@ if __name__ == "__main__":
                     'prevXinfectiousXstrain_mdrXamong': 'Prevalence of MDR-TB (/100,000)'
                     }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='mle_18_12',
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_outputs',
                                   targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers, translation_dictionary=translations,
                                   scenario_list=scenario_list)

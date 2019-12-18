@@ -11,7 +11,7 @@ output_db_path = os.path.join(os.getcwd(), 'databases/outputs_' + now.strftime("
 
 
 def build_rmi_timevariant_cdr(cdr_multiplier):
-    cdr = {1950.: 0., 1980.: .10, 1990.: .2, 2000.: .30, 2010.: .40, 2015: .5}
+    cdr = {1950.: 0., 1980.: .10, 1990.: .1, 2000.: .2, 2010.: .3, 2015: .3}
     return scale_up_function(cdr.keys(), [c * cdr_multiplier for c in list(cdr.values())], smoothness=0.2, method=5)
 
 def build_rmi_timevariant_tsr():
@@ -23,9 +23,9 @@ def build_rmi_model(update_params={}):
 
     # stratify_by = []
     # stratify_by = ['age']
-    stratify_by = ['age', 'organ']
-    # stratify_by = ['age', 'organ', 'diabetes']
-    # stratify_by = ['age', 'organ', 'diabetes', 'location']
+    # stratify_by = ['age', 'diabetes']
+    # stratify_by = ['age', 'diabetes', 'organ']
+    stratify_by = ['age', 'diabetes', 'organ', 'location']
 
     # some default parameter values
     external_params = {  # run configuration
@@ -34,38 +34,22 @@ def build_rmi_model(update_params={}):
                        'time_step': 1.,
                        'start_population': 9000,
                        # base model definition:
-                       'contact_rate': 20.,
+                       'contact_rate': 30.,
                        'rr_transmission_recovered': 0.6,
                        'rr_transmission_infected': 0.21,
                        'latency_adjustment': 2.,  # used to modify progression rates during calibration
                        'self_recovery_rate': 0.231,  # this is for smear-positive TB
                        'tb_mortality_rate': 0.389,  # this is for smear-positive TB
                        'prop_smearpos': .390,
-                        'cdr_multiplier': 1.3,
-                       #   # MDR-TB:
-                       # 'dr_amplification_prop_among_nonsuccess': 0.15,
-                       # 'prop_mdr_detected_as_mdr': 0.5,
-                       # 'mdr_tsr': .6,
+                        'cdr_multiplier': 1.1,
                         # diagnostic sensitivity by organ status:
                         'diagnostic_sensitivity_smearpos': 1.,
                         'diagnostic_sensitivity_smearneg': .7,
                         'diagnostic_sensitivity_extrapul': .5,
                          # adjustments by location and diabetes
-                       'rr_transmission_ebeye': 1.,  # reference: majuro
-                       'rr_transmission_otherislands': 1.,  # reference: majuro
+                       # 'rr_transmission_ebeye': 1.,  # reference: majuro
+                       # 'rr_transmission_otherislands': 1.,  # reference: majuro
                        'rr_progression_has_diabetes': 3.11,  # reference: no_diabetes
-                       # # IPT
-                       # 'ipt_age_0_ct_coverage': 0.,  # Children contact tracing coverage  .17
-                       # 'ipt_age_5_ct_coverage': 0.,  # Children contact tracing coverage
-                       # 'ipt_age_15_ct_coverage': 0.,  # Children contact tracing coverage
-                       # 'ipt_age_35_ct_coverage': 0.,  # Children contact tracing coverage
-                       # 'ipt_age_50_ct_coverage': 0.,  # Children contact tracing coverage
-                       # 'yield_contact_ct_tstpos_per_detected_tb': 2.,  # expected number of infections traced per index
-                       # 'ipt_efficacy': .75,   # based on intention-to-treat
-                       # # 'ds_ipt_switch': 1.,  # used as a DS-specific multiplier to the coverage defined above
-                       # # 'mdr_ipt_switch': .0,  # used as an MDR-specific multiplier to the coverage defined above
-                       # # Treatment improvement (C-DOTS)
-                       # 'reduction_negative_tx_outcome': 0.,
                        # ACF for intervention groups
                        'acf_coverage': 0.,
                        'acf_sensitivity': .9,
@@ -94,7 +78,6 @@ def build_rmi_model(update_params={}):
          "ipt_rate": 0.,
          "acf_rate": 0.,
          "acf_ltbi_rate": external_params['acf_ltbi_coverage'] * external_params['acf_ltbi_sensitivity'] * external_params['acf_ltbi_efficacy'],
-         # "dr_amplification": .0,  # high value for testing
          "crude_birth_rate": 35.0 / 1e3}
 
     input_db_path = os.path.join(os.getcwd(), 'databases/inputs.db')
@@ -148,7 +131,7 @@ def build_rmi_model(update_params={}):
         output_connections=out_connections)
 
     # add crude birth rate from un estimates
-    _tb_model = get_birth_rate_functions(_tb_model, input_database, 'MNG')
+    _tb_model = get_birth_rate_functions(_tb_model, input_database, 'FSM')
 
     # add case detection process to basic model
     _tb_model.add_transition_flow(
@@ -168,9 +151,9 @@ def build_rmi_model(update_params={}):
 
         return infectious_populations / float(n_early_latent_comps)
 
-    _tb_model.add_transition_flow(
-        {"type": "customised_flows", "parameter": "ipt_rate", "origin": "early_latent", "to": "recovered",
-         "function": ipt_flow_func})
+    # _tb_model.add_transition_flow(
+    #     {"type": "customised_flows", "parameter": "ipt_rate", "origin": "early_latent", "to": "recovered",
+    #      "function": ipt_flow_func})
 
     # add ACF flow
     _tb_model.add_transition_flow(
@@ -244,9 +227,6 @@ def build_rmi_model(update_params={}):
     #     lambda t: detect_rate(t) *\
     #               (rmi_tsr(t) + external_params['reduction_negative_tx_outcome'] * (1. - rmi_tsr(t)))
 
-    # # initialise ipt_rate function assuming coverage of 1.0 before age stratification
-    # ipt_rate_function = lambda t: detect_rate(t) * 1.0 *\
-    #                               external_params['yield_contact_ct_tstpos_per_detected_tb'] * external_params['ipt_efficacy']
 
     # initialise acf_rate function
     acf_rate_function = lambda t: external_params['acf_coverage'] * external_params['acf_sensitivity'] *\
@@ -255,15 +235,11 @@ def build_rmi_model(update_params={}):
     # assign newly created functions to model parameters
     if len(stratify_by) == 0:
         _tb_model.time_variants["case_detection"] = tb_control_recovery_rate
-        # _tb_model.time_variants["ipt_rate"] = ipt_rate_function
         _tb_model.time_variants["acf_rate"] = acf_rate_function
 
     else:
         _tb_model.adaptation_functions["case_detection"] = tb_control_recovery_rate
         _tb_model.parameters["case_detection"] = "case_detection"
-
-        # _tb_model.adaptation_functions["ipt_rate"] = ipt_rate_function
-        # _tb_model.parameters["ipt_rate"] = "ipt_rate"
 
         _tb_model.adaptation_functions["acf_rate"] = acf_rate_function
         _tb_model.parameters["acf_rate"] = "acf_rate"
@@ -279,7 +255,7 @@ def build_rmi_model(update_params={}):
             for age_break in age_breakpoints:
                 age_params[param][str(age_break) + 'W'] *= external_params['latency_adjustment']
 
-        pop_morts = get_pop_mortality_functions(input_database, age_breakpoints, country_iso_code='MNG')
+        pop_morts = get_pop_mortality_functions(input_database, age_breakpoints, country_iso_code='FSM')
         age_params["universal_death_rate"] = {}
         for age_break in age_breakpoints:
             _tb_model.time_variants["universal_death_rateXage_" + str(age_break)] = pop_morts[age_break]
@@ -287,12 +263,6 @@ def build_rmi_model(update_params={}):
 
             age_params["universal_death_rate"][str(age_break) + 'W'] = "universal_death_rateXage_" + str(age_break)
         _tb_model.parameters["universal_death_rateX"] = 0.
-
-        # # age-specific IPT
-        # ipt_by_age = {'ipt_rate': {}}
-        # for age_break in age_breakpoints:
-        #     ipt_by_age['ipt_rate'][str(age_break)] = external_params['ipt_age_' + str(age_break) + '_ct_coverage']
-        # age_params.update(ipt_by_age)
 
         # add BCG effect without stratification assuming constant 100% coverage
         bcg_wane = create_sloping_step_function(15.0, 0.3, 30.0, 1.0)
@@ -302,11 +272,24 @@ def build_rmi_model(update_params={}):
         _tb_model.stratify("age", copy.deepcopy(age_breakpoints), [], {}, adjustment_requests=age_params,
                            infectiousness_adjustments=age_infectiousness, verbose=False)
 
-        # patch for IPT to overwrite parameters when ds_ipt has been turned off while we still need some coverage at baseline
-        # if external_params['ds_ipt_switch'] == 0. and external_params['mdr_ipt_switch'] == 1.:
-        #     _tb_model.parameters['ipt_rateXstrain_dsXage_0'] = 0.17
-        #     for age_break in [5, 15, 35, 50]:
-        #         _tb_model.parameters['ipt_rateXstrain_dsXage_' + str(age_break)] = 0.
+
+    if 'diabetes' in stratify_by:
+        props_diabetes = {'has_diabetes': 0.3, 'no_diabetes': 0.7}
+        progression_adjustments = {"has_diabetes": 3.11, "no_diabetes": 1.}
+        # progression_adjustments = {}
+        # for age_break in age_breakpoints[2:]:
+        #     progression_adjustments[age_break] = {"has_diabetes": 3.11, "no_diabetes": 1.}
+
+        _tb_model.stratify("diabetes", ["has_diabetes", "no_diabetes"], [],
+                           verbose=False, requested_proportions=props_diabetes,
+                           adjustment_requests={'late_progressionXage_15': progression_adjustments,
+                                                'late_progressionXage_35': progression_adjustments,
+                                                'late_progressionXage_50': progression_adjustments,},
+                           entry_proportions=props_diabetes)
+
+        # adjustment_dict = {}
+        # for age_break in age_breakpoints[2:]:
+        #     adjustment_dict[age_break] = {"has_diabetes": 3.11, "no_diabetes": 1.}
 
     if 'organ' in stratify_by:
         props_smear = {"smearpos": external_params['prop_smearpos'],
@@ -318,7 +301,7 @@ def build_rmi_model(update_params={}):
         for stratum in ["smearpos", "smearneg", "extrapul"]:
             diagnostic_sensitivity[stratum] = external_params["diagnostic_sensitivity_" + stratum]
         _tb_model.stratify("organ", ["smearpos", "smearneg", "extrapul"], ["infectious"],
-                           infectiousness_adjustments={"smearpos": 1., "smearneg": 1., "extrapul": 1.},
+                           infectiousness_adjustments={"smearpos": 1., "smearneg": .25, "extrapul": 0.},
                            verbose=False, requested_proportions=props_smear,
                            adjustment_requests={'recovery': recovery_adjustments,
                                                 'infect_death': mortality_adjustments,
@@ -326,27 +309,23 @@ def build_rmi_model(update_params={}):
                                                 },
                            entry_proportions=props_smear)
 
-    if 'diabetes' in stratify_by:
-        props_diabetes = {'has_diabetes': 0.3, 'no_diabetes': 0.7}
-        progression_adjustments = {"has_diabetes": 3.11, "no_diabetes": 1.}
 
-        _tb_model.stratify("diabetes", ["has_diabetes", "no_diabetes"], [],
-                           verbose=False, requested_proportions=props_diabetes,
-                           adjustment_requests={'early_progression': progression_adjustments,
-                                                'late_progression': progression_adjustments},
-                           entry_proportions=props_diabetes)
+    _tb_model.transition_flows.to_csv("transitions_age_dm_organ.csv")
 
     if "location" in stratify_by:
         props_location = {'majuro': .523, 'ebeye': .2, 'otherislands': .277}
-        raw_relative_risks_loc = {'majuro': 1.}
-        for stratum in ['ebeye', 'otherislands']:
-            raw_relative_risks_loc[stratum] = external_params['rr_transmission_' + stratum]
-        scaled_relative_risks_loc = scale_relative_risks_for_equivalence(props_location, raw_relative_risks_loc)
+        # raw_relative_risks_loc = {'majuro': 1.}
+        # for stratum in ['ebeye', 'otherislands']:
+        #     raw_relative_risks_loc[stratum] = external_params['rr_transmission_' + stratum]
+        # scaled_relative_risks_loc = scale_relative_risks_for_equivalence(props_location, raw_relative_risks_loc)
 
         # dummy matrix for mixing by location
-        location_mixing = numpy.array([1., .2, .1, .2, 1., .1, .1,	.1,	1.]).reshape((3, 3))
+        location_mixing = numpy.array([.8, .1, .1,
+                                       .1, .8, .1,
+                                       .1, .1, .8]).reshape((3, 3))
+        location_mixing *= 3.  # adjusted such that heterogeneous mixing yields similar overall burden as homogeneous
 
-        # location_adjustments = {}
+        location_adjustments = {}
         # for beta_type in ['', '_infected', '_recovered']:
         #     location_adjustments['contact_rate' + beta_type] = scaled_relative_risks_loc
 
@@ -360,14 +339,13 @@ def build_rmi_model(update_params={}):
                            mixing_matrix=location_mixing
                            )
 
-    _tb_model.transition_flows.to_csv("transitions.csv")
+    _tb_model.transition_flows.to_csv("transitions_all.csv")
     _tb_model.death_flows.to_csv("deaths.csv")
     create_flowchart(_tb_model, strata=0, name="rmi_flow_diagram")
     create_flowchart(_tb_model, strata=1, name="rmi_flow_diagram_1")
     # create_flowchart(_tb_model, strata=2, name="rmi_flow_diagram_2")
 
     return _tb_model
-
 
 
 if __name__ == "__main__":
@@ -490,6 +468,6 @@ if __name__ == "__main__":
                     'prevXinfectiousXstrain_mdrXamong': 'Prevalence of MDR-TB (/100,000)'
                     }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_12_10', targets_to_plot=targets_to_plot,
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_12_18_all_replacedeath', targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers, translation_dictionary=translations,
                                   scenario_list=scenario_list)

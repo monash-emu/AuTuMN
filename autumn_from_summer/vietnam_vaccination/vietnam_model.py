@@ -6,7 +6,7 @@ from autumn_from_summer.tb_model import create_multi_scenario_outputs
 import matplotlib.pyplot as plt
 import datetime
 
-now = datetime.now()
+# now = datetime.now()
 
 def get_total_popsize(model, time):
     return sum(model.compartment_values)
@@ -63,7 +63,8 @@ my_parameters["reinfection_from_recovered"] = my_parameters["infection_rate"]
 # Set up initial condition as a single seed individual with active TB
 my_initial_conditions = {"infectious": 1}
 
-my_model = StratifiedModel(times=my_times,
+my_model = StratifiedModel(
+                           times=my_times,
                            compartment_types=my_compartments,
                            initial_conditions=my_initial_conditions,
                            parameters=my_parameters,
@@ -85,7 +86,7 @@ my_model.death_flows.to_csv("deaths_flows.csv")
 # "1":0.5, means new parameter for age 1 is 0.5x
 
 # Choose what to stratify the model by
-stratify_by = ["age", "bcg"]
+stratify_by = ["age", "bcg", "novel"]
 
 if "age" in stratify_by:
     # Stratify model by age
@@ -170,7 +171,7 @@ my_model.transition_flows.to_csv("transition.csv")
 my_model.death_flows.to_csv("deaths_flows.csv")
 
 create_flowchart(my_model)
-# print(os.getcwd())
+print(os.getcwd())
 
 my_model.run_model()
 
@@ -189,7 +190,14 @@ my_requested_outputs = [
                      'prevXlate_latentXamongXage_15',
                      'prevXlate_latentXamongXage_10',
                      'prevXlate_latentXamongXage_5',
-                     'prevXlate_latentXamongXage_0'
+                     'prevXlate_latentXamongXage_0',
+                     "distribution_of_strataXage",
+                     "distribution_of_strataXbcg",
+                     "distribution_of_stataXnovel"
+                     # "prevXsusceptibleBYage",
+                     # "prevXearly_latentBYage",
+                     # "prevXlate_latentBYage",
+                     # "prevXrecoveredBYage"
                     ]
 
 my_multiplier = {}
@@ -198,7 +206,8 @@ for output in my_requested_outputs:
     if "prev" in output:
         my_multiplier[output] = 100000
 
-my_translations = {'prevXsusceptibleXamong': "Susceptible prevalence (/100 000)",
+my_translations = {
+                'prevXsusceptibleXamong': "Susceptible prevalence (/100 000)",
                 'prevXearly_latentXamong':"Prevalence of early latent TB (/100 000)",
                 'prevXlate_latentXamong':"Prevalence of late latent TB (/100 000)",
                 'prevXinfectiousXamong': "Prevalence of active TB (/100 000)",
@@ -212,21 +221,75 @@ my_translations = {'prevXsusceptibleXamong': "Susceptible prevalence (/100 000)"
                 'prevXlate_latentXamongXage_15':"Prevalence of late latent TB among 15-60 year olds (/100 000)",
                 'prevXlate_latentXamongXage_10': "Prevalence of late latent TB among 10-15 year olds (/100 000)",
                 'prevXlate_latentXamongXage_5':"Prevalence of late latent TB among 5-10 year olds (/100 000)",
-                'prevXlate_latentXamongXage_0':"Prevalence of late latent TB among 0-5 year olds (/100 000)"
+                'prevXlate_latentXamongXage_0':"Prevalence of late latent TB among 0-5 year olds (/100 000)",
                 }
 
-# pp = PostProcessing(my_model, requested_outputs=my_requested_outputs, multipliers=my_multiplier)
-# out = Outputs([pp])
-# out.plot_requested_outputs()
+pp = PostProcessing(my_model, requested_outputs=my_requested_outputs, multipliers=my_multiplier)
+out = Outputs([pp],out_dir="outputs_test_18_12_19", translation_dict=my_translations)
+out.plot_requested_outputs()
 
-models = [my_model]
-create_multi_scenario_outputs(models,
-                              req_outputs=my_requested_outputs,
-                              req_multipliers=my_multiplier,
-                              out_dir="outputs_test_17_12_19",
-                              translation_dictionary=my_translations,
-                              scenario_list=[0]
-                              )
+#####################################################################################################################
+# 17/12/19 Trying to rewrite the create multiple scenario output function to only give out the outputs we want,
+# and to plot prevalence of each age group together on one plot
+#####################################################################################################################
+def create_outputs(models, req_outputs, req_times={}, req_multipliers={}, out_dir='outputs_tes', targets_to_plot={}, translation_dictionary={}, scenario_list=[]):
+    """
+    process and generate plots for several scenarios
+    :param models: a list of run models
+    :param req_outputs. See PostProcessing class
+    :param req_times. See PostProcessing class
+    :param req_multipliers. See PostProcessing class
+    """
+    if not os.path.exists(out_dir):
+        os.mkdir(out_dir)
+
+    my_post_proccessing_list = []
+    for scenario_index in range(len(models)):
+
+        # automatically add some basic outputs
+        # if hasattr(models[scenario_index], "all_stratifications"):
+        #
+        #     for group in models[scenario_index].all_stratifications.keys():
+        #         # Add distribution of population within each type of stratifications
+        #         req_outputs.append('distribution_of_strataX' + group)
+        #
+        #         # for stratum in models[scenario_index].all_stratifications[group]:
+        #         #     req_outputs.append('prevXinfectiousXamongX' + group + '_' + stratum)
+        #         #     req_outputs.append('prevXearly_latentXamongX' + group + '_' + stratum)
+        #         #     req_outputs.append('prevXlate_latentXamongX' + group + '_' + stratum)
+        #         #     req_outputs.append('prevXrecoveredXamongX' + group + '_' + stratum)
+        #
+        #     if "bcg" in models[scenario_index].all_stratifications.keys():
+        #         req_outputs.append('prevXinfectiousXbcg_noneXamongXinfectious')
+        #
+        # for output in req_outputs:
+        #     if output[0:15] == 'prevXinfectious':
+        #         req_multipliers[output] = 1.e5
+        #         # translation_dictionary
+        #     elif output[0:11] == 'prevXlatent':
+        #         req_multipliers[output] = 1.e2
+
+        my_post_proccessing_list.append(post_proc.PostProcessing(models[scenario_index],
+                                            requested_outputs=req_outputs,
+                                            scenario_number=scenario_list[scenario_index],
+                                            requested_times=req_times,
+                                            multipliers=req_multipliers))
+
+    outputs = Outputs(my_post_proccessing_list, targets_to_plot, out_dir, translation_dictionary)
+    outputs.plot_requested_outputs()
+
+    for req_output in ['prevXinfectious', 'prevXearly_latent', 'prevXlate_latent', 'prevXrecovered']:
+        outputs.plot_outputs_by_stratum(req_output)
+
+# Call outputs
+# models = [my_model]
+# create_outputs(models,
+#                 my_requested_outputs,
+#                 req_multipliers=my_multiplier,
+#                 out_dir="create_outputs_18_12_19",
+#                 translation_dictionary=my_translations,
+#                 scenario_list=[0]
+#                 )
 
 want = "" # "population size"
 if "population size" in want:

@@ -17,7 +17,7 @@ def get_total_popsize(model, time):
 # Set up time frame and time steps
 start_time = 2000.
 end_time = 2100.
-time_step = 1 # Time steps are given in years
+time_step = 1   # Time steps are given in years
 my_times = numpy.linspace(start_time, end_time, int((end_time-start_time)/time_step) + 1).tolist()
 
 # Set up compartments
@@ -28,20 +28,22 @@ my_compartments = ["susceptible",
                    "recovered"]
 
 # Set up flows between compartments, births, and deaths
-my_flows = [{"type": "infection_density", "parameter": "infection_rate", "origin": "susceptible", "to": "early_latent"},
+my_flows = [{"type": "infection_frequency", "parameter": "infection_rate", "origin": "susceptible", "to": "early_latent"},
             {"type": "standard_flows", "parameter": "rapid_progression_rate", "origin": "early_latent", "to": "infectious"},
             {"type": "standard_flows", "parameter": "immune_stabilisation_rate", "origin": "early_latent", "to": "late_latent"},
             {"type": "standard_flows", "parameter": "reactivation_rate", "origin": "late_latent", "to": "infectious"},
-            {"type": "standard_flows", "parameter": "recovery_rate", "origin": "infectious", "to": "recovered"},
+            {"type": "standard_flows", "parameter": "self_recovery_rate", "origin": "infectious", "to": "recovered"},
             {"type": "infection_density", "parameter": "reinfection_from_recovered", "origin": "recovered", "to": "early_latent"},
-            # {"type": "infection_density", "parameter": "reinfection_from_late_latent", "origin": "late_latent", "to": "early_latent"},
+            # {"type": "infection_frequency", "parameter": "reinfection_from_late_latent", "origin": "late_latent", "to": "early_latent"},
             # {"type": "standard_flows", "parameter": "relapse_rate", "origin": "recovered", "to": "infectious"},
-            {"type": "compartment_death", "parameter": "tb_mortality_rate", "origin": "infectious"}]
+            {"type": "compartment_death", "parameter": "tb_mortality_rate", "origin": "infectious"},
+            ]
 
 # Track incidence rates
 out_connections = {
-        "incidence_from_early_latent": {"origin": "early_latent", "to": "infectious"},
-        "incidence_from_late_latent": {"origin": "late_latent", "to": "infectious"}}
+        "incidence_from_susceptible_to_early_latent": {"origin": "susceptible", "to": "early_latent"},
+        "incidence_from_early_latent_to_infectious": {"origin": "early_latent", "to": "infectious"},
+        "incidence_from_late_latent_to_infectious": {"origin": "late_latent", "to": "infectious"}}
 
 # Set up parameters
 my_parameters = {'infection_rate': .00013,
@@ -49,13 +51,36 @@ my_parameters = {'infection_rate': .00013,
                  'reactivation_rate': 3.3e-6 * 365.25,
                  'reinfection_from_late_latent': 0.0021,
                  'reinfection_from_recovered': 0.00013,
-                 'recovery_rate': 0.5,
+                 'self_recovery_rate': 0.5,
                  'rapid_progression_rate': 2.7e-4 * 365.25,
                  # 'relapse_rate': 0.002,
-                 "tb_mortality_rate": 0.097, # Global tuberculosis report 2018 estimated Viet Nam had 124 000 new TB cases and 12 000 TB-relate deaths
-                 "universal_death_rate": 0.00639, #1./50.,
+                 "tb_mortality_rate": 0.097,   # Global tuberculosis report 2018 estimated Viet Nam had 124 000 new TB cases and 12 000 TB-relate deaths
+                 "universal_death_rate": 0.00639,   #1./50.,
                  "crude_birth_rate": 0.0169
                  }
+
+# Add case detection rate (cdr), and hence different rates of recovery without treatment or with detection and treatment
+# we assume everyone who gets detected received treatment
+cdr = True
+if cdr:
+    case_detection_rate = 0.6
+
+    # Get parameters involved in flows from infectious to recovered
+    self_recovery_rate = my_parameters['self_recovery_rate']
+    tb_mortality_rate = my_parameters['tb_mortality_rate']
+
+    prop_treatment = case_detection_rate*(self_recovery_rate+tb_mortality_rate)/(1-case_detection_rate)
+
+    treatment_success_rate = 0.57
+    duration_treatment_recovery = 0.5   # 6 months
+    duration_self_recovery = 2  # 2 years
+
+    # Add/Update new parameters
+    my_parameters['treatment_recovery_rate'] = prop_treatment*(1/duration_treatment_recovery)*treatment_success_rate
+    my_parameters['self_recovery_rate'] = (1-prop_treatment-tb_mortality_rate)*(1/duration_self_recovery)
+
+    # Add  recovery with treatment as a new flows
+    my_flows.append({"type": "standard_flows", "parameter": "treatment_recovery_rate", "origin": "infectious", "to": "recovered"})
 
 # If we want the recovered population is the same as the susceptible population in terms of risk of TB infection, uses
 my_parameters["reinfection_from_recovered"] = my_parameters["infection_rate"]
@@ -75,7 +100,7 @@ my_model = StratifiedModel(
                            birth_approach="add_crude_birth_rate",
                            output_connections=out_connections,
                            derived_output_functions={'population': get_total_popsize},
-                           death_output_categories=((), ("age_0",), ("age_5",))
+                           death_output_categories=((), ("age_0",), ("age_5",), ("bcg"))
                            )
 
 my_model.death_flows.to_csv("deaths_flows.csv")
@@ -167,6 +192,7 @@ if "novel" in stratify_by:
 
 
 # Creating plots of model outputs
+# Save flows including death to csv files
 my_model.transition_flows.to_csv("transition.csv")
 my_model.death_flows.to_csv("deaths_flows.csv")
 
@@ -176,57 +202,57 @@ print(os.getcwd())
 my_model.run_model()
 
 my_requested_outputs = [
-                     'prevXsusceptibleXamong',
-                     'prevXearly_latentXamong',
-                     'prevXlate_latentXamong',
-                     'prevXinfectiousXamong',
-                     'prevXrecoveredXamong',
-                     'prevXinfectiousXamongXage_60',
-                     'prevXinfectiousXamongXage_15',
-                     'prevXinfectiousXamongXage_10',
-                     'prevXinfectiousXamongXage_5',
-                     'prevXinfectiousXamongXage_0',
-                     'prevXlate_latentXamongXage_60',
-                     'prevXlate_latentXamongXage_15',
-                     'prevXlate_latentXamongXage_10',
-                     'prevXlate_latentXamongXage_5',
-                     'prevXlate_latentXamongXage_0',
-                     "distribution_of_strataXage",
-                     "distribution_of_strataXbcg",
-                     "distribution_of_stataXnovel"
-                     # "prevXsusceptibleBYage",
-                     # "prevXearly_latentBYage",
-                     # "prevXlate_latentBYage",
-                     # "prevXrecoveredBYage"
+                     # 'prevXsusceptibleXamong',
+                     # 'prevXearly_latentXamong',
+                     # 'prevXlate_latentXamong',
+                     # 'prevXinfectiousXamong',
+                     # 'prevXrecoveredXamong',
+                     # 'prevXinfectiousXamongXage_60',
+                     # 'prevXinfectiousXamongXage_15',
+                     # 'prevXinfectiousXamongXage_10',
+                     # 'prevXinfectiousXamongXage_5',
+                     # 'prevXinfectiousXamongXage_0',
+                     # 'prevXlate_latentXamongXage_60',
+                     # 'prevXlate_latentXamongXage_15',
+                     # 'prevXlate_latentXamongXage_10',
+                     # 'prevXlate_latentXamongXage_5',
+                     # 'prevXlate_latentXamongXage_0',
+                     # "distribution_of_strataXage",
+                     # "distribution_of_strataXbcg",
+                     # "distribution_of_stataXnovel"
+                     # # "prevXsusceptibleBYage",
+                     # # "prevXearly_latentBYage",
+                     # # "prevXlate_latentBYage",
+                     # # "prevXrecoveredBYage"
                     ]
 
 my_multiplier = {}
-for output in my_requested_outputs:
-    # Adds a 100 000 multiplier to all prevalence outputs
-    if "prev" in output:
-        my_multiplier[output] = 100000
+# for output in my_requested_outputs:
+#     # Adds a 100 000 multiplier to all prevalence outputs
+#     if "prev" in output:
+#         my_multiplier[output] = 100000
 
 my_translations = {
-                'prevXsusceptibleXamong': "Susceptible prevalence (/100 000)",
-                'prevXearly_latentXamong':"Prevalence of early latent TB (/100 000)",
-                'prevXlate_latentXamong':"Prevalence of late latent TB (/100 000)",
-                'prevXinfectiousXamong': "Prevalence of active TB (/100 000)",
-                'prevXrecoveredXamong': "Prevalence of recovered (/100 000)",
-                'prevXinfectiousXamongXage_60': "Prevalence of active TB among 60+ year olds (/100 000)",
-                'prevXinfectiousXamongXage_15': "Prevalence of active TB among 15-60 year olds (/100 000)",
-                'prevXinfectiousXamongXage_10':"Prevalence of active TB among 10-15 year olds (/100 000)",
-                'prevXinfectiousXamongXage_5':"Prevalence of active TB among 5-10 year olds (/100 000)",
-                'prevXinfectiousXamongXage_0':"Prevalence of active TB among 0-5 year olds (/100 000)",
-                'prevXlate_latentXamongXage_60':"Prevalence of late latent TB among 60+ year olds (/100 000)",
-                'prevXlate_latentXamongXage_15':"Prevalence of late latent TB among 15-60 year olds (/100 000)",
-                'prevXlate_latentXamongXage_10': "Prevalence of late latent TB among 10-15 year olds (/100 000)",
-                'prevXlate_latentXamongXage_5':"Prevalence of late latent TB among 5-10 year olds (/100 000)",
-                'prevXlate_latentXamongXage_0':"Prevalence of late latent TB among 0-5 year olds (/100 000)",
+                # 'prevXsusceptibleXamong': "Susceptible prevalence (/100 000)",
+                # 'prevXearly_latentXamong':"Prevalence of early latent TB (/100 000)",
+                # 'prevXlate_latentXamong':"Prevalence of late latent TB (/100 000)",
+                # 'prevXinfectiousXamong': "Prevalence of active TB (/100 000)",
+                # 'prevXrecoveredXamong': "Prevalence of recovered (/100 000)",
+                # 'prevXinfectiousXamongXage_60': "Prevalence of active TB among 60+ year olds (/100 000)",
+                # 'prevXinfectiousXamongXage_15': "Prevalence of active TB among 15-60 year olds (/100 000)",
+                # 'prevXinfectiousXamongXage_10':"Prevalence of active TB among 10-15 year olds (/100 000)",
+                # 'prevXinfectiousXamongXage_5':"Prevalence of active TB among 5-10 year olds (/100 000)",
+                # 'prevXinfectiousXamongXage_0':"Prevalence of active TB among 0-5 year olds (/100 000)",
+                # 'prevXlate_latentXamongXage_60':"Prevalence of late latent TB among 60+ year olds (/100 000)",
+                # 'prevXlate_latentXamongXage_15':"Prevalence of late latent TB among 15-60 year olds (/100 000)",
+                # 'prevXlate_latentXamongXage_10': "Prevalence of late latent TB among 10-15 year olds (/100 000)",
+                # 'prevXlate_latentXamongXage_5':"Prevalence of late latent TB among 5-10 year olds (/100 000)",
+                # 'prevXlate_latentXamongXage_0':"Prevalence of late latent TB among 0-5 year olds (/100 000)",
                 }
 
-pp = PostProcessing(my_model, requested_outputs=my_requested_outputs, multipliers=my_multiplier)
-out = Outputs([pp],out_dir="outputs_test_18_12_19", translation_dict=my_translations)
-out.plot_requested_outputs()
+# pp = PostProcessing(my_model, requested_outputs=my_requested_outputs, multipliers=my_multiplier)
+# out = Outputs([pp],out_dir="outputs_test_18_12_19", translation_dict=my_translations)
+# out.plot_requested_outputs()
 
 #####################################################################################################################
 # 17/12/19 Trying to rewrite the create multiple scenario output function to only give out the outputs we want,
@@ -247,27 +273,27 @@ def create_outputs(models, req_outputs, req_times={}, req_multipliers={}, out_di
     for scenario_index in range(len(models)):
 
         # automatically add some basic outputs
-        # if hasattr(models[scenario_index], "all_stratifications"):
-        #
-        #     for group in models[scenario_index].all_stratifications.keys():
-        #         # Add distribution of population within each type of stratifications
-        #         req_outputs.append('distribution_of_strataX' + group)
-        #
-        #         # for stratum in models[scenario_index].all_stratifications[group]:
-        #         #     req_outputs.append('prevXinfectiousXamongX' + group + '_' + stratum)
-        #         #     req_outputs.append('prevXearly_latentXamongX' + group + '_' + stratum)
-        #         #     req_outputs.append('prevXlate_latentXamongX' + group + '_' + stratum)
-        #         #     req_outputs.append('prevXrecoveredXamongX' + group + '_' + stratum)
-        #
-        #     if "bcg" in models[scenario_index].all_stratifications.keys():
-        #         req_outputs.append('prevXinfectiousXbcg_noneXamongXinfectious')
-        #
-        # for output in req_outputs:
-        #     if output[0:15] == 'prevXinfectious':
-        #         req_multipliers[output] = 1.e5
-        #         # translation_dictionary
-        #     elif output[0:11] == 'prevXlatent':
-        #         req_multipliers[output] = 1.e2
+        if hasattr(models[scenario_index], "all_stratifications"):
+
+            for group in models[scenario_index].all_stratifications.keys():
+                # Add distribution of population within each type of stratifications
+                req_outputs.append('distribution_of_strataX' + group)
+
+                for stratum in models[scenario_index].all_stratifications[group]:
+                    req_outputs.append('prevXinfectiousXamongX' + group + '_' + stratum)
+                    req_outputs.append('prevXearly_latentXamongX' + group + '_' + stratum)
+                    req_outputs.append('prevXlate_latentXamongX' + group + '_' + stratum)
+                    req_outputs.append('prevXrecoveredXamongX' + group + '_' + stratum)
+
+            if "bcg" in models[scenario_index].all_stratifications.keys():
+                req_outputs.append('prevXinfectiousXbcg_noneXamongXinfectious')
+
+        for output in req_outputs:
+            if output[0:15] == 'prevXinfectious':
+                req_multipliers[output] = 1.e5
+                # translation_dictionary
+            elif output[0:17] == 'prevXearly_latent' or output[0:16] == 'prevXlate_latent':
+                req_multipliers[output] = 1.e2
 
         my_post_proccessing_list.append(post_proc.PostProcessing(models[scenario_index],
                                             requested_outputs=req_outputs,
@@ -282,14 +308,14 @@ def create_outputs(models, req_outputs, req_times={}, req_multipliers={}, out_di
         outputs.plot_outputs_by_stratum(req_output)
 
 # Call outputs
-# models = [my_model]
-# create_outputs(models,
-#                 my_requested_outputs,
-#                 req_multipliers=my_multiplier,
-#                 out_dir="create_outputs_18_12_19",
-#                 translation_dictionary=my_translations,
-#                 scenario_list=[0]
-#                 )
+models = [my_model]
+create_outputs(models,
+               my_requested_outputs,
+               req_multipliers=my_multiplier,
+               out_dir="output_test_19_12_19",
+               translation_dictionary=my_translations,
+               scenario_list=[0]
+                )
 
 want = "" # "population size"
 if "population size" in want:

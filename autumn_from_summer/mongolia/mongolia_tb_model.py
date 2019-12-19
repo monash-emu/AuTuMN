@@ -327,7 +327,7 @@ def build_mongolia_model(update_params={}):
         props_smear = {"smearpos": external_params['prop_smearpos'],
                        "smearneg": 1. - (external_params['prop_smearpos'] + .20),
                        "extrapul": .20}
-        mortality_adjustments = {"smearpos": 1., "smearneg": .64, "extrapul": .64}
+        mortality_adjustments = {"smearpos": 1., "smearneg": .064, "extrapul": .064}
         recovery_adjustments = {"smearpos": 1., "smearneg": .56, "extrapul": .56}
 
         # workout the detection rate adjustment by organ status
@@ -417,7 +417,7 @@ if __name__ == "__main__":
         #           'ipt_age_60_ct_coverage': .5, 'ds_ipt_switch': 0., 'mdr_ipt_switch': 1.},
         # 4: {'mdr_tsr': .8},
         # 5: {'reduction_negative_tx_outcome': 0.5},
-        # 6: {'acf_coverage': .2, 'acf_urban_ger_switch': 1.},
+        # 6: {'acf_coverage': .155, 'acf_urban_ger_switch': 1.},  # 15.5% to get 70,000 screens
         # 8: {'diagnostic_sensitivity_smearneg': 1., 'prop_mdr_detected_as_mdr': .9}
         }
     scenario_list = list(scenario_params.keys())
@@ -519,7 +519,7 @@ if __name__ == "__main__":
                     'prevXinfectiousXstrain_mdrXamong': 'Prevalence of MDR-TB (/100,000)'
                     }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_outputs',
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_mle_19_12',
                                   targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers, translation_dictionary=translations,
                                   scenario_list=scenario_list)

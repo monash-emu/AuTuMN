@@ -1,9 +1,9 @@
 library(RSQLite)
 setwd("C:/Users/rrag0004/Models/jtrauer_AuTuMN/autumn_from_summer/mcmc_postprocessing")
-path_to_databases = '../mongolia/mcmc_outputs/13_12_2019/'
+path_to_databases = '../mongolia/mcmc_outputs/18_12_bis/'
 sqlite.driver <- dbDriver("SQLite")
 
-ylims = list('contact_rate'=c(12,16), 'adult_latency_adjustment'=c(2,6), 'dr_amplification_prop_among_nonsuccess'=c(.15,.25),
+ylims = list('contact_rate'=c(10,20), 'adult_latency_adjustment'=c(2,6), 'dr_amplification_prop_among_nonsuccess'=c(.15,.25),
              'self_recovery_rate'=c(.18,.29), 'tb_mortality_rate'=c(.33,.44), 'rr_transmission_recovered'=c(.8,1.2), 'cdr_multiplier'=c(.66,1.5))
 
 
@@ -42,7 +42,8 @@ plot_traces_and_histograms <- function(loaded_dbs){
     }
     for (db_index in names(loaded_dbs)){
       if (db_index != 'db1'){
-        lines(loaded_dbs[[db_index]]$mcmc_trace[[param]])
+        iters = 1:length(loaded_dbs[[db_index]]$mcmc_trace[[param]])
+        lines(iters, loaded_dbs[[db_index]]$mcmc_trace[[param]])
       }
     }
   }

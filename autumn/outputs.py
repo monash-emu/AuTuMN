@@ -553,7 +553,6 @@ class Project:
             labels_off: Whether to turn all tick labels off on this axis
             x_label: Text for the x-axis label if required
         """
-
         # range
         axis.set_xlim(left=start, right=end)
 
@@ -1169,16 +1168,17 @@ class Project:
         if self.gui_inputs['output_by_subgroups']:
             for strata_type in ['agegroups', 'riskgroups']:
                 outputs_to_plot, list_of_strata = ['incidence', 'mortality'], getattr(self.inputs, strata_type)
+                strata_type_name = 'age groups' if strata_type == 'agegroups' else 'risk groups'
                 if len(list_of_strata) > 1:
                     self.plot_epi_outputs(
                         [''.join(panel) for panel in itertools.product(outputs_to_plot, list_of_strata)],
-                        'scenario', ', by_' + strata_type, grid=[len(outputs_to_plot), len(list_of_strata)],
+                        'scenario', ', by_' + strata_type_name, grid=[len(outputs_to_plot), len(list_of_strata)],
                         sharey='row')
                     for scenario in self.scenarios:
                         if scenario > 0:
                             self.plot_epi_outputs(
                                 [''.join(panel) for panel in itertools.product(outputs_to_plot, list_of_strata)],
-                                'single_scenario', ', by_' + strata_type, grid=[len(outputs_to_plot), len(list_of_strata)],
+                                'single_scenario', ', by_' + strata_type_name, grid=[len(outputs_to_plot), len(list_of_strata)],
                                 sharey='row', single_scenario_number=scenario)
             for strata_type in ['agegroups', 'riskgroups']:
                 for fraction in [True, False]:
@@ -1236,6 +1236,7 @@ class Project:
         start_time = self.inputs.model_constants['before_intervention_time'] - 4. \
             if self.run_mode == 'int_uncertainty' or (len(self.scenarios) > 1 and purpose in ['scenario', 'single_scenario']) \
             else self.gui_inputs['plot_option_start_time']
+        #start_time = 2010
         start_index, max_data_values = 0, {}
         scenarios, uncertainty_scenario = ([0, 15], 15) if self.run_mode == 'int_uncertainty' \
             else (self.scenarios, 0)
@@ -1560,13 +1561,14 @@ class Project:
                     else t_k.find_title_from_dictionary(stratum))  # proxy
 
         # finish off
+        category_to_loop_name = 'age groups' if category_to_loop == 'agegroups' else 'risk groups'
         ax.legend(bbox_to_anchor=(1.3, 1))
         self.tidy_x_axis(ax, start_time, 2035., max_dim)
         self.tidy_y_axis(ax, 'prop_' if fraction else '', max_dim, max_value=max(cumulative_data))
         self.finish_off_figure(fig, 1, '_' + ('absolute_' if fraction else 'population_') + output + '_'
-                               + category_to_loop,
+                               + category_to_loop_name,
                                ('Fraction of ' if fraction else 'Stacked absolute ') + output + ', by '
-                               + t_k.find_title_from_dictionary(category_to_loop, capital_first_letter=False))
+                               + t_k.find_title_from_dictionary(category_to_loop_name, capital_first_letter=False))
 
     ''' miscellaneous plotting method '''
 

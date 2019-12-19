@@ -25,14 +25,14 @@ multipliers = {'prevXinfectiousXamong': 1.e5,
 
 
 if __name__ == '__main__':
-    n_cpus = 48
+    n_cpus = 24
     _iterable = []
     for i in range(n_cpus):
         _iterable.append(Calibration(build_mongolia_model, par_priors, target_outputs, multipliers, i))
 
     def run_a_single_chain(_calib):
         _calib.run_fitting_algorithm(run_mode='autumn_mcmc', n_iterations=100000, n_burned=0,
-                                     n_chains=1, available_time=3600.*24.*2.)
+                                     n_chains=1, available_time=3600.*24.*7.)
         return
 
 

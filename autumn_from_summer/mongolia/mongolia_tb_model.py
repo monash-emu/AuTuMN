@@ -327,7 +327,7 @@ def build_mongolia_model(update_params={}):
         props_smear = {"smearpos": external_params['prop_smearpos'],
                        "smearneg": 1. - (external_params['prop_smearpos'] + .20),
                        "extrapul": .20}
-        mortality_adjustments = {"smearpos": 1., "smearneg": .64, "extrapul": .64}
+        mortality_adjustments = {"smearpos": 1., "smearneg": .064, "extrapul": .064}
         recovery_adjustments = {"smearpos": 1., "smearneg": .56, "extrapul": .56}
 
         # workout the detection rate adjustment by organ status
@@ -519,7 +519,7 @@ if __name__ == "__main__":
                     'prevXinfectiousXstrain_mdrXamong': 'Prevalence of MDR-TB (/100,000)'
                     }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_outputs',
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_sc5',
                                   targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers, translation_dictionary=translations,
                                   scenario_list=scenario_list)

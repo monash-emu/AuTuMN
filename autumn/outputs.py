@@ -553,7 +553,6 @@ class Project:
             labels_off: Whether to turn all tick labels off on this axis
             x_label: Text for the x-axis label if required
         """
-
         # range
         axis.set_xlim(left=start, right=end)
 
@@ -1237,6 +1236,7 @@ class Project:
         start_time = self.inputs.model_constants['before_intervention_time'] - 4. \
             if self.run_mode == 'int_uncertainty' or (len(self.scenarios) > 1 and purpose in ['scenario', 'single_scenario']) \
             else self.gui_inputs['plot_option_start_time']
+        #start_time = 2010
         start_index, max_data_values = 0, {}
         scenarios, uncertainty_scenario = ([0, 15], 15) if self.run_mode == 'int_uncertainty' \
             else (self.scenarios, 0)
@@ -1568,7 +1568,7 @@ class Project:
         self.finish_off_figure(fig, 1, '_' + ('absolute_' if fraction else 'population_') + output + '_'
                                + category_to_loop_name,
                                ('Fraction of ' if fraction else 'Stacked absolute ') + output + ', by '
-                               + t_k.find_title_from_dictionary(category_to_loop, capital_first_letter=False))
+                               + t_k.find_title_from_dictionary(category_to_loop_name, capital_first_letter=False))
 
     ''' miscellaneous plotting method '''
 

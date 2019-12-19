@@ -40,7 +40,7 @@ def build_rmi_model(update_params={}):
                        'latency_adjustment': 2.,  # used to modify progression rates during calibration
                        'self_recovery_rate': 0.231,  # this is for smear-positive TB
                        'tb_mortality_rate': 0.389,  # this is for smear-positive TB
-                       'prop_smearpos': .390,
+                       'prop_smearpos': .1,
                         'cdr_multiplier': 1.1,
                         # diagnostic sensitivity by organ status:
                         'diagnostic_sensitivity_smearpos': 1.,
@@ -183,9 +183,9 @@ def build_rmi_model(update_params={}):
     cdr_scaleup_overall = build_rmi_timevariant_cdr(external_params['cdr_multiplier'])
 
     # targeted TB prevalence proportions by organ
-    prop_smearpos = .390
-    prop_smearneg = .375
-    prop_extrapul = .235
+    prop_smearpos = .1
+    prop_smearneg = .6
+    prop_extrapul = .3
 
     # disease duration by organ
     overall_duration = prop_smearpos * 1.6 + 5.3 * (1 - prop_smearpos)
@@ -210,8 +210,8 @@ def build_rmi_model(update_params={}):
         prop_to_rate = convert_competing_proportion_to_rate(1.0 / disease_duration[organ])
         detect_rate_by_organ[organ] = return_function_of_function(cdr_by_organ[organ], prop_to_rate)
 
-    # load time-variant treatment success rate
-    rmi_tsr = build_rmi_timevariant_tsr()
+    # # load time-variant treatment success rate
+    # rmi_tsr = build_rmi_timevariant_tsr()
 
     # create a treatment succes rate function adjusted for treatment support intervention
     tsr_function = lambda t: rmi_tsr(t) #+ external_params['reduction_negative_tx_outcome'] * (1. - rmi_tsr(t))
@@ -276,9 +276,6 @@ def build_rmi_model(update_params={}):
     if 'diabetes' in stratify_by:
         props_diabetes = {'has_diabetes': 0.3, 'no_diabetes': 0.7}
         progression_adjustments = {"has_diabetes": 3.11, "no_diabetes": 1.}
-        # progression_adjustments = {}
-        # for age_break in age_breakpoints[2:]:
-        #     progression_adjustments[age_break] = {"has_diabetes": 3.11, "no_diabetes": 1.}
 
         _tb_model.stratify("diabetes", ["has_diabetes", "no_diabetes"], [],
                            verbose=False, requested_proportions=props_diabetes,
@@ -293,9 +290,9 @@ def build_rmi_model(update_params={}):
 
     if 'organ' in stratify_by:
         props_smear = {"smearpos": external_params['prop_smearpos'],
-                       "smearneg": 1. - (external_params['prop_smearpos'] + .235),
-                       "extrapul": .235}
-        mortality_adjustments = {"smearpos": 1., "smearneg": .64, "extrapul": .64}
+                       "smearneg": 1. - (external_params['prop_smearpos'] + .3),
+                       "extrapul": .3}
+        mortality_adjustments = {"smearpos": 1., "smearneg": .064, "extrapul": .064}
         recovery_adjustments = {"smearpos": 1., "smearneg": .56, "extrapul": .56}
         diagnostic_sensitivity = {}
         for stratum in ["smearpos", "smearneg", "extrapul"]:
@@ -320,9 +317,9 @@ def build_rmi_model(update_params={}):
         # scaled_relative_risks_loc = scale_relative_risks_for_equivalence(props_location, raw_relative_risks_loc)
 
         # dummy matrix for mixing by location
-        location_mixing = numpy.array([.8, .1, .1,
-                                       .1, .8, .1,
-                                       .1, .1, .8]).reshape((3, 3))
+        location_mixing = numpy.array([.9, .05, .05,
+                                       .05, .9, .05,
+                                       .05, .05, .9]).reshape((3, 3))
         location_mixing *= 3.  # adjusted such that heterogeneous mixing yields similar overall burden as homogeneous
 
         location_adjustments = {}
@@ -332,6 +329,10 @@ def build_rmi_model(update_params={}):
         location_adjustments['acf_rate'] = {}
         for stratum in ['majuro', 'ebeye', 'otherislands']:
             location_adjustments['acf_rate'][stratum] = external_params['acf_' + stratum + '_switch']
+
+        location_adjustments['acf_ltbi_rate'] = {}
+        for stratum in ['majuro', 'ebeye', 'otherislands']:
+            location_adjustments['acf_ltbi_rate'][stratum] = external_params['acf_ltbi_' + stratum + '_switch']
 
         _tb_model.stratify("location", ['majuro', 'ebeye', 'otherislands'], [],
                            requested_proportions=props_location, verbose=False, entry_proportions=props_location,
@@ -355,7 +356,8 @@ if __name__ == "__main__":
     scenario_params = {
             # Tentative RMI scenarios
             # Ebeye intervention
-            # 1: {'acf_coverage': .9, 'acf_ebeye_switch': 1., 'ebeye_switch': 1.}
+            # 1: {'acf_ltbi_coverage': .9, 'acf_ltbi_majuro_switch': 1.}
+            # 'ebeye_switch' = step_function_maker(2017.2, 2017.57, .1)
 
             # Majuro intervention (on Majuro only)
             # 2: {'acf_coverage'': .9, 'acf_majuro_switch': 1., 'majuro_switch': 1., *\
@@ -468,6 +470,6 @@ if __name__ == "__main__":
                     'prevXinfectiousXstrain_mdrXamong': 'Prevalence of MDR-TB (/100,000)'
                     }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_12_18_all_replacedeath', targets_to_plot=targets_to_plot,
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_12_19_3', targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers, translation_dictionary=translations,
                                   scenario_list=scenario_list)

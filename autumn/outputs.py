@@ -1169,16 +1169,17 @@ class Project:
         if self.gui_inputs['output_by_subgroups']:
             for strata_type in ['agegroups', 'riskgroups']:
                 outputs_to_plot, list_of_strata = ['incidence', 'mortality'], getattr(self.inputs, strata_type)
+                strata_type_name = 'age groups' if strata_type == 'agegroups' else 'risk groups'
                 if len(list_of_strata) > 1:
                     self.plot_epi_outputs(
                         [''.join(panel) for panel in itertools.product(outputs_to_plot, list_of_strata)],
-                        'scenario', ', by_' + strata_type, grid=[len(outputs_to_plot), len(list_of_strata)],
+                        'scenario', ', by_' + strata_type_name, grid=[len(outputs_to_plot), len(list_of_strata)],
                         sharey='row')
                     for scenario in self.scenarios:
                         if scenario > 0:
                             self.plot_epi_outputs(
                                 [''.join(panel) for panel in itertools.product(outputs_to_plot, list_of_strata)],
-                                'single_scenario', ', by_' + strata_type, grid=[len(outputs_to_plot), len(list_of_strata)],
+                                'single_scenario', ', by_' + strata_type_name, grid=[len(outputs_to_plot), len(list_of_strata)],
                                 sharey='row', single_scenario_number=scenario)
             for strata_type in ['agegroups', 'riskgroups']:
                 for fraction in [True, False]:
@@ -1560,11 +1561,12 @@ class Project:
                     else t_k.find_title_from_dictionary(stratum))  # proxy
 
         # finish off
+        category_to_loop_name = 'age groups' if category_to_loop == 'agegroups' else 'risk groups'
         ax.legend(bbox_to_anchor=(1.3, 1))
         self.tidy_x_axis(ax, start_time, 2035., max_dim)
         self.tidy_y_axis(ax, 'prop_' if fraction else '', max_dim, max_value=max(cumulative_data))
         self.finish_off_figure(fig, 1, '_' + ('absolute_' if fraction else 'population_') + output + '_'
-                               + category_to_loop,
+                               + category_to_loop_name,
                                ('Fraction of ' if fraction else 'Stacked absolute ') + output + ', by '
                                + t_k.find_title_from_dictionary(category_to_loop, capital_first_letter=False))
 

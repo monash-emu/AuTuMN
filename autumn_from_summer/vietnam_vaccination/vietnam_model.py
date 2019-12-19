@@ -33,7 +33,7 @@ my_flows = [{"type": "infection_frequency", "parameter": "infection_rate", "orig
             {"type": "standard_flows", "parameter": "immune_stabilisation_rate", "origin": "early_latent", "to": "late_latent"},
             {"type": "standard_flows", "parameter": "reactivation_rate", "origin": "late_latent", "to": "infectious"},
             {"type": "standard_flows", "parameter": "self_recovery_rate", "origin": "infectious", "to": "recovered"},
-            {"type": "infection_density", "parameter": "reinfection_from_recovered", "origin": "recovered", "to": "early_latent"},
+            {"type": "infection_frequency", "parameter": "reinfection_from_recovered", "origin": "recovered", "to": "early_latent"},
             # {"type": "infection_frequency", "parameter": "reinfection_from_late_latent", "origin": "late_latent", "to": "early_latent"},
             # {"type": "standard_flows", "parameter": "relapse_rate", "origin": "recovered", "to": "infectious"},
             {"type": "compartment_death", "parameter": "tb_mortality_rate", "origin": "infectious"},

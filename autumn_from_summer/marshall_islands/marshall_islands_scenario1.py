@@ -24,8 +24,8 @@ def build_rmi_model(update_params={}):
     # stratify_by = ['location']
     # stratify_by = ['age']
     # stratify_by = ['age', 'diabetes']
-    stratify_by = ['age', 'diabetes', 'organ']
-    # stratify_by = ['age', 'diabetes', 'organ', 'location']
+    # stratify_by = ['age', 'diabetes', 'organ']
+    stratify_by = ['age', 'diabetes', 'organ', 'location']
 
     # some default parameter values
     external_params = {  # run configuration
@@ -231,11 +231,13 @@ def build_rmi_model(update_params={}):
     # # create time dependent ACF coverage switch
     # _tb_model.adaptation_functions['acf_coverage'] = lambda time: .9 if 2019. < time < 2019.5 else 0.0
 
+    acf_screening_rate = -numpy.log(1 - .90)/.5
+
     # create time dependent ACF coverage switch
-    acf_rate_function = lambda t: (.9 if 2019. < t < 2019.5 else 0.0) * external_params['acf_sensitivity'] *(rmi_tsr(t))
+    acf_rate_function = lambda t: (acf_screening_rate if 2019. < t < 2019.5 else 0.0) * external_params['acf_sensitivity'] * (rmi_tsr(t))
 
     # create time dependent LTBI ACF coverage switch
-    acf_ltbi_rate_function = lambda t: (.9 if 2019. < t < 2019.5 else 0.0) * external_params['acf_ltbi_sensitivity'] * external_params['acf_ltbi_efficacy']
+    acf_ltbi_rate_function = lambda t: (acf_screening_rate if 2019. < t < 2019.5 else 0.0) * external_params['acf_ltbi_sensitivity'] * external_params['acf_ltbi_efficacy']
 
     # # initialise acf_rate function
     # acf_rate_function = lambda t: 'acf_coverage' * external_params['acf_sensitivity'] *\

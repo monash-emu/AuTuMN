@@ -14,6 +14,34 @@ def step_function_maker(start_time, end_time, value):
     return my_function
 
 
+def progressive_step_function_maker(start_time, end_time, average_value, scaling_time_fraction=.2):
+    """
+    Make a step_function with linear increasing and decreasing slopes to simulate more progressive changes
+    :param average_value: targeted average value (auc)
+    :param scaling_time_fraction: fraction of (end_time - start_time) used for scaling up the value (classic step
+    function obtained with scaling_time_fraction=0, triangle function obtained with scaling_time_fraction=.5)
+    :return: function
+    """
+    assert scaling_time_fraction <= .5, "scaling_time_fraction must be <=.5"
+
+    def my_function(time):
+        if time <= start_time or time >= end_time:
+            y = 0
+        else:
+            total_time = end_time - start_time
+            plateau_height = average_value / (1. - scaling_time_fraction)
+            slope = plateau_height / (scaling_time_fraction * total_time)
+            intercept_left = - slope * start_time
+            intercept_right = slope * end_time
+            if start_time + scaling_time_fraction * total_time <= time <= end_time - scaling_time_fraction * total_time:
+                y = plateau_height
+            elif time < start_time + scaling_time_fraction * total_time:
+                y = slope * time + intercept_left
+            else:
+                y = -slope * time + intercept_right
+        return y
+
+    return my_function
 
 def change_parameter_unit(parameter_dict, multiplier):
     """
@@ -169,4 +197,3 @@ def get_coverage_from_cost(spending, saturation, unit_cost, popsize, inflection_
     a = saturation / (1. - 2. ** alpha)
     b = 2. ** (alpha + 1.) / (alpha * (saturation - a) * unit_cost * popsize)
     return a + (saturation - a) / ((1. + numpy.exp((-b) * (spending - inflection_cost))) ** alpha)
-

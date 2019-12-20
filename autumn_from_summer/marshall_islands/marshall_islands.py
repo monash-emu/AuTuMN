@@ -21,11 +21,11 @@ def build_rmi_timevariant_tsr():
 
 def build_rmi_model(update_params={}):
 
-    # stratify_by = []
+    stratify_by = ['location']
     # stratify_by = ['age']
     # stratify_by = ['age', 'diabetes']
     # stratify_by = ['age', 'diabetes', 'organ']
-    stratify_by = ['age', 'diabetes', 'organ', 'location']
+    # stratify_by = ['age', 'diabetes', 'organ', 'location']
 
     # some default parameter values
     external_params = {  # run configuration
@@ -77,7 +77,7 @@ def build_rmi_model(update_params={}):
          "case_detection": 0.,
          "ipt_rate": 0.,
          "acf_rate": 0.,
-         "acf_ltbi_rate": external_params['acf_ltbi_coverage'] * external_params['acf_ltbi_sensitivity'] * external_params['acf_ltbi_efficacy'],
+         "acf_ltbi_rate": 0.,
          "crude_birth_rate": 35.0 / 1e3}
 
     input_db_path = os.path.join(os.getcwd(), 'databases/inputs.db')
@@ -227,15 +227,20 @@ def build_rmi_model(update_params={}):
     #     lambda t: detect_rate(t) *\
     #               (rmi_tsr(t) + external_params['reduction_negative_tx_outcome'] * (1. - rmi_tsr(t)))
 
+    acf_screening_rate = -numpy.log(1 - .90)/.5
+
 
     # initialise acf_rate function
-    acf_rate_function = lambda t: external_params['acf_coverage'] * external_params['acf_sensitivity'] *\
-                                  (rmi_tsr(t)) #+ external_params['reduction_negative_tx_outcome'] * (1. - rmi_tsr(t)))
+    acf_rate_function = lambda t: (acf_screening_rate if 2019. < t < 2019.5 else 0.0) * external_params['acf_sensitivity'] * (rmi_tsr(t))
+
+    acf_ltbi_rate_function = lambda t: (acf_screening_rate if 2019. < t < 2019.5 else 0.0) * external_params['acf_ltbi_sensitivity'] * external_params['acf_ltbi_efficacy']
+
 
     # assign newly created functions to model parameters
     if len(stratify_by) == 0:
         _tb_model.time_variants["case_detection"] = tb_control_recovery_rate
         _tb_model.time_variants["acf_rate"] = acf_rate_function
+        _tb_model.time_variants["acf_ltbi_rate"] = acf_ltbi_rate_function
 
     else:
         _tb_model.adaptation_functions["case_detection"] = tb_control_recovery_rate
@@ -243,6 +248,9 @@ def build_rmi_model(update_params={}):
 
         _tb_model.adaptation_functions["acf_rate"] = acf_rate_function
         _tb_model.parameters["acf_rate"] = "acf_rate"
+
+        _tb_model.adaptation_functions["acf_ltbi_rate"] = acf_ltbi_rate_function
+        _tb_model.parameters["acf_ltbi_rate"] = "acf_ltbi_rate"
 
     if "age" in stratify_by:
         age_breakpoints = [0, 5, 15, 35, 50]
@@ -354,6 +362,16 @@ if __name__ == "__main__":
     load_model = False
 
     scenario_params = {
+        1: {'acf_majuro_switch': 1.,
+                       'acf_ebeye_switch': 1.,
+                       'acf_otherislands_switch': 0.,
+                        # LTBI ACF for intervention groups
+                       'acf_ltbi_coverage': 0., ## replaced by function in acf_ltbi rate_function below
+                       'acf_ltbi_sensitivity': .9,
+                       'acf_ltbi_efficacy': .85, # higher than ipt_efficacy as higher completion rate
+                       'acf_ltbi_majuro_switch': 1.,
+                       'acf_ltbi_ebeye_switch': 0.,
+                       'acf_ltbi_otherislands_switch': 0.}
             # Tentative RMI scenarios
             # Ebeye intervention
             # 1: {'acf_ltbi_coverage': .9, 'acf_ltbi_majuro_switch': 1.}
@@ -398,12 +416,14 @@ if __name__ == "__main__":
                 models.append(DummyModel(model_dict))
     else:
         t0 = time()
-        models = run_multi_scenario(scenario_params, 2020., build_rmi_model)
+        models = run_multi_scenario(scenario_params, 2015., build_rmi_model)
         store_run_models(models, scenarios=scenario_list, database_name=output_db_path)
         delta = time() - t0
         print("Running time: " + str(round(delta, 1)) + " seconds")
 
     req_outputs = ['prevXinfectiousXamong',
+
+
                    # 'prevXinfectiousXorgan_smearposXamongXinfectious',
                    # 'prevXinfectiousXorgan_smearnegXamongXinfectious',
                    # 'prevXinfectiousXorgan_extrapulXamongXinfectious',
@@ -470,6 +490,6 @@ if __name__ == "__main__":
                     'prevXinfectiousXstrain_mdrXamong': 'Prevalence of MDR-TB (/100,000)'
                     }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_12_19_3', targets_to_plot=targets_to_plot,
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_20_12', targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers, translation_dictionary=translations,
                                   scenario_list=scenario_list)

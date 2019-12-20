@@ -444,7 +444,8 @@ def create_multi_scenario_outputs(models, req_outputs, req_times={}, req_multipl
     outputs.plot_requested_outputs()
 
     for req_output in ['prevXinfectious', 'prevXlatent']:
-        outputs.plot_outputs_by_stratum(req_output)
+        for sc_index in range(len(models)):
+            outputs.plot_outputs_by_stratum(req_output, sc_index=sc_index)
 
 
 

@@ -28,9 +28,6 @@ class Calibration:
     required, or using maximum likelihood estimation if only one calibrated parameter set is required.
     """
     def __init__(self, model_builder, priors, targeted_outputs, multipliers, chain_index):
-        # initialise random seed differently for different chains
-        np.random.seed(chain_index + int(time()))
-
         self.model_builder = model_builder  # a function that builds a new model without running it
         self.running_model = None  # a model that will be run during calibration
         self.post_processing = None  # a PostProcessing object containing the required outputs of a model that has been run
@@ -199,6 +196,10 @@ class Calibration:
         :param n_chains: number of chains to be run
         :param available_time: maximal simulation time allowed (in seconds)
         """
+
+        # initialise random seed differently for different chains
+        np.random.seed(self.chain_index + int(time()))
+
         self.run_mode = run_mode
         if run_mode == 'autumn_mcmc':
             if n_chains > 1:

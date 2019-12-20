@@ -130,11 +130,11 @@ if "age" in stratify_by:
 
     # Matrix of social mixing rates between age groups
     age_mixing_matrix = numpy.array(
-                                   [[1.8, 0.3, 0.3, 0.8, 0.4],
-                                    [0.3, 2.1, 2.1, 0.7, 0.6],
-                                    [0.3, 2.1, 2.1, 0.7, 0.6],
-                                    [0.8, 0.7, 0.7, 1.0, 1.15],
-                                    [0.4, 0.6, 0.6, 1.15, 1.6]]
+                                   [[1.875, 0.375, 0.375, 0.833, 0.625],
+                                    [0.375, 2.125, 2.125, 0.792, 0.500],
+                                    [0.375, 2.125, 2.125, 0.792, 0.500],
+                                    [0.833, 0.792, 0.792, 0.896, 0.896],
+                                    [0.625, 0.500, 0.500, 0.896, 1.750]]
                                     )
 
     # array estimated from Figure 4 in the paper "Social Contact Patterns in Vietnam and Implications for
@@ -142,7 +142,7 @@ if "age" in stratify_by:
 
     age_mixing = age_mixing_matrix # None means homogenous mixing
 
-    my_model.stratify("age", [0, 5, 10, 15, 60], [], {}, {},
+    my_model.stratify("age", [0, 5, 10, 15, 50], [], {}, {},
                       infectiousness_adjustments={"0": 0, "5": 0, "10": 0},
                       mixing_matrix=age_mixing,
                       verbose=False,              # Verbose prints out information, does not effect model

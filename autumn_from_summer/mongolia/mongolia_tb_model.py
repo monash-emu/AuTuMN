@@ -124,7 +124,7 @@ def build_mongolia_model(update_params={}):
     for stratification in stratify_by:
         for stratum in all_stratifications[stratification]:
             for stage in ["early", 'late']:
-                out_connections["indidence_" + stage + "X" + stratification + "_" + stratum] =\
+                out_connections["incidence_" + stage + "X" + stratification + "_" + stratum] =\
                     {"origin": stage + "_latent", "to": "infectious", "to_condition": stratification + "_" + stratum}
 
     # define model     #replace_deaths  add_crude_birth_rate
@@ -519,7 +519,7 @@ if __name__ == "__main__":
                     'prevXinfectiousXstrain_mdrXamong': 'Prevalence of MDR-TB (/100,000)'
                     }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_mle_19_12',
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_mle_20_12',
                                   targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers, translation_dictionary=translations,
                                   scenario_list=scenario_list)

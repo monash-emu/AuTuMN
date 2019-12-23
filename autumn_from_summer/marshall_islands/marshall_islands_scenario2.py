@@ -1,3 +1,5 @@
+# This is the Marshall Islands model from 23/12/12, with only 5 compartments.
+
 from autumn_from_summer.tb_model import *
 from autumn_from_summer.tool_kit import *
 from time import time
@@ -30,7 +32,7 @@ def build_rmi_model(update_params={}):
     # some default parameter values
     external_params = {  # run configuration
                        'start_time': 1850.,
-                       'end_time': 2035.,
+                       'end_time': 2050.,
                        'time_step': 1.,
                        'start_population': 9000,
                        # base model definition:
@@ -51,18 +53,16 @@ def build_rmi_model(update_params={}):
                        # 'rr_transmission_otherislands': 1.,  # reference: majuro
                        'rr_progression_has_diabetes': 3.11,  # reference: no_diabetes
                        # ACF for intervention groups
-                       'acf_coverage': 0., ## replaced by function in acf_rate_function below
+                       'acf_coverage': 0.,
                        'acf_sensitivity': .9,
-                       'acf_switch': 0.,
-                       'acf_majuro_switch': 1.,
-                       'acf_ebeye_switch': 1.,
+                       'acf_majuro_switch': 0.,
+                       'acf_ebeye_switch': 0.,
                        'acf_otherislands_switch': 0.,
                         # LTBI ACF for intervention groups
-                       'acf_ltbi_coverage': 0., ## replaced by function in acf_ltbi rate_function below
+                       'acf_ltbi_coverage': 0.,
                        'acf_ltbi_sensitivity': .9,
                        'acf_ltbi_efficacy': .85, # higher than ipt_efficacy as higher completion rate
-                       'acf_ltbi_switch': 0.,
-                       'acf_ltbi_majuro_switch': 1.,
+                       'acf_ltbi_majuro_switch': 0.,
                        'acf_ltbi_ebeye_switch': 0.,
                        'acf_ltbi_otherislands_switch': 0.,
                        }
@@ -85,7 +85,7 @@ def build_rmi_model(update_params={}):
     input_db_path = os.path.join(os.getcwd(), 'databases/inputs.db')
     input_database = InputDB(database_name=input_db_path)
     n_iter = int(round((external_params['end_time'] - external_params['start_time']) / external_params['time_step'])) + 1
-    integration_times = numpy.linspace(external_params['start_time'], external_params['end_time'], n_iter).tolist()
+    integration_times = numpy.linspace(external_params['start_time'], external_params['end_time'], 4*n_iter).tolist()
 
     model_parameters.update(change_parameter_unit(provide_aggregated_latency_parameters(), 365.251))
 
@@ -139,7 +139,6 @@ def build_rmi_model(update_params={}):
     _tb_model.add_transition_flow(
         {"type": "standard_flows", "parameter": "case_detection", "origin": "infectious", "to": "recovered"})
 
-
     # Add IPT as a customised flow
     def ipt_flow_func(model, n_flow):
         if not hasattr(model, 'strains') or len(model.strains) < 2:
@@ -154,10 +153,6 @@ def build_rmi_model(update_params={}):
 
         return infectious_populations / float(n_early_latent_comps)
 
-    # _tb_model.add_transition_flow(
-    #     {"type": "customised_flows", "parameter": "ipt_rate", "origin": "early_latent", "to": "recovered",
-    #      "function": ipt_flow_func})
-
     # add ACF flow
     _tb_model.add_transition_flow(
         {"type": "standard_flows", "parameter": "acf_rate", "origin": "infectious", "to": "recovered"})
@@ -168,19 +163,6 @@ def build_rmi_model(update_params={}):
 
     _tb_model.add_transition_flow(
         {"type": "standard_flows", "parameter": "acf_ltbi_rate", "origin": "late_latent", "to": "recovered"})
-
-    # # load time-variant case detection rate
-    # cdr_scaleup = build_rmi_timevariant_cdr()
-    # disease_duration = 3.
-    # prop_to_rate = convert_competing_proportion_to_rate(1.0 / disease_duration)
-    # detect_rate = return_function_of_function(cdr_scaleup, prop_to_rate)
-
-    # load time-variant treatment success rate
-    rmi_tsr = build_rmi_timevariant_tsr()
-
-    # # build island-specific intervention duration switches
-    # ebeye_switch = step_function_maker(2017.2, 2017.8, .0)
-    # majuro_switch = step_function_maker(2018.2, 2018.8, .0)
 
     # load time-variant case detection rate
     cdr_scaleup_overall = build_rmi_timevariant_cdr(external_params['cdr_multiplier'])
@@ -213,11 +195,11 @@ def build_rmi_model(update_params={}):
         prop_to_rate = convert_competing_proportion_to_rate(1.0 / disease_duration[organ])
         detect_rate_by_organ[organ] = return_function_of_function(cdr_by_organ[organ], prop_to_rate)
 
-    # # load time-variant treatment success rate
-    # rmi_tsr = build_rmi_timevariant_tsr()
+    # load time-variant treatment success rate
+    rmi_tsr = build_rmi_timevariant_tsr()
 
-    # create a treatment succes rate function adjusted for treatment support intervention
-    tsr_function = lambda t: rmi_tsr(t) #+ external_params['reduction_negative_tx_outcome'] * (1. - rmi_tsr(t))
+    # create a treatment success rate function adjusted for treatment support intervention
+    tsr_function = lambda t: rmi_tsr(t)
 
     # tb control recovery rate (detection and treatment) function set for overall if not organ-specific, smearpos otherwise
     if 'organ' not in stratify_by:
@@ -225,31 +207,22 @@ def build_rmi_model(update_params={}):
     else:
         tb_control_recovery_rate = lambda t: tsr_function(t) * detect_rate_by_organ['smearpos'](t)
 
-    # # create a tb_control_recovery_rate function combining case detection and treatment success rates
-    # tb_control_recovery_rate = \
-    #     lambda t: detect_rate(t) *\
-    #               (rmi_tsr(t) + external_params['reduction_negative_tx_outcome'] * (1. - rmi_tsr(t)))
+    # set acf screening rate using proportion of population reached and duration of intervention
+    acf_screening_rate = -numpy.log(1 - .90)/.5
 
-    # # create time dependent ACF coverage switch
-    # _tb_model.adaptation_functions['acf_coverage'] = lambda time: .9 if 2019. < time < 2019.5 else 0.0
+    acf_rate_over_time = progressive_step_function_maker(2018.2, 2018.7, acf_screening_rate, scaling_time_fraction=.3)
 
-    # create time dependent ACF coverage switch
-    acf_rate_function = lambda t: (.9 if 2019. < t < 2019.5 else 0.0) * external_params['acf_sensitivity'] *\
-                                  (rmi_tsr(t)) * external_params['acf_switch']
+    # initialise acf_rate function
+    acf_rate_function = lambda t: (acf_rate_over_time(t)) * external_params['acf_sensitivity'] * (rmi_tsr(t))
 
-    # create time dependent LTBI ACF coverage switch
-    acf_ltbi_rate_function = lambda t: (.9 if 2019. < t < 2019.5 else 0.0) * external_params['acf_ltbi_sensitivity'] *\
-                                       external_params['acf_ltbi_efficacy'] * external_params['acf_ltbi_switch']
-
-    # # initialise acf_rate function
-    # acf_rate_function = lambda t: 'acf_coverage' * external_params['acf_sensitivity'] *\
-    #                               (rmi_tsr(t)) #+ external_params['reduction_negative_tx_outcome'] * (1. - rmi_tsr(t)))
+    acf_ltbi_rate_function = lambda t: (acf_rate_over_time(t)) * external_params['acf_ltbi_sensitivity'] * external_params['acf_ltbi_efficacy']
 
     # assign newly created functions to model parameters
     if len(stratify_by) == 0:
         _tb_model.time_variants["case_detection"] = tb_control_recovery_rate
         _tb_model.time_variants["acf_rate"] = acf_rate_function
         _tb_model.time_variants["acf_ltbi_rate"] = acf_ltbi_rate_function
+
     else:
         _tb_model.adaptation_functions["case_detection"] = tb_control_recovery_rate
         _tb_model.parameters["case_detection"] = "case_detection"
@@ -300,9 +273,6 @@ def build_rmi_model(update_params={}):
                                                 'late_progressionXage_50': progression_adjustments,},
                            entry_proportions=props_diabetes)
 
-        # adjustment_dict = {}
-        # for age_break in age_breakpoints[2:]:
-        #     adjustment_dict[age_break] = {"has_diabetes": 3.11, "no_diabetes": 1.}
 
     if 'organ' in stratify_by:
         props_smear = {"smearpos": external_params['prop_smearpos'],
@@ -323,12 +293,11 @@ def build_rmi_model(update_params={}):
                            entry_proportions=props_smear)
 
 
+    _tb_model.transition_flows.to_csv("transitions_age_dm_organ.csv")
+
     if "location" in stratify_by:
         props_location = {'majuro': .523, 'ebeye': .2, 'otherislands': .277}
-        # raw_relative_risks_loc = {'majuro': 1.}
-        # for stratum in ['ebeye', 'otherislands']:
-        #     raw_relative_risks_loc[stratum] = external_params['rr_transmission_' + stratum]
-        # scaled_relative_risks_loc = scale_relative_risks_for_equivalence(props_location, raw_relative_risks_loc)
+
 
         # dummy matrix for mixing by location
         location_mixing = numpy.array([.9, .05, .05,
@@ -336,41 +305,18 @@ def build_rmi_model(update_params={}):
                                        .05, .05, .9]).reshape((3, 3))
         location_mixing *= 3.  # adjusted such that heterogeneous mixing yields similar overall burden as homogeneous
 
-        # acf_switch_adjust = {"majuro": 1., "ebeye": 1., "otherislands": 0.}
-        # acf_ltbi_switch_adjust = {"majuro": 1., "ebeye": 0., "otherislands": 0.}
+        location_adjustments = {}
+        location_adjustments['acf_rate'] = {}
+        for stratum in ['majuro', 'ebeye', 'otherislands']:
+            location_adjustments['acf_rate'][stratum] = external_params['acf_' + stratum + '_switch']
 
-        acf_switch_adjust = {}
-        for stratum in ["majuro", "ebeye", "otherislands"]:
-            acf_switch_adjust[stratum] = external_params["acf_" + stratum + "_switch"]
-
-        acf_ltbi_switch_adjust = {}
-        for stratum in ["majuro", "ebeye", "otherislands"]:
-            acf_ltbi_switch_adjust[stratum] = external_params["acf_ltbi_" + stratum + "_switch"]
-
-        # location_adjustments = {}
-        # for beta_type in ['', '_infected', '_recovered']:
-        #     location_adjustments['contact_rate' + beta_type] = scaled_relative_risks_loc
-
-        # location_adjustments['acf_rate_function'] = {}
-        # for stratum in ['majuro', 'ebeye', 'otherislands']:
-        #     location_adjustments['acf_rate_function'][stratum] = external_params['acf_' + stratum + '_switch']
-        #
-        # location_adjustments['acf_ltbi_rate_function'] = {}
-        # for stratum in ['majuro', 'ebeye', 'otherislands']:
-        #     location_adjustments['acf_ltbi_rate_function'][stratum] = external_params['acf_ltbi_' + stratum + '_switch']
-        #
-        # for stratum in ['majuro', 'ebeye']:
-        # location_adjustments[acf_rate_function] = lambda t: (.9 if 2019. < t < 2019.5 else 0.0) * external_params['acf_sensitivity'] * (
-        #     rmi_tsr(t))
-        #
-        # # create time dependent LTBI ACF coverage switch
-        # acf_ltbi_rate_function = lambda t: (.9 if 2019. < t < 2019.5 else 0.0) * external_params[
-        #     'acf_ltbi_sensitivity'] * external_params['acf_ltbi_efficacy']
+        location_adjustments['acf_ltbi_rate'] = {}
+        for stratum in ['majuro', 'ebeye', 'otherislands']:
+            location_adjustments['acf_ltbi_rate'][stratum] = external_params['acf_ltbi_' + stratum + '_switch']
 
         _tb_model.stratify("location", ['majuro', 'ebeye', 'otherislands'], [],
                            requested_proportions=props_location, verbose=False, entry_proportions=props_location,
-                           adjustment_requests={'acf_switch': acf_switch_adjust,
-                                                'acf_ltbi_switch': acf_ltbi_switch_adjust},
+                           adjustment_requests=location_adjustments,
                            mixing_matrix=location_mixing
                            )
 
@@ -388,30 +334,13 @@ if __name__ == "__main__":
     load_model = False
 
     scenario_params = {
-            # Tentative RMI scenarios
-            # Ebeye intervention
-            # 1: {'acf_coverage': .9, 'acf_majuro_switch' = step_function_maker(2017.2, 2017.57, .1)}
+        1: {'acf_majuro_switch': 1.,
+                       'acf_ebeye_switch': 1.,
+                       'acf_otherislands_switch': 0.,
+                       'acf_ltbi_majuro_switch': 1.,
+                       'acf_ltbi_ebeye_switch': 0.,
+                       'acf_ltbi_otherislands_switch': 0.}
 
-            # Majuro intervention (on Majuro only)
-            # 2: {'acf_coverage'': .9, 'acf_majuro_switch': 1., 'majuro_switch': 1., *\
-            # 'acf_ltbi_coverage': .9, 'acf_ltbi_majuro_switch': 1.} # need to limit  to ?6 months and check coverage
-
-            # Hypothetical application of Majuro intervention across RMI
-            # 3: {'acf_coverage': .9, 'acf_majuro_switch': 1., 'acf_ebeye_switch': 1., 'acf_otherislands_switch': 1., *\
-            # 'acf_ltbi_coverage': .9, 'acf_ltbi_majuro_switch': 1., 'acf_ltbi_ebeye_switch': 1., *\
-            # 'acf_ltbi_otherislands_switch': 1.} # need to limit to ?6 months and check coverage
-
-            # Mongolia scenarios - kept for reference only
-            # 1: {'ipt_age_0_ct_coverage': .5},
-            # 2: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
-            #     'ipt_age_60_ct_coverage': .5},
-            # 3: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
-            #      'ipt_age_60_ct_coverage': .5, 'ds_ipt_switch': 0., 'mdr_ipt_switch': 1.},
-            # 4: {'mdr_tsr': .8},
-            # 5: {'reduction_negative_tx_outcome': 0.5},
-            # 6: {'acf_coverage': .2, 'acf_urban_ger_switch': 1.},
-            # 7: {'acf_coverage': .2, 'acf_mine_switch': 1.},
-            # 8: {'diagnostic_sensitivity_smearneg': 1., 'prop_mdr_detected_as_mdr': .9}
         }
     scenario_list = [0]
     scenario_list.extend(list(scenario_params.keys()))
@@ -431,12 +360,14 @@ if __name__ == "__main__":
                 models.append(DummyModel(model_dict))
     else:
         t0 = time()
-        models = run_multi_scenario(scenario_params, 1900, build_rmi_model)
+        models = run_multi_scenario(scenario_params, 2000., build_rmi_model)
         store_run_models(models, scenarios=scenario_list, database_name=output_db_path)
         delta = time() - t0
         print("Running time: " + str(round(delta, 1)) + " seconds")
 
     req_outputs = ['prevXinfectiousXamong',
+
+
                    # 'prevXinfectiousXorgan_smearposXamongXinfectious',
                    # 'prevXinfectiousXorgan_smearnegXamongXinfectious',
                    # 'prevXinfectiousXorgan_extrapulXamongXinfectious',
@@ -503,6 +434,6 @@ if __name__ == "__main__":
                     'prevXinfectiousXstrain_mdrXamong': 'Prevalence of MDR-TB (/100,000)'
                     }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_19_12_scenario2_2', targets_to_plot=targets_to_plot,
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_12_23_2', targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers, translation_dictionary=translations,
                                   scenario_list=scenario_list)

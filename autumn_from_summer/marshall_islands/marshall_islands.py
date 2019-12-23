@@ -37,6 +37,7 @@ def build_rmi_model(update_params={}):
                        'contact_rate': 30.,
                        'rr_transmission_recovered': 0.6,
                        'rr_transmission_infected': 0.21,
+                       'rr_transmission_ltbi_treated': 0.21,
                        'latency_adjustment': 2.,  # used to modify progression rates during calibration
                        'self_recovery_rate': 0.231,  # this is for smear-positive TB
                        'tb_mortality_rate': 0.389,  # this is for smear-positive TB
@@ -71,6 +72,7 @@ def build_rmi_model(update_params={}):
         {"contact_rate": external_params['contact_rate'],
          "contact_rate_recovered": external_params['contact_rate'] * external_params['rr_transmission_recovered'],
          "contact_rate_infected": external_params['contact_rate'] * external_params['rr_transmission_infected'],
+         "contact_rate_ltbi_treated": external_params['contact_rate'] * external_params['rr_transmission_ltbi_treated'],
          "recovery": external_params['self_recovery_rate'],
          "infect_death": external_params['tb_mortality_rate'],
          "universal_death_rate": 1.0 / 70.0,
@@ -93,7 +95,7 @@ def build_rmi_model(update_params={}):
     flows = add_standard_natural_history_flows(flows)
 
     # compartments
-    compartments = ["susceptible", "early_latent", "late_latent", "infectious", "recovered"]
+    compartments = ["susceptible", "early_latent", "late_latent", "infectious", "recovered", "ltbi_treated"]
 
     # derived output definition
     out_connections = {
@@ -137,19 +139,10 @@ def build_rmi_model(update_params={}):
     _tb_model.add_transition_flow(
         {"type": "standard_flows", "parameter": "case_detection", "origin": "infectious", "to": "recovered"})
 
-    # Add IPT as a customised flow
-    def ipt_flow_func(model, n_flow):
-        if not hasattr(model, 'strains') or len(model.strains) < 2:
-            infectious_populations = model.infectious_populations['all_strains'][0]
-        else:
-            infectious_populations = \
-                    model.infectious_populations[find_stratum_index_from_string(
-                        model.transition_flows.at[n_flow, "parameter"], "strain")][0]
-
-        n_early_latent_comps = len([model.compartment_names[i] for i in range(len(model.compartment_names)) if
-                                   model.compartment_names[i][0:12] == 'early_latent'])
-
-        return infectious_populations / float(n_early_latent_comps)
+    # add ltbi treated infection flow
+    _tb_model.add_transition_flow(
+        {"type": "infection_frequency", "parameter": "contact_rate_ltbi_treated", "origin": "ltbi_treated",
+         "to": "early_latent"})
 
     # add ACF flow
     _tb_model.add_transition_flow(
@@ -157,10 +150,10 @@ def build_rmi_model(update_params={}):
 
     # add LTBI ACF flows
     _tb_model.add_transition_flow(
-        {"type": "standard_flows", "parameter": "acf_ltbi_rate", "origin": "early_latent", "to": "recovered"})
+        {"type": "standard_flows", "parameter": "acf_ltbi_rate", "origin": "early_latent", "to": "ltbi_treated"})
 
     _tb_model.add_transition_flow(
-        {"type": "standard_flows", "parameter": "acf_ltbi_rate", "origin": "late_latent", "to": "recovered"})
+        {"type": "standard_flows", "parameter": "acf_ltbi_rate", "origin": "late_latent", "to": "ltbi_treated"})
 
     # load time-variant case detection rate
     cdr_scaleup_overall = build_rmi_timevariant_cdr(external_params['cdr_multiplier'])
@@ -262,7 +255,7 @@ def build_rmi_model(update_params={}):
 
     if 'diabetes' in stratify_by:
         props_diabetes = {'has_diabetes': 0.3, 'no_diabetes': 0.7}
-        progression_adjustments = {"has_diabetes": 3.11, "no_diabetes": 1.}
+        progression_adjustments = {"has_diabetes": 3.18, "no_diabetes": 1.}
 
         _tb_model.stratify("diabetes", ["has_diabetes", "no_diabetes"], [],
                            verbose=False, requested_proportions=props_diabetes,
@@ -364,8 +357,6 @@ if __name__ == "__main__":
         print("Running time: " + str(round(delta, 1)) + " seconds")
 
     req_outputs = ['prevXinfectiousXamong',
-
-
                    # 'prevXinfectiousXorgan_smearposXamongXinfectious',
                    # 'prevXinfectiousXorgan_smearnegXamongXinfectious',
                    # 'prevXinfectiousXorgan_extrapulXamongXinfectious',
@@ -418,20 +409,18 @@ if __name__ == "__main__":
                     'prevXinfectiousXamongXage_15Xage_60Xlocation_urban': 'TB prev. among 15+ y.o. urban population (/100,000)',
                     'prevXinfectiousXstrain_mdrXamongXinfectious': 'Proportion of MDR-TB among TB (%)',
                     'prevXinfectiousXamongXhousing_gerXlocation_urban': 'TB prevalence in urban Ger population (/100,000)',
-                    'age_0': 'age 0-4',
-                    'age_5': 'age 5-14',
-                    'age_15': 'age 15-59',
-                    'age_60': 'age 60+',
-                    'housing_ger': 'ger',
-                    'housing_non-ger': 'non-ger',
-                    'location_rural': 'rural',
-                    'location_province': 'province',
-                    'location_urban': 'urban',
-                    'strain_ds': 'DS-TB',
-                    'strain_mdr': 'MDR-TB',
-                    'prevXinfectiousXstrain_mdrXamong': 'Prevalence of MDR-TB (/100,000)'
+                    'age_0': 'Age 0-4',
+                    'age_5': 'Age 5-14',
+                    'age_15': 'Age 15-34',
+                    'age_35': 'Age 35-49',
+                    'age_50': 'Age 50+',
+                    'location_majuro': 'Majuro',
+                    'location_ebeye': 'Ebeye',
+                    'location_otherislands': 'Other locations',
+                    'diabetes_has_diabetes': 'Diabetes',
+                    'diabetes_no_diabetes': 'No Diabetes',
                     }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_20_12_3', targets_to_plot=targets_to_plot,
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_12_23_6', targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers, translation_dictionary=translations,
                                   scenario_list=scenario_list)

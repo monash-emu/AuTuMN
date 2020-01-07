@@ -50,7 +50,7 @@ my_parameters = {
     'reactivation_rate': 3.3e-6 * 365.25,
     # 'reinfection_from_late_latent': 0.09,  # currently unknown
     # 'reinfection_from_recovered': 0.15,    # currently unknown
-    'self_recovery_rate': 0.542,
+    'self_recovery_rate': 0.223,
     'rapid_progression_rate': 2.7e-4 * 365.25,
     'relapse_rate': 0.0139,
     "tb_mortality_rate": 0.11,
@@ -60,6 +60,7 @@ my_parameters = {
     # proportion of cases notified to WHO divided by number of estimated cases for that year
     "treatment_success_rate": 0.92
 }
+my_parameters['self_recovery_rate'] = 1/3-my_parameters['tb_mortality_rate']
 
 # Add case detection rate (cdr), and hence different rates of recovery without treatment or with detection and treatment
 # we assume everyone who gets detected received treatment

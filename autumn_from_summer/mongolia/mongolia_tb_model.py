@@ -73,10 +73,10 @@ def build_mongolia_model(update_params={}):
                        }
 
     # update external_params with MCMC mle estimates
-    mle_estimates = {'contact_rate': 6.,  # 10.44,
-                     'adult_latency_adjustment': 4.97,
-                     'dr_amplification_prop_among_nonsuccess': .214, 'self_recovery_rate': .22,
-                     'tb_mortality_rate': .354, 'rr_transmission_recovered': .893, 'cdr_multiplier': 1.17}
+    mle_estimates = {'contact_rate': 13.17359,  # 10.44,
+                     'adult_latency_adjustment': 2.894561,
+                     'dr_amplification_prop_among_nonsuccess': 0.1662956, 'self_recovery_rate': 0.2497045,
+                     'tb_mortality_rate': 0.3729356, 'rr_transmission_recovered': 0.959254, 'cdr_multiplier': 1.077391}
     external_params.update(mle_estimates)
 
     # update external_params with new parameter values found in update_params
@@ -519,7 +519,7 @@ if __name__ == "__main__":
                     'prevXinfectiousXstrain_mdrXamong': 'Prevalence of MDR-TB (/100,000)'
                     }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_mle_20_12',
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_mle_13_01',
                                   targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers, translation_dictionary=translations,
                                   scenario_list=scenario_list)

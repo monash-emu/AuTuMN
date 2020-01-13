@@ -209,9 +209,14 @@ def build_mongolia_model(update_params={}):
 
     # work out the CDR for smear-positive TB
     def cdr_smearpos(time):
+        # Had to replace external_params['diagnostic_sensitivity_smearneg'] with its hard-coded value .7 to avoid
+        # cdr_smearpos to be affected when increasing diagnostic_sensitivity_smearneg in interventions (e.g. Xpert)
+
+        # return (cdr_scaleup_overall(time) /
+        #         (prop_smearpos + prop_smearneg * external_params['diagnostic_sensitivity_smearneg'] +
+        #          prop_extrapul * external_params['diagnostic_sensitivity_extrapul']))
         return (cdr_scaleup_overall(time) /
-                (prop_smearpos + prop_smearneg * external_params['diagnostic_sensitivity_smearneg'] +
-                 prop_extrapul * external_params['diagnostic_sensitivity_extrapul']))
+                (prop_smearpos + prop_smearneg * .7 + prop_extrapul * external_params['diagnostic_sensitivity_extrapul']))
 
     def cdr_smearneg(time):
         return cdr_smearpos(time) * external_params['diagnostic_sensitivity_smearneg']
@@ -410,32 +415,32 @@ if __name__ == "__main__":
 
     scenario_params = {
         0: {},
-        # 1: {'ipt_age_0_ct_coverage': 1.},
-        # 2: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
-        #          'ipt_age_60_ct_coverage': .5},
-        # 3: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
-        #           'ipt_age_60_ct_coverage': .5, 'ds_ipt_switch': 0., 'mdr_ipt_switch': 1.},
-        # 4: {'mdr_tsr': .8},
-        # 5: {'reduction_negative_tx_outcome': 0.5},
-        # 6: {'acf_coverage': .155, 'acf_urban_ger_switch': 1.},  # 15.5% to get 70,000 screens
-        # 8: {'diagnostic_sensitivity_smearneg': 1., 'prop_mdr_detected_as_mdr': .9}
+        1: {'ipt_age_0_ct_coverage': 1.},
+        2: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
+                 'ipt_age_60_ct_coverage': .5},
+        3: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
+                  'ipt_age_60_ct_coverage': .5, 'ds_ipt_switch': 0., 'mdr_ipt_switch': 1.},
+        4: {'mdr_tsr': .8},
+        5: {'reduction_negative_tx_outcome': 0.5},
+        6: {'acf_coverage': .155, 'acf_urban_ger_switch': 1.},  # 15.5% to get 70,000 screens
+        7: {'diagnostic_sensitivity_smearneg': 1., 'prop_mdr_detected_as_mdr': .9}
         }
     scenario_list = list(scenario_params.keys())
     if 0 not in scenario_list:
         scenario_list = [0] + scenario_list
 
     if load_model:
-        load_mcmc = True
+        load_mcmc = False
 
         if load_mcmc:
-            models = load_calibration_from_db('z_outputs_calibration_chain_15.db')
+            models = load_calibration_from_db('outputs_calibration_chain_5.db')
             scenario_list = range(len(models))
         else:
             models = []
             scenarios_to_load = scenario_list
             for sc in scenarios_to_load:
                 print("Loading model for scenario " + str(sc))
-                model_dict = load_model_scenario(str(sc), database_name='outputs_11_27_2019_13_12_43.db')
+                model_dict = load_model_scenario(str(sc), database_name='outputs_01_13_2020_15_11_35.db')
                 models.append(DummyModel(model_dict))
     else:
         t0 = time()
@@ -519,7 +524,7 @@ if __name__ == "__main__":
                     'prevXinfectiousXstrain_mdrXamong': 'Prevalence of MDR-TB (/100,000)'
                     }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_mle_13_01',
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_scenarios_13_01_loaded',
                                   targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers, translation_dictionary=translations,
                                   scenario_list=scenario_list)

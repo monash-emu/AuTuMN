@@ -21,15 +21,15 @@ def build_rmi_timevariant_tsr():
 
 def build_rmi_model(update_params={}):
 
-    # stratify_by = ['location']
+    stratify_by = ['location']
     # stratify_by = ['age']
     # stratify_by = ['age', 'diabetes']
     # stratify_by = ['age', 'diabetes', 'organ']
-    stratify_by = ['age', 'diabetes', 'organ', 'location']
+    # stratify_by = ['age', 'diabetes', 'organ', 'location']
 
     # some default parameter values
     external_params = {  # run configuration
-                       'start_time': 1850.,
+                       'start_time': 1900.,
                        'end_time': 2035.,
                        'time_step': 1.,
                        'start_population': 9000,
@@ -37,7 +37,7 @@ def build_rmi_model(update_params={}):
                        'contact_rate': 30.,
                        'rr_transmission_recovered': 0.6,
                        'rr_transmission_infected': 0.21,
-                       'rr_transmission_ltbi_treated': 0.21,
+                       'rr_transmission_ltbi_treated': 0.6,
                        'latency_adjustment': 2.,  # used to modify progression rates during calibration
                        'self_recovery_rate': 0.231,  # this is for smear-positive TB
                        'tb_mortality_rate': 0.389,  # this is for smear-positive TB
@@ -59,8 +59,8 @@ def build_rmi_model(update_params={}):
                        'acf_otherislands_switch': 0.,
                         # LTBI ACF for intervention groups
                        'acf_ltbi_coverage': 0.,
-                       'acf_ltbi_sensitivity': .9,
-                       'acf_ltbi_efficacy': .85, # higher than ipt_efficacy as higher completion rate
+                       'acf_ltbi_sensitivity': .8,
+                       'acf_ltbi_efficacy': .72, # higher than ipt_efficacy as higher completion rate
                        'acf_ltbi_majuro_switch': 0.,
                        'acf_ltbi_ebeye_switch': 0.,
                        'acf_ltbi_otherislands_switch': 0.,
@@ -313,8 +313,10 @@ def build_rmi_model(update_params={}):
 
     _tb_model.transition_flows.to_csv("transitions_all.csv")
     _tb_model.death_flows.to_csv("deaths.csv")
-    create_flowchart(_tb_model, strata=0, name="rmi_flow_diagram")
-    create_flowchart(_tb_model, strata=1, name="rmi_flow_diagram_1")
+    # create_flowchart(_tb_model, strata=0, name="rmi_flow_diagram_0")
+    # create_flowchart(_tb_model, strata=1, name="rmi_flow_diagram_1")
+    # create_flowchart(_tb_model, strata=2, name="rmi_flow_diagram_2")
+    # create_flowchart(_tb_model, strata=3, name="rmi_flow_diagram_3")
     # create_flowchart(_tb_model, strata=2, name="rmi_flow_diagram_2")
 
     return _tb_model
@@ -351,12 +353,13 @@ if __name__ == "__main__":
                 models.append(DummyModel(model_dict))
     else:
         t0 = time()
-        models = run_multi_scenario(scenario_params, 2000., build_rmi_model)
+        models = run_multi_scenario(scenario_params, 1990., build_rmi_model)
         store_run_models(models, scenarios=scenario_list, database_name=output_db_path)
         delta = time() - t0
         print("Running time: " + str(round(delta, 1)) + " seconds")
 
     req_outputs = ['prevXinfectiousXamong',
+                   'prevXlatentXamong'
                    # 'prevXinfectiousXorgan_smearposXamongXinfectious',
                    # 'prevXinfectiousXorgan_smearnegXamongXinfectious',
                    # 'prevXinfectiousXorgan_extrapulXamongXinfectious',
@@ -373,42 +376,37 @@ if __name__ == "__main__":
                    # 'prevXinfectiousXstrain_mdrXamong'
                  ]
 
+
     multipliers = {
         'prevXinfectiousXstrain_mdrXamongXinfectious': 100.,
         'prevXinfectiousXstrain_mdrXamong': 1.e5
     }
 
-    targets_to_plot = {'prevXinfectiousXamongXage_15Xage_60': [[2015.], [560.]],
-                       #'prevXlatentXamongXage_5': [[2016.], [9.6]],
-                       #'prevXinfectiousXamongXage_15Xage_60Xhousing_ger': [[2015.], [613.]],
-                       #'prevXinfectiousXamongXage_15Xage_60Xhousing_non-ger': [[2015.], [436.]],
-                       #'prevXinfectiousXamongXage_15Xage_60Xlocation_rural': [[2015.], [529.]],
-                       #'prevXinfectiousXamongXage_15Xage_60Xlocation_province': [[2015.], [513.]],
-                       #'prevXinfectiousXamongXage_15Xage_60Xlocation_urban': [[2015.], [586.]],
-                       #'prevXinfectiousXstrain_mdrXamongXinfectious': [[2016.], [5.3]]
+    targets_to_plot = {
                        }
 
     translations = {'prevXinfectiousXamong': 'TB prevalence (/100,000)',
                     'prevXinfectiousXamongXage_0': 'TB prevalence among 0-4 y.o. (/100,000)',
                     'prevXinfectiousXamongXage_5': 'TB prevalence among 5-14 y.o. (/100,000)',
-                    'prevXinfectiousXamongXage_15': 'TB prevalence among 15-59 y.o. (/100,000)',
-                    'prevXinfectiousXamongXage_60': 'TB prevalence among 60+ y.o. (/100,000)',
-                    'prevXinfectiousXamongXhousing_ger': 'TB prev. among Ger population (/100,000)',
-                    'prevXinfectiousXamongXhousing_non-ger': 'TB prev. among non-Ger population(/100,000)',
-                    'prevXinfectiousXamongXlocation_rural': 'TB prev. among rural population (/100,000)',
-                    'prevXinfectiousXamongXlocation_province': 'TB prev. among province population (/100,000)',
-                    'prevXinfectiousXamongXlocation_urban': 'TB prev. among urban population (/100,000)',
+                    'prevXinfectiousXamongXage_15': 'TB prevalence among 15-34 y.o. (/100,000)',
+                    'prevXinfectiousXamongXage_35': 'TB prevalence among 35-49 y.o. (/100,000)',
+                    'prevXinfectiousXamongXage_50': 'TB prevalence among 50+ y.o. (/100,000)',
+                    'prevXinfectiousXamongXlocation_majuro': 'TB prevalence in Majuro (/100,000)',
+                    'prevXinfectiousXamongXlocation_ebeye': 'TB prevalence in Ebeye (/100,000)',
+                    'prevXinfectiousXamongXlocation_otherislands': 'TB prevalence in other areas (/100,000)',
+                    'prevXinfectiousXamongXdiabetes_has_diabetes': 'TB prevalence in diabetics (/100,000)',
+                    'prevXinfectiousXamongXdiabetes_no_diabetes': 'TB prevalence in non-diabetics (/100,000)',
                     'prevXlatentXamong': 'Latent TB infection prevalence (%)',
-                    'prevXlatentXamongXage_5': 'Latent TB infection prevalence among 5-14 y.o. (%)',
                     'prevXlatentXamongXage_0': 'Latent TB infection prevalence among 0-4 y.o. (%)',
-                    'prevXinfectiousXamongXage_15Xage_60': 'TB prev. among 15+ y.o. (/100,000)',
-                    'prevXinfectiousXamongXage_15Xage_60Xhousing_ger': 'TB prev. among 15+ y.o. Ger population (/100,000)',
-                    'prevXinfectiousXamongXage_15Xage_60Xhousing_non-ger': 'TB prev. among 15+ y.o. non-Ger population (/100,000)',
-                    'prevXinfectiousXamongXage_15Xage_60Xlocation_rural': 'TB prev. among 15+ y.o. rural population (/100,000)',
-                    'prevXinfectiousXamongXage_15Xage_60Xlocation_province': 'TB prev. among 15+ y.o. province population (/100,000)',
-                    'prevXinfectiousXamongXage_15Xage_60Xlocation_urban': 'TB prev. among 15+ y.o. urban population (/100,000)',
-                    'prevXinfectiousXstrain_mdrXamongXinfectious': 'Proportion of MDR-TB among TB (%)',
-                    'prevXinfectiousXamongXhousing_gerXlocation_urban': 'TB prevalence in urban Ger population (/100,000)',
+                    'prevXlatentXamongXage_5': 'Latent TB infection prevalence among 5-14 y.o. (%)',
+                    'prevXlatentXamongXage_15': 'Latent TB infection prevalence among 15-34 y.o. (%)',
+                    'prevXlatentXamongXage_35': 'Latent TB infection prevalence among 35-49 y.o. (%)',
+                    'prevXlatentXamongXage_50': 'Latent TB infection prevalence among 50+ y.o. (%)',
+                    'prevXlatentXamongXlocation_majuro': 'Latent TB infection prevalence in Majuro (%)',
+                    'prevXlatentXamongXlocation_ebeye': 'Latent TB infection prevalence in Ebeye (%)',
+                    'prevXlatentXamongXlocation_otherislands': 'Latent TB infection prevalence in other areas (%)',
+                    'prevXlatentXamongXdiabetes_has_diabetes': 'Latent TB infection prevalence in diabetics (%)',
+                    'prevXlatentXamongXdiabetes_no_diabetes': 'Latent TB infection prevalence in non-diabetics (%)',
                     'age_0': 'Age 0-4',
                     'age_5': 'Age 5-14',
                     'age_15': 'Age 15-34',
@@ -421,6 +419,6 @@ if __name__ == "__main__":
                     'diabetes_no_diabetes': 'No Diabetes',
                     }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_12_23_6', targets_to_plot=targets_to_plot,
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_13_01_1', targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers, translation_dictionary=translations,
                                   scenario_list=scenario_list)

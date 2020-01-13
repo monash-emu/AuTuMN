@@ -1,6 +1,6 @@
 library(RSQLite)
 setwd("C:/Users/rrag0004/Models/jtrauer_AuTuMN/autumn_from_summer/mcmc_postprocessing")
-path_to_databases = '../mongolia/mcmc_outputs/18_12_bis/'
+path_to_databases = '../mongolia/mcmc_chistmas_2019/'
 sqlite.driver <- dbDriver("SQLite")
 
 ylims = list('contact_rate'=c(10,20), 'adult_latency_adjustment'=c(2,6), 'dr_amplification_prop_among_nonsuccess'=c(.15,.25),
@@ -32,18 +32,33 @@ load_databases <- function(){
 plot_traces_and_histograms <- function(loaded_dbs){
   param_list = colnames(loaded_dbs$db1$mcmc_trace)
   param_list = param_list[!param_list %in% c('idx', 'Scenario', 'loglikelihood', 'accept')]
+  
+  colours = rainbow(length(names(loaded_dbs)))
+  
+  # work out max number of iterations
+  n_iter = 0
+  for (db_index in names(loaded_dbs)){
+    n_iter = max(n_iter,nrow(loaded_dbs[[db_index]]$mcmc_trace))
+  }
+
   for (param in c(param_list, 'loglikelihood')){
     
     x11()
     if (param %in% names(ylims)){
-      plot(loaded_dbs$db1$mcmc_trace[[param]], type='l', main=param,ylab='',xlab='iter', ylim = ylims[[param]])
-    }else{
-      plot(loaded_dbs$db1$mcmc_trace[[param]], type='l', main=param,ylab='',xlab='iter')
+      YLIM = ylims[[param]]
+    }else if (param == 'loglikelihood'){
+      YLIM=c(-1000,0)
+    } else{
+      YLIM=NA
     }
+    plot(loaded_dbs$db1$mcmc_trace[[param]], type='l', main=param,ylab='',xlab='iter', xlim=c(0,n_iter), ylim=YLIM, col=colours[1])
+    
+    i=1
     for (db_index in names(loaded_dbs)){
+      i=i+1
       if (db_index != 'db1'){
         iters = 1:length(loaded_dbs[[db_index]]$mcmc_trace[[param]])
-        lines(iters, loaded_dbs[[db_index]]$mcmc_trace[[param]])
+        lines(iters, loaded_dbs[[db_index]]$mcmc_trace[[param]],col=colours[i])
       }
     }
   }

@@ -15,7 +15,7 @@ from summer_py.parameter_processing import *
 
 def load_model_scenario(scenario_name, database_name):
     out_database = InputDB(database_name="databases/" + database_name)
-    res = out_database.db_query(table_name='outputs', conditions=["Scenario='"+scenario_name+"'"])
+    res = out_database.db_query(table_name='outputs', conditions=["Scenario='S_"+scenario_name+"'"])
     return res.to_dict()
 
 

@@ -21,3 +21,4 @@ autumn_from_summer/databases/outputs*
 autumn.egg*
 build/
 dist/
+autumn_from_summer/mcmc_postprocessing/.Rhistory

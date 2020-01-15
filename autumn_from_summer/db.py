@@ -136,8 +136,14 @@ def find_death_rates(_input_database, country_iso_code):
     absolute_death_data = absolute_death_data.astype(float)
     total_population_data = total_population_data.astype(float)
 
+    # replace NaN and inf values with zeros
+    death_rates = absolute_death_data / total_population_data / 5.0
+    for col in death_rates.columns:
+        death_rates[col] = death_rates[col].fillna(0)
+        death_rates[col] = death_rates[col].replace(np.inf, 0.)
+
     # divide through by population and by five to allow for the mortality data being aggregated over five year periods
-    return absolute_death_data / total_population_data / 5.0, mortality_years
+    return death_rates, mortality_years
 
 
 def find_age_weights(age_breakpoints, demo_data, arbitrary_upper_age=1e2, break_width=5.0):
@@ -217,7 +223,7 @@ def find_age_specific_death_rates(input_database, age_breakpoints, country_iso_c
         age_death_rates[age_break] = [0.0] * death_rates.shape[0]
 
         # old code so as not to ruin manual calibration - should be removed later
-        if country_iso_code == "MNG":
+        if country_iso_code in ["MNG", "FSM"]:
             for year in death_rates.index:
                 age_death_rates[age_break][year] = \
                     sum([death_rate * weight for death_rate, weight in

@@ -29,7 +29,7 @@ def build_rmi_model(update_params={}):
 
     # some default parameter values
     external_params = {  # run configuration
-                       'start_time': 1930.,
+                       'start_time': 1900.,
                        'end_time': 2035.,
                        'time_step': 1.,
                        'start_population': 9000,
@@ -201,7 +201,7 @@ def build_rmi_model(update_params={}):
     # set acf screening rate using proportion of population reached and duration of intervention
     acf_screening_rate = -numpy.log(1 - .90)/.5
 
-    acf_rate_over_time = progressive_step_function_maker(2018.2, 2018.7, acf_screening_rate, scaling_time_fraction=.3)
+    acf_rate_over_time = progressive_step_function_maker(2018.25, 2018.75, acf_screening_rate, scaling_time_fraction=.3)
 
     # initialise acf_rate function
     acf_rate_function = lambda t: (acf_rate_over_time(t)) * external_params['acf_sensitivity'] * (rmi_tsr(t))
@@ -229,13 +229,14 @@ def build_rmi_model(update_params={}):
         age_infectiousness = get_parameter_dict_from_function(logistic_scaling_function(10.0), age_breakpoints)
         age_params = get_adapted_age_parameters(age_breakpoints)
         age_params.update(split_age_parameter(age_breakpoints, "contact_rate"))
-
+        # props_age = {"_0": 0.5, "_5": 0.5, "_15": 0.0, "_35": 0.0, "_50": 0., "_70": 0.0}
         # adjustment of latency parameters
         for param in ['early_progression', 'late_progression']:
             for age_break in age_breakpoints:
                 age_params[param][str(age_break) + 'W'] *= external_params['latency_adjustment']
 
-        pop_morts = get_pop_mortality_functions(input_database, age_breakpoints, country_iso_code='FSM')
+        pop_morts = get_pop_mortality_functions(input_database, age_breakpoints, country_iso_code='FSM', emigration_value=0.01,
+                                emigration_start_time=1990.)
 
         age_params["universal_death_rate"] = {}
         for age_break in age_breakpoints:
@@ -250,8 +251,8 @@ def build_rmi_model(update_params={}):
         age_bcg_efficacy_dict = get_parameter_dict_from_function(lambda value: bcg_wane(value), age_breakpoints)
         age_params.update({'contact_rate': age_bcg_efficacy_dict})
 
-        _tb_model.stratify("age", copy.deepcopy(age_breakpoints), [], {}, adjustment_requests=age_params,
-                           infectiousness_adjustments=age_infectiousness, verbose=False)
+        _tb_model.stratify("age", copy.deepcopy(age_breakpoints), [], {},
+                           adjustment_requests=age_params, infectiousness_adjustments=age_infectiousness, verbose=False)
 
 
     if 'diabetes' in stratify_by:
@@ -328,12 +329,12 @@ if __name__ == "__main__":
     load_model = False
 
     scenario_params = {
-        # 1: {'acf_majuro_switch': 1.,
-        #                'acf_ebeye_switch': 1.,
-        #                'acf_otherislands_switch': 0.,
-        #                'acf_ltbi_majuro_switch': 1.,
-        #                'acf_ltbi_ebeye_switch': 0.,
-        #                'acf_ltbi_otherislands_switch': 0.}
+        1: {'acf_majuro_switch': 1.,
+                       'acf_ebeye_switch': 1.,
+                       'acf_otherislands_switch': 0.,
+                       'acf_ltbi_majuro_switch': 1.,
+                       'acf_ltbi_ebeye_switch': 0.,
+                       'acf_ltbi_otherislands_switch': 0.}
 
         }
     scenario_list = [0]
@@ -406,6 +407,6 @@ if __name__ == "__main__":
                     'diabetes_no_diabetes': 'No Diabetes',
                     }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='report_start1930_all_age70', targets_to_plot=targets_to_plot,
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='report_all_age70_mig.01_intervention', targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers, translation_dictionary=translations,
                                   scenario_list=scenario_list)

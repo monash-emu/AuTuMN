@@ -221,20 +221,10 @@ def find_age_specific_death_rates(input_database, age_breakpoints, country_iso_c
     age_death_rates = {}
     for age_break in age_breakpoints:
         age_death_rates[age_break] = [0.0] * death_rates.shape[0]
-
-        # old code so as not to ruin manual calibration - should be removed later
-        if country_iso_code in ["MNG", "FSM"]:
-            for year in death_rates.index:
-                age_death_rates[age_break][year] = \
-                    sum([death_rate * weight for death_rate, weight in
-                         zip(list(death_rates.iloc[year]), age_weights[age_break])])
-
-        # new code works better, avoids a problem (which we don't fully understand) with nans in highest age group
-        else:
-            for year in death_rates.index:
-                for data_age_group in range(len(death_rates)):
-                    age_death_rates[age_break][year] += \
-                        death_rates.iloc[year, data_age_group] * age_weights[age_break][data_age_group]
+        for year in death_rates.index:
+            age_death_rates[age_break][year] = \
+                sum([death_rate * weight for death_rate, weight in
+                     zip(list(death_rates.iloc[year]), age_weights[age_break])])
     return age_death_rates, years
 
 

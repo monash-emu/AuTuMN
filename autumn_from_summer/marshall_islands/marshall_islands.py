@@ -21,15 +21,15 @@ def build_rmi_timevariant_tsr():
 
 def build_rmi_model(update_params={}):
 
-    # stratify_by = ['location']
-    stratify_by = ['age']
+    # stratify_by = ['age']
+    # stratify_by = ['age', 'location']
     # stratify_by = ['age', 'diabetes']
     # stratify_by = ['age', 'diabetes', 'organ']
-    # stratify_by = ['age', 'diabetes', 'organ', 'location']
+    stratify_by = ['age', 'diabetes', 'organ', 'location']
 
     # some default parameter values
     external_params = {  # run configuration
-                       'start_time': 1900.,
+                       'start_time': 1930.,
                        'end_time': 2035.,
                        'time_step': 1.,
                        'start_population': 9000,
@@ -37,7 +37,7 @@ def build_rmi_model(update_params={}):
                        'contact_rate': 30.,
                        'rr_transmission_recovered': 0.6,
                        'rr_transmission_infected': 0.21,
-                       'rr_transmission_ltbi_treated': 0.6,
+                       'rr_transmission_ltbi_treated': 0.21,
                        'latency_adjustment': 2.,  # used to modify progression rates during calibration
                        'self_recovery_rate': 0.231,  # this is for smear-positive TB
                        'tb_mortality_rate': 0.389,  # this is for smear-positive TB
@@ -52,9 +52,9 @@ def build_rmi_model(update_params={}):
                        # 'rr_transmission_otherislands': 1.,  # reference: majuro
                        'rr_progression_has_diabetes': 3.11,  # reference: no_diabetes
                        # ACF for intervention groups
-                       'acf_coverage': 1.,
+                       'acf_coverage': 0.,
                        'acf_sensitivity': .9,
-                       'acf_majuro_switch': 1.,
+                       'acf_majuro_switch': 0.,
                        'acf_ebeye_switch': 0.,
                        'acf_otherislands_switch': 0.,
                         # LTBI ACF for intervention groups
@@ -109,11 +109,11 @@ def build_rmi_model(update_params={}):
                            'diabetes': ['has_diabetes', 'no_diabetes']}
 
     #  create derived outputs for disaggregated incidence
-    for stratification in stratify_by:
-        for stratum in all_stratifications[stratification]:
-            for stage in ["early", 'late']:
-                out_connections["indidence_" + stage + "X" + stratification + "_" + stratum] =\
-                    {"origin": stage + "_latent", "to": "infectious", "to_condition": stratification + "_" + stratum}
+    # for stratification in stratify_by:
+    #     for stratum in all_stratifications[stratification]:
+    #         for stage in ["early", 'late']:
+    #             out_connections["indidence_" + stage + "X" + stratification + "_" + stratum] =\
+    #                 {"origin": stage + "_latent", "to": "infectious", "to_condition": stratification + "_" + stratum}
 
     # create personalised derived outputs for mortality and notifications
     def mortality_derived_output(model):
@@ -225,7 +225,7 @@ def build_rmi_model(update_params={}):
         _tb_model.parameters["acf_ltbi_rate"] = "acf_ltbi_rate"
 
     if "age" in stratify_by:
-        age_breakpoints = [0, 5, 15, 35, 50]
+        age_breakpoints = [0, 5, 15, 35, 50, 70]
         age_infectiousness = get_parameter_dict_from_function(logistic_scaling_function(10.0), age_breakpoints)
         age_params = get_adapted_age_parameters(age_breakpoints)
         age_params.update(split_age_parameter(age_breakpoints, "contact_rate"))
@@ -236,6 +236,7 @@ def build_rmi_model(update_params={}):
                 age_params[param][str(age_break) + 'W'] *= external_params['latency_adjustment']
 
         pop_morts = get_pop_mortality_functions(input_database, age_breakpoints, country_iso_code='FSM')
+
         age_params["universal_death_rate"] = {}
         for age_break in age_breakpoints:
             _tb_model.time_variants["universal_death_rateXage_" + str(age_break)] = pop_morts[age_break]
@@ -303,10 +304,7 @@ def build_rmi_model(update_params={}):
 
         location_adjustments['acf_ltbi_rate'] = {}
         for stratum in ['majuro', 'ebeye', 'otherislands']:
-            location_adjustments['acf_ltbi_rate'][stratum] = "working_function"
-
-        _tb_model.time_variants["working_function"] = lambda time: 1.0 if 2019. < time < 2019.5 else 0.0
-
+            location_adjustments['acf_ltbi_rate'][stratum] = external_params['acf_ltbi_' + stratum + '_switch']
 
         _tb_model.stratify("location", ['majuro', 'ebeye', 'otherislands'], [],
                            requested_proportions=props_location, verbose=False, entry_proportions=props_location,
@@ -330,12 +328,12 @@ if __name__ == "__main__":
     load_model = False
 
     scenario_params = {
-        1: {'acf_majuro_switch': 1.,
-                       'acf_ebeye_switch': 1.,
-                       'acf_otherislands_switch': 0.,
-                       'acf_ltbi_majuro_switch': 1.,
-                       'acf_ltbi_ebeye_switch': 0.,
-                       'acf_ltbi_otherislands_switch': 0.}
+        # 1: {'acf_majuro_switch': 1.,
+        #                'acf_ebeye_switch': 1.,
+        #                'acf_otherislands_switch': 0.,
+        #                'acf_ltbi_majuro_switch': 1.,
+        #                'acf_ltbi_ebeye_switch': 0.,
+        #                'acf_ltbi_otherislands_switch': 0.}
 
         }
     scenario_list = [0]
@@ -363,22 +361,8 @@ if __name__ == "__main__":
 
     req_outputs = ['prevXinfectiousXamong',
                    'prevXlatentXamong'
-                   # 'prevXinfectiousXorgan_smearposXamongXinfectious',
-                   # 'prevXinfectiousXorgan_smearnegXamongXinfectious',
-                   # 'prevXinfectiousXorgan_extrapulXamongXinfectious',
-                   # 'prevXlatentXamong',
-                   # 'prevXinfectiousXamongXage_15Xage_60',
-                   # 'prevXinfectiousXamongXage_15Xage_60Xhousing_ger',
-                   # 'prevXinfectiousXamongXage_15Xage_60Xhousing_non-ger',
-                   # 'prevXinfectiousXamongXage_15Xage_60Xlocation_rural',
-                   # 'prevXinfectiousXamongXage_15Xage_60Xlocation_province',
-                   # 'prevXinfectiousXamongXage_15Xage_60Xlocation_urban',
-                   # 'prevXinfectiousXamongXhousing_gerXlocation_urban',
-                   # 'prevXlatentXamongXhousing_gerXlocation_urban',
-                   #
-                   # 'prevXinfectiousXstrain_mdrXamong'
                  ]
-
+    ## nb - to change output graph axes, change start and end times in output.py
 
     multipliers = {
         'prevXinfectiousXstrain_mdrXamongXinfectious': 100.,
@@ -422,6 +406,6 @@ if __name__ == "__main__":
                     'diabetes_no_diabetes': 'No Diabetes',
                     }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_13_01_1', targets_to_plot=targets_to_plot,
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='report_start1930_all_age70', targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers, translation_dictionary=translations,
                                   scenario_list=scenario_list)

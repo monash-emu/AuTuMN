@@ -21,8 +21,8 @@ def build_rmi_timevariant_tsr():
 
 def build_rmi_model(update_params={}):
 
-    stratify_by = ['location']
-    # stratify_by = ['age']
+    # stratify_by = ['location']
+    stratify_by = ['age']
     # stratify_by = ['age', 'diabetes']
     # stratify_by = ['age', 'diabetes', 'organ']
     # stratify_by = ['age', 'diabetes', 'organ', 'location']
@@ -52,9 +52,9 @@ def build_rmi_model(update_params={}):
                        # 'rr_transmission_otherislands': 1.,  # reference: majuro
                        'rr_progression_has_diabetes': 3.11,  # reference: no_diabetes
                        # ACF for intervention groups
-                       'acf_coverage': 0.,
+                       'acf_coverage': 1.,
                        'acf_sensitivity': .9,
-                       'acf_majuro_switch': 0.,
+                       'acf_majuro_switch': 1.,
                        'acf_ebeye_switch': 0.,
                        'acf_otherislands_switch': 0.,
                         # LTBI ACF for intervention groups
@@ -303,7 +303,10 @@ def build_rmi_model(update_params={}):
 
         location_adjustments['acf_ltbi_rate'] = {}
         for stratum in ['majuro', 'ebeye', 'otherislands']:
-            location_adjustments['acf_ltbi_rate'][stratum] = external_params['acf_ltbi_' + stratum + '_switch']
+            location_adjustments['acf_ltbi_rate'][stratum] = "working_function"
+
+        _tb_model.time_variants["working_function"] = lambda time: 1.0 if 2019. < time < 2019.5 else 0.0
+
 
         _tb_model.stratify("location", ['majuro', 'ebeye', 'otherislands'], [],
                            requested_proportions=props_location, verbose=False, entry_proportions=props_location,

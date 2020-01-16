@@ -238,7 +238,8 @@ def find_age_specific_death_rates(input_database, age_breakpoints, country_iso_c
     return age_death_rates, years
 
 
-def get_pop_mortality_functions(input_database, age_breaks, country_iso_code):
+def get_pop_mortality_functions(input_database, age_breaks, country_iso_code, emigration_value=0.0,
+                                emigration_start_time=1980.):
     """
     use the mortality rate data that can be obtained from find_age_specific_death_rates to fit time-variant mortality
         functions for each age group being implemented in the model
@@ -247,10 +248,22 @@ def get_pop_mortality_functions(input_database, age_breaks, country_iso_code):
         starting ages for each of the age groups
     :param country_iso_code: str
         the three digit iso3 code for the country of interest
+    :param emigration_value: float
+        an extra rate of migration to add on to the population-wide mortality rates to simulate net emigration
+    :param emigration_start_time: float
+        the point from which the additional net emigration commences
     :return: dict
         keys age breakpoints, values mortality functions
     """
     age_death_dict, data_years = find_age_specific_death_rates(input_database, age_breaks, country_iso_code)
+
+    # add an extra fixed value after a particular time point for each mortality estimate
+    for age_group in age_death_dict:
+        for i_year in range(len(age_death_dict[age_group])):
+            if data_years[i_year] > emigration_start_time:
+                age_death_dict[age_group][i_year] += emigration_value
+
+    # fit the curve functions to the aggregate data of mortality and net emigration
     return {age_group: scale_up_function(data_years, age_death_dict[age_group], smoothness=0.2, method=5) for
             age_group in age_death_dict}
 

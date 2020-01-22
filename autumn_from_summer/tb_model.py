@@ -16,8 +16,9 @@ from summer_py.parameter_processing import *
 
 def load_model_scenario(scenario_name, database_name):
     out_database = InputDB(database_name="databases/" + database_name)
-    res = out_database.db_query(table_name='outputs', conditions=["Scenario='S_"+scenario_name+"'"])
-    return res.to_dict()
+    outputs = out_database.db_query(table_name='outputs', conditions=["Scenario='S_"+scenario_name+"'"])
+    derived_outputs = out_database.db_query(table_name='derived_outputs', conditions=["Scenario='S_"+scenario_name+"'"])
+    return {'outputs': outputs.to_dict(), 'derived_outputs':derived_outputs.to_dict()}
 
 
 def load_calibration_from_db(database_directory, n_burned_per_chain=0):
@@ -54,9 +55,11 @@ def load_calibration_from_db(database_directory, n_burned_per_chain=0):
         weights[retained_indices[0]] = weights[retained_indices[0]] - (n_burned_per_chain - previous_cum_sum)
         weights = weights[retained_indices[0]:]
         for i, run_id in enumerate(run_ids):
-            res = out_database.db_query(table_name='outputs', conditions=["idx='" + str(run_id) +"'"])
-            model_dict = res.to_dict()
-            model_info_dict = {'db_name': db_name, 'run_id': run_id, 'model':  DummyModel(model_dict),
+            outputs = out_database.db_query(table_name='outputs', conditions=["idx='" + str(run_id) +"'"])
+            output_dict = outputs.to_dict()
+            derived_outputs = out_database.db_query(table_name='derived_outputs', conditions=["idx='" + str(run_id) +"'"])
+            derived_outputs_dict = derived_outputs.to_dict()
+            model_info_dict = {'db_name': db_name, 'run_id': run_id, 'model':  DummyModel(output_dict, derived_outputs_dict),
                                'weight': weights[i]}
             models.append(model_info_dict)
 
@@ -508,12 +511,14 @@ def create_mcmc_outputs(mcmc_models, req_outputs, req_times={}, req_multipliers=
     outputs.plot_requested_outputs()
 
 class DummyModel:
-    def __init__(self, model_dict):
-        self.compartment_names = [name for name in model_dict.keys() if name not in ['idx', 'Scenario', 'times']]
+    def __init__(self, outputs, derived_outputs):
+        self.compartment_names = [name for name in outputs.keys() if name not in ['idx', 'Scenario', 'times']]
 
-        self.outputs = numpy.column_stack([list(column.values()) for name, column in model_dict.items()if
+        self.outputs = numpy.column_stack([list(column.values()) for name, column in outputs.items()if
                                            name not in ['idx', 'Scenario', 'times']])
-        self.times = list(model_dict['times'].values())
+        self.derived_outputs = {key: list(value.values()) for key, value in derived_outputs.items() if key not in ['idx', 'Scenario', 'times']}
+
+        self.times = list(outputs['times'].values())
 
 if __name__ == "__main__":
 

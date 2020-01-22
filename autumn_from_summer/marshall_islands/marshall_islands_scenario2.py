@@ -356,8 +356,8 @@ if __name__ == "__main__":
             scenarios_to_load = scenario_list
             for sc in scenarios_to_load:
                 print("Loading model for scenario " + str(sc))
-                model_dict = load_model_scenario(str(sc), database_name='outputs_11_27_2019_13_12_43.db')
-                models.append(DummyModel(model_dict))
+                loaded_model = load_model_scenario(str(sc), database_name='outputs_11_27_2019_13_12_43.db')
+                models.append(DummyModel(loaded_model['outputs'], loaded_model['derived_outputs']))
     else:
         t0 = time()
         models = run_multi_scenario(scenario_params, 2000., build_rmi_model)

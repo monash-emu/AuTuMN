@@ -491,7 +491,8 @@ def create_mcmc_outputs(mcmc_models, req_outputs, req_times={}, req_multipliers=
                                             requested_times=req_times,
                                             multipliers=req_multipliers))
 
-    outputs = Outputs(pps, targets_to_plot, out_dir, translation_dictionary)
+    mcmc_weights = [mcmc_models[i]['weight'] for i in range(len(mcmc_models))]
+    outputs = Outputs(pps, targets_to_plot, out_dir, translation_dictionary, mcmc_weights=mcmc_weights)
     outputs.plot_requested_outputs()
 
 class DummyModel:

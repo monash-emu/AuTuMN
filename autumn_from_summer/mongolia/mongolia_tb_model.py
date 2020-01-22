@@ -439,7 +439,7 @@ if __name__ == "__main__":
         load_mcmc = True
 
         if load_mcmc:
-            models = load_calibration_from_db('mcmc_chistmas_2019')
+            models = load_calibration_from_db('mcmc_chistmas_2019', n_burned_per_chain=10)
             scenario_list = [i + 1 for i in range(len(models))]
         else:
             models = []

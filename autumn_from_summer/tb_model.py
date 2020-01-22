@@ -13,13 +13,14 @@ import json
 from autumn_from_summer.tool_kit import *
 from summer_py.parameter_processing import *
 
+
 def load_model_scenario(scenario_name, database_name):
     out_database = InputDB(database_name="databases/" + database_name)
     res = out_database.db_query(table_name='outputs', conditions=["Scenario='S_"+scenario_name+"'"])
     return res.to_dict()
 
 
-def load_calibration_from_db(database_directory, n_burned=0):
+def load_calibration_from_db(database_directory, n_burned_per_chain=0):
     """
     Load all model runs stored in multiple databases found in database_directory
     :param database_directory: path to databases location
@@ -43,6 +44,15 @@ def load_calibration_from_db(database_directory, n_burned=0):
         one_indices.append(len(accept))  # add extra index for counting
         weights = [one_indices[j+1] - one_indices[j] for j in range(len(one_indices) - 1)]
 
+        # burn fist iterations
+        cum_sum = numpy.cumsum(weights).tolist()
+        if cum_sum[-1] <= n_burned_per_chain:
+            continue
+        retained_indices = [i for i, c in enumerate(cum_sum) if c > n_burned_per_chain]
+        run_ids = run_ids[retained_indices[0]:]
+        previous_cum_sum = cum_sum[retained_indices[0]-1] if retained_indices[0] > 0 else 0
+        weights[retained_indices[0]] = weights[retained_indices[0]] - (n_burned_per_chain - previous_cum_sum)
+        weights = weights[retained_indices[0]:]
         for i, run_id in enumerate(run_ids):
             res = out_database.db_query(table_name='outputs', conditions=["idx='" + str(run_id) +"'"])
             model_dict = res.to_dict()
@@ -50,8 +60,10 @@ def load_calibration_from_db(database_directory, n_burned=0):
                                'weight': weights[i]}
             models.append(model_info_dict)
 
-    print("The MCMC runs have been loaded.")
+    print("MCMC runs loaded.")
+    print("Number of loaded iterations after burn-in: " + str(sum(weights)))
     return models
+
 
 def scale_relative_risks_for_equivalence(proportions, relative_risks):
     """

@@ -411,7 +411,7 @@ def build_mongolia_model(update_params={}):
 
 
 if __name__ == "__main__":
-    load_model = False
+    load_model = True
 
     scenario_params = {
         # 0: {'contact_rate':1.},
@@ -436,11 +436,11 @@ if __name__ == "__main__":
         scenario_list = [0] + scenario_list
 
     if load_model:
-        load_mcmc = False
+        load_mcmc = True
 
         if load_mcmc:
             models = load_calibration_from_db('mcmc_chistmas_2019')
-            scenario_list = range(len(models))
+            scenario_list = [i + 1 for i in range(len(models))]
         else:
             models = []
             scenarios_to_load = scenario_list
@@ -532,8 +532,14 @@ if __name__ == "__main__":
                     'prevXinfectiousXstrain_mdrXamong': 'Prevalence of MDR-TB (/100,000)'
                     }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test',
-                                  targets_to_plot=targets_to_plot,
-                                  req_multipliers=multipliers, translation_dictionary=translations,
-                                  scenario_list=scenario_list)
+    if load_mcmc:
+        create_mcmc_outputs(models, req_outputs=req_outputs, out_dir='mcmc_output_plots',
+                            targets_to_plot=targets_to_plot,
+                            req_multipliers=multipliers, translation_dictionary=translations,
+                            scenario_list=scenario_list)
+    else:
+        create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test',
+                                      targets_to_plot=targets_to_plot,
+                                      req_multipliers=multipliers, translation_dictionary=translations,
+                                      scenario_list=scenario_list)
 

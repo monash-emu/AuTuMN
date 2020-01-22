@@ -27,6 +27,7 @@ def load_calibration_from_db(database_directory, n_burned=0):
     """
     # list all databases
     db_names = os.listdir(database_directory + '/')
+    db_names = [s for s in db_names if s[-3:] == '.db']
 
     models = []
     for db_name in db_names:
@@ -49,6 +50,7 @@ def load_calibration_from_db(database_directory, n_burned=0):
                                'weight': weights[i]}
             models.append(model_info_dict)
 
+    print("The MCMC runs have been loaded.")
     return models
 
 def scale_relative_risks_for_equivalence(proportions, relative_risks):
@@ -470,6 +472,27 @@ def create_multi_scenario_outputs(models, req_outputs, req_times={}, req_multipl
             outputs.plot_outputs_by_stratum(req_output, sc_index=sc_index)
 
 
+def create_mcmc_outputs(mcmc_models, req_outputs, req_times={}, req_multipliers={}, out_dir='outputs_tes',
+                                  targets_to_plot={}, translation_dictionary={}, scenario_list=[]):
+    """similar to create_multi_scenario_outputs but using MCMC outputs"""
+    if not os.path.exists(out_dir):
+        os.mkdir(out_dir)
+
+    for output in req_outputs:
+        if output[0:15] == 'prevXinfectious' and output != 'prevXinfectiousXstrain_mdrXamongXinfectious':
+            req_multipliers[output] = 1.e5
+        elif output[0:11] == 'prevXlatent':
+            req_multipliers[output] = 1.e2
+
+    pps = []
+    for scenario_index in range(len(mcmc_models)):
+        pps.append(post_proc.PostProcessing(mcmc_models[scenario_index]['model'], requested_outputs=req_outputs,
+                                            scenario_number=scenario_list[scenario_index],
+                                            requested_times=req_times,
+                                            multipliers=req_multipliers))
+
+    outputs = Outputs(pps, targets_to_plot, out_dir, translation_dictionary)
+    outputs.plot_requested_outputs()
 
 class DummyModel:
     def __init__(self, model_dict):

@@ -19,15 +19,36 @@ def load_model_scenario(scenario_name, database_name):
     return res.to_dict()
 
 
-def load_calibration_from_db(database_name):
-    out_database = InputDB(database_name='databases/' + database_name)
-    res = out_database.db_query(table_name='mcmc_run', column='idx')
-    run_ids = list(res.to_dict()['idx'].values())
+def load_calibration_from_db(database_directory, n_burned=0):
+    """
+    Load all model runs stored in multiple databases found in database_directory
+    :param database_directory: path to databases location
+    :return: list of models
+    """
+    # list all databases
+    db_names = os.listdir(database_directory + '/')
+
     models = []
-    for run_id in run_ids:
-        res = out_database.db_query(table_name='outputs', conditions=["idx='"+ str(run_id) +"'"])
-        model_dict = res.to_dict()
-        models.append(DummyModel(model_dict))
+    for db_name in db_names:
+        out_database = InputDB(database_name=database_directory + '/' + db_name)
+
+        # find accepted run indices
+        res = out_database.db_query(table_name='mcmc_run', column='idx', conditions=['accept=1'])
+        run_ids = list(res.to_dict()['idx'].values())
+        # find weights to associate with the accepted runs
+        accept = out_database.db_query(table_name='mcmc_run', column='accept')
+        accept = accept['accept'].tolist()
+        one_indices = [i for i, val in enumerate(accept) if val == 1]
+        one_indices.append(len(accept))  # add extra index for counting
+        weights = [one_indices[j+1] - one_indices[j] for j in range(len(one_indices) - 1)]
+
+        for i, run_id in enumerate(run_ids):
+            res = out_database.db_query(table_name='outputs', conditions=["idx='" + str(run_id) +"'"])
+            model_dict = res.to_dict()
+            model_info_dict = {'db_name': db_name, 'run_id': run_id, 'model':  DummyModel(model_dict),
+                               'weight': weights[i]}
+            models.append(model_info_dict)
+
     return models
 
 def scale_relative_risks_for_equivalence(proportions, relative_risks):

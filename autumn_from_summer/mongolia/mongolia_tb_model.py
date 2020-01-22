@@ -414,16 +414,22 @@ if __name__ == "__main__":
     load_model = False
 
     scenario_params = {
-        0: {},
-        1: {'ipt_age_0_ct_coverage': 1.},
-        2: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
-                 'ipt_age_60_ct_coverage': .5},
-        3: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
-                  'ipt_age_60_ct_coverage': .5, 'ds_ipt_switch': 0., 'mdr_ipt_switch': 1.},
-        4: {'mdr_tsr': .8},
-        5: {'reduction_negative_tx_outcome': 0.5},
-        6: {'acf_coverage': .155, 'acf_urban_ger_switch': 1.},  # 15.5% to get 70,000 screens
-        7: {'diagnostic_sensitivity_smearneg': 1., 'prop_mdr_detected_as_mdr': .9}
+        # 0: {'contact_rate':1.},
+        # 1: {'contact_rate':3.},
+        # 2: {'contact_rate':6.},
+        # 3: {'contact_rate':10.},
+        # 4: {'contact_rate':15.},
+        # 5: {'contact_rate':20.},
+        # 6: {'contact_rate':25.}
+        # 1: {'ipt_age_0_ct_coverage': 1.},
+        # 2: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
+        #          'ipt_age_60_ct_coverage': .5},
+        # 3: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
+        #           'ipt_age_60_ct_coverage': .5, 'ds_ipt_switch': 0., 'mdr_ipt_switch': 1.},
+        # 4: {'mdr_tsr': .8},
+        # 5: {'reduction_negative_tx_outcome': 0.5},
+        # 6: {'acf_coverage': .155, 'acf_urban_ger_switch': 1.},  # 15.5% to get 70,000 screens
+        # 7: {'diagnostic_sensitivity_smearneg': 1., 'prop_mdr_detected_as_mdr': .9}
         }
     scenario_list = list(scenario_params.keys())
     if 0 not in scenario_list:
@@ -433,14 +439,14 @@ if __name__ == "__main__":
         load_mcmc = False
 
         if load_mcmc:
-            models = load_calibration_from_db('outputs_calibration_chain_5.db')
+            models = load_calibration_from_db('mcmc_chistmas_2019')
             scenario_list = range(len(models))
         else:
             models = []
             scenarios_to_load = scenario_list
             for sc in scenarios_to_load:
                 print("Loading model for scenario " + str(sc))
-                model_dict = load_model_scenario(str(sc), database_name='outputs_01_13_2020_15_11_35.db')
+                model_dict = load_model_scenario(str(sc), database_name='outputs_01_14_2020_10_50_27.db')
                 models.append(DummyModel(model_dict))
     else:
         t0 = time()
@@ -450,10 +456,11 @@ if __name__ == "__main__":
         print("Running time: " + str(round(delta, 1)) + " seconds")
 
     req_outputs = ['prevXinfectiousXamong',
-                   'prevXlatentXamong',
-                   'prevXinfectiousXorgan_smearposXamongXinfectious', 'prevXinfectiousXorgan_smearnegXamongXinfectious',
-                   'prevXinfectiousXorgan_extrapulXamongXinfectious',
-                   'prevXinfectiousXorgan_smearposXamongXage_15Xage_60Xlocation_prison']
+                   'prevXlatentXamong'
+                   # 'prevXinfectiousXorgan_smearposXamongXinfectious', 'prevXinfectiousXorgan_smearnegXamongXinfectious',
+                   # 'prevXinfectiousXorgan_extrapulXamongXinfectious',
+                   #'prevXinfectiousXorgan_smearposXamongXage_15Xage_60Xlocation_prison']
+                   ]
 
     # {'prevXinfectiousXamongXage_15Xage_60': [[2015.], [560.]],
     #                    'prevXlatentXamongXage_5': [[2016.], [9.6]],
@@ -478,6 +485,7 @@ if __name__ == "__main__":
                       {'output_key': 'prevXlatentXamongXage_5', 'years': [2016.], 'values': [9.6], 'cis': [(9.02, 10.18)]},
                       {'output_key': 'prevXinfectiousXstrain_mdrXamongXinfectious', 'years': [2015.], 'values': [5]}
                       ]
+    calib_targets = []
 
     targets_to_plot = {}
     for target in calib_targets:
@@ -524,7 +532,7 @@ if __name__ == "__main__":
                     'prevXinfectiousXstrain_mdrXamong': 'Prevalence of MDR-TB (/100,000)'
                     }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_scenarios_13_01_loaded',
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test',
                                   targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers, translation_dictionary=translations,
                                   scenario_list=scenario_list)

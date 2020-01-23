@@ -32,6 +32,7 @@ def load_calibration_from_db(database_directory, n_burned_per_chain=0):
     db_names = [s for s in db_names if s[-3:] == '.db']
 
     models = []
+    n_loaded_iter = 0
     for db_name in db_names:
         out_database = InputDB(database_name=database_directory + '/' + db_name)
 
@@ -54,6 +55,7 @@ def load_calibration_from_db(database_directory, n_burned_per_chain=0):
         previous_cum_sum = cum_sum[retained_indices[0]-1] if retained_indices[0] > 0 else 0
         weights[retained_indices[0]] = weights[retained_indices[0]] - (n_burned_per_chain - previous_cum_sum)
         weights = weights[retained_indices[0]:]
+        n_loaded_iter += sum(weights)
         for i, run_id in enumerate(run_ids):
             outputs = out_database.db_query(table_name='outputs', conditions=["idx='" + str(run_id) +"'"])
             output_dict = outputs.to_dict()
@@ -64,7 +66,7 @@ def load_calibration_from_db(database_directory, n_burned_per_chain=0):
             models.append(model_info_dict)
 
     print("MCMC runs loaded.")
-    print("Number of loaded iterations after burn-in: " + str(sum(weights)))
+    print("Number of loaded iterations after burn-in: " + str(n_loaded_iter))
     return models
 
 
@@ -442,8 +444,9 @@ def build_working_tb_model(tb_n_contact, country_iso3, cdr_adjustment=0.6, start
     return _tb_model
 
 
-def create_multi_scenario_outputs(models, req_outputs, req_times={}, req_multipliers={}, out_dir='outputs_tes',
-                                  targets_to_plot={}, translation_dictionary={}, scenario_list=[]):
+def create_multi_scenario_outputs(models, req_outputs, req_times={}, req_multipliers={}, ymax={}, out_dir='outputs_tes',
+                                  targets_to_plot={}, translation_dictionary={}, scenario_list=[],
+                                  plot_start_time=1990):
     """
     process and generate plots for several scenarios
     :param models: a list of run models
@@ -477,9 +480,9 @@ def create_multi_scenario_outputs(models, req_outputs, req_times={}, req_multipl
         pps.append(post_proc.PostProcessing(models[scenario_index], requested_outputs=req_outputs,
                                             scenario_number=scenario_list[scenario_index],
                                             requested_times=req_times,
-                                            multipliers=req_multipliers))
+                                            multipliers=req_multipliers, ymax=ymax))
 
-    outputs = Outputs(pps, targets_to_plot, out_dir, translation_dictionary)
+    outputs = Outputs(pps, targets_to_plot, out_dir, translation_dictionary, plot_start_time=plot_start_time)
     outputs.plot_requested_outputs()
 
     for req_output in ['prevXinfectious', 'prevXlatent']:
@@ -487,8 +490,8 @@ def create_multi_scenario_outputs(models, req_outputs, req_times={}, req_multipl
             outputs.plot_outputs_by_stratum(req_output, sc_index=sc_index)
 
 
-def create_mcmc_outputs(mcmc_models, req_outputs, req_times={}, req_multipliers={}, out_dir='outputs_tes',
-                                  targets_to_plot={}, translation_dictionary={}, scenario_list=[]):
+def create_mcmc_outputs(mcmc_models, req_outputs, req_times={}, req_multipliers={}, ymax={}, out_dir='outputs_tes',
+                                  targets_to_plot={}, translation_dictionary={}, scenario_list=[], plot_start_time=1990):
     """similar to create_multi_scenario_outputs but using MCMC outputs"""
     if not os.path.exists(out_dir):
         os.mkdir(out_dir)
@@ -504,10 +507,11 @@ def create_mcmc_outputs(mcmc_models, req_outputs, req_times={}, req_multipliers=
         pps.append(post_proc.PostProcessing(mcmc_models[scenario_index]['model'], requested_outputs=req_outputs,
                                             scenario_number=scenario_list[scenario_index],
                                             requested_times=req_times,
-                                            multipliers=req_multipliers))
+                                            multipliers=req_multipliers, ymax=ymax))
 
     mcmc_weights = [mcmc_models[i]['weight'] for i in range(len(mcmc_models))]
-    outputs = Outputs(pps, targets_to_plot, out_dir, translation_dictionary, mcmc_weights=mcmc_weights)
+    outputs = Outputs(pps, targets_to_plot, out_dir, translation_dictionary, mcmc_weights=mcmc_weights,
+                      plot_start_time=plot_start_time)
     outputs.plot_requested_outputs()
 
 class DummyModel:

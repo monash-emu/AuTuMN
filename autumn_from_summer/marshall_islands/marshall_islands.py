@@ -409,4 +409,4 @@ if __name__ == "__main__":
 
     create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='report_all_age70_mig.01_intervention', targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers, translation_dictionary=translations,
-                                  scenario_list=scenario_list)
+                                  scenario_list=scenario_list, plot_start_time=1990)

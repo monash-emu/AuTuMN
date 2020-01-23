@@ -412,6 +412,7 @@ def build_mongolia_model(update_params={}):
 
 if __name__ == "__main__":
     load_model = True
+    load_mcmc = True
 
     scenario_params = {
         # 0: {'contact_rate':1.},
@@ -436,10 +437,8 @@ if __name__ == "__main__":
         scenario_list = [0] + scenario_list
 
     if load_model:
-        load_mcmc = True
-
         if load_mcmc:
-            models = load_calibration_from_db('mcmc_chistmas_2019', n_burned_per_chain=10)
+            models = load_calibration_from_db('mcmc_chistmas_2019', n_burned_per_chain=50)
             scenario_list = [i + 1 for i in range(len(models))]
         else:
             models = []
@@ -497,6 +496,8 @@ if __name__ == "__main__":
         'prevXinfectiousXstrain_mdrXamongXinfectious': 100.
     }
 
+    ymax = {'prevXinfectiousXamong': 2000.}
+
     translations = {'prevXinfectiousXamong': 'TB prevalence (/100,000)',
                     'prevXinfectiousXamongXage_0': 'TB prevalence among 0-4 y.o. (/100,000)',
                     'prevXinfectiousXamongXage_5': 'TB prevalence among 5-14 y.o. (/100,000)',
@@ -533,13 +534,13 @@ if __name__ == "__main__":
                     }
 
     if load_mcmc:
-        create_mcmc_outputs(models, req_outputs=req_outputs, out_dir='mcmc_output_plots',
+        create_mcmc_outputs(models, req_outputs=req_outputs, out_dir='mcmc_output_plots_test',
                             targets_to_plot=targets_to_plot,
                             req_multipliers=multipliers, translation_dictionary=translations,
-                            scenario_list=scenario_list)
+                            scenario_list=scenario_list, ymax=ymax, plot_start_time=1990)
     else:
-        create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test',
+        create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_timestep',
                                       targets_to_plot=targets_to_plot,
                                       req_multipliers=multipliers, translation_dictionary=translations,
-                                      scenario_list=scenario_list)
+                                      scenario_list=scenario_list, ymax=ymax, plot_start_time=1990)
 

@@ -14,11 +14,33 @@ from autumn_from_summer.tool_kit import *
 from summer_py.parameter_processing import *
 
 
+def add_combined_incidence(derived_outputs, outputs):
+    columns_to_add = {}
+    comp_names = outputs.drop(outputs.columns[[0, 1, 2]], axis=1).columns
+    for column_name in derived_outputs.columns:
+        if column_name[0:15] == 'incidence_early':
+            incidence_late_name = 'incidence_late' + column_name[15:]
+            new_output = 'incidence' + column_name[15:]
+            absolute_incidence = (derived_outputs[column_name] + derived_outputs[incidence_late_name])
+
+            # work out total stratum population
+            stratum_compartments = [c for c in comp_names if column_name[15:] in c or 'strain' in column_name[15:] or
+                                    'organ' in column_name[15:]]
+
+            stratum_population = outputs[stratum_compartments].sum(axis=1)
+            columns_to_add[new_output] = absolute_incidence / stratum_population * 1.e5
+
+    for key, val in columns_to_add.items():
+        derived_outputs[key] = val
+
+    return derived_outputs
+
 def load_model_scenario(scenario_name, database_name):
     out_database = InputDB(database_name="databases/" + database_name)
     outputs = out_database.db_query(table_name='outputs', conditions=["Scenario='S_"+scenario_name+"'"])
     derived_outputs = out_database.db_query(table_name='derived_outputs', conditions=["Scenario='S_"+scenario_name+"'"])
-    return {'outputs': outputs.to_dict(), 'derived_outputs':derived_outputs.to_dict()}
+    derived_outputs = add_combined_incidence(derived_outputs, outputs)
+    return {'outputs': outputs.to_dict(), 'derived_outputs': derived_outputs.to_dict()}
 
 
 def load_calibration_from_db(database_directory, n_burned_per_chain=0):
@@ -514,6 +536,7 @@ def create_mcmc_outputs(mcmc_models, req_outputs, req_times={}, req_multipliers=
                       plot_start_time=plot_start_time)
     outputs.plot_requested_outputs()
 
+
 class DummyModel:
     def __init__(self, outputs, derived_outputs):
         self.compartment_names = [name for name in outputs.keys() if name not in ['idx', 'Scenario', 'times']]
@@ -523,6 +546,7 @@ class DummyModel:
         self.derived_outputs = {key: list(value.values()) for key, value in derived_outputs.items() if key not in ['idx', 'Scenario', 'times']}
 
         self.times = list(outputs['times'].values())
+
 
 if __name__ == "__main__":
 

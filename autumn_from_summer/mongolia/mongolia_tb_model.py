@@ -412,7 +412,7 @@ def build_mongolia_model(update_params={}):
 
 if __name__ == "__main__":
     load_model = True
-    load_mcmc = True
+    load_mcmc = False
 
     scenario_params = {
         # 0: {'contact_rate':1.},
@@ -530,6 +530,8 @@ if __name__ == "__main__":
                     'location_urban': 'urban',
                     'strain_ds': 'DS-TB',
                     'strain_mdr': 'MDR-TB',
+                    'incidence': 'TB incidence (/100,000/y)',
+
                     'prevXinfectiousXstrain_mdrXamong': 'Prevalence of MDR-TB (/100,000)'
                     }
 
@@ -539,7 +541,7 @@ if __name__ == "__main__":
                             req_multipliers=multipliers, translation_dictionary=translations,
                             scenario_list=scenario_list, ymax=ymax, plot_start_time=1990)
     else:
-        create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_timestep',
+        create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_inccccc',
                                       targets_to_plot=targets_to_plot,
                                       req_multipliers=multipliers, translation_dictionary=translations,
                                       scenario_list=scenario_list, ymax=ymax, plot_start_time=1990)

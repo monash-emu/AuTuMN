@@ -405,6 +405,10 @@ if __name__ == "__main__":
                     'location_otherislands': 'Other locations',
                     'diabetes_has_diabetes': 'Diabetes',
                     'diabetes_no_diabetes': 'No Diabetes',
+                    'incidence': 'TB incidence (/100,000/y)',
+                    'incidenceXlocation_majuro': 'Majuro - TB incidence (/100,000/y)',
+                    'incidenceXlocation_ebeye': 'Ebeye - TB incidence (/100,000/y)',
+                    'incidenceXlocation_otherislands': 'Other locations - TB incidence (/100,000/y)'
                     }
 
     create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='report_all_age70_mig.01_intervention', targets_to_plot=targets_to_plot,

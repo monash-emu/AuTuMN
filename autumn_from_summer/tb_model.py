@@ -24,8 +24,14 @@ def add_combined_incidence(derived_outputs, outputs):
             absolute_incidence = (derived_outputs[column_name] + derived_outputs[incidence_late_name])
 
             # work out total stratum population
-            stratum_compartments = [c for c in comp_names if column_name[15:] in c or 'strain' in column_name[15:] or
-                                    'organ' in column_name[15:]]
+            if column_name == 'incidence_early':  # we need the total population
+                stratum_compartments = comp_names
+            else:  # we may need a subgroup population
+                stratification_name = column_name[15:].split('_')[0]
+                if all(stratification_name in c for c in comp_names):
+                    stratum_compartments = [c for c in comp_names if column_name[15:] in c]
+                else:
+                    stratum_compartments = comp_names
 
             stratum_population = outputs[stratum_compartments].sum(axis=1)
             columns_to_add[new_output] = absolute_incidence / stratum_population * 1.e5
@@ -34,6 +40,7 @@ def add_combined_incidence(derived_outputs, outputs):
         derived_outputs[key] = val
 
     return derived_outputs
+
 
 def load_model_scenario(scenario_name, database_name):
     out_database = InputDB(database_name="databases/" + database_name)

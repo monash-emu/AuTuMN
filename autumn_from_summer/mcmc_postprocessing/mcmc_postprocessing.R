@@ -112,7 +112,25 @@ find_best_likelihood_params <- function(loaded_dbs){
   
 }
 
+
+find_number_of_iterations_after_burnin <- function(loaded_dbs, burn_in_values=seq(0, 400)){
+  n_iterations_after_burnin = rep(0,length(burn_in_values))
+  for (db_index in names(loaded_dbs)){
+    n_iterations_this_db = nrow(loaded_dbs[[db_index]]$mcmc_trace)
+    for (burn_in_value in burn_in_values){
+      n_iter_this_db_after_burnin = max(0, n_iterations_this_db - burn_in_value)
+      n_iterations_after_burnin[burn_in_value] = n_iterations_after_burnin[burn_in_value] + n_iter_this_db_after_burnin   
+    }
+  }  
+  x11()
+  plot(burn_in_values, n_iterations_after_burnin, type='l')
+  return(n_iterations_after_burnin)
+}
+
+
 loaded_dbs = load_databases()
+
+find_number_of_iterations_after_burnin(loaded_dbs)
 
 plot_traces_and_histograms(loaded_dbs)
 

@@ -89,6 +89,8 @@ def load_calibration_from_db(database_directory, n_burned_per_chain=0):
             outputs = out_database.db_query(table_name='outputs', conditions=["idx='" + str(run_id) +"'"])
             output_dict = outputs.to_dict()
             derived_outputs = out_database.db_query(table_name='derived_outputs', conditions=["idx='" + str(run_id) +"'"])
+            derived_outputs = add_combined_incidence(derived_outputs, outputs)
+
             derived_outputs_dict = derived_outputs.to_dict()
             model_info_dict = {'db_name': db_name, 'run_id': run_id, 'model':  DummyModel(output_dict, derived_outputs_dict),
                                'weight': weights[i]}

@@ -112,11 +112,11 @@ def build_rmi_model(update_params={}):
                            'diabetes': ['has_diabetes', 'no_diabetes']}
 
     #  create derived outputs for disaggregated incidence
-    # for stratification in stratify_by:
-    #     for stratum in all_stratifications[stratification]:
-    #         for stage in ["early", 'late']:
-    #             out_connections["indidence_" + stage + "X" + stratification + "_" + stratum] =\
-    #                 {"origin": stage + "_latent", "to": "infectious", "to_condition": stratification + "_" + stratum}
+    for stratification in stratify_by:
+        for stratum in all_stratifications[stratification]:
+            for stage in ["early", 'late']:
+                out_connections["indidence_" + stage + "X" + stratification + "_" + stratum] =\
+                    {"origin": stage + "_latent", "to": "infectious", "to_condition": stratification + "_" + stratum}
 
     # create personalised derived outputs for mortality and notifications
     def mortality_derived_output(model):
@@ -354,12 +354,12 @@ if __name__ == "__main__":
     load_model = True
 
     scenario_params = {
-        # 1: {'acf_majuro_switch': 1.,
-        #                'acf_ebeye_switch': 1.,
-        #                'acf_otherislands_switch': 0.,
-        #                'acf_ltbi_majuro_switch': 1.,
-        #                'acf_ltbi_ebeye_switch': 0.,
-        #                'acf_ltbi_otherislands_switch': 0.}
+        1: {'acf_majuro_switch': 1.,
+                       'acf_ebeye_switch': 1.,
+                       'acf_otherislands_switch': 0.,
+                       'acf_ltbi_majuro_switch': 1.,
+                       'acf_ltbi_ebeye_switch': 0.,
+                       'acf_ltbi_otherislands_switch': 0.}
 
         }
     scenario_list = [0]
@@ -369,14 +369,14 @@ if __name__ == "__main__":
         load_mcmc = False
 
         if load_mcmc:
-            models = load_calibration_from_db('outputs_11_27_2019_14_07_54.db')
+            models = load_calibration_from_db('outputs_12_23_2019_15_37_56.db')
             scenario_list = range(len(models))
         else:
             models = []
             scenarios_to_load = scenario_list
             for sc in scenarios_to_load:
                 print("Loading model for scenario " + str(sc))
-                loaded_model = load_model_scenario(str(sc), database_name='outputs_11_27_2019_13_12_43.db')
+                loaded_model = load_model_scenario(str(sc), database_name='outputs_12_23_2019_15_37_56.db')
                 models.append(DummyModel(loaded_model['outputs'], loaded_model['derived_outputs']))
     else:
         t0 = time()
@@ -443,6 +443,6 @@ if __name__ == "__main__":
                     'incidenceXlocation_otherislands': 'Other locations - TB incidence (/100,000/y)'
                     }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='rmi_24jan_2', targets_to_plot=targets_to_plot,
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='rmi_24jan_4', targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers, translation_dictionary=translations,
-                                  scenario_list=scenario_list, ymax=ymax, plot_start_time=1940)
+                                  scenario_list=scenario_list, ymax=ymax, plot_start_time=1990)

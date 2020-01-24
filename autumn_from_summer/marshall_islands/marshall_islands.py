@@ -381,6 +381,13 @@ if __name__ == "__main__":
     else:
         t0 = time()
         models = run_multi_scenario(scenario_params, 1990., build_rmi_model)
+        # automatically add combined incidence output
+        for model in models:
+            outputs_df = pd.DataFrame(model.outputs, columns=model.compartment_names)
+            derived_outputs_df = pd.DataFrame(model.derived_outputs, columns=model.derived_outputs.keys())
+            updated_derived_outputs = add_combined_incidence(derived_outputs_df, outputs_df)
+            updated_derived_outputs = updated_derived_outputs.to_dict('list')
+            model.derived_outputs = updated_derived_outputs
         store_run_models(models, scenarios=scenario_list, database_name=output_db_path)
         delta = time() - t0
         print("Running time: " + str(round(delta, 1)) + " seconds")

@@ -1,13 +1,8 @@
   
 AuTuMN  
 ======  
-  
-This is a set of Python models that modularises the development of dynamic transmission models and allows a
-pluggable API to other system. Applied to tuberculosis.
 
-## quick run
-
-```> python gui.py```
+This project is a modelling framework used by the [AuTuMN tuberculosis modelling project](http://www.tb-modelling.com/index.php). It provides a set of Python models that modularises the development of dynamic transmission models and allows a pluggable API to other system. Applied to tuberculosis.
 
 ## TODO
 - setup.py file to load all dependent modules

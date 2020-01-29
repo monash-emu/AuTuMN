@@ -1,6 +1,8 @@
   
-AuTuMN  
-======  
+AuTuMN 
+======
+
+![](https://github.com/monash-emu/AuTuMN/workflows/Continuous%20Integration/badge.svg)
 
 This project is a modelling framework used by the [AuTuMN tuberculosis modelling project](http://www.tb-modelling.com/index.php). It provides a set of Python models that modularises the development of dynamic transmission models and allows a pluggable API to other system. Applied to tuberculosis.
 

@@ -1,10 +1,11 @@
-
-from sqlalchemy import create_engine
-import pandas as pd
 import glob
+
+import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from autumn_from_summer.curve import scale_up_function
+from sqlalchemy import create_engine
+
+from .curve import scale_up_function
 
 
 def get_bcg_coverage(database, country_iso_code):

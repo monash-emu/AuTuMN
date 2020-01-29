@@ -1,8 +1,8 @@
 """
 Sigmoidal and spline functions to generate cost coverage curves and historical input curves.
 """
-
 from math import exp
+
 import numpy as np
 from scipy.interpolate import UnivariateSpline
 

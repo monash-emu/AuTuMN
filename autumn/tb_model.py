@@ -1,18 +1,18 @@
 import re
-import re
-from summer_py.summer_model import *
-from autumn_from_summer.db import InputDB
-import matplotlib.pyplot
-import numpy
 import copy
-from autumn_from_summer.curve import scale_up_function
-import pandas as pd
-from autumn_from_summer.db import get_bcg_coverage, get_crude_birth_rate, get_pop_mortality_functions
-import summer_py.post_processing as post_proc
-from summer_py.outputs import Outputs
 import json
-from autumn_from_summer.tool_kit import *
+
+import numpy
+import matplotlib.pyplot
+import pandas as pd
+import summer_py.post_processing as post_proc
+from summer_py.summer_model import *
 from summer_py.parameter_processing import *
+from summer_py.outputs import Outputs
+
+from .db import InputDB, get_bcg_coverage, get_crude_birth_rate, get_pop_mortality_functions
+from .curve import scale_up_function
+from .tool_kit import *
 
 
 def add_combined_incidence(derived_outputs, outputs):

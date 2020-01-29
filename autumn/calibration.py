@@ -1,16 +1,15 @@
-import theano.tensor as tt
-from autumn_from_summer.mongolia.mongolia_tb_model import *
-import summer_py.post_processing as post_proc
-from itertools import chain
-from time import time
-
-import pymc3 as pm
-import theano
-import numpy as np
 import logging
 import os
+from time import time
+from itertools import chain
 
+import theano
+import numpy as np
+import pymc3 as pm
+import theano.tensor as tt
+import summer_py.post_processing as post_proc
 from scipy.optimize import Bounds, minimize
+
 
 logger = logging.getLogger("pymc3")
 logger.setLevel(logging.DEBUG)
@@ -396,36 +395,30 @@ class LogLike(tt.Op):
         outputs[0][0] = np.array(logl)  # output the log-likelihood
 
 
-if __name__ == "__main__":
-
-    par_priors = [{'param_name': 'contact_rate', 'distribution': 'uniform', 'distri_params': [14., 18.]},
-                  # {'param_name': 'rr_transmission_ger', 'distribution': 'uniform', 'distri_params': [1., 5.]},
-                  # {'param_name': 'rr_transmission_urban', 'distribution': 'uniform', 'distri_params': [1., 5.]},
-                  # {'param_name': 'rr_transmission_province', 'distribution': 'uniform', 'distri_params': [.5, 5.]},
-                  {'param_name': 'latency_adjustment', 'distribution': 'uniform', 'distri_params': [1., 3.]},
-                  ]
-    target_outputs = [{'output_key': 'prevXinfectiousXamongXage_15Xage_60', 'years': [2015.], 'values': [560.]},
-                      # {'output_key': 'prevXinfectiousXamongXage_15Xage_60Xhousing_ger', 'years': [2015.], 'values': [613.]},
-                      # {'output_key': 'prevXinfectiousXamongXage_15Xage_60Xlocation_urban', 'years': [2015.], 'values': [586.]},
-                      # {'output_key': 'prevXinfectiousXamongXage_15Xage_60Xlocation_province', 'years': [2015.], 'values': [513.]},
-                      {'output_key': 'prevXlatentXamongXage_5', 'years': [2016.], 'values': [960.]}
-                     ]
-
-    multipliers = {'prevXlatentXamongXage_5': 1.e4}
-    for i, output in enumerate(target_outputs):
-        if output['output_key'][0:15] == 'prevXinfectious':
-            multipliers[output['output_key']] = 1.e5
-
-    calib = Calibration(build_mongolia_model, par_priors, target_outputs, multipliers)
-
-
-    # calib.run_fitting_algorithm(run_mode='lsm')  # for least square minimization
-    # print(calib.mle_estimates)
-    #
-
-    # calib.run_fitting_algorithm(run_mode='mle')  # for maximum-likelihood estimation
-    # print(calib.mle_estimates)
-    #
-    calib.run_fitting_algorithm(run_mode='autumn_mcmc', n_iterations=10, n_burned=0, n_chains=1, available_time=10)  # for autumn_mcmc
-
-    print(calib.mcmc_trace)
+# FIXME: Move this script to a smoke test or delete. This file should not depend on mongolia tb model.
+# if __name__ == "__main__":
+#     par_priors = [{'param_name': 'contact_rate', 'distribution': 'uniform', 'distri_params': [14., 18.]},
+#                   # {'param_name': 'rr_transmission_ger', 'distribution': 'uniform', 'distri_params': [1., 5.]},
+#                   # {'param_name': 'rr_transmission_urban', 'distribution': 'uniform', 'distri_params': [1., 5.]},
+#                   # {'param_name': 'rr_transmission_province', 'distribution': 'uniform', 'distri_params': [.5, 5.]},
+#                   {'param_name': 'latency_adjustment', 'distribution': 'uniform', 'distri_params': [1., 3.]},
+#                   ]
+#     target_outputs = [{'output_key': 'prevXinfectiousXamongXage_15Xage_60', 'years': [2015.], 'values': [560.]},
+#                       # {'output_key': 'prevXinfectiousXamongXage_15Xage_60Xhousing_ger', 'years': [2015.], 'values': [613.]},
+#                       # {'output_key': 'prevXinfectiousXamongXage_15Xage_60Xlocation_urban', 'years': [2015.], 'values': [586.]},
+#                       # {'output_key': 'prevXinfectiousXamongXage_15Xage_60Xlocation_province', 'years': [2015.], 'values': [513.]},
+#                       {'output_key': 'prevXlatentXamongXage_5', 'years': [2016.], 'values': [960.]}
+#                      ]
+#     multipliers = {'prevXlatentXamongXage_5': 1.e4}
+#     for i, output in enumerate(target_outputs):
+#         if output['output_key'][0:15] == 'prevXinfectious':
+#             multipliers[output['output_key']] = 1.e5
+#     calib = Calibration(build_mongolia_model, par_priors, target_outputs, multipliers)
+#     # calib.run_fitting_algorithm(run_mode='lsm')  # for least square minimization
+#     # print(calib.mle_estimates)
+#     #
+#     # calib.run_fitting_algorithm(run_mode='mle')  # for maximum-likelihood estimation
+#     # print(calib.mle_estimates)
+#     #
+#     calib.run_fitting_algorithm(run_mode='autumn_mcmc', n_iterations=10, n_burned=0, n_chains=1, available_time=10)  # for autumn_mcmc
+#     print(calib.mcmc_trace)

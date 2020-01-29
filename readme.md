@@ -8,6 +8,15 @@ The tuberculosis-specific AuTuMN modelling framework is build on top of the dise
 
 See [this guide](./docs/setup.md) for information on how to set up this project.
 
+## Project Structure
+
+```
+├── autumn                  AuTuMN framework module
+├── autumn_from_summer      Applications of AuTuMN (to be moved to another location)
+├── docs                    Documentation
+└── scripts                 Ad-hoc utility scripts
+```
+
 ## TODO
 - setup.py file to load all dependent modules
 - document Bulgaria interventions properly in handbook

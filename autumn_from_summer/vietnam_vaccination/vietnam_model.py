@@ -1,9 +1,10 @@
+import os
+
+import matplotlib.pyplot as plt
 from summer_py.summer_model import *
 from summer_py.post_processing import *
 from summer_py.outputs import *
-import os
-from autumn_from_summer.tb_model import create_multi_scenario_outputs
-import matplotlib.pyplot as plt
+from autumn.tb_model import create_multi_scenario_outputs
 
 
 def get_total_popsize(model, time):

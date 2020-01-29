@@ -1,5 +1,6 @@
-from autumn_from_summer.calibration import *
 from multiprocess.pool import Pool
+
+from autumn.calibration import *
 
 par_priors = [{'param_name': 'contact_rate', 'distribution': 'uniform', 'distri_params': [10., 20.]},
               {'param_name': 'adult_latency_adjustment', 'distribution': 'uniform', 'distri_params': [2., 6.]},

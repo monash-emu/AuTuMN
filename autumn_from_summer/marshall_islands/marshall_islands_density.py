@@ -1,8 +1,9 @@
-from autumn_from_summer.tb_model import *
-from autumn_from_summer.tool_kit import *
-from time import time
-from datetime import datetime
 import os
+from datetime import datetime
+from time import time
+
+from autumn.tb_model import *
+from autumn.tool_kit import *
 
 now = datetime.now()
 

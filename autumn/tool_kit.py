@@ -1,7 +1,7 @@
 import copy
 
 import numpy
-from summer_py.summer_model import *
+from summer_py.summer_model import *  # FIXME: Avoid import *
 
 def step_function_maker(start_time, end_time, value):
 

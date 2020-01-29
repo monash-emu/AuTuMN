@@ -6,13 +6,13 @@ import numpy
 import matplotlib.pyplot
 import pandas as pd
 import summer_py.post_processing as post_proc
-from summer_py.summer_model import *
-from summer_py.parameter_processing import *
+from summer_py.summer_model import *   # FIXME: Avoid import *
+from summer_py.parameter_processing import *   # FIXME: Avoid import *
 from summer_py.outputs import Outputs
 
 from .db import InputDB, get_bcg_coverage, get_crude_birth_rate, get_pop_mortality_functions
 from .curve import scale_up_function
-from .tool_kit import *
+from .tool_kit import change_parameter_unit, add_w_to_param_names
 
 
 def add_combined_incidence(derived_outputs, outputs):

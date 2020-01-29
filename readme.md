@@ -13,6 +13,7 @@ See [this guide](./docs/setup.md) for information on how to set up this project.
 ## Project Structure
 
 ```
+├── .github                 GitHub config
 ├── autumn                  AuTuMN framework module
 ├── autumn_from_summer      Applications of AuTuMN (to be renamed/moved to another location)
 ├── docs                    Documentation
@@ -27,6 +28,8 @@ Automated tests may be run via [PyCharm](https://www.jetbrains.com/help/pycharm/
 ```
 python -m pytest
 ```
+
+Tests are also run automatically via [GitHub Actions](https://github.com/features/actions) on any pull request or commit to the `master` branch. 
 
 ## TODO
 - setup.py file to load all dependent modules

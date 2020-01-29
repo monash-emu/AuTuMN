@@ -22,11 +22,11 @@ def build_rmi_timevariant_tsr():
 def build_rmi_model(update_params={}):
 
     # stratify_by = ['age']
-    stratify_by = ['age', 'location']
+    # stratify_by = ['age', 'location']
     # stratify_by = ['age', 'organ']
     # stratify_by = ['age', 'diabetes']
     # stratify_by = ['age', 'diabetes', 'organ']
-    # stratify_by = ['age', 'diabetes', 'organ', 'location']
+    stratify_by = ['age', 'diabetes', 'organ', 'location']
 
     # some default parameter values
     external_params = {  # run configuration
@@ -119,7 +119,7 @@ def build_rmi_model(update_params={}):
     for stratification in stratify_by:
         for stratum in all_stratifications[stratification]:
             for stage in ["early", 'late']:
-                out_connections["indidence_" + stage + "X" + stratification + "_" + stratum] =\
+                out_connections["incidence_" + stage + "X" + stratification + "_" + stratum] =\
                     {"origin": stage + "_latent", "to": "infectious", "to_condition": stratification + "_" + stratum}
 
     # create personalised derived outputs for mortality and notifications
@@ -363,12 +363,12 @@ if __name__ == "__main__":
     load_model = False
 
     scenario_params = {
-        # 1: {'acf_majuro_switch': 1.,
-        #                'acf_ebeye_switch': 1.,
-        #                'acf_otherislands_switch': 0.,
-        #                'acf_ltbi_majuro_switch': 1.,
-        #                'acf_ltbi_ebeye_switch': 0.,
-        #                'acf_ltbi_otherislands_switch': 0.}
+        1: {'acf_majuro_switch': 1.,
+                       'acf_ebeye_switch': 1.,
+                       'acf_otherislands_switch': 0.,
+                       'acf_ltbi_majuro_switch': 1.,
+                       'acf_ltbi_ebeye_switch': 0.,
+                       'acf_ltbi_otherislands_switch': 0.}
 
         }
     scenario_list = [0]
@@ -462,6 +462,6 @@ if __name__ == "__main__":
                     'incidenceXlocation_otherislands': 'Other locations - TB incidence (/100,000/y)'
                     }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='rmi_27jan_3', targets_to_plot=targets_to_plot,
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='rmi_29jan_1', targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers, translation_dictionary=translations,
-                                  scenario_list=scenario_list, ymax=ymax, plot_start_time=1990)
+                                  scenario_list=scenario_list, ymax=ymax, plot_start_time=2015)

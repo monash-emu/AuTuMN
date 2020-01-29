@@ -1,4 +1,5 @@
 import re
+import re
 from summer_py.summer_model import *
 from autumn_from_summer.db import InputDB
 import matplotlib.pyplot
@@ -275,7 +276,23 @@ def add_standard_infection_flows(list_of_flows):
     list_of_flows += [
         {"type": "infection_frequency", "parameter": "contact_rate", "origin": "susceptible", "to": "early_latent"},
         {"type": "infection_frequency", "parameter": "contact_rate_recovered", "origin": "recovered", "to": "early_latent"},
-        {"type": "infection_frequency", "parameter": "contact_rate_infected", "origin": "late_latent", "to": "early_latent"}
+        {"type": "infection_frequency", "parameter": "contact_rate_infected", "origin": "late_latent", "to": "early_latent"},
+    ]
+    return list_of_flows
+
+def add_density_infection_flows(list_of_flows):
+    """
+    adds our standard infection processes to the list of flows to be implemented in the model
+
+    :param list_of_flows: list
+        existing flows for implementation in the model
+    :return: list_of_flows: list
+        list of flows updated to include the standard infection processes
+    """
+    list_of_flows += [
+        {"type": "infection_density", "parameter": "contact_rate", "origin": "susceptible", "to": "early_latent"},
+        {"type": "infection_density", "parameter": "contact_rate_recovered", "origin": "recovered", "to": "early_latent"},
+        {"type": "infection_density", "parameter": "contact_rate_infected", "origin": "late_latent", "to": "early_latent"},
     ]
     return list_of_flows
 

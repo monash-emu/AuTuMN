@@ -4,6 +4,10 @@ AuTuMN
 
 This project is a modelling framework used by the [AuTuMN tuberculosis modelling project](http://www.tb-modelling.com/index.php). It provides a set of Python models that modularises the development of dynamic transmission models and allows a pluggable API to other system. Applied to tuberculosis.
 
+The tuberculosis-specific AuTuMN modelling framework is build on top of the disease-agnostic [SUMMER project](https://github.com/monash-emu/summer).
+
+See [this guide](./docs/setup.md) for information on how to set up this project.
+
 ## TODO
 - setup.py file to load all dependent modules
 - document Bulgaria interventions properly in handbook

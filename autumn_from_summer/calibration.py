@@ -11,7 +11,6 @@ import logging
 import os
 
 from scipy.optimize import Bounds, minimize
-# from autumn.inputs import NumpyEncoder
 
 logger = logging.getLogger("pymc3")
 logger.setLevel(logging.DEBUG)

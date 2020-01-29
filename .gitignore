@@ -25,3 +25,4 @@ autumn_from_summer/mcmc_postprocessing/.Rhistory
 autumn_from_summer/mongolia/mcmc_chistmas_2019/o
 .vscode
 *.secret.*
+.pytest_cache

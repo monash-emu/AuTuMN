@@ -12,9 +12,18 @@ See [this guide](./docs/setup.md) for information on how to set up this project.
 
 ```
 ├── autumn                  AuTuMN framework module
-├── autumn_from_summer      Applications of AuTuMN (to be moved to another location)
+├── autumn_from_summer      Applications of AuTuMN (to be renamed/moved to another location)
 ├── docs                    Documentation
-└── scripts                 Ad-hoc utility scripts
+├── scripts                 Ad-hoc utility scripts
+└── tests                   Automated tests
+```
+
+## Tests
+
+Automated tests may be run via [PyCharm](https://www.jetbrains.com/help/pycharm/pytest.html) or via the command line:
+
+```
+python -m pytest
 ```
 
 ## TODO

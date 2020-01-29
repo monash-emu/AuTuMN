@@ -1,4 +1,4 @@
-from autumn_from_summer.calibration import *
+from autumn.calibration import *
 
 par_priors = [{'param_name': 'contact_rate', 'distribution': 'uniform', 'distri_params': [1., 20.]},
                   {'param_name': 'rr_transmission_ger', 'distribution': 'uniform', 'distri_params': [1., 5.]},

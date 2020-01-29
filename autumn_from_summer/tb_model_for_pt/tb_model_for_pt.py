@@ -1,6 +1,7 @@
-from autumn_from_summer.tb_model import *
-from autumn_from_summer.tool_kit import *
 import dill
+
+from autumn.tb_model import *
+from autumn.tool_kit import *
 
 
 def build_timevariant_cdr():

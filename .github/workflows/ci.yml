@@ -19,7 +19,7 @@ jobs:
     - name: Which Python
       run: which python  
     - name: Python Version
-      run: python --verson  
+      run: python --version  
     - name: Hello world
       run: python -c "print('Hello world')"
     # - uses: s-weigand/setup-conda@v1

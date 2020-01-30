@@ -43,6 +43,24 @@ def add_combined_incidence(derived_outputs, outputs):
     return derived_outputs
 
 
+def create_output_connections_for_incidence_by_stratum(all_compartment_names, infectious_compartment_name='infectious'):
+    """
+    Automatically create output connections for fully disaggregated incidence outputs
+    :param all_compartment_names: full list of model compartment names
+    :param infectious_compartment_name: the name used for the active TB compartment
+    :return: a dictionary containing incidence output connections
+    """
+    out_connections = {}
+    for compartment in all_compartment_names:
+        if infectious_compartment_name in compartment:
+            stratum = compartment.split(infectious_compartment_name)[1]
+            for stage in ["early", 'late']:
+                    out_connections["incidence_" + stage + stratum] =\
+                        {"origin": stage + "_latent", "to": infectious_compartment_name, "origin_condition": "",
+                         "to_condition": stratum}
+    return out_connections
+
+
 def load_model_scenario(scenario_name, database_name):
     out_database = InputDB(database_name="databases/" + database_name)
     outputs = out_database.db_query(table_name='outputs', conditions=["Scenario='S_"+scenario_name+"'"])

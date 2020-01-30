@@ -392,15 +392,7 @@ def build_mongolia_model(update_params={}):
     _tb_model.derived_output_functions['popsize_treatment_support'] = calculate_notifications
 
     # add output_connections for all stratum-specific incidence outputs
-    out_connections = {}
-    for compartment in _tb_model.compartment_names:
-        if 'infectious' in compartment:
-            stratum = compartment.split('infectious')[1]
-            for stage in ["early", 'late']:
-                    out_connections["incidence_" + stage + stratum] =\
-                        {"origin": stage + "_latent", "to": "infectious", "origin_condition": "", "to_condition": stratum}
-
-    _tb_model.output_connections = out_connections
+    _tb_model.output_connections.update(create_output_connections_for_incidence_by_stratum(_tb_model.compartment_names))
 
     return _tb_model
 

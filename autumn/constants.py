@@ -9,6 +9,8 @@ class Compartment:
     """
 
     SUSCEPTIBLE = "susceptible"
+    EARLY_LATENT = "early_latent"
+    LATE_LATENT = "late_latent"
     INFECTIOUS = "infectious"
     RECOVERED = "recovered"
 
@@ -18,6 +20,8 @@ class Flow:
     A type of flow between model compartments
     """
 
+    CUSTOM = "customised_flows"
+    STANDARD = "standard_flows"
     INFECTION_FREQUENCY = "infection_frequency"
     INFECTION_DENSITY = "infection_density"
     DEATH = "compartment_death"

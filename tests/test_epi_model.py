@@ -94,8 +94,77 @@ def test_epi_model__with_death_rate__expect_pop_decrease():
     assert (actual_output == np.array(expected_output)).all()
 
 
+def test_epi_model__with_recovery_rate__expect_all_recover():
+    """
+    Ensure that a model with three compartments and only recovery dynamics
+    results in (almost) everybody recovering.
+    """
+    # Set up a model with 100 people, all infectious.
+    # Add recovery dynamics.
+    pop = 100
+    model = EpiModel(
+        times=get_integration_times(2000, 2005, 1),
+        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.INFECTIOUS, Compartment.RECOVERED],
+        initial_conditions={Compartment.INFECTIOUS: pop},
+        parameters={"recovery": 1},
+        requested_flows=[
+            {
+                "type": Flow.STANDARD,
+                "parameter": "recovery",
+                "origin": Compartment.INFECTIOUS,
+                "to": Compartment.RECOVERED,
+            }
+        ],
+        birth_approach=BirthApproach.NO_BIRTH,
+        starting_population=pop,
+    )
+    # Run the model for 5 years.
+    model.run_model()
+    # Expect that almost everyone recovers
+    expected_output = [
+        [0.0, 100.0, 0.0],
+        [0.0, 37.0, 63.0],
+        [0.0, 14.0, 86.0],
+        [0.0, 5.0, 95.0],
+        [0.0, 2.0, 98.0],
+        [0.0, 1.0, 99.0],
+    ]
+    actual_output = np.round(model.outputs)
+    assert (actual_output == np.array(expected_output)).all()
+
+
 def test_epi_model__with_infect_death_rate__expect_infected_pop_decrease():
-    pass
+    """
+    Ensure that a model with two compartments and only infected death rate dynamics
+    results in fewer infected people, but no change to susceptible pop.
+    """
+    # Set up a model with 100 people, all susceptible, no transmission possible.
+    # Add some dying at ~2 people / 100 / year.
+    pop = 100
+    model = EpiModel(
+        times=get_integration_times(2000, 2005, 1),
+        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.INFECTIOUS],
+        initial_conditions={Compartment.INFECTIOUS: 50},
+        parameters={"infect_death": 2e-2},
+        requested_flows=[
+            {"type": Flow.DEATH, "parameter": "infect_death", "origin": Compartment.INFECTIOUS}
+        ],
+        birth_approach=BirthApproach.NO_BIRTH,
+        starting_population=pop,
+    )
+    # Run the model for 5 years.
+    model.run_model()
+    # Expect that we have more people in the population
+    expected_output = [
+        [50.0, 50.0],
+        [50.0, 49.0],
+        [50.0, 48.0],
+        [50.0, 47.0],
+        [50.0, 46.0],
+        [50.0, 45.0],
+    ]
+    actual_output = np.round(model.outputs)
+    assert (actual_output == np.array(expected_output)).all()
 
 
 def test_epi_model__with_no_infected__expect_no_change():

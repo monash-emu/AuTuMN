@@ -263,3 +263,122 @@ def test_epi_model__with_infection_density__expect_all_infected():
     ]
     actual_output = np.round(model.outputs)
     assert (actual_output == np.array(expected_output)).all()
+
+
+def test_epi_model__with_complex_dynamics__expect_correct_outputs():
+    """
+    Ensure that a EpiModel with the "full suite" of TB dynamics produces correct results:
+        - 5 compartments
+        - birth rate +  universal death rate
+        - standard inter-compartment flows
+
+    FIXME: Change parameter values to be vaugely realistic
+    """
+    # Set up a model with 1000 people, 100 intially infected
+    pop = 1000
+    times = get_integration_times(2000, 2005, 1)
+    compartments = [
+        Compartment.SUSCEPTIBLE,
+        Compartment.INFECTIOUS,
+        Compartment.LATE_LATENT,
+        Compartment.EARLY_LATENT,
+        Compartment.RECOVERED,
+    ]
+    initial_pop = {Compartment.INFECTIOUS: 100}
+    params = {
+        # Global birth / death params
+        "crude_birth_rate": 2e-2,  # ~ 2 babies / 100 / year
+        "universal_death_rate": 2e-2,  # ~ 2 deaths / 100 / year
+        # Compartment flow params
+        "infect_death": 0.4,
+        "recovery": 0.2,
+        "contact_rate": 14,
+        "contact_rate_recovered": 14,
+        "contact_rate_infected": 3,
+        "stabilisation": 3,
+        "early_progression": 2,
+        "late_progression": 1,
+        "case_detection": 1,
+    }
+    flows = [
+        # Susceptible becoming latent
+        {
+            "type": Flow.INFECTION_FREQUENCY,
+            "parameter": "contact_rate",
+            "origin": Compartment.SUSCEPTIBLE,
+            "to": Compartment.EARLY_LATENT,
+        },
+        # Recovered becoming latent again.
+        {
+            "type": Flow.INFECTION_FREQUENCY,
+            "parameter": "contact_rate_recovered",
+            "origin": Compartment.RECOVERED,
+            "to": Compartment.EARLY_LATENT,
+        },
+        # Late latent going back to early latent
+        {
+            "type": Flow.INFECTION_FREQUENCY,
+            "parameter": "contact_rate_infected",
+            "origin": Compartment.LATE_LATENT,
+            "to": Compartment.EARLY_LATENT,
+        },
+        # Early progression from latent to infectious
+        {
+            "type": Flow.STANDARD,
+            "parameter": "early_progression",
+            "origin": Compartment.EARLY_LATENT,
+            "to": Compartment.INFECTIOUS,
+        },
+        # Transition from early to late latent
+        {
+            "type": Flow.STANDARD,
+            "parameter": "stabilisation",
+            "origin": Compartment.EARLY_LATENT,
+            "to": Compartment.LATE_LATENT,
+        },
+        # Late latent becoming infectious.
+        {
+            "type": Flow.STANDARD,
+            "parameter": "late_progression",
+            "origin": Compartment.LATE_LATENT,
+            "to": Compartment.INFECTIOUS,
+        },
+        # Infected people dying.
+        {"type": Flow.DEATH, "parameter": "infect_death", "origin": Compartment.INFECTIOUS},
+        # Infected people recovering naturally.
+        {
+            "type": Flow.STANDARD,
+            "parameter": "recovery",
+            "origin": Compartment.INFECTIOUS,
+            "to": Compartment.RECOVERED,
+        },
+        # Infectious people recovering via manual intervention
+        {
+            "type": Flow.STANDARD,
+            "parameter": "case_detection",
+            "origin": Compartment.INFECTIOUS,
+            "to": Compartment.RECOVERED,
+        },
+    ]
+    model = EpiModel(
+        times,
+        compartments,
+        initial_pop,
+        params,
+        flows,
+        birth_approach=BirthApproach.ADD_CRUDE,
+        starting_population=pop,
+    )
+    # Run the model for 5 years.
+    model.run_model()
+    # Expect that the results are consistent, nothing crazy happens.
+    expected_output = [
+        [900.0, 100.0, 0.0, 0.0, 0.0],
+        [66.0, 307.0, 274.0, 204.0, 75.0],
+        [3.0, 345.0, 221.0, 151.0, 69.0],
+        [2.0, 297.0, 176.0, 127.0, 58.0],
+        [2.0, 249.0, 146.0, 106.0, 48.0],
+        [1.0, 208.0, 121.0, 89.0, 40.0],
+    ]
+    actual_output = np.round(model.outputs)
+    assert (actual_output == np.array(expected_output)).all()

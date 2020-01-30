@@ -394,7 +394,11 @@ def build_mongolia_model(update_params={}):
     # add output_connections for all stratum-specific incidence outputs
     _tb_model.output_connections.update(create_output_connections_for_incidence_by_stratum(_tb_model.compartment_names))
 
+    # prepare death outputs for all strata
+    _tb_model.death_output_categories = list_all_srata_for_mortality(_tb_model.compartment_names)
+
     return _tb_model
+
 
 
 if __name__ == "__main__":

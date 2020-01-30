@@ -111,30 +111,13 @@ def build_mongolia_model(update_params={}):
     # compartments
     compartments = ["susceptible", "early_latent", "late_latent", "infectious", "recovered"]
 
-    # derived output definition
-    out_connections = {
-        "incidence_early": {"origin": "early_latent", "to": "infectious"},
-        "incidence_late": {"origin": "late_latent", "to": "infectious"}
-    }
-
-    all_stratifications = {'strain': ['ds', 'mdr'], 'organ': ['smearpos', 'smearneg', 'extrapul'],
-                           'age': ['0', '5', '15', '60'],
-                           'location': ['rural_province', 'urban_nonger', 'urban_ger', 'prison']}
-
-    #  create derived outputs for disaggregated incidence
-    for stratification in stratify_by:
-        for stratum in all_stratifications[stratification]:
-            for stage in ["early", 'late']:
-                out_connections["incidence_" + stage + "X" + stratification + "_" + stratum] =\
-                    {"origin": stage + "_latent", "to": "infectious", "to_condition": stratification + "_" + stratum}
-
     # define model     #replace_deaths  add_crude_birth_rate
     init_pop = {"infectious": 1000, "late_latent": 1000000}
 
     _tb_model = StratifiedModel(
         integration_times, compartments, init_pop, model_parameters, flows, birth_approach="replace_deaths",
         starting_population=external_params['start_population'],
-        output_connections=out_connections, derived_output_functions={},
+        output_connections={}, derived_output_functions={},
         death_output_categories=((), ("age_0",)))
 
     # add crude birth rate from un estimates
@@ -408,6 +391,17 @@ def build_mongolia_model(update_params={}):
     _tb_model.derived_output_functions['notifications'] = calculate_notifications
     _tb_model.derived_output_functions['popsize_treatment_support'] = calculate_notifications
 
+    # add output_connections for all stratum-specific incidence outputs
+    out_connections = {}
+    for compartment in _tb_model.compartment_names:
+        if 'infectious' in compartment:
+            stratum = compartment.split('infectious')[1]
+            for stage in ["early", 'late']:
+                    out_connections["incidence_" + stage + stratum] =\
+                        {"origin": stage + "_latent", "to": "infectious", "origin_condition": "", "to_condition": stratum}
+
+    _tb_model.output_connections = out_connections
+
     return _tb_model
 
 
@@ -549,7 +543,7 @@ if __name__ == "__main__":
                             req_multipliers=multipliers, translation_dictionary=translations,
                             scenario_list=scenario_list, ymax=ymax, plot_start_time=1990)
     else:
-        create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_inccccc',
+        create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='test_inc_stratum',
                                       targets_to_plot=targets_to_plot,
                                       req_multipliers=multipliers, translation_dictionary=translations,
                                       scenario_list=scenario_list, ymax=ymax, plot_start_time=1990)

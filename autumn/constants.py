@@ -44,3 +44,13 @@ class IntegrationType:
 
     ODE_INT = "odeint"
     SOLVE_IVP = "solve_ivp"
+
+
+class Stratification:
+    """
+    Attribute used to stratify the population within compartments. 
+    """
+
+    AGE = "age"
+    STRAIN = "strain"
+    LOCATION = "location"

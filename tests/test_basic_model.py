@@ -1,20 +1,24 @@
 """
-End-to-end tests for the EpiModel - a disease agnostic compartmental model from SUMMER
+End-to-end tests for the EpiModel and StratifiedModel - a disease agnostic compartmental model from SUMMER
+
+We expect the StratifiedModel and EpiModel to work the same in these basic cases.
 """
+import pytest
 import numpy as np
 
-from summer_py.summer_model import EpiModel
+from summer_py.summer_model import EpiModel, StratifiedModel
 from autumn.constants import Compartment, Flow, BirthApproach
 from autumn.tool_kit import get_integration_times
 
 
-def test_epi_model__with_static_dynamics__expect_no_change():
+@pytest.mark.parametrize("ModelClass", [EpiModel, StratifiedModel])
+def test_epi_model__with_static_dynamics__expect_no_change(ModelClass):
     """
     Ensure that a model with two compartments and no internal dynamics results in no change.
     """
     # Set up a model with 100 people, all susceptible, no transmission possible.
     pop = 100
-    model = EpiModel(
+    model = ModelClass(
         times=get_integration_times(2000, 2005, 1),
         compartment_types=[Compartment.SUSCEPTIBLE, Compartment.INFECTIOUS],
         initial_conditions={Compartment.SUSCEPTIBLE: pop},
@@ -37,14 +41,15 @@ def test_epi_model__with_static_dynamics__expect_no_change():
     assert (actual_output == np.array(expected_output)).all()
 
 
-def test_epi_model__with_birth_rate__expect_pop_increase():
+@pytest.mark.parametrize("ModelClass", [EpiModel, StratifiedModel])
+def test_epi_model__with_birth_rate__expect_pop_increase(ModelClass):
     """
     Ensure that a model with two compartments and only birth rate dynamics results in more people.
     """
     # Set up a model with 100 people, all susceptible, no transmission possible.
     # Add some babies at ~2 babies / 100 / year.
     pop = 100
-    model = EpiModel(
+    model = ModelClass(
         times=get_integration_times(2000, 2005, 1),
         compartment_types=[Compartment.SUSCEPTIBLE, Compartment.INFECTIOUS],
         initial_conditions={Compartment.SUSCEPTIBLE: pop},
@@ -63,14 +68,15 @@ def test_epi_model__with_birth_rate__expect_pop_increase():
     assert (actual_output == np.array(expected_output)).all()
 
 
-def test_epi_model__with_death_rate__expect_pop_decrease():
+@pytest.mark.parametrize("ModelClass", [EpiModel, StratifiedModel])
+def test_epi_model__with_death_rate__expect_pop_decrease(ModelClass):
     """
     Ensure that a model with two compartments and only death rate dynamics results in fewer people.
     """
     # Set up a model with 100 people, all susceptible, no transmission possible.
     # Add some dying at ~2 people / 100 / year.
     pop = 100
-    model = EpiModel(
+    model = ModelClass(
         times=get_integration_times(2000, 2005, 1),
         compartment_types=[Compartment.SUSCEPTIBLE, Compartment.INFECTIOUS],
         initial_conditions={Compartment.SUSCEPTIBLE: pop},
@@ -94,7 +100,8 @@ def test_epi_model__with_death_rate__expect_pop_decrease():
     assert (actual_output == np.array(expected_output)).all()
 
 
-def test_epi_model__with_recovery_rate__expect_all_recover():
+@pytest.mark.parametrize("ModelClass", [EpiModel, StratifiedModel])
+def test_epi_model__with_recovery_rate__expect_all_recover(ModelClass):
     """
     Ensure that a model with three compartments and only recovery dynamics
     results in (almost) everybody recovering.
@@ -102,7 +109,7 @@ def test_epi_model__with_recovery_rate__expect_all_recover():
     # Set up a model with 100 people, all infectious.
     # Add recovery dynamics.
     pop = 100
-    model = EpiModel(
+    model = ModelClass(
         times=get_integration_times(2000, 2005, 1),
         compartment_types=[Compartment.SUSCEPTIBLE, Compartment.INFECTIOUS, Compartment.RECOVERED],
         initial_conditions={Compartment.INFECTIOUS: pop},
@@ -133,7 +140,8 @@ def test_epi_model__with_recovery_rate__expect_all_recover():
     assert (actual_output == np.array(expected_output)).all()
 
 
-def test_epi_model__with_infect_death_rate__expect_infected_pop_decrease():
+@pytest.mark.parametrize("ModelClass", [EpiModel, StratifiedModel])
+def test_epi_model__with_infect_death_rate__expect_infected_pop_decrease(ModelClass):
     """
     Ensure that a model with two compartments and only infected death rate dynamics
     results in fewer infected people, but no change to susceptible pop.
@@ -141,7 +149,7 @@ def test_epi_model__with_infect_death_rate__expect_infected_pop_decrease():
     # Set up a model with 100 people, all susceptible, no transmission possible.
     # Add some dying at ~2 people / 100 / year.
     pop = 100
-    model = EpiModel(
+    model = ModelClass(
         times=get_integration_times(2000, 2005, 1),
         compartment_types=[Compartment.SUSCEPTIBLE, Compartment.INFECTIOUS],
         initial_conditions={Compartment.INFECTIOUS: 50},
@@ -167,13 +175,14 @@ def test_epi_model__with_infect_death_rate__expect_infected_pop_decrease():
     assert (actual_output == np.array(expected_output)).all()
 
 
-def test_epi_model__with_no_infected__expect_no_change():
+@pytest.mark.parametrize("ModelClass", [EpiModel, StratifiedModel])
+def test_epi_model__with_no_infected__expect_no_change(ModelClass):
     """
     Ensure that if no one has the disease, then no one gets the disease in the future.
     """
     # Set up a model with 100 people, all susceptible, transmission highly likely, but no one is infected.
     pop = 100
-    model = EpiModel(
+    model = ModelClass(
         times=get_integration_times(2000, 2005, 1),
         compartment_types=[Compartment.SUSCEPTIBLE, Compartment.INFECTIOUS],
         initial_conditions={Compartment.SUSCEPTIBLE: pop},
@@ -203,13 +212,14 @@ def test_epi_model__with_no_infected__expect_no_change():
     assert (actual_output == np.array(expected_output)).all()
 
 
-def test_epi_model__with_infection_frequency__expect_all_infected():
+@pytest.mark.parametrize("ModelClass", [EpiModel, StratifiedModel])
+def test_epi_model__with_infection_frequency__expect_all_infected(ModelClass):
     """
     Ensure that a model with two compartments and one-way internal dynamics results in all infected.
     """
     # Set up a model with 100 people, all susceptible execept 1 infected.
     pop = 100
-    model = EpiModel(
+    model = ModelClass(
         times=get_integration_times(2000, 2005, 1),
         compartment_types=[Compartment.SUSCEPTIBLE, Compartment.INFECTIOUS],
         initial_conditions={Compartment.INFECTIOUS: 1},
@@ -234,13 +244,14 @@ def test_epi_model__with_infection_frequency__expect_all_infected():
     assert (actual_output == np.array(expected_output)).all()
 
 
-def test_epi_model__with_infection_density__expect_all_infected():
+@pytest.mark.parametrize("ModelClass", [EpiModel, StratifiedModel])
+def test_epi_model__with_infection_density__expect_all_infected(ModelClass):
     """
     Ensure that a model with two compartments and one-way internal dynamics results in all infected.
     """
     # Set up a model with 100 people, all susceptible execept 1 infected.
     pop = 100
-    model = EpiModel(
+    model = ModelClass(
         times=get_integration_times(2000, 2005, 1),
         compartment_types=[Compartment.SUSCEPTIBLE, Compartment.INFECTIOUS],
         initial_conditions={Compartment.INFECTIOUS: 1},
@@ -265,7 +276,8 @@ def test_epi_model__with_infection_density__expect_all_infected():
     assert (actual_output == np.array(expected_output)).all()
 
 
-def test_epi_model__with_complex_dynamics__expect_correct_outputs():
+@pytest.mark.parametrize("ModelClass", [EpiModel, StratifiedModel])
+def test_epi_model__with_complex_dynamics__expect_correct_outputs(ModelClass):
     """
     Ensure that a EpiModel with the "full suite" of TB dynamics produces correct results:
         - 5 compartments
@@ -360,7 +372,7 @@ def test_epi_model__with_complex_dynamics__expect_correct_outputs():
             "to": Compartment.RECOVERED,
         },
     ]
-    model = EpiModel(
+    model = ModelClass(
         times,
         compartments,
         initial_pop,

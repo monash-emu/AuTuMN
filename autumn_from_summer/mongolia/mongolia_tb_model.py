@@ -370,11 +370,17 @@ def build_mongolia_model(update_params={}):
     # _tb_model.death_flows.to_csv("deaths.csv")
 
     # create some customised derived_outputs
-    def calculate_notifications(model, time):
-        total_notifications = 0.
-        dict_flows = model.transition_flows.to_dict()
 
-        for comp_ind in model.infectious_indices['all_strains']:
+    def notification_function_builder(stratum):
+        """
+            example of stratum: "Xage_0Xstrain_mdr"
+        """
+        def calculate_notifications(model, time):
+
+            total_notifications = 0.
+            dict_flows = model.transition_flows.to_dict()
+
+            comp_ind = model.compartment_names.index("infectious" + stratum)
             infectious_pop = model.compartment_values[comp_ind]
             detection_indices = [index for index, val in dict_flows['parameter'].items() if 'case_detection' in val]
             flow_index = [index for index in detection_indices if dict_flows['origin'][index] == model.compartment_names[comp_ind]][0]
@@ -386,10 +392,15 @@ def build_mongolia_model(update_params={}):
             if tsr > 0.:
                 total_notifications += infectious_pop * detection_tx_rate / tsr
 
-        return total_notifications
+            return total_notifications
 
-    _tb_model.derived_output_functions['notifications'] = calculate_notifications
-    _tb_model.derived_output_functions['popsize_treatment_support'] = calculate_notifications
+        return calculate_notifications
+
+    for compartment in _tb_model.compartment_names:
+        if 'infectious' in compartment:
+            stratum = compartment.split('infectious')[1]
+            _tb_model.derived_output_functions['notifications' + stratum] = notification_function_builder(stratum)
+            #_tb_model.derived_output_functions['popsize_treatment_support' + stratum] = notification_function_builder(stratum)
 
     # add output_connections for all stratum-specific incidence outputs
     _tb_model.output_connections.update(create_output_connections_for_incidence_by_stratum(_tb_model.compartment_names))

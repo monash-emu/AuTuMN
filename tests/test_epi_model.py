@@ -81,9 +81,15 @@ def test_epi_model__with_infection_frequency__expect_all_infected():
     # Run the model for 5 years.
     model.run_model()
     # Expect that everyone gets infected very quickly.
-    assert np.round(model.outputs) == np.array(
-        [[99.0, 1.0], [0.0, 100.0], [0.0, 100.0], [0.0, 100.0], [0.0, 100.0]]
-    )
+    expected_output = [
+        [99.0, 1.0],
+        [0.0, 100.0],
+        [0.0, 100.0],
+        [0.0, 100.0],
+        [0.0, 100.0],
+        [0.0, 100.0],
+    ]
+    assert (np.round(model.outputs) == np.array(expected_output)).all()
 
 
 def test_epi_model__with_infection_density__expect_all_infected():

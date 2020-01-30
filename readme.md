@@ -29,7 +29,7 @@ Automated tests may be run via [PyCharm](https://www.jetbrains.com/help/pycharm/
 python -m pytest
 ```
 
-Tests are also run automatically via [GitHub Actions](https://github.com/features/actions) on any pull request or commit to the `master` branch. 
+Tests are also run automatically via [GitHub Actions](https://github.com/monash-emu/AuTuMN/actions) on any pull request or commit to the `master` branch.
 
 ## TODO
 - setup.py file to load all dependent modules

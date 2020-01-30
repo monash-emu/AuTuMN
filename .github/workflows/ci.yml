@@ -22,4 +22,4 @@ jobs:
         conda install git pip
         pip install -r requirements.txt
     - name: Test with pytest
-      run: pytest
+      run: pytest -vv

@@ -198,3 +198,11 @@ def get_coverage_from_cost(spending, saturation, unit_cost, popsize, inflection_
     a = saturation / (1. - 2. ** alpha)
     b = 2. ** (alpha + 1.) / (alpha * (saturation - a) * unit_cost * popsize)
     return a + (saturation - a) / ((1. + numpy.exp((-b) * (spending - inflection_cost))) ** alpha)
+
+
+def get_integration_times(start_year: int, end_year: int, time_step: int):
+    """
+    Get a list of timesteps from start_year to end_year, spaced by time_step.
+    """
+    n_iter = int(round((end_year - start_year) / time_step)) + 1
+    return numpy.linspace(start_year, end_year, n_iter).tolist()

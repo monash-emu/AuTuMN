@@ -61,6 +61,21 @@ def create_output_connections_for_incidence_by_stratum(all_compartment_names, in
     return out_connections
 
 
+def list_all_srata_for_mortality(all_compartment_names, infectious_compartment_name='infectious'):
+    """
+    Automatically lists all combinations of population subgroups to request disaggregated mortality outputs
+    :param all_compartment_names: full list of model compartment names
+    :param infectious_compartment_name: the name used for the active TB compartment
+    :return: a tuple designed to be passed as death_output_categories argument to the model
+    """
+    death_output_categories = []
+    for compartment in all_compartment_names:
+        if infectious_compartment_name in compartment:
+            stratum = compartment.split(infectious_compartment_name)[1]
+            death_output_categories.append(tuple(stratum.split('X')[1:]))
+    return tuple(death_output_categories)
+
+
 def load_model_scenario(scenario_name, database_name):
     out_database = InputDB(database_name="databases/" + database_name)
     outputs = out_database.db_query(table_name='outputs', conditions=["Scenario='S_"+scenario_name+"'"])

@@ -36,7 +36,7 @@ def build_rmi_model(update_params={}):
                        'time_step': 1.,
                        'start_population': 14000,
                        # base model definition:
-                       'contact_rate': 0.00024,
+                       'contact_rate': 0.000265,
                        'rr_transmission_recovered': 0.6,
                        'rr_transmission_infected': 0.21,
                        'rr_transmission_ltbi_treated': 0.21,
@@ -50,8 +50,8 @@ def build_rmi_model(update_params={}):
                         'diagnostic_sensitivity_smearneg': .7,
                         'diagnostic_sensitivity_extrapul': .5,
                          # adjustments by location and diabetes
-                       'rr_transmission_ebeye': 1.9,  # reference majuro
-                       'rr_transmission_otherislands': 1.1, # reference majuro
+                       'rr_transmission_ebeye': 2.2,  # reference majuro
+                       'rr_transmission_otherislands': 1.0, # reference majuro
                        'rr_progression_has_diabetes': 3.11,  # reference: no_diabetes
                         # case detection adjustment for location
                         'case_detection_majuro_multiplier': 1.0,
@@ -134,7 +134,7 @@ def build_rmi_model(update_params={}):
             total_deaths += infectious_pop * mortality_rate
         return total_deaths
 
-    init_pop = {"infectious": 10, "late_latent": 500, "recovered": 500}
+    init_pop = {"infectious": 3, "late_latent": 50}
     # define model     #replace_deaths  add_crude_birth_rate
     _tb_model = StratifiedModel(
         integration_times, compartments, init_pop, model_parameters, flows, birth_approach="add_crude_birth_rate",
@@ -279,7 +279,14 @@ def build_rmi_model(update_params={}):
                                                 'late_progressionXage_35': progression_adjustments,
                                                 'late_progressionXage_50': progression_adjustments,
                                                 'late_progressionXage_70': progression_adjustments},
-                           entry_proportions=props_diabetes)
+                           entry_proportions=props_diabetes,
+                           target_props={'0': {"has_diabetes": 0.9},
+                                         '5': {"has_diabetes": 0.9},
+                                         '15': {"has_diabetes": 0.9},
+                                         '35': {"has_diabetes": 0.9},
+                                         '50': {"has_diabetes": 0.9},
+                                         '70': {"has_diabetes": 0.9}}
+                           )
 
 
     if 'organ' in stratify_by:
@@ -364,19 +371,21 @@ if __name__ == "__main__":
     load_model = False
 
     scenario_params = {
-        1: {'acf_majuro_switch': 1.,
-                       'acf_ebeye_switch': 1.,
-                       'acf_otherislands_switch': 0.,
-                       'acf_ltbi_majuro_switch': 1.,
-                       'acf_ltbi_ebeye_switch': 0.,
-                       'acf_ltbi_otherislands_switch': 0.}
+        # 1: {'acf_majuro_switch': 1.,
+        #                'acf_ebeye_switch': 1.,
+        #                'acf_otherislands_switch': 0.,
+        #                'acf_ltbi_majuro_switch': 1.,
+        #                'acf_ltbi_ebeye_switch': 0.,
+        #                'acf_ltbi_otherislands_switch': 0.}
+        # 1: {'contact_rate': 0.000255},
+        # 2: {'contact_rate': 0.000265}
 
         }
     scenario_list = [0]
     scenario_list.extend(list(scenario_params.keys()))
 
     if load_model:
-        load_mcmc = True
+        load_mcmc = False
 
         if load_mcmc:
             models = load_calibration_from_db('outputs_01_24_2020_withintervention.db')
@@ -463,6 +472,6 @@ if __name__ == "__main__":
                     'incidenceXlocation_otherislands': 'Other locations - TB incidence (/100,000/y)'
                     }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='rmi_29jan_1', targets_to_plot=targets_to_plot,
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='rmi_31jan_1', targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers, translation_dictionary=translations,
-                                  scenario_list=scenario_list, ymax=ymax, plot_start_time=2015)
+                                  scenario_list=scenario_list, ymax=ymax, plot_start_time=1940)

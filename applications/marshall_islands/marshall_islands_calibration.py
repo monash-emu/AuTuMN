@@ -2,7 +2,7 @@ from multiprocess.pool import Pool
 
 from autumn.calibration import *
 
-par_priors = [{'param_name': 'contact_rate', 'distribution': 'uniform', 'distri_params': [10., 20.]},
+par_priors = [{'param_name': 'contact_rate', 'distribution': 'uniform', 'distri_params': [.00025, .00028]},
               {'param_name': 'rr_transmission_ebeye', 'distribution': 'uniform', 'distri_params': [1., 2.5]},
               {'param_name': 'rr_transmission_otherislands', 'distribution': 'uniform', 'distri_params': [0.5, 1.5]},
               {'param_name': 'cdr_multiplier', 'distribution': 'uniform', 'distri_params': [.66, 1.5]},

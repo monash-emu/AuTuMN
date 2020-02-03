@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 from time import time
+from copy import deepcopy
 
 from autumn.tb_model import *
 from autumn.tool_kit import *
@@ -52,7 +53,7 @@ def build_rmi_model(update_params={}):
                          # adjustments by location and diabetes
                        'rr_transmission_ebeye': 2.2,  # reference majuro
                        'rr_transmission_otherislands': 1.0, # reference majuro
-                       'rr_progression_diabetes': 3.11,  # reference: no_diabetes
+                       'rr_progression_diabetic': 3.11,  # reference: no_diabetes
                         # case detection adjustment for location
                         'case_detection_majuro_multiplier': 1.0,
                         'case_detection_ebeye_multiplier': 1.5,
@@ -114,7 +115,7 @@ def build_rmi_model(update_params={}):
     all_stratifications = {'organ': ['smearpos', 'smearneg', 'extrapul'],
                            'age': ['0', '5', '15', '35', '50'],
                            'location': ['majuro', 'ebeye', 'otherislands'],
-                           'diabetes': ['diabetes', 'diabetes']}
+                           'diabetes': ['diabetic', 'nodiabetes']}
 
     #  create derived outputs for disaggregated incidence
     for stratification in stratify_by:
@@ -135,13 +136,14 @@ def build_rmi_model(update_params={}):
         return total_deaths
 
     init_pop = {"infectious": 3, "late_latent": 50}
+
     # define model     #replace_deaths  add_crude_birth_rate
     _tb_model = StratifiedModel(
         integration_times, compartments, init_pop, model_parameters, flows, birth_approach="add_crude_birth_rate",
         starting_population=external_params['start_population'],
         output_connections=out_connections)
 
-    # add crude birth rate from un estimates
+    # add crude birth rate from un estimates (using Federated States of Micronesia as a proxy as no data for RMI)
     _tb_model = get_birth_rate_functions(_tb_model, input_database, 'FSM')
 
     # add case detection process to basic model
@@ -150,7 +152,7 @@ def build_rmi_model(update_params={}):
 
     # add ltbi treated infection flow
     _tb_model.add_transition_flow(
-        {"type": "infection_frequency", "parameter": "contact_rate_ltbi_treated", "origin": "ltbi_treated",
+        {"type": "infection_density", "parameter": "contact_rate_ltbi_treated", "origin": "ltbi_treated",
          "to": "early_latent"})
 
     # add ACF flow
@@ -260,15 +262,15 @@ def build_rmi_model(update_params={}):
         age_bcg_efficacy_dict = get_parameter_dict_from_function(lambda value: bcg_wane(value), age_breakpoints)
         age_params.update({'contact_rate': age_bcg_efficacy_dict})
 
-        _tb_model.stratify("age", copy.deepcopy(age_breakpoints), [], {},
+        _tb_model.stratify("age", deepcopy(age_breakpoints), [], {},
                            adjustment_requests=age_params, infectiousness_adjustments=age_infectiousness, verbose=False)
 
 
     if 'diabetes' in stratify_by:
-        props_diabetes = {'diabetes': 0.3, 'nodiabetes': 0.7}
-        progression_adjustments = {"diabetes": 3.18, "nodiabetes": 1.}
+        props_diabetes = {'diabetic': 0.3, 'nodiabetes': 0.7}
+        progression_adjustments = {"diabetic": 3.18, "nodiabetes": 1.}
 
-        _tb_model.stratify("diabetes", ["diabetes", "nodiabetes"], [],
+        _tb_model.stratify("diabetes", ["diabetic", "nodiabetes"], [],
                            verbose=False, requested_proportions=props_diabetes,
                            adjustment_requests={
                                                'early_progressionXage_15': progression_adjustments,
@@ -279,13 +281,13 @@ def build_rmi_model(update_params={}):
                                                 'late_progressionXage_35': progression_adjustments,
                                                 'late_progressionXage_50': progression_adjustments,
                                                 'late_progressionXage_70': progression_adjustments},
-                           # entry_proportions=props_diabetes,
-                           target_props={'age_0': {"diabetes": 0.1},
-                                         'age_5': {"diabetes": 0.1},
-                                         'age_15': {"diabetes": 0.1},
-                                         'age_35': {"diabetes": 0.1},
-                                         'age_50': {"diabetes": 0.1},
-                                         'age_70': {"diabetes": 0.1}}
+                           # entry_proportions={'diabetic': 0.01, 'nodiabetes': 0.99},
+                           # target_props={'age_0': {"diabetic": 0.05},
+                           #               'age_5': {"diabetic": 0.1},
+                           #               'age_15': {"diabetic": 0.2},
+                           #               'age_35': {"diabetic": 0.4},
+                           #               'age_50': {"diabetic": 0.5},
+                           #               'age_70': {"diabetic": 0.8}}
                            )
 
 
@@ -443,8 +445,8 @@ if __name__ == "__main__":
                     'prevXinfectiousXamongXlocation_majuro': 'TB prevalence in Majuro (/100,000)',
                     'prevXinfectiousXamongXlocation_ebeye': 'TB prevalence in Ebeye (/100,000)',
                     'prevXinfectiousXamongXlocation_otherislands': 'TB prevalence in other areas (/100,000)',
-                    'prevXinfectiousXamongXdiabetes_diabetes': 'TB prevalence in diabetics (/100,000)',
-                    'prevXinfectiousXamongXdiabetes_nodiabetes': 'TB prevalence in non-diabetics (/100,000)',
+                    'prevXinfectiousXamongXdiabetic_diabetes': 'TB prevalence in diabetics (/100,000)',
+                    'prevXinfectiousXamongXdiabetic_nodiabetes': 'TB prevalence in non-diabetics (/100,000)',
                     'prevXlatentXamong': 'Latent TB infection prevalence (%)',
                     'prevXlatentXamongXage_0': 'Latent TB infection prevalence among 0-4 y.o. (%)',
                     'prevXlatentXamongXage_5': 'Latent TB infection prevalence among 5-14 y.o. (%)',
@@ -454,8 +456,8 @@ if __name__ == "__main__":
                     'prevXlatentXamongXlocation_majuro': 'Latent TB infection prevalence in Majuro (%)',
                     'prevXlatentXamongXlocation_ebeye': 'Latent TB infection prevalence in Ebeye (%)',
                     'prevXlatentXamongXlocation_otherislands': 'Latent TB infection prevalence in other areas (%)',
-                    'prevXlatentXamongXdiabetes_diabetes': 'Latent TB infection prevalence in diabetics (%)',
-                    'prevXlatentXamongXdiabetes_nodiabetes': 'Latent TB infection prevalence in non-diabetics (%)',
+                    'prevXlatentXamongXdiabetic_diabetes': 'Latent TB infection prevalence in diabetics (%)',
+                    'prevXlatentXamongXdiabetic_nodiabetes': 'Latent TB infection prevalence in non-diabetics (%)',
                     'age_0': 'Age 0-4',
                     'age_5': 'Age 5-14',
                     'age_15': 'Age 15-34',
@@ -464,7 +466,7 @@ if __name__ == "__main__":
                     'location_majuro': 'Majuro',
                     'location_ebeye': 'Ebeye',
                     'location_otherislands': 'Other locations',
-                    'diabetes_diabetes': 'Diabetes',
+                    'diabetes_diabetic': 'Diabetes',
                     'diabetes_nodiabetes': 'No Diabetes',
                     'incidence': 'TB incidence (/100,000/y)',
                     'incidenceXlocation_majuro': 'Majuro - TB incidence (/100,000/y)',
@@ -472,6 +474,6 @@ if __name__ == "__main__":
                     'incidenceXlocation_otherislands': 'Other locations - TB incidence (/100,000/y)'
                     }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='rmi_03feb_2', targets_to_plot=targets_to_plot,
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='rmi_03feb_7', targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers, translation_dictionary=translations,
                                   scenario_list=scenario_list, ymax=ymax, plot_start_time=1940)

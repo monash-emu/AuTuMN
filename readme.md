@@ -14,11 +14,14 @@ See [this guide](./docs/setup.md) for information on how to set up this project.
 
 ```
 ├── .github                 GitHub config
+├── applications            Specific applications of AuTuMN
 ├── autumn                  AuTuMN framework module
-├── autumn_from_summer      Applications of AuTuMN (to be renamed/moved to another location)
 ├── docs                    Documentation
 ├── scripts                 Ad-hoc utility scripts
-└── tests                   Automated tests
+├── tests                   Automated tests
+├── conftest.py             PyTest configuration
+├── requirements.txt        Python library dependencies
+└── setup.py                Packaging for deployment to MASSIVE computing platform
 ```
 
 ## Tests

@@ -1,9 +1,19 @@
+# SUMMER library
 git+https://github.com/jtrauer/summer.git
+
+# Data visualization
 matplotlib>=1.4.2
+
+# Numerical computing
 multiprocess==0.70.9
 numpy>=1.14.1
 pandas==0.24.2
-pymc3==3.7
 scipy==1.1.0
+pymc3==3.7  # Probabilistic programming
+xlrd>=1.2.0  # Reading Excel files via Pandas
+
+# Database access
 SQLAlchemy>=1.1.18
+
+# Testing
 pytest

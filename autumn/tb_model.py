@@ -1,6 +1,7 @@
 import re
 import copy
 import json
+import os
 
 import numpy
 import matplotlib.pyplot
@@ -10,9 +11,12 @@ from summer_py.summer_model import *   # FIXME: Avoid import *
 from summer_py.parameter_processing import *   # FIXME: Avoid import *
 from summer_py.outputs import Outputs
 
-from .db import InputDB, get_bcg_coverage, get_crude_birth_rate, get_pop_mortality_functions
+from . import constants
+from .db import Database, get_bcg_coverage, get_crude_birth_rate, get_pop_mortality_functions
 from .curve import scale_up_function
 from .tool_kit import change_parameter_unit, add_w_to_param_names
+
+INPUT_DB_PATH = os.path.join(constants.DATA_PATH, 'inputs.db')
 
 
 def add_combined_incidence(derived_outputs, outputs):
@@ -77,7 +81,7 @@ def list_all_srata_for_mortality(all_compartment_names, infectious_compartment_n
 
 
 def load_model_scenario(scenario_name, database_name):
-    out_database = InputDB(database_name="databases/" + database_name)
+    out_database = Database(database_name="databases/" + database_name)
     outputs = out_database.db_query(table_name='outputs', conditions=["Scenario='S_"+scenario_name+"'"])
     derived_outputs = out_database.db_query(table_name='derived_outputs', conditions=["Scenario='S_"+scenario_name+"'"])
     derived_outputs = add_combined_incidence(derived_outputs, outputs)
@@ -97,7 +101,7 @@ def load_calibration_from_db(database_directory, n_burned_per_chain=0):
     models = []
     n_loaded_iter = 0
     for db_name in db_names:
-        out_database = InputDB(database_name=database_directory + '/' + db_name)
+        out_database = Database(database_name=database_directory + '/' + db_name)
 
         # find accepted run indices
         res = out_database.db_query(table_name='mcmc_run', column='idx', conditions=['accept=1'])
@@ -392,7 +396,7 @@ def build_working_tb_model(tb_n_contact, country_iso3, cdr_adjustment=0.6, start
     """
     current working tb model with some characteristics of mongolia applied at present
     """
-    input_database = InputDB()
+    input_database = Database(INPUT_DB_PATH)
 
     integration_times = numpy.linspace(start_time, 2020.0, 201).tolist()
 
@@ -472,7 +476,7 @@ def build_working_tb_model(tb_n_contact, country_iso3, cdr_adjustment=0.6, start
     # create_flowchart(_tb_model, name="stratified_by_age_vaccination")
 
     # loading time-variant case detection rate
-    input_database = InputDB()
+    input_database = Database(INPUT_DB_PATH)
     res = input_database.db_query("gtb_2015", column="c_cdr", is_filter="country", value="Mongolia")
 
     # add scaling case detection rate
@@ -646,6 +650,3 @@ if __name__ == "__main__":
     # matplotlib.pyplot.ylim((0.0, 1e3))
     # matplotlib.pyplot.show()
     # matplotlib.pyplot.savefig("mongolia_cdr_output")
-
-
-

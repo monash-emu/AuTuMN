@@ -650,6 +650,3 @@ if __name__ == "__main__":
     # matplotlib.pyplot.ylim((0.0, 1e3))
     # matplotlib.pyplot.show()
     # matplotlib.pyplot.savefig("mongolia_cdr_output")
-
-
-

@@ -16,13 +16,11 @@ def build_input_database():
     Builds an input database from source Excel spreadsheets and stores it in the data directory.
     """
     # Load input database, where we will store the data.
-    timestamp = int(time.time())
-    db_name = f'inputs.{timestamp}.db'
-    db_path = os.path.join(constants.DATA_PATH, db_name)
-    database = Database(db_path)
+    db_name = get_new_database_name()
+    database = Database(db_name)
 
     # Load Excel sheets into the database.
-    excel_glob = os.path.join(constants.EXCEL_PATH, '*.xlsx')
+    excel_glob = os.path.join(constants.EXCEL_PATH, "*.xlsx")
     excel_sheets = glob.glob(excel_glob)
     for file_path in excel_sheets:
         filename = os.path.basename(file_path)
@@ -38,7 +36,7 @@ def build_input_database():
         file_df.to_sql(data_title, con=database.engine, if_exists="replace")
 
     # Load CSV files into the database
-    csv_glob = os.path.join(constants.EXCEL_PATH, '*.csv')
+    csv_glob = os.path.join(constants.EXCEL_PATH, "*.csv")
     csv_sheets = glob.glob(csv_glob)
     for file_path in csv_sheets:
         file_title = os.path.basename(file_path).split(".")[0]
@@ -48,17 +46,17 @@ def build_input_database():
         file_df.to_sql(file_title, con=database.engine, if_exists="replace")
 
     # Add mapped ISO3 code tables that only contain the UN country code
-    table_names = [
-        "crude_birth_rate",
-        "absolute_deaths",
-        "total_population",
-    ]
+    table_names = ["crude_birth_rate", "absolute_deaths", "total_population"]
     for table_name in table_names:
         print("Creating country code mapped database for", table_name)
         # Create dictionary structure to map from un three numeric digit codes to iso3 three alphabetical digit codes.
-        map_df = database.db_query(table_name="un_iso3_map")[["Location code", "ISO3 Alpha-code"]].dropna()
+        map_df = database.db_query(table_name="un_iso3_map")[
+            ["Location code", "ISO3 Alpha-code"]
+        ].dropna()
         table_df = database.db_query(table_name=table_name)
-        table_with_iso = pd.merge(table_df, map_df, left_on="Country code", right_on="Location code")
+        table_with_iso = pd.merge(
+            table_df, map_df, left_on="Country code", right_on="Location code"
+        )
         # Rename columns to avoid using spaces.
         table_with_iso.rename(columns={"ISO3 Alpha-code": "iso3"}, inplace=True)
         # Remove index column to avoid creating duplicates.
@@ -67,6 +65,17 @@ def build_input_database():
 
         # Create a new 'mapped' database structure
         table_with_iso.to_sql(table_name + "_mapped", con=database.engine, if_exists="replace")
+
+    return database
+
+
+def get_new_database_name():
+    """
+    Get a timestamped name for the new database.
+    """
+    timestamp = int(time.time())
+    db_name = f"inputs.{timestamp}.db"
+    return os.path.join(constants.DATA_PATH, db_name)
 
 
 # Mappings for Excel data that is used to populate the input database.

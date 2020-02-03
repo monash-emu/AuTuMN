@@ -99,6 +99,8 @@ def build_rmi_model(update_params={}):
                        'acf_ltbi_majuro_switch': 0.,
                        'acf_ltbi_ebeye_switch': 0.,
                        'acf_ltbi_otherislands_switch': 0.,
+                        # prevalence adjustment
+                        'over_reporting_prevalence_proportion': .20
                        }
     # update external_params with new parameter values found in update_params
     external_params.update(update_params)
@@ -382,6 +384,17 @@ def build_rmi_model(update_params={}):
                            mixing_matrix=location_mixing
                            )
 
+    def calculate_reported_majuro_prevalence(model, time):
+        actual_prev = 0.
+        pop_majuro = 0.
+        for i, compartment in enumerate(model.compartment_names):
+            if 'majuro' in compartment:
+                pop_majuro += model.compartment_values[i]
+                if 'infectious' in compartment:
+                    actual_prev += model.compartment_values[i]
+        return 1.e5 * actual_prev / pop_majuro * (1. + external_params['over_reporting_prevalence_proportion'])
+
+    _tb_model.derived_output_functions.update({'reported_majuro_prevalence': calculate_reported_majuro_prevalence})
 
     write_model_data(_tb_model)
     return _tb_model

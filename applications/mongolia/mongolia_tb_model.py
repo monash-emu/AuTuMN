@@ -8,8 +8,9 @@ import pandas as pd
 from summer_py.summer_model import StratifiedModel, split_age_parameter, create_sloping_step_function, find_name_components, find_stem
 from summer_py.parameter_processing import get_parameter_dict_from_function, logistic_scaling_function
 
+from autumn import constants
 from autumn.curve import scale_up_function
-from autumn.db import InputDB, get_pop_mortality_functions
+from autumn.db import Database, get_pop_mortality_functions
 from autumn.tb_model import (
     add_combined_incidence,
     create_output_connections_for_incidence_by_stratum,
@@ -39,7 +40,7 @@ from autumn.tool_kit import (
 file_dir = os.path.dirname(os.path.abspath(__file__))
 timestamp = datetime.now().strftime("%m_%d_%Y_%H_%M_%S")
 OUTPUT_DB_PATH = os.path.join(file_dir, 'databases', f'outputs_{timestamp}.db')
-INPUT_DB_PATH = os.path.join(file_dir, 'databases', 'inputs.db')
+INPUT_DB_PATH = os.path.join(constants.DATA_PATH, 'inputs.db')
 
 
 def build_mongolia_timevariant_cdr(cdr_multiplier):
@@ -127,7 +128,7 @@ def build_mongolia_model(update_params={}):
          "dr_amplification": .0,  # high value for testing
          "crude_birth_rate": 20.0 / 1e3}
 
-    input_database = InputDB(database_name=INPUT_DB_PATH)
+    input_database = Database(database_name=INPUT_DB_PATH)
     n_iter = int(round((external_params['end_time'] - external_params['start_time']) / external_params['time_step'])) + 1
     integration_times = numpy.linspace(external_params['start_time'], external_params['end_time'], n_iter).tolist()
 

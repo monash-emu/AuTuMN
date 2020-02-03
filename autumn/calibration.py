@@ -10,6 +10,7 @@ import theano.tensor as tt
 import summer_py.post_processing as post_proc
 from scipy.optimize import Bounds, minimize
 
+from .db import Database
 
 logger = logging.getLogger("pymc3")
 logger.setLevel(logging.DEBUG)
@@ -287,7 +288,7 @@ class Calibration:
 
                     traceDf = pm.trace_to_dataframe(self.mcmc_trace)
                     traceDf.to_csv('trace.csv')
-                    out_database = InputDB(database_name=self.output_db_path)
+                    out_database = Database(database_name=self.output_db_path)
                     mcmc_run_df = out_database.db_query('mcmc_run')
                     mcmc_run_df = mcmc_run_df.reset_index(drop=True)
                     traceDf = traceDf.reset_index(drop=True)

@@ -8,8 +8,9 @@ import pandas as pd
 from summer_py.summer_model import StratifiedModel, split_age_parameter, create_sloping_step_function
 from summer_py.parameter_processing import get_parameter_dict_from_function, logistic_scaling_function
 
+from autumn import constants
 from autumn.curve import scale_up_function
-from autumn.db import InputDB, get_pop_mortality_functions
+from autumn.db import Database, get_pop_mortality_functions
 from autumn.tb_model import (
     add_combined_incidence,
     load_model_scenario,
@@ -33,10 +34,11 @@ from autumn.tool_kit import (
     change_parameter_unit,
 )
 
-now = datetime.now()
-
-# location for output database
-output_db_path = os.path.join(os.getcwd(), 'databases/outputs_' + now.strftime("%m_%d_%Y_%H_%M_%S") + '.db')
+# Database locations
+file_dir = os.path.dirname(os.path.abspath(__file__))
+timestamp = datetime.now().strftime("%m_%d_%Y_%H_%M_%S")
+OUTPUT_DB_PATH = os.path.join(file_dir, 'databases', f'outputs_{timestamp}.db')
+INPUT_DB_PATH = os.path.join(constants.DATA_PATH, 'inputs.db')
 
 
 def build_rmi_timevariant_cdr(cdr_multiplier):
@@ -116,8 +118,7 @@ def build_rmi_model(update_params={}):
          "acf_ltbi_rate": 0.,
          "crude_birth_rate": 35.0 / 1e3}
 
-    input_db_path = os.path.join(os.getcwd(), 'databases/inputs.db')
-    input_database = InputDB(database_name=input_db_path)
+    input_database = Database(database_name=INPUT_DB_PATH)
     n_iter = 4 * int(
         round((external_params['end_time'] - external_params['start_time']) / external_params['time_step'])) + 1
 
@@ -434,7 +435,7 @@ if __name__ == "__main__":
             updated_derived_outputs = add_combined_incidence(derived_outputs_df, outputs_df)
             updated_derived_outputs = updated_derived_outputs.to_dict('list')
             model.derived_outputs = updated_derived_outputs
-        store_run_models(models, scenarios=scenario_list, database_name=output_db_path)
+        store_run_models(models, scenarios=scenario_list, database_name=OUTPUT_DB_PATH)
         delta = time() - t0
         print("Running time: " + str(round(delta, 1)) + " seconds")
 

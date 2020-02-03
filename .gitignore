@@ -1,28 +1,43 @@
+# Python stuff
+Pipfile.lock
 **/*.pyc
+venv/
+env/
+.pytest_cache
+
+# IDE stuff
 .idea
 .spyderworkspace
-projects
-saved_*
-Pipfile.lock
+.vscode
+
+# Images
 *.png
-bgui/server/server/database.sqlite
-saved_optimisation_analyses/
-saved_uncertainty_analyses/
-*pkl
-saved_*
-projects
-venv*
-env*
-osx_boot.sh
-*json
+
+# Data
+*.json
+*.pkl
 *.pickle
-autumn_from_summer/databases/outputs*
-*.db
+output*.db
+inputs.*.db
+
+# Python packaging stuff
 autumn.egg*
 build/
 dist/
-autumn_from_summer/mcmc_postprocessing/.Rhistory
-autumn_from_summer/mongolia/mcmc_chistmas_2019/o
-.vscode
+
+# R stuff
+.Rhistory
+
+# Scripts, secrets
+osx_boot.sh
 *.secret.*
-.pytest_cache
+
+# Random stuff
+projects
+saved_*
+saved_optimisation_analyses/
+saved_uncertainty_analyses/
+saved_*
+projects
+autumn_from_summer/databases/outputs*
+autumn_from_summer/mongolia/mcmc_chistmas_2019/o

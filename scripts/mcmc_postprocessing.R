@@ -1,6 +1,6 @@
 library(RSQLite)
-setwd("C:/Users/rrag0004/Models/jtrauer_AuTuMN/autumn_from_summer")
-path_to_databases = './mongolia/mcmc_chistmas_2019/'
+setwd("C:/Users/rrag0004/Models/jtrauer_AuTuMN")
+path_to_databases = 'applications/mongolia/mcmc_chistmas_2019/'
 sqlite.driver <- dbDriver("SQLite")
 
 ylims = list('contact_rate'=c(10,20), 'adult_latency_adjustment'=c(2,6), 'dr_amplification_prop_among_nonsuccess'=c(.15,.25),

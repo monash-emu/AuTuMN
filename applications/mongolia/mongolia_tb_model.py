@@ -1,9 +1,39 @@
 import os
 from datetime import datetime
 from time import time
+from copy import deepcopy
 
-from autumn.tb_model import *
-from autumn.tool_kit import *
+import numpy
+import pandas as pd
+from summer_py.summer_model import StratifiedModel, split_age_parameter, create_sloping_step_function, find_name_components, find_stem
+from summer_py.parameter_processing import get_parameter_dict_from_function, logistic_scaling_function
+
+from autumn.curve import scale_up_function
+from autumn.db import InputDB, get_pop_mortality_functions
+from autumn.tb_model import (
+    add_combined_incidence,
+    create_output_connections_for_incidence_by_stratum,
+    list_all_srata_for_mortality,
+    load_model_scenario,
+    load_calibration_from_db,
+    scale_relative_risks_for_equivalence,
+    provide_aggregated_latency_parameters,
+    get_adapted_age_parameters,
+    convert_competing_proportion_to_rate,
+    return_function_of_function,
+    store_run_models,
+    add_standard_latency_flows,
+    add_standard_natural_history_flows,
+    add_standard_infection_flows,
+    get_birth_rate_functions,
+    create_multi_scenario_outputs,
+    create_mcmc_outputs,
+    DummyModel,
+)
+from autumn.tool_kit import (
+    run_multi_scenario,
+    change_parameter_unit,
+)
 
 now = datetime.now()
 
@@ -303,7 +333,7 @@ def build_mongolia_model(update_params={}):
         age_bcg_efficacy_dict = get_parameter_dict_from_function(lambda value: bcg_wane(value), age_breakpoints)
         age_params.update({'contact_rate': age_bcg_efficacy_dict})
 
-        _tb_model.stratify("age", copy.deepcopy(age_breakpoints), [], {}, adjustment_requests=age_params,
+        _tb_model.stratify("age", deepcopy(age_breakpoints), [], {}, adjustment_requests=age_params,
                            infectiousness_adjustments=age_infectiousness, verbose=False)
 
         # patch for IPT to overwrite parameters when ds_ipt has been turned off while we still need some coverage at baseline

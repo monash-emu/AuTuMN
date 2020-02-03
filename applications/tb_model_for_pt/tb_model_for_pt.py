@@ -1,15 +1,24 @@
 import dill
 
 from autumn.tb_model import *
-from autumn.tool_kit import *
+from autumn.tool_kit import (
+    initialise_scenario_run,
+    change_parameter_unit,
+)
 
 
 def build_timevariant_cdr():
+    """
+    Interpolate case detection rate
+    """
     cdr = {1950.: 0., 1980.: .10, 1990.: .15, 2000.: .20, 2010.: .30, 2015: .33}
     return scale_up_function(cdr.keys(), cdr.values(), smoothness=0.2, method=5)
 
 
 def build_timevariant_tsr():
+    """
+    Interpolate treatment success rate
+    """
     tsr = {1950.: 0., 1970.: .2, 1994.: .6, 2000.: .85, 2010.: .87, 2016: .9}
     return scale_up_function(tsr.keys(), tsr.values(), smoothness=0.2, method=5)
 

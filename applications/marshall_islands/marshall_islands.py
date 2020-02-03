@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 from time import time
+from copy import deepcopy
 
 from autumn.tb_model import *
 from autumn.tool_kit import *
@@ -135,13 +136,14 @@ def build_rmi_model(update_params={}):
         return total_deaths
 
     init_pop = {"infectious": 3, "late_latent": 50}
+
     # define model     #replace_deaths  add_crude_birth_rate
     _tb_model = StratifiedModel(
         integration_times, compartments, init_pop, model_parameters, flows, birth_approach="add_crude_birth_rate",
         starting_population=external_params['start_population'],
         output_connections=out_connections)
 
-    # add crude birth rate from un estimates
+    # add crude birth rate from un estimates (using Federated States of Micronesia as a proxy as no data for RMI)
     _tb_model = get_birth_rate_functions(_tb_model, input_database, 'FSM')
 
     # add case detection process to basic model
@@ -150,7 +152,7 @@ def build_rmi_model(update_params={}):
 
     # add ltbi treated infection flow
     _tb_model.add_transition_flow(
-        {"type": "infection_frequency", "parameter": "contact_rate_ltbi_treated", "origin": "ltbi_treated",
+        {"type": "infection_density", "parameter": "contact_rate_ltbi_treated", "origin": "ltbi_treated",
          "to": "early_latent"})
 
     # add ACF flow
@@ -260,7 +262,7 @@ def build_rmi_model(update_params={}):
         age_bcg_efficacy_dict = get_parameter_dict_from_function(lambda value: bcg_wane(value), age_breakpoints)
         age_params.update({'contact_rate': age_bcg_efficacy_dict})
 
-        _tb_model.stratify("age", copy.deepcopy(age_breakpoints), [], {},
+        _tb_model.stratify("age", deepcopy(age_breakpoints), [], {},
                            adjustment_requests=age_params, infectiousness_adjustments=age_infectiousness, verbose=False)
 
 
@@ -279,7 +281,7 @@ def build_rmi_model(update_params={}):
                                                 'late_progressionXage_35': progression_adjustments,
                                                 'late_progressionXage_50': progression_adjustments,
                                                 'late_progressionXage_70': progression_adjustments},
-                           entry_proportions={'diabetic': 0.01, 'nodiabetes': 0.99},
+                           # entry_proportions={'diabetic': 0.01, 'nodiabetes': 0.99},
                            # target_props={'age_0': {"diabetic": 0.05},
                            #               'age_5': {"diabetic": 0.1},
                            #               'age_15': {"diabetic": 0.2},
@@ -472,6 +474,6 @@ if __name__ == "__main__":
                     'incidenceXlocation_otherislands': 'Other locations - TB incidence (/100,000/y)'
                     }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='rmi_03feb_5', targets_to_plot=targets_to_plot,
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='rmi_03feb_7', targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers, translation_dictionary=translations,
                                   scenario_list=scenario_list, ymax=ymax, plot_start_time=1940)

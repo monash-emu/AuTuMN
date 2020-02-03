@@ -22,17 +22,17 @@ def build_rmi_timevariant_tsr():
 
 def build_rmi_model(update_params={}):
 
-    # stratify_by = ['location']
     # stratify_by = ['age']
+    # stratify_by = ['age', 'location']
     # stratify_by = ['age', 'organ']
-    # stratify_by = ['age', 'diabetes']
+    stratify_by = ['age', 'diabetes']
     # stratify_by = ['age', 'diabetes', 'organ']
-    stratify_by = ['age', 'diabetes', 'organ', 'location']
+    # stratify_by = ['age', 'diabetes', 'organ', 'location']
 
     # some default parameter values
     external_params = {  # run configuration
                        'start_time': 1940.,
-                       'end_time': 2035.,
+                       'end_time': 2100.,
                        'time_step': 1.,
                        'start_population': 14000,
                        # base model definition:
@@ -52,7 +52,11 @@ def build_rmi_model(update_params={}):
                          # adjustments by location and diabetes
                        'rr_transmission_ebeye': 1.9,  # reference majuro
                        'rr_transmission_otherislands': 1.1, # reference majuro
-                       'rr_progression_has_diabetes': 3.18,  # reference: no_diabetes
+                       'rr_progression_has_diabetes': 3.11,  # reference: no_diabetes
+                        # case detection adjustment for location
+                        'case_detection_majuro_multiplier': 1.0,
+                        'case_detection_ebeye_multiplier': 1.5,
+                        'case_detection_otherislands_multiplier': 0.8,
                        # ACF for intervention groups
                        'acf_coverage': 0.,
                        'acf_sensitivity': .9,
@@ -86,7 +90,9 @@ def build_rmi_model(update_params={}):
 
     input_db_path = os.path.join(os.getcwd(), 'databases/inputs.db')
     input_database = InputDB(database_name=input_db_path)
-    n_iter = int(round((external_params['end_time'] - external_params['start_time']) / external_params['time_step'])) + 1
+    n_iter = 4 * int(
+        round((external_params['end_time'] - external_params['start_time']) / external_params['time_step'])) + 1
+
     integration_times = numpy.linspace(external_params['start_time'], external_params['end_time'], n_iter).tolist()
 
     model_parameters.update(change_parameter_unit(provide_aggregated_latency_parameters(), 365.251))
@@ -95,7 +101,6 @@ def build_rmi_model(update_params={}):
     flows = add_density_infection_flows([])
     flows = add_standard_latency_flows(flows)
     flows = add_standard_natural_history_flows(flows)
-
 
     # compartments
     compartments = ["susceptible", "early_latent", "late_latent", "infectious", "recovered", "ltbi_treated"]
@@ -109,14 +114,14 @@ def build_rmi_model(update_params={}):
     all_stratifications = {'organ': ['smearpos', 'smearneg', 'extrapul'],
                            'age': ['0', '5', '15', '35', '50', '70'],
                            'location': ['majuro', 'ebeye', 'otherislands'],
-                           'diabetes': ['has_diabetes', 'no_diabetes']}
+                           'diabetes': ['dmy', 'dmn']}
 
     #  create derived outputs for disaggregated incidence
-    # for stratification in stratify_by:
-    #     for stratum in all_stratifications[stratification]:
-    #         for stage in ["early", 'late']:
-    #             out_connections["indidence_" + stage + "X" + stratification + "_" + stratum] =\
-    #                 {"origin": stage + "_latent", "to": "infectious", "to_condition": stratification + "_" + stratum}
+    for stratification in stratify_by:
+        for stratum in all_stratifications[stratification]:
+            for stage in ["early", 'late']:
+                out_connections["incidence_" + stage + "X" + stratification + "_" + stratum] =\
+                    {"origin": stage + "_latent", "to": "infectious", "to_condition": stratification + "_" + stratum}
 
     # create personalised derived outputs for mortality and notifications
     def mortality_derived_output(model):
@@ -129,7 +134,7 @@ def build_rmi_model(update_params={}):
             total_deaths += infectious_pop * mortality_rate
         return total_deaths
 
-    init_pop = {"infectious": 10, "late_latent": 500}
+    init_pop = {"infectious": 10}
     # define model     #replace_deaths  add_crude_birth_rate
     _tb_model = StratifiedModel(
         integration_times, compartments, init_pop, model_parameters, flows, birth_approach="add_crude_birth_rate",
@@ -255,27 +260,34 @@ def build_rmi_model(update_params={}):
         age_bcg_efficacy_dict = get_parameter_dict_from_function(lambda value: bcg_wane(value), age_breakpoints)
         age_params.update({'contact_rate': age_bcg_efficacy_dict})
 
-        _tb_model.stratify("age", copy.deepcopy(age_breakpoints), [], {}, adjustment_requests=age_params,
-                           infectiousness_adjustments=age_infectiousness, verbose=False)
+        _tb_model.stratify("age", copy.deepcopy(age_breakpoints), [], {},
+                           adjustment_requests=age_params, infectiousness_adjustments=age_infectiousness, verbose=False)
 
 
     if 'diabetes' in stratify_by:
-        props_diabetes = {'has_diabetes': 0.3, 'no_diabetes': 0.7}
-        progression_adjustments = {"has_diabetes": 3.18, "no_diabetes": 1.}
+        props_diabetes = {'dmy': 0.3, 'dmn': 0.7}
+        progression_adjustments = {"dmy": 3.18, "dmn": 1.}
 
-        _tb_model.stratify("diabetes", ["has_diabetes", "no_diabetes"], [],
-                           verbose=False, requested_proportions=props_diabetes,
+        _tb_model.stratify("diabetes", ["dmy", "dmn"], [],
+                           verbose=False,
+                           requested_proportions=props_diabetes,
                            adjustment_requests={
-                                                'early_progressionXage_15': progression_adjustments,
-                                                'early_progressionXage_35': progression_adjustments,
-                                                'early_progressionXage_50': progression_adjustments,
-                                                'early_progressionXage_70': progression_adjustments,
+                                               'early_progressionXage_15': progression_adjustments,
+                                               'early_progressionXage_35': progression_adjustments,
+                                               'early_progressionXage_50': progression_adjustments,
+                                               'early_progressionXage_70': progression_adjustments,
                                                 'late_progressionXage_15': progression_adjustments,
                                                 'late_progressionXage_35': progression_adjustments,
                                                 'late_progressionXage_50': progression_adjustments,
-                                                'late_progressionXage_70': progression_adjustments
-                                                },
-                           entry_proportions=props_diabetes)
+                                                'late_progressionXage_70': progression_adjustments},
+                           # entry_proportions={'dmy': 0.01, 'dmn': 0.99},
+                           target_props={'age_0':{"dmy":0.01},
+                                         'age_5':{"dmy":0.05},
+                                         'age_15':{"dmy":0.15},
+                                         'age_35':{"dmy":0.4},
+                                         'age_50':{"dmy":0.5},
+                                         'age_70':{"dmy":0.8}}
+                           )
 
 
     if 'organ' in stratify_by:
@@ -324,6 +336,10 @@ def build_rmi_model(update_params={}):
         for beta_type in ['', '_infected', '_recovered']:
             location_adjustments['contact_rate' + beta_type] = scaled_relative_risks_loc
 
+        location_adjustments['case_detection'] = {}
+        for stratum in ['majuro', 'ebeye', 'otherislands']:
+            location_adjustments['case_detection'][stratum] = external_params['case_detection_' + stratum + '_multiplier']
+
         location_adjustments['acf_rate'] = {}
         for stratum in ['majuro', 'ebeye', 'otherislands']:
             location_adjustments['acf_rate'][stratum] = external_params['acf_' + stratum + '_switch']
@@ -338,6 +354,7 @@ def build_rmi_model(update_params={}):
                            adjustment_requests=location_adjustments,
                            mixing_matrix=location_mixing
                            )
+
 
     _tb_model.transition_flows.to_csv("transitions_all.csv")
     _tb_model.death_flows.to_csv("deaths.csv")
@@ -355,10 +372,6 @@ if __name__ == "__main__":
     load_model = False
 
     scenario_params = {
-        # 1: {'contact_rate': 0.000245},
-        # 2: {'contact_rate': 0.00025},
-        # 3: {'contact_rate': 0.0001}
-        # 4: {'contact_rate': 0.00035}
         # 1: {'acf_majuro_switch': 1.,
         #                'acf_ebeye_switch': 1.,
         #                'acf_otherislands_switch': 0.,
@@ -371,21 +384,21 @@ if __name__ == "__main__":
     scenario_list.extend(list(scenario_params.keys()))
 
     if load_model:
-        load_mcmc = True
+        load_mcmc = False
 
         if load_mcmc:
-            models = load_calibration_from_db('outputs_11_27_2019_14_07_54.db')
+            models = load_calibration_from_db('outputs_01_24_2020_withintervention.db')
             scenario_list = range(len(models))
         else:
             models = []
             scenarios_to_load = scenario_list
             for sc in scenarios_to_load:
                 print("Loading model for scenario " + str(sc))
-                model_dict = load_model_scenario(str(sc), database_name='outputs_11_27_2019_13_12_43.db')
-                models.append(DummyModel(model_dict))
+                loaded_model = load_model_scenario(str(sc), database_name='outputs_01_24_2020_withintervention.db')
+                models.append(DummyModel(loaded_model['outputs'], loaded_model['derived_outputs']))
     else:
         t0 = time()
-        models = run_multi_scenario(scenario_params, 1910., build_rmi_model)
+        models = run_multi_scenario(scenario_params, 1990., build_rmi_model)
         # automatically add combined incidence output
         for model in models:
             outputs_df = pd.DataFrame(model.outputs, columns=model.compartment_names)
@@ -399,8 +412,15 @@ if __name__ == "__main__":
 
     req_outputs = ['prevXinfectiousXamong',
                    'prevXlatentXamong',
+                   'prevXinfectiousXamongXlocation_majuro',
+                   'prevXinfectiousXamongXlocation_ebeye',
+                   'prevXlatentXamongXlocation_majuro',
+                   'prevXlatentXamongXlocation_ebeye',
                    'prevXsusceptibleXamong',
                    'prevXrecoveredXamong',
+                   'prevXearly_latentXamong',
+                   'prevXlate_latentXamong',
+                   'prevXltbi_treatedXamong'
                  ]
 
     multipliers = {
@@ -410,6 +430,8 @@ if __name__ == "__main__":
 
     targets_to_plot = {
                        }
+
+    ymax = {'prevXinfectiousXamong': 2000.}
 
     translations = {'prevXinfectiousXamong': 'TB prevalence (/100,000)',
                     'prevXinfectiousXamongXage_0': 'TB prevalence among 0-4 y.o. (/100,000)',
@@ -443,9 +465,12 @@ if __name__ == "__main__":
                     'location_otherislands': 'Other locations',
                     'diabetes_has_diabetes': 'Diabetes',
                     'diabetes_no_diabetes': 'No Diabetes',
+                    'incidence': 'TB incidence (/100,000/y)',
+                    'incidenceXlocation_majuro': 'Majuro - TB incidence (/100,000/y)',
+                    'incidenceXlocation_ebeye': 'Ebeye - TB incidence (/100,000/y)',
+                    'incidenceXlocation_otherislands': 'Other locations - TB incidence (/100,000/y)'
                     }
 
-
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='dens_test_23jan_2', targets_to_plot=targets_to_plot,
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='rmi_31_jan_dmtest3', targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers, translation_dictionary=translations,
-                                  scenario_list=scenario_list)
+                                  scenario_list=scenario_list, ymax=ymax, plot_start_time=1940)

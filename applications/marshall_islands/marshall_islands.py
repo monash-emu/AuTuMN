@@ -25,6 +25,8 @@ from autumn.tb_model import (
     add_density_infection_flows,
     get_birth_rate_functions,
     create_multi_scenario_outputs,
+    create_output_connections_for_incidence_by_stratum,
+    list_all_srata_for_mortality,
     DummyModel,
 )
 from autumn.tool_kit import (
@@ -152,17 +154,6 @@ def build_rmi_model(update_params={}):
             for stage in ["early", 'late']:
                 out_connections["incidence_" + stage + "X" + stratification + "_" + stratum] =\
                     {"origin": stage + "_latent", "to": "infectious", "to_condition": stratification + "_" + stratum}
-
-    # create personalised derived outputs for mortality and notifications
-    def mortality_derived_output(model):
-        total_deaths = 0.
-        for comp_ind in model.infectious_indices['all_strains']:
-            infectious_pop = model.compartment_values[comp_ind]
-            flow_index = model.death_flows[model.death_flows.origin == model.compartment_names[comp_ind]].index
-            param_name = model.death_flows.parameter[flow_index].to_string().split('    ')[1]
-            mortality_rate = model.get_parameter_value(param_name, 2019.)
-            total_deaths += infectious_pop * mortality_rate
-        return total_deaths
 
     init_pop = {"infectious": 3, "late_latent": 50}
 
@@ -385,6 +376,8 @@ def build_rmi_model(update_params={}):
                            )
 
     def calculate_reported_majuro_prevalence(model, time):
+        if 'location' not in stratify_by:
+            return 0.
         actual_prev = 0.
         pop_majuro = 0.
         for i, compartment in enumerate(model.compartment_names):
@@ -395,6 +388,63 @@ def build_rmi_model(update_params={}):
         return 1.e5 * actual_prev / pop_majuro * (1. + external_params['over_reporting_prevalence_proportion'])
 
     _tb_model.derived_output_functions.update({'reported_majuro_prevalence': calculate_reported_majuro_prevalence})
+
+    # build derived outputs for notifications
+    def notification_function_builder(stratum):
+        """
+            example of stratum: "Xage_0Xstrain_mdr"
+        """
+        def calculate_notifications(model, time):
+
+            total_notifications = 0.
+            dict_flows = model.transition_flows.to_dict()
+
+            comp_ind = model.compartment_names.index("infectious" + stratum)
+            infectious_pop = model.compartment_values[comp_ind]
+            detection_indices = [index for index, val in dict_flows['parameter'].items() if 'case_detection' in val]
+            flow_index = [index for index in detection_indices if dict_flows['origin'][index] == model.compartment_names[comp_ind]][0]
+            param_name = dict_flows['parameter'][flow_index]
+            detection_tx_rate = model.get_parameter_value(param_name, time)
+            tsr = rmi_tsr(time)
+            if tsr > 0.:
+                total_notifications += infectious_pop * detection_tx_rate / tsr
+
+            return total_notifications
+
+        return calculate_notifications
+
+    for compartment in _tb_model.compartment_names:
+        if 'infectious' in compartment:
+            stratum = compartment.split('infectious')[1]
+            _tb_model.derived_output_functions['notifications' + stratum] = notification_function_builder(stratum)
+
+    # create some personalised notification outputs
+     # build derived outputs for notifications
+    def aggregated_notification_function_builder(location):
+        """
+            example of location: "majuro"
+        """
+        def calculate_aggregated_notifications(model, time):
+            total_notifications = 0.
+            for key, value in model.derived_outputs.items():
+                if 'notifications' in key and location in key and 'agg_notifications' not in key:
+                    this_time_index = model.times.index(time)
+                    total_notifications += value[this_time_index]
+
+            return total_notifications
+
+        return calculate_aggregated_notifications
+
+    for location in ['majuro', 'ebeye', 'otherislands']:
+        _tb_model.derived_output_functions['agg_notificationsXlocation_' + location] = aggregated_notification_function_builder(location)
+
+
+    # add output_connections for all stratum-specific incidence outputs
+    _tb_model.output_connections.update(create_output_connections_for_incidence_by_stratum(_tb_model.compartment_names))
+
+    # prepare death outputs for all strata
+    _tb_model.death_output_categories = list_all_srata_for_mortality(_tb_model.compartment_names)
+
 
     write_model_data(_tb_model)
     return _tb_model

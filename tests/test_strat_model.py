@@ -170,7 +170,7 @@ def test_strat_model__with_locations_and_mixing__expect_varied_transmission():
     assert (actual_output == np.array(expected_output)).all()
 
 
-@pytest.mark.xfail  # FIXME: I don't know how to implement this.
+@pytest.mark.xfail(reason="I don't know how to implement this properly.")
 def test_strat_model__with_age_and_infectiousness__expect_age_based_infectiousness():
     """
     Ensure that a module with age stratification produces ageing flows,

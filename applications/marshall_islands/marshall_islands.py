@@ -33,10 +33,11 @@ from autumn.tool_kit import (
     change_parameter_unit,
 )
 
-now = datetime.now()
-
-# location for output database
-output_db_path = os.path.join(os.getcwd(), 'databases/outputs_' + now.strftime("%m_%d_%Y_%H_%M_%S") + '.db')
+# Database locations
+file_dir = os.path.dirname(os.path.abspath(__file__))
+timestamp = datetime.now().strftime("%m_%d_%Y_%H_%M_%S")
+OUTPUT_DB_PATH = os.path.join(file_dir, 'databases', f'outputs_{timestamp}.db')
+INPUT_DB_PATH = os.path.join(file_dir, 'databases', 'inputs.db')
 
 
 def build_rmi_timevariant_cdr(cdr_multiplier):
@@ -116,8 +117,7 @@ def build_rmi_model(update_params={}):
          "acf_ltbi_rate": 0.,
          "crude_birth_rate": 35.0 / 1e3}
 
-    input_db_path = os.path.join(os.getcwd(), 'databases/inputs.db')
-    input_database = InputDB(database_name=input_db_path)
+    input_database = InputDB(database_name=INPUT_DB_PATH)
     n_iter = 4 * int(
         round((external_params['end_time'] - external_params['start_time']) / external_params['time_step'])) + 1
 
@@ -344,7 +344,6 @@ def build_rmi_model(update_params={}):
                            )
 
 
-    _tb_model.transition_flows.to_csv("transitions_age_dm_organ.csv")
 
     if "location" in stratify_by:
         props_location = {'majuro': .523, 'ebeye': .2, 'otherislands': .277}
@@ -384,6 +383,15 @@ def build_rmi_model(update_params={}):
                            )
 
 
+    write_model_data(_tb_model)
+    return _tb_model
+
+
+def write_model_data(_tb_model):
+    """
+    Save / visualise model data for debugging purposes
+    """
+    _tb_model.transition_flows.to_csv("transitions_age_dm_organ.csv")
     _tb_model.transition_flows.to_csv("transitions_all.csv")
     _tb_model.death_flows.to_csv("deaths.csv")
     # create_flowchart(_tb_model, strata=0, name="rmi_flow_diagram_0")
@@ -391,8 +399,6 @@ def build_rmi_model(update_params={}):
     # create_flowchart(_tb_model, strata=2, name="rmi_flow_diagram_2")
     # create_flowchart(_tb_model, strata=3, name="rmi_flow_diagram_3")
     # create_flowchart(_tb_model, strata=2, name="rmi_flow_diagram_2")
-
-    return _tb_model
 
 
 if __name__ == "__main__":
@@ -436,7 +442,7 @@ if __name__ == "__main__":
             updated_derived_outputs = add_combined_incidence(derived_outputs_df, outputs_df)
             updated_derived_outputs = updated_derived_outputs.to_dict('list')
             model.derived_outputs = updated_derived_outputs
-        store_run_models(models, scenarios=scenario_list, database_name=output_db_path)
+        store_run_models(models, scenarios=scenario_list, database_name=OUTPUT_DB_PATH)
         delta = time() - t0
         print("Running time: " + str(round(delta, 1)) + " seconds")
 

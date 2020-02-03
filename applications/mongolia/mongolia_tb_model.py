@@ -35,10 +35,11 @@ from autumn.tool_kit import (
     change_parameter_unit,
 )
 
-now = datetime.now()
-
-# location for output database
-output_db_path = os.path.join(os.getcwd(), 'databases/outputs_' + now.strftime("%m_%d_%Y_%H_%M_%S") + '.db')
+# Database locations
+file_dir = os.path.dirname(os.path.abspath(__file__))
+timestamp = datetime.now().strftime("%m_%d_%Y_%H_%M_%S")
+OUTPUT_DB_PATH = os.path.join(file_dir, 'databases', f'outputs_{timestamp}.db')
+INPUT_DB_PATH = os.path.join(file_dir, 'databases', 'inputs.db')
 
 
 def build_mongolia_timevariant_cdr(cdr_multiplier):
@@ -126,8 +127,7 @@ def build_mongolia_model(update_params={}):
          "dr_amplification": .0,  # high value for testing
          "crude_birth_rate": 20.0 / 1e3}
 
-    input_db_path = os.path.join(os.getcwd(), 'databases/inputs.db')
-    input_database = InputDB(database_name=input_db_path)
+    input_database = InputDB(database_name=INPUT_DB_PATH)
     n_iter = int(round((external_params['end_time'] - external_params['start_time']) / external_params['time_step'])) + 1
     integration_times = numpy.linspace(external_params['start_time'], external_params['end_time'], n_iter).tolist()
 
@@ -489,7 +489,7 @@ if __name__ == "__main__":
             updated_derived_outputs = add_combined_incidence(derived_outputs_df, outputs_df)
             updated_derived_outputs = updated_derived_outputs.to_dict('list')
             model.derived_outputs = updated_derived_outputs
-        store_run_models(models, scenarios=scenario_list, database_name=output_db_path)
+        store_run_models(models, scenarios=scenario_list, database_name=OUTPUT_DB_PATH)
         delta = time() - t0
         print("Running time: " + str(round(delta, 1)) + " seconds")
 

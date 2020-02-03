@@ -3,7 +3,10 @@ from datetime import datetime
 from time import time
 
 from autumn.tb_model import *
-from autumn.tool_kit import *
+from autumn.tool_kit import (
+    run_multi_scenario,
+    change_parameter_unit,
+)
 
 now = datetime.now()
 

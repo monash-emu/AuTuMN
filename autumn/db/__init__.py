@@ -9,3 +9,4 @@ from .queries import (
     find_age_specific_death_rates,  
     get_pop_mortality_functions,    
 )
+from .database import Database

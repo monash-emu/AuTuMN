@@ -13,9 +13,9 @@ from summer_py.parameter_processing import (
     logistic_scaling_function,
 )
 
+from autumn import constants
 from autumn.curve import scale_up_function
-from autumn.db import InputDB, get_pop_mortality_functions
-
+from autumn.db import Database, get_pop_mortality_functions
 from autumn.tb_model import (
     scale_relative_risks_for_equivalence,
     provide_aggregated_latency_parameters,
@@ -29,8 +29,7 @@ from autumn.tb_model import (
 )
 from autumn.tool_kit import initialise_scenario_run, change_parameter_unit
 
-file_dir = os.path.dirname(os.path.abspath(__file__))
-INPUT_DB_PATH = os.path.join(file_dir, "databases", "inputs.db")
+INPUT_DB_PATH = os.path.join(constants.DATA_PATH, 'inputs.db')
 
 
 def build_timevariant_cdr():
@@ -124,7 +123,7 @@ def build_model(update_params={}):
         "crude_birth_rate": 20.0 / 1e3,
     }
 
-    input_database = InputDB(database_name=INPUT_DB_PATH)
+    input_database = Database(database_name=INPUT_DB_PATH)
     n_iter = (
         int(
             round(

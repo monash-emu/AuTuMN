@@ -280,12 +280,12 @@ def build_rmi_model(update_params={}):
                                                 'late_progressionXage_50': progression_adjustments,
                                                 'late_progressionXage_70': progression_adjustments},
                            entry_proportions={'diabetic': 0.01, 'nodiabetes': 0.99},
-                           target_props={'age_0': {"diabetic": 0.05},
-                                         'age_5': {"diabetic": 0.1},
-                                         'age_15': {"diabetic": 0.2},
-                                         'age_35': {"diabetic": 0.4},
-                                         'age_50': {"diabetic": 0.5},
-                                         'age_70': {"diabetic": 0.8}}
+                           # target_props={'age_0': {"diabetic": 0.05},
+                           #               'age_5': {"diabetic": 0.1},
+                           #               'age_15': {"diabetic": 0.2},
+                           #               'age_35': {"diabetic": 0.4},
+                           #               'age_50': {"diabetic": 0.5},
+                           #               'age_70': {"diabetic": 0.8}}
                            )
 
 
@@ -472,6 +472,6 @@ if __name__ == "__main__":
                     'incidenceXlocation_otherislands': 'Other locations - TB incidence (/100,000/y)'
                     }
 
-    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='rmi_03feb_4', targets_to_plot=targets_to_plot,
+    create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='rmi_03feb_5', targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers, translation_dictionary=translations,
                                   scenario_list=scenario_list, ymax=ymax, plot_start_time=1940)

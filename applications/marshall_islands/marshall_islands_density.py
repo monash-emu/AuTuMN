@@ -283,7 +283,7 @@ def build_rmi_model(update_params={}):
                            # entry_proportions={'dmy': 0.01, 'dmn': 0.99},
                            target_props={'age_0':{"dmy":0.01},
                                          'age_5':{"dmy":0.05},
-                                         'age_15':{"dmy":0.15},
+                                         'age_15':{"dmy":0.3},
                                          'age_35':{"dmy":0.4},
                                          'age_50':{"dmy":0.5},
                                          'age_70':{"dmy":0.8}}

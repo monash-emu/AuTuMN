@@ -18,6 +18,7 @@ env/
 *.pkl
 *.pickle
 output*.db
+inputs.*.db
 
 # Python packaging stuff
 autumn.egg*

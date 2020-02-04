@@ -527,8 +527,7 @@ def run_model():
         'prevXinfectiousXstrain_mdrXamong': 1.e5
     }
 
-    targets_to_plot = {
-                       }
+    targets_to_plot = {}
 
     ymax = {'prevXinfectiousXamong': 2000.}
 

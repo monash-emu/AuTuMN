@@ -9,6 +9,7 @@ import pandas as pd
 import summer_py.post_processing as post_proc
 from summer_py.parameter_processing import get_parameter_dict_from_function, create_step_function_from_dict
 from summer_py.outputs import Outputs
+from sqlalchemy import create_engine
 
 from . import constants
 from .db import Database, get_bcg_coverage, get_crude_birth_rate, get_pop_mortality_functions

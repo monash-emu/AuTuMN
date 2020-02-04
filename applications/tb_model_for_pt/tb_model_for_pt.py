@@ -21,13 +21,12 @@ from autumn.tb_model import (
     provide_aggregated_latency_parameters,
     get_adapted_age_parameters,
     convert_competing_proportion_to_rate,
-    return_function_of_function,
     add_standard_latency_flows,
     add_standard_natural_history_flows,
     add_standard_infection_flows,
     get_birth_rate_functions,
 )
-from autumn.tool_kit import initialise_scenario_run, change_parameter_unit
+from autumn.tool_kit import initialise_scenario_run, change_parameter_unit, return_function_of_function
 
 INPUT_DB_PATH = os.path.join(constants.DATA_PATH, 'inputs.db')
 

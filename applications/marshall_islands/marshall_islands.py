@@ -19,7 +19,6 @@ from autumn.tb_model import (
     provide_aggregated_latency_parameters,
     get_adapted_age_parameters,
     convert_competing_proportion_to_rate,
-    return_function_of_function,
     store_run_models,
     add_standard_latency_flows,
     add_standard_natural_history_flows,
@@ -27,11 +26,12 @@ from autumn.tb_model import (
     get_birth_rate_functions,
     create_multi_scenario_outputs,
     create_output_connections_for_incidence_by_stratum,
-    list_all_srata_for_mortality,
+    list_all_strata_for_mortality,
     DummyModel,
 )
 from autumn.tool_kit import (
     run_multi_scenario,
+    return_function_of_function,
     progressive_step_function_maker,
     change_parameter_unit,
 )
@@ -41,6 +41,13 @@ file_dir = os.path.dirname(os.path.abspath(__file__))
 timestamp = datetime.now().strftime("%m_%d_%Y_%H_%M_%S")
 OUTPUT_DB_PATH = os.path.join(file_dir, 'databases', f'outputs_{timestamp}.db')
 INPUT_DB_PATH = os.path.join(constants.DATA_PATH, 'inputs.db')
+
+# STRATIFY_BY = ['age']
+# STRATIFY_BY = ['age', 'location']
+# STRATIFY_BY = ['age', 'organ']
+# STRATIFY_BY = ['age', 'diabetes']
+# STRATIFY_BY = ['age', 'diabetes', 'organ']
+STRATIFY_BY = ['age', 'diabetes', 'organ', 'location']
 
 
 def build_rmi_timevariant_cdr(cdr_multiplier):
@@ -53,12 +60,6 @@ def build_rmi_timevariant_tsr():
 
 
 def build_rmi_model(update_params={}):
-    # stratify_by = ['age']
-    # stratify_by = ['age', 'location']
-    # stratify_by = ['age', 'organ']
-    # stratify_by = ['age', 'diabetes']
-    # stratify_by = ['age', 'diabetes', 'organ']
-    stratify_by = ['age', 'diabetes', 'organ', 'location']
 
     # some default parameter values
     external_params = {  # run configuration
@@ -149,7 +150,7 @@ def build_rmi_model(update_params={}):
                            'diabetes': ['diabetic', 'nodiabetes']}
 
     #  create derived outputs for disaggregated incidence
-    for stratification in stratify_by:
+    for stratification in STRATIFY_BY:
         for stratum in all_stratifications[stratification]:
             for stage in ["early", 'late']:
                 out_connections["incidence_" + stage + "X" + stratification + "_" + stratum] =\
@@ -224,7 +225,7 @@ def build_rmi_model(update_params={}):
     tsr_function = lambda t: rmi_tsr(t)
 
     # tb control recovery rate (detection and treatment) function set for overall if not organ-specific, smearpos otherwise
-    if 'organ' not in stratify_by:
+    if 'organ' not in STRATIFY_BY:
         tb_control_recovery_rate = lambda t: tsr_function(t) * detect_rate_by_organ['overall'](t)
     else:
         tb_control_recovery_rate = lambda t: tsr_function(t) * detect_rate_by_organ['smearpos'](t)
@@ -240,7 +241,7 @@ def build_rmi_model(update_params={}):
     acf_ltbi_rate_function = lambda t: (acf_rate_over_time(t)) * external_params['acf_ltbi_sensitivity'] * external_params['acf_ltbi_efficacy']
 
     # assign newly created functions to model parameters
-    if len(stratify_by) == 0:
+    if len(STRATIFY_BY) == 0:
         _tb_model.time_variants["case_detection"] = tb_control_recovery_rate
         _tb_model.time_variants["acf_rate"] = acf_rate_function
         _tb_model.time_variants["acf_ltbi_rate"] = acf_ltbi_rate_function
@@ -255,7 +256,7 @@ def build_rmi_model(update_params={}):
         _tb_model.adaptation_functions["acf_ltbi_rate"] = acf_ltbi_rate_function
         _tb_model.parameters["acf_ltbi_rate"] = "acf_ltbi_rate"
 
-    if "age" in stratify_by:
+    if "age" in STRATIFY_BY:
         age_breakpoints = [0, 5, 15, 35, 50, 70]
         age_infectiousness = get_parameter_dict_from_function(logistic_scaling_function(10.0), age_breakpoints)
         age_params = get_adapted_age_parameters(age_breakpoints)
@@ -286,7 +287,7 @@ def build_rmi_model(update_params={}):
                            adjustment_requests=age_params, infectiousness_adjustments=age_infectiousness, verbose=False)
 
 
-    if 'diabetes' in stratify_by:
+    if 'diabetes' in STRATIFY_BY:
         props_diabetes = {'diabetic': 0.3, 'nodiabetes': 0.7}
         progression_adjustments = {"diabetic": 3.18, "nodiabetes": 1.}
 
@@ -311,7 +312,7 @@ def build_rmi_model(update_params={}):
                            )
 
 
-    if 'organ' in stratify_by:
+    if 'organ' in STRATIFY_BY:
         props_smear = {"smearpos": external_params['prop_smearpos'],
                        "smearneg": 1. - (external_params['prop_smearpos'] + .2),
                        "extrapul": .2}
@@ -338,7 +339,7 @@ def build_rmi_model(update_params={}):
 
 
 
-    if "location" in stratify_by:
+    if "location" in STRATIFY_BY:
         props_location = {'majuro': .523, 'ebeye': .2, 'otherislands': .277}
 
         raw_relative_risks_loc = {'majuro': 1.}
@@ -376,7 +377,7 @@ def build_rmi_model(update_params={}):
                            )
 
     def calculate_reported_majuro_prevalence(model, time):
-        if 'location' not in stratify_by:
+        if 'location' not in STRATIFY_BY:
             return 0.
         actual_prev = 0.
         pop_majuro = 0.
@@ -443,7 +444,7 @@ def build_rmi_model(update_params={}):
     _tb_model.output_connections.update(create_output_connections_for_incidence_by_stratum(_tb_model.compartment_names))
 
     # prepare death outputs for all strata
-    _tb_model.death_output_categories = list_all_srata_for_mortality(_tb_model.compartment_names)
+    _tb_model.death_output_categories = list_all_strata_for_mortality(_tb_model.compartment_names)
 
 
     write_model_data(_tb_model)
@@ -464,8 +465,7 @@ def write_model_data(_tb_model):
     # create_flowchart(_tb_model, strata=2, name="rmi_flow_diagram_2")
 
 
-if __name__ == "__main__":
-
+def run_model():
     load_model = False
 
     scenario_params = {
@@ -573,3 +573,7 @@ if __name__ == "__main__":
     create_multi_scenario_outputs(models, req_outputs=req_outputs, out_dir='rmi_03feb_7', targets_to_plot=targets_to_plot,
                                   req_multipliers=multipliers, translation_dictionary=translations,
                                   scenario_list=scenario_list, ymax=ymax, plot_start_time=1940)
+
+
+if __name__ == "__main__":
+    run_model()

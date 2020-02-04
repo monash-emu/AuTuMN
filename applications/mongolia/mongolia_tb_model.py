@@ -14,14 +14,13 @@ from autumn.db import Database, get_pop_mortality_functions
 from autumn.tb_model import (
     add_combined_incidence,
     create_output_connections_for_incidence_by_stratum,
-    list_all_srata_for_mortality,
+    list_all_strata_for_mortality,
     load_model_scenario,
     load_calibration_from_db,
     scale_relative_risks_for_equivalence,
     provide_aggregated_latency_parameters,
     get_adapted_age_parameters,
     convert_competing_proportion_to_rate,
-    return_function_of_function,
     store_run_models,
     add_standard_latency_flows,
     add_standard_natural_history_flows,
@@ -33,6 +32,7 @@ from autumn.tb_model import (
 )
 from autumn.tool_kit import (
     run_multi_scenario,
+    return_function_of_function,
     change_parameter_unit,
 )
 
@@ -42,6 +42,7 @@ timestamp = datetime.now().strftime("%m_%d_%Y_%H_%M_%S")
 OUTPUT_DB_PATH = os.path.join(file_dir, 'databases', f'outputs_{timestamp}.db')
 INPUT_DB_PATH = os.path.join(constants.DATA_PATH, 'inputs.db')
 
+STRATIFY_BY = ['age', 'strain', 'location', 'organ']
 
 def build_mongolia_timevariant_cdr(cdr_multiplier):
     cdr = {1950.: 0., 1980.: .10, 1990.: .15, 2000.: .20, 2010.: .30, 2015: .33}
@@ -54,9 +55,6 @@ def build_mongolia_timevariant_tsr():
 
 
 def build_mongolia_model(update_params={}):
-
-    stratify_by = ['age', 'strain', 'location', 'organ']
-
     # some default parameter values
     external_params = {  # run configuration
                        'start_time': 1900.,
@@ -253,7 +251,7 @@ def build_mongolia_model(update_params={}):
     tsr_function = lambda t: mongolia_tsr(t) + external_params['reduction_negative_tx_outcome'] * (1. - mongolia_tsr(t))
 
     # tb control recovery rate (detection and treatment) function set for overall if not organ-specific, smearpos otherwise
-    if 'organ' not in stratify_by:
+    if 'organ' not in STRATIFY_BY:
         tb_control_recovery_rate = lambda t: tsr_function(t) * detect_rate_by_organ['overall'](t)
     else:
         tb_control_recovery_rate = lambda t: tsr_function(t) * detect_rate_by_organ['smearpos'](t)
@@ -276,7 +274,7 @@ def build_mongolia_model(update_params={}):
     _tb_model.adaptation_functions["acf_rate"] = acf_rate_function
     _tb_model.parameters["acf_rate"] = "acf_rate"
 
-    if "strain" in stratify_by:
+    if "strain" in STRATIFY_BY:
         mdr_adjustment = external_params['prop_mdr_detected_as_mdr'] * external_params['mdr_tsr'] / .9  # /.9 for last DS TSR
 
         _tb_model.stratify("strain", ["ds", "mdr"], ["early_latent", "late_latent", "infectious"], verbose=False,
@@ -302,7 +300,7 @@ def build_mongolia_model(update_params={}):
         _tb_model.adaptation_functions["dr_amplification"] = dr_amplification_rate
         _tb_model.parameters["dr_amplification"] = "dr_amplification"
 
-    if "age" in stratify_by:
+    if "age" in STRATIFY_BY:
         age_breakpoints = [0, 5, 15, 60]
         age_infectiousness = get_parameter_dict_from_function(logistic_scaling_function(10.0), age_breakpoints)
         age_params = get_adapted_age_parameters(age_breakpoints)
@@ -343,7 +341,7 @@ def build_mongolia_model(update_params={}):
             for age_break in [5, 15, 60]:
                 _tb_model.parameters['ipt_rateXstrain_dsXage_' + str(age_break)] = 0.
 
-    if 'organ' in stratify_by:
+    if 'organ' in STRATIFY_BY:
         props_smear = {"smearpos": external_params['prop_smearpos'],
                        "smearneg": 1. - (external_params['prop_smearpos'] + .20),
                        "extrapul": .20}
@@ -368,7 +366,7 @@ def build_mongolia_model(update_params={}):
                                                 },
                            )
 
-    if "location" in stratify_by:
+    if "location" in STRATIFY_BY:
         props_location = {'rural_province': .48, 'urban_nonger': .368, 'urban_ger': .15, 'prison': .002}
         raw_relative_risks_loc = {'rural_province': 1.}
         for stratum in ['urban_nonger', 'urban_ger', 'prison']:
@@ -437,13 +435,13 @@ def build_mongolia_model(update_params={}):
     _tb_model.output_connections.update(create_output_connections_for_incidence_by_stratum(_tb_model.compartment_names))
 
     # prepare death outputs for all strata
-    _tb_model.death_output_categories = list_all_srata_for_mortality(_tb_model.compartment_names)
+    _tb_model.death_output_categories = list_all_strata_for_mortality(_tb_model.compartment_names)
 
     return _tb_model
 
 
 
-if __name__ == "__main__":
+def run_model():
     load_model = False
     load_mcmc = False
 
@@ -586,3 +584,6 @@ if __name__ == "__main__":
                                       req_multipliers=multipliers, translation_dictionary=translations,
                                       scenario_list=scenario_list, ymax=ymax, plot_start_time=1990)
 
+
+if __name__ == "__main__":
+    run_model()

@@ -1,3 +1,6 @@
+"""
+Utilties to build, access, query SQLite databases. 
+"""
 from .queries import (
     get_bcg_coverage,   
     get_all_iso3_from_bcg,  

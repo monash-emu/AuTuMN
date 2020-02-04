@@ -32,7 +32,7 @@ class Flow:
     STANDARD = "standard_flows"
     INFECTION_FREQUENCY = "infection_frequency"
     INFECTION_DENSITY = "infection_density"
-    DEATH = "compartment_death"
+    COMPARTMENT_DEATH = "compartment_death"
 
 
 class BirthApproach:

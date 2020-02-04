@@ -16,7 +16,6 @@ from autumn.tb_model import (
     provide_aggregated_latency_parameters,
     get_adapted_age_parameters,
     convert_competing_proportion_to_rate,
-    return_function_of_function,
     add_standard_latency_flows,
     add_standard_natural_history_flows,
     add_standard_infection_flows,
@@ -154,7 +153,7 @@ def test_example_model_for_regressions():
     cdr_mongolia_year = numpy.concatenate(([1950.0], cdr_mongolia_year))
     cdr_scaleup = scale_up_function(cdr_mongolia_year, cdr_mongolia, smoothness=0.2, method=5)
     prop_to_rate = convert_competing_proportion_to_rate(1.0 / untreated_disease_duration)
-    detect_rate = return_function_of_function(cdr_scaleup, prop_to_rate)
+    detect_rate = utils.return_function_of_function(cdr_scaleup, prop_to_rate)
     tb_model.time_variants["case_detection"] = detect_rate
 
     # Run the model

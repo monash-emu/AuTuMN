@@ -6,6 +6,13 @@ import numpy
 from summer_py.summer_model import find_name_components
 
 
+def return_function_of_function(inner_function, outer_function):
+    """
+    Returns a chained function from two functions
+    """
+    return lambda value: outer_function(inner_function(value))
+
+
 def step_function_maker(start_time, end_time, value):
     def my_function(time):
         if start_time <= time <= end_time:

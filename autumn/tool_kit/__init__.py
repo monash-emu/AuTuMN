@@ -8,4 +8,5 @@ from .utils import (
     find_stratum_index_from_string,
     find_first_list_element_above,
     get_integration_times,
+    return_function_of_function,
 )

@@ -155,7 +155,7 @@ def test_epi_model__with_infect_death_rate__expect_infected_pop_decrease(ModelCl
         initial_conditions={Compartment.INFECTIOUS: 50},
         parameters={"infect_death": 2e-2},
         requested_flows=[
-            {"type": Flow.DEATH, "parameter": "infect_death", "origin": Compartment.INFECTIOUS}
+            {"type": Flow.COMPARTMENT_DEATH, "parameter": "infect_death", "origin": Compartment.INFECTIOUS}
         ],
         birth_approach=BirthApproach.NO_BIRTH,
         starting_population=pop,
@@ -356,7 +356,7 @@ def test_epi_model__with_complex_dynamics__expect_correct_outputs(ModelClass):
             "to": Compartment.INFECTIOUS,
         },
         # Infected people dying.
-        {"type": Flow.DEATH, "parameter": "infect_death", "origin": Compartment.INFECTIOUS},
+        {"type": Flow.COMPARTMENT_DEATH, "parameter": "infect_death", "origin": Compartment.INFECTIOUS},
         # Infected people recovering naturally.
         {
             "type": Flow.STANDARD,

@@ -16,10 +16,13 @@ See [this guide](./docs/setup.md) for information on how to set up this project.
 ├── .github                 GitHub config
 ├── applications            Specific applications of AuTuMN
 ├── autumn                  AuTuMN framework module
+├── data                    Data to be used by the models
 ├── docs                    Documentation
 ├── scripts                 Ad-hoc utility scripts
 ├── tests                   Automated tests
-├── conftest.py             PyTest configuration
+├── .gitignore              Files for Git to ignore
+├── .pylintrc               PyLint code linter configuration
+├── conftest.py             PyTest test runner configuration
 ├── requirements.txt        Python library dependencies
 └── setup.py                Packaging for deployment to MASSIVE computing platform
 ```

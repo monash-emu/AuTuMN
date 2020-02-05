@@ -32,17 +32,35 @@ See [this guide](./docs/setup.md) for information on how to set up this project.
 Automated tests may be run via [PyCharm](https://www.jetbrains.com/help/pycharm/pytest.html) or via the command line:
 
 ```
-python -m pytest
+./scripts/test.ps1
 ```
 
 Tests are also run automatically via [GitHub Actions](https://github.com/monash-emu/AuTuMN/actions) on any pull request or commit to the `master` branch.
 
+## Formatting
+
+The codebase can be auto-formatted using [Black](https://github.com/psf/black):
+
+```
+./scripts/format.ps1
+```
+
+## Running applications
+
+Specific uses of the AuTuMN framework are present in `applications/`. You can run an application through an IDE like PyCharm, or run it from the command line:
+
+```
+./scripts/run.ps1 --help
+```
+
 ## TODO
+
 - setup.py file to load all dependent modules
 - document Bulgaria interventions properly in handbook
 - the model would not run without age-stratification (detected when running Bulgaria)
 
 ## major outstanding tasks
+
 - Bulgaria paper
 - Bhutan inputs
 - age-specific parameterisation
@@ -50,6 +68,7 @@ Tests are also run automatically via [GitHub Actions](https://github.com/monash-
 - optimisation
 
 ## minor tasks
+
 - simplify code for automatic detection of int_uncertainty start_time. Should use common method with optimisation start_dates
 - in the adjust_treatment_outcomes_support method, only the "relative" approach accounts for baseline intervention coverage
     The "absolute" approach should be updated similarly in case we use it with a non-zero coverage at baseline.

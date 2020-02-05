@@ -17,3 +17,4 @@ SQLAlchemy>=1.1.18
 
 # Testing
 pytest
+black

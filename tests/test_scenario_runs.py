@@ -48,7 +48,7 @@ def test_run_multi_scenario(mock_init_scenario_run):
             ),
         ]
     )
-    
+
     # Ensure models were run
     mock_baseline_model.run_model.assert_called_once()
     mock_scenario_1_model.run_model.assert_called_once()

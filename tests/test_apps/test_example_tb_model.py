@@ -5,8 +5,15 @@ import os
 
 import pytest
 import numpy
-from summer_py.summer_model import StratifiedModel, split_age_parameter, create_sloping_step_function
-from summer_py.parameter_processing import get_parameter_dict_from_function, logistic_scaling_function
+from summer_py.summer_model import (
+    StratifiedModel,
+    split_age_parameter,
+    create_sloping_step_function,
+)
+from summer_py.parameter_processing import (
+    get_parameter_dict_from_function,
+    logistic_scaling_function,
+)
 
 from autumn import constants
 from autumn.constants import Compartment, Flow
@@ -21,13 +28,14 @@ from autumn.tb_model import (
     add_standard_infection_flows,
     get_birth_rate_functions,
 )
+
 COUNTRY_ISO3 = "MNG"  # Mongolia
 CONTACT_RATE = 40.0
 RR_TRANSMISSION_RECOVERED = 1
 RR_TRANSMISSION_INFECTED = 0.21
 CDR_ADJUSTMENT = 0.6
 START_TIME = 1800
-INPUT_DB_PATH = os.path.join(constants.DATA_PATH, 'inputs.db')
+INPUT_DB_PATH = os.path.join(constants.DATA_PATH, "inputs.db")
 
 
 @pytest.mark.xfail(reason="Function 'substratify_parameter' doesn't exist anymore.")
@@ -158,7 +166,9 @@ def test_example_model_for_regressions():
 
     # Run the model
     tb_model.run_model()
-    import pdb; pdb.set_trace()
+    import pdb
+
+    pdb.set_trace()
     # get outputs
     # infectious_population = tb_model.get_total_compartment_size(["infectious"])
 

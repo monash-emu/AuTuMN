@@ -18,7 +18,7 @@ logger.setLevel(logging.DEBUG)
 _logger = logging.getLogger("theano.gof.compilelock")
 _logger.setLevel(logging.DEBUG)
 
-theano.config.optimizer = 'None'
+theano.config.optimizer = "None"
 
 
 class Calibration:
@@ -26,16 +26,25 @@ class Calibration:
     this class handles model calibration using an MCMC algorithm if sampling from the posterior distribution is
     required, or using maximum likelihood estimation if only one calibrated parameter set is required.
     """
+
     def __init__(self, model_builder, priors, targeted_outputs, multipliers, chain_index):
         self.model_builder = model_builder  # a function that builds a new model without running it
         self.running_model = None  # a model that will be run during calibration
-        self.post_processing = None  # a PostProcessing object containing the required outputs of a model that has been run
-        self.priors = priors  # a list of dictionaries. Each dictionary describes the prior distribution for a parameter
-        self.param_list = [self.priors[i]['param_name'] for i in range(len(self.priors))]
-        self.targeted_outputs = targeted_outputs  # a list of dictionaries. Each dictionary describes a target
+        self.post_processing = (
+            None
+        )  # a PostProcessing object containing the required outputs of a model that has been run
+        self.priors = (
+            priors
+        )  # a list of dictionaries. Each dictionary describes the prior distribution for a parameter
+        self.param_list = [self.priors[i]["param_name"] for i in range(len(self.priors))]
+        self.targeted_outputs = (
+            targeted_outputs
+        )  # a list of dictionaries. Each dictionary describes a target
         self.multipliers = multipliers
         self.chain_index = chain_index
-        self.output_db_path = os.path.join(os.getcwd(), 'databases/outputs_calibration_chain_' + str(self.chain_index) + '.db')
+        self.output_db_path = os.path.join(
+            os.getcwd(), "databases/outputs_calibration_chain_" + str(self.chain_index) + ".db"
+        )
         self.data_as_array = None  # will contain all targeted data points in a single array
 
         self.loglike = None  # will store theano object
@@ -59,27 +68,46 @@ class Calibration:
         :return:
         """
         if self.post_processing is None:  # we need to initialise a PostProcessing object
-            requested_outputs = [self.targeted_outputs[i]['output_key'] for i in range(len(self.targeted_outputs)) if 'prev' in self.targeted_outputs[i]['output_key']]
+            requested_outputs = [
+                self.targeted_outputs[i]["output_key"]
+                for i in range(len(self.targeted_outputs))
+                if "prev" in self.targeted_outputs[i]["output_key"]
+            ]
             requested_times = {}
 
             for _output in self.targeted_outputs:
-                if 'prev' in _output['output_key']:
-                    requested_times[_output['output_key']] = _output['years']
+                if "prev" in _output["output_key"]:
+                    requested_times[_output["output_key"]] = _output["years"]
 
-            self.post_processing = post_proc.PostProcessing(self.running_model, requested_outputs=requested_outputs,
-                                                            requested_times=requested_times,
-                                                            multipliers=self.multipliers)
+            self.post_processing = post_proc.PostProcessing(
+                self.running_model,
+                requested_outputs=requested_outputs,
+                requested_times=requested_times,
+                multipliers=self.multipliers,
+            )
         else:  # we just need to update the post_processing attribute and produce new outputs
             self.post_processing.model = self.running_model
             self.post_processing.generated_outputs = {}
 
             self.post_processing.generate_outputs()
-        out_df = pd.DataFrame(self.running_model.outputs, columns=self.running_model.compartment_names)
+        out_df = pd.DataFrame(
+            self.running_model.outputs, columns=self.running_model.compartment_names
+        )
         derived_output_df = pd.DataFrame.from_dict(self.running_model.derived_outputs)
-        store_tb_database(derived_output_df, table_name="derived_outputs", run_idx=self.iter_num,
-                           database_name=self.output_db_path, append=True)
-        store_tb_database(out_df, run_idx=self.iter_num, times=self.running_model.times, database_name=self.output_db_path,
-                          append=True)
+        store_tb_database(
+            derived_output_df,
+            table_name="derived_outputs",
+            run_idx=self.iter_num,
+            database_name=self.output_db_path,
+            append=True,
+        )
+        store_tb_database(
+            out_df,
+            run_idx=self.iter_num,
+            times=self.running_model.times,
+            database_name=self.output_db_path,
+            append=True,
+        )
         self.iter_num += 1
 
     def run_model_with_params(self, params):
@@ -117,26 +145,33 @@ class Calibration:
 
             ll = 0  # loglikelihood if using bayesian approach. Sum of squares if using lsm mode
             for target in self.targeted_outputs:
-                key = target['output_key']
-                data = np.array(target['values'])
+                key = target["output_key"]
+                data = np.array(target["values"])
                 if key in self.post_processing.generated_outputs:
                     model_output = np.array(self.post_processing.generated_outputs[key])
                 else:
-                    index = self.running_model.times.index(target['years'][0])
+                    index = self.running_model.times.index(target["years"][0])
                     model_output = np.array([self.post_processing.derived_outputs[key][index]])
 
-                if self.run_mode == 'lsm':
-                    ll += np.sum((data - model_output)**2)
+                if self.run_mode == "lsm":
+                    ll += np.sum((data - model_output) ** 2)
                 else:
-                    ll += -(0.5/target['sd']**2)*np.sum((data - model_output)**2)
-            if self.run_mode != 'autumn_mcmc':
+                    ll += -(0.5 / target["sd"] ** 2) * np.sum((data - model_output) ** 2)
+            if self.run_mode != "autumn_mcmc":
                 mcmc_run_dict = {k: v for k, v in zip(self.param_list, params)}
-                mcmc_run_dict['loglikelihood'] = ll
+                mcmc_run_dict["loglikelihood"] = ll
                 mcmc_run_colnames = self.param_list.copy()
-                mcmc_run_colnames = mcmc_run_colnames.append('loglikelihood')
-                mcmc_run_df = pd.DataFrame(mcmc_run_dict, columns=mcmc_run_colnames, index=[self.iter_num])
-                store_tb_database(mcmc_run_df, table_name='mcmc_run', run_idx=self.iter_num,
-                                  database_name=self.output_db_path, append=True)
+                mcmc_run_colnames = mcmc_run_colnames.append("loglikelihood")
+                mcmc_run_df = pd.DataFrame(
+                    mcmc_run_dict, columns=mcmc_run_colnames, index=[self.iter_num]
+                )
+                store_tb_database(
+                    mcmc_run_df,
+                    table_name="mcmc_run",
+                    run_idx=self.iter_num,
+                    database_name=self.output_db_path,
+                    append=True,
+                )
             self.evaluated_params_ll.append((copy.copy(params), copy.copy(ll)))
         return ll
 
@@ -146,7 +181,7 @@ class Calibration:
         """
         data = []
         for target in self.targeted_outputs:
-            data.append(target['values'])
+            data.append(target["values"])
 
         data = list(chain(*data))  # create a simple list from a list of lists
         self.data_as_array = np.asarray(data)
@@ -158,23 +193,33 @@ class Calibration:
         :return:
         """
         for i, target in enumerate(self.targeted_outputs):
-            if 'sd' not in target.keys():
-                if 'cis' in target.keys():  # match normal likelihood 95% width with data 95% CI with
-                    self.targeted_outputs[i]['sd'] = (target['cis'][0][1] - target['cis'][0][0]) / 4.
+            if "sd" not in target.keys():
+                if (
+                    "cis" in target.keys()
+                ):  # match normal likelihood 95% width with data 95% CI with
+                    self.targeted_outputs[i]["sd"] = (
+                        target["cis"][0][1] - target["cis"][0][0]
+                    ) / 4.0
                 else:
-                    self.targeted_outputs[i]['sd'] = 0.5 / 4. * np.mean(target['values'])
+                    self.targeted_outputs[i]["sd"] = 0.5 / 4.0 * np.mean(target["values"])
 
     def workout_unspecified_jumping_sds(self):
         for i, prior_dict in enumerate(self.priors):
-            if 'jumping_sd' not in prior_dict.keys():
-                if prior_dict['distribution'] == 'uniform':
-                    prior_width = prior_dict['distri_params'][1] - prior_dict['distri_params'][0]
+            if "jumping_sd" not in prior_dict.keys():
+                if prior_dict["distribution"] == "uniform":
+                    prior_width = prior_dict["distri_params"][1] - prior_dict["distri_params"][0]
                 else:
-                    print("prior_width not specified for " +  prior_dict['distribution'] + " distribution at the moment")
+                    print(
+                        "prior_width not specified for "
+                        + prior_dict["distribution"]
+                        + " distribution at the moment"
+                    )
 
                 #  95% of the sampled values within [mu - 2*sd, mu + 2*sd], i.e. interval of witdth 4*sd
-                relative_prior_width = .25  # fraction of prior_width in which 95% of samples should fall
-                self.priors[i]['jumping_sd'] = relative_prior_width * prior_width / 4.
+                relative_prior_width = (
+                    0.25
+                )  # fraction of prior_width in which 95% of samples should fall
+                self.priors[i]["jumping_sd"] = relative_prior_width * prior_width / 4.0
 
     def create_loglike_object(self):
         """
@@ -182,8 +227,15 @@ class Calibration:
         """
         self.loglike = LogLike(self.loglikelihood)
 
-    def run_fitting_algorithm(self, run_mode='mle', mcmc_method='Metropolis', n_iterations=100, n_burned=10, n_chains=1,
-                              available_time=None):
+    def run_fitting_algorithm(
+        self,
+        run_mode="mle",
+        mcmc_method="Metropolis",
+        n_iterations=100,
+        n_burned=10,
+        n_chains=1,
+        available_time=None,
+    ):
         """
         master method to run model calibration.
 
@@ -200,15 +252,15 @@ class Calibration:
         np.random.seed(self.chain_index + int(time()))
 
         self.run_mode = run_mode
-        if run_mode == 'autumn_mcmc':
+        if run_mode == "autumn_mcmc":
             if n_chains > 1:
                 print("autumn_mcmc method does not support multiple-chain runs at the moment")
             t0 = time()
 
             self.mcmc_trace = {}  # will store param trace and loglikelihood evolution
             for prior_dict in self.priors:
-                self.mcmc_trace[prior_dict['param_name']] = []
-            self.mcmc_trace['loglikelihood'] = []
+                self.mcmc_trace[prior_dict["param_name"]] = []
+            self.mcmc_trace["loglikelihood"] = []
 
             last_accepted_params = None
             last_acceptance_quantity = None  # acceptance quantity is defined as loglike + logprior
@@ -226,11 +278,16 @@ class Calibration:
                 # decide acceptance
                 proposed_acceptance_quantity = proposed_loglike + proposed_logprior
                 accept = False
-                if last_acceptance_quantity is None or proposed_acceptance_quantity >= last_acceptance_quantity:
+                if (
+                    last_acceptance_quantity is None
+                    or proposed_acceptance_quantity >= last_acceptance_quantity
+                ):
                     accept = True
                 else:
                     acc_proba = np.exp(proposed_acceptance_quantity - last_acceptance_quantity)
-                    accept = np.random.binomial(n=1, p=acc_proba, size=1) > 0  # binomial returns integer. We need a boolean
+                    accept = (
+                        np.random.binomial(n=1, p=acc_proba, size=1) > 0
+                    )  # binomial returns integer. We need a boolean
 
                 # update stored quantities
                 if accept:
@@ -242,79 +299,115 @@ class Calibration:
 
                 # Here we should store the "accept" variable into the output database
                 mcmc_run_dict = {k: v for k, v in zip(self.param_list, proposed_params)}
-                mcmc_run_dict['loglikelihood'] = proposed_loglike
-                mcmc_run_dict['accept'] = 1 if accept else 0
+                mcmc_run_dict["loglikelihood"] = proposed_loglike
+                mcmc_run_dict["accept"] = 1 if accept else 0
                 mcmc_run_colnames = self.param_list.copy()
-                mcmc_run_colnames.append('loglikelihood')
-                mcmc_run_colnames.append('accept')
+                mcmc_run_colnames.append("loglikelihood")
+                mcmc_run_colnames.append("accept")
                 mcmc_run_df = pd.DataFrame(mcmc_run_dict, columns=mcmc_run_colnames, index=[i_run])
-                store_tb_database(mcmc_run_df, table_name='mcmc_run', run_idx=i_run,
-                                  database_name=self.output_db_path, append=True)
+                store_tb_database(
+                    mcmc_run_df,
+                    table_name="mcmc_run",
+                    run_idx=i_run,
+                    database_name=self.output_db_path,
+                    append=True,
+                )
 
                 print(str(i_run + 1) + " MCMC iterations completed.")
 
                 if available_time is not None:
                     elapsed_time = time() - t0
                     if elapsed_time > available_time:
-                        print("Stopping MCMC simulation after " + str(i_run + 1) + " iterations because of time limit")
+                        print(
+                            "Stopping MCMC simulation after "
+                            + str(i_run + 1)
+                            + " iterations because of time limit"
+                        )
                         break
 
-        elif run_mode in ['pymc_mcmc', 'mle']:
+        elif run_mode in ["pymc_mcmc", "mle"]:
             basic_model = pm.Model()
             with basic_model:
 
                 fitted_params = []
                 for prior in self.priors:
-                    if prior['distribution'] == 'uniform':
-                        value = pm.Uniform(prior['param_name'], lower=prior['distri_params'][0],
-                                           upper=prior['distri_params'][1])
+                    if prior["distribution"] == "uniform":
+                        value = pm.Uniform(
+                            prior["param_name"],
+                            lower=prior["distri_params"][0],
+                            upper=prior["distri_params"][1],
+                        )
                         fitted_params.append(value)
 
                 theta = tt.as_tensor_variable(fitted_params)
 
-                pm.DensityDist('likelihood', lambda v: self.loglike(v), observed={'v': theta})
+                pm.DensityDist("likelihood", lambda v: self.loglike(v), observed={"v": theta})
 
-                if run_mode == 'mle':
+                if run_mode == "mle":
                     self.mle_estimates = pm.find_MAP()
-                elif run_mode == 'pymc_mcmc':  # full MCMC requested
-                    if mcmc_method == 'Metropolis':
-                        mcmc_step = pm.Metropolis(S=np.array([1.]))
-                    elif mcmc_method == 'DEMetropolis':
+                elif run_mode == "pymc_mcmc":  # full MCMC requested
+                    if mcmc_method == "Metropolis":
+                        mcmc_step = pm.Metropolis(S=np.array([1.0]))
+                    elif mcmc_method == "DEMetropolis":
                         mcmc_step = pm.DEMetropolis()
                     else:
-                        ValueError("requested mcmc mode is not supported. Must be one of ['Metropolis', 'DEMetropolis']")
-                    self.mcmc_trace = pm.sample(draws=n_iterations, step=mcmc_step, tune=n_burned, chains=n_chains,
-                                                progressbar=False)
+                        ValueError(
+                            "requested mcmc mode is not supported. Must be one of ['Metropolis', 'DEMetropolis']"
+                        )
+                    self.mcmc_trace = pm.sample(
+                        draws=n_iterations,
+                        step=mcmc_step,
+                        tune=n_burned,
+                        chains=n_chains,
+                        progressbar=False,
+                    )
 
                     traceDf = pm.trace_to_dataframe(self.mcmc_trace)
-                    traceDf.to_csv('trace.csv')
+                    traceDf.to_csv("trace.csv")
                     out_database = Database(database_name=self.output_db_path)
-                    mcmc_run_df = out_database.db_query('mcmc_run')
+                    mcmc_run_df = out_database.db_query("mcmc_run")
                     mcmc_run_df = mcmc_run_df.reset_index(drop=True)
                     traceDf = traceDf.reset_index(drop=True)
-                    traceDf['accepted'] = 1
-                    mcmc_run_info = pd.merge(mcmc_run_df, traceDf, how='left', left_on=self.param_list,
-                                             right_on=self.param_list)
-                    mcmc_run_info['accepted'].fillna(0, inplace=True)
+                    traceDf["accepted"] = 1
+                    mcmc_run_info = pd.merge(
+                        mcmc_run_df,
+                        traceDf,
+                        how="left",
+                        left_on=self.param_list,
+                        right_on=self.param_list,
+                    )
+                    mcmc_run_info["accepted"].fillna(0, inplace=True)
                     mcmc_run_info = mcmc_run_info.drop_duplicates()
-                    store_tb_database(mcmc_run_info, table_name='mcmc_run_info', database_name=self.output_db_path)
+                    store_tb_database(
+                        mcmc_run_info, table_name="mcmc_run_info", database_name=self.output_db_path
+                    )
                 else:
-                    ValueError("requested run mode is not supported. Must be one of ['pymc_mcmc', 'lme']")
-        elif run_mode == 'lsm':
+                    ValueError(
+                        "requested run mode is not supported. Must be one of ['pymc_mcmc', 'lme']"
+                    )
+        elif run_mode == "lsm":
             lower_bounds = []
             upper_bounds = []
             x0 = []
             for prior in self.priors:
-                lower_bounds.append(prior['distri_params'][0])
-                upper_bounds.append(prior['distri_params'][1])
-                x0.append(.5 * (prior['distri_params'][0] + prior['distri_params'][1]))
+                lower_bounds.append(prior["distri_params"][0])
+                upper_bounds.append(prior["distri_params"][1])
+                x0.append(0.5 * (prior["distri_params"][0] + prior["distri_params"][1]))
             bounds = Bounds(lower_bounds, upper_bounds)
 
-            sol = minimize(self.loglikelihood, x0, bounds=bounds, options={'eps': .1, 'ftol': .1}, method='SLSQP')
+            sol = minimize(
+                self.loglikelihood,
+                x0,
+                bounds=bounds,
+                options={"eps": 0.1, "ftol": 0.1},
+                method="SLSQP",
+            )
             self.mle_estimates = sol.x
 
         else:
-            ValueError("requested run mode is not supported. Must be one of ['pymc_mcmc', 'lme', 'autumn_mcmc']")
+            ValueError(
+                "requested run mode is not supported. Must be one of ['pymc_mcmc', 'lme', 'autumn_mcmc']"
+            )
 
     def propose_new_params(self, prev_params):
         """
@@ -326,14 +419,20 @@ class Calibration:
         if prev_params is None:
             prev_params = []
             for prior_dict in self.priors:
-                prev_params.append(.5 * (prior_dict['distri_params'][0] + prior_dict['distri_params'][1]))
+                prev_params.append(
+                    0.5 * (prior_dict["distri_params"][0] + prior_dict["distri_params"][1])
+                )
 
         new_params = []
 
         for i, prior_dict in enumerate(self.priors):
-            sample = prior_dict['distri_params'][0] - 10.  # deliberately initialise out of parameter scope
-            while not prior_dict['distri_params'][0] <= sample <= prior_dict['distri_params'][1]:
-                sample = np.random.normal(loc=prev_params[i], scale=prior_dict['jumping_sd'], size=1)[0]
+            sample = (
+                prior_dict["distri_params"][0] - 10.0
+            )  # deliberately initialise out of parameter scope
+            while not prior_dict["distri_params"][0] <= sample <= prior_dict["distri_params"][1]:
+                sample = np.random.normal(
+                    loc=prev_params[i], scale=prior_dict["jumping_sd"], size=1
+                )[0]
             new_params.append(sample)
         return new_params
 
@@ -343,12 +442,15 @@ class Calibration:
         :param params: model parameters as a list of values ordered using the order of self.priors
         :return: the natural log of the joint prior
         """
-        logp = 0.
+        logp = 0.0
         for prior_dict in self.priors:
-            if prior_dict['distribution'] == 'uniform':
-                logp += 1. / (prior_dict['distri_params'][1] - prior_dict['distri_params'][0])
+            if prior_dict["distribution"] == "uniform":
+                logp += 1.0 / (prior_dict["distri_params"][1] - prior_dict["distri_params"][0])
             else:
-                print(prior_dict['distribution'] + "distribution not supported in autumn_mcmc at the moment")
+                print(
+                    prior_dict["distribution"]
+                    + "distribution not supported in autumn_mcmc at the moment"
+                )
 
         return logp
 
@@ -359,8 +461,8 @@ class Calibration:
         :param loglike_to_store: current loglikelihood value
         """
         for i, prior_dict in enumerate(self.priors):
-            self.mcmc_trace[prior_dict['param_name']].append(params_to_store[i])
-        self.mcmc_trace['loglikelihood'].append(loglike_to_store)
+            self.mcmc_trace[prior_dict["param_name"]].append(params_to_store[i])
+        self.mcmc_trace["loglikelihood"].append(loglike_to_store)
 
 
 class LogLike(tt.Op):
@@ -371,6 +473,7 @@ class LogLike(tt.Op):
     that define our model) and returning a single "scalar" value (the
     log-likelihood)
     """
+
     itypes = [tt.dvector]  # expects a vector of parameter values when called
     otypes = [tt.dscalar]  # outputs a single scalar value (the log likelihood)
 

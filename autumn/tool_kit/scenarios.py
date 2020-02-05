@@ -2,6 +2,7 @@
 Utilities for running multiple model scenarios
 """
 
+
 def run_multi_scenario(param_lookup, scenario_start_time, model_builder):
     """
     Run a baseline model and scenarios
@@ -13,7 +14,7 @@ def run_multi_scenario(param_lookup, scenario_start_time, model_builder):
     :return: a list of model objects
     """
     # Run baseline model as scenario '0'
-    baseline_params =  param_lookup[0] if 0 in param_lookup else {}
+    baseline_params = param_lookup[0] if 0 in param_lookup else {}
     baseline_model = model_builder(baseline_params)
     print("____________________  Running baseline scenario ")
     baseline_model.run_model()
@@ -26,9 +27,7 @@ def run_multi_scenario(param_lookup, scenario_start_time, model_builder):
 
         print(f"____________________  Running scenario #{scenario_idx}")
         scenario_params["start_time"] = scenario_start_time
-        scenario_model = initialise_scenario_run(
-            baseline_model, scenario_params, model_builder
-        )
+        scenario_model = initialise_scenario_run(baseline_model, scenario_params, model_builder)
         scenario_model.run_model()
         models.append(scenario_model)
 

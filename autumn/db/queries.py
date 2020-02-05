@@ -291,4 +291,3 @@ def get_pop_mortality_functions(
         )
         for age_group in age_death_dict
     }
-

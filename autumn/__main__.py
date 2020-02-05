@@ -9,6 +9,7 @@ import click
 
 from .db.input_data import build_input_database
 
+
 @click.group()
 def cli():
     """

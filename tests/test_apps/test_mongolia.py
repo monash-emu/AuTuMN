@@ -13,8 +13,8 @@ def test_build_mongolia_model():
     assert type(model) is StratifiedModel
 
 
-@mock.patch('applications.mongolia.mongolia_tb_model.STRATIFY_BY', ['age'])
-@mock.patch('autumn.tb_model.outputs.Outputs')
+@mock.patch("applications.mongolia.mongolia_tb_model.STRATIFY_BY", ["age"])
+@mock.patch("autumn.tb_model.outputs.Outputs")
 def test_run_mongolia_model(mock_output_cls):
     """
     Ensure Mongolia model runs with nothing crashing.

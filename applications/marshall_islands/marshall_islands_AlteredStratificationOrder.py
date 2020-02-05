@@ -603,4 +603,3 @@ if __name__ == "__main__":
         translation_dictionary=translations,
         scenario_list=scenario_list,
     )
-

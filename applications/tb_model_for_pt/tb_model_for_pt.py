@@ -26,9 +26,13 @@ from autumn.tb_model import (
     add_standard_infection_flows,
     get_birth_rate_functions,
 )
-from autumn.tool_kit import initialise_scenario_run, change_parameter_unit, return_function_of_function
+from autumn.tool_kit import (
+    initialise_scenario_run,
+    change_parameter_unit,
+    return_function_of_function,
+)
 
-INPUT_DB_PATH = os.path.join(constants.DATA_PATH, 'inputs.db')
+INPUT_DB_PATH = os.path.join(constants.DATA_PATH, "inputs.db")
 
 
 def build_timevariant_cdr():

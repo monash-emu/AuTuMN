@@ -15,17 +15,11 @@ from .outputs import (
 )
 from .latency_params import provide_aggregated_latency_parameters, get_adapted_age_parameters
 from .dummy_model import DummyModel
-from .interpolation import (
-    get_bcg_functions,
-    get_birth_rate_functions,
-)
+from .interpolation import get_bcg_functions, get_birth_rate_functions
 from .flows import (
     add_density_infection_flows,
     add_standard_infection_flows,
     add_standard_latency_flows,
     add_standard_natural_history_flows,
 )
-from .preprocess import (
-    convert_competing_proportion_to_rate,
-    scale_relative_risks_for_equivalence,
-)
+from .preprocess import convert_competing_proportion_to_rate, scale_relative_risks_for_equivalence

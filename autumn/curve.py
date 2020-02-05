@@ -7,7 +7,7 @@ import numpy as np
 from scipy.interpolate import UnivariateSpline
 
 
-def make_sigmoidal_curve(y_low=0, y_high=1., x_start=0, x_inflect=0.5, multiplier=1.):
+def make_sigmoidal_curve(y_low=0, y_high=1.0, x_start=0, x_inflect=0.5, multiplier=1.0):
 
     """
     Base function to make sigmoidal curves. Not sure whether currently in use.
@@ -25,20 +25,22 @@ def make_sigmoidal_curve(y_low=0, y_high=1., x_start=0, x_inflect=0.5, multiplie
 
     amplitude = y_high - y_low
     if amplitude == 0:
+
         def curve(x):
             return y_low
+
         return curve
 
     x_delta = x_inflect - x_start
     slope_at_inflection = multiplier * 0.5 * amplitude / x_delta
-    b = 4. * slope_at_inflection / amplitude
+    b = 4.0 * slope_at_inflection / amplitude
 
     def curve(x):
-        arg = b * ( x_inflect - x )
+        arg = b * (x_inflect - x)
         # check for large values that will blow out exp
         if arg > 10.0:
             return y_low
-        return amplitude / ( 1. + exp( arg ) ) + y_low
+        return amplitude / (1.0 + exp(arg)) + y_low
 
     return curve
 
@@ -49,14 +51,20 @@ def make_two_step_curve(y_low, y_med, y_high, x_start, x_med, x_end):
     """
 
     curve1 = make_sigmoidal_curve(
-        y_high=y_med, y_low=y_low,
-        x_start=x_start, x_inflect=(x_med-x_start)*0.5 + x_start,
-        multiplier=4)
+        y_high=y_med,
+        y_low=y_low,
+        x_start=x_start,
+        x_inflect=(x_med - x_start) * 0.5 + x_start,
+        multiplier=4,
+    )
 
     curve2 = make_sigmoidal_curve(
-        y_high=y_high, y_low=y_med,
-        x_start=x_med, x_inflect=(x_end-x_med)*0.5 + x_med,
-        multiplier=4)
+        y_high=y_high,
+        y_low=y_med,
+        x_start=x_med,
+        x_inflect=(x_end - x_med) * 0.5 + x_med,
+        multiplier=4,
+    )
 
     def curve(x):
         if x < x_start:
@@ -70,7 +78,7 @@ def make_two_step_curve(y_low, y_med, y_high, x_start, x_med, x_end):
     return curve
 
 
-''' the functions test_a and get_spare_fit are only used inside of scale_up_function when method=5 '''
+""" the functions test_a and get_spare_fit are only used inside of scale_up_function when method=5 """
 
 
 def test_a(a, x_min, x_max, x_peak, bound_low, bound_up):
@@ -83,10 +91,10 @@ def test_a(a, x_min, x_max, x_peak, bound_low, bound_up):
     """
 
     test = 1
-    delta = 4. * a[2] ** 2 - 12. * a[1] * a[3]
+    delta = 4.0 * a[2] ** 2 - 12.0 * a[1] * a[3]
     if delta > 0:
-        zero_1 = (-2 * a[2] + delta ** 0.5) / (6. * a[3])
-        zero_2 = (-2 * a[2] - delta ** 0.5) / (6. * a[3])
+        zero_1 = (-2 * a[2] + delta ** 0.5) / (6.0 * a[3])
+        zero_2 = (-2 * a[2] - delta ** 0.5) / (6.0 * a[3])
         zero = zero_1
         if abs(zero_2 - x_peak) > abs(zero_1 - x_peak):
             zero = zero_2
@@ -98,7 +106,9 @@ def test_a(a, x_min, x_max, x_peak, bound_low, bound_up):
     return test
 
 
-def get_spare_fit(indice, x_peak, bound, side, f, cut_off_dict, bound_low, bound_up, a_init, a_f, x, y):
+def get_spare_fit(
+    indice, x_peak, bound, side, f, cut_off_dict, bound_low, bound_up, a_init, a_f, x, y
+):
 
     """
     When a portion of the curve was detected outside of the bounds, we have tried to replace it by a portion that will
@@ -112,8 +122,8 @@ def get_spare_fit(indice, x_peak, bound, side, f, cut_off_dict, bound_low, bound
     """
 
     ok = 0
-    sg = 1.
-    if side == 'left':
+    sg = 1.0
+    if side == "left":
         spare_indice = indice
         sg = -1
     else:
@@ -127,19 +137,19 @@ def get_spare_fit(indice, x_peak, bound, side, f, cut_off_dict, bound_low, bound
 
         if spare_indice in cut_off_dict.keys():
             out = cut_off_dict[spare_indice]
-            if x_spare < out['x_peak']:
-                a = out['a1']
+            if x_spare < out["x_peak"]:
+                a = out["a1"]
             else:
-                a = out['a2']
+                a = out["a2"]
             y_spare = a[0] + a[1] * x_spare + a[2] * x_spare ** 2 + a[3] * x_spare ** 3
-            v_spare = a[1] + 2. * a[2] * x_spare + 3. * a[3] * x_spare ** 2
+            v_spare = a[1] + 2.0 * a[2] * x_spare + 3.0 * a[3] * x_spare ** 2
         else:
             if spare_indice == 0:
                 y_spare = y[0]
                 v_spare = 0
             elif spare_indice == len(x) - 2:
                 y_spare = a_f[0] + a_f[1] * x_spare + a_f[2] * x_spare ** 2 + a_f[3] * x_spare ** 3
-                v_spare = a_f[1] + 2. * a_f[2] * x_spare + 3. * a_f[3] * x_spare ** 2
+                v_spare = a_f[1] + 2.0 * a_f[2] * x_spare + 3.0 * a_f[3] * x_spare ** 2
             elif spare_indice == len(x) - 1:
                 y_spare = y[-1]
                 v_spare = 0
@@ -147,23 +157,34 @@ def get_spare_fit(indice, x_peak, bound, side, f, cut_off_dict, bound_low, bound
                 y_spare = f(x_spare)
                 v_spare = f.derivatives(x_spare)[1]
 
-        g = np.array([
-            [x_spare ** 3, x_spare ** 2, x_spare, 1],
-            [x_peak ** 3, x_peak ** 2, x_peak, 1],
-            [3. * x_spare ** 2, 2. * x_spare, 1, 0],
-            [3. * x_peak ** 2, 2. * x_peak, 1, 0]
-        ])
-        d = np.array([y_spare, bound, v_spare, 0.])
+        g = np.array(
+            [
+                [x_spare ** 3, x_spare ** 2, x_spare, 1],
+                [x_peak ** 3, x_peak ** 2, x_peak, 1],
+                [3.0 * x_spare ** 2, 2.0 * x_spare, 1, 0],
+                [3.0 * x_peak ** 2, 2.0 * x_peak, 1, 0],
+            ]
+        )
+        d = np.array([y_spare, bound, v_spare, 0.0])
         a = np.linalg.solve(g, d)
         a = a[::-1]  # reverse
 
         ok = test_a(a, min(x_spare, x_peak), max(x_spare, x_peak), x_peak, bound_low, bound_up)
 
-    return {'a': a, 'cpt': cpt}
+    return {"a": a, "cpt": cpt}
 
 
-def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=None, auto_bound=1.3,
-                      intervention_end=None, intervention_start_date=None):
+def scale_up_function(
+    x,
+    y,
+    method=3,
+    smoothness=1.0,
+    bound_low=None,
+    bound_up=None,
+    auto_bound=1.3,
+    intervention_end=None,
+    intervention_start_date=None,
+):
 
     """
     Given a set of points defined by x and y,
@@ -199,7 +220,7 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
     Returns:
         interpolation function
     """
-    assert len(x) == len(y), 'x and y must have the same length'
+    assert len(x) == len(y), "x and y must have the same length"
     x = [float(i) for i in x]
     y = [float(i) for i in y]
 
@@ -207,7 +228,7 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
     y = np.array(y)
 
     # Check that every x_i is unique
-    assert len(x) == len(set(x)), 'There are duplicate values in x.'
+    assert len(x) == len(set(x)), "There are duplicate values in x."
 
     # Make sure the arrays are ordered
     order = x.argsort()
@@ -217,14 +238,18 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
     # Define a scale-up for a potential intervention
     if intervention_end is not None:
         if intervention_start_date is not None:
-            assert intervention_start_date >= max(x), 'The intervention start date should be >= max(x)'
+            assert intervention_start_date >= max(
+                x
+            ), "The intervention start date should be >= max(x)"
             t_intervention_start = intervention_start_date
         else:
             t_intervention_start = max(x)
-        curve_intervention = scale_up_function(x=[t_intervention_start, intervention_end[0]],
-                                               y=[y[-1], intervention_end[1]], method=4)
+        curve_intervention = scale_up_function(
+            x=[t_intervention_start, intervention_end[0]], y=[y[-1], intervention_end[1]], method=4
+        )
 
-    if (len(x) == 1) or (max(y)-min(y) == 0):
+    if (len(x) == 1) or (max(y) - min(y) == 0):
+
         def curve(t):
             if intervention_end is not None:
                 if t >= t_intervention_start:
@@ -262,17 +287,21 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
         x = x / coef
 
     vel = derivatives(x, y)  # Obtain derivatives conditions
-    m = np.zeros((len(x) - 1, 4))  # To store the polynomial coefficients for each section [x_i, x_(i+1)]
+    m = np.zeros(
+        (len(x) - 1, 4)
+    )  # To store the polynomial coefficients for each section [x_i, x_(i+1)]
 
     if method == 1:
         for i in range(1, len(x)):
             x0, x1 = x[i - 1], x[i]
-            g = np.array([
-                [x0 ** 3, x0 ** 2, x0, 1],
-                [x1 ** 3, x1 ** 2, x1, 1],
-                [3 * x0 ** 2, 2 * x0, 1, 0],
-                [3 * x1 ** 2, 2 * x1, 1, 0],
-            ])
+            g = np.array(
+                [
+                    [x0 ** 3, x0 ** 2, x0, 1],
+                    [x1 ** 3, x1 ** 2, x1, 1],
+                    [3 * x0 ** 2, 2 * x0, 1, 0],
+                    [3 * x1 ** 2, 2 * x1, 1, 0],
+                ]
+            )
             # Bound conditions:  f(x0) = y0   f(x1) = y1  f'(x0) = v0  f'(x1) = v1
             d = np.array([y[i - 1], y[i], vel[i - 1], vel[i]])
             m[i - 1, :] = np.linalg.solve(g, d)
@@ -296,41 +325,45 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
                 if vel[i + 1] == 0:  # Define only one section
                     x1 = x[i + 1]
                     y1 = y[i + 1]
-                    g = np.array([
-                        [x0 ** 3, x0 ** 2, x0, 1],
-                        [x1 ** 3, x1 ** 2, x1, 1],
-                        [3 * x0 ** 2, 2 * x0, 1, 0],
-                        [3 * x1 ** 2, 2 * x1, 1, 0],
-
-                    ])
+                    g = np.array(
+                        [
+                            [x0 ** 3, x0 ** 2, x0, 1],
+                            [x1 ** 3, x1 ** 2, x1, 1],
+                            [3 * x0 ** 2, 2 * x0, 1, 0],
+                            [3 * x1 ** 2, 2 * x1, 1, 0],
+                        ]
+                    )
                     # Bound conditions: f(x0) = y0  f(x1) = y1   f'(x0) = v0  f'(x1) = 0
                     d = np.array([y0, y1, v, 0])
                     m[i, :] = np.linalg.solve(g, d)
-                elif vel[i + 2] == 0: # defines two sections
+                elif vel[i + 2] == 0:  # defines two sections
                     x1, x2 = x[i + 1], x[i + 2]
                     y1, y2 = y[i + 1], y[i + 2]
-                    g = np.array([
-                        [x0 ** 3, x0 ** 2, x0, 1],
-                        [x2 ** 3, x2 ** 2, x2, 1],
-                        [3 * x0 ** 2, 2 * x0, 1, 0],
-                        [3 * x2 ** 2, 2 * x2, 1, 0],
-
-                    ])
+                    g = np.array(
+                        [
+                            [x0 ** 3, x0 ** 2, x0, 1],
+                            [x2 ** 3, x2 ** 2, x2, 1],
+                            [3 * x0 ** 2, 2 * x0, 1, 0],
+                            [3 * x2 ** 2, 2 * x2, 1, 0],
+                        ]
+                    )
                     # Bound conditions: f(x0) = y0  f(x2) = y2   f'(x0) = v0  f'(x2) = 0
                     d = np.array([y0, y2, v, 0])
                     sol = np.linalg.solve(g, d)
                     m[i, :] = sol
                     m[i + 1, :] = sol
                     pass_next = 1
-                else: # v1 and v2 are not null. We define two sections
+                else:  # v1 and v2 are not null. We define two sections
                     x1, x2 = x[i + 1], x[i + 2]
                     y1, y2 = y[i + 1], y[i + 2]
-                    g = np.array([
-                        [x0 ** 3, x0 ** 2, x0, 1],
-                        [x1 ** 3, x1 ** 2, x1, 1],
-                        [x2 ** 3, x2 ** 2, x2, 1],
-                        [3 * x0 ** 2, 2 * x0, 1, 0],
-                    ])
+                    g = np.array(
+                        [
+                            [x0 ** 3, x0 ** 2, x0, 1],
+                            [x1 ** 3, x1 ** 2, x1, 1],
+                            [x2 ** 3, x2 ** 2, x2, 1],
+                            [3 * x0 ** 2, 2 * x0, 1, 0],
+                        ]
+                    )
                     # Bound conditions: f(x0) = y0  f(x1) = y1 f(x2) = y2   f'(x0) = v0
                     d = np.array([y0, y1, y2, v])
                     sol = np.linalg.solve(g, d)
@@ -358,12 +391,14 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
                 if vel[i + 1] == 0:
                     x1 = x[i + 1]
                     y1 = y[i + 1]
-                    g = np.array([
-                        [x0 ** 3, x0 ** 2, x0, 1],
-                        [x1 ** 3, x1 ** 2, x1, 1],
-                        [3 * x0 ** 2, 2 * x0, 1, 0],
-                        [3 * x1 ** 2, 2 * x1, 1, 0],
-                    ])
+                    g = np.array(
+                        [
+                            [x0 ** 3, x0 ** 2, x0, 1],
+                            [x1 ** 3, x1 ** 2, x1, 1],
+                            [3 * x0 ** 2, 2 * x0, 1, 0],
+                            [3 * x1 ** 2, 2 * x1, 1, 0],
+                        ]
+                    )
 
                     # Bound conditions: f(x0) = y0  f(x1) = y1   f'(x0) = v0  f'(x1) = 0
                     d = np.array([y0, y1, v, 0])
@@ -371,28 +406,34 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
                 else:
                     x1, x2 = x[i + 1], x[i + 2]
                     y1, y2 = y[i + 1], y[i + 2]
-                    g = np.array([
-                        [x0 ** 3, x0 ** 2, x0, 1],
-                        [x1 ** 3, x1 ** 2, x1, 1],
-                        [x2 ** 3, x2 ** 2, x2, 1],
-                        [3 * x0 ** 2, 2 * x0, 1, 0],
-
-                    ])
+                    g = np.array(
+                        [
+                            [x0 ** 3, x0 ** 2, x0, 1],
+                            [x1 ** 3, x1 ** 2, x1, 1],
+                            [x2 ** 3, x2 ** 2, x2, 1],
+                            [3 * x0 ** 2, 2 * x0, 1, 0],
+                        ]
+                    )
                     # Bound conditions: f(x0) = y0  f(x1) = y1  f(x2) = y2  f'(x0) = v0
                     d = np.array([y0, y1, y2, v])
                     m[i, :] = np.linalg.solve(g, d)
 
     elif method == 4:
-        functions = [[] for j in range(len(x))[0:-1]]  # Initialises an empty list to store functions
+        functions = [
+            [] for j in range(len(x))[0:-1]
+        ]  # Initialises an empty list to store functions
         for i in range(len(x))[0:-1]:
             y_high = y[i + 1]
             y_low = y[i]
             x_start = x[i]
-            x_inflect = 0.5 * (x[i] + x[i+1])
+            x_inflect = 0.5 * (x[i] + x[i + 1])
             func = make_sigmoidal_curve(
-                y_high=y[i + 1], y_low=y[i],
-                x_start=x[i], x_inflect=0.5 * (x[i] + x[i+1]),
-                multiplier=4)
+                y_high=y[i + 1],
+                y_low=y[i],
+                x_start=x[i],
+                x_inflect=0.5 * (x[i] + x[i + 1]),
+                multiplier=4,
+            )
             functions[i] = func
 
         def curve(t):
@@ -444,21 +485,21 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
 
         # Get rid of first elements when they have same y (same for last elements) as there is no need for fitting
         ind_start = 0
-        while y[ind_start] == y[ind_start+1]:
+        while y[ind_start] == y[ind_start + 1]:
             ind_start += 1
 
         ind_end = len(x) - 1
         while y[ind_end] == y[ind_end - 1]:
             ind_end -= 1
 
-        x = x[ind_start:(ind_end+1)]
-        y = y[ind_start:(ind_end+1)]
+        x = x[ind_start : (ind_end + 1)]
+        y = y[ind_start : (ind_end + 1)]
 
         k = min(3, len(x) - 1)
 
         w = np.ones(len(x))
-        w[0] = 5.
-        w[-1] = 5.
+        w[0] = 5.0
+        w[-1] = 5.0
 
         f = UnivariateSpline(x, y, k=k, s=s, ext=3, w=w)  # Create a first raw approximation
 
@@ -471,22 +512,26 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
         v1 = f.derivatives(x1)[1]  #
         v_a = f.derivatives(x_a)[1]
 
-        g = np.array([
-            [x0 ** 3, x0 ** 2, x0, 1],
-            [x1 ** 3, x1 ** 2, x1, 1],
-            [3 * x0 ** 2, 2 * x0, 1, 0],
-            [3 * x1 ** 2, 2 * x1, 1, 0]
-        ])
+        g = np.array(
+            [
+                [x0 ** 3, x0 ** 2, x0, 1],
+                [x1 ** 3, x1 ** 2, x1, 1],
+                [3 * x0 ** 2, 2 * x0, 1, 0],
+                [3 * x1 ** 2, 2 * x1, 1, 0],
+            ]
+        )
         d_init = np.array([y[0], f(x1), 0, v1])
         a_init = np.linalg.solve(g, d_init)
         a_init = a_init[::-1]  # Reverse
 
-        h = np.array([
-            [x_a ** 3, x_a ** 2, x_a, 1],
-            [x_f ** 3, x_f ** 2, x_f, 1],
-            [3 * x_a ** 2, 2 * x_a, 1, 0],
-            [3 * x_f ** 2, 2 * x_f, 1, 0]
-        ])
+        h = np.array(
+            [
+                [x_a ** 3, x_a ** 2, x_a, 1],
+                [x_f ** 3, x_f ** 2, x_f, 1],
+                [3 * x_a ** 2, 2 * x_a, 1, 0],
+                [3 * x_f ** 2, 2 * x_f, 1, 0],
+            ]
+        )
         d_f = np.array([f(x_a), y[-1], v_a, 0])
         a_f = np.linalg.solve(h, d_f)
         a_f = a_f[::-1]  # Reverse
@@ -497,7 +542,7 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
         amplitude = auto_bound * (max(y) - min(y))
         if bound_low is None:
             if auto_bound is not None:
-                bound_low = 0.5*(max(y) + min(y)) - 0.5 * amplitude
+                bound_low = 0.5 * (max(y) + min(y)) - 0.5 * amplitude
         if bound_up is None:
             if auto_bound is not None:
                 bound_up = 0.5 * (max(y) + min(y)) + 0.5 * amplitude
@@ -505,7 +550,7 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
         if (bound_low is not None) or (bound_up is not None):
             # We adjust the data so that no values go over/under the bounds
             if bound_low is not None:
-                for i in range(len(x)-1):
+                for i in range(len(x) - 1):
                     if y[i] < bound_low:
                         y[i] = bound_low
 
@@ -536,8 +581,12 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
                     if (index + k) == 0:
                         y_k = y[0]
                     elif (index + k) == len(x) - 2:
-                        y_k = a_f[0] \
-                              + a_f[1] * x[index + k] + a_f[2] * x[index + k] ** 2 + a_f[3] * x[index + k] ** 3
+                        y_k = (
+                            a_f[0]
+                            + a_f[1] * x[index + k]
+                            + a_f[2] * x[index + k] ** 2
+                            + a_f[3] * x[index + k] ** 3
+                        )
                     elif (index + k) == len(x) - 1:
                         y_k = y[-1]
                     else:
@@ -552,7 +601,7 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
                 y1 = f(x1)
 
                 if y0 == y1:
-                    x_peak = 0.5*(x0 + x1)
+                    x_peak = 0.5 * (x0 + x1)
                 else:
                     if y0 == bound:
                         x_peak = x0
@@ -560,7 +609,9 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
                         x_peak = x1
                     else:
                         # Weighted positioning of the contact with bound
-                        x_peak = x0 + (abs(y0 - bound) / (abs(y0 - bound) + abs(y1 - bound))) * (x1 - x0)
+                        x_peak = x0 + (abs(y0 - bound) / (abs(y0 - bound) + abs(y1 - bound))) * (
+                            x1 - x0
+                        )
 
                 if index == 0:
                     v0 = 0
@@ -573,23 +624,27 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
                     v1 = f.derivatives(x1)[1]
 
                 if x0 != x_peak:
-                    g = np.array([
-                        [x0 ** 3, x0 ** 2, x0, 1],
-                        [x_peak ** 3, x_peak ** 2, x_peak, 1],
-                        [3. * x0 ** 2, 2. * x0, 1, 0],
-                        [3. * x_peak ** 2, 2. * x_peak, 1, 0]
-                    ])
+                    g = np.array(
+                        [
+                            [x0 ** 3, x0 ** 2, x0, 1],
+                            [x_peak ** 3, x_peak ** 2, x_peak, 1],
+                            [3.0 * x0 ** 2, 2.0 * x0, 1, 0],
+                            [3.0 * x_peak ** 2, 2.0 * x_peak, 1, 0],
+                        ]
+                    )
                     d = np.array([y0, bound, v0, 0.0])
                     a1 = np.linalg.solve(g, d)
                     a1 = a1[::-1]  # Reverse
 
                 if x1 != x_peak:
-                    g = np.array([
-                        [x_peak ** 3, x_peak ** 2, x_peak, 1],
-                        [x1 ** 3, x1 ** 2, x1, 1],
-                        [3. * x_peak ** 2, 2. * x_peak, 1, 0],
-                        [3. * x1 ** 2, 2. * x1, 1, 0]
-                    ])
+                    g = np.array(
+                        [
+                            [x_peak ** 3, x_peak ** 2, x_peak, 1],
+                            [x1 ** 3, x1 ** 2, x1, 1],
+                            [3.0 * x_peak ** 2, 2.0 * x_peak, 1, 0],
+                            [3.0 * x1 ** 2, 2.0 * x1, 1, 0],
+                        ]
+                    )
                     d = np.array([bound, y1, 0.0, v1])
                     a2 = np.linalg.solve(g, d)
                     a2 = a2[::-1]  # Reverse
@@ -602,20 +657,49 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
                 indice_first = index
                 t1 = test_a(a1, x0, x_peak, x_peak, bound_low, bound_up)
                 if t1 == 0:  # There is something wrong here
-                    spare = get_spare_fit(index, x_peak, bound, 'left', f, cut_off_dict, bound_low, bound_up, a_init,
-                                          a_f, x, y)
-                    a1 = spare['a']
-                    indice_first = index - spare['cpt']
-                t2 = test_a(a2, x_peak, x1, x_peak, bound_low, bound_up
-                            )
+                    spare = get_spare_fit(
+                        index,
+                        x_peak,
+                        bound,
+                        "left",
+                        f,
+                        cut_off_dict,
+                        bound_low,
+                        bound_up,
+                        a_init,
+                        a_f,
+                        x,
+                        y,
+                    )
+                    a1 = spare["a"]
+                    indice_first = index - spare["cpt"]
+                t2 = test_a(a2, x_peak, x1, x_peak, bound_low, bound_up)
                 if t2 == 0:  # There is something wrong here
-                    spare = get_spare_fit(index, x_peak, bound, 'right', f, cut_off_dict, bound_low, bound_up, a_init,
-                                          a_f, x, y)
-                    a2 = spare['a']
-                    next_index = index + 1 + spare['cpt']
+                    spare = get_spare_fit(
+                        index,
+                        x_peak,
+                        bound,
+                        "right",
+                        f,
+                        cut_off_dict,
+                        bound_low,
+                        bound_up,
+                        a_init,
+                        a_f,
+                        x,
+                        y,
+                    )
+                    a2 = spare["a"]
+                    next_index = index + 1 + spare["cpt"]
 
-                out = {'a1': a1, 'a2': a2, 'x_peak': x_peak, 'indice_first': indice_first, 'indice_next': next_index}
-                return (out)
+                out = {
+                    "a1": a1,
+                    "a2": a2,
+                    "x_peak": x_peak,
+                    "indice_first": indice_first,
+                    "indice_next": next_index,
+                }
+                return out
 
             t = x[0]
 
@@ -635,20 +719,20 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
                 if bound_low is not None:
                     if y_t < bound_low:
                         ok = 0
-                        sign = -1.
+                        sign = -1.0
                 if bound_up is not None:
                     if y_t > bound_up:
                         ok = 0
-                        sign = 1.
+                        sign = 1.0
 
                 if ok == 0:
                     indice = len(x[x < t]) - 1
                     out = cut_off(indice, bound_low, bound_up, sign)
 
-                    for k in range(out['indice_first'], out['indice_next']):
+                    for k in range(out["indice_first"], out["indice_next"]):
                         cut_off_dict[k] = out
-                    t = x[out['indice_next']]
-                t += (x[-1] - x[0]) / 1000.
+                    t = x[out["indice_next"]]
+                t += (x[-1] - x[0]) / 1000.0
 
         def curve(t):
             t = float(t)
@@ -674,10 +758,10 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
                 indice = len(x[x < t]) - 1
                 if indice in cut_off_dict.keys():
                     out = cut_off_dict[indice]
-                    if t < out['x_peak']:
-                        a = out['a1']
+                    if t < out["x_peak"]:
+                        a = out["a1"]
                     else:
-                        a = out['a2']
+                        a = out["a2"]
                     y_t = a[0] + a[1] * t + a[2] * t ** 2 + a[3] * t ** 3
 
             if (bound_low is not None) and (t <= x[-1]):
@@ -690,7 +774,7 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
         return curve
 
     else:
-        raise Exception('method ' + method + 'does not exist.')
+        raise Exception("method " + method + "does not exist.")
 
     def curve(t):
         t = t / coef
@@ -698,8 +782,8 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
             return y[0]
         elif t >= x[-1]:  # Constant after x[0]
             if intervention_end is not None:
-                if t >= t_intervention_start/coef:
-                    return curve_intervention(t*coef)
+                if t >= t_intervention_start / coef:
+                    return curve_intervention(t * coef)
                 else:
                     return y[-1]
             else:
@@ -714,16 +798,16 @@ def scale_up_function(x, y, method=3, smoothness=1.0, bound_low=None, bound_up=N
 
 
 def freeze_curve(curve, freeze_time):
-
     def frozen_curve(t):
         return curve(min(t, freeze_time))
 
     return frozen_curve
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     import pylab
+
     #
     # x_vals = np.linspace(1950, 2050, 150)
     # curve = make_sigmoidal_curve(y_high=2, y_low=0, x_start=1950, x_inflect=1970)
@@ -741,23 +825,25 @@ if __name__ == '__main__':
     # pylab.ylim(0, 5)
     # pylab.show()
 
-    x = (1880., 1890., 1900., 1910., 1930., 1950., 1990., 1997., 2000., 2002., 2005.)
+    x = (1880.0, 1890.0, 1900.0, 1910.0, 1930.0, 1950.0, 1990.0, 1997.0, 2000.0, 2002.0, 2005.0)
     y = np.random.rand(len(x))
 
-    f = scale_up_function(x, y, method=1,intervention_end=[2010, 1.0])
-    g = scale_up_function(x, y, method=2,intervention_end=[2010, 1.0], intervention_start_date=2008)
-    h = scale_up_function(x, y, method=3,intervention_end=[2010, 1.0])
-    k = scale_up_function(x, y, method=4,intervention_end=[2010, 1.0])
-    p = scale_up_function(x, y, method=5,intervention_end=[2020, 1.0])
+    f = scale_up_function(x, y, method=1, intervention_end=[2010, 1.0])
+    g = scale_up_function(
+        x, y, method=2, intervention_end=[2010, 1.0], intervention_start_date=2008
+    )
+    h = scale_up_function(x, y, method=3, intervention_end=[2010, 1.0])
+    k = scale_up_function(x, y, method=4, intervention_end=[2010, 1.0])
+    p = scale_up_function(x, y, method=5, intervention_end=[2020, 1.0])
     q = scale_up_function(x, y, method=5, bound_low=0.0, bound_up=1.0, intervention_end=[2010, 1.0])
 
-    x_vals = np.linspace(min(x)-0.1*(max(x)-min(x)), max(x)+0.1*(max(x)-min(x)), 1000)
-    pylab.plot(x_vals, map(f, x_vals), color='r')
-    pylab.plot(x_vals, map(g, x_vals), color='b')
-    pylab.plot(x_vals, map(h, x_vals), color='g')
-    pylab.plot(x_vals, map(k, x_vals), color='purple')  # ok
-    pylab.plot(x_vals, map(p, x_vals), color='orange')  # ok
-    pylab.plot(x_vals, map(q, x_vals), color='cyan')   # ok
+    x_vals = np.linspace(min(x) - 0.1 * (max(x) - min(x)), max(x) + 0.1 * (max(x) - min(x)), 1000)
+    pylab.plot(x_vals, map(f, x_vals), color="r")
+    pylab.plot(x_vals, map(g, x_vals), color="b")
+    pylab.plot(x_vals, map(h, x_vals), color="g")
+    pylab.plot(x_vals, map(k, x_vals), color="purple")  # ok
+    pylab.plot(x_vals, map(p, x_vals), color="orange")  # ok
+    pylab.plot(x_vals, map(q, x_vals), color="cyan")  # ok
 
-    pylab.plot(x, y, 'ro')
+    pylab.plot(x, y, "ro")
     pylab.show()

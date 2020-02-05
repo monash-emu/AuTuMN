@@ -662,4 +662,3 @@ if __name__ == "__main__":
         ymax=ymax,
         plot_start_time=1940,
     )
-

@@ -202,7 +202,7 @@ def build_mongolia_model(update_params={}):
         latent compartment of n_flow) multiplied with the proportion of the relevant infected contacts that is from this
         latent compartment.
         """
-        dict_flows = model.transition_flows_to_dict
+        dict_flows = model.transition_flows_dict
         origin_comp_name = dict_flows["origin"][n_flow]
         components_latent_comp = find_name_components(origin_comp_name)
 
@@ -671,22 +671,15 @@ def run_model():
     load_mcmc = False
 
     scenario_params = {
-        # 0: {'contact_rate':1.},
-        # 1: {'contact_rate':3.},
-        # 2: {'contact_rate':6.},
-        # 3: {'contact_rate':10.},
-        # 4: {'contact_rate':15.},
-        # 5: {'contact_rate':20.},
-        # 6: {'contact_rate':25.}
-        # 1: {'ipt_age_0_ct_coverage': 1.},
-        # 2: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
-        #          'ipt_age_60_ct_coverage': .5},
-        # 3: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
-        #           'ipt_age_60_ct_coverage': .5, 'ds_ipt_switch': 0., 'mdr_ipt_switch': 1.},
-        # 4: {'mdr_tsr': .8},
-        # 5: {'reduction_negative_tx_outcome': 0.5},
-        # 6: {'acf_coverage': .155, 'acf_urban_ger_switch': 1.},  # 15.5% to get 70,000 screens
-        # 7: {'diagnostic_sensitivity_smearneg': 1., 'prop_mdr_detected_as_mdr': .9}
+        1: {'ipt_age_0_ct_coverage': 1.},
+        2: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
+                 'ipt_age_60_ct_coverage': .5},
+        3: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
+                  'ipt_age_60_ct_coverage': .5, 'ds_ipt_switch': 0., 'mdr_ipt_switch': 1.},
+        4: {'mdr_tsr': .8},
+        5: {'reduction_negative_tx_outcome': 0.5},
+        6: {'acf_coverage': .155, 'acf_urban_ger_switch': 1.},  # 15.5% to get 70,000 screens
+        7: {'diagnostic_sensitivity_smearneg': 1., 'prop_mdr_detected_as_mdr': .9}
     }
     scenario_list = list(scenario_params.keys())
     if 0 not in scenario_list:
@@ -720,6 +713,8 @@ def run_model():
         store_run_models(models, scenarios=scenario_list, database_name=OUTPUT_DB_PATH)
         delta = time() - t0
         print("Running time: " + str(round(delta, 1)) + " seconds")
+
+    exit("Outputs not plotted")
 
     req_outputs = [
         "prevXinfectiousXamong",

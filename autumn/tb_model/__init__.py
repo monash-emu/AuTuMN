@@ -12,6 +12,7 @@ from .outputs import (
     add_combined_incidence,
     create_output_connections_for_incidence_by_stratum,
     list_all_strata_for_mortality,
+    plot_time_variant_param,
 )
 from .latency_params import provide_aggregated_latency_parameters, get_adapted_age_parameters
 from .dummy_model import DummyModel

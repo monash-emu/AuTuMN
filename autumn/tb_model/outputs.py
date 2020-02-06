@@ -9,6 +9,8 @@ import pandas as pd
 import summer_py.post_processing as post_proc
 from sqlalchemy import create_engine
 from summer_py.outputs import Outputs
+import matplotlib
+import matplotlib.pyplot as plt
 
 from ..constants import Compartment
 from ..db import Database
@@ -376,3 +378,12 @@ def _unpivot_outputs(model):
 
     output_df = output_df.drop(columns="variable")
     return output_df
+
+
+def plot_time_variant_param(function, time_span, title=''):
+    times = numpy.linspace(time_span[0], time_span[1], 1000)
+    y = [function(t) for t in times]
+    plt.plot(times, y)
+    plt.title(title)
+    plt.show()
+

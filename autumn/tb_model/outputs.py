@@ -156,7 +156,6 @@ def load_calibration_from_db(database_directory, n_burned_per_chain=0):
     return models
 
 
-# temporary fix for store database, need to move to tb_model
 def store_tb_database(
     outputs,
     table_name="outputs",
@@ -328,40 +327,51 @@ def create_mcmc_outputs(
     outputs.plot_requested_outputs()
 
 
-def _find_match(row, column_name):
-    """
-    method to return a matching item in row
-    """
-    regex = re.compile(r".*" + column_name + r".*")
-    row_list = row.variable.split("X")
-    match_item = list(filter(regex.search, row_list))
-    if len(match_item) > 0:
-        result = match_item[0]
-    else:
-        result = ""
-    return result
-
-
-def _unpivot_outputs(model_object):
+def _unpivot_outputs(model):
     """
     take outputs in the form they come out of the model object and convert them into a "long", "melted" or "unpiovted"
     format in order to more easily plug to PowerBI
     """
-    output_dataframe = pd.DataFrame(model_object.outputs, columns=model_object.compartment_names)
-    output_dataframe["times"] = model_object.times
-    output_dataframe = output_dataframe.melt("times")
-    for n_stratification in range(len(model_object.all_stratifications.keys()) + 1):
-        column_name = (
-            "compartment"
-            if n_stratification == 0
-            else list(model_object.all_stratifications.keys())[n_stratification - 1]
-        )
-        if n_stratification == 0:
-            output_dataframe[column_name] = output_dataframe.apply(
-                lambda row: row.variable.split("X")[n_stratification], axis=1
-            )
-        if n_stratification > 0:
-            output_dataframe[column_name] = output_dataframe.apply(
-                lambda row: _find_match(row, column_name), axis=1
-            )
-    return output_dataframe.drop(columns="variable")
+    output_df = pd.DataFrame(model.outputs, columns=model.compartment_names)
+    output_df["times"] = model.times
+    output_df = output_df.melt("times")
+
+    # Make compartment column
+    def get_compartment_name(row):
+        return row.variable.split("X")[0]
+
+    output_df["compartment"] = output_df.apply(get_compartment_name, axis=1)
+
+    # Map compartment names to strata names
+    # Eg.
+    #   from susceptibleXage_0Xdiabetes_diabeticXlocation_majuro
+    #   to {
+    #       "age": "age_0",
+    #       "diabetes": "diabetes_diabetic",
+    #       "location": "location_majuro"
+    #   }
+    compartment_to_column_map = {}
+    strata_names = list(model.all_stratifications.keys())
+    for compartment_name in model.compartment_names:
+        compartment_to_column_map[compartment_name] = {}
+        compartment_stratas = compartment_name.split("X")[1:]
+        for compartment_strata in compartment_stratas:
+            for strata_name in strata_names:
+                if compartment_strata.startswith(strata_name):
+                    compartment_to_column_map[compartment_name][strata_name] = compartment_strata
+
+    def get_strata_names(strata_name):
+        def _get_strata_names(row):
+            compartment_name = row["variable"]
+            try:
+                return compartment_to_column_map[compartment_name][strata_name]
+            except KeyError:
+                return ""
+
+        return _get_strata_names
+
+    for strata_name in strata_names:
+        output_df[strata_name] = output_df.apply(get_strata_names(strata_name), axis=1)
+
+    output_df = output_df.drop(columns="variable")
+    return output_df

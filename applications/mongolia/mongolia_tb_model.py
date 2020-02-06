@@ -202,7 +202,7 @@ def build_mongolia_model(update_params={}):
         latent compartment of n_flow) multiplied with the proportion of the relevant infected contacts that is from this
         latent compartment.
         """
-        dict_flows = model.transition_flows.to_dict()
+        dict_flows = model.transition_flows_to_dict
         origin_comp_name = dict_flows["origin"][n_flow]
         components_latent_comp = find_name_components(origin_comp_name)
 
@@ -589,7 +589,7 @@ def build_mongolia_model(update_params={}):
         def calculate_notifications(model, time):
 
             total_notifications = 0.0
-            dict_flows = model.transition_flows.to_dict()
+            dict_flows = model.transition_flows_dict
 
             comp_ind = model.compartment_names.index("infectious" + stratum)
             infectious_pop = model.compartment_values[comp_ind]
@@ -849,7 +849,7 @@ def run_model():
         create_multi_scenario_outputs(
             models,
             req_outputs=req_outputs,
-            out_dir="test_popsizes",
+            out_dir="test_runtime",
             targets_to_plot=targets_to_plot,
             req_multipliers=multipliers,
             translation_dictionary=translations,

@@ -373,11 +373,5 @@ def _unpivot_outputs(model):
     for strata_name in strata_names:
         output_df[strata_name] = output_df.apply(get_strata_names(strata_name), axis=1)
 
-    # # Make columns for strat names eg: infectiousXmood_happyXage_old -> mood_happy, age_old
-    # def get_strata_names(compartment_name):
-    #     return pd.Series(compartment_to_column_map[compartment_name])
-
-    # strata_name_df = output_df.variable.apply(get_strata_names)
-    # output_df = output_df.merge(strata_name_df, left_index=True, right_index=True)
-
-    return output_df.drop(columns="variable")
+    output_df = output_df.drop(columns="variable")
+    return output_df

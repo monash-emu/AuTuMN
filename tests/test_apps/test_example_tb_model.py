@@ -166,9 +166,6 @@ def test_example_model_for_regressions():
 
     # Run the model
     tb_model.run_model()
-    import pdb
-
-    pdb.set_trace()
     # get outputs
     # infectious_population = tb_model.get_total_compartment_size(["infectious"])
 

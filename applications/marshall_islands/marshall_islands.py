@@ -550,17 +550,18 @@ def build_rmi_model(update_params={}):
         def calculate_notifications(model, time):
 
             total_notifications = 0.0
-            dict_flows = model.transition_flows.to_dict()
+            dict_flows = model.transition_flows_dict
+            compartment_name = "infectious" + stratum
+            comp_idx = model.compartment_idx_lookup[compartment_name]
 
-            comp_ind = model.compartment_names.index("infectious" + stratum)
-            infectious_pop = model.compartment_values[comp_ind]
+            infectious_pop = model.compartment_values[comp_idx]
             detection_indices = [
                 index for index, val in dict_flows["parameter"].items() if "case_detection" in val
             ]
             flow_index = [
                 index
                 for index in detection_indices
-                if dict_flows["origin"][index] == model.compartment_names[comp_ind]
+                if dict_flows["origin"][index] == model.compartment_names[comp_idx]
             ][0]
             param_name = dict_flows["parameter"][flow_index]
             detection_tx_rate = model.get_parameter_value(param_name, time)

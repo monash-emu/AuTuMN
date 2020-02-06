@@ -222,6 +222,7 @@ def create_multi_scenario_outputs(
     translation_dictionary={},
     scenario_list=[],
     plot_start_time=1990,
+    outputs_to_plot_by_stratum=['prevXinfectious', 'prevXlatent'],
 ):
     """
     process and generate plots for several scenarios
@@ -240,9 +241,9 @@ def create_multi_scenario_outputs(
         if hasattr(models[scenario_index], "all_stratifications"):
             for group in models[scenario_index].all_stratifications.keys():
                 req_outputs.append("distribution_of_strataX" + group)
-                for stratum in models[scenario_index].all_stratifications[group]:
-                    req_outputs.append("prevXinfectiousXamongX" + group + "_" + stratum)
-                    req_outputs.append("prevXlatentXamongX" + group + "_" + stratum)
+                for output in outputs_to_plot_by_stratum:
+                    for stratum in models[scenario_index].all_stratifications[group]:
+                        req_outputs.append(output + "XamongX" + group + "_" + stratum)
 
             if "strain" in models[scenario_index].all_stratifications.keys():
                 req_outputs.append("prevXinfectiousXstrain_mdrXamongXinfectious")
@@ -272,9 +273,9 @@ def create_multi_scenario_outputs(
     )
     outputs.plot_requested_outputs()
 
-    for req_output in ["prevXinfectious", "prevXlatent"]:
+    for output in outputs_to_plot_by_stratum:
         for sc_index in range(len(models)):
-            outputs.plot_outputs_by_stratum(req_output, sc_index=sc_index)
+            outputs.plot_outputs_by_stratum(output, sc_index=sc_index)
 
 
 def create_mcmc_outputs(

@@ -631,6 +631,38 @@ def build_mongolia_model(update_params={}):
     # prepare death outputs for all strata
     _tb_model.death_output_categories = list_all_strata_for_mortality(_tb_model.compartment_names)
 
+    ############################################
+    #       population sizes for costing
+    ############################################
+
+    # nb of detected individuals by strain:
+    def detected_popsize_function_builder(tag):
+        """
+            example of tag: "starin_mdr" or "organ_smearpos"
+        """
+        def calculate_nb_detected(model, time):
+            nb_treated = 0.
+            for key, value in model.derived_outputs.items():
+                if 'notifications' in key and tag in key:
+                    this_time_index = model.times.index(time)
+                    nb_treated += value[this_time_index]
+            return nb_treated
+
+        return calculate_nb_detected
+
+    for tag in ['strain_mdr', 'strain_ds', 'organ_smearpos', 'organ_smearneg', 'organ_extrapul']:
+        _tb_model.derived_output_functions['popsizeXnb_detectedX' + tag] = \
+            detected_popsize_function_builder(tag)
+
+    # ACF popsize: number of people screened
+    def popsize_acf(model, time):
+        if external_params['acf_coverage'] == 0.:
+            return 0.
+        pop_urban_ger = sum([model.compartment_values[i] for i, c_name in enumerate(model.compartment_names) if 'location_urban_ger' in c_name])
+        return external_params['acf_coverage'] * pop_urban_ger
+
+    _tb_model.derived_output_functions['popsizeXnb_screened_acf'] = popsize_acf
+
     return _tb_model
 
 
@@ -817,7 +849,7 @@ def run_model():
         create_multi_scenario_outputs(
             models,
             req_outputs=req_outputs,
-            out_dir="test_inc_stratum",
+            out_dir="test_popsizes",
             targets_to_plot=targets_to_plot,
             req_multipliers=multipliers,
             translation_dictionary=translations,

@@ -75,7 +75,7 @@ def build_rmi_model(update_params={}):
 
     # some default parameter values
     external_params = {  # run configuration
-        "start_time": 1940.0,
+        "start_time": 1900.0,
         "end_time": 2035.0,
         "time_step": 1.0,
         "start_population": 14000,
@@ -196,7 +196,7 @@ def build_rmi_model(update_params={}):
                         "to_condition": stratification + "_" + stratum,
                     }
 
-    init_pop = {"infectious": 3, "late_latent": 50}
+    init_pop = {"infectious": 3, "late_latent": 600}
 
     # define model     #replace_deaths  add_crude_birth_rate
     _tb_model = StratifiedModel(
@@ -413,22 +413,16 @@ def build_rmi_model(update_params={}):
             verbose=False,
             requested_proportions=props_diabetes,
             adjustment_requests={
-                "early_progressionXage_15": progression_adjustments,
-                "early_progressionXage_35": progression_adjustments,
-                "early_progressionXage_50": progression_adjustments,
-                "early_progressionXage_70": progression_adjustments,
-                "late_progressionXage_15": progression_adjustments,
-                "late_progressionXage_35": progression_adjustments,
-                "late_progressionXage_50": progression_adjustments,
-                "late_progressionXage_70": progression_adjustments,
+                "early_progression": progression_adjustments,
+                "late_progression": progression_adjustments,
             },
-            # entry_proportions={'diabetic': 0.01, 'nodiabetes': 0.99},
-            # target_props={'age_0': {"diabetic": 0.05},
-            #               'age_5': {"diabetic": 0.1},
-            #               'age_15': {"diabetic": 0.2},
-            #               'age_35': {"diabetic": 0.4},
-            #               'age_50': {"diabetic": 0.5},
-            #               'age_70': {"diabetic": 0.8}}
+            entry_proportions={'diabetic': 0.01, 'nodiabetes': 0.99},
+            target_props={'age_0': {"diabetic": 0.05},
+                          'age_5': {"diabetic": 0.1},
+                          'age_15': {"diabetic": 0.2},
+                          'age_35': {"diabetic": 0.4},
+                          'age_50': {"diabetic": 0.5},
+                          'age_70': {"diabetic": 0.8}}
         )
 
     if "organ" in STRATIFY_BY:
@@ -750,7 +744,7 @@ def run_model():
     create_multi_scenario_outputs(
         models,
         req_outputs=req_outputs,
-        out_dir="rmi_03feb_7",
+        out_dir="rmi_07feb3",
         targets_to_plot=targets_to_plot,
         req_multipliers=multipliers,
         translation_dictionary=translations,

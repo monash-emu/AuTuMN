@@ -17,7 +17,7 @@ from ..db import Database
 from .dummy_model import DummyModel
 
 
-def add_combined_incidence(derived_outputs, outputs):
+def add_combined_incidence(derived_outputs, outputs, scaled_by_population=False):
     columns_to_add = {}
     comp_names = outputs.drop(outputs.columns[[0, 1, 2]], axis=1).columns
     for column_name in derived_outputs.columns:
@@ -26,18 +26,21 @@ def add_combined_incidence(derived_outputs, outputs):
             new_output = "incidence" + column_name[15:]
             absolute_incidence = derived_outputs[column_name] + derived_outputs[incidence_late_name]
 
-            # work out total stratum population
-            if column_name == "incidence_early":  # we need the total population
-                stratum_compartments = comp_names
-            else:  # we may need a subgroup population
-                stratification_name = column_name[15:].split("_")[0]
-                if all(stratification_name in c for c in comp_names):
-                    stratum_compartments = [c for c in comp_names if column_name[15:] in c]
-                else:
+            if scaled_by_population:
+                # work out total stratum population
+                if column_name == "incidence_early":  # we need the total population
                     stratum_compartments = comp_names
+                else:  # we may need a subgroup population
+                    stratification_name = column_name[15:].split("_")[0]
+                    if all(stratification_name in c for c in comp_names):
+                        stratum_compartments = [c for c in comp_names if column_name[15:] in c]
+                    else:
+                        stratum_compartments = comp_names
 
-            stratum_population = outputs[stratum_compartments].sum(axis=1)
-            columns_to_add[new_output] = absolute_incidence / stratum_population * 1.0e5
+                stratum_population = outputs[stratum_compartments].sum(axis=1)
+                columns_to_add[new_output] = absolute_incidence / stratum_population * 1.0e5
+            else:
+                columns_to_add[new_output] = absolute_incidence
 
     for key, val in columns_to_add.items():
         derived_outputs[key] = val

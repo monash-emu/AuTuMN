@@ -667,8 +667,8 @@ def build_mongolia_model(update_params={}):
 
 
 def run_model():
-    load_model = False
-    load_mcmc = False
+    load_model = True
+    load_mcmc = True
 
     scenario_params = {
         # 1: {'ipt_age_0_ct_coverage': 1.},
@@ -722,68 +722,16 @@ def run_model():
         #'prevXinfectiousXorgan_smearposXamongXage_15Xage_60Xlocation_prison']
     ]
 
-    # {'prevXinfectiousXamongXage_15Xage_60': [[2015.], [560.]],
-    #                    'prevXlatentXamongXage_5': [[2016.], [9.6]],
-    #                    'prevXinfectiousXamongXage_15Xage_60Xhousing_ger': [[2015.], [613.]],
-    #                    'prevXinfectiousXamongXage_15Xage_60Xhousing_non-ger': [[2015.], [436.]],
-    #                    'prevXinfectiousXamongXage_15Xage_60Xlocation_rural': [[2015.], [529.]],
-    #                    'prevXinfectiousXamongXage_15Xage_60Xlocation_province': [[2015.], [513.]],
-    #                    'prevXinfectiousXamongXage_15Xage_60Xlocation_urban': [[2015.], [586.]],
-    #                    'prevXinfectiousXstrain_mdrXamongXinfectious': [[2016.], [5.3]]
-    #                    }
+    targets_to_plot = {"prevXinfectiousXamong": {'times': [2015], 'values': [[757., 620., 894.]]},
+                       "prevXlatentXamongXage_5": {'times': [2016], 'values': [[9.60, 9.02, 10.18]]},
+                       "prevXinfectiousXstrain_mdrXamongXinfectious": {'times': [2015],
+                                                                       'values': [[5.03, 4.10, 6.70]]},
+                       "notifications": {'times': [2015], 'values': [[4685]]}
+                       }
 
-    calib_targets = [
-        {
-            "output_key": "prevXinfectiousXorgan_smearposXamongXage_15Xage_60",
-            "years": [2015.0],
-            "values": [204.0],
-            "cis": [(143.0, 265.1)],
-        },
-        {
-            "output_key": "prevXinfectiousXorgan_smearnegXamongXage_15Xage_60",
-            "years": [2015.0],
-            "values": [340.0],
-            "cis": [(273.0, 407.0)],
-        },
-        {
-            "output_key": "prevXinfectiousXorgan_smearposXamongXage_15Xage_60Xlocation_rural_province",
-            "years": [2015.0],
-            "values": [220.0],
-        },
-        {
-            "output_key": "prevXinfectiousXorgan_smearposXamongXage_15Xage_60Xlocation_urban_ger",
-            "years": [2015.0],
-            "values": [277.0],
-        },
-        {
-            "output_key": "prevXinfectiousXorgan_smearposXamongXage_15Xage_60Xlocation_urban_nonger",
-            "years": [2015.0],
-            "values": [156],
-        },
-        {
-            "output_key": "prevXinfectiousXamongXage_15Xage_60Xlocation_prison",
-            "years": [2015.0],
-            "values": [3785],
-        },
-        {
-            "output_key": "prevXlatentXamongXage_5",
-            "years": [2016.0],
-            "values": [9.6],
-            "cis": [(9.02, 10.18)],
-        },
-        {
-            "output_key": "prevXinfectiousXstrain_mdrXamongXinfectious",
-            "years": [2015.0],
-            "values": [5],
-        },
-    ]
-    calib_targets = []
-
-    targets_to_plot = {}
-    for target in calib_targets:
-        targets_to_plot[target["output_key"]] = [target["years"], target["values"]]
-        if target["output_key"] not in req_outputs:
-            req_outputs.append(target["output_key"])
+    for target in targets_to_plot.keys():
+        if target not in req_outputs and target[0:5] == 'prevX':
+            req_outputs.append(target)
 
     multipliers = {"prevXinfectiousXstrain_mdrXamongXinfectious": 100.0}
 
@@ -830,7 +778,7 @@ def run_model():
         create_mcmc_outputs(
             models,
             req_outputs=req_outputs,
-            out_dir="mcmc_output_plots_test",
+            out_dir="mcmc_output_12_02",
             targets_to_plot=targets_to_plot,
             req_multipliers=multipliers,
             translation_dictionary=translations,

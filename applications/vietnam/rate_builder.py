@@ -106,4 +106,3 @@ class RateBuilder:
             * (1.0 - self.rate_params["reduction_negative_tx_outcome"])
             * self.rate_params["dr_amplification_prop_among_nonsuccess"]
         )
-

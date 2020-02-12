@@ -39,7 +39,7 @@ input_database = Database(database_name=INPUT_DB_PATH)
 STRATIFY_BY = ["age", "strain", "location", "organ"]
 
 
-def build_model(params):
+def build_model(params: dict):
     tb_control_recovery_rate_organ = "smearpos" if "organ" in STRATIFY_BY else "overall"
     rates = RateBuilder(params["rates"], tb_control_recovery_rate_organ)
 
@@ -171,7 +171,7 @@ def run_model():
     print(f"Running time: {run_time:0.2f} seconds")
 
 
-def merge_dicts(src, dest):
+def merge_dicts(src: dict, dest: dict):
     """
     Merge src dict into dest dict.
     """

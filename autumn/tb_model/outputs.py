@@ -227,7 +227,7 @@ def create_multi_scenario_outputs(
     translation_dictionary={},
     scenario_list=[],
     plot_start_time=1990,
-    outputs_to_plot_by_stratum=['prevXinfectious', 'prevXlatent'],
+    outputs_to_plot_by_stratum=["prevXinfectious", "prevXlatent"],
 ):
     """
     process and generate plots for several scenarios
@@ -383,10 +383,9 @@ def _unpivot_outputs(model):
     return output_df
 
 
-def plot_time_variant_param(function, time_span, title=''):
+def plot_time_variant_param(function, time_span, title=""):
     times = numpy.linspace(time_span[0], time_span[1], 1000)
     y = [function(t) for t in times]
     plt.plot(times, y)
     plt.title(title)
     plt.show()
-

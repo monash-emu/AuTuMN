@@ -1,8 +1,4 @@
-from autumn.tb_model.flows import (
-    add_standard_latency_flows,
-    add_standard_natural_history_flows,
-    add_standard_infection_flows,
-)
+from autumn.tb_model import flows
 from summer_py.summer_model import StratifiedModel, find_name_components, find_stem
 from summer_py.constants import Compartment, Flow
 
@@ -13,12 +9,10 @@ def get_flows(rates: RateBuilder, strain_params: dict):
     """
     Returns a list of compartmental model flows.
     """
-    flows = []
-    flows = add_standard_infection_flows(flows)
-    flows = add_standard_latency_flows(flows)
-    flows = add_standard_natural_history_flows(flows)
     return [
-        *flows,
+        *flows.INFECTION_FLOWS,
+        *flows.LATENCY_FLOWS,
+        *flows.NATURAL_HISTORY_FLOWS,
         # Add case detection process to basic model
         {
             "type": Flow.STANDARD,

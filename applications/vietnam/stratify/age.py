@@ -22,7 +22,7 @@ def stratify_age(model: StratifiedModel, input_database: Database, age_params: d
     age_params = get_adapted_age_parameters(age_breakpoints)
     age_params.update(split_age_parameter(age_breakpoints, "contact_rate"))
 
-    # adjustment of latency parameters
+    # Adjustment of latency parameters
     for param in ["early_progression", "late_progression"]:
         for age_break in age_breakpoints:
             if age_break > 5:
@@ -46,7 +46,7 @@ def stratify_age(model: StratifiedModel, input_database: Database, age_params: d
     # Age-specific IPT
     age_params.update({"ipt_rate": ipt_ct_coverage})
 
-    # add BCG effect without stratification assuming constant 100% coverage
+    # Add BCG effect without stratification assuming constant 100% coverage
     bcg_wane = create_sloping_step_function(15.0, 0.3, 30.0, 1.0)
     age_bcg_efficacy_dict = get_parameter_dict_from_function(
         lambda value: bcg_wane(value), age_breakpoints

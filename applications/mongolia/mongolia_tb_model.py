@@ -679,7 +679,15 @@ def run_model():
         # 4: {'mdr_tsr': .8},
         # 5: {'reduction_negative_tx_outcome': 0.5},
         # 6: {'acf_coverage': .155, 'acf_urban_ger_switch': 1.},  # 15.5% to get 70,000 screens
-        # 7: {'diagnostic_sensitivity_smearneg': 1., 'prop_mdr_detected_as_mdr': .9}
+        # 7: {'diagnostic_sensitivity_smearneg': 1., 'prop_mdr_detected_as_mdr': .9},
+        # 8: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
+        #     'ipt_age_60_ct_coverage': .5, 'ds_ipt_switch': 0., 'mdr_ipt_switch': 1.,
+        #     'mdr_tsr': .8,
+        #     'reduction_negative_tx_outcome': 0.5,
+        #     'acf_coverage': .155, 'acf_urban_ger_switch': 1.,
+        #     'diagnostic_sensitivity_smearneg': 1., 'prop_mdr_detected_as_mdr': .9
+        #     },
+        # 9: {'contact_rate': 0.}
     }
     scenario_list = list(scenario_params.keys())
     if 0 not in scenario_list:
@@ -735,7 +743,9 @@ def run_model():
 
     multipliers = {"prevXinfectiousXstrain_mdrXamongXinfectious": 100.0}
 
-    ymax = {"prevXinfectiousXamong": 2000.0}
+    ymax = {"prevXinfectiousXamong": 2000.0,
+            "prevXlatentXamongXage_5": 20.
+            }
 
     translations = {
         "prevXinfectiousXamong": "TB prevalence (/100,000)",
@@ -790,7 +800,7 @@ def run_model():
         create_multi_scenario_outputs(
             models,
             req_outputs=req_outputs,
-            out_dir="test_runtime",
+            out_dir="test_new_scenarios",
             targets_to_plot=targets_to_plot,
             req_multipliers=multipliers,
             translation_dictionary=translations,

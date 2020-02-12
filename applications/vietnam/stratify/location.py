@@ -1,3 +1,4 @@
+import numpy as np
 from summer_py.summer_model import StratifiedModel
 from autumn.tb_model import scale_relative_risks_for_equivalence
 
@@ -11,7 +12,7 @@ def stratify_location(model: StratifiedModel, location_params: dict):
     )
 
     # Adjusted such that heterogeneous mixing yields similar overall burden as homogeneous
-    location_mixing = 3.0 * numpy.array(location_params["mixing_matrix"])
+    location_mixing = 3.0 * np.array(location_params["mixing_matrix"])
 
     location_adjustments = {}
     location_adjustments["acf_rate"] = location_params["acf_rate"]

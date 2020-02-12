@@ -24,8 +24,8 @@ model:
   contact_rate: 14.0
   rr_transmission_recovered: 1.0
   rr_transmission_infected: 0.21
-  self_recovery_rate: 0.231 # this is for smear-positive TB
-  tb_mortality_rate: 0.389 # this is for smear-positive TB
+  recovery: 0.231 # this is for smear-positive TB
+  infect_death: 0.389 # this is for smear-positive TB
   universal_death_rate: 0.02
   case_detection: 0.0
   ipt_rate: 0.0

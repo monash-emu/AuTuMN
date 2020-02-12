@@ -15,6 +15,9 @@ xlrd>=1.2.0  # Reading Excel files via Pandas
 # Database access
 SQLAlchemy>=1.1.18
 
+# Utility
+pyyaml==5.3
+
 # Testing
 pytest
 black

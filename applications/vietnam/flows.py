@@ -3,12 +3,13 @@ from autumn.tb_model.flows import (
     add_standard_natural_history_flows,
     add_standard_infection_flows,
 )
-from summer_py.summer_model import (
-    find_name_components,
-    find_stem,
-)
+from summer_py.summer_model import StratifiedModel, find_name_components, find_stem
+from summer_py.constants import Compartment, Flow
 
-def get_flows():
+from .rate_builder import RateBuilder
+
+
+def get_flows(rates: RateBuilder, strain_params: dict):
     """
     Returns a list of compartmental model flows.
     """
@@ -16,44 +17,35 @@ def get_flows():
     flows = add_standard_infection_flows(flows)
     flows = add_standard_latency_flows(flows)
     flows = add_standard_natural_history_flows(flows)
-    flows.append()
     return [
         *flows,
         # Add case detection process to basic model
         {
-            "type": "standard_flows",
+            "type": Flow.STANDARD,
             "parameter": "case_detection",
-            "origin": "infectious",
-            "to": "recovered",
+            "origin": Compartment.INFECTIOUS,
+            "to": Compartment.RECOVERED,
         },
-        # Add IPT flow
+        # Add Isoniazid preventive therapy flow
         {
-            "type": "customised_flows",
+            "type": Flow.CUSTOM,
             "parameter": "ipt_rate",
-            "origin": "early_latent",
-            "to": "recovered",
-            "function": build_ipt_flow_func(x, y, z),
-        }
-        # Add ACF flow
+            "origin": Compartment.EARLY_LATENT,
+            "to": Compartment.RECOVERED,
+            "function": build_ipt_flow_func(rates, strain_params),
+        },
+        # Add active case finding flow
         {
-            "type": "standard_flows",
+            "type": Flow.STANDARD,
             "parameter": "acf_rate",
-            "origin": "infectious",
-            "to": "recovered",
-        }
-    ]   
-
-def build_ipt_flow_func(x, y, z):
-    """
-    FIXME: DEPENDS ON
-        - reduction_negative_tx_outcome
-        - mdr_tsr
-        - prop_mdr_detected_as_mdr
-        - mongolia_tsr (func)
-    """
+            "origin": Compartment.INFECTIOUS,
+            "to": Compartment.RECOVERED,
+        },
+    ]
 
 
-    def ipt_flow_func(model, n_flow, time, compartment_values):
+def build_ipt_flow_func(rates: RateBuilder, strain_params: dict):
+    def ipt_flow_func(model: StratifiedModel, n_flow: int, time: int, compartment_values):
         """
         Work out the number of detected individuals from the relevant active TB compartments (with regard to the origin
         latent compartment of n_flow) multiplied with the proportion of the relevant infected contacts that is from this
@@ -87,11 +79,9 @@ def build_ipt_flow_func(x, y, z):
                 ][0]
                 param_name = dict_flows["parameter"][flow_index]
                 detection_tx_rate = model.get_parameter_value(param_name, time)
-                tsr = mongolia_tsr(time) + external_params["reduction_negative_tx_outcome"] * (
-                    1.0 - mongolia_tsr(time)
-                )
+                tsr = rates.get_treatment_sucess(time)
                 if "strain_mdr" in model.compartment_names[comp_ind]:
-                    tsr = external_params["mdr_tsr"] * external_params["prop_mdr_detected_as_mdr"]
+                    tsr = strain_params["mdr_tsr"] * strain_params["prop_mdr_detected_as_mdr"]
                 if tsr > 0.0:
                     total_tb_detected += infectious_pop * detection_tx_rate / tsr
 

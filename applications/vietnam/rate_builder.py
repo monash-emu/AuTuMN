@@ -28,7 +28,7 @@ class RateBuilder:
         }
         disease_duration = rate_params["disease_duration"]
         self.detect_rate_by_organ = {}
-        for organ in self.cdr_by_organ.keys():
+        for organ in cdr_by_organ.keys():
             prop_to_rate = convert_competing_proportion_to_rate(1.0 / disease_duration[organ])
             self.detect_rate_by_organ[organ] = return_function_of_function(
                 cdr_by_organ[organ], prop_to_rate

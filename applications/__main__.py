@@ -9,6 +9,8 @@ You can access this script from your CLI by running:
 import click
 
 from .marshall_islands.marshall_islands import run_model as rmi_run_model
+from .vietnam.model import run_model as run_vietnam_model
+
 
 @click.group()
 def cli():
@@ -19,6 +21,14 @@ def cli():
 
 
 @click.command()
+def vietnam():
+    """
+    Run the Marshall Islands model.
+    """
+    run_vietnam_model()
+
+
+@click.command()
 def rmi():
     """
     Run the Marshall Islands model.
@@ -26,5 +36,6 @@ def rmi():
     rmi_run_model()
 
 
+cli.add_command(vietnam)
 cli.add_command(rmi)
 cli()

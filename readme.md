@@ -61,11 +61,7 @@ Specific uses of the AuTuMN framework are present in `applications/`. You can ru
 
 ## major outstanding tasks
 
-- Bulgaria paper
-- Bhutan inputs
-- age-specific parameterisation
 - mapping to DALYs, QALYs
-- optimisation
 
 ## minor tasks
 

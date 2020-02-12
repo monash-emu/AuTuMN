@@ -26,4 +26,3 @@ def test_build_marshall_model(mock_write_model_data):
     """
     model = build_rmi_model({})
     assert type(model) is StratifiedModel
-    mock_write_model_data.assert_called_once()

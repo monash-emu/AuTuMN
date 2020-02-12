@@ -35,6 +35,7 @@ from autumn.tb_model import (
     create_output_connections_for_incidence_by_stratum,
     list_all_strata_for_mortality,
     DummyModel,
+    plot_time_variant_param,
 )
 from autumn.tool_kit import (
     run_multi_scenario,
@@ -77,10 +78,12 @@ def build_rmi_model(update_params={}):
     external_params = {  # run configuration
         "start_time": 1900.0,
         "end_time": 2035.0,
-        "time_step": 1.0,
-        "start_population": 14000,
+        "time_step": .25,
+        "start_population": 4300,
         # base model definition:
-        "contact_rate": 0.0005,
+        "contact_rate": .0037,
+        "beta_decay_rate": .05,
+        "minimum_tv_beta_multiplier": .1,
         "rr_transmission_recovered": 0.6,
         "rr_transmission_infected": 0.21,
         "rr_transmission_ltbi_treated": 0.21,
@@ -88,7 +91,7 @@ def build_rmi_model(update_params={}):
         "self_recovery_rate": 0.231,  # this is for smear-positive TB
         "tb_mortality_rate": 0.389,  # this is for smear-positive TB
         "prop_smearpos": 0.5,
-        "cdr_multiplier": 1.1,
+        "cdr_multiplier": 1.,
         # diagnostic sensitivity by organ status:
         "diagnostic_sensitivity_smearpos": 1.0,
         "diagnostic_sensitivity_smearneg": 0.7,
@@ -96,7 +99,7 @@ def build_rmi_model(update_params={}):
         # adjustments by location and diabetes
         "rr_transmission_ebeye": 2.2,  # reference majuro
         "rr_transmission_otherislands": 1.0,  # reference majuro
-        "rr_progression_diabetic": 3.11,  # reference: no_diabetes
+        "rr_progression_diabetic": 3.18,  # reference: no_diabetes
         # case detection adjustment for location
         "case_detection_majuro_multiplier": 1.0,
         "case_detection_ebeye_multiplier": 1.5,
@@ -140,8 +143,7 @@ def build_rmi_model(update_params={}):
 
     input_database = Database(database_name=INPUT_DB_PATH)
     n_iter = (
-        4
-        * int(
+        int(
             round(
                 (external_params["end_time"] - external_params["start_time"])
                 / external_params["time_step"]
@@ -196,7 +198,7 @@ def build_rmi_model(update_params={}):
                         "to_condition": stratification + "_" + stratum,
                     }
 
-    init_pop = {"infectious": 3, "late_latent": 600}
+    init_pop = {"infectious": 3, "late_latent": 50}
 
     # define model     #replace_deaths  add_crude_birth_rate
     _tb_model = StratifiedModel(
@@ -325,14 +327,28 @@ def build_rmi_model(update_params={}):
 
     # initialise acf_rate function
     acf_rate_function = (
-        lambda t: (acf_rate_over_time(t)) * external_params["acf_sensitivity"] * (rmi_tsr(t))
+        lambda t: external_params['acf_coverage'] * (acf_rate_over_time(t)) * external_params["acf_sensitivity"] * (rmi_tsr(t))
     )
 
     acf_ltbi_rate_function = (
-        lambda t: (acf_rate_over_time(t))
+        lambda t: external_params['acf_coverage'] * (acf_rate_over_time(t))
         * external_params["acf_ltbi_sensitivity"]
         * external_params["acf_ltbi_efficacy"]
     )
+
+    # time_variant contact_rate to simulate living condition improvement
+    contact_rate_function = (
+        lambda t: (external_params['minimum_tv_beta_multiplier'] + (1.- external_params['minimum_tv_beta_multiplier']) *
+                   numpy.exp(-external_params['beta_decay_rate']*(t - 1900.))) * external_params['contact_rate']
+    )
+
+    # plot_time_variant_param(contact_rate_function, [1900, 2020])
+
+    # create time-variant functions for the different contact rates # did not get it to work with a loop!!!
+    beta_func = lambda t: contact_rate_function(t)
+    beta_func_infected = lambda t: contact_rate_function(t) * external_params['rr_transmission_infected']
+    beta_func_recovered = lambda t: contact_rate_function(t) * external_params['rr_transmission_recovered']
+    beta_func_ltbi_treated = lambda t: contact_rate_function(t) * external_params['rr_transmission_ltbi_treated']
 
     # assign newly created functions to model parameters
     if len(STRATIFY_BY) == 0:
@@ -340,6 +356,11 @@ def build_rmi_model(update_params={}):
         _tb_model.time_variants["acf_rate"] = acf_rate_function
         _tb_model.time_variants["acf_ltbi_rate"] = acf_ltbi_rate_function
 
+        ###################################
+        _tb_model.time_variants["contact_rate"] = beta_func
+        _tb_model.time_variants["contact_rate_infected"] = beta_func_infected
+        _tb_model.time_variants["contact_rate_recovered"] = beta_func_recovered
+        _tb_model.time_variants["contact_rate_ltbi_treated"] = beta_func_ltbi_treated
     else:
         _tb_model.adaptation_functions["case_detection"] = tb_control_recovery_rate
         _tb_model.parameters["case_detection"] = "case_detection"
@@ -349,6 +370,19 @@ def build_rmi_model(update_params={}):
 
         _tb_model.adaptation_functions["acf_ltbi_rate"] = acf_ltbi_rate_function
         _tb_model.parameters["acf_ltbi_rate"] = "acf_ltbi_rate"
+
+        ###################################################################################
+        _tb_model.adaptation_functions["contact_rate"] = beta_func
+        _tb_model.parameters["contact_rate"] = "contact_rate"
+
+        _tb_model.adaptation_functions["contact_rate_infected"] = beta_func_infected
+        _tb_model.parameters["contact_rate_infected"] = "contact_rate_infected"
+
+        _tb_model.adaptation_functions["contact_rate_recovered"] = beta_func_recovered
+        _tb_model.parameters["contact_rate_recovered"] = "contact_rate_recovered"
+
+        _tb_model.adaptation_functions["contact_rate_ltbi_treated"] = beta_func_ltbi_treated
+        _tb_model.parameters["contact_rate_ltbi_treated"] = "contact_rate_ltbi_treated"
 
     if "age" in STRATIFY_BY:
         age_breakpoints = [0, 5, 15, 35, 50, 70]
@@ -404,7 +438,7 @@ def build_rmi_model(update_params={}):
 
     if "diabetes" in STRATIFY_BY:
         props_diabetes = {"diabetic": 0.3, "nodiabetes": 0.7}
-        progression_adjustments = {"diabetic": 3.18, "nodiabetes": 1.0}
+        progression_adjustments = {"diabetic": external_params['rr_progression_diabetic'], "nodiabetes": 1.0}
 
         _tb_model.stratify(
             "diabetes",
@@ -413,16 +447,22 @@ def build_rmi_model(update_params={}):
             verbose=False,
             requested_proportions=props_diabetes,
             adjustment_requests={
-                "early_progression": progression_adjustments,
-                "late_progression": progression_adjustments,
+                "early_progressionXage_15": progression_adjustments,
+                "early_progressionXage_35": progression_adjustments,
+                "early_progressionXage_50": progression_adjustments,
+                "early_progressionXage_70": progression_adjustments,
+                "late_progressionXage_15": progression_adjustments,
+                "late_progressionXage_35": progression_adjustments,
+                "late_progressionXage_50": progression_adjustments,
+                "late_progressionXage_70": progression_adjustments,
             },
-            entry_proportions={'diabetic': 0.01, 'nodiabetes': 0.99},
-            target_props={'age_0': {"diabetic": 0.05},
-                          'age_5': {"diabetic": 0.1},
-                          'age_15': {"diabetic": 0.2},
-                          'age_35': {"diabetic": 0.4},
-                          'age_50': {"diabetic": 0.5},
-                          'age_70': {"diabetic": 0.8}}
+            # entry_proportions={'diabetic': 0.01, 'nodiabetes': 0.99},
+            # target_props={'age_0': {"diabetic": 0.05},
+            #               'age_5': {"diabetic": 0.1},
+            #               'age_15': {"diabetic": 0.2},
+            #               'age_35': {"diabetic": 0.4},
+            #               'age_50': {"diabetic": 0.5},
+            #               'age_70': {"diabetic": 0.8}}
         )
 
     if "organ" in STRATIFY_BY:
@@ -582,7 +622,6 @@ def build_rmi_model(update_params={}):
                 ] = notification_function_builder(stratum)
 
         # create some personalised notification outputs
-        # build derived outputs for notifications
         def aggregated_notification_function_builder(location):
             """
                 example of location: "majuro"
@@ -614,7 +653,7 @@ def build_rmi_model(update_params={}):
         # prepare death outputs for all strata
         _tb_model.death_output_categories = list_all_strata_for_mortality(_tb_model.compartment_names)
 
-    write_model_data(_tb_model)
+    # write_model_data(_tb_model)
     return _tb_model
 
 
@@ -636,12 +675,14 @@ def run_model():
     load_model = False
 
     scenario_params = {
-        # 1: {'acf_majuro_switch': 1.,
-        #                'acf_ebeye_switch': 1.,
-        #                'acf_otherislands_switch': 0.,
-        #                'acf_ltbi_majuro_switch': 1.,
-        #                'acf_ltbi_ebeye_switch': 0.,
-        #                'acf_ltbi_otherislands_switch': 0.}
+        1: {'acf_coverage':1.,
+
+            'acf_majuro_switch': 1.,
+                       'acf_ebeye_switch': 1.,
+                       'acf_otherislands_switch': 0.,
+                       'acf_ltbi_majuro_switch': 1.,
+                       'acf_ltbi_ebeye_switch': 0.,
+                       'acf_ltbi_otherislands_switch': 0.}
         # 1: {'contact_rate': 0.000255},
         # 2: {'contact_rate': 0.000265}
     }
@@ -698,7 +739,7 @@ def run_model():
         "prevXinfectiousXstrain_mdrXamong": 1.0e5,
     }
 
-    targets_to_plot = {}
+    targets_to_plot = {"prevXinfectiousXamong": [2016, 1000.]}
 
     ymax = {"prevXinfectiousXamong": 2000.0}
 
@@ -744,13 +785,13 @@ def run_model():
     create_multi_scenario_outputs(
         models,
         req_outputs=req_outputs,
-        out_dir="rmi_07feb3",
+        out_dir="rmi_acf_10feb2020",
         targets_to_plot=targets_to_plot,
         req_multipliers=multipliers,
         translation_dictionary=translations,
         scenario_list=scenario_list,
         ymax=ymax,
-        plot_start_time=1940,
+        plot_start_time=1900,
         outputs_to_plot_by_stratum=PLOTTED_STRATIFIED_PREVALENCE_OUTPUTS,
     )
 

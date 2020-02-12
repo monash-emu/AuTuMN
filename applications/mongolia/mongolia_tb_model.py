@@ -734,7 +734,12 @@ def run_model():
                        "prevXlatentXamongXage_5": {'times': [2016], 'values': [[9.60, 9.02, 10.18]]},
                        "prevXinfectiousXstrain_mdrXamongXinfectious": {'times': [2015],
                                                                        'values': [[5.03, 4.10, 6.70]]},
-                       "notifications": {'times': [2015], 'values': [[4685]]}
+                       "notifications": {'times': list(numpy.linspace(1990, 2018, 29)),
+                                         'values': [[1659], [1611], [1516], [1418], [1730], [2780], [4062], [3592],
+                                                    [2915], [3348], [3109], [3526], [3829], [3918], [4542], [4601],
+                                                    [5049], [4654], [4490], [4481], [4458], [4217], [4128], [4331],
+                                                    [4483], [4685], [4425], [4220], [4065]]
+                                         }
                        }
 
     for target in targets_to_plot.keys():

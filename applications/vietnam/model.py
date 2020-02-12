@@ -30,12 +30,12 @@ from . import derived_outputs
 # Database locations
 file_dir = os.path.dirname(os.path.abspath(__file__))
 timestamp = datetime.now().strftime("%m_%d_%Y_%H_%M_%S")
+OUTPUT_DB_DIR = os.path.join(constants.DATA_PATH, "vietnam", "databases")
+OUTPUT_DB_PATH = os.path.join(OUTPUT_DB_DIR, f"outputs_{timestamp}.db")
+PARAMS_PATH = os.path.join(file_dir, "params.yml")
 INPUT_DB_PATH = os.path.join(constants.DATA_PATH, "inputs.db")
 input_database = Database(database_name=INPUT_DB_PATH)
-OUTPUT_DB_PATH = os.path.join(
-    constants.DATA_PATH, "vietnam", "databases", f"outputs_{timestamp}.db"
-)
-PARAMS_PATH = os.path.join(file_dir, "params.yml")
+
 STRATIFY_BY = ["age", "strain", "location", "organ"]
 
 
@@ -140,6 +140,9 @@ def run_model():
     with open(PARAMS_PATH, "r") as f:
         params = yaml.safe_load(f)
 
+    if not os.path.exists(OUTPUT_DB_DIR):
+        os.makedirs(OUTPUT_DB_DIR, exist_ok=True)
+
     def _build_model(update_params={}):
         final_params = merge_dicts(update_params, params)
         return build_model(final_params)
@@ -159,13 +162,17 @@ def run_model():
         updated_derived_outputs = updated_derived_outputs.to_dict("list")
         model.derived_outputs = updated_derived_outputs
 
+    scenario_list = list(scenario_params.keys())
+    if 0 not in scenario_list:
+        scenario_list = [0] + scenario_list
+
     store_run_models(models, scenarios=scenario_list, database_name=OUTPUT_DB_PATH)
     run_time = time() - start_time
     print(f"Running time: {run_time:0.2f} seconds")
 
 
 def merge_dicts(src, dest):
-    """i
+    """
     Merge src dict into dest dict.
     """
     for key, value in src.items():

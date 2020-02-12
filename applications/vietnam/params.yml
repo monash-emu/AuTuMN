@@ -95,10 +95,10 @@ strain:
   mdr_tsr: 0.6
   prop_mdr_detected_as_mdr: 0.5
   infectiousness_adjustments:
-    ds: 1
+    ds: 1.0
     mdr: 1.1
   ipt_switch:
-    ds: 1
+    ds: 1.0
     mdr: 0.0
 
 # Parameters for age-based stratification.

@@ -31,7 +31,7 @@ def build_calc_notifications(stratum: str, rates: RateBuilder, strain_params: di
         ][0]
         param_name = dict_flows["parameter"][flow_index]
         detection_tx_rate = model.get_parameter_value(param_name, time)
-        tsr = rates.get_treatment_sucess(time)
+        tsr = rates.get_treatment_success(time)
         if "strain_mdr" in model.compartment_names[comp_idx]:
             tsr = strain_params["mdr_tsr"] * strain_params["prop_mdr_detected_as_mdr"]
         if tsr > 0.0:

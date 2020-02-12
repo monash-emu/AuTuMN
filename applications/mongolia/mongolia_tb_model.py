@@ -12,7 +12,7 @@ from summer_py.summer_model import (
     find_name_components,
     find_stem,
 )
-from summer_py.parameter_processing import (
+from summer_py.summer_model.utils.parameter_processing import (
     get_parameter_dict_from_function,
     logistic_scaling_function,
 )
@@ -640,28 +640,36 @@ def build_mongolia_model(update_params={}):
         """
             example of tag: "starin_mdr" or "organ_smearpos"
         """
+
         def calculate_nb_detected(model, time):
-            nb_treated = 0.
+            nb_treated = 0.0
             for key, value in model.derived_outputs.items():
-                if 'notifications' in key and tag in key:
+                if "notifications" in key and tag in key:
                     this_time_index = model.times.index(time)
                     nb_treated += value[this_time_index]
             return nb_treated
 
         return calculate_nb_detected
 
-    for tag in ['strain_mdr', 'strain_ds', 'organ_smearpos', 'organ_smearneg', 'organ_extrapul']:
-        _tb_model.derived_output_functions['popsizeXnb_detectedX' + tag] = \
-            detected_popsize_function_builder(tag)
+    for tag in ["strain_mdr", "strain_ds", "organ_smearpos", "organ_smearneg", "organ_extrapul"]:
+        _tb_model.derived_output_functions[
+            "popsizeXnb_detectedX" + tag
+        ] = detected_popsize_function_builder(tag)
 
     # ACF popsize: number of people screened
     def popsize_acf(model, time):
-        if external_params['acf_coverage'] == 0.:
-            return 0.
-        pop_urban_ger = sum([model.compartment_values[i] for i, c_name in enumerate(model.compartment_names) if 'location_urban_ger' in c_name])
-        return external_params['acf_coverage'] * pop_urban_ger
+        if external_params["acf_coverage"] == 0.0:
+            return 0.0
+        pop_urban_ger = sum(
+            [
+                model.compartment_values[i]
+                for i, c_name in enumerate(model.compartment_names)
+                if "location_urban_ger" in c_name
+            ]
+        )
+        return external_params["acf_coverage"] * pop_urban_ger
 
-    _tb_model.derived_output_functions['popsizeXnb_screened_acf'] = popsize_acf
+    _tb_model.derived_output_functions["popsizeXnb_screened_acf"] = popsize_acf
 
     return _tb_model
 
@@ -730,27 +738,56 @@ def run_model():
         #'prevXinfectiousXorgan_smearposXamongXage_15Xage_60Xlocation_prison']
     ]
 
-    targets_to_plot = {"prevXinfectiousXamong": {'times': [2015], 'values': [[757., 620., 894.]]},
-                       "prevXlatentXamongXage_5": {'times': [2016], 'values': [[9.60, 9.02, 10.18]]},
-                       "prevXinfectiousXstrain_mdrXamongXinfectious": {'times': [2015],
-                                                                       'values': [[5.03, 4.10, 6.70]]},
-                       "notifications": {'times': list(numpy.linspace(1990, 2018, 29)),
-                                         'values': [[1659], [1611], [1516], [1418], [1730], [2780], [4062], [3592],
-                                                    [2915], [3348], [3109], [3526], [3829], [3918], [4542], [4601],
-                                                    [5049], [4654], [4490], [4481], [4458], [4217], [4128], [4331],
-                                                    [4483], [4685], [4425], [4220], [4065]]
-                                         }
-                       }
+    targets_to_plot = {
+        "prevXinfectiousXamong": {"times": [2015], "values": [[757.0, 620.0, 894.0]]},
+        "prevXlatentXamongXage_5": {"times": [2016], "values": [[9.60, 9.02, 10.18]]},
+        "prevXinfectiousXstrain_mdrXamongXinfectious": {
+            "times": [2015],
+            "values": [[5.03, 4.10, 6.70]],
+        },
+        "notifications": {
+            "times": list(numpy.linspace(1990, 2018, 29)),
+            "values": [
+                [1659],
+                [1611],
+                [1516],
+                [1418],
+                [1730],
+                [2780],
+                [4062],
+                [3592],
+                [2915],
+                [3348],
+                [3109],
+                [3526],
+                [3829],
+                [3918],
+                [4542],
+                [4601],
+                [5049],
+                [4654],
+                [4490],
+                [4481],
+                [4458],
+                [4217],
+                [4128],
+                [4331],
+                [4483],
+                [4685],
+                [4425],
+                [4220],
+                [4065],
+            ],
+        },
+    }
 
     for target in targets_to_plot.keys():
-        if target not in req_outputs and target[0:5] == 'prevX':
+        if target not in req_outputs and target[0:5] == "prevX":
             req_outputs.append(target)
 
     multipliers = {"prevXinfectiousXstrain_mdrXamongXinfectious": 100.0}
 
-    ymax = {"prevXinfectiousXamong": 2000.0,
-            "prevXlatentXamongXage_5": 20.
-            }
+    ymax = {"prevXinfectiousXamong": 2000.0, "prevXlatentXamongXage_5": 20.0}
 
     translations = {
         "prevXinfectiousXamong": "TB prevalence (/100,000)",

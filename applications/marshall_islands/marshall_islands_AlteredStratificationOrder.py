@@ -11,7 +11,7 @@ from summer_py.summer_model import (
     create_sloping_step_function,
     create_flowchart,
 )
-from summer_py.parameter_processing import (
+from summer_py.summer_model.utils.parameter_processing import (
     get_parameter_dict_from_function,
     logistic_scaling_function,
 )

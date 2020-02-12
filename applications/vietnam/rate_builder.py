@@ -38,30 +38,25 @@ class RateBuilder:
         """
         Get Tuberculosis control recovery rate for a given timestep.
         """
-        get_detect_rate = detect_rate_by_organ[self.tb_control_recovery_rate_organ]
-        return self.get_treatment_sucess(time) * get_detect_rate(time)
+        get_detect_rate = self.detect_rate_by_organ[self.tb_control_recovery_rate_organ]
+        return self.get_treatment_success(time) * get_detect_rate(time)
 
     def get_isoniazid_preventative_therapy(self, time):
         """
         Get Isoniazid preventive therapy (IPT) at a given timestep.
         Assume a coverage of 1.0 before age stratification.
         """
-        return (
-            self.rate_params["yield_contact_ct_tstpos_per_detected_tb"]
-            * self.rate_params["ipt_efficacy"]
-        )
+        ipt_params = self.rate_params["ipt"]
+        return ipt_params["yield_contact_ct_tstpos_per_detected_tb"] * ipt_params["ipt_efficacy"]
 
     def get_active_case_finding(self, time):
         """
         Returns that active case finding rate at a given timestep.
         """
-        return (
-            self.rate_params["acf_coverage"]
-            * self.rate_params["acf_sensitivity"]
-            * self.get_treatment_sucess(time)
-        )
+        acf_params = self.rate_params["acf"]
+        return acf_params["coverage"] * acf_params["sensitivity"] * self.get_treatment_success(time)
 
-    def get_treatment_sucess(self, time):
+    def get_treatment_success(self, time):
         """
         Returms the treatment success rate at a given timestep.
         """
@@ -104,9 +99,9 @@ class RateBuilder:
         """
         Returns the "dr_amplification_rate" for a given timestep.
         """
-        get_detect_rate = detect_rate_by_organ["overall"]
+        get_detect_rate = self.detect_rate_by_organ["overall"]
         return (
-            get_detect_rate(t)
+            get_detect_rate(time)
             * (1.0 - self.tsr_func(time))
             * (1.0 - self.rate_params["reduction_negative_tx_outcome"])
             * self.rate_params["dr_amplification_prop_among_nonsuccess"]

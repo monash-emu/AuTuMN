@@ -47,7 +47,7 @@ timestamp = datetime.now().strftime("%m_%d_%Y_%H_%M_%S")
 OUTPUT_DB_PATH = os.path.join(file_dir, "databases", f"outputs_{timestamp}.db")
 INPUT_DB_PATH = os.path.join(constants.DATA_PATH, "inputs.db")
 
-STRATIFY_BY = ["age"]# , "strain", "location", "organ"]
+STRATIFY_BY = ["age", "strain", "location", "organ"]
 
 # Adjust the following variables to reduce the number of graphs
 PLOTTED_STRATIFIED_DERIVED_OUTPUTS = (

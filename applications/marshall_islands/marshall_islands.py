@@ -55,7 +55,7 @@ INPUT_DB_PATH = os.path.join(constants.DATA_PATH, "inputs.db")
 # STRATIFY_BY = ['age', 'organ']
 # STRATIFY_BY = ['age', 'diabetes']
 # STRATIFY_BY = ['age', 'diabetes', 'organ']
-STRATIFY_BY = ["age", "diabetes", "organ", "location"]
+STRATIFY_BY = ["age"]  #, "diabetes", "organ", "location"]
 
 PLOTTED_STRATIFIED_DERIVED_OUTPUTS = (
     []
@@ -768,7 +768,7 @@ def run_model():
         "prevXinfectiousXstrain_mdrXamong": 1.0e5,
     }
 
-    targets_to_plot = {"prevXinfectiousXamong": [2016, 1000.0]}
+    targets_to_plot = {"prevXinfectiousXamong": {'times': [2016], 'values': [[1000.]]}}
 
     ymax = {"prevXinfectiousXamong": 2000.0}
 

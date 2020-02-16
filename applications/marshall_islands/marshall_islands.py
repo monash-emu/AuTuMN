@@ -55,7 +55,7 @@ INPUT_DB_PATH = os.path.join(constants.DATA_PATH, "inputs.db")
 # STRATIFY_BY = ['age', 'organ']
 # STRATIFY_BY = ['age', 'diabetes']
 # STRATIFY_BY = ['age', 'diabetes', 'organ']
-STRATIFY_BY = ["age"]  #, "diabetes", "organ", "location"]
+STRATIFY_BY = ["age", "diabetes", "organ", "location"]
 
 PLOTTED_STRATIFIED_DERIVED_OUTPUTS = (
     []
@@ -467,22 +467,17 @@ def build_rmi_model(update_params={}):
             verbose=False,
             requested_proportions=props_diabetes,
             adjustment_requests={
-                "early_progressionXage_15": progression_adjustments,
-                "early_progressionXage_35": progression_adjustments,
-                "early_progressionXage_50": progression_adjustments,
-                "early_progressionXage_70": progression_adjustments,
-                "late_progressionXage_15": progression_adjustments,
-                "late_progressionXage_35": progression_adjustments,
-                "late_progressionXage_50": progression_adjustments,
-                "late_progressionXage_70": progression_adjustments,
+                "early_progression": progression_adjustments,
+                "late_progression": progression_adjustments,
+
             },
-            # entry_proportions={'diabetic': 0.01, 'nodiabetes': 0.99},
-            # target_props={'age_0': {"diabetic": 0.05},
-            #               'age_5': {"diabetic": 0.1},
-            #               'age_15': {"diabetic": 0.2},
-            #               'age_35': {"diabetic": 0.4},
-            #               'age_50': {"diabetic": 0.5},
-            #               'age_70': {"diabetic": 0.8}}
+            entry_proportions={'diabetic': 0.01, 'nodiabetes': 0.99},
+            target_props={'age_0': {"diabetic": 0.05},
+                          'age_5': {"diabetic": 0.1},
+                          'age_15': {"diabetic": 0.2},
+                          'age_35': {"diabetic": 0.4},
+                          'age_50': {"diabetic": 0.5},
+                          'age_70': {"diabetic": 0.8}}
         )
 
     if "organ" in STRATIFY_BY:
@@ -704,13 +699,13 @@ def run_model():
 
     scenario_params = {
         1: {
-            "acf_coverage": 1.0,
-            "acf_majuro_switch": 1.0,
-            "acf_ebeye_switch": 1.0,
-            "acf_otherislands_switch": 0.0,
-            "acf_ltbi_majuro_switch": 1.0,
-            "acf_ltbi_ebeye_switch": 0.0,
-            "acf_ltbi_otherislands_switch": 0.0,
+            # "acf_coverage": 1.0,
+            # "acf_majuro_switch": 1.0,
+            # "acf_ebeye_switch": 1.0,
+            # "acf_otherislands_switch": 0.0,
+            # "acf_ltbi_majuro_switch": 1.0,
+            # "acf_ltbi_ebeye_switch": 0.0,
+            # "acf_ltbi_otherislands_switch": 0.0,
         }
         # 1: {'contact_rate': 0.000255},
         # 2: {'contact_rate': 0.000265}
@@ -814,7 +809,7 @@ def run_model():
     create_multi_scenario_outputs(
         models,
         req_outputs=req_outputs,
-        out_dir="rmi_acf_10feb2020",
+        out_dir="rmi_17feb2020",
         targets_to_plot=targets_to_plot,
         req_multipliers=multipliers,
         translation_dictionary=translations,

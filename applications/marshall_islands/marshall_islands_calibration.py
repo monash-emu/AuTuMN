@@ -6,7 +6,7 @@ par_priors = [
     {
         "param_name": "contact_rate",
         "distribution": "uniform",
-        "distri_params": [0.00025, 0.00028]},
+        "distri_params": [0.0001, 0.01]},
     {
         "param_name": "beta_decay_rate",
         "distribution": "uniform",
@@ -26,7 +26,7 @@ par_priors = [
     {
         "param_name": "cdr_multiplier",
         "distribution": "uniform",
-        "distri_params": [0.66, 2.0]},
+        "distri_params": [0.5, 2.0]},
     {
         "param_name": "case_detection_ebeye_multiplier",
         "distribution": "uniform",
@@ -36,6 +36,11 @@ par_priors = [
         "distribution": "uniform",
         "distri_params": [0.5, 1.0],
     },
+    {
+        "param_name": "over_reporting_prevalence_proportion",
+        "distribution": "uniform",
+        "distri_params": [0.0, 0.5],
+    },
 ]
 
 target_outputs = [
@@ -43,22 +48,30 @@ target_outputs = [
         "output_key": "prevXinfectiousXamongXlocation_ebeye",
         "years": [2017.0],
         "values": [755.0],
-        "cis": [(620.0, 894.0)],
-    },
+        "cis": [(620.0, 894.0)]},
     {
-        "output_key": "prevXinfectiousXamongXlocation_majuro",
-        "years": [2017.0],
+        "output_key": "reported_majuro_prevalence",
+        "years": [2018.0],
         "values": [1578.0],
-        "cis": [(620.0, 894.0)],
-    },
+        "cis": [(620.0, 894.0)]},
     {
         "output_key": "prevXlatentXamongXlocation_majuro",
         "years": [2017.0],
         "values": [28.5],
-        "cis": [(902.0, 1018.0)],
-    },
-    {"output_key": "notificationsXlocation_majuro", "years": [2016.0], "values": [119.0]},
-    {"output_key": "notificationsXlocation_ebeye", "years": [2016.0], "values": [53.0]},
+        "cis": [(902.0, 1018.0)]},
+    {
+        "output_key": "notificationsXlocation_majuro",
+        "years": [2016.0],
+        "values": [119.0]},
+    {
+        "output_key": "notificationsXlocation_ebeye",
+        "years": [2016.0],
+        "values": [53.0]},
+    {
+        "output_key": "notificationsXlocation_otherislands",
+        "years": [2016.0],
+        "values": [6.0],
+        "cis": [(5.0, 17.0)]}
 ]
 
 multipliers = {

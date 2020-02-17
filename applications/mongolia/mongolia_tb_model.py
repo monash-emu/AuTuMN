@@ -12,7 +12,7 @@ from summer_py.summer_model import (
     find_name_components,
     find_stem,
 )
-from summer_py.parameter_processing import (
+from summer_py.summer_model.utils.parameter_processing import (
     get_parameter_dict_from_function,
     logistic_scaling_function,
 )
@@ -48,6 +48,12 @@ OUTPUT_DB_PATH = os.path.join(file_dir, "databases", f"outputs_{timestamp}.db")
 INPUT_DB_PATH = os.path.join(constants.DATA_PATH, "inputs.db")
 
 STRATIFY_BY = ["age", "strain", "location", "organ"]
+
+# Adjust the following variables to reduce the number of graphs
+PLOTTED_STRATIFIED_DERIVED_OUTPUTS = (
+    ["incidence", "notifications", "mortality", "popsizes"]
+)  # use ["incidence", "notifications", "mortality", "popsizes"] to get all outputs
+PLOTTED_STRATIFIED_PREVALENCE_OUTPUTS = ["prevXinfectious", "prevXlatent"]  # e.g. ["prevXinfectious", "prevXlatent"]
 
 
 def build_mongolia_timevariant_cdr(cdr_multiplier):
@@ -581,94 +587,106 @@ def build_mongolia_model(update_params={}):
 
     # create some customised derived_outputs
 
-    def notification_function_builder(stratum):
-        """
-            example of stratum: "Xage_0Xstrain_mdr"
-        """
+    if 'notifications' in PLOTTED_STRATIFIED_DERIVED_OUTPUTS:
+        def notification_function_builder(stratum):
+            """
+                example of stratum: "Xage_0Xstrain_mdr"
+            """
 
-        def calculate_notifications(model, time):
+            def calculate_notifications(model, time):
 
-            total_notifications = 0.0
-            dict_flows = model.transition_flows_dict
+                total_notifications = 0.0
+                dict_flows = model.transition_flows_dict
 
-            comp_ind = model.compartment_names.index("infectious" + stratum)
-            infectious_pop = model.compartment_values[comp_ind]
-            detection_indices = [
-                index for index, val in dict_flows["parameter"].items() if "case_detection" in val
-            ]
-            flow_index = [
-                index
-                for index in detection_indices
-                if dict_flows["origin"][index] == model.compartment_names[comp_ind]
-            ][0]
-            param_name = dict_flows["parameter"][flow_index]
-            detection_tx_rate = model.get_parameter_value(param_name, time)
-            tsr = mongolia_tsr(time) + external_params["reduction_negative_tx_outcome"] * (
-                1.0 - mongolia_tsr(time)
-            )
-            if "strain_mdr" in model.compartment_names[comp_ind]:
-                tsr = external_params["mdr_tsr"] * external_params["prop_mdr_detected_as_mdr"]
-            if tsr > 0.0:
-                total_notifications += infectious_pop * detection_tx_rate / tsr
+                comp_ind = model.compartment_names.index("infectious" + stratum)
+                infectious_pop = model.compartment_values[comp_ind]
+                detection_indices = [
+                    index for index, val in dict_flows["parameter"].items() if "case_detection" in val
+                ]
+                flow_index = [
+                    index
+                    for index in detection_indices
+                    if dict_flows["origin"][index] == model.compartment_names[comp_ind]
+                ][0]
+                param_name = dict_flows["parameter"][flow_index]
+                detection_tx_rate = model.get_parameter_value(param_name, time)
+                tsr = mongolia_tsr(time) + external_params["reduction_negative_tx_outcome"] * (
+                    1.0 - mongolia_tsr(time)
+                )
+                if "strain_mdr" in model.compartment_names[comp_ind]:
+                    tsr = external_params["mdr_tsr"] * external_params["prop_mdr_detected_as_mdr"]
+                if tsr > 0.0:
+                    total_notifications += infectious_pop * detection_tx_rate / tsr
 
-            return total_notifications
+                return total_notifications
 
-        return calculate_notifications
+            return calculate_notifications
 
-    for compartment in _tb_model.compartment_names:
-        if "infectious" in compartment:
-            stratum = compartment.split("infectious")[1]
-            _tb_model.derived_output_functions[
-                "notifications" + stratum
-            ] = notification_function_builder(stratum)
-            # _tb_model.derived_output_functions['popsize_treatment_support' + stratum] = notification_function_builder(stratum)
+        for compartment in _tb_model.compartment_names:
+            if "infectious" in compartment:
+                stratum = compartment.split("infectious")[1]
+                _tb_model.derived_output_functions[
+                    "notifications" + stratum
+                ] = notification_function_builder(stratum)
+                # _tb_model.derived_output_functions['popsize_treatment_support' + stratum] = notification_function_builder(stratum)
 
-    # add output_connections for all stratum-specific incidence outputs
-    _tb_model.output_connections.update(
-        create_output_connections_for_incidence_by_stratum(_tb_model.compartment_names)
-    )
+    if 'incidence' in PLOTTED_STRATIFIED_DERIVED_OUTPUTS:
+        # add output_connections for all stratum-specific incidence outputs
+        _tb_model.output_connections.update(
+            create_output_connections_for_incidence_by_stratum(_tb_model.compartment_names)
+        )
 
-    # prepare death outputs for all strata
-    _tb_model.death_output_categories = list_all_strata_for_mortality(_tb_model.compartment_names)
+    if 'mortality' in PLOTTED_STRATIFIED_DERIVED_OUTPUTS:
+        # prepare death outputs for all strata
+        _tb_model.death_output_categories = list_all_strata_for_mortality(_tb_model.compartment_names)
+
 
     ############################################
     #       population sizes for costing
     ############################################
+    if 'popsizes' in PLOTTED_STRATIFIED_DERIVED_OUTPUTS:
+        # nb of detected individuals by strain:
+        def detected_popsize_function_builder(tag):
+            """
+                example of tag: "starin_mdr" or "organ_smearpos"
+            """
 
-    # nb of detected individuals by strain:
-    def detected_popsize_function_builder(tag):
-        """
-            example of tag: "starin_mdr" or "organ_smearpos"
-        """
-        def calculate_nb_detected(model, time):
-            nb_treated = 0.
-            for key, value in model.derived_outputs.items():
-                if 'notifications' in key and tag in key:
-                    this_time_index = model.times.index(time)
-                    nb_treated += value[this_time_index]
-            return nb_treated
+            def calculate_nb_detected(model, time):
+                nb_treated = 0.0
+                for key, value in model.derived_outputs.items():
+                    if "notifications" in key and tag in key:
+                        this_time_index = model.times.index(time)
+                        nb_treated += value[this_time_index]
+                return nb_treated
 
-        return calculate_nb_detected
+            return calculate_nb_detected
 
-    for tag in ['strain_mdr', 'strain_ds', 'organ_smearpos', 'organ_smearneg', 'organ_extrapul']:
-        _tb_model.derived_output_functions['popsizeXnb_detectedX' + tag] = \
-            detected_popsize_function_builder(tag)
+        for tag in ["strain_mdr", "strain_ds", "organ_smearpos", "organ_smearneg", "organ_extrapul"]:
+            _tb_model.derived_output_functions[
+                "popsizeXnb_detectedX" + tag
+            ] = detected_popsize_function_builder(tag)
 
-    # ACF popsize: number of people screened
-    def popsize_acf(model, time):
-        if external_params['acf_coverage'] == 0.:
-            return 0.
-        pop_urban_ger = sum([model.compartment_values[i] for i, c_name in enumerate(model.compartment_names) if 'location_urban_ger' in c_name])
-        return external_params['acf_coverage'] * pop_urban_ger
+        # ACF popsize: number of people screened
+        def popsize_acf(model, time):
+            if external_params["acf_coverage"] == 0.0:
+                return 0.0
+            pop_urban_ger = sum(
+                [
+                    model.compartment_values[i]
+                    for i, c_name in enumerate(model.compartment_names)
+                    if "location_urban_ger" in c_name
+                ]
+            )
+            return external_params["acf_coverage"] * pop_urban_ger
 
-    _tb_model.derived_output_functions['popsizeXnb_screened_acf'] = popsize_acf
+        _tb_model.derived_output_functions["popsizeXnb_screened_acf"] = popsize_acf
 
     return _tb_model
 
 
 def run_model():
-    load_model = True
-    load_mcmc = True
+    load_model = False
+    load_mcmc = False
 
     scenario_params = {
         # 1: {'ipt_age_0_ct_coverage': 1.},
@@ -679,7 +697,15 @@ def run_model():
         # 4: {'mdr_tsr': .8},
         # 5: {'reduction_negative_tx_outcome': 0.5},
         # 6: {'acf_coverage': .155, 'acf_urban_ger_switch': 1.},  # 15.5% to get 70,000 screens
-        # 7: {'diagnostic_sensitivity_smearneg': 1., 'prop_mdr_detected_as_mdr': .9}
+        # 7: {'diagnostic_sensitivity_smearneg': 1., 'prop_mdr_detected_as_mdr': .9},
+        # 8: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
+        #     'ipt_age_60_ct_coverage': .5, 'ds_ipt_switch': 0., 'mdr_ipt_switch': 1.,
+        #     'mdr_tsr': .8,
+        #     'reduction_negative_tx_outcome': 0.5,
+        #     'acf_coverage': .155, 'acf_urban_ger_switch': 1.,
+        #     'diagnostic_sensitivity_smearneg': 1., 'prop_mdr_detected_as_mdr': .9
+        #     },
+        # 9: {'contact_rate': 0.}
     }
     scenario_list = list(scenario_params.keys())
     if 0 not in scenario_list:
@@ -722,20 +748,56 @@ def run_model():
         #'prevXinfectiousXorgan_smearposXamongXage_15Xage_60Xlocation_prison']
     ]
 
-    targets_to_plot = {"prevXinfectiousXamong": {'times': [2015], 'values': [[757., 620., 894.]]},
-                       "prevXlatentXamongXage_5": {'times': [2016], 'values': [[9.60, 9.02, 10.18]]},
-                       "prevXinfectiousXstrain_mdrXamongXinfectious": {'times': [2015],
-                                                                       'values': [[5.03, 4.10, 6.70]]},
-                       "notifications": {'times': [2015], 'values': [[4685]]}
-                       }
+    targets_to_plot = {
+        "prevXinfectiousXamong": {"times": [2015], "values": [[757.0, 620.0, 894.0]]},
+        "prevXlatentXamongXage_5": {"times": [2016], "values": [[9.60, 9.02, 10.18]]},
+        "prevXinfectiousXstrain_mdrXamongXinfectious": {
+            "times": [2015],
+            "values": [[5.03, 4.10, 6.70]],
+        },
+        "notifications": {
+            "times": list(numpy.linspace(1990, 2018, 29)),
+            "values": [
+                [1659],
+                [1611],
+                [1516],
+                [1418],
+                [1730],
+                [2780],
+                [4062],
+                [3592],
+                [2915],
+                [3348],
+                [3109],
+                [3526],
+                [3829],
+                [3918],
+                [4542],
+                [4601],
+                [5049],
+                [4654],
+                [4490],
+                [4481],
+                [4458],
+                [4217],
+                [4128],
+                [4331],
+                [4483],
+                [4685],
+                [4425],
+                [4220],
+                [4065],
+            ],
+        },
+    }
 
     for target in targets_to_plot.keys():
-        if target not in req_outputs and target[0:5] == 'prevX':
+        if target not in req_outputs and target[0:5] == "prevX":
             req_outputs.append(target)
 
     multipliers = {"prevXinfectiousXstrain_mdrXamongXinfectious": 100.0}
 
-    ymax = {"prevXinfectiousXamong": 2000.0}
+    ymax = {"prevXinfectiousXamong": 2000.0, "prevXlatentXamongXage_5": 20.0}
 
     translations = {
         "prevXinfectiousXamong": "TB prevalence (/100,000)",
@@ -785,18 +847,20 @@ def run_model():
             scenario_list=scenario_list,
             ymax=ymax,
             plot_start_time=1990,
+            outputs_to_plot_by_stratum=PLOTTED_STRATIFIED_PREVALENCE_OUTPUTS,
         )
     else:
         create_multi_scenario_outputs(
             models,
             req_outputs=req_outputs,
-            out_dir="test_runtime",
+            out_dir="test",
             targets_to_plot=targets_to_plot,
             req_multipliers=multipliers,
             translation_dictionary=translations,
             scenario_list=scenario_list,
             ymax=ymax,
             plot_start_time=1990,
+            outputs_to_plot_by_stratum=PLOTTED_STRATIFIED_PREVALENCE_OUTPUTS,
         )
 
 

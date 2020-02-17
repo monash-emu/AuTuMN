@@ -84,7 +84,7 @@ def build_rmi_model(update_params={}):
         "time_step": 0.25,
         "start_population": 4300,
         # base model definition:
-        "contact_rate": 0.0037,
+        "contact_rate": 0.0038,
         "beta_decay_rate": 0.05,
         "minimum_tv_beta_multiplier": 0.1,
         "rr_transmission_recovered": 0.6,
@@ -94,7 +94,7 @@ def build_rmi_model(update_params={}):
         "self_recovery_rate": 0.231,  # this is for smear-positive TB
         "tb_mortality_rate": 0.389,  # this is for smear-positive TB
         "prop_smearpos": 0.5,
-        "cdr_multiplier": 1.0,
+        "cdr_multiplier": 1.5,
         # diagnostic sensitivity by organ status:
         "diagnostic_sensitivity_smearpos": 1.0,
         "diagnostic_sensitivity_smearneg": 0.7,
@@ -353,7 +353,7 @@ def build_rmi_model(update_params={}):
         * external_params["contact_rate"]
     )
 
-    # plot_time_variant_param(contact_rate_function, [1900, 2020])
+    plot_time_variant_param(contact_rate_function, [1900, 2020])
 
     # create time-variant functions for the different contact rates # did not get it to work with a loop!!!
     beta_func = lambda t: contact_rate_function(t)
@@ -763,7 +763,11 @@ def run_model():
         "prevXinfectiousXstrain_mdrXamong": 1.0e5,
     }
 
-    targets_to_plot = {"prevXinfectiousXamong": {'times': [2016], 'values': [[1000.]]}}
+    targets_to_plot = {
+        "prevXinfectiousXamong": {'times': [2016], 'values': [[1000.]]},
+        "prevXlatentXamongXlocation_majuro": {'times': [2016], 'values': [[29.]]}
+
+    }
 
     ymax = {"prevXinfectiousXamong": 2000.0}
 

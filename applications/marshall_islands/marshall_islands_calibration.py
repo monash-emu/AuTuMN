@@ -3,19 +3,34 @@ from multiprocess.pool import Pool
 from autumn.calibration import *
 
 par_priors = [
-    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.00025, 0.00028]},
-    {"param_name": "rr_transmission_ebeye", "distribution": "uniform", "distri_params": [1.0, 2.5]},
+    {
+        "param_name": "contact_rate",
+        "distribution": "uniform",
+        "distri_params": [0.00025, 0.00028]},
+    {
+        "param_name": "beta_decay_rate",
+        "distribution": "uniform",
+        "distri_params": [0.01, 0.1]},
+    {
+        "param_name": "minimum_tv_beta_multiplier",
+        "distribution": "uniform",
+        "distri_params": [0.1, 0.4]},
+    {
+        "param_name": "rr_transmission_ebeye",
+        "distribution": "uniform",
+        "distri_params": [1.0, 2.5]},
     {
         "param_name": "rr_transmission_otherislands",
         "distribution": "uniform",
-        "distri_params": [0.5, 1.5],
-    },
-    {"param_name": "cdr_multiplier", "distribution": "uniform", "distri_params": [0.66, 1.5]},
+        "distri_params": [0.5, 1.5]},
+    {
+        "param_name": "cdr_multiplier",
+        "distribution": "uniform",
+        "distri_params": [0.66, 2.0]},
     {
         "param_name": "case_detection_ebeye_multiplier",
         "distribution": "uniform",
-        "distri_params": [1.0, 2.0],
-    },
+        "distri_params": [0.5, 2.0]},
     {
         "param_name": "case_detection_otherislands_multiplier",
         "distribution": "uniform",

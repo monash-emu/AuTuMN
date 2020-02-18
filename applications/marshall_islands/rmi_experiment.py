@@ -13,7 +13,14 @@ from autumn.tool_kit import run_multi_scenario
 from autumn.tb_model import add_combined_incidence, store_run_models, create_multi_scenario_outputs
 from autumn import constants
 
-from rmi_model import build_rmi_model
+# This is a hack to get the imports to work in PyCharm and in the automated tests.
+try:
+    # Try import for PyCharm, as if this were a script.
+    from rmi_model import build_rmi_model
+except ModuleNotFoundError:
+    # Try import as if we are in a module.
+    from .rmi_model import build_rmi_model
+
 
 FILE_DIR = os.path.dirname(os.path.abspath(__file__))
 PARAMS_PATH = os.path.join(FILE_DIR, "params.yml")

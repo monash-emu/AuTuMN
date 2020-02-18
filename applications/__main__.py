@@ -8,7 +8,7 @@ You can access this script from your CLI by running:
 """
 import click
 
-from .marshall_islands.marshall_islands import run_model as rmi_run_model
+from .marshall_islands.rmi_experiment import run_model as rmi_run_model
 from .vietnam.model import run_model as run_vietnam_model
 
 

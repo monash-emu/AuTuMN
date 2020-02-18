@@ -17,6 +17,7 @@ SQLAlchemy>=1.1.18
 
 # Utility
 pyyaml==5.3
+python-slugify==4.0.0
 
 # Testing
 pytest

@@ -1,13 +1,12 @@
 """
 Utilities for running multiple model scenarios
 """
+from autumn.tool_kit.timer import Timer
 
 
-def run_multi_scenario(param_lookup, scenario_start_time, model_builder):
+def run_multi_scenario(param_lookup, scenario_start_time, model_builder, run_kwargs={}):
     """
     Run a baseline model and scenarios
-    FIXME: [Matt] Wouldn't it make more sense if param_lookup was just a list?
-
     :param param_lookup: 
         A dictionary keyed with scenario numbers (0 for baseline). 
         Values are dictionaries containing parameter updates.
@@ -16,20 +15,20 @@ def run_multi_scenario(param_lookup, scenario_start_time, model_builder):
     # Run baseline model as scenario '0'
     baseline_params = param_lookup[0] if 0 in param_lookup else {}
     baseline_model = model_builder(baseline_params)
-    print("____________________  Running baseline scenario ")
-    baseline_model.run_model()
-    models = [baseline_model]
+    with Timer("Running baseline scenario"):
+        baseline_model.run_model(**run_kwargs)
 
+    models = [baseline_model]
     for scenario_idx, scenario_params in param_lookup.items():
         # Ignore scenario '0' because we've already run it.
         if scenario_idx == 0:
             continue
 
-        print(f"____________________  Running scenario #{scenario_idx}")
-        scenario_params["start_time"] = scenario_start_time
-        scenario_model = initialise_scenario_run(baseline_model, scenario_params, model_builder)
-        scenario_model.run_model()
-        models.append(scenario_model)
+        with Timer(f"Running scenario #{scenario_idx}"):
+            scenario_params["start_time"] = scenario_start_time
+            scenario_model = initialise_scenario_run(baseline_model, scenario_params, model_builder)
+            scenario_model.run_model(**run_kwargs)
+            models.append(scenario_model)
 
     return models
 

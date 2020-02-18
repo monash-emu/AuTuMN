@@ -1,10 +1,8 @@
 import os
-from datetime import datetime
-from time import time
 from copy import deepcopy
 
 import numpy
-import pandas as pd
+import yaml
 from summer_py.summer_model import (
     StratifiedModel,
     split_age_parameter,
@@ -19,26 +17,19 @@ from autumn import constants
 from autumn.curve import scale_up_function
 from autumn.db import Database, get_pop_mortality_functions
 from autumn.tb_model import (
-    add_combined_incidence,
-    load_model_scenario,
-    load_calibration_from_db,
     scale_relative_risks_for_equivalence,
     provide_aggregated_latency_parameters,
     get_adapted_age_parameters,
     convert_competing_proportion_to_rate,
-    store_run_models,
     add_standard_latency_flows,
     add_standard_natural_history_flows,
     add_density_infection_flows,
     get_birth_rate_functions,
-    create_multi_scenario_outputs,
     create_output_connections_for_incidence_by_stratum,
     list_all_strata_for_mortality,
-    DummyModel,
     plot_time_variant_param,
 )
 from autumn.tool_kit import (
-    run_multi_scenario,
     return_function_of_function,
     progressive_step_function_maker,
     change_parameter_unit,
@@ -46,84 +37,28 @@ from autumn.tool_kit import (
 
 # Database locations
 file_dir = os.path.dirname(os.path.abspath(__file__))
-timestamp = datetime.now().strftime("%m_%d_%Y_%H_%M_%S")
-OUTPUT_DB_PATH = os.path.join(file_dir, "databases", f"outputs_{timestamp}.db")
 INPUT_DB_PATH = os.path.join(constants.DATA_PATH, "inputs.db")
+PARAMS_PATH = os.path.join(file_dir, "params.yml")
 
-# STRATIFY_BY = ['age']
-# STRATIFY_BY = ['age', 'location']
+# STRATIFY_BY = ["age"]
+STRATIFY_BY = ["age", "location"]
 # STRATIFY_BY = ['age', 'organ']
 # STRATIFY_BY = ['age', 'diabetes']
 # STRATIFY_BY = ['age', 'diabetes', 'organ']
-STRATIFY_BY = ["age", "diabetes", "organ", "location"]
+# STRATIFY_BY = ["age", "diabetes", "organ", "location"]
 
 PLOTTED_STRATIFIED_DERIVED_OUTPUTS = (
     []
 )  # use ["incidence", "notifications", "mortality"] to get all outputs
-PLOTTED_STRATIFIED_PREVALENCE_OUTPUTS = []  # e.g. ["prevXinfectious", "prevXlatent"]
-
-
-def build_rmi_timevariant_cdr(cdr_multiplier):
-    cdr = {1950.0: 0.0, 1980.0: 0.10, 1990.0: 0.1, 2000.0: 0.2, 2010.0: 0.3, 2015: 0.4}
-    return scale_up_function(
-        cdr.keys(), [c * cdr_multiplier for c in list(cdr.values())], smoothness=0.2, method=5
-    )
-
-
-def build_rmi_timevariant_tsr():
-    tsr = {1950.0: 0.0, 1970.0: 0.2, 1994.0: 0.6, 2000.0: 0.85, 2010.0: 0.87, 2016: 0.87}
-    return scale_up_function(tsr.keys(), tsr.values(), smoothness=0.2, method=5)
 
 
 def build_rmi_model(update_params={}):
+    with open(PARAMS_PATH, "r") as f:
+        params = yaml.safe_load(f)
 
-    # some default parameter values
-    external_params = {  # run configuration
-        "start_time": 1900.0,
-        "end_time": 2035.0,
-        "time_step": 0.25,
-        "start_population": 4300,
-        # base model definition:
-        "contact_rate": 0.0038,
-        "beta_decay_rate": 0.05,
-        "minimum_tv_beta_multiplier": 0.1,
-        "rr_transmission_recovered": 0.6,
-        "rr_transmission_infected": 0.21,
-        "rr_transmission_ltbi_treated": 0.21,
-        # 'latency_adjustment': 2.,  # used to modify progression rates during calibration
-        "self_recovery_rate": 0.231,  # this is for smear-positive TB
-        "tb_mortality_rate": 0.389,  # this is for smear-positive TB
-        "prop_smearpos": 0.5,
-        "cdr_multiplier": 1.5,
-        # diagnostic sensitivity by organ status:
-        "diagnostic_sensitivity_smearpos": 1.0,
-        "diagnostic_sensitivity_smearneg": 0.7,
-        "diagnostic_sensitivity_extrapul": 0.5,
-        # adjustments by location and diabetes
-        "rr_transmission_ebeye": 2.2,  # reference majuro
-        "rr_transmission_otherislands": 1.0,  # reference majuro
-        "rr_progression_diabetic": 3.18,  # reference: no_diabetes
-        # case detection adjustment for location
-        "case_detection_majuro_multiplier": 1.0,
-        "case_detection_ebeye_multiplier": 1.5,
-        "case_detection_otherislands_multiplier": 0.8,
-        # ACF for intervention groups
-        "acf_coverage": 0.0,
-        "acf_sensitivity": 0.9,
-        "acf_majuro_switch": 0.0,
-        "acf_ebeye_switch": 0.0,
-        "acf_otherislands_switch": 0.0,
-        # LTBI ACF for intervention groups
-        "acf_ltbi_coverage": 0.0,
-        "acf_ltbi_sensitivity": 0.8,
-        "acf_ltbi_efficacy": 0.72,  # higher than ipt_efficacy as higher completion rate
-        "acf_ltbi_majuro_switch": 0.0,
-        "acf_ltbi_ebeye_switch": 0.0,
-        "acf_ltbi_otherislands_switch": 0.0,
-        # prevalence adjustment
-        "over_reporting_prevalence_proportion": 0.20,
-    }
-    # update external_params with new parameter values found in update_params
+    # Load default parameter values
+    external_params = params["default"]
+    # Update external_params with new parameter values found in update_params
     external_params.update(update_params)
 
     model_parameters = {
@@ -469,15 +404,16 @@ def build_rmi_model(update_params={}):
             adjustment_requests={
                 "early_progression": progression_adjustments,
                 "late_progression": progression_adjustments,
-
             },
-            entry_proportions={'diabetic': 0.01, 'nodiabetes': 0.99},
-            target_props={'age_0': {"diabetic": 0.05},
-                          'age_5': {"diabetic": 0.1},
-                          'age_15': {"diabetic": 0.2},
-                          'age_35': {"diabetic": 0.4},
-                          'age_50': {"diabetic": 0.5},
-                          'age_70': {"diabetic": 0.8}}
+            entry_proportions={"diabetic": 0.01, "nodiabetes": 0.99},
+            target_props={
+                "age_0": {"diabetic": 0.05},
+                "age_5": {"diabetic": 0.1},
+                "age_15": {"diabetic": 0.2},
+                "age_35": {"diabetic": 0.4},
+                "age_50": {"diabetic": 0.5},
+                "age_70": {"diabetic": 0.8},
+            },
         )
 
     if "organ" in STRATIFY_BY:
@@ -535,9 +471,7 @@ def build_rmi_model(update_params={}):
         location_mixing = numpy.array([0.9, 0.05, 0.05, 0.05, 0.9, 0.05, 0.05, 0.05, 0.9]).reshape(
             (3, 3)
         )
-        location_mixing *= (
-            3.0
-        )  # adjusted such that heterogeneous mixing yields similar overall burden as homogeneous
+        location_mixing *= 3.0  # adjusted such that heterogeneous mixing yields similar overall burden as homogeneous
 
         location_adjustments = {}
         for beta_type in ["", "_infected", "_recovered"]:
@@ -676,153 +610,16 @@ def build_rmi_model(update_params={}):
             _tb_model.compartment_names
         )
 
-    # write_model_data(_tb_model)
     return _tb_model
 
 
-def write_model_data(_tb_model):
-    """
-    Save / visualise model data for debugging purposes
-    """
-    _tb_model.transition_flows.to_csv("transitions_age_dm_organ.csv")
-    _tb_model.transition_flows.to_csv("transitions_all.csv")
-    _tb_model.death_flows.to_csv("deaths.csv")
-    # create_flowchart(_tb_model, strata=0, name="rmi_flow_diagram_0")
-    # create_flowchart(_tb_model, strata=1, name="rmi_flow_diagram_1")
-    # create_flowchart(_tb_model, strata=2, name="rmi_flow_diagram_2")
-    # create_flowchart(_tb_model, strata=3, name="rmi_flow_diagram_3")
-    # create_flowchart(_tb_model, strata=2, name="rmi_flow_diagram_2")
-
-
-def run_model():
-    load_model = False
-
-    scenario_params = {
-        1: {
-            # "acf_coverage": 1.0,
-            # "acf_majuro_switch": 1.0,
-            # "acf_ebeye_switch": 1.0,
-            # "acf_otherislands_switch": 0.0,
-            # "acf_ltbi_majuro_switch": 1.0,
-            # "acf_ltbi_ebeye_switch": 0.0,
-            # "acf_ltbi_otherislands_switch": 0.0,
-        }
-        # 1: {'contact_rate': 0.000255},
-        # 2: {'contact_rate': 0.000265}
-    }
-    scenario_list = [0]
-    scenario_list.extend(list(scenario_params.keys()))
-
-    if load_model:
-        load_mcmc = False
-
-        if load_mcmc:
-            models = load_calibration_from_db("outputs_01_24_2020_withintervention.db")
-            scenario_list = range(len(models))
-        else:
-            models = []
-            scenarios_to_load = scenario_list
-            for sc in scenarios_to_load:
-                print("Loading model for scenario " + str(sc))
-                loaded_model = load_model_scenario(
-                    str(sc), database_name="outputs_01_24_2020_withintervention.db"
-                )
-                models.append(DummyModel(loaded_model["outputs"], loaded_model["derived_outputs"]))
-    else:
-        t0 = time()
-        models = run_multi_scenario(scenario_params, 1990.0, build_rmi_model)
-        # automatically add combined incidence output
-        for model in models:
-            outputs_df = pd.DataFrame(model.outputs, columns=model.compartment_names)
-            derived_outputs_df = pd.DataFrame(
-                model.derived_outputs, columns=model.derived_outputs.keys()
-            )
-            updated_derived_outputs = add_combined_incidence(derived_outputs_df, outputs_df)
-            updated_derived_outputs = updated_derived_outputs.to_dict("list")
-            model.derived_outputs = updated_derived_outputs
-        store_run_models(models, scenarios=scenario_list, database_name=OUTPUT_DB_PATH)
-        delta = time() - t0
-        print("Running time: " + str(round(delta, 1)) + " seconds")
-
-    req_outputs = [
-        "prevXinfectiousXamong",
-        "prevXlatentXamong",
-        "prevXinfectiousXamongXlocation_majuro",
-        "prevXinfectiousXamongXlocation_ebeye",
-        "prevXlatentXamongXlocation_majuro",
-        "prevXlatentXamongXlocation_ebeye",
-        "prevXsusceptibleXamong",
-        "prevXrecoveredXamong",
-        "prevXearly_latentXamong",
-        "prevXlate_latentXamong",
-        "prevXltbi_treatedXamong",
-    ]
-
-    multipliers = {
-        "prevXinfectiousXstrain_mdrXamongXinfectious": 100.0,
-        "prevXinfectiousXstrain_mdrXamong": 1.0e5,
-    }
-
-    targets_to_plot = {
-        "prevXinfectiousXamong": {'times': [2016], 'values': [[1000.]]},
-        "prevXlatentXamongXlocation_majuro": {'times': [2016], 'values': [[29.]]}
-
-    }
-
-    ymax = {"prevXinfectiousXamong": 2000.0}
-
-    translations = {
-        "prevXinfectiousXamong": "TB prevalence (/100,000)",
-        "prevXinfectiousXamongXage_0": "TB prevalence among 0-4 y.o. (/100,000)",
-        "prevXinfectiousXamongXage_5": "TB prevalence among 5-14 y.o. (/100,000)",
-        "prevXinfectiousXamongXage_15": "TB prevalence among 15-34 y.o. (/100,000)",
-        "prevXinfectiousXamongXage_35": "TB prevalence among 35-49 y.o. (/100,000)",
-        "prevXinfectiousXamongXage_50": "TB prevalence among 50+ y.o. (/100,000)",
-        "prevXinfectiousXamongXlocation_majuro": "TB prevalence in Majuro (/100,000)",
-        "prevXinfectiousXamongXlocation_ebeye": "TB prevalence in Ebeye (/100,000)",
-        "prevXinfectiousXamongXlocation_otherislands": "TB prevalence in other areas (/100,000)",
-        "prevXinfectiousXamongXdiabetic_diabetes": "TB prevalence in diabetics (/100,000)",
-        "prevXinfectiousXamongXdiabetic_nodiabetes": "TB prevalence in non-diabetics (/100,000)",
-        "prevXlatentXamong": "Latent TB infection prevalence (%)",
-        "prevXlatentXamongXage_0": "Latent TB infection prevalence among 0-4 y.o. (%)",
-        "prevXlatentXamongXage_5": "Latent TB infection prevalence among 5-14 y.o. (%)",
-        "prevXlatentXamongXage_15": "Latent TB infection prevalence among 15-34 y.o. (%)",
-        "prevXlatentXamongXage_35": "Latent TB infection prevalence among 35-49 y.o. (%)",
-        "prevXlatentXamongXage_50": "Latent TB infection prevalence among 50+ y.o. (%)",
-        "prevXlatentXamongXlocation_majuro": "Latent TB infection prevalence in Majuro (%)",
-        "prevXlatentXamongXlocation_ebeye": "Latent TB infection prevalence in Ebeye (%)",
-        "prevXlatentXamongXlocation_otherislands": "Latent TB infection prevalence in other areas (%)",
-        "prevXlatentXamongXdiabetic_diabetes": "Latent TB infection prevalence in diabetics (%)",
-        "prevXlatentXamongXdiabetic_nodiabetes": "Latent TB infection prevalence in non-diabetics (%)",
-        "age_0": "Age 0-4",
-        "age_5": "Age 5-14",
-        "age_15": "Age 15-34",
-        "age_35": "Age 35-49",
-        "age_50": "Age 50+",
-        "location_majuro": "Majuro",
-        "location_ebeye": "Ebeye",
-        "location_otherislands": "Other locations",
-        "diabetes_diabetic": "Diabetes",
-        "diabetes_nodiabetes": "No Diabetes",
-        "incidence": "TB incidence (/100,000/y)",
-        "incidenceXlocation_majuro": "Majuro - TB incidence (/100,000/y)",
-        "incidenceXlocation_ebeye": "Ebeye - TB incidence (/100,000/y)",
-        "incidenceXlocation_otherislands": "Other locations - TB incidence (/100,000/y)",
-    }
-
-    create_multi_scenario_outputs(
-        models,
-        req_outputs=req_outputs,
-        out_dir="rmi_17feb2020",
-        targets_to_plot=targets_to_plot,
-        req_multipliers=multipliers,
-        translation_dictionary=translations,
-        scenario_list=scenario_list,
-        ymax=ymax,
-        plot_start_time=1900,
-        outputs_to_plot_by_stratum=PLOTTED_STRATIFIED_PREVALENCE_OUTPUTS,
+def build_rmi_timevariant_cdr(cdr_multiplier):
+    cdr = {1950.0: 0.0, 1980.0: 0.10, 1990.0: 0.1, 2000.0: 0.2, 2010.0: 0.3, 2015: 0.4}
+    return scale_up_function(
+        cdr.keys(), [c * cdr_multiplier for c in list(cdr.values())], smoothness=0.2, method=5
     )
 
 
-if __name__ == "__main__":
-    run_model()
+def build_rmi_timevariant_tsr():
+    tsr = {1950.0: 0.0, 1970.0: 0.2, 1994.0: 0.6, 2000.0: 0.85, 2010.0: 0.87, 2016: 0.87}
+    return scale_up_function(tsr.keys(), tsr.values(), smoothness=0.2, method=5)

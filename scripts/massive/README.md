@@ -12,7 +12,20 @@ Follow the following steps to run a job.
 
 Modify your code to match how you want it to run, and modify the config file at `scripts/massive/config.yml`, then commit the changes to Git, and push them up to GitHub.
 
-TODO: Config params
+Notably, you want to set up your `job_command` to execute the Python script that you need to run. For example, to run the Mongolia calibration:
+
+```yaml
+job_command: python3 -m applications mongolia-calibration 10000 30
+```
+
+Note that this command is always called with an extra argument, which is the Slurm array task ID, so when the script runs it will actually be something like:
+
+```bash
+SLURM_ARRAY_TASK_ID=5
+python3 -m applications mongolia-calibration 300 $SLURM_ARRAY_TASK_ID
+```
+
+Please use `python3` instead of `python` when writing this command.
 
 ### Setup the job
 

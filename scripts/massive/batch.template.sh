@@ -2,9 +2,9 @@
 # Template for our batch script - see https://slurm.schedmd.com/sbatch.html
 #SBATCH --job-name={job_name}
 #SBATCH --array=0-{array_end}
-#SBATCH --ntasks={num_tasks}
-#SBATCH --cpus-per-task={cores_per_task}
-#SBATCH --mem-per-cpu={mem_per_cpu}
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task={cores_per_job}
+#SBATCH --mem-per-cpu={mem_per_core}
 #SBATCH --time={runtime}
 #SBATCH --mail-user={notification_email}
 #SBATCH --mail-type=BEGIN
@@ -25,4 +25,4 @@ module load python/3.7.3-system
 . env/bin/activate
 
 # Run the job
-{job_command}
+{job_command} $SLURM_ARRAY_TASK_ID

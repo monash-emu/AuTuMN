@@ -1,8 +1,31 @@
-from multiprocess.pool import Pool
+from autumn.calibration import Calibration
 
-from autumn.calibration import *
+from applications.mongolia.mongolia_tb_model import build_mongolia_model
 
-par_priors = [
+
+def run_calibration_chain(max_seconds: int, run_id: int):
+    """
+    Run a calibration chain for the Mongolia TB model
+
+    num_iters: Maximum number of iterations to run.
+    available_time: Maximum time, in seconds, to run the calibration.
+    """
+    print(f"Preparing to run Mongolia TB model calibration for run {run_id}")
+    calib = Calibration(
+        "mongolia", build_mongolia_model, PAR_PRIORS, TARGET_OUTPUTS, MULTIPLIERS, run_id
+    )
+    print("Starting calibration.")
+    calib.run_fitting_algorithm(
+        run_mode="autumn_mcmc",
+        n_iterations=100000,
+        n_burned=0,
+        n_chains=1,
+        available_time=max_seconds,
+    )
+    print(f"Finished calibration for run {run_id}.")
+
+
+PAR_PRIORS = [
     {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [10.0, 20.0]},
     {
         "param_name": "adult_latency_adjustment",
@@ -24,7 +47,7 @@ par_priors = [
     {"param_name": "cdr_multiplier", "distribution": "uniform", "distri_params": [0.66, 1.5]},
 ]
 
-target_outputs = [
+TARGET_OUTPUTS = [
     {
         "output_key": "prevXinfectiousXamong",
         "years": [2015.0],
@@ -43,33 +66,11 @@ target_outputs = [
         "values": [503.0],
         "cis": [(410.0, 670.0)],
     },
-    {"output_key": "notifications", "years": [2015.0], "values": [4685.0]},
+    # {"output_key": "notifications", "years": [2015.0], "values": [4685.0]},
 ]
 
-multipliers = {
+MULTIPLIERS = {
     "prevXinfectiousXamong": 1.0e5,
     "prevXlatentXamongXage_5": 1.0e4,
     "prevXinfectiousXstrain_mdrXamongXinfectious": 1.0e4,
 }
-
-
-if __name__ == "__main__":
-    n_cpus = 24
-    _iterable = []
-    for i in range(n_cpus):
-        _iterable.append(
-            Calibration(build_mongolia_model, par_priors, target_outputs, multipliers, i)
-        )
-
-    def run_a_single_chain(_calib):
-        _calib.run_fitting_algorithm(
-            run_mode="autumn_mcmc",
-            n_iterations=100000,
-            n_burned=0,
-            n_chains=1,
-            available_time=3600.0 * 24.0 * 7.0,
-        )
-        return
-
-    p = Pool(processes=n_cpus)
-    p.map(func=run_a_single_chain, iterable=_iterable)

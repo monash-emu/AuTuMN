@@ -1,5 +1,5 @@
   
-AuTuMN 
+AuTuMN
 ======
 
 ![](https://github.com/monash-emu/AuTuMN/workflows/Continuous%20Integration/badge.svg)
@@ -27,6 +27,10 @@ See [this guide](./docs/setup.md) for information on how to set up this project.
 └── setup.py                Packaging for deployment to MASSIVE computing platform
 ```
 
+## MASSIVE
+
+We sometimes need to run jobs on Monash's [MASSIVE](https://www.monash.edu/research/infrastructure/platforms-pages/massive) computer cluster. The scripts and documentation that allow you to do this can be found in the `scripts/massive/` folder.
+
 ## Tests
 
 Automated tests may be run via [PyCharm](https://www.jetbrains.com/help/pycharm/pytest.html) or via the command line:
@@ -53,9 +57,10 @@ Specific uses of the AuTuMN framework are present in `applications/`. You can ru
 ./scripts/run.ps1 --help
 ```
 
+# Old notes below: are these used anymore?
+
 ## TODO
 
-- setup.py file to load all dependent modules
 - document Bulgaria interventions properly in handbook
 - the model would not run without age-stratification (detected when running Bulgaria)
 
@@ -67,5 +72,4 @@ Specific uses of the AuTuMN framework are present in `applications/`. You can ru
 
 - simplify code for automatic detection of int_uncertainty start_time. Should use common method with optimisation start_dates
 - in the adjust_treatment_outcomes_support method, only the "relative" approach accounts for baseline intervention coverage
-    The "absolute" approach should be updated similarly in case we use it with a non-zero coverage at baseline.
-- the platform currently loads all data files every single time we hit the run button from the GUY. we may want to run the file loading operations only once when launching the GUI 
+  The "absolute" approach should be updated similarly in case we use it with a non-zero coverage at baseline.

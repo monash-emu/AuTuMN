@@ -8,4 +8,5 @@ then
 fi
 echo -e "\n>>> Requesting Slurm batch job..."
 sbatch batch.sh
-echo -e "\n>>> Job request submitted."
+
+echo -e "\n>>> Job request submitted.\n>>> To view job status: squeue -j <JOBID>"

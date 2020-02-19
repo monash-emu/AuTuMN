@@ -58,6 +58,11 @@ pip3 install -r requirements.txt
 echo -e "\n>>> Generating job batch script."
 python3 build-script.py $JOB_NAME $JOB_DIR
 chmod +x batch.sh
+rm batch.template.sh
+
+# Prepare output directory
+mkdir -p logs
 
 echo -e "\n>>> Setup complete, job ready to run."
-echo -e ">>> Run $JOB_DIR/run-job.sh to start the job."
+echo -e ">>>\n>>> Try: cd $JOB_DIR\n>>>"
+echo -e ">>> To start the job run: $JOB_DIR/run-job.sh."

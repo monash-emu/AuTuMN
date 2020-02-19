@@ -10,8 +10,8 @@
 #SBATCH --mail-type=BEGIN
 #SBATCH --mail-type=END
 #SBATCH --mail-type=FAIL
-#SBATCH --output=job-stdout-%A-%a.txt
-#SBATCH --error=job-stderr-%A-%a.txt
+#SBATCH --output=logs/%A-%a-stdout.log
+#SBATCH --error=logs/%A-%a-stderr.log
 set -e
 echo "Running job {job_name}, array task $SLURM_ARRAY_TASK_ID"
 

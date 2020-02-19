@@ -8,23 +8,32 @@ import pandas as pd
 import yaml
 from slugify import slugify
 
+from summer_py.constants import IntegrationType
+
 from autumn.tool_kit.timer import Timer
 from autumn.tool_kit import run_multi_scenario
 from autumn.tb_model import add_combined_incidence, store_run_models, create_multi_scenario_outputs
 from autumn import constants
 
-# This is a hack to get the imports to work in PyCharm and in the automated tests.
-try:
-    # Try import for PyCharm, as if this were a script.
-    from rmi_model import build_rmi_model
-except ModuleNotFoundError:
-    # Try import as if we are in a module.
-    from .rmi_model import build_rmi_model
+from applications.marshall_islands.rmi_model import build_rmi_model
 
 
 FILE_DIR = os.path.dirname(os.path.abspath(__file__))
 PARAMS_PATH = os.path.join(FILE_DIR, "params.yml")
 OUTPUTS_PATH = os.path.join(FILE_DIR, "outputs.yml")
+
+# Settings for the hand-coded Euler method.
+# It's not clear whether this produces reliable results, but it can be faster than odeint
+EULER_KWARGS = {
+    "integration_type": IntegrationType.EULER,
+    "solver_args": {"step_size": 0.3},
+}
+# Settings for the SciPy odeint solver - this can get stuck on some ODE types and take a long time.
+ODEINT_KWARGS = {
+    "integration_type": IntegrationType.ODE_INT,
+}
+# ODE solver settings to use when unning the model.
+SOLVER_KWARGS = ODEINT_KWARGS
 
 
 def run_model():
@@ -73,8 +82,9 @@ def run_model():
 
     # Run the model
     with Timer("Running model scenarios"):
-        models = run_multi_scenario(scenario_params, params["scenario_start"], build_rmi_model)
-
+        models = run_multi_scenario(
+            scenario_params, params["scenario_start"], build_rmi_model, run_kwargs=SOLVER_KWARGS,
+        )
     # Post-process and save model outputs
     with Timer("Post processing model outputs"):
         # Automatically add combined incidence output

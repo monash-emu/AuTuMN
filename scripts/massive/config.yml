@@ -1,0 +1,9 @@
+---
+# MASSIVE job configuration
+num_jobs: 1
+num_tasks_per_job: 1
+cores_per_task: 1
+mem_per_cpu: 1 # Memory in MB
+runtime: 0-0:00:01 # day-hours:minutes:seconds
+notification_email: matthew.segal@monash.edu
+job_command: python3 -c "print('hello world')"

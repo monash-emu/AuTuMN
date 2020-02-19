@@ -58,7 +58,6 @@ pip3 install -r requirements.txt
 echo -e "\n>>> Generating job batch script."
 python3 build-script.py $JOB_NAME $JOB_DIR
 chmod +x batch.sh
-rm batch.template.sh
 
 # Prepare output directory
 mkdir -p logs

@@ -48,4 +48,9 @@ cd /projects/sh30/autumn-repo/my-job-17-02-2020
 ./run-job.sh
 ```
 
-After that the job will be submitted to Slurm.
+After that the job will be submitted to Slurm. You can view the job's progress with:
+
+```bash
+squeue -j <JOBID> # or
+squeue -u <USERNAME>
+```

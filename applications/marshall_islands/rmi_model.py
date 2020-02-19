@@ -9,9 +9,11 @@ from summer_py.summer_model import (
     create_sloping_step_function,
 )
 from summer_py.summer_model.utils.parameter_processing import (
+    create_step_function_from_dict,
     get_parameter_dict_from_function,
     logistic_scaling_function,
 )
+
 
 from autumn import constants
 from autumn.curve import scale_up_function
@@ -28,11 +30,13 @@ from autumn.tb_model import (
     create_output_connections_for_incidence_by_stratum,
     list_all_strata_for_mortality,
     plot_time_variant_param,
+
 )
 from autumn.tool_kit import (
     return_function_of_function,
     progressive_step_function_maker,
     change_parameter_unit,
+    add_w_to_param_names
 )
 
 # Database locations
@@ -41,11 +45,11 @@ INPUT_DB_PATH = os.path.join(constants.DATA_PATH, "inputs.db")
 PARAMS_PATH = os.path.join(file_dir, "params.yml")
 
 # STRATIFY_BY = ["age"]
-STRATIFY_BY = ["age", "location"]
+# STRATIFY_BY = ["age", "location"]
 # STRATIFY_BY = ['age', 'organ']
 # STRATIFY_BY = ['age', 'diabetes']
 # STRATIFY_BY = ['age', 'diabetes', 'organ']
-# STRATIFY_BY = ["age", "diabetes", "organ", "location"]
+STRATIFY_BY = ["age", "diabetes", "organ", "location"]
 
 PLOTTED_STRATIFIED_DERIVED_OUTPUTS = (
     []
@@ -71,12 +75,16 @@ def build_rmi_model(update_params={}):
         * external_params["rr_transmission_ltbi_treated"],
         "recovery": external_params["self_recovery_rate"],
         "infect_death": external_params["tb_mortality_rate"],
+        ""
         "universal_death_rate": 1.0 / 70.0,
         "case_detection": 0.0,
         "ipt_rate": 0.0,
         "acf_rate": 0.0,
         "acf_ltbi_rate": 0.0,
         "crude_birth_rate": 35.0 / 1e3,
+        "early_progression": 365.251*external_params["early_progression"],
+        "late_progression": 365.251*external_params["late_progression"],
+        "stabilisation": 365.251*external_params["stabilisation"]
     }
 
     input_database = Database(database_name=INPUT_DB_PATH)
@@ -94,7 +102,7 @@ def build_rmi_model(update_params={}):
         external_params["start_time"], external_params["end_time"], n_iter
     ).tolist()
 
-    model_parameters.update(change_parameter_unit(provide_aggregated_latency_parameters(), 365.251))
+    # model_parameters.update(change_parameter_unit(provide_aggregated_latency_parameters(), 365.251))
 
     # sequentially add groups of flows
     flows = add_density_infection_flows([])
@@ -219,6 +227,41 @@ def build_rmi_model(update_params={}):
         "overall": overall_duration,
     }
 
+    def get_adapted_age_parameters(age_breakpoints):
+        """
+        Get age-specific latency parameters adapted to any specification of age breakpoints
+        """
+        adapted_parameter_dict = {}
+        for parameter in ("early_progression", "stabilisation", "late_progression"):
+            adapted_parameter_dict[parameter] = add_w_to_param_names(
+                change_parameter_unit(
+                    get_parameter_dict_from_function(
+                        create_step_function_from_dict(AGE_SPECIFIC_LATENCY_PARAMETERS[parameter]),
+                        age_breakpoints,
+                    ),
+                    365.251,
+                )
+            )
+        return adapted_parameter_dict
+
+    AGE_SPECIFIC_LATENCY_PARAMETERS = {
+        "early_progression":{
+            0: external_params["early_progression_0"],
+             5: external_params["early_progression_5"],
+             15: external_params["early_progression_15"]
+             },
+        "stabilisation": {
+            0: external_params["stabilisation_0"],
+            5: external_params["stabilisation_5"],
+            15: external_params["stabilisation_15"]
+        },
+        "late_progression": {
+            0: external_params["late_progression_0"],
+            5: external_params["late_progression_5"],
+            15: external_params["late_progression_15"]
+        }
+    }
+
     # work out the CDR for smear-positive TB
     def cdr_smearpos(time):
         return cdr_scaleup_overall(time) / (
@@ -288,7 +331,7 @@ def build_rmi_model(update_params={}):
         * external_params["contact_rate"]
     )
 
-    plot_time_variant_param(contact_rate_function, [1900, 2020])
+    # plot_time_variant_param(contact_rate_function, [1900, 2020])
 
     # create time-variant functions for the different contact rates # did not get it to work with a loop!!!
     beta_func = lambda t: contact_rate_function(t)
@@ -342,6 +385,7 @@ def build_rmi_model(update_params={}):
             logistic_scaling_function(10.0), age_breakpoints
         )
         age_params = get_adapted_age_parameters(age_breakpoints)
+
         age_params.update(split_age_parameter(age_breakpoints, "contact_rate"))
 
         # adjustment of latency parameters
@@ -499,7 +543,6 @@ def build_rmi_model(update_params={}):
             "location",
             ["majuro", "ebeye", "otherislands"],
             [],
-            # infectiousness_adjustments={"majuro": 0.9, "ebeye": 1.9, "otherislands": 1.1},
             requested_proportions=props_location,
             verbose=False,
             entry_proportions=props_location,

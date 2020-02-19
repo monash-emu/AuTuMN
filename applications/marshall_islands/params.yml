@@ -7,9 +7,9 @@ default:
   start_population: 4300
 
   # Base model definition
-  contact_rate: 0.0038
-  beta_decay_rate: 0.05
-  minimum_tv_beta_multiplier: 0.1
+  contact_rate: 0.004
+  beta_decay_rate: 0.06
+  minimum_tv_beta_multiplier: 0.15
   rr_transmission_recovered: 0.6
   rr_transmission_infected: 0.21
   rr_transmission_ltbi_treated: 0.21
@@ -18,6 +18,40 @@ default:
   tb_mortality_rate: 0.389 # this is for smear-positive TB
   prop_smearpos: 0.5
   cdr_multiplier: 1.5
+
+#  # Latency parameters - aggregated - best estimate values from Ragonnet et al "Optimally capturing latency dynamics in models of tuberculosis
+#  #transmission" 2017 Epidemics
+#  early_progression: 1.1e-3
+#  stabilisation: 1.0e-2
+#  late_progression: 5.5e-6
+#  # latency parameters - age-specific - best estimate values from Ragonnet et al "Optimally capturing latency dynamics in models of tuberculosis
+#  #  #transmission" 2017 Epidemics
+#  early_progression_0: 6.6e-3
+#  early_progression_5: 2.7e-3
+#  early_progression_15: 2.7e-4
+#  stabilisation_0: 1.2e-2
+#  stabilisation_5: 1.2e-2
+#  stabilisation_15: 5.4e-3
+#  late_progression_0: 1.9e-11
+#  late_progression_5: 6.4e-6
+#  late_progression_15: 3.3e-6
+
+  # Latency parameters - aggregated - upper values from Ragonnet et al "Optimally capturing latency dynamics in models of tuberculosis
+  #transmission" 2017 Epidemics
+  early_progression: 1.5e-3
+  stabilisation: 1.4e-2
+  late_progression: 1.1e-5
+  # latency parameters - age-specific - upper values from Ragonnet et al "Optimally capturing latency dynamics in models of tuberculosis
+  #  #transmission" 2017 Epidemics
+  early_progression_0: 9.5e-3
+  early_progression_5: 3.9e-3
+  early_progression_15: 5.1e-4
+  stabilisation_0: 1.8e-2
+  stabilisation_5: 1.6e-2
+  stabilisation_15: 1.1e-2
+  late_progression_0: 1.6e-5
+  late_progression_5: 1.9e-5
+  late_progression_15: 1.0e-5
 
   # Diagnostic sensitivity by organ status:
   diagnostic_sensitivity_smearpos: 1.0

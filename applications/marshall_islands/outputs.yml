@@ -24,12 +24,16 @@ req_multipliers:
   prevXinfectiousXstrain_mdrXamong: 0.00001
 
 targets_to_plot:
-  prevXinfectiousXamong:
-    times: [2016]
-    values: [[1000.0]]
+  prevXinfectiousXamongXlocation_ebeye:
+    times: [2017]
+    values: [[755.0]]
   prevXlatentXamongXlocation_majuro:
     times: [2016]
     values: [[29.0]]
+  reported_majuro_prevalence:
+    times: [2018]
+    values: [[1578.]]
+
 
 ymax:
   prevXinfectiousXamong: 2000.0

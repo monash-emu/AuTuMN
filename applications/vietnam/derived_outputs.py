@@ -3,7 +3,7 @@ Create some customised derived_outputs
 """
 from summer_py.summer_model import StratifiedModel
 
-from .rate_builder import RateBuilder
+from applications.vietnam.rate_builder import RateBuilder
 
 
 def build_calc_notifications(stratum: str, rates: RateBuilder, strain_params: dict):

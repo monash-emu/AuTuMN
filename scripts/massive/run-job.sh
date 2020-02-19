@@ -4,6 +4,7 @@ set -e
 if [[ ! -f "./batch.sh" ]]
 then
     echo "Error: expected batch script batch.sh to exist. Run setup.sh to generate the script."
+    exit 1
 fi
 echo -e "\n>>> Requesting Slurm batch job..."
 sbatch batch.sh

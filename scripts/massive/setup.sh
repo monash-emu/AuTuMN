@@ -1,7 +1,6 @@
 #!/bin/bash
 # Sets up a new job in MASSIVE.
 # Run this script on the MASSIVE login server (m3.massive.org.au)
-# 
 set -e
 # Read the job name from the user
 JOB_NAME_RAW=$1
@@ -12,10 +11,11 @@ then
 fi
 
 # Check that the AuTuMN code base exists.
-CODE_DIR=/project/sh30/autumn-repo
+CODE_DIR=/projects/sh30/autumn-repo
 if [[ ! -d "$CODE_DIR" ]]
 then
     echo "Error: expected AuTuMN project to be present at $CODE_DIR."
+    exit 1
 fi
 
 # Format job name so it can be used as a filename
@@ -31,6 +31,7 @@ mkdir -p $JOB_DIR
 # Copy over Slurm batch job files.
 cp ./scripts/massive/batch.template.sh $JOB_DIR
 cp ./scripts/massive/config.yml $JOB_DIR
+cp ./scripts/massive/build-script.py $JOB_DIR
 cp ./scripts/massive/run-job.sh $JOB_DIR
 
 # Copy over AuTuMN code

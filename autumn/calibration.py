@@ -4,6 +4,7 @@ from time import time
 from itertools import chain
 
 import theano
+import math
 import pandas as pd
 import numpy as np
 import copy
@@ -11,6 +12,7 @@ import pymc3 as pm
 import theano.tensor as tt
 import summer_py.post_processing as post_proc
 from scipy.optimize import Bounds, minimize
+from scipy import stats, special
 
 from autumn.tb_model import store_tb_database
 
@@ -212,6 +214,12 @@ class Calibration:
             if "jumping_sd" not in prior_dict.keys():
                 if prior_dict["distribution"] == "uniform":
                     prior_width = prior_dict["distri_params"][1] - prior_dict["distri_params"][0]
+                elif prior_dict["distribution"] == "lognormal":
+                    mu = prior_dict["distri_params"][0]
+                    sd = prior_dict["distri_params"][1]
+                    quantile_2_5 = math.exp(mu + math.sqrt(2)*sd * special.erfinv(2 * .025 - 1))
+                    quantile_97_5 = math.exp(mu + math.sqrt(2)*sd * special.erfinv(2 * .975 - 1))
+                    prior_width = quantile_97_5 - quantile_2_5
                 else:
                     print(
                         "prior_width not specified for "
@@ -447,9 +455,14 @@ class Calibration:
         :return: the natural log of the joint prior
         """
         logp = 0.0
-        for prior_dict in self.priors:
+        for i, prior_dict in enumerate(self.priors):
             if prior_dict["distribution"] == "uniform":
-                logp += 1.0 / (prior_dict["distri_params"][1] - prior_dict["distri_params"][0])
+                logp += math.log(1.0 / (prior_dict["distri_params"][1] - prior_dict["distri_params"][0]))
+            elif prior_dict["distribution"] == "lognormal":
+                mu = prior_dict["distri_params"][0]
+                sd = prior_dict["distri_params"][1]
+                logp += stats.lognorm.logpdf(x=params[i],
+                                             s=sd, scale=math.exp(mu))  # see documentation of stats.lognorm for scale
             else:
                 print(
                     prior_dict["distribution"]

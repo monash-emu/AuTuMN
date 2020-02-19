@@ -5,7 +5,7 @@
 set -e
 # Read the job name from the user
 JOB_NAME_RAW=$1
-if [[ -z "$JOB_NAME_RAW"]]
+if [[ -z "$JOB_NAME_RAW" ]]
 then
     echo "Error: job name expected as first argument."
     exit 1
@@ -13,7 +13,8 @@ fi
 
 # Check that the AuTuMN code base exists.
 CODE_DIR=/project/sh30/autumn-repo
-if [[ ! -d "$CODE_DIR"]]
+if [[ ! -d "$CODE_DIR" ]]
+then
     echo "Error: expected AuTuMN project to be present at $CODE_DIR."
 fi
 

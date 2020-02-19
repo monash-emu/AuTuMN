@@ -15,6 +15,7 @@ from scipy.optimize import Bounds, minimize
 from scipy import stats, special
 
 from autumn.tb_model import store_tb_database
+from autumn.constants import DATA_PATH
 
 from .db import Database
 
@@ -33,26 +34,28 @@ class Calibration:
     required, or using maximum likelihood estimation if only one calibrated parameter set is required.
     """
 
-    def __init__(self, model_builder, priors, targeted_outputs, multipliers, chain_index):
+    def __init__(
+        self, model_name: str, model_builder, priors, targeted_outputs, multipliers, chain_index
+    ):
         self.model_builder = model_builder  # a function that builds a new model without running it
         self.running_model = None  # a model that will be run during calibration
-        self.post_processing = (
-            None
-        )  # a PostProcessing object containing the required outputs of a model that has been run
-        self.priors = (
-            priors
-        )  # a list of dictionaries. Each dictionary describes the prior distribution for a parameter
+        self.post_processing = None  # a PostProcessing object containing the required outputs of a model that has been run
+        self.priors = priors  # a list of dictionaries. Each dictionary describes the prior distribution for a parameter
         self.param_list = [self.priors[i]["param_name"] for i in range(len(self.priors))]
         self.targeted_outputs = (
-            targeted_outputs
-        )  # a list of dictionaries. Each dictionary describes a target
+            targeted_outputs  # a list of dictionaries. Each dictionary describes a target
+        )
         self.multipliers = multipliers
         self.chain_index = chain_index
-        self.output_db_path = os.path.join(
-            os.getcwd(), "databases/outputs_calibration_chain_" + str(self.chain_index) + ".db"
-        )
-        self.data_as_array = None  # will contain all targeted data points in a single array
 
+        # Setup output database directory
+        out_db_dir = os.path.join(DATA_PATH, model_name)
+        os.makedirs(out_db_dir, exist_ok=True)
+        self.output_db_path = os.path.join(
+            out_db_dir, f"outputs_calibration_chain_{self.chain_index}.db"
+        )
+
+        self.data_as_array = None  # will contain all targeted data points in a single array
         self.loglike = None  # will store theano object
 
         self.format_data_as_array()
@@ -217,8 +220,8 @@ class Calibration:
                 elif prior_dict["distribution"] == "lognormal":
                     mu = prior_dict["distri_params"][0]
                     sd = prior_dict["distri_params"][1]
-                    quantile_2_5 = math.exp(mu + math.sqrt(2)*sd * special.erfinv(2 * .025 - 1))
-                    quantile_97_5 = math.exp(mu + math.sqrt(2)*sd * special.erfinv(2 * .975 - 1))
+                    quantile_2_5 = math.exp(mu + math.sqrt(2) * sd * special.erfinv(2 * 0.025 - 1))
+                    quantile_97_5 = math.exp(mu + math.sqrt(2) * sd * special.erfinv(2 * 0.975 - 1))
                     prior_width = quantile_97_5 - quantile_2_5
                 else:
                     print(
@@ -229,8 +232,8 @@ class Calibration:
 
                 #  95% of the sampled values within [mu - 2*sd, mu + 2*sd], i.e. interval of witdth 4*sd
                 relative_prior_width = (
-                    0.25
-                )  # fraction of prior_width in which 95% of samples should fall
+                    0.25  # fraction of prior_width in which 95% of samples should fall
+                )
                 self.priors[i]["jumping_sd"] = relative_prior_width * prior_width / 4.0
 
     def create_loglike_object(self):
@@ -457,12 +460,15 @@ class Calibration:
         logp = 0.0
         for i, prior_dict in enumerate(self.priors):
             if prior_dict["distribution"] == "uniform":
-                logp += math.log(1.0 / (prior_dict["distri_params"][1] - prior_dict["distri_params"][0]))
+                logp += math.log(
+                    1.0 / (prior_dict["distri_params"][1] - prior_dict["distri_params"][0])
+                )
             elif prior_dict["distribution"] == "lognormal":
                 mu = prior_dict["distri_params"][0]
                 sd = prior_dict["distri_params"][1]
-                logp += stats.lognorm.logpdf(x=params[i],
-                                             s=sd, scale=math.exp(mu))  # see documentation of stats.lognorm for scale
+                logp += stats.lognorm.logpdf(
+                    x=params[i], s=sd, scale=math.exp(mu)
+                )  # see documentation of stats.lognorm for scale
             else:
                 print(
                     prior_dict["distribution"]
@@ -508,7 +514,7 @@ class LogLike(tt.Op):
 
     def perform(self, node, inputs, outputs):
         # the method that is used when calling the Op
-        theta, = inputs  # this will contain my variables
+        (theta,) = inputs  # this will contain my variables
 
         # call the log-likelihood function
         logl = self.likelihood(theta)

@@ -5,7 +5,6 @@ git+https://github.com/jtrauer/summer.git
 matplotlib>=1.4.2
 
 # Numerical computing
-multiprocess==0.70.9
 numpy>=1.14.1
 pandas==0.24.2
 scipy==1.1.0

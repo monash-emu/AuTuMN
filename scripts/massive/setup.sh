@@ -38,6 +38,7 @@ cp ./scripts/massive/run-job.sh $JOB_DIR
 echo -e "\n>>> Copying AuTuMN code from $CODE_DIR to $JOB_DIR."
 cp -r $CODE_DIR/autumn $JOB_DIR
 cp -r $CODE_DIR/applications $JOB_DIR
+cp -r $CODE_DIR/data $JOB_DIR
 cp $CODE_DIR/requirements.txt $JOB_DIR
 
 echo -e "\n>>> Setting up Python 3 environment in $JOB_DIR."
@@ -59,8 +60,9 @@ echo -e "\n>>> Generating job batch script."
 python3 build-script.py $JOB_NAME $JOB_DIR
 chmod +x batch.sh
 
-# Prepare output directory
+# Prepare output directories
 mkdir -p logs
+mkdir -p data
 
 echo -e "\n>>> Setup complete, job ready to run."
 echo -e ">>>\n>>> Try: cd $JOB_DIR\n>>>"

@@ -1,9 +1,17 @@
 ---
 # MASSIVE job configuration
-num_jobs: 1
-num_tasks_per_job: 1
-cores_per_task: 1
-mem_per_cpu: 1 # Memory in MB
-runtime: 0-0:00:01 # day-hours:minutes:seconds
+# Number of jobs to run asynchronously in parallel.
+num_jobs: 10
+# Number of CPU cores available to each job.
+cores_per_job: 1
+# Memory in MB available per core, per job.
+mem_per_core: 512
+# Maximum time that each job can run for, format is day-hours:minutes:seconds
+# Try to build in a safety factor of ~2x to prevent Slurm from killing the job.
+runtime: 0-0:10:00
+# Who gets emailed when the job starts, suceeds, fails.
 notification_email: matthew.segal@monash.edu
-job_command: python3 -c "print('hello world')"
+# The bash command that gets run to start the job.
+# Run Mongolia calibration for 5 minutes (300 seconds).
+# N.B Job array ID will be passed in as an extra argument.
+job_command: python3 -m applications mongolia-calibration 300

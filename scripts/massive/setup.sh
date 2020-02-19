@@ -20,7 +20,7 @@ fi
 
 # Format job name so it can be used as a filename
 JOB_NAME=$(echo "$JOB_NAME_RAW" | iconv -t ascii//TRANSLIT | sed -r s/[^a-zA-Z0-9]+/-/g | sed -r s/^-+\|-+$//g | tr A-Z a-z)
-DATE_STAMP=$(date +"%d-%m-%Y")
+DATE_STAMP=$(date +"%d-%m-%Y-%s")
 
 # Make the job folder
 mkdir -p /projects/sh30/autumn-jobs
@@ -56,7 +56,7 @@ pip3 install -r requirements.txt
 
 # Generate the job's batch script.
 echo -e "\n>>> Generating job batch script."
-python3 build-script.py $JOB_NAME
+python3 build-script.py $JOB_NAME $JOB_DIR
 chmod +x batch.sh
 
 echo -e "\n>>> Setup complete, job ready to run."

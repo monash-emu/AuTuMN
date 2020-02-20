@@ -23,17 +23,23 @@ PARAMS_PATH = os.path.join(FILE_DIR, "params.yml")
 OUTPUTS_PATH = os.path.join(FILE_DIR, "outputs.yml")
 
 # Settings for the hand-coded Euler method.
-# It's not clear whether this produces reliable results, but it can be faster than odeint
+# It's not clear whether this produces reliable results, but it can be faster than odeint (~60s at 0.1 step, ~20s at 0.3 step)
 EULER_KWARGS = {
     "integration_type": IntegrationType.EULER,
     "solver_args": {"step_size": 0.3},
 }
-# Settings for the SciPy odeint solver - this can get stuck on some ODE types and take a long time.
+# Settings for the hand-coded Runge-Kutta method, which is more accurate, but slower than Euler.
+# It's not clear whether this produces reliable results, but it can be faster than odeint (~230s at 0.1 step, ~70s at 0.3 step, ~50s at 0.5 step)
+RUNGE_KUTTA_KWARGS = {
+    "integration_type": IntegrationType.RUNGE_KUTTA,
+    "solver_args": {"step_size": 0.5},
+}
+# Settings for the SciPy odeint solver - this can get stuck on some ODE types and take a long time (~230s).
 ODEINT_KWARGS = {
     "integration_type": IntegrationType.ODE_INT,
 }
-# ODE solver settings to use when unning the model.
-SOLVER_KWARGS = ODEINT_KWARGS
+# ODE solver settings to use when running the model.
+SOLVER_KWARGS = RUNGE_KUTTA_KWARGS
 
 
 def run_model():

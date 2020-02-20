@@ -30,13 +30,12 @@ from autumn.tb_model import (
     create_output_connections_for_incidence_by_stratum,
     list_all_strata_for_mortality,
     plot_time_variant_param,
-
 )
 from autumn.tool_kit import (
     return_function_of_function,
     progressive_step_function_maker,
     change_parameter_unit,
-    add_w_to_param_names
+    add_w_to_param_names,
 )
 
 # Database locations
@@ -75,16 +74,15 @@ def build_rmi_model(update_params={}):
         * external_params["rr_transmission_ltbi_treated"],
         "recovery": external_params["self_recovery_rate"],
         "infect_death": external_params["tb_mortality_rate"],
-        ""
         "universal_death_rate": 1.0 / 70.0,
         "case_detection": 0.0,
         "ipt_rate": 0.0,
         "acf_rate": 0.0,
         "acf_ltbi_rate": 0.0,
         "crude_birth_rate": 35.0 / 1e3,
-        "early_progression": 365.251*external_params["early_progression"],
-        "late_progression": 365.251*external_params["late_progression"],
-        "stabilisation": 365.251*external_params["stabilisation"]
+        "early_progression": 365.251 * external_params["early_progression"],
+        "late_progression": 365.251 * external_params["late_progression"],
+        "stabilisation": 365.251 * external_params["stabilisation"],
     }
 
     input_database = Database(database_name=INPUT_DB_PATH)
@@ -245,21 +243,21 @@ def build_rmi_model(update_params={}):
         return adapted_parameter_dict
 
     AGE_SPECIFIC_LATENCY_PARAMETERS = {
-        "early_progression":{
+        "early_progression": {
             0: external_params["early_progression_0"],
-             5: external_params["early_progression_5"],
-             15: external_params["early_progression_15"]
-             },
+            5: external_params["early_progression_5"],
+            15: external_params["early_progression_15"],
+        },
         "stabilisation": {
             0: external_params["stabilisation_0"],
             5: external_params["stabilisation_5"],
-            15: external_params["stabilisation_15"]
+            15: external_params["stabilisation_15"],
         },
         "late_progression": {
             0: external_params["late_progression_0"],
             5: external_params["late_progression_5"],
-            15: external_params["late_progression_15"]
-        }
+            15: external_params["late_progression_15"],
+        },
     }
 
     # work out the CDR for smear-positive TB

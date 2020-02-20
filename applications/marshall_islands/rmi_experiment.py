@@ -39,7 +39,7 @@ ODEINT_KWARGS = {
     "integration_type": IntegrationType.ODE_INT,
 }
 # ODE solver settings to use when running the model.
-SOLVER_KWARGS = RUNGE_KUTTA_KWARGS
+SOLVER_KWARGS = ODEINT_KWARGS
 
 
 def run_model():

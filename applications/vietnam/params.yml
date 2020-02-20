@@ -20,7 +20,7 @@ population:
 
 # Model definition parameters
 model:
-  contact_rate: 14.0
+  contact_rate: 15.0
   rr_transmission_recovered: 1.0
   rr_transmission_infected: 0.21
   recovery: 0.231 # this is for smear-positive TB

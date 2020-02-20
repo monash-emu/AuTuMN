@@ -2,8 +2,35 @@
 Miscellanious utility functions.
 If several functions here develop a theme, consider reorganising them into a module.
 """
+import subprocess as sp
+
 import numpy
 from summer_py.summer_model import find_name_components
+
+
+def get_git_hash():
+    """
+    Return the current commit hash, or an empty string.
+    """
+    return run_command("git rev-parse HEAD").strip()
+
+
+def get_git_branch():
+    """
+    Return the current git branch, or an empty string
+    """
+    return run_command("git rev-parse --abbrev-ref HEAD").strip()
+
+
+def run_command(cmds):
+    """
+    Run a process and retun the stdout.
+    """
+    try:
+        result = sp.run(cmds, shell=True, check=True, stdout=sp.PIPE, encoding="utf-8")
+        return result.stdout
+    except sp.CalledProcessError:
+        return ""
 
 
 def return_function_of_function(inner_function, outer_function):

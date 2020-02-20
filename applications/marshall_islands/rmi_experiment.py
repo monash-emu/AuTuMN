@@ -12,6 +12,7 @@ from summer_py.constants import IntegrationType
 
 from autumn.tool_kit.timer import Timer
 from autumn.tool_kit import run_multi_scenario
+from autumn.tool_kit.utils import get_git_branch, get_git_hash
 from autumn.tb_model import add_combined_incidence, store_run_models, create_multi_scenario_outputs
 from autumn import constants
 
@@ -72,15 +73,23 @@ def run_model():
     output_db_path = os.path.join(experiment_dir, "outputs.db")
     plot_path = os.path.join(experiment_dir, "plots")
 
-    # Save experiment metadata.
+    # Save experiment parameters.
     param_path = os.path.join(experiment_dir, "params.yml")
-    meta_path = os.path.join(experiment_dir, "meta.yml")
-    metadata = get_experiment_metadata(experiment_name)
-    with open(meta_path, "w") as f:
-        yaml.dump(metadata, f)
-
     with open(param_path, "w") as f:
         yaml.dump(params, f)
+
+    # Save experiment metadata.
+    meta_path = os.path.join(experiment_dir, "meta.yml")
+    metadata = {
+        "name": experiment_name,
+        "description": experiment_desc,
+        "start_time": timestamp,
+        "git_branch": get_git_branch(),
+        "git_commit": get_git_hash(),
+    }
+
+    with open(meta_path, "w") as f:
+        yaml.dump(metadata, f)
 
     # Prepare scenario data.
     scenario_params = params["scenarios"]
@@ -91,6 +100,7 @@ def run_model():
         models = run_multi_scenario(
             scenario_params, params["scenario_start"], build_rmi_model, run_kwargs=SOLVER_KWARGS,
         )
+
     # Post-process and save model outputs
     with Timer("Post processing model outputs"):
         # Automatically add combined incidence output
@@ -110,16 +120,6 @@ def run_model():
         create_multi_scenario_outputs(
             models, out_dir=plot_path, scenario_list=scenario_list, **output_options
         )
-
-
-def get_experiment_metadata(experiment_name):
-    """
-    Get experiment metadata for future reference.
-    TODO: git commit, datetime, runtime(s), description.
-    """
-    return {
-        "experiment_name": experiment_name,
-    }
 
 
 if __name__ == "__main__":

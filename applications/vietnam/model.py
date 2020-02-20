@@ -6,7 +6,6 @@ import yaml
 import pandas as pd
 from summer_py.summer_model import StratifiedModel
 
-
 from autumn import constants
 from autumn.db import Database
 from autumn.tb_model import (
@@ -19,26 +18,14 @@ from autumn.tb_model import (
 from autumn.tb_model.latency_params import AGGREGATED_LATENCY_PARAMETERS
 from autumn.tool_kit import run_multi_scenario, change_parameter_unit, get_integration_times
 
+import applications.vietnam.derived_outputs as derived_outputs
+from applications.vietnam.flows import get_flows
+from applications.vietnam.rate_builder import RateBuilder
+from applications.vietnam.stratify.location import stratify_location
+from applications.vietnam.stratify.age import stratify_age
+from applications.vietnam.stratify.organ import stratify_organ
+from applications.vietnam.stratify.strain import stratify_strain
 
-# This is a hack to get the imports to work in PyCharm and in the automated tests.
-try:
-    # Try import for PyCharm, as if this were a script.
-    import derived_outputs
-    from rate_builder import RateBuilder
-    from flows import get_flows
-    from stratify.location import stratify_location
-    from stratify.age import stratify_age
-    from stratify.organ import stratify_organ
-    from stratify.strain import stratify_strain
-except ModuleNotFoundError:
-    # Try import as if we are in a module.
-    from .rate_builder import RateBuilder
-    from .flows import get_flows
-    from .stratify.location import stratify_location
-    from .stratify.age import stratify_age
-    from .stratify.organ import stratify_organ
-    from .stratify.strain import stratify_strain
-    from . import derived_outputs
 
 # Database locations
 file_dir = os.path.dirname(os.path.abspath(__file__))

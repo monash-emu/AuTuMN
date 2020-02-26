@@ -26,6 +26,7 @@ from autumn.tb_model import (
     add_standard_latency_flows,
     add_standard_natural_history_flows,
     add_density_infection_flows,
+    add_standard_infection_flows,
     get_birth_rate_functions,
     create_output_connections_for_incidence_by_stratum,
     list_all_strata_for_mortality,
@@ -51,7 +52,7 @@ PARAMS_PATH = os.path.join(file_dir, "params.yml")
 STRATIFY_BY = ["age", "diabetes", "organ", "location"]
 
 PLOTTED_STRATIFIED_DERIVED_OUTPUTS = (
-    []
+    ["notifications"]
 )  # use ["incidence", "notifications", "mortality"] to get all outputs
 
 
@@ -103,7 +104,7 @@ def build_rmi_model(update_params={}):
     # model_parameters.update(change_parameter_unit(provide_aggregated_latency_parameters(), 365.251))
 
     # sequentially add groups of flows
-    flows = add_density_infection_flows([])
+    flows = add_standard_infection_flows([])
     flows = add_standard_latency_flows(flows)
     flows = add_standard_natural_history_flows(flows)
 
@@ -142,7 +143,7 @@ def build_rmi_model(update_params={}):
                         "to_condition": stratification + "_" + stratum,
                     }
 
-    init_pop = {"infectious": 3, "late_latent": 50}
+    init_pop = {"infectious": 10, "late_latent": 100}
 
     # define model     #replace_deaths  add_crude_birth_rate
     _tb_model = StratifiedModel(
@@ -172,7 +173,7 @@ def build_rmi_model(update_params={}):
     # add ltbi treated infection flow
     _tb_model.add_transition_flow(
         {
-            "type": "infection_density",
+            "type": "infection_frequency",
             "parameter": "contact_rate_ltbi_treated",
             "origin": "ltbi_treated",
             "to": "early_latent",
@@ -298,7 +299,7 @@ def build_rmi_model(update_params={}):
         tb_control_recovery_rate = lambda t: tsr_function(t) * detect_rate_by_organ["smearpos"](t)
 
     # set acf screening rate using proportion of population reached and duration of intervention
-    acf_screening_rate = -numpy.log(1 - 0.90) / 0.5
+    acf_screening_rate = -numpy.log(1 - 0.9) / 0.5
 
     acf_rate_over_time = progressive_step_function_maker(
         2018.2, 2018.7, acf_screening_rate, scaling_time_fraction=0.3
@@ -319,41 +320,43 @@ def build_rmi_model(update_params={}):
         * external_params["acf_ltbi_efficacy"]
     )
 
-    # time_variant contact_rate to simulate living condition improvement
-    contact_rate_function = (
-        lambda t: (
-            external_params["minimum_tv_beta_multiplier"]
-            + (1.0 - external_params["minimum_tv_beta_multiplier"])
-            * numpy.exp(-external_params["beta_decay_rate"] * (t - 1900.0))
-        )
-        * external_params["contact_rate"]
-    )
+    # # time_variant contact_rate to simulate living condition improvement
+    # contact_rate_function = (
+    #     lambda t: (
+    #         external_params["minimum_tv_beta_multiplier"]
+    #         + (1.0 - external_params["minimum_tv_beta_multiplier"])
+    #         * numpy.exp(-external_params["beta_decay_rate"] * (t - 1900.0))
+    #     )
+    #     * external_params["contact_rate"]
+    # )
+    #
+    # plot_time_variant_param(contact_rate_function, [1940, 2020])
+    plot_time_variant_param(cdr_scaleup_overall, [1940, 2020])
 
-    # plot_time_variant_param(contact_rate_function, [1900, 2020])
+    #
+    # # create time-variant functions for the different contact rates # did not get it to work with a loop!!!
+    # beta_func = lambda t: contact_rate_function(t)
+    # beta_func_infected = (
+    #     lambda t: contact_rate_function(t) * external_params["rr_transmission_infected"]
+    # )
+    # beta_func_recovered = (
+    #     lambda t: contact_rate_function(t) * external_params["rr_transmission_recovered"]
+    # )
+    # beta_func_ltbi_treated = (
+    #     lambda t: contact_rate_function(t) * external_params["rr_transmission_ltbi_treated"]
+    # )
 
-    # create time-variant functions for the different contact rates # did not get it to work with a loop!!!
-    beta_func = lambda t: contact_rate_function(t)
-    beta_func_infected = (
-        lambda t: contact_rate_function(t) * external_params["rr_transmission_infected"]
-    )
-    beta_func_recovered = (
-        lambda t: contact_rate_function(t) * external_params["rr_transmission_recovered"]
-    )
-    beta_func_ltbi_treated = (
-        lambda t: contact_rate_function(t) * external_params["rr_transmission_ltbi_treated"]
-    )
-
-    # assign newly created functions to model parameters
+    # # assign newly created functions to model parameters
     if len(STRATIFY_BY) == 0:
         _tb_model.time_variants["case_detection"] = tb_control_recovery_rate
         _tb_model.time_variants["acf_rate"] = acf_rate_function
         _tb_model.time_variants["acf_ltbi_rate"] = acf_ltbi_rate_function
-
-        ###################################
-        _tb_model.time_variants["contact_rate"] = beta_func
-        _tb_model.time_variants["contact_rate_infected"] = beta_func_infected
-        _tb_model.time_variants["contact_rate_recovered"] = beta_func_recovered
-        _tb_model.time_variants["contact_rate_ltbi_treated"] = beta_func_ltbi_treated
+    # #
+    # #     ###################################
+    # #     _tb_model.time_variants["contact_rate"] = beta_func
+    # #     _tb_model.time_variants["contact_rate_infected"] = beta_func_infected
+    # #     _tb_model.time_variants["contact_rate_recovered"] = beta_func_recovered
+    # #     _tb_model.time_variants["contact_rate_ltbi_treated"] = beta_func_ltbi_treated
     else:
         _tb_model.adaptation_functions["case_detection"] = tb_control_recovery_rate
         _tb_model.parameters["case_detection"] = "case_detection"
@@ -363,22 +366,22 @@ def build_rmi_model(update_params={}):
 
         _tb_model.adaptation_functions["acf_ltbi_rate"] = acf_ltbi_rate_function
         _tb_model.parameters["acf_ltbi_rate"] = "acf_ltbi_rate"
-
-        ###################################################################################
-        _tb_model.adaptation_functions["contact_rate"] = beta_func
-        _tb_model.parameters["contact_rate"] = "contact_rate"
-
-        _tb_model.adaptation_functions["contact_rate_infected"] = beta_func_infected
-        _tb_model.parameters["contact_rate_infected"] = "contact_rate_infected"
-
-        _tb_model.adaptation_functions["contact_rate_recovered"] = beta_func_recovered
-        _tb_model.parameters["contact_rate_recovered"] = "contact_rate_recovered"
-
-        _tb_model.adaptation_functions["contact_rate_ltbi_treated"] = beta_func_ltbi_treated
-        _tb_model.parameters["contact_rate_ltbi_treated"] = "contact_rate_ltbi_treated"
+    #
+    #     ###################################################################################
+    #     _tb_model.adaptation_functions["contact_rate"] = beta_func
+    #     _tb_model.parameters["contact_rate"] = "contact_rate"
+    #
+    #     _tb_model.adaptation_functions["contact_rate_infected"] = beta_func_infected
+    #     _tb_model.parameters["contact_rate_infected"] = "contact_rate_infected"
+    #
+    #     _tb_model.adaptation_functions["contact_rate_recovered"] = beta_func_recovered
+    #     _tb_model.parameters["contact_rate_recovered"] = "contact_rate_recovered"
+    #
+    #     _tb_model.adaptation_functions["contact_rate_ltbi_treated"] = beta_func_ltbi_treated
+    #     _tb_model.parameters["contact_rate_ltbi_treated"] = "contact_rate_ltbi_treated"
 
     if "age" in STRATIFY_BY:
-        age_breakpoints = [0, 5, 15, 35, 50, 70]
+        age_breakpoints = [0, 5, 15, 35, 50]
         age_infectiousness = get_parameter_dict_from_function(
             logistic_scaling_function(10.0), age_breakpoints
         )
@@ -386,7 +389,7 @@ def build_rmi_model(update_params={}):
 
         age_params.update(split_age_parameter(age_breakpoints, "contact_rate"))
 
-        # adjustment of latency parameters
+        # # adjustment of latency parameters
         # for param in ['early_progression', 'late_progression']:
         #     for age_break in age_breakpoints:
         #         age_params[param][str(age_break) + 'W'] *= external_params['latency_adjustment']
@@ -395,7 +398,7 @@ def build_rmi_model(update_params={}):
             input_database,
             age_breakpoints,
             country_iso_code="FSM",
-            emigration_value=0.01,
+            emigration_value=0.0075,
             emigration_start_time=1990.0,
         )
 
@@ -453,8 +456,8 @@ def build_rmi_model(update_params={}):
                 "age_5": {"diabetic": 0.1},
                 "age_15": {"diabetic": 0.2},
                 "age_35": {"diabetic": 0.4},
-                "age_50": {"diabetic": 0.5},
-                "age_70": {"diabetic": 0.8},
+                "age_50": {"diabetic": 0.7},
+                # "age_70": {"diabetic": 0.8},
             },
         )
 
@@ -525,16 +528,16 @@ def build_rmi_model(update_params={}):
                 "case_detection_" + stratum + "_multiplier"
             ]
 
-        location_adjustments["acf_rate"] = {}
+        location_adjustments["acf_coverage"] = {}
         for stratum in ["majuro", "ebeye", "otherislands"]:
-            location_adjustments["acf_rate"][stratum] = external_params[
-                "acf_" + stratum + "_switch"
+            location_adjustments["acf_coverage"][stratum] = external_params[
+                "acf_" + stratum + "_coverage"
             ]
 
-        location_adjustments["acf_ltbi_rate"] = {}
+        location_adjustments["acf_ltbi_coverage"] = {}
         for stratum in ["majuro", "ebeye", "otherislands"]:
-            location_adjustments["acf_ltbi_rate"][stratum] = external_params[
-                "acf_ltbi_" + stratum + "_switch"
+            location_adjustments["acf_ltbi_coverage"][stratum] = external_params[
+                "acf_ltbi_" + stratum + "_coverage"
             ]
 
         _tb_model.stratify(
@@ -655,7 +658,7 @@ def build_rmi_model(update_params={}):
 
 
 def build_rmi_timevariant_cdr(cdr_multiplier):
-    cdr = {1950.0: 0.0, 1980.0: 0.10, 1990.0: 0.1, 2000.0: 0.2, 2010.0: 0.3, 2015: 0.4}
+    cdr = {1950.0: 0.0, 1980.0: 0.2, 1990.0: 0.3, 2000.0: 0.4, 2010.0: 0.45, 2015: 0.5}
     return scale_up_function(
         cdr.keys(), [c * cdr_multiplier for c in list(cdr.values())], smoothness=0.2, method=5
     )

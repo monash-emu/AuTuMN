@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 from ..constants import Compartment
 from ..db import Database
 from .dummy_model import DummyModel
+from autumn.tool_kit.utils import find_first_list_element_above
 
 
 def add_combined_incidence(derived_outputs, outputs, scaled_by_population=False):
@@ -282,6 +283,8 @@ def create_multi_scenario_outputs(
     for output in outputs_to_plot_by_stratum:
         for sc_index in range(len(models)):
             outputs.plot_outputs_by_stratum(output, sc_index=sc_index)
+
+    time_index = find_first_list_element_above(pps[0].derived_outputs["times"], 2017.)
 
     # Plotting the baseline function value, but here in case we want to use for multi-scenario in the future
     for input_function in input_functions_to_plot:

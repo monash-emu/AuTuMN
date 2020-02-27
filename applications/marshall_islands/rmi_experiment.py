@@ -57,8 +57,10 @@ def run_model():
         os.makedirs(project_dir, exist_ok=True)
 
     # Get user input.
-    experiment_name = slugify(input("Experiment name (empty ok): "))
-    experiment_desc = input("Experiment description (empty ok): ")
+    experiment_name = ""
+    # experiment_name = slugify(input("Experiment name (empty ok): "))
+    experiment_desc = ""
+    # experiment_desc = input("Experiment description (empty ok): ")
 
     # Create experiment folder.
     experiment_name = experiment_name or "experiment"

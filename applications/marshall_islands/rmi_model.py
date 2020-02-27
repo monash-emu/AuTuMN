@@ -331,7 +331,7 @@ def build_rmi_model(update_params={}):
     # )
     #
     # plot_time_variant_param(contact_rate_function, [1940, 2020])
-    plot_time_variant_param(cdr_scaleup_overall, [1940, 2020])
+    # plot_time_variant_param(cdr_scaleup_overall, [1940, 2020])
 
     #
     # # create time-variant functions for the different contact rates # did not get it to work with a loop!!!

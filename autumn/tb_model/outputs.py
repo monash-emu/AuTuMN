@@ -217,30 +217,8 @@ def store_run_models(models, scenarios, database_name="../databases/outputs.db")
         )
 
 
-def create_multi_scenario_outputs(
-    models,
-    req_outputs,
-    req_times={},
-    req_multipliers={},
-    ymax={},
-    out_dir="outputs_tes",
-    targets_to_plot={},
-    translation_dictionary={},
-    scenario_list=[],
-    plot_start_time=1990,
-    outputs_to_plot_by_stratum=["prevXinfectious", "prevXlatent"],
-    input_functions_to_plot=[]
-):
-    """
-    process and generate plots for several scenarios
-    :param models: a list of run models
-    :param req_outputs. See PostProcessing class
-    :param req_times. See PostProcessing class
-    :param req_multipliers. See PostProcessing class
-    """
-    if not os.path.exists(out_dir):
-        os.mkdir(out_dir)
-
+def get_post_processing_results(
+        models, req_outputs, req_multipliers, outputs_to_plot_by_stratum, scenario_list, req_times, ymax):
     pps = []
     for scenario_index in range(len(models)):
 
@@ -274,6 +252,35 @@ def create_multi_scenario_outputs(
                 ymax=ymax,
             )
         )
+        return pps
+
+
+def create_multi_scenario_outputs(
+    models,
+    req_outputs,
+    req_times={},
+    req_multipliers={},
+    ymax={},
+    out_dir="outputs_tes",
+    targets_to_plot={},
+    translation_dictionary={},
+    scenario_list=[],
+    plot_start_time=1990,
+    outputs_to_plot_by_stratum=["prevXinfectious", "prevXlatent"],
+    input_functions_to_plot=[]
+):
+    """
+    process and generate plots for several scenarios
+    :param models: a list of run models
+    :param req_outputs. See PostProcessing class
+    :param req_times. See PostProcessing class
+    :param req_multipliers. See PostProcessing class
+    """
+    if not os.path.exists(out_dir):
+        os.mkdir(out_dir)
+
+    pps = get_post_processing_results(
+        models, req_outputs, req_multipliers, outputs_to_plot_by_stratum, scenario_list, req_times, ymax)
 
     outputs = Outputs(
         pps, targets_to_plot, out_dir, translation_dictionary, plot_start_time=plot_start_time
@@ -284,11 +291,51 @@ def create_multi_scenario_outputs(
         for sc_index in range(len(models)):
             outputs.plot_outputs_by_stratum(output, sc_index=sc_index)
 
-    time_index = find_first_list_element_above(pps[0].derived_outputs["times"], 2017.)
-
     # Plotting the baseline function value, but here in case we want to use for multi-scenario in the future
     for input_function in input_functions_to_plot:
         outputs.plot_input_function(input_function, models[0].adaptation_functions[input_function])
+
+def compare_marshall_notifications(
+        models,
+        req_outputs,
+        req_times={},
+        req_multipliers={},
+        ymax={},
+        out_dir="outputs_tes",
+        targets_to_plot={},
+        translation_dictionary={},
+        scenario_list=[],
+        plot_start_time=1990,
+        outputs_to_plot_by_stratum=["prevXinfectious", "prevXlatent"],
+        comparison_time=2017.,
+):
+    # gather data
+    pps = get_post_processing_results(
+        models, req_outputs, req_multipliers, outputs_to_plot_by_stratum, scenario_list, req_times, ymax)
+    time_index = find_first_list_element_above(pps[0].derived_outputs['times'], comparison_time)
+    age_groups = models[0].all_stratifications['age']
+    ages = [float(age) for age in age_groups]
+    notifications = \
+        [pps[0].derived_outputs['notificationsXage_' + age_group + 'Xlocation_otherislands'][time_index]
+         for age_group in age_groups]
+
+    # prepare plot
+    plt.style.use('ggplot')
+    fig = plt.figure()
+    axis = fig.add_axes([0.15, 0.15, .8, .8])
+    axis.scatter(ages, notifications)
+
+    # tidy x-axis
+    axis.set_xlim(-5., max(ages) + 5.)
+    axis.set_xlabel('age groups')
+    axis.set_xticks(ages)
+    axis.set_xticklabels(age_groups)
+
+    # tidy y-axis
+    axis.set_ylim(0., max(notifications) * 1.2)
+    axis.set_ylabel('notifications at %s' % round(comparison_time))
+    plt.show()
+    print()
 
 
 def create_mcmc_outputs(

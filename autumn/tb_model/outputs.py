@@ -309,6 +309,10 @@ def compare_marshall_notifications(
         outputs_to_plot_by_stratum=["prevXinfectious", "prevXlatent"],
         comparison_times=[2012., 2017.],
 ):
+    """
+    Targeted function to produce plot outputs that are specific to the Marshall Islands application.
+    Produces a comparison of the notification rates in the model to those in the inputs provided by CDC.
+    """
 
     # Prepare figure.
     plt.style.use('ggplot')
@@ -328,7 +332,7 @@ def compare_marshall_notifications(
         notifications[location] = \
             [sum(pps[0].derived_outputs['notificationsXage_' + age_group + 'Xlocation_' + location][
                  start_time_index: end_time_index])
-            for age_group in age_groups]
+             for age_group in age_groups]
 
         # Prepare plot.
         axis = fig.add_subplot(2, 2, i_loc + 1)

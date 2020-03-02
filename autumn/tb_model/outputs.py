@@ -307,35 +307,47 @@ def compare_marshall_notifications(
         scenario_list=[],
         plot_start_time=1990,
         outputs_to_plot_by_stratum=["prevXinfectious", "prevXlatent"],
-        comparison_time=2017.,
+        comparison_times=[2012., 2017.],
 ):
-    # Gather data
-    pps = get_post_processing_results(
-        models, req_outputs, req_multipliers, outputs_to_plot_by_stratum, scenario_list, req_times, ymax)
-    time_index = find_first_list_element_above(pps[0].derived_outputs['times'], comparison_time)
-    age_groups = models[0].all_stratifications['age']
-    ages = [float(age) for age in age_groups]
-    notifications = \
-        [pps[0].derived_outputs['notificationsXage_' + age_group + 'Xlocation_otherislands'][time_index]
-         for age_group in age_groups]
 
-    # Prepare plot
+    # Prepare figure.
     plt.style.use('ggplot')
     fig = plt.figure()
-    axis = fig.add_axes([0.15, 0.15, .8, .8])
-    axis.scatter(ages, notifications)
 
-    # Tidy x-axis
-    axis.set_xlim(-5., max(ages) + 5.)
-    axis.set_xlabel('age groups')
-    axis.set_xticks(ages)
-    axis.set_xticklabels(age_groups)
+    # Gather data.
+    pps = get_post_processing_results(
+        models, req_outputs, req_multipliers, outputs_to_plot_by_stratum, scenario_list, req_times, ymax)
+    start_time_index = find_first_list_element_above(pps[0].derived_outputs['times'], comparison_times[0])
+    end_time_index = find_first_list_element_above(pps[0].derived_outputs['times'], comparison_times[1])
+    age_groups = models[0].all_stratifications['age']
+    locations = models[0].all_stratifications['location']
+    ages = [float(age) for age in age_groups]
 
-    # Tidy y-axis
-    axis.set_ylim(0., max(notifications) * 1.2)
-    axis.set_ylabel('notifications at %s' % round(comparison_time))
+    notifications = {}
+    for i_loc, location in enumerate(locations):
+        notifications[location] = \
+            [sum(pps[0].derived_outputs['notificationsXage_' + age_group + 'Xlocation_' + location][
+                 start_time_index: end_time_index])
+            for age_group in age_groups]
 
-    # Save
+        # Prepare plot.
+        axis = fig.add_subplot(2, 2, i_loc + 1)
+        axis.scatter(ages, notifications[location])
+        axis.set_title(location)
+
+        # Tidy x-axis.
+        axis.set_xlim(-5., max(ages) + 5.)
+        axis.set_xlabel('age groups')
+        axis.set_xticks(ages)
+        axis.set_xticklabels(age_groups)
+
+        # Tidy y-axis.
+        axis.set_ylim(0., max(notifications[location]) * 1.2)
+        axis.set_ylabel('notifications')
+
+    # Save.
+    fig.suptitle('Notifications by location, from %s to %s' % tuple([str(round(time)) for time in comparison_times]))
+    fig.tight_layout(rect=[0., 0., 1., 0.95])
     fig.savefig(os.path.join(out_dir, "notification_comparisons.png"))
 
 

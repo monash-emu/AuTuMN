@@ -285,11 +285,11 @@ def create_multi_scenario_outputs(
     outputs = Outputs(
         pps, targets_to_plot, out_dir, translation_dictionary, plot_start_time=plot_start_time
     )
-    outputs.plot_requested_outputs()
-
-    for output in outputs_to_plot_by_stratum:
-        for sc_index in range(len(models)):
-            outputs.plot_outputs_by_stratum(output, sc_index=sc_index)
+    # outputs.plot_requested_outputs()
+    #
+    # for output in outputs_to_plot_by_stratum:
+    #     for sc_index in range(len(models)):
+    #         outputs.plot_outputs_by_stratum(output, sc_index=sc_index)
 
     # Plotting the baseline function value, but here in case we want to use for multi-scenario in the future
     for input_function in input_functions_to_plot:
@@ -309,7 +309,7 @@ def compare_marshall_notifications(
         outputs_to_plot_by_stratum=["prevXinfectious", "prevXlatent"],
         comparison_time=2017.,
 ):
-    # gather data
+    # Gather data
     pps = get_post_processing_results(
         models, req_outputs, req_multipliers, outputs_to_plot_by_stratum, scenario_list, req_times, ymax)
     time_index = find_first_list_element_above(pps[0].derived_outputs['times'], comparison_time)
@@ -319,23 +319,24 @@ def compare_marshall_notifications(
         [pps[0].derived_outputs['notificationsXage_' + age_group + 'Xlocation_otherislands'][time_index]
          for age_group in age_groups]
 
-    # prepare plot
+    # Prepare plot
     plt.style.use('ggplot')
     fig = plt.figure()
     axis = fig.add_axes([0.15, 0.15, .8, .8])
     axis.scatter(ages, notifications)
 
-    # tidy x-axis
+    # Tidy x-axis
     axis.set_xlim(-5., max(ages) + 5.)
     axis.set_xlabel('age groups')
     axis.set_xticks(ages)
     axis.set_xticklabels(age_groups)
 
-    # tidy y-axis
+    # Tidy y-axis
     axis.set_ylim(0., max(notifications) * 1.2)
     axis.set_ylabel('notifications at %s' % round(comparison_time))
-    plt.show()
-    print()
+
+    # Save
+    fig.savefig(os.path.join(out_dir, "notification_comparisons.png"))
 
 
 def create_mcmc_outputs(

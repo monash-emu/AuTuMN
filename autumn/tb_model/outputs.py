@@ -327,6 +327,9 @@ def compare_marshall_notifications(
     locations = models[0].all_stratifications['location']
     ages = [float(age) for age in age_groups]
 
+
+
+
     notifications = {}
     for i_loc, location in enumerate(locations):
         notifications[location] = \

@@ -303,11 +303,13 @@ def get_ebeye_baseline_data():
     baseline_data = {}
     for island in ['majuro', 'ebeye', 'otherislands']:
 
-        # Read
-        baseline_data[island] = pd.read_csv(
-            'C:\\Users\\jtrauer\\PycharmProjects\\AuTuMN\\applications\\marshall_islands\\rmi_specific_data\\' +
-            'baseline_' + island + '.csv',
-            header=3)
+        # Read data in
+        file_path = os.path.abspath(__file__)
+        final_path = \
+            os.path.join(
+                '\\'.join(file_path.split('\\')[:-3]),
+                'applications', 'marshall_islands', 'rmi_specific_data', 'baseline_' + island + '.csv')
+        baseline_data[island] = pd.read_csv(final_path, header=3)
 
         # Fix column names
         age_cols = {'Unnamed: 0': 'year', 'Age': 'subgroup'}

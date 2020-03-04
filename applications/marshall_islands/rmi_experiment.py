@@ -14,6 +14,7 @@ from autumn.tool_kit.timer import Timer
 from autumn.tool_kit import run_multi_scenario
 from autumn.tool_kit.utils import get_git_branch, get_git_hash
 from autumn.tb_model import add_combined_incidence, store_run_models, create_multi_scenario_outputs
+from autumn.tb_model.outputs import compare_marshall_notifications
 from autumn import constants
 
 from applications.marshall_islands.rmi_model import build_rmi_model
@@ -123,6 +124,7 @@ def run_model():
             models, out_dir=plot_path, scenario_list=scenario_list, **output_options,
             input_functions_to_plot=["case_detection"]
         )
+        compare_marshall_notifications(models, out_dir=plot_path, scenario_list=scenario_list, **output_options)
 
 
 if __name__ == "__main__":

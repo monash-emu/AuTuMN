@@ -1,0 +1,114 @@
+,"RMI Baseline data excluding Majuro and Ebeye, 2012-2016",,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,,,
+,,Diabetes,,,,,No Diabetes,,,,,Diabetes not tested or missing info,,,,,
+,Age,0-4,5-14,15-34,35-49,50+,0-4,5-14,15-34,35-49,50+,0-4,5-14,15-34,35-49,50+,Total
+Report Year,Active TB Diagnosis Totals,,,,,,,,,,,,,,,,
+2012,,,,4,1,3,2,1,,,,,,,,,11
+2013,,,,3,1,4,2,,,,,,,,,,10
+2014,,,,,,1,,,5,1,1,,,,,,8
+2015,,,,1,,3,,4,6,2,1,,,,,,17
+2016,,,,,,1,1,1,1,2,,,,,,,6
+,"PTB with bacteriological confirmation (smear, culture, and/or Xpert)",,,,,,,,,,,,,,,,
+2012,Total,,,3,1,2,,,,,,,,,,,6
+,Treatment success (cured and/or treatment completed),,,3,1,1,,,,,,,,,,,5
+,"Treatment failure (default, lost, failure)",,,,,,,,,,,,,,,,0
+,Died,,,,,,,,,,,,,,,,0
+,"Other (unknown, transferred out)",,,,,1,,,,,,,,,,,1
+2013,Total,,,1,1,3,,,,,,,,,,,5
+,Treatment success (cured and/or treatment completed),,,,1,3,,,,,,,,,,,4
+,"Treatment failure (default, lost, failure)",,,,,,,,,,,,,,,,0
+,Died,,,1,,,,,,,,,,,,,1
+,"Other (unknown, transferred out)",,,,,,,,,,,,,,,,0
+2014,Total,,,,,1,,,2,1,,,,,,,4
+,Treatment success (cured and/or treatment completed),,,,,1,,,1,,,,,,,,2
+,"Treatment failure (default, lost, failure)",,,,,,,,,1,,,,,,,1
+,Died,,,,,,,,1,,,,,,,,1
+,"Other (unknown, transferred out)",,,,,,,,,,,,,,,,0
+2015,Total,,,1,,3,,1,1,,,,,,,,6
+,Treatment success (cured and/or treatment completed),,,,,1,,1,1,,,,,,,,3
+,"Treatment failure (default, lost, failure)",,,1,,,,,,,,,,,,,1
+,Died,,,,,1,,,,,,,,,,,1
+,"Other (unknown, transferred out)",,,,,1,,,,,,,,,,,1
+2016,Total,,,,,1,,,1,,,,,,,,2
+,Treatment success (cured and/or treatment completed),,,,,,,,,,,,,,,,0
+,"Treatment failure (default, lost, failure)",,,,,,,,,,,,,,,,0
+,Died,,,,,1,,,,,,,,,,,1
+,"Other (unknown, transferred out)",,,,,,,,1,,,,,,,,1
+,Sputum Smear Positive only,,,,,,,,,,,,,,,,
+2012,Total,,,2,,2,,,,,,,,,,,4
+,Treatment success (cured and/or treatment completed),,,2,,1,,,,,,,,,,,3
+,"Treatment failure (default, lost, failure)",,,,,,,,,,,,,,,,0
+,Died,,,,,,,,,,,,,,,,0
+,"Other (unknown, transferred out)",,,,,1,,,,,,,,,,,1
+2013,Total,,,1,1,3,,,,,,,,,,,5
+,Treatment success (cured and/or treatment completed),,,,1,3,,,,,,,,,,,4
+,"Treatment failure (default, lost, failure)",,,,,,,,,,,,,,,,0
+,Died,,,1,,,,,,,,,,,,,1
+,"Other (unknown, transferred out)",,,,,,,,,,,,,,,,0
+2014,Total,,,,,1,,,2,1,,,,,,,4
+,Treatment success (cured and/or treatment completed),,,,,1,,,1,,,,,,,,2
+,"Treatment failure (default, lost, failure)",,,,,,,,,1,,,,,,,1
+,Died,,,,,,,,1,,,,,,,,1
+,"Other (unknown, transferred out)",,,,,,,,,,,,,,,,0
+2015,Total,,,1,,3,,1,1,,,,,,,,6
+,Treatment success (cured and/or treatment completed),,,,,1,,1,1,,,,,,,,3
+,"Treatment failure (default, lost, failure)",,,1,,,,,,,,,,,,,1
+,Died,,,,,1,,,,,,,,,,,1
+,"Other (unknown, transferred out)",,,,,1,,,,,,,,,,,1
+2016,Total,,,,,1,,,,,,,,,,,1
+,Treatment success (cured and/or treatment completed),,,,,,,,,,,,,,,,0
+,"Treatment failure (default, lost, failure)",,,,,,,,,,,,,,,,0
+,Died,,,,,1,,,,,,,,,,,1
+,"Other (unknown, transferred out)",,,,,,,,,,,,,,,,0
+,PTB without bacteriological confirmation (clinical dx),,,,,,,,,,,,,,,,
+2012,Total,,,,,1,1,1,,,,,,,,,3
+,Treatment success (cured and/or treatment completed),,,,,1,1,1,,,,,,,,,3
+,"Treatment failure (default, lost, failure)",,,,,,,,,,,,,,,,0
+,Died,,,,,,,,,,,,,,,,0
+,"Other (unknown, transferred out)",,,,,,,,,,,,,,,,0
+2013,Total,,,1,,,2,,,,,,,,,,3
+,Treatment success (cured and/or treatment completed),,,1,,,1,,,,,,,,,,2
+,"Treatment failure (default, lost, failure)",,,,,,1,,,,,,,,,,1
+,Died,,,,,,,,,,,,,,,,0
+,"Other (unknown, transferred out)",,,,,,,,,,,,,,,,0
+2014,Total,,,,,,,,1,,1,,,,,,2
+,Treatment success (cured and/or treatment completed),,,,,,,,,,,,,,,,0
+,"Treatment failure (default, lost, failure)",,,,,,,,1,,1,,,,,,2
+,Died,,,,,,,,,,,,,,,,0
+,"Other (unknown, transferred out)",,,,,,,,,,,,,,,,0
+2015,Total,,,,,,,1,3,1,,,,,,,5
+,Treatment success (cured and/or treatment completed),,,,,,,1,2,1,,,,,,,4
+,"Treatment failure (default, lost, failure)",,,,,,,,,,,,,,,,0
+,Died,,,,,,,,1,,,,,,,,1
+,"Other (unknown, transferred out)",,,,,,,,,,,,,,,,0
+2016,Total,,,,,,,,,2,,,,,,,2
+,Treatment success (cured and/or treatment completed),,,,,,,,,,,,,,,,0
+,"Treatment failure (default, lost, failure)",,,,,,,,,,,,,,,,0
+,Died,,,,,,,,,,,,,,,,0
+,"Other (unknown, transferred out)",,,,,,,,,2,,,,,,,2
+,Extrapulmonary TB only,,,,,,,,,,,,,,,,
+2012,Total,,,1,,,1,,,,,,,,,,2
+,Treatment success (cured and/or treatment completed),,,1,,,1,,,,,,,,,,2
+,"Treatment failure (default, lost, failure)",,,,,,,,,,,,,,,,0
+,Died,,,,,,,,,,,,,,,,0
+,"Other (unknown, transferred out)",,,,,,,,,,,,,,,,0
+2013,Total,,,1,,1,,,,,,,,,,,2
+,Treatment success (cured and/or treatment completed),,,1,,1,,,,,,,,,,,2
+,"Treatment failure (default, lost, failure)",,,,,,,,,,,,,,,,0
+,Died,,,,,,,,,,,,,,,,0
+,"Other (unknown, transferred out)",,,,,,,,,,,,,,,,0
+2014,Total,,,,,,,,2,,,,,,,,2
+,Treatment success (cured and/or treatment completed),,,,,,,,2,,,,,,,,2
+,"Treatment failure (default, lost, failure)",,,,,,,,,,,,,,,,0
+,Died,,,,,,,,,,,,,,,,0
+,"Other (unknown, transferred out)",,,,,,,,,,,,,,,,0
+2015,Total,,,,,,,2,2,1,1,,,,,,6
+,Treatment success (cured and/or treatment completed),,,,,,,1,2,1,1,,,,,,5
+,"Treatment failure (default, lost, failure)",,,,,,,,,,,,,,,,0
+,Died,,,,,,,1,,,,,,,,,1
+,"Other (unknown, transferred out)",,,,,,,,,,,,,,,,0
+2016,Total,,,,,,1,1,,,,,,,,,2
+,Treatment success (cured and/or treatment completed),,,,,,,1,,,,,,,,,1
+,"Treatment failure (default, lost, failure)",,,,,,,,,,,,,,,,0
+,Died,,,,,,,,,,,,,,,,0
+,"Other (unknown, transferred out)",,,,,,1,,,,,,,,,,1

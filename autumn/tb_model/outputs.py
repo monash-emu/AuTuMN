@@ -15,6 +15,7 @@ import matplotlib.pyplot as plt
 from ..constants import Compartment
 from ..db import Database
 from .dummy_model import DummyModel
+from autumn.tool_kit.utils import find_first_list_element_above
 
 
 def add_combined_incidence(derived_outputs, outputs, scaled_by_population=False):
@@ -216,30 +217,8 @@ def store_run_models(models, scenarios, database_name="../databases/outputs.db")
         )
 
 
-def create_multi_scenario_outputs(
-    models,
-    req_outputs,
-    req_times={},
-    req_multipliers={},
-    ymax={},
-    out_dir="outputs_tes",
-    targets_to_plot={},
-    translation_dictionary={},
-    scenario_list=[],
-    plot_start_time=1990,
-    outputs_to_plot_by_stratum=["prevXinfectious", "prevXlatent"],
-    input_functions_to_plot=[]
-):
-    """
-    process and generate plots for several scenarios
-    :param models: a list of run models
-    :param req_outputs. See PostProcessing class
-    :param req_times. See PostProcessing class
-    :param req_multipliers. See PostProcessing class
-    """
-    if not os.path.exists(out_dir):
-        os.mkdir(out_dir)
-
+def get_post_processing_results(
+        models, req_outputs, req_multipliers, outputs_to_plot_by_stratum, scenario_list, req_times, ymax):
     pps = []
     for scenario_index in range(len(models)):
 
@@ -273,19 +252,149 @@ def create_multi_scenario_outputs(
                 ymax=ymax,
             )
         )
+        return pps
+
+
+def create_multi_scenario_outputs(
+    models,
+    req_outputs,
+    req_times={},
+    req_multipliers={},
+    ymax={},
+    out_dir="outputs_tes",
+    targets_to_plot={},
+    translation_dictionary={},
+    scenario_list=[],
+    plot_start_time=1990,
+    outputs_to_plot_by_stratum=["prevXinfectious", "prevXlatent"],
+    input_functions_to_plot=[]
+):
+    """
+    process and generate plots for several scenarios
+    :param models: a list of run models
+    :param req_outputs. See PostProcessing class
+    :param req_times. See PostProcessing class
+    :param req_multipliers. See PostProcessing class
+    """
+    if not os.path.exists(out_dir):
+        os.mkdir(out_dir)
+
+    pps = get_post_processing_results(
+        models, req_outputs, req_multipliers, outputs_to_plot_by_stratum, scenario_list, req_times, ymax)
 
     outputs = Outputs(
         pps, targets_to_plot, out_dir, translation_dictionary, plot_start_time=plot_start_time
     )
-    outputs.plot_requested_outputs()
-
-    for output in outputs_to_plot_by_stratum:
-        for sc_index in range(len(models)):
-            outputs.plot_outputs_by_stratum(output, sc_index=sc_index)
+    # outputs.plot_requested_outputs()
+    #
+    # for output in outputs_to_plot_by_stratum:
+    #     for sc_index in range(len(models)):
+    #         outputs.plot_outputs_by_stratum(output, sc_index=sc_index)
 
     # Plotting the baseline function value, but here in case we want to use for multi-scenario in the future
     for input_function in input_functions_to_plot:
         outputs.plot_input_function(input_function, models[0].adaptation_functions[input_function])
+
+
+def get_ebeye_baseline_data():
+    """
+    Load in baseline data from spreadsheets provided by CDC - to create dictionary of data frames
+    """
+    baseline_data = {}
+    for island in ['majuro', 'ebeye', 'otherislands']:
+
+        # Read
+        baseline_data[island] = pd.read_csv(
+            'C:\\Users\\jtrauer\\PycharmProjects\\AuTuMN\\applications\\marshall_islands\\rmi_specific_data\\' +
+            'baseline_' + island + '.csv',
+            header=3)
+
+        # Fix column names
+        age_cols = {'Unnamed: 0': 'year', 'Age': 'subgroup'}
+        n_chars = [0] * 2 + ([1] * 2 + [2] * 3) * 3
+        extra_string = [''] * 7 + ['no'] * 5 + ['unknown'] * 5
+        for i_column in range(2, len(baseline_data[island].columns) - 1):
+            age_cols.update(
+                {baseline_data[island].columns[i_column]:
+                     baseline_data[island].columns[i_column][0: n_chars[i_column]] + '_' +
+                     extra_string[i_column] + 'diabetes'})
+        baseline_data[island].rename(columns=age_cols, inplace=True)
+        baseline_data[island].drop(columns=['Total'], inplace=True)
+        baseline_data[island].to_csv('temp.csv')
+
+    return baseline_data
+
+
+def compare_marshall_notifications(
+        models,
+        req_outputs,
+        req_times={},
+        req_multipliers={},
+        ymax={},
+        out_dir="outputs_tes",
+        targets_to_plot={},
+        translation_dictionary={},
+        scenario_list=[],
+        plot_start_time=1990,
+        outputs_to_plot_by_stratum=["prevXinfectious", "prevXlatent"],
+        comparison_times=[2012., 2017.],
+):
+    """
+    Targeted function to produce plot outputs that are specific to the Marshall Islands application.
+    Produces a comparison of the notification rates in the model to those in the inputs provided by CDC.
+    """
+
+    # Prepare figure
+    plt.style.use('ggplot')
+    fig = plt.figure()
+
+    # Gather data
+    pps = get_post_processing_results(
+        models, req_outputs, req_multipliers, outputs_to_plot_by_stratum, scenario_list, req_times, ymax)
+    start_time_index = find_first_list_element_above(pps[0].derived_outputs['times'], comparison_times[0])
+    end_time_index = find_first_list_element_above(pps[0].derived_outputs['times'], comparison_times[1])
+    age_groups = models[0].all_stratifications['age']
+    locations = models[0].all_stratifications['location']
+    ages = [float(age) for age in age_groups]
+    baseline_data = get_ebeye_baseline_data()
+
+    # Plot by location
+    modelled_notifications = {}
+    for i_loc, location in enumerate(locations):
+
+        # Collate modelled outputs
+        modelled_notifications[location] = \
+            [sum(pps[0].derived_outputs['notificationsXage_' + age_group + 'Xlocation_' + location][
+                 start_time_index: end_time_index])
+             for age_group in age_groups]
+
+        # Collate real data
+        real_notifications = \
+            [baseline_data[location].loc[
+             1: 5,
+             [age_group + '_diabetes', age_group + '_nodiabetes', age_group + '_unknowndiabetes']].sum(0).sum()
+             for age_group in age_groups]
+
+        # Prepare plot
+        axis = fig.add_subplot(2, 2, i_loc + 1)
+        axis.scatter(ages, modelled_notifications[location], color='r')
+        axis.scatter(ages, real_notifications, color='k')
+        axis.set_title(location)
+
+        # Tidy x-axis
+        axis.set_xlim(-5., max(ages) + 5.)
+        axis.set_xlabel('age groups')
+        axis.set_xticks(ages)
+        axis.set_xticklabels(age_groups)
+
+        # Tidy y-axis
+        axis.set_ylim(0., max(modelled_notifications[location] + real_notifications) * 1.2)
+        axis.set_ylabel('notifications')
+
+    # Save
+    fig.suptitle('Notifications by location, from %s to %s' % tuple([str(round(time)) for time in comparison_times]))
+    fig.tight_layout(rect=[0., 0., 1., 0.95])
+    fig.savefig(os.path.join(out_dir, "notification_comparisons.png"))
 
 
 def create_mcmc_outputs(

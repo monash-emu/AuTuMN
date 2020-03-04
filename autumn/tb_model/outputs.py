@@ -377,7 +377,7 @@ def compare_marshall_notifications(
 
         # Prepare plot
         axis = fig.add_subplot(2, 2, i_loc + 1)
-        axis.scatter(ages, modelled_notifications[location])
+        axis.scatter(ages, modelled_notifications[location], color='r')
         axis.scatter(ages, real_notifications, color='k')
         axis.set_title(location)
 

@@ -79,35 +79,39 @@ DENSITY_INFECTION_FLOWS = [
 
 ACF_LTBI_FLOWS = [
     {
-        "type": "standard_flows",
+        "type": Flow.STANDARD,
         "parameter": "acf_ltbi_rate",
         "origin": Compartment.LATE_LATENT,
         "to": "ltbi_treated",
     }
 ]
 
+CASE_DETECTION_FLOWS = [
+    {
+        "type": Flow.STANDARD,
+        "parameter": "case_detection",
+        "origin": Compartment.INFECTIOUS,
+        "to": Compartment.RECOVERED,
+    }
+]
+
+LATENCY_REINFECTION = [
+    {
+        "type": Flow.INFECTION_FREQUENCY,
+        "parameter": "contact_rate_ltbi_treated",
+        "origin": "ltbi_treated",
+        "to": Compartment.EARLY_LATENT,
+    }
+]
+
 
 def add_case_detection(list_of_flows):
-    list_of_flows += [
-        {
-            "type": "standard_flows",
-            "parameter": "case_detection",
-            "origin": "infectious",
-            "to": "recovered",
-        }
-    ]
+    list_of_flows += CASE_DETECTION_FLOWS
     return list_of_flows
 
 
 def add_latency_progression(list_of_flows):
-    list_of_flows += [
-        {
-            "type": "infection_frequency",
-            "parameter": "contact_rate_ltbi_treated",
-            "origin": "ltbi_treated",
-            "to": "early_latent",
-        }
-    ]
+    list_of_flows += LATENCY_REINFECTION
     return list_of_flows
 
 

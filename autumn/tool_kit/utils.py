@@ -154,3 +154,10 @@ def get_integration_times(start_year: int, end_year: int, time_step: int):
     """
     n_iter = int(round((end_year - start_year) / time_step)) + 1
     return numpy.linspace(start_year, end_year, n_iter).tolist()
+
+
+def element_wise_list_summation(list_1, list_2):
+    """
+    Element-wise summation of two lists of the same length.
+    """
+    return [value_1 + value_2 for value_1, value_2 in zip(list_1, list_2)]

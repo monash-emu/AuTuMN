@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 from ..constants import Compartment
 from ..db import Database
 from .dummy_model import DummyModel
-from autumn.tool_kit.utils import find_first_list_element_above
+from autumn.tool_kit.utils import find_first_list_element_above, element_wise_list_summation
 
 
 def add_combined_incidence(derived_outputs, outputs, scaled_by_population=False):
@@ -533,11 +533,4 @@ def sum_notifications_over_organ_diabetes(derived_outputs, locations, age_groups
                                 'Xorgan_' + organ +
                                 'Xlocation_' + location])
     return summed_notifications
-
-
-def element_wise_list_summation(list_1, list_2):
-    """
-    Element-wise summation of two lists of the same length.
-    """
-    return [value_1 + value_2 for value_1, value_2 in zip(list_1, list_2)]
 

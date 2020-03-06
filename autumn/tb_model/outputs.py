@@ -524,7 +524,7 @@ def sum_notifications_over_organ_diabetes(derived_outputs, locations, age_groups
             summed_notifications[location][age_group] = [0.] * n_times
             for organ in organs:
                 for diabetic in diabetes:
-                    summed_notifications = \
+                    summed_notifications[location][age_group] = \
                         element_wise_list_summation(
                             summed_notifications[location][age_group],
                             derived_outputs[

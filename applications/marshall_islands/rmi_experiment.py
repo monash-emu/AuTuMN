@@ -118,13 +118,14 @@ def run_model():
 
         store_run_models(models, scenarios=scenario_list, database_name=output_db_path)
 
-    # Save plots of model outputs.
+    # Save plots of model outputs
     with Timer("Plotting model outputs"):
         create_multi_scenario_outputs(
             models, out_dir=plot_path, scenario_list=scenario_list, **output_options,
             input_functions_to_plot=["case_detection"]
         )
-        compare_marshall_notifications(models, out_dir=plot_path, scenario_list=scenario_list, **output_options)
+        if len(models[0].all_stratifications) == 4:
+            compare_marshall_notifications(models, out_dir=plot_path, scenario_list=scenario_list, **output_options)
 
 
 if __name__ == "__main__":

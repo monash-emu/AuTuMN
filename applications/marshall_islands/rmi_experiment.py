@@ -1,18 +1,17 @@
 """
 Build and run the Republic of Marshall Islands (RMI) model, storing the outputs.
 """
+
 import os
 from datetime import datetime
-
 import pandas as pd
 import yaml
-from slugify import slugify
 
 from summer_py.constants import IntegrationType
 
 from autumn.tool_kit.timer import Timer
 from autumn.tool_kit import run_multi_scenario
-from autumn.tool_kit.utils import get_git_branch, get_git_hash
+from autumn.tool_kit.utils import get_git_branch, get_git_hash, make_directory_if_absent
 from autumn.tb_model import add_combined_incidence, store_run_models, create_multi_scenario_outputs
 from autumn.tb_model.outputs import compare_marshall_notifications
 from autumn import constants
@@ -25,13 +24,15 @@ PARAMS_PATH = os.path.join(FILE_DIR, "params.yml")
 OUTPUTS_PATH = os.path.join(FILE_DIR, "outputs.yml")
 
 # Settings for the hand-coded Euler method.
-# It's not clear whether this produces reliable results, but it can be faster than odeint (~60s at 0.1 step, ~20s at 0.3 step)
+# It's not clear whether this produces reliable results, but is likely faster than odeint
+# (~60s at 0.1 step, ~20s at 0.3 step)
 EULER_KWARGS = {
     "integration_type": IntegrationType.EULER,
     "solver_args": {"step_size": 0.3},
 }
 # Settings for the hand-coded Runge-Kutta method, which is more accurate, but slower than Euler.
-# It's not clear whether this produces reliable results, but it can be faster than odeint (~230s at 0.1 step, ~70s at 0.3 step, ~50s at 0.5 step)
+# It's not clear whether this produces reliable results, but it can be faster than odeint
+# (~230s at 0.1 step, ~70s at 0.3 step, ~50s at 0.5 step)
 RUNGE_KUTTA_KWARGS = {
     "integration_type": IntegrationType.RUNGE_KUTTA,
     "solver_args": {"step_size": 0.5},
@@ -45,32 +46,25 @@ SOLVER_KWARGS = ODEINT_KWARGS
 
 
 def run_model():
-    # Load experiment data from YAML files.
-    with open(PARAMS_PATH, "r") as f:
-        params = yaml.safe_load(f)
+    # Load user information for parameters and outputs from YAML files
+    with open(PARAMS_PATH, "r") as yaml_file:
+        params = yaml.safe_load(yaml_file)
+    with open(OUTPUTS_PATH, "r") as yaml_file:
+        output_options = yaml.safe_load(yaml_file)
 
-    with open(OUTPUTS_PATH, "r") as f:
-        output_options = yaml.safe_load(f)
-
-    # Ensure project folder exists.
+    # Ensure project folder exists
     project_dir = os.path.join(constants.DATA_PATH, "marshall_islands")
     if not os.path.exists(project_dir):
         os.makedirs(project_dir, exist_ok=True)
 
-    # Get user input.
-    experiment_name = ""
-    # experiment_name = slugify(input("Experiment name (empty ok): "))
-    experiment_desc = ""
-    # experiment_desc = input("Experiment description (empty ok): ")
+    # Include user input if requested
+    experiment_name, experiment_desc = '', ''
 
-    # Create experiment folder.
-    experiment_name = experiment_name or "experiment"
+    # Create output data folder
+    experiment_name = experiment_name or 'manual-calibration'
     timestamp = datetime.now().strftime("%d-%m-%Y--%H-%M-%S")
     experiment_dir = os.path.join(project_dir, f"{experiment_name}-{timestamp}")
-    if not os.path.exists(experiment_dir):
-        os.makedirs(experiment_dir)
-    else:
-        raise FileExistsError(f"Experiment {experiment_name} already exists at time {timestamp}.")
+    make_directory_if_absent(experiment_dir, experiment_name, timestamp)
 
     # Figure out where to save model outputs.
     output_db_path = os.path.join(experiment_dir, "outputs.db")
@@ -78,8 +72,8 @@ def run_model():
 
     # Save experiment parameters.
     param_path = os.path.join(experiment_dir, "params.yml")
-    with open(param_path, "w") as f:
-        yaml.dump(params, f)
+    with open(param_path, "w") as yaml_file:
+        yaml.dump(params, yaml_file)
 
     # Save experiment metadata.
     meta_path = os.path.join(experiment_dir, "meta.yml")
@@ -91,8 +85,8 @@ def run_model():
         "git_commit": get_git_hash(),
     }
 
-    with open(meta_path, "w") as f:
-        yaml.dump(metadata, f)
+    with open(meta_path, "w") as yaml_file:
+        yaml.dump(metadata, yaml_file)
 
     # Prepare scenario data.
     scenario_params = params["scenarios"]

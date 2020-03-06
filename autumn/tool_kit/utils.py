@@ -3,8 +3,9 @@ Miscellanious utility functions.
 If several functions here develop a theme, consider reorganising them into a module.
 """
 import subprocess as sp
-
 import numpy
+import os
+
 from summer_py.summer_model import find_name_components
 
 
@@ -154,3 +155,14 @@ def get_integration_times(start_year: int, end_year: int, time_step: int):
     """
     n_iter = int(round((end_year - start_year) / time_step)) + 1
     return numpy.linspace(start_year, end_year, n_iter).tolist()
+
+
+def make_directory_if_absent(full_directory_name, user_requested_name, timestamp):
+    """
+    Check a requested directory doesn't exist and create it if it doesn't.
+    """
+    if os.path.exists(full_directory_name):
+        raise FileExistsError(f"Experiment {user_requested_name} already exists at time {timestamp}.")
+    else:
+        os.makedirs(full_directory_name)
+

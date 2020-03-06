@@ -17,6 +17,8 @@ from summer_py.summer_model.utils.parameter_processing import (
 from autumn import constants
 from autumn.curve import scale_up_function
 from autumn.db import Database, get_pop_mortality_functions
+from autumn.tb_model.flows import add_case_detection, add_latency_progression, add_acf, add_acf_ltbi
+
 from autumn.tb_model import (
     scale_relative_risks_for_equivalence,
     convert_competing_proportion_to_rate,
@@ -146,7 +148,7 @@ def build_rmi_model(update_params={}):
 
     init_pop = {"infectious": 10, "late_latent": 100}
 
-    # define model     #replace_deaths  add_crude_birth_rate
+    # define model
     _tb_model = StratifiedModel(
         integration_times,
         compartments,
@@ -160,63 +162,17 @@ def build_rmi_model(update_params={}):
 
     # add crude birth rate from un estimates (using Federated States of Micronesia as a proxy as no data for RMI)
     _tb_model = get_birth_rate_functions(_tb_model, input_database, "FSM")
-
-    # add case detection process to basic model
-    _tb_model.add_transition_flow(
-        {
-            "type": "standard_flows",
-            "parameter": "case_detection",
-            "origin": "infectious",
-            "to": "recovered",
-        }
-    )
-
-    # add ltbi treated infection flow
-    _tb_model.add_transition_flow(
-        {
-            "type": "infection_frequency",
-            "parameter": "contact_rate_ltbi_treated",
-            "origin": "ltbi_treated",
-            "to": "early_latent",
-        }
-    )
-
-    # add ACF flow
-    _tb_model.add_transition_flow(
-        {
-            "type": "standard_flows",
-            "parameter": "acf_rate",
-            "origin": "infectious",
-            "to": "recovered",
-        }
-    )
-
-    # add LTBI ACF flows
-    _tb_model.add_transition_flow(
-        {
-            "type": "standard_flows",
-            "parameter": "acf_ltbi_rate",
-            "origin": "early_latent",
-            "to": "ltbi_treated",
-        }
-    )
-
-    _tb_model.add_transition_flow(
-        {
-            "type": "standard_flows",
-            "parameter": "acf_ltbi_rate",
-            "origin": "late_latent",
-            "to": "ltbi_treated",
-        }
-    )
+    _tb_model = add_case_detection(_tb_model)
+    _tb_model = add_latency_progression(_tb_model)
+    _tb_model = add_acf(_tb_model)
+    _tb_model = add_acf_ltbi(_tb_model)
 
     # load time-variant case detection rate
     cdr_scaleup_overall = build_rmi_timevariant_cdr(external_params["cdr_multiplier"])
 
     # targeted TB prevalence proportions by organ
-    prop_smearpos = 0.5
-    prop_smearneg = 0.3
-    prop_extrapul = 0.2
+    prop_smearpos, prop_smearneg, prop_extrapul = \
+        0.5, 0.3, 0.2
 
     # disease duration by organ
     overall_duration = prop_smearpos * 1.6 + 5.3 * (1 - prop_smearpos)

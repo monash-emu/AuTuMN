@@ -11,7 +11,7 @@ from summer_py.constants import IntegrationType
 
 from autumn.tool_kit.timer import Timer
 from autumn.tool_kit import run_multi_scenario
-from autumn.tool_kit.utils import get_git_branch, get_git_hash, make_directory_if_absent
+from autumn.tool_kit.utils import make_directory_if_absent, record_parameter_request, record_run_metadata
 from autumn.tb_model import add_combined_incidence, store_run_models, create_multi_scenario_outputs
 from autumn.tb_model.outputs import compare_marshall_notifications
 from autumn import constants
@@ -58,37 +58,22 @@ def run_model():
         os.makedirs(project_dir, exist_ok=True)
 
     # Include user input if requested
-    experiment_name, experiment_desc = '', ''
+    run_name, run_description = 'manual-calibration', ''
 
     # Create output data folder
-    experiment_name = experiment_name or 'manual-calibration'
     timestamp = datetime.now().strftime("%d-%m-%Y--%H-%M-%S")
-    experiment_dir = os.path.join(project_dir, f"{experiment_name}-{timestamp}")
-    make_directory_if_absent(experiment_dir, experiment_name, timestamp)
+    output_directory = os.path.join(project_dir, f"{run_name}-{timestamp}")
+    make_directory_if_absent(output_directory, run_name, timestamp)
 
-    # Figure out where to save model outputs.
-    output_db_path = os.path.join(experiment_dir, "outputs.db")
-    plot_path = os.path.join(experiment_dir, "plots")
+    # Determine where to save model outputs
+    output_db_path = os.path.join(output_directory, "outputs.db")
+    plot_path = os.path.join(output_directory, "plots")
 
-    # Save experiment parameters.
-    param_path = os.path.join(experiment_dir, "params.yml")
-    with open(param_path, "w") as yaml_file:
-        yaml.dump(params, yaml_file)
+    # Save parameter requests and metadata
+    record_parameter_request(output_directory, params)
+    record_run_metadata(output_directory, run_name, run_description, timestamp)
 
-    # Save experiment metadata.
-    meta_path = os.path.join(experiment_dir, "meta.yml")
-    metadata = {
-        "name": experiment_name,
-        "description": experiment_desc,
-        "start_time": timestamp,
-        "git_branch": get_git_branch(),
-        "git_commit": get_git_hash(),
-    }
-
-    with open(meta_path, "w") as yaml_file:
-        yaml.dump(metadata, yaml_file)
-
-    # Prepare scenario data.
+    # Prepare scenario data
     scenario_params = params["scenarios"]
     scenario_list = [0, *scenario_params.keys()]
 

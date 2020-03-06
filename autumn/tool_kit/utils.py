@@ -1,10 +1,11 @@
 """
-Miscellanious utility functions.
+Miscellaneous utility functions.
 If several functions here develop a theme, consider reorganising them into a module.
 """
 import subprocess as sp
 import numpy
 import os
+import yaml
 
 from summer_py.summer_model import find_name_components
 
@@ -173,3 +174,21 @@ def element_wise_list_summation(list_1, list_2):
     """
     return [value_1 + value_2 for value_1, value_2 in zip(list_1, list_2)]
 
+
+def record_parameter_request(output_directory, params):
+    param_path = os.path.join(output_directory, "params.yml")
+    with open(param_path, "w") as yaml_file:
+        yaml.dump(params, yaml_file)
+
+
+def record_run_metadata(output_directory, run_name, experiment_desc, timestamp):
+    meta_path = os.path.join(output_directory, "meta.yml")
+    metadata = {
+        "name": run_name,
+        "description": experiment_desc,
+        "start_time": timestamp,
+        "git_branch": get_git_branch(),
+        "git_commit": get_git_hash(),
+    }
+    with open(meta_path, "w") as yaml_file:
+        yaml.dump(metadata, yaml_file)

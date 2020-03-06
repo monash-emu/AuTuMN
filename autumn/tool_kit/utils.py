@@ -166,3 +166,10 @@ def make_directory_if_absent(full_directory_name, user_requested_name, timestamp
     else:
         os.makedirs(full_directory_name)
 
+
+def element_wise_list_summation(list_1, list_2):
+    """
+    Element-wise summation of two lists of the same length.
+    """
+    return [value_1 + value_2 for value_1, value_2 in zip(list_1, list_2)]
+

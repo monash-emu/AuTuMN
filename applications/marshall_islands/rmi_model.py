@@ -49,7 +49,7 @@ PARAMS_PATH = os.path.join(file_dir, "params.yml")
 # STRATIFY_BY = ['age', 'organ']
 # STRATIFY_BY = ['age', 'diabetes']
 # STRATIFY_BY = ['age', 'diabetes', 'organ']
-STRATIFY_BY = ["age", "location"]
+STRATIFY_BY = ["age", "location", 'diabetes', 'organ']
 
 PLOTTED_STRATIFIED_DERIVED_OUTPUTS = (
     ["notifications"]

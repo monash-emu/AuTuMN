@@ -322,8 +322,6 @@ def get_ebeye_baseline_data():
                      extra_string[i_column] + 'diabetes'})
         baseline_data[island].rename(columns=age_cols, inplace=True)
         baseline_data[island].drop(columns=['Total'], inplace=True)
-        baseline_data[island].to_csv('temp.csv')
-
     return baseline_data
 
 
@@ -355,18 +353,24 @@ def compare_marshall_notifications(
         models, req_outputs, req_multipliers, outputs_to_plot_by_stratum, scenario_list, req_times, ymax)
     start_time_index = find_first_list_element_above(pps[0].derived_outputs['times'], comparison_times[0])
     end_time_index = find_first_list_element_above(pps[0].derived_outputs['times'], comparison_times[1])
+    stratifications = {stratification: models[0].all_stratifications[stratification] for stratification in models[0].all_stratifications}
+
     age_groups = models[0].all_stratifications['age']
     locations = models[0].all_stratifications['location']
+    organs = models[0].all_stratifications['organ']
+    diabetes = models[0].all_stratifications['diabetes']
+
     ages = [float(age) for age in age_groups]
     baseline_data = get_ebeye_baseline_data()
 
-    # Plot by location
-    modelled_notifications = {}
-    for i_loc, location in enumerate(locations):
+    # Sum notifications over organ and diabetes status.
+    summed_notifications = \
+        sum_notifications_over_organ_diabetes(pps[0].derived_outputs, locations, age_groups, organs, diabetes)
 
-        # Collate modelled outputs
-        modelled_notifications[location] = \
-            [sum(pps[0].derived_outputs['notificationsXage_' + age_group + 'Xlocation_' + location][
+    # Plot by location
+    for i_loc, location in enumerate(locations):
+        location_notifications_by_age = \
+            [sum(summed_notifications['notificationsXage_' + age_group + 'Xlocation_' + location][
                  start_time_index: end_time_index])
              for age_group in age_groups]
 
@@ -379,7 +383,7 @@ def compare_marshall_notifications(
 
         # Prepare plot
         axis = fig.add_subplot(2, 2, i_loc + 1)
-        axis.scatter(ages, modelled_notifications[location], color='r')
+        axis.scatter(ages, location_notifications_by_age, color='r')
         axis.scatter(ages, real_notifications, color='k')
         axis.set_title(location)
 
@@ -390,7 +394,7 @@ def compare_marshall_notifications(
         axis.set_xticklabels(age_groups)
 
         # Tidy y-axis
-        axis.set_ylim(0., max(modelled_notifications[location] + real_notifications) * 1.2)
+        axis.set_ylim(0., max(location_notifications_by_age + real_notifications) * 1.2)
         axis.set_ylabel('notifications')
 
     # Save
@@ -505,3 +509,35 @@ def plot_time_variant_param(function, time_span, title=""):
     plt.plot(times, y)
     plt.title(title)
     plt.show()
+
+
+def sum_notifications_over_organ_diabetes(derived_outputs, locations, age_groups, organs, diabetes):
+    """
+    Quite a specific function to sum the fully disaggregated notifications according to two specific modelled strata.
+    Currently only intended to be used for the RMI application.
+    """
+    n_times = len(derived_outputs['times'])
+    summed_notifications = {}
+    for i_loc, location in enumerate(locations):
+        summed_notifications[location] = {}
+        for age_group in age_groups:
+            summed_notifications[location][age_group] = [0.] * n_times
+            for organ in organs:
+                for diabetic in diabetes:
+                    summed_notifications = \
+                        element_wise_list_summation(
+                            summed_notifications[location][age_group],
+                            derived_outputs[
+                                'notificationsXage_' + age_group +
+                                'Xdiabetes_' + diabetic +
+                                'Xorgan_' + organ +
+                                'Xlocation_' + location])
+    return summed_notifications
+
+
+def element_wise_list_summation(list_1, list_2):
+    """
+    Element-wise summation of two lists of the same length.
+    """
+    return [value_1 + value_2 for value_1, value_2 in zip(list_1, list_2)]
+

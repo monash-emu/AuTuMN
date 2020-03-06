@@ -1,8 +1,8 @@
 import os
 from copy import deepcopy
-
 import numpy
 import yaml
+
 from summer_py.summer_model import (
     StratifiedModel,
     split_age_parameter,
@@ -14,23 +14,18 @@ from summer_py.summer_model.utils.parameter_processing import (
     logistic_scaling_function,
 )
 
-
 from autumn import constants
 from autumn.curve import scale_up_function
 from autumn.db import Database, get_pop_mortality_functions
 from autumn.tb_model import (
     scale_relative_risks_for_equivalence,
-    provide_aggregated_latency_parameters,
-    get_adapted_age_parameters,
     convert_competing_proportion_to_rate,
     add_standard_latency_flows,
     add_standard_natural_history_flows,
-    add_density_infection_flows,
     add_standard_infection_flows,
     get_birth_rate_functions,
     create_output_connections_for_incidence_by_stratum,
     list_all_strata_for_mortality,
-    plot_time_variant_param,
 )
 from autumn.tool_kit import (
     return_function_of_function,

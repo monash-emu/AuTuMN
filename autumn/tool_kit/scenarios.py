@@ -7,9 +7,10 @@ from autumn.tool_kit.timer import Timer
 def run_multi_scenario(param_lookup, scenario_start_time, model_builder, run_kwargs={}):
     """
     Run a baseline model and scenarios
+
     :param param_lookup: 
-        A dictionary keyed with scenario numbers (0 for baseline). 
-        Values are dictionaries containing parameter updates.
+        A dictionary keyed with scenario numbers (0 for baseline)
+        Values are dictionaries containing parameter updates
     :return: a list of model objects
     """
     # Run baseline model as scenario '0'
@@ -17,10 +18,12 @@ def run_multi_scenario(param_lookup, scenario_start_time, model_builder, run_kwa
     baseline_model = model_builder(baseline_params)
     with Timer("Running baseline scenario"):
         baseline_model.run_model(**run_kwargs)
-
     models = [baseline_model]
+
+    # Run scenario models
     for scenario_idx, scenario_params in param_lookup.items():
-        # Ignore scenario '0' because we've already run it.
+
+        # Ignore the baseline because it has already been run
         if scenario_idx == 0:
             continue
 
@@ -44,7 +47,7 @@ def initialise_scenario_run(baseline_model, scenario_params, model_builder):
     baseline_times = baseline_model.times
     baseline_outputs = baseline_model.outputs
 
-    # Find the timestep from which we will start the scenario.
+    # Find the time step from which we will start the scenario
     scenario_start_index = get_scenario_start_index(baseline_times, scenario_params["start_time"])
     scenario_start_time = baseline_times[scenario_start_index]
     scenario_init_compartments = baseline_outputs[scenario_start_index, :]
@@ -59,15 +62,16 @@ def initialise_scenario_run(baseline_model, scenario_params, model_builder):
 
 def get_scenario_start_index(baseline_times, scenario_start_time):
     """
-    Returns the index of the closest timestep that is at, or before the scenario start time.
+    Returns the index of the closest time step that is at, or before the scenario start time.
     """
-    indexs_after_start_index = [
+    indices_after_start_index = [
         idx for idx, time in enumerate(baseline_times) if time > scenario_start_time
     ]
-    if not indexs_after_start_index:
-        msg = f"Scenario start time {scenario_start_time} is set after the baseline time range."
-        raise ValueError(msg)
+    if not indices_after_start_index:
+        raise ValueError(
+            f"Scenario start time {scenario_start_time} is set after the baseline time range."
+        )
 
-    index_after_start_index = min(indexs_after_start_index)
+    index_after_start_index = min(indices_after_start_index)
     start_index = max([0, index_after_start_index - 1])
     return start_index

@@ -370,7 +370,7 @@ def compare_marshall_notifications(
     # Plot by location
     for i_loc, location in enumerate(locations):
         location_notifications_by_age = \
-            [sum(summed_notifications['notificationsXage_' + age_group + 'Xlocation_' + location][
+            [sum(summed_notifications[location][age_group][
                  start_time_index: end_time_index])
              for age_group in age_groups]
 

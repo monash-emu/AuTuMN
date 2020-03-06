@@ -33,6 +33,7 @@ from autumn.tool_kit import (
     change_parameter_unit,
     add_w_to_param_names,
 )
+from autumn.tool_kit.scenarios import get_model_times_from_inputs
 
 # Database locations
 file_dir = os.path.dirname(os.path.abspath(__file__))
@@ -52,49 +53,54 @@ PLOTTED_STRATIFIED_DERIVED_OUTPUTS = (
 
 
 def build_rmi_model(update_params={}):
-    with open(PARAMS_PATH, "r") as f:
-        params = yaml.safe_load(f)
+    with open(PARAMS_PATH, "r") as yaml_file:
+        params = yaml.safe_load(yaml_file)
 
-    # Load default parameter values
+    # Extract default parameter values
     external_params = params["default"]
-    # Update external_params with new parameter values found in update_params
+
+    # Update with new parameter values from update_params
     external_params.update(update_params)
 
     model_parameters = {
-        "contact_rate": external_params["contact_rate"],
-        "contact_rate_recovered": external_params["contact_rate"]
-        * external_params["rr_transmission_recovered"],
-        "contact_rate_infected": external_params["contact_rate"]
-        * external_params["rr_transmission_infected"],
-        "contact_rate_ltbi_treated": external_params["contact_rate"]
-        * external_params["rr_transmission_ltbi_treated"],
-        "recovery": external_params["self_recovery_rate"],
-        "infect_death": external_params["tb_mortality_rate"],
-        "universal_death_rate": 1.0 / 70.0,
-        "case_detection": 0.0,
-        "ipt_rate": 0.0,
-        "acf_rate": 0.0,
-        "acf_ltbi_rate": 0.0,
-        "crude_birth_rate": 35.0 / 1e3,
-        "early_progression": 365.251 * external_params["early_progression"],
-        "late_progression": 365.251 * external_params["late_progression"],
-        "stabilisation": 365.251 * external_params["stabilisation"],
+        "contact_rate":
+            external_params["contact_rate"],
+        "contact_rate_recovered":
+            external_params["contact_rate"] * external_params["rr_transmission_recovered"],
+        "contact_rate_infected":
+            external_params["contact_rate"] * external_params["rr_transmission_infected"],
+        "contact_rate_ltbi_treated":
+            external_params["contact_rate"] * external_params["rr_transmission_ltbi_treated"],
+        "recovery":
+            external_params["self_recovery_rate"],
+        "infect_death":
+            external_params["tb_mortality_rate"],
+        "universal_death_rate":
+            1.0 / 70.0,
+        "case_detection":
+            0.0,
+        "ipt_rate":
+            0.0,
+        "acf_rate":
+            0.0,
+        "acf_ltbi_rate":
+            0.0,
+        "crude_birth_rate":
+            35.0 / 1e3,
+        "early_progression":
+            365.251 * external_params["early_progression"],
+        "late_progression":
+            365.251 * external_params["late_progression"],
+        "stabilisation":
+            365.251 * external_params["stabilisation"],
     }
 
     input_database = Database(database_name=INPUT_DB_PATH)
-    n_iter = (
-        int(
-            round(
-                (external_params["end_time"] - external_params["start_time"])
-                / external_params["time_step"]
-            )
-        )
-        + 1
-    )
 
-    integration_times = numpy.linspace(
-        external_params["start_time"], external_params["end_time"], n_iter
-    ).tolist()
+    integration_times = \
+        get_model_times_from_inputs(
+            external_params["start_time"], external_params["end_time"], external_params["time_step"]
+        )
 
     # model_parameters.update(change_parameter_unit(provide_aggregated_latency_parameters(), 365.251))
 

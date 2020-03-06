@@ -2,6 +2,7 @@
 Utilities for running multiple model scenarios
 """
 from autumn.tool_kit.timer import Timer
+import numpy
 
 
 def run_multi_scenario(param_lookup, scenario_start_time, model_builder, run_kwargs={}):
@@ -75,3 +76,16 @@ def get_scenario_start_index(baseline_times, scenario_start_time):
     index_after_start_index = min(indices_after_start_index)
     start_index = max([0, index_after_start_index - 1])
     return start_index
+
+
+def get_model_times_from_inputs(start_time, end_time, time_step):
+    """
+    Find the time steps for model integration from the submitted requests, ensuring the time points are evenly spaced.
+    """
+    n_times = int(round(
+        (end_time - start_time) / time_step
+    )) + 1
+    return numpy.linspace(
+        start_time, end_time, n_times
+    ).tolist()
+

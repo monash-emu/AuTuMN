@@ -55,13 +55,24 @@ PLOTTED_STRATIFIED_DERIVED_OUTPUTS = (
 
 
 def build_rmi_model(update_params={}):
+
+    # Define compartments and initial conditions
+    compartments = [
+        "susceptible",
+        "early_latent",
+        "late_latent",
+        "infectious",
+        "recovered",
+        "ltbi_treated",
+    ]
+    init_pop = {"infectious": 10, "late_latent": 100}
+
+    # Get user-requested parameters
     with open(PARAMS_PATH, "r") as yaml_file:
         params = yaml.safe_load(yaml_file)
-
-    # Extract default parameter values
     external_params = params["default"]
 
-    # Update with new parameter values from update_params
+    # Update, not needed for baseline run
     external_params.update(update_params)
 
     model_parameters = {
@@ -87,8 +98,8 @@ def build_rmi_model(update_params={}):
             0.0,
         "acf_ltbi_rate":
             0.0,
-        "crude_birth_rate":
-            35.0 / 1e3,
+        # "crude_birth_rate":
+        #     35.0 / 1e3,
         "early_progression":
             365.251 * external_params["early_progression"],
         "late_progression":
@@ -97,29 +108,13 @@ def build_rmi_model(update_params={}):
             365.251 * external_params["stabilisation"],
     }
 
-    input_database = Database(database_name=INPUT_DB_PATH)
-
+    # Set integration times
     integration_times = \
         get_model_times_from_inputs(
             external_params["start_time"], external_params["end_time"], external_params["time_step"]
         )
 
-    # model_parameters.update(change_parameter_unit(provide_aggregated_latency_parameters(), 365.251))
-
-    # sequentially add groups of flows
-    flows = add_standard_infection_flows([])
-    flows = add_standard_latency_flows(flows)
-    flows = add_standard_natural_history_flows(flows)
-
-    # compartments
-    compartments = [
-        "susceptible",
-        "early_latent",
-        "late_latent",
-        "infectious",
-        "recovered",
-        "ltbi_treated",
-    ]
+    input_database = Database(database_name=INPUT_DB_PATH)
 
     # derived output definition
     out_connections = {
@@ -146,7 +141,14 @@ def build_rmi_model(update_params={}):
                         "to_condition": stratification + "_" + stratum,
                     }
 
-    init_pop = {"infectious": 10, "late_latent": 100}
+    # Sequentially add groups of flows to flows list
+    flows = add_standard_infection_flows([])
+    flows = add_standard_latency_flows(flows)
+    flows = add_standard_natural_history_flows(flows)
+    flows = add_latency_progression(flows)
+    flows = add_case_detection(flows)
+    flows = add_acf(flows)
+    flows = add_acf_ltbi(flows)
 
     # define model
     _tb_model = StratifiedModel(
@@ -162,10 +164,6 @@ def build_rmi_model(update_params={}):
 
     # add crude birth rate from un estimates (using Federated States of Micronesia as a proxy as no data for RMI)
     _tb_model = get_birth_rate_functions(_tb_model, input_database, "FSM")
-    _tb_model = add_case_detection(_tb_model)
-    _tb_model = add_latency_progression(_tb_model)
-    _tb_model = add_acf(_tb_model)
-    _tb_model = add_acf_ltbi(_tb_model)
 
     # load time-variant case detection rate
     cdr_scaleup_overall = build_rmi_timevariant_cdr(external_params["cdr_multiplier"])

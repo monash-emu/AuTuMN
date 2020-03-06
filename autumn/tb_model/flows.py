@@ -77,55 +77,58 @@ DENSITY_INFECTION_FLOWS = [
     },
 ]
 
+ACF_LTBI_FLOWS = [
+    {
+        "type": "standard_flows",
+        "parameter": "acf_ltbi_rate",
+        "origin": Compartment.LATE_LATENT,
+        "to": "ltbi_treated",
+    }
+]
 
 
-
-def add_case_detection(_tb_model):
-    _tb_model.add_transition_flow(
+def add_case_detection(list_of_flows):
+    list_of_flows += [
         {
             "type": "standard_flows",
             "parameter": "case_detection",
             "origin": "infectious",
             "to": "recovered",
         }
-    )
-    return _tb_model
+    ]
+    return list_of_flows
 
 
-def add_latency_progression(_tb_model):
-    _tb_model.add_transition_flow(
+def add_latency_progression(list_of_flows):
+    list_of_flows += [
         {
             "type": "infection_frequency",
             "parameter": "contact_rate_ltbi_treated",
             "origin": "ltbi_treated",
             "to": "early_latent",
         }
-    )
-    return _tb_model
+    ]
+    return list_of_flows
 
 
-def add_acf(_tb_model):
-    _tb_model.add_transition_flow(
+def add_acf(list_of_flows):
+    list_of_flows += [
         {
             "type": "standard_flows",
             "parameter": "acf_rate",
             "origin": "infectious",
             "to": "recovered",
         }
-    )
-    return _tb_model
+    ]
+    return list_of_flows
 
 
-def add_acf_ltbi(_tb_model):
-    _tb_model.add_transition_flow(
-        {
-            "type": "standard_flows",
-            "parameter": "acf_ltbi_rate",
-            "origin": "late_latent",
-            "to": "ltbi_treated",
-        }
-    )
-    return _tb_model
+def add_acf_ltbi(list_of_flows):
+    """
+    Add standard flows for ACF linked to LTBI
+    """
+    list_of_flows += ACF_LTBI_FLOWS
+    return list_of_flows
 
 
 def add_standard_latency_flows(list_of_flows):

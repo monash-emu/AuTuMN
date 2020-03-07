@@ -180,3 +180,14 @@ def add_acf_ltbi(list_of_flows):
     list_of_flows += ACF_LTBI_FLOWS
     return list_of_flows
 
+
+def get_incidence_connections():
+    return {
+        "incidence_early":
+            {"origin": Compartment.EARLY_LATENT,
+             "to": Compartment.INFECTIOUS},
+        "incidence_late":
+            {"origin": Compartment.LATE_LATENT,
+             "to": Compartment.INFECTIOUS},
+    }
+

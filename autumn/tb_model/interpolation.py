@@ -38,9 +38,9 @@ def get_bcg_functions(_tb_model, _input_database, _country_iso3, start_year=1955
     return _tb_model
 
 
-def get_birth_rate_functions(_tb_model, _input_database, _country_iso3):
+def add_birth_rate_functions(_tb_model, _input_database, _country_iso3):
     """
-    add crude birth rate function to existing epidemiological model
+    Add crude birth rate function to existing epidemiological model
 
     :param _tb_model: EpiModel or StratifiedModel class
         SUMMER model object to be assigned bcg vaccination coverage functions

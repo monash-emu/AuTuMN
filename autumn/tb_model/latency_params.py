@@ -48,3 +48,15 @@ AGE_SPECIFIC_LATENCY_PARAMETERS = {
     "stabilisation": {0: 1.2e-2, 5: 1.2e-2, 15: 5.4e-3},
     "late_progression": {0: 1.9e-11, 5: 6.4e-6, 15: 3.3e-6},
 }
+
+
+def update_transmission_parameters(parameters, compartments_to_update):
+    """
+    Update parameters with transmission rates for each compartment with altered immunity/sucseptibility to infection
+    """
+    for compartment in compartments_to_update:
+        parameters.update({
+            'contact_rate_' + compartment:
+                parameters['contact_rate'] * parameters['rr_transmission_' + compartment]
+        })
+    return parameters

@@ -24,7 +24,7 @@ from autumn.tb_model import (
     add_standard_latency_flows,
     add_standard_natural_history_flows,
     add_standard_infection_flows,
-    get_birth_rate_functions,
+    add_birth_rate_functions,
 )
 from autumn.tool_kit import (
     initialise_scenario_run,
@@ -173,7 +173,7 @@ def build_model(update_params={}):
         )
 
     # add crude birth rate from un estimates
-    _tb_model = get_birth_rate_functions(_tb_model, input_database, "MNG")
+    _tb_model = add_birth_rate_functions(_tb_model, input_database, "MNG")
 
     # add case detection process to basic model
     _tb_model.add_transition_flow(

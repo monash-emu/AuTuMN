@@ -324,14 +324,15 @@ def build_rmi_model(update_params={}):
     #     _tb_model.adaptation_functions["contact_rate_ltbi_treated"] = beta_func_ltbi_treated
     #     _tb_model.parameters["contact_rate_ltbi_treated"] = "contact_rate_ltbi_treated"
 
+    # Stratification by age
     if "age" in STRATIFY_BY:
         age_breakpoints = [int(i_break) for i_break in ALL_STRATIFICATIONS['age']]
         age_infectiousness = get_parameter_dict_from_function(
             logistic_scaling_function(10.0), age_breakpoints
         )
-        age_params = get_adapted_age_parameters(age_breakpoints, AGE_SPECIFIC_LATENCY_PARAMETERS)
+        age_params = \
+            get_adapted_age_parameters(age_breakpoints, AGE_SPECIFIC_LATENCY_PARAMETERS)
         age_params.update(split_age_parameter(age_breakpoints, "contact_rate"))
-
         pop_morts = get_pop_mortality_functions(
             input_database,
             age_breakpoints,
@@ -339,28 +340,22 @@ def build_rmi_model(update_params={}):
             emigration_value=0.0075,
             emigration_start_time=1990.,
         )
-
         age_params["universal_death_rate"] = {}
         for age_break in age_breakpoints:
-            _tb_model.time_variants["universal_death_rateXage_" + str(age_break)] = pop_morts[
-                age_break
-            ]
-            _tb_model.parameters[
+            _tb_model.time_variants["universal_death_rateXage_" + str(age_break)] = \
+                pop_morts[age_break]
+            _tb_model.parameters["universal_death_rateXage_" + str(age_break)] = \
                 "universal_death_rateXage_" + str(age_break)
-            ] = "universal_death_rateXage_" + str(age_break)
-
-            age_params["universal_death_rate"][
-                str(age_break) + "W"
-            ] = "universal_death_rateXage_" + str(age_break)
+            age_params["universal_death_rate"][str(age_break) + "W"] = \
+                "universal_death_rateXage_" + str(age_break)
         _tb_model.parameters["universal_death_rateX"] = 0.0
 
-        # add BCG effect without stratification assuming constant 100% coverage
+        # Add BCG effect without stratification assuming constant 100% coverage
         bcg_wane = create_sloping_step_function(15.0, 0.3, 30.0, 1.0)
         age_bcg_efficacy_dict = get_parameter_dict_from_function(
             lambda value: bcg_wane(value), age_breakpoints
         )
         age_params.update({"contact_rate": age_bcg_efficacy_dict})
-
         _tb_model.stratify(
             "age",
             deepcopy(age_breakpoints),
@@ -371,31 +366,39 @@ def build_rmi_model(update_params={}):
             verbose=False,
         )
 
+    # Stratification by diabetic status
     if "diabetes" in STRATIFY_BY:
-        props_diabetes = {"diabetic": 0.3, "nodiabetes": 0.7}
         progression_adjustments = {
             "diabetic": model_parameters["rr_progression_diabetic"],
             "nodiabetes": 1.0,
         }
-
+        diabetes_target_props = \
+            {
+                0: 0.05,
+                5: 0.1,
+                15: 0.2,
+                35: 0.4,
+                50: 0.7,
+            }
+        diabetes_target_props = \
+            {"age" + str(i_break): {"diabetic": diabetes_target_props[i_break]}
+             for i_break in diabetes_target_props}
         _tb_model.stratify(
             "diabetes",
             ALL_STRATIFICATIONS["diabetes"],
             [],
             verbose=False,
-            requested_proportions=props_diabetes,
+            # Starting proportions (for initial conditions), not very important
+            requested_proportions={
+                "diabetic": 0.3,
+                "nodiabetes": 0.7
+            },
             adjustment_requests={
                 "early_progression": progression_adjustments,
                 "late_progression": progression_adjustments,
             },
             entry_proportions={"diabetic": 0.01, "nodiabetes": 0.99},
-            target_props={
-                "age_0": {"diabetic": 0.05},
-                "age_5": {"diabetic": 0.1},
-                "age_15": {"diabetic": 0.2},
-                "age_35": {"diabetic": 0.4},
-                "age_50": {"diabetic": 0.7},
-            },
+            target_props=diabetes_target_props,
         )
 
     if "organ" in STRATIFY_BY:

@@ -285,11 +285,11 @@ def create_multi_scenario_outputs(
     outputs = Outputs(
         pps, targets_to_plot, out_dir, translation_dictionary, plot_start_time=plot_start_time
     )
-    # outputs.plot_requested_outputs()
-    #
-    # for output in outputs_to_plot_by_stratum:
-    #     for sc_index in range(len(models)):
-    #         outputs.plot_outputs_by_stratum(output, sc_index=sc_index)
+    outputs.plot_requested_outputs()
+
+    for output in outputs_to_plot_by_stratum:
+        for sc_index in range(len(models)):
+            outputs.plot_outputs_by_stratum(output, sc_index=sc_index)
 
     # Plotting the baseline function value, but here in case we want to use for multi-scenario in the future
     for input_function in input_functions_to_plot:

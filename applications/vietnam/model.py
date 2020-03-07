@@ -13,7 +13,7 @@ from autumn.tb_model import (
     create_output_connections_for_incidence_by_stratum,
     list_all_strata_for_mortality,
     store_run_models,
-    get_birth_rate_functions,
+    add_birth_rate_functions,
 )
 from autumn.tb_model.latency_params import AGGREGATED_LATENCY_PARAMETERS
 from autumn.tool_kit import run_multi_scenario, change_parameter_unit, get_integration_times
@@ -70,7 +70,7 @@ def build_model(params: dict):
     )
 
     # Add crude birth rate from UN estimates.
-    model = get_birth_rate_functions(model, input_database, "VNM")
+    model = add_birth_rate_functions(model, input_database, "VNM")
 
     # Assign time-varying rate functions to model parameters
     model.adaptation_functions["case_detection"] = rates.get_tb_control_recovery

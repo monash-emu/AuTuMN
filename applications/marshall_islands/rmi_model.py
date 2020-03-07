@@ -26,7 +26,7 @@ from autumn.tb_model import (
     add_standard_latency_flows,
     add_standard_natural_history_flows,
     add_standard_infection_flows,
-    get_birth_rate_functions,
+    add_birth_rate_functions,
     create_output_connections_for_incidence_by_stratum,
     list_all_strata_for_mortality,
 )
@@ -73,74 +73,25 @@ def build_rmi_model(update_params={}):
     # Get user-requested parameters
     with open(PARAMS_PATH, "r") as yaml_file:
         params = yaml.safe_load(yaml_file)
-    external_params = params["default"]
+    model_parameters = params["default"]
 
     # Update, not needed for baseline run
-    external_params.update(update_params)
+    model_parameters.update(update_params)
 
-    model_parameters = {
-        "contact_rate":
-            external_params["contact_rate"],
+    model_parameters.update({
         "contact_rate_recovered":
-            external_params["contact_rate"] * external_params["rr_transmission_recovered"],
+            model_parameters["contact_rate"] * model_parameters["rr_transmission_recovered"],
         "contact_rate_infected":
-            external_params["contact_rate"] * external_params["rr_transmission_infected"],
+            model_parameters["contact_rate"] * model_parameters["rr_transmission_infected"],
         "contact_rate_ltbi_treated":
-            external_params["contact_rate"] * external_params["rr_transmission_ltbi_treated"],
-        "recovery":
-            external_params["self_recovery_rate"],
-        "infect_death":
-            external_params["tb_mortality_rate"],
-        "universal_death_rate":
-            1.0 / 70.0,
-        "case_detection":
-            0.0,
-        "ipt_rate":
-            0.0,
-        "acf_rate":
-            0.0,
-        "acf_ltbi_rate":
-            0.0,
-        # "crude_birth_rate":
-        #     35.0 / 1e3,
-        "early_progression":
-            365.251 * external_params["early_progression"],
-        "late_progression":
-            365.251 * external_params["late_progression"],
-        "stabilisation":
-            365.251 * external_params["stabilisation"],
-    }
+            model_parameters["contact_rate"] * model_parameters["rr_transmission_ltbi_treated"],
+    })
 
     # Set integration times
     integration_times = \
         get_model_times_from_inputs(
-            external_params["start_time"], external_params["end_time"], external_params["time_step"]
+            model_parameters["start_time"], model_parameters["end_time"], model_parameters["time_step"]
         )
-
-    # Derived output definition
-    out_connections = {
-        "incidence_early": {"origin": "early_latent", "to": "infectious"},
-        "incidence_late": {"origin": "late_latent", "to": "infectious"},
-    }
-
-    if "incidence" in PLOTTED_STRATIFIED_DERIVED_OUTPUTS:
-
-        all_stratifications = {
-            "organ": ["smearpos", "smearneg", "extrapul"],
-            "age": ["0", "5", "15", "35", "50"],
-            "location": ["majuro", "ebeye", "otherislands"],
-            "diabetes": ["diabetic", "nodiabetes"],
-        }
-
-        #  create derived outputs for disaggregated incidence
-        for stratification in STRATIFY_BY:
-            for stratum in all_stratifications[stratification]:
-                for stage in ["early", "late"]:
-                    out_connections["incidence_" + stage + "X" + stratification + "_" + stratum] = {
-                        "origin": stage + "_latent",
-                        "to": "infectious",
-                        "to_condition": stratification + "_" + stratum,
-                    }
 
     # Sequentially add groups of flows to flows list
     flows = add_standard_infection_flows([])
@@ -151,6 +102,30 @@ def build_rmi_model(update_params={}):
     flows = add_acf(flows)
     flows = add_acf_ltbi(flows)
 
+    # Derived output definitions
+    out_connections = {
+        "incidence_early": {"origin": "early_latent", "to": "infectious"},
+        "incidence_late": {"origin": "late_latent", "to": "infectious"},
+    }
+
+    if "incidence" in PLOTTED_STRATIFIED_DERIVED_OUTPUTS:
+        all_stratifications = {
+            "organ": ["smearpos", "smearneg", "extrapul"],
+            "age": ["0", "5", "15", "35", "50"],
+            "location": ["majuro", "ebeye", "otherislands"],
+            "diabetes": ["diabetic", "nodiabetes"],
+        }
+
+        # Create derived outputs for disaggregated incidence
+        for stratification in STRATIFY_BY:
+            for stratum in all_stratifications[stratification]:
+                for stage in ["early", "late"]:
+                    out_connections["incidence_" + stage + "X" + stratification + "_" + stratum] = {
+                        "origin": stage + "_latent",
+                        "to": "infectious",
+                        "to_condition": stratification + "_" + stratum,
+                    }
+
     # define model
     _tb_model = StratifiedModel(
         integration_times,
@@ -159,15 +134,15 @@ def build_rmi_model(update_params={}):
         model_parameters,
         flows,
         birth_approach="add_crude_birth_rate",
-        starting_population=external_params["start_population"],
+        starting_population=model_parameters["start_population"],
         output_connections=out_connections,
     )
 
     # add crude birth rate from un estimates (using Federated States of Micronesia as a proxy as no data for RMI)
-    _tb_model = get_birth_rate_functions(_tb_model, input_database, "FSM")
+    _tb_model = add_birth_rate_functions(_tb_model, input_database, "FSM")
 
     # load time-variant case detection rate
-    cdr_scaleup_overall = build_rmi_timevariant_cdr(external_params["cdr_multiplier"])
+    cdr_scaleup_overall = build_rmi_timevariant_cdr(model_parameters["cdr_multiplier"])
 
     # targeted TB prevalence proportions by organ
     prop_smearpos, prop_smearneg, prop_extrapul = \
@@ -201,19 +176,19 @@ def build_rmi_model(update_params={}):
 
     AGE_SPECIFIC_LATENCY_PARAMETERS = {
         "early_progression": {
-            0: external_params["early_progression_0"],
-            5: external_params["early_progression_5"],
-            15: external_params["early_progression_15"],
+            0: model_parameters["early_progression_0"],
+            5: model_parameters["early_progression_5"],
+            15: model_parameters["early_progression_15"],
         },
         "stabilisation": {
-            0: external_params["stabilisation_0"],
-            5: external_params["stabilisation_5"],
-            15: external_params["stabilisation_15"],
+            0: model_parameters["stabilisation_0"],
+            5: model_parameters["stabilisation_5"],
+            15: model_parameters["stabilisation_15"],
         },
         "late_progression": {
-            0: external_params["late_progression_0"],
-            5: external_params["late_progression_5"],
-            15: external_params["late_progression_15"],
+            0: model_parameters["late_progression_0"],
+            5: model_parameters["late_progression_5"],
+            15: model_parameters["late_progression_15"],
         },
     }
 
@@ -221,15 +196,15 @@ def build_rmi_model(update_params={}):
     def cdr_smearpos(time):
         return cdr_scaleup_overall(time) / (
             prop_smearpos
-            + prop_smearneg * external_params["diagnostic_sensitivity_smearneg"]
-            + prop_extrapul * external_params["diagnostic_sensitivity_extrapul"]
+            + prop_smearneg * model_parameters["diagnostic_sensitivity_smearneg"]
+            + prop_extrapul * model_parameters["diagnostic_sensitivity_extrapul"]
         )
 
     def cdr_smearneg(time):
-        return cdr_smearpos(time) * external_params["diagnostic_sensitivity_smearneg"]
+        return cdr_smearpos(time) * model_parameters["diagnostic_sensitivity_smearneg"]
 
     def cdr_extrapul(time):
-        return cdr_smearpos(time) * external_params["diagnostic_sensitivity_extrapul"]
+        return cdr_smearpos(time) * model_parameters["diagnostic_sensitivity_extrapul"]
 
     cdr_by_organ = {
         "smearpos": cdr_smearpos,
@@ -263,17 +238,17 @@ def build_rmi_model(update_params={}):
 
     # initialise acf_rate function
     acf_rate_function = (
-        lambda t: external_params["acf_coverage"]
+        lambda t: model_parameters["acf_coverage"]
         * (acf_rate_over_time(t))
-        * external_params["acf_sensitivity"]
+        * model_parameters["acf_sensitivity"]
         * (rmi_tsr(t))
     )
 
     acf_ltbi_rate_function = (
-        lambda t: external_params["acf_coverage"]
+        lambda t: model_parameters["acf_coverage"]
         * (acf_rate_over_time(t))
-        * external_params["acf_ltbi_sensitivity"]
-        * external_params["acf_ltbi_efficacy"]
+        * model_parameters["acf_ltbi_sensitivity"]
+        * model_parameters["acf_ltbi_efficacy"]
     )
 
     # # time_variant contact_rate to simulate living condition improvement
@@ -392,7 +367,7 @@ def build_rmi_model(update_params={}):
     if "diabetes" in STRATIFY_BY:
         props_diabetes = {"diabetic": 0.3, "nodiabetes": 0.7}
         progression_adjustments = {
-            "diabetic": external_params["rr_progression_diabetic"],
+            "diabetic": model_parameters["rr_progression_diabetic"],
             "nodiabetes": 1.0,
         }
 
@@ -419,8 +394,8 @@ def build_rmi_model(update_params={}):
 
     if "organ" in STRATIFY_BY:
         props_smear = {
-            "smearpos": external_params["prop_smearpos"],
-            "smearneg": 1.0 - (external_params["prop_smearpos"] + 0.2),
+            "smearpos": model_parameters["prop_smearpos"],
+            "smearneg": 1.0 - (model_parameters["prop_smearpos"] + 0.2),
             "extrapul": 0.2,
         }
         mortality_adjustments = {"smearpos": 1.0, "smearneg": 0.064, "extrapul": 0.064}
@@ -463,7 +438,7 @@ def build_rmi_model(update_params={}):
 
         raw_relative_risks_loc = {"majuro": 1.0}
         for stratum in ["ebeye", "otherislands"]:
-            raw_relative_risks_loc[stratum] = external_params["rr_transmission_" + stratum]
+            raw_relative_risks_loc[stratum] = model_parameters["rr_transmission_" + stratum]
         scaled_relative_risks_loc = scale_relative_risks_for_equivalence(
             props_location, raw_relative_risks_loc
         )
@@ -480,19 +455,19 @@ def build_rmi_model(update_params={}):
 
         location_adjustments["case_detection"] = {}
         for stratum in ["majuro", "ebeye", "otherislands"]:
-            location_adjustments["case_detection"][stratum] = external_params[
+            location_adjustments["case_detection"][stratum] = model_parameters[
                 "case_detection_" + stratum + "_multiplier"
             ]
 
         location_adjustments["acf_coverage"] = {}
         for stratum in ["majuro", "ebeye", "otherislands"]:
-            location_adjustments["acf_coverage"][stratum] = external_params[
+            location_adjustments["acf_coverage"][stratum] = model_parameters[
                 "acf_" + stratum + "_coverage"
             ]
 
         location_adjustments["acf_ltbi_coverage"] = {}
         for stratum in ["majuro", "ebeye", "otherislands"]:
-            location_adjustments["acf_ltbi_coverage"][stratum] = external_params[
+            location_adjustments["acf_ltbi_coverage"][stratum] = model_parameters[
                 "acf_ltbi_" + stratum + "_coverage"
             ]
 
@@ -521,7 +496,7 @@ def build_rmi_model(update_params={}):
             1.0e5
             * actual_prev
             / pop_majuro
-            * (1.0 + external_params["over_reporting_prevalence_proportion"])
+            * (1.0 + model_parameters["over_reporting_prevalence_proportion"])
         )
 
     _tb_model.derived_output_functions.update(
@@ -529,7 +504,6 @@ def build_rmi_model(update_params={}):
     )
 
     # add some optional disaggregated derived outputs
-
     if "notifications" in PLOTTED_STRATIFIED_DERIVED_OUTPUTS:
         # build derived outputs for notifications
         def notification_function_builder(stratum):

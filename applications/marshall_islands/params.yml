@@ -14,8 +14,8 @@ default:
   rr_transmission_infected: 0.21
   rr_transmission_ltbi_treated: 0.21
 #  latency_adjustment: 2.  # used to modify progression rates during calibration
-  self_recovery_rate: 0.231 # this is for smear-positive TB
-  tb_mortality_rate: 0.389 # this is for smear-positive TB
+  recovery: 0.231 # this is for smear-positive TB
+  infect_death: 0.389 # this is for smear-positive TB
   prop_smearpos: 0.5
   cdr_multiplier: 1.0
 #  # Latency parameters - aggregated - best estimate values from Ragonnet et al "Optimally capturing latency dynamics in models of tuberculosis
@@ -37,9 +37,9 @@ default:
 
   # Latency parameters - aggregated - upper values from Ragonnet et al "Optimally capturing latency dynamics in models of tuberculosis
   #transmission" 2017 Epidemics
-  early_progression: 1.5e-3
-  stabilisation: 1.4e-2
-  late_progression: 1.1e-5
+  early_progression: 1.5e-3 * 365.251
+  stabilisation: 1.4e-2 * 365.251
+  late_progression: 1.1e-5 * 365.251
   # latency parameters - age-specific - upper values from Ragonnet et al "Optimally capturing latency dynamics in models of tuberculosis
   #  #transmission" 2017 Epidemics
 #  early_progression_0: 9.5e-3
@@ -84,6 +84,14 @@ default:
 
   # Prevalence adjustment
   over_reporting_prevalence_proportion: 0.2
+
+  # Few more parameters that had previously been added manually in rmi_model.py
+  universal_death_rate: 1.0 / 70.0
+  case_detection: 0.0
+  ipt_rate: 0.0
+  acf_rate: 0.0
+  acf_ltbi_rate: 0.0
+  crude_birth_rate: 35.0 / 1e3
 
 # When the scenarios start running
 scenario_start: 1990

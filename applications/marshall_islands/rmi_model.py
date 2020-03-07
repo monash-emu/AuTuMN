@@ -15,6 +15,7 @@ from summer_py.summer_model.utils.parameter_processing import (
 )
 
 from autumn import constants
+from autumn.constants import Compartment
 from autumn.curve import scale_up_function
 from autumn.db import Database, get_pop_mortality_functions
 from autumn.tb_model.flows import add_case_detection, add_latency_progression, add_acf, add_acf_ltbi
@@ -56,13 +57,15 @@ PLOTTED_STRATIFIED_DERIVED_OUTPUTS = (
 
 def build_rmi_model(update_params={}):
 
+    input_database = Database(database_name=INPUT_DB_PATH)
+
     # Define compartments and initial conditions
     compartments = [
-        "susceptible",
-        "early_latent",
-        "late_latent",
-        "infectious",
-        "recovered",
+        Compartment.SUSCEPTIBLE,
+        Compartment.EARLY_LATENT,
+        Compartment.LATE_LATENT,
+        Compartment.INFECTIOUS,
+        Compartment.RECOVERED,
         "ltbi_treated",
     ]
     init_pop = {"infectious": 10, "late_latent": 100}
@@ -114,9 +117,7 @@ def build_rmi_model(update_params={}):
             external_params["start_time"], external_params["end_time"], external_params["time_step"]
         )
 
-    input_database = Database(database_name=INPUT_DB_PATH)
-
-    # derived output definition
+    # Derived output definition
     out_connections = {
         "incidence_early": {"origin": "early_latent", "to": "infectious"},
         "incidence_late": {"origin": "late_latent", "to": "infectious"},

@@ -366,39 +366,31 @@ def build_rmi_model(update_params={}):
             verbose=False,
         )
 
-    # Stratification by diabetic status
     if "diabetes" in STRATIFY_BY:
+        props_diabetes = {"diabetic": 0.3, "nodiabetes": 0.7}
         progression_adjustments = {
             "diabetic": model_parameters["rr_progression_diabetic"],
             "nodiabetes": 1.0,
         }
-        diabetes_target_props = \
-            {
-                0: 0.05,
-                5: 0.1,
-                15: 0.2,
-                35: 0.4,
-                50: 0.7,
-            }
-        diabetes_target_props = \
-            {"age" + str(i_break): {"diabetic": diabetes_target_props[i_break]}
-             for i_break in diabetes_target_props}
+
         _tb_model.stratify(
             "diabetes",
-            ALL_STRATIFICATIONS["diabetes"],
+            ["diabetic", "nodiabetes"],
             [],
             verbose=False,
-            # Starting proportions (for initial conditions), not very important
-            requested_proportions={
-                "diabetic": 0.3,
-                "nodiabetes": 0.7
-            },
+            requested_proportions=props_diabetes,
             adjustment_requests={
                 "early_progression": progression_adjustments,
                 "late_progression": progression_adjustments,
             },
             entry_proportions={"diabetic": 0.01, "nodiabetes": 0.99},
-            target_props=diabetes_target_props,
+            target_props={
+                "age_0": {"diabetic": 0.05},
+                "age_5": {"diabetic": 0.1},
+                "age_15": {"diabetic": 0.2},
+                "age_35": {"diabetic": 0.4},
+                "age_50": {"diabetic": 0.7},
+            },
         )
 
     if "organ" in STRATIFY_BY:

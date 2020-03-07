@@ -3,6 +3,26 @@ Standardised flow functions
 """
 from autumn.constants import Flow, Compartment
 
+INFECTION_FLOWS = [
+    {
+        "type": Flow.INFECTION_FREQUENCY,
+        "parameter": "contact_rate",
+        "origin": Compartment.SUSCEPTIBLE,
+        "to": Compartment.EARLY_LATENT,
+    },
+    {
+        "type": Flow.INFECTION_FREQUENCY,
+        "parameter": "contact_rate_recovered",
+        "origin": Compartment.RECOVERED,
+        "to": Compartment.EARLY_LATENT,
+    },
+    {
+        "type": Flow.INFECTION_FREQUENCY,
+        "parameter": "contact_rate_infected",
+        "origin": Compartment.LATE_LATENT,
+        "to": Compartment.EARLY_LATENT,
+    },
+]
 
 LATENCY_FLOWS = [
     {
@@ -32,27 +52,10 @@ NATURAL_HISTORY_FLOWS = [
         "origin": Compartment.INFECTIOUS,
         "to": Compartment.RECOVERED,
     },
-    {"type": Flow.COMPARTMENT_DEATH, "parameter": "infect_death", "origin": Compartment.INFECTIOUS},
-]
-
-INFECTION_FLOWS = [
     {
-        "type": Flow.INFECTION_FREQUENCY,
-        "parameter": "contact_rate",
-        "origin": Compartment.SUSCEPTIBLE,
-        "to": Compartment.EARLY_LATENT,
-    },
-    {
-        "type": Flow.INFECTION_FREQUENCY,
-        "parameter": "contact_rate_recovered",
-        "origin": Compartment.RECOVERED,
-        "to": Compartment.EARLY_LATENT,
-    },
-    {
-        "type": Flow.INFECTION_FREQUENCY,
-        "parameter": "contact_rate_infected",
-        "origin": Compartment.LATE_LATENT,
-        "to": Compartment.EARLY_LATENT,
+        "type": Flow.COMPARTMENT_DEATH,
+        "parameter": "infect_death",
+        "origin": Compartment.INFECTIOUS
     },
 ]
 
@@ -75,6 +78,15 @@ DENSITY_INFECTION_FLOWS = [
         "origin": Compartment.LATE_LATENT,
         "to": Compartment.EARLY_LATENT,
     },
+]
+
+ACF_FLOWS = [
+    {
+        "type": Flow.STANDARD,
+        "parameter": "acf_rate",
+        "origin": Compartment.INFECTIOUS,
+        "to": Compartment.RECOVERED,
+    }
 ]
 
 ACF_LTBI_FLOWS = [
@@ -105,33 +117,27 @@ LATENCY_REINFECTION = [
 ]
 
 
-def add_case_detection(list_of_flows):
-    list_of_flows += CASE_DETECTION_FLOWS
+def add_standard_infection_flows(list_of_flows):
+    """
+    Adds our standard infection processes to the list of flows to be implemented in the model
+    """
+    list_of_flows += INFECTION_FLOWS
+    return list_of_flows
+
+
+def add_density_infection_flows(list_of_flows):
+    """
+    Adds our standard infection processes to the list of flows to be implemented in the model
+    """
+    list_of_flows += DENSITY_INFECTION_FLOWS
     return list_of_flows
 
 
 def add_latency_progression(list_of_flows):
+    """
+    Adds standard latency progression flows
+    """
     list_of_flows += LATENCY_REINFECTION
-    return list_of_flows
-
-
-def add_acf(list_of_flows):
-    list_of_flows += [
-        {
-            "type": "standard_flows",
-            "parameter": "acf_rate",
-            "origin": "infectious",
-            "to": "recovered",
-        }
-    ]
-    return list_of_flows
-
-
-def add_acf_ltbi(list_of_flows):
-    """
-    Add standard flows for ACF linked to LTBI
-    """
-    list_of_flows += ACF_LTBI_FLOWS
     return list_of_flows
 
 
@@ -151,19 +157,26 @@ def add_standard_natural_history_flows(list_of_flows):
     return list_of_flows
 
 
-def add_standard_infection_flows(list_of_flows):
+def add_case_detection(list_of_flows):
     """
-    Adds our standard infection processes to the list of flows to be implemented in the model
+    Adds standard passive (DOTS-based) case detection flows
     """
-    list_of_flows += INFECTION_FLOWS
+    list_of_flows += CASE_DETECTION_FLOWS
     return list_of_flows
 
 
-def add_density_infection_flows(list_of_flows):
+def add_acf(list_of_flows):
     """
-    Adds our standard infection processes to the list of flows to be implemented in the model
+    Adds active case finding flows
     """
-    list_of_flows += DENSITY_INFECTION_FLOWS
+    list_of_flows += ACF_FLOWS
     return list_of_flows
 
+
+def add_acf_ltbi(list_of_flows):
+    """
+    Adds standard flows for ACF linked to LTBI
+    """
+    list_of_flows += ACF_LTBI_FLOWS
+    return list_of_flows
 

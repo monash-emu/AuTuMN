@@ -8,14 +8,14 @@ from summer_py.summer_model import (
 
 from autumn import constants
 from autumn.constants import Compartment
+from autumn.tb_model.outputs import create_request_stratified_incidence
 from autumn.curve import scale_up_function
 from autumn.db import Database
-from autumn.tb_model.flows import add_case_detection, add_latency_progression, add_acf, add_acf_ltbi,\
-    get_incidence_connections
+from autumn.tb_model.flows import add_case_detection, add_latency_progression, add_acf, add_acf_ltbi
 from autumn.tb_model.latency_params import update_transmission_parameters
-from autumn.tb_model.stratification import stratify_by_age, stratify_by_diabetes, stratify_by_organ
+from autumn.tb_model.stratification import \
+    stratify_by_age, stratify_by_diabetes, stratify_by_organ, stratify_by_location
 from autumn.tb_model import (
-    scale_relative_risks_for_equivalence,
     convert_competing_proportion_to_rate,
     add_standard_latency_flows,
     add_standard_natural_history_flows,
@@ -64,58 +64,6 @@ def build_rmi_timevariant_cdr(cdr_multiplier):
 def build_rmi_timevariant_tsr():
     tsr = {1950.0: 0.0, 1970.0: 0.2, 1994.0: 0.6, 2000.0: 0.85, 2010.0: 0.87, 2016: 0.87}
     return scale_up_function(tsr.keys(), tsr.values(), smoothness=0.2, method=5)
-
-
-def stratify_by_location(_tb_model, model_parameters):
-    props_location = \
-        {"majuro": 0.523, "ebeye": 0.2, "otherislands": 0.277}
-
-    raw_relative_risks_loc = {"majuro": 1.0}
-    for stratum in ["ebeye", "otherislands"]:
-        raw_relative_risks_loc[stratum] = model_parameters["rr_transmission_" + stratum]
-    scaled_relative_risks_loc = scale_relative_risks_for_equivalence(
-        props_location, raw_relative_risks_loc
-    )
-
-    # dummy matrix for mixing by location
-    location_mixing = numpy.array([0.9, 0.05, 0.05, 0.05, 0.9, 0.05, 0.05, 0.05, 0.9]).reshape(
-        (3, 3)
-    )
-    location_mixing *= 3.0  # adjusted such that heterogeneous mixing yields similar overall burden as homogeneous
-
-    location_adjustments = {}
-    for beta_type in ["", "_late_latent", "_recovered"]:
-        location_adjustments["contact_rate" + beta_type] = scaled_relative_risks_loc
-
-    location_adjustments["case_detection"] = {}
-    for stratum in ALL_STRATIFICATIONS['location']:
-        location_adjustments["case_detection"][stratum] = model_parameters[
-            "case_detection_" + stratum + "_multiplier"
-            ]
-
-    location_adjustments["acf_coverage"] = {}
-    for stratum in ALL_STRATIFICATIONS['location']:
-        location_adjustments["acf_coverage"][stratum] = model_parameters[
-            "acf_" + stratum + "_coverage"
-            ]
-
-    location_adjustments["acf_ltbi_coverage"] = {}
-    for stratum in ALL_STRATIFICATIONS['location']:
-        location_adjustments["acf_ltbi_coverage"][stratum] = model_parameters[
-            "acf_ltbi_" + stratum + "_coverage"
-            ]
-
-    _tb_model.stratify(
-        "location",
-        ALL_STRATIFICATIONS['location'],
-        [],
-        requested_proportions=props_location,
-        verbose=False,
-        entry_proportions=props_location,
-        adjustment_requests=location_adjustments,
-        mixing_matrix=location_mixing,
-    )
-    return _tb_model
 
 
 def build_rmi_model(update_params={}):
@@ -173,22 +121,12 @@ def build_rmi_model(update_params={}):
     flows = add_acf(flows)
     flows = add_acf_ltbi(flows)
 
-    # Derived output definitions
-    out_connections = get_incidence_connections()
+    out_connections = \
+        create_request_stratified_incidence(STRATIFY_BY, ALL_STRATIFICATIONS) \
+            if "incidence" in PLOTTED_STRATIFIED_DERIVED_OUTPUTS \
+            else {}
 
-    if "incidence" in PLOTTED_STRATIFIED_DERIVED_OUTPUTS:
-
-        # Create derived outputs for disaggregated incidence
-        for stratification in STRATIFY_BY:
-            for stratum in ALL_STRATIFICATIONS[stratification]:
-                for stage in ["early", "late"]:
-                    out_connections["incidence_" + stage + "X" + stratification + "_" + stratum] = {
-                        "origin": stage + "_latent",
-                        "to": "infectious",
-                        "to_condition": stratification + "_" + stratum,
-                    }
-
-    # define model
+    # Define model
     _tb_model = StratifiedModel(
         integration_times,
         compartments,
@@ -200,10 +138,10 @@ def build_rmi_model(update_params={}):
         output_connections=out_connections,
     )
 
-    # add crude birth rate from un estimates (using Federated States of Micronesia as a proxy as no data for RMI)
+    # Add crude birth rate from un estimates (using Federated States of Micronesia as a proxy as no data for RMI)
     _tb_model = add_birth_rate_functions(_tb_model, input_database, "FSM")
 
-    # load time-variant case detection rate
+    # Load time-variant case detection rate
     cdr_scaleup_overall = build_rmi_timevariant_cdr(model_parameters["cdr_multiplier"])
 
     # targeted TB prevalence proportions by organ
@@ -240,9 +178,9 @@ def build_rmi_model(update_params={}):
     # work out the CDR for smear-positive TB
     def cdr_smearpos(time):
         return cdr_scaleup_overall(time) / (
-            prop_smearpos
-            + prop_smearneg * model_parameters["diagnostic_sensitivity_smearneg"]
-            + prop_extrapul * model_parameters["diagnostic_sensitivity_extrapul"]
+                prop_smearpos
+                + prop_smearneg * model_parameters["diagnostic_sensitivity_smearneg"]
+                + prop_extrapul * model_parameters["diagnostic_sensitivity_extrapul"]
         )
 
     def cdr_smearneg(time):
@@ -284,16 +222,16 @@ def build_rmi_model(update_params={}):
     # initialise acf_rate function
     acf_rate_function = (
         lambda t: model_parameters["acf_coverage"]
-        * (acf_rate_over_time(t))
-        * model_parameters["acf_sensitivity"]
-        * (rmi_tsr(t))
+                  * (acf_rate_over_time(t))
+                  * model_parameters["acf_sensitivity"]
+                  * (rmi_tsr(t))
     )
 
     acf_ltbi_rate_function = (
         lambda t: model_parameters["acf_coverage"]
-        * (acf_rate_over_time(t))
-        * model_parameters["acf_ltbi_sensitivity"]
-        * model_parameters["acf_ltbi_efficacy"]
+                  * (acf_rate_over_time(t))
+                  * model_parameters["acf_ltbi_sensitivity"]
+                  * model_parameters["acf_ltbi_efficacy"]
     )
 
     # # assign newly created functions to model parameters
@@ -317,15 +255,22 @@ def build_rmi_model(update_params={}):
             _tb_model, AGE_SPECIFIC_LATENCY_PARAMETERS, input_database, ALL_STRATIFICATIONS['age']
         )
     if "diabetes" in STRATIFY_BY:
+        diabetes_target_props = {
+            "age_0": {"diabetic": 0.01},
+            "age_5": {"diabetic": 0.05},
+            "age_15": {"diabetic": 0.2},
+            "age_35": {"diabetic": 0.4},
+            "age_50": {"diabetic": 0.7},
+        }
         _tb_model = stratify_by_diabetes(
-            _tb_model, model_parameters, ALL_STRATIFICATIONS['diabetes']
+            _tb_model, model_parameters, ALL_STRATIFICATIONS['diabetes'], diabetes_target_props
         )
     if "organ" in STRATIFY_BY:
         _tb_model = stratify_by_organ(
             _tb_model, model_parameters, detect_rate_by_organ, ALL_STRATIFICATIONS['organ']
         )
     if "location" in STRATIFY_BY:
-        _tb_model = stratify_by_location(_tb_model, model_parameters)
+        _tb_model = stratify_by_location(_tb_model, model_parameters, ALL_STRATIFICATIONS['location'])
 
     def calculate_reported_majuro_prevalence(model, time):
         if "location" not in STRATIFY_BY:
@@ -338,10 +283,10 @@ def build_rmi_model(update_params={}):
                 if "infectious" in compartment:
                     actual_prev += model.compartment_values[i]
         return (
-            1.0e5
-            * actual_prev
-            / pop_majuro
-            * (1.0 + model_parameters["over_reporting_prevalence_proportion"])
+                1.0e5
+                * actual_prev
+                / pop_majuro
+                * (1.0 + model_parameters["over_reporting_prevalence_proportion"])
         )
 
     _tb_model.derived_output_functions.update(
@@ -389,7 +334,7 @@ def build_rmi_model(update_params={}):
                 stratum = compartment.split("infectious")[1]
                 _tb_model.derived_output_functions[
                     "notifications" + stratum
-                ] = notification_function_builder(stratum)
+                    ] = notification_function_builder(stratum)
 
         # create some personalised notification outputs
         def aggregated_notification_function_builder(location):
@@ -401,9 +346,9 @@ def build_rmi_model(update_params={}):
                 total_notifications = 0.0
                 for key, value in model.derived_outputs.items():
                     if (
-                        "notifications" in key
-                        and location in key
-                        and "agg_notifications" not in key
+                            "notifications" in key
+                            and location in key
+                            and "agg_notifications" not in key
                     ):
                         this_time_index = model.times.index(time)
                         total_notifications += value[this_time_index]
@@ -415,7 +360,7 @@ def build_rmi_model(update_params={}):
         for location in ["majuro", "ebeye", "otherislands"]:
             _tb_model.derived_output_functions[
                 "agg_notificationsXlocation_" + location
-            ] = aggregated_notification_function_builder(location)
+                ] = aggregated_notification_function_builder(location)
 
     if "incidence" in PLOTTED_STRATIFIED_DERIVED_OUTPUTS:
         # add output_connections for all stratum-specific incidence outputs

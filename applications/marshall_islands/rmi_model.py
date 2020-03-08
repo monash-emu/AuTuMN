@@ -105,7 +105,7 @@ def build_rmi_model(update_params={}):
         Compartment.LATE_LATENT,
         Compartment.INFECTIOUS,
         Compartment.RECOVERED,
-        "ltbi_treated",
+        Compartment.LTBI_TREATED,
     ]
     init_pop = {
         Compartment.INFECTIOUS: 10,
@@ -118,19 +118,26 @@ def build_rmi_model(update_params={}):
     model_parameters = params["default"]
 
     # Update, not needed for baseline run
-    model_parameters.update(update_params)
+    model_parameters.update(
+        update_params
+    )
 
     # Update partial immunity/susceptibility parameters
     model_parameters = \
         update_transmission_parameters(
             model_parameters,
-            ['recovered', 'late_latent', 'ltbi_treated']
+            [
+                Compartment.RECOVERED,
+                Compartment.LATE_LATENT,
+                Compartment.LTBI_TREATED]
         )
 
     # Set integration times
     integration_times = \
         get_model_times_from_inputs(
-            model_parameters["start_time"], model_parameters["end_time"], model_parameters["time_step"]
+            model_parameters["start_time"],
+            model_parameters["end_time"],
+            model_parameters["time_step"]
         )
 
     # Sequentially add groups of flows to flows list
@@ -265,43 +272,11 @@ def build_rmi_model(update_params={}):
         * model_parameters["acf_ltbi_efficacy"]
     )
 
-    # # time_variant contact_rate to simulate living condition improvement
-    # contact_rate_function = (
-    #     lambda t: (
-    #         external_params["minimum_tv_beta_multiplier"]
-    #         + (1.0 - external_params["minimum_tv_beta_multiplier"])
-    #         * numpy.exp(-external_params["beta_decay_rate"] * (t - 1900.0))
-    #     )
-    #     * external_params["contact_rate"]
-    # )
-    #
-    # plot_time_variant_param(contact_rate_function, [1940, 2020])
-    # plot_time_variant_param(cdr_scaleup_overall, [1940, 2020])
-
-    #
-    # # create time-variant functions for the different contact rates # did not get it to work with a loop!!!
-    # beta_func = lambda t: contact_rate_function(t)
-    # beta_func_infected = (
-    #     lambda t: contact_rate_function(t) * external_params["rr_transmission_infected"]
-    # )
-    # beta_func_recovered = (
-    #     lambda t: contact_rate_function(t) * external_params["rr_transmission_recovered"]
-    # )
-    # beta_func_ltbi_treated = (
-    #     lambda t: contact_rate_function(t) * external_params["rr_transmission_ltbi_treated"]
-    # )
-
     # # assign newly created functions to model parameters
     if len(STRATIFY_BY) == 0:
         _tb_model.time_variants["case_detection"] = tb_control_recovery_rate
         _tb_model.time_variants["acf_rate"] = acf_rate_function
         _tb_model.time_variants["acf_ltbi_rate"] = acf_ltbi_rate_function
-    # #
-    # #     ###################################
-    # #     _tb_model.time_variants["contact_rate"] = beta_func
-    # #     _tb_model.time_variants["contact_rate_infected"] = beta_func_infected
-    # #     _tb_model.time_variants["contact_rate_recovered"] = beta_func_recovered
-    # #     _tb_model.time_variants["contact_rate_ltbi_treated"] = beta_func_ltbi_treated
     else:
         _tb_model.adaptation_functions["case_detection"] = tb_control_recovery_rate
         _tb_model.parameters["case_detection"] = "case_detection"
@@ -311,19 +286,6 @@ def build_rmi_model(update_params={}):
 
         _tb_model.adaptation_functions["acf_ltbi_rate"] = acf_ltbi_rate_function
         _tb_model.parameters["acf_ltbi_rate"] = "acf_ltbi_rate"
-    #
-    #     ###################################################################################
-    #     _tb_model.adaptation_functions["contact_rate"] = beta_func
-    #     _tb_model.parameters["contact_rate"] = "contact_rate"
-    #
-    #     _tb_model.adaptation_functions["contact_rate_infected"] = beta_func_infected
-    #     _tb_model.parameters["contact_rate_infected"] = "contact_rate_infected"
-    #
-    #     _tb_model.adaptation_functions["contact_rate_recovered"] = beta_func_recovered
-    #     _tb_model.parameters["contact_rate_recovered"] = "contact_rate_recovered"
-    #
-    #     _tb_model.adaptation_functions["contact_rate_ltbi_treated"] = beta_func_ltbi_treated
-    #     _tb_model.parameters["contact_rate_ltbi_treated"] = "contact_rate_ltbi_treated"
 
     # Stratification by age
     if "age" in STRATIFY_BY:

@@ -122,11 +122,10 @@ def build_rmi_model(update_params={}):
     flows = add_acf_ltbi(flows)
 
     # Make sure incidence is tracked during integration
-    if 'incidence' in PLOTTED_STRATIFIED_DERIVED_OUTPUTS:
-        out_connections = \
-            create_request_stratified_incidence(STRATIFY_BY, ALL_STRATIFICATIONS) \
-                if "incidence" in PLOTTED_STRATIFIED_DERIVED_OUTPUTS \
-                else {}
+    out_connections = \
+        create_request_stratified_incidence(STRATIFY_BY, ALL_STRATIFICATIONS) \
+            if "incidence" in PLOTTED_STRATIFIED_DERIVED_OUTPUTS \
+            else {}
 
     # Define model
     _tb_model = StratifiedModel(
@@ -234,6 +233,10 @@ def build_rmi_model(update_params={}):
         _tb_model.parameters["acf_ltbi_rate"] = "acf_ltbi_rate"
 
     # Stratification processes
+    # for parameter in ['early_progression', 'stabilisation', 'late_progression'];
+    #     for age_group in [0, 5, 15]:
+    #         AGE_SPECIFIC_LATENCY_PARAMETERS
+
     AGE_SPECIFIC_LATENCY_PARAMETERS = {
         "early_progression": {
             0: model_parameters["early_progression_0"],

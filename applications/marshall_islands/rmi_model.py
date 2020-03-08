@@ -233,30 +233,16 @@ def build_rmi_model(update_params={}):
         _tb_model.parameters["acf_ltbi_rate"] = "acf_ltbi_rate"
 
     # Stratification processes
-    # for parameter in ['early_progression', 'stabilisation', 'late_progression'];
-    #     for age_group in [0, 5, 15]:
-    #         AGE_SPECIFIC_LATENCY_PARAMETERS
-
-    AGE_SPECIFIC_LATENCY_PARAMETERS = {
-        "early_progression": {
-            0: model_parameters["early_progression_0"],
-            5: model_parameters["early_progression_5"],
-            15: model_parameters["early_progression_15"],
-        },
-        "stabilisation": {
-            0: model_parameters["stabilisation_0"],
-            5: model_parameters["stabilisation_5"],
-            15: model_parameters["stabilisation_15"],
-        },
-        "late_progression": {
-            0: model_parameters["late_progression_0"],
-            5: model_parameters["late_progression_5"],
-            15: model_parameters["late_progression_15"],
-        },
-    }
     if "age" in STRATIFY_BY:
+        age_specific_latency_parameters = {}
+        for parameter in ['early_progression', 'stabilisation', 'late_progression']:
+            age_specific_latency_parameters[parameter] = {}
+            for age_group in [0, 5, 15]:
+                age_specific_latency_parameters[parameter].update(
+                    {age_group: model_parameters[parameter + '_' + str(age_group)]}
+                )
         _tb_model = stratify_by_age(
-            _tb_model, AGE_SPECIFIC_LATENCY_PARAMETERS, input_database, ALL_STRATIFICATIONS['age']
+            _tb_model, age_specific_latency_parameters, input_database, ALL_STRATIFICATIONS['age']
         )
     if "diabetes" in STRATIFY_BY:
         diabetes_target_props = {

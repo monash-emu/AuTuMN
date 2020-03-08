@@ -142,29 +142,26 @@ def build_rmi_model(update_params={}):
 
     # Find raw case detection rate and adjust for differences by organ status
     cdr_scaleup_raw = build_rmi_timevariant_cdr(model_parameters["cdr_multiplier"])
-    target_organ_props = \
-        {
-            'smearpos': 0.5,
-            'smearneg': 0.3,
-            'extrapul': 0.2
-        }
     detect_rate_by_organ = \
         find_organ_specific_cdr(
-            cdr_scaleup_raw, model_parameters, ALL_STRATIFICATIONS['organ'], target_organ_props
+            cdr_scaleup_raw,
+            model_parameters,
+            ALL_STRATIFICATIONS['organ'],
+            target_organ_props=
+            {
+                'smearpos': 0.5,
+                'smearneg': 0.3,
+                'extrapul': 0.2
+            }
         )
 
     # load time-variant treatment success rate
     rmi_tsr = build_rmi_timevariant_tsr()
 
-    # create a treatment success rate function adjusted for treatment support intervention
-    tsr_function = lambda t: rmi_tsr(t)
-
     # tb control recovery rate (detection and treatment) function set for overall if not organ-specific,
     # smearpos otherwise
-    if "organ" not in STRATIFY_BY:
-        tb_control_recovery_rate = lambda t: tsr_function(t) * detect_rate_by_organ["overall"](t)
-    else:
-        tb_control_recovery_rate = lambda t: tsr_function(t) * detect_rate_by_organ["smearpos"](t)
+    tb_control_recovery_rate = \
+        lambda t: rmi_tsr(t) * detect_rate_by_organ['smearpos' if 'organ' in STRATIFY_BY else "overall"](t)
 
     # set acf screening rate using proportion of population reached and duration of intervention
     acf_screening_rate = -numpy.log(1 - 0.9) / 0.5

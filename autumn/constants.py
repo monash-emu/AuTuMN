@@ -21,6 +21,7 @@ class Compartment:
     LATE_LATENT = "late_latent"
     INFECTIOUS = "infectious"
     RECOVERED = "recovered"
+    LTBI_TREATED = "ltbi_treated"
 
 
 class Flow:

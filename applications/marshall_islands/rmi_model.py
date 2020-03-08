@@ -1,29 +1,21 @@
 import os
-from copy import deepcopy
 import numpy
 import yaml
 
 from summer_py.summer_model import (
     StratifiedModel,
-    split_age_parameter,
-    create_sloping_step_function,
-)
-from summer_py.summer_model.utils.parameter_processing import (
-    create_step_function_from_dict,
-    get_parameter_dict_from_function,
-    logistic_scaling_function,
 )
 
 from autumn import constants
 from autumn.constants import Compartment
+from autumn.tb_model.outputs import create_request_stratified_incidence
 from autumn.curve import scale_up_function
-from autumn.db import Database, get_pop_mortality_functions
-from autumn.tb_model.flows import add_case_detection, add_latency_progression, add_acf, add_acf_ltbi,\
-    get_incidence_connections
+from autumn.db import Database
+from autumn.tb_model.flows import add_case_detection, add_latency_progression, add_acf, add_acf_ltbi
 from autumn.tb_model.latency_params import update_transmission_parameters
-
+from autumn.tb_model.stratification import \
+    stratify_by_age, stratify_by_diabetes, stratify_by_organ, stratify_by_location
 from autumn.tb_model import (
-    scale_relative_risks_for_equivalence,
     convert_competing_proportion_to_rate,
     add_standard_latency_flows,
     add_standard_natural_history_flows,
@@ -35,8 +27,6 @@ from autumn.tb_model import (
 from autumn.tool_kit import (
     return_function_of_function,
     progressive_step_function_maker,
-    change_parameter_unit,
-    add_w_to_param_names,
 )
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
 
@@ -76,23 +66,6 @@ def build_rmi_timevariant_tsr():
     return scale_up_function(tsr.keys(), tsr.values(), smoothness=0.2, method=5)
 
 
-def get_adapted_age_parameters(age_breakpoints, AGE_SPECIFIC_LATENCY_PARAMETERS):
-    """
-    Get age-specific latency parameters adapted to any specification of age breakpoints
-    """
-    adapted_parameter_dict = {}
-    for parameter in ("early_progression", "stabilisation", "late_progression"):
-        adapted_parameter_dict[parameter] = add_w_to_param_names(
-            change_parameter_unit(
-                get_parameter_dict_from_function(
-                    create_step_function_from_dict(AGE_SPECIFIC_LATENCY_PARAMETERS[parameter]),
-                    age_breakpoints,
-                ),
-                365.251,
-            )
-        )
-    return adapted_parameter_dict
-
 def build_rmi_model(update_params={}):
 
     input_database = Database(database_name=INPUT_DB_PATH)
@@ -104,7 +77,7 @@ def build_rmi_model(update_params={}):
         Compartment.LATE_LATENT,
         Compartment.INFECTIOUS,
         Compartment.RECOVERED,
-        "ltbi_treated",
+        Compartment.LTBI_TREATED,
     ]
     init_pop = {
         Compartment.INFECTIOUS: 10,
@@ -117,19 +90,26 @@ def build_rmi_model(update_params={}):
     model_parameters = params["default"]
 
     # Update, not needed for baseline run
-    model_parameters.update(update_params)
+    model_parameters.update(
+        update_params
+    )
 
     # Update partial immunity/susceptibility parameters
     model_parameters = \
         update_transmission_parameters(
             model_parameters,
-            ['recovered', 'infected', 'ltbi_treated']
+            [
+                Compartment.RECOVERED,
+                Compartment.LATE_LATENT,
+                Compartment.LTBI_TREATED]
         )
 
     # Set integration times
     integration_times = \
         get_model_times_from_inputs(
-            model_parameters["start_time"], model_parameters["end_time"], model_parameters["time_step"]
+            model_parameters["start_time"],
+            model_parameters["end_time"],
+            model_parameters["time_step"]
         )
 
     # Sequentially add groups of flows to flows list
@@ -141,22 +121,13 @@ def build_rmi_model(update_params={}):
     flows = add_acf(flows)
     flows = add_acf_ltbi(flows)
 
-    # Derived output definitions
-    out_connections = get_incidence_connections()
+    # Make sure incidence is tracked during integration
+    out_connections = \
+        create_request_stratified_incidence(STRATIFY_BY, ALL_STRATIFICATIONS) \
+            if "incidence" in PLOTTED_STRATIFIED_DERIVED_OUTPUTS \
+            else {}
 
-    if "incidence" in PLOTTED_STRATIFIED_DERIVED_OUTPUTS:
-
-        # Create derived outputs for disaggregated incidence
-        for stratification in STRATIFY_BY:
-            for stratum in ALL_STRATIFICATIONS[stratification]:
-                for stage in ["early", "late"]:
-                    out_connections["incidence_" + stage + "X" + stratification + "_" + stratum] = {
-                        "origin": stage + "_latent",
-                        "to": "infectious",
-                        "to_condition": stratification + "_" + stratum,
-                    }
-
-    # define model
+    # Define model
     _tb_model = StratifiedModel(
         integration_times,
         compartments,
@@ -168,17 +139,17 @@ def build_rmi_model(update_params={}):
         output_connections=out_connections,
     )
 
-    # add crude birth rate from un estimates (using Federated States of Micronesia as a proxy as no data for RMI)
+    # Add crude birth rate from UN estimates (using Federated States of Micronesia as a proxy as no data for RMI)
     _tb_model = add_birth_rate_functions(_tb_model, input_database, "FSM")
 
-    # load time-variant case detection rate
+    # Load time-variant case detection rate
     cdr_scaleup_overall = build_rmi_timevariant_cdr(model_parameters["cdr_multiplier"])
 
-    # targeted TB prevalence proportions by organ
+    # Targeted TB prevalence proportions by organ
     prop_smearpos, prop_smearneg, prop_extrapul = \
         0.5, 0.3, 0.2
 
-    # disease duration by organ
+    # Disease duration by organ
     overall_duration = prop_smearpos * 1.6 + 5.3 * (1 - prop_smearpos)
     disease_duration = {
         "smearpos": 1.6,
@@ -187,30 +158,12 @@ def build_rmi_model(update_params={}):
         "overall": overall_duration,
     }
 
-    AGE_SPECIFIC_LATENCY_PARAMETERS = {
-        "early_progression": {
-            0: model_parameters["early_progression_0"],
-            5: model_parameters["early_progression_5"],
-            15: model_parameters["early_progression_15"],
-        },
-        "stabilisation": {
-            0: model_parameters["stabilisation_0"],
-            5: model_parameters["stabilisation_5"],
-            15: model_parameters["stabilisation_15"],
-        },
-        "late_progression": {
-            0: model_parameters["late_progression_0"],
-            5: model_parameters["late_progression_5"],
-            15: model_parameters["late_progression_15"],
-        },
-    }
-
     # work out the CDR for smear-positive TB
     def cdr_smearpos(time):
         return cdr_scaleup_overall(time) / (
-            prop_smearpos
-            + prop_smearneg * model_parameters["diagnostic_sensitivity_smearneg"]
-            + prop_extrapul * model_parameters["diagnostic_sensitivity_extrapul"]
+                prop_smearpos
+                + prop_smearneg * model_parameters["diagnostic_sensitivity_smearneg"]
+                + prop_extrapul * model_parameters["diagnostic_sensitivity_extrapul"]
         )
 
     def cdr_smearneg(time):
@@ -226,7 +179,7 @@ def build_rmi_model(update_params={}):
         "overall": cdr_scaleup_overall,
     }
     detect_rate_by_organ = {}
-    for organ in ["smearpos", "smearneg", "extrapul", "overall"]:
+    for organ in ALL_STRATIFICATIONS['organ'] + ['overall']:
         prop_to_rate = convert_competing_proportion_to_rate(1.0 / disease_duration[organ])
         detect_rate_by_organ[organ] = return_function_of_function(cdr_by_organ[organ], prop_to_rate)
 
@@ -252,55 +205,23 @@ def build_rmi_model(update_params={}):
     # initialise acf_rate function
     acf_rate_function = (
         lambda t: model_parameters["acf_coverage"]
-        * (acf_rate_over_time(t))
-        * model_parameters["acf_sensitivity"]
-        * (rmi_tsr(t))
+                  * (acf_rate_over_time(t))
+                  * model_parameters["acf_sensitivity"]
+                  * (rmi_tsr(t))
     )
 
     acf_ltbi_rate_function = (
         lambda t: model_parameters["acf_coverage"]
-        * (acf_rate_over_time(t))
-        * model_parameters["acf_ltbi_sensitivity"]
-        * model_parameters["acf_ltbi_efficacy"]
+                  * (acf_rate_over_time(t))
+                  * model_parameters["acf_ltbi_sensitivity"]
+                  * model_parameters["acf_ltbi_efficacy"]
     )
-
-    # # time_variant contact_rate to simulate living condition improvement
-    # contact_rate_function = (
-    #     lambda t: (
-    #         external_params["minimum_tv_beta_multiplier"]
-    #         + (1.0 - external_params["minimum_tv_beta_multiplier"])
-    #         * numpy.exp(-external_params["beta_decay_rate"] * (t - 1900.0))
-    #     )
-    #     * external_params["contact_rate"]
-    # )
-    #
-    # plot_time_variant_param(contact_rate_function, [1940, 2020])
-    # plot_time_variant_param(cdr_scaleup_overall, [1940, 2020])
-
-    #
-    # # create time-variant functions for the different contact rates # did not get it to work with a loop!!!
-    # beta_func = lambda t: contact_rate_function(t)
-    # beta_func_infected = (
-    #     lambda t: contact_rate_function(t) * external_params["rr_transmission_infected"]
-    # )
-    # beta_func_recovered = (
-    #     lambda t: contact_rate_function(t) * external_params["rr_transmission_recovered"]
-    # )
-    # beta_func_ltbi_treated = (
-    #     lambda t: contact_rate_function(t) * external_params["rr_transmission_ltbi_treated"]
-    # )
 
     # # assign newly created functions to model parameters
     if len(STRATIFY_BY) == 0:
         _tb_model.time_variants["case_detection"] = tb_control_recovery_rate
         _tb_model.time_variants["acf_rate"] = acf_rate_function
         _tb_model.time_variants["acf_ltbi_rate"] = acf_ltbi_rate_function
-    # #
-    # #     ###################################
-    # #     _tb_model.time_variants["contact_rate"] = beta_func
-    # #     _tb_model.time_variants["contact_rate_infected"] = beta_func_infected
-    # #     _tb_model.time_variants["contact_rate_recovered"] = beta_func_recovered
-    # #     _tb_model.time_variants["contact_rate_ltbi_treated"] = beta_func_ltbi_treated
     else:
         _tb_model.adaptation_functions["case_detection"] = tb_control_recovery_rate
         _tb_model.parameters["case_detection"] = "case_detection"
@@ -310,71 +231,20 @@ def build_rmi_model(update_params={}):
 
         _tb_model.adaptation_functions["acf_ltbi_rate"] = acf_ltbi_rate_function
         _tb_model.parameters["acf_ltbi_rate"] = "acf_ltbi_rate"
-    #
-    #     ###################################################################################
-    #     _tb_model.adaptation_functions["contact_rate"] = beta_func
-    #     _tb_model.parameters["contact_rate"] = "contact_rate"
-    #
-    #     _tb_model.adaptation_functions["contact_rate_infected"] = beta_func_infected
-    #     _tb_model.parameters["contact_rate_infected"] = "contact_rate_infected"
-    #
-    #     _tb_model.adaptation_functions["contact_rate_recovered"] = beta_func_recovered
-    #     _tb_model.parameters["contact_rate_recovered"] = "contact_rate_recovered"
-    #
-    #     _tb_model.adaptation_functions["contact_rate_ltbi_treated"] = beta_func_ltbi_treated
-    #     _tb_model.parameters["contact_rate_ltbi_treated"] = "contact_rate_ltbi_treated"
 
-    # Stratification by age
+    # Stratification processes
     if "age" in STRATIFY_BY:
-        age_breakpoints = [int(i_break) for i_break in ALL_STRATIFICATIONS['age']]
-        age_infectiousness = get_parameter_dict_from_function(
-            logistic_scaling_function(10.0), age_breakpoints
+        age_specific_latency_parameters = {}
+        for parameter in ['early_progression', 'stabilisation', 'late_progression']:
+            age_specific_latency_parameters[parameter] = {}
+            for age_group in [0, 5, 15]:
+                age_specific_latency_parameters[parameter].update(
+                    {age_group: model_parameters[parameter + '_' + str(age_group)]}
+                )
+        _tb_model = stratify_by_age(
+            _tb_model, age_specific_latency_parameters, input_database, ALL_STRATIFICATIONS['age']
         )
-        age_params = \
-            get_adapted_age_parameters(age_breakpoints, AGE_SPECIFIC_LATENCY_PARAMETERS)
-        age_params.update(split_age_parameter(age_breakpoints, "contact_rate"))
-        pop_morts = get_pop_mortality_functions(
-            input_database,
-            age_breakpoints,
-            country_iso_code="FSM",
-            emigration_value=0.0075,
-            emigration_start_time=1990.,
-        )
-        age_params["universal_death_rate"] = {}
-        for age_break in age_breakpoints:
-            _tb_model.time_variants["universal_death_rateXage_" + str(age_break)] = \
-                pop_morts[age_break]
-            _tb_model.parameters["universal_death_rateXage_" + str(age_break)] = \
-                "universal_death_rateXage_" + str(age_break)
-            age_params["universal_death_rate"][str(age_break) + "W"] = \
-                "universal_death_rateXage_" + str(age_break)
-        _tb_model.parameters["universal_death_rateX"] = 0.0
-
-        # Add BCG effect without stratification assuming constant 100% coverage
-        bcg_wane = create_sloping_step_function(15.0, 0.3, 30.0, 1.0)
-        age_bcg_efficacy_dict = get_parameter_dict_from_function(
-            lambda value: bcg_wane(value), age_breakpoints
-        )
-        age_params.update({"contact_rate": age_bcg_efficacy_dict})
-        _tb_model.stratify(
-            "age",
-            deepcopy(age_breakpoints),
-            [],
-            {},
-            adjustment_requests=age_params,
-            infectiousness_adjustments=age_infectiousness,
-            verbose=False,
-        )
-
     if "diabetes" in STRATIFY_BY:
-        diabetes_starting_props = {
-            "diabetic": 0.01,
-            "nodiabetes": 0.99
-        }
-        diabetes_entry_props = {
-            "diabetic": 0.01,
-            "nodiabetes": 0.99
-        }
         diabetes_target_props = {
             "age_0": {"diabetic": 0.01},
             "age_5": {"diabetic": 0.05},
@@ -382,116 +252,15 @@ def build_rmi_model(update_params={}):
             "age_35": {"diabetic": 0.4},
             "age_50": {"diabetic": 0.7},
         }
-        progression_adjustments = {
-            "diabetic": model_parameters["rr_progression_diabetic"],
-            "nodiabetes": 1.0,
-        }
-        _tb_model.stratify(
-            "diabetes",
-            ALL_STRATIFICATIONS['diabetes'],
-            [],
-            verbose=False,
-            requested_proportions=diabetes_starting_props,
-            adjustment_requests={
-                "early_progression": progression_adjustments,
-                "late_progression": progression_adjustments,
-            },
-            entry_proportions=diabetes_entry_props,
-            target_props=diabetes_target_props,
+        _tb_model = stratify_by_diabetes(
+            _tb_model, model_parameters, ALL_STRATIFICATIONS['diabetes'], diabetes_target_props
         )
-
     if "organ" in STRATIFY_BY:
-        props_smear = {
-            "smearpos": model_parameters["prop_smearpos"],
-            "smearneg": 1.0 - (model_parameters["prop_smearpos"] + 0.2),
-            "extrapul": 0.2,
-        }
-        mortality_adjustments = \
-            {"smearpos": 1.0, "smearneg": 0.064, "extrapul": 0.064}
-        recovery_adjustments = \
-            {"smearpos": 1.0, "smearneg": 0.56, "extrapul": 0.56}
-
-        # workout the detection rate adjustment by organ status
-        adjustment_smearneg = (
-            detect_rate_by_organ["smearneg"](2015.0) / detect_rate_by_organ["smearpos"](2015.0)
-            if detect_rate_by_organ["smearpos"](2015.0) > 0.0
-            else 1.0
+        _tb_model = stratify_by_organ(
+            _tb_model, model_parameters, detect_rate_by_organ, ALL_STRATIFICATIONS['organ']
         )
-        adjustment_extrapul = (
-            detect_rate_by_organ["extrapul"](2015.0) / detect_rate_by_organ["smearpos"](2015.0)
-            if detect_rate_by_organ["smearpos"](2015.0) > 0.0
-            else 1.0
-        )
-
-        _tb_model.stratify(
-            "organ",
-            ALL_STRATIFICATIONS['organ'],
-            [Compartment.INFECTIOUS],
-            infectiousness_adjustments={"smearpos": 1.0, "smearneg": 0.25, "extrapul": 0.0},
-            verbose=False,
-            requested_proportions=props_smear,
-            adjustment_requests={
-                "recovery": recovery_adjustments,
-                "infect_death": mortality_adjustments,
-                "case_detection": {
-                    "smearpos": 1.0,
-                    "smearneg": adjustment_smearneg,
-                    "extrapul": adjustment_extrapul,
-                },
-                "early_progression": props_smear,
-                "late_progression": props_smear,
-            },
-        )
-
     if "location" in STRATIFY_BY:
-        props_location = \
-            {"majuro": 0.523, "ebeye": 0.2, "otherislands": 0.277}
-
-        raw_relative_risks_loc = {"majuro": 1.0}
-        for stratum in ["ebeye", "otherislands"]:
-            raw_relative_risks_loc[stratum] = model_parameters["rr_transmission_" + stratum]
-        scaled_relative_risks_loc = scale_relative_risks_for_equivalence(
-            props_location, raw_relative_risks_loc
-        )
-
-        # dummy matrix for mixing by location
-        location_mixing = numpy.array([0.9, 0.05, 0.05, 0.05, 0.9, 0.05, 0.05, 0.05, 0.9]).reshape(
-            (3, 3)
-        )
-        location_mixing *= 3.0  # adjusted such that heterogeneous mixing yields similar overall burden as homogeneous
-
-        location_adjustments = {}
-        for beta_type in ["", "_infected", "_recovered"]:
-            location_adjustments["contact_rate" + beta_type] = scaled_relative_risks_loc
-
-        location_adjustments["case_detection"] = {}
-        for stratum in ALL_STRATIFICATIONS['location']:
-            location_adjustments["case_detection"][stratum] = model_parameters[
-                "case_detection_" + stratum + "_multiplier"
-            ]
-
-        location_adjustments["acf_coverage"] = {}
-        for stratum in ALL_STRATIFICATIONS['location']:
-            location_adjustments["acf_coverage"][stratum] = model_parameters[
-                "acf_" + stratum + "_coverage"
-            ]
-
-        location_adjustments["acf_ltbi_coverage"] = {}
-        for stratum in ALL_STRATIFICATIONS['location']:
-            location_adjustments["acf_ltbi_coverage"][stratum] = model_parameters[
-                "acf_ltbi_" + stratum + "_coverage"
-            ]
-
-        _tb_model.stratify(
-            "location",
-            ALL_STRATIFICATIONS['location'],
-            [],
-            requested_proportions=props_location,
-            verbose=False,
-            entry_proportions=props_location,
-            adjustment_requests=location_adjustments,
-            mixing_matrix=location_mixing,
-        )
+        _tb_model = stratify_by_location(_tb_model, model_parameters, ALL_STRATIFICATIONS['location'])
 
     def calculate_reported_majuro_prevalence(model, time):
         if "location" not in STRATIFY_BY:
@@ -504,10 +273,10 @@ def build_rmi_model(update_params={}):
                 if "infectious" in compartment:
                     actual_prev += model.compartment_values[i]
         return (
-            1.0e5
-            * actual_prev
-            / pop_majuro
-            * (1.0 + model_parameters["over_reporting_prevalence_proportion"])
+                1.0e5
+                * actual_prev
+                / pop_majuro
+                * (1.0 + model_parameters["over_reporting_prevalence_proportion"])
         )
 
     _tb_model.derived_output_functions.update(
@@ -555,7 +324,7 @@ def build_rmi_model(update_params={}):
                 stratum = compartment.split("infectious")[1]
                 _tb_model.derived_output_functions[
                     "notifications" + stratum
-                ] = notification_function_builder(stratum)
+                    ] = notification_function_builder(stratum)
 
         # create some personalised notification outputs
         def aggregated_notification_function_builder(location):
@@ -567,9 +336,9 @@ def build_rmi_model(update_params={}):
                 total_notifications = 0.0
                 for key, value in model.derived_outputs.items():
                     if (
-                        "notifications" in key
-                        and location in key
-                        and "agg_notifications" not in key
+                            "notifications" in key
+                            and location in key
+                            and "agg_notifications" not in key
                     ):
                         this_time_index = model.times.index(time)
                         total_notifications += value[this_time_index]
@@ -581,7 +350,7 @@ def build_rmi_model(update_params={}):
         for location in ["majuro", "ebeye", "otherislands"]:
             _tb_model.derived_output_functions[
                 "agg_notificationsXlocation_" + location
-            ] = aggregated_notification_function_builder(location)
+                ] = aggregated_notification_function_builder(location)
 
     if "incidence" in PLOTTED_STRATIFIED_DERIVED_OUTPUTS:
         # add output_connections for all stratum-specific incidence outputs

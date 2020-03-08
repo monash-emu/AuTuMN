@@ -16,7 +16,7 @@ def stratify_location(model: StratifiedModel, location_params: dict):
 
     location_adjustments = {}
     location_adjustments["acf_rate"] = location_params["acf_rate"]
-    for beta_type in ["", "_infected", "_recovered"]:
+    for beta_type in ["", "_late_latent", "_recovered"]:
         location_adjustments[f"contact_rate{beta_type}"] = scaled_relative_risks_loc
 
     model.stratify(

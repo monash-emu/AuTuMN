@@ -2,20 +2,36 @@
 Post processing and storing/loading data from the output database.
 """
 import os
-import re
 
 import numpy
 import pandas as pd
 import summer_py.post_processing as post_proc
 from sqlalchemy import create_engine
 from summer_py.outputs import Outputs
-import matplotlib
 import matplotlib.pyplot as plt
 
 from ..constants import Compartment
 from ..db import Database
 from .dummy_model import DummyModel
 from autumn.tool_kit.utils import find_first_list_element_above, element_wise_list_summation
+from autumn.tb_model.flows import get_incidence_connections
+
+
+def create_request_stratified_incidence(requested_stratifications, strata_dict):
+    """
+    Create derived outputs for disaggregated incidence
+    """
+    out_connections = get_incidence_connections()
+    for stratification in requested_stratifications:
+        for stratum in strata_dict[stratification]:
+            for stage in ["early", "late"]:
+                out_connections["incidence_" + stage + "X" + stratification + "_" + stratum] \
+                    = {
+                    "origin": stage + "_latent",
+                    "to": Compartment.INFECTIOUS,
+                    "to_condition": stratification + "_" + stratum,
+                }
+    return out_connections
 
 
 def add_combined_incidence(derived_outputs, outputs, scaled_by_population=False):

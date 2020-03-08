@@ -50,12 +50,12 @@ def build_model(params: dict):
 
     contact_rate = params["model"]["contact_rate"]
     contact_rate_recovered = contact_rate * params["model"]["rr_transmission_recovered"]
-    contact_rate_infected = contact_rate * params["model"]["rr_transmission_infected"]
+    contact_rate_infected = contact_rate * params["model"]["rr_transmission_late_latent"]
     latency_params = change_parameter_unit(AGGREGATED_LATENCY_PARAMETERS, 365.251)
     model_params = {
         **params["model"],
         "contact_rate_recovered": contact_rate_recovered,
-        "contact_rate_infected": contact_rate_infected,
+        "contact_rate_late_latent": contact_rate_infected,
         **latency_params,
     }
     model = StratifiedModel(

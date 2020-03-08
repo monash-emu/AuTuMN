@@ -121,10 +121,12 @@ def build_rmi_model(update_params={}):
     flows = add_acf(flows)
     flows = add_acf_ltbi(flows)
 
-    out_connections = \
-        create_request_stratified_incidence(STRATIFY_BY, ALL_STRATIFICATIONS) \
-            if "incidence" in PLOTTED_STRATIFIED_DERIVED_OUTPUTS \
-            else {}
+    # Make sure incidence is tracked during integration
+    if 'incidence' in PLOTTED_STRATIFIED_DERIVED_OUTPUTS:
+        out_connections = \
+            create_request_stratified_incidence(STRATIFY_BY, ALL_STRATIFICATIONS) \
+                if "incidence" in PLOTTED_STRATIFIED_DERIVED_OUTPUTS \
+                else {}
 
     # Define model
     _tb_model = StratifiedModel(
@@ -138,41 +140,23 @@ def build_rmi_model(update_params={}):
         output_connections=out_connections,
     )
 
-    # Add crude birth rate from un estimates (using Federated States of Micronesia as a proxy as no data for RMI)
+    # Add crude birth rate from UN estimates (using Federated States of Micronesia as a proxy as no data for RMI)
     _tb_model = add_birth_rate_functions(_tb_model, input_database, "FSM")
 
     # Load time-variant case detection rate
     cdr_scaleup_overall = build_rmi_timevariant_cdr(model_parameters["cdr_multiplier"])
 
-    # targeted TB prevalence proportions by organ
+    # Targeted TB prevalence proportions by organ
     prop_smearpos, prop_smearneg, prop_extrapul = \
         0.5, 0.3, 0.2
 
-    # disease duration by organ
+    # Disease duration by organ
     overall_duration = prop_smearpos * 1.6 + 5.3 * (1 - prop_smearpos)
     disease_duration = {
         "smearpos": 1.6,
         "smearneg": 5.3,
         "extrapul": 5.3,
         "overall": overall_duration,
-    }
-
-    AGE_SPECIFIC_LATENCY_PARAMETERS = {
-        "early_progression": {
-            0: model_parameters["early_progression_0"],
-            5: model_parameters["early_progression_5"],
-            15: model_parameters["early_progression_15"],
-        },
-        "stabilisation": {
-            0: model_parameters["stabilisation_0"],
-            5: model_parameters["stabilisation_5"],
-            15: model_parameters["stabilisation_15"],
-        },
-        "late_progression": {
-            0: model_parameters["late_progression_0"],
-            5: model_parameters["late_progression_5"],
-            15: model_parameters["late_progression_15"],
-        },
     }
 
     # work out the CDR for smear-positive TB
@@ -250,6 +234,23 @@ def build_rmi_model(update_params={}):
         _tb_model.parameters["acf_ltbi_rate"] = "acf_ltbi_rate"
 
     # Stratification processes
+    AGE_SPECIFIC_LATENCY_PARAMETERS = {
+        "early_progression": {
+            0: model_parameters["early_progression_0"],
+            5: model_parameters["early_progression_5"],
+            15: model_parameters["early_progression_15"],
+        },
+        "stabilisation": {
+            0: model_parameters["stabilisation_0"],
+            5: model_parameters["stabilisation_5"],
+            15: model_parameters["stabilisation_15"],
+        },
+        "late_progression": {
+            0: model_parameters["late_progression_0"],
+            5: model_parameters["late_progression_5"],
+            15: model_parameters["late_progression_15"],
+        },
+    }
     if "age" in STRATIFY_BY:
         _tb_model = stratify_by_age(
             _tb_model, AGE_SPECIFIC_LATENCY_PARAMETERS, input_database, ALL_STRATIFICATIONS['age']

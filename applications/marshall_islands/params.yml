@@ -11,7 +11,7 @@ default:
 #  beta_decay_rate: 0.06
 #  minimum_tv_beta_multiplier: 0.5
   rr_transmission_recovered: 0.6
-  rr_transmission_infected: 0.21
+  rr_transmission_late_latent: 0.21
   rr_transmission_ltbi_treated: 0.21
 #  latency_adjustment: 2.  # used to modify progression rates during calibration
   recovery: 0.231 # this is for smear-positive TB

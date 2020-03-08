@@ -78,7 +78,7 @@ def build_mongolia_model(update_params={}):
         # base model definition:
         "contact_rate": 14.0,
         "rr_transmission_recovered": 1.0,
-        "rr_transmission_infected": 0.21,
+        "rr_transmission_late_latent": 0.21,
         "adult_latency_adjustment": 4.0,  # used to increase adult progression rates due to pollution
         "self_recovery_rate": 0.231,  # this is for smear-positive TB
         "tb_mortality_rate": 0.389,  # this is for smear-positive TB
@@ -136,8 +136,8 @@ def build_mongolia_model(update_params={}):
         "contact_rate": external_params["contact_rate"],
         "contact_rate_recovered": external_params["contact_rate"]
         * external_params["rr_transmission_recovered"],
-        "contact_rate_infected": external_params["contact_rate"]
-        * external_params["rr_transmission_infected"],
+        "contact_rate_late_latent": external_params["contact_rate"]
+        * external_params["rr_transmission_late_latent"],
         "recovery": external_params["self_recovery_rate"],
         "infect_death": external_params["tb_mortality_rate"],
         "universal_death_rate": 1.0 / 50.0,
@@ -562,7 +562,7 @@ def build_mongolia_model(update_params={}):
         )  # adjusted such that heterogeneous mixing yields similar overall burden as homogeneous
 
         location_adjustments = {}
-        for beta_type in ["", "_infected", "_recovered"]:
+        for beta_type in ["", "_late_latent", "_recovered"]:
             location_adjustments["contact_rate" + beta_type] = scaled_relative_risks_loc
 
         location_adjustments["acf_rate"] = {}

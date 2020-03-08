@@ -310,7 +310,7 @@ def test_epi_model__with_complex_dynamics__expect_correct_outputs(ModelClass):
         "recovery": 0.2,
         "contact_rate": 14,
         "contact_rate_recovered": 14,
-        "contact_rate_infected": 3,
+        "contact_rate_late_latent": 3,
         "stabilisation": 3,
         "early_progression": 2,
         "late_progression": 1,
@@ -334,7 +334,7 @@ def test_epi_model__with_complex_dynamics__expect_correct_outputs(ModelClass):
         # Late latent going back to early latent
         {
             "type": Flow.INFECTION_FREQUENCY,
-            "parameter": "contact_rate_infected",
+            "parameter": "contact_rate_late_latent",
             "origin": Compartment.LATE_LATENT,
             "to": Compartment.EARLY_LATENT,
         },

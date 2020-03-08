@@ -18,7 +18,7 @@ INFECTION_FLOWS = [
     },
     {
         "type": Flow.INFECTION_FREQUENCY,
-        "parameter": "contact_rate_infected",
+        "parameter": "contact_rate_late_latent",
         "origin": Compartment.LATE_LATENT,
         "to": Compartment.EARLY_LATENT,
     },
@@ -74,7 +74,7 @@ DENSITY_INFECTION_FLOWS = [
     },
     {
         "type": Flow.INFECTION_DENSITY,
-        "parameter": "contact_rate_infected",
+        "parameter": "contact_rate_late_latent",
         "origin": Compartment.LATE_LATENT,
         "to": Compartment.EARLY_LATENT,
     },

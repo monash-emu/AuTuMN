@@ -93,6 +93,7 @@ def get_adapted_age_parameters(age_breakpoints, AGE_SPECIFIC_LATENCY_PARAMETERS)
         )
     return adapted_parameter_dict
 
+
 def build_rmi_model(update_params={}):
 
     input_database = Database(database_name=INPUT_DB_PATH)
@@ -123,7 +124,7 @@ def build_rmi_model(update_params={}):
     model_parameters = \
         update_transmission_parameters(
             model_parameters,
-            ['recovered', 'infected', 'ltbi_treated']
+            ['recovered', 'late_latent', 'ltbi_treated']
         )
 
     # Set integration times
@@ -461,7 +462,7 @@ def build_rmi_model(update_params={}):
         location_mixing *= 3.0  # adjusted such that heterogeneous mixing yields similar overall burden as homogeneous
 
         location_adjustments = {}
-        for beta_type in ["", "_infected", "_recovered"]:
+        for beta_type in ["", "_late_latent", "_recovered"]:
             location_adjustments["contact_rate" + beta_type] = scaled_relative_risks_loc
 
         location_adjustments["case_detection"] = {}

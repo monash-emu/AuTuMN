@@ -64,7 +64,7 @@ def build_model(update_params={}):
         # base model definition:
         "contact_rate": 4.6,
         "rr_transmission_recovered": 0.21,
-        "rr_transmission_infected": 0.21,
+        "rr_transmission_late_latent": 0.21,
         "latency_adjustment": 5.0,  # used to modify progression rates during calibration
         "case_fatality_rate": 0.4,
         "untreated_disease_duration": 3.0,
@@ -111,8 +111,8 @@ def build_model(update_params={}):
         "contact_rate": external_params["contact_rate"],
         "contact_rate_recovered": external_params["contact_rate"]
         * external_params["rr_transmission_recovered"],
-        "contact_rate_infected": external_params["contact_rate"]
-        * external_params["rr_transmission_infected"],
+        "contact_rate_late_latent": external_params["contact_rate"]
+        * external_params["rr_transmission_late_latent"],
         "recovery": external_params["case_fatality_rate"]
         / external_params["untreated_disease_duration"],
         "infect_death": (1.0 - external_params["case_fatality_rate"])
@@ -475,7 +475,7 @@ def build_model(update_params={}):
         # housing_mixing[0, 0] = 5.
         # housing_mixing[1, 1] = 5.
         housing_adjustments = {}
-        for beta_type in ["", "_infected", "_recovered"]:
+        for beta_type in ["", "_late_latent", "_recovered"]:
             housing_adjustments["contact_rate" + beta_type] = scaled_relative_risks
 
         housing_adjustments["acf_rate"] = {}
@@ -510,7 +510,7 @@ def build_model(update_params={}):
         # location_mixing[2, 2] = 10.
 
         location_adjustments = {}
-        for beta_type in ["", "_infected", "_recovered"]:
+        for beta_type in ["", "_late_latent", "_recovered"]:
             location_adjustments["contact_rate" + beta_type] = scaled_relative_risks_loc
 
         location_adjustments["acf_rate"] = {}

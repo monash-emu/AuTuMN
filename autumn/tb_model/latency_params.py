@@ -9,6 +9,17 @@ from summer_py.summer_model.utils.parameter_processing import (
 from ..tool_kit import add_w_to_param_names, change_parameter_unit
 
 
+def manually_create_age_specific_latency_parameters(model_parameters):
+    age_specific_latency_parameters = {}
+    for parameter in ['early_progression', 'stabilisation', 'late_progression']:
+        age_specific_latency_parameters[parameter] = {}
+        for age_group in [0, 5, 15]:
+            age_specific_latency_parameters[parameter].update(
+                {age_group: model_parameters[parameter + '_' + str(age_group)]}
+            )
+    return age_specific_latency_parameters
+
+
 def provide_aggregated_latency_parameters():
     """
     function to add the latency parameters estimated by Ragonnet et al from our paper in Epidemics to the existing

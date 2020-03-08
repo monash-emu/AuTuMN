@@ -12,11 +12,12 @@ from autumn.tb_model.outputs import create_request_stratified_incidence
 from autumn.curve import scale_up_function
 from autumn.db import Database
 from autumn.tb_model.flows import add_case_detection, add_latency_progression, add_acf, add_acf_ltbi
-from autumn.tb_model.latency_params import update_transmission_parameters
+from autumn.tb_model.latency_params import \
+    update_transmission_parameters, manually_create_age_specific_latency_parameters
+from autumn.tb_model.case_detection_params import find_organ_specific_cdr
 from autumn.tb_model.stratification import \
     stratify_by_age, stratify_by_diabetes, stratify_by_organ, stratify_by_location
 from autumn.tb_model import (
-    convert_competing_proportion_to_rate,
     add_standard_latency_flows,
     add_standard_natural_history_flows,
     add_standard_infection_flows,
@@ -24,10 +25,7 @@ from autumn.tb_model import (
     create_output_connections_for_incidence_by_stratum,
     list_all_strata_for_mortality,
 )
-from autumn.tool_kit import (
-    return_function_of_function,
-    progressive_step_function_maker,
-)
+from autumn.tool_kit import progressive_step_function_maker
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
 
 # Database locations
@@ -142,46 +140,18 @@ def build_rmi_model(update_params={}):
     # Add crude birth rate from UN estimates (using Federated States of Micronesia as a proxy as no data for RMI)
     _tb_model = add_birth_rate_functions(_tb_model, input_database, "FSM")
 
-    # Load time-variant case detection rate
-    cdr_scaleup_overall = build_rmi_timevariant_cdr(model_parameters["cdr_multiplier"])
-
-    # Targeted TB prevalence proportions by organ
-    prop_smearpos, prop_smearneg, prop_extrapul = \
-        0.5, 0.3, 0.2
-
-    # Disease duration by organ
-    overall_duration = prop_smearpos * 1.6 + 5.3 * (1 - prop_smearpos)
-    disease_duration = {
-        "smearpos": 1.6,
-        "smearneg": 5.3,
-        "extrapul": 5.3,
-        "overall": overall_duration,
-    }
-
-    # work out the CDR for smear-positive TB
-    def cdr_smearpos(time):
-        return cdr_scaleup_overall(time) / (
-                prop_smearpos
-                + prop_smearneg * model_parameters["diagnostic_sensitivity_smearneg"]
-                + prop_extrapul * model_parameters["diagnostic_sensitivity_extrapul"]
+    # Find raw case detection rate and adjust for differences by organ status
+    cdr_scaleup_raw = build_rmi_timevariant_cdr(model_parameters["cdr_multiplier"])
+    target_organ_props = \
+        {
+            'smearpos': 0.5,
+            'smearneg': 0.3,
+            'extrapul': 0.2
+        }
+    detect_rate_by_organ = \
+        find_organ_specific_cdr(
+            cdr_scaleup_raw, model_parameters, ALL_STRATIFICATIONS['organ'], target_organ_props
         )
-
-    def cdr_smearneg(time):
-        return cdr_smearpos(time) * model_parameters["diagnostic_sensitivity_smearneg"]
-
-    def cdr_extrapul(time):
-        return cdr_smearpos(time) * model_parameters["diagnostic_sensitivity_extrapul"]
-
-    cdr_by_organ = {
-        "smearpos": cdr_smearpos,
-        "smearneg": cdr_smearneg,
-        "extrapul": cdr_extrapul,
-        "overall": cdr_scaleup_overall,
-    }
-    detect_rate_by_organ = {}
-    for organ in ALL_STRATIFICATIONS['organ'] + ['overall']:
-        prop_to_rate = convert_competing_proportion_to_rate(1.0 / disease_duration[organ])
-        detect_rate_by_organ[organ] = return_function_of_function(cdr_by_organ[organ], prop_to_rate)
 
     # load time-variant treatment success rate
     rmi_tsr = build_rmi_timevariant_tsr()
@@ -189,7 +159,8 @@ def build_rmi_model(update_params={}):
     # create a treatment success rate function adjusted for treatment support intervention
     tsr_function = lambda t: rmi_tsr(t)
 
-    # tb control recovery rate (detection and treatment) function set for overall if not organ-specific, smearpos otherwise
+    # tb control recovery rate (detection and treatment) function set for overall if not organ-specific,
+    # smearpos otherwise
     if "organ" not in STRATIFY_BY:
         tb_control_recovery_rate = lambda t: tsr_function(t) * detect_rate_by_organ["overall"](t)
     else:
@@ -197,7 +168,6 @@ def build_rmi_model(update_params={}):
 
     # set acf screening rate using proportion of population reached and duration of intervention
     acf_screening_rate = -numpy.log(1 - 0.9) / 0.5
-
     acf_rate_over_time = progressive_step_function_maker(
         2018.2, 2018.7, acf_screening_rate, scaling_time_fraction=0.3
     )
@@ -209,7 +179,6 @@ def build_rmi_model(update_params={}):
                   * model_parameters["acf_sensitivity"]
                   * (rmi_tsr(t))
     )
-
     acf_ltbi_rate_function = (
         lambda t: model_parameters["acf_coverage"]
                   * (acf_rate_over_time(t))
@@ -217,7 +186,7 @@ def build_rmi_model(update_params={}):
                   * model_parameters["acf_ltbi_efficacy"]
     )
 
-    # # assign newly created functions to model parameters
+    # assign newly created functions to model parameters
     if len(STRATIFY_BY) == 0:
         _tb_model.time_variants["case_detection"] = tb_control_recovery_rate
         _tb_model.time_variants["acf_rate"] = acf_rate_function
@@ -225,33 +194,34 @@ def build_rmi_model(update_params={}):
     else:
         _tb_model.adaptation_functions["case_detection"] = tb_control_recovery_rate
         _tb_model.parameters["case_detection"] = "case_detection"
-
         _tb_model.adaptation_functions["acf_rate"] = acf_rate_function
         _tb_model.parameters["acf_rate"] = "acf_rate"
-
         _tb_model.adaptation_functions["acf_ltbi_rate"] = acf_ltbi_rate_function
         _tb_model.parameters["acf_ltbi_rate"] = "acf_ltbi_rate"
 
     # Stratification processes
     if "age" in STRATIFY_BY:
-        age_specific_latency_parameters = {}
-        for parameter in ['early_progression', 'stabilisation', 'late_progression']:
-            age_specific_latency_parameters[parameter] = {}
-            for age_group in [0, 5, 15]:
-                age_specific_latency_parameters[parameter].update(
-                    {age_group: model_parameters[parameter + '_' + str(age_group)]}
-                )
-        _tb_model = stratify_by_age(
-            _tb_model, age_specific_latency_parameters, input_database, ALL_STRATIFICATIONS['age']
-        )
+        age_specific_latency_parameters = \
+            manually_create_age_specific_latency_parameters(
+                model_parameters
+            )
+        _tb_model = \
+            stratify_by_age(
+                _tb_model, age_specific_latency_parameters, input_database, ALL_STRATIFICATIONS['age']
+            )
     if "diabetes" in STRATIFY_BY:
-        diabetes_target_props = {
-            "age_0": {"diabetic": 0.01},
-            "age_5": {"diabetic": 0.05},
-            "age_15": {"diabetic": 0.2},
-            "age_35": {"diabetic": 0.4},
-            "age_50": {"diabetic": 0.7},
+        diab_target_props = {
+            0: 0.01,
+            5: 0.05,
+            15: 0.2,
+            35: 0.4,
+            50: 0.7
         }
+        diabetes_target_props = {}
+        for age_group in ALL_STRATIFICATIONS['age']:
+            diabetes_target_props.update({
+                'age_' + age_group: {'diabetic': diab_target_props[int(age_group)]}
+            })
         _tb_model = stratify_by_diabetes(
             _tb_model, model_parameters, ALL_STRATIFICATIONS['diabetes'], diabetes_target_props
         )

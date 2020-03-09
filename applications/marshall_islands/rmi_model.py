@@ -159,6 +159,7 @@ def build_rmi_model(update_params={}):
         birth_approach="add_crude_birth_rate",
         starting_population=model_parameters["start_population"],
         output_connections=out_connections,
+        death_output_categories=list_all_strata_for_mortality(compartments)
     )
 
     # Add crude birth rate from UN estimates (using Federated States of Micronesia as a proxy as no data for RMI)
@@ -261,11 +262,6 @@ def build_rmi_model(update_params={}):
     # _tb_model.derived_output_functions.update(
     #     {"reported_majuro_prevalence": calculate_reported_majuro_prevalence}
     # )
-
-    # prepare death outputs for all strata
-    _tb_model.death_output_categories = list_all_strata_for_mortality(
-        _tb_model.compartment_names
-    )
 
     return _tb_model
 

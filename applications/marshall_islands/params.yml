@@ -67,6 +67,9 @@ default:
   case_detection_ebeye_multiplier: 1.5
   case_detection_otherislands_multiplier: 1.0
 
+  # Treatment rate
+  treatment_rate: 2.
+
   # ACF for intervention groups
   acf_coverage: 0.0
   acf_sensitivity: 0.9

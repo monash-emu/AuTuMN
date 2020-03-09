@@ -34,23 +34,14 @@ file_dir = os.path.dirname(os.path.abspath(__file__))
 INPUT_DB_PATH = os.path.join(constants.DATA_PATH, "inputs.db")
 PARAMS_PATH = os.path.join(file_dir, "params.yml")
 
-ALL_STRATIFICATIONS = {
-    "organ": ["smearpos", "smearneg", "extrapul"],
-    "age": ["0", "5", "15", "35", "50"],
-    "location": ["majuro", "ebeye", "otherislands"],
-    "diabetes": ["diabetic", "nodiabetes"],
-}
 
-
-def build_rmi_timevariant_cdr(cdr_multiplier):
-    cdr = {1950.0: 0.0, 1980.0: 0.2, 1990.0: 0.3, 2000.0: 0.4, 2010.0: 0.45, 2015: 0.5}
+def build_rmi_timevariant_cdr(cdr, cdr_multiplier):
     return scale_up_function(
         cdr.keys(), [c * cdr_multiplier for c in list(cdr.values())], smoothness=0.2, method=5
     )
 
 
-def build_rmi_timevariant_tsr():
-    tsr = {1950.0: 0.0, 1970.0: 0.2, 1994.0: 0.6, 2000.0: 0.85, 2010.0: 0.87, 2016: 0.87}
+def build_rmi_timevariant_tsr(tsr):
     return scale_up_function(tsr.keys(), tsr.values(), smoothness=0.2, method=5)
 
 
@@ -149,23 +140,23 @@ def build_rmi_model(update_params={}):
     _tb_model = add_birth_rate_functions(_tb_model, input_database, "FSM")
 
     # Find raw case detection rate with multiplier, which is 1 by default, and adjust for differences by organ status
-    cdr_scaleup_raw = build_rmi_timevariant_cdr(model_parameters["cdr_multiplier"])
+    cdr_scaleup_raw = \
+        build_rmi_timevariant_cdr(
+            model_parameters['cdr'],
+            model_parameters["cdr_multiplier"]
+        )
     detect_rate_by_organ = \
         find_organ_specific_cdr(
             cdr_scaleup_raw,
             model_parameters,
             model_parameters['all_stratifications']['organ'],
-            target_organ_props=
-            {
-                'smearpos': 0.5,
-                'smearneg': 0.3,
-                'extrapul': 0.2
-            }
+            target_organ_props=model_parameters['target_organ_props']
         )
 
     # Find base case detection rate and time-variant treatment completion function
     base_detection_rate = detect_rate_by_organ['smearpos' if 'organ' in model_parameters['stratify_by'] else "overall"]
-    treatment_completion_rate = lambda time: build_rmi_timevariant_tsr()(time) / model_parameters['treatment_duration']
+    treatment_completion_rate = lambda time: build_rmi_timevariant_tsr(model_parameters['tsr'])(time) / \
+                                             model_parameters['treatment_duration']
 
     # Set acf screening rate using proportion of population reached and duration of intervention
     acf_screening_rate = -numpy.log(1 - 0.9) / 0.5

@@ -66,6 +66,14 @@ def build_rmi_timevariant_tsr():
 
 
 def build_rmi_model(update_params={}):
+    """
+    Build the master function to run the TB model for the Republic of the Marshall Islands
+
+    :param update_params: dict
+        Any parameters that need to be updated for the current run
+    :return: StratifiedModel
+        The final model with all parameters and stratifications
+    """
 
     input_database = Database(database_name=INPUT_DB_PATH)
 
@@ -159,14 +167,14 @@ def build_rmi_model(update_params={}):
             }
         )
 
-    # load time-variant treatment success rate
+    # Generate time-variant treatment completion function
     treatment_rate = model_parameters['treatment_rate']
     def treatment_completion_rate(time):
         return build_rmi_timevariant_tsr()(time) * treatment_rate
 
     # tb control recovery rate (detection and treatment) function set for overall if not organ-specific,
     # smearpos otherwise
-    tb_control_recovery_rate = lambda t: detect_rate_by_organ['smearpos' if 'organ' in STRATIFY_BY else "overall"](t)
+    tb_control_recovery_rate = detect_rate_by_organ['smearpos' if 'organ' in STRATIFY_BY else "overall"]
 
     # set acf screening rate using proportion of population reached and duration of intervention
     acf_screening_rate = -numpy.log(1 - 0.9) / 0.5

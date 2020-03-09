@@ -8,7 +8,7 @@ from summer_py.summer_model import (
 
 from autumn import constants
 from autumn.constants import Compartment
-from autumn.tb_model.outputs import create_request_stratified_incidence
+from autumn.tb_model.outputs import create_request_stratified_incidence, create_request_stratified_notifications
 from autumn.tb_model.parameters import add_time_variant_parameter_to_model
 from autumn.curve import scale_up_function
 from autumn.db import Database
@@ -40,11 +40,7 @@ PARAMS_PATH = os.path.join(file_dir, "params.yml")
 # STRATIFY_BY = ['age', 'organ']
 # STRATIFY_BY = ['age', 'diabetes']
 # STRATIFY_BY = ['age', 'diabetes', 'organ']
-STRATIFY_BY = ["age", "location", 'diabetes', 'organ']
-
-PLOTTED_STRATIFIED_DERIVED_OUTPUTS = (
-    ["notifications"]
-)  # use ["incidence", "notifications", "mortality"] to get all outputs
+STRATIFY_BY = ["age", "location", 'organ', 'diabetes']
 
 ALL_STRATIFICATIONS = {
     "organ": ["smearpos", "smearneg", "extrapul"],
@@ -52,6 +48,14 @@ ALL_STRATIFICATIONS = {
     "location": ["majuro", "ebeye", "otherislands"],
     "diabetes": ["diabetic", "nodiabetes"],
 }
+
+NOTIFICATION_STRATIFICATIONS = (
+    ['location']
+)
+
+INCIDENCE_STRATIFICATIONS = (
+    ['location', 'age']
+)
 
 
 def build_rmi_timevariant_cdr(cdr_multiplier):
@@ -132,11 +136,18 @@ def build_rmi_model(update_params={}):
     flows = add_acf(flows, compartments)
     flows = add_acf_ltbi(flows)
 
-    # Make sure incidence is tracked during integration
-    out_connections = \
-        create_request_stratified_incidence(STRATIFY_BY, ALL_STRATIFICATIONS) \
-            if "incidence" in PLOTTED_STRATIFIED_DERIVED_OUTPUTS \
-            else {}
+    # Make sure incidence and notifications are tracked during integration
+    out_connections = {}
+    out_connections.update(
+        create_request_stratified_incidence(
+            INCIDENCE_STRATIFICATIONS, ALL_STRATIFICATIONS
+        )
+    )
+    out_connections.update(
+        create_request_stratified_notifications(
+            NOTIFICATION_STRATIFICATIONS, ALL_STRATIFICATIONS
+        )
+    )
 
     # Define model
     _tb_model = StratifiedModel(
@@ -153,7 +164,7 @@ def build_rmi_model(update_params={}):
     # Add crude birth rate from UN estimates (using Federated States of Micronesia as a proxy as no data for RMI)
     _tb_model = add_birth_rate_functions(_tb_model, input_database, "FSM")
 
-    # Find raw case detection rate and adjust for differences by organ status
+    # Find raw case detection rate with multiplier, which is 1 by default, and adjust for differences by organ status
     cdr_scaleup_raw = build_rmi_timevariant_cdr(model_parameters["cdr_multiplier"])
     detect_rate_by_organ = \
         find_organ_specific_cdr(
@@ -230,102 +241,31 @@ def build_rmi_model(update_params={}):
     if "location" in STRATIFY_BY:
         _tb_model = stratify_by_location(_tb_model, model_parameters, ALL_STRATIFICATIONS['location'])
 
-    def calculate_reported_majuro_prevalence(model, time):
-        if "location" not in STRATIFY_BY:
-            return 0.0
-        actual_prev = 0.0
-        pop_majuro = 0.0
-        for i, compartment in enumerate(model.compartment_names):
-            if "majuro" in compartment:
-                pop_majuro += model.compartment_values[i]
-                if "infectious" in compartment:
-                    actual_prev += model.compartment_values[i]
-        return (
-                1.0e5
-                * actual_prev
-                / pop_majuro
-                * (1.0 + model_parameters["over_reporting_prevalence_proportion"])
-        )
+    # def calculate_reported_majuro_prevalence(model, time):
+    #     if "location" not in STRATIFY_BY:
+    #         return 0.0
+    #     actual_prev = 0.0
+    #     pop_majuro = 0.0
+    #     for i, compartment in enumerate(model.compartment_names):
+    #         if "majuro" in compartment:
+    #             pop_majuro += model.compartment_values[i]
+    #             if "infectious" in compartment:
+    #                 actual_prev += model.compartment_values[i]
+    #     return (
+    #             1.0e5
+    #             * actual_prev
+    #             / pop_majuro
+    #             * (1.0 + model_parameters["over_reporting_prevalence_proportion"])
+    #     )
+    #
+    # _tb_model.derived_output_functions.update(
+    #     {"reported_majuro_prevalence": calculate_reported_majuro_prevalence}
+    # )
 
-    _tb_model.derived_output_functions.update(
-        {"reported_majuro_prevalence": calculate_reported_majuro_prevalence}
+    # prepare death outputs for all strata
+    _tb_model.death_output_categories = list_all_strata_for_mortality(
+        _tb_model.compartment_names
     )
-
-    # add some optional disaggregated derived outputs
-    if "notifications" in PLOTTED_STRATIFIED_DERIVED_OUTPUTS:
-        # build derived outputs for notifications
-        def notification_function_builder(stratum):
-            """
-                example of stratum: "Xage_0Xstrain_mdr"
-            """
-
-            def calculate_notifications(model, time):
-
-                total_notifications = 0.0
-                dict_flows = model.transition_flows_dict
-                compartment_name = "infectious" + stratum
-                comp_idx = model.compartment_idx_lookup[compartment_name]
-
-                infectious_pop = model.compartment_values[comp_idx]
-                detection_indices = [
-                    index
-                    for index, val in dict_flows["parameter"].items()
-                    if "case_detection" in val
-                ]
-                flow_index = [
-                    index
-                    for index in detection_indices
-                    if dict_flows["origin"][index] == model.compartment_names[comp_idx]
-                ][0]
-                param_name = dict_flows["parameter"][flow_index]
-                return total_notifications
-
-            return calculate_notifications
-
-        for compartment in _tb_model.compartment_names:
-            if "infectious" in compartment:
-                stratum = compartment.split("infectious")[1]
-                _tb_model.derived_output_functions[
-                    "notifications" + stratum
-                    ] = notification_function_builder(stratum)
-
-        # create some personalised notification outputs
-        def aggregated_notification_function_builder(location):
-            """
-                example of location: "majuro"
-            """
-
-            def calculate_aggregated_notifications(model, time):
-                total_notifications = 0.0
-                for key, value in model.derived_outputs.items():
-                    if (
-                            "notifications" in key
-                            and location in key
-                            and "agg_notifications" not in key
-                    ):
-                        this_time_index = model.times.index(time)
-                        total_notifications += value[this_time_index]
-
-                return total_notifications
-
-            return calculate_aggregated_notifications
-
-        for location in ["majuro", "ebeye", "otherislands"]:
-            _tb_model.derived_output_functions[
-                "agg_notificationsXlocation_" + location
-                ] = aggregated_notification_function_builder(location)
-
-    if "incidence" in PLOTTED_STRATIFIED_DERIVED_OUTPUTS:
-        # add output_connections for all stratum-specific incidence outputs
-        _tb_model.output_connections.update(
-            create_output_connections_for_incidence_by_stratum(_tb_model.compartment_names)
-        )
-
-    if "mortality" in PLOTTED_STRATIFIED_DERIVED_OUTPUTS:
-        # prepare death outputs for all strata
-        _tb_model.death_output_categories = list_all_strata_for_mortality(
-            _tb_model.compartment_names
-        )
 
     return _tb_model
 

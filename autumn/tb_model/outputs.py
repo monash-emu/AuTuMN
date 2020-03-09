@@ -14,7 +14,7 @@ from ..constants import Compartment
 from ..db import Database
 from .dummy_model import DummyModel
 from autumn.tool_kit.utils import find_first_list_element_above, element_wise_list_summation
-from autumn.tb_model.flows import get_incidence_connections
+from autumn.tb_model.flows import get_incidence_connections, get_notifications_connections
 
 
 def create_request_stratified_incidence(requested_stratifications, strata_dict):
@@ -29,6 +29,23 @@ def create_request_stratified_incidence(requested_stratifications, strata_dict):
                     = {
                     "origin": stage + "_latent",
                     "to": Compartment.INFECTIOUS,
+                    "to_condition": stratification + "_" + stratum,
+                }
+    return out_connections
+
+
+def create_request_stratified_notifications(requested_stratifications, strata_dict):
+    """
+    Create derived outputs for disaggregated notifications
+    """
+    out_connections = get_notifications_connections()
+    for stratification in requested_stratifications:
+        for stratum in strata_dict[stratification]:
+            out_connections["notificationsX" + stratification + "_" + stratum] = \
+                {
+                    "origin": Compartment.INFECTIOUS,
+                    "to": Compartment.ON_TREATMENT,
+                    "origin_condition": "",
                     "to_condition": stratification + "_" + stratum,
                 }
     return out_connections
@@ -70,6 +87,7 @@ def create_output_connections_for_incidence_by_stratum(
 ):
     """
     Automatically create output connections for fully disaggregated incidence outputs
+
     :param all_compartment_names: full list of model compartment names
     :param infectious_compartment_name: the name used for the active TB compartment
     :return: a dictionary containing incidence output connections

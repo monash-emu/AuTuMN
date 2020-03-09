@@ -211,9 +211,23 @@ def get_incidence_connections():
     return {
         "incidence_early":
             {"origin": Compartment.EARLY_LATENT,
-             "to": Compartment.INFECTIOUS},
+             "to": Compartment.INFECTIOUS,
+             'origin_condition': '',
+             'to_condition': ''},
         "incidence_late":
             {"origin": Compartment.LATE_LATENT,
-             "to": Compartment.INFECTIOUS},
+             "to": Compartment.INFECTIOUS,
+             'origin_condition': '',
+             'to_condition': ''},
+    }
+
+
+def get_notifications_connections():
+    return {
+        'notifications':
+            {'origin': Compartment.INFECTIOUS,
+             'to': Compartment.ON_TREATMENT,
+             'origin_condition': '',
+             'to_condition': ''}
     }
 

@@ -1,3 +1,6 @@
+from autumn.curve import scale_up_function
+
+
 def add_time_variant_parameter_to_model(model, parameter_name, parameter_function, n_stratifications):
     """
     Add a time variant parameter to a model, regardless of whether it is stratified or not
@@ -17,3 +20,9 @@ def add_time_variant_parameter_to_model(model, parameter_name, parameter_functio
     else:
         model.parameters[parameter_name] = parameter_name
         model.adaptation_functions[parameter_name] = parameter_function
+
+
+def build_scale_up_function(values_dict, multiplier=1.):
+    return scale_up_function(
+        values_dict.keys(), [val * multiplier for val in list(values_dict.values())], smoothness=0.2, method=5
+    )

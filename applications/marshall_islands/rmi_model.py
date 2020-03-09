@@ -9,8 +9,7 @@ from summer_py.summer_model import (
 from autumn import constants
 from autumn.constants import Compartment
 from autumn.tb_model.outputs import create_request_stratified_incidence, create_request_stratified_notifications
-from autumn.tb_model.parameters import add_time_variant_parameter_to_model
-from autumn.curve import scale_up_function
+from autumn.tb_model.parameters import add_time_variant_parameter_to_model, build_scale_up_function
 from autumn.db import Database
 from autumn.tb_model.flows import \
     add_case_detection, add_latency_progression, add_acf, add_acf_ltbi, add_treatment_flows
@@ -33,16 +32,6 @@ from autumn.tool_kit.scenarios import get_model_times_from_inputs
 file_dir = os.path.dirname(os.path.abspath(__file__))
 INPUT_DB_PATH = os.path.join(constants.DATA_PATH, "inputs.db")
 PARAMS_PATH = os.path.join(file_dir, "params.yml")
-
-
-def build_rmi_timevariant_cdr(cdr, cdr_multiplier):
-    return scale_up_function(
-        cdr.keys(), [c * cdr_multiplier for c in list(cdr.values())], smoothness=0.2, method=5
-    )
-
-
-def build_rmi_timevariant_tsr(tsr):
-    return scale_up_function(tsr.keys(), tsr.values(), smoothness=0.2, method=5)
 
 
 def build_rmi_model(update_params={}):
@@ -141,7 +130,7 @@ def build_rmi_model(update_params={}):
 
     # Find raw case detection rate with multiplier, which is 1 by default, and adjust for differences by organ status
     cdr_scaleup_raw = \
-        build_rmi_timevariant_cdr(
+        build_scale_up_function(
             model_parameters['cdr'],
             model_parameters["cdr_multiplier"]
         )
@@ -155,7 +144,7 @@ def build_rmi_model(update_params={}):
 
     # Find base case detection rate and time-variant treatment completion function
     base_detection_rate = detect_rate_by_organ['smearpos' if 'organ' in model_parameters['stratify_by'] else "overall"]
-    treatment_completion_rate = lambda time: build_rmi_timevariant_tsr(model_parameters['tsr'])(time) / \
+    treatment_completion_rate = lambda time: build_scale_up_function(model_parameters['tsr'])(time) / \
                                              model_parameters['treatment_duration']
 
     # Set acf screening rate using proportion of population reached and duration of intervention

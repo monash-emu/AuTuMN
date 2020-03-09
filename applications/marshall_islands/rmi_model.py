@@ -168,12 +168,9 @@ def build_rmi_model(update_params={}):
             }
         )
 
-    # Generate time-variant treatment completion function
+    # Find base case detection rate and time-variant treatment completion function
+    base_detection_rate = detect_rate_by_organ['smearpos' if 'organ' in STRATIFY_BY else "overall"]
     treatment_completion_rate = lambda time: build_rmi_timevariant_tsr()(time) / model_parameters['treatment_duration']
-
-    # tb control recovery rate (detection and treatment) function set for overall if not organ-specific,
-    # smearpos otherwise
-    tb_control_recovery_rate = detect_rate_by_organ['smearpos' if 'organ' in STRATIFY_BY else "overall"]
 
     # set acf screening rate using proportion of population reached and duration of intervention
     acf_screening_rate = -numpy.log(1 - 0.9) / 0.5
@@ -195,7 +192,7 @@ def build_rmi_model(update_params={}):
     )
 
     # Assign newly created functions to model parameters
-    add_time_variant_parameter_to_model(_tb_model, 'case_detection', tb_control_recovery_rate, len(STRATIFY_BY))
+    add_time_variant_parameter_to_model(_tb_model, 'case_detection', base_detection_rate, len(STRATIFY_BY))
     add_time_variant_parameter_to_model(_tb_model, 'treatment_rate', treatment_completion_rate, len(STRATIFY_BY))
     add_time_variant_parameter_to_model(_tb_model, 'acf_rate', acf_rate_function, len(STRATIFY_BY))
     add_time_variant_parameter_to_model(_tb_model, 'acf_ltbi_rate', acf_ltbi_rate_function, len(STRATIFY_BY))

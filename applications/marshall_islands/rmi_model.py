@@ -34,23 +34,12 @@ file_dir = os.path.dirname(os.path.abspath(__file__))
 INPUT_DB_PATH = os.path.join(constants.DATA_PATH, "inputs.db")
 PARAMS_PATH = os.path.join(file_dir, "params.yml")
 
-# Stratifications to implement - comment out as required to enable model to run more quickly
-STRATIFY_BY = ["age", "location", 'organ', 'diabetes']
-
 ALL_STRATIFICATIONS = {
     "organ": ["smearpos", "smearneg", "extrapul"],
     "age": ["0", "5", "15", "35", "50"],
     "location": ["majuro", "ebeye", "otherislands"],
     "diabetes": ["diabetic", "nodiabetes"],
 }
-
-# Stratification(s) over which to disaggregate notifications and incidence
-NOTIFICATION_STRATIFICATIONS = (
-    ['location']
-)
-INCIDENCE_STRATIFICATIONS = (
-    ['location', 'age']
-)
 
 
 def build_rmi_timevariant_cdr(cdr_multiplier):
@@ -134,12 +123,12 @@ def build_rmi_model(update_params={}):
     out_connections = {}
     out_connections.update(
         create_request_stratified_incidence(
-            INCIDENCE_STRATIFICATIONS, ALL_STRATIFICATIONS
+            model_parameters['incidence_stratification'], model_parameters['all_stratifications']
         )
     )
     out_connections.update(
         create_request_stratified_notifications(
-            NOTIFICATION_STRATIFICATIONS, ALL_STRATIFICATIONS
+            model_parameters['notification_stratifications'], model_parameters['all_stratifications']
         )
     )
 
@@ -165,7 +154,7 @@ def build_rmi_model(update_params={}):
         find_organ_specific_cdr(
             cdr_scaleup_raw,
             model_parameters,
-            ALL_STRATIFICATIONS['organ'],
+            model_parameters['all_stratifications']['organ'],
             target_organ_props=
             {
                 'smearpos': 0.5,
@@ -175,7 +164,7 @@ def build_rmi_model(update_params={}):
         )
 
     # Find base case detection rate and time-variant treatment completion function
-    base_detection_rate = detect_rate_by_organ['smearpos' if 'organ' in STRATIFY_BY else "overall"]
+    base_detection_rate = detect_rate_by_organ['smearpos' if 'organ' in model_parameters['stratify_by'] else "overall"]
     treatment_completion_rate = lambda time: build_rmi_timevariant_tsr()(time) / model_parameters['treatment_duration']
 
     # Set acf screening rate using proportion of population reached and duration of intervention
@@ -198,22 +187,26 @@ def build_rmi_model(update_params={}):
     )
 
     # Assign newly created functions to model parameters
-    add_time_variant_parameter_to_model(_tb_model, 'case_detection', base_detection_rate, len(STRATIFY_BY))
-    add_time_variant_parameter_to_model(_tb_model, 'treatment_rate', treatment_completion_rate, len(STRATIFY_BY))
-    add_time_variant_parameter_to_model(_tb_model, 'acf_rate', acf_rate_function, len(STRATIFY_BY))
-    add_time_variant_parameter_to_model(_tb_model, 'acf_ltbi_rate', acf_ltbi_rate_function, len(STRATIFY_BY))
+    add_time_variant_parameter_to_model(
+        _tb_model, 'case_detection', base_detection_rate, len(model_parameters['stratify_by']))
+    add_time_variant_parameter_to_model(
+        _tb_model, 'treatment_rate', treatment_completion_rate, len(model_parameters['stratify_by']))
+    add_time_variant_parameter_to_model(
+        _tb_model, 'acf_rate', acf_rate_function, len(model_parameters['stratify_by']))
+    add_time_variant_parameter_to_model(
+        _tb_model, 'acf_ltbi_rate', acf_ltbi_rate_function, len(model_parameters['stratify_by']))
 
     # Stratification processes
-    if "age" in STRATIFY_BY:
+    if "age" in model_parameters['stratify_by']:
         age_specific_latency_parameters = \
             manually_create_age_specific_latency_parameters(
                 model_parameters
             )
         _tb_model = \
             stratify_by_age(
-                _tb_model, age_specific_latency_parameters, input_database, ALL_STRATIFICATIONS['age']
+                _tb_model, age_specific_latency_parameters, input_database, model_parameters['all_stratifications']['age']
             )
-    if "diabetes" in STRATIFY_BY:
+    if "diabetes" in model_parameters['stratify_by']:
         diab_target_props = {
             0: 0.01,
             5: 0.05,
@@ -222,20 +215,19 @@ def build_rmi_model(update_params={}):
             50: 0.7
         }
         diabetes_target_props = {}
-        for age_group in ALL_STRATIFICATIONS['age']:
+        for age_group in model_parameters['all_stratifications']['age']:
             diabetes_target_props.update({
                 'age_' + age_group: {'diabetic': diab_target_props[int(age_group)]}
             })
         _tb_model = stratify_by_diabetes(
-            _tb_model, model_parameters, ALL_STRATIFICATIONS['diabetes'], diabetes_target_props
+            _tb_model, model_parameters, model_parameters['all_stratifications']['diabetes'], diabetes_target_props
         )
-    if "organ" in STRATIFY_BY:
+    if "organ" in model_parameters['stratify_by']:
         _tb_model = stratify_by_organ(
-            _tb_model, model_parameters, detect_rate_by_organ, ALL_STRATIFICATIONS['organ']
+            _tb_model, model_parameters, detect_rate_by_organ, model_parameters['all_stratifications']['organ']
         )
-    if "location" in STRATIFY_BY:
-        _tb_model = stratify_by_location(_tb_model, model_parameters, ALL_STRATIFICATIONS['location'])
+    if "location" in model_parameters['stratify_by']:
+        _tb_model = \
+            stratify_by_location(_tb_model, model_parameters, model_parameters['all_stratifications']['location'])
 
     return _tb_model
-
-

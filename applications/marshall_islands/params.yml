@@ -1,6 +1,31 @@
 ---
 # Parameters used to build the Marshall Island model.
 default:
+
+  # Stratifications to implement - comment out/remove as required to enable model to run more quickly
+  stratify_by:
+    - age
+    - location
+    - organ
+    - diabetes
+  all_stratifications:
+    organ:
+      - smearpos
+      - smearneg
+      - extrapul
+    age:
+      - '0'
+      - '5'
+      - '15'
+      - '35'
+      - '50'
+    location:
+      - majuro
+      - ebeye
+      - otherislands
+    diabetes:
+      - diabetic
+      - nodiabetes
   start_time: 1940.0
   end_time: 2035.0
   time_step: 0.25
@@ -96,6 +121,13 @@ default:
   acf_rate: 0.0
   acf_ltbi_rate: 0.0
   crude_birth_rate: 35.0 / 1e3
+
+  # Stratification(s) over which to disaggregate notifications and incidence
+  notification_stratifications:
+    - location
+  incidence_stratification:
+    - location
+    - age
 
 # When the scenarios start running
 scenario_start: 1990

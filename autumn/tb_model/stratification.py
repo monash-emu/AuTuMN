@@ -176,23 +176,23 @@ def stratify_by_location(_tb_model, model_parameters, location_strata):
     for beta_type in ["", "_late_latent", "_recovered"]:
         location_adjustments["contact_rate" + beta_type] = scaled_relative_risks_loc
 
-    location_adjustments["case_detection"] = {}
-    for stratum in location_strata:
-        location_adjustments["case_detection"][stratum] = model_parameters[
-            "case_detection_" + stratum + "_multiplier"
-            ]
+    # location_adjustments["case_detection"] = {}
+    # for stratum in location_strata:
+    #     location_adjustments["case_detection"][stratum] = model_parameters[
+    #         "case_detection_" + stratum + "_multiplier"
+    #         ]
 
-    location_adjustments["acf_coverage"] = {}
-    for stratum in location_strata:
-        location_adjustments["acf_coverage"][stratum] = model_parameters[
-            "acf_" + stratum + "_coverage"
-            ]
-
-    location_adjustments["acf_ltbi_coverage"] = {}
-    for stratum in location_strata:
-        location_adjustments["acf_ltbi_coverage"][stratum] = model_parameters[
-            "acf_ltbi_" + stratum + "_coverage"
-            ]
+    # location_adjustments["acf_coverage"] = {}
+    # for stratum in location_strata:
+    #     location_adjustments["acf_coverage"][stratum] = model_parameters[
+    #         "acf_" + stratum + "_coverage"
+    #         ]
+    #
+    # location_adjustments["acf_ltbi_coverage"] = {}
+    # for stratum in location_strata:
+    #     location_adjustments["acf_ltbi_coverage"][stratum] = model_parameters[
+    #         "acf_ltbi_" + stratum + "_coverage"
+    #         ]
 
     _tb_model.stratify(
         "location",

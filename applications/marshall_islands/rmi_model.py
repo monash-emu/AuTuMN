@@ -96,8 +96,8 @@ def build_rmi_model(update_params={}):
     flows = add_latency_progression(flows)
     flows = add_case_detection(flows, compartments)
     flows = add_treatment_flows(flows)
-    flows = add_acf(flows, compartments)
-    flows = add_acf_ltbi(flows)
+    # flows = add_acf(flows, compartments)
+    # flows = add_acf_ltbi(flows)
 
     # Make sure incidence and notifications are tracked during integration
     out_connections = {}

@@ -24,7 +24,6 @@ from autumn.tb_model import (
     add_standard_natural_history_flows,
     add_standard_infection_flows,
     add_birth_rate_functions,
-    create_output_connections_for_incidence_by_stratum,
     list_all_strata_for_mortality,
 )
 from autumn.tool_kit import progressive_step_function_maker
@@ -35,11 +34,7 @@ file_dir = os.path.dirname(os.path.abspath(__file__))
 INPUT_DB_PATH = os.path.join(constants.DATA_PATH, "inputs.db")
 PARAMS_PATH = os.path.join(file_dir, "params.yml")
 
-# STRATIFY_BY = ["age"]
-# STRATIFY_BY = ["age", "location"]
-# STRATIFY_BY = ['age', 'organ']
-# STRATIFY_BY = ['age', 'diabetes']
-# STRATIFY_BY = ['age', 'diabetes', 'organ']
+# Stratifications to implement - comment out as required to enable model to run more quickly
 STRATIFY_BY = ["age", "location", 'organ', 'diabetes']
 
 ALL_STRATIFICATIONS = {
@@ -49,10 +44,10 @@ ALL_STRATIFICATIONS = {
     "diabetes": ["diabetic", "nodiabetes"],
 }
 
+# Stratification(s) over which to disaggregate notifications and incidence
 NOTIFICATION_STRATIFICATIONS = (
     ['location']
 )
-
 INCIDENCE_STRATIFICATIONS = (
     ['location', 'age']
 )
@@ -79,7 +74,6 @@ def build_rmi_model(update_params={}):
     :return: StratifiedModel
         The final model with all parameters and stratifications
     """
-
     input_database = Database(database_name=INPUT_DB_PATH)
 
     # Define compartments and initial conditions
@@ -184,13 +178,13 @@ def build_rmi_model(update_params={}):
     base_detection_rate = detect_rate_by_organ['smearpos' if 'organ' in STRATIFY_BY else "overall"]
     treatment_completion_rate = lambda time: build_rmi_timevariant_tsr()(time) / model_parameters['treatment_duration']
 
-    # set acf screening rate using proportion of population reached and duration of intervention
+    # Set acf screening rate using proportion of population reached and duration of intervention
     acf_screening_rate = -numpy.log(1 - 0.9) / 0.5
     acf_rate_over_time = progressive_step_function_maker(
         2018.2, 2018.7, acf_screening_rate, scaling_time_fraction=0.3
     )
 
-    # initialise acf_rate function
+    # Initialise acf_rate function
     acf_rate_function = (
         lambda t: model_parameters["acf_coverage"]
                   * (acf_rate_over_time(t))
@@ -241,27 +235,6 @@ def build_rmi_model(update_params={}):
         )
     if "location" in STRATIFY_BY:
         _tb_model = stratify_by_location(_tb_model, model_parameters, ALL_STRATIFICATIONS['location'])
-
-    # def calculate_reported_majuro_prevalence(model, time):
-    #     if "location" not in STRATIFY_BY:
-    #         return 0.0
-    #     actual_prev = 0.0
-    #     pop_majuro = 0.0
-    #     for i, compartment in enumerate(model.compartment_names):
-    #         if "majuro" in compartment:
-    #             pop_majuro += model.compartment_values[i]
-    #             if "infectious" in compartment:
-    #                 actual_prev += model.compartment_values[i]
-    #     return (
-    #             1.0e5
-    #             * actual_prev
-    #             / pop_majuro
-    #             * (1.0 + model_parameters["over_reporting_prevalence_proportion"])
-    #     )
-    #
-    # _tb_model.derived_output_functions.update(
-    #     {"reported_majuro_prevalence": calculate_reported_majuro_prevalence}
-    # )
 
     return _tb_model
 

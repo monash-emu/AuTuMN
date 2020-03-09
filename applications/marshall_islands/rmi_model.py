@@ -95,7 +95,7 @@ def build_rmi_model(update_params={}):
     flows = add_standard_natural_history_flows(flows)
     flows = add_latency_progression(flows)
     flows = add_case_detection(flows, compartments)
-    flows = add_treatment_flows(flows, compartments)
+    flows = add_treatment_flows(flows)
     flows = add_acf(flows, compartments)
     flows = add_acf_ltbi(flows)
 
@@ -144,14 +144,16 @@ def build_rmi_model(update_params={}):
 
     # Find base case detection rate and time-variant treatment completion function
     base_detection_rate = detect_rate_by_organ['smearpos' if 'organ' in model_parameters['stratify_by'] else "overall"]
-    treatment_completion_rate = lambda time: build_scale_up_function(model_parameters['tsr'])(time) / \
+    treatment_success_rate = lambda time: build_scale_up_function(model_parameters['tsr'])(time) / \
+                                             model_parameters['treatment_duration']
+    treatment_nonsuccess_rate = lambda time: (1. - build_scale_up_function(model_parameters['tsr'])(time)) / \
                                              model_parameters['treatment_duration']
 
     # Set acf screening rate using proportion of population reached and duration of intervention
-    acf_screening_rate = -numpy.log(1 - 0.9) / 0.5
-    acf_rate_over_time = progressive_step_function_maker(
-        2018.2, 2018.7, acf_screening_rate, scaling_time_fraction=0.3
-    )
+    # acf_screening_rate = -numpy.log(1 - 0.9) / 0.5
+    # acf_rate_over_time = progressive_step_function_maker(
+    #     2018.2, 2018.7, acf_screening_rate, scaling_time_fraction=0.3
+    # )
 
     # Initialise acf_rate function
     # acf_rate_function = (
@@ -170,7 +172,10 @@ def build_rmi_model(update_params={}):
     add_time_variant_parameter_to_model(
         _tb_model, 'case_detection', base_detection_rate, len(model_parameters['stratify_by']))
     add_time_variant_parameter_to_model(
-        _tb_model, 'treatment_rate', treatment_completion_rate, len(model_parameters['stratify_by']))
+        _tb_model, 'treatment_success', treatment_success_rate, len(model_parameters['stratify_by']))
+    add_time_variant_parameter_to_model(
+        _tb_model, 'treatment_nonsuccess', treatment_nonsuccess_rate, len(model_parameters['stratify_by'])
+    )
     # add_time_variant_parameter_to_model(
     #     _tb_model, 'acf_rate', acf_rate_function, len(model_parameters['stratify_by']))
     # add_time_variant_parameter_to_model(

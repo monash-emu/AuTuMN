@@ -118,9 +118,15 @@ LATENCY_REINFECTION = [
 TREATMENT_FLOWS = [
     {
         'type': Flow.STANDARD,
-        'parameter': 'treatment_rate',
+        'parameter': 'treatment_success',
         'origin': Compartment.ON_TREATMENT,
         'to': Compartment.RECOVERED,
+    },
+    {
+        'type': Flow.STANDARD,
+        'parameter': 'treatment_nonsuccess',
+        'origin': Compartment.ON_TREATMENT,
+        'to': Compartment.INFECTIOUS,
     }
 ]
 
@@ -179,9 +185,8 @@ def add_case_detection(list_of_flows, available_compartments):
     return list_of_flows
 
 
-def add_treatment_flows(list_of_flows, available_compartments):
-    if Compartment.RECOVERED in available_compartments:
-        list_of_flows += TREATMENT_FLOWS
+def add_treatment_flows(list_of_flows):
+    list_of_flows += TREATMENT_FLOWS
     return list_of_flows
 
 

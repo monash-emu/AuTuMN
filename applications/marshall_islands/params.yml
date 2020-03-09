@@ -117,15 +117,14 @@ default:
 
   # Treatment success rate
   tsr:
-    1950.: 0.
-    1970.: 0.2
     1994.: 0.6
     2000.: 0.85
     2010.: 0.87
     2016.: 0.87
 
-  # Treatment rate
-  treatment_rate: 2.
+  # Treatment rate - I don't think the first two parameters are used, but are necessary to pass validation at __init__
+  treatment_success: 2.
+  treatment_nonsuccess: 0.
   treatment_duration: 0.5
 
   # ACF for intervention groups

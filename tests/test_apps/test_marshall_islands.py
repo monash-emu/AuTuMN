@@ -10,7 +10,7 @@ IS_GITHUB_CI = os.environ.get("GITHUB_ACTION", False)
 
 
 # FIXME: the order of these tests matter, STRATIFY_BY patch isn't working as expected.
-@mock.patch("applications.marshall_islands.rmi_model.STRATIFY_BY", ["age"])
+# @mock.patch("applications.marshall_islands.rmi_model.STRATIFY_BY", ["age"])
 @mock.patch("builtins.input", return_value="")
 @mock.patch("autumn.tb_model.outputs.Outputs")
 def test_run_marshall_model(mock_output_cls, mock_input):

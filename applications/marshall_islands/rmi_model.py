@@ -9,9 +9,11 @@ from summer_py.summer_model import (
 from autumn import constants
 from autumn.constants import Compartment
 from autumn.tb_model.outputs import create_request_stratified_incidence
+from autumn.tb_model.parameters import add_time_variant_parameter_to_model
 from autumn.curve import scale_up_function
 from autumn.db import Database
-from autumn.tb_model.flows import add_case_detection, add_latency_progression, add_acf, add_acf_ltbi
+from autumn.tb_model.flows import \
+    add_case_detection, add_latency_progression, add_acf, add_acf_ltbi, add_treatment_flows
 from autumn.tb_model.latency_params import \
     update_transmission_parameters, manually_create_age_specific_latency_parameters
 from autumn.tb_model.case_detection_params import find_organ_specific_cdr
@@ -65,6 +67,14 @@ def build_rmi_timevariant_tsr():
 
 
 def build_rmi_model(update_params={}):
+    """
+    Build the master function to run the TB model for the Republic of the Marshall Islands
+
+    :param update_params: dict
+        Any parameters that need to be updated for the current run
+    :return: StratifiedModel
+        The final model with all parameters and stratifications
+    """
 
     input_database = Database(database_name=INPUT_DB_PATH)
 
@@ -74,6 +84,7 @@ def build_rmi_model(update_params={}):
         Compartment.EARLY_LATENT,
         Compartment.LATE_LATENT,
         Compartment.INFECTIOUS,
+        Compartment.ON_TREATMENT,
         Compartment.RECOVERED,
         Compartment.LTBI_TREATED,
     ]
@@ -99,7 +110,8 @@ def build_rmi_model(update_params={}):
             [
                 Compartment.RECOVERED,
                 Compartment.LATE_LATENT,
-                Compartment.LTBI_TREATED]
+                Compartment.LTBI_TREATED
+            ]
         )
 
     # Set integration times
@@ -115,8 +127,9 @@ def build_rmi_model(update_params={}):
     flows = add_standard_latency_flows(flows)
     flows = add_standard_natural_history_flows(flows)
     flows = add_latency_progression(flows)
-    flows = add_case_detection(flows)
-    flows = add_acf(flows)
+    flows = add_case_detection(flows, compartments)
+    flows = add_treatment_flows(flows, compartments)
+    flows = add_acf(flows, compartments)
     flows = add_acf_ltbi(flows)
 
     # Make sure incidence is tracked during integration
@@ -155,13 +168,9 @@ def build_rmi_model(update_params={}):
             }
         )
 
-    # load time-variant treatment success rate
-    rmi_tsr = build_rmi_timevariant_tsr()
-
-    # tb control recovery rate (detection and treatment) function set for overall if not organ-specific,
-    # smearpos otherwise
-    tb_control_recovery_rate = \
-        lambda t: rmi_tsr(t) * detect_rate_by_organ['smearpos' if 'organ' in STRATIFY_BY else "overall"](t)
+    # Find base case detection rate and time-variant treatment completion function
+    base_detection_rate = detect_rate_by_organ['smearpos' if 'organ' in STRATIFY_BY else "overall"]
+    treatment_completion_rate = lambda time: build_rmi_timevariant_tsr()(time) / model_parameters['treatment_duration']
 
     # set acf screening rate using proportion of population reached and duration of intervention
     acf_screening_rate = -numpy.log(1 - 0.9) / 0.5
@@ -174,7 +183,6 @@ def build_rmi_model(update_params={}):
         lambda t: model_parameters["acf_coverage"]
                   * (acf_rate_over_time(t))
                   * model_parameters["acf_sensitivity"]
-                  * (rmi_tsr(t))
     )
     acf_ltbi_rate_function = (
         lambda t: model_parameters["acf_coverage"]
@@ -183,18 +191,11 @@ def build_rmi_model(update_params={}):
                   * model_parameters["acf_ltbi_efficacy"]
     )
 
-    # assign newly created functions to model parameters
-    if len(STRATIFY_BY) == 0:
-        _tb_model.time_variants["case_detection"] = tb_control_recovery_rate
-        _tb_model.time_variants["acf_rate"] = acf_rate_function
-        _tb_model.time_variants["acf_ltbi_rate"] = acf_ltbi_rate_function
-    else:
-        _tb_model.adaptation_functions["case_detection"] = tb_control_recovery_rate
-        _tb_model.parameters["case_detection"] = "case_detection"
-        _tb_model.adaptation_functions["acf_rate"] = acf_rate_function
-        _tb_model.parameters["acf_rate"] = "acf_rate"
-        _tb_model.adaptation_functions["acf_ltbi_rate"] = acf_ltbi_rate_function
-        _tb_model.parameters["acf_ltbi_rate"] = "acf_ltbi_rate"
+    # Assign newly created functions to model parameters
+    add_time_variant_parameter_to_model(_tb_model, 'case_detection', base_detection_rate, len(STRATIFY_BY))
+    add_time_variant_parameter_to_model(_tb_model, 'treatment_rate', treatment_completion_rate, len(STRATIFY_BY))
+    add_time_variant_parameter_to_model(_tb_model, 'acf_rate', acf_rate_function, len(STRATIFY_BY))
+    add_time_variant_parameter_to_model(_tb_model, 'acf_ltbi_rate', acf_ltbi_rate_function, len(STRATIFY_BY))
 
     # Stratification processes
     if "age" in STRATIFY_BY:
@@ -277,11 +278,6 @@ def build_rmi_model(update_params={}):
                     if dict_flows["origin"][index] == model.compartment_names[comp_idx]
                 ][0]
                 param_name = dict_flows["parameter"][flow_index]
-                detection_tx_rate = model.get_parameter_value(param_name, time)
-                tsr = rmi_tsr(time)
-                if tsr > 0.0:
-                    total_notifications += infectious_pop * detection_tx_rate / tsr
-
                 return total_notifications
 
             return calculate_notifications

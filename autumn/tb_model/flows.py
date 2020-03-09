@@ -85,7 +85,7 @@ ACF_FLOWS = [
         "type": Flow.STANDARD,
         "parameter": "acf_rate",
         "origin": Compartment.INFECTIOUS,
-        "to": Compartment.RECOVERED,
+        "to": Compartment.ON_TREATMENT,
     }
 ]
 
@@ -103,7 +103,6 @@ CASE_DETECTION_FLOWS = [
         "type": Flow.STANDARD,
         "parameter": "case_detection",
         "origin": Compartment.INFECTIOUS,
-        "to": Compartment.RECOVERED,
     }
 ]
 
@@ -113,6 +112,15 @@ LATENCY_REINFECTION = [
         "parameter": "contact_rate_ltbi_treated",
         "origin": "ltbi_treated",
         "to": Compartment.EARLY_LATENT,
+    }
+]
+
+TREATMENT_FLOWS = [
+    {
+        'type': Flow.STANDARD,
+        'parameter': 'treatment_rate',
+        'origin': Compartment.ON_TREATMENT,
+        'to': Compartment.RECOVERED,
     }
 ]
 
@@ -157,18 +165,36 @@ def add_standard_natural_history_flows(list_of_flows):
     return list_of_flows
 
 
-def add_case_detection(list_of_flows):
+def add_case_detection(list_of_flows, available_compartments):
     """
     Adds standard passive (DOTS-based) case detection flows
     """
+    case_detection_flows = CASE_DETECTION_FLOWS
+    case_detection_flows[0].update({
+        'to': Compartment.ON_TREATMENT
+        if Compartment.ON_TREATMENT in available_compartments
+        else Compartment.RECOVERED
+    })
     list_of_flows += CASE_DETECTION_FLOWS
     return list_of_flows
 
 
-def add_acf(list_of_flows):
+def add_treatment_flows(list_of_flows, available_compartments):
+    if Compartment.RECOVERED in available_compartments:
+        list_of_flows += TREATMENT_FLOWS
+    return list_of_flows
+
+
+def add_acf(list_of_flows, available_compartments):
     """
     Adds active case finding flows
     """
+    acf_flows = ACF_FLOWS
+    acf_flows[0].update({
+        'to': Compartment.ON_TREATMENT
+        if Compartment.ON_TREATMENT in available_compartments
+        else Compartment.RECOVERED
+    })
     list_of_flows += ACF_FLOWS
     return list_of_flows
 

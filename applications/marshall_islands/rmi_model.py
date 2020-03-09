@@ -154,27 +154,27 @@ def build_rmi_model(update_params={}):
     )
 
     # Initialise acf_rate function
-    acf_rate_function = (
-        lambda t: model_parameters["acf_coverage"]
-                  * (acf_rate_over_time(t))
-                  * model_parameters["acf_sensitivity"]
-    )
-    acf_ltbi_rate_function = (
-        lambda t: model_parameters["acf_coverage"]
-                  * (acf_rate_over_time(t))
-                  * model_parameters["acf_ltbi_sensitivity"]
-                  * model_parameters["acf_ltbi_efficacy"]
-    )
+    # acf_rate_function = (
+    #     lambda t: model_parameters["acf_coverage"]
+    #               * (acf_rate_over_time(t))
+    #               * model_parameters["acf_sensitivity"]
+    # )
+    # acf_ltbi_rate_function = (
+    #     lambda t: model_parameters["acf_coverage"]
+    #               * (acf_rate_over_time(t))
+    #               * model_parameters["acf_ltbi_sensitivity"]
+    #               * model_parameters["acf_ltbi_efficacy"]
+    # )
 
     # Assign newly created functions to model parameters
     add_time_variant_parameter_to_model(
         _tb_model, 'case_detection', base_detection_rate, len(model_parameters['stratify_by']))
     add_time_variant_parameter_to_model(
         _tb_model, 'treatment_rate', treatment_completion_rate, len(model_parameters['stratify_by']))
-    add_time_variant_parameter_to_model(
-        _tb_model, 'acf_rate', acf_rate_function, len(model_parameters['stratify_by']))
-    add_time_variant_parameter_to_model(
-        _tb_model, 'acf_ltbi_rate', acf_ltbi_rate_function, len(model_parameters['stratify_by']))
+    # add_time_variant_parameter_to_model(
+    #     _tb_model, 'acf_rate', acf_rate_function, len(model_parameters['stratify_by']))
+    # add_time_variant_parameter_to_model(
+    #     _tb_model, 'acf_ltbi_rate', acf_ltbi_rate_function, len(model_parameters['stratify_by']))
 
     # Stratification processes
     if "age" in model_parameters['stratify_by']:
@@ -184,23 +184,17 @@ def build_rmi_model(update_params={}):
             )
         _tb_model = \
             stratify_by_age(
-                _tb_model, age_specific_latency_parameters, input_database, model_parameters['all_stratifications']['age']
+                _tb_model,
+                age_specific_latency_parameters,
+                input_database,
+                model_parameters['all_stratifications']['age']
             )
     if "diabetes" in model_parameters['stratify_by']:
-        diab_target_props = {
-            0: 0.01,
-            5: 0.05,
-            15: 0.2,
-            35: 0.4,
-            50: 0.7
-        }
-        diabetes_target_props = {}
-        for age_group in model_parameters['all_stratifications']['age']:
-            diabetes_target_props.update({
-                'age_' + age_group: {'diabetic': diab_target_props[int(age_group)]}
-            })
         _tb_model = stratify_by_diabetes(
-            _tb_model, model_parameters, model_parameters['all_stratifications']['diabetes'], diabetes_target_props
+            _tb_model,
+            model_parameters,
+            model_parameters['all_stratifications']['diabetes'],
+            model_parameters['diabetes_target_props']
         )
     if "organ" in model_parameters['stratify_by']:
         _tb_model = stratify_by_organ(

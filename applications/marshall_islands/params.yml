@@ -31,6 +31,14 @@ default:
   time_step: 0.25
   start_population: 14000
 
+  # Diabetes
+  diabetes_target_props:
+    0: 0.01
+    5: 0.05
+    15: 0.2
+    35: 0.4
+    50: 0.7
+
   # Base model definition
   contact_rate: 12.
 #  beta_decay_rate: 0.06

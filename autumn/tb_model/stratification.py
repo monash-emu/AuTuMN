@@ -81,7 +81,12 @@ def stratify_by_age(model_to_stratify, age_specific_latency_parameters, input_da
     return model_to_stratify
 
 
-def stratify_by_diabetes(model_to_stratify, model_parameters, diabetes_strata, diabetes_target_props):
+def stratify_by_diabetes(model_to_stratify, model_parameters, diabetes_strata, requested_diabetes_proportions):
+    diabetes_target_props = {}
+    for age_group in model_parameters['all_stratifications']['age']:
+        diabetes_target_props.update({
+            'age_' + age_group: {'diabetic': requested_diabetes_proportions[int(age_group)]}
+        })
     diabetes_starting_and_entry_props = {
         "diabetic": 0.01,
         "nodiabetes": 0.99

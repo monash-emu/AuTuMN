@@ -9,6 +9,7 @@ from summer_py.summer_model import (
 from autumn import constants
 from autumn.constants import Compartment
 from autumn.tb_model.outputs import create_request_stratified_incidence
+from autumn.tb_model.parameters import add_time_variant_parameter_to_model
 from autumn.curve import scale_up_function
 from autumn.db import Database
 from autumn.tb_model.flows import \
@@ -168,9 +169,7 @@ def build_rmi_model(update_params={}):
         )
 
     # Generate time-variant treatment completion function
-    treatment_rate = model_parameters['treatment_rate']
-    def treatment_completion_rate(time):
-        return build_rmi_timevariant_tsr()(time) * treatment_rate
+    treatment_completion_rate = lambda time: build_rmi_timevariant_tsr()(time) / model_parameters['treatment_duration']
 
     # tb control recovery rate (detection and treatment) function set for overall if not organ-specific,
     # smearpos otherwise
@@ -195,21 +194,11 @@ def build_rmi_model(update_params={}):
                   * model_parameters["acf_ltbi_efficacy"]
     )
 
-    # assign newly created functions to model parameters
-    if len(STRATIFY_BY) == 0:
-        _tb_model.time_variants["case_detection"] = tb_control_recovery_rate
-        _tb_model.time_variants["acf_rate"] = acf_rate_function
-        _tb_model.time_variants["acf_ltbi_rate"] = acf_ltbi_rate_function
-        _tb_model.time_variants['treatment_rate'] = treatment_completion_rate
-    else:
-        _tb_model.adaptation_functions["case_detection"] = tb_control_recovery_rate
-        _tb_model.parameters["case_detection"] = "case_detection"
-        _tb_model.parameters['treatment_rate'] = 'treatment_rate'
-        _tb_model.adaptation_functions['treatment_rate'] = treatment_completion_rate
-        _tb_model.adaptation_functions["acf_rate"] = acf_rate_function
-        _tb_model.parameters["acf_rate"] = "acf_rate"
-        _tb_model.adaptation_functions["acf_ltbi_rate"] = acf_ltbi_rate_function
-        _tb_model.parameters["acf_ltbi_rate"] = "acf_ltbi_rate"
+    # Assign newly created functions to model parameters
+    add_time_variant_parameter_to_model(_tb_model, 'case_detection', tb_control_recovery_rate, len(STRATIFY_BY))
+    add_time_variant_parameter_to_model(_tb_model, 'treatment_rate', treatment_completion_rate, len(STRATIFY_BY))
+    add_time_variant_parameter_to_model(_tb_model, 'acf_rate', acf_rate_function, len(STRATIFY_BY))
+    add_time_variant_parameter_to_model(_tb_model, 'acf_ltbi_rate', acf_ltbi_rate_function, len(STRATIFY_BY))
 
     # Stratification processes
     if "age" in STRATIFY_BY:

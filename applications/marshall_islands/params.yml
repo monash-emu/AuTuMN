@@ -69,6 +69,7 @@ default:
 
   # Treatment rate
   treatment_rate: 2.
+  treatment_duration: 0.5
 
   # ACF for intervention groups
   acf_coverage: 0.0

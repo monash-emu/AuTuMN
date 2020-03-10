@@ -1,0 +1,175 @@
+---
+# Parameters used to build the Marshall Island model.
+default:
+
+  # Stratifications to implement - comment out/remove as required to enable model to run more quickly
+  stratify_by:
+    - age
+    - location
+    - organ
+    - diabetes
+  all_stratifications:
+    organ:
+      - smearpos
+      - smearneg
+      - extrapul
+    age:
+      - '0'
+      - '5'
+      - '15'
+      - '35'
+      - '50'
+    location:
+      - majuro
+      - ebeye
+      - otherislands
+    diabetes:
+      - diabetic
+      - nodiabetes
+  start_time: 1940.0
+  end_time: 2035.0
+  time_step: 0.25
+  start_population: 14000
+
+  # Diabetes
+  diabetes_target_props:
+    0: 0.01
+    5: 0.05
+    15: 0.2
+    35: 0.4
+    50: 0.7
+
+  # Base model definition
+  contact_rate: 12.
+#  beta_decay_rate: 0.06
+#  minimum_tv_beta_multiplier: 0.5
+  rr_transmission_recovered: 0.6
+  rr_transmission_late_latent: 0.21
+  rr_transmission_ltbi_treated: 0.21
+#  latency_adjustment: 2.  # used to modify progression rates during calibration
+  recovery: 0.231 # this is for smear-positive TB
+  infect_death: 0.389 # this is for smear-positive TB
+  prop_smearpos: 0.5
+  cdr_multiplier: 1.0
+#  # Latency parameters - aggregated - best estimate values from Ragonnet et al "Optimally capturing latency dynamics in models of tuberculosis
+#  #transmission" 2017 Epidemics
+#  early_progression: 1.1e-3
+#  stabilisation: 1.0e-2
+#  late_progression: 5.5e-6
+#  # latency parameters - age-specific - best estimate values from Ragonnet et al "Optimally capturing latency dynamics in models of tuberculosis
+#  #  #transmission" 2017 Epidemics
+  early_progression_0: 6.6e-3
+  early_progression_5: 2.7e-3
+  early_progression_15: 2.7e-4
+  stabilisation_0: 1.2e-2
+  stabilisation_5: 1.2e-2
+  stabilisation_15: 5.4e-3
+  late_progression_0: 1.9e-11
+  late_progression_5: 6.4e-6
+#  late_progression_15: 3.3e-6
+
+  # Latency parameters - aggregated - upper values from Ragonnet et al "Optimally capturing latency dynamics in models of tuberculosis
+  #transmission" 2017 Epidemics
+  early_progression: 1.5e-3 * 365.251
+  stabilisation: 1.4e-2 * 365.251
+  late_progression: 1.1e-5 * 365.251
+  # latency parameters - age-specific - upper values from Ragonnet et al "Optimally capturing latency dynamics in models of tuberculosis
+  #  #transmission" 2017 Epidemics
+#  early_progression_0: 9.5e-3
+#  early_progression_5: 3.9e-3
+#  early_progression_15: 5.1e-4
+#  stabilisation_0: 1.8e-2
+#  stabilisation_5: 1.6e-2
+#  stabilisation_15: 1.1e-2
+#  late_progression_0: 1.6e-5
+#  late_progression_5: 1.9e-5
+  late_progression_15: 1.0e-5
+
+  # Diagnostic sensitivity by organ status:
+  diagnostic_sensitivity_smearpos: 1.0
+  diagnostic_sensitivity_smearneg: 0.7
+  diagnostic_sensitivity_extrapul: 0.5
+
+  # Adjustments by location and diabetes
+  rr_transmission_ebeye: 1.75 # reference majuro
+  rr_transmission_otherislands: 1.0 # reference majuro
+  rr_progression_diabetic: 5.73 # reference: no_diabetes
+
+  # Raw CDR values
+  cdr:
+    1950.: 0.
+    1980.: 0.2
+    1990.: 0.3
+    2000.: 0.4
+    2010.: 0.45
+    2015.: 0.5
+
+  # Not exactly sure what this is
+  target_organ_props:
+    smearpos: 0.5
+    smearneg: 0.3
+    extrapul: 0.2
+
+  # Case detection adjustment for location
+#  case_detection_majuro_multiplier: 1.0
+#  case_detection_ebeye_multiplier: 1.5
+#  case_detection_otherislands_multiplier: 1.0
+
+  # Treatment success rate
+  tsr:
+    1994.: 0.6
+    2000.: 0.85
+    2010.: 0.87
+    2016.: 0.87
+
+  # Treatment rate - I don't think the first two parameters are used, but are necessary to pass validation at __init__
+  treatment_success: 2.
+  treatment_nonsuccess: 0.
+  treatment_duration: 0.5
+
+  # ACF for intervention groups
+  acf_coverage: 0.0
+  acf_sensitivity: 0.9
+  acf_majuro_coverage: 0.0
+  acf_ebeye_coverage: 0.0
+  acf_otherislands_coverage: 0.0
+
+  # LTBI ACF for intervention groups
+  acf_ltbi_coverage: 0.0
+  acf_ltbi_sensitivity: 0.8
+  acf_ltbi_efficacy: 0.72 # higher than ipt_efficacy as higher completion rate
+  acf_ltbi_majuro_coverage: 0.0
+  acf_ltbi_ebeye_coverage: 0.0
+  acf_ltbi_otherislands_coverage: 0.0
+
+  # Prevalence adjustment
+  over_reporting_prevalence_proportion: 0.2
+
+  # Few more parameters that had previously been added manually in rmi_model.py
+  universal_death_rate: 1.0 / 70.0
+  case_detection: 0.0
+  ipt_rate: 0.0
+  acf_rate: 0.0
+  acf_ltbi_rate: 0.0
+  crude_birth_rate: 35.0 / 1e3
+
+  # Stratification(s) over which to disaggregate notifications and incidence
+  notification_stratifications:
+    - location
+  incidence_stratification:
+    - location
+    - age
+
+# When the scenarios start running
+scenario_start: 1990
+
+# N.B: Scenario keys have to be integers 1-N, or it'll break downstream dashboards.
+scenarios: {}
+## # The ACF intervention that they actually did in RMI in 2017/2018
+# 1:
+#   acf_majuro_coverage: 1.0
+#   acf_ebeye_coverage: 1.0
+#   acf_otherislands_coverage: 0.0
+#   acf_ltbi_majuro_coverage: 1.0
+#   acf_ltbi_ebeye_coverage: 0.0
+#   acf_ltbi_otherislands_coverage: 0.0

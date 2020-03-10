@@ -8,7 +8,7 @@ You can access this script from your CLI by running:
 """
 import click
 
-from applications.marshall_islands.rmi_single_run import run_model as rmi_run_model
+from applications.run_single_application import run_model as rmi_run_model
 from applications.vietnam.model import run_model as run_vietnam_model
 from applications.mongolia.mongolia_calibration import (
     run_calibration_chain as run_mongolia_calibration_chain,

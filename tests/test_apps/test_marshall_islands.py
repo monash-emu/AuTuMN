@@ -4,7 +4,7 @@ from unittest import mock
 from summer_py.summer_model import StratifiedModel
 
 from applications.marshall_islands.rmi_model import build_rmi_model
-from applications.marshall_islands.rmi_single_run import run_model
+from applications.run_single_application import run_model
 
 IS_GITHUB_CI = os.environ.get("GITHUB_ACTION", False)
 

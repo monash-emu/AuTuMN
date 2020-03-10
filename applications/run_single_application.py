@@ -1,5 +1,5 @@
 """
-Build and run the Republic of Marshall Islands (RMI) model, storing the outputs.
+Build and run any AuTuMN model, storing the outputs
 """
 
 import os
@@ -13,15 +13,13 @@ from autumn.tool_kit.timer import Timer
 from autumn.tool_kit import run_multi_scenario
 from autumn.tool_kit.utils import make_directory_if_absent, record_parameter_request, record_run_metadata
 from autumn.tb_model import add_combined_incidence, store_run_models, create_multi_scenario_outputs
-from autumn.tb_model.outputs import compare_marshall_notifications
 from autumn import constants
 
 from applications.marshall_islands.rmi_model import build_rmi_model
+from applications.covid_19.covid_model import build_covid_model
 
 
 FILE_DIR = os.path.dirname(os.path.abspath(__file__))
-PARAMS_PATH = os.path.join(FILE_DIR, "params.yml")
-OUTPUTS_PATH = os.path.join(FILE_DIR, "outputs.yml")
 
 # Settings for the hand-coded Euler method.
 # It's not clear whether this produces reliable results, but is likely faster than odeint
@@ -45,15 +43,18 @@ ODEINT_KWARGS = {
 SOLVER_KWARGS = ODEINT_KWARGS
 
 
-def run_model():
+def run_model(application):
     # Load user information for parameters and outputs from YAML files
-    with open(PARAMS_PATH, "r") as yaml_file:
+    params_path = os.path.join(FILE_DIR, application, "params.yml")
+    outputs_path = os.path.join(FILE_DIR, application, "outputs.yml")
+
+    with open(params_path, "r") as yaml_file:
         params = yaml.safe_load(yaml_file)
-    with open(OUTPUTS_PATH, "r") as yaml_file:
+    with open(outputs_path, "r") as yaml_file:
         output_options = yaml.safe_load(yaml_file)
 
     # Ensure project folder exists
-    project_dir = os.path.join(constants.DATA_PATH, "marshall_islands")
+    project_dir = os.path.join(constants.DATA_PATH, application)
     if not os.path.exists(project_dir):
         os.makedirs(project_dir, exist_ok=True)
 
@@ -78,9 +79,14 @@ def run_model():
     scenario_list = [0, *scenario_params.keys()]
 
     # Run the model
+    if application == 'marshall_islands':
+        model_function = build_rmi_model
+    elif application == 'covid_19':
+        model_function = build_covid_model
+
     with Timer("Running model scenarios"):
         models = run_multi_scenario(
-            scenario_params, params["scenario_start"], build_rmi_model, run_kwargs=SOLVER_KWARGS,
+            scenario_params, params["scenario_start"], model_function, run_kwargs=SOLVER_KWARGS,
         )
 
     # Post-process and save model outputs
@@ -103,9 +109,7 @@ def run_model():
             models, out_dir=plot_path, scenario_list=scenario_list, **output_options,
             input_functions_to_plot=["case_detection"]
         )
-        # if len(models[0].all_stratifications) == 4:
-        #     compare_marshall_notifications(models, out_dir=plot_path, scenario_list=scenario_list, **output_options)
 
 
 if __name__ == "__main__":
-    run_model()
+    run_model('covid_19')

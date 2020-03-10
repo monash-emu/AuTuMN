@@ -81,8 +81,10 @@ def run_model(application):
     # Run the model
     if application == 'marshall_islands':
         model_function = build_rmi_model
+        functions_to_plot = ["case_detection"]
     elif application == 'covid_19':
         model_function = build_covid_model
+        functions_to_plot = []
 
     with Timer("Running model scenarios"):
         models = run_multi_scenario(
@@ -107,9 +109,9 @@ def run_model(application):
     with Timer("Plotting model outputs"):
         create_multi_scenario_outputs(
             models, out_dir=plot_path, scenario_list=scenario_list, **output_options,
-            input_functions_to_plot=["case_detection"]
+            input_functions_to_plot=functions_to_plot
         )
 
 
 if __name__ == "__main__":
-    run_model('marshall_islands')
+    run_model('covid_19')

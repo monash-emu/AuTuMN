@@ -17,6 +17,7 @@ class Compartment:
     """
 
     SUSCEPTIBLE = "susceptible"
+    EXPOSED = 'exposed'
     EARLY_LATENT = "early_latent"
     LATE_LATENT = "late_latent"
     INFECTIOUS = "infectious"

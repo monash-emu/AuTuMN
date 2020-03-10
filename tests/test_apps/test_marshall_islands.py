@@ -16,7 +16,7 @@ def test_run_marshall_model(mock_output_cls, mock_input):
     """
     Ensure Marshall Islands model runs.
     """
-    run_model()
+    run_model('marshall_islands')
 
 
 def test_build_marshall_model():

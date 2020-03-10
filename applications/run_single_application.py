@@ -112,4 +112,4 @@ def run_model(application):
 
 
 if __name__ == "__main__":
-    run_model('covid_19')
+    run_model('marshall_islands')

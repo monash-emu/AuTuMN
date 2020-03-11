@@ -90,6 +90,4 @@ def build_covid_model(update_params={}):
         death_output_categories=list_all_strata_for_mortality(compartments)
     )
 
-    _tb_model.transition_flows.to_csv('temp.csv')
-
     return _tb_model

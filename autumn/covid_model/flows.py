@@ -32,7 +32,7 @@ PROGRESSION_FLOWS = [
 RECOVERY_FLOWS = [
     {
         'type': Flow.STANDARD,
-        'parameter': 'recovery',
+        'parameter': 'within_infectious',
         'to': Compartment.RECOVERED,
     }
 ]

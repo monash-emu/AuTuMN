@@ -1,6 +1,6 @@
 import os
 import yaml
-
+import numpy as np
 from summer_py.summer_model import (
     StratifiedModel,
 )
@@ -14,7 +14,7 @@ from autumn.tool_kit.scenarios import get_model_times_from_inputs
 from autumn.covid_model.flows import \
     add_infection_flows, add_progression_flows, add_recovery_flows, add_within_exposed_flows, \
     add_within_infectious_flows, replicate_compartment, multiply_flow_value_for_multiple_compartments
-from autumn.covid_model.stratification import stratify_by_age
+from autumn.covid_model.stratification import stratify_by_age, stratify_by_location
 
 # Database locations
 file_dir = os.path.dirname(os.path.abspath(__file__))
@@ -53,7 +53,7 @@ def build_covid_model(update_params={}):
         )
     compartments, infectious_compartments, init_pop = \
         replicate_compartment(
-            model_parameters['n_infectious_compartments'], compartments, Compartment.INFECTIOUS
+            model_parameters['n_infectious_compartments'], compartments, Compartment.INFECTIOUS, infectious_seed=model_parameters['infectious_seed']
         )
 
     # Multiply the progression rate by the number of compartments to keep the average time in exposed the same
@@ -106,6 +106,21 @@ def build_covid_model(update_params={}):
         infectious_compartment=infectious_compartments
     )
 
-    _covid_model = stratify_by_age(_covid_model, model_parameters['all_stratifications']['agegroup'])
+    # Stratify model by age without demography
+    if 'agegroup' in model_parameters['stratify_by']:
+        _covid_model = \
+            stratify_by_age(
+                _covid_model, model_parameters['all_stratifications']['agegroup']
+            )
+
+    # Stratify model by location with heterogeneous mixing
+    if 'location' in model_parameters['stratify_by']:
+        location_mixing = np.array([0.9, 0.05, 0.05, 0.05, 0.9, 0.05, 0.05, 0.05, 0.9]).reshape(
+            (3, 3)
+        )
+        _covid_model = \
+            stratify_by_location(
+                _covid_model, location_mixing, model_parameters['all_stratifications']['location']
+            )
 
     return _covid_model

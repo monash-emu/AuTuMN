@@ -16,3 +16,17 @@ def stratify_by_age(model_to_stratify, age_strata):
         verbose=False,
     )
     return model_to_stratify
+
+
+def stratify_by_location(model_to_stratify, location_mixing, location_strata):
+    props_location = {'a': 0.333, 'b': 0.333, 'c': 0.334}
+    model_to_stratify.stratify(
+        "location",
+        location_strata,
+        [],
+        requested_proportions=props_location,
+        verbose=False,
+        entry_proportions=props_location,
+        mixing_matrix=location_mixing,
+    )
+    return model_to_stratify

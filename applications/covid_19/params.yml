@@ -11,6 +11,7 @@ default:
 
   # Stratifications to implement - comment out/remove as required to enable model to run more quickly
   stratify_by:
+    -
 #    - agegroup
 #    - location
   all_stratifications:

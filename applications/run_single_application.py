@@ -95,8 +95,6 @@ def run_model(application):
     # Post-process and save model outputs
     with Timer("Post processing model outputs"):
         # Automatically add combined incidence output
-        np.savetxt('temp.csv', models[0].outputs, delimiter=',')
-
         for model in models:
             outputs_df = pd.DataFrame(model.outputs, columns=model.compartment_names)
             derived_outputs_df = pd.DataFrame(

@@ -9,6 +9,8 @@ import pandas as pd
 import yaml
 
 from summer_py.constants import IntegrationType
+import summer_py.post_processing as post_proc
+from autumn.outputs.outputs import Outputs
 
 from autumn.tool_kit.timer import Timer
 from autumn.tool_kit import run_multi_scenario
@@ -44,7 +46,46 @@ ODEINT_KWARGS = {
 SOLVER_KWARGS = ODEINT_KWARGS
 
 
+def get_post_processing_results(
+        models, req_outputs, req_multipliers, outputs_to_plot_by_stratum, scenario_list, req_times, ymax):
+    pps = []
+    for scenario_index in range(len(models)):
+
+        # automatically add some basic outputs
+        if hasattr(models[scenario_index], "all_stratifications"):
+            for group in models[scenario_index].all_stratifications.keys():
+                req_outputs.append("distribution_of_strataX" + group)
+                for output in outputs_to_plot_by_stratum:
+                    for stratum in models[scenario_index].all_stratifications[group]:
+                        req_outputs.append(output + "XamongX" + group + "_" + stratum)
+
+            if "strain" in models[scenario_index].all_stratifications.keys():
+                req_outputs.append("prevXinfectiousXstrain_mdrXamongXinfectious")
+
+        for output in req_outputs:
+            if (
+                output[0:15] == "prevXinfectious"
+                and output != "prevXinfectiousXstrain_mdrXamongXinfectious"
+            ):
+                req_multipliers[output] = 1.0e5
+            elif output[0:11] == "prevXlatent":
+                req_multipliers[output] = 1.0e2
+
+        pps.append(
+            post_proc.PostProcessing(
+                models[scenario_index],
+                requested_outputs=req_outputs,
+                scenario_number=scenario_list[scenario_index],
+                requested_times=req_times,
+                multipliers=req_multipliers,
+                ymax=ymax,
+            )
+        )
+        return pps
+
+
 def run_model(application):
+
     # Load user information for parameters and outputs from YAML files
     params_path = os.path.join(FILE_DIR, application, "params.yml")
     outputs_path = os.path.join(FILE_DIR, application, "outputs.yml")
@@ -82,10 +123,8 @@ def run_model(application):
     # Run the model
     if application == 'marshall_islands':
         model_function = build_rmi_model
-        functions_to_plot = ["case_detection"]
     elif application == 'covid_19':
         model_function = build_covid_model
-        functions_to_plot = []
 
     with Timer("Running model scenarios"):
         models = run_multi_scenario(
@@ -93,7 +132,8 @@ def run_model(application):
         )
 
     # Post-process and save model outputs
-    with Timer("Post processing model outputs"):
+    with Timer("Processing model outputs"):
+
         # Automatically add combined incidence output
         for model in models:
             outputs_df = pd.DataFrame(model.outputs, columns=model.compartment_names)
@@ -106,13 +146,38 @@ def run_model(application):
 
         store_run_models(models, scenarios=scenario_list, database_name=output_db_path)
 
-    # Save plots of model outputs
-    with Timer("Plotting model outputs"):
-        create_multi_scenario_outputs(
-            models, out_dir=plot_path, scenario_list=scenario_list, **output_options,
-            input_functions_to_plot=functions_to_plot
+        if not os.path.exists(plot_path):
+            os.mkdir(plot_path)
+
+        pps = get_post_processing_results(
+            models,
+            output_options['req_outputs'],
+            output_options['req_multipliers'],
+            output_options['outputs_to_plot_by_stratum'],
+            scenario_list,
+            {},
+            output_options['ymax']
         )
+
+    with Timer('Creating model outputs'):
+
+        outputs = Outputs(
+            pps,
+            output_options['targets_to_plot'],
+            plot_path,
+            output_options['translation_dictionary'],
+            plot_start_time=output_options['plot_start_time']
+        )
+        outputs.plot_requested_outputs()
+
+        for output in output_options['outputs_to_plot_by_stratum']:
+            for sc_index in range(len(models)):
+                outputs.plot_outputs_by_stratum(output, sc_index=sc_index)
+
+        # Plotting the baseline function value, but here in case we want to use for multi-scenario in the future
+        for input_function in output_options['functions_to_plot']:
+            outputs.plot_input_function(input_function, models[0].adaptation_functions[input_function])
 
 
 if __name__ == "__main__":
-    run_model('covid_19')
+    run_model('marshall_islands')

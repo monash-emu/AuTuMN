@@ -21,6 +21,9 @@ req_outputs:
   - prevXlate_latentXamong
   - prevXltbi_treatedXamong
 
+function_to_plot:
+  - case_detection
+
 req_multipliers:
   prevXinfectiousXstrain_mdrXamongXinfectious: 100.0
   prevXinfectiousXstrain_mdrXamong: 0.00001

@@ -6,74 +6,14 @@ plot_start_time: 1940
 # e.g. [prevXinfectious, prevXlatent]
 outputs_to_plot_by_stratum: []
 
-req_outputs:
-  - prevXinfectiousXamong
-  - prevXlatentXamong
-  - prevXinfectiousXamongXlocation_majuro
-  - prevXinfectiousXamongXlocation_ebeye
-  - prevXinfectiousXamongXlocation_otherislands
-  - prevXlatentXamongXlocation_majuro
-  - prevXlatentXamongXlocation_ebeye
-  - prevXlatentXamongXlocation_otherislands
-  - prevXsusceptibleXamong
-  - prevXrecoveredXamong
-  - prevXearly_latentXamong
-  - prevXlate_latentXamong
-  - prevXltbi_treatedXamong
+req_outputs: []
 
-req_multipliers:
-  prevXinfectiousXstrain_mdrXamongXinfectious: 100.0
-  prevXinfectiousXstrain_mdrXamong: 0.00001
+functions_to_plot: []
 
-targets_to_plot:
-  prevXinfectiousXamongXlocation_ebeye:
-    times: [2017]
-    values: [[755.0]]
-  prevXlatentXamongXlocation_majuro:
-    times: [2016]
-    values: [[29.0]]
-  reported_majuro_prevalence:
-    times: [2018]
-    values: [[1578.]]
+req_multipliers: {}
 
+targets_to_plot: {}
 
-ymax:
-  prevXinfectiousXamong: 2000.0
+ymax: {}
 
-translation_dictionary:
-  prevXinfectiousXamong: TB prevalence (/100,000)
-  prevXinfectiousXamongXage_0: TB prevalence among 0-4 y.o. (/100,000)
-  prevXinfectiousXamongXage_5: TB prevalence among 5-14 y.o. (/100,000)
-  prevXinfectiousXamongXage_15: TB prevalence among 15-34 y.o. (/100,000)
-  prevXinfectiousXamongXage_35: TB prevalence among 35-49 y.o. (/100,000)
-  prevXinfectiousXamongXage_50: TB prevalence among 50+ y.o. (/100,000)
-  prevXinfectiousXamongXlocation_majuro: TB prevalence in Majuro (/100,000)
-  prevXinfectiousXamongXlocation_ebeye: TB prevalence in Ebeye (/100,000)
-  prevXinfectiousXamongXlocation_otherislands: TB prevalence in other areas (/100,000)
-  prevXinfectiousXamongXdiabetic_diabetes: TB prevalence in diabetics (/100,000)
-  prevXinfectiousXamongXdiabetic_nodiabetes: TB prevalence in non-diabetics (/100,000)
-  prevXlatentXamong: Latent TB infection prevalence (%)
-  prevXlatentXamongXage_0: Latent TB infection prevalence among 0-4 y.o. (%)
-  prevXlatentXamongXage_5: Latent TB infection prevalence among 5-14 y.o. (%)
-  prevXlatentXamongXage_15: Latent TB infection prevalence among 15-34 y.o. (%)
-  prevXlatentXamongXage_35: Latent TB infection prevalence among 35-49 y.o. (%)
-  prevXlatentXamongXage_50: Latent TB infection prevalence among 50+ y.o. (%)
-  prevXlatentXamongXlocation_majuro: Latent TB infection prevalence in Majuro (%)
-  prevXlatentXamongXlocation_ebeye: Latent TB infection prevalence in Ebeye (%)
-  prevXlatentXamongXlocation_otherislands: Latent TB infection prevalence in other areas (%)
-  prevXlatentXamongXdiabetic_diabetes: Latent TB infection prevalence in diabetics (%)
-  prevXlatentXamongXdiabetic_nodiabetes: Latent TB infection prevalence in non-diabetics (%)
-  age_0: Age 0-4
-  age_5: Age 5-14
-  age_15: Age 15-34
-  age_35: Age 35-49
-  age_50: Age 50+
-  location_majuro: Majuro
-  location_ebeye: Ebeye
-  location_otherislands: Other locations
-  diabetes_diabetic: Diabetes
-  diabetes_nodiabetes: No Diabetes
-  incidence: TB incidence (/100,000/y)
-  incidenceXlocation_majuro: Majuro - TB incidence (/100,000/y)
-  incidenceXlocation_ebeye: Ebeye - TB incidence (/100,000/y)
-  incidenceXlocation_otherislands: Other locations - TB incidence (/100,000/y)
+translation_dictionary: {}

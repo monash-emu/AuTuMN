@@ -62,10 +62,16 @@ def build_covid_model(update_params={}):
             compartments += [Compartment.INFECTIOUS + '_' + str(i_infectious + 1)]
             infectious_compartments += [Compartment.INFECTIOUS + '_' + str(i_infectious + 1)]
 
-
-    init_pop = {
-        Compartment.INFECTIOUS + '_1': 1,
-    }
+    infectious_seed = 1.
+    if model_parameters['n_infectious_compartments'] == 1:
+        init_pop = {
+            Compartment.INFECTIOUS: infectious_seed,
+        }
+    else:
+        init_pop = {}
+        for i_infectious in range(model_parameters['n_infectious_compartments']):
+            init_pop[Compartment.INFECTIOUS + '_' + str(i_infectious + 1)] = \
+                infectious_seed / float(model_parameters['n_infectious_compartments'])
 
     # Multiply the progression rate by the number of compartments to keep the average time in exposed the same
     model_parameters['within_exposed'] = \

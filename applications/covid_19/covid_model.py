@@ -11,7 +11,8 @@ from autumn.tb_model import (
     list_all_strata_for_mortality,
 )
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
-from autumn.covid_model.flows import add_infection_flows, add_progression_flows, add_recovery_flows
+from autumn.covid_model.flows import \
+    add_infection_flows, add_progression_flows, add_recovery_flows, add_within_exposed_flows
 
 # Database locations
 file_dir = os.path.dirname(os.path.abspath(__file__))
@@ -29,17 +30,6 @@ def build_covid_model(update_params={}):
         The final model with all parameters and stratifications
     """
 
-    # Define compartments and initial conditions
-    compartments = [
-        Compartment.SUSCEPTIBLE,
-        Compartment.EXPOSED,
-        Compartment.INFECTIOUS,
-        Compartment.RECOVERED,
-    ]
-    init_pop = {
-        Compartment.INFECTIOUS: 1,
-    }
-
     # Get user-requested parameters
     with open(PARAMS_PATH, "r") as yaml_file:
         params = yaml.safe_load(yaml_file)
@@ -49,6 +39,28 @@ def build_covid_model(update_params={}):
     model_parameters.update(
         update_params
     )
+
+    # Define compartments and initial conditions
+    compartments = [
+        Compartment.SUSCEPTIBLE,
+        Compartment.INFECTIOUS,
+        Compartment.RECOVERED,
+    ]
+    init_pop = {
+        Compartment.INFECTIOUS: 1,
+    }
+
+    # Implement n-exposed compartments into SIR model
+    if model_parameters['n_exposed_compartments'] == 0:
+        compartments += [Compartment.EXPOSED]
+    else:
+        for i_exposed in range(model_parameters['n_exposed_compartments']):
+            compartments += [Compartment.EXPOSED + '_' + str(i_exposed + 1)]
+
+    # Multiply the progression rate by the number of compartments to keep the average time in exposed the same
+    model_parameters['within_exposed'] = \
+        model_parameters['progression'] \
+        * float(model_parameters['n_exposed_compartments'])
 
     # Set integration times
     integration_times = \
@@ -60,8 +72,9 @@ def build_covid_model(update_params={}):
 
     # Sequentially add groups of flows to flows list
     flows = []
-    flows = add_infection_flows(flows)
-    flows = add_progression_flows(flows)
+    flows = add_infection_flows(flows, model_parameters['n_exposed_compartments'])
+    flows = add_within_exposed_flows(flows, model_parameters['n_exposed_compartments'])
+    flows = add_progression_flows(flows, model_parameters['n_exposed_compartments'])
     flows = add_recovery_flows(flows)
 
     # Define model
@@ -76,5 +89,7 @@ def build_covid_model(update_params={}):
         output_connections={},
         death_output_categories=list_all_strata_for_mortality(compartments)
     )
+
+    _tb_model.transition_flows.to_csv('temp.csv')
 
     return _tb_model

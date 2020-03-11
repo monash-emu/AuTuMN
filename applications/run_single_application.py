@@ -87,9 +87,8 @@ def get_post_processing_results(
 def run_model(application):
 
     # Load user information for parameters and outputs from YAML files
-    params_path = os.path.join(FILE_DIR, application, "params.yml")
-    outputs_path = os.path.join(FILE_DIR, application, "outputs.yml")
-
+    params_path = os.path.join(FILE_DIR, application, 'params.yml')
+    outputs_path = os.path.join(FILE_DIR, application, 'outputs.yml')
     with open(params_path, "r") as yaml_file:
         params = yaml.safe_load(yaml_file)
     with open(outputs_path, "r") as yaml_file:
@@ -133,22 +132,9 @@ def run_model(application):
 
     # Post-process and save model outputs
     with Timer("Processing model outputs"):
-
-        # Automatically add combined incidence output
-        for model in models:
-            outputs_df = pd.DataFrame(model.outputs, columns=model.compartment_names)
-            derived_outputs_df = pd.DataFrame(
-                model.derived_outputs, columns=model.derived_outputs.keys()
-            )
-            updated_derived_outputs = add_combined_incidence(derived_outputs_df, outputs_df)
-            updated_derived_outputs = updated_derived_outputs.to_dict("list")
-            model.derived_outputs = updated_derived_outputs
-
         store_run_models(models, scenarios=scenario_list, database_name=output_db_path)
-
         if not os.path.exists(plot_path):
             os.mkdir(plot_path)
-
         pps = get_post_processing_results(
             models,
             output_options['req_outputs'],
@@ -160,7 +146,6 @@ def run_model(application):
         )
 
     with Timer('Creating model outputs'):
-
         outputs = Outputs(
             pps,
             output_options['targets_to_plot'],
@@ -169,7 +154,6 @@ def run_model(application):
             plot_start_time=output_options['plot_start_time']
         )
         outputs.plot_requested_outputs()
-
         for output in output_options['outputs_to_plot_by_stratum']:
             for sc_index in range(len(models)):
                 outputs.plot_outputs_by_stratum(output, sc_index=sc_index)

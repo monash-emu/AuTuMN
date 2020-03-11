@@ -7,7 +7,7 @@ import numpy
 import pandas as pd
 import summer_py.post_processing as post_proc
 from sqlalchemy import create_engine
-from summer_py.outputs import Outputs
+from autumn.outputs.outputs import Outputs
 import matplotlib.pyplot as plt
 
 from ..constants import Compartment

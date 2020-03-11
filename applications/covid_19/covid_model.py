@@ -13,7 +13,7 @@ from autumn.tb_model import (
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
 from autumn.covid_model.flows import \
     add_infection_flows, add_progression_flows, add_recovery_flows, add_within_exposed_flows, \
-    add_within_infectious_flows
+    add_within_infectious_flows, replicate_compartment, multiply_flow_value_for_multiple_compartments
 
 # Database locations
 file_dir = os.path.dirname(os.path.abspath(__file__))
@@ -45,42 +45,25 @@ def build_covid_model(update_params={}):
         Compartment.RECOVERED,
     ]
 
-    # Implement n-exposed compartments into SIR model
-    if model_parameters['n_exposed_compartments'] == 1:
-        compartments += [Compartment.EXPOSED]
-    else:
-        for i_exposed in range(model_parameters['n_exposed_compartments']):
-            compartments += [Compartment.EXPOSED + '_' + str(i_exposed + 1)]
-
-    # Implement n-infectious compartments
-    if model_parameters['n_infectious_compartments'] == 1:
-        compartments += [Compartment.INFECTIOUS]
-        infectious_compartments = ['infectious']
-    else:
-        infectious_compartments = []
-        for i_infectious in range(model_parameters['n_infectious_compartments']):
-            compartments += [Compartment.INFECTIOUS + '_' + str(i_infectious + 1)]
-            infectious_compartments += [Compartment.INFECTIOUS + '_' + str(i_infectious + 1)]
-
-    infectious_seed = 1.
-    if model_parameters['n_infectious_compartments'] == 1:
-        init_pop = {
-            Compartment.INFECTIOUS: infectious_seed,
-        }
-    else:
-        init_pop = {}
-        for i_infectious in range(model_parameters['n_infectious_compartments']):
-            init_pop[Compartment.INFECTIOUS + '_' + str(i_infectious + 1)] = \
-                infectious_seed / float(model_parameters['n_infectious_compartments'])
+    # Replicate compartments that need to be repeated
+    compartments, _, _ = \
+        replicate_compartment(
+            model_parameters['n_exposed_compartments'], compartments, Compartment.EXPOSED
+        )
+    compartments, infectious_compartments, init_pop = \
+        replicate_compartment(
+            model_parameters['n_infectious_compartments'], compartments, Compartment.INFECTIOUS
+        )
 
     # Multiply the progression rate by the number of compartments to keep the average time in exposed the same
-    model_parameters['within_exposed'] = \
-        model_parameters['progression'] \
-        * float(model_parameters['n_exposed_compartments'])
-
-    model_parameters['within_infectious'] = \
-        model_parameters['recovery'] \
-        * float(model_parameters['n_infectious_compartments'])
+    model_parameters = \
+        multiply_flow_value_for_multiple_compartments(
+            model_parameters, Compartment.EXPOSED, 'progression'
+        )
+    model_parameters = \
+        multiply_flow_value_for_multiple_compartments(
+            model_parameters, Compartment.INFECTIOUS, 'recovery'
+        )
 
     # Set integration times
     integration_times = \

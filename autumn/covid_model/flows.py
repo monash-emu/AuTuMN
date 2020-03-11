@@ -88,4 +88,30 @@ def add_within_infectious_flows(list_of_flows, n_infectious):
     return list_of_flows
 
 
+def replicate_compartment(n_replications, current_compartments, compartment_stem, infectious_seed=0.):
+    """
+    Implement n compartments of a certain type
+    Also returns the names of the infectious compartments and the intial population evenly distributed across the
+    replicated infectious compartments
+    """
+    if n_replications == 1:
+        current_compartments += [compartment_stem]
+        infectious_compartments = [compartment_stem]
+        init_pop = {
+            Compartment.INFECTIOUS: infectious_seed,
+        }
+    else:
+        infectious_compartments, init_pop = [], {}
+        for i_infectious in range(n_replications):
+            current_compartments += [compartment_stem + '_' + str(i_infectious + 1)]
+            infectious_compartments += [compartment_stem + '_' + str(i_infectious + 1)]
+            init_pop[Compartment.INFECTIOUS + '_' + str(i_infectious + 1)] = \
+                infectious_seed / float(n_replications)
+    return current_compartments, infectious_compartments, init_pop
 
+
+def multiply_flow_value_for_multiple_compartments(model_parameters, compartment_name, parameter_name):
+    model_parameters['within_' + compartment_name] = \
+        model_parameters[parameter_name] * \
+        float(model_parameters['n_' + compartment_name + '_compartments'])
+    return model_parameters

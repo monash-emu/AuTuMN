@@ -15,7 +15,6 @@ default:
       - '0'
       - '5'
       - '15'
-      - '35'
       - '50'
   start_time: 0.
   end_time: 100.

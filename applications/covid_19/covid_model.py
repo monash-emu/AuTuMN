@@ -14,6 +14,7 @@ from autumn.tool_kit.scenarios import get_model_times_from_inputs
 from autumn.covid_model.flows import \
     add_infection_flows, add_progression_flows, add_recovery_flows, add_within_exposed_flows, \
     add_within_infectious_flows, replicate_compartment, multiply_flow_value_for_multiple_compartments
+from autumn.covid_model.stratification import stratify_by_age
 
 # Database locations
 file_dir = os.path.dirname(os.path.abspath(__file__))
@@ -92,7 +93,7 @@ def build_covid_model(update_params={}):
     )
 
     # Define model
-    _tb_model = StratifiedModel(
+    _covid_model = StratifiedModel(
         integration_times,
         compartments,
         init_pop,
@@ -105,4 +106,6 @@ def build_covid_model(update_params={}):
         infectious_compartment=infectious_compartments
     )
 
-    return _tb_model
+    _covid_model = stratify_by_age(_covid_model, model_parameters['all_stratifications']['agegroup'])
+
+    return _covid_model

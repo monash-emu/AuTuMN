@@ -47,29 +47,25 @@ SOLVER_KWARGS = ODEINT_KWARGS
 
 
 def get_post_processing_results(
-        models, req_outputs, req_multipliers, outputs_to_plot_by_stratum, scenario_list, req_times, ymax):
+        models,
+        req_outputs,
+        req_multipliers,
+        outputs_to_plot_by_stratum,
+        scenario_list,
+        req_times,
+        ymax
+):
+
     pps = []
     for scenario_index in range(len(models)):
 
-        # automatically add some basic outputs
+        # Automatically add some basic outputs
         if hasattr(models[scenario_index], "all_stratifications"):
             for group in models[scenario_index].all_stratifications.keys():
                 req_outputs.append("distribution_of_strataX" + group)
                 for output in outputs_to_plot_by_stratum:
                     for stratum in models[scenario_index].all_stratifications[group]:
                         req_outputs.append(output + "XamongX" + group + "_" + stratum)
-
-            if "strain" in models[scenario_index].all_stratifications.keys():
-                req_outputs.append("prevXinfectiousXstrain_mdrXamongXinfectious")
-
-        for output in req_outputs:
-            if (
-                output[0:15] == "prevXinfectious"
-                and output != "prevXinfectiousXstrain_mdrXamongXinfectious"
-            ):
-                req_multipliers[output] = 1.0e5
-            elif output[0:11] == "prevXlatent":
-                req_multipliers[output] = 1.0e2
 
         pps.append(
             post_proc.PostProcessing(
@@ -164,4 +160,4 @@ def run_model(application):
 
 
 if __name__ == "__main__":
-    run_model('marshall_islands')
+    run_model('covid_19')

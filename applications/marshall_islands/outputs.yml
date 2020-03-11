@@ -21,7 +21,7 @@ req_outputs:
   - prevXlate_latentXamong
   - prevXltbi_treatedXamong
 
-function_to_plot:
+functions_to_plot:
   - case_detection
 
 req_multipliers:

@@ -16,11 +16,16 @@ WITHIN_EXPOSED_FLOWS = [
     }
 ]
 
+WITHIN_INFECTIOUS_FLOWS = [
+    {
+        'type': Flow.STANDARD,
+        'parameter': 'within_infectious',
+    }
+]
 
 PROGRESSION_FLOWS = [
     {
         'type': Flow.STANDARD,
-        'to': Compartment.INFECTIOUS
     }
 ]
 
@@ -28,22 +33,26 @@ RECOVERY_FLOWS = [
     {
         'type': Flow.STANDARD,
         'parameter': 'recovery',
-        'origin': Compartment.INFECTIOUS,
         'to': Compartment.RECOVERED,
     }
 ]
 
 
-def add_progression_flows(list_of_flows, n_exposed):
+def add_progression_flows(list_of_flows, n_exposed, n_infectious):
     progression_flows = PROGRESSION_FLOWS
     progression_flows[0]['origin'] = \
         Compartment.EXPOSED + '_' + str(n_exposed) if n_exposed > 0 else Compartment.EXPOSED
+    progression_flows[0]['to'] = \
+        Compartment.INFECTIOUS + '_1' if n_infectious > 0 else Compartment.INFECTIOUS
     progression_flows[0]['parameter'] = 'within_exposed' if n_exposed > 0 else 'within_exposed'
     list_of_flows += PROGRESSION_FLOWS
     return list_of_flows
 
 
-def add_recovery_flows(list_of_flows):
+def add_recovery_flows(list_of_flows, n_infectious):
+    recovery_flows = RECOVERY_FLOWS
+    recovery_flows[0]['origin'] = \
+        Compartment.INFECTIOUS + '_' + str(n_infectious) if n_infectious > 0 else Compartment.INFECTIOUS
     list_of_flows += RECOVERY_FLOWS
     return list_of_flows
 
@@ -64,6 +73,18 @@ def add_within_exposed_flows(list_of_flows, n_exposed):
             within_exposed_flows[0]['to'] = \
                 Compartment.EXPOSED + '_' + str(i_flow + 1)
             list_of_flows += within_exposed_flows
+    return list_of_flows
+
+
+def add_within_infectious_flows(list_of_flows, n_infectious):
+    if n_infectious > 1:
+        for i_flow in range(1, n_infectious):
+            within_infectious_flows = copy.deepcopy(WITHIN_INFECTIOUS_FLOWS)
+            within_infectious_flows[0]['origin'] = \
+                Compartment.INFECTIOUS + '_' + str(i_flow)
+            within_infectious_flows[0]['to'] = \
+                Compartment.INFECTIOUS + '_' + str(i_flow + 1)
+            list_of_flows += within_infectious_flows
     return list_of_flows
 
 

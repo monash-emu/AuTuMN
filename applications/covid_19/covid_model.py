@@ -46,14 +46,14 @@ def build_covid_model(update_params={}):
     ]
 
     # Implement n-exposed compartments into SIR model
-    if model_parameters['n_exposed_compartments'] == 0:
+    if model_parameters['n_exposed_compartments'] == 1:
         compartments += [Compartment.EXPOSED]
     else:
         for i_exposed in range(model_parameters['n_exposed_compartments']):
             compartments += [Compartment.EXPOSED + '_' + str(i_exposed + 1)]
 
     # Implement n-infectious compartments
-    if model_parameters['n_infectious_compartments'] == 0:
+    if model_parameters['n_infectious_compartments'] == 1:
         compartments += [Compartment.INFECTIOUS]
         infectious_compartments = ['infectious']
     else:
@@ -105,7 +105,7 @@ def build_covid_model(update_params={}):
         flows, model_parameters['n_exposed_compartments'], model_parameters['n_infectious_compartments']
     )
     flows = add_recovery_flows(
-        flows, model_parameters['n_exposed_compartments']
+        flows, model_parameters['n_infectious_compartments']
     )
 
     # Define model

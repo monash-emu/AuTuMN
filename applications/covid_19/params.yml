@@ -3,8 +3,8 @@
 default:
 
   # Model structure parameters
-  n_exposed_compartments: 5
-  n_infectious_compartments: 5
+  n_exposed_compartments: 1
+  n_infectious_compartments: 1
 
   # Stratifications to implement - comment out/remove as required to enable model to run more quickly
   stratify_by:

@@ -24,8 +24,8 @@ default:
 
   # Base model definition
   contact_rate: 1.
-  progression: 0.333
-  recovery: 0.5
+  progression: 0.2
+  recovery: 0.125
   universal_death_rate: 0.
 
 # When the scenarios start running

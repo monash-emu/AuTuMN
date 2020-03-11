@@ -3,8 +3,8 @@
 default:
 
   # Model structure parameters
-  n_exposed_compartments: 1
-  n_infectious_compartments: 1
+  n_exposed_compartments: 3
+  n_infectious_compartments: 3
 
   # Stratifications to implement - comment out/remove as required to enable model to run more quickly
   stratify_by:
@@ -24,8 +24,8 @@ default:
 
   # Base model definition
   contact_rate: 1.
-  progression: 0.15
-  recovery: 0.15
+  progression: 0.333
+  recovery: 0.5
   universal_death_rate: 0.
 
 # When the scenarios start running

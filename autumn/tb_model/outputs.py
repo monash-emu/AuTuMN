@@ -304,6 +304,8 @@ def create_multi_scenario_outputs(
     input_functions_to_plot=[]
 ):
     """
+    Have now moved this code - and now constitutes legacy code for the Mongolia (and possibly Vietnam) applications only
+
     process and generate plots for several scenarios
     :param models: a list of run models
     :param req_outputs. See PostProcessing class

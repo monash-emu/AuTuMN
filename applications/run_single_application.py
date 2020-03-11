@@ -15,7 +15,7 @@ from autumn.outputs.outputs import Outputs
 from autumn.tool_kit.timer import Timer
 from autumn.tool_kit import run_multi_scenario
 from autumn.tool_kit.utils import make_directory_if_absent, record_parameter_request, record_run_metadata
-from autumn.tb_model import add_combined_incidence, store_run_models, create_multi_scenario_outputs
+from autumn.tb_model import add_combined_incidence, store_run_models
 from autumn import constants
 
 from applications.marshall_islands.rmi_model import build_rmi_model

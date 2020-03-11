@@ -4,8 +4,6 @@ Build and run any AuTuMN model, storing the outputs
 
 import os
 from datetime import datetime
-import numpy as np
-import pandas as pd
 import yaml
 
 from summer_py.constants import IntegrationType
@@ -15,7 +13,7 @@ from autumn.outputs.outputs import Outputs
 from autumn.tool_kit.timer import Timer
 from autumn.tool_kit import run_multi_scenario
 from autumn.tool_kit.utils import make_directory_if_absent, record_parameter_request, record_run_metadata
-from autumn.tb_model import add_combined_incidence, store_run_models
+from autumn.tb_model import store_run_models
 from autumn import constants
 
 from applications.marshall_islands.rmi_model import build_rmi_model
@@ -44,40 +42,6 @@ ODEINT_KWARGS = {
 }
 # ODE solver settings to use when running the model.
 SOLVER_KWARGS = ODEINT_KWARGS
-
-
-def get_post_processing_results(
-        models,
-        req_outputs,
-        req_multipliers,
-        outputs_to_plot_by_stratum,
-        scenario_list,
-        req_times,
-        ymax
-):
-
-    pps = []
-    for scenario_index in range(len(models)):
-
-        # Automatically add some basic outputs
-        if hasattr(models[scenario_index], "all_stratifications"):
-            for group in models[scenario_index].all_stratifications.keys():
-                req_outputs.append("distribution_of_strataX" + group)
-                for output in outputs_to_plot_by_stratum:
-                    for stratum in models[scenario_index].all_stratifications[group]:
-                        req_outputs.append(output + "XamongX" + group + "_" + stratum)
-
-        pps.append(
-            post_proc.PostProcessing(
-                models[scenario_index],
-                requested_outputs=req_outputs,
-                scenario_number=scenario_list[scenario_index],
-                requested_times=req_times,
-                multipliers=req_multipliers,
-                ymax=ymax,
-            )
-        )
-        return pps
 
 
 def run_model(application):
@@ -131,15 +95,30 @@ def run_model(application):
         store_run_models(models, scenarios=scenario_list, database_name=output_db_path)
         if not os.path.exists(plot_path):
             os.mkdir(plot_path)
-        pps = get_post_processing_results(
-            models,
-            output_options['req_outputs'],
-            output_options['req_multipliers'],
-            output_options['outputs_to_plot_by_stratum'],
-            scenario_list,
-            {},
-            output_options['ymax']
-        )
+
+        pps = []
+        for scenario_index in range(len(models)):
+
+            # Automatically add some basic outputs
+            if hasattr(models[scenario_index], "all_stratifications"):
+                for group in models[scenario_index].all_stratifications.keys():
+                    output_options['req_outputs'].append(
+                        "distribution_of_strataX" + group)
+                    for output in output_options['outputs_to_plot_by_stratum']:
+                        for stratum in models[scenario_index].all_stratifications[group]:
+                            output_options['req_outputs'].append(
+                                output + "XamongX" + group + "_" + stratum)
+
+            pps.append(
+                post_proc.PostProcessing(
+                    models[scenario_index],
+                    requested_outputs=output_options['req_outputs'],
+                    scenario_number=scenario_list[scenario_index],
+                    requested_times={},
+                    multipliers=output_options['req_multipliers'],
+                    ymax=output_options['ymax'],
+                )
+            )
 
     with Timer('Creating model outputs'):
         outputs = Outputs(
@@ -160,4 +139,4 @@ def run_model(application):
 
 
 if __name__ == "__main__":
-    run_model('covid_19')
+    run_model('marshall_islands')

@@ -8,8 +8,8 @@ def load_specific_prem_sheet(file_type, sheet_name):
     Load a mixing matrix sheet, according to user-specified name of the sheet (i.e. country)
     """
     file_dir = \
-        os.path.join(os.path.abspath(
-            os.getcwd()),
+        os.path.join(
+            os.path.abspath(os.path.dirname(__file__)),
             'social_mixing_data',
             'MUestimates_' + file_type + '.xlsx'
         )
@@ -21,8 +21,8 @@ def load_all_prem_sheets(file_type):
     Load all the mixing matrices (i.e. sheets) from a specified excel file
     """
     file_dir = \
-        os.path.join(os.path.abspath(
-            os.getcwd()),
+        os.path.join(
+            os.path.abspath(os.path.dirname(__file__)),
             'social_mixing_data',
             'MUestimates_' + file_type + '.xlsx'
         )

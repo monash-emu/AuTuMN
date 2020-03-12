@@ -14,6 +14,7 @@ from autumn.covid_model.flows import \
     add_infection_flows, add_progression_flows, add_recovery_flows, add_within_exposed_flows, \
     add_within_infectious_flows, replicate_compartment, multiply_flow_value_for_multiple_compartments
 from autumn.covid_model.stratification import stratify_by_age
+from autumn.social_mixing.social_mixing import load_specific_prem_sheet
 
 # Database locations
 file_dir = os.path.dirname(os.path.abspath(__file__))
@@ -91,6 +92,12 @@ def build_covid_model(update_params={}):
         flows, model_parameters['n_infectious_compartments']
     )
 
+    mixing_matrix = \
+        load_specific_prem_sheet(
+            'all_locations_1',
+            'Australia'
+        )
+
     # Define model
     _covid_model = StratifiedModel(
         integration_times,
@@ -99,7 +106,7 @@ def build_covid_model(update_params={}):
         model_parameters,
         flows,
         birth_approach='no_birth',
-        starting_population=model_parameters["start_population"],
+        starting_population=model_parameters['start_population'],
         output_connections={},
         death_output_categories=list_all_strata_for_mortality(compartments),
         infectious_compartment=infectious_compartments
@@ -107,9 +114,12 @@ def build_covid_model(update_params={}):
 
     # Stratify model by age without demography
     if 'agegroup' in model_parameters['stratify_by']:
+        age_breaks = [str(i_break) for i_break in list(range(0, 80, 5))]
         _covid_model = \
             stratify_by_age(
-                _covid_model, model_parameters['all_stratifications']['agegroup']
+                _covid_model,
+                age_breaks,
+                mixing_matrix=mixing_matrix
             )
 
     return _covid_model

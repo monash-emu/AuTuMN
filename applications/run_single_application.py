@@ -133,6 +133,8 @@ def run_model(application):
             for sc_index in range(len(models)):
                 outputs.plot_outputs_by_stratum(output, sc_index=sc_index)
 
+        outputs.plot_parameter_category_values(models, 'contact_rate', 2010.)
+
         # Plotting the baseline function value, but here in case we want to use for multi-scenario in the future
         for input_function in output_options['functions_to_plot']:
             outputs.plot_input_function(input_function, models[0].adaptation_functions[input_function])

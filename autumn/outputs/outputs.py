@@ -732,3 +732,13 @@ class Outputs:
         scenario_name = list(self.scenario_names.values())[sc_index]
         file_name = os.path.join(scenario_name, input_function_name)
         self.finish_off_figure(fig, filename=file_name, title_text=input_function_name)
+
+    def plot_parameter_category_values(self, models, parameter_name, time, sc_index=0):
+
+        parameter_names_to_plot = {}
+        for parameter in models[sc_index].final_parameter_functions:
+            if parameter.startswith(parameter_name):
+                parameter_names_to_plot[parameter] = \
+                    models[sc_index].final_parameter_functions[parameter](time)
+        # print(parameter_names_to_plot)
+

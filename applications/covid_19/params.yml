@@ -11,19 +11,13 @@ default:
 
   # Stratifications to implement - comment out/remove as required to enable model to run more quickly
   stratify_by:
-    -
-#    - agegroup
-#    - location
+    - agegroup
   all_stratifications:
     agegroup:
       - '0'
       - '5'
       - '15'
       - '50'
-    location:
-      - 'a'
-      - 'b'
-      - 'c'
   start_time: 0.
   end_time: 100.
   time_step: 1

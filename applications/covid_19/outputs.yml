@@ -1,12 +1,16 @@
 ---
 # Options for plotting outputs of the Marshall Island model
 # All keys in this file are arguments to `create_multi_scenario_outputs`
-plot_start_time: 1940
+plot_start_time: 0
 
 # e.g. [prevXinfectious, prevXlatent]
 outputs_to_plot_by_stratum: []
 
-req_outputs: []
+req_outputs: 
+  - prevXexposedXamong
+  - prevXinfectiousXamong
+  - prevXsusceptibleXamong
+  - prevXrecoveredXamong
 
 functions_to_plot: []
 

@@ -72,7 +72,7 @@ def load_population(file, sheet_name):
     population.set_index(['Age group (years)','Gender'], inplace = True)
 
     over_75 =  population.loc[[('75–79'),('80–84'),('85–89'),('85–89'),('90–94'),('95–99'),('100 and over'),],:]
-    population
+    population.drop([('75–79'),('80–84'),('85–89'),('85–89'),('90–94'),('95–99'),('100 and over')], inplace =True)
 
     over_75 =  over_75.groupby('Gender').sum()
     over_75['Age group (years)'] = '75+'
@@ -80,6 +80,7 @@ def load_population(file, sheet_name):
     over_75.set_index(['Age group (years)','Gender'], inplace =True)
 
     population = pd.concat([population,over_75])
+    
     
     return population
 
@@ -105,5 +106,4 @@ def load_age_calibration():
   
     return pd.Series(y, index=age_breakpoints)
 
-    file ='31010DO001_201906.XLS'
-    sheet_name = 'Table_6'
+    

@@ -67,12 +67,12 @@ def run_model(application):
     for compartment_type in output_options['compartments_for_prevalence']:
         output_options['req_outputs'].append('prevX' + compartment_type + 'Xamong')
 
-    if application == 'covid_19':
+    for i_combination in range(len(output_options['output_combinations_to_collate'])):
         output_options = \
             collate_compartment_across_stratification(
                 output_options,
-                'infectious',
-                'agegroup',
+                output_options['output_combinations_to_collate'][i_combination][0],
+                output_options['output_combinations_to_collate'][i_combination][1],
                 params['default']['all_stratifications']['agegroup']
             )
 

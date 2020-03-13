@@ -8,6 +8,8 @@ outputs_to_plot_by_stratum: []
 
 compartments_for_prevalence: []
 
+output_combinations_to_collate: []
+
 req_outputs:
   - prevXinfectiousXamong
   - prevXlatentXamong

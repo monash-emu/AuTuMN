@@ -9,6 +9,11 @@ compartments_for_prevalence:
   - 'infectious'
   - 'recovered'
 
+output_combinations_to_collate:
+  -
+    - 'infectious'
+    - 'agegroup'
+
 # e.g. [prevXinfectious, prevXlatent]
 outputs_to_plot_by_stratum: []
 

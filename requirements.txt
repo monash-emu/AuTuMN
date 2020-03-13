@@ -3,6 +3,7 @@ git+https://github.com/jtrauer/summer.git
 
 # Data visualization
 matplotlib>=1.4.2
+seaborn==0.9.0
 
 # Numerical computing
 numpy>=1.14.1

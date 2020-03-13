@@ -15,6 +15,7 @@ from autumn.tool_kit import run_multi_scenario
 from autumn.tool_kit.utils import make_directory_if_absent, record_parameter_request, record_run_metadata
 from autumn.tb_model import store_run_models
 from autumn import constants
+from autumn.demography.ageing import add_agegroup_breaks
 
 from applications.marshall_islands.rmi_model import build_rmi_model
 from applications.covid_19.covid_model import build_covid_model
@@ -54,12 +55,12 @@ def run_model(application):
     with open(outputs_path, "r") as yaml_file:
         output_options = yaml.safe_load(yaml_file)
 
+    params = add_agegroup_breaks(params)
+
     # Run the model
     if application == 'marshall_islands':
         model_function = build_rmi_model
     elif application == 'covid_19':
-        params['age_breaks'] = \
-            [str(i_break) for i_break in list(range(0, 80, 5))]
         model_function = build_covid_model
 
     if application == 'covid_19':
@@ -70,7 +71,7 @@ def run_model(application):
                 output_options,
                 'infectious',
                 'agegroup',
-                params['age_breaks']
+                params['default']['age_breaks']
             )
 
     # Ensure project folder exists

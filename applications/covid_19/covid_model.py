@@ -14,7 +14,7 @@ from autumn.covid_model.flows import \
     add_infection_flows, add_progression_flows, add_recovery_flows, add_within_exposed_flows, \
     add_within_infectious_flows, replicate_compartment, multiply_flow_value_for_multiple_compartments
 from autumn.covid_model.stratification import stratify_by_age
-from autumn.social_mixing.social_mixing import load_specific_prem_sheet
+from autumn.demography.social_mixing import load_specific_prem_sheet
 
 # Database locations
 file_dir = os.path.dirname(os.path.abspath(__file__))

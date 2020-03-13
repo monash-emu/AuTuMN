@@ -12,6 +12,9 @@ default:
   # Stratifications to implement - comment out/remove as required to enable model to run more quickly
   stratify_by:
     - agegroup
+  agegroup_breaks:
+    - 80
+    - 5
   start_time: 0.
   end_time: 100.
   time_step: 1

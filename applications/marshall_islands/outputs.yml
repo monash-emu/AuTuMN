@@ -10,6 +10,8 @@ compartments_for_prevalence: []
 
 output_combinations_to_collate: []
 
+output_combinations_to_plot_together: []
+
 req_outputs:
   - prevXinfectiousXamong
   - prevXlatentXamong

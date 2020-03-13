@@ -3,6 +3,7 @@ from matplotlib.ticker import FuncFormatter
 import numpy
 import os
 import copy
+import seaborn as sns
 
 
 def find_subplot_grid(n_plots):
@@ -178,6 +179,7 @@ def add_title_to_plot(fig, n_panels, content):
 class Outputs:
     def __init__(
         self,
+        models,
         post_processing_list,
         targets_to_plot={},
         out_dir="outputs",
@@ -197,6 +199,7 @@ class Outputs:
         self.multiplot_only = multiplot_only
         self.scenario_names = {}
         self.plot_start_time = plot_start_time
+        self.models = models
 
         self.colour_theme = [
             (0.0, 0.0, 0.0),
@@ -740,5 +743,19 @@ class Outputs:
             if parameter.startswith(parameter_name):
                 parameter_names_to_plot[parameter] = \
                     models[sc_index].final_parameter_functions[parameter](time)
-        # print(parameter_names_to_plot)
 
+    def plot_mixing_matrix(self, sc_index):
+        """
+        Simple plotting function of a mixing matrix, using standard seaborn method
+        """
+        if self.models[sc_index].mixing_matrix is not None:
+            fig, axes, max_dims, n_rows, n_cols = initialise_figures_axes(1)
+            axes = \
+                sns.heatmap(
+                    self.models[sc_index].mixing_matrix,
+                    yticklabels=self.models[0].mixing_categories,
+                    xticklabels=False
+                )
+            scenario_name = list(self.scenario_names.values())[sc_index]
+            file_name = os.path.join(scenario_name, 'mixing_matrix')
+            self.finish_off_figure(fig, filename=file_name, title_text='mixing_matrix')

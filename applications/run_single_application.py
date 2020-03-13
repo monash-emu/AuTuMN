@@ -122,6 +122,7 @@ def run_model(application):
 
     with Timer('Creating model outputs'):
         outputs = Outputs(
+            models,
             pps,
             output_options['targets_to_plot'],
             plot_path,
@@ -134,6 +135,9 @@ def run_model(application):
                 outputs.plot_outputs_by_stratum(output, sc_index=sc_index)
 
         outputs.plot_parameter_category_values(models, 'contact_rate', 2010.)
+
+        # Plot mixing matrix, presuming that this should always be plotted, provided there is one
+        outputs.plot_mixing_matrix(0)
 
         # Plotting the baseline function value, but here in case we want to use for multi-scenario in the future
         for input_function in output_options['functions_to_plot']:

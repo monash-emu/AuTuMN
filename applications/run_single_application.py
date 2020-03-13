@@ -64,8 +64,9 @@ def run_model(application):
     if application == 'covid_19':
         for compartment_type in ['susceptible', 'exposed', 'infectious', 'recovered']:
             output_options['req_outputs'].append('prevX' + compartment_type + 'Xamong')
-            # for age_break in params['age_breaks']:
-            #     output_options['req_outputs'].append('prevX' + compartment_type + 'XamongX' + age_break)
+        for stratum in params['age_breaks']:
+            output_options['req_outputs'].append(
+                'prevXinfectiousXamongXagegroup_' + stratum)
 
     # Ensure project folder exists
     project_dir = os.path.join(constants.DATA_PATH, application)
@@ -111,10 +112,6 @@ def run_model(application):
                 for group in models[scenario_index].all_stratifications.keys():
                     output_options['req_outputs'].append(
                         "distribution_of_strataX" + group)
-                    for output in output_options['outputs_to_plot_by_stratum']:
-                        for stratum in models[scenario_index].all_stratifications[group]:
-                            output_options['req_outputs'].append(
-                                output + "XamongX" + group + "_" + stratum)
 
             pps.append(
                 post_proc.PostProcessing(

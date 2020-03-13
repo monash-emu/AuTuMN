@@ -14,6 +14,11 @@ output_combinations_to_collate:
     - 'infectious'
     - 'agegroup'
 
+output_combinations_to_plot_together:
+  -
+    - 'infectious'
+    - 'agegroup'
+
 # e.g. [prevXinfectious, prevXlatent]
 outputs_to_plot_by_stratum: []
 

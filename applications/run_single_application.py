@@ -135,17 +135,20 @@ def run_model(application):
         outputs = Outputs(
             models,
             pps,
+            output_options,
             output_options['targets_to_plot'],
             plot_path,
             output_options['translation_dictionary'],
             plot_start_time=output_options['plot_start_time']
         )
-        outputs.plot_requested_outputs()
-        for output in output_options['outputs_to_plot_by_stratum']:
-            for sc_index in range(len(models)):
-                outputs.plot_outputs_by_stratum(output, sc_index=sc_index)
+        outputs.plot_output_combinations_together()
 
-        outputs.plot_parameter_category_values(models, 'contact_rate', 2010.)
+        # outputs.plot_requested_outputs()
+        # for output in output_options['outputs_to_plot_by_stratum']:
+        #     for sc_index in range(len(models)):
+        #         outputs.plot_outputs_by_stratum(output, sc_index=sc_index)
+        #
+        # outputs.plot_parameter_category_values(models, 'contact_rate', 2010.)
 
         # Plot mixing matrix, presuming that this should always be plotted, provided there is one
         outputs.plot_mixing_matrix(0)

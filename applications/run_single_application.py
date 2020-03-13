@@ -8,7 +8,7 @@ import yaml
 
 from summer_py.constants import IntegrationType
 import summer_py.post_processing as post_proc
-from autumn.outputs.outputs import Outputs, collate_compartment_across_stratification
+from autumn.outputs.outputs import Outputs, collate_compartment_across_stratification, collate_prevalence
 
 from autumn.tool_kit.timer import Timer
 from autumn.tool_kit import run_multi_scenario
@@ -64,8 +64,7 @@ def run_model(application):
     elif application == 'covid_19':
         model_function = build_covid_model
 
-    for compartment_type in output_options['compartments_for_prevalence']:
-        output_options['req_outputs'].append('prevX' + compartment_type + 'Xamong')
+    output_options = collate_prevalence(output_options)
 
     for i_combination in range(len(output_options['output_combinations_to_collate'])):
         output_options = \

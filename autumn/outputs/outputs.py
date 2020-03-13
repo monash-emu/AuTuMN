@@ -183,6 +183,12 @@ def collate_compartment_across_stratification(output_options, compartment, strat
     return output_options
 
 
+def collate_prevalence(output_options):
+    for compartment_type in output_options['compartments_for_prevalence']:
+        output_options['req_outputs'].append('prevX' + compartment_type + 'Xamong')
+    return output_options
+
+
 class Outputs:
     def __init__(
         self,

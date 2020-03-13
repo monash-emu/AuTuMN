@@ -657,13 +657,11 @@ class Outputs:
 
     def plot_output_combinations_together(self):
         fig, axes, max_dims, n_rows, n_cols = initialise_figures_axes(1)
-        for combination in self.output_options['output_combinations_to_plot_together']:
+        for i_combination in range(len(self.output_options['output_combinations_to_plot_together'])):
             for stratum in \
                     self.models[0].all_stratifications[
-                        self.output_options['output_combinations_to_plot_together'][0][1]
+                        self.output_options['output_combinations_to_plot_together'][i_combination][1]
                     ]:
-                print(self.post_processing_list[0].derived_outputs['times'])
-                print(self.post_processing_list[0].generated_outputs['prevXinfectiousXamongXagegroup_' + stratum])
                 axes.plot(
                     self.post_processing_list[0].derived_outputs['times'],
                     self.post_processing_list[0].generated_outputs['prevXinfectiousXamongXagegroup_' + stratum]

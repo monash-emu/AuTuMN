@@ -72,10 +72,14 @@ def load_population(file, sheet_name):
     population.set_index(['Age group (years)','Gender'], inplace = True)
 
     over_75 =  population.loc[[('75–79'),('80–84'),('85–89'),('85–89'),('90–94'),('95–99'),('100 and over'),],:]
+    population
+
     over_75 =  over_75.groupby('Gender').sum()
     over_75['Age group (years)'] = '75+'
+    over_75.reset_index(inplace =True)
+    over_75.set_index(['Age group (years)','Gender'], inplace =True)
 
-    over_75.set_index(['Age group (years)'],append=True, inplace =True)
+    population = pd.concat([population,over_75])
     
     return population
 

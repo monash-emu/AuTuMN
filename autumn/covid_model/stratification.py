@@ -31,3 +31,5 @@ def stratify_by_location(model_to_stratify, location_mixing, location_strata):
         mixing_matrix=location_mixing,
     )
     return model_to_stratify
+
+

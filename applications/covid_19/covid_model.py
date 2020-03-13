@@ -98,7 +98,7 @@ def build_covid_model(update_params={}):
             'Australia'
         )
     # Load a population
-    population = load_population('31010DO001_201906.XLS', 'Table_6')
+    # population = load_population('31010DO001_201906.XLS', 'Table_6')
 
     # Define model
     _covid_model = StratifiedModel(

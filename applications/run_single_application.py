@@ -71,7 +71,7 @@ def run_model(application):
                 output_options,
                 'infectious',
                 'agegroup',
-                params['default']['age_breaks']
+                params['default']['all_stratifications']['agegroup']
             )
 
     # Ensure project folder exists

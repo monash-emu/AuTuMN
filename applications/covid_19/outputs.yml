@@ -3,6 +3,12 @@
 # All keys in this file are arguments to `create_multi_scenario_outputs`
 plot_start_time: 0
 
+compartments_for_prevalence:
+  - 'susceptible'
+  - 'exposed'
+  - 'infectious'
+  - 'recovered'
+
 # e.g. [prevXinfectious, prevXlatent]
 outputs_to_plot_by_stratum: []
 

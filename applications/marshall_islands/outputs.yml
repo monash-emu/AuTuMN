@@ -6,6 +6,8 @@ plot_start_time: 1940
 # e.g. [prevXinfectious, prevXlatent]
 outputs_to_plot_by_stratum: []
 
+compartments_for_prevalence: []
+
 req_outputs:
   - prevXinfectiousXamong
   - prevXlatentXamong

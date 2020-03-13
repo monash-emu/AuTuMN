@@ -55,6 +55,7 @@ def run_model(application):
     with open(outputs_path, "r") as yaml_file:
         output_options = yaml.safe_load(yaml_file)
 
+    # If agegroup breaks specified in default, add these to the agegroup stratification
     params = add_agegroup_breaks(params)
 
     # Run the model
@@ -63,9 +64,10 @@ def run_model(application):
     elif application == 'covid_19':
         model_function = build_covid_model
 
+    for compartment_type in output_options['compartments_for_prevalence']:
+        output_options['req_outputs'].append('prevX' + compartment_type + 'Xamong')
+
     if application == 'covid_19':
-        for compartment_type in ['susceptible', 'exposed', 'infectious', 'recovered']:
-            output_options['req_outputs'].append('prevX' + compartment_type + 'Xamong')
         output_options = \
             collate_compartment_across_stratification(
                 output_options,

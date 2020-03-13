@@ -8,7 +8,7 @@ import yaml
 
 from summer_py.constants import IntegrationType
 import summer_py.post_processing as post_proc
-from autumn.outputs.outputs import Outputs
+from autumn.outputs.outputs import Outputs, collate_compartment_across_stratification
 
 from autumn.tool_kit.timer import Timer
 from autumn.tool_kit import run_multi_scenario
@@ -58,15 +58,20 @@ def run_model(application):
     if application == 'marshall_islands':
         model_function = build_rmi_model
     elif application == 'covid_19':
-        params['age_breaks'] = [str(i_break) for i_break in list(range(0, 80, 5))]
+        params['age_breaks'] = \
+            [str(i_break) for i_break in list(range(0, 80, 5))]
         model_function = build_covid_model
 
     if application == 'covid_19':
         for compartment_type in ['susceptible', 'exposed', 'infectious', 'recovered']:
             output_options['req_outputs'].append('prevX' + compartment_type + 'Xamong')
-        for stratum in params['age_breaks']:
-            output_options['req_outputs'].append(
-                'prevXinfectiousXamongXagegroup_' + stratum)
+        output_options = \
+            collate_compartment_across_stratification(
+                output_options,
+                'infectious',
+                'agegroup',
+                params['age_breaks']
+            )
 
     # Ensure project folder exists
     project_dir = os.path.join(constants.DATA_PATH, application)

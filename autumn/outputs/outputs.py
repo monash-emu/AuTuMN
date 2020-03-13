@@ -176,6 +176,13 @@ def add_title_to_plot(fig, n_panels, content):
     )
 
 
+def collate_compartment_across_stratification(output_options, compartment, stratification, strata):
+    for stratum in strata:
+        output_options['req_outputs'].append(
+            'prevX' + compartment + 'XamongX' + stratification + '_' + stratum)
+    return output_options
+
+
 class Outputs:
     def __init__(
         self,

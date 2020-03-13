@@ -54,6 +54,19 @@ def run_model(application):
     with open(outputs_path, "r") as yaml_file:
         output_options = yaml.safe_load(yaml_file)
 
+    # Run the model
+    if application == 'marshall_islands':
+        model_function = build_rmi_model
+    elif application == 'covid_19':
+        params['age_breaks'] = [str(i_break) for i_break in list(range(0, 80, 5))]
+        model_function = build_covid_model
+
+    if application == 'covid_19':
+        for compartment_type in ['susceptible', 'exposed', 'infectious', 'recovered']:
+            output_options['req_outputs'].append('prevX' + compartment_type + 'Xamong')
+            # for age_break in params['age_breaks']:
+            #     output_options['req_outputs'].append('prevX' + compartment_type + 'XamongX' + age_break)
+
     # Ensure project folder exists
     project_dir = os.path.join(constants.DATA_PATH, application)
     if not os.path.exists(project_dir):
@@ -78,12 +91,6 @@ def run_model(application):
     # Prepare scenario data
     scenario_params = params["scenarios"]
     scenario_list = [0, *scenario_params.keys()]
-
-    # Run the model
-    if application == 'marshall_islands':
-        model_function = build_rmi_model
-    elif application == 'covid_19':
-        model_function = build_covid_model
 
     with Timer("Running model scenarios"):
         models = run_multi_scenario(
@@ -145,4 +152,4 @@ def run_model(application):
 
 
 if __name__ == "__main__":
-    run_model('marshall_islands')
+    run_model('covid_19')

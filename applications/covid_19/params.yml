@@ -3,8 +3,8 @@
 default:
 
   # Model structure parameters
-  n_exposed_compartments: 10
-  n_infectious_compartments: 10
+  n_exposed_compartments: 2
+  n_infectious_compartments: 2
 
   # Initial conditions
   infectious_seed: 1

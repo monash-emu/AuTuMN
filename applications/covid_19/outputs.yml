@@ -6,11 +6,7 @@ plot_start_time: 0
 # e.g. [prevXinfectious, prevXlatent]
 outputs_to_plot_by_stratum: []
 
-req_outputs: 
-  - prevXexposedXamong
-  - prevXinfectiousXamong
-  - prevXsusceptibleXamong
-  - prevXrecoveredXamong
+req_outputs: []
 
 functions_to_plot: []
 

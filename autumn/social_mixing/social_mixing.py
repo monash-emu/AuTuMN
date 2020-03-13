@@ -70,5 +70,36 @@ def load_population(file, sheet_name):
     # Make one DF and create a multi-level index
     population = pd.concat([m_pop,f_pop,p_pop])
     population.set_index(['Age group (years)','Gender'], inplace = True)
+
+    over_75 =  population.loc[[('75–79'),('80–84'),('85–89'),('85–89'),('90–94'),('95–99'),('100 and over'),],:]
+    over_75 =  over_75.groupby('Gender').sum()
+    over_75['Age group (years)'] = '75+'
+
+    over_75.set_index(['Age group (years)'],append=True, inplace =True)
     
     return population
+
+def load_age_calibration():
+    '''
+    converts the age group specific cases to covid_19 agegroup
+    0–9,    10–19,  20–29,  30–39,  40–49,  50–59,  60–69,  70–79,  80+
+    2,      2,	    13,	    11,	    11,	    14,	    8,	    6,	    4
+
+    Returns:
+        a pandas series
+    '''
+
+    age_breakpoints = [int(i_break) for i_break in list(range(0, 80, 5))]
+        
+    # split the case numbers into 5 year groups
+    case_numbers = [2,2,13,11,11,14,8,6,4]
+    case_numbers = [ each/2 for each in case_numbers for y in range(2) ]
+
+    # create case numbers for 75+
+    y = case_numbers[:-3]
+    y.append(sum(case_numbers[-3:]))
+  
+    return pd.Series(y, index=age_breakpoints)
+
+    file ='31010DO001_201906.XLS'
+    sheet_name = 'Table_6'

@@ -49,11 +49,16 @@ def build_covid_model(update_params={}):
     # Replicate compartments that need to be repeated
     compartments, _, _ = \
         replicate_compartment(
-            model_parameters['n_exposed_compartments'], compartments, Compartment.EXPOSED
+            model_parameters['n_exposed_compartments'],
+            compartments,
+            Compartment.EXPOSED
         )
     compartments, infectious_compartments, init_pop = \
         replicate_compartment(
-            model_parameters['n_infectious_compartments'], compartments, Compartment.INFECTIOUS, infectious_seed=model_parameters['infectious_seed']
+            model_parameters['n_infectious_compartments'],
+            compartments,
+            Compartment.INFECTIOUS,
+            infectious_seed=model_parameters['infectious_seed']
         )
 
     # Multiply the progression rate by the number of compartments to keep the average time in exposed the same
@@ -77,19 +82,25 @@ def build_covid_model(update_params={}):
     # Sequentially add groups of flows to flows list
     flows = []
     flows = add_infection_flows(
-        flows, model_parameters['n_exposed_compartments']
+        flows,
+        model_parameters['n_exposed_compartments']
     )
     flows = add_within_exposed_flows(
-        flows, model_parameters['n_exposed_compartments']
+        flows,
+        model_parameters['n_exposed_compartments']
     )
     flows = add_within_infectious_flows(
-        flows, model_parameters['n_infectious_compartments']
+        flows,
+        model_parameters['n_infectious_compartments']
     )
     flows = add_progression_flows(
-        flows, model_parameters['n_exposed_compartments'], model_parameters['n_infectious_compartments']
+        flows,
+        model_parameters['n_exposed_compartments'],
+        model_parameters['n_infectious_compartments']
     )
     flows = add_recovery_flows(
-        flows, model_parameters['n_infectious_compartments']
+        flows,
+        model_parameters['n_infectious_compartments']
     )
 
     mixing_matrix = \
@@ -97,6 +108,23 @@ def build_covid_model(update_params={}):
             'all_locations_1',
             'Australia'
         )
+
+    last_exposed = \
+        'exposed' + '_' + str(model_parameters['n_exposed_compartments']) if \
+            model_parameters['n_exposed_compartments'] > 1 else \
+            'exposed'
+    first_infectious = \
+        'infectious_1' if \
+            model_parameters['n_infectious_compartments'] > 1 else \
+            'infectious'
+    output_connections = {
+        'incidence':
+            {'origin': last_exposed,
+             'to': first_infectious,
+             'origin_condition': '',
+             'to_condition': ''
+             }
+    }
 
     # Define model
     _covid_model = StratifiedModel(
@@ -107,7 +135,7 @@ def build_covid_model(update_params={}):
         flows,
         birth_approach='no_birth',
         starting_population=model_parameters['start_population'],
-        output_connections={},
+        output_connections=output_connections,
         death_output_categories=list_all_strata_for_mortality(compartments),
         infectious_compartment=infectious_compartments
     )

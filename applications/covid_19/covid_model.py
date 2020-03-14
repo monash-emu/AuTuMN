@@ -130,11 +130,15 @@ def build_covid_model(update_params={}):
     # Stratify model by age without demography
     if 'agegroup' in model_parameters['stratify_by']:
         params = add_agegroup_breaks(params)
+        age_breakpoints = params['default']['all_stratifications']['agegroup']
+        list_of_starting_pops = [1. / len(age_breakpoints)] * len(age_breakpoints)
+        starting_props = {i_break: prop for i_break, prop in zip(age_breakpoints, list_of_starting_pops)}
         _covid_model = \
             stratify_by_age(
                 _covid_model,
                 params['default']['all_stratifications']['agegroup'],
-                mixing_matrix=mixing_matrix
+                mixing_matrix,
+                starting_props,
             )
 
     return _covid_model

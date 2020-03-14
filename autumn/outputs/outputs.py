@@ -780,6 +780,28 @@ class Outputs:
                 parameter_names_to_plot[parameter] = \
                     models[sc_index].final_parameter_functions[parameter](time)
 
+        fig, axes, max_dims, n_rows, n_cols = initialise_figures_axes(1)
+        axis = find_panel_grid_indices([axes], 0, n_rows, n_cols)
+        axis.plot(
+            list(parameter_names_to_plot.values()),
+            linewidth=0.,
+            marker='o',
+            markersize=5
+        )
+        x_tick_labels = \
+            [
+                i_label[len(parameter_name) + 1:]
+                for i_label in parameter_names_to_plot.keys()
+            ]
+        pyplot.xticks(list(range(len(parameter_names_to_plot))))
+        axis.set_xticklabels(
+            x_tick_labels,
+            rotation=90,
+            fontsize=5
+        )
+        file_name = os.path.join('baseline', parameter_name)
+        self.finish_off_figure(fig, filename=file_name, title_text=parameter_name)
+
     def plot_mixing_matrix(self, sc_index):
         """
         Simple plotting function of a mixing matrix, using standard seaborn method

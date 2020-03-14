@@ -143,12 +143,12 @@ def run_model(application):
         )
         outputs.plot_output_combinations_together()
 
-        # outputs.plot_requested_outputs()
+        outputs.plot_requested_outputs()
         # for output in output_options['outputs_to_plot_by_stratum']:
         #     for sc_index in range(len(models)):
         #         outputs.plot_outputs_by_stratum(output, sc_index=sc_index)
-        #
-        # outputs.plot_parameter_category_values(models, 'contact_rate', 2010.)
+
+        outputs.plot_parameter_category_values(models, 'contact_rate', 2010.)
 
         # Plot mixing matrix, presuming that this should always be plotted, provided there is one
         outputs.plot_mixing_matrix(0)
@@ -158,5 +158,5 @@ def run_model(application):
             outputs.plot_input_function(input_function, models[0].adaptation_functions[input_function])
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     run_model('covid_19')

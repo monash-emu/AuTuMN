@@ -107,7 +107,7 @@ def build_covid_model(update_params={}):
     mixing_matrix = \
         load_specific_prem_sheet(
             'all_locations_1',
-            'Australia'
+            params['default']['country']
         )
 
     output_connections = find_incidence_outputs(model_parameters)

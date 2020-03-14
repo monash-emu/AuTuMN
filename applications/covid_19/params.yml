@@ -6,6 +6,9 @@ default:
   n_exposed_compartments: 2
   n_infectious_compartments: 2
 
+  # Country
+  country: Australia
+
   # Initial conditions
   infectious_seed: 1
 

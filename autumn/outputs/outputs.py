@@ -655,18 +655,26 @@ class Outputs:
         )
         self.tidy_y_axis(axis, quantity="", max_dims=1, y_label=y_label, max_value=y_max)
 
-    def plot_output_combinations_together(self):
+    def plot_output_combinations_together(self, compartment='infectious'):
+        """
+        Create output graph for each requested stratification, displaying prevalence of compartment in each stratum
+        """
         fig, axes, max_dims, n_rows, n_cols = initialise_figures_axes(1)
         for i_combination in range(len(self.output_options['output_combinations_to_plot_together'])):
-            for stratum in \
-                    self.models[0].all_stratifications[
-                        self.output_options['output_combinations_to_plot_together'][i_combination][1]
-                    ]:
+            strata_to_iterate = \
+                self.models[0].all_stratifications[
+                    self.output_options['output_combinations_to_plot_together'][i_combination][1]]
+            for i_stratum, stratum in enumerate(strata_to_iterate):
+                colour = i_stratum / len(strata_to_iterate)
                 axes.plot(
                     self.post_processing_list[0].derived_outputs['times'],
-                    self.post_processing_list[0].generated_outputs['prevXinfectiousXamongXagegroup_' + stratum]
+                    self.post_processing_list[0].generated_outputs[
+                        'prevX' + compartment + 'XamongXagegroup_' + stratum
+                    ],
+                    color=(colour, 0., 1 - colour)
                 )
-        self.finish_off_figure(fig, filename='prev_by_stratum')
+            axes.legend(strata_to_iterate)
+            self.finish_off_figure(fig, filename='prev_by_stratum')
 
     def plot_outputs_by_stratum(self, requested_output="prevXinfectious", sc_index=0):
         if not hasattr(self.post_processing_list[sc_index].model, "all_stratifications"):

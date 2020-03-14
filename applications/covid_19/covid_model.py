@@ -14,6 +14,7 @@ from autumn.covid_model.flows import \
     add_infection_flows, add_progression_flows, add_recovery_flows, add_within_exposed_flows, \
     add_within_infectious_flows, replicate_compartment, multiply_flow_value_for_multiple_compartments
 from autumn.covid_model.stratification import stratify_by_age
+from autumn.covid_model.covid_outputs import find_incidence_outputs
 from autumn.demography.social_mixing import load_specific_prem_sheet
 
 # Database locations
@@ -109,22 +110,7 @@ def build_covid_model(update_params={}):
             'Australia'
         )
 
-    last_exposed = \
-        'exposed' + '_' + str(model_parameters['n_exposed_compartments']) if \
-            model_parameters['n_exposed_compartments'] > 1 else \
-            'exposed'
-    first_infectious = \
-        'infectious_1' if \
-            model_parameters['n_infectious_compartments'] > 1 else \
-            'infectious'
-    output_connections = {
-        'incidence':
-            {'origin': last_exposed,
-             'to': first_infectious,
-             'origin_condition': '',
-             'to_condition': ''
-             }
-    }
+    output_connections = find_incidence_outputs(model_parameters)
 
     # Define model
     _covid_model = StratifiedModel(

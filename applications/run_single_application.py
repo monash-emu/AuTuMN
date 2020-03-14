@@ -148,7 +148,7 @@ def run_model(application):
         #     for sc_index in range(len(models)):
         #         outputs.plot_outputs_by_stratum(output, sc_index=sc_index)
 
-        outputs.plot_parameter_category_values(models, 'contact_rate', 2010.)
+        # outputs.plot_parameter_category_values(models, 'contact_rate', 2010.)
 
         # Plot mixing matrix, presuming that this should always be plotted, provided there is one
         outputs.plot_mixing_matrix(0)

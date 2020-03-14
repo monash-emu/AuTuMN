@@ -15,6 +15,8 @@ def stratify_by_age(model_to_stratify, age_strata, mixing_matrix):
         adjustment_requests=age_params,
         mixing_matrix=mixing_matrix,
         verbose=False,
+        # requested_proportions={'0': 0.1, '5': .1, '10': .1, '15': .1, '20': .1, '25': .1, '30': .1, '35': .1,
+        #                        '40': .1, '45': .1, '50': 0., '55': 0., '60':}
     )
     return model_to_stratify
 

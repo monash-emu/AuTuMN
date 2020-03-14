@@ -16,6 +16,7 @@ from applications.covid_19.flows import \
 from applications.covid_19.stratification import stratify_by_age
 from applications.covid_19.covid_outputs import find_incidence_outputs
 from autumn.demography.social_mixing import load_specific_prem_sheet
+from autumn.demography.ageing import add_agegroup_breaks
 
 # Database locations
 file_dir = os.path.dirname(os.path.abspath(__file__))
@@ -128,11 +129,11 @@ def build_covid_model(update_params={}):
 
     # Stratify model by age without demography
     if 'agegroup' in model_parameters['stratify_by']:
-        age_breaks = [str(i_break) for i_break in list(range(0, 80, 5))]
+        params = add_agegroup_breaks(params)
         _covid_model = \
             stratify_by_age(
                 _covid_model,
-                age_breaks,
+                params['default']['all_stratifications']['agegroup'],
                 mixing_matrix=mixing_matrix
             )
 

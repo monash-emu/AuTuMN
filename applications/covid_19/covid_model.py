@@ -10,11 +10,11 @@ from autumn.tb_model import (
     list_all_strata_for_mortality,
 )
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
-from autumn.covid_model.flows import \
+from applications.covid_19.flows import \
     add_infection_flows, add_progression_flows, add_recovery_flows, add_within_exposed_flows, \
     add_within_infectious_flows, replicate_compartment, multiply_flow_value_for_multiple_compartments
-from autumn.covid_model.stratification import stratify_by_age
-from autumn.covid_model.covid_outputs import find_incidence_outputs
+from applications.covid_19.stratification import stratify_by_age
+from applications.covid_19.covid_outputs import find_incidence_outputs
 from autumn.demography.social_mixing import load_specific_prem_sheet
 
 # Database locations

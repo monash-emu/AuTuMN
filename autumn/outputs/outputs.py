@@ -1,6 +1,7 @@
 from matplotlib import pyplot
 from matplotlib.ticker import FuncFormatter
 import numpy
+import pandas as pd
 import os
 import copy
 import seaborn as sns
@@ -654,6 +655,33 @@ class Outputs:
             axis, start=self.plot_start_time, end=max(times_to_plot), max_dims=1, x_label="time"
         )
         self.tidy_y_axis(axis, quantity="", max_dims=1, y_label=y_label, max_value=y_max)
+
+    def plot_pop_distribution_by_stratum(self, stratification):
+
+        fig, axes, max_dims, n_rows, n_cols = initialise_figures_axes(1)
+        previous_values = [0.] * len(self.post_processing_list[0].derived_outputs['times'])
+        for i_stratum, stratum in \
+                enumerate(self.models[0].all_stratifications[stratification]):
+            working_values = \
+                self.post_processing_list[0].generated_outputs[
+                    'distribution_of_strataX' + stratification][stratum]
+            new_values = [
+                working + previous for
+                working, previous in
+                zip(working_values, previous_values)
+            ]
+            colour = \
+                i_stratum / \
+                len(self.models[0].all_stratifications[stratification])
+            axes.fill_between(
+                self.post_processing_list[0].derived_outputs['times'],
+                previous_values,
+                new_values,
+                color=(colour, 0., 1 - colour)
+            )
+            previous_values = new_values
+        axes.legend(self.models[0].all_stratifications[stratification])
+        self.finish_off_figure(fig, filename='distribution_by_stratum_' + stratification)
 
     def plot_output_combinations_together(self, compartment='infectious'):
         """

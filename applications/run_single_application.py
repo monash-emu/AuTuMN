@@ -143,6 +143,9 @@ def run_model(application):
         )
         outputs.plot_output_combinations_together()
 
+        for stratification in output_options['display_stratification']:
+            outputs.plot_pop_distribution_by_stratum(stratification)
+
         outputs.plot_requested_outputs()
         # for output in output_options['outputs_to_plot_by_stratum']:
         #     for sc_index in range(len(models)):
@@ -159,4 +162,4 @@ def run_model(application):
 
 
 if __name__ == '__main__':
-    run_model('covid_19')
+    run_model('marshall_islands')

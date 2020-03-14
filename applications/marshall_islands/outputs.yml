@@ -6,6 +6,8 @@ plot_start_time: 1940
 # e.g. [prevXinfectious, prevXlatent]
 outputs_to_plot_by_stratum: []
 
+display_stratification: []
+
 compartments_for_prevalence: []
 
 output_combinations_to_collate: []

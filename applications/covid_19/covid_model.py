@@ -42,6 +42,10 @@ def build_covid_model(update_params={}):
     # Update, not needed for baseline run
     model_parameters.update(update_params)
 
+    total_pops = \
+        [1464776, 1502644, 1397182, 1421612, 1566792, 1664609, 1703852, 1561686, 1583254, 1581460, 1523557,
+         1454332, 1299406, 1188989, 887721, 652671 + 460555 + 486847]
+
     # Define single compartments that don't need to be replicated
     compartments = [
         Compartment.SUSCEPTIBLE,
@@ -121,7 +125,7 @@ def build_covid_model(update_params={}):
         model_parameters,
         flows,
         birth_approach='no_birth',
-        starting_population=model_parameters['start_population'],
+        starting_population=sum(total_pops),
         output_connections=output_connections,
         death_output_categories=list_all_strata_for_mortality(compartments),
         infectious_compartment=infectious_compartments
@@ -131,7 +135,7 @@ def build_covid_model(update_params={}):
     if 'agegroup' in model_parameters['stratify_by']:
         params = add_agegroup_breaks(params)
         age_breakpoints = params['default']['all_stratifications']['agegroup']
-        list_of_starting_pops = [1. / len(age_breakpoints)] * len(age_breakpoints)
+        list_of_starting_pops = [i_pop / sum(total_pops) for i_pop in total_pops]
         starting_props = {i_break: prop for i_break, prop in zip(age_breakpoints, list_of_starting_pops)}
         _covid_model = \
             stratify_by_age(

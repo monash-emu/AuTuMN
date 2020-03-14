@@ -22,6 +22,9 @@ output_combinations_to_plot_together:
 # e.g. [prevXinfectious, prevXlatent]
 outputs_to_plot_by_stratum: []
 
+display_stratification:
+  - agegroup
+
 req_outputs: []
 
 functions_to_plot: []

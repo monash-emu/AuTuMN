@@ -7,7 +7,7 @@ default:
     - age
     - location
     - organ
-#    - diabetes
+    - diabetes
   all_stratifications:
     organ:
       - smearpos

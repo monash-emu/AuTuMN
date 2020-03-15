@@ -775,11 +775,10 @@ class Outputs:
 
     def plot_input_function(self, input_function_name, input_function, sc_index=0):
         """
-        Plot single simple plot of a function
+        Plot single simple plot of a function over time
         """
-
-        times_to_plot = self.post_processing_list[sc_index].model.times
         fig, axes, max_dims, n_rows, n_cols = initialise_figures_axes(1)
+        times_to_plot = self.post_processing_list[sc_index].model.times
         axis = find_panel_grid_indices([axes], 0, n_rows, n_cols)
         axis.plot(
             times_to_plot,

@@ -37,6 +37,6 @@ ymax: {}
 
 translation_dictionary: {}
 
-time_for_parameter_visualisation: 2010.
+time_for_parameter_visualisation: 0.
 
 parameter_stems_to_plot: []

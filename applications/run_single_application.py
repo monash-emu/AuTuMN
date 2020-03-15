@@ -160,8 +160,8 @@ def run_model(application):
         outputs.plot_mixing_matrix()
 
         # Plotting the baseline function value, but here in case we want to use for multi-scenario in the future
-        # for input_function in output_options['functions_to_plot']:
-        #     outputs.new_plot_input_function(input_function, models[0].adaptation_functions[input_function])
+        for input_function in output_options['functions_to_plot']:
+            outputs.new_plot_input_function(input_function, models[0].adaptation_functions[input_function])
 
 
 if __name__ == '__main__':

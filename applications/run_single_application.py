@@ -151,10 +151,13 @@ def run_model(application):
         #     for sc_index in range(len(models)):
         #         outputs.plot_outputs_by_stratum(output, sc_index=sc_index)
 
-        # outputs.plot_parameter_category_values(models, 'contact_rate', 2010.)
+        outputs.plot_parameter_category_values(
+            output_options['parameter_stems_to_plot'],
+            output_options['time_for_parameter_visualisation']
+        )
 
         # Plot mixing matrix, presuming that this should always be plotted, provided there is one
-        outputs.plot_mixing_matrix(0)
+        outputs.plot_mixing_matrix()
 
         # Plotting the baseline function value, but here in case we want to use for multi-scenario in the future
         for input_function in output_options['functions_to_plot']:
@@ -162,4 +165,4 @@ def run_model(application):
 
 
 if __name__ == '__main__':
-    run_model('marshall_islands')
+    run_model('covid_19')

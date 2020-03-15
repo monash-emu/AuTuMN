@@ -121,7 +121,6 @@ def initialise_figures_axes(
         axes: A list containing each of the axes
         max_dims: The number of rows or columns of sub-plots, whichever is greater
     """
-
     pyplot.style.use("ggplot")
     n_rows, n_cols = requested_grid if requested_grid else find_subplot_grid(n_panels)
     horizontal_position_one_axis = 0.11 if room_for_legend else 0.15
@@ -800,48 +799,79 @@ class Outputs:
         file_name = os.path.join(scenario_name, input_function_name)
         self.finish_off_figure(fig, filename=file_name, title_text=input_function_name)
 
-    def plot_parameter_category_values(self, models, parameter_name, time, sc_index=0):
-
-        parameter_names_to_plot = {}
-        for parameter in models[sc_index].final_parameter_functions:
-            if parameter.startswith(parameter_name):
-                parameter_names_to_plot[parameter] = \
-                    models[sc_index].final_parameter_functions[parameter](time)
-
-        fig, axes, max_dims, n_rows, n_cols = initialise_figures_axes(1)
-        axis = find_panel_grid_indices([axes], 0, n_rows, n_cols)
-        axis.plot(
-            list(parameter_names_to_plot.values()),
-            linewidth=0.,
-            marker='o',
-            markersize=5
-        )
-        x_tick_labels = \
-            [
-                i_label[len(parameter_name) + 1:]
-                for i_label in parameter_names_to_plot.keys()
-            ]
-        pyplot.xticks(list(range(len(parameter_names_to_plot))))
-        axis.set_xticklabels(
-            x_tick_labels,
-            rotation=90,
-            fontsize=5
-        )
-        file_name = os.path.join('baseline', parameter_name)
-        self.finish_off_figure(fig, filename=file_name, title_text=parameter_name)
-
-    def plot_mixing_matrix(self, sc_index):
+    def plot_parameter_category_values(self, parameter_stems, time, sc_index=0):
         """
-        Simple plotting function of a mixing matrix, using standard seaborn method
+        Create a plot to visualise the parameter values and their values across categories after stratification
+        adjustments have been applied.
+
+        :param parameter_stems: list
+        List containing the strings for the stems of the parameter names to be visualised
+        :param time: float
+        Time at which to visualise the parameter values
+        :param sc_index: int
+        Index of the scenario that the mixing matrix is being plotted for
+        """
+
+        # Loop over each requested stem
+        for parameter_stem in parameter_stems:
+
+            # Initialise
+            fig, axis, max_dims, n_rows, n_cols = initialise_figures_axes(1)
+
+            # Collate all the individual parameter names that need to be plotted
+            parameter_names_to_plot = {}
+            for parameter in self.models[sc_index].final_parameter_functions:
+                if parameter.startswith(parameter_stem):
+                    parameter_names_to_plot[parameter] = \
+                        self.models[sc_index].final_parameter_functions[parameter](time)
+
+            # Plot
+            axis.plot(
+                list(parameter_names_to_plot.values()),
+                linewidth=0.,
+                marker='o',
+                markersize=5
+            )
+
+            # Labelling of the x-ticks with the parameter names
+            pyplot.xticks(list(range(len(parameter_names_to_plot))))
+            x_tick_labels = \
+                [
+                    i_label[len(parameter_stem) + 1:]
+                    for i_label in parameter_names_to_plot.keys()
+                ]
+            axis.set_xticklabels(
+                x_tick_labels,
+                rotation=90,
+                fontsize=5
+            )
+
+            # Finish off
+            self.finish_off_figure(
+                fig,
+                filename=os.path.join('baseline', parameter_stem),
+                title_text=parameter_stem
+            )
+
+    def plot_mixing_matrix(self, sc_index=0):
+        """
+        Simple plotting function for the model's mixing matrix, using standard seaborn method
+
+        :parameter sc_index:
+        Integer index of the scenario that the mixing matrix is being plotted for
         """
         if self.models[sc_index].mixing_matrix is not None:
-            fig, axes, max_dims, n_rows, n_cols = initialise_figures_axes(1)
-            axes = \
+            fig, axis, max_dims, n_rows, n_cols = \
+                initialise_figures_axes(1)
+            axis = \
                 sns.heatmap(
                     self.models[sc_index].mixing_matrix,
-                    yticklabels=self.models[0].mixing_categories,
+                    yticklabels=self.models[sc_index].mixing_categories,
                     xticklabels=False
                 )
-            scenario_name = list(self.scenario_names.values())[sc_index]
-            file_name = os.path.join(scenario_name, 'mixing_matrix')
-            self.finish_off_figure(fig, filename=file_name, title_text='mixing_matrix')
+            self.finish_off_figure(
+                fig,
+                filename=os.path.join(
+                    list(self.scenario_names.values())[sc_index],
+                    'mixing_matrix')
+            )

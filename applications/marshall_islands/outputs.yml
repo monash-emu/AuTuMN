@@ -14,6 +14,11 @@ output_combinations_to_collate: []
 
 output_combinations_to_plot_together: []
 
+time_for_parameter_visualisation: 2010.
+
+parameter_stems_to_plot:
+  - contact_rate
+
 req_outputs:
   - prevXinfectiousXamong
   - prevXlatentXamong

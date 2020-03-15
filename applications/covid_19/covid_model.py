@@ -42,6 +42,7 @@ def build_covid_model(update_params={}):
     # Update, not needed for baseline run
     model_parameters.update(update_params)
 
+    # Australian population sizes
     total_pops = \
         [1464776, 1502644, 1397182, 1421612, 1566792, 1664609, 1703852, 1561686, 1583254, 1581460, 1523557,
          1454332, 1299406, 1188989, 887721, 652671 + 460555 + 486847]

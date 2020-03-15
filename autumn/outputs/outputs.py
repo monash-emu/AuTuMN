@@ -907,33 +907,30 @@ class Outputs:
             )
 
 
-class OutputCreation:
+class OutputPlotter:
     def __init__(
         self,
         models,
         post_processing_list,
         output_options,
-        targets_to_plot={},
-        out_dir="outputs",
-        translation_dict={},
+        out_dir='outputs',
         multiplot_only=False,
         mcmc_weights=None,
-        plot_start_time=1990,
     ):
         """
         :param post_processing: an object of class post_processing associated with a run model
-        :param out_dir: the name of the directory where to write the outputs
+        :param out_dir: the name of the directory in which to write the outputs
         """
         self.post_processing_list = post_processing_list
-        self.targets_to_plot = targets_to_plot
         self.out_dir = out_dir
-        self.translation_dict = translation_dict
+        self.translation_dict = \
+            output_options['translation_dict'] if 'translation_dict' in output_options else {}
         self.multiplot_only = multiplot_only
         self.scenario_names = {}
-        self.plot_start_time = plot_start_time
+        self.plot_start_time = \
+            output_options['plot_start_time'] if 'plot_start_time' in output_options else 1990.
         self.models = models
         self.output_options = output_options
-
         self.colour_theme = [
             (0.0, 0.0, 0.0),
             (57.0 / 255.0, 106.0 / 255.0, 177.0 / 255.0),
@@ -960,22 +957,21 @@ class OutputCreation:
             (0.5, 0.5, 0.5),
             (0.0, 0.0, 0.0),
         ]
-
         self.mcmc_weights = mcmc_weights
-        self.mcmc_mode = not self.mcmc_weights is None
-        self.multiplot_only = True is self.mcmc_mode
-
+        self.mcmc_mode = self.mcmc_weights is not None
+        self.multiplot_only = self.mcmc_mode is True
         self.create_out_directories()
 
     def create_out_directories(self):
+        """
+        Create necessary directories for saving the plots
+        """
         if not os.path.exists(self.out_dir):
             os.mkdir(self.out_dir)
 
         for scenario_index in range(len(self.post_processing_list)):
             scenario_number = self.post_processing_list[scenario_index].scenario_number
-            scenario_name = (
-                "Baseline" if scenario_number == 0 else "Scenario " + str(scenario_number)
-            )
+            scenario_name = 'Baseline' if scenario_number == 0 else 'Scenario ' + str(scenario_number)
             self.scenario_names[scenario_number] = scenario_name
 
             if not self.multiplot_only and not self.mcmc_mode:
@@ -984,7 +980,7 @@ class OutputCreation:
                     os.mkdir(scenario_out_dir)
 
         if len(self.scenario_names) > 1 or self.mcmc_mode:
-            multi_out_dir = os.path.join(self.out_dir, "multi_plots")
+            multi_out_dir = os.path.join(self.out_dir, 'multi_plots')
             if not os.path.exists(multi_out_dir):
                 os.mkdir(multi_out_dir)
 
@@ -1146,21 +1142,17 @@ class OutputCreation:
         file_name = os.path.join(scenario_name, input_function_name)
         self.finish_off_figure(fig, filename=file_name, title_text=input_function_name)
 
-    def plot_parameter_category_values(self, parameter_stems, time, sc_index=0):
+    def plot_parameter_category_values(self, sc_index=0):
         """
         Create a plot to visualise the parameter values and their values across categories after stratification
         adjustments have been applied.
 
-        :param parameter_stems: list
-        List containing the strings for the stems of the parameter names to be visualised
-        :param time: float
-        Time at which to visualise the parameter values
         :param sc_index: int
         Index of the scenario that the mixing matrix is being plotted for
         """
 
         # Loop over each requested stem
-        for parameter_stem in parameter_stems:
+        for parameter_stem in self.output_options['parameter_stems_to_plot']:
 
             # Initialise
             fig, axis, max_dims, n_rows, n_cols = initialise_figures_axes(1)
@@ -1170,7 +1162,9 @@ class OutputCreation:
             for parameter in self.models[sc_index].final_parameter_functions:
                 if parameter.startswith(parameter_stem):
                     parameter_names_to_plot[parameter] = \
-                        self.models[sc_index].final_parameter_functions[parameter](time)
+                        self.models[sc_index].final_parameter_functions[parameter](
+                            self.output_options['time_for_parameter_visualisation']
+                        )
 
             # Plot
             axis.plot(

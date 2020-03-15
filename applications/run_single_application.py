@@ -161,7 +161,7 @@ def run_model(application):
 
         # Plotting the baseline function value, but here in case we want to use for multi-scenario in the future
         for input_function in output_options['functions_to_plot']:
-            outputs.plot_input_function(input_function, models[0].adaptation_functions[input_function], something=1)
+            outputs.plot_input_function(input_function, models[0].adaptation_functions[input_function])
 
 
 if __name__ == '__main__':

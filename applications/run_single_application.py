@@ -157,7 +157,7 @@ def run_model(application):
         # )
 
         # Plot mixing matrix, presuming that this should always be plotted, provided there is one
-        outputs.plot_mixing_matrix()
+        # outputs.plot_mixing_matrix()
 
         # Plotting the baseline function value, but here in case we want to use for multi-scenario in the future
         for input_function in output_options['functions_to_plot']:

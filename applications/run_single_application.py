@@ -8,7 +8,7 @@ import yaml
 
 from summer_py.constants import IntegrationType
 import summer_py.post_processing as post_proc
-from autumn.outputs.outputs import Outputs, collate_compartment_across_stratification, collate_prevalence
+from autumn.outputs.outputs import Outputs, OutputCreation, collate_compartment_across_stratification, collate_prevalence
 
 from autumn.tool_kit.timer import Timer
 from autumn.tool_kit import run_multi_scenario
@@ -151,17 +151,27 @@ def run_model(application):
         #     for sc_index in range(len(models)):
         #         outputs.plot_outputs_by_stratum(output, sc_index=sc_index)
 
-        # outputs.plot_parameter_category_values(
-        #     output_options['parameter_stems_to_plot'],
-        #     output_options['time_for_parameter_visualisation']
-        # )
+        outputs_2 = OutputCreation(
+            models,
+            pps,
+            output_options,
+            output_options['targets_to_plot'],
+            plot_path,
+            output_options['translation_dictionary'],
+            plot_start_time=output_options['plot_start_time']
+        )
 
         # Plot mixing matrix, presuming that this should always be plotted, provided there is one
-        outputs.plot_mixing_matrix()
+        outputs_2.plot_mixing_matrix()
+
+        outputs_2.plot_parameter_category_values(
+            output_options['parameter_stems_to_plot'],
+            output_options['time_for_parameter_visualisation']
+        )
 
         # Plotting the baseline function value, but here in case we want to use for multi-scenario in the future
         for input_function in output_options['functions_to_plot']:
-            outputs.plot_input_function(input_function, models[0].adaptation_functions[input_function])
+            outputs_2.plot_input_function(input_function, models[0].adaptation_functions[input_function])
 
 
 if __name__ == '__main__':

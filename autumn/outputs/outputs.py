@@ -1117,30 +1117,42 @@ class OutputPlotter:
                 self.intelligent_convert_string(y_label), fontsize=get_label_font_size(max_dims)
             )
 
-    def plot_input_function(self, input_function_name, input_function, sc_index=0):
+    def plot_input_function(self, sc_index=0):
         """
         Plot single simple plot of a function over time
         """
-        fig, axes, max_dims, n_rows, n_cols = initialise_figures_axes(1)
-        times_to_plot = self.post_processing_list[sc_index].model.times
-        axis = find_panel_grid_indices([axes], 0, n_rows, n_cols)
-        axis.plot(
-            times_to_plot,
-            list(map(input_function, times_to_plot)),
-            color=self.colour_theme[sc_index])
-        self.tidy_x_axis(
-            axis,
-            start=self.plot_start_time,
-            end=max(times_to_plot),
-            max_dims=max_dims,
-            x_label="time",
-        )
-        self.tidy_y_axis(
-            axis, quantity="", max_dims=max_dims
-        )
-        scenario_name = list(self.scenario_names.values())[sc_index]
-        file_name = os.path.join(scenario_name, input_function_name)
-        self.finish_off_figure(fig, filename=file_name, title_text=input_function_name)
+        for input_function_name in self.output_options['functions_to_plot']:
+            fig, axes, max_dims, n_rows, n_cols = initialise_figures_axes(1)
+            times_to_plot = self.post_processing_list[sc_index].model.times
+            axis = find_panel_grid_indices([axes], 0, n_rows, n_cols)
+            axis.plot(
+                times_to_plot,
+                list(map(
+                    self.models[0].adaptation_functions[input_function_name],
+                    times_to_plot)
+                ),
+                color=self.colour_theme[sc_index])
+            self.tidy_x_axis(
+                axis,
+                start=self.plot_start_time,
+                end=max(times_to_plot),
+                max_dims=max_dims,
+                x_label='time',
+            )
+            self.tidy_y_axis(
+                axis, quantity='', max_dims=max_dims
+            )
+            scenario_name = list(self.scenario_names.values())[sc_index]
+            file_name = os.path.join(scenario_name, input_function_name)
+            self.finish_off_figure(fig, filename=file_name, title_text=input_function_name)
+
+    def run_input_plots(self):
+        """
+        Master method to pull together methods for plotting model inputs
+        """
+        self.plot_parameter_category_values()
+        self.plot_mixing_matrix()
+        self.plot_input_function()
 
     def plot_parameter_category_values(self, sc_index=0):
         """

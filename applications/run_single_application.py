@@ -151,13 +151,10 @@ def run_model(application):
         #     for sc_index in range(len(models)):
         #         outputs.plot_outputs_by_stratum(output, sc_index=sc_index)
 
+        # New approach to plotting outputs, intended to be more general
         outputs_plotter = OutputPlotter(models, pps, output_options, plot_path)
         outputs_plotter.run_input_plots()
 
-        # Plotting the baseline function value, but here in case we want to use for multi-scenario in the future
-        for input_function in output_options['functions_to_plot']:
-            outputs_plotter.plot_input_function(input_function, models[0].adaptation_functions[input_function])
-
 
 if __name__ == '__main__':
-    run_model('covid_19')
+    run_model('marshall_islands')

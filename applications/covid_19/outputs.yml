@@ -3,14 +3,29 @@
 # All keys in this file are arguments to `create_multi_scenario_outputs`
 plot_start_time: 0
 
+compartments_for_prevalence:
+  - 'susceptible'
+  - 'exposed'
+  - 'infectious'
+  - 'recovered'
+
+output_combinations_to_collate:
+  -
+    - 'infectious'
+    - 'agegroup'
+
+output_combinations_to_plot_together:
+  -
+    - 'infectious'
+    - 'agegroup'
+
 # e.g. [prevXinfectious, prevXlatent]
 outputs_to_plot_by_stratum: []
 
-req_outputs: 
-  - prevXexposedXamong
-  - prevXinfectiousXamong
-  - prevXsusceptibleXamong
-  - prevXrecoveredXamong
+display_stratification:
+  - agegroup
+
+req_outputs: []
 
 functions_to_plot: []
 
@@ -21,3 +36,7 @@ targets_to_plot: {}
 ymax: {}
 
 translation_dictionary: {}
+
+time_for_parameter_visualisation: 0.
+
+parameter_stems_to_plot: []

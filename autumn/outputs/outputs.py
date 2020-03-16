@@ -1,6 +1,7 @@
 from matplotlib import pyplot
 from matplotlib.ticker import FuncFormatter
 import numpy
+import pandas as pd
 import os
 import copy
 import seaborn as sns
@@ -120,7 +121,6 @@ def initialise_figures_axes(
         axes: A list containing each of the axes
         max_dims: The number of rows or columns of sub-plots, whichever is greater
     """
-
     pyplot.style.use("ggplot")
     n_rows, n_cols = requested_grid if requested_grid else find_subplot_grid(n_panels)
     horizontal_position_one_axis = 0.11 if room_for_legend else 0.15
@@ -176,11 +176,25 @@ def add_title_to_plot(fig, n_panels, content):
     )
 
 
+def collate_compartment_across_stratification(output_options, compartment, stratification, strata):
+    for stratum in strata:
+        output_options['req_outputs'].append(
+            'prevX' + compartment + 'XamongX' + stratification + '_' + stratum)
+    return output_options
+
+
+def collate_prevalence(output_options):
+    for compartment_type in output_options['compartments_for_prevalence']:
+        output_options['req_outputs'].append('prevX' + compartment_type + 'Xamong')
+    return output_options
+
+
 class Outputs:
     def __init__(
         self,
         models,
         post_processing_list,
+        output_options,
         targets_to_plot={},
         out_dir="outputs",
         translation_dict={},
@@ -200,6 +214,7 @@ class Outputs:
         self.scenario_names = {}
         self.plot_start_time = plot_start_time
         self.models = models
+        self.output_options = output_options
 
         self.colour_theme = [
             (0.0, 0.0, 0.0),
@@ -640,6 +655,33 @@ class Outputs:
         )
         self.tidy_y_axis(axis, quantity="", max_dims=1, y_label=y_label, max_value=y_max)
 
+    def plot_pop_distribution_by_stratum(self, stratification):
+
+        fig, axes, max_dims, n_rows, n_cols = initialise_figures_axes(1)
+        previous_values = [0.] * len(self.post_processing_list[0].derived_outputs['times'])
+        for i_stratum, stratum in \
+                enumerate(self.models[0].all_stratifications[stratification]):
+            working_values = \
+                self.post_processing_list[0].generated_outputs[
+                    'distribution_of_strataX' + stratification][stratum]
+            new_values = [
+                working + previous for
+                working, previous in
+                zip(working_values, previous_values)
+            ]
+            colour = \
+                i_stratum / \
+                len(self.models[0].all_stratifications[stratification])
+            axes.fill_between(
+                self.post_processing_list[0].derived_outputs['times'],
+                previous_values,
+                new_values,
+                color=(colour, 0., 1 - colour)
+            )
+            previous_values = new_values
+        axes.legend(self.models[0].all_stratifications[stratification])
+        self.finish_off_figure(fig, filename='distribution_by_stratum_' + stratification)
+
     def plot_outputs_by_stratum(self, requested_output="prevXinfectious", sc_index=0):
         if not hasattr(self.post_processing_list[sc_index].model, "all_stratifications"):
             return
@@ -712,11 +754,10 @@ class Outputs:
 
     def plot_input_function(self, input_function_name, input_function, sc_index=0):
         """
-        Plot single simple plot of a function
+        Plot single simple plot of a function over time
         """
-
-        times_to_plot = self.post_processing_list[sc_index].model.times
         fig, axes, max_dims, n_rows, n_cols = initialise_figures_axes(1)
+        times_to_plot = self.post_processing_list[sc_index].model.times
         axis = find_panel_grid_indices([axes], 0, n_rows, n_cols)
         axis.plot(
             times_to_plot,
@@ -736,26 +777,436 @@ class Outputs:
         file_name = os.path.join(scenario_name, input_function_name)
         self.finish_off_figure(fig, filename=file_name, title_text=input_function_name)
 
-    def plot_parameter_category_values(self, models, parameter_name, time, sc_index=0):
-
-        parameter_names_to_plot = {}
-        for parameter in models[sc_index].final_parameter_functions:
-            if parameter.startswith(parameter_name):
-                parameter_names_to_plot[parameter] = \
-                    models[sc_index].final_parameter_functions[parameter](time)
-
-    def plot_mixing_matrix(self, sc_index):
+    def plot_parameter_category_values(self, parameter_stems, time, sc_index=0):
         """
-        Simple plotting function of a mixing matrix, using standard seaborn method
+        Create a plot to visualise the parameter values and their values across categories after stratification
+        adjustments have been applied.
+
+        :param parameter_stems: list
+        List containing the strings for the stems of the parameter names to be visualised
+        :param time: float
+        Time at which to visualise the parameter values
+        :param sc_index: int
+        Index of the scenario that the mixing matrix is being plotted for
+        """
+
+        # Loop over each requested stem
+        for parameter_stem in parameter_stems:
+
+            # Initialise
+            fig, axis, max_dims, n_rows, n_cols = initialise_figures_axes(1)
+
+            # Collate all the individual parameter names that need to be plotted
+            parameter_names_to_plot = {}
+            for parameter in self.models[sc_index].final_parameter_functions:
+                if parameter.startswith(parameter_stem):
+                    parameter_names_to_plot[parameter] = \
+                        self.models[sc_index].final_parameter_functions[parameter](time)
+
+            # Plot
+            axis.plot(
+                list(parameter_names_to_plot.values()),
+                linewidth=0.,
+                marker='o',
+                markersize=5
+            )
+
+            # Labelling of the x-ticks with the parameter names
+            pyplot.xticks(list(range(len(parameter_names_to_plot))))
+            x_tick_labels = \
+                [
+                    i_label[len(parameter_stem) + 1:]
+                    for i_label in parameter_names_to_plot.keys()
+                ]
+            axis.set_xticklabels(
+                x_tick_labels,
+                rotation=90,
+                fontsize=5
+            )
+
+            # Finish off
+            scenario_name = list(self.scenario_names.values())[sc_index]
+            self.finish_off_figure(
+                fig,
+                filename=os.path.join(scenario_name, parameter_stem),
+                title_text=parameter_stem
+            )
+
+    def plot_mixing_matrix(self, sc_index=0):
+        """
+        Simple plotting function for the model's mixing matrix, using standard seaborn method
+
+        :parameter sc_index:
+        Integer index of the scenario that the mixing matrix is being plotted for
         """
         if self.models[sc_index].mixing_matrix is not None:
-            fig, axes, max_dims, n_rows, n_cols = initialise_figures_axes(1)
-            axes = \
+            fig, axis, max_dims, n_rows, n_cols = \
+                initialise_figures_axes(1)
+            axis = \
                 sns.heatmap(
                     self.models[sc_index].mixing_matrix,
-                    yticklabels=self.models[0].mixing_categories,
+                    yticklabels=self.models[sc_index].mixing_categories,
                     xticklabels=False
                 )
+            self.finish_off_figure(
+                fig,
+                filename=os.path.join(
+                    list(self.scenario_names.values())[sc_index],
+                    'mixing_matrix')
+            )
+
+
+class OutputPlotter:
+    def __init__(
+        self,
+        models,
+        post_processing_list,
+        output_options,
+        out_dir='outputs',
+        multiplot_only=False,
+        mcmc_weights=None,
+    ):
+        """
+        :param post_processing: an object of class post_processing associated with a run model
+        :param out_dir: the name of the directory in which to write the outputs
+        """
+        self.post_processing_list = post_processing_list
+        self.out_dir = out_dir
+        self.translation_dict = \
+            output_options['translation_dict'] if 'translation_dict' in output_options else {}
+        self.multiplot_only = multiplot_only
+        self.scenario_names = {}
+        self.plot_start_time = \
+            output_options['plot_start_time'] if 'plot_start_time' in output_options else 1990.
+        self.models = models
+        self.output_options = output_options
+        self.colour_theme = [
+            (0.0, 0.0, 0.0),
+            (57.0 / 255.0, 106.0 / 255.0, 177.0 / 255.0),
+            (218.0 / 255.0, 124.0 / 255.0, 48.0 / 255.0),
+            (62.0 / 255.0, 150.0 / 255.0, 81.0 / 255.0),
+            (204.0 / 255.0, 37.0 / 255.0, 41.0 / 255.0),
+            (107.0 / 255.0, 76.0 / 255.0, 154.0 / 255.0),
+            (146.0 / 255.0, 36.0 / 255.0, 40.0 / 255.0),
+            (148.0 / 255.0, 139.0 / 255.0, 61.0 / 255.0),
+            (0.0, 0.0, 125.0 / 255.0),
+            (210.0 / 255.0, 70.0 / 255.0, 0.0),
+            (100.0 / 255.0, 150.0 / 255.0, 1.0),
+            (65.0 / 255.0, 65.0 / 255.0, 65.0 / 255.0),
+            (220.0 / 255.0, 25.0 / 255.0, 25.0 / 255.0),
+            (120.0 / 255.0, 55.0 / 255.0, 20.0 / 255.0),
+            (120.0 / 255.0, 55.0 / 255.0, 110.0 / 255.0),
+            (135.0 / 255.0, 135.0 / 255.0, 30.0 / 255.0),
+            (120.0 / 255.0, 120.0 / 255.0, 120.0 / 255.0),
+            (220.0 / 255.0, 20.0 / 255.0, 170.0 / 255.0),
+            (20.0 / 255.0, 65.0 / 255.0, 20.0 / 255.0),
+            (15.0 / 255.0, 145.0 / 255.0, 25.0 / 255.0),
+            (15.0 / 255.0, 185.0 / 255.0, 240.0 / 255.0),
+            (10.0 / 255.0, 0.0, 110.0 / 255.0),
+            (0.5, 0.5, 0.5),
+            (0.0, 0.0, 0.0),
+        ]
+        self.mcmc_weights = mcmc_weights
+        self.mcmc_mode = self.mcmc_weights is not None
+        self.multiplot_only = self.mcmc_mode is True
+        self.create_out_directories()
+
+    def create_out_directories(self):
+        """
+        Create necessary directories for saving the plots
+        """
+        if not os.path.exists(self.out_dir):
+            os.mkdir(self.out_dir)
+
+        for scenario_index in range(len(self.post_processing_list)):
+            scenario_number = self.post_processing_list[scenario_index].scenario_number
+            scenario_name = 'Baseline' if scenario_number == 0 else 'Scenario ' + str(scenario_number)
+            self.scenario_names[scenario_number] = scenario_name
+
+            if not self.multiplot_only and not self.mcmc_mode:
+                scenario_out_dir = os.path.join(self.out_dir, scenario_name)
+                if not os.path.exists(scenario_out_dir):
+                    os.mkdir(scenario_out_dir)
+
+        if len(self.scenario_names) > 1 or self.mcmc_mode:
+            multi_out_dir = os.path.join(self.out_dir, 'multi_plots')
+            if not os.path.exists(multi_out_dir):
+                os.mkdir(multi_out_dir)
+
+    def finish_off_figure(self, fig, filename, n_plots=1, title_text=None):
+        """
+        Slight extension of save_figure to include adding main title to figure.
+
+        Args:
+            fig: The figure to add the title to
+            filename: The end of the string for the file name
+            n_plots: number of panels
+            title_text: Text for the title of the figure
+        """
+        if title_text is not None:
+            add_title_to_plot(fig, n_plots, self.intelligent_convert_string(title_text))
+        filename = os.path.join(self.out_dir, filename + ".png")
+        fig.savefig(filename, dpi=300, bbox_inches="tight")
+        pyplot.close(fig)
+
+    def intelligent_convert_string(self, string):
+        """
+        returns a more readable version of string for figure title ...
+        """
+        if string in self.translation_dict.keys():
+            return self.translation_dict[string]
+        elif string[0:22] == "distribution_of_strata":
+            return "Population distribution by " + string.split("X")[1]
+        elif string[0:4] == "prev":
+            char = "Prevalence of "
+            numerator_groups = string.split("among")[0].split("X")[1:]
+            for group in numerator_groups:
+                char += group + " "
+
+            subgroup = string.split("among")[1]
+            if len(subgroup) > 0:
+                char += "("
+                need_comma = False
+                for group in subgroup.split("X"):
+                    if len(group) > 0:
+                        if need_comma:
+                            char += ", "
+                        char += group
+                        need_comma = True
+                char += ")"
+            return char
+        else:
+            return string
+
+    def tidy_x_axis(self, axis, start, end, max_dims, labels_off=False, x_label=None):
+        """
+        Function to tidy x-axis of a plot panel - currently only used in the scale-up vars, but intended to be written
+        in such a way as to be extendable to other types of plotting.
+
+        Args:
+            axis: The plotting axis
+            start: Lowest x-value being plotted
+            end: Highest x-value being plotted
+            max_dim: Maximum number of rows or columns of subplots in figure
+            labels_off: Whether to turn all tick labels off on this axis
+            x_label: Text for the x-axis label if required
+        """
+
+        # range
+        axis.set_xlim(left=start, right=end)
+
+        # ticks and their labels
+        if labels_off:
+            axis.tick_params(axis="x", labelbottom=False)
+        elif len(axis.get_xticks()) > 7:
+            for label in axis.xaxis.get_ticklabels()[::2]:
+                label.set_visible(False)
+        axis.tick_params(axis="x", length=3, pad=6, labelsize=get_label_font_size(max_dims))
+
+        # axis label
+        if x_label is not None:
+            axis.set_xlabel(
+                self.intelligent_convert_string(x_label), fontsize=get_label_font_size(max_dims)
+            )
+
+    def tidy_y_axis(
+        self,
+        axis,
+        quantity,
+        max_dims,
+        left_axis=True,
+        max_value=1e6,
+        space_at_top=0.1,
+        y_label=None,
+        y_lims=None,
+        allow_negative=False,
+    ):
+        """
+        General approach to tidying up the vertical axis of a plot, depends on whether it is the left-most panel.
+
+        Args:
+            axis: The axis itself
+            quantity: The name of the quantity being plotted (which can be used to determine the sort of variable it is)
+            max_dims: Maximum number of rows or columns of subplots on the figure
+            left_axis: Boolean for whether the axis is the left-most panel
+            max_value: The maximum value in the data being plotted
+            space_at_top: Relative amount of space to leave at the top, above the maximum value of the plotted data
+            y_label: A label for the y-axis, if required
+            y_lims: 2-element tuple for the y-limit, if required
+            allow_negative: Whether to set the bottom of the axis to zero
+        """
+
+        # axis range
+        if y_lims:
+            axis.set_ylim(y_lims)
+        elif "prop_" in quantity and axis.get_ylim()[1] > 1.0:
+            axis.set_ylim(top=1.004)
+        elif "prop_" in quantity and max_value > 0.7:
+            axis.set_ylim(bottom=0.0, top=1.0)
+        elif "prop_" in quantity or "likelihood" in quantity or "cost" in quantity:
+            pass
+        elif axis.get_ylim()[1] < max_value * (1.0 + space_at_top):
+            pass
+            # axis.set_ylim(top=max_value * (1. + space_at_top))
+        if not allow_negative:
+            axis.set_ylim(bottom=0.0)
+
+        # ticks
+        axis.tick_params(axis="y", length=3.0, pad=6, labelsize=get_label_font_size(max_dims))
+
+        # tick labels
+        if not left_axis:
+            pyplot.setp(axis.get_yticklabels(), visible=False)
+        elif "prop_" in quantity:
+            axis.yaxis.set_major_formatter(FuncFormatter("{0:.0%}".format))
+
+        # axis label
+        if y_label and left_axis:
+            axis.set_ylabel(
+                self.intelligent_convert_string(y_label), fontsize=get_label_font_size(max_dims)
+            )
+
+    def run_input_plots(self):
+        """
+        Master method to pull together methods for plotting model inputs
+        """
+        self.plot_parameter_category_values()
+        self.plot_mixing_matrix()
+        self.plot_input_function()
+        self.plot_prevalence_combinations()
+
+    def plot_input_function(self, sc_index=0):
+        """
+        Plot single simple plot of a function over time
+        """
+        for input_function_name in self.output_options['functions_to_plot']:
+            fig, axes, max_dims, n_rows, n_cols = initialise_figures_axes(1)
+            times_to_plot = self.post_processing_list[sc_index].model.times
+            axis = find_panel_grid_indices([axes], sc_index, n_rows, n_cols)
+            parameter_names = []
+            colour_index = 0
+            for parameter in self.models[sc_index].final_parameter_functions:
+                if parameter.startswith(input_function_name):
+                    parameter_names.append(parameter)
+                    colour_index += 1
+                    axis.plot(
+                        times_to_plot,
+                        list(map(
+                            self.models[sc_index].final_parameter_functions[parameter],
+                            times_to_plot)
+                        ),
+                        color=self.colour_theme[colour_index])
+            axis.legend(parameter_names)
+            self.tidy_x_axis(
+                axis,
+                start=self.plot_start_time,
+                end=max(times_to_plot),
+                max_dims=max_dims,
+                x_label='time',
+            )
+            self.tidy_y_axis(
+                axis, quantity='', max_dims=max_dims
+            )
             scenario_name = list(self.scenario_names.values())[sc_index]
-            file_name = os.path.join(scenario_name, 'mixing_matrix')
-            self.finish_off_figure(fig, filename=file_name, title_text='mixing_matrix')
+            file_name = os.path.join(scenario_name, input_function_name)
+            self.finish_off_figure(fig, filename=file_name, title_text=input_function_name)
+
+    def plot_prevalence_combinations(self, sc_index=0):
+        """
+        Create output graph for each requested stratification, displaying prevalence of compartment in each stratum
+        """
+        fig, axes, max_dims, n_rows, n_cols = initialise_figures_axes(1)
+        for i_combination in range(len(self.output_options['output_combinations_to_plot_together'])):
+            compartment, stratification = self.output_options['output_combinations_to_plot_together'][i_combination]
+            strata_to_iterate = self.models[sc_index].all_stratifications[stratification]
+            plot_name = 'prevX' + compartment + 'XamongX' + stratification
+            for i_stratum, stratum in enumerate(strata_to_iterate):
+                colour = i_stratum / len(strata_to_iterate)
+                axes.plot(
+                    self.post_processing_list[sc_index].derived_outputs['times'],
+                    self.post_processing_list[sc_index].generated_outputs[plot_name + '_' + stratum],
+                    color=(colour, 0., 1. - colour)
+                )
+            axes.legend(strata_to_iterate)
+            scenario_name = list(self.scenario_names.values())[sc_index]
+            self.finish_off_figure(
+                fig,
+                filename=os.path.join(scenario_name, plot_name),
+                title_text=plot_name
+            )
+
+    def plot_parameter_category_values(self, sc_index=0):
+        """
+        Create a plot to visualise the parameter values and their values across categories after stratification
+        adjustments have been applied.
+
+        :param sc_index: int
+        Index of the scenario that the mixing matrix is being plotted for
+        """
+
+        # Loop over each requested stem
+        for parameter_stem in self.output_options['parameter_stems_to_plot']:
+
+            # Initialise
+            fig, axis, max_dims, n_rows, n_cols = initialise_figures_axes(1)
+
+            # Collate all the individual parameter names that need to be plotted
+            parameter_names_to_plot = {}
+            for parameter in self.models[sc_index].final_parameter_functions:
+                if parameter.startswith(parameter_stem):
+                    parameter_names_to_plot[parameter] = \
+                        self.models[sc_index].final_parameter_functions[parameter](
+                            self.output_options['time_for_parameter_visualisation']
+                        )
+
+            # Plot
+            axis.plot(
+                list(parameter_names_to_plot.values()),
+                linewidth=0.,
+                marker='o',
+                markersize=5
+            )
+
+            # Labelling of the x-ticks with the parameter names
+            pyplot.xticks(list(range(len(parameter_names_to_plot))))
+            x_tick_labels = \
+                [
+                    i_label[len(parameter_stem) + 1:]
+                    for i_label in parameter_names_to_plot.keys()
+                ]
+            axis.set_xticklabels(
+                x_tick_labels,
+                rotation=90,
+                fontsize=5
+            )
+
+            # Finish off
+            scenario_name = list(self.scenario_names.values())[sc_index]
+            self.finish_off_figure(
+                fig,
+                filename=os.path.join(scenario_name, parameter_stem),
+                title_text=parameter_stem
+            )
+
+    def plot_mixing_matrix(self, sc_index=0):
+        """
+        Simple plotting function for the model's mixing matrix, using standard seaborn method
+
+        :parameter sc_index:
+        Integer index of the scenario that the mixing matrix is being plotted for
+        """
+        if self.models[sc_index].mixing_matrix is not None:
+            fig, axis, max_dims, n_rows, n_cols = \
+                initialise_figures_axes(1)
+            axis = \
+                sns.heatmap(
+                    self.models[sc_index].mixing_matrix,
+                    yticklabels=self.models[sc_index].mixing_categories,
+                    xticklabels=False
+                )
+            self.finish_off_figure(
+                fig,
+                filename=os.path.join(
+                    list(self.scenario_names.values())[sc_index],
+                    'mixing_matrix')
+            )

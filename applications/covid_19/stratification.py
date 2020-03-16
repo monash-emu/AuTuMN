@@ -1,6 +1,6 @@
 
 
-def stratify_by_age(model_to_stratify, age_strata, mixing_matrix):
+def stratify_by_age(model_to_stratify, age_strata, mixing_matrix, starting_props):
     """
     Stratify model by age
     Note that because the string passed is 'agegroup' rather than 'age', the standard SUMMER demography is not triggered
@@ -11,10 +11,10 @@ def stratify_by_age(model_to_stratify, age_strata, mixing_matrix):
         "agegroup",
         age_breakpoints,
         [],
-        {},
+        starting_props,
         adjustment_requests=age_params,
         mixing_matrix=mixing_matrix,
-        verbose=False,
+        verbose=False
     )
     return model_to_stratify
 

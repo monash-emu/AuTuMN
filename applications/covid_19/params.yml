@@ -3,22 +3,28 @@
 default:
 
   # Model structure parameters
-  n_exposed_compartments: 10
-  n_infectious_compartments: 10
+  n_exposed_compartments: 2
+  n_infectious_compartments: 2
+
+  # Country
+  country: Australia
 
   # Initial conditions
-  infectious_seed: 1
+  infectious_seed: 2000
 
   # Stratifications to implement - comment out/remove as required to enable model to run more quickly
   stratify_by:
     - agegroup
+  all_stratifications: {}
+  agegroup_breaks:
+    - 80
+    - 5
   start_time: 0.
   end_time: 100.
   time_step: 1
-  start_population: 1000
 
   # Base model definition
-  contact_rate: 10.
+  contact_rate: 0.5
   progression: 0.2
   recovery: 0.125
   universal_death_rate: 0.

@@ -6,20 +6,39 @@ plot_start_time: 1940
 # e.g. [prevXinfectious, prevXlatent]
 outputs_to_plot_by_stratum: []
 
-req_outputs:
-  - prevXinfectiousXamong
-  - prevXlatentXamong
-  - prevXinfectiousXamongXlocation_majuro
-  - prevXinfectiousXamongXlocation_ebeye
-  - prevXinfectiousXamongXlocation_otherislands
-  - prevXlatentXamongXlocation_majuro
-  - prevXlatentXamongXlocation_ebeye
-  - prevXlatentXamongXlocation_otherislands
-  - prevXsusceptibleXamong
-  - prevXrecoveredXamong
-  - prevXearly_latentXamong
-  - prevXlate_latentXamong
-  - prevXltbi_treatedXamong
+display_stratification: []
+
+compartments_for_prevalence: []
+
+output_combinations_to_collate:
+  -
+    - 'infectious'
+    - 'age'
+
+output_combinations_to_plot_together:
+  -
+    - 'infectious'
+    - 'age'
+
+time_for_parameter_visualisation: 2010.
+
+parameter_stems_to_plot:
+  - contact_rate
+
+req_outputs: []
+#  - prevXinfectiousXamong
+#  - prevXlatentXamong
+#  - prevXinfectiousXamongXlocation_majuro
+#  - prevXinfectiousXamongXlocation_ebeye
+#  - prevXinfectiousXamongXlocation_otherislands
+#  - prevXlatentXamongXlocation_majuro
+#  - prevXlatentXamongXlocation_ebeye
+#  - prevXlatentXamongXlocation_otherislands
+#  - prevXsusceptibleXamong
+#  - prevXrecoveredXamong
+#  - prevXearly_latentXamong
+#  - prevXlate_latentXamong
+#  - prevXltbi_treatedXamong
 
 functions_to_plot:
   - case_detection

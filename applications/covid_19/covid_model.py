@@ -10,11 +10,13 @@ from autumn.tb_model import (
     list_all_strata_for_mortality,
 )
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
-from autumn.covid_model.flows import \
+from applications.covid_19.flows import \
     add_infection_flows, add_progression_flows, add_recovery_flows, add_within_exposed_flows, \
     add_within_infectious_flows, replicate_compartment, multiply_flow_value_for_multiple_compartments
-from autumn.covid_model.stratification import stratify_by_age
-from autumn.social_mixing.social_mixing import load_specific_prem_sheet
+from applications.covid_19.stratification import stratify_by_age
+from applications.covid_19.covid_outputs import find_incidence_outputs
+from autumn.demography.social_mixing import load_specific_prem_sheet
+from autumn.demography.ageing import add_agegroup_breaks
 
 # Database locations
 file_dir = os.path.dirname(os.path.abspath(__file__))
@@ -40,6 +42,11 @@ def build_covid_model(update_params={}):
     # Update, not needed for baseline run
     model_parameters.update(update_params)
 
+    # Australian population sizes
+    total_pops = \
+        [1464776, 1502644, 1397182, 1421612, 1566792, 1664609, 1703852, 1561686, 1583254, 1581460, 1523557,
+         1454332, 1299406, 1188989, 887721, 652671 + 460555 + 486847]
+
     # Define single compartments that don't need to be replicated
     compartments = [
         Compartment.SUSCEPTIBLE,
@@ -49,11 +56,16 @@ def build_covid_model(update_params={}):
     # Replicate compartments that need to be repeated
     compartments, _, _ = \
         replicate_compartment(
-            model_parameters['n_exposed_compartments'], compartments, Compartment.EXPOSED
+            model_parameters['n_exposed_compartments'],
+            compartments,
+            Compartment.EXPOSED
         )
     compartments, infectious_compartments, init_pop = \
         replicate_compartment(
-            model_parameters['n_infectious_compartments'], compartments, Compartment.INFECTIOUS, infectious_seed=model_parameters['infectious_seed']
+            model_parameters['n_infectious_compartments'],
+            compartments,
+            Compartment.INFECTIOUS,
+            infectious_seed=model_parameters['infectious_seed']
         )
 
     # Multiply the progression rate by the number of compartments to keep the average time in exposed the same
@@ -77,26 +89,34 @@ def build_covid_model(update_params={}):
     # Sequentially add groups of flows to flows list
     flows = []
     flows = add_infection_flows(
-        flows, model_parameters['n_exposed_compartments']
+        flows,
+        model_parameters['n_exposed_compartments']
     )
     flows = add_within_exposed_flows(
-        flows, model_parameters['n_exposed_compartments']
+        flows,
+        model_parameters['n_exposed_compartments']
     )
     flows = add_within_infectious_flows(
-        flows, model_parameters['n_infectious_compartments']
+        flows,
+        model_parameters['n_infectious_compartments']
     )
     flows = add_progression_flows(
-        flows, model_parameters['n_exposed_compartments'], model_parameters['n_infectious_compartments']
+        flows,
+        model_parameters['n_exposed_compartments'],
+        model_parameters['n_infectious_compartments']
     )
     flows = add_recovery_flows(
-        flows, model_parameters['n_infectious_compartments']
+        flows,
+        model_parameters['n_infectious_compartments']
     )
 
     mixing_matrix = \
         load_specific_prem_sheet(
             'all_locations_1',
-            'Australia'
+            params['default']['country']
         )
+
+    output_connections = find_incidence_outputs(model_parameters)
 
     # Define model
     _covid_model = StratifiedModel(
@@ -106,20 +126,24 @@ def build_covid_model(update_params={}):
         model_parameters,
         flows,
         birth_approach='no_birth',
-        starting_population=model_parameters['start_population'],
-        output_connections={},
+        starting_population=sum(total_pops),
+        output_connections=output_connections,
         death_output_categories=list_all_strata_for_mortality(compartments),
         infectious_compartment=infectious_compartments
     )
 
     # Stratify model by age without demography
     if 'agegroup' in model_parameters['stratify_by']:
-        age_breaks = [str(i_break) for i_break in list(range(0, 80, 5))]
+        params = add_agegroup_breaks(params)
+        age_breakpoints = params['default']['all_stratifications']['agegroup']
+        list_of_starting_pops = [i_pop / sum(total_pops) for i_pop in total_pops]
+        starting_props = {i_break: prop for i_break, prop in zip(age_breakpoints, list_of_starting_pops)}
         _covid_model = \
             stratify_by_age(
                 _covid_model,
-                age_breaks,
-                mixing_matrix=mixing_matrix
+                params['default']['all_stratifications']['agegroup'],
+                mixing_matrix,
+                starting_props,
             )
 
     return _covid_model

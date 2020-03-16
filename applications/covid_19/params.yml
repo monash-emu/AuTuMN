@@ -18,6 +18,7 @@ default:
   # Stratifications to implement - comment out/remove as required to enable model to run more quickly
   stratify_by:
     - agegroup
+    - infectiousness
   all_stratifications: {}
   agegroup_breaks:
     - 80

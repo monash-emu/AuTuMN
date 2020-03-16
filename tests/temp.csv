@@ -1,0 +1,6 @@
+,type,parameter,origin,to,implement,strain,force_index
+0,infection_frequency,contact_rate,susceptible,exposed_1,0,,
+1,standard_flows,within_exposed,exposed_1,exposed_2,0,,
+2,standard_flows,within_infectious,infectious_1,infectious_2,0,,
+3,standard_flows,within_exposed,exposed_2,infectious_1,0,,
+4,standard_flows,within_infectious,infectious_2,recovered,0,,

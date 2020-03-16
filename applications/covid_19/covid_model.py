@@ -1,4 +1,5 @@
 import os
+import copy
 import yaml
 from summer_py.summer_model import (
     StratifiedModel,
@@ -40,6 +41,7 @@ def build_covid_model(update_params={}):
         params = yaml.safe_load(yaml_file)
     model_parameters = params["default"]
 
+
     # Update, not needed for baseline run
     model_parameters.update(update_params)
 
@@ -78,6 +80,7 @@ def build_covid_model(update_params={}):
         multiply_flow_value_for_multiple_compartments(
             model_parameters, Compartment.INFECTIOUS, 'recovery'
         )
+    params['default']['to_infectious'] = params['default']['within_infectious']
 
     # Set integration times
     integration_times = \
@@ -106,7 +109,8 @@ def build_covid_model(update_params={}):
         flows,
         model_parameters['n_exposed_compartments'],
         model_parameters['n_infectious_compartments'],
-        Compartment.INFECTIOUS
+        Compartment.INFECTIOUS,
+        'to_infectious'
     )
     flows = add_recovery_flows(
         flows,
@@ -145,6 +149,8 @@ def build_covid_model(update_params={}):
             requested_proportions={},
             verbose=False
         )
+
+    _covid_model.transition_flows.to_csv('temp_.csv')
 
     # Stratify model by age without demography
     if 'agegroup' in model_parameters['stratify_by']:

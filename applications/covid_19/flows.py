@@ -38,13 +38,13 @@ RECOVERY_FLOWS = [
 ]
 
 
-def add_progression_flows(list_of_flows, n_exposed, n_infectious, infectious_compartment_name):
+def add_progression_flows(list_of_flows, n_exposed, n_infectious, infectious_compartment_name, parameter_name):
     progression_flows = copy.deepcopy(PROGRESSION_FLOWS)
     progression_flows[0]['origin'] = \
         Compartment.EXPOSED + '_' + str(n_exposed) if n_exposed > 1 else Compartment.EXPOSED
     progression_flows[0]['to'] = \
         infectious_compartment_name + '_1' if n_infectious > 1 else infectious_compartment_name
-    progression_flows[0]['parameter'] = 'within_exposed' if n_exposed > 1 else 'within_exposed'
+    progression_flows[0]['parameter'] = parameter_name
     list_of_flows += progression_flows
     return list_of_flows
 

@@ -72,7 +72,7 @@ def run_model(application):
                 output_options,
                 output_options['output_combinations_to_collate'][i_combination][0],
                 output_options['output_combinations_to_collate'][i_combination][1],
-                params['default']['all_stratifications']['agegroup']
+                params['default']['all_stratifications'][output_options['output_combinations_to_collate'][i_combination][1]]
             )
 
     # Ensure project folder exists
@@ -141,7 +141,6 @@ def run_model(application):
             output_options['translation_dictionary'],
             plot_start_time=output_options['plot_start_time']
         )
-        outputs.plot_output_combinations_together()
 
         for stratification in output_options['display_stratification']:
             outputs.plot_pop_distribution_by_stratum(stratification)

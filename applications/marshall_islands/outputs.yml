@@ -10,9 +10,15 @@ display_stratification: []
 
 compartments_for_prevalence: []
 
-output_combinations_to_collate: []
+output_combinations_to_collate:
+  -
+    - 'infectious'
+    - 'age'
 
-output_combinations_to_plot_together: []
+output_combinations_to_plot_together:
+  -
+    - 'infectious'
+    - 'age'
 
 time_for_parameter_visualisation: 2010.
 

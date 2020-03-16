@@ -682,27 +682,6 @@ class Outputs:
         axes.legend(self.models[0].all_stratifications[stratification])
         self.finish_off_figure(fig, filename='distribution_by_stratum_' + stratification)
 
-    def plot_output_combinations_together(self, compartment='infectious'):
-        """
-        Create output graph for each requested stratification, displaying prevalence of compartment in each stratum
-        """
-        fig, axes, max_dims, n_rows, n_cols = initialise_figures_axes(1)
-        for i_combination in range(len(self.output_options['output_combinations_to_plot_together'])):
-            strata_to_iterate = \
-                self.models[0].all_stratifications[
-                    self.output_options['output_combinations_to_plot_together'][i_combination][1]]
-            for i_stratum, stratum in enumerate(strata_to_iterate):
-                colour = i_stratum / len(strata_to_iterate)
-                axes.plot(
-                    self.post_processing_list[0].derived_outputs['times'],
-                    self.post_processing_list[0].generated_outputs[
-                        'prevX' + compartment + 'XamongXagegroup_' + stratum
-                    ],
-                    color=(colour, 0., 1 - colour)
-                )
-            axes.legend(strata_to_iterate)
-            self.finish_off_figure(fig, filename='prev_by_stratum')
-
     def plot_outputs_by_stratum(self, requested_output="prevXinfectious", sc_index=0):
         if not hasattr(self.post_processing_list[sc_index].model, "all_stratifications"):
             return
@@ -1094,6 +1073,7 @@ class OutputPlotter:
         self.plot_parameter_category_values()
         self.plot_mixing_matrix()
         self.plot_input_function()
+        self.plot_prevalence_combinations()
 
     def plot_input_function(self, sc_index=0):
         """
@@ -1130,6 +1110,30 @@ class OutputPlotter:
             scenario_name = list(self.scenario_names.values())[sc_index]
             file_name = os.path.join(scenario_name, input_function_name)
             self.finish_off_figure(fig, filename=file_name, title_text=input_function_name)
+
+    def plot_prevalence_combinations(self, sc_index=0):
+        """
+        Create output graph for each requested stratification, displaying prevalence of compartment in each stratum
+        """
+        fig, axes, max_dims, n_rows, n_cols = initialise_figures_axes(1)
+        for i_combination in range(len(self.output_options['output_combinations_to_plot_together'])):
+            compartment, stratification = self.output_options['output_combinations_to_plot_together'][i_combination]
+            strata_to_iterate = self.models[sc_index].all_stratifications[stratification]
+            plot_name = 'prevX' + compartment + 'XamongX' + stratification
+            for i_stratum, stratum in enumerate(strata_to_iterate):
+                colour = i_stratum / len(strata_to_iterate)
+                axes.plot(
+                    self.post_processing_list[sc_index].derived_outputs['times'],
+                    self.post_processing_list[sc_index].generated_outputs[plot_name + '_' + stratum],
+                    color=(colour, 0., 1. - colour)
+                )
+            axes.legend(strata_to_iterate)
+            scenario_name = list(self.scenario_names.values())[sc_index]
+            self.finish_off_figure(
+                fig,
+                filename=os.path.join(scenario_name, plot_name),
+                title_text=plot_name
+            )
 
     def plot_parameter_category_values(self, sc_index=0):
         """

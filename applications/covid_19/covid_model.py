@@ -80,7 +80,7 @@ def build_covid_model(update_params={}):
         multiply_flow_value_for_multiple_compartments(
             model_parameters, Compartment.INFECTIOUS, 'recovery'
         )
-    params['default']['to_infectious'] = params['default']['within_infectious']
+    params['default']['to_infectious'] = params['default']['within_exposed']
 
     # Set integration times
     integration_times = \
@@ -140,18 +140,6 @@ def build_covid_model(update_params={}):
         infectious_compartment=infectious_compartments
     )
 
-    # Stratify infectious compartment as high or low infectiousness as requested
-    if 'infectiousness' in model_parameters['stratify_by']:
-        _covid_model.stratify(
-            'infectiousness',
-            ['high', 'low'],
-            infectious_compartments,
-            requested_proportions={},
-            verbose=False
-        )
-
-    _covid_model.transition_flows.to_csv('temp_.csv')
-
     # Stratify model by age without demography
     if 'agegroup' in model_parameters['stratify_by']:
         params = add_agegroup_breaks(params)
@@ -165,5 +153,25 @@ def build_covid_model(update_params={}):
                 mixing_matrix,
                 starting_props,
             )
+
+    # Stratify infectious compartment as high or low infectiousness as requested
+    if 'infectiousness' in model_parameters['stratify_by']:
+        progression_props = [0.7] * 16
+        to_infectious_adjustments = \
+            {'to_infectiousXagegroup_' + i_break:
+                 {
+                     'low': 1. - prop,
+                     'high': prop
+                 }
+                for i_break, prop in zip(age_breakpoints, progression_props)
+             }
+        _covid_model.stratify(
+            'infectiousness',
+            ['high', 'low'],
+            infectious_compartments,
+            requested_proportions={},
+            adjustment_requests=to_infectious_adjustments,
+            verbose=False
+        )
 
     return _covid_model

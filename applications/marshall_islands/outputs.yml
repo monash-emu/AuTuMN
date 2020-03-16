@@ -19,20 +19,20 @@ time_for_parameter_visualisation: 2010.
 parameter_stems_to_plot:
   - contact_rate
 
-req_outputs:
-  - prevXinfectiousXamong
-  - prevXlatentXamong
-  - prevXinfectiousXamongXlocation_majuro
-  - prevXinfectiousXamongXlocation_ebeye
-  - prevXinfectiousXamongXlocation_otherislands
-  - prevXlatentXamongXlocation_majuro
-  - prevXlatentXamongXlocation_ebeye
-  - prevXlatentXamongXlocation_otherislands
-  - prevXsusceptibleXamong
-  - prevXrecoveredXamong
-  - prevXearly_latentXamong
-  - prevXlate_latentXamong
-  - prevXltbi_treatedXamong
+req_outputs: []
+#  - prevXinfectiousXamong
+#  - prevXlatentXamong
+#  - prevXinfectiousXamongXlocation_majuro
+#  - prevXinfectiousXamongXlocation_ebeye
+#  - prevXinfectiousXamongXlocation_otherislands
+#  - prevXlatentXamongXlocation_majuro
+#  - prevXlatentXamongXlocation_ebeye
+#  - prevXlatentXamongXlocation_otherislands
+#  - prevXsusceptibleXamong
+#  - prevXrecoveredXamong
+#  - prevXearly_latentXamong
+#  - prevXlate_latentXamong
+#  - prevXltbi_treatedXamong
 
 functions_to_plot:
   - case_detection

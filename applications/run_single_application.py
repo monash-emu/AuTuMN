@@ -146,7 +146,7 @@ def run_model(application):
         for stratification in output_options['display_stratification']:
             outputs.plot_pop_distribution_by_stratum(stratification)
 
-        outputs.plot_requested_outputs()
+        # outputs.plot_requested_outputs()
         # for output in output_options['outputs_to_plot_by_stratum']:
         #     for sc_index in range(len(models)):
         #         outputs.plot_outputs_by_stratum(output, sc_index=sc_index)

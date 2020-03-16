@@ -1047,7 +1047,7 @@ class OutputPlotter:
         self.plot_mixing_matrix()
         self.plot_input_function()
         self.plot_prevalence_combinations()
-        sef.plot_pop_distribution_by_stratum()
+        self.plot_pop_distribution_by_stratum()
 
     def plot_input_function(self, sc_index=0):
         """

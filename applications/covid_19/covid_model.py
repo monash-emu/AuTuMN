@@ -3,6 +3,7 @@ import yaml
 from summer_py.summer_model import (
     StratifiedModel,
 )
+from summer_py.summer_model.utils.flowchart import create_flowchart
 
 from autumn import constants
 from autumn.constants import Compartment
@@ -68,6 +69,13 @@ def build_covid_model(update_params={}):
             infectious_seed=model_parameters['infectious_seed']
         )
 
+    compartments, infectious_compartments, _ = \
+        replicate_compartment(
+            model_parameters['n_infectious_compartments'],
+            compartments,
+            'noninfectious'
+        )
+
     # Multiply the progression rate by the number of compartments to keep the average time in exposed the same
     model_parameters = \
         multiply_flow_value_for_multiple_compartments(
@@ -98,16 +106,35 @@ def build_covid_model(update_params={}):
     )
     flows = add_within_infectious_flows(
         flows,
-        model_parameters['n_infectious_compartments']
+        model_parameters['n_infectious_compartments'],
+        Compartment.INFECTIOUS
+    )
+    flows = add_within_infectious_flows(
+        flows,
+        model_parameters['n_infectious_compartments'],
+        'noninfectious'
     )
     flows = add_progression_flows(
         flows,
         model_parameters['n_exposed_compartments'],
-        model_parameters['n_infectious_compartments']
+        model_parameters['n_infectious_compartments'],
+        Compartment.INFECTIOUS
+    )
+    flows = add_progression_flows(
+        flows,
+        model_parameters['n_exposed_compartments'],
+        model_parameters['n_infectious_compartments'],
+        'noninfectious'
     )
     flows = add_recovery_flows(
         flows,
-        model_parameters['n_infectious_compartments']
+        model_parameters['n_infectious_compartments'],
+        Compartment.INFECTIOUS
+    )
+    flows = add_recovery_flows(
+        flows,
+        model_parameters['n_infectious_compartments'],
+        'noninfectious'
     )
 
     mixing_matrix = \
@@ -131,6 +158,8 @@ def build_covid_model(update_params={}):
         death_output_categories=list_all_strata_for_mortality(compartments),
         infectious_compartment=infectious_compartments
     )
+
+    _covid_model.transition_flows.to_csv('temp.csv')
 
     # Stratify model by age without demography
     if 'agegroup' in model_parameters['stratify_by']:

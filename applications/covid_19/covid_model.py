@@ -114,31 +114,6 @@ def build_covid_model(update_params={}):
         Compartment.INFECTIOUS
     )
 
-    if params['default']['add_non_infectious']:
-        non_infectious_compartment_name = 'noninfectious'
-        compartments, infectious_compartments, _ = \
-            replicate_compartment(
-                model_parameters['n_infectious_compartments'],
-                compartments,
-                non_infectious_compartment_name
-            )
-        flows = add_within_infectious_flows(
-            flows,
-            model_parameters['n_infectious_compartments'],
-            non_infectious_compartment_name
-        )
-        flows = add_progression_flows(
-            flows,
-            model_parameters['n_exposed_compartments'],
-            model_parameters['n_infectious_compartments'],
-            non_infectious_compartment_name
-        )
-        flows = add_recovery_flows(
-            flows,
-            model_parameters['n_infectious_compartments'],
-            non_infectious_compartment_name
-        )
-
     mixing_matrix = \
         load_specific_prem_sheet(
             'all_locations_1',
@@ -160,6 +135,16 @@ def build_covid_model(update_params={}):
         death_output_categories=list_all_strata_for_mortality(compartments),
         infectious_compartment=infectious_compartments
     )
+
+    # Stratify infectious compartment as high or low infectiousness as requested
+    if 'infectiousness' in model_parameters['stratify_by']:
+        _covid_model.stratify(
+            'infectiousness',
+            ['high', 'low'],
+            infectious_compartments,
+            requested_proportions={},
+            verbose=False
+        )
 
     # Stratify model by age without demography
     if 'agegroup' in model_parameters['stratify_by']:

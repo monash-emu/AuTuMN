@@ -7,7 +7,7 @@ default:
   n_infectious_compartments: 2
 
   # Add non-infectious
-  add_non_infectious: False
+  add_non_infectious: True
 
   # Country
   country: Australia

@@ -655,33 +655,6 @@ class Outputs:
         )
         self.tidy_y_axis(axis, quantity="", max_dims=1, y_label=y_label, max_value=y_max)
 
-    def plot_pop_distribution_by_stratum(self, stratification):
-
-        fig, axes, max_dims, n_rows, n_cols = initialise_figures_axes(1)
-        previous_values = [0.] * len(self.post_processing_list[0].derived_outputs['times'])
-        for i_stratum, stratum in \
-                enumerate(self.models[0].all_stratifications[stratification]):
-            working_values = \
-                self.post_processing_list[0].generated_outputs[
-                    'distribution_of_strataX' + stratification][stratum]
-            new_values = [
-                working + previous for
-                working, previous in
-                zip(working_values, previous_values)
-            ]
-            colour = \
-                i_stratum / \
-                len(self.models[0].all_stratifications[stratification])
-            axes.fill_between(
-                self.post_processing_list[0].derived_outputs['times'],
-                previous_values,
-                new_values,
-                color=(colour, 0., 1 - colour)
-            )
-            previous_values = new_values
-        axes.legend(self.models[0].all_stratifications[stratification])
-        self.finish_off_figure(fig, filename='distribution_by_stratum_' + stratification)
-
     def plot_outputs_by_stratum(self, requested_output="prevXinfectious", sc_index=0):
         if not hasattr(self.post_processing_list[sc_index].model, "all_stratifications"):
             return
@@ -1074,6 +1047,7 @@ class OutputPlotter:
         self.plot_mixing_matrix()
         self.plot_input_function()
         self.plot_prevalence_combinations()
+        sef.plot_pop_distribution_by_stratum()
 
     def plot_input_function(self, sc_index=0):
         """
@@ -1210,3 +1184,31 @@ class OutputPlotter:
                     list(self.scenario_names.values())[sc_index],
                     'mixing_matrix')
             )
+
+    def plot_pop_distribution_by_stratum(self, sc_index=0):
+        for stratification in self.output_options['display_stratification']:
+            fig, axes, max_dims, n_rows, n_cols = initialise_figures_axes(1)
+            previous_values = [0.] * len(self.post_processing_list[sc_index].derived_outputs['times'])
+            for i_stratum, stratum in \
+                    enumerate(self.models[sc_index].all_stratifications[stratification]):
+                working_values = \
+                    self.post_processing_list[sc_index].generated_outputs[
+                        'distribution_of_strataX' + stratification][stratum]
+                new_values = [
+                    working + previous for
+                    working, previous in
+                    zip(working_values, previous_values)
+                ]
+                colour = \
+                    i_stratum / \
+                    len(self.models[sc_index].all_stratifications[stratification])
+                axes.fill_between(
+                    self.post_processing_list[sc_index].derived_outputs['times'],
+                    previous_values,
+                    new_values,
+                    color=(colour, 0., 1 - colour)
+                )
+                previous_values = new_values
+            axes.legend(self.models[0].all_stratifications[stratification])
+            self.finish_off_figure(fig, filename=os.path.join(
+                list(self.scenario_names.values())[sc_index], 'distribution_by_stratum_' + stratification))

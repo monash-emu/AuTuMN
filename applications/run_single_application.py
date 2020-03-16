@@ -142,9 +142,6 @@ def run_model(application):
             plot_start_time=output_options['plot_start_time']
         )
 
-        for stratification in output_options['display_stratification']:
-            outputs.plot_pop_distribution_by_stratum(stratification)
-
         # outputs.plot_requested_outputs()
         # for output in output_options['outputs_to_plot_by_stratum']:
         #     for sc_index in range(len(models)):
@@ -153,7 +150,6 @@ def run_model(application):
         # New approach to plotting outputs, intended to be more general
         outputs_plotter = OutputPlotter(models, pps, output_options, plot_path)
         outputs_plotter.run_input_plots()
-
 
 if __name__ == '__main__':
     run_model('covid_19')

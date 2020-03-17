@@ -171,6 +171,7 @@ def build_covid_model(update_params={}):
                  }
                 for i_break, prop in zip(age_breakpoints, progression_props)
              }
+        print()
         _covid_model.stratify(
             'infectiousness',
             ['high', 'low'],

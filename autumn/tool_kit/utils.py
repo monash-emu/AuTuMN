@@ -197,3 +197,8 @@ def record_run_metadata(output_directory, run_name, experiment_desc, timestamp):
 
 def repeat_list_elements(repetitions, list_to_repeat):
     return list(itertools.chain.from_iterable(itertools.repeat(i_element, repetitions) for i_element in list_to_repeat))
+
+
+def split_parameter(adjustment_dict, parameter, strata):
+    adjustment_dict.update({parameter: {stratum: 1. for stratum in strata}})
+    return adjustment_dict

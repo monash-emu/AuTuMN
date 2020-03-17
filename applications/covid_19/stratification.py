@@ -1,3 +1,4 @@
+from autumn.tool_kit.utils import split_parameter
 
 
 def stratify_by_age(model_to_stratify, age_strata, mixing_matrix, starting_props):
@@ -6,13 +7,17 @@ def stratify_by_age(model_to_stratify, age_strata, mixing_matrix, starting_props
     Note that because the string passed is 'agegroup' rather than 'age', the standard SUMMER demography is not triggered
     """
     age_breakpoints = [int(i_break) for i_break in age_strata]
+    parameter_splits = \
+        split_parameter({}, 'to_infectious', age_strata)
+    parameter_splits = \
+        split_parameter(parameter_splits, 'infect_death', age_strata)
     model_to_stratify.stratify(
         "agegroup",
         age_breakpoints,
         [],
         starting_props,
         mixing_matrix=mixing_matrix,
-        adjustment_requests={'to_infectious': {stratum: 1. for stratum in age_strata}},
+        adjustment_requests=parameter_splits,
         verbose=False
     )
     return model_to_stratify

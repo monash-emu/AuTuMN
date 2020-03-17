@@ -58,7 +58,7 @@ def add_recovery_flows(list_of_flows, n_infectious, infectious_compartment_name)
 
 
 def add_infection_flows(list_of_flows, n_exposed):
-    infection_flows = INFECTION_FLOWS
+    infection_flows = copy.deepcopy(INFECTION_FLOWS)
     infection_flows[0]['to'] = Compartment.EXPOSED + '_1' if n_exposed > 1 else Compartment.EXPOSED
     list_of_flows += infection_flows
     return list_of_flows
@@ -115,3 +115,20 @@ def multiply_flow_value_for_multiple_compartments(model_parameters, compartment_
         model_parameters[parameter_name] * \
         float(model_parameters['n_' + compartment_name + '_compartments'])
     return model_parameters
+
+
+def add_infection_death_flows(list_of_flows, n_infectious):
+    if n_infectious > 1:
+        for i_comp in range(n_infectious):
+            list_of_flows += [
+                {'type': Flow.COMPARTMENT_DEATH,
+                 'parameter': 'infect_death',
+                 'origin': Compartment.INFECTIOUS + '_' + str(i_comp + 1)}
+            ]
+    else:
+        list_of_flows += [
+            {'type': Flow.COMPARTMENT_DEATH,
+             'parameter': 'infect_death',
+             'origin': Compartment.INFECTIOUS}
+        ]
+    return list_of_flows

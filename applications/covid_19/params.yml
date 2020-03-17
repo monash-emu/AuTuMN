@@ -45,6 +45,7 @@ default:
   latent_period: 3.2
   infectious_period: 7.68
   universal_death_rate: 0.
+  infect_death: 0.
 
 # When the scenarios start running
 scenario_start: 10

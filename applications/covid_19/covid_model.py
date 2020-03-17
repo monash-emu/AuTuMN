@@ -149,15 +149,13 @@ def build_covid_model(update_params={}):
     # Stratify model by age without demography
     if 'agegroup' in model_parameters['stratify_by']:
         model_parameters = add_agegroup_breaks(model_parameters)
-        age_breakpoints = model_parameters['all_stratifications']['agegroup']
-        list_of_starting_pops = [i_pop / sum(total_pops) for i_pop in total_pops]
-        starting_props = {i_break: prop for i_break, prop in zip(age_breakpoints, list_of_starting_pops)}
         _covid_model = \
             stratify_by_age(
                 _covid_model,
                 model_parameters['all_stratifications']['agegroup'],
                 mixing_matrix,
-                starting_props
+                total_pops,
+                model_parameters
             )
 
     # Stratify infectious compartment as high or low infectiousness as requested
@@ -169,9 +167,8 @@ def build_covid_model(update_params={}):
                      'low': 1. - prop,
                      'high': prop
                  }
-                for i_break, prop in zip(age_breakpoints, progression_props)
+                for i_break, prop in zip(model_parameters['all_stratifications']['agegroup'], progression_props)
              }
-        print()
         _covid_model.stratify(
             'infectiousness',
             ['high', 'low'],

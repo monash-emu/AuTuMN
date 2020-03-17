@@ -1,14 +1,14 @@
 
 
-def add_agegroup_breaks(params):
+def add_agegroup_breaks(parameters):
     """
     Algorithmically add breakpoints for agegroup from request for the end year and the agegroup width
     """
-    if 'agegroup_breaks' in params['default']:
-        params['default']['all_stratifications']['agegroup'] = \
+    if 'agegroup_breaks' in parameters:
+        parameters['all_stratifications']['agegroup'] = \
             [str(i_break) for
              i_break in list(range(0,
-                                   params['default']['agegroup_breaks'][0],
-                                   params['default']['agegroup_breaks'][1]))
+                                   parameters['agegroup_breaks'][0],
+                                   parameters['agegroup_breaks'][1]))
              ]
-    return params
+    return parameters

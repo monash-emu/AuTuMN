@@ -56,7 +56,7 @@ def run_model(application):
         output_options = yaml.safe_load(yaml_file)
 
     # If agegroup breaks specified in default, add these to the agegroup stratification
-    params = add_agegroup_breaks(params)
+    params['default'] = add_agegroup_breaks(params['default'])
 
     # Run the model
     if application == 'marshall_islands':
@@ -136,8 +136,6 @@ def run_model(application):
         # New approach to plotting outputs, intended to be more general
         outputs_plotter = OutputPlotter(models, pps, output_options, plot_path)
         outputs_plotter.run_input_plots()
-
-
 
 
 if __name__ == '__main__':

@@ -51,8 +51,6 @@ def build_covid_model(update_params={}):
         [1464776, 1502644, 1397182, 1421612, 1566792, 1664609, 1703852, 1561686, 1583254, 1581460, 1523557,
          1454332, 1299406, 1188989, 887721, 652671 + 460555 + 486847]
 
-    infectiousness_by_decade = repeat_list_elements(2, [0.09, 0.33, 0.67, 0.4, 0.43, 0.51, 0.5, 0.46])
-
     # Define single compartments that don't need to be replicated
     compartments = [
         Compartment.SUSCEPTIBLE,
@@ -149,7 +147,7 @@ def build_covid_model(update_params={}):
 
     # Stratify model by age without demography
     if 'agegroup' in model_parameters['stratify_by']:
-        params = add_agegroup_breaks(params)
+        model_parameters = add_agegroup_breaks(model_parameters)
         age_breakpoints = model_parameters['all_stratifications']['agegroup']
         list_of_starting_pops = [i_pop / sum(total_pops) for i_pop in total_pops]
         starting_props = {i_break: prop for i_break, prop in zip(age_breakpoints, list_of_starting_pops)}
@@ -158,12 +156,12 @@ def build_covid_model(update_params={}):
                 _covid_model,
                 model_parameters['all_stratifications']['agegroup'],
                 mixing_matrix,
-                starting_props,
+                starting_props
             )
 
     # Stratify infectious compartment as high or low infectiousness as requested
     if 'infectiousness' in model_parameters['stratify_by']:
-        progression_props = [0.7] * 16
+        progression_props = repeat_list_elements(2, model_parameters['age_infect_progression'])
         to_infectious_adjustments = \
             {'to_infectiousXagegroup_' + i_break:
                  {
@@ -176,6 +174,11 @@ def build_covid_model(update_params={}):
             'infectiousness',
             ['high', 'low'],
             infectious_compartments,
+            infectiousness_adjustments=
+            {
+                'high': model_parameters['high_infect_multiplier'],
+                'low': model_parameters['low_infect_multiplier']
+            },
             requested_proportions={},
             adjustment_requests=to_infectious_adjustments,
             verbose=False

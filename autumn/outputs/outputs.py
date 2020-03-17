@@ -1048,6 +1048,7 @@ class OutputPlotter:
         self.plot_input_function()
         self.plot_prevalence_combinations()
         self.plot_pop_distribution_by_stratum()
+        self.find_exponential_growth_rate()
 
     def plot_input_function(self, sc_index=0):
         """
@@ -1212,3 +1213,25 @@ class OutputPlotter:
             axes.legend(self.models[sc_index].all_stratifications[stratification])
             self.finish_off_figure(fig, filename=os.path.join(
                 list(self.scenario_names.values())[sc_index], 'distribution_by_stratum_' + stratification))
+
+    def find_exponential_growth_rate(self, sc_index=0):
+        """
+        Find the exponential growth rate at a range of requested time points
+        """
+        if 'find_exponential_growth_rate' in self.output_options:
+            time_points = \
+                range(self.output_options['find_exponential_growth_rate']['start'],
+                      self.output_options['find_exponential_growth_rate']['end'])
+            growth_rates = []
+            for i_time in range(len(time_points) - 1):
+                start_time, end_time = time_points[i_time], time_points[i_time + 1]
+                exponential_growth_rate = \
+                    numpy.log(self.post_processing_list[sc_index].derived_outputs['incidence'][end_time] /
+                              self.post_processing_list[sc_index].derived_outputs['incidence'][start_time]) \
+                    / float(end_time - start_time)
+                growth_rates.append(exponential_growth_rate)
+            fig, axis, max_dims, n_rows, n_cols = initialise_figures_axes(1)
+            axis.plot(time_points[:-1], growth_rates)
+            scenario_name = list(self.scenario_names.values())[sc_index]
+            file_name = os.path.join(scenario_name, 'exponential_growth_rate')
+            self.finish_off_figure(fig, filename=file_name, title_text='exponential_growth_rate')

@@ -1,5 +1,6 @@
 import os
 import copy
+import itertools
 import yaml
 from summer_py.summer_model import (
     StratifiedModel,
@@ -19,6 +20,7 @@ from applications.covid_19.stratification import stratify_by_age
 from applications.covid_19.covid_outputs import find_incidence_outputs
 from autumn.demography.social_mixing import load_specific_prem_sheet
 from autumn.demography.ageing import add_agegroup_breaks
+from autumn.tool_kit.utils import repeat_list_elements
 
 # Database locations
 file_dir = os.path.dirname(os.path.abspath(__file__))
@@ -48,6 +50,8 @@ def build_covid_model(update_params={}):
     total_pops = \
         [1464776, 1502644, 1397182, 1421612, 1566792, 1664609, 1703852, 1561686, 1583254, 1581460, 1523557,
          1454332, 1299406, 1188989, 887721, 652671 + 460555 + 486847]
+
+    infectiousness_by_decade = repeat_list_elements(2, [0.09, 0.33, 0.67, 0.4, 0.43, 0.51, 0.5, 0.46])
 
     # Define single compartments that don't need to be replicated
     compartments = [

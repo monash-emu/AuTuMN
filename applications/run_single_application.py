@@ -3,7 +3,6 @@ Build and run any AuTuMN model, storing the outputs
 """
 
 import os
-import numpy as np
 from datetime import datetime
 import yaml
 
@@ -138,8 +137,7 @@ def run_model(application):
         outputs_plotter = OutputPlotter(models, pps, output_options, plot_path)
         outputs_plotter.run_input_plots()
 
-        # for i in range(150):
-        #     print(np.log(pps[0].derived_outputs['incidence'][i + 1] / pps[0].derived_outputs['incidence'][i]))
+
 
 
 if __name__ == '__main__':

@@ -9,7 +9,7 @@ default:
   # Add non-infectious
   add_non_infectious: True
 
-  # Country
+  # Country for mixing matrix
   country: Australia
 
   # Initial conditions

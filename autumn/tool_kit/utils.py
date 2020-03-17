@@ -4,6 +4,7 @@ If several functions here develop a theme, consider reorganising them into a mod
 """
 import subprocess as sp
 import numpy
+import itertools
 import os
 import yaml
 
@@ -135,7 +136,7 @@ def find_stratum_index_from_string(compartment, stratification, remove_stratific
         if stratification in name
     ][0]
     return (
-        stratum_name[stratum_name.find("_") + 1 :] if remove_stratification_name else stratum_name
+        stratum_name[stratum_name.find("_") + 1:] if remove_stratification_name else stratum_name
     )
 
 
@@ -192,3 +193,7 @@ def record_run_metadata(output_directory, run_name, experiment_desc, timestamp):
     }
     with open(meta_path, "w") as yaml_file:
         yaml.dump(metadata, yaml_file)
+
+
+def repeat_list_elements(repetitions, list_to_repeat):
+    return list(itertools.chain.from_iterable(itertools.repeat(i_element, repetitions) for i_element in list_to_repeat))

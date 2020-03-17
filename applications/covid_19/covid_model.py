@@ -5,7 +5,7 @@ from summer_py.summer_model import (
 )
 
 from autumn import constants
-from autumn.constants import Compartment, Flow
+from autumn.constants import Compartment
 from autumn.tb_model import (
     list_all_strata_for_mortality,
 )
@@ -14,7 +14,7 @@ from applications.covid_19.flows import \
     add_infection_flows, add_progression_flows, add_recovery_flows, add_within_exposed_flows, \
     add_within_infectious_flows, replicate_compartment, multiply_flow_value_for_multiple_compartments,\
     add_infection_death_flows
-from applications.covid_19.stratification import stratify_by_age
+from applications.covid_19.stratification import stratify_by_age, stratify_by_infectiousness
 from applications.covid_19.covid_outputs import find_incidence_outputs
 from autumn.demography.social_mixing import load_specific_prem_sheet
 from autumn.demography.ageing import add_agegroup_breaks
@@ -160,28 +160,18 @@ def build_covid_model(update_params={}):
 
     # Stratify infectious compartment as high or low infectiousness as requested
     if 'infectiousness' in model_parameters['stratify_by']:
+        death_rates = [0.] * 16
+        within_infectious_rates = [model_parameters['within_infectious']] * 16
         progression_props = repeat_list_elements(2, model_parameters['age_infect_progression'])
-        to_infectious_adjustments = \
-            {'to_infectiousXagegroup_' + i_break:
-                 {
-                     'low': 1. - prop,
-                     'high': prop
-                 }
-                for i_break, prop in zip(model_parameters['all_stratifications']['agegroup'], progression_props)
-             }
-        _covid_model.stratify(
-            'infectiousness',
-            ['high', 'low'],
-            infectious_compartments,
-            infectiousness_adjustments=
-            {
-                'high': model_parameters['high_infect_multiplier'],
-                'low': model_parameters['low_infect_multiplier']
-            },
-            requested_proportions={},
-            adjustment_requests=to_infectious_adjustments,
-            verbose=False
-        )
+        _covid_model = \
+            stratify_by_infectiousness(
+                _covid_model,
+                progression_props,
+                death_rates,
+                within_infectious_rates,
+                model_parameters,
+                infectious_compartments
+            )
 
     _covid_model.death_output_categories = \
         list_all_strata_for_mortality(_covid_model.compartment_names)

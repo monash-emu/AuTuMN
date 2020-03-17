@@ -186,6 +186,4 @@ def build_covid_model(update_params={}):
             verbose=False
         )
 
-    _covid_model.death_flows.to_csv('temp.csv')
-
     return _covid_model

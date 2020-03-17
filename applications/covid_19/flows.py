@@ -9,6 +9,13 @@ INFECTION_FLOWS = [
     }
 ]
 
+DEATH_FLOWS = [
+    {
+        'type': Flow.COMPARTMENT_DEATH,
+        'parameter': 'infect_death',
+    }
+]
+
 WITHIN_EXPOSED_FLOWS = [
     {
         'type': Flow.STANDARD,
@@ -118,17 +125,11 @@ def multiply_flow_value_for_multiple_compartments(model_parameters, compartment_
 
 
 def add_infection_death_flows(list_of_flows, n_infectious):
+    death_flows = copy.deepcopy(DEATH_FLOWS)
     if n_infectious > 1:
         for i_comp in range(n_infectious):
-            list_of_flows += [
-                {'type': Flow.COMPARTMENT_DEATH,
-                 'parameter': 'infect_death',
-                 'origin': Compartment.INFECTIOUS + '_' + str(i_comp + 1)}
-            ]
+            death_flows[0]['origin'] = Compartment.INFECTIOUS + '_' + str(i_comp + 1)
     else:
-        list_of_flows += [
-            {'type': Flow.COMPARTMENT_DEATH,
-             'parameter': 'infect_death',
-             'origin': Compartment.INFECTIOUS}
-        ]
+        death_flows[0]['origin'] = Compartment.INFECTIOUS
+    list_of_flows += death_flows
     return list_of_flows

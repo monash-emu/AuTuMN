@@ -111,6 +111,7 @@ def list_all_strata_for_mortality(
 ):
     """
     Automatically lists all combinations of population subgroups to request disaggregated mortality outputs
+
     :param all_compartment_names: full list of model compartment names
     :param infectious_compartment_name: the name used for the active TB compartment
     :return: a tuple designed to be passed as death_output_categories argument to the model
@@ -119,7 +120,10 @@ def list_all_strata_for_mortality(
     for compartment in all_compartment_names:
         if infectious_compartment_name in compartment:
             stratum = compartment.split(infectious_compartment_name)[1]
-            death_output_categories.append(tuple(stratum.split("X")[1:]))
+            categories_to_append = tuple(stratum.split("X")[1:])
+            categories_to_append = [i_category for i_category in categories_to_append if i_category != '']
+            death_output_categories.append(categories_to_append)
+
     return tuple(death_output_categories)
 
 

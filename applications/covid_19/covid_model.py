@@ -143,7 +143,6 @@ def build_covid_model(update_params={}):
         birth_approach='no_birth',
         starting_population=sum(total_pops),
         output_connections=output_connections,
-        death_output_categories=list_all_strata_for_mortality(compartments),
         infectious_compartment=infectious_compartments
     )
 
@@ -185,5 +184,8 @@ def build_covid_model(update_params={}):
             adjustment_requests=to_infectious_adjustments,
             verbose=False
         )
+
+    _covid_model.death_output_categories = \
+        list_all_strata_for_mortality(_covid_model.compartment_names)
 
     return _covid_model

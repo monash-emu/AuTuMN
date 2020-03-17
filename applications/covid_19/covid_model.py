@@ -41,7 +41,6 @@ def build_covid_model(update_params={}):
         params = yaml.safe_load(yaml_file)
     model_parameters = params["default"]
 
-
     # Update, not needed for baseline run
     model_parameters.update(update_params)
 
@@ -55,6 +54,10 @@ def build_covid_model(update_params={}):
         Compartment.SUSCEPTIBLE,
         Compartment.RECOVERED,
     ]
+
+    # Get progression rates from sojourn times
+    model_parameters['progression'] = 1. / model_parameters['latent_period']
+    model_parameters['recovery'] = 1. / model_parameters['infectious_period']
 
     # Replicate compartments that need to be repeated
     compartments, _, _ = \
@@ -80,7 +83,7 @@ def build_covid_model(update_params={}):
         multiply_flow_value_for_multiple_compartments(
             model_parameters, Compartment.INFECTIOUS, 'recovery'
         )
-    params['default']['to_infectious'] = params['default']['within_exposed']
+    model_parameters['to_infectious'] = model_parameters['within_exposed']
 
     # Set integration times
     integration_times = \
@@ -121,7 +124,7 @@ def build_covid_model(update_params={}):
     mixing_matrix = \
         load_specific_prem_sheet(
             'all_locations_1',
-            params['default']['country']
+            model_parameters['country']
         )
 
     output_connections = find_incidence_outputs(model_parameters)
@@ -143,13 +146,13 @@ def build_covid_model(update_params={}):
     # Stratify model by age without demography
     if 'agegroup' in model_parameters['stratify_by']:
         params = add_agegroup_breaks(params)
-        age_breakpoints = params['default']['all_stratifications']['agegroup']
+        age_breakpoints = model_parameters['all_stratifications']['agegroup']
         list_of_starting_pops = [i_pop / sum(total_pops) for i_pop in total_pops]
         starting_props = {i_break: prop for i_break, prop in zip(age_breakpoints, list_of_starting_pops)}
         _covid_model = \
             stratify_by_age(
                 _covid_model,
-                params['default']['all_stratifications']['agegroup'],
+                model_parameters['all_stratifications']['agegroup'],
                 mixing_matrix,
                 starting_props,
             )

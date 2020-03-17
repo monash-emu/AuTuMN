@@ -1209,6 +1209,6 @@ class OutputPlotter:
                     color=(colour, 0., 1 - colour)
                 )
                 previous_values = new_values
-            axes.legend(self.models[0].all_stratifications[stratification])
+            axes.legend(self.models[sc_index].all_stratifications[stratification])
             self.finish_off_figure(fig, filename=os.path.join(
                 list(self.scenario_names.values())[sc_index], 'distribution_by_stratum_' + stratification))

@@ -28,7 +28,7 @@ default:
   time_step: 1
 
   # Base model definition
-  contact_rate: 0.5
+  contact_rate: 0.3
   latent_period: 3.2
   infectious_period: 7.68
   universal_death_rate: 0.

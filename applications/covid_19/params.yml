@@ -16,6 +16,18 @@ default:
     - 0.51
     - 0.5
     - 0.46
+
+  # Age-specific CFR - in five year brackets
+  age_cfr:
+    - 0.00019
+    - 0.00046
+    - 0.0019
+    - 0.0038
+    - 0.0082
+    - 0.027
+    - 0.094
+    - 0.2
+    - 0.36
   high_infect_multiplier: 1.
   low_infect_multiplier: 0.
 

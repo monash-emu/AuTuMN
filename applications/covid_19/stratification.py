@@ -57,9 +57,11 @@ def stratify_by_infectiousness(
         model_parameters,
         infectious_compartments,
         case_fatality_rates,
-        progression_props,
-        within_infectious_rates
+        progression_props
 ):
+
+    # Replicate within infectious progression rates
+    within_infectious_rates = [model_parameters['within_infectious']] * 16
 
     # Calculate death rates and progression rates
     high_infectious_death_rates = \

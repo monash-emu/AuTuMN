@@ -3,6 +3,7 @@ Utilities for running multiple model scenarios
 """
 from autumn.tool_kit.timer import Timer
 import numpy
+from autumn.demography.social_mixing import load_specific_prem_sheet
 
 
 def run_multi_scenario(param_lookup, scenario_start_time, model_builder, run_kwargs={}):
@@ -28,9 +29,14 @@ def run_multi_scenario(param_lookup, scenario_start_time, model_builder, run_kwa
         if scenario_idx == 0:
             continue
 
-        with Timer(f"Running scenario #{scenario_idx}"):
-            scenario_params["start_time"] = scenario_start_time
+        with Timer(f'Running scenario #{scenario_idx}'):
+            scenario_params['start_time'] = scenario_start_time
             scenario_model = initialise_scenario_run(baseline_model, scenario_params, model_builder)
+            # scenario_model.mixing_matrix = \
+            #     load_specific_prem_sheet(
+            #         'all_locations_1',
+            #         'Mongolia'
+            #     )
             scenario_model.run_model(**run_kwargs)
             models.append(scenario_model)
 

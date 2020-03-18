@@ -6,6 +6,19 @@ import numpy
 from autumn.demography.social_mixing import load_specific_prem_sheet
 
 
+def change_mixing_matrix_for_scenario(model, scenario_requests):
+    """
+    Dummy function to switch the mixing matrix over to that of a different country at the point that the scenario
+    commences
+    """
+    if 'mixing' in scenario_requests:
+        model.mixing_matrix = load_specific_prem_sheet(
+            'all_locations_1',
+            scenario_requests['mixing']
+        )
+    return model
+
+
 def run_multi_scenario(param_lookup, scenario_start_time, model_builder, run_kwargs={}):
     """
     Run a baseline model and scenarios
@@ -32,11 +45,7 @@ def run_multi_scenario(param_lookup, scenario_start_time, model_builder, run_kwa
         with Timer(f'Running scenario #{scenario_idx}'):
             scenario_params['start_time'] = scenario_start_time
             scenario_model = initialise_scenario_run(baseline_model, scenario_params, model_builder)
-            # scenario_model.mixing_matrix = \
-            #     load_specific_prem_sheet(
-            #         'all_locations_1',
-            #         'Mongolia'
-            #     )
+            scenario_model = change_mixing_matrix_for_scenario(scenario_model, scenario_params)
             scenario_model.run_model(**run_kwargs)
             models.append(scenario_model)
 

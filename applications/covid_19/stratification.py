@@ -53,8 +53,29 @@ def update_parameters(
 
 
 def stratify_by_infectiousness(
-        _covid_model, progression_props, death_rates, within_infectious_rates, model_parameters, infectious_compartments
+        _covid_model,
+        model_parameters,
+        infectious_compartments,
+        case_fatality_rates,
+        progression_props,
+        within_infectious_rates
 ):
+
+    # Calculate death rates and progression rates
+    high_infectious_death_rates = \
+        [
+            cfr / model_parameters['n_infectious_compartments'] * progression for
+            cfr, progression in
+            zip(case_fatality_rates, within_infectious_rates)
+        ]
+    high_infectious_within_infectious_rates = \
+        [
+            (1. - cfr / model_parameters['n_infectious_compartments']) * progression
+            for cfr, progression in
+            zip(case_fatality_rates, within_infectious_rates)
+        ]
+
+    # Progression to high infectiousness, rather than low
     infectious_adjustments = \
         update_parameters(
             {},
@@ -63,24 +84,30 @@ def stratify_by_infectiousness(
             progression_props,
             'to_infectious'
         )
+
+    # Death rates to apply to the high infectious category
     infectious_adjustments = \
         update_parameters(
             infectious_adjustments,
             model_parameters['all_stratifications']['agegroup'],
             [0.] * 16,
-            death_rates,
+            high_infectious_death_rates,
             'infect_death',
             overwrite=True
         )
+
+    # Non-death progression between infectious compartments towards the recovered compartment
     infectious_adjustments = \
         update_parameters(
             infectious_adjustments,
             model_parameters['all_stratifications']['agegroup'],
             within_infectious_rates,
-            within_infectious_rates,
+            high_infectious_within_infectious_rates,
             'within_infectious',
             overwrite=True
         )
+
+    # Stratify the model with the SUMMER stratification function
     _covid_model.stratify(
         'infectiousness',
         ['high', 'low'],

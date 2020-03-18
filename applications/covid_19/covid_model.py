@@ -160,17 +160,17 @@ def build_covid_model(update_params={}):
 
     # Stratify infectious compartment as high or low infectiousness as requested
     if 'infectiousness' in model_parameters['stratify_by']:
-        death_rates = [0.] * 16
         within_infectious_rates = [model_parameters['within_infectious']] * 16
+        case_fatality_rates = [0.02] * 16
         progression_props = repeat_list_elements(2, model_parameters['age_infect_progression'])
         _covid_model = \
             stratify_by_infectiousness(
                 _covid_model,
-                progression_props,
-                death_rates,
-                within_infectious_rates,
                 model_parameters,
-                infectious_compartments
+                infectious_compartments,
+                case_fatality_rates,
+                progression_props,
+                within_infectious_rates
             )
 
     _covid_model.death_output_categories = \

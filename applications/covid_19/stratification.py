@@ -1,6 +1,14 @@
 from autumn.tool_kit.utils import split_parameter
 
 
+def find_series_compartment_parameter(
+        proportion_to_split,
+        n_compartments,
+        original_parameter
+):
+    return (1. - (1. - proportion_to_split) ** (1. / n_compartments)) * original_parameter
+
+
 def stratify_by_age(model_to_stratify, age_strata, mixing_matrix, total_pops, model_parameters):
     """
     Stratify model by age
@@ -66,14 +74,14 @@ def stratify_by_infectiousness(
     # Calculate death rates and progression rates
     high_infectious_death_rates = \
         [
-            cfr / model_parameters['n_infectious_compartments'] * progression for
+            find_series_compartment_parameter(cfr, model_parameters['n_infectious_compartments'], progression) for
             cfr, progression in
             zip(case_fatality_rates, within_infectious_rates)
         ]
     high_infectious_within_infectious_rates = \
         [
-            (1. - cfr / model_parameters['n_infectious_compartments']) * progression
-            for cfr, progression in
+            find_series_compartment_parameter(1. - cfr, model_parameters['n_infectious_compartments'], progression) for
+            cfr, progression in
             zip(case_fatality_rates, within_infectious_rates)
         ]
 

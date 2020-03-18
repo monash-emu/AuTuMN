@@ -19,7 +19,7 @@ from applications.covid_19.covid_outputs import find_incidence_outputs
 from autumn.demography.social_mixing import load_specific_prem_sheet
 from autumn.demography.ageing import add_agegroup_breaks
 from autumn.tool_kit.utils import repeat_list_elements
-from autumn.tb_model.outputs import create_request_stratified_incidence_covid
+from applications.covid_19.covid_outputs import create_request_stratified_incidence_covid
 
 # Database locations
 file_dir = os.path.dirname(os.path.abspath(__file__))

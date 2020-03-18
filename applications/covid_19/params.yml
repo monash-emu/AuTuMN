@@ -59,6 +59,9 @@ default:
   universal_death_rate: 0.
   infect_death: 0.
 
+  incidence_stratification:
+    - agegroup
+
 # When the scenarios start running
 scenario_start: 10
 

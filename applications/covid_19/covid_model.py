@@ -19,6 +19,7 @@ from applications.covid_19.covid_outputs import find_incidence_outputs
 from autumn.demography.social_mixing import load_specific_prem_sheet
 from autumn.demography.ageing import add_agegroup_breaks
 from autumn.tool_kit.utils import repeat_list_elements
+from autumn.tb_model.outputs import create_request_stratified_incidence_covid
 
 # Database locations
 file_dir = os.path.dirname(os.path.abspath(__file__))
@@ -142,7 +143,6 @@ def build_covid_model(update_params={}):
         flows,
         birth_approach='no_birth',
         starting_population=sum(total_pops),
-        output_connections=output_connections,
         infectious_compartment=infectious_compartments
     )
 
@@ -157,6 +157,14 @@ def build_covid_model(update_params={}):
                 total_pops,
                 model_parameters
             )
+        output_connections.update(
+            create_request_stratified_incidence_covid(
+                model_parameters['incidence_stratification'],
+                model_parameters['all_stratifications'],
+                model_parameters['n_exposed_compartments'],
+                model_parameters['n_infectious_compartments']
+            )
+        )
 
     # Stratify infectious compartment as high or low infectiousness as requested
     if 'infectiousness' in model_parameters['stratify_by']:
@@ -174,6 +182,8 @@ def build_covid_model(update_params={}):
                 age_specific_cfrs,
                 progression_props
             )
+
+    _covid_model.output_connections = output_connections
 
     _covid_model.death_output_categories = \
         list_all_strata_for_mortality(_covid_model.compartment_names)

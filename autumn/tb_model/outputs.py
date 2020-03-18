@@ -34,6 +34,25 @@ def create_request_stratified_incidence(requested_stratifications, strata_dict):
     return out_connections
 
 
+def create_request_stratified_incidence_covid(requested_stratifications, strata_dict, n_exposed, n_infectious):
+    """
+    Create derived outputs for disaggregated incidence
+    """
+    out_connections = {}
+    origin_compartment = Compartment.EXPOSED if n_exposed < 2 else 'exposed_' + str(n_exposed)
+    to_compartment = Compartment.INFECTIOUS if n_infectious < 2 else Compartment.INFECTIOUS + '_1'
+    for stratification in requested_stratifications:
+        for stratum in strata_dict[stratification]:
+            out_connections['incidenceX' + stratification + '_' + stratum] \
+                = {
+                'origin': origin_compartment,
+                'to': to_compartment,
+                'origin_condition': '',
+                'to_condition': stratification + '_' + stratum,
+            }
+    return out_connections
+
+
 def create_request_stratified_notifications(requested_stratifications, strata_dict):
     """
     Create derived outputs for disaggregated notifications

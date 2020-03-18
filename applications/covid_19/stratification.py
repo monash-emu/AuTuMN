@@ -1,12 +1,4 @@
-from autumn.tool_kit.utils import split_parameter
-
-
-def find_series_compartment_parameter(
-        proportion_to_split,
-        n_compartments,
-        original_parameter
-):
-    return (1. - (1. - proportion_to_split) ** (1. / n_compartments)) * original_parameter
+from autumn.tool_kit.utils import split_parameter, find_series_compartment_parameter
 
 
 def stratify_by_age(model_to_stratify, age_strata, mixing_matrix, total_pops, model_parameters):

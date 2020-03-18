@@ -202,3 +202,11 @@ def repeat_list_elements(repetitions, list_to_repeat):
 def split_parameter(adjustment_dict, parameter, strata):
     adjustment_dict.update({parameter: {stratum: 1. for stratum in strata}})
     return adjustment_dict
+
+
+def find_series_compartment_parameter(
+        proportion_to_split,
+        n_compartments,
+        original_parameter
+):
+    return (1. - (1. - proportion_to_split) ** (1. / n_compartments)) * original_parameter

@@ -17,7 +17,7 @@ def stratify_by_age(model_to_stratify, age_strata, mixing_matrix, total_pops, mo
     parameter_splits = \
         split_parameter(parameter_splits, 'within_infectious', age_strata)
     model_to_stratify.stratify(
-        "agegroup",
+        'agegroup',
         age_breakpoints,
         [],
         starting_props,
@@ -114,10 +114,11 @@ def stratify_by_infectiousness(
     _covid_model.stratify(
         'infectiousness',
         ['high', 'moderate', 'low'],
-        infectious_compartments,
+        ['infectious_1', 'infectious_2'],
         infectiousness_adjustments=
         {
             'high': model_parameters['high_infect_multiplier'],
+            'moderate': model_parameters['low_infect_multiplier'],
             'low': model_parameters['low_infect_multiplier']
         },
         requested_proportions={

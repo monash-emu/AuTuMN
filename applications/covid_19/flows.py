@@ -23,6 +23,13 @@ WITHIN_EXPOSED_FLOWS = [
     }
 ]
 
+WITHIN_PRESYMPT_FLOWS = [
+    {
+        'type': Flow.STANDARD,
+        'parameter': 'within_presympt',
+    }
+]
+
 WITHIN_INFECTIOUS_FLOWS = [
     {
         'type': Flow.STANDARD,
@@ -45,10 +52,21 @@ RECOVERY_FLOWS = [
 ]
 
 
-def add_progression_flows(list_of_flows, n_exposed, n_infectious, infectious_compartment_name, parameter_name):
+def add_to_presympt_flows(list_of_flows, n_exposed, n_presympt, presympt_compartment_name, parameter_name):
     progression_flows = copy.deepcopy(PROGRESSION_FLOWS)
     progression_flows[0]['origin'] = \
         Compartment.EXPOSED + '_' + str(n_exposed) if n_exposed > 1 else Compartment.EXPOSED
+    progression_flows[0]['to'] = \
+        presympt_compartment_name + '_1' if n_presympt > 1 else presympt_compartment_name
+    progression_flows[0]['parameter'] = parameter_name
+    list_of_flows += progression_flows
+    return list_of_flows
+
+
+def add_to_infectious_flows(list_of_flows, n_presympt, n_infectious, infectious_compartment_name, parameter_name):
+    progression_flows = copy.deepcopy(PROGRESSION_FLOWS)
+    progression_flows[0]['origin'] = \
+        'presympt_' + str(n_presympt) if n_presympt > 1 else 'presympt'
     progression_flows[0]['to'] = \
         infectious_compartment_name + '_1' if n_infectious > 1 else infectious_compartment_name
     progression_flows[0]['parameter'] = parameter_name
@@ -83,6 +101,18 @@ def add_within_exposed_flows(list_of_flows, n_exposed):
     return list_of_flows
 
 
+def add_within_presympt_flows(list_of_flows, n_presympt, presympt_compartment_name):
+    if n_presympt > 1:
+        for i_flow in range(1, n_presympt):
+            within_presympt_flows = copy.deepcopy(WITHIN_PRESYMPT_FLOWS)
+            within_presympt_flows[0]['origin'] = \
+                presympt_compartment_name + '_' + str(i_flow)
+            within_presympt_flows[0]['to'] = \
+                presympt_compartment_name + '_' + str(i_flow + 1)
+            list_of_flows += within_presympt_flows
+    return list_of_flows
+
+
 def add_within_infectious_flows(list_of_flows, n_infectious, infectious_compartment_name):
     if n_infectious > 1:
         for i_flow in range(1, n_infectious):
@@ -95,7 +125,9 @@ def add_within_infectious_flows(list_of_flows, n_infectious, infectious_compartm
     return list_of_flows
 
 
-def replicate_compartment(n_replications, current_compartments, compartment_stem, infectious_seed=0.):
+def replicate_compartment(
+        n_replications, current_compartments, compartment_stem, infectious_compartments, infectious_seed=0.,
+):
     """
     Implement n compartments of a certain type
     Also returns the names of the infectious compartments and the intial population evenly distributed across the
@@ -103,12 +135,12 @@ def replicate_compartment(n_replications, current_compartments, compartment_stem
     """
     if n_replications == 1:
         current_compartments += [compartment_stem]
-        infectious_compartments = [compartment_stem]
+        infectious_compartments += [compartment_stem]
         init_pop = {
             compartment_stem: infectious_seed,
         }
     else:
-        infectious_compartments, init_pop = [], {}
+        init_pop = {}
         for i_infectious in range(n_replications):
             current_compartments += [compartment_stem + '_' + str(i_infectious + 1)]
             infectious_compartments += [compartment_stem + '_' + str(i_infectious + 1)]

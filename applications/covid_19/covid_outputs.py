@@ -2,17 +2,17 @@ from autumn.constants import Compartment
 
 
 def find_incidence_outputs(parameters):
-    last_exposed = \
-        'exposed_' + str(parameters['n_exposed_compartments']) if \
-            parameters['n_exposed_compartments'] > 1 else \
-            'exposed'
+    last_presympt = \
+        'presympt_' + str(parameters['n_presympt_compartments']) if \
+            parameters['n_presympt_compartments'] > 1 else \
+            'presympt'
     first_infectious = \
         'infectious_1' if \
             parameters['n_infectious_compartments'] > 1 else \
             'infectious'
     return {
         'incidence':
-            {'origin': last_exposed,
+            {'origin': last_presympt,
              'to': first_infectious,
              'origin_condition': '',
              'to_condition': ''
@@ -20,12 +20,12 @@ def find_incidence_outputs(parameters):
     }
 
 
-def create_request_stratified_incidence_covid(requested_stratifications, strata_dict, n_exposed, n_infectious):
+def create_request_stratified_incidence_covid(requested_stratifications, strata_dict, presympt, n_infectious):
     """
     Create derived outputs for disaggregated incidence
     """
     out_connections = {}
-    origin_compartment = Compartment.EXPOSED if n_exposed < 2 else 'exposed_' + str(n_exposed)
+    origin_compartment = 'presympt' if presympt < 2 else 'presympt_' + str(presympt)
     to_compartment = Compartment.INFECTIOUS if n_infectious < 2 else Compartment.INFECTIOUS + '_1'
     for stratification in requested_stratifications:
         for stratum in strata_dict[stratification]:

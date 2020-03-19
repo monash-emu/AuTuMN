@@ -11,9 +11,9 @@ from autumn.tb_model import (
 )
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
 from applications.covid_19.flows import \
-    add_infection_flows, add_progression_flows, add_recovery_flows, add_within_exposed_flows, \
+    add_infection_flows, add_to_presympt_flows, add_recovery_flows, add_within_exposed_flows, \
     add_within_infectious_flows, replicate_compartment, multiply_flow_value_for_multiple_compartments,\
-    add_infection_death_flows
+    add_infection_death_flows, add_within_presympt_flows, add_to_infectious_flows
 from applications.covid_19.stratification import stratify_by_age, stratify_by_infectiousness
 from applications.covid_19.covid_outputs import find_incidence_outputs
 from autumn.demography.social_mixing import load_specific_prem_sheet
@@ -57,41 +57,56 @@ def build_covid_model(update_params={}):
     ]
 
     # Get progression rates from sojourn times
-    model_parameters['progression'] = 1. / model_parameters['latent_period']
-    model_parameters['recovery'] = 1. / model_parameters['infectious_period']
+    model_parameters['within_exposed'] = 1. / model_parameters['latent_period']
+    model_parameters['within_presympt'] = 1. / model_parameters['presympt_period']
+    model_parameters['to_infectious'] = 1. / model_parameters['presympt_period']
+    model_parameters['within_infectious'] = 1. / model_parameters['infectious_period']
 
     # Replicate compartments that need to be repeated
     compartments, _, _ = \
         replicate_compartment(
             model_parameters['n_exposed_compartments'],
             compartments,
-            Compartment.EXPOSED
+            Compartment.EXPOSED,
+            []
+        )
+    compartments, infectious_compartments, _ = \
+        replicate_compartment(
+            model_parameters['n_presympt_compartments'],
+            compartments,
+            'presympt',
+            []
         )
     compartments, infectious_compartments, init_pop = \
         replicate_compartment(
             model_parameters['n_infectious_compartments'],
             compartments,
             Compartment.INFECTIOUS,
+            infectious_compartments,
             infectious_seed=model_parameters['infectious_seed']
         )
 
     # Multiply the progression rate by the number of compartments to keep the average time in exposed the same
     model_parameters = \
         multiply_flow_value_for_multiple_compartments(
-            model_parameters, Compartment.EXPOSED, 'progression'
+            model_parameters, Compartment.EXPOSED, 'within_exposed'
         )
     model_parameters = \
         multiply_flow_value_for_multiple_compartments(
-            model_parameters, Compartment.INFECTIOUS, 'recovery'
+            model_parameters, 'presympt', 'within_presympt'
+        )
+    model_parameters = \
+        multiply_flow_value_for_multiple_compartments(
+            model_parameters, Compartment.INFECTIOUS, 'within_infectious'
         )
     model_parameters['to_infectious'] = model_parameters['within_exposed']
 
     # Set integration times
     integration_times = \
         get_model_times_from_inputs(
-            model_parameters["start_time"],
-            model_parameters["end_time"],
-            model_parameters["time_step"]
+            model_parameters['start_time'],
+            model_parameters['end_time'],
+            model_parameters['time_step']
         )
 
     # Sequentially add groups of flows to flows list
@@ -100,22 +115,37 @@ def build_covid_model(update_params={}):
         flows,
         model_parameters['n_exposed_compartments']
     )
+
     flows = add_within_exposed_flows(
         flows,
         model_parameters['n_exposed_compartments']
+    )
+    flows = add_within_presympt_flows(
+        flows,
+        model_parameters['n_presympt_compartments'],
+        'presympt'
     )
     flows = add_within_infectious_flows(
         flows,
         model_parameters['n_infectious_compartments'],
         Compartment.INFECTIOUS
     )
-    flows = add_progression_flows(
+
+    flows = add_to_presympt_flows(
         flows,
         model_parameters['n_exposed_compartments'],
+        model_parameters['n_presympt_compartments'],
+        'presympt',
+        'within_exposed'
+    )
+    flows = add_to_infectious_flows(
+        flows,
+        model_parameters['n_presympt_compartments'],
         model_parameters['n_infectious_compartments'],
         Compartment.INFECTIOUS,
         'to_infectious'
     )
+
     flows = add_recovery_flows(
         flows,
         model_parameters['n_infectious_compartments'],
@@ -161,7 +191,7 @@ def build_covid_model(update_params={}):
             create_request_stratified_incidence_covid(
                 model_parameters['incidence_stratification'],
                 model_parameters['all_stratifications'],
-                model_parameters['n_exposed_compartments'],
+                model_parameters['n_presympt_compartments'],
                 model_parameters['n_infectious_compartments']
             )
         )

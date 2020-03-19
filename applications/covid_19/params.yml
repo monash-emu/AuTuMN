@@ -63,7 +63,7 @@ default:
     - agegroup
 
 # When the scenarios start running
-scenario_start: 50
+scenario_start: 80
 
 # N.B: Scenario keys have to be integers 1-N, or it'll break downstream dashboards.
 scenarios:

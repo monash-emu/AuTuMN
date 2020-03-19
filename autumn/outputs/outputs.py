@@ -189,6 +189,42 @@ def collate_prevalence(output_options):
     return output_options
 
 
+def create_output_dataframes(pps, params):
+    # Include times in  generated outputs
+    for i_scenario in [0] + list(params['scenarios'].keys()):
+        pps[i_scenario].generated_outputs['times'] = pps[i_scenario].derived_outputs['times']
+
+    # Create dataframe for the baseline estimates
+    for attribute in ['derived_outputs', 'generated_outputs']:
+        setattr(pps[0], attribute + '_df', pd.DataFrame.from_dict(
+            {key: value for
+             key, value in
+             getattr(pps[0], attribute).items() if
+             'distribution' not in key}
+        ))
+        getattr(pps[0], attribute + '_df').set_index('times', inplace=True)
+        setattr(pps[0],
+                attribute + '_df',
+                getattr(pps[0], attribute + '_df')
+                )
+
+        # Create dataframe that adds the scenario estimates on to the baseline ones
+        for i_scenario in params['scenarios']:
+            # Unfortunate hack to ignore the dictionaries that we put in to dictionary attributes rather than list
+            intervention_outputs = \
+                pd.DataFrame.from_dict(
+                    {key: value for
+                     key, value in
+                     getattr(pps[i_scenario], attribute).items() if
+                     'distribution' not in key}
+                )
+            intervention_outputs.set_index('times', inplace=True)
+            setattr(pps[i_scenario],
+                    attribute + '_df',
+                    getattr(pps[0], attribute + '_df')[:params['scenario_start'] - 1].append(intervention_outputs)
+                    )
+
+
 class Outputs:
     def __init__(
         self,
@@ -1086,29 +1122,30 @@ class OutputPlotter:
             file_name = os.path.join(scenario_name, input_function_name)
             self.finish_off_figure(fig, filename=file_name, title_text=input_function_name)
 
-    def plot_prevalence_combinations(self, sc_index=0):
+    def plot_prevalence_combinations(self):
         """
         Create output graph for each requested stratification, displaying prevalence of compartment in each stratum
         """
-        fig, axes, max_dims, n_rows, n_cols = initialise_figures_axes(1)
-        for i_combination in range(len(self.output_options['output_combinations_to_plot_together'])):
-            compartment, stratification = self.output_options['output_combinations_to_plot_together'][i_combination]
-            strata_to_iterate = self.models[sc_index].all_stratifications[stratification]
-            plot_name = 'prevX' + compartment + 'XamongX' + stratification
-            for i_stratum, stratum in enumerate(strata_to_iterate):
-                colour = i_stratum / len(strata_to_iterate)
-                axes.plot(
-                    self.post_processing_list[sc_index].derived_outputs['times'],
-                    self.post_processing_list[sc_index].generated_outputs[plot_name + '_' + stratum],
-                    color=(colour, 0., 1. - colour)
+        for i_scenario in self.scenario_names:
+            fig, axes, max_dims, n_rows, n_cols = initialise_figures_axes(1)
+            for i_combination in range(len(self.output_options['output_combinations_to_plot_together'])):
+                compartment, stratification = self.output_options['output_combinations_to_plot_together'][i_combination]
+                strata_to_iterate = self.models[i_scenario].all_stratifications[stratification]
+                plot_name = 'prevX' + compartment + 'XamongX' + stratification
+                for i_stratum, stratum in enumerate(strata_to_iterate):
+                    colour = i_stratum / len(strata_to_iterate)
+                    axes.plot(
+                        self.post_processing_list[0].derived_outputs['times'],
+                        self.post_processing_list[i_scenario].generated_outputs_df.loc[:, plot_name + '_' + stratum],
+                        color=(colour, 0., 1. - colour)
+                    )
+                axes.legend(strata_to_iterate)
+                scenario_name = list(self.scenario_names.values())[i_scenario]
+                self.finish_off_figure(
+                    fig,
+                    filename=os.path.join(scenario_name, plot_name),
+                    title_text=plot_name
                 )
-            axes.legend(strata_to_iterate)
-            scenario_name = list(self.scenario_names.values())[sc_index]
-            self.finish_off_figure(
-                fig,
-                filename=os.path.join(scenario_name, plot_name),
-                title_text=plot_name
-            )
 
     def plot_parameter_category_values(self, sc_index=0):
         """

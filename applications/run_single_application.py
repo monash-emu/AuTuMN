@@ -5,10 +5,12 @@ Build and run any AuTuMN model, storing the outputs
 import os
 from datetime import datetime
 import yaml
+import pandas as pd
 
 from summer_py.constants import IntegrationType
 import summer_py.post_processing as post_proc
-from autumn.outputs.outputs import Outputs, OutputPlotter, collate_compartment_across_stratification, collate_prevalence
+from autumn.outputs.outputs import OutputPlotter, collate_compartment_across_stratification, \
+    collate_prevalence, create_output_dataframes
 
 from autumn.tool_kit.timer import Timer
 from autumn.tool_kit import run_multi_scenario
@@ -131,12 +133,13 @@ def run_model(application):
                 )
             )
 
+        create_output_dataframes(pps, params)
+
     with Timer('Creating model outputs'):
 
         # New approach to plotting outputs, intended to be more general
         outputs_plotter = OutputPlotter(models, pps, output_options, plot_path)
         outputs_plotter.run_input_plots()
-
 
 if __name__ == '__main__':
     run_model('covid_19')

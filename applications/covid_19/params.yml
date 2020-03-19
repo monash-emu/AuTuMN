@@ -54,7 +54,7 @@ default:
   time_step: 1
 
   # Base model definition
-  contact_rate: 0.7
+  contact_rate: 0.52
   latent_period: 3.2
   presympt_period: 0.2
   infectious_period: 7.68
@@ -68,9 +68,9 @@ default:
 scenario_start: 60
 
 # N.B: Scenario keys have to be integers 1-N, or it'll break downstream dashboards.
-scenarios: {}
-#  1:
-#    mixing:
-#      school_closure: True
-#      distance: True
-#    distance_effect: 0.5
+scenarios:
+  1:
+    mixing:
+      school_closure: True
+      distance: True
+    distance_effect: 0.5

@@ -218,4 +218,6 @@ def build_covid_model(update_params={}):
     _covid_model.death_output_categories = \
         list_all_strata_for_mortality(_covid_model.compartment_names)
 
+    _covid_model.transition_flows.to_csv('temp.csv')
+
     return _covid_model

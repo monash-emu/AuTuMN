@@ -1269,6 +1269,7 @@ class OutputPlotter:
                 growth_rates.append(exponential_growth_rate)
             fig, axis, max_dims, n_rows, n_cols = initialise_figures_axes(1)
             axis.plot(time_points[:-1], growth_rates)
+            axis.set_ylim([0., 0.25])
             scenario_name = list(self.scenario_names.values())[sc_index]
             file_name = os.path.join(scenario_name, 'exponential_growth_rate')
             self.finish_off_figure(fig, filename=file_name, title_text='exponential_growth_rate')

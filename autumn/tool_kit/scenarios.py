@@ -11,11 +11,13 @@ def change_mixing_matrix_for_scenario(model, scenario_requests):
     Dummy function to switch the mixing matrix over to that of a different country at the point that the scenario
     commences
     """
+    mixing_matrix = load_specific_prem_sheet('all_locations_1', 'Australia')
     if 'mixing' in scenario_requests:
-        model.mixing_matrix = load_specific_prem_sheet(
-            'all_locations_1',
-            scenario_requests['mixing']
-        )
+        if scenario_requests['mixing'].startswith('no_'):
+            model.mixing_matrix = numpy.subtract(
+                mixing_matrix,
+                load_specific_prem_sheet(scenario_requests['mixing'][3:] + '_1', 'Australia')
+            )
     return model
 
 

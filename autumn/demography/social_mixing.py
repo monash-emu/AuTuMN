@@ -84,6 +84,7 @@ def load_population(file, sheet_name):
     
     return population
 
+
 def load_age_calibration():
     '''
     converts the age group specific cases to covid_19 agegroup
@@ -105,5 +106,3 @@ def load_age_calibration():
     y.append(sum(case_numbers[-3:]))
   
     return pd.Series(y, index=age_breakpoints)
-
-    

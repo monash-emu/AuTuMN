@@ -3,22 +3,7 @@ Utilities for running multiple model scenarios
 """
 from autumn.tool_kit.timer import Timer
 import numpy
-from autumn.demography.social_mixing import load_specific_prem_sheet
-
-
-def change_mixing_matrix_for_scenario(model, scenario_requests):
-    """
-    Dummy function to switch the mixing matrix over to that of a different country at the point that the scenario
-    commences
-    """
-    mixing_matrix = load_specific_prem_sheet('all_locations_1', 'Australia')
-    if 'mixing' in scenario_requests:
-        if scenario_requests['mixing'].startswith('no_'):
-            model.mixing_matrix = numpy.subtract(
-                mixing_matrix,
-                load_specific_prem_sheet(scenario_requests['mixing'][3:] + '_1', 'Australia')
-            )
-    return model
+from autumn.demography.social_mixing import load_specific_prem_sheet, change_mixing_matrix_for_scenario
 
 
 def run_multi_scenario(param_lookup, scenario_start_time, model_builder, run_kwargs={}):

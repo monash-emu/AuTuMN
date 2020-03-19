@@ -68,4 +68,7 @@ scenario_start: 60
 # N.B: Scenario keys have to be integers 1-N, or it'll break downstream dashboards.
 scenarios:
   1:
-    mixing: no_school
+    mixing:
+      school_closure: True
+      distance: True
+    distance_effect: 0.5

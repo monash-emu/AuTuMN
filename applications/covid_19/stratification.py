@@ -37,14 +37,15 @@ def update_parameters(
         overwrite=False
 ):
     strata_being_implemented = \
-        ['low', 'high']
+        ['low', 'moderate', 'high']
     strata_being_implemented = \
         [stratum + 'W' for stratum in strata_being_implemented] if overwrite else strata_being_implemented
     working_parameters.update(
         {parameter_name_to_adjust + 'Xagegroup_' + i_break:
             {
                 strata_being_implemented[0]: prop_1,
-                strata_being_implemented[1]: prop_2
+                strata_being_implemented[1]: 0.,
+                strata_being_implemented[2]: prop_2
             }
             for i_break, prop_1, prop_2 in zip(upstream_strata, new_low_parameters, new_high_parameters)
         }
@@ -112,14 +113,18 @@ def stratify_by_infectiousness(
     # Stratify the model with the SUMMER stratification function
     _covid_model.stratify(
         'infectiousness',
-        ['high', 'low'],
+        ['high', 'moderate', 'low'],
         infectious_compartments,
         infectiousness_adjustments=
         {
             'high': model_parameters['high_infect_multiplier'],
             'low': model_parameters['low_infect_multiplier']
         },
-        requested_proportions={},
+        requested_proportions={
+            'high': 1. / 3.,
+            'moderate': 0.,
+            'low': 1. / 3.
+        },
         adjustment_requests=infectious_adjustments,
         verbose=False
     )

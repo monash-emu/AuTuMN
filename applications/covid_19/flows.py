@@ -126,27 +126,25 @@ def add_within_infectious_flows(list_of_flows, n_infectious, infectious_compartm
 
 
 def replicate_compartment(
-        n_replications, current_compartments, compartment_stem, infectious_compartments, infectious_seed=0.,
+        n_replications, current_compartments, compartment_stem, infectious_compartments, infectious=False, infectious_seed=0.,
 ):
     """
     Implement n compartments of a certain type
     Also returns the names of the infectious compartments and the intial population evenly distributed across the
     replicated infectious compartments
     """
-    if n_replications == 1:
-        current_compartments += [compartment_stem]
-        infectious_compartments += [compartment_stem]
-        init_pop = {
-            compartment_stem: infectious_seed,
-        }
-    else:
-        init_pop = {}
-        for i_infectious in range(n_replications):
-            current_compartments += [compartment_stem + '_' + str(i_infectious + 1)]
-            infectious_compartments += [compartment_stem + '_' + str(i_infectious + 1)]
-            init_pop[compartment_stem + '_' + str(i_infectious + 1)] = \
-                infectious_seed / float(n_replications)
-    return current_compartments, infectious_compartments, init_pop
+    compartments_to_add = \
+        [compartment_stem] if \
+            n_replications == 1 else \
+            [compartment_stem + '_' + str(i_comp + 1) for i_comp in range(n_replications)]
+    infectious_compartments_to_add = \
+        compartments_to_add if infectious else []
+    init_pop = \
+        {compartment_stem: infectious_seed} if \
+            n_replications == 1 else \
+            {compartment_stem + '_' + str(i_infectious + 1): infectious_seed / float(n_replications)
+             for i_infectious in range(n_replications)}
+    return current_compartments + compartments_to_add, infectious_compartments + infectious_compartments_to_add, init_pop
 
 
 def multiply_flow_value_for_multiple_compartments(model_parameters, compartment_name, parameter_name):

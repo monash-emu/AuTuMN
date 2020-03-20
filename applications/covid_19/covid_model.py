@@ -62,19 +62,20 @@ def build_covid_model(update_params={}):
     model_parameters['to_infectious'] = 1. / model_parameters['within_presympt']
 
     # Replicate compartments that need to be repeated
-    compartments, _, _ = \
+    infectious_compartments = []
+    compartments, infectious_compartments, _ = \
         replicate_compartment(
             model_parameters['n_compartment_repeats'],
             compartments,
             Compartment.EXPOSED,
-            []
+            infectious_compartments
         )
     compartments, infectious_compartments, _ = \
         replicate_compartment(
             model_parameters['n_compartment_repeats'],
             compartments,
             'presympt',
-            []
+            infectious_compartments
         )
     compartments, infectious_compartments, init_pop = \
         replicate_compartment(
@@ -82,6 +83,7 @@ def build_covid_model(update_params={}):
             compartments,
             Compartment.INFECTIOUS,
             infectious_compartments,
+            infectious=True,
             infectious_seed=model_parameters['infectious_seed']
         )
 

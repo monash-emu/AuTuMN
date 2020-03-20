@@ -11,9 +11,9 @@ from autumn.tb_model import (
 )
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
 from applications.covid_19.flows import \
-    add_infection_flows, add_to_presympt_flows, add_recovery_flows, add_within_exposed_flows, \
-    add_within_infectious_flows, replicate_compartment, multiply_flow_value_for_multiple_compartments,\
-    add_infection_death_flows, add_within_presympt_flows, add_to_infectious_flows
+    add_infection_flows, add_transition_flows, add_recovery_flows, add_sequential_compartment_flows, \
+    replicate_compartment, multiply_flow_value_for_multiple_compartments,\
+    add_infection_death_flows
 from applications.covid_19.stratification import stratify_by_age, stratify_by_infectiousness
 from applications.covid_19.covid_outputs import find_incidence_outputs
 from autumn.demography.social_mixing import load_specific_prem_sheet
@@ -116,47 +116,27 @@ def build_covid_model(update_params={}):
         )
 
     # Sequentially add groups of flows to flows list
-    flows = []
     flows = add_infection_flows(
-        flows,
-        model_parameters['n_compartment_repeats']
+        [], model_parameters['n_compartment_repeats']
     )
-
-    flows = add_within_exposed_flows(
-        flows,
-        model_parameters['n_compartment_repeats']
+    flows = add_sequential_compartment_flows(
+        flows, model_parameters['n_compartment_repeats'], Compartment.EXPOSED
     )
-    flows = add_within_presympt_flows(
-        flows,
-        model_parameters['n_compartment_repeats'],
-        'presympt'
+    flows = add_sequential_compartment_flows(
+        flows, model_parameters['n_compartment_repeats'], Compartment.PRESYMPTOMATIC
     )
-    flows = add_within_infectious_flows(
-        flows,
-        model_parameters['n_compartment_repeats'],
-        Compartment.INFECTIOUS
+    flows = add_sequential_compartment_flows(
+        flows, model_parameters['n_compartment_repeats'], Compartment.INFECTIOUS
     )
-
-    flows = add_to_presympt_flows(
-        flows,
-        model_parameters['n_compartment_repeats'],
-        model_parameters['n_compartment_repeats'],
-        'presympt',
+    flows = add_transition_flows(
+        flows, model_parameters['n_compartment_repeats'], Compartment.EXPOSED, Compartment.PRESYMPTOMATIC,
         'within_exposed'
     )
-    flows = add_to_infectious_flows(
-        flows,
-        model_parameters['n_compartment_repeats'],
-        model_parameters['n_compartment_repeats'],
-        Compartment.INFECTIOUS,
+    flows = add_transition_flows(
+        flows, model_parameters['n_compartment_repeats'], Compartment.PRESYMPTOMATIC, Compartment.INFECTIOUS,
         'to_infectious'
     )
-
-    flows = add_recovery_flows(
-        flows,
-        model_parameters['n_compartment_repeats'],
-        Compartment.INFECTIOUS
-    )
+    flows = add_recovery_flows(flows, model_parameters['n_compartment_repeats'])
     flows = add_infection_death_flows(
         flows,
         model_parameters['n_compartment_repeats']

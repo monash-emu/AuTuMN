@@ -1,13 +1,6 @@
 from autumn.constants import Flow, Compartment
 import copy
 
-INFECTION_FLOWS = [
-    {
-        'type': Flow.INFECTION_FREQUENCY,
-        'parameter': 'contact_rate',
-        'origin': Compartment.SUSCEPTIBLE,
-    }
-]
 
 DEATH_FLOWS = [
     {
@@ -16,113 +9,59 @@ DEATH_FLOWS = [
     }
 ]
 
-WITHIN_EXPOSED_FLOWS = [
-    {
-        'type': Flow.STANDARD,
-        'parameter': 'within_exposed',
-    }
-]
 
-WITHIN_PRESYMPT_FLOWS = [
-    {
-        'type': Flow.STANDARD,
-        'parameter': 'within_presympt',
-    }
-]
+def add_infection_flows(working_flows, n_exposed):
+    """
+    Add standard infection flows for transition from susceptible to exposed through infection
+    """
+    working_flows += [{
+        'type': Flow.INFECTION_FREQUENCY,
+        'parameter': 'contact_rate',
+        'origin': Compartment.SUSCEPTIBLE,
+        'to': Compartment.EXPOSED + '_1' if n_exposed > 1 else Compartment.EXPOSED
+    }]
+    return working_flows
 
-WITHIN_INFECTIOUS_FLOWS = [
-    {
-        'type': Flow.STANDARD,
-        'parameter': 'within_infectious',
-    }
-]
 
-PROGRESSION_FLOWS = [
-    {
+def add_transition_flows(list_of_flows, n_sequential, origin_compartment, to_compartment, parameter_name):
+    """
+    Add flow from end of sequential exposed compartments to start of presymptomatic compartments
+    """
+    list_of_flows += [{
         'type': Flow.STANDARD,
-    }
-]
+        'origin': origin_compartment + '_' + str(n_sequential) if n_sequential > 1 else origin_compartment,
+        'to': to_compartment + '_1' if n_sequential > 1 else to_compartment,
+        'parameter': parameter_name
+    }]
+    return list_of_flows
 
-RECOVERY_FLOWS = [
-    {
+
+def add_recovery_flows(working_flows, n_infectious):
+    """
+    Add standard recovery flows
+    Differs from the transition flows in that the recovered compartment is never duplicated
+    """
+    working_flows += [{
         'type': Flow.STANDARD,
         'parameter': 'within_infectious',
         'to': Compartment.RECOVERED,
-    }
-]
+        'origin': Compartment.INFECTIOUS + '_' + str(n_infectious) if n_infectious > 1 else Compartment.INFECTIOUS
+    }]
+    return working_flows
 
 
-def add_to_presympt_flows(list_of_flows, n_exposed, n_presympt, presympt_compartment_name, parameter_name):
-    progression_flows = copy.deepcopy(PROGRESSION_FLOWS)
-    progression_flows[0]['origin'] = \
-        Compartment.EXPOSED + '_' + str(n_exposed) if n_exposed > 1 else Compartment.EXPOSED
-    progression_flows[0]['to'] = \
-        presympt_compartment_name + '_1' if n_presympt > 1 else presympt_compartment_name
-    progression_flows[0]['parameter'] = parameter_name
-    list_of_flows += progression_flows
-    return list_of_flows
-
-
-def add_to_infectious_flows(list_of_flows, n_presympt, n_infectious, infectious_compartment_name, parameter_name):
-    progression_flows = copy.deepcopy(PROGRESSION_FLOWS)
-    progression_flows[0]['origin'] = \
-        'presympt_' + str(n_presympt) if n_presympt > 1 else 'presympt'
-    progression_flows[0]['to'] = \
-        infectious_compartment_name + '_1' if n_infectious > 1 else infectious_compartment_name
-    progression_flows[0]['parameter'] = parameter_name
-    list_of_flows += progression_flows
-    return list_of_flows
-
-
-def add_recovery_flows(list_of_flows, n_infectious, infectious_compartment_name):
-    recovery_flows = copy.deepcopy(RECOVERY_FLOWS)
-    recovery_flows[0]['origin'] = \
-        infectious_compartment_name + '_' + str(n_infectious) if n_infectious > 1 else infectious_compartment_name
-    list_of_flows += recovery_flows
-    return list_of_flows
-
-
-def add_infection_flows(list_of_flows, n_exposed):
-    infection_flows = copy.deepcopy(INFECTION_FLOWS)
-    infection_flows[0]['to'] = Compartment.EXPOSED + '_1' if n_exposed > 1 else Compartment.EXPOSED
-    list_of_flows += infection_flows
-    return list_of_flows
-
-
-def add_within_exposed_flows(list_of_flows, n_exposed):
-    if n_exposed > 1:
-        for i_flow in range(1, n_exposed):
-            within_exposed_flows = copy.deepcopy(WITHIN_EXPOSED_FLOWS)
-            within_exposed_flows[0]['origin'] = \
-                Compartment.EXPOSED + '_' + str(i_flow)
-            within_exposed_flows[0]['to'] = \
-                Compartment.EXPOSED + '_' + str(i_flow + 1)
-            list_of_flows += within_exposed_flows
-    return list_of_flows
-
-
-def add_within_presympt_flows(list_of_flows, n_presympt, presympt_compartment_name):
-    if n_presympt > 1:
-        for i_flow in range(1, n_presympt):
-            within_presympt_flows = copy.deepcopy(WITHIN_PRESYMPT_FLOWS)
-            within_presympt_flows[0]['origin'] = \
-                presympt_compartment_name + '_' + str(i_flow)
-            within_presympt_flows[0]['to'] = \
-                presympt_compartment_name + '_' + str(i_flow + 1)
-            list_of_flows += within_presympt_flows
-    return list_of_flows
-
-
-def add_within_infectious_flows(list_of_flows, n_infectious, infectious_compartment_name):
-    if n_infectious > 1:
-        for i_flow in range(1, n_infectious):
-            within_infectious_flows = copy.deepcopy(WITHIN_INFECTIOUS_FLOWS)
-            within_infectious_flows[0]['origin'] = \
-                infectious_compartment_name + '_' + str(i_flow)
-            within_infectious_flows[0]['to'] = \
-                infectious_compartment_name + '_' + str(i_flow + 1)
-            list_of_flows += within_infectious_flows
-    return list_of_flows
+def add_sequential_compartment_flows(working_flows, n_compartments, compartment_name):
+    """
+    Add standard flows for progression through sequential compartments
+    """
+    for i_flow in range(1, n_compartments):
+        working_flows += [{
+            'type': Flow.STANDARD,
+            'parameter': 'within_' + compartment_name,
+            'origin': compartment_name + '_' + str(i_flow),
+            'to': compartment_name + '_' + str(i_flow + 1)
+        }]
+    return working_flows
 
 
 def replicate_compartment(

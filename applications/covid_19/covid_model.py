@@ -23,8 +23,8 @@ from applications.covid_19.covid_outputs import create_request_stratified_incide
 
 # Database locations
 file_dir = os.path.dirname(os.path.abspath(__file__))
-INPUT_DB_PATH = os.path.join(constants.DATA_PATH, "inputs.db")
-PARAMS_PATH = os.path.join(file_dir, "params.yml")
+INPUT_DB_PATH = os.path.join(constants.DATA_PATH, 'inputs.db')
+PARAMS_PATH = os.path.join(file_dir, 'params.yml')
 
 
 def build_covid_model(update_params={}):
@@ -57,10 +57,9 @@ def build_covid_model(update_params={}):
     ]
 
     # Get progression rates from sojourn times
-    model_parameters['within_exposed'] = 1. / model_parameters['latent_period']
-    model_parameters['within_presympt'] = 1. / model_parameters['presympt_period']
-    model_parameters['to_infectious'] = 1. / model_parameters['presympt_period']
-    model_parameters['within_infectious'] = 1. / model_parameters['infectious_period']
+    for compartment in ['exposed', 'presympt', 'infectious']:
+        model_parameters['within_' + compartment] = 1. / model_parameters[compartment + '_period']
+    model_parameters['to_infectious'] = 1. / model_parameters['within_presympt']
 
     # Replicate compartments that need to be repeated
     compartments, _, _ = \

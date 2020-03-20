@@ -115,11 +115,10 @@ def change_mixing_matrix_for_scenario(model, scenario_requests):
     """
     mixing_matrix = load_specific_prem_sheet('all_locations_1', 'Australia')
     if 'mixing' in scenario_requests:
-        if not scenario_requests['mixing']['school_closure']:
-            model.mixing_matrix = np.subtract(
+        for location in scenario_requests['mixing']:
+            model.mixing_matrix = np.add(
                 mixing_matrix,
-                load_specific_prem_sheet('school_1', 'Australia')
+                load_specific_prem_sheet(location + '_1', 'Australia') *
+                scenario_requests['mixing'][location]
             )
-        if scenario_requests['mixing']['distance']:
-            model.mixing_matrix = model.mixing_matrix * scenario_requests['distance_effect']
     return model

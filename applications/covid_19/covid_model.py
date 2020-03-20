@@ -90,20 +90,22 @@ def build_covid_model(update_params={}):
             infectious_seed=model_parameters['infectious_seed']
         )
 
-    # Multiply the progression rate by the number of compartments to keep the average time in exposed the same
+    # Multiply the progression rates by the number of compartments to keep the average time in exposed the same
     model_parameters = \
         multiply_flow_value_for_multiple_compartments(
             model_parameters, Compartment.EXPOSED, 'within_exposed'
         )
     model_parameters = \
         multiply_flow_value_for_multiple_compartments(
-            model_parameters, 'presympt', 'within_presympt'
+            model_parameters, Compartment.PRESYMPTOMATIC, 'within_presympt'
         )
     model_parameters = \
         multiply_flow_value_for_multiple_compartments(
             model_parameters, Compartment.INFECTIOUS, 'within_infectious'
         )
-    model_parameters['to_infectious'] = model_parameters['within_exposed']
+
+    # Distinguish to_infectious parameter, so that it can be split later
+    model_parameters['to_infectious'] = model_parameters['within_presympt']
 
     # Set integration times
     integration_times = \

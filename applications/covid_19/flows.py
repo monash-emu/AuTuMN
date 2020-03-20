@@ -167,6 +167,10 @@ def replicate_compartment(
 
 
 def multiply_flow_value_for_multiple_compartments(model_parameters, compartment_name, parameter_name):
+    """
+    Multiply the progression rate through the compartments placed in series by the number of compartments, so that the
+    average sojourn time in the group of compartment remains the same.
+    """
     model_parameters['within_' + compartment_name] = \
         model_parameters[parameter_name] * \
         float(model_parameters['n_compartment_repeats'])

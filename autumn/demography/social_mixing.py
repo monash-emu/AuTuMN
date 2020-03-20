@@ -108,16 +108,16 @@ def load_age_calibration():
     return pd.Series(y, index=age_breakpoints)
 
 
-def change_mixing_matrix_for_scenario(model, scenario_requests):
+def change_mixing_matrix_for_scenario(model, scenario_requests, i_scenario):
     """
     Dummy function to switch the mixing matrix over to that of a different country at the point that the scenario
     commences
     """
-    mixing_matrix = load_specific_prem_sheet('all_locations_1', 'Australia')
+    model.mixing_matrix = load_specific_prem_sheet('all_locations_1', 'Australia')
     if 'mixing' in scenario_requests:
         for location in scenario_requests['mixing']:
             model.mixing_matrix = np.add(
-                mixing_matrix,
+                model.mixing_matrix,
                 load_specific_prem_sheet(location + '_1', 'Australia') *
                 scenario_requests['mixing'][location]
             )

@@ -5,6 +5,7 @@ import pandas as pd
 import os
 import copy
 import seaborn as sns
+from autumn.demography.social_mixing import load_specific_prem_sheet
 
 
 def find_subplot_grid(n_plots):
@@ -1200,28 +1201,41 @@ class OutputPlotter:
                 title_text=parameter_stem
             )
 
-    def plot_mixing_matrix(self, sc_index=0):
+    def plot_mixing_matrix(self):
         """
         Simple plotting function for the model's mixing matrix, using standard seaborn method
-
-        :parameter sc_index:
-        Integer index of the scenario that the mixing matrix is being plotted for
         """
-        if self.models[sc_index].mixing_matrix is not None:
+        for i_scenario in self.scenario_names:
+
+            if self.models[i_scenario].mixing_matrix is not None:
+                fig, axis, max_dims, n_rows, n_cols = \
+                    initialise_figures_axes(1)
+                axis = \
+                    sns.heatmap(
+                        self.models[i_scenario].mixing_matrix,
+                        yticklabels=self.models[i_scenario].mixing_categories,
+                        xticklabels=False,
+                        vmin=0.,
+                        vmax=12.
+                    )
+                self.finish_off_figure(
+                    fig,
+                    filename=os.path.join('mixing_matrix_' + str(i_scenario)))
+
+        for location in ['all_locations', 'school', 'home', 'work', 'other_locations']:
             fig, axis, max_dims, n_rows, n_cols = \
                 initialise_figures_axes(1)
             axis = \
                 sns.heatmap(
-                    self.models[sc_index].mixing_matrix,
-                    yticklabels=self.models[sc_index].mixing_categories,
-                    xticklabels=False
+                    load_specific_prem_sheet(location + '_1', 'Australia'),
+                    yticklabels=self.models[i_scenario].mixing_categories,
+                    xticklabels=False,
+                    vmin=0.,
+                    vmax=12.
                 )
             self.finish_off_figure(
                 fig,
-                filename=os.path.join(
-                    list(self.scenario_names.values())[sc_index],
-                    'mixing_matrix')
-            )
+                filename=os.path.join('mixing_matrix_' + location))
 
     def plot_pop_distribution_by_stratum(self, sc_index=0):
         for stratification in self.output_options['display_stratification']:

@@ -53,7 +53,7 @@ default:
 
   # Base model definition
   contact_rate: 0.52
-  latent_period: 3.2
+  exposed_period: 3.2
   presympt_period: 0.2
   infectious_period: 7.68
   universal_death_rate: 0.

@@ -32,7 +32,7 @@ def run_multi_scenario(param_lookup, scenario_start_time, model_builder, run_kwa
         with Timer(f'Running scenario #{scenario_idx}'):
             scenario_params['start_time'] = scenario_start_time
             scenario_model = initialise_scenario_run(baseline_model, scenario_params, model_builder)
-            scenario_model = change_mixing_matrix_for_scenario(scenario_model, scenario_params)
+            scenario_model = change_mixing_matrix_for_scenario(scenario_model, scenario_params, scenario_idx)
             scenario_model.run_model(**run_kwargs)
             models.append(scenario_model)
 

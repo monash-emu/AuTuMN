@@ -152,7 +152,7 @@ def replicate_compartment(
 def multiply_flow_value_for_multiple_compartments(model_parameters, compartment_name, parameter_name):
     model_parameters['within_' + compartment_name] = \
         model_parameters[parameter_name] * \
-        float(model_parameters['n_' + compartment_name + '_compartments'])
+        float(model_parameters['n_compartment_repeats'])
     return model_parameters
 
 

@@ -3,8 +3,8 @@
 default:
 
   # Model structure parameters
+  n_compartment_repeats: 2
   n_exposed_compartments: 2
-  n_infectious_compartments: 2
   n_presympt_compartments: 2
 
   # Age-specific infectiousness progression adjustments - in ten year brackets

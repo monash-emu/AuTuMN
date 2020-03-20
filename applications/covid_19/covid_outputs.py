@@ -4,11 +4,11 @@ from autumn.constants import Compartment
 def find_incidence_outputs(parameters):
     last_presympt = \
         'presympt_' + str(parameters['n_presympt_compartments']) if \
-            parameters['n_presympt_compartments'] > 1 else \
+            parameters['n_compartment_repeats'] > 1 else \
             'presympt'
     first_infectious = \
         'infectious_1' if \
-            parameters['n_infectious_compartments'] > 1 else \
+            parameters['n_compartment_repeats'] > 1 else \
             'infectious'
     return {
         'incidence':

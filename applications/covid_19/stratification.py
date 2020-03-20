@@ -67,13 +67,13 @@ def stratify_by_infectiousness(
     # Calculate death rates and progression rates
     high_infectious_death_rates = \
         [
-            find_series_compartment_parameter(cfr, model_parameters['n_infectious_compartments'], progression) for
+            find_series_compartment_parameter(cfr, model_parameters['n_compartment_repeats'], progression) for
             cfr, progression in
             zip(case_fatality_rates, within_infectious_rates)
         ]
     high_infectious_within_infectious_rates = \
         [
-            find_series_compartment_parameter(1. - cfr, model_parameters['n_infectious_compartments'], progression) for
+            find_series_compartment_parameter(1. - cfr, model_parameters['n_compartment_repeats'], progression) for
             cfr, progression in
             zip(case_fatality_rates, within_infectious_rates)
         ]

@@ -38,9 +38,9 @@ def build_covid_model(update_params={}):
     """
 
     # Get user-requested parameters
-    with open(PARAMS_PATH, "r") as yaml_file:
+    with open(PARAMS_PATH, 'r') as yaml_file:
         params = yaml.safe_load(yaml_file)
-    model_parameters = params["default"]
+    model_parameters = params['default']
 
     # Update, not needed for baseline run
     model_parameters.update(update_params)
@@ -65,21 +65,21 @@ def build_covid_model(update_params={}):
     # Replicate compartments that need to be repeated
     compartments, _, _ = \
         replicate_compartment(
-            model_parameters['n_exposed_compartments'],
+            model_parameters['n_compartment_repeats'],
             compartments,
             Compartment.EXPOSED,
             []
         )
     compartments, infectious_compartments, _ = \
         replicate_compartment(
-            model_parameters['n_presympt_compartments'],
+            model_parameters['n_compartment_repeats'],
             compartments,
             'presympt',
             []
         )
     compartments, infectious_compartments, init_pop = \
         replicate_compartment(
-            model_parameters['n_infectious_compartments'],
+            model_parameters['n_compartment_repeats'],
             compartments,
             Compartment.INFECTIOUS,
             infectious_compartments,
@@ -113,47 +113,47 @@ def build_covid_model(update_params={}):
     flows = []
     flows = add_infection_flows(
         flows,
-        model_parameters['n_exposed_compartments']
+        model_parameters['n_compartment_repeats']
     )
 
     flows = add_within_exposed_flows(
         flows,
-        model_parameters['n_exposed_compartments']
+        model_parameters['n_compartment_repeats']
     )
     flows = add_within_presympt_flows(
         flows,
-        model_parameters['n_presympt_compartments'],
+        model_parameters['n_compartment_repeats'],
         'presympt'
     )
     flows = add_within_infectious_flows(
         flows,
-        model_parameters['n_infectious_compartments'],
+        model_parameters['n_compartment_repeats'],
         Compartment.INFECTIOUS
     )
 
     flows = add_to_presympt_flows(
         flows,
-        model_parameters['n_exposed_compartments'],
-        model_parameters['n_presympt_compartments'],
+        model_parameters['n_compartment_repeats'],
+        model_parameters['n_compartment_repeats'],
         'presympt',
         'within_exposed'
     )
     flows = add_to_infectious_flows(
         flows,
-        model_parameters['n_presympt_compartments'],
-        model_parameters['n_infectious_compartments'],
+        model_parameters['n_compartment_repeats'],
+        model_parameters['n_compartment_repeats'],
         Compartment.INFECTIOUS,
         'to_infectious'
     )
 
     flows = add_recovery_flows(
         flows,
-        model_parameters['n_infectious_compartments'],
+        model_parameters['n_compartment_repeats'],
         Compartment.INFECTIOUS
     )
     flows = add_infection_death_flows(
         flows,
-        model_parameters['n_infectious_compartments']
+        model_parameters['n_compartment_repeats']
     )
 
     mixing_matrix = \
@@ -191,8 +191,8 @@ def build_covid_model(update_params={}):
             create_request_stratified_incidence_covid(
                 model_parameters['incidence_stratification'],
                 model_parameters['all_stratifications'],
-                model_parameters['n_presympt_compartments'],
-                model_parameters['n_infectious_compartments']
+                model_parameters['n_compartment_repeats'],
+                model_parameters['n_compartment_repeats']
             )
         )
 
@@ -217,7 +217,5 @@ def build_covid_model(update_params={}):
 
     _covid_model.death_output_categories = \
         list_all_strata_for_mortality(_covid_model.compartment_names)
-
-    _covid_model.transition_flows.to_csv('temp.csv')
 
     return _covid_model

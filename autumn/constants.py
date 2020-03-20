@@ -16,14 +16,15 @@ class Compartment:
     A model compartment.
     """
 
-    SUSCEPTIBLE = "susceptible"
+    SUSCEPTIBLE = 'susceptible'
     EXPOSED = 'exposed'
-    EARLY_LATENT = "early_latent"
-    LATE_LATENT = "late_latent"
-    INFECTIOUS = "infectious"
+    PRESYMPTOMATIC = 'presympt'
+    EARLY_LATENT = 'early_latent'
+    LATE_LATENT = 'late_latent'
+    INFECTIOUS = 'infectious'
     ON_TREATMENT = 'on_treatment'
-    RECOVERED = "recovered"
-    LTBI_TREATED = "ltbi_treated"
+    RECOVERED = 'recovered'
+    LTBI_TREATED = 'ltbi_treated'
 
 
 class Flow:

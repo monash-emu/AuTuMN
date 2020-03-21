@@ -88,8 +88,8 @@ def stratify_by_infectiousness(_covid_model, model_parameters, compartments):
     infectious_adjustments.update(
         update_parameters(
             strata_being_implemented,
-            model_parameters,
             'agegroup',
+            model_parameters['all_stratifications']['agegroup'],
             [[1. - prop for prop in progression_props], [0.] * 16, progression_props],
             'to_infectious'
         )
@@ -99,8 +99,8 @@ def stratify_by_infectiousness(_covid_model, model_parameters, compartments):
     infectious_adjustments.update(
         update_parameters(
             strata_being_implemented,
-            model_parameters,
             'agegroup',
+            model_parameters['all_stratifications']['agegroup'],
             [[0.] * 16, [0.] * 16, high_infectious_death_rates],
             'infect_death',
             overwrite=True
@@ -111,8 +111,8 @@ def stratify_by_infectiousness(_covid_model, model_parameters, compartments):
     infectious_adjustments.update(
         update_parameters(
             strata_being_implemented,
-            model_parameters,
             'agegroup',
+            model_parameters['all_stratifications']['agegroup'],
             [within_infectious_rates, [0.] * 16, high_infectious_within_infectious_rates],
             'within_infectious',
             overwrite=True

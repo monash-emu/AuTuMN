@@ -1,8 +1,8 @@
 
 def update_parameters(
         adjusted_strata,
-        model_parameters,
         upstream_stratification,
+        upstream_strata,
         parameter_sets,
         parameter_name_to_adjust,
         overwrite=False
@@ -11,9 +11,6 @@ def update_parameters(
     Add new parameter sets to a model that differ across a previously implemented model stratification and the
     stratification currently being implemented
     """
-
-    # Find names of upstream strata that have been split
-    upstream_strata = model_parameters['all_stratifications'][upstream_stratification]
 
     # Indicate that parameters currently being implemented are overwrite parameter if needed
     adjusted_strata = [stratum + 'W' for stratum in adjusted_strata] if overwrite else adjusted_strata

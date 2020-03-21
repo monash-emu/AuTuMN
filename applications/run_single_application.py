@@ -92,7 +92,7 @@ def run_model(application):
 
     # Determine where to save model outputs
     output_db_path = os.path.join(output_directory, 'outputs.db')
-    plot_path = os.path.join(output_directory, 'plots')
+    # plot_path = os.path.join(output_directory, 'plots')
 
     # Save parameter requests and metadata
     record_parameter_request(output_directory, params)
@@ -110,8 +110,8 @@ def run_model(application):
     # Post-process and save model outputs
     with Timer('Processing model outputs'):
         store_run_models(models, scenarios=scenario_list, database_name=output_db_path)
-        if not os.path.exists(plot_path):
-            os.mkdir(plot_path)
+        if not os.path.exists(output_directory):
+            os.mkdir(output_directory)
 
         pps = []
         for scenario_index in range(len(models)):
@@ -138,7 +138,8 @@ def run_model(application):
     with Timer('Creating model outputs'):
 
         # New approach to plotting outputs, intended to be more general
-        outputs_plotter = OutputPlotter(models, pps, output_options, plot_path)
+        outputs_plotter = OutputPlotter(models, pps, output_options, output_directory)
+        outputs_plotter.save_flows_sheets()
         outputs_plotter.run_input_plots()
 
 

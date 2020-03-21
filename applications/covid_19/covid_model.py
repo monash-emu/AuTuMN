@@ -10,7 +10,7 @@ from autumn.tb_model import (
     list_all_strata_for_mortality,
 )
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
-from applications.covid_19.flows import \
+from disease_categories.emerging_infections.flows import \
     add_infection_flows, add_transition_flows, add_recovery_flows, add_sequential_compartment_flows, \
     replicate_compartment, multiply_flow_value_for_multiple_compartments,\
     add_infection_death_flows

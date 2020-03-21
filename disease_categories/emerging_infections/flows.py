@@ -1,5 +1,4 @@
 from autumn.constants import Flow, Compartment
-import copy
 
 
 def add_infection_flows(working_flows, n_exposed):

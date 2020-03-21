@@ -1287,3 +1287,10 @@ class OutputPlotter:
             scenario_name = list(self.scenario_names.values())[sc_index]
             file_name = os.path.join(scenario_name, 'exponential_growth_rate')
             self.finish_off_figure(fig, filename=file_name, title_text='exponential_growth_rate')
+
+    def save_flows_sheets(self):
+        """
+        Save the transitions and deaths dataframes as csv files, for easier inspection
+        """
+        self.models[0].transition_flows.to_csv(os.path.join(self.out_dir, 'transitions.csv'))
+        self.models[0].death_flows.to_csv(os.path.join(self.out_dir, 'deaths.csv'))

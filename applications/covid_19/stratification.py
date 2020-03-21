@@ -56,14 +56,18 @@ def update_parameters(
         ['low', 'moderate', 'high']
     strata_being_implemented = \
         [stratum + 'W' for stratum in strata_being_implemented] if overwrite else strata_being_implemented
+
+    new_moderate_parameters = [0.] * 16
     working_parameters.update(
         {parameter_name_to_adjust + 'Xagegroup_' + i_break:
             {
                 strata_being_implemented[0]: prop_1,
-                strata_being_implemented[1]: 0.,
-                strata_being_implemented[2]: prop_2
+                strata_being_implemented[1]: prop_2,
+                strata_being_implemented[2]: prop_3
             }
-            for i_break, prop_1, prop_2 in zip(upstream_strata, new_low_parameters, new_high_parameters)
+            for i_break, prop_1, prop_2, prop_3 in zip(
+            upstream_strata, new_low_parameters, new_moderate_parameters, new_high_parameters
+        )
         }
     )
     return working_parameters

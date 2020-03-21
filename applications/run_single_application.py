@@ -22,6 +22,8 @@ from autumn.demography.ageing import add_agegroup_breaks
 from applications.marshall_islands.rmi_model import build_rmi_model
 from applications.covid_19.covid_model import build_covid_model
 
+from summer_py.summer_model.utils.flowchart import create_flowchart
+
 
 FILE_DIR = os.path.dirname(os.path.abspath(__file__))
 

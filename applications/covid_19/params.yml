@@ -15,6 +15,13 @@ default:
     - 0.51
     - 0.5
     - 0.46
+# Ferguson infect proportion 40-50%
+# Infection fatality rate of 0.9% and 4.4% infections hospitalised
+# 30% hospitalised need ICU
+# 50% ICU cases die (supplemented by non-critical care deaths to reach age-specific IFR)
+# 8 days in hospital if no ICU
+# 16 days in hospital if ICU needed
+# Ferguson table 1 gives age-specific hospital|symptoms, ICU|hospital, IFR
 
   # Age-specific CFR - in five year brackets
   age_cfr:
@@ -27,6 +34,7 @@ default:
     - 0.094
     - 0.2
     - 0.36
+# Ruiyun et al. in Science - 0.55
   high_infect_multiplier: 1.
   low_infect_multiplier: 0.
 
@@ -54,10 +62,17 @@ default:
   # Base model definition
   contact_rate: 0.75
   exposed_period: 3.2
-  presympt_period: 0.2
+  presympt_period: 0.5
   infectious_period: 7.68
   universal_death_rate: 0.
   infect_death: 0.
+
+  # Ferguson parameters
+#  exposed_period: 5.1
+#  presympt_period: 0.5
+#  infectious_period: unclear, differs by symptoms
+#  high_infect_multiplier: 1.5
+#  low_infect_multiplier: 1.
 
   incidence_stratification:
     - agegroup

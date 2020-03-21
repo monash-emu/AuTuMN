@@ -2,14 +2,6 @@ from autumn.constants import Flow, Compartment
 import copy
 
 
-DEATH_FLOWS = [
-    {
-        'type': Flow.COMPARTMENT_DEATH,
-        'parameter': 'infect_death',
-    }
-]
-
-
 def add_infection_flows(working_flows, n_exposed):
     """
     Add standard infection flows for transition from susceptible to exposed through infection
@@ -64,6 +56,21 @@ def add_sequential_compartment_flows(working_flows, n_compartments, compartment_
     return working_flows
 
 
+def add_infection_death_flows(working_flows, n_infectious):
+    """
+    Add infection-related death flows to the infectious compartments
+    """
+    for i_comp in range(n_infectious):
+        working_flows.append({
+            'type': Flow.COMPARTMENT_DEATH,
+            'parameter': 'infect_death',
+            'origin': Compartment.INFECTIOUS + '_' + str(i_comp + 1) if
+            n_infectious > 1 else
+            Compartment.INFECTIOUS
+        })
+    return working_flows
+
+
 def replicate_compartment(
         n_replications,
         current_compartments,
@@ -114,14 +121,3 @@ def multiply_flow_value_for_multiple_compartments(model_parameters, compartment_
         model_parameters[parameter_name] * \
         float(model_parameters['n_compartment_repeats'])
     return model_parameters
-
-
-def add_infection_death_flows(list_of_flows, n_infectious):
-    death_flows = copy.deepcopy(DEATH_FLOWS)
-    if n_infectious > 1:
-        for i_comp in range(n_infectious):
-            death_flows[0]['origin'] = Compartment.INFECTIOUS + '_' + str(i_comp + 1)
-    else:
-        death_flows[0]['origin'] = Compartment.INFECTIOUS
-    list_of_flows += death_flows
-    return list_of_flows

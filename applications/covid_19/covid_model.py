@@ -17,9 +17,6 @@ from disease_categories.emerging_infections.flows import \
 from applications.covid_19.stratification import stratify_by_age, stratify_by_infectiousness
 from applications.covid_19.covid_outputs import find_incidence_outputs
 from autumn.demography.social_mixing import load_specific_prem_sheet
-from autumn.demography.ageing import add_agegroup_breaks
-from autumn.tool_kit.utils import repeat_list_elements
-from applications.covid_19.covid_outputs import create_request_stratified_incidence_covid
 
 # Database locations
 file_dir = os.path.dirname(os.path.abspath(__file__))
@@ -104,9 +101,6 @@ def build_covid_model(update_params={}):
             model_parameters, Compartment.INFECTIOUS, 'within_infectious'
         )
 
-    # Distinguish to_infectious parameter, so that it can be split later
-    model_parameters['to_infectious'] = model_parameters['within_presympt']
-
     # Set integration times
     integration_times = \
         get_model_times_from_inputs(
@@ -132,6 +126,8 @@ def build_covid_model(update_params={}):
         flows, model_parameters['n_compartment_repeats'], Compartment.EXPOSED, Compartment.PRESYMPTOMATIC,
         'within_exposed'
     )
+    # Distinguish to_infectious parameter, so that it can be split later
+    model_parameters['to_infectious'] = model_parameters['within_presympt']
     flows = add_transition_flows(
         flows, model_parameters['n_compartment_repeats'], Compartment.PRESYMPTOMATIC, Compartment.INFECTIOUS,
         'to_infectious'
@@ -164,40 +160,18 @@ def build_covid_model(update_params={}):
 
     # Stratify model by age without demography
     if 'agegroup' in model_parameters['stratify_by']:
-        model_parameters = add_agegroup_breaks(model_parameters)
-        _covid_model = \
+        _covid_model, model_parameters, output_connections = \
             stratify_by_age(
                 _covid_model,
-                model_parameters['all_stratifications']['agegroup'],
                 mixing_matrix,
                 total_pops,
-                model_parameters
+                model_parameters,
+                output_connections
             )
-        output_connections.update(
-            create_request_stratified_incidence_covid(
-                model_parameters['incidence_stratification'],
-                model_parameters['all_stratifications'],
-                model_parameters['n_compartment_repeats'],
-                model_parameters['n_compartment_repeats']
-            )
-        )
 
     # Stratify infectious compartment as high or low infectiousness as requested
     if 'infectiousness' in model_parameters['stratify_by']:
-        progression_props = repeat_list_elements(2, model_parameters['age_infect_progression'])
-
-        # Repeat the age-specific CFRs for all but the top age bracket, and use the average of the last two for the last
-        age_specific_cfrs = \
-            repeat_list_elements(2, model_parameters['age_cfr'][: -1]) + \
-            [(model_parameters['age_cfr'][-1] + model_parameters['age_cfr'][-2]) / 2.]
-        _covid_model = \
-            stratify_by_infectiousness(
-                _covid_model,
-                model_parameters,
-                infectious_compartments,
-                age_specific_cfrs,
-                progression_props
-            )
+        _covid_model = stratify_by_infectiousness(_covid_model, model_parameters, compartments)
 
     _covid_model.output_connections = output_connections
 

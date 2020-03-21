@@ -1,15 +1,24 @@
 from autumn.tool_kit.utils import split_parameter, find_series_compartment_parameter
+from autumn.demography.ageing import add_agegroup_breaks
+from applications.covid_19.covid_outputs import create_request_stratified_incidence_covid
+from autumn.tool_kit.utils import repeat_list_elements
+from autumn.constants import Compartment
 
 
-def stratify_by_age(model_to_stratify, age_strata, mixing_matrix, total_pops, model_parameters):
+def stratify_by_age(model_to_stratify, mixing_matrix, total_pops, model_parameters, output_connections):
     """
     Stratify model by age
-    Note that because the string passed is 'agegroup' rather than 'age', the standard SUMMER demography is not triggered
+    Note that because the string passed is 'agegroup' rather than 'age', the standard automatic SUMMER demography is not
+    triggered
     """
-    age_breakpoints = model_parameters['all_stratifications']['agegroup']
-    list_of_starting_pops = [i_pop / sum(total_pops) for i_pop in total_pops]
-    starting_props = {i_break: prop for i_break, prop in zip(age_breakpoints, list_of_starting_pops)}
-    age_breakpoints = [int(i_break) for i_break in age_strata]
+    model_parameters = \
+        add_agegroup_breaks(model_parameters)
+    age_strata = \
+        model_parameters['all_stratifications']['agegroup']
+    list_of_starting_pops = \
+        [i_pop / sum(total_pops) for i_pop in total_pops]
+    starting_props = \
+        {i_break: prop for i_break, prop in zip(age_strata, list_of_starting_pops)}
     parameter_splits = \
         split_parameter({}, 'to_infectious', age_strata)
     parameter_splits = \
@@ -18,14 +27,21 @@ def stratify_by_age(model_to_stratify, age_strata, mixing_matrix, total_pops, mo
         split_parameter(parameter_splits, 'within_infectious', age_strata)
     model_to_stratify.stratify(
         'agegroup',
-        age_breakpoints,
+        [int(i_break) for i_break in age_strata],
         [],
         starting_props,
         mixing_matrix=mixing_matrix,
         adjustment_requests=parameter_splits,
         verbose=False
     )
-    return model_to_stratify
+    output_connections.update(
+        create_request_stratified_incidence_covid(
+            model_parameters['incidence_stratification'],
+            model_parameters['all_stratifications'],
+            model_parameters['n_compartment_repeats']
+        )
+    )
+    return model_to_stratify, model_parameters, output_connections
 
 
 def update_parameters(
@@ -53,15 +69,25 @@ def update_parameters(
     return working_parameters
 
 
-def stratify_by_infectiousness(
-        _covid_model,
-        model_parameters,
-        infectious_compartments,
-        case_fatality_rates,
-        progression_props
-):
+def stratify_by_infectiousness(_covid_model, model_parameters, compartments):
+    """
+    Stratify the infectious compartments of the covid model (not including the presymptomatic compartments, which are
+    actually infectious)
+    """
 
-    # Replicate within infectious progression rates
+    # Find the compartments that will need to be stratified under this stratification
+    compartments_to_split = \
+        [i_comp for i_comp in compartments if i_comp.startswith(Compartment.INFECTIOUS)]
+
+    # Repeat the 5-year age-specific CFRs for all but the top age bracket, and average the last two for the last group
+    case_fatality_rates = \
+        repeat_list_elements(2, model_parameters['age_cfr'][: -1]) + \
+        [(model_parameters['age_cfr'][-1] + model_parameters['age_cfr'][-2]) / 2.]
+
+    # Repeat all the 5-year age-specific infectiousness proportions
+    progression_props = repeat_list_elements(2, model_parameters['age_infect_progression'])
+
+    # Replicate within infectious progression rates for all age groups
     within_infectious_rates = [model_parameters['within_infectious']] * 16
 
     # Calculate death rates and progression rates
@@ -114,7 +140,7 @@ def stratify_by_infectiousness(
     _covid_model.stratify(
         'infectiousness',
         ['high', 'moderate', 'low'],
-        ['infectious_1', 'infectious_2'],
+        compartments_to_split,
         infectiousness_adjustments=
         {
             'high': model_parameters['high_infect_multiplier'],

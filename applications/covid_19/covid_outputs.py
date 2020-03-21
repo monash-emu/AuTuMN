@@ -20,13 +20,19 @@ def find_incidence_outputs(parameters):
     }
 
 
-def create_request_stratified_incidence_covid(requested_stratifications, strata_dict, presympt, n_infectious):
+def create_request_stratified_incidence_covid(requested_stratifications, strata_dict, n_compartment_repeats):
     """
     Create derived outputs for disaggregated incidence
     """
     out_connections = {}
-    origin_compartment = 'presympt' if presympt < 2 else 'presympt_' + str(presympt)
-    to_compartment = Compartment.INFECTIOUS if n_infectious < 2 else Compartment.INFECTIOUS + '_1'
+    origin_compartment = \
+        Compartment.PRESYMPTOMATIC if \
+            n_compartment_repeats < 2 else \
+            Compartment.PRESYMPTOMATIC + '_' + str(n_compartment_repeats)
+    to_compartment = \
+        Compartment.INFECTIOUS if \
+            n_compartment_repeats < 2 else \
+            Compartment.INFECTIOUS + '_1'
     for stratification in requested_stratifications:
         for stratum in strata_dict[stratification]:
             out_connections['incidenceX' + stratification + '_' + stratum] \

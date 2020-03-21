@@ -84,39 +84,40 @@ def stratify_by_infectiousness(_covid_model, model_parameters, compartments):
         ]
 
     # Progression to high infectiousness, rather than low
-    infectious_adjustments = \
+    infectious_adjustments = {}
+    infectious_adjustments.update(
         update_parameters(
             strata_being_implemented,
-            {},
             model_parameters,
             'agegroup',
             [[1. - prop for prop in progression_props], [0.] * 16, progression_props],
             'to_infectious'
         )
+    )
 
     # Death rates to apply to the high infectious category
-    infectious_adjustments = \
+    infectious_adjustments.update(
         update_parameters(
             strata_being_implemented,
-            infectious_adjustments,
             model_parameters,
             'agegroup',
             [[0.] * 16, [0.] * 16, high_infectious_death_rates],
             'infect_death',
             overwrite=True
         )
+    )
 
     # Non-death progression between infectious compartments towards the recovered compartment
-    infectious_adjustments = \
+    infectious_adjustments.update(
         update_parameters(
             strata_being_implemented,
-            infectious_adjustments,
             model_parameters,
             'agegroup',
             [within_infectious_rates, [0.] * 16, high_infectious_within_infectious_rates],
             'within_infectious',
             overwrite=True
         )
+    )
 
     # Stratify the model with the SUMMER stratification function
     _covid_model.stratify(

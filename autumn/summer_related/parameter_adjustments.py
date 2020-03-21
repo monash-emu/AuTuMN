@@ -1,6 +1,6 @@
+
 def update_parameters(
         adjusted_strata,
-        working_parameters,
         model_parameters,
         upstream_stratification,
         parameter_sets,
@@ -29,5 +29,4 @@ def update_parameters(
             param_adjustments[sub_param_to_adjust].update(
                 {stratum: parameter_sets[i_stratum][i_upstratum]}
             )
-    working_parameters.update(param_adjustments)
-    return working_parameters
+    return param_adjustments

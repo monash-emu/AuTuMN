@@ -3,6 +3,7 @@ from autumn.demography.ageing import add_agegroup_breaks
 from applications.covid_19.covid_outputs import create_request_stratified_incidence_covid
 from autumn.tool_kit.utils import repeat_list_elements
 from autumn.constants import Compartment
+from autumn.summer_related.parameter_adjustments import update_parameters
 
 
 def stratify_by_age(model_to_stratify, mixing_matrix, total_pops, model_parameters, output_connections):
@@ -44,40 +45,14 @@ def stratify_by_age(model_to_stratify, mixing_matrix, total_pops, model_paramete
     return model_to_stratify, model_parameters, output_connections
 
 
-def update_parameters(
-        working_parameters,
-        upstream_strata,
-        new_low_parameters,
-        new_high_parameters,
-        parameter_name_to_adjust,
-        overwrite=False
-):
-    strata_being_implemented = \
-        ['low', 'moderate', 'high']
-    strata_being_implemented = \
-        [stratum + 'W' for stratum in strata_being_implemented] if overwrite else strata_being_implemented
-
-    new_moderate_parameters = [0.] * 16
-    working_parameters.update(
-        {parameter_name_to_adjust + 'Xagegroup_' + i_break:
-            {
-                strata_being_implemented[0]: prop_1,
-                strata_being_implemented[1]: prop_2,
-                strata_being_implemented[2]: prop_3
-            }
-            for i_break, prop_1, prop_2, prop_3 in zip(
-            upstream_strata, new_low_parameters, new_moderate_parameters, new_high_parameters
-        )
-        }
-    )
-    return working_parameters
-
-
 def stratify_by_infectiousness(_covid_model, model_parameters, compartments):
     """
     Stratify the infectious compartments of the covid model (not including the presymptomatic compartments, which are
     actually infectious)
     """
+
+    strata_being_implemented = \
+        ['low', 'moderate', 'high']
 
     # Find the compartments that will need to be stratified under this stratification
     compartments_to_split = \
@@ -111,20 +86,22 @@ def stratify_by_infectiousness(_covid_model, model_parameters, compartments):
     # Progression to high infectiousness, rather than low
     infectious_adjustments = \
         update_parameters(
+            strata_being_implemented,
             {},
-            model_parameters['all_stratifications']['agegroup'],
-            [1. - prop for prop in progression_props],
-            progression_props,
+            model_parameters,
+            'agegroup',
+            [[1. - prop for prop in progression_props], [0.] * 16, progression_props],
             'to_infectious'
         )
 
     # Death rates to apply to the high infectious category
     infectious_adjustments = \
         update_parameters(
+            strata_being_implemented,
             infectious_adjustments,
-            model_parameters['all_stratifications']['agegroup'],
-            [0.] * 16,
-            high_infectious_death_rates,
+            model_parameters,
+            'agegroup',
+            [[0.] * 16, [0.] * 16, high_infectious_death_rates],
             'infect_death',
             overwrite=True
         )
@@ -132,10 +109,11 @@ def stratify_by_infectiousness(_covid_model, model_parameters, compartments):
     # Non-death progression between infectious compartments towards the recovered compartment
     infectious_adjustments = \
         update_parameters(
+            strata_being_implemented,
             infectious_adjustments,
-            model_parameters['all_stratifications']['agegroup'],
-            within_infectious_rates,
-            high_infectious_within_infectious_rates,
+            model_parameters,
+            'agegroup',
+            [within_infectious_rates, [0.] * 16, high_infectious_within_infectious_rates],
             'within_infectious',
             overwrite=True
         )

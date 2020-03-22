@@ -56,7 +56,6 @@ default:
     - 0.2
     - 0.36
 # Ruiyun et al. in Science - 0.55
-  high_infect_multiplier: 1.
   low_infect_multiplier: 0.
 
   # Add non-infectious

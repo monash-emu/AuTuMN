@@ -143,23 +143,17 @@ def stratify_by_infectiousness(_covid_model, model_parameters, compartments):
     #     )
     # )
 
+    # Determine infectiousness of each group
+    strata_infectiousness = {i_stratum: 1. for i_stratum in strata_to_implement}
+    strata_infectiousness['non_infectious'] = model_parameters['low_infect_multiplier']
+
     # Stratify the model with the SUMMER stratification function
     _covid_model.stratify(
         'infectiousness',
         strata_to_implement,
         compartments_to_split,
-        # infectiousness_adjustments=
-        # {
-        #     'high': model_parameters['high_infect_multiplier'],
-        #     'moderate': model_parameters['low_infect_multiplier'],
-        #     'low': model_parameters['low_infect_multiplier']
-        # },
-        requested_proportions={
-            'non_infectious': 1. / 4.,
-            'infectious_non_hospital': 1. / 4.,
-            'hospital_non_icu': 1. / 4.,
-            'icu': 1. / 4.
-        },
+        infectiousness_adjustments=strata_infectiousness,
+        requested_proportions={stratum: 1. / len(strata_to_implement) for stratum in strata_to_implement},
         adjustment_requests=infectious_adjustments,
         verbose=False
     )

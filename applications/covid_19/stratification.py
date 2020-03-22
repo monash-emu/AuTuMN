@@ -3,7 +3,8 @@ from autumn.demography.ageing import add_agegroup_breaks
 from applications.covid_19.covid_outputs import create_request_stratified_incidence_covid
 from autumn.tool_kit.utils import repeat_list_elements
 from autumn.constants import Compartment
-from autumn.summer_related.parameter_adjustments import adjust_upstream_stratified_parameter
+from autumn.summer_related.parameter_adjustments import \
+    adjust_upstream_stratified_parameter, split_prop_into_two_subprops
 
 
 def stratify_by_age(model_to_stratify, mixing_matrix, total_pops, model_parameters, output_connections):
@@ -51,7 +52,8 @@ def stratify_by_infectiousness(_covid_model, model_parameters, compartments):
     actually infectious)
     """
 
-    strata_being_implemented = \
+    # New strata names
+    strata_to_implement = \
         ['low', 'moderate', 'high']
 
     # Find the compartments that will need to be stratified under this stratification
@@ -64,7 +66,17 @@ def stratify_by_infectiousness(_covid_model, model_parameters, compartments):
         [(model_parameters['age_cfr'][-1] + model_parameters['age_cfr'][-2]) / 2.]
 
     # Repeat all the 5-year age-specific infectiousness proportions
-    progression_props = repeat_list_elements(2, model_parameters['age_infect_progression'])
+    infectious_props = repeat_list_elements(2, model_parameters['age_infect_progression'])
+    # Repeat 5-year age-specific hospitalisation proportions, with 75+s taking the average of the last two groups
+    hospital_props = repeat_list_elements(2, model_parameters['hospital_props'][:-1])
+    hospital_props[-1] = sum(model_parameters['hospital_props'][-2:]) / 2.
+    icu_props = repeat_list_elements(2, model_parameters['icu_props'][:-1])
+    icu_props[-1] = sum(model_parameters['icu_props'][-2:]) / 2.
+
+    # Find the absolute  progression proportions from the relative splits
+    abs_props = split_prop_into_two_subprops([1.] * 16, '', infectious_props, 'infectious')
+    abs_props.update(split_prop_into_two_subprops(abs_props['infectious'], 'infectious', hospital_props, 'hospital'))
+    abs_props.update(split_prop_into_two_subprops(abs_props['hospital'], 'hospital', icu_props, 'icu'))
 
     # Replicate within infectious progression rates for all age groups
     within_infectious_rates = [model_parameters['within_infectious']] * 16
@@ -88,10 +100,10 @@ def stratify_by_infectiousness(_covid_model, model_parameters, compartments):
     infectious_adjustments.update(
         adjust_upstream_stratified_parameter(
             'to_infectious',
-            strata_being_implemented,
+            strata_to_implement,
             'agegroup',
             model_parameters['all_stratifications']['agegroup'],
-            [[1. - prop for prop in progression_props], [0.] * 16, progression_props]
+            [[1. - prop for prop in infectious_props], [0.] * 16, infectious_props]
         )
     )
 
@@ -99,7 +111,7 @@ def stratify_by_infectiousness(_covid_model, model_parameters, compartments):
     infectious_adjustments.update(
         adjust_upstream_stratified_parameter(
             'infect_death',
-            strata_being_implemented,
+            strata_to_implement,
             'agegroup',
             model_parameters['all_stratifications']['agegroup'],
             [[0.] * 16, [0.] * 16, high_infectious_death_rates],
@@ -111,7 +123,7 @@ def stratify_by_infectiousness(_covid_model, model_parameters, compartments):
     infectious_adjustments.update(
         adjust_upstream_stratified_parameter(
             'within_infectious',
-            strata_being_implemented,
+            strata_to_implement,
             'agegroup',
             model_parameters['all_stratifications']['agegroup'],
             [within_infectious_rates, [0.] * 16, high_infectious_within_infectious_rates],

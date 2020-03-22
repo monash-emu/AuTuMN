@@ -210,3 +210,18 @@ def find_series_compartment_parameter(
         original_parameter
 ):
     return (1. - (1. - proportion_to_split) ** (1. / n_compartments)) * original_parameter
+
+
+def find_rates_and_complements_from_cfr(cfrs, n_compartment_repeats, overall_rates):
+    """
+    Given a list of proportions (CFRs) to be applied to a set of n compartments in series with equal flow rates through
+    them, work out the death rates and their complements
+    """
+    death_rates = [
+        find_series_compartment_parameter(i_cfr, n_compartment_repeats, i_rate) for
+        i_cfr, i_rate in zip(cfrs, overall_rates)
+    ]
+    complements = [
+        i_overall_rate - i_death_rate for i_overall_rate, i_death_rate in zip(overall_rates, death_rates)
+    ]
+    return death_rates, complements

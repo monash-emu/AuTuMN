@@ -10,7 +10,7 @@ from autumn.tb_model import (
     list_all_strata_for_mortality,
 )
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
-from disease_categories.emerging_infections.flows import \
+from autumn.disease_categories.emerging_infections.flows import \
     add_infection_flows, add_transition_flows, add_recovery_flows, add_sequential_compartment_flows, \
     replicate_compartment, multiply_flow_value_for_multiple_compartments,\
     add_infection_death_flows
@@ -54,8 +54,8 @@ def build_covid_model(update_params={}):
     ]
 
     # Get progression rates from sojourn times
-    for compartment in ['exposed', 'presympt', 'infectious']:
-        model_parameters['within_' + compartment] = 1. / model_parameters[compartment + '_period']
+    for state in ['exposed', 'presympt', 'infectious', 'hospital', 'icu']:
+        model_parameters['within_' + state] = 1. / model_parameters[state + '_period']
     model_parameters['to_infectious'] = 1. / model_parameters['within_presympt']
 
     # Replicate compartments that need to be repeated

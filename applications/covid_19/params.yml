@@ -23,19 +23,50 @@ default:
 # 16 days in hospital if ICU needed
 # Ferguson table 1 gives age-specific hospital|symptoms, ICU|hospital, IFR
 
-  # Age-specific CFR - in five year brackets
+  hospital_props:
+    - 0.001
+    - 0.003
+    - 0.012
+    - 0.032
+    - 0.049
+    - 0.102
+    - 0.166
+    - 0.243
+    - 0.273
+  icu_props:
+    - 0.05
+    - 0.05
+    - 0.05
+    - 0.05
+    - 0.063
+    - 0.122
+    - 0.274
+    - 0.432
+    - 0.709
+
+  # Old age-specific CFR - in five year brackets
+#  age_cfr:
+#    - 0.00019
+#    - 0.00046
+#    - 0.0019
+#    - 0.0038
+#    - 0.0082
+#    - 0.027
+#    - 0.094
+#    - 0.2
+#    - 0.36
   age_cfr:
-    - 0.00019
-    - 0.00046
-    - 0.0019
-    - 0.0038
-    - 0.0082
-    - 0.027
-    - 0.094
-    - 0.2
-    - 0.36
+    - 0.00002
+    - 0.00006
+    - 0.0003
+    - 0.0008
+    - 0.0015
+    - 0.006
+    - 0.022
+    - 0.051
+    - 0.093
+
 # Ruiyun et al. in Science - 0.55
-  high_infect_multiplier: 1.
   low_infect_multiplier: 0.
 
   # Add non-infectious
@@ -64,6 +95,8 @@ default:
   exposed_period: 3.2
   presympt_period: 0.5
   infectious_period: 7.68
+  hospital_period: 8.
+  icu_period: 20.
   universal_death_rate: 0.
   infect_death: 0.
 

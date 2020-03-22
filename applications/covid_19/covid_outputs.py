@@ -55,5 +55,6 @@ def find_date_from_year_start(times, incidence):
     cases = 1098.
     data_days_from_year_start = (date(year, month, day) - date(year, 1, 1)).days
     model_days_reach_target = next(i_inc[0] for i_inc in enumerate(incidence) if i_inc[1] > cases)
+    print(f'Integer date at which target reached is: {model_days_reach_target}')
     days_to_add = data_days_from_year_start - model_days_reach_target
     return [int(i_time) + days_to_add for i_time in times]

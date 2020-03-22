@@ -71,8 +71,8 @@ def stratify_by_infectiousness(_covid_model, model_parameters, compartments):
 
     # Repeat the 5-year age-specific CFRs for all but the top age bracket, and average the last two for the last group
     case_fatality_rates = \
-        repeat_list_elements(2, model_parameters['age_cfr'][: -1]) + \
-        [(model_parameters['age_cfr'][-1] + model_parameters['age_cfr'][-2]) / 2.]
+        repeat_list_elements(2, model_parameters['age_cfr'][: -1])
+    case_fatality_rates[-1] = (model_parameters['age_cfr'][-1] + model_parameters['age_cfr'][-2]) / 2.
 
     # Repeat all the 5-year age-specific infectiousness proportions, with adjustment for data length as needed
     infectious_props = repeat_list_elements(2, model_parameters['age_infect_progression'])
@@ -86,22 +86,40 @@ def stratify_by_infectiousness(_covid_model, model_parameters, compartments):
 
     # Replicate within infectious progression rates for all age groups
     within_infectious_rates = [model_parameters['within_infectious']] * 16
-    icu_within_infectious_rates = [i_rate * 0.5 for i_rate in within_infectious_rates]
-    icu_death_rates = [i_rate * 0.5 for i_rate in within_infectious_rates]
+    icu_death_props = [0.5] * 16
+    icu_within_infectious_rates = \
+        [i_rate * (1. - i_prop) for i_rate, i_prop in zip(within_infectious_rates, icu_death_props)]
+    icu_death_rates = \
+        [i_rate * i_prop for i_rate, i_prop in zip(within_infectious_rates, icu_death_props)]
+
+    # CFR contributed by the ICU deaths
+    icu_abs_death_props = [i_prop * 0.5 for i_prop in abs_props['icu']]
+
+    # CFR that needs to be contributed by the hospital deaths - check no negative values and replace if there are
+    non_icu_abs_death_props = [cfr - icu_prop for cfr, icu_prop in zip(case_fatality_rates, icu_abs_death_props)]
+    for i_prop, prop in enumerate(non_icu_abs_death_props):
+        if prop < 0.:
+            print('Warning, deaths in ICU greater than absolute CFR, setting non-ICU deaths for this age group to zero')
+            non_icu_abs_death_props[i_prop] = 0.
+
+    # CFR for hospitalised patients
+    prop_mort_hospital_non_icu = \
+        [icu_prop / non_icu_prop for
+         icu_prop, non_icu_prop in zip(non_icu_abs_death_props, abs_props['hospital_non_icu'])]
 
     # Calculate death rates and progression rates
-    # high_infectious_death_rates = \
-    #     [
-    #         find_series_compartment_parameter(cfr, model_parameters['n_compartment_repeats'], progression) for
-    #         cfr, progression in
-    #         zip(case_fatality_rates, within_infectious_rates)
-    #     ]
-    # high_infectious_within_infectious_rates = \
-    #     [
-    #         find_series_compartment_parameter(1. - cfr, model_parameters['n_compartment_repeats'], progression) for
-    #         cfr, progression in
-    #         zip(case_fatality_rates, within_infectious_rates)
-    #     ]
+    hospital_death_rates = \
+        [
+            find_series_compartment_parameter(cfr, model_parameters['n_compartment_repeats'], progression) for
+            cfr, progression in
+            zip(prop_mort_hospital_non_icu, within_infectious_rates)
+        ]
+    hospital_within_infectious_rates = \
+        [
+            find_series_compartment_parameter(1. - cfr, model_parameters['n_compartment_repeats'], progression) for
+            cfr, progression in
+            zip(prop_mort_hospital_non_icu, within_infectious_rates)
+        ]
 
     # Progression to high infectiousness, rather than low
     infectious_adjustments = {}
@@ -125,7 +143,7 @@ def stratify_by_infectiousness(_covid_model, model_parameters, compartments):
             strata_to_implement[2:],
             'agegroup',
             model_parameters['all_stratifications']['agegroup'],
-            [within_infectious_rates,
+            [hospital_within_infectious_rates,
              icu_within_infectious_rates],
             overwrite=True
         )
@@ -138,7 +156,7 @@ def stratify_by_infectiousness(_covid_model, model_parameters, compartments):
             strata_to_implement[2:],
             'agegroup',
             model_parameters['all_stratifications']['agegroup'],
-            [[0.] * 16,
+            [hospital_death_rates,
              icu_death_rates],
             overwrite=True
         )

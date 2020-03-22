@@ -44,17 +44,28 @@ default:
     - 0.432
     - 0.709
 
-  # Age-specific CFR - in five year brackets
+  # Old age-specific CFR - in five year brackets
+#  age_cfr:
+#    - 0.00019
+#    - 0.00046
+#    - 0.0019
+#    - 0.0038
+#    - 0.0082
+#    - 0.027
+#    - 0.094
+#    - 0.2
+#    - 0.36
   age_cfr:
-    - 0.00019
-    - 0.00046
-    - 0.0019
-    - 0.0038
-    - 0.0082
-    - 0.027
-    - 0.094
-    - 0.2
-    - 0.36
+    - 0.00002
+    - 0.00006
+    - 0.0003
+    - 0.0008
+    - 0.0015
+    - 0.006
+    - 0.022
+    - 0.051
+    - 0.093
+
 # Ruiyun et al. in Science - 0.55
   low_infect_multiplier: 0.
 

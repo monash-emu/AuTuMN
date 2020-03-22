@@ -3,7 +3,7 @@ Build and run any AuTuMN model, storing the outputs
 """
 
 import os
-from datetime import datetime
+from datetime import datetime, date
 import yaml
 import pandas as pd
 
@@ -146,4 +146,10 @@ def run_model(application):
 
 
 if __name__ == '__main__':
+    # import datetime
+    # something = datetime.date(2020, 3, 28)
+    # something_else = datetime.date(2020, 1, 1)
+    # delta = something - something_else
+    # print()
+    #
     run_model('covid_19')

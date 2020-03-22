@@ -6,6 +6,8 @@ import os
 import copy
 import seaborn as sns
 from autumn.demography.social_mixing import load_specific_prem_sheet
+from datetime import datetime, date
+from applications.covid_19.covid_outputs import find_date_from_year_start
 
 
 def find_subplot_grid(n_plots):
@@ -1133,10 +1135,20 @@ class OutputPlotter:
                 compartment, stratification = self.output_options['output_combinations_to_plot_together'][i_combination]
                 strata_to_iterate = self.models[i_scenario].all_stratifications[stratification]
                 plot_name = 'prevX' + compartment + 'XamongX' + stratification
+
+                # Messy patch to allow time to be shifted across for the Covid model
+                times = \
+                    find_date_from_year_start(
+                        self.post_processing_list[0].derived_outputs['times'],
+                        self.post_processing_list[0].derived_outputs['incidence']
+                    ) if \
+                    'covid' in self.out_dir else \
+                    self.post_processing_list[i_scenario].derived_outputs['times']
+
                 for i_stratum, stratum in enumerate(strata_to_iterate):
                     colour = i_stratum / len(strata_to_iterate)
                     axes.plot(
-                        self.post_processing_list[0].derived_outputs['times'],
+                        times,
                         self.post_processing_list[i_scenario].generated_outputs_df.loc[:, plot_name + '_' + stratum],
                         color=(colour, 0., 1. - colour)
                     )

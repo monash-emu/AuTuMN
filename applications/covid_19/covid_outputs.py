@@ -1,4 +1,5 @@
 from autumn.constants import Compartment
+from datetime import date
 
 
 def find_incidence_outputs(parameters):
@@ -43,3 +44,16 @@ def create_request_stratified_incidence_covid(requested_stratifications, strata_
                 'to_condition': stratification + '_' + stratum,
             }
     return out_connections
+
+
+def find_date_from_year_start(times, incidence):
+    """
+    Messy patch to shift dates over such that zero represents the start of the year and the number of cases are
+    approximately correct for Australia at 22nd March
+    """
+    year, month, day = 2020, 3, 22
+    cases = 1098.
+    data_days_from_year_start = (date(year, month, day) - date(year, 1, 1)).days
+    model_days_reach_target = next(i_inc[0] for i_inc in enumerate(incidence) if i_inc[1] > cases)
+    days_to_add = data_days_from_year_start - model_days_reach_target
+    return [int(i_time) + days_to_add for i_time in times]

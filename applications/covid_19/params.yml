@@ -76,7 +76,7 @@ default:
   country: Australia
 
   # Initial conditions
-  infectious_seed: 2000
+  infectious_seed: 100
 
   # Stratifications to implement - comment out/remove as required to enable model to run more quickly
   stratify_by:
@@ -87,7 +87,7 @@ default:
     - 80
     - 5
   start_time: 0.
-  end_time: 150.
+  end_time: 250.
   time_step: 1
 
   # Base model definition

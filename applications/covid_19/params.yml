@@ -91,7 +91,7 @@ default:
   time_step: 1
 
   # Base model definition
-  contact_rate: 0.75
+  contact_rate: 0.68
   exposed_period: 3.2
   presympt_period: 0.5
   infectious_period: 7.68
@@ -114,60 +114,61 @@ default:
 scenario_start: 30
 
 # N.B: Scenario keys have to be integers 1-N, or it'll break downstream dashboards.
-scenarios:
-  1:
-    mixing:
-      school: -1.
-  2:
-    mixing:
-      school: -1.
-      home: 0.1
-  3:
-    mixing:
-      school: -1.
-      home: 0.2
-  4:
-    mixing:
-      work: -1.
-  5:
-    mixing:
-      work: -1.
-      home: 0.1
-  6:
-    mixing:
-      work: -1.
-      home: 0.2
-  7:
-    mixing:
-      school: -0.4
-      work: -0.4
-      other_locations: -0.4
-  8:
-    mixing:
-      school: -0.4
-      work: -0.4
-      other_locations: -0.4
-      home: 0.1
-  9:
-    mixing:
-      school: -0.4
-      work: -0.4
-      other_locations: -0.4
-      home: 0.2
-  10:
-    mixing:
-      school: -0.8
-      work: -0.8
-      other_locations: -0.8
-  11:
-    mixing:
-      school: -0.8
-      work: -0.8
-      other_locations: -0.8
-      home: 0.1
-  12:
-    mixing:
-      school: -0.8
-      work: -0.8
-      other_locations: -0.8
-      home: 0.2
+scenarios: {}
+#  1:
+#    mixing:
+#      school: -1.
+#  2:
+#    mixing:
+#      school: -1.
+#      home: 0.1
+#  3:
+#    mixing:
+#      school: -1.
+#      home: 0.2
+#  4:
+#    mixing:
+#      work: -1.
+#  5:
+#    mixing:
+#      work: -1.
+#      home: 0.1
+#  6:
+#    mixing:
+#      work: -1.
+#      home: 0.2
+#  7:
+#    mixing:
+#      school: -0.4
+#      work: -0.4
+#      other_locations: -0.4
+#  8:
+#    mixing:
+#      school: -0.4
+#      work: -0.4
+#      other_locations: -0.4
+#      home: 0.1
+#  9:
+#    mixing:
+#      school: -0.4
+#      work: -0.4
+#      other_locations: -0.4
+#      home: 0.2
+#  10:
+#    mixing:
+#      school: -0.8
+#      work: -0.8
+#      other_locations: -0.8
+#  11:
+#    mixing:
+#      school: -0.8
+#      work: -0.8
+#      other_locations: -0.8
+#      home: 0.1
+#  12:
+#    mixing:
+#      school: -0.8
+#      work: -0.8
+#      other_locations: -0.8
+#      home: 0.2
+#

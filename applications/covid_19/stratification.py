@@ -62,9 +62,6 @@ def stratify_by_infectiousness(_covid_model, model_parameters, compartments):
     """
 
     # New strata names
-    # strata_to_implement = \
-    #     ['low', 'moderate', 'high']
-
     strata_to_implement = \
         ['non_infectious', 'infectious_non_hospital', 'hospital_non_icu', 'icu']
 
@@ -89,20 +86,22 @@ def stratify_by_infectiousness(_covid_model, model_parameters, compartments):
 
     # Replicate within infectious progression rates for all age groups
     within_infectious_rates = [model_parameters['within_infectious']] * 16
+    icu_within_infectious_rates = [i_rate * 0.5 for i_rate in within_infectious_rates]
+    icu_death_rates = [i_rate * 0.5 for i_rate in within_infectious_rates]
 
     # Calculate death rates and progression rates
-    high_infectious_death_rates = \
-        [
-            find_series_compartment_parameter(cfr, model_parameters['n_compartment_repeats'], progression) for
-            cfr, progression in
-            zip(case_fatality_rates, within_infectious_rates)
-        ]
-    high_infectious_within_infectious_rates = \
-        [
-            find_series_compartment_parameter(1. - cfr, model_parameters['n_compartment_repeats'], progression) for
-            cfr, progression in
-            zip(case_fatality_rates, within_infectious_rates)
-        ]
+    # high_infectious_death_rates = \
+    #     [
+    #         find_series_compartment_parameter(cfr, model_parameters['n_compartment_repeats'], progression) for
+    #         cfr, progression in
+    #         zip(case_fatality_rates, within_infectious_rates)
+    #     ]
+    # high_infectious_within_infectious_rates = \
+    #     [
+    #         find_series_compartment_parameter(1. - cfr, model_parameters['n_compartment_repeats'], progression) for
+    #         cfr, progression in
+    #         zip(case_fatality_rates, within_infectious_rates)
+    #     ]
 
     # Progression to high infectiousness, rather than low
     infectious_adjustments = {}
@@ -119,29 +118,31 @@ def stratify_by_infectiousness(_covid_model, model_parameters, compartments):
         )
     )
 
-    # Death rates to apply to the high infectious category
-    # infectious_adjustments.update(
-    #     adjust_upstream_stratified_parameter(
-    #         'infect_death',
-    #         strata_to_implement,
-    #         'agegroup',
-    #         model_parameters['all_stratifications']['agegroup'],
-    #         [[0.] * 16, [0.] * 16, high_infectious_death_rates],
-    #         overwrite=True
-    #     )
-    # )
-
     # Non-death progression between infectious compartments towards the recovered compartment
-    # infectious_adjustments.update(
-    #     adjust_upstream_stratified_parameter(
-    #         'within_infectious',
-    #         strata_to_implement,
-    #         'agegroup',
-    #         model_parameters['all_stratifications']['agegroup'],
-    #         [within_infectious_rates, [0.] * 16, high_infectious_within_infectious_rates],
-    #         overwrite=True
-    #     )
-    # )
+    infectious_adjustments.update(
+        adjust_upstream_stratified_parameter(
+            'within_infectious',
+            strata_to_implement[2:],
+            'agegroup',
+            model_parameters['all_stratifications']['agegroup'],
+            [within_infectious_rates,
+             icu_within_infectious_rates],
+            overwrite=True
+        )
+    )
+
+    # Death rates to apply to the high infectious category
+    infectious_adjustments.update(
+        adjust_upstream_stratified_parameter(
+            'infect_death',
+            strata_to_implement[2:],
+            'agegroup',
+            model_parameters['all_stratifications']['agegroup'],
+            [[0.] * 16,
+             icu_death_rates],
+            overwrite=True
+        )
+    )
 
     # Determine infectiousness of each group
     strata_infectiousness = {i_stratum: 1. for i_stratum in strata_to_implement}

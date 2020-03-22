@@ -54,8 +54,8 @@ def build_covid_model(update_params={}):
     ]
 
     # Get progression rates from sojourn times
-    for compartment in ['exposed', 'presympt', 'infectious']:
-        model_parameters['within_' + compartment] = 1. / model_parameters[compartment + '_period']
+    for state in ['exposed', 'presympt', 'infectious', 'hospital', 'icu']:
+        model_parameters['within_' + state] = 1. / model_parameters[state + '_period']
     model_parameters['to_infectious'] = 1. / model_parameters['within_presympt']
 
     # Replicate compartments that need to be repeated

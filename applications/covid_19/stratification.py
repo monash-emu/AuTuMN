@@ -1,4 +1,4 @@
-from autumn.tool_kit.utils import split_parameter, find_series_compartment_parameter
+from autumn.tool_kit.utils import split_parameter, find_rates_and_complements_from_cfr
 from autumn.demography.ageing import add_agegroup_breaks
 from applications.covid_19.covid_outputs import create_request_stratified_incidence_covid
 from autumn.tool_kit.utils import repeat_list_elements
@@ -69,57 +69,58 @@ def stratify_by_infectiousness(_covid_model, model_parameters, compartments):
     compartments_to_split = \
         [i_comp for i_comp in compartments if i_comp.startswith(Compartment.INFECTIOUS)]
 
-    # Repeat the 5-year age-specific CFRs for all but the top age bracket, and average the last two for the last group
+    # Repeat the 5-year age-specific CFRs for all but the top age bracket, and average the last two for the last one
     case_fatality_rates = \
-        repeat_list_elements(2, model_parameters['age_cfr'][: -1])
-    case_fatality_rates[-1] = (model_parameters['age_cfr'][-1] + model_parameters['age_cfr'][-2]) / 2.
+        repeat_list_elements_average_last_two(model_parameters['age_cfr'])
 
-    # Repeat all the 5-year age-specific infectiousness proportions, with adjustment for data length as needed
-    infectious_props = repeat_list_elements(2, model_parameters['age_infect_progression'])
-    hospital_props = repeat_list_elements_average_last_two(model_parameters['hospital_props'])
-    icu_props = repeat_list_elements_average_last_two(model_parameters['icu_props'])
+    # Repeat all the 5-year age-specific infectiousness proportions, again with adjustment for data length as needed
+    infectious_props = \
+        repeat_list_elements(2, model_parameters['age_infect_progression'])
+    hospital_props = \
+        repeat_list_elements_average_last_two(model_parameters['hospital_props'])
+    icu_props = \
+        repeat_list_elements_average_last_two(model_parameters['icu_props'])
 
-    # Find the absolute  progression proportions from the relative splits
-    abs_props = split_prop_into_two_subprops([1.] * 16, '', infectious_props, 'infectious')
-    abs_props.update(split_prop_into_two_subprops(abs_props['infectious'], 'infectious', hospital_props, 'hospital'))
-    abs_props.update(split_prop_into_two_subprops(abs_props['hospital'], 'hospital', icu_props, 'icu'))
+    # Find the absolute progression proportions from the relative splits
+    abs_props = \
+        split_prop_into_two_subprops([1.] * 16, '', infectious_props, 'infectious')
+    abs_props.update(
+        split_prop_into_two_subprops(abs_props['infectious'], 'infectious', hospital_props, 'hospital')
+    )
+    abs_props.update(
+        split_prop_into_two_subprops(abs_props['hospital'], 'hospital', icu_props, 'icu')
+    )
 
-    # Replicate within infectious progression rates for all age groups
-    within_infectious_rates = [model_parameters['within_infectious']] * 16
-    icu_death_props = [0.5] * 16
-    icu_within_infectious_rates = \
-        [i_rate * (1. - i_prop) for i_rate, i_prop in zip(within_infectious_rates, icu_death_props)]
-    icu_death_rates = \
-        [i_rate * i_prop for i_rate, i_prop in zip(within_infectious_rates, icu_death_props)]
+    # CFR contributed by the ICU deaths, calculated as 50% of the absolute proportion admitted to ICU
+    icu_abs_death_props = \
+        [i_prop * 0.5 for i_prop in abs_props['icu']]
 
-    # CFR contributed by the ICU deaths
-    icu_abs_death_props = [i_prop * 0.5 for i_prop in abs_props['icu']]
-
-    # CFR that needs to be contributed by the hospital deaths - check no negative values and replace if there are
-    non_icu_abs_death_props = [cfr - icu_prop for cfr, icu_prop in zip(case_fatality_rates, icu_abs_death_props)]
+    # CFR that then needs to be contributed by non-ICU hospital deaths - check no negative values and replace as needed
+    non_icu_abs_death_props = \
+        [cfr - icu_abs_prop for cfr, icu_abs_prop in zip(case_fatality_rates, icu_abs_death_props)]
     for i_prop, prop in enumerate(non_icu_abs_death_props):
         if prop < 0.:
             print('Warning, deaths in ICU greater than absolute CFR, setting non-ICU deaths for this age group to zero')
             non_icu_abs_death_props[i_prop] = 0.
 
-    # CFR for hospitalised patients
+    # CFR for hospitalised patients not in ICU
     prop_mort_hospital_non_icu = \
-        [icu_prop / non_icu_prop for
-         icu_prop, non_icu_prop in zip(non_icu_abs_death_props, abs_props['hospital_non_icu'])]
+        [hosp_death_prop / hosp_prop for
+         hosp_death_prop, hosp_prop in zip(non_icu_abs_death_props, abs_props['hospital_non_icu'])]
 
-    # Calculate death rates and progression rates
-    hospital_death_rates = \
-        [
-            find_series_compartment_parameter(cfr, model_parameters['n_compartment_repeats'], progression) for
-            cfr, progression in
-            zip(prop_mort_hospital_non_icu, within_infectious_rates)
-        ]
-    hospital_within_infectious_rates = \
-        [
-            find_series_compartment_parameter(1. - cfr, model_parameters['n_compartment_repeats'], progression) for
-            cfr, progression in
-            zip(prop_mort_hospital_non_icu, within_infectious_rates)
-        ]
+    # Calculate death rates and progression rates for hospitalised and ICU patients
+    hospital_death_rates, hospital_within_infectious_rates = \
+        find_rates_and_complements_from_cfr(
+            prop_mort_hospital_non_icu,
+            model_parameters['n_compartment_repeats'],
+            [model_parameters['within_hospital']] * 16
+        )
+    icu_death_rates, icu_within_infectious_rates = \
+        find_rates_and_complements_from_cfr(
+            icu_abs_death_props,
+            model_parameters['n_compartment_repeats'],
+            [model_parameters['within_icu']] * 16
+        )
 
     # Progression to high infectiousness, rather than low
     infectious_adjustments = {}

@@ -95,6 +95,8 @@ default:
   exposed_period: 3.2
   presympt_period: 0.5
   infectious_period: 7.68
+  hospital_period: 8.
+  icu_period: 20.
   universal_death_rate: 0.
   infect_death: 0.
 

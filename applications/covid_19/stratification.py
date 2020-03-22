@@ -3,7 +3,7 @@ from autumn.demography.ageing import add_agegroup_breaks
 from applications.covid_19.covid_outputs import create_request_stratified_incidence_covid
 from autumn.tool_kit.utils import repeat_list_elements
 from autumn.constants import Compartment
-from autumn.summer_related.parameter_adjustments import update_parameters
+from autumn.summer_related.parameter_adjustments import adjust_upstream_stratified_parameter
 
 
 def stratify_by_age(model_to_stratify, mixing_matrix, total_pops, model_parameters, output_connections):
@@ -86,35 +86,35 @@ def stratify_by_infectiousness(_covid_model, model_parameters, compartments):
     # Progression to high infectiousness, rather than low
     infectious_adjustments = {}
     infectious_adjustments.update(
-        update_parameters(
+        adjust_upstream_stratified_parameter(
+            'to_infectious',
             strata_being_implemented,
             'agegroup',
             model_parameters['all_stratifications']['agegroup'],
-            [[1. - prop for prop in progression_props], [0.] * 16, progression_props],
-            'to_infectious'
+            [[1. - prop for prop in progression_props], [0.] * 16, progression_props]
         )
     )
 
     # Death rates to apply to the high infectious category
     infectious_adjustments.update(
-        update_parameters(
+        adjust_upstream_stratified_parameter(
+            'infect_death',
             strata_being_implemented,
             'agegroup',
             model_parameters['all_stratifications']['agegroup'],
             [[0.] * 16, [0.] * 16, high_infectious_death_rates],
-            'infect_death',
             overwrite=True
         )
     )
 
     # Non-death progression between infectious compartments towards the recovered compartment
     infectious_adjustments.update(
-        update_parameters(
+        adjust_upstream_stratified_parameter(
+            'within_infectious',
             strata_being_implemented,
             'agegroup',
             model_parameters['all_stratifications']['agegroup'],
             [within_infectious_rates, [0.] * 16, high_infectious_within_infectious_rates],
-            'within_infectious',
             overwrite=True
         )
     )

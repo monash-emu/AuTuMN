@@ -10,7 +10,7 @@ import pandas as pd
 from summer_py.constants import IntegrationType
 import summer_py.post_processing as post_proc
 from autumn.outputs.outputs import OutputPlotter, collate_compartment_across_stratification, \
-    collate_prevalence, create_output_dataframes
+    collate_prevalence, create_output_dataframes, Outputs
 
 from autumn.tool_kit.timer import Timer
 from autumn.tool_kit import run_multi_scenario
@@ -143,6 +143,10 @@ def run_model(application):
         outputs_plotter = OutputPlotter(models, pps, output_options, output_directory)
         outputs_plotter.save_flows_sheets()
         outputs_plotter.run_input_plots()
+
+        # # using old code (should eventually be handled by OutputPlotter)
+        # old_outputs_plotter = Outputs(models, pps, output_options, out_dir=output_directory, plot_start_time=0)
+        # old_outputs_plotter.plot_requested_outputs()
 
 
 if __name__ == '__main__':

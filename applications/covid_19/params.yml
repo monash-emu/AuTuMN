@@ -109,6 +109,7 @@ default:
 
   incidence_stratification:
     - agegroup
+    - infectiousness
 
 # When the scenarios start running
 scenario_start: 30

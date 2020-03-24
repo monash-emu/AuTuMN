@@ -1,6 +1,6 @@
 from autumn.constants import Compartment
 from datetime import date
-
+import itertools
 
 def find_incidence_outputs(parameters):
     last_presympt = \
@@ -21,9 +21,9 @@ def find_incidence_outputs(parameters):
     }
 
 
-def create_request_stratified_incidence_covid(requested_stratifications, strata_dict, n_compartment_repeats):
+def create_fully_stratified_incidence_covid(requested_stratifications, strata_dict, n_compartment_repeats):
     """
-    Create derived outputs for disaggregated incidence
+    Create derived outputs for fully disaggregated incidence
     """
     out_connections = {}
     origin_compartment = \
@@ -34,15 +34,26 @@ def create_request_stratified_incidence_covid(requested_stratifications, strata_
         Compartment.INFECTIOUS if \
             n_compartment_repeats < 2 else \
             Compartment.INFECTIOUS + '_1'
+
+    all_tags_by_stratification = []
     for stratification in requested_stratifications:
+        this_stratification_tags = []
         for stratum in strata_dict[stratification]:
-            out_connections['incidenceX' + stratification + '_' + stratum] \
-                = {
-                'origin': origin_compartment,
-                'to': to_compartment,
-                'origin_condition': '',
-                'to_condition': stratification + '_' + stratum,
-            }
+            this_stratification_tags.append(stratification + '_' + stratum)
+        all_tags_by_stratification.append(this_stratification_tags)
+
+    all_tag_lists = list(itertools.product(*all_tags_by_stratification))
+
+    for tag_list in all_tag_lists:
+        stratum_name = 'X'.join(tag_list)
+        out_connections['incidenceX' + stratum_name] \
+                    = {
+                    'origin': origin_compartment,
+                    'to': to_compartment,
+                    'origin_condition': '',
+                    'to_condition': stratum_name,
+                }
+
     return out_connections
 
 

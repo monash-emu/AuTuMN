@@ -1,6 +1,5 @@
 from autumn.tool_kit.utils import split_parameter, find_rates_and_complements_from_cfr
 from autumn.demography.ageing import add_agegroup_breaks
-from applications.covid_19.covid_outputs import create_request_stratified_incidence_covid
 from autumn.tool_kit.utils import repeat_list_elements
 from autumn.constants import Compartment
 from autumn.summer_related.parameter_adjustments import \
@@ -36,13 +35,14 @@ def stratify_by_age(model_to_stratify, mixing_matrix, total_pops, model_paramete
         adjustment_requests=parameter_splits,
         verbose=False
     )
-    output_connections.update(
-        create_request_stratified_incidence_covid(
-            model_parameters['incidence_stratification'],
-            model_parameters['all_stratifications'],
-            model_parameters['n_compartment_repeats']
-        )
-    )
+    # output_connections.update(
+    #     create_request_stratified_incidence_covid(
+    #         model_parameters['incidence_stratification'],
+    #         model_parameters['all_stratifications'],
+    #         model_parameters['n_compartment_repeats']
+    #     )
+    # )
+
     return model_to_stratify, model_parameters, output_connections
 
 
@@ -64,6 +64,8 @@ def stratify_by_infectiousness(_covid_model, model_parameters, compartments):
     # New strata names
     strata_to_implement = \
         ['non_infectious', 'infectious_non_hospital', 'hospital_non_icu', 'icu']
+
+    model_parameters['all_stratifications']['infectiousness'] = strata_to_implement
 
     # Find the compartments that will need to be stratified under this stratification
     compartments_to_split = \
@@ -177,4 +179,6 @@ def stratify_by_infectiousness(_covid_model, model_parameters, compartments):
         adjustment_requests=infectious_adjustments,
         verbose=False
     )
-    return _covid_model
+
+    return _covid_model, model_parameters
+

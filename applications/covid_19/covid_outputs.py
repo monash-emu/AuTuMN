@@ -57,6 +57,19 @@ def create_fully_stratified_incidence_covid(requested_stratifications, strata_di
     return out_connections
 
 
+def calculate_notifications_covid(model, time):
+    """
+    Returns the number of notifications for a given time.
+    The fully stratified incidence outputs must be available before calling this function
+    """
+    notifications = 0.
+    this_time_index = model.times.index(time)
+    for key, value in model.derived_outputs.items():
+        if 'incidenceX' in key and 'non_infectious' not in key:
+            notifications += value[this_time_index]
+    return notifications
+
+
 def find_date_from_year_start(times, incidence):
     """
     Messy patch to shift dates over such that zero represents the start of the year and the number of cases are

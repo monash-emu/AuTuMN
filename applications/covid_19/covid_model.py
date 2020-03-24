@@ -15,7 +15,8 @@ from autumn.disease_categories.emerging_infections.flows import \
     replicate_compartment, multiply_flow_value_for_multiple_compartments,\
     add_infection_death_flows
 from applications.covid_19.stratification import stratify_by_age, stratify_by_infectiousness
-from applications.covid_19.covid_outputs import find_incidence_outputs, create_fully_stratified_incidence_covid
+from applications.covid_19.covid_outputs import find_incidence_outputs, create_fully_stratified_incidence_covid, \
+    calculate_notifications_covid
 from autumn.demography.social_mixing import load_specific_prem_sheet
 
 
@@ -185,6 +186,9 @@ def build_covid_model(update_params={}):
     )
 
     _covid_model.output_connections = output_connections
+
+    # add notifications to derived_outputs
+    _covid_model.derived_output_functions["notifications"] = calculate_notifications_covid
 
     _covid_model.death_output_categories = \
         list_all_strata_for_mortality(_covid_model.compartment_names)

@@ -15,8 +15,11 @@ from autumn.disease_categories.emerging_infections.flows import \
     replicate_compartment, multiply_flow_value_for_multiple_compartments,\
     add_infection_death_flows
 from applications.covid_19.stratification import stratify_by_age, stratify_by_infectiousness
-from applications.covid_19.covid_outputs import find_incidence_outputs
+from applications.covid_19.covid_outputs import find_incidence_outputs, create_fully_stratified_incidence_covid, \
+    calculate_notifications_covid
 from autumn.demography.social_mixing import load_specific_prem_sheet
+
+
 
 # Database locations
 file_dir = os.path.dirname(os.path.abspath(__file__))
@@ -171,9 +174,21 @@ def build_covid_model(update_params={}):
 
     # Stratify infectious compartment as high or low infectiousness as requested
     if 'infectiousness' in model_parameters['stratify_by']:
-        _covid_model = stratify_by_infectiousness(_covid_model, model_parameters, compartments)
+        _covid_model, model_parameters = stratify_by_infectiousness(_covid_model, model_parameters, compartments)
+
+    # Add fully stratified incidence to output_connections
+    output_connections.update(
+        create_fully_stratified_incidence_covid(
+            model_parameters['incidence_stratification'],
+            model_parameters['all_stratifications'],
+            model_parameters['n_compartment_repeats']
+        )
+    )
 
     _covid_model.output_connections = output_connections
+
+    # add notifications to derived_outputs
+    _covid_model.derived_output_functions["notifications"] = calculate_notifications_covid
 
     _covid_model.death_output_categories = \
         list_all_strata_for_mortality(_covid_model.compartment_names)

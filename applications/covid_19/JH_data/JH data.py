@@ -20,7 +20,10 @@ ts_confirmed = pd.read_csv(list_of_url[0])
 ts_deaths = pd.read_csv(list_of_url[1])
 ts_recovered = pd.read_csv(list_of_url[2]) 
 
-
+ts_confirmed.to_csv('covid_confirmed.csv')
+ts_deaths.to_csv('covid_deaths.csv')
+ts_recovered.to_csv('covid_recovered.csv')
+exit()
 # daily reports url
 url = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/'
 
@@ -28,7 +31,7 @@ end = datetime.today().date()
 start = datetime(2020,1,22).date()
 step = timedelta(1)
 
-list_of_filenames =[]
+list_of_filenames = []
 
 # generate a list of url+date strings for file name download
 while start < end:

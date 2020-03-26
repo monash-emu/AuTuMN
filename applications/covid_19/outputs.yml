@@ -3,21 +3,21 @@
 # All keys in this file are arguments to `create_multi_scenario_outputs`
 plot_start_time: 0
 
-compartments_for_prevalence:
-  - 'susceptible'
-  - 'exposed'
-  - 'infectious'
-  - 'recovered'
+compartments_for_prevalence: []
+#  - 'susceptible'
+#  - 'exposed'
+#  - 'infectious'
+#  - 'recovered'
 
-output_combinations_to_collate:
-  -
-    - 'infectious'
-    - 'agegroup'
+output_combinations_to_collate: []
+#  -
+#    - 'infectious'
+#    - 'agegroup'
 
-output_combinations_to_plot_together:
-  -
-    - 'infectious'
-    - 'agegroup'
+output_combinations_to_plot_together: []
+#   -
+#    - 'infectious'
+#    - 'agegroup'
 
 find_exponential_growth_rate:
   start: 0

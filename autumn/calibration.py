@@ -97,8 +97,9 @@ class Calibration:
         else:  # we just need to update the post_processing attribute and produce new outputs
             self.post_processing.model = self.running_model
             self.post_processing.generated_outputs = {}
-
             self.post_processing.generate_outputs()
+            self.post_processing.derived_outputs = self.running_model.derived_outputs if hasattr(self.running_model, "derived_outputs") else {}
+
         out_df = pd.DataFrame(
             self.running_model.outputs, columns=self.running_model.compartment_names
         )

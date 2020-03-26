@@ -68,7 +68,8 @@ def build_covid_model(update_params={}):
             compartments,
             Compartment.EXPOSED,
             [],
-            {}
+            {},
+            infectious_seed=model_parameters['infectious_seed'] / 2.
         )
     compartments, infectious_compartments, init_pop = \
         replicate_compartment(
@@ -87,7 +88,7 @@ def build_covid_model(update_params={}):
             infectious_compartments,
             init_pop,
             infectious=True,
-            infectious_seed=model_parameters['infectious_seed']
+            infectious_seed=model_parameters['infectious_seed'] / 2.
         )
 
     # Multiply the progression rates by the number of compartments to keep the average time in exposed the same

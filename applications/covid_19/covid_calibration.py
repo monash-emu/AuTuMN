@@ -30,7 +30,7 @@ def run_calibration_chain(max_seconds: int, run_id: int):
 
 
 PAR_PRIORS = [
-    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.5, 0.7]},
+    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.3, 1.]},
 ]
 
 
@@ -63,7 +63,7 @@ n_daily_cases = read_john_hopkins_data_from_csv('confirmed')
 
 TARGET_OUTPUTS = [
     {
-        "output_key": "incidence",
+        "output_key": "notifications",
         "years": linspace(22, 21 + len(n_daily_cases), num=len(n_daily_cases)),
         "values": n_daily_cases
     }

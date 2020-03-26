@@ -1085,9 +1085,9 @@ class OutputPlotter:
         self.plot_parameter_category_values()
         self.plot_mixing_matrix()
         self.plot_input_function()
-        self.plot_prevalence_combinations()
-        self.plot_pop_distribution_by_stratum()
-        self.find_exponential_growth_rate()
+        # self.plot_prevalence_combinations()
+        # self.plot_pop_distribution_by_stratum()
+        # self.find_exponential_growth_rate()
 
     def plot_input_function(self, sc_index=0):
         """
@@ -1137,13 +1137,15 @@ class OutputPlotter:
                 plot_name = 'prevX' + compartment + 'XamongX' + stratification
 
                 # Messy patch to allow time to be shifted across for the Covid model
-                times = \
-                    find_date_from_year_start(
-                        self.post_processing_list[0].derived_outputs['times'],
-                        self.post_processing_list[0].derived_outputs['incidence']
-                    ) if \
-                    'covid' in self.out_dir else \
-                    self.post_processing_list[i_scenario].derived_outputs['times']
+                # times = \
+                #     find_date_from_year_start(
+                #         self.post_processing_list[0].derived_outputs['times'],
+                #         self.post_processing_list[0].derived_outputs['incidence']
+                #     ) if \
+                #     'covid' in self.out_dir else \
+                #     self.post_processing_list[i_scenario].derived_outputs['times']
+
+                times = self.post_processing_list[i_scenario].derived_outputs['times']
 
                 for i_stratum, stratum in enumerate(strata_to_iterate):
                     colour = i_stratum / len(strata_to_iterate)

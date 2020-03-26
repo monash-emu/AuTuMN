@@ -164,10 +164,6 @@ class Calibration:
                         indices.append(self.running_model.times.index(year))
                     model_output = np.array([self.post_processing.derived_outputs[key][index] for index in indices])
 
-                print("###################")
-                print(data)
-                print(model_output)
-
                 if self.run_mode == "lsm":
                     ll += np.sum((data - model_output) ** 2)
                 else:

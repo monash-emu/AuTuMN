@@ -31,7 +31,7 @@ def run_calibration_chain(max_seconds: int, run_id: int):
 
 PAR_PRIORS = [
     {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.3, 1.]},
-    {"param_name": "start_time", "distribution": "uniform", "distri_params": [0., 30.]}
+    {"param_name": "start_time", "distribution": "uniform", "distri_params": [0., 65.]}
 ]
 
 

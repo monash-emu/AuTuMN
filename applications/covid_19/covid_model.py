@@ -108,7 +108,7 @@ def build_covid_model(update_params={}):
     # Set integration times
     integration_times = \
         get_model_times_from_inputs(
-            model_parameters['start_time'],
+            round(model_parameters['start_time']),
             model_parameters['end_time'],
             model_parameters['time_step']
         )

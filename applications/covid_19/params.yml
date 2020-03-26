@@ -91,7 +91,7 @@ default:
   time_step: 1
 
   # Base model definition
-  contact_rate: 0.68
+  contact_rate: 0.44
   exposed_period: 3.2
   presympt_period: 0.5
   infectious_period: 7.68

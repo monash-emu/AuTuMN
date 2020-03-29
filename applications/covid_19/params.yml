@@ -86,12 +86,12 @@ default:
   agegroup_breaks:
     - 80
     - 5
-  start_time: 0.
-  end_time: 85.
+  start_time: 51.
+  end_time: 250.
   time_step: 1
 
   # Base model definition
-  contact_rate: 0.44
+  contact_rate: 0.397082
   exposed_period: 3.2
   presympt_period: 0.5
   infectious_period: 7.68

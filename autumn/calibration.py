@@ -124,7 +124,6 @@ class Calibration:
             database_name=self.output_db_path,
             append=True,
         )
-        self.iter_num += 1
 
     def run_model_with_params(self, params):
         """
@@ -144,24 +143,57 @@ class Calibration:
         self.update_post_processing()
 
     def run_extra_scenarios_with_params(self, params):
-
+        """
+        Run intervention scenarios after accepting a baseline run
+        :param params: list of all current MCMC parameter values
+        """
         for scenario_idx, scenario_params in self.scenario_params.items():
             if scenario_idx == 0:
                 continue
             scenario_params['start_time'] = self.scenario_start_time
 
+            # Potential update of scenario params if these are among the MCMC params
             updated_scenario_params = copy.copy(scenario_params)
             for param_name in scenario_params.keys():
                 if param_name in self.param_list:
                     param_index = self.param_list.index(param_name)
                     updated_scenario_params[param_index] = params[param_index]
 
+            # Run scenario
             scenario_model = initialise_scenario_run(self.running_model, updated_scenario_params,
                                                      self.model_builder)
             scenario_model = change_mixing_matrix_for_scenario(scenario_model, updated_scenario_params, scenario_idx)
             scenario_model.run_model()
 
+            # Produce scenario outputs
+            scenario_pp = copy.deepcopy(self.post_processing)
+            scenario_pp.model = scenario_model
+            scenario_pp.generated_outputs = {}
+            ########### TIMES
+            scenario_pp.generate_outputs()
+            scenario_pp.derived_outputs = scenario_model.derived_outputs if hasattr(self.running_model, "derived_outputs") else {}
 
+            # Store scenario outputs into database
+            out_df = pd.DataFrame(
+                scenario_model.outputs, columns=scenario_model.compartment_names
+            )
+            # derived_output_df = pd.DataFrame.from_dict(scenario_model.derived_outputs)
+            # store_tb_database(
+            #     derived_output_df,
+            #     table_name="derived_outputs",
+            #     run_idx=self.iter_num,
+            #     scenario=scenario_idx,
+            #     database_name=self.output_db_path,
+            #     append=True,
+            # )
+            store_tb_database(
+                out_df,
+                run_idx=self.iter_num,
+                scenario=scenario_idx,
+                times=scenario_model.times,
+                database_name=self.output_db_path,
+                append=True,
+            )
 
     def loglikelihood(self, params):
         """
@@ -361,6 +393,8 @@ class Calibration:
                 if accept:
                     print("Running extra scenarios")
                     self.run_extra_scenarios_with_params(proposed_params)
+
+                self.iter_num += 1
 
                 print(str(i_run + 1) + " MCMC iterations completed.")
 

@@ -16,6 +16,8 @@ from scipy import stats, special
 
 from autumn.tb_model import store_tb_database
 from autumn.constants import DATA_PATH
+from autumn.tool_kit.scenarios import initialise_scenario_run
+from autumn.demography.social_mixing import change_mixing_matrix_for_scenario
 
 from .db import Database
 
@@ -35,7 +37,8 @@ class Calibration:
     """
 
     def __init__(
-        self, model_name: str, model_builder, priors, targeted_outputs, multipliers, chain_index
+        self, model_name: str, model_builder, priors, targeted_outputs, multipliers, chain_index, scenario_params={},
+            scenario_start_time=None
     ):
         self.model_builder = model_builder  # a function that builds a new model without running it
         self.running_model = None  # a model that will be run during calibration
@@ -70,6 +73,9 @@ class Calibration:
         self.mle_estimates = {}  # will store the results of the maximum-likelihood calibration
 
         self.evaluated_params_ll = []  # list of tuples:  [(theta_0, ll_0), (theta_1, ll_1), ...]
+
+        self.scenario_params = scenario_params
+        self.scenario_start_time = scenario_start_time
 
     def update_post_processing(self):
         """
@@ -136,6 +142,26 @@ class Calibration:
 
         # perform post-processing
         self.update_post_processing()
+
+    def run_extra_scenarios_with_params(self, params):
+
+        for scenario_idx, scenario_params in self.scenario_params.items():
+            if scenario_idx == 0:
+                continue
+            scenario_params['start_time'] = self.scenario_start_time
+
+            updated_scenario_params = copy.copy(scenario_params)
+            for param_name in scenario_params.keys():
+                if param_name in self.param_list:
+                    param_index = self.param_list.index(param_name)
+                    updated_scenario_params[param_index] = params[param_index]
+
+            scenario_model = initialise_scenario_run(self.running_model, updated_scenario_params,
+                                                     self.model_builder)
+            scenario_model = change_mixing_matrix_for_scenario(scenario_model, updated_scenario_params, scenario_idx)
+            scenario_model.run_model()
+
+
 
     def loglikelihood(self, params):
         """
@@ -330,6 +356,11 @@ class Calibration:
                     database_name=self.output_db_path,
                     append=True,
                 )
+
+                # Run intervention scenarios if accepted run
+                if accept:
+                    print("Running extra scenarios")
+                    self.run_extra_scenarios_with_params(proposed_params)
 
                 print(str(i_run + 1) + " MCMC iterations completed.")
 

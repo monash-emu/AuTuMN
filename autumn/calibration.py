@@ -86,12 +86,12 @@ class Calibration:
             requested_outputs = [
                 self.targeted_outputs[i]["output_key"]
                 for i in range(len(self.targeted_outputs))
-                if "prev" in self.targeted_outputs[i]["output_key"]
+                if "prevX" in self.targeted_outputs[i]["output_key"]
             ]
             requested_times = {}
 
             for _output in self.targeted_outputs:
-                if "prev" in _output["output_key"]:
+                if "prevX" in _output["output_key"]:
                     requested_times[_output["output_key"]] = _output["years"]
 
             self.post_processing = post_proc.PostProcessing(
@@ -138,7 +138,6 @@ class Calibration:
 
         # run the model
         self.running_model.run_model()
-
         # perform post-processing
         self.update_post_processing()
 

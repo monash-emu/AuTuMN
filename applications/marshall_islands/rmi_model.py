@@ -210,4 +210,16 @@ def build_rmi_model(update_params={}):
         _tb_model = \
             stratify_by_location(_tb_model, model_parameters, model_parameters['all_stratifications']['location'])
 
+    # Capture reported prevalence in Majuro assuming over-reporting (needed for calibration)
+    def calculate_reported_majuro_prevalence(model, time):
+        true_prev = 0.
+        pop_majuro = 0.
+        for i, compartment in enumerate(model.compartment_names):
+            if 'majuro' in compartment:
+                pop_majuro += model.compartment_values[i]
+                if 'infectious' in compartment:
+                    true_prev += model.compartment_values[i]
+        return 1.e5 * true_prev / pop_majuro * (1. + model_parameters['over_reporting_prevalence_proportion'])
+    _tb_model.derived_output_functions.update({'reported_majuro_prevalence': calculate_reported_majuro_prevalence})
+
     return _tb_model

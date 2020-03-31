@@ -29,11 +29,11 @@ PAR_PRIORS = [
     {
         "param_name": "contact_rate",
         "distribution": "uniform",
-        "distri_params": [5., 50.]},
+        "distri_params": [10., 20.]},
     {
         "param_name": "late_progression_15",
         "distribution": "lognormal",
-        "distri_params": [5., 50.]}, ###need to update this with mu and sd
+        "distri_params": [-12.11, 0.45]},  # Ragonnet et al, Epidemics 2017
     {
         "param_name": "rr_progression_diabetic",
         "distribution": "uniform",
@@ -73,13 +73,11 @@ TARGET_OUTPUTS = [
     {
         "output_key": "reported_majuro_prevalence",
         "years": [2018.0],
-        "values": [1578.0],
-        "cis": [(620.0, 894.0)],},
+        "values": [1578.0],},
     {
         "output_key": "prevXlatentXamongXlocation_majuro",
         "years": [2017.0],
-        "values": [28.5],
-        "cis": [(902.0, 1018.0)],},
+        "values": [28.5],},
     {
         "output_key": "notificationsXlocation_majuro",
         "years": [2016.0],
@@ -98,7 +96,7 @@ TARGET_OUTPUTS = [
 
 MULTIPLIERS = {
     "prevXinfectiousXamong": 1.0e5,
-    "prevXlatentXamongXlocation_majuro": 1.0e4,
-    "prevXinfectiousXstrain_mdrXamongXinfectious": 1.0e4,
+    "prevXinfectiousXamongXlocation_ebeye": 1.0e5,
+    "prevXlatentXamongXlocation_majuro": 100
 }
 

@@ -29,7 +29,7 @@ default:
   start_time: 1940.0
   end_time: 2035.0
   time_step: 0.25
-  start_population: 1000
+  start_population: 14000
 
   # Diabetes
   # If we use age-specific diabetes prevalence

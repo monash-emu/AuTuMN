@@ -7,7 +7,7 @@ default:
     - age
     - location
     - organ
-#    - diabetes
+    - diabetes
   all_stratifications:
     organ:
       - smearpos
@@ -32,12 +32,16 @@ default:
   start_population: 1000
 
   # Diabetes
+  # If we use age-specific diabetes prevalence
   diabetes_target_props:
     0: 0.01
     5: 0.05
     15: 0.2
     35: 0.4
     50: 0.7
+
+  # If we use overall diabetes prevalence
+  diabetes_prevalence_adults: .30
 
   # Base model definition
   contact_rate: 12.

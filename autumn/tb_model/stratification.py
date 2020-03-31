@@ -81,33 +81,62 @@ def stratify_by_age(model_to_stratify, age_specific_latency_parameters, input_da
     return model_to_stratify
 
 
-def stratify_by_diabetes(model_to_stratify, model_parameters, diabetes_strata, requested_diabetes_proportions):
-    diabetes_target_props = {}
-    for age_group in model_parameters['all_stratifications']['age']:
-        diabetes_target_props.update({
-            'age_' + age_group: {'diabetic': requested_diabetes_proportions[int(age_group)]}
-        })
-    diabetes_starting_and_entry_props = {
-        "diabetic": 0.01,
-        "nodiabetes": 0.99
-    }
+def stratify_by_diabetes(model_to_stratify, model_parameters, diabetes_strata, requested_diabetes_proportions,
+                         age_specific_prevalence=True):
+
     progression_adjustments = {
         "diabetic": model_parameters["rr_progression_diabetic"],
         "nodiabetes": 1.0,
     }
-    model_to_stratify.stratify(
-        "diabetes",
-        diabetes_strata,
-        [],
-        verbose=False,
-        requested_proportions=diabetes_starting_and_entry_props,
-        adjustment_requests={
-            "early_progression": progression_adjustments,
-            "late_progression": progression_adjustments,
-        },
-        entry_proportions=diabetes_starting_and_entry_props,
-        target_props=diabetes_target_props,
-    )
+    adjustment_dict = {
+                "early_progression": progression_adjustments,
+                "late_progression": progression_adjustments
+    }
+    if age_specific_prevalence:
+        diabetes_target_props = {}
+        for age_group in model_parameters['all_stratifications']['age']:
+            diabetes_target_props.update({
+                'age_' + age_group: {'diabetic': requested_diabetes_proportions[int(age_group)]}
+            })
+        diabetes_starting_and_entry_props = {
+            "diabetic": 0.01,
+            "nodiabetes": 0.99
+        }
+
+        model_to_stratify.stratify(
+            "diabetes",
+            diabetes_strata,
+            [],
+            verbose=False,
+            requested_proportions=diabetes_starting_and_entry_props,
+            adjustment_requests=adjustment_dict,
+            entry_proportions=diabetes_starting_and_entry_props,
+            target_props=diabetes_target_props,
+        )
+    else:
+        diabetes_starting_and_entry_props = {
+            "diabetic": model_parameters['diabetes_prevalence_adults'],
+            "nodiabetes": 1. - model_parameters['diabetes_prevalence_adults']
+        }
+
+        # define age-specific adjustment requests for progression if age-stratified model
+        if 'age' in model_parameters['stratify_by']:
+            adjustment_dict = {}
+            for age_break in model_parameters['all_stratifications']['age']:
+                if int(age_break) >= 15:
+                    adjustment_dict['early_progressionXage_' + age_break] = progression_adjustments
+                    adjustment_dict['late_progressionXage_' + age_break] = progression_adjustments
+
+        model_to_stratify.stratify(
+            "diabetes",
+            diabetes_strata,
+            [],
+            verbose=False,
+            requested_proportions=diabetes_starting_and_entry_props,
+            adjustment_requests=adjustment_dict,
+            entry_proportions=diabetes_starting_and_entry_props,
+        )
+
     return model_to_stratify
 
 

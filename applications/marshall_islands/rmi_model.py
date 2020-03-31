@@ -199,7 +199,8 @@ def build_rmi_model(update_params={}):
             _tb_model,
             model_parameters,
             model_parameters['all_stratifications']['diabetes'],
-            model_parameters['diabetes_target_props']
+            model_parameters['diabetes_target_props'],
+            age_specific_prevalence=False
         )
     if "organ" in model_parameters['stratify_by']:
         _tb_model = stratify_by_organ(

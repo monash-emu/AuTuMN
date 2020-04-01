@@ -166,7 +166,7 @@ def find_death_rates(_input_database, country_iso_code):
     return death_rates, mortality_years
 
 
-def find_age_weights(age_breakpoints, demo_data, arbitrary_upper_age=1e2, break_width=5.0):
+def find_age_weights(age_breakpoints, demo_data, arbitrary_upper_age=1e2, break_width=5.0, normalise=True):
     """
     find the weightings to assign to the various components of the data from the age breakpoints planned to be used
     in the model
@@ -215,7 +215,8 @@ def find_age_weights(age_breakpoints, demo_data, arbitrary_upper_age=1e2, break_
                 weightings[n_data_break] -= 1.0
 
         # normalise the values
-        weightings = [weight / sum(weightings) for weight in weightings]
+        if normalise:
+            weightings = [weight / sum(weightings) for weight in weightings]
         weightings_dict[age_breakpoints[n_breakpoint]] = weightings
     return weightings_dict
 
@@ -256,6 +257,47 @@ def find_age_specific_death_rates(input_database, age_breakpoints, country_iso_c
     return age_death_rates, years
 
 
+def find_population_by_agegroup(input_database, age_breakpoints, country_iso_code):
+    """
+    find non-tb-related death rates from un data that are specific to the age groups requested for the model regardless
+    of the age brackets for which data are available
+
+    :param age_breakpoints: list
+        integers for the age breakpoints being used in the model
+    :param country_iso_code: str
+        the three digit iso3 code for the country of interest
+    :return: dict
+        keys the age breakpoints, values lists for the death rates with time
+    """
+    age_breakpoints = prepare_age_breakpoints(age_breakpoints)
+
+    # gather up the death rates with the brackets from the data
+    total_population_data = extract_demo_data(
+        input_database, "total_population_mapped", country_iso_code
+    )
+
+    years = list(total_population_data['Period'])
+    populations = total_population_data.drop(["Period"], axis=1)
+
+    # find the weightings to each age group in the data from the requested brackets
+    age_weights = find_age_weights(age_breakpoints, populations, normalise=False)
+
+    # calculate the list of values for the weighted death rates for each modelled age category
+    age_populations = {}
+    for age_break in age_breakpoints:
+        age_populations[age_break] = [0.0] * populations.shape[0]
+        for i_year, year in enumerate(years):
+            age_populations[age_break][i_year] = sum(
+                [
+                    float(pop) * weight
+                    for pop, weight in zip(
+                        list(populations.iloc[i_year]), age_weights[age_break]
+                    )
+                ]
+            )
+    return age_populations, years
+
+
 def get_pop_mortality_functions(
     input_database, age_breaks, country_iso_code, emigration_value=0.0, emigration_start_time=1980.0
 ):
@@ -291,3 +333,5 @@ def get_pop_mortality_functions(
         )
         for age_group in age_death_dict
     }
+
+

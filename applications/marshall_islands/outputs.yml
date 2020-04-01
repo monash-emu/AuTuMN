@@ -6,28 +6,29 @@ plot_start_time: 1940
 # e.g. [prevXinfectious, prevXlatent]
 outputs_to_plot_by_stratum: []
 
-display_stratification: []
+display_stratification:
+  - infectious
 
 compartments_for_prevalence: []
 
 output_combinations_to_collate:
   -
     - 'infectious'
-    - 'age'
+    - 'location'
 
 output_combinations_to_plot_together:
   -
     - 'infectious'
-    - 'age'
+    - 'location'
 
 time_for_parameter_visualisation: 2010.
 
 parameter_stems_to_plot:
   - contact_rate
 
-req_outputs: []
-#  - prevXinfectiousXamong
-#  - prevXlatentXamong
+req_outputs:
+  - prevXinfectiousXamong
+  - prevXlatentXamong
 #  - prevXinfectiousXamongXlocation_majuro
 #  - prevXinfectiousXamongXlocation_ebeye
 #  - prevXinfectiousXamongXlocation_otherislands
@@ -45,7 +46,8 @@ functions_to_plot:
 
 req_multipliers:
   prevXinfectiousXstrain_mdrXamongXinfectious: 100.0
-  prevXinfectiousXstrain_mdrXamong: 0.00001
+  prevXinfectiousXstrain_mdrXamong: 0.00001  # not sure this one is correct
+  prevXinfectiousXamong: 100000
 
 targets_to_plot:
   prevXinfectiousXamongXlocation_ebeye:

@@ -53,7 +53,7 @@ def build_rmi_model(update_params={}):
         Compartment.INFECTIOUS,
         Compartment.ON_TREATMENT,
         Compartment.RECOVERED,
-        Compartment.LTBI_TREATED,
+        # Compartment.LTBI_TREATED,
     ]
     init_pop = {
         Compartment.INFECTIOUS: 10,
@@ -93,7 +93,7 @@ def build_rmi_model(update_params={}):
     flows = add_standard_infection_flows([])
     flows = add_standard_latency_flows(flows)
     flows = add_standard_natural_history_flows(flows)
-    flows = add_latency_progression(flows)
+    # flows = add_latency_progression(flows)
     flows = add_case_detection(flows, compartments)
     flows = add_treatment_flows(flows)
     # flows = add_acf(flows, compartments)

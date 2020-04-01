@@ -1,7 +1,11 @@
 from autumn.calibration import Calibration
 
-from applications.marshall_islands.rmi_model import build_rmi_model
+from applications.marshall_islands.rmi_model import build_rmi_model, PARAMS_PATH
 
+import yaml
+
+with open(PARAMS_PATH, 'r') as yaml_file:
+        params = yaml.safe_load(yaml_file)
 
 def run_calibration_chain(max_seconds: int, run_id: int):
     """
@@ -12,7 +16,8 @@ def run_calibration_chain(max_seconds: int, run_id: int):
     """
     print(f"Preparing to run Marshall Islands TB model calibration for run {run_id}")
     calib = Calibration(
-        "marshall_islands", build_rmi_model, PAR_PRIORS, TARGET_OUTPUTS, MULTIPLIERS, run_id
+        "marshall_islands", build_rmi_model, PAR_PRIORS, TARGET_OUTPUTS, MULTIPLIERS, run_id,
+        model_parameters=params['default']
     )
     print("Starting calibration.")
     calib.run_fitting_algorithm(
@@ -50,14 +55,14 @@ PAR_PRIORS = [
         "param_name": "cdr_multiplier",
         "distribution": "uniform",
         "distri_params": [0.5, 2.0]},
-    {
-        "param_name": "case_detection_ebeye_multiplier",
-        "distribution": "uniform",
-        "distri_params": [0.5, 2.0],},
-    {
-        "param_name": "case_detection_otherislands_multiplier",
-        "distribution": "uniform",
-        "distri_params": [0.5, 1.0],},
+    # {
+    #     "param_name": "case_detection_ebeye_multiplier",
+    #     "distribution": "uniform",
+    #     "distri_params": [0.5, 2.0],},
+    # {
+    #     "param_name": "case_detection_otherislands_multiplier",
+    #     "distribution": "uniform",
+    #     "distri_params": [0.5, 1.0],},
     {
         "param_name": "over_reporting_prevalence_proportion",
         "distribution": "uniform",
@@ -99,4 +104,3 @@ MULTIPLIERS = {
     "prevXinfectiousXamongXlocation_ebeye": 1.0e5,
     "prevXlatentXamongXlocation_majuro": 100
 }
-

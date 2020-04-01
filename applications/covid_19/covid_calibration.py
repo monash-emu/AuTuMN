@@ -22,7 +22,7 @@ def run_calibration_chain(max_seconds: int, run_id: int):
     print(f"Preparing to run covid model calibration for run {run_id}")
     calib = Calibration(
         "covid", build_covid_model, PAR_PRIORS, TARGET_OUTPUTS, MULTIPLIERS, run_id,
-        scenario_params, sc_start_time
+        scenario_params, sc_start_time, model_parameters=params['default']
     )
     print("Starting calibration.")
     calib.run_fitting_algorithm(

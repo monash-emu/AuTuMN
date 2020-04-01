@@ -38,9 +38,10 @@ class Calibration:
 
     def __init__(
         self, model_name: str, model_builder, priors, targeted_outputs, multipliers, chain_index, scenario_params={},
-            scenario_start_time=None
+            scenario_start_time=None, model_parameters={}
     ):
         self.model_builder = model_builder  # a function that builds a new model without running it
+        self.model_parameters = model_parameters
         self.running_model = None  # a model that will be run during calibration
         self.post_processing = None  # a PostProcessing object containing the required outputs of a model that has been run
         self.priors = priors  # a list of dictionaries. Each dictionary describes the prior distribution for a parameter
@@ -497,25 +498,33 @@ class Calibration:
         :param prev_params: last accepted parameter values as a list ordered using the order of self.priors
         :return: a new list of parameter values
         """
-        # prev_params assumed to be centre of the prior range for first step
+        # prev_params assumed to be the manually calibrated parameters for first step
         if prev_params is None:
             prev_params = []
             for prior_dict in self.priors:
-                prev_params.append(
-                    0.5 * (prior_dict["distri_params"][0] + prior_dict["distri_params"][1])
-                )
+                prev_params.append(self.model_parameters[prior_dict['param_name']])
 
         new_params = []
 
         for i, prior_dict in enumerate(self.priors):
+            # Work out bounds for acceptable values, using the support of the prior distribution
+            if prior_dict["distribution"] == "uniform":
+                lower_bound = prior_dict["distri_params"][0]
+                upper_bound = prior_dict["distri_params"][1]
+            elif prior_dict["distribution"] in ["lognormal", "gamma", "weibull", "exponential"]:
+                lower_bound = 0.
+                upper_bound = float("inf")
+            else:
+                print("Warning: prior distribution bounds detection currently not handled")
             sample = (
-                prior_dict["distri_params"][0] - 10.0
+                lower_bound - 10.0
             )  # deliberately initialise out of parameter scope
-            while not prior_dict["distri_params"][0] <= sample <= prior_dict["distri_params"][1]:
+            while not lower_bound <= sample <= upper_bound:
                 sample = np.random.normal(
                     loc=prev_params[i], scale=prior_dict["jumping_sd"], size=1
                 )[0]
             new_params.append(sample)
+
         return new_params
 
     def logprior(self, params):

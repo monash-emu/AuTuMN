@@ -28,7 +28,7 @@ default:
       - nodiabetes
   start_time: 1940.0
   end_time: 2035.0
-  time_step: 0.25
+  time_step: 1.
   start_population: 14000
 
   # Diabetes

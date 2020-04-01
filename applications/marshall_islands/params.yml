@@ -115,9 +115,9 @@ default:
     extrapul: 0.2
 
   # Case detection adjustment for location
-#  case_detection_majuro_multiplier: 1.0
-#  case_detection_ebeye_multiplier: 1.5
-#  case_detection_otherislands_multiplier: 1.0
+  case_detection_majuro_multiplier: 1.0
+  case_detection_ebeye_multiplier: 1.5
+  case_detection_otherislands_multiplier: 1.0
 
   # Treatment success rate
   tsr:

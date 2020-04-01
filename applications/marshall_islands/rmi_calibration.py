@@ -55,14 +55,14 @@ PAR_PRIORS = [
         "param_name": "cdr_multiplier",
         "distribution": "uniform",
         "distri_params": [0.5, 2.0]},
-    # {
-    #     "param_name": "case_detection_ebeye_multiplier",
-    #     "distribution": "uniform",
-    #     "distri_params": [0.5, 2.0],},
-    # {
-    #     "param_name": "case_detection_otherislands_multiplier",
-    #     "distribution": "uniform",
-    #     "distri_params": [0.5, 1.0],},
+    {
+        "param_name": "case_detection_ebeye_multiplier",
+        "distribution": "uniform",
+        "distri_params": [0.5, 2.0],},
+    {
+        "param_name": "case_detection_otherislands_multiplier",
+        "distribution": "uniform",
+        "distri_params": [0.5, 1.0],},
     {
         "param_name": "over_reporting_prevalence_proportion",
         "distribution": "uniform",

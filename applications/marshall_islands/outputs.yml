@@ -7,7 +7,9 @@ plot_start_time: 1940
 outputs_to_plot_by_stratum: []
 
 display_stratification:
-  - infectious
+  - location
+
+outputs_to_plot: []
 
 compartments_for_prevalence: []
 

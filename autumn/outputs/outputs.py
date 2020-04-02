@@ -1085,9 +1085,9 @@ class OutputPlotter:
         self.plot_parameter_category_values()
         self.plot_mixing_matrix()
         self.plot_input_function()
-        # self.plot_prevalence_combinations()
-        # self.plot_pop_distribution_by_stratum()
-        # self.find_exponential_growth_rate()
+        self.plot_prevalence_combinations()
+        self.plot_pop_distribution_by_stratum()
+        self.find_exponential_growth_rate()
 
     def plot_input_function(self, sc_index=0):
         """

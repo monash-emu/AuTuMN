@@ -70,47 +70,6 @@ def add_infection_death_flows(working_flows, n_infectious):
     return working_flows
 
 
-def replicate_compartment(
-        n_replications,
-        current_compartments,
-        compartment_stem,
-        infectious_compartments,
-        initial_populations,
-        infectious=False,
-        infectious_seed=0.,
-):
-    """
-    Implement n compartments of a certain type
-    Also returns the names of the infectious compartments and the intial population evenly distributed across the
-    replicated infectious compartments
-    """
-
-    # Add the compartment names to the working list of compartments
-    compartments_to_add = \
-        [compartment_stem] if \
-            n_replications == 1 else \
-            [compartment_stem + '_' + str(i_comp + 1) for i_comp in range(n_replications)]
-
-    # Add the compartment names to the working list of infectious compartments, if the compartment is infectious
-    infectious_compartments_to_add = \
-        compartments_to_add if infectious else []
-
-    # Add the infectious population to the initial conditions
-    if infectious_seed == 0.:
-        init_pop = {}
-    elif n_replications == 1:
-        init_pop = {compartment_stem: infectious_seed}
-    else:
-        init_pop = \
-            {compartment_stem + '_' + str(i_infectious + 1): infectious_seed / float(n_replications) for
-             i_infectious in range(n_replications)}
-    initial_populations.update(init_pop)
-
-    return current_compartments + compartments_to_add, \
-           infectious_compartments + infectious_compartments_to_add, \
-           initial_populations
-
-
 def multiply_flow_value_for_multiple_compartments(model_parameters, compartment_name, parameter_name):
     """
     Multiply the progression rate through the compartments placed in series by the number of compartments, so that the

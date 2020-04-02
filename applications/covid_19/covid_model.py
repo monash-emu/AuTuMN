@@ -1,18 +1,15 @@
 import os
 import yaml
-from summer_py.summer_model import (
-    StratifiedModel,
-)
+from summer_py.summer_model import StratifiedModel
+from summer_py.summer_model.utils.base_compartments import replicate_compartment
 
 from autumn import constants
 from autumn.constants import Compartment
-from autumn.tb_model import (
-    list_all_strata_for_mortality,
-)
+from autumn.tb_model import list_all_strata_for_mortality
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
 from autumn.disease_categories.emerging_infections.flows import \
     add_infection_flows, add_transition_flows, add_recovery_flows, add_sequential_compartment_flows, \
-    replicate_compartment, multiply_flow_value_for_multiple_compartments,\
+    multiply_flow_value_for_multiple_compartments, \
     add_infection_death_flows
 from applications.covid_19.stratification import stratify_by_age, stratify_by_infectiousness
 from applications.covid_19.covid_outputs import find_incidence_outputs, create_fully_stratified_incidence_covid, \
@@ -45,66 +42,55 @@ def build_covid_model(update_params={}):
         params = yaml.safe_load(yaml_file)
     model_parameters = params['default']
 
-    # Update, not needed for baseline run
+    # Update, not used in single application run
     model_parameters.update(update_params)
 
     # Get population size (by age if age-stratified)
     total_pops, model_parameters = get_population_size(model_parameters, input_database)
 
-    # Define single compartments that don't need to be replicated
+    # Define single compartments that don't need replication
     compartments = [
         Compartment.SUSCEPTIBLE,
         Compartment.RECOVERED,
     ]
 
-    # Get progression rates from sojourn times
-    for state in ['exposed', 'presympt', 'infectious', 'hospital', 'icu']:
-        model_parameters['within_' + state] = 1. / model_parameters[state + '_period']
-    model_parameters['to_infectious'] = 1. / model_parameters['within_presympt']
-
-    # Replicate compartments that need to be repeated
-    compartments, infectious_compartments, init_pop = \
-        replicate_compartment(
-            model_parameters['n_compartment_repeats'],
-            compartments,
-            Compartment.EXPOSED,
-            [],
-            {},
-            infectious_seed=model_parameters['infectious_seed'] / 2.
-        )
-    compartments, infectious_compartments, init_pop = \
-        replicate_compartment(
-            model_parameters['n_compartment_repeats'],
-            compartments,
-            Compartment.PRESYMPTOMATIC,
-            infectious_compartments,
-            init_pop,
-            infectious=True
-        )
-    compartments, infectious_compartments, init_pop = \
-        replicate_compartment(
-            model_parameters['n_compartment_repeats'],
-            compartments,
-            Compartment.INFECTIOUS,
-            infectious_compartments,
-            init_pop,
-            infectious=True,
-            infectious_seed=model_parameters['infectious_seed'] / 2.
-        )
+    # Get progression rates from sojourn times, distinguishing to_infectious in order to split this parameter later
+    for compartment in ['exposed', 'presympt', 'infectious', 'hospital', 'icu']:
+        model_parameters['within_' + compartment] = \
+            1. / model_parameters[compartment + '_period']
+    model_parameters['to_infectious'] = \
+        1. / model_parameters['within_presympt']
 
     # Multiply the progression rates by the number of compartments to keep the average time in exposed the same
-    model_parameters = \
-        multiply_flow_value_for_multiple_compartments(
-            model_parameters, Compartment.EXPOSED, 'within_exposed'
-        )
-    model_parameters = \
-        multiply_flow_value_for_multiple_compartments(
-            model_parameters, Compartment.PRESYMPTOMATIC, 'within_presympt'
-        )
-    model_parameters = \
-        multiply_flow_value_for_multiple_compartments(
-            model_parameters, Compartment.INFECTIOUS, 'within_infectious'
-        )
+    for compartment in [Compartment.EXPOSED, Compartment.PRESYMPTOMATIC, Compartment.INFECTIOUS]:
+        model_parameters = \
+            multiply_flow_value_for_multiple_compartments(
+                model_parameters, compartment, 'within_' + compartment
+            )
+
+    # Replicate compartments - all repeated compartments are replicated the same number of times, which could be changed
+    total_infectious_times = 0.
+    for compartment in [Compartment.EXPOSED, Compartment.PRESYMPTOMATIC, Compartment.INFECTIOUS]:
+        total_infectious_times += model_parameters[compartment + '_period']
+    infectious_compartments, init_pop = [], {}
+    is_infectious = {
+        Compartment.EXPOSED: False,
+        Compartment.PRESYMPTOMATIC: True,
+        Compartment.INFECTIOUS: True
+    }
+    for compartment in [Compartment.EXPOSED, Compartment.PRESYMPTOMATIC, Compartment.INFECTIOUS]:
+        compartments, infectious_compartments, init_pop = \
+            replicate_compartment(
+                model_parameters['n_compartment_repeats'],
+                compartments,
+                compartment,
+                infectious_compartments,
+                init_pop,
+                infectious_seed=model_parameters['infectious_seed']
+                                * model_parameters[compartment + '_period'] /
+                                total_infectious_times,
+                infectious=is_infectious[compartment]
+            )
 
     # Set integration times
     integration_times = \
@@ -118,19 +104,15 @@ def build_covid_model(update_params={}):
     flows = add_infection_flows(
         [], model_parameters['n_compartment_repeats']
     )
-    flows = add_sequential_compartment_flows(
-        flows, model_parameters['n_compartment_repeats'], Compartment.EXPOSED
-    )
-    flows = add_sequential_compartment_flows(
-        flows, model_parameters['n_compartment_repeats'], Compartment.PRESYMPTOMATIC
-    )
-    flows = add_sequential_compartment_flows(
-        flows, model_parameters['n_compartment_repeats'], Compartment.INFECTIOUS
-    )
+    for compartment in [Compartment.EXPOSED, Compartment.PRESYMPTOMATIC, Compartment.INFECTIOUS]:
+        flows = add_sequential_compartment_flows(
+            flows, model_parameters['n_compartment_repeats'], compartment
+        )
     flows = add_transition_flows(
         flows, model_parameters['n_compartment_repeats'], Compartment.EXPOSED, Compartment.PRESYMPTOMATIC,
         'within_exposed'
     )
+
     # Distinguish to_infectious parameter, so that it can be split later
     model_parameters['to_infectious'] = model_parameters['within_presympt']
     flows = add_transition_flows(
@@ -143,12 +125,14 @@ def build_covid_model(update_params={}):
         model_parameters['n_compartment_repeats']
     )
 
+    # Get mixing matrix, although would need to adapt this for countries in file _2
     mixing_matrix = \
         load_specific_prem_sheet(
             'all_locations_1',
             model_parameters['country']
         )
 
+    # Define output connections to collate
     output_connections = find_incidence_outputs(model_parameters)
 
     # Define model
@@ -176,7 +160,12 @@ def build_covid_model(update_params={}):
 
     # Stratify infectious compartment as high or low infectiousness as requested
     if 'infectiousness' in model_parameters['stratify_by']:
-        _covid_model, model_parameters = stratify_by_infectiousness(_covid_model, model_parameters, compartments)
+        _covid_model, model_parameters = \
+            stratify_by_infectiousness(
+                _covid_model,
+                model_parameters,
+                compartments
+            )
 
     # Add fully stratified incidence to output_connections
     output_connections.update(
@@ -186,12 +175,11 @@ def build_covid_model(update_params={}):
             model_parameters['n_compartment_repeats']
         )
     )
-
     _covid_model.output_connections = output_connections
 
-    # add notifications to derived_outputs
-    _covid_model.derived_output_functions["notifications"] = calculate_notifications_covid
-
+    # Add notifications to derived_outputs
+    _covid_model.derived_output_functions['notifications'] = \
+        calculate_notifications_covid
     _covid_model.death_output_categories = \
         list_all_strata_for_mortality(_covid_model.compartment_names)
 

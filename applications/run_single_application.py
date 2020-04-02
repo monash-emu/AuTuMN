@@ -144,16 +144,6 @@ def run_model(application):
         outputs_plotter.save_flows_sheets()
         outputs_plotter.run_input_plots()
 
-        # # using old code (should eventually be handled by OutputPlotter)
-        # old_outputs_plotter = Outputs(models, pps, output_options, out_dir=output_directory, plot_start_time=0)
-        # old_outputs_plotter.plot_requested_outputs()
-
 
 if __name__ == '__main__':
-    # import datetime
-    # something = datetime.date(2020, 3, 28)
-    # something_else = datetime.date(2020, 1, 1)
-    # delta = something - something_else
-    # print()
-    #
     run_model('covid_19')

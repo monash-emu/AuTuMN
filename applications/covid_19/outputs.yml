@@ -19,9 +19,8 @@ output_combinations_to_plot_together:
     - 'infectious'
     - 'agegroup'
 
-find_exponential_growth_rate:
-  start: 0
-  end: 100
+outputs_to_plot:
+  - 'find_exponential_growth_rate'
 
 # e.g. [prevXinfectious, prevXlatent]
 outputs_to_plot_by_stratum: []

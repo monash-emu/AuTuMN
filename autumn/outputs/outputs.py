@@ -1283,10 +1283,9 @@ class OutputPlotter:
         """
         Find the exponential growth rate at a range of requested time points
         """
-        if 'find_exponential_growth_rate' in self.output_options:
+        if 'find_exponential_growth_rate' in self.output_options['outputs_to_plot']:
             time_points = \
-                range(self.output_options['find_exponential_growth_rate']['start'],
-                      self.output_options['find_exponential_growth_rate']['end'])
+                range(len(self.models[0].times))
             growth_rates = []
             for i_time in range(len(time_points) - 1):
                 start_time, end_time = time_points[i_time], time_points[i_time + 1]

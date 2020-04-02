@@ -5,6 +5,7 @@ from autumn.db import find_population_by_agegroup
 def get_population_size(model_parameters, input_database):
     """
     Calculate the population size by age-group, using UN data
+
     :param model_parameters: a dictionary containing model parameters
     :param input_database: database containing UN population data
     :return: a dictionary with the age-specific population sizes for the latest year available in UN data (2020)

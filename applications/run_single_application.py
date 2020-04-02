@@ -144,5 +144,6 @@ def run_model(application):
         outputs_plotter.save_flows_sheets()
         outputs_plotter.run_input_plots()
 
+
 if __name__ == '__main__':
     run_model('covid_19')

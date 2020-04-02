@@ -93,8 +93,12 @@ default:
   infectious_period: 7.68
   hospital_period: 8.
   icu_period: 20.
-  universal_death_rate: 0.
+
+  # Compulsory parameter that is completely overwritten in stratification, rather than being modified
   infect_death: 0.
+
+  # Compulsory parameter for all models, even though there are no population-wide deaths
+  universal_death_rate: 0.
 
 # SCENARIO-RELATED PARAMETERS
 

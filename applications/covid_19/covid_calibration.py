@@ -12,6 +12,7 @@ with open(PARAMS_PATH, 'r') as yaml_file:
 scenario_params = params['scenarios']
 sc_start_time = params['scenario_start']
 
+
 def run_calibration_chain(max_seconds: int, run_id: int):
     """
     Run a calibration chain for the covid model
@@ -41,7 +42,7 @@ PAR_PRIORS = [
 ]
 
 
-def read_john_hopkins_data_from_csv(variable="confirmed", country="Australia"):
+def read_john_hopkins_data_from_csv(variable="confirmed", country=params['default']['country']):
     """
     Read John Hopkins data from previously generated csv files
     :param variable: one of "confirmed", "deaths", "recovered"
@@ -49,8 +50,14 @@ def read_john_hopkins_data_from_csv(variable="confirmed", country="Australia"):
     """
     filename = "covid_" + variable + ".csv"
     path = os.path.join('applications', 'covid_19', 'JH_data', filename)
+
     data = pd.read_csv(path)
     data = data[data['Country/Region'] == country]
+
+    # We need to collect the country-level data
+    if data['Province/State'].isnull().any():  # when there is a single row for the whole country
+        data = data[data['Province/State'].isnull()]
+
     data_series = []
     for (columnName, columnData) in data.iteritems():
         if columnName.count("/") > 1:
@@ -63,10 +70,7 @@ def read_john_hopkins_data_from_csv(variable="confirmed", country="Australia"):
     return data_series
 
 # for JH data, day_1 is '1/22/20', that is 22 Jan 2020
-
-
 n_daily_cases = read_john_hopkins_data_from_csv('confirmed')
-
 
 TARGET_OUTPUTS = [
     {

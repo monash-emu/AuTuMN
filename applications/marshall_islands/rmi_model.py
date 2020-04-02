@@ -53,7 +53,7 @@ def build_rmi_model(update_params={}):
         Compartment.INFECTIOUS,
         Compartment.ON_TREATMENT,
         Compartment.RECOVERED,
-        Compartment.LTBI_TREATED,
+        # Compartment.LTBI_TREATED,
     ]
     init_pop = {
         Compartment.INFECTIOUS: 10,
@@ -93,7 +93,7 @@ def build_rmi_model(update_params={}):
     flows = add_standard_infection_flows([])
     flows = add_standard_latency_flows(flows)
     flows = add_standard_natural_history_flows(flows)
-    flows = add_latency_progression(flows)
+    # flows = add_latency_progression(flows)
     flows = add_case_detection(flows, compartments)
     flows = add_treatment_flows(flows)
     # flows = add_acf(flows, compartments)
@@ -199,7 +199,8 @@ def build_rmi_model(update_params={}):
             _tb_model,
             model_parameters,
             model_parameters['all_stratifications']['diabetes'],
-            model_parameters['diabetes_target_props']
+            model_parameters['diabetes_target_props'],
+            age_specific_prevalence=False
         )
     if "organ" in model_parameters['stratify_by']:
         _tb_model = stratify_by_organ(
@@ -208,5 +209,17 @@ def build_rmi_model(update_params={}):
     if "location" in model_parameters['stratify_by']:
         _tb_model = \
             stratify_by_location(_tb_model, model_parameters, model_parameters['all_stratifications']['location'])
+
+    # Capture reported prevalence in Majuro assuming over-reporting (needed for calibration)
+    def calculate_reported_majuro_prevalence(model, time):
+        true_prev = 0.
+        pop_majuro = 0.
+        for i, compartment in enumerate(model.compartment_names):
+            if 'majuro' in compartment:
+                pop_majuro += model.compartment_values[i]
+                if 'infectious' in compartment:
+                    true_prev += model.compartment_values[i]
+        return 1.e5 * true_prev / pop_majuro * (1. + model_parameters['over_reporting_prevalence_proportion'])
+    _tb_model.derived_output_functions.update({'reported_majuro_prevalence': calculate_reported_majuro_prevalence})
 
     return _tb_model

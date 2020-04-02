@@ -11,9 +11,10 @@ url = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/who_covi
 who_sit_rep = pd.read_csv(url)
 
 # csse_covid_19_time_series data (three files)
-list_of_url = ['https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv',
-               'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Deaths.csv',
-               'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Recovered.csv']
+list_of_url = []
+for variable in ['confirmed', 'deaths', 'recovered']:
+    list_of_url.append('https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_' +
+                       variable + '_global.csv')
 
 # hard coded for now
 ts_confirmed = pd.read_csv(list_of_url[0])
@@ -23,7 +24,9 @@ ts_recovered = pd.read_csv(list_of_url[2])
 ts_confirmed.to_csv('covid_confirmed.csv')
 ts_deaths.to_csv('covid_deaths.csv')
 ts_recovered.to_csv('covid_recovered.csv')
-exit()
+
+exit()  # no need for the daily reports for now
+
 # daily reports url
 url = 'https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/'
 

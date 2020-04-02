@@ -12,8 +12,6 @@ def stratify_by_age(model_to_stratify, mixing_matrix, total_pops, model_paramete
     Note that because the string passed is 'agegroup' rather than 'age', the standard automatic SUMMER demography is not
     triggered
     """
-    model_parameters = \
-        add_agegroup_breaks(model_parameters)
     age_strata = \
         model_parameters['all_stratifications']['agegroup']
     list_of_starting_pops = \

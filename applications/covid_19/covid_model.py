@@ -18,13 +18,16 @@ from applications.covid_19.stratification import stratify_by_age, stratify_by_in
 from applications.covid_19.covid_outputs import find_incidence_outputs, create_fully_stratified_incidence_covid, \
     calculate_notifications_covid
 from autumn.demography.social_mixing import load_specific_prem_sheet
-
+from autumn.demography.population import get_population_size
+from autumn.db import Database
 
 
 # Database locations
 file_dir = os.path.dirname(os.path.abspath(__file__))
 INPUT_DB_PATH = os.path.join(constants.DATA_PATH, 'inputs.db')
 PARAMS_PATH = os.path.join(file_dir, 'params.yml')
+
+input_database = Database(database_name=INPUT_DB_PATH)
 
 
 def build_covid_model(update_params={}):
@@ -45,10 +48,8 @@ def build_covid_model(update_params={}):
     # Update, not needed for baseline run
     model_parameters.update(update_params)
 
-    # Australian population sizes
-    total_pops = \
-        [1464776, 1502644, 1397182, 1421612, 1566792, 1664609, 1703852, 1561686, 1583254, 1581460, 1523557,
-         1454332, 1299406, 1188989, 887721, 652671 + 460555 + 486847]
+    # Get population size (by age if age-stratified)
+    total_pops, model_parameters = get_population_size(model_parameters, input_database)
 
     # Define single compartments that don't need to be replicated
     compartments = [

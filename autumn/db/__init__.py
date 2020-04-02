@@ -11,5 +11,6 @@ from .queries import (
     find_age_weights,
     find_age_specific_death_rates,
     get_pop_mortality_functions,
+    find_population_by_agegroup,
 )
 from .database import Database

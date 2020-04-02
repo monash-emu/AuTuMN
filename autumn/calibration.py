@@ -16,6 +16,8 @@ from scipy import stats, special
 
 from autumn.tb_model import store_tb_database
 from autumn.constants import DATA_PATH
+from autumn.tool_kit.scenarios import initialise_scenario_run
+from autumn.demography.social_mixing import change_mixing_matrix_for_scenario
 
 from .db import Database
 
@@ -35,9 +37,11 @@ class Calibration:
     """
 
     def __init__(
-        self, model_name: str, model_builder, priors, targeted_outputs, multipliers, chain_index
+        self, model_name: str, model_builder, priors, targeted_outputs, multipliers, chain_index, scenario_params={},
+            scenario_start_time=None, model_parameters={}
     ):
         self.model_builder = model_builder  # a function that builds a new model without running it
+        self.model_parameters = model_parameters
         self.running_model = None  # a model that will be run during calibration
         self.post_processing = None  # a PostProcessing object containing the required outputs of a model that has been run
         self.priors = priors  # a list of dictionaries. Each dictionary describes the prior distribution for a parameter
@@ -71,6 +75,9 @@ class Calibration:
 
         self.evaluated_params_ll = []  # list of tuples:  [(theta_0, ll_0), (theta_1, ll_1), ...]
 
+        self.scenario_params = scenario_params
+        self.scenario_start_time = scenario_start_time
+
     def update_post_processing(self):
         """
         updates self.post_processing attribute based on the newly run model
@@ -80,12 +87,12 @@ class Calibration:
             requested_outputs = [
                 self.targeted_outputs[i]["output_key"]
                 for i in range(len(self.targeted_outputs))
-                if "prev" in self.targeted_outputs[i]["output_key"]
+                if "prevX" in self.targeted_outputs[i]["output_key"]
             ]
             requested_times = {}
 
             for _output in self.targeted_outputs:
-                if "prev" in _output["output_key"]:
+                if "prevX" in _output["output_key"]:
                     requested_times[_output["output_key"]] = _output["years"]
 
             self.post_processing = post_proc.PostProcessing(
@@ -118,7 +125,6 @@ class Calibration:
             database_name=self.output_db_path,
             append=True,
         )
-        self.iter_num += 1
 
     def run_model_with_params(self, params):
         """
@@ -133,9 +139,61 @@ class Calibration:
 
         # run the model
         self.running_model.run_model()
-
         # perform post-processing
         self.update_post_processing()
+
+    def run_extra_scenarios_with_params(self, params):
+        """
+        Run intervention scenarios after accepting a baseline run
+        :param params: list of all current MCMC parameter values
+        """
+        for scenario_idx, scenario_params in self.scenario_params.items():
+            if scenario_idx == 0:
+                continue
+            scenario_params['start_time'] = self.scenario_start_time
+
+            # Potential update of scenario params if these are among the MCMC params
+            updated_scenario_params = copy.copy(scenario_params)
+            for param_name in scenario_params.keys():
+                if param_name in self.param_list:
+                    param_index = self.param_list.index(param_name)
+                    updated_scenario_params[param_index] = params[param_index]
+
+            # Run scenario
+            scenario_model = initialise_scenario_run(self.running_model, updated_scenario_params,
+                                                     self.model_builder)
+            scenario_model = change_mixing_matrix_for_scenario(scenario_model, updated_scenario_params, scenario_idx)
+            scenario_model.run_model()
+
+            # Produce scenario outputs
+            scenario_pp = copy.deepcopy(self.post_processing)
+            scenario_pp.model = scenario_model
+            scenario_pp.generated_outputs = {}
+            ########### TIMES
+            scenario_pp.generate_outputs()
+            scenario_pp.derived_outputs = scenario_model.derived_outputs if hasattr(self.running_model, "derived_outputs") else {}
+
+            # Store scenario outputs into database
+            out_df = pd.DataFrame(
+                scenario_model.outputs, columns=scenario_model.compartment_names
+            )
+            # derived_output_df = pd.DataFrame.from_dict(scenario_model.derived_outputs)
+            # store_tb_database(
+            #     derived_output_df,
+            #     table_name="derived_outputs",
+            #     run_idx=self.iter_num,
+            #     scenario=scenario_idx,
+            #     database_name=self.output_db_path,
+            #     append=True,
+            # )
+            store_tb_database(
+                out_df,
+                run_idx=self.iter_num,
+                scenario=scenario_idx,
+                times=scenario_model.times,
+                database_name=self.output_db_path,
+                append=True,
+            )
 
     def loglikelihood(self, params):
         """
@@ -331,6 +389,13 @@ class Calibration:
                     append=True,
                 )
 
+                # Run intervention scenarios if accepted run
+                if accept:
+                    print("Running extra scenarios")
+                    self.run_extra_scenarios_with_params(proposed_params)
+
+                self.iter_num += 1
+
                 print(str(i_run + 1) + " MCMC iterations completed.")
 
                 if available_time is not None:
@@ -433,25 +498,33 @@ class Calibration:
         :param prev_params: last accepted parameter values as a list ordered using the order of self.priors
         :return: a new list of parameter values
         """
-        # prev_params assumed to be centre of the prior range for first step
+        # prev_params assumed to be the manually calibrated parameters for first step
         if prev_params is None:
             prev_params = []
             for prior_dict in self.priors:
-                prev_params.append(
-                    0.5 * (prior_dict["distri_params"][0] + prior_dict["distri_params"][1])
-                )
+                prev_params.append(self.model_parameters[prior_dict['param_name']])
 
         new_params = []
 
         for i, prior_dict in enumerate(self.priors):
+            # Work out bounds for acceptable values, using the support of the prior distribution
+            if prior_dict["distribution"] == "uniform":
+                lower_bound = prior_dict["distri_params"][0]
+                upper_bound = prior_dict["distri_params"][1]
+            elif prior_dict["distribution"] in ["lognormal", "gamma", "weibull", "exponential"]:
+                lower_bound = 0.
+                upper_bound = float("inf")
+            else:
+                print("Warning: prior distribution bounds detection currently not handled")
             sample = (
-                prior_dict["distri_params"][0] - 10.0
+                lower_bound - 10.0
             )  # deliberately initialise out of parameter scope
-            while not prior_dict["distri_params"][0] <= sample <= prior_dict["distri_params"][1]:
+            while not lower_bound <= sample <= upper_bound:
                 sample = np.random.normal(
                     loc=prev_params[i], scale=prior_dict["jumping_sd"], size=1
                 )[0]
             new_params.append(sample)
+
         return new_params
 
     def logprior(self, params):

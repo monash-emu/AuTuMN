@@ -1,11 +1,16 @@
 from autumn.calibration import Calibration
 
-from applications.covid_19.covid_model import build_covid_model
+from applications.covid_19.covid_model import build_covid_model, PARAMS_PATH
 
 import pandas as pd
 import os
 from numpy import diff, linspace
+import yaml
 
+with open(PARAMS_PATH, 'r') as yaml_file:
+        params = yaml.safe_load(yaml_file)
+scenario_params = params['scenarios']
+sc_start_time = params['scenario_start']
 
 def run_calibration_chain(max_seconds: int, run_id: int):
     """
@@ -16,7 +21,8 @@ def run_calibration_chain(max_seconds: int, run_id: int):
     """
     print(f"Preparing to run covid model calibration for run {run_id}")
     calib = Calibration(
-        "covid", build_covid_model, PAR_PRIORS, TARGET_OUTPUTS, MULTIPLIERS, run_id
+        "covid", build_covid_model, PAR_PRIORS, TARGET_OUTPUTS, MULTIPLIERS, run_id,
+        scenario_params, sc_start_time, model_parameters=params['default']
     )
     print("Starting calibration.")
     calib.run_fitting_algorithm(
@@ -69,8 +75,6 @@ TARGET_OUTPUTS = [
         "values": n_daily_cases[-15:]
     }
 ]
-
-print(TARGET_OUTPUTS)
 
 MULTIPLIERS = {
 

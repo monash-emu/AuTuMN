@@ -1,12 +1,15 @@
 ---
-# Parameters used to build the Marshall Island model.
+# Parameters used to build a general model of COVID-19 disease for application to Australia or internationally
 default:
 
-  # Model structure parameters
+  # MODEL STRUCTURE PARAMETERS
+
+  # Number of times each compartment representing active infection (i.e. not S and not R) are repeated
   n_compartment_repeats: 2
 
-  # Age-specific infectiousness progression adjustments - in ten year brackets
-  age_infect_progression:
+  # AGE-STRATIFIED PARAMETERS
+  # Infectiousness progression adjustments - in ten year brackets
+  symptomatic_props:
     - 0.09
     - 0.33
     - 0.67
@@ -43,18 +46,6 @@ default:
     - 0.274
     - 0.432
     - 0.709
-
-  # Old age-specific CFR - in five year brackets
-#  age_cfr:
-#    - 0.00019
-#    - 0.00046
-#    - 0.0019
-#    - 0.0038
-#    - 0.0082
-#    - 0.027
-#    - 0.094
-#    - 0.2
-#    - 0.36
   age_cfr:
     - 0.00002
     - 0.00006

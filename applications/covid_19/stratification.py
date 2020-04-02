@@ -76,8 +76,8 @@ def stratify_by_infectiousness(_covid_model, model_parameters, compartments):
         repeat_list_elements_average_last_two(model_parameters['age_cfr'])
 
     # Repeat all the 5-year age-specific infectiousness proportions, again with adjustment for data length as needed
-    infectious_props = \
-        repeat_list_elements(2, model_parameters['age_infect_progression'])
+    symptomatic_props = \
+        repeat_list_elements(2, model_parameters['symptomatic_props'])
     hospital_props = \
         repeat_list_elements_average_last_two(model_parameters['hospital_props'])
     icu_props = \
@@ -85,7 +85,7 @@ def stratify_by_infectiousness(_covid_model, model_parameters, compartments):
 
     # Find the absolute progression proportions from the relative splits
     abs_props = \
-        split_prop_into_two_subprops([1.] * 16, '', infectious_props, 'infectious')
+        split_prop_into_two_subprops([1.] * 16, '', symptomatic_props, 'infectious')
     abs_props.update(
         split_prop_into_two_subprops(abs_props['infectious'], 'infectious', hospital_props, 'hospital')
     )

@@ -2,6 +2,7 @@ import pandas as pd
 import os
 from numpy import diff
 
+
 def get_all_jh_countries():
     """
     Determine the list of available countries from the John Hopkins database

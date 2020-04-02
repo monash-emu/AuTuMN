@@ -11,6 +11,11 @@ default:
   stratify_by:
     - agegroup
     - infectiousness
+  infectious_strata:
+    - non_infectious
+    - infectious_non_hospital
+    - hospital_non_icu
+    - icu
   agegroup_breaks:
     - 80
     - 5

@@ -59,15 +59,12 @@ def stratify_by_infectiousness(_covid_model, model_parameters, compartments):
     actually infectious)
     """
 
-    # New strata names
-    strata_to_implement = \
-        ['non_infectious', 'infectious_non_hospital', 'hospital_non_icu', 'icu']
-
+    strata_to_implement = model_parameters['infectious_strata']
     model_parameters['all_stratifications']['infectiousness'] = strata_to_implement
 
     # Find the compartments that will need to be stratified under this stratification
     compartments_to_split = \
-        [i_comp for i_comp in compartments if i_comp.startswith(Compartment.INFECTIOUS)]
+        [comp for comp in compartments if comp.startswith(Compartment.INFECTIOUS)]
 
     # Repeat the 5-year age-specific CFRs for all but the top age bracket, and average the last two for the last one
     infection_fatality_rates = \

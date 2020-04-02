@@ -7,8 +7,17 @@ default:
   # Number of times each compartment representing active infection (i.e. not S and not R) are repeated
   n_compartment_repeats: 2
 
+  # Stratification-related requests
+  stratify_by:
+    - agegroup
+    - infectiousness
+  agegroup_breaks:
+    - 80
+    - 5
+
   # AGE-STRATIFIED PARAMETERS
-  # Infectiousness progression adjustments - in ten year brackets
+
+  # Infectiousness progression adjustments - in ten year brackets that need to adapated to model strata later
   symptomatic_props:
     - 0.09
     - 0.33
@@ -18,14 +27,8 @@ default:
     - 0.51
     - 0.5
     - 0.46
-# Ferguson infect proportion 40-50%
-# Infection fatality rate of 0.9% and 4.4% infections hospitalised
-# 30% hospitalised need ICU
-# 50% ICU cases die (supplemented by non-critical care deaths to reach age-specific IFR)
-# 8 days in hospital if no ICU
-# 16 days in hospital if ICU needed
-# Ferguson table 1 gives age-specific hospital|symptoms, ICU|hospital, IFR
 
+  # Proportion hospitalised
   hospital_props:
     - 0.001
     - 0.003
@@ -36,6 +39,8 @@ default:
     - 0.166
     - 0.243
     - 0.273
+
+  # Proportion admitted to ICU
   icu_props:
     - 0.05
     - 0.05
@@ -46,7 +51,9 @@ default:
     - 0.274
     - 0.432
     - 0.709
-  age_cfr:
+
+  # Infection fatality proportions
+  infection_fatality_props:
     - 0.00002
     - 0.00006
     - 0.0003
@@ -57,28 +64,24 @@ default:
     - 0.051
     - 0.093
 
-# Ruiyun et al. in Science - 0.55
+  # NON-AGE-STRATIFIED PARAMETERS
+
+  # Ruiyun et al. in Science - 0.55
   low_infect_multiplier: 0.55
 
   # Add non-infectious
   add_non_infectious: True
 
-  # Country for mixing matrix
+  # Country to extract Prem mixing matrix from
   country: Australia
 
-  iso3: AUS  # should eventually use only one of country or iso3
+  # Country to extract stratified population data from - should eventually use only one of country or iso3
+  iso3: AUS
 
   # Initial conditions
   infectious_seed: 100
 
-  # Stratifications to implement - comment out/remove as required to enable model to run more quickly
-  stratify_by:
-    - agegroup
-    - infectiousness
-  all_stratifications: {}
-  agegroup_breaks:
-    - 80
-    - 5
+  # Running time-related - for COVID-19 model, all times are assumed to be in days and reference time is 1st Jan 2020
   start_time: 51.
   end_time: 250.
   time_step: 1
@@ -93,21 +96,12 @@ default:
   universal_death_rate: 0.
   infect_death: 0.
 
-  # Ferguson parameters
-#  exposed_period: 5.1
-#  presympt_period: 0.5
-#  infectious_period: unclear, differs by symptoms
-#  high_infect_multiplier: 1.5
-#  low_infect_multiplier: 1.
-
-  incidence_stratification:
-    - agegroup
-    - infectiousness
+# SCENARIO-RELATED PARAMETERS
 
 # When the scenarios start running
 scenario_start: 85
 
-# N.B: Scenario keys have to be integers 1-N, or it'll break downstream dashboards.
+# N.B: Scenario keys have to be sequential integers from one, or won't be compatible with dashboards
 scenarios: {}
 #  1:
 #    mixing:

@@ -70,8 +70,8 @@ def stratify_by_infectiousness(_covid_model, model_parameters, compartments):
         [i_comp for i_comp in compartments if i_comp.startswith(Compartment.INFECTIOUS)]
 
     # Repeat the 5-year age-specific CFRs for all but the top age bracket, and average the last two for the last one
-    case_fatality_rates = \
-        repeat_list_elements_average_last_two(model_parameters['age_cfr'])
+    infection_fatality_rates = \
+        repeat_list_elements_average_last_two(model_parameters['infection_fatality_props'])
 
     # Repeat all the 5-year age-specific infectiousness proportions, again with adjustment for data length as needed
     symptomatic_props = \
@@ -97,7 +97,7 @@ def stratify_by_infectiousness(_covid_model, model_parameters, compartments):
 
     # CFR that then needs to be contributed by non-ICU hospital deaths - check no negative values and replace as needed
     non_icu_abs_death_props = \
-        [cfr - icu_abs_prop for cfr, icu_abs_prop in zip(case_fatality_rates, icu_abs_death_props)]
+        [cfr - icu_abs_prop for cfr, icu_abs_prop in zip(infection_fatality_rates, icu_abs_death_props)]
     for i_prop, prop in enumerate(non_icu_abs_death_props):
         if prop < 0.:
             print('Warning, deaths in ICU greater than absolute CFR, setting non-ICU deaths for this age group to zero')

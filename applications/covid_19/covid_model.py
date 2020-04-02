@@ -181,7 +181,7 @@ def build_covid_model(update_params={}):
     # Add fully stratified incidence to output_connections
     output_connections.update(
         create_fully_stratified_incidence_covid(
-            model_parameters['incidence_stratification'],
+            model_parameters['stratify_by'],
             model_parameters['all_stratifications'],
             model_parameters['n_compartment_repeats']
         )

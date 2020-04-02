@@ -335,3 +335,24 @@ def get_pop_mortality_functions(
     }
 
 
+def get_iso3_from_country_name(input_database, country_name):
+    """
+    Return the iso3 code matching with a given country name using the bcg table
+    """
+    iso3_list = input_database.db_query(
+        "bcg", column='ISO_code', conditions=["Cname='" + country_name + "'"]
+    )["ISO_code"].tolist()
+
+    return None if len(iso3_list) == 0 else iso3_list[0]
+
+
+def get_country_name_from_iso3(input_database, iso3):
+    """
+    Return the country name matching with a given iso3 code using the bcg table
+    """
+    country_list = input_database.db_query(
+        "bcg", column='Cname', conditions=["ISO_code='" + iso3 + "'"]
+    )["Cname"].tolist()
+
+    return None if len(country_list) == 0 else country_list[0]
+

@@ -30,6 +30,24 @@ _logger.setLevel(logging.DEBUG)
 theano.config.optimizer = "None"
 
 
+def get_parameter_bounds_from_priors(prior_dict):
+    """
+    Determine lower and upper bounds of a parameter by analysing its assigned prior distribution
+    :param prior_dict: dictionary defining a parameter's prior distribution
+    :return: lower_bound, upper_bound
+    """
+    if prior_dict["distribution"] == "uniform":
+        lower_bound = prior_dict["distri_params"][0]
+        upper_bound = prior_dict["distri_params"][1]
+    elif prior_dict["distribution"] in ["lognormal", "gamma", "weibull", "exponential"]:
+        lower_bound = 0.
+        upper_bound = float("inf")
+    else:
+        raise ValueError('prior distribution bounds detection currently not handled.')
+
+    return lower_bound, upper_bound
+
+
 class Calibration:
     """
     this class handles model calibration using an MCMC algorithm if sampling from the posterior distribution is
@@ -243,6 +261,7 @@ class Calibration:
                     append=True,
                 )
             self.evaluated_params_ll.append((copy.copy(params), copy.copy(ll)))
+
         return ll
 
     def format_data_as_array(self):
@@ -473,20 +492,27 @@ class Calibration:
             upper_bounds = []
             x0 = []
             for prior in self.priors:
-                lower_bounds.append(prior["distri_params"][0])
-                upper_bounds.append(prior["distri_params"][1])
-                x0.append(0.5 * (prior["distri_params"][0] + prior["distri_params"][1]))
+                lower_bound, upper_bound = get_parameter_bounds_from_priors(prior)
+                lower_bounds.append(lower_bound)
+                upper_bounds.append(upper_bound)
+                if not any([math.isinf(lower_bound), math.isinf(upper_bound)]):
+                    x0.append(0.5 * (lower_bound + upper_bound))
+                elif all([math.isinf(lower_bound), math.isinf(upper_bound)]):
+                    x0.append(0.)
+                elif math.isinf(lower_bound):
+                    x0.append(upper_bound)
+                else:
+                    x0.append(lower_bound)
             bounds = Bounds(lower_bounds, upper_bounds)
 
             sol = minimize(
                 self.loglikelihood,
                 x0,
-                bounds=bounds,
-                options={"eps": 0.1, "ftol": 0.1},
-                method="SLSQP",
+                bounds=bounds
             )
             self.mle_estimates = sol.x
-
+            print("Best solution:")
+            print(self.mle_estimates)
         else:
             ValueError(
                 "requested run mode is not supported. Must be one of ['pymc_mcmc', 'lme', 'autumn_mcmc']"
@@ -508,14 +534,7 @@ class Calibration:
 
         for i, prior_dict in enumerate(self.priors):
             # Work out bounds for acceptable values, using the support of the prior distribution
-            if prior_dict["distribution"] == "uniform":
-                lower_bound = prior_dict["distri_params"][0]
-                upper_bound = prior_dict["distri_params"][1]
-            elif prior_dict["distribution"] in ["lognormal", "gamma", "weibull", "exponential"]:
-                lower_bound = 0.
-                upper_bound = float("inf")
-            else:
-                print("Warning: prior distribution bounds detection currently not handled")
+            lower_bound, upper_bound = get_parameter_bounds_from_priors(prior_dict)
             sample = (
                 lower_bound - 10.0
             )  # deliberately initialise out of parameter scope

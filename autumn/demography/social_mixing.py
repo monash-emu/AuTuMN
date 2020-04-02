@@ -122,3 +122,19 @@ def change_mixing_matrix_for_scenario(model, scenario_requests, i_scenario):
                 scenario_requests['mixing'][location]
             )
     return model
+
+
+def get_all_prem_countries():
+    """
+    Return the list of countries for which Prem et al provide contact matrices
+    """
+    sheet_names = []
+    for file_number in ['1', '2']:
+        filepath = os.path.join(
+                os.path.abspath(os.path.dirname(__file__)),
+                'social_mixing_data',
+                'MUestimates_all_locations_' + file_number + '.xlsx'
+            )
+        xl = pd.ExcelFile(filepath)
+        sheet_names += xl.sheet_names
+    return sheet_names

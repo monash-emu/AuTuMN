@@ -27,7 +27,7 @@ def run_calibration_chain(max_seconds: int, run_id: int):
     )
     print("Starting calibration.")
     calib.run_fitting_algorithm(
-        run_mode="autumn_mcmc",
+        run_mode="lsm",
         n_iterations=100000,
         n_burned=0,
         n_chains=1,
@@ -37,8 +37,8 @@ def run_calibration_chain(max_seconds: int, run_id: int):
 
 
 PAR_PRIORS = [
-    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.3, 1.]},
-    {"param_name": "start_time", "distribution": "uniform", "distri_params": [0., 65.]}
+    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [.3, .6]},
+    # {"param_name": "start_time", "distribution": "uniform", "distri_params": [0., 65.]}
 ]
 
 

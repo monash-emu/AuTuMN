@@ -106,7 +106,7 @@ def run_model(application):
 
     with Timer('Running model scenarios'):
         models = run_multi_scenario(
-            scenario_params, params['scenario_start'], model_function, run_kwargs=SOLVER_KWARGS,
+            scenario_params, params['scenario_start'], model_function, params['default'], run_kwargs=SOLVER_KWARGS
         )
 
     # Post-process and save model outputs

@@ -180,7 +180,7 @@ class Calibration:
             # Run scenario
             scenario_model = initialise_scenario_run(self.running_model, updated_scenario_params,
                                                      self.model_builder)
-            scenario_model = change_mixing_matrix_for_scenario(scenario_model, updated_scenario_params, scenario_idx)
+            scenario_model = change_mixing_matrix_for_scenario(scenario_model, updated_scenario_params)
             scenario_model.run_model()
 
             # Produce scenario outputs

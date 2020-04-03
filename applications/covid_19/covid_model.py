@@ -1,5 +1,6 @@
 import os
 import yaml
+import numpy as np
 from summer_py.summer_model import StratifiedModel
 from summer_py.summer_model.utils.base_compartments import replicate_compartment
 
@@ -14,7 +15,7 @@ from autumn.disease_categories.emerging_infections.flows import \
 from applications.covid_19.stratification import stratify_by_age, stratify_by_clinical
 from applications.covid_19.covid_outputs import find_incidence_outputs, create_fully_stratified_incidence_covid, \
     calculate_notifications_covid
-from autumn.demography.social_mixing import load_specific_prem_sheet
+from autumn.demography.social_mixing import load_specific_prem_sheet, load_all_prem_types
 from autumn.demography.population import get_population_size
 from autumn.db import Database
 

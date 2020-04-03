@@ -31,7 +31,7 @@ def test_run_multi_scenario(mock_init_scenario_run):
         1: {"start_time": 1992, "contact_rate": 11},
         2: {"start_time": 1993, "contact_rate": 12},
     }
-    models = run_multi_scenario(param_lookup, start_time, mock_model_builder)
+    models = run_multi_scenario(param_lookup, start_time, mock_model_builder, {'country': 'Australia'})
 
     # Ensure models were returned
     assert models == [mock_baseline_model, mock_scenario_1_model, mock_scenario_2_model]

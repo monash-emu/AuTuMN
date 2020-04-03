@@ -118,13 +118,15 @@ default:
 # SCENARIO-RELATED PARAMETERS
 
 # When the scenarios start running
+  school_closure: 150.
+  school_reopening: 175.
 scenario_start: 85
 
 # N.B: Scenario keys have to be sequential integers from one, or won't be compatible with dashboards
-scenarios: {}
-#  1:
-#    mixing:
-#      school: -1.
+scenarios:
+  1:
+    mixing:
+      school: -1.
 #  2:
 #    mixing:
 #      school: -1.

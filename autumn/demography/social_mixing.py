@@ -16,6 +16,21 @@ def load_specific_prem_sheet(file_type, sheet_name):
     return np.array(pd.read_excel(file_dir, sheet_name=sheet_name))
 
 
+def load_all_prem_types(country, sheet_group):
+    """
+    Collate the matrices of different location types for a given country
+
+    :param country: str
+        Name of the requested country
+    :param sheet_group: int
+        Either 1 or 2 depending on the country's position in the alphabet
+    """
+    matrices = {}
+    for sheet_type in ['all_locations', 'home', 'other_locations', 'school', 'work']:
+        matrices[sheet_type] = load_specific_prem_sheet(sheet_type + '_' + str(sheet_group), country)
+    return matrices
+
+
 def load_all_prem_sheets(file_type):
     """
     Load all the mixing matrices (i.e. sheets) from a specified excel file
@@ -108,19 +123,29 @@ def load_age_calibration():
     return pd.Series(y, index=age_breakpoints)
 
 
-def change_mixing_matrix_for_scenario(model, scenario_requests, i_scenario):
+def change_mixing_matrix_for_scenario(model, scenario_requests, default_params):
     """
-    Dummy function to switch the mixing matrix over to that of a different country at the point that the scenario
-    commences
+    Change the mixing matrix to a dynamic version to reflect interventions
     """
-    model.mixing_matrix = load_specific_prem_sheet('all_locations_1', 'Australia')
-    if 'mixing' in scenario_requests:
-        for location in scenario_requests['mixing']:
-            model.mixing_matrix = np.add(
-                model.mixing_matrix,
-                load_specific_prem_sheet(location + '_1', 'Australia') *
-                scenario_requests['mixing'][location]
-            )
+    mixing_matrix_components = load_all_prem_types(default_params['country'], 1)
+
+    def mixing_matrix_function(time):
+        mixing_matrix = mixing_matrix_components['all_locations']
+        for location in \
+                [loc for loc in ['home', 'other_locations', 'school', 'work'] if loc in scenario_requests['mixing']]:
+            school_closure_change = \
+                np.piecewise(
+                    time,
+                    [time < default_params['school_closure'],
+                     default_params['school_closure'] <= time < default_params['school_reopening'],
+                     default_params['school_reopening'] <= time],
+                    [0., scenario_requests['mixing'][location], 0.]
+                )
+            mixing_matrix = np.add(mixing_matrix, school_closure_change * mixing_matrix_components[location])
+        return mixing_matrix
+
+    model.find_dynamic_mixing_matrix = mixing_matrix_function
+    model.dynamic_mixing_matrix = True
     return model
 
 

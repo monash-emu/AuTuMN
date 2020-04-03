@@ -225,3 +225,18 @@ def find_rates_and_complements_from_ifr(cfrs, n_compartment_repeats, overall_rat
         i_overall_rate - i_death_rate for i_overall_rate, i_death_rate in zip(overall_rates, death_rates)
     ]
     return death_rates, complements
+
+
+def find_first_index_reaching_cumulative_sum(a_list, threshold):
+    """
+    Returns the index at which the cumulative sum of a list has reached a given value
+    :param a_list: list object containing floats or integers
+    :param threshold: a float or integer
+    :return: an index (integer)
+    """
+    cumsum_list = numpy.cumsum(a_list).tolist()
+
+    if cumsum_list[-1] < threshold:
+        raise ValueError("The cumulative sum of the entire list is smaller than the threshold")
+
+    return next(i for i, val in enumerate(cumsum_list) if val >= threshold)

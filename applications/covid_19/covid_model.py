@@ -11,7 +11,7 @@ from autumn.disease_categories.emerging_infections.flows import \
     add_infection_flows, add_transition_flows, add_recovery_flows, add_sequential_compartment_flows, \
     multiply_flow_value_for_multiple_compartments, \
     add_infection_death_flows
-from applications.covid_19.stratification import stratify_by_age, stratify_by_infectiousness
+from applications.covid_19.stratification import stratify_by_age, stratify_by_clinical
 from applications.covid_19.covid_outputs import find_incidence_outputs, create_fully_stratified_incidence_covid, \
     calculate_notifications_covid
 from autumn.demography.social_mixing import load_specific_prem_sheet
@@ -168,9 +168,9 @@ def build_covid_model(update_params={}):
             )
 
     # Stratify infectious compartment as high or low infectiousness as requested
-    if 'infectiousness' in model_parameters['stratify_by'] and model_parameters['infectious_strata']:
+    if 'clinical' in model_parameters['stratify_by'] and model_parameters['clinical_strata']:
         _covid_model, model_parameters = \
-            stratify_by_infectiousness(
+            stratify_by_clinical(
                 _covid_model,
                 model_parameters,
                 compartments

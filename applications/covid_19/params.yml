@@ -10,8 +10,8 @@ default:
   # Stratification-related requests
   stratify_by:
     - agegroup
-    - infectiousness
-  infectious_strata:
+    - clinical
+  clinical_strata:
 #    - non_sympt
 #    - sympt
 

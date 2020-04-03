@@ -53,14 +53,14 @@ def repeat_list_elements_average_last_two(raw_props):
     return repeated_props
 
 
-def stratify_by_infectiousness(_covid_model, model_parameters, compartments):
+def stratify_by_clinical(_covid_model, model_parameters, compartments):
     """
     Stratify the infectious compartments of the covid model (not including the presymptomatic compartments, which are
     actually infectious)
     """
 
-    strata_to_implement = model_parameters['infectious_strata']
-    model_parameters['all_stratifications']['infectiousness'] = strata_to_implement
+    strata_to_implement = model_parameters['clinical_strata']
+    model_parameters['all_stratifications']['clinical'] = strata_to_implement
 
     # Find the compartments that will need to be stratified under this stratification
     compartments_to_split = \
@@ -70,7 +70,7 @@ def stratify_by_infectiousness(_covid_model, model_parameters, compartments):
     infection_fatality_rates = \
         repeat_list_elements_average_last_two(model_parameters['infection_fatality_props'])
 
-    # Repeat all the 5-year age-specific infectiousness proportions, again with adjustment for data length as needed
+    # Repeat all the 5-year age-specific clinical proportions, again with adjustment for data length as needed
     symptomatic_props = \
         repeat_list_elements(2, model_parameters['symptomatic_props'])
     hospital_props = \
@@ -120,43 +120,24 @@ def stratify_by_infectiousness(_covid_model, model_parameters, compartments):
         )
 
     # Progression rates into the infectious compartment(s)
-    if len(model_parameters['infectious_strata']) < 2:
-        splits = [
-            [1.] * len(model_parameters['all_stratifications']['agegroup'])
-        ]
-    elif len(model_parameters['infectious_strata']) == 2:
-        splits = [
-            abs_props['non_sympt'],
-            abs_props['sympt']
-        ]
-    elif len(model_parameters['infectious_strata']) == 3:
-        splits = [
-            abs_props['non_sympt'],
-            abs_props['sympt_non_hospital'],
-            abs_props['hospital']
-        ]
-    else:
-        splits = [
-            abs_props['non_sympt'],
-            abs_props['sympt_non_hospital'],
-            abs_props['hospital_non_icu'],
-            abs_props['icu']
-        ]
-
     stratification_adjustments = \
         adjust_upstream_stratified_parameter(
             'to_infectious',
             strata_to_implement,
             'agegroup',
             model_parameters['all_stratifications']['agegroup'],
-            splits
+            [[1.] * len(model_parameters['all_stratifications']['agegroup'])] if \
+                len(model_parameters['clinical_strata']) == 1 else \
+                [abs_props[stratum] for stratum in model_parameters['clinical_strata']]
         )
 
-    # Non-death progression between infectious compartments towards the recovered compartment
+    # Death and non-death progression between infectious compartments towards the recovered compartment
     if len(strata_to_implement) > 2:
         within_infectious_overwrites = [hospital_within_infectious_rates]
+        infect_death_overwrites = [hospital_death_rates]
         if len(strata_to_implement) == 4:
             within_infectious_overwrites += [icu_within_infectious_rates]
+            infect_death_overwrites += [icu_death_rates]
         stratification_adjustments.update(
             adjust_upstream_stratified_parameter(
                 'within_infectious',
@@ -167,12 +148,6 @@ def stratify_by_infectiousness(_covid_model, model_parameters, compartments):
                 overwrite=True
             )
         )
-
-    # Death rates to apply to the high infectious category
-    if len(strata_to_implement) > 2:
-        infect_death_overwrites = [hospital_death_rates]
-        if len(strata_to_implement) == 4:
-            infect_death_overwrites += [icu_death_rates]
         stratification_adjustments.update(
             adjust_upstream_stratified_parameter(
                 'infect_death',
@@ -184,13 +159,13 @@ def stratify_by_infectiousness(_covid_model, model_parameters, compartments):
             )
         )
 
-    # Determine infectiousness of each group
+    # Determine infectiousness of each clinical group
     strata_infectiousness = {i_stratum: 1. for i_stratum in strata_to_implement}
     strata_infectiousness['non_sympt'] = model_parameters['low_infect_multiplier']
 
     # Stratify the model with the SUMMER stratification function
     _covid_model.stratify(
-        'infectiousness',
+        'clinical',
         strata_to_implement,
         compartments_to_split,
         infectiousness_adjustments=strata_infectiousness,

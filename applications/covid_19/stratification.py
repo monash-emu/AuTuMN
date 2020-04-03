@@ -160,8 +160,10 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
         )
 
     # Determine infectiousness of each clinical group
-    strata_infectiousness = {i_stratum: 1. for i_stratum in strata_to_implement}
-    strata_infectiousness['non_sympt'] = model_parameters['low_infect_multiplier']
+    strata_infectiousness = {}
+    for stratum in strata_to_implement:
+        if stratum + '_infect_multiplier' in model_parameters:
+            strata_infectiousness[stratum] = model_parameters[stratum + '_infect_multiplier']
 
     # Stratify the model with the SUMMER stratification function
     _covid_model.stratify(

@@ -78,8 +78,8 @@ default:
 
   # NON-AGE-STRATIFIED PARAMETERS
 
-  # Ruiyun et al. in Science - 0.55
-  low_infect_multiplier: 0.55
+  # Ruiyun et al. in Science - 0.55 (can adjust the infectiousness of other groups in an equivalent way)
+  non_sympt_infect_multiplier: 0.55
 
   # Add non-infectious
   add_non_infectious: True

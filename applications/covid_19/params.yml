@@ -78,8 +78,11 @@ default:
 
   # NON-AGE-STRATIFIED PARAMETERS
 
-  # Ruiyun et al. in Science - 0.55 (can adjust the infectiousness of other groups in an equivalent way)
+  # Adjust the infectiousness of clinical strata - note that the parameter naming will change with the number of strata
   non_sympt_infect_multiplier: 0.55
+  hospital_infect_multiplier: 0.2
+  hospital_non_icu_infect_multiplier: 0.2
+  icu_infect_multiplier: 0.2
 
   # Add non-infectious
   add_non_infectious: True
@@ -95,11 +98,11 @@ default:
 
   # Running time-related - for COVID-19 model, all times are assumed to be in days and reference time is 1st Jan 2020
   start_time: 51.
-  end_time: 100.
+  end_time: 250.
   time_step: 1
 
   # Base model definition
-  contact_rate: 0.40977 # 0.397082
+  contact_rate: 0.397082
   exposed_period: 3.2
   presympt_period: 0.5
   infectious_period: 7.68

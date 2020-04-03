@@ -168,7 +168,7 @@ def build_covid_model(update_params={}):
             )
 
     # Stratify infectious compartment as high or low infectiousness as requested
-    if 'infectiousness' in model_parameters['stratify_by']:
+    if 'infectiousness' in model_parameters['stratify_by'] and model_parameters['infectious_strata']:
         _covid_model, model_parameters = \
             stratify_by_infectiousness(
                 _covid_model,

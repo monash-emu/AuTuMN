@@ -1,4 +1,4 @@
-from autumn.tool_kit.utils import split_parameter, find_rates_and_complements_from_cfr
+from autumn.tool_kit.utils import split_parameter, find_rates_and_complements_from_ifr
 from autumn.demography.ageing import add_agegroup_breaks
 from autumn.tool_kit.utils import repeat_list_elements
 from autumn.constants import Compartment
@@ -80,89 +80,113 @@ def stratify_by_infectiousness(_covid_model, model_parameters, compartments):
 
     # Find the absolute progression proportions from the relative splits
     abs_props = \
-        split_prop_into_two_subprops([1.] * 16, '', symptomatic_props, 'infectious')
+        split_prop_into_two_subprops([1.] * 16, '', symptomatic_props, 'sympt')
     abs_props.update(
-        split_prop_into_two_subprops(abs_props['infectious'], 'infectious', hospital_props, 'hospital')
+        split_prop_into_two_subprops(abs_props['sympt'], 'sympt', hospital_props, 'hospital')
     )
     abs_props.update(
         split_prop_into_two_subprops(abs_props['hospital'], 'hospital', icu_props, 'icu')
     )
 
     # CFR contributed by the ICU deaths, calculated as 50% of the absolute proportion admitted to ICU
-    icu_abs_death_props = \
+    abs_props['icu_death'] = \
         [i_prop * 0.5 for i_prop in abs_props['icu']]
 
-    # CFR that then needs to be contributed by non-ICU hospital deaths - check no negative values and replace as needed
-    non_icu_abs_death_props = \
-        [cfr - icu_abs_prop for cfr, icu_abs_prop in zip(infection_fatality_rates, icu_abs_death_props)]
-    for i_prop, prop in enumerate(non_icu_abs_death_props):
+    # IFR that then needs to be contributed by non-ICU hospital deaths - check no negative values and replace as needed
+    abs_props['non_icu_death'] = \
+        [ifr - icu_abs_prop for ifr, icu_abs_prop in zip(infection_fatality_rates, abs_props['icu_death'])]
+    for i_prop, prop in enumerate(abs_props['non_icu_death']):
         if prop < 0.:
             print('Warning, deaths in ICU greater than absolute CFR, setting non-ICU deaths for this age group to zero')
-            non_icu_abs_death_props[i_prop] = 0.
+            abs_props['non_icu_death'][i_prop] = 0.
 
     # CFR for hospitalised patients not in ICU
     prop_mort_hospital_non_icu = \
         [hosp_death_prop / hosp_prop for
-         hosp_death_prop, hosp_prop in zip(non_icu_abs_death_props, abs_props['hospital_non_icu'])]
+         hosp_death_prop, hosp_prop in zip(abs_props['non_icu_death'], abs_props['hospital_non_icu'])]
 
     # Calculate death rates and progression rates for hospitalised and ICU patients
     hospital_death_rates, hospital_within_infectious_rates = \
-        find_rates_and_complements_from_cfr(
+        find_rates_and_complements_from_ifr(
             prop_mort_hospital_non_icu,
             model_parameters['n_compartment_repeats'],
             [model_parameters['within_hospital']] * 16
         )
     icu_death_rates, icu_within_infectious_rates = \
-        find_rates_and_complements_from_cfr(
-            icu_abs_death_props,
+        find_rates_and_complements_from_ifr(
+            abs_props['icu_death'],
             model_parameters['n_compartment_repeats'],
             [model_parameters['within_icu']] * 16
         )
 
-    # Progression to high infectiousness, rather than low
-    infectious_adjustments = {}
-    infectious_adjustments.update(
+    # Progression rates into the infectious compartment(s)
+    if len(model_parameters['infectious_strata']) < 2:
+        splits = [
+            [1.] * len(model_parameters['all_stratifications']['agegroup'])
+        ]
+    elif len(model_parameters['infectious_strata']) == 2:
+        splits = [
+            abs_props['non_sympt'],
+            abs_props['sympt']
+        ]
+    elif len(model_parameters['infectious_strata']) == 3:
+        splits = [
+            abs_props['non_sympt'],
+            abs_props['sympt_non_hospital'],
+            abs_props['hospital']
+        ]
+    else:
+        splits = [
+            abs_props['non_sympt'],
+            abs_props['sympt_non_hospital'],
+            abs_props['hospital_non_icu'],
+            abs_props['icu']
+        ]
+
+    stratification_adjustments = \
         adjust_upstream_stratified_parameter(
             'to_infectious',
             strata_to_implement,
             'agegroup',
             model_parameters['all_stratifications']['agegroup'],
-            [abs_props['non_infectious'],
-             abs_props['infectious_non_hospital'],
-             abs_props['hospital_non_icu'],
-             abs_props['icu']]
+            splits
         )
-    )
 
     # Non-death progression between infectious compartments towards the recovered compartment
-    infectious_adjustments.update(
-        adjust_upstream_stratified_parameter(
-            'within_infectious',
-            strata_to_implement[2:],
-            'agegroup',
-            model_parameters['all_stratifications']['agegroup'],
-            [hospital_within_infectious_rates,
-             icu_within_infectious_rates],
-            overwrite=True
+    if len(strata_to_implement) > 2:
+        within_infectious_overwrites = [hospital_within_infectious_rates]
+        if len(strata_to_implement) == 4:
+            within_infectious_overwrites += [icu_within_infectious_rates]
+        stratification_adjustments.update(
+            adjust_upstream_stratified_parameter(
+                'within_infectious',
+                strata_to_implement[2:],
+                'agegroup',
+                model_parameters['all_stratifications']['agegroup'],
+                within_infectious_overwrites,
+                overwrite=True
+            )
         )
-    )
 
     # Death rates to apply to the high infectious category
-    infectious_adjustments.update(
-        adjust_upstream_stratified_parameter(
-            'infect_death',
-            strata_to_implement[2:],
-            'agegroup',
-            model_parameters['all_stratifications']['agegroup'],
-            [hospital_death_rates,
-             icu_death_rates],
-            overwrite=True
+    if len(strata_to_implement) > 2:
+        infect_death_overwrites = [hospital_death_rates]
+        if len(strata_to_implement) == 4:
+            infect_death_overwrites += [icu_death_rates]
+        stratification_adjustments.update(
+            adjust_upstream_stratified_parameter(
+                'infect_death',
+                strata_to_implement[2:],
+                'agegroup',
+                model_parameters['all_stratifications']['agegroup'],
+                infect_death_overwrites,
+                overwrite=True
+            )
         )
-    )
 
     # Determine infectiousness of each group
     strata_infectiousness = {i_stratum: 1. for i_stratum in strata_to_implement}
-    strata_infectiousness['non_infectious'] = model_parameters['low_infect_multiplier']
+    strata_infectiousness['non_sympt'] = model_parameters['low_infect_multiplier']
 
     # Stratify the model with the SUMMER stratification function
     _covid_model.stratify(
@@ -171,7 +195,7 @@ def stratify_by_infectiousness(_covid_model, model_parameters, compartments):
         compartments_to_split,
         infectiousness_adjustments=strata_infectiousness,
         requested_proportions={stratum: 1. / len(strata_to_implement) for stratum in strata_to_implement},
-        adjustment_requests=infectious_adjustments,
+        adjustment_requests=stratification_adjustments,
         verbose=False
     )
 

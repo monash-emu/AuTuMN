@@ -12,8 +12,15 @@ default:
     - agegroup
     - infectiousness
   infectious_strata:
-    - non_infectious
-    - infectious_non_hospital
+#    - non_sympt
+#    - sympt
+
+#    - non_sympt
+#    - sympt_non_hospital
+#    - hospital
+
+    - non_sympt
+    - sympt_non_hospital
     - hospital_non_icu
     - icu
   agegroup_breaks:

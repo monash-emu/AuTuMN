@@ -2,6 +2,8 @@ import pandas as pd
 import os
 from numpy import diff
 
+import matplotlib.pyplot as plt
+
 
 def get_all_jh_countries():
     """
@@ -43,4 +45,22 @@ def read_john_hopkins_data_from_csv(variable="confirmed", country='Australia'):
     # for confirmed and deaths, we want the daily counts and not the cumulative number
     if variable != 'recovered':
         data_series = diff(data_series)
-    return data_series
+
+    return data_series.tolist()
+
+
+def plot_jh_data(data):
+    """
+    Produce a graph for each country
+    :param data: a dictionary with the country names as keys and the data as values
+    """
+
+    i = 0
+    for country, n_cases in data.items():
+        i += 1
+        plt.figure(i)
+        x = list(range(len(n_cases)))
+        plt.bar(x, list(n_cases))
+        filename = "daily_cases_" + country + ".png"
+        path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'data_graphs', filename)
+        plt.savefig(path)

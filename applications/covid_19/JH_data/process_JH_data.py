@@ -54,6 +54,9 @@ def plot_jh_data(data):
     Produce a graph for each country
     :param data: a dictionary with the country names as keys and the data as values
     """
+    dir_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'data_graphs')
+    if not os.path.exists(dir_path):
+        os.mkdir(dir_path)
 
     i = 0
     for country, n_cases in data.items():
@@ -62,5 +65,5 @@ def plot_jh_data(data):
         x = list(range(len(n_cases)))
         plt.bar(x, list(n_cases))
         filename = "daily_cases_" + country + ".png"
-        path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'data_graphs', filename)
+        path = os.path.join(dir_path, filename)
         plt.savefig(path)

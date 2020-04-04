@@ -1,4 +1,7 @@
 ---
+# When to introduce the scenario interventions taking off from the baseline
+scenario_start: 85
+
 # Parameters used to build a general model of COVID-19 disease for application to Australia or internationally
 default:
 
@@ -115,12 +118,11 @@ default:
   # Compulsory parameter for all models, even though there are no population-wide deaths
   universal_death_rate: 0.
 
-# SCENARIO-RELATED PARAMETERS
-
-# When the scenarios start running
+  # Intervention-related parameters
   school_closure: 150.
   school_reopening: 175.
-scenario_start: 85
+  mixing:
+    school: -1.
 
 # N.B: Scenario keys have to be sequential integers from one, or won't be compatible with dashboards
 scenarios:

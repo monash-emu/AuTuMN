@@ -127,25 +127,26 @@ def change_mixing_matrix_for_scenario(model, scenario_requests, default_params):
     """
     Change the mixing matrix to a dynamic version to reflect interventions
     """
-    mixing_matrix_components = load_all_prem_types(default_params['country'], 1)
+    if 'mixing' in scenario_requests:
+        mixing_matrix_components = load_all_prem_types(default_params['country'], 1)
 
-    def mixing_matrix_function(time):
-        mixing_matrix = mixing_matrix_components['all_locations']
-        for location in \
-                [loc for loc in ['home', 'other_locations', 'school', 'work'] if loc in scenario_requests['mixing']]:
-            school_closure_change = \
-                np.piecewise(
-                    time,
-                    [time < default_params['school_closure'],
-                     default_params['school_closure'] <= time < default_params['school_reopening'],
-                     default_params['school_reopening'] <= time],
-                    [0., scenario_requests['mixing'][location], 0.]
-                )
-            mixing_matrix = np.add(mixing_matrix, school_closure_change * mixing_matrix_components[location])
-        return mixing_matrix
+        def mixing_matrix_function(time):
+            mixing_matrix = mixing_matrix_components['all_locations']
+            for location in \
+                    [loc for loc in ['home', 'other_locations', 'school', 'work'] if loc in scenario_requests['mixing']]:
+                school_closure_change = \
+                    np.piecewise(
+                        time,
+                        [time < default_params['school_closure'],
+                         default_params['school_closure'] <= time < default_params['school_reopening'],
+                         default_params['school_reopening'] <= time],
+                        [0., scenario_requests['mixing'][location], 0.]
+                    )
+                mixing_matrix = np.add(mixing_matrix, school_closure_change * mixing_matrix_components[location])
+            return mixing_matrix
 
-    model.find_dynamic_mixing_matrix = mixing_matrix_function
-    model.dynamic_mixing_matrix = True
+        model.find_dynamic_mixing_matrix = mixing_matrix_function
+        model.dynamic_mixing_matrix = True
     return model
 
 

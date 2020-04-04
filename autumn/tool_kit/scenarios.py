@@ -15,24 +15,27 @@ def run_multi_scenario(param_lookup, scenario_start_time, model_builder, default
         Values are dictionaries containing parameter updates
     :return: a list of model objects
     """
+
     # Run baseline model as scenario '0'
-    baseline_params = param_lookup[0] if 0 in param_lookup else {}
-    baseline_model = model_builder(baseline_params)
     with Timer("Running baseline scenario"):
+        baseline_params = param_lookup[0] if 0 in param_lookup else {}
+        baseline_model = model_builder(baseline_params)
+        baseline_model = change_mixing_matrix_for_scenario(baseline_model, default_params, default_params)
         baseline_model.run_model(**run_kwargs)
-    models = [baseline_model]
+        models = [baseline_model]
 
     # Run scenario models
-    for scenario_idx, scenario_params in param_lookup.items():
+    for i_scenario, scenario_params in param_lookup.items():
 
         # Ignore the baseline because it has already been run
-        if scenario_idx == 0:
+        if i_scenario == 0:
             continue
 
-        with Timer(f'Running scenario #{scenario_idx}'):
+        with Timer(f'Running scenario #{i_scenario}'):
             scenario_params['start_time'] = scenario_start_time
             scenario_model = initialise_scenario_run(baseline_model, scenario_params, model_builder)
-            scenario_model = change_mixing_matrix_for_scenario(scenario_model, scenario_params, default_params)
+            scenario_model = \
+                change_mixing_matrix_for_scenario(scenario_model, scenario_params, default_params)
             scenario_model.run_model(**run_kwargs)
             models.append(scenario_model)
 

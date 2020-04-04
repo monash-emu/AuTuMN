@@ -118,17 +118,24 @@ default:
   # Compulsory parameter for all models, even though there are no population-wide deaths
   universal_death_rate: 0.
 
-  # Intervention-related parameters
-  school_closure: 150.
-  school_reopening: 175.
-  mixing:
+scenarios: {}
+
+# Parameters relating to adjusting the mixing matrix to reflect interventions
+mixing:
+  0:
     school: -1.
+    school_closure: 150.
+    school_reopening: 175.
+  1:
+    school: -1.
+    school_closure: 150.
+    school_reopening: 175.
 
 # N.B: Scenario keys have to be sequential integers from one, or won't be compatible with dashboards
-scenarios:
-  1:
-    mixing:
-      school: -1.
+#scenarios:
+#  1:
+#    mixing:
+#      school: -1.
 #  2:
 #    mixing:
 #      school: -1.

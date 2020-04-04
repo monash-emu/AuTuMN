@@ -96,25 +96,24 @@ def load_population(file, sheet_name):
 
     population = pd.concat([population,over_75])
     
-    
     return population
 
 
 def load_age_calibration():
-    '''
+    """
     converts the age group specific cases to covid_19 agegroup
     0–9,    10–19,  20–29,  30–39,  40–49,  50–59,  60–69,  70–79,  80+
     2,      2,	    13,	    11,	    11,	    14,	    8,	    6,	    4
 
     Returns:
         a pandas series
-    '''
+    """
 
     age_breakpoints = [int(i_break) for i_break in list(range(0, 80, 5))]
         
     # split the case numbers into 5 year groups
-    case_numbers = [2,2,13,11,11,14,8,6,4]
-    case_numbers = [ each/2 for each in case_numbers for y in range(2) ]
+    case_numbers = [2, 2, 13, 11, 11, 14, 8, 6, 4]
+    case_numbers = [each/2 for each in case_numbers for y in range(2)]
 
     # create case numbers for 75+
     y = case_numbers[:-3]
@@ -123,29 +122,12 @@ def load_age_calibration():
     return pd.Series(y, index=age_breakpoints)
 
 
-def change_mixing_matrix_for_scenario(model, scenario_requests, default_params):
+def change_mixing_matrix_for_scenario(model, mixing_functions, i_scenario):
     """
-    Change the mixing matrix to a dynamic version to reflect interventions
+    Change the mixing matrix to a dynamic version to reflect interventions acting on the mixing matrix
     """
-    if 'mixing' in scenario_requests:
-        mixing_matrix_components = load_all_prem_types(default_params['country'], 1)
-
-        def mixing_matrix_function(time):
-            mixing_matrix = mixing_matrix_components['all_locations']
-            for location in \
-                    [loc for loc in ['home', 'other_locations', 'school', 'work'] if loc in scenario_requests['mixing']]:
-                school_closure_change = \
-                    np.piecewise(
-                        time,
-                        [time < default_params['school_closure'],
-                         default_params['school_closure'] <= time < default_params['school_reopening'],
-                         default_params['school_reopening'] <= time],
-                        [0., scenario_requests['mixing'][location], 0.]
-                    )
-                mixing_matrix = np.add(mixing_matrix, school_closure_change * mixing_matrix_components[location])
-            return mixing_matrix
-
-        model.find_dynamic_mixing_matrix = mixing_matrix_function
+    if mixing_functions and i_scenario in mixing_functions:
+        model.find_dynamic_mixing_matrix = mixing_functions[i_scenario]
         model.dynamic_mixing_matrix = True
     return model
 

@@ -3,9 +3,9 @@ Build and run any AuTuMN model, storing the outputs
 """
 
 import os
-from datetime import datetime, date
+import numpy as np
+from datetime import datetime
 import yaml
-import pandas as pd
 
 from summer_py.constants import IntegrationType
 import summer_py.post_processing as post_proc
@@ -21,6 +21,7 @@ from autumn.demography.ageing import add_agegroup_breaks
 
 from applications.marshall_islands.rmi_model import build_rmi_model
 from applications.covid_19.covid_model import build_covid_model
+from applications.covid_19.covid_matrices import build_covid_matrices
 
 from summer_py.summer_model.utils.flowchart import create_flowchart
 
@@ -64,9 +65,10 @@ def run_model(application):
 
     # Run the model
     if application == 'marshall_islands':
-        model_function = build_rmi_model
+        model_function, mixing_progression = build_rmi_model, None
     elif application == 'covid_19':
         model_function = build_covid_model
+        mixing_progression = build_covid_matrices(params['default']['country'], params['mixing'])
 
     output_options = collate_prevalence(output_options)
 
@@ -76,7 +78,8 @@ def run_model(application):
                 output_options,
                 output_options['output_combinations_to_collate'][i_combination][0],
                 output_options['output_combinations_to_collate'][i_combination][1],
-                params['default']['all_stratifications'][output_options['output_combinations_to_collate'][i_combination][1]]
+                params['default'][
+                    'all_stratifications'][output_options['output_combinations_to_collate'][i_combination][1]]
             )
 
     # Ensure project folder exists
@@ -94,7 +97,6 @@ def run_model(application):
 
     # Determine where to save model outputs
     output_db_path = os.path.join(output_directory, 'outputs.db')
-    # plot_path = os.path.join(output_directory, 'plots')
 
     # Save parameter requests and metadata
     record_parameter_request(output_directory, params)
@@ -106,7 +108,11 @@ def run_model(application):
 
     with Timer('Running model scenarios'):
         models = run_multi_scenario(
-            scenario_params, params['scenario_start'], model_function, params['default'], run_kwargs=SOLVER_KWARGS
+            scenario_params,
+            params['scenario_start'],
+            model_function,
+            mixing_progression,
+            run_kwargs=SOLVER_KWARGS
         )
 
     # Post-process and save model outputs

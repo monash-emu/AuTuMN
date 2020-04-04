@@ -150,7 +150,7 @@ def run_model():
     print(f"Starting Vietnam model...")
     start_time = time()
     scenario_params = {}
-    models = run_multi_scenario(scenario_params, 2020.0, _build_model)
+    models = run_multi_scenario(scenario_params, 2020., _build_model)
 
     # Automatically add combined incidence output
     for model in models:

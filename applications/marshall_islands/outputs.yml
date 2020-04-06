@@ -17,12 +17,17 @@ output_combinations_to_collate:
   -
     - 'infectious'
     - 'location'
+  -
+    - 'latent'
+    - 'location'
 
 output_combinations_to_plot_together:
   -
     - 'infectious'
     - 'location'
-
+  -
+    - 'latent'
+    - 'location'
 time_for_parameter_visualisation: 2010.
 
 parameter_stems_to_plot:
@@ -34,9 +39,9 @@ req_outputs:
 #  - prevXinfectiousXamongXlocation_majuro
 #  - prevXinfectiousXamongXlocation_ebeye
 #  - prevXinfectiousXamongXlocation_otherislands
-#  - prevXlatentXamongXlocation_majuro
-#  - prevXlatentXamongXlocation_ebeye
-#  - prevXlatentXamongXlocation_otherislands
+  - prevXlatentXamongXlocation_majuro
+  - prevXlatentXamongXlocation_ebeye
+  - prevXlatentXamongXlocation_otherislands
 #  - prevXsusceptibleXamong
 #  - prevXrecoveredXamong
 #  - prevXearly_latentXamong
@@ -48,20 +53,33 @@ functions_to_plot:
 
 req_multipliers:
   prevXinfectiousXstrain_mdrXamongXinfectious: 100.0
-  prevXinfectiousXstrain_mdrXamong: 0.00001  # not sure this one is correct
   prevXinfectiousXamong: 100000
+  prevXinfectiousXamongXlocation: 100000
+  prevXlatentXamong: 100
+  prevXlatentXamongXebeye: 100
+  prevXlatentXamongXmajuro: 100
+  prevXlatentXamongXotherislands: 100
+  prevXlatentXamongXlocation: 100
 
 targets_to_plot:
   prevXinfectiousXamongXlocation_ebeye:
-    times: [2017]
-    values: [[755.0]]
+    times: [2017.0]
+    values: [[755.0, 620.0, 894.0]]
   prevXlatentXamongXlocation_majuro:
-    times: [2016]
-    values: [[29.0]]
+    times: [2017.0]
+    values: [[28.5]]
   reported_majuro_prevalence:
-    times: [2018]
-    values: [[1578.]]
-
+    times: [2018.0]
+    values: [[1578.0]]
+  notificationsXlocation_majuro:
+    times: [2016.0]
+    values: [[119.0]]
+  notificationsXlocation_ebeye:
+    times: [2016.0]
+    values: [[53.0]]
+  notificationsXlocation_otherislands:
+    times: [2016.0]
+    values: [[6.0]]
 
 ymax:
   prevXinfectiousXamong: 2000.0

@@ -94,8 +94,7 @@ TARGET_OUTPUTS = [
     {
         "output_key": "notificationsXlocation_otherislands",
         "years": [2016.0],
-        "values": [6.0],
-        "cis": [(5.0, 17.0)],
+        "values": [6.0]
     },
 ]
 

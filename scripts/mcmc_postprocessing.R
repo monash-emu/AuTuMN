@@ -7,6 +7,7 @@ ylims = list('contact_rate'=c(0.2,1), 'start_time'=c(0,65), 'adult_latency_adjus
              'self_recovery_rate'=c(.18,.29), 'tb_mortality_rate'=c(.33,.44), 'rr_transmission_recovered'=c(.8,1.2), 'cdr_multiplier'=c(.66,1.5))
 
 
+# for Marshall Islands
 ylims = list('contact_rate'=c(10,20), 'rr_progression_diabetic'=c(2.25, 5.73),
              'rr_transmission_ebeye'=c(1,2.5), 'rr_transmission_otherislands'=c(0.5,1.5),
              'cdr_multiplier'=c(0.5, 2.0), 'case_detection_ebeye_multiplier'=c(0.5, 2.0),
@@ -19,6 +20,9 @@ load_databases <- function(){
   loaded_dbs=list()
   i = 0
   for (db_file in db_files){
+    if (substr(db_file, nchar(db_file)-2, nchar(db_file) ) != '.db'){
+      next
+    }
     i = i+1
     filename = paste(path_to_databases,db_file,sep='')
     db <- dbConnect(sqlite.driver,
@@ -55,7 +59,7 @@ plot_traces_and_histograms <- function(loaded_dbs){
     if (param %in% names(ylims)){
       YLIM = ylims[[param]]
     }else if (param == 'loglikelihood'){
-      YLIM=c(-1000,0)
+      YLIM=c(-100,0)
     } else{
       YLIM=NA
     }

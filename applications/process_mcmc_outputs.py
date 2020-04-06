@@ -3,11 +3,14 @@ import os
 import yaml
 FILE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-application = 'marshall_islands'
+APPLICATION = 'marshall_islands'
+PATH_TO_CALIBRATION_FILE = 'marshall_islands/rmi_calibration.py'
 PATH_TO_MCMC_DATABASES = 'marshall_islands/mcmc_outputs/first_calibration_3_4_2020'
 N_BURNED_ITERATIONS = 280
+from applications.marshall_islands.rmi_calibration import TARGET_OUTPUTS
 
-outputs_path = os.path.join(FILE_DIR, application, 'outputs.yml')
+
+outputs_path = os.path.join(FILE_DIR, APPLICATION, 'outputs.yml')
 with open(outputs_path, 'r') as yaml_file:
     output_options = yaml.safe_load(yaml_file)
 
@@ -22,6 +25,22 @@ scenario_list = [i + 1 for i in range(len(models))]
 
 req_outputs = output_options['req_outputs']
 targets_to_plot = output_options['targets_to_plot']
+
+# automatically add some targets based on calibration targets
+for calib_target in TARGET_OUTPUTS:
+    if 'cis' in calib_target:
+        targets_to_plot[calib_target['output_key']] = {
+            "times": calib_target['years'], "values":[[calib_target['values'][i], calib_target['cis'][i][0], calib_target['cis'][i][1]] for i in range(len(calib_target['values']))]
+        }
+    else:
+        targets_to_plot[calib_target['output_key']] = {
+            "times": calib_target['years'], "values":[[calib_target['values'][i]] for i in range(len(calib_target['values']))]
+        }
+
+ #  {'output_key': 'prevXinfectiousXamongXlocation_ebeye', 'years': [2017.0], 'values': [755.0], 'cis': [(620.0, 894.0)]}
+
+# "prevXinfectiousXamong": {"times": [2015], "values": [[757.0, 620.0, 894.0]]},
+
 
 for target in targets_to_plot.keys():
     if target not in req_outputs and target[0:5] == "prevX":

@@ -464,7 +464,7 @@ class Outputs:
                 multiplot_plotting_modes = [False]
 
             for multi_plot in multiplot_plotting_modes:
-                if requested_output not in self.post_processing_list[0].derived_outputs:
+                if self.post_processing_list[0].derived_outputs is None or requested_output not in self.post_processing_list[0].derived_outputs:
                     if (
                         isinstance(
                             self.post_processing_list[0].generated_outputs[requested_output], dict
@@ -484,8 +484,8 @@ class Outputs:
                         self.post_processing_list[scenario_index].generated_outputs[
                             requested_output
                         ]
-                        if requested_output
-                        not in self.post_processing_list[scenario_index].derived_outputs
+                        if (self.post_processing_list[scenario_index].derived_outputs is None or  requested_output
+                        not in self.post_processing_list[scenario_index].derived_outputs)
                         else self.post_processing_list[scenario_index].derived_outputs[
                             requested_output
                         ]

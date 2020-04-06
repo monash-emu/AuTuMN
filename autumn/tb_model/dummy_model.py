@@ -22,6 +22,6 @@ class DummyModel:
             key: list(value.values())
             for key, value in derived_outputs.items()
             if key not in ["idx", "Scenario", "times"]
-        }
+        } if derived_outputs is not None else None
 
         self.times = list(outputs["times"].values())

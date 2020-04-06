@@ -182,12 +182,16 @@ def load_calibration_from_db(database_directory, n_burned_per_chain=0):
                 table_name="outputs", conditions=["idx='" + str(run_id) + "'"]
             )
             output_dict = outputs.to_dict()
-            derived_outputs = out_database.db_query(
-                table_name="derived_outputs", conditions=["idx='" + str(run_id) + "'"]
-            )
-            derived_outputs = add_combined_incidence(derived_outputs, outputs)
 
-            derived_outputs_dict = derived_outputs.to_dict()
+            if out_database.engine.dialect.has_table(out_database.engine, 'derived_outputs'):
+                derived_outputs = out_database.db_query(
+                    table_name="derived_outputs", conditions=["idx='" + str(run_id) + "'"]
+                )
+                derived_outputs = add_combined_incidence(derived_outputs, outputs)
+
+                derived_outputs_dict = derived_outputs.to_dict()
+            else:
+                derived_outputs_dict = None
             model_info_dict = {
                 "db_name": db_name,
                 "run_id": run_id,
@@ -484,10 +488,12 @@ def create_mcmc_outputs(
 
     mcmc_weights = [mcmc_models[i]["weight"] for i in range(len(mcmc_models))]
     outputs = Outputs(
+        mcmc_models,
         pps,
-        targets_to_plot,
-        out_dir,
-        translation_dictionary,
+        output_options={},
+        targets_to_plot=targets_to_plot,
+        out_dir=out_dir,
+        translation_dict=translation_dictionary,
         mcmc_weights=mcmc_weights,
         plot_start_time=plot_start_time,
     )

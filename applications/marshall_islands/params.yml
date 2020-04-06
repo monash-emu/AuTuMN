@@ -44,7 +44,7 @@ default:
   diabetes_prevalence_adults: .30
 
   # Base model definition
-  contact_rate: 12.
+  contact_rate: 11.33892 # 12.
 #  beta_decay_rate: 0.06
 #  minimum_tv_beta_multiplier: 0.5
   rr_transmission_recovered: 0.6
@@ -54,7 +54,7 @@ default:
   recovery: 0.231 # this is for smear-positive TB
   infect_death: 0.389 # this is for smear-positive TB
   prop_smearpos: 0.5
-  cdr_multiplier: 1.0
+  cdr_multiplier: 1.219867  # 1.0
 #  # Latency parameters - aggregated - best estimate values from Ragonnet et al "Optimally capturing latency dynamics in models of tuberculosis
 #  #transmission" 2017 Epidemics
 #  early_progression: 1.1e-3
@@ -87,7 +87,7 @@ default:
 #  stabilisation_15: 1.1e-2
 #  late_progression_0: 1.6e-5
 #  late_progression_5: 1.9e-5
-  late_progression_15: 1.0e-5
+  late_progression_15: 2.418346e-05  # 1.0e-5
 
   # Diagnostic sensitivity by organ status:
   diagnostic_sensitivity_smearpos: 1.0
@@ -95,9 +95,9 @@ default:
   diagnostic_sensitivity_extrapul: 0.5
 
   # Adjustments by location and diabetes
-  rr_transmission_ebeye: 1.75 # reference majuro
-  rr_transmission_otherislands: 1.0 # reference majuro
-  rr_progression_diabetic: 5.73 # reference: no_diabetes
+  rr_transmission_ebeye: 2.481458  #1.75 # reference majuro
+  rr_transmission_otherislands: 0.5634661  #1.0 # reference majuro
+  rr_progression_diabetic: 5.033365 #5.73 # reference: no_diabetes
 
   # Raw CDR values
   cdr:
@@ -116,8 +116,8 @@ default:
 
   # Case detection adjustment for location
   case_detection_majuro_multiplier: 1.0
-  case_detection_ebeye_multiplier: 1.5
-  case_detection_otherislands_multiplier: 1.0
+  case_detection_ebeye_multiplier: 1.860793   #1.5
+  case_detection_otherislands_multiplier: 0.6801257  #1.0
 
   # Treatment success rate
   tsr:
@@ -147,7 +147,7 @@ default:
   acf_ltbi_otherislands_coverage: 0.0
 
   # Prevalence adjustment
-  over_reporting_prevalence_proportion: 0.2
+  over_reporting_prevalence_proportion: 0.3794872  #0.2
 
   # Few more parameters that had previously been added manually in rmi_model.py
   universal_death_rate: 1.0 / 70.0

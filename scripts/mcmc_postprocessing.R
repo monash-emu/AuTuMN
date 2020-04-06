@@ -1,11 +1,17 @@
 library(RSQLite)
 setwd("C:/Users/rrag0004/Models/jtrauer_AuTuMN")
-path_to_databases = 'applications/mongolia/mcmc_chistmas_2019/'
+path_to_databases = 'applications/marshall_islands/mcmc_outputs/first_calibration_3_4_2020/'
 sqlite.driver <- dbDriver("SQLite")
 
-ylims = list('contact_rate'=c(10,20), 'adult_latency_adjustment'=c(2,6), 'dr_amplification_prop_among_nonsuccess'=c(.15,.25),
+ylims = list('contact_rate'=c(0.2,1), 'start_time'=c(0,65), 'adult_latency_adjustment'=c(2,6), 'dr_amplification_prop_among_nonsuccess'=c(.15,.25),
              'self_recovery_rate'=c(.18,.29), 'tb_mortality_rate'=c(.33,.44), 'rr_transmission_recovered'=c(.8,1.2), 'cdr_multiplier'=c(.66,1.5))
 
+
+ylims = list('contact_rate'=c(10,20), 'rr_progression_diabetic'=c(2.25, 5.73),
+             'rr_transmission_ebeye'=c(1,2.5), 'rr_transmission_otherislands'=c(0.5,1.5),
+             'cdr_multiplier'=c(0.5, 2.0), 'case_detection_ebeye_multiplier'=c(0.5, 2.0),
+             'case_detection_otherislands_multiplier'=c(0.5, 1.0), 'over_reporting_prevalence_proportion'=c(0.0, 0.5)
+             )
 
 db_files = list.files(path_to_databases)
 
@@ -19,7 +25,9 @@ load_databases <- function(){
                     dbname = filename)
     db_name = paste("db",i,sep='')
     loaded_dbs[[db_name]] = list()
-    for (table_name in c('outputs', 'derived_outputs', 'mcmc_run')){
+    # for (table_name in c('outputs', 'derived_outputs', 'mcmc_run')){
+    for (table_name in c('outputs', 'mcmc_run')){
+        
       loaded_dbs[[db_name]][[table_name]] = dbReadTable(db, table_name)
     }
     # make actual trace dataframe
@@ -51,7 +59,13 @@ plot_traces_and_histograms <- function(loaded_dbs){
     } else{
       YLIM=NA
     }
-    plot(loaded_dbs$db1$mcmc_trace[[param]], type='l', main=param,ylab='',xlab='iter', xlim=c(0,n_iter), ylim=YLIM, col=colours[1])
+    if (is.na(YLIM)){
+      plot(loaded_dbs$db1$mcmc_trace[[param]], type='l', main=param,ylab='',xlab='iter', xlim=c(0,n_iter), col=colours[1])
+      
+    }else{
+      plot(loaded_dbs$db1$mcmc_trace[[param]], type='l', main=param,ylab='',xlab='iter', xlim=c(0,n_iter), ylim=YLIM, col=colours[1])
+      
+    }
     
     i=1
     for (db_index in names(loaded_dbs)){

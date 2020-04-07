@@ -129,13 +129,13 @@ class Calibration:
             self.running_model.outputs, columns=self.running_model.compartment_names
         )
         derived_output_df = pd.DataFrame.from_dict(self.running_model.derived_outputs)
-        # store_tb_database(
-        #     derived_output_df,
-        #     table_name="derived_outputs",
-        #     run_idx=self.iter_num,
-        #     database_name=self.output_db_path,
-        #     append=True,
-        # )
+        store_tb_database(
+            derived_output_df,
+            table_name="derived_outputs",
+            run_idx=self.iter_num,
+            database_name=self.output_db_path,
+            append=True,
+        )
         store_tb_database(
             out_df,
             run_idx=self.iter_num,

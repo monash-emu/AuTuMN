@@ -57,7 +57,7 @@ This will create a folder in `/projects/sh30/autumn-jobs` for your job, eg: `/pr
 Navigate to the job folder and run the job:
 
 ```bash
-cd /projects/sh30/autumn-repo/my-job-17-02-2020
+cd /projects/sh30/autumn-jobs/my-job-17-02-2020
 ./run-job.sh
 ```
 

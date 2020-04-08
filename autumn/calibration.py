@@ -244,7 +244,16 @@ class Calibration:
                 if self.run_mode == "lsm":
                     ll += np.sum((data - model_output) ** 2)
                 else:
-                    ll += -(0.5 / target["sd"] ** 2) * np.sum((data - model_output) ** 2)
+                    if "loglikelihood_distri" not in target:  # default distribution
+                        target["loglikelihood_distri"] = 'normal'
+                    if target["loglikelihood_distri"] == 'normal':
+                        ll += -(0.5 / target["sd"] ** 2) * np.sum((data - model_output) ** 2)
+                    elif target["loglikelihood_distri"] == 'poisson':
+                        for i in range(len(data)):
+                            ll += data[i] * math.log(model_output[i]) - model_output[i] - \
+                                  math.log(math.factorial(data[i]))
+                    else:
+                        raise ValueError("Distribution not supported in loglikelihood_distri")
             if self.run_mode != "autumn_mcmc":
                 mcmc_run_dict = {k: v for k, v in zip(self.param_list, params)}
                 mcmc_run_dict["loglikelihood"] = ll

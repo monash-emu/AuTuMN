@@ -27,7 +27,7 @@ def run_calibration_chain(max_seconds: int, run_id: int):
     )
     print("Starting calibration.")
     calib.run_fitting_algorithm(
-        run_mode="autumn_mcmc",
+        run_mode="lsm",  # "autumn_mcmc",
         n_iterations=100000,
         n_burned=0,
         n_chains=1,
@@ -46,7 +46,7 @@ start_day = index_100 + 22  # because JH data starts 22/1
 
 
 PAR_PRIORS = [
-    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [.3, .6]},
+    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [.1, 1.]},
     {"param_name": "start_time", "distribution": "uniform", "distri_params": [-30, start_day - 1]}
 ]
 

@@ -151,9 +151,9 @@ def run_model(application):
         outputs_plotter.run_input_plots()
 
         # Old code to plot requested_outputs and derived_outputs
-        # old_outputs_plotter = Outputs(models, pps, output_options, targets_to_plot=output_options['targets_to_plot'],
-        #                               out_dir=output_directory, plot_start_time=1940)
-        # old_outputs_plotter.plot_requested_outputs()
+        old_outputs_plotter = Outputs(models, pps, output_options, targets_to_plot=output_options['targets_to_plot'],
+                                       out_dir=output_directory, plot_start_time=0)
+        old_outputs_plotter.plot_requested_outputs()
 
 
 if __name__ == '__main__':

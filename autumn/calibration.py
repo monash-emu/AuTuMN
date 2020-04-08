@@ -21,6 +21,8 @@ from autumn.demography.social_mixing import change_mixing_matrix_for_scenario
 
 from .db import Database
 
+import yaml
+
 logger = logging.getLogger("pymc3")
 logger.setLevel(logging.DEBUG)
 
@@ -58,6 +60,7 @@ class Calibration:
         self, model_name: str, model_builder, priors, targeted_outputs, multipliers, chain_index, scenario_params={},
             scenario_start_time=None, model_parameters={}
     ):
+        self.model_name = model_name
         self.model_builder = model_builder  # a function that builds a new model without running it
         self.model_parameters = model_parameters
         self.running_model = None  # a model that will be run during calibration
@@ -522,6 +525,8 @@ class Calibration:
             self.mle_estimates = sol.x
             print("Best solution:")
             print(self.mle_estimates)
+            self.dump_mle_params_to_yaml_file()
+
         else:
             ValueError(
                 "requested run mode is not supported. Must be one of ['pymc_mcmc', 'lme', 'autumn_mcmc']"
@@ -590,6 +595,16 @@ class Calibration:
         for i, prior_dict in enumerate(self.priors):
             self.mcmc_trace[prior_dict["param_name"]].append(params_to_store[i])
         self.mcmc_trace["loglikelihood"].append(loglike_to_store)
+
+    def dump_mle_params_to_yaml_file(self):
+
+        dict_to_dump = {}
+        for i, param_name in enumerate(self.param_list):
+            dict_to_dump[param_name] = self.mle_estimates[i]
+
+        file_path = os.path.join(DATA_PATH, self.model_name, 'mle_params.yml')
+        with open(file_path, 'w') as outfile:
+            yaml.dump(dict_to_dump, outfile, default_flow_style=False)
 
 
 class LogLike(tt.Op):

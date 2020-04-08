@@ -16,4 +16,12 @@ intercept_country_list = list(set(prem_country_list) & set(jh_country_list))  # 
 all_data = {}
 for i, country in enumerate(intercept_country_list):
     all_data[country] = read_john_hopkins_data_from_csv(country=country)
-plot_jh_data(all_data)
+# plot_jh_data(all_data)
+
+# print list of countries with more than 1000 cases
+countries_1000 = []
+for country, n_cases in all_data.items():
+    if sum(n_cases) >= 1000:
+        countries_1000.append(country)
+print(countries_1000)
+# ['Dominican Republic', 'Singapore', 'Qatar', 'Greece', 'Canada', 'Israel', 'Portugal', 'Brazil', 'India', 'Estonia', 'Denmark', 'Saudi Arabia', 'Germany', 'Iceland', 'Luxembourg', 'South Africa', 'Spain', 'Algeria', 'Argentina', 'Indonesia', 'Peru', 'Thailand', 'France', 'Poland', 'Philippines', 'Australia', 'Malaysia', 'Italy', 'Serbia', 'Japan', 'Ireland', 'Romania', 'Sweden', 'Egypt', 'Pakistan', 'Switzerland', 'Mexico', 'Netherlands', 'Morocco', 'Turkey', 'United Arab Emirates', 'Slovenia', 'Austria', 'Panama', 'New Zealand', 'China', 'Ukraine', 'Chile', 'Belgium', 'Finland', 'Croatia', 'Iraq', 'Ecuador', 'Colombia']

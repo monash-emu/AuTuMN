@@ -66,11 +66,11 @@ def mongolia_calibration(max_seconds, run_id):
 @click.command()
 @click.argument("max_seconds", type=int)
 @click.argument("run_id", type=int)
-def covid_calibration(max_seconds, run_id):
+def covid_calibration(max_seconds, run_id, country):
     """
-    Run Mongolia model calibration.
+    Run Covid model calibration.
     """
-    run_covid_calibration_chain(max_seconds, run_id)
+    run_covid_calibration_chain(max_seconds, run_id, country)
 
 
 cli.add_command(rmi_calibration)

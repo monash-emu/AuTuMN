@@ -12,6 +12,7 @@ from .queries import (
     find_age_specific_death_rates,
     get_pop_mortality_functions,
     find_population_by_agegroup,
-    get_iso3_from_country_name
+    get_iso3_from_country_name,
+    get_country_name_from_iso3
 )
 from .database import Database

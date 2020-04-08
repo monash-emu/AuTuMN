@@ -7,6 +7,7 @@ import yaml
 with open(PARAMS_PATH, 'r') as yaml_file:
         params = yaml.safe_load(yaml_file)
 
+
 def run_calibration_chain(max_seconds: int, run_id: int):
     """
     Run a calibration chain for the Marshall Islands TB model
@@ -45,24 +46,24 @@ PAR_PRIORS = [
         "distri_params": [2.25, 5.73]},
     {
         "param_name": "rr_transmission_ebeye",
-        "distribution": "uniform",
-        "distri_params": [1.0, 2.5]},
+        "distribution": "lognormal",
+        "distri_params": [.25, .5]},
     {
         "param_name": "rr_transmission_otherislands",
-        "distribution": "uniform",
-        "distri_params": [0.5, 1.5],},
+        "distribution": "lognormal",
+        "distri_params": [.25, .5]},
     {
         "param_name": "cdr_multiplier",
         "distribution": "uniform",
         "distri_params": [0.5, 2.0]},
     {
         "param_name": "case_detection_ebeye_multiplier",
-        "distribution": "uniform",
-        "distri_params": [0.5, 2.0],},
+        "distribution": "lognormal",
+        "distri_params": [.25, .5]},
     {
         "param_name": "case_detection_otherislands_multiplier",
-        "distribution": "uniform",
-        "distri_params": [0.5, 1.0],},
+        "distribution": "lognormal",
+        "distri_params": [.25, .5]},
     {
         "param_name": "over_reporting_prevalence_proportion",
         "distribution": "uniform",
@@ -81,7 +82,7 @@ TARGET_OUTPUTS = [
         "values": [1578.0],},
     {
         "output_key": "prevXlatentXamongXlocation_majuro",
-        "years": [2017.0],
+        "years": [2018.0],
         "values": [28.5],},
     {
         "output_key": "notificationsXlocation_majuro",
@@ -93,8 +94,8 @@ TARGET_OUTPUTS = [
         "values": [53.0]},
     {
         "output_key": "notificationsXlocation_otherislands",
-        "years": [2016.0],
-        "values": [6.0]
+        "years": [2014.0],
+        "values": [10.0]
     },
 ]
 

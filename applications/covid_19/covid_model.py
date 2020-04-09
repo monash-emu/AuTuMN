@@ -49,6 +49,8 @@ def build_covid_model(update_params={}):
     # Get population size (by age if age-stratified)
     total_pops, model_parameters = get_population_size(model_parameters, input_database)
 
+    total_pops = [int(t * .26) for t in total_pops]
+
     # Define compartments
     compartments = [
         Compartment.SUSCEPTIBLE,

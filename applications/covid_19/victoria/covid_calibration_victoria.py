@@ -1,16 +1,16 @@
 from applications.covid_19.covid_calibration import *
 from numpy import linspace
 
-country = 'Philippines'
+country = 'Australia'
 
-# start_date = 11/3/2020 (day 70) for first item of the death_counts list
-death_counts = [3, 3, 4, 4, 5, 2, 11, 4, 10, 11, 8, 10, 15, 7, 7, 12, 8, 10, 12, 9, 8, 6, 3, 2, 5, 1]
-data_times = linspace(70, 70 + 25, num=26)
-nb_time_points = 10
-death_counts = death_counts[:nb_time_points]
+# start_date = 16/3/2020 (day 75) for first item of the case_counts list
+case_counts = [9, 2, 5, 9, 17, 11, 10, 31, 26, 21, 28, 32, 42, 28, 25, 55, 39, 41]
+data_times = linspace(75, 75 + 17, num=18)
+nb_time_points = 18
+case_counts = case_counts[:nb_time_points]
 data_times = data_times[:nb_time_points].tolist()
 
-target_to_plots = {'infection_deathXall': {'times': data_times, 'values': [[d] for d in death_counts]}}
+target_to_plots = {'notifications': {'times': data_times, 'values': [[d] for d in case_counts]}}
 print(target_to_plots)
 PAR_PRIORS = [
     {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [.1, 4.]},
@@ -18,9 +18,9 @@ PAR_PRIORS = [
 ]
 
 TARGET_OUTPUTS = [
-    {"output_key": "infection_deathsXall",
+    {"output_key": "notifications",
      "years": data_times,
-     "values": death_counts,
+     "values": case_counts,
      "loglikelihood_distri": 'poisson'}
 ]
 

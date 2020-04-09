@@ -13,7 +13,10 @@ def load_specific_prem_sheet(file_type, sheet_name):
             'social_mixing_data',
             'MUestimates_' + file_type + '.xlsx'
         )
-    return np.array(pd.read_excel(file_dir, sheet_name=sheet_name))
+    # files with name ending with _1 have a header. Not those ending with _2...
+    header_argument = 0 if file_type[-1] == '1' else None
+
+    return np.array(pd.read_excel(file_dir, sheet_name=sheet_name, header=header_argument))
 
 
 def load_all_prem_types(country, sheet_group):

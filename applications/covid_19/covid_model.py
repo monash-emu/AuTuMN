@@ -136,9 +136,10 @@ def build_covid_model(update_params={}):
     flows = add_infection_death_flows(flows, n_repeats)
 
     # Get mixing matrix, although would need to adapt this for countries in file _2
+    file_ending = '1' if model_parameters['country'] < 'Mozambique' else '2'
     mixing_matrix = \
         load_specific_prem_sheet(
-            'all_locations_1',
+            'all_locations_' + file_ending,
             model_parameters['country']
         )
 

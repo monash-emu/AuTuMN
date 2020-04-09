@@ -14,7 +14,7 @@ scenario_params = params['scenarios']
 sc_start_time = params['scenario_start']
 
 
-def run_calibration_chain(max_seconds: int, run_id: int, country: str):
+def run_calibration_chain(max_seconds: int, run_id: int, country: str, par_priors, target_outputs):
     """
     Run a calibration chain for the covid model
 
@@ -26,10 +26,8 @@ def run_calibration_chain(max_seconds: int, run_id: int, country: str):
     params['default']['country'] = country
     params['default']['iso3'] = get_iso3_from_country_name(input_database, country)
 
-    PAR_PRIORS, TARGET_OUTPUTS = get_priors_and_targets(country)
-    print(TARGET_OUTPUTS)
     calib = Calibration(
-        "covid_" + country, build_covid_model, PAR_PRIORS, TARGET_OUTPUTS, MULTIPLIERS, run_id,
+        "covid_" + country, build_covid_model, par_priors, target_outputs, MULTIPLIERS, run_id,
         scenario_params, sc_start_time, model_parameters=params['default']
     )
     print("Starting calibration.")
@@ -54,7 +52,7 @@ def get_priors_and_targets(country):
     start_day = index_100 + 22  # because JH data starts 22/1
 
     PAR_PRIORS = [
-        {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [.1, 1.]},
+        {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [.1, 2.]},
         {"param_name": "start_time", "distribution": "uniform", "distri_params": [-30, start_day - 1]}
     ]
 

@@ -5,8 +5,8 @@ FILE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 APPLICATION = 'marshall_islands'
 PATH_TO_CALIBRATION_FILE = 'marshall_islands/rmi_calibration.py'
-PATH_TO_MCMC_DATABASES = 'marshall_islands/mcmc_outputs/first_calibration_3_4_2020'
-N_BURNED_ITERATIONS = 150
+PATH_TO_MCMC_DATABASES = 'marshall_islands/mcmc_outputs/second_calibration_8_4_2020'
+N_BURNED_ITERATIONS = 10
 from applications.marshall_islands.rmi_calibration import TARGET_OUTPUTS
 
 

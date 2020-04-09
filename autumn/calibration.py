@@ -152,7 +152,7 @@ class Calibration:
         run the model with a set of params.
         :param params: a list containing the parameter values for update
         """
-        update_params = {}
+        update_params = self.model_parameters
         for i, param_name in enumerate(self.param_list):
             update_params[param_name] = params[i]
 
@@ -600,7 +600,7 @@ class Calibration:
 
         dict_to_dump = {}
         for i, param_name in enumerate(self.param_list):
-            dict_to_dump[param_name] = self.mle_estimates[i]
+            dict_to_dump[param_name] = float(self.mle_estimates[i])
 
         file_path = os.path.join(DATA_PATH, self.model_name, 'mle_params.yml')
         with open(file_path, 'w') as outfile:

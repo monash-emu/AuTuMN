@@ -124,6 +124,7 @@ def list_all_strata_for_mortality(
             categories_to_append = tuple(stratum.split("X")[1:])
             categories_to_append = [i_category for i_category in categories_to_append if i_category != '']
             death_output_categories.append(categories_to_append)
+    death_output_categories.append(())
 
     return tuple(death_output_categories)
 

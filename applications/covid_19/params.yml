@@ -91,21 +91,21 @@ default:
   add_non_infectious: True
 
   # Country to extract Prem mixing matrix from
-  country: Philippines
+  country: Australia
 
   # Country to extract stratified population data from - should eventually use only one of country or iso3
-  iso3: PHL
+  iso3: AUS
 
   # Initial conditions
   infectious_seed: 10
 
   # Running time-related - for COVID-19 model, all times are assumed to be in days and reference time is 1st Jan 2020
-  start_time: 51.
-  end_time: 250.
+  start_time: 40.
+  end_time: 350.
   time_step: 1
 
   # Base model definition
-  contact_rate: 0.397082
+  contact_rate: 0.36
   exposed_period: 3.2
   presympt_period: 0.5
   infectious_period: 7.68
@@ -118,20 +118,21 @@ default:
   # Compulsory parameter for all models, even though there are no population-wide deaths
   universal_death_rate: 0.
 
-scenarios: {}
+scenarios:
+  1: {}
 
 # Parameters relating to adjusting the mixing matrix to reflect interventions
 mixing:
-  0:
+  1:
     school_times:
       - 120.
       - 121.
       - 199.
       - 200.
     school_values:
-      - 1.
       - 0.
+      - -1.
+      - -1.
       - 0.
-      - 1.
 
 # N.B: Scenario keys have to be sequential integers from one, or won't be compatible with dashboards

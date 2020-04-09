@@ -91,13 +91,13 @@ default:
   add_non_infectious: True
 
   # Country to extract Prem mixing matrix from
-  country: Australia
+  country: Philippines
 
   # Country to extract stratified population data from - should eventually use only one of country or iso3
-  iso3: AUS
+  iso3: PHL
 
   # Initial conditions
-  infectious_seed: 100
+  infectious_seed: 10
 
   # Running time-related - for COVID-19 model, all times are assumed to be in days and reference time is 1st Jan 2020
   start_time: 51.

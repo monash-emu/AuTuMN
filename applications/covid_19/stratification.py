@@ -1,9 +1,17 @@
 from autumn.tool_kit.utils import split_parameter, find_rates_and_complements_from_ifr
-from autumn.demography.ageing import add_agegroup_breaks
 from autumn.tool_kit.utils import repeat_list_elements
 from autumn.constants import Compartment
 from autumn.summer_related.parameter_adjustments import \
     adjust_upstream_stratified_parameter, split_prop_into_two_subprops
+
+
+def repeat_list_elements_average_last_two(raw_props):
+    """
+    Repeat 5-year age-specific proportions, but with 75+s taking the average of the last two groups
+    """
+    repeated_props = repeat_list_elements(2, raw_props[:-1])
+    repeated_props[-1] = sum(raw_props[-2:]) / 2.
+    return repeated_props
 
 
 def stratify_by_age(model_to_stratify, mixing_matrix, total_pops, model_parameters, output_connections):
@@ -44,18 +52,9 @@ def stratify_by_age(model_to_stratify, mixing_matrix, total_pops, model_paramete
     return model_to_stratify, model_parameters, output_connections
 
 
-def repeat_list_elements_average_last_two(raw_props):
-    """
-    Repeat 5-year age-specific proportions, but with 75+s taking the average of the last two groups
-    """
-    repeated_props = repeat_list_elements(2, raw_props[:-1])
-    repeated_props[-1] = sum(raw_props[-2:]) / 2.
-    return repeated_props
-
-
 def stratify_by_clinical(_covid_model, model_parameters, compartments):
     """
-    Stratify the infectious compartments of the covid model (not including the presymptomatic compartments, which are
+    Stratify the infectious compartments of the covid model (not including the pre-symptomatic compartments, which are
     actually infectious)
     """
 
@@ -135,7 +134,7 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
     if len(strata_to_implement) > 2:
         within_infectious_overwrites = [hospital_within_infectious_rates]
         infect_death_overwrites = [hospital_death_rates]
-        if len(strata_to_implement) == 4:
+        if len(strata_to_implement) > 3:
             within_infectious_overwrites += [icu_within_infectious_rates]
             infect_death_overwrites += [icu_death_rates]
         stratification_adjustments.update(

@@ -3,7 +3,7 @@ Utilities for running multiple model scenarios
 """
 from autumn.tool_kit.timer import Timer
 import numpy
-from autumn.demography.social_mixing import change_mixing_matrix_for_scenario, load_all_prem_types
+from autumn.demography.social_mixing import change_mixing_matrix_for_scenario
 
 
 def run_multi_scenario(

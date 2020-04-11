@@ -3,51 +3,39 @@ import numpy as np
 import pandas as pd
 
 
-def load_specific_prem_sheet(file_type, sheet_name):
+def load_specific_prem_sheet(mixing_location, country):
     """
-    Load a mixing matrix sheet, according to user-specified name of the sheet (i.e. country)
+    Load a mixing matrix sheet, according to name of the sheet (i.e. country)
+
+    :param: mixing_location: str
+        One of the four mixing locations - ('all_locations', 'home', 'other_locations', 'school', 'work')
+    :param: country: str
+        Name of the country of interest
     """
+
+    # Files with name ending with _1 have a header, but not those ending with _2 - plus need to determine file to read
+    sheet_number, header_argument = ('1', 0) if country < 'Mozambique' else ('2', None)
+
     file_dir = \
         os.path.join(
             os.path.abspath(os.path.dirname(__file__)),
             'social_mixing_data',
-            'MUestimates_' + file_type + '.xlsx'
+            'MUestimates_' + mixing_location + '_' + sheet_number + '.xlsx'
         )
-    # files with name ending with _1 have a header. Not those ending with _2...
-    header_argument = 0 if file_type[-1] == '1' else None
 
-    return np.array(pd.read_excel(file_dir, sheet_name=sheet_name, header=header_argument))
+    return np.array(pd.read_excel(file_dir, sheet_name=country, header=header_argument))
 
 
-def load_all_prem_types(country, sheet_group):
+def load_all_prem_types(country):
     """
     Collate the matrices of different location types for a given country
 
     :param country: str
         Name of the requested country
-    :param sheet_group: int
-        Either 1 or 2 depending on the country's position in the alphabet
     """
     matrices = {}
-    for sheet_type in ['all_locations', 'home', 'other_locations', 'school', 'work']:
-        matrices[sheet_type] = load_specific_prem_sheet(sheet_type + '_' + str(sheet_group), country)
-    return matrices
-
-
-def load_all_prem_sheets(file_type):
-    """
-    Load all the mixing matrices (i.e. sheets) from a specified excel file
-    """
-    file_dir = \
-        os.path.join(
-            os.path.abspath(os.path.dirname(__file__)),
-            'social_mixing_data',
-            'MUestimates_' + file_type + '.xlsx'
-        )
-    excel_file = pd.ExcelFile(file_dir)
-    matrices = {}
-    for sheet in excel_file.sheet_names:
-        matrices[sheet] = load_specific_prem_sheet(file_type, sheet)
+    for sheet_type in ('all_locations', 'home', 'other_locations', 'school', 'work'):
+        matrices[sheet_type] = load_specific_prem_sheet(sheet_type, country)
     return matrices
 
 
@@ -140,7 +128,7 @@ def get_all_prem_countries():
     Return the list of countries for which Prem et al provide contact matrices
     """
     sheet_names = []
-    for file_number in ['1', '2']:
+    for file_number in ('1', '2'):
         filepath = os.path.join(
                 os.path.abspath(os.path.dirname(__file__)),
                 'social_mixing_data',

@@ -1232,7 +1232,7 @@ class OutputPlotter:
                 initialise_figures_axes(1)
             axis = \
                 sns.heatmap(
-                    load_specific_prem_sheet(location + '_1', 'Australia'),
+                    load_specific_prem_sheet(location, 'Australia'),
                     yticklabels=self.models[i_scenario].mixing_categories,
                     xticklabels=False,
                     vmin=0.,

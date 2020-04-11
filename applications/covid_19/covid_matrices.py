@@ -17,8 +17,7 @@ def build_covid_matrices(country, mixing_params):
     """
 
     # Note that this line of code would break for countries in the second half of the alphabet
-    sheet_group = 1 if country < 'Mozambique' else 2
-    mixing_matrix_components = load_all_prem_types(country, sheet_group)
+    mixing_matrix_components = load_all_prem_types(country)
 
     mixing_functions = {}
     for i_scenario in mixing_params:

@@ -91,10 +91,10 @@ default:
   add_non_infectious: True
 
   # Country to extract Prem mixing matrix from
-  country: Australia
+  country: Philippines
 
   # Country to extract stratified population data from - should eventually use only one of country or iso3
-  iso3: AUS
+  iso3: PHL
 
   # Initial conditions
   infectious_seed: 10
@@ -111,6 +111,7 @@ default:
   infectious_period: 7.68
   hospital_period: 8.
   icu_period: 20.
+  icu_mortality_prop: 0.5
 
   # Compulsory parameter that is completely overwritten in stratification, rather than being modified
   infect_death: 0.

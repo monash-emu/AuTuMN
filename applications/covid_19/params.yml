@@ -14,15 +14,10 @@ default:
   stratify_by:
     - agegroup
     - clinical
+
+  # Currently must use only four strata, because deaths will not be calculated correctly otherwise - should be quickly
+  # adaptable to fewer strata as needed, though
   clinical_strata:
-#    - non_sympt
-#    - sympt
-
-#    - non_sympt
-#    - sympt_non_hospital
-#    - hospital
-
-    # Currently must use these four strata, because deaths will not be calculated correctly otherwise
     - non_sympt
     - sympt_non_hospital
     - hospital_non_icu

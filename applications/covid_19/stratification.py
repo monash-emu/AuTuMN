@@ -113,11 +113,13 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
     # CFR for non-ICU hospitalised patients
     rel_props = {
         'hospital_death':
-            [hosp_death_prop / hosp_prop for
-             hosp_death_prop, hosp_prop in zip(abs_props['hospital_death'], abs_props['hospital_non_icu'])],
+            [death_prop / total_prop for
+             death_prop, total_prop in
+             zip(abs_props['hospital_death'], abs_props['hospital_non_icu'])],
         'icu_death':
-            [icu_death_prop / icu_prop for
-             icu_death_prop, icu_prop in zip(abs_props['icu_death'], abs_props['icu'])]
+            [death_prop / total_prop for
+             death_prop, total_prop in
+             zip(abs_props['icu_death'], abs_props['icu'])]
     }
 
     # Calculate death rates and progression rates for hospitalised and ICU patients
@@ -181,7 +183,7 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
         if stratum + '_infect_multiplier' in model_parameters:
             strata_infectiousness[stratum] = model_parameters[stratum + '_infect_multiplier']
 
-    # Stratify the model with the SUMMER stratification function
+    # Stratify the model using the SUMMER stratification function
     _covid_model.stratify(
         'clinical',
         strata_to_implement,
@@ -191,6 +193,4 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
         adjustment_requests=stratification_adjustments,
         verbose=False
     )
-
     return _covid_model, model_parameters
-

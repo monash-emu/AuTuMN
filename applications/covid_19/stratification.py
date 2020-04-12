@@ -65,7 +65,7 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
         [comp for comp in compartments if comp.startswith(Compartment.INFECTIOUS)]
 
     # Repeat the 5-year age-specific CFRs for all but the top age bracket, and average the last two for the last one
-    infection_fatality_rates = \
+    model_parameters['adjusted_infection_fatality_props'] = \
         repeat_list_elements_average_last_two(model_parameters['infection_fatality_props'])
 
     # Repeat all the 5-year age-specific clinical proportions, again with adjustment for data length as needed
@@ -78,7 +78,7 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
             repeat_list_elements_average_last_two(model_parameters['icu_props'])
     }
 
-    # Find the absolute progression proportions from the relative splits
+    # Find the absolute progression proportions from the requested splits
     abs_props = \
         split_prop_into_two_subprops([1.] * 16, '', raw_props['sympt'], 'sympt')
     abs_props.update(
@@ -88,33 +88,49 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
         split_prop_into_two_subprops(abs_props['hospital'], 'hospital', raw_props['icu'], 'icu')
     )
 
-    # CFR contributed by the ICU deaths, calculated as 50% of the absolute proportion admitted to ICU
-    abs_props['icu_death'] = \
-        [i_prop * model_parameters['icu_mortality_prop'] for i_prop in abs_props['icu']]
+    # Find IFR that needs to be contributed by ICU and non-ICU hospital deaths
+    abs_props['icu_death'], abs_props['hospital_death'] = [], []
+    for i_agegroup in range(len(model_parameters['all_stratifications']['agegroup'])):
+        
+        # If some IFR will be left over for the hospitalised
+        if abs_props['icu'][i_agegroup] * model_parameters['icu_mortality_prop'] < \
+                model_parameters['adjusted_infection_fatality_props'][i_agegroup]:
+            abs_props['icu_death'].append(
+                abs_props['icu'][i_agegroup] * model_parameters['icu_mortality_prop']
+            )
+            abs_props['hospital_death'].append(
+                model_parameters['adjusted_infection_fatality_props'][i_agegroup] -
+                abs_props['icu'][i_agegroup] * model_parameters['icu_mortality_prop']
+            )
+        
+        # Otherwise if all IFR taken up by ICU
+        else:
+            abs_props['icu_death'].append(
+                model_parameters['adjusted_infection_fatality_props'][i_agegroup]
+            )
+            abs_props['hospital_death'].append(0.)
 
-    # IFR that then needs to be contributed by non-ICU hospital deaths - check no negative values and replace as needed
-    abs_props['non_icu_death'] = \
-        [ifr - icu_abs_prop for ifr, icu_abs_prop in zip(infection_fatality_rates, abs_props['icu_death'])]
-    for i_prop, prop in enumerate(abs_props['non_icu_death']):
-        if prop < 0.:
-            print('Warning, deaths in ICU greater than IFR, setting non-ICU deaths for this age group to zero')
-            abs_props['non_icu_death'][i_prop] = 0.
-
-    # CFR for hospitalised patients not in ICU
-    prop_mort_hospital_non_icu = \
-        [hosp_death_prop / hosp_prop for
-         hosp_death_prop, hosp_prop in zip(abs_props['non_icu_death'], abs_props['hospital_non_icu'])]
+    # CFR for non-ICU hospitalised patients
+    rel_props = {
+        'hospital_death':
+            [hosp_death_prop / hosp_prop for
+             hosp_death_prop, hosp_prop in zip(abs_props['hospital_death'], abs_props['hospital_non_icu'])],
+        'icu_death':
+            [icu_death_prop / icu_prop for
+             icu_death_prop, icu_prop in zip(abs_props['icu_death'], abs_props['icu'])]
+    }
 
     # Calculate death rates and progression rates for hospitalised and ICU patients
-    hospital_death_rates, hospital_within_infectious_rates = \
+    progression_death_rates = {}
+    progression_death_rates['hospital_death'], progression_death_rates['hospital_progression'] = \
         find_rates_and_complements_from_ifr(
-            prop_mort_hospital_non_icu,
+            rel_props['hospital_death'],
             model_parameters['n_compartment_repeats'],
             [model_parameters['within_hospital']] * 16
         )
-    icu_death_rates, icu_within_infectious_rates = \
+    progression_death_rates['icu_death'], progression_death_rates['icu_progression'] = \
         find_rates_and_complements_from_ifr(
-            abs_props['icu_death'],
+            rel_props['icu_death'],
             model_parameters['n_compartment_repeats'],
             [model_parameters['within_icu']] * 16
         )
@@ -126,18 +142,18 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
             strata_to_implement,
             'agegroup',
             model_parameters['all_stratifications']['agegroup'],
-            [[1.] * len(model_parameters['all_stratifications']['agegroup'])] if \
-                len(model_parameters['clinical_strata']) == 1 else \
-                [abs_props[stratum] for stratum in model_parameters['clinical_strata']]
+            [[1.] * len(model_parameters['all_stratifications']['agegroup'])] if
+            len(model_parameters['clinical_strata']) == 1 else
+            [abs_props[stratum] for stratum in model_parameters['clinical_strata']]
         )
 
     # Death and non-death progression between infectious compartments towards the recovered compartment
     if len(strata_to_implement) > 2:
-        within_infectious_overwrites = [hospital_within_infectious_rates]
-        infect_death_overwrites = [hospital_death_rates]
+        within_infectious_overwrites = [progression_death_rates['hospital_progression']]
+        infect_death_overwrites = [progression_death_rates['hospital_death']]
         if len(strata_to_implement) > 3:
-            within_infectious_overwrites += [icu_within_infectious_rates]
-            infect_death_overwrites += [icu_death_rates]
+            within_infectious_overwrites += [progression_death_rates['icu_progression']]
+            infect_death_overwrites += [progression_death_rates['icu_death']]
         stratification_adjustments.update(
             adjust_upstream_stratified_parameter(
                 'within_infectious',

@@ -22,6 +22,7 @@ default:
 #    - sympt_non_hospital
 #    - hospital
 
+    # Currently must use these four strata, because deaths will not be calculated correctly otherwise
     - non_sympt
     - sympt_non_hospital
     - hospital_non_icu
@@ -32,7 +33,7 @@ default:
 
   # AGE-STRATIFIED PARAMETERS
 
-  # Infectiousness progression adjustments - in ten year brackets that need to adapated to model strata later
+  # Infectiousness progression adjustments - in ten year brackets that need to adapted to model strata later
   symptomatic_props:
     - 0.09
     - 0.33
@@ -43,7 +44,7 @@ default:
     - 0.5
     - 0.46
 
-  # Proportion hospitalised
+  # Proportion of symptomatic persons that are hospitalised
   hospital_props:
     - 0.001
     - 0.003
@@ -55,7 +56,7 @@ default:
     - 0.243
     - 0.273
 
-  # Proportion admitted to ICU
+  # Proportion of those that are hospitalised that are admitted to ICU
   icu_props:
     - 0.05
     - 0.05

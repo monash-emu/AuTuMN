@@ -3,7 +3,6 @@ Build and run any AuTuMN model, storing the outputs
 """
 
 import os
-import numpy as np
 from datetime import datetime
 import yaml
 

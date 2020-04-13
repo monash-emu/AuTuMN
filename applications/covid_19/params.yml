@@ -119,17 +119,6 @@ scenarios:
   1: {}
 
 # Parameters relating to adjusting the mixing matrix to reflect interventions
-mixing:
-  1:
-    school_times:
-      - 120.
-      - 121.
-      - 199.
-      - 200.
-    school_values:
-      - 0.
-      - -1.
-      - -1.
-      - 0.
+mixing: {}
 
 # N.B: Scenario keys have to be sequential integers from one, or won't be compatible with dashboards

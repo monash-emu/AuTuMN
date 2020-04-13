@@ -27,12 +27,15 @@ def build_covid_matrices(country, mixing_params):
             for location in \
                     [loc for loc in ['home', 'other_locations', 'school', 'work']
                      if loc + '_times' in mixing_params[i_scenario]]:
-                location_change = \
+                location_adjustment = \
                     scale_up_function(
                         mixing_params[i_scenario][location + '_times'],
                         mixing_params[i_scenario][location + '_values']
                     )
-                mixing_matrix = np.add(mixing_matrix, location_change(time) * mixing_matrix_components[location])
+                mixing_matrix = \
+                    np.add(
+                        mixing_matrix, (location_adjustment(time) + 1.) * mixing_matrix_components[location]
+                    )
             return mixing_matrix
 
         mixing_functions[i_scenario] = mixing_matrix_function

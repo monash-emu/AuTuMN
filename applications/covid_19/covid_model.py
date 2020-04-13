@@ -24,6 +24,7 @@ from autumn.db import Database
 file_dir = os.path.dirname(os.path.abspath(__file__))
 INPUT_DB_PATH = os.path.join(constants.DATA_PATH, 'inputs.db')
 PARAMS_PATH = os.path.join(file_dir, 'params.yml')
+APPLICATION_PATH = os.path.join(file_dir, 'application.yml')
 
 input_database = Database(database_name=INPUT_DB_PATH)
 
@@ -41,6 +42,12 @@ def build_covid_model(update_params={}):
     # Get user-requested parameters
     with open(PARAMS_PATH, 'r') as yaml_file:
         params = yaml.safe_load(yaml_file)
+    with open(APPLICATION_PATH, 'r') as yaml_file:
+        application_params = yaml.safe_load(yaml_file)
+
+    if 'mixing' in application_params:
+        params['mixing'].update(application_params['mixing'])
+
     model_parameters = params['default']
 
     # Update, not used in single application run

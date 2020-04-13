@@ -15,6 +15,9 @@ OPTI_PARAMS_PATH = os.path.join(this_file_dir, 'opti_params.yml')
 with open(OPTI_PARAMS_PATH, 'r') as yaml_file:
         opti_params = yaml.safe_load(yaml_file)
 
+main_params['default'].update(opti_params['default'])
+
+
 # select the country
 COUNTRY = 'Australia'
 ISO3 = get_iso3_from_country_name(input_database, COUNTRY)
@@ -22,18 +25,19 @@ main_params['default']['country'] = COUNTRY
 main_params['default']['iso3'] = ISO3
 
 # check the format of the mixing_matrix_multipliers
-if any([len(opti_params['mixing_matrix_multipliers']) != len(opti_params['mixing_matrix_multipliers'][i])
-        for i in opti_params['mixing_matrix_multipliers']]):
+if any([len(main_params['default']['mixing_matrix_multipliers']) != len(main_params['default']['mixing_matrix_multipliers'][i])
+        for i in main_params['default']['mixing_matrix_multipliers']]):
     raise ValueError("mixing multipliers are ill-defined")
 
 
 def objective_function(mixing_multipliers):
     # build the model
     model_function = build_covid_model
-    mixing_progression = build_covid_matrices(main_params['default']['country'], main_params['mixing'])
+    mixing_progression = {}
 
     # Prepare scenario data
-    scenario_params = {0: {}}
+    main_params['default'].update({'mixing_matrix_multipliers': mixing_multipliers})
+    scenario_params = {0: main_params['default']}
 
     # run the model
     model = run_multi_scenario(
@@ -53,4 +57,4 @@ def objective_function(mixing_multipliers):
     return herd_immunity, total_nb_deaths
 
 
-# h_i, obj = objective_function(mixing_multipliers=opti_params['mixing_matrix_multipliers'])
+h_i, obj = objective_function(mixing_multipliers=main_params['default']['mixing_matrix_multipliers'])

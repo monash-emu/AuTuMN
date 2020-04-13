@@ -15,7 +15,7 @@ from autumn.disease_categories.emerging_infections.flows import \
 from applications.covid_19.stratification import stratify_by_age, stratify_by_clinical
 from applications.covid_19.covid_outputs import find_incidence_outputs, create_fully_stratified_incidence_covid, \
     calculate_notifications_covid
-from autumn.demography.social_mixing import load_specific_prem_sheet, load_all_prem_types
+from autumn.demography.social_mixing import load_specific_prem_sheet, update_mixing_with_multipliers
 from autumn.demography.population import get_population_size
 from autumn.db import Database
 
@@ -141,6 +141,8 @@ def build_covid_model(update_params={}):
             'all_locations',
             model_parameters['country']
         )
+    if 'mixing_matrix_multipliers' in model_parameters:
+        mixing_matrix = update_mixing_with_multipliers(mixing_matrix, model_parameters['mixing_matrix_multipliers'])
 
     # Define output connections to collate
     output_connections = find_incidence_outputs(model_parameters)

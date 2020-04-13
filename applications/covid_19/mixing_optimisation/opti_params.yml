@@ -1,6 +1,7 @@
 ---
 # These parameters will be added to or overwrites those found in the main params.yml file
-mixing_matrix_multipliers:
-  0: [1., 1., 1.]
-  15: [1., 1., 1.]
-  65: [1., 1., 1.]
+default:
+  mixing_matrix_multipliers:
+    0: [1., 1., 1.]
+    15: [1., 1., 1.]
+    65: [1., 1., 1.]

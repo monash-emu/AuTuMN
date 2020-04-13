@@ -123,6 +123,13 @@ def change_mixing_matrix_for_scenario(model, mixing_functions, i_scenario):
     return model
 
 
+def update_mixing_with_multipliers(mixing_matrix, multipliers):
+
+    # Just a placeholder for now
+
+    return mixing_matrix
+
+
 def get_all_prem_countries():
     """
     Return the list of countries for which Prem et al provide contact matrices
@@ -137,3 +144,4 @@ def get_all_prem_countries():
         xl = pd.ExcelFile(filepath)
         sheet_names += xl.sheet_names
     return sheet_names
+

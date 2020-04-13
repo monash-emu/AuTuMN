@@ -124,10 +124,15 @@ def change_mixing_matrix_for_scenario(model, mixing_functions, i_scenario):
 
 
 def update_mixing_with_multipliers(mixing_matrix, multipliers):
+    """
+    Updates the mixing matrix using some age-specific multipliers
+    :param mixing_matrix: the baseline mixing-matrix
+    :param multipliers: a matrix with the ages-specific multipliers
+    :return: the updated mixing-matrix
+    """
+    assert mixing_matrix.shape == multipliers.shape
 
-    # Just a placeholder for now
-
-    return mixing_matrix
+    return np.multiply(mixing_matrix, multipliers)
 
 
 def get_all_prem_countries():

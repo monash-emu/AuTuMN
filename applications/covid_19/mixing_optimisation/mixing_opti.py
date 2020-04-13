@@ -24,19 +24,25 @@ ISO3 = get_iso3_from_country_name(input_database, COUNTRY)
 main_params['default']['country'] = COUNTRY
 main_params['default']['iso3'] = ISO3
 
-# check the format of the mixing_matrix_multipliers
-if any([len(main_params['default']['mixing_matrix_multipliers']) != len(main_params['default']['mixing_matrix_multipliers'][i])
-        for i in main_params['default']['mixing_matrix_multipliers']]):
-    raise ValueError("mixing multipliers are ill-defined")
-
 
 def objective_function(mixing_multipliers):
     # build the model
     model_function = build_covid_model
     mixing_progression = {}
 
+    mixing_multipliers_matrix = np.zeros((16, 16))
+    mixing_multipliers_matrix[0:3, 0:3] = mixing_multipliers['a'] * np.ones((3, 3))
+    mixing_multipliers_matrix[3:13, 3:13] = mixing_multipliers['b'] * np.ones((10, 10))
+    mixing_multipliers_matrix[13:, 13:] = mixing_multipliers['c'] * np.ones((3, 3))
+    mixing_multipliers_matrix[3:13, 0:3] = mixing_multipliers['d'] * np.ones((10, 3))
+    mixing_multipliers_matrix[0:3, 3:13] = mixing_multipliers['d'] * np.ones((3, 10))
+    mixing_multipliers_matrix[13:, 0:3] = mixing_multipliers['e'] * np.ones((3, 3))
+    mixing_multipliers_matrix[0:3, 13:] = mixing_multipliers['e'] * np.ones((3, 3))
+    mixing_multipliers_matrix[13:, 3:13] = mixing_multipliers['f'] * np.ones((3, 10))
+    mixing_multipliers_matrix[3:13, 13:] = mixing_multipliers['f'] * np.ones((10, 3))
+
     # Prepare scenario data
-    main_params['default'].update({'mixing_matrix_multipliers': mixing_multipliers})
+    main_params['default'].update({'mixing_matrix_multipliers': mixing_multipliers_matrix})
     scenario_params = {0: main_params['default']}
 
     # run the model

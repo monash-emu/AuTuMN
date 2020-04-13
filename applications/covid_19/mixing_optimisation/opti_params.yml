@@ -2,6 +2,9 @@
 # These parameters will be added to or overwrites those found in the main params.yml file
 default:
   mixing_matrix_multipliers:
-    0: [1., 1., 1.]
-    15: [1., 1., 1.]
-    65: [1., 1., 1.]
+    a: 1.  # agegroups 0 / 0
+    b: 1.  # 15 / 15
+    c: 1.  # 65 / 65
+    d: 1.  # 0 / 15
+    e: 1.  # 0 / 65
+    f: 1.  # 15 / 65

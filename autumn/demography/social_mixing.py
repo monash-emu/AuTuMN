@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import pandas as pd
+from applications.covid_19.covid_matrices import build_covid_matrices
 
 
 def load_specific_prem_sheet(mixing_location, country):
@@ -76,7 +77,7 @@ def change_mixing_matrix_for_scenario(model, params, i_scenario):
         mixing_functions = None
 
     if mixing_functions:
-        model.find_dynamic_mixing_matrix = mixing_functions
+        model.find_dynamic_mixing_matrix = build_covid_matrices(params['default']['country'], mixing_functions)
         model.dynamic_mixing_matrix = True
     return model
 

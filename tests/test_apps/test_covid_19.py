@@ -3,25 +3,40 @@ from unittest import mock
 
 from summer_py.summer_model import StratifiedModel
 
-from applications.covid_19.covid_model import build_covid_model
-from applications.run_single_application import run_model
+from applications.covid_19.covid_model import AUSTRALIA, PHILLIPINES, build_covid_model
 
-IS_GITHUB_CI = os.environ.get("GITHUB_ACTION", False)
+from applications.covid_19.runners import run_covid_aus_model, run_covid_phl_model
 
 
-# FIXME: the order of these tests matter, STRATIFY_BY patch isn't working as expected.
-@mock.patch("builtins.input", return_value="")
-@mock.patch("autumn.tb_model.outputs.Outputs")
-def test_run_covid_model(mock_output_cls, mock_input):
+# @mock.patch("autumn.model_runner.Outputs")
+# @mock.patch("autumn.model_runner.OutputPlotter")
+# def test_run_covid_aus_model(mock_1, mock_2):
+#     """
+#     Ensure COVID Australian model runs.
+#     """
+#     run_covid_aus_model()
+
+
+# @mock.patch("autumn.model_runner.Outputs")
+# @mock.patch("autumn.model_runner.OutputPlotter")
+# def test_run_covid_phl_model(mock_1, mock_2):
+#     """
+#     Ensure COVID Phillipines model runs.
+#     """
+#     run_covid_aus_model()
+
+
+def test_build_aus_covid_model():
     """
-    Ensure COVID model runs.
+    Ensure we can build the Australian COVID model with nothing crashing
     """
-    run_model("covid_19")
+    model = build_covid_model(AUSTRALIA, update_params={})
+    assert type(model) is StratifiedModel
 
 
-def test_build_covid_model():
+def test_build_phl_covid_model():
     """
-    Ensure we can build the COVID model with nothing crashing
+    Ensure we can build the Phillipines COVID model with nothing crashing
     """
-    model = build_covid_model({})
+    model = build_covid_model(PHILLIPINES, update_params={})
     assert type(model) is StratifiedModel

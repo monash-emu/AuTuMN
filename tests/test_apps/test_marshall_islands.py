@@ -4,24 +4,21 @@ from unittest import mock
 from summer_py.summer_model import StratifiedModel
 
 from applications.marshall_islands.rmi_model import build_rmi_model
-from applications.run_single_application import run_model
-
-IS_GITHUB_CI = os.environ.get("GITHUB_ACTION", False)
+from applications.marshall_islands.runners import run_rmi_model
 
 
-# FIXME: the order of these tests matter, STRATIFY_BY patch isn't working as expected.
-@mock.patch("builtins.input", return_value="")
-@mock.patch("autumn.tb_model.outputs.Outputs")
-def test_run_marshall_model(mock_output_cls, mock_input):
+@mock.patch("autumn.model_runner.Outputs")
+@mock.patch("autumn.model_runner.OutputPlotter")
+def test_run_marshall_model(mock_1, mock_2):
     """
     Ensure Marshall Islands model runs.
     """
-    run_model('marshall_islands')
+    run_rmi_model()
 
 
 def test_build_marshall_model():
     """
     Ensure we can build the Marshall Islands model with nothing crashing
     """
-    model = build_rmi_model({})
+    model = build_rmi_model()
     assert type(model) is StratifiedModel

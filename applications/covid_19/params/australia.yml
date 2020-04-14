@@ -1,6 +1,6 @@
 ---
-mixing:
-  0:
+default:
+  mixing:
     school_times:
       - 120.
       - 121.

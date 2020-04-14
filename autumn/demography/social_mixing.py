@@ -62,12 +62,21 @@ def load_age_calibration():
     return pd.Series(y, index=age_breakpoints)
 
 
-def change_mixing_matrix_for_scenario(model, mixing_functions, i_scenario):
+def change_mixing_matrix_for_scenario(model, params, i_scenario):
     """
     Change the mixing matrix to a dynamic version to reflect interventions acting on the mixing matrix
     """
-    if mixing_functions and i_scenario in mixing_functions:
-        model.find_dynamic_mixing_matrix = mixing_functions[i_scenario]
+    scenario_name = 'default' if i_scenario == 0 else i_scenario
+
+    if scenario_name in params and 'mixing' in params[scenario_name]:
+        mixing_functions = params[scenario_name]['mixing']
+    elif 'mixing' in params['default']:
+        mixing_functions = params['default']['mixing']
+    else:
+        mixing_functions = None
+
+    if mixing_functions:
+        model.find_dynamic_mixing_matrix = mixing_functions
         model.dynamic_mixing_matrix = True
     return model
 

@@ -34,8 +34,9 @@ INPUT_DB_PATH = os.path.join(constants.DATA_PATH, "inputs.db")
 input_database = Database(database_name=INPUT_DB_PATH)
 
 AUSTRALIA = "australia"
-PHILIPPINES = "phillipines"
-COUNTRIES = (AUSTRALIA, PHILIPPINES)
+PHILIPPINES = "philippines"
+VICTORIA = 'victoria'
+COUNTRIES = (AUSTRALIA, PHILIPPINES, VICTORIA)
 
 
 def build_covid_model(country: str, update_params: dict):

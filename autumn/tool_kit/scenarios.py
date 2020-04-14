@@ -8,9 +8,8 @@ from autumn.demography.social_mixing import change_mixing_matrix_for_scenario
 
 def run_multi_scenario(
         param_lookup,
-        scenario_start_time,
+        params,
         model_builder,
-        mixing_functions=None,
         run_kwargs={}
 ):
     """
@@ -26,7 +25,7 @@ def run_multi_scenario(
     with Timer("Running baseline scenario"):
         baseline_params = param_lookup[0] if 0 in param_lookup else {}
         baseline_model = model_builder(baseline_params)
-        baseline_model = change_mixing_matrix_for_scenario(baseline_model, mixing_functions, 0)
+        baseline_model = change_mixing_matrix_for_scenario(baseline_model, params, 0)
         baseline_model.run_model(**run_kwargs)
         models = [baseline_model]
 
@@ -38,9 +37,9 @@ def run_multi_scenario(
             continue
 
         with Timer(f'Running scenario #{i_scenario}'):
-            scenario_params['start_time'] = scenario_start_time
+            scenario_params['start_time'] = params['scenario_start_time']
             scenario_model = initialise_scenario_run(baseline_model, scenario_params, model_builder)
-            scenario_model = change_mixing_matrix_for_scenario(scenario_model, mixing_functions, i_scenario)
+            scenario_model = change_mixing_matrix_for_scenario(scenario_model, params, i_scenario)
             scenario_model.run_model(**run_kwargs)
             models.append(scenario_model)
 

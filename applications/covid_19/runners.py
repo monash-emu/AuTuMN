@@ -7,7 +7,7 @@ import yaml
 from autumn.model_runner import build_model_runner
 from autumn.tool_kit.params import load_params
 
-from .covid_model import AUSTRALIA, PHILLIPINES, build_covid_model
+from .covid_model import AUSTRALIA, PHILIPPINES, build_covid_model
 from .covid_matrices import build_covid_matrices
 
 FILE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -40,4 +40,4 @@ def build_country_runner(country: str):
 
 
 run_covid_aus_model = build_country_runner(AUSTRALIA)
-run_covid_phl_model = build_country_runner(PHILLIPINES)
+run_covid_phl_model = build_country_runner(PHILIPPINES)

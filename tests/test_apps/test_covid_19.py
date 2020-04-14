@@ -21,9 +21,9 @@ def test_run_covid_aus_model(mock_1, mock_2):
 @mock.patch("autumn.model_runner.OutputPlotter")
 def test_run_covid_phl_model(mock_1, mock_2):
     """
-    Ensure COVID Phillipines model runs.
+    Ensure COVID Philippines model runs.
     """
-    run_covid_aus_model()
+    run_covid_phl_model()
 
 
 def test_build_aus_covid_model():
@@ -36,7 +36,7 @@ def test_build_aus_covid_model():
 
 def test_build_phl_covid_model():
     """
-    Ensure we can build the Phillipines COVID model with nothing crashing
+    Ensure we can build the Philippines COVID model with nothing crashing
     """
     model = build_covid_model(PHILIPPINES, update_params={})
     assert type(model) is StratifiedModel

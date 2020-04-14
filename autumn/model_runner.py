@@ -45,7 +45,6 @@ def build_model_runner(
 
         # FIXME: Get rid of rename
         model_function = build_model
-        mixing_progression = mixing_functions
         output_options = outputs
 
         # FIXME: This is model specific, doesn't live here.
@@ -104,9 +103,8 @@ def build_model_runner(
         with Timer("Running model scenarios"):
             models = run_multi_scenario(
                 scenario_params,
-                params["scenario_start"],
+                params,
                 model_function,
-                mixing_progression,
                 run_kwargs={"integration_type": IntegrationType.ODE_INT},
             )
 

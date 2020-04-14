@@ -49,7 +49,7 @@ def covidaus():
 @click.command()
 def covidphl():
     """
-    Run the COVID Phillipines model.
+    Run the COVID Philippines model.
     """
     run_covid_phl_model()
 

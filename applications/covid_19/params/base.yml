@@ -115,10 +115,9 @@ default:
   # Compulsory parameter for all models, even though there are no population-wide deaths
   universal_death_rate: 0.
 
-scenarios:
-  1: {}
+  # Parameters relating to adjusting the mixing matrix to reflect interventions
+  mixing: {}
 
-# Parameters relating to adjusting the mixing matrix to reflect interventions
-mixing: {}
+scenarios: {}
 
 # N.B: Scenario keys have to be sequential integers from one, or won't be compatible with dashboards

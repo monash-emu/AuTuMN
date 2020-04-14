@@ -164,6 +164,8 @@ default:
     - location
     - age
 
+  mixing: {}
+
 # When the scenarios start running
 scenario_start: 1990
 

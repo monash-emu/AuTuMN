@@ -726,7 +726,8 @@ def run_model():
                 models.append(DummyModel(loaded_model["outputs"], loaded_model["derived_outputs"]))
     else:
         t0 = time()
-        models = run_multi_scenario(scenario_params, 2020.0, build_mongolia_model)
+        models = \
+            run_multi_scenario(scenario_params, {'scenario_start_time': 2020., 'default': {}}, build_mongolia_model)
         # automatically add combined incidence output
         for model in models:
             outputs_df = pd.DataFrame(model.outputs, columns=model.compartment_names)

@@ -7,7 +7,7 @@ import yaml
 from autumn.model_runner import build_model_runner
 from autumn.tool_kit.params import load_params
 
-from .covid_model import AUSTRALIA, PHILIPPINES, build_covid_model
+from .covid_model import AUSTRALIA, PHILIPPINES, VICTORIA, build_covid_model
 from .covid_matrices import build_covid_matrices
 
 FILE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -31,13 +31,15 @@ def build_country_runner(country: str):
     params = load_params(FILE_DIR, application=country)
     country_name = country.lower()
     return build_model_runner(
-        model_name=f"coivd_{country_name}",
+        model_name=f"covid_{country_name}",
         build_model=build_country_covid_model,
         params=params,
-        outputs=outputs,
-        mixing_functions=build_covid_matrices(params["default"]["country"], params["mixing"]),
+        outputs=outputs
+        # mixing_functions=build_covid_matrices(params["default"]["country"], params["mixing"]),
     )
 
 
 run_covid_aus_model = build_country_runner(AUSTRALIA)
 run_covid_phl_model = build_country_runner(PHILIPPINES)
+run_covid_vic_model = build_country_runner(VICTORIA)
+

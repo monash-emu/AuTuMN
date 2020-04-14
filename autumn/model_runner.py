@@ -7,7 +7,7 @@ from datetime import datetime
 
 from summer_py.constants import IntegrationType
 import summer_py.post_processing as post_proc
-from summer_py.summer_model.utils.flowchart import create_flowchart
+
 from autumn.outputs.outputs import (
     OutputPlotter,
     collate_compartment_across_stratification,
@@ -15,13 +15,11 @@ from autumn.outputs.outputs import (
     create_output_dataframes,
     Outputs,
 )
-
 from autumn.tool_kit.timer import Timer
 from autumn.tool_kit import run_multi_scenario
 from autumn.tool_kit.utils import (
-    make_directory_if_absent,
-    record_parameter_request,
-    record_run_metadata,
+    get_git_branch,
+    get_git_hash,
 )
 from autumn.tb_model import store_run_models
 from autumn import constants
@@ -44,12 +42,13 @@ def build_model_runner(
         Run the model, save the outputs.
         """
         print(f"Running {model_name}...")
+
         # FIXME: Get rid of rename
         model_function = build_model
         mixing_progression = mixing_functions
         output_options = outputs
 
-        # FIXME: This is model specific
+        # FIXME: This is model specific, doesn't live here.
         # If agegroup breaks specified in default, add these to the agegroup stratification
         params["default"] = add_agegroup_breaks(params["default"])
 
@@ -65,24 +64,40 @@ def build_model_runner(
                 ],
             )
 
-        # Ensure project folder exists
+        # Ensure project folder exists.
         project_dir = os.path.join(constants.DATA_PATH, model_name)
         if not os.path.exists(project_dir):
             os.makedirs(project_dir, exist_ok=True)
 
-        # Create output data folder
+        # Create output data folder.
         timestamp = datetime.now().strftime("%d-%m-%Y--%H-%M-%S")
-        output_directory = os.path.join(project_dir, f"{run_name}-{timestamp}")
-        make_directory_if_absent(output_directory, run_name, timestamp)
+        output_dir = os.path.join(project_dir, f"{run_name}-{timestamp}")
+        if os.path.exists(output_dir):
+            raise FileExistsError(f"Experiment {run_name} already exists at time {timestamp}.")
+        else:
+            os.makedirs(output_dir)
 
         # Determine where to save model outputs
-        output_db_path = os.path.join(output_directory, "outputs.db")
+        output_db_path = os.path.join(output_dir, "outputs.db")
 
-        # Save parameter requests and metadata
-        record_parameter_request(output_directory, params)
-        record_run_metadata(output_directory, run_name, run_description, timestamp)
+        # Save model parameters to output dir.
+        param_path = os.path.join(output_dir, "params.yml")
+        with open(param_path, "w") as f:
+            yaml.dump(params, f)
 
-        # Prepare scenario data
+        # Save model run metadata to output dir.
+        meta_path = os.path.join(output_dir, "meta.yml")
+        metadata = {
+            "name": run_name,
+            "description": run_description,
+            "start_time": timestamp,
+            "git_branch": get_git_branch(),
+            "git_commit": get_git_hash(),
+        }
+        with open(meta_path, "w") as f:
+            yaml.dump(metadata, f)
+
+        # Prepare scenario data for running.
         scenario_params = params["scenarios"]
         scenario_list = [0, *scenario_params.keys()]
 
@@ -98,8 +113,8 @@ def build_model_runner(
         # Post-process and save model outputs
         with Timer("Processing model outputs"):
             store_run_models(models, scenarios=scenario_list, database_name=output_db_path)
-            if not os.path.exists(output_directory):
-                os.mkdir(output_directory)
+            if not os.path.exists(output_dir):
+                os.mkdir(output_dir)
 
             pps = []
             for scenario_index in range(len(models)):
@@ -125,7 +140,7 @@ def build_model_runner(
         with Timer("Creating model outputs"):
 
             # New approach to plotting outputs, intended to be more general
-            outputs_plotter = OutputPlotter(models, pps, output_options, output_directory)
+            outputs_plotter = OutputPlotter(models, pps, output_options, output_dir)
             outputs_plotter.save_flows_sheets()
             outputs_plotter.run_input_plots()
 
@@ -135,7 +150,7 @@ def build_model_runner(
                 pps,
                 output_options,
                 targets_to_plot=output_options["targets_to_plot"],
-                out_dir=output_directory,
+                out_dir=output_dir,
                 plot_start_time=0,
             )
             old_outputs_plotter.plot_requested_outputs()

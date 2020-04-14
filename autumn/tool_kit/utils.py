@@ -136,7 +136,7 @@ def find_stratum_index_from_string(compartment, stratification, remove_stratific
         if stratification in name
     ][0]
     return (
-        stratum_name[stratum_name.find("_") + 1:] if remove_stratification_name else stratum_name
+        stratum_name[stratum_name.find("_") + 1 :] if remove_stratification_name else stratum_name
     )
 
 
@@ -159,16 +159,6 @@ def get_integration_times(start_year: int, end_year: int, time_step: int):
     return numpy.linspace(start_year, end_year, n_iter).tolist()
 
 
-def make_directory_if_absent(full_directory_name, user_requested_name, timestamp):
-    """
-    Check a requested directory doesn't exist and create it if it doesn't.
-    """
-    if os.path.exists(full_directory_name):
-        raise FileExistsError(f"Experiment {user_requested_name} already exists at time {timestamp}.")
-    else:
-        os.makedirs(full_directory_name)
-
-
 def element_wise_list_summation(list_1, list_2):
     """
     Element-wise summation of two lists of the same length.
@@ -176,40 +166,21 @@ def element_wise_list_summation(list_1, list_2):
     return [value_1 + value_2 for value_1, value_2 in zip(list_1, list_2)]
 
 
-def record_parameter_request(output_directory, params):
-    param_path = os.path.join(output_directory, "params.yml")
-    with open(param_path, "w") as yaml_file:
-        yaml.dump(params, yaml_file)
-
-
-def record_run_metadata(output_directory, run_name, experiment_desc, timestamp):
-    meta_path = os.path.join(output_directory, "meta.yml")
-    metadata = {
-        "name": run_name,
-        "description": experiment_desc,
-        "start_time": timestamp,
-        "git_branch": get_git_branch(),
-        "git_commit": get_git_hash(),
-    }
-    with open(meta_path, "w") as yaml_file:
-        yaml.dump(metadata, yaml_file)
-
-
 def repeat_list_elements(repetitions, list_to_repeat):
-    return list(itertools.chain.from_iterable(itertools.repeat(i_element, repetitions) for i_element in list_to_repeat))
+    return list(
+        itertools.chain.from_iterable(
+            itertools.repeat(i_element, repetitions) for i_element in list_to_repeat
+        )
+    )
 
 
 def split_parameter(adjustment_dict, parameter, strata):
-    adjustment_dict.update({parameter: {stratum: 1. for stratum in strata}})
+    adjustment_dict.update({parameter: {stratum: 1.0 for stratum in strata}})
     return adjustment_dict
 
 
-def find_series_compartment_parameter(
-        proportion_to_split,
-        n_compartments,
-        original_parameter
-):
-    return (1. - (1. - proportion_to_split) ** (1. / n_compartments)) * original_parameter
+def find_series_compartment_parameter(proportion_to_split, n_compartments, original_parameter):
+    return (1.0 - (1.0 - proportion_to_split) ** (1.0 / n_compartments)) * original_parameter
 
 
 def find_rates_and_complements_from_ifr(cfrs, n_compartment_repeats, overall_rates):
@@ -218,11 +189,12 @@ def find_rates_and_complements_from_ifr(cfrs, n_compartment_repeats, overall_rat
     them, work out the death rates and their complements
     """
     death_rates = [
-        find_series_compartment_parameter(i_cfr, n_compartment_repeats, i_rate) for
-        i_cfr, i_rate in zip(cfrs, overall_rates)
+        find_series_compartment_parameter(i_cfr, n_compartment_repeats, i_rate)
+        for i_cfr, i_rate in zip(cfrs, overall_rates)
     ]
     complements = [
-        i_overall_rate - i_death_rate for i_overall_rate, i_death_rate in zip(overall_rates, death_rates)
+        i_overall_rate - i_death_rate
+        for i_overall_rate, i_death_rate in zip(overall_rates, death_rates)
     ]
     return death_rates, complements
 

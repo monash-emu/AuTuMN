@@ -70,14 +70,14 @@ def change_mixing_matrix_for_scenario(model, params, i_scenario):
     scenario_name = 'default' if i_scenario == 0 else i_scenario
 
     if scenario_name in params and 'mixing' in params[scenario_name]:
-        mixing_functions = params[scenario_name]['mixing']
+        mixing_instructions = params[scenario_name]['mixing']
     elif 'mixing' in params['default']:
-        mixing_functions = params['default']['mixing']
+        mixing_instructions = params['default']['mixing']
     else:
-        mixing_functions = None
+        mixing_instructions = None
 
-    if mixing_functions:
-        model.find_dynamic_mixing_matrix = build_covid_matrices(params['default']['country'], mixing_functions)
+    if mixing_instructions:
+        model.find_dynamic_mixing_matrix = build_covid_matrices(params['default']['country'], mixing_instructions)
         model.dynamic_mixing_matrix = True
     return model
 

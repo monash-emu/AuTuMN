@@ -8,22 +8,22 @@ from applications.covid_19.covid_model import AUSTRALIA, PHILLIPINES, build_covi
 from applications.covid_19.runners import run_covid_aus_model, run_covid_phl_model
 
 
-# @mock.patch("autumn.model_runner.Outputs")
-# @mock.patch("autumn.model_runner.OutputPlotter")
-# def test_run_covid_aus_model(mock_1, mock_2):
-#     """
-#     Ensure COVID Australian model runs.
-#     """
-#     run_covid_aus_model()
+@mock.patch("autumn.model_runner.Outputs")
+@mock.patch("autumn.model_runner.OutputPlotter")
+def test_run_covid_aus_model(mock_1, mock_2):
+    """
+    Ensure COVID Australian model runs.
+    """
+    run_covid_aus_model()
 
 
-# @mock.patch("autumn.model_runner.Outputs")
-# @mock.patch("autumn.model_runner.OutputPlotter")
-# def test_run_covid_phl_model(mock_1, mock_2):
-#     """
-#     Ensure COVID Phillipines model runs.
-#     """
-#     run_covid_aus_model()
+@mock.patch("autumn.model_runner.Outputs")
+@mock.patch("autumn.model_runner.OutputPlotter")
+def test_run_covid_phl_model(mock_1, mock_2):
+    """
+    Ensure COVID Phillipines model runs.
+    """
+    run_covid_aus_model()
 
 
 def test_build_aus_covid_model():

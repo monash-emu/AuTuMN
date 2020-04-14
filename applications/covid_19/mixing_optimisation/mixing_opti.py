@@ -36,11 +36,12 @@ def has_immunity_been_reached(_model):
     return max(_model.derived_outputs['incidence']) == _model.derived_outputs['incidence'][0]
 
 
-def objective_function(mixing_multipliers):
-    # build the model
-    model_function = build_covid_model
-    mixing_progression = {}
-
+def build_mixing_multipliers_matrix(mixing_multipliers):
+    """
+    Builds a full 16x16 matrix of multipliers based on the parameters found in mixing_multipliers
+    :param mixing_multipliers: a dictionary with the parameters a, b, c ,d ,e ,f
+    :return: a matrix of multipliers
+    """
     mixing_multipliers_matrix = np.zeros((16, 16))
     mixing_multipliers_matrix[0:3, 0:3] = mixing_multipliers['a'] * np.ones((3, 3))
     mixing_multipliers_matrix[3:13, 3:13] = mixing_multipliers['b'] * np.ones((10, 10))
@@ -51,6 +52,15 @@ def objective_function(mixing_multipliers):
     mixing_multipliers_matrix[0:3, 13:] = mixing_multipliers['e'] * np.ones((3, 3))
     mixing_multipliers_matrix[13:, 3:13] = mixing_multipliers['f'] * np.ones((3, 10))
     mixing_multipliers_matrix[3:13, 13:] = mixing_multipliers['f'] * np.ones((10, 3))
+    return mixing_multipliers_matrix
+
+
+def objective_function(mixing_multipliers):
+    # build the model
+    model_function = build_covid_model
+    mixing_progression = {}
+
+    mixing_multipliers_matrix = build_mixing_multipliers_matrix(mixing_multipliers)
 
     # save params without mixing multipliers for scenario 1
     main_params_sc1 = copy.copy(main_params['default'])

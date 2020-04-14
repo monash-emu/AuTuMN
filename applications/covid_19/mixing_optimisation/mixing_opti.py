@@ -1,5 +1,6 @@
 from applications.run_single_application import *
 from autumn.db import Database, get_iso3_from_country_name
+import numpy as np
 import copy
 
 INPUT_DB_PATH = os.path.join(constants.DATA_PATH, 'inputs.db')

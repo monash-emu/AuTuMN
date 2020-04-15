@@ -71,18 +71,38 @@ def build_mixing_multipliers_matrix(mixing_multipliers):
     return mixing_multipliers_matrix
 
 
-def objective_function(mixing_multipliers):
-    # build the model
+def objective_function(decision_variables, mode="by_age"):
+    """
+    :param decision_variables: dictionary containing
+        - mixing multipliers if mode == "by_age"    OR
+        - location multipliers if mode == "by_location"
+    :param mode: either "by_age" or "by_location"
+    :return:
+    """
     model_function = build_covid_model
 
-    mixing_multipliers_matrix = build_mixing_multipliers_matrix(mixing_multipliers)
-
-    # save params without mixing multipliers for scenario 1
+    # save params without any mixing multipliers for scenario 1
     main_params_sc1 = copy.copy(main_params["default"])
     main_params_sc1["end_time"] = 300
 
-    # Prepare scenario data
-    main_params["default"].update({"mixing_matrix_multipliers": mixing_multipliers_matrix})
+    # define the two scenarios: 0: with intervention, 1: after intervention to test immunity
+    if mode == "by_age":
+        mixing_multipliers = decision_variables
+        mixing_multipliers_matrix = build_mixing_multipliers_matrix(mixing_multipliers)
+
+        # Prepare scenario data
+        main_params["default"].update({"mixing_matrix_multipliers": mixing_multipliers_matrix})
+    elif mode == "by_location":
+        mixing_update_dictionary = {}
+        for loc in ['school', 'work', 'other_locations']:
+            mixing_update_dictionary[loc + '_times'] = [0]
+            mixing_update_dictionary[loc + '_values'] = [decision_variables[loc]]
+        main_params["default"].update({
+            'mixing': mixing_update_dictionary
+        })
+    else:
+        raise ValueError("The requested mode is not supported")
+
     scenario_params = {0: main_params["default"], 1: main_params_sc1}
     main_params['scenario_start_time'] = main_params["default"]["end_time"] - 1
 
@@ -121,9 +141,17 @@ def visualise_simulation(_models):
     old_outputs_plotter.plot_requested_outputs()
 
 
-# parameters to optimise (all bounded in [0., 2.])
-mixing_mult = {"a": 1.0, "b": 1.5, "c": 0.0, "d": 0.5, "e": 0.7, "f": 1.3}
+# parameters to optimise (all bounded in [0., 1.])
+mixing_mult_by_age = {"a": 1., "b": 1., "c": 1.0, "d": 1., "e": 1., "f": 1.}
+mixing_mult_by_location = {"school": 1., "work": 1., "other_locations": 1.}
 
-h_immu, obj, models = objective_function(mixing_multipliers=mixing_mult)
+mode = "by_location"
+
+_dec_var, _mode = (mixing_mult_by_age, "by_age") if mode == "by_age" else (mixing_mult_by_location, "by_location")
+
+h_immu, obj, models = objective_function(decision_variables=_dec_var, mode=_mode)
+
+print(h_immu)
+print(obj)
 
 # visualise_simulation(models)

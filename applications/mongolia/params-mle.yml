@@ -1,0 +1,11 @@
+---
+# Parameters used to build the Mongolia model.
+# These are parameter estimates that were found using a
+# MCMC computation using the base model.
+contact_rate: 13.17359 # 10.44
+adult_latency_adjustment: 2.894561
+dr_amplification_prop_among_nonsuccess: 0.1662956
+self_recovery_rate: 0.2497045
+tb_mortality_rate: 0.3729356
+rr_transmission_recovered: 0.959254
+cdr_multiplier: 1.077391

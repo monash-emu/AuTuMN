@@ -1,6 +1,7 @@
-from autumn.constants import Compartment
-from datetime import date
 import itertools
+from datetime import date
+
+from autumn.constants import Compartment
 
 
 def find_incidence_outputs(parameters):

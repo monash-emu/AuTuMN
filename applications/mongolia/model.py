@@ -1,10 +1,7 @@
 import os
-from datetime import datetime
-from time import time
 from copy import deepcopy
 
 import numpy
-import pandas as pd
 from summer_py.summer_model import (
     StratifiedModel,
     split_age_parameter,
@@ -21,123 +18,26 @@ from autumn import constants
 from autumn.curve import scale_up_function
 from autumn.db import Database, get_pop_mortality_functions
 from autumn.tb_model import (
-    add_combined_incidence,
     create_output_connections_for_incidence_by_stratum,
     list_all_strata_for_mortality,
-    load_model_scenario,
-    load_calibration_from_db,
     scale_relative_risks_for_equivalence,
     provide_aggregated_latency_parameters,
     get_adapted_age_parameters,
     convert_competing_proportion_to_rate,
-    store_run_models,
     add_standard_latency_flows,
     add_standard_natural_history_flows,
     add_standard_infection_flows,
     add_birth_rate_functions,
-    create_multi_scenario_outputs,
-    create_mcmc_outputs,
-    DummyModel,
 )
-from autumn.tool_kit import run_multi_scenario, return_function_of_function, change_parameter_unit
+from autumn.tool_kit import return_function_of_function, change_parameter_unit
 
 # Database locations
-file_dir = os.path.dirname(os.path.abspath(__file__))
-timestamp = datetime.now().strftime("%m_%d_%Y_%H_%M_%S")
-OUTPUT_DB_PATH = os.path.join(file_dir, "databases", f"outputs_{timestamp}.db")
 INPUT_DB_PATH = os.path.join(constants.DATA_PATH, "inputs.db")
 
-STRATIFY_BY = ["age", "strain", "location", "organ"]
 
-# Adjust the following variables to reduce the number of graphs
-PLOTTED_STRATIFIED_DERIVED_OUTPUTS = [
-    "incidence",
-    "notifications",
-    "mortality",
-    "popsizes",
-]  # use ["incidence", "notifications", "mortality", "popsizes"] to get all outputs
-PLOTTED_STRATIFIED_PREVALENCE_OUTPUTS = [
-    "prevXinfectious",
-    "prevXlatent",
-]  # e.g. ["prevXinfectious", "prevXlatent"]
-
-
-def build_mongolia_timevariant_cdr(cdr_multiplier):
-    cdr = {1950.0: 0.0, 1980.0: 0.10, 1990.0: 0.15, 2000.0: 0.20, 2010.0: 0.30, 2015: 0.33}
-    return scale_up_function(
-        cdr.keys(), [c * cdr_multiplier for c in list(cdr.values())], smoothness=0.2, method=5
-    )
-
-
-def build_mongolia_timevariant_tsr():
-    tsr = {1950.0: 0.0, 1970.0: 0.2, 1994.0: 0.6, 2000.0: 0.85, 2010.0: 0.87, 2016: 0.9}
-    return scale_up_function(tsr.keys(), tsr.values(), smoothness=0.2, method=5)
-
-
-def build_mongolia_model(update_params={}):
-    # some default parameter values
-    external_params = {  # run configuration
-        "start_time": 1900.0,
-        "end_time": 2035.0,
-        "time_step": 1.0,
-        "start_population": 3000000,
-        # base model definition:
-        "contact_rate": 14.0,
-        "rr_transmission_recovered": 1.0,
-        "rr_transmission_late_latent": 0.21,
-        "adult_latency_adjustment": 4.0,  # used to increase adult progression rates due to pollution
-        "self_recovery_rate": 0.231,  # this is for smear-positive TB
-        "tb_mortality_rate": 0.389,  # this is for smear-positive TB
-        "prop_smearpos": 0.5,
-        "cdr_multiplier": 1.0,
-        # MDR-TB:
-        "dr_amplification_prop_among_nonsuccess": 0.20,  # based on Cox et al and Bonnet et al
-        "prop_mdr_detected_as_mdr": 0.5,
-        "mdr_tsr": 0.6,
-        "mdr_infectiousness_multiplier": 1.1,
-        # diagnostic sensitivity by organ status:
-        "diagnostic_sensitivity_smearpos": 1.0,
-        "diagnostic_sensitivity_smearneg": 0.7,
-        "diagnostic_sensitivity_extrapul": 0.5,
-        # adjustments by location
-        "rr_transmission_urban_ger": 3.0,  # reference: rural_province
-        "rr_transmission_urban_nonger": 0.8,  # reference: rural_province
-        "rr_transmission_prison": 50,  # reference: rural_province
-        # IPT
-        "ipt_age_0_ct_coverage": 0.17,  # Children contact tracing coverage  .17
-        "ipt_age_5_ct_coverage": 0.0,  # Children contact tracing coverage
-        "ipt_age_15_ct_coverage": 0.0,  # Children contact tracing coverage
-        "ipt_age_60_ct_coverage": 0.0,  # Children contact tracing coverage
-        "yield_contact_ct_tstpos_per_detected_tb": 2.0,  # expected number of infections traced per index
-        "ipt_efficacy": 0.75,  # based on intention-to-treat
-        "ds_ipt_switch": 1.0,  # used as a DS-specific multiplier to the coverage defined above
-        "mdr_ipt_switch": 0.0,  # used as an MDR-specific multiplier to the coverage defined above
-        # Treatment improvement (C-DOTS)
-        "reduction_negative_tx_outcome": 0.0,
-        # ACF for risk groups
-        "acf_coverage": 0.0,
-        "acf_sensitivity": 0.8,
-        "acf_rural_province_switch": 0.0,
-        "acf_urban_nonger_switch": 0.0,
-        "acf_urban_ger_switch": 0.0,
-        "acf_prison_switch": 0.0,
-    }
-
-    # update external_params with MCMC mle estimates
-    mle_estimates = {
-        "contact_rate": 13.17359,  # 10.44,
-        "adult_latency_adjustment": 2.894561,
-        "dr_amplification_prop_among_nonsuccess": 0.1662956,
-        "self_recovery_rate": 0.2497045,
-        "tb_mortality_rate": 0.3729356,
-        "rr_transmission_recovered": 0.959254,
-        "cdr_multiplier": 1.077391,
-    }
-    external_params.update(mle_estimates)
-
-    # update external_params with new parameter values found in update_params
+def build_model(params, update_params={}):
+    external_params = deepcopy(params)
     external_params.update(update_params)
-
     model_parameters = {
         "contact_rate": external_params["contact_rate"],
         "contact_rate_recovered": external_params["contact_rate"]
@@ -146,13 +46,10 @@ def build_mongolia_model(update_params={}):
         * external_params["rr_transmission_late_latent"],
         "recovery": external_params["self_recovery_rate"],
         "infect_death": external_params["tb_mortality_rate"],
-        "universal_death_rate": 1.0 / 50.0,
-        "case_detection": 0.0,
-        "ipt_rate": 0.0,
-        "acf_rate": 0.0,
-        "dr_amplification": 0.0,  # high value for testing
-        "crude_birth_rate": 20.0 / 1e3,
+        **external_params,
     }
+    stratify_by = external_params["stratify_by"]
+    derived_output_types = external_params["derived_outputs"]
 
     input_database = Database(database_name=INPUT_DB_PATH)
     n_iter = (
@@ -181,7 +78,7 @@ def build_mongolia_model(update_params={}):
     # define model     #replace_deaths  add_crude_birth_rate
     init_pop = {"infectious": 1000, "late_latent": 1000000}
 
-    _tb_model = StratifiedModel(
+    tb_model = StratifiedModel(
         integration_times,
         compartments,
         init_pop,
@@ -195,10 +92,10 @@ def build_mongolia_model(update_params={}):
     )
 
     # add crude birth rate from un estimates
-    _tb_model = add_birth_rate_functions(_tb_model, input_database, "MNG")
+    tb_model = add_birth_rate_functions(tb_model, input_database, "MNG")
 
     # add case detection process to basic model
-    _tb_model.add_transition_flow(
+    tb_model.add_transition_flow(
         {
             "type": "standard_flows",
             "parameter": "case_detection",
@@ -269,7 +166,7 @@ def build_mongolia_model(update_params={}):
 
         return total_tb_detected * prop_of_relevant_latent
 
-    _tb_model.add_transition_flow(
+    tb_model.add_transition_flow(
         {
             "type": "customised_flows",
             "parameter": "ipt_rate",
@@ -280,7 +177,7 @@ def build_mongolia_model(update_params={}):
     )
 
     # add ACF flow
-    _tb_model.add_transition_flow(
+    tb_model.add_transition_flow(
         {
             "type": "standard_flows",
             "parameter": "acf_rate",
@@ -346,7 +243,7 @@ def build_mongolia_model(update_params={}):
     )
 
     # tb control recovery rate (detection and treatment) function set for overall if not organ-specific, smearpos otherwise
-    if "organ" not in STRATIFY_BY:
+    if "organ" not in stratify_by:
         tb_control_recovery_rate = lambda t: tsr_function(t) * detect_rate_by_organ["overall"](t)
     else:
         tb_control_recovery_rate = lambda t: tsr_function(t) * detect_rate_by_organ["smearpos"](t)
@@ -369,21 +266,21 @@ def build_mongolia_model(update_params={}):
     )
 
     # assign newly created functions to model parameters
-    _tb_model.adaptation_functions["case_detection"] = tb_control_recovery_rate
-    _tb_model.parameters["case_detection"] = "case_detection"
+    tb_model.adaptation_functions["case_detection"] = tb_control_recovery_rate
+    tb_model.parameters["case_detection"] = "case_detection"
 
-    _tb_model.adaptation_functions["ipt_rate"] = ipt_rate_function
-    _tb_model.parameters["ipt_rate"] = "ipt_rate"
+    tb_model.adaptation_functions["ipt_rate"] = ipt_rate_function
+    tb_model.parameters["ipt_rate"] = "ipt_rate"
 
-    _tb_model.adaptation_functions["acf_rate"] = acf_rate_function
-    _tb_model.parameters["acf_rate"] = "acf_rate"
+    tb_model.adaptation_functions["acf_rate"] = acf_rate_function
+    tb_model.parameters["acf_rate"] = "acf_rate"
 
-    if "strain" in STRATIFY_BY:
+    if "strain" in stratify_by:
         mdr_adjustment = (
             external_params["prop_mdr_detected_as_mdr"] * external_params["mdr_tsr"] / 0.9
         )  # /.9 for last DS TSR
 
-        _tb_model.stratify(
+        tb_model.stratify(
             "strain",
             ["ds", "mdr"],
             ["early_latent", "late_latent", "infectious"],
@@ -403,13 +300,13 @@ def build_mongolia_model(update_params={}):
             },
         )
 
-        _tb_model.add_transition_flow(
+        tb_model.add_transition_flow(
             {
                 "type": "standard_flows",
                 "parameter": "dr_amplification",
                 "origin": "infectiousXstrain_ds",
                 "to": "infectiousXstrain_mdr",
-                "implement": len(_tb_model.all_stratifications),
+                "implement": len(tb_model.all_stratifications),
             }
         )
 
@@ -420,10 +317,10 @@ def build_mongolia_model(update_params={}):
             * external_params["dr_amplification_prop_among_nonsuccess"]
         )
 
-        _tb_model.adaptation_functions["dr_amplification"] = dr_amplification_rate
-        _tb_model.parameters["dr_amplification"] = "dr_amplification"
+        tb_model.adaptation_functions["dr_amplification"] = dr_amplification_rate
+        tb_model.parameters["dr_amplification"] = "dr_amplification"
 
-    if "age" in STRATIFY_BY:
+    if "age" in stratify_by:
         age_breakpoints = [0, 5, 15, 60]
         age_infectiousness = get_parameter_dict_from_function(
             logistic_scaling_function(10.0), age_breakpoints
@@ -444,17 +341,17 @@ def build_mongolia_model(update_params={}):
         )
         age_params["universal_death_rate"] = {}
         for age_break in age_breakpoints:
-            _tb_model.time_variants["universal_death_rateXage_" + str(age_break)] = pop_morts[
+            tb_model.time_variants["universal_death_rateXage_" + str(age_break)] = pop_morts[
                 age_break
             ]
-            _tb_model.parameters[
+            tb_model.parameters[
                 "universal_death_rateXage_" + str(age_break)
             ] = "universal_death_rateXage_" + str(age_break)
 
             age_params["universal_death_rate"][
                 str(age_break) + "W"
             ] = "universal_death_rateXage_" + str(age_break)
-        _tb_model.parameters["universal_death_rateX"] = 0.0
+        tb_model.parameters["universal_death_rateX"] = 0.0
 
         # age-specific IPT
         ipt_by_age = {"ipt_rate": {}}
@@ -471,7 +368,7 @@ def build_mongolia_model(update_params={}):
         )
         age_params.update({"contact_rate": age_bcg_efficacy_dict})
 
-        _tb_model.stratify(
+        tb_model.stratify(
             "age",
             deepcopy(age_breakpoints),
             [],
@@ -483,11 +380,11 @@ def build_mongolia_model(update_params={}):
 
         # patch for IPT to overwrite parameters when ds_ipt has been turned off while we still need some coverage at baseline
         if external_params["ds_ipt_switch"] == 0.0 and external_params["mdr_ipt_switch"] == 1.0:
-            _tb_model.parameters["ipt_rateXstrain_dsXage_0"] = 0.17
+            tb_model.parameters["ipt_rateXstrain_dsXage_0"] = 0.17
             for age_break in [5, 15, 60]:
-                _tb_model.parameters["ipt_rateXstrain_dsXage_" + str(age_break)] = 0.0
+                tb_model.parameters["ipt_rateXstrain_dsXage_" + str(age_break)] = 0.0
 
-    if "organ" in STRATIFY_BY:
+    if "organ" in stratify_by:
         props_smear = {
             "smearpos": external_params["prop_smearpos"],
             "smearneg": 1.0 - (external_params["prop_smearpos"] + 0.20),
@@ -508,7 +405,7 @@ def build_mongolia_model(update_params={}):
             else 1.0
         )
 
-        _tb_model.stratify(
+        tb_model.stratify(
             "organ",
             ["smearpos", "smearneg", "extrapul"],
             ["infectious"],
@@ -528,7 +425,7 @@ def build_mongolia_model(update_params={}):
             },
         )
 
-    if "location" in STRATIFY_BY:
+    if "location" in stratify_by:
         props_location = {
             "rural_province": 0.48,
             "urban_nonger": 0.368,
@@ -575,7 +472,7 @@ def build_mongolia_model(update_params={}):
                 "acf_" + stratum + "_switch"
             ]
 
-        _tb_model.stratify(
+        tb_model.stratify(
             "location",
             ["rural_province", "urban_nonger", "urban_ger", "prison"],
             [],
@@ -586,12 +483,12 @@ def build_mongolia_model(update_params={}):
             mixing_matrix=location_mixing,
         )
 
-    # _tb_model.transition_flows.to_csv("transitions.csv")
-    # _tb_model.death_flows.to_csv("deaths.csv")
+    # tb_model.transition_flows.to_csv("transitions.csv")
+    # tb_model.death_flows.to_csv("deaths.csv")
 
     # create some customised derived_outputs
 
-    if "notifications" in PLOTTED_STRATIFIED_DERIVED_OUTPUTS:
+    if "notifications" in derived_output_types:
 
         def notification_function_builder(stratum):
             """
@@ -629,30 +526,43 @@ def build_mongolia_model(update_params={}):
 
             return calculate_notifications
 
-        for compartment in _tb_model.compartment_names:
+        for compartment in tb_model.compartment_names:
             if "infectious" in compartment:
                 stratum = compartment.split("infectious")[1]
-                _tb_model.derived_output_functions[
+                tb_model.derived_output_functions[
                     "notifications" + stratum
                 ] = notification_function_builder(stratum)
-                # _tb_model.derived_output_functions['popsize_treatment_support' + stratum] = notification_function_builder(stratum)
+                # tb_model.derived_output_functions['popsize_treatment_support' + stratum] = notification_function_builder(stratum)
 
-    if "incidence" in PLOTTED_STRATIFIED_DERIVED_OUTPUTS:
+    if "incidence" in derived_output_types:
         # add output_connections for all stratum-specific incidence outputs
-        _tb_model.output_connections.update(
-            create_output_connections_for_incidence_by_stratum(_tb_model.compartment_names)
+        incidence_output_conns = create_output_connections_for_incidence_by_stratum(
+            tb_model.compartment_names
         )
+        tb_model.output_connections.update(incidence_output_conns)
+        # Create a 'combined incidence' derived output
+        early_names = [k for k in incidence_output_conns.keys() if k.startswith("incidence_early")]
+        for early_name in early_names:
+            rootname = early_name[15:]
+            late_name = f"incidence_late{rootname}"
+            combined_name = f"incidence{rootname}"
 
-    if "mortality" in PLOTTED_STRATIFIED_DERIVED_OUTPUTS:
+            def add_combined_incidence(model, time, e=early_name, l=late_name):
+                time_idx = model.times.index(time)
+                early_incidence = model.derived_outputs[e][time_idx]
+                late_incidence = model.derived_outputs[l][time_idx]
+                return early_incidence + late_incidence
+
+            tb_model.derived_output_functions[combined_name] = add_combined_incidence
+
+    if "mortality" in derived_output_types:
         # prepare death outputs for all strata
-        _tb_model.death_output_categories = list_all_strata_for_mortality(
-            _tb_model.compartment_names
-        )
+        tb_model.death_output_categories = list_all_strata_for_mortality(tb_model.compartment_names)
 
     ############################################
     #       population sizes for costing
     ############################################
-    if "popsizes" in PLOTTED_STRATIFIED_DERIVED_OUTPUTS:
+    if "popsizes" in derived_output_types:
         # nb of detected individuals by strain:
         def detected_popsize_function_builder(tag):
             """
@@ -676,7 +586,7 @@ def build_mongolia_model(update_params={}):
             "organ_smearneg",
             "organ_extrapul",
         ]:
-            _tb_model.derived_output_functions[
+            tb_model.derived_output_functions[
                 "popsizeXnb_detectedX" + tag
             ] = detected_popsize_function_builder(tag)
 
@@ -693,192 +603,18 @@ def build_mongolia_model(update_params={}):
             )
             return external_params["acf_coverage"] * pop_urban_ger
 
-        _tb_model.derived_output_functions["popsizeXnb_screened_acf"] = popsize_acf
+        tb_model.derived_output_functions["popsizeXnb_screened_acf"] = popsize_acf
 
-    return _tb_model
-
-
-def run_model():
-    load_model = False
-    load_mcmc = False
-
-    scenario_params = {
-        # 1: {'ipt_age_0_ct_coverage': 1.},
-        # 2: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
-        #          'ipt_age_60_ct_coverage': .5},
-        # 3: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
-        #           'ipt_age_60_ct_coverage': .5, 'ds_ipt_switch': 0., 'mdr_ipt_switch': 1.},
-        # 4: {'mdr_tsr': .8},
-        # 5: {'reduction_negative_tx_outcome': 0.5},
-        # 6: {'acf_coverage': .155, 'acf_urban_ger_switch': 1.},  # 15.5% to get 70,000 screens
-        # 7: {'diagnostic_sensitivity_smearneg': 1., 'prop_mdr_detected_as_mdr': .9},
-        # 8: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
-        #     'ipt_age_60_ct_coverage': .5, 'ds_ipt_switch': 0., 'mdr_ipt_switch': 1.,
-        #     'mdr_tsr': .8,
-        #     'reduction_negative_tx_outcome': 0.5,
-        #     'acf_coverage': .155, 'acf_urban_ger_switch': 1.,
-        #     'diagnostic_sensitivity_smearneg': 1., 'prop_mdr_detected_as_mdr': .9
-        #     },
-        # 9: {'contact_rate': 0.}
-    }
-    scenario_list = list(scenario_params.keys())
-    if 0 not in scenario_list:
-        scenario_list = [0] + scenario_list
-
-    if load_model:
-        if load_mcmc:
-            models = load_calibration_from_db("mcmc_chistmas_2019", n_burned_per_chain=50)
-            scenario_list = [i + 1 for i in range(len(models))]
-        else:
-            models = []
-            scenarios_to_load = scenario_list
-            for sc in scenarios_to_load:
-                print("Loading model for scenario " + str(sc))
-                loaded_model = load_model_scenario(
-                    str(sc), database_name="outputs_01_14_2020_10_50_27.db"
-                )
-                models.append(DummyModel(loaded_model["outputs"], loaded_model["derived_outputs"]))
-    else:
-        t0 = time()
-        models = run_multi_scenario(
-            scenario_params, {"scenario_start_time": 2020.0, "default": {}}, build_mongolia_model
-        )
-        # automatically add combined incidence output
-        for model in models:
-            outputs_df = pd.DataFrame(model.outputs, columns=model.compartment_names)
-            derived_outputs_df = pd.DataFrame(
-                model.derived_outputs, columns=model.derived_outputs.keys()
-            )
-            updated_derived_outputs = add_combined_incidence(derived_outputs_df, outputs_df)
-            updated_derived_outputs = updated_derived_outputs.to_dict("list")
-            model.derived_outputs = updated_derived_outputs
-        store_run_models(models, scenarios=scenario_list, database_name=OUTPUT_DB_PATH)
-        delta = time() - t0
-        print("Running time: " + str(round(delta, 1)) + " seconds")
-
-    req_outputs = [
-        "prevXinfectiousXamong",
-        "prevXlatentXamong"
-        # 'prevXinfectiousXorgan_smearposXamongXinfectious', 'prevXinfectiousXorgan_smearnegXamongXinfectious',
-        # 'prevXinfectiousXorgan_extrapulXamongXinfectious',
-        #'prevXinfectiousXorgan_smearposXamongXage_15Xage_60Xlocation_prison']
-    ]
-
-    targets_to_plot = {
-        "prevXinfectiousXamong": {"times": [2015], "values": [[757.0, 620.0, 894.0]]},
-        "prevXlatentXamongXage_5": {"times": [2016], "values": [[9.60, 9.02, 10.18]]},
-        "prevXinfectiousXstrain_mdrXamongXinfectious": {
-            "times": [2015],
-            "values": [[5.03, 4.10, 6.70]],
-        },
-        "notifications": {
-            "times": list(numpy.linspace(1990, 2018, 29)),
-            "values": [
-                [1659],
-                [1611],
-                [1516],
-                [1418],
-                [1730],
-                [2780],
-                [4062],
-                [3592],
-                [2915],
-                [3348],
-                [3109],
-                [3526],
-                [3829],
-                [3918],
-                [4542],
-                [4601],
-                [5049],
-                [4654],
-                [4490],
-                [4481],
-                [4458],
-                [4217],
-                [4128],
-                [4331],
-                [4483],
-                [4685],
-                [4425],
-                [4220],
-                [4065],
-            ],
-        },
-    }
-
-    for target in targets_to_plot.keys():
-        if target not in req_outputs and target[0:5] == "prevX":
-            req_outputs.append(target)
-
-    multipliers = {"prevXinfectiousXstrain_mdrXamongXinfectious": 100.0}
-
-    ymax = {"prevXinfectiousXamong": 2000.0, "prevXlatentXamongXage_5": 20.0}
-
-    translations = {
-        "prevXinfectiousXamong": "TB prevalence (/100,000)",
-        "prevXinfectiousXamongXage_0": "TB prevalence among 0-4 y.o. (/100,000)",
-        "prevXinfectiousXamongXage_5": "TB prevalence among 5-14 y.o. (/100,000)",
-        "prevXinfectiousXamongXage_15": "TB prevalence among 15-59 y.o. (/100,000)",
-        "prevXinfectiousXamongXage_60": "TB prevalence among 60+ y.o. (/100,000)",
-        "prevXinfectiousXamongXhousing_ger": "TB prev. among Ger population (/100,000)",
-        "prevXinfectiousXamongXhousing_non-ger": "TB prev. among non-Ger population(/100,000)",
-        "prevXinfectiousXamongXlocation_rural": "TB prev. among rural population (/100,000)",
-        "prevXinfectiousXamongXlocation_province": "TB prev. among province population (/100,000)",
-        "prevXinfectiousXamongXlocation_urban": "TB prev. among urban population (/100,000)",
-        "prevXlatentXamong": "Latent TB infection prevalence (%)",
-        "prevXlatentXamongXage_5": "Latent TB infection prevalence among 5-14 y.o. (%)",
-        "prevXlatentXamongXage_0": "Latent TB infection prevalence among 0-4 y.o. (%)",
-        "prevXinfectiousXamongXage_15Xage_60": "TB prev. among 15+ y.o. (/100,000)",
-        "prevXinfectiousXamongXage_15Xage_60Xhousing_ger": "TB prev. among 15+ y.o. Ger population (/100,000)",
-        "prevXinfectiousXamongXage_15Xage_60Xhousing_non-ger": "TB prev. among 15+ y.o. non-Ger population (/100,000)",
-        "prevXinfectiousXamongXage_15Xage_60Xlocation_rural": "TB prev. among 15+ y.o. rural population (/100,000)",
-        "prevXinfectiousXamongXage_15Xage_60Xlocation_province": "TB prev. among 15+ y.o. province population (/100,000)",
-        "prevXinfectiousXamongXage_15Xage_60Xlocation_urban": "TB prev. among 15+ y.o. urban population (/100,000)",
-        "prevXinfectiousXstrain_mdrXamongXinfectious": "Proportion of MDR-TB among TB (%)",
-        "prevXinfectiousXamongXhousing_gerXlocation_urban": "TB prevalence in urban Ger population (/100,000)",
-        "age_0": "age 0-4",
-        "age_5": "age 5-14",
-        "age_15": "age 15-59",
-        "age_60": "age 60+",
-        "housing_ger": "ger",
-        "housing_non-ger": "non-ger",
-        "location_rural": "rural",
-        "location_province": "province",
-        "location_urban": "urban",
-        "strain_ds": "DS-TB",
-        "strain_mdr": "MDR-TB",
-        "incidence": "TB incidence (/100,000/y)",
-        "prevXinfectiousXstrain_mdrXamong": "Prevalence of MDR-TB (/100,000)",
-    }
-
-    if load_mcmc:
-        create_mcmc_outputs(
-            models,
-            req_outputs=req_outputs,
-            out_dir="mcmc_output_12_02",
-            targets_to_plot=targets_to_plot,
-            req_multipliers=multipliers,
-            translation_dictionary=translations,
-            scenario_list=scenario_list,
-            ymax=ymax,
-            plot_start_time=1990,
-            outputs_to_plot_by_stratum=PLOTTED_STRATIFIED_PREVALENCE_OUTPUTS,
-        )
-    else:
-        create_multi_scenario_outputs(
-            models,
-            req_outputs=req_outputs,
-            out_dir="test",
-            targets_to_plot=targets_to_plot,
-            req_multipliers=multipliers,
-            translation_dictionary=translations,
-            scenario_list=scenario_list,
-            ymax=ymax,
-            plot_start_time=1990,
-            outputs_to_plot_by_stratum=PLOTTED_STRATIFIED_PREVALENCE_OUTPUTS,
-        )
+    return tb_model
 
 
-if __name__ == "__main__":
-    run_model()
+def build_mongolia_timevariant_cdr(cdr_multiplier):
+    cdr = {1950.0: 0.0, 1980.0: 0.10, 1990.0: 0.15, 2000.0: 0.20, 2010.0: 0.30, 2015: 0.33}
+    return scale_up_function(
+        cdr.keys(), [c * cdr_multiplier for c in list(cdr.values())], smoothness=0.2, method=5
+    )
+
+
+def build_mongolia_timevariant_tsr():
+    tsr = {1950.0: 0.0, 1970.0: 0.2, 1994.0: 0.6, 2000.0: 0.85, 2010.0: 0.87, 2016: 0.9}
+    return scale_up_function(tsr.keys(), tsr.values(), smoothness=0.2, method=5)

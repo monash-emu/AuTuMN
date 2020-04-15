@@ -1,7 +1,7 @@
 import numpy
 
 
-class DummyModel:
+class LoadedModel:
     """
     A model placeholder, used to store the outputs of a previous model run.
     """

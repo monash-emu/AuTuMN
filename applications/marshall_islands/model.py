@@ -1,6 +1,4 @@
 import os
-import numpy
-import yaml
 
 from summer_py.summer_model import StratifiedModel
 
@@ -37,16 +35,14 @@ from autumn.tb_model import (
     add_birth_rate_functions,
     list_all_strata_for_mortality,
 )
-from autumn.tool_kit import progressive_step_function_maker
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
 
 # Database locations
-file_dir = os.path.dirname(os.path.abspath(__file__))
+FILE_DIR = os.path.dirname(os.path.abspath(__file__))
 INPUT_DB_PATH = os.path.join(constants.DATA_PATH, "inputs.db")
-PARAMS_PATH = os.path.join(file_dir, "params.yml")
 
 
-def build_rmi_model(update_params={}):
+def build_model(params: dict, update_params={}):
     """
     Build the master function to run the TB model for the Republic of the Marshall Islands
 
@@ -57,7 +53,7 @@ def build_rmi_model(update_params={}):
     """
     input_database = Database(database_name=INPUT_DB_PATH)
 
-    # Define compartments and initial conditions
+    # Define compartments and initial conditions.
     compartments = [
         Compartment.SUSCEPTIBLE,
         Compartment.EARLY_LATENT,
@@ -69,12 +65,7 @@ def build_rmi_model(update_params={}):
     ]
     init_pop = {Compartment.INFECTIOUS: 10, Compartment.LATE_LATENT: 100}
 
-    # Get user-requested parameters
-    with open(PARAMS_PATH, "r") as yaml_file:
-        params = yaml.safe_load(yaml_file)
-    model_parameters = params["default"]
-
-    # Update, not needed for baseline run
+    model_parameters = params
     model_parameters.update(update_params)
 
     # Update partial immunity/susceptibility parameters
@@ -112,7 +103,7 @@ def build_rmi_model(update_params={}):
     )
 
     # Define model
-    _tb_model = StratifiedModel(
+    tb_model = StratifiedModel(
         integration_times,
         compartments,
         init_pop,
@@ -125,7 +116,7 @@ def build_rmi_model(update_params={}):
     )
 
     # Add crude birth rate from UN estimates (using Federated States of Micronesia as a proxy as no data for RMI)
-    _tb_model = add_birth_rate_functions(_tb_model, input_database, "FSM")
+    tb_model = add_birth_rate_functions(tb_model, input_database, "FSM")
 
     # Find raw case detection rate with multiplier, which is 1 by default, and adjust for differences by organ status
     cdr_scaleup_raw = build_scale_up_function(
@@ -172,51 +163,51 @@ def build_rmi_model(update_params={}):
 
     # Assign newly created functions to model parameters
     add_time_variant_parameter_to_model(
-        _tb_model, "case_detection", base_detection_rate, len(model_parameters["stratify_by"])
+        tb_model, "case_detection", base_detection_rate, len(model_parameters["stratify_by"])
     )
     add_time_variant_parameter_to_model(
-        _tb_model, "treatment_success", treatment_success_rate, len(model_parameters["stratify_by"])
+        tb_model, "treatment_success", treatment_success_rate, len(model_parameters["stratify_by"])
     )
     add_time_variant_parameter_to_model(
-        _tb_model,
+        tb_model,
         "treatment_nonsuccess",
         treatment_nonsuccess_rate,
         len(model_parameters["stratify_by"]),
     )
     # add_time_variant_parameter_to_model(
-    #     _tb_model, 'acf_rate', acf_rate_function, len(model_parameters['stratify_by']))
+    #     tb_model, 'acf_rate', acf_rate_function, len(model_parameters['stratify_by']))
     # add_time_variant_parameter_to_model(
-    #     _tb_model, 'acf_ltbi_rate', acf_ltbi_rate_function, len(model_parameters['stratify_by']))
+    #     tb_model, 'acf_ltbi_rate', acf_ltbi_rate_function, len(model_parameters['stratify_by']))
 
     # Stratification processes
     if "age" in model_parameters["stratify_by"]:
         age_specific_latency_parameters = manually_create_age_specific_latency_parameters(
             model_parameters
         )
-        _tb_model = stratify_by_age(
-            _tb_model,
+        tb_model = stratify_by_age(
+            tb_model,
             age_specific_latency_parameters,
             input_database,
             model_parameters["all_stratifications"]["age"],
         )
     if "diabetes" in model_parameters["stratify_by"]:
-        _tb_model = stratify_by_diabetes(
-            _tb_model,
+        tb_model = stratify_by_diabetes(
+            tb_model,
             model_parameters,
             model_parameters["all_stratifications"]["diabetes"],
             model_parameters["diabetes_target_props"],
             age_specific_prevalence=False,
         )
     if "organ" in model_parameters["stratify_by"]:
-        _tb_model = stratify_by_organ(
-            _tb_model,
+        tb_model = stratify_by_organ(
+            tb_model,
             model_parameters,
             detect_rate_by_organ,
             model_parameters["all_stratifications"]["organ"],
         )
     if "location" in model_parameters["stratify_by"]:
-        _tb_model = stratify_by_location(
-            _tb_model, model_parameters, model_parameters["all_stratifications"]["location"]
+        tb_model = stratify_by_location(
+            tb_model, model_parameters, model_parameters["all_stratifications"]["location"]
         )
 
     # Capture reported prevalence in Majuro assuming over-reporting (needed for calibration)
@@ -235,8 +226,8 @@ def build_rmi_model(update_params={}):
             * (1.0 + model_parameters["over_reporting_prevalence_proportion"])
         )
 
-    _tb_model.derived_output_functions.update(
+    tb_model.derived_output_functions.update(
         {"reported_majuro_prevalence": calculate_reported_majuro_prevalence}
     )
 
-    return _tb_model
+    return tb_model

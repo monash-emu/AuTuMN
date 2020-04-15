@@ -1,76 +1,100 @@
 """
 Utilities for running multiple model scenarios
 """
-from autumn.tool_kit.timer import Timer
 import numpy
-from autumn.demography.social_mixing import change_mixing_matrix_for_scenario
+
+from cerberus import Validator
+from autumn.tool_kit.timer import Timer
+
+from .utils import merge_dicts
+
+# Schema used to validate model parameters
+PARAM_SCEHMA = {
+    "default": {"type": "dict"},
+    "scenario_start_time": {"type": "float"},
+    "scenarios": {"type": "dict"},
+}
 
 
-def run_multi_scenario(param_lookup, params, model_builder, run_kwargs={}):
+def validate_params(params: dict):
     """
-    Run a baseline model and scenarios
+    Ensure plot config adhers to schema.
+    """
+    validator = Validator(PARAM_SCEHMA, allow_unknown=True, require_all=True)
+    if not validator.validate(params):
+        errors = validator.errors
+        raise Exception(errors)
 
-    :param param_lookup: 
-        A dictionary keyed with scenario numbers (0 for baseline)
-        Values are dictionaries containing parameter updates
-    :return: a list of model objects
+
+class Scenario:
+    """
+    A particular run of a simulation using a common model and unique parameters.
     """
 
-    # Run baseline model as scenario '0'
-    with Timer("Running baseline scenario"):
-        baseline_params = param_lookup[0] if 0 in param_lookup else {}
-        baseline_model = model_builder(baseline_params)
-        baseline_model = change_mixing_matrix_for_scenario(baseline_model, params, 0)
-        baseline_model.run_model(**run_kwargs)
-        models = [baseline_model]
+    def __init__(self, model_builder, idx: str, params: dict):
+        validate_params(params)
+        self.model_builder = model_builder
+        self.idx = idx
+        self.name = "baseline" if idx == 0 else f"scenario-{idx}"
+        self.params = params
+        self.generated_outputs = None
 
-    # Run scenario models
-    for i_scenario, scenario_params in param_lookup.items():
+    def run(self, base_model=None):
+        """
+        Run the scenario model simulation.
+        If a base model is provided, then run the scenario from the scenario start time.
+        """
+        with Timer(f"Running scenario: {self.name}"):
+            params = None
+            if not base_model:
+                # This model is the baseline model
+                assert self.is_baseline, "Can only run base model if Scenario idx is 0"
+                params = self.params["default"]
+                self.model = self.model_builder(params)
+            else:
+                # This is a scenario model, based off the baseline model
+                assert not self.is_baseline, "Can only run scenario model if Scenario idx is > 0"
 
-        # Ignore the baseline because it has already been run
-        if i_scenario == 0:
-            continue
+                # Construct scenario params by merging scenario-specific params into default params
+                default_params = self.params["default"]
+                scenario_params = self.params["scenarios"][self.idx]
+                params = merge_dicts(scenario_params, default_params)
 
-        with Timer(f"Running scenario #{i_scenario}"):
-            scenario_params["start_time"] = params["scenario_start_time"]
-            scenario_model = initialise_scenario_run(baseline_model, scenario_params, model_builder)
-            scenario_model = change_mixing_matrix_for_scenario(scenario_model, params, i_scenario)
-            scenario_model.run_model(**run_kwargs)
-            models.append(scenario_model)
+                # Override start time.
+                params = {**params, "start_time": self.params["scenario_start_time"]}
 
-    return models
+                base_times = base_model.times
+                base_outputs = base_model.outputs
 
+                # Find the time step from which we will start the scenario
+                start_index = get_scenario_start_index(base_times, params["start_time"])
+                start_time = base_times[start_index]
+                init_compartments = base_outputs[start_index, :]
 
-def initialise_scenario_run(baseline_model, scenario_params, model_builder):
-    """
-    Build a model to run a scenario. Running time starts at start_time, which must
-    be specified in `scenario_params`. The initial conditions will be loaded from the
-    run baseline_model.
+                # Create the new scenario model using the scenario-specific params,
+                # ensuring the initial conditions are the same for the given start time.
+                self.model = self.model_builder(params)
+                self.model.compartment_values = init_compartments
 
-    :return: the run scenario model
-    """
-    baseline_times = baseline_model.times
-    baseline_outputs = baseline_model.outputs
+            self.model.run_model()
 
-    # Find the time step from which we will start the scenario
-    scenario_start_index = get_scenario_start_index(baseline_times, scenario_params["start_time"])
-    scenario_start_time = baseline_times[scenario_start_index]
-    scenario_init_compartments = baseline_outputs[scenario_start_index, :]
+    @property
+    def is_baseline(self):
+        """Return True if this is a baseline model."""
+        return self.idx == 0
 
-    # Create the new scenario model using the scenario-specific params,
-    # ensuring the initial conditions are the same for the given start time.
-    scenario_params["start_time"] = scenario_start_time
-    model = model_builder(scenario_params)
-    model.compartment_values = scenario_init_compartments
-    return model
+    @property
+    def has_run(self):
+        """Return True if the model has been run."""
+        return self.model and self.model.outputs is not None
 
 
-def get_scenario_start_index(baseline_times, scenario_start_time):
+def get_scenario_start_index(base_times, scenario_start_time):
     """
     Returns the index of the closest time step that is at, or before the scenario start time.
     """
     indices_after_start_index = [
-        idx for idx, time in enumerate(baseline_times) if time > scenario_start_time
+        idx for idx, time in enumerate(base_times) if time > scenario_start_time
     ]
     if not indices_after_start_index:
         raise ValueError(

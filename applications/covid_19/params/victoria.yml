@@ -1,7 +1,7 @@
 ---
 default:
   country: victoria
-  iso3: AUS
+  iso3: VIC
 
   implement_importation: True
   importation_rate: 1.e-6
@@ -71,6 +71,6 @@ default:
       - 0.
       - 0.1
 
-data:
-  times_imported_cases: [70., 71., 86., 100., 107]
-  n_imported_cases: [1, 1, 45, 4, 1]
+  data:
+    times_imported_cases: [70., 71., 86., 100., 107]
+    n_imported_cases: [1, 1, 45, 4, 1]

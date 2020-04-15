@@ -2,15 +2,16 @@ import os
 
 from autumn.calibration import Calibration
 from autumn.tool_kit.utils import find_first_index_reaching_cumulative_sum
-from autumn.tool_kit.params import load_params
-from autumn.db import get_iso3_from_country_name
 
-from applications.covid_19.covid_model import build_covid_model, input_database
-from applications.covid_19.JH_data.process_JH_data import read_john_hopkins_data_from_csv
+from ..countries import CountryModel
+from ..model import build_model
+from ..JH_data.process_JH_data import read_john_hopkins_data_from_csv
 
 from numpy import linspace
 
-FILE_DIR = os.path.dirname(os.path.abspath(__file__))
+N_ITERS = 100000
+N_BURNED = 0
+N_CHAINS = 1
 
 
 def run_calibration_chain(
@@ -30,17 +31,15 @@ def run_calibration_chain(
     mode is either 'lsm' or 'autumn_mcmc'
     """
     print(f"Preparing to run covid model calibration for country {country}")
-    params = load_params(FILE_DIR, application=country.lower())
+
+    country_model = CountryModel(country)
+    build_model = country_model.build_model
+    params = country_model.params
     scenario_params = params["scenarios"]
     sc_start_time = params["scenario_start_time"]
-    # params["default"]["country"] = country
-    params["default"]["iso3"] = (
-        get_iso3_from_country_name(input_database, country) if country != "Victoria" else "VIC"
-    )
-
     calib = Calibration(
-        "covid_" + country,
-        build_covid_model,
+        f"covid_{country}",
+        build_model,
         par_priors,
         target_outputs,
         MULTIPLIERS,
@@ -52,7 +51,11 @@ def run_calibration_chain(
     )
     print("Starting calibration.")
     calib.run_fitting_algorithm(
-        run_mode=mode, n_iterations=100000, n_burned=0, n_chains=1, available_time=max_seconds,
+        run_mode=mode,
+        n_iterations=N_ITERS,
+        n_burned=N_BURNED,
+        n_chains=N_CHAINS,
+        available_time=max_seconds,
     )
     print(f"Finished calibration for run {run_id}.")
 

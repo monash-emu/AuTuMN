@@ -1,0 +1,30 @@
+---
+# Options for post processing of the Marshall Island model
+requested_outputs:
+  - prevXinfectiousXamong
+  - prevXlatentXamong
+  # - prevXinfectiousXamongXlocation_majuro
+  # - prevXinfectiousXamongXlocation_ebeye
+  # - prevXinfectiousXamongXlocation_otherislands
+  - prevXlatentXamongXlocation_majuro
+  - prevXlatentXamongXlocation_ebeye
+  - prevXlatentXamongXlocation_otherislands
+  # - prevXsusceptibleXamong
+  # - prevXrecoveredXamong
+  # - prevXearly_latentXamong
+  # - prevXlate_latentXamong
+  # - prevXltbi_treatedXamong
+
+multipliers:
+  prevXinfectiousXstrain_mdrXamongXinfectious: 100.0
+  prevXinfectiousXamong: 100000
+  prevXinfectiousXamongXlocation: 100000
+  prevXlatentXamong: 100
+  prevXlatentXamongXebeye: 100
+  prevXlatentXamongXmajuro: 100
+  prevXlatentXamongXotherislands: 100
+  prevXlatentXamongXlocation: 100
+
+collated_combos:
+  - ["infectious", "location"]
+  - ["latent", "location"]

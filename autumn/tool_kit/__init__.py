@@ -1,5 +1,5 @@
 from .economics import get_cost_from_coverage, get_coverage_from_cost
-from .scenarios import run_multi_scenario, initialise_scenario_run
+from .scenarios import Scenario
 from .utils import (
     step_function_maker,
     progressive_step_function_maker,

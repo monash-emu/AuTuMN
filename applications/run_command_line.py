@@ -8,80 +8,69 @@ You can access this script from your CLI by running:
 """
 import click
 
+from . import covid_19, marshall_islands, mongolia
 
-from .marshall_islands.runners import run_rmi_model
-from .covid_19.runners import run_covid_aus_model, run_covid_phl_model
-from .mongolia.mongolia_calibration import run_calibration_chain as run_mongolia_calibration_chain
-from .marshall_islands.rmi_calibration import run_calibration_chain as run_rmi_calibration_chain
-from .covid_19.covid_calibration import run_calibration_chain as run_covid_calibration_chain
+from .marshall_islands.calibration import run_calibration_chain as run_rmi_calibration_chain
+from .mongolia.calibration import run_calibration_chain as run_mongolia_calibration_chain
 
 
 @click.group()
 def cli():
-    """
-    AuTuMN utility command line
-    """
-    pass
+    """AuTuMN CLI"""
 
 
-@click.command()
-def rmi():
-    """
-    Run the Marshall Islands model.
-    """
-    rmi_run_model()
+@click.group()
+def run():
+    """Run a model"""
 
 
-@click.command()
-def covidaus():
-    """
-    Run the COVID Australian model.
-    """
-    run_covid_aus_model()
+@run.command("covid-aus")
+def run_covid_aus():
+    """Run the COVID Australia model"""
+    covid_19.aus.run_model()
 
 
-@click.command()
-def covidphl():
-    """
-    Run the COVID Philippines model.
-    """
-    run_covid_phl_model()
+@run.command("covid-phl")
+def run_covid_phl():
+    """Run the COVID Phillipines model"""
+    covid_19.phl.run_model()
 
 
-@click.command()
+@run.command("rmi")
+def run_rmi():
+    """Run the Marshall Islands TB model"""
+    marshall_islands.run_model()
+
+
+@run.command("mongolia")
+def run_mongolia():
+    """Run the Mongolia TB model"""
+    mongolia.run_model()
+
+
+@click.group()
+def calibrate():
+    """
+    Calibrate a model
+    """
+
+
+@calibrate.command("rmi")
 @click.argument("max_seconds", type=int)
 @click.argument("run_id", type=int)
 def rmi_calibration(max_seconds, run_id):
-    """
-    Run RMI model calibration.
-    """
+    """Run Marshall Islands model calibration."""
     run_rmi_calibration_chain(max_seconds, run_id)
 
 
-@click.command()
+@calibrate.command("mongolia")
 @click.argument("max_seconds", type=int)
 @click.argument("run_id", type=int)
 def mongolia_calibration(max_seconds, run_id):
-    """
-    Run Mongolia model calibration.
-    """
+    """Run Mongolia model calibration."""
     run_mongolia_calibration_chain(max_seconds, run_id)
 
 
-@click.command()
-@click.argument("max_seconds", type=int)
-@click.argument("run_id", type=int)
-def covid_calibration(max_seconds, run_id, country):
-    """
-    Run Covid model calibration.
-    """
-    run_covid_calibration_chain(max_seconds, run_id, country)
-
-
-cli.add_command(rmi_calibration)
-cli.add_command(mongolia_calibration)
-cli.add_command(covid_calibration)
-cli.add_command(rmi)
-cli.add_command(covidaus)
-cli.add_command(covidphl)
+cli.add_command(run)
+cli.add_command(calibrate)
 cli()

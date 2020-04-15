@@ -1,0 +1,100 @@
+---
+# Options for plotting outputs for the Marshall Island model
+outputs_to_plot: []
+parameter_category_values:
+  time: 0
+  param_names: []
+
+input_function:
+  start_time: 1990
+  func_names: []
+
+pop_distribution_strata: []
+
+prevalence_combos: []
+# - ["infectious", "latent"]
+
+translations:
+  prevXinfectiousXamong: TB prevalence (/100,000)
+  prevXinfectiousXamongXage_0: TB prevalence among 0-4 y.o. (/100,000)
+  prevXinfectiousXamongXage_5: TB prevalence among 5-14 y.o. (/100,000)
+  prevXinfectiousXamongXage_15: TB prevalence among 15-59 y.o. (/100,000)
+  prevXinfectiousXamongXage_60: TB prevalence among 60+ y.o. (/100,000)
+  prevXinfectiousXamongXhousing_ger: TB prev. among Ger population (/100,000)
+  prevXinfectiousXamongXhousing_non-ger: TB prev. among non-Ger population(/100,000)
+  prevXinfectiousXamongXlocation_rural: TB prev. among rural population (/100,000)
+  prevXinfectiousXamongXlocation_province: TB prev. among province population (/100,000)
+  prevXinfectiousXamongXlocation_urban: TB prev. among urban population (/100,000)
+  prevXlatentXamong: Latent TB infection prevalence (%)
+  prevXlatentXamongXage_5: Latent TB infection prevalence among 5-14 y.o. (%)
+  prevXlatentXamongXage_0: Latent TB infection prevalence among 0-4 y.o. (%)
+  prevXinfectiousXamongXage_15Xage_60: TB prev. among 15+ y.o. (/100,000)
+  prevXinfectiousXamongXage_15Xage_60Xhousing_ger: TB prev. among 15+ y.o. Ger population (/100,000)
+  prevXinfectiousXamongXage_15Xage_60Xhousing_non-ger: TB prev. among 15+ y.o. non-Ger population (/100,000)
+  prevXinfectiousXamongXage_15Xage_60Xlocation_rural: TB prev. among 15+ y.o. rural population (/100,000)
+  prevXinfectiousXamongXage_15Xage_60Xlocation_province: TB prev. among 15+ y.o. province population (/100,000)
+  prevXinfectiousXamongXage_15Xage_60Xlocation_urban: TB prev. among 15+ y.o. urban population (/100,000)
+  prevXinfectiousXstrain_mdrXamongXinfectious: Proportion of MDR-TB among TB (%)
+  prevXinfectiousXamongXhousing_gerXlocation_urban: TB prevalence in urban Ger population (/100,000)
+  age_0: age 0-4
+  age_5: age 5-14
+  age_15: age 15-59
+  age_60: age 60+
+  housing_ger: ger
+  housing_non-ger: non-ger
+  location_rural: rural
+  location_province: province
+  location_urban: urban
+  strain_ds: DS-TB
+  strain_mdr: MDR-TB
+  incidence: TB incidence (/100,000/y)
+  prevXinfectiousXstrain_mdrXamong: Prevalence of MDR-TB (/100,000)
+# not_sure_what_this_does:
+#   # ymax: { "prevXinfectiousXamong": 2000.0, "prevXlatentXamongXage_5": 20.0 }
+#   targets_to_plot:
+#     {
+#       "prevXinfectiousXamong":
+#         { "times": [2015], "values": [[757.0, 620.0, 894.0]] },
+#       "prevXlatentXamongXage_5":
+#         { "times": [2016], "values": [[9.60, 9.02, 10.18]] },
+#       "prevXinfectiousXstrain_mdrXamongXinfectious":
+#         { "times": [2015], "values": [[5.03, 4.10, 6.70]] },
+#       "notifications":
+#         {
+#           "times": list(numpy.linspace(1990,
+#           2018,
+#           29)),
+#           "values":
+#             [
+#               [1659],
+#               [1611],
+#               [1516],
+#               [1418],
+#               [1730],
+#               [2780],
+#               [4062],
+#               [3592],
+#               [2915],
+#               [3348],
+#               [3109],
+#               [3526],
+#               [3829],
+#               [3918],
+#               [4542],
+#               [4601],
+#               [5049],
+#               [4654],
+#               [4490],
+#               [4481],
+#               [4458],
+#               [4217],
+#               [4128],
+#               [4331],
+#               [4483],
+#               [4685],
+#               [4425],
+#               [4220],
+#               [4065],
+#             ],
+#         },
+#     }

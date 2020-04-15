@@ -5,6 +5,8 @@ import os
 import yaml
 import logging
 
+from .utils import merge_dicts
+
 logger = logging.getLogger(__file__)
 
 
@@ -60,18 +62,3 @@ def load_params(app_dir: str, application=None):
             params = yaml.safe_load(f)
 
     return params
-
-
-def merge_dicts(src: dict, dest: dict):
-    """
-    Merge src dict into dest dict.
-    """
-    for key, value in src.items():
-        if isinstance(value, dict):
-            # get node or create one
-            node = dest.setdefault(key, {})
-            merge_dicts(value, node)
-        else:
-            dest[key] = value
-
-    return dest

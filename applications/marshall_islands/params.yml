@@ -1,7 +1,6 @@
 ---
 # Parameters used to build the Marshall Island model.
 default:
-
   # Stratifications to implement - comment out/remove as required to enable model to run more quickly
   stratify_by:
     - age
@@ -14,11 +13,11 @@ default:
       - smearneg
       - extrapul
     age:
-      - '0'
-      - '5'
-      - '15'
-      - '35'
-      - '50'
+      - "0"
+      - "5"
+      - "15"
+      - "35"
+      - "50"
     location:
       - majuro
       - ebeye
@@ -45,23 +44,23 @@ default:
 
   # Base model definition
   contact_rate: 11.33892 # 12.
-#  beta_decay_rate: 0.06
-#  minimum_tv_beta_multiplier: 0.5
+  #  beta_decay_rate: 0.06
+  #  minimum_tv_beta_multiplier: 0.5
   rr_transmission_recovered: 0.6
   rr_transmission_late_latent: 0.21
   rr_transmission_ltbi_treated: 0.21
-#  latency_adjustment: 2.  # used to modify progression rates during calibration
+  #  latency_adjustment: 2.  # used to modify progression rates during calibration
   recovery: 0.231 # this is for smear-positive TB
   infect_death: 0.389 # this is for smear-positive TB
   prop_smearpos: 0.5
-  cdr_multiplier: 1.219867  # 1.0
-#  # Latency parameters - aggregated - best estimate values from Ragonnet et al "Optimally capturing latency dynamics in models of tuberculosis
-#  #transmission" 2017 Epidemics
-#  early_progression: 1.1e-3
-#  stabilisation: 1.0e-2
-#  late_progression: 5.5e-6
-#  # latency parameters - age-specific - best estimate values from Ragonnet et al "Optimally capturing latency dynamics in models of tuberculosis
-#  #  #transmission" 2017 Epidemics
+  cdr_multiplier: 1.219867 # 1.0
+  #  # Latency parameters - aggregated - best estimate values from Ragonnet et al "Optimally capturing latency dynamics in models of tuberculosis
+  #  #transmission" 2017 Epidemics
+  #  early_progression: 1.1e-3
+  #  stabilisation: 1.0e-2
+  #  late_progression: 5.5e-6
+  #  # latency parameters - age-specific - best estimate values from Ragonnet et al "Optimally capturing latency dynamics in models of tuberculosis
+  #  #  #transmission" 2017 Epidemics
   early_progression_0: 6.6e-3
   early_progression_5: 2.7e-3
   early_progression_15: 2.7e-4
@@ -70,7 +69,7 @@ default:
   stabilisation_15: 5.4e-3
   late_progression_0: 1.9e-11
   late_progression_5: 6.4e-6
-#  late_progression_15: 3.3e-6
+  #  late_progression_15: 3.3e-6
 
   # Latency parameters - aggregated - upper values from Ragonnet et al "Optimally capturing latency dynamics in models of tuberculosis
   #transmission" 2017 Epidemics
@@ -79,15 +78,15 @@ default:
   late_progression: 1.1e-5 * 365.251
   # latency parameters - age-specific - upper values from Ragonnet et al "Optimally capturing latency dynamics in models of tuberculosis
   #  #transmission" 2017 Epidemics
-#  early_progression_0: 9.5e-3
-#  early_progression_5: 3.9e-3
-#  early_progression_15: 5.1e-4
-#  stabilisation_0: 1.8e-2
-#  stabilisation_5: 1.6e-2
-#  stabilisation_15: 1.1e-2
-#  late_progression_0: 1.6e-5
-#  late_progression_5: 1.9e-5
-  late_progression_15: 2.418346e-05  # 1.0e-5
+  #  early_progression_0: 9.5e-3
+  #  early_progression_5: 3.9e-3
+  #  early_progression_15: 5.1e-4
+  #  stabilisation_0: 1.8e-2
+  #  stabilisation_5: 1.6e-2
+  #  stabilisation_15: 1.1e-2
+  #  late_progression_0: 1.6e-5
+  #  late_progression_5: 1.9e-5
+  late_progression_15: 2.418346e-05 # 1.0e-5
 
   # Diagnostic sensitivity by organ status:
   diagnostic_sensitivity_smearpos: 1.0
@@ -95,8 +94,8 @@ default:
   diagnostic_sensitivity_extrapul: 0.5
 
   # Adjustments by location and diabetes
-  rr_transmission_ebeye: 2.481458  #1.75 # reference majuro
-  rr_transmission_otherislands: 0.5634661  #1.0 # reference majuro
+  rr_transmission_ebeye: 2.481458 #1.75 # reference majuro
+  rr_transmission_otherislands: 0.5634661 #1.0 # reference majuro
   rr_progression_diabetic: 5.033365 #5.73 # reference: no_diabetes
 
   # Raw CDR values
@@ -116,8 +115,8 @@ default:
 
   # Case detection adjustment for location
   case_detection_majuro_multiplier: 1.0
-  case_detection_ebeye_multiplier: 1.860793   #1.5
-  case_detection_otherislands_multiplier: 0.6801257  #1.0
+  case_detection_ebeye_multiplier: 1.860793 #1.5
+  case_detection_otherislands_multiplier: 0.6801257 #1.0
 
   # Treatment success rate
   tsr:
@@ -147,7 +146,7 @@ default:
   acf_ltbi_otherislands_coverage: 0.0
 
   # Prevalence adjustment
-  over_reporting_prevalence_proportion: 0.3794872  #0.2
+  over_reporting_prevalence_proportion: 0.3794872 #0.2
 
   # Few more parameters that had previously been added manually in rmi_model.py
   universal_death_rate: 1.0 / 70.0
@@ -167,7 +166,7 @@ default:
   mixing: {}
 
 # When the scenarios start running
-scenario_start: 1990
+scenario_start_time: 1990
 
 # N.B: Scenario keys have to be integers 1-N, or it'll break downstream dashboards.
 scenarios: {}

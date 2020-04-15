@@ -5,7 +5,6 @@ from summer_py.summer_model.utils.base_compartments import replicate_compartment
 from autumn import constants
 from autumn.constants import Compartment
 from autumn.tb_model import list_all_strata_for_mortality
-from autumn.tool_kit.params import load_params
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
 from autumn.disease_categories.emerging_infections.flows import (
     add_infection_flows,
@@ -14,19 +13,19 @@ from autumn.disease_categories.emerging_infections.flows import (
     add_sequential_compartment_flows,
     add_infection_death_flows,
 )
-from applications.covid_19.stratification import stratify_by_age, stratify_by_clinical
-from applications.covid_19.covid_outputs import (
+from autumn.demography.social_mixing import load_specific_prem_sheet, update_mixing_with_multipliers
+from autumn.demography.population import get_population_size
+from autumn.demography.ageing import add_agegroup_breaks
+from autumn.db import Database
+
+from .stratification import stratify_by_age, stratify_by_clinical
+from .outputs import (
     find_incidence_outputs,
     create_fully_stratified_incidence_covid,
     calculate_notifications_covid,
 )
-from applications.covid_19.covid_importation import set_tv_importation_rate
-from autumn.demography.social_mixing import load_specific_prem_sheet, update_mixing_with_multipliers
-from autumn.demography.population import get_population_size, load_population
-from autumn.db import Database
-
-from summer_py.summer_model.strat_model import find_name_components
-
+from .importation import set_tv_importation_rate
+from .matrices import build_covid_matrices
 
 # Database locations
 FILE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -34,14 +33,8 @@ INPUT_DB_PATH = os.path.join(constants.DATA_PATH, "inputs.db")
 
 input_database = Database(database_name=INPUT_DB_PATH)
 
-AUSTRALIA = "australia"
-PHILIPPINES = "philippines"
-MALAYSIA = "malaysia"
-VICTORIA = "victoria"
-COUNTRIES = (AUSTRALIA, PHILIPPINES, VICTORIA, MALAYSIA)
 
-
-def build_covid_model(country: str, update_params: dict):
+def build_model(country: str, params: dict, update_params={}):
     """
     Build the master function to run the TB model for Covid-19
 
@@ -50,12 +43,8 @@ def build_covid_model(country: str, update_params: dict):
     :return: StratifiedModel
         The final model with all parameters and stratifications
     """
-    assert country in COUNTRIES, "Invalid country"
-
-    # Get user-requested parameters
-    params = load_params(FILE_DIR, application=country)
-
-    model_parameters = params["default"]
+    params = add_agegroup_breaks(params)
+    model_parameters = params
 
     # Update, not used in single application run
     model_parameters.update(update_params)
@@ -86,7 +75,7 @@ def build_covid_model(country: str, update_params: dict):
     # Define compartments
     final_compartments, replicated_compartments = [], []
     for compartment in all_compartments:
-        if params["default"]["n_compartment_repeats"][compartment] == 1:
+        if params["n_compartment_repeats"][compartment] == 1:
             final_compartments.append(compartment)
         else:
             replicated_compartments.append(compartment)
@@ -99,10 +88,8 @@ def build_covid_model(country: str, update_params: dict):
     }
 
     # Get progression rates from sojourn times, distinguishing to_infectious in order to split this parameter later
-    for compartment in params["default"]["compartment_periods"]:
-        model_parameters["within_" + compartment] = (
-            1.0 / params["default"]["compartment_periods"][compartment]
-        )
+    for compartment in params["compartment_periods"]:
+        model_parameters["within_" + compartment] = 1.0 / params["compartment_periods"][compartment]
 
     # Multiply the progression rates by the number of compartments to keep the average time in exposed the same
     for compartment in is_infectious:
@@ -191,10 +178,9 @@ def build_covid_model(country: str, update_params: dict):
 
     # Get mixing matrix, although would need to adapt this for countries in file _2
     mixing_matrix = load_specific_prem_sheet("all_locations", model_parameters["country"])
-    if "mixing_matrix_multipliers" in model_parameters:
-        mixing_matrix = update_mixing_with_multipliers(
-            mixing_matrix, model_parameters["mixing_matrix_multipliers"]
-        )
+    mixing_matrix_multipliers = model_parameters.get("mixing_matrix_multipliers")
+    if mixing_matrix_multipliers is not None:
+        mixing_matrix = update_mixing_with_multipliers(mixing_matrix, mixing_matrix_multipliers)
 
     # Define output connections to collate
     output_connections = find_incidence_outputs(model_parameters)
@@ -247,6 +233,12 @@ def build_covid_model(country: str, update_params: dict):
 
     _covid_model.individual_infectiousness_adjustments = [[["late", "clinical_sympt_isolate"], 0.0]]
 
-    print()
+    # Do mixing matrix stuff
+    mixing_instructions = model_parameters.get("mixing")
+    if mixing_instructions:
+        _covid_model.find_dynamic_mixing_matrix = build_covid_matrices(
+            model_parameters["country"], mixing_instructions
+        )
+        _covid_model.dynamic_mixing_matrix = True
 
     return _covid_model

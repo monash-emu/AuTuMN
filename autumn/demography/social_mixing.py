@@ -1,7 +1,6 @@
 import os
 import numpy as np
 import pandas as pd
-from applications.covid_19.covid_matrices import build_covid_matrices
 
 
 def load_specific_prem_sheet(mixing_location, country):
@@ -62,27 +61,6 @@ def load_age_calibration():
     y.append(sum(case_numbers[-3:]))
 
     return pd.Series(y, index=age_breakpoints)
-
-
-def change_mixing_matrix_for_scenario(model, params, i_scenario):
-    """
-    Change the mixing matrix to a dynamic version to reflect interventions acting on the mixing matrix
-    """
-    scenario_name = "default" if i_scenario == 0 else i_scenario
-
-    if scenario_name in params and "mixing" in params[scenario_name]:
-        mixing_instructions = params[scenario_name]["mixing"]
-    elif "mixing" in params["default"]:
-        mixing_instructions = params["default"]["mixing"]
-    else:
-        mixing_instructions = None
-
-    if mixing_instructions:
-        model.find_dynamic_mixing_matrix = build_covid_matrices(
-            params["default"]["country"], mixing_instructions
-        )
-        model.dynamic_mixing_matrix = True
-    return model
 
 
 def update_mixing_with_multipliers(mixing_matrix, multipliers):

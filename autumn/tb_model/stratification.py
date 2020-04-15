@@ -39,6 +39,7 @@ def get_adapted_age_parameters(age_breakpoints, AGE_SPECIFIC_LATENCY_PARAMETERS)
 
 
 def stratify_by_age(model_to_stratify, age_specific_latency_parameters, input_database, age_strata):
+    # FIXME: This is Marshall Islands specifc - DO NOT USE outside of Marshall Islands
     age_breakpoints = [int(i_break) for i_break in age_strata]
     age_infectiousness = get_parameter_dict_from_function(
         logistic_scaling_function(10.0), age_breakpoints
@@ -90,7 +91,7 @@ def stratify_by_diabetes(
     requested_diabetes_proportions,
     age_specific_prevalence=True,
 ):
-
+    # FIXME: This is Marshall Islands specifc - DO NOT USE outside of Marshall Islands
     progression_adjustments = {
         "diabetic": model_parameters["rr_progression_diabetic"],
         "nodiabetes": 1.0,
@@ -145,6 +146,7 @@ def stratify_by_diabetes(
 
 
 def stratify_by_organ(model_to_stratify, model_parameters, detect_rate_by_organ, organ_strata):
+    # FIXME: This is Marshall Islands specifc - DO NOT USE outside of Marshall Islands
     props_smear = {
         "smearpos": model_parameters["prop_smearpos"],
         "smearneg": 1.0 - (model_parameters["prop_smearpos"] + 0.2),
@@ -186,7 +188,8 @@ def stratify_by_organ(model_to_stratify, model_parameters, detect_rate_by_organ,
     return model_to_stratify
 
 
-def stratify_by_location(_tb_model, model_parameters, location_strata):
+def stratify_by_location(tb_model, model_parameters, location_strata):
+    # FIXME: This is Marshall Islands specifc - DO NOT USE outside of Marshall Islands
     props_location = {"majuro": 0.523, "ebeye": 0.2, "otherislands": 0.277}
 
     raw_relative_risks_loc = {"majuro": 1.0}
@@ -224,7 +227,7 @@ def stratify_by_location(_tb_model, model_parameters, location_strata):
     #         "acf_ltbi_" + stratum + "_coverage"
     #         ]
 
-    _tb_model.stratify(
+    tb_model.stratify(
         "location",
         location_strata,
         [],
@@ -234,4 +237,4 @@ def stratify_by_location(_tb_model, model_parameters, location_strata):
         adjustment_requests=location_adjustments,
         mixing_matrix=location_mixing,
     )
-    return _tb_model
+    return tb_model

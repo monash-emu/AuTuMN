@@ -7,12 +7,11 @@ import numpy
 import pandas as pd
 import summer_py.post_processing as post_proc
 from sqlalchemy import create_engine
-from autumn.outputs.outputs import Outputs
 import matplotlib.pyplot as plt
 
 from ..constants import Compartment
 from ..db import Database
-from .dummy_model import DummyModel
+from .loaded_model import LoadedModel
 from autumn.tool_kit.utils import find_first_list_element_above, element_wise_list_summation
 from autumn.tb_model.flows import get_incidence_connections, get_notifications_connections
 
@@ -47,38 +46,6 @@ def create_request_stratified_notifications(requested_stratifications, strata_di
                 "to_condition": stratification + "_" + stratum,
             }
     return out_connections
-
-
-def add_combined_incidence(derived_outputs, outputs, scaled_by_population=False):
-    columns_to_add = {}
-    comp_names = outputs.drop(outputs.columns[[0, 1, 2]], axis=1).columns
-    for column_name in derived_outputs.columns:
-        if column_name[0:15] == "incidence_early":
-            incidence_late_name = "incidence_late" + column_name[15:]
-            new_output = "incidence" + column_name[15:]
-            absolute_incidence = derived_outputs[column_name] + derived_outputs[incidence_late_name]
-
-            if scaled_by_population:
-                # work out total stratum population
-                if column_name == "incidence_early":  # we need the total population
-                    stratum_compartments = comp_names
-                else:  # we may need a subgroup population
-                    stratification_name = column_name[15:].split("_")[0]
-                    if all(stratification_name in c for c in comp_names):
-                        stratum_compartments = [c for c in comp_names if column_name[15:] in c]
-                    else:
-                        stratum_compartments = comp_names
-
-                stratum_population = outputs[stratum_compartments].sum(axis=1)
-                columns_to_add[new_output] = absolute_incidence / stratum_population * 1.0e5
-            else:
-                columns_to_add[new_output] = absolute_incidence
-
-    for key, val in columns_to_add.items():
-        derived_outputs[key] = val
-
-    return derived_outputs
-
 
 def create_output_connections_for_incidence_by_stratum(
     all_compartment_names, infectious_compartment_name=Compartment.INFECTIOUS
@@ -128,16 +95,21 @@ def list_all_strata_for_mortality(
     return tuple(death_output_categories)
 
 
-def load_model_scenario(scenario_name, database_name):
-    out_database = Database(database_name="databases/" + database_name)
+# FIXME: Not used, need to get back into use so we can load and re-plot old models.
+def load_model_scenario(scenario_idx: int, database_path: str):
+    """
+    Load a model's outputs and derived outputs, returns a LoadedModel
+    filled with this data,
+    """
+    out_database = Database(database_name=database_path)
     outputs = out_database.db_query(
-        table_name="outputs", conditions=["Scenario='S_" + scenario_name + "'"]
+        table_name="outputs", conditions=[f"Scenario='S_{scenario_idx}'"]
     )
     derived_outputs = out_database.db_query(
-        table_name="derived_outputs", conditions=["Scenario='S_" + scenario_name + "'"]
+        table_name="derived_outputs", conditions=[f"Scenario='S_{scenario_idx}'"]
     )
-    derived_outputs = add_combined_incidence(derived_outputs, outputs)
-    return {"outputs": outputs.to_dict(), "derived_outputs": derived_outputs.to_dict()}
+    kwargs = {"outputs": outputs.to_dict(), "derived_outputs": derived_outputs.to_dict()}
+    return LoadedModel(**kwargs)
 
 
 def load_calibration_from_db(database_directory, n_burned_per_chain=0):
@@ -187,7 +159,6 @@ def load_calibration_from_db(database_directory, n_burned_per_chain=0):
                 derived_outputs = out_database.db_query(
                     table_name="derived_outputs", conditions=["idx='" + str(run_id) + "'"]
                 )
-                derived_outputs = add_combined_incidence(derived_outputs, outputs)
 
                 derived_outputs_dict = derived_outputs.to_dict()
             else:
@@ -195,7 +166,7 @@ def load_calibration_from_db(database_directory, n_burned_per_chain=0):
             model_info_dict = {
                 "db_name": db_name,
                 "run_id": run_id,
-                "model": DummyModel(output_dict, derived_outputs_dict),
+                "model": LoadedModel(output_dict, derived_outputs_dict),
                 "weight": weights[i],
             }
             models.append(model_info_dict)
@@ -297,56 +268,6 @@ def get_post_processing_results(
             )
         )
         return pps
-
-
-def create_multi_scenario_outputs(
-    models,
-    req_outputs,
-    req_times={},
-    req_multipliers={},
-    ymax={},
-    out_dir="outputs_tes",
-    targets_to_plot={},
-    translation_dictionary={},
-    scenario_list=[],
-    plot_start_time=1990,
-    outputs_to_plot_by_stratum=["prevXinfectious", "prevXlatent"],
-    input_functions_to_plot=[],
-):
-    """
-    Have now moved this code - and now constitutes legacy code for the Mongolia (and possibly Vietnam) applications only
-
-    process and generate plots for several scenarios
-    :param models: a list of run models
-    :param req_outputs. See PostProcessing class
-    :param req_times. See PostProcessing class
-    :param req_multipliers. See PostProcessing class
-    """
-    if not os.path.exists(out_dir):
-        os.mkdir(out_dir)
-
-    pps = get_post_processing_results(
-        models,
-        req_outputs,
-        req_multipliers,
-        outputs_to_plot_by_stratum,
-        scenario_list,
-        req_times,
-        ymax,
-    )
-
-    outputs = Outputs(
-        pps, targets_to_plot, out_dir, translation_dictionary, plot_start_time=plot_start_time
-    )
-    outputs.plot_requested_outputs()
-
-    for output in outputs_to_plot_by_stratum:
-        for sc_index in range(len(models)):
-            outputs.plot_outputs_by_stratum(output, sc_index=sc_index)
-
-    # Plotting the baseline function value, but here in case we want to use for multi-scenario in the future
-    for input_function in input_functions_to_plot:
-        outputs.plot_input_function(input_function, models[0].adaptation_functions[input_function])
 
 
 def get_ebeye_baseline_data():

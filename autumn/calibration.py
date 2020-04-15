@@ -2,6 +2,7 @@ import logging
 import os
 from time import time
 from itertools import chain
+from datetime import datetime
 
 import theano
 import math
@@ -14,12 +15,10 @@ import summer_py.post_processing as post_proc
 from scipy.optimize import Bounds, minimize
 from scipy import stats, special
 
-from autumn.tb_model import store_tb_database
-from autumn.constants import DATA_PATH
-from autumn.tool_kit.scenarios import initialise_scenario_run
-from autumn.demography.social_mixing import change_mixing_matrix_for_scenario
-
+from . import constants
+from .tb_model import store_tb_database
 from .db import Database
+from .tool_kit.utils import get_data_hash
 
 import yaml
 
@@ -42,10 +41,10 @@ def get_parameter_bounds_from_priors(prior_dict):
         lower_bound = prior_dict["distri_params"][0]
         upper_bound = prior_dict["distri_params"][1]
     elif prior_dict["distribution"] in ["lognormal", "gamma", "weibull", "exponential"]:
-        lower_bound = 0.
+        lower_bound = 0.0
         upper_bound = float("inf")
     else:
-        raise ValueError('prior distribution bounds detection currently not handled.')
+        raise ValueError("prior distribution bounds detection currently not handled.")
 
     return lower_bound, upper_bound
 
@@ -57,13 +56,24 @@ class Calibration:
     """
 
     def __init__(
-        self, model_name: str, model_builder, priors, targeted_outputs, multipliers, chain_index, scenario_params={},
-            scenario_start_time=None, model_parameters={}, start_time_range=None
+        self,
+        model_name: str,
+        model_builder,
+        priors,
+        targeted_outputs,
+        multipliers,
+        chain_index,
+        scenario_params={},
+        scenario_start_time=None,
+        model_parameters={},
+        start_time_range=None,
     ):
         self.model_name = model_name
         self.model_builder = model_builder  # a function that builds a new model without running it
         self.model_parameters = model_parameters
-        self.start_time_range = start_time_range  # if specified, we allow start time to vary to achieve the best fit
+        self.start_time_range = (
+            start_time_range  # if specified, we allow start time to vary to achieve the best fit
+        )
         self.best_start_time = None
         self.running_model = None  # a model that will be run during calibration
         self.post_processing = None  # a PostProcessing object containing the required outputs of a model that has been run
@@ -76,11 +86,12 @@ class Calibration:
         self.chain_index = chain_index
 
         # Setup output database directory
-        out_db_dir = os.path.join(DATA_PATH, model_name)
+        project_dir = os.path.join(constants.DATA_PATH, model_name)
+        run_hash = get_data_hash(model_name, priors, targeted_outputs, multipliers)
+        out_db_dir = os.path.join(project_dir, f"calibration-{run_hash}")
         os.makedirs(out_db_dir, exist_ok=True)
-        self.output_db_path = os.path.join(
-            out_db_dir, f"outputs_calibration_chain_{self.chain_index}.db"
-        )
+        db_name = f"outputs_calibration_chain_{self.chain_index}.db"
+        self.output_db_path = os.path.join(out_db_dir, db_name)
 
         self.data_as_array = None  # will contain all targeted data points in a single array
         self.loglike = None  # will store theano object
@@ -106,29 +117,23 @@ class Calibration:
         updates self.post_processing attribute based on the newly run model
         :return:
         """
-        if self.post_processing is None:  # we need to initialise a PostProcessing object
-            requested_outputs = [
-                self.targeted_outputs[i]["output_key"]
-                for i in range(len(self.targeted_outputs))
-                if "prevX" in self.targeted_outputs[i]["output_key"]
-            ]
-            requested_times = {}
+        requested_outputs = [
+            self.targeted_outputs[i]["output_key"]
+            for i in range(len(self.targeted_outputs))
+            if "prevX" in self.targeted_outputs[i]["output_key"]
+        ]
+        requested_times = {}
 
-            for _output in self.targeted_outputs:
-                if "prevX" in _output["output_key"]:
-                    requested_times[_output["output_key"]] = _output["years"]
+        for _output in self.targeted_outputs:
+            if "prevX" in _output["output_key"]:
+                requested_times[_output["output_key"]] = _output["years"]
 
-            self.post_processing = post_proc.PostProcessing(
-                self.running_model,
-                requested_outputs=requested_outputs,
-                requested_times=requested_times,
-                multipliers=self.multipliers,
-            )
-        else:  # we just need to update the post_processing attribute and produce new outputs
-            self.post_processing.model = self.running_model
-            self.post_processing.generated_outputs = {}
-            self.post_processing.generate_outputs()
-            self.post_processing.derived_outputs = self.running_model.derived_outputs if hasattr(self.running_model, "derived_outputs") else {}
+        self.post_processing = post_proc.PostProcessing(
+            self.running_model,
+            requested_outputs=requested_outputs,
+            requested_times=requested_times,
+            multipliers=self.multipliers,
+        )
 
         out_df = pd.DataFrame(
             self.running_model.outputs, columns=self.running_model.compartment_names
@@ -158,14 +163,8 @@ class Calibration:
         for i, param_name in enumerate(self.param_list):
             update_params[param_name] = params[i]
 
-        self.running_model = self.model_builder(self.model_parameters['country'], update_params)
-        self.running_model = change_mixing_matrix_for_scenario(self.running_model,
-                                                               {'default': self.model_parameters},
-                                                               0)
-
-        # run the model
+        self.running_model = self.model_builder(self.model_parameters, update_params)
         self.running_model.run_model()
-        # perform post-processing
         self.update_post_processing()
 
     def run_extra_scenarios_with_params(self, params):
@@ -176,7 +175,7 @@ class Calibration:
         for scenario_idx, scenario_params in self.scenario_params.items():
             if scenario_idx == 0:
                 continue
-            scenario_params['start_time'] = self.scenario_start_time
+            scenario_params["start_time"] = self.scenario_start_time
 
             # Potential update of scenario params if these are among the MCMC params
             updated_scenario_params = copy.copy(scenario_params)
@@ -186,10 +185,12 @@ class Calibration:
                     updated_scenario_params[param_index] = params[param_index]
 
             # Run scenario
-            scenario_model = initialise_scenario_run(self.running_model, updated_scenario_params,
-                                                     self.model_builder)
-            scenario_model = change_mixing_matrix_for_scenario(scenario_model, updated_scenario_params)
-            scenario_model.run_model()
+            # FIXME: Matt broke this
+            assert False, "Matt broke this"
+            # scenario_model = initialise_scenario_run(self.running_model, updated_scenario_params,
+            #  self.model_builder)
+            # scenario_model = change_mixing_matrix_for_scenario(scenario_model, updated_scenario_params)
+            # scenario_model.run_model()
 
             # Produce scenario outputs
             scenario_pp = copy.deepcopy(self.post_processing)
@@ -197,12 +198,14 @@ class Calibration:
             scenario_pp.generated_outputs = {}
             ########### TIMES
             scenario_pp.generate_outputs()
-            scenario_pp.derived_outputs = scenario_model.derived_outputs if hasattr(self.running_model, "derived_outputs") else {}
+            scenario_pp.derived_outputs = (
+                scenario_model.derived_outputs
+                if hasattr(self.running_model, "derived_outputs")
+                else {}
+            )
 
             # Store scenario outputs into database
-            out_df = pd.DataFrame(
-                scenario_model.outputs, columns=scenario_model.compartment_names
-            )
+            out_df = pd.DataFrame(scenario_model.outputs, columns=scenario_model.compartment_names)
             # derived_output_df = pd.DataFrame.from_dict(scenario_model.derived_outputs)
             # store_tb_database(
             #     derived_output_df,
@@ -221,7 +224,7 @@ class Calibration:
                 append=True,
             )
 
-    def loglikelihood(self, params, to_return='best_ll'):
+    def loglikelihood(self, params, to_return="best_ll"):
         """
         defines the loglikelihood
         :param params: model parameters
@@ -237,16 +240,19 @@ class Calibration:
         if best_ll is None:
             self.run_model_with_params(params)
 
-            model_start_time = self.post_processing.derived_outputs['times'][0]
+            model_start_time = self.post_processing.derived_outputs["times"][0]
             if self.start_time_range is None:
                 considered_start_times = [model_start_time]
             else:
-                considered_start_times = np.linspace(self.start_time_range[0], self.start_time_range[1],
-                                                     num=self.start_time_range[1]-self.start_time_range[0] + 1)
+                considered_start_times = np.linspace(
+                    self.start_time_range[0],
+                    self.start_time_range[1],
+                    num=self.start_time_range[1] - self.start_time_range[0] + 1,
+                )
 
-            best_ll, best_start_time = (1.e-60, None)
-            if self.run_mode == 'lsm':
-                best_ll = 1.e60
+            best_ll, best_start_time = (1.0e-60, None)
+            if self.run_mode == "lsm":
+                best_ll = 1.0e60
             for considered_start_time in considered_start_times:
                 time_shift = considered_start_time - model_start_time
                 ll = 0  # loglikelihood if using bayesian approach. Sum of squares if using lsm mode
@@ -255,29 +261,38 @@ class Calibration:
                     data = np.array(target["values"])
                     if key in self.post_processing.generated_outputs:
                         if self.start_time_range is not None:
-                            raise ValueError('variable start time implemented for derived_outputs only')
+                            raise ValueError(
+                                "variable start time implemented for derived_outputs only"
+                            )
                         model_output = np.array(self.post_processing.generated_outputs[key])
                     else:
                         indices = []
                         for year in target["years"]:
                             indices.append(self.running_model.times.index(year - time_shift))
-                        model_output = np.array([self.post_processing.derived_outputs[key][index] for index in indices])
+                        model_output = np.array(
+                            [self.post_processing.derived_outputs[key][index] for index in indices]
+                        )
 
                     if self.run_mode == "lsm":
                         ll += np.sum((data - model_output) ** 2)
                     else:
                         if "loglikelihood_distri" not in target:  # default distribution
-                            target["loglikelihood_distri"] = 'normal'
-                        if target["loglikelihood_distri"] == 'normal':
+                            target["loglikelihood_distri"] = "normal"
+                        if target["loglikelihood_distri"] == "normal":
                             ll += -(0.5 / target["sd"] ** 2) * np.sum((data - model_output) ** 2)
-                        elif target["loglikelihood_distri"] == 'poisson':
+                        elif target["loglikelihood_distri"] == "poisson":
                             for i in range(len(data)):
-                                ll += data[i] * math.log(model_output[i]) - model_output[i] - \
-                                      math.log(math.factorial(data[i]))
+                                ll += (
+                                    data[i] * math.log(model_output[i])
+                                    - model_output[i]
+                                    - math.log(math.factorial(data[i]))
+                                )
                         else:
                             raise ValueError("Distribution not supported in loglikelihood_distri")
 
-                if (ll > best_ll and self.run_mode != 'lsm') or (ll < best_ll and self.run_mode == 'lsm'):
+                if (ll > best_ll and self.run_mode != "lsm") or (
+                    ll < best_ll and self.run_mode == "lsm"
+                ):
                     best_ll, best_start_time = (ll, considered_start_time)
 
             if self.run_mode != "autumn_mcmc":
@@ -297,9 +312,9 @@ class Calibration:
                 )
             self.evaluated_params_ll.append((copy.copy(params), copy.copy(best_ll)))
 
-        if to_return == 'best_ll':
+        if to_return == "best_ll":
             return best_ll
-        elif to_return == 'best_start_time':
+        elif to_return == "best_start_time":
             return best_start_time
         else:
             raise ValueError("to_return not recognised")
@@ -538,21 +553,19 @@ class Calibration:
                 if not any([math.isinf(lower_bound), math.isinf(upper_bound)]):
                     x0.append(0.5 * (lower_bound + upper_bound))
                 elif all([math.isinf(lower_bound), math.isinf(upper_bound)]):
-                    x0.append(0.)
+                    x0.append(0.0)
                 elif math.isinf(lower_bound):
                     x0.append(upper_bound)
                 else:
                     x0.append(lower_bound)
             bounds = Bounds(lower_bounds, upper_bounds)
 
-            sol = minimize(
-                self.loglikelihood,
-                x0,
-                bounds=bounds
-            )
+            sol = minimize(self.loglikelihood, x0, bounds=bounds)
             self.mle_estimates = sol.x
             if self.start_time_range is not None:
-                self.best_start_time = self.loglikelihood(self.mle_estimates, to_return='best_start_time')
+                self.best_start_time = self.loglikelihood(
+                    self.mle_estimates, to_return="best_start_time"
+                )
                 print("Best start time: " + str(self.best_start_time))
 
             print("Best solution:")
@@ -574,16 +587,14 @@ class Calibration:
         if prev_params is None:
             prev_params = []
             for prior_dict in self.priors:
-                prev_params.append(self.model_parameters[prior_dict['param_name']])
+                prev_params.append(self.model_parameters[prior_dict["param_name"]])
 
         new_params = []
 
         for i, prior_dict in enumerate(self.priors):
             # Work out bounds for acceptable values, using the support of the prior distribution
             lower_bound, upper_bound = get_parameter_bounds_from_priors(prior_dict)
-            sample = (
-                lower_bound - 10.0
-            )  # deliberately initialise out of parameter scope
+            sample = lower_bound - 10.0  # deliberately initialise out of parameter scope
             while not lower_bound <= sample <= upper_bound:
                 sample = np.random.normal(
                     loc=prev_params[i], scale=prior_dict["jumping_sd"], size=1
@@ -634,10 +645,10 @@ class Calibration:
         for i, param_name in enumerate(self.param_list):
             dict_to_dump[param_name] = float(self.mle_estimates[i])
         if self.best_start_time is not None:
-            dict_to_dump['start_time'] = self.best_start_time
+            dict_to_dump["start_time"] = self.best_start_time
 
-        file_path = os.path.join(DATA_PATH, self.model_name, 'mle_params.yml')
-        with open(file_path, 'w') as outfile:
+        file_path = os.path.join(DATA_PATH, self.model_name, "mle_params.yml")
+        with open(file_path, "w") as outfile:
             yaml.dump(dict_to_dump, outfile, default_flow_style=False)
 
 

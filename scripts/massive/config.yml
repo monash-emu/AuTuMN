@@ -14,4 +14,4 @@ notification_email: romain.ragonnet@monash.edu
 # The bash command that gets run to start the job.
 # Run Mongolia calibration for 5 minutes (300 seconds).
 # N.B Job array ID will be passed in as an extra argument.
-job_command: python3 -m applications rmi-calibration 97200
+job_command: python3 -m applications calibrate rmi 97200

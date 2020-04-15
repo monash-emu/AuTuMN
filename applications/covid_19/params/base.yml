@@ -4,7 +4,6 @@ scenario_start_time: 85
 
 # Parameters used to build a general model of COVID-19 disease for application to Australia or internationally
 default:
-
   # MODEL STRUCTURE PARAMETERS
 
   # Number of times each compartment representing active infection (i.e. not S and not R) are repeated
@@ -108,10 +107,10 @@ default:
   add_non_infectious: True
 
   # Country to extract Prem mixing matrix from
-  country: Philippines
+  country: null
 
   # Country to extract stratified population data from - should eventually use only one of country or iso3
-  iso3: PHL
+  iso3: null
 
   # Initial conditions
   infectious_seed: 10
@@ -135,5 +134,4 @@ default:
   mixing: {}
 
 scenarios: {}
-
 # N.B: Scenario keys have to be sequential integers from one, or won't be compatible with dashboards

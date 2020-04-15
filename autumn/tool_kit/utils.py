@@ -5,10 +5,42 @@ If several functions here develop a theme, consider reorganising them into a mod
 import subprocess as sp
 import numpy
 import itertools
-import os
-import yaml
+import hashlib
+import json
 
 from summer_py.summer_model import find_name_components
+
+
+def get_data_hash(*args):
+    """
+    Get a hash of a bunch of JSON serializable data.
+    Returns first 8 characters of the MD5 hash of the data.
+    Eg. args of ("foo", {"a": 1}, [1, 2, 3]) --> "34d333dw"
+    """
+    data_str = ""
+    for arg in args:
+        try:
+            data_str += json.dumps(arg)
+        except TypeError:
+            continue  # Fail silently :(
+
+    hash_str = hashlib.md5(data_str.encode()).hexdigest()
+    return hash_str[:8]
+
+
+def merge_dicts(src: dict, dest: dict):
+    """
+    Merge src dict into dest dict.
+    """
+    for key, value in src.items():
+        if isinstance(value, dict):
+            # get node or create one
+            node = dest.setdefault(key, {})
+            merge_dicts(value, node)
+        else:
+            dest[key] = value
+
+    return dest
 
 
 def get_git_hash():

@@ -1,0 +1,16 @@
+---
+# Options for post processing of the Marshall Island model
+requested_outputs:
+  - prevXinfectiousXamong
+  - prevXlatentXamong
+  - prevXlatentXamongXage_5
+  - prevXinfectiousXstrain_mdrXamongXinfectious
+  # - prevXinfectiousXorgan_smearposXamongXinfectious
+  # - prevXinfectiousXorgan_smearnegXamongXinfectious
+  # - prevXinfectiousXorgan_extrapulXamongXinfectious
+  # - prevXinfectiousXorgan_smearposXamongXage_15Xage_60Xlocation_prison
+
+multipliers:
+  prevXinfectiousXstrain_mdrXamongXinfectious: 100.0
+
+collated_combos: []

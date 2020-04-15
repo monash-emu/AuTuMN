@@ -1,11 +1,18 @@
-from autumn.calibration import Calibration
-
-from applications.marshall_islands.rmi_model import build_rmi_model, PARAMS_PATH
-
+import os
 import yaml
 
-with open(PARAMS_PATH, "r") as yaml_file:
-    params = yaml.safe_load(yaml_file)
+from autumn.calibration import Calibration
+
+from .model import build_model
+
+N_ITERS = 100000
+N_BURNED = 0
+N_CHAINS = 1
+FILE_DIR = os.path.dirname(os.path.abspath(__file__))
+PARAMS_PATH = os.path.join(FILE_DIR, "params.yml")
+
+with open(PARAMS_PATH, "r") as f:
+    params = yaml.safe_load(f)
 
 
 def run_calibration_chain(max_seconds: int, run_id: int):
@@ -18,7 +25,7 @@ def run_calibration_chain(max_seconds: int, run_id: int):
     print(f"Preparing to run Marshall Islands TB model calibration for run {run_id}")
     calib = Calibration(
         "marshall_islands",
-        build_rmi_model,
+        build_model,
         PAR_PRIORS,
         TARGET_OUTPUTS,
         MULTIPLIERS,
@@ -28,9 +35,9 @@ def run_calibration_chain(max_seconds: int, run_id: int):
     print("Starting calibration.")
     calib.run_fitting_algorithm(
         run_mode="autumn_mcmc",
-        n_iterations=100000,
-        n_burned=0,
-        n_chains=1,
+        n_iterations=N_ITERS,
+        n_burned=N_BURNED,
+        n_chains=N_CHAINS,
         available_time=max_seconds,
     )
     print(f"Finished calibration for run {run_id}.")

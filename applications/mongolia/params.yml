@@ -1,0 +1,86 @@
+---
+# Parameters used to build the Mongolia model.
+default:
+  stratify_by:
+    - age
+    - strain
+    - location
+    - organ
+  derived_outputs:
+    - incidence
+    - notifications
+    - mortality
+    - popsizes
+  start_time: 1900.0
+  end_time: 2035.0
+  time_step: 1.0
+  start_population: 3000000
+  # base model definition:
+  contact_rate: 14.0
+  rr_transmission_recovered: 1.0
+  rr_transmission_late_latent: 0.21
+  adult_latency_adjustment: 4.0 # used to increase adult progression rates due to pollution
+  self_recovery_rate: 0.231 # this is for smear-positive TB
+  tb_mortality_rate: 0.389 # this is for smear-positive TB
+  prop_smearpos: 0.5
+  cdr_multiplier: 1.0
+  # MDR-TB:
+  dr_amplification_prop_among_nonsuccess: 0.20 # based on Cox et al and Bonnet et al
+  prop_mdr_detected_as_mdr: 0.5
+  mdr_tsr: 0.6
+  mdr_infectiousness_multiplier: 1.1
+  # diagnostic sensitivity by organ status:
+  diagnostic_sensitivity_smearpos: 1.0
+  diagnostic_sensitivity_smearneg: 0.7
+  diagnostic_sensitivity_extrapul: 0.5
+  # adjustments by location
+  rr_transmission_urban_ger: 3.0 # reference: rural_province
+  rr_transmission_urban_nonger: 0.8 # reference: rural_province
+  rr_transmission_prison: 50 # reference: rural_province
+  # IPT
+  ipt_age_0_ct_coverage: 0.17 # Children contact tracing coverage  .17
+  ipt_age_5_ct_coverage: 0.0 # Children contact tracing coverage
+  ipt_age_15_ct_coverage: 0.0 # Children contact tracing coverage
+  ipt_age_60_ct_coverage: 0.0 # Children contact tracing coverage
+  yield_contact_ct_tstpos_per_detected_tb: 2.0 # expected number of infections traced per index
+  ipt_efficacy: 0.75 # based on intention-to-treat
+  ds_ipt_switch: 1.0 # used as a DS-specific multiplier to the coverage defined above
+  mdr_ipt_switch: 0.0 # used as an MDR-specific multiplier to the coverage defined above
+  # Treatment improvement (C-DOTS)
+  reduction_negative_tx_outcome: 0.0
+  # ACF for risk groups
+  acf_coverage: 0.0
+  acf_sensitivity: 0.8
+  acf_rural_province_switch: 0.0
+  acf_urban_nonger_switch: 0.0
+  acf_urban_ger_switch: 0.0
+  acf_prison_switch: 0.0
+  universal_death_rate: 0.02
+  case_detection: 0.0
+  ipt_rate: 0.0
+  acf_rate: 0.0
+  dr_amplification: 0.0 # high value for testing
+  crude_birth_rate: 0.02
+
+# When the scenarios start running
+scenario_start_time: 2020
+
+# N.B: Scenario keys have to be integers 1-N, or it'll break downstream dashboards.
+scenarios: {}
+# 1: {'ipt_age_0_ct_coverage': 1.},
+# 2: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
+#          'ipt_age_60_ct_coverage': .5},
+# 3: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
+#           'ipt_age_60_ct_coverage': .5, 'ds_ipt_switch': 0., 'mdr_ipt_switch': 1.},
+# 4: {'mdr_tsr': .8},
+# 5: {'reduction_negative_tx_outcome': 0.5},
+# 6: {'acf_coverage': .155, 'acf_urban_ger_switch': 1.},  # 15.5% to get 70,000 screens
+# 7: {'diagnostic_sensitivity_smearneg': 1., 'prop_mdr_detected_as_mdr': .9},
+# 8: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
+#     'ipt_age_60_ct_coverage': .5, 'ds_ipt_switch': 0., 'mdr_ipt_switch': 1.,
+#     'mdr_tsr': .8,
+#     'reduction_negative_tx_outcome': 0.5,
+#     'acf_coverage': .155, 'acf_urban_ger_switch': 1.,
+#     'diagnostic_sensitivity_smearneg': 1., 'prop_mdr_detected_as_mdr': .9
+#     },
+# 9: {'contact_rate': 0.}

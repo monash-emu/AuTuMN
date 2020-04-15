@@ -1,90 +1,23 @@
 ---
 # Options for plotting outputs of the Marshall Island model
-# All keys in this file are arguments to `create_multi_scenario_outputs`
-plot_start_time: 1940
-
-# e.g. [prevXinfectious, prevXlatent]
-outputs_to_plot_by_stratum: []
-
-display_stratification:
-  - location
-
 outputs_to_plot: []
 
-compartments_for_prevalence: []
+parameter_category_values:
+  time: 2010.
+  param_names: ["contact_rate"]
 
-output_combinations_to_collate:
-  -
-    - 'infectious'
-    - 'location'
-  -
-    - 'latent'
-    - 'location'
+input_function:
+  start_time: 1940
+  func_names: ["case_detection"]
 
-output_combinations_to_plot_together:
-  -
-    - 'infectious'
-    - 'location'
-  -
-    - 'latent'
-    - 'location'
-time_for_parameter_visualisation: 2010.
+pop_distribution_strata: ["location"]
 
-parameter_stems_to_plot:
-  - contact_rate
+# FIXME: Broken code in `plot_prevalence_combinations`?
+prevalence_combos: []
+# - ["infectious", "location"]
+# - ["latent", "location"]
 
-req_outputs:
-  - prevXinfectiousXamong
-  - prevXlatentXamong
-#  - prevXinfectiousXamongXlocation_majuro
-#  - prevXinfectiousXamongXlocation_ebeye
-#  - prevXinfectiousXamongXlocation_otherislands
-  - prevXlatentXamongXlocation_majuro
-  - prevXlatentXamongXlocation_ebeye
-  - prevXlatentXamongXlocation_otherislands
-#  - prevXsusceptibleXamong
-#  - prevXrecoveredXamong
-#  - prevXearly_latentXamong
-#  - prevXlate_latentXamong
-#  - prevXltbi_treatedXamong
-
-functions_to_plot:
-  - case_detection
-
-req_multipliers:
-  prevXinfectiousXstrain_mdrXamongXinfectious: 100.0
-  prevXinfectiousXamong: 100000
-  prevXinfectiousXamongXlocation: 100000
-  prevXlatentXamong: 100
-  prevXlatentXamongXebeye: 100
-  prevXlatentXamongXmajuro: 100
-  prevXlatentXamongXotherislands: 100
-  prevXlatentXamongXlocation: 100
-
-targets_to_plot:
-  prevXinfectiousXamongXlocation_ebeye:
-    times: [2017.0]
-    values: [[755.0, 620.0, 894.0]]
-  prevXlatentXamongXlocation_majuro:
-    times: [2017.0]
-    values: [[28.5]]
-  reported_majuro_prevalence:
-    times: [2018.0]
-    values: [[1578.0]]
-  notificationsXlocation_majuro:
-    times: [2016.0]
-    values: [[119.0]]
-  notificationsXlocation_ebeye:
-    times: [2016.0]
-    values: [[53.0]]
-  notificationsXlocation_otherislands:
-    times: [2016.0]
-    values: [[6.0]]
-
-ymax:
-  prevXinfectiousXamong: 2000.0
-
-translation_dictionary:
+translations:
   prevXinfectiousXamong: TB prevalence (/100,000)
   prevXinfectiousXamongXage_0: TB prevalence among 0-4 y.o. (/100,000)
   prevXinfectiousXamongXage_5: TB prevalence among 5-14 y.o. (/100,000)
@@ -121,3 +54,24 @@ translation_dictionary:
   incidenceXlocation_majuro: Majuro - TB incidence (/100,000/y)
   incidenceXlocation_ebeye: Ebeye - TB incidence (/100,000/y)
   incidenceXlocation_otherislands: Other locations - TB incidence (/100,000/y)
+# not_sure_what_this_does:
+#   # FIXME: What is this? Why does it exist?
+#   targets_to_plot:
+#     prevXinfectiousXamongXlocation_ebeye:
+#       times: [2017.0]
+#       values: [[755.0, 620.0, 894.0]]
+#     prevXlatentXamongXlocation_majuro:
+#       times: [2017.0]
+#       values: [[28.5]]
+#     reported_majuro_prevalence:
+#       times: [2018.0]
+#       values: [[1578.0]]
+#     notificationsXlocation_majuro:
+#       times: [2016.0]
+#       values: [[119.0]]
+#     notificationsXlocation_ebeye:
+#       times: [2016.0]
+#       values: [[53.0]]
+#     notificationsXlocation_otherislands:
+#       times: [2016.0]
+#       values: [[6.0]]

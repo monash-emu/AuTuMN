@@ -1,6 +1,17 @@
+import os
+import yaml
 from autumn.calibration import Calibration
 
-from applications.mongolia.mongolia_tb_model import build_mongolia_model
+from .model import build_model
+
+N_ITERS = 100000
+N_BURNED = 0
+N_CHAINS = 1
+FILE_DIR = os.path.dirname(os.path.abspath(__file__))
+PARAMS_PATH = os.path.join(FILE_DIR, "params.yml")
+
+with open(PARAMS_PATH, "r") as f:
+    params = yaml.safe_load(f)
 
 
 def run_calibration_chain(max_seconds: int, run_id: int):
@@ -12,14 +23,20 @@ def run_calibration_chain(max_seconds: int, run_id: int):
     """
     print(f"Preparing to run Mongolia TB model calibration for run {run_id}")
     calib = Calibration(
-        "mongolia", build_mongolia_model, PAR_PRIORS, TARGET_OUTPUTS, MULTIPLIERS, run_id
+        "mongolia",
+        build_model,
+        PAR_PRIORS,
+        TARGET_OUTPUTS,
+        MULTIPLIERS,
+        run_id,
+        model_parameters=params["default"],
     )
     print("Starting calibration.")
     calib.run_fitting_algorithm(
         run_mode="autumn_mcmc",
-        n_iterations=100000,
-        n_burned=0,
-        n_chains=1,
+        n_iterations=N_ITERS,
+        n_burned=N_BURNED,
+        n_chains=N_CHAINS,
         available_time=max_seconds,
     )
     print(f"Finished calibration for run {run_id}.")

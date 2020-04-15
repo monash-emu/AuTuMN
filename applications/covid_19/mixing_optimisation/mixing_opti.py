@@ -7,8 +7,10 @@ import numpy as np
 from autumn import constants
 from autumn.db import Database
 from summer_py.constants import IntegrationType
+import summer_py.post_processing as post_proc
 from autumn.demography.ageing import add_agegroup_breaks
 from autumn.tool_kit import run_multi_scenario
+from autumn.outputs.outputs import Outputs
 
 from applications.covid_19.covid_model import build_covid_model as build_country_covid_model
 

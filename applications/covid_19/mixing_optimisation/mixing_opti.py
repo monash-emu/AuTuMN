@@ -151,7 +151,4 @@ _dec_var, _mode = (mixing_mult_by_age, "by_age") if mode == "by_age" else (mixin
 
 h_immu, obj, models = objective_function(decision_variables=_dec_var, mode=_mode)
 
-print(h_immu)
-print(obj)
-
 # visualise_simulation(models)

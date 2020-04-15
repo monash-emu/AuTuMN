@@ -1,12 +1,15 @@
 from applications.covid_19.covid_calibration import *
 from numpy import linspace
 
-country = 'Australia'
+country = 'Victoria'
 
-# start_date = 16/3/2020 (day 75) for first item of the case_counts list
-case_counts = [9, 2, 5, 9, 17, 11, 10, 31, 26, 21, 28, 32, 42, 28, 25, 55, 39, 41]
-data_times = linspace(75, 75 + 17, num=18)
-nb_time_points = 18
+# start_date = 11/3/2020 (day 71) for first item of the case_counts list
+case_counts = [1, 1, 3, 1, 0, 4, 8, 7, 9, 12, 13, 22, 19, 18, 16,
+               22, 40, 33, 33, 49, 34, 36, 43, 16, 23, 23, 18, 15, 10,
+               7, 15, 2, 1, 3]
+case_counts = [float(c) for c in case_counts]
+data_times = linspace(71, 71 + len(case_counts) - 1, num=len(case_counts))
+nb_time_points = len(case_counts)
 case_counts = case_counts[:nb_time_points]
 data_times = data_times[:nb_time_points].tolist()
 

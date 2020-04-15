@@ -156,7 +156,7 @@ class Calibration:
         for i, param_name in enumerate(self.param_list):
             update_params[param_name] = params[i]
 
-        self.running_model = self.model_builder(update_params)
+        self.running_model = self.model_builder(self.model_parameters['country'], update_params)
 
         # run the model
         self.running_model.run_model()

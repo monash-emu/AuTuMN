@@ -24,8 +24,8 @@ def run_calibration_chain(max_seconds: int, run_id: int, country: str, par_prior
     params = load_params(FILE_DIR, application=country.lower())
     scenario_params = params["scenarios"]
     sc_start_time = params["scenario_start"]
-    params["default"]["country"] = country
-    params["default"]["iso3"] = get_iso3_from_country_name(input_database, country)
+    # params["default"]["country"] = country
+    params["default"]["iso3"] = get_iso3_from_country_name(input_database, country) if country != 'Victoria' else 'VIC'
 
     calib = Calibration(
         "covid_" + country,

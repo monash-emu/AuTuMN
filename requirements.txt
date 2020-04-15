@@ -1,6 +1,3 @@
-# SUMMER library
-git+https://github.com/jtrauer/summer.git
-
 # Data visualization
 matplotlib>=1.4.2
 seaborn==0.9.0
@@ -18,6 +15,8 @@ SQLAlchemy>=1.1.18
 # Utility
 pyyaml==5.3
 python-slugify==4.0.0
+graphviz>=0.4.10
+cerberus==1.3.2
 
 # Testing
 pytest

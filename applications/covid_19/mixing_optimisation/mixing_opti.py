@@ -7,8 +7,10 @@ import numpy as np
 from autumn import constants
 from autumn.db import Database
 from summer_py.constants import IntegrationType
+import summer_py.post_processing as post_proc
 from autumn.demography.ageing import add_agegroup_breaks
 from autumn.tool_kit import run_multi_scenario
+from autumn.outputs.outputs import Outputs
 
 from applications.covid_19.covid_model import build_covid_model as build_country_covid_model
 
@@ -19,7 +21,7 @@ MAIN_PARAMS_PATH = os.path.join(
     constants.BASE_PATH, "applications", "covid_19", "params", "base.yml"
 )
 
-COUNTRY = "australia"
+COUNTRY = "Australia"
 ISO3 = "AUS"
 
 
@@ -72,7 +74,6 @@ def build_mixing_multipliers_matrix(mixing_multipliers):
 def objective_function(mixing_multipliers):
     # build the model
     model_function = build_covid_model
-    mixing_progression = {}
 
     mixing_multipliers_matrix = build_mixing_multipliers_matrix(mixing_multipliers)
 
@@ -83,13 +84,13 @@ def objective_function(mixing_multipliers):
     # Prepare scenario data
     main_params["default"].update({"mixing_matrix_multipliers": mixing_multipliers_matrix})
     scenario_params = {0: main_params["default"], 1: main_params_sc1}
+    main_params['scenario_start_time'] = main_params["default"]["end_time"] - 1
 
     # run the model
     models = run_multi_scenario(
         scenario_params,
-        main_params["default"]["end_time"] - 1,
+        main_params,
         model_function,
-        mixing_progression,
         run_kwargs={"integration_type": IntegrationType.ODE_INT},
     )
 

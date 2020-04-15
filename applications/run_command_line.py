@@ -9,17 +9,11 @@ You can access this script from your CLI by running:
 import click
 
 
-from marshall_islands.runnners import run_rmi_model
-from covid_19.runnners import run_covid_aus_model, run_covid_phl_model
-from applications.mongolia.mongolia_calibration import (
-    run_calibration_chain as run_mongolia_calibration_chain,
-)
-from applications.marshall_islands.rmi_calibration import (
-    run_calibration_chain as run_rmi_calibration_chain,
-)
-from applications.covid_19.covid_calibration import (
-    run_calibration_chain as run_covid_calibration_chain,
-)
+from .marshall_islands.runners import run_rmi_model
+from .covid_19.runners import run_covid_aus_model, run_covid_phl_model
+from .mongolia.mongolia_calibration import run_calibration_chain as run_mongolia_calibration_chain
+from .marshall_islands.rmi_calibration import run_calibration_chain as run_rmi_calibration_chain
+from .covid_19.covid_calibration import run_calibration_chain as run_covid_calibration_chain
 
 
 @click.group()

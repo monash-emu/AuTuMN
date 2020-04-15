@@ -1,17 +1,16 @@
+import os
+
 from autumn.calibration import Calibration
 from autumn.tool_kit.utils import find_first_index_reaching_cumulative_sum
+from autumn.tool_kit.params import load_params
 from autumn.db import get_iso3_from_country_name
 
-from applications.covid_19.covid_model import build_covid_model, PARAMS_PATH, input_database
+from applications.covid_19.covid_model import build_covid_model, input_database
 from applications.covid_19.JH_data.process_JH_data import read_john_hopkins_data_from_csv
 
 from numpy import linspace
-import yaml
 
-with open(PARAMS_PATH, 'r') as yaml_file:
-        params = yaml.safe_load(yaml_file)
-scenario_params = params['scenarios']
-sc_start_time = params['scenario_start']
+FILE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def run_calibration_chain(max_seconds: int, run_id: int, country: str, par_priors, target_outputs):
@@ -22,13 +21,22 @@ def run_calibration_chain(max_seconds: int, run_id: int, country: str, par_prior
     available_time: Maximum time, in seconds, to run the calibration.
     """
     print(f"Preparing to run covid model calibration for country {country}")
-
-    params['default']['country'] = country
-    params['default']['iso3'] = get_iso3_from_country_name(input_database, country)
+    params = load_params(FILE_DIR, application=country.lower())
+    scenario_params = params["scenarios"]
+    sc_start_time = params["scenario_start"]
+    params["default"]["country"] = country
+    params["default"]["iso3"] = get_iso3_from_country_name(input_database, country)
 
     calib = Calibration(
-        "covid_" + country, build_covid_model, par_priors, target_outputs, MULTIPLIERS, run_id,
-        scenario_params, sc_start_time, model_parameters=params['default']
+        "covid_" + country,
+        build_covid_model,
+        par_priors,
+        target_outputs,
+        MULTIPLIERS,
+        run_id,
+        scenario_params,
+        sc_start_time,
+        model_parameters=params["default"],
     )
     print("Starting calibration.")
     calib.run_fitting_algorithm(
@@ -43,31 +51,35 @@ def run_calibration_chain(max_seconds: int, run_id: int, country: str, par_prior
 
 def get_priors_and_targets(country):
     # for JH data, day_1 is '1/22/20', that is 22 Jan 2020
-    n_daily_cases = read_john_hopkins_data_from_csv('confirmed', country=country)
+    n_daily_cases = read_john_hopkins_data_from_csv("confirmed", country=country)
 
     # get the subset of data points starting after 100th case detected and recording next 14 days
     index_100 = find_first_index_reaching_cumulative_sum(n_daily_cases, 100)
-    data_of_interest = n_daily_cases[index_100: index_100 + 14]
+    data_of_interest = n_daily_cases[index_100 : index_100 + 14]
 
     start_day = index_100 + 22  # because JH data starts 22/1
 
     PAR_PRIORS = [
-        {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [.1, 2.]},
-        {"param_name": "start_time", "distribution": "uniform", "distri_params": [-30, start_day - 1]}
+        {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.1, 2.0]},
+        {
+            "param_name": "start_time",
+            "distribution": "uniform",
+            "distri_params": [-30, start_day - 1],
+        },
     ]
 
     TARGET_OUTPUTS = [
         {
             "output_key": "notifications",
-            "years": linspace(start_day, start_day + len(data_of_interest) - 1, num=len(data_of_interest)),
+            "years": linspace(
+                start_day, start_day + len(data_of_interest) - 1, num=len(data_of_interest)
+            ),
             "values": data_of_interest,
-            "loglikelihood_distri": 'poisson'
+            "loglikelihood_distri": "poisson",
         }
     ]
 
     return PAR_PRIORS, TARGET_OUTPUTS
 
 
-MULTIPLIERS = {
-
-}
+MULTIPLIERS = {}

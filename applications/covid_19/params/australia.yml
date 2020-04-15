@@ -1,13 +1,2 @@
 ---
-default:
-  mixing:
-    school_times:
-      - 120.
-      - 121.
-      - 199.
-      - 200.
-    school_values:
-      - 1.
-      - 0.
-      - 0.
-      - 1.
+

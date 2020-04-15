@@ -10,5 +10,5 @@ RUN_DESCRIPTION = "trying to x and y the z"
 
 # run_rmi_model()
 # run_covid_phl_model()
-run_covid_aus_model(RUN_NAME, RUN_DESCRIPTION)
-# run_covid_vic_model(RUN_NAME, RUN_DESCRIPTION)
+# run_covid_aus_model(RUN_NAME, RUN_DESCRIPTION)
+run_covid_vic_model(RUN_NAME, RUN_DESCRIPTION)

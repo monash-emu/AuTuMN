@@ -31,7 +31,7 @@ def build_covid_matrices(country, mixing_params):
                 )
             mixing_matrix = \
                 np.add(
-                    mixing_matrix, (location_adjustment(time) + 1.) * mixing_matrix_components[location]
+                    mixing_matrix, (location_adjustment(time) - 1.) * mixing_matrix_components[location]
                 )
         return mixing_matrix
 

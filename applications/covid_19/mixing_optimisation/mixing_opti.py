@@ -24,7 +24,6 @@ MAIN_PARAMS_PATH = os.path.join(
 COUNTRY = "Australia"
 ISO3 = "AUS"
 
-
 # Read COVID-19 base parameter values
 with open(MAIN_PARAMS_PATH, "r") as f:
     main_params = yaml.safe_load(f)
@@ -141,14 +140,3 @@ def visualise_simulation(_models):
     old_outputs_plotter.plot_requested_outputs()
 
 
-# parameters to optimise (all bounded in [0., 1.])
-mixing_mult_by_age = {"a": 1., "b": 1., "c": 1.0, "d": 1., "e": 1., "f": 1.}
-mixing_mult_by_location = {"school": 1., "work": 1., "other_locations": 1.}
-
-mode = "by_location"
-
-_dec_var, _mode = (mixing_mult_by_age, "by_age") if mode == "by_age" else (mixing_mult_by_location, "by_location")
-
-h_immu, obj, models = objective_function(decision_variables=_dec_var, mode=_mode)
-
-# visualise_simulation(models)

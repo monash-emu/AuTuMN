@@ -87,13 +87,14 @@ def build_covid_model(country: str, update_params: dict):
     # Get progression rates from sojourn times, distinguishing to_infectious in order to split this parameter later
     for compartment in infected_compartment_types + ["hospital", "icu"]:
         model_parameters["within_" + compartment] = 1.0 / model_parameters[compartment + "_period"]
-    model_parameters["to_infectious"] = 1.0 / model_parameters["within_presympt"]
+    model_parameters["to_infectious"] = model_parameters["within_presympt"]
 
     # Multiply the progression rates by the number of compartments to keep the average time in exposed the same
     for compartment in infected_compartment_types:
         model_parameters = multiply_flow_value_for_multiple_compartments(
             model_parameters, compartment, "within_" + compartment
         )
+    model_parameters['to_infectious'] *= model_parameters['n_compartment_repeats']
 
     # Replicate compartments - all repeated compartments are replicated the same number of times, which could be changed
     total_infectious_times = 0.0

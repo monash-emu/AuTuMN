@@ -13,7 +13,8 @@ from numpy import linspace
 FILE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-def run_calibration_chain(max_seconds: int, run_id: int, country: str, par_priors, target_outputs, mode='lsm'):
+def run_calibration_chain(max_seconds: int, run_id: int, country: str, par_priors, target_outputs, mode='lsm',
+                          _start_time_range=None):
     """
     Run a calibration chain for the covid model
 
@@ -38,6 +39,7 @@ def run_calibration_chain(max_seconds: int, run_id: int, country: str, par_prior
         scenario_params,
         sc_start_time,
         model_parameters=params["default"],
+        start_time_range=_start_time_range
     )
     print("Starting calibration.")
     calib.run_fitting_algorithm(

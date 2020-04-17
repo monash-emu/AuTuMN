@@ -58,11 +58,13 @@ class Calibration:
 
     def __init__(
         self, model_name: str, model_builder, priors, targeted_outputs, multipliers, chain_index, scenario_params={},
-            scenario_start_time=None, model_parameters={}
+            scenario_start_time=None, model_parameters={}, start_time_range=None
     ):
         self.model_name = model_name
         self.model_builder = model_builder  # a function that builds a new model without running it
         self.model_parameters = model_parameters
+        self.start_time_range = start_time_range  # if specified, we allow start time to vary to achieve the best fit
+        self.best_start_time = None
         self.running_model = None  # a model that will be run during calibration
         self.post_processing = None  # a PostProcessing object containing the required outputs of a model that has been run
         self.priors = priors  # a list of dictionaries. Each dictionary describes the prior distribution for a parameter
@@ -219,50 +221,68 @@ class Calibration:
                 append=True,
             )
 
-    def loglikelihood(self, params):
+    def loglikelihood(self, params, to_return='best_ll'):
         """
         defines the loglikelihood
         :param params: model parameters
         :return: the loglikelihood
         """
         # run the model
-        ll = None
-        for evaluated in self.evaluated_params_ll:
-            if np.array_equal(params, evaluated[0]):
-                ll = evaluated[1]
-                break
+        best_ll = None
+        # for evaluated in self.evaluated_params_ll:
+        #     if np.array_equal(params, evaluated[0]):
+        #         best_ll = evaluated[1]
+        #         break
 
-        if ll is None:
+        if best_ll is None:
             self.run_model_with_params(params)
 
-            ll = 0  # loglikelihood if using bayesian approach. Sum of squares if using lsm mode
-            for target in self.targeted_outputs:
-                key = target["output_key"]
-                data = np.array(target["values"])
-                if key in self.post_processing.generated_outputs:
-                    model_output = np.array(self.post_processing.generated_outputs[key])
-                else:
-                    indices = []
-                    for year in target["years"]:
-                        indices.append(self.running_model.times.index(year))
-                    model_output = np.array([self.post_processing.derived_outputs[key][index] for index in indices])
+            model_start_time = self.post_processing.derived_outputs['times'][0]
+            if self.start_time_range is None:
+                considered_start_times = [model_start_time]
+            else:
+                considered_start_times = np.linspace(self.start_time_range[0], self.start_time_range[1],
+                                                     num=self.start_time_range[1]-self.start_time_range[0] + 1)
 
-                if self.run_mode == "lsm":
-                    ll += np.sum((data - model_output) ** 2)
-                else:
-                    if "loglikelihood_distri" not in target:  # default distribution
-                        target["loglikelihood_distri"] = 'normal'
-                    if target["loglikelihood_distri"] == 'normal':
-                        ll += -(0.5 / target["sd"] ** 2) * np.sum((data - model_output) ** 2)
-                    elif target["loglikelihood_distri"] == 'poisson':
-                        for i in range(len(data)):
-                            ll += data[i] * math.log(model_output[i]) - model_output[i] - \
-                                  math.log(math.factorial(data[i]))
+            best_ll, best_start_time = (1.e-60, None)
+            if self.run_mode == 'lsm':
+                best_ll = 1.e60
+            for considered_start_time in considered_start_times:
+                time_shift = considered_start_time - model_start_time
+                ll = 0  # loglikelihood if using bayesian approach. Sum of squares if using lsm mode
+                for target in self.targeted_outputs:
+                    key = target["output_key"]
+                    data = np.array(target["values"])
+                    if key in self.post_processing.generated_outputs:
+                        if self.start_time_range is not None:
+                            raise ValueError('variable start time implemented for derived_outputs only')
+                        model_output = np.array(self.post_processing.generated_outputs[key])
                     else:
-                        raise ValueError("Distribution not supported in loglikelihood_distri")
+                        indices = []
+                        for year in target["years"]:
+                            indices.append(self.running_model.times.index(year - time_shift))
+                        model_output = np.array([self.post_processing.derived_outputs[key][index] for index in indices])
+
+                    if self.run_mode == "lsm":
+                        ll += np.sum((data - model_output) ** 2)
+                    else:
+                        if "loglikelihood_distri" not in target:  # default distribution
+                            target["loglikelihood_distri"] = 'normal'
+                        if target["loglikelihood_distri"] == 'normal':
+                            ll += -(0.5 / target["sd"] ** 2) * np.sum((data - model_output) ** 2)
+                        elif target["loglikelihood_distri"] == 'poisson':
+                            for i in range(len(data)):
+                                ll += data[i] * math.log(model_output[i]) - model_output[i] - \
+                                      math.log(math.factorial(data[i]))
+                        else:
+                            raise ValueError("Distribution not supported in loglikelihood_distri")
+
+                if (ll > best_ll and self.run_mode != 'lsm') or (ll < best_ll and self.run_mode == 'lsm'):
+                    best_ll, best_start_time = (ll, considered_start_time)
+
             if self.run_mode != "autumn_mcmc":
                 mcmc_run_dict = {k: v for k, v in zip(self.param_list, params)}
-                mcmc_run_dict["loglikelihood"] = ll
+                mcmc_run_dict["loglikelihood"] = best_ll
                 mcmc_run_colnames = self.param_list.copy()
                 mcmc_run_colnames = mcmc_run_colnames.append("loglikelihood")
                 mcmc_run_df = pd.DataFrame(
@@ -275,9 +295,14 @@ class Calibration:
                     database_name=self.output_db_path,
                     append=True,
                 )
-            self.evaluated_params_ll.append((copy.copy(params), copy.copy(ll)))
+            self.evaluated_params_ll.append((copy.copy(params), copy.copy(best_ll)))
 
-        return ll
+        if to_return == 'best_ll':
+            return best_ll
+        elif to_return == 'best_start_time':
+            return best_start_time
+        else:
+            raise ValueError("to_return not recognised")
 
     def format_data_as_array(self):
         """
@@ -526,6 +551,10 @@ class Calibration:
                 bounds=bounds
             )
             self.mle_estimates = sol.x
+            if self.start_time_range is not None:
+                self.best_start_time = self.loglikelihood(self.mle_estimates, to_return='best_start_time')
+                print("Best start time: " + str(self.best_start_time))
+
             print("Best solution:")
             print(self.mle_estimates)
             self.dump_mle_params_to_yaml_file()
@@ -604,6 +633,8 @@ class Calibration:
         dict_to_dump = {}
         for i, param_name in enumerate(self.param_list):
             dict_to_dump[param_name] = float(self.mle_estimates[i])
+        if self.best_start_time is not None:
+            dict_to_dump['start_time'] = self.best_start_time
 
         file_path = os.path.join(DATA_PATH, self.model_name, 'mle_params.yml')
         with open(file_path, 'w') as outfile:

@@ -1,2 +1,5 @@
 ---
 
+default:
+  country: australia
+  iso3: AUS

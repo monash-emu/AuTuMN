@@ -21,7 +21,7 @@ MAIN_PARAMS_PATH = os.path.join(
     constants.BASE_PATH, "applications", "covid_19", "params", "base.yml"
 )
 
-COUNTRY = "Australia"
+COUNTRY = "australia"
 ISO3 = "AUS"
 
 # Read COVID-19 base parameter values

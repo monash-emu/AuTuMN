@@ -1,5 +1,8 @@
 ---
 default:
+  country: victoria
+  iso3: AUS
+
   mixing:
     other_locations_times:
       - 78.

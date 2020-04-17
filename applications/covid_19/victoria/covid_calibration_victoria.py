@@ -1,7 +1,7 @@
 from applications.covid_19.covid_calibration import *
 from numpy import linspace
 
-country = 'Victoria'
+country = 'victoria'
 
 # start_date = 11/3/2020 (day 71) for first item of the case_counts list
 case_counts = [1, 1, 3, 1, 0, 4, 8, 7, 9, 12, 13, 22, 19, 18, 16,

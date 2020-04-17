@@ -152,11 +152,14 @@ class Calibration:
         run the model with a set of params.
         :param params: a list containing the parameter values for update
         """
-        update_params = self.model_parameters
+        update_params = {}  # self.model_parameters
         for i, param_name in enumerate(self.param_list):
             update_params[param_name] = params[i]
 
         self.running_model = self.model_builder(self.model_parameters['country'], update_params)
+        self.running_model = change_mixing_matrix_for_scenario(self.running_model,
+                                                               {'default': self.model_parameters},
+                                                               0)
 
         # run the model
         self.running_model.run_model()

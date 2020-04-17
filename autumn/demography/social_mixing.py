@@ -13,6 +13,8 @@ def load_specific_prem_sheet(mixing_location, country):
     :param: country: str
         Name of the country of interest
     """
+    if country == 'victoria':
+        country = 'australia'
 
     # Files with name ending with _1 have a header, but not those ending with _2 - plus need to determine file to read
     sheet_number, header_argument = ('1', 0) if country.title() < 'Mozambique' else ('2', None)

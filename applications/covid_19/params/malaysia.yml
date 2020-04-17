@@ -1,0 +1,6 @@
+---
+default:
+  contact_rate: 0.25
+  start_time: 22.
+  country: Malaysia
+  iso3: MYS

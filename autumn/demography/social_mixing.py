@@ -15,7 +15,7 @@ def load_specific_prem_sheet(mixing_location, country):
     """
 
     # Files with name ending with _1 have a header, but not those ending with _2 - plus need to determine file to read
-    sheet_number, header_argument = ('1', 0) if country < 'Mozambique' else ('2', None)
+    sheet_number, header_argument = ('1', 0) if country.title() < 'Mozambique' else ('2', None)
 
     file_dir = \
         os.path.join(
@@ -24,7 +24,7 @@ def load_specific_prem_sheet(mixing_location, country):
             'MUestimates_' + mixing_location + '_' + sheet_number + '.xlsx'
         )
 
-    return np.array(pd.read_excel(file_dir, sheet_name=country, header=header_argument))
+    return np.array(pd.read_excel(file_dir, sheet_name=country.title(), header=header_argument))
 
 
 def load_all_prem_types(country):

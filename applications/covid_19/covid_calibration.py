@@ -13,12 +13,13 @@ from numpy import linspace
 FILE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-def run_calibration_chain(max_seconds: int, run_id: int, country: str, par_priors, target_outputs):
+def run_calibration_chain(max_seconds: int, run_id: int, country: str, par_priors, target_outputs, mode='lsm'):
     """
     Run a calibration chain for the covid model
 
     num_iters: Maximum number of iterations to run.
     available_time: Maximum time, in seconds, to run the calibration.
+    mode is either 'lsm' or 'autumn_mcmc'
     """
     print(f"Preparing to run covid model calibration for country {country}")
     params = load_params(FILE_DIR, application=country.lower())
@@ -40,7 +41,7 @@ def run_calibration_chain(max_seconds: int, run_id: int, country: str, par_prior
     )
     print("Starting calibration.")
     calib.run_fitting_algorithm(
-        run_mode="lsm",  # "autumn_mcmc",
+        run_mode=mode,
         n_iterations=100000,
         n_burned=0,
         n_chains=1,
@@ -51,7 +52,7 @@ def run_calibration_chain(max_seconds: int, run_id: int, country: str, par_prior
 
 def get_priors_and_targets(country):
     # for JH data, day_1 is '1/22/20', that is 22 Jan 2020
-    n_daily_cases = read_john_hopkins_data_from_csv("confirmed", country=country)
+    n_daily_cases = read_john_hopkins_data_from_csv("confirmed", country=country.title())
 
     # get the subset of data points starting after 100th case detected and recording next 14 days
     index_100 = find_first_index_reaching_cumulative_sum(n_daily_cases, 100)
@@ -83,3 +84,4 @@ def get_priors_and_targets(country):
 
 
 MULTIPLIERS = {}
+

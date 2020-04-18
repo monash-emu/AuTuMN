@@ -149,12 +149,16 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
             model_parameters['all_stratifications']['agegroup'],
             [abs_props[stratum] for stratum in fixed_prop_strata]
         )
+    prop_isolated = lambda time: 0.
     for i_age, agegroup in enumerate(model_parameters['all_stratifications']['agegroup']):
+        _covid_model.time_variants['abs_prop_isolatedX' + agegroup] = \
+            lambda time: abs_props['sympt_non_hospital'][i_age] * prop_isolated(time)
+        _covid_model.time_variants['abs_prop_not_isolatedX' + agegroup] = \
+            lambda time: abs_props['sympt_non_hospital'][i_age] * (1. - prop_isolated(time))
         stratification_adjustments['to_infectiousXagegroup_' + agegroup]['sympt_non_hospital'] = \
-            abs_props['sympt_non_hospital'][i_age]
+            'abs_prop_not_isolatedX' + agegroup
         stratification_adjustments['to_infectiousXagegroup_' + agegroup]['sympt_isolate'] = \
-            0.
-
+            'abs_prop_isolatedX' + agegroup
 
     # Death and non-death progression between infectious compartments towards the recovered compartment
     if len(strata_to_implement) > 2:

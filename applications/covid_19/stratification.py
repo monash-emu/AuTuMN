@@ -185,6 +185,13 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
         if stratum + '_infect_multiplier' in model_parameters:
             strata_infectiousness[stratum] = model_parameters[stratum + '_infect_multiplier']
 
+
+    #
+    # _covid_model.time_variants['whatever'] = lambda time: 1.
+    # stratification_adjustments['to_infectiousXagegroup_0']['non_sympt'] = 'whatever'
+    #
+
+
     # Stratify the model using the SUMMER stratification function
     _covid_model.stratify(
         'clinical',

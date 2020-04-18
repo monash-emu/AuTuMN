@@ -1,5 +1,4 @@
 import os
-import yaml
 from summer_py.summer_model import StratifiedModel
 from summer_py.summer_model.utils.base_compartments import replicate_compartment
 
@@ -24,6 +23,8 @@ from applications.covid_19.covid_outputs import (
 from autumn.demography.social_mixing import load_specific_prem_sheet, update_mixing_with_multipliers
 from autumn.demography.population import get_population_size, load_population
 from autumn.db import Database
+
+from summer_py.summer_model.strat_model import find_name_components
 
 
 # Database locations
@@ -217,5 +218,10 @@ def build_covid_model(country: str, update_params: dict):
     _covid_model.death_output_categories = list_all_strata_for_mortality(
         _covid_model.compartment_names
     )
+
+    _covid_model.individual_infectiousness_adjustments = \
+        [[['late', 'clinical_sympt_isolate'], 0.]]
+
+    print()
 
     return _covid_model

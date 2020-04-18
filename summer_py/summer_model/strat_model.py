@@ -209,6 +209,7 @@ class StratifiedModel(EpiModel):
         self.strata_indices = {}
         self.target_props = {}
         self.cumulative_target_props = {}
+        self.individual_infectiousness_adjustments = []
         self.heterogeneous_mixing = False
         self.mixing_matrix = None
         self.available_death_rates = [""]
@@ -1452,6 +1453,21 @@ class StratifiedModel(EpiModel):
             for modifier in self.infectiousness_levels:
                 if modifier in find_name_components(compartment):
                     self.infectiousness_multipliers[n_comp] *= self.infectiousness_levels[modifier]
+
+        self.make_further_infectiousness_adjustments()
+
+    def make_further_infectiousness_adjustments(self):
+        """
+        Work through specific requests for specific adjustments, to escape the requirement to only adjust compartment
+        infectiousness according to stratification process - with all infectious compartments having the same
+        adjustment.
+        """
+        for i_adjustment in range(len(self.individual_infectiousness_adjustments)):
+            for i_comp, comp in enumerate(self.compartment_names):
+                if all([component in find_name_components(comp) for
+                        component in self.individual_infectiousness_adjustments[i_adjustment][0]]):
+                    self.infectiousness_multipliers[i_comp] = \
+                        self.individual_infectiousness_adjustments[i_adjustment][1]
 
     def find_infectious_indices(self):
         """

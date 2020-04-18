@@ -78,6 +78,7 @@ def build_covid_model(country: str, update_params: dict):
         Compartment.EXPOSED,
         Compartment.PRESYMPTOMATIC,
         Compartment.INFECTIOUS,
+        Compartment.LATE_INFECTIOUS
     ]
 
     # Define compartments
@@ -92,6 +93,7 @@ def build_covid_model(country: str, update_params: dict):
         Compartment.EXPOSED: False,
         Compartment.PRESYMPTOMATIC: True,
         Compartment.INFECTIOUS: True,
+        Compartment.LATE_INFECTIOUS: True
     }
 
     # Get progression rates from sojourn times, distinguishing to_infectious in order to split this parameter later
@@ -130,11 +132,14 @@ def build_covid_model(country: str, update_params: dict):
         model_parameters['time_step'],
     )
 
-    # Sequentially add groups of flows to flows list
-    flows = add_infection_flows([], model_parameters['n_compartment_repeats']['exposed'])
+    # Add flows through replicated compartments
+    flows = []
     for compartment in is_infectious:
         flows = add_sequential_compartment_flows(
             flows, model_parameters['n_compartment_repeats'][compartment], compartment)
+
+    # Add other flows between compartment types
+    flows = add_infection_flows(flows, model_parameters['n_compartment_repeats']['exposed'])
     flows = add_transition_flows(
         flows,
         model_parameters['n_compartment_repeats']['exposed'],
@@ -154,7 +159,15 @@ def build_covid_model(country: str, update_params: dict):
         Compartment.INFECTIOUS,
         'to_infectious'
     )
-    flows = add_recovery_flows(flows, model_parameters['n_compartment_repeats']['infectious'])
+    flows = add_transition_flows(
+        flows,
+        model_parameters['n_compartment_repeats']['infectious'],
+        model_parameters['n_compartment_repeats']['late'],
+        Compartment.INFECTIOUS,
+        Compartment.LATE_INFECTIOUS,
+        'within_infectious'
+    )
+    flows = add_recovery_flows(flows, model_parameters['n_compartment_repeats']['late'])
     flows = add_infection_death_flows(flows, model_parameters['n_compartment_repeats']['infectious'])
 
     # Get mixing matrix, although would need to adapt this for countries in file _2

@@ -62,7 +62,9 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
 
     # Find the compartments that will need to be stratified under this stratification
     compartments_to_split = \
-        [comp for comp in compartments if comp.startswith(Compartment.INFECTIOUS)]
+        [comp for comp in compartments if
+         comp.startswith(Compartment.INFECTIOUS) or
+         comp.startswith(Compartment.LATE_INFECTIOUS)]
 
     # Repeat the 5-year age-specific CFRs for all but the top age bracket, and average the last two for the last one
     model_parameters['adjusted_infection_fatality_props'] = \

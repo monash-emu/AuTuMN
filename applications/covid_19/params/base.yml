@@ -13,12 +13,14 @@ default:
     exposed: 2
     presympt: 1
     infectious: 1
+    late: 1
     recovered: 1
 
   compartment_periods:
     exposed: 3.2
     presympt: 0.5
-    infectious: 7.68
+    infectious: 3.84
+    late: 3.84
     hospital: 8.
     icu: 20.
 

@@ -8,7 +8,19 @@ default:
   # MODEL STRUCTURE PARAMETERS
 
   # Number of times each compartment representing active infection (i.e. not S and not R) are repeated
-  n_compartment_repeats: 2
+  n_compartment_repeats:
+    susceptible: 1
+    exposed: 2
+    presympt: 1
+    infectious: 1
+    recovered: 1
+
+  compartment_periods:
+    exposed: 3.2
+    presympt: 0.5
+    infectious: 7.68
+    hospital: 8.
+    icu: 20.
 
   # Stratification-related requests
   stratify_by:
@@ -102,11 +114,6 @@ default:
 
   # Base model definition
   contact_rate: 0.36
-  exposed_period: 3.2
-  presympt_period: 0.5
-  infectious_period: 7.68
-  hospital_period: 8.
-  icu_period: 20.
   icu_mortality_prop: 0.5
 
   # Compulsory parameter that is completely overwritten in stratification, rather than being modified

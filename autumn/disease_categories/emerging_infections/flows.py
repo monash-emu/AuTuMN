@@ -14,14 +14,14 @@ def add_infection_flows(working_flows, n_exposed):
     return working_flows
 
 
-def add_transition_flows(list_of_flows, n_sequential, origin_compartment, to_compartment, parameter_name):
+def add_transition_flows(list_of_flows, n_origin, n_to, origin_compartment, to_compartment, parameter_name):
     """
     Add flow from end of sequential exposed compartments to start of presymptomatic compartments
     """
     list_of_flows += [{
         'type': Flow.STANDARD,
-        'origin': origin_compartment + '_' + str(n_sequential) if n_sequential > 1 else origin_compartment,
-        'to': to_compartment + '_1' if n_sequential > 1 else to_compartment,
+        'origin': origin_compartment + '_' + str(n_origin) if n_origin > 1 else origin_compartment,
+        'to': to_compartment + '_1' if n_to > 1 else to_compartment,
         'parameter': parameter_name
     }]
     return list_of_flows
@@ -68,14 +68,3 @@ def add_infection_death_flows(working_flows, n_infectious):
             Compartment.INFECTIOUS
         })
     return working_flows
-
-
-def multiply_flow_value_for_multiple_compartments(model_parameters, compartment_name, parameter_name):
-    """
-    Multiply the progression rate through the compartments placed in series by the number of compartments, so that the
-    average sojourn time in the group of compartment remains the same.
-    """
-    model_parameters['within_' + compartment_name] = \
-        model_parameters[parameter_name] * \
-        float(model_parameters['n_compartment_repeats'])
-    return model_parameters

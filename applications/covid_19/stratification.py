@@ -149,16 +149,20 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
             model_parameters['all_stratifications']['agegroup'],
             [abs_props[stratum] for stratum in fixed_prop_strata]
         )
+
+    # Define isolated proportion, which will be moved to inputs later in some way
     prop_isolated = lambda time: 0.
+
+    # Apply the isolated proportion to the symptomatic non-hospitalised group
     for i_age, agegroup in enumerate(model_parameters['all_stratifications']['agegroup']):
-        _covid_model.time_variants['abs_prop_isolatedX' + agegroup] = \
+        isolated_name = 'abs_prop_isolatedX' + agegroup
+        not_isolated_name = 'abs_prop_not_isolatedX' + agegroup
+        _covid_model.time_variants[isolated_name] = \
             lambda time: abs_props['sympt_non_hospital'][i_age] * prop_isolated(time)
-        _covid_model.time_variants['abs_prop_not_isolatedX' + agegroup] = \
+        _covid_model.time_variants[not_isolated_name] = \
             lambda time: abs_props['sympt_non_hospital'][i_age] * (1. - prop_isolated(time))
-        stratification_adjustments['to_infectiousXagegroup_' + agegroup]['sympt_non_hospital'] = \
-            'abs_prop_not_isolatedX' + agegroup
-        stratification_adjustments['to_infectiousXagegroup_' + agegroup]['sympt_isolate'] = \
-            'abs_prop_isolatedX' + agegroup
+        stratification_adjustments['to_infectiousXagegroup_' + agegroup]['sympt_isolate'] = isolated_name
+        stratification_adjustments['to_infectiousXagegroup_' + agegroup]['sympt_non_hospital'] = not_isolated_name
 
     # Death and non-death progression between infectious compartments towards the recovered compartment
     if len(strata_to_implement) > 2:
@@ -193,17 +197,6 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
     for stratum in strata_to_implement:
         if stratum + '_infect_multiplier' in model_parameters:
             strata_infectiousness[stratum] = model_parameters[stratum + '_infect_multiplier']
-
-
-    # _covid_model.time_variants['whatever'] = lambda time: 1.
-    #
-    # del stratification_adjustments['to_infectiousXagegroup_0']
-    #
-    # stratification_adjustments['to_infectiousXagegroup_0W'] = {'non_sympt': 'whatever'}
-    #
-    # for agegroup in range(len(model_parameters['all_stratifications']['agegroup'])):
-    #     print(abs_props['sympt_non_hospital'][agegroup])
-
 
     # Stratify the model using the SUMMER stratification function
     _covid_model.stratify(

@@ -19,8 +19,8 @@ default:
   compartment_periods:
     exposed: 3.2
     presympt: 0.5
-    infectious: 3.84
-    late: 3.84
+    infectious: 2.
+    late: 5.68
     hospital: 8.
     icu: 20.
 

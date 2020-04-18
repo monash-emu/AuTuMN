@@ -140,16 +140,21 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
         )
 
     # Progression rates into the infectious compartment(s)
+    fixed_prop_strata = ['non_sympt', 'hospital_non_icu', 'icu']
     stratification_adjustments = \
         adjust_upstream_stratified_parameter(
             'to_infectious',
-            strata_to_implement,
+            fixed_prop_strata,
             'agegroup',
             model_parameters['all_stratifications']['agegroup'],
-            [[1.] * len(model_parameters['all_stratifications']['agegroup'])] if
-            len(model_parameters['clinical_strata']) == 1 else
-            [abs_props[stratum] for stratum in model_parameters['clinical_strata']]
+            [abs_props[stratum] for stratum in fixed_prop_strata]
         )
+    for i_age, agegroup in enumerate(model_parameters['all_stratifications']['agegroup']):
+        stratification_adjustments['to_infectiousXagegroup_' + agegroup]['sympt_non_hospital'] = \
+            abs_props['sympt_non_hospital'][i_age]
+        stratification_adjustments['to_infectiousXagegroup_' + agegroup]['sympt_isolate'] = \
+            0.
+
 
     # Death and non-death progression between infectious compartments towards the recovered compartment
     if len(strata_to_implement) > 2:
@@ -161,7 +166,7 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
         stratification_adjustments.update(
             adjust_upstream_stratified_parameter(
                 'within_infectious',
-                strata_to_implement[2:],
+                strata_to_implement[3:],
                 'agegroup',
                 model_parameters['all_stratifications']['agegroup'],
                 within_infectious_overwrites,
@@ -171,7 +176,7 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
         stratification_adjustments.update(
             adjust_upstream_stratified_parameter(
                 'infect_death',
-                strata_to_implement[2:],
+                strata_to_implement[3:],
                 'agegroup',
                 model_parameters['all_stratifications']['agegroup'],
                 infect_death_overwrites,
@@ -186,10 +191,14 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
             strata_infectiousness[stratum] = model_parameters[stratum + '_infect_multiplier']
 
 
-    #
     # _covid_model.time_variants['whatever'] = lambda time: 1.
-    # stratification_adjustments['to_infectiousXagegroup_0']['non_sympt'] = 'whatever'
     #
+    # del stratification_adjustments['to_infectiousXagegroup_0']
+    #
+    # stratification_adjustments['to_infectiousXagegroup_0W'] = {'non_sympt': 'whatever'}
+    #
+    # for agegroup in range(len(model_parameters['all_stratifications']['agegroup'])):
+    #     print(abs_props['sympt_non_hospital'][agegroup])
 
 
     # Stratify the model using the SUMMER stratification function

@@ -34,6 +34,7 @@ default:
   clinical_strata:
     - non_sympt
     - sympt_non_hospital
+    - sympt_isolate
     - hospital_non_icu
     - icu
   agegroup_breaks:

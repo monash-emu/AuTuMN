@@ -2,14 +2,15 @@ from autumn.constants import Compartment
 from datetime import date
 import itertools
 
+
 def find_incidence_outputs(parameters):
     last_presympt = \
-        'presympt_' + str(parameters['n_compartment_repeats']) if \
-            parameters['n_compartment_repeats'] > 1 else \
+        'presympt_' + str(parameters['n_compartment_repeats']['presympt']) if \
+            parameters['n_compartment_repeats']['presympt'] > 1 else \
             'presympt'
     first_infectious = \
         'infectious_1' if \
-            parameters['n_compartment_repeats'] > 1 else \
+            parameters['n_compartment_repeats']['infectious'] > 1 else \
             'infectious'
     return {
         'incidence':
@@ -21,18 +22,18 @@ def find_incidence_outputs(parameters):
     }
 
 
-def create_fully_stratified_incidence_covid(requested_stratifications, strata_dict, n_compartment_repeats):
+def create_fully_stratified_incidence_covid(requested_stratifications, strata_dict, model_params):
     """
     Create derived outputs for fully disaggregated incidence
     """
     out_connections = {}
     origin_compartment = \
         Compartment.PRESYMPTOMATIC if \
-            n_compartment_repeats < 2 else \
-            Compartment.PRESYMPTOMATIC + '_' + str(n_compartment_repeats)
+            model_params['n_compartment_repeats']['presympt'] < 2 else \
+            Compartment.PRESYMPTOMATIC + '_' + str(model_params['n_compartment_repeats']['presympt'])
     to_compartment = \
         Compartment.INFECTIOUS if \
-            n_compartment_repeats < 2 else \
+            model_params['n_compartment_repeats']['infectious'] < 2 else \
             Compartment.INFECTIOUS + '_1'
 
     all_tags_by_stratification = []

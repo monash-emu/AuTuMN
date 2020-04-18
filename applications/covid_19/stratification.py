@@ -44,7 +44,7 @@ def stratify_by_age(model_to_stratify, mixing_matrix, total_pops, model_paramete
     #     create_request_stratified_incidence_covid(
     #         model_parameters['incidence_stratification'],
     #         model_parameters['all_stratifications'],
-    #         model_parameters['n_compartment_repeats']
+    #         model_parameters['n_compartment_repeats']['infectious']
     #     )
     # )
 
@@ -127,13 +127,13 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
     progression_death_rates['hospital_death'], progression_death_rates['hospital_progression'] = \
         find_rates_and_complements_from_ifr(
             rel_props['hospital_death'],
-            model_parameters['n_compartment_repeats'],
+            model_parameters['n_compartment_repeats']['infectious'],
             [model_parameters['within_hospital']] * 16
         )
     progression_death_rates['icu_death'], progression_death_rates['icu_progression'] = \
         find_rates_and_complements_from_ifr(
             rel_props['icu_death'],
-            model_parameters['n_compartment_repeats'],
+            model_parameters['n_compartment_repeats']['infectious'],
             [model_parameters['within_icu']] * 16
         )
 

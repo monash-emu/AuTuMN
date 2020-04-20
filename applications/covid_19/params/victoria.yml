@@ -3,6 +3,16 @@ default:
   country: victoria
   iso3: AUS
 
+  implement_importation: True
+  importation_rate: 1.e-6
+
+  infectious_seed: 0
+
+  start_time: 30.
+  end_time: 365.
+
+  contact_rate: 0.2
+
   prop_isolated_among_symptomatic: .84
 
   mixing:
@@ -60,3 +70,7 @@ default:
       - 0.
       - 0.
       - 0.1
+
+data:
+  times_imported_cases: [70., 71., 86., 100., 107]
+  n_imported_cases: [1, 1, 45, 4, 1]

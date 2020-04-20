@@ -3,6 +3,8 @@ default:
   country: victoria
   iso3: AUS
 
+  prop_isolated_among_symptomatic: .84
+
   mixing:
     other_locations_times:
       - 78.

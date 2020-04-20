@@ -98,6 +98,9 @@ default:
   hospital_non_icu_infect_multiplier: 0.2
   icu_infect_multiplier: 0.2
 
+  # proportion of isolated cases among symptomatic
+  prop_isolated_among_symptomatic: 0.
+
   # Add non-infectious
   add_non_infectious: True
 

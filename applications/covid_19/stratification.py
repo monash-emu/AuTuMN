@@ -151,7 +151,9 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
         )
 
     # Define isolated proportion, which will be moved to inputs later in some way
-    prop_isolated = lambda time: 0.
+    prop_isolated = lambda time: model_parameters['prop_isolated_among_symptomatic']
+
+    print(prop_isolated(123))
 
     # Apply the isolated proportion to the symptomatic non-hospitalised group
     for i_age, agegroup in enumerate(model_parameters['all_stratifications']['agegroup']):

@@ -27,23 +27,24 @@ def add_transition_flows(list_of_flows, n_origin, n_to, origin_compartment, to_c
     return list_of_flows
 
 
-def add_recovery_flows(working_flows, n_infectious):
+def add_recovery_flows(working_flows, n_late):
     """
     Add standard recovery flows
     Differs from the transition flows in that the recovered compartment is never duplicated
     """
     working_flows += [{
         'type': Flow.STANDARD,
-        'parameter': 'within_infectious',
+        'parameter': 'within_late',
         'to': Compartment.RECOVERED,
-        'origin': Compartment.INFECTIOUS + '_' + str(n_infectious) if n_infectious > 1 else Compartment.INFECTIOUS
+        'origin': Compartment.LATE_INFECTIOUS + '_' + str(n_late) if
+        n_late > 1 else Compartment.LATE_INFECTIOUS
     }]
     return working_flows
 
 
 def add_sequential_compartment_flows(working_flows, n_compartments, compartment_name):
     """
-    Add standard flows for progression through sequential compartments
+    Add standard flows for progression through any sequential compartments
     """
     for i_flow in range(1, n_compartments):
         working_flows += [{

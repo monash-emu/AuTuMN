@@ -13,12 +13,14 @@ default:
     exposed: 2
     presympt: 1
     infectious: 1
+    late: 1
     recovered: 1
 
   compartment_periods:
     exposed: 3.2
     presympt: 0.5
-    infectious: 7.68
+    infectious: 2.
+    late: 5.68
     hospital: 8.
     icu: 20.
 
@@ -32,6 +34,7 @@ default:
   clinical_strata:
     - non_sympt
     - sympt_non_hospital
+    - sympt_isolate
     - hospital_non_icu
     - icu
   agegroup_breaks:

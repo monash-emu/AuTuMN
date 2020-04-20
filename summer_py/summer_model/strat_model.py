@@ -34,8 +34,8 @@ class StratifiedModel(EpiModel):
     however, this class should make the stratification process more algorithmic, easier and more reliable
 
     :attribute adaptation_functions: dict
-        one-stage functions for each parameter sub-component from which to build the final functions (which are in
-            final_parameter_functions)
+        single stage functions representing each stratified parameter component, from which to build the final functions
+            (i.e. final_parameter_functions)
     :attribute all_stratifications: dictionary
         keys are all the stratification names implemented so far. values are the list of strata for each stratification
     :attribute available_death_rates: list
@@ -43,7 +43,8 @@ class StratifiedModel(EpiModel):
     :attribute compartment_types_to_stratify: list
         the compartments that are being stratified at this round of model stratification
     :attribute final_parameter_functions: dict
-        a function for every parameter to be implemented during integration, constructed recursively for stratification
+        a function representing each parameter that will be implemented during integration,
+            constructed recursively for stratification
     :attribute full_stratifications_list: list
         all the stratification names implemented so far that apply to all of the compartment types
     :attribute heterogeneous_mixing: bool
@@ -98,8 +99,8 @@ class StratifiedModel(EpiModel):
         keys for the name of each transition parameter, values the list of functions needed to recursively create the
             functions to create these parameter values
     :attribute parameters: dict
-        same format as for EpiModel, but described here again given the other parameter-related attributes
-        unprocessed parameters, which may be either float values or strings pointing to the keys of adaptation functions
+        same format as for EpiModel (but described here again given the other parameter-related attributes)
+        unprocessed parameters, which may be either float values or strings pointing to the keys of time_variants
     :attribute removed_compartments: list
         all unstratified compartments that have been removed through the stratification process
     :attribute overwrite_parameters: list
@@ -208,6 +209,7 @@ class StratifiedModel(EpiModel):
         self.strata_indices = {}
         self.target_props = {}
         self.cumulative_target_props = {}
+        self.individual_infectiousness_adjustments = []
         self.heterogeneous_mixing = False
         self.mixing_matrix = None
         self.available_death_rates = [""]
@@ -768,9 +770,8 @@ class StratifiedModel(EpiModel):
                 % (_stratum, _stratification_name, parameter_adjustment_name)
             )
             if _stratum in _adjustment_requests[relevant_adjustment_request]:
-                self.parameters[parameter_adjustment_name] = _adjustment_requests[
-                    relevant_adjustment_request
-                ][_stratum]
+                self.parameters[parameter_adjustment_name] = \
+                    _adjustment_requests[relevant_adjustment_request][_stratum]
 
             # record the parameters that over-write the less stratified parameters closer to the trunk of the tree
             if (
@@ -1344,9 +1345,9 @@ class StratifiedModel(EpiModel):
                     "parameter component %s not found in parameters attribute" % component
                 )
             elif type(self.parameters[component]) == float:
-                update_function = create_multiplicative_function(self.parameters[component])
+                self.adaptation_functions[component] = create_multiplicative_function(self.parameters[component])
             elif type(self.parameters[component]) == str:
-                update_function = create_time_variant_multiplicative_function(
+                self.adaptation_functions[component] = create_time_variant_multiplicative_function(
                     self.adaptation_functions[component]
                 )
             else:
@@ -1356,7 +1357,7 @@ class StratifiedModel(EpiModel):
             self.final_parameter_functions[
                 "universal_death_rateX" + _compartment
             ] = create_function_of_function(
-                update_function,
+                self.adaptation_functions[component],
                 self.final_parameter_functions["universal_death_rateX" + _compartment],
             )
 
@@ -1409,17 +1410,17 @@ class StratifiedModel(EpiModel):
                     "parameter component %s not found in parameters attribute" % component
                 )
             elif isinstance(self.parameters[component], float):
-                update_function = create_multiplicative_function(self.parameters[component])
+                self.adaptation_functions[component] = \
+                    create_multiplicative_function(self.parameters[component])
             elif type(self.parameters[component]) == str:
-                update_function = create_time_variant_multiplicative_function(
-                    self.adaptation_functions[component]
-                )
+                self.adaptation_functions[component] = \
+                    create_time_variant_multiplicative_function(self.time_variants[self.parameters[component]])
             else:
                 raise ValueError("parameter component %s not appropriate format" % component)
 
             # create the composite function
             self.final_parameter_functions[_parameter] = create_function_of_function(
-                update_function, self.final_parameter_functions[_parameter]
+                self.adaptation_functions[component], self.final_parameter_functions[_parameter]
             )
 
     def prepare_infectiousness_calculations(self):
@@ -1452,6 +1453,21 @@ class StratifiedModel(EpiModel):
             for modifier in self.infectiousness_levels:
                 if modifier in find_name_components(compartment):
                     self.infectiousness_multipliers[n_comp] *= self.infectiousness_levels[modifier]
+
+        self.make_further_infectiousness_adjustments()
+
+    def make_further_infectiousness_adjustments(self):
+        """
+        Work through specific requests for specific adjustments, to escape the requirement to only adjust compartment
+        infectiousness according to stratification process - with all infectious compartments having the same
+        adjustment.
+        """
+        for i_adjustment in range(len(self.individual_infectiousness_adjustments)):
+            for i_comp, comp in enumerate(self.compartment_names):
+                if all([component in find_name_components(comp) for
+                        component in self.individual_infectiousness_adjustments[i_adjustment][0]]):
+                    self.infectiousness_multipliers[i_comp] = \
+                        self.individual_infectiousness_adjustments[i_adjustment][1]
 
     def find_infectious_indices(self):
         """

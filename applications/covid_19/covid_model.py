@@ -1,5 +1,4 @@
 import os
-import yaml
 from summer_py.summer_model import StratifiedModel
 from summer_py.summer_model.utils.base_compartments import replicate_compartment
 
@@ -24,6 +23,8 @@ from applications.covid_19.covid_outputs import (
 from autumn.demography.social_mixing import load_specific_prem_sheet, update_mixing_with_multipliers
 from autumn.demography.population import get_population_size, load_population
 from autumn.db import Database
+
+from summer_py.summer_model.strat_model import find_name_components
 
 
 # Database locations
@@ -78,6 +79,7 @@ def build_covid_model(country: str, update_params: dict):
         Compartment.EXPOSED,
         Compartment.PRESYMPTOMATIC,
         Compartment.INFECTIOUS,
+        Compartment.LATE_INFECTIOUS
     ]
 
     # Define compartments
@@ -92,6 +94,7 @@ def build_covid_model(country: str, update_params: dict):
         Compartment.EXPOSED: False,
         Compartment.PRESYMPTOMATIC: True,
         Compartment.INFECTIOUS: True,
+        Compartment.LATE_INFECTIOUS: True
     }
 
     # Get progression rates from sojourn times, distinguishing to_infectious in order to split this parameter later
@@ -130,11 +133,14 @@ def build_covid_model(country: str, update_params: dict):
         model_parameters['time_step'],
     )
 
-    # Sequentially add groups of flows to flows list
-    flows = add_infection_flows([], model_parameters['n_compartment_repeats']['exposed'])
+    # Add flows through replicated compartments
+    flows = []
     for compartment in is_infectious:
         flows = add_sequential_compartment_flows(
             flows, model_parameters['n_compartment_repeats'][compartment], compartment)
+
+    # Add other flows between compartment types
+    flows = add_infection_flows(flows, model_parameters['n_compartment_repeats']['exposed'])
     flows = add_transition_flows(
         flows,
         model_parameters['n_compartment_repeats']['exposed'],
@@ -154,7 +160,15 @@ def build_covid_model(country: str, update_params: dict):
         Compartment.INFECTIOUS,
         'to_infectious'
     )
-    flows = add_recovery_flows(flows, model_parameters['n_compartment_repeats']['infectious'])
+    flows = add_transition_flows(
+        flows,
+        model_parameters['n_compartment_repeats']['infectious'],
+        model_parameters['n_compartment_repeats']['late'],
+        Compartment.INFECTIOUS,
+        Compartment.LATE_INFECTIOUS,
+        'within_infectious'
+    )
+    flows = add_recovery_flows(flows, model_parameters['n_compartment_repeats']['late'])
     flows = add_infection_death_flows(flows, model_parameters['n_compartment_repeats']['infectious'])
 
     # Get mixing matrix, although would need to adapt this for countries in file _2
@@ -204,5 +218,10 @@ def build_covid_model(country: str, update_params: dict):
     _covid_model.death_output_categories = list_all_strata_for_mortality(
         _covid_model.compartment_names
     )
+
+    _covid_model.individual_infectiousness_adjustments = \
+        [[['late', 'clinical_sympt_isolate'], 0.]]
+
+    print()
 
     return _covid_model

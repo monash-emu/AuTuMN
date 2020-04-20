@@ -20,6 +20,7 @@ from applications.covid_19.covid_outputs import (
     create_fully_stratified_incidence_covid,
     calculate_notifications_covid,
 )
+from applications.covid_19.covid_importation import set_tv_importation_rate
 from autumn.demography.social_mixing import load_specific_prem_sheet, update_mixing_with_multipliers
 from autumn.demography.population import get_population_size, load_population
 from autumn.db import Database
@@ -171,6 +172,17 @@ def build_covid_model(country: str, update_params: dict):
     flows = add_recovery_flows(flows, model_parameters['n_compartment_repeats']['late'])
     flows = add_infection_death_flows(flows, model_parameters['n_compartment_repeats']['infectious'])
 
+    # add importation flows if requested
+    if model_parameters['implement_importation']:
+        flows = add_transition_flows(
+            flows,
+            1,
+            model_parameters['n_compartment_repeats']['exposed'],
+            Compartment.SUSCEPTIBLE,
+            Compartment.EXPOSED,
+            'importation_rate'
+        )
+
     # Get mixing matrix, although would need to adapt this for countries in file _2
     mixing_matrix = load_specific_prem_sheet('all_locations', model_parameters['country'])
     if 'mixing_matrix_multipliers' in model_parameters:
@@ -192,6 +204,12 @@ def build_covid_model(country: str, update_params: dict):
         starting_population=sum(total_pops),
         infectious_compartment=infectious_compartments,
     )
+
+    # set time-variant importation rate
+    if model_parameters['implement_importation']:
+        _covid_model = set_tv_importation_rate(_covid_model,
+                                               params['data']['times_imported_cases'],
+                                               params['data']['n_imported_cases'])
 
     # Stratify model by age without demography
     if 'agegroup' in model_parameters['stratify_by']:

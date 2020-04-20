@@ -1,2 +1,30 @@
 ---
-# Nothing here yet
+
+default:
+  country: philippines
+  iso3: PHL
+
+  contact_rate: 0.2
+
+  start_time: 0.
+  end_time: 200
+
+  mixing:
+    other_locations_times:
+      - 85.
+      - 90.
+    other_locations_values:
+      - 1.
+      - 0.2
+    workplace_times:
+      - 85.
+      - 90.
+    workplace_values:
+      - 1.
+      - 0.25
+    school_times:
+      - 85.
+      - 90.
+    school_values:
+      - 1.
+      - 0.1

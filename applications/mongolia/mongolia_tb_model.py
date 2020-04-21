@@ -50,10 +50,16 @@ INPUT_DB_PATH = os.path.join(constants.DATA_PATH, "inputs.db")
 STRATIFY_BY = ["age", "strain", "location", "organ"]
 
 # Adjust the following variables to reduce the number of graphs
-PLOTTED_STRATIFIED_DERIVED_OUTPUTS = (
-    ["incidence", "notifications", "mortality", "popsizes"]
-)  # use ["incidence", "notifications", "mortality", "popsizes"] to get all outputs
-PLOTTED_STRATIFIED_PREVALENCE_OUTPUTS = ["prevXinfectious", "prevXlatent"]  # e.g. ["prevXinfectious", "prevXlatent"]
+PLOTTED_STRATIFIED_DERIVED_OUTPUTS = [
+    "incidence",
+    "notifications",
+    "mortality",
+    "popsizes",
+]  # use ["incidence", "notifications", "mortality", "popsizes"] to get all outputs
+PLOTTED_STRATIFIED_PREVALENCE_OUTPUTS = [
+    "prevXinfectious",
+    "prevXlatent",
+]  # e.g. ["prevXinfectious", "prevXlatent"]
 
 
 def build_mongolia_timevariant_cdr(cdr_multiplier):
@@ -557,9 +563,7 @@ def build_mongolia_model(update_params={}):
                 0.7,
             ]
         ).reshape((4, 4))
-        location_mixing *= (
-            3.0
-        )  # adjusted such that heterogeneous mixing yields similar overall burden as homogeneous
+        location_mixing *= 3.0  # adjusted such that heterogeneous mixing yields similar overall burden as homogeneous
 
         location_adjustments = {}
         for beta_type in ["", "_late_latent", "_recovered"]:
@@ -587,7 +591,8 @@ def build_mongolia_model(update_params={}):
 
     # create some customised derived_outputs
 
-    if 'notifications' in PLOTTED_STRATIFIED_DERIVED_OUTPUTS:
+    if "notifications" in PLOTTED_STRATIFIED_DERIVED_OUTPUTS:
+
         def notification_function_builder(stratum):
             """
                 example of stratum: "Xage_0Xstrain_mdr"
@@ -601,7 +606,9 @@ def build_mongolia_model(update_params={}):
                 comp_ind = model.compartment_names.index("infectious" + stratum)
                 infectious_pop = model.compartment_values[comp_ind]
                 detection_indices = [
-                    index for index, val in dict_flows["parameter"].items() if "case_detection" in val
+                    index
+                    for index, val in dict_flows["parameter"].items()
+                    if "case_detection" in val
                 ]
                 flow_index = [
                     index
@@ -630,21 +637,22 @@ def build_mongolia_model(update_params={}):
                 ] = notification_function_builder(stratum)
                 # _tb_model.derived_output_functions['popsize_treatment_support' + stratum] = notification_function_builder(stratum)
 
-    if 'incidence' in PLOTTED_STRATIFIED_DERIVED_OUTPUTS:
+    if "incidence" in PLOTTED_STRATIFIED_DERIVED_OUTPUTS:
         # add output_connections for all stratum-specific incidence outputs
         _tb_model.output_connections.update(
             create_output_connections_for_incidence_by_stratum(_tb_model.compartment_names)
         )
 
-    if 'mortality' in PLOTTED_STRATIFIED_DERIVED_OUTPUTS:
+    if "mortality" in PLOTTED_STRATIFIED_DERIVED_OUTPUTS:
         # prepare death outputs for all strata
-        _tb_model.death_output_categories = list_all_strata_for_mortality(_tb_model.compartment_names)
-
+        _tb_model.death_output_categories = list_all_strata_for_mortality(
+            _tb_model.compartment_names
+        )
 
     ############################################
     #       population sizes for costing
     ############################################
-    if 'popsizes' in PLOTTED_STRATIFIED_DERIVED_OUTPUTS:
+    if "popsizes" in PLOTTED_STRATIFIED_DERIVED_OUTPUTS:
         # nb of detected individuals by strain:
         def detected_popsize_function_builder(tag):
             """
@@ -661,7 +669,13 @@ def build_mongolia_model(update_params={}):
 
             return calculate_nb_detected
 
-        for tag in ["strain_mdr", "strain_ds", "organ_smearpos", "organ_smearneg", "organ_extrapul"]:
+        for tag in [
+            "strain_mdr",
+            "strain_ds",
+            "organ_smearpos",
+            "organ_smearneg",
+            "organ_extrapul",
+        ]:
             _tb_model.derived_output_functions[
                 "popsizeXnb_detectedX" + tag
             ] = detected_popsize_function_builder(tag)
@@ -726,8 +740,9 @@ def run_model():
                 models.append(DummyModel(loaded_model["outputs"], loaded_model["derived_outputs"]))
     else:
         t0 = time()
-        models = \
-            run_multi_scenario(scenario_params, {'scenario_start_time': 2020., 'default': {}}, build_mongolia_model)
+        models = run_multi_scenario(
+            scenario_params, {"scenario_start_time": 2020.0, "default": {}}, build_mongolia_model
+        )
         # automatically add combined incidence output
         for model in models:
             outputs_df = pd.DataFrame(model.outputs, columns=model.compartment_names)

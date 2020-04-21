@@ -19,4 +19,3 @@ class Timer:
         runtime = time() - self.start
         msg = self.message[0].lower() + self.message[1:]
         print(f"Finished {msg} in {runtime:0.1f} seconds.")
-

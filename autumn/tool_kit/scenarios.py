@@ -6,12 +6,7 @@ import numpy
 from autumn.demography.social_mixing import change_mixing_matrix_for_scenario
 
 
-def run_multi_scenario(
-        param_lookup,
-        params,
-        model_builder,
-        run_kwargs={}
-):
+def run_multi_scenario(param_lookup, params, model_builder, run_kwargs={}):
     """
     Run a baseline model and scenarios
 
@@ -36,8 +31,8 @@ def run_multi_scenario(
         if i_scenario == 0:
             continue
 
-        with Timer(f'Running scenario #{i_scenario}'):
-            scenario_params['start_time'] = params['scenario_start_time']
+        with Timer(f"Running scenario #{i_scenario}"):
+            scenario_params["start_time"] = params["scenario_start_time"]
             scenario_model = initialise_scenario_run(baseline_model, scenario_params, model_builder)
             scenario_model = change_mixing_matrix_for_scenario(scenario_model, params, i_scenario)
             scenario_model.run_model(**run_kwargs)
@@ -91,9 +86,5 @@ def get_model_times_from_inputs(start_time, end_time, time_step):
     """
     Find the time steps for model integration from the submitted requests, ensuring the time points are evenly spaced.
     """
-    n_times = int(round(
-        (end_time - start_time) / time_step
-    )) + 1
-    return numpy.linspace(
-        start_time, end_time, n_times
-    ).tolist()
+    n_times = int(round((end_time - start_time) / time_step)) + 1
+    return numpy.linspace(start_time, end_time, n_times).tolist()

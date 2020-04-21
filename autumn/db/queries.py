@@ -166,7 +166,9 @@ def find_death_rates(_input_database, country_iso_code):
     return death_rates, mortality_years
 
 
-def find_age_weights(age_breakpoints, demo_data, arbitrary_upper_age=1e2, break_width=5.0, normalise=True):
+def find_age_weights(
+    age_breakpoints, demo_data, arbitrary_upper_age=1e2, break_width=5.0, normalise=True
+):
     """
     find the weightings to assign to the various components of the data from the age breakpoints planned to be used
     in the model
@@ -276,7 +278,7 @@ def find_population_by_agegroup(input_database, age_breakpoints, country_iso_cod
         input_database, "total_population_mapped", country_iso_code
     )
 
-    years = list(total_population_data['Period'])
+    years = list(total_population_data["Period"])
     populations = total_population_data.drop(["Period"], axis=1)
 
     # find the weightings to each age group in the data from the requested brackets
@@ -290,9 +292,7 @@ def find_population_by_agegroup(input_database, age_breakpoints, country_iso_cod
             age_populations[age_break][i_year] = sum(
                 [
                     float(pop) * weight
-                    for pop, weight in zip(
-                        list(populations.iloc[i_year]), age_weights[age_break]
-                    )
+                    for pop, weight in zip(list(populations.iloc[i_year]), age_weights[age_break])
                 ]
             )
     return age_populations, years
@@ -339,26 +339,51 @@ def get_iso3_from_country_name(input_database, country_name):
     """
     Return the iso3 code matching with a given country name using the bcg table
     """
-    if 'Lao ' in country_name:
-        return 'LAO'
+    if "Lao " in country_name:
+        return "LAO"
 
     iso3_list = input_database.db_query(
-        "bcg", column='ISO_code', conditions=["Cname='" + country_name + "'"]
+        "bcg", column="ISO_code", conditions=["Cname='" + country_name + "'"]
     )["ISO_code"].tolist()
 
     if len(iso3_list) > 0:
         return iso3_list[0]
     else:
-        backup_iso3_codes = {'Andorra': 'AND', 'Antigua and Barbuda': 'ATG', 'Australia': 'AUS', 'Bahamas': 'BHS',
-                             'Bahrain': 'BHR', 'Belgium': 'BEL', 'Bolivia (Plurinational State of': 'BOL',
-                             'Canada': 'CAN', 'Congo': 'COG', 'Cyprus': 'CYP', 'Dominican Republic': 'DOM',
-                             'Germany': 'DEU', 'Hong Kong SAR, China': 'HKG', 'Iceland': 'ISL', 'Lebanon': 'LBN',
-                             'Luxembourg': 'LUX', 'Netherlands': 'NLD', 'New Zealand': 'NZL', 'Niger': 'NER',
-                             'Philippines': 'PHL', 'Republic of Korea': 'KOR', 'Russian Federation': 'RUS',
-                             'Sao Tome and Principe ': 'STP', 'Spain': 'ESP', 'Suriname': 'SUR', 'Switzerland': 'CHE',
-                             'Syrian Arab Republic': 'SYR', 'Taiwan': 'TWN', 'TFYR of Macedonia': 'MKD',
-                             'United Arab Emirates': 'ARE', 'United Kingdom of Great Britain': 'GBR',
-                             'United States of America': 'USA', 'Venezuela (Bolivarian Republic ': 'VEN'}
+        backup_iso3_codes = {
+            "Andorra": "AND",
+            "Antigua and Barbuda": "ATG",
+            "Australia": "AUS",
+            "Bahamas": "BHS",
+            "Bahrain": "BHR",
+            "Belgium": "BEL",
+            "Bolivia (Plurinational State of": "BOL",
+            "Canada": "CAN",
+            "Congo": "COG",
+            "Cyprus": "CYP",
+            "Dominican Republic": "DOM",
+            "Germany": "DEU",
+            "Hong Kong SAR, China": "HKG",
+            "Iceland": "ISL",
+            "Lebanon": "LBN",
+            "Luxembourg": "LUX",
+            "Netherlands": "NLD",
+            "New Zealand": "NZL",
+            "Niger": "NER",
+            "Philippines": "PHL",
+            "Republic of Korea": "KOR",
+            "Russian Federation": "RUS",
+            "Sao Tome and Principe ": "STP",
+            "Spain": "ESP",
+            "Suriname": "SUR",
+            "Switzerland": "CHE",
+            "Syrian Arab Republic": "SYR",
+            "Taiwan": "TWN",
+            "TFYR of Macedonia": "MKD",
+            "United Arab Emirates": "ARE",
+            "United Kingdom of Great Britain": "GBR",
+            "United States of America": "USA",
+            "Venezuela (Bolivarian Republic ": "VEN",
+        }
 
         if country_name in backup_iso3_codes:
             return backup_iso3_codes[country_name]
@@ -371,7 +396,7 @@ def get_country_name_from_iso3(input_database, iso3):
     Return the country name matching with a given iso3 code using the bcg table
     """
     country_list = input_database.db_query(
-        "bcg", column='Cname', conditions=["ISO_code='" + iso3 + "'"]
+        "bcg", column="Cname", conditions=["ISO_code='" + iso3 + "'"]
     )["Cname"].tolist()
 
     return None if len(country_list) == 0 else country_list[0]

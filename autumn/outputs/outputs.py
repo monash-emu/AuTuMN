@@ -181,51 +181,57 @@ def add_title_to_plot(fig, n_panels, content):
 
 def collate_compartment_across_stratification(output_options, compartment, stratification, strata):
     for stratum in strata:
-        output_options['req_outputs'].append(
-            'prevX' + compartment + 'XamongX' + stratification + '_' + stratum)
+        output_options["req_outputs"].append(
+            "prevX" + compartment + "XamongX" + stratification + "_" + stratum
+        )
     return output_options
 
 
 def collate_prevalence(output_options):
-    for compartment_type in output_options['compartments_for_prevalence']:
-        output_options['req_outputs'].append('prevX' + compartment_type + 'Xamong')
+    for compartment_type in output_options["compartments_for_prevalence"]:
+        output_options["req_outputs"].append("prevX" + compartment_type + "Xamong")
     return output_options
 
 
 def create_output_dataframes(pps, params):
     # Include times in  generated outputs
-    for i_scenario in [0] + list(params['scenarios'].keys()):
-        pps[i_scenario].generated_outputs['times'] = pps[i_scenario].derived_outputs['times']
+    for i_scenario in [0] + list(params["scenarios"].keys()):
+        pps[i_scenario].generated_outputs["times"] = pps[i_scenario].derived_outputs["times"]
 
     # Create dataframe for the baseline estimates
-    for attribute in ['derived_outputs', 'generated_outputs']:
-        setattr(pps[0], attribute + '_df', pd.DataFrame.from_dict(
-            {key: value for
-             key, value in
-             getattr(pps[0], attribute).items() if
-             'distribution' not in key}
-        ))
-        getattr(pps[0], attribute + '_df').set_index('times', inplace=True)
-        setattr(pps[0],
-                attribute + '_df',
-                getattr(pps[0], attribute + '_df')
-                )
+    for attribute in ["derived_outputs", "generated_outputs"]:
+        setattr(
+            pps[0],
+            attribute + "_df",
+            pd.DataFrame.from_dict(
+                {
+                    key: value
+                    for key, value in getattr(pps[0], attribute).items()
+                    if "distribution" not in key
+                }
+            ),
+        )
+        getattr(pps[0], attribute + "_df").set_index("times", inplace=True)
+        setattr(pps[0], attribute + "_df", getattr(pps[0], attribute + "_df"))
 
         # Create dataframe that adds the scenario estimates on to the baseline ones
-        for i_scenario in params['scenarios']:
+        for i_scenario in params["scenarios"]:
             # Unfortunate hack to ignore the dictionaries that we put in to dictionary attributes rather than list
-            intervention_outputs = \
-                pd.DataFrame.from_dict(
-                    {key: value for
-                     key, value in
-                     getattr(pps[i_scenario], attribute).items() if
-                     'distribution' not in key}
-                )
-            intervention_outputs.set_index('times', inplace=True)
-            setattr(pps[i_scenario],
-                    attribute + '_df',
-                    getattr(pps[0], attribute + '_df')[:params['scenario_start'] - 1].append(intervention_outputs)
-                    )
+            intervention_outputs = pd.DataFrame.from_dict(
+                {
+                    key: value
+                    for key, value in getattr(pps[i_scenario], attribute).items()
+                    if "distribution" not in key
+                }
+            )
+            intervention_outputs.set_index("times", inplace=True)
+            setattr(
+                pps[i_scenario],
+                attribute + "_df",
+                getattr(pps[0], attribute + "_df")[: params["scenario_start"] - 1].append(
+                    intervention_outputs
+                ),
+            )
 
 
 class Outputs:
@@ -464,7 +470,10 @@ class Outputs:
                 multiplot_plotting_modes = [False]
 
             for multi_plot in multiplot_plotting_modes:
-                if self.post_processing_list[0].derived_outputs is None or requested_output not in self.post_processing_list[0].derived_outputs:
+                if (
+                    self.post_processing_list[0].derived_outputs is None
+                    or requested_output not in self.post_processing_list[0].derived_outputs
+                ):
                     if (
                         isinstance(
                             self.post_processing_list[0].generated_outputs[requested_output], dict
@@ -484,8 +493,11 @@ class Outputs:
                         self.post_processing_list[scenario_index].generated_outputs[
                             requested_output
                         ]
-                        if (self.post_processing_list[scenario_index].derived_outputs is None or  requested_output
-                        not in self.post_processing_list[scenario_index].derived_outputs)
+                        if (
+                            self.post_processing_list[scenario_index].derived_outputs is None
+                            or requested_output
+                            not in self.post_processing_list[scenario_index].derived_outputs
+                        )
                         else self.post_processing_list[scenario_index].derived_outputs[
                             requested_output
                         ]
@@ -774,7 +786,8 @@ class Outputs:
         axis.plot(
             times_to_plot,
             list(map(input_function, times_to_plot)),
-            color=self.colour_theme[sc_index])
+            color=self.colour_theme[sc_index],
+        )
         self.tidy_x_axis(
             axis,
             start=self.plot_start_time,
@@ -782,9 +795,7 @@ class Outputs:
             max_dims=max_dims,
             x_label="time",
         )
-        self.tidy_y_axis(
-            axis, quantity="", max_dims=max_dims
-        )
+        self.tidy_y_axis(axis, quantity="", max_dims=max_dims)
         scenario_name = list(self.scenario_names.values())[sc_index]
         file_name = os.path.join(scenario_name, input_function_name)
         self.finish_off_figure(fig, filename=file_name, title_text=input_function_name)
@@ -812,36 +823,26 @@ class Outputs:
             parameter_names_to_plot = {}
             for parameter in self.models[sc_index].final_parameter_functions:
                 if parameter.startswith(parameter_stem):
-                    parameter_names_to_plot[parameter] = \
-                        self.models[sc_index].final_parameter_functions[parameter](time)
+                    parameter_names_to_plot[parameter] = self.models[
+                        sc_index
+                    ].final_parameter_functions[parameter](time)
 
             # Plot
             axis.plot(
-                list(parameter_names_to_plot.values()),
-                linewidth=0.,
-                marker='o',
-                markersize=5
+                list(parameter_names_to_plot.values()), linewidth=0.0, marker="o", markersize=5
             )
 
             # Labelling of the x-ticks with the parameter names
             pyplot.xticks(list(range(len(parameter_names_to_plot))))
-            x_tick_labels = \
-                [
-                    i_label[len(parameter_stem) + 1:]
-                    for i_label in parameter_names_to_plot.keys()
-                ]
-            axis.set_xticklabels(
-                x_tick_labels,
-                rotation=90,
-                fontsize=5
-            )
+            x_tick_labels = [
+                i_label[len(parameter_stem) + 1 :] for i_label in parameter_names_to_plot.keys()
+            ]
+            axis.set_xticklabels(x_tick_labels, rotation=90, fontsize=5)
 
             # Finish off
             scenario_name = list(self.scenario_names.values())[sc_index]
             self.finish_off_figure(
-                fig,
-                filename=os.path.join(scenario_name, parameter_stem),
-                title_text=parameter_stem
+                fig, filename=os.path.join(scenario_name, parameter_stem), title_text=parameter_stem
             )
 
     def plot_mixing_matrix(self, sc_index=0):
@@ -852,19 +853,17 @@ class Outputs:
         Integer index of the scenario that the mixing matrix is being plotted for
         """
         if self.models[sc_index].mixing_matrix is not None:
-            fig, axis, max_dims, n_rows, n_cols = \
-                initialise_figures_axes(1)
-            axis = \
-                sns.heatmap(
-                    self.models[sc_index].mixing_matrix,
-                    yticklabels=self.models[sc_index].mixing_categories,
-                    xticklabels=False
-                )
+            fig, axis, max_dims, n_rows, n_cols = initialise_figures_axes(1)
+            axis = sns.heatmap(
+                self.models[sc_index].mixing_matrix,
+                yticklabels=self.models[sc_index].mixing_categories,
+                xticklabels=False,
+            )
             self.finish_off_figure(
                 fig,
                 filename=os.path.join(
-                    list(self.scenario_names.values())[sc_index],
-                    'mixing_matrix')
+                    list(self.scenario_names.values())[sc_index], "mixing_matrix"
+                ),
             )
 
 
@@ -874,7 +873,7 @@ class OutputPlotter:
         models,
         post_processing_list,
         output_options,
-        out_dir='outputs',
+        out_dir="outputs",
         multiplot_only=False,
         mcmc_weights=None,
     ):
@@ -884,12 +883,14 @@ class OutputPlotter:
         """
         self.post_processing_list = post_processing_list
         self.out_dir = out_dir
-        self.translation_dict = \
-            output_options['translation_dict'] if 'translation_dict' in output_options else {}
+        self.translation_dict = (
+            output_options["translation_dict"] if "translation_dict" in output_options else {}
+        )
         self.multiplot_only = multiplot_only
         self.scenario_names = {}
-        self.plot_start_time = \
-            output_options['plot_start_time'] if 'plot_start_time' in output_options else 1990.
+        self.plot_start_time = (
+            output_options["plot_start_time"] if "plot_start_time" in output_options else 1990.0
+        )
         self.models = models
         self.output_options = output_options
         self.colour_theme = [
@@ -932,7 +933,9 @@ class OutputPlotter:
 
         for scenario_index in range(len(self.post_processing_list)):
             scenario_number = self.post_processing_list[scenario_index].scenario_number
-            scenario_name = 'Baseline' if scenario_number == 0 else 'Scenario ' + str(scenario_number)
+            scenario_name = (
+                "Baseline" if scenario_number == 0 else "Scenario " + str(scenario_number)
+            )
             self.scenario_names[scenario_number] = scenario_name
 
             if not self.multiplot_only and not self.mcmc_mode:
@@ -941,7 +944,7 @@ class OutputPlotter:
                     os.mkdir(scenario_out_dir)
 
         if len(self.scenario_names) > 1 or self.mcmc_mode:
-            multi_out_dir = os.path.join(self.out_dir, 'multi_plots')
+            multi_out_dir = os.path.join(self.out_dir, "multi_plots")
             if not os.path.exists(multi_out_dir):
                 os.mkdir(multi_out_dir)
 
@@ -1093,7 +1096,7 @@ class OutputPlotter:
         """
         Plot single simple plot of a function over time
         """
-        for input_function_name in self.output_options['functions_to_plot']:
+        for input_function_name in self.output_options["functions_to_plot"]:
             fig, axes, max_dims, n_rows, n_cols = initialise_figures_axes(1)
             times_to_plot = self.post_processing_list[sc_index].model.times
             axis = find_panel_grid_indices([axes], sc_index, n_rows, n_cols)
@@ -1105,22 +1108,23 @@ class OutputPlotter:
                     colour_index += 1
                     axis.plot(
                         times_to_plot,
-                        list(map(
-                            self.models[sc_index].final_parameter_functions[parameter],
-                            times_to_plot)
+                        list(
+                            map(
+                                self.models[sc_index].final_parameter_functions[parameter],
+                                times_to_plot,
+                            )
                         ),
-                        color=self.colour_theme[colour_index])
+                        color=self.colour_theme[colour_index],
+                    )
             axis.legend(parameter_names)
             self.tidy_x_axis(
                 axis,
                 start=self.plot_start_time,
                 end=max(times_to_plot),
                 max_dims=max_dims,
-                x_label='time',
+                x_label="time",
             )
-            self.tidy_y_axis(
-                axis, quantity='', max_dims=max_dims
-            )
+            self.tidy_y_axis(axis, quantity="", max_dims=max_dims)
             scenario_name = list(self.scenario_names.values())[sc_index]
             file_name = os.path.join(scenario_name, input_function_name)
             self.finish_off_figure(fig, filename=file_name, title_text=input_function_name)
@@ -1131,26 +1135,30 @@ class OutputPlotter:
         """
         for i_scenario in self.scenario_names:
             fig, axes, max_dims, n_rows, n_cols = initialise_figures_axes(1)
-            for i_combination in range(len(self.output_options['output_combinations_to_plot_together'])):
-                compartment, stratification = self.output_options['output_combinations_to_plot_together'][i_combination]
+            for i_combination in range(
+                len(self.output_options["output_combinations_to_plot_together"])
+            ):
+                compartment, stratification = self.output_options[
+                    "output_combinations_to_plot_together"
+                ][i_combination]
                 strata_to_iterate = self.models[i_scenario].all_stratifications[stratification]
-                plot_name = 'prevX' + compartment + 'XamongX' + stratification
+                plot_name = "prevX" + compartment + "XamongX" + stratification
 
-                times = self.post_processing_list[0].derived_outputs['times']
+                times = self.post_processing_list[0].derived_outputs["times"]
 
                 for i_stratum, stratum in enumerate(strata_to_iterate):
                     colour = i_stratum / len(strata_to_iterate)
                     axes.plot(
                         times,
-                        self.post_processing_list[i_scenario].generated_outputs_df.loc[:, plot_name + '_' + stratum],
-                        color=(colour, 0., 1. - colour)
+                        self.post_processing_list[i_scenario].generated_outputs_df.loc[
+                            :, plot_name + "_" + stratum
+                        ],
+                        color=(colour, 0.0, 1.0 - colour),
                     )
                 axes.legend(strata_to_iterate)
                 scenario_name = list(self.scenario_names.values())[i_scenario]
                 self.finish_off_figure(
-                    fig,
-                    filename=os.path.join(scenario_name, plot_name),
-                    title_text=plot_name
+                    fig, filename=os.path.join(scenario_name, plot_name), title_text=plot_name
                 )
 
     def plot_parameter_category_values(self, sc_index=0):
@@ -1163,7 +1171,7 @@ class OutputPlotter:
         """
 
         # Loop over each requested stem
-        for parameter_stem in self.output_options['parameter_stems_to_plot']:
+        for parameter_stem in self.output_options["parameter_stems_to_plot"]:
 
             # Initialise
             fig, axis, max_dims, n_rows, n_cols = initialise_figures_axes(1)
@@ -1172,38 +1180,28 @@ class OutputPlotter:
             parameter_names_to_plot = {}
             for parameter in self.models[sc_index].final_parameter_functions:
                 if parameter.startswith(parameter_stem):
-                    parameter_names_to_plot[parameter] = \
-                        self.models[sc_index].final_parameter_functions[parameter](
-                            self.output_options['time_for_parameter_visualisation']
-                        )
+                    parameter_names_to_plot[parameter] = self.models[
+                        sc_index
+                    ].final_parameter_functions[parameter](
+                        self.output_options["time_for_parameter_visualisation"]
+                    )
 
             # Plot
             axis.plot(
-                list(parameter_names_to_plot.values()),
-                linewidth=0.,
-                marker='o',
-                markersize=5
+                list(parameter_names_to_plot.values()), linewidth=0.0, marker="o", markersize=5
             )
 
             # Labelling of the x-ticks with the parameter names
             pyplot.xticks(list(range(len(parameter_names_to_plot))))
-            x_tick_labels = \
-                [
-                    i_label[len(parameter_stem) + 1:]
-                    for i_label in parameter_names_to_plot.keys()
-                ]
-            axis.set_xticklabels(
-                x_tick_labels,
-                rotation=90,
-                fontsize=5
-            )
+            x_tick_labels = [
+                i_label[len(parameter_stem) + 1 :] for i_label in parameter_names_to_plot.keys()
+            ]
+            axis.set_xticklabels(x_tick_labels, rotation=90, fontsize=5)
 
             # Finish off
             scenario_name = list(self.scenario_names.values())[sc_index]
             self.finish_off_figure(
-                fig,
-                filename=os.path.join(scenario_name, parameter_stem),
-                title_text=parameter_stem
+                fig, filename=os.path.join(scenario_name, parameter_stem), title_text=parameter_stem
             )
 
     def plot_mixing_matrix(self):
@@ -1213,88 +1211,85 @@ class OutputPlotter:
         for i_scenario in self.scenario_names:
 
             if self.models[i_scenario].mixing_matrix is not None:
-                fig, axis, max_dims, n_rows, n_cols = \
-                    initialise_figures_axes(1)
-                axis = \
-                    sns.heatmap(
-                        self.models[i_scenario].mixing_matrix,
-                        yticklabels=self.models[i_scenario].mixing_categories,
-                        xticklabels=False,
-                        vmin=0.,
-                        vmax=12.
-                    )
-                self.finish_off_figure(
-                    fig,
-                    filename=os.path.join('mixing_matrix_' + str(i_scenario)))
-
-        for location in ['all_locations', 'school', 'home', 'work', 'other_locations']:
-            fig, axis, max_dims, n_rows, n_cols = \
-                initialise_figures_axes(1)
-            axis = \
-                sns.heatmap(
-                    load_specific_prem_sheet(location, 'Australia'),
+                fig, axis, max_dims, n_rows, n_cols = initialise_figures_axes(1)
+                axis = sns.heatmap(
+                    self.models[i_scenario].mixing_matrix,
                     yticklabels=self.models[i_scenario].mixing_categories,
                     xticklabels=False,
-                    vmin=0.,
-                    vmax=12.
+                    vmin=0.0,
+                    vmax=12.0,
                 )
-            self.finish_off_figure(
-                fig,
-                filename=os.path.join('mixing_matrix_' + location))
+                self.finish_off_figure(
+                    fig, filename=os.path.join("mixing_matrix_" + str(i_scenario))
+                )
+
+        for location in ["all_locations", "school", "home", "work", "other_locations"]:
+            fig, axis, max_dims, n_rows, n_cols = initialise_figures_axes(1)
+            axis = sns.heatmap(
+                load_specific_prem_sheet(location, "Australia"),
+                yticklabels=self.models[i_scenario].mixing_categories,
+                xticklabels=False,
+                vmin=0.0,
+                vmax=12.0,
+            )
+            self.finish_off_figure(fig, filename=os.path.join("mixing_matrix_" + location))
 
     def plot_pop_distribution_by_stratum(self, sc_index=0):
-        for stratification in self.output_options['display_stratification']:
+        for stratification in self.output_options["display_stratification"]:
             fig, axes, max_dims, n_rows, n_cols = initialise_figures_axes(1)
-            previous_values = [0.] * len(self.post_processing_list[sc_index].derived_outputs['times'])
-            for i_stratum, stratum in \
-                    enumerate(self.models[sc_index].all_stratifications[stratification]):
-                working_values = \
-                    self.post_processing_list[sc_index].generated_outputs[
-                        'distribution_of_strataX' + stratification][stratum]
+            previous_values = [0.0] * len(
+                self.post_processing_list[sc_index].derived_outputs["times"]
+            )
+            for i_stratum, stratum in enumerate(
+                self.models[sc_index].all_stratifications[stratification]
+            ):
+                working_values = self.post_processing_list[sc_index].generated_outputs[
+                    "distribution_of_strataX" + stratification
+                ][stratum]
                 new_values = [
-                    working + previous for
-                    working, previous in
-                    zip(working_values, previous_values)
+                    working + previous for working, previous in zip(working_values, previous_values)
                 ]
-                colour = \
-                    i_stratum / \
-                    len(self.models[sc_index].all_stratifications[stratification])
+                colour = i_stratum / len(self.models[sc_index].all_stratifications[stratification])
                 axes.fill_between(
-                    self.post_processing_list[sc_index].derived_outputs['times'],
+                    self.post_processing_list[sc_index].derived_outputs["times"],
                     previous_values,
                     new_values,
-                    color=(colour, 0., 1 - colour)
+                    color=(colour, 0.0, 1 - colour),
                 )
                 previous_values = new_values
             axes.legend(self.models[sc_index].all_stratifications[stratification])
-            self.finish_off_figure(fig, filename=os.path.join(
-                list(self.scenario_names.values())[sc_index], 'distribution_by_stratum_' + stratification))
+            self.finish_off_figure(
+                fig,
+                filename=os.path.join(
+                    list(self.scenario_names.values())[sc_index],
+                    "distribution_by_stratum_" + stratification,
+                ),
+            )
 
     def find_exponential_growth_rate(self, sc_index=0):
         """
         Find the exponential growth rate at a range of requested time points
         """
-        if 'find_exponential_growth_rate' in self.output_options['outputs_to_plot']:
-            time_points = \
-                range(len(self.models[0].times))
+        if "find_exponential_growth_rate" in self.output_options["outputs_to_plot"]:
+            time_points = range(len(self.models[0].times))
             growth_rates = []
             for i_time in range(len(time_points) - 1):
                 start_time, end_time = time_points[i_time], time_points[i_time + 1]
-                exponential_growth_rate = \
-                    numpy.log(self.post_processing_list[sc_index].derived_outputs['incidence'][end_time] /
-                              self.post_processing_list[sc_index].derived_outputs['incidence'][start_time]) \
-                    / float(end_time - start_time)
+                exponential_growth_rate = numpy.log(
+                    self.post_processing_list[sc_index].derived_outputs["incidence"][end_time]
+                    / self.post_processing_list[sc_index].derived_outputs["incidence"][start_time]
+                ) / float(end_time - start_time)
                 growth_rates.append(exponential_growth_rate)
             fig, axis, max_dims, n_rows, n_cols = initialise_figures_axes(1)
             axis.plot(time_points[:-1], growth_rates)
-            axis.set_ylim([0., 0.25])
+            axis.set_ylim([0.0, 0.25])
             scenario_name = list(self.scenario_names.values())[sc_index]
-            file_name = os.path.join(scenario_name, 'exponential_growth_rate')
-            self.finish_off_figure(fig, filename=file_name, title_text='exponential_growth_rate')
+            file_name = os.path.join(scenario_name, "exponential_growth_rate")
+            self.finish_off_figure(fig, filename=file_name, title_text="exponential_growth_rate")
 
     def save_flows_sheets(self):
         """
         Save the transitions and deaths dataframes as csv files, for easier inspection
         """
-        self.models[0].transition_flows.to_csv(os.path.join(self.out_dir, 'transitions.csv'))
-        self.models[0].death_flows.to_csv(os.path.join(self.out_dir, 'deaths.csv'))
+        self.models[0].transition_flows.to_csv(os.path.join(self.out_dir, "transitions.csv"))
+        self.models[0].death_flows.to_csv(os.path.join(self.out_dir, "deaths.csv"))

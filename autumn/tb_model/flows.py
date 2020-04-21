@@ -52,11 +52,7 @@ NATURAL_HISTORY_FLOWS = [
         "origin": Compartment.INFECTIOUS,
         "to": Compartment.RECOVERED,
     },
-    {
-        "type": Flow.COMPARTMENT_DEATH,
-        "parameter": "infect_death",
-        "origin": Compartment.INFECTIOUS
-    },
+    {"type": Flow.COMPARTMENT_DEATH, "parameter": "infect_death", "origin": Compartment.INFECTIOUS},
 ]
 
 DENSITY_INFECTION_FLOWS = [
@@ -99,11 +95,7 @@ ACF_LTBI_FLOWS = [
 ]
 
 CASE_DETECTION_FLOWS = [
-    {
-        "type": Flow.STANDARD,
-        "parameter": "case_detection",
-        "origin": Compartment.INFECTIOUS,
-    }
+    {"type": Flow.STANDARD, "parameter": "case_detection", "origin": Compartment.INFECTIOUS,}
 ]
 
 LATENCY_REINFECTION = [
@@ -117,17 +109,17 @@ LATENCY_REINFECTION = [
 
 TREATMENT_FLOWS = [
     {
-        'type': Flow.STANDARD,
-        'parameter': 'treatment_success',
-        'origin': Compartment.ON_TREATMENT,
-        'to': Compartment.RECOVERED,
+        "type": Flow.STANDARD,
+        "parameter": "treatment_success",
+        "origin": Compartment.ON_TREATMENT,
+        "to": Compartment.RECOVERED,
     },
     {
-        'type': Flow.STANDARD,
-        'parameter': 'treatment_nonsuccess',
-        'origin': Compartment.ON_TREATMENT,
-        'to': Compartment.INFECTIOUS,
-    }
+        "type": Flow.STANDARD,
+        "parameter": "treatment_nonsuccess",
+        "origin": Compartment.ON_TREATMENT,
+        "to": Compartment.INFECTIOUS,
+    },
 ]
 
 
@@ -176,11 +168,13 @@ def add_case_detection(list_of_flows, available_compartments):
     Adds standard passive (DOTS-based) case detection flows
     """
     case_detection_flows = CASE_DETECTION_FLOWS
-    case_detection_flows[0].update({
-        'to': Compartment.ON_TREATMENT
-        if Compartment.ON_TREATMENT in available_compartments
-        else Compartment.RECOVERED
-    })
+    case_detection_flows[0].update(
+        {
+            "to": Compartment.ON_TREATMENT
+            if Compartment.ON_TREATMENT in available_compartments
+            else Compartment.RECOVERED
+        }
+    )
     list_of_flows += CASE_DETECTION_FLOWS
     return list_of_flows
 
@@ -195,11 +189,13 @@ def add_acf(list_of_flows, available_compartments):
     Adds active case finding flows
     """
     acf_flows = ACF_FLOWS
-    acf_flows[0].update({
-        'to': Compartment.ON_TREATMENT
-        if Compartment.ON_TREATMENT in available_compartments
-        else Compartment.RECOVERED
-    })
+    acf_flows[0].update(
+        {
+            "to": Compartment.ON_TREATMENT
+            if Compartment.ON_TREATMENT in available_compartments
+            else Compartment.RECOVERED
+        }
+    )
     list_of_flows += ACF_FLOWS
     return list_of_flows
 
@@ -214,25 +210,27 @@ def add_acf_ltbi(list_of_flows):
 
 def get_incidence_connections():
     return {
-        "incidence_early":
-            {"origin": Compartment.EARLY_LATENT,
-             "to": Compartment.INFECTIOUS,
-             'origin_condition': '',
-             'to_condition': ''},
-        "incidence_late":
-            {"origin": Compartment.LATE_LATENT,
-             "to": Compartment.INFECTIOUS,
-             'origin_condition': '',
-             'to_condition': ''},
+        "incidence_early": {
+            "origin": Compartment.EARLY_LATENT,
+            "to": Compartment.INFECTIOUS,
+            "origin_condition": "",
+            "to_condition": "",
+        },
+        "incidence_late": {
+            "origin": Compartment.LATE_LATENT,
+            "to": Compartment.INFECTIOUS,
+            "origin_condition": "",
+            "to_condition": "",
+        },
     }
 
 
 def get_notifications_connections():
     return {
-        'notifications':
-            {'origin': Compartment.INFECTIOUS,
-             'to': Compartment.ON_TREATMENT,
-             'origin_condition': '',
-             'to_condition': ''}
+        "notifications": {
+            "origin": Compartment.INFECTIOUS,
+            "to": Compartment.ON_TREATMENT,
+            "origin_condition": "",
+            "to_condition": "",
+        }
     }
-

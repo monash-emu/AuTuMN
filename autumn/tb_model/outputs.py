@@ -25,14 +25,12 @@ def create_request_stratified_incidence(requested_stratifications, strata_dict):
     for stratification in requested_stratifications:
         for stratum in strata_dict[stratification]:
             for stage in ["early", "late"]:
-                out_connections["incidence_" + stage + "X" + stratification + "_" + stratum] \
-                    = {
+                out_connections["incidence_" + stage + "X" + stratification + "_" + stratum] = {
                     "origin": stage + "_latent",
                     "to": Compartment.INFECTIOUS,
                     "to_condition": stratification + "_" + stratum,
                 }
     return out_connections
-
 
 
 def create_request_stratified_notifications(requested_stratifications, strata_dict):
@@ -42,13 +40,12 @@ def create_request_stratified_notifications(requested_stratifications, strata_di
     out_connections = get_notifications_connections()
     for stratification in requested_stratifications:
         for stratum in strata_dict[stratification]:
-            out_connections["notificationsX" + stratification + "_" + stratum] = \
-                {
-                    "origin": Compartment.INFECTIOUS,
-                    "to": Compartment.ON_TREATMENT,
-                    "origin_condition": "",
-                    "to_condition": stratification + "_" + stratum,
-                }
+            out_connections["notificationsX" + stratification + "_" + stratum] = {
+                "origin": Compartment.INFECTIOUS,
+                "to": Compartment.ON_TREATMENT,
+                "origin_condition": "",
+                "to_condition": stratification + "_" + stratum,
+            }
     return out_connections
 
 
@@ -122,7 +119,9 @@ def list_all_strata_for_mortality(
         if infectious_compartment_name in compartment:
             stratum = compartment.split(infectious_compartment_name)[1]
             categories_to_append = tuple(stratum.split("X")[1:])
-            categories_to_append = [i_category for i_category in categories_to_append if i_category != '']
+            categories_to_append = [
+                i_category for i_category in categories_to_append if i_category != ""
+            ]
             death_output_categories.append(categories_to_append)
     death_output_categories.append(())
 
@@ -184,7 +183,7 @@ def load_calibration_from_db(database_directory, n_burned_per_chain=0):
             )
             output_dict = outputs.to_dict()
 
-            if out_database.engine.dialect.has_table(out_database.engine, 'derived_outputs'):
+            if out_database.engine.dialect.has_table(out_database.engine, "derived_outputs"):
                 derived_outputs = out_database.db_query(
                     table_name="derived_outputs", conditions=["idx='" + str(run_id) + "'"]
                 )
@@ -262,7 +261,8 @@ def store_run_models(models, scenarios, database_name="../databases/outputs.db")
 
 
 def get_post_processing_results(
-        models, req_outputs, req_multipliers, outputs_to_plot_by_stratum, scenario_list, req_times, ymax):
+    models, req_outputs, req_multipliers, outputs_to_plot_by_stratum, scenario_list, req_times, ymax
+):
     pps = []
     for scenario_index in range(len(models)):
 
@@ -311,7 +311,7 @@ def create_multi_scenario_outputs(
     scenario_list=[],
     plot_start_time=1990,
     outputs_to_plot_by_stratum=["prevXinfectious", "prevXlatent"],
-    input_functions_to_plot=[]
+    input_functions_to_plot=[],
 ):
     """
     Have now moved this code - and now constitutes legacy code for the Mongolia (and possibly Vietnam) applications only
@@ -326,7 +326,14 @@ def create_multi_scenario_outputs(
         os.mkdir(out_dir)
 
     pps = get_post_processing_results(
-        models, req_outputs, req_multipliers, outputs_to_plot_by_stratum, scenario_list, req_times, ymax)
+        models,
+        req_outputs,
+        req_multipliers,
+        outputs_to_plot_by_stratum,
+        scenario_list,
+        req_times,
+        ymax,
+    )
 
     outputs = Outputs(
         pps, targets_to_plot, out_dir, translation_dictionary, plot_start_time=plot_start_time
@@ -347,43 +354,52 @@ def get_ebeye_baseline_data():
     Load in baseline data from spreadsheets provided by CDC - to create dictionary of data frames
     """
     baseline_data = {}
-    for island in ['majuro', 'ebeye', 'otherislands']:
+    for island in ["majuro", "ebeye", "otherislands"]:
 
         # Read data in
         file_path = os.path.abspath(__file__)
-        final_path = \
-            os.path.join(
-                '\\'.join(file_path.split('\\')[:-3]),
-                'applications', 'marshall_islands', 'rmi_specific_data', 'baseline_' + island + '.csv')
+        final_path = os.path.join(
+            "\\".join(file_path.split("\\")[:-3]),
+            "applications",
+            "marshall_islands",
+            "rmi_specific_data",
+            "baseline_" + island + ".csv",
+        )
         baseline_data[island] = pd.read_csv(final_path, header=3)
 
         # Fix column names
-        age_cols = {'Unnamed: 0': 'year', 'Age': 'subgroup'}
+        age_cols = {"Unnamed: 0": "year", "Age": "subgroup"}
         n_chars = [0] * 2 + ([1] * 2 + [2] * 3) * 3
-        extra_string = [''] * 7 + ['no'] * 5 + ['unknown'] * 5
+        extra_string = [""] * 7 + ["no"] * 5 + ["unknown"] * 5
         for i_column in range(2, len(baseline_data[island].columns) - 1):
             age_cols.update(
-                {baseline_data[island].columns[i_column]:
-                     baseline_data[island].columns[i_column][0: n_chars[i_column]] + '_' +
-                     extra_string[i_column] + 'diabetes'})
+                {
+                    baseline_data[island]
+                    .columns[i_column]: baseline_data[island]
+                    .columns[i_column][0 : n_chars[i_column]]
+                    + "_"
+                    + extra_string[i_column]
+                    + "diabetes"
+                }
+            )
         baseline_data[island].rename(columns=age_cols, inplace=True)
-        baseline_data[island].drop(columns=['Total'], inplace=True)
+        baseline_data[island].drop(columns=["Total"], inplace=True)
     return baseline_data
 
 
 def compare_marshall_notifications(
-        models,
-        req_outputs,
-        req_times={},
-        req_multipliers={},
-        ymax={},
-        out_dir="outputs_tes",
-        targets_to_plot={},
-        translation_dictionary={},
-        scenario_list=[],
-        plot_start_time=1990,
-        outputs_to_plot_by_stratum=["prevXinfectious", "prevXlatent"],
-        comparison_times=[2012., 2017.],
+    models,
+    req_outputs,
+    req_times={},
+    req_multipliers={},
+    ymax={},
+    out_dir="outputs_tes",
+    targets_to_plot={},
+    translation_dictionary={},
+    scenario_list=[],
+    plot_start_time=1990,
+    outputs_to_plot_by_stratum=["prevXinfectious", "prevXlatent"],
+    comparison_times=[2012.0, 2017.0],
 ):
     """
     Targeted function to produce plot outputs that are specific to the Marshall Islands application.
@@ -391,61 +407,88 @@ def compare_marshall_notifications(
     """
 
     # Prepare figure
-    plt.style.use('ggplot')
+    plt.style.use("ggplot")
     fig = plt.figure()
 
     # Gather data
     pps = get_post_processing_results(
-        models, req_outputs, req_multipliers, outputs_to_plot_by_stratum, scenario_list, req_times, ymax)
-    start_time_index = find_first_list_element_above(pps[0].derived_outputs['times'], comparison_times[0])
-    end_time_index = find_first_list_element_above(pps[0].derived_outputs['times'], comparison_times[1])
-    stratifications = {stratification: models[0].all_stratifications[stratification] for stratification in models[0].all_stratifications}
+        models,
+        req_outputs,
+        req_multipliers,
+        outputs_to_plot_by_stratum,
+        scenario_list,
+        req_times,
+        ymax,
+    )
+    start_time_index = find_first_list_element_above(
+        pps[0].derived_outputs["times"], comparison_times[0]
+    )
+    end_time_index = find_first_list_element_above(
+        pps[0].derived_outputs["times"], comparison_times[1]
+    )
+    stratifications = {
+        stratification: models[0].all_stratifications[stratification]
+        for stratification in models[0].all_stratifications
+    }
 
-    age_groups = models[0].all_stratifications['age']
-    locations = models[0].all_stratifications['location']
-    organs = models[0].all_stratifications['organ']
-    diabetes = models[0].all_stratifications['diabetes']
+    age_groups = models[0].all_stratifications["age"]
+    locations = models[0].all_stratifications["location"]
+    organs = models[0].all_stratifications["organ"]
+    diabetes = models[0].all_stratifications["diabetes"]
 
     ages = [float(age) for age in age_groups]
     baseline_data = get_ebeye_baseline_data()
 
     # Sum notifications over organ and diabetes status.
-    summed_notifications = \
-        sum_notifications_over_organ_diabetes(pps[0].derived_outputs, locations, age_groups, organs, diabetes)
+    summed_notifications = sum_notifications_over_organ_diabetes(
+        pps[0].derived_outputs, locations, age_groups, organs, diabetes
+    )
 
     # Plot by location
     for i_loc, location in enumerate(locations):
-        location_notifications_by_age = \
-            [sum(summed_notifications[location][age_group][
-                 start_time_index: end_time_index])
-             for age_group in age_groups]
+        location_notifications_by_age = [
+            sum(summed_notifications[location][age_group][start_time_index:end_time_index])
+            for age_group in age_groups
+        ]
 
         # Collate real data
-        real_notifications = \
-            [baseline_data[location].loc[
-             1: 5,
-             [age_group + '_diabetes', age_group + '_nodiabetes', age_group + '_unknowndiabetes']].sum(0).sum()
-             for age_group in age_groups]
+        real_notifications = [
+            baseline_data[location]
+            .loc[
+                1:5,
+                [
+                    age_group + "_diabetes",
+                    age_group + "_nodiabetes",
+                    age_group + "_unknowndiabetes",
+                ],
+            ]
+            .sum(0)
+            .sum()
+            for age_group in age_groups
+        ]
 
         # Prepare plot
         axis = fig.add_subplot(2, 2, i_loc + 1)
-        axis.scatter(ages, location_notifications_by_age, color='r')
-        axis.scatter(ages, real_notifications, color='k')
+        axis.scatter(ages, location_notifications_by_age, color="r")
+        axis.scatter(ages, real_notifications, color="k")
         axis.set_title(location)
 
         # Tidy x-axis
-        axis.set_xlim(-5., max(ages) + 5.)
-        axis.set_xlabel('age groups')
+        axis.set_xlim(-5.0, max(ages) + 5.0)
+        axis.set_xlabel("age groups")
         axis.set_xticks(ages)
         axis.set_xticklabels(age_groups)
 
         # Tidy y-axis
-        axis.set_ylim(0., max(location_notifications_by_age + real_notifications) * 1.2)
-        axis.set_ylabel('notifications')
+        axis.set_ylim(0.0, max(location_notifications_by_age + real_notifications) * 1.2)
+        axis.set_ylabel("notifications")
 
     # Save
-    fig.suptitle('Notifications by location, from %s to %s' % tuple([str(round(time)) for time in comparison_times]))
-    fig.tight_layout(rect=[0., 0., 1., 0.95])
+    fig.suptitle(
+        "Notifications by location, from %s to %s"
+        % tuple([str(round(time)) for time in comparison_times])
+    )
+    fig.tight_layout(rect=[0.0, 0.0, 1.0, 0.95])
     fig.savefig(os.path.join(out_dir, "notification_comparisons.png"))
 
 
@@ -564,21 +607,25 @@ def sum_notifications_over_organ_diabetes(derived_outputs, locations, age_groups
     Quite a specific function to sum the fully disaggregated notifications according to two specific modelled strata.
     Currently only intended to be used for the RMI application.
     """
-    n_times = len(derived_outputs['times'])
+    n_times = len(derived_outputs["times"])
     summed_notifications = {}
     for i_loc, location in enumerate(locations):
         summed_notifications[location] = {}
         for age_group in age_groups:
-            summed_notifications[location][age_group] = [0.] * n_times
+            summed_notifications[location][age_group] = [0.0] * n_times
             for organ in organs:
                 for diabetic in diabetes:
-                    summed_notifications[location][age_group] = \
-                        element_wise_list_summation(
-                            summed_notifications[location][age_group],
-                            derived_outputs[
-                                'notificationsXage_' + age_group +
-                                'Xdiabetes_' + diabetic +
-                                'Xorgan_' + organ +
-                                'Xlocation_' + location])
+                    summed_notifications[location][age_group] = element_wise_list_summation(
+                        summed_notifications[location][age_group],
+                        derived_outputs[
+                            "notificationsXage_"
+                            + age_group
+                            + "Xdiabetes_"
+                            + diabetic
+                            + "Xorgan_"
+                            + organ
+                            + "Xlocation_"
+                            + location
+                        ],
+                    )
     return summed_notifications
-

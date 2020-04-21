@@ -13,8 +13,15 @@ from numpy import linspace
 FILE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-def run_calibration_chain(max_seconds: int, run_id: int, country: str, par_priors, target_outputs, mode='lsm',
-                          _start_time_range=None):
+def run_calibration_chain(
+    max_seconds: int,
+    run_id: int,
+    country: str,
+    par_priors,
+    target_outputs,
+    mode="lsm",
+    _start_time_range=None,
+):
     """
     Run a calibration chain for the covid model
 
@@ -27,7 +34,9 @@ def run_calibration_chain(max_seconds: int, run_id: int, country: str, par_prior
     scenario_params = params["scenarios"]
     sc_start_time = params["scenario_start_time"]
     # params["default"]["country"] = country
-    params["default"]["iso3"] = get_iso3_from_country_name(input_database, country) if country != 'Victoria' else 'VIC'
+    params["default"]["iso3"] = (
+        get_iso3_from_country_name(input_database, country) if country != "Victoria" else "VIC"
+    )
 
     calib = Calibration(
         "covid_" + country,
@@ -39,15 +48,11 @@ def run_calibration_chain(max_seconds: int, run_id: int, country: str, par_prior
         scenario_params,
         sc_start_time,
         model_parameters=params["default"],
-        start_time_range=_start_time_range
+        start_time_range=_start_time_range,
     )
     print("Starting calibration.")
     calib.run_fitting_algorithm(
-        run_mode=mode,
-        n_iterations=100000,
-        n_burned=0,
-        n_chains=1,
-        available_time=max_seconds,
+        run_mode=mode, n_iterations=100000, n_burned=0, n_chains=1, available_time=max_seconds,
     )
     print(f"Finished calibration for run {run_id}.")
 

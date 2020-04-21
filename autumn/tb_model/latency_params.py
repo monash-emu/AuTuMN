@@ -11,11 +11,11 @@ from ..tool_kit import add_w_to_param_names, change_parameter_unit
 
 def manually_create_age_specific_latency_parameters(model_parameters):
     age_specific_latency_parameters = {}
-    for parameter in ['early_progression', 'stabilisation', 'late_progression']:
+    for parameter in ["early_progression", "stabilisation", "late_progression"]:
         age_specific_latency_parameters[parameter] = {}
         for age_group in [0, 5, 15]:
             age_specific_latency_parameters[parameter].update(
-                {age_group: model_parameters[parameter + '_' + str(age_group)]}
+                {age_group: model_parameters[parameter + "_" + str(age_group)]}
             )
     return age_specific_latency_parameters
 
@@ -66,8 +66,11 @@ def update_transmission_parameters(parameters, compartments_to_update):
     Update parameters with transmission rates for each compartment with altered immunity/sucseptibility to infection
     """
     for compartment in compartments_to_update:
-        parameters.update({
-            'contact_rate_' + compartment:
-                parameters['contact_rate'] * parameters['rr_transmission_' + compartment]
-        })
+        parameters.update(
+            {
+                "contact_rate_"
+                + compartment: parameters["contact_rate"]
+                * parameters["rr_transmission_" + compartment]
+            }
+        )
     return parameters

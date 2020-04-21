@@ -43,4 +43,3 @@ run_covid_aus_model = build_country_runner(AUSTRALIA)
 run_covid_phl_model = build_country_runner(PHILIPPINES)
 run_covid_mys_model = build_country_runner(MALAYSIA)
 run_covid_vic_model = build_country_runner(VICTORIA)
-

@@ -43,24 +43,26 @@ def stratify_by_age(model_to_stratify, age_specific_latency_parameters, input_da
     age_infectiousness = get_parameter_dict_from_function(
         logistic_scaling_function(10.0), age_breakpoints
     )
-    age_params = \
-        get_adapted_age_parameters(age_breakpoints, age_specific_latency_parameters)
+    age_params = get_adapted_age_parameters(age_breakpoints, age_specific_latency_parameters)
     age_params.update(split_age_parameter(age_breakpoints, "contact_rate"))
     pop_morts = get_pop_mortality_functions(
         input_database,
         age_breakpoints,
         country_iso_code="FSM",
         emigration_value=0.0075,
-        emigration_start_time=1990.,
+        emigration_start_time=1990.0,
     )
     age_params["universal_death_rate"] = {}
     for age_break in age_breakpoints:
-        model_to_stratify.time_variants["universal_death_rateXage_" + str(age_break)] = \
-            pop_morts[age_break]
-        model_to_stratify.parameters["universal_death_rateXage_" + str(age_break)] = \
+        model_to_stratify.time_variants["universal_death_rateXage_" + str(age_break)] = pop_morts[
+            age_break
+        ]
+        model_to_stratify.parameters[
             "universal_death_rateXage_" + str(age_break)
-        age_params["universal_death_rate"][str(age_break) + "W"] = \
-            "universal_death_rateXage_" + str(age_break)
+        ] = "universal_death_rateXage_" + str(age_break)
+        age_params["universal_death_rate"][
+            str(age_break) + "W"
+        ] = "universal_death_rateXage_" + str(age_break)
     model_to_stratify.parameters["universal_death_rateX"] = 0.0
 
     # Add BCG effect without stratification assuming constant 100% coverage
@@ -81,27 +83,29 @@ def stratify_by_age(model_to_stratify, age_specific_latency_parameters, input_da
     return model_to_stratify
 
 
-def stratify_by_diabetes(model_to_stratify, model_parameters, diabetes_strata, requested_diabetes_proportions,
-                         age_specific_prevalence=True):
+def stratify_by_diabetes(
+    model_to_stratify,
+    model_parameters,
+    diabetes_strata,
+    requested_diabetes_proportions,
+    age_specific_prevalence=True,
+):
 
     progression_adjustments = {
         "diabetic": model_parameters["rr_progression_diabetic"],
         "nodiabetes": 1.0,
     }
     adjustment_dict = {
-                "early_progression": progression_adjustments,
-                "late_progression": progression_adjustments
+        "early_progression": progression_adjustments,
+        "late_progression": progression_adjustments,
     }
     if age_specific_prevalence:
         diabetes_target_props = {}
-        for age_group in model_parameters['all_stratifications']['age']:
-            diabetes_target_props.update({
-                'age_' + age_group: {'diabetic': requested_diabetes_proportions[int(age_group)]}
-            })
-        diabetes_starting_and_entry_props = {
-            "diabetic": 0.01,
-            "nodiabetes": 0.99
-        }
+        for age_group in model_parameters["all_stratifications"]["age"]:
+            diabetes_target_props.update(
+                {"age_" + age_group: {"diabetic": requested_diabetes_proportions[int(age_group)]}}
+            )
+        diabetes_starting_and_entry_props = {"diabetic": 0.01, "nodiabetes": 0.99}
 
         model_to_stratify.stratify(
             "diabetes",
@@ -115,17 +119,17 @@ def stratify_by_diabetes(model_to_stratify, model_parameters, diabetes_strata, r
         )
     else:
         diabetes_starting_and_entry_props = {
-            "diabetic": model_parameters['diabetes_prevalence_adults'],
-            "nodiabetes": 1. - model_parameters['diabetes_prevalence_adults']
+            "diabetic": model_parameters["diabetes_prevalence_adults"],
+            "nodiabetes": 1.0 - model_parameters["diabetes_prevalence_adults"],
         }
 
         # define age-specific adjustment requests for progression if age-stratified model
-        if 'age' in model_parameters['stratify_by']:
+        if "age" in model_parameters["stratify_by"]:
             adjustment_dict = {}
-            for age_break in model_parameters['all_stratifications']['age']:
+            for age_break in model_parameters["all_stratifications"]["age"]:
                 if int(age_break) >= 15:
-                    adjustment_dict['early_progressionXage_' + age_break] = progression_adjustments
-                    adjustment_dict['late_progressionXage_' + age_break] = progression_adjustments
+                    adjustment_dict["early_progressionXage_" + age_break] = progression_adjustments
+                    adjustment_dict["late_progressionXage_" + age_break] = progression_adjustments
 
         model_to_stratify.stratify(
             "diabetes",
@@ -146,10 +150,8 @@ def stratify_by_organ(model_to_stratify, model_parameters, detect_rate_by_organ,
         "smearneg": 1.0 - (model_parameters["prop_smearpos"] + 0.2),
         "extrapul": 0.2,
     }
-    mortality_adjustments = \
-        {"smearpos": 1.0, "smearneg": 0.064, "extrapul": 0.064}
-    recovery_adjustments = \
-        {"smearpos": 1.0, "smearneg": 0.56, "extrapul": 0.56}
+    mortality_adjustments = {"smearpos": 1.0, "smearneg": 0.064, "extrapul": 0.064}
+    recovery_adjustments = {"smearpos": 1.0, "smearneg": 0.56, "extrapul": 0.56}
 
     # workout the detection rate adjustment by organ status
     adjustment_smearneg = (
@@ -185,8 +187,7 @@ def stratify_by_organ(model_to_stratify, model_parameters, detect_rate_by_organ,
 
 
 def stratify_by_location(_tb_model, model_parameters, location_strata):
-    props_location = \
-        {"majuro": 0.523, "ebeye": 0.2, "otherislands": 0.277}
+    props_location = {"majuro": 0.523, "ebeye": 0.2, "otherislands": 0.277}
 
     raw_relative_risks_loc = {"majuro": 1.0}
     for stratum in ["ebeye", "otherislands"]:
@@ -196,10 +197,10 @@ def stratify_by_location(_tb_model, model_parameters, location_strata):
     )
 
     # dummy matrix for mixing by location
-    location_mixing = array([0.9, 0.05, 0.05, 0.05, 0.9, 0.05, 0.05, 0.05, 0.9]).reshape(
-        (3, 3)
+    location_mixing = array([0.9, 0.05, 0.05, 0.05, 0.9, 0.05, 0.05, 0.05, 0.9]).reshape((3, 3))
+    location_mixing *= (
+        3.0  # adjusted such that heterogeneous mixing yields similar overall burden as homogeneous
     )
-    location_mixing *= 3.0  # adjusted such that heterogeneous mixing yields similar overall burden as homogeneous
 
     location_adjustments = {}
     for beta_type in ["", "_late_latent", "_recovered"]:
@@ -209,7 +210,7 @@ def stratify_by_location(_tb_model, model_parameters, location_strata):
     for stratum in location_strata:
         location_adjustments["case_detection"][stratum] = model_parameters[
             "case_detection_" + stratum + "_multiplier"
-            ]
+        ]
 
     # location_adjustments["acf_coverage"] = {}
     # for stratum in location_strata:

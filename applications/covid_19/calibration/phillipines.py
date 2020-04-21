@@ -1,4 +1,4 @@
-from .base import run_calibration_chain, get_priors_and_targets
+from applications.covid_19.calibration.base import run_calibration_chain, get_priors_and_targets
 
 country = "philippines"
 PAR_PRIORS, TARGET_OUTPUTS = get_priors_and_targets(country, "deaths", 2)

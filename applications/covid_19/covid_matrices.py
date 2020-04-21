@@ -14,7 +14,7 @@ def build_covid_matrices(country, mixing_params):
     :return: dict
         Mixing matrices as a function of time collated together
     """
-    plot_mixing_params_over_time(mixing_params)
+    # plot_mixing_params_over_time(mixing_params)
     from autumn.demography.social_mixing import load_all_prem_types
 
     # Note that this line of code would break for countries in the second half of the alphabet
@@ -28,7 +28,8 @@ def build_covid_matrices(country, mixing_params):
             if loc + "_times" in mixing_params
         ]:
             location_adjustment = scale_up_function(
-                mixing_params[location + "_times"], mixing_params[location + "_values"]
+                mixing_params[location + "_times"], mixing_params[location + "_values"],
+                method=4
             )
             mixing_matrix = np.add(
                 mixing_matrix,
@@ -46,8 +47,9 @@ def plot_mixing_params_over_time(mixing_params):
             if loc + "_times" in mixing_params]:
 
         location_adjustment = scale_up_function(
-                    mixing_params[location + "_times"], mixing_params[location + "_values"]
-                )
+            mixing_params[location + "_times"], mixing_params[location + "_values"],
+            method=4
+            )
 
         x = list(np.linspace(0., 120., num=1000))
 

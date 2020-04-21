@@ -3,7 +3,7 @@ default:
   contact_rate: 0.2395
 
   start_time: 0.
-  end_time: 365
+  end_time: 120
   country: malaysia
   iso3: MYS
 

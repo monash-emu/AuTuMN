@@ -7,7 +7,7 @@ PAR_PRIORS, TARGET_OUTPUTS = get_priors_and_targets(country, "deaths", 2)
 del PAR_PRIORS[1]
 
 target_to_plots = {
-    "infection_deathXall": {
+    "infection_deathsXall": {
         "times": TARGET_OUTPUTS[0]["years"],
         "values": [[d] for d in TARGET_OUTPUTS[0]["values"]],
     }

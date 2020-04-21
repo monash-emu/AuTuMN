@@ -10,7 +10,7 @@ def test_load_params__with_no_apps():
     Ensure params can be loaded when there is just params.yml
     """
     expected_params = {
-        "scenario_start": 85,
+        "scenario_start_time": 85,
         "default": {"n_compartment_repeats": 2, "stratify_by": ["agegroup", "clinical",]},
     }
     with TemporaryDirectory() as dir_path:
@@ -27,14 +27,14 @@ def test_load_params__with_apps():
     Ensure params can be loaded when there is just params.yml
     """
     base_params = {
-        "scenario_start": 85,
+        "scenario_start_time": 85,
         "default": {"n_compartment_repeats": 2, "stratify_by": ["agegroup", "clinical",]},
     }
     app_params = {
         "default": {"n_compartment_repeats": 3},
     }
     expected_params = {
-        "scenario_start": 85,
+        "scenario_start_time": 85,
         "default": {"n_compartment_repeats": 3, "stratify_by": ["agegroup", "clinical",]},
     }
     with TemporaryDirectory() as dir_path:

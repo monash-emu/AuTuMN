@@ -1,6 +1,6 @@
 ---
 # When to introduce the scenario interventions taking off from the baseline
-scenario_start: 85
+scenario_start_time: 85
 
 # Parameters used to build a general model of COVID-19 disease for application to Australia or internationally
 default:

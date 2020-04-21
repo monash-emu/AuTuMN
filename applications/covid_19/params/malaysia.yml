@@ -1,10 +1,10 @@
 ---
 default:
-  contact_rate: 0.20
+  contact_rate: 0.2395
 
-  start_time: 20.
-  end_time: 120
-  country: Malaysia
+  start_time: 0.
+  end_time: 365
+  country: malaysia
   iso3: MYS
 
   mixing:

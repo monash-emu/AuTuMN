@@ -2,7 +2,7 @@
 Entry point for PyCharm users to run an application
 """
 
-from . import covid_19, marshall_islands, mongolia
+from applications import covid_19, marshall_islands, mongolia
 
 
 RUN_NAME = "manual-calibration"

@@ -16,10 +16,10 @@ default:
     other_locations_values:
       - 1.
       - 0.2
-    workplace_times:
+    work_times:
       - 85.
       - 90.
-    workplace_values:
+    work_values:
       - 1.
       - 0.25
     school_times:

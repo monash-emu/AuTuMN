@@ -38,7 +38,7 @@ default:
       - 0.4
       - 0.4
       - 0.2
-    workplace_times:
+    work_times:
       - 78.
       - 79.
       - 81.
@@ -49,7 +49,7 @@ default:
       - 87.
       - 91.
       - 92.
-    workplace_values:
+    work_values:
       - 1.
       - 0.95
       - 0.95

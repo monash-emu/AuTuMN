@@ -1,28 +1,36 @@
 ---
 default:
-  contact_rate: 0.2
+  contact_rate: 0.20
 
-  start_time: 0.
+  start_time: 20.
   end_time: 120
   country: Malaysia
   iso3: MYS
 
   mixing:
     other_locations_times:
-      - 79.
-      - 85.
+      - 77.
+      - 81.
+      - 92.
+      - 106.
     other_locations_values:
       - 1.
-      - 0.2
-    workplace_times:
-      - 79.
-      - 85.
-    workplace_values:
+      - .6
+      - .4
+      - .2
+    work_times:
+      - 77.
+      - 81.
+      - 92.
+      - 106.
+    work_values:
       - 1.
-      - 0.25
+      - .6
+      - .4
+      - .2
     school_times:
-      - 79.
-      - 85.
+      - 70.
+      - 75.
     school_values:
       - 1.
       - 0.1

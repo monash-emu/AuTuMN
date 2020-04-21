@@ -228,7 +228,7 @@ def create_output_dataframes(pps, params):
             setattr(
                 pps[i_scenario],
                 attribute + "_df",
-                getattr(pps[0], attribute + "_df")[: params["scenario_start"] - 1].append(
+                getattr(pps[0], attribute + "_df")[: params["scenario_start_time"] - 1].append(
                     intervention_outputs
                 ),
             )

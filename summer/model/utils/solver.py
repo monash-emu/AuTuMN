@@ -69,7 +69,7 @@ def solve_with_euler(
     """
     Solve ODE with Euler's method.
     https://en.wikipedia.org/wiki/Euler_method
-    WARNING: This code is not rigorously tested, don't use it for important stuff.
+    WARNING: This is too innacurate to use for real.
     """
     step_size = solver_args.get("step_size", 0.1)
     start_time = times[0]
@@ -96,7 +96,7 @@ def solve_with_rk4(ode_func: Callable, values: List[float], times: List[float], 
     """
     Solve ODE with the Runge-Kutta 4 method.
     https://en.wikipedia.org/wiki/Runge%E2%80%93Kutta_methods
-    WARNING: This code is not rigorously tested, don't use it for important stuff.
+    WARNING: This code needs to be run with a very small step size to be comparable to scipy functions.
     """
     step_size = solver_args.get("step_size", 0.1)
     start_time = times[0]

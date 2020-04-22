@@ -221,7 +221,7 @@ class StratifiedModel(EpiModel):
     stratification methods
     """
 
-    def stratify(
+    def _stratify(
         self,
         stratification_name,
         strata_request,
@@ -303,7 +303,7 @@ class StratifiedModel(EpiModel):
         if self.death_flows.shape[0] > 0:
             self.stratify_death_flows(stratification_name, strata_names, adjustment_requests)
         self.stratify_universal_death_rate(
-            stratification_name, strata_names, adjustment_requests, compartment_types_to_stratify
+            stratification_name, strata_names, adjustment_requests, compartment_types_to_stratify,
         )
 
         # if stratifying by strain
@@ -1213,6 +1213,242 @@ class StratifiedModel(EpiModel):
                         },
                         ignore_index=True,
                     )
+
+    # ================== MATT STRAT REFACTOR
+
+    def stratify(
+        self,
+        stratification_name,
+        strata_request,
+        compartment_types_to_stratify,
+        requested_proportions,
+        entry_proportions={},
+        adjustment_requests={},
+        infectiousness_adjustments={},
+        mixing_matrix=None,
+        target_proportions=None,
+        verbose=True,
+    ):
+        """
+        calls to initial preparation, checks and methods that stratify the various aspects of the model
+
+        :param stratification_name:
+            see prepare_and_check_stratification
+        :param strata_request:
+            see find_strata_names_from_input
+        :param compartment_types_to_stratify:
+            see check_compartment_request
+        :param adjustment_requests:
+            see incorporate_alternative_overwrite_approach and check_parameter_adjustment_requests
+        :param requested_proportions:
+            see prepare_starting_proportions
+        :param entry_proportions:
+
+        :param infectiousness_adjustments:
+
+        :param mixing_matrix:
+            see check_mixing
+        :param verbose: bool
+            whether to report on progress
+            note that this can be changed at this stage from what was requested at the original unstratified model
+                construction
+        :param target_proportions: dict
+            keys are the strata being implemented at this call to stratify
+            values are the desired proportions to target
+        """
+        # THINGS MATT BROKE
+        # removed ability to just pass an int as strata_names and get an array from 1-N magically
+
+        # TODO: VALIDATION TODOS
+        # TODO: validate that stratification name is a str
+        # TODO: target_proportions must be a dict
+        # TODO: all keys of target_proportions must be a type of strata requested as a part of this stratification
+        # TODO: check that user isn't re-creating a stratification with the same name
+        # TODO: strata_request cannot be a float, it can be an int(represents 1-N), it can be a list (which be co-erced to a string)
+        # TODO: comparemnts in compartment_types_to_stratify must be valid compartments
+        # TODO: AGE SPECIFIC VALIDATION TODOS
+        # TODO: ensure that IF age stratification is requested, THEN user cannot specify "compartment_types_to_stratify"
+        #       ie. age stratification must apply to all compartments.
+        # TODO: all age strata must be int or float
+        # TODO: 0 must be in age strata request - represents those ages 0 to <next lowest age?
+
+        # OTHER NOTES
+        # self.full_stratification_list keeps track of comparements that are not partially stratified
+        # self.all_stratifications keeps track of all stratifications and their strata
+
+        def get_strata_proportions(strata_names, strata_proportions):
+            """
+            Determine what % of population get assigned to the different strata.
+            """
+            proportion_allocated = sum(strata_proportions.values())
+            remaining_strata = [s for s in strata_names if s not in strata_proportions]
+            count_remaining = len(remaining_strata)
+            assert set(strata_proportions.keys()).issubset(strata_names), "Invalid proprotion keys"
+            assert proportion_allocated <= 1, "Sum of strata proportions must not exceed 1.0"
+            if not remaining_strata:
+                assert proportion_allocated == 1, "Sum of strata proportions must be 1.0"
+                return strata_proportions
+            else:
+                # Divide the remaining proprotions equally
+                starting_proportion = (1 - proportion_allocated) / count_remaining
+                remaining_proportions = {
+                    stratum: starting_proportion for stratum in remaining_strata
+                }
+                return {**strata_proportions, **remaining_proportions}
+
+        # Rename vars
+        strata_names = strata_request
+
+        # If user does not want to stratify specific compartments, we only want to stratify a subset.
+        if not compartment_types_to_stratify:
+            self.full_stratification_list.append(stratification_name)
+
+        # Check age stratification
+        if stratification_name == "age":
+            # Ensure age strata are sorted... for some reason?
+            if strata_names != sorted(strata_names):
+                strata_names = sorted(strata_names)
+
+        strata_names = [str(s) for s in strata_names]
+        self.all_stratifications[stratification_name] = strata_names
+        requested_proportions = get_strata_proportions(strata_names, requested_proportions)
+
+        # Track strains. (why?)
+        if stratification_name == "strain":
+            self.strains = strata_names
+
+        # Decide whether to stratify all compartments or not.
+        # self.compartment_types_to_stratify is used for stratification stuff only
+        if compartment_types_to_stratify:
+            self.compartment_types_to_stratify = compartment_types_to_stratify
+        else:
+            self.compartment_types_to_stratify = self.compartment_types
+
+        # Retain copy of compartment names in their stratified form to refer back to during stratification process
+        self.unstratified_compartment_names = copy.copy(self.compartment_names)
+
+        # ACTUALLY STRATIFY COMPARTMENTS
+        # Stratify the model compartments into sub-compartments, based on the strata names provided,
+        # splitting the population according to the provided proprotions. Stratification will be applied
+        # to compartment_names and compartment_values.
+        # Only compartments specified in `self.compartment_types_to_stratify` will be stratified.
+        # Find the existing compartments that need stratification
+        compartments_to_stratify = [
+            c for c in self.compartment_names if find_stem(c) in self.compartment_types_to_stratify
+        ]
+        for compartment in compartments_to_stratify:
+            # Add new stratified compartment.
+            for stratum in strata_names:
+                name = create_stratified_name(compartment, stratification_name, stratum)
+                idx = self.compartment_names.index(compartment)
+                value = self.compartment_values[idx] * requested_proportions[stratum]
+                self.add_compartment(name, value)
+
+            # Remove the original compartment, since it has now been stratified.
+            self.remove_compartment(compartment)
+
+        # ================= ADJUSTMENT STUFF ====================================
+
+        # Alternative approach to working out which parameters to overwrite
+        # can put a capital W at the string's end to indicate that it is an overwrite parameter, as an alternative to
+        # submitting a separate dictionary key to represent the strata which need to be overwritten
+        # FIXME: Does anyone actually use this W notation?
+        revised_adjustments = {}
+        for parameter in adjustment_requests.keys():
+            revised_adjustments[parameter] = {}
+            param_adjs = revised_adjustments[parameter]
+
+            for stratum in adjustment_requests[parameter]:
+                if stratum == OVERWRITE_KEY:
+                    # Skip overwrite key
+                    continue
+
+                elif stratum[-1] == OVERWRITE_CHARACTER:
+                    # if the parameter ends in W, interpret as an overwrite parameter and added to this key
+                    if OVERWRITE_KEY not in param_adjs:
+                        param_adjs[OVERWRITE_KEY] = []
+
+                    param_adjs[stratum[:-1]] = adjustment_requests[parameter][stratum]
+                    param_adjs[OVERWRITE_KEY].append(stratum[:-1])
+
+                else:
+                    # Copy accross
+                    param_adjs[stratum] = adjustment_requests[parameter][stratum]
+
+            if OVERWRITE_KEY not in revised_adjustments:
+                revised_adjustments[OVERWRITE_KEY] = []
+
+        adjustment_requests = revised_adjustments
+
+        # Check parameter adjustments have been requested appropriately and add parameter for any strata not referred to.
+        for parameter in adjustment_requests:
+            invalid_adjustments = [
+                requested_stratum not in strata_names + [OVERWRITE_KEY]
+                for requested_stratum in adjustment_requests[parameter]
+            ]
+            if any(invalid_adjustments):
+                msg = "A stratum was requested in adjustments that is not available in this stratification"
+                raise ValueError(msg)
+
+        # ============== ADD AGE flows 1st for some reason
+
+        if stratification_name == "age":
+            # Work out ageing flows.
+            # This comes first, so that the compartment names remain in the unstratified form
+            # .... why do we need that?
+            # Set inter-compartmental flows for ageing from one stratum to the next.
+            # The ageing rate is proportional to the width of the age bracket.
+            ageing_flows = []
+            for strata_idx in range(len(strata_names) - 1):
+                start_age = int(strata_names[strata_idx])
+                end_age = int(strata_names[strata_idx + 1])
+                ageing_parameter_name = f"ageing{start_age}to{end_age}"
+                ageing_rate = 1.0 / (end_age - start_age)
+                self.parameters[ageing_parameter_name] = ageing_rate
+                # Why do we need the unstratified_compartment_names
+                for compartment in self.unstratified_compartment_names:
+                    ageing_flow = {
+                        "type": Flow.STANDARD,
+                        "parameter": ageing_parameter_name,
+                        "origin": create_stratified_name(compartment, "age", start_age),
+                        "to": create_stratified_name(compartment, "age", end_age),
+                        "implement": len(self.all_stratifications),
+                    }
+                    ageing_flows.append(ageing_flow)
+
+            self.transition_flows = self.transition_flows.append(ageing_flows)
+
+        # =============== CUTOFF HERE FOR NOW ==================================
+
+        # stratify the flows
+        self.stratify_transition_flows(
+            stratification_name,
+            strata_names,
+            adjustment_requests,
+            self.compartment_types_to_stratify,
+        )
+        self.stratify_entry_flows(
+            stratification_name, strata_names, entry_proportions, requested_proportions
+        )
+        if self.death_flows.shape[0] > 0:
+            self.stratify_death_flows(stratification_name, strata_names, adjustment_requests)
+        self.stratify_universal_death_rate(
+            stratification_name, strata_names, adjustment_requests, compartment_types_to_stratify,
+        )
+
+        # check submitted mixing matrix and combine with existing matrix, if any
+        self.prepare_mixing_matrix(mixing_matrix, stratification_name, strata_names)
+
+        # prepare infectiousness levels attribute
+        self.prepare_infectiousness_levels(
+            stratification_name, strata_names, infectiousness_adjustments
+        )
+
+        # prepare strata equilibration target proportions
+        if target_proportions:
+            self.prepare_and_check_target_props(target_props, stratification_name, strata_names)
+
+    # ==================== END MATT STRAT REFACTOR
 
     """
     pre-integration methods

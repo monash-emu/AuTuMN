@@ -6,8 +6,8 @@ We expect the StratifiedModel and EpiModel to work the same in these basic cases
 import pytest
 import numpy as np
 
-from summer_py.summer_model import EpiModel, StratifiedModel
-from summer_py.constants import Compartment, Flow, BirthApproach, Stratification
+from summer.model import EpiModel, StratifiedModel
+from summer.constants import Compartment, Flow, BirthApproach, Stratification
 
 
 @pytest.mark.parametrize("ModelClass", [EpiModel, StratifiedModel])

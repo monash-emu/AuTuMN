@@ -1,7 +1,7 @@
 from numpy import linspace
 
-from summer_py.summer_model.strat_model import StratifiedModel
-from summer_py.post_processing.processor import post_process
+from summer.model.strat_model import StratifiedModel
+from autumn.post_processing.processor import post_process
 
 
 def test_post_processing():

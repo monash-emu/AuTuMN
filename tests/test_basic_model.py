@@ -6,7 +6,7 @@ We expect the StratifiedModel and EpiModel to work the same in these basic cases
 import pytest
 import numpy as np
 
-from summer_py.summer_model import EpiModel, StratifiedModel
+from summer.model import EpiModel, StratifiedModel
 from autumn.constants import Compartment, Flow, BirthApproach
 from autumn.tool_kit import get_integration_times
 

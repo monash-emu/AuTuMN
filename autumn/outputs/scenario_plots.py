@@ -5,7 +5,7 @@ from typing import List, Tuple
 import seaborn as sns
 import numpy as np
 from matplotlib import pyplot
-from summer_py.summer_model.strat_model import StratifiedModel
+from summer.model.strat_model import StratifiedModel
 
 from autumn.demography.social_mixing import load_specific_prem_sheet
 from autumn.tool_kit.scenarios import Scenario

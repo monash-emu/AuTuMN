@@ -2,4 +2,4 @@
 # You can use the following from PowerShell to see your options:
 #   ./scripts/run.ps1 --help
 # 
-python -m applications $args
+python -m apps $args

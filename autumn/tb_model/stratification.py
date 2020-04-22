@@ -1,12 +1,12 @@
 from copy import deepcopy
 from numpy import array
 
-from summer_py.summer_model.utils.parameter_processing import (
+from summer.model.utils.parameter_processing import (
     create_step_function_from_dict,
     get_parameter_dict_from_function,
     logistic_scaling_function,
 )
-from summer_py.summer_model import (
+from summer.model import (
     split_age_parameter,
     create_sloping_step_function,
 )

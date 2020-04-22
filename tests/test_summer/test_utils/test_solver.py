@@ -1,6 +1,6 @@
 import numpy as np
 
-from summer_py.summer_model.utils.solver import solve_with_euler, solve_with_rk4
+from summer.model.utils.solver import solve_with_euler, solve_with_rk4
 
 
 def test_solve_with_rk4_linear_func():

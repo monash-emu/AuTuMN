@@ -37,7 +37,7 @@ cp ./scripts/massive/run-job.sh $JOB_DIR
 # Copy over AuTuMN code
 echo -e "\n>>> Copying AuTuMN code from $CODE_DIR to $JOB_DIR."
 cp -r $CODE_DIR/autumn $JOB_DIR
-cp -r $CODE_DIR/applications $JOB_DIR
+cp -r $CODE_DIR/apps $JOB_DIR
 cp -r $CODE_DIR/data $JOB_DIR
 cp $CODE_DIR/requirements.txt $JOB_DIR
 

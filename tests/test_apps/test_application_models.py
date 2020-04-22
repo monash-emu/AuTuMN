@@ -1,7 +1,7 @@
 import pytest
-from summer_py.summer_model import StratifiedModel
+from summer.model import StratifiedModel
 
-from applications import mongolia, covid_19, marshall_islands
+from apps import mongolia, covid_19, marshall_islands
 
 MODEL_RUNNERS = [
     ["Mongolia", mongolia.run_model],

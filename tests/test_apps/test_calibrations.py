@@ -1,5 +1,5 @@
-from applications.marshall_islands import calibration as rmi_calibration
-from applications.covid_19.calibration import base as covid_calibration
+from apps.marshall_islands import calibration as rmi_calibration
+from apps.covid_19.calibration import base as covid_calibration
 
 
 def test_marshall_islands_calibration():

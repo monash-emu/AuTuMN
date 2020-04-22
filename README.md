@@ -14,7 +14,7 @@ See [this guide](./docs/setup.md) for information on how to set up this project.
 
 ```
 ├── .github                 GitHub config
-├── applications            Specific applications of AuTuMN
+├── apps            Specific apps of AuTuMN
 ├── autumn                  AuTuMN framework module
 ├── data                    Data to be used by the models
 ├── docs                    Documentation
@@ -49,9 +49,9 @@ The codebase can be auto-formatted using [Black](https://github.com/psf/black):
 ./scripts/format.ps1
 ```
 
-## Running applications
+## Running apps
 
-Specific uses of the AuTuMN framework are present in `applications/`. You can run an application through an IDE like PyCharm, or run it from the command line:
+Specific uses of the AuTuMN framework are present in `apps/`. You can run an application through an IDE like PyCharm, or run it from the command line:
 
 ```
 ./scripts/run.ps1 --help

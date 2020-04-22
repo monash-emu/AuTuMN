@@ -9,7 +9,7 @@ import os
 import yaml
 from datetime import datetime
 
-from summer_py.post_processing.processor import post_process, validate_post_process_config
+from autumn.post_processing.processor import post_process, validate_post_process_config
 
 from autumn import constants
 from autumn.outputs import save_flows_sheets, plot_scenarios, validate_plot_config

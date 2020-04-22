@@ -8,7 +8,7 @@ import itertools
 import hashlib
 import json
 
-from summer_py.summer_model import find_name_components
+from summer.model import find_name_components
 
 
 def get_data_hash(*args):

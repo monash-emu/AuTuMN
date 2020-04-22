@@ -4,8 +4,8 @@ End-to-end tests for the StratifiedModel - a disease agnostic compartmental mode
 import pytest
 import numpy as np
 
-from summer_py.summer_model import StratifiedModel
-from summer_py.constants import Compartment, Flow, BirthApproach, Stratification
+from summer.model import StratifiedModel
+from summer.constants import Compartment, Flow, BirthApproach, Stratification
 
 
 def test_strat_model__with_age__expect_ageing():

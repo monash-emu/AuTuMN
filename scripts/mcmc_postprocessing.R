@@ -1,6 +1,6 @@
 library(RSQLite)
 setwd("C:/Users/rrag0004/Models/jtrauer_AuTuMN")
-path_to_databases = 'applications/marshall_islands/mcmc_outputs/second_calibration_8_4_2020/'
+path_to_databases = 'apps/marshall_islands/mcmc_outputs/second_calibration_8_4_2020/'
 sqlite.driver <- dbDriver("SQLite")
 
 ylims = list('contact_rate'=c(0.2,1), 'start_time'=c(0,65), 'adult_latency_adjustment'=c(2,6), 'dr_amplification_prop_among_nonsuccess'=c(.15,.25),

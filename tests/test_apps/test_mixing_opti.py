@@ -1,4 +1,4 @@
-from applications.covid_19.mixing_optimisation.mixing_opti import objective_function
+from apps.covid_19.mixing_optimisation.mixing_opti import objective_function
 
 
 def test_optimisation_by_age():

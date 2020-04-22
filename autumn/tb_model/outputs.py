@@ -5,7 +5,7 @@ import os
 
 import numpy
 import pandas as pd
-import summer_py.post_processing as post_proc
+import autumn.post_processing as post_proc
 from sqlalchemy import create_engine
 import matplotlib.pyplot as plt
 
@@ -46,6 +46,7 @@ def create_request_stratified_notifications(requested_stratifications, strata_di
                 "to_condition": stratification + "_" + stratum,
             }
     return out_connections
+
 
 def create_output_connections_for_incidence_by_stratum(
     all_compartment_names, infectious_compartment_name=Compartment.INFECTIOUS
@@ -281,7 +282,7 @@ def get_ebeye_baseline_data():
         file_path = os.path.abspath(__file__)
         final_path = os.path.join(
             "\\".join(file_path.split("\\")[:-3]),
-            "applications",
+            "apps",
             "marshall_islands",
             "rmi_specific_data",
             "baseline_" + island + ".csv",

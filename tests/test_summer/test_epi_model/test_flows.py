@@ -3,8 +3,8 @@ Ensure that the EpiModel model produces the correct flow rates and outputs when 
 """
 import pytest
 
-from summer_py.summer_model import EpiModel
-from summer_py.constants import Compartment, Flow, BirthApproach, Stratification, IntegrationType
+from summer.model import EpiModel
+from summer.constants import Compartment, Flow, BirthApproach, Stratification, IntegrationType
 
 MODEL_KWARGS = {
     "times": [2000, 2001, 2002, 2003, 2004, 2005],

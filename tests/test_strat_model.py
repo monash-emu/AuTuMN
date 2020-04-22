@@ -4,7 +4,7 @@ End-to-end tests for the StratifiedModel - a disease agnostic compartmental mode
 import pytest
 import numpy as np
 
-from summer_py.summer_model import StratifiedModel
+from summer.model import StratifiedModel
 from autumn.constants import Compartment, Flow, BirthApproach, Stratification
 from autumn.tool_kit import get_integration_times
 

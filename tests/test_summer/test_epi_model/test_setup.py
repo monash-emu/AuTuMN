@@ -9,9 +9,9 @@ import numpy as np
 import pandas as pd
 from pandas.util.testing import assert_frame_equal
 
-from summer_py.summer_model.utils.validation import ValidationException
-from summer_py.summer_model import EpiModel, StratifiedModel
-from summer_py.constants import Compartment, Flow, BirthApproach, Stratification, IntegrationType
+from summer.model.utils.validation import ValidationException
+from summer.model import EpiModel, StratifiedModel
+from summer.constants import Compartment, Flow, BirthApproach, Stratification, IntegrationType
 
 
 @pytest.mark.parametrize(

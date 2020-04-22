@@ -11,7 +11,7 @@ import numpy as np
 import copy
 import pymc3 as pm
 import theano.tensor as tt
-import summer_py.post_processing as post_proc
+import autumn.post_processing as post_proc
 from scipy.optimize import Bounds, minimize
 from scipy import stats, special
 

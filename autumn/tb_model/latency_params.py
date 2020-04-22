@@ -1,7 +1,7 @@
 """
 Latency parameters from Ragonnet et al.
 """
-from summer_py.summer_model.utils.parameter_processing import (
+from summer.model.utils.parameter_processing import (
     create_step_function_from_dict,
     get_parameter_dict_from_function,
 )

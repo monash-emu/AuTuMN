@@ -1,11 +1,8 @@
-import os
-
 from autumn.calibration import Calibration
 from autumn.tool_kit.utils import find_first_index_reaching_cumulative_sum
 
 from ..countries import CountryModel
-from ..model import build_model
-from ..JH_data.process_JH_data import read_john_hopkins_data_from_csv
+from ..john_hopkins import read_john_hopkins_data_from_csv
 
 from numpy import linspace
 

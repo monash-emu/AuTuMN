@@ -3,7 +3,7 @@ from autumn import constants
 
 from autumn.demography.social_mixing import get_all_prem_countries
 from autumn.db import Database
-from apps.covid_19.JH_data.process_JH_data import (
+from apps.covid_19.john_hopkins import (
     get_all_jh_countries,
     read_john_hopkins_data_from_csv,
     plot_jh_data,

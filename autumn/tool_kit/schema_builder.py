@@ -1,7 +1,28 @@
 """
 Cerberus schema building utilities
 """
-PRIMITIVES = [int, float, bool, str]
+from cerberus import Validator
+
+PRIMITIVES = [int, float, bool, str, dict, list]
+
+
+def build_validator(**schema):
+    """
+    Returns a function that validates an input dictionary,
+    based on the supplied validation schema.
+    """
+    cerberus_schema = _build_schema(schema)
+
+    def validate(data: dict):
+        """
+        Ensure data adhers to schema.
+        """
+        validator = Validator(cerberus_schema, allow_unknown=False, require_all=True)
+        if not validator.validate(data):
+            errors = validator.errors
+            raise ValidationException(errors)
+
+    return validate
 
 
 def build_schema(**schema):
@@ -10,7 +31,7 @@ def build_schema(**schema):
 
 def _build_schema(schema):
     if schema in PRIMITIVES:
-        return build_primitive(schema)
+        return _build_primitive(schema)
 
     s_type = type(schema)
     if s_type in [Dict, List, DictGeneric]:
@@ -20,7 +41,8 @@ def _build_schema(schema):
     cerberus_schema = {}
     for k, v in schema.items():
         if v in PRIMITIVES:
-            cerberus_schema[k] = build_primitive(v)
+            cerberus_schema[k] = _build_primitive(v)
+
         else:
             v_type = type(v)
             if v_type not in [Dict, List, DictGeneric]:
@@ -31,7 +53,7 @@ def _build_schema(schema):
     return cerberus_schema
 
 
-def build_primitive(v_type):
+def _build_primitive(v_type):
     if v_type is int:
         return {"type": "integer"}
     elif v_type is float:
@@ -40,6 +62,10 @@ def build_primitive(v_type):
         return {"type": "boolean"}
     elif v_type is str:
         return {"type": "string"}
+    elif v_type is dict:
+        return {"type": "dict"}
+    elif v_type is list:
+        return {"type": "list"}
     else:
         raise ValueError(f"Could not find type {v_type}")
 
@@ -71,3 +97,7 @@ class DictGeneric:
             "valuesrules": _build_schema(self.value_schema),
             "keysrules": _build_schema(self.key_schema),
         }
+
+
+class ValidationException(Exception):
+    """An exception thrown when data is invalid"""

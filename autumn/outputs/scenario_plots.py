@@ -4,7 +4,6 @@ from typing import List, Tuple
 
 import seaborn as sns
 import numpy as np
-from cerberus import Validator
 from matplotlib import pyplot
 from summer_py.summer_model.strat_model import StratifiedModel
 
@@ -18,7 +17,7 @@ logger = logging.getLogger(__file__)
 
 
 # Schema used to validate output plotting configuration data.
-PLOT_CONFIG_SCHEMA = sb.build_schema(
+validate_plot_config = sb.build_validator(
     # A list of translation mappings used to format plot titles.
     translations=sb.DictGeneric(str, str),
     # List of derived / generated outputs to plot
@@ -34,16 +33,6 @@ PLOT_CONFIG_SCHEMA = sb.build_schema(
     # Visualise parameter values across categories for a particular time.
     parameter_category_values=sb.Dict(time=float, param_names=sb.List(str)),
 )
-
-
-def validate_plot_config(plot_config: dict):
-    """
-    Ensure plot config adhers to schema.
-    """
-    validator = Validator(PLOT_CONFIG_SCHEMA, allow_unknown=False, require_all=True)
-    if not validator.validate(plot_config):
-        errors = validator.errors
-        raise Exception(errors)
 
 
 def plot_scenarios(scenarios: List[Scenario], out_dir: str, plot_config: dict):

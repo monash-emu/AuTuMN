@@ -3,27 +3,12 @@ Utilities for running multiple model scenarios
 """
 import numpy
 
-from cerberus import Validator
+from autumn.tool_kit import schema_builder as sb
 from autumn.tool_kit.timer import Timer
 
 from .utils import merge_dicts
 
-# Schema used to validate model parameters
-PARAM_SCEHMA = {
-    "default": {"type": "dict"},
-    "scenario_start_time": {"type": "float"},
-    "scenarios": {"type": "dict"},
-}
-
-
-def validate_params(params: dict):
-    """
-    Ensure plot config adhers to schema.
-    """
-    validator = Validator(PARAM_SCEHMA, allow_unknown=True, require_all=True)
-    if not validator.validate(params):
-        errors = validator.errors
-        raise Exception(errors)
+validate_params = sb.build_validator(default=dict, scenario_start_time=float, scenarios=dict)
 
 
 class Scenario:

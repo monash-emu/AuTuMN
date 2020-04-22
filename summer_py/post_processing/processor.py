@@ -3,32 +3,22 @@ from copy import deepcopy
 from cerberus import Validator
 from summer_py.summer_model.strat_model import StratifiedModel
 
-from autumn.tool_kit import find_first_list_element_above
+from autumn.tool_kit import schema_builder as sb
 
 from .requested_outputs import RequestedOutput
 
 # FIXME - This data representation can be improved... somehow.
-POST_PROCESS_SCHEMA = {
+validate_post_process_config = sb.build_validator(
     # Outputs to be generated
     # Eg. ["prevXinfectiousXamongXage_10Xstrain_sensitive", "distribution_of_strataXstrain"]
-    "requested_outputs": {"type": "list", "schema": {"type": "string"},},
+    requested_outputs=sb.List(str),
     # Constants to multiply the generated outputs by.
     # Eg. {"prevXinfectiousXamongXage_10Xstrain_sensitive": 1.0e5}
-    "multipliers": {"required": False, "type": "dict", "valueschema": {"type": "float"}},
+    multipliers=sb.DictGeneric(str, float),
     # List of compartment, stratification pairs used to generate some more requested outputs
     # Eg. [["infectious", "location"], ["latent", "location"]]
-    "collated_combos": {"type": "list", "schema": {"type": "list", "schema": {"type": "string"}}},
-}
-
-
-def validate_post_process_config(post_process_config: dict):
-    """
-    Ensure post processing config adhers to schema.
-    """
-    validator = Validator(POST_PROCESS_SCHEMA, allow_unknown=False, require_all=True)
-    if not validator.validate(post_process_config):
-        errors = validator.errors
-        raise Exception(errors)
+    collated_combos=sb.List(sb.List(str)),
+)
 
 
 def post_process(model: StratifiedModel, post_process_config: dict, add_defaults=True):

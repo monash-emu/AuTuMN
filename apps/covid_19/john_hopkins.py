@@ -1,11 +1,21 @@
+"""
+Access John Hopkins COVID-19 data from their GitHub repository.
+"""
 import os
 import yaml
+from datetime import datetime
+from urllib.parse import urljoin
+
 import pandas as pd
 from numpy import diff, linspace
 import matplotlib.pyplot as plt
 
 from autumn.db import get_iso3_from_country_name
 from autumn.tool_kit.utils import find_first_index_reaching_cumulative_sum
+from autumn.constants import DATA_PATH
+
+JH_DATA_DIR = os.path.join(DATA_PATH, "john-hopkins")
+GITHUB_BASE_URL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/"
 
 
 def get_all_jh_countries():
@@ -13,13 +23,11 @@ def get_all_jh_countries():
     Determine the list of available countries from the John Hopkins database
     :return: a list of country names
     """
-    file_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "covid_confirmed.csv")
+    download_jh_data()
+    file_path = os.path.join(JH_DATA_DIR, "covid_confirmed.csv")
     data = pd.read_csv(file_path)
     countries = data["Country/Region"].to_list()
-
-    # remove duplicates
     countries = list(dict.fromkeys(countries))
-
     return countries
 
 
@@ -29,9 +37,9 @@ def read_john_hopkins_data_from_csv(variable="confirmed", country="Australia"):
     :param variable: one of "confirmed", "deaths", "recovered"
     :param country: country
     """
-    filename = "covid_" + variable + ".csv"
-    path = os.path.join(os.path.abspath(os.path.dirname(__file__)), filename)
-
+    download_jh_data()
+    filename = f"covid_{variable}.csv"
+    path = os.path.join(JH_DATA_DIR, filename)
     data = pd.read_csv(path)
     data = data[data["Country/Region"] == country]
 
@@ -57,7 +65,8 @@ def plot_jh_data(data):
     Produce a graph for each country
     :param data: a dictionary with the country names as keys and the data as values
     """
-    dir_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "data_graphs")
+    download_jh_data()
+    dir_path = os.path.join(JH_DATA_DIR, "data_graphs")
     if not os.path.exists(dir_path):
         os.mkdir(dir_path)
 
@@ -73,7 +82,8 @@ def plot_jh_data(data):
 
 
 def plot_fitted_model(country):
-    dir_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "data_graphs")
+    download_jh_data()
+    dir_path = os.path.join(JH_DATA_DIR, "data_graphs")
 
     # load the calibrated parameters
     file_path = os.path.join(
@@ -122,6 +132,48 @@ def plot_fitted_model(country):
     plt.savefig(path)
 
 
-#
-# for _country in ['Canada', 'Germany', 'France', 'Australia', 'Italy', 'China', 'Pakistan', 'Spain']:
-#     plot_fitted_model(_country)
+CSVS_TO_READ = [
+    [
+        "who_situation_report.csv",
+        "who_covid_19_situation_reports/who_covid_19_sit_rep_time_series/who_covid_19_sit_rep_time_series.csv",
+    ],
+    [
+        "covid_confirmed.csv",
+        "csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv",
+    ],
+    [
+        "covid_deaths.csv",
+        "csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_deaths_global.csv",
+    ],
+    [
+        "covid_recovered.csv",
+        "csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_recovered_global.csv",
+    ],
+]
+
+
+def download_jh_data():
+    if not os.path.exists(JH_DATA_DIR):
+        os.makedirs(JH_DATA_DIR)
+        download_global_csv(JH_DATA_DIR)
+
+
+def download_global_csv(output_dir: str):
+    """
+    Download John Hopkins COVID data as CSV to output_dir.
+    """
+    for filename, url_path in CSVS_TO_READ:
+        url = urljoin(GITHUB_BASE_URL, url_path)
+        path = os.path.join(output_dir, filename)
+        df = pd.read_csv(url)
+        df.to_csv(path)
+
+
+def download_daily_reports(output_dir: str):
+    dates = pd.date_range(start=datetime.today(), end=datetime(2020, 1, 22))
+    for date in dates:
+        filename = date.strftime("%m-%d-%Y.csv")
+        url = urljoin(GITHUB_BASE_URL, "csse_covid_19_data/csse_covid_19_daily_reports", filename)
+        path = os.path.join(output_dir, filename)
+        df = pd.read_csv(url)
+        df.to_csv(path)

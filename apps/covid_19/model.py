@@ -162,7 +162,7 @@ def build_model(country: str, params: dict, update_params={}):
     )
     flows = add_recovery_flows(flows, model_parameters["n_compartment_repeats"]["late"])
     flows = add_infection_death_flows(
-        flows, model_parameters["n_compartment_repeats"]["infectious"]
+        flows, model_parameters["n_compartment_repeats"]["late"]
     )
 
     # add importation flows if requested

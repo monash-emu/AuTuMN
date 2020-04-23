@@ -21,6 +21,7 @@ from .db import Database
 from .tool_kit.utils import get_data_hash
 from autumn.tool_kit.scenarios import Scenario
 
+from autumn.tb_model.outputs import _unpivot_outputs
 import yaml
 
 logger = logging.getLogger("pymc3")
@@ -168,6 +169,14 @@ class Calibration:
             database_name=self.output_db_path,
             append=True,
             scenario=scenario_index
+        )
+        pbi_outputs = _unpivot_outputs(_model)
+        store_tb_database(
+            pbi_outputs,
+            table_name='pbi_scenario_' + str(scenario_index),
+            database_name=self.output_db_path,
+            scenario=scenario_index,
+            run_idx=self.iter_num
         )
 
     def store_mcmc_iteration_info(self, proposed_params, proposed_loglike, accept, i_run):

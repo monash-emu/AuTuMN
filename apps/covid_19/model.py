@@ -96,7 +96,14 @@ def build_model(country: str, params: dict, update_params={}):
         model_parameters["within_" + compartment] *= float(
             model_parameters["n_compartment_repeats"][compartment]
         )
-    model_parameters["to_infectious"] = model_parameters["within_presympt"]
+    for state in ["hospital_early", "icu_early"]:
+        model_parameters["within_" + state] *= float(
+            model_parameters["n_compartment_repeats"][Compartment.INFECTIOUS]
+        )
+    for state in ["hospital_late", "icu_late"]:
+        model_parameters["within_" + state] *= float(
+            model_parameters["n_compartment_repeats"][Compartment.LATE_INFECTIOUS]
+        )
 
     # Replicate compartments - all repeated compartments are replicated the same number of times, which could be changed
     total_infectious_times = sum(

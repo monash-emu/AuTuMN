@@ -134,7 +134,7 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
     ) = find_rates_and_complements_from_ifr(
         rel_props["hospital_death"],
         model_parameters["n_compartment_repeats"]["late"],
-        [model_parameters["within_hospital"]] * 16,
+        [model_parameters["within_hospital_late"]] * 16,
     )
     (
         progression_death_rates["icu_death"],
@@ -142,7 +142,7 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
     ) = find_rates_and_complements_from_ifr(
         rel_props["icu_death"],
         model_parameters["n_compartment_repeats"]["late"],
-        [model_parameters["within_icu"]] * 16,
+        [model_parameters["within_icu_late"]] * 16,
     )
 
     # Progression rates into the infectious compartment(s)
@@ -208,6 +208,15 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
     for stratum in strata_to_implement:
         if stratum + "_infect_multiplier" in model_parameters:
             strata_infectiousness[stratum] = model_parameters[stratum + "_infect_multiplier"]
+
+    stratification_adjustments.update(
+        {"within_infectious":
+             {"hospital_non_icuW":
+                  model_parameters['within_hospital_early'],
+              "icuW":
+                  model_parameters['within_icu_early']},
+         }
+    )
 
     # Stratify the model using the SUMMER stratification function
     _covid_model.stratify(

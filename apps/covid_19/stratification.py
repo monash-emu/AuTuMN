@@ -94,24 +94,22 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
     abs_props["icu_death"], abs_props["hospital_death"] = [], []
     for i_agegroup in range(len(model_parameters["all_stratifications"]["agegroup"])):
 
+        # Find the target absolute ICU mortality and the amount left over from IFRs to go to hospital, if positive
+        target_icu_abs_mort = \
+            abs_props["icu"][i_agegroup] * \
+            model_parameters["icu_mortality_prop"]
+        left_over_mort = \
+            model_parameters["adjusted_infection_fatality_props"][i_agegroup] - \
+            target_icu_abs_mort
+
         # If some IFR will be left over for the hospitalised
-        if (
-            abs_props["icu"][i_agegroup] * model_parameters["icu_mortality_prop"]
-            < model_parameters["adjusted_infection_fatality_props"][i_agegroup]
-        ):
-            abs_props["icu_death"].append(
-                abs_props["icu"][i_agegroup] * model_parameters["icu_mortality_prop"]
-            )
-            abs_props["hospital_death"].append(
-                model_parameters["adjusted_infection_fatality_props"][i_agegroup]
-                - abs_props["icu"][i_agegroup] * model_parameters["icu_mortality_prop"]
-            )
+        if left_over_mort > 0.:
+            abs_props["icu_death"].append(target_icu_abs_mort)
+            abs_props["hospital_death"].append(left_over_mort)
 
         # Otherwise if all IFR taken up by ICU
         else:
-            abs_props["icu_death"].append(
-                model_parameters["adjusted_infection_fatality_props"][i_agegroup]
-            )
+            abs_props["icu_death"].append(model_parameters["adjusted_infection_fatality_props"][i_agegroup])
             abs_props["hospital_death"].append(0.0)
 
     # CFR for non-ICU hospitalised patients

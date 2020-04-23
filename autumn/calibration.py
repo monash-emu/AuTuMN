@@ -66,6 +66,7 @@ class Calibration:
         chain_index,
         model_parameters={},
         start_time_range=None,
+        record_rejected_outputs=False
     ):
 
         self.model_name = model_name
@@ -73,7 +74,7 @@ class Calibration:
         self.model_parameters = model_parameters
         self.scenarios = []
         self.initialise_scenario_list()
-
+        self.record_rejected_outputs = record_rejected_outputs
         self.start_time_range = (
             start_time_range  # if specified, we allow start time to vary to achieve the best fit
         )
@@ -143,21 +144,51 @@ class Calibration:
             multipliers=self.multipliers,
         )
 
+    def store_model_outputs(self, scenario_index):
+        """
+        Record the model outputs in the database
+        """
+        _model = self.scenarios[scenario_index].model
         out_df = pd.DataFrame(
-            self.scenarios[0].model.outputs, columns=self.scenarios[0].model.compartment_names
+            _model.outputs, columns=_model.compartment_names
         )
-        derived_output_df = pd.DataFrame.from_dict(self.scenarios[0].model.derived_outputs)
+        derived_output_df = pd.DataFrame.from_dict(_model.derived_outputs)
         store_tb_database(
             derived_output_df,
             table_name="derived_outputs",
             run_idx=self.iter_num,
             database_name=self.output_db_path,
             append=True,
+            scenario=scenario_index
         )
         store_tb_database(
             out_df,
             run_idx=self.iter_num,
-            times=self.scenarios[0].model.times,
+            times=_model.times,
+            database_name=self.output_db_path,
+            append=True,
+            scenario=scenario_index
+        )
+
+    def store_mcmc_iteration_info(self, proposed_params, proposed_loglike, accept, i_run):
+        """
+        Records the MCMC iteration details
+        :param proposed_params: the current parameter values
+        :param proposed_loglike: the current loglikelihood
+        :param accept: whether the iteration was accepted or not
+        :param i_run: the iteration number
+        """
+        mcmc_run_dict = {k: v for k, v in zip(self.param_list, proposed_params)}
+        mcmc_run_dict["loglikelihood"] = proposed_loglike
+        mcmc_run_dict["accept"] = 1 if accept else 0
+        mcmc_run_colnames = self.param_list.copy()
+        mcmc_run_colnames.append("loglikelihood")
+        mcmc_run_colnames.append("accept")
+        mcmc_run_df = pd.DataFrame(mcmc_run_dict, columns=mcmc_run_colnames, index=[i_run])
+        store_tb_database(
+            mcmc_run_df,
+            table_name="mcmc_run",
+            run_idx=i_run,
             database_name=self.output_db_path,
             append=True,
         )
@@ -202,38 +233,7 @@ class Calibration:
             baseline_model = copy.deepcopy(self.scenarios[0].model)
             self.scenarios[scenario_idx].run(base_model=baseline_model)
 
-            scenario_model = self.scenarios[scenario_idx].model
-
-            # Produce scenario outputs
-            scenario_pp = copy.deepcopy(self.post_processing)
-            scenario_pp.model = scenario_model
-            scenario_pp.generated_outputs = {}
-            scenario_pp.generate_outputs()
-            scenario_pp.derived_outputs = (
-                scenario_model.derived_outputs
-                if hasattr(scenario_model, "derived_outputs")
-                else {}
-            )
-
-            # Store scenario outputs into database
-            out_df = pd.DataFrame(scenario_model.outputs, columns=scenario_model.compartment_names)
-            derived_output_df = pd.DataFrame.from_dict(scenario_model.derived_outputs)
-            store_tb_database(
-                derived_output_df,
-                table_name="derived_outputs",
-                run_idx=self.iter_num,
-                scenario=scenario_idx,
-                database_name=self.output_db_path,
-                append=True,
-            )
-            store_tb_database(
-                out_df,
-                run_idx=self.iter_num,
-                scenario=scenario_idx,
-                times=scenario_model.times,
-                database_name=self.output_db_path,
-                append=True,
-            )
+            self.store_model_outputs(scenario_idx)
 
     def loglikelihood(self, params, to_return="best_ll"):
         """
@@ -458,21 +458,11 @@ class Calibration:
 
                 self.update_mcmc_trace(last_accepted_params, last_acceptance_loglike)
 
-                # Here we should store the "accept" variable into the output database
-                mcmc_run_dict = {k: v for k, v in zip(self.param_list, proposed_params)}
-                mcmc_run_dict["loglikelihood"] = proposed_loglike
-                mcmc_run_dict["accept"] = 1 if accept else 0
-                mcmc_run_colnames = self.param_list.copy()
-                mcmc_run_colnames.append("loglikelihood")
-                mcmc_run_colnames.append("accept")
-                mcmc_run_df = pd.DataFrame(mcmc_run_dict, columns=mcmc_run_colnames, index=[i_run])
-                store_tb_database(
-                    mcmc_run_df,
-                    table_name="mcmc_run",
-                    run_idx=i_run,
-                    database_name=self.output_db_path,
-                    append=True,
-                )
+                # store model outputs
+                if accept or self.record_rejected_outputs:
+                    self.store_model_outputs(0)
+
+                self.store_mcmc_iteration_info(proposed_params, proposed_loglike, accept, i_run)
 
                 # Run intervention scenarios if accepted run
                 if accept:

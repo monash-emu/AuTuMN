@@ -66,7 +66,7 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
     compartments_to_split = [
         comp
         for comp in compartments
-        if comp.startswith(Compartment.INFECTIOUS) or comp.startswith(Compartment.LATE_INFECTIOUS)
+        if comp.startswith(Compartment.EARLY_INFECTIOUS) or comp.startswith(Compartment.LATE_INFECTIOUS)
     ]
 
     # Repeat the 5-year age-specific CFRs for all but the top age bracket, and average the last two for the last one
@@ -133,16 +133,16 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
         progression_death_rates["hospital_progression"],
     ) = find_rates_and_complements_from_ifr(
         rel_props["hospital_death"],
-        model_parameters["n_compartment_repeats"]["late"],
-        [model_parameters["within_hospital"]] * 16,
+        model_parameters["n_compartment_repeats"][Compartment.LATE_INFECTIOUS],
+        [model_parameters["within_hospital_late"]] * 16,
     )
     (
         progression_death_rates["icu_death"],
         progression_death_rates["icu_progression"],
     ) = find_rates_and_complements_from_ifr(
         rel_props["icu_death"],
-        model_parameters["n_compartment_repeats"]["late"],
-        [model_parameters["within_icu"]] * 16,
+        model_parameters["n_compartment_repeats"][Compartment.LATE_INFECTIOUS],
+        [model_parameters["within_icu_late"]] * 16,
     )
 
     # Progression rates into the infectious compartment(s)
@@ -208,6 +208,15 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
     for stratum in strata_to_implement:
         if stratum + "_infect_multiplier" in model_parameters:
             strata_infectiousness[stratum] = model_parameters[stratum + "_infect_multiplier"]
+
+    stratification_adjustments.update(
+        {"within_infectious":
+             {"hospital_non_icuW":
+                  model_parameters['within_hospital_early'],
+              "icuW":
+                  model_parameters['within_icu_early']},
+         }
+    )
 
     # Stratify the model using the SUMMER stratification function
     _covid_model.stratify(

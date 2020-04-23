@@ -23,8 +23,10 @@ default:
     presympt: 0.5
     infectious: 2.
     late: 5.68
-    hospital: 8.
-    icu: 20.
+    hospital_early: 5.
+    hospital_late: 8.
+    icu_early: 10.
+    icu_late: 10.
 
   # Stratification-related requests
   stratify_by:

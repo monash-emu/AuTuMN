@@ -29,7 +29,7 @@ LATENCY_FLOWS = [
         "type": Flow.STANDARD,
         "parameter": "early_progression",
         "origin": Compartment.EARLY_LATENT,
-        "to": Compartment.INFECTIOUS,
+        "to": Compartment.EARLY_INFECTIOUS,
     },
     {
         "type": Flow.STANDARD,
@@ -41,7 +41,7 @@ LATENCY_FLOWS = [
         "type": Flow.STANDARD,
         "parameter": "late_progression",
         "origin": Compartment.LATE_LATENT,
-        "to": Compartment.INFECTIOUS,
+        "to": Compartment.EARLY_INFECTIOUS,
     },
 ]
 
@@ -49,10 +49,10 @@ NATURAL_HISTORY_FLOWS = [
     {
         "type": Flow.STANDARD,
         "parameter": "recovery",
-        "origin": Compartment.INFECTIOUS,
+        "origin": Compartment.EARLY_INFECTIOUS,
         "to": Compartment.RECOVERED,
     },
-    {"type": Flow.COMPARTMENT_DEATH, "parameter": "infect_death", "origin": Compartment.INFECTIOUS},
+    {"type": Flow.COMPARTMENT_DEATH, "parameter": "infect_death", "origin": Compartment.EARLY_INFECTIOUS},
 ]
 
 DENSITY_INFECTION_FLOWS = [
@@ -80,7 +80,7 @@ ACF_FLOWS = [
     {
         "type": Flow.STANDARD,
         "parameter": "acf_rate",
-        "origin": Compartment.INFECTIOUS,
+        "origin": Compartment.EARLY_INFECTIOUS,
         "to": Compartment.ON_TREATMENT,
     }
 ]
@@ -95,7 +95,7 @@ ACF_LTBI_FLOWS = [
 ]
 
 CASE_DETECTION_FLOWS = [
-    {"type": Flow.STANDARD, "parameter": "case_detection", "origin": Compartment.INFECTIOUS,}
+    {"type": Flow.STANDARD, "parameter": "case_detection", "origin": Compartment.EARLY_INFECTIOUS, }
 ]
 
 LATENCY_REINFECTION = [
@@ -118,7 +118,7 @@ TREATMENT_FLOWS = [
         "type": Flow.STANDARD,
         "parameter": "treatment_nonsuccess",
         "origin": Compartment.ON_TREATMENT,
-        "to": Compartment.INFECTIOUS,
+        "to": Compartment.EARLY_INFECTIOUS,
     },
 ]
 
@@ -212,13 +212,13 @@ def get_incidence_connections():
     return {
         "incidence_early": {
             "origin": Compartment.EARLY_LATENT,
-            "to": Compartment.INFECTIOUS,
+            "to": Compartment.EARLY_INFECTIOUS,
             "origin_condition": "",
             "to_condition": "",
         },
         "incidence_late": {
             "origin": Compartment.LATE_LATENT,
-            "to": Compartment.INFECTIOUS,
+            "to": Compartment.EARLY_INFECTIOUS,
             "origin_condition": "",
             "to_condition": "",
         },
@@ -228,7 +228,7 @@ def get_incidence_connections():
 def get_notifications_connections():
     return {
         "notifications": {
-            "origin": Compartment.INFECTIOUS,
+            "origin": Compartment.EARLY_INFECTIOUS,
             "to": Compartment.ON_TREATMENT,
             "origin_condition": "",
             "to_condition": "",

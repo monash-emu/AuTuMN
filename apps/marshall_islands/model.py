@@ -58,12 +58,12 @@ def build_model(params: dict, update_params={}):
         Compartment.SUSCEPTIBLE,
         Compartment.EARLY_LATENT,
         Compartment.LATE_LATENT,
-        Compartment.INFECTIOUS,
+        Compartment.EARLY_INFECTIOUS,
         Compartment.ON_TREATMENT,
         Compartment.RECOVERED,
         # Compartment.LTBI_TREATED,
     ]
-    init_pop = {Compartment.INFECTIOUS: 10, Compartment.LATE_LATENT: 100}
+    init_pop = {Compartment.EARLY_INFECTIOUS: 10, Compartment.LATE_LATENT: 100}
 
     model_parameters = params
     model_parameters.update(update_params)

@@ -8,8 +8,8 @@ from summer.constants import Compartment, Flow, BirthApproach, Stratification, I
 
 MODEL_KWARGS = {
     "times": [2000, 2001, 2002, 2003, 2004, 2005],
-    "compartment_types": [Compartment.SUSCEPTIBLE, Compartment.INFECTIOUS],
-    "initial_conditions": {Compartment.INFECTIOUS: 10},
+    "compartment_types": [Compartment.SUSCEPTIBLE, Compartment.EARLY_INFECTIOUS],
+    "initial_conditions": {Compartment.EARLY_INFECTIOUS: 10},
     "parameters": {},
     "requested_flows": [],
     "starting_population": 1000,
@@ -26,7 +26,7 @@ PARAM_VALS = [
             {
                 "type": Flow.STANDARD,
                 "parameter": "recover_rate",
-                "origin": Compartment.INFECTIOUS,
+                "origin": Compartment.EARLY_INFECTIOUS,
                 "to": Compartment.SUSCEPTIBLE,
             }
         ],
@@ -40,7 +40,7 @@ PARAM_VALS = [
             {
                 "type": Flow.CUSTOM,
                 "parameter": "recover_rate",
-                "origin": Compartment.INFECTIOUS,
+                "origin": Compartment.EARLY_INFECTIOUS,
                 "to": Compartment.SUSCEPTIBLE,
                 # Add a function that halves the rate, but uses total population.
                 "function": lambda model, flow_idx, time, compartments: 0.5 * sum(compartments),
@@ -58,7 +58,7 @@ PARAM_VALS = [
                 "type": Flow.INFECTION_FREQUENCY,
                 "parameter": "contact_rate",
                 "origin": Compartment.SUSCEPTIBLE,
-                "to": Compartment.INFECTIOUS,
+                "to": Compartment.EARLY_INFECTIOUS,
             }
         ],
         {"contact_rate": 10},
@@ -73,7 +73,7 @@ PARAM_VALS = [
                 "type": Flow.INFECTION_DENSITY,
                 "parameter": "contact_rate",
                 "origin": Compartment.SUSCEPTIBLE,
-                "to": Compartment.INFECTIOUS,
+                "to": Compartment.EARLY_INFECTIOUS,
             }
         ],
         {"contact_rate": 0.01},
@@ -110,7 +110,7 @@ PARAM_VALS = [
             {
                 "type": Flow.COMPARTMENT_DEATH,
                 "parameter": "infect_death",
-                "origin": Compartment.INFECTIOUS,
+                "origin": Compartment.EARLY_INFECTIOUS,
             }
         ],
         {"infect_death": 0.5},

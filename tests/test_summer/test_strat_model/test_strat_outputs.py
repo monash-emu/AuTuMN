@@ -16,7 +16,7 @@ def test_strat_model__with_age__expect_ageing():
     pop = 1000
     model = StratifiedModel(
         times=_get_integration_times(2000, 2005, 1),
-        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.INFECTIOUS],
+        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.EARLY_INFECTIOUS],
         initial_conditions={Compartment.SUSCEPTIBLE: pop},
         parameters={},
         requested_flows=[],
@@ -52,7 +52,7 @@ def test_strat_model__with_age_and_starting_proportion__expect_ageing():
     pop = 1000
     model = StratifiedModel(
         times=_get_integration_times(2000, 2005, 1),
-        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.INFECTIOUS],
+        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.EARLY_INFECTIOUS],
         initial_conditions={Compartment.SUSCEPTIBLE: pop},
         parameters={},
         requested_flows=[],
@@ -88,7 +88,7 @@ def test_strat_model__with_locations__expect_no_change():
     pop = 1000
     model = StratifiedModel(
         times=_get_integration_times(2000, 2005, 1),
-        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.INFECTIOUS],
+        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.EARLY_INFECTIOUS],
         initial_conditions={Compartment.SUSCEPTIBLE: pop},
         parameters={},
         requested_flows=[],
@@ -124,15 +124,15 @@ def test_strat_model__with_locations_and_mixing__expect_varied_transmission():
     pop = 1000
     model = StratifiedModel(
         times=_get_integration_times(2000, 2005, 1),
-        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.INFECTIOUS],
-        initial_conditions={Compartment.INFECTIOUS: 100},
+        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.EARLY_INFECTIOUS],
+        initial_conditions={Compartment.EARLY_INFECTIOUS: 100},
         parameters={"contact_rate": 3},
         requested_flows=[
             {
                 "type": Flow.INFECTION_FREQUENCY,
                 "parameter": "contact_rate",
                 "origin": Compartment.SUSCEPTIBLE,
-                "to": Compartment.INFECTIOUS,
+                "to": Compartment.EARLY_INFECTIOUS,
             }
         ],
         starting_population=pop,

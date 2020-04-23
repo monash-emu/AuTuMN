@@ -68,7 +68,7 @@ def build_model(country: str, params: dict, update_params={}):
         Compartment.RECOVERED,
         Compartment.EXPOSED,
         Compartment.PRESYMPTOMATIC,
-        Compartment.INFECTIOUS,
+        Compartment.EARLY_INFECTIOUS,
         Compartment.LATE_INFECTIOUS,
     ]
 
@@ -83,7 +83,7 @@ def build_model(country: str, params: dict, update_params={}):
     is_infectious = {
         Compartment.EXPOSED: False,
         Compartment.PRESYMPTOMATIC: True,
-        Compartment.INFECTIOUS: True,
+        Compartment.EARLY_INFECTIOUS: True,
         Compartment.LATE_INFECTIOUS: True,
     }
 
@@ -98,7 +98,7 @@ def build_model(country: str, params: dict, update_params={}):
         )
     for state in ["hospital_early", "icu_early"]:
         model_parameters["within_" + state] *= float(
-            model_parameters["n_compartment_repeats"][Compartment.INFECTIOUS]
+            model_parameters["n_compartment_repeats"][Compartment.EARLY_INFECTIOUS]
         )
     for state in ["hospital_late", "icu_late"]:
         model_parameters["within_" + state] *= float(
@@ -153,23 +153,23 @@ def build_model(country: str, params: dict, update_params={}):
     model_parameters["to_infectious"] = model_parameters["within_presympt"]
     flows = add_transition_flows(
         flows,
-        model_parameters["n_compartment_repeats"]["presympt"],
-        model_parameters["n_compartment_repeats"]["infectious"],
+        model_parameters["n_compartment_repeats"][Compartment.PRESYMPTOMATIC],
+        model_parameters["n_compartment_repeats"][Compartment.EARLY_INFECTIOUS],
         Compartment.PRESYMPTOMATIC,
-        Compartment.INFECTIOUS,
+        Compartment.EARLY_INFECTIOUS,
         "to_infectious",
     )
     flows = add_transition_flows(
         flows,
-        model_parameters["n_compartment_repeats"]["infectious"],
-        model_parameters["n_compartment_repeats"]["late"],
-        Compartment.INFECTIOUS,
+        model_parameters["n_compartment_repeats"][Compartment.EARLY_INFECTIOUS],
+        model_parameters["n_compartment_repeats"][Compartment.LATE_INFECTIOUS],
+        Compartment.EARLY_INFECTIOUS,
         Compartment.LATE_INFECTIOUS,
-        "within_infectious",
+        "within_" + Compartment.EARLY_INFECTIOUS,
     )
-    flows = add_recovery_flows(flows, model_parameters["n_compartment_repeats"]["late"])
+    flows = add_recovery_flows(flows, model_parameters["n_compartment_repeats"][Compartment.LATE_INFECTIOUS])
     flows = add_infection_death_flows(
-        flows, model_parameters["n_compartment_repeats"]["late"]
+        flows, model_parameters["n_compartment_repeats"][Compartment.LATE_INFECTIOUS]
     )
 
     # add importation flows if requested
@@ -177,7 +177,7 @@ def build_model(country: str, params: dict, update_params={}):
         flows = add_transition_flows(
             flows,
             1,
-            model_parameters["n_compartment_repeats"]["exposed"],
+            model_parameters["n_compartment_repeats"][Compartment.EXPOSED],
             Compartment.SUSCEPTIBLE,
             Compartment.EXPOSED,
             "importation_rate",
@@ -238,7 +238,8 @@ def build_model(country: str, params: dict, update_params={}):
         _covid_model.compartment_names
     )
 
-    _covid_model.individual_infectiousness_adjustments = [[["late", "clinical_sympt_isolate"], 0.0]]
+    _covid_model.individual_infectiousness_adjustments = \
+        [[[Compartment.LATE_INFECTIOUS, "clinical_sympt_isolate"], 0.0]]
 
     # Do mixing matrix stuff
     mixing_instructions = model_parameters.get("mixing")

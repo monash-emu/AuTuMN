@@ -6,12 +6,14 @@ from autumn.constants import Compartment
 
 def find_incidence_outputs(parameters):
     last_presympt = (
-        "presympt_" + str(parameters["n_compartment_repeats"]["presympt"])
-        if parameters["n_compartment_repeats"]["presympt"] > 1
-        else "presympt"
+        "presympt_" + str(parameters["n_compartment_repeats"][Compartment.PRESYMPTOMATIC])
+        if parameters["n_compartment_repeats"][Compartment.PRESYMPTOMATIC] > 1
+        else Compartment.PRESYMPTOMATIC
     )
     first_infectious = (
-        "infectious_1" if parameters["n_compartment_repeats"]["infectious"] > 1 else "infectious"
+        Compartment.EARLY_INFECTIOUS + "_1" if
+        parameters["n_compartment_repeats"][Compartment.EARLY_INFECTIOUS] > 1 else
+        Compartment.EARLY_INFECTIOUS
     )
     return {
         "incidence": {
@@ -30,15 +32,15 @@ def create_fully_stratified_incidence_covid(requested_stratifications, strata_di
     out_connections = {}
     origin_compartment = (
         Compartment.PRESYMPTOMATIC
-        if model_params["n_compartment_repeats"]["presympt"] < 2
+        if model_params["n_compartment_repeats"][Compartment.PRESYMPTOMATIC] < 2
         else Compartment.PRESYMPTOMATIC
         + "_"
-        + str(model_params["n_compartment_repeats"]["presympt"])
+        + str(model_params["n_compartment_repeats"][Compartment.PRESYMPTOMATIC])
     )
     to_compartment = (
-        Compartment.INFECTIOUS
-        if model_params["n_compartment_repeats"]["infectious"] < 2
-        else Compartment.INFECTIOUS + "_1"
+        Compartment.EARLY_INFECTIOUS
+        if model_params["n_compartment_repeats"][Compartment.EARLY_INFECTIOUS] < 2
+        else Compartment.EARLY_INFECTIOUS + "_1"
     )
 
     all_tags_by_stratification = []

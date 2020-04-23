@@ -157,7 +157,7 @@ class StratifiedModel(EpiModel):
         initial_conditions,
         parameters,
         requested_flows,
-        infectious_compartment=(Compartment.INFECTIOUS,),
+        infectious_compartment=(Compartment.EARLY_INFECTIOUS,),
         birth_approach=BirthApproach.NO_BIRTH,
         verbose=False,
         reporting_sigfigs=4,

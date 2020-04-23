@@ -66,7 +66,7 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
     compartments_to_split = [
         comp
         for comp in compartments
-        if comp.startswith(Compartment.INFECTIOUS) or comp.startswith(Compartment.LATE_INFECTIOUS)
+        if comp.startswith(Compartment.EARLY_INFECTIOUS) or comp.startswith(Compartment.LATE_INFECTIOUS)
     ]
 
     # Repeat the 5-year age-specific CFRs for all but the top age bracket, and average the last two for the last one
@@ -133,7 +133,7 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
         progression_death_rates["hospital_progression"],
     ) = find_rates_and_complements_from_ifr(
         rel_props["hospital_death"],
-        model_parameters["n_compartment_repeats"]["late"],
+        model_parameters["n_compartment_repeats"][Compartment.LATE_INFECTIOUS],
         [model_parameters["within_hospital_late"]] * 16,
     )
     (
@@ -141,7 +141,7 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
         progression_death_rates["icu_progression"],
     ) = find_rates_and_complements_from_ifr(
         rel_props["icu_death"],
-        model_parameters["n_compartment_repeats"]["late"],
+        model_parameters["n_compartment_repeats"][Compartment.LATE_INFECTIOUS],
         [model_parameters["within_icu_late"]] * 16,
     )
 

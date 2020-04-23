@@ -30,7 +30,7 @@ def run_calibration_chain(max_seconds: int, run_id: int):
         TARGET_OUTPUTS,
         MULTIPLIERS,
         run_id,
-        model_parameters=params["default"],
+        model_parameters=params,
     )
     print("Starting calibration.")
     calib.run_fitting_algorithm(

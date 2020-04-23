@@ -64,8 +64,8 @@ def add_infection_death_flows(working_flows, n_infectious):
         working_flows.append({
             'type': Flow.COMPARTMENT_DEATH,
             'parameter': 'infect_death',
-            'origin': Compartment.INFECTIOUS + '_' + str(i_comp + 1) if
+            'origin': Compartment.LATE_INFECTIOUS + '_' + str(i_comp + 1) if
             n_infectious > 1 else
-            Compartment.INFECTIOUS
+            Compartment.LATE_INFECTIOUS
         })
     return working_flows

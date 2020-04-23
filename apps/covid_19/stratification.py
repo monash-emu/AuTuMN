@@ -32,7 +32,7 @@ def stratify_by_age(
     starting_props = {i_break: prop for i_break, prop in zip(age_strata, list_of_starting_pops)}
     parameter_splits = split_parameter({}, "to_infectious", age_strata)
     parameter_splits = split_parameter(parameter_splits, "infect_death", age_strata)
-    parameter_splits = split_parameter(parameter_splits, "within_infectious", age_strata)
+    parameter_splits = split_parameter(parameter_splits, "within_late", age_strata)
     model_to_stratify.stratify(
         "agegroup",
         [int(i_break) for i_break in age_strata],
@@ -133,7 +133,7 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
         progression_death_rates["hospital_progression"],
     ) = find_rates_and_complements_from_ifr(
         rel_props["hospital_death"],
-        model_parameters["n_compartment_repeats"]["infectious"],
+        model_parameters["n_compartment_repeats"]["late"],
         [model_parameters["within_hospital"]] * 16,
     )
     (
@@ -141,7 +141,7 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
         progression_death_rates["icu_progression"],
     ) = find_rates_and_complements_from_ifr(
         rel_props["icu_death"],
-        model_parameters["n_compartment_repeats"]["infectious"],
+        model_parameters["n_compartment_repeats"]["late"],
         [model_parameters["within_icu"]] * 16,
     )
 
@@ -177,18 +177,18 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
 
     # Death and non-death progression between infectious compartments towards the recovered compartment
     if len(strata_to_implement) > 2:
-        within_infectious_overwrites = [progression_death_rates["hospital_progression"]]
+        within_late_overwrites = [progression_death_rates["hospital_progression"]]
         infect_death_overwrites = [progression_death_rates["hospital_death"]]
         if len(strata_to_implement) > 3:
-            within_infectious_overwrites += [progression_death_rates["icu_progression"]]
+            within_late_overwrites += [progression_death_rates["icu_progression"]]
             infect_death_overwrites += [progression_death_rates["icu_death"]]
         stratification_adjustments.update(
             adjust_upstream_stratified_parameter(
-                "within_infectious",
+                "within_late",
                 strata_to_implement[3:],
                 "agegroup",
                 model_parameters["all_stratifications"]["agegroup"],
-                within_infectious_overwrites,
+                within_late_overwrites,
                 overwrite=True,
             )
         )

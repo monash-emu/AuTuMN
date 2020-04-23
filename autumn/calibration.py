@@ -19,6 +19,7 @@ from . import constants
 from .tb_model import store_tb_database
 from .db import Database
 from .tool_kit.utils import get_data_hash
+from autumn.tool_kit.scenarios import Scenario
 
 import yaml
 
@@ -63,19 +64,20 @@ class Calibration:
         targeted_outputs,
         multipliers,
         chain_index,
-        scenario_params={},
-        scenario_start_time=None,
         model_parameters={},
         start_time_range=None,
     ):
+
         self.model_name = model_name
         self.model_builder = model_builder  # a function that builds a new model without running it
         self.model_parameters = model_parameters
+        self.scenarios = []
+        self.initialise_scenario_list()
+
         self.start_time_range = (
             start_time_range  # if specified, we allow start time to vary to achieve the best fit
         )
         self.best_start_time = None
-        self.running_model = None  # a model that will be run during calibration
         self.post_processing = None  # a PostProcessing object containing the required outputs of a model that has been run
         self.priors = priors  # a list of dictionaries. Each dictionary describes the prior distribution for a parameter
         self.param_list = [self.priors[i]["param_name"] for i in range(len(self.priors))]
@@ -88,7 +90,8 @@ class Calibration:
         # Setup output database directory
         project_dir = os.path.join(constants.DATA_PATH, model_name)
         run_hash = get_data_hash(model_name, priors, targeted_outputs, multipliers)
-        out_db_dir = os.path.join(project_dir, f"calibration-{run_hash}")
+        timestamp = datetime.now().strftime("%d-%m-%Y--%H-%M-%S")
+        out_db_dir = os.path.join(project_dir, f"calibration-{run_hash}-{timestamp}")
         os.makedirs(out_db_dir, exist_ok=True)
         db_name = f"outputs_calibration_chain_{self.chain_index}.db"
         self.output_db_path = os.path.join(out_db_dir, db_name)
@@ -109,8 +112,13 @@ class Calibration:
 
         self.evaluated_params_ll = []  # list of tuples:  [(theta_0, ll_0), (theta_1, ll_1), ...]
 
-        self.scenario_params = scenario_params
-        self.scenario_start_time = scenario_start_time
+    def initialise_scenario_list(self):
+        base_scenario = Scenario(self.model_builder, 0, copy.deepcopy(self.model_parameters))
+        self.scenarios = [base_scenario]
+        if 'scenarios' in self.model_parameters:
+            for scenario_index in [sc_i for sc_i in self.model_parameters['scenarios'] if int(sc_i) > 0]:
+                scenario = Scenario(self.model_builder, scenario_index, copy.deepcopy(self.model_parameters))
+                self.scenarios.append(scenario)
 
     def update_post_processing(self):
         """
@@ -129,16 +137,16 @@ class Calibration:
                 requested_times[_output["output_key"]] = _output["years"]
 
         self.post_processing = post_proc.PostProcessing(
-            self.running_model,
+            self.scenarios[0].model,
             requested_outputs=requested_outputs,
             requested_times=requested_times,
             multipliers=self.multipliers,
         )
 
         out_df = pd.DataFrame(
-            self.running_model.outputs, columns=self.running_model.compartment_names
+            self.scenarios[0].model.outputs, columns=self.scenarios[0].model.compartment_names
         )
-        derived_output_df = pd.DataFrame.from_dict(self.running_model.derived_outputs)
+        derived_output_df = pd.DataFrame.from_dict(self.scenarios[0].model.derived_outputs)
         store_tb_database(
             derived_output_df,
             table_name="derived_outputs",
@@ -149,7 +157,7 @@ class Calibration:
         store_tb_database(
             out_df,
             run_idx=self.iter_num,
-            times=self.running_model.times,
+            times=self.scenarios[0].model.times,
             database_name=self.output_db_path,
             append=True,
         )
@@ -163,8 +171,8 @@ class Calibration:
         for i, param_name in enumerate(self.param_list):
             update_params[param_name] = params[i]
 
-        self.running_model = self.model_builder(self.model_parameters, update_params)
-        self.running_model.run_model()
+        self.scenarios[0].params['default'].update(update_params)
+        self.scenarios[0].run()
         self.update_post_processing()
 
     def run_extra_scenarios_with_params(self, params):
@@ -172,49 +180,52 @@ class Calibration:
         Run intervention scenarios after accepting a baseline run
         :param params: list of all current MCMC parameter values
         """
-        for scenario_idx, scenario_params in self.scenario_params.items():
+        for scenario_idx, scenario_params in self.model_parameters['scenarios'].items():
             if scenario_idx == 0:
                 continue
-            scenario_params["start_time"] = self.scenario_start_time
+            scenario_params["start_time"] = self.model_parameters['scenario_start_time']
 
             # Potential update of scenario params if these are among the MCMC params
             updated_scenario_params = copy.copy(scenario_params)
             for param_name in scenario_params.keys():
                 if param_name in self.param_list:
                     param_index = self.param_list.index(param_name)
-                    updated_scenario_params[param_index] = params[param_index]
+                    updated_scenario_params[param_name] = params[param_index]
+
+            # update default params
+            self.scenarios[scenario_idx].params['default'] = copy.deepcopy(self.scenarios[0].params['default'])
+
+            # update scenario params
+            self.scenarios[scenario_idx].params['scenarios'][scenario_idx].update(updated_scenario_params)
 
             # Run scenario
-            # FIXME: Matt broke this
-            assert False, "Matt broke this"
-            # scenario_model = initialise_scenario_run(self.running_model, updated_scenario_params,
-            #  self.model_builder)
-            # scenario_model = change_mixing_matrix_for_scenario(scenario_model, updated_scenario_params)
-            # scenario_model.run_model()
+            baseline_model = copy.deepcopy(self.scenarios[0].model)
+            self.scenarios[scenario_idx].run(base_model=baseline_model)
+
+            scenario_model = self.scenarios[scenario_idx].model
 
             # Produce scenario outputs
             scenario_pp = copy.deepcopy(self.post_processing)
             scenario_pp.model = scenario_model
             scenario_pp.generated_outputs = {}
-            ########### TIMES
             scenario_pp.generate_outputs()
             scenario_pp.derived_outputs = (
                 scenario_model.derived_outputs
-                if hasattr(self.running_model, "derived_outputs")
+                if hasattr(scenario_model, "derived_outputs")
                 else {}
             )
 
             # Store scenario outputs into database
             out_df = pd.DataFrame(scenario_model.outputs, columns=scenario_model.compartment_names)
-            # derived_output_df = pd.DataFrame.from_dict(scenario_model.derived_outputs)
-            # store_tb_database(
-            #     derived_output_df,
-            #     table_name="derived_outputs",
-            #     run_idx=self.iter_num,
-            #     scenario=scenario_idx,
-            #     database_name=self.output_db_path,
-            #     append=True,
-            # )
+            derived_output_df = pd.DataFrame.from_dict(scenario_model.derived_outputs)
+            store_tb_database(
+                derived_output_df,
+                table_name="derived_outputs",
+                run_idx=self.iter_num,
+                scenario=scenario_idx,
+                database_name=self.output_db_path,
+                append=True,
+            )
             store_tb_database(
                 out_df,
                 run_idx=self.iter_num,
@@ -250,7 +261,7 @@ class Calibration:
                     num=self.start_time_range[1] - self.start_time_range[0] + 1,
                 )
 
-            best_ll, best_start_time = (1.0e-60, None)
+            best_ll, best_start_time = (-1.0e60, None)
             if self.run_mode == "lsm":
                 best_ll = 1.0e60
             for considered_start_time in considered_start_times:
@@ -268,7 +279,7 @@ class Calibration:
                     else:
                         indices = []
                         for year in target["years"]:
-                            indices.append(self.running_model.times.index(year - time_shift))
+                            indices.append(self.scenarios[0].model.times.index(year - time_shift))
                         model_output = np.array(
                             [self.post_processing.derived_outputs[key][index] for index in indices]
                         )
@@ -568,9 +579,10 @@ class Calibration:
                 )
                 print("Best start time: " + str(self.best_start_time))
 
-            print("Best solution:")
-            print(self.mle_estimates)
-            self.dump_mle_params_to_yaml_file()
+            # FIXME: need to fix dump_mle_params_to_yaml_file
+            # print("Best solution:")
+            # print(self.mle_estimates)
+            # self.dump_mle_params_to_yaml_file()
 
         else:
             ValueError(
@@ -587,7 +599,7 @@ class Calibration:
         if prev_params is None:
             prev_params = []
             for prior_dict in self.priors:
-                prev_params.append(self.model_parameters[prior_dict["param_name"]])
+                prev_params.append(self.model_parameters['default'][prior_dict["param_name"]])
 
         new_params = []
 
@@ -647,9 +659,10 @@ class Calibration:
         if self.best_start_time is not None:
             dict_to_dump["start_time"] = self.best_start_time
 
-        file_path = os.path.join(DATA_PATH, self.model_name, "mle_params.yml")
-        with open(file_path, "w") as outfile:
-            yaml.dump(dict_to_dump, outfile, default_flow_style=False)
+        # FIXME: DATA_PATH unknown
+        # file_path = os.path.join(DATA_PATH, self.model_name, "mle_params.yml")
+        # with open(file_path, "w") as outfile:
+        #     yaml.dump(dict_to_dump, outfile, default_flow_style=False)
 
 
 class LogLike(tt.Op):

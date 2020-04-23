@@ -41,9 +41,7 @@ def run_calibration_chain(
         target_outputs,
         MULTIPLIERS,
         run_id,
-        scenario_params,
-        sc_start_time,
-        model_parameters=params["default"],
+        model_parameters=params,
         start_time_range=_start_time_range,
     )
     print("Starting calibration.")

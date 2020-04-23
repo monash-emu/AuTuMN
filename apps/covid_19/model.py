@@ -238,9 +238,6 @@ def build_model(country: str, params: dict, update_params={}):
         _covid_model.compartment_names
     )
 
-    _covid_model.individual_infectiousness_adjustments = \
-        [[[Compartment.LATE_INFECTIOUS, "clinical_sympt_isolate"], 0.0]]
-
     # Do mixing matrix stuff
     mixing_instructions = model_parameters.get("mixing")
     if mixing_instructions:

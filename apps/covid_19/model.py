@@ -25,7 +25,7 @@ from .outputs import (
     calculate_notifications_covid,
 )
 from .importation import set_tv_importation_rate
-from .matrices import build_covid_matrices
+from .matrices import build_covid_matrices, apply_npi_effectiveness
 
 # Database locations
 FILE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -236,6 +236,9 @@ def build_model(country: str, params: dict, update_params={}):
     # Do mixing matrix stuff
     mixing_instructions = model_parameters.get("mixing")
     if mixing_instructions:
+        if "npi_effectiveness" in model_parameters:
+            mixing_instructions = apply_npi_effectiveness(mixing_instructions,
+                                                          model_parameters.get("npi_effectiveness"))
         _covid_model.find_dynamic_mixing_matrix = build_covid_matrices(
             model_parameters["country"], mixing_instructions
         )

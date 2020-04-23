@@ -56,3 +56,28 @@ def plot_mixing_params_over_time(mixing_params):
         y = [location_adjustment(t) for t in x]
         plt.plot(x, y)
         plt.show()
+
+
+def apply_npi_effectiveness(mixing_params, npi_effectiveness):
+    """
+    Adjust the mixing parameters according by scaling them according to NPI effectiveness
+    :param mixing_params: dict
+        Instructions for how the mixing matrices should vary with time, including for the baseline
+    :param npi_effectiveness: dict
+        Instructions for how the input mixing parameters should be adjusted to account for the level of
+        NPI effectiveness. mixing_params are unchanged if all NPI effectiveness values are 1.
+    :return: dict
+        Adjusted instructions
+    """
+    for location in [
+        loc
+        for loc in ["home", "other_locations", "school", "work"]
+        if loc + "_times" in mixing_params
+    ]:
+        if location in npi_effectiveness:
+            mixing_params[location + '_values'] = [1. - (1. - val) * npi_effectiveness[location]
+                                                   for val in mixing_params[location + '_values']]
+
+    return mixing_params
+
+

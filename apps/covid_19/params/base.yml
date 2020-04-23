@@ -132,6 +132,7 @@ default:
 
   # Parameters relating to adjusting the mixing matrix to reflect interventions
   mixing: {}
+  npi_effectiveness: {}
 
 scenarios: {}
 # N.B: Scenario keys have to be sequential integers from one, or won't be compatible with dashboards

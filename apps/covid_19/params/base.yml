@@ -49,14 +49,14 @@ default:
 
   # Infectiousness progression adjustments - in ten year brackets that need to adapted to model strata later
   symptomatic_props:
-    - 0.09
-    - 0.33
-    - 0.67
-    - 0.4
+    - 0.11
+    - 0.18
+    - 0.35
     - 0.43
-    - 0.51
-    - 0.5
-    - 0.46
+    - 0.50
+    - 0.68
+    - 0.78
+    - 0.78
 
   # Proportion of symptomatic persons that are hospitalised
   hospital_props:

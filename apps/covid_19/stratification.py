@@ -59,35 +59,41 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
     actually infectious)
     """
 
-    strata_to_implement = model_parameters["clinical_strata"]
-    model_parameters["all_stratifications"]["clinical"] = strata_to_implement
+    # DEFINE STRATIFICATION
 
-    # Find the compartments that will need to be stratified under this stratification
+    strata_to_implement = \
+        model_parameters["clinical_strata"]
+    model_parameters["all_stratifications"]["clinical"] = \
+        strata_to_implement
     compartments_to_split = [
         comp
         for comp in compartments
-        if comp.startswith(Compartment.INFECTIOUS) or comp.startswith(Compartment.LATE_INFECTIOUS)
+        if comp.startswith(Compartment.EARLY_INFECTIOUS) or comp.startswith(Compartment.LATE_INFECTIOUS)
     ]
 
-    # Repeat the 5-year age-specific CFRs for all but the top age bracket, and average the last two for the last one
-    model_parameters["adjusted_infection_fatality_props"] = repeat_list_elements_average_last_two(
-        model_parameters["infection_fatality_props"]
-    )
+    # UNADJUSTED PARAMETERS
 
-    # Repeat all the 5-year age-specific clinical proportions, again with adjustment for data length as needed
-    raw_props = {
-        "sympt": repeat_list_elements(2, model_parameters["symptomatic_props"]),
-        "hospital": repeat_list_elements_average_last_two(model_parameters["hospital_props"]),
-        "icu": repeat_list_elements_average_last_two(model_parameters["icu_props"]),
-    }
+    # Repeat all the 5-year age-specific IFRs and clinical proportions, with adjustment for data length as needed
+    model_parameters.update({
+        "adjusted_infection_fatality_props":
+            repeat_list_elements_average_last_two(model_parameters["infection_fatality_props"]),
+        "raw_sympt":
+            repeat_list_elements(2, model_parameters["symptomatic_props"]),
+        "raw_hospital":
+            repeat_list_elements_average_last_two(model_parameters["hospital_props"]),
+        "raw_icu":
+            repeat_list_elements_average_last_two(model_parameters["icu_props"]),
+    })
+
+    # ABSOLUTE PROGRESSION PROPORTIONS
 
     # Find the absolute progression proportions from the requested splits
-    abs_props = split_prop_into_two_subprops([1.0] * 16, "", raw_props["sympt"], "sympt")
+    abs_props = split_prop_into_two_subprops([1.0] * 16, "", model_parameters["raw_sympt"], "sympt")
     abs_props.update(
-        split_prop_into_two_subprops(abs_props["sympt"], "sympt", raw_props["hospital"], "hospital")
+        split_prop_into_two_subprops(abs_props["sympt"], "sympt", model_parameters["raw_hospital"], "hospital")
     )
     abs_props.update(
-        split_prop_into_two_subprops(abs_props["hospital"], "hospital", raw_props["icu"], "icu")
+        split_prop_into_two_subprops(abs_props["hospital"], "hospital", model_parameters["raw_icu"], "icu")
     )
 
     # Find IFR that needs to be contributed by ICU and non-ICU hospital deaths
@@ -112,6 +118,8 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
             abs_props["icu_death"].append(model_parameters["adjusted_infection_fatality_props"][i_agegroup])
             abs_props["hospital_death"].append(0.0)
 
+    # RELATIVE PROPORTIONS PROGRESSING
+
     # CFR for non-ICU hospitalised patients
     rel_props = {
         "hospital_death": [
@@ -126,6 +134,8 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
         ],
     }
 
+    # RATES OUT OF LATE DISEASE
+
     # Calculate death rates and progression rates for hospitalised and ICU patients
     progression_death_rates = {}
     (
@@ -133,16 +143,16 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
         progression_death_rates["hospital_progression"],
     ) = find_rates_and_complements_from_ifr(
         rel_props["hospital_death"],
-        model_parameters["n_compartment_repeats"]["late"],
-        [model_parameters["within_hospital"]] * 16,
+        model_parameters["n_compartment_repeats"][Compartment.LATE_INFECTIOUS],
+        [model_parameters["within_hospital_late"]] * 16,
     )
     (
         progression_death_rates["icu_death"],
         progression_death_rates["icu_progression"],
     ) = find_rates_and_complements_from_ifr(
         rel_props["icu_death"],
-        model_parameters["n_compartment_repeats"]["late"],
-        [model_parameters["within_icu"]] * 16,
+        model_parameters["n_compartment_repeats"][Compartment.LATE_INFECTIOUS],
+        [model_parameters["within_icu_late"]] * 16,
     )
 
     # Progression rates into the infectious compartment(s)
@@ -154,6 +164,8 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
         model_parameters["all_stratifications"]["agegroup"],
         [abs_props[stratum] for stratum in fixed_prop_strata],
     )
+
+    # RATES INTO EARLY DISEASE
 
     # Define isolated proportion, which will be moved to inputs later in some way
     prop_isolated = lambda time: model_parameters["prop_isolated_among_symptomatic"]
@@ -203,11 +215,24 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
             )
         )
 
-    # Determine infectiousness of each clinical group
+    # INFECTIOUSNESS
+
     strata_infectiousness = {}
     for stratum in strata_to_implement:
         if stratum + "_infect_multiplier" in model_parameters:
             strata_infectiousness[stratum] = model_parameters[stratum + "_infect_multiplier"]
+    stratification_adjustments.update(
+        {"within_infectious":
+             {"hospital_non_icuW":
+                  model_parameters['within_hospital_early'],
+              "icuW":
+                  model_parameters['within_icu_early']},
+         }
+    )
+    _covid_model.individual_infectiousness_adjustments = \
+        [[[Compartment.LATE_INFECTIOUS, "clinical_sympt_isolate"], 0.2]]
+
+    # STRATIFICATION
 
     # Stratify the model using the SUMMER stratification function
     _covid_model.stratify(

@@ -23,7 +23,7 @@ def test_setup_default_parameters(ModelClass):
     """
     base_kwargs = {
         "times": _get_integration_times(2000, 2005, 1),
-        "compartment_types": [Compartment.SUSCEPTIBLE, Compartment.INFECTIOUS],
+        "compartment_types": [Compartment.SUSCEPTIBLE, Compartment.EARLY_INFECTIOUS],
         "initial_conditions": {},
         "parameters": {},
         "requested_flows": [],
@@ -92,7 +92,7 @@ def test_model_flow_setup(ModelClass):
         {
             "type": Flow.COMPARTMENT_DEATH,
             "parameter": "infect_death",
-            "origin": Compartment.INFECTIOUS,
+            "origin": Compartment.EARLY_INFECTIOUS,
         },
         {
             "type": Flow.COMPARTMENT_DEATH,
@@ -103,14 +103,14 @@ def test_model_flow_setup(ModelClass):
         {
             "type": Flow.STANDARD,
             "parameter": "recovery",
-            "origin": Compartment.INFECTIOUS,
+            "origin": Compartment.EARLY_INFECTIOUS,
             "to": Compartment.SUSCEPTIBLE,
         },
         # Try some custom flows
         {
             "type": Flow.CUSTOM,
             "parameter": "divine_blessing",
-            "origin": Compartment.INFECTIOUS,
+            "origin": Compartment.EARLY_INFECTIOUS,
             "to": Compartment.SUSCEPTIBLE,
             "function": mock_func_1,
         },
@@ -118,14 +118,14 @@ def test_model_flow_setup(ModelClass):
             "type": Flow.CUSTOM,
             "parameter": "cursed",
             "origin": Compartment.SUSCEPTIBLE,
-            "to": Compartment.INFECTIOUS,
+            "to": Compartment.EARLY_INFECTIOUS,
             "function": mock_func_2,
         },
     ]
     model = ModelClass(
         times=_get_integration_times(2000, 2005, 1),
-        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.INFECTIOUS],
-        initial_conditions={Compartment.SUSCEPTIBLE: 10, Compartment.INFECTIOUS: 20},
+        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.EARLY_INFECTIOUS],
+        initial_conditions={Compartment.SUSCEPTIBLE: 10, Compartment.EARLY_INFECTIOUS: 20},
         parameters=parameters,
         requested_flows=requested_flows,
         starting_population=100,
@@ -160,8 +160,8 @@ def test_model_compartment_init__with_remainder__expect_correct_allocation(Model
     """
     model = ModelClass(
         times=_get_integration_times(2000, 2005, 1),
-        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.INFECTIOUS, "empty"],
-        initial_conditions={Compartment.SUSCEPTIBLE: 10, Compartment.INFECTIOUS: 20},
+        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.EARLY_INFECTIOUS, "empty"],
+        initial_conditions={Compartment.SUSCEPTIBLE: 10, Compartment.EARLY_INFECTIOUS: 20},
         parameters={},
         requested_flows=[],
         starting_population=100,
@@ -177,8 +177,8 @@ def test_model_compartment_init__with_no_remainder__expect_correct_allocation(Mo
     """
     model = ModelClass(
         times=_get_integration_times(2000, 2005, 1),
-        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.INFECTIOUS, "empty"],
-        initial_conditions={Compartment.SUSCEPTIBLE: 30, Compartment.INFECTIOUS: 70},
+        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.EARLY_INFECTIOUS, "empty"],
+        initial_conditions={Compartment.SUSCEPTIBLE: 30, Compartment.EARLY_INFECTIOUS: 70},
         parameters={},
         requested_flows=[],
         starting_population=100,
@@ -202,7 +202,7 @@ bad_inputs = [
     {"output_connections": {"foo": {"bar": 1}}},
     # Initial condition compartment not in compartment types
     {
-        "compartment_types": [Compartment.SUSCEPTIBLE, Compartment.INFECTIOUS],
+        "compartment_types": [Compartment.SUSCEPTIBLE, Compartment.EARLY_INFECTIOUS],
         "initial_conditions": {"this is wrong": 20},
     },
     # Initial condition population exceeds starting pop.
@@ -221,7 +221,7 @@ def test_model_input_validation__with_bad_inputs__expect_error(ModelClass, bad_i
     """
     inputs = {
         "times": _get_integration_times(2000, 2005, 1),
-        "compartment_types": [Compartment.SUSCEPTIBLE, Compartment.INFECTIOUS],
+        "compartment_types": [Compartment.SUSCEPTIBLE, Compartment.EARLY_INFECTIOUS],
         "initial_conditions": {Compartment.SUSCEPTIBLE: 20},
         "parameters": {},
         "requested_flows": [],

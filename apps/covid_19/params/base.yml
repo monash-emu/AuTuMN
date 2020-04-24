@@ -97,7 +97,7 @@ default:
   # NON-AGE-STRATIFIED PARAMETERS
 
   # Adjust the infectiousness of clinical strata - note that the parameter naming will change with the number of strata
-  non_sympt_infect_multiplier: 0.55
+  non_sympt_infect_multiplier: 0.5
   hospital_infect_multiplier: 0.2
   hospital_non_icu_infect_multiplier: 0.2
   icu_infect_multiplier: 0.2

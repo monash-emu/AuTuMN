@@ -72,7 +72,7 @@ def calculate_notifications_covid(model, time):
     notifications = 0.0
     this_time_index = model.times.index(time)
     for key, value in model.derived_outputs.items():
-        if "incidenceX" in key and "non_sympt" not in key:
+        if "incidenceX" in key and "non_sympt" not in key and "sympt_non_hospital" not in key:
             notifications += value[this_time_index]
     return notifications
 

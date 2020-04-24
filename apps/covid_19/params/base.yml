@@ -19,8 +19,8 @@ default:
   importation_rate: 0.
 
   compartment_periods:
-    exposed: 3.2
-    presympt: 0.5
+    exposed: 3.0
+    presympt: 1.0
     infectious: 2.
     late: 5.68
     hospital_early: 5.

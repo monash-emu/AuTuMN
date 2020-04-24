@@ -7,6 +7,7 @@ import numpy
 import itertools
 import hashlib
 import json
+from datetime import date
 
 from summer.model import find_name_components
 
@@ -244,3 +245,12 @@ def find_first_index_reaching_cumulative_sum(a_list, threshold):
         raise ValueError("The cumulative sum of the entire list is smaller than the threshold")
 
     return next(i for i, val in enumerate(cumsum_list) if val >= threshold)
+
+
+def get_date_from_tuple(date_as_tuple):
+    return date(date_as_tuple[0], date_as_tuple[1], date_as_tuple[2])
+
+
+def find_relative_date(requested_date, base_date=(2019, 12, 31)):
+    difference = get_date_from_tuple(requested_date) - get_date_from_tuple(base_date)
+    return difference.days

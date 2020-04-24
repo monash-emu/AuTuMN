@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from autumn.curve import scale_up_function
+import copy
 
 
 def build_covid_matrices(country, mixing_params):
@@ -39,23 +40,36 @@ def build_covid_matrices(country, mixing_params):
     return mixing_matrix_function
 
 
-def plot_mixing_params_over_time(mixing_params):
+def plot_mixing_params_over_time(mixing_params, npi_effectiveness_range):
 
-    for location in [
+    plt.style.use("ggplot")
+    for i_loc, location in enumerate([
         loc
         for loc in ["home", "other_locations", "school", "work"]
         if loc + "_times" in mixing_params
-    ]:
+    ]):
+        plt.figure(i_loc)
+        x = list(np.linspace(0.0, 150.0, num=10000))
+        y = []
+        for indice_npi_effect_range in [0, 1]:
+            npi_effect = {key: val[indice_npi_effect_range] for key, val in npi_effectiveness_range.items()}
 
-        location_adjustment = scale_up_function(
-            mixing_params[location + "_times"], mixing_params[location + "_values"], method=4
-        )
+            modified_mixing_params = apply_npi_effectiveness(copy.deepcopy(mixing_params), npi_effect)
 
-        x = list(np.linspace(0.0, 120.0, num=1000))
+            location_adjustment = scale_up_function(
+                modified_mixing_params[location + "_times"], modified_mixing_params[location + "_values"], method=4
+            )
 
-        y = [location_adjustment(t) for t in x]
-        plt.plot(x, y)
-        plt.show()
+            _y = [location_adjustment(t) for t in x]
+            y.append(_y)
+            plt.plot(x, _y, color='navy')
+
+        plt.fill_between(x, y[0], y[1], color='cornflowerblue')
+        plt.ylim((0, 1.1))
+        plt.xlabel('Days since 31/12/2019')
+        plt.ylabel('Relative contact rate\n(Ref. before COVID-19)')
+        plt.title(location.title())
+        plt.savefig('mixing_adjustment_' + location + '.png')
 
 
 def apply_npi_effectiveness(mixing_params, npi_effectiveness):
@@ -79,5 +93,3 @@ def apply_npi_effectiveness(mixing_params, npi_effectiveness):
                                                    for val in mixing_params[location + '_values']]
 
     return mixing_params
-
-

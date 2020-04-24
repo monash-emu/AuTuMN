@@ -11,7 +11,7 @@ default:
   start_time: 30.
   end_time: 365.
 
-  contact_rate: 0.13866552
+  contact_rate: 0.2512
 
   prop_isolated_among_symptomatic: .84
 

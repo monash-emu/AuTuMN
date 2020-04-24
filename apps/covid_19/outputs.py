@@ -77,6 +77,14 @@ def calculate_notifications_covid(model, time):
     return notifications
 
 
+def calculate_incidence_icu_covid(model, time):
+    this_time_index = model.times.index(time)
+    incidence_icu = 0.
+    for key, value in model.derived_outputs.items():
+        if "incidenceX" in key and "icu" in key:
+            incidence_icu += value[this_time_index]
+    return incidence_icu
+
 def find_date_from_year_start(times, incidence):
     """
     Messy patch to shift dates over such that zero represents the start of the year and the number of cases are

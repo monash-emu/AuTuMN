@@ -23,6 +23,7 @@ from .outputs import (
     find_incidence_outputs,
     create_fully_stratified_incidence_covid,
     calculate_notifications_covid,
+    calculate_incidence_icu_covid
 )
 from .importation import set_tv_importation_rate
 from .matrices import build_covid_matrices, apply_npi_effectiveness
@@ -237,6 +238,8 @@ def build_model(country: str, params: dict, update_params={}):
     _covid_model.death_output_categories = list_all_strata_for_mortality(
         _covid_model.compartment_names
     )
+    _covid_model.derived_output_functions["incidence_icu"] = calculate_incidence_icu_covid
+
 
     # Do mixing matrix stuff
     mixing_instructions = model_parameters.get("mixing")

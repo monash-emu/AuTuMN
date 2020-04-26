@@ -270,3 +270,10 @@ def normalise_sequence(input_sequence):
 
 def convert_list_contents_to_int(input_list):
     return [int(i_element) for i_element in input_list]
+
+
+def element_wise_list_division(numerator, denominator):
+    """
+    Simple function to find the quotients of two lists.
+    """
+    return [num / den for num, den in zip(numerator, denominator)]

@@ -1,7 +1,8 @@
 from autumn.tool_kit.utils import (
     find_rates_and_complements_from_ifr,
     repeat_list_elements,
-    repeat_list_elements_average_last_two
+    repeat_list_elements_average_last_two,
+    element_wise_list_division
 )
 from autumn.constants import Compartment
 from autumn.summer_related.parameter_adjustments import (
@@ -62,6 +63,30 @@ def find_abs_death_props(params, abs_props):
     return {"hospital_death": hospital_death, "icu_death": icu_death}
 
 
+def set_isolation_props(_covid_model, model_parameters, abs_props, stratification_adjustments):
+    """
+    Set the absolute proportions of new cases isolated and not isolated, and indicate to the model where they should be
+    found.
+    """
+
+    # Define isolated proportion, which will be moved closer towards inputs later in some way
+    prop_isolated = lambda time: model_parameters["prop_isolated_among_symptomatic"]
+
+    # Apply the isolated proportion to the symptomatic non-hospitalised group
+    for i_age, agegroup in enumerate(model_parameters["all_stratifications"]["agegroup"]):
+        _covid_model.time_variants["abs_prop_isolatedX" + agegroup] = \
+            lambda time: abs_props["sympt_non_hospital"][i_age] * \
+                         prop_isolated(time)
+        _covid_model.time_variants["abs_prop_not_isolatedX" + agegroup] = \
+            lambda time: abs_props["sympt_non_hospital"][i_age] * \
+                         (1.0 - prop_isolated(time))
+        stratification_adjustments["to_infectiousXagegroup_" + agegroup]["sympt_isolate"] = \
+            "abs_prop_isolatedX" + agegroup
+        stratification_adjustments["to_infectiousXagegroup_" + agegroup]["sympt_non_hospital"] = \
+            "abs_prop_not_isolatedX" + agegroup
+    return _covid_model, stratification_adjustments
+
+
 def stratify_by_clinical(_covid_model, model_parameters, compartments):
     """
     Stratify the infectious compartments of the covid model (not including the pre-symptomatic compartments, which are
@@ -91,25 +116,28 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
         split_prop_into_two_subprops(abs_props["hospital"], "hospital", model_parameters["raw_icu"], "icu")
     )
 
+    # Find the absolute proportion dying in hospital and in ICU
     abs_props.update(find_abs_death_props(model_parameters, abs_props))
-
-    # RELATIVE PROPORTIONS PROGRESSING
 
     # CFR for non-ICU hospitalised patients
     rel_props = {
-        "hospital_death": [
-            death_prop / total_prop
-            for death_prop, total_prop in zip(
-                abs_props["hospital_death"], abs_props["hospital_non_icu"]
-            )
-        ],
-        "icu_death": [
-            death_prop / total_prop
-            for death_prop, total_prop in zip(abs_props["icu_death"], abs_props["icu"])
-        ],
+        "hospital_death": element_wise_list_division(abs_props["hospital_death"], abs_props["hospital_non_icu"]),
+        "icu_death": element_wise_list_division(abs_props["icu_death"], abs_props["icu"])
     }
 
-    # RATES OUT OF LATE DISEASE
+    # Progression rates into the infectious compartment(s)
+    fixed_prop_strata = ["non_sympt", "hospital_non_icu", "icu"]
+    stratification_adjustments = adjust_upstream_stratified_parameter(
+        "to_infectious",
+        fixed_prop_strata,
+        "agegroup",
+        model_parameters["all_stratifications"]["agegroup"],
+        [abs_props[stratum] for stratum in fixed_prop_strata],
+    )
+
+    # Set isolation rates as absolute proportions
+    _covid_model, stratification_adjustments = \
+        set_isolation_props(_covid_model, model_parameters, abs_props, stratification_adjustments)
 
     # Calculate death rates and progression rates for hospitalised and ICU patients
     progression_death_rates = {}
@@ -129,38 +157,6 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
         model_parameters["n_compartment_repeats"][Compartment.LATE_INFECTIOUS],
         [model_parameters["within_icu_late"]] * 16,
     )
-
-    # RATES INTO EARLY DISEASE
-
-    # Progression rates into the infectious compartment(s)
-    fixed_prop_strata = ["non_sympt", "hospital_non_icu", "icu"]
-    stratification_adjustments = adjust_upstream_stratified_parameter(
-        "to_infectious",
-        fixed_prop_strata,
-        "agegroup",
-        model_parameters["all_stratifications"]["agegroup"],
-        [abs_props[stratum] for stratum in fixed_prop_strata],
-    )
-
-    # Define isolated proportion, which will be moved to inputs later in some way
-    prop_isolated = lambda time: model_parameters["prop_isolated_among_symptomatic"]
-
-    # Apply the isolated proportion to the symptomatic non-hospitalised group
-    for i_age, agegroup in enumerate(model_parameters["all_stratifications"]["agegroup"]):
-        isolated_name = "abs_prop_isolatedX" + agegroup
-        not_isolated_name = "abs_prop_not_isolatedX" + agegroup
-        _covid_model.time_variants[isolated_name] = lambda time: abs_props["sympt_non_hospital"][
-            i_age
-        ] * prop_isolated(time)
-        _covid_model.time_variants[not_isolated_name] = lambda time: abs_props[
-            "sympt_non_hospital"
-        ][i_age] * (1.0 - prop_isolated(time))
-        stratification_adjustments["to_infectiousXagegroup_" + agegroup][
-            "sympt_isolate"
-        ] = isolated_name
-        stratification_adjustments["to_infectiousXagegroup_" + agegroup][
-            "sympt_non_hospital"
-        ] = not_isolated_name
 
     # Death and non-death progression between infectious compartments towards the recovered compartment
     for param in ("within_late", "infect_death"):

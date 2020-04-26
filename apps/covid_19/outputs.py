@@ -6,7 +6,7 @@ from autumn.constants import Compartment
 
 def find_incidence_outputs(parameters):
     last_presympt = (
-        "presympt_" + str(parameters["n_compartment_repeats"][Compartment.PRESYMPTOMATIC])
+        Compartment.PRESYMPTOMATIC + "_" + str(parameters["n_compartment_repeats"][Compartment.PRESYMPTOMATIC])
         if parameters["n_compartment_repeats"][Compartment.PRESYMPTOMATIC] > 1
         else Compartment.PRESYMPTOMATIC
     )
@@ -64,6 +64,45 @@ def create_fully_stratified_incidence_covid(requested_stratifications, strata_di
     return out_connections
 
 
+def create_fully_stratified_progress_covid(requested_stratifications, strata_dict, model_params):
+    """
+    Create derived outputs for fully disaggregated incidence
+    """
+    out_connections = {}
+    origin_compartment = (
+        Compartment.EARLY_INFECTIOUS
+        if model_params["n_compartment_repeats"][Compartment.EARLY_INFECTIOUS] < 2
+        else Compartment.EARLY_INFECTIOUS
+        + "_"
+        + str(model_params["n_compartment_repeats"][Compartment.EARLY_INFECTIOUS])
+    )
+    to_compartment = (
+        Compartment.LATE_INFECTIOUS
+        if model_params["n_compartment_repeats"][Compartment.LATE_INFECTIOUS] < 2
+        else Compartment.LATE_INFECTIOUS + "_1"
+    )
+
+    all_tags_by_stratification = []
+    for stratification in requested_stratifications:
+        this_stratification_tags = []
+        for stratum in strata_dict[stratification]:
+            this_stratification_tags.append(stratification + "_" + stratum)
+        all_tags_by_stratification.append(this_stratification_tags)
+
+    all_tag_lists = list(itertools.product(*all_tags_by_stratification))
+
+    for tag_list in all_tag_lists:
+        stratum_name = "X".join(tag_list)
+        out_connections["progressX" + stratum_name] = {
+            "origin": origin_compartment,
+            "to": to_compartment,
+            "origin_condition": "",
+            "to_condition": stratum_name,
+        }
+
+    return out_connections
+
+
 def calculate_notifications_covid(model, time):
     """
     Returns the number of notifications for a given time.
@@ -72,7 +111,8 @@ def calculate_notifications_covid(model, time):
     notifications = 0.0
     this_time_index = model.times.index(time)
     for key, value in model.derived_outputs.items():
-        if "incidenceX" in key and "non_sympt" not in key and "sympt_non_hospital" not in key:
+        if "progressX" in key and \
+                any([stratum in key for stratum in model.all_stratifications["clinical"][2:]]):
             notifications += value[this_time_index]
     return notifications
 

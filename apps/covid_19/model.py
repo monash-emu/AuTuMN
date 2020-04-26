@@ -24,6 +24,7 @@ from .stratification import stratify_by_clinical
 from .outputs import (
     find_incidence_outputs,
     create_fully_stratified_incidence_covid,
+    create_fully_stratified_progress_covid,
     calculate_notifications_covid,
     calculate_incidence_icu_covid
 )
@@ -242,7 +243,14 @@ def build_model(country: str, params: dict, update_params={}):
         create_fully_stratified_incidence_covid(
             model_parameters["stratify_by"],
             model_parameters["all_stratifications"],
-            model_parameters,
+            model_parameters
+        )
+    )
+    output_connections.update(
+        create_fully_stratified_progress_covid(
+            model_parameters["stratify_by"],
+            model_parameters["all_stratifications"],
+            model_parameters
         )
     )
     _covid_model.output_connections = output_connections

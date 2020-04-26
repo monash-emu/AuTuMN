@@ -1,8 +1,11 @@
 from autumn.tool_kit.utils import (
-    split_parameter,
     find_rates_and_complements_from_ifr,
     repeat_list_elements,
+    normalise_sequence,
+    convert_list_contents_to_int,
+    repeat_list_elements_average_last_two
 )
+from autumn.summer_related.parameter_adjustments import split_multiple_parameters
 from autumn.constants import Compartment
 from autumn.summer_related.parameter_adjustments import (
     adjust_upstream_stratified_parameter,
@@ -10,47 +13,28 @@ from autumn.summer_related.parameter_adjustments import (
 )
 
 
-def repeat_list_elements_average_last_two(raw_props):
-    """
-    Repeat 5-year age-specific proportions, but with 75+s taking the average of the last two groups
-    """
-    repeated_props = repeat_list_elements(2, raw_props[:-1])
-    repeated_props[-1] = sum(raw_props[-2:]) / 2.0
-    return repeated_props
-
-
-def stratify_by_age(
-    model_to_stratify, mixing_matrix, total_pops, model_parameters, output_connections
-):
+def stratify_by_age(model_to_stratify, age_strata, mixing_matrix, total_pops):
     """
     Stratify model by age
     Note that because the string passed is 'agegroup' rather than 'age', the standard automatic SUMMER demography is not
-    triggered
+    triggered.
+    Split the parameters to_infectious, infect_death and within_late without adjusting values, to allow values to be
+    adjusted later.
     """
-    age_strata = model_parameters["all_stratifications"]["agegroup"]
-    list_of_starting_pops = [i_pop / sum(total_pops) for i_pop in total_pops]
-    starting_props = {i_break: prop for i_break, prop in zip(age_strata, list_of_starting_pops)}
-    parameter_splits = split_parameter({}, "to_infectious", age_strata)
-    parameter_splits = split_parameter(parameter_splits, "infect_death", age_strata)
-    parameter_splits = split_parameter(parameter_splits, "within_late", age_strata)
     model_to_stratify.stratify(
-        "agegroup",
-        [int(i_break) for i_break in age_strata],
-        [],
-        starting_props,
+        "agegroup",  # Don't use the string age, to avoid triggering automatic demography
+        convert_list_contents_to_int(age_strata),
+        [],  # Apply to all compartments
+        {i_break: prop for
+         i_break, prop in zip(age_strata, normalise_sequence(total_pops))},  # Distribute starting population
         mixing_matrix=mixing_matrix,
-        adjustment_requests=parameter_splits,
+        adjustment_requests=
+        split_multiple_parameters(
+            ("to_infectious", "infect_death", "within_late"),
+            age_strata),  # Split parameters for later adjustment, but retain original value
         verbose=False,
     )
-    # output_connections.update(
-    #     create_request_stratified_incidence_covid(
-    #         model_parameters['incidence_stratification'],
-    #         model_parameters['all_stratifications'],
-    #         model_parameters['n_compartment_repeats']['infectious']
-    #     )
-    # )
-
-    return model_to_stratify, model_parameters, output_connections
+    return model_to_stratify
 
 
 def stratify_by_clinical(_covid_model, model_parameters, compartments):
@@ -247,3 +231,4 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
         verbose=False,
     )
     return _covid_model, model_parameters
+

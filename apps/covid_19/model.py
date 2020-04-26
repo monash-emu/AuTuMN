@@ -211,10 +211,13 @@ def build_model(country: str, params: dict, update_params={}):
             _covid_model, params["data"]["times_imported_cases"], params["data"]["n_imported_cases"]
         )
 
-    # Stratify model by age without demography
+    # Stratify model by age
     if "agegroup" in model_parameters["stratify_by"]:
-        _covid_model, model_parameters, output_connections = stratify_by_age(
-            _covid_model, mixing_matrix, total_pops, model_parameters, output_connections
+        _covid_model = stratify_by_age(
+            _covid_model,
+            model_parameters["all_stratifications"]["agegroup"],
+            mixing_matrix,
+            total_pops
         )
 
     # Stratify infectious compartment as high or low infectiousness as requested

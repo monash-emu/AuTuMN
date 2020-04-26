@@ -57,3 +57,15 @@ def split_prop_into_two_subprops(overall_props, overall_prop_name, split_props, 
             for i_agegroup in range(len(split_props))
         ],
     }
+
+
+def split_parameter(parameter, strata):
+    return {parameter: {stratum: 1.0 for stratum in strata}}
+
+
+def split_multiple_parameters(parameters, strata):
+    adjustments = {}
+    for param in parameters:
+        adjustments.update(split_parameter(param, strata))
+    return adjustments
+

@@ -4,10 +4,21 @@ Used to load model parameters from file
 import os
 import yaml
 import logging
+from autumn.tool_kit.utils import find_relative_date
 
 from .utils import merge_dicts
 
 logger = logging.getLogger(__file__)
+
+
+def revise_dates_if_ymd(mixing_params):
+    """
+    Find any mixing times parameters that were submitted as a three element list of year, month day - and revise to an
+    integer representing the number of days from the reference time.
+    """
+    for key in (k for k in mixing_params if k.endswith("_times")):
+        for i_time in (t for t in range(len(mixing_params[key])) if type(mixing_params[key][t]) == list):
+            mixing_params[key][i_time] = find_relative_date(mixing_params[key][i_time])
 
 
 def load_params(app_dir: str, application=None):
@@ -60,5 +71,10 @@ def load_params(app_dir: str, application=None):
 
         with open(param_yaml_path, "r") as f:
             params = yaml.safe_load(f)
+
+    # Revise any dates for mixing matrices submitted in YMD format
+    for scenario in params:
+        if type(params[scenario]) == dict and "mixing" in params[scenario]:
+            revise_dates_if_ymd(params[scenario]["mixing"])
 
     return params

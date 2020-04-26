@@ -87,6 +87,25 @@ def set_isolation_props(_covid_model, model_parameters, abs_props, stratificatio
     return _covid_model, stratification_adjustments
 
 
+def adjust_infectiousness(model, params, strata, adjustments):
+    """
+    Sort out all infectiousness adjustments for all compartments of the model.
+    """
+
+    # Make adjustment for hospitalisation and ICU admission
+    strata_infectiousness = {}
+    for stratum in strata:
+        if stratum + "_infect_multiplier" in params:
+            strata_infectiousness[stratum] = params[stratum + "_infect_multiplier"]
+
+    # Make adjustment for isolation/quarantine
+    model.individual_infectiousness_adjustments = \
+        [
+            [[Compartment.LATE_INFECTIOUS, "clinical_sympt_isolate"], 0.2]
+        ]
+    return model, adjustments, strata_infectiousness
+
+
 def stratify_by_clinical(_covid_model, model_parameters, compartments):
     """
     Stratify the infectious compartments of the covid model (not including the pre-symptomatic compartments, which are
@@ -164,11 +183,7 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
             )
         )
 
-    # Sort out infectiousness for all compartments
-    strata_infectiousness = {}
-    for stratum in strata_to_implement:
-        if stratum + "_infect_multiplier" in model_parameters:
-            strata_infectiousness[stratum] = model_parameters[stratum + "_infect_multiplier"]
+    # Over-write rate of progression for early compartments for hospital and ICU
     stratification_adjustments.update(
         {"within_infectious":
              {"hospital_non_icuW":
@@ -177,8 +192,10 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
                   model_parameters['within_icu_early']},
          }
     )
-    _covid_model.individual_infectiousness_adjustments = \
-        [[[Compartment.LATE_INFECTIOUS, "clinical_sympt_isolate"], 0.2]]
+
+    # Sort out all infectiousness adjustments for entire model here
+    _covid_model, stratification_adjustments, strata_infectiousness = \
+        adjust_infectiousness(_covid_model, model_parameters, strata_to_implement, stratification_adjustments)
 
     # Stratify the model using the SUMMER stratification function
     _covid_model.stratify(
@@ -193,4 +210,3 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
         verbose=False,
     )
     return _covid_model, model_parameters
-

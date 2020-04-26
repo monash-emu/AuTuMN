@@ -1276,6 +1276,11 @@ class StratifiedModel(EpiModel):
         # self.full_stratification_list keeps track of comparements that are not partially stratified
         # self.all_stratifications keeps track of all stratifications and their strata
 
+        # RENAME VARS
+        strata_names = strata_request
+
+        # STATELESS FUNCTIONS
+
         def get_strata_proportions(strata_names, strata_proportions):
             """
             Determine what % of population get assigned to the different strata.
@@ -1296,8 +1301,6 @@ class StratifiedModel(EpiModel):
                 }
                 return {**strata_proportions, **remaining_proportions}
 
-        # Rename vars
-        strata_names = strata_request
 
         # If user does not want to stratify specific compartments, we only want to stratify a subset.
         if not compartment_types_to_stratify:

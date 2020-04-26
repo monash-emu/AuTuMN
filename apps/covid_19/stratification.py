@@ -139,6 +139,8 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
         [model_parameters["within_icu_late"]] * 16,
     )
 
+    # RATES INTO EARLY DISEASE
+
     # Progression rates into the infectious compartment(s)
     fixed_prop_strata = ["non_sympt", "hospital_non_icu", "icu"]
     stratification_adjustments = adjust_upstream_stratified_parameter(
@@ -148,8 +150,6 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
         model_parameters["all_stratifications"]["agegroup"],
         [abs_props[stratum] for stratum in fixed_prop_strata],
     )
-
-    # RATES INTO EARLY DISEASE
 
     # Define isolated proportion, which will be moved to inputs later in some way
     prop_isolated = lambda time: model_parameters["prop_isolated_among_symptomatic"]

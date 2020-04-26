@@ -1,11 +1,8 @@
 from autumn.tool_kit.utils import (
     find_rates_and_complements_from_ifr,
     repeat_list_elements,
-    normalise_sequence,
-    convert_list_contents_to_int,
     repeat_list_elements_average_last_two
 )
-from autumn.summer_related.parameter_adjustments import split_multiple_parameters
 from autumn.constants import Compartment
 from autumn.summer_related.parameter_adjustments import (
     adjust_upstream_stratified_parameter,
@@ -13,28 +10,56 @@ from autumn.summer_related.parameter_adjustments import (
 )
 
 
-def stratify_by_age(model_to_stratify, age_strata, mixing_matrix, total_pops):
+def get_raw_clinical_props(params):
     """
-    Stratify model by age
-    Note that because the string passed is 'agegroup' rather than 'age', the standard automatic SUMMER demography is not
-    triggered.
-    Split the parameters to_infectious, infect_death and within_late without adjusting values, to allow values to be
-    adjusted later.
+    Get the raw proportions of persons dying and progressing to symptomatic, hospital if symptomatic, and to ICU if
+    hospitalised - adjusting to required number of age groups.
     """
-    model_to_stratify.stratify(
-        "agegroup",  # Don't use the string age, to avoid triggering automatic demography
-        convert_list_contents_to_int(age_strata),
-        [],  # Apply to all compartments
-        {i_break: prop for
-         i_break, prop in zip(age_strata, normalise_sequence(total_pops))},  # Distribute starting population
-        mixing_matrix=mixing_matrix,
-        adjustment_requests=
-        split_multiple_parameters(
-            ("to_infectious", "infect_death", "within_late"),
-            age_strata),  # Split parameters for later adjustment, but retain original value
-        verbose=False,
-    )
-    return model_to_stratify
+    return {
+        "adjusted_infection_fatality_props":
+            repeat_list_elements_average_last_two(params["infection_fatality_props"]),
+        "raw_sympt":
+            repeat_list_elements(2, params["symptomatic_props"]),
+        "raw_hospital":
+            repeat_list_elements_average_last_two(params["hospital_props"]),
+        "raw_icu":
+            repeat_list_elements_average_last_two(params["icu_props"])
+    }
+
+
+def find_abs_death_props(params, abs_props):
+    """
+    Calculate the absolute proportion of all patients who should eventually reach hospital death or ICU death.
+    """
+
+    # Find IFR that needs to be contributed by ICU and non-ICU hospital deaths\
+    hospital_death, icu_death = [], []
+    for i_agegroup in range(len(params["all_stratifications"]["agegroup"])):
+
+        # Find the target absolute ICU mortality and the amount left over from IFRs to go to hospital, if any
+        target_icu_abs_mort = \
+            abs_props["icu"][i_agegroup] * \
+            params["icu_mortality_prop"]
+        left_over_mort = \
+            params["adjusted_infection_fatality_props"][i_agegroup] - \
+            target_icu_abs_mort
+
+        # If IFR for age group is greater than absolute proportion hospitalised (very unlikely to ever occur)
+        if params["adjusted_infection_fatality_props"][i_agegroup] > \
+                abs_props["hospital"][i_agegroup]:
+            raise ValueError("Infection fatality prop greater than absolute proportion admitted to hospital")
+
+        # If some IFR will be left over for the hospitalised
+        elif left_over_mort > 0.:
+            hospital_death.append(left_over_mort)
+            icu_death.append(target_icu_abs_mort)
+
+        # Otherwise if all IFR taken up by ICU
+        else:
+            hospital_death.append(0.0)
+            icu_death.append(params["adjusted_infection_fatality_props"][i_agegroup])
+
+    return {"hospital_death": hospital_death, "icu_death": icu_death}
 
 
 def stratify_by_clinical(_covid_model, model_parameters, compartments):
@@ -43,8 +68,7 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
     actually infectious)
     """
 
-    # DEFINE STRATIFICATION
-
+    # Define stratification
     strata_to_implement = \
         model_parameters["clinical_strata"]
     model_parameters["all_stratifications"]["clinical"] = \
@@ -55,21 +79,8 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
         if comp.startswith(Compartment.EARLY_INFECTIOUS) or comp.startswith(Compartment.LATE_INFECTIOUS)
     ]
 
-    # UNADJUSTED PARAMETERS
-
-    # Repeat all the 5-year age-specific IFRs and clinical proportions, with adjustment for data length as needed
-    model_parameters.update({
-        "adjusted_infection_fatality_props":
-            repeat_list_elements_average_last_two(model_parameters["infection_fatality_props"]),
-        "raw_sympt":
-            repeat_list_elements(2, model_parameters["symptomatic_props"]),
-        "raw_hospital":
-            repeat_list_elements_average_last_two(model_parameters["hospital_props"]),
-        "raw_icu":
-            repeat_list_elements_average_last_two(model_parameters["icu_props"]),
-    })
-
-    # ABSOLUTE PROGRESSION PROPORTIONS
+    # Find unadjusted parameters
+    model_parameters.update(get_raw_clinical_props(model_parameters))
 
     # Find the absolute progression proportions from the requested splits
     abs_props = split_prop_into_two_subprops([1.0] * 16, "", model_parameters["raw_sympt"], "sympt")
@@ -80,27 +91,7 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
         split_prop_into_two_subprops(abs_props["hospital"], "hospital", model_parameters["raw_icu"], "icu")
     )
 
-    # Find IFR that needs to be contributed by ICU and non-ICU hospital deaths
-    abs_props["icu_death"], abs_props["hospital_death"] = [], []
-    for i_agegroup in range(len(model_parameters["all_stratifications"]["agegroup"])):
-
-        # Find the target absolute ICU mortality and the amount left over from IFRs to go to hospital, if positive
-        target_icu_abs_mort = \
-            abs_props["icu"][i_agegroup] * \
-            model_parameters["icu_mortality_prop"]
-        left_over_mort = \
-            model_parameters["adjusted_infection_fatality_props"][i_agegroup] - \
-            target_icu_abs_mort
-
-        # If some IFR will be left over for the hospitalised
-        if left_over_mort > 0.:
-            abs_props["icu_death"].append(target_icu_abs_mort)
-            abs_props["hospital_death"].append(left_over_mort)
-
-        # Otherwise if all IFR taken up by ICU
-        else:
-            abs_props["icu_death"].append(model_parameters["adjusted_infection_fatality_props"][i_agegroup])
-            abs_props["hospital_death"].append(0.0)
+    abs_props.update(find_abs_death_props(model_parameters, abs_props))
 
     # RELATIVE PROPORTIONS PROGRESSING
 
@@ -184,8 +175,7 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
             )
         )
 
-    # INFECTIOUSNESS
-
+    # Sort out infectiousness for all compartments
     strata_infectiousness = {}
     for stratum in strata_to_implement:
         if stratum + "_infect_multiplier" in model_parameters:
@@ -200,8 +190,6 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
     )
     _covid_model.individual_infectiousness_adjustments = \
         [[[Compartment.LATE_INFECTIOUS, "clinical_sympt_isolate"], 0.2]]
-
-    # STRATIFICATION
 
     # Stratify the model using the SUMMER stratification function
     _covid_model.stratify(

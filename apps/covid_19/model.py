@@ -2,6 +2,7 @@ import os
 from summer.model import StratifiedModel
 from summer.model.utils.base_compartments import replicate_compartment
 
+from autumn.tool_kit.utils import normalise_sequence, convert_list_contents_to_int
 from autumn import constants
 from autumn.constants import Compartment
 from autumn.tb_model import list_all_strata_for_mortality
@@ -17,8 +18,9 @@ from autumn.demography.social_mixing import load_specific_prem_sheet, update_mix
 from autumn.demography.population import get_population_size
 from autumn.demography.ageing import add_agegroup_breaks
 from autumn.db import Database
+from autumn.summer_related.parameter_adjustments import split_multiple_parameters
 
-from .stratification import stratify_by_age, stratify_by_clinical
+from .stratification import stratify_by_clinical
 from .outputs import (
     find_incidence_outputs,
     create_fully_stratified_incidence_covid,
@@ -213,11 +215,20 @@ def build_model(country: str, params: dict, update_params={}):
 
     # Stratify model by age
     if "agegroup" in model_parameters["stratify_by"]:
-        _covid_model = stratify_by_age(
-            _covid_model,
-            model_parameters["all_stratifications"]["agegroup"],
-            mixing_matrix,
-            total_pops
+        age_strata = model_parameters["all_stratifications"]["agegroup"]
+        _covid_model.stratify(
+            "agegroup",  # Don't use the string age, to avoid triggering automatic demography
+            convert_list_contents_to_int(age_strata),
+            [],  # Apply to all compartments
+            {i_break: prop for
+             i_break, prop in zip(age_strata,
+                                  normalise_sequence(total_pops))},  # Distribute starting population
+            mixing_matrix=mixing_matrix,
+            adjustment_requests=
+            split_multiple_parameters(
+                ("to_infectious", "infect_death", "within_late"),
+                age_strata),  # Split unchanged parameters for later adjustment
+            verbose=False,
         )
 
     # Stratify infectious compartment as high or low infectiousness as requested

@@ -30,6 +30,8 @@ from .outputs import (
 )
 from .importation import set_tv_importation_rate
 from .matrices import build_covid_matrices, apply_npi_effectiveness
+from .utils import update_dict_params_for_calibration
+
 
 # Database locations
 FILE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -52,6 +54,9 @@ def build_model(country: str, params: dict, update_params={}):
 
     # Update, not used in single application run
     model_parameters.update(update_params)
+
+    # update parameters stored in dictionaries that need to be modified during calibration
+    model_parameters = update_dict_params_for_calibration(model_parameters)
 
     # Get population size (by age if age-stratified)
     total_pops, model_parameters = get_population_size(model_parameters, input_database)

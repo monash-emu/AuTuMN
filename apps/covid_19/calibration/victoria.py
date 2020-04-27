@@ -3,17 +3,6 @@ from numpy import linspace
 
 country = "victoria"
 
-########  local transmission only
-# start_date = 11/3/2020 (day 71) for first item of the case_counts list
-# case_counts = [1, 1, 3, 1, 0, 4, 8, 7, 9, 12, 13, 22, 19, 18, 16,
-#                22, 40, 33, 33, 49, 34, 36, 43, 16, 23, 23, 18, 15, 10,
-#                7, 15, 2, 1, 3]
-# case_counts = [float(c) for c in case_counts]
-# data_times = linspace(71, 71 + len(case_counts) - 1, num=len(case_counts))
-# nb_time_points = len(case_counts)
-# case_counts = case_counts[:nb_time_points]
-# data_times = data_times[:nb_time_points].tolist()
-
 # #######  all cases
 data_times = [
     67,
@@ -97,7 +86,7 @@ target_to_plots = {"notifications": {"times": data_times, "values": [[d] for d i
 print(target_to_plots)
 PAR_PRIORS = [
     {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.1, 0.5]},
-    # {"param_name": "start_time", "distribution": "uniform", "distri_params": [-30, 69]}
+    # {'param_name': 'infectious_seed', 'distribution': 'uniform', 'distri_params': [1, 1000]},
 ]
 
 TARGET_OUTPUTS = [
@@ -110,4 +99,5 @@ TARGET_OUTPUTS = [
 ]
 
 
-run_calibration_chain(120, 1, country, PAR_PRIORS, TARGET_OUTPUTS, mode="lsm")
+def run_vic_calibration_chain(max_seconds: int, run_id: int):
+    run_calibration_chain(max_seconds, run_id, country, PAR_PRIORS, TARGET_OUTPUTS, mode="autumn_mcmc")

@@ -12,7 +12,7 @@ from . import covid_19, marshall_islands, mongolia
 
 from .marshall_islands.calibration import run_calibration_chain as run_rmi_calibration_chain
 from .mongolia.calibration import run_calibration_chain as run_mongolia_calibration_chain
-
+from .covid_19.calibration.victoria import run_vic_calibration_chain as run_victoria_covid_calibration_chain
 
 @click.group()
 def cli():
@@ -69,6 +69,14 @@ def rmi_calibration(max_seconds, run_id):
 def mongolia_calibration(max_seconds, run_id):
     """Run Mongolia model calibration."""
     run_mongolia_calibration_chain(max_seconds, run_id)
+
+
+@calibrate.command("victoria")
+@click.argument("max_seconds", type=int)
+@click.argument("run_id", type=int)
+def victoria_calibration(max_seconds, run_id):
+    """Run Victoria COVID model calibration."""
+    run_victoria_covid_calibration_chain(max_seconds, run_id)
 
 
 cli.add_command(run)

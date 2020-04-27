@@ -601,7 +601,11 @@ class Calibration:
                 if prior_dict["param_name"] in self.model_parameters['default']:
                     prev_params.append(self.model_parameters['default'][prior_dict["param_name"]])
                 else:
-                    prev_params.append(1.)  # FIXME: we need to make it more flexible
+                    if prior_dict["distribution"] == 'uniform':
+                        prev_params.append(np.mean(prior_dict['distri_params']))
+                    else:
+                        # FIXME: we need to make it more flexible
+                        print('FIXME: need to be able to handle different distributions')
 
         new_params = []
 

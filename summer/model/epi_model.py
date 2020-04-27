@@ -302,7 +302,7 @@ class EpiModel:
     model running methods
     """
 
-    def run_model(self, integration_type=IntegrationType.ODE_INT, solver_args={}):
+    def run_model(self, integration_type=IntegrationType.SOLVE_IVP, solver_args={}):
         """
         Calculates the model's outputs using an ODE solver.
 

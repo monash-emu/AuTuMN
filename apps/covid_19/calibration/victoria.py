@@ -89,8 +89,8 @@ PAR_PRIORS = [
     {"param_name": "prop_isolated_among_symptomatic", "distribution": "uniform", "distri_params": [0.8, .9]},
     {"param_name": "non_sympt_infect_multiplier", "distribution": "uniform", "distri_params": [0.4, 0.6]},
 
-    {"param_name": "compartment_period_exposed", "distribution": "uniform", "distri_params": [2., 4.]},
-    {"param_name": "compartment_period_late", "distribution": "uniform", "distri_params": [4., 7.]},
+    {"param_name": "compartment_periods_exposed", "distribution": "uniform", "distri_params": [2., 4.]},
+    {"param_name": "compartment_periods_late", "distribution": "uniform", "distri_params": [4., 7.]},
 
     {"param_name": "npi_effectiveness_school", "distribution": "uniform", "distri_params": [0.8, 1.]},
     {"param_name": "npi_effectiveness_work", "distribution": "uniform", "distri_params": [0.8, 1.]},
@@ -111,6 +111,3 @@ TARGET_OUTPUTS = [
 
 def run_vic_calibration_chain(max_seconds: int, run_id: int):
     run_calibration_chain(max_seconds, run_id, country, PAR_PRIORS, TARGET_OUTPUTS, mode="autumn_mcmc")
-
-
-run_vic_calibration_chain(30, 1)

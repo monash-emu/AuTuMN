@@ -20,7 +20,7 @@ def update_dict_params_for_calibration(params):
 
     for comp_type in ['exposed', 'presympt', 'infectious', 'late', 'hospital_early', 'hospital_late',
                       'icu_early', 'icu_late']:
-        if 'compartment_period_' + comp_type in params:
-            params['compartment_period'][comp_type] = params['compartment_period_' + comp_type]
+        if 'compartment_periods_' + comp_type in params:
+            params['compartment_periods'][comp_type] = params['compartment_periods_' + comp_type]
 
     return params

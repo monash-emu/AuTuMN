@@ -579,8 +579,8 @@ class Calibration:
                 print("Best start time: " + str(self.best_start_time))
 
             # FIXME: need to fix dump_mle_params_to_yaml_file
-            # print("Best solution:")
-            # print(self.mle_estimates)
+            print("Best solution:")
+            print(self.mle_estimates)
             # self.dump_mle_params_to_yaml_file()
 
         else:
@@ -598,7 +598,10 @@ class Calibration:
         if prev_params is None:
             prev_params = []
             for prior_dict in self.priors:
-                prev_params.append(self.model_parameters['default'][prior_dict["param_name"]])
+                if prior_dict["param_name"] in self.model_parameters['default']:
+                    prev_params.append(self.model_parameters['default'][prior_dict["param_name"]])
+                else:
+                    prev_params.append(1.)  # FIXME: we need to make it more flexible
 
         new_params = []
 

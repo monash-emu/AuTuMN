@@ -39,6 +39,7 @@ echo -e "\n>>> Copying AuTuMN code from $CODE_DIR to $JOB_DIR."
 cp -r $CODE_DIR/autumn $JOB_DIR
 cp -r $CODE_DIR/apps $JOB_DIR
 cp -r $CODE_DIR/data $JOB_DIR
+cp -r $CODE_DIR/summer $JOB_DIR
 cp $CODE_DIR/requirements.txt $JOB_DIR
 
 echo -e "\n>>> Setting up Python 3 environment in $JOB_DIR."

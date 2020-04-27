@@ -66,8 +66,9 @@ default:
 scenario_start_time: 2020
 
 # N.B: Scenario keys have to be integers 1-N, or it'll break downstream dashboards.
-scenarios: {}
-# 1: {'ipt_age_0_ct_coverage': 1.},
+scenarios:
+  {}
+  # 1: { "ipt_age_0_ct_coverage": 1. }
 # 2: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,
 #          'ipt_age_60_ct_coverage': .5},
 # 3: {'ipt_age_0_ct_coverage': .5, 'ipt_age_5_ct_coverage': .5, 'ipt_age_15_ct_coverage': .5,

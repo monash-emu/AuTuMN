@@ -12,9 +12,15 @@ from . import covid_19, marshall_islands, mongolia
 
 from .marshall_islands.calibration import run_calibration_chain as run_rmi_calibration_chain
 from .mongolia.calibration import run_calibration_chain as run_mongolia_calibration_chain
-from .covid_19.calibration.victoria import run_vic_calibration_chain as run_victoria_covid_calibration_chain
-from .covid_19.calibration.malaysia import run_mys_calibration_chain as run_malaysia_covid_calibration_chain
-from .covid_19.calibration.philippines import run_phl_calibration_chain as run_philippines_covid_calibration_chain
+from .covid_19.calibration.victoria import (
+    run_vic_calibration_chain as run_victoria_covid_calibration_chain,
+)
+from .covid_19.calibration.malaysia import (
+    run_mys_calibration_chain as run_malaysia_covid_calibration_chain,
+)
+from .covid_19.calibration.philippines import (
+    run_phl_calibration_chain as run_philippines_covid_calibration_chain,
+)
 
 
 @click.group()
@@ -25,6 +31,12 @@ def cli():
 @click.group()
 def run():
     """Run a model"""
+
+
+@run.command("covid-vic")
+def run_covid_vic():
+    """Run the COVID Victoria model"""
+    covid_19.vic.run_model()
 
 
 @run.command("covid-aus")

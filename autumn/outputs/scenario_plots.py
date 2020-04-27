@@ -41,87 +41,113 @@ def plot_scenarios(scenarios: List[Scenario], out_dir: str, plot_config: dict):
     """
     validate_plot_config(plot_config)
     translations = plot_config["translations"]
+    outputs_to_plot = plot_config["outputs_to_plot"]
+    prevalence_combos = plot_config["prevalence_combos"]
+    param_config = plot_config["parameter_category_values"]
+    input_config = plot_config["input_function"]
+    pop_distribution_strata = plot_config["pop_distribution_strata"]
 
+    if len(scenarios) > 1:
+        # Create multi-scenario-plots
+        multi_out_dir = os.path.join(out_dir, "multi")
+        os.makedirs(multi_out_dir, exist_ok=True)
+        multi_plotter = Plotter(multi_out_dir, translations)
+        for output_config in outputs_to_plot:
+            plot_outputs_multi(multi_plotter, scenarios, output_config)
+
+    # Create scenario-specifc plots
     for scenario in scenarios:
         model_out_dir = os.path.join(out_dir, scenario.name)
         os.makedirs(model_out_dir, exist_ok=True)
-
-        plotter = Plotter(model_out_dir, translations)
+        scenario_plotter = Plotter(model_out_dir, translations)
         model = scenario.model
         generated_outputs = scenario.generated_outputs
-
-        outputs_to_plot = plot_config["outputs_to_plot"]
-        plot_outputs(plotter, model, generated_outputs, outputs_to_plot)
-
-        plot_mixing_matrix(plotter, model)
-
-        prevalence_combos = plot_config["prevalence_combos"]
-        plot_prevalence_combinations(plotter, model, prevalence_combos, generated_outputs)
-
+        for output_config in outputs_to_plot:
+            plot_outputs_single(scenario_plotter, scenario, output_config)
+        plot_mixing_matrix(scenario_plotter, model)
+        plot_prevalence_combinations(scenario_plotter, model, prevalence_combos, generated_outputs)
         if scenario.is_baseline:
             # Only plot some graphs for the base model.
-            config = plot_config["parameter_category_values"]
-            plot_parameter_category_values(plotter, model, config["param_names"], config["time"])
-
-            config = plot_config["input_function"]
-            plot_input_function(plotter, model, config["func_names"], config["start_time"])
-
-            pop_distribution_strata = plot_config["pop_distribution_strata"]
+            plot_parameter_category_values(
+                scenario_plotter, model, param_config["param_names"], param_config["time"]
+            )
+            plot_input_function(
+                scenario_plotter, model, input_config["func_names"], input_config["start_time"]
+            )
             plot_pop_distribution_by_stratum(
-                plotter, model, pop_distribution_strata, generated_outputs
+                scenario_plotter, model, pop_distribution_strata, generated_outputs
             )
+            plot_exponential_growth_rate(scenario_plotter, model)
 
-            plot_exponential_growth_rate(plotter, model)
 
-
-def plot_outputs(
-    plotter: Plotter, model: StratifiedModel, generated_outputs: dict, outputs_to_plot: List[str]
-):
+def plot_outputs_multi(plotter: Plotter, scenarios: List[Scenario], output_config: dict):
     """
-    Plot the model derived/generated outputs requested by the user.
+    Plot the model derived/generated outputs requested by the user for multiple single scenarios, on one plot.
     """
-    for output_config in outputs_to_plot:
-        output_name = output_config["name"]
-        target_values = output_config["target_values"]
-        target_times = output_config["target_times"]
+    fig, axis, _, _, _ = plotter.get_figure()
+    output_name = output_config["name"]
+    for idx, scenario in enumerate(reversed(scenarios)):
+        _plot_outputs_to_axis(axis, scenario, output_name, color_idx=idx)
 
-        # Figure out which values we should plot
-        if output_name in generated_outputs:
-            plot_values = generated_outputs[output_name]
-        elif output_name in model.derived_outputs:
-            plot_values = model.derived_outputs[output_name]
+    target_values = output_config["target_values"]
+    target_times = output_config["target_times"]
+    _plot_targets_to_axis(axis, target_values, target_times)
+    plotter.save_figure(fig, filename=output_name, title_text=output_name)
+
+
+def plot_outputs_single(plotter: Plotter, scenario: Scenario, output_config: dict):
+    """
+    Plot the model derived/generated outputs requested by the user for a single scenario.
+    """
+    fig, axis, _, _, _ = plotter.get_figure()
+    output_name = output_config["name"]
+    target_values = output_config["target_values"]
+    target_times = output_config["target_times"]
+    _plot_outputs_to_axis(axis, scenario, output_name)
+    _plot_targets_to_axis(axis, target_values, target_times)
+    plotter.save_figure(fig, filename=output_name, subdir="outputs", title_text=output_name)
+
+
+def _plot_outputs_to_axis(axis, scenario: Scenario, name: str, color_idx=0):
+    """
+    Plot outputs requested by output_config from scenario to the provided axis.
+    """
+    model = scenario.model
+    generated_outputs = scenario.generated_outputs
+    if generated_outputs and name in generated_outputs:
+        plot_values = generated_outputs[name]
+    elif name in model.derived_outputs:
+        plot_values = model.derived_outputs[name]
+    else:
+        logger.error("Could not plot output named %s - not found.", name)
+        return
+
+    # Plot the values as a line.
+    if type(plot_values) is list:
+        axis.plot(model.times, plot_values, color=COLOR_THEME[color_idx])
+    else:
+        logger.error("Could not plot output named %s - non-list data format.", name)
+
+
+def _plot_targets_to_axis(axis, target_values: List[float], target_times: List[int]):
+    """
+    Plot output value calibration targets as points on the axis.
+    """
+    assert len(target_times) == len(target_values), "Targets have inconsistent length"
+    for i, time in enumerate(target_times):
+        values = target_values[i]
+        is_confidence_interval = len(values) > 1
+        if is_confidence_interval:
+            # Plot confidence interval
+            x_vals = [time, time]
+            y_vals = values[1:]
+            axis.plot(x_vals, y_vals, "m", linewidth=1, color="red")
         else:
-            logger.error("Could not plot output named %s - not found.", output_name)
-            return
-
-        fig, axis, max_dims, n_rows, n_cols = plotter.get_figure()
-        # Plot the values as a line.
-        if type(plot_values) is list:
-            axis.plot(
-                model.times, plot_values, color=COLOR_THEME[0],
-            )
-        else:
-            logger.error("Could not plot output named %s - non-list data format.", output_name)
-            return
-
-        # Plot output value calibration targets as points.
-        assert len(target_times) == len(target_values), "Targets have inconsistent length"
-        for i, time in enumerate(target_times):
-            values = target_values[i]
-            is_confidence_interval = len(values) > 1
-            if is_confidence_interval:
-                # Plot confidence interval
-                x_vals = [time, time]
-                y_vals = values[1:]
-                axis.plot(x_vals, y_vals, "m", linewidth=1, color="red")
-            else:
-                # Plot a single point estimate
-                value = values[0]
-                marker_size = 30.0
-                axis.scatter(time, value, marker="o", color="red", s=30)
-                axis.scatter(time, value, marker="o", color="white", s=10)
-
-        plotter.save_figure(fig, filename=output_name, subdir="outputs", title_text=output_name)
+            # Plot a single point estimate
+            value = values[0]
+            marker_size = 30.0
+            axis.scatter(time, value, marker="o", color="red", s=30)
+            axis.scatter(time, value, marker="o", color="white", s=10)
 
 
 def plot_exponential_growth_rate(plotter: Plotter, model: StratifiedModel):

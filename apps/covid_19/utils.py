@@ -18,4 +18,9 @@ def update_dict_params_for_calibration(params):
         if 'npi_effectiveness_' + location in params:
             params['npi_effectiveness'][location] = params['npi_effectiveness_' + location]
 
+    for comp_type in ['exposed', 'presympt', 'infectious', 'late', 'hospital_early', 'hospital_late',
+                      'icu_early', 'icu_late']:
+        if 'compartment_period_' + comp_type in params:
+            params['compartment_period'][comp_type] = params['compartment_period_' + comp_type]
+
     return params

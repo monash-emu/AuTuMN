@@ -86,7 +86,15 @@ target_to_plots = {"notifications": {"times": data_times, "values": [[d] for d i
 print(target_to_plots)
 PAR_PRIORS = [
     {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.1, 0.5]},
-    # {'param_name': 'infectious_seed', 'distribution': 'uniform', 'distri_params': [1, 1000]},
+    {"param_name": "prop_isolated_among_symptomatic", "distribution": "uniform", "distri_params": [0.8, .9]},
+    {"param_name": "non_sympt_infect_multiplier", "distribution": "uniform", "distri_params": [0.4, 0.6]},
+    {"param_name": "icu_mortality_prop", "distribution": "uniform", "distri_params": [0.4, 0.6]},
+
+    {"param_name": "npi_effectiveness_school", "distribution": "uniform", "distri_params": [0.8, 1.]},
+    {"param_name": "npi_effectiveness_work", "distribution": "uniform", "distri_params": [0.8, 1.]},
+    {"param_name": "npi_effectiveness_other_locations", "distribution": "uniform", "distri_params": [0.8, 1.]},
+    {"param_name": "n_imported_cases_final", "distribution": "uniform", "distri_params": [0., 2.]},
+
 ]
 
 TARGET_OUTPUTS = [

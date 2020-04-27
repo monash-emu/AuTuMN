@@ -162,14 +162,14 @@ class Calibration:
             append=True,
             scenario=scenario_index
         )
-        store_tb_database(
-            out_df,
-            run_idx=self.iter_num,
-            times=_model.times,
-            database_name=self.output_db_path,
-            append=True,
-            scenario=scenario_index
-        )
+        # store_tb_database(
+        #     out_df,
+        #     run_idx=self.iter_num,
+        #     times=_model.times,
+        #     database_name=self.output_db_path,
+        #     append=True,
+        #     scenario=scenario_index
+        # )
         pbi_outputs = _unpivot_outputs(_model)
         store_tb_database(
             pbi_outputs,

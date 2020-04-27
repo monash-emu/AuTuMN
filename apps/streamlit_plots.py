@@ -123,17 +123,23 @@ def main():
 
 
 def plot_outputs_multi(plotter: Plotter, scenarios: list, scenario_idx: int, plot_config: dict):
-    output_config = _get_output_config(scenarios, plot_config)
+    output_config = get_output_config(scenarios, plot_config)
     scenario_plots.plot_outputs_multi(plotter, scenarios, output_config)
 
 
 def plot_outputs_single(plotter: Plotter, scenarios: list, scenario_idx: int, plot_config: dict):
-    output_config = _get_output_config(scenarios, plot_config)
+    output_config = get_output_config(scenarios, plot_config)
     scenario = scenarios[scenario_idx]
     scenario_plots.plot_outputs_single(plotter, scenario, output_config)
 
 
-def _get_output_config(scenarios, plot_config):
+PLOT_FUNCS = {
+    "Multi scenario outputs": plot_outputs_multi,
+    "Single scenario output": plot_outputs_single,
+}
+
+
+def get_output_config(scenarios, plot_config):
     outputs_to_plot = plot_config["outputs_to_plot"]
     output_names = []
     base_scenario = scenarios[0]
@@ -141,21 +147,25 @@ def _get_output_config(scenarios, plot_config):
         output_names += base_scenario.generated_outputs.keys()
     if base_scenario.model.derived_outputs:
         output_names += base_scenario.model.derived_outputs.keys()
+    output_base_names = list(set([n.split("X")[0] for n in output_names]))
+    output_base_name = st.sidebar.selectbox("Select output type", output_base_names)
 
-    output_name = st.sidebar.selectbox("Select output", output_names)
+    output_strata_names = [
+        "X".join(n.split("X")[1:]) for n in output_names if n.startswith(output_base_name)
+    ]
+    has_strata_names = any(output_strata_names)
+    if has_strata_names:
+        output_strata = st.sidebar.selectbox("Select output strata", output_strata_names)
+        output_name = f"{output_base_name}X{output_strata}"
+    else:
+        output_name = output_base_name
+
     try:
         output_config = next(o for o in outputs_to_plot if o["name"] == output_name)
     except StopIteration:
         output_config = {"name": output_name, "target_values": [], "target_times": []}
 
     return output_config
-
-
-PLOT_FUNCS = {
-    "Multi scenario outputs": plot_outputs_multi,
-    "Single scenario output": plot_outputs_single,
-    # Request arbitrary output
-}
 
 
 def scenario_idx_selector(scenarios):
@@ -188,20 +198,30 @@ def app_model_run_selector(app_data_dir_path: str):
     """
     Allows a user to select what model run they want, given an app 
     """
+    # Read model runs from filesystem
     model_run_dirs = [
         f for f in reversed(os.listdir(app_data_dir_path)) if not f.startswith("calibration")
     ]
-    model_run_dir_lookup = {}
-    # TODO: Order datetimes properly
+    # Parse model run folder names
+    model_runs = []
     for dirname in model_run_dirs:
         datestr = "-".join(dirname.split("-")[-7:])
         run_name = " ".join(dirname.split("-")[:-7]).title()
         run_datetime = datetime.strptime(datestr, "%d-%m-%Y--%H-%M-%S")
+        model_runs.append([run_datetime, run_name, dirname])
+
+    # Sort model runs by date
+    model_runs = reversed(sorted(model_runs, key=lambda i: i[0]))
+
+    # Create labels for the select box.
+    labels = []
+    model_run_dir_lookup = {}
+    for run_datetime, run_name, dirname in model_runs:
         run_datestr = run_datetime.strftime("%-d %b at %-I:%M%p ")
         label = f'{run_datestr} "{run_name}"'
         model_run_dir_lookup[label] = dirname
+        labels.append(label)
 
-    labels = list(model_run_dir_lookup.keys())
     label = st.sidebar.selectbox("Select app model run", labels)
     return model_run_dir_lookup[label]
 

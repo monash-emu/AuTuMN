@@ -83,20 +83,49 @@ case_counts = [
 ]
 
 target_to_plots = {"notifications": {"times": data_times, "values": [[d] for d in case_counts]}}
-print(target_to_plots)
+# print(target_to_plots)
 PAR_PRIORS = [
     {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.1, 0.5]},
-    {"param_name": "prop_isolated_among_symptomatic", "distribution": "uniform", "distri_params": [0.8, .9]},
-    {"param_name": "non_sympt_infect_multiplier", "distribution": "uniform", "distri_params": [0.4, 0.6]},
-
-    {"param_name": "compartment_periods_exposed", "distribution": "uniform", "distri_params": [2., 4.]},
-    {"param_name": "compartment_periods_late", "distribution": "uniform", "distri_params": [4., 7.]},
-
-    {"param_name": "npi_effectiveness_school", "distribution": "uniform", "distri_params": [0.8, 1.]},
-    {"param_name": "npi_effectiveness_work", "distribution": "uniform", "distri_params": [0.8, 1.]},
-    {"param_name": "npi_effectiveness_other_locations", "distribution": "uniform", "distri_params": [0.8, 1.]},
-
-    {"param_name": "n_imported_cases_final", "distribution": "uniform", "distri_params": [0., 2.]},
+    {
+        "param_name": "prop_isolated_among_symptomatic",
+        "distribution": "uniform",
+        "distri_params": [0.8, 0.9],
+    },
+    {
+        "param_name": "non_sympt_infect_multiplier",
+        "distribution": "uniform",
+        "distri_params": [0.4, 0.6],
+    },
+    {
+        "param_name": "compartment_periods_exposed",
+        "distribution": "uniform",
+        "distri_params": [2.0, 4.0],
+    },
+    {
+        "param_name": "compartment_periods_late",
+        "distribution": "uniform",
+        "distri_params": [4.0, 7.0],
+    },
+    {
+        "param_name": "npi_effectiveness_school",
+        "distribution": "uniform",
+        "distri_params": [0.8, 1.0],
+    },
+    {
+        "param_name": "npi_effectiveness_work",
+        "distribution": "uniform",
+        "distri_params": [0.8, 1.0],
+    },
+    {
+        "param_name": "npi_effectiveness_other_locations",
+        "distribution": "uniform",
+        "distri_params": [0.8, 1.0],
+    },
+    {
+        "param_name": "n_imported_cases_final",
+        "distribution": "uniform",
+        "distri_params": [0.0, 2.0],
+    },
 ]
 
 TARGET_OUTPUTS = [
@@ -110,4 +139,6 @@ TARGET_OUTPUTS = [
 
 
 def run_vic_calibration_chain(max_seconds: int, run_id: int):
-    run_calibration_chain(max_seconds, run_id, country, PAR_PRIORS, TARGET_OUTPUTS, mode="autumn_mcmc")
+    run_calibration_chain(
+        max_seconds, run_id, country, PAR_PRIORS, TARGET_OUTPUTS, mode="autumn_mcmc"
+    )

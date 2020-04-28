@@ -86,8 +86,7 @@ def build_model_runner(
 
         with Timer("Saving model outputs to the database"):
             models = [s.model for s in scenarios]
-            scenario_idxs = range(num_scenarios)
-            store_run_models(models, scenarios=scenario_idxs, database_name=output_db_path)
+            store_run_models(models, output_db_path)
 
         if post_processing_config:
             with Timer("Applying post-processing to model outputs"):

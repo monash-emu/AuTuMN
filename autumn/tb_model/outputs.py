@@ -2,6 +2,7 @@
 Post processing and storing/loading data from the output database.
 """
 import os
+from typing import List
 
 import numpy
 import pandas as pd
@@ -9,11 +10,15 @@ import autumn.post_processing as post_proc
 from sqlalchemy import create_engine
 import matplotlib.pyplot as plt
 
+from summer.model import StratifiedModel
+
 from ..constants import Compartment
 from ..db import Database
 from .loaded_model import LoadedModel
+from autumn.tool_kit.scenarios import Scenario
 from autumn.tool_kit.utils import find_first_list_element_above, element_wise_list_summation
 from autumn.tb_model.flows import get_incidence_connections, get_notifications_connections
+from autumn.post_processing.processor import post_process
 
 
 def create_request_stratified_incidence(requested_stratifications, strata_dict):
@@ -96,21 +101,34 @@ def list_all_strata_for_mortality(
     return tuple(death_output_categories)
 
 
-# FIXME: Not used, need to get back into use so we can load and re-plot old models.
-def load_model_scenario(scenario_idx: int, database_path: str):
+def load_model_scenarios(
+    database_path: str, model_params={}, post_processing_config=None
+) -> List[Scenario]:
     """
-    Load a model's outputs and derived outputs, returns a LoadedModel
-    filled with this data,
+    Load model scenarios from an output database.
+    Will apply post processing if the post processing config is supplied.
+    Will store model params in the database if suppied.
     """
-    out_database = Database(database_name=database_path)
-    outputs = out_database.db_query(
-        table_name="outputs", conditions=[f"Scenario='S_{scenario_idx}'"]
-    )
-    derived_outputs = out_database.db_query(
-        table_name="derived_outputs", conditions=[f"Scenario='S_{scenario_idx}'"]
-    )
-    kwargs = {"outputs": outputs.to_dict(), "derived_outputs": derived_outputs.to_dict()}
-    return LoadedModel(**kwargs)
+    out_db = Database(database_name=database_path)
+
+    # Load scenarios from the dabase
+    scenario_results = out_db.engine.execute("SELECT DISTINCT Scenario FROM outputs;").fetchall()
+    scenario_names = sorted(([result[0] for result in scenario_results]))
+    scenarios = []
+    for scenario_name in scenario_names:
+        # Load model outputs from database, build Scenario instance
+        conditions = [f"Scenario='{scenario_name}'"]
+        outputs = out_db.db_query("outputs", conditions=conditions)
+        derived_outputs = out_db.db_query("derived_outputs", conditions=conditions)
+        model = LoadedModel(outputs=outputs.to_dict(), derived_outputs=derived_outputs.to_dict())
+        idx = int(scenario_name.split("_")[1])
+        scenario = Scenario.load_from_db(idx, model, params=model_params)
+        if post_processing_config:
+            scenario.generated_outputs = post_process(model, post_processing_config)
+
+        scenarios.append(scenario)
+
+    return scenarios
 
 
 def load_calibration_from_db(database_directory, n_burned_per_chain=0):
@@ -177,14 +195,8 @@ def load_calibration_from_db(database_directory, n_burned_per_chain=0):
     return models
 
 
-def store_tb_database(
-    outputs,
-    table_name="outputs",
-    scenario=0,
-    run_idx=0,
-    times=None,
-    database_name="../databases/outputs.db",
-    append=True,
+def store_database(
+    outputs, database_name, table_name="outputs", scenario=0, run_idx=0, times=None,
 ):
     """
     store outputs from the model in sql database for use in producing outputs later
@@ -192,43 +204,52 @@ def store_tb_database(
 
     if times:
         outputs.insert(0, column="times", value=times)
+
     if table_name != "mcmc_run_info":
-        outputs.insert(0, column="idx", value="run_" + str(run_idx))
-        outputs.insert(1, column="Scenario", value="S_" + str(scenario))
-    engine = create_engine("sqlite:///" + database_name, echo=False)
-    if table_name == "functions":
-        outputs.to_sql(
-            table_name, con=engine, if_exists="replace", index=False, dtype={"cdr_values": float()}
-        )
-    elif append:
-        outputs.to_sql(table_name, con=engine, if_exists="append", index=False)
-    else:
-        outputs.to_sql(table_name, con=engine, if_exists="replace", index=False)
+        outputs.insert(0, column="idx", value=f"run_{run_idx}")
+        outputs.insert(1, column="Scenario", value=f"S_{scenario}")
+
+    sql_engine = create_engine("sqlite:///" + database_name, echo=False)
+    outputs.to_sql(table_name, con=sql_engine, if_exists="append", index=False)
 
 
-def store_run_models(models, scenarios, database_name="../databases/outputs.db"):
-    for i, model in enumerate(models):
+def store_run_models(models: List[StratifiedModel], database_path: str):
+    """
+    Store models in the database.
+    Assume that models are sorted in an order such that their index is their scenario idx.
+    """
+    for idx, model in enumerate(models):
         output_df = pd.DataFrame(model.outputs, columns=model.compartment_names)
         derived_output_df = pd.DataFrame.from_dict(model.derived_outputs)
-        pbi_outputs = _unpivot_outputs(model)
-        store_tb_database(
-            pbi_outputs,
-            table_name="pbi_scenario_" + str(scenarios[i]),
-            database_name=database_name,
-            scenario=scenarios[i],
-        )
-        store_tb_database(
+        store_database(
             derived_output_df,
-            scenario=scenarios[i],
+            scenario=idx,
             table_name="derived_outputs",
-            database_name=database_name,
+            database_name=database_path,
         )
-        store_tb_database(
+        store_database(
             output_df,
-            scenario=scenarios[i],
+            scenario=idx,
+            table_name="outputs",
             times=model.times,
-            database_name=database_name,
-            append=True,
+            database_name=database_path,
+        )
+
+
+def create_power_bi_outputs(source_db_path: str, target_db_path: str):
+    """
+    Read the model outputs from a database and then convert them into a form
+    that is readable by our PowerBI dashboard.
+    Save the converted data into its own database.
+    """
+    scenarios = load_model_scenarios(source_db_path)
+    for scenario in scenarios:
+        power_bi_outputs = unpivot_outputs(scenario.model)
+        store_database(
+            power_bi_outputs,
+            table_name=f"pbi_scenario_{scenario.idx}",
+            database_name=target_db_path,
+            scenario=scenario.idx,
         )
 
 
@@ -466,7 +487,7 @@ def create_mcmc_outputs(
     outputs.plot_requested_outputs()
 
 
-def _unpivot_outputs(model):
+def unpivot_outputs(model):
     """
     take outputs in the form they come out of the model object and convert them into a "long", "melted" or "unpiovted"
     format in order to more easily plug to PowerBI

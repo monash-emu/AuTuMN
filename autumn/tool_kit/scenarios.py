@@ -2,6 +2,9 @@
 Utilities for running multiple model scenarios
 """
 import numpy
+from typing import Callable
+
+from summer.model import StratifiedModel
 
 from autumn.tool_kit import schema_builder as sb
 from autumn.tool_kit.timer import Timer
@@ -10,19 +13,32 @@ from .utils import merge_dicts
 
 validate_params = sb.build_validator(default=dict, scenario_start_time=float, scenarios=dict)
 
+ModelBuilderType = Callable[[dict], StratifiedModel]
+
 
 class Scenario:
     """
     A particular run of a simulation using a common model and unique parameters.
     """
 
-    def __init__(self, model_builder, idx: str, params: dict):
+    def __init__(self, model_builder: ModelBuilderType, idx: str, params: dict):
         validate_params(params)
         self.model_builder = model_builder
         self.idx = idx
         self.name = "baseline" if idx == 0 else f"scenario-{idx}"
         self.params = params
         self.generated_outputs = None
+
+    @classmethod
+    def load_from_db(self, idx: int, model: StratifiedModel, params=None):
+        """
+        Construct a Scenario from a model that's been loaded from an output database.
+        """
+        empty_params = {"default": {}, "scenario_start_time": 0, "scenarios": {}}
+        params = params or empty_params
+        scenario = Scenario(None, idx, params)
+        scenario.model = model
+        return scenario
 
     def run(self, base_model=None):
         """

@@ -33,7 +33,7 @@ import streamlit as st
 
 from autumn import constants
 from autumn.db import Database
-from autumn.tb_model import LoadedModel
+from autumn.tb_model import load_model_scenarios
 from autumn.tool_kit import Scenario
 from autumn.outputs import scenario_plots
 from autumn.outputs.plotter import Plotter, add_title_to_plot
@@ -61,10 +61,6 @@ def main():
     model_run_dirname = app_model_run_selector(app_data_dir_path)
     model_run_path = os.path.join(app_data_dir_path, model_run_dirname)
 
-    # Get database from model data dir.
-    db_path = os.path.join(model_run_path, "outputs.db")
-    out_db = Database(database_name=db_path)
-
     # Get params from model data dir.
     params_path = os.path.join(model_run_path, "params.yml")
     with open(params_path, "r") as f:
@@ -89,24 +85,9 @@ def main():
     with open(post_processing_path, "r") as f:
         post_processing_config = yaml.safe_load(f)
 
-    validate_post_process_config(post_processing_config)
-
-    # Load scenarios from the dabase
-    scenario_results = out_db.engine.execute("SELECT DISTINCT Scenario FROM outputs;").fetchall()
-    scenario_names = sorted(([result[0] for result in scenario_results]))
-    scenarios = []
-    for scenario_name in scenario_names:
-        # Load model outputs from database, build Scenario instance
-        outputs = out_db.db_query("outputs", conditions=[f"Scenario='{scenario_name}'"])
-        derived_outputs = out_db.db_query(
-            "derived_outputs", conditions=[f"Scenario='{scenario_name}'"]
-        )
-        model = LoadedModel(outputs=outputs.to_dict(), derived_outputs=derived_outputs.to_dict())
-        idx = int(scenario_name.split("_")[1])
-        scenario = Scenario(model_builder=None, idx=idx, params=params)
-        scenario.model = model
-        scenario.generated_outputs = post_process(model, post_processing_config)
-        scenarios.append(scenario)
+    # Get database from model data dir.
+    db_path = os.path.join(model_run_path, "outputs.db")
+    scenarios = load_model_scenarios(db_path, params, post_processing_config)
 
     # Create plotter which will write to streamlit UI.
     translations = plot_config["translations"]

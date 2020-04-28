@@ -1,8 +1,5 @@
 """
 Build and run any AuTuMN model, storing the outputs
-
-TODO: Add ability to load MCMC outputs and plot their results
-
 """
 import os
 import yaml

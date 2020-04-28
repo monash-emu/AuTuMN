@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from summer.model import StratifiedModel
 
 from ..constants import Compartment
-from ..db import Database
+from ..db.database import Database, _get_sql_engine
 from .loaded_model import LoadedModel
 from autumn.tool_kit.scenarios import Scenario
 from autumn.tool_kit.utils import find_first_list_element_above, element_wise_list_summation
@@ -209,7 +209,7 @@ def store_database(
         outputs.insert(0, column="idx", value=f"run_{run_idx}")
         outputs.insert(1, column="Scenario", value=f"S_{scenario}")
 
-    sql_engine = create_engine("sqlite:///" + database_name, echo=False)
+    sql_engine = _get_sql_engine(database_name)
     outputs.to_sql(table_name, con=sql_engine, if_exists="append", index=False)
 
 

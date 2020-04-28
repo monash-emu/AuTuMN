@@ -6,6 +6,8 @@ import numpy as np
 import pandas as pd
 from pandas.util.testing import assert_frame_equal
 
+from ..utils import get_mock_model
+
 from autumn.tb_model.outputs import (
     unpivot_outputs,
     load_model_scenarios,
@@ -19,7 +21,7 @@ def test_unpivot_outputs():
     """
     Verify that unpivot_outputs works. 
     """
-    mock_model = _get_mock_model(
+    mock_model = get_mock_model(
         times=[2000, 2001, 2002, 2003, 2004, 2005],
         outputs=[
             [300.0, 300.0, 300.0, 33.0, 33.0, 33.0, 93.0, 39.0],
@@ -92,7 +94,7 @@ def test_create_power_bi_outputs():
     """
     # Prepare models
     models = [
-        _get_mock_model(
+        get_mock_model(
             times=[2000, 2001, 2002, 2003, 2004, 2005],
             outputs=[
                 [1, 2, 3, 4, 5, 6, 7, 8],
@@ -107,7 +109,7 @@ def test_create_power_bi_outputs():
                 "snacks": [1, 2, 3, 4, 5, 6],
             },
         ),
-        _get_mock_model(
+        get_mock_model(
             times=[2000, 2001, 2002, 2003, 2004, 2005],
             outputs=[
                 [51, 52, 53, 54, 55, 56, 57, 58],
@@ -153,7 +155,7 @@ def test_store_and_load_models():
     data is in the correct format.
     """
     models = [
-        _get_mock_model(
+        get_mock_model(
             times=[2000, 2001, 2002, 2003, 2004, 2005],
             outputs=[
                 [1, 2, 3, 4, 5, 6, 7, 8],
@@ -168,7 +170,7 @@ def test_store_and_load_models():
                 "snacks": [1, 2, 3, 4, 5, 6],
             },
         ),
-        _get_mock_model(
+        get_mock_model(
             times=[2000, 2001, 2002, 2003, 2004, 2005],
             outputs=[
                 [51, 52, 53, 54, 55, 56, 57, 58],
@@ -202,22 +204,3 @@ def test_store_and_load_models():
 
         # Check derived outputs are the same as stored outputs
         assert scenario_model.derived_outputs["snacks"] == original_model.derived_outputs["snacks"]
-
-
-def _get_mock_model(times, outputs, derived_outputs=None):
-    mock_model = mock.Mock()
-    mock_model.derived_outputs = derived_outputs or {}
-    mock_model.outputs = np.array(outputs)
-    mock_model.compartment_names = [
-        "susceptibleXmood_happyXage_old",
-        "susceptibleXmood_sadXage_old",
-        "susceptibleXmood_happyXage_young",
-        "susceptibleXmood_sadXage_young",
-        "infectiousXmood_happyXage_old",
-        "infectiousXmood_sadXage_old",
-        "infectiousXmood_happyXage_young",
-        "infectiousXmood_sadXage_young",
-    ]
-    mock_model.times = times
-    mock_model.all_stratifications = {"mood": ["happy", "sad"], "age": ["old", "young"]}
-    return mock_model

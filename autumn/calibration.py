@@ -16,12 +16,12 @@ from scipy.optimize import Bounds, minimize
 from scipy import stats, special
 
 from . import constants
-from .tb_model import store_tb_database
+from .tb_model import store_database
 from .db import Database
 from .tool_kit.utils import get_data_hash
 from autumn.tool_kit.scenarios import Scenario
 
-from autumn.tb_model.outputs import _unpivot_outputs
+from autumn.tb_model.outputs import unpivot_outputs
 import yaml
 
 logger = logging.getLogger("pymc3")
@@ -67,7 +67,7 @@ class Calibration:
         chain_index,
         model_parameters={},
         start_time_range=None,
-        record_rejected_outputs=False
+        record_rejected_outputs=False,
     ):
 
         self.model_name = model_name
@@ -117,9 +117,13 @@ class Calibration:
     def initialise_scenario_list(self):
         base_scenario = Scenario(self.model_builder, 0, copy.deepcopy(self.model_parameters))
         self.scenarios = [base_scenario]
-        if 'scenarios' in self.model_parameters:
-            for scenario_index in [sc_i for sc_i in self.model_parameters['scenarios'] if int(sc_i) > 0]:
-                scenario = Scenario(self.model_builder, scenario_index, copy.deepcopy(self.model_parameters))
+        if "scenarios" in self.model_parameters:
+            for scenario_index in [
+                sc_i for sc_i in self.model_parameters["scenarios"] if int(sc_i) > 0
+            ]:
+                scenario = Scenario(
+                    self.model_builder, scenario_index, copy.deepcopy(self.model_parameters)
+                )
                 self.scenarios.append(scenario)
 
     def update_post_processing(self):
@@ -150,33 +154,29 @@ class Calibration:
         Record the model outputs in the database
         """
         _model = self.scenarios[scenario_index].model
-        out_df = pd.DataFrame(
-            _model.outputs, columns=_model.compartment_names
-        )
+        out_df = pd.DataFrame(_model.outputs, columns=_model.compartment_names)
         derived_output_df = pd.DataFrame.from_dict(_model.derived_outputs)
-        store_tb_database(
+        store_database(
             derived_output_df,
             table_name="derived_outputs",
             run_idx=self.iter_num,
             database_name=self.output_db_path,
-            append=True,
-            scenario=scenario_index
+            scenario=scenario_index,
         )
-        # store_tb_database(
+        # store_database(
         #     out_df,
         #     run_idx=self.iter_num,
         #     times=_model.times,
         #     database_name=self.output_db_path,
-        #     append=True,
         #     scenario=scenario_index
         # )
-        pbi_outputs = _unpivot_outputs(_model)
-        store_tb_database(
+        pbi_outputs = unpivot_outputs(_model)
+        store_database(
             pbi_outputs,
-            table_name='pbi_scenario_' + str(scenario_index),
+            table_name="pbi_scenario_" + str(scenario_index),
             database_name=self.output_db_path,
             scenario=scenario_index,
-            run_idx=self.iter_num
+            run_idx=self.iter_num,
         )
 
     def store_mcmc_iteration_info(self, proposed_params, proposed_loglike, accept, i_run):
@@ -194,12 +194,11 @@ class Calibration:
         mcmc_run_colnames.append("loglikelihood")
         mcmc_run_colnames.append("accept")
         mcmc_run_df = pd.DataFrame(mcmc_run_dict, columns=mcmc_run_colnames, index=[i_run])
-        store_tb_database(
+        store_database(
             mcmc_run_df,
             table_name="mcmc_run",
             run_idx=i_run,
             database_name=self.output_db_path,
-            append=True,
         )
 
     def run_model_with_params(self, params):
@@ -211,7 +210,7 @@ class Calibration:
         for i, param_name in enumerate(self.param_list):
             update_params[param_name] = params[i]
 
-        self.scenarios[0].params['default'].update(update_params)
+        self.scenarios[0].params["default"].update(update_params)
         self.scenarios[0].run()
         self.update_post_processing()
 
@@ -220,10 +219,10 @@ class Calibration:
         Run intervention scenarios after accepting a baseline run
         :param params: list of all current MCMC parameter values
         """
-        for scenario_idx, scenario_params in self.model_parameters['scenarios'].items():
+        for scenario_idx, scenario_params in self.model_parameters["scenarios"].items():
             if scenario_idx == 0:
                 continue
-            scenario_params["start_time"] = self.model_parameters['scenario_start_time']
+            scenario_params["start_time"] = self.model_parameters["scenario_start_time"]
 
             # Potential update of scenario params if these are among the MCMC params
             updated_scenario_params = copy.copy(scenario_params)
@@ -233,10 +232,14 @@ class Calibration:
                     updated_scenario_params[param_name] = params[param_index]
 
             # update default params
-            self.scenarios[scenario_idx].params['default'] = copy.deepcopy(self.scenarios[0].params['default'])
+            self.scenarios[scenario_idx].params["default"] = copy.deepcopy(
+                self.scenarios[0].params["default"]
+            )
 
             # update scenario params
-            self.scenarios[scenario_idx].params['scenarios'][scenario_idx].update(updated_scenario_params)
+            self.scenarios[scenario_idx].params["scenarios"][scenario_idx].update(
+                updated_scenario_params
+            )
 
             # Run scenario
             baseline_model = copy.deepcopy(self.scenarios[0].model)
@@ -323,12 +326,11 @@ class Calibration:
                 mcmc_run_df = pd.DataFrame(
                     mcmc_run_dict, columns=mcmc_run_colnames, index=[self.iter_num]
                 )
-                store_tb_database(
+                store_database(
                     mcmc_run_df,
                     table_name="mcmc_run",
                     run_idx=self.iter_num,
                     database_name=self.output_db_path,
-                    append=True,
                 )
             self.evaluated_params_ll.append((copy.copy(params), copy.copy(best_ll)))
 
@@ -545,7 +547,7 @@ class Calibration:
                     )
                     mcmc_run_info["accepted"].fillna(0, inplace=True)
                     mcmc_run_info = mcmc_run_info.drop_duplicates()
-                    store_tb_database(
+                    store_database(
                         mcmc_run_info, table_name="mcmc_run_info", database_name=self.output_db_path
                     )
                 else:
@@ -598,14 +600,14 @@ class Calibration:
         if prev_params is None:
             prev_params = []
             for prior_dict in self.priors:
-                if prior_dict["param_name"] in self.model_parameters['default']:
-                    prev_params.append(self.model_parameters['default'][prior_dict["param_name"]])
+                if prior_dict["param_name"] in self.model_parameters["default"]:
+                    prev_params.append(self.model_parameters["default"][prior_dict["param_name"]])
                 else:
-                    if prior_dict["distribution"] == 'uniform':
-                        prev_params.append(np.mean(prior_dict['distri_params']))
+                    if prior_dict["distribution"] == "uniform":
+                        prev_params.append(np.mean(prior_dict["distri_params"]))
                     else:
                         # FIXME: we need to make it more flexible
-                        print('FIXME: need to be able to handle different distributions')
+                        print("FIXME: need to be able to handle different distributions")
 
         new_params = []
 

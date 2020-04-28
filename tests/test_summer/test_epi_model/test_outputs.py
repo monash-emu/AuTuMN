@@ -7,7 +7,7 @@ import pytest
 import numpy as np
 
 from summer.model import EpiModel, StratifiedModel
-from summer.constants import Compartment, Flow, BirthApproach, Stratification
+from summer.constants import Compartment, Flow, BirthApproach, Stratification, IntegrationType
 
 
 @pytest.mark.parametrize("ModelClass", [EpiModel, StratifiedModel])
@@ -26,7 +26,8 @@ def test_epi_model__with_static_dynamics__expect_no_change(ModelClass):
         starting_population=pop,
     )
     # Run the model for 5 years.
-    model.run_model()
+    model.run_model(integration_type=IntegrationType.ODE_INT)
+
     # Expect that no one has moved from sucsceptible to infections at any point in time
     expected_output = [
         [100.0, 0.0],
@@ -58,7 +59,8 @@ def test_epi_model__with_birth_rate__expect_pop_increase(ModelClass):
         starting_population=pop,
     )
     # Run the model for 5 years.
-    model.run_model()
+    model.run_model(integration_type=IntegrationType.ODE_INT)
+
     # Expect that we have more people in the population
     expected_output = [
         [[100.0, 0.0], [102.0, 0.0], [104.0, 0.0], [106.0, 0.0], [108.0, 0.0], [111.0, 0.0]]
@@ -85,7 +87,7 @@ def test_epi_model__with_death_rate__expect_pop_decrease(ModelClass):
         starting_population=pop,
     )
     # Run the model for 5 years.
-    model.run_model()
+    model.run_model(integration_type=IntegrationType.ODE_INT)
     # Expect that we have more people in the population
     expected_output = [
         [100.0, 0.0],
@@ -110,7 +112,11 @@ def test_epi_model__with_recovery_rate__expect_all_recover(ModelClass):
     pop = 100
     model = ModelClass(
         times=_get_integration_times(2000, 2005, 1),
-        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.EARLY_INFECTIOUS, Compartment.RECOVERED],
+        compartment_types=[
+            Compartment.SUSCEPTIBLE,
+            Compartment.EARLY_INFECTIOUS,
+            Compartment.RECOVERED,
+        ],
         initial_conditions={Compartment.EARLY_INFECTIOUS: pop},
         parameters={"recovery": 1},
         requested_flows=[
@@ -125,7 +131,8 @@ def test_epi_model__with_recovery_rate__expect_all_recover(ModelClass):
         starting_population=pop,
     )
     # Run the model for 5 years.
-    model.run_model()
+    model.run_model(integration_type=IntegrationType.ODE_INT)
+
     # Expect that almost everyone recovers
     expected_output = [
         [0.0, 100.0, 0.0],
@@ -164,7 +171,8 @@ def test_epi_model__with_infect_death_rate__expect_infected_pop_decrease(ModelCl
         starting_population=pop,
     )
     # Run the model for 5 years.
-    model.run_model()
+    model.run_model(integration_type=IntegrationType.ODE_INT)
+
     # Expect that we have more people in the population
     expected_output = [
         [50.0, 50.0],
@@ -201,7 +209,8 @@ def test_epi_model__with_no_infected__expect_no_change(ModelClass):
         starting_population=pop,
     )
     # Run the model for 5 years.
-    model.run_model()
+    model.run_model(integration_type=IntegrationType.ODE_INT)
+
     # Expect that no one has moved from sucsceptible to infections at any point in time
     expected_output = [
         [100.0, 0.0],
@@ -238,7 +247,8 @@ def test_epi_model__with_infection_frequency__expect_all_infected(ModelClass):
         starting_population=pop,
     )
     # Run the model for 5 years.
-    model.run_model()
+    model.run_model(integration_type=IntegrationType.ODE_INT)
+
     # Expect that everyone gets infected eventually.
     expected_output = [
         [[99.0, 1.0], [83.0, 17.0], [20.0, 80.0], [1.0, 99.0], [0.0, 100.0], [0.0, 100.0]]
@@ -270,7 +280,8 @@ def test_epi_model__with_infection_density__expect_all_infected(ModelClass):
         starting_population=pop,
     )
     # Run the model for 5 years.
-    model.run_model()
+    model.run_model(integration_type=IntegrationType.ODE_INT)
+
     # Expect that everyone gets infected eventually.
     expected_output = [
         [[99.0, 1.0], [83.0, 17.0], [20.0, 80.0], [1.0, 99.0], [0.0, 100.0], [0.0, 100.0]]
@@ -387,7 +398,8 @@ def test_epi_model__with_complex_dynamics__expect_correct_outputs(ModelClass):
         starting_population=pop,
     )
     # Run the model for 5 years.
-    model.run_model()
+    model.run_model(integration_type=IntegrationType.ODE_INT)
+
     # Expect that the results are consistent, nothing crazy happens.
     expected_output = [
         [900.0, 100.0, 0.0, 0.0, 0.0],

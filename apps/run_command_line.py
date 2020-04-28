@@ -21,11 +21,25 @@ from .covid_19.calibration.malaysia import (
 from .covid_19.calibration.philippines import (
     run_phl_calibration_chain as run_philippines_covid_calibration_chain,
 )
+from autumn.tb_model.outputs import create_power_bi_outputs
 
 
 @click.group()
 def cli():
     """AuTuMN CLI"""
+
+
+@click.group()
+def db():
+    """Database utilities"""
+
+
+@db.command("powerbi")
+@click.argument("src_db_path", type=str)
+@click.argument("dest_db_path", type=str)
+def powerbi_convert(src_db_path, dest_db_path):
+    """Convert model outputs into PowerBI format"""
+    create_power_bi_outputs(src_db_path, dest_db_path)
 
 
 @click.group()
@@ -112,4 +126,5 @@ def philippines_calibration(max_seconds, run_id):
 
 cli.add_command(run)
 cli.add_command(calibrate)
+cli.add_command(db)
 cli()

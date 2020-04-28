@@ -4,12 +4,13 @@ Tools to build a tuberculosis
 
 from .outputs import (
     load_calibration_from_db,
-    store_tb_database,
+    store_database,
     store_run_models,
     create_mcmc_outputs,
     create_output_connections_for_incidence_by_stratum,
     list_all_strata_for_mortality,
     plot_time_variant_param,
+    load_model_scenarios,
 )
 from .latency_params import provide_aggregated_latency_parameters, get_adapted_age_parameters
 from .loaded_model import LoadedModel

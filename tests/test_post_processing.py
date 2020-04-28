@@ -2,6 +2,7 @@ from numpy import linspace
 
 from summer.model.strat_model import StratifiedModel
 from autumn.post_processing.processor import post_process
+from summer.constants import IntegrationType
 
 
 def test_post_processing():
@@ -61,7 +62,7 @@ def _get_model():
         verbose=False,
     )
 
-    model.run_model()
+    model.run_model(integration_type=IntegrationType.ODE_INT)
     return model
 
 

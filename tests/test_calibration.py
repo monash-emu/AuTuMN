@@ -3,7 +3,7 @@ from unittest import mock
 from tempfile import TemporaryDirectory
 
 
-from utils import get_mock_model, in_memory_db_factory, get_deterministic_random_seed
+from .utils import get_mock_model, in_memory_db_factory, get_deterministic_random_seed
 
 get_in_memory_db = in_memory_db_factory()
 

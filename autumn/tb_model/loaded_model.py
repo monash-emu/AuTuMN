@@ -29,3 +29,19 @@ class LoadedModel:
         )
 
         self.times = list(outputs["times"].values())
+        self.all_stratifications = {}
+        # lateXagegroup_75Xclinical_sympt_non_hospital
+        for compartment_name in self.compartment_names:
+            # ['late', 'agegroup_75', 'clinical_sympt_non_hospital']
+            parts = compartment_name.split("X")
+            # ['agegroup_75', 'clinical_sympt_non_hospital']
+            strats = parts[1:]
+            for strat in strats:
+                # clinical_sympt_non_hospital
+                parts = strat.split("_")
+                strat_name = parts[0]
+                strata = "_".join(parts[1:])
+                if strat_name not in self.all_stratifications:
+                    self.all_stratifications[strat_name] = []
+                if strata not in self.all_stratifications[strat_name]:
+                    self.all_stratifications[strat_name].append(strata)

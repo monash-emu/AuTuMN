@@ -6,6 +6,8 @@ import numpy
 from autumn.tool_kit import schema_builder as sb
 from autumn.tool_kit.timer import Timer
 
+from ..constants import IntegrationType
+
 from .utils import merge_dicts
 
 validate_params = sb.build_validator(default=dict, scenario_start_time=float, scenarios=dict)
@@ -61,7 +63,7 @@ class Scenario:
                 self.model = self.model_builder(params)
                 self.model.compartment_values = init_compartments
 
-            self.model.run_model()
+            self.model.run_model(IntegrationType.SOLVE_IVP)
 
     @property
     def is_baseline(self):

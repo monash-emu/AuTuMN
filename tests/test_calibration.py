@@ -3,12 +3,13 @@ from unittest import mock
 from tempfile import TemporaryDirectory
 
 
-from utils import get_mock_model, in_memory_db_factory
+from utils import get_mock_model, in_memory_db_factory, get_deterministic_random_seed
 
 get_in_memory_db = in_memory_db_factory()
 
 
-@mock.patch("autumn.db.database._get_sql_engine", get_in_memory_db)
+@mock.patch("autumn.calibration.calibration.get_random_seed", get_deterministic_random_seed)
+@mock.patch("autumn.db.database.get_sql_engine", get_in_memory_db)
 def test_calibrate_autumn_mcmc():
     # Import autumn stuff inside function so we can mock out the database.
     from autumn.db import Database
@@ -59,11 +60,11 @@ def test_calibrate_autumn_mcmc():
                 chain_index=0,
                 model_parameters={"default": {}, "scenario_start_time": 2000, "scenarios": {}},
             )
-            num_iters = 100
+            num_iters = 50
             calib.run_fitting_algorithm(
                 run_mode=CalibrationMode.AUTUMN_MCMC,
                 n_iterations=num_iters,
-                n_burned=20,
+                n_burned=10,
                 n_chains=1,
                 available_time=1e6,
             )
@@ -77,4 +78,5 @@ def test_calibrate_autumn_mcmc():
             max_idx = mcmc_runs.loglikelihood.idxmax()
             best_run = mcmc_runs.iloc[max_idx]
             ice_cream_sales_mle = best_run.ice_cream_sales
-            # assert 2.6 < ice_cream_sales_mle < 3.4
+            # This value is non-deterministic due to fixed seed.
+            assert 2.9 < ice_cream_sales_mle < 3.1

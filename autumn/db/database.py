@@ -9,7 +9,7 @@ class Database:
 
     def __init__(self, database_name):
         self.database_name = database_name
-        self.engine = _get_sql_engine(database_name)
+        self.engine = get_sql_engine(database_name)
 
     def db_query(self, table_name, column="*", conditions=[]):
         """
@@ -35,6 +35,6 @@ class Database:
         return pd.read_sql_query(query, con=self.engine)
 
 
-def _get_sql_engine(db_path: str):
+def get_sql_engine(db_path: str):
     """Gets SQL Alchemy databas engine. Mocked out in testing"""
     return create_engine("sqlite:///" + db_path, echo=False)

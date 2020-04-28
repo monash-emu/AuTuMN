@@ -23,8 +23,12 @@ def get_mock_model(times, outputs, derived_outputs=None):
     return mock_model
 
 
+def get_deterministic_random_seed(num: int):
+    return num
+
+
 def in_memory_db_factory():
-    """Replacement for _get_sql_engine, returns an in-memory database"""
+    """Replacement for get_sql_engine, returns an in-memory database"""
     databases = {}
 
     def get_in_memory_db(db_path: str):

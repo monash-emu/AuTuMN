@@ -436,7 +436,7 @@ class Calibration:
             raise ValueError(msg)
 
         # Initialise random seed differently for different chains
-        np.random.seed(self.chain_index + int(time()))
+        np.random.seed(get_random_seed(self.chain_index))
 
         # Run the selected fitting algorithm.
         if run_mode == CalibrationMode.AUTUMN_MCMC:
@@ -691,6 +691,14 @@ class Calibration:
         file_path = os.path.join(constants.DATA_PATH, self.model_name, "mle_params.yml")
         with open(file_path, "w") as outfile:
             yaml.dump(dict_to_dump, outfile, default_flow_style=False)
+
+
+def get_random_seed(chain_index: int):
+    """
+    Get a random seed for the calibration.
+    Mocked out by unit tests.
+    """
+    return chain_index + int(time())
 
 
 # FIXME: Move this script to a smoke test or delete. This file should not depend on mongolia tb model.

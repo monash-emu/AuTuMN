@@ -86,9 +86,13 @@ def plot_outputs_multi(plotter: Plotter, scenarios: List[Scenario], output_confi
     """
     fig, axis, _, _, _ = plotter.get_figure()
     output_name = output_config["name"]
+    legend = []
     for idx, scenario in enumerate(reversed(scenarios)):
-        _plot_outputs_to_axis(axis, scenario, output_name, color_idx=idx)
+        color_idx = len(scenarios) - idx - 1
+        _plot_outputs_to_axis(axis, scenario, output_name, color_idx=color_idx, alpha=0.7)
+        legend.append(scenario.name)
 
+    axis.legend(legend)
     target_values = output_config["target_values"]
     target_times = output_config["target_times"]
     _plot_targets_to_axis(axis, target_values, target_times)
@@ -108,7 +112,7 @@ def plot_outputs_single(plotter: Plotter, scenario: Scenario, output_config: dic
     plotter.save_figure(fig, filename=output_name, subdir="outputs", title_text=output_name)
 
 
-def _plot_outputs_to_axis(axis, scenario: Scenario, name: str, color_idx=0):
+def _plot_outputs_to_axis(axis, scenario: Scenario, name: str, color_idx=0, alpha=1):
     """
     Plot outputs requested by output_config from scenario to the provided axis.
     """
@@ -124,7 +128,7 @@ def _plot_outputs_to_axis(axis, scenario: Scenario, name: str, color_idx=0):
 
     # Plot the values as a line.
     if type(plot_values) is list:
-        axis.plot(model.times, plot_values, color=COLOR_THEME[color_idx])
+        axis.plot(model.times, plot_values, color=COLOR_THEME[color_idx], alpha=alpha)
     else:
         logger.error("Could not plot output named %s - non-list data format.", name)
 

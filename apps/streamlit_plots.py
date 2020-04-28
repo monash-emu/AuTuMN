@@ -55,8 +55,6 @@ APP_FOLDERS = {
 
 
 def main():
-    st.sidebar.title("AuTuMN Plots")
-
     app_dirname = app_selector()
     app_data_dir_path = os.path.join(constants.DATA_PATH, app_dirname)
 
@@ -123,12 +121,12 @@ def main():
 
 
 def plot_outputs_multi(plotter: Plotter, scenarios: list, scenario_idx: int, plot_config: dict):
-    output_config = get_output_config(scenarios, plot_config)
+    output_config = model_output_selector(scenarios, plot_config)
     scenario_plots.plot_outputs_multi(plotter, scenarios, output_config)
 
 
 def plot_outputs_single(plotter: Plotter, scenarios: list, scenario_idx: int, plot_config: dict):
-    output_config = get_output_config(scenarios, plot_config)
+    output_config = model_output_selector(scenarios, plot_config)
     scenario = scenarios[scenario_idx]
     scenario_plots.plot_outputs_single(plotter, scenario, output_config)
 
@@ -139,27 +137,40 @@ PLOT_FUNCS = {
 }
 
 
-def get_output_config(scenarios, plot_config):
+def model_output_selector(scenarios, plot_config):
+    """
+    Allow user to select the output that they want to select.
+    Returns an output config dictionary.
+    """
+    # Get a list of all the outputs requested by user
     outputs_to_plot = plot_config["outputs_to_plot"]
+
+    # Get a list of all possible output names
     output_names = []
     base_scenario = scenarios[0]
     if base_scenario.generated_outputs:
         output_names += base_scenario.generated_outputs.keys()
     if base_scenario.model.derived_outputs:
         output_names += base_scenario.model.derived_outputs.keys()
+
+    # Find the names of all the output types and get user to select one
     output_base_names = list(set([n.split("X")[0] for n in output_names]))
     output_base_name = st.sidebar.selectbox("Select output type", output_base_names)
 
+    # Find the names of all the strata available to be plotted
     output_strata_names = [
         "X".join(n.split("X")[1:]) for n in output_names if n.startswith(output_base_name)
     ]
     has_strata_names = any(output_strata_names)
     if has_strata_names:
+        # If there are strata names to select, get the user to select one.
         output_strata = st.sidebar.selectbox("Select output strata", output_strata_names)
         output_name = f"{output_base_name}X{output_strata}"
     else:
+        # Otherwise just use the base name - no selection required.
         output_name = output_base_name
 
+    # Construct an output config for the plotting code.
     try:
         output_config = next(o for o in outputs_to_plot if o["name"] == output_name)
     except StopIteration:
@@ -239,8 +250,9 @@ class StreamlitPlotter(Plotter):
         W
         """
         if title_text:
-            pretty_title = self.get_plot_title(title_text)
-            add_title_to_plot(fig, 1, pretty_title)
+            pretty_title = self.get_plot_title(title_text).replace("X", " ")
+            md = f"<p style='text-align: center;padding-left: 80px'>{pretty_title}</p>"
+            st.markdown(md, unsafe_allow_html=True)
 
         st.pyplot(fig, dpi=300, bbox_inches="tight")
 

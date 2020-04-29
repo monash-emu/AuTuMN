@@ -75,8 +75,11 @@ def load_params(app_dir: str, application=None):
             params = yaml.safe_load(f)
 
     # Revise any dates for mixing matrices submitted in YMD format
-    for scenario in params:
-        if type(params[scenario]) == dict and "mixing" in params[scenario]:
-            revise_dates_if_ymd(params[scenario]["mixing"])
+    for param in params:
+        if type(params[param]) == dict and "mixing" in params[param]:
+            revise_dates_if_ymd(params[param]["mixing"])
+        if param == "scenarios":
+            for scenario in params["scenarios"]:
+                revise_dates_if_ymd(params[param][scenario]["mixing"])
 
     return params

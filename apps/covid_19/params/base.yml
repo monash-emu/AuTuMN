@@ -9,7 +9,7 @@ default:
   # Number of times each compartment representing active infection (i.e. not S and not R) are repeated
   n_compartment_repeats:
     susceptible: 1
-    exposed: 2
+    exposed: 1
     presympt: 1
     infectious: 1
     late: 1
@@ -19,14 +19,18 @@ default:
   import_secondary_rate: 0.
 
   compartment_periods:
-    exposed: 3.0
-    presympt: 1.0
+    incubation: 4.0
+    # exposed now calculated
+    # presympt now calculated
     infectious: 2.
     late: 5.68
     hospital_early: 5.
     hospital_late: 8.
     icu_early: 10.
     icu_late: 10.
+
+  # Proportion of the exposed period spent infectious - i.e. "presymptomatic"
+  prop_exposed_presympt: 0.5
 
   # Stratification-related requests
   stratify_by:

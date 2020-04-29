@@ -158,6 +158,8 @@ def plot_exponential_growth_rate(plotter: Plotter, model: StratifiedModel):
     """
     Find the exponential growth rate at a range of requested time points
     """
+    logger.error("plot_exponential_growth_rate does not work yet")
+    return
     growth_rates = []
     for time_idx in range(len(model.times) - 1):
         try:

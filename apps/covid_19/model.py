@@ -59,6 +59,14 @@ def build_model(country: str, params: dict, update_params={}):
     # Update, not used in single application run
     model_parameters.update(update_params)
 
+    # Calculate presymptomatic period from exposed period and relative proportion of that period spent infectious
+    model_parameters["compartment_periods"][Compartment.EXPOSED] = \
+        model_parameters["compartment_periods"]["incubation"] * \
+        (1.0 - model_parameters["prop_exposed_presympt"])
+    model_parameters["compartment_periods"][Compartment.PRESYMPTOMATIC] = \
+        model_parameters["compartment_periods"]["incubation"] * \
+        model_parameters["prop_exposed_presympt"]
+
     # update parameters stored in dictionaries that need to be modified during calibration
     model_parameters = update_dict_params_for_calibration(model_parameters)
 

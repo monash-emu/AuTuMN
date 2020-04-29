@@ -1,43 +1,16 @@
 """
-Entrypoint for Streamlit web UI
-Run from a command line shell (with virtualenv active) using
-
-    streamlit run apps/streamlit_plots.py
-
-Website: https://www.streamlit.io/
-Docs: https://docs.streamlit.io/
+Streamlit web UI
 """
 import os
-import sys
+import yaml
 from datetime import datetime
 
-# Fix import issue by adding autumn project directory to Python path.
-PROJECT_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sys.path += [PROJECT_PATH]
-
-# Plus fix Streamlit hot reloading, which requires PYTHONPATH hacks
-# https://github.com/streamlit/streamlit/issues/1176
-MODULE_DIRNAMES = ["summer", "autumn"]
-dirpaths = []
-for module_dirname in MODULE_DIRNAMES:
-    dirpaths += [
-        os.path.join(PROJECT_PATH, d)
-        for d, _, _ in os.walk(module_dirname)
-        if not "__pycache__" in d
-    ]
-
-os.environ["PYTHONPATH"] = ":".join(dirpaths)
-
-import yaml
 import streamlit as st
 
 from autumn import constants
-from autumn.db import Database
 from autumn.tb_model import load_model_scenarios
-from autumn.tool_kit import Scenario
 from autumn.outputs import scenario_plots
-from autumn.outputs.plotter import Plotter, add_title_to_plot
-from autumn.post_processing.processor import validate_post_process_config, post_process
+from autumn.outputs.plotter import Plotter
 
 
 class Apps:
@@ -236,7 +209,3 @@ class StreamlitPlotter(Plotter):
             st.markdown(md, unsafe_allow_html=True)
 
         st.pyplot(fig, dpi=300, bbox_inches="tight")
-
-
-if __name__ == "__main__":
-    main()

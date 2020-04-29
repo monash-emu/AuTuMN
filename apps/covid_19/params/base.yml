@@ -16,7 +16,7 @@ default:
     recovered: 1
 
   implement_importation: False
-  importation_rate: 0.
+  import_secondary_rate: 0.
 
   compartment_periods:
     exposed: 3.0
@@ -104,6 +104,13 @@ default:
 
   # proportion of isolated cases among symptomatic
   prop_isolated_among_symptomatic: 0.6
+
+  # parameters to define the effect (infectiousness adjustment) of self-isolation and enforced isolation
+  self_isolation_effect: .66
+  enforced_isolation_effect: 1.
+
+  # contact rate for imported cases
+  beta_imported: 1.
 
   # Add non-infectious
   add_non_infectious: True

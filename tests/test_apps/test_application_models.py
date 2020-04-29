@@ -1,7 +1,11 @@
+import os
+
 import pytest
 from summer.model import StratifiedModel
 
 from apps import mongolia, covid_19, marshall_islands
+
+IS_GITHUB_CI = os.environ.get("GITHUB_ACTION", False)
 
 MODEL_RUNNERS = [
     ["Mongolia", mongolia.run_model],
@@ -17,6 +21,7 @@ MODEL_BUILDERS = [
 ]
 
 
+@pytest.mark.skipif(not IS_GITHUB_CI, reason="This takes way too long to run locally.")
 @pytest.mark.parametrize("name, build_model, params", MODEL_BUILDERS)
 def test_build_models(name, build_model, params):
     """
@@ -26,6 +31,7 @@ def test_build_models(name, build_model, params):
     assert type(model) is StratifiedModel
 
 
+@pytest.mark.skipif(not IS_GITHUB_CI, reason="This takes way too long to run locally.")
 @pytest.mark.parametrize("name, run_model", MODEL_RUNNERS)
 def test_run_models(name, run_model):
     """

@@ -75,6 +75,23 @@ def update_mixing_with_multipliers(mixing_matrix, multipliers):
     return np.multiply(mixing_matrix, multipliers)
 
 
+def apply_age_specific_contact_multipliers(mixing_matrix, age_specific_multipliers):
+    """
+    Update a mixing matrix using age-specific multipliers specified through a dictionary
+    :param mixing_matrix: the original mixing matrix
+    :param age_specific_multipliers: dict
+        keys are age indices between 0 and 15, values are multipliers
+    :return: the updated mixing matrix
+    """
+    mixing_multipliers_matrix = np.ones((16, 16))
+    for age_index, multiplier in age_specific_multipliers.items():
+        assert(0 <= age_index <= 15)
+        mixing_multipliers_matrix[age_index, :] *= multiplier
+        mixing_multipliers_matrix[:, age_index] *= multiplier
+    return update_mixing_with_multipliers(mixing_matrix, mixing_multipliers_matrix)
+
+
+
 def get_all_prem_countries():
     """
     Return the list of countries for which Prem et al provide contact matrices

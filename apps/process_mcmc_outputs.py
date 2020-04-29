@@ -1,7 +1,8 @@
 """
 Post processing script for MCMC calibration
 """
-from autumn.tb_model import load_calibration_from_db, create_mcmc_outputs
+from autumn.db.models import load_calibration_from_db
+from autumn.tb_model.outputs import create_mcmc_outputs
 import os
 import yaml
 

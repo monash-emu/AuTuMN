@@ -23,22 +23,23 @@ class Scenario:
     A particular run of a simulation using a common model and unique parameters.
     """
 
-    def __init__(self, model_builder: ModelBuilderType, idx: str, params: dict):
+    def __init__(self, model_builder: ModelBuilderType, idx: str, params: dict, chain_idx=0):
         validate_params(params)
         self.model_builder = model_builder
         self.idx = idx
+        self.chain_idx = chain_idx
         self.name = "baseline" if idx == 0 else f"scenario-{idx}"
         self.params = params
         self.generated_outputs = None
 
     @classmethod
-    def load_from_db(self, idx: int, model: StratifiedModel, params=None):
+    def load_from_db(self, idx: int, chain_idx: int, model: StratifiedModel, params=None):
         """
         Construct a Scenario from a model that's been loaded from an output database.
         """
         empty_params = {"default": {}, "scenario_start_time": 0, "scenarios": {}}
         params = params or empty_params
-        scenario = Scenario(None, idx, params)
+        scenario = Scenario(None, idx, params, chain_idx=chain_idx)
         scenario.model = model
         return scenario
 

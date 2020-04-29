@@ -15,7 +15,7 @@ from autumn.tool_kit.utils import (
     get_git_branch,
     get_git_hash,
 )
-from autumn.tb_model import store_run_models
+from autumn.db.models import store_run_models
 
 from summer.model.utils.flowchart import create_flowchart
 

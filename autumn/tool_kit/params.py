@@ -17,10 +17,10 @@ def revise_dates_if_ymd(mixing_params):
     integer representing the number of days from the reference time.
     """
     for key in (k for k in mixing_params if k.endswith("_times")):
-        for time in mixing_params[key]:
+        for i_time, time in enumerate(mixing_params[key]):
             if isinstance(time, (list, str)):
-                mixing_params[key][time] = \
-                    find_relative_date_from_string_or_tuple(mixing_params[key][time])
+                mixing_params[key][i_time] = \
+                    find_relative_date_from_string_or_tuple(mixing_params[key][i_time])
 
 
 def load_params(app_dir: str, application=None):

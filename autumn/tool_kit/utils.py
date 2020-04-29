@@ -259,13 +259,11 @@ def get_date_from_string(date_as_string):
     return date(int(date_as_string[:4]), int(date_as_string[4: 6]), int(date_as_string[6:]))
 
 
-def find_relative_date_from_tuple(requested_date, base_date=(2019, 12, 31)):
-    difference = get_date_from_tuple(requested_date) - get_date_from_tuple(base_date)
-    return difference.days
-
-
-def find_relative_date_from_string(requested_date, base_date=(2019, 12, 31)):
-    difference = get_date_from_string(requested_date) - get_date_from_tuple(base_date)
+def find_relative_date_from_string_or_tuple(requested_date, base_date=(2019, 12, 31)):
+    requested_date = get_date_from_string(requested_date) if \
+        type(requested_date) == str else \
+        get_date_from_tuple(requested_date)
+    difference = requested_date - get_date_from_tuple(base_date)
     return difference.days
 
 

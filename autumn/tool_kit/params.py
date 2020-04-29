@@ -4,7 +4,7 @@ Used to load model parameters from file
 import os
 import yaml
 import logging
-from autumn.tool_kit.utils import find_relative_date_from_tuple, find_relative_date_from_string
+from autumn.tool_kit.utils import find_relative_date_from_string_or_tuple
 
 from .utils import merge_dicts
 
@@ -17,10 +17,10 @@ def revise_dates_if_ymd(mixing_params):
     integer representing the number of days from the reference time.
     """
     for key in (k for k in mixing_params if k.endswith("_times")):
-        for i_time in (t for t in range(len(mixing_params[key])) if type(mixing_params[key][t]) == list):
-            mixing_params[key][i_time] = find_relative_date_from_tuple(mixing_params[key][i_time])
-        for i_time in (t for t in range(len(mixing_params[key])) if type(mixing_params[key][t]) == str):
-            mixing_params[key][i_time] = find_relative_date_from_string(mixing_params[key][i_time])
+        for time in mixing_params[key]:
+            if isinstance(time, (list, str)):
+                mixing_params[key][time] = \
+                    find_relative_date_from_string_or_tuple(mixing_params[key][time])
 
 
 def load_params(app_dir: str, application=None):

@@ -106,11 +106,8 @@ default:
   prop_isolated_among_symptomatic: 0.6
 
   # parameters to define the effect (infectiousness adjustment) of self-isolation and enforced isolation
-  self_isolation_effect: .66
+  self_isolation_effect: .67
   enforced_isolation_effect: 1.
-
-  # contact rate for imported cases
-  beta_imported: 1.
 
   # Add non-infectious
   add_non_infectious: True

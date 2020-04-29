@@ -103,24 +103,14 @@ PAR_PRIORS = [
         "distri_params": [0.4, 0.6],
     },
     {
-        "param_name": "compartment_periods_exposed",
+        "param_name": "compartment_periods_incubation",
         "distribution": "uniform",
-        "distri_params": [2.0, 4.0],
+        "distri_params": [2.0, 6.0],
     },
     {
         "param_name": "compartment_periods_late",
         "distribution": "uniform",
         "distri_params": [4.0, 7.0],
-    },
-    {
-        "param_name": "npi_effectiveness_school",
-        "distribution": "uniform",
-        "distri_params": [0.8, 1.0],
-    },
-    {
-        "param_name": "npi_effectiveness_work",
-        "distribution": "uniform",
-        "distri_params": [0.8, 1.0],
     },
     {
         "param_name": "npi_effectiveness_other_locations",
@@ -131,6 +121,16 @@ PAR_PRIORS = [
         "param_name": "n_imported_cases_final",
         "distribution": "uniform",
         "distri_params": [0.0, 2.0],
+    },
+    {
+        "param_name": "self_isolation_effect",
+        "distribution": "uniform",
+        "distri_params": [.4, .8],
+    },
+    {
+        "param_name": "enforced_isolation_effect",
+        "distribution": "uniform",
+        "distri_params": [.8, 1.],
     },
 ]
 

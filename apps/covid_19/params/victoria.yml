@@ -46,7 +46,6 @@ default:
       - 1.
       - 0.
 
-
   data:
     times_imported_cases: [70., 71., 86., 100., 107]
     n_imported_cases: [1, 1, 45, 4, 1]

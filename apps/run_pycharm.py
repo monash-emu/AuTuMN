@@ -12,8 +12,8 @@ RUN_DESCRIPTION = "trying to x and y the z"
 # covid_19.phl.run_model(RUN_NAME)
 # covid_19.mys.run_model(RUN_NAME)
 # covid_19.aus.run_model(RUN_NAME, RUN_DESCRIPTION)
-# covid_19.vic.run_model(RUN_NAME, RUN_DESCRIPTION)
+covid_19.vic.run_model(RUN_NAME, RUN_DESCRIPTION)
 
 
-MODEL_RUN_PATH = "data/covid_victoria/model-run-27-04-2020--17-06-42/"
-plot_from_database(MODEL_RUN_PATH)
+# MODEL_RUN_PATH = "data/covid_victoria/model-run-27-04-2020--17-06-42/"
+# plot_from_database(MODEL_RUN_PATH)

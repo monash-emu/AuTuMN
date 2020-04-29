@@ -14,7 +14,7 @@ def set_tv_importation_rate(model, importation_times, importation_n_cases):
     )
 
     def tv_recruitment_rate(t):
-        return importation_numbers_scale_up(t) * tv_imported_infectiousness(t) * model.parameters['beta_imported'] / \
+        return importation_numbers_scale_up(t) * tv_imported_infectiousness(t) * model.parameters['contact_rate'] / \
                model.starting_population
 
     model.parameters["import_secondary_rate"] = "import_secondary_rate"

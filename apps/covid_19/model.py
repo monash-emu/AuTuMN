@@ -17,6 +17,7 @@ from autumn.disease_categories.emerging_infections.flows import (
 from autumn.demography.social_mixing import (
     load_specific_prem_sheet,
     update_mixing_with_multipliers,
+    get_total_contact_rates_by_age
 )
 from autumn.demography.population import get_population_size
 from autumn.demography.ageing import add_agegroup_breaks
@@ -225,6 +226,17 @@ def build_model(country: str, params: dict, update_params={}):
     # Stratify model by age
     if "agegroup" in model_parameters["stratify_by"]:
         age_strata = model_parameters["all_stratifications"]["agegroup"]
+        adjust_requests = split_multiple_parameters(
+            ("to_infectious", "infect_death", "within_late"),
+            age_strata)  # Split unchanged parameters for later adjustment
+
+        if model_parameters["implement_importation"]:
+            adjust_requests.update({'import_secondary_rate': get_total_contact_rates_by_age(
+                mixing_matrix,
+                direction='horizontal')
+                                    }
+                                   )
+
         _covid_model.stratify(
             "agegroup",  # Don't use the string age, to avoid triggering automatic demography
             convert_list_contents_to_int(age_strata),
@@ -233,10 +245,7 @@ def build_model(country: str, params: dict, update_params={}):
              i_break, prop in zip(age_strata,
                                   normalise_sequence(total_pops))},  # Distribute starting population
             mixing_matrix=mixing_matrix,
-            adjustment_requests=
-            split_multiple_parameters(
-                ("to_infectious", "infect_death", "within_late"),
-                age_strata),  # Split unchanged parameters for later adjustment
+            adjustment_requests=adjust_requests,
             verbose=False,
         )
 
@@ -269,7 +278,6 @@ def build_model(country: str, params: dict, update_params={}):
         _covid_model.compartment_names
     )
     _covid_model.derived_output_functions["incidence_icu"] = calculate_incidence_icu_covid
-
 
     # Do mixing matrix stuff
     mixing_instructions = model_parameters.get("mixing")

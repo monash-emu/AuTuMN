@@ -1,15 +1,23 @@
 # PyTest configuration file.
 # See pytest fixtue docs: https://docs.pytest.org/en/latest/fixture.html
+import os
 import pytest
 
-from autumn.db import database
-from autumn.tb_model import outputs
+from autumn.db import database, models
 from autumn import constants
 from autumn.calibration import calibration
 
 from .utils import in_memory_db_factory, get_deterministic_random_seed
 
 get_in_memory_db = in_memory_db_factory()
+
+IS_GITHUB_CI = os.environ.get("GITHUB_ACTION", False)
+
+
+def pytest_runtest_setup(item):
+    for marker in item.iter_markers(name="github_only"):
+        if not IS_GITHUB_CI:
+            pytest.skip("Long running test: run on GitHub only.")
 
 
 @pytest.fixture(autouse=True)
@@ -19,7 +27,7 @@ def memory_db(monkeypatch):
     Automatically run at the start of every test run.
     """
     monkeypatch.setattr(database, "get_sql_engine", get_in_memory_db)
-    monkeypatch.setattr(outputs, "get_sql_engine", get_in_memory_db)
+    monkeypatch.setattr(models, "get_sql_engine", get_in_memory_db)
 
 
 @pytest.fixture(autouse=True)

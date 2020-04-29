@@ -1,14 +1,9 @@
-import os
-from unittest import mock
-
 import pytest
 
 from autumn.db.input_data import build_input_database
 
-IS_GITHUB_CI = os.environ.get("GITHUB_ACTION", False)
 
-
-@pytest.mark.skipif(not IS_GITHUB_CI, reason="This takes way too long to run (~20s).")
+@pytest.mark.github_only
 def test_build_input_database():
     """
     Ensure we can build the input database with nothing crashing

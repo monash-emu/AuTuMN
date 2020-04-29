@@ -8,7 +8,7 @@ from datetime import datetime
 import streamlit as st
 
 from autumn import constants
-from autumn.tb_model import load_model_scenarios
+from autumn.db.models import load_model_scenarios
 from autumn.outputs import scenario_plots
 from autumn.outputs.plotter import Plotter
 

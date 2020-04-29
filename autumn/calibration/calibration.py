@@ -17,8 +17,7 @@ from scipy.optimize import Bounds, minimize
 from scipy import stats, special
 
 from autumn import constants
-from autumn.tb_model import store_database
-from autumn.tb_model.outputs import unpivot_outputs
+from autumn.db.models import store_database
 from autumn.db import Database
 from autumn.tool_kit.utils import get_data_hash, find_distribution_params_from_mean_and_ci
 from autumn.tool_kit.scenarios import Scenario
@@ -69,7 +68,7 @@ def get_parameter_bounds_from_priors(prior_dict):
         upper_bound = float("inf")
     elif prior_dict["distribution"] == "beta":
         lower_bound = 0.0
-        upper_bound = 1.
+        upper_bound = 1.0
     else:
         raise ValueError("prior distribution bounds detection currently not handled.")
 
@@ -94,7 +93,6 @@ class Calibration:
         start_time_range=None,
         record_rejected_outputs=False,
     ):
-
         self.model_name = model_name
         self.model_builder = model_builder  # a function that builds a new model without running it
         self.model_parameters = model_parameters
@@ -119,8 +117,8 @@ class Calibration:
         # Setup output database directory
         project_dir = os.path.join(constants.DATA_PATH, model_name)
         run_hash = get_data_hash(model_name, priors, targeted_outputs, multipliers)
-        timestamp = datetime.now().strftime("%d-%m-%Y--%H-%M-%S")
-        out_db_dir = os.path.join(project_dir, f"calibration-{run_hash}-{timestamp}")
+        timestamp = datetime.now().strftime("%d-%m-%Y")
+        out_db_dir = os.path.join(project_dir, f"calibration-{model_name}-{run_hash}-{timestamp}")
         os.makedirs(out_db_dir, exist_ok=True)
         db_name = f"outputs_calibration_chain_{self.chain_index}.db"
         self.output_db_path = os.path.join(out_db_dir, db_name)
@@ -149,23 +147,30 @@ class Calibration:
         Work out the prior distribution parameters if they were not specified
         """
         for i, p_dict in enumerate(self.priors):
-            if 'distri_params' not in p_dict:
-                assert 'distri_mean' in p_dict and 'distri_ci' in p_dict, "Please specify distri_mean and distri_ci."
-                if 'distri_ci_width' in p_dict:
-                    distri_params = find_distribution_params_from_mean_and_ci(p_dict['distribution'],
-                                                                              p_dict['distri_mean'],
-                                                                              p_dict['distri_ci'],
-                                                                              p_dict['distri_ci_width'])
+            if "distri_params" not in p_dict:
+                assert (
+                    "distri_mean" in p_dict and "distri_ci" in p_dict
+                ), "Please specify distri_mean and distri_ci."
+                if "distri_ci_width" in p_dict:
+                    distri_params = find_distribution_params_from_mean_and_ci(
+                        p_dict["distribution"],
+                        p_dict["distri_mean"],
+                        p_dict["distri_ci"],
+                        p_dict["distri_ci_width"],
+                    )
                 else:
-                    distri_params = find_distribution_params_from_mean_and_ci(p_dict['distribution'],
-                                                                              p_dict['distri_mean'],
-                                                                              p_dict['distri_ci'])
-                if p_dict['distribution'] == 'beta':
-                    self.priors[i]['distri_params'] = [distri_params['a'], distri_params['b']]
-                elif p_dict['distribution'] == 'gamma':
-                    self.priors[i]['distri_params'] = [distri_params['shape'], distri_params['scale']]
+                    distri_params = find_distribution_params_from_mean_and_ci(
+                        p_dict["distribution"], p_dict["distri_mean"], p_dict["distri_ci"]
+                    )
+                if p_dict["distribution"] == "beta":
+                    self.priors[i]["distri_params"] = [distri_params["a"], distri_params["b"]]
+                elif p_dict["distribution"] == "gamma":
+                    self.priors[i]["distri_params"] = [
+                        distri_params["shape"],
+                        distri_params["scale"],
+                    ]
                 else:
-                    raise_error_unsupported_prior(p_dict['distribution'])
+                    raise_error_unsupported_prior(p_dict["distribution"])
 
     def initialise_scenario_list(self):
         base_scenario = Scenario(self.model_builder, 0, copy.deepcopy(self.model_parameters))
@@ -216,20 +221,13 @@ class Calibration:
             database_name=self.output_db_path,
             scenario=scenario_index,
         )
-        # store_database(
-        #     out_df,
-        #     run_idx=self.iter_num,
-        #     times=_model.times,
-        #     database_name=self.output_db_path,
-        #     scenario=scenario_index
-        # )
-        pbi_outputs = unpivot_outputs(_model)
         store_database(
-            pbi_outputs,
-            table_name="pbi_scenario_" + str(scenario_index),
+            out_df,
+            table_name="outputs",
+            run_idx=self.iter_num,
+            times=_model.times,
             database_name=self.output_db_path,
             scenario=scenario_index,
-            run_idx=self.iter_num,
         )
 
     def store_mcmc_iteration_info(self, proposed_params, proposed_loglike, accept, i_run):
@@ -260,7 +258,6 @@ class Calibration:
         for i, param_name in enumerate(self.param_list):
             update_params[param_name] = params[i]
 
-        # FIXME: we may want to avoid initialising a new Scenario object and instead reuse the existing one
         self.scenarios[0] = Scenario(self.model_builder, 0, copy.deepcopy(self.model_parameters))
         self.scenarios[0].params["default"].update(update_params)
         self.scenarios[0].run()
@@ -285,8 +282,8 @@ class Calibration:
 
             # FIXME: we may want to avoid initialising a new Scenario object and instead reuse the existing one
             self.scenarios[scenario_idx] = Scenario(
-                    self.model_builder, scenario_idx, copy.deepcopy(self.model_parameters)
-                )
+                self.model_builder, scenario_idx, copy.deepcopy(self.model_parameters)
+            )
 
             # update default params
             self.scenarios[scenario_idx].params["default"] = copy.deepcopy(
@@ -438,15 +435,23 @@ class Calibration:
                     quantile_97_5 = math.exp(mu + math.sqrt(2) * sd * special.erfinv(2 * 0.975 - 1))
                     prior_width = quantile_97_5 - quantile_2_5
                 elif prior_dict["distribution"] == "beta":
-                    quantile_2_5 = stats.beta.ppf(.025, prior_dict["distri_params"][0], prior_dict["distri_params"][1])
-                    quantile_97_5 = stats.beta.ppf(.975, prior_dict["distri_params"][0], prior_dict["distri_params"][1])
+                    quantile_2_5 = stats.beta.ppf(
+                        0.025, prior_dict["distri_params"][0], prior_dict["distri_params"][1]
+                    )
+                    quantile_97_5 = stats.beta.ppf(
+                        0.975, prior_dict["distri_params"][0], prior_dict["distri_params"][1]
+                    )
                     prior_width = quantile_97_5 - quantile_2_5
                 elif prior_dict["distribution"] == "gamma":
-                    quantile_2_5 = stats.gamma.ppf(.025, prior_dict["distri_params"][0], 0.,  prior_dict["distri_params"][1])
-                    quantile_97_5 = stats.gamma.ppf(.975, prior_dict["distri_params"][0], 0., prior_dict["distri_params"][1])
+                    quantile_2_5 = stats.gamma.ppf(
+                        0.025, prior_dict["distri_params"][0], 0.0, prior_dict["distri_params"][1]
+                    )
+                    quantile_97_5 = stats.gamma.ppf(
+                        0.975, prior_dict["distri_params"][0], 0.0, prior_dict["distri_params"][1]
+                    )
                     prior_width = quantile_97_5 - quantile_2_5
                 else:
-                    raise_error_unsupported_prior(prior_dict['distribution'])
+                    raise_error_unsupported_prior(prior_dict["distribution"])
 
                 #  95% of the sampled values within [mu - 2*sd, mu + 2*sd], i.e. interval of witdth 4*sd
                 relative_prior_width = (
@@ -693,6 +698,7 @@ class Calibration:
         logp = 0.0
         for i, prior_dict in enumerate(self.priors):
             logp += calculate_prior(prior_dict, params[i], log=True)
+
         return logp
 
     def update_mcmc_trace(self, params_to_store, loglike_to_store):

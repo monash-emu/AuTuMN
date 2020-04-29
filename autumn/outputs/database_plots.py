@@ -4,7 +4,7 @@ Utilities to plot data from existing databases.
 import os
 import yaml
 
-from autumn.tb_model import load_model_scenarios
+from autumn.db.models import load_model_scenarios
 
 from .scenario_plots import plot_scenarios, validate_plot_config
 from .streamlit_plots import APP_FOLDERS

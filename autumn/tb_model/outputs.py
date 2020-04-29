@@ -1,24 +1,16 @@
 """
-Post processing and storing/loading data from the output database.
+Post processing data.
 """
 import os
-from typing import List
 
 import numpy
 import pandas as pd
 import autumn.post_processing as post_proc
-from sqlalchemy import create_engine
 import matplotlib.pyplot as plt
 
-from summer.model import StratifiedModel
-
 from ..constants import Compartment
-from ..db.database import Database, get_sql_engine
-from .loaded_model import LoadedModel
-from autumn.tool_kit.scenarios import Scenario
 from autumn.tool_kit.utils import find_first_list_element_above, element_wise_list_summation
 from autumn.tb_model.flows import get_incidence_connections, get_notifications_connections
-from autumn.post_processing.processor import post_process
 
 
 def create_request_stratified_incidence(requested_stratifications, strata_dict):
@@ -99,165 +91,6 @@ def list_all_strata_for_mortality(
     death_output_categories.append(())
 
     return tuple(death_output_categories)
-
-
-def load_model_scenarios(
-    database_path: str, model_params={}, post_processing_config=None
-) -> List[Scenario]:
-    """
-    Load model scenarios from an output database.
-    Will apply post processing if the post processing config is supplied.
-    Will store model params in the database if suppied.
-    """
-    out_db = Database(database_name=database_path)
-
-    # Load scenarios from the dabase
-    scenario_results = out_db.engine.execute("SELECT DISTINCT Scenario FROM outputs;").fetchall()
-    scenario_names = sorted(([result[0] for result in scenario_results]))
-    scenarios = []
-    for scenario_name in scenario_names:
-        # Load model outputs from database, build Scenario instance
-        conditions = [f"Scenario='{scenario_name}'"]
-        outputs = out_db.db_query("outputs", conditions=conditions)
-        derived_outputs = out_db.db_query("derived_outputs", conditions=conditions)
-        model = LoadedModel(outputs=outputs.to_dict(), derived_outputs=derived_outputs.to_dict())
-        idx = int(scenario_name.split("_")[1])
-        scenario = Scenario.load_from_db(idx, model, params=model_params)
-        if post_processing_config:
-            scenario.generated_outputs = post_process(model, post_processing_config)
-
-        scenarios.append(scenario)
-
-    return scenarios
-
-
-def load_calibration_from_db(database_directory, n_burned_per_chain=0):
-    """
-    Load all model runs stored in multiple databases found in database_directory
-    :param database_directory: path to databases location
-    :return: list of models
-    """
-    # list all databases
-    db_names = os.listdir(database_directory + "/")
-    db_names = [s for s in db_names if s[-3:] == ".db"]
-
-    models = []
-    n_loaded_iter = 0
-    for db_name in db_names:
-        out_database = Database(database_name=database_directory + "/" + db_name)
-
-        # find accepted run indices
-        res = out_database.db_query(table_name="mcmc_run", column="idx", conditions=["accept=1"])
-        run_ids = list(res.to_dict()["idx"].values())
-        # find weights to associate with the accepted runs
-        accept = out_database.db_query(table_name="mcmc_run", column="accept")
-        accept = accept["accept"].tolist()
-        one_indices = [i for i, val in enumerate(accept) if val == 1]
-        one_indices.append(len(accept))  # add extra index for counting
-        weights = [one_indices[j + 1] - one_indices[j] for j in range(len(one_indices) - 1)]
-
-        # burn fist iterations
-        cum_sum = numpy.cumsum(weights).tolist()
-        if cum_sum[-1] <= n_burned_per_chain:
-            continue
-        retained_indices = [i for i, c in enumerate(cum_sum) if c > n_burned_per_chain]
-        run_ids = run_ids[retained_indices[0] :]
-        previous_cum_sum = cum_sum[retained_indices[0] - 1] if retained_indices[0] > 0 else 0
-        weights[retained_indices[0]] = weights[retained_indices[0]] - (
-            n_burned_per_chain - previous_cum_sum
-        )
-        weights = weights[retained_indices[0] :]
-        n_loaded_iter += sum(weights)
-        for i, run_id in enumerate(run_ids):
-            outputs = out_database.db_query(
-                table_name="outputs", conditions=["idx='" + str(run_id) + "'"]
-            )
-            output_dict = outputs.to_dict()
-
-            if out_database.engine.dialect.has_table(out_database.engine, "derived_outputs"):
-                derived_outputs = out_database.db_query(
-                    table_name="derived_outputs", conditions=["idx='" + str(run_id) + "'"]
-                )
-
-                derived_outputs_dict = derived_outputs.to_dict()
-            else:
-                derived_outputs_dict = None
-            model_info_dict = {
-                "db_name": db_name,
-                "run_id": run_id,
-                "model": LoadedModel(output_dict, derived_outputs_dict),
-                "weight": weights[i],
-            }
-            models.append(model_info_dict)
-
-    print("MCMC runs loaded.")
-    print("Number of loaded iterations after burn-in: " + str(n_loaded_iter))
-    return models
-
-
-def store_database(
-    outputs, database_name, table_name="outputs", scenario=0, run_idx=0, times=None,
-):
-    """
-    store outputs from the model in sql database for use in producing outputs later
-    """
-
-    if times:
-        outputs.insert(0, column="times", value=times)
-
-    if table_name != "mcmc_run_info":
-        outputs.insert(0, column="idx", value=f"run_{run_idx}")
-        outputs.insert(1, column="Scenario", value=f"S_{scenario}")
-
-    sql_engine = get_sql_engine(database_name)
-    outputs.to_sql(table_name, con=sql_engine, if_exists="append", index=False)
-
-
-def store_run_models(models: List[StratifiedModel], database_path: str):
-    """
-    Store models in the database.
-    Assume that models are sorted in an order such that their index is their scenario idx.
-    """
-    for idx, model in enumerate(models):
-        output_df = pd.DataFrame(model.outputs, columns=model.compartment_names)
-        derived_output_df = pd.DataFrame.from_dict(model.derived_outputs)
-        store_database(
-            derived_output_df,
-            scenario=idx,
-            table_name="derived_outputs",
-            database_name=database_path,
-        )
-        store_database(
-            output_df,
-            scenario=idx,
-            table_name="outputs",
-            times=model.times,
-            database_name=database_path,
-        )
-        pbi_output_df = unpivot_outputs(model)
-        store_database(
-            pbi_output_df,
-            table_name=f"pbi_scenario_{idx}",
-            database_name=database_path,
-            scenario=idx,
-        )
-
-
-def create_power_bi_outputs(source_db_path: str, target_db_path: str):
-    """
-    Read the model outputs from a database and then convert them into a form
-    that is readable by our PowerBI dashboard.
-    Save the converted data into its own database.
-    """
-    scenarios = load_model_scenarios(source_db_path)
-    for scenario in scenarios:
-        power_bi_outputs = unpivot_outputs(scenario.model)
-        store_database(
-            power_bi_outputs,
-            table_name=f"pbi_scenario_{scenario.idx}",
-            database_name=target_db_path,
-            scenario=scenario.idx,
-        )
 
 
 def get_post_processing_results(
@@ -492,56 +325,6 @@ def create_mcmc_outputs(
         plot_start_time=plot_start_time,
     )
     outputs.plot_requested_outputs()
-
-
-def unpivot_outputs(model):
-    """
-    take outputs in the form they come out of the model object and convert them into a "long", "melted" or "unpiovted"
-    format in order to more easily plug to PowerBI
-    """
-    output_df = pd.DataFrame(model.outputs, columns=model.compartment_names)
-    output_df["times"] = model.times
-    output_df = output_df.melt("times")
-
-    # Make compartment column
-    def get_compartment_name(row):
-        return row.variable.split("X")[0]
-
-    output_df["compartment"] = output_df.apply(get_compartment_name, axis=1)
-
-    # Map compartment names to strata names
-    # Eg.
-    #   from susceptibleXage_0Xdiabetes_diabeticXlocation_majuro
-    #   to {
-    #       "age": "age_0",
-    #       "diabetes": "diabetes_diabetic",
-    #       "location": "location_majuro"
-    #   }
-    compartment_to_column_map = {}
-    strata_names = list(model.all_stratifications.keys())
-    for compartment_name in model.compartment_names:
-        compartment_to_column_map[compartment_name] = {}
-        compartment_stratas = compartment_name.split("X")[1:]
-        for compartment_strata in compartment_stratas:
-            for strata_name in strata_names:
-                if compartment_strata.startswith(strata_name):
-                    compartment_to_column_map[compartment_name][strata_name] = compartment_strata
-
-    def get_strata_names(strata_name):
-        def _get_strata_names(row):
-            compartment_name = row["variable"]
-            try:
-                return compartment_to_column_map[compartment_name][strata_name]
-            except KeyError:
-                return ""
-
-        return _get_strata_names
-
-    for strata_name in strata_names:
-        output_df[strata_name] = output_df.apply(get_strata_names(strata_name), axis=1)
-
-    output_df = output_df.drop(columns="variable")
-    return output_df
 
 
 def plot_time_variant_param(function, time_span, title=""):

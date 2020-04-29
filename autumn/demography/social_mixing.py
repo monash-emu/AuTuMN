@@ -91,7 +91,6 @@ def apply_age_specific_contact_multipliers(mixing_matrix, age_specific_multiplie
     return update_mixing_with_multipliers(mixing_matrix, mixing_multipliers_matrix)
 
 
-
 def get_all_prem_countries():
     """
     Return the list of countries for which Prem et al provide contact matrices
@@ -106,3 +105,21 @@ def get_all_prem_countries():
         xl = pd.ExcelFile(filepath)
         sheet_names += xl.sheet_names
     return sheet_names
+
+
+def get_total_contact_rates_by_age(mixing_matrix, direction='horizontal'):
+    """
+    Sum the contact-rates by age group
+    :param mixing_matrix: the input mixing matrix
+    :param direction: either 'horizontal' (infectee's perspective) or 'vertical' (infector's perspective)
+    :return: dict
+        keys are the age categories and values are the aggregated contact rates
+    """
+    assert direction in ['horizontal', 'vertical'], "direction should be in ['horizontal', 'vertical']"
+    aggregated_contact_rates = {}
+    for i in range(16):
+        if direction == 'horizontal':
+            aggregated_contact_rates[str(5 * i)] = mixing_matrix[i, :].sum()
+        else:
+            aggregated_contact_rates[str(5 * i)] = mixing_matrix[:, i].sum()
+    return aggregated_contact_rates

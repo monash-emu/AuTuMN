@@ -10,11 +10,12 @@ def set_tv_importation_rate(model, importation_times, importation_n_cases):
     tv_imported_infectiousness = scale_up_function(
         [75., 77., 88., 90.],
         [1., 1. - model.parameters['self_isolation_effect'], 1. - model.parameters['self_isolation_effect'],
-         1. - model.parameters['enforced_isolation_effect']]
+         1. - model.parameters['enforced_isolation_effect']],
+        method=4
     )
 
     def tv_recruitment_rate(t):
-        return importation_numbers_scale_up(t) * tv_imported_infectiousness(t) * model.parameters['beta_imported'] / \
+        return importation_numbers_scale_up(t) * tv_imported_infectiousness(t) * model.parameters['contact_rate'] / \
                model.starting_population
 
     model.parameters["import_secondary_rate"] = "import_secondary_rate"

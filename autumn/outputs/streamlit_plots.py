@@ -182,7 +182,7 @@ def app_model_run_selector(app_data_dir_path: str):
     labels = []
     model_run_dir_lookup = {}
     for run_datetime, run_name, dirname in model_runs:
-        run_datestr = run_datetime.strftime("%-d %b at %-I:%M%p ")
+        run_datestr = run_datetime.strftime("%d %b at %I:%M%p ")
         label = f'{run_datestr} "{run_name}"'
         model_run_dir_lookup[label] = dirname
         labels.append(label)

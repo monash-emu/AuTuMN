@@ -14,7 +14,10 @@ from autumn.disease_categories.emerging_infections.flows import (
     add_sequential_compartment_flows,
     add_infection_death_flows,
 )
-from autumn.demography.social_mixing import load_specific_prem_sheet, update_mixing_with_multipliers
+from autumn.demography.social_mixing import (
+    load_specific_prem_sheet,
+    update_mixing_with_multipliers,
+)
 from autumn.demography.population import get_population_size
 from autumn.demography.ageing import add_agegroup_breaks
 from autumn.db import Database
@@ -189,7 +192,7 @@ def build_model(country: str, params: dict, update_params={}):
             model_parameters["n_compartment_repeats"][Compartment.EXPOSED],
             Compartment.SUSCEPTIBLE,
             Compartment.EXPOSED,
-            "importation_rate",
+            "import_secondary_rate",
         )
 
     # Get mixing matrix, although would need to adapt this for countries in file _2

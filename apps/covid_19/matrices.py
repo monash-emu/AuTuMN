@@ -23,6 +23,7 @@ def build_covid_matrices(country, mixing_params):
 
     def mixing_matrix_function(time):
         mixing_matrix = mixing_matrix_components["all_locations"]
+        # Make adjustments by location
         for location in [
             loc
             for loc in ["home", "other_locations", "school", "work"]
@@ -35,6 +36,19 @@ def build_covid_matrices(country, mixing_params):
                 mixing_matrix,
                 (location_adjustment(time) - 1.0) * mixing_matrix_components[location],
             )
+
+        # Make adjustments by age
+        for agegroup_index in [age_index for age_index in range(16) if
+                               'age_' + str(age_index) + '_times' in mixing_params]:
+
+            age_adjustment = scale_up_function(
+                mixing_params['age_' + str(agegroup_index) + "_times"],
+                mixing_params['age_' + str(agegroup_index) + "_values"],
+                method=4
+            )
+            mixing_matrix[agegroup_index, :] *= age_adjustment(time)
+            mixing_matrix[:, agegroup_index] *= age_adjustment(time)
+
         return mixing_matrix
 
     return mixing_matrix_function

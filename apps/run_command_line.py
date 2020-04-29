@@ -22,6 +22,7 @@ from .covid_19.calibration.philippines import (
     run_phl_calibration_chain as run_philippines_covid_calibration_chain,
 )
 from autumn.tb_model.outputs import create_power_bi_outputs
+from autumn.outputs.database_plots import plot_from_database
 
 
 @click.group()
@@ -32,6 +33,13 @@ def cli():
 @click.group()
 def db():
     """Database utilities"""
+
+
+@db.command("plot")
+@click.argument("model_run_path", type=str)
+def powerbi_convert(model_run_path):
+    """Re-plot data from a model run folder"""
+    plot_from_database(model_run_path)
 
 
 @db.command("powerbi")

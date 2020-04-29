@@ -10,33 +10,13 @@ default:
   start_time: 60.
   end_time: 130.
 
-  contact_rate: 0.25
+  contact_rate: 0.27
 
   prop_isolated_among_symptomatic: .84
 
   mixing:
-    other_locations_times:
-      - 78.
-      - 79.
-      - 81.
-      - 82.
-      - 84.
-      - 85.
-      - 86.
-      - 87.
-      - 91.
-      - 92.
-    other_locations_values:
-      - 1.
-      - 0.9
-      - 0.9
-      - 0.8
-      - 0.8
-      - 0.6
-      - 0.6
-      - 0.4
-      - 0.4
-      - 0.2
+    other_locations_times: [72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93]
+    other_locations_values: [1., .95, .89, .81, .79, .66, .53, .50, .49, .46, .42, .33, .25, .20, .20, .18, .18, .18, .18, .15, .15, .14]
     work_times:
       - 78.
       - 79.
@@ -76,28 +56,8 @@ scenario_start_time: 121
 scenarios:
   1:  # schools reopen
     mixing:
-      other_locations_times:
-        - 78.
-        - 79.
-        - 81.
-        - 82.
-        - 84.
-        - 85.
-        - 86.
-        - 87.
-        - 91.
-        - 92.
-      other_locations_values:
-        - 1.
-        - 0.9
-        - 0.9
-        - 0.8
-        - 0.8
-        - 0.6
-        - 0.6
-        - 0.4
-        - 0.4
-        - 0.2
+      other_locations_times: [72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93]
+      other_locations_values: [1., .95, .89, .81, .79, .66, .53, .50, .49, .46, .42, .33, .25, .20, .20, .18, .18, .18, .18, .15, .15, .14]
       work_times:
         - 78.
         - 79.
@@ -123,41 +83,17 @@ scenarios:
       school_times:
         - 84.
         - 85.
-        - 106.
-        - 107.
         - 121.
         - 123.
       school_values:
         - 1.
         - 0.
         - 0.
-        - 0.1
-        - 0.1
         - 1.
   2:  # no more working from home + schools repoen
     mixing:
-      other_locations_times:
-        - 78.
-        - 79.
-        - 81.
-        - 82.
-        - 84.
-        - 85.
-        - 86.
-        - 87.
-        - 91.
-        - 92.
-      other_locations_values:
-        - 1.
-        - 0.9
-        - 0.9
-        - 0.8
-        - 0.8
-        - 0.6
-        - 0.6
-        - 0.4
-        - 0.4
-        - 0.2
+      other_locations_times: [72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93]
+      other_locations_values: [1., .95, .89, .81, .79, .66, .53, .50, .49, .46, .42, .33, .25, .20, .20, .18, .18, .18, .18, .15, .15, .14]
       work_times:
         - 78.
         - 79.
@@ -196,32 +132,8 @@ scenarios:
         - 0.1
   3:  # back to usual social mixing
     mixing:
-      other_locations_times:
-        - 78.
-        - 79.
-        - 81.
-        - 82.
-        - 84.
-        - 85.
-        - 86.
-        - 87.
-        - 91.
-        - 92.
-        - 121.
-        - 123.
-      other_locations_values:
-        - 1.
-        - 0.9
-        - 0.9
-        - 0.8
-        - 0.8
-        - 0.6
-        - 0.6
-        - 0.4
-        - 0.4
-        - 0.2
-        - 0.2
-        - 1.0
+      other_locations_times: [72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 121, 123]
+      other_locations_values: [1., .95, .89, .81, .79, .66, .53, .50, .49, .46, .42, .33, .25, .20, .20, .18, .18, .18, .18, .15, .15, .14, .14, 1.]
       work_times:
         - 78.
         - 79.
@@ -251,14 +163,10 @@ scenarios:
       school_times:
         - 84.
         - 85.
-        - 106.
-        - 107.
         - 121.
         - 123.
       school_values:
         - 1.
         - 0.
         - 0.
-        - 0.1
-        - 0.1
         - 1.

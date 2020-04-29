@@ -63,13 +63,10 @@ default:
     school_times:
       - 84.
       - 85.
-      - 106.
-      - 107.
     school_values:
       - 1.
       - 0.
-      - 0.
-      - 0.1
+
 
   data:
     times_imported_cases: [70., 71., 86., 100., 107]

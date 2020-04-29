@@ -16,7 +16,7 @@ get_in_memory_db = in_memory_db_factory()
 def memory_db(monkeypatch):
     """
     Replaces all SQLite on-disk databases with in-memory databases.
-    Automatically run at the start of the test run.
+    Automatically run at the start of every test run.
     """
     monkeypatch.setattr(database, "get_sql_engine", get_in_memory_db)
     monkeypatch.setattr(outputs, "get_sql_engine", get_in_memory_db)
@@ -26,16 +26,16 @@ def memory_db(monkeypatch):
 def deterministic_seed(monkeypatch):
     """
     Replaces all random seed non-deterministic seed.
-    Automatically run at the start of the test run.
+    Automatically run at the start of every test run.
     """
     monkeypatch.setattr(calibration, "get_random_seed", get_deterministic_random_seed)
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def temp_data_dir(monkeypatch, tmp_path):
     """
     Replaces DATA_PATH with a tempoary directory.
-    Runs every time it is invoked by a test.
+    Automatically run at the start of every test run.
     """
     path_str = tmp_path.as_posix()
     monkeypatch.setattr(constants, "DATA_PATH", path_str)

@@ -98,6 +98,12 @@ default:
     - 0.051
     - 0.093
 
+  # Reduced susceptibility in children
+  young_reduced_susceptibility: 0.5
+  reduced_susceptibility_agegroups:
+    - "0"
+    - "5"
+
   # NON-AGE-STRATIFIED PARAMETERS
 
   # Adjust the infectiousness of clinical strata - note that the parameter naming will change with the number of strata

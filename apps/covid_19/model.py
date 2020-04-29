@@ -245,6 +245,16 @@ def build_model(country: str, params: dict, update_params={}):
                                     }
                                    )
 
+        # Adjust susceptibility for children
+        adjust_requests.update(
+            {
+                "contact_rate": {key: value for key, value in
+                                 zip(model_parameters["reduced_susceptibility_agegroups"],
+                                     [model_parameters["young_reduced_susceptibility"]] *
+                                     len(model_parameters["reduced_susceptibility_agegroups"]))}
+            }
+        )
+
         _covid_model.stratify(
             "agegroup",  # Don't use the string age, to avoid triggering automatic demography
             convert_list_contents_to_int(age_strata),

@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 from sqlalchemy import create_engine
 
@@ -37,4 +38,5 @@ class Database:
 
 def get_sql_engine(db_path: str):
     """Gets SQL Alchemy databas engine. Mocked out in testing"""
-    return create_engine("sqlite:///" + db_path, echo=False)
+    rel_db_path = os.path.relpath(db_path)
+    return create_engine(f"sqlite:///{rel_db_path}", echo=False)

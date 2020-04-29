@@ -1,3 +1,4 @@
+import os
 from unittest import mock
 
 import numpy as np
@@ -31,7 +32,16 @@ def in_memory_db_factory():
     """Replacement for get_sql_engine, returns an in-memory database"""
     databases = {}
 
-    def get_in_memory_db(db_path: str):
+    def get_in_memory_db_engine(db_path: str):
+        """
+        Returns an in-memory SQLite database that corresponds to db_path.
+        """
+        # Return the real "inputs.db" if it's requested
+        if db_path.endswith("inputs.db"):
+            rel_db_path = os.path.relpath(db_path)
+            engine = create_engine(f"sqlite:///{rel_db_path}", echo=False)
+            return engine
+
         # Create a fake DB path.
         with open(db_path, "w") as f:
             pass
@@ -44,4 +54,4 @@ def in_memory_db_factory():
             databases[db_path] = engine
             return engine
 
-    return get_in_memory_db
+    return get_in_memory_db_engine

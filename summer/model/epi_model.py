@@ -312,7 +312,6 @@ class EpiModel:
         The final result is an array of compartment values at each timestep (self.outputs).
         Also calculates post-processing outputs after the ODE integration is complete.
         """
-        print(integration_type)
         self.prepare_to_run()
 
         def ode_func(compartment_values, time):

@@ -17,6 +17,8 @@ from autumn.tool_kit.utils import (
 )
 from autumn.tb_model import store_run_models
 
+from summer.model.utils.flowchart import create_flowchart
+
 
 def build_model_runner(
     model_name: str, build_model, params: dict, post_processing_config={}, plots_config={}
@@ -94,9 +96,16 @@ def build_model_runner(
                     )
 
         if plots_config:
+
             with Timer("Creating plots"):
                 # Plot all scenario outputs.
                 plot_dir = os.path.join(output_dir, "plots")
+
+                try:
+                    create_flowchart(models[0])
+                except:
+                    pass
+
                 os.makedirs(plot_dir, exist_ok=True)
                 plot_scenarios(scenarios, plot_dir, plots_config)
 

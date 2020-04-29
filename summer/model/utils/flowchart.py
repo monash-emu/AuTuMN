@@ -2,7 +2,8 @@
 Flow diagram creation
 """
 from graphviz import Digraph
-
+from summer.model.utils.string import find_name_components
+from autumn import constants
 
 def create_flowchart(model_object, strata=None, name="flow_chart"):
     """
@@ -63,4 +64,4 @@ def create_flowchart(model_object, strata=None, name="flow_chart"):
     for row in type_of_flow.iterrows():
         model_object.flow_diagram.edge(row[1]["origin"], row[1]["to"], row[1]["parameter"])
     model_object.flow_diagram = apply_styles(model_object.flow_diagram, styles)
-    model_object.flow_diagram.render(name)
+    model_object.flow_diagram.render(directory=constants.DATA_DIR)

@@ -322,7 +322,18 @@ def find_distribution_params_from_mean_and_ci(distribution, mean, ci, ci_width=.
 
     elif distribution == 'gamma':
         assert ci[0] > 0 and ci[1] > 0 and mean > 0.
-        params = {'shape': None, 'scale': None}
+
+        def distance_to_minimise(scale):
+            shape = mean / scale
+            vals = gamma.ppf([percentile_low, percentile_up], shape, 0, scale)
+            dist = sum([(ci[i] - vals[i])**2 for i in range(2)])
+            return dist
+
+        sol = minimize(distance_to_minimise, [1.], bounds=[(1.e-11, None)])
+        best_scale = sol.x
+        best_shape = mean / best_scale
+
+        params = {'shape': best_shape, 'scale': best_scale}
     else:
         raise ValueError(distribution + " distribution is not supported for the moment")
 

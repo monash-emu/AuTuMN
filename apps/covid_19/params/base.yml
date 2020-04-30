@@ -19,7 +19,7 @@ default:
   import_secondary_rate: 0.
 
   compartment_periods:
-    incubation: 4.0
+    incubation: 5.0
     # exposed now calculated
     # presympt now calculated
     infectious: 2.

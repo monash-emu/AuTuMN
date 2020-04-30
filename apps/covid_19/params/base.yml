@@ -22,8 +22,8 @@ default:
     incubation: 5.0
     # exposed now calculated
     # presympt now calculated
-    infectious: 2.
-    late: 5.68
+    infectious: 3.
+    late: 4.
     hospital_early: 5.
     hospital_late: 8.
     icu_early: 10.

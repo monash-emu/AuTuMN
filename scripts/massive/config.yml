@@ -1,17 +1,17 @@
 ---
 # MASSIVE job configuration
 # Number of jobs to run asynchronously in parallel.
-num_jobs: 12
+num_jobs: 1
 # Number of CPU cores available to each job.
 cores_per_job: 1
 # Memory in MB available per core, per job.
 mem_per_core: 512
 # Maximum time that each job can run for, format is day-hours:minutes:seconds
 # Try to build in a safety factor of ~2x to prevent Slurm from killing the job.
-runtime: 0-6:00:00
+runtime: 0-2:00:00
 # Who gets emailed when the job starts, succeeds, fails.
 notification_email: romain.ragonnet@monash.edu
 # The bash command that gets run to start the job.
 # Run Mongolia calibration for 5 minutes (300 seconds).
 # N.B Job array ID will be passed in as an extra argument.
-job_command: python3 -m apps calibrate victoria 22000
+job_command: python3 -m apps calibrate victoria 8000

@@ -11,17 +11,20 @@ from .utils import merge_dicts
 logger = logging.getLogger(__file__)
 
 
-def get_location_lists_from_dict(working_dict):
-    return [str(i_key) for i_key in working_dict.keys()], \
+def get_mixing_lists_from_dict(working_dict):
+    return [i_key for i_key in working_dict.keys()], \
            [i_key for i_key in working_dict.values()]
 
 
-def revise_location_data_for_dicts(parameters):
-    for location in ["home", "other_locations", "school", "work"]:
-        if location in parameters:
-            parameters[location + "_times"], \
-            parameters[location + "_values"] = \
-                get_location_lists_from_dict(parameters[location])
+def revise_mixing_data_for_dicts(parameters):
+    list_of_possible_keys = ["home", "other_locations", "school", "work"]
+    for age_index in range(16):
+        list_of_possible_keys.append("age_" + str(age_index))
+    for mixing_key in list_of_possible_keys:
+        if mixing_key in parameters:
+            parameters[mixing_key + "_times"], \
+                parameters[mixing_key + "_values"] = \
+                get_mixing_lists_from_dict(parameters[mixing_key])
     return parameters
 
 
@@ -34,7 +37,7 @@ def revise_dates_if_ymd(mixing_params):
         for i_time, time in enumerate(mixing_params[key]):
             if isinstance(time, (list, str)):
                 mixing_params[key][i_time] = \
-                    find_relative_date_from_string_or_tuple(mixing_params[key][i_time])
+                    find_relative_date_from_string_or_tuple(time)
 
 
 def load_params(app_dir: str, application=None):
@@ -92,13 +95,13 @@ def load_params(app_dir: str, application=None):
     for param in params:
         if type(params[param]) == dict and "mixing" in params[param]:
             params[param]["mixing"] = \
-                revise_location_data_for_dicts(params[param]["mixing"])
+                revise_mixing_data_for_dicts(params[param]["mixing"])
             revise_dates_if_ymd(params[param]["mixing"])
 
         if param == "scenarios":
             for scenario in params["scenarios"]:
                 params[param][scenario]["mixing"] = \
-                    revise_location_data_for_dicts(params[param][scenario]["mixing"])
+                    revise_mixing_data_for_dicts(params[param][scenario]["mixing"])
                 revise_dates_if_ymd(params[param][scenario]["mixing"])
 
     return params

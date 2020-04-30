@@ -227,6 +227,8 @@ class Calibration:
         for i, param_name in enumerate(self.param_list):
             update_params[param_name] = params[i]
 
+        # FIXME: we may want to avoid initialising a new Scenario object and instead reuse the existing one
+        self.scenarios[0] = Scenario(self.model_builder, 0, copy.deepcopy(self.model_parameters))
         self.scenarios[0].params["default"].update(update_params)
         self.scenarios[0].run()
         self.update_post_processing()
@@ -247,6 +249,11 @@ class Calibration:
                 if param_name in self.param_list:
                     param_index = self.param_list.index(param_name)
                     updated_scenario_params[param_name] = params[param_index]
+
+            # FIXME: we may want to avoid initialising a new Scenario object and instead reuse the existing one
+            self.scenarios[scenario_idx] = Scenario(
+                    self.model_builder, scenario_idx, copy.deepcopy(self.model_parameters)
+                )
 
             # update default params
             self.scenarios[scenario_idx].params["default"] = copy.deepcopy(

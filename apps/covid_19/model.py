@@ -67,6 +67,14 @@ def build_model(country: str, params: dict, update_params={}):
         model_parameters["compartment_periods"]["incubation"] * \
         model_parameters["prop_exposed_presympt"]
 
+    # Calculate early infectious period from total infectious period and proportion of that period spent isolated
+    model_parameters["compartment_periods"][Compartment.EARLY_INFECTIOUS] = \
+        model_parameters["compartment_periods"]["infectious"] * \
+        model_parameters["prop_infectious_early"]
+    model_parameters["compartment_periods"][Compartment.LATE_INFECTIOUS] = \
+        model_parameters["compartment_periods"]["infectious"] * \
+        (1.0 - model_parameters["prop_infectious_early"])
+
     # update parameters stored in dictionaries that need to be modified during calibration
     model_parameters = update_dict_params_for_calibration(model_parameters)
 

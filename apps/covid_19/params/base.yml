@@ -22,8 +22,9 @@ default:
     incubation: 5.0
     # exposed now calculated
     # presympt now calculated
-    infectious: 3.
-    late: 4.
+    infectious: 7.
+    # infectious now refers to total infectious period, which is confusing because there is an infectious compartment
+    # late now calculated
     hospital_early: 5.
     hospital_late: 8.
     icu_early: 5.
@@ -31,6 +32,9 @@ default:
 
   # Proportion of the exposed period spent infectious - i.e. "presymptomatic"
   prop_exposed_presympt: 0.5
+
+  # Proportion of the infectious period spent in the early compartment (i.e. can't be isolated for symptoms)
+  prop_infectious_early: 0.33
 
   # Stratification-related requests
   stratify_by:

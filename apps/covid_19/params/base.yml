@@ -26,8 +26,8 @@ default:
     late: 4.
     hospital_early: 5.
     hospital_late: 8.
-    icu_early: 10.
-    icu_late: 10.
+    icu_early: 5.
+    icu_late: 20.
 
   # Proportion of the exposed period spent infectious - i.e. "presymptomatic"
   prop_exposed_presympt: 0.5
@@ -110,7 +110,6 @@ default:
 
   # Adjust the infectiousness of clinical strata - note that the parameter naming will change with the number of strata
   non_sympt_infect_multiplier: 0.5
-  hospital_infect_multiplier: 0.2
   hospital_non_icu_infect_multiplier: 0.2
   icu_infect_multiplier: 0.2
 
@@ -139,7 +138,7 @@ default:
   time_step: 1
 
   # Base model definition
-  contact_rate: 0.36
+  contact_rate: 0.36  # Expected to be calibrated for each application
   icu_mortality_prop: 0.5
 
   # Compulsory parameter that is completely overwritten in stratification, rather than being modified

@@ -17,10 +17,6 @@ default:
     incubation: 3.1482
     infectious: 2.
     late: 4.0973
-    hospital_early: 5.
-    hospital_late: 8.
-    icu_early: 10.
-    icu_late: 10.
 
   young_reduced_susceptibility: .4484674
   prop_isolated_among_symptomatic: .8035  # .84

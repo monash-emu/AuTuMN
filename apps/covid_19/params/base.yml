@@ -99,10 +99,12 @@ default:
     - 0.093
 
   # Reduced susceptibility in children
-  young_reduced_susceptibility: 0.5
+  young_reduced_susceptibility: 0.75
   reduced_susceptibility_agegroups:
     - "0"
     - "5"
+    - "10"
+    - "15"
 
   # NON-AGE-STRATIFIED PARAMETERS
 

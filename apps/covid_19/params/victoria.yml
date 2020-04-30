@@ -8,11 +8,28 @@ default:
   infectious_seed: 0
 
   start_time: 60.
-  end_time: 364.
+  end_time: 365.
 
-  contact_rate: 0.27
+  contact_rate: 0.21584
+  non_sympt_infect_multiplier: .464939
 
-  prop_isolated_among_symptomatic: .84
+  compartment_periods:
+    incubation: 3.1482
+    infectious: 2.
+    late: 4.0973
+    hospital_early: 5.
+    hospital_late: 8.
+    icu_early: 10.
+    icu_late: 10.
+
+  young_reduced_susceptibility: .4484674
+  prop_isolated_among_symptomatic: .8035  # .84
+  npi_effectiveness:
+    other_locations: .9697829
+
+  self_isolation_effect: .434371
+  enforced_isolation_effect: .9858
+
 
   mixing:
     other_locations_times: [72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93]
@@ -48,7 +65,7 @@ default:
 
   data:
     times_imported_cases: [70., 71., 86., 100., 107]
-    n_imported_cases: [1, 1, 45, 4, 1]
+    n_imported_cases: [1, 1, 45, 4, 1.1341]
 
 scenario_start_time: 121
 

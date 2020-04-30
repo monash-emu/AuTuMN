@@ -91,12 +91,9 @@ case_counts = [1.0, 1.0, 3.0, 1.0, 0.0, 4.0, 8.0, 7.0, 9.0, 12.0, 13.0, 22.0, 19
 # print(target_to_plots)
 
 PAR_PRIORS = [
+    # Transmission parameter
     {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.1, 0.4]},
-    {
-        "param_name": "prop_isolated_among_symptomatic",
-        "distribution": "uniform",
-        "distri_params": [0.8, 0.9],
-    },
+    # Parameters defining the natural history of COVID-19
     {
         "param_name": "non_sympt_infect_multiplier",
         "distribution": "uniform",
@@ -113,10 +110,23 @@ PAR_PRIORS = [
         "distri_params": [4.0, 7.0],
     },
     {
+        "param_name": "young_reduced_susceptibility",
+        "distribution": "uniform",
+        "distri_params": [.4, .6],
+    },
+    # Programmatic parameters
+    {
+        "param_name": "prop_isolated_among_symptomatic",
+        "distribution": "uniform",
+        "distri_params": [0.8, 0.9],
+    },
+    # Parameter to vary the mixing adjustment in other_locations
+    {
         "param_name": "npi_effectiveness_other_locations",
         "distribution": "uniform",
         "distri_params": [0.8, 1.0],
     },
+    # Parameters related to case importation
     {
         "param_name": "n_imported_cases_final",
         "distribution": "uniform",
@@ -131,7 +141,8 @@ PAR_PRIORS = [
         "param_name": "enforced_isolation_effect",
         "distribution": "uniform",
         "distri_params": [.8, 1.],
-    },
+    }
+
 ]
 
 TARGET_OUTPUTS = [

@@ -20,10 +20,11 @@ from autumn import constants
 from autumn.tb_model import store_database
 from autumn.tb_model.outputs import unpivot_outputs
 from autumn.db import Database
-from autumn.tool_kit.utils import get_data_hash
+from autumn.tool_kit.utils import get_data_hash, find_distribution_params_from_mean_and_ci
 from autumn.tool_kit.scenarios import Scenario
 
 from .loglike import LogLike
+from .utils import find_decent_starting_point, calculate_log_prior, raise_error_unsupported_prior
 
 pymc3_logger = logging.getLogger("pymc3")
 pymc3_logger.setLevel(logging.ERROR)
@@ -65,6 +66,9 @@ def get_parameter_bounds_from_priors(prior_dict):
     elif prior_dict["distribution"] in ["lognormal", "gamma", "weibull", "exponential"]:
         lower_bound = 0.0
         upper_bound = float("inf")
+    elif prior_dict["distribution"] == "beta":
+        lower_bound = 0.0
+        upper_bound = 1.
     else:
         raise ValueError("prior distribution bounds detection currently not handled.")
 
@@ -109,6 +113,8 @@ class Calibration:
         self.multipliers = multipliers
         self.chain_index = chain_index
 
+        self.specify_missing_prior_params()
+
         # Setup output database directory
         project_dir = os.path.join(constants.DATA_PATH, model_name)
         run_hash = get_data_hash(model_name, priors, targeted_outputs, multipliers)
@@ -133,6 +139,29 @@ class Calibration:
         self.mle_estimates = {}  # will store the results of the maximum-likelihood calibration
 
         self.evaluated_params_ll = []  # list of tuples:  [(theta_0, ll_0), (theta_1, ll_1), ...]
+
+    def specify_missing_prior_params(self):
+        """
+        Work out the prior distribution parameters if they were not specified
+        """
+        for i, p_dict in enumerate(self.priors):
+            if 'distri_params' not in p_dict:
+                assert 'distri_mean' in p_dict and 'distri_ci' in p_dict, "Please specify distri_mean and distri_ci."
+                if 'distri_ci_width' in p_dict:
+                    distri_params = find_distribution_params_from_mean_and_ci(p_dict['distribution'],
+                                                                              p_dict['distri_mean'],
+                                                                              p_dict['distri_ci'],
+                                                                              p_dict['distri_ci_width'])
+                else:
+                    distri_params = find_distribution_params_from_mean_and_ci(p_dict['distribution'],
+                                                                              p_dict['distri_mean'],
+                                                                              p_dict['distri_ci'])
+                if p_dict['distribution'] == 'beta':
+                    self.priors[i]['distri_params'] = [distri_params['a'], distri_params['b']]
+                elif p_dict['distribution'] == 'gamma':
+                    self.priors[i]['distri_params'] = [distri_params['shape'], distri_params['scale']]
+                else:
+                    raise_error_unsupported_prior(p_dict['distribution'])
 
     def initialise_scenario_list(self):
         base_scenario = Scenario(self.model_builder, 0, copy.deepcopy(self.model_parameters))
@@ -404,12 +433,16 @@ class Calibration:
                     quantile_2_5 = math.exp(mu + math.sqrt(2) * sd * special.erfinv(2 * 0.025 - 1))
                     quantile_97_5 = math.exp(mu + math.sqrt(2) * sd * special.erfinv(2 * 0.975 - 1))
                     prior_width = quantile_97_5 - quantile_2_5
+                elif prior_dict["distribution"] == "beta":
+                    quantile_2_5 = stats.beta.ppf(.025, prior_dict["distri_params"][0], prior_dict["distri_params"][1])
+                    quantile_97_5 = stats.beta.ppf(.975, prior_dict["distri_params"][0], prior_dict["distri_params"][1])
+                    prior_width = quantile_97_5 - quantile_2_5
+                elif prior_dict["distribution"] == "gamma":
+                    quantile_2_5 = stats.gamma.ppf(.025, prior_dict["distri_params"][0], 0.,  prior_dict["distri_params"][1])
+                    quantile_97_5 = stats.gamma.ppf(.975, prior_dict["distri_params"][0], 0., prior_dict["distri_params"][1])
+                    prior_width = quantile_97_5 - quantile_2_5
                 else:
-                    logger.info(
-                        "prior_width not specified for "
-                        + prior_dict["distribution"]
-                        + " distribution at the moment"
-                    )
+                    raise_error_unsupported_prior(prior_dict['distribution'])
 
                 #  95% of the sampled values within [mu - 2*sd, mu + 2*sd], i.e. interval of witdth 4*sd
                 relative_prior_width = (
@@ -631,11 +664,7 @@ class Calibration:
                 if prior_dict["param_name"] in self.model_parameters["default"]:
                     prev_params.append(self.model_parameters["default"][prior_dict["param_name"]])
                 else:
-                    if prior_dict["distribution"] == "uniform":
-                        prev_params.append(np.mean(prior_dict["distri_params"]))
-                    else:
-                        # FIXME: we need to make it more flexible
-                        logger.info("FIXME: need to be able to handle different distributions")
+                    prev_params.append(find_decent_starting_point(prior_dict))
 
         new_params = []
 
@@ -659,22 +688,7 @@ class Calibration:
         """
         logp = 0.0
         for i, prior_dict in enumerate(self.priors):
-            if prior_dict["distribution"] == "uniform":
-                logp += math.log(
-                    1.0 / (prior_dict["distri_params"][1] - prior_dict["distri_params"][0])
-                )
-            elif prior_dict["distribution"] == "lognormal":
-                mu = prior_dict["distri_params"][0]
-                sd = prior_dict["distri_params"][1]
-                logp += stats.lognorm.logpdf(
-                    x=params[i], s=sd, scale=math.exp(mu)
-                )  # see documentation of stats.lognorm for scale
-            else:
-                logger.info(
-                    prior_dict["distribution"]
-                    + "distribution not supported in autumn_mcmc at the moment"
-                )
-
+            logp += calculate_log_prior(prior_dict, params[i])
         return logp
 
     def update_mcmc_trace(self, params_to_store, loglike_to_store):

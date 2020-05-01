@@ -4,6 +4,7 @@ Used to load model parameters from file
 import os
 import yaml
 import logging
+from autumn.constants import Compartment
 from autumn.tool_kit.utils import find_relative_date_from_string_or_tuple
 
 from .utils import merge_dicts
@@ -103,5 +104,29 @@ def load_params(app_dir: str, application=None):
                 params[param][scenario]["mixing"] = \
                     revise_mixing_data_for_dicts(params[param][scenario]["mixing"])
                 revise_dates_if_ymd(params[param][scenario]["mixing"])
+
+    # Adjust infection for relative all-cause mortality compared to South Korea, if process being applied
+    if "ifr_multipliers" in params["default"]:
+        params["default"]["infection_fatality_props"] = \
+            [i_prop * mult for i_prop, mult in
+             zip(params["default"]["infection_fatality_props"], params["default"]["ifr_multipliers"])]
+
+    # Calculate presymptomatic period from exposed period and relative proportion of that period spent infectious
+    if "compartment_periods" in params["default"] and Compartment.EXPOSED in params["default"]["compartment_periods"]:
+        params["default"]["compartment_periods"][Compartment.EXPOSED] = \
+            params["default"]["compartment_periods"]["incubation"] * \
+            (1.0 - params["default"]["prop_exposed_presympt"])
+        params["default"]["compartment_periods"][Compartment.PRESYMPTOMATIC] = \
+            params["default"]["compartment_periods"]["incubation"] * \
+            params["default"]["prop_exposed_presympt"]
+
+    # Calculate early infectious period from total infectious period and proportion of that period spent isolated
+    if "prop_infectious_early" in params["default"]:
+        params["default"]["compartment_periods"][Compartment.EARLY_INFECTIOUS] = \
+            params["default"]["compartment_periods"]["infectious"] * \
+            params["default"]["prop_infectious_early"]
+        params["default"]["compartment_periods"][Compartment.LATE_INFECTIOUS] = \
+            params["default"]["compartment_periods"]["infectious"] * \
+            (1.0 - params["default"]["prop_infectious_early"])
 
     return params

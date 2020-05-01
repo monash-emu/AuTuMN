@@ -34,7 +34,7 @@ default:
   prop_exposed_presympt: 0.5
 
   # Proportion of the infectious period spent in the early compartment (i.e. can't be isolated for symptoms)
-  prop_infectious_early: 0.33
+  prop_infectious_early: 0.333
 
   # Stratification-related requests
   stratify_by:

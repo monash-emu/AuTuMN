@@ -1,12 +1,23 @@
 ---
 default:
-  contact_rate: 0.23
-  prop_isolated_among_symptomatic: 0.3
+  contact_rate: 0.335
+  prop_isolated_among_symptomatic: 0.7
 
-  start_time: 15
+  start_time: 29
   end_time: 150.
   country: malaysia
   iso3: MYS
+
+  ifr_multipliers:
+    - 2.485238131
+    - 2.818023382
+    - 2.119966887
+    - 1.602830675
+    - 1.831299482
+    - 1.926790627
+    - 1.939654271
+    - 1.518871437
+    - 1.024102769
 
   mixing:
     other_locations_times:

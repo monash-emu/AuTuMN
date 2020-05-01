@@ -35,7 +35,12 @@ def find_abs_death_props(params, abs_props):
 
     # Find IFR that needs to be contributed by ICU and non-ICU hospital deaths\
     hospital_death, icu_death = [], []
-    for i_agegroup in range(len(params["all_stratifications"]["agegroup"])):
+    for i_agegroup, agegroup in enumerate(params["all_stratifications"]["agegroup"]):
+
+        # If IFR for age group is greater than absolute proportion hospitalised, increased hospitalised proportion
+        if params["adjusted_infection_fatality_props"][i_agegroup] > \
+                abs_props["hospital"][i_agegroup]:
+            abs_props["hospital"][i_agegroup] = params["adjusted_infection_fatality_props"][i_agegroup]
 
         # Find the target absolute ICU mortality and the amount left over from IFRs to go to hospital, if any
         target_icu_abs_mort = \
@@ -45,13 +50,8 @@ def find_abs_death_props(params, abs_props):
             params["adjusted_infection_fatality_props"][i_agegroup] - \
             target_icu_abs_mort
 
-        # If IFR for age group is greater than absolute proportion hospitalised (very unlikely to ever occur)
-        if params["adjusted_infection_fatality_props"][i_agegroup] > \
-                abs_props["hospital"][i_agegroup]:
-            raise ValueError("Infection fatality prop greater than absolute proportion admitted to hospital")
-
         # If some IFR will be left over for the hospitalised
-        elif left_over_mort > 0.:
+        if left_over_mort > 0.:
             hospital_death.append(left_over_mort)
             icu_death.append(target_icu_abs_mort)
 

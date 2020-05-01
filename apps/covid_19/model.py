@@ -59,23 +59,7 @@ def build_model(country: str, params: dict, update_params={}):
     # Update, not used in single application run
     model_parameters.update(update_params)
 
-    # Calculate presymptomatic period from exposed period and relative proportion of that period spent infectious
-    model_parameters["compartment_periods"][Compartment.EXPOSED] = \
-        model_parameters["compartment_periods"]["incubation"] * \
-        (1.0 - model_parameters["prop_exposed_presympt"])
-    model_parameters["compartment_periods"][Compartment.PRESYMPTOMATIC] = \
-        model_parameters["compartment_periods"]["incubation"] * \
-        model_parameters["prop_exposed_presympt"]
-
-    # Calculate early infectious period from total infectious period and proportion of that period spent isolated
-    model_parameters["compartment_periods"][Compartment.EARLY_INFECTIOUS] = \
-        model_parameters["compartment_periods"]["infectious"] * \
-        model_parameters["prop_infectious_early"]
-    model_parameters["compartment_periods"][Compartment.LATE_INFECTIOUS] = \
-        model_parameters["compartment_periods"]["infectious"] * \
-        (1.0 - model_parameters["prop_infectious_early"])
-
-    # update parameters stored in dictionaries that need to be modified during calibration
+    # Update parameters stored in dictionaries that need to be modified during calibration
     model_parameters = update_dict_params_for_calibration(model_parameters)
 
     # Get population size (by age if age-stratified)
@@ -273,7 +257,7 @@ def build_model(country: str, params: dict, update_params={}):
             verbose=False,
         )
 
-    # Stratify infectious compartment as high or low infectiousness as requested
+    # Stratify infectious compartment by clinical status
     if "clinical" in model_parameters["stratify_by"] and model_parameters["clinical_strata"]:
         _covid_model, model_parameters = stratify_by_clinical(
             _covid_model, model_parameters, final_compartments

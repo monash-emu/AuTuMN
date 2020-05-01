@@ -112,7 +112,7 @@ def load_params(app_dir: str, application=None):
              zip(params["default"]["infection_fatality_props"], params["default"]["ifr_multipliers"])]
 
     # Calculate presymptomatic period from exposed period and relative proportion of that period spent infectious
-    if "compartment_periods" in params["default"] and Compartment.EXPOSED in params["default"]["compartment_periods"]:
+    if "prop_exposed_presympt" in params["default"]:
         params["default"]["compartment_periods"][Compartment.EXPOSED] = \
             params["default"]["compartment_periods"]["incubation"] * \
             (1.0 - params["default"]["prop_exposed_presympt"])

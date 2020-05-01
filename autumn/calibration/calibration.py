@@ -442,11 +442,7 @@ class Calibration:
                     quantile_97_5 = stats.gamma.ppf(.975, prior_dict["distri_params"][0], 0., prior_dict["distri_params"][1])
                     prior_width = quantile_97_5 - quantile_2_5
                 else:
-                    raise ValueError(
-                        "prior_width not specified for "
-                        + prior_dict["distribution"]
-                        + " distribution at the moment"
-                    )
+                    raise_error_unsupported_prior(prior_dict['distribution'])
 
                 #  95% of the sampled values within [mu - 2*sd, mu + 2*sd], i.e. interval of witdth 4*sd
                 relative_prior_width = (

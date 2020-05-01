@@ -59,7 +59,7 @@ PAR_PRIORS = [
     },
     {
         "param_name": "self_isolation_effect",
-        "distribution": "gamma",
+        "distribution": "beta",
         "distri_mean": .67,
         "distri_ci": [.55, .80],
         "distri_ci_width": .95

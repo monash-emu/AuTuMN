@@ -22,9 +22,10 @@ from autumn.tb_model.outputs import unpivot_outputs
 from autumn.db import Database
 from autumn.tool_kit.utils import get_data_hash, find_distribution_params_from_mean_and_ci
 from autumn.tool_kit.scenarios import Scenario
+from autumn.outputs.calibration_plots import plot_all_priors
 
 from .loglike import LogLike
-from .utils import find_decent_starting_point, calculate_log_prior, raise_error_unsupported_prior
+from .utils import find_decent_starting_point, calculate_prior, raise_error_unsupported_prior
 
 pymc3_logger = logging.getLogger("pymc3")
 pymc3_logger.setLevel(logging.ERROR)
@@ -139,6 +140,8 @@ class Calibration:
         self.mle_estimates = {}  # will store the results of the maximum-likelihood calibration
 
         self.evaluated_params_ll = []  # list of tuples:  [(theta_0, ll_0), (theta_1, ll_1), ...]
+
+        plot_all_priors(self.priors, out_db_dir)
 
     def specify_missing_prior_params(self):
         """
@@ -688,7 +691,7 @@ class Calibration:
         """
         logp = 0.0
         for i, prior_dict in enumerate(self.priors):
-            logp += calculate_log_prior(prior_dict, params[i])
+            logp += calculate_prior(prior_dict, params[i], log=True)
         return logp
 
     def update_mcmc_trace(self, params_to_store, loglike_to_store):

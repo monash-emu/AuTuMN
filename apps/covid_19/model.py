@@ -92,23 +92,21 @@ def build_model(country: str, params: dict, update_params={}):
     #         ]
     #     ]
 
+    # Define compartments with repeats as needed
     all_compartments = [
         Compartment.SUSCEPTIBLE,
-        Compartment.RECOVERED,
         Compartment.EXPOSED,
         Compartment.PRESYMPTOMATIC,
         Compartment.EARLY_INFECTIOUS,
         Compartment.LATE_INFECTIOUS,
+        Compartment.RECOVERED,
     ]
-
-    # Define compartments
     final_compartments, replicated_compartments = [], []
     for compartment in all_compartments:
         if params["n_compartment_repeats"][compartment] == 1:
             final_compartments.append(compartment)
         else:
             replicated_compartments.append(compartment)
-
     is_infectious = {
         Compartment.EXPOSED: False,
         Compartment.PRESYMPTOMATIC: True,
@@ -168,11 +166,11 @@ def build_model(country: str, params: dict, update_params={}):
         )
 
     # Add other flows between compartment types
-    flows = add_infection_flows(flows, model_parameters["n_compartment_repeats"]["exposed"])
+    flows = add_infection_flows(flows, model_parameters["n_compartment_repeats"][Compartment.EXPOSED])
     flows = add_transition_flows(
         flows,
-        model_parameters["n_compartment_repeats"]["exposed"],
-        model_parameters["n_compartment_repeats"]["presympt"],
+        model_parameters["n_compartment_repeats"][Compartment.EXPOSED],
+        model_parameters["n_compartment_repeats"][Compartment.PRESYMPTOMATIC],
         Compartment.EXPOSED,
         Compartment.PRESYMPTOMATIC,
         "within_exposed",
@@ -201,7 +199,7 @@ def build_model(country: str, params: dict, update_params={}):
         flows, model_parameters["n_compartment_repeats"][Compartment.LATE_INFECTIOUS]
     )
 
-    # add importation flows if requested
+    # Add importation flows if requested
     if model_parameters["implement_importation"]:
         flows = add_transition_flows(
             flows,
@@ -212,7 +210,7 @@ def build_model(country: str, params: dict, update_params={}):
             "import_secondary_rate",
         )
 
-    # Get mixing matrix, although would need to adapt this for countries in file _2
+    # Get mixing matrix
     mixing_matrix = load_specific_prem_sheet("all_locations", model_parameters["country"])
     mixing_matrix_multipliers = model_parameters.get("mixing_matrix_multipliers")
     if mixing_matrix_multipliers is not None:

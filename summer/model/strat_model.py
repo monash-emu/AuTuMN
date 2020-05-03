@@ -1682,12 +1682,10 @@ class StratifiedModel(EpiModel):
                 )
 
         # Not sure which of these to use
-        self.infectious_denominator_shadow = []
-        for category in mixing_categories:
-            self.infectious_denominator_shadow.append(
-                sum([comp for i_comp, comp in enumerate(list(_compartment_values)) if
-                     i_comp in self.mixing_indices[category]]))
-
+        if type(_compartment_values) == list:
+            _compartment_values = numpy.asarray(_compartment_values)
+        self.infectious_denominator_shadow = \
+            [sum(_compartment_values[self.mixing_indices[category]]) for category in self.mixing_indices]
         self.infectious_denominators = sum(_compartment_values)
 
     def find_infectious_multiplier(self, n_flow):

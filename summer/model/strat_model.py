@@ -16,6 +16,7 @@ from .utils import (
     create_stratum_name,
     create_time_variant_multiplicative_function,
     element_list_multiplication,
+    element_list_division,
     extract_reversed_x_positions,
     find_name_components,
     find_stem,
@@ -215,6 +216,7 @@ class StratifiedModel(EpiModel):
         self.available_death_rates = [""]
         self.dynamic_mixing_matrix = False
         self.mixing_indices = {}
+        self.infectious_denominator_shadow = []
 
     """
     stratification methods
@@ -1663,6 +1665,7 @@ class StratifiedModel(EpiModel):
         mixing_categories = (
             ["all_population"] if self.mixing_matrix is None else self.mixing_categories
         )
+
         for strain in self.strains if self.strains else ["all_strains"]:
             self.infectious_populations[strain] = []
             for category in mixing_categories:
@@ -1677,6 +1680,14 @@ class StratifiedModel(EpiModel):
                         )
                     )
                 )
+
+        # Not sure which of these to use
+        self.infectious_denominator_shadow = []
+        for category in mixing_categories:
+            self.infectious_denominator_shadow.append(
+                sum([comp for i_comp, comp in enumerate(list(_compartment_values)) if
+                     i_comp in self.mixing_indices[category]]))
+
         self.infectious_denominators = sum(_compartment_values)
 
     def find_infectious_multiplier(self, n_flow):
@@ -1700,10 +1711,18 @@ class StratifiedModel(EpiModel):
             [1.0] if self.mixing_matrix is None else self.mixing_matrix[force_index, :]
         )
         denominator = 1.0 if "_density" in flow_type else self.infectious_denominators
-        return (
-            sum(element_list_multiplication(self.infectious_populations[strain], mixing_elements))
-            / denominator
-        )
+
+        return \
+            sum(element_list_division(
+                element_list_multiplication(
+                    self.infectious_populations[strain],
+                    mixing_elements
+                ),
+                self.infectious_denominator_shadow
+            )
+            )
+        return sum(element_list_multiplication(self.infectious_populations[strain], mixing_elements)) \
+               / denominator
 
     def prepare_time_step(self, _time):
         """

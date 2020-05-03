@@ -63,7 +63,8 @@ def test_calibrate_autumn_mcmc(temp_data_dir):
     )
     app_dir = os.path.join(temp_data_dir, "sharks")
     run_dir = os.path.join(app_dir, os.listdir(app_dir)[0])
-    out_db_path = os.path.join(run_dir, os.listdir(run_dir)[0])
+    db_filename = [i for i in os.listdir(run_dir) if i.endswith(".db")][0]
+    out_db_path = os.path.join(run_dir, db_filename)
     assert os.path.exists(out_db_path)
 
     out_db = Database(out_db_path)

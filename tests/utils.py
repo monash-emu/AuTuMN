@@ -43,6 +43,7 @@ def in_memory_db_factory():
             return engine
 
         # Create a fake DB path.
+        assert db_path.endswith(".db"), f'Database path "{db_path}" must be a file that ends in .db'
         with open(db_path, "w") as f:
             pass
 

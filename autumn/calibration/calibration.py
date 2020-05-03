@@ -141,7 +141,8 @@ class Calibration:
 
         self.evaluated_params_ll = []  # list of tuples:  [(theta_0, ll_0), (theta_1, ll_1), ...]
 
-        plot_all_priors(self.priors, out_db_dir)
+        if self.chain_index == 0:
+            plot_all_priors(self.priors, out_db_dir)
 
     def specify_missing_prior_params(self):
         """

@@ -19,7 +19,7 @@ def plot_all_priors(priors, directory):
     """
     print("Plotting prior distributions")
     path = os.path.join(directory, "prior_plots")
-    os.makedirs(path)
+    os.makedirs(path, exist_ok=True)
     for i, prior_dict in enumerate(priors):
         if prior_dict["distribution"] == "lognormal":
             logger.error("Cannot plot prior distributions for lognormal.")

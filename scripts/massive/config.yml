@@ -1,7 +1,7 @@
 ---
 # MASSIVE job configuration
 # Number of jobs to run asynchronously in parallel.
-num_jobs: 6
+num_jobs: 1
 # Number of CPU cores available to each job.
 cores_per_job: 1
 # Memory in MB available per core, per job.

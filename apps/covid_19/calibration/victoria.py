@@ -9,7 +9,7 @@ PAR_PRIORS = [
     {
         "param_name": "contact_rate",
         "distribution": "uniform",
-        "distri_params": [0.1, 0.4]
+        "distri_params": [.025, .08]
     },
     # Parameters defining the natural history of COVID-19
     {
@@ -100,4 +100,4 @@ def run_vic_calibration_chain(max_seconds: int, run_id: int):
 
 
 if __name__ == "__main__":
-    run_vic_calibration_chain(30, 1)
+    run_vic_calibration_chain(30, 0)

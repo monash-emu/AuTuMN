@@ -9,7 +9,7 @@ from autumn.demography.ageing import add_agegroup_breaks
 def preprocess_params(params: dict, update_params: dict):
 
     # Revise any dates for mixing matrices submitted in YMD format
-    if "mixing" in params:
+    if params.get("mixing"):
         params["mixing"] = revise_mixing_data_for_dicts(params["mixing"])
         revise_dates_if_ymd(params["mixing"])
 

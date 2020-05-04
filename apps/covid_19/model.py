@@ -17,10 +17,9 @@ from autumn.disease_categories.emerging_infections.flows import (
 from autumn.demography.social_mixing import (
     load_specific_prem_sheet,
     update_mixing_with_multipliers,
-    get_total_contact_rates_by_age
+    get_total_contact_rates_by_age,
 )
 from autumn.demography.population import get_population_size
-from autumn.demography.ageing import add_agegroup_breaks
 from autumn.db import Database
 from autumn.summer_related.parameter_adjustments import split_multiple_parameters
 
@@ -30,12 +29,11 @@ from .outputs import (
     create_fully_stratified_incidence_covid,
     create_fully_stratified_progress_covid,
     calculate_notifications_covid,
-    calculate_incidence_icu_covid
+    calculate_incidence_icu_covid,
 )
 from .importation import set_tv_importation_rate
 from .matrices import build_covid_matrices, apply_npi_effectiveness
-from .utils import update_dict_params_for_calibration
-
+from .preprocess import preprocess_params
 
 # Database locations
 FILE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -53,14 +51,7 @@ def build_model(country: str, params: dict, update_params={}):
     :return: StratifiedModel
         The final model with all parameters and stratifications
     """
-    params = add_agegroup_breaks(params)
-    model_parameters = params
-
-    # Update, not used in single application run
-    model_parameters.update(update_params)
-
-    # Update parameters stored in dictionaries that need to be modified during calibration
-    model_parameters = update_dict_params_for_calibration(model_parameters)
+    model_parameters = preprocess_params(params, update_params)
 
     # Get population size (by age if age-stratified)
     total_pops, model_parameters = get_population_size(model_parameters, input_database)
@@ -150,7 +141,9 @@ def build_model(country: str, params: dict, update_params={}):
         )
 
     # Add other flows between compartment types
-    flows = add_infection_flows(flows, model_parameters["n_compartment_repeats"][Compartment.EXPOSED])
+    flows = add_infection_flows(
+        flows, model_parameters["n_compartment_repeats"][Compartment.EXPOSED]
+    )
     flows = add_transition_flows(
         flows,
         model_parameters["n_compartment_repeats"][Compartment.EXPOSED],
@@ -178,7 +171,9 @@ def build_model(country: str, params: dict, update_params={}):
         Compartment.LATE_INFECTIOUS,
         "within_" + Compartment.EARLY_INFECTIOUS,
     )
-    flows = add_recovery_flows(flows, model_parameters["n_compartment_repeats"][Compartment.LATE_INFECTIOUS])
+    flows = add_recovery_flows(
+        flows, model_parameters["n_compartment_repeats"][Compartment.LATE_INFECTIOUS]
+    )
     flows = add_infection_death_flows(
         flows, model_parameters["n_compartment_repeats"][Compartment.LATE_INFECTIOUS]
     )
@@ -225,23 +220,29 @@ def build_model(country: str, params: dict, update_params={}):
     if "agegroup" in model_parameters["stratify_by"]:
         age_strata = model_parameters["all_stratifications"]["agegroup"]
         adjust_requests = split_multiple_parameters(
-            ("to_infectious", "infect_death", "within_late"),
-            age_strata)  # Split unchanged parameters for later adjustment
+            ("to_infectious", "infect_death", "within_late"), age_strata
+        )  # Split unchanged parameters for later adjustment
 
         if model_parameters["implement_importation"]:
-            adjust_requests.update({'import_secondary_rate': get_total_contact_rates_by_age(
-                mixing_matrix,
-                direction='horizontal')
-                                    }
-                                   )
+            adjust_requests.update(
+                {
+                    "import_secondary_rate": get_total_contact_rates_by_age(
+                        mixing_matrix, direction="horizontal"
+                    )
+                }
+            )
 
         # Adjust susceptibility for children
         adjust_requests.update(
             {
-                "contact_rate": {key: value for key, value in
-                                 zip(model_parameters["reduced_susceptibility_agegroups"],
-                                     [model_parameters["young_reduced_susceptibility"]] *
-                                     len(model_parameters["reduced_susceptibility_agegroups"]))}
+                "contact_rate": {
+                    key: value
+                    for key, value in zip(
+                        model_parameters["reduced_susceptibility_agegroups"],
+                        [model_parameters["young_reduced_susceptibility"]]
+                        * len(model_parameters["reduced_susceptibility_agegroups"]),
+                    )
+                }
             }
         )
 
@@ -249,9 +250,9 @@ def build_model(country: str, params: dict, update_params={}):
             "agegroup",  # Don't use the string age, to avoid triggering automatic demography
             convert_list_contents_to_int(age_strata),
             [],  # Apply to all compartments
-            {i_break: prop for
-             i_break, prop in zip(age_strata,
-                                  normalise_sequence(total_pops))},  # Distribute starting population
+            {
+                i_break: prop for i_break, prop in zip(age_strata, normalise_sequence(total_pops))
+            },  # Distribute starting population
             mixing_matrix=mixing_matrix,
             adjustment_requests=adjust_requests,
             verbose=False,
@@ -268,14 +269,14 @@ def build_model(country: str, params: dict, update_params={}):
         create_fully_stratified_incidence_covid(
             model_parameters["stratify_by"],
             model_parameters["all_stratifications"],
-            model_parameters
+            model_parameters,
         )
     )
     output_connections.update(
         create_fully_stratified_progress_covid(
             model_parameters["stratify_by"],
             model_parameters["all_stratifications"],
-            model_parameters
+            model_parameters,
         )
     )
     _covid_model.output_connections = output_connections
@@ -291,8 +292,9 @@ def build_model(country: str, params: dict, update_params={}):
     mixing_instructions = model_parameters.get("mixing")
     if mixing_instructions:
         if "npi_effectiveness" in model_parameters:
-            mixing_instructions = apply_npi_effectiveness(mixing_instructions,
-                                                          model_parameters.get("npi_effectiveness"))
+            mixing_instructions = apply_npi_effectiveness(
+                mixing_instructions, model_parameters.get("npi_effectiveness")
+            )
         _covid_model.find_dynamic_mixing_matrix = build_covid_matrices(
             model_parameters["country"], mixing_instructions
         )

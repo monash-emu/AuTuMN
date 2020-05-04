@@ -13,8 +13,7 @@ logger = logging.getLogger(__file__)
 
 
 def get_mixing_lists_from_dict(working_dict):
-    return [i_key for i_key in working_dict.keys()], \
-           [i_key for i_key in working_dict.values()]
+    return [i_key for i_key in working_dict.keys()], [i_key for i_key in working_dict.values()]
 
 
 def revise_mixing_data_for_dicts(parameters):
@@ -23,9 +22,10 @@ def revise_mixing_data_for_dicts(parameters):
         list_of_possible_keys.append("age_" + str(age_index))
     for mixing_key in list_of_possible_keys:
         if mixing_key in parameters:
-            parameters[mixing_key + "_times"], \
-                parameters[mixing_key + "_values"] = \
-                get_mixing_lists_from_dict(parameters[mixing_key])
+            (
+                parameters[mixing_key + "_times"],
+                parameters[mixing_key + "_values"],
+            ) = get_mixing_lists_from_dict(parameters[mixing_key])
     return parameters
 
 
@@ -37,8 +37,7 @@ def revise_dates_if_ymd(mixing_params):
     for key in (k for k in mixing_params if k.endswith("_times")):
         for i_time, time in enumerate(mixing_params[key]):
             if isinstance(time, (list, str)):
-                mixing_params[key][i_time] = \
-                    find_relative_date_from_string_or_tuple(time)
+                mixing_params[key][i_time] = find_relative_date_from_string_or_tuple(time)
 
 
 def load_params(app_dir: str, application=None):
@@ -95,38 +94,41 @@ def load_params(app_dir: str, application=None):
     # Revise any dates for mixing matrices submitted in YMD format
     for param in params:
         if type(params[param]) == dict and "mixing" in params[param]:
-            params[param]["mixing"] = \
-                revise_mixing_data_for_dicts(params[param]["mixing"])
+            params[param]["mixing"] = revise_mixing_data_for_dicts(params[param]["mixing"])
             revise_dates_if_ymd(params[param]["mixing"])
 
         if param == "scenarios":
             for scenario in params["scenarios"]:
-                params[param][scenario]["mixing"] = \
-                    revise_mixing_data_for_dicts(params[param][scenario]["mixing"])
+                params[param][scenario]["mixing"] = revise_mixing_data_for_dicts(
+                    params[param][scenario]["mixing"]
+                )
                 revise_dates_if_ymd(params[param][scenario]["mixing"])
 
+
+    default = params["default"]
     # Adjust infection for relative all-cause mortality compared to South Korea, if process being applied
-    if "ifr_multipliers" in params["default"]:
-        params["default"]["infection_fatality_props"] = \
-            [i_prop * mult for i_prop, mult in
-             zip(params["default"]["infection_fatality_props"], params["default"]["ifr_multipliers"])]
+    if "ifr_multipliers" in default:
+        default["infection_fatality_props"] = [
+            i_prop * mult
+            for i_prop, mult in zip(default["infection_fatality_props"], default["ifr_multipliers"])
+        ]
 
     # Calculate presymptomatic period from exposed period and relative proportion of that period spent infectious
-    if "prop_exposed_presympt" in params["default"]:
-        params["default"]["compartment_periods"][Compartment.EXPOSED] = \
-            params["default"]["compartment_periods"]["incubation"] * \
-            (1.0 - params["default"]["prop_exposed_presympt"])
-        params["default"]["compartment_periods"][Compartment.PRESYMPTOMATIC] = \
-            params["default"]["compartment_periods"]["incubation"] * \
-            params["default"]["prop_exposed_presympt"]
+    if "prop_exposed_presympt" in default:
+        default["compartment_periods"][Compartment.EXPOSED] = default["compartment_periods"][
+            "incubation"
+        ] * (1.0 - default["prop_exposed_presympt"])
+        default["compartment_periods"][Compartment.PRESYMPTOMATIC] = (
+            default["compartment_periods"]["incubation"] * default["prop_exposed_presympt"]
+        )
 
     # Calculate early infectious period from total infectious period and proportion of that period spent isolated
-    if "prop_infectious_early" in params["default"]:
-        params["default"]["compartment_periods"][Compartment.EARLY_INFECTIOUS] = \
-            params["default"]["compartment_periods"]["infectious"] * \
-            params["default"]["prop_infectious_early"]
-        params["default"]["compartment_periods"][Compartment.LATE_INFECTIOUS] = \
-            params["default"]["compartment_periods"]["infectious"] * \
-            (1.0 - params["default"]["prop_infectious_early"])
+    if "prop_infectious_early" in default:
+        default["compartment_periods"][Compartment.EARLY_INFECTIOUS] = (
+            default["compartment_periods"]["infectious"] * default["prop_infectious_early"]
+        )
+        default["compartment_periods"][Compartment.LATE_INFECTIOUS] = default[
+            "compartment_periods"
+        ]["infectious"] * (1.0 - default["prop_infectious_early"])
 
     return params

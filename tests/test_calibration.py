@@ -1,6 +1,4 @@
 import os
-from unittest import mock
-from tempfile import TemporaryDirectory
 
 from autumn.db import Database
 from autumn.calibration import Calibration, CalibrationMode

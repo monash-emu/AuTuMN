@@ -190,7 +190,6 @@ class StratifiedModel(EpiModel):
         self.removed_compartments = []
         self.overwrite_parameters = []
         self.compartment_types_to_stratify = []
-        self.infectious_denominators = []
         self.strains = []
         self.mixing_categories = []
         self.unstratified_compartment_names = []
@@ -216,7 +215,7 @@ class StratifiedModel(EpiModel):
         self.available_death_rates = [""]
         self.dynamic_mixing_matrix = False
         self.mixing_indices = {}
-        self.infectious_denominator_shadow = []
+        self.infectious_denominators = []
 
     """
     stratification methods
@@ -1684,9 +1683,8 @@ class StratifiedModel(EpiModel):
         # Not sure which of these to use
         if type(_compartment_values) == list:
             _compartment_values = numpy.asarray(_compartment_values)
-        self.infectious_denominator_shadow = \
+        self.infectious_denominators = \
             [sum(_compartment_values[self.mixing_indices[category]]) for category in self.mixing_indices]
-        self.infectious_denominators = sum(_compartment_values)
 
     def find_infectious_multiplier(self, n_flow):
         """
@@ -1708,7 +1706,8 @@ class StratifiedModel(EpiModel):
         mixing_elements = (
             [1.0] if self.mixing_matrix is None else self.mixing_matrix[force_index, :]
         )
-        denominator = 1.0 if "_density" in flow_type else self.infectious_denominators
+        denominator = [1.0] * len(self.infectious_denominators) if "_density" in flow_type else \
+            self.infectious_denominators
 
         return \
             sum(element_list_division(
@@ -1716,11 +1715,9 @@ class StratifiedModel(EpiModel):
                     self.infectious_populations[strain],
                     mixing_elements
                 ),
-                self.infectious_denominator_shadow
+                denominator
             )
             )
-        return sum(element_list_multiplication(self.infectious_populations[strain], mixing_elements)) \
-               / denominator
 
     def prepare_time_step(self, _time):
         """

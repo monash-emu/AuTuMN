@@ -120,60 +120,6 @@ def test_strat_model__with_locations__expect_no_change():
     assert (actual_output == np.array(expected_output)).all()
 
 
-def test_strat_model__with_locations_and_mixing__expect_varied_transmission():
-    """
-    Ensure that location-based mixing works.
-    Expect urbanites to be highly infectious t other locations, but not the reverse.
-    """
-    pop = 1000
-    model = StratifiedModel(
-        times=get_integration_times(2000, 2005, 1),
-        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.EARLY_INFECTIOUS],
-        initial_conditions={Compartment.EARLY_INFECTIOUS: 100},
-        parameters={"contact_rate": 3},
-        requested_flows=[
-            {
-                "type": Flow.INFECTION_FREQUENCY,
-                "parameter": "contact_rate",
-                "origin": Compartment.SUSCEPTIBLE,
-                "to": Compartment.EARLY_INFECTIOUS,
-            }
-        ],
-        starting_population=pop,
-    )
-    # Add basic location stratification
-    model.stratify(
-        Stratification.LOCATION,
-        strata_request=["rural", "urban", "prison"],
-        compartment_types_to_stratify=[],
-        requested_proportions={},
-        mixing_matrix=np.array(
-            [
-                # Rural people catch disease from urbanites
-                [0.0, 1.0, 0.0],
-                # Urbanites cannot catch disease from anyone
-                [0.0, 0.0, 0.0],
-                # Prisoners catch disease from urbanites
-                [0.0, 1.0, 0.0],
-            ]
-        ),
-    )
-    # Run the model for 5 years.
-    model.run_model(integration_type=IntegrationType.ODE_INT)
-
-    # Expect everyone to generally get older, but no one should die or get sick
-    expected_output = [
-        [300.0, 300.0, 300.0, 33.0, 33.0, 33.0],
-        [271.0, 300.0, 271.0, 62.0, 33.0, 62.0],
-        [246.0, 300.0, 246.0, 88.0, 33.0, 88.0],
-        [222.0, 300.0, 222.0, 111.0, 33.0, 111.0],
-        [201.0, 300.0, 201.0, 132.0, 33.0, 132.0],
-        [182.0, 300.0, 182.0, 151.0, 33.0, 151.0],
-    ]
-    actual_output = np.round(model.outputs)
-    assert (actual_output == np.array(expected_output)).all()
-
-
 @pytest.mark.xfail(reason="I don't know how to implement this properly.")
 def test_strat_model__with_age_and_infectiousness__expect_age_based_infectiousness():
     """

@@ -100,4 +100,4 @@ def run_vic_calibration_chain(max_seconds: int, run_id: int):
 
 
 if __name__ == "__main__":
-    run_vic_calibration_chain(30, 1)
+    run_vic_calibration_chain(30, 0)

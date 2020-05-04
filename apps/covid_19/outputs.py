@@ -1,5 +1,6 @@
 import itertools
 from datetime import date
+from summer.model.utils.string import find_name_components
 
 from autumn.constants import Compartment
 
@@ -121,7 +122,7 @@ def calculate_incidence_icu_covid(model, time):
     this_time_index = model.times.index(time)
     incidence_icu = 0.
     for key, value in model.derived_outputs.items():
-        if "incidenceX" in key and "icu" in key:
+        if "incidence" in find_name_components(key) and "clinical_icu" in find_name_components(key):
             incidence_icu += value[this_time_index]
     return incidence_icu
 

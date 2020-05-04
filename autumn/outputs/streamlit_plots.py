@@ -85,7 +85,16 @@ def plot_outputs_single(plotter: Plotter, scenarios: list, scenario_idx: int, pl
     scenario_plots.plot_outputs_single(plotter, scenario, output_config)
 
 
+def plot_compartment(plotter: Plotter, scenarios: list, scenario_idx: int, plot_config: dict):
+    scenario = scenarios[scenario_idx]
+    compartments = st.multiselect(
+        "Select the compartments to plot", scenario.model.compartment_names
+    )
+    scenario_plots.plot_compartment(plotter, scenario, compartments)
+
+
 PLOT_FUNCS = {
+    "Compartment sizes": plot_compartment,
     "Multi scenario outputs": plot_outputs_multi,
     "Single scenario output": plot_outputs_single,
 }

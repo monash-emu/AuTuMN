@@ -80,6 +80,25 @@ def plot_scenarios(scenarios: List[Scenario], out_dir: str, plot_config: dict):
             plot_exponential_growth_rate(scenario_plotter, model)
 
 
+def plot_compartment(plotter: Plotter, scenario: Scenario, compartments: List[str]):
+    """
+    Plot the selected output compartments.
+    """
+    model = scenario.model
+    times = model.times
+
+    fig, axis, _, _, _ = plotter.get_figure()
+    legend = []
+    for color_idx, compartment_name in enumerate(reversed(compartments)):
+        comp_idx = model.compartment_names.index(compartment_name)
+        values = model.outputs[:, comp_idx]
+        axis.plot(times, values, color=COLOR_THEME[color_idx], alpha=0.7)
+        legend.append(compartment_name)
+
+    axis.legend(legend)
+    plotter.save_figure(fig, filename="compartments", title_text="compartments")
+
+
 def plot_outputs_multi(plotter: Plotter, scenarios: List[Scenario], output_config: dict):
     """
     Plot the model derived/generated outputs requested by the user for multiple single scenarios, on one plot.

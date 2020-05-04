@@ -1,9 +1,9 @@
 ---
 default:
-  contact_rate: 0.0268
+  contact_rate: 0.047
   prop_isolated_among_symptomatic: 0.7
 
-  start_time: 29
+  start_time: 50
   end_time: 150.
   country: malaysia
   iso3: MYS

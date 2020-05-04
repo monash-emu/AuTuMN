@@ -125,6 +125,7 @@ def calculate_incidence_icu_covid(model, time):
             incidence_icu += value[this_time_index]
     return incidence_icu
 
+
 def find_date_from_year_start(times, incidence):
     """
     Messy patch to shift dates over such that zero represents the start of the year and the number of cases are

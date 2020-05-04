@@ -16,6 +16,7 @@ from .utils import (
     create_stratum_name,
     create_time_variant_multiplicative_function,
     element_list_multiplication,
+    element_list_division,
     extract_reversed_x_positions,
     find_name_components,
     find_stem,
@@ -189,7 +190,6 @@ class StratifiedModel(EpiModel):
         self.removed_compartments = []
         self.overwrite_parameters = []
         self.compartment_types_to_stratify = []
-        self.infectious_denominators = []
         self.strains = []
         self.mixing_categories = []
         self.unstratified_compartment_names = []
@@ -214,6 +214,8 @@ class StratifiedModel(EpiModel):
         self.mixing_matrix = None
         self.available_death_rates = [""]
         self.dynamic_mixing_matrix = False
+        self.mixing_indices = {}
+        self.infectious_denominators = []
 
     """
     stratification methods
@@ -1440,10 +1442,10 @@ class StratifiedModel(EpiModel):
         # mixing preparations
         if self.mixing_matrix is not None:
             self.add_force_indices_to_transitions()
-        mixing_indices = self.find_mixing_denominators()
+        self.find_mixing_denominators()
 
         # reconciling the strains and the mixing attributes together into one structure
-        self.find_strain_mixing_multipliers(mixing_indices)
+        self.find_strain_mixing_multipliers()
 
     def prepare_all_infectiousness_multipliers(self):
         """
@@ -1519,12 +1521,12 @@ class StratifiedModel(EpiModel):
         # loop through and find the index of the mixing matrix applicable to the flow, of which there should be only one
         for n_flow in infection_flow_indices:
             found = False
-            for n_group, force_group in enumerate(self.mixing_categories):
+            for i_group, force_group in enumerate(self.mixing_categories):
                 if all(
                     stratum in find_name_components(self.transition_flows.origin[n_flow])
                     for stratum in find_name_components(force_group)
                 ):
-                    self.transition_flows.force_index[n_flow] = n_group
+                    self.transition_flows.force_index[n_flow] = i_group
                     if found:
                         raise ValueError(
                             "mixing group found twice for transition flow number %s" % n_flow
@@ -1542,11 +1544,10 @@ class StratifiedModel(EpiModel):
             indices of the compartments that are applicable to a particular mixing category
         """
         if self.mixing_matrix is None:
-            return {"all_population": range(len(self.compartment_names))}
+            self.mixing_indices = {"all_population": range(len(self.compartment_names))}
         else:
-            mixing_indices = {}
             for category in self.mixing_categories:
-                mixing_indices[category] = [
+                self.mixing_indices[category] = [
                     i_comp
                     for i_comp, compartment in enumerate(self.compartment_names)
                     if all(
@@ -1556,9 +1557,8 @@ class StratifiedModel(EpiModel):
                         ]
                     )
                 ]
-            return mixing_indices
 
-    def find_strain_mixing_multipliers(self, mixing_indices):
+    def find_strain_mixing_multipliers(self):
         """
         find the relevant indices to be used to calculate the force of infection contribution to each strain from each
             mixing category as a list of indices - and separately find multipliers as a list of the same length for
@@ -1571,7 +1571,7 @@ class StratifiedModel(EpiModel):
             ):
                 self.strain_mixing_elements[strain][category] = [
                     index
-                    for index in mixing_indices[category]
+                    for index in self.mixing_indices[category]
                     if index in self.infectious_indices[strain]
                 ]
                 self.strain_mixing_multipliers[strain][category] = [
@@ -1664,6 +1664,7 @@ class StratifiedModel(EpiModel):
         mixing_categories = (
             ["all_population"] if self.mixing_matrix is None else self.mixing_categories
         )
+
         for strain in self.strains if self.strains else ["all_strains"]:
             self.infectious_populations[strain] = []
             for category in mixing_categories:
@@ -1678,7 +1679,12 @@ class StratifiedModel(EpiModel):
                         )
                     )
                 )
-        self.infectious_denominators = sum(_compartment_values)
+
+        # Not sure which of these to use
+        if type(_compartment_values) == list:
+            _compartment_values = numpy.asarray(_compartment_values)
+        self.infectious_denominators = \
+            [sum(_compartment_values[self.mixing_indices[category]]) for category in self.mixing_indices]
 
     def find_infectious_multiplier(self, n_flow):
         """
@@ -1700,11 +1706,18 @@ class StratifiedModel(EpiModel):
         mixing_elements = (
             [1.0] if self.mixing_matrix is None else self.mixing_matrix[force_index, :]
         )
-        denominator = 1.0 if "_density" in flow_type else self.infectious_denominators
-        return (
-            sum(element_list_multiplication(self.infectious_populations[strain], mixing_elements))
-            / denominator
-        )
+        denominator = [1.0] * len(self.infectious_denominators) if "_density" in flow_type else \
+            self.infectious_denominators
+
+        return \
+            sum(element_list_division(
+                element_list_multiplication(
+                    self.infectious_populations[strain],
+                    mixing_elements
+                ),
+                denominator
+            )
+            )
 
     def prepare_time_step(self, _time):
         """

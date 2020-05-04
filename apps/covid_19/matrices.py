@@ -56,6 +56,13 @@ def build_covid_matrices(country, mixing_params):
 
 def plot_mixing_params_over_time(mixing_params, npi_effectiveness_range):
 
+    titles = {'home': 'Household', 'work': 'Workplace', 'school': 'School', 'other_locations': 'Other locations'}
+    y_labs = {'home': 'h', 'work': 'w', 'school': 's', 'other_locations': 'l'}
+    date_ticks = {61: '1/3', 76: '16/3', 92: '1/4', 107: '16/4', 122: '1/5', 137: '16/5', 152: '1/6'}
+    # use italics for y_labs
+    for key in y_labs:
+        y_labs[key] = '$\it{' + y_labs[key] + '}$(t)'
+
     plt.style.use("ggplot")
     for i_loc, location in enumerate([
         loc
@@ -63,7 +70,7 @@ def plot_mixing_params_over_time(mixing_params, npi_effectiveness_range):
         if loc + "_times" in mixing_params
     ]):
         plt.figure(i_loc)
-        x = list(np.linspace(0.0, 150.0, num=10000))
+        x = list(np.linspace(0.0, 152.0, num=10000))
         y = []
         for indice_npi_effect_range in [0, 1]:
             npi_effect = {key: val[indice_npi_effect_range] for key, val in npi_effectiveness_range.items()}
@@ -79,10 +86,13 @@ def plot_mixing_params_over_time(mixing_params, npi_effectiveness_range):
             plt.plot(x, _y, color='navy')
 
         plt.fill_between(x, y[0], y[1], color='cornflowerblue')
+        plt.xlim((60., 152.))
         plt.ylim((0, 1.1))
-        plt.xlabel('Days since 31/12/2019')
-        plt.ylabel('Relative contact rate\n(Ref. before COVID-19)')
-        plt.title(location.title())
+
+        plt.xticks(list(date_ticks.keys()), list(date_ticks.values()))
+        plt.xlabel('Date in 2020')
+        plt.ylabel(y_labs[location])
+        plt.title(titles[location])
         plt.savefig('mixing_adjustment_' + location + '.png')
 
 

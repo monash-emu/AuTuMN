@@ -234,6 +234,13 @@ def store_run_models(models: List[StratifiedModel], database_path: str):
             times=model.times,
             database_name=database_path,
         )
+        pbi_output_df = unpivot_outputs(model)
+        store_database(
+            pbi_output_df,
+            table_name=f"pbi_scenario_{idx}",
+            database_name=database_path,
+            scenario=idx,
+        )
 
 
 def create_power_bi_outputs(source_db_path: str, target_db_path: str):

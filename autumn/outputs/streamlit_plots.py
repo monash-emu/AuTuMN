@@ -89,18 +89,70 @@ def plot_compartment(plotter: Plotter, scenarios: list, plot_config: dict):
             scenario = chosen_scenarios[0]
             compartment_options = scenario.model.compartment_names
             compartments = st.multiselect("Select the compartments to plot", compartment_options)
-            scenario_plots.plot_compartments(plotter, scenario, compartments, is_logscale)
+            scenario_plots.plot_multi_compartments_single_scenario(
+                plotter, scenario, compartments, is_logscale
+            )
         else:
             # Plot one compartment for many scenarios
             compartment_options = chosen_scenarios[0].model.compartment_names
             compartment = st.selectbox("Select the compartment to plot", compartment_options)
-            scenario_plots.plot_compartment_multi_scenario(
+            scenario_plots.plot_single_compartment_multi_scenario(
                 plotter, chosen_scenarios, compartment, is_logscale
             )
 
 
+def plot_compartment_aggregate(plotter: Plotter, scenarios: list, plot_config: dict):
+    is_logscale = st.sidebar.checkbox("Log scale")
+    model = scenarios[0].model
+    compartment_names = model.compartment_names
+    chosen_strata = {}
+
+    # Choose compartments to aggregate
+    original_compartments = list(set([c.split("X")[0] for c in compartment_names]))
+    compartment_choices = st.multiselect(
+        "compartments", ["All"] + original_compartments, default="All"
+    )
+    chosen_compartments = "All" if "All" in compartment_choices else compartment_choices
+    # Choose strata to aggregate
+    for strat_name, strata in model.all_stratifications.items():
+        options = ["All"] + strata
+        choices = st.multiselect(strat_name, options, default="All")
+        chosen_strata[strat_name] = "All" if "All" in choices else choices
+
+    # Figure out which compartment names we just chose.
+    chosen_compartment_names = []
+    for compartment_name in compartment_names:
+        parts = compartment_name.split("X")
+        compartment, strata_strs = parts[0], parts[1:]
+        # Check that this compartment was selected
+        if chosen_compartments == "All":
+            is_accepted = True
+        else:
+            is_accepted = compartment in chosen_compartments
+
+        # Figure out which strata were selected
+        comp_strata = {}
+        for strata_str in strata_strs:
+            strat_parts = strata_str.split("_")
+            comp_strata[strat_parts[0]] = "_".join(strat_parts[1:])
+
+        # Check that each strata was selected
+        for strat_name, chosen_stratas in chosen_strata.items():
+            if chosen_stratas != "All":
+                is_accepted = is_accepted and comp_strata[strat_name] in chosen_stratas
+
+        if is_accepted:
+            chosen_compartment_names.append(compartment_name)
+
+    scenario_plots.plot_agg_compartments_multi_scenario(
+        plotter, scenarios, chosen_compartment_names, is_logscale
+    )
+    st.write(chosen_compartment_names)
+
+
 PLOT_FUNCS = {
     "Compartment sizes": plot_compartment,
+    "Compartments aggregate": plot_compartment_aggregate,
     "Scenario outputs": plot_outputs_multi,
 }
 

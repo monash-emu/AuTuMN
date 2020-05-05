@@ -7,14 +7,14 @@ default:
 
   infectious_seed: 0
 
-  start_time: 60.
+  start_time: 45.
   end_time: 365.
 
-  contact_rate: 0.055
+  contact_rate: 0.045
   non_sympt_infect_multiplier: .464939
 
   young_reduced_susceptibility: .4484674
-  prop_isolated_among_symptomatic: .8035  # .84
+  prop_isolated_among_symptomatic: .8035
   npi_effectiveness:
     other_locations: .9697829
 

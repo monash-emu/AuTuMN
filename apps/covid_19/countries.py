@@ -15,6 +15,12 @@ class Country:
     PHILIPPINES = "philippines"
     MALAYSIA = "malaysia"
     VICTORIA = "victoria"
+    COUNTRIES = [
+        AUSTRALIA,
+        PHILIPPINES,
+        MALAYSIA,
+        VICTORIA,
+    ]
 
 
 FILE_DIR = os.path.dirname(os.path.abspath(__file__))

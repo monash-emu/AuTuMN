@@ -55,22 +55,12 @@ def run():
     """Run a model"""
 
 
-@run.command("covid-vic")
-def run_covid_vic():
-    """Run the COVID Victoria model"""
-    covid_19.vic.run_model()
-
-
-@run.command("covid-aus")
-def run_covid_aus():
-    """Run the COVID Australia model"""
-    covid_19.aus.run_model()
-
-
-@run.command("covid-phl")
-def run_covid_phl():
-    """Run the COVID Phillipines model"""
-    covid_19.phl.run_model()
+@run.command("covid")
+@click.argument("country", type=click.Choice(covid_19.COUNTRY_RUNNERS))
+def run_covid(country):
+    """Run the COVID model for some country"""
+    runner = getattr(covid_19, country)
+    runner.run_model()
 
 
 @run.command("rmi")
@@ -97,7 +87,7 @@ def calibrate():
 @click.argument("run_id", type=int)
 def rmi_calibration(max_seconds, run_id):
     """Run Marshall Islands model calibration."""
-    run_rmi_calibration_chain(max_seconds, run_id)
+    marshall_islands.calibration.run_calibration_chain(max_seconds, run_id)
 
 
 @calibrate.command("mongolia")
@@ -105,7 +95,7 @@ def rmi_calibration(max_seconds, run_id):
 @click.argument("run_id", type=int)
 def mongolia_calibration(max_seconds, run_id):
     """Run Mongolia model calibration."""
-    run_mongolia_calibration_chain(max_seconds, run_id)
+    mongolia.calibration.run_calibration_chain(max_seconds, run_id)
 
 
 @calibrate.command("victoria")

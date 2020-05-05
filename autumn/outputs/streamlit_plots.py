@@ -66,38 +66,42 @@ def main():
     translations = plot_config["translations"]
     plotter = StreamlitPlotter(translations)
 
-    scenario_idx = scenario_idx_selector(scenarios)
-
     # Get user to select plot type / scenario
     plot_type = st.sidebar.selectbox("Select plot type", list(PLOT_FUNCS.keys()))
     plot_func = PLOT_FUNCS[plot_type]
-    plot_func(plotter, scenarios, scenario_idx, plot_config)
+    plot_func(plotter, scenarios, plot_config)
 
 
-def plot_outputs_multi(plotter: Plotter, scenarios: list, scenario_idx: int, plot_config: dict):
-    output_config = model_output_selector(scenarios, plot_config)
-    is_logscale = st.sidebar.checkbox("Log scale")
-    scenario_plots.plot_outputs_multi(plotter, scenarios, output_config, is_logscale)
+def plot_outputs_multi(plotter: Plotter, scenarios: list, plot_config: dict):
+    chosen_scenarios = scenario_selector(scenarios)
+    if chosen_scenarios:
+        output_config = model_output_selector(chosen_scenarios, plot_config)
+        is_logscale = st.sidebar.checkbox("Log scale")
+        scenario_plots.plot_outputs_multi(plotter, chosen_scenarios, output_config, is_logscale)
 
 
-def plot_outputs_single(plotter: Plotter, scenarios: list, scenario_idx: int, plot_config: dict):
-    output_config = model_output_selector(scenarios, plot_config)
-    scenario = scenarios[scenario_idx]
-    scenario_plots.plot_outputs_single(plotter, scenario, output_config)
-
-
-def plot_compartment(plotter: Plotter, scenarios: list, scenario_idx: int, plot_config: dict):
-    scenario = scenarios[scenario_idx]
-    compartments = st.multiselect(
-        "Select the compartments to plot", scenario.model.compartment_names
-    )
-    scenario_plots.plot_compartment(plotter, scenario, compartments)
+def plot_compartment(plotter: Plotter, scenarios: list, plot_config: dict):
+    chosen_scenarios = scenario_selector(scenarios)
+    if chosen_scenarios:
+        is_logscale = st.sidebar.checkbox("Log scale")
+        if len(chosen_scenarios) == 1:
+            # Plot many compartments for one scenario
+            scenario = chosen_scenarios[0]
+            compartment_options = scenario.model.compartment_names
+            compartments = st.multiselect("Select the compartments to plot", compartment_options)
+            scenario_plots.plot_compartments(plotter, scenario, compartments, is_logscale)
+        else:
+            # Plot one compartment for many scenarios
+            compartment_options = chosen_scenarios[0].model.compartment_names
+            compartment = st.selectbox("Select the compartment to plot", compartment_options)
+            scenario_plots.plot_compartment_multi_scenario(
+                plotter, chosen_scenarios, compartment, is_logscale
+            )
 
 
 PLOT_FUNCS = {
     "Compartment sizes": plot_compartment,
-    "Multi scenario outputs": plot_outputs_multi,
-    "Single scenario output": plot_outputs_single,
+    "Scenario outputs": plot_outputs_multi,
 }
 
 
@@ -143,16 +147,20 @@ def model_output_selector(scenarios, plot_config):
     return output_config
 
 
-def scenario_idx_selector(scenarios):
+def scenario_selector(scenarios):
     """
     Get user to select the scenario that they want.
     """
-    options = ["Baseline"]
+    options = ["All", "Baseline"]
     for s in scenarios[1:]:
         options.append(f"Scenario {s.idx}")
 
     scenario_name = st.sidebar.selectbox("Select scenario", options)
-    return options.index(scenario_name)
+    if scenario_name == "All":
+        return scenarios
+    else:
+        idx = options.index(scenario_name) - 1
+        return [scenarios[idx]]
 
 
 def app_selector():

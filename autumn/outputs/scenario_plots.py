@@ -80,9 +80,33 @@ def plot_scenarios(scenarios: List[Scenario], out_dir: str, plot_config: dict):
             plot_exponential_growth_rate(scenario_plotter, model)
 
 
-def plot_compartment(plotter: Plotter, scenario: Scenario, compartments: List[str]):
+def plot_compartment_multi_scenario(
+    plotter: Plotter, scenarios: List[Scenario], compartment_name: str, is_logscale=False
+):
     """
-    Plot the selected output compartments.
+    Plot the selected output compartment for a multiple scenarios.
+    """
+    fig, axis, _, _, _ = plotter.get_figure()
+    legend = []
+    for color_idx, scenario in enumerate(reversed(scenarios)):
+        model = scenario.model
+        comp_idx = model.compartment_names.index(compartment_name)
+        values = model.outputs[:, comp_idx]
+        axis.plot(model.times, values, color=COLOR_THEME[color_idx], alpha=0.7)
+        legend.append(scenario.name)
+
+    axis.legend(legend)
+    if is_logscale:
+        axis.set_yscale("log")
+
+    plotter.save_figure(fig, filename=compartment_name, title_text=compartment_name)
+
+
+def plot_compartments(
+    plotter: Plotter, scenario: Scenario, compartments: List[str], is_logscale=False
+):
+    """
+    Plot the selected output compartments for a single scenario.
     """
     model = scenario.model
     times = model.times
@@ -96,11 +120,14 @@ def plot_compartment(plotter: Plotter, scenario: Scenario, compartments: List[st
         legend.append(compartment_name)
 
     axis.legend(legend)
+    if is_logscale:
+        axis.set_yscale("log")
+
     plotter.save_figure(fig, filename="compartments", title_text="compartments")
 
 
 def plot_outputs_multi(
-    plotter: Plotter, scenarios: List[Scenario], output_config: dict, is_logscale=None
+    plotter: Plotter, scenarios: List[Scenario], output_config: dict, is_logscale=False
 ):
     """
     Plot the model derived/generated outputs requested by the user for multiple single scenarios, on one plot.

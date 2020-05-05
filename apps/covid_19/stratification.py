@@ -74,16 +74,22 @@ def set_isolation_props(_covid_model, model_parameters, abs_props, stratificatio
 
     # Apply the isolated proportion to the symptomatic non-hospitalised group
     for i_age, agegroup in enumerate(model_parameters["all_stratifications"]["agegroup"]):
-        _covid_model.time_variants["abs_prop_isolatedX" + agegroup] = \
-            lambda time: abs_props["sympt_non_hospital"][i_age] * \
-                         prop_isolated(time)
-        _covid_model.time_variants["abs_prop_not_isolatedX" + agegroup] = \
-            lambda time: abs_props["sympt_non_hospital"][i_age] * \
-                         (1.0 - prop_isolated(time))
+        # _covid_model.time_variants["abs_prop_isolatedX" + agegroup] = \
+        #     lambda time: abs_props["sympt_non_hospital"][i_age] * \
+        #                  prop_isolated(time)
+        # _covid_model.time_variants["abs_prop_not_isolatedX" + agegroup] = \
+        #     lambda time: abs_props["sympt_non_hospital"][i_age] * \
+        #                  (1.0 - prop_isolated(time))
+        # stratification_adjustments["to_infectiousXagegroup_" + agegroup]["sympt_isolate"] = \
+        #     "abs_prop_isolatedX" + agegroup
+        # stratification_adjustments["to_infectiousXagegroup_" + agegroup]["sympt_non_hospital"] = \
+        #     "abs_prop_not_isolatedX" + agegroup
         stratification_adjustments["to_infectiousXagegroup_" + agegroup]["sympt_isolate"] = \
-            "abs_prop_isolatedX" + agegroup
+            abs_props["sympt_non_hospital"][i_age] * \
+            prop_isolated(0.)
         stratification_adjustments["to_infectiousXagegroup_" + agegroup]["sympt_non_hospital"] = \
-            "abs_prop_not_isolatedX" + agegroup
+            abs_props["sympt_non_hospital"][i_age] * \
+            (1.0 - prop_isolated(0.))
     return _covid_model, stratification_adjustments
 
 

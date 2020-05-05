@@ -38,16 +38,23 @@ def build_covid_matrices(country, mixing_params):
             )
 
         # Make adjustments by age
-        for agegroup_index in [age_index for age_index in range(16) if
-                               'age_' + str(age_index) + '_times' in mixing_params]:
+        affected_age_indices = [age_index for age_index in range(16) if
+                               'age_' + str(age_index) + '_times' in mixing_params]
+        complement_indices = [age_index for age_index in range(16) if age_index not in affected_age_indices]
 
+        for age_index_affected in affected_age_indices:
             age_adjustment = scale_up_function(
-                mixing_params['age_' + str(agegroup_index) + "_times"],
-                mixing_params['age_' + str(agegroup_index) + "_values"],
-                method=4
-            )
-            mixing_matrix[agegroup_index, :] *= age_adjustment(time)
-            mixing_matrix[:, agegroup_index] *= age_adjustment(time)
+                    mixing_params['age_' + str(age_index_affected) + "_times"],
+                    mixing_params['age_' + str(age_index_affected) + "_values"],
+                    method=4
+                )
+            for age_index_not_affected in complement_indices:
+                mixing_matrix[age_index_affected, age_index_not_affected] *= age_adjustment(time)
+                mixing_matrix[age_index_not_affected, age_index_affected] *= age_adjustment(time)
+
+            # FIXME: patch for elderly cocooning in Victoria assuming 
+            for age_index_affected_bis in affected_age_indices:
+                mixing_matrix[age_index_affected, age_index_affected_bis] *= 1. - (1. - age_adjustment(time))/2.
 
         return mixing_matrix
 

@@ -88,7 +88,7 @@ def plot_agg_compartments_multi_scenario(
     """
     fig, axis, _, _, _ = plotter.get_figure()
     legend = []
-    for color_idx, scenario in enumerate(reversed(scenarios)):
+    for color_idx, scenario in enumerate(scenarios):
         model = scenario.model
         values = np.zeros(model.outputs.shape[0])
         for compartment_name in compartment_names:
@@ -113,7 +113,7 @@ def plot_single_compartment_multi_scenario(
     """
     fig, axis, _, _, _ = plotter.get_figure()
     legend = []
-    for color_idx, scenario in enumerate(reversed(scenarios)):
+    for color_idx, scenario in enumerate(scenarios):
         model = scenario.model
         comp_idx = model.compartment_names.index(compartment_name)
         values = model.outputs[:, comp_idx]

@@ -99,7 +99,9 @@ def plot_compartment(plotter: Plotter, scenario: Scenario, compartments: List[st
     plotter.save_figure(fig, filename="compartments", title_text="compartments")
 
 
-def plot_outputs_multi(plotter: Plotter, scenarios: List[Scenario], output_config: dict):
+def plot_outputs_multi(
+    plotter: Plotter, scenarios: List[Scenario], output_config: dict, is_logscale=None
+):
     """
     Plot the model derived/generated outputs requested by the user for multiple single scenarios, on one plot.
     """
@@ -115,6 +117,9 @@ def plot_outputs_multi(plotter: Plotter, scenarios: List[Scenario], output_confi
     target_values = output_config["target_values"]
     target_times = output_config["target_times"]
     _plot_targets_to_axis(axis, target_values, target_times)
+    if is_logscale:
+        axis.set_yscale("log")
+
     plotter.save_figure(fig, filename=output_name, title_text=output_name)
 
 

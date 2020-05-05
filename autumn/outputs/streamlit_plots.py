@@ -76,7 +76,8 @@ def main():
 
 def plot_outputs_multi(plotter: Plotter, scenarios: list, scenario_idx: int, plot_config: dict):
     output_config = model_output_selector(scenarios, plot_config)
-    scenario_plots.plot_outputs_multi(plotter, scenarios, output_config)
+    is_logscale = st.sidebar.checkbox("Log scale")
+    scenario_plots.plot_outputs_multi(plotter, scenarios, output_config, is_logscale)
 
 
 def plot_outputs_single(plotter: Plotter, scenarios: list, scenario_idx: int, plot_config: dict):
@@ -209,9 +210,6 @@ class StreamlitPlotter(Plotter):
         self.translation_dict = translation_dict
 
     def save_figure(self, fig, filename: str, subdir=None, title_text=None):
-        """
-        W
-        """
         if title_text:
             pretty_title = self.get_plot_title(title_text).replace("X", " ")
             md = f"<p style='text-align: center;padding-left: 80px'>{pretty_title}</p>"

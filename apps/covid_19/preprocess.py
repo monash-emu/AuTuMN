@@ -19,6 +19,11 @@ def preprocess_params(params: dict, update_params: dict):
             i_prop * mult
             for i_prop, mult in zip(params["infection_fatality_props"], params["ifr_multipliers"])
         ]
+        if params["hospital_inflate"]:
+            params["hospital_props"] = [
+                i_prop * mult
+                for i_prop, mult in zip(params["hospital_props"], params["ifr_multipliers"])
+            ]
 
     # Calculate presymptomatic period from exposed period and relative proportion of that period spent infectious
     if "prop_exposed_presympt" in params:

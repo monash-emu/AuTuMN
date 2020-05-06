@@ -6,7 +6,8 @@ import yaml
 
 from autumn.db.models import load_model_scenarios
 
-from .scenario_plots import plot_scenarios, validate_plot_config
+from .plots import validate_plot_config
+from .scenario_plots import plot_scenarios, 
 from .streamlit_plots import APP_FOLDERS
 
 

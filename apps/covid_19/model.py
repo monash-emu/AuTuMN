@@ -1,6 +1,5 @@
 import os
 from summer.model import StratifiedModel
-from summer.model.utils.base_compartments import replicate_compartment
 
 from autumn.tool_kit.utils import normalise_sequence, convert_list_contents_to_int
 from autumn import constants
@@ -107,24 +106,15 @@ def build_model(country: str, params: dict, update_params={}):
             model_parameters["n_compartment_repeats"][Compartment.LATE_INFECTIOUS]
         )
 
-    # Replicate compartments - all repeated compartments are replicated the same number of times, which could be changed
+    # Distribute infectious seed across infectious compartments
     total_infectious_times = sum(
         [model_parameters["compartment_periods"][comp] for comp in is_infectious]
     )
-    infectious_compartments, init_pop = [], {}
-
-    for compartment in is_infectious:
-        final_compartments, infectious_compartments, init_pop = replicate_compartment(
-            model_parameters["n_compartment_repeats"][compartment],
-            final_compartments,
-            compartment,
-            infectious_compartments,
-            init_pop,
-            infectious_seed=model_parameters["infectious_seed"]
-            * model_parameters["compartment_periods"][compartment]
-            / total_infectious_times,
-            infectious=is_infectious[compartment],
-        )
+    init_pop = \
+        {comp: model_parameters["infectious_seed"] *
+               model_parameters["compartment_periods"][comp] /
+               total_infectious_times for
+         comp in is_infectious}
 
     # Set integration times
     integration_times = get_model_times_from_inputs(
@@ -207,7 +197,7 @@ def build_model(country: str, params: dict, update_params={}):
         flows,
         birth_approach="no_birth",
         starting_population=sum(total_pops),
-        infectious_compartment=infectious_compartments,
+        infectious_compartment=[i_comp for i_comp in is_infectious if is_infectious[i_comp]],
     )
 
     # set time-variant importation rate

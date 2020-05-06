@@ -373,7 +373,7 @@ class Calibration:
                                 mu = model_output[i]
                                 # work out parameter p to match the distribution mean with the model output
                                 p = mu / (mu + n)
-                                ll += stats.nbinom.logpmf(data[i], n, p)
+                                ll += stats.nbinom.logpmf(data[i], n, 1. - p)
                         else:
                             raise ValueError("Distribution not supported in loglikelihood_distri")
 
@@ -696,7 +696,6 @@ class Calibration:
                     loc=prev_params[i], scale=prior_dict["jumping_sd"], size=1
                 )[0]
             new_params.append(sample)
-
         return new_params
 
     def logprior(self, params):

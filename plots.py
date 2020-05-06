@@ -18,11 +18,15 @@ If not, install project requirements
 Run from a command line shell (with env active) using
 
     streamlit run plots.py
+    OR
+    streamlit run plots.py mcmc
+
 
 Website: https://www.streamlit.io/
 Docs: https://docs.streamlit.io/
 """
 import os
+import sys
 
 # Plus fix Streamlit hot reloading, which requires PYTHONPATH hacks
 # https://github.com/streamlit/streamlit/issues/1176
@@ -42,6 +46,9 @@ if pypath:
 
 os.environ["PYTHONPATH"] = ":".join(dirpaths)
 
-from autumn.outputs.streamlit_plots import main
+from autumn.plots.streamlit import run_scenario_plots, run_mcmc_plots
 
-main()
+if len(sys.argv) > 1 and sys.argv[1] == "mcmc":
+    run_mcmc_plots()
+else:
+    run_scenario_plots()

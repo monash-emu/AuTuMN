@@ -1,7 +1,10 @@
-import os
+"""
+Different types of plots that use a Plotter
+"""
 import logging
 from typing import List, Tuple
 
+import pandas as pd
 import seaborn as sns
 import numpy as np
 from matplotlib import pyplot
@@ -35,49 +38,31 @@ validate_plot_config = sb.build_validator(
 )
 
 
-def plot_scenarios(scenarios: List[Scenario], out_dir: str, plot_config: dict):
+def plot_posterior(
+    plotter: Plotter, mcmc_tables: List[pd.DataFrame], param_name: str, num_bins: int
+):
     """
-    Plot the model outputs using the supplied config to the output directory.
+    - do not plot non accepted
+    - all non accepted values that follow an accepted value
+      count as the accepted value
     """
-    validate_plot_config(plot_config)
-    translations = plot_config["translations"]
-    outputs_to_plot = plot_config["outputs_to_plot"]
-    prevalence_combos = plot_config["prevalence_combos"]
-    param_config = plot_config["parameter_category_values"]
-    input_config = plot_config["input_function"]
-    pop_distribution_strata = plot_config["pop_distribution_strata"]
+    for table_df in mcmc_tables:
+        prev_val = None
+        for idx in range(len(table_df)):
+            if table_df.at[idx, "accept"] == 1:
+                prev_val = table_df.at[idx, param_name]
+            else:
+                table_df.at[idx, param_name] = prev_val
 
-    if len(scenarios) > 1:
-        # Create multi-scenario-plots
-        multi_out_dir = os.path.join(out_dir, "multi")
-        os.makedirs(multi_out_dir, exist_ok=True)
-        multi_plotter = Plotter(multi_out_dir, translations)
-        for output_config in outputs_to_plot:
-            plot_outputs_multi(multi_plotter, scenarios, output_config)
+    vals = mcmc_tables[0][param_name]
+    for table_df in mcmc_tables[1:]:
+        vals.append(table_df[param_name])
 
-    # Create scenario-specifc plots
-    for scenario in scenarios:
-        model_out_dir = os.path.join(out_dir, scenario.name)
-        os.makedirs(model_out_dir, exist_ok=True)
-        scenario_plotter = Plotter(model_out_dir, translations)
-        model = scenario.model
-        generated_outputs = scenario.generated_outputs
-        for output_config in outputs_to_plot:
-            plot_outputs_single(scenario_plotter, scenario, output_config)
-        plot_mixing_matrix(scenario_plotter, model)
-        plot_prevalence_combinations(scenario_plotter, model, prevalence_combos, generated_outputs)
-        if scenario.is_baseline:
-            # Only plot some graphs for the base model.
-            plot_parameter_category_values(
-                scenario_plotter, model, param_config["param_names"], param_config["time"]
-            )
-            plot_input_function(
-                scenario_plotter, model, input_config["func_names"], input_config["start_time"]
-            )
-            plot_pop_distribution_by_stratum(
-                scenario_plotter, model, pop_distribution_strata, generated_outputs
-            )
-            plot_exponential_growth_rate(scenario_plotter, model)
+    fig, axis, _, _, _ = plotter.get_figure()
+    vals.hist(bins=num_bins, ax=axis)
+    plotter.save_figure(
+        fig, filename=f"{param_name} posterior", title_text=f"{param_name} posterior"
+    )
 
 
 def plot_agg_compartments_multi_scenario(

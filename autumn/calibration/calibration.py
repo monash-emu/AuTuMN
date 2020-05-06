@@ -364,6 +364,16 @@ class Calibration:
                                     - model_output[i]
                                     - math.log(math.factorial(data[i]))
                                 )
+                        elif target["loglikelihood_distri"] == "negative_binomial":
+                            assert key + '_dispersion_param' in self.param_list
+                            # the dispersion parameter varies during the MCMC. We need to retrieve its value
+                            n = [params[i] for i in range(len(params)) if self.param_list[i] == key + '_dispersion_param'][0]
+                            for i in range(len(data)):
+                                # We use the parameterisation based on mean and variance and assume define var=mean**delta
+                                mu = model_output[i]
+                                # work out parameter p to match the distribution mean with the model output
+                                p = mu / (mu + n)
+                                ll += stats.nbinom.logpmf(data[i], n, p)
                         else:
                             raise ValueError("Distribution not supported in loglikelihood_distri")
 

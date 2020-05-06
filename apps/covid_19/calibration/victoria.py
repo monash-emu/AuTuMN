@@ -5,6 +5,12 @@ country = "victoria"
 
 # _______ Define the priors
 PAR_PRIORS = [
+    # Extra parameter for the negative binomial likelihood
+    {
+        "param_name": "notifications_dispersion_param",
+        "distribution": "uniform",
+        "distri_params": [.1, 5.]
+    },
     # Transmission parameter
     {
         "param_name": "contact_rate",
@@ -86,7 +92,7 @@ TARGET_OUTPUTS = [
         "output_key": "notifications",
         "years": data_times,
         "values": case_counts,
-        "loglikelihood_distri": "poisson",
+        "loglikelihood_distri": "negative_binomial",
     }
 ]
 
@@ -100,4 +106,4 @@ def run_vic_calibration_chain(max_seconds: int, run_id: int):
 
 
 if __name__ == "__main__":
-    run_vic_calibration_chain(30, 0)
+    run_vic_calibration_chain(2*60*60, 0)

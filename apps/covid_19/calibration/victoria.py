@@ -30,12 +30,13 @@ PAR_PRIORS = [
         "distri_mean": 5.,
         "distri_ci": [3., 7.]
     },
-    {
-        "param_name": "compartment_periods_infectious",
-        "distribution": "gamma",
-        "distri_mean": 7.,
-        "distri_ci": [5., 9.]
-    },
+    # FIXME: the parameter value is changed automatically during model initialisation !!! Cant be included atm
+    # {
+    #     "param_name": "compartment_periods_infectious",
+    #     "distribution": "gamma",
+    #     "distri_mean": 7.,
+    #     "distri_ci": [5., 9.]
+    # },
     {
         "param_name": "young_reduced_susceptibility",
         "distribution": "beta",

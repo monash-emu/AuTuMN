@@ -2,6 +2,7 @@
 Utilities for running multiple model scenarios
 """
 import numpy
+from copy import deepcopy
 from typing import Callable
 
 from summer.model import StratifiedModel
@@ -24,12 +25,13 @@ class Scenario:
     """
 
     def __init__(self, model_builder: ModelBuilderType, idx: str, params: dict, chain_idx=0):
-        validate_params(params)
+        _params = deepcopy(params)
+        validate_params(_params)
         self.model_builder = model_builder
         self.idx = idx
         self.chain_idx = chain_idx
         self.name = "baseline" if idx == 0 else f"scenario-{idx}"
-        self.params = params
+        self.params = _params
         self.generated_outputs = None
 
     @classmethod

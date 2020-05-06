@@ -78,11 +78,12 @@ def store_database(
     store_db.dump_df(table_name, outputs)
 
 
-def store_run_models(models: List[StratifiedModel], database_path: str):
+def store_run_models(models: List[StratifiedModel], database_path: str, powerbi=True):
     """
     Store models in the database.
     Assume that models are sorted in an order such that their index is their scenario idx.
     """
+    target_db = Database(database_path)
     for idx, model in enumerate(models):
         output_df = pd.DataFrame(model.outputs, columns=model.compartment_names)
         derived_output_df = pd.DataFrame.from_dict(model.derived_outputs)
@@ -99,6 +100,12 @@ def store_run_models(models: List[StratifiedModel], database_path: str):
             times=model.times,
             database_name=database_path,
         )
+
+        # Hack in PowerBI outputs.
+        if powerbi:
+            table_name = f"pbi_scenario_{idx}"
+            scenario_df = unpivot_outputs(output_df)
+            target_db.dump_df(table_name, scenario_df)
 
 
 def collate_outputs_powerbi(src_db_paths: List[str], target_db_path: str, max_size: float):

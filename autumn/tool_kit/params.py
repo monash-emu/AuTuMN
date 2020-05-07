@@ -104,7 +104,6 @@ def load_params(app_dir: str, application=None):
                 )
                 revise_dates_if_ymd(params[param][scenario]["mixing"])
 
-
     default = params["default"]
     # Adjust infection for relative all-cause mortality compared to South Korea, if process being applied
     if "ifr_multipliers" in default:
@@ -125,10 +124,10 @@ def load_params(app_dir: str, application=None):
     # Calculate early infectious period from total infectious period and proportion of that period spent isolated
     if "prop_infectious_early" in default:
         default["compartment_periods"][Compartment.EARLY_INFECTIOUS] = (
-            default["compartment_periods"]["infectious"] * default["prop_infectious_early"]
+            default["compartment_periods"]["total_infectious"] * default["prop_infectious_early"]
         )
         default["compartment_periods"][Compartment.LATE_INFECTIOUS] = default[
             "compartment_periods"
-        ]["infectious"] * (1.0 - default["prop_infectious_early"])
+        ]["total_infectious"] * (1.0 - default["prop_infectious_early"])
 
     return params

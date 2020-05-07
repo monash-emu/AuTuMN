@@ -3,7 +3,7 @@ Entry point for PyCharm users to run an application
 """
 
 from apps import covid_19, marshall_islands, mongolia
-from autumn.outputs.database_plots import plot_from_database
+# from autumn.outputs.database_plots import plot_from_database
 
 RUN_NAME = "manual-calibration"
 RUN_DESCRIPTION = "trying to x and y the z"

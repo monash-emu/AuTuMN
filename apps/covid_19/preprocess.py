@@ -25,24 +25,6 @@ def preprocess_params(params: dict, update_params: dict):
                 for i_prop, mult in zip(params["hospital_props"], params["ifr_multipliers"])
             ]
 
-    # Calculate presymptomatic period from exposed period and relative proportion of that period spent infectious
-    if "prop_exposed_presympt" in params:
-        params["compartment_periods"][Compartment.EXPOSED] = params["compartment_periods"][
-            "incubation"
-        ] * (1.0 - params["prop_exposed_presympt"])
-        params["compartment_periods"][Compartment.PRESYMPTOMATIC] = (
-            params["compartment_periods"]["incubation"] * params["prop_exposed_presympt"]
-        )
-
-    # Calculate early infectious period from total infectious period and proportion of that period spent isolated
-    if "prop_infectious_early" in params:
-        params["compartment_periods"][Compartment.EARLY_INFECTIOUS] = (
-            params["compartment_periods"]["infectious"] * params["prop_infectious_early"]
-        )
-        params["compartment_periods"][Compartment.LATE_INFECTIOUS] = params["compartment_periods"][
-            "infectious"
-        ] * (1.0 - params["prop_infectious_early"])
-
     params = add_agegroup_breaks(params)
 
     # Update, not used in single application run

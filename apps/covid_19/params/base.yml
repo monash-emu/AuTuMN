@@ -22,7 +22,7 @@ default:
     incubation: 5.0
     # exposed now calculated
     # presympt now calculated
-    infectious: 7.
+    total_infectious: 7.
     # infectious now refers to total infectious period, which is confusing because there is an infectious compartment
     # late now calculated
     hospital_early: 5.

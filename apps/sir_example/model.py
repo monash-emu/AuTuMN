@@ -1,10 +1,11 @@
 from summer.model import StratifiedModel
 from autumn.constants import Compartment, BirthApproach
+from autumn.tool_kit.scenarios import get_model_times_from_inputs
 
 
 def build_model(country: str, params: dict, update_params={}):
     """
-    Build the master function to run the TB model for Covid-19
+    Build the master function to run a simple SIR model
 
     :param update_params: dict
         Any parameters that need to be updated for the current run
@@ -12,7 +13,6 @@ def build_model(country: str, params: dict, update_params={}):
         The final model with all parameters and stratifications
     """
     params.update(update_params)
-
     compartments = [
         Compartment.SUSCEPTIBLE,
         Compartment.INFECTIOUS,
@@ -34,7 +34,8 @@ def build_model(country: str, params: dict, update_params={}):
         },
     ]
 
-    integration_times = list(range(100))
+    integration_times = get_model_times_from_inputs(round(params["start_time"]), params["end_time"], params["time_step"])
+
     init_conditions = {Compartment.INFECTIOUS: 1}
 
     sir_model = StratifiedModel(

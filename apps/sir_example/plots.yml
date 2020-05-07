@@ -1,13 +1,13 @@
 ---
 # Options for plotting outputs of the SIR model
 outputs_to_plot:
-  - name: infection_deathsXall
+  - name: prevXinfectiousXamong
+    target_times: [25., 30.]
+    target_values: [[7.], [5.]]
+
+  - name: prevXsusceptibleXamong
     target_times: []
     target_values: []
-
-  - name: prevXinfectiousXamongX
-    target_times: [10.]
-    target_values: [20.]
 
 parameter_category_values:
   time: 0

@@ -47,7 +47,7 @@ def solve_with_ivp(ode_func: Callable, values: List[float], times: List[float], 
     https://docs.scipy.org/doc/scipy/reference/generated/scipy.integrate.solve_ivp.html#scipy.integrate.solve_ivp
     This method allows us to set a stopping condition.
     """
-    stopping_tolerance = solver_args.get("stopping_tolerance", 1e-6)
+    stopping_tolerance = solver_args.get("stopping_tolerance", 1e-60)
 
     def _ode_func(time, values):
         """Reverse parameters"""

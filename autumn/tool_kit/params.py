@@ -99,10 +99,11 @@ def load_params(app_dir: str, application=None):
 
         if param == "scenarios":
             for scenario in params["scenarios"]:
-                params[param][scenario]["mixing"] = revise_mixing_data_for_dicts(
-                    params[param][scenario]["mixing"]
-                )
-                revise_dates_if_ymd(params[param][scenario]["mixing"])
+                if "mixing" in params[param][scenario]:
+                    params[param][scenario]["mixing"] = revise_mixing_data_for_dicts(
+                        params[param][scenario]["mixing"]
+                    )
+                    revise_dates_if_ymd(params[param][scenario]["mixing"])
 
     default = params["default"]
     # Adjust infection for relative all-cause mortality compared to South Korea, if process being applied

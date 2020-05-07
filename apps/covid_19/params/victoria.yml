@@ -7,10 +7,10 @@ default:
 
   infectious_seed: 0
 
-  start_time: 45.
+  start_time: 15.
   end_time: 365.
 
-  contact_rate: 0.045
+  contact_rate: 0.0236
   non_sympt_infect_multiplier: .464939
 
   young_reduced_susceptibility: .4484674

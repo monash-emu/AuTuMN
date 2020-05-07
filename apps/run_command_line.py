@@ -9,7 +9,7 @@ You can access this script from your CLI by running:
 import os
 import click
 
-from . import covid_19, marshall_islands, mongolia
+from . import covid_19, marshall_islands, mongolia, sir_example
 
 from .marshall_islands.calibration import run_calibration_chain as run_rmi_calibration_chain
 from .mongolia.calibration import run_calibration_chain as run_mongolia_calibration_chain
@@ -75,6 +75,14 @@ def run():
 def run_covid(country):
     """Run the COVID model for some country"""
     runner = getattr(covid_19, country)
+    runner.run_model()
+
+
+@run.command("sir_example")
+@click.argument("country", type=click.Choice(sir_example.COUNTRY_RUNNERS))
+def run_sir_example(country):
+    """Run the SIR model for some country"""
+    runner = getattr(sir_example, country)
     runner.run_model()
 
 

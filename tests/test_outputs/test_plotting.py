@@ -2,7 +2,7 @@ from tempfile import TemporaryDirectory
 
 from summer.model import StratifiedModel
 
-from autumn.plots import plot_scenarios
+from autumn.outputs import plot_scenarios
 from autumn.tool_kit import Scenario, get_integration_times
 from autumn.constants import Compartment, Stratification
 

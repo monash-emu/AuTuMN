@@ -8,7 +8,7 @@ from datetime import datetime
 from autumn.post_processing.processor import post_process, validate_post_process_config
 
 from autumn import constants
-from autumn.plots import save_flows_sheets, plot_scenarios, validate_plot_config
+from autumn.outputs import save_flows_sheets, plot_scenarios, validate_plot_config
 from autumn.tool_kit.timer import Timer
 from autumn.tool_kit.scenarios import Scenario
 from autumn.tool_kit.utils import (

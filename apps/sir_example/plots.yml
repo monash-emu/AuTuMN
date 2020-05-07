@@ -1,0 +1,29 @@
+---
+# Options for plotting outputs of the SIR model
+outputs_to_plot:
+  - name: infection_deathsXall
+    target_times: []
+    target_values: []
+
+  - name: prevXinfectiousXamongX
+    target_times: [10.]
+    target_values: [20.]
+
+parameter_category_values:
+  time: 0
+  param_names: []
+
+input_function:
+  start_time: 0
+  func_names: []
+
+pop_distribution_strata: []
+
+translations:
+  prevXinfectiousXamongX: 'Prevalence of infectious'
+
+prevalence_combos: []
+#  - 'susceptible'
+#  - 'exposed'
+#  - 'infectious'
+#  - 'recovered'

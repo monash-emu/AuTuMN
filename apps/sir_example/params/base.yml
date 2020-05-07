@@ -1,0 +1,159 @@
+---
+# When to introduce the scenario interventions taking off from the baseline
+scenario_start_time: 85
+
+# Parameters used to build a general model of COVID-19 disease for application to Australia or internationally
+default:
+  # MODEL STRUCTURE PARAMETERS
+
+  # Number of times each compartment representing active infection (i.e. not S and not R) are repeated
+  n_compartment_repeats:
+    susceptible: 1
+    exposed: 1
+    presympt: 1
+    infectious: 1
+    late: 1
+    recovered: 1
+
+  implement_importation: False
+  import_secondary_rate: 0.
+
+  compartment_periods:
+    incubation: 5.0
+    # exposed now calculated
+    # presympt now calculated
+    infectious: 7.
+    # infectious now refers to total infectious period, which is confusing because there is an infectious compartment
+    # late now calculated
+    hospital_early: 5.
+    hospital_late: 8.
+    icu_early: 5.
+    icu_late: 20.
+
+  # Proportion of the exposed period spent infectious - i.e. "presymptomatic"
+  prop_exposed_presympt: 0.5
+
+  # Proportion of the infectious period spent in the early compartment (i.e. can't be isolated for symptoms)
+  prop_infectious_early: 0.333
+
+  # Stratification-related requests
+  stratify_by:
+    - agegroup
+    - clinical
+
+  # Currently must use only four strata, because deaths will not be calculated correctly otherwise - should be quickly
+  # adaptable to fewer strata as needed, though
+  clinical_strata:
+    - non_sympt
+    - sympt_non_hospital
+    - sympt_isolate
+    - hospital_non_icu
+    - icu
+  agegroup_breaks:
+    - 80
+    - 5
+
+  # AGE-STRATIFIED PARAMETERS
+
+  # Infectiousness progression adjustments - in ten year brackets that need to adapted to model strata later
+  symptomatic_props:
+    - 0.11
+    - 0.18
+    - 0.35
+    - 0.43
+    - 0.50
+    - 0.68
+    - 0.78
+    - 0.78
+
+  # Proportion of symptomatic persons that are hospitalised
+  hospital_props:
+    - 0.001
+    - 0.003
+    - 0.012
+    - 0.032
+    - 0.049
+    - 0.102
+    - 0.166
+    - 0.243
+    - 0.273
+
+  # Proportion of those that are hospitalised that are admitted to ICU
+  icu_props:
+    - 0.05
+    - 0.05
+    - 0.05
+    - 0.05
+    - 0.063
+    - 0.122
+    - 0.274
+    - 0.432
+    - 0.709
+
+  # Infection fatality proportions
+  infection_fatality_props:
+    - 0.00002
+    - 0.00006
+    - 0.0003
+    - 0.0008
+    - 0.0015
+    - 0.006
+    - 0.022
+    - 0.051
+    - 0.093
+
+  # Reduced susceptibility in children
+  young_reduced_susceptibility: 0.75
+  reduced_susceptibility_agegroups:
+    - "0"
+    - "5"
+    - "10"
+    - "15"
+
+  # NON-AGE-STRATIFIED PARAMETERS
+
+  # Adjust the infectiousness of clinical strata - note that the parameter naming will change with the number of strata
+  non_sympt_infect_multiplier: 0.5
+  hospital_non_icu_infect_multiplier: 0.2
+  icu_infect_multiplier: 0.2
+
+  # proportion of isolated cases among symptomatic
+  prop_isolated_among_symptomatic: 0.6
+
+  # parameters to define the effect (infectiousness adjustment) of self-isolation and enforced isolation
+  self_isolation_effect: .67
+  enforced_isolation_effect: 1.
+
+  # Add non-infectious
+  add_non_infectious: True
+
+  # Country to extract Prem mixing matrix from
+  country: null
+
+  # Country to extract stratified population data from - should eventually use only one of country or iso3
+  iso3: null
+
+  # Initial conditions
+  infectious_seed: 10
+
+  # Running time-related - for COVID-19 model, all times are assumed to be in days and reference time is 1st Jan 2020
+  start_time: 40.
+  end_time: 350.
+  time_step: 1
+
+  # Base model definition
+  contact_rate: 0.36  # Expected to be calibrated for each application
+  icu_mortality_prop: 0.5
+
+  # Compulsory parameter that is completely overwritten in stratification, rather than being modified
+  infect_death: 0.
+
+  # Compulsory parameter for all models, even though there are no population-wide deaths
+  universal_death_rate: 0.
+
+  # Parameters relating to adjusting the mixing matrix to reflect interventions
+  mixing: {}
+  npi_effectiveness: {}
+
+scenarios: {}
+# N.B: Scenario keys have to be sequential integers from one, or won't be compatible with dashboards

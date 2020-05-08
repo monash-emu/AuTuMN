@@ -19,6 +19,7 @@ def run_calibration_chain(
     target_outputs,
     mode="lsm",
     _start_time_range=None,
+    _run_extra_scenarios=True,
 ):
     """
     Run a calibration chain for the covid model
@@ -41,6 +42,7 @@ def run_calibration_chain(
         run_id,
         model_parameters=params,
         start_time_range=_start_time_range,
+        run_extra_scenarios=_run_extra_scenarios
     )
     print("Starting calibration.")
     calib.run_fitting_algorithm(

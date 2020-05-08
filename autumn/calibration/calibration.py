@@ -67,6 +67,7 @@ class Calibration:
         model_parameters={},
         start_time_range=None,
         record_rejected_outputs=False,
+        run_extra_scenarios=True
     ):
         self.model_name = model_name
         self.model_builder = model_builder  # a function that builds a new model without running it
@@ -74,6 +75,7 @@ class Calibration:
         self.scenarios = []
         self.initialise_scenario_list()
         self.record_rejected_outputs = record_rejected_outputs
+        self.run_extra_scenarios = run_extra_scenarios
         self.start_time_range = (
             start_time_range  # if specified, we allow start time to vary to achieve the best fit
         )
@@ -227,6 +229,8 @@ class Calibration:
         run the model with a set of params.
         :param params: a list containing the parameter values for update
         """
+
+        print("Running iteration " + str(self.iter_num) + "...")
         update_params = {}  # self.model_parameters
         for i, param_name in enumerate(self.param_list):
             update_params[param_name] = params[i]
@@ -563,7 +567,7 @@ class Calibration:
                 self.store_model_outputs(0)
 
             # Run intervention scenarios if accepted run
-            if accept:
+            if accept and self.run_extra_scenarios:
                 print("Running extra scenarios")
                 self.run_extra_scenarios_with_params(proposed_params)
 

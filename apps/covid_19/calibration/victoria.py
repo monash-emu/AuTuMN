@@ -102,9 +102,10 @@ TARGET_OUTPUTS = [
 
 def run_vic_calibration_chain(max_seconds: int, run_id: int):
     run_calibration_chain(
-        max_seconds, run_id, country, PAR_PRIORS, TARGET_OUTPUTS, mode="autumn_mcmc"
+        max_seconds, run_id, country, PAR_PRIORS, TARGET_OUTPUTS, mode="autumn_mcmc",
+        _run_extra_scenarios=False
     )
 
 
 if __name__ == "__main__":
-    run_vic_calibration_chain(2*60*60, 0)
+    run_vic_calibration_chain(30, 0)

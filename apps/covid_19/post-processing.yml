@@ -1,5 +1,6 @@
 ---
 # Options for post-processing outputs of the COVID-19 model
-requested_outputs: []
-multipliers: {}
+requested_outputs: [prevXlateXclinical_icuXamong]
+multipliers:
+  prevXlateXclinical_icuXamong: 1000000
 collated_combos: []

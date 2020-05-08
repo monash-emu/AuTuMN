@@ -1,7 +1,7 @@
 import yaml
 import os
 from time import time
-from itertools import chain
+from itertools import chain, product
 from datetime import datetime
 
 import math
@@ -26,7 +26,8 @@ class CalibrationMode:
 
     AUTUMN_MCMC = "autumn_mcmc"
     LEAST_SQUARES = "lsm"
-    MODES = [AUTUMN_MCMC, LEAST_SQUARES]
+    GRID_BASED = "grid_based"
+    MODES = [AUTUMN_MCMC, LEAST_SQUARES, GRID_BASED]
 
 
 def get_parameter_bounds_from_priors(prior_dict):
@@ -97,7 +98,7 @@ class Calibration:
         timestamp = datetime.now().strftime("%d-%m-%Y")
         out_db_dir = os.path.join(project_dir, f"calibration-{model_name}-{run_hash}-{timestamp}")
         os.makedirs(out_db_dir, exist_ok=True)
-        db_name = f"outputs_calibration_chain_{self.chain_index}.db"
+        db_name = f"outputs_calibration_chainZZ_{self.chain_index}.db"
         self.output_db_path = os.path.join(out_db_dir, db_name)
 
         self.data_as_array = None  # will contain all targeted data points in a single array
@@ -359,7 +360,7 @@ class Calibration:
                 ):
                     best_ll, best_start_time = (ll, considered_start_time)
 
-            if self.run_mode != "autumn_mcmc":
+            if self.run_mode == "lsm":
                 mcmc_run_dict = {k: v for k, v in zip(self.param_list, params)}
                 mcmc_run_dict["loglikelihood"] = best_ll
                 mcmc_run_colnames = self.param_list.copy()
@@ -453,6 +454,7 @@ class Calibration:
         n_burned=10,
         n_chains=1,
         available_time=None,
+        grid_info=None,
     ):
         """
         master method to run model calibration.
@@ -477,6 +479,8 @@ class Calibration:
             self.run_autumn_mcmc(n_iterations, n_burned, n_chains, available_time)
         elif run_mode == CalibrationMode.LEAST_SQUARES:
             self.run_least_squares()
+        elif run_mode == CalibrationMode.GRID_BASED:
+            self.run_grid_based(grid_info)
 
     def run_least_squares(self):
         """
@@ -583,6 +587,36 @@ class Calibration:
                     print(msg)
                     break
 
+    def run_grid_based(self, grid_info):
+        """
+        Runs a grid-based calibration
+        :param grid_info: list of dictionaries
+            containing the list of parameters to vary, their range and the number of different values per parameter
+        """
+        new_param_list = [par_dict['param_name'] for par_dict in grid_info]
+        assert all([p in self.param_list for p in new_param_list])
+
+        self.param_list = new_param_list
+
+        param_values = []
+        for i, param_name in enumerate(self.param_list):
+            param_values.append(list(np.linspace(
+                grid_info[i]['lower'], grid_info[i]['upper'], grid_info[i]['n']
+            )))
+
+        all_combinations = list(product(*param_values))
+        print("Total number of iterations: " + str(len(all_combinations)))
+        for params in all_combinations:
+            loglike = self.loglikelihood(params)
+            logprior = self.logprior(params)
+            a_posteriori_logproba = loglike + logprior
+
+            self.store_mcmc_iteration_info(params, a_posteriori_logproba, False, self.iter_num)
+            if self.record_rejected_outputs:
+                self.store_model_outputs(0)
+
+            self.iter_num += 1
+
     def propose_new_params(self, prev_params):
         """
         calculated the joint log prior
@@ -618,7 +652,8 @@ class Calibration:
         :return: the natural log of the joint prior
         """
         logp = 0.0
-        for i, prior_dict in enumerate(self.priors):
+        for i, param_name in enumerate(self.param_list):
+            prior_dict = [d for d in self.priors if d['param_name'] == param_name][0]
             logp += calculate_prior(prior_dict, params[i], log=True)
 
         return logp

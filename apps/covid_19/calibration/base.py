@@ -18,6 +18,7 @@ def run_calibration_chain(
     par_priors,
     target_outputs,
     mode="lsm",
+    _grid_info=None,
     _start_time_range=None,
     _run_extra_scenarios=True,
 ):
@@ -51,6 +52,7 @@ def run_calibration_chain(
         n_burned=N_BURNED,
         n_chains=N_CHAINS,
         available_time=max_seconds,
+        grid_info=_grid_info
     )
     print(f"Finished calibration for run {run_id}.")
 

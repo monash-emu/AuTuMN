@@ -80,16 +80,7 @@ default:
   hospital_inflate: False
 
   # Proportion of those that are hospitalised that are admitted to ICU
-  icu_props:
-    - 0.05
-    - 0.05
-    - 0.05
-    - 0.05
-    - 0.063
-    - 0.122
-    - 0.274
-    - 0.432
-    - 0.709
+  icu_prop: 0.3
 
   # Infection fatality proportions
   infection_fatality_props:
@@ -104,7 +95,7 @@ default:
     - 0.093
 
   # Reduced susceptibility in children
-  young_reduced_susceptibility: 0.75
+  young_reduced_susceptibility: 0.5
   reduced_susceptibility_agegroups:
     - "0"
     - "5"

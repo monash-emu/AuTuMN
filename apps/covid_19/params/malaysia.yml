@@ -8,16 +8,7 @@ default:
   country: malaysia
   iso3: MYS
 
-  ifr_multipliers:
-    - 2.485238131
-    - 2.818023382
-    - 2.119966887
-    - 1.602830675
-    - 1.831299482
-    - 1.926790627
-    - 1.939654271
-    - 1.518871437
-    - 1.024102769
+  ifr_multiplier: 2.
   hospital_inflate: True
 
   mixing:

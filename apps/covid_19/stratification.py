@@ -22,9 +22,7 @@ def get_raw_clinical_props(params):
         "raw_sympt":
             repeat_list_elements(2, params["symptomatic_props"]),
         "raw_hospital":
-            repeat_list_elements_average_last_two(params["hospital_props"]),
-        "raw_icu":
-            repeat_list_elements_average_last_two(params["icu_props"])
+            repeat_list_elements_average_last_two(params["hospital_props"])
     }
 
 
@@ -129,7 +127,7 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
         split_prop_into_two_subprops(abs_props["sympt"], "sympt", model_parameters["raw_hospital"], "hospital")
     )
     abs_props.update(
-        split_prop_into_two_subprops(abs_props["hospital"], "hospital", model_parameters["raw_icu"], "icu")
+        split_prop_into_two_subprops(abs_props["hospital"], "hospital", [model_parameters["icu_prop"]] * 16, "icu")
     )
 
     # Find the absolute proportion dying in hospital and in ICU

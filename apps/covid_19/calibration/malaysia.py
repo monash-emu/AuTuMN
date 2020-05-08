@@ -20,9 +20,10 @@ TARGET_OUTPUTS = [
     }
 ]
 
+# define a grid of parameter values. The posterior probability will be evaluated at each node
 par_grid = [
-    {"param_name": "contact_rate", 'lower': .015, 'upper': .035, 'n': 5},
-    {"param_name": "start_time", 'lower': 0., 'upper': 40., 'n': 9},
+    {"param_name": "contact_rate", 'lower': .015, 'upper': .025, 'n': 6},
+    {"param_name": "start_time", 'lower': 15., 'upper': 25., 'n': 11},
 ]
 
 

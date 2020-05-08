@@ -106,12 +106,14 @@ def load_params(app_dir: str, application=None):
                     revise_dates_if_ymd(params[param][scenario]["mixing"])
 
     default = params["default"]
-    # Adjust infection for relative all-cause mortality compared to South Korea, if process being applied
-    # if "ifr_multipliers" in default:
-    #     default["infection_fatality_props"] = [
-    #         i_prop * mult
-    #         for i_prop, mult in zip(default["infection_fatality_props"], default["ifr_multipliers"])
-    #     ]
+
+    # Adjust infection for relative all-cause mortality compared to China, if process being applied
+    if "ifr_multiplier" in default:
+        default["infection_fatality_props"] = \
+            [i_prop * default["ifr_multiplier"] for i_prop in default["infection_fatality_props"]]
+        if default["hospital_inflate"]:
+            default["hospital_props"] = \
+                [i_prop * default["ifr_multiplier"] for i_prop in default["hospital_props"]]
 
     # Calculate presymptomatic period from exposed period and relative proportion of that period spent infectious
     if "prop_exposed_presympt" in default:

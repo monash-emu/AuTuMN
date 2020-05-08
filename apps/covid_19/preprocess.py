@@ -13,14 +13,6 @@ def preprocess_params(params: dict, update_params: dict):
         params["mixing"] = revise_mixing_data_for_dicts(params["mixing"])
         revise_dates_if_ymd(params["mixing"])
 
-    # Adjust infection for relative all-cause mortality compared to South Korea, if process being applied
-    # if "ifr_multipliers" in params:
-    #     params["infection_fatality_props"] = \
-    #         [i_prop * params["ifr_multiplier"] for i_prop in ["infection_fatality_props"]]
-    #     if params["hospital_inflate"]:
-    #         params["hospital_props"] = \
-    #             [i_prop * params["ifr_multiplier"] for i_prop in params["hospital_props"]]
-
     params = add_agegroup_breaks(params)
 
     # Update, not used in single application run

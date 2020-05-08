@@ -36,4 +36,4 @@ def run_mys_calibration_chain(max_seconds: int, run_id: int):
 
 
 if __name__ == "__main__":
-    run_mys_calibration_chain(2 * 60 * 60, 0)  # first argument only relevant for autumn_mcmc mode
+    run_mys_calibration_chain(2 * 60 * 60, 0)  # first argument only relevant for autumn_mcmc mode (time limit in seconds)

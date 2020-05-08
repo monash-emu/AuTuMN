@@ -49,7 +49,8 @@ input_function:
 pop_distribution_strata:
   - agegroup
 
-translations: {}
+translations:
+  prevXlateXclinical_icuXamong: 'Prevalence of ICU cases (/million pop.)'
 
 prevalence_combos: []
 #  - 'susceptible'

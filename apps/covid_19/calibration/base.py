@@ -32,8 +32,6 @@ def run_calibration_chain(
     country_model = CountryModel(country)
     build_model = country_model.build_model
     params = country_model.params
-    scenario_params = params["scenarios"]
-    sc_start_time = params["scenario_start_time"]
     calib = Calibration(
         f"covid_{country}",
         build_model,

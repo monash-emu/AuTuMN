@@ -107,11 +107,11 @@ def load_params(app_dir: str, application=None):
 
     default = params["default"]
     # Adjust infection for relative all-cause mortality compared to South Korea, if process being applied
-    if "ifr_multipliers" in default:
-        default["infection_fatality_props"] = [
-            i_prop * mult
-            for i_prop, mult in zip(default["infection_fatality_props"], default["ifr_multipliers"])
-        ]
+    # if "ifr_multipliers" in default:
+    #     default["infection_fatality_props"] = [
+    #         i_prop * mult
+    #         for i_prop, mult in zip(default["infection_fatality_props"], default["ifr_multipliers"])
+    #     ]
 
     # Calculate presymptomatic period from exposed period and relative proportion of that period spent infectious
     if "prop_exposed_presympt" in default:

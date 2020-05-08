@@ -1,57 +1,32 @@
-import logging
 import yaml
 import os
 from time import time
 from itertools import chain
 from datetime import datetime
 
-import theano
 import math
 import pandas as pd
 import numpy as np
 import copy
-import pymc3 as pm
-import theano.tensor as tt
 import autumn.post_processing as post_proc
 from scipy.optimize import Bounds, minimize
 from scipy import stats, special
 
 from autumn import constants
 from autumn.db.models import store_database
-from autumn.db import Database
 from autumn.tool_kit.utils import get_data_hash, find_distribution_params_from_mean_and_ci
 from autumn.tool_kit.scenarios import Scenario
 from autumn.outputs.calibration_plots import plot_all_priors
 
-from .loglike import LogLike
 from .utils import find_decent_starting_point, calculate_prior, raise_error_unsupported_prior
-
-pymc3_logger = logging.getLogger("pymc3")
-pymc3_logger.setLevel(logging.ERROR)
-
-theano_logger = logging.getLogger("theano.gof.compilelock")
-theano_logger.setLevel(logging.ERROR)
-theano.config.optimizer = "None"
-
-logger = logging.getLogger(__file__)
 
 
 class CalibrationMode:
     """Different ways to run the calibration."""
 
     AUTUMN_MCMC = "autumn_mcmc"
-    PYMC_MCMC = "pymc_mcmc"
-    MAX_LIKELIHOOD = "mle"
     LEAST_SQUARES = "lsm"
-    MODES = [AUTUMN_MCMC, PYMC_MCMC, MAX_LIKELIHOOD, LEAST_SQUARES]
-
-
-class PymcMode:
-    """Different ways to run the PyMC calibration."""
-
-    METROPOLIS = "Metropolis"
-    DE_METROPOLIS = "DEMetropolis"
-    MODES = [METROPOLIS, DE_METROPOLIS]
+    MODES = [AUTUMN_MCMC, LEAST_SQUARES]
 
 
 def get_parameter_bounds_from_priors(prior_dict):
@@ -124,13 +99,11 @@ class Calibration:
         self.output_db_path = os.path.join(out_db_dir, db_name)
 
         self.data_as_array = None  # will contain all targeted data points in a single array
-        self.loglike = None  # will store theano object
 
         self.format_data_as_array()
         self.workout_unspecified_target_sds()  # for likelihood definition
         self.workout_unspecified_jumping_sds()  # for proposal function definition
 
-        self.loglike = LogLike(self.loglikelihood)
         self.iter_num = 0
         self.run_mode = None
         self.main_table = {}
@@ -471,8 +444,7 @@ class Calibration:
 
     def run_fitting_algorithm(
         self,
-        run_mode=CalibrationMode.LEAST_SQUARES,
-        mcmc_method=PymcMode.METROPOLIS,
+        run_mode=CalibrationMode.AUTUMN_MCMC,
         n_iterations=100,
         n_burned=10,
         n_chains=1,
@@ -481,9 +453,8 @@ class Calibration:
         """
         master method to run model calibration.
 
-        :param run_mode: either 'pymc_mcmc' (for sampling from the posterior) or 'mle' (maximum likelihood estimation) or
-        'lsm' (for least square minimisation using scipy.minimize function)
-        :param mcmc_method: if run_mode == 'mcmc' , either 'Metropolis' or 'DEMetropolis'
+        :param run_mode: string
+            either 'autumn_mcmc' or 'lsm' (for least square minimisation using scipy.minimize function)
         :param n_iterations: number of iterations requested for sampling (excluding burn-in phase)
         :param n_burned: number of burned iterations before effective sampling
         :param n_chains: number of chains to be run
@@ -500,70 +471,8 @@ class Calibration:
         # Run the selected fitting algorithm.
         if run_mode == CalibrationMode.AUTUMN_MCMC:
             self.run_autumn_mcmc(n_iterations, n_burned, n_chains, available_time)
-        elif run_mode in [CalibrationMode.PYMC_MCMC, CalibrationMode.MAX_LIKELIHOOD]:
-            self.run_pymc_mcmc_or_mle(run_mode, n_iterations, n_burned, n_chains)
         elif run_mode == CalibrationMode.LEAST_SQUARES:
             self.run_least_squares()
-
-    def run_pymc_mcmc_or_mle(self, run_mode: str, n_iterations: int, n_burned: int, n_chains: int):
-        """
-        Run PyMC MCMC or maximum likelihood algorithms to calibrate model parameters.
-        """
-        basic_model = pm.Model()
-        with basic_model:
-            fitted_params = []
-            for prior in self.priors:
-                if prior["distribution"] == "uniform":
-                    value = pm.Uniform(
-                        prior["param_name"],
-                        lower=prior["distri_params"][0],
-                        upper=prior["distri_params"][1],
-                    )
-                    fitted_params.append(value)
-
-            theta = tt.as_tensor_variable(fitted_params)
-            pm.DensityDist("likelihood", lambda v: self.loglike(v), observed={"v": theta})
-            if run_mode == CalibrationMode.MAX_LIKELIHOOD:
-                self.mle_estimates = pm.find_MAP()
-            elif run_mode == CalibrationMode.PYMC_MCMC:
-                if mcmc_method == PymcMode.METROPOLIS:
-                    mcmc_step = pm.Metropolis(S=np.array([1.0]))
-                elif mcmc_method == PymcMode.DE_METROPOLIS:
-                    mcmc_step = pm.DEMetropolis()
-                else:
-                    msg = f"Requested MC mode is not supported. Must be one of {PymcMode.MODES}"
-                    ValueError(msg)
-
-                self.mcmc_trace = pm.sample(
-                    draws=n_iterations,
-                    step=mcmc_step,
-                    tune=n_burned,
-                    chains=n_chains,
-                    progressbar=False,
-                )
-
-                traceDf = pm.trace_to_dataframe(self.mcmc_trace)
-                traceDf.to_csv("trace.csv")
-                out_database = Database(database_name=self.output_db_path)
-                mcmc_run_df = out_database.db_query("mcmc_run")
-                mcmc_run_df = mcmc_run_df.reset_index(drop=True)
-                traceDf = traceDf.reset_index(drop=True)
-                traceDf["accepted"] = 1
-                mcmc_run_info = pd.merge(
-                    mcmc_run_df,
-                    traceDf,
-                    how="left",
-                    left_on=self.param_list,
-                    right_on=self.param_list,
-                )
-                mcmc_run_info["accepted"].fillna(0, inplace=True)
-                mcmc_run_info = mcmc_run_info.drop_duplicates()
-                store_database(
-                    mcmc_run_info, table_name="mcmc_run_info", database_name=self.output_db_path
-                )
-            else:
-                msg = "Requested run mode is not supported. Must be one of ['pymc_mcmc', 'lme']"
-                ValueError(msg)
 
     def run_least_squares(self):
         """
@@ -592,11 +501,11 @@ class Calibration:
             self.best_start_time = self.loglikelihood(
                 self.mle_estimates, to_return="best_start_time"
             )
-            logger.info("Best start time: " + str(self.best_start_time))
+            print("Best start time: " + str(self.best_start_time))
 
         # FIXME: need to fix dump_mle_params_to_yaml_file
-        logger.info("Best solution:")
-        logger.info(self.mle_estimates)
+        print("Best solution:")
+        print(self.mle_estimates)
         # self.dump_mle_params_to_yaml_file()
 
     def run_autumn_mcmc(self, n_iterations: int, n_burned: int, n_chains: int, available_time):
@@ -655,19 +564,19 @@ class Calibration:
 
             # Run intervention scenarios if accepted run
             if accept:
-                logger.info("Running extra scenarios")
+                print("Running extra scenarios")
                 self.run_extra_scenarios_with_params(proposed_params)
 
             self.iter_num += 1
             iters_completed = i_run + 1
-            logger.info(f"{iters_completed} MCMC iterations completed.")
+            print(f"{iters_completed} MCMC iterations completed.")
 
             if available_time:
                 # Stop iterating if we have run out of time.
                 elapsed_time = time() - start_time
                 if elapsed_time > available_time:
                     msg = f"Stopping MCMC simulation after {iters_completed} iterations because of {available_time}s time limit"
-                    logger.info(msg)
+                    print(msg)
                     break
 
     def propose_new_params(self, prev_params):
@@ -739,32 +648,3 @@ def get_random_seed(chain_index: int):
     Mocked out by unit tests.
     """
     return chain_index + int(time())
-
-
-# FIXME: Move this script to a smoke test or delete. This file should not depend on mongolia tb model.
-# if __name__ == "__main__":
-#     par_priors = [{'param_name': 'contact_rate', 'distribution': 'uniform', 'distri_params': [14., 18.]},
-#                   # {'param_name': 'rr_transmission_ger', 'distribution': 'uniform', 'distri_params': [1., 5.]},
-#                   # {'param_name': 'rr_transmission_urban', 'distribution': 'uniform', 'distri_params': [1., 5.]},
-#                   # {'param_name': 'rr_transmission_province', 'distribution': 'uniform', 'distri_params': [.5, 5.]},
-#                   {'param_name': 'latency_adjustment', 'distribution': 'uniform', 'distri_params': [1., 3.]},
-#                   ]
-#     target_outputs = [{'output_key': 'prevXinfectiousXamongXage_15Xage_60', 'years': [2015.], 'values': [560.]},
-#                       # {'output_key': 'prevXinfectiousXamongXage_15Xage_60Xhousing_ger', 'years': [2015.], 'values': [613.]},
-#                       # {'output_key': 'prevXinfectiousXamongXage_15Xage_60Xlocation_urban', 'years': [2015.], 'values': [586.]},
-#                       # {'output_key': 'prevXinfectiousXamongXage_15Xage_60Xlocation_province', 'years': [2015.], 'values': [513.]},
-#                       {'output_key': 'prevXlatentXamongXage_5', 'years': [2016.], 'values': [960.]}
-#                      ]
-#     multipliers = {'prevXlatentXamongXage_5': 1.e4}
-#     for i, output in enumerate(target_outputs):
-#         if output['output_key'][0:15] == 'prevXinfectious':
-#             multipliers[output['output_key']] = 1.e5
-#     calib = Calibration(build_mongolia_model, par_priors, target_outputs, multipliers)
-#     # calib.run_fitting_algorithm(run_mode='lsm')  # for least square minimization
-#     # logger.info(calib.mle_estimates)
-#     #
-#     # calib.run_fitting_algorithm(run_mode='mle')  # for maximum-likelihood estimation
-#     # logger.info(calib.mle_estimates)
-#     #
-#     calib.run_fitting_algorithm(run_mode='autumn_mcmc', n_iterations=10, n_burned=0, n_chains=1, available_time=10)  # for autumn_mcmc
-#     logger.info(calib.mcmc_trace)

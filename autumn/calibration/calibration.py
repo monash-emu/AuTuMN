@@ -16,7 +16,7 @@ from autumn import constants
 from autumn.db.models import store_database
 from autumn.tool_kit.utils import get_data_hash, find_distribution_params_from_mean_and_ci
 from autumn.tool_kit.scenarios import Scenario
-from autumn.outputs.calibration_plots import plot_all_priors
+from autumn.plots.calibration_plots import plot_all_priors
 
 from .utils import find_decent_starting_point, calculate_prior, raise_error_unsupported_prior
 

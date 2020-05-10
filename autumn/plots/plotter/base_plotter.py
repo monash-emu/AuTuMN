@@ -1,18 +1,22 @@
-import os
 import copy
+from abc import ABC, abstractmethod
 
 import numpy
 from matplotlib import pyplot
 
 
-class Plotter:
+class BasePlotter(ABC):
     """
     Used to plot things
     """
 
-    def __init__(self, out_dir: str, translation_dict: dict):
-        self.translation_dict = translation_dict
-        self.out_dir = out_dir
+    @abstractmethod
+    def __init__(self):
+        pass
+
+    @abstractmethod
+    def save_figure(self, fig, filename: str, subdir=None, title_text=None):
+        pass
 
     def get_figure(
         self, n_panels=1, room_for_legend=False, requested_grid=None, share_yaxis="none"
@@ -45,29 +49,6 @@ class Plotter:
             for panel in range(n_panels, n_rows * n_cols):
                 find_panel_grid_indices(axes, panel, n_rows, n_cols).axis("off")
         return fig, axes, max([n_rows, n_cols]), n_rows, n_cols
-
-    def save_figure(self, fig, filename: str, subdir=None, title_text=None):
-        """
-        Args:
-            fig: The figure to add the title to
-            filename: The end of the string for the file name
-            subdir
-            n_plots: number of panels
-            title_text: Text for the title of the figure
-        """
-        if title_text:
-            pretty_title = self.get_plot_title(title_text)
-            add_title_to_plot(fig, 1, pretty_title)
-
-        if subdir:
-            subdir_path = os.path.join(self.out_dir, subdir)
-            os.makedirs(subdir_path, exist_ok=True)
-            filename = os.path.join(subdir_path, f"{filename}.png")
-        else:
-            filename = os.path.join(self.out_dir, f"{filename}.png")
-
-        fig.savefig(filename, dpi=300, bbox_inches="tight")
-        pyplot.close(fig)
 
     def get_plot_title(self, title: str):
         """

@@ -136,7 +136,8 @@ def collate_outputs_powerbi(src_db_paths: List[str], target_db_path: str, max_si
             sample_db_size = Database(sample_db_path).get_size_mb()
             pivot_db_size = Database(pivot_db_path).get_size_mb()
             pivot_factor = math.ceil(pivot_db_size / sample_db_size)
-            num_runs = math.floor(max_runs / len(src_db_paths) / pivot_factor)
+            # Throw away 20% as a safety factor
+            num_runs = math.floor((4 / 5) * max_runs / len(src_db_paths) / pivot_factor)
 
         logger.info("Sampling %s runs to achieve no more than %s MB", num_runs, max_size)
         collated_db_path = os.path.join(temp_dir, "collated.db")

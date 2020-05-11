@@ -7,6 +7,7 @@ default:
   # MODEL STRUCTURE PARAMETERS
 
   # Number of times each compartment representing active infection (i.e. not S and not R) are repeated
+  # Now redundant, because we have repeated the compartments so many times
   n_compartment_repeats:
     susceptible: 1
     exposed: 1
@@ -30,10 +31,10 @@ default:
     icu_early: 5.
     icu_late: 10.
 
-  # Proportion of the exposed period spent infectious - i.e. "presymptomatic"
+  # Proportion of the exposed period spent infectious - i.e. "presymptomatic", assumed
   prop_exposed_presympt: 0.5
 
-  # Proportion of the infectious period spent in the early compartment (i.e. can't be isolated for symptoms)
+  # Proportion of the infectious period spent in the early compartment (i.e. can't be isolated for symptoms), assumed
   prop_infectious_early: 0.333
 
   # Stratification-related requests
@@ -55,18 +56,19 @@ default:
 
   # AGE-STRATIFIED PARAMETERS
 
-  # Infectiousness progression adjustments - in ten year brackets that need to adapted to model strata later
+  # Infectiousness progression adjustments - in ten year brackets that need to be adapted to model strata later
+  # Extracted by WebPlotDigitizer from the LSHTM's "Age-dependent effects in the ..." Fig 2b, upper-left panel
   symptomatic_props:
-    - 0.11
-    - 0.18
-    - 0.35
-    - 0.43
-    - 0.50
-    - 0.68
-    - 0.78
-    - 0.78
+    - 0.396
+    - 0.252
+    - 0.367
+    - 0.408
+    - 0.476
+    - 0.572
+    - 0.710
+    - 0.745
 
-  # Proportion of symptomatic persons that are hospitalised
+  # Proportion of symptomatic persons that are hospitalised - Verity et al.
   hospital_props:
     - 0.001
     - 0.003
@@ -79,10 +81,10 @@ default:
     - 0.273
   hospital_inflate: False
 
-  # Proportion of those that are hospitalised that are admitted to ICU
+  # Proportion of those hospitalised that are admitted to ICU - consistent with LSHTM's LMIC estimates parameters
   icu_prop: 0.3
 
-  # Infection fatality proportions
+  # Infection fatality proportions - Verity et al.
   infection_fatality_props:
     - 0.00002
     - 0.00006
@@ -94,7 +96,7 @@ default:
     - 0.051
     - 0.093
 
-  # Reduced susceptibility in children
+  # Reduced susceptibility in children - assumed, but informed by Iceland NEJM paper
   young_reduced_susceptibility: 0.5
   reduced_susceptibility_agegroups:
     - "0"
@@ -104,7 +106,7 @@ default:
 
   # NON-AGE-STRATIFIED PARAMETERS
 
-  # Adjust the infectiousness of clinical strata - note that the parameter naming will change with the number of strata
+  # Adjust the infectiousness of clinical strata - assumed
   non_sympt_infect_multiplier: 0.5
   hospital_non_icu_infect_multiplier: 0.2
   icu_infect_multiplier: 0.2

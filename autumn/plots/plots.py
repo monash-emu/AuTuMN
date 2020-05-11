@@ -38,6 +38,20 @@ validate_plot_config = sb.build_validator(
 )
 
 
+def plot_mcmc_parameter_trace(plotter: Plotter, mcmc_tables: List[pd.DataFrame], param_name: str):
+    """
+    Plot the prameter traces for each MCMC run.
+    """
+    _overwrite_non_accepted_mcmc_runs(mcmc_tables, column_name=param_name)
+    fig, axis, _, _, _ = plotter.get_figure()
+    for idx, table_df in enumerate(mcmc_tables):
+        table_df[param_name].plot.line(ax=axis, alpha=0.8, linewidth=0.7)
+
+    axis.set_ylabel(param_name)
+    axis.set_xlabel("MCMC iterations")
+    plotter.save_figure(fig, filename=f"{param_name}-traces", title_text=f"{param_name}-traces")
+
+
 def plot_loglikelihood_trace(plotter: Plotter, mcmc_tables: List[pd.DataFrame], burn_in=0):
     """
     Plot the loglikelihood traces for each MCMC run.

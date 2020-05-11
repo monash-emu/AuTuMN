@@ -33,6 +33,13 @@ def run_mcmc_plots():
     plot_func(plotter, mcmc_tables)
 
 
+def plot_loglikelihood_trace(plotter: StreamlitPlotter, mcmc_tables: List[pd.DataFrame]):
+    burn_in = st.sidebar.slider("Burn-in", 0, len(mcmc_tables[0]), 0)
+    plots.plot_loglikelihood_trace(plotter, mcmc_tables, burn_in)
+    num_iters = len(mcmc_tables[0])
+    plots.plot_burn_in(plotter, num_iters, burn_in)
+
+
 def plot_posterior(plotter: StreamlitPlotter, mcmc_tables: List[pd.DataFrame]):
     non_param_cols = ["idx", "Scenario", "loglikelihood", "accept"]
     param_options = [c for c in mcmc_tables[0].columns if c not in non_param_cols]
@@ -43,4 +50,5 @@ def plot_posterior(plotter: StreamlitPlotter, mcmc_tables: List[pd.DataFrame]):
 
 PLOT_FUNCS = {
     "Posterior distributions": plot_posterior,
+    "Loglikelihood trace": plot_loglikelihood_trace,
 }

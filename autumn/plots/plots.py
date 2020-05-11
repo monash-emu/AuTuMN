@@ -38,22 +38,56 @@ validate_plot_config = sb.build_validator(
 )
 
 
+def plot_loglikelihood_trace(plotter: Plotter, mcmc_tables: List[pd.DataFrame], burn_in=0):
+    """
+    Plot the loglikelihood traces for each MCMC run.
+    """
+    _overwrite_non_accepted_mcmc_runs(mcmc_tables, column_name="loglikelihood")
+    fig, axis, _, _, _ = plotter.get_figure()
+
+    for idx, table_df in enumerate(mcmc_tables):
+        table_df.loglikelihood.plot.line(ax=axis, alpha=0.8, linewidth=0.7)
+
+    axis.set_ylabel("Loglikelihood")
+    axis.set_xlabel("MCMC iterations")
+
+    if burn_in:
+        axis.axvline(x=burn_in, color=COLOR_THEME[1], linestyle="dotted")
+
+    plotter.save_figure(fig, filename="loglikelihood-traces", title_text="loglikelihood-traces")
+
+
+def plot_burn_in(plotter: Plotter, num_iters: int, burn_in: int):
+    """
+    Plot the trade off been num iters and burn-in for MCMC runs.
+    """
+    fig, axis, _, _, _ = plotter.get_figure()
+
+    def floor(n):
+        val = num_iters - n
+        return val if val > 0 else 0
+
+    values = [floor(i) for i in range(num_iters)]
+
+    fig, axis, _, _, _ = plotter.get_figure()
+
+    axis.plot(values, color=COLOR_THEME[0])
+    axis.set_ylabel("Number iters after burn-in")
+    axis.set_xlabel("Burn-in size")
+    axis.set_ylim(bottom=-5, top=num_iters)
+    axis.set_xlim(left=0, right=num_iters)
+    axis.axvline(x=burn_in, color=COLOR_THEME[1], linestyle="dotted")
+    axis.axhline(y=num_iters - burn_in, color=COLOR_THEME[1], linestyle="dotted")
+    plotter.save_figure(fig, filename="burn-in", title_text="burn-in")
+
+
 def plot_posterior(
     plotter: Plotter, mcmc_tables: List[pd.DataFrame], param_name: str, num_bins: int
 ):
     """
-    - do not plot non accepted
-    - all non accepted values that follow an accepted value
-      count as the accepted value
+    Plots the posterior distribution of a given parameter in a histogram.
     """
-    for table_df in mcmc_tables:
-        prev_val = None
-        for idx in range(len(table_df)):
-            if table_df.at[idx, "accept"] == 1:
-                prev_val = table_df.at[idx, param_name]
-            else:
-                table_df.at[idx, param_name] = prev_val
-
+    _overwrite_non_accepted_mcmc_runs(mcmc_tables, column_name=param_name)
     vals = mcmc_tables[0][param_name]
     for table_df in mcmc_tables[1:]:
         vals.append(table_df[param_name])
@@ -63,6 +97,20 @@ def plot_posterior(
     plotter.save_figure(
         fig, filename=f"{param_name} posterior", title_text=f"{param_name} posterior"
     )
+
+
+def _overwrite_non_accepted_mcmc_runs(mcmc_tables: List[pd.DataFrame], column_name: str):
+    """
+    Count non-accepted rows in a MCMC trace as the last accepted row.
+    Modifies mcmc_tables in-place.
+    """
+    for table_df in mcmc_tables:
+        prev_val = None
+        for idx in range(len(table_df)):
+            if table_df.at[idx, "accept"] == 1:
+                prev_val = table_df.at[idx, column_name]
+            else:
+                table_df.at[idx, column_name] = prev_val
 
 
 def plot_agg_compartments_multi_scenario(

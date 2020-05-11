@@ -1,5 +1,6 @@
 from autumn.curve import scale_up_function
 
+# dummy proportions for now:
 importation_props_by_age = {
     '0': .04,
     '5': .04,
@@ -17,6 +18,14 @@ importation_props_by_age = {
     '65': .04,
     '70': .04,
     '75': .04
+}
+
+importation_props_by_clinical = {
+    'non_sympt': 0.,
+    'sympt_non_hospital': .90,
+    'sympt_isolate': 0.,
+    'hospital_non_icu': 10.,
+    'icu': 0.
 }
 
 
@@ -61,3 +70,5 @@ def set_tv_importation_as_birth_rates(model, importation_times, importation_n_ca
     model.time_variants["crude_birth_rate"] = tv_recruitment_rate
 
     return model
+
+

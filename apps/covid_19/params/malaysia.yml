@@ -1,6 +1,6 @@
 ---
 default:
-  implement_importation: True
+  implement_importation: False
   imported_cases_explict: True
 
   contact_rate: 0.023

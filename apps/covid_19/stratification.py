@@ -9,6 +9,7 @@ from autumn.summer_related.parameter_adjustments import (
     adjust_upstream_stratified_parameter,
     split_prop_into_two_subprops,
 )
+from .importation import importation_props_by_clinical
 
 
 def get_raw_clinical_props(params):
@@ -202,6 +203,7 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
             stratum: 1.0 / len(strata_to_implement) for stratum in strata_to_implement
         },
         adjustment_requests=stratification_adjustments,
+        entry_proportions=importation_props_by_clinical,
         verbose=False,
     )
     return _covid_model, model_parameters

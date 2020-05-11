@@ -15,6 +15,9 @@ from . import selectors, utils
 def run_scenario_plots():
     app_dirname, app_dirpath = selectors.app()
     run_dirname, run_dirpath = selectors.model_run(app_dirpath)
+    if not run_dirname:
+        st.write("No model run folder found")
+        return
 
     params = utils.load_params(run_dirpath)
     plot_config = utils.load_plot_config(app_dirname)

@@ -1,9 +1,9 @@
 ---
 default:
-  implement_importation: False
+  implement_importation: True
   imported_cases_explict: True
 
-  contact_rate: 0.023
+  contact_rate: 0.02
   prop_isolated_among_symptomatic: 0.7
 
   start_time: 15
@@ -279,8 +279,8 @@ default:
       - 0.
 
   data:  # dummy values for now. Meant to be the daily numbers of imported cases.
-    times_imported_cases: [70., 71., 86., 100., 107]
-    n_imported_cases: [1, 1, 45, 4, 1.0]
+    times_imported_cases: [94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132]
+    n_imported_cases: [5.9, 5.9, 5.9, 5.9, 5.9, 5.9, 5.9, 5.9, 5.9, 5.9, 5.9, 5.9, 5.9, 5.9, 5.9, 5.9, 5.9, 5.9, 5.9, 5.9, 5.9, 5.9, 5.9, 5.9, 5.9, 5.9, 72.0, 25.0, 12.0, 11.0, 52.0, 7.0, 0.0, 1.0, 1.0, 4.0, 1.0, 0.0, 0.0]
 
 scenarios:
   1:  # Schools re-open from the 12th of May

@@ -115,6 +115,8 @@ def build_model(country: str, params: dict, update_params={}):
                model_parameters["compartment_periods"][comp] /
                total_infectious_times for
          comp in is_infectious}
+    # force the remainder starting population to go to S compartment. Required as entry_compartment is late_infectious
+    init_pop[Compartment.SUSCEPTIBLE] = sum(total_pops) - sum(init_pop.values())
 
     # Set integration times
     integration_times = get_model_times_from_inputs(
@@ -168,8 +170,9 @@ def build_model(country: str, params: dict, update_params={}):
         flows, model_parameters["n_compartment_repeats"][Compartment.LATE_INFECTIOUS]
     )
 
+    _birth_approach = 'no_birth'  # may be changed if case importation implemented
     # Add importation flows if requested
-    if model_parameters["implement_importation"]:
+    if model_parameters["implement_importation"] and not model_parameters["imported_cases_explict"]:
         flows = add_transition_flows(
             flows,
             1,
@@ -178,6 +181,9 @@ def build_model(country: str, params: dict, update_params={}):
             Compartment.EXPOSED,
             "import_secondary_rate",
         )
+    elif model_parameters["implement_importation"] and model_parameters["imported_cases_explict"]:
+        _birth_approach = 'add_crude_birth_rate'
+
 
     # Get mixing matrix
     mixing_matrix = load_specific_prem_sheet("all_locations", model_parameters["country"])
@@ -195,13 +201,14 @@ def build_model(country: str, params: dict, update_params={}):
         init_pop,
         model_parameters,
         flows,
-        birth_approach="no_birth",
+        birth_approach=_birth_approach,
+        entry_compartment=Compartment.LATE_INFECTIOUS,  # to model imported cases
         starting_population=sum(total_pops),
         infectious_compartment=[i_comp for i_comp in is_infectious if is_infectious[i_comp]],
     )
 
     # set time-variant importation rate
-    if model_parameters["implement_importation"]:
+    if model_parameters["implement_importation"] and not model_parameters["imported_cases_explict"]:
         _covid_model = set_tv_importation_rate(
             _covid_model, params["data"]["times_imported_cases"], params["data"]["n_imported_cases"]
         )
@@ -213,7 +220,7 @@ def build_model(country: str, params: dict, update_params={}):
             ("to_infectious", "infect_death", "within_late"), age_strata
         )  # Split unchanged parameters for later adjustment
 
-        if model_parameters["implement_importation"]:
+        if model_parameters["implement_importation"] and not model_parameters["imported_cases_explict"]:
             adjust_requests.update(
                 {
                     "import_secondary_rate": get_total_contact_rates_by_age(

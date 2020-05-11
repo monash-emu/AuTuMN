@@ -1,5 +1,8 @@
 ---
 default:
+  implement_importation: True
+  imported_cases_explict: True
+
   contact_rate: 0.023
   prop_isolated_among_symptomatic: 0.7
 

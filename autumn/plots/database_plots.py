@@ -7,8 +7,10 @@ import yaml
 from autumn.db.models import load_model_scenarios
 
 from .plots import validate_plot_config
-from .scenario_plots import plot_scenarios, 
-from .streamlit_plots import APP_FOLDERS
+from .scenario_plots import plot_scenarios
+from .streamlit.utils import try_find_app_code_path
+
+APP_DIRNAMES = ["covid_", "marshall_islands", "mongolia", "dummy"]
 
 
 def plot_from_database(run_path: str):
@@ -22,10 +24,7 @@ def plot_from_database(run_path: str):
     with open(params_path, "r") as f:
         params = yaml.safe_load(f)
 
-    plot_config_path = None
-    for _app_name, _app_dir in APP_FOLDERS.items():
-        if app_dirname.startswith(_app_name):
-            app_code_path = os.path.join("apps", _app_dir)
+    app_code_path = try_find_app_code_path(app_dirname)
 
     # Load plot config from project dir
     plot_config_path = os.path.join(app_code_path, "plots.yml")

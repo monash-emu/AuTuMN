@@ -23,7 +23,7 @@ from .covid_19.calibration.philippines import (
     run_phl_calibration_chain as run_philippines_covid_calibration_chain,
 )
 from autumn.db.models import create_power_bi_outputs, collate_outputs_powerbi
-from autumn.outputs.database_plots import plot_from_database
+from autumn.plots.database_plots import plot_from_database
 
 
 @click.group()

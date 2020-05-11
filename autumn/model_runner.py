@@ -85,7 +85,7 @@ def build_model_runner(
 
         with Timer("Saving model outputs to the database"):
             models = [s.model for s in scenarios]
-            store_run_models(models, output_db_path)
+            store_run_models(models, output_db_path, powerbi=False)
 
         if post_processing_config:
             with Timer("Applying post-processing to model outputs"):

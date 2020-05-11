@@ -1,6 +1,7 @@
+import os
 from matplotlib import pyplot
 
-from .base_plotter import BasePlotter
+from .base_plotter import BasePlotter, add_title_to_plot
 
 
 class FilePlotter(BasePlotter):

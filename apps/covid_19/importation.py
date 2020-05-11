@@ -20,14 +20,6 @@ importation_props_by_age = {
     '75': .04
 }
 
-importation_props_by_clinical = {
-    'non_sympt': 0.,
-    'sympt_non_hospital': .90,
-    'sympt_isolate': 0.,
-    'hospital_non_icu': 10.,
-    'icu': 0.
-}
-
 
 def set_tv_importation_rate(model, importation_times, importation_n_cases):
     """

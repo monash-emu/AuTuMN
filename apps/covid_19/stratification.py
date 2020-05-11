@@ -9,7 +9,6 @@ from autumn.summer_related.parameter_adjustments import (
     adjust_upstream_stratified_parameter,
     split_prop_into_two_subprops,
 )
-from .importation import importation_props_by_clinical
 
 
 def get_raw_clinical_props(params):
@@ -192,6 +191,18 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
     # Sort out all infectiousness adjustments for entire model here
     _covid_model, stratification_adjustments, strata_infectiousness = \
         adjust_infectiousness(_covid_model, model_parameters, strata_to_implement, stratification_adjustments)
+
+    # work out clinical proportions for imported cases
+    importation_props_by_clinical = {
+        "non_sympt": 1. - model_parameters['symptomatic_props_imported'],
+        "sympt_non_hospital": model_parameters['symptomatic_props_imported'] *
+                              (1. - model_parameters['prop_isolated_among_symptomatic_imported'] -
+                               model_parameters['hospital_props_imported']),
+        "sympt_isolate": model_parameters['symptomatic_props_imported'] *
+                         model_parameters['prop_isolated_among_symptomatic_imported'],
+        "hospital_non_icu": model_parameters['hospital_props_imported'] * (1. - model_parameters['icu_prop_imported']),
+        "icu": model_parameters['hospital_props_imported'] * model_parameters['icu_prop_imported']
+    }
 
     # Stratify the model using the SUMMER stratification function
     _covid_model.stratify(

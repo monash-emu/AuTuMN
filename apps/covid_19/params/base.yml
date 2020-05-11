@@ -115,6 +115,12 @@ default:
   # proportion of isolated cases among symptomatic
   prop_isolated_among_symptomatic: 0.6
 
+  # clinical proportions for imported cases
+  symptomatic_props_imported: .5
+  hospital_props_imported: .05
+  icu_prop_imported: .3
+  prop_isolated_among_symptomatic_imported: .6
+
   # parameters to define the effect (infectiousness adjustment) of self-isolation and enforced isolation
   self_isolation_effect: .67
   enforced_isolation_effect: 1.

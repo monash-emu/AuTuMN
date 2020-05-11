@@ -30,7 +30,7 @@ from .outputs import (
     calculate_notifications_covid,
     calculate_incidence_icu_covid,
 )
-from .importation import set_tv_importation_rate, set_tv_importation_as_birth_rates
+from .importation import set_tv_importation_rate, set_tv_importation_as_birth_rates, importation_props_by_age
 from .matrices import build_covid_matrices, apply_npi_effectiveness
 from .preprocess import preprocess_params
 
@@ -256,6 +256,7 @@ def build_model(country: str, params: dict, update_params={}):
             mixing_matrix=mixing_matrix,
             adjustment_requests=adjust_requests,
             verbose=False,
+            entry_proportions=importation_props_by_age
         )
 
     # Stratify infectious compartment by clinical status

@@ -1,5 +1,24 @@
 from autumn.curve import scale_up_function
 
+importation_props_by_age = {
+    '0': .04,
+    '5': .04,
+    '10': .04,
+    '15': .04,
+    '20': .08,
+    '25': .09,
+    '30': .09,
+    '35': .09,
+    '40': .09,
+    '45': .08,
+    '50': .08,
+    '55': .08,
+    '60': .04,
+    '65': .04,
+    '70': .04,
+    '75': .04
+}
+
 
 def set_tv_importation_rate(model, importation_times, importation_n_cases):
     """

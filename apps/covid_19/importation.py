@@ -2,7 +2,10 @@ from autumn.curve import scale_up_function
 
 
 def set_tv_importation_rate(model, importation_times, importation_n_cases):
-
+    """
+    When imported cases need to be accounted for to inflate the force of infection but they are not explicitly included
+    in the modelled population.
+    """
     # scale-up curve for importation numbers
     importation_numbers_scale_up = scale_up_function(importation_times, importation_n_cases)
 
@@ -20,5 +23,22 @@ def set_tv_importation_rate(model, importation_times, importation_n_cases):
 
     model.parameters["import_secondary_rate"] = "import_secondary_rate"
     model.adaptation_functions["import_secondary_rate"] = tv_recruitment_rate
+
+    return model
+
+
+def set_tv_importation_as_birth_rates(model, importation_times, importation_n_cases):
+    """
+    When imported cases are explicitly simulated as part of the modelled population. They enter the late_infectious
+    compartment through a birth process
+    """
+    # scale-up curve for importation numbers
+    importation_numbers_scale_up = scale_up_function(importation_times, importation_n_cases)
+
+    def tv_recruitment_rate(t):
+        return importation_numbers_scale_up(t) / model.starting_population
+
+    model.parameters["crude_birth_rate"] = "crude_birth_rate"
+    model.time_variants["crude_birth_rate"] = tv_recruitment_rate
 
     return model

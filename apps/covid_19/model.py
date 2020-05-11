@@ -30,7 +30,7 @@ from .outputs import (
     calculate_notifications_covid,
     calculate_incidence_icu_covid,
 )
-from .importation import set_tv_importation_rate
+from .importation import set_tv_importation_rate, set_tv_importation_as_birth_rates
 from .matrices import build_covid_matrices, apply_npi_effectiveness
 from .preprocess import preprocess_params
 
@@ -184,7 +184,6 @@ def build_model(country: str, params: dict, update_params={}):
     elif model_parameters["implement_importation"] and model_parameters["imported_cases_explict"]:
         _birth_approach = 'add_crude_birth_rate'
 
-
     # Get mixing matrix
     mixing_matrix = load_specific_prem_sheet("all_locations", model_parameters["country"])
     mixing_matrix_multipliers = model_parameters.get("mixing_matrix_multipliers")
@@ -210,6 +209,10 @@ def build_model(country: str, params: dict, update_params={}):
     # set time-variant importation rate
     if model_parameters["implement_importation"] and not model_parameters["imported_cases_explict"]:
         _covid_model = set_tv_importation_rate(
+            _covid_model, params["data"]["times_imported_cases"], params["data"]["n_imported_cases"]
+        )
+    elif model_parameters["implement_importation"] and model_parameters["imported_cases_explict"]:
+        _covid_model = set_tv_importation_as_birth_rates(
             _covid_model, params["data"]["times_imported_cases"], params["data"]["n_imported_cases"]
         )
 

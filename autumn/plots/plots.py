@@ -7,6 +7,7 @@ from typing import List, Tuple
 import pandas as pd
 import seaborn as sns
 import numpy as np
+from math import log
 from matplotlib import pyplot
 from summer.model.strat_model import StratifiedModel
 
@@ -98,6 +99,21 @@ def plot_posterior(
         fig, filename=f"{param_name} posterior", title_text=f"{param_name} posterior"
     )
 
+
+def plot_loglikelihood_vs_parameter(plotter: Plotter, mcmc_tables: List[pd.DataFrame], param_name: str, burn_in=0):
+    """
+    Plots the loglikelihood against parameter values.
+    """
+    ll_vals = mcmc_tables[0]['loglikelihood']
+    p_vals = mcmc_tables[0][param_name]
+    log_ll_vals = [-log(-x) for x in ll_vals]
+    fig, axis, _, _, _ = plotter.get_figure()
+    axis.plot(p_vals[burn_in:], log_ll_vals[burn_in:], '.')
+    axis.set_xlabel(param_name)
+    axis.set_ylabel('-log(-loglikelihood)')
+    plotter.save_figure(
+        fig, filename=f"likelihood against {param_name}", title_text=f"likelihood against {param_name}"
+    )
 
 def _overwrite_non_accepted_mcmc_runs(mcmc_tables: List[pd.DataFrame], column_name: str):
     """

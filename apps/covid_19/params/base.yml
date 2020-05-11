@@ -19,7 +19,7 @@ default:
   import_secondary_rate: 0.
 
   compartment_periods:
-    incubation: 5.0
+    incubation: 5.
     # exposed now calculated
     # presympt now calculated
     total_infectious: 7.
@@ -28,7 +28,7 @@ default:
     hospital_early: 5.
     hospital_late: 8.
     icu_early: 5.
-    icu_late: 20.
+    icu_late: 10.
 
   # Proportion of the exposed period spent infectious - i.e. "presymptomatic"
   prop_exposed_presympt: 0.5
@@ -116,9 +116,6 @@ default:
   self_isolation_effect: .67
   enforced_isolation_effect: 1.
 
-  # Add non-infectious
-  add_non_infectious: True
-
   # Country to extract Prem mixing matrix from
   country: null
 
@@ -134,7 +131,7 @@ default:
   time_step: 1
 
   # Base model definition
-  contact_rate: 0.36  # Expected to be calibrated for each application
+  contact_rate: 0.03  # Expected to be calibrated for each application
   icu_mortality_prop: 0.5
 
   # Compulsory parameter that is completely overwritten in stratification, rather than being modified

@@ -98,7 +98,7 @@ class Calibration:
         timestamp = datetime.now().strftime("%d-%m-%Y")
         out_db_dir = os.path.join(project_dir, f"calibration-{model_name}-{run_hash}-{timestamp}")
         os.makedirs(out_db_dir, exist_ok=True)
-        db_name = f"outputs_calibration_chainZZ_{self.chain_index}.db"
+        db_name = f"outputs_calibration_chain_{self.chain_index}.db"
         self.output_db_path = os.path.join(out_db_dir, db_name)
 
         self.data_as_array = None  # will contain all targeted data points in a single array

@@ -157,9 +157,12 @@ def calibration_run(app_dirpath: str) -> str:
         labels.append(label)
 
     label = st.sidebar.selectbox("Select app calibration run", labels)
-    dirname = model_run_dir_lookup[label]
-    dirpath = os.path.join(app_dirpath, dirname)
-    return dirname, dirpath
+    if not label:
+        return None, None
+    else:
+        dirname = model_run_dir_lookup[label]
+        dirpath = os.path.join(app_dirpath, dirname)
+        return dirname, dirpath
 
 
 def model_run(app_dirpath: str) -> Tuple[str, str]:
@@ -192,6 +195,9 @@ def model_run(app_dirpath: str) -> Tuple[str, str]:
         labels.append(label)
 
     label = st.sidebar.selectbox("Select app model run", labels)
-    dirname = model_run_dir_lookup[label]
-    dirpath = os.path.join(app_dirpath, dirname)
-    return dirname, dirpath
+    if not label:
+        return None, None
+    else:
+        dirname = model_run_dir_lookup[label]
+        dirpath = os.path.join(app_dirpath, dirname)
+        return dirname, dirpath

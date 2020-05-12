@@ -9,6 +9,7 @@ from autumn.summer_related.parameter_adjustments import (
     adjust_upstream_stratified_parameter,
     split_prop_into_two_subprops,
 )
+from autumn.curve import scale_up_function
 
 
 def get_raw_clinical_props(params):
@@ -192,17 +193,37 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
     _covid_model, stratification_adjustments, strata_infectiousness = \
         adjust_infectiousness(_covid_model, model_parameters, strata_to_implement, stratification_adjustments)
 
-    # work out clinical proportions for imported cases
-    importation_props_by_clinical = {
-        "non_sympt": 1. - model_parameters['symptomatic_props_imported'],
-        "sympt_non_hospital": model_parameters['symptomatic_props_imported'] *
-                              (1. - model_parameters['prop_isolated_among_symptomatic_imported'] -
-                               model_parameters['hospital_props_imported']),
-        "sympt_isolate": model_parameters['symptomatic_props_imported'] *
-                         model_parameters['prop_isolated_among_symptomatic_imported'],
-        "hospital_non_icu": model_parameters['hospital_props_imported'] * (1. - model_parameters['icu_prop_imported']),
-        "icu": model_parameters['hospital_props_imported'] * model_parameters['icu_prop_imported']
-    }
+    # work out time-variant clinical proportions for imported cases accounting for quarantine
+    if model_parameters['implement_importation'] and model_parameters['imported_cases_explict']:
+        raw_prop_imported_sympt_non_hospital = model_parameters['symptomatic_props_imported'] *\
+                                           (1. - model_parameters['prop_isolated_among_symptomatic_imported'] -
+                                            model_parameters['hospital_props_imported'])
+        raw_prop_imported_sympt_isolate = model_parameters['symptomatic_props_imported'] *\
+                                      model_parameters['prop_isolated_among_symptomatic_imported']
+
+        quarantine_scale_up = scale_up_function(model_parameters['traveller_quarantine']['times'],
+                                                model_parameters['traveller_quarantine']['values'],
+                                                method=4
+                                                )
+
+        def tv_prop_imported_sympt_non_hospital(t):
+            return raw_prop_imported_sympt_non_hospital * (1. - quarantine_scale_up(t))
+
+        def tv_prop_imported_sympt_isolate(t):
+            return raw_prop_imported_sympt_isolate + raw_prop_imported_sympt_non_hospital * quarantine_scale_up(t)
+
+        _covid_model.time_variants['tv_prop_imported_sympt_non_hospital'] = tv_prop_imported_sympt_non_hospital
+        _covid_model.time_variants['tv_prop_imported_sympt_isolate'] = tv_prop_imported_sympt_isolate
+
+        importation_props_by_clinical = {
+            "non_sympt": 1. - model_parameters['symptomatic_props_imported'],
+            "sympt_non_hospital": 'tv_prop_imported_sympt_non_hospital',
+            "sympt_isolate": 'tv_prop_imported_sympt_isolate',
+            "hospital_non_icu": model_parameters['hospital_props_imported'] * (1. - model_parameters['icu_prop_imported']),
+            "icu": model_parameters['hospital_props_imported'] * model_parameters['icu_prop_imported']
+        }
+    else:
+        importation_props_by_clinical = {}
 
     # Stratify the model using the SUMMER stratification function
     _covid_model.stratify(

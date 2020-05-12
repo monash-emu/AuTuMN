@@ -19,6 +19,9 @@ default:
   implement_importation: False
   imported_cases_explict: False  # whether to explicitely include imported cases
   import_secondary_rate: 0.
+  traveller_quarantine:
+    times: [0.]
+    values: [0.]
 
   compartment_periods:
     incubation: 5.
@@ -116,7 +119,7 @@ default:
   prop_isolated_among_symptomatic: 0.6
 
   # clinical proportions for imported cases
-  symptomatic_props_imported: .5
+  symptomatic_props_imported: 1.
   hospital_props_imported: .05
   icu_prop_imported: .3
   prop_isolated_among_symptomatic_imported: .6

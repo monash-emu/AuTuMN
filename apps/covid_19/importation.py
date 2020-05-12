@@ -52,8 +52,14 @@ def set_tv_importation_as_birth_rates(model, importation_times, importation_n_ca
     When imported cases are explicitly simulated as part of the modelled population. They enter the late_infectious
     compartment through a birth process
     """
+    # inflate importation numbers to account for undetected cases (assumed to be asymptomatic or sympt non hospital)
+    prop_detected = model.parameters['symptomatic_props_imported'] *\
+                    (model.parameters['prop_isolated_among_symptomatic_imported'] +
+                     model.parameters['hospital_props_imported'])
+    importation_n_cases = [n / prop_detected for n in importation_n_cases]
+
     # scale-up curve for importation numbers
-    importation_numbers_scale_up = scale_up_function(importation_times, importation_n_cases,method=5, smoothness=2.)
+    importation_numbers_scale_up = scale_up_function(importation_times, importation_n_cases, method=5, smoothness=5.)
 
     def tv_recruitment_rate(t):
         return importation_numbers_scale_up(t) / model.starting_population

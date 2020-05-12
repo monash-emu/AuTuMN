@@ -382,7 +382,9 @@ def plot_input_function(
         fig, axes, max_dims, n_rows, n_cols = plotter.get_figure()
         colour_index = 0
         param_names = []
-        for param_name, param_func in model.final_parameter_functions.items():
+        # combine all parameters from final_parameter_functions and time_variants dictionaries
+        all_param_functions = {**model.final_parameter_functions, **model.time_variants}
+        for param_name, param_func in all_param_functions.items():
             if param_name.startswith(func_name):
                 # Plot all parameter functions starting with requested func name.
                 colour_index += 1

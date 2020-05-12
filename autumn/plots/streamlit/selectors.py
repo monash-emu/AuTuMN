@@ -91,7 +91,7 @@ def app() -> Tuple[str, str]:
     from the model output data directory.
     Returns app dir and path to app dir
     """
-    APP_DIRNAMES = ["covid_", "marshall_islands", "mongolia", "dummy"]
+    APP_DIRNAMES = ["covid_", "marshall_islands", "mongolia", "dummy", "sir_example"]
     paths = {}
     dirnames = []
     for dirname in os.listdir(constants.DATA_PATH):

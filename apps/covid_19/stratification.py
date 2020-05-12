@@ -195,6 +195,8 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
 
     # work out time-variant clinical proportions for imported cases accounting for quarantine
     if model_parameters['implement_importation'] and model_parameters['imported_cases_explict']:
+        raw_prop_imported_non_sympt = 1. - model_parameters['symptomatic_props_imported']
+
         raw_prop_imported_sympt_non_hospital = model_parameters['symptomatic_props_imported'] *\
                                            (1. - model_parameters['prop_isolated_among_symptomatic_imported'] -
                                             model_parameters['hospital_props_imported'])
@@ -206,17 +208,21 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
                                                 method=4
                                                 )
 
+        def tv_prop_imported_non_sympt(t):
+            return raw_prop_imported_non_sympt * (1. - quarantine_scale_up(t))
+
         def tv_prop_imported_sympt_non_hospital(t):
             return raw_prop_imported_sympt_non_hospital * (1. - quarantine_scale_up(t))
 
         def tv_prop_imported_sympt_isolate(t):
             return raw_prop_imported_sympt_isolate + raw_prop_imported_sympt_non_hospital * quarantine_scale_up(t)
 
+        _covid_model.time_variants['tv_prop_imported_non_sympt'] = tv_prop_imported_non_sympt
         _covid_model.time_variants['tv_prop_imported_sympt_non_hospital'] = tv_prop_imported_sympt_non_hospital
         _covid_model.time_variants['tv_prop_imported_sympt_isolate'] = tv_prop_imported_sympt_isolate
 
         importation_props_by_clinical = {
-            "non_sympt": 1. - model_parameters['symptomatic_props_imported'],
+            "non_sympt": 'tv_prop_imported_non_sympt',
             "sympt_non_hospital": 'tv_prop_imported_sympt_non_hospital',
             "sympt_isolate": 'tv_prop_imported_sympt_isolate',
             "hospital_non_icu": model_parameters['hospital_props_imported'] * (1. - model_parameters['icu_prop_imported']),

@@ -115,6 +115,10 @@ def calculate_notifications_covid(model, time):
         if "progressX" in key and \
                 any([stratum in key for stratum in model.all_stratifications["clinical"][2:]]):
             notifications += value[this_time_index]
+
+    if model.parameters['implement_importation'] and model.parameters['imported_cases_explict']:
+        notifications += model.time_variants["crude_birth_rate"](time) * sum(model.compartment_values)
+
     return notifications
 
 

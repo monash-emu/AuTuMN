@@ -23,8 +23,8 @@ TARGET_OUTPUTS = [
 # __________  For the grid-based calibration approach
 # define a grid of parameter values. The posterior probability will be evaluated at each node
 par_grid = [
-    {"param_name": "contact_rate", 'lower': .010, 'upper': .022, 'n': 7},
-    {"param_name": "start_time", 'lower': 0., 'upper': 20., 'n': 11},
+    {"param_name": "contact_rate", 'lower': .018, 'upper': .023, 'n': 6},
+    {"param_name": "start_time", 'lower': 25., 'upper': 35., 'n': 11},
 ]
 
 
@@ -36,4 +36,4 @@ def run_mys_calibration_chain(max_seconds: int, run_id: int):
 
 
 if __name__ == "__main__":
-    run_mys_calibration_chain(2 * 60 * 60, 2)  # first argument only relevant for autumn_mcmc mode (time limit in seconds)
+    run_mys_calibration_chain(2 * 60 * 60, 1)  # first argument only relevant for autumn_mcmc mode (time limit in seconds)

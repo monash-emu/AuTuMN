@@ -338,7 +338,7 @@ class Calibration:
                         elif target["loglikelihood_distri"] == "poisson":
                             for i in range(len(data)):
                                 ll += (
-                                    data[i] * math.log(model_output[i])
+                                    data[i] * math.log(abs(model_output[i]))
                                     - model_output[i]
                                     - math.log(math.factorial(data[i]))
                                 )

@@ -62,29 +62,30 @@ def find_abs_death_props(params, abs_props):
     return {"hospital_death": hospital_death, "icu_death": icu_death}
 
 
-def set_isolation_props(_covid_model, model_parameters, abs_props, stratification_adjustments):
+def set_isolation_props(_covid_model, model_parameters, abs_props, stratification_adjustments, tv_prop_iso_among_sympt):
     """
     Set the absolute proportions of new cases isolated and not isolated, and indicate to the model where they should be
     found.
     """
-    # set up time-variant detection
-    # FIXME: the time-variant detection function is not being used at the moment
-    prop_detected_among_sympt = tanh_based_scaleup(model_parameters['tv_detection_b'],
-                                                   model_parameters['tv_detection_c'],
-                                                   model_parameters['tv_detection_sigma'])
-
-    # Apply the isolated proportion to the symptomatic non-hospitalised group
+    # We need two time-variant functions for each age-group. Stored in lists to avoid using same reference for different ages.
+    abs_prop_iso_functions = []
+    abs_prop_sympt_non_hosp_functions = []
     for i_age, agegroup in enumerate(model_parameters["all_stratifications"]["agegroup"]):
-        prop_isolated = \
-            (abs_props["sympt"][i_age] * model_parameters["prop_isolated_among_symptomatic"] -
-             abs_props["hospital"][i_age]) / \
-            abs_props["sympt_non_hospital"][i_age]
+        # define the time-variant splitting proportions
+        abs_prop_iso_functions.append(lambda t: abs_props["sympt"][i_age] * tv_prop_iso_among_sympt(t))
+        abs_prop_sympt_non_hosp_functions.append(
+            lambda t: max(abs_props["sympt"][i_age] *
+                      (1. - tv_prop_iso_among_sympt(t) - model_parameters["raw_hospital"][i_age]), 0.)
+        )
+        # pass the functions to summer
+        _covid_model.time_variants['prop_sympt_isolate_' + agegroup] = abs_prop_iso_functions[i_age]
+        _covid_model.time_variants['prop_sympt_non_hospital_' + agegroup] = abs_prop_sympt_non_hosp_functions[i_age]
+        # define the stratification adjustment to be made
         stratification_adjustments["to_infectiousXagegroup_" + agegroup]["sympt_isolate"] = \
-            abs_props["sympt_non_hospital"][i_age] * \
-            prop_isolated
+            'prop_sympt_isolate_' + agegroup
         stratification_adjustments["to_infectiousXagegroup_" + agegroup]["sympt_non_hospital"] = \
-            abs_props["sympt_non_hospital"][i_age] * \
-            (1.0 - prop_isolated)
+            'prop_sympt_non_hospital_' + agegroup
+
     return _covid_model, stratification_adjustments
 
 
@@ -112,6 +113,10 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
     Stratify the infectious compartments of the covid model (not including the pre-symptomatic compartments, which are
     actually infectious)
     """
+
+    assert all([h_prop + model_parameters['prop_isolated_among_symptomatic'] <= 1. for
+                h_prop in model_parameters['hospital_props']]), \
+        "Sum of hospital_props and prop_isolated_among_symptomatic must be <=1"
 
     # Define stratification
     strata_to_implement = \
@@ -155,9 +160,18 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
         [abs_props[stratum] for stratum in fixed_prop_strata],
     )
 
+    # Set time-variant proportion of sympt_isolate among all symptomatics
+    # create a scale-up function converging to 1
+    scale_up_multiplier = tanh_based_scaleup(model_parameters['tv_detection_b'],
+                                             model_parameters['tv_detection_c'],
+                                             model_parameters['tv_detection_sigma'])
+    # use the input parameter 'prop_isolated_among_symptomatic', specifying the maximum prop of isolates among all sympt
+    _tv_prop_iso_among_sympt = lambda t: model_parameters['prop_isolated_among_symptomatic'] * scale_up_multiplier(t)
+
     # Set isolation rates as absolute proportions
     _covid_model, stratification_adjustments = \
-        set_isolation_props(_covid_model, model_parameters, abs_props, stratification_adjustments)
+        set_isolation_props(_covid_model, model_parameters, abs_props, stratification_adjustments,
+                            _tv_prop_iso_among_sympt)
 
     # Calculate death rates and progression rates for hospitalised and ICU patients
     progression_death_rates = {}

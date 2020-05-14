@@ -17,6 +17,10 @@ default:
   ifr_multiplier: 2.
   hospital_inflate: True
 
+  # Make case detection time-variant
+  tv_detection_c: 90.
+  tv_detection_sigma: 0.
+
   mixing:
     other_locations_times:
       - 46

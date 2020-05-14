@@ -9,7 +9,7 @@ from autumn.summer_related.parameter_adjustments import (
     adjust_upstream_stratified_parameter,
     split_prop_into_two_subprops,
 )
-from autumn.curve import scale_up_function
+from autumn.curve import scale_up_function, tanh_based_scaleup
 
 
 def get_raw_clinical_props(params):
@@ -67,6 +67,11 @@ def set_isolation_props(_covid_model, model_parameters, abs_props, stratificatio
     Set the absolute proportions of new cases isolated and not isolated, and indicate to the model where they should be
     found.
     """
+    # set up time-variant detection
+    # FIXME: the time-variant detection function is not being used at the moment
+    prop_detected_among_sympt = tanh_based_scaleup(model_parameters['tv_detection_b'],
+                                                   model_parameters['tv_detection_c'],
+                                                   model_parameters['tv_detection_sigma'])
 
     # Apply the isolated proportion to the symptomatic non-hospitalised group
     for i_age, agegroup in enumerate(model_parameters["all_stratifications"]["agegroup"]):

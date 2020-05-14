@@ -88,6 +88,11 @@ default:
   # Proportion of those hospitalised that are admitted to ICU - consistent with LSHTM's LMIC estimates parameters
   icu_prop: 0.3
 
+  # parameters of tanh-based scale-up function used to define time-variant detection
+  tv_detection_b: .05  # shape parameter of the tanh-based curve
+  tv_detection_c: 90  # inflection point
+  tv_detection_sigma: 0.  # height of the lower asymptote
+
   # Infection fatality proportions - Verity et al.
   infection_fatality_props:
     - 0.00002

@@ -3,8 +3,50 @@ from apps.covid_19.calibration.base import run_calibration_chain
 country = "malaysia"
 
 PAR_PRIORS = [
-    {'param_name': 'contact_rate', 'distribution': 'uniform', 'distri_params': [0.010, 0.040]},
-    {'param_name': 'start_time', 'distribution': 'uniform', 'distri_params': [10., 40.]}
+    {
+        'param_name': 'contact_rate',
+        'distribution': 'uniform',
+        'distri_params': [0.010, 0.040]
+    },
+    {
+        'param_name': 'start_time',
+        'distribution': 'uniform',
+        'distri_params': [10., 40.]},
+    {
+        "param_name": "compartment_periods_incubation",
+        "distribution": "gamma",
+        "distri_mean": 5.,
+        "distri_ci": [3., 7.]
+    },
+    {
+        "param_name": "compartment_periods_icu_late",
+        "distribution": "gamma",
+        "distri_mean": 10.,
+        "distri_ci": [5., 15.]
+    },
+    {
+        "param_name": "young_reduced_susceptibility",
+        "distribution": "beta",
+        "distri_mean": .5,
+        "distri_ci": [.4, .6]
+    },
+    {
+        "param_name": "tv_detection_sigma",
+        "distribution": "beta",
+        "distri_mean": .2,
+        "distri_ci": [.1, .4]
+    },
+    # Add negative binomial over-dispersion parameters
+    {
+        "param_name": "notifications_dispersion_param",
+        "distribution": "uniform",
+        "distri_params": [.1, 5.]
+    },
+    {
+        "param_name": "prevXlateXclinical_icuXamong_dispersion_param",
+        "distribution": "uniform",
+        "distri_params": [.1, 5.]
+    }
 ]
 
 # notification data, provided by the country
@@ -20,13 +62,13 @@ TARGET_OUTPUTS = [
         "output_key": "notifications",
         "years": notification_times,
         "values": notification_counts,
-        "loglikelihood_distri": "poisson",
+        "loglikelihood_distri": "negative_binomial",
     },
     {
         "output_key": "prevXlateXclinical_icuXamong",
         "years": icu_times,
         "values": icu_counts,
-        "loglikelihood_distri": "poisson",
+        "loglikelihood_distri": "negative_binomial",
     }
 ]
 
@@ -36,7 +78,7 @@ MULTIPLIERS = {'prevXlateXclinical_icuXamong': 32364904.}  # to get absolute pop
 # define a grid of parameter values. The posterior probability will be evaluated at each node
 par_grid = [
     {"param_name": "contact_rate", 'lower': .018, 'upper': .023, 'n': 6},
-    {"param_name": "start_time", 'lower': 25., 'upper': 35., 'n': 11},
+    {"param_name": "start_time", 'lower': 25., 'upper': 35., 'n': 11}
 ]
 
 
@@ -48,4 +90,4 @@ def run_mys_calibration_chain(max_seconds: int, run_id: int):
 
 
 if __name__ == "__main__":
-    run_mys_calibration_chain(30, 0)  # first argument only relevant for autumn_mcmc mode (time limit in seconds)
+    run_mys_calibration_chain(60*60, 0)  # first argument only relevant for autumn_mcmc mode (time limit in seconds)

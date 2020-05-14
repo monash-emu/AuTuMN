@@ -21,6 +21,7 @@ def run_calibration_chain(
     _grid_info=None,
     _start_time_range=None,
     _run_extra_scenarios=True,
+    _multipliers={}
 ):
     """
     Run a calibration chain for the covid model
@@ -39,7 +40,7 @@ def run_calibration_chain(
         build_model,
         par_priors,
         target_outputs,
-        MULTIPLIERS,
+        _multipliers,
         run_id,
         model_parameters=params,
         start_time_range=_start_time_range,
@@ -99,6 +100,3 @@ def get_priors_and_targets(country, data_type="confirmed", start_after_n_cases=1
     ]
 
     return PAR_PRIORS, TARGET_OUTPUTS
-
-
-MULTIPLIERS = {}

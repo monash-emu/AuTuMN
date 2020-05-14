@@ -1,7 +1,7 @@
 """
 Sigmoidal and spline functions to generate cost coverage curves and historical input curves.
 """
-from math import exp
+from math import exp, tanh
 
 import numpy as np
 from scipy.interpolate import UnivariateSpline
@@ -76,6 +76,20 @@ def make_two_step_curve(y_low, y_med, y_high, x_start, x_med, x_end):
         return y_high
 
     return curve
+
+
+def tanh_based_scaleup(b, c, sigma):
+    """
+    return the function t: (1 - sigma) / 2 * tanh(b * (a - c)) + (1 + sigma) / 2
+    :param b: shape parameter
+    :param c: inflection point
+    :param sigma: lowest asymptotic value
+    :return: a function
+    """
+    def tanh_scaleup(t):
+        return (1 - sigma) / 2 * tanh(b * (t - c)) + (1 + sigma) / 2
+
+    return tanh_scaleup
 
 
 """ the functions test_a and get_spare_fit are only used inside of scale_up_function when method=5 """

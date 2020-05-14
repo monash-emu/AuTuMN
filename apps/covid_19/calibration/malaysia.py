@@ -13,7 +13,7 @@ notification_counts = [7, 14, 5, 28, 10, 6, 18, 12, 20, 9, 45, 35, 190, 125, 120
 
 # ICU data (prev / million pop), provided by the country
 icu_times = [71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134]
-icu_counts = [0.06179533237608244, 0.09269299856412365, 0.12359066475216487, 0.15448833094020611, 0.27807899569237093, 0.3707719942564946, 0.3707719942564946, 0.46346499282061826, 0.6179533237608245, 0.8033393208890718, 1.143213648957525, 1.4212926446498961, 1.7611669727183494, 1.977450636034638, 1.390394978461855, 1.390394978461855, 1.6684739741542258, 2.255529631727009, 2.255529631727009, 2.9043806216758745, 2.9043806216758745, 3.1515619511802044, 3.244254949744328, 3.3369479483084517, 3.0588689526160806, 3.0588689526160806, 3.1515619511802044, 2.8425852892997923, 2.348222630291133, 2.2246319655389675, 2.131938966974844, 2.2246319655389675, 2.0392459684107207, 2.0392459684107207, 1.853859971282473, 1.7302693065303083, 1.7302693065303083, 1.5757809755901022, 1.5139856432140197, 1.4212926446498961, 1.390394978461855, 1.3285996460857723, 1.3285996460857723, 1.2977019798977312, 1.2668043137096898, 1.1123159827694837, 1.1123159827694837, 1.143213648957525, 1.1123159827694837, 1.235906647521649, 1.1123159827694837, 1.143213648957525, 0.9578276518292779, 0.8342369870771129, 0.8651346532651542, 0.7415439885129892, 0.6797486561369068, 0.5870556575727832, 0.5561579913847419, 0.5561579913847419, 0.5561579913847419, 0.6179533237608245, 0.494362659, 0.494362659]
+icu_counts = [2.0, 3.0, 4.0, 5.0, 9.0, 12.0, 12.0, 15.0, 20.0, 26.0, 37.0, 46.0, 57.0, 64.0, 45.0, 45.0, 54.0, 73.0, 73.0, 94.0, 94.0, 102.0, 105.0, 108.0, 99.0, 99.0, 102.0, 92.0, 76.0, 72.0, 69.0, 72.0, 66.0, 66.0, 60.0, 56.0, 56.0, 51.0, 49.0, 46.0, 45.0, 43.0, 43.0, 42.0, 41.0, 36.0, 36.0, 37.0, 36.0, 40.0, 36.0, 37.0, 31.0, 27.0, 28.0, 24.0, 22.0, 19.0, 18.0, 18.0, 18.0, 20.0, 16., 16.]
 
 TARGET_OUTPUTS = [
     {
@@ -30,7 +30,7 @@ TARGET_OUTPUTS = [
     }
 ]
 
-MULTIPLIERS = {'prevXlateXclinical_icuXamong': 1.e6}
+MULTIPLIERS = {'prevXlateXclinical_icuXamong': 32364904.}  # to get absolute pop size instead of proportion
 
 # __________  For the grid-based calibration approach
 # define a grid of parameter values. The posterior probability will be evaluated at each node
@@ -41,11 +41,11 @@ par_grid = [
 
 
 def run_mys_calibration_chain(max_seconds: int, run_id: int):
-    run_calibration_chain(max_seconds, run_id, country, PAR_PRIORS, TARGET_OUTPUTS, mode='grid_based',
-                          _grid_info=par_grid, _run_extra_scenarios=False, _multipliers=MULTIPLIERS)
-    # run_calibration_chain(max_seconds, run_id, country, PAR_PRIORS, TARGET_OUTPUTS, mode='autumn_mcmc',
-    #                       _run_extra_scenarios=False, _multipliers=MULTIPLIERS)
+    # run_calibration_chain(max_seconds, run_id, country, PAR_PRIORS, TARGET_OUTPUTS, mode='grid_based',
+    #                       _grid_info=par_grid, _run_extra_scenarios=False, _multipliers=MULTIPLIERS)
+    run_calibration_chain(max_seconds, run_id, country, PAR_PRIORS, TARGET_OUTPUTS, mode='autumn_mcmc',
+                          _run_extra_scenarios=False, _multipliers=MULTIPLIERS)
 
 
 if __name__ == "__main__":
-    run_mys_calibration_chain(2 * 60 * 60, 1)  # first argument only relevant for autumn_mcmc mode (time limit in seconds)
+    run_mys_calibration_chain(30, 0)  # first argument only relevant for autumn_mcmc mode (time limit in seconds)

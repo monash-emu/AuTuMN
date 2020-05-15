@@ -2,7 +2,7 @@ from autumn.tool_kit.utils import (
     find_rates_and_complements_from_ifr,
     repeat_list_elements,
     repeat_list_elements_average_last_two,
-    element_wise_list_division
+    element_wise_list_division,
 )
 from autumn.constants import Compartment
 from autumn.summer_related.parameter_adjustments import (
@@ -67,40 +67,46 @@ def set_isolation_props(_covid_model, model_parameters, abs_props, stratificatio
     Set the absolute proportions of new cases isolated and not isolated, and indicate to the model where they should be
     found.
     """
-    # We need four time-variant functions for each age-group. Stored in lists to avoid using same reference for different ages.
-    abs_prop_sympt_non_hosp_functions = []
-    abs_prop_isolate_functions = []
-    abs_prop_hosp_non_icu_functions = []
-    abs_prop_icu_functions = []
-    for i_age, agegroup in enumerate(model_parameters["all_stratifications"]["agegroup"]):
-        # define the time-variant splitting proportions
-        abs_prop_sympt_non_hosp_functions.append(
-            lambda t: abs_props["sympt"][i_age] * (1. - tv_prop_detect_among_sympt(t))
-        )
-        # we need to adjust the hospital_props to make sure it remains <= detected proportions
-        def adjusted_prop_hospital_among_sympt(t):
-            raw_h_prop = abs_props["sympt"][i_age] * model_parameters["raw_hospital"][i_age]
+    # need wrapper functions around all time-variant splitting functions to avoid using the final i_age
+    # for all age groups, which is what would happen if the t_v functions were defined within a loop.
+    def abs_prop_sympt_non_hosp_wrapper(_i_age):
+        def abs_prop_sympt_non_hosp_func(t):
+            return abs_props["sympt"][_i_age] * (1. - tv_prop_detect_among_sympt(t))
+        return abs_prop_sympt_non_hosp_func
+
+    # we need to adjust the hospital_props to make sure it remains <= detected proportions
+    def adjusted_prop_hospital_among_sympt_wrapper(_i_age):
+        def adjusted_prop_hospital_among_sympt_func(t):
+            raw_h_prop = abs_props["sympt"][_i_age] * model_parameters["raw_hospital"][_i_age]
             adjusted_h_prop = raw_h_prop if tv_prop_detect_among_sympt(t) >= raw_h_prop else \
                 tv_prop_detect_among_sympt(t)
             return adjusted_h_prop
+        return adjusted_prop_hospital_among_sympt_func
 
-        abs_prop_isolate_functions.append(
-            lambda t: abs_props["sympt"][i_age] * tv_prop_detect_among_sympt(t) *
-                      (1. - adjusted_prop_hospital_among_sympt(t) / tv_prop_detect_among_sympt(t))
-        )
-        abs_prop_hosp_non_icu_functions.append(
-            lambda t: abs_props["sympt"][i_age] * adjusted_prop_hospital_among_sympt(t) *
-                      (1. -model_parameters['icu_prop'])
-        )
-        abs_prop_icu_functions.append(
-            lambda t: abs_props["sympt"][i_age] * adjusted_prop_hospital_among_sympt(t) * model_parameters['icu_prop']
-        )
+    def abs_prop_isolate_wrapper(_i_age):
+        def abs_prop_isolate_func(t):
+            return abs_props["sympt"][_i_age] * tv_prop_detect_among_sympt(t) * \
+                   (1. - adjusted_prop_hospital_among_sympt_wrapper(_i_age)(t) / tv_prop_detect_among_sympt(t))
+        return abs_prop_isolate_func
 
+    def abs_prop_hosp_non_icu_wrapper(_i_age):
+        def abs_prop_hosp_non_icu_func(t):
+            return abs_props["sympt"][_i_age] * adjusted_prop_hospital_among_sympt_wrapper(_i_age)(t) *\
+                   (1. -model_parameters['icu_prop'])
+        return abs_prop_hosp_non_icu_func
+
+    def abs_prop_icu_wrapper(_i_age):
+        def abs_prop_icu_func(t):
+            return abs_props["sympt"][_i_age] * adjusted_prop_hospital_among_sympt_wrapper(_i_age)(t) *\
+                   model_parameters['icu_prop']
+        return abs_prop_icu_func
+
+    for i_age, agegroup in enumerate(model_parameters["all_stratifications"]["agegroup"]):
         # pass the functions to summer
-        _covid_model.time_variants['prop_sympt_non_hospital_' + agegroup] = abs_prop_sympt_non_hosp_functions[i_age]
-        _covid_model.time_variants['prop_sympt_isolate_' + agegroup] = abs_prop_isolate_functions[i_age]
-        _covid_model.time_variants['prop_hospital_non_icu_' + agegroup] = abs_prop_hosp_non_icu_functions[i_age]
-        _covid_model.time_variants['prop_icu_' + agegroup] = abs_prop_icu_functions[i_age]
+        _covid_model.time_variants['prop_sympt_non_hospital_' + agegroup] = abs_prop_sympt_non_hosp_wrapper(i_age)
+        _covid_model.time_variants['prop_sympt_isolate_' + agegroup] = abs_prop_isolate_wrapper(i_age)
+        _covid_model.time_variants['prop_hospital_non_icu_' + agegroup] = abs_prop_hosp_non_icu_wrapper(i_age)
+        _covid_model.time_variants['prop_icu_' + agegroup] = abs_prop_icu_wrapper(i_age)
 
         # define the stratification adjustment to be made
         for clinical_stratum in ["sympt_non_hospital", "sympt_isolate", "hospital_non_icu", "icu"]:

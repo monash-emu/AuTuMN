@@ -108,7 +108,7 @@ def set_isolation_props(_covid_model, model_parameters, abs_props, stratificatio
         _covid_model.time_variants['prop_hospital_non_icu_' + agegroup] = abs_prop_hosp_non_icu_wrapper(i_age)
         _covid_model.time_variants['prop_icu_' + agegroup] = abs_prop_icu_wrapper(i_age)
 
-        # define the stratification adjustment to be made
+        # define the stratification adjustments to be made
         for clinical_stratum in ["sympt_non_hospital", "sympt_isolate", "hospital_non_icu", "icu"]:
             stratification_adjustments["to_infectiousXagegroup_" + agegroup][clinical_stratum] =\
                 'prop_' + clinical_stratum + '_' + agegroup
@@ -241,39 +241,43 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
 
     # work out time-variant clinical proportions for imported cases accounting for quarantine
     if model_parameters['implement_importation'] and model_parameters['imported_cases_explict']:
-        raw_prop_imported_non_sympt = 1. - model_parameters['symptomatic_props_imported']
-
-        raw_prop_imported_sympt_non_hospital = model_parameters['symptomatic_props_imported'] *\
-                                           (1. - model_parameters['prop_detected_among_symptomatic_imported'] -
-                                            model_parameters['hospital_props_imported'])
-        raw_prop_imported_sympt_isolate = model_parameters['symptomatic_props_imported'] *\
-                                      model_parameters['prop_detected_among_symptomatic_imported']
+        rep_age_group = '35'  # the clinical split will be defined according to this representative age-group
+        tvs = _covid_model.time_variants  # to reduce verbosity
 
         quarantine_scale_up = scale_up_function(model_parameters['traveller_quarantine']['times'],
                                                 model_parameters['traveller_quarantine']['values'],
                                                 method=4
                                                 )
 
-        def tv_prop_imported_non_sympt(t):
-            return raw_prop_imported_non_sympt * (1. - quarantine_scale_up(t))
+        tv_prop_imported_non_sympt =\
+            lambda t: stratification_adjustments['to_infectiousXagegroup_' + rep_age_group]['non_sympt'] *\
+                      (1. - quarantine_scale_up(t))
 
-        def tv_prop_imported_sympt_non_hospital(t):
-            return raw_prop_imported_sympt_non_hospital * (1. - quarantine_scale_up(t))
+        tv_prop_imported_sympt_non_hospital = \
+            lambda t: tvs[stratification_adjustments['to_infectiousXagegroup_' + rep_age_group]['sympt_non_hospital']](t) *\
+                      (1. - quarantine_scale_up(t))
 
-        def tv_prop_imported_sympt_isolate(t):
-            return raw_prop_imported_sympt_isolate + raw_prop_imported_sympt_non_hospital * quarantine_scale_up(t)
+        tv_prop_imported_sympt_isolate =\
+            lambda t: tvs[stratification_adjustments['to_infectiousXagegroup_' + rep_age_group]['sympt_isolate']](t) +\
+                      quarantine_scale_up(t) *\
+                      (tvs[stratification_adjustments['to_infectiousXagegroup_' + rep_age_group]['sympt_non_hospital']](t) +
+                       stratification_adjustments['to_infectiousXagegroup_' + rep_age_group]['non_sympt'])
+
+        tv_prop_imported_hospital_non_icu = lambda t: \
+            tvs[stratification_adjustments['to_infectiousXagegroup_' + rep_age_group]['hospital_non_icu']](t)
+
+        tv_prop_imported_icu = lambda t: \
+            tvs[stratification_adjustments['to_infectiousXagegroup_' + rep_age_group]['icu']](t)
 
         _covid_model.time_variants['tv_prop_imported_non_sympt'] = tv_prop_imported_non_sympt
         _covid_model.time_variants['tv_prop_imported_sympt_non_hospital'] = tv_prop_imported_sympt_non_hospital
         _covid_model.time_variants['tv_prop_imported_sympt_isolate'] = tv_prop_imported_sympt_isolate
+        _covid_model.time_variants['tv_prop_imported_hospital_non_icu'] = tv_prop_imported_hospital_non_icu
+        _covid_model.time_variants['tv_prop_imported_icu'] = tv_prop_imported_icu
 
-        importation_props_by_clinical = {
-            "non_sympt": 'tv_prop_imported_non_sympt',
-            "sympt_non_hospital": 'tv_prop_imported_sympt_non_hospital',
-            "sympt_isolate": 'tv_prop_imported_sympt_isolate',
-            "hospital_non_icu": model_parameters['hospital_props_imported'] * (1. - model_parameters['icu_prop_imported']),
-            "icu": model_parameters['hospital_props_imported'] * model_parameters['icu_prop_imported']
-        }
+        importation_props_by_clinical = {}
+        for stratum in strata_to_implement:
+            importation_props_by_clinical[stratum] = "tv_prop_imported_" + stratum
     else:
         importation_props_by_clinical = {}
 

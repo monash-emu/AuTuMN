@@ -7,17 +7,17 @@ default:
     times: [73., 76.]  # self-isolation from 13 March
     values: [0., 1.]
 
-  contact_rate: 0.019  # Approach 1: .022  Approach 2: .022
+  contact_rate: 0.0184713476630507  # Approach 1: .022  Approach 2: .022
   prop_detected_among_symptomatic: 0.7
 
-#  compartment_periods:
-#    incubation: 5.2
-#    icu_late: 13.13
+  compartment_periods:
+    incubation: 4.54961742047202
+    icu_late: 14.2466923897739
 
-#  young_reduced_susceptibility: .5435
+  young_reduced_susceptibility: 0.516763168017078
 
 
-  start_time: 15
+  start_time: 12
   end_time: 135.
   country: malaysia
   iso3: MYS
@@ -26,7 +26,7 @@ default:
   hospital_inflate: True
 
   # Make case detection time-variant
-  tv_detection_c: .1  # shape parameter
+  tv_detection_b: 0.0382350396360314  # shape parameter
   tv_detection_c: 80.  # inflection time
   tv_detection_sigma: 0.  # lowest asymptote
 
@@ -202,7 +202,7 @@ default:
       - 0.5125
       - 0.5175
       - 0.5025
-      - 0.4775
+      - .4 # 0.4775
     work_times:
       - 46
       - 47

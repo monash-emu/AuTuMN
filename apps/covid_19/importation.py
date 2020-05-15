@@ -54,8 +54,7 @@ def set_tv_importation_as_birth_rates(model, importation_times, importation_n_ca
     """
     # inflate importation numbers to account for undetected cases (assumed to be asymptomatic or sympt non hospital)
     prop_detected = model.parameters['symptomatic_props_imported'] *\
-                    (model.parameters['prop_isolated_among_symptomatic_imported'] +
-                     model.parameters['hospital_props_imported'])
+                    model.parameters['prop_detected_among_symptomatic_imported']
     importation_n_cases = [n / prop_detected for n in importation_n_cases]
 
     # scale-up curve for importation numbers

@@ -113,8 +113,7 @@ def load_params(app_dir: str, application=None):
             [i_prop * default["ifr_multiplier"] for i_prop in default["infection_fatality_props"]]
         if default["hospital_inflate"]:
             default["hospital_props"] = \
-                [min(h_prop * default["ifr_multiplier"], 1. - default['prop_isolated_among_symptomatic']) for
-                 h_prop in default["hospital_props"]]
+                [h_prop * default["ifr_multiplier"] for h_prop in default["hospital_props"]]
     # Calculate presymptomatic period from exposed period and relative proportion of that period spent infectious
     if "prop_exposed_presympt" in default:
         default["compartment_periods"][Compartment.EXPOSED] = default["compartment_periods"][

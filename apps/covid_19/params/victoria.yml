@@ -15,7 +15,7 @@ default:
   non_sympt_infect_multiplier: .464939
 
   young_reduced_susceptibility: .4484674
-  prop_isolated_among_symptomatic: .8035
+  prop_detected_among_symptomatic: .8035
   npi_effectiveness:
     other_locations: .9697829
 

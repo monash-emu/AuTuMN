@@ -117,9 +117,8 @@ def calculate_notifications_covid(model, time):
             notifications += value[this_time_index]
 
     if model.parameters['implement_importation'] and model.parameters['imported_cases_explict']:
-        prop_imported_detected = model.parameters['symptomatic_props_imported'] * \
-                        (model.parameters['prop_isolated_among_symptomatic_imported'] +
-                         model.parameters['hospital_props_imported'])
+        prop_imported_detected = model.parameters['symptomatic_props_imported'] *\
+                                 model.parameters['prop_detected_among_symptomatic_imported']
         notifications += model.time_variants["crude_birth_rate"](time) *\
                           sum(model.compartment_values) * prop_imported_detected
 

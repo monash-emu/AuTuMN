@@ -45,7 +45,7 @@ PAR_PRIORS = [
     },
     # Programmatic parameters
     {
-        "param_name": "prop_isolated_among_symptomatic",
+        "param_name": "prop_detected_among_symptomatic",
         "distribution": "beta",
         "distri_mean": .85,
         "distri_ci": [.8, .9]

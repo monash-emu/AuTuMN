@@ -11,7 +11,7 @@ PAR_PRIORS = [
     {
         'param_name': 'start_time',
         'distribution': 'uniform',
-        'distri_params': [10., 40.]},
+        'distri_params': [0., 40.]},
     {
         "param_name": "compartment_periods_incubation",
         "distribution": "gamma",
@@ -96,4 +96,4 @@ def run_mys_calibration_chain(max_seconds: int, run_id: int):
 
 
 if __name__ == "__main__":
-    run_mys_calibration_chain(60*60, 1)  # first argument only relevant for autumn_mcmc mode (time limit in seconds)
+    run_mys_calibration_chain(4000 * 17, 0)  # first argument only relevant for autumn_mcmc mode (time limit in seconds)

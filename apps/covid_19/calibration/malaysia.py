@@ -33,8 +33,14 @@ PAR_PRIORS = [
     {
         "param_name": "tv_detection_sigma",
         "distribution": "beta",
-        "distri_mean": .2,
-        "distri_ci": [.1, .4]
+        "distri_mean": .15,
+        "distri_ci": [.01, .3]
+    },
+    {
+        "param_name": "tv_detection_b",
+        "distribution": "beta",
+        "distri_mean": .075,
+        "distri_ci": [.05, .1]
     },
     # Add negative binomial over-dispersion parameters
     {
@@ -90,4 +96,4 @@ def run_mys_calibration_chain(max_seconds: int, run_id: int):
 
 
 if __name__ == "__main__":
-    run_mys_calibration_chain(60*60, 0)  # first argument only relevant for autumn_mcmc mode (time limit in seconds)
+    run_mys_calibration_chain(60*60, 1)  # first argument only relevant for autumn_mcmc mode (time limit in seconds)

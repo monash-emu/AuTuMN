@@ -7,6 +7,7 @@ import numpy
 import itertools
 import hashlib
 import json
+import types
 from datetime import date
 from scipy.stats import beta, gamma
 from scipy.optimize import minimize
@@ -338,3 +339,15 @@ def find_distribution_params_from_mean_and_ci(distribution, mean, ci, ci_width=.
         raise ValueError(distribution + " distribution is not supported for the moment")
 
     return params
+
+
+def copy_function(f, name=None):
+    '''
+    return a function with same code, globals, defaults, closure, and
+    name (or provide a new name)
+    '''
+    fn = types.FunctionType(f.__code__, f.__globals__, name or f.__name__,
+        f.__defaults__, f.__closure__)
+    # in case f was given attrs (note this dict is a shallow copy):
+    fn.__dict__.update(f.__dict__)
+    return fn

@@ -1,6 +1,8 @@
 import numpy as np
 import math
 from scipy import stats
+import os
+from autumn.db import Database
 
 
 def find_decent_starting_point(prior_dict):
@@ -69,3 +71,32 @@ def calculate_prior(prior_dict, x, log=True):
 
 def raise_error_unsupported_prior(distribution):
     raise ValueError(distribution + "distribution not supported in autumn_mcmc at the moment")
+
+
+def collect_map_estimate(calib_dirpath: str):
+    """
+    Read all MCMC outputs found in mcmc_db_folder and print the map parameter values.
+    :return: dict of parameters
+    """
+    mcmc_tables = []
+    db_paths = [
+        os.path.join(calib_dirpath, f) for f in os.listdir(calib_dirpath) if f.endswith(".db")
+    ]
+    for db_path in db_paths:
+        db = Database(db_path)
+        mcmc_tables.append(db.db_query("mcmc_run").sort_values(by="loglikelihood",ascending=False))
+
+    best_chain_index = np.argmax([mcmc_tables[i]['loglikelihood'][0] for i in range(len(mcmc_tables))])
+    non_param_cols = ["idx", "Scenario", "loglikelihood", "accept"]
+    param_list = [c for c in mcmc_tables[0].columns if c not in non_param_cols]
+    map_estimates = {}
+    for param in param_list:
+        map_estimates[param] = mcmc_tables[best_chain_index][param][0]
+    return map_estimates
+
+
+if __name__ == "__main__":
+    calib_dir = os.path.join("../../data", "covid_malaysia", "calibration-covid_malaysia-6ded1afa-15-05-2020")
+    map_estimates = collect_map_estimate(calib_dir)
+    for key, value in map_estimates.items():
+        print(key + ": " + str(value))

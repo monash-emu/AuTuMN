@@ -84,14 +84,14 @@ def collect_map_estimate(calib_dirpath: str):
     ]
     for db_path in db_paths:
         db = Database(db_path)
-        mcmc_tables.append(db.db_query("mcmc_run").sort_values(by="loglikelihood",ascending=False))
+        mcmc_tables.append(db.db_query("mcmc_run").sort_values(by="loglikelihood", ascending=False))
 
-    best_chain_index = np.argmax([mcmc_tables[i]['loglikelihood'][0] for i in range(len(mcmc_tables))])
+    best_chain_index = np.argmax([mcmc_tables[i]['loglikelihood'].iloc[0] for i in range(len(mcmc_tables))])
     non_param_cols = ["idx", "Scenario", "loglikelihood", "accept"]
     param_list = [c for c in mcmc_tables[0].columns if c not in non_param_cols]
     map_estimates = {}
     for param in param_list:
-        map_estimates[param] = mcmc_tables[best_chain_index][param][0]
+        map_estimates[param] = mcmc_tables[best_chain_index][param].iloc[0]
     return map_estimates
 
 

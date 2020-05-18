@@ -68,7 +68,7 @@ class Calibration:
         model_parameters={},
         start_time_range=None,
         record_rejected_outputs=False,
-        run_extra_scenarios=True
+        run_extra_scenarios=True,
     ):
         self.model_name = model_name
         self.model_builder = model_builder  # a function that builds a new model without running it
@@ -343,15 +343,19 @@ class Calibration:
                                     - math.log(math.factorial(data[i]))
                                 )
                         elif target["loglikelihood_distri"] == "negative_binomial":
-                            assert key + '_dispersion_param' in self.param_list
+                            assert key + "_dispersion_param" in self.param_list
                             # the dispersion parameter varies during the MCMC. We need to retrieve its value
-                            n = [params[i] for i in range(len(params)) if self.param_list[i] == key + '_dispersion_param'][0]
+                            n = [
+                                params[i]
+                                for i in range(len(params))
+                                if self.param_list[i] == key + "_dispersion_param"
+                            ][0]
                             for i in range(len(data)):
                                 # We use the parameterisation based on mean and variance and assume define var=mean**delta
                                 mu = model_output[i]
                                 # work out parameter p to match the distribution mean with the model output
                                 p = mu / (mu + n)
-                                ll += stats.nbinom.logpmf(data[i], n, 1. - p)
+                                ll += stats.nbinom.logpmf(data[i], n, 1.0 - p)
                         else:
                             raise ValueError("Distribution not supported in loglikelihood_distri")
 
@@ -593,16 +597,16 @@ class Calibration:
         :param grid_info: list of dictionaries
             containing the list of parameters to vary, their range and the number of different values per parameter
         """
-        new_param_list = [par_dict['param_name'] for par_dict in grid_info]
+        new_param_list = [par_dict["param_name"] for par_dict in grid_info]
         assert all([p in self.param_list for p in new_param_list])
 
         self.param_list = new_param_list
 
         param_values = []
         for i, param_name in enumerate(self.param_list):
-            param_values.append(list(np.linspace(
-                grid_info[i]['lower'], grid_info[i]['upper'], grid_info[i]['n']
-            )))
+            param_values.append(
+                list(np.linspace(grid_info[i]["lower"], grid_info[i]["upper"], grid_info[i]["n"]))
+            )
 
         all_combinations = list(product(*param_values))
         print("Total number of iterations: " + str(len(all_combinations)))
@@ -653,7 +657,7 @@ class Calibration:
         """
         logp = 0.0
         for i, param_name in enumerate(self.param_list):
-            prior_dict = [d for d in self.priors if d['param_name'] == param_name][0]
+            prior_dict = [d for d in self.priors if d["param_name"] == param_name][0]
             logp += calculate_prior(prior_dict, params[i], log=True)
 
         return logp

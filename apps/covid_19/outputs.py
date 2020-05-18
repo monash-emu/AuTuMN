@@ -7,14 +7,16 @@ from autumn.constants import Compartment
 
 def find_incidence_outputs(parameters):
     last_presympt = (
-        Compartment.PRESYMPTOMATIC + "_" + str(parameters["n_compartment_repeats"][Compartment.PRESYMPTOMATIC])
+        Compartment.PRESYMPTOMATIC
+        + "_"
+        + str(parameters["n_compartment_repeats"][Compartment.PRESYMPTOMATIC])
         if parameters["n_compartment_repeats"][Compartment.PRESYMPTOMATIC] > 1
         else Compartment.PRESYMPTOMATIC
     )
     first_infectious = (
-        Compartment.EARLY_INFECTIOUS + "_1" if
-        parameters["n_compartment_repeats"][Compartment.EARLY_INFECTIOUS] > 1 else
-        Compartment.EARLY_INFECTIOUS
+        Compartment.EARLY_INFECTIOUS + "_1"
+        if parameters["n_compartment_repeats"][Compartment.EARLY_INFECTIOUS] > 1
+        else Compartment.EARLY_INFECTIOUS
     )
     return {
         "incidence": {
@@ -112,22 +114,28 @@ def calculate_notifications_covid(model, time):
     notifications = 0.0
     this_time_index = model.times.index(time)
     for key, value in model.derived_outputs.items():
-        if "progressX" in key and \
-                any([stratum in key for stratum in model.all_stratifications["clinical"][2:]]):
+        if "progressX" in key and any(
+            [stratum in key for stratum in model.all_stratifications["clinical"][2:]]
+        ):
             notifications += value[this_time_index]
 
-    if model.parameters['implement_importation'] and model.parameters['imported_cases_explict']:
-        prop_imported_detected = model.parameters['symptomatic_props_imported'] *\
-                                 model.parameters['prop_detected_among_symptomatic_imported']
-        notifications += model.time_variants["crude_birth_rate"](time) *\
-                          sum(model.compartment_values) * prop_imported_detected
+    if model.parameters["implement_importation"] and model.parameters["imported_cases_explict"]:
+        prop_imported_detected = (
+            model.parameters["symptomatic_props_imported"]
+            * model.parameters["prop_detected_among_symptomatic_imported"]
+        )
+        notifications += (
+            model.time_variants["crude_birth_rate"](time)
+            * sum(model.compartment_values)
+            * prop_imported_detected
+        )
 
     return notifications
 
 
 def calculate_incidence_icu_covid(model, time):
     this_time_index = model.times.index(time)
-    incidence_icu = 0.
+    incidence_icu = 0.0
     for key, value in model.derived_outputs.items():
         if "incidence" in find_name_components(key) and "clinical_icu" in find_name_components(key):
             incidence_icu += value[this_time_index]

@@ -90,7 +90,6 @@ def build_model(country: str, params: dict, update_params={}):
             "total_infectious"
         ] * (1.0 - params["prop_infectious_early"])
 
-
     model_parameters = preprocess_params(params, update_params)
 
     # Get population size (by age if age-stratified)

@@ -68,4 +68,3 @@ def split_multiple_parameters(parameters, strata):
     for param in parameters:
         adjustments.update(split_parameter(param, strata))
     return adjustments
-

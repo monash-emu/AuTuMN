@@ -52,7 +52,11 @@ NATURAL_HISTORY_FLOWS = [
         "origin": Compartment.EARLY_INFECTIOUS,
         "to": Compartment.RECOVERED,
     },
-    {"type": Flow.COMPARTMENT_DEATH, "parameter": "infect_death", "origin": Compartment.EARLY_INFECTIOUS},
+    {
+        "type": Flow.COMPARTMENT_DEATH,
+        "parameter": "infect_death",
+        "origin": Compartment.EARLY_INFECTIOUS,
+    },
 ]
 
 DENSITY_INFECTION_FLOWS = [
@@ -95,7 +99,7 @@ ACF_LTBI_FLOWS = [
 ]
 
 CASE_DETECTION_FLOWS = [
-    {"type": Flow.STANDARD, "parameter": "case_detection", "origin": Compartment.EARLY_INFECTIOUS, }
+    {"type": Flow.STANDARD, "parameter": "case_detection", "origin": Compartment.EARLY_INFECTIOUS,}
 ]
 
 LATENCY_REINFECTION = [

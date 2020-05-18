@@ -114,29 +114,46 @@ def plot_posterior(
     )
 
 
-def plot_loglikelihood_vs_parameter(plotter: Plotter, mcmc_tables: List[pd.DataFrame], param_name: str, burn_in=0):
+def plot_loglikelihood_vs_parameter(
+    plotter: Plotter, mcmc_tables: List[pd.DataFrame], param_name: str, burn_in=0
+):
     """
     Plots the loglikelihood against parameter values.
     """
-    ll_vals = mcmc_tables[0]['loglikelihood']
+    ll_vals = mcmc_tables[0]["loglikelihood"]
     p_vals = mcmc_tables[0][param_name]
     log_ll_vals = [-log(-x) for x in ll_vals]
     fig, axis, _, _, _ = plotter.get_figure()
-    axis.plot(p_vals[burn_in:], log_ll_vals[burn_in:], '.')
+    axis.plot(p_vals[burn_in:], log_ll_vals[burn_in:], ".")
     axis.set_xlabel(param_name)
-    axis.set_ylabel('-log(-loglikelihood)')
+    axis.set_ylabel("-log(-loglikelihood)")
     plotter.save_figure(
-        fig, filename=f"likelihood against {param_name}", title_text=f"likelihood against {param_name}"
+        fig,
+        filename=f"likelihood against {param_name}",
+        title_text=f"likelihood against {param_name}",
     )
 
 
-def plot_timeseries_with_uncertainty(plotter: Plotter, mcmc_tables: List[pd.DataFrame],
-                                     output_tables: List[pd.DataFrame], derived_output_tables: List[pd.DataFrame],
-                                     output_name: str, burn_in=0, plot_config={}):
+def plot_timeseries_with_uncertainty(
+    plotter: Plotter,
+    mcmc_tables: List[pd.DataFrame],
+    output_tables: List[pd.DataFrame],
+    derived_output_tables: List[pd.DataFrame],
+    output_name: str,
+    burn_in=0,
+    plot_config={},
+):
 
     # find the smallest time that is commun to all accepted runs
-    if 'start_time' in mcmc_tables[0].columns:
-        t_min = round(max([max(mcmc_tables[i].start_time[mcmc_tables[i].accept == 1]) for i in range(len(mcmc_tables))]))
+    if "start_time" in mcmc_tables[0].columns:
+        t_min = round(
+            max(
+                [
+                    max(mcmc_tables[i].start_time[mcmc_tables[i].accept == 1])
+                    for i in range(len(mcmc_tables))
+                ]
+            )
+        )
     else:
         t_min = output_tables[0].times[0]
     t_max = list(output_tables[0].times)[-1]
@@ -148,19 +165,23 @@ def plot_timeseries_with_uncertainty(plotter: Plotter, mcmc_tables: List[pd.Data
         output_list = []
         for i_chain in range(len(mcmc_tables)):
             for run_id, w in weights[i_chain].items():
-                output_list += [float(derived_output_tables[i_chain][output_name][
-                                       (derived_output_tables[i_chain].idx == run_id) &
-                                       (derived_output_tables[i_chain].times == time)
-                                   ])] * w
-        quantiles[i, :] = np.quantile(output_list, [.025, .25, .5, .75, .975])
+                output_list += [
+                    float(
+                        derived_output_tables[i_chain][output_name][
+                            (derived_output_tables[i_chain].idx == run_id)
+                            & (derived_output_tables[i_chain].times == time)
+                        ]
+                    )
+                ] * w
+        quantiles[i, :] = np.quantile(output_list, [0.025, 0.25, 0.5, 0.75, 0.975])
 
     fig, axis, _, _, _ = plotter.get_figure()
-    axis.fill_between(times, quantiles[:, 0], quantiles[:, 4], facecolor='lightsteelblue')
-    axis.fill_between(times, quantiles[:, 1], quantiles[:, 3], facecolor='cornflowerblue')
-    axis.plot(times, quantiles[:, 2], color='navy')
+    axis.fill_between(times, quantiles[:, 0], quantiles[:, 4], facecolor="lightsteelblue")
+    axis.fill_between(times, quantiles[:, 1], quantiles[:, 3], facecolor="cornflowerblue")
+    axis.plot(times, quantiles[:, 2], color="navy")
 
     try:
-        output_config = next(o for o in plot_config['outputs_to_plot'] if o["name"] == output_name)
+        output_config = next(o for o in plot_config["outputs_to_plot"] if o["name"] == output_name)
     except StopIteration:
         output_config = {"name": output_name, "target_values": [], "target_times": []}
 
@@ -168,12 +189,10 @@ def plot_timeseries_with_uncertainty(plotter: Plotter, mcmc_tables: List[pd.Data
     target_times = output_config["target_times"]
     _plot_targets_to_axis(axis, target_values, target_times, on_uncertainty_plot=True)
 
-    axis.set_xlabel('time')
+    axis.set_xlabel("time")
     axis.set_ylabel(output_name)
     axis.set_xlim((t_min, t_max))
-    plotter.save_figure(
-        fig, filename=f"{output_name} uncertainty", title_text=f"{output_name}"
-    )
+    plotter.save_figure(fig, filename=f"{output_name} uncertainty", title_text=f"{output_name}")
 
 
 def _overwrite_non_accepted_mcmc_runs(mcmc_tables: List[pd.DataFrame], column_name: str):
@@ -193,7 +212,7 @@ def _overwrite_non_accepted_mcmc_runs(mcmc_tables: List[pd.DataFrame], column_na
 def collect_iteration_weights(mcmc_tables: List[pd.DataFrame], burn_in=0):
     weights = []
     for i_chain in range(len(mcmc_tables)):
-        mcmc_tables[i_chain].sort_values(['idx'])
+        mcmc_tables[i_chain].sort_values(["idx"])
         weight_dict = {}
         last_run_id = None
         for i_row, run_id in enumerate(mcmc_tables[i_chain].idx):
@@ -339,8 +358,9 @@ def _plot_outputs_to_axis(axis, scenario: Scenario, name: str, color_idx=0, alph
         logger.error("Could not plot output named %s - non-list data format.", name)
 
 
-def _plot_targets_to_axis(axis, target_values: List[float], target_times: List[int],
-                          on_uncertainty_plot=False):
+def _plot_targets_to_axis(
+    axis, target_values: List[float], target_times: List[int], on_uncertainty_plot=False
+):
     """
     Plot output value calibration targets as points on the axis.
     """

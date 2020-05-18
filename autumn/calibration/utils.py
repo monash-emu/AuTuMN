@@ -6,25 +6,25 @@ from autumn.db import Database
 
 
 def find_decent_starting_point(prior_dict):
-        """
+    """
         Find an MCMC parameter initial value, using the mean of the specified prior
         :param prior_dict:
         :return: float (starting point)
         """
-        if prior_dict["distribution"] == "uniform":
-            x = np.mean(prior_dict["distri_params"])
-        elif prior_dict["distribution"] == "beta":
-            a = prior_dict["distri_params"][0]
-            b = prior_dict["distri_params"][1]
-            x = a / (a + b)
-        elif prior_dict["distribution"] == "gamma":
-            shape = prior_dict["distri_params"][0]
-            scale = prior_dict["distri_params"][1]
-            x = shape * scale
-        else:
-            raise_error_unsupported_prior(prior_dict["distribution"])
+    if prior_dict["distribution"] == "uniform":
+        x = np.mean(prior_dict["distri_params"])
+    elif prior_dict["distribution"] == "beta":
+        a = prior_dict["distri_params"][0]
+        b = prior_dict["distri_params"][1]
+        x = a / (a + b)
+    elif prior_dict["distribution"] == "gamma":
+        shape = prior_dict["distri_params"][0]
+        scale = prior_dict["distri_params"][1]
+        x = shape * scale
+    else:
+        raise_error_unsupported_prior(prior_dict["distribution"])
 
-        return x
+    return x
 
 
 def calculate_prior(prior_dict, x, log=True):
@@ -38,16 +38,16 @@ def calculate_prior(prior_dict, x, log=True):
     """
     if prior_dict["distribution"] == "uniform":
         if log:
-            y = math.log(
-                1.0 / (prior_dict["distri_params"][1] - prior_dict["distri_params"][0])
-            )
+            y = math.log(1.0 / (prior_dict["distri_params"][1] - prior_dict["distri_params"][0]))
         else:
             y = 1.0 / (prior_dict["distri_params"][1] - prior_dict["distri_params"][0])
     elif prior_dict["distribution"] == "lognormal":
         mu = prior_dict["distri_params"][0]
         sd = prior_dict["distri_params"][1]
         if log:
-            y = stats.lognorm.logpdf(x=x, s=sd, scale=math.exp(mu))  # see documentation of stats.lognorm for scale
+            y = stats.lognorm.logpdf(
+                x=x, s=sd, scale=math.exp(mu)
+            )  # see documentation of stats.lognorm for scale
         else:
             y = stats.lognorm.pdf(x=x, s=sd, scale=math.exp(mu))
     elif prior_dict["distribution"] == "beta":
@@ -61,9 +61,9 @@ def calculate_prior(prior_dict, x, log=True):
         shape = prior_dict["distri_params"][0]
         scale = prior_dict["distri_params"][1]
         if log:
-            y = stats.gamma.logpdf(x, shape, 0., scale)
+            y = stats.gamma.logpdf(x, shape, 0.0, scale)
         else:
-            y = stats.gamma.pdf(x, shape, 0., scale)
+            y = stats.gamma.pdf(x, shape, 0.0, scale)
     else:
         raise_error_unsupported_prior()
     return float(y)
@@ -86,7 +86,9 @@ def collect_map_estimate(calib_dirpath: str):
         db = Database(db_path)
         mcmc_tables.append(db.db_query("mcmc_run").sort_values(by="loglikelihood", ascending=False))
 
-    best_chain_index = np.argmax([mcmc_tables[i]['loglikelihood'].iloc[0] for i in range(len(mcmc_tables))])
+    best_chain_index = np.argmax(
+        [mcmc_tables[i]["loglikelihood"].iloc[0] for i in range(len(mcmc_tables))]
+    )
     non_param_cols = ["idx", "Scenario", "loglikelihood", "accept"]
     param_list = [c for c in mcmc_tables[0].columns if c not in non_param_cols]
     map_estimates = {}
@@ -96,7 +98,9 @@ def collect_map_estimate(calib_dirpath: str):
 
 
 if __name__ == "__main__":
-    calib_dir = os.path.join("../../data", "covid_malaysia", "calibration-covid_malaysia-6ded1afa-15-05-2020")
+    calib_dir = os.path.join(
+        "../../data", "covid_malaysia", "calibration-covid_malaysia-6ded1afa-15-05-2020"
+    )
     map_estimates = collect_map_estimate(calib_dir)
     for key, value in map_estimates.items():
         print(key + ": " + str(value))

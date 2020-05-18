@@ -85,7 +85,7 @@ def apply_age_specific_contact_multipliers(mixing_matrix, age_specific_multiplie
     """
     mixing_multipliers_matrix = np.ones((16, 16))
     for age_index, multiplier in age_specific_multipliers.items():
-        assert(0 <= age_index <= 15)
+        assert 0 <= age_index <= 15
         mixing_multipliers_matrix[age_index, :] *= multiplier
         mixing_multipliers_matrix[:, age_index] *= multiplier
     return update_mixing_with_multipliers(mixing_matrix, mixing_multipliers_matrix)
@@ -107,7 +107,7 @@ def get_all_prem_countries():
     return sheet_names
 
 
-def get_total_contact_rates_by_age(mixing_matrix, direction='horizontal'):
+def get_total_contact_rates_by_age(mixing_matrix, direction="horizontal"):
     """
     Sum the contact-rates by age group
     :param mixing_matrix: the input mixing matrix
@@ -115,10 +115,13 @@ def get_total_contact_rates_by_age(mixing_matrix, direction='horizontal'):
     :return: dict
         keys are the age categories and values are the aggregated contact rates
     """
-    assert direction in ['horizontal', 'vertical'], "direction should be in ['horizontal', 'vertical']"
+    assert direction in [
+        "horizontal",
+        "vertical",
+    ], "direction should be in ['horizontal', 'vertical']"
     aggregated_contact_rates = {}
     for i in range(16):
-        if direction == 'horizontal':
+        if direction == "horizontal":
             aggregated_contact_rates[str(5 * i)] = mixing_matrix[i, :].sum()
         else:
             aggregated_contact_rates[str(5 * i)] = mixing_matrix[:, i].sum()

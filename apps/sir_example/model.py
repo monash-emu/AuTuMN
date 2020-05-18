@@ -21,20 +21,22 @@ def build_model(country: str, params: dict, update_params={}):
 
     flows = [
         {
-            'type': 'infection_frequency',
-            'parameter': 'contact_rate',
-            'origin': Compartment.SUSCEPTIBLE,
-            'to': Compartment.INFECTIOUS
+            "type": "infection_frequency",
+            "parameter": "contact_rate",
+            "origin": Compartment.SUSCEPTIBLE,
+            "to": Compartment.INFECTIOUS,
         },
         {
-            'type': 'standard_flows',
-            'parameter': 'recovery_rate',
-            'origin': Compartment.INFECTIOUS,
-            'to': Compartment.RECOVERED
+            "type": "standard_flows",
+            "parameter": "recovery_rate",
+            "origin": Compartment.INFECTIOUS,
+            "to": Compartment.RECOVERED,
         },
     ]
 
-    integration_times = get_model_times_from_inputs(round(params["start_time"]), params["end_time"], params["time_step"])
+    integration_times = get_model_times_from_inputs(
+        round(params["start_time"]), params["end_time"], params["time_step"]
+    )
 
     init_conditions = {Compartment.INFECTIOUS: 1}
 

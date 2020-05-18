@@ -3,16 +3,12 @@
 scenario_start_time: 50
 
 # Parameters used to build a general model of COVID-19 disease for application to Australia or internationally
-default:
-  country: null
-  iso3: null
+country: null
+iso3: null
 
-  start_time: 0.
-  end_time: 100.
-  time_step: 1
+start_time: 0.
+end_time: 100.
+time_step: 1
 
-  contact_rate: 0.3
-  recovery_rate: 1.0
-
-scenarios: {}
-# N.B: Scenario keys have to be sequential integers from one, or won't be compatible with dashboards
+contact_rate: 0.3
+recovery_rate: 1.0

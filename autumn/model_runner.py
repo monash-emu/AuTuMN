@@ -10,6 +10,7 @@ from autumn.post_processing.processor import post_process, validate_post_process
 from autumn import constants
 from autumn.plots import save_flows_sheets, plot_scenarios, validate_plot_config
 from autumn.tool_kit.timer import Timer
+from autumn.tool_kit.serializer import serialize_model
 from autumn.tool_kit.scenarios import Scenario
 from autumn.tool_kit.utils import (
     get_git_branch,
@@ -78,10 +79,13 @@ def build_model_runner(
             baseline_scenario = scenarios[0]
             baseline_scenario.run()
             baseline_model = baseline_scenario.model
+            save_serialized_model(baseline_model, output_dir, "baseline")
 
             # Run all the other scenarios
             for scenario in scenarios[1:]:
                 scenario.run(base_model=baseline_model)
+                name = f"scenario-{scenario.idx}"
+                save_serialized_model(scenario.model, output_dir, name)
 
         with Timer("Saving model outputs to the database"):
             models = [s.model for s in scenarios]
@@ -113,3 +117,12 @@ def build_model_runner(
                 save_flows_sheets(baseline_model, output_dir)
 
     return run_model
+
+
+def save_serialized_model(model, output_dir: str, name: str):
+    model_path = os.path.join(output_dir, "models")
+    os.makedirs(model_path, exist_ok=True)
+    model_filepath = os.path.join(model_path, f"{name}.yml")
+    model_data = serialize_model(model)
+    with open(model_filepath, "w") as f:
+        yaml.dump(model_data, f)

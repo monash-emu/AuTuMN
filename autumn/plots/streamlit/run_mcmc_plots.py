@@ -21,19 +21,27 @@ def run_mcmc_plots():
         st.write("No calibration folder found")
         return
 
+    plot_config = utils.load_plot_config(app_dirname)
+
     # Load MCMC tables
     mcmc_tables = []
+    output_tables = []
+    derived_output_tables = []
     db_paths = [
         os.path.join(calib_dirpath, f) for f in os.listdir(calib_dirpath) if f.endswith(".db")
     ]
     for db_path in db_paths:
         db = Database(db_path)
         mcmc_tables.append(db.db_query("mcmc_run"))
-
+        output_tables.append(db.db_query("outputs"))
+        derived_output_tables.append(db.db_query("derived_outputs"))
     plotter = StreamlitPlotter({})
     plot_type = st.sidebar.selectbox("Select plot type", list(PLOT_FUNCS.keys()))
     plot_func = PLOT_FUNCS[plot_type]
-    plot_func(plotter, mcmc_tables)
+    if plot_type == "Predictions":
+        plot_func(plotter, mcmc_tables, output_tables, derived_output_tables, plot_config)
+    else:
+        plot_func(plotter, mcmc_tables)
 
 
 def plot_mcmc_parameter_trace(plotter: StreamlitPlotter, mcmc_tables: List[pd.DataFrame]):
@@ -61,11 +69,22 @@ def plot_loglikelihood_vs_parameter(plotter: StreamlitPlotter, mcmc_tables: List
     chosen_param = st.sidebar.selectbox("Select parameter", param_options)
     plots.plot_loglikelihood_vs_parameter(plotter, mcmc_tables, chosen_param, burn_in)
 
+
+def plot_timeseries_with_uncertainty(plotter: StreamlitPlotter, mcmc_tables: List[pd.DataFrame],
+                                     output_tables: List[pd.DataFrame], derived_output_tables: List[pd.DataFrame],
+                                     plot_config: dict):
+    burn_in = st.sidebar.slider("Burn-in", 0, len(mcmc_tables[0]), 0)
+    chosen_output = 'notifications'  # to be replaced with selector option
+
+    plots.plot_timeseries_with_uncertainty(plotter, mcmc_tables, output_tables, derived_output_tables, chosen_output,
+                                           burn_in, plot_config)
+
 PLOT_FUNCS = {
     "Posterior distributions": plot_posterior,
     "Loglikelihood trace": plot_loglikelihood_trace,
     "Loglikelihood vs param": plot_loglikelihood_vs_parameter,
     "Parameter trace": plot_mcmc_parameter_trace,
+    "Predictions": plot_timeseries_with_uncertainty,
 }
 
 

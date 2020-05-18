@@ -129,6 +129,53 @@ def plot_loglikelihood_vs_parameter(plotter: Plotter, mcmc_tables: List[pd.DataF
         fig, filename=f"likelihood against {param_name}", title_text=f"likelihood against {param_name}"
     )
 
+
+def plot_timeseries_with_uncertainty(plotter: Plotter, mcmc_tables: List[pd.DataFrame],
+                                     output_tables: List[pd.DataFrame], derived_output_tables: List[pd.DataFrame],
+                                     output_name: str, burn_in=0, plot_config={}):
+
+    # find the smallest time that is commun to all accepted runs
+    if 'start_time' in mcmc_tables[0].columns:
+        t_min = round(max([max(mcmc_tables[i].start_time[mcmc_tables[i].accept == 1]) for i in range(len(mcmc_tables))]))
+    else:
+        t_min = output_tables[0].times[0]
+    t_max = list(output_tables[0].times)[-1]
+
+    weights = collect_iteration_weights(mcmc_tables, burn_in)  # discarding burned iterations
+    times = list(np.linspace(t_min, t_max, num=t_max - t_min + 1))
+    quantiles = np.zeros((len(times), 5))
+    for i, time in enumerate(times):
+        output_list = []
+        for i_chain in range(len(mcmc_tables)):
+            for run_id, w in weights[i_chain].items():
+                output_list += [float(derived_output_tables[i_chain][output_name][
+                                       (derived_output_tables[i_chain].idx == run_id) &
+                                       (derived_output_tables[i_chain].times == time)
+                                   ])] * w
+        quantiles[i, :] = np.quantile(output_list, [.025, .25, .5, .75, .975])
+
+    fig, axis, _, _, _ = plotter.get_figure()
+    axis.fill_between(times, quantiles[:, 0], quantiles[:, 4], facecolor='lightsteelblue')
+    axis.fill_between(times, quantiles[:, 1], quantiles[:, 3], facecolor='cornflowerblue')
+    axis.plot(times, quantiles[:, 2], color='navy')
+
+    try:
+        output_config = next(o for o in plot_config['outputs_to_plot'] if o["name"] == output_name)
+    except StopIteration:
+        output_config = {"name": output_name, "target_values": [], "target_times": []}
+
+    target_values = output_config["target_values"]
+    target_times = output_config["target_times"]
+    _plot_targets_to_axis(axis, target_values, target_times, on_uncertainty_plot=True)
+
+    axis.set_xlabel('time')
+    axis.set_ylabel(output_name)
+    axis.set_xlim((t_min, t_max))
+    plotter.save_figure(
+        fig, filename=f"{output_name} uncertainty", title_text=f"{output_name}"
+    )
+
+
 def _overwrite_non_accepted_mcmc_runs(mcmc_tables: List[pd.DataFrame], column_name: str):
     """
     Count non-accepted rows in a MCMC trace as the last accepted row.
@@ -141,6 +188,26 @@ def _overwrite_non_accepted_mcmc_runs(mcmc_tables: List[pd.DataFrame], column_na
                 prev_val = table_df.at[idx, column_name]
             else:
                 table_df.at[idx, column_name] = prev_val
+
+
+def collect_iteration_weights(mcmc_tables: List[pd.DataFrame], burn_in=0):
+    weights = []
+    for i_chain in range(len(mcmc_tables)):
+        mcmc_tables[i_chain].sort_values(['idx'])
+        weight_dict = {}
+        last_run_id = None
+        for i_row, run_id in enumerate(mcmc_tables[i_chain].idx):
+            if int(run_id[4:]) < burn_in:
+                continue
+            if mcmc_tables[i_chain].accept[i_row] == 1:
+                weight_dict[run_id] = 1
+                last_run_id = run_id
+            elif last_run_id is None:
+                continue
+            else:
+                weight_dict[last_run_id] += 1
+        weights.append(weight_dict)
+    return weights
 
 
 def plot_agg_compartments_multi_scenario(
@@ -272,7 +339,8 @@ def _plot_outputs_to_axis(axis, scenario: Scenario, name: str, color_idx=0, alph
         logger.error("Could not plot output named %s - non-list data format.", name)
 
 
-def _plot_targets_to_axis(axis, target_values: List[float], target_times: List[int]):
+def _plot_targets_to_axis(axis, target_values: List[float], target_times: List[int],
+                          on_uncertainty_plot=False):
     """
     Plot output value calibration targets as points on the axis.
     """
@@ -288,9 +356,11 @@ def _plot_targets_to_axis(axis, target_values: List[float], target_times: List[i
         else:
             # Plot a single point estimate
             value = values[0]
-            marker_size = 30.0
-            axis.scatter(time, value, marker="o", color="red", s=30)
-            axis.scatter(time, value, marker="o", color="white", s=10)
+            if on_uncertainty_plot:
+                axis.scatter(time, value, marker="o", color="black", s=10)
+            else:
+                axis.scatter(time, value, marker="o", color="red", s=30)
+                axis.scatter(time, value, marker="o", color="white", s=10)
 
 
 def plot_exponential_growth_rate(plotter: Plotter, model: StratifiedModel):

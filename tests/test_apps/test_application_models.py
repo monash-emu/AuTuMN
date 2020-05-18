@@ -1,6 +1,7 @@
 import pytest
 from summer.model import StratifiedModel
 
+from autumn.tool_kit.serializer import serialize_model
 from apps import mongolia, covid_19, marshall_islands
 
 
@@ -26,6 +27,8 @@ def test_build_models(name, build_model, params):
     """
     model = build_model(params["default"])
     assert type(model) is StratifiedModel
+    model_data = serialize_model(model)
+    # TODO: Actually check these
 
 
 @pytest.mark.github_only

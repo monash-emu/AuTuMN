@@ -30,8 +30,16 @@ from .outputs import (
     calculate_notifications_covid,
     calculate_incidence_icu_covid,
 )
-from .importation import set_tv_importation_rate, set_tv_importation_as_birth_rates, importation_props_by_age
-from .matrices import build_covid_matrices, apply_npi_effectiveness, update_mixing_parameters_for_prayers
+from .importation import (
+    set_tv_importation_rate,
+    set_tv_importation_as_birth_rates,
+    importation_props_by_age,
+)
+from .matrices import (
+    build_covid_matrices,
+    apply_npi_effectiveness,
+    update_mixing_parameters_for_prayers,
+)
 from .preprocess import preprocess_params
 
 # Database locations
@@ -50,6 +58,39 @@ def build_model(country: str, params: dict, update_params={}):
     :return: StratifiedModel
         The final model with all parameters and stratifications
     """
+    # Revise any dates for mixing matrices submitted in YMD format
+    params["mixing"] = revise_mixing_data_for_dicts(params["mixing"])
+    revise_dates_if_ymd(params["mixing"])
+
+    # Adjust infection for relative all-cause mortality compared to China, if process being applied
+    if "ifr_multiplier" in params:
+        params["infection_fatality_props"] = [
+            i_prop * params["ifr_multiplier"] for i_prop in params["infection_fatality_props"]
+        ]
+        if params["hospital_inflate"]:
+            params["hospital_props"] = [
+                i_prop * params["ifr_multiplier"] for i_prop in params["hospital_props"]
+            ]
+
+    # Calculate presymptomatic period from exposed period and relative proportion of that period spent infectious
+    if "prop_exposed_presympt" in params:
+        params["compartment_periods"][Compartment.EXPOSED] = params["compartment_periods"][
+            "incubation"
+        ] * (1.0 - params["prop_exposed_presympt"])
+        params["compartment_periods"][Compartment.PRESYMPTOMATIC] = (
+            params["compartment_periods"]["incubation"] * params["prop_exposed_presympt"]
+        )
+
+    # Calculate early infectious period from total infectious period and proportion of that period spent isolated
+    if "prop_infectious_early" in params:
+        params["compartment_periods"][Compartment.EARLY_INFECTIOUS] = (
+            params["compartment_periods"]["total_infectious"] * params["prop_infectious_early"]
+        )
+        params["compartment_periods"][Compartment.LATE_INFECTIOUS] = params["compartment_periods"][
+            "total_infectious"
+        ] * (1.0 - params["prop_infectious_early"])
+
+
     model_parameters = preprocess_params(params, update_params)
 
     # Get population size (by age if age-stratified)
@@ -110,11 +151,12 @@ def build_model(country: str, params: dict, update_params={}):
     total_infectious_times = sum(
         [model_parameters["compartment_periods"][comp] for comp in is_infectious]
     )
-    init_pop = \
-        {comp: model_parameters["infectious_seed"] *
-               model_parameters["compartment_periods"][comp] /
-               total_infectious_times for
-         comp in is_infectious}
+    init_pop = {
+        comp: model_parameters["infectious_seed"]
+        * model_parameters["compartment_periods"][comp]
+        / total_infectious_times
+        for comp in is_infectious
+    }
     # force the remainder starting population to go to S compartment. Required as entry_compartment is late_infectious
     init_pop[Compartment.SUSCEPTIBLE] = sum(total_pops) - sum(init_pop.values())
 
@@ -170,7 +212,7 @@ def build_model(country: str, params: dict, update_params={}):
         flows, model_parameters["n_compartment_repeats"][Compartment.LATE_INFECTIOUS]
     )
 
-    _birth_approach = 'no_birth'  # may be changed if case importation implemented
+    _birth_approach = "no_birth"  # may be changed if case importation implemented
     # Add importation flows if requested
     if model_parameters["implement_importation"] and not model_parameters["imported_cases_explict"]:
         flows = add_transition_flows(
@@ -182,7 +224,7 @@ def build_model(country: str, params: dict, update_params={}):
             "import_secondary_rate",
         )
     elif model_parameters["implement_importation"] and model_parameters["imported_cases_explict"]:
-        _birth_approach = 'add_crude_birth_rate'
+        _birth_approach = "add_crude_birth_rate"
 
     # Get mixing matrix
     mixing_matrix = load_specific_prem_sheet("all_locations", model_parameters["country"])
@@ -223,7 +265,10 @@ def build_model(country: str, params: dict, update_params={}):
             ("to_infectious", "infect_death", "within_late"), age_strata
         )  # Split unchanged parameters for later adjustment
 
-        if model_parameters["implement_importation"] and not model_parameters["imported_cases_explict"]:
+        if (
+            model_parameters["implement_importation"]
+            and not model_parameters["imported_cases_explict"]
+        ):
             adjust_requests.update(
                 {
                     "import_secondary_rate": get_total_contact_rates_by_age(
@@ -256,7 +301,7 @@ def build_model(country: str, params: dict, update_params={}):
             mixing_matrix=mixing_matrix,
             adjustment_requests=adjust_requests,
             verbose=False,
-            entry_proportions=importation_props_by_age
+            entry_proportions=importation_props_by_age,
         )
 
     # Stratify infectious compartment by clinical status
@@ -296,12 +341,13 @@ def build_model(country: str, params: dict, update_params={}):
             mixing_instructions = apply_npi_effectiveness(
                 mixing_instructions, model_parameters.get("npi_effectiveness")
             )
-        if model_parameters['reinstall_regular_prayers']:
+        if model_parameters["reinstall_regular_prayers"]:
             mixing_instructions = update_mixing_parameters_for_prayers(
-                mixing_instructions, model_parameters['prayers_params']['restart_time'],
-                model_parameters['prayers_params']['prop_participating'],
-                model_parameters['prayers_params']['contact_multiplier'],
-                t_end=model_parameters['end_time']
+                mixing_instructions,
+                model_parameters["prayers_params"]["restart_time"],
+                model_parameters["prayers_params"]["prop_participating"],
+                model_parameters["prayers_params"]["contact_multiplier"],
+                t_end=model_parameters["end_time"],
             )
         _covid_model.find_dynamic_mixing_matrix = build_covid_matrices(
             model_parameters["country"], mixing_instructions
@@ -309,3 +355,36 @@ def build_model(country: str, params: dict, update_params={}):
         _covid_model.dynamic_mixing_matrix = True
 
     return _covid_model
+
+
+# MATT REFACTOR
+# TODO: Move or delete
+from autumn.tool_kit.utils import find_relative_date_from_string_or_tuple
+
+
+def get_mixing_lists_from_dict(working_dict):
+    return [i_key for i_key in working_dict.keys()], [i_key for i_key in working_dict.values()]
+
+
+def revise_mixing_data_for_dicts(parameters):
+    list_of_possible_keys = ["home", "other_locations", "school", "work"]
+    for age_index in range(16):
+        list_of_possible_keys.append("age_" + str(age_index))
+    for mixing_key in list_of_possible_keys:
+        if mixing_key in parameters:
+            (
+                parameters[mixing_key + "_times"],
+                parameters[mixing_key + "_values"],
+            ) = get_mixing_lists_from_dict(parameters[mixing_key])
+    return parameters
+
+
+def revise_dates_if_ymd(mixing_params):
+    """
+    Find any mixing times parameters that were submitted as a three element list of year, month day - and revise to an
+    integer representing the number of days from the reference time.
+    """
+    for key in (k for k in mixing_params if k.endswith("_times")):
+        for i_time, time in enumerate(mixing_params[key]):
+            if isinstance(time, (list, str)):
+                mixing_params[key][i_time] = find_relative_date_from_string_or_tuple(time)

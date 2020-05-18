@@ -32,7 +32,7 @@ def serialize_model(model: StratifiedModel) -> dict:
             "times": model.times,
         },
         "stratifications": model.all_stratifications,
-        "parameters": model.parameters,
+        "parameters": serialize_params(model.parameters),
         "flows": {"transition": t_flows, "death": d_flows, "requested": model.requested_flows,},
         "adaptation_functions": list(model.adaptation_functions.keys()),
         "mixing": {
@@ -40,3 +40,13 @@ def serialize_model(model: StratifiedModel) -> dict:
             "dynamic_mixing_matrix": model.dynamic_mixing_matrix,
         },
     }
+
+
+def serialize_params(ps):
+    params = {}
+    for k, v in ps.items():
+        try:
+            params[k] = v.tolist()
+        except:
+            params[k] = v
+    return params

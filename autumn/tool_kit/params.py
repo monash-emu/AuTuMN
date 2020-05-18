@@ -3,133 +3,64 @@ Used to load model parameters from file
 """
 import os
 import yaml
-import logging
-from autumn.constants import Compartment
-from autumn.tool_kit.utils import find_relative_date_from_string_or_tuple
+from os import path
 
-from .utils import merge_dicts
-
-logger = logging.getLogger(__file__)
+from autumn.constants import APPS_PATH
+from autumn.tool_kit.utils import merge_dicts
 
 
-def get_mixing_lists_from_dict(working_dict):
-    return [i_key for i_key in working_dict.keys()], [i_key for i_key in working_dict.values()]
-
-
-def revise_mixing_data_for_dicts(parameters):
-    list_of_possible_keys = ["home", "other_locations", "school", "work"]
-    for age_index in range(16):
-        list_of_possible_keys.append("age_" + str(age_index))
-    for mixing_key in list_of_possible_keys:
-        if mixing_key in parameters:
-            (
-                parameters[mixing_key + "_times"],
-                parameters[mixing_key + "_values"],
-            ) = get_mixing_lists_from_dict(parameters[mixing_key])
-    return parameters
-
-
-def revise_dates_if_ymd(mixing_params):
+def load_params(app_name: str, region_name: str):
     """
-    Find any mixing times parameters that were submitted as a three element list of year, month day - and revise to an
-    integer representing the number of days from the reference time.
+    Load  parameters for the requested app and region.
+    This is for loading only, please do not put any pre-processing in here.
+
+    The data structure returned by this function is a little wonky for
+    backwards compatibility reasons.
     """
-    for key in (k for k in mixing_params if k.endswith("_times")):
-        for i_time, time in enumerate(mixing_params[key]):
-            if isinstance(time, (list, str)):
-                mixing_params[key][i_time] = find_relative_date_from_string_or_tuple(time)
+    param_path = path.join(APPS_PATH, app_name, "params")
+    assert path.exists(param_path), f"App name {app_name} not found at {param_path}"
+    param_dirnames = [
+        d
+        for d in os.listdir(param_path)
+        if path.isdir(path.join(param_path, d)) and not d == "__pycache__"
+    ]
+    assert region_name in param_dirnames, f"Region name {region_name} is not in {param_dirnames}"
+    app_param_dir = path.join(param_path, region_name)
 
+    # Load base param config
+    base_yaml_path = path.join(param_path, "base.yml")
+    with open(base_yaml_path, "r") as f:
+        base_params = yaml.safe_load(f)
 
-def load_params(app_dir: str, application=None):
-    """
-    Load parameters for the application from the app directory.
+    # Load app default param config
+    default_param_path = path.join(app_param_dir, "default.yml")
+    with open(default_param_path, "r") as f:
+        app_default_params = yaml.safe_load(f)
 
-    By convention, the parameters will either be 
-        - in a single YAML file, named params.yml
-        - in a folder called 'params'
+    default_params = merge_dicts(app_default_params, base_params)
 
-    If there is a folder called 'params', then there should be:
-        - a base YAML file called 'base.yml'
-        - a set of application specific YAML files,
-          each with the name of the application as the file name
+    # Load scenario specific params for the given app
+    scenarios = {}
+    scenaro_params_fnames = [
+        fname
+        for fname in os.listdir(app_param_dir)
+        if fname.startswith("scenario-") and fname.endswith(".yml")
+    ]
+    for fname in scenaro_params_fnames:
+        scenario_idx = int(fname.split("-")[-1].split(".")[0])
+        yaml_path = path.join(app_param_dir, fname)
+        with open(yaml_path, "r") as f:
+            scenarios[scenario_idx] = yaml.safe_load(f)
 
-    args:
-        app_dir: the directory that contains params.yml or params folder
-        application: the name of the application to be loaded,
-                     only used if there are multiple parameter sets
-    
-    """
-    logger.debug(f"Loading params from app dir {app_dir} for application {application}")
-    if application:
-        # Users wants to load base parameters + application specific params
-        param_dir = os.path.join(app_dir, "params")
-        base_yaml_path = os.path.join(param_dir, "base.yml")
-        app_yaml_path = os.path.join(param_dir, f"{application}.yml")
-        if not os.path.exists(param_dir):
-            raise FileNotFoundError(f"Param dir not found at {param_dir}")
-        if not os.path.exists(base_yaml_path):
-            raise FileNotFoundError(f"Base param file not found at {base_yaml_path}")
-        if not os.path.exists(app_yaml_path):
-            raise FileNotFoundError(
-                f"Application {application} param file not found at {app_yaml_path}"
-            )
+    # By convention this is outside of the default params
+    scenario_start_time = None
+    if "scenario_start_time" in default_params:
+        scenario_start_time = default_params["scenario_start_time"]
+        del default_params["scenario_start_time"]
 
-        with open(base_yaml_path, "r") as f:
-            base_params = yaml.safe_load(f)
-        with open(app_yaml_path, "r") as f:
-            app_params = yaml.safe_load(f) or {}
-
-        # Merge base and app params into one parameter set, with app params overwriting base params
-        params = merge_dicts(app_params, base_params)
-
-    else:
-        # User wants to load params from a single file, no fancy merging
-        param_yaml_path = os.path.join(app_dir, "params.yml")
-        if not os.path.exists(param_yaml_path):
-            raise FileNotFoundError(f"Param file not found at {param_yaml_path}")
-
-        with open(param_yaml_path, "r") as f:
-            params = yaml.safe_load(f)
-
-    # Revise any dates for mixing matrices submitted in YMD format
-    for param in params:
-        if type(params[param]) == dict and "mixing" in params[param]:
-            params[param]["mixing"] = revise_mixing_data_for_dicts(params[param]["mixing"])
-            revise_dates_if_ymd(params[param]["mixing"])
-
-        if param == "scenarios":
-            for scenario in params["scenarios"]:
-                if "mixing" in params[param][scenario]:
-                    params[param][scenario]["mixing"] = revise_mixing_data_for_dicts(
-                        params[param][scenario]["mixing"]
-                    )
-                    revise_dates_if_ymd(params[param][scenario]["mixing"])
-
-    default = params["default"]
-
-    # Adjust infection for relative all-cause mortality compared to China, if process being applied
-    if "ifr_multiplier" in default:
-        default["infection_fatality_props"] = \
-            [i_prop * default["ifr_multiplier"] for i_prop in default["infection_fatality_props"]]
-        if default["hospital_inflate"]:
-            default["hospital_props"] = \
-                [h_prop * default["ifr_multiplier"] for h_prop in default["hospital_props"]]
-    # Calculate presymptomatic period from exposed period and relative proportion of that period spent infectious
-    if "prop_exposed_presympt" in default:
-        default["compartment_periods"][Compartment.EXPOSED] = default["compartment_periods"][
-            "incubation"
-        ] * (1.0 - default["prop_exposed_presympt"])
-        default["compartment_periods"][Compartment.PRESYMPTOMATIC] = (
-            default["compartment_periods"]["incubation"] * default["prop_exposed_presympt"]
-        )
-
-    # Calculate early infectious period from total infectious period and proportion of that period spent isolated
-    if "prop_infectious_early" in default:
-        default["compartment_periods"][Compartment.EARLY_INFECTIOUS] = (
-            default["compartment_periods"]["total_infectious"] * default["prop_infectious_early"]
-        )
-        default["compartment_periods"][Compartment.LATE_INFECTIOUS] = default[
-            "compartment_periods"
-        ]["total_infectious"] * (1.0 - default["prop_infectious_early"])
-
-    return params
+    # Return backwards-compatible data structure
+    return {
+        "default": default_params,
+        "scenarios": scenarios,
+        "scenario_start_time": scenario_start_time,
+    }

@@ -3,168 +3,164 @@
 scenario_start_time: 85
 
 # Parameters used to build a general model of COVID-19 disease for application to Australia or internationally
-default:
-  # MODEL STRUCTURE PARAMETERS
+# MODEL STRUCTURE PARAMETERS
 
-  # Number of times each compartment representing active infection (i.e. not S and not R) are repeated
-  # Now redundant, because we have repeated the compartments so many times
-  n_compartment_repeats:
-    susceptible: 1
-    exposed: 1
-    presympt: 1
-    infectious: 1
-    late: 1
-    recovered: 1
+# Number of times each compartment representing active infection (i.e. not S and not R) are repeated
+# Now redundant, because we have repeated the compartments so many times
+n_compartment_repeats:
+  susceptible: 1
+  exposed: 1
+  presympt: 1
+  infectious: 1
+  late: 1
+  recovered: 1
 
-  implement_importation: False
-  imported_cases_explict: False  # whether to explicitely include imported cases
-  import_secondary_rate: 0.
-  traveller_quarantine:
-    times: [0.]
-    values: [0.]
+implement_importation: False
+imported_cases_explict: False # whether to explicitely include imported cases
+import_secondary_rate: 0.
+traveller_quarantine:
+  times: [0.]
+  values: [0.]
 
-  compartment_periods:
-    incubation: 5.
-    # exposed now calculated
-    # presympt now calculated
-    total_infectious: 7.
-    # infectious now refers to total infectious period, which is confusing because there is an infectious compartment
-    # late now calculated
-    hospital_early: 5.
-    hospital_late: 8.
-    icu_early: 5.
-    icu_late: 10.
+compartment_periods:
+  incubation: 5.
+  # exposed now calculated
+  # presympt now calculated
+  total_infectious: 7.
+  # infectious now refers to total infectious period, which is confusing because there is an infectious compartment
+  # late now calculated
+  hospital_early: 5.
+  hospital_late: 8.
+  icu_early: 5.
+  icu_late: 10.
 
-  # Proportion of the exposed period spent infectious - i.e. "presymptomatic", assumed
-  prop_exposed_presympt: 0.5
+# Proportion of the exposed period spent infectious - i.e. "presymptomatic", assumed
+prop_exposed_presympt: 0.5
 
-  # Proportion of the infectious period spent in the early compartment (i.e. can't be isolated for symptoms), assumed
-  prop_infectious_early: 0.333
+# Proportion of the infectious period spent in the early compartment (i.e. can't be isolated for symptoms), assumed
+prop_infectious_early: 0.333
 
-  # Stratification-related requests
-  stratify_by:
-    - agegroup
-    - clinical
+# Stratification-related requests
+stratify_by:
+  - agegroup
+  - clinical
 
-  # Currently must use only four strata, because deaths will not be calculated correctly otherwise - should be quickly
-  # adaptable to fewer strata as needed, though
-  clinical_strata:
-    - non_sympt
-    - sympt_non_hospital
-    - sympt_isolate
-    - hospital_non_icu
-    - icu
-  agegroup_breaks:
-    - 80
-    - 5
+# Currently must use only four strata, because deaths will not be calculated correctly otherwise - should be quickly
+# adaptable to fewer strata as needed, though
+clinical_strata:
+  - non_sympt
+  - sympt_non_hospital
+  - sympt_isolate
+  - hospital_non_icu
+  - icu
+agegroup_breaks:
+  - 80
+  - 5
 
-  # AGE-STRATIFIED PARAMETERS
+# AGE-STRATIFIED PARAMETERS
 
-  # Infectiousness progression adjustments - in ten year brackets that need to be adapted to model strata later
-  # Extracted by WebPlotDigitizer from the LSHTM's "Age-dependent effects in the ..." Fig 2b, upper-left panel
-  symptomatic_props:
-    - 0.396
-    - 0.252
-    - 0.367
-    - 0.408
-    - 0.476
-    - 0.572
-    - 0.710
-    - 0.745
+# Infectiousness progression adjustments - in ten year brackets that need to be adapted to model strata later
+# Extracted by WebPlotDigitizer from the LSHTM's "Age-dependent effects in the ..." Fig 2b, upper-left panel
+symptomatic_props:
+  - 0.396
+  - 0.252
+  - 0.367
+  - 0.408
+  - 0.476
+  - 0.572
+  - 0.710
+  - 0.745
 
-  # Proportion of symptomatic persons that are hospitalised - Verity et al.
-  hospital_props:
-    - 0.001
-    - 0.003
-    - 0.012
-    - 0.032
-    - 0.049
-    - 0.102
-    - 0.166
-    - 0.243
-    - 0.273
-  hospital_inflate: False
+# Proportion of symptomatic persons that are hospitalised - Verity et al.
+hospital_props:
+  - 0.001
+  - 0.003
+  - 0.012
+  - 0.032
+  - 0.049
+  - 0.102
+  - 0.166
+  - 0.243
+  - 0.273
+hospital_inflate: False
 
-  # Proportion of those hospitalised that are admitted to ICU - consistent with LSHTM's LMIC estimates parameters
-  icu_prop: 0.3
+# Proportion of those hospitalised that are admitted to ICU - consistent with LSHTM's LMIC estimates parameters
+icu_prop: 0.3
 
-  # Infection fatality proportions - Verity et al.
-  infection_fatality_props:
-    - 0.00002
-    - 0.00006
-    - 0.0003
-    - 0.0008
-    - 0.0015
-    - 0.006
-    - 0.022
-    - 0.051
-    - 0.093
+# Infection fatality proportions - Verity et al.
+infection_fatality_props:
+  - 0.00002
+  - 0.00006
+  - 0.0003
+  - 0.0008
+  - 0.0015
+  - 0.006
+  - 0.022
+  - 0.051
+  - 0.093
 
-  # Reduced susceptibility in children - assumed, but informed by Iceland NEJM paper
-  young_reduced_susceptibility: 0.5
-  reduced_susceptibility_agegroups:
-    - "0"
-    - "5"
-    - "10"
-    - "15"
+# Reduced susceptibility in children - assumed, but informed by Iceland NEJM paper
+young_reduced_susceptibility: 0.5
+reduced_susceptibility_agegroups:
+  - "0"
+  - "5"
+  - "10"
+  - "15"
 
-  # NON-AGE-STRATIFIED PARAMETERS
+# NON-AGE-STRATIFIED PARAMETERS
 
-  # Adjust the infectiousness of clinical strata - assumed
-  non_sympt_infect_multiplier: 0.5
-  hospital_non_icu_infect_multiplier: 0.2
-  icu_infect_multiplier: 0.2
+# Adjust the infectiousness of clinical strata - assumed
+non_sympt_infect_multiplier: 0.5
+hospital_non_icu_infect_multiplier: 0.2
+icu_infect_multiplier: 0.2
 
-  # parameters of tanh-based scale-up function used to define time-variant detection
-  tv_detection_b: .05  # shape parameter of the tanh-based curve
-  tv_detection_c: 90  # inflection point
-  tv_detection_sigma: 1.  # height of the lower asymptote (1. means constant function)
+# parameters of tanh-based scale-up function used to define time-variant detection
+tv_detection_b: .05 # shape parameter of the tanh-based curve
+tv_detection_c: 90 # inflection point
+tv_detection_sigma: 1. # height of the lower asymptote (1. means constant function)
 
-  # proportion of isolated cases among symptomatic
-  prop_detected_among_symptomatic: 0.6
+# proportion of isolated cases among symptomatic
+prop_detected_among_symptomatic: 0.6
 
-  # clinical proportions for imported cases
-  symptomatic_props_imported: .5
-  hospital_props_imported: .05
-  icu_prop_imported: .3
-  prop_detected_among_symptomatic_imported: .6
+# clinical proportions for imported cases
+symptomatic_props_imported: .5
+hospital_props_imported: .05
+icu_prop_imported: .3
+prop_detected_among_symptomatic_imported: .6
 
-  # parameters to define the effect (infectiousness adjustment) of self-isolation and enforced isolation
-  self_isolation_effect: .67
-  enforced_isolation_effect: 1.
+# parameters to define the effect (infectiousness adjustment) of self-isolation and enforced isolation
+self_isolation_effect: .67
+enforced_isolation_effect: 1.
 
-  # Country to extract Prem mixing matrix from
-  country: null
+# Country to extract Prem mixing matrix from
+country: null
 
-  # Country to extract stratified population data from - should eventually use only one of country or iso3
-  iso3: null
+# Country to extract stratified population data from - should eventually use only one of country or iso3
+iso3: null
 
-  # Initial conditions
-  infectious_seed: 10
+# Initial conditions
+infectious_seed: 10
 
-  # Running time-related - for COVID-19 model, all times are assumed to be in days and reference time is 1st Jan 2020
-  start_time: 40.
-  end_time: 350.
-  time_step: 1
+# Running time-related - for COVID-19 model, all times are assumed to be in days and reference time is 1st Jan 2020
+start_time: 40.
+end_time: 350.
+time_step: 1
 
-  # Base model definition
-  contact_rate: 0.03  # Expected to be calibrated for each application
-  icu_mortality_prop: 0.5
+# Base model definition
+contact_rate: 0.03 # Expected to be calibrated for each application
+icu_mortality_prop: 0.5
 
-  # Compulsory parameter that is completely overwritten in stratification, rather than being modified
-  infect_death: 0.
+# Compulsory parameter that is completely overwritten in stratification, rather than being modified
+infect_death: 0.
 
-  # Compulsory parameter for all models, even though there are no population-wide deaths
-  universal_death_rate: 0.
+# Compulsory parameter for all models, even though there are no population-wide deaths
+universal_death_rate: 0.
 
-  # Parameters relating to adjusting the mixing matrix to reflect interventions
-  mixing: {}
-  npi_effectiveness: {}
-  reinstall_regular_prayers: False
-  prayers_params:
-      restart_time: 0
-      prop_participating: 0.
-      contact_multiplier: 1.
-
-scenarios: {}
-# N.B: Scenario keys have to be sequential integers from one, or won't be compatible with dashboards
+# Parameters relating to adjusting the mixing matrix to reflect interventions
+mixing: {}
+npi_effectiveness: {}
+reinstall_regular_prayers: False
+prayers_params:
+  restart_time: 0
+  prop_participating: 0.
+  contact_multiplier: 1.

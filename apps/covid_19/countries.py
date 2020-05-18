@@ -45,8 +45,8 @@ class CountryModel:
             plots_config=plots_config,
         )
 
-    def build_model(self, params, update_params={}):
-        return build_model(self.country, params, update_params)
+    def build_model(self, params):
+        return build_model(params)
 
     @property
     def params(self):

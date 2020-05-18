@@ -40,7 +40,9 @@ from .matrices import (
     apply_npi_effectiveness,
     update_mixing_parameters_for_prayers,
 )
-from .preprocess import preprocess_params
+
+from autumn.tool_kit.utils import find_relative_date_from_string_or_tuple
+from autumn.demography.ageing import add_agegroup_breaks
 
 # Database locations
 FILE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -49,7 +51,7 @@ INPUT_DB_PATH = os.path.join(constants.DATA_PATH, "inputs.db")
 input_database = Database(database_name=INPUT_DB_PATH)
 
 
-def build_model(country: str, params: dict, update_params={}):
+def build_model(params: dict):
     """
     Build the master function to run the TB model for Covid-19
 
@@ -59,8 +61,14 @@ def build_model(country: str, params: dict, update_params={}):
         The final model with all parameters and stratifications
     """
     # Revise any dates for mixing matrices submitted in YMD format
-    params["mixing"] = revise_mixing_data_for_dicts(params["mixing"])
-    revise_dates_if_ymd(params["mixing"])
+    if params.get("mixing"):
+        params["mixing"] = revise_mixing_data_for_dicts(params["mixing"])
+        revise_dates_if_ymd(params["mixing"])
+
+    params = add_agegroup_breaks(params)
+
+    # Update parameters stored in dictionaries that need to be modified during calibration
+    params = update_dict_params_for_calibration(params)
 
     # Adjust infection for relative all-cause mortality compared to China, if process being applied
     if "ifr_multiplier" in params:
@@ -90,7 +98,7 @@ def build_model(country: str, params: dict, update_params={}):
             "total_infectious"
         ] * (1.0 - params["prop_infectious_early"])
 
-    model_parameters = preprocess_params(params, update_params)
+    model_parameters = params
 
     # Get population size (by age if age-stratified)
     total_pops, model_parameters = get_population_size(model_parameters, input_database)
@@ -387,3 +395,35 @@ def revise_dates_if_ymd(mixing_params):
         for i_time, time in enumerate(mixing_params[key]):
             if isinstance(time, (list, str)):
                 mixing_params[key][i_time] = find_relative_date_from_string_or_tuple(time)
+
+
+def update_dict_params_for_calibration(params):
+    """
+    Update some specific parameters that are stored in a dictionary but are updated during calibration.
+    For example, we may want to update params['default']['compartment_periods']['incubation'] using the parameter
+    ['default']['compartment_periods_incubation']
+    :param params: dict
+        contains the model parameters
+    :return: the updated dictionary
+    """
+
+    if "n_imported_cases_final" in params:
+        params["data"]["n_imported_cases"][-1] = params["n_imported_cases_final"]
+
+    for location in ["school", "work", "home", "other_locations"]:
+        if "npi_effectiveness_" + location in params:
+            params["npi_effectiveness"][location] = params["npi_effectiveness_" + location]
+
+    for comp_type in [
+        "incubation",
+        "infectious",
+        "late",
+        "hospital_early",
+        "hospital_late",
+        "icu_early",
+        "icu_late",
+    ]:
+        if "compartment_periods_" + comp_type in params:
+            params["compartment_periods"][comp_type] = params["compartment_periods_" + comp_type]
+
+    return params

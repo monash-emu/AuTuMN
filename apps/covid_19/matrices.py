@@ -124,3 +124,24 @@ def apply_npi_effectiveness(mixing_params, npi_effectiveness):
                                                    for val in mixing_params[location + '_values']]
 
     return mixing_params
+
+
+def update_mixing_parameters_for_prayers(mixing_params, t_start, participating_prop, other_location_multiplier,
+                                         t_end=365):
+    """
+    Updare the mixing parameters to simulate re-installing regular Friday prayers from t_start to t_end. We assume that
+    a proportion 'participating_prop' of the population participates in the prayers and that the other-location
+    contact rates are multiplied by 'other_location_multiplier' for the participating individuals.
+    """
+    assert "other_locations_times" in mixing_params, "need to specify other_location mixing params"
+
+    t = t_start
+    reference_val = mixing_params['other_locations_values'][-1]
+    amplified_val = reference_val * ((1. - participating_prop) + other_location_multiplier * participating_prop)
+    while t < t_end:
+        mixing_params['other_locations_times'] += [t, t+1, t+2]
+        mixing_params['other_locations_values'] += [reference_val, amplified_val, reference_val]
+        t += 7
+
+    return mixing_params
+

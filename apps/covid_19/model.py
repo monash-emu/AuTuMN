@@ -31,7 +31,7 @@ from .outputs import (
     calculate_incidence_icu_covid,
 )
 from .importation import set_tv_importation_rate, set_tv_importation_as_birth_rates, importation_props_by_age
-from .matrices import build_covid_matrices, apply_npi_effectiveness
+from .matrices import build_covid_matrices, apply_npi_effectiveness, update_mixing_parameters_for_prayers
 from .preprocess import preprocess_params
 
 # Database locations
@@ -295,6 +295,13 @@ def build_model(country: str, params: dict, update_params={}):
         if "npi_effectiveness" in model_parameters:
             mixing_instructions = apply_npi_effectiveness(
                 mixing_instructions, model_parameters.get("npi_effectiveness")
+            )
+        if model_parameters['reinstall_regular_prayers']:
+            mixing_instructions = update_mixing_parameters_for_prayers(
+                mixing_instructions, model_parameters['prayers_params']['restart_time'],
+                model_parameters['prayers_params']['prop_participating'],
+                model_parameters['prayers_params']['contact_multiplier'],
+                t_end=model_parameters['end_time']
             )
         _covid_model.find_dynamic_mixing_matrix = build_covid_matrices(
             model_parameters["country"], mixing_instructions

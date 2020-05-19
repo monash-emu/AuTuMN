@@ -83,14 +83,9 @@ validate_params = sb.build_validator(
 )
 
 
-def build_model(params: dict):
+def build_model(params: dict) -> StratifiedModel:
     """
     Build the master function to run the TB model for Covid-19
-
-    :param update_params: dict
-        Any parameters that need to be updated for the current run
-    :return: StratifiedModel
-        The final model with all parameters and stratifications
     """
     validate_params(params)
     # Update parameters stored in dictionaries that need to be modified during calibration

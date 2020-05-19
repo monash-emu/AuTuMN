@@ -42,7 +42,7 @@ FILE_DIR = os.path.dirname(os.path.abspath(__file__))
 INPUT_DB_PATH = os.path.join(constants.DATA_PATH, "inputs.db")
 
 
-def build_model(params: dict, update_params={}):
+def build_model(params: dict) -> StratifiedModel:
     """
     Build the master function to run the TB model for the Republic of the Marshall Islands
 

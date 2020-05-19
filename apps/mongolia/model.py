@@ -35,7 +35,7 @@ from autumn.tool_kit import return_function_of_function, change_parameter_unit
 INPUT_DB_PATH = os.path.join(constants.DATA_PATH, "inputs.db")
 
 
-def build_model(params, update_params={}):
+def build_model(params: dict) -> StratifiedModel:
     external_params = deepcopy(params)
     external_params.update(update_params)
     model_parameters = {

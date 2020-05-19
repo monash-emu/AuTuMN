@@ -3,7 +3,7 @@ from autumn.constants import Compartment, BirthApproach
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
 
 
-def build_model(country: str, params: dict, update_params={}):
+def build_model(params: dict) -> StratifiedModel:
     """
     Build the master function to run a simple SIR model
 

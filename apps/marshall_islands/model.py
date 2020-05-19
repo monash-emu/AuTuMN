@@ -66,7 +66,6 @@ def build_model(params: dict) -> StratifiedModel:
     init_pop = {Compartment.EARLY_INFECTIOUS: 10, Compartment.LATE_LATENT: 100}
 
     model_parameters = params
-    model_parameters.update(update_params)
 
     # Update partial immunity/susceptibility parameters
     model_parameters = update_transmission_parameters(

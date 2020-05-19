@@ -6,13 +6,7 @@ from autumn.tool_kit.scenarios import get_model_times_from_inputs
 def build_model(params: dict) -> StratifiedModel:
     """
     Build the master function to run a simple SIR model
-
-    :param update_params: dict
-        Any parameters that need to be updated for the current run
-    :return: StratifiedModel
-        The final model with all parameters and stratifications
     """
-    params.update(update_params)
     compartments = [
         Compartment.SUSCEPTIBLE,
         Compartment.INFECTIOUS,

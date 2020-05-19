@@ -37,7 +37,6 @@ INPUT_DB_PATH = os.path.join(constants.DATA_PATH, "inputs.db")
 
 def build_model(params: dict) -> StratifiedModel:
     external_params = deepcopy(params)
-    external_params.update(update_params)
     model_parameters = {
         "contact_rate": external_params["contact_rate"],
         "contact_rate_recovered": external_params["contact_rate"]

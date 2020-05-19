@@ -12,13 +12,7 @@ from autumn.db import Database, find_population_by_agegroup
 from autumn.summer_related.parameter_adjustments import split_multiple_parameters
 
 from .stratification import stratify_by_clinical
-from .outputs import (
-    find_incidence_outputs,
-    create_fully_stratified_incidence_covid,
-    create_fully_stratified_progress_covid,
-    calculate_notifications_covid,
-    calculate_incidence_icu_covid,
-)
+from . import outputs
 from . import preprocess
 
 # Database locations
@@ -48,12 +42,16 @@ def build_model(params: dict):
     hospital_inflate = params["hospital_inflate"]
     hospital_props = params["hospital_props"]
     infection_fatality_props = params["infection_fatality_props"]
+    prop_isolated_among_symptomatic = params.get("prop_isolated_among_symptomatic", 0)
     if ifr_multiplier:
         infection_fatality_props = [p * ifr_multiplier for p in infection_fatality_props]
         # FIXME: we should never write back to params
         params["infection_fatality_props"] = infection_fatality_props
     if ifr_multiplier and hospital_inflate:
-        hospital_props = [p * ifr_multiplier for p in hospital_props]
+        hospital_props = [
+            min(h_prop * ifr_multiplier, 1.0 - prop_isolated_among_symptomatic)
+            for h_prop in hospital_props
+        ]
         # FIXME: we should never write back to params
         params["hospital_props"] = hospital_props
 
@@ -148,9 +146,6 @@ def build_model(params: dict):
     # FIXME: Remove params from model_parameters
     model_parameters = {**params, **time_within_compartment_params}
     model_parameters["to_infectious"] = model_parameters["within_presympt"]
-    if is_importation_active and not is_importation_explict:
-        # FIXME: summer should handle this internally.
-        model_parameters["import_secondary_rate"] = "import_secondary_rate"
 
     # Define model
     model = StratifiedModel(
@@ -176,16 +171,16 @@ def build_model(params: dict):
         prop_detected_among_symptomatic_imported = params[
             "prop_detected_among_symptomatic_imported"
         ]
-        model.parameters["crude_birth_rate"] = "crude_birth_rate"
-        model.time_variants[
-            "crude_birth_rate"
-        ] = preprocess.importation.get_importation_rate_func_as_birth_rates(
+        import_rate_func = preprocess.importation.get_importation_rate_func_as_birth_rates(
             import_times,
             import_cases,
             symptomatic_props_imported,
             prop_detected_among_symptomatic_imported,
             starting_pop,
         )
+        model.parameters["crude_birth_rate"] = "crude_birth_rate"
+        model.time_variants["crude_birth_rate"] = import_rate_func
+
     elif is_importation_active:
         param_name = "import_secondary_rate"
         contact_rate = params["contact_rate"]
@@ -193,9 +188,7 @@ def build_model(params: dict):
         enforced_isolation_effect = params["enforced_isolation_effect"]
         import_times = params["data"]["times_imported_cases"]
         import_cases = params["data"]["n_imported_cases"]
-        model.adaptation_functions[
-            "import_secondary_rate"
-        ] = preprocess.importation.get_importation_rate_func(
+        import_rate_func = preprocess.importation.get_importation_rate_func(
             country,
             import_times,
             import_cases,
@@ -204,6 +197,8 @@ def build_model(params: dict):
             contact_rate,
             starting_pop,
         )
+        model.parameters["import_secondary_rate"] = "import_secondary_rate"
+        model.adaptation_functions["import_secondary_rate"] = import_rate_func
 
     # Stratify model by age.
     # Coerce age breakpoint numbers into strings - all strata are represented as strings.
@@ -249,30 +244,29 @@ def build_model(params: dict):
         model, model_parameters = stratify_by_clinical(model, model_parameters, compartments)
 
     # Define output connections to collate
-    output_connections = find_incidence_outputs(model_parameters)
-
-    # Add fully stratified incidence to output_connections
-    output_connections.update(
-        create_fully_stratified_incidence_covid(
-            model_parameters["stratify_by"],
-            model_parameters["all_stratifications"],
-            model_parameters,
-        )
-    )
-    output_connections.update(
-        create_fully_stratified_progress_covid(
-            model_parameters["stratify_by"],
-            model_parameters["all_stratifications"],
-            model_parameters,
-        )
-    )
-    model.output_connections = output_connections
-
+    # Track compartment output connections.
+    stratum_names = list(set(["X".join(x.split("X")[1:]) for x in model.compartment_names]))
+    incidence_connections = outputs.get_incidence_connections(stratum_names)
+    progress_connections = outputs.get_progress_connections(stratum_names)
+    model.output_connections = {
+        **incidence_connections,
+        **progress_connections,
+    }
     # Add notifications to derived_outputs
-    model.derived_output_functions["notifications"] = calculate_notifications_covid
+    implement_importation = model.parameters["implement_importation"]
+    imported_cases_explict = model.parameters["imported_cases_explict"]
+    symptomatic_props_imported = model.parameters["symptomatic_props_imported"]
+    prop_detected_among_symptomatic_imported = model.parameters[
+        "prop_detected_among_symptomatic_imported"
+    ]
+    model.derived_output_functions["notifications"] = outputs.get_calc_notifications_covid(
+        implement_importation,
+        imported_cases_explict,
+        symptomatic_props_imported,
+        prop_detected_among_symptomatic_imported,
+    )
+    model.derived_output_functions["incidence_icu"] = outputs.calculate_incidence_icu_covid
     model.death_output_categories = list_all_strata_for_mortality(model.compartment_names)
-    model.derived_output_functions["incidence_icu"] = calculate_incidence_icu_covid
-
     return model
 
 

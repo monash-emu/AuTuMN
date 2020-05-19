@@ -41,16 +41,21 @@ def build_model(params: dict):
     # Update parameters stored in dictionaries that need to be modified during calibration
     params = update_dict_params_for_calibration(params)
 
-    # Adjust infection for relative all-cause mortality compared to China, if process being applied
-    if "ifr_multiplier" in params:
-        params["infection_fatality_props"] = [
-            i_prop * params["ifr_multiplier"] for i_prop in params["infection_fatality_props"]
-        ]
-        if params["hospital_inflate"]:
-            params["hospital_props"] = [
-                i_prop * params["ifr_multiplier"] for i_prop in params["hospital_props"]
-            ]
-    model_parameters = params
+    # Adjust infection for relative all-cause mortality compared to China,
+    # using a single constant: infection-rate multiplier.
+    # FIXME: how consistently is this used?
+    ifr_multiplier = params.get("ifr_multiplier")
+    hospital_inflate = params["hospital_inflate"]
+    hospital_props = params["hospital_props"]
+    infection_fatality_props = params["infection_fatality_props"]
+    if ifr_multiplier:
+        infection_fatality_props = [p * ifr_multiplier for p in infection_fatality_props]
+        # FIXME: we should never write back to params
+        params["infection_fatality_props"] = infection_fatality_props
+    if ifr_multiplier and hospital_inflate:
+        hospital_props = [p * ifr_multiplier for p in hospital_props]
+        # FIXME: we should never write back to params
+        params["hospital_props"] = hospital_props
 
     # Get the agegroup strata breakpoints.
     agegroup_max = params["agegroup_breaks"][0]
@@ -63,8 +68,8 @@ def build_model(params: dict):
     total_pops = [int(1000.0 * total_pops[agebreak][-1]) for agebreak in list(total_pops.keys())]
     starting_pop = sum(total_pops)
 
-    # Define compartments with repeats as needed
-    all_compartments = [
+    # Define compartments
+    compartments = [
         Compartment.SUSCEPTIBLE,
         Compartment.EXPOSED,
         Compartment.PRESYMPTOMATIC,
@@ -72,12 +77,6 @@ def build_model(params: dict):
         Compartment.LATE_INFECTIOUS,
         Compartment.RECOVERED,
     ]
-    final_compartments, replicated_compartments = [], []
-    for compartment in all_compartments:
-        if params["n_compartment_repeats"][compartment] == 1:
-            final_compartments.append(compartment)
-        else:
-            replicated_compartments.append(compartment)
     is_infectious = {
         Compartment.EXPOSED: False,
         Compartment.PRESYMPTOMATIC: True,
@@ -97,24 +96,6 @@ def build_model(params: dict):
     for compartment in compartment_periods:
         param_key = f"within_{compartment}"
         time_within_compartment_params[param_key] = 1.0 / compartment_periods[compartment]
-
-    # FIXME: Remove
-    model_parameters = {**model_parameters, **time_within_compartment_params}
-    model_parameters["to_infectious"] = model_parameters["within_presympt"]
-
-    # Multiply the progression rates by the number of compartments to keep the average time in exposed the same
-    for compartment in is_infectious:
-        model_parameters["within_" + compartment] *= float(
-            model_parameters["n_compartment_repeats"][compartment]
-        )
-    for state in ["hospital_early", "icu_early"]:
-        model_parameters["within_" + state] *= float(
-            model_parameters["n_compartment_repeats"][Compartment.EARLY_INFECTIOUS]
-        )
-    for state in ["hospital_late", "icu_late"]:
-        model_parameters["within_" + state] *= float(
-            model_parameters["n_compartment_repeats"][Compartment.LATE_INFECTIOUS]
-        )
 
     # Distribute infectious seed across infectious compartments
     infectious_seed = params["infectious_seed"]
@@ -164,6 +145,9 @@ def build_model(params: dict):
             end_time,
         )
 
+    # FIXME: Remove params from model_parameters
+    model_parameters = {**params, **time_within_compartment_params}
+    model_parameters["to_infectious"] = model_parameters["within_presympt"]
     if is_importation_active and not is_importation_explict:
         # FIXME: summer should handle this internally.
         model_parameters["import_secondary_rate"] = "import_secondary_rate"
@@ -171,7 +155,7 @@ def build_model(params: dict):
     # Define model
     model = StratifiedModel(
         integration_times,
-        final_compartments,
+        compartments,
         init_pop,
         model_parameters,
         flows,
@@ -272,7 +256,7 @@ def build_model(params: dict):
     # Stratify infectious compartment by clinical status
     if "clinical" in model_parameters["stratify_by"] and model_parameters["clinical_strata"]:
         model_parameters["all_stratifications"] = {"agegroup": agegroup_strata}
-        model, model_parameters = stratify_by_clinical(model, model_parameters, final_compartments)
+        model, model_parameters = stratify_by_clinical(model, model_parameters, compartments)
 
     # Define output connections to collate
     output_connections = find_incidence_outputs(model_parameters)

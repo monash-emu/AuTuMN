@@ -7,6 +7,7 @@ scenario_start_time: 85
 
 # Number of times each compartment representing active infection (i.e. not S and not R) are repeated
 # Now redundant, because we have repeated the compartments so many times
+# FIXME: NOT USED - delete after Matt has finished refactoring build_model
 n_compartment_repeats:
   susceptible: 1
   exposed: 1

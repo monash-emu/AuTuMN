@@ -14,6 +14,7 @@ from summer.model.strat_model import StratifiedModel
 from autumn.demography.social_mixing import load_specific_prem_sheet
 from autumn.tool_kit.scenarios import Scenario
 from autumn.tool_kit import schema_builder as sb
+from autumn.tool_kit.uncertainty import collect_iteration_weights, compute_mcmc_output_quantiles
 
 from .plotter import Plotter, COLOR_THEME
 
@@ -143,38 +144,9 @@ def plot_timeseries_with_uncertainty(
     burn_in=0,
     plot_config={},
 ):
-
-    # find the smallest time that is commun to all accepted runs
-    if "start_time" in mcmc_tables[0].columns:
-        t_min = round(
-            max(
-                [
-                    max(mcmc_tables[i].start_time[mcmc_tables[i].accept == 1])
-                    for i in range(len(mcmc_tables))
-                ]
-            )
-        )
-    else:
-        t_min = output_tables[0].times[0]
-    t_max = list(output_tables[0].times)[-1]
-
     weights = collect_iteration_weights(mcmc_tables, burn_in)  # discarding burned iterations
-    times = list(np.linspace(t_min, t_max, num=t_max - t_min + 1))
-    quantiles = np.zeros((len(times), 5))
-    for i, time in enumerate(times):
-        output_list = []
-        for i_chain in range(len(mcmc_tables)):
-            for run_id, w in weights[i_chain].items():
-                output_list += [
-                    float(
-                        derived_output_tables[i_chain][output_name][
-                            (derived_output_tables[i_chain].idx == run_id)
-                            & (derived_output_tables[i_chain].times == time)
-                        ]
-                    )
-                ] * w
-        quantiles[i, :] = np.quantile(output_list, [0.025, 0.25, 0.5, 0.75, 0.975])
-
+    times, quantiles = compute_mcmc_output_quantiles(mcmc_tables, output_tables, derived_output_tables, weights,
+                                                     output_name)
     fig, axis, _, _, _ = plotter.get_figure()
     axis.fill_between(times, quantiles[:, 0], quantiles[:, 4], facecolor="lightsteelblue")
     axis.fill_between(times, quantiles[:, 1], quantiles[:, 3], facecolor="cornflowerblue")
@@ -188,10 +160,8 @@ def plot_timeseries_with_uncertainty(
     target_values = output_config["target_values"]
     target_times = output_config["target_times"]
     _plot_targets_to_axis(axis, target_values, target_times, on_uncertainty_plot=True)
-
     axis.set_xlabel("time")
     axis.set_ylabel(output_name)
-    axis.set_xlim((t_min, t_max))
     plotter.save_figure(fig, filename=f"{output_name} uncertainty", title_text=f"{output_name}")
 
 
@@ -207,26 +177,6 @@ def _overwrite_non_accepted_mcmc_runs(mcmc_tables: List[pd.DataFrame], column_na
                 prev_val = table_df.at[idx, column_name]
             else:
                 table_df.at[idx, column_name] = prev_val
-
-
-def collect_iteration_weights(mcmc_tables: List[pd.DataFrame], burn_in=0):
-    weights = []
-    for i_chain in range(len(mcmc_tables)):
-        mcmc_tables[i_chain].sort_values(["idx"])
-        weight_dict = {}
-        last_run_id = None
-        for i_row, run_id in enumerate(mcmc_tables[i_chain].idx):
-            if int(run_id[4:]) < burn_in:
-                continue
-            if mcmc_tables[i_chain].accept[i_row] == 1:
-                weight_dict[run_id] = 1
-                last_run_id = run_id
-            elif last_run_id is None:
-                continue
-            else:
-                weight_dict[last_run_id] += 1
-        weights.append(weight_dict)
-    return weights
 
 
 def plot_agg_compartments_multi_scenario(

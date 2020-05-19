@@ -33,21 +33,21 @@ def find_abs_death_props(params, abs_props):
 
     # Find IFR that needs to be contributed by ICU and non-ICU hospital deaths\
     hospital_death, icu_death = [], []
-    for i_agegroup, agegroup in enumerate(params["all_stratifications"]["agegroup"]):
+    for age_idxgroup, agegroup in enumerate(params["all_stratifications"]["agegroup"]):
 
         # If IFR for age group is greater than absolute proportion hospitalised, increased hospitalised proportion
         if (
-            params["adjusted_infection_fatality_props"][i_agegroup]
-            > abs_props["hospital"][i_agegroup]
+            params["adjusted_infection_fatality_props"][age_idxgroup]
+            > abs_props["hospital"][age_idxgroup]
         ):
-            abs_props["hospital"][i_agegroup] = params["adjusted_infection_fatality_props"][
-                i_agegroup
+            abs_props["hospital"][age_idxgroup] = params["adjusted_infection_fatality_props"][
+                age_idxgroup
             ]
 
         # Find the target absolute ICU mortality and the amount left over from IFRs to go to hospital, if any
-        target_icu_abs_mort = abs_props["icu"][i_agegroup] * params["icu_mortality_prop"]
+        target_icu_abs_mort = abs_props["icu"][age_idxgroup] * params["icu_mortality_prop"]
         left_over_mort = (
-            params["adjusted_infection_fatality_props"][i_agegroup] - target_icu_abs_mort
+            params["adjusted_infection_fatality_props"][age_idxgroup] - target_icu_abs_mort
         )
 
         # If some IFR will be left over for the hospitalised
@@ -58,7 +58,7 @@ def find_abs_death_props(params, abs_props):
         # Otherwise if all IFR taken up by ICU
         else:
             hospital_death.append(0.0)
-            icu_death.append(params["adjusted_infection_fatality_props"][i_agegroup])
+            icu_death.append(params["adjusted_infection_fatality_props"][age_idxgroup])
 
     return {"hospital_death": hospital_death, "icu_death": icu_death}
 
@@ -74,18 +74,18 @@ def set_isolation_props(
     Set the absolute proportions of new cases isolated and not isolated, and indicate to the model where they should be
     found.
     """
-    # need wrapper functions around all time-variant splitting functions to avoid using the final i_age
+    # need wrapper functions around all time-variant splitting functions to avoid using the final age_idx
     # for all age groups, which is what would happen if the t_v functions were defined within a loop.
-    def abs_prop_sympt_non_hosp_wrapper(_i_age):
+    def abs_prop_sympt_non_hosp_wrapper(_age_idx):
         def abs_prop_sympt_non_hosp_func(t):
-            return abs_props["sympt"][_i_age] * (1.0 - tv_prop_detect_among_sympt(t))
+            return abs_props["sympt"][_age_idx] * (1.0 - tv_prop_detect_among_sympt(t))
 
         return abs_prop_sympt_non_hosp_func
 
     # we need to adjust the hospital_props to make sure it remains <= detected proportions
-    def adjusted_prop_hospital_among_sympt_wrapper(_i_age):
+    def adjusted_prop_hospital_among_sympt_wrapper(_age_idx):
         def adjusted_prop_hospital_among_sympt_func(t):
-            raw_h_prop = abs_props["sympt"][_i_age] * model_parameters["raw_hospital"][_i_age]
+            raw_h_prop = abs_props["sympt"][_age_idx] * model_parameters["raw_hospital"][_age_idx]
             adjusted_h_prop = (
                 raw_h_prop
                 if tv_prop_detect_among_sympt(t) >= raw_h_prop
@@ -95,52 +95,52 @@ def set_isolation_props(
 
         return adjusted_prop_hospital_among_sympt_func
 
-    def abs_prop_isolate_wrapper(_i_age):
+    def abs_prop_isolate_wrapper(_age_idx):
         def abs_prop_isolate_func(t):
             return (
-                abs_props["sympt"][_i_age]
+                abs_props["sympt"][_age_idx]
                 * tv_prop_detect_among_sympt(t)
                 * (
                     1.0
-                    - adjusted_prop_hospital_among_sympt_wrapper(_i_age)(t)
+                    - adjusted_prop_hospital_among_sympt_wrapper(_age_idx)(t)
                     / tv_prop_detect_among_sympt(t)
                 )
             )
 
         return abs_prop_isolate_func
 
-    def abs_prop_hosp_non_icu_wrapper(_i_age):
+    def abs_prop_hosp_non_icu_wrapper(_age_idx):
         def abs_prop_hosp_non_icu_func(t):
             return (
-                abs_props["sympt"][_i_age]
-                * adjusted_prop_hospital_among_sympt_wrapper(_i_age)(t)
+                abs_props["sympt"][_age_idx]
+                * adjusted_prop_hospital_among_sympt_wrapper(_age_idx)(t)
                 * (1.0 - model_parameters["icu_prop"])
             )
 
         return abs_prop_hosp_non_icu_func
 
-    def abs_prop_icu_wrapper(_i_age):
+    def abs_prop_icu_wrapper(_age_idx):
         def abs_prop_icu_func(t):
             return (
-                abs_props["sympt"][_i_age]
-                * adjusted_prop_hospital_among_sympt_wrapper(_i_age)(t)
+                abs_props["sympt"][_age_idx]
+                * adjusted_prop_hospital_among_sympt_wrapper(_age_idx)(t)
                 * model_parameters["icu_prop"]
             )
 
         return abs_prop_icu_func
 
-    for i_age, agegroup in enumerate(model_parameters["all_stratifications"]["agegroup"]):
+    for age_idx, agegroup in enumerate(model_parameters["all_stratifications"]["agegroup"]):
         # pass the functions to summer
         _covid_model.time_variants[
             "prop_sympt_non_hospital_" + agegroup
-        ] = abs_prop_sympt_non_hosp_wrapper(i_age)
+        ] = abs_prop_sympt_non_hosp_wrapper(age_idx)
         _covid_model.time_variants["prop_sympt_isolate_" + agegroup] = abs_prop_isolate_wrapper(
-            i_age
+            age_idx
         )
         _covid_model.time_variants[
             "prop_hospital_non_icu_" + agegroup
-        ] = abs_prop_hosp_non_icu_wrapper(i_age)
-        _covid_model.time_variants["prop_icu_" + agegroup] = abs_prop_icu_wrapper(i_age)
+        ] = abs_prop_hosp_non_icu_wrapper(age_idx)
+        _covid_model.time_variants["prop_icu_" + agegroup] = abs_prop_icu_wrapper(age_idx)
 
         # define the stratification adjustments to be made
         for clinical_stratum in ["sympt_non_hospital", "sympt_isolate", "hospital_non_icu", "icu"]:
@@ -174,15 +174,29 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
     Stratify the infectious compartments of the covid model (not including the pre-symptomatic compartments, which are
     actually infectious)
     """
-    for i_age, h_prop in enumerate(model_parameters["hospital_props"]):
-        if h_prop > model_parameters["prop_detected_among_symptomatic"]:
-            print("Warning: Hospital proportions had to be reduced for age-group " + str(i_age))
-            model_parameters["hospital_props"][i_age] = model_parameters[
-                "prop_detected_among_symptomatic"
-            ]
+    all_stratifications = model_parameters["all_stratifications"]
+    clinical_strata = model_parameters["clinical_strata"]
+    hospital_props = model_parameters["hospital_props"]
+    icu_prop = model_parameters["icu_prop"]
+    implement_importation = model_parameters["implement_importation"]
+    imported_cases_explict = model_parameters["imported_cases_explict"]
+    prop_detected_among_symptomatic = model_parameters["prop_detected_among_symptomatic"]
+    traveller_quarantine = model_parameters["traveller_quarantine"]
+    tv_detection_b = model_parameters["tv_detection_b"]
+    tv_detection_c = model_parameters["tv_detection_c"]
+    tv_detection_sigma = model_parameters["tv_detection_sigma"]
+    within_hospital_early = model_parameters["within_hospital_early"]
+    within_icu_early = model_parameters["within_icu_early"]
+
+    for age_idx, h_prop in enumerate(hospital_props):
+        # Check that hospital props aren't too big for some reason.
+        if h_prop > prop_detected_among_symptomatic:
+            # Reduce hospital props for some reason.
+            print("Warning: Hospital proportions had to be reduced for age-group " + str(age_idx))
+            hospital_props[age_idx] = prop_detected_among_symptomatic
 
     # Define stratification
-    strata_to_implement = model_parameters["clinical_strata"]
+    strata_to_implement = clinical_strata
     model_parameters["all_stratifications"]["clinical"] = strata_to_implement
     compartments_to_split = [
         comp

@@ -4,6 +4,7 @@ import yaml
 from autumn import constants
 from autumn.plots.plots import validate_plot_config
 from autumn.post_processing.processor import validate_post_process_config
+from apps.covid_19.plots import load_plot_config as load_covid_plot_config
 
 
 def load_params(run_dirpath: str) -> dict:
@@ -32,13 +33,16 @@ def load_plot_config(app_dirname: str) -> dict:
     """
     Loads the plot config from the app's code dir
     """
-    app_code_path = try_find_app_code_path(app_dirname)
-    plot_config_path = os.path.join(app_code_path, "plots.yml")
-    with open(plot_config_path, "r") as f:
-        config = yaml.safe_load(f)
+    if app_dirname.startswith("covid_"):
+        region_name = app_dirname.replace("covid_", "")
+        config = load_covid_plot_config(region_name)
+    else:
+        app_code_path = try_find_app_code_path(app_dirname)
+        plot_config_path = os.path.join(app_code_path, "plots.yml")
+        with open(plot_config_path, "r") as f:
+            config = yaml.safe_load(f)
 
     validate_plot_config(config)
-
     return config
 
 

@@ -1,7 +1,7 @@
 import os
 from summer.model import StratifiedModel
 
-from autumn.tool_kit.utils import normalise_sequence, convert_list_contents_to_int
+from autumn.tool_kit.utils import normalise_sequence
 from autumn import constants
 from autumn.constants import Compartment, BirthApproach
 from autumn.tb_model import list_all_strata_for_mortality
@@ -10,7 +10,6 @@ from autumn.tool_kit import schema_builder as sb
 
 from autumn.demography.social_mixing import get_total_contact_rates_by_age
 from autumn.db import Database, find_population_by_agegroup
-from autumn.summer_related.parameter_adjustments import split_multiple_parameters
 
 from .stratification import stratify_by_clinical
 from . import outputs

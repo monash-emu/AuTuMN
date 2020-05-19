@@ -6,6 +6,7 @@ from autumn import constants
 from autumn.constants import Compartment, BirthApproach
 from autumn.tb_model import list_all_strata_for_mortality
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
+from autumn.tool_kit import schema_builder as sb
 
 from autumn.demography.social_mixing import get_total_contact_rates_by_age
 from autumn.db import Database, find_population_by_agegroup
@@ -22,6 +23,67 @@ INPUT_DB_PATH = os.path.join(constants.DATA_PATH, "inputs.db")
 input_database = Database(database_name=INPUT_DB_PATH)
 
 
+validate_params = sb.build_validator(
+    stratify_by=sb.List(str),
+    # Country info
+    country=str,
+    iso3=str,
+    # Running time.
+    start_time=float,
+    end_time=float,
+    time_step=float,
+    # Compartment construction
+    compartment_periods=sb.DictGeneric(str, float),
+    compartment_periods_calculated=dict,
+    # Infectiousness adjustments (not sure where used)
+    ifr_multiplier=float,
+    hospital_props=sb.List(float),
+    hospital_inflate=bool,
+    infection_fatality_props=sb.List(float),
+    # Age stratified params
+    agegroup_breaks=sb.List(float),
+    # Clinical status stratified params
+    clinical_strata=sb.List(str),
+    non_sympt_infect_multiplier=float,
+    hospital_non_icu_infect_multiplier=float,
+    icu_infect_multiplier=float,
+    icu_mortality_prop=float,
+    symptomatic_props=sb.List(float),
+    icu_prop=float,
+    prop_detected_among_symptomatic=float,
+    # Youth reduced susceiptibility adjustment.
+    young_reduced_susceptibility=float,
+    reduced_susceptibility_agegroups=sb.List(str),
+    # Time-variant detection (???)
+    tv_detection_b=float,
+    tv_detection_c=float,
+    tv_detection_sigma=float,
+    # Mixing matrix
+    mixing=sb.DictGeneric(str, list),
+    npi_effectiveness=sb.DictGeneric(str, float),
+    reinstall_regular_prayers=bool,
+    prayers_params=sb.Dict(restart_time=float, prop_participating=float, contact_multiplier=float,),
+    # Something to do with travellers?.
+    traveller_quarantine=sb.Dict(times=sb.List(float), values=sb.List(float),),
+    # Importation of disease from outside of region.
+    implement_importation=bool,
+    imported_cases_explict=bool,
+    import_secondary_rate=float,
+    symptomatic_props_imported=float,
+    hospital_props_imported=float,
+    icu_prop_imported=float,
+    prop_detected_among_symptomatic_imported=float,
+    enforced_isolation_effect=float,
+    self_isolation_effect=float,
+    data=sb.Dict(times_imported_cases=sb.List(float), n_imported_cases=sb.List(float),),
+    # Other stuff
+    contact_rate=float,
+    infect_death=float,
+    infectious_seed=int,
+    universal_death_rate=float,
+)
+
+
 def build_model(params: dict):
     """
     Build the master function to run the TB model for Covid-19
@@ -31,14 +93,14 @@ def build_model(params: dict):
     :return: StratifiedModel
         The final model with all parameters and stratifications
     """
-
+    validate_params(params)
     # Update parameters stored in dictionaries that need to be modified during calibration
     params = update_dict_params_for_calibration(params)
 
     # Adjust infection for relative all-cause mortality compared to China,
     # using a single constant: infection-rate multiplier.
     # FIXME: how consistently is this used?
-    ifr_multiplier = params.get("ifr_multiplier")
+    ifr_multiplier = params["ifr_multiplier"]
     hospital_inflate = params["hospital_inflate"]
     hospital_props = params["hospital_props"]
     infection_fatality_props = params["infection_fatality_props"]

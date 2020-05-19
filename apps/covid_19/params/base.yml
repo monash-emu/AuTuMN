@@ -5,20 +5,13 @@ scenario_start_time: 85
 # Parameters used to build a general model of COVID-19 disease for application to Australia or internationally
 # MODEL STRUCTURE PARAMETERS
 
-# Number of times each compartment representing active infection (i.e. not S and not R) are repeated
-# Now redundant, because we have repeated the compartments so many times
-# FIXME: NOT USED - delete after Matt has finished refactoring build_model
-n_compartment_repeats:
-  susceptible: 1
-  exposed: 1
-  presympt: 1
-  infectious: 1
-  late: 1
-  recovered: 1
-
 implement_importation: False
 imported_cases_explict: False # whether to explicitely include imported cases
 import_secondary_rate: 0.
+data:
+  times_imported_cases: []
+  n_imported_cases: []
+
 traveller_quarantine:
   times: [0.]
   values: [0.]
@@ -89,6 +82,7 @@ hospital_props:
   - 0.243
   - 0.273
 hospital_inflate: False
+ifr_multiplier: 0
 
 # Proportion of those hospitalised that are admitted to ICU - consistent with LSHTM's LMIC estimates parameters
 icu_prop: 0.3

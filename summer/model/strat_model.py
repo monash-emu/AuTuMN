@@ -232,7 +232,7 @@ class StratifiedModel(EpiModel):
         infectiousness_adjustments={},
         mixing_matrix=None,
         target_props=None,
-        verbose=True,
+        verbose=False,
     ):
         """
         calls to initial preparation, checks and methods that stratify the various aspects of the model

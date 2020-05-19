@@ -205,53 +205,43 @@ def build_model(params: dict):
             starting_pop,
         )
 
-    # Stratify model by age
+    # Stratify model by age.
     # Coerce age breakpoint numbers into strings - all strata are represented as strings.
     agegroup_strata = [str(s) for s in agegroup_strata]
-    if "agegroup" in model_parameters["stratify_by"]:
-        age_strata = agegroup_strata
-        adjust_requests = split_multiple_parameters(
-            ("to_infectious", "infect_death", "within_late"), age_strata
-        )  # Split unchanged parameters for later adjustment
-
-        if (
-            model_parameters["implement_importation"]
-            and not model_parameters["imported_cases_explict"]
-        ):
-            adjust_requests.update(
-                {
-                    "import_secondary_rate": get_total_contact_rates_by_age(
-                        static_mixing_matrix, direction="horizontal"
-                    )
-                }
-            )
-
+    # Create parameter adjustment request for age stratifications
+    youth_agegroups = params["reduced_susceptibility_agegroups"]
+    youth_reduced_susceptibility = params["young_reduced_susceptibility"]
+    adjust_requests = {
+        # No change, required for further stratification by clinical status.
+        "to_infectious": {s: 1 for s in agegroup_strata},
+        "infect_death": {s: 1 for s in agegroup_strata},
+        "within_late": {s: 1 for s in agegroup_strata},
         # Adjust susceptibility for children
-        adjust_requests.update(
-            {
-                "contact_rate": {
-                    key: value
-                    for key, value in zip(
-                        model_parameters["reduced_susceptibility_agegroups"],
-                        [model_parameters["young_reduced_susceptibility"]]
-                        * len(model_parameters["reduced_susceptibility_agegroups"]),
-                    )
-                }
-            }
+        "contact_rate": {
+            str(agegroup): youth_reduced_susceptibility for agegroup in youth_agegroups
+        },
+    }
+    if is_importation_active:
+        adjust_requests["import_secondary_rate"] = get_total_contact_rates_by_age(
+            static_mixing_matrix, direction="horizontal"
         )
 
-        model.stratify(
-            "agegroup",  # Don't use the string age, to avoid triggering automatic demography
-            convert_list_contents_to_int(age_strata),
-            [],  # Apply to all compartments
-            {
-                i_break: prop for i_break, prop in zip(age_strata, normalise_sequence(total_pops))
-            },  # Distribute starting population
-            mixing_matrix=static_mixing_matrix,
-            adjustment_requests=adjust_requests,
-            verbose=False,
-            entry_proportions=preprocess.importation.IMPORTATION_PROPS_BY_AGE,
-        )
+    # Distribute starting population over agegroups
+    requested_props = {
+        agegroup: prop for agegroup, prop in zip(agegroup_strata, normalise_sequence(total_pops))
+    }
+
+    # We use "agegroup" instead of "age", to avoid triggering automatic demography features.
+    model.stratify(
+        "agegroup",
+        agegroup_strata,
+        compartment_types_to_stratify=[],  # Apply to all compartments
+        requested_proportions=requested_props,
+        mixing_matrix=static_mixing_matrix,
+        adjustment_requests=adjust_requests,
+        # FIXME: This seems awfully a lot like a parameter that should go in a YAML file.
+        entry_proportions=preprocess.importation.IMPORTATION_PROPS_BY_AGE,
+    )
 
     # Stratify infectious compartment by clinical status
     if "clinical" in model_parameters["stratify_by"] and model_parameters["clinical_strata"]:

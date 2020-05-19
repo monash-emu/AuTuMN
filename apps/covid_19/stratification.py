@@ -257,7 +257,7 @@ def stratify_by_clinical(_covid_model, model_parameters, compartments):
             progression_death_rates[stratum + "_within_late"],
         ) = find_rates_and_complements_from_ifr(
             rel_props[stratum + "_death"],
-            model_parameters["n_compartment_repeats"][Compartment.LATE_INFECTIOUS],
+            1,
             [model_parameters["within_" + stratum + "_late"]] * 16,
         )
 

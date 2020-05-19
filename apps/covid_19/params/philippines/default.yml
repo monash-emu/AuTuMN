@@ -1,7 +1,7 @@
 ---
 country: philippines
 iso3: PHL
-prop_isolated_among_symptomatic: 0.2
+symptomatic_props_imported: 0.2
 
 contact_rate: 0.026
 

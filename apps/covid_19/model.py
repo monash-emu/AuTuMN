@@ -42,14 +42,14 @@ def build_model(params: dict):
     hospital_inflate = params["hospital_inflate"]
     hospital_props = params["hospital_props"]
     infection_fatality_props = params["infection_fatality_props"]
-    prop_isolated_among_symptomatic = params.get("prop_isolated_among_symptomatic", 0)
+    symptomatic_props_imported = params["symptomatic_props_imported"]
     if ifr_multiplier:
         infection_fatality_props = [p * ifr_multiplier for p in infection_fatality_props]
         # FIXME: we should never write back to params
         params["infection_fatality_props"] = infection_fatality_props
     if ifr_multiplier and hospital_inflate:
         hospital_props = [
-            min(h_prop * ifr_multiplier, 1.0 - prop_isolated_among_symptomatic)
+            min(h_prop * ifr_multiplier, 1.0 - symptomatic_props_imported)
             for h_prop in hospital_props
         ]
         # FIXME: we should never write back to params
@@ -255,7 +255,6 @@ def build_model(params: dict):
     # Add notifications to derived_outputs
     implement_importation = model.parameters["implement_importation"]
     imported_cases_explict = model.parameters["imported_cases_explict"]
-    symptomatic_props_imported = model.parameters["symptomatic_props_imported"]
     prop_detected_among_symptomatic_imported = model.parameters[
         "prop_detected_among_symptomatic_imported"
     ]
@@ -268,10 +267,6 @@ def build_model(params: dict):
     model.derived_output_functions["incidence_icu"] = outputs.calculate_incidence_icu_covid
     model.death_output_categories = list_all_strata_for_mortality(model.compartment_names)
     return model
-
-
-# MATT REFACTOR
-# TODO: Move or delete
 
 
 def update_dict_params_for_calibration(params):

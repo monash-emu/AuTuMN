@@ -293,7 +293,8 @@ def plot_multi_compartments_single_scenario(
         axis.plot(times, values, color=COLOR_THEME[color_idx], alpha=0.7)
         legend.append(compartment_name)
 
-    axis.legend(legend)
+    if len(legend) < 10:
+        axis.legend(legend)
     if is_logscale:
         axis.set_yscale("log")
 

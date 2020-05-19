@@ -8,8 +8,7 @@ from autumn.tb_model import list_all_strata_for_mortality
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
 
 from autumn.demography.social_mixing import get_total_contact_rates_by_age
-from autumn.demography.population import get_population_size
-from autumn.db import Database
+from autumn.db import Database, find_population_by_agegroup
 from autumn.summer_related.parameter_adjustments import split_multiple_parameters
 
 from .stratification import stratify_by_clinical
@@ -20,13 +19,6 @@ from .outputs import (
     calculate_notifications_covid,
     calculate_incidence_icu_covid,
 )
-from .importation import (
-    set_tv_importation_rate,
-    set_tv_importation_as_birth_rates,
-    importation_props_by_age,
-)
-
-from autumn.demography.ageing import add_agegroup_breaks
 from . import preprocess
 
 # Database locations
@@ -46,8 +38,6 @@ def build_model(params: dict):
         The final model with all parameters and stratifications
     """
 
-    params = add_agegroup_breaks(params)
-
     # Update parameters stored in dictionaries that need to be modified during calibration
     params = update_dict_params_for_calibration(params)
 
@@ -62,8 +52,16 @@ def build_model(params: dict):
             ]
     model_parameters = params
 
-    # Get population size (by age if age-stratified)
-    total_pops, model_parameters = get_population_size(model_parameters, input_database)
+    # Get the agegroup strata breakpoints.
+    agegroup_max = params["agegroup_breaks"][0]
+    agegroup_step = params["agegroup_breaks"][1]
+    agegroup_strata = list(range(0, agegroup_max, agegroup_step))
+
+    # Calculate the country population size by age-group, using UN data
+    country_iso3 = params["iso3"]
+    total_pops, _ = find_population_by_agegroup(input_database, agegroup_strata, country_iso3)
+    total_pops = [int(1000.0 * total_pops[agebreak][-1]) for agebreak in list(total_pops.keys())]
+    starting_pop = sum(total_pops)
 
     # Define compartments with repeats as needed
     all_compartments = [
@@ -166,6 +164,10 @@ def build_model(params: dict):
             end_time,
         )
 
+    if is_importation_active and not is_importation_explict:
+        # FIXME: summer should handle this internally.
+        model_parameters["import_secondary_rate"] = "import_secondary_rate"
+
     # Define model
     model = StratifiedModel(
         integration_times,
@@ -182,19 +184,48 @@ def build_model(params: dict):
         model.find_dynamic_mixing_matrix = dynamic_mixing_matrix
         model.dynamic_mixing_matrix = True
 
-    # set time-variant importation rate
-    if model_parameters["implement_importation"] and not model_parameters["imported_cases_explict"]:
-        model = set_tv_importation_rate(
-            model, params["data"]["times_imported_cases"], params["data"]["n_imported_cases"]
+    # Set time-variant importation rate
+    if is_importation_active and is_importation_explict:
+        import_times = params["data"]["times_imported_cases"]
+        import_cases = params["data"]["n_imported_cases"]
+        symptomatic_props_imported = params["symptomatic_props_imported"]
+        prop_detected_among_symptomatic_imported = params[
+            "prop_detected_among_symptomatic_imported"
+        ]
+        model.parameters["crude_birth_rate"] = "crude_birth_rate"
+        model.time_variants[
+            "crude_birth_rate"
+        ] = preprocess.importation.get_importation_rate_func_as_birth_rates(
+            import_times,
+            import_cases,
+            symptomatic_props_imported,
+            prop_detected_among_symptomatic_imported,
+            starting_pop,
         )
-    elif model_parameters["implement_importation"] and model_parameters["imported_cases_explict"]:
-        model = set_tv_importation_as_birth_rates(
-            model, params["data"]["times_imported_cases"], params["data"]["n_imported_cases"]
+    elif is_importation_active:
+        param_name = "import_secondary_rate"
+        contact_rate = params["contact_rate"]
+        self_isolation_effect = params["self_isolation_effect"]
+        enforced_isolation_effect = params["enforced_isolation_effect"]
+        import_times = params["data"]["times_imported_cases"]
+        import_cases = params["data"]["n_imported_cases"]
+        model.adaptation_functions[
+            "import_secondary_rate"
+        ] = preprocess.importation.get_importation_rate_func(
+            country,
+            import_times,
+            import_cases,
+            self_isolation_effect,
+            enforced_isolation_effect,
+            contact_rate,
+            starting_pop,
         )
 
     # Stratify model by age
+    # Coerce age breakpoint numbers into strings - all strata are represented as strings.
+    agegroup_strata = [str(s) for s in agegroup_strata]
     if "agegroup" in model_parameters["stratify_by"]:
-        age_strata = model_parameters["all_stratifications"]["agegroup"]
+        age_strata = agegroup_strata
         adjust_requests = split_multiple_parameters(
             ("to_infectious", "infect_death", "within_late"), age_strata
         )  # Split unchanged parameters for later adjustment
@@ -235,11 +266,12 @@ def build_model(params: dict):
             mixing_matrix=static_mixing_matrix,
             adjustment_requests=adjust_requests,
             verbose=False,
-            entry_proportions=importation_props_by_age,
+            entry_proportions=preprocess.importation.IMPORTATION_PROPS_BY_AGE,
         )
 
     # Stratify infectious compartment by clinical status
     if "clinical" in model_parameters["stratify_by"] and model_parameters["clinical_strata"]:
+        model_parameters["all_stratifications"] = {"agegroup": agegroup_strata}
         model, model_parameters = stratify_by_clinical(model, model_parameters, final_compartments)
 
     # Define output connections to collate

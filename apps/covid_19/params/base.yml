@@ -22,23 +22,28 @@ traveller_quarantine:
   times: [0.]
   values: [0.]
 
+# Mean time (?) spent in each compartment
 compartment_periods:
-  incubation: 5.
-  # exposed now calculated
-  # presympt now calculated
-  total_infectious: 7.
-  # infectious now refers to total infectious period, which is confusing because there is an infectious compartment
-  # late now calculated
   hospital_early: 5.
   hospital_late: 8.
   icu_early: 5.
   icu_late: 10.
 
-# Proportion of the exposed period spent infectious - i.e. "presymptomatic", assumed
-prop_exposed_presympt: 0.5
+# Mean time (?) spent in each compartment, defined via proprotions
+compartment_periods_calculated:
+  total_infectious:
+    total_period: 7.
+    proportions:
+      # Proportion of the infectious period spent in the early compartment (i.e. can't be isolated for symptoms), assumed
+      infectious: 0.333
+      late: 0.667
 
-# Proportion of the infectious period spent in the early compartment (i.e. can't be isolated for symptoms), assumed
-prop_infectious_early: 0.333
+  incubation:
+    total_period: 5.
+    proportions:
+      exposed: 0.5
+      # Proportion of the exposed period spent infectious - i.e. "presymptomatic", assumed
+      presympt: 0.5
 
 # Stratification-related requests
 stratify_by:

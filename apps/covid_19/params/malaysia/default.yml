@@ -19,12 +19,15 @@ hospital_inflate: True
 # Make case detection time-variant
 tv_detection_c: 80. # inflection time
 
-# MCMC calibrated params:
-contact_rate: 0.017071820120503907
-start_time: 2.4207225897160702
+contact_rate: 0.017071820120503907 # MCMC calibrated
+start_time: 2.4207225897160702 # MCMC calibrated
 compartment_periods:
-  incubation: 4.757296795140329
-  icu_late: 18.014359691036365
+  icu_late: 18.014359691036365 # MCMC calibrated
+
+compartment_periods_calculated:
+  incubation:
+    total_period: 4.757296795140329 # MCMC calibrated
+
 young_reduced_susceptibility: 0.5455689171623851
 tv_detection_sigma: 0.0012018317478746966
 tv_detection_b: 0.06734510356363975

@@ -39,26 +39,6 @@ def adjust_upstream_stratified_parameter(
     return param_adjustments
 
 
-def split_prop_into_two_subprops(overall_props, overall_prop_name, split_props, split_prop_name):
-    """
-    Split a proportion parameter into two subproportions according to a requested split, and include the complement
-    """
-    extra_underscore = "" if overall_prop_name == "" else "_"
-    return {
-        split_prop_name: [
-            overall_props[i_agegroup] * split_props[i_agegroup]
-            for i_agegroup in range(len(split_props))
-        ],
-        overall_prop_name
-        + extra_underscore
-        + "non_"
-        + split_prop_name: [
-            overall_props[i_agegroup] * (1.0 - split_props[i_agegroup])
-            for i_agegroup in range(len(split_props))
-        ],
-    }
-
-
 def split_parameter(parameter, strata):
     return {parameter: {stratum: 1.0 for stratum in strata}}
 

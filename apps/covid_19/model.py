@@ -91,26 +91,6 @@ def build_model(params: dict) -> StratifiedModel:
     # Update parameters stored in dictionaries that need to be modified during calibration
     params = update_dict_params_for_calibration(params)
 
-    # Adjust infection for relative all-cause mortality compared to China,
-    # using a single constant: infection-rate multiplier.
-    # FIXME: how consistently is this used?
-    ifr_multiplier = params["ifr_multiplier"]
-    hospital_inflate = params["hospital_inflate"]
-    hospital_props = params["hospital_props"]
-    infection_fatality_props = params["infection_fatality_props"]
-    symptomatic_props_imported = params["symptomatic_props_imported"]
-    if ifr_multiplier:
-        infection_fatality_props = [p * ifr_multiplier for p in infection_fatality_props]
-        # FIXME: we should never write back to params
-        params["infection_fatality_props"] = infection_fatality_props
-    if ifr_multiplier and hospital_inflate:
-        hospital_props = [
-            min(h_prop * ifr_multiplier, 1.0 - symptomatic_props_imported)
-            for h_prop in hospital_props
-        ]
-        # FIXME: we should never write back to params
-        params["hospital_props"] = hospital_props
-
     # Get the agegroup strata breakpoints.
     agegroup_max = params["agegroup_breaks"][0]
     agegroup_step = params["agegroup_breaks"][1]
@@ -297,7 +277,7 @@ def build_model(params: dict) -> StratifiedModel:
     # Stratify infectious compartment by clinical status
     if "clinical" in model_parameters["stratify_by"] and model_parameters["clinical_strata"]:
         model_parameters["all_stratifications"] = {"agegroup": agegroup_strata}
-        model, model_parameters = stratify_by_clinical(model, model_parameters, compartments)
+        stratify_by_clinical(model, model_parameters, compartments)
 
     # Define output connections to collate
     # Track compartment output connections.
@@ -311,6 +291,7 @@ def build_model(params: dict) -> StratifiedModel:
     # Add notifications to derived_outputs
     implement_importation = model.parameters["implement_importation"]
     imported_cases_explict = model.parameters["imported_cases_explict"]
+    symptomatic_props_imported = model_parameters["symptomatic_props_imported"]
     prop_detected_among_symptomatic_imported = model.parameters[
         "prop_detected_among_symptomatic_imported"
     ]

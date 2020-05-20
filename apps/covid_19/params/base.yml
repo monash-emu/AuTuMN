@@ -61,43 +61,43 @@ agegroup_breaks:
 # Infectiousness progression adjustments - in ten year brackets that need to be adapted to model strata later
 # Extracted by WebPlotDigitizer from the LSHTM's "Age-dependent effects in the ..." Fig 2b, upper-left panel
 symptomatic_props:
-  - 0.396
-  - 0.252
-  - 0.367
-  - 0.408
-  - 0.476
-  - 0.572
-  - 0.710
-  - 0.745
+  - 0.396 # 0-9
+  - 0.252 # 10-19
+  - 0.367 # 20-29
+  - 0.408 # 30-39
+  - 0.476 # 40-49
+  - 0.572 # 50-59
+  - 0.710 # 60-69
+  - 0.745 # 70+
 
 # Proportion of symptomatic persons that are hospitalised - Verity et al.
 hospital_props:
-  - 0.001
-  - 0.003
-  - 0.012
-  - 0.032
-  - 0.049
-  - 0.102
-  - 0.166
-  - 0.243
-  - 0.273
-hospital_inflate: False
-ifr_multiplier: 0
+  - 0.001 # 0-9
+  - 0.003 # 10-19
+  - 0.012 # 20-29
+  - 0.032 # 30-39
+  - 0.049 # 40-49
+  - 0.102 # 50-59
+  - 0.166 # 60-69
+  - 0.243 # 70-79
+  - 0.273 # 80+
 
 # Proportion of those hospitalised that are admitted to ICU - consistent with LSHTM's LMIC estimates parameters
 icu_prop: 0.3
 
 # Infection fatality proportions - Verity et al.
+ifr_multiplier: 0
+hospital_inflate: False
 infection_fatality_props:
-  - 0.00002
-  - 0.00006
-  - 0.0003
-  - 0.0008
-  - 0.0015
-  - 0.006
-  - 0.022
-  - 0.051
-  - 0.093
+  - 0.00002 # 0-9
+  - 0.00006 # 10-19
+  - 0.0003 # 20-29
+  - 0.0008 # 30-39
+  - 0.0015 # 40-49
+  - 0.006 # 50-59
+  - 0.022 # 60-69
+  - 0.051 # 70-79
+  - 0.093 # 80+
 
 # Reduced susceptibility in children - assumed, but informed by Iceland NEJM paper
 young_reduced_susceptibility: 0.5

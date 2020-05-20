@@ -315,7 +315,7 @@ def stratify_by_clinical(model, model_parameters, compartments):
 def subdivide_props(base_props: np.ndarray, split_props: np.ndarray):
     """
     Split an array (base_array) of proportions into two arrays (split_arr, complement_arr)
-    according to the split proprotions provided (split_prop).
+    according to the split proportions provided (split_prop).
     """
     split_arr = base_props * split_props
     complement_arr = base_props * (1 - split_props)
@@ -324,7 +324,7 @@ def subdivide_props(base_props: np.ndarray, split_props: np.ndarray):
 
 class TimeVaryingProprotions:
     """
-    Provides time-varying proprotions for a given age group.
+    Provides time-varying proportions for a given age group.
     The proportions determine which clinical stratum people transition into when they go
     from being presymptomatic to early infectious.
     """
@@ -338,20 +338,20 @@ class TimeVaryingProprotions:
 
     def abs_prop_sympt_non_hosp_func(self, t):
         """
-        Returns the absolute proprotion of infected not entering the hospital.
+        Returns the absolute proportion of infected not entering the hospital.
         This also does not count people who are isolated.
         This is only people who are not detected.
         """
-        prop_symptomatic = abs_props["sympt"][self.age_idx]
+        prop_symptomatic = self.abs_props["sympt"][self.age_idx]
         rel_prop_not_detected_among_symptomatic = 1.0 - self.prop_detect_among_sympt(t)
         prop_symptomatic_not_detected = prop_symptomatic * rel_prop_not_detected_among_symptomatic
         return prop_symptomatic_not_detected
 
     def adjusted_prop_hospital_among_sympt_func(self, t):
         """
-        Returns the relative proprotion of infected entering the hospital.
+        Returns the relative proportion of infected entering the hospital.
         """
-        prop_hospitalized_among_symptomatic = self.hospital_props[age_idx]
+        prop_hospitalized_among_symptomatic = self.hospital_props[self.age_idx]
         prop_symptomatic_detected = self.prop_detect_among_sympt(t)
         if prop_symptomatic_detected >= prop_hospitalized_among_symptomatic:
             # This is fine because it is less than the proportion detected.
@@ -363,9 +363,9 @@ class TimeVaryingProprotions:
 
     def abs_prop_isolate_func(self, t):
         """
-        Returns the absolute proprotion of infected becoming isolated at home.
+        Returns the absolute proportion of infected becoming isolated at home.
         """
-        prop_symptomatic = abs_props["sympt"][self.age_idx]
+        prop_symptomatic = self.abs_props["sympt"][self.age_idx]
         prop_symptomatic_and_detected = prop_symptomatic * self.prop_detect_among_sympt(t)
         prop_detected_going_to_hospital = self.adjusted_prop_hospital_among_sympt_func(
             t
@@ -378,7 +378,7 @@ class TimeVaryingProprotions:
         Returns the absolute proprotion of infected people entering the
         hospital but not the ICU.
         """
-        prop_symptomatic = abs_props["sympt"][self.age_idx]
+        prop_symptomatic = self.abs_props["sympt"][self.age_idx]
         prop_hospitalised = prop_symptomatic * self.adjusted_prop_hospital_among_sympt_func(t)
         prop_hospitalised_not_in_icu = prop_hospitalised * (1.0 - self.icu_prop)
         return prop_hospitalised_not_in_icu
@@ -387,7 +387,7 @@ class TimeVaryingProprotions:
         """
         Returns the absolute proprotion of infected people entering the ICU.
         """
-        prop_symptomatic = abs_props["sympt"][self.age_idx]
+        prop_symptomatic = self.abs_props["sympt"][self.age_idx]
         prop_hospitalised = prop_symptomatic * self.adjusted_prop_hospital_among_sympt_func(t)
         prop_hospitalised_in_icu = prop_hospitalised * self.icu_prop
         return prop_hospitalised_in_icu

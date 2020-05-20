@@ -3,6 +3,7 @@ Different types of plots that use a Plotter
 """
 import logging
 from typing import List, Tuple
+import os
 
 import pandas as pd
 import seaborn as sns
@@ -14,7 +15,9 @@ from summer.model.strat_model import StratifiedModel
 from autumn.demography.social_mixing import load_specific_prem_sheet
 from autumn.tool_kit.scenarios import Scenario
 from autumn.tool_kit import schema_builder as sb
-from autumn.tool_kit.uncertainty import collect_iteration_weights, compute_mcmc_output_quantiles
+from autumn.tool_kit.uncertainty import export_mcmc_quantiles
+from autumn.db.database import Database
+
 
 from .plotter import Plotter, COLOR_THEME
 
@@ -137,21 +140,27 @@ def plot_loglikelihood_vs_parameter(
 
 def plot_timeseries_with_uncertainty(
     plotter: Plotter,
-    mcmc_tables: List[pd.DataFrame],
-    output_tables: List[pd.DataFrame],
-    derived_output_tables: List[pd.DataFrame],
+    path_to_percentile_outputs: str,
     output_name: str,
+    scenario_indices=[0],
     burn_in=0,
-    plot_config={},
+    plot_config={}
 ):
-    weights = collect_iteration_weights(mcmc_tables, burn_in)  # discarding burned iterations
-    times, quantiles = compute_mcmc_output_quantiles(mcmc_tables, output_tables, derived_output_tables, weights,
-                                                     output_name)
-    fig, axis, _, _, _ = plotter.get_figure()
-    axis.fill_between(times, quantiles[:, 0], quantiles[:, 4], facecolor="lightsteelblue")
-    axis.fill_between(times, quantiles[:, 1], quantiles[:, 3], facecolor="cornflowerblue")
-    axis.plot(times, quantiles[:, 2], color="navy")
+    percentile_db_path = os.path.join(path_to_percentile_outputs, 'mcmc_percentiles_burned_' + str(burn_in) + '.db')
+    if not os.path.exists(percentile_db_path):
+        export_mcmc_quantiles(path_to_percentile_outputs, [output_name], burn_in=burn_in)
 
+    db = Database(percentile_db_path)
+    output_perc = db.db_query(output_name)
+
+    fig, axis, _, _, _ = plotter.get_figure()
+    scenario_list = 'scenarios'
+    for scenario_index in scenario_indices[::-1]:  # loop in reverse scenario order
+        scenario_list += ' ' + str(scenario_index)
+        df = output_perc[output_perc.Scenario == 'S_' + str(scenario_index)]
+        axis.fill_between(df.times, df.q_2_5, df.q_97_5, facecolor="lightsteelblue")
+        axis.fill_between(df.times, df.q_25, df.q_75, facecolor="cornflowerblue")
+        axis.plot(df.times, df.q_50, color="navy")
     try:
         output_config = next(o for o in plot_config["outputs_to_plot"] if o["name"] == output_name)
     except StopIteration:
@@ -162,7 +171,8 @@ def plot_timeseries_with_uncertainty(
     _plot_targets_to_axis(axis, target_values, target_times, on_uncertainty_plot=True)
     axis.set_xlabel("time")
     axis.set_ylabel(output_name)
-    plotter.save_figure(fig, filename=f"{output_name} uncertainty", title_text=f"{output_name}")
+
+    plotter.save_figure(fig, filename=f"{output_name} uncertainty {scenario_list}", title_text=f"{output_name}")
 
 
 def _overwrite_non_accepted_mcmc_runs(mcmc_tables: List[pd.DataFrame], column_name: str):

@@ -182,7 +182,7 @@ def stratify_by_clinical(model, model_parameters, compartments):
     # we need to adjust the hospital_props to make sure it remains <= detected proportions
     def adjusted_prop_hospital_among_sympt_wrapper(_age_idx):
         def adjusted_prop_hospital_among_sympt_func(t):
-            raw_h_prop = abs_props["sympt"][_age_idx] * model_parameters["raw_hospital"][_age_idx]
+            raw_h_prop = abs_props["sympt"][_age_idx] * hospital_props[_age_idx]
             adjusted_h_prop = (
                 raw_h_prop
                 if tv_prop_detect_among_sympt(t) >= raw_h_prop

@@ -164,3 +164,7 @@ prayers_params:
   restart_time: 0
   prop_participating: 0.
   contact_multiplier: 1.
+
+# parameters od negative binomial (need to be listed for validation)
+notifications_dispersion_param: 1.
+prevXlateXclinical_icuXamong_dispersion_param: 1.

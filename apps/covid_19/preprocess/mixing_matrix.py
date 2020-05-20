@@ -99,11 +99,11 @@ def build_dynamic(
         mixing_matrix = matrix_components["all_locations"]
 
         # Make adjustments by location
-        for loc_key in LOCATIONS:
+        for loc_key in [loc for loc in LOCATIONS if loc in mixing]:
             loc_times = mixing[loc_key]["times"]
             loc_vals = mixing[loc_key]["values"]
             loc_adj_func = scale_up_function(loc_times, loc_vals, method=4)
-            location_adjustment_matrix = (loc_adj_func(time) - 1.0) * matrix_components[location]
+            location_adjustment_matrix = (loc_adj_func(time) - 1.0) * matrix_components[loc_key]
             mixing_matrix = np.add(mixing_matrix, location_adjustment_matrix)
 
         # Make adjustments by age

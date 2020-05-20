@@ -40,6 +40,7 @@ def stratify_by_clinical(model, model_parameters, compartments):
     traveller_quarantine = model_parameters["traveller_quarantine"]
     # Time variant case detection
     prop_detected_among_symptomatic = model_parameters["prop_detected_among_symptomatic"]
+    # FIXME: Make it clear that this for tahn
     tv_detection_b = model_parameters["tv_detection_b"]
     tv_detection_c = model_parameters["tv_detection_c"]
     tv_detection_sigma = model_parameters["tv_detection_sigma"]
@@ -103,6 +104,7 @@ def stratify_by_clinical(model, model_parameters, compartments):
     sympt_hospital, sympt_non_hospital = subdivide_props(sympt, hospital_props_arr)
     # Determine the absolute proportion of hospitalized who become icu vs non-icu.
     sympt_hospital_icu, sympt_hospital_non_icu = subdivide_props(sympt_hospital, icu_prop)
+    # FIXME: Some of these proprotions are overidden by time-varying proprotions later and are never used.
     abs_props = {
         "sympt": sympt.tolist(),
         "non_sympt": non_sympt.tolist(),
@@ -138,6 +140,7 @@ def stratify_by_clinical(model, model_parameters, compartments):
 
     abs_props.update({"hospital_death": hospital_death, "icu_death": icu_death})
 
+    # FIXME: These depend on static variables which have been made time-variant.
     # fatality rate for hospitalised patients
     rel_props = {
         "hospital_death": element_wise_list_division(
@@ -148,100 +151,37 @@ def stratify_by_clinical(model, model_parameters, compartments):
 
     # Progression rates into the infectious compartment(s)
     # Define progresion rates into non-symptomatic compartments using parameter adjustment.
-    fixed_prop_strata = ["non_sympt"]
-    stratification_adjustments = adjust_upstream_stratified_parameter(
-        "to_infectious",
-        fixed_prop_strata,
-        "agegroup",
-        model_parameters["all_stratifications"]["agegroup"],
-        [abs_props[stratum] for stratum in fixed_prop_strata],
-    )
+    stratification_adjustments = {}
+    for age_idx, age in enumerate(agegroup_strata):
+        key = f"to_infectiousXagegroup_{age}"
+        stratification_adjustments[key] = {"non_sympt": non_sympt[age_idx]}
 
-    # Set time-variant proportion of sympt_isolate among all symptomatics
-    # create a scale-up function converging to 1
+    # Create a function for the proprotion of symptomatic people who are detected at timestep `t`.
     scale_up_multiplier = tanh_based_scaleup(tv_detection_b, tv_detection_c, tv_detection_sigma)
-    # use the input parameter 'prop_detected_among_symptomatic', specifying the maximum prop of isolates among all sympt
-    tv_prop_detect_among_sympt = lambda t: prop_detected_among_symptomatic * scale_up_multiplier(t)
 
-    # Set isolation rates as absolute proportions
-    # model, stratification_adjustments = set_isolation_props(
-    #     model, model_parameters, abs_props, stratification_adjustments, tv_prop_detect_among_sympt,
-    # )
-    """
-    Set the absolute proportions of new cases isolated and not isolated, and indicate to the model where they should be
-    found.
-    """
-    # need wrapper functions around all time-variant splitting functions to avoid using the final age_idx
-    # for all age groups, which is what would happen if the t_v functions were defined within a loop.
-    def abs_prop_sympt_non_hosp_wrapper(_age_idx):
-        def abs_prop_sympt_non_hosp_func(t):
-            return abs_props["sympt"][_age_idx] * (1.0 - tv_prop_detect_among_sympt(t))
+    def prop_detect_among_sympt_func(t):
+        return prop_detected_among_symptomatic * scale_up_multiplier(t)
 
-        return abs_prop_sympt_non_hosp_func
-
-    # we need to adjust the hospital_props to make sure it remains <= detected proportions
-    def adjusted_prop_hospital_among_sympt_wrapper(_age_idx):
-        def adjusted_prop_hospital_among_sympt_func(t):
-            raw_h_prop = abs_props["sympt"][_age_idx] * hospital_props[_age_idx]
-            adjusted_h_prop = (
-                raw_h_prop
-                if tv_prop_detect_among_sympt(t) >= raw_h_prop
-                else tv_prop_detect_among_sympt(t)
-            )
-            return adjusted_h_prop
-
-        return adjusted_prop_hospital_among_sympt_func
-
-    def abs_prop_isolate_wrapper(_age_idx):
-        def abs_prop_isolate_func(t):
-            return (
-                abs_props["sympt"][_age_idx]
-                * tv_prop_detect_among_sympt(t)
-                * (
-                    1.0
-                    - adjusted_prop_hospital_among_sympt_wrapper(_age_idx)(t)
-                    / tv_prop_detect_among_sympt(t)
-                )
-            )
-
-        return abs_prop_isolate_func
-
-    def abs_prop_hosp_non_icu_wrapper(_age_idx):
-        def abs_prop_hosp_non_icu_func(t):
-            return (
-                abs_props["sympt"][_age_idx]
-                * adjusted_prop_hospital_among_sympt_wrapper(_age_idx)(t)
-                * (1.0 - model_parameters["icu_prop"])
-            )
-
-        return abs_prop_hosp_non_icu_func
-
-    def abs_prop_icu_wrapper(_age_idx):
-        def abs_prop_icu_func(t):
-            return (
-                abs_props["sympt"][_age_idx]
-                * adjusted_prop_hospital_among_sympt_wrapper(_age_idx)(t)
-                * model_parameters["icu_prop"]
-            )
-
-        return abs_prop_icu_func
-
-    for age_idx, agegroup in enumerate(model_parameters["all_stratifications"]["agegroup"]):
-        # pass the functions to summer
-        model.time_variants[
-            "prop_sympt_non_hospital_" + agegroup
-        ] = abs_prop_sympt_non_hosp_wrapper(age_idx)
-        model.time_variants["prop_sympt_isolate_" + agegroup] = abs_prop_isolate_wrapper(age_idx)
-        model.time_variants["prop_hospital_non_icu_" + agegroup] = abs_prop_hosp_non_icu_wrapper(
-            age_idx
+    # Set time-varying isolation proprotions
+    for age_idx, agegroup in enumerate(agegroup_strata):
+        # Pass the functions to summer
+        tv_props = TimeVaryingProprotions(
+            age_idx, abs_props, icu_prop, prop_detect_among_sympt_func, hospital_props
         )
-        model.time_variants["prop_icu_" + agegroup] = abs_prop_icu_wrapper(age_idx)
+        time_variants = [
+            [f"prop_sympt_non_hospital_{agegroup}", tv_props.abs_prop_sympt_non_hosp_func],
+            [f"prop_sympt_isolate_{agegroup}", tv_props.abs_prop_isolate_func],
+            [f"prop_hospital_non_icu_{agegroup}", tv_props.abs_prop_hosp_non_icu_func],
+            [f"prop_icu_{agegroup}", tv_props.abs_prop_icu_func],
+        ]
+        for name, func in time_variants:
+            model.time_variants[name] = func
 
-        # define the stratification adjustments to be made
         for clinical_stratum in ["sympt_non_hospital", "sympt_isolate", "hospital_non_icu", "icu"]:
-            stratification_adjustments["to_infectiousXagegroup_" + agegroup][clinical_stratum] = (
-                "prop_" + clinical_stratum + "_" + agegroup
-            )
+            # Tell summer to use these time varying functions for the stratification adjustments.
+            stratification_adjustments[f"to_infectiousXagegroup_{agegroup}"][
+                clinical_stratum
+            ] = f"prop_{clinical_stratum}_{agegroup}"
 
     # Calculate death rates and progression rates for hospitalised and ICU patients
     progression_death_rates = {}
@@ -380,3 +320,74 @@ def subdivide_props(base_props: np.ndarray, split_props: np.ndarray):
     split_arr = base_props * split_props
     complement_arr = base_props * (1 - split_props)
     return split_arr, complement_arr
+
+
+class TimeVaryingProprotions:
+    """
+    Provides time-varying proprotions for a given age group.
+    The proportions determine which clinical stratum people transition into when they go
+    from being presymptomatic to early infectious.
+    """
+
+    def __init__(self, age_idx, abs_props, icu_prop, prop_detect_among_sympt_func, hospital_props):
+        self.age_idx = age_idx
+        self.abs_props = abs_props
+        self.icu_prop = icu_prop
+        self.prop_detect_among_sympt = prop_detect_among_sympt_func
+        self.hospital_props = hospital_props
+
+    def abs_prop_sympt_non_hosp_func(self, t):
+        """
+        Returns the absolute proprotion of infected not entering the hospital.
+        This also does not count people who are isolated.
+        This is only people who are not detected.
+        """
+        prop_symptomatic = abs_props["sympt"][self.age_idx]
+        rel_prop_not_detected_among_symptomatic = 1.0 - self.prop_detect_among_sympt(t)
+        prop_symptomatic_not_detected = prop_symptomatic * rel_prop_not_detected_among_symptomatic
+        return prop_symptomatic_not_detected
+
+    def adjusted_prop_hospital_among_sympt_func(self, t):
+        """
+        Returns the relative proprotion of infected entering the hospital.
+        """
+        prop_hospitalized_among_symptomatic = self.hospital_props[age_idx]
+        prop_symptomatic_detected = self.prop_detect_among_sympt(t)
+        if prop_symptomatic_detected >= prop_hospitalized_among_symptomatic:
+            # This is fine because it is less than the proportion detected.
+            return prop_hospitalized_among_symptomatic
+        else:
+            # Higher prop is being hospitalised than is being detected, which doesn't work.
+            # So we set a lower bowund to the number detected.
+            return prop_symptomatic_detected
+
+    def abs_prop_isolate_func(self, t):
+        """
+        Returns the absolute proprotion of infected becoming isolated at home.
+        """
+        prop_symptomatic = abs_props["sympt"][self.age_idx]
+        prop_symptomatic_and_detected = prop_symptomatic * self.prop_detect_among_sympt(t)
+        prop_detected_going_to_hospital = self.adjusted_prop_hospital_among_sympt_func(
+            t
+        ) / self.prop_detect_among_sympt(t)
+        prop_detected_not_going_to_hospital = 1 - prop_detected_going_to_hospital
+        return prop_symptomatic_and_detected * prop_detected_not_going_to_hospital
+
+    def abs_prop_hosp_non_icu_func(self, t):
+        """
+        Returns the absolute proprotion of infected people entering the
+        hospital but not the ICU.
+        """
+        prop_symptomatic = abs_props["sympt"][self.age_idx]
+        prop_hospitalised = prop_symptomatic * self.adjusted_prop_hospital_among_sympt_func(t)
+        prop_hospitalised_not_in_icu = prop_hospitalised * (1.0 - self.icu_prop)
+        return prop_hospitalised_not_in_icu
+
+    def abs_prop_icu_func(self, t):
+        """
+        Returns the absolute proprotion of infected people entering the ICU.
+        """
+        prop_symptomatic = abs_props["sympt"][self.age_idx]
+        prop_hospitalised = prop_symptomatic * self.adjusted_prop_hospital_among_sympt_func(t)
+        prop_hospitalised_in_icu = prop_hospitalised * self.icu_prop
+        return prop_hospitalised_in_icu

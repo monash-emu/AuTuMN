@@ -1,3 +1,5 @@
+import numpy as np
+
 from autumn.tool_kit.utils import (
     find_rates_and_complements_from_ifr,
     repeat_list_elements,
@@ -5,12 +7,8 @@ from autumn.tool_kit.utils import (
     element_wise_list_division,
 )
 from autumn.constants import Compartment
-from autumn.summer_related.parameter_adjustments import (
-    adjust_upstream_stratified_parameter,
-    split_prop_into_two_subprops,
-)
+from autumn.summer_related.parameter_adjustments import adjust_upstream_stratified_parameter
 from autumn.curve import scale_up_function, tanh_based_scaleup
-
 
 
 def stratify_by_clinical(model, model_parameters, compartments):
@@ -85,12 +83,10 @@ def stratify_by_clinical(model, model_parameters, compartments):
     # Age dependent proportions of infected people who become symptomatic.
     # This is defined 8x10 year bands, 0-70+, which we transform into 16x5 year bands 0-75+
     symptomatic_props = repeat_list_elements(2, symptomatic_props_10_year)
-
     # Age dependent proportions of symptomatic people who become hospitalised.
     # This is defined 9x10 year bands, 0-80+, which we trransform into 16x5 year bands 0-75+
     # Calculate 75+ age bracket as half 75-79 and half 80+
     hospital_props = repeat_list_elements_average_last_two(hospital_props_10_year)
-
     # Infection fatality rate by age group.
     # Data in props used 10 year bands 0-80+, but we want 5 year bands from 0-75+
     # Calculate 75+ age bracket as half 75-79 and half 80+
@@ -98,25 +94,22 @@ def stratify_by_clinical(model, model_parameters, compartments):
         infection_fatality_props_10_year
     )
 
-    # Find the absolute progression proportions from the requested splits
-    # Split sympt by "is sympt" / "non sympt" using complement
-    # Of whole presympt pop, determine who becomes sympt vs non-sympt
-    ones = [1.0] * 16
-    sympt_props_split = split_prop_into_two_subprops(ones, "", symptomatic_props, "sympt")
-
-    # Of whole sympt pop, determine who goes to hospital vs non-hospital
-    hospital_props_split = split_prop_into_two_subprops(
-        sympt_props_split["sympt"], "sympt", hospital_props, "hospital"
-    )
-    # Of whole hospital pop, who goes to icu
-    icu_props = [icu_prop] * 16
-    icu_props_split = split_prop_into_two_subprops(
-        hospital_props_split["hospital"], "hospital", icu_props, "icu"
-    )
+    # Find the absolute progression proportions.
+    symptomatic_props_arr = np.array(symptomatic_props)
+    hospital_props_arr = np.array(hospital_props)
+    # Determine the absolute proportion of presymptomatic who become sympt vs non-sympt.
+    sympt, non_sympt = subdivide_props(1, symptomatic_props_arr)
+    # Determine the absolute proportion of sympt who become hospitalized vs non-hospitalized.
+    sympt_hospital, sympt_non_hospital = subdivide_props(sympt, hospital_props_arr)
+    # Determine the absolute proportion of hospitalized who become icu vs non-icu.
+    sympt_hospital_icu, sympt_hospital_non_icu = subdivide_props(sympt_hospital, icu_prop)
     abs_props = {
-        **sympt_props_split,
-        **hospital_props_split,
-        **icu_props_split,
+        "sympt": sympt.tolist(),
+        "non_sympt": non_sympt.tolist(),
+        "hospital": sympt_hospital.tolist(),
+        "sympt_non_hospital": sympt_non_hospital.tolist(),
+        "icu": sympt_hospital_icu.tolist(),
+        "hospital_non_icu": sympt_hospital_non_icu.tolist(),
     }
 
     # Calculate the absolute proportion of all patients who should eventually reach hospital death or ICU death.
@@ -377,3 +370,13 @@ def stratify_by_clinical(model, model_parameters, compartments):
         entry_proportions=importation_props_by_clinical,
         verbose=False,
     )
+
+
+def subdivide_props(base_props: np.ndarray, split_props: np.ndarray):
+    """
+    Split an array (base_array) of proportions into two arrays (split_arr, complement_arr)
+    according to the split proprotions provided (split_prop).
+    """
+    split_arr = base_props * split_props
+    complement_arr = base_props * (1 - split_props)
+    return split_arr, complement_arr

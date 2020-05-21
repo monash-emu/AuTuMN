@@ -47,8 +47,7 @@ def get_importation_rate_func(
 def get_importation_rate_func_as_birth_rates(
     importation_times: List[float],
     importation_n_cases: List[float],
-    symptomatic_props_imported: float,
-    prop_detected_among_symptomatic_imported: float,
+    detect_prop_func,
     starting_population: float,
 ):
     """
@@ -56,9 +55,8 @@ def get_importation_rate_func_as_birth_rates(
     compartment through a birth process
     """
     # inflate importation numbers to account for undetected cases (assumed to be asymptomatic or sympt non hospital)
-    prop_detected = symptomatic_props_imported * prop_detected_among_symptomatic_imported
-    importation_n_cases = [n / prop_detected for n in importation_n_cases]
-
+    for i, time in enumerate(importation_times):
+        importation_n_cases[i] /= detect_prop_func(time)
     # scale-up curve for importation numbers
     importation_numbers_scale_up = scale_up_function(
         importation_times, importation_n_cases, method=5, smoothness=5.0

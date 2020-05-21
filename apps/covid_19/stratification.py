@@ -287,8 +287,17 @@ def stratify_by_clinical(model, model_parameters, compartments):
 
         for stratum in ['non_sympt', 'sympt_isolate', 'sympt_non_hospital']:
             importation_props_by_clinical[stratum] = "tv_prop_imported_" + stratum
+
+        # create absolute time-variant case detection proportion that will be returned to be used to set importation flow
+        def modelled_abs_detection_proportion_imported(t):
+            return stratification_adjustments['to_infectiousXagegroup_' + rep_age_group]['icu'] +\
+                   stratification_adjustments['to_infectiousXagegroup_' + rep_age_group]['hospital_non_icu'] +\
+                   tvs[stratification_adjustments['to_infectiousXagegroup_' + rep_age_group]['sympt_isolate']](t)
+
+
     else:
         importation_props_by_clinical = {}
+        modelled_abs_detection_proportion_imported = None
 
     # Stratify the model using the SUMMER stratification function
     model.stratify(
@@ -303,6 +312,7 @@ def stratify_by_clinical(model, model_parameters, compartments):
         entry_proportions=importation_props_by_clinical,
         verbose=False,
     )
+    return modelled_abs_detection_proportion_imported
 
 
 def subdivide_props(base_props: np.ndarray, split_props: np.ndarray):

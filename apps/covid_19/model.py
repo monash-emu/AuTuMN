@@ -202,43 +202,6 @@ def build_model(params: dict) -> StratifiedModel:
         model.find_dynamic_mixing_matrix = dynamic_mixing_matrix
         model.dynamic_mixing_matrix = True
 
-    # Set time-variant importation rate
-    if is_importation_active and is_importation_explict:
-        import_times = params["data"]["times_imported_cases"]
-        import_cases = params["data"]["n_imported_cases"]
-        symptomatic_props_imported = params["symptomatic_props_imported"]
-        prop_detected_among_symptomatic_imported = params[
-            "prop_detected_among_symptomatic_imported"
-        ]
-        import_rate_func = preprocess.importation.get_importation_rate_func_as_birth_rates(
-            import_times,
-            import_cases,
-            symptomatic_props_imported,
-            prop_detected_among_symptomatic_imported,
-            starting_pop,
-        )
-        model.parameters["crude_birth_rate"] = "crude_birth_rate"
-        model.time_variants["crude_birth_rate"] = import_rate_func
-
-    elif is_importation_active:
-        param_name = "import_secondary_rate"
-        contact_rate = params["contact_rate"]
-        self_isolation_effect = params["self_isolation_effect"]
-        enforced_isolation_effect = params["enforced_isolation_effect"]
-        import_times = params["data"]["times_imported_cases"]
-        import_cases = params["data"]["n_imported_cases"]
-        import_rate_func = preprocess.importation.get_importation_rate_func(
-            country,
-            import_times,
-            import_cases,
-            self_isolation_effect,
-            enforced_isolation_effect,
-            contact_rate,
-            starting_pop,
-        )
-        model.parameters["import_secondary_rate"] = "import_secondary_rate"
-        model.adaptation_functions["import_secondary_rate"] = import_rate_func
-
     # Stratify model by age.
     # Coerce age breakpoint numbers into strings - all strata are represented as strings.
     agegroup_strata = [str(s) for s in agegroup_strata]
@@ -280,7 +243,41 @@ def build_model(params: dict) -> StratifiedModel:
     # Stratify infectious compartment by clinical status
     if "clinical" in model_parameters["stratify_by"] and model_parameters["clinical_strata"]:
         model_parameters["all_stratifications"] = {"agegroup": agegroup_strata}
-        stratify_by_clinical(model, model_parameters, compartments)
+        modelled_abs_detection_proportion_imported = stratify_by_clinical(model, model_parameters, compartments)
+
+    # Set time-variant importation rate
+    if is_importation_active and is_importation_explict:
+        import_times = params["data"]["times_imported_cases"]
+        import_cases = params["data"]["n_imported_cases"]
+        import_rate_func = preprocess.importation.get_importation_rate_func_as_birth_rates(
+            import_times,
+            import_cases,
+            modelled_abs_detection_proportion_imported,
+            starting_pop,
+        )
+        model.parameters["crude_birth_rate"] = "crude_birth_rate"
+        model.time_variants["crude_birth_rate"] = import_rate_func
+
+    elif is_importation_active:
+        param_name = "import_secondary_rate"
+        contact_rate = params["contact_rate"]
+        self_isolation_effect = params["self_isolation_effect"]
+        enforced_isolation_effect = params["enforced_isolation_effect"]
+        import_times = params["data"]["times_imported_cases"]
+        import_cases = params["data"]["n_imported_cases"]
+        import_rate_func = preprocess.importation.get_importation_rate_func(
+            country,
+            import_times,
+            import_cases,
+            self_isolation_effect,
+            enforced_isolation_effect,
+            contact_rate,
+            starting_pop,
+        )
+        model.parameters["import_secondary_rate"] = "import_secondary_rate"
+        model.adaptation_functions["import_secondary_rate"] = import_rate_func
+
+
 
     # Define output connections to collate
     # Track compartment output connections.

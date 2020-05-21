@@ -26,12 +26,12 @@ def get_calc_notifications_covid(
                 print(key)
                 notifications_count += value[time_idx]
 
-        # if implement_importation and imported_cases_explict:
-        #     notifications_count += (
-        #         model.time_variants["crude_birth_rate"](time)
-        #         * sum(model.compartment_values)
-        #         * prop_detected_func(time)
-        #     )
+        if implement_importation and imported_cases_explict:
+            notifications_count += (
+                model.time_variants["crude_birth_rate"](time)
+                * sum(model.compartment_values)
+                * prop_detected_func(time)
+            )
 
         return notifications_count
 

@@ -31,12 +31,9 @@ def stratify_by_clinical(model, model_parameters, compartments):
     all_stratifications = model_parameters["all_stratifications"]
     clinical_strata = model_parameters["clinical_strata"]
     # Infection rate multiplication
-    infection_rate_multiplier = model_parameters["ifr_multiplier"]
-    hospital_inflate = model_parameters["hospital_inflate"]
     # Importation
     implement_importation = model_parameters["implement_importation"]
     imported_cases_explict = model_parameters["imported_cases_explict"]
-    symptomatic_props_imported = model_parameters["symptomatic_props_imported"]
     traveller_quarantine = model_parameters["traveller_quarantine"]
     # Time variant case detection
     prop_detected_among_symptomatic = model_parameters["prop_detected_among_symptomatic"]
@@ -63,19 +60,6 @@ def stratify_by_clinical(model, model_parameters, compartments):
         if comp.startswith(Compartment.EARLY_INFECTIOUS)
         or comp.startswith(Compartment.LATE_INFECTIOUS)
     ]
-
-    # Adjust infection for relative all-cause mortality compared to China, using the infection-rate multiplier
-    if infection_rate_multiplier:
-        # Adjust infection fatality proprtions by multiplier
-        infection_fatality_props_10_year = [
-            p * infection_rate_multiplier for p in infection_fatality_props_10_year
-        ]
-        if hospital_inflate:
-            # Not sure what this is doing.
-            hospital_props_10_year = [
-                min(h_prop * infection_rate_multiplier, 1.0 - symptomatic_props_imported)
-                for h_prop in hospital_props_10_year
-            ]
 
     # FIXME: Set params to make comparison happy
     model_parameters["infection_fatality_props"] = infection_fatality_props_10_year

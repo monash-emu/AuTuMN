@@ -86,8 +86,6 @@ hospital_props:
 icu_prop: 0.3
 
 # Infection fatality proportions - Verity et al.
-ifr_multiplier: 0
-hospital_inflate: False
 infection_fatality_props:
   - 0.00002 # 0-9
   - 0.00006 # 10-19

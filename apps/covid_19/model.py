@@ -35,9 +35,7 @@ validate_params = sb.build_validator(
     compartment_periods=sb.DictGeneric(str, float),
     compartment_periods_calculated=dict,
     # Infectiousness adjustments (not sure where used)
-    ifr_multiplier=float,
     hospital_props=sb.List(float),
-    hospital_inflate=bool,
     infection_fatality_props=sb.List(float),
     # Age stratified params
     agegroup_breaks=sb.List(float),

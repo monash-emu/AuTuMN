@@ -241,12 +241,22 @@ def stratify_by_clinical(model, model_parameters, compartments):
         )
         tvs = model.time_variants  # to reduce verbosity
 
+        # create scale-up function for quarantine
         quarantine_scale_up = scale_up_function(
             model_parameters["traveller_quarantine"]["times"],
             model_parameters["traveller_quarantine"]["values"],
             method=4,
         )
 
+        # set fixed clinical proportions for imported cases (hospital_non_icu and icu)
+        importation_props_by_clinical = {
+            'hospital_non_icu':
+                stratification_adjustments['to_infectiousXagegroup_' + rep_age_group]['hospital_non_icu'],
+            'icu':
+                stratification_adjustments['to_infectiousXagegroup_' + rep_age_group]['icu']
+        }
+
+        # create time-variant function for remaining imported clinical proportions
         tv_prop_imported_non_sympt = lambda t: stratification_adjustments[
             "to_infectiousXagegroup_" + rep_age_group
         ]["non_sympt"] * (1.0 - quarantine_scale_up(t))
@@ -268,26 +278,14 @@ def stratify_by_clinical(model, model_parameters, compartments):
             + stratification_adjustments["to_infectiousXagegroup_" + rep_age_group]["non_sympt"]
         )
 
-        tv_prop_imported_hospital_non_icu = lambda t: tvs[
-            stratification_adjustments["to_infectiousXagegroup_" + rep_age_group][
-                "hospital_non_icu"
-            ]
-        ](t)
-
-        tv_prop_imported_icu = lambda t: tvs[
-            stratification_adjustments["to_infectiousXagegroup_" + rep_age_group]["icu"]
-        ](t)
-
+        # Pass time-variant functions to the model object
         model.time_variants["tv_prop_imported_non_sympt"] = tv_prop_imported_non_sympt
         model.time_variants[
             "tv_prop_imported_sympt_non_hospital"
         ] = tv_prop_imported_sympt_non_hospital
         model.time_variants["tv_prop_imported_sympt_isolate"] = tv_prop_imported_sympt_isolate
-        model.time_variants["tv_prop_imported_hospital_non_icu"] = tv_prop_imported_hospital_non_icu
-        model.time_variants["tv_prop_imported_icu"] = tv_prop_imported_icu
 
-        importation_props_by_clinical = {}
-        for stratum in strata_to_implement:
+        for stratum in ['non_sympt', 'sympt_isolate', 'sympt_non_hospital']:
             importation_props_by_clinical[stratum] = "tv_prop_imported_" + stratum
     else:
         importation_props_by_clinical = {}

@@ -23,7 +23,6 @@ def get_calc_notifications_covid(
             is_progress = "progressX" in key
             is_notify_stratum = any([stratum in key for stratum in NOTIFICATION_STRATUM])
             if is_progress and is_notify_stratum:
-                print(key)
                 notifications_count += value[time_idx]
 
         if implement_importation and imported_cases_explict:

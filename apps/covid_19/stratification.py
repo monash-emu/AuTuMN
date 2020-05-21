@@ -153,7 +153,11 @@ def stratify_by_clinical(model, model_parameters, compartments):
     stratification_adjustments = {}
     for age_idx, age in enumerate(agegroup_strata):
         key = f"to_infectiousXagegroup_{age}"
-        stratification_adjustments[key] = {"non_sympt": non_sympt[age_idx]}
+        stratification_adjustments[key] = {
+            "non_sympt": non_sympt[age_idx],
+            "icu": sympt_hospital_icu[age_idx],
+            "hospital_non_icu": sympt_hospital_non_icu[age_idx],
+        }
 
     # Create a function for the proprotion of symptomatic people who are detected at timestep `t`.
     scale_up_multiplier = tanh_based_scaleup(tv_detection_b, tv_detection_c, tv_detection_sigma)

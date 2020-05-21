@@ -6,7 +6,7 @@ PAR_PRIORS = [
     {
         'param_name': 'contact_rate',
         'distribution': 'uniform',
-        'distri_params': [0.010, 0.040]
+        'distri_params': [0.010, 0.030]
     },
     {
         'param_name': 'start_time',
@@ -33,14 +33,26 @@ PAR_PRIORS = [
     {
         "param_name": "tv_detection_sigma",
         "distribution": "beta",
-        "distri_mean": .15,
-        "distri_ci": [.01, .3]
+        "distri_mean": .25,
+        "distri_ci": [.1, .4]
     },
     {
         "param_name": "tv_detection_b",
         "distribution": "beta",
         "distri_mean": .075,
         "distri_ci": [.05, .1]
+    },
+    {
+        "param_name": "prop_detected_among_symptomatic",
+        "distribution": "beta",
+        "distri_mean": .7,
+        "distri_ci": [.6, .9]
+    },
+    {
+        "param_name": "icu_prop",
+        "distribution": "beta",
+        "distri_mean": .25,
+        "distri_ci": [.15, .35]
     },
     # Add negative binomial over-dispersion parameters
     {

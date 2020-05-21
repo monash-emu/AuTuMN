@@ -46,6 +46,14 @@ def calculate_incidence_icu_covid(model, time):
     return incidence_icu
 
 
+def calculate_icu_prev(model, time):
+    icu_prev = 0
+    for i, comp_name in enumerate(model.compartment_names):
+        if 'late' in comp_name and 'clinical_icu' in comp_name:
+            icu_prev += model.compartment_values[i]
+    return icu_prev
+
+
 def get_progress_connections(stratum_names: str):
     """
     Track "progress": flow from early infectious cases to late infectious cases.

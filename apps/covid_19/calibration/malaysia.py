@@ -6,7 +6,7 @@ PAR_PRIORS = [
     {
         'param_name': 'contact_rate',
         'distribution': 'uniform',
-        'distri_params': [0.010, 0.030]
+        'distri_params': [0.010, 0.020]
     },
     {
         'param_name': 'start_time',
@@ -109,4 +109,4 @@ def run_mys_calibration_chain(max_seconds: int, run_id: int):
 
 
 if __name__ == "__main__":
-    run_mys_calibration_chain(4000 * 17, 0)  # first argument only relevant for autumn_mcmc mode (time limit in seconds)
+    run_mys_calibration_chain(15 * 60 * 60, 0)  # first argument only relevant for autumn_mcmc mode (time limit in seconds)

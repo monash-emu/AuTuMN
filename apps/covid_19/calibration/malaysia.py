@@ -13,13 +13,13 @@ PAR_PRIORS = [
         'distribution': 'uniform',
         'distri_params': [0., 40.]},
     {
-        "param_name": "compartment_periods_incubation",
+        "param_name": "compartment_periods_calculated.incubation.total_period",
         "distribution": "gamma",
         "distri_mean": 5.,
         "distri_ci": [3., 7.]
     },
     {
-        "param_name": "compartment_periods_icu_late",
+        "param_name": "compartment_periods.icu_late",
         "distribution": "gamma",
         "distri_mean": 10.,
         "distri_ci": [5., 15.]
@@ -69,13 +69,13 @@ TARGET_OUTPUTS = [
         "output_key": "notifications",
         "years": notification_times,
         "values": notification_counts,
-        "loglikelihood_distri": "poisson",  # "negative_binomial",
+        "loglikelihood_distri": "negative_binomial",
     },
     {
         "output_key": "prevXlateXclinical_icuXamong",
         "years": icu_times,
         "values": icu_counts,
-        "loglikelihood_distri": "poisson",  # "negative_binomial",
+        "loglikelihood_distri": "negative_binomial",
     }
 ]
 
@@ -90,10 +90,10 @@ par_grid = [
 
 
 def run_mys_calibration_chain(max_seconds: int, run_id: int):
-    run_calibration_chain(max_seconds, run_id, country, PAR_PRIORS, TARGET_OUTPUTS, mode='grid_based',
-                          _grid_info=par_grid, _run_extra_scenarios=False, _multipliers=MULTIPLIERS)
-    # run_calibration_chain(max_seconds, run_id, country, PAR_PRIORS, TARGET_OUTPUTS, mode='autumn_mcmc',
-    #                       _run_extra_scenarios=False, _multipliers=MULTIPLIERS)
+    # run_calibration_chain(max_seconds, run_id, country, PAR_PRIORS, TARGET_OUTPUTS, mode='grid_based',
+    #                       _grid_info=par_grid, _run_extra_scenarios=False, _multipliers=MULTIPLIERS)
+    run_calibration_chain(max_seconds, run_id, country, PAR_PRIORS, TARGET_OUTPUTS, mode='autumn_mcmc',
+                          _run_extra_scenarios=False, _multipliers=MULTIPLIERS)
 
 
 if __name__ == "__main__":

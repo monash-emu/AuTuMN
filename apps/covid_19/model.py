@@ -89,8 +89,6 @@ def build_model(params: dict) -> StratifiedModel:
     Build the master function to run the TB model for Covid-19
     """
     validate_params(params)
-    # Update parameters stored in dictionaries that need to be modified during calibration
-    params = update_dict_params_for_calibration(params)
 
     # Get the agegroup strata breakpoints.
     agegroup_max = params["agegroup_breaks"][0]
@@ -301,35 +299,3 @@ def build_model(params: dict) -> StratifiedModel:
     model.derived_output_functions["incidence_icu"] = outputs.calculate_incidence_icu_covid
     model.death_output_categories = list_all_strata_for_mortality(model.compartment_names)
     return model
-
-
-def update_dict_params_for_calibration(params):
-    """
-    Update some specific parameters that are stored in a dictionary but are updated during calibration.
-    For example, we may want to update params['default']['compartment_periods']['incubation'] using the parameter
-    ['default']['compartment_periods_incubation']
-    :param params: dict
-        contains the model parameters
-    :return: the updated dictionary
-    """
-
-    if "n_imported_cases_final" in params:
-        params["data"]["n_imported_cases"][-1] = params["n_imported_cases_final"]
-
-    for location in ["school", "work", "home", "other_locations"]:
-        if "npi_effectiveness_" + location in params:
-            params["npi_effectiveness"][location] = params["npi_effectiveness_" + location]
-
-    for comp_type in [
-        "incubation",
-        "infectious",
-        "late",
-        "hospital_early",
-        "hospital_late",
-        "icu_early",
-        "icu_late",
-    ]:
-        if "compartment_periods_" + comp_type in params:
-            params["compartment_periods"][comp_type] = params["compartment_periods_" + comp_type]
-
-    return params

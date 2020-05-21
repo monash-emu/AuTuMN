@@ -17,6 +17,7 @@ from autumn.db.models import store_database
 from autumn.tool_kit.utils import get_data_hash, find_distribution_params_from_mean_and_ci
 from autumn.tool_kit.scenarios import Scenario
 from autumn.plots.calibration_plots import plot_all_priors
+from autumn.tool_kit.params import update_params
 
 from .utils import find_decent_starting_point, calculate_prior, raise_error_unsupported_prior
 
@@ -232,12 +233,12 @@ class Calibration:
         """
 
         print("Running iteration " + str(self.iter_num) + "...")
-        update_params = {}  # self.model_parameters
+        param_updates = {}  # self.model_parameters
         for i, param_name in enumerate(self.param_list):
-            update_params[param_name] = params[i]
+            param_updates[param_name] = params[i]
 
         self.scenarios[0] = Scenario(self.model_builder, 0, copy.deepcopy(self.model_parameters))
-        self.scenarios[0].params["default"].update(update_params)
+        self.scenarios[0].params["default"] = update_params(self.scenarios[0].params["default"], param_updates)
         self.scenarios[0].run()
         self.update_post_processing()
 

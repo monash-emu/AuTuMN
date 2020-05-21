@@ -109,8 +109,10 @@ reduced_susceptibility_agegroups:
 
 # Adjust the infectiousness of clinical strata - assumed
 non_sympt_infect_multiplier: 0.5
-hospital_non_icu_infect_multiplier: 0.2
-icu_infect_multiplier: 0.2
+late_infect_multiplier:
+  sympt_isolate: 0.2
+  hospital_non_icu: 0.2
+  icu: 0.2
 
 # parameters of tanh-based scale-up function used to define time-variant detection
 tv_detection_b: .05 # shape parameter of the tanh-based curve

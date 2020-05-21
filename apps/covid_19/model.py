@@ -42,8 +42,7 @@ validate_params = sb.build_validator(
     # Clinical status stratified params
     clinical_strata=sb.List(str),
     non_sympt_infect_multiplier=float,
-    hospital_non_icu_infect_multiplier=float,
-    icu_infect_multiplier=float,
+    late_infect_multiplier=sb.Dict(sympt_isolate=float, hospital_non_icu=float, icu=float),
     icu_mortality_prop=float,
     symptomatic_props=sb.List(float),
     icu_prop=float,

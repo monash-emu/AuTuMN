@@ -298,8 +298,7 @@ def build_model(params: dict) -> StratifiedModel:
     model.derived_output_functions["notifications"] = outputs.get_calc_notifications_covid(
         implement_importation,
         imported_cases_explict,
-        symptomatic_props_imported,
-        prop_detected_among_symptomatic_imported,
+        modelled_abs_detection_proportion_imported
     )
     model.derived_output_functions["incidence_icu"] = outputs.calculate_incidence_icu_covid
     model.death_output_categories = list_all_strata_for_mortality(model.compartment_names)

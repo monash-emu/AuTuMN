@@ -206,16 +206,21 @@ def stratify_by_clinical(model, model_parameters, compartments):
 
     # Sort out all infectiousness adjustments for entire model here
     # Sort out all infectiousness adjustments for all compartments of the model.
-    # Make adjustment for hospitalisation and ICU admission
+    # Now make adjustment for asymptomatic patients only
     strata_infectiousness = {}
     for stratum in strata_to_implement:
         if stratum + "_infect_multiplier" in model_parameters:
             strata_infectiousness[stratum] = model_parameters[stratum + "_infect_multiplier"]
 
     # Make adjustment for isolation/quarantine
-    model.individual_infectiousness_adjustments = [
-        [[Compartment.LATE_INFECTIOUS, "clinical_sympt_isolate"], 0.2]
-    ]
+    for stratum in strata_to_implement:
+        if stratum in model_parameters['late_infect_multiplier']:
+            model.individual_infectiousness_adjustments.append(
+                [
+                    [Compartment.LATE_INFECTIOUS, "clinical_" + stratum],
+                    model_parameters['late_infect_multiplier'][stratum]
+                ]
+            )
 
     # FIXME: Ask Romain about importation
     # work out time-variant clinical proportions for imported cases accounting for quarantine

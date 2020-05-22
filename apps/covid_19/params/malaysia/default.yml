@@ -1,5 +1,5 @@
 ---
-scenario_start_time: 144
+scenario_start_time: 140
 implement_importation: True
 imported_cases_explict: True
 
@@ -7,29 +7,29 @@ traveller_quarantine:
   times: [73., 76.] # self-isolation from 13 March
   values: [0., 1.]
 
-prop_detected_among_symptomatic: .7  # MCMC calibrated
+prop_detected_among_symptomatic: .9245618502383184  # MCMC calibrated
 
-end_time: 160.
+end_time: 365.
 country: malaysia
 iso3: MYS
 
 # Make case detection time-variant
 tv_detection_c: 80. # inflection time
 
-contact_rate: 0.016  # MCMC calibrated
-start_time: 20. # MCMC calibrated
+contact_rate: 0.019844933673145947  # MCMC calibrated
+start_time: 33. # MCMC calibrated
 compartment_periods:
-  icu_late: 10 # MCMC calibrated
+  icu_late: 3.434446210595029 # MCMC calibrated
 
-icu_prop: .3 # MCMC calibrated
+icu_prop: 0.3412926734959111 # MCMC calibrated
 
 compartment_periods_calculated:
   incubation:
-    total_period: 5. # MCMC calibrated
+    total_period: 2.997856338616169 # MCMC calibrated
 
-young_reduced_susceptibility: 0.5  # MCMC calibrated
-tv_detection_sigma: 0.5  # MCMC calibrated
-tv_detection_b: 0.1  # MCMC calibrated
+young_reduced_susceptibility: 0.5241684928760063  # MCMC calibrated
+tv_detection_sigma: 0.3532910119987097  # MCMC calibrated
+tv_detection_b: 0.07666065046849144  # MCMC calibrated
 
 mixing:
   other_locations_times:

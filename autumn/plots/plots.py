@@ -147,11 +147,13 @@ def plot_timeseries_with_uncertainty(
     plot_config={}
 ):
     percentile_db_path = os.path.join(path_to_percentile_outputs, 'mcmc_percentiles_burned_' + str(burn_in) + '.db')
-    if not os.path.exists(percentile_db_path):
+    try:
+        db = Database(percentile_db_path)
+        output_perc = db.db_query(output_name)
+    except:
         export_mcmc_quantiles(path_to_percentile_outputs, [output_name], burn_in=burn_in)
-
-    db = Database(percentile_db_path)
-    output_perc = db.db_query(output_name)
+        db = Database(percentile_db_path)
+        output_perc = db.db_query(output_name)
 
     fig, axis, _, _, _ = plotter.get_figure()
     scenario_list = 'scenarios'
@@ -167,6 +169,7 @@ def plot_timeseries_with_uncertainty(
         output_config = {"name": output_name, "target_values": [], "target_times": []}
 
     target_values = output_config["target_values"]
+    # target_values = [[t_list[0] * 32.364904] for t_list in target_values] # for Malaysia ICU prev
     target_times = output_config["target_times"]
     _plot_targets_to_axis(axis, target_values, target_times, on_uncertainty_plot=True)
     axis.set_xlabel("time")

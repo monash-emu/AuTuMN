@@ -795,8 +795,7 @@ class StratifiedModel(EpiModel):
             stratified than any of the others (i.e. more instances of the "X" string), will return this most stratified
             parameter
         * if there are multiple submitted requests that are extensions to the unadjusted parameter and several of them
-            are equal in having the greatest extent of stratification, will return the first one with the greatest
-            length in the order of looping through the keys of the request dictionary
+            are equal in having the greatest extent of stratification, will return the longest string
 
         :param _unadjusted_parameter:
             see add_adjusted_parameter
@@ -810,14 +809,14 @@ class StratifiedModel(EpiModel):
         applicable_params = [
             param for param in _adjustment_requests if _unadjusted_parameter.startswith(param)
         ]
-        applicable_param_lengths = [len(find_name_components(param)) for param in applicable_params]
-
-        # find the first most stratified parameter
-        return (
-            applicable_params[applicable_param_lengths.index(max(applicable_param_lengths))]
-            if applicable_param_lengths
-            else None
-        )
+        applicable_param_n_stratifications = [len(find_name_components(param)) for param in applicable_params]
+        if applicable_param_n_stratifications:
+            max_length_indices = [i_p for i_p, p in enumerate(applicable_param_n_stratifications) if
+                                  p == max(applicable_param_n_stratifications)]
+            candidate_params = [applicable_params[i] for i in max_length_indices]
+            return max(candidate_params, key=len)
+        else:
+            return None
 
     def sort_absent_transition_parameter(
         self,

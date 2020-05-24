@@ -15,5 +15,7 @@ pop_distribution_strata:
 
 translations:
   prevXlateXclinical_icuXamong: "Prevalence of ICU cases (/million pop.)"
+  infection_deathsXall: "Daily number of deaths"
+  notifications: "Daily number of confirmed cases"
 
 prevalence_combos: []

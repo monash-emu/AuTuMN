@@ -39,6 +39,7 @@ validate_params = sb.build_validator(
     infection_fatality_props=sb.List(float),
     # Age stratified params
     agegroup_breaks=sb.List(float),
+    age_based_susceptibility=sb.DictGeneric(str, float),
     # Clinical status stratified params
     clinical_strata=sb.List(str),
     non_sympt_infect_multiplier=float,
@@ -47,10 +48,7 @@ validate_params = sb.build_validator(
     symptomatic_props=sb.List(float),
     icu_prop=float,
     prop_detected_among_symptomatic=float,
-    # Youth reduced susceiptibility adjustment.
-    young_reduced_susceptibility=float,
-    reduced_susceptibility_agegroups=sb.List(str),
-    # Time-variant detection (???)
+    # Time-variant detection of COVID cases, used to construct a tanh function.
     tv_detection_b=float,
     tv_detection_c=float,
     tv_detection_sigma=float,

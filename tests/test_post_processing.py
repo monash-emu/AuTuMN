@@ -46,11 +46,7 @@ def _get_model():
     )
 
     model.stratify(
-        "strain",
-        ["sensitive", "resistant"],
-        ["infectious"],
-        requested_proportions={},
-        verbose=False,
+        "strain", ["sensitive", "resistant"], ["infectious"], split_proportions={}, verbose=False,
     )
 
     age_mixing = None

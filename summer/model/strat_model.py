@@ -21,6 +21,8 @@ from .utils import (
     find_name_components,
     find_stem,
     increment_list_by_index,
+    get_all_proportions,
+    get_stratified_compartments,
 )
 
 STRATA_EQUILIBRATION_FACTOR = 0.01
@@ -125,32 +127,6 @@ class StratifiedModel(EpiModel):
     general methods
     """
 
-    def add_compartment(self, new_compartment_name, new_compartment_value):
-        """
-        add a compartment by specifying its name and the starting value for it to take
-
-        :param new_compartment_name: str
-            name of the new compartment to be created
-        :param new_compartment_value: float
-            initial value to be assigned to the new compartment before integration
-        """
-        self.compartment_names.append(new_compartment_name)
-        self.compartment_values.append(new_compartment_value)
-        self.output_to_user("adding compartment: %s" % new_compartment_name)
-
-    def remove_compartment(self, compartment_name):
-        """
-        remove a compartment by taking the element out of the compartment_names and compartment_values attributes
-        store name of removed compartment in a separate attribute
-
-        :param compartment_name: str
-            name of compartment to be removed
-        """
-        self.removed_compartments.append(compartment_name)
-        del self.compartment_values[self.compartment_names.index(compartment_name)]
-        del self.compartment_names[self.compartment_names.index(compartment_name)]
-        self.output_to_user("removing compartment: %s" % compartment_name)
-
     def __init__(
         self,
         times,
@@ -187,7 +163,6 @@ class StratifiedModel(EpiModel):
             ticker,
         )
         self.full_stratification_list = []
-        self.removed_compartments = []
         self.overwrite_parameters = []
         self.compartment_types_to_stratify = []
         self.strains = []
@@ -226,7 +201,7 @@ class StratifiedModel(EpiModel):
         stratification_name,
         strata_request,
         compartment_types_to_stratify,
-        requested_proportions,
+        split_proportions,
         entry_proportions={},
         adjustment_requests=(),
         infectiousness_adjustments={},
@@ -245,7 +220,7 @@ class StratifiedModel(EpiModel):
             see check_compartment_request
         :param adjustment_requests:
             see incorporate_alternative_overwrite_approach and check_parameter_adjustment_requests
-        :param requested_proportions:
+        :param split_proportions:
             see prepare_starting_proportions
         :param entry_proportions:
 
@@ -280,13 +255,11 @@ class StratifiedModel(EpiModel):
         self.unstratified_compartment_names = copy.copy(self.compartment_names)
 
         # stratify the compartments
-        requested_proportions = self.prepare_starting_proportions(
-            strata_names, requested_proportions
-        )
+        split_proportions = self.prepare_starting_proportions(strata_names, split_proportions)
         self.stratify_compartments(
             stratification_name,
             strata_names,
-            requested_proportions,
+            split_proportions,
             self.compartment_types_to_stratify,
         )
 
@@ -298,7 +271,7 @@ class StratifiedModel(EpiModel):
             self.compartment_types_to_stratify,
         )
         self.stratify_entry_flows(
-            stratification_name, strata_names, entry_proportions, requested_proportions
+            stratification_name, strata_names, entry_proportions, split_proportions
         )
         if self.death_flows.shape[0] > 0:
             self.stratify_death_flows(stratification_name, strata_names, adjustment_requests)
@@ -586,7 +559,7 @@ class StratifiedModel(EpiModel):
 
         self.transition_flows = self.transition_flows.append(ageing_flows)
 
-    def prepare_starting_proportions(self, _strata_names, _requested_proportions):
+    def prepare_starting_proportions(self, _strata_names, _split_proportions):
         """
         prepare user inputs for starting proportions for the initial conditions to apply to the exact set of strata
             requested
@@ -595,7 +568,7 @@ class StratifiedModel(EpiModel):
 
         :param _strata_names:
             see find_strata_names_from_input
-        :param _requested_proportions: dict
+        :param _split_proportions: dict
             dictionary with keys for the stratum to assign starting population to and values the proportions to assign
         :return: dict
             revised dictionary of starting proportions after cleaning
@@ -603,31 +576,29 @@ class StratifiedModel(EpiModel):
         self.output_to_user(
             "\n-----\ncalculating proportions of initial conditions to assign to each stratified starting compartment"
         )
-        if any(stratum not in _strata_names for stratum in _requested_proportions):
+        if any(stratum not in _strata_names for stratum in _split_proportions):
             raise ValueError(
                 "requested starting proportion for stratum that does not appear in requested strata"
             )
-        if sum(_requested_proportions.values()) > 1.0:
+        if sum(_split_proportions.values()) > 1.0:
             raise ValueError("requested starting proportions sum to a value greater than one")
 
         # assuming an equal proportion of the unallocated population if no request specified
         unrequested_strata = [
-            stratum for stratum in _strata_names if stratum not in _requested_proportions
+            stratum for stratum in _strata_names if stratum not in _split_proportions
         ]
-        unrequested_proportions = {}
+        unsplit_proportions = {}
         for stratum in unrequested_strata:
-            starting_proportion = (1.0 - sum(_requested_proportions.values())) / len(
-                unrequested_strata
-            )
-            unrequested_proportions[stratum] = starting_proportion
+            starting_proportion = (1.0 - sum(_split_proportions.values())) / len(unrequested_strata)
+            unsplit_proportions[stratum] = starting_proportion
             self.output_to_user(
                 "no starting proportion requested for %s stratum so provisionally allocated %s of total"
                 % (stratum, round(starting_proportion, self.reporting_sigfigs))
             )
 
         # update specified proportions with inferred unspecified proportions
-        _requested_proportions.update(unrequested_proportions)
-        return _requested_proportions
+        _split_proportions.update(unsplit_proportions)
+        return _split_proportions
 
     def stratify_compartments(
         self,
@@ -809,10 +780,15 @@ class StratifiedModel(EpiModel):
         applicable_params = [
             param for param in _adjustment_requests if _unadjusted_parameter.startswith(param)
         ]
-        applicable_param_n_stratifications = [len(find_name_components(param)) for param in applicable_params]
+        applicable_param_n_stratifications = [
+            len(find_name_components(param)) for param in applicable_params
+        ]
         if applicable_param_n_stratifications:
-            max_length_indices = [i_p for i_p, p in enumerate(applicable_param_n_stratifications) if
-                                  p == max(applicable_param_n_stratifications)]
+            max_length_indices = [
+                i_p
+                for i_p, p in enumerate(applicable_param_n_stratifications)
+                if p == max(applicable_param_n_stratifications)
+            ]
             candidate_params = [applicable_params[i] for i in max_length_indices]
             return max(candidate_params, key=len)
         else:
@@ -866,7 +842,7 @@ class StratifiedModel(EpiModel):
             return unstratified_name
 
     def stratify_entry_flows(
-        self, _stratification_name, _strata_names, _entry_proportions, _requested_proportions
+        self, _stratification_name, _strata_names, _entry_proportions, _split_proportions
     ):
         """
         stratify entry/recruitment/birth flows according to requested entry proportion adjustments
@@ -878,7 +854,7 @@ class StratifiedModel(EpiModel):
             see find_strata_names_from_input
         :param _entry_proportions: dict
             user requested proportions to enter to each stratum
-        :param _requested_proportions:
+        :param _split_proportions:
             see prepare_starting_proportions
         :return:
             normalised dictionary of the compartments that the new entry flows should come in to
@@ -1218,30 +1194,29 @@ class StratifiedModel(EpiModel):
 
     def stratify(
         self,
-        stratification_name,
-        strata_request,
-        compartment_types_to_stratify,
-        requested_proportions,
-        entry_proportions={},
-        adjustment_requests={},
-        infectiousness_adjustments={},
-        mixing_matrix=None,
-        target_proportions=None,
-        verbose=True,
+        stratification_name: str,
+        strata_names: List[str],
+        compartment_types: List[str],
+        split_proportions: Dict[str, float] = {},
+        entry_proportions: Dict[str, float] = {},
+        adjustment_requests: Dict[str, Dict[str, float]] = {},
+        infectiousness_adjustments: Dict[str, float] = {},
+        mixing_matrix: numpy.ndarray = None,
+        target_proportions: Dict[str, Dict[str, float]] = None,
+        verbose: bool = False,
     ):
         """
-        calls to initial preparation, checks and methods that stratify the various aspects of the model
+        Apply a stratification to the model's compartments.
 
-        :param stratification_name:
-            see prepare_and_check_stratification
-        :param strata_request:
-            see find_strata_names_from_input
-        :param compartment_types_to_stratify:
-            see check_compartment_request
+        stratification_name: 
+            The name of the stratification
+        strata_names: 
+            The names of the strata to ucompartment_types: 
+            The compartments that will have the stratification applied. Falsey args interpreted as "all".
+        split_proportions:
+            Request to split existing population in the compartments according to specific proprotions
         :param adjustment_requests:
             see incorporate_alternative_overwrite_approach and check_parameter_adjustment_requests
-        :param requested_proportions:
-            see prepare_starting_proportions
         :param entry_proportions:
 
         :param infectiousness_adjustments:
@@ -1265,9 +1240,9 @@ class StratifiedModel(EpiModel):
         # TODO: all keys of target_proportions must be a type of strata requested as a part of this stratification
         # TODO: check that user isn't re-creating a stratification with the same name
         # TODO: strata_request cannot be a float, it can be an int(represents 1-N), it can be a list (which be co-erced to a string)
-        # TODO: comparemnts in compartment_types_to_stratify must be valid compartments
+        # TODO: comparemntcompartment_types must be valid compartments
         # TODO: AGE SPECIFIC VALIDATION TODOS
-        # TODO: ensure that IF age stratification is requested, THEN user cannot specify "compartment_types_to_stratify"
+        # TODO: ensure that IF age stratification is requested, THEN user cannot speccompartment_types"
         #       ie. age stratification must apply to all compartments.
         # TODO: all age strata must be int or float
         # TODO: 0 must be in age strata request - represents those ages 0 to <next lowest age?
@@ -1276,79 +1251,45 @@ class StratifiedModel(EpiModel):
         # self.full_stratification_list keeps track of comparements that are not partially stratified
         # self.all_stratifications keeps track of all stratifications and their strata
 
-        # RENAME VARS
-        strata_names = strata_request
-
-        # STATELESS FUNCTIONS
-
-        def get_strata_proportions(strata_names, strata_proportions):
-            """
-            Determine what % of population get assigned to the different strata.
-            """
-            proportion_allocated = sum(strata_proportions.values())
-            remaining_strata = [s for s in strata_names if s not in strata_proportions]
-            count_remaining = len(remaining_strata)
-            assert set(strata_proportions.keys()).issubset(strata_names), "Invalid proprotion keys"
-            assert proportion_allocated <= 1, "Sum of strata proportions must not exceed 1.0"
-            if not remaining_strata:
-                assert proportion_allocated == 1, "Sum of strata proportions must be 1.0"
-                return strata_proportions
-            else:
-                # Divide the remaining proprotions equally
-                starting_proportion = (1 - proportion_allocated) / count_remaining
-                remaining_proportions = {
-                    stratum: starting_proportion for stratum in remaining_strata
-                }
-                return {**strata_proportions, **remaining_proportions}
-
-
-        # If user does not want to stratify specific compartments, we only want to stratify a subset.
-        if not compartment_types_to_stratify:
+        if not compartment_types:
+            # Stratify all compartments.
+            compartment_types = self.compartment_types
             self.full_stratification_list.append(stratification_name)
 
         # Check age stratification
         if stratification_name == "age":
             # Ensure age strata are sorted... for some reason?
-            if strata_names != sorted(strata_names):
-                strata_names = sorted(strata_names)
+            strata_names = sorted(strata_names)
+        elif stratification_name == "strain":
+            # Track strains. (why?)
+            self.strains = strata_names
 
         strata_names = [str(s) for s in strata_names]
         self.all_stratifications[stratification_name] = strata_names
-        requested_proportions = get_strata_proportions(strata_names, requested_proportions)
-
-        # Track strains. (why?)
-        if stratification_name == "strain":
-            self.strains = strata_names
-
-        # Decide whether to stratify all compartments or not.
-        # self.compartment_types_to_stratify is used for stratification stuff only
-        if compartment_types_to_stratify:
-            self.compartment_types_to_stratify = compartment_types_to_stratify
-        else:
-            self.compartment_types_to_stratify = self.compartment_types
+        split_proportions = get_all_proportions(strata_names, split_proportions)
 
         # Retain copy of compartment names in their stratified form to refer back to during stratification process
         self.unstratified_compartment_names = copy.copy(self.compartment_names)
 
-        # ACTUALLY STRATIFY COMPARTMENTS
-        # Stratify the model compartments into sub-compartments, based on the strata names provided,
-        # splitting the population according to the provided proprotions. Stratification will be applied
-        # to compartment_names and compartment_values.
-        # Only compartments specified in `self.compartment_types_to_stratify` will be stratified.
-        # Find the existing compartments that need stratification
-        compartments_to_stratify = [
-            c for c in self.compartment_names if find_stem(c) in self.compartment_types_to_stratify
-        ]
-        for compartment in compartments_to_stratify:
-            # Add new stratified compartment.
-            for stratum in strata_names:
-                name = create_stratified_name(compartment, stratification_name, stratum)
-                idx = self.compartment_names.index(compartment)
-                value = self.compartment_values[idx] * requested_proportions[stratum]
-                self.add_compartment(name, value)
+        # Stratify compartments, split according to split_proportions
+        to_add, to_remove = get_stratified_compartments(
+            strata_names,
+            stratification_name,
+            compartment_types,
+            split_proportions,
+            self.compartment_names,
+            self.compartment_values,
+        )
+        for name, value in to_add.items():
+            # Add new stratified compartments
+            self.compartment_names.append(name)
+            self.compartment_values.append(value)
 
-            # Remove the original compartment, since it has now been stratified.
-            self.remove_compartment(compartment)
+        for name in to_remove:
+            # Remove the original compartments, since they have now been stratified.
+            remove_idx = self.compartment_names.index(name)
+            del self.compartment_values[remove_idx]
+            del self.compartment_names[remove_idx]
 
         # ================= ADJUSTMENT STUFF ====================================
 
@@ -1425,18 +1366,15 @@ class StratifiedModel(EpiModel):
 
         # stratify the flows
         self.stratify_transition_flows(
-            stratification_name,
-            strata_names,
-            adjustment_requests,
-            self.compartment_types_to_stratify,
+            stratification_name, strata_names, adjustment_requests, compartment_types,
         )
         self.stratify_entry_flows(
-            stratification_name, strata_names, entry_proportions, requested_proportions
+            stratification_name, strata_names, entry_proportions, split_proportions
         )
         if self.death_flows.shape[0] > 0:
             self.stratify_death_flows(stratification_name, strata_names, adjustment_requests)
         self.stratify_universal_death_rate(
-            stratification_name, strata_names, adjustment_requests, compartment_types_to_stratify,
+            stratification_name, strata_names, adjustment_requests, compartment_types,
         )
 
         # check submitted mixing matrix and combine with existing matrix, if any
@@ -2246,7 +2184,7 @@ if __name__ == "__main__":
     # sir_model.stratify("strain", ["sensitive", "resistant"], ["infectious"],
     #                    adjustment_requests={"recoveryXhiv_negative": {"sensitive": 0.9},
     #                                         "recovery": {"sensitive": 0.8}},
-    #                    requested_proportions={}, verbose=False)
+    #                    split_proportions={}, verbose=False)
 
     sir_model.transition_flows.to_csv("transitions.csv")
 

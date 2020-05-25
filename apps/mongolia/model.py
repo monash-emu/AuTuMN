@@ -284,7 +284,7 @@ def build_model(params: dict) -> StratifiedModel:
             ["ds", "mdr"],
             ["early_latent", "late_latent", "infectious"],
             verbose=False,
-            requested_proportions={"mdr": 0.0},
+            split_proportions={"mdr": 0.0},
             adjustment_requests={
                 "contact_rate": {"ds": 1.0, "mdr": 1.0},
                 "case_detection": {"mdr": mdr_adjustment},
@@ -410,7 +410,7 @@ def build_model(params: dict) -> StratifiedModel:
             ["infectious"],
             infectiousness_adjustments={"smearpos": 1.0, "smearneg": 0.25, "extrapul": 0.0},
             verbose=False,
-            requested_proportions=props_smear,
+            split_proportions=props_smear,
             adjustment_requests={
                 "recovery": recovery_adjustments,
                 "infect_death": mortality_adjustments,
@@ -475,7 +475,7 @@ def build_model(params: dict) -> StratifiedModel:
             "location",
             ["rural_province", "urban_nonger", "urban_ger", "prison"],
             [],
-            requested_proportions=props_location,
+            split_proportions=props_location,
             verbose=False,
             entry_proportions=props_location,
             adjustment_requests=location_adjustments,

@@ -330,54 +330,7 @@ def test_find_transition_indices_to_implement(
     assert expected_idxs == actual_idxs
 
 
-PARAM_VARS = "strata,proportions,to_stratify,expected_names,expected_values"
-PARAM_VALS = [
-    # Use 2 strata, expect 2x new compartments, strata split evenly.
-    [
-        ["foo", "bar"],
-        {"foo": 0.5, "bar": 0.5},
-        ["susceptible", "infectious"],
-        [
-            "susceptibleXtest_foo",
-            "susceptibleXtest_bar",
-            "infectiousXtest_foo",
-            "infectiousXtest_bar",
-        ],
-        [450, 450, 50, 50],
-    ],
-    # Use 2 strata, expect 2x new compartments, strata split unevenly.
-    [
-        ["foo", "bar"],
-        {"foo": 0.1, "bar": 0.9},
-        ["susceptible", "infectious"],
-        [
-            "susceptibleXtest_foo",
-            "susceptibleXtest_bar",
-            "infectiousXtest_foo",
-            "infectiousXtest_bar",
-        ],
-        [90, 810, 10, 90],
-    ],
-    # Use 2 strata, don't stratify infectious.
-    [
-        ["foo", "bar"],
-        {"foo": 0.5, "bar": 0.5},
-        ["susceptible"],
-        ["infectious", "susceptibleXtest_foo", "susceptibleXtest_bar"],
-        [100, 450, 450],
-    ],
-]
 
-
-@pytest.mark.parametrize(PARAM_VARS, PARAM_VALS)
-def test_stratify_compartments(strata, proportions, to_stratify, expected_names, expected_values):
-    """
-    Ensure that `stratify_compartments` splits up compartment names and values correctly.
-    """
-    model = StratifiedModel(**_get_model_kwargs())
-    model.stratify_compartments("test", strata, proportions, to_stratify)
-    assert model.compartment_names == expected_names
-    assert model.compartment_values == expected_values
 
 
 PARAM_VARS = "age_strata,expected_flows,expected_ageing"

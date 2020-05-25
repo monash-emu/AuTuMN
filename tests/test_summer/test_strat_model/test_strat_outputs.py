@@ -26,8 +26,8 @@ def test_strat_model__with_age__expect_ageing():
     model.stratify(
         Stratification.AGE,
         strata_request=[0, 5, 15, 60],
-        compartment_types_to_stratify=[],
-        requested_proportions={},
+        compartment_types=[],
+        split_proportions={},
     )
     # Run the model for 5 years.
     model.run_model(integration_type=IntegrationType.ODE_INT)
@@ -63,14 +63,14 @@ def test_strat_model__with_age_and_starting_proportion__expect_ageing():
     model.stratify(
         Stratification.AGE,
         strata_request=[0, 5, 15, 60],
-        compartment_types_to_stratify=[],
-        requested_proportions={"0": 0.8, "5": 0.1, "15": 0.1},
+        compartment_types=[],
+        split_proportions={"0": 0.8, "5": 0.1, "15": 0.1},
     )
     # Run the model for 5 years.
     model.run_model(integration_type=IntegrationType.ODE_INT)
 
     # Expect everyone to generally get older, but no one should die or get sick.
-    # Expect initial distribution of ages to be set according to "requested_proportions".
+    # Expect initial distribution of ages to be set according to "split_proportions".
     expected_output = [
         [800.0, 100.0, 100.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         [655.0, 228.0, 114.0, 2.0, 0.0, 0.0, 0.0, 0.0],
@@ -100,8 +100,8 @@ def test_strat_model__with_locations__expect_no_change():
     model.stratify(
         Stratification.LOCATION,
         strata_request=["rural", "urban", "prison"],
-        compartment_types_to_stratify=[],
-        requested_proportions={"rural": 0.44, "urban": 0.55, "prison": 0.01},
+        compartment_types=[],
+        split_proportions={"rural": 0.44, "urban": 0.55, "prison": 0.01},
     )
     # Run the model for 5 years.
     model.run_model(integration_type=IntegrationType.ODE_INT)
@@ -145,8 +145,8 @@ def test_strat_model__with_locations_and_mixing__expect_varied_transmission():
     model.stratify(
         Stratification.LOCATION,
         strata_request=["rural", "urban", "prison"],
-        compartment_types_to_stratify=[],
-        requested_proportions={},
+        compartment_types=[],
+        split_proportions={},
         mixing_matrix=np.array(
             [
                 # Rural people catch disease from urbanites

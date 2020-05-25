@@ -222,8 +222,8 @@ def build_model(params: dict) -> StratifiedModel:
     model.stratify(
         "agegroup",
         agegroup_strata,
-        compartment_types_to_stratify=[],  # Apply to all compartments
-        requested_proportions=requested_props,
+        compartment_types=[],  # Apply to all compartments
+        split_proportions=requested_props,
         mixing_matrix=static_mixing_matrix,
         adjustment_requests=adjust_requests,
         # FIXME: This seems awfully a lot like a parameter that should go in a YAML file.

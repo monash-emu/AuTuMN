@@ -1,4 +1,4 @@
-# 50% of labor force who were no longer at work back into the office from 25/5
+# 9% of original labor force back into the office from 25/5 to simulate university reopening
 mixing:
   other_locations_times:
     - 46
@@ -363,7 +363,7 @@ mixing:
     - 0.64
     - 0.66
     - 0.66
-    - 0.83
+    - 0.75
   school_times:
     - "20200312"
     - "20200314"

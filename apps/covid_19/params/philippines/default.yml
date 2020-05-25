@@ -1,12 +1,26 @@
 ---
 country: philippines
 iso3: PHL
-symptomatic_props_imported: 0.2
 
-contact_rate: 0.026
+scenario_start_time: 140
+end_time: 365.
 
-start_time: 0.
-end_time: 180.
+# calibrated parameters
+start_time: 12.
+contact_rate: 0.038
+tv_detection_c: 150 # inflection point
+tv_detection_sigma: 0
+prop_detected_among_symptomatic: 0.5
+compartment_periods_calculated:
+  total_infectious:
+    total_period: 3.
+  incubation:
+    total_period: 2.
+
+# other country-specific parameters
+tv_detection_b: .05 # shape parameter of the tanh-based curve
+
+
 
 # Stringency levels:
 # 30/1: 10   31/1: 30  11/2:40   2/3: 55   13/3: 90

@@ -59,16 +59,17 @@ agegroup_breaks:
 # AGE-STRATIFIED PARAMETERS
 
 # Infectiousness progression adjustments - in ten year brackets that need to be adapted to model strata later
-# Extracted by WebPlotDigitizer from the LSHTM's "Age-dependent effects in the ..." Fig 2b, upper-left panel
+# Extracted from the LSHTM's "Age-dependent effects in the ..." Fig 2b, upper-left panel
+# Mean estimated values used. a.k.a "clinical fraction".
 symptomatic_props:
-  - 0.396 # 0-9
-  - 0.252 # 10-19
-  - 0.367 # 20-29
-  - 0.408 # 30-39
-  - 0.476 # 40-49
-  - 0.572 # 50-59
-  - 0.710 # 60-69
-  - 0.745 # 70+
+  - 0.29 # 0-9
+  - 0.21 # 10-19
+  - 0.27 # 20-29
+  - 0.33 # 30-39
+  - 0.40 # 40-49
+  - 0.49 # 50-59
+  - 0.63 # 60-69
+  - 0.69 # 70+
 
 # Proportion of symptomatic persons that are hospitalised - Verity et al.
 hospital_props:
@@ -98,12 +99,24 @@ infection_fatality_props:
   - 0.093 # 80+
 
 # Reduced susceptibility in children - assumed, but informed by Iceland NEJM paper
-young_reduced_susceptibility: 0.5
-reduced_susceptibility_agegroups:
-  - "0"
-  - "5"
-  - "10"
-  - "15"
+# Age-based susceptibility from LSHTM, used mean values
+age_based_susceptibility:
+  "0": 0.40 # 0-4
+  "5": 0.40 # 5-9
+  "10": 0.38 # 10-14
+  "15": 0.38 # 15-19
+  "20": 0.79 # 20-24
+  "25": 0.79 # 25-29
+  "30": 0.86 # 30-34
+  "35": 0.86 # 35-39
+  "40": 0.80 # 40-44
+  "45": 0.80 # 45-49
+  "50": 0.82 # 50-54
+  "55": 0.82 # 55-59
+  "60": 0.88 # 60-64
+  "65": 0.88 # 65-69
+  "70": 0.74 # 70-74
+  "75": 0.74 # 75+
 
 # NON-AGE-STRATIFIED PARAMETERS
 

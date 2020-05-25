@@ -201,17 +201,14 @@ def build_model(params: dict) -> StratifiedModel:
     # Coerce age breakpoint numbers into strings - all strata are represented as strings.
     agegroup_strata = [str(s) for s in agegroup_strata]
     # Create parameter adjustment request for age stratifications
-    youth_agegroups = params["reduced_susceptibility_agegroups"]
-    youth_reduced_susceptibility = params["young_reduced_susceptibility"]
+    age_based_susceptibility = params["age_based_susceptibility"]
     adjust_requests = {
         # No change, required for further stratification by clinical status.
         "to_infectious": {s: 1 for s in agegroup_strata},
         "infect_death": {s: 1 for s in agegroup_strata},
         "within_late": {s: 1 for s in agegroup_strata},
-        # Adjust susceptibility for children
-        "contact_rate": {
-            str(agegroup): youth_reduced_susceptibility for agegroup in youth_agegroups
-        },
+        # Adjust susceptibility across age groups
+        "contact_rate": age_based_susceptibility,
     }
     if is_importation_active:
         adjust_requests["import_secondary_rate"] = get_total_contact_rates_by_age(
@@ -238,17 +235,16 @@ def build_model(params: dict) -> StratifiedModel:
     # Stratify infectious compartment by clinical status
     if "clinical" in model_parameters["stratify_by"] and model_parameters["clinical_strata"]:
         model_parameters["all_stratifications"] = {"agegroup": agegroup_strata}
-        modelled_abs_detection_proportion_imported = stratify_by_clinical(model, model_parameters, compartments)
+        modelled_abs_detection_proportion_imported = stratify_by_clinical(
+            model, model_parameters, compartments
+        )
 
     # Set time-variant importation rate
     if is_importation_active and is_importation_explict:
         import_times = params["data"]["times_imported_cases"]
         import_cases = params["data"]["n_imported_cases"]
         import_rate_func = preprocess.importation.get_importation_rate_func_as_birth_rates(
-            import_times,
-            import_cases,
-            modelled_abs_detection_proportion_imported,
-            starting_pop,
+            import_times, import_cases, modelled_abs_detection_proportion_imported, starting_pop,
         )
         model.parameters["crude_birth_rate"] = "crude_birth_rate"
         model.time_variants["crude_birth_rate"] = import_rate_func
@@ -272,8 +268,6 @@ def build_model(params: dict) -> StratifiedModel:
         model.parameters["import_secondary_rate"] = "import_secondary_rate"
         model.adaptation_functions["import_secondary_rate"] = import_rate_func
 
-
-
     # Define output connections to collate
     # Track compartment output connections.
     stratum_names = list(set(["X".join(x.split("X")[1:]) for x in model.compartment_names]))
@@ -291,9 +285,7 @@ def build_model(params: dict) -> StratifiedModel:
         "prop_detected_among_symptomatic_imported"
     ]
     model.derived_output_functions["notifications"] = outputs.get_calc_notifications_covid(
-        implement_importation,
-        imported_cases_explict,
-        modelled_abs_detection_proportion_imported
+        implement_importation, imported_cases_explict, modelled_abs_detection_proportion_imported
     )
     model.derived_output_functions["incidence_icu"] = outputs.calculate_incidence_icu_covid
     model.derived_output_functions["prevXlateXclinical_icuXamong"] = outputs.calculate_icu_prev

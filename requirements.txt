@@ -23,3 +23,6 @@ tqdm
 # Testing
 pytest
 black
+
+# Debugging
+ipdb

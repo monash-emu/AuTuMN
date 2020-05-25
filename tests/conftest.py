@@ -19,6 +19,10 @@ def pytest_runtest_setup(item):
         if not IS_GITHUB_CI:
             pytest.skip("Long running test: run on GitHub only.")
 
+    for marker in item.iter_markers(name="local_only"):
+        if IS_GITHUB_CI:
+            pytest.skip("Local test: never run on GitHub.")
+
 
 @pytest.fixture(autouse=True)
 def memory_db(monkeypatch):

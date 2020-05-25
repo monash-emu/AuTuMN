@@ -16,7 +16,7 @@ iso3: MYS
 # Make case detection time-variant
 tv_detection_c: 80. # inflection time
 
-contact_rate: 0.019844933673145947 # MCMC calibrated
+contact_rate: 0.026  #  0.019844933673145947 # MCMC calibrated
 start_time: 33. # MCMC calibrated
 compartment_periods:
   icu_late: 3.434446210595029 # MCMC calibrated

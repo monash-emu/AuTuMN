@@ -38,7 +38,7 @@ def get_importation_rate_func(
             get_importation_amount(t)
             * tv_imported_infectiousness(t)
             * contact_rate
-            / model.starting_population
+            / starting_population
         )
 
     return recruitment_rate
@@ -59,8 +59,7 @@ def get_importation_rate_func_as_birth_rates(
         importation_n_cases[i] /= detect_prop_func(time)
     # scale-up curve for importation numbers
     importation_numbers_scale_up = scale_up_function(
-        importation_times, importation_n_cases, method=5, smoothness=5.0,
-        bound_low=0.
+        importation_times, importation_n_cases, method=5, smoothness=5.0, bound_low=0.0
     )
 
     def recruitment_rate(t):

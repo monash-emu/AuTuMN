@@ -14,7 +14,8 @@ end_time: 365.
 contact_rate: 0.024
 non_sympt_infect_multiplier: .464939
 
-young_reduced_susceptibility: .4484674
+# Replaced by `age_based_susceptibility`
+# young_reduced_susceptibility: .4484674
 prop_detected_among_symptomatic: .8035
 npi_effectiveness:
   other_locations: .9697829

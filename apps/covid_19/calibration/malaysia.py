@@ -6,7 +6,7 @@ PAR_PRIORS = [
     {
         'param_name': 'contact_rate',
         'distribution': 'uniform',
-        'distri_params': [0.010, 0.020]
+        'distri_params': [0.015, 0.040]
     },
     {
         'param_name': 'start_time',
@@ -25,10 +25,10 @@ PAR_PRIORS = [
         "distri_ci": [5., 15.]
     },
     {
-        "param_name": "young_reduced_susceptibility",
-        "distribution": "beta",
-        "distri_mean": .5,
-        "distri_ci": [.4, .6]
+        "param_name": "compartment_periods.icu_early",
+        "distribution": "gamma",
+        "distri_mean": 10.,
+        "distri_ci": [2., 25.]
     },
     {
         "param_name": "tv_detection_sigma",

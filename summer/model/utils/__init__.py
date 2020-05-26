@@ -79,3 +79,90 @@ def get_stratified_compartments(
         to_remove.append(compartment)
 
     return to_add, to_remove
+
+
+def stratify_transition_flows(
+    self,
+    stratification_name: str,
+    strata_names: List[str],
+    adjustment_requests: Dict[str, Dict[str, float]],
+    compartments_to_stratify: List[str],
+    transition_flows: List[dict],
+    all_stratifications,
+):
+    """
+    Stratify flows depending on whether inflow, outflow or both need replication
+    """
+    flow_idxs = [
+        idx
+        for idx, flow in enumerate(transition_flows)
+        and flow["implement"] == len(all_stratifications) - 1
+    ]
+    all_new_flows = []
+    for n_flow in flow_idxs:
+        new_flows = []
+        flow = transition_flows[n_flow]
+
+        stratify_from = find_stem(flow["origin"]) in compartments_to_stratify
+        stratify_to = find_stem(flow["to"]) in compartments_to_stratify
+        if stratify_from or stratify_to:
+            for stratum in strata_names:
+                # Find the flow's parameter name 
+                parameter_name = self.add_adjusted_parameter(
+                    flow["parameter"], stratification_name, stratum, adjustment_requests,
+                )
+                if not parameter_name:
+                    parameter_name = self.sort_absent_transition_parameter(
+                        stratification_name,
+                        strata_names,
+                        stratum,
+                        stratify_from,
+                        stratify_to,
+                        flow["parameter"],
+                    )
+
+                # Determine whether to and/or from compartments are stratified
+                from_compartment = (
+                    create_stratified_name(flow["origin"], stratification_name, stratum)
+                    if stratify_from
+                    else flow["origin"]
+                )
+                to_compartment = (
+                    create_stratified_name(flow["to"], stratification_name, stratum)
+                    if stratify_to
+                    else flow["to"]
+                )
+                # Add the new flow
+                strain = (
+                    stratum
+                    if stratification_name == "strain" and flow["type"] != Flow.STRATA_CHANGE
+                    else flow["strain"]
+                )
+                new_flow = {
+                    "type": flow["type"],
+                    "parameter": parameter_name,
+                    "origin": from_compartment,
+                    "to": to_compartment,
+                    "implement": len(self.all_stratifications),
+                    "strain": strain,
+                }
+                new_flows.append(new_flow)
+
+        else:
+            # If flow applies to a transition not involved in the stratification,
+            # still increment to ensure that it is implemented.
+            new_flow = flow.to_dict()
+            new_flow["implement"] += 1
+            new_flows.append(new_flow)
+
+        # FIXME: Move outside.
+        # Update the customised flow functions.
+        num_flows = len(self.transition_flows) + len(all_new_flows)
+        for idx, new_flow in enumerate(new_flows):
+            if new_flow["type"] == Flow.CUSTOM:
+                new_idx = num_flows + idx
+                self.customised_flow_functions[new_idx] = self.customised_flow_functions[n_flow]
+
+        all_new_flows += new_flows
+
+    return all_new_flows:

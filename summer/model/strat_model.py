@@ -199,16 +199,20 @@ class StratifiedModel(EpiModel):
     def _stratify(
         self,
         stratification_name,
-        strata_request,
-        compartment_types_to_stratify,
+        strata_names,
+        compartment_types,
         split_proportions,
         entry_proportions={},
         adjustment_requests=(),
         infectiousness_adjustments={},
         mixing_matrix=None,
-        target_props=None,
+        target_proportions=None,
         verbose=False,
     ):
+        strata_request = strata_names
+        compartment_types_to_stratify = compartment_types
+        target_props = target_proportions
+
         """
         calls to initial preparation, checks and methods that stratify the various aspects of the model
 
@@ -624,10 +628,14 @@ class StratifiedModel(EpiModel):
                 name = create_stratified_name(compartment, stratification_name, stratum)
                 idx = self.compartment_names.index(compartment)
                 value = self.compartment_values[idx] * strata_proportions[stratum]
-                self.add_compartment(name, value)
+                # Add new stratified compartments
+                self.compartment_names.append(name)
+                self.compartment_values.append(value)
 
-            # Remove the original compartment, since it has now been stratified.
-            self.remove_compartment(compartment)
+            # Remove the original compartments, since they have now been stratified.
+            remove_idx = self.compartment_names.index(compartment)
+            del self.compartment_values[remove_idx]
+            del self.compartment_names[remove_idx]
 
     def stratify_transition_flows(
         self,
@@ -1273,8 +1281,8 @@ class StratifiedModel(EpiModel):
 
         # Stratify compartments, split according to split_proportions
         to_add, to_remove = get_stratified_compartments(
-            strata_names,
             stratification_name,
+            strata_names,
             compartment_types,
             split_proportions,
             self.compartment_names,

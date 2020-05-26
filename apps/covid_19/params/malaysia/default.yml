@@ -7,8 +7,6 @@ traveller_quarantine:
   times: [73., 76.] # self-isolation from 13 March
   values: [0., 1.]
 
-prop_detected_among_symptomatic: .9245618502383184 # MCMC calibrated
-
 end_time: 365.
 country: malaysia
 iso3: MYS
@@ -16,21 +14,21 @@ iso3: MYS
 # Make case detection time-variant
 tv_detection_c: 80. # inflection time
 
-contact_rate: 0.026  #  0.019844933673145947 # MCMC calibrated
-start_time: 33. # MCMC calibrated
-compartment_periods:
-  icu_late: 3.434446210595029 # MCMC calibrated
-
-icu_prop: 0.3412926734959111 # MCMC calibrated
-
+contact_rate: 0.024181165464591217
+start_time: 26.22860550092925
 compartment_periods_calculated:
   incubation:
-    total_period: 2.997856338616169 # MCMC calibrated
+    total_period: 3.3863202215911135
 
-# Replaced by `age_based_susceptibility`
-# young_reduced_susceptibility: 0.5241684928760063  # MCMC calibrated
-tv_detection_sigma: 0.3532910119987097 # MCMC calibrated
-tv_detection_b: 0.07666065046849144 # MCMC calibrated
+compartment_periods:
+  icu_late: 2.8861263218320614
+  icu_early: 15.836780335908683
+
+tv_detection_sigma: 0.46947313655390566
+tv_detection_b: 0.0864321086194213
+prop_detected_among_symptomatic: 0.8676169331018422
+icu_prop: 0.285236873634658
+
 
 mixing:
   other_locations_times:
@@ -212,7 +210,7 @@ mixing:
     - .4725
     - .5525
     - .555
-    - .5 # raw data: .58
+    - .5 # .58
   work_times:
     - 46
     - 47

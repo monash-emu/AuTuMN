@@ -142,11 +142,13 @@ def plot_timeseries_with_uncertainty(
     plotter: Plotter,
     path_to_percentile_outputs: str,
     output_name: str,
-    scenario_indices=[0],
-    burn_in=0,
-    plot_config={}
+    scenario_indices,
+    burn_in,
+    plot_config={},
 ):
-    percentile_db_path = os.path.join(path_to_percentile_outputs, 'mcmc_percentiles_burned_' + str(burn_in) + '.db')
+    percentile_db_path = os.path.join(
+        path_to_percentile_outputs, "mcmc_percentiles_burned_" + str(burn_in) + ".db"
+    )
     try:
         db = Database(percentile_db_path)
         output_perc = db.db_query(output_name)
@@ -156,10 +158,10 @@ def plot_timeseries_with_uncertainty(
         output_perc = db.db_query(output_name)
 
     fig, axis, _, _, _ = plotter.get_figure()
-    scenario_list = 'scenarios'
+    scenario_list = "scenarios"
     for scenario_index in scenario_indices[::-1]:  # loop in reverse scenario order
-        scenario_list += ' ' + str(scenario_index)
-        df = output_perc[output_perc.Scenario == 'S_' + str(scenario_index)]
+        scenario_list += " " + str(scenario_index)
+        df = output_perc[output_perc.Scenario == "S_" + str(scenario_index)]
         axis.fill_between(df.times, df.q_2_5, df.q_97_5, facecolor="lightsteelblue")
         axis.fill_between(df.times, df.q_25, df.q_75, facecolor="cornflowerblue")
         axis.plot(df.times, df.q_50, color="navy")
@@ -175,7 +177,9 @@ def plot_timeseries_with_uncertainty(
     axis.set_xlabel("time")
     axis.set_ylabel(output_name)
 
-    plotter.save_figure(fig, filename=f"{output_name} uncertainty {scenario_list}", title_text=f"{output_name}")
+    plotter.save_figure(
+        fig, filename=f"{output_name} uncertainty {scenario_list}", title_text=f"{output_name}"
+    )
 
 
 def _overwrite_non_accepted_mcmc_runs(mcmc_tables: List[pd.DataFrame], column_name: str):

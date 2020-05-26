@@ -24,54 +24,96 @@ def run_mcmc_plots():
     plot_config = utils.load_plot_config(app_dirname)
 
     # Load MCMC tables
-    mcmc_tables, output_tables, derived_output_tables = collect_all_mcmc_output_tables(calib_dirpath)
+    mcmc_tables, output_tables, derived_output_tables = collect_all_mcmc_output_tables(
+        calib_dirpath
+    )
 
     plotter = StreamlitPlotter({})
     plot_type = st.sidebar.selectbox("Select plot type", list(PLOT_FUNCS.keys()))
     plot_func = PLOT_FUNCS[plot_type]
-    if plot_type == "Predictions":
-        plot_func(plotter, calib_dirpath, mcmc_tables, plot_config)
-    else:
-        plot_func(plotter, mcmc_tables)
+    plot_func(plotter, calib_dirpath, mcmc_tables, derived_output_tables, plot_config)
 
 
-def plot_mcmc_parameter_trace(plotter: StreamlitPlotter, mcmc_tables: List[pd.DataFrame]):
+def plot_mcmc_parameter_trace(
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    derived_output_tables: List[pd.DataFrame],
+    plot_config={},
+):
     chosen_param = parameter_selector(mcmc_tables[0])
     plots.plot_mcmc_parameter_trace(plotter, mcmc_tables, chosen_param)
 
 
-def plot_loglikelihood_trace(plotter: StreamlitPlotter, mcmc_tables: List[pd.DataFrame]):
-    burn_in = st.sidebar.slider("Burn-in", 0, len(mcmc_tables[0]), 0)
+def plot_loglikelihood_trace(
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    derived_output_tables: List[pd.DataFrame],
+    plot_config={},
+):
+    burn_in = burn_in_selector(mcmc_tables)
     plots.plot_loglikelihood_trace(plotter, mcmc_tables, burn_in)
     num_iters = len(mcmc_tables[0])
     plots.plot_burn_in(plotter, num_iters, burn_in)
 
 
-def plot_posterior(plotter: StreamlitPlotter, mcmc_tables: List[pd.DataFrame]):
+def plot_posterior(
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    derived_output_tables: List[pd.DataFrame],
+    plot_config={},
+):
     chosen_param = parameter_selector(mcmc_tables[0])
     num_bins = st.sidebar.slider("Number of bins", 1, 50, 10)
     plots.plot_posterior(plotter, mcmc_tables, chosen_param, num_bins)
 
 
-def plot_loglikelihood_vs_parameter(plotter: StreamlitPlotter, mcmc_tables: List[pd.DataFrame]):
-    burn_in = st.sidebar.slider("Burn-in", 0, len(mcmc_tables[0]), 0)
+def plot_loglikelihood_vs_parameter(
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    derived_output_tables: List[pd.DataFrame],
+    plot_config={},
+):
+    burn_in = burn_in_selector(mcmc_tables)
     non_param_cols = ["idx", "Scenario", "loglikelihood", "accept"]
     param_options = [c for c in mcmc_tables[0].columns if c not in non_param_cols]
     chosen_param = st.sidebar.selectbox("Select parameter", param_options)
     plots.plot_loglikelihood_vs_parameter(plotter, mcmc_tables, chosen_param, burn_in)
 
 
-def plot_timeseries_with_uncertainty(plotter: StreamlitPlotter, calib_dir_path: str, mcmc_tables: List[pd.DataFrame],
-                                     plot_config={}):
-    burn_in = st.sidebar.slider("Burn-in", 0, min([len(mcmc_tables[i]) for i in range(len(mcmc_tables))]), 0)
+def plot_timeseries_with_uncertainty(
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    derived_output_tables: List[pd.DataFrame],
+    plot_config={},
+):
+    # Choose one or more scenarios
+    scenario_strs = list(derived_output_tables[0].Scenario.unique())
+    scenario_idxs = [int(s.replace("S_", "")) for s in scenario_strs]
+    scenario_names = ["Baseline" if i == 0 else f"Scenario {i}" for i in scenario_idxs]
+    chosen_scenario_names = st.sidebar.multiselect("Select scenarios", scenario_names, "Baseline")
+    chosen_scenarios = [scenario_idxs[scenario_names.index(n)] for n in chosen_scenario_names]
 
-    # FIXME
-    chosen_output = 'notifications'  # to be replaced with selector options
-    chosen_scenarios = [0]  # to be replaced with selector options
+    # Choose which output to plot
+    non_output_cols = ["idx", "Scenario", "times"]
+    output_cols = list(set(derived_output_tables[0].columns) - set(non_output_cols))
+    output_cols = [c for c in output_cols if "X" not in c or c.endswith("Xall")]
+    chosen_output = st.sidebar.selectbox("Select derived output", output_cols)
+    # Select burn in with a slider
+    burn_in = burn_in_selector(mcmc_tables)
+    plots.plot_timeseries_with_uncertainty(
+        plotter,
+        calib_dir_path,
+        chosen_output,
+        scenario_indices=chosen_scenarios,
+        burn_in=burn_in,
+        plot_config=plot_config,
+    )
 
-    plots.plot_timeseries_with_uncertainty(plotter, calib_dir_path, chosen_output, scenario_indices=chosen_scenarios,
-                                           burn_in=burn_in, plot_config=plot_config
-                                           )
 
 PLOT_FUNCS = {
     "Posterior distributions": plot_posterior,
@@ -80,6 +122,14 @@ PLOT_FUNCS = {
     "Parameter trace": plot_mcmc_parameter_trace,
     "Predictions": plot_timeseries_with_uncertainty,
 }
+
+
+def burn_in_selector(mcmc_tables: List[pd.DataFrame]):
+    """
+    Slider for selecting how much burn in we should apply to an MCMC trace.
+    """
+    min_length = min([len(t) for t in mcmc_tables])
+    return st.sidebar.slider("Burn-in", 0, min_length, 0)
 
 
 def parameter_selector(mcmc_table: pd.DataFrame):

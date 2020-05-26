@@ -80,7 +80,8 @@ def collect_map_estimate(calib_dirpath: str):
     """
     mcmc_tables = []
     db_paths = [
-        os.path.join(calib_dirpath, f) for f in os.listdir(calib_dirpath) if f.endswith(".db")
+        os.path.join(calib_dirpath, f) for f in os.listdir(calib_dirpath) if f.endswith(".db") and
+                                                                             not f.startswith("mcmc_percentiles")
     ]
     for db_path in db_paths:
         db = Database(db_path)

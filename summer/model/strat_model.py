@@ -21,9 +21,9 @@ from .utils import (
     find_name_components,
     find_stem,
     increment_list_by_index,
-    get_all_proportions,
-    get_stratified_compartments,
 )
+from summer.model import utils
+
 
 STRATA_EQUILIBRATION_FACTOR = 0.01
 OVERWRITE_CHARACTER = "W"
@@ -1254,7 +1254,7 @@ class StratifiedModel(EpiModel):
         #       ie. age stratification must apply to all compartments.
         # TODO: all age strata must be int or float
         # TODO: 0 must be in age strata request - represents those ages 0 to <next lowest age?
-
+        # TODO: Validate that all adjustment request parameters and strata actually exist already
         # OTHER NOTES
         # self.full_stratification_list keeps track of comparements that are not partially stratified
         # self.all_stratifications keeps track of all stratifications and their strata
@@ -1274,13 +1274,13 @@ class StratifiedModel(EpiModel):
 
         strata_names = [str(s) for s in strata_names]
         self.all_stratifications[stratification_name] = strata_names
-        split_proportions = get_all_proportions(strata_names, split_proportions)
+        split_proportions = utils.get_all_proportions(strata_names, split_proportions)
 
         # Retain copy of compartment names in their stratified form to refer back to during stratification process
         self.unstratified_compartment_names = copy.copy(self.compartment_names)
 
         # Stratify compartments, split according to split_proportions
-        to_add, to_remove = get_stratified_compartments(
+        to_add, to_remove = utils.get_stratified_compartments(
             stratification_name,
             strata_names,
             compartment_types,
@@ -1299,83 +1299,46 @@ class StratifiedModel(EpiModel):
             del self.compartment_values[remove_idx]
             del self.compartment_names[remove_idx]
 
-        # ================= ADJUSTMENT STUFF ====================================
-
-        # Alternative approach to working out which parameters to overwrite
-        # can put a capital W at the string's end to indicate that it is an overwrite parameter, as an alternative to
-        # submitting a separate dictionary key to represent the strata which need to be overwritten
-        # FIXME: Does anyone actually use this W notation?
-        revised_adjustments = {}
-        for parameter in adjustment_requests.keys():
-            revised_adjustments[parameter] = {}
-            param_adjs = revised_adjustments[parameter]
-
-            for stratum in adjustment_requests[parameter]:
-                if stratum == OVERWRITE_KEY:
-                    # Skip overwrite key
-                    continue
-
-                elif stratum[-1] == OVERWRITE_CHARACTER:
-                    # if the parameter ends in W, interpret as an overwrite parameter and added to this key
-                    if OVERWRITE_KEY not in param_adjs:
-                        param_adjs[OVERWRITE_KEY] = []
-
-                    param_adjs[stratum[:-1]] = adjustment_requests[parameter][stratum]
-                    param_adjs[OVERWRITE_KEY].append(stratum[:-1])
-
-                else:
-                    # Copy accross
-                    param_adjs[stratum] = adjustment_requests[parameter][stratum]
-
-            if OVERWRITE_KEY not in revised_adjustments:
-                revised_adjustments[OVERWRITE_KEY] = []
-
-        adjustment_requests = revised_adjustments
-
-        # Check parameter adjustments have been requested appropriately and add parameter for any strata not referred to.
-        for parameter in adjustment_requests:
-            invalid_adjustments = [
-                requested_stratum not in strata_names + [OVERWRITE_KEY]
-                for requested_stratum in adjustment_requests[parameter]
-            ]
-            if any(invalid_adjustments):
-                msg = "A stratum was requested in adjustments that is not available in this stratification"
-                raise ValueError(msg)
-
-        # ============== ADD AGE flows 1st for some reason
+        adjustment_requests = utils.parse_param_adjustment_overwrite(
+            strata_names, adjustment_requests
+        )
 
         if stratification_name == "age":
             # Work out ageing flows.
             # This comes first, so that the compartment names remain in the unstratified form
             # .... why do we need that?
-            # Set inter-compartmental flows for ageing from one stratum to the next.
-            # The ageing rate is proportional to the width of the age bracket.
-            ageing_flows = []
-            for strata_idx in range(len(strata_names) - 1):
-                start_age = int(strata_names[strata_idx])
-                end_age = int(strata_names[strata_idx + 1])
-                ageing_parameter_name = f"ageing{start_age}to{end_age}"
-                ageing_rate = 1.0 / (end_age - start_age)
-                self.parameters[ageing_parameter_name] = ageing_rate
-                # Why do we need the unstratified_compartment_names
-                for compartment in self.unstratified_compartment_names:
-                    ageing_flow = {
-                        "type": Flow.STANDARD,
-                        "parameter": ageing_parameter_name,
-                        "origin": create_stratified_name(compartment, "age", start_age),
-                        "to": create_stratified_name(compartment, "age", end_age),
-                        "implement": len(self.all_stratifications),
-                    }
-                    ageing_flows.append(ageing_flow)
-
+            ageing_params, ageing_flows = utils.create_ageing_flows(
+                strata_names, self.unstratified_compartment_names, len(self.all_stratifications)
+            )
             self.transition_flows = self.transition_flows.append(ageing_flows)
+            self.parameters.update(ageing_params)
+
+        # Stratify the transition flows
+        (
+            new_flows,
+            overwritten_parameter_adjustment_names,
+            param_updates,
+            adaptation_function_updates,
+        ) = utils.stratify_transition_flows(
+            stratification_name,
+            strata_names,
+            adjustment_requests,
+            compartment_types,
+            list(self.transition_flows.T.to_dict().values()),
+            len(self.all_stratifications),
+        )
+        self.overwrite_parameters += overwritten_parameter_adjustment_names
+        self.parameters.update(param_updates)
+        self.adaptation_functions.update(adaptation_function_updates)
+
+        # Update the customised flow functions.
+        num_flows = len(self.transition_flows)
+        for idx, new_flow in enumerate(new_flows):
+            if new_flow["type"] == Flow.CUSTOM:
+                new_idx = num_flows + idx
+                self.customised_flow_functions[new_idx] = self.customised_flow_functions[n_flow]
 
         # =============== CUTOFF HERE FOR NOW ==================================
-
-        # stratify the flows
-        self.stratify_transition_flows(
-            stratification_name, strata_names, adjustment_requests, compartment_types,
-        )
         self.stratify_entry_flows(
             stratification_name, strata_names, entry_proportions, split_proportions
         )
@@ -2186,7 +2149,7 @@ if __name__ == "__main__":
         infectiousness_adjustments={"positive": 0.5},
         mixing_matrix=hiv_mixing,
         verbose=False,
-        target_props={"all": {"negative": 0.5}},
+        target_proportions={"all": {"negative": 0.5}},
     )
 
     # sir_model.stratify("strain", ["sensitive", "resistant"], ["infectious"],

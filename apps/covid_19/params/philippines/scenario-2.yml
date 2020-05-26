@@ -1,6 +1,7 @@
 
 mixing:
   other_locations_times:
+    - 45
     - 46
     - 47
     - 48
@@ -87,6 +88,7 @@ mixing:
     - 129
     - 130
   other_locations_values:
+    - 1
     - 1.0275
     - 1.0075
     - 0.985
@@ -173,6 +175,7 @@ mixing:
     - 0.3475
     - 0.33
   work_times:
+    - 45
     - 46
     - 47
     - 48
@@ -261,6 +264,7 @@ mixing:
     - 145
     - 147
   work_values:
+    - 1
     - 1.06
     - 1.01
     - 1.08

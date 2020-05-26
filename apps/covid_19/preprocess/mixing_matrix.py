@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from typing import Callable
 
 import numpy as np
@@ -59,9 +59,7 @@ def build_dynamic(
         mixing_data = restructured_mixing_params[location_key]
         mixing[location_key] = {
             "values": mixing_data["values"],
-            "times": [
-                ((t - BASE_DATE).days if type(t) is date else t) for t in mixing_data["times"]
-            ],
+            "times": list(parse_times(mixing_data["times"])),
         }
 
     # Adjust the mixing parameters according by scaling them according to NPI effectiveness
@@ -128,3 +126,16 @@ def build_dynamic(
         return mixing_matrix
 
     return mixing_matrix_function
+
+
+def parse_times(times):
+    """
+    Ensure all times are an integer,
+    representing days since simulation start.
+    """
+    for time in times:
+        if type(time) is str:
+            time_date = datetime.strptime(time, "%Y%m%d").date()
+            yield (time_date - BASE_DATE).days
+        else:
+            yield time

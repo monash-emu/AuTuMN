@@ -8,6 +8,7 @@ pandas==0.24.2
 scipy==1.1.0
 pymc3==3.7  # Probabilistic programming
 xlrd>=1.2.0  # Reading Excel files via Pandas
+numba
 
 # Database access
 SQLAlchemy>=1.1.18

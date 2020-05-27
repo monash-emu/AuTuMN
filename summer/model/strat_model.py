@@ -3,6 +3,7 @@ import itertools
 from functools import lru_cache
 from typing import List, Dict
 
+import numpy as np
 import numpy
 
 from summer.constants import Compartment, Flow, BirthApproach, Stratification, IntegrationType
@@ -809,10 +810,15 @@ class StratifiedModel(EpiModel):
         applicable_params = [
             param for param in _adjustment_requests if _unadjusted_parameter.startswith(param)
         ]
-        applicable_param_n_stratifications = [len(find_name_components(param)) for param in applicable_params]
+        applicable_param_n_stratifications = [
+            len(find_name_components(param)) for param in applicable_params
+        ]
         if applicable_param_n_stratifications:
-            max_length_indices = [i_p for i_p, p in enumerate(applicable_param_n_stratifications) if
-                                  p == max(applicable_param_n_stratifications)]
+            max_length_indices = [
+                i_p
+                for i_p, p in enumerate(applicable_param_n_stratifications)
+                if p == max(applicable_param_n_stratifications)
+            ]
             candidate_params = [applicable_params[i] for i in max_length_indices]
             return max(candidate_params, key=len)
         else:
@@ -1560,6 +1566,8 @@ class StratifiedModel(EpiModel):
                     )
                 ]
 
+        self.mixing_indices_arr = np.array(list(self.mixing_indices.values()))
+
     def find_strain_mixing_multipliers(self):
         """
         find the relevant indices to be used to calculate the force of infection contribution to each strain from each
@@ -1571,15 +1579,19 @@ class StratifiedModel(EpiModel):
             for category in (
                 ["all_population"] if self.mixing_matrix is None else self.mixing_categories
             ):
-                self.strain_mixing_elements[strain][category] = [
-                    index
-                    for index in self.mixing_indices[category]
-                    if index in self.infectious_indices[strain]
-                ]
-                self.strain_mixing_multipliers[strain][category] = [
-                    self.infectiousness_multipliers[i_comp]
-                    for i_comp in self.strain_mixing_elements[strain][category]
-                ]
+                self.strain_mixing_elements[strain][category] = numpy.array(
+                    [
+                        index
+                        for index in self.mixing_indices[category]
+                        if index in self.infectious_indices[strain]
+                    ]
+                )
+                self.strain_mixing_multipliers[strain][category] = numpy.array(
+                    [
+                        self.infectiousness_multipliers[i_comp]
+                        for i_comp in self.strain_mixing_elements[strain][category]
+                    ]
+                )
 
     def find_transition_indices_to_implement(
         self, back_one: int = 0, include_change: bool = False
@@ -1655,40 +1667,28 @@ class StratifiedModel(EpiModel):
         """
         return self.final_parameter_functions[_parameter](_time)
 
-    def find_infectious_population(self, _compartment_values):
+    def find_infectious_population(self, compartment_values):
         """
         find vectors for the total infectious populations and the total population that is needed in the case of
             frequency-dependent transmission
 
-        :param _compartment_values: numpy array
+        :param compartment_values: numpy array
             current values for the compartment sizes
         """
-        mixing_categories = (
-            ["all_population"] if self.mixing_matrix is None else self.mixing_categories
+        strains = self.strains if self.strains else ["all_strains"]
+        if self.mixing_matrix is None:
+            mixing_categories = ["all_population"]
+        else:
+            mixing_categories = self.mixing_categories
+
+        self.infectious_denominators = compartment_values[self.mixing_indices_arr].sum(axis=1)
+        self.infectious_populations = find_infectious_populations(
+            compartment_values,
+            strains,
+            mixing_categories,
+            self.strain_mixing_elements,
+            self.strain_mixing_multipliers,
         )
-
-        for strain in self.strains if self.strains else ["all_strains"]:
-            self.infectious_populations[strain] = []
-            for category in mixing_categories:
-                self.infectious_populations[strain].append(
-                    sum(
-                        element_list_multiplication(
-                            [
-                                _compartment_values[i_comp]
-                                for i_comp in self.strain_mixing_elements[strain][category]
-                            ],
-                            self.strain_mixing_multipliers[strain][category],
-                        )
-                    )
-                )
-
-        # Not sure which of these to use
-        if type(_compartment_values) == list:
-            _compartment_values = numpy.asarray(_compartment_values)
-        self.infectious_denominators = [
-            sum(_compartment_values[self.mixing_indices[category]])
-            for category in self.mixing_indices
-        ]
 
     def find_infectious_multiplier(self, n_flow):
         """
@@ -1929,92 +1929,35 @@ class StratifiedModel(EpiModel):
         return create_cumulative_dict(current_strata_props)
 
 
-if __name__ == "__main__":
+from numba import jit
 
-    def get_total_popsize(model, time):
-        return sum(model.compartment_values)
 
-    sir_model = StratifiedModel(
-        numpy.linspace(0, 60 / 365, 61).tolist(),
-        ["susceptible", "infectious", "recovered"],
-        {"infectious": 0.001},
-        {"beta": 400, "recovery": 365 / 13, "infect_death": 1},
-        [
-            {
-                "type": "standard_flows",
-                "parameter": "recovery",
-                "origin": "infectious",
-                "to": "recovered",
-            },
-            {
-                "type": "infection_density",
-                "parameter": "beta",
-                "origin": "susceptible",
-                "to": "infectious",
-            },
-            {"type": "compartment_death", "parameter": "infect_death", "origin": "infectious"},
-        ],
-        output_connections={
-            "incidence": {"origin": "susceptible", "to": "infectious"},
-            "incidence_hiv_positive": {
-                "origin": "susceptible",
-                "to": "infectious",
-                "origin_condition": "hiv_positive",
-                "to_condition": "hiv_positive",
-            },
-        },
-        verbose=False,
-        derived_output_functions={"population": get_total_popsize},
-        death_output_categories=((), ("hiv_positive",)),
-    )
-    # sir_model.adaptation_functions["increment_by_one"] = create_additive_function(1.)
+def find_infectious_populations(
+    compartment_values: np.ndarray,
+    strains: List[str],
+    mixing_categories: List[str],
+    strain_mixing_elements: Dict[str, Dict[str, List[int]]],
+    strain_mixing_multipliers: Dict[str, Dict[str, np.ndarray]],
+):
+    infectious_populations = {}
+    num_mixing_categories = len(mixing_categories)
+    for strain in strains:
+        infectious_populations[strain] = []
+        for idx in range(num_mixing_categories):
+            category = mixing_categories[idx]
+            weighted_sum = _find_infectious_populations_weighted_sum(
+                compartment_values,
+                strain_mixing_elements[strain][category],
+                strain_mixing_multipliers[strain][category],
+            )
+            infectious_populations[strain].append(weighted_sum)
 
-    # hiv_mixing = numpy.ones(4).reshape(2, 2)
-    hiv_mixing = None
+    return infectious_populations
 
-    temp_function = lambda time: 0.4
-    sir_model.time_variants["temp_function"] = temp_function
 
-    age_mixing = None
-    sir_model.stratify(
-        "age",
-        [5, 10],
-        [],
-        {},
-        {"recovery": {"5": 0.5, "10": 0.8}},
-        infectiousness_adjustments={"5": 0.8},
-        mixing_matrix=age_mixing,
-        verbose=False,
-    )
-
-    sir_model.stratify(
-        "hiv",
-        ["negative", "positive"],
-        [],
-        {"negative": 0.6},
-        {
-            "recovery": {"negative": "increment_by_one", "positive": 0.5},
-            "infect_death": {"negative": 0.5},
-            "entry_fraction": {"negative": 0.6, "positive": 0.4},
-        },
-        adjustment_requests={"recovery": {"negative": 0.7}},
-        infectiousness_adjustments={"positive": 0.5},
-        mixing_matrix=hiv_mixing,
-        verbose=False,
-        target_props={"all": {"negative": 0.5}},
-    )
-
-    # sir_model.stratify("strain", ["sensitive", "resistant"], ["infectious"],
-    #                    adjustment_requests={"recoveryXhiv_negative": {"sensitive": 0.9},
-    #                                         "recovery": {"sensitive": 0.8}},
-    #                    requested_proportions={}, verbose=False)
-
-    sir_model.transition_flows.to_csv("transitions.csv")
-
-    sir_model.run_model()
-
-    # create_flowchart(sir_model, name="sir_model_diagram")
-
-    # create_flowchart(sir_model)
-    #
-    sir_model.plot_compartment_size(["infectious", "hiv_positive"])
+@jit(nopython=True)
+def _find_infectious_populations_weighted_sum(
+    compartment_values: np.ndarray, mixing_element_idxs: np.ndarray, mixing_multipliers: np.ndarray,
+):
+    mixing_elements = compartment_values[mixing_element_idxs]
+    return (mixing_elements * mixing_multipliers).sum()

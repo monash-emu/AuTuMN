@@ -1,7 +1,7 @@
 import copy
 
 import matplotlib.pyplot
-import numpy
+import numpy as np
 import pandas as pd
 
 from ..constants import Compartment, Flow, BirthApproach, Stratification, IntegrationType
@@ -66,7 +66,7 @@ class EpiModel:
         keys are the names of the quantities to be tracked
         value is dict containing the origin and the destination ("to") compartments on which to base these calculations
             as well as conditional strings that should appear in the origin and destination compartment names
-    :attribute outputs: numpy array
+    :attribute outputs: np array
         array containing all the evaluated compartment sizes
     :attribute parameters: dict
         string keys for each parameter, with values either string to refer to a time-variant function or float
@@ -324,11 +324,11 @@ class EpiModel:
             return self.apply_all_flow_types_to_odes(compartment_values, time)
 
         self.outputs = solve_ode(
-            integration_type, ode_func, self.compartment_values, self.times, solver_args
+            integration_type, ode_func, np.array(self.compartment_values), self.times, solver_args
         )
 
         # Check that all compartment values are >= 0
-        if numpy.any(self.outputs < 0.0):
+        if np.any(self.outputs < 0.0):
             print("Warning: compartment(s) with negative values.")
 
         # Collate outputs to be calculated post-integration that are not just compartment sizes.
@@ -344,7 +344,7 @@ class EpiModel:
 
         :param flow_rates: list
             comes in as a list of zeros with length equal to that of the number of compartments for integration
-        :param compartment_values: numpy.ndarray
+        :param compartment_values: np.ndarray
             working values of the compartment sizes
         :param time: float
             current integration time
@@ -354,7 +354,7 @@ class EpiModel:
         if self.ticker:
             print("Integrating at time: %s" % time)
         self.prepare_time_step(time)
-        flow_rates = numpy.zeros(len(self.compartment_names))
+        flow_rates = np.zeros(len(self.compartment_names))
         flow_rates = self.apply_transition_flows(flow_rates, compartment_values, time)
         # Apply deaths before births so that we can use 'total deaths' to calculate the birth rate, if required.
         flow_rates = self.apply_compartment_death_flows(flow_rates, compartment_values, time)

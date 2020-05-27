@@ -251,9 +251,7 @@ def stratify_transition_flows(
                         )
                         fraction = 1.0 / len(strata_names)
                         param_updates[adjusted_param_name] = fraction
-                        adaptation_function_updates[
-                            adjusted_param_name
-                        ] = create_multiplicative_function(fraction)
+                        adaptation_function_updates[adjusted_param_name] = lambda v, t: fraction * v
                     else:
                         # Otherwise if no request, retain the existing parameter
                         adjusted_param_name = param_name

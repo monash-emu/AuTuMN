@@ -10,7 +10,10 @@ from summer.model.utils import (
 )
 
 
-def test_stratify_transition_flows():
+def test_stratify_transition_flows__with_adjustments():
+    """
+    Ensure correct flows and params are returned when adjustments are used
+    """
     flows = [
         {
             "type": "standard_flows",
@@ -19,7 +22,6 @@ def test_stratify_transition_flows():
             "to": "infectious",
             "implement": 0,
             "strain": None,
-            "force_index": None,
         },
         {
             "type": "standard_flows",
@@ -28,7 +30,6 @@ def test_stratify_transition_flows():
             "to": "susceptible",
             "implement": 0,
             "strain": None,
-            "force_index": None,
         },
     ]
     params = {
@@ -89,238 +90,192 @@ def test_stratify_transition_flows():
     ]
 
 
-PARAM_VARS = "flows, custom_func, params, adjustment, comps, expected_flows, expected_custom_func, expected_params"
-PARAM_VALS = [
-    # Start with two transition flows and two parameters,
-    # Apply 2x strata and 1x parameter adjustment
-    # Apply strata to all compartments
-    # Expect 4 new transition flows and 2 new parameters.
-    [
-        # Starting flow
-        [
-            ["standard_flows", "flow_0", "susceptible", "infectious", 0, None, None],
-            ["standard_flows", "flow_1", "infectious", "susceptible", 0, None, None],
-        ],
-        # Starting custom flow funcs
-        {},
-        # Starting params
-        {"flow_0": 0.5, "flow_1": 0.1,},
-        # Adjustments
-        {"flow_0": {"foo": 0.2, "bar": 0.7,}},
-        # Compartments to stratify
-        ["susceptible", "infectious"],
-        # Expected flows
-        [
-            ["standard_flows", "flow_0", "susceptible", "infectious", 0, None, None],
-            ["standard_flows", "flow_1", "infectious", "susceptible", 0, None, None],
-            [
-                "standard_flows",
-                "flow_0Xtest_foo",
-                "susceptibleXtest_foo",
-                "infectiousXtest_foo",
-                1,
-                None,
-                None,
-            ],
-            [
-                "standard_flows",
-                "flow_0Xtest_bar",
-                "susceptibleXtest_bar",
-                "infectiousXtest_bar",
-                1,
-                None,
-                None,
-            ],
-            [
-                "standard_flows",
-                "flow_1",
-                "infectiousXtest_foo",
-                "susceptibleXtest_foo",
-                1,
-                None,
-                None,
-            ],
-            [
-                "standard_flows",
-                "flow_1",
-                "infectiousXtest_bar",
-                "susceptibleXtest_bar",
-                1,
-                None,
-                None,
-            ],
-        ],
-        # Expected custom funcs
-        {},
-        # Expected params
-        {"flow_0": 0.5, "flow_1": 0.1, "flow_0Xtest_foo": 0.2, "flow_0Xtest_bar": 0.7},
-    ],
-    # Same as above but only stratify one compartment
-    [
-        # Starting flows
-        [
-            ["standard_flows", "flow_0", "susceptible", "infectious", 0, None, None],
-            ["standard_flows", "flow_1", "infectious", "susceptible", 0, None, None],
-        ],
-        # Starting custom flow funcs
-        {},
-        # Starting params
-        {"flow_0": 0.5, "flow_1": 0.1,},
-        # Adjustments
-        {"flow_0": {"foo": 0.2, "bar": 0.7,}},
-        # Compartments to stratify
-        ["susceptible"],
-        # Expected flows
-        [
-            ["standard_flows", "flow_0", "susceptible", "infectious", 0, None, None],
-            ["standard_flows", "flow_1", "infectious", "susceptible", 0, None, None],
-            [
-                "standard_flows",
-                "flow_0Xtest_foo",
-                "susceptibleXtest_foo",
-                "infectious",
-                1,
-                None,
-                None,
-            ],
-            [
-                "standard_flows",
-                "flow_0Xtest_bar",
-                "susceptibleXtest_bar",
-                "infectious",
-                1,
-                None,
-                None,
-            ],
-            [
-                "standard_flows",
-                "flow_1Xtest_foo",
-                "infectious",
-                "susceptibleXtest_foo",
-                1,
-                None,
-                None,
-            ],
-            [
-                "standard_flows",
-                "flow_1Xtest_bar",
-                "infectious",
-                "susceptibleXtest_bar",
-                1,
-                None,
-                None,
-            ],
-        ],
-        # Expected custom funcs
-        {},
-        # Expected params
+def test_stratify_transition_flows__with_adjustments_and_partial_strat():
+    """
+    Ensure correct flows and params are returned when adjustments are used
+    but only one compartment is stratified.
+    """
+    flows = [
         {
-            "flow_0": 0.5,
-            "flow_1": 0.1,
-            "flow_0Xtest_foo": 0.2,
-            "flow_0Xtest_bar": 0.7,
-            "flow_1Xtest_foo": 0.5,
-            "flow_1Xtest_bar": 0.5,
+            "type": "standard_flows",
+            "parameter": "flow_0",
+            "origin": "susceptible",
+            "to": "infectious",
+            "implement": 0,
+            "strain": None,
         },
-    ],
-    # Expect custom flow funcs to be updated
-    [
-        # Starting flow
-        [
-            ["customised_flows", "flow_0", "susceptible", "infectious", 0, None, None],
-            ["customised_flows", "flow_1", "infectious", "susceptible", 0, None, None],
-            ["customised_flows", "flow_2", "comp_0", "comp_1", 0, None, None],
-        ],
-        # Starting custom flow funcs
-        {0: "func_for_flow_0", 1: "func_for_flow_1", 2: "func_for_flow_2"},
-        # Starting params
-        {"flow_0": 0.5, "flow_1": 0.1, "flow_2": 1.9},
-        # Adjustments
-        {},
-        # Compartments to stratify
-        ["susceptible"],
-        # Expected flows
-        [
-            ["customised_flows", "flow_0", "susceptible", "infectious", 0, None, None],
-            ["customised_flows", "flow_1", "infectious", "susceptible", 0, None, None],
-            ["customised_flows", "flow_2", "comp_0", "comp_1", 0, None, None],
-            ["customised_flows", "flow_0", "susceptibleXtest_foo", "infectious", 1, None, None,],
-            ["customised_flows", "flow_0", "susceptibleXtest_bar", "infectious", 1, None, None,],
-            [
-                "customised_flows",
-                "flow_1Xtest_foo",
-                "infectious",
-                "susceptibleXtest_foo",
-                1,
-                None,
-                None,
-            ],
-            [
-                "customised_flows",
-                "flow_1Xtest_bar",
-                "infectious",
-                "susceptibleXtest_bar",
-                1,
-                None,
-                None,
-            ],
-            ["customised_flows", "flow_2", "comp_0", "comp_1", 1, None, None],
-        ],
-        # Expected custom funcs
         {
-            0: "func_for_flow_0",
-            1: "func_for_flow_1",
-            2: "func_for_flow_2",
-            3: "func_for_flow_0",
-            4: "func_for_flow_0",
-            5: "func_for_flow_1",
-            6: "func_for_flow_1",
-            7: "func_for_flow_2",
+            "type": "standard_flows",
+            "parameter": "flow_1",
+            "origin": "infectious",
+            "to": "susceptible",
+            "implement": 0,
+            "strain": None,
         },
-        # Expected params
+    ]
+    params = {
+        "flow_0": 0.5,
+        "flow_1": 0.1,
+    }
+    adjustments = {"flow_0": {"foo": 0.2, "bar": 0.7,}}
+    compartments_to_stratify = ["susceptible"]
+    (
+        new_flows,
+        overwritten_parameter_adjustment_names,
+        param_updates,
+        adaptation_function_updates,
+    ) = stratify_transition_flows(
+        "test",
+        strata_names=["foo", "bar"],
+        adjustment_requests=adjustments,
+        compartments_to_stratify=compartments_to_stratify,
+        transition_flows=flows,
+        implement_count=1,
+    )
+    assert adaptation_function_updates["flow_1Xtest_foo"](1, 0) == 0.5
+    assert adaptation_function_updates["flow_1Xtest_bar"](1, 0) == 0.5
+    assert overwritten_parameter_adjustment_names == []
+    assert param_updates == {
+        "flow_0Xtest_foo": 0.2,
+        "flow_0Xtest_bar": 0.7,
+        "flow_1Xtest_foo": 0.5,
+        "flow_1Xtest_bar": 0.5,
+    }
+    assert new_flows == [
         {
-            "flow_0": 0.5,
-            "flow_1": 0.1,
-            "flow_1Xtest_foo": 0.5,
-            "flow_1Xtest_bar": 0.5,
-            "flow_2": 1.9,
+            "type": "standard_flows",
+            "parameter": "flow_0Xtest_foo",
+            "origin": "susceptibleXtest_foo",
+            "to": "infectious",
+            "implement": 1,
+            "strain": None,
         },
-    ],
-]
+        {
+            "type": "standard_flows",
+            "parameter": "flow_0Xtest_bar",
+            "origin": "susceptibleXtest_bar",
+            "to": "infectious",
+            "implement": 1,
+            "strain": None,
+        },
+        {
+            "type": "standard_flows",
+            "parameter": "flow_1Xtest_foo",
+            "origin": "infectious",
+            "to": "susceptibleXtest_foo",
+            "implement": 1,
+            "strain": None,
+        },
+        {
+            "type": "standard_flows",
+            "parameter": "flow_1Xtest_bar",
+            "origin": "infectious",
+            "to": "susceptibleXtest_bar",
+            "implement": 1,
+            "strain": None,
+        },
+    ]
 
 
-# @pytest.mark.parametrize(PARAM_VARS, PARAM_VALS)
-# def test_stratify_transition_flows(
-#     flows,
-#     custom_func,
-#     params,
-#     adjustment,
-#     comps,
-#     expected_flows,
-#     expected_custom_func,
-#     expected_params,
-# ):
-#     """
-#     Ensure that `stratify_compartments` splits up transition flows correctly.
-#     """
-#     model = StratifiedModel(**_get_model_kwargs())
-#     cols = ["type", "parameter", "origin", "to", "implement", "strain", "force_index"]
-#     model.transition_flows = pd.DataFrame(flows, columns=cols).astype(object)
-#     model.parameters = params
-#     strat_name = "test"
-#     strata_names = ["foo", "bar"]
-#     model.customised_flow_functions = custom_func
-#     model.all_stratifications = {strat_name: strata_names}
-#     model.stratify_compartments(strat_name, strata_names, {"foo": 0.5, "bar": 0.5}, comps)
-#     model.stratify_transition_flows(strat_name, strata_names, adjustment, comps)
-#     # Check flows df stratified
-#     expected_flows_df = pd.DataFrame(expected_flows, columns=cols).astype(object)
-#     assert_frame_equal(expected_flows_df, model.transition_flows)
-#     # Check custom flow func is updated
-#     assert model.customised_flow_functions == expected_custom_func
-#     # Check params are stratified
-#     for k, v in expected_params.items():
-#         assert model.parameters[k] == v
+def test_stratify_transition_flows__with_custom_flow_funcs():
+    """
+    Ensure correct flows and params are returned when adjustments are used
+    """
+    flows = [
+        {
+            "type": "customised_flows",
+            "parameter": "flow_0",
+            "origin": "susceptible",
+            "to": "infectious",
+            "implement": 0,
+            "strain": None,
+        },
+        {
+            "type": "customised_flows",
+            "parameter": "flow_1",
+            "origin": "infectious",
+            "to": "susceptible",
+            "implement": 0,
+            "strain": None,
+        },
+        {
+            "type": "customised_flows",
+            "parameter": "flow_2",
+            "origin": "comp_0",
+            "to": "comp_1",
+            "implement": 0,
+            "strain": None,
+        },
+    ]
+    params = {"flow_0": 0.5, "flow_1": 0.1, "flow_2": 1.9}
+    adjustments = {}
+    compartments_to_stratify = ["susceptible"]
+    (
+        new_flows,
+        overwritten_parameter_adjustment_names,
+        param_updates,
+        adaptation_function_updates,
+    ) = stratify_transition_flows(
+        "test",
+        strata_names=["foo", "bar"],
+        adjustment_requests=adjustments,
+        compartments_to_stratify=compartments_to_stratify,
+        transition_flows=flows,
+        implement_count=1,
+    )
+    assert adaptation_function_updates["flow_1Xtest_foo"](1, 0) == 0.5
+    assert adaptation_function_updates["flow_1Xtest_bar"](1, 0) == 0.5
+    assert adaptation_function_updates["flow_0Xtest_foo"](1, 0) == 0.5
+    assert adaptation_function_updates["flow_0Xtest_bar"](1, 0) == 0.5
+    assert overwritten_parameter_adjustment_names == []
+    assert param_updates == {
+        "flow_0Xtest_foo": 0.5,
+        "flow_0Xtest_bar": 0.5,
+        "flow_1Xtest_foo": 0.5,
+        "flow_1Xtest_bar": 0.5,
+    }
+    assert new_flows == [
+        {
+            "type": "customised_flows",
+            "parameter": "flow_0Xtest_foo",
+            "origin": "susceptibleXtest_foo",
+            "to": "infectious",
+            "implement": 1,
+            "strain": None,
+        },
+        {
+            "type": "customised_flows",
+            "parameter": "flow_0Xtest_bar",
+            "origin": "susceptibleXtest_bar",
+            "to": "infectious",
+            "implement": 1,
+            "strain": None,
+        },
+        {
+            "type": "customised_flows",
+            "parameter": "flow_1Xtest_foo",
+            "origin": "infectious",
+            "to": "susceptibleXtest_foo",
+            "implement": 1,
+            "strain": None,
+        },
+        {
+            "type": "customised_flows",
+            "parameter": "flow_1Xtest_bar",
+            "origin": "infectious",
+            "to": "susceptibleXtest_bar",
+            "implement": 1,
+            "strain": None,
+        },
+        {
+            "type": "customised_flows",
+            "parameter": "flow_2",
+            "origin": "comp_0",
+            "to": "comp_1",
+            "implement": 1,
+            "strain": None,
+        },
+    ]
 
 
 def test_create_ageing_flows():
@@ -451,7 +406,7 @@ PROPS_TEST_CASES = [
         {"foo": 0.3, "bar": 0.3, "baz": 0.4},
     ],
     # Test no props
-    [["foo", "bar"], {}, {"foo": 0.5, "bar": 0.5,},],
+    [["foo", "bar"], {}, {"foo": 0.5, "bar": 0.5},],
     # Test some missing
     [["foo", "bar", "baz"], {"baz": 0.4}, {"foo": 0.3, "bar": 0.3, "baz": 0.4},],
 ]
@@ -475,7 +430,7 @@ def test_get_stratified_compartments__with_no_extisting_strat():
         stratification_name="age",
         strata_names=["0", "10", "20"],
         stratified_compartments=["S", "I", "R"],
-        split_proportions={"0": 0.25, "10": 0.5, "20": 0.25,},
+        split_proportions={"0": 0.25, "10": 0.5, "20": 0.25},
         current_names=["S", "I", "R"],
         current_values=[1000, 100, 0],
     )
@@ -503,7 +458,7 @@ def test_get_stratified_compartments__with_subset_stratified():
         stratification_name="age",
         strata_names=["0", "10", "20"],
         stratified_compartments=["S"],
-        split_proportions={"0": 0.25, "10": 0.5, "20": 0.25,},
+        split_proportions={"0": 0.25, "10": 0.5, "20": 0.25},
         current_names=["S", "I", "R"],
         current_values=[1000, 100, 0],
     )

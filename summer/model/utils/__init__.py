@@ -1,3 +1,5 @@
+from typing import List, Tuple, Dict, Callable
+
 from .age_stratification import add_zero_to_age_breakpoints, split_age_parameter
 from .data_structures import (
     convert_boolean_list_to_indices,
@@ -44,9 +46,6 @@ def get_all_proportions(names, proportions):
         starting_proportion = (1 - proportion_allocated) / count_remaining
         remaining_proportions = {name: starting_proportion for name in remaining_names}
         return {**proportions, **remaining_proportions}
-
-
-from typing import List, Tuple, Dict
 
 
 def get_stratified_compartments(
@@ -205,23 +204,7 @@ def stratify_transition_flows(
 
             param_adjust_requests = adjustment_requests.get(adjustment_request_param)
             for stratum in strata_names:
-                """
-                find the adjustment request that is relevant to a particular unadjusted parameter and stratum and add the
-                    parameter value (str for function or float) to the parameters dictionary attribute
-                otherwise allow return of None
-
-                :param param_name:
-                    name of the unadjusted parameter value
-                :param _stratification_name:
-                    see prepare_and_check_stratification
-                :param _stratum:
-                    stratum being considered by the method calling this method
-                :param _adjustment_requests:
-                    see incorporate_alternative_overwrite_approach and check_parameter_adjustment_requests
-                :return: parameter_adjustment_name: str or None
-                    if returned as None, assumption will be that the original, unstratified parameter should be used
-                    otherwise create a new parameter name and value and store away in the appropriate model structure
-                """
+                # Find the adjustment request that is relevant to a particular unadjusted parameter
                 adjusted_param_name = None
                 if param_adjust_requests:
                     if stratum in param_adjust_requests:
@@ -300,3 +283,43 @@ def stratify_transition_flows(
         param_updates,
         adaptation_function_updates,
     )
+
+
+def stratify_entry_flows(
+    stratification_name: str,
+    strata_names: List[str],
+    entry_proportions: Dict[str, float],
+    time_variant_funcs: Dict[str, Callable[[float], float]],
+):
+    """
+    Stratify entry/recruitment/birth flows according to requested entry proportion adjustments
+    again, may need to revise behaviour for what is done if some strata are requested but not others
+    """
+    param_updates = {}
+    time_variant_func_updates = {}
+    for stratum in strata_names:
+        entry_fraction_name = create_stratified_name("entry_fraction", stratification_name, stratum)
+        stratum_prop = entry_proportions.get(stratum)
+        stratum_prop_type = type(stratum_prop)
+        time_variant_func = time_variant_funcs.get(stratum_prop)
+        if stratum_prop_type is str and not time_variant_func:
+            msg = f"Requested entry fraction function for {entry_fraction_name} not available in time variants"
+            raise ValueError(msg)
+
+        if stratification_name == "age" and stratum == "0":
+            # Babies get born as age 0
+            param_updates[entry_fraction_name] = 1.0
+        elif stratification_name == "age":
+            # Babies can't get born older than age 0
+            param_updates[entry_fraction_name] = 0.0
+        elif stratum_prop_type is float:
+            # Entry rates have been manually specified
+            param_updates[entry_fraction_name] = entry_proportions[stratum]
+        elif stratum_prop_type is str:
+            # Use the specified time-varying function to calculate the entry fraction.
+            time_variant_func_updates[entry_fraction_name] = time_variant_funcs[stratum_prop]
+        else:
+            # Otherwise just equally divide entry population between all strata.
+            param_updates[entry_fraction_name] = 1.0 / len(strata_names)
+
+    return param_updates, time_variant_func_updates

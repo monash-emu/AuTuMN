@@ -7,7 +7,66 @@ from summer.model.utils import (
     parse_param_adjustment_overwrite,
     create_ageing_flows,
     stratify_transition_flows,
+    stratify_entry_flows,
 )
+
+
+def test_stratify_stratify_entry_flows__with_age_strata():
+    param_updates, time_variant_updates = stratify_entry_flows(
+        stratification_name="age",
+        strata_names=["0", "10", "20"],
+        entry_proportions={"0": 0.2, "10": 0.8, "20": 0},
+        time_variant_funcs={},
+    )
+    assert time_variant_updates == {}
+    # Just ignore any provided proprotions
+    assert param_updates == {
+        "entry_fractionXage_0": 1,
+        "entry_fractionXage_10": 0,
+        "entry_fractionXage_20": 0,
+    }
+
+
+def test_stratify_stratify_entry_flows__with_entry_proprotions():
+    param_updates, time_variant_updates = stratify_entry_flows(
+        stratification_name="test",
+        strata_names=["foo", "bar"],
+        entry_proportions={"foo": 0.2, "bar": 0.8},
+        time_variant_funcs={},
+    )
+    assert time_variant_updates == {}
+    assert param_updates == {
+        "entry_fractionXtest_foo": 0.2,
+        "entry_fractionXtest_bar": 0.8,
+    }
+
+
+def test_stratify_stratify_entry_flows__with_unspecified_entry_proprotions():
+    param_updates, time_variant_updates = stratify_entry_flows(
+        stratification_name="test",
+        strata_names=["foo", "bar"],
+        entry_proportions={"foo": 0.2},
+        time_variant_funcs={},
+    )
+    assert time_variant_updates == {}
+    # FIXME: I'm not saying that this is a good idea, it's just the current behaviour
+    assert param_updates == {
+        "entry_fractionXtest_foo": 0.2,
+        "entry_fractionXtest_bar": 0.5,
+    }
+
+
+def test_stratify_stratify_entry_flows__with_time_varying_entry_proprotions():
+    param_updates, time_variant_updates = stratify_entry_flows(
+        stratification_name="test",
+        strata_names=["foo", "bar"],
+        entry_proportions={"foo": 0.2, "bar": "plus_one"},
+        time_variant_funcs={"plus_one": lambda x: x + 1},
+    )
+    assert time_variant_updates["entry_fractionXtest_bar"](1) == 2
+    assert param_updates == {
+        "entry_fractionXtest_foo": 0.2,
+    }
 
 
 def test_stratify_transition_flows__with_adjustments():

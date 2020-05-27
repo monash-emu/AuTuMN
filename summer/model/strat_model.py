@@ -209,7 +209,7 @@ class StratifiedModel(EpiModel):
         target_proportions=None,
         verbose=False,
     ):
-        strata_request = strata_names
+        strata_names = strata_names
         compartment_types_to_stratify = compartment_types
         target_props = target_proportions
 
@@ -218,7 +218,7 @@ class StratifiedModel(EpiModel):
 
         :param stratification_name:
             see prepare_and_check_stratification
-        :param strata_request:
+        :param strata_names:
             see find_strata_names_from_input
         :param compartment_types_to_stratify:
             see check_compartment_request
@@ -244,7 +244,7 @@ class StratifiedModel(EpiModel):
         # check inputs correctly specified
         strata_names, adjustment_requests = self.prepare_and_check_stratification(
             stratification_name,
-            strata_request,
+            strata_names,
             compartment_types_to_stratify,
             adjustment_requests,
             target_props,
@@ -1223,18 +1223,6 @@ class StratifiedModel(EpiModel):
             The compartments that will have the stratification applied. Falsey args interpreted as "all".
         split_proportions:
             Request to split existing population in the compartments according to specific proprotions
-        :param adjustment_requests:
-            see incorporate_alternative_overwrite_approach and check_parameter_adjustment_requests
-        :param entry_proportions:
-
-        :param infectiousness_adjustments:
-
-        :param mixing_matrix:
-            see check_mixing
-        :param verbose: bool
-            whether to report on progress
-            note that this can be changed at this stage from what was requested at the original unstratified model
-                construction
         :param target_proportions: dict
             keys are the strata being implemented at this call to stratify
             values are the desired proportions to target
@@ -1247,7 +1235,7 @@ class StratifiedModel(EpiModel):
         # TODO: target_proportions must be a dict
         # TODO: all keys of target_proportions must be a type of strata requested as a part of this stratification
         # TODO: check that user isn't re-creating a stratification with the same name
-        # TODO: strata_request cannot be a float, it can be an int(represents 1-N), it can be a list (which be co-erced to a string)
+        # TODO: strata_names cannot be a float, it can be an int(represents 1-N), it can be a list (which be co-erced to a string)
         # TODO: comparemntcompartment_types must be valid compartments
         # TODO: AGE SPECIFIC VALIDATION TODOS
         # TODO: ensure that IF age stratification is requested, THEN user cannot speccompartment_types"
@@ -1255,6 +1243,7 @@ class StratifiedModel(EpiModel):
         # TODO: all age strata must be int or float
         # TODO: 0 must be in age strata request - represents those ages 0 to <next lowest age?
         # TODO: Validate that all adjustment request parameters and strata actually exist already
+        # FIXME: No validation of entry proportions sanity
         # OTHER NOTES
         # self.full_stratification_list keeps track of comparements that are not partially stratified
         # self.all_stratifications keeps track of all stratifications and their strata
@@ -1338,10 +1327,18 @@ class StratifiedModel(EpiModel):
                 new_idx = num_flows + idx
                 self.customised_flow_functions[new_idx] = self.customised_flow_functions[n_flow]
 
+        if new_flows:
+            self.transition_flows = self.transition_flows.append(new_flows)
+
+        # Stratify the entry flows
+        if self.entry_compartment in compartment_types:
+            param_updates, time_variant_updates = utils.stratify_entry_flows(
+                stratification_name, strata_names, entry_proportions, self.time_variants,
+            )
+            self.parameters.update(param_updates)
+            self.time_variants.update(time_variant_updates)
+
         # =============== CUTOFF HERE FOR NOW ==================================
-        self.stratify_entry_flows(
-            stratification_name, strata_names, entry_proportions, split_proportions
-        )
         if self.death_flows.shape[0] > 0:
             self.stratify_death_flows(stratification_name, strata_names, adjustment_requests)
         self.stratify_universal_death_rate(

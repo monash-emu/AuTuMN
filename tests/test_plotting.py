@@ -44,9 +44,6 @@ def _build_model(*args, **kwargs):
     )
     # Add basic age stratification
     model.stratify(
-        Stratification.AGE,
-        strata_request=[0, 5, 15, 60],
-        compartment_types=[],
-        split_proportions={},
+        Stratification.AGE, strata_names=[0, 5, 15, 60], compartment_types=[], split_proportions={},
     )
     return model

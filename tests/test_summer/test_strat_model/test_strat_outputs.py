@@ -24,10 +24,7 @@ def test_strat_model__with_age__expect_ageing():
     )
     # Add basic age stratification
     model.stratify(
-        Stratification.AGE,
-        strata_request=[0, 5, 15, 60],
-        compartment_types=[],
-        split_proportions={},
+        Stratification.AGE, strata_names=[0, 5, 15, 60], compartment_types=[], split_proportions={},
     )
     # Run the model for 5 years.
     model.run_model(integration_type=IntegrationType.ODE_INT)
@@ -62,7 +59,7 @@ def test_strat_model__with_age_and_starting_proportion__expect_ageing():
     # Add basic age stratification
     model.stratify(
         Stratification.AGE,
-        strata_request=[0, 5, 15, 60],
+        strata_names=[0, 5, 15, 60],
         compartment_types=[],
         split_proportions={"0": 0.8, "5": 0.1, "15": 0.1},
     )
@@ -99,7 +96,7 @@ def test_strat_model__with_locations__expect_no_change():
     # Add basic location stratification
     model.stratify(
         Stratification.LOCATION,
-        strata_request=["rural", "urban", "prison"],
+        strata_names=["rural", "urban", "prison"],
         compartment_types=[],
         split_proportions={"rural": 0.44, "urban": 0.55, "prison": 0.01},
     )
@@ -144,7 +141,7 @@ def test_strat_model__with_locations_and_mixing__expect_varied_transmission():
     # Add basic location stratification
     model.stratify(
         Stratification.LOCATION,
-        strata_request=["rural", "urban", "prison"],
+        strata_names=["rural", "urban", "prison"],
         compartment_types=[],
         split_proportions={},
         mixing_matrix=np.array(

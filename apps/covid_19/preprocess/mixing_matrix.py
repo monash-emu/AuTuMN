@@ -37,7 +37,7 @@ def build_dynamic(
     is_reinstall_regular_prayers: bool,
     prayers_params: dict,
     end_time: float,
-) -> Callable[[float], dict]:
+) -> Callable[[float], np.ndarray]:
     """
     Build a time-varing mixing matrix
     """
@@ -71,6 +71,7 @@ def build_dynamic(
     # Load all location-specific mixing info.
     matrix_components = {}
     for sheet_type in ["all_locations"] + LOCATIONS:
+        # Loads a 16x16 ndarray
         matrix_components[sheet_type] = load_specific_prem_sheet(sheet_type, country)
 
     # Update the mixing parameters to simulate re-installing regular Friday prayers from t_start to t_end. We assume that

@@ -325,48 +325,47 @@ def stratify_entry_flows(
     return param_updates, time_variant_func_updates
 
 
-def stratify_death_flows(self, _stratification_name, _strata_names, _adjustment_requests):
+def stratify_death_flows(
+    stratification_name: str,
+    strata_names: List[str],
+    adjustment_requests: Dict[str, Dict[str, float]],
+    compartments_to_stratify: List[str],
+    death_flows: List[dict],
+    implement_count: int,
+):
     """
-    add compartment-specific death flows to death_flows data frame attribute
-
-    :param _stratification_name:
-        see prepare_and_check_stratification
-    :param _strata_names:
-            see find_strata_names_from_input
-    :param _adjustment_requests:
-        see incorporate_alternative_overwrite_approach and check_parameter_adjustment_requests
+    Add compartment-specific death flows
     """
-    for n_flow in self.find_death_indices_to_implement(back_one=1):
+    for flow in death_flows:
+        is_prev_implement = flow["implement"] == implement_count - 1
+        if not is_prev_implement:
+            continue
 
-        # if the compartment with an additional death flow is being stratified
-        if find_stem(self.death_flows.origin[n_flow]) in self.compartment_types_to_stratify:
+        if find_stem(flow["origin"]) in self.compartment_types_to_stratify:
+            # if the compartment with an additional death flow is being stratified
             for stratum in _strata_names:
 
                 # get stratified parameter name if requested to stratify, otherwise use the unstratified one
                 parameter_name = self.add_adjusted_parameter(
-                    self.death_flows.parameter[n_flow],
-                    _stratification_name,
-                    stratum,
-                    _adjustment_requests,
+                    flow["parameter"], _stratification_name, stratum, _adjustment_requests,
                 )
                 if not parameter_name:
-                    parameter_name = self.death_flows.parameter[n_flow]
+                    parameter_name = flow["parameter"]
 
                 # add the stratified flow to the death flows data frame
                 self.death_flows = self.death_flows.append(
                     {
-                        "type": self.death_flows.type[n_flow],
+                        "type": flow["type"],
                         "parameter": parameter_name,
                         "origin": create_stratified_name(
-                            self.death_flows.origin[n_flow], _stratification_name, stratum
+                            flow["origin"], _stratification_name, stratum
                         ),
                         "implement": len(self.all_stratifications),
                     },
                     ignore_index=True,
                 )
-
-        # otherwise if not part of the stratification, accept the existing flow and increment the implement value
         else:
+            # otherwise if not part of the stratification, accept the existing flow and increment the implement value
             new_flow = self.death_flows.loc[n_flow, :].to_dict()
             new_flow["implement"] += 1
             self.death_flows = self.death_flows.append(new_flow, ignore_index=True)

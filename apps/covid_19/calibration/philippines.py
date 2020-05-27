@@ -20,6 +20,18 @@ PAR_PRIORS = [
         'distribution': 'uniform',
         'distri_params': [.1, 5.]
     },
+    {
+        "param_name": "compartment_periods_calculated.incubation.total_period",
+        "distribution": "gamma",
+        "distri_mean": 5.,
+        "distri_ci": [3., 7.]
+    },
+    {
+        "param_name": "compartment_periods_calculated.total_infectious.total_period",
+        "distribution": "gamma",
+        "distri_mean": 7.,
+        "distri_ci": [5., 9.]
+    },
 ]
 
 # Death counts:

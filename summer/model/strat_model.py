@@ -1299,7 +1299,7 @@ class StratifiedModel(EpiModel):
             ageing_params, ageing_flows = utils.create_ageing_flows(
                 strata_names, self.unstratified_compartment_names, len(self.all_stratifications)
             )
-            self.transition_flows = self.transition_flows.append(ageing_flows)
+            self.transition_flows = self.transition_flows.append(ageing_flows, ignore_index=True)
             self.parameters.update(ageing_params)
 
         # Stratify the transition flows
@@ -1328,7 +1328,7 @@ class StratifiedModel(EpiModel):
                 self.customised_flow_functions[new_idx] = self.customised_flow_functions[n_flow]
 
         if new_flows:
-            self.transition_flows = self.transition_flows.append(new_flows)
+            self.transition_flows = self.transition_flows.append(new_flows, ignore_index=True)
 
         # Stratify the entry flows
         if self.entry_compartment in compartment_types:
@@ -1338,9 +1338,10 @@ class StratifiedModel(EpiModel):
             self.parameters.update(param_updates)
             self.time_variants.update(time_variant_updates)
 
-        # =============== CUTOFF HERE FOR NOW ==================================
-        if self.death_flows.shape[0] > 0:
+        if len(self.death_flows) > 0:
             self.stratify_death_flows(stratification_name, strata_names, adjustment_requests)
+
+        # =============== CUTOFF HERE FOR NOW ==================================
         self.stratify_universal_death_rate(
             stratification_name, strata_names, adjustment_requests, compartment_types,
         )
@@ -1418,15 +1419,15 @@ class StratifiedModel(EpiModel):
             n_flow
             for n_flow, flow in enumerate(self.transition_flows.type)
             if "change" not in flow
-            and self.transition_flows.implement[n_flow] == len(self.all_stratifications)
+            and self.transition_flows.iloc[n_flow].implement == len(self.all_stratifications)
         ]
 
         for n_flow in transition_flow_indices:
             if (
-                self.transition_flows.implement[n_flow] == len(self.all_stratifications)
-                and self.transition_flows.parameter[n_flow] not in parameters_to_adjust
+                self.transition_flows.iloc[n_flow].implement == len(self.all_stratifications)
+                and self.transition_flows.iloc[n_flow].parameter not in parameters_to_adjust
             ):
-                parameters_to_adjust.append(self.transition_flows.parameter[n_flow])
+                parameters_to_adjust.append(self.transition_flows.iloc[n_flow].parameter)
         for n_flow in range(self.death_flows.shape[0]):
             if (
                 self.death_flows.implement[n_flow] == len(self.all_stratifications)
@@ -1662,9 +1663,8 @@ class StratifiedModel(EpiModel):
             n_flow
             for n_flow, flow in enumerate(self.transition_flows.type)
             if "infection" in flow
-            and self.transition_flows.implement[n_flow] == len(self.all_stratifications)
+            and self.transition_flows.iloc[n_flow].implement == len(self.all_stratifications)
         ]
-
         # loop through and find the index of the mixing matrix applicable to the flow, of which there should be only one
         for n_flow in infection_flow_indices:
             found = False
@@ -1742,12 +1742,14 @@ class StratifiedModel(EpiModel):
         :return: list
             list of indices of the flows that need to be stratified
         """
-        return [
-            idx
-            for idx, flow in self.transition_flows.iterrows()
-            if (flow.type != Flow.STRATA_CHANGE or include_change)
-            and flow.implement == len(self.all_stratifications) - back_one
-        ]
+        idxs = []
+        for idx, flow in self.transition_flows.iterrows():
+            is_ok_flow_type = flow.type != Flow.STRATA_CHANGE or include_change
+            is_implemented = flow.implement == (len(self.all_stratifications) - back_one)
+            if is_ok_flow_type and is_implemented:
+                idxs.append(idx)
+
+        return idxs
 
     def find_change_indices_to_implement(self, back_one=0):
         """

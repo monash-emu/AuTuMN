@@ -8,7 +8,7 @@ from autumn.curve import scale_up_function
 from autumn.demography.social_mixing import load_specific_prem_sheet
 
 # Base date used to calculate mixing matrix times.
-BASE_DATE = date(2020, 12, 31)
+BASE_DATE = date(2019, 12, 31)
 
 # Locations that can be used for mixing
 LOCATIONS = ["home", "other_locations", "school", "work"]

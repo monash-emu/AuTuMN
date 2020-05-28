@@ -14,20 +14,20 @@ iso3: MYS
 # Make case detection time-variant
 tv_detection_c: 80. # inflection time
 
-contact_rate: 0.024181165464591217
-start_time: 26.22860550092925
+contact_rate: 0.026261071031329
+start_time: 31.0692731013737
 compartment_periods_calculated:
   incubation:
-    total_period: 3.3863202215911135
+    total_period: 3.90213647584108
 
 compartment_periods:
-  icu_late: 2.8861263218320614
-  icu_early: 15.836780335908683
+  icu_late: 2.88703733417247
+  icu_early: 21.1707377760239
 
-tv_detection_sigma: 0.46947313655390566
-tv_detection_b: 0.0864321086194213
-prop_detected_among_symptomatic: 0.8676169331018422
-icu_prop: 0.285236873634658
+tv_detection_sigma: 0.46226447586322
+tv_detection_b: 0.0604182172578674
+prop_detected_among_symptomatic: 0.891585432203268
+icu_prop: 0.282896242081187
 
 
 mixing:

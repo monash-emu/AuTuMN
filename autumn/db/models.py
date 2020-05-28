@@ -226,16 +226,23 @@ def unpivot_outputs(output_df: pd.DataFrame):
     id_cols = ["idx", "Scenario", "times"]
     value_cols = [c for c in output_df.columns if c not in id_cols]
     output_df = output_df.melt(id_vars=id_cols, value_vars=value_cols)
+    cols = {"compartment"}
 
-    def expand_compartments(row):
-        comp_name = row["variable"]
-        vals = comp_name.split("X")
-        names = [el.split("_")[0] for el in vals]
-        names[0] = "compartment"
-        return pd.Series(vals, index=names)
+    def label_strata(row: list):
+        strata = {"compartment": row[0]}
+        for el in row[1:]:
+            parts = el.split("_")
+            k = parts[0]
+            # FIXME: Use this once Milinda can use it in PowerBI
+            # v = "_".join(parts[1:])
+            strata[k] = el
+            cols.add(k)
 
-    new_cols = output_df.apply(expand_compartments, axis=1)
-    output_df = output_df.join(new_cols)
+        return strata
+
+    variables = (s.split("X") for s in output_df.variable)
+    new_cols_df = pd.DataFrame([label_strata(row) for row in variables])
+    output_df = output_df.join(new_cols_df)
     output_df = output_df.drop(columns="variable")
 
     return output_df

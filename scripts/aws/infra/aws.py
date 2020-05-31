@@ -5,7 +5,7 @@ import boto3
 import timeago
 from tabulate import tabulate
 
-import settings
+from . import settings
 
 client = boto3.client("ec2", region_name=settings.AWS_REGION)
 
@@ -17,20 +17,24 @@ class NoInstanceAvailable(Exception):
 
 
 def run_job(job_id: str):
-    instance_type = settings.EC2InstanceType.g4dn
+    instance_type = settings.EC2InstanceType.m5_8xlarge
     run_instance(job_id, instance_type)
 
 
 def stop_job(job_id: str):
     print(f"Stopping EC2 instances running job {job_id}... ", end="")
-    instance_ids = [i["InstanceId"] for i in describe_instances() if i["name"] == job_id]
+    instance_ids = [
+        i["InstanceId"] for i in describe_instances() if i["name"] == job_id
+    ]
     client.terminate_instances(InstanceIds=instance_ids)
     print("request sent.")
 
 
 def cleanup_volumes():
     volumes = client.describe_volumes()
-    volume_ids = [v["VolumeId"] for v in volumes["Volumes"] if v["State"] == "available"]
+    volume_ids = [
+        v["VolumeId"] for v in volumes["Volumes"] if v["State"] == "available"
+    ]
     for v_id in volume_ids:
         print(f"Deleting orphaned volume {v_id}")
         client.delete_volume(VolumeId=v_id)
@@ -99,7 +103,9 @@ def print_status(instances):
         ]
         for i in instances
     ]
-    table_str = tabulate(table_data, headers=["Name", "Type", "Status", "IP", "Launched"])
+    table_str = tabulate(
+        table_data, headers=["Name", "Type", "Status", "IP", "Launched"]
+    )
     print(table_str, "\n")
 
 

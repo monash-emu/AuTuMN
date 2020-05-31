@@ -2,8 +2,8 @@ import time
 
 import click
 
-import aws
-import remote
+from . import aws
+from . import remote
 
 
 @click.group()

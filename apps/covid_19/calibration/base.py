@@ -14,14 +14,16 @@ N_BURNED = 0
 N_CHAINS = 1
 
 
-def run_full_models_for_mcmc(country: str, src_db_path: str, dest_db_path: str):
+def run_full_models_for_mcmc(
+    country: str, burn_in: int, src_db_path: str, dest_db_path: str
+):
     """
     Run the full baseline model and all scenarios for all accepted MCMC runs in src db.
     """
     country_model = CountryModel(country)
     build_model = country_model.build_model
     params = country_model.params
-    _run_full_models_for_mcmc(src_db_path, dest_db_path, build_model, params)
+    _run_full_models_for_mcmc(burn_in, src_db_path, dest_db_path, build_model, params)
 
 
 def run_calibration_chain(

@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+export TZ="/usr/share/zoneinfo/Australia/Melbourne"
 function log {
     echo "$(date "+%F %T")> $@"
 } 

@@ -20,11 +20,12 @@ def run_mcmc():
     """
 
 
-@run_mcmc.command("covid")
+@run_mcmc.command("malaysia")
+@click.argument("burn_in", type=int)
 @click.argument("src_db_path", type=str)
 @click.argument("dest_db_path", type=str)
-def run_mcmc_malaysia(src_db_path, dest_db_path):
+def run_mcmc_malaysia(burn_in, src_db_path, dest_db_path):
     """
     Run the Malaysia COVID model based on the parameters from a a MCMC chain.
     """
-    run_full_covid_models_for_mcmc("malaysia", src_db_path, dest_db_path)
+    run_full_covid_models_for_mcmc("malaysia", burn_in, src_db_path, dest_db_path)

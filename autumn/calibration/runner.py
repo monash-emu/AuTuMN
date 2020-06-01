@@ -15,7 +15,7 @@ logger = logging.getLogger(__file__)
 
 
 def run_full_models_for_mcmc(
-    src_db_path: str, dest_db_path: str, build_model, params: dict
+    burn_in: int, src_db_path: str, dest_db_path: str, build_model, params: dict
 ):
     """
     Run the full baseline model and all scenarios for all accepted MCMC runs in src db.
@@ -24,11 +24,18 @@ def run_full_models_for_mcmc(
     dest_db = Database(dest_db_path)
 
     logger.info("Copying mcmc_run table to %s", dest_db_path)
+    # FIXME: Add burn in to mcmc_run table.
     dest_db.dump_df("mcmc_run", src_db.db_query("mcmc_run"))
 
     mcmc_runs = list(src_db.db_query("mcmc_run").T.to_dict().values())
+    burn_in_count = burn_in
     for mcmc_run in mcmc_runs:
         meta = {k: v for k, v in mcmc_run.items() if k in META_COLS}
+        if burn_in_count > 0:
+            logger.info("Burning MCMC run %s", meta["idx"])
+            burn_in_count -= 1
+            continue
+
         if not meta["accept"]:
             logger.info("Ignoring non-accepted MCMC run %s", meta["idx"])
             continue

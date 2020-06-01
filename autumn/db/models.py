@@ -78,7 +78,7 @@ def store_database(
     store_db.dump_df(table_name, outputs)
 
 
-def store_run_models(models: List[StratifiedModel], database_path: str, powerbi=True):
+def store_run_models(models: List[StratifiedModel], database_path: str):
     """
     Store models in the database.
     Assume that models are sorted in an order such that their index is their scenario idx.
@@ -101,14 +101,10 @@ def store_run_models(models: List[StratifiedModel], database_path: str, powerbi=
             database_name=database_path,
         )
 
-        # Hack in PowerBI outputs.
-        if powerbi:
-            table_name = f"pbi_scenario_{idx}"
-            scenario_df = unpivot_outputs(output_df)
-            target_db.dump_df(table_name, scenario_df)
 
-
-def collate_outputs_powerbi(src_db_paths: List[str], target_db_path: str, max_size: float):
+def collate_outputs_powerbi(
+    src_db_paths: List[str], target_db_path: str, max_size: float
+):
     """
     Collate the output of many calibration databases into a single database,
     of size no greater than `max_size` MB, then converts it into the PowerBI format.
@@ -139,7 +135,9 @@ def collate_outputs_powerbi(src_db_paths: List[str], target_db_path: str, max_si
             # Throw away 20% as a safety factor
             num_runs = math.floor((4 / 5) * max_runs / len(src_db_paths) / pivot_factor)
 
-        logger.info("Sampling %s runs to achieve no more than %s MB", num_runs, max_size)
+        logger.info(
+            "Sampling %s runs to achieve no more than %s MB", num_runs, max_size
+        )
         collated_db_path = os.path.join(temp_dir, "collated.db")
         with Timer("Collating outputs into one database"):
             collate_outputs(src_db_paths, collated_db_path, num_runs)
@@ -264,14 +262,18 @@ def load_calibration_from_db(database_directory, n_burned_per_chain=0):
         out_database = Database(database_name=database_directory + "/" + db_name)
 
         # find accepted run indices
-        res = out_database.db_query(table_name="mcmc_run", column="idx", conditions=["accept=1"])
+        res = out_database.db_query(
+            table_name="mcmc_run", column="idx", conditions=["accept=1"]
+        )
         run_ids = list(res.to_dict()["idx"].values())
         # find weights to associate with the accepted runs
         accept = out_database.db_query(table_name="mcmc_run", column="accept")
         accept = accept["accept"].tolist()
         one_indices = [i for i, val in enumerate(accept) if val == 1]
         one_indices.append(len(accept))  # add extra index for counting
-        weights = [one_indices[j + 1] - one_indices[j] for j in range(len(one_indices) - 1)]
+        weights = [
+            one_indices[j + 1] - one_indices[j] for j in range(len(one_indices) - 1)
+        ]
 
         # burn fist iterations
         cum_sum = numpy.cumsum(weights).tolist()
@@ -279,7 +281,9 @@ def load_calibration_from_db(database_directory, n_burned_per_chain=0):
             continue
         retained_indices = [i for i, c in enumerate(cum_sum) if c > n_burned_per_chain]
         run_ids = run_ids[retained_indices[0] :]
-        previous_cum_sum = cum_sum[retained_indices[0] - 1] if retained_indices[0] > 0 else 0
+        previous_cum_sum = (
+            cum_sum[retained_indices[0] - 1] if retained_indices[0] > 0 else 0
+        )
         weights[retained_indices[0]] = weights[retained_indices[0]] - (
             n_burned_per_chain - previous_cum_sum
         )
@@ -291,9 +295,12 @@ def load_calibration_from_db(database_directory, n_burned_per_chain=0):
             )
             output_dict = outputs.to_dict()
 
-            if out_database.engine.dialect.has_table(out_database.engine, "derived_outputs"):
+            if out_database.engine.dialect.has_table(
+                out_database.engine, "derived_outputs"
+            ):
                 derived_outputs = out_database.db_query(
-                    table_name="derived_outputs", conditions=["idx='" + str(run_id) + "'"]
+                    table_name="derived_outputs",
+                    conditions=["idx='" + str(run_id) + "'"],
                 )
 
                 derived_outputs_dict = derived_outputs.to_dict()

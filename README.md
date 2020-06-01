@@ -28,7 +28,11 @@ See [this guide](./docs/setup.md) for information on how to set up this project.
 
 ## MASSIVE
 
-We sometimes need to run jobs on Monash's [MASSIVE](https://www.monash.edu/research/infrastructure/platforms-pages/massive) computer cluster. The scripts and documentation that allow you to do this can be found in the `scripts/massive/` folder.
+We sometimes need to run calibration jobs on Monash's [MASSIVE](https://www.monash.edu/research/infrastructure/platforms-pages/massive) computer cluster. The scripts and documentation that allow you to do this can be found in the `scripts/massive/` folder.
+
+## AWS Calibration
+
+We sometimes need to run jobs using Amazon Web Services. The scripts and documentation that allow you to do this can be found in the `scripts/aws/` folder.
 
 ## Tests
 
@@ -55,20 +59,3 @@ Specific uses of the AuTuMN framework are present in `apps/`. You can run an app
 ```
 ./scripts/run.ps1 --help
 ```
-
-# Old notes below: are these used anymore?
-
-## TODO
-
-- document Bulgaria interventions properly in handbook
-- the model would not run without age-stratification (detected when running Bulgaria)
-
-## major outstanding tasks
-
-- mapping to DALYs, QALYs
-
-## minor tasks
-
-- simplify code for automatic detection of int_uncertainty start_time. Should use common method with optimisation start_dates
-- in the adjust_treatment_outcomes_support method, only the "relative" approach accounts for baseline intervention coverage
-  The "absolute" approach should be updated similarly in case we use it with a non-zero coverage at baseline.

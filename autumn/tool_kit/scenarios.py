@@ -14,7 +14,9 @@ from ..constants import IntegrationType
 
 from .utils import merge_dicts
 
-validate_params = sb.build_validator(default=dict, scenario_start_time=float, scenarios=dict)
+validate_params = sb.build_validator(
+    default=dict, scenario_start_time=float, scenarios=dict
+)
 
 ModelBuilderType = Callable[[dict], StratifiedModel]
 
@@ -24,7 +26,9 @@ class Scenario:
     A particular run of a simulation using a common model and unique parameters.
     """
 
-    def __init__(self, model_builder: ModelBuilderType, idx: str, params: dict, chain_idx=0):
+    def __init__(
+        self, model_builder: ModelBuilderType, idx: str, params: dict, chain_idx=0
+    ):
         _params = deepcopy(params)
         validate_params(_params)
         self.model_builder = model_builder
@@ -35,7 +39,9 @@ class Scenario:
         self.generated_outputs = None
 
     @classmethod
-    def load_from_db(self, idx: int, chain_idx: int, model: StratifiedModel, params=None):
+    def load_from_db(
+        self, idx: int, chain_idx: int, model: StratifiedModel, params=None
+    ):
         """
         Construct a Scenario from a model that's been loaded from an output database.
         """
@@ -45,10 +51,11 @@ class Scenario:
         scenario.model = model
         return scenario
 
-    def run(self, base_model=None):
+    def run(self, base_model=None, update_func=None):
         """
         Run the scenario model simulation.
         If a base model is provided, then run the scenario from the scenario start time.
+        If a parameter update function is provided, it will be used to update params before the model is run.
         """
         with Timer(f"Running scenario: {self.name}"):
             params = None
@@ -56,15 +63,25 @@ class Scenario:
                 # This model is the baseline model
                 assert self.is_baseline, "Can only run base model if Scenario idx is 0"
                 params = self.params["default"]
+                if update_func:
+                    # Apply extra parameter updates
+                    params = update_func(params)
+
                 self.model = self.model_builder(params)
             else:
                 # This is a scenario model, based off the baseline model
-                assert not self.is_baseline, "Can only run scenario model if Scenario idx is > 0"
+                assert (
+                    not self.is_baseline
+                ), "Can only run scenario model if Scenario idx is > 0"
 
                 # Construct scenario params by merging scenario-specific params into default params
                 default_params = self.params["default"]
                 scenario_params = self.params["scenarios"][self.idx]
                 params = merge_dicts(scenario_params, default_params)
+
+                if update_func:
+                    # Apply extra parameter updates
+                    params = update_func(params)
 
                 # Override start time.
                 params = {**params, "start_time": self.params["scenario_start_time"]}

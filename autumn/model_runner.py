@@ -22,7 +22,11 @@ from summer.model.utils.flowchart import create_flowchart
 
 
 def build_model_runner(
-    model_name: str, build_model, params: dict, post_processing_config={}, plots_config={}
+    model_name: str,
+    build_model,
+    params: dict,
+    post_processing_config={},
+    plots_config={},
 ):
     """
     Factory function that returns a 'run_model' function.
@@ -89,7 +93,7 @@ def build_model_runner(
 
         with Timer("Saving model outputs to the database"):
             models = [s.model for s in scenarios]
-            store_run_models(models, output_db_path, powerbi=False)
+            store_run_models(models, output_db_path)
 
         if post_processing_config:
             with Timer("Applying post-processing to model outputs"):

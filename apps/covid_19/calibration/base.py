@@ -1,4 +1,7 @@
-from autumn.calibration import Calibration
+from autumn.calibration import (
+    Calibration,
+    run_full_models_for_mcmc as _run_full_models_for_mcmc,
+)
 from autumn.tool_kit.utils import find_first_index_reaching_cumulative_sum
 
 from ..countries import CountryModel
@@ -11,6 +14,16 @@ N_BURNED = 0
 N_CHAINS = 1
 
 
+def run_full_models_for_mcmc(country: str, src_db_path: str, dest_db_path: str):
+    """
+    Run the full baseline model and all scenarios for all accepted MCMC runs in src db.
+    """
+    country_model = CountryModel(country)
+    build_model = country_model.build_model
+    params = country_model.params
+    _run_full_models_for_mcmc(src_db_path, dest_db_path, build_model, params)
+
+
 def run_calibration_chain(
     max_seconds: int,
     run_id: int,
@@ -21,7 +34,7 @@ def run_calibration_chain(
     _grid_info=None,
     _start_time_range=None,
     _run_extra_scenarios=True,
-    _multipliers={}
+    _multipliers={},
 ):
     """
     Run a calibration chain for the covid model
@@ -44,7 +57,7 @@ def run_calibration_chain(
         run_id,
         model_parameters=params,
         start_time_range=_start_time_range,
-        run_extra_scenarios=_run_extra_scenarios
+        run_extra_scenarios=_run_extra_scenarios,
     )
     print("Starting calibration.")
     calib.run_fitting_algorithm(
@@ -53,7 +66,7 @@ def run_calibration_chain(
         n_burned=N_BURNED,
         n_chains=N_CHAINS,
         available_time=max_seconds,
-        grid_info=_grid_info
+        grid_info=_grid_info,
     )
     print(f"Finished calibration for run {run_id}.")
 
@@ -70,13 +83,19 @@ def get_priors_and_targets(country, data_type="confirmed", start_after_n_cases=1
     n_daily_cases = read_john_hopkins_data_from_csv(data_type, country=country.title())
 
     # get the subset of data points starting after 1st case detected
-    index_start = find_first_index_reaching_cumulative_sum(n_daily_cases, start_after_n_cases)
+    index_start = find_first_index_reaching_cumulative_sum(
+        n_daily_cases, start_after_n_cases
+    )
     data_of_interest = n_daily_cases[index_start:]
 
     start_day = index_start + 22  # because JH data starts 22/1
 
     PAR_PRIORS = [
-        {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.1, 4.0]},
+        {
+            "param_name": "contact_rate",
+            "distribution": "uniform",
+            "distri_params": [0.1, 4.0],
+        },
         {
             "param_name": "start_time",
             "distribution": "uniform",
@@ -92,7 +111,9 @@ def get_priors_and_targets(country, data_type="confirmed", start_after_n_cases=1
         {
             "output_key": output_key[data_type],
             "years": linspace(
-                start_day, start_day + len(data_of_interest) - 1, num=len(data_of_interest)
+                start_day,
+                start_day + len(data_of_interest) - 1,
+                num=len(data_of_interest),
             ),
             "values": data_of_interest,
             "loglikelihood_distri": "poisson",

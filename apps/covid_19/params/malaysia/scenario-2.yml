@@ -179,7 +179,7 @@ mixing:
     - .4725
     - .5525
     - .555
-    - .5  # raw data: .58
+    - .58
   work_times:
     - 46
     - 47
@@ -270,8 +270,8 @@ mixing:
     - 132
     - 133
     - 134
-    - 145
-    - 147
+    - 145  # scenario
+    - 147  # scenario
   work_values:
     - 1.02
     - 1
@@ -362,8 +362,8 @@ mixing:
     - 0.51
     - 0.64
     - 0.66
-    - 0.66
-    - 0.75
+    - 0.66  # scenario
+    - 0.75  # scenario
   school_times:
     - 63
     - 65

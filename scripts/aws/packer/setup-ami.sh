@@ -23,3 +23,4 @@ cd ~/code
 virtualenv -p python3 env
 . ./env/bin/activate
 pip3 install -r requirements.txt
+pip3 install awscli

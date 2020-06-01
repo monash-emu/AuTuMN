@@ -113,7 +113,7 @@ def build_dynamic(
             age_idx_key = f"age_{age_idx_affected}"
             age_times = mixing[age_idx_key]["times"]
             age_vals = mixing[age_idx_key]["values"]
-            age_adj_func = scale_up_function(loc_times, loc_vals, method=4,)
+            age_adj_func = scale_up_function(age_times, age_vals, method=4,)
             age_adj_val = age_adj_func(time)
             for age_idx_not_affected in complement_indices:
                 mixing_matrix[age_idx_affected, age_idx_not_affected] *= age_adj_val

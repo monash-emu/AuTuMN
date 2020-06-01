@@ -7,7 +7,7 @@ import numpy as np
 import autumn.post_processing as post_proc
 from autumn.tool_kit.scenarios import Scenario
 
-from ..countries import Country, CountryModel
+from apps.covid_19.countries import Country, CountryModel
 
 
 FILE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -16,46 +16,49 @@ OPTI_PARAMS_PATH = os.path.join(FILE_DIR, "opti_params.yml")
 with open(OPTI_PARAMS_PATH, "r") as yaml_file:
     opti_params = yaml.safe_load(yaml_file)
 
-aus = CountryModel(Country.AUSTRALIA)
+mys = CountryModel(Country.MALAYSIA)
 
 
 def objective_function(decision_variables, mode="by_age"):
     """
     :param decision_variables: dictionary containing
-        - mixing multipliers if mode == "by_age"    OR
+        - mixing multipliers by age if mode == "by_age"    OR
         - location multipliers if mode == "by_location"
     :param mode: either "by_age" or "by_location"
     :return:
     """
-    build_model = aus.build_model
-    params = copy.deepcopy(aus.params)
+    build_model = mys.build_model
+    params = copy.deepcopy(mys.params)
 
     # Define the two scenarios:
     #   baseline: with intervention
     #   scenario 1: after intervention to test immunity
     if mode == "by_age":
-        mixing_multipliers = decision_variables
-        mixing_multipliers_matrix = build_mixing_multipliers_matrix(mixing_multipliers)
-        params["default"].update({"mixing_matrix_multipliers": mixing_multipliers_matrix})
+        mixing_update = {}
+        for age_group in range(15):
+            mixing_update['age_' + str(age_group) + '_times'] = [10, 14]
+            mixing_update['age_' + str(age_group) + '_values'] = [1., decision_variables[age_group]]
 
-    elif mode == "by_location":
-        mixing_update_dictionary = {}
-        for loc in ["school", "work", "other_locations"]:
-            mixing_update_dictionary[loc + "_times"] = [0]
-            mixing_update_dictionary[loc + "_values"] = [decision_variables[loc]]
+        params["default"]["mixing"].update(mixing_update)
 
-        params["default"].update({"mixing": mixing_update_dictionary})
-
-    else:
-        raise ValueError("The requested mode is not supported")
+    # elif mode == "by_location":
+    #     mixing_update_dictionary = {}
+    #     for loc in ["school", "work", "other_locations"]:
+    #         mixing_update_dictionary[loc + "_times"] = [0]
+    #         mixing_update_dictionary[loc + "_values"] = [decision_variables[loc]]
+    #
+    #     params["default"].update({"mixing": mixing_update_dictionary})
+    #
+    # else:
+    #     raise ValueError("The requested mode is not supported")
 
     # Add a scenario without any mixing multipliers
     end_time = params["default"]["end_time"]
     params["scenario_start_time"] = end_time - 1
     params["scenarios"][1] = {
         "end_time": end_time + 50,
-        "mixing_matrix_multipliers": None,
-        "mixing": None,
+        # "mixing_matrix_multipliers": None,
+        # "mixing": None,
     }
 
     scenario_0 = Scenario(build_model, idx=0, params=params)
@@ -101,20 +104,11 @@ def has_immunity_been_reached(_model):
     return max(_model.derived_outputs["incidence"]) == _model.derived_outputs["incidence"][0]
 
 
-def build_mixing_multipliers_matrix(mixing_multipliers):
-    """
-    Builds a full 16x16 matrix of multipliers based on the parameters found in mixing_multipliers
-    :param mixing_multipliers: a dictionary with the parameters a, b, c ,d ,e ,f
-    :return: a matrix of multipliers
-    """
-    mixing_multipliers_matrix = np.zeros((16, 16))
-    mixing_multipliers_matrix[0:3, 0:3] = mixing_multipliers["a"] * np.ones((3, 3))
-    mixing_multipliers_matrix[3:13, 3:13] = mixing_multipliers["b"] * np.ones((10, 10))
-    mixing_multipliers_matrix[13:, 13:] = mixing_multipliers["c"] * np.ones((3, 3))
-    mixing_multipliers_matrix[3:13, 0:3] = mixing_multipliers["d"] * np.ones((10, 3))
-    mixing_multipliers_matrix[0:3, 3:13] = mixing_multipliers["d"] * np.ones((3, 10))
-    mixing_multipliers_matrix[13:, 0:3] = mixing_multipliers["e"] * np.ones((3, 3))
-    mixing_multipliers_matrix[0:3, 13:] = mixing_multipliers["e"] * np.ones((3, 3))
-    mixing_multipliers_matrix[13:, 3:13] = mixing_multipliers["f"] * np.ones((3, 10))
-    mixing_multipliers_matrix[3:13, 13:] = mixing_multipliers["f"] * np.ones((10, 3))
-    return mixing_multipliers_matrix
+if __name__ == '__main__':
+    mode = 'by_age'
+    mixing_multipiers = [1., 1., 1., 1., 1., 1., 1., 1., 1., 1.,
+                         1., 1., 1., 1., 1., 1.]
+    h, d, m = objective_function(mixing_multipiers, mode)
+
+    print(d)
+

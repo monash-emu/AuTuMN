@@ -19,44 +19,23 @@ log "Updating local AuTuMN repository to run the latest code."
 git pull
 . ./env/bin/activate
 pip install -r requirements.txt
-pip install awscli # Remove when packer re-run.
 
-log "Converting outputs to PowerBI format"
+
+log "Dowloading full model runs for $RUN_NAME"
+aws s3 cp --recursive s3://autumn-calibrations/$RUN_NAME/data/full_model_runs data/full_model_runs
+
+log "Collating databases"
 mkdir -p data/powerbi
-chain_dbs=($(find data/calibration_outputs/ -name *.db))
-pids=()
-num_dbs="${#chain_dbs[@]}"
-for i in $(seq 1 1 $num_dbs)
-do
-    idx=$(($i - 1))
-    chain_db="${chain_dbs[$idx]}"
-    log "Converting chain database #$i $chain_db"
-    touch logs/powerbi-convert-$i.log
-    nohup python -m apps db powerbi $chain_db data/powerbi/mcmc_chain_powerbi_${i}.db &> logs/powerbi-convert-$i.log &
-    pids+=("$!")
-done
+python -m apps db collate data/full_model_runs/ data/powerbi/collated.db
 
-log "Waiting for ${#pids[@]} database conversions to complete."
-for pid in ${pids[@]}
-do
-    wait $pid
-done
-log "All database conversions completed"
+log "Adding uncertainty to collated databases"
+python -m apps db uncertainty data/powerbi/collated.db
 
-log "Uploading logs"
-aws s3 cp --recursive logs s3://autumn-calibrations/$RUN_NAME/logs
+log "Pruning non-MLE runs from database"
+python -m apps db prune data/powerbi/collated.db data/powerbi/pruned.db
 
-# Collate data into one database
-# Add uncertainty table
-# Prune non MLE outputs and derived outputs
-# Unpivot data for PowerBi
+log "Converting outputs into unpivoted PowerBI format"
+python -m apps db unpivot data/powerbi/pruned.db data/powerbi/powerbi-${RUN_NAME}.db
 
-
-#python -m apps db unpivot $SOURCE_DB $TARGET_DB
-#python -m apps db uncertainty $SOURCE_DB $TARGET_DB [$DERIVED_OUTPUTS]
-
-# TODO: Collate database
-# TODO: Add uncertainty
-
-# log "Uploading PowerBI compatible database"
-# aws s3 cp --recursive data/powerbi s3://autumn-calibrations/$RUN_NAME/data/powerbi
+log "Uploading PowerBI compatible database"
+aws s3 cp --recursive data/powerbi s3://autumn-calibrations/$RUN_NAME/data/powerbi

@@ -9,7 +9,7 @@ You can access this script from your CLI by running:
 import os
 import click
 
-from autumn.db.models import collate_databases
+from autumn.db import models
 from autumn.plots.database_plots import plot_from_database
 
 
@@ -38,20 +38,25 @@ def collate(src_db_dir, dest_db_path):
         for fname in os.listdir(src_db_dir)
         if fname.endswith(".db")
     ]
-    collate_databases(src_db_paths, dest_db_path)
+    models.collate_databases(src_db_paths, dest_db_path)
 
 
 @db.command("uncertainty")
-@click.argument("src_db_path", type=str)
-@click.argument("dest_db_path", type=str)
-def uncertainty(src_db_path, dest_db_path):
+@click.argument("db_path", type=str)
+def uncertainty(db_path):
     """
     Add uncertainty estimates to specified derived outputs.
     Requires MCMC run metadata.
-    FIXME: Do we need to specify derived outputs?
     """
-    assert os.path.isfile(src_db_path), f"{src_db_path} must be a file"
-    xxxxxxxxxxxxxx(src_db_path, dest_db_path)
+    assert os.path.isfile(db_path), f"{db_path} must be a file"
+    # FIXME: Do not hard code this
+    derived_outputs = [
+        "incidence",
+        "notifications",
+        "death",
+        "prevXlateXclinical_icuXamong",
+    ]
+    add_mcmc_uncertainty(db_path, derived_outputs)
 
 
 @db.command("prune")
@@ -63,7 +68,7 @@ def prune(src_db_path, dest_db_path):
     Requires MCMC run metadata.
     """
     assert os.path.isfile(src_db_path), f"{src_db_path} must be a file"
-    xxxxxxxxxxxxxx(src_db_path, dest_db_path)
+    models.prune(src_db_path, dest_db_path)
 
 
 @db.command("unpivot")
@@ -74,4 +79,4 @@ def unpivot(src_db_path, dest_db_path):
     Convert model outputs into PowerBI-friendly unpivoted format.
     """
     assert os.path.isfile(src_db_path), f"{src_db_path} must be a file"
-    xxxxxxxxxxxxxx(src_db_path, dest_db_path)
+    models.unpivot(src_db_path, dest_db_path)

@@ -30,24 +30,35 @@ git checkout $GIT_COMMIT
 log "Ensuring latest requirements are installed."
 . ./env/bin/activate
 pip install -r requirements.txt
-pip install awscli # Remove when packer re-run.
 
 log "Downloading MCMC databases"
 aws s3 cp --recursive s3://autumn-calibrations/$RUN_NAME/data/calibration_outputs data/calibration_outputs
 
+# Setup folders for model runs.
 mkdir -p logs
 mkdir -p data/full_model_runs/
-DB_FILES=($(find data/calibration_outputs/ -name *.db))
+
+# Handle script failure
+function onexit {
+    log "Script failed - running cleanup code"
+    log "Uploading logs"
+    aws s3 cp --recursive logs s3://autumn-calibrations/$RUN_NAME/logs
+}
+trap onexit EXIT
+
 PIDS=()
+DB_FILES=($(find data/calibration_outputs/ -name *.db))
 NUM_DBS="${#DB_FILES[@]}"
 for i in $(seq 1 1 $NUM_DBS)
 do
-    idx=$(($i - 1))
-    DB_FILE="${DB_FILES[$idx]}"
-    log "Converting chain database #$i $DB_FILE"
-    touch logs/full-run-$i.log
+    IDX=$(($i - 1))
+    DB_FILE="${DB_FILES[$IDX]}"
     DB_NUMBER=$(echo $DB_FILE | cut -d'_' -f5 - | cut -d'.' -f1 -)
-    nohup python -m apps run-mcmc $MODEL_NAME $BURN_IN $DB_FILE data/full_model_runs/mcmc_chain_full_run_${DB_NUMBER}.db &> logs/full-run-$i.log &
+    LOG_FILE=logs/full-run-${DB_NUMBER}.log
+    DEST_DB=data/full_model_runs/mcmc_chain_full_run_${DB_NUMBER}.db
+    touch $LOG_FILE
+    log "Running full model for chain database #$DB_NUMBER $DB_FILE"
+    nohup python -m apps run-mcmc $MODEL_NAME $BURN_IN $DB_FILE $DEST_DB &> $LOG_FILE &
     PIDS+=("$!")
 done
 

@@ -32,16 +32,23 @@ git pull
 log "Ensuring latest requirements are installed."
 . ./env/bin/activate
 pip install -r requirements.txt
-pip install awscli # Remove when packer re-run.
 
 GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 GIT_COMMIT=$(git rev-parse HEAD)
 TIMESTAMP=$(date +%s)
 RUN_NAME="$CALIBRATION_NAME-$TIMESTAMP-$GIT_BRANCH-$GIT_COMMIT"
 
+# Handle script failure
+mkdir -p logs
+function onexit {
+    log "Script failed - running cleanup code"
+    log "Uploading logs"
+    aws s3 cp --recursive logs s3://autumn-calibrations/$RUN_NAME/logs
+}
+trap onexit EXIT
+
 log "Starting calibration run $RUN_NAME"
 log "Running $NUM_CHAINS calibration chains for $RUN_TIME seconds."
-mkdir -p logs
 pids=()
 for i in $(seq 1 1 $NUM_CHAINS)
 do

@@ -28,8 +28,35 @@ log "Collating databases"
 mkdir -p data/powerbi
 python -m apps db collate data/full_model_runs/ data/powerbi/collated.db
 
+
+mkdir -p logs
+
+# Handle script failure
+function onexit {
+    log "Script exited - running cleanup code"
+    log "Uploading logs"
+    aws s3 cp --recursive logs s3://autumn-calibrations/$RUN_NAME/logs
+}
+trap onexit EXIT
+
 log "Adding uncertainty to collated databases"
-python -m apps db uncertainty data/powerbi/collated.db
+PIDS=()
+UNCERTAINTY_OUTPUTS="incidence notifications death prevXlateXclinical_icuXamong"
+for OUTPUT in $UNCERTAINTY_OUTPUTS
+do
+    log "Calculating uncertainty for $OUTPUT"
+    LOG_FILE=logs/uncertainty-${OUTPUT}.log
+    touch $LOG_FILE
+    nohup python -m apps db uncertainty $OUTPUT data/powerbi/collated.db &> $LOG_FILE &
+    PIDS+=("$!")
+done
+
+log "Waiting for ${#PIDS[@]} uncertainty calculations to complete."
+for PID in ${PIDS[@]}
+do
+    wait $PID
+done
+log "All uncertainty calculations completed"
 
 log "Pruning non-MLE runs from database"
 python -m apps db prune data/powerbi/collated.db data/powerbi/pruned.db

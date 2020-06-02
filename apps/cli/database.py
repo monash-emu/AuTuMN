@@ -11,6 +11,7 @@ import click
 
 from autumn.db import models
 from autumn.plots.database_plots import plot_from_database
+from autumn.tool_kit.uncertainty import add_uncertainty
 
 
 @click.group()
@@ -42,22 +43,15 @@ def collate(src_db_dir, dest_db_path):
 
 
 @db.command("uncertainty")
+@click.argument("output_name", type=str)
 @click.argument("db_path", type=str)
-def uncertainty(db_path):
+def uncertainty(output_name: str, db_path: str):
     """
     Add uncertainty estimates to specified derived outputs.
     Requires MCMC run metadata.
     """
     assert os.path.isfile(db_path), f"{db_path} must be a file"
-    # FIXME: Do not hard code this
-    derived_outputs = [
-        "incidence",
-        "notifications",
-        "death",
-        "prevXlateXclinical_icuXamong",
-    ]
-    print("TODO")
-    # add_mcmc_uncertainty(db_path, derived_outputs)
+    add_uncertainty(output_name, db_path)
 
 
 @db.command("prune")

@@ -39,3 +39,4 @@ python -m apps db unpivot data/powerbi/pruned.db data/powerbi/powerbi-${RUN_NAME
 
 log "Uploading PowerBI compatible database"
 aws s3 cp --recursive data/powerbi s3://autumn-calibrations/$RUN_NAME/data/powerbi
+

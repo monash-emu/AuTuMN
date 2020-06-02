@@ -1,7 +1,6 @@
 
 mixing:
   other_locations_times:
-    - 45
     - 46
     - 47
     - 48
@@ -95,8 +94,13 @@ mixing:
     - 136
     - 137
     - 138
+    - 139
+    - 140
+    - 141
+    - 142
+    - 143
+    - 144
   other_locations_values:
-    - 1 # Entered for time point 45 
     - 1.0275
     - 1.0075
     - 0.985
@@ -189,9 +193,14 @@ mixing:
     - 0.375
     - 0.3375
     - 0.3925
-    - 0.36325 # 10 day average for time point 138 
+    - 0.345
+    - 0.455
+    - 0.44
+    - 0.445
+    - 0.445
+    - 0.4125
+    - 0.405
   work_times:
-    - 45
     - 46
     - 47
     - 48
@@ -285,8 +294,13 @@ mixing:
     - 136
     - 137
     - 138
+    - 139
+    - 140
+    - 141
+    - 142
+    - 143
+    - 144
   work_values:
-    - 1 # Entered for time point 45
     - 1.06
     - 1.01
     - 1.08
@@ -379,7 +393,13 @@ mixing:
     - 0.35
     - 0.36
     - 0.51
-    - 0.4 # 10 day average for time point 138
+    - 0.6
+    - 0.45
+    - 0.42
+    - 0.43
+    - 0.43
+    - 0.45
+    - 0.58
   school_times:
     - 42.
     - 72.

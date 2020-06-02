@@ -1,4 +1,4 @@
-
+# Partial (50%) workplace re-openings 1st June
 mixing:
   other_locations_times:
     - 46
@@ -300,6 +300,8 @@ mixing:
     - 142
     - 143
     - 144
+    - 152
+    - 154
   work_values:
     - 1.06
     - 1.01
@@ -400,6 +402,8 @@ mixing:
     - 0.43
     - 0.45
     - 0.58
+    - 0.58
+    - 0.79
   school_times:
     - 42.
     - 72.

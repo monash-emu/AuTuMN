@@ -1,4 +1,4 @@
-
+# Complete release of all restrictions 1st June
 mixing:
   other_locations_times:
     - 46
@@ -100,6 +100,8 @@ mixing:
     - 142
     - 143
     - 144
+    - 152.
+    - 154.
   other_locations_values:
     - 1.0275
     - 1.0075
@@ -200,6 +202,8 @@ mixing:
     - 0.445
     - 0.4125
     - 0.405
+    - 0.405
+    - 1.
   work_times:
     - 46
     - 47
@@ -300,6 +304,8 @@ mixing:
     - 142
     - 143
     - 144
+    - 152.
+    - 154.
   work_values:
     - 1.06
     - 1.01
@@ -400,12 +406,14 @@ mixing:
     - 0.43
     - 0.45
     - 0.58
+    - 0.58
+    - 1.
   school_times:
     - 42.
     - 72.
     - 93.
-    - 145
-    - 147
+    - 152.
+    - 154.
   school_values:
     - 1.
     - 0.45

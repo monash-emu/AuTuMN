@@ -43,6 +43,8 @@ def run_full_models_for_mcmc(
         logger.info("Running full model for MCMC run %s", meta["idx"])
         param_updates = {k: v for k, v in mcmc_run.items() if k not in META_COLS}
 
+        run_idx = meta["idx"].split("_")[-1]
+
         def update_func(ps: dict):
             return update_params(ps, param_updates)
 
@@ -64,6 +66,6 @@ def run_full_models_for_mcmc(
 
         with Timer("Saving model outputs to the database"):
             models = [s.model for s in scenarios]
-            store_run_models(models, dest_db_path)
+            store_run_models(models, dest_db_path, run_idx=run_idx)
 
     logger.info("Finished running full models for all accepted MCMC runs.")

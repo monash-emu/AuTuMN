@@ -13,9 +13,10 @@ then
     exit 1
 fi
 
-cd ~/code
 log "Starting post-processing for run $RUN_NAME"
 log "Updating local AuTuMN repository to run the latest code."
+sudo chown -R ubuntu:ubuntu ~/code
+cd ~/code
 git pull
 . ./env/bin/activate
 pip install -r requirements.txt

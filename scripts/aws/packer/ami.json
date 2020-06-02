@@ -33,10 +33,15 @@
       ]
     }
   ],
+  "variables": {
+    "sentry_dsn": "{{env `SENTRY_DSN`}}"
+  },
   "provisioners": [
     {
       "type": "shell",
-      "script": "./setup-ami.sh"
+      "script": "./setup-ami.sh",
+      "execute_command": "echo 'packer' | sudo -S sh -c '{{ .Vars }} {{ .Path }}'",
+      "environment_vars": ["SENTRY_DSN={{user `sentry_dsn`}}"]
     }
   ]
 }

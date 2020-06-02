@@ -1,3 +1,4 @@
+import subprocess
 from datetime import datetime
 from dateutil.tz import tzutc
 
@@ -12,12 +13,41 @@ client = boto3.client("ec2", region_name=settings.AWS_REGION)
 DESCRIBE_KEYS = ["InstanceId", "InstanceType", "LaunchTime", "State"]
 
 
+def get_instance_type(min_cores: int, min_ram: int):
+    cores_set = set()
+    ram_set = set()
+    for instance_type, specs in settings.EC2_INSTANCE_SPECS.items():
+        if specs["cores"] > min_cores:
+            cores_set.add(instance_type)
+        if specs["ram"] > min_ram:
+            ram_set.add(instance_type)
+
+    specs_set = cores_set.intersection(ram_set)
+    min_price = 10000
+    chosen_instance = None
+    for instance_type in specs_set:
+        price = settings.EC2_INSTANCE_SPECS[instance_type]["price"]
+        if price < min_price:
+            chosen_instance = instance_type
+            min_price = price
+
+    assert chosen_instance, "Could not find an instance to match specs"
+    return chosen_instance
+
+
+def download_s3(s3_key, dest):
+    cmd = f"aws s3 cp --recursive {s3_key} {dest}"
+    subprocess.run(args=[cmd], shell=True, check=True)
+
+
 class NoInstanceAvailable(Exception):
     pass
 
 
-def run_job(job_id: str):
-    instance_type = settings.EC2InstanceType.m5_8xlarge
+def run_job(job_id: str, instance_type=None):
+    if not instance_type:
+        instance_type = settings.EC2InstanceType.m5_8xlarge
+
     run_instance(job_id, instance_type)
 
 

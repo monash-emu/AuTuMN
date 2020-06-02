@@ -25,5 +25,8 @@ tqdm
 pytest
 black
 
+# Error reporting
+sentry-sdk
+
 # Debugging
 ipdb

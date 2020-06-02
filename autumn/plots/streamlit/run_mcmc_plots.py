@@ -14,6 +14,11 @@ from autumn.plots.plotter import StreamlitPlotter
 from . import selectors, utils
 
 
+@st.cache(suppress_st_warning=True)
+def cached_collect_all_mcmc_output_tables(dirpath):
+    return collect_all_mcmc_output_tables(dirpath)
+
+
 def run_mcmc_plots():
     app_dirname, app_dirpath = selectors.app()
     calib_dirname, calib_dirpath = selectors.calibration_run(app_dirpath)
@@ -24,9 +29,11 @@ def run_mcmc_plots():
     plot_config = utils.load_plot_config(app_dirname)
 
     # Load MCMC tables
-    mcmc_tables, output_tables, derived_output_tables = collect_all_mcmc_output_tables(
-        calib_dirpath
-    )
+    (
+        mcmc_tables,
+        output_tables,
+        derived_output_tables,
+    ) = cached_collect_all_mcmc_output_tables(calib_dirpath)
 
     plotter = StreamlitPlotter({})
     plot_type = st.sidebar.selectbox("Select plot type", list(PLOT_FUNCS.keys()))
@@ -95,8 +102,12 @@ def plot_timeseries_with_uncertainty(
     scenario_strs = list(derived_output_tables[0].Scenario.unique())
     scenario_idxs = [int(s.replace("S_", "")) for s in scenario_strs]
     scenario_names = ["Baseline" if i == 0 else f"Scenario {i}" for i in scenario_idxs]
-    chosen_scenario_names = st.sidebar.multiselect("Select scenarios", scenario_names, "Baseline")
-    chosen_scenarios = [scenario_idxs[scenario_names.index(n)] for n in chosen_scenario_names]
+    chosen_scenario_names = st.sidebar.multiselect(
+        "Select scenarios", scenario_names, "Baseline"
+    )
+    chosen_scenarios = [
+        scenario_idxs[scenario_names.index(n)] for n in chosen_scenario_names
+    ]
 
     # Choose which output to plot
     non_output_cols = ["idx", "Scenario", "times"]

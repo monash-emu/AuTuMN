@@ -25,8 +25,9 @@ then
     exit 1
 fi
 
-cd ~/code
 log "Updating local AuTuMN repository to run the latest code."
+sudo chown -R ubuntu:ubuntu ~/code
+cd ~/code
 git pull
 
 log "Ensuring latest requirements are installed."

@@ -22,8 +22,9 @@ log "Running full model for $RUN_NAME with burn-in $BURN_IN"
 MODEL_NAME=$(echo $RUN_NAME | cut -d'-' -f1 -)
 GIT_COMMIT=$(echo $RUN_NAME | cut -d'-' -f4 -)
 
-cd ~/code
 log "Updating local AuTuMN repository to run the commit $GIT_COMMIT."
+sudo chown -R ubuntu:ubuntu ~/code
+cd ~/code
 git fetch
 git checkout $GIT_COMMIT
 

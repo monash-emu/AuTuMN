@@ -20,6 +20,7 @@ env/
 output*.db
 inputs.*.db
 data/
+logs/
 
 # Python packaging stuff
 autumn.egg*

@@ -1,9 +1,11 @@
 import time
+import os
 
 import click
 
 from . import aws
 from . import remote
+from .settings import EC2InstanceType
 
 
 @click.group()
@@ -47,6 +49,16 @@ def cleanup():
 
 
 @click.command()
+@click.argument("run_name")
+def logs(run_name):
+    """Get all logs for a given run"""
+    s3_key = f"s3://autumn-calibrations/{run_name}/logs"
+    dest = f"logs/{run_name}"
+    os.makedirs(dest, exist_ok=True)
+    aws.download_s3(s3_key, dest)
+
+
+@click.command()
 @click.argument("name")
 def ssh(name):
     """SSH into an EC2 instance"""
@@ -77,7 +89,8 @@ def run_calibrate(job_name, calibration_name, num_chains, run_time):
     """
     job_id = f"calibrate-{job_name}"
     script_args = [calibration_name, num_chains, run_time]
-    _run_job(job_id, "run_calibrate.sh", script_args)
+    instance_type = aws.get_instance_type(num_chains, 8)
+    _run_job(job_id, instance_type, "run_calibrate.sh", script_args)
 
 
 @run.command("full")
@@ -90,7 +103,9 @@ def run_full_model(job_name, run_name, burn_in):
     """
     job_id = f"full-{job_name}"
     script_args = [run_name, burn_in]
-    _run_job(job_id, "run_full_model.sh", script_args)
+    instance_type = EC2InstanceType.m5_8xlarge
+    instance_type = aws.get_instance_type(30, 8)
+    _run_job(job_id, instance_type, "run_full_model.sh", script_args)
 
 
 @run.command("powerbi")
@@ -102,10 +117,11 @@ def run_powerbi(job_name, run_name):
     """
     job_id = f"powerbi-{job_name}"
     script_args = [run_name]
-    _run_job(job_id, "run_powerbi.sh", script_args)
+    instance_type = aws.get_instance_type(4, 8)
+    _run_job(job_id, instance_type, "run_powerbi.sh", script_args)
 
 
-def _run_job(job_id, script_name, script_args):
+def _run_job(job_id, instance_type, script_name, script_args):
     """
     Run a job on a remote server
     """
@@ -128,6 +144,7 @@ def _run_job(job_id, script_name, script_args):
     aws.stop_job(job_id)
 
 
+cli.add_command(logs)
 cli.add_command(cleanup)
 cli.add_command(status)
 cli.add_command(ssh)

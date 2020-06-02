@@ -15,6 +15,10 @@ def ssh_interactive(instance):
 
 
 def ssh_run_job(instance: dict, script_name: str, script_args):
+    """
+    Copy and run a script on a given instance.
+    TODO: Pipe stdout to logs as well as console.
+    """
     ip = instance["ip"]
     name = instance["name"]
     print(f"Starting SSH session with instance {name}.")

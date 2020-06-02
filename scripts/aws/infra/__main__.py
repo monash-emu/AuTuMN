@@ -5,6 +5,7 @@ import click
 
 from . import aws
 from . import remote
+from .website import update_website
 from .settings import EC2InstanceType
 
 
@@ -144,6 +145,15 @@ def _run_job(job_id, instance_type, script_name, script_args):
     aws.stop_job(job_id)
 
 
+@click.command()
+def website():
+    """
+    Update the calibrations website.
+    """
+    update_website()
+
+
+cli.add_command(website)
 cli.add_command(logs)
 cli.add_command(cleanup)
 cli.add_command(status)

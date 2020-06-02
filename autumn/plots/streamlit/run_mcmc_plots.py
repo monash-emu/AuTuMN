@@ -14,11 +14,6 @@ from autumn.plots.plotter import StreamlitPlotter
 from . import selectors, utils
 
 
-@st.cache(suppress_st_warning=True)
-def cached_collect_all_mcmc_output_tables(dirpath):
-    return collect_all_mcmc_output_tables(dirpath)
-
-
 def run_mcmc_plots():
     app_dirname, app_dirpath = selectors.app()
     calib_dirname, calib_dirpath = selectors.calibration_run(app_dirpath)
@@ -33,7 +28,7 @@ def run_mcmc_plots():
         mcmc_tables,
         output_tables,
         derived_output_tables,
-    ) = cached_collect_all_mcmc_output_tables(calib_dirpath)
+    ) = collect_all_mcmc_output_tables(calib_dirpath)
 
     plotter = StreamlitPlotter({})
     plot_type = st.sidebar.selectbox("Select plot type", list(PLOT_FUNCS.keys()))

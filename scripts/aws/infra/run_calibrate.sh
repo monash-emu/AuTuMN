@@ -4,7 +4,6 @@ export TZ="/usr/share/zoneinfo/Australia/Melbourne"
 function log {
     echo -e "\n$(date "+%F %T")> $@"
 }
-# malaysia-1590992312-master-b7ddb47361e6eda87bf05a18405f208ff5e3f2b0
 log "Starting calibration"
 
 CALIBRATION_NAME=$1

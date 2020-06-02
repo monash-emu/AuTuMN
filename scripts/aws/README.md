@@ -2,6 +2,27 @@
 
 These scripts allow you to run AuTuMN calibrations in AWS.
 
+```
+# Ensure aws requirements are installed
+cd aws
+pip install -r infra/requirements.txt
+
+# Access command line tool
+python -m infra
+
+# Run calibration, first argument is a job name to refer to the job.
+python -m run calibrate job1 malaysia 30 3600
+
+# The calibration will print a "run name", which refers to the results,
+# eg. malaysia-1590992312-master-b7ddb47361e6eda87bf05a18405f208ff5e3f2b0
+
+# Run the full models for a given calibration run and burn in
+python -m run full job2 malaysia-1590992312-master-b7ddb47361e6eda87bf05a18405f208ff5e3f2b0 10
+
+# Finally, generate a PowerBI database from the full model runs
+python -m run powerbi job3 malaysia-1590992312-master-b7ddb47361e6eda87bf05a18405f208ff5e3f2b0
+```
+
 ## Calibration stages
 
 There are several steps required to run a calibration and then prepare the final results for PowerBI.

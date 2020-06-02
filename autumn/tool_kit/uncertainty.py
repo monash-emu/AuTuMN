@@ -67,6 +67,8 @@ def add_uncertainty(output_name: str, database_path: str):
         scenario_df = pd.DataFrame(scenario_data)
         db.dump_df("uncertainty", scenario_df)
 
+    logger.info("Finished writing %s uncertainties", output_name)
+
 
 def export_mcmc_quantiles(
     path_to_mcmc_outputs, output_names: List[str], q_list=DEFAULT_QUANTILES, burn_in=0,

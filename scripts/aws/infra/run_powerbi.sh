@@ -41,7 +41,7 @@ trap onexit EXIT
 
 log "Adding uncertainty to collated databases"
 PIDS=()
-UNCERTAINTY_OUTPUTS="incidence notifications death prevXlateXclinical_icuXamong"
+UNCERTAINTY_OUTPUTS="incidence notifications infection_deathsXall prevXlateXclinical_icuXamong"
 for OUTPUT in $UNCERTAINTY_OUTPUTS
 do
     log "Calculating uncertainty for $OUTPUT"
@@ -62,7 +62,8 @@ log "Pruning non-MLE runs from database"
 python -m apps db prune data/powerbi/collated.db data/powerbi/pruned.db
 
 log "Converting outputs into unpivoted PowerBI format"
-python -m apps db unpivot data/powerbi/pruned.db data/powerbi/powerbi-${RUN_NAME}.db
+FINAL_DB_FILE=data/powerbi/powerbi-${RUN_NAME}.db
+python -m apps db unpivot data/powerbi/pruned.db $FINAL_DB_FILE
 
 log "Uploading PowerBI compatible database"
-aws s3 cp --recursive data/powerbi s3://autumn-calibrations/$RUN_NAME/data/powerbi
+aws s3 cp $FINAL_DB_FILE s3://autumn-calibrations/$RUN_NAME/data/powerbi

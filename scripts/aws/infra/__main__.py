@@ -88,7 +88,7 @@ def run_full_model(job_name, run_name, burn_in):
     """
     Run the full models based off an MCMC calibration
     """
-    job_id = f"full-model-{job_name}"
+    job_id = f"full-{job_name}"
     script_args = [run_name, burn_in]
     _run_job(job_id, "run_full_model.sh", script_args)
 

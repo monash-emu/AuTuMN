@@ -40,7 +40,7 @@ mkdir -p data/full_model_runs/
 
 # Handle script failure
 function onexit {
-    log "Script failed - running cleanup code"
+    log "Script exited - running cleanup code"
     log "Uploading logs"
     aws s3 cp --recursive logs s3://autumn-calibrations/$RUN_NAME/logs
 }
@@ -68,9 +68,6 @@ do
     wait $PID
 done
 log "All full model runs completed"
-
-log "Uploading logs"
-aws s3 cp --recursive logs s3://autumn-calibrations/$RUN_NAME/logs
 
 log "Uploading full model run databases"
 aws s3 cp --recursive data/full_model_runs s3://autumn-calibrations/$RUN_NAME/data/full_model_runs

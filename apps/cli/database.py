@@ -56,7 +56,8 @@ def uncertainty(db_path):
         "death",
         "prevXlateXclinical_icuXamong",
     ]
-    add_mcmc_uncertainty(db_path, derived_outputs)
+    print("TODO")
+    # add_mcmc_uncertainty(db_path, derived_outputs)
 
 
 @db.command("prune")

@@ -41,7 +41,7 @@ RUN_NAME="$CALIBRATION_NAME-$TIMESTAMP-$GIT_BRANCH-$GIT_COMMIT"
 # Handle script failure
 mkdir -p logs
 function onexit {
-    log "Script failed - running cleanup code"
+    log "Script exited - running cleanup code"
     log "Uploading logs"
     aws s3 cp --recursive logs s3://autumn-calibrations/$RUN_NAME/logs
 }
@@ -64,9 +64,6 @@ do
     wait $pid
 done
 log "All chains completed"
-
-log "Uploading logs"
-aws s3 cp --recursive logs s3://autumn-calibrations/$RUN_NAME/logs
 
 log "Uploading MCMC databases"
 mkdir -p data/calibration_outputs

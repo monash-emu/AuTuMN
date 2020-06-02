@@ -78,7 +78,9 @@ def store_database(
     store_db.dump_df(table_name, outputs)
 
 
-def store_run_models(models: List[StratifiedModel], database_path: str):
+def store_run_models(
+    models: List[StratifiedModel], database_path: str, run_idx: int = 0
+):
     """
     Store models in the database.
     Assume that models are sorted in an order such that their index is their scenario idx.
@@ -89,16 +91,18 @@ def store_run_models(models: List[StratifiedModel], database_path: str):
         derived_output_df = pd.DataFrame.from_dict(model.derived_outputs)
         store_database(
             derived_output_df,
-            scenario=idx,
-            table_name="derived_outputs",
             database_name=database_path,
+            table_name="derived_outputs",
+            scenario=idx,
+            run_idx=run_idx,
         )
         store_database(
             output_df,
-            scenario=idx,
-            table_name="outputs",
-            times=model.times,
             database_name=database_path,
+            table_name="outputs",
+            scenario=idx,
+            run_idx=run_idx,
+            times=model.times,
         )
 
 

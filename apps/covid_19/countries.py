@@ -16,11 +16,13 @@ class Country:
     PHILIPPINES = "philippines"
     MALAYSIA = "malaysia"
     VICTORIA = "victoria"
+    LIBERIA = "liberia"
     COUNTRIES = [
         AUSTRALIA,
         PHILIPPINES,
         MALAYSIA,
         VICTORIA,
+        LIBERIA
     ]
 
 

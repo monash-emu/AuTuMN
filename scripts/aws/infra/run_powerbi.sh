@@ -66,4 +66,4 @@ FINAL_DB_FILE=data/powerbi/powerbi-${RUN_NAME}.db
 python -m apps db unpivot data/powerbi/pruned.db $FINAL_DB_FILE
 
 log "Uploading PowerBI compatible database"
-aws s3 cp $FINAL_DB_FILE s3://autumn-calibrations/$RUN_NAME/data/powerbi
+aws s3 cp --acl public-read $FINAL_DB_FILE s3://autumn-calibrations/$RUN_NAME/data/powerbi

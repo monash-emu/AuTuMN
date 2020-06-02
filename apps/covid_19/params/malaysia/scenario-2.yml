@@ -402,8 +402,8 @@ mixing:
     - 0.68
     - 0.69
     - 0.7
-    - 0.66  # scenario
-    - 0.75  # scenario
+    - 0.7  # scenario
+    - 0.763  # scenario
   school_times:
     - 63
     - 65

@@ -71,6 +71,6 @@ def malaysia_calibration(max_seconds, run_id):
 @click.argument("max_seconds", type=int)
 @click.argument("run_id", type=int)
 def philippines_calibration(max_seconds, run_id):
-    """Run Malaysia COVID model calibration."""
+    """Run Philippines COVID model calibration."""
     run_philippines_covid_calibration_chain(max_seconds, run_id)
 

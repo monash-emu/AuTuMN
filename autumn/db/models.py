@@ -130,7 +130,39 @@ def collate_databases(src_db_paths: List[str], target_db_path: str):
     logger.info("Finished collating db outputs into %s", target_db_path)
 
 
-def create_power_bi_outputs(source_db_path: str, target_db_path: str):
+def prune(source_db_path: str, target_db_path: str):
+    """
+    Read the model outputs from a database and remove all run-related data that is not MLE.
+    """
+    logger.info("Pruning %s into %s", source_db_path, target_db_path)
+
+    source_db = Database(source_db_path)
+    target_db = Database(target_db_path)
+
+    # Find the maximum loglikelihood for all runs
+    mcmc_run_df = source_db.db_query("mcmc_run")
+    max_ll_idx = mcmc_run_df.loglikelihood.idxmax()
+    max_ll_run_name = mcmc_run_df.idx.iloc[max_ll_idx]
+    tables_to_copy = [t for t in source_db.table_names()]
+    for table_name in tables_to_copy:
+        table_df = source_db.db_query(table_name)
+        # Prune any table with an idx column except for mcmc_run
+        should_prune = "idx" in table_df.columns and table_name != "mcmc_run"
+        if should_prune:
+            logger.info(
+                "Pruning %s so that it only contains max likelihood runs", table_name
+            )
+            max_ll_mask = table_df["idx"] == max_ll_run_name
+            max_ll_table_df = table_df[max_ll_mask]
+            target_db.dump_df(table_name, max_ll_table_df)
+        else:
+            logger.info("Copying %s", table_name)
+            target_db.dump_df(table_name, table_df)
+
+    logger.info("Finished pruning %s into %s", source_db_path, target_db_path)
+
+
+def unpivot(source_db_path: str, target_db_path: str):
     """
     Read the model outputs from a database and then convert them into a form
     that is readable by our PowerBI dashboard.
@@ -138,22 +170,16 @@ def create_power_bi_outputs(source_db_path: str, target_db_path: str):
     """
     source_db = Database(source_db_path)
     target_db = Database(target_db_path)
-    tables_to_copy = ["mcmc_run", "derived_outputs"]
+    tables_to_copy = [t for t in source_db.table_names() if t != "outputs"]
     for table_name in tables_to_copy:
         logger.info("Copying %s", table_name)
         table_df = source_db.db_query(table_name)
         target_db.dump_df(table_name, table_df)
 
+    logger.info("Converting outputs to PowerBI format")
     outputs_df = source_db.db_query("outputs")
-    scenario_names = outputs_df["Scenario"].unique()
-    logger.info("Converting scenarios to PowerBI format")
-    for scenario_name in tqdm(scenario_names):
-        scenario_idx = int(scenario_name.split("_")[-1])
-        table_name = f"pbi_scenario_{scenario_idx}"
-        mask = outputs_df["Scenario"] == scenario_name
-        scenario_df = unpivot_outputs(outputs_df[mask])
-        target_db.dump_df(table_name, scenario_df)
-
+    pbi_outputs_df = unpivot_outputs(outputs_df)
+    target_db.dump_df("powerbi_outputs", pbi_outputs_df)
     logger.info("Finished creating PowerBI output database at %s", target_db_path)
 
 

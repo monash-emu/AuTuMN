@@ -3,19 +3,24 @@ from copy import deepcopy
 
 import pytest
 from autumn.db import Database
-from autumn.db.models import collate_outputs_powerbi
 from autumn.calibration import Calibration, CalibrationMode
 
 from .utils import get_mock_model
 
 
-@pytest.mark.github_only
+@pytest.mark.skip("Old code, needs to be re-written")
 @pytest.mark.parametrize("num_iters, max_size_mb", [(50, 0.1), (50, 0.2), (50, 0.3)])
 def test_calibration_data_collation(temp_data_dir, num_iters, max_size_mb):
     """
     Test that collate_powerbi_database correctly pulls data from calibration outputs into a single database.
     """
-    priors = [{"param_name": "ice_cream_sales", "distribution": "uniform", "distri_params": [1, 5]}]
+    priors = [
+        {
+            "param_name": "ice_cream_sales",
+            "distribution": "uniform",
+            "distri_params": [1, 5],
+        }
+    ]
     target_outputs = [
         {
             "output_key": "shark_attacks",
@@ -33,7 +38,11 @@ def test_calibration_data_collation(temp_data_dir, num_iters, max_size_mb):
             deepcopy(target_outputs),
             multipliers={},
             chain_index=chain_index,
-            model_parameters={"default": {}, "scenario_start_time": 2000, "scenarios": {}},
+            model_parameters={
+                "default": {},
+                "scenario_start_time": 2000,
+                "scenarios": {},
+            },
         )
         calib.run_fitting_algorithm(
             run_mode=CalibrationMode.AUTUMN_MCMC,
@@ -46,7 +55,9 @@ def test_calibration_data_collation(temp_data_dir, num_iters, max_size_mb):
     app_dir = os.path.join(temp_data_dir, "sharks")
     run_dir = os.path.join(app_dir, os.listdir(app_dir)[0])
     out_db_paths = [
-        os.path.join(run_dir, db_path) for db_path in os.listdir(run_dir) if db_path.endswith(".db")
+        os.path.join(run_dir, db_path)
+        for db_path in os.listdir(run_dir)
+        if db_path.endswith(".db")
     ]
     # There should be 5 databases saved
     assert len(out_db_paths) == 5
@@ -63,7 +74,13 @@ def test_calibration_data_collation(temp_data_dir, num_iters, max_size_mb):
 
 def test_calibrate_autumn_mcmc(temp_data_dir):
     # Import autumn stuff inside function so we can mock out the database.
-    priors = [{"param_name": "ice_cream_sales", "distribution": "uniform", "distri_params": [1, 5]}]
+    priors = [
+        {
+            "param_name": "ice_cream_sales",
+            "distribution": "uniform",
+            "distri_params": [1, 5],
+        }
+    ]
     target_outputs = [
         {
             "output_key": "shark_attacks",
@@ -96,7 +113,11 @@ def test_calibrate_autumn_mcmc(temp_data_dir):
     assert os.path.exists(out_db_path)
 
     out_db = Database(out_db_path)
-    assert set(out_db.engine.table_names()) == {"outputs", "derived_outputs", "mcmc_run"}
+    assert set(out_db.engine.table_names()) == {
+        "outputs",
+        "derived_outputs",
+        "mcmc_run",
+    }
     mcmc_runs = out_db.db_query("mcmc_run")
     max_idx = mcmc_runs.loglikelihood.idxmax()
     best_run = mcmc_runs.iloc[max_idx]

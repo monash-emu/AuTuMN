@@ -11,11 +11,6 @@ contact_rate: 0.049
 tv_detection_c: 150 # inflection point
 tv_detection_sigma: 0
 prop_detected_among_symptomatic: 0.5
-compartment_periods_calculated:
-  total_infectious:
-    total_period: 3.
-  incubation:
-    total_period: 2.
 
 # other country-specific parameters
 tv_detection_b: .05 # shape parameter of the tanh-based curve

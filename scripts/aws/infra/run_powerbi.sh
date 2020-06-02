@@ -46,9 +46,14 @@ log "All database conversions completed"
 log "Uploading logs"
 aws s3 cp --recursive logs s3://autumn-calibrations/$RUN_NAME/logs
 
+# Collate data into one database
+# Add uncertainty table
+# Prune non MLE outputs and derived outputs
+# Unpivot data for PowerBi
+
+
 #python -m apps db unpivot $SOURCE_DB $TARGET_DB
 #python -m apps db uncertainty $SOURCE_DB $TARGET_DB [$DERIVED_OUTPUTS]
-#python -m apps db prune $SOURCE_DB $TARGET_DB $FINAL_SIZE
 
 # TODO: Collate database
 # TODO: Add uncertainty

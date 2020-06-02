@@ -9,7 +9,7 @@ You can access this script from your CLI by running:
 import os
 import click
 
-from autumn.db.models import create_power_bi_outputs, collate_outputs_powerbi
+from autumn.db.models import collate_databases
 from autumn.plots.database_plots import plot_from_database
 
 
@@ -25,26 +25,53 @@ def plot_database(model_run_path):
     plot_from_database(model_run_path)
 
 
-@db.command("powerbi")
-@click.argument("src_db_path", type=str)
-@click.argument("dest_db_path", type=str)
-def powerbi_convert(src_db_path, dest_db_path):
-    """Convert model outputs into PowerBI format"""
-    assert os.path.isfile(src_db_path), f"{src_db_path} must be a file"
-    create_power_bi_outputs(src_db_path, dest_db_path)
-
-
-@db.command("powerbi-collate")
+@db.command("collate")
 @click.argument("src_db_dir", type=str)
 @click.argument("dest_db_path", type=str)
-@click.argument("max_size_mb", type=int)
-def powerbi_collate(src_db_dir, dest_db_path, max_size_mb):
-    """Collate MCMC databases and then convert model outputs into PowerBI format"""
+def collate(src_db_dir, dest_db_path):
+    """
+    Merge all databases from a folder into a single database.
+    """
     assert os.path.isdir(src_db_dir), f"{src_db_dir} must be a folder"
     src_db_paths = [
         os.path.join(src_db_dir, fname)
         for fname in os.listdir(src_db_dir)
         if fname.endswith(".db")
     ]
-    collate_outputs_powerbi(src_db_paths, dest_db_path, max_size_mb)
+    collate_databases(src_db_paths, dest_db_path)
 
+
+@db.command("uncertainty")
+@click.argument("src_db_path", type=str)
+@click.argument("dest_db_path", type=str)
+def uncertainty(src_db_path, dest_db_path):
+    """
+    Add uncertainty estimates to specified derived outputs.
+    Requires MCMC run metadata.
+    FIXME: Do we need to specify derived outputs?
+    """
+    assert os.path.isfile(src_db_path), f"{src_db_path} must be a file"
+    xxxxxxxxxxxxxx(src_db_path, dest_db_path)
+
+
+@db.command("prune")
+@click.argument("src_db_path", type=str)
+@click.argument("dest_db_path", type=str)
+def prune(src_db_path, dest_db_path):
+    """
+    Drop data for all outputs except for the MLE model run.
+    Requires MCMC run metadata.
+    """
+    assert os.path.isfile(src_db_path), f"{src_db_path} must be a file"
+    xxxxxxxxxxxxxx(src_db_path, dest_db_path)
+
+
+@db.command("unpivot")
+@click.argument("src_db_path", type=str)
+@click.argument("dest_db_path", type=str)
+def unpivot(src_db_path, dest_db_path):
+    """
+    Convert model outputs into PowerBI-friendly unpivoted format.
+    """
+    assert os.path.isfile(src_db_path), f"{src_db_path} must be a file"
+    xxxxxxxxxxxxxx(src_db_path, dest_db_path)

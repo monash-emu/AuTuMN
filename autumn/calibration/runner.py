@@ -24,18 +24,18 @@ def run_full_models_for_mcmc(
     dest_db = Database(dest_db_path)
 
     logger.info("Copying mcmc_run table to %s", dest_db_path)
-    # FIXME: Add burn in to mcmc_run table.
-    dest_db.dump_df("mcmc_run", src_db.db_query("mcmc_run"))
 
-    mcmc_runs = list(src_db.db_query("mcmc_run").T.to_dict().values())
-    burn_in_count = burn_in
+    mcmc_run_df = src_db.db_query("mcmc_run")
+
+    # Apply burn in and save to destination
+    burned_runs_str = ", ".join(mcmc_run_df[:burn_in].idx)
+    logger.info("Burned MCMC runs %s", burned_runs_str)
+    mcmc_run_df = mcmc_run_df[burn_in:]
+    dest_db.dump_df("mcmc_run", mcmc_run_df)
+
+    mcmc_runs = list(mcmc_run_df.T.to_dict().values())
     for mcmc_run in mcmc_runs:
         meta = {k: v for k, v in mcmc_run.items() if k in META_COLS}
-        if burn_in_count > 0:
-            logger.info("Burning MCMC run %s", meta["idx"])
-            burn_in_count -= 1
-            continue
-
         if not meta["accept"]:
             logger.info("Ignoring non-accepted MCMC run %s", meta["idx"])
             continue

@@ -102,89 +102,30 @@ def store_run_models(models: List[StratifiedModel], database_path: str):
         )
 
 
-def collate_outputs_powerbi(
-    src_db_paths: List[str], target_db_path: str, max_size: float
-):
-    """
-    Collate the output of many calibration databases into a single database,
-    of size no greater than `max_size` MB, then converts it into the PowerBI format.
-    """
-    # Figure out the number of runs to sample - we assume all source dbs are approximately the same size.
-    sum_size_mb = 0
-    sum_runs = 0
-    with Timer("Measuring input databases"):
-        for db_path in src_db_paths:
-            db = Database(db_path)
-            sum_size_mb += db.get_size_mb()
-            sum_runs += db.engine.execute("SELECT COUNT(*) from mcmc_run;").first()[0]
-
-        mb_per_run = sum_size_mb / sum_runs
-        max_runs = max_size / mb_per_run
-
-    # Collate the outputs
-    with TemporaryDirectory() as temp_dir:
-        # Figure out how much bigger the db gets due to pivoting
-        with Timer("Calculating pivot factor"):
-            sample_db_path = src_db_paths[0]
-            # TODO: subsample just one run to make this faster.
-            pivot_db_path = os.path.join(temp_dir, "pivot.db")
-            create_power_bi_outputs(sample_db_path, pivot_db_path)
-            sample_db_size = Database(sample_db_path).get_size_mb()
-            pivot_db_size = Database(pivot_db_path).get_size_mb()
-            pivot_factor = math.ceil(pivot_db_size / sample_db_size)
-            # Throw away 20% as a safety factor
-            num_runs = math.floor((4 / 5) * max_runs / len(src_db_paths) / pivot_factor)
-
-        logger.info(
-            "Sampling %s runs to achieve no more than %s MB", num_runs, max_size
-        )
-        collated_db_path = os.path.join(temp_dir, "collated.db")
-        with Timer("Collating outputs into one database"):
-            collate_outputs(src_db_paths, collated_db_path, num_runs)
-        with Timer("Converting collated database to PowerBI format"):
-            create_power_bi_outputs(collated_db_path, target_db_path)
-
-
-def collate_outputs(src_db_paths: List[str], target_db_path: str, num_runs: int):
+def collate_databases(src_db_paths: List[str], target_db_path: str):
     """
     Collate the output of many calibration databases into a single database.
-    Selects the top `num_runs` most recent accepted runs from each database.
     Run names are renamed to be ascending in the final database.
     """
     logger.info("Collating db outputs into %s", target_db_path)
     target_db = Database(target_db_path)
+    tables_to_copy = ["outputs", "derived_outputs", "mcmc_run"]
     run_count = 0
     for db_path in tqdm(src_db_paths):
-        accepted_runs = {}
         source_db = Database(db_path)
-        # Get a list of source run names
-        mcmc_run_df = source_db.db_query("mcmc_run")
-        accepted_df = mcmc_run_df[mcmc_run_df["accept"] == 1]
-        num_accepted_runs = len(accepted_df)
-        if num_accepted_runs >= num_runs:
-            logger.warn(
-                "Insufficient accepted runs in %s: %s requested but only %s available",
-                db_path,
-                num_runs,
-                num_accepted_runs,
-            )
-        accepted_df = accepted_df.tail(num_runs)
-        for _, row in accepted_df.iterrows():
-            old_name = row.idx
-            new_name = f"run_{run_count}"
-            run_count += 1
-            accepted_runs[old_name] = new_name
-
-        tables_to_copy = ["outputs", "derived_outputs", "mcmc_run"]
+        num_runs = len(source_db.db_query("mcmc_run", column="idx"))
         for table_name in tables_to_copy:
             table_df = source_db.db_query(table_name)
-            mask = table_df["idx"] == None  # Init mask as all False
-            for old_name, new_name in accepted_runs.items():
-                mask |= table_df["idx"] == old_name
 
-            table_df = table_df[mask]
-            table_df = table_df.replace(accepted_runs)
+            def increment_run(idx: str):
+                run_idx = int(idx.split("_")[-1])
+                new_idx = run_count + run_idx
+                return f"run_{new_idx}"
+
+            table_df.idx = table_df.idx.apply(increment_run)
             target_db.dump_df(table_name, table_df)
+
+        run_count += num_runs
 
     logger.info("Finished collating db outputs into %s", target_db_path)
 

@@ -16,10 +16,10 @@ OPTI_PARAMS_PATH = os.path.join(FILE_DIR, "opti_params.yml")
 with open(OPTI_PARAMS_PATH, "r") as yaml_file:
     opti_params = yaml.safe_load(yaml_file)
 
-mys = CountryModel(Country.MALAYSIA)
+avaialable_countries = ['malaysia', 'philippines', 'australia', 'liberia']
 
 
-def objective_function(decision_variables, mode="by_age"):
+def objective_function(decision_variables, mode="by_age", country='malaysia'):
     """
     :param decision_variables: dictionary containing
         - mixing multipliers by age if mode == "by_age"    OR
@@ -27,8 +27,9 @@ def objective_function(decision_variables, mode="by_age"):
     :param mode: either "by_age" or "by_location"
     :return:
     """
-    build_model = mys.build_model
-    params = copy.deepcopy(mys.params)
+    running_model = CountryModel(country)
+    build_model = running_model.build_model
+    params = copy.deepcopy(running_model.params)
 
     # Define the two scenarios:
     #   baseline: with intervention
@@ -105,10 +106,13 @@ def has_immunity_been_reached(_model):
 
 
 if __name__ == '__main__':
-    mode = 'by_age'
-    mixing_multipiers = [1., 1., 1., 1., 1., 1., 1., 1., 1., 1.,
-                         1., 1., 1., 1., 1., 1.]
-    h, d, m = objective_function(mixing_multipiers, mode)
+    for country in avaialable_countries:
+        mode = 'by_age'
+        mixing_multipiers = [1., 1., 1., 1., 1., 1., 1., 1., 1., 1.,
+                             1., 1., 1., 1., 1., 1.]
+        mixing_multipiers = [.1 * m for m in mixing_multipiers]
+        h, d, m = objective_function(mixing_multipiers, mode, country)
 
-    print(d)
+        print(h)
+        print(d)
 

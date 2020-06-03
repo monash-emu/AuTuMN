@@ -118,7 +118,7 @@ def run_powerbi(job_name, run_name):
     """
     job_id = f"powerbi-{job_name}"
     script_args = [run_name]
-    instance_type = aws.get_instance_type(4, 8)
+    instance_type = aws.get_instance_type(30, 32)
     _run_job(job_id, instance_type, "run_powerbi.sh", script_args)
 
 
@@ -127,7 +127,7 @@ def _run_job(job_id, instance_type, script_name, script_args):
     Run a job on a remote server
     """
     try:
-        aws.run_job(job_id)
+        aws.run_job(job_id, instance_type)
     except aws.NoInstanceAvailable:
         click.echo("Could not run job - no instances available")
         return

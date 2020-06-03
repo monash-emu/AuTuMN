@@ -11,7 +11,10 @@ import click
 
 from autumn.db import models
 from autumn.plots.database_plots import plot_from_database
-from autumn.tool_kit.uncertainty import add_uncertainty
+from autumn.tool_kit.uncertainty import (
+    add_uncertainty_weights,
+    add_uncertainty_quantiles,
+)
 
 
 @click.group()
@@ -42,18 +45,6 @@ def collate(src_db_dir, dest_db_path):
     models.collate_databases(src_db_paths, dest_db_path)
 
 
-@db.command("uncertainty")
-@click.argument("output_name", type=str)
-@click.argument("db_path", type=str)
-def uncertainty(output_name: str, db_path: str):
-    """
-    Add uncertainty estimates to specified derived outputs.
-    Requires MCMC run metadata.
-    """
-    assert os.path.isfile(db_path), f"{db_path} must be a file"
-    add_uncertainty(output_name, db_path)
-
-
 @db.command("prune")
 @click.argument("src_db_path", type=str)
 @click.argument("dest_db_path", type=str)
@@ -75,3 +66,34 @@ def unpivot(src_db_path, dest_db_path):
     """
     assert os.path.isfile(src_db_path), f"{src_db_path} must be a file"
     models.unpivot(src_db_path, dest_db_path)
+
+
+@click.group()
+def uncertainty():
+    """Calculate uncertainty around MCMC calibrated parameters"""
+
+
+@uncertainty.command("weights")
+@click.argument("output_name", type=str)
+@click.argument("db_path", type=str)
+def uncertainty_weights(output_name: str, db_path: str):
+    """
+    Calculate uncertainty weights for the specified derived outputs.
+    Requires MCMC run metadata.
+    """
+    assert os.path.isfile(db_path), f"{db_path} must be a file"
+    add_uncertainty_weights(output_name, db_path)
+
+
+@uncertainty.command("quantiles")
+@click.argument("db_path", type=str)
+def uncertainty_quantiles(db_path: str):
+    """
+    Add uncertainty quantiles for the any derived outputs with weights.
+    Requires MCMC run metadata abd .
+    """
+    assert os.path.isfile(db_path), f"{db_path} must be a file"
+    add_uncertainty_quantiles(db_path)
+
+
+db.add_command(uncertainty)

@@ -16,9 +16,7 @@ class Database:
         """
         Returns database size in MB.
         """
-        query = (
-            "SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size();"
-        )
+        query = "SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size();"
         size_bytes = self.engine.execute(query).first()[0]
         return size_bytes / 1024 / 1024
 
@@ -43,7 +41,12 @@ class Database:
         :return: pandas dataframe
             output for user
         """
-        query = f"SELECT {column} FROM {table_name}"
+        if type(column) is list:
+            column_str = ",".join(column)
+        else:
+            column_str = column
+
+        query = f"SELECT {column_str} FROM {table_name}"
         if len(conditions) > 0:
             condition_chain = " AND ".join(conditions)
             query += f" WHERE {condition_chain}"

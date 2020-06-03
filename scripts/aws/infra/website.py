@@ -90,6 +90,8 @@ def update_page(path: str, children: List[str]):
         link_html = render_link(dirname, dirpath)
         link_htmls.append(link_html)
 
+    download_html = render_download_all_link(path, files)
+    link_htmls.append(download_html)
     for file in files:
         filepath = os.path.join(path, file)
         link_html = render_link(file, filepath)
@@ -149,12 +151,24 @@ def render_body(inner: str):
     """
 
 
-# TODO: Download all.
-# def render_download_all_link(files)
-# # <a href="#" class="yourlink">Download</a>
-# # $('a.yourlink').click(function(e) {
-# #     e.preventDefault();
-# #     window.open('mysite.com/file1');
-# #     window.open('mysite.com/file2');
-# #     window.open('mysite.com/file3');
-# # });
+def render_download_all_link(path, files):
+    urls = [get_url(os.path.join(path, file)) for file in files]
+    urls_str = ",".join([f"'{url}'" for url in urls])
+    return f"""
+    <a href="#" id="downloadall">Download all files</a>
+    <script>
+    let urls = [{urls_str}]
+    $('#downloadall').click(function(e) {{
+        e.preventDefault();
+        let link = document.createElement('a');
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        for (let i = 0; i < urls.length; i++) {{
+            link.setAttribute('download', urls[i].split('/').pop());
+            link.setAttribute('href', urls[i]);
+            link.click();
+        }}
+        document.body.removeChild(link);
+    }});
+    </script>
+    """

@@ -128,10 +128,6 @@ def calculate_mcmc_uncertainty(
             )
             threads_args_list.append(thread_args)
 
-    import pdb
-
-    pdb.set_trace()
-
     num_workers = multiprocessing.cpu_count() - 2
     with futures.ThreadPoolExecutor(max_workers=num_workers) as ex:
         fs = [ex.submit(calculate_quantiles, *args) for args in threads_args_list]

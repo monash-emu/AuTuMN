@@ -1,10 +1,14 @@
 import os
 import logging
+import multiprocessing
+from concurrent import futures
 from typing import List
+
 
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
+
 
 from autumn.db.database import Database
 
@@ -13,61 +17,166 @@ DEFAULT_QUANTILES = [0.025, 0.25, 0.5, 0.75, 0.975]
 logger = logging.getLogger(__file__)
 
 
-def add_uncertainty(output_name: str, database_path: str):
+def add_uncertainty_weights(output_name: str, database_path: str):
+    """
+    Calculate uncertainty weights for a given MCMC chain and derived output.
+    Saves requested weights in a table 'uncertainty_weights'.
+    """
+    logger.info("Adding uncertainty_weights for %s to %s", output_name, database_path)
+    db = Database(database_path)
+    if "uncertainty_weights" in db.table_names():
+        logger.info(
+            "Deleting %s from existing uncertainty_weights table in %s",
+            output_name,
+            database_path,
+        )
+        db.engine.execute(
+            f"DELETE FROM uncertainty_weights WHERE output_name='{output_name}'"
+        )
+
+    logger.info("Loading data into memory")
+    columns = ["idx", "Scenario", "times", output_name]
+    mcmc_df = db.db_query("mcmc_run")
+    derived_outputs_df = db.db_query("derived_outputs", column=columns)
+    logger.info("Calculating weighted values for %s", output_name)
+    weights_df = calc_mcmc_weighted_values(output_name, mcmc_df, derived_outputs_df)
+    db.dump_df("uncertainty_weights", weights_df)
+    logger.info("Finished writing %s uncertainty weights", output_name)
+
+
+def calc_mcmc_weighted_values(
+    output_name: str, mcmc_df: pd.DataFrame, derived_output_df: pd.DataFrame,
+) -> pd.DataFrame:
+    """
+    Calculate quantiles for a given derived output.
+    Note that this must be run on each MCMC chain individually.
+    """
+    # Calculate weights
+    mcmc_df["run_int"] = mcmc_df["idx"].apply(run_idx_to_int)
+    mcmc_df = mcmc_df.sort_values(["run_int"])
+    max_run_idx = mcmc_df["run_int"].max()
+    weights = np.zeros(max_run_idx + 1)
+    last_run_int = None
+    for run_int, accept in zip(mcmc_df["run_int"], mcmc_df["accept"]):
+        if accept:
+            weights[run_int] = 1
+            last_run_int = run_int
+        elif last_run_int is None:
+            continue
+        else:
+            weights[last_run_int] += 1
+
+    # Add weights to weights dataframe
+    weights_df = derived_output_df.copy()
+    weights_df = weights_df.rename(columns={output_name: "value"})
+    weights_df["output_name"] = output_name
+    weights_df["weight"] = 0
+    for run_idx in weights_df.idx.unique():
+        run_int = run_idx_to_int(run_idx)
+        weight = weights[run_int]
+        run_mask = weights_df["idx"] == run_idx
+        weights_df.loc[run_mask, "weight"] = weight
+
+    return weights_df
+
+
+def add_uncertainty_quantiles(database_path: str):
     """
     Add an uncertainty table to a given database, based on mcmc_run and derived_outputs.
     The table will have columns scenario/type/time/quantile/value.
     """
-    logger.info("Adding uncertainty for %s to %s", output_name, database_path)
+    logger.info("Calculating uncertainty for %s", database_path)
     db = Database(database_path)
-
     if "uncertainty" in db.table_names():
         logger.info(
-            "Deleting %s from existing uncertainty table in %s",
-            output_name,
-            database_path,
+            "Deleting existing uncertainty table in %s", database_path,
         )
-        db.engine.execute(f"DELETE FROM uncertainty WHERE type={output_name}")
+        db.engine.execute(f"DELETE FROM uncertainty")
 
-    mcmc_tables = [db.db_query("mcmc_run")]
-    output_tables = [db.db_query("outputs")]
-    derived_output_tables = [db.db_query("derived_outputs")]
-    logger.info("Calculating weights for %s", output_name)
-    weights = collect_iteration_weights(mcmc_tables, burn_in=0)
-    logger.info("Calculating uncertainty for %s", output_name)
-    times_list, quantiles_list = compute_mcmc_output_quantiles(
-        mcmc_tables,
-        output_tables,
-        derived_output_tables,
-        weights,
-        output_name,
-        DEFAULT_QUANTILES,
-    )
-    logger.info("Preparing scenarios for %s", output_name)
-    num_scenarios = len(times_list)
-    for idx in tqdm(range(num_scenarios)):
-        scenario_name = f"S_{idx}"
-        times = times_list[idx]
-        quantiles = quantiles_list[idx]
-        scenario_data = []
-        for t_idx, time in enumerate(times):
-            for q_idx, value in enumerate(quantiles[t_idx]):
-                datum = {
-                    "Scenario": scenario_name,
-                    "type": output_name,
-                    "time": time,
-                    "quantile": DEFAULT_QUANTILES[q_idx],
-                    "value": value,
-                }
-                scenario_data.append(datum)
+    logger.info("Loading data into memory")
+    weights_df = db.db_query("uncertainty_weights")
+    logger.info("Calculating uncertainty")
+    uncertainty_df = calculate_mcmc_uncertainty(weights_df, DEFAULT_QUANTILES)
+    db.dump_df("uncertainty", uncertainty_df)
+    logger.info("Finished writing uncertainties")
 
-        logger.info(
-            "Writing %s uncertainties for scenario %s", output_name, scenario_name
-        )
-        scenario_df = pd.DataFrame(scenario_data)
-        db.dump_df("uncertainty", scenario_df)
 
-    logger.info("Finished writing %s uncertainties", output_name)
+def calculate_mcmc_uncertainty(
+    weights_df: pd.DataFrame, quantiles: List[float]
+) -> pd.DataFrame:
+    """
+    Calculate quantiles from a table of weighted values.
+    See calc_mcmc_weighted_values for how these weights are calculated.
+    """
+
+    # For a given time and output we want the weighted vcals
+
+    output_names = weights_df.output_name.unique()
+    times = sorted(weights_df.times.unique())
+    scenarios = weights_df.Scenario.unique()
+    uncertainty_data = []
+    threads_args_list = []
+    for scenario in scenarios:
+        for output_name in output_names:
+            thread_args = (
+                scenario,
+                output_name,
+                times,
+                weights_df,
+                quantiles,
+                uncertainty_data,
+            )
+            threads_args_list.append(thread_args)
+
+    import pdb
+
+    pdb.set_trace()
+
+    num_workers = multiprocessing.cpu_count() - 2
+    with futures.ThreadPoolExecutor(max_workers=num_workers) as ex:
+        fs = [ex.submit(calculate_quantiles, *args) for args in threads_args_list]
+        futures.wait(fs, timeout=None, return_when=futures.FIRST_EXCEPTION)
+
+    uncertainty_df = pd.DataFrame(uncertainty_data)
+    return uncertainty_df
+
+
+def calculate_quantiles(
+    scenario: str,
+    output_name: str,
+    times: List[int],
+    weights_df: pd.DataFrame,
+    quantiles: List[float],
+    uncertainty_data: List[dict],
+):
+    for time in times:
+        time_mask = weights_df["times"] == time
+        scenario_mask = weights_df["Scenario"] == scenario
+        output_mask = weights_df["output_name"] == output_name
+        mask = time_mask & scenario_mask & output_mask
+        masked_df = weights_df[mask]
+        if masked_df.empty:
+            continue
+
+        weighted_values = np.repeat(masked_df.value, masked_df.weight)
+        quantile_vals = np.quantile(weighted_values, quantiles)
+        for q_idx, q_value in enumerate(quantile_vals):
+            datum = {
+                "Scenario": scenario,
+                "type": output_name,
+                "time": time,
+                "quantile": quantiles[q_idx],
+                "value": q_value,
+            }
+            uncertainty_data.append(datum)
+
+
+def run_idx_to_int(run_idx: str) -> int:
+    return int(run_idx.split("_")[-1])
+
+
+def run_int_to_idx(run_int: int) -> str:
+    return f"run_{run_int}"
 
 
 def export_mcmc_quantiles(

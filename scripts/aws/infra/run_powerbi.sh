@@ -3,7 +3,8 @@ set -e
 export TZ="/usr/share/zoneinfo/Australia/Melbourne"
 function log {
     echo "$(date "+%F %T")> $@"
-} 
+}
+
 log "Running PowerBI post processing"
 
 RUN_NAME=$1
@@ -21,14 +22,8 @@ git pull
 . ./env/bin/activate
 pip install -r requirements.txt
 
-
 log "Dowloading full model runs for $RUN_NAME"
 aws s3 cp --recursive s3://autumn-calibrations/$RUN_NAME/data/full_model_runs data/full_model_runs
-
-log "Collating databases"
-mkdir -p data/powerbi
-python -m apps db collate data/full_model_runs/ data/powerbi/collated.db
-
 
 mkdir -p logs
 
@@ -40,31 +35,72 @@ function onexit {
 }
 trap onexit EXIT
 
-log "Adding uncertainty to collated databases"
+log "Calculating uncertainty weights for full run databases"
 PIDS=()
 UNCERTAINTY_OUTPUTS="incidence notifications infection_deathsXall prevXlateXclinical_icuXamong"
-for OUTPUT in $UNCERTAINTY_OUTPUTS
+DB_FILES=($(find data/full_model_runs/ -name *.db))
+NUM_DBS="${#DB_FILES[@]}"
+for i in $(seq 1 1 $NUM_DBS)
 do
-    log "Calculating uncertainty for $OUTPUT"
-    LOG_FILE=logs/uncertainty-${OUTPUT}.log
-    touch $LOG_FILE
-    nohup python -m apps db uncertainty $OUTPUT data/powerbi/collated.db &> $LOG_FILE &
-    PIDS+=("$!")
+    IDX=$(($i - 1))
+    DB_FILE="${DB_FILES[$IDX]}"
+    DB_NUMBER=$(echo $DB_FILE | cut -d'_' -f7 - | cut -d'.' -f1 -)
+    LOG_FILE=logs/weights-${DB_NUMBER}.log
+    for OUTPUT in $UNCERTAINTY_OUTPUTS
+    do
+        log "Calculating uncertainty weights for $OUTPUT in database #$DB_NUMBER $DB_FILE"
+        nohup python -m apps db uncertainty weights $OUTPUT $DB_FILE &> $LOG_FILE &
+        PIDS+=("$!")
+    done
 done
 
-log "Waiting for ${#PIDS[@]} uncertainty calculations to complete."
+log "Waiting for ${#PIDS[@]} uncertainty weight operations to complete."
 for PID in ${PIDS[@]}
 do
     wait $PID
 done
-log "All uncertainty calculations completed"
+log "All uncertainty weight operations completed"
+
+log "Pruning full run databases"
+PIDS=()
+DB_FILES=($(find data/full_model_runs/ -name *.db))
+NUM_DBS="${#DB_FILES[@]}"
+mkdir -p data/pruned
+for i in $(seq 1 1 $NUM_DBS)
+do
+    IDX=$(($i - 1))
+    DB_FILE="${DB_FILES[$IDX]}"
+    DB_NUMBER=$(echo $DB_FILE | cut -d'_' -f7 - | cut -d'.' -f1 -)
+    LOG_FILE=logs/prune-${DB_NUMBER}.log
+    DEST_DB=data/pruned/mcmc_pruned_${DB_NUMBER}.db
+    touch $LOG_FILE
+    log "Pruning  chain database #$DB_NUMBER $DB_FILE"
+    nohup python -m apps db prune $DB_FILE $DEST_DB &> $LOG_FILE &
+    PIDS+=("$!")
+done
+
+log "Waiting for ${#PIDS[@]} pruning operations to complete."
+for PID in ${PIDS[@]}
+do
+    wait $PID
+done
+log "All pruning operations completed"
+
+
+log "Collating databases"
+mkdir -p data/powerbi
+python -m apps db collate data/pruned/ data/powerbi/collated.db
+
+log "Adding uncertainty to collated databases"
+python -m apps db uncertainty quantiles data/powerbi/collated.db
 
 log "Pruning non-MLE runs from database"
-python -m apps db prune data/powerbi/collated.db data/powerbi/pruned.db
+python -m apps db prune data/powerbi/collated.db data/powerbi/collated-pruned.db
 
 log "Converting outputs into unpivoted PowerBI format"
-FINAL_DB_FILE=data/powerbi/powerbi-${RUN_NAME}.db
-python -m apps db unpivot data/powerbi/pruned.db $FINAL_DB_FILE
+FINAL_DB_FILENAME=powerbi-${RUN_NAME}.db
+FINAL_DB_FILE=data/powerbi/$FINAL_DB_FILENAME
+python -m apps db unpivot data/powerbi/collated-pruned.db $FINAL_DB_FILE
 
 log "Uploading PowerBI compatible database"
-aws s3 cp --acl public-read $FINAL_DB_FILE s3://autumn-calibrations/$RUN_NAME/data/powerbi
+aws s3 cp --acl public-read $FINAL_DB_FILE s3://autumn-calibrations/$RUN_NAME/data/powerbi/$FINAL_DB_FILENAME

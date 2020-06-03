@@ -113,20 +113,22 @@ def collate_databases(src_db_paths: List[str], target_db_path: str):
     """
     logger.info("Collating db outputs into %s", target_db_path)
     target_db = Database(target_db_path)
-    tables_to_copy = ["outputs", "derived_outputs", "mcmc_run"]
     run_count = 0
     for db_path in tqdm(src_db_paths):
         source_db = Database(db_path)
         num_runs = len(source_db.db_query("mcmc_run", column="idx"))
-        for table_name in tables_to_copy:
+        for table_name in source_db.table_names():
             table_df = source_db.db_query(table_name)
+            should_increment_idx = "idx" in table_df.columns
 
             def increment_run(idx: str):
                 run_idx = int(idx.split("_")[-1])
                 new_idx = run_count + run_idx
                 return f"run_{new_idx}"
 
-            table_df.idx = table_df.idx.apply(increment_run)
+            if should_increment_idx:
+                table_df.idx = table_df.idx.apply(increment_run)
+
             target_db.dump_df(table_name, table_df)
 
         run_count += num_runs
@@ -143,15 +145,19 @@ def prune(source_db_path: str, target_db_path: str):
     source_db = Database(source_db_path)
     target_db = Database(target_db_path)
 
-    # Find the maximum loglikelihood for all runs
+    # Find the maximum accepted loglikelihood for all runs
     mcmc_run_df = source_db.db_query("mcmc_run")
-    max_ll_idx = mcmc_run_df.loglikelihood.idxmax()
+    accept_mask = mcmc_run_df["accept"] == 1
+    max_ll_idx = mcmc_run_df[accept_mask].loglikelihood.idxmax()
     max_ll_run_name = mcmc_run_df.idx.iloc[max_ll_idx]
     tables_to_copy = [t for t in source_db.table_names()]
+    tables_to_not_prune = ["uncertainty_weights", "mcmc_run"]
     for table_name in tables_to_copy:
         table_df = source_db.db_query(table_name)
         # Prune any table with an idx column except for mcmc_run
-        should_prune = "idx" in table_df.columns and table_name != "mcmc_run"
+        should_prune = (
+            "idx" in table_df.columns and table_name not in tables_to_not_prune
+        )
         if should_prune:
             logger.info(
                 "Pruning %s so that it only contains max likelihood runs", table_name

@@ -90,8 +90,10 @@ def update_page(path: str, children: List[str]):
         link_html = render_link(dirname, dirpath)
         link_htmls.append(link_html)
 
-    download_html = render_download_all_link(path, files)
-    link_htmls.append(download_html)
+    if files:
+        download_html = render_download_all_link(path, files)
+        link_htmls.append(download_html)
+
     for file in files:
         filepath = os.path.join(path, file)
         link_html = render_link(file, filepath)

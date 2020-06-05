@@ -108,7 +108,7 @@ def has_immunity_been_reached(_model):
 
 if __name__ == '__main__':
     # looping through all countries for testing purpose
-    # optimisation will have to be made separately for the different countries.
+    # optimisation will have to be performed separately for the different countries.
     for country in available_countries:
         mode = 'by_age'
         mixing_multipiers = [1., 1., 1., 1., 1., 1., 1., 1., 1., 1.,

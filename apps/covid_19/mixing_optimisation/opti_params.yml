@@ -1,6 +1,21 @@
 ---
-# These parameters will be added to or overwrites those found in the main params.yml file
+# These parameters will be added to or overwrites those found in the original country .yml files
 default:
   start_time: 0.
   end_time: 180.
+
+  # remove all changes to the usual mixing rates
   mixing: {}
+
+  # ensure that we use the latest value of case detection proportion from now on
+  tv_detection_c: -1000. # inflection time
+
+  # turn off traveller quarantine
+  traveller_quarantine:
+    times: [0]
+    values: [0.]
+
+  # turn off importation of cases
+  implement_importation: False
+
+

@@ -15,16 +15,16 @@ OPTI_PARAMS_PATH = os.path.join(FILE_DIR, "opti_params.yml")
 with open(OPTI_PARAMS_PATH, "r") as yaml_file:
     opti_params = yaml.safe_load(yaml_file)
 
-available_countries = ['malaysia', 'philippines', 'australia', 'liberia']
+available_countries = ['malaysia', 'philippines', 'liberia']  # need to fix australia
 
 
 def objective_function(decision_variables, mode="by_age", country='malaysia'):
     """
     :param decision_variables: dictionary containing
-        - mixing multipliers by age if mode == "by_age"    OR
-        - location multipliers if mode == "by_location"
+        - mixing multipliers by age as a list if mode == "by_age"    OR
+        - location multipliers as a dictionary if mode == "by_location"
     :param mode: either "by_age" or "by_location"
-    :return:
+    :param country: the country name
     """
     running_model = CountryModel(country)
     build_model = running_model.build_model
@@ -34,26 +34,27 @@ def objective_function(decision_variables, mode="by_age", country='malaysia'):
     params['default'].update(opti_params['default'])
 
     # Define the two scenarios:
-    #   baseline: with intervention
+    #   baseline: using the decision variables
     #   scenario 1: after intervention to test immunity
     if mode == "by_age":
         mixing_update = {}
         for age_group in range(15):
             mixing_update['age_' + str(age_group) + '_times'] = [10, 14]
             mixing_update['age_' + str(age_group) + '_values'] = [1., decision_variables[age_group]]
-
         params["default"]["mixing"].update(mixing_update)
 
-    # elif mode == "by_location":
-    #     mixing_update_dictionary = {}
-    #     for loc in ["school", "work", "other_locations"]:
-    #         mixing_update_dictionary[loc + "_times"] = [0]
-    #         mixing_update_dictionary[loc + "_values"] = [decision_variables[loc]]
-    #
-    #     params["default"].update({"mixing": mixing_update_dictionary})
-    #
-    # else:
-    #     raise ValueError("The requested mode is not supported")
+    # set location-specific mixing back to pre-COVID rates on 1st of July or use the opti decision variable
+    for loc in ["other_locations", "school", "work"]:
+        latest_value = params["default"]["mixing"][loc + "_values"][-1]
+        params["default"]["mixing"][loc + "_times"] += [181, 183]
+        if mode == "by_age":  # just return mixing to pre-COVID
+            new_mixing_adjustment = 1.
+        elif mode == "by_location":  # use optimisation decision variables
+            new_mixing_adjustment = decision_variables[loc]
+        else:
+            raise ValueError("The requested mode is not supported")
+
+        params["default"]["mixing"][loc + "_values"] += [latest_value, new_mixing_adjustment]
 
     # Add a scenario without any mixing multipliers
     end_time = params["default"]["end_time"]
@@ -62,7 +63,6 @@ def objective_function(decision_variables, mode="by_age", country='malaysia'):
         "end_time": end_time + 50,
         "mixing": {}
     }
-
     scenario_0 = Scenario(build_model, idx=0, params=params)
     scenario_1 = Scenario(build_model, idx=1, params=params)
     scenario_0.run()
@@ -72,8 +72,11 @@ def objective_function(decision_variables, mode="by_age", country='malaysia'):
     # Has herd immunity been reached?
     herd_immunity = has_immunity_been_reached(models[1])
 
-    # How many deaths
-    total_nb_deaths = sum(models[0].derived_outputs["infection_deathsXall"])
+    # How many deaths after 1 July 2020
+    first_july_index = models[0].derived_outputs["times"].index(183)
+    total_nb_deaths = sum(
+        models[0].derived_outputs["infection_deathsXall"][first_july_index:]
+    )
 
     return herd_immunity, total_nb_deaths, models
 
@@ -107,11 +110,20 @@ def has_immunity_been_reached(_model):
 
 
 if __name__ == '__main__':
-    # looping through all countries for testing purpose
-    # optimisation will have to be performed separately for the different countries.
-    for country in available_countries:
-        mode = 'by_age'
-        mixing_multipiers = [1., 1., 1., 1., 1., 1., 1., 1., 1., 1.,
-                             1., 1., 1., 1., 1., 1.]
-        h, d, m = objective_function(mixing_multipiers, mode, country)
+    # looping through all countries and optimisation modes for testing purpose
+    # optimisation will have to be performed separately for the different countries and modes.
 
+    decision_vars = {
+        'by_age': [1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.],
+        'by_location': {
+            "other_locations": .1,
+            "school": 1.,
+            "work": 1.
+        }
+    }
+
+    for mode in ['by_age', 'by_location']:
+        for country in available_countries:
+            h, d, m = objective_function(decision_vars[mode], mode, country)
+            print(country)
+            print("Immunity: " + str(h) + "\n" + "Deaths: " + str(round(d)))

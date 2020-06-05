@@ -4,6 +4,8 @@ default:
   start_time: 0.
   end_time: 180.
 
+  infectious_seed: 10
+
   # remove all changes to the usual mixing rates
   mixing: {}
 

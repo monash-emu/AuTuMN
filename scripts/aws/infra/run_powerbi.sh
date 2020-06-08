@@ -36,30 +36,31 @@ function onexit {
 trap onexit EXIT
 
 log "Calculating uncertainty weights for full run databases"
-PIDS=()
 UNCERTAINTY_OUTPUTS="incidence notifications infection_deathsXall prevXlateXclinical_icuXamong"
 DB_FILES=($(find data/full_model_runs/ -name *.db))
 NUM_DBS="${#DB_FILES[@]}"
-for i in $(seq 1 1 $NUM_DBS)
+for OUTPUT in $UNCERTAINTY_OUTPUTS
 do
-    IDX=$(($i - 1))
-    DB_FILE="${DB_FILES[$IDX]}"
-    DB_NUMBER=$(echo $DB_FILE | cut -d'_' -f7 - | cut -d'.' -f1 -)
-    LOG_FILE=logs/weights-${DB_NUMBER}.log
-    for OUTPUT in $UNCERTAINTY_OUTPUTS
+    PIDS=()
+    for i in $(seq 1 1 $NUM_DBS)
     do
+        IDX=$(($i - 1))
+        DB_FILE="${DB_FILES[$IDX]}"
+        DB_NUMBER=$(echo $DB_FILE | cut -d'_' -f7 - | cut -d'.' -f1 -)
+        LOG_FILE=logs/weights-${DB_NUMBER}-$OUTPUT.log
         log "Calculating uncertainty weights for $OUTPUT in database #$DB_NUMBER $DB_FILE"
         nohup python -m apps db uncertainty weights $OUTPUT $DB_FILE &> $LOG_FILE &
         PIDS+=("$!")
     done
-done
-
-log "Waiting for ${#PIDS[@]} uncertainty weight operations to complete."
-for PID in ${PIDS[@]}
-do
-    wait $PID
+    log "Waiting for ${#PIDS[@]} uncertainty weight operations for $OUTPUT to complete."
+    for PID in ${PIDS[@]}
+    do
+        wait $PID
+    done
+    log "All uncertainty weight operations for $OUTPUT completed"
 done
 log "All uncertainty weight operations completed"
+
 
 log "Pruning full run databases"
 PIDS=()

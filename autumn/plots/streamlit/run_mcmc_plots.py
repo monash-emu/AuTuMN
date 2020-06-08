@@ -7,6 +7,7 @@ from typing import List
 import pandas as pd
 import streamlit as st
 
+from autumn.db import Database
 from autumn.tool_kit.uncertainty import collect_all_mcmc_output_tables
 from autumn.plots import plots
 from autumn.plots.plotter import StreamlitPlotter
@@ -24,23 +25,32 @@ def run_mcmc_plots():
     plot_config = utils.load_plot_config(app_dirname)
 
     # Load MCMC tables
-    (
-        mcmc_tables,
-        output_tables,
-        derived_output_tables,
-    ) = collect_all_mcmc_output_tables(calib_dirpath)
+    mcmc_tables = load_mcmc_tables(calib_dirpath)
 
     plotter = StreamlitPlotter({})
     plot_type = st.sidebar.selectbox("Select plot type", list(PLOT_FUNCS.keys()))
     plot_func = PLOT_FUNCS[plot_type]
-    plot_func(plotter, calib_dirpath, mcmc_tables, derived_output_tables, plot_config)
+    plot_func(plotter, calib_dirpath, mcmc_tables, plot_config)
+
+
+def load_mcmc_tables(calib_dirpath: str):
+    db_paths = [
+        os.path.join(calib_dirpath, f)
+        for f in os.listdir(calib_dirpath)
+        if f.endswith(".db") and not f.startswith("mcmc_percentiles")
+    ]
+    mcmc_tables = []
+    for db_path in db_paths:
+        db = Database(db_path)
+        mcmc_tables.append(db.db_query("mcmc_run"))
+
+    return mcmc_tables
 
 
 def plot_mcmc_parameter_trace(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
     mcmc_tables: List[pd.DataFrame],
-    derived_output_tables: List[pd.DataFrame],
     plot_config={},
 ):
     chosen_param = parameter_selector(mcmc_tables[0])
@@ -51,7 +61,6 @@ def plot_loglikelihood_trace(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
     mcmc_tables: List[pd.DataFrame],
-    derived_output_tables: List[pd.DataFrame],
     plot_config={},
 ):
     burn_in = burn_in_selector(mcmc_tables)
@@ -64,7 +73,6 @@ def plot_posterior(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
     mcmc_tables: List[pd.DataFrame],
-    derived_output_tables: List[pd.DataFrame],
     plot_config={},
 ):
     chosen_param = parameter_selector(mcmc_tables[0])
@@ -76,7 +84,6 @@ def plot_loglikelihood_vs_parameter(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
     mcmc_tables: List[pd.DataFrame],
-    derived_output_tables: List[pd.DataFrame],
     plot_config={},
 ):
     burn_in = burn_in_selector(mcmc_tables)
@@ -90,7 +97,6 @@ def plot_timeseries_with_uncertainty(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
     mcmc_tables: List[pd.DataFrame],
-    derived_output_tables: List[pd.DataFrame],
     plot_config={},
 ):
     # Choose one or more scenarios

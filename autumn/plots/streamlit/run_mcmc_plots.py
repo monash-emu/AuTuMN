@@ -47,6 +47,20 @@ def load_mcmc_tables(calib_dirpath: str):
     return mcmc_tables
 
 
+def load_derived_output_tables(calib_dirpath: str):
+    db_paths = [
+        os.path.join(calib_dirpath, f)
+        for f in os.listdir(calib_dirpath)
+        if f.endswith(".db") and not f.startswith("mcmc_percentiles")
+    ]
+    derived_output_tables = []
+    for db_path in db_paths:
+        db = Database(db_path)
+        derived_output_tables.append(db.db_query("derived_outputs"))
+
+    return derived_output_tables
+
+
 def plot_mcmc_parameter_trace(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
@@ -99,6 +113,7 @@ def plot_timeseries_with_uncertainty(
     mcmc_tables: List[pd.DataFrame],
     plot_config={},
 ):
+    derived_output_tables = load_derived_output_tables(calib_dir_path)
     # Choose one or more scenarios
     scenario_strs = list(derived_output_tables[0].Scenario.unique())
     scenario_idxs = [int(s.replace("S_", "")) for s in scenario_strs]

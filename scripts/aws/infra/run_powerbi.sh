@@ -105,3 +105,5 @@ python -m apps db unpivot data/powerbi/collated-pruned.db $FINAL_DB_FILE
 
 log "Uploading PowerBI compatible database"
 aws s3 cp --acl public-read $FINAL_DB_FILE s3://autumn-calibrations/$RUN_NAME/data/powerbi/$FINAL_DB_FILENAME
+
+log "PowerBI processing complete"

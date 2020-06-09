@@ -1,0 +1,45 @@
+# https://buildkite.com/docs/pipelines/input-step
+steps:
+  - block: "Calibration settings"
+    fields:
+      - select: "Model Region"
+        key: "model-name"
+        hint: Which model do you want to run?
+        required: true
+        options:
+          - label: "Malaysia"
+            value: "malaysia"
+          - label: "Philippines"
+            value: "philippines"
+          - label: "Victoria"
+            value: "victoria"
+
+      - text: "Number of MCMC chains"
+        key: "mcmc-num-chains"
+        hint: "How many MCMC chains do you want to run?"
+        required: false
+        default: "15"
+
+      - text: "Runtime"
+        key: "mcmc-runtime"
+        hint: "How many hours should the model run for?"
+        required: false
+        default: "5"
+
+      - select: "Trigger full model run"
+        key: "trigger-downstream"
+        hint: Should this task trigger a full model run when it is done?
+        required: false
+        default: "yes"
+        options:
+          - label: "Yes"
+            value: "yes"
+          - label: "No"
+            value: "no"
+
+  - command: ./scripts/buildkite/tasks/calibrate.sh
+    label: Run calibration
+    key: run-calibrate
+  - command: ./scripts/aws/run.sh website
+    label: Update website
+    depends_on: run-calibrate

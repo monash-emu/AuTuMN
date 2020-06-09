@@ -78,11 +78,11 @@ def build_dynamic(
     # a proportion 'prop_participating' of the population participates in the prayers and that the other-location
     # contact rates are multiplied by 'other_location_multiplier' for the participating individuals.
     if is_reinstall_regular_prayers:
-        t_start = prayers_params["restart_time"]
+        other_locations = mixing.get("other_locations")
+        t_start = max([prayers_params["restart_time"], max(other_locations["times"]) + 1])
         t_end = end_time
         prop_participating = prayers_params["prop_participating"]
         contact_multiplier = prayers_params["contact_multiplier"]
-        other_locations = mixing.get("other_locations")
         assert other_locations, "need to specify other_location mixing params"
         t = t_start
         reference_val = other_locations["values"][-1]

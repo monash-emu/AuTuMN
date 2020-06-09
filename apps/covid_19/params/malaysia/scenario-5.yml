@@ -1,7 +1,7 @@
 # reinstate regular prayers
 reinstall_regular_prayers: True
 prayers_params:
-  restart_time: 146
+  restart_time: 151
   prop_participating: .30 # assuming 50 % of the Malaysian muslim population
   contact_multiplier: 10.
 mixing:
@@ -105,6 +105,12 @@ mixing:
     - 142
     - 143
     - 144
+    - 145
+    - 146
+    - 147
+    - 148
+    - 149
+    - 150
   other_locations_values:
     - 0.975
     - 0.9675
@@ -205,6 +211,12 @@ mixing:
     - 0.665
     - 0.6525
     - 0.6125
+    - 0.495
+    - 0.6125
+    - 0.6275
+    - 0.65
+    - 0.64
+    - 0.6075
   work_times:
     - 46
     - 47
@@ -305,6 +317,12 @@ mixing:
     - 142
     - 143
     - 144
+    - 145
+    - 146
+    - 147
+    - 148
+    - 149
+    - 150
   work_values:
     - 1.02
     - 1
@@ -405,6 +423,12 @@ mixing:
     - 0.68
     - 0.69
     - 0.7
+    - 0.57
+    - 0.29
+    - 0.36
+    - 0.61
+    - 0.66
+    - 0.72
   school_times:
     - 63
     - 65

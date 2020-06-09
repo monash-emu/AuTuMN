@@ -24,13 +24,13 @@ PAR_PRIORS = [
         "param_name": "compartment_periods_calculated.incubation.total_period",
         "distribution": "gamma",
         "distri_mean": 5.,
-        "distri_ci": [3., 6.]
+        "distri_ci": [4., 6.]
     },
     {
         "param_name": "compartment_periods_calculated.total_infectious.total_period",
         "distribution": "gamma",
         "distri_mean": 7.,
-        "distri_ci": [3., 10.]
+        "distri_ci": [4., 10.]
     },
 ]
 

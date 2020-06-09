@@ -15,7 +15,7 @@ OPTI_PARAMS_PATH = os.path.join(FILE_DIR, "opti_params.yml")
 with open(OPTI_PARAMS_PATH, "r") as yaml_file:
     opti_params = yaml.safe_load(yaml_file)
 
-available_countries = ['malaysia', 'philippines', 'liberia']  # need to fix australia
+available_countries = ['malaysia', 'philippines']
 
 
 def objective_function(decision_variables, mode="by_age", country='malaysia'):
@@ -38,8 +38,8 @@ def objective_function(decision_variables, mode="by_age", country='malaysia'):
     #   scenario 1: after intervention to test immunity
     if mode == "by_age":
         mixing_update = {}
-        for age_group in range(15):
-            mixing_update['age_' + str(age_group) + '_times'] = [10, 14]
+        for age_group in range(16):
+            mixing_update['age_' + str(age_group) + '_times'] = [181, 183]
             mixing_update['age_' + str(age_group) + '_values'] = [1., decision_variables[age_group]]
         params["default"]["mixing"].update(mixing_update)
 
@@ -77,7 +77,6 @@ def objective_function(decision_variables, mode="by_age", country='malaysia'):
     total_nb_deaths = sum(
         models[0].derived_outputs["infection_deathsXall"][first_july_index:]
     )
-
     return herd_immunity, total_nb_deaths, models
 
 
@@ -112,9 +111,9 @@ def has_immunity_been_reached(_model):
 if __name__ == '__main__':
     # looping through all countries and optimisation modes for testing purpose
     # optimisation will have to be performed separately for the different countries and modes.
-
     decision_vars = {
-        'by_age': [1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.],
+        'by_age':
+        [1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.],
         'by_location': {
             "other_locations": .1,
             "school": 1.,

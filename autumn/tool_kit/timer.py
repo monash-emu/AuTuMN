@@ -17,9 +17,9 @@ class Timer:
     def __enter__(self):
         self.start = time()
         msg = self.message[0].upper() + self.message[1:]
-        logger.info(f"\n{msg}...")
+        # logger.info(f"\n{msg}...")
 
     def __exit__(self, *args):
         runtime = time() - self.start
         msg = self.message[0].lower() + self.message[1:]
-        logger.info(f"Finished {msg} in {runtime:0.1f} seconds.")
+        # logger.info(f"Finished {msg} in {runtime:0.1f} seconds.")

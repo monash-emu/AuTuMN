@@ -67,6 +67,22 @@ def test_update_params__array_request__expect_updated():
     assert actual_new_params == expected_new_params
 
 
+def test_update_params__end_of_array_request__expect_updated():
+    old_params = {
+        "foo": 1,
+        "bar": {"baz": 2, "boop": [7, 8, 9], "bing": {"bonk": 3,}},
+        "boop": [4, 5, 6],
+    }
+    update_request = {"boop[-1]": 3}
+    expected_new_params = {
+        "foo": 1,
+        "bar": {"baz": 2, "boop": [7, 8, 9], "bing": {"bonk": 3,}},
+        "boop": [4, 5, 3],
+    }
+    actual_new_params = update_params(old_params, update_request)
+    assert actual_new_params == expected_new_params
+
+
 def test_update_params__deep_array_request__expect_updated():
     old_params = {
         "foo": 1,

@@ -1,4 +1,4 @@
-# schools reopen
+# Workplace contact rates back to pre-covid levels
 mixing:
   other_locations_times:
     - 46
@@ -339,6 +339,8 @@ mixing:
     - 155
     - 156
     - 157
+    - 158. # scenario
+    - 160. # scenario
   work_values:
     - 1.03
     - 0.98
@@ -452,13 +454,19 @@ mixing:
     - 0.72
     - 0.73
     - 0.72
+    - 0.72 # scenario
+    - 1. # scenario
   school_times:
     - 84.
     - 85.
-    - 131.
-    - 133.
+    - 146.
+    - 148.
+    - 160.
+    - 162.
   school_values:
     - 1.
     - 0.
     - 0.
-    - 1.
+    - 0.429  # 6 / 14 to represent five grades and special schools going back
+    - 0.429  # 6 / 14
+    - 1.  # all students back

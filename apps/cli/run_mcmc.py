@@ -40,3 +40,14 @@ def run_mcmc_philippines(burn_in, src_db_path, dest_db_path):
     Run the Philippines COVID model based on the parameters from a a MCMC chain.
     """
     run_full_covid_models_for_mcmc("philippines", burn_in, src_db_path, dest_db_path)
+
+
+@run_mcmc.command("victoria")
+@click.argument("burn_in", type=int)
+@click.argument("src_db_path", type=str)
+@click.argument("dest_db_path", type=str)
+def run_mcmc_victoria(burn_in, src_db_path, dest_db_path):
+    """
+    Run the Victoria COVID model based on the parameters from a a MCMC chain.
+    """
+    run_full_covid_models_for_mcmc("victoria", burn_in, src_db_path, dest_db_path)

@@ -152,7 +152,7 @@ def describe_instances():
             continue
 
         name = ""
-        for tag in aws_instance["Tags"]:
+        for tag in aws_instance.get("Tags", []):
             if tag["Key"] == "Name":
                 name = tag["Value"]
 

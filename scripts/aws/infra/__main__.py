@@ -84,14 +84,18 @@ def run():
 @click.argument("calibration_name", type=str)
 @click.argument("num_chains", type=int)
 @click.argument("run_time", type=int)
-def run_calibrate(job_name, calibration_name, num_chains, run_time):
+@click.option("--dry", is_flag=True)
+def run_calibrate(job_name, calibration_name, num_chains, run_time, dry):
     """
     Run a MCMC calibration
     """
     job_id = f"calibrate-{job_name}"
     script_args = [calibration_name, num_chains, run_time]
     instance_type = aws.get_instance_type(num_chains, 8)
-    _run_job(job_id, instance_type, "run_calibrate.sh", script_args)
+    if dry:
+        print("Dry run:", instance_type)
+    else:
+        _run_job(job_id, instance_type, "run_calibrate.sh", script_args)
 
 
 @run.command("full")

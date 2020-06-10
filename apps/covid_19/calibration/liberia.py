@@ -13,7 +13,31 @@ PAR_PRIORS = [
     {
         'param_name': 'start_time',
         'distribution': 'uniform',
-        'distri_params': [0., 40.]
+        'distri_params': [0., 60.]
+    },
+    {
+        "param_name": "compartment_periods_calculated.incubation.total_period",
+        "distribution": "gamma",
+        "distri_mean": 5.,
+        "distri_ci": [4., 6.]
+    },
+    {
+        "param_name": "compartment_periods_calculated.total_infectious.total_period",
+        "distribution": "gamma",
+        "distri_mean": 7.,
+        "distri_ci": [4., 10.]
+    },
+    # to set time-variant detection
+    {
+        "param_name": "tv_detection_c",
+        "distribution": "uniform",
+        "distri_params": [80, 120.]
+    },
+    {
+        "param_name": "prop_detected_among_symptomatic",
+        "distribution": "beta",
+        "distri_mean": .5,
+        "distri_ci": [.3, .7]
     },
     # Add extra params for negative binomial likelihood
     {
@@ -22,16 +46,21 @@ PAR_PRIORS = [
         'distri_params': [.1, 5.]
     },
     {
-        "param_name": "compartment_periods_calculated.incubation.total_period",
-        "distribution": "gamma",
-        "distri_mean": 5.,
-        "distri_ci": [4., 6.]
-    },
+        'param_name': 'notifications_dispersion_param',
+        'distribution': 'uniform',
+        'distri_params': [.1, 5.]
+    }
 ]
 
+# Case counts:
+case_times = [77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161]
+case_values = [1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 1, 3, 3, 1, 0, 17, 0, 6, 11, 2, 9, 0, 0, 14, 3, 5, 10, 8, 2, 0, 0, 16, 3, 4, 9, 8, 0, 0, 11, 2, 4, 8, 4, 8, 11, 10, 0, 0, 12, 1, 1, 2, 4, 4, 3, 3, 4, 5, 2, 9, 6, 10, 0, 1, 0, 3, 4, 7, 8, 8, 15, 5, 5, 13, 11, 14, 11]
+
 # Death counts:
-death_times = [30, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153]
-death_values = [1, 2, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 3, 1, 0, 4, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 2, 4, 4, 3, 3, 4, 5, 2, 9, 6, 10, 0, 1, 0, 3, 4, 7, 8, 8]
+death_times = [77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161]
+death_values = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 3, 1, 4, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 1, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 2, 0, 0, 0]
+
+
 
 TARGET_OUTPUTS = [
     {
@@ -39,11 +68,17 @@ TARGET_OUTPUTS = [
         "years": death_times,
         "values": death_values,
         "loglikelihood_distri": "negative_binomial",
+    },
+    {
+        "output_key": "notifications",
+        "years": case_times,
+        "values": case_values,
+        "loglikelihood_distri": "negative_binomial",
     }
 ]
 
 
-def run_phl_calibration_chain(max_seconds: int, run_id: int):
+def run_lbr_calibration_chain(max_seconds: int, run_id: int):
     # run_calibration_chain(max_seconds, run_id, country, PAR_PRIORS, TARGET_OUTPUTS, mode='grid_based',
     #                       _grid_info=par_grid, _run_extra_scenarios=False, _multipliers=MULTIPLIERS)
     run_calibration_chain(max_seconds, run_id, country, PAR_PRIORS, TARGET_OUTPUTS, mode='autumn_mcmc',
@@ -51,4 +86,4 @@ def run_phl_calibration_chain(max_seconds: int, run_id: int):
 
 
 if __name__ == "__main__":
-    run_phl_calibration_chain(15 * 60 * 60, 0)  # first argument only relevant for autumn_mcmc mode (time limit in seconds)
+    run_lbr_calibration_chain(15 * 60 * 60, 0)  # first argument only relevant for autumn_mcmc mode (time limit in seconds)

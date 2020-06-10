@@ -3,17 +3,22 @@ country: liberia
 iso3: LBR
 
 scenario_start_time: 140
-end_time: 365.
+end_time: 165.
 
 # calibrated parameters
-start_time: 25.
-contact_rate: 0.02
-tv_detection_c: 150 # inflection point
-tv_detection_sigma: 0
-prop_detected_among_symptomatic: 0.5
+contact_rate: 0.02366381959286445
+start_time: 3
+compartment_periods_calculated:
+  incubation:
+    total_period: 5.627117561785651
+  total_infectious:
+    total_period: 4.629812222907533
+tv_detection_c: 98.14653458951433  # inflection point
+prop_detected_among_symptomatic: 0.06361796942396405
 
 # other country-specific parameters
 tv_detection_b: .05 # shape parameter of the tanh-based curve
+tv_detection_sigma: 0
 
 mixing:
   other_locations_times:

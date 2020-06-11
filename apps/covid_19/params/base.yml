@@ -154,9 +154,9 @@ iso3: null
 # Initial conditions
 infectious_seed: 10
 
-# Running time-related - for COVID-19 model, all times are assumed to be in days and reference time is 1st Jan 2020
+# Running time-related - for COVID-19 model, all times are assumed to be in days and reference time is 31st Dec 2019
 start_time: 40.
-end_time: 350.
+end_time: 550.
 time_step: 1
 
 # Base model definition

@@ -20,7 +20,7 @@ prop_detected_among_symptomatic: .8035
 npi_effectiveness:
   other_locations: .9697829
 
-self_isolation_effect: .434371
+#self_isolation_effect: .434371
 enforced_isolation_effect: .9858
 
 mixing:

@@ -91,7 +91,7 @@ def run_calibrate(job_name, calibration_name, num_chains, run_time, dry):
     """
     job_id = f"calibrate-{job_name}"
     script_args = [calibration_name, num_chains, run_time]
-    instance_type = aws.get_instance_type(num_chains, 8)
+    instance_type = aws.get_instance_type(2 * num_chains, 8)
     if dry:
         print("Dry run:", instance_type)
     else:

@@ -21,7 +21,7 @@ then
 else
     log "Found run name from envar: $RUN_NAME"
     TRIGGER_DOWNSTREAM=yes
-    BURN_IN=BURN_IN_DEFAULT
+    BURN_IN=$BURN_IN_DEFAULT
 fi
 MODEL_NAME=$(echo $RUN_NAME | cut -d'-' -f1)
 JOB_NAME=$MODEL_NAME-$BUILDKITE_BUILD_NUMBER

@@ -14,12 +14,19 @@ from scipy import stats, special
 
 from autumn import constants
 from autumn.db.models import store_database
-from autumn.tool_kit.utils import get_data_hash, find_distribution_params_from_mean_and_ci
+from autumn.tool_kit.utils import (
+    get_data_hash,
+    find_distribution_params_from_mean_and_ci,
+)
 from autumn.tool_kit.scenarios import Scenario
 from autumn.plots.calibration_plots import plot_all_priors
 from autumn.tool_kit.params import update_params
 
-from .utils import find_decent_starting_point, calculate_prior, raise_error_unsupported_prior
+from .utils import (
+    find_decent_starting_point,
+    calculate_prior,
+    raise_error_unsupported_prior,
+)
 
 
 class CalibrationMode:
@@ -72,24 +79,28 @@ class Calibration:
         run_extra_scenarios=True,
     ):
         self.model_name = model_name
-        self.model_builder = model_builder  # a function that builds a new model without running it
+        self.model_builder = (
+            model_builder  # a function that builds a new model without running it
+        )
         self.model_parameters = model_parameters
         self.scenarios = []
         self.initialise_scenario_list()
         self.record_rejected_outputs = record_rejected_outputs
         self.run_extra_scenarios = run_extra_scenarios
-        self.start_time_range = (
-            start_time_range  # if specified, we allow start time to vary to achieve the best fit
-        )
+        self.start_time_range = start_time_range  # if specified, we allow start time to vary to achieve the best fit
         self.best_start_time = None
         self.post_processing = None  # a PostProcessing object containing the required outputs of a model that has been run
         self.priors = priors  # a list of dictionaries. Each dictionary describes the prior distribution for a parameter
-        self.param_list = [self.priors[i]["param_name"] for i in range(len(self.priors))]
-        self.targeted_outputs = (
-            targeted_outputs  # a list of dictionaries. Each dictionary describes a target
-        )
+        self.param_list = [
+            self.priors[i]["param_name"] for i in range(len(self.priors))
+        ]
+        self.targeted_outputs = targeted_outputs  # a list of dictionaries. Each dictionary describes a target
         self.multipliers = multipliers
         self.chain_index = chain_index
+
+        # Set a custom end time for all model runs - there is no point running
+        # the models after the last calibration targets.
+        self.end_time = 2 + max([max(t["years"]) for t in targeted_outputs])
 
         self.specify_missing_prior_params()
 
@@ -97,12 +108,16 @@ class Calibration:
         project_dir = os.path.join(constants.DATA_PATH, model_name)
         run_hash = get_data_hash(model_name, priors, targeted_outputs, multipliers)
         timestamp = datetime.now().strftime("%d-%m-%Y")
-        out_db_dir = os.path.join(project_dir, f"calibration-{model_name}-{run_hash}-{timestamp}")
+        out_db_dir = os.path.join(
+            project_dir, f"calibration-{model_name}-{run_hash}-{timestamp}"
+        )
         os.makedirs(out_db_dir, exist_ok=True)
         db_name = f"outputs_calibration_chain_{self.chain_index}.db"
         self.output_db_path = os.path.join(out_db_dir, db_name)
 
-        self.data_as_array = None  # will contain all targeted data points in a single array
+        self.data_as_array = (
+            None  # will contain all targeted data points in a single array
+        )
 
         self.format_data_as_array()
         self.workout_unspecified_target_sds()  # for likelihood definition
@@ -112,9 +127,13 @@ class Calibration:
         self.run_mode = None
         self.main_table = {}
         self.mcmc_trace = None  # will store the results of the MCMC model calibration
-        self.mle_estimates = {}  # will store the results of the maximum-likelihood calibration
+        self.mle_estimates = (
+            {}
+        )  # will store the results of the maximum-likelihood calibration
 
-        self.evaluated_params_ll = []  # list of tuples:  [(theta_0, ll_0), (theta_1, ll_1), ...]
+        self.evaluated_params_ll = (
+            []
+        )  # list of tuples:  [(theta_0, ll_0), (theta_1, ll_1), ...]
 
         if self.chain_index == 0:
             plot_all_priors(self.priors, out_db_dir)
@@ -137,10 +156,15 @@ class Calibration:
                     )
                 else:
                     distri_params = find_distribution_params_from_mean_and_ci(
-                        p_dict["distribution"], p_dict["distri_mean"], p_dict["distri_ci"]
+                        p_dict["distribution"],
+                        p_dict["distri_mean"],
+                        p_dict["distri_ci"],
                     )
                 if p_dict["distribution"] == "beta":
-                    self.priors[i]["distri_params"] = [distri_params["a"], distri_params["b"]]
+                    self.priors[i]["distri_params"] = [
+                        distri_params["a"],
+                        distri_params["b"],
+                    ]
                 elif p_dict["distribution"] == "gamma":
                     self.priors[i]["distri_params"] = [
                         distri_params["shape"],
@@ -150,14 +174,18 @@ class Calibration:
                     raise_error_unsupported_prior(p_dict["distribution"])
 
     def initialise_scenario_list(self):
-        base_scenario = Scenario(self.model_builder, 0, copy.deepcopy(self.model_parameters))
+        base_scenario = Scenario(
+            self.model_builder, 0, copy.deepcopy(self.model_parameters)
+        )
         self.scenarios = [base_scenario]
         if "scenarios" in self.model_parameters:
             for scenario_index in [
                 sc_i for sc_i in self.model_parameters["scenarios"] if int(sc_i) > 0
             ]:
                 scenario = Scenario(
-                    self.model_builder, scenario_index, copy.deepcopy(self.model_parameters)
+                    self.model_builder,
+                    scenario_index,
+                    copy.deepcopy(self.model_parameters),
                 )
                 self.scenarios.append(scenario)
 
@@ -207,7 +235,9 @@ class Calibration:
             scenario=scenario_index,
         )
 
-    def store_mcmc_iteration_info(self, proposed_params, proposed_loglike, accept, i_run):
+    def store_mcmc_iteration_info(
+        self, proposed_params, proposed_loglike, accept, i_run
+    ):
         """
         Records the MCMC iteration details
         :param proposed_params: the current parameter values
@@ -221,9 +251,14 @@ class Calibration:
         mcmc_run_colnames = self.param_list.copy()
         mcmc_run_colnames.append("loglikelihood")
         mcmc_run_colnames.append("accept")
-        mcmc_run_df = pd.DataFrame(mcmc_run_dict, columns=mcmc_run_colnames, index=[i_run])
+        mcmc_run_df = pd.DataFrame(
+            mcmc_run_dict, columns=mcmc_run_colnames, index=[i_run]
+        )
         store_database(
-            mcmc_run_df, table_name="mcmc_run", run_idx=i_run, database_name=self.output_db_path,
+            mcmc_run_df,
+            table_name="mcmc_run",
+            run_idx=i_run,
+            database_name=self.output_db_path,
         )
 
     def run_model_with_params(self, params):
@@ -231,15 +266,20 @@ class Calibration:
         run the model with a set of params.
         :param params: a list containing the parameter values for update
         """
-
         print("Running iteration " + str(self.iter_num) + "...")
-        param_updates = {}  # self.model_parameters
+        param_updates = {"end_time": self.end_time}
         for i, param_name in enumerate(self.param_list):
             param_updates[param_name] = params[i]
 
-        self.scenarios[0] = Scenario(self.model_builder, 0, copy.deepcopy(self.model_parameters))
-        self.scenarios[0].params["default"] = update_params(self.scenarios[0].params["default"], param_updates)
-        self.scenarios[0].run()
+        base_scenario = Scenario(
+            self.model_builder, 0, copy.deepcopy(self.model_parameters)
+        )
+        self.scenarios[0] = base_scenario
+
+        base_scenario.params["default"] = update_params(
+            base_scenario.params["default"], param_updates
+        )
+        base_scenario.run()
         self.update_post_processing()
 
     def run_extra_scenarios_with_params(self, params):
@@ -320,13 +360,20 @@ class Calibration:
                             raise ValueError(
                                 "variable start time implemented for derived_outputs only"
                             )
-                        model_output = np.array(self.post_processing.generated_outputs[key])
+                        model_output = np.array(
+                            self.post_processing.generated_outputs[key]
+                        )
                     else:
                         indices = []
                         for year in target["years"]:
-                            indices.append(self.scenarios[0].model.times.index(year - time_shift))
+                            indices.append(
+                                self.scenarios[0].model.times.index(year - time_shift)
+                            )
                         model_output = np.array(
-                            [self.post_processing.derived_outputs[key][index] for index in indices]
+                            [
+                                self.post_processing.derived_outputs[key][index]
+                                for index in indices
+                            ]
                         )
 
                     if self.run_mode == "lsm":
@@ -335,7 +382,9 @@ class Calibration:
                         if "loglikelihood_distri" not in target:  # default distribution
                             target["loglikelihood_distri"] = "normal"
                         if target["loglikelihood_distri"] == "normal":
-                            ll += -(0.5 / target["sd"] ** 2) * np.sum((data - model_output) ** 2)
+                            ll += -(0.5 / target["sd"] ** 2) * np.sum(
+                                (data - model_output) ** 2
+                            )
                         elif target["loglikelihood_distri"] == "poisson":
                             for i in range(len(data)):
                                 ll += (
@@ -358,7 +407,9 @@ class Calibration:
                                 p = mu / (mu + n)
                                 ll += stats.nbinom.logpmf(data[i], n, 1.0 - p)
                         else:
-                            raise ValueError("Distribution not supported in loglikelihood_distri")
+                            raise ValueError(
+                                "Distribution not supported in loglikelihood_distri"
+                            )
 
                 if (ll > best_ll and self.run_mode != "lsm") or (
                     ll < best_ll and self.run_mode == "lsm"
@@ -414,33 +465,51 @@ class Calibration:
                         target["cis"][0][1] - target["cis"][0][0]
                     ) / 4.0
                 else:
-                    self.targeted_outputs[i]["sd"] = 0.5 / 4.0 * np.mean(target["values"])
+                    self.targeted_outputs[i]["sd"] = (
+                        0.5 / 4.0 * np.mean(target["values"])
+                    )
 
     def workout_unspecified_jumping_sds(self):
         for i, prior_dict in enumerate(self.priors):
             if "jumping_sd" not in prior_dict.keys():
                 if prior_dict["distribution"] == "uniform":
-                    prior_width = prior_dict["distri_params"][1] - prior_dict["distri_params"][0]
+                    prior_width = (
+                        prior_dict["distri_params"][1] - prior_dict["distri_params"][0]
+                    )
                 elif prior_dict["distribution"] == "lognormal":
                     mu = prior_dict["distri_params"][0]
                     sd = prior_dict["distri_params"][1]
-                    quantile_2_5 = math.exp(mu + math.sqrt(2) * sd * special.erfinv(2 * 0.025 - 1))
-                    quantile_97_5 = math.exp(mu + math.sqrt(2) * sd * special.erfinv(2 * 0.975 - 1))
+                    quantile_2_5 = math.exp(
+                        mu + math.sqrt(2) * sd * special.erfinv(2 * 0.025 - 1)
+                    )
+                    quantile_97_5 = math.exp(
+                        mu + math.sqrt(2) * sd * special.erfinv(2 * 0.975 - 1)
+                    )
                     prior_width = quantile_97_5 - quantile_2_5
                 elif prior_dict["distribution"] == "beta":
                     quantile_2_5 = stats.beta.ppf(
-                        0.025, prior_dict["distri_params"][0], prior_dict["distri_params"][1]
+                        0.025,
+                        prior_dict["distri_params"][0],
+                        prior_dict["distri_params"][1],
                     )
                     quantile_97_5 = stats.beta.ppf(
-                        0.975, prior_dict["distri_params"][0], prior_dict["distri_params"][1]
+                        0.975,
+                        prior_dict["distri_params"][0],
+                        prior_dict["distri_params"][1],
                     )
                     prior_width = quantile_97_5 - quantile_2_5
                 elif prior_dict["distribution"] == "gamma":
                     quantile_2_5 = stats.gamma.ppf(
-                        0.025, prior_dict["distri_params"][0], 0.0, prior_dict["distri_params"][1]
+                        0.025,
+                        prior_dict["distri_params"][0],
+                        0.0,
+                        prior_dict["distri_params"][1],
                     )
                     quantile_97_5 = stats.gamma.ppf(
-                        0.975, prior_dict["distri_params"][0], 0.0, prior_dict["distri_params"][1]
+                        0.975,
+                        prior_dict["distri_params"][0],
+                        0.0,
+                        prior_dict["distri_params"][1],
                     )
                     prior_width = quantile_97_5 - quantile_2_5
                 else:
@@ -521,13 +590,17 @@ class Calibration:
         print(self.mle_estimates)
         # self.dump_mle_params_to_yaml_file()
 
-    def run_autumn_mcmc(self, n_iterations: int, n_burned: int, n_chains: int, available_time):
+    def run_autumn_mcmc(
+        self, n_iterations: int, n_burned: int, n_chains: int, available_time
+    ):
         """
         Run our hand-rolled MCMC algoruthm to calibrate model parameters.
         """
         start_time = time()
         if n_chains > 1:
-            msg = "Autumn MCMC method does not support multiple-chain runs at the moment."
+            msg = (
+                "Autumn MCMC method does not support multiple-chain runs at the moment."
+            )
             raise ValueError(msg)
 
         self.mcmc_trace = {}  # will store param trace and loglikelihood evolution
@@ -537,7 +610,9 @@ class Calibration:
         self.mcmc_trace["loglikelihood"] = []
 
         last_accepted_params = None
-        last_acceptance_quantity = None  # acceptance quantity is defined as loglike + logprior
+        last_acceptance_quantity = (
+            None  # acceptance quantity is defined as loglike + logprior
+        )
         last_acceptance_loglike = None
         for i_run in range(n_iterations + n_burned):
             # Propose new paramameter set.
@@ -559,7 +634,9 @@ class Calibration:
             if is_auto_accept:
                 accept = True
             else:
-                accept_prob = np.exp(proposed_acceptance_quantity - last_acceptance_quantity)
+                accept_prob = np.exp(
+                    proposed_acceptance_quantity - last_acceptance_quantity
+                )
                 accept = np.random.binomial(n=1, p=accept_prob, size=1) > 0
 
             # Update stored quantities.
@@ -571,7 +648,9 @@ class Calibration:
             self.update_mcmc_trace(last_accepted_params, last_acceptance_loglike)
 
             # Store model outputs
-            self.store_mcmc_iteration_info(proposed_params, proposed_loglike, accept, i_run)
+            self.store_mcmc_iteration_info(
+                proposed_params, proposed_loglike, accept, i_run
+            )
             if accept or self.record_rejected_outputs:
                 self.store_model_outputs(0)
 
@@ -606,7 +685,11 @@ class Calibration:
         param_values = []
         for i, param_name in enumerate(self.param_list):
             param_values.append(
-                list(np.linspace(grid_info[i]["lower"], grid_info[i]["upper"], grid_info[i]["n"]))
+                list(
+                    np.linspace(
+                        grid_info[i]["lower"], grid_info[i]["upper"], grid_info[i]["n"]
+                    )
+                )
             )
 
         all_combinations = list(product(*param_values))
@@ -616,7 +699,9 @@ class Calibration:
             logprior = self.logprior(params)
             a_posteriori_logproba = loglike + logprior
 
-            self.store_mcmc_iteration_info(params, a_posteriori_logproba, False, self.iter_num)
+            self.store_mcmc_iteration_info(
+                params, a_posteriori_logproba, False, self.iter_num
+            )
             if self.record_rejected_outputs:
                 self.store_model_outputs(0)
 
@@ -633,7 +718,9 @@ class Calibration:
             prev_params = []
             for prior_dict in self.priors:
                 if prior_dict["param_name"] in self.model_parameters["default"]:
-                    prev_params.append(self.model_parameters["default"][prior_dict["param_name"]])
+                    prev_params.append(
+                        self.model_parameters["default"][prior_dict["param_name"]]
+                    )
                 else:
                     prev_params.append(find_decent_starting_point(prior_dict))
 
@@ -642,7 +729,9 @@ class Calibration:
         for i, prior_dict in enumerate(self.priors):
             # Work out bounds for acceptable values, using the support of the prior distribution
             lower_bound, upper_bound = get_parameter_bounds_from_priors(prior_dict)
-            sample = lower_bound - 10.0  # deliberately initialise out of parameter scope
+            sample = (
+                lower_bound - 10.0
+            )  # deliberately initialise out of parameter scope
             while not lower_bound <= sample <= upper_bound:
                 sample = np.random.normal(
                     loc=prev_params[i], scale=prior_dict["jumping_sd"], size=1

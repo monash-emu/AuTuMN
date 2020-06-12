@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
-pushd ./scripts/aws
+SCRIPT_DIR=$(dirname $0)
+pushd $SCRIPT_DIR
 if [ ! -d "env" ]
 then
     echo "Installing requirements"

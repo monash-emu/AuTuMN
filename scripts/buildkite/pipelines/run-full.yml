@@ -1,0 +1,32 @@
+steps:
+  - block: "Full model run settings"
+    if: 'build.env("RUN_NAME") !~ /\S+/'
+    fields:
+      - text: "Calibration run name"
+        key: "run-name"
+        hint: "Which calibration run should be used?"
+        required: true
+
+      - text: "Burn-in"
+        key: "full-burn-in"
+        hint: "How many MCMC iterations should be burned?"
+        required: false
+        default: "300"
+
+      - select: "Trigger PowerBI processing"
+        key: "trigger-downstream"
+        hint: Should this task trigger PowerBI processing when it is done?
+        required: false
+        default: "yes"
+        options:
+          - label: "Yes"
+            value: "yes"
+          - label: "No"
+            value: "no"
+
+  - command: "./scripts/buildkite/tasks/full.sh"
+    label: "Run full models"
+    key: run-full
+  - command: ./scripts/aws/run.sh website
+    label: Update website
+    depends_on: run-full

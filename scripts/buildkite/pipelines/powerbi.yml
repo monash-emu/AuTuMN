@@ -1,0 +1,15 @@
+steps:
+  - block: "PowerBI processing settings"
+    if: 'build.env("RUN_NAME") !~ /\S+/'
+    fields:
+      - text: "Calibration run name"
+        key: "run-name"
+        hint: "Which calibration run should be used?"
+        required: true
+
+  - command: "./scripts/buildkite/tasks/powerbi.sh"
+    label: "Run PowerBI processing"
+    key: run-powerbi
+  - command: ./scripts/aws/run.sh website
+    label: Update website
+    depends_on: run-powerbi

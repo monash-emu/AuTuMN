@@ -1,0 +1,45 @@
+to get things started for autumn covid, have the following programs on your computer
+
+conemu -useful for using all sorts of bash, cmd and gitbash type environments
+anaconda3 -make sure it is on the system path. this is crucial
+anaconda prompt, should come with the anaconda3 package
+open anaconda promtp -after installing anaconda3, you get this from the program file dropdown, or from a quick search/(or powershell etc if this is easier for you) use python to load all of the requirements by
+
+navigating to the file AuTuMN
+pip install -r requirements.txt
+otherwise this can be done one by one in the spyder console
+
+open anaconda navigator
+set up an environment in the environment tab, and give it a name; I called mine autmnenv
+launch spyder
+set folder to AuTuMN\apps
+open  "run_pycharm.py"
+within file "run_pycharm.py" there is a choice of models to run
+uncomment the one you want to run and run the file
+
+go to AuTuMN/data to find your outputs ***
+
+when wanting to modify parameters for the scenarios:
+the hierarchy starts with AuTuMN/apps/COVID-19/params/base.yml
+this can be overwritten for each country inside the file ~/params/[country name]
+default is the baseline scenario then they are named scenario1, 2, 3 etc.
+
+when you run_pycharm.py, it points to the base.yml then is overwritten by country default (for country baseline) then the scenarios one by one.
+
+to conduct uncertainty runs there is another.py file
+AuTuMN/apps/process_mcmc_outputs.py, which I don't know how to run yet
+
+
+
+
+*** output is found in  AuTuMN/data 
+
+these can be viewed directly as jpeg files but you can also see them in streamlit
+
+open a powershell (using conemu)
+write conda activate autmnenv  (for james this is conda activate summer (he must have called the environment by this name)
+
+navigate to directory AuTuMN
+enter
+streamlit run plots.py (this sits at AuTuMN/plots.py)
+

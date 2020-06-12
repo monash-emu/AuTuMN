@@ -20,7 +20,7 @@ sudo chown -R ubuntu:ubuntu ~/code
 cd ~/code
 git pull
 . ./env/bin/activate
-pip install -r requirements.txt
+pip install --quiet -r requirements.txt
 
 log "Dowloading full model runs for $RUN_NAME"
 aws s3 cp --recursive s3://autumn-calibrations/$RUN_NAME/data/full_model_runs data/full_model_runs

@@ -32,7 +32,7 @@ git pull
 
 log "Ensuring latest requirements are installed."
 . ./env/bin/activate
-pip install -r requirements.txt
+pip install --quiet -r requirements.txt
 
 GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 GIT_COMMIT=$(git rev-parse HEAD)

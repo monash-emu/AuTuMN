@@ -30,7 +30,7 @@ git checkout $GIT_COMMIT
 
 log "Ensuring latest requirements are installed."
 . ./env/bin/activate
-pip install -r requirements.txt
+pip install --quiet -r requirements.txt
 
 log "Downloading MCMC databases"
 aws s3 cp --recursive s3://autumn-calibrations/$RUN_NAME/data/calibration_outputs data/calibration_outputs

@@ -18,13 +18,15 @@ class Country:
     VICTORIA = "victoria"
     LIBERIA = "liberia"
     MANILA = "manila"
+    CALABARZON = "calabarzon"
     COUNTRIES = [
         AUSTRALIA,
         PHILIPPINES,
         MALAYSIA,
         VICTORIA,
         LIBERIA,
-        MANILA
+        MANILA,
+        CALABARZON
     ]
 
 

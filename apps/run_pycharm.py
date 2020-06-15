@@ -14,7 +14,8 @@ RUN_DESCRIPTION = "trying to x and y the z"
 # covid_19.mys.run_model(RUN_NAME)
 # covid_19.lbr.run_model(RUN_NAME)
 # covid_19.aus.run_model(RUN_NAME, RUN_DESCRIPTION)
-covid_19.vic.run_model(RUN_NAME, RUN_DESCRIPTION)
+# covid_19.vic.run_model(RUN_NAME, RUN_DESCRIPTION)
+covid_19.man.run_model(RUN_NAME)
 
 # Simple SIR model for demonstration
 # sir_example.aus.run_model(RUN_NAME, RUN_DESCRIPTION)

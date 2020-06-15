@@ -73,7 +73,7 @@ aws s3 cp --recursive data/calibration_outputs s3://autumn-calibrations/$RUN_NAM
 
 log "Plotting MCMC outputs"
 mkdir -p plots
-python -m apps db plot-mcmc data/pruned plots
+python -m apps db plot-mcmc data/calibration_outputs plots
 log "Uploading MCMC output plots"
 aws s3 cp --recursive plots s3://autumn-calibrations/$RUN_NAME/plots
 

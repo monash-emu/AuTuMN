@@ -5,7 +5,7 @@ TRIGGER_DOWNSTREAM=$(buildkite-agent meta-data get trigger-downstream)
 MODEL_NAME=$(buildkite-agent meta-data get model-name)
 NUM_CHAINS=$(buildkite-agent meta-data get mcmc-num-chains)
 RUN_TIME_HOURS=$(buildkite-agent meta-data get mcmc-runtime)
-RUN_TIME=$(python -c "print(int($RUN_TIME_HOURS * 3600))")
+RUN_TIME=$(python3 -c "print(int($RUN_TIME_HOURS * 3600))")
 JOB_NAME=$MODEL_NAME-$BUILDKITE_BUILD_NUMBER
 
 function log {

@@ -27,13 +27,13 @@ def get_pretty_name(s: str):
     """
     Get a pretty run name from the slug stored in AWS S3
     """
-    if "-" in s:
+    try:
         model_name, timestamp, branch, commit = s.split("-")
         run_dt = datetime.fromtimestamp(int(timestamp))
         run_dt_str = run_dt.strftime("%a at %H:%M %d-%m-%Y")
         model_name = model_name.title()
         return f"{model_name} {run_dt_str} ({branch} {commit[:7]})"
-    else:
+    except:
         return s.title()
 
 

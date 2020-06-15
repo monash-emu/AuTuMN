@@ -4,6 +4,7 @@ Pipfile.lock
 venv/
 env/
 .pytest_cache
+*.cprof
 
 # IDE stuff
 .idea

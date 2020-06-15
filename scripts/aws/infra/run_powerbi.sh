@@ -87,7 +87,6 @@ do
 done
 log "All pruning operations completed"
 
-
 log "Collating databases"
 mkdir -p data/powerbi
 python -m apps db collate data/pruned/ data/powerbi/collated.db

@@ -90,7 +90,7 @@ def plot_posterior(
     plot_config={},
 ):
     chosen_param = parameter_selector(mcmc_tables[0])
-    num_bins = st.sidebar.slider("Number of bins", 1, 50, 10)
+    num_bins = st.sidebar.slider("Number of bins", 1, 50, 16)
     plots.plot_posterior(plotter, mcmc_tables, chosen_param, num_bins)
 
 

@@ -71,4 +71,10 @@ mkdir -p data/calibration_outputs
 find data -name *calibration*.db -exec mv -t data/calibration_outputs/ {} +
 aws s3 cp --recursive data/calibration_outputs s3://autumn-calibrations/$RUN_NAME/data/calibration_outputs
 
+log "Plotting MCMC outputs"
+mkdir -p plots
+python -m apps db plot-mcmc data/pruned plots
+log "Uploading MCMC output plots"
+aws s3 cp --recursive plots s3://autumn-calibrations/$RUN_NAME/plots
+
 log "Calibration finished for $RUN_NAME"

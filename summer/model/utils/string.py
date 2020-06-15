@@ -1,6 +1,7 @@
 """
 String manipulation functions
 """
+from functools import lru_cache
 
 
 def create_stratum_name(stratification_name, stratum_name, joining_string="X"):
@@ -47,9 +48,9 @@ def extract_x_positions(parameter, joining_string="X"):
     :return: list
         list of all the indices for where the X character occurs in the string, along with the total length of the list
     """
-    return [loc for loc in range(len(parameter)) if parameter[loc] == joining_string] + [
-        len(parameter)
-    ]
+    return [
+        loc for loc in range(len(parameter)) if parameter[loc] == joining_string
+    ] + [len(parameter)]
 
 
 def extract_reversed_x_positions(parameter):
@@ -63,27 +64,16 @@ def extract_reversed_x_positions(parameter):
     return result
 
 
-def find_stem(stratified_string, joining_string="X"):
+@lru_cache(maxsize=None)
+def find_stem(stratified_string: str):
     """
     find the stem of the compartment name as the text leading up to the first occurrence of the joining string
-        (usually "X")
     should run slightly faster than using find_name_components
-
-    :param stratified_string: str
-        the stratified string for the compartment or parameter name
-    :param joining_string: str
-        the string of interest whose character position will be used to truncate the stratified string
-    :return: int
-        the point at which the first occurrence of the joining string occurs
     """
-    index = (
-        stratified_string.find(joining_string)
-        if joining_string in stratified_string
-        else len(stratified_string)
-    )
-    return stratified_string[:index]
+    return stratified_string.split("X")[0]
 
 
+@lru_cache(maxsize=None)
 def find_name_components(compartment):
     """
     extract all the components of a stratified compartment or parameter name, including the stem
@@ -104,7 +94,9 @@ def find_name_components(compartment):
     ]
 
 
-def find_stratum_index_from_string(compartment, stratification, remove_stratification_name=True):
+def find_stratum_index_from_string(
+    compartment, stratification, remove_stratification_name=True
+):
     """
     finds the stratum which the compartment (or parameter) name falls in when provided with the compartment name and the
         name of the stratification of interest
@@ -126,5 +118,7 @@ def find_stratum_index_from_string(compartment, stratification, remove_stratific
         if stratification in name
     ][0]
     return (
-        stratum_name[stratum_name.find("_") + 1 :] if remove_stratification_name else stratum_name
+        stratum_name[stratum_name.find("_") + 1 :]
+        if remove_stratification_name
+        else stratum_name
     )

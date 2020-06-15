@@ -4,7 +4,13 @@ import matplotlib.pyplot
 import numpy as np
 import pandas as pd
 
-from ..constants import Compartment, Flow, BirthApproach, Stratification, IntegrationType
+from ..constants import (
+    Compartment,
+    Flow,
+    BirthApproach,
+    Stratification,
+    IntegrationType,
+)
 from .utils.solver import solve_ode
 from .utils.validation import validate_model
 from .utils import (
@@ -138,9 +144,19 @@ class EpiModel:
         Thise model is unstratified, but has characteristics required to support stratification.
         """
         self.transition_flows = pd.DataFrame(
-            columns=("type", "parameter", "origin", "to", "implement", "strain", "force_index")
+            columns=(
+                "type",
+                "parameter",
+                "origin",
+                "to",
+                "implement",
+                "strain",
+                "force_index",
+            )
         )
-        self.death_flows = pd.DataFrame(columns=("type", "parameter", "origin", "implement"))
+        self.death_flows = pd.DataFrame(
+            columns=("type", "parameter", "origin", "implement")
+        )
         self.all_stratifications = {}
         self.customised_flow_functions = {}
         self.time_variants = {}
@@ -207,7 +223,9 @@ class EpiModel:
         """
         flow["implement"] = flow.get("implement", len(self.all_stratifications))
         flow_data = {key: value for key, value in flow.items() if key != "function"}
-        self.transition_flows = self.transition_flows.append(flow_data, ignore_index=True)
+        self.transition_flows = self.transition_flows.append(
+            flow_data, ignore_index=True
+        )
         if flow["type"] == Flow.CUSTOM:
             idx = self.transition_flows.shape[0] - 1
             self.customised_flow_functions[idx] = flow["function"]
@@ -247,7 +265,9 @@ class EpiModel:
         here just find all of the compartments that are infectious and prepare some list indices to speed integration
         """
         self.infectious_indices = self.find_all_infectious_indices()
-        self.transition_indices_to_implement = self.find_transition_indices_to_implement()
+        self.transition_indices_to_implement = (
+            self.find_transition_indices_to_implement()
+        )
         self.death_indices_to_implement = self.find_death_indices_to_implement()
         self.prepare_lookup_tables()
 
@@ -265,7 +285,9 @@ class EpiModel:
         self.death_flows_dict = self.death_flows.to_dict()
 
         # Create mapping from compartment name to index.
-        self.compartment_idx_lookup = {name: idx for idx, name in enumerate(self.compartment_names)}
+        self.compartment_idx_lookup = {
+            name: idx for idx, name in enumerate(self.compartment_names)
+        }
 
     def find_all_infectious_indices(self):
         """
@@ -275,7 +297,10 @@ class EpiModel:
             booleans for whether each compartment is infectious or not
         """
         return convert_boolean_list_to_indices(
-            [find_stem(comp) in self.infectious_compartment for comp in self.compartment_names]
+            [
+                find_stem(comp) in self.infectious_compartment
+                for comp in self.compartment_names
+            ]
         )
 
     def find_transition_indices_to_implement(self):
@@ -324,7 +349,11 @@ class EpiModel:
             return self.apply_all_flow_types_to_odes(compartment_values, time)
 
         self.outputs = solve_ode(
-            integration_type, ode_func, np.array(self.compartment_values), self.times, solver_args
+            integration_type,
+            ode_func,
+            np.array(self.compartment_values),
+            self.times,
+            solver_args,
         )
 
         # Check that all compartment values are >= 0
@@ -357,8 +386,12 @@ class EpiModel:
         flow_rates = np.zeros(len(self.compartment_names))
         flow_rates = self.apply_transition_flows(flow_rates, compartment_values, time)
         # Apply deaths before births so that we can use 'total deaths' to calculate the birth rate, if required.
-        flow_rates = self.apply_compartment_death_flows(flow_rates, compartment_values, time)
-        flow_rates = self.apply_universal_death_flow(flow_rates, compartment_values, time)
+        flow_rates = self.apply_compartment_death_flows(
+            flow_rates, compartment_values, time
+        )
+        flow_rates = self.apply_universal_death_flow(
+            flow_rates, compartment_values, time
+        )
         flow_rates = self.apply_birth_rate(flow_rates, compartment_values, time)
         flow_rates = self.apply_change_rates(flow_rates, compartment_values, time)
         return flow_rates
@@ -429,9 +462,15 @@ class EpiModel:
         flow_type = self.transition_flows_dict["type"][n_flow]
         if flow_type == Flow.CUSTOM:
             custom_flow_func = self.customised_flow_functions[n_flow]
-            return parameter_value * custom_flow_func(self, n_flow, time, compartment_values)
+            return parameter_value * custom_flow_func(
+                self, n_flow, time, compartment_values
+            )
         else:
-            return parameter_value * compartment_values[origin_idx] * infectious_population_factor
+            return (
+                parameter_value
+                * compartment_values[origin_idx]
+                * infectious_population_factor
+            )
 
     def apply_compartment_death_flows(self, flow_rates, compartment_values, time):
         """
@@ -440,7 +479,9 @@ class EpiModel:
         :parameters and return: see previous method apply_all_flow_types_to_odes
         """
         for n_flow in self.death_indices_to_implement:
-            net_flow = self.find_net_infection_death_flow(n_flow, time, compartment_values)
+            net_flow = self.find_net_infection_death_flow(
+                n_flow, time, compartment_values
+            )
             origin_name = self.death_flows_dict["origin"][n_flow]
             origin_idx = self.compartment_idx_lookup[origin_name]
             flow_rates[origin_idx] -= net_flow
@@ -613,7 +654,9 @@ class EpiModel:
             for ntime, time in enumerate(self.times):
                 self.restore_past_state(time)
                 for n_flow in transition_indices:
-                    net_flow = self.find_net_transition_flow(n_flow, time, self.compartment_values)
+                    net_flow = self.find_net_transition_flow(
+                        n_flow, time, self.compartment_values
+                    )
                     self.derived_outputs[output][ntime] += net_flow
 
     def calculate_post_integration_death_outputs(self, death_output):
@@ -632,7 +675,9 @@ class EpiModel:
         for ntime, time in enumerate(self.times):
             self.restore_past_state(time)
             for n_flow in death_indices:
-                net_flow = self.find_net_infection_death_flow(n_flow, time, self.compartment_values)
+                net_flow = self.find_net_infection_death_flow(
+                    n_flow, time, self.compartment_values
+                )
                 self.derived_outputs[category_name][ntime] += net_flow
 
     def calculate_post_integration_function_outputs(self):
@@ -643,9 +688,9 @@ class EpiModel:
             self.derived_outputs[output] = [0.0] * len(self.times)
             for ntime, time in enumerate(self.times):
                 self.restore_past_state(time)
-                self.derived_outputs[output][ntime] = self.derived_output_functions[output](
-                    self, time
-                )
+                self.derived_outputs[output][ntime] = self.derived_output_functions[
+                    output
+                ](self, time)
 
     def restore_past_state(self, time):
         """
@@ -659,25 +704,23 @@ class EpiModel:
         self.compartment_values = self.outputs[self.times.index(time)]
         self.update_tracked_quantities(self.compartment_values)
 
-    def find_output_transition_indices(self, output):
+    def find_output_transition_indices(self, output: str):
         """
-        find the transition indices that are relevant to a particular output evaluation request from the
-            output_connections dictionary created from the user's request
-
-        :param output: str
-            name of the output of interest
-        :return: list
-            integers referencing the transition flows relevant to this output connection
+        Find the transition indices that are relevant to a particular output evaluation request.
+        A flow is "Relevant" if the flow is impelemented, has a matching origin and target,
+        and something to to with "origin condition" or "to condition" which I don't understand.
+        Returns a list of idxs for the transition flows DataFrame.
         """
-
-        def condition(idx):
-            implement = self.transition_flows_dict["implement"][idx]
-            origin = self.transition_flows_dict["origin"][idx]
-            target = self.transition_flows_dict["to"][idx]
-            check_implement = implement == len(self.all_stratifications)
+        num_flows = len(self.transition_flows)
+        flow_idxs = []
+        for flow_idx in range(num_flows):
             output_conn = self.output_connections[output]
+            implement = self.transition_flows_dict["implement"][flow_idx]
+            origin = self.transition_flows_dict["origin"][flow_idx]
+            target = self.transition_flows_dict["to"][flow_idx]
             check_origin_stem = find_stem(origin) == output_conn["origin"]
             check_target_stem = find_stem(target) == output_conn["to"]
+            check_implement = implement == len(self.all_stratifications)
             check_origin_condition = "origin_condition" not in output_conn or (
                 "origin_condition" in output_conn
                 and all(
@@ -694,15 +737,17 @@ class EpiModel:
                 )
                 or output_conn["to_condition"] == ""
             )
-            return (
+            is_transition_flow_for_output = (
                 check_implement
                 and check_origin_stem
                 and check_target_stem
                 and check_origin_condition
                 and check_target_condition
             )
+            if is_transition_flow_for_output:
+                flow_idxs.append(flow_idx)
 
-        return [i for i in range(len(self.transition_flows)) if condition(i)]
+        return flow_idxs
 
     def find_output_death_indices(self, _death_output):
         """

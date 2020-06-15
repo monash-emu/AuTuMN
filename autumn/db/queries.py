@@ -1,9 +1,12 @@
 """
 Functions for extracting data from a database.
 """
+from typing import List
+
 import numpy as np
 
 from autumn.curve import scale_up_function
+from .database import Database
 
 
 def get_bcg_coverage(database, country_iso_code):
@@ -17,7 +20,9 @@ def get_bcg_coverage(database, country_iso_code):
     :return: dict
         pandas data frame with columns years and one row containing the values of BCG coverage in that year
     """
-    _bcg_coverage = database.db_query("BCG", conditions=["ISO_code='" + country_iso_code + "'"])
+    _bcg_coverage = database.db_query(
+        "BCG", conditions=["ISO_code='" + country_iso_code + "'"]
+    )
     _bcg_coverage = _bcg_coverage.filter(
         items=[column for column in _bcg_coverage.columns if column.isdigit()]
     )
@@ -111,15 +116,9 @@ def extract_demo_data(_input_database, data_type, country_iso_code):
     return demo_data_frame
 
 
-def prepare_age_breakpoints(breakpoints):
-    """
-    temporary function - should merge in with functions from the summer module
-
-    :param breakpoints:
-    :return:
-    """
-    breakpoints.sort()
-    return breakpoints if 0 in breakpoints else [0] + breakpoints
+def clean_age_breakpoints(breakpoints):
+    bs = sorted(breakpoints)
+    return bs if 0 in breakpoints else [0, *bs]
 
 
 def find_death_rates(_input_database, country_iso_code):
@@ -145,12 +144,20 @@ def find_death_rates(_input_database, country_iso_code):
     )
 
     # cut off last row of population data because it goes out five years longer
-    total_population_data = total_population_data.loc[: absolute_death_data.shape[0] - 1, :]
+    total_population_data = total_population_data.loc[
+        : absolute_death_data.shape[0] - 1, :
+    ]
 
     # cut off last column of both data frames because they include the years, but retain the data as a list
-    mortality_years = [float(i) + 2.5 for i in list(total_population_data.loc[:, "Period"])]
-    total_population_data = total_population_data.iloc[:, : total_population_data.shape[1] - 1]
-    absolute_death_data = absolute_death_data.iloc[:, : absolute_death_data.shape[1] - 1]
+    mortality_years = [
+        float(i) + 2.5 for i in list(total_population_data.loc[:, "Period"])
+    ]
+    total_population_data = total_population_data.iloc[
+        :, : total_population_data.shape[1] - 1
+    ]
+    absolute_death_data = absolute_death_data.iloc[
+        :, : absolute_death_data.shape[1] - 1
+    ]
 
     # make sure all floats, as seem to have become str somewhere
     absolute_death_data = absolute_death_data.astype(float)
@@ -208,11 +215,15 @@ def find_age_weights(
             if data_upper <= lower_value:
                 weightings[n_data_break] -= 1.0
             elif data_lower < lower_value < data_upper:
-                weightings[n_data_break] -= 1.0 - (data_upper - lower_value) / break_width
+                weightings[n_data_break] -= (
+                    1.0 - (data_upper - lower_value) / break_width
+                )
 
             # then consider the upper value of the age bracket and how much of the data it excludes
             if data_lower < upper_value < data_upper:
-                weightings[n_data_break] -= 1.0 - (upper_value - data_lower) / break_width
+                weightings[n_data_break] -= (
+                    1.0 - (upper_value - data_lower) / break_width
+                )
             elif upper_value <= data_lower:
                 weightings[n_data_break] -= 1.0
 
@@ -235,7 +246,7 @@ def find_age_specific_death_rates(input_database, age_breakpoints, country_iso_c
     :return: dict
         keys the age breakpoints, values lists for the death rates with time
     """
-    age_breakpoints = prepare_age_breakpoints(age_breakpoints)
+    age_breakpoints = clean_age_breakpoints(age_breakpoints)
 
     # gather up the death rates with the brackets from the data
     death_rates, years = find_death_rates(input_database, country_iso_code)
@@ -259,32 +270,21 @@ def find_age_specific_death_rates(input_database, age_breakpoints, country_iso_c
     return age_death_rates, years
 
 
-def find_population_by_agegroup(input_database, age_breakpoints, country_iso_code):
+def find_population_by_agegroup(
+    input_database: Database, age_breakpoints: List[float], country_iso_code: str
+):
     """
-    find non-tb-related death rates from un data that are specific to the age groups requested for the model regardless
-    of the age brackets for which data are available
-
-    :param age_breakpoints: list
-        integers for the age breakpoints being used in the model
-    :param country_iso_code: str
-        the three digit iso3 code for the country of interest
-    :return: dict
-        keys the age breakpoints, values lists for the death rates with time
+    Find population for age brackets.
+    Returns a dict of lists.
     """
-    age_breakpoints = prepare_age_breakpoints(age_breakpoints)
-
-    # gather up the death rates with the brackets from the data
+    age_breakpoints = clean_age_breakpoints(age_breakpoints)
+    data_type = "total_population_mapped"
     total_population_data = extract_demo_data(
-        input_database, "total_population_mapped", country_iso_code
+        input_database, data_type, country_iso_code
     )
-
     years = list(total_population_data["Period"])
     populations = total_population_data.drop(["Period"], axis=1)
-
-    # find the weightings to each age group in the data from the requested brackets
     age_weights = find_age_weights(age_breakpoints, populations, normalise=False)
-
-    # calculate the list of values for the weighted death rates for each modelled age category
     age_populations = {}
     for age_break in age_breakpoints:
         age_populations[age_break] = [0.0] * populations.shape[0]
@@ -292,14 +292,21 @@ def find_population_by_agegroup(input_database, age_breakpoints, country_iso_cod
             age_populations[age_break][i_year] = sum(
                 [
                     float(pop) * weight
-                    for pop, weight in zip(list(populations.iloc[i_year]), age_weights[age_break])
+                    for pop, weight in zip(
+                        list(populations.iloc[i_year]), age_weights[age_break]
+                    )
                 ]
             )
+
     return age_populations, years
 
 
 def get_pop_mortality_functions(
-    input_database, age_breaks, country_iso_code, emigration_value=0.0, emigration_start_time=1980.0
+    input_database,
+    age_breaks,
+    country_iso_code,
+    emigration_value=0.0,
+    emigration_start_time=1980.0,
 ):
     """
     use the mortality rate data that can be obtained from find_age_specific_death_rates to fit time-variant mortality

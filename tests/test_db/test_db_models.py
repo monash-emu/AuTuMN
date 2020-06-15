@@ -8,6 +8,7 @@ from pandas.util.testing import assert_frame_equal
 from ..utils import get_mock_model
 
 from autumn.db import Database
+
 # from autumn.db.models import (
 #     unpivot_outputs,
 #     load_model_scenarios,
@@ -17,6 +18,7 @@ from autumn.db import Database
 #     store_database,
 #     create_power_bi_outputs,
 # )
+
 
 @pytest.mark.skip("Old code, needs to be re-written")
 def test_unpivot_outputs(tmp_path):
@@ -92,6 +94,7 @@ def test_unpivot_outputs(tmp_path):
     ]
     expected_df = pd.DataFrame(expected_data, columns=expected_columns)
     assert_frame_equal(expected_df, unpivoted_df)
+
 
 @pytest.mark.skip("Old code, needs to be re-written")
 def test_collate_outputs_powerbi(tmp_path):
@@ -258,6 +261,7 @@ def test_collate_outputs_powerbi(tmp_path):
     assert_frame_equal(expected_derived_ouputs_df, derived_outputs_df)
     assert_frame_equal(expected_pbi_outputs_df, pbi_outputs_df)
 
+
 @pytest.mark.skip("Old code, needs to be re-written")
 def test_collate_outputs(tmp_path):
     """
@@ -410,6 +414,7 @@ def test_collate_outputs(tmp_path):
     assert_frame_equal(expected_derived_ouputs_df, derived_outputs_df)
     assert_frame_equal(expected_outputs_df, outputs_df)
 
+
 @pytest.mark.skip("Old code, needs to be re-written")
 def test_create_power_bi_outputs(tmp_path):
     """
@@ -492,6 +497,7 @@ def test_create_power_bi_outputs(tmp_path):
 
     expected_df = get_expected_df(models[1], "S_1")
     assert_frame_equal(expected_df, table_1)
+
 
 @pytest.mark.skip("Old code, needs to be re-written")
 def test_store_and_load_models(tmp_path):

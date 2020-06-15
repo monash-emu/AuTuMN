@@ -8,9 +8,7 @@ NOTIFICATION_STRATUM = ["sympt_isolate", "hospital_non_icu", "icu"]
 
 
 def get_calc_notifications_covid(
-    implement_importation,
-    imported_cases_explict,
-    prop_detected_func,
+    implement_importation, imported_cases_explict, prop_detected_func,
 ):
     def calculate_notifications_covid(model: StratifiedModel, time: float):
         """
@@ -49,7 +47,7 @@ def calculate_incidence_icu_covid(model, time):
 def calculate_icu_prev(model, time):
     icu_prev = 0
     for i, comp_name in enumerate(model.compartment_names):
-        if 'late' in comp_name and 'clinical_icu' in comp_name:
+        if "late" in comp_name and "clinical_icu" in comp_name:
             icu_prev += model.compartment_values[i]
     return icu_prev
 

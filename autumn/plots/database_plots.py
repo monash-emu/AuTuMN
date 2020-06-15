@@ -40,9 +40,7 @@ def plot_from_mcmc_databases(mcmc_dir: str, plot_dir: str):
     logger.info("Plotting loglikelihood vs params")
     subplotter = _get_sub_plotter(plot_dir, "params-vs-loglikelihood")
     for chosen_param in param_options:
-        plots.plot_loglikelihood_vs_parameter(
-            subplotter, mcmc_tables, chosen_param, burn_in
-        )
+        plots.plot_loglikelihood_vs_parameter(subplotter, mcmc_tables, chosen_param, burn_in)
 
     logger.info("Plotting parameter traces")
     subplotter = _get_sub_plotter(plot_dir, "params-traces")

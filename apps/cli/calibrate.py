@@ -8,12 +8,8 @@ You can access this script from your CLI by running:
 """
 import click
 
-from apps.marshall_islands.calibration import (
-    run_calibration_chain as run_rmi_calibration_chain,
-)
-from apps.mongolia.calibration import (
-    run_calibration_chain as run_mongolia_calibration_chain,
-)
+from apps.marshall_islands.calibration import run_calibration_chain as run_rmi_calibration_chain
+from apps.mongolia.calibration import run_calibration_chain as run_mongolia_calibration_chain
 from apps.covid_19.calibration.victoria import (
     run_vic_calibration_chain as run_victoria_covid_calibration_chain,
 )
@@ -73,4 +69,3 @@ def malaysia_calibration(max_seconds, run_id):
 def philippines_calibration(max_seconds, run_id):
     """Run Philippines COVID model calibration."""
     run_philippines_covid_calibration_chain(max_seconds, run_id)
-

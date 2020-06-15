@@ -26,9 +26,7 @@ def load_params(app_name: str, region_name: str):
         for d in os.listdir(param_path)
         if path.isdir(path.join(param_path, d)) and not d == "__pycache__"
     ]
-    assert (
-        region_name in param_dirnames
-    ), f"Region name {region_name} is not in {param_dirnames}"
+    assert region_name in param_dirnames, f"Region name {region_name} is not in {param_dirnames}"
     app_param_dir = path.join(param_path, region_name)
 
     # Load base param config

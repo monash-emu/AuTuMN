@@ -7,12 +7,4 @@ vic = CountryModel(Country.VICTORIA)
 lbr = CountryModel(Country.LIBERIA)
 man = CountryModel(Country.MANILA)
 cal = CountryModel(Country.CALABARZON)
-COUNTRY_RUNNERS = [
-    "aus",
-    "phl",
-    "mys",
-    "vic",
-    "lbr",
-    "man",
-    "cal"
-]
+COUNTRY_RUNNERS = ["aus", "phl", "mys", "vic", "lbr", "man", "cal"]

@@ -14,9 +14,7 @@ from ..constants import IntegrationType
 
 from .utils import merge_dicts
 
-validate_params = sb.build_validator(
-    default=dict, scenario_start_time=float, scenarios=dict
-)
+validate_params = sb.build_validator(default=dict, scenario_start_time=float, scenarios=dict)
 
 ModelBuilderType = Callable[[dict], StratifiedModel]
 
@@ -26,9 +24,7 @@ class Scenario:
     A particular run of a simulation using a common model and unique parameters.
     """
 
-    def __init__(
-        self, model_builder: ModelBuilderType, idx: str, params: dict, chain_idx=0
-    ):
+    def __init__(self, model_builder: ModelBuilderType, idx: str, params: dict, chain_idx=0):
         _params = deepcopy(params)
         validate_params(_params)
         self.model_builder = model_builder
@@ -39,9 +35,7 @@ class Scenario:
         self.generated_outputs = None
 
     @classmethod
-    def load_from_db(
-        self, idx: int, chain_idx: int, model: StratifiedModel, params=None
-    ):
+    def load_from_db(self, idx: int, chain_idx: int, model: StratifiedModel, params=None):
         """
         Construct a Scenario from a model that's been loaded from an output database.
         """
@@ -70,9 +64,7 @@ class Scenario:
                 self.model = self.model_builder(params)
             else:
                 # This is a scenario model, based off the baseline model
-                assert (
-                    not self.is_baseline
-                ), "Can only run scenario model if Scenario idx is > 0"
+                assert not self.is_baseline, "Can only run scenario model if Scenario idx is > 0"
 
                 # Construct scenario params by merging scenario-specific params into default params
                 default_params = self.params["default"]

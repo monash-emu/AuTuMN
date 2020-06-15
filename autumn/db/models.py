@@ -78,9 +78,7 @@ def store_database(
     store_db.dump_df(table_name, outputs)
 
 
-def store_run_models(
-    models: List[StratifiedModel], database_path: str, run_idx: int = 0
-):
+def store_run_models(models: List[StratifiedModel], database_path: str, run_idx: int = 0):
     """
     Store models in the database.
     Assume that models are sorted in an order such that their index is their scenario idx.
@@ -155,13 +153,9 @@ def prune(source_db_path: str, target_db_path: str):
     for table_name in tables_to_copy:
         table_df = source_db.db_query(table_name)
         # Prune any table with an idx column except for mcmc_run
-        should_prune = (
-            "idx" in table_df.columns and table_name not in tables_to_not_prune
-        )
+        should_prune = "idx" in table_df.columns and table_name not in tables_to_not_prune
         if should_prune:
-            logger.info(
-                "Pruning %s so that it only contains max likelihood runs", table_name
-            )
+            logger.info("Pruning %s so that it only contains max likelihood runs", table_name)
             max_ll_mask = table_df["idx"] == max_ll_run_name
             max_ll_table_df = table_df[max_ll_mask]
             target_db.dump_df(table_name, max_ll_table_df)
@@ -239,18 +233,14 @@ def load_calibration_from_db(database_directory, n_burned_per_chain=0):
         out_database = Database(database_name=database_directory + "/" + db_name)
 
         # find accepted run indices
-        res = out_database.db_query(
-            table_name="mcmc_run", column="idx", conditions=["accept=1"]
-        )
+        res = out_database.db_query(table_name="mcmc_run", column="idx", conditions=["accept=1"])
         run_ids = list(res.to_dict()["idx"].values())
         # find weights to associate with the accepted runs
         accept = out_database.db_query(table_name="mcmc_run", column="accept")
         accept = accept["accept"].tolist()
         one_indices = [i for i, val in enumerate(accept) if val == 1]
         one_indices.append(len(accept))  # add extra index for counting
-        weights = [
-            one_indices[j + 1] - one_indices[j] for j in range(len(one_indices) - 1)
-        ]
+        weights = [one_indices[j + 1] - one_indices[j] for j in range(len(one_indices) - 1)]
 
         # burn fist iterations
         cum_sum = numpy.cumsum(weights).tolist()
@@ -258,9 +248,7 @@ def load_calibration_from_db(database_directory, n_burned_per_chain=0):
             continue
         retained_indices = [i for i, c in enumerate(cum_sum) if c > n_burned_per_chain]
         run_ids = run_ids[retained_indices[0] :]
-        previous_cum_sum = (
-            cum_sum[retained_indices[0] - 1] if retained_indices[0] > 0 else 0
-        )
+        previous_cum_sum = cum_sum[retained_indices[0] - 1] if retained_indices[0] > 0 else 0
         weights[retained_indices[0]] = weights[retained_indices[0]] - (
             n_burned_per_chain - previous_cum_sum
         )
@@ -272,12 +260,9 @@ def load_calibration_from_db(database_directory, n_burned_per_chain=0):
             )
             output_dict = outputs.to_dict()
 
-            if out_database.engine.dialect.has_table(
-                out_database.engine, "derived_outputs"
-            ):
+            if out_database.engine.dialect.has_table(out_database.engine, "derived_outputs"):
                 derived_outputs = out_database.db_query(
-                    table_name="derived_outputs",
-                    conditions=["idx='" + str(run_id) + "'"],
+                    table_name="derived_outputs", conditions=["idx='" + str(run_id) + "'"],
                 )
 
                 derived_outputs_dict = derived_outputs.to_dict()

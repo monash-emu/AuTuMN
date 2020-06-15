@@ -20,9 +20,7 @@ def get_bcg_coverage(database, country_iso_code):
     :return: dict
         pandas data frame with columns years and one row containing the values of BCG coverage in that year
     """
-    _bcg_coverage = database.db_query(
-        "BCG", conditions=["ISO_code='" + country_iso_code + "'"]
-    )
+    _bcg_coverage = database.db_query("BCG", conditions=["ISO_code='" + country_iso_code + "'"])
     _bcg_coverage = _bcg_coverage.filter(
         items=[column for column in _bcg_coverage.columns if column.isdigit()]
     )
@@ -144,20 +142,12 @@ def find_death_rates(_input_database, country_iso_code):
     )
 
     # cut off last row of population data because it goes out five years longer
-    total_population_data = total_population_data.loc[
-        : absolute_death_data.shape[0] - 1, :
-    ]
+    total_population_data = total_population_data.loc[: absolute_death_data.shape[0] - 1, :]
 
     # cut off last column of both data frames because they include the years, but retain the data as a list
-    mortality_years = [
-        float(i) + 2.5 for i in list(total_population_data.loc[:, "Period"])
-    ]
-    total_population_data = total_population_data.iloc[
-        :, : total_population_data.shape[1] - 1
-    ]
-    absolute_death_data = absolute_death_data.iloc[
-        :, : absolute_death_data.shape[1] - 1
-    ]
+    mortality_years = [float(i) + 2.5 for i in list(total_population_data.loc[:, "Period"])]
+    total_population_data = total_population_data.iloc[:, : total_population_data.shape[1] - 1]
+    absolute_death_data = absolute_death_data.iloc[:, : absolute_death_data.shape[1] - 1]
 
     # make sure all floats, as seem to have become str somewhere
     absolute_death_data = absolute_death_data.astype(float)
@@ -215,15 +205,11 @@ def find_age_weights(
             if data_upper <= lower_value:
                 weightings[n_data_break] -= 1.0
             elif data_lower < lower_value < data_upper:
-                weightings[n_data_break] -= (
-                    1.0 - (data_upper - lower_value) / break_width
-                )
+                weightings[n_data_break] -= 1.0 - (data_upper - lower_value) / break_width
 
             # then consider the upper value of the age bracket and how much of the data it excludes
             if data_lower < upper_value < data_upper:
-                weightings[n_data_break] -= (
-                    1.0 - (upper_value - data_lower) / break_width
-                )
+                weightings[n_data_break] -= 1.0 - (upper_value - data_lower) / break_width
             elif upper_value <= data_lower:
                 weightings[n_data_break] -= 1.0
 
@@ -279,9 +265,7 @@ def find_population_by_agegroup(
     """
     age_breakpoints = clean_age_breakpoints(age_breakpoints)
     data_type = "total_population_mapped"
-    total_population_data = extract_demo_data(
-        input_database, data_type, country_iso_code
-    )
+    total_population_data = extract_demo_data(input_database, data_type, country_iso_code)
     years = list(total_population_data["Period"])
     populations = total_population_data.drop(["Period"], axis=1)
     age_weights = find_age_weights(age_breakpoints, populations, normalise=False)
@@ -292,9 +276,7 @@ def find_population_by_agegroup(
             age_populations[age_break][i_year] = sum(
                 [
                     float(pop) * weight
-                    for pop, weight in zip(
-                        list(populations.iloc[i_year]), age_weights[age_break]
-                    )
+                    for pop, weight in zip(list(populations.iloc[i_year]), age_weights[age_break])
                 ]
             )
 

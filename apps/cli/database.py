@@ -48,9 +48,7 @@ def collate(src_db_dir, dest_db_path):
     """
     assert os.path.isdir(src_db_dir), f"{src_db_dir} must be a folder"
     src_db_paths = [
-        os.path.join(src_db_dir, fname)
-        for fname in os.listdir(src_db_dir)
-        if fname.endswith(".db")
+        os.path.join(src_db_dir, fname) for fname in os.listdir(src_db_dir) if fname.endswith(".db")
     ]
     models.collate_databases(src_db_paths, dest_db_path)
 

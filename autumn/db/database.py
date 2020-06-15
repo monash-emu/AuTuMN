@@ -16,7 +16,9 @@ class Database:
         """
         Returns database size in MB.
         """
-        query = "SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size();"
+        query = (
+            "SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size();"
+        )
         size_bytes = self.engine.execute(query).first()[0]
         return size_bytes / 1024 / 1024
 

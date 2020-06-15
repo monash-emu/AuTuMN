@@ -26,13 +26,9 @@ def add_uncertainty_weights(output_name: str, database_path: str):
     db = Database(database_path)
     if "uncertainty_weights" in db.table_names():
         logger.info(
-            "Deleting %s from existing uncertainty_weights table in %s",
-            output_name,
-            database_path,
+            "Deleting %s from existing uncertainty_weights table in %s", output_name, database_path,
         )
-        db.engine.execute(
-            f"DELETE FROM uncertainty_weights WHERE output_name='{output_name}'"
-        )
+        db.engine.execute(f"DELETE FROM uncertainty_weights WHERE output_name='{output_name}'")
 
     logger.info("Loading data into memory")
     columns = ["idx", "Scenario", "times", output_name]
@@ -101,9 +97,7 @@ def add_uncertainty_quantiles(database_path: str):
     logger.info("Finished writing uncertainties")
 
 
-def calculate_mcmc_uncertainty(
-    weights_df: pd.DataFrame, quantiles: List[float]
-) -> pd.DataFrame:
+def calculate_mcmc_uncertainty(weights_df: pd.DataFrame, quantiles: List[float]) -> pd.DataFrame:
     """
     Calculate quantiles from a table of weighted values.
     See calc_mcmc_weighted_values for how these weights are calculated.
@@ -191,12 +185,7 @@ def export_mcmc_quantiles(
     weights = collect_iteration_weights(mcmc_tables, burn_in)
     for output_name in output_names:
         times, quantiles = compute_mcmc_output_quantiles(
-            mcmc_tables,
-            output_tables,
-            derived_output_tables,
-            weights,
-            output_name,
-            q_list,
+            mcmc_tables, output_tables, derived_output_tables, weights, output_name, q_list,
         )
         column_names = ["times", "Scenario"]
         for q in q_list:
@@ -288,8 +277,7 @@ def compute_mcmc_output_quantiles(
 
     # Add cumulate output if required (not sure what this means).
     should_add_cumulate = (
-        output_name not in derived_output_tables[0].columns
-        and output_name[:8] == "cumulate"
+        output_name not in derived_output_tables[0].columns and output_name[:8] == "cumulate"
     )
     if should_add_cumulate:
         derived_output_tables = add_cumulate_output_to_derived_outputs(
@@ -320,9 +308,7 @@ def compute_mcmc_output_quantiles(
                         & (derived_output_tables[i_chain].times == time)
                         & (derived_output_tables[i_chain].Scenario == scenario)
                     )
-                    output_val = float(
-                        derived_output_tables[i_chain][output_name][mask]
-                    )
+                    output_val = float(derived_output_tables[i_chain][output_name][mask])
                     output_list += [output_val] * w
             quantiles[i_time, :] = np.quantile(output_list, q_list)
 

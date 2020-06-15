@@ -214,11 +214,11 @@ def stratify_by_clinical(model, model_parameters, compartments):
 
     # Make adjustment for isolation/quarantine
     for stratum in strata_to_implement:
-        if stratum in model_parameters['late_infect_multiplier']:
+        if stratum in model_parameters["late_infect_multiplier"]:
             model.individual_infectiousness_adjustments.append(
                 [
                     [Compartment.LATE_INFECTIOUS, "clinical_" + stratum],
-                    model_parameters['late_infect_multiplier'][stratum]
+                    model_parameters["late_infect_multiplier"][stratum],
                 ]
             )
 
@@ -239,10 +239,10 @@ def stratify_by_clinical(model, model_parameters, compartments):
 
         # set fixed clinical proportions for imported cases (hospital_non_icu and icu)
         importation_props_by_clinical = {
-            'hospital_non_icu':
-                stratification_adjustments['to_infectiousXagegroup_' + rep_age_group]['hospital_non_icu'],
-            'icu':
-                stratification_adjustments['to_infectiousXagegroup_' + rep_age_group]['icu']
+            "hospital_non_icu": stratification_adjustments[
+                "to_infectiousXagegroup_" + rep_age_group
+            ]["hospital_non_icu"],
+            "icu": stratification_adjustments["to_infectiousXagegroup_" + rep_age_group]["icu"],
         }
 
         # create time-variant function for remaining imported clinical proportions
@@ -274,15 +274,22 @@ def stratify_by_clinical(model, model_parameters, compartments):
         ] = tv_prop_imported_sympt_non_hospital
         model.time_variants["tv_prop_imported_sympt_isolate"] = tv_prop_imported_sympt_isolate
 
-        for stratum in ['non_sympt', 'sympt_isolate', 'sympt_non_hospital']:
+        for stratum in ["non_sympt", "sympt_isolate", "sympt_non_hospital"]:
             importation_props_by_clinical[stratum] = "tv_prop_imported_" + stratum
 
         # create absolute time-variant case detection proportion that will be returned to be used to set importation flow
         def modelled_abs_detection_proportion_imported(t):
-            return stratification_adjustments['to_infectiousXagegroup_' + rep_age_group]['icu'] +\
-                   stratification_adjustments['to_infectiousXagegroup_' + rep_age_group]['hospital_non_icu'] +\
-                   tvs[stratification_adjustments['to_infectiousXagegroup_' + rep_age_group]['sympt_isolate']](t)
-
+            return (
+                stratification_adjustments["to_infectiousXagegroup_" + rep_age_group]["icu"]
+                + stratification_adjustments["to_infectiousXagegroup_" + rep_age_group][
+                    "hospital_non_icu"
+                ]
+                + tvs[
+                    stratification_adjustments["to_infectiousXagegroup_" + rep_age_group][
+                        "sympt_isolate"
+                    ]
+                ](t)
+            )
 
     else:
         importation_props_by_clinical = {}

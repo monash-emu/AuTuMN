@@ -42,4 +42,3 @@ def run_rmi():
 def run_mongolia():
     """Run the Mongolia TB model"""
     mongolia.run_model()
-

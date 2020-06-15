@@ -19,15 +19,7 @@ class Country:
     LIBERIA = "liberia"
     MANILA = "manila"
     CALABARZON = "calabarzon"
-    COUNTRIES = [
-        AUSTRALIA,
-        PHILIPPINES,
-        MALAYSIA,
-        VICTORIA,
-        LIBERIA,
-        MANILA,
-        CALABARZON
-    ]
+    COUNTRIES = [AUSTRALIA, PHILIPPINES, MALAYSIA, VICTORIA, LIBERIA, MANILA, CALABARZON]
 
 
 FILE_DIR = os.path.dirname(os.path.abspath(__file__))

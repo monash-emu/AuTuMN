@@ -37,9 +37,22 @@ def get_pretty_name(s: str):
         return s.title()
 
 
-def update_website():
+def fetch_all_objects():
     response = client.list_objects_v2(Bucket=BUCKET)
-    objects = [o for o in response["Contents"] if not o["Key"].endswith(".html")]
+    objs = response["Contents"]
+    is_truncated = response["IsTruncated"]
+    while is_truncated:
+        token = response["NextContinuationToken"]
+        response = client.list_objects_v2(Bucket=BUCKET, ContinuationToken=token)
+        objs += response["Contents"]
+        is_truncated = response["IsTruncated"]
+
+    return objs
+
+
+def update_website():
+    all_objects = fetch_all_objects()
+    objects = [o for o in all_objects if not o["Key"].endswith(".html")]
     keys = [o["Key"] for o in objects]
     runs = {k.split("/")[0] for k in keys}
     models = sorted(list({r.split("-")[0] for r in runs}))
@@ -76,6 +89,7 @@ def update_page(path: str, children: List[str]):
     html += render_header(title)
     dirs = set()
     files = []
+
     for child in children:
         parts = child.split("/")
         if len(parts) > 1:

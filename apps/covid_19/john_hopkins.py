@@ -60,6 +60,20 @@ def read_john_hopkins_data_from_csv(variable="confirmed", country="Australia"):
     return data_series.tolist()
 
 
+def print_jh_data_series(variable_list=["confirmed", "deaths"], country="Australia"):
+    start_time = 22
+    for variable in variable_list:
+        print(variable)
+        data = read_john_hopkins_data_from_csv(variable, country)
+        times = [start_time + i for i in range(len(data))]
+        print("times:")
+        print(times)
+        print("list for calibration:")
+        print(data)
+        print("list for plotting targets:")
+        print([[d] for d in data])
+        print()
+
 def plot_jh_data(data):
     """
     Produce a graph for each country
@@ -177,3 +191,6 @@ def download_daily_reports(output_dir: str):
         path = os.path.join(output_dir, filename)
         df = pd.read_csv(url)
         df.to_csv(path)
+
+
+# print_jh_data_series(country="United Kingdom")

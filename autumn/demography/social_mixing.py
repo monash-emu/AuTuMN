@@ -23,6 +23,11 @@ def load_specific_prem_sheet(mixing_location, country):
         country = "philippines"
     elif country == "calabarzon":
         country = "philippines"
+    elif country == "bicol":
+        country = "philippines"
+    elif country == "central-visayas":
+        country == "philippines"
+
         
 
     # Files with name ending with _1 have a header, but not those ending with _2 - plus need to determine file to read

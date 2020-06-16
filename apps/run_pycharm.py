@@ -17,6 +17,9 @@ RUN_DESCRIPTION = "trying to x and y the z"
 # covid_19.vic.run_model(RUN_NAME, RUN_DESCRIPTION)
 covid_19.man.run_model(RUN_NAME)
 
+# Covid models used for optimisation study
+# covid_19.gbr.run_model(RUN_NAME)
+
 # Simple SIR model for demonstration
 # sir_example.aus.run_model(RUN_NAME, RUN_DESCRIPTION)
 # sir_example.phl.run_model(RUN_NAME, RUN_DESCRIPTION)

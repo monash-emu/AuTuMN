@@ -21,6 +21,7 @@ class Country:
     CALABARZON = "calabarzon"
     BICOL = "bicol"
     CENTRAL_VISAYAS = "central-visayas"
+    UNITED_KINGDOM = "united-kingdom"
     COUNTRIES = [
         AUSTRALIA,
         PHILIPPINES,
@@ -31,6 +32,7 @@ class Country:
         CALABARZON,
         BICOL,
         CENTRAL_VISAYAS,
+        UNITED_KINGDOM,
     ]
 
 

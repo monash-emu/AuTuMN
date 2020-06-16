@@ -1,22 +1,11 @@
-"""
-Build the SIR country model runner functions
-"""
 import os
 import yaml
 
 from autumn.model_runner import build_model_runner
 from autumn.tool_kit.params import load_params
+from autumn.tool_kit.model_register import RegionAppBase
 
 from .model import build_model
-
-
-class Country:
-    AUSTRALIA = "australia"
-    PHILIPPINES = "philippines"
-    COUNTRIES = [
-        AUSTRALIA,
-        PHILIPPINES,
-    ]
 
 
 FILE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -30,11 +19,11 @@ with open(PLOTS_PATH, "r") as f:
     plots_config = yaml.safe_load(f)
 
 
-class CountryModel:
-    def __init__(self, country: str):
-        self.country = country
+class RegionApp(RegionAppBase):
+    def __init__(self, region: str):
+        self.region = region
         self._run_model = build_model_runner(
-            model_name=f"sir_example_{country}",
+            model_name=f"sir_example_{region}",
             build_model=self.build_model,
             params=self.params,
             post_processing_config=pp_config,
@@ -44,9 +33,13 @@ class CountryModel:
     def build_model(self, params):
         return build_model(params)
 
-    @property
-    def params(self):
-        return load_params("sir_example", self.country)
-
     def run_model(self, run_name="model-run", run_desc=""):
         self._run_model(run_name, run_desc)
+
+    @property
+    def params(self):
+        return load_params("sir_example", self.region)
+
+    @property
+    def plots_config(self):
+        return None

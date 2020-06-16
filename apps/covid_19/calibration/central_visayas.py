@@ -1,6 +1,16 @@
-from apps.covid_19.calibration.base import run_calibration_chain, get_priors_and_targets
+from autumn.constants import Region
+from apps.covid_19.calibration import base
 
-country = "central-visayas"
+
+def run_calibration_chain(max_seconds: int, run_id: int):
+    base.run_calibration_chain(
+        max_seconds,
+        run_id,
+        Region.CENTRAL_VISAYAS,
+        PAR_PRIORS,
+        TARGET_OUTPUTS,
+        mode="autumn_mcmc",
+    )
 
 
 PAR_PRIORS = [
@@ -286,4 +296,3 @@ if __name__ == "__main__":
     run_phl_calibration_chain(
         15 * 60 * 60, 0
     )  # first argument only relevant for autumn_mcmc mode (time limit in seconds)
-

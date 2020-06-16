@@ -5,7 +5,7 @@ function log {
     echo -e "\n>>> $@\n"
 }
 log "Starting a full model run."
-BURN_IN_DEFAULT=300
+BURN_IN_DEFAULT=500
 if [[ -z "$RUN_NAME" ]]
 then
     log "Using user-supplied run name."

@@ -1,7 +1,17 @@
-from apps.covid_19.calibration.base import run_calibration_chain
-from numpy import linspace
+from autumn.constants import Region
+from apps.covid_19.calibration import base
 
-country = "victoria"
+
+def run_calibration_chain(max_seconds: int, run_id: int):
+    base.run_calibration_chain(
+        max_seconds,
+        run_id,
+        Region.VICTORIA,
+        PAR_PRIORS,
+        TARGET_OUTPUTS,
+        mode="autumn_mcmc",
+    )
+
 
 # _______ Define the priors
 PAR_PRIORS = [
@@ -267,21 +277,3 @@ TARGET_OUTPUTS = [
         "loglikelihood_distri": "negative_binomial",
     }
 ]
-
-# _______ Create the calibration function
-
-
-def run_vic_calibration_chain(max_seconds: int, run_id: int):
-    run_calibration_chain(
-        max_seconds,
-        run_id,
-        country,
-        PAR_PRIORS,
-        TARGET_OUTPUTS,
-        mode="autumn_mcmc",
-        _run_extra_scenarios=False,
-    )
-
-
-if __name__ == "__main__":
-    run_vic_calibration_chain(30, 0)

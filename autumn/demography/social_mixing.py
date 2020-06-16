@@ -15,6 +15,7 @@ COUNTRY_MAPPING = {
     "calabarzon": "philippines",
     "bicol": "philippines",
     "central-visayas": "philippines",
+    "united-kingdom": "United Kingdom of Great Britain",
 }
 
 # Cache result beecause this gets called 1000s of times during calibration.
@@ -37,5 +38,12 @@ def load_country_mixing_matrix(mixing_location: str, country: str):
 
     sheet_name = f"MUestimates_{mixing_location}_{sheet_number}.xlsx"
     file_dir = os.path.join(DATA_FOLDER, sheet_name)
-    df = pd.read_excel(file_dir, sheet_name=country.title(), header=header_argument)
+    # We need to capitalise all words contained in the country name except the word "of"
+    if " of " in country:
+        x = country.split("of")
+        x = [s.title() for s in x]
+        _sheet_name = x[0] + "of" + x[1]
+    else:
+        _sheet_name = country.title()
+    df = pd.read_excel(file_dir, sheet_name=_sheet_name, header=header_argument)
     return np.array(df)

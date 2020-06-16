@@ -12,4 +12,4 @@ CALIBRATION_REGIONS = list(covid_calibration.CALIBRATIONS.keys())
 @pytest.mark.parametrize("region", CALIBRATION_REGIONS)
 def test_covid_calibration(region):
     calib_func = covid_calibration.get_calibration_func(region)
-    calib_func(30, 0)
+    calib_func(15, 0)

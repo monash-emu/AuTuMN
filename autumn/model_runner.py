@@ -5,10 +5,8 @@ import os
 import yaml
 from datetime import datetime
 
-from autumn.post_processing.processor import post_process, validate_post_process_config
 
 from autumn import constants
-from autumn.plots import save_flows_sheets, plot_scenarios, validate_plot_config
 from autumn.tool_kit.timer import Timer
 from autumn.tool_kit.serializer import serialize_model
 from autumn.tool_kit.scenarios import Scenario
@@ -25,8 +23,8 @@ def build_model_runner(
     model_name: str,
     build_model,
     params: dict,
-    post_processing_config={},
-    plots_config={},
+    post_processing_config={},  # TODO: remove
+    plots_config={},  # TODO: remove
 ):
     """
     Factory function that returns a 'run_model' function.
@@ -40,11 +38,6 @@ def build_model_runner(
         Run the model, save the outputs.
         """
         print(f"Running {model_name}...")
-        if post_processing_config:
-            validate_post_process_config(post_processing_config)
-
-        if plots_config:
-            validate_plot_config(plots_config)
 
         # Ensure project folder exists.
         project_dir = os.path.join(constants.DATA_PATH, model_name)
@@ -94,31 +87,6 @@ def build_model_runner(
         with Timer("Saving model outputs to the database"):
             models = [s.model for s in scenarios]
             store_run_models(models, output_db_path)
-
-        if post_processing_config:
-            with Timer("Applying post-processing to model outputs"):
-                # Calculate generated outputs with post-processing.
-                for scenario in scenarios:
-                    scenario.generated_outputs = post_process(
-                        scenario.model, post_processing_config
-                    )
-
-        if plots_config:
-
-            with Timer("Creating plots"):
-                # Plot all scenario outputs.
-                plot_dir = os.path.join(output_dir, "plots")
-
-                try:
-                    create_flowchart(models[0])
-                except:
-                    pass
-
-                os.makedirs(plot_dir, exist_ok=True)
-                plot_scenarios(scenarios, plot_dir, plots_config)
-
-                # Save some CSV sheets describing the baseline model.
-                save_flows_sheets(baseline_model, output_dir)
 
     return run_model
 

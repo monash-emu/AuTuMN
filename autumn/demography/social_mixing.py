@@ -1,8 +1,13 @@
 import os
 import numpy as np
 import pandas as pd
+from functools import lru_cache
+
+FILE_DIR = os.path.abspath(os.path.dirname(__file__))
 
 
+# Cache result beecause this gets called 1000s of times during calibration.
+@lru_cache(maxsize=None)
 def load_specific_prem_sheet(mixing_location, country):
     """
     Load a mixing matrix sheet, according to name of the sheet (i.e. country)
@@ -14,20 +19,20 @@ def load_specific_prem_sheet(mixing_location, country):
     """
     if country == "victoria":
         country = "australia"
-
-    if country == "manila":
+    elif country == "manila":
         country == "philippines"
 
     # Files with name ending with _1 have a header, but not those ending with _2 - plus need to determine file to read
-    sheet_number, header_argument = ("1", 0) if country.title() < "Mozambique" else ("2", None)
-
-    file_dir = os.path.join(
-        os.path.abspath(os.path.dirname(__file__)),
-        "social_mixing_data",
-        "MUestimates_" + mixing_location + "_" + sheet_number + ".xlsx",
+    sheet_number, header_argument = (
+        ("1", 0) if country.title() < "Mozambique" else ("2", None)
     )
-
-    return np.array(pd.read_excel(file_dir, sheet_name=country.title(), header=header_argument))
+    file_dir = os.path.join(
+        FILE_DIR,
+        "social_mixing_data",
+        f"MUestimates_{mixing_location}_{sheet_number}.xlsx",
+    )
+    df = pd.read_excel(file_dir, sheet_name=country.title(), header=header_argument)
+    return np.array(df)
 
 
 def load_all_prem_types(country):

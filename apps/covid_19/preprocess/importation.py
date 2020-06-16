@@ -19,7 +19,7 @@ def get_importation_rate_func(
     in the modelled population.
     """
 
-    # scale-up curve for importation numbers
+    # Number of importation over time
     get_importation_amount = scale_up_function(importation_times, importation_n_cases)
 
     # time-variant infectiousness of imported cases
@@ -31,7 +31,9 @@ def get_importation_rate_func(
         1.0 - self_isolation_effect,
         1.0 - enforced_isolation_effect,
     ]
-    tv_imported_infectiousness = scale_up_function(mystery_times, mystery_vals, method=4,)
+    tv_imported_infectiousness = scale_up_function(
+        mystery_times, mystery_vals, method=4,
+    )
 
     def recruitment_rate(t):
         return (

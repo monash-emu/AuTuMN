@@ -15,7 +15,7 @@ OPTI_PARAMS_PATH = os.path.join(FILE_DIR, "opti_params.yml")
 with open(OPTI_PARAMS_PATH, "r") as yaml_file:
     opti_params = yaml.safe_load(yaml_file)
 
-available_countries = ['malaysia', 'philippines']
+available_countries = ['malaysia']
 
 
 def objective_function(decision_variables, mode="by_age", country='malaysia'):
@@ -77,7 +77,12 @@ def objective_function(decision_variables, mode="by_age", country='malaysia'):
     total_nb_deaths = sum(
         models[0].derived_outputs["infection_deathsXall"][first_july_index:]
     )
-    return herd_immunity, total_nb_deaths, models
+    recovered_indices = [i for i in range(len(models[0].compartment_names)) if "recovered" in models[0].compartment_names[i]]
+    nb_reco = sum([models[0].outputs[-1, i] for i in recovered_indices])
+    total_pop = sum(models[0].compartment_values)
+    prop_immune = nb_reco / total_pop
+
+    return herd_immunity, total_nb_deaths, prop_immune, models
 
 
 def visualise_simulation(_models):
@@ -113,9 +118,9 @@ if __name__ == '__main__':
     # optimisation will have to be performed separately for the different countries and modes.
     decision_vars = {
         'by_age':
-        [1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.],
+            [1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1., 1.],
         'by_location': {
-            "other_locations": .1,
+            "other_locations": 1.,
             "school": 1.,
             "work": 1.
         }
@@ -123,6 +128,6 @@ if __name__ == '__main__':
 
     for mode in ['by_age', 'by_location']:
         for country in available_countries:
-            h, d, m = objective_function(decision_vars[mode], mode, country)
+            h, d, p_immune, m = objective_function(decision_vars[mode], mode, country)
             print(country)
             print("Immunity: " + str(h) + "\n" + "Deaths: " + str(round(d)))

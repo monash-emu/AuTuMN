@@ -20,8 +20,18 @@ class Country:
     MANILA = "manila"
     CALABARZON = "calabarzon"
     BICOL = "bicol"
-    CENTRALVISAYAS = "centralVisayas"
-    COUNTRIES = [AUSTRALIA, PHILIPPINES, MALAYSIA, VICTORIA, LIBERIA, MANILA, CALABARZON, BICOL, CENTRALVISAYAS]
+    CENTRAL_VISAYAS = "central-visayas"
+    COUNTRIES = [
+        AUSTRALIA,
+        PHILIPPINES,
+        MALAYSIA,
+        VICTORIA,
+        LIBERIA,
+        MANILA,
+        CALABARZON,
+        BICOL,
+        CENTRAL_VISAYAS,
+    ]
 
 
 FILE_DIR = os.path.dirname(os.path.abspath(__file__))

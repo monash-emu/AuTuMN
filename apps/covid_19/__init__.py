@@ -8,5 +8,5 @@ lbr = CountryModel(Country.LIBERIA)
 man = CountryModel(Country.MANILA)
 cal = CountryModel(Country.CALABARZON)
 bic = CountryModel(Country.BICOL)
-vis = CountryModel(Country.CENTRALVISAYAS)
+vis = CountryModel(Country.CENTRAL_VISAYAS)
 COUNTRY_RUNNERS = ["aus", "phl", "mys", "vic", "lbr", "man", "cal", "bic", "vis"]

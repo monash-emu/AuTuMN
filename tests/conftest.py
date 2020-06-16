@@ -21,6 +21,10 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "local_only: Mark test to never run in GitHub Actions"
     )
+    config.addinivalue_line("markers", "run_models: A test which runs the full models")
+    config.addinivalue_line(
+        "markers", "calibrate_models: A test which runs full calibrations"
+    )
 
 
 def pytest_runtest_setup(item):

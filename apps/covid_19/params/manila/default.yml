@@ -1,6 +1,6 @@
 ---
-country: philippines
-iso3: PHL # NEED TO CREATE A ISO3 CODE FOR MANILA -  discuss with Matt
+country: manila
+iso3: MAN
 
 scenario_start_time: 140
 end_time: 365.

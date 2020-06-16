@@ -108,12 +108,20 @@ def update_page(path: str, children: List[str]):
         download_html = render_download_all_link(path, files)
         link_htmls.append(download_html)
 
-    for file in files:
+    png_files = [f for f in files if f.endswith(".png")]
+    non_png_files = [f for f in files if not f.endswith(".png")]
+    for file in non_png_files:
         filepath = os.path.join(path, file)
         link_html = render_link(file, filepath)
         link_htmls.append(link_html)
 
+    img_htmls = ""
+    for file in png_files:
+        filepath = os.path.join(path, file)
+        img_htmls += render_img(filepath)
+
     html += render_list(link_htmls)
+    html += img_htmls
     html = render_body(html)
     key = os.path.join(path, "index.html")
     upload_html(html, key)
@@ -129,6 +137,11 @@ def update_page(path: str, children: List[str]):
 def upload_html(s: str, key: str):
     f = io.BytesIO(s.encode("utf-8"))
     client.upload_fileobj(f, BUCKET, key, ExtraArgs={"ContentType": "text/html"})
+
+
+def render_img(url: str):
+    url = get_url(url)
+    return f"<img style='width: 100%;max-width: 500px;' src='{url}' />"
 
 
 def render_header(text: str):

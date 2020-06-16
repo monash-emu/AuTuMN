@@ -55,3 +55,4 @@ steps:
   - command: ./scripts/aws/run.sh website
     label: Update website
     depends_on: run-calibrate
+    allow_dependency_failure: true

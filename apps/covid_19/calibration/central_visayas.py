@@ -26,6 +26,11 @@ PAR_PRIORS = [
     },
     # Add extra params for negative binomial likelihood
     {
+        "param_name": "notifications_dispersion_param",
+        "distribution": "uniform",
+        "distri_params": [0.1, 5.0],
+    },
+    {
         "param_name": "prevXlateXclinical_icuXamong_dispersion_param",
         "distribution": "uniform",
         "distri_params": [0.1, 5.0],

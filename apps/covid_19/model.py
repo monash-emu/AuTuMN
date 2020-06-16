@@ -43,7 +43,9 @@ validate_params = sb.build_validator(
     # Clinical status stratified params
     clinical_strata=sb.List(str),
     non_sympt_infect_multiplier=float,
-    late_infect_multiplier=sb.Dict(sympt_isolate=float, hospital_non_icu=float, icu=float),
+    late_infect_multiplier=sb.Dict(
+        sympt_isolate=float, hospital_non_icu=float, icu=float
+    ),
     icu_mortality_prop=float,
     symptomatic_props=sb.List(float),
     icu_prop=float,
@@ -56,7 +58,9 @@ validate_params = sb.build_validator(
     mixing=sb.DictGeneric(str, list),
     npi_effectiveness=sb.DictGeneric(str, float),
     reinstall_regular_prayers=bool,
-    prayers_params=sb.Dict(restart_time=float, prop_participating=float, contact_multiplier=float,),
+    prayers_params=sb.Dict(
+        restart_time=float, prop_participating=float, contact_multiplier=float,
+    ),
     # Something to do with travellers?.
     traveller_quarantine=sb.Dict(times=sb.List(float), values=sb.List(float),),
     # Importation of disease from outside of region.
@@ -95,8 +99,12 @@ def build_model(params: dict) -> StratifiedModel:
 
     # Calculate the country population size by age-group, using UN data
     country_iso3 = params["iso3"]
-    total_pops, _ = find_population_by_agegroup(input_database, agegroup_strata, country_iso3)
-    total_pops = [int(1000.0 * total_pops[agebreak][-1]) for agebreak in list(total_pops.keys())]
+    total_pops, _ = find_population_by_agegroup(
+        input_database, agegroup_strata, country_iso3
+    )
+    total_pops = [
+        int(1000.0 * total_pops[agebreak][-1]) for agebreak in list(total_pops.keys())
+    ]
     starting_pop = sum(total_pops)
 
     # Define compartments
@@ -126,14 +134,17 @@ def build_model(params: dict) -> StratifiedModel:
     time_within_compartment_params = {}
     for compartment in compartment_periods:
         param_key = f"within_{compartment}"
-        time_within_compartment_params[param_key] = 1.0 / compartment_periods[compartment]
+        time_within_compartment_params[param_key] = (
+            1.0 / compartment_periods[compartment]
+        )
 
     # Distribute infectious seed across infectious compartments
     infectious_seed = params["infectious_seed"]
     total_infectious_times = sum([compartment_periods[c] for c in is_infectious])
 
     init_pop = {
-        c: infectious_seed * compartment_periods[c] / total_infectious_times for c in is_infectious
+        c: infectious_seed * compartment_periods[c] / total_infectious_times
+        for c in is_infectious
     }
     # force the remainder starting population to go to S compartment. Required as entry_compartment is late_infectious
     init_pop[Compartment.SUSCEPTIBLE] = sum(total_pops) - sum(init_pop.values())
@@ -142,7 +153,9 @@ def build_model(params: dict) -> StratifiedModel:
     start_time = params["start_time"]
     end_time = params["end_time"]
     time_step = params["time_step"]
-    integration_times = get_model_times_from_inputs(round(start_time), end_time, time_step,)
+    integration_times = get_model_times_from_inputs(
+        round(start_time), end_time, time_step,
+    )
 
     is_importation_active = params["implement_importation"]
     is_importation_explict = params["imported_cases_explict"]
@@ -190,7 +203,9 @@ def build_model(params: dict) -> StratifiedModel:
         birth_approach=birth_approach,
         entry_compartment=Compartment.LATE_INFECTIOUS,  # to model imported cases
         starting_population=sum(total_pops),
-        infectious_compartment=[i_comp for i_comp in is_infectious if is_infectious[i_comp]],
+        infectious_compartment=[
+            i_comp for i_comp in is_infectious if is_infectious[i_comp]
+        ],
     )
     if dynamic_mixing_matrix:
         model.find_dynamic_mixing_matrix = dynamic_mixing_matrix
@@ -210,13 +225,16 @@ def build_model(params: dict) -> StratifiedModel:
         "contact_rate": age_based_susceptibility,
     }
     if is_importation_active:
-        adjust_requests["import_secondary_rate"] = get_total_contact_rates_by_age(
+        adjust_requests[
+            "import_secondary_rate"
+        ] = preprocess.mixing_matrix.get_total_contact_rates_by_age(
             static_mixing_matrix, direction="horizontal"
         )
 
     # Distribute starting population over agegroups
     requested_props = {
-        agegroup: prop for agegroup, prop in zip(agegroup_strata, normalise_sequence(total_pops))
+        agegroup: prop
+        for agegroup, prop in zip(agegroup_strata, normalise_sequence(total_pops))
     }
 
     # We use "agegroup" instead of "age", to avoid triggering automatic demography features.
@@ -232,7 +250,10 @@ def build_model(params: dict) -> StratifiedModel:
     )
 
     # Stratify infectious compartment by clinical status
-    if "clinical" in model_parameters["stratify_by"] and model_parameters["clinical_strata"]:
+    if (
+        "clinical" in model_parameters["stratify_by"]
+        and model_parameters["clinical_strata"]
+    ):
         model_parameters["all_stratifications"] = {"agegroup": agegroup_strata}
         modelled_abs_detection_proportion_imported = stratify_by_clinical(
             model, model_parameters, compartments
@@ -243,7 +264,10 @@ def build_model(params: dict) -> StratifiedModel:
         import_times = params["data"]["times_imported_cases"]
         import_cases = params["data"]["n_imported_cases"]
         import_rate_func = preprocess.importation.get_importation_rate_func_as_birth_rates(
-            import_times, import_cases, modelled_abs_detection_proportion_imported, starting_pop,
+            import_times,
+            import_cases,
+            modelled_abs_detection_proportion_imported,
+            starting_pop,
         )
         model.parameters["crude_birth_rate"] = "crude_birth_rate"
         model.time_variants["crude_birth_rate"] = import_rate_func
@@ -269,7 +293,9 @@ def build_model(params: dict) -> StratifiedModel:
 
     # Define output connections to collate
     # Track compartment output connections.
-    stratum_names = list(set(["X".join(x.split("X")[1:]) for x in model.compartment_names]))
+    stratum_names = list(
+        set(["X".join(x.split("X")[1:]) for x in model.compartment_names])
+    )
     incidence_connections = outputs.get_incidence_connections(stratum_names)
     progress_connections = outputs.get_progress_connections(stratum_names)
     model.output_connections = {
@@ -283,10 +309,20 @@ def build_model(params: dict) -> StratifiedModel:
     prop_detected_among_symptomatic_imported = model.parameters[
         "prop_detected_among_symptomatic_imported"
     ]
-    model.derived_output_functions["notifications"] = outputs.get_calc_notifications_covid(
-        implement_importation, imported_cases_explict, modelled_abs_detection_proportion_imported,
+    model.derived_output_functions[
+        "notifications"
+    ] = outputs.get_calc_notifications_covid(
+        implement_importation,
+        imported_cases_explict,
+        modelled_abs_detection_proportion_imported,
     )
-    model.derived_output_functions["incidence_icu"] = outputs.calculate_incidence_icu_covid
-    model.derived_output_functions["prevXlateXclinical_icuXamong"] = outputs.calculate_icu_prev
-    model.death_output_categories = list_all_strata_for_mortality(model.compartment_names)
+    model.derived_output_functions[
+        "incidence_icu"
+    ] = outputs.calculate_incidence_icu_covid
+    model.derived_output_functions[
+        "prevXlateXclinical_icuXamong"
+    ] = outputs.calculate_icu_prev
+    model.death_output_categories = list_all_strata_for_mortality(
+        model.compartment_names
+    )
     return model

@@ -12,7 +12,7 @@ from math import log
 from matplotlib import pyplot
 from summer.model.strat_model import StratifiedModel
 
-from autumn.demography.social_mixing import load_specific_prem_sheet
+from autumn.demography.social_mixing import load_country_mixing_matrix
 from autumn.tool_kit.scenarios import Scenario
 from autumn.tool_kit import schema_builder as sb
 from autumn.tool_kit.uncertainty import export_mcmc_quantiles
@@ -30,7 +30,9 @@ validate_plot_config = sb.build_validator(
     translations=sb.DictGeneric(str, str),
     # List of derived / generated outputs to plot
     outputs_to_plot=sb.List(
-        sb.Dict(name=str, target_times=sb.List(float), target_values=sb.List(sb.List(float)))
+        sb.Dict(
+            name=str, target_times=sb.List(float), target_values=sb.List(sb.List(float))
+        )
     ),
     # Plot population distribution across particular strata
     pop_distribution_strata=sb.List(str),
@@ -43,7 +45,9 @@ validate_plot_config = sb.build_validator(
 )
 
 
-def plot_mcmc_parameter_trace(plotter: Plotter, mcmc_tables: List[pd.DataFrame], param_name: str):
+def plot_mcmc_parameter_trace(
+    plotter: Plotter, mcmc_tables: List[pd.DataFrame], param_name: str
+):
     """
     Plot the prameter traces for each MCMC run.
     """
@@ -54,10 +58,14 @@ def plot_mcmc_parameter_trace(plotter: Plotter, mcmc_tables: List[pd.DataFrame],
 
     axis.set_ylabel(param_name)
     axis.set_xlabel("MCMC iterations")
-    plotter.save_figure(fig, filename=f"{param_name}-traces", title_text=f"{param_name}-traces")
+    plotter.save_figure(
+        fig, filename=f"{param_name}-traces", title_text=f"{param_name}-traces"
+    )
 
 
-def plot_loglikelihood_trace(plotter: Plotter, mcmc_tables: List[pd.DataFrame], burn_in=0):
+def plot_loglikelihood_trace(
+    plotter: Plotter, mcmc_tables: List[pd.DataFrame], burn_in=0
+):
     """
     Plot the loglikelihood traces for each MCMC run.
     """
@@ -73,7 +81,9 @@ def plot_loglikelihood_trace(plotter: Plotter, mcmc_tables: List[pd.DataFrame], 
     if burn_in:
         axis.axvline(x=burn_in, color=COLOR_THEME[1], linestyle="dotted")
 
-    plotter.save_figure(fig, filename="loglikelihood-traces", title_text="loglikelihood-traces")
+    plotter.save_figure(
+        fig, filename="loglikelihood-traces", title_text="loglikelihood-traces"
+    )
 
 
 def plot_burn_in(plotter: Plotter, num_iters: int, burn_in: int):
@@ -153,7 +163,9 @@ def plot_timeseries_with_uncertainty(
         db = Database(percentile_db_path)
         output_perc = db.db_query(output_name)
     except:
-        export_mcmc_quantiles(path_to_percentile_outputs, [output_name], burn_in=burn_in)
+        export_mcmc_quantiles(
+            path_to_percentile_outputs, [output_name], burn_in=burn_in
+        )
         db = Database(percentile_db_path)
         output_perc = db.db_query(output_name)
 
@@ -166,7 +178,9 @@ def plot_timeseries_with_uncertainty(
         axis.fill_between(df.times, df.q_25, df.q_75, facecolor="cornflowerblue")
         axis.plot(df.times, df.q_50, color="navy")
     try:
-        output_config = next(o for o in plot_config["outputs_to_plot"] if o["name"] == output_name)
+        output_config = next(
+            o for o in plot_config["outputs_to_plot"] if o["name"] == output_name
+        )
     except StopIteration:
         output_config = {"name": output_name, "target_values": [], "target_times": []}
 
@@ -178,11 +192,15 @@ def plot_timeseries_with_uncertainty(
     axis.set_ylabel(output_name)
 
     plotter.save_figure(
-        fig, filename=f"{output_name} uncertainty {scenario_list}", title_text=f"{output_name}"
+        fig,
+        filename=f"{output_name} uncertainty {scenario_list}",
+        title_text=f"{output_name}",
     )
 
 
-def _overwrite_non_accepted_mcmc_runs(mcmc_tables: List[pd.DataFrame], column_name: str):
+def _overwrite_non_accepted_mcmc_runs(
+    mcmc_tables: List[pd.DataFrame], column_name: str
+):
     """
     Count non-accepted rows in a MCMC trace as the last accepted row.
     Modifies mcmc_tables in-place.
@@ -197,7 +215,10 @@ def _overwrite_non_accepted_mcmc_runs(mcmc_tables: List[pd.DataFrame], column_na
 
 
 def plot_agg_compartments_multi_scenario(
-    plotter: Plotter, scenarios: List[Scenario], compartment_names: List[str], is_logscale=False
+    plotter: Plotter,
+    scenarios: List[Scenario],
+    compartment_names: List[str],
+    is_logscale=False,
 ):
     """
     Plot multiple compartments with values aggregated for a multiple scenarios.
@@ -218,11 +239,16 @@ def plot_agg_compartments_multi_scenario(
     if is_logscale:
         axis.set_yscale("log")
 
-    plotter.save_figure(fig, filename="aggregate compartments", title_text="aggregate compartments")
+    plotter.save_figure(
+        fig, filename="aggregate compartments", title_text="aggregate compartments"
+    )
 
 
 def plot_single_compartment_multi_scenario(
-    plotter: Plotter, scenarios: List[Scenario], compartment_name: str, is_logscale=False
+    plotter: Plotter,
+    scenarios: List[Scenario],
+    compartment_name: str,
+    is_logscale=False,
 ):
     """
     Plot the selected output compartment for a multiple scenarios.
@@ -279,7 +305,9 @@ def plot_outputs_multi(
     legend = []
     for idx, scenario in enumerate(reversed(scenarios)):
         color_idx = len(scenarios) - idx - 1
-        _plot_outputs_to_axis(axis, scenario, output_name, color_idx=color_idx, alpha=0.7)
+        _plot_outputs_to_axis(
+            axis, scenario, output_name, color_idx=color_idx, alpha=0.7
+        )
         legend.append(scenario.name)
 
     axis.legend(legend)
@@ -302,7 +330,9 @@ def plot_outputs_single(plotter: Plotter, scenario: Scenario, output_config: dic
     target_times = output_config["target_times"]
     _plot_outputs_to_axis(axis, scenario, output_name)
     _plot_targets_to_axis(axis, target_values, target_times)
-    plotter.save_figure(fig, filename=output_name, subdir="outputs", title_text=output_name)
+    plotter.save_figure(
+        fig, filename=output_name, subdir="outputs", title_text=output_name
+    )
 
 
 def _plot_outputs_to_axis(axis, scenario: Scenario, name: str, color_idx=0, alpha=1):
@@ -368,7 +398,9 @@ def plot_exponential_growth_rate(plotter: Plotter, model: StratifiedModel):
         start_idx, end_idx = time_idx, time_idx + 1
         start_time, end_time = model.times[start_idx], model.times[end_idx]
         start_val, end_val = incidence_values[start_idx], incidence_values[end_idx]
-        exponential_growth_rate = np.log(end_val / start_val) / (start_time - start_time)
+        exponential_growth_rate = np.log(end_val / start_val) / (
+            start_time - start_time
+        )
         growth_rates.append(exponential_growth_rate)
 
     fig, axis, max_dims, n_rows, n_cols = plotter.get_figure()
@@ -395,10 +427,14 @@ def plot_pop_distribution_by_stratum(
                 continue
 
             new_values = [
-                working + previous for working, previous in zip(working_values, previous_values)
+                working + previous
+                for working, previous in zip(working_values, previous_values)
             ]
             axes.fill_between(
-                model.times, previous_values, new_values, color=(colour, 0.0, 1 - colour),
+                model.times,
+                previous_values,
+                new_values,
+                color=(colour, 0.0, 1 - colour),
             )
             previous_values = new_values
 
@@ -429,7 +465,10 @@ def plot_prevalence_combinations(
 
 
 def plot_input_function(
-    plotter: Plotter, model: StratifiedModel, func_names: List[str], plot_start_time: float
+    plotter: Plotter,
+    model: StratifiedModel,
+    func_names: List[str],
+    plot_start_time: float,
 ):
     """
     Plot single simple plot of a function over time
@@ -452,7 +491,11 @@ def plot_input_function(
 
         axes.legend(param_names)
         plotter.tidy_x_axis(
-            axes, start=plot_start_time, end=max(times), max_dims=max_dims, x_label="time",
+            axes,
+            start=plot_start_time,
+            end=max(times),
+            max_dims=max_dims,
+            x_label="time",
         )
         plotter.tidy_y_axis(axes, quantity="", max_dims=max_dims)
         plotter.save_figure(fig, filename=func_name, title_text=func_name)
@@ -518,7 +561,7 @@ def plot_mixing_matrix(plotter: Plotter, model: StratifiedModel):
     for location in ["all_locations", "school", "home", "work", "other_locations"]:
         fig, axis, max_dims, n_rows, n_cols = plotter.get_figure()
         axis = sns.heatmap(
-            load_specific_prem_sheet(location, "Australia"),
+            load_country_mixing_matrix(location, "Australia"),
             yticklabels=model.mixing_categories,
             xticklabels=False,
             vmin=0.0,

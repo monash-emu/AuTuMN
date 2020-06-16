@@ -328,8 +328,8 @@ class EpiModel:
         )
 
         # Check that all compartment values are >= 0
-        # if np.any(self.outputs < 0.0):
-        #     print("Warning: compartment(s) with negative values.")
+        if np.any(self.outputs < 0.0):
+            print("Warning: compartment(s) with negative values.")
 
         # Collate outputs to be calculated post-integration that are not just compartment sizes.
         self.calculate_post_integration_connection_outputs()

@@ -111,22 +111,18 @@ def build_dynamic(
 
         # Make adjustments by age
         affected_age_indices = [i for i in AGE_INDICES if f"age_{i}" in mixing]
-        complement_indices = [i for i in AGE_INDICES if i not in affected_age_indices]
-
+        age_adjustment_functions = {}
         for age_idx_affected in affected_age_indices:
             age_idx_key = f"age_{age_idx_affected}"
             age_times = mixing[age_idx_key]["times"]
             age_vals = mixing[age_idx_key]["values"]
-            age_adj_func = scale_up_function(age_times, age_vals, method=4,)
-            age_adj_val = age_adj_func(time)
-            for age_idx_not_affected in complement_indices:
-                mixing_matrix[age_idx_affected, age_idx_not_affected] *= age_adj_val
-                mixing_matrix[age_idx_not_affected, age_idx_affected] *= age_adj_val
+            age_adjustment_functions[age_idx_affected] = scale_up_function(age_times, age_vals, method=4,)
 
-            # FIXME: patch for elderly cocooning in Victoria assuming
-            # FIXME: ... assuming what?
-            for idx in affected_age_indices:
-                mixing_matrix[age_idx_affected, idx] *= 1.0 - (1.0 - age_adj_val) / 2.0
+        for row_index in range(len(AGE_INDICES)):
+            row_multiplier = age_adjustment_functions[row_index](time) if row_index in affected_age_indices else 1.
+            for col_index in range(len(AGE_INDICES)):
+                col_multiplier = age_adjustment_functions[col_index](time) if col_index in affected_age_indices else 1.
+                mixing_matrix[row_index, col_index] *= row_multiplier * col_multiplier
 
         return mixing_matrix
 

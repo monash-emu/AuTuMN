@@ -1,4 +1,4 @@
 ---
 # These parameters will be added to or overwrites those found in the original country .yml files
 default:
-  end_time: 365.
+  end_time: 366.

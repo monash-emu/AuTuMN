@@ -7,13 +7,10 @@ from autumn.constants import Compartment, BirthApproach
 from autumn.tb_model import list_all_strata_for_mortality
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
 from autumn.tool_kit import schema_builder as sb
-
-from autumn.demography.social_mixing import get_total_contact_rates_by_age
 from autumn.db import Database, find_population_by_agegroup
 
+from . import outputs, preprocess
 from .stratification import stratify_by_clinical
-from . import outputs
-from . import preprocess
 
 # Database locations
 FILE_DIR = os.path.dirname(os.path.abspath(__file__))

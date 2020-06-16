@@ -31,7 +31,6 @@ jobs:
       - name: Test with pytest
         run: pytest -W ignore -vv -m "not run_models and not calibrate_models"
   test_runs:
-    needs: test_basic
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -54,7 +53,6 @@ jobs:
       - name: Test with pytest
         run: pytest -W ignore -vv -m run_models
   test_calibrations:
-    needs: test_basic
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

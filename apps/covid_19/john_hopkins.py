@@ -169,7 +169,7 @@ CSVS_TO_READ = [
 def download_jh_data():
     if not os.path.exists(JH_DATA_DIR):
         os.makedirs(JH_DATA_DIR)
-        download_global_csv(JH_DATA_DIR)
+    download_global_csv(JH_DATA_DIR)
 
 
 def download_global_csv(output_dir: str):
@@ -193,4 +193,5 @@ def download_daily_reports(output_dir: str):
         df.to_csv(path)
 
 
+# download_jh_data()
 # print_jh_data_series(country="United Kingdom")

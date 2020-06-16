@@ -26,7 +26,7 @@ def load_specific_prem_sheet(mixing_location, country):
     elif country == "bicol":
         country = "philippines"
     elif country == "central-visayas":
-        country == "philippines"
+        country = "philippines"
 
         
 

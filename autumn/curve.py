@@ -86,6 +86,7 @@ def tanh_based_scaleup(b, c, sigma):
     :param sigma: lowest asymptotic value
     :return: a function
     """
+
     def tanh_scaleup(t):
         return (1 - sigma) / 2 * tanh(b * (t - c)) + (1 + sigma) / 2
 

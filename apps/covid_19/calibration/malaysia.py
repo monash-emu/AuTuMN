@@ -14,18 +14,9 @@ def run_calibration_chain(max_seconds: int, run_id: int):
     )
 
 
-
 PAR_PRIORS = [
-    {
-        "param_name": "contact_rate",
-        "distribution": "uniform",
-        "distri_params": [0.015, 0.040],
-    },
-    {
-        "param_name": "start_time",
-        "distribution": "uniform",
-        "distri_params": [0.0, 40.0],
-    },
+    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.015, 0.040],},
+    {"param_name": "start_time", "distribution": "uniform", "distri_params": [0.0, 40.0],},
     {
         "param_name": "compartment_periods_calculated.incubation.total_period",
         "distribution": "gamma",
@@ -188,7 +179,7 @@ notification_times = [
     165,
     166,
     167,
-    168
+    168,
 ]
 notification_counts = [
     7,
@@ -296,7 +287,7 @@ notification_counts = [
     43,
     8,
     41,
-    11    
+    11,
 ]
 
 
@@ -399,7 +390,7 @@ icu_times = [
     165,
     166,
     167,
-    168
+    168,
 ]
 
 icu_counts = [
@@ -500,7 +491,7 @@ icu_counts = [
     4,
     4,
     4,
-    4
+    4,
 ]
 
 

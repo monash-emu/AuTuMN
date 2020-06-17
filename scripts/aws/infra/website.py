@@ -127,9 +127,7 @@ def update_page(path: str, children: List[str]):
     upload_html(html, key)
 
     for dirname in dirs:
-        dir_children = [
-            "/".join(k.split("/")[1:]) for k in children if k.startswith(dirname)
-        ]
+        dir_children = ["/".join(k.split("/")[1:]) for k in children if k.startswith(dirname)]
         dirpath = os.path.join(path, dirname)
         update_page(dirpath, dir_children)
 

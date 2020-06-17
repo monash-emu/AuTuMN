@@ -78,9 +78,7 @@ def objective_function(decision_variables, mode="by_age", country=Region.MALAYSI
 
     # How many deaths after 1 July 2020
     first_july_index = models[0].derived_outputs["times"].index(183)
-    total_nb_deaths = sum(
-        models[0].derived_outputs["infection_deathsXall"][first_july_index:]
-    )
+    total_nb_deaths = sum(models[0].derived_outputs["infection_deathsXall"][first_july_index:])
     recovered_indices = [
         i
         for i in range(len(models[0].compartment_names))
@@ -118,34 +116,14 @@ def has_immunity_been_reached(_model):
     :param _model: a model run with no-intervention setting for testing herd-immunity
     :return: a boolean
     """
-    return (
-        max(_model.derived_outputs["incidence"])
-        == _model.derived_outputs["incidence"][0]
-    )
+    return max(_model.derived_outputs["incidence"]) == _model.derived_outputs["incidence"][0]
 
 
 if __name__ == "__main__":
     # looping through all countries and optimisation modes for testing purpose
     # optimisation will have to be performed separately for the different countries and modes.
     decision_vars = {
-        "by_age": [
-            1.0,
-            1.0,
-            1.0,
-            1.0,
-            1.0,
-            1.0,
-            1.0,
-            1.0,
-            1.0,
-            1.0,
-            1.0,
-            1.0,
-            1.0,
-            1.0,
-            1.0,
-            1.0,
-        ],
+        "by_age": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,],
         "by_location": {"other_locations": 1.0, "school": 1.0, "work": 1.0},
     }
 

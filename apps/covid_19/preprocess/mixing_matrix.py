@@ -79,9 +79,7 @@ def build_dynamic(
     # contact rates are multiplied by 'other_location_multiplier' for the participating individuals.
     if is_reinstall_regular_prayers:
         other_locations = mixing.get("other_locations")
-        t_start = max(
-            [prayers_params["restart_time"], max(other_locations["times"]) + 1]
-        )
+        t_start = max([prayers_params["restart_time"], max(other_locations["times"]) + 1])
         t_end = end_time
         prop_participating = prayers_params["prop_participating"]
         contact_multiplier = prayers_params["contact_multiplier"]
@@ -104,9 +102,7 @@ def build_dynamic(
             loc_times = mixing[loc_key]["times"]
             loc_vals = mixing[loc_key]["values"]
             loc_adj_func = scale_up_function(loc_times, loc_vals, method=4)
-            location_adjustment_matrix = (loc_adj_func(time) - 1.0) * matrix_components[
-                loc_key
-            ]
+            location_adjustment_matrix = (loc_adj_func(time) - 1.0) * matrix_components[loc_key]
             mixing_matrix = np.add(mixing_matrix, location_adjustment_matrix)
 
         # Make adjustments by age
@@ -116,12 +112,22 @@ def build_dynamic(
             age_idx_key = f"age_{age_idx_affected}"
             age_times = mixing[age_idx_key]["times"]
             age_vals = mixing[age_idx_key]["values"]
-            age_adjustment_functions[age_idx_affected] = scale_up_function(age_times, age_vals, method=4,)
+            age_adjustment_functions[age_idx_affected] = scale_up_function(
+                age_times, age_vals, method=4,
+            )
 
         for row_index in range(len(AGE_INDICES)):
-            row_multiplier = age_adjustment_functions[row_index](time) if row_index in affected_age_indices else 1.
+            row_multiplier = (
+                age_adjustment_functions[row_index](time)
+                if row_index in affected_age_indices
+                else 1.0
+            )
             for col_index in range(len(AGE_INDICES)):
-                col_multiplier = age_adjustment_functions[col_index](time) if col_index in affected_age_indices else 1.
+                col_multiplier = (
+                    age_adjustment_functions[col_index](time)
+                    if col_index in affected_age_indices
+                    else 1.0
+                )
                 mixing_matrix[row_index, col_index] *= row_multiplier * col_multiplier
 
         return mixing_matrix

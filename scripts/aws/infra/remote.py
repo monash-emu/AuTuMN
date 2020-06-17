@@ -27,10 +27,7 @@ def ssh_run_job(instance: dict, script_name: str, script_args):
         raise FileNotFoundError(f"Could not find {run_script_path}")
 
     subprocess.call(
-        f"scp {SSH_ARGS} {run_script_path} ubuntu@{ip}:/home/ubuntu/{script_name}",
-        shell=True,
+        f"scp {SSH_ARGS} {run_script_path} ubuntu@{ip}:/home/ubuntu/{script_name}", shell=True,
     )
     args = " ".join([str(a) for a in script_args])
-    subprocess.call(
-        f"ssh {SSH_ARGS} ubuntu@{ip} 'bash ~/{script_name} {args}'", shell=True
-    )
+    subprocess.call(f"ssh {SSH_ARGS} ubuntu@{ip} 'bash ~/{script_name} {args}'", shell=True)

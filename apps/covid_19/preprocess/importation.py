@@ -31,9 +31,7 @@ def get_importation_rate_func(
         1.0 - self_isolation_effect,
         1.0 - enforced_isolation_effect,
     ]
-    tv_imported_infectiousness = scale_up_function(
-        mystery_times, mystery_vals, method=4,
-    )
+    tv_imported_infectiousness = scale_up_function(mystery_times, mystery_vals, method=4,)
 
     def recruitment_rate(t):
         return (

@@ -4,28 +4,15 @@ from apps.covid_19.calibration import base
 
 def run_calibration_chain(max_seconds: int, run_id: int):
     base.run_calibration_chain(
-        max_seconds,
-        run_id,
-        Region.LIBERIA,
-        PAR_PRIORS,
-        TARGET_OUTPUTS,
-        mode="autumn_mcmc",
+        max_seconds, run_id, Region.LIBERIA, PAR_PRIORS, TARGET_OUTPUTS, mode="autumn_mcmc",
     )
 
 
 # CHANGE ALL THE VALUES BELOW
 
 PAR_PRIORS = [
-    {
-        "param_name": "contact_rate",
-        "distribution": "uniform",
-        "distri_params": [0.010, 0.05],
-    },
-    {
-        "param_name": "start_time",
-        "distribution": "uniform",
-        "distri_params": [0.0, 60.0],
-    },
+    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.010, 0.05],},
+    {"param_name": "start_time", "distribution": "uniform", "distri_params": [0.0, 60.0],},
     {
         "param_name": "compartment_periods_calculated.incubation.total_period",
         "distribution": "gamma",
@@ -39,11 +26,7 @@ PAR_PRIORS = [
         "distri_ci": [4.0, 10.0],
     },
     # to set time-variant detection
-    {
-        "param_name": "tv_detection_c",
-        "distribution": "uniform",
-        "distri_params": [80, 120.0],
-    },
+    {"param_name": "tv_detection_c", "distribution": "uniform", "distri_params": [80, 120.0],},
     {
         "param_name": "prop_detected_among_symptomatic",
         "distribution": "beta",

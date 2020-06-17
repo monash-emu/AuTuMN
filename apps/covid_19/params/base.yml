@@ -6,7 +6,6 @@ scenario_start_time: 85
 # MODEL STRUCTURE PARAMETERS
 
 implement_importation: False
-imported_cases_explict: False # whether to explicitly include imported cases
 import_secondary_rate: 0.
 data:
   times_imported_cases: []

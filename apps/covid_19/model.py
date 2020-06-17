@@ -62,7 +62,6 @@ validate_params = sb.build_validator(
     traveller_quarantine=sb.Dict(times=sb.List(float), values=sb.List(float),),
     # Importation of disease from outside of region.
     implement_importation=bool,
-    imported_cases_explict=bool,
     import_secondary_rate=float,
     symptomatic_props_imported=float,
     hospital_props_imported=float,
@@ -273,12 +272,10 @@ def build_model(params: dict) -> StratifiedModel:
     }
     # Add notifications to derived_outputs
     implement_importation = model.parameters["implement_importation"]
-    imported_cases_explict = model.parameters["imported_cases_explict"]
     model.derived_output_functions[
         "notifications"
     ] = outputs.get_calc_notifications_covid(
         implement_importation,
-        imported_cases_explict,
         modelled_abs_detection_proportion_imported,
     )
     model.derived_output_functions[

@@ -33,7 +33,6 @@ def stratify_by_clinical(model, model_parameters, compartments):
     # Infection rate multiplication
     # Importation
     implement_importation = model_parameters["implement_importation"]
-    imported_cases_explict = model_parameters["imported_cases_explict"]
     traveller_quarantine = model_parameters["traveller_quarantine"]
     # Time variant case detection
     prop_detected_among_symptomatic = model_parameters["prop_detected_among_symptomatic"]

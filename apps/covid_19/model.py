@@ -54,9 +54,9 @@ validate_params = sb.build_validator(
     npi_effectiveness=sb.DictGeneric(str, float),
     reinstall_regular_prayers=bool,
     prayers_params=sb.Dict(restart_time=float, prop_participating=float, contact_multiplier=float,),
-    # Something to do with travellers?.
+    # Something to do with travellers?
     traveller_quarantine=sb.Dict(times=sb.List(float), values=sb.List(float),),
-    # Importation of disease from outside of region.
+    # Importation of disease from outside of region
     implement_importation=bool,
     import_secondary_rate=float,
     symptomatic_props_imported=float,
@@ -104,13 +104,14 @@ def build_model(params: dict) -> StratifiedModel:
         Compartment.RECOVERED,
     ]
 
-    # Indicate whether infectious for the compartments representing active disease
+    # Indicate whether the compartments representing active disease are infectious
     is_infectious = {
         Compartment.EXPOSED: False,
         Compartment.PRESYMPTOMATIC: True,
         Compartment.EARLY_INFECTIOUS: True,
         Compartment.LATE_INFECTIOUS: True,
     }
+
     # Calculate compartment periods
     # FIXME: Needs tests.
     base_compartment_periods = params["compartment_periods"]
@@ -128,12 +129,11 @@ def build_model(params: dict) -> StratifiedModel:
     # Distribute infectious seed across infectious compartments
     infectious_seed = params["infectious_seed"]
     total_disease_time = sum([compartment_periods[c] for c in is_infectious])
-
     init_pop = {
         c: infectious_seed * compartment_periods[c] / total_disease_time for c in is_infectious
     }
 
-    # Force the remainder starting population to go to S compartment. Required as entry_compartment is late_infectious
+    # Force the remainder starting population to go to S compartment (Required as entry_compartment is late_infectious)
     init_pop[Compartment.SUSCEPTIBLE] = sum(total_pops) - sum(init_pop.values())
 
     # Set integration times
@@ -142,7 +142,7 @@ def build_model(params: dict) -> StratifiedModel:
     time_step = params["time_step"]
     integration_times = get_model_times_from_inputs(round(start_time), end_time, time_step,)
 
-    # Add compartmental flows
+    # Add inter-compartmental transition flows
     flows = preprocess.flows.DEFAULT_FLOWS
 
     # Choose a birth approach
@@ -158,13 +158,13 @@ def build_model(params: dict) -> StratifiedModel:
     dynamic_mixing_params = params["mixing"]
     if dynamic_mixing_params:
         npi_effectiveness_params = params["npi_effectiveness"]
-        is_reinstall_regular_prayers = params.get("reinstall_regular_prayers")
+        is_reinstate_regular_prayers = params.get("reinstall_regular_prayers")
         prayers_params = params.get("prayers_params")
         dynamic_mixing_matrix = preprocess.mixing_matrix.build_dynamic(
             country,
             dynamic_mixing_params,
             npi_effectiveness_params,
-            is_reinstall_regular_prayers,
+            is_reinstate_regular_prayers,
             prayers_params,
             end_time,
         )
@@ -244,6 +244,7 @@ def build_model(params: dict) -> StratifiedModel:
 
     # Define output connections to collate
     # Track compartment output connections.
+    # FIXME: Following line should use a standard SUMMER function
     stratum_names = list(set(["X".join(x.split("X")[1:]) for x in model.compartment_names]))
     incidence_connections = outputs.get_incidence_connections(stratum_names)
     progress_connections = outputs.get_progress_connections(stratum_names)
@@ -251,6 +252,7 @@ def build_model(params: dict) -> StratifiedModel:
         **incidence_connections,
         **progress_connections,
     }
+
     # Add notifications to derived_outputs
     implement_importation = model.parameters["implement_importation"]
     model.derived_output_functions["notifications"] = outputs.get_calc_notifications_covid(

@@ -92,8 +92,7 @@ def build_model(params: dict) -> StratifiedModel:
     # Calculate the country population size by age-group, using UN data
     country_iso3 = params["iso3"]
     total_pops, _ = find_population_by_agegroup(input_database, agegroup_strata, country_iso3)
-    total_pops = [int(1000.0 * total_pops[agebreak][-1]) for agebreak in list(total_pops.keys())]
-    starting_pop = sum(total_pops)
+    total_pops = [int(1e3 * total_pops[agebreak][-1]) for agebreak in list(total_pops.keys())]
 
     # Define compartments
     compartments = [
@@ -104,6 +103,8 @@ def build_model(params: dict) -> StratifiedModel:
         Compartment.LATE_INFECTIOUS,
         Compartment.RECOVERED,
     ]
+
+    # Indicate whether infectious for the compartments representing active disease
     is_infectious = {
         Compartment.EXPOSED: False,
         Compartment.PRESYMPTOMATIC: True,
@@ -119,19 +120,20 @@ def build_model(params: dict) -> StratifiedModel:
     )
 
     # Get progression rates from sojourn times, distinguishing to_infectious in order to split this parameter later
-    time_within_compartment_params = {}
+    compartment_exit_flow_rates = {}
     for compartment in compartment_periods:
         param_key = f"within_{compartment}"
-        time_within_compartment_params[param_key] = 1.0 / compartment_periods[compartment]
+        compartment_exit_flow_rates[param_key] = 1.0 / compartment_periods[compartment]
 
     # Distribute infectious seed across infectious compartments
     infectious_seed = params["infectious_seed"]
-    total_infectious_times = sum([compartment_periods[c] for c in is_infectious])
+    total_disease_time = sum([compartment_periods[c] for c in is_infectious])
 
     init_pop = {
-        c: infectious_seed * compartment_periods[c] / total_infectious_times for c in is_infectious
+        c: infectious_seed * compartment_periods[c] / total_disease_time for c in is_infectious
     }
-    # force the remainder starting population to go to S compartment. Required as entry_compartment is late_infectious
+
+    # Force the remainder starting population to go to S compartment. Required as entry_compartment is late_infectious
     init_pop[Compartment.SUSCEPTIBLE] = sum(total_pops) - sum(init_pop.values())
 
     # Set integration times
@@ -140,12 +142,11 @@ def build_model(params: dict) -> StratifiedModel:
     time_step = params["time_step"]
     integration_times = get_model_times_from_inputs(round(start_time), end_time, time_step,)
 
-    is_importation_active = params["implement_importation"]
-
     # Add compartmental flows
     flows = preprocess.flows.DEFAULT_FLOWS
 
-    # Choose a birth apprach
+    # Choose a birth approach
+    is_importation_active = params["implement_importation"]
     birth_approach = BirthApproach.ADD_CRUDE if is_importation_active else BirthApproach.NO_BIRTH
 
     # Build mixing matrix.
@@ -169,10 +170,10 @@ def build_model(params: dict) -> StratifiedModel:
         )
 
     # FIXME: Remove params from model_parameters
-    model_parameters = {**params, **time_within_compartment_params}
+    model_parameters = {**params, **compartment_exit_flow_rates}
     model_parameters["to_infectious"] = model_parameters["within_presympt"]
 
-    # Define model
+    # Instantiate SUMMER model
     model = StratifiedModel(
         integration_times,
         compartments,
@@ -188,13 +189,13 @@ def build_model(params: dict) -> StratifiedModel:
         model.find_dynamic_mixing_matrix = dynamic_mixing_matrix
         model.dynamic_mixing_matrix = True
 
-    # Stratify model by age.
-    # Coerce age breakpoint numbers into strings - all strata are represented as strings.
+    # Stratify model by age
+    # Coerce age breakpoint numbers into strings - all strata are represented as strings
     agegroup_strata = [str(s) for s in agegroup_strata]
     # Create parameter adjustment request for age stratifications
     age_based_susceptibility = params["age_based_susceptibility"]
     adjust_requests = {
-        # No change, required for further stratification by clinical status.
+        # No change, but distinction is required for later stratification by clinical status
         "to_infectious": {s: 1 for s in agegroup_strata},
         "infect_death": {s: 1 for s in agegroup_strata},
         "within_late": {s: 1 for s in agegroup_strata},
@@ -213,7 +214,8 @@ def build_model(params: dict) -> StratifiedModel:
         agegroup: prop for agegroup, prop in zip(agegroup_strata, normalise_sequence(total_pops))
     }
 
-    # We use "agegroup" instead of "age", to avoid triggering automatic demography features.
+    # We use "agegroup" instead of "age" for this model, to avoid triggering automatic demography features
+    # (which work on the assumption that the time unit is years, so would be totally wrong)
     model.stratify(
         "agegroup",
         agegroup_strata,
@@ -235,7 +237,7 @@ def build_model(params: dict) -> StratifiedModel:
         import_times = params["data"]["times_imported_cases"]
         import_cases = params["data"]["n_imported_cases"]
         import_rate_func = preprocess.importation.get_importation_rate_func_as_birth_rates(
-            import_times, import_cases, modelled_abs_detection_proportion_imported, starting_pop,
+            import_times, import_cases, modelled_abs_detection_proportion_imported, total_pops,
         )
         model.parameters["crude_birth_rate"] = "crude_birth_rate"
         model.time_variants["crude_birth_rate"] = import_rate_func

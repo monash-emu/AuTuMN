@@ -6,7 +6,7 @@ def get_importation_rate_func_as_birth_rates(
     importation_times: List[float],
     importation_n_cases: List[float],
     detect_prop_func,
-    starting_population: float,
+    starting_pops: list,
 ):
     """
     When imported cases are explicitly simulated as part of the modelled population. They enter the late_infectious
@@ -21,7 +21,7 @@ def get_importation_rate_func_as_birth_rates(
     )
 
     def recruitment_rate(t):
-        return importation_numbers_scale_up(t) / starting_population
+        return importation_numbers_scale_up(t) / sum(starting_pops)
 
     return recruitment_rate
 

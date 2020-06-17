@@ -15,11 +15,7 @@ def test_calibration_data_collation(temp_data_dir, num_iters, max_size_mb):
     Test that collate_powerbi_database correctly pulls data from calibration outputs into a single database.
     """
     priors = [
-        {
-            "param_name": "ice_cream_sales",
-            "distribution": "uniform",
-            "distri_params": [1, 5],
-        }
+        {"param_name": "ice_cream_sales", "distribution": "uniform", "distri_params": [1, 5],}
     ]
     target_outputs = [
         {
@@ -38,11 +34,7 @@ def test_calibration_data_collation(temp_data_dir, num_iters, max_size_mb):
             deepcopy(target_outputs),
             multipliers={},
             chain_index=chain_index,
-            model_parameters={
-                "default": {},
-                "scenario_start_time": 2000,
-                "scenarios": {},
-            },
+            model_parameters={"default": {}, "scenario_start_time": 2000, "scenarios": {},},
         )
         calib.run_fitting_algorithm(
             run_mode=CalibrationMode.AUTUMN_MCMC,
@@ -55,9 +47,7 @@ def test_calibration_data_collation(temp_data_dir, num_iters, max_size_mb):
     app_dir = os.path.join(temp_data_dir, "sharks")
     run_dir = os.path.join(app_dir, os.listdir(app_dir)[0])
     out_db_paths = [
-        os.path.join(run_dir, db_path)
-        for db_path in os.listdir(run_dir)
-        if db_path.endswith(".db")
+        os.path.join(run_dir, db_path) for db_path in os.listdir(run_dir) if db_path.endswith(".db")
     ]
     # There should be 5 databases saved
     assert len(out_db_paths) == 5
@@ -75,11 +65,7 @@ def test_calibration_data_collation(temp_data_dir, num_iters, max_size_mb):
 def test_calibrate_autumn_mcmc(temp_data_dir):
     # Import autumn stuff inside function so we can mock out the database.
     priors = [
-        {
-            "param_name": "ice_cream_sales",
-            "distribution": "uniform",
-            "distri_params": [1, 5],
-        }
+        {"param_name": "ice_cream_sales", "distribution": "uniform", "distri_params": [1, 5],}
     ]
     target_outputs = [
         {
@@ -96,7 +82,11 @@ def test_calibrate_autumn_mcmc(temp_data_dir):
         target_outputs,
         multipliers={},
         chain_index=0,
-        model_parameters={"default": {}, "scenario_start_time": 2000, "scenarios": {}},
+        model_parameters={
+            "default": {"start_time": 2000},
+            "scenario_start_time": 2000,
+            "scenarios": {},
+        },
     )
     calib.run_fitting_algorithm(
         run_mode=CalibrationMode.AUTUMN_MCMC,

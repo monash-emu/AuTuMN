@@ -105,12 +105,9 @@ class Calibration:
             min_year = min(t["years"])
             msg = f"Target {t_name} has time {min_year} before model start {model_start}."
             assert min_year >= model_start, msg
-            msg = f"Target {t_name} has time {min_year} before prior start {max_prior_start}."
-            assert min_year >= max_prior_start, msg
-
-        import pdb
-
-        pdb.set_trace()
+            if max_prior_start:
+                msg = f"Target {t_name} has time {min_year} before prior start {max_prior_start}."
+                assert min_year >= max_prior_start, msg
 
         # Set a custom end time for all model runs - there is no point running
         # the models after the last calibration targets.

@@ -1,18 +1,10 @@
 country: united-kingdom
 iso3: GBR
 
-scenario_start_time: XX
+start_time: -20.
 end_time: 180.
 
-# calibrated parameters
-start_time: XX
-contact_rate: XX
-tv_detection_c: XX # inflection point
-tv_detection_sigma: XX
-prop_detected_among_symptomatic: XX
-
-# other country-specific parameters
-tv_detection_b: XX # shape parameter of the tanh-based curve
+contact_rate: .035
 
 mixing:
   other_locations_times:
@@ -495,11 +487,11 @@ mixing:
     - 0.48
     - 0.48
     - 0.49
-  school_times:
-    - XX
-    - XX
-    - XX
-  school_values:
-    - XX
-    - XX
-    - XX
+#  school_times:
+#    - XX
+#    - XX
+#    - XX
+#  school_values:
+#    - XX
+#    - XX
+#    - XX

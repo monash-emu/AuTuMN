@@ -89,7 +89,7 @@ def run_instance(job_id: str, instance_type: str):
         ImageId=settings.EC2_AMI,
         InstanceType=instance_type,
         SecurityGroupIds=[settings.EC2_SECURITY_GROUP],
-        IamInstanceProfile={"Name": "deeplearning"},
+        IamInstanceProfile={"Name": settings.EC2_IAM_INSTANCE_PROFILE},
         KeyName="wizard",
         InstanceInitiatedShutdownBehavior="terminate",
         InstanceMarketOptions={

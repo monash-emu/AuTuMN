@@ -4,7 +4,6 @@ country: victoria
 iso3: VIC
 
 implement_importation: True
-imported_cases_explict: False
 
 infectious_seed: 0
 

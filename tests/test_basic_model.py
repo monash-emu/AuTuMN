@@ -62,7 +62,7 @@ def test_epi_model__with_birth_rate__expect_pop_increase(ModelClass):
     model.run_model(integration_type=IntegrationType.ODE_INT)
     # Expect that we have more people in the population
     expected_output = [
-        [[100.0, 0.0], [102.0, 0.0], [104.0, 0.0], [106.0, 0.0], [108.0, 0.0], [111.0, 0.0]]
+        [[100.0, 0.0], [102.0, 0.0], [104.0, 0.0], [106.0, 0.0], [108.0, 0.0], [111.0, 0.0],]
     ]
     actual_output = np.round(model.outputs)
     assert (actual_output == np.array(expected_output)).all()
@@ -246,7 +246,7 @@ def test_epi_model__with_infection_frequency__expect_all_infected(ModelClass):
     model.run_model(integration_type=IntegrationType.ODE_INT)
     # Expect that everyone gets infected eventually.
     expected_output = [
-        [[99.0, 1.0], [83.0, 17.0], [20.0, 80.0], [1.0, 99.0], [0.0, 100.0], [0.0, 100.0]]
+        [[99.0, 1.0], [83.0, 17.0], [20.0, 80.0], [1.0, 99.0], [0.0, 100.0], [0.0, 100.0],]
     ]
     actual_output = np.round(model.outputs)
     assert (actual_output == np.array(expected_output)).all()
@@ -278,7 +278,7 @@ def test_epi_model__with_infection_density__expect_all_infected(ModelClass):
     model.run_model(integration_type=IntegrationType.ODE_INT)
     # Expect that everyone gets infected eventually.
     expected_output = [
-        [[99.0, 1.0], [83.0, 17.0], [20.0, 80.0], [1.0, 99.0], [0.0, 100.0], [0.0, 100.0]]
+        [[99.0, 1.0], [83.0, 17.0], [20.0, 80.0], [1.0, 99.0], [0.0, 100.0], [0.0, 100.0],]
     ]
     actual_output = np.round(model.outputs)
     assert (actual_output == np.array(expected_output)).all()

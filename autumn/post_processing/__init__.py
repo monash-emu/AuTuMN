@@ -197,7 +197,7 @@ class PostProcessing:
                     i_time, self.operations_to_perform[output]["numerator_indices"]
                 ].sum()
                 extra_for_denominator = self.model.outputs[
-                    i_time, self.operations_to_perform[output]["denominator_extra_indices"]
+                    i_time, self.operations_to_perform[output]["denominator_extra_indices"],
                 ].sum()
                 value = (
                     numerator / (numerator + extra_for_denominator)

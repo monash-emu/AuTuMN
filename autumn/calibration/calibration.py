@@ -28,6 +28,9 @@ from .utils import (
     raise_error_unsupported_prior,
 )
 
+BEST_LL = "best_ll"
+BEST_START = "best_start_time"
+
 
 class CalibrationMode:
     """Different ways to run the calibration."""
@@ -76,31 +79,42 @@ class Calibration:
         model_parameters={},
         start_time_range=None,
         record_rejected_outputs=False,
-        run_extra_scenarios=True,
     ):
         self.model_name = model_name
         self.model_builder = model_builder  # a function that builds a new model without running it
         self.model_parameters = model_parameters
-        self.scenarios = []
-        self.initialise_scenario_list()
         self.record_rejected_outputs = record_rejected_outputs
-        self.run_extra_scenarios = run_extra_scenarios
-        self.start_time_range = (
-            start_time_range  # if specified, we allow start time to vary to achieve the best fit
-        )
+        # If specified, we allow start time to vary to achieve the best fit
+        self.start_time_range = start_time_range
         self.best_start_time = None
-        self.post_processing = None  # a PostProcessing object containing the required outputs of a model that has been run
         self.priors = priors  # a list of dictionaries. Each dictionary describes the prior distribution for a parameter
         self.param_list = [self.priors[i]["param_name"] for i in range(len(self.priors))]
         self.targeted_outputs = (
             targeted_outputs  # a list of dictionaries. Each dictionary describes a target
         )
-        self.multipliers = multipliers
-        self.chain_index = chain_index
+
+        # Validate target output start time.
+        model_start = model_parameters["default"]["start_time"]
+        max_prior_start = None
+        for p in priors:
+            if p["param_name"] == "start_time":
+                max_prior_start = max(p["distri_params"])
+
+        for t in targeted_outputs:
+            t_name = t["output_key"]
+            min_year = min(t["years"])
+            msg = f"Target {t_name} has time {min_year} before model start {model_start}."
+            assert min_year >= model_start, msg
+            if max_prior_start:
+                msg = f"Target {t_name} has time {min_year} before prior start {max_prior_start}."
+                assert min_year >= max_prior_start, msg
 
         # Set a custom end time for all model runs - there is no point running
         # the models after the last calibration targets.
         self.end_time = 2 + max([max(t["years"]) for t in targeted_outputs])
+
+        self.multipliers = multipliers
+        self.chain_index = chain_index
 
         self.specify_missing_prior_params()
 
@@ -120,6 +134,7 @@ class Calibration:
         self.workout_unspecified_jumping_sds()  # for proposal function definition
 
         self.iter_num = 0
+        self.latest_scenario = None
         self.run_mode = None
         self.main_table = {}
         self.mcmc_trace = None  # will store the results of the MCMC model calibration
@@ -163,62 +178,29 @@ class Calibration:
                 else:
                     raise_error_unsupported_prior(p_dict["distribution"])
 
-    def initialise_scenario_list(self):
-        base_scenario = Scenario(self.model_builder, 0, copy.deepcopy(self.model_parameters))
-        self.scenarios = [base_scenario]
-        if "scenarios" in self.model_parameters:
-            for scenario_index in [
-                sc_i for sc_i in self.model_parameters["scenarios"] if int(sc_i) > 0
-            ]:
-                scenario = Scenario(
-                    self.model_builder, scenario_index, copy.deepcopy(self.model_parameters),
-                )
-                self.scenarios.append(scenario)
-
-    def update_post_processing(self):
-        """
-        updates self.post_processing attribute based on the newly run model
-        :return:
-        """
-        requested_outputs = [
-            self.targeted_outputs[i]["output_key"]
-            for i in range(len(self.targeted_outputs))
-            if "prevX" in self.targeted_outputs[i]["output_key"]
-        ]
-        requested_times = {}
-
-        for _output in self.targeted_outputs:
-            if "prevX" in _output["output_key"]:
-                requested_times[_output["output_key"]] = _output["years"]
-
-        self.post_processing = post_proc.PostProcessing(
-            self.scenarios[0].model,
-            requested_outputs=requested_outputs,
-            requested_times=requested_times,
-            multipliers=self.multipliers,
-        )
-
-    def store_model_outputs(self, scenario_index):
+    def store_model_outputs(self):
         """
         Record the model outputs in the database
         """
-        _model = self.scenarios[scenario_index].model
-        out_df = pd.DataFrame(_model.outputs, columns=_model.compartment_names)
-        derived_output_df = pd.DataFrame.from_dict(_model.derived_outputs)
+        scenario = self.latest_scenario
+        assert scenario, "No model has been run"
+        model = scenario.model
+        out_df = pd.DataFrame(model.outputs, columns=model.compartment_names)
+        derived_output_df = pd.DataFrame.from_dict(model.derived_outputs)
         store_database(
             derived_output_df,
             table_name="derived_outputs",
             run_idx=self.iter_num,
             database_name=self.output_db_path,
-            scenario=scenario_index,
+            scenario=scenario.idx,
         )
         store_database(
             out_df,
             table_name="outputs",
             run_idx=self.iter_num,
-            times=_model.times,
+            times=model.times,
             database_name=self.output_db_path,
-            scenario=scenario_index,
+            scenario=scenario.idx,
         )
 
     def store_mcmc_iteration_info(self, proposed_params, proposed_loglike, accept, i_run):
@@ -240,167 +222,133 @@ class Calibration:
             mcmc_run_df, table_name="mcmc_run", run_idx=i_run, database_name=self.output_db_path,
         )
 
-    def run_model_with_params(self, params):
+    def run_model_with_params(self, proposed_params: dict):
         """
-        run the model with a set of params.
-        :param params: a list containing the parameter values for update
+        Run the model with a set of params.
         """
-        print("Running iteration " + str(self.iter_num) + "...")
+        print(f"Running iteration {self.iter_num}...")
+
+        # Update default parameters to use calibration params.
         param_updates = {"end_time": self.end_time}
         for i, param_name in enumerate(self.param_list):
-            param_updates[param_name] = params[i]
+            param_updates[param_name] = proposed_params[i]
 
-        base_scenario = Scenario(self.model_builder, 0, copy.deepcopy(self.model_parameters))
-        self.scenarios[0] = base_scenario
+        params = copy.deepcopy(self.model_parameters)
+        params["default"] = update_params(params["default"], param_updates)
+        scenario = Scenario(self.model_builder, 0, params)
+        scenario.run()
+        self.latest_scenario = scenario
 
-        base_scenario.params["default"] = update_params(
-            base_scenario.params["default"], param_updates
+        _req_outs = [o for o in self.targeted_outputs if "prevX" in o["output_key"]]
+        requested_outputs = [o["output_key"] for o in _req_outs]
+        requested_times = {o["output_key"]: o["years"] for o in _req_outs}
+        pp = post_proc.PostProcessing(
+            scenario.model,
+            requested_outputs=requested_outputs,
+            requested_times=requested_times,
+            multipliers=self.multipliers,
         )
-        base_scenario.run()
-        self.update_post_processing()
 
-    def run_extra_scenarios_with_params(self, params):
+        return scenario, pp
+
+    def loglikelihood(self, params, to_return=BEST_LL):
         """
-        Run intervention scenarios after accepting a baseline run
-        :param params: list of all current MCMC parameter values
+        Calculate the loglikelihood for a set of parameters
         """
-        for scenario_idx, scenario_params in self.model_parameters["scenarios"].items():
-            if scenario_idx == 0:
-                continue
-            scenario_params["start_time"] = self.model_parameters["scenario_start_time"]
+        scenario, pp = self.run_model_with_params(params)
 
-            # Potential update of scenario params if these are among the MCMC params
-            updated_scenario_params = copy.copy(scenario_params)
-            for param_name in scenario_params.keys():
-                if param_name in self.param_list:
-                    param_index = self.param_list.index(param_name)
-                    updated_scenario_params[param_name] = params[param_index]
+        model_start_time = pp.derived_outputs["times"][0]
+        if self.start_time_range is None:
+            considered_start_times = [model_start_time]
+        else:
+            start, end = self.start_time_range
+            considered_start_times = np.linspace(start, end, num=end - start + 1)
 
-            # FIXME: we may want to avoid initialising a new Scenario object and instead reuse the existing one
-            self.scenarios[scenario_idx] = Scenario(
-                self.model_builder, scenario_idx, copy.deepcopy(self.model_parameters)
-            )
+        best_start_time = None
+        if self.run_mode == CalibrationMode.LEAST_SQUARES:
+            # Initial best loglikelihood is a very large +ve number.
+            best_ll = 1.0e60
+        else:
+            # Initial best loglikelihood is a very large -ve number.
+            best_ll = -1.0e60
 
-            # update default params
-            self.scenarios[scenario_idx].params["default"] = copy.deepcopy(
-                self.scenarios[0].params["default"]
-            )
+        for considered_start_time in considered_start_times:
+            time_shift = considered_start_time - model_start_time
+            ll = 0  # loglikelihood if using bayesian approach. Sum of squares if using lsm mode
+            for target in self.targeted_outputs:
+                key = target["output_key"]
+                data = np.array(target["values"])
+                if key in pp.generated_outputs:
+                    if self.start_time_range is not None:
+                        raise ValueError("variable start time implemented for derived_outputs only")
+                    model_output = np.array(pp.generated_outputs[key])
+                else:
+                    indices = []
+                    for year in target["years"]:
+                        time_idx = scenario.model.times.index(year - time_shift)
+                        indices.append(time_idx)
 
-            # update scenario params
-            self.scenarios[scenario_idx].params["scenarios"][scenario_idx].update(
-                updated_scenario_params
-            )
+                    model_output = np.array([pp.derived_outputs[key][index] for index in indices])
 
-            # Run scenario
-            baseline_model = copy.deepcopy(self.scenarios[0].model)
-            self.scenarios[scenario_idx].run(base_model=baseline_model)
-
-            self.store_model_outputs(scenario_idx)
-
-    def loglikelihood(self, params, to_return="best_ll"):
-        """
-        defines the loglikelihood
-        :param params: model parameters
-        :return: the loglikelihood
-        """
-        # run the model
-        best_ll = None
-        # for evaluated in self.evaluated_params_ll:
-        #     if np.array_equal(params, evaluated[0]):
-        #         best_ll = evaluated[1]
-        #         break
-
-        if best_ll is None:
-            self.run_model_with_params(params)
-
-            model_start_time = self.post_processing.derived_outputs["times"][0]
-            if self.start_time_range is None:
-                considered_start_times = [model_start_time]
-            else:
-                considered_start_times = np.linspace(
-                    self.start_time_range[0],
-                    self.start_time_range[1],
-                    num=self.start_time_range[1] - self.start_time_range[0] + 1,
-                )
-
-            best_ll, best_start_time = (-1.0e60, None)
-            if self.run_mode == "lsm":
-                best_ll = 1.0e60
-            for considered_start_time in considered_start_times:
-                time_shift = considered_start_time - model_start_time
-                ll = 0  # loglikelihood if using bayesian approach. Sum of squares if using lsm mode
-                for target in self.targeted_outputs:
-                    key = target["output_key"]
-                    data = np.array(target["values"])
-                    if key in self.post_processing.generated_outputs:
-                        if self.start_time_range is not None:
-                            raise ValueError(
-                                "variable start time implemented for derived_outputs only"
+                if self.run_mode == CalibrationMode.LEAST_SQUARES:
+                    ll += np.sum((data - model_output) ** 2)
+                else:
+                    if "loglikelihood_distri" not in target:  # default distribution
+                        target["loglikelihood_distri"] = "normal"
+                    if target["loglikelihood_distri"] == "normal":
+                        ll += -(0.5 / target["sd"] ** 2) * np.sum((data - model_output) ** 2)
+                    elif target["loglikelihood_distri"] == "poisson":
+                        for i in range(len(data)):
+                            ll += (
+                                data[i] * math.log(abs(model_output[i]))
+                                - model_output[i]
+                                - math.log(math.factorial(data[i]))
                             )
-                        model_output = np.array(self.post_processing.generated_outputs[key])
+                    elif target["loglikelihood_distri"] == "negative_binomial":
+                        assert key + "_dispersion_param" in self.param_list
+                        # the dispersion parameter varies during the MCMC. We need to retrieve its value
+                        n = [
+                            params[i]
+                            for i in range(len(params))
+                            if self.param_list[i] == key + "_dispersion_param"
+                        ][0]
+                        for i in range(len(data)):
+                            # We use the parameterisation based on mean and variance and assume define var=mean**delta
+                            mu = model_output[i]
+                            # work out parameter p to match the distribution mean with the model output
+                            p = mu / (mu + n)
+                            ll += stats.nbinom.logpmf(data[i], n, 1.0 - p)
                     else:
-                        indices = []
-                        for year in target["years"]:
-                            indices.append(self.scenarios[0].model.times.index(year - time_shift))
-                        model_output = np.array(
-                            [self.post_processing.derived_outputs[key][index] for index in indices]
-                        )
+                        raise ValueError("Distribution not supported in loglikelihood_distri")
 
-                    if self.run_mode == "lsm":
-                        ll += np.sum((data - model_output) ** 2)
-                    else:
-                        if "loglikelihood_distri" not in target:  # default distribution
-                            target["loglikelihood_distri"] = "normal"
-                        if target["loglikelihood_distri"] == "normal":
-                            ll += -(0.5 / target["sd"] ** 2) * np.sum((data - model_output) ** 2)
-                        elif target["loglikelihood_distri"] == "poisson":
-                            for i in range(len(data)):
-                                ll += (
-                                    data[i] * math.log(abs(model_output[i]))
-                                    - model_output[i]
-                                    - math.log(math.factorial(data[i]))
-                                )
-                        elif target["loglikelihood_distri"] == "negative_binomial":
-                            assert key + "_dispersion_param" in self.param_list
-                            # the dispersion parameter varies during the MCMC. We need to retrieve its value
-                            n = [
-                                params[i]
-                                for i in range(len(params))
-                                if self.param_list[i] == key + "_dispersion_param"
-                            ][0]
-                            for i in range(len(data)):
-                                # We use the parameterisation based on mean and variance and assume define var=mean**delta
-                                mu = model_output[i]
-                                # work out parameter p to match the distribution mean with the model output
-                                p = mu / (mu + n)
-                                ll += stats.nbinom.logpmf(data[i], n, 1.0 - p)
-                        else:
-                            raise ValueError("Distribution not supported in loglikelihood_distri")
+            if self.run_mode == CalibrationMode.LEAST_SQUARES:
+                is_new_best_ll = ll < best_ll
+            else:
+                is_new_best_ll = ll > best_ll
 
-                if (ll > best_ll and self.run_mode != "lsm") or (
-                    ll < best_ll and self.run_mode == "lsm"
-                ):
-                    best_ll, best_start_time = (ll, considered_start_time)
+            if is_new_best_ll:
+                best_ll, best_start_time = (ll, considered_start_time)
 
-            if self.run_mode == "lsm":
-                mcmc_run_dict = {k: v for k, v in zip(self.param_list, params)}
-                mcmc_run_dict["loglikelihood"] = best_ll
-                mcmc_run_colnames = self.param_list.copy()
-                mcmc_run_colnames = mcmc_run_colnames.append("loglikelihood")
-                mcmc_run_df = pd.DataFrame(
-                    mcmc_run_dict, columns=mcmc_run_colnames, index=[self.iter_num]
-                )
-                store_database(
-                    mcmc_run_df,
-                    table_name="mcmc_run",
-                    run_idx=self.iter_num,
-                    database_name=self.output_db_path,
-                )
-            self.evaluated_params_ll.append((copy.copy(params), copy.copy(best_ll)))
+        if self.run_mode == CalibrationMode.LEAST_SQUARES:
+            mcmc_run_dict = {k: v for k, v in zip(self.param_list, params)}
+            mcmc_run_dict["loglikelihood"] = best_ll
+            mcmc_run_colnames = self.param_list.copy()
+            mcmc_run_colnames = mcmc_run_colnames.append("loglikelihood")
+            mcmc_run_df = pd.DataFrame(
+                mcmc_run_dict, columns=mcmc_run_colnames, index=[self.iter_num]
+            )
+            store_database(
+                mcmc_run_df,
+                table_name="mcmc_run",
+                run_idx=self.iter_num,
+                database_name=self.output_db_path,
+            )
 
-        if to_return == "best_ll":
+        self.evaluated_params_ll.append((copy.copy(params), copy.copy(best_ll)))
+
+        if to_return == BEST_LL:
             return best_ll
-        elif to_return == "best_start_time":
+        elif to_return == BEST_START:
             return best_start_time
         else:
             raise ValueError("to_return not recognised")
@@ -590,12 +538,7 @@ class Calibration:
             # Store model outputs
             self.store_mcmc_iteration_info(proposed_params, proposed_loglike, accept, i_run)
             if accept or self.record_rejected_outputs:
-                self.store_model_outputs(0)
-
-            # Run intervention scenarios if accepted run
-            if accept and self.run_extra_scenarios:
-                print("Running extra scenarios")
-                self.run_extra_scenarios_with_params(proposed_params)
+                self.store_model_outputs()
 
             self.iter_num += 1
             iters_completed = i_run + 1
@@ -634,9 +577,6 @@ class Calibration:
             a_posteriori_logproba = loglike + logprior
 
             self.store_mcmc_iteration_info(params, a_posteriori_logproba, False, self.iter_num)
-            if self.record_rejected_outputs:
-                self.store_model_outputs(0)
-
             self.iter_num += 1
 
     def propose_new_params(self, prev_params):

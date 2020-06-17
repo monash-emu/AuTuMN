@@ -9,11 +9,14 @@ from datetime import datetime
 import boto3
 import timeago
 
-client = boto3.client("s3")
+from . import settings
+from .aws import session
 
-BUCKET = "autumn-calibrations"
-WEBSITE_URL = "http://autumn-calibrations.s3-website-ap-southeast-2.amazonaws.com"
-BUCKET_URL = "https://autumn-calibrations.s3-ap-southeast-2.amazonaws.com/"
+client = session.client("s3")
+
+BUCKET = settings.S3_BUCKET
+WEBSITE_URL = f"http://{BUCKET}.s3-website-ap-southeast-2.amazonaws.com"
+BUCKET_URL = f"https://{BUCKET}.s3-ap-southeast-2.amazonaws.com/"
 
 
 def get_url(path: str):
@@ -28,7 +31,11 @@ def get_pretty_name(s: str):
     Get a pretty run name from the slug stored in AWS S3
     """
     try:
-        model_name, timestamp, branch, commit = s.split("-")
+        parts = s.split("-")
+        commit = parts[-1]
+        branch = parts[-2]
+        timestamp = parts[-3]
+        model_name = " ".join(parts[:-3])
         run_dt = datetime.fromtimestamp(int(timestamp))
         run_dt_str = run_dt.strftime("%a at %H:%M %d-%m-%Y")
         model_name = model_name.title()
@@ -127,9 +134,7 @@ def update_page(path: str, children: List[str]):
     upload_html(html, key)
 
     for dirname in dirs:
-        dir_children = [
-            "/".join(k.split("/")[1:]) for k in children if k.startswith(dirname)
-        ]
+        dir_children = ["/".join(k.split("/")[1:]) for k in children if k.startswith(dirname)]
         dirpath = os.path.join(path, dirname)
         update_page(dirpath, dir_children)
 

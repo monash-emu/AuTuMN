@@ -8,7 +8,7 @@ NOTIFICATION_STRATUM = ["sympt_isolate", "hospital_non_icu", "icu"]
 
 
 def get_calc_notifications_covid(
-    implement_importation, imported_cases_explict, prop_detected_func,
+    implement_importation, prop_detected_func,
 ):
     def calculate_notifications_covid(model: StratifiedModel, time: float):
         """
@@ -22,13 +22,6 @@ def get_calc_notifications_covid(
             is_notify_stratum = any([stratum in key for stratum in NOTIFICATION_STRATUM])
             if is_progress and is_notify_stratum:
                 notifications_count += value[time_idx]
-
-        if implement_importation and imported_cases_explict:
-            notifications_count += (
-                model.time_variants["crude_birth_rate"](time)
-                * sum(model.compartment_values)
-                * prop_detected_func(time)
-            )
 
         return notifications_count
 

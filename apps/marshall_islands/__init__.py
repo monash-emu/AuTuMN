@@ -6,6 +6,7 @@ import yaml
 
 from autumn.model_runner import build_model_runner
 
+from . import calibration
 from .model import build_model
 
 FILE_DIR = os.path.dirname(os.path.abspath(__file__))

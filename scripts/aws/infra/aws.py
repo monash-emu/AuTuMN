@@ -1,14 +1,29 @@
+import os
 import subprocess
 from datetime import datetime
 from dateutil.tz import tzutc
 
 import boto3
+from botocore.exceptions import ProfileNotFound
 import timeago
 from tabulate import tabulate
 
 from . import settings
 
-client = boto3.client("ec2", region_name=settings.AWS_REGION)
+
+try:
+    session = boto3.session.Session(
+        region_name=settings.AWS_REGION, profile_name=settings.AWS_PROFILE
+    )
+except ProfileNotFound:
+    session = boto3.session.Session(
+        region_name=settings.AWS_REGION,
+        aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
+        aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
+    )
+
+
+client = session.client("ec2")
 
 DESCRIBE_KEYS = ["InstanceId", "InstanceType", "LaunchTime", "State"]
 
@@ -36,7 +51,7 @@ def get_instance_type(min_cores: int, min_ram: int):
 
 
 def download_s3(s3_key, dest):
-    cmd = f"aws s3 cp --recursive {s3_key} {dest}"
+    cmd = f"aws --profile {settings.AWS_PROFILE} s3 cp --recursive {s3_key} {dest}"
     subprocess.run(args=[cmd], shell=True, check=True)
 
 
@@ -53,18 +68,14 @@ def run_job(job_id: str, instance_type=None):
 
 def stop_job(job_id: str):
     print(f"Stopping EC2 instances running job {job_id}... ", end="")
-    instance_ids = [
-        i["InstanceId"] for i in describe_instances() if i["name"] == job_id
-    ]
+    instance_ids = [i["InstanceId"] for i in describe_instances() if i["name"] == job_id]
     client.terminate_instances(InstanceIds=instance_ids)
     print("request sent.")
 
 
 def cleanup_volumes():
     volumes = client.describe_volumes()
-    volume_ids = [
-        v["VolumeId"] for v in volumes["Volumes"] if v["State"] == "available"
-    ]
+    volume_ids = [v["VolumeId"] for v in volumes["Volumes"] if v["State"] == "available"]
     for v_id in volume_ids:
         print(f"Deleting orphaned volume {v_id}")
         client.delete_volume(VolumeId=v_id)
@@ -78,16 +89,16 @@ def run_instance(job_id: str, instance_type: str):
         ImageId=settings.EC2_AMI,
         InstanceType=instance_type,
         SecurityGroupIds=[settings.EC2_SECURITY_GROUP],
-        IamInstanceProfile={"Name": "deeplearning"},
-        KeyName="wizard",
+        IamInstanceProfile={"Name": settings.EC2_IAM_INSTANCE_PROFILE},
+        KeyName=settings.EC2_KEYFILE.split(".")[0],
         InstanceInitiatedShutdownBehavior="terminate",
-        InstanceMarketOptions={
-            "MarketType": "spot",
-            "SpotOptions": {
-                "MaxPrice": settings.EC2_SPOT_MAX_PRICE,
-                "SpotInstanceType": "one-time",
-            },
-        },
+        # InstanceMarketOptions={
+        #     "MarketType": "spot",
+        #     "SpotOptions": {
+        #         "MaxPrice": settings.EC2_SPOT_MAX_PRICE,
+        #         "SpotInstanceType": "one-time",
+        #     },
+        # },
         TagSpecifications=[
             {"ResourceType": "instance", "Tags": [{"Key": "Name", "Value": job_id}]}
         ],
@@ -133,9 +144,7 @@ def print_status(instances):
         ]
         for i in instances
     ]
-    table_str = tabulate(
-        table_data, headers=["Name", "Type", "Status", "IP", "Launched"]
-    )
+    table_str = tabulate(table_data, headers=["Name", "Type", "Status", "IP", "Launched"])
     print(table_str, "\n")
 
 

@@ -10,6 +10,7 @@ import os
 import click
 
 from autumn.db import models
+from autumn.db.input_data import build_input_database
 from autumn.plots.database_plots import plot_from_database, plot_from_mcmc_databases
 from autumn.tool_kit.uncertainty import (
     add_uncertainty_weights,
@@ -20,6 +21,14 @@ from autumn.tool_kit.uncertainty import (
 @click.group()
 def db():
     """Database utilities"""
+
+
+@db.command("build_input")
+def build_input_db():
+    """
+    Build a new, timestamped input database from Excel files.
+    """
+    build_input_database()
 
 
 @db.command("plot")

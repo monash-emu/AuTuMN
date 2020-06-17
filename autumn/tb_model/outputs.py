@@ -9,8 +9,14 @@ import autumn.post_processing as post_proc
 import matplotlib.pyplot as plt
 
 from ..constants import Compartment
-from autumn.tool_kit.utils import find_first_list_element_above, element_wise_list_summation
-from autumn.tb_model.flows import get_incidence_connections, get_notifications_connections
+from autumn.tool_kit.utils import (
+    find_first_list_element_above,
+    element_wise_list_summation,
+)
+from autumn.tb_model.flows import (
+    get_incidence_connections,
+    get_notifications_connections,
+)
 
 
 def create_request_stratified_incidence(requested_stratifications, strata_dict):
@@ -94,7 +100,13 @@ def list_all_strata_for_mortality(
 
 
 def get_post_processing_results(
-    models, req_outputs, req_multipliers, outputs_to_plot_by_stratum, scenario_list, req_times, ymax
+    models,
+    req_outputs,
+    req_multipliers,
+    outputs_to_plot_by_stratum,
+    scenario_list,
+    req_times,
+    ymax,
 ):
     pps = []
     for scenario_index in range(len(models)):

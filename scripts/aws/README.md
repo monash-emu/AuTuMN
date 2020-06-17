@@ -37,7 +37,7 @@ The parameters required are:
 - How many seconds to run the calibration for (eg. 3 hours = 10800 seconds)
 
 This calibration is run on a single cloud computer (AWS EC2) in parallel. A separate database is produced for each calibration chain and stored in
-cloud object storage (AWS S3 s3://autumn-calibrations) under a "run name" which has the format {model_name}-{timestamp}-{git_branch}-{git_hash}.
+cloud object storage (AWS S3 s3://autumn-data) under a "run name" which has the format {model_name}-{timestamp}-{git_branch}-{git_hash}.
 Each calibration chain database is an SQLite file with the tables:
 
 - mcmc_run: log of each MCMC iteration including parameter values, loglikelihood and run acceptance

@@ -4,7 +4,13 @@ Ensure that the EpiModel model produces the correct flow rates and outputs when 
 import pytest
 
 from summer.model import EpiModel
-from summer.constants import Compartment, Flow, BirthApproach, Stratification, IntegrationType
+from summer.constants import (
+    Compartment,
+    Flow,
+    BirthApproach,
+    Stratification,
+    IntegrationType,
+)
 
 MODEL_KWARGS = {
     "times": [2000, 2001, 2002, 2003, 2004, 2005],
@@ -224,7 +230,11 @@ def test_epi_model_apply_birth_rate__with_crude_birth_rate__expect_births(
     the birth approach is "crude birth rate".
     """
     params = {"crude_birth_rate": birth_rate}
-    model_kwargs = {**MODEL_KWARGS, "birth_approach": BirthApproach.ADD_CRUDE, "parameters": params}
+    model_kwargs = {
+        **MODEL_KWARGS,
+        "birth_approach": BirthApproach.ADD_CRUDE,
+        "parameters": params,
+    }
     model = EpiModel(**model_kwargs)
     model.prepare_to_run()
     new_rates = model.apply_birth_rate(flow_rates, model.compartment_values, 2000)

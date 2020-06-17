@@ -48,9 +48,9 @@ def extract_x_positions(parameter, joining_string="X"):
     :return: list
         list of all the indices for where the X character occurs in the string, along with the total length of the list
     """
-    return [
-        loc for loc in range(len(parameter)) if parameter[loc] == joining_string
-    ] + [len(parameter)]
+    return [loc for loc in range(len(parameter)) if parameter[loc] == joining_string] + [
+        len(parameter)
+    ]
 
 
 def extract_reversed_x_positions(parameter):
@@ -94,9 +94,7 @@ def find_name_components(compartment):
     ]
 
 
-def find_stratum_index_from_string(
-    compartment, stratification, remove_stratification_name=True
-):
+def find_stratum_index_from_string(compartment, stratification, remove_stratification_name=True):
     """
     finds the stratum which the compartment (or parameter) name falls in when provided with the compartment name and the
         name of the stratification of interest
@@ -118,7 +116,5 @@ def find_stratum_index_from_string(
         if stratification in name
     ][0]
     return (
-        stratum_name[stratum_name.find("_") + 1 :]
-        if remove_stratification_name
-        else stratum_name
+        stratum_name[stratum_name.find("_") + 1 :] if remove_stratification_name else stratum_name
     )

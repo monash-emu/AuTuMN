@@ -11,7 +11,7 @@ steps:
         key: "full-burn-in"
         hint: "How many MCMC iterations should be burned?"
         required: false
-        default: "300"
+        default: "1000"
 
       - select: "Trigger PowerBI processing"
         key: "trigger-downstream"
@@ -30,3 +30,4 @@ steps:
   - command: ./scripts/aws/run.sh website
     label: Update website
     depends_on: run-full
+    allow_dependency_failure: true

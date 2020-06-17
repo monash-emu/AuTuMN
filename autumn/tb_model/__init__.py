@@ -8,7 +8,10 @@ from .outputs import (
     list_all_strata_for_mortality,
     plot_time_variant_param,
 )
-from .latency_params import provide_aggregated_latency_parameters, get_adapted_age_parameters
+from .latency_params import (
+    provide_aggregated_latency_parameters,
+    get_adapted_age_parameters,
+)
 from .loaded_model import LoadedModel
 from .interpolation import get_bcg_functions, add_birth_rate_functions
 from .flows import (
@@ -17,4 +20,7 @@ from .flows import (
     add_standard_latency_flows,
     add_standard_natural_history_flows,
 )
-from .preprocess import convert_competing_proportion_to_rate, scale_relative_risks_for_equivalence
+from .preprocess import (
+    convert_competing_proportion_to_rate,
+    scale_relative_risks_for_equivalence,
+)

@@ -12,7 +12,7 @@ from math import log
 from matplotlib import pyplot
 from summer.model.strat_model import StratifiedModel
 
-from autumn.demography.social_mixing import load_specific_prem_sheet
+from autumn.demography.social_mixing import load_country_mixing_matrix
 from autumn.tool_kit.scenarios import Scenario
 from autumn.tool_kit import schema_builder as sb
 from autumn.tool_kit.uncertainty import export_mcmc_quantiles
@@ -178,7 +178,7 @@ def plot_timeseries_with_uncertainty(
     axis.set_ylabel(output_name)
 
     plotter.save_figure(
-        fig, filename=f"{output_name} uncertainty {scenario_list}", title_text=f"{output_name}"
+        fig, filename=f"{output_name} uncertainty {scenario_list}", title_text=f"{output_name}",
     )
 
 
@@ -197,7 +197,7 @@ def _overwrite_non_accepted_mcmc_runs(mcmc_tables: List[pd.DataFrame], column_na
 
 
 def plot_agg_compartments_multi_scenario(
-    plotter: Plotter, scenarios: List[Scenario], compartment_names: List[str], is_logscale=False
+    plotter: Plotter, scenarios: List[Scenario], compartment_names: List[str], is_logscale=False,
 ):
     """
     Plot multiple compartments with values aggregated for a multiple scenarios.
@@ -222,7 +222,7 @@ def plot_agg_compartments_multi_scenario(
 
 
 def plot_single_compartment_multi_scenario(
-    plotter: Plotter, scenarios: List[Scenario], compartment_name: str, is_logscale=False
+    plotter: Plotter, scenarios: List[Scenario], compartment_name: str, is_logscale=False,
 ):
     """
     Plot the selected output compartment for a multiple scenarios.
@@ -429,7 +429,7 @@ def plot_prevalence_combinations(
 
 
 def plot_input_function(
-    plotter: Plotter, model: StratifiedModel, func_names: List[str], plot_start_time: float
+    plotter: Plotter, model: StratifiedModel, func_names: List[str], plot_start_time: float,
 ):
     """
     Plot single simple plot of a function over time
@@ -518,7 +518,7 @@ def plot_mixing_matrix(plotter: Plotter, model: StratifiedModel):
     for location in ["all_locations", "school", "home", "work", "other_locations"]:
         fig, axis, max_dims, n_rows, n_cols = plotter.get_figure()
         axis = sns.heatmap(
-            load_specific_prem_sheet(location, "Australia"),
+            load_country_mixing_matrix(location, "Australia"),
             yticklabels=model.mixing_categories,
             xticklabels=False,
             vmin=0.0,

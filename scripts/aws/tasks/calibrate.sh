@@ -44,7 +44,7 @@ mkdir -p logs
 function onexit {
     log "Script exited - running cleanup code"
     log "Uploading logs"
-    aws s3 cp --recursive logs s3://autumn-calibrations/$RUN_NAME/logs
+    aws s3 cp --recursive logs s3://autumn-data/$RUN_NAME/logs
 }
 trap onexit EXIT
 
@@ -69,12 +69,12 @@ log "All chains completed"
 log "Uploading MCMC databases"
 mkdir -p data/calibration_outputs
 find data -name *calibration*.db -exec mv -t data/calibration_outputs/ {} +
-aws s3 cp --recursive data/calibration_outputs s3://autumn-calibrations/$RUN_NAME/data/calibration_outputs
+aws s3 cp --recursive data/calibration_outputs s3://autumn-data/$RUN_NAME/data/calibration_outputs
 
 log "Plotting MCMC outputs"
 mkdir -p plots
 python -m apps db plot-mcmc data/calibration_outputs plots
 log "Uploading MCMC output plots"
-aws s3 cp --recursive plots s3://autumn-calibrations/$RUN_NAME/plots
+aws s3 cp --recursive plots s3://autumn-data/$RUN_NAME/plots
 
 log "Calibration finished for $RUN_NAME"

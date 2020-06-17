@@ -5,7 +5,13 @@ import pytest
 import numpy as np
 
 from summer.model import StratifiedModel
-from autumn.constants import Compartment, Flow, BirthApproach, Stratification, IntegrationType
+from autumn.constants import (
+    Compartment,
+    Flow,
+    BirthApproach,
+    Stratification,
+    IntegrationType,
+)
 from autumn.tool_kit import get_integration_times
 
 

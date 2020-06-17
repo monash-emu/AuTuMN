@@ -5,7 +5,7 @@ import numpy as np
 
 from autumn.curve import scale_up_function
 
-from autumn.demography.social_mixing import load_specific_prem_sheet
+from autumn.demography.social_mixing import load_country_mixing_matrix
 
 # Base date used to calculate mixing matrix times.
 BASE_DATE = date(2019, 12, 31)
@@ -21,7 +21,7 @@ def build_static(country: str, multipliers: np.ndarray) -> np.ndarray:
     multipliers is a matrix with the ages-specific multipliers.
     Returns the updated mixing-matrix
     """
-    mixing_matrix = load_specific_prem_sheet("all_locations", country)
+    mixing_matrix = load_country_mixing_matrix("all_locations", country)
     if multipliers:
         # Update the mixing matrix using some age-specific multipliers
         assert mixing_matrix.shape == multipliers.shape
@@ -72,7 +72,7 @@ def build_dynamic(
     matrix_components = {}
     for sheet_type in ["all_locations"] + LOCATIONS:
         # Loads a 16x16 ndarray
-        matrix_components[sheet_type] = load_specific_prem_sheet(sheet_type, country)
+        matrix_components[sheet_type] = load_country_mixing_matrix(sheet_type, country)
 
     # Update the mixing parameters to simulate re-installing regular Friday prayers from t_start to t_end. We assume that
     # a proportion 'prop_participating' of the population participates in the prayers and that the other-location
@@ -107,22 +107,28 @@ def build_dynamic(
 
         # Make adjustments by age
         affected_age_indices = [i for i in AGE_INDICES if f"age_{i}" in mixing]
-        complement_indices = [i for i in AGE_INDICES if i not in affected_age_indices]
-
+        age_adjustment_functions = {}
         for age_idx_affected in affected_age_indices:
             age_idx_key = f"age_{age_idx_affected}"
             age_times = mixing[age_idx_key]["times"]
             age_vals = mixing[age_idx_key]["values"]
-            age_adj_func = scale_up_function(age_times, age_vals, method=4,)
-            age_adj_val = age_adj_func(time)
-            for age_idx_not_affected in complement_indices:
-                mixing_matrix[age_idx_affected, age_idx_not_affected] *= age_adj_val
-                mixing_matrix[age_idx_not_affected, age_idx_affected] *= age_adj_val
+            age_adjustment_functions[age_idx_affected] = scale_up_function(
+                age_times, age_vals, method=4,
+            )
 
-            # FIXME: patch for elderly cocooning in Victoria assuming
-            # FIXME: ... assuming what?
-            for idx in affected_age_indices:
-                mixing_matrix[age_idx_affected, idx] *= 1.0 - (1.0 - age_adj_val) / 2.0
+        for row_index in range(len(AGE_INDICES)):
+            row_multiplier = (
+                age_adjustment_functions[row_index](time)
+                if row_index in affected_age_indices
+                else 1.0
+            )
+            for col_index in range(len(AGE_INDICES)):
+                col_multiplier = (
+                    age_adjustment_functions[col_index](time)
+                    if col_index in affected_age_indices
+                    else 1.0
+                )
+                mixing_matrix[row_index, col_index] *= row_multiplier * col_multiplier
 
         return mixing_matrix
 
@@ -140,3 +146,24 @@ def parse_times(times):
             yield (time_date - BASE_DATE).days
         else:
             yield time
+
+
+def get_total_contact_rates_by_age(mixing_matrix, direction="horizontal"):
+    """
+    Sum the contact-rates by age group
+    :param mixing_matrix: the input mixing matrix
+    :param direction: either 'horizontal' (infectee's perspective) or 'vertical' (infector's perspective)
+    :return: dict
+        keys are the age categories and values are the aggregated contact rates
+    """
+    assert direction in [
+        "horizontal",
+        "vertical",
+    ], "direction should be in ['horizontal', 'vertical']"
+    aggregated_contact_rates = {}
+    for i in range(16):
+        if direction == "horizontal":
+            aggregated_contact_rates[str(5 * i)] = mixing_matrix[i, :].sum()
+        else:
+            aggregated_contact_rates[str(5 * i)] = mixing_matrix[:, i].sum()
+    return aggregated_contact_rates

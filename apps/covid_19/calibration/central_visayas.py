@@ -1,22 +1,24 @@
-from apps.covid_19.calibration.base import run_calibration_chain, get_priors_and_targets
+from autumn.constants import Region
+from apps.covid_19.calibration import base
 
-country = "central-visayas"
+
+def run_calibration_chain(max_seconds: int, run_id: int):
+    base.run_calibration_chain(
+        max_seconds, run_id, Region.CENTRAL_VISAYAS, PAR_PRIORS, TARGET_OUTPUTS, mode="autumn_mcmc",
+    )
 
 
 PAR_PRIORS = [
-    {
-        "param_name": "contact_rate",
-        "distribution": "uniform",
-        "distri_params": [0.010, 0.05],
-    },
-    {
-        "param_name": "start_time",
-        "distribution": "uniform",
-        "distri_params": [0.0, 40.0],
-    },
+    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.010, 0.05],},
+    {"param_name": "start_time", "distribution": "uniform", "distri_params": [0.0, 40.0],},
     # Add extra params for negative binomial likelihood
     {
-        "param_name": "infection_deathsXall_dispersion_param",
+        "param_name": "notifications_dispersion_param",
+        "distribution": "uniform",
+        "distri_params": [0.1, 5.0],
+    },
+    {
+        "param_name": "prevXlateXclinical_icuXamong_dispersion_param",
         "distribution": "uniform",
         "distri_params": [0.1, 5.0],
     },
@@ -36,9 +38,6 @@ PAR_PRIORS = [
 
 # notification data
 notification_times = [
-    17,
-    20,
-    23,
     48,
     54,
     62,
@@ -108,11 +107,9 @@ notification_times = [
     155,
     156,
     158,
+    159,
 ]
 notification_counts = [
-    1,
-    2,
-    1,
     1,
     1,
     1,
@@ -182,13 +179,11 @@ notification_counts = [
     1,
     3,
     1,
+    1,
 ]
 
 # ICU data
 icu_times = [
-    134,
-    135,
-    136,
     137,
     138,
     139,
@@ -217,11 +212,11 @@ icu_times = [
     162,
     163,
     164,
+    165,
+    166,
+    167,
 ]
 icu_counts = [
-    21,
-    15,
-    19,
     17,
     17,
     16,
@@ -250,6 +245,9 @@ icu_counts = [
     28,
     29,
     36,
+    43,
+    35,
+    34,
 ]
 
 TARGET_OUTPUTS = [
@@ -266,24 +264,3 @@ TARGET_OUTPUTS = [
         "loglikelihood_distri": "negative_binomial",
     },
 ]
-
-
-def run_phl_calibration_chain(max_seconds: int, run_id: int):
-    # run_calibration_chain(max_seconds, run_id, country, PAR_PRIORS, TARGET_OUTPUTS, mode='grid_based',
-    #                       _grid_info=par_grid, _run_extra_scenarios=False, _multipliers=MULTIPLIERS)
-    run_calibration_chain(
-        max_seconds,
-        run_id,
-        country,
-        PAR_PRIORS,
-        TARGET_OUTPUTS,
-        mode="autumn_mcmc",
-        _run_extra_scenarios=False,
-    )
-
-
-if __name__ == "__main__":
-    run_phl_calibration_chain(
-        15 * 60 * 60, 0
-    )  # first argument only relevant for autumn_mcmc mode (time limit in seconds)
-

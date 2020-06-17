@@ -58,6 +58,6 @@ def add_birth_rate_functions(_tb_model, _input_database, _country_iso3):
                 crude_birth_rate_data[year] = 0.04
 
     _tb_model.time_variants["crude_birth_rate"] = scale_up_function(
-        crude_birth_rate_data.keys(), crude_birth_rate_data.values(), smoothness=0.2, method=5
+        crude_birth_rate_data.keys(), crude_birth_rate_data.values(), smoothness=0.2, method=5,
     )
     return _tb_model

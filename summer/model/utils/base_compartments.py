@@ -1,13 +1,11 @@
-
-
 def replicate_compartment(
-        n_replications,
-        current_compartments,
-        compartment_stem,
-        infectious_compartments,
-        initial_populations,
-        infectious=False,
-        infectious_seed=0.,
+    n_replications,
+    current_compartments,
+    compartment_stem,
+    infectious_compartments,
+    initial_populations,
+    infectious=False,
+    infectious_seed=0.0,
 ):
     """
     Implements n repeated sequential compartments of a certain type
@@ -36,26 +34,29 @@ def replicate_compartment(
     """
 
     # Add the compartment names to the working list of compartments
-    compartments_to_add = \
-        [compartment_stem] if \
-            n_replications == 1 else \
-            [compartment_stem + '_' + str(i_comp + 1) for i_comp in range(n_replications)]
+    compartments_to_add = (
+        [compartment_stem]
+        if n_replications == 1
+        else [compartment_stem + "_" + str(i_comp + 1) for i_comp in range(n_replications)]
+    )
 
     # Add the compartment names to the working list of infectious compartments, if the compartment is infectious
-    infectious_compartments_to_add = \
-        compartments_to_add if infectious else []
+    infectious_compartments_to_add = compartments_to_add if infectious else []
 
     # Add the infectious population to the initial conditions
-    if infectious_seed == 0.:
+    if infectious_seed == 0.0:
         init_pop = {}
     elif n_replications == 1:
         init_pop = {compartment_stem: infectious_seed}
     else:
-        init_pop = \
-            {compartment_stem + '_' + str(i_infectious + 1): infectious_seed / float(n_replications) for
-             i_infectious in range(n_replications)}
+        init_pop = {
+            compartment_stem + "_" + str(i_infectious + 1): infectious_seed / float(n_replications)
+            for i_infectious in range(n_replications)
+        }
     initial_populations.update(init_pop)
 
-    return current_compartments + compartments_to_add, \
-           infectious_compartments + infectious_compartments_to_add, \
-           initial_populations
+    return (
+        current_compartments + compartments_to_add,
+        infectious_compartments + infectious_compartments_to_add,
+        initial_populations,
+    )

@@ -17,6 +17,8 @@ from autumn.constants import DATA_PATH
 JH_DATA_DIR = os.path.join(DATA_PATH, "john-hopkins")
 GITHUB_BASE_URL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/"
 
+country_mapping = {"united-kingdom": "United Kingdom"}
+
 
 def get_all_jh_countries():
     """
@@ -37,11 +39,15 @@ def read_john_hopkins_data_from_csv(variable="confirmed", country="Australia"):
     :param variable: one of "confirmed", "deaths", "recovered"
     :param country: country
     """
+    if country in country_mapping:
+        country_name = country_mapping[country]
+    else:
+        country_name = country
     download_jh_data()
     filename = f"covid_{variable}.csv"
     path = os.path.join(JH_DATA_DIR, filename)
     data = pd.read_csv(path)
-    data = data[data["Country/Region"] == country]
+    data = data[data["Country/Region"] == country_name]
 
     # We need to collect the country-level data
     if data["Province/State"].isnull().any():  # when there is a single row for the whole country
@@ -58,6 +64,21 @@ def read_john_hopkins_data_from_csv(variable="confirmed", country="Australia"):
         data_series = diff(data_series)
 
     return data_series.tolist()
+
+
+def print_jh_data_series(variable_list=["confirmed", "deaths"], country="Australia"):
+    start_time = 22
+    for variable in variable_list:
+        print(variable)
+        data = read_john_hopkins_data_from_csv(variable, country)
+        times = [start_time + i for i in range(len(data))]
+        print("times:")
+        print(times)
+        print("list for calibration:")
+        print(data)
+        print("list for plotting targets:")
+        print([[d] for d in data])
+        print()
 
 
 def plot_jh_data(data):
@@ -155,7 +176,7 @@ CSVS_TO_READ = [
 def download_jh_data():
     if not os.path.exists(JH_DATA_DIR):
         os.makedirs(JH_DATA_DIR)
-        download_global_csv(JH_DATA_DIR)
+    download_global_csv(JH_DATA_DIR)
 
 
 def download_global_csv(output_dir: str):
@@ -177,3 +198,7 @@ def download_daily_reports(output_dir: str):
         path = os.path.join(output_dir, filename)
         df = pd.read_csv(url)
         df.to_csv(path)
+
+
+# download_jh_data()
+# print_jh_data_series(country="United Kingdom")

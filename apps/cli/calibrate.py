@@ -8,20 +8,9 @@ You can access this script from your CLI by running:
 """
 import click
 
-from apps.marshall_islands.calibration import run_calibration_chain as run_rmi_calibration_chain
-from apps.mongolia.calibration import run_calibration_chain as run_mongolia_calibration_chain
-from apps.covid_19.calibration.victoria import (
-    run_vic_calibration_chain as run_victoria_covid_calibration_chain,
-)
-from apps.covid_19.calibration.base import (
-    run_full_models_for_mcmc as run_full_covid_models_for_mcmc,
-)
-from apps.covid_19.calibration.malaysia import (
-    run_mys_calibration_chain as run_malaysia_covid_calibration_chain,
-)
-from apps.covid_19.calibration.philippines import (
-    run_phl_calibration_chain as run_philippines_covid_calibration_chain,
-)
+from apps.covid_19 import calibration as covid_calibration
+from apps.marshall_islands import calibration as rmi_calibration
+from apps.mongolia import calibration as mongolia_calibration
 
 
 @click.group()
@@ -31,41 +20,28 @@ def calibrate():
     """
 
 
-@calibrate.command("rmi")
-@click.argument("max_seconds", type=int)
-@click.argument("run_id", type=int)
-def rmi_calibration(max_seconds, run_id):
-    """Run Marshall Islands model calibration."""
-    marshall_islands.calibration.run_calibration_chain(max_seconds, run_id)
+for region in covid_calibration.CALIBRATIONS.keys():
+
+    @calibrate.command(region)
+    @click.argument("max_seconds", type=int)
+    @click.argument("run_id", type=int)
+    def run_region_calibration(max_seconds, run_id, region=region):
+        """Run COVID model calibration for region"""
+        calib_func = covid_calibration.get_calibration_func(region)
+        calib_func(max_seconds, run_id)
 
 
 @calibrate.command("mongolia")
 @click.argument("max_seconds", type=int)
 @click.argument("run_id", type=int)
 def mongolia_calibration(max_seconds, run_id):
-    """Run Mongolia model calibration."""
-    mongolia.calibration.run_calibration_chain(max_seconds, run_id)
+    """Run Mongolia TB model calibration."""
+    mongolia_calibration.run_calibration_chain(max_seconds, run_id)
 
 
-@calibrate.command("victoria")
+@calibrate.command("rmi")
 @click.argument("max_seconds", type=int)
 @click.argument("run_id", type=int)
-def victoria_calibration(max_seconds, run_id):
-    """Run Victoria COVID model calibration."""
-    run_victoria_covid_calibration_chain(max_seconds, run_id)
-
-
-@calibrate.command("malaysia")
-@click.argument("max_seconds", type=int)
-@click.argument("run_id", type=int)
-def malaysia_calibration(max_seconds, run_id):
-    """Run Malaysia COVID model calibration."""
-    run_malaysia_covid_calibration_chain(max_seconds, run_id)
-
-
-@calibrate.command("philippines")
-@click.argument("max_seconds", type=int)
-@click.argument("run_id", type=int)
-def philippines_calibration(max_seconds, run_id):
-    """Run Philippines COVID model calibration."""
-    run_philippines_covid_calibration_chain(max_seconds, run_id)
+def rmi_calibration(max_seconds, run_id):
+    """Run Marshall Islands TB model calibration."""
+    rmi_calibration.run_calibration_chain(max_seconds, run_id)

@@ -62,20 +62,14 @@ def load_derived_output_tables(calib_dirpath: str):
 
 
 def plot_mcmc_parameter_trace(
-    plotter: StreamlitPlotter,
-    calib_dir_path: str,
-    mcmc_tables: List[pd.DataFrame],
-    plot_config={},
+    plotter: StreamlitPlotter, calib_dir_path: str, mcmc_tables: List[pd.DataFrame], plot_config={},
 ):
     chosen_param = parameter_selector(mcmc_tables[0])
     plots.plot_mcmc_parameter_trace(plotter, mcmc_tables, chosen_param)
 
 
 def plot_loglikelihood_trace(
-    plotter: StreamlitPlotter,
-    calib_dir_path: str,
-    mcmc_tables: List[pd.DataFrame],
-    plot_config={},
+    plotter: StreamlitPlotter, calib_dir_path: str, mcmc_tables: List[pd.DataFrame], plot_config={},
 ):
     burn_in = burn_in_selector(mcmc_tables)
     plots.plot_loglikelihood_trace(plotter, mcmc_tables, burn_in)
@@ -84,10 +78,7 @@ def plot_loglikelihood_trace(
 
 
 def plot_posterior(
-    plotter: StreamlitPlotter,
-    calib_dir_path: str,
-    mcmc_tables: List[pd.DataFrame],
-    plot_config={},
+    plotter: StreamlitPlotter, calib_dir_path: str, mcmc_tables: List[pd.DataFrame], plot_config={},
 ):
     chosen_param = parameter_selector(mcmc_tables[0])
     num_bins = st.sidebar.slider("Number of bins", 1, 50, 16)
@@ -95,10 +86,7 @@ def plot_posterior(
 
 
 def plot_loglikelihood_vs_parameter(
-    plotter: StreamlitPlotter,
-    calib_dir_path: str,
-    mcmc_tables: List[pd.DataFrame],
-    plot_config={},
+    plotter: StreamlitPlotter, calib_dir_path: str, mcmc_tables: List[pd.DataFrame], plot_config={},
 ):
     burn_in = burn_in_selector(mcmc_tables)
     non_param_cols = ["idx", "Scenario", "loglikelihood", "accept"]
@@ -108,22 +96,15 @@ def plot_loglikelihood_vs_parameter(
 
 
 def plot_timeseries_with_uncertainty(
-    plotter: StreamlitPlotter,
-    calib_dir_path: str,
-    mcmc_tables: List[pd.DataFrame],
-    plot_config={},
+    plotter: StreamlitPlotter, calib_dir_path: str, mcmc_tables: List[pd.DataFrame], plot_config={},
 ):
     derived_output_tables = load_derived_output_tables(calib_dir_path)
     # Choose one or more scenarios
     scenario_strs = list(derived_output_tables[0].Scenario.unique())
     scenario_idxs = [int(s.replace("S_", "")) for s in scenario_strs]
     scenario_names = ["Baseline" if i == 0 else f"Scenario {i}" for i in scenario_idxs]
-    chosen_scenario_names = st.sidebar.multiselect(
-        "Select scenarios", scenario_names, "Baseline"
-    )
-    chosen_scenarios = [
-        scenario_idxs[scenario_names.index(n)] for n in chosen_scenario_names
-    ]
+    chosen_scenario_names = st.sidebar.multiselect("Select scenarios", scenario_names, "Baseline")
+    chosen_scenarios = [scenario_idxs[scenario_names.index(n)] for n in chosen_scenario_names]
 
     # Choose which output to plot
     non_output_cols = ["idx", "Scenario", "times"]

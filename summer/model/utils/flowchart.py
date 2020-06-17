@@ -5,6 +5,7 @@ from graphviz import Digraph
 from summer.model.utils.string import find_name_components
 from autumn import constants
 
+
 def create_flowchart(model_object, strata=None, name="flow_chart"):
     """
     use graphviz module to create flow diagram of compartments and inter-compartmental flows

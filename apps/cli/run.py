@@ -17,19 +17,19 @@ def run():
 
 
 @run.command("covid")
-@click.argument("country", type=click.Choice(covid_19.COUNTRY_RUNNERS))
-def run_covid(country):
-    """Run the COVID model for some country"""
-    runner = getattr(covid_19, country)
-    runner.run_model()
+@click.argument("region", type=click.Choice(covid_19.REGION_APPS))
+def run_covid(region):
+    """Run the COVID model for some region"""
+    region_app = covid_19.get_region_app(region)
+    region_app.run_model()
 
 
 @run.command("sir_example")
-@click.argument("country", type=click.Choice(sir_example.COUNTRY_RUNNERS))
-def run_sir_example(country):
-    """Run the SIR model for some country"""
-    runner = getattr(sir_example, country)
-    runner.run_model()
+@click.argument("region", type=click.Choice(sir_example.REGION_APPS))
+def run_sir_example(region):
+    """Run the SIR model for some region"""
+    region_app = sir_example.get_region_app(region)
+    region_app.run_model()
 
 
 @run.command("rmi")

@@ -36,7 +36,7 @@ for calib_target in TARGET_OUTPUTS:
         targets_to_plot[calib_target["output_key"]] = {
             "times": calib_target["years"],
             "values": [
-                [calib_target["values"][i], calib_target["cis"][i][0], calib_target["cis"][i][1]]
+                [calib_target["values"][i], calib_target["cis"][i][0], calib_target["cis"][i][1],]
                 for i in range(len(calib_target["values"]))
             ],
         }

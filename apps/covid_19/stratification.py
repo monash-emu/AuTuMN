@@ -154,7 +154,7 @@ def stratify_by_clinical(model, model_parameters, compartments):
         # Pass the functions to the model
         tv_props = TimeVaryingProprotions(age_idx, abs_props, prop_detect_among_sympt_func)
         time_variants = [
-            [f"prop_sympt_non_hospital_{agegroup}", tv_props.get_abs_prop_sympt_non_hospital],
+            [f"prop_sympt_non_hospital_{agegroup}", tv_props.get_abs_prop_sympt_non_hospital,],
             [f"prop_sympt_isolate_{agegroup}", tv_props.get_abs_prop_isolated],
         ]
         for name, func in time_variants:

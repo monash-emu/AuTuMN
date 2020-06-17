@@ -5,7 +5,13 @@ import pytest
 import numpy as np
 
 from summer.model import StratifiedModel
-from summer.constants import Compartment, Flow, BirthApproach, Stratification, IntegrationType
+from summer.constants import (
+    Compartment,
+    Flow,
+    BirthApproach,
+    Stratification,
+    IntegrationType,
+)
 
 
 def test_strat_model__with_age__expect_ageing():

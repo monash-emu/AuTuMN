@@ -43,7 +43,7 @@ def run_calibration_chain(max_seconds: int, run_id: int):
 
 
 PAR_PRIORS = [
-    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [10.0, 20.0]},
+    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [10.0, 20.0],},
     {
         "param_name": "adult_latency_adjustment",
         "distribution": "uniform",
@@ -54,14 +54,14 @@ PAR_PRIORS = [
         "distribution": "uniform",
         "distri_params": [0.15, 0.25],
     },
-    {"param_name": "self_recovery_rate", "distribution": "uniform", "distri_params": [0.18, 0.29]},
-    {"param_name": "tb_mortality_rate", "distribution": "uniform", "distri_params": [0.33, 0.44]},
+    {"param_name": "self_recovery_rate", "distribution": "uniform", "distri_params": [0.18, 0.29],},
+    {"param_name": "tb_mortality_rate", "distribution": "uniform", "distri_params": [0.33, 0.44],},
     {
         "param_name": "rr_transmission_recovered",
         "distribution": "uniform",
         "distri_params": [0.8, 1.2],
     },
-    {"param_name": "cdr_multiplier", "distribution": "uniform", "distri_params": [0.66, 1.5]},
+    {"param_name": "cdr_multiplier", "distribution": "uniform", "distri_params": [0.66, 1.5],},
 ]
 
 TARGET_OUTPUTS = [

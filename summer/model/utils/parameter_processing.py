@@ -73,7 +73,7 @@ def get_parameter_dict_from_function(input_function, breakpoints, upper_value=10
 
 
 def substratify_parameter(
-    parameter_to_stratify, stratum_to_split, param_value_dict, breakpoints, stratification="age"
+    parameter_to_stratify, stratum_to_split, param_value_dict, breakpoints, stratification="age",
 ):
     """
     produce dictionary revise a stratum of a parameter that has been split at a higher level from dictionary of the

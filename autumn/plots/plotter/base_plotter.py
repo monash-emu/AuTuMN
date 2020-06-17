@@ -303,7 +303,10 @@ def increment_list_for_patch(new_data, cumulative_data):
     """
 
     previous_data = copy.copy(cumulative_data)
-    return previous_data, [last + current for last, current in zip(cumulative_data, new_data)]
+    return (
+        previous_data,
+        [last + current for last, current in zip(cumulative_data, new_data)],
+    )
 
 
 def add_title_to_plot(fig, n_panels, content):

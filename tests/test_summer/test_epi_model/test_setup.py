@@ -11,7 +11,13 @@ from pandas.util.testing import assert_frame_equal
 
 from summer.model.utils.validation import ValidationException
 from summer.model import EpiModel, StratifiedModel
-from summer.constants import Compartment, Flow, BirthApproach, Stratification, IntegrationType
+from summer.constants import (
+    Compartment,
+    Flow,
+    BirthApproach,
+    Stratification,
+    IntegrationType,
+)
 
 
 @pytest.mark.parametrize(
@@ -125,7 +131,7 @@ def test_model_flow_setup(ModelClass):
     model = ModelClass(
         times=_get_integration_times(2000, 2005, 1),
         compartment_types=[Compartment.SUSCEPTIBLE, Compartment.EARLY_INFECTIOUS],
-        initial_conditions={Compartment.SUSCEPTIBLE: 10, Compartment.EARLY_INFECTIOUS: 20},
+        initial_conditions={Compartment.SUSCEPTIBLE: 10, Compartment.EARLY_INFECTIOUS: 20,},
         parameters=parameters,
         requested_flows=requested_flows,
         starting_population=100,
@@ -139,10 +145,18 @@ def test_model_flow_setup(ModelClass):
     expected_df = pd.DataFrame(expected_data, columns=expected_columns).astype(object)
     assert_frame_equal(expected_df, model.death_flows)
     # Check that transition flows were set up properly
-    expected_columns = ["type", "parameter", "origin", "to", "implement", "strain", "force_index"]
+    expected_columns = [
+        "type",
+        "parameter",
+        "origin",
+        "to",
+        "implement",
+        "strain",
+        "force_index",
+    ]
     expected_data = [
         ["standard_flows", "recovery", "infectious", "susceptible", 0, None, None],
-        ["customised_flows", "divine_blessing", "infectious", "susceptible", 0, None, None],
+        ["customised_flows", "divine_blessing", "infectious", "susceptible", 0, None, None,],
         ["customised_flows", "cursed", "susceptible", "infectious", 0, None, None],
     ]
     expected_df = pd.DataFrame(expected_data, columns=expected_columns).astype(object)
@@ -160,8 +174,8 @@ def test_model_compartment_init__with_remainder__expect_correct_allocation(Model
     """
     model = ModelClass(
         times=_get_integration_times(2000, 2005, 1),
-        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.EARLY_INFECTIOUS, "empty"],
-        initial_conditions={Compartment.SUSCEPTIBLE: 10, Compartment.EARLY_INFECTIOUS: 20},
+        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.EARLY_INFECTIOUS, "empty",],
+        initial_conditions={Compartment.SUSCEPTIBLE: 10, Compartment.EARLY_INFECTIOUS: 20,},
         parameters={},
         requested_flows=[],
         starting_population=100,
@@ -170,15 +184,15 @@ def test_model_compartment_init__with_remainder__expect_correct_allocation(Model
 
 
 @pytest.mark.parametrize("ModelClass", [EpiModel, StratifiedModel])
-def test_model_compartment_init__with_no_remainder__expect_correct_allocation(ModelClass):
+def test_model_compartment_init__with_no_remainder__expect_correct_allocation(ModelClass,):
     """
     Ensure model compartments are set up correctly when there are no left over people
     in the population from the intitial conditions setup.
     """
     model = ModelClass(
         times=_get_integration_times(2000, 2005, 1),
-        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.EARLY_INFECTIOUS, "empty"],
-        initial_conditions={Compartment.SUSCEPTIBLE: 30, Compartment.EARLY_INFECTIOUS: 70},
+        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.EARLY_INFECTIOUS, "empty",],
+        initial_conditions={Compartment.SUSCEPTIBLE: 30, Compartment.EARLY_INFECTIOUS: 70,},
         parameters={},
         requested_flows=[],
         starting_population=100,

@@ -8,7 +8,10 @@ from autumn.tb_model.outputs import (
     create_request_stratified_incidence,
     create_request_stratified_notifications,
 )
-from autumn.tb_model.parameters import add_time_variant_parameter_to_model, build_scale_up_function
+from autumn.tb_model.parameters import (
+    add_time_variant_parameter_to_model,
+    build_scale_up_function,
+)
 from autumn.db import Database
 from autumn.tb_model.flows import (
     add_case_detection,
@@ -69,12 +72,13 @@ def build_model(params: dict) -> StratifiedModel:
 
     # Update partial immunity/susceptibility parameters
     model_parameters = update_transmission_parameters(
-        model_parameters, [Compartment.RECOVERED, Compartment.LATE_LATENT, Compartment.LTBI_TREATED]
+        model_parameters,
+        [Compartment.RECOVERED, Compartment.LATE_LATENT, Compartment.LTBI_TREATED],
     )
 
     # Set integration times
     integration_times = get_model_times_from_inputs(
-        model_parameters["start_time"], model_parameters["end_time"], model_parameters["time_step"]
+        model_parameters["start_time"], model_parameters["end_time"], model_parameters["time_step"],
     )
 
     # Sequentially add groups of flows to flows list
@@ -91,7 +95,7 @@ def build_model(params: dict) -> StratifiedModel:
     out_connections = {}
     out_connections.update(
         create_request_stratified_incidence(
-            model_parameters["incidence_stratification"], model_parameters["all_stratifications"]
+            model_parameters["incidence_stratification"], model_parameters["all_stratifications"],
         )
     )
     out_connections.update(
@@ -162,10 +166,10 @@ def build_model(params: dict) -> StratifiedModel:
 
     # Assign newly created functions to model parameters
     add_time_variant_parameter_to_model(
-        tb_model, "case_detection", base_detection_rate, len(model_parameters["stratify_by"])
+        tb_model, "case_detection", base_detection_rate, len(model_parameters["stratify_by"]),
     )
     add_time_variant_parameter_to_model(
-        tb_model, "treatment_success", treatment_success_rate, len(model_parameters["stratify_by"])
+        tb_model, "treatment_success", treatment_success_rate, len(model_parameters["stratify_by"]),
     )
     add_time_variant_parameter_to_model(
         tb_model,
@@ -206,7 +210,7 @@ def build_model(params: dict) -> StratifiedModel:
         )
     if "location" in model_parameters["stratify_by"]:
         tb_model = stratify_by_location(
-            tb_model, model_parameters, model_parameters["all_stratifications"]["location"]
+            tb_model, model_parameters, model_parameters["all_stratifications"]["location"],
         )
 
     # Capture reported prevalence in Majuro assuming over-reporting (needed for calibration)

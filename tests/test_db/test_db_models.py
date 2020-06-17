@@ -41,7 +41,15 @@ def test_unpivot_outputs(tmp_path):
     out_db = Database(out_db_path)
     outputs_df = out_db.db_query("outputs")
     unpivoted_df = unpivot_outputs(outputs_df)
-    expected_columns = ["idx", "Scenario", "times", "value", "age", "compartment", "mood"]
+    expected_columns = [
+        "idx",
+        "Scenario",
+        "times",
+        "value",
+        "age",
+        "compartment",
+        "mood",
+    ]
     expected_data = [
         ["run_0", "S_0", 2000, 300.0, "age_old", "susceptible", "mood_happy"],
         ["run_0", "S_0", 2001, 271.0, "age_old", "susceptible", "mood_happy"],

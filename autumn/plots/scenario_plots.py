@@ -43,10 +43,10 @@ def plot_scenarios(scenarios: List[Scenario], out_dir: str, plot_config: dict):
         if scenario.is_baseline:
             # Only plot some graphs for the base model.
             plots.plot_parameter_category_values(
-                scenario_plotter, model, param_config["param_names"], param_config["time"]
+                scenario_plotter, model, param_config["param_names"], param_config["time"],
             )
             plots.plot_input_function(
-                scenario_plotter, model, input_config["func_names"], input_config["start_time"]
+                scenario_plotter, model, input_config["func_names"], input_config["start_time"],
             )
             plots.plot_pop_distribution_by_stratum(
                 scenario_plotter, model, pop_distribution_strata, generated_outputs

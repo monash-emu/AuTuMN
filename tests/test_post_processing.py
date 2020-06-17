@@ -39,7 +39,7 @@ def _get_model():
                 "origin": "susceptible",
                 "to": "infectious",
             },
-            {"type": "compartment_death", "parameter": "infect_death", "origin": "infectious"},
+            {"type": "compartment_death", "parameter": "infect_death", "origin": "infectious",},
         ],
         output_connections={},
         verbose=False,

@@ -6,7 +6,13 @@ import pandas as pd
 from pandas.util.testing import assert_frame_equal
 
 from summer.model import StratifiedModel
-from summer.constants import Compartment, Flow, BirthApproach, Stratification, IntegrationType
+from summer.constants import (
+    Compartment,
+    Flow,
+    BirthApproach,
+    Stratification,
+    IntegrationType,
+)
 
 
 PARAM_VARS = "flows, custom_func, params, adjustment, comps, expected_flows, expected_custom_func, expected_params"
@@ -421,7 +427,15 @@ PARAM_VALS = [
                 None,
                 None,
             ],
-            ["standard_flows", "ageing0to5", "infectiousXage_0", "infectiousXage_5", 0, None, None],
+            [
+                "standard_flows",
+                "ageing0to5",
+                "infectiousXage_0",
+                "infectiousXage_5",
+                0,
+                None,
+                None,
+            ],
             [
                 "standard_flows",
                 "ageing5to15",

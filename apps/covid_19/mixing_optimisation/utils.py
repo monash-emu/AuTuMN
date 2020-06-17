@@ -3,8 +3,8 @@ from apps.covid_19.john_hopkins import download_jh_data, read_john_hopkins_data_
 
 def get_prior_distributions_for_opti():
     prior_list = [
-        {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.015, 0.050]},
-        {"param_name": "start_time", "distribution": "uniform", "distri_params": [-30.0, 40.0]},
+        {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.015, 0.050],},
+        {"param_name": "start_time", "distribution": "uniform", "distri_params": [-30.0, 40.0],},
         {
             "param_name": "compartment_periods_calculated.incubation.total_period",
             "distribution": "gamma",

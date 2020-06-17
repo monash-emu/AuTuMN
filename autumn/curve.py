@@ -260,7 +260,7 @@ def scale_up_function(
         else:
             t_intervention_start = max(x)
         curve_intervention = scale_up_function(
-            x=[t_intervention_start, intervention_end[0]], y=[y[-1], intervention_end[1]], method=4
+            x=[t_intervention_start, intervention_end[0]], y=[y[-1], intervention_end[1]], method=4,
         )
 
     if (len(x) == 1) or (max(y) - min(y) == 0):
@@ -840,7 +840,19 @@ if __name__ == "__main__":
     # pylab.ylim(0, 5)
     # pylab.show()
 
-    x = (1880.0, 1890.0, 1900.0, 1910.0, 1930.0, 1950.0, 1990.0, 1997.0, 2000.0, 2002.0, 2005.0)
+    x = (
+        1880.0,
+        1890.0,
+        1900.0,
+        1910.0,
+        1930.0,
+        1950.0,
+        1990.0,
+        1997.0,
+        2000.0,
+        2002.0,
+        2005.0,
+    )
     y = np.random.rand(len(x))
 
     f = scale_up_function(x, y, method=1, intervention_end=[2010, 1.0])

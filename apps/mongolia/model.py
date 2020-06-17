@@ -72,7 +72,13 @@ def build_model(params: dict) -> StratifiedModel:
     flows = add_standard_natural_history_flows(flows)
 
     # compartments
-    compartments = ["susceptible", "early_latent", "late_latent", "infectious", "recovered"]
+    compartments = [
+        "susceptible",
+        "early_latent",
+        "late_latent",
+        "infectious",
+        "recovered",
+    ]
 
     # define model     #replace_deaths  add_crude_birth_rate
     init_pop = {"infectious": 1000, "late_latent": 1000000}
@@ -408,7 +414,7 @@ def build_model(params: dict) -> StratifiedModel:
             "organ",
             ["smearpos", "smearneg", "extrapul"],
             ["infectious"],
-            infectiousness_adjustments={"smearpos": 1.0, "smearneg": 0.25, "extrapul": 0.0},
+            infectiousness_adjustments={"smearpos": 1.0, "smearneg": 0.25, "extrapul": 0.0,},
             verbose=False,
             requested_proportions=props_smear,
             adjustment_requests={
@@ -608,9 +614,16 @@ def build_model(params: dict) -> StratifiedModel:
 
 
 def build_mongolia_timevariant_cdr(cdr_multiplier):
-    cdr = {1950.0: 0.0, 1980.0: 0.10, 1990.0: 0.15, 2000.0: 0.20, 2010.0: 0.30, 2015: 0.33}
+    cdr = {
+        1950.0: 0.0,
+        1980.0: 0.10,
+        1990.0: 0.15,
+        2000.0: 0.20,
+        2010.0: 0.30,
+        2015: 0.33,
+    }
     return scale_up_function(
-        cdr.keys(), [c * cdr_multiplier for c in list(cdr.values())], smoothness=0.2, method=5
+        cdr.keys(), [c * cdr_multiplier for c in list(cdr.values())], smoothness=0.2, method=5,
     )
 
 

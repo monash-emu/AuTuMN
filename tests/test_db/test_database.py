@@ -24,7 +24,7 @@ def test_database__with_conditions__expect_filtered_df():
     """
     db = Database(INPUT_DB_PATH)
     result_df = db.db_query(
-        table_name="un_iso3_map", conditions=['"Region, subregion, country or area*"="Ethiopia"']
+        table_name="un_iso3_map", conditions=['"Region, subregion, country or area*"="Ethiopia"'],
     )
     assert len(result_df) == 1  # Number of rows
     assert len(result_df.columns) == 37  # Number of columns

@@ -1,20 +1,6 @@
 from autumn.constants import Flow, Compartment
 
 
-def get_flows(add_import_flow: bool):
-    flows = DEFAULT_FLOWS
-    if add_import_flow:
-        import_flow = {
-            "type": Flow.STANDARD,
-            "origin": Compartment.SUSCEPTIBLE,
-            "to": Compartment.EXPOSED,
-            "parameter": "import_secondary_rate",
-        }
-        flows.append(import_flow)
-
-    return flows
-
-
 DEFAULT_FLOWS = [
     # Infection flows.
     {

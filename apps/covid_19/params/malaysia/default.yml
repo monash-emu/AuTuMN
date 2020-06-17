@@ -1,7 +1,6 @@
 ---
 scenario_start_time: 140
 implement_importation: True
-imported_cases_explict: True
 
 traveller_quarantine:
   times: [73., 76.] # self-isolation from 13 March

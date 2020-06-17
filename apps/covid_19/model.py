@@ -58,7 +58,6 @@ validate_params = sb.build_validator(
     traveller_quarantine=sb.Dict(times=sb.List(float), values=sb.List(float),),
     # Importation of disease from outside of region.
     implement_importation=bool,
-    imported_cases_explict=bool,
     import_secondary_rate=float,
     symptomatic_props_imported=float,
     hospital_props_imported=float,
@@ -142,16 +141,12 @@ def build_model(params: dict) -> StratifiedModel:
     integration_times = get_model_times_from_inputs(round(start_time), end_time, time_step,)
 
     is_importation_active = params["implement_importation"]
-    is_importation_explict = params["imported_cases_explict"]
 
     # Add compartmental flows
-    add_import_flow = is_importation_active and not is_importation_explict
-    flows = preprocess.flows.get_flows(add_import_flow=add_import_flow)
+    flows = preprocess.flows.DEFAULT_FLOWS
 
     # Choose a birth apprach
-    birth_approach = BirthApproach.NO_BIRTH
-    if is_importation_active and is_importation_explict:
-        birth_approach = BirthApproach.ADD_CRUDE
+    birth_approach = BirthApproach.ADD_CRUDE if is_importation_active else BirthApproach.NO_BIRTH
 
     # Build mixing matrix.
     # FIXME: unit tests for build_static
@@ -230,15 +225,13 @@ def build_model(params: dict) -> StratifiedModel:
         entry_proportions=preprocess.importation.IMPORTATION_PROPS_BY_AGE,
     )
 
-    # Stratify infectious compartment by clinical status
-    if "clinical" in model_parameters["stratify_by"] and model_parameters["clinical_strata"]:
-        model_parameters["all_stratifications"] = {"agegroup": agegroup_strata}
-        modelled_abs_detection_proportion_imported = stratify_by_clinical(
-            model, model_parameters, compartments
-        )
+    model_parameters["all_stratifications"] = {"agegroup": agegroup_strata}
+    modelled_abs_detection_proportion_imported = stratify_by_clinical(
+        model, model_parameters, compartments
+    )
 
     # Set time-variant importation rate
-    if is_importation_active and is_importation_explict:
+    if is_importation_active:
         import_times = params["data"]["times_imported_cases"]
         import_cases = params["data"]["n_imported_cases"]
         import_rate_func = preprocess.importation.get_importation_rate_func_as_birth_rates(
@@ -246,25 +239,6 @@ def build_model(params: dict) -> StratifiedModel:
         )
         model.parameters["crude_birth_rate"] = "crude_birth_rate"
         model.time_variants["crude_birth_rate"] = import_rate_func
-
-    elif is_importation_active:
-        param_name = "import_secondary_rate"
-        contact_rate = params["contact_rate"]
-        self_isolation_effect = params["self_isolation_effect"]
-        enforced_isolation_effect = params["enforced_isolation_effect"]
-        import_times = params["data"]["times_imported_cases"]
-        import_cases = params["data"]["n_imported_cases"]
-        import_rate_func = preprocess.importation.get_importation_rate_func(
-            country,
-            import_times,
-            import_cases,
-            self_isolation_effect,
-            enforced_isolation_effect,
-            contact_rate,
-            starting_pop,
-        )
-        model.parameters["import_secondary_rate"] = "import_secondary_rate"
-        model.adaptation_functions["import_secondary_rate"] = import_rate_func
 
     # Define output connections to collate
     # Track compartment output connections.
@@ -277,13 +251,8 @@ def build_model(params: dict) -> StratifiedModel:
     }
     # Add notifications to derived_outputs
     implement_importation = model.parameters["implement_importation"]
-    imported_cases_explict = model.parameters["imported_cases_explict"]
-    symptomatic_props_imported = model_parameters["symptomatic_props_imported"]
-    prop_detected_among_symptomatic_imported = model.parameters[
-        "prop_detected_among_symptomatic_imported"
-    ]
     model.derived_output_functions["notifications"] = outputs.get_calc_notifications_covid(
-        implement_importation, imported_cases_explict, modelled_abs_detection_proportion_imported,
+        implement_importation, modelled_abs_detection_proportion_imported,
     )
     model.derived_output_functions["incidence_icu"] = outputs.calculate_incidence_icu_covid
     model.derived_output_functions["prevXlateXclinical_icuXamong"] = outputs.calculate_icu_prev

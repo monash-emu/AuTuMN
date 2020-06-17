@@ -13,7 +13,7 @@ app.register(RegionApp(Region.MANILA))
 app.register(RegionApp(Region.CALABARZON))
 app.register(RegionApp(Region.BICOL))
 app.register(RegionApp(Region.CENTRAL_VISAYAS))
-# app.register(RegionApp(Region.UNITED_KINGDOM))
+app.register(RegionApp(Region.UNITED_KINGDOM))
 
 # Functions and data exposed to the outside world
 REGION_APPS = app.region_names

@@ -6,7 +6,7 @@ scenario_start_time: 85
 # MODEL STRUCTURE PARAMETERS
 
 implement_importation: False
-imported_cases_explict: False # whether to explicitely include imported cases
+imported_cases_explict: False # whether to explicitly include imported cases
 import_secondary_rate: 0.
 data:
   times_imported_cases: []
@@ -23,7 +23,7 @@ compartment_periods:
   icu_early: 5.
   icu_late: 10.
 
-# Mean time (?) spent in each compartment, defined via proprotions
+# Mean time (?) spent in each compartment, defined via proportions
 compartment_periods_calculated:
   total_infectious:
     total_period: 7.

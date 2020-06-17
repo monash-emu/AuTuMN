@@ -6,7 +6,7 @@ import click
 from . import aws
 from . import remote
 from .website import update_website
-from .settings import EC2InstanceType
+from .settings import EC2InstanceType, EC2_INSTANCE_SPECS
 
 
 @click.group()
@@ -25,11 +25,12 @@ def status():
 
 @click.command()
 @click.argument("job_id")
-def start(job_id):
+@click.argument("instance_type", type=click.Choice(EC2_INSTANCE_SPECS.keys()))
+def start(job_id, instance_type):
     """
     Start a job but don't stop it
     """
-    aws.run_job(job_id)
+    aws.run_job(job_id, instance_type)
 
 
 @click.command()

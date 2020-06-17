@@ -4,26 +4,13 @@ from apps.covid_19.calibration import base
 
 def run_calibration_chain(max_seconds: int, run_id: int):
     base.run_calibration_chain(
-        max_seconds,
-        run_id,
-        Region.CALABARZON,
-        PAR_PRIORS,
-        TARGET_OUTPUTS,
-        mode="autumn_mcmc",
+        max_seconds, run_id, Region.CALABARZON, PAR_PRIORS, TARGET_OUTPUTS, mode="autumn_mcmc",
     )
 
 
 PAR_PRIORS = [
-    {
-        "param_name": "contact_rate",
-        "distribution": "uniform",
-        "distri_params": [0.010, 0.05],
-    },
-    {
-        "param_name": "start_time",
-        "distribution": "uniform",
-        "distri_params": [0.0, 40.0],
-    },
+    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.010, 0.05],},
+    {"param_name": "start_time", "distribution": "uniform", "distri_params": [0.0, 40.0],},
     # Add extra params for negative binomial likelihood
     {
         "param_name": "infection_deathsXall_dispersion_param",
@@ -172,7 +159,6 @@ death_values = [
 
 # notification data
 notification_times = [
-    17,
     51,
     55,
     57,
@@ -278,7 +264,6 @@ notification_times = [
     161,
 ]
 notification_counts = [
-    1,
     1,
     1,
     1,

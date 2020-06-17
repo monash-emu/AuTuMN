@@ -1,5 +1,5 @@
 # reinstate regular prayers
-reinstall_regular_prayers: True
+reinstate_regular_prayers: True
 prayers_params:
   restart_time: 165
   prop_participating: .30 # assuming 50 % of the Malaysian muslim population

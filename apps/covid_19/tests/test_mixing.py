@@ -14,7 +14,7 @@ def test_dynamic_mixing():
         country="Malaysia",
         mixing_params=mixing_params,
         npi_effectiveness_params={},
-        is_reinstall_regular_prayers=False,
+        is_reinstate_regular_prayers=False,
         prayers_params={},
         end_time=365,
     )

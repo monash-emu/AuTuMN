@@ -34,7 +34,7 @@ def build_dynamic(
     country: str,
     mixing_params: dict,
     npi_effectiveness_params: dict,
-    is_reinstall_regular_prayers: bool,
+    is_reinstate_regular_prayers: bool,
     prayers_params: dict,
     end_time: float,
 ) -> Callable[[float], np.ndarray]:
@@ -74,10 +74,10 @@ def build_dynamic(
         # Loads a 16x16 ndarray
         matrix_components[sheet_type] = load_country_mixing_matrix(sheet_type, country)
 
-    # Update the mixing parameters to simulate re-installing regular Friday prayers from t_start to t_end. We assume that
+    # Update the mixing parameters to simulate re-instating regular Friday prayers from t_start to t_end. We assume that
     # a proportion 'prop_participating' of the population participates in the prayers and that the other-location
     # contact rates are multiplied by 'other_location_multiplier' for the participating individuals.
-    if is_reinstall_regular_prayers:
+    if is_reinstate_regular_prayers:
         other_locations = mixing.get("other_locations")
         t_start = max([prayers_params["restart_time"], max(other_locations["times"]) + 1])
         t_end = end_time

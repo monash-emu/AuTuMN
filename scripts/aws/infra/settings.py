@@ -25,9 +25,10 @@ EC2_INSTANCE_SPECS = {
 }
 
 
-EC2_INSTANCE_TYPE_LIMIT = 2
-EC2_AMI = "ami-060a95ac585c93df7"
-EC2_SPOT_MAX_PRICE = "0.9"
-EC2_SECURITY_GROUP = "sg-3d0ecf44"
-EC2_LAUNCH_PREFERENCE = [EC2InstanceType.m5_8xlarge]
+AWS_PROFILE = "autumn"
 AWS_REGION = "ap-southeast-2"
+EC2_KEYFILE = "autumn.pem"
+EC2_SPOT_MAX_PRICE = "1.2"
+EC2_AMI = "ami-01aa2ffb8036f6376"
+EC2_SECURITY_GROUP = "sg-07264e49a069ef40a"
+S3_BUCKET = "autumn-data"

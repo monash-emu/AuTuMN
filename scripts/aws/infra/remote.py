@@ -1,10 +1,10 @@
 import os
 import subprocess
 
-SSH_ARGS = "-o StrictHostKeyChecking=no -i ~/.ssh/wizard.pem"
+from . import settings
 
-
-INFRA_DIR = os.path.dirname(os.path.abspath(__file__))
+SSH_ARGS = f"-o StrictHostKeyChecking=no -i ~/.ssh/{settings.EC2_KEYFILE}"
+AWS_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def ssh_interactive(instance):
@@ -22,7 +22,7 @@ def ssh_run_job(instance: dict, script_name: str, script_args):
     ip = instance["ip"]
     name = instance["name"]
     print(f"Starting SSH session with instance {name}.")
-    run_script_path = os.path.join(INFRA_DIR, script_name)
+    run_script_path = os.path.join(AWS_DIR, "tasks", script_name)
     if not os.path.exists(run_script_path):
         raise FileNotFoundError(f"Could not find {run_script_path}")
 

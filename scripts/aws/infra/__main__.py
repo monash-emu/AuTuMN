@@ -53,7 +53,7 @@ def cleanup():
 @click.argument("run_name")
 def logs(run_name):
     """Get all logs for a given run"""
-    s3_key = f"s3://autumn-calibrations/{run_name}/logs"
+    s3_key = f"s3://autumn-data/{run_name}/logs"
     dest = f"logs/{run_name}"
     os.makedirs(dest, exist_ok=True)
     aws.download_s3(s3_key, dest)

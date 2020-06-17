@@ -23,7 +23,7 @@ git pull
 pip install --quiet -r requirements.txt
 
 log "Dowloading full model runs for $RUN_NAME"
-aws s3 cp --recursive s3://autumn-calibrations/$RUN_NAME/data/full_model_runs data/full_model_runs
+aws s3 cp --recursive s3://autumn-data/$RUN_NAME/data/full_model_runs data/full_model_runs
 
 mkdir -p logs
 
@@ -31,7 +31,7 @@ mkdir -p logs
 function onexit {
     log "Script exited - running cleanup code"
     log "Uploading logs"
-    aws s3 cp --recursive logs s3://autumn-calibrations/$RUN_NAME/logs
+    aws s3 cp --recursive logs s3://autumn-data/$RUN_NAME/logs
 }
 trap onexit EXIT
 
@@ -103,6 +103,6 @@ FINAL_DB_FILE=data/powerbi/$FINAL_DB_FILENAME
 python -m apps db unpivot data/powerbi/collated-pruned.db $FINAL_DB_FILE
 
 log "Uploading PowerBI compatible database"
-aws s3 cp --acl public-read $FINAL_DB_FILE s3://autumn-calibrations/$RUN_NAME/data/powerbi/$FINAL_DB_FILENAME
+aws s3 cp --acl public-read $FINAL_DB_FILE s3://autumn-data/$RUN_NAME/data/powerbi/$FINAL_DB_FILENAME
 
 log "PowerBI processing complete"

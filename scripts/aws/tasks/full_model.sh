@@ -33,7 +33,7 @@ log "Ensuring latest requirements are installed."
 pip install --quiet -r requirements.txt
 
 log "Downloading MCMC databases"
-aws s3 cp --recursive s3://autumn-calibrations/$RUN_NAME/data/calibration_outputs data/calibration_outputs
+aws s3 cp --recursive s3://autumn-data/$RUN_NAME/data/calibration_outputs data/calibration_outputs
 
 # Setup folders for model runs.
 mkdir -p logs
@@ -43,7 +43,7 @@ mkdir -p data/full_model_runs/
 function onexit {
     log "Script exited - running cleanup code"
     log "Uploading logs"
-    aws s3 cp --recursive logs s3://autumn-calibrations/$RUN_NAME/logs
+    aws s3 cp --recursive logs s3://autumn-data/$RUN_NAME/logs
 }
 trap onexit EXIT
 
@@ -71,6 +71,6 @@ done
 log "All full model runs completed"
 
 log "Uploading full model run databases"
-aws s3 cp --recursive data/full_model_runs s3://autumn-calibrations/$RUN_NAME/data/full_model_runs
+aws s3 cp --recursive data/full_model_runs s3://autumn-data/$RUN_NAME/data/full_model_runs
 
 log "Full model runs finished for $RUN_NAME"

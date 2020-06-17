@@ -25,8 +25,9 @@ GIT_COMMIT=$(echo $RUN_NAME | cut -d'-' -f4 -)
 log "Updating local AuTuMN repository to run the commit $GIT_COMMIT."
 sudo chown -R ubuntu:ubuntu ~/code
 cd ~/code
-git fetch
-git checkout $GIT_COMMIT
+# git fetch
+# git checkout $GIT_COMMIT
+git pull
 
 log "Ensuring latest requirements are installed."
 . ./env/bin/activate

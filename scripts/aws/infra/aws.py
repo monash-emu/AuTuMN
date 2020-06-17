@@ -1,14 +1,29 @@
+import os
 import subprocess
 from datetime import datetime
 from dateutil.tz import tzutc
 
 import boto3
+from botocore.exceptions import ProfileNotFound
 import timeago
 from tabulate import tabulate
 
 from . import settings
 
-client = boto3.client("ec2", region_name=settings.AWS_REGION)
+
+try:
+    session = boto3.session.Session(
+        region_name=settings.AWS_REGION, profile_name=settings.AWS_PROFILE
+    )
+except ProfileNotFound:
+    session = boto3.session.Session(
+        region_name=settings.AWS_REGION,
+        aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
+        aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
+    )
+
+
+client = session.client("ec2")
 
 DESCRIBE_KEYS = ["InstanceId", "InstanceType", "LaunchTime", "State"]
 
@@ -36,7 +51,7 @@ def get_instance_type(min_cores: int, min_ram: int):
 
 
 def download_s3(s3_key, dest):
-    cmd = f"aws s3 cp --recursive {s3_key} {dest}"
+    cmd = f"aws --profile {settings.AWS_PROFILE} s3 cp --recursive {s3_key} {dest}"
     subprocess.run(args=[cmd], shell=True, check=True)
 
 

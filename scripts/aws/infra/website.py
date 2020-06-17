@@ -9,11 +9,14 @@ from datetime import datetime
 import boto3
 import timeago
 
-client = boto3.client("s3")
+from . import settings
+from .aws import session
 
-BUCKET = "autumn-calibrations"
-WEBSITE_URL = "http://autumn-calibrations.s3-website-ap-southeast-2.amazonaws.com"
-BUCKET_URL = "https://autumn-calibrations.s3-ap-southeast-2.amazonaws.com/"
+client = session.client("s3")
+
+BUCKET = settings.S3_BUCKET
+WEBSITE_URL = f"http://{BUCKET}.s3-website-ap-southeast-2.amazonaws.com"
+BUCKET_URL = f"https://{BUCKET}.s3-ap-southeast-2.amazonaws.com/"
 
 
 def get_url(path: str):

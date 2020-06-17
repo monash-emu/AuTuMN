@@ -95,7 +95,7 @@ def run_calibrate(job_name, calibration_name, num_chains, run_time, dry):
     if dry:
         print("Dry run:", instance_type)
     else:
-        _run_job(job_id, instance_type, "run_calibrate.sh", script_args)
+        _run_job(job_id, instance_type, "calibrate.sh", script_args)
 
 
 @run.command("full")
@@ -110,7 +110,7 @@ def run_full_model(job_name, run_name, burn_in):
     script_args = [run_name, burn_in]
     instance_type = EC2InstanceType.m5_8xlarge
     instance_type = aws.get_instance_type(30, 8)
-    _run_job(job_id, instance_type, "run_full_model.sh", script_args)
+    _run_job(job_id, instance_type, "full_model.sh", script_args)
 
 
 @run.command("powerbi")
@@ -123,7 +123,7 @@ def run_powerbi(job_name, run_name):
     job_id = f"powerbi-{job_name}"
     script_args = [run_name]
     instance_type = aws.get_instance_type(30, 32)
-    _run_job(job_id, instance_type, "run_powerbi.sh", script_args)
+    _run_job(job_id, instance_type, "powerbi.sh", script_args)
 
 
 def _run_job(job_id, instance_type, script_name, script_args):

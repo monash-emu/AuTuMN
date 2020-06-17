@@ -308,14 +308,9 @@ class StratifiedModel(EpiModel):
             stratification_name, strata_names, entry_proportions, requested_proportions
         )
         if self.death_flows.shape[0] > 0:
-            self.stratify_death_flows(
-                stratification_name, strata_names, adjustment_requests
-            )
+            self.stratify_death_flows(stratification_name, strata_names, adjustment_requests)
         self.stratify_universal_death_rate(
-            stratification_name,
-            strata_names,
-            adjustment_requests,
-            compartment_types_to_stratify,
+            stratification_name, strata_names, adjustment_requests, compartment_types_to_stratify,
         )
 
         # if stratifying by strain
@@ -331,9 +326,7 @@ class StratifiedModel(EpiModel):
 
         # prepare strata equilibration target proportions
         if target_props:
-            self.prepare_and_check_target_props(
-                target_props, stratification_name, strata_names
-            )
+            self.prepare_and_check_target_props(target_props, stratification_name, strata_names)
 
     """
     stratification checking methods
@@ -378,8 +371,7 @@ class StratifiedModel(EpiModel):
         # report progress
         self.verbose = _verbose
         self.output_to_user(
-            "\n___________________\nimplementing stratification for: %s"
-            % _stratification_name
+            "\n___________________\nimplementing stratification for: %s" % _stratification_name
         )
 
         # deal with stratifications that have specific behaviour
@@ -388,9 +380,7 @@ class StratifiedModel(EpiModel):
                 _strata_names, _compartment_types_to_stratify
             )
         elif _stratification_name == "strain":
-            self.output_to_user(
-                "implementing strain stratification with specific behaviour"
-            )
+            self.output_to_user("implementing strain stratification with specific behaviour")
 
         # make sure the stratification name is a string
         if not isinstance(_stratification_name, str):
@@ -410,9 +400,7 @@ class StratifiedModel(EpiModel):
                         for target_key in _target_props[restriction].keys()
                     ]
                 ):
-                    raise ValueError(
-                        "requested target proportion strata not in requested strata"
-                    )
+                    raise ValueError("requested target proportion strata not in requested strata")
 
         # ensure requested stratification hasn't previously been implemented
         if _stratification_name in self.all_stratifications.keys():
@@ -423,9 +411,7 @@ class StratifiedModel(EpiModel):
         # record stratification as model attribute, find the names to apply strata and check requests
         _strata_names = self.find_strata_names_from_input(_strata_names)
         self.all_stratifications[_stratification_name] = _strata_names
-        _adjustment_requests = self.incorporate_alternative_overwrite_approach(
-            _adjustment_requests
-        )
+        _adjustment_requests = self.incorporate_alternative_overwrite_approach(_adjustment_requests)
         self.check_compartment_request(_compartment_types_to_stratify)
         self.check_parameter_adjustment_requests(_adjustment_requests, _strata_names)
         return _strata_names, _adjustment_requests
@@ -456,8 +442,7 @@ class StratifiedModel(EpiModel):
         if _strata_names != sorted(_strata_names):
             _strata_names = sorted(_strata_names)
             self.output_to_user(
-                "requested age strata not ordered, so have been sorted to: %s"
-                % _strata_names
+                "requested age strata not ordered, so have been sorted to: %s" % _strata_names
             )
         return _strata_names
 
@@ -519,16 +504,16 @@ class StratifiedModel(EpiModel):
                 elif stratum[-1] == OVERWRITE_CHARACTER:
                     if OVERWRITE_KEY not in revised_adjustments[parameter]:
                         revised_adjustments[parameter][OVERWRITE_KEY] = []
-                    revised_adjustments[parameter][stratum[:-1]] = _adjustment_requests[
-                        parameter
-                    ][stratum]
+                    revised_adjustments[parameter][stratum[:-1]] = _adjustment_requests[parameter][
+                        stratum
+                    ]
                     revised_adjustments[parameter][OVERWRITE_KEY].append(stratum[:-1])
 
                 # otherwise just accept the parameter in its submitted form
                 else:
-                    revised_adjustments[parameter][stratum] = _adjustment_requests[
-                        parameter
-                    ][stratum]
+                    revised_adjustments[parameter][stratum] = _adjustment_requests[parameter][
+                        stratum
+                    ]
             if OVERWRITE_KEY not in revised_adjustments:
                 revised_adjustments[OVERWRITE_KEY] = []
         return revised_adjustments
@@ -630,15 +615,11 @@ class StratifiedModel(EpiModel):
                 "requested starting proportion for stratum that does not appear in requested strata"
             )
         if sum(_requested_proportions.values()) > 1.0:
-            raise ValueError(
-                "requested starting proportions sum to a value greater than one"
-            )
+            raise ValueError("requested starting proportions sum to a value greater than one")
 
         # assuming an equal proportion of the unallocated population if no request specified
         unrequested_strata = [
-            stratum
-            for stratum in _strata_names
-            if stratum not in _requested_proportions
+            stratum for stratum in _strata_names if stratum not in _requested_proportions
         ]
         unrequested_proportions = {}
         for stratum in unrequested_strata:
@@ -671,9 +652,7 @@ class StratifiedModel(EpiModel):
         """
         # Find the existing compartments that need stratification
         compartments_to_stratify = [
-            c
-            for c in self.compartment_names
-            if find_stem(c) in compartments_to_stratify
+            c for c in self.compartment_names if find_stem(c) in compartments_to_stratify
         ]
         for compartment in compartments_to_stratify:
             # Add newm stratified compartment.
@@ -696,9 +675,7 @@ class StratifiedModel(EpiModel):
         """
         Stratify flows depending on whether inflow, outflow or both need replication
         """
-        flow_idxs = self.find_transition_indices_to_implement(
-            back_one=1, include_change=True
-        )
+        flow_idxs = self.find_transition_indices_to_implement(back_one=1, include_change=True)
         all_new_flows = []
         for n_flow in flow_idxs:
             new_flows = []
@@ -709,10 +686,7 @@ class StratifiedModel(EpiModel):
                 for stratum in strata_names:
                     # Find the flow's parameter name
                     parameter_name = self.add_adjusted_parameter(
-                        flow.parameter,
-                        stratification_name,
-                        stratum,
-                        adjustment_requests,
+                        flow.parameter, stratification_name, stratum, adjustment_requests,
                     )
                     if not parameter_name:
                         parameter_name = self.sort_absent_transition_parameter(
@@ -726,9 +700,7 @@ class StratifiedModel(EpiModel):
 
                     # Determine whether to and/or from compartments are stratified
                     from_compartment = (
-                        create_stratified_name(
-                            flow.origin, stratification_name, stratum
-                        )
+                        create_stratified_name(flow.origin, stratification_name, stratum)
                         if stratify_from
                         else flow.origin
                     )
@@ -740,8 +712,7 @@ class StratifiedModel(EpiModel):
                     # Add the new flow
                     strain = (
                         stratum
-                        if stratification_name == "strain"
-                        and flow.type != Flow.STRATA_CHANGE
+                        if stratification_name == "strain" and flow.type != Flow.STRATA_CHANGE
                         else flow.strain
                     )
                     new_flow = {
@@ -766,23 +737,15 @@ class StratifiedModel(EpiModel):
             for idx, new_flow in enumerate(new_flows):
                 if new_flow["type"] == Flow.CUSTOM:
                     new_idx = num_flows + idx
-                    self.customised_flow_functions[
-                        new_idx
-                    ] = self.customised_flow_functions[n_flow]
+                    self.customised_flow_functions[new_idx] = self.customised_flow_functions[n_flow]
 
             all_new_flows += new_flows
 
         if all_new_flows:
-            self.transition_flows = self.transition_flows.append(
-                all_new_flows, ignore_index=True
-            )
+            self.transition_flows = self.transition_flows.append(all_new_flows, ignore_index=True)
 
     def add_adjusted_parameter(
-        self,
-        _unadjusted_parameter,
-        _stratification_name,
-        _stratum,
-        _adjustment_requests,
+        self, _unadjusted_parameter, _stratification_name, _stratum, _adjustment_requests,
     ):
         """
         find the adjustment request that is relevant to a particular unadjusted parameter and stratum and add the
@@ -807,9 +770,7 @@ class StratifiedModel(EpiModel):
         )
         if relevant_adjustment_request is not None:
             parameter_adjustment_name = (
-                create_stratified_name(
-                    _unadjusted_parameter, _stratification_name, _stratum
-                )
+                create_stratified_name(_unadjusted_parameter, _stratification_name, _stratum)
                 if _stratum in _adjustment_requests[relevant_adjustment_request]
                 else _unadjusted_parameter
             )
@@ -825,15 +786,12 @@ class StratifiedModel(EpiModel):
             # record the parameters that over-write the less stratified parameters closer to the trunk of the tree
             if (
                 OVERWRITE_KEY in _adjustment_requests[relevant_adjustment_request]
-                and _stratum
-                in _adjustment_requests[relevant_adjustment_request][OVERWRITE_KEY]
+                and _stratum in _adjustment_requests[relevant_adjustment_request][OVERWRITE_KEY]
             ):
                 self.overwrite_parameters.append(parameter_adjustment_name)
         return parameter_adjustment_name
 
-    def find_relevant_adjustment_request(
-        self, _adjustment_requests, _unadjusted_parameter
-    ):
+    def find_relevant_adjustment_request(self, _adjustment_requests, _unadjusted_parameter):
         """
         find the adjustment requests that are extensions of the base parameter type being considered
         expected behaviour is as follows:
@@ -856,9 +814,7 @@ class StratifiedModel(EpiModel):
 
         # find all the requests that start with the parameter of interest and their level of stratification
         applicable_params = [
-            param
-            for param in _adjustment_requests
-            if _unadjusted_parameter.startswith(param)
+            param for param in _adjustment_requests if _unadjusted_parameter.startswith(param)
         ]
         applicable_param_n_stratifications = [
             len(find_name_components(param)) for param in applicable_params
@@ -918,17 +874,11 @@ class StratifiedModel(EpiModel):
 
         # otherwise if no request, retain the existing parameter
         else:
-            self.output_to_user(
-                "\tretaining existing parameter value %s" % unstratified_name
-            )
+            self.output_to_user("\tretaining existing parameter value %s" % unstratified_name)
             return unstratified_name
 
     def stratify_entry_flows(
-        self,
-        _stratification_name,
-        _strata_names,
-        _entry_proportions,
-        _requested_proportions,
+        self, _stratification_name, _strata_names, _entry_proportions, _requested_proportions,
     ):
         """
         stratify entry/recruitment/birth flows according to requested entry proportion adjustments
@@ -963,10 +913,7 @@ class StratifiedModel(EpiModel):
                     continue
 
                 # where a request for splitting entry rates has been submitted
-                elif (
-                    stratum in _entry_proportions
-                    and type(_entry_proportions[stratum]) == float
-                ):
+                elif stratum in _entry_proportions and type(_entry_proportions[stratum]) == float:
                     self.parameters[entry_fraction_name] = _entry_proportions[stratum]
                     self.output_to_user(
                         "assigning requested proportion %s of births/recruitment to %s stratum"
@@ -984,10 +931,7 @@ class StratifiedModel(EpiModel):
                     )
 
                 # otherwise it must already be a defined function that can be called during integration
-                elif (
-                    stratum in _entry_proportions
-                    and type(_entry_proportions[stratum]) == str
-                ):
+                elif stratum in _entry_proportions and type(_entry_proportions[stratum]) == str:
                     self.time_variants[entry_fraction_name] = self.time_variants[
                         _entry_proportions[stratum]
                     ]
@@ -1001,9 +945,7 @@ class StratifiedModel(EpiModel):
                 else:
                     self.parameters[entry_fraction_name] = 1.0 / len(_strata_names)
 
-    def stratify_death_flows(
-        self, _stratification_name, _strata_names, _adjustment_requests
-    ):
+    def stratify_death_flows(self, _stratification_name, _strata_names, _adjustment_requests):
         """
         add compartment-specific death flows to death_flows data frame attribute
 
@@ -1017,10 +959,7 @@ class StratifiedModel(EpiModel):
         for n_flow in self.find_death_indices_to_implement(back_one=1):
 
             # if the compartment with an additional death flow is being stratified
-            if (
-                find_stem(self.death_flows.origin[n_flow])
-                in self.compartment_types_to_stratify
-            ):
+            if find_stem(self.death_flows.origin[n_flow]) in self.compartment_types_to_stratify:
                 for stratum in _strata_names:
 
                     # get stratified parameter name if requested to stratify, otherwise use the unstratified one
@@ -1039,9 +978,7 @@ class StratifiedModel(EpiModel):
                             "type": self.death_flows.type[n_flow],
                             "parameter": parameter_name,
                             "origin": create_stratified_name(
-                                self.death_flows.origin[n_flow],
-                                _stratification_name,
-                                stratum,
+                                self.death_flows.origin[n_flow], _stratification_name, stratum,
                             ),
                             "implement": len(self.all_stratifications),
                         },
@@ -1101,34 +1038,27 @@ class StratifiedModel(EpiModel):
                 "universal_death_rate" in _adjustment_requests
                 and stratum in _adjustment_requests["universal_death_rate"]
             ):
-                stratum_name = create_stratum_name(
-                    _stratification_name, stratum, joining_string=""
-                )
+                stratum_name = create_stratum_name(_stratification_name, stratum, joining_string="")
                 self.available_death_rates.append(stratum_name)
 
                 # use existing function or create new one from constant as needed
                 if type(_adjustment_requests["universal_death_rate"][stratum]) == str:
                     self.adaptation_functions[
                         "universal_death_rateX" + stratum_name
-                    ] = self.time_variants[
-                        _adjustment_requests["universal_death_rate"][stratum]
-                    ]
+                    ] = self.time_variants[_adjustment_requests["universal_death_rate"][stratum]]
                 elif isinstance(
                     _adjustment_requests["universal_death_rate"][stratum], (int, float)
                 ):
                     self.adaptation_functions[
                         "universal_death_rateX" + stratum_name
                     ] = create_multiplicative_function(
-                        self.time_variants[
-                            _adjustment_requests["universal_death_rate"][stratum]
-                        ]
+                        self.time_variants[_adjustment_requests["universal_death_rate"][stratum]]
                     )
 
                 # record the parameters that over-write the less stratified parameters closer to the trunk of the tree
                 if (
                     OVERWRITE_KEY in _adjustment_requests["universal_death_rate"]
-                    and stratum
-                    in _adjustment_requests["universal_death_rate"][OVERWRITE_KEY]
+                    and stratum in _adjustment_requests["universal_death_rate"][OVERWRITE_KEY]
                 ):
                     self.overwrite_parameters.append(
                         create_stratified_name(
@@ -1136,9 +1066,7 @@ class StratifiedModel(EpiModel):
                         )
                     )
 
-    def prepare_mixing_matrix(
-        self, _mixing_matrix, _stratification_name, _strata_names
-    ):
+    def prepare_mixing_matrix(self, _mixing_matrix, _stratification_name, _strata_names):
         """
         check that the mixing matrix has been correctly specified and call the other relevant functions
 
@@ -1159,9 +1087,7 @@ class StratifiedModel(EpiModel):
         elif _mixing_matrix.shape[0] != _mixing_matrix.shape[1]:
             raise ValueError("submitted mixing is not square")
         elif _mixing_matrix.shape[0] != len(_strata_names):
-            raise ValueError(
-                "mixing matrix does not sized to number of strata being implemented"
-            )
+            raise ValueError("mixing matrix does not sized to number of strata being implemented")
         self.combine_new_mixing_matrix_with_existing(
             _mixing_matrix, _stratification_name, _strata_names
         )
@@ -1182,9 +1108,7 @@ class StratifiedModel(EpiModel):
 
         # if no mixing matrix yet, just convert the existing one to a dataframe
         if self.mixing_matrix is None:
-            self.mixing_categories = [
-                _stratification_name + "_" + i for i in _strata_names
-            ]
+            self.mixing_categories = [_stratification_name + "_" + i for i in _strata_names]
             self.mixing_matrix = _mixing_matrix
 
         # otherwise take the kronecker product to get the new mixing matrix
@@ -1213,23 +1137,15 @@ class StratifiedModel(EpiModel):
         """
         if type(_infectiousness_adjustments) != dict:
             raise ValueError("infectiousness adjustments not submitted as dictionary")
-        elif not all(
-            key in _strata_names for key in _infectiousness_adjustments.keys()
-        ):
-            raise ValueError(
-                "infectiousness adjustment key not in strata being implemented"
-            )
+        elif not all(key in _strata_names for key in _infectiousness_adjustments.keys()):
+            raise ValueError("infectiousness adjustment key not in strata being implemented")
         else:
             for stratum in _infectiousness_adjustments:
                 self.infectiousness_levels[
-                    create_stratum_name(
-                        _stratification_name, stratum, joining_string=""
-                    )
+                    create_stratum_name(_stratification_name, stratum, joining_string="")
                 ] = _infectiousness_adjustments[stratum]
 
-    def prepare_and_check_target_props(
-        self, _target_props, _stratification_name, _strata_names
-    ):
+    def prepare_and_check_target_props(self, _target_props, _stratification_name, _strata_names):
         """
         create the dictionary of dictionaries that contains the target values for equlibration
 
@@ -1252,20 +1168,16 @@ class StratifiedModel(EpiModel):
                         "one or more of first n-1 strata being applied not in the target prop request"
                     )
                 elif isinstance(_target_props[restriction][stratum], (float, int, str)):
-                    self.target_props[_stratification_name][restriction][
-                        stratum
-                    ] = _target_props[restriction][stratum]
+                    self.target_props[_stratification_name][restriction][stratum] = _target_props[
+                        restriction
+                    ][stratum]
                 else:
-                    raise ValueError(
-                        "target proportions specified with incorrect format for value"
-                    )
+                    raise ValueError("target proportions specified with incorrect format for value")
                 if (
                     type(_target_props[restriction][stratum]) == str
                     and _target_props[restriction][stratum] not in self.time_variants
                 ):
-                    raise ValueError(
-                        "function for prevalence of %s not found" % stratum
-                    )
+                    raise ValueError("function for prevalence of %s not found" % stratum)
             if _strata_names[-1] in self.target_props:
                 self.output_to_user(
                     "target proportion requested for stratum %s, but as last stratum"
@@ -1274,9 +1186,7 @@ class StratifiedModel(EpiModel):
                 )
 
             # add the necessary flows to the transition data frame
-            self.link_strata_with_flows(
-                _stratification_name, _strata_names, restriction
-            )
+            self.link_strata_with_flows(_stratification_name, _strata_names, restriction)
 
     def link_strata_with_flows(self, _stratification_name, _strata_names, _restriction):
         """
@@ -1292,10 +1202,7 @@ class StratifiedModel(EpiModel):
                 name of previously implemented stratum that this equilibration flow applies to, if any, otherwise "all"
         """
         for compartment in self.unstratified_compartment_names:
-            if (
-                _restriction in find_name_components(compartment)
-                or _restriction == "all"
-            ):
+            if _restriction in find_name_components(compartment) or _restriction == "all":
                 for n_stratum in range(len(_strata_names[:-1])):
                     self.transition_flows = self.transition_flows.append(
                         {
@@ -1308,14 +1215,10 @@ class StratifiedModel(EpiModel):
                             + "_"
                             + _strata_names[n_stratum + 1],
                             "origin": create_stratified_name(
-                                compartment,
-                                _stratification_name,
-                                _strata_names[n_stratum],
+                                compartment, _stratification_name, _strata_names[n_stratum],
                             ),
                             "to": create_stratified_name(
-                                compartment,
-                                _stratification_name,
-                                _strata_names[n_stratum + 1],
+                                compartment, _stratification_name, _strata_names[n_stratum + 1],
                             ),
                             "implement": len(self.all_stratifications),
                             "strain": float("nan"),
@@ -1333,9 +1236,7 @@ class StratifiedModel(EpiModel):
         """
         self.prepare_stratified_parameter_calculations()
         self.prepare_infectiousness_calculations()
-        self.transition_indices_to_implement = (
-            self.find_transition_indices_to_implement()
-        )
+        self.transition_indices_to_implement = self.find_transition_indices_to_implement()
         self.death_indices_to_implement = self.find_death_indices_to_implement()
         self.change_indices_to_implement = self.find_change_indices_to_implement()
 
@@ -1343,16 +1244,16 @@ class StratifiedModel(EpiModel):
         if len(self.all_stratifications) == 0 and isinstance(
             self.parameters["universal_death_rate"], (float, int)
         ):
-            self.final_parameter_functions[
+            self.final_parameter_functions["universal_death_rate"] = lambda time: self.parameters[
                 "universal_death_rate"
-            ] = lambda time: self.parameters["universal_death_rate"]
+            ]
         elif (
             len(self.all_stratifications) == 0
             and type(self.parameters["universal_death_rate"]) == str
         ):
-            self.final_parameter_functions[
+            self.final_parameter_functions["universal_death_rate"] = self.adaptation_functions[
                 "universal_death_rate"
-            ] = self.adaptation_functions["universal_death_rate"]
+            ]
 
         self.find_strata_indices()
         self.prepare_lookup_tables()
@@ -1365,9 +1266,7 @@ class StratifiedModel(EpiModel):
                     i_comp
                     for i_comp in range(len(self.compartment_names))
                     if create_stratum_name(
-                        stratif,
-                        self.all_stratifications[stratif][i_stratum],
-                        joining_string="",
+                        stratif, self.all_stratifications[stratif][i_stratum], joining_string="",
                     )
                     in find_name_components(self.compartment_names[i_comp])
                 ]
@@ -1404,22 +1303,14 @@ class StratifiedModel(EpiModel):
 
         # and adjust
         for parameter in parameters_to_adjust:
-            self.parameter_components[parameter] = self.find_transition_components(
-                parameter
-            )
-            self.create_transition_functions(
-                parameter, self.parameter_components[parameter]
-            )
+            self.parameter_components[parameter] = self.find_transition_components(parameter)
+            self.create_transition_functions(parameter, self.parameter_components[parameter])
 
         # similarly for all model compartments
         for compartment in self.compartment_names:
-            self.mortality_components[compartment] = self.find_mortality_components(
-                compartment
-            )
+            self.mortality_components[compartment] = self.find_mortality_components(compartment)
             if len(self.all_stratifications) > 0:
-                self.create_mortality_functions(
-                    compartment, self.mortality_components[compartment]
-                )
+                self.create_mortality_functions(compartment, self.mortality_components[compartment])
 
     def find_mortality_components(self, _compartment):
         """
@@ -1465,24 +1356,19 @@ class StratifiedModel(EpiModel):
             # get the new function to act on the less stratified function (closer to the "tree-trunk")
             if component not in self.parameters:
                 raise ValueError(
-                    "parameter component %s not found in parameters attribute"
-                    % component
+                    "parameter component %s not found in parameters attribute" % component
                 )
             elif type(self.parameters[component]) == float:
                 self.adaptation_functions[component] = create_multiplicative_function(
                     self.parameters[component]
                 )
             elif type(self.parameters[component]) == str:
-                self.adaptation_functions[
-                    component
-                ] = create_time_variant_multiplicative_function(
+                self.adaptation_functions[component] = create_time_variant_multiplicative_function(
                     self.adaptation_functions[component]
                 )
             else:
 
-                raise ValueError(
-                    "parameter component %s not appropriate format" % component
-                )
+                raise ValueError("parameter component %s not appropriate format" % component)
 
             # create the composite function
             self.final_parameter_functions[
@@ -1538,8 +1424,7 @@ class StratifiedModel(EpiModel):
             # get the new function to act on the less stratified function (closer to the "tree-trunk")
             if component not in self.parameters:
                 raise ValueError(
-                    "parameter component %s not found in parameters attribute"
-                    % component
+                    "parameter component %s not found in parameters attribute" % component
                 )
             elif isinstance(self.parameters[component], float) or isinstance(
                 self.parameters[component], int
@@ -1548,20 +1433,15 @@ class StratifiedModel(EpiModel):
                     self.parameters[component]
                 )
             elif type(self.parameters[component]) == str:
-                self.adaptation_functions[
-                    component
-                ] = create_time_variant_multiplicative_function(
+                self.adaptation_functions[component] = create_time_variant_multiplicative_function(
                     self.time_variants[self.parameters[component]]
                 )
             else:
-                raise ValueError(
-                    "parameter component %s not appropriate format" % component
-                )
+                raise ValueError("parameter component %s not appropriate format" % component)
 
             # create the composite function
             self.final_parameter_functions[_parameter] = create_function_of_function(
-                self.adaptation_functions[component],
-                self.final_parameter_functions[_parameter],
+                self.adaptation_functions[component], self.final_parameter_functions[_parameter],
             )
 
     def prepare_infectiousness_calculations(self):
@@ -1593,9 +1473,7 @@ class StratifiedModel(EpiModel):
         for n_comp, compartment in enumerate(self.compartment_names):
             for modifier in self.infectiousness_levels:
                 if modifier in find_name_components(compartment):
-                    self.infectiousness_multipliers[
-                        n_comp
-                    ] *= self.infectiousness_levels[modifier]
+                    self.infectiousness_multipliers[n_comp] *= self.infectiousness_levels[modifier]
 
         self.make_further_infectiousness_adjustments()
 
@@ -1610,9 +1488,7 @@ class StratifiedModel(EpiModel):
                 if all(
                     [
                         component in find_name_components(comp)
-                        for component in self.individual_infectiousness_adjustments[
-                            i_adjustment
-                        ][0]
+                        for component in self.individual_infectiousness_adjustments[i_adjustment][0]
                     ]
                 ):
                     self.infectiousness_multipliers[
@@ -1661,22 +1537,18 @@ class StratifiedModel(EpiModel):
             found = False
             for i_group, force_group in enumerate(self.mixing_categories):
                 if all(
-                    stratum
-                    in find_name_components(self.transition_flows.origin[n_flow])
+                    stratum in find_name_components(self.transition_flows.origin[n_flow])
                     for stratum in find_name_components(force_group)
                 ):
                     self.transition_flows.force_index[n_flow] = i_group
                     if found:
                         raise ValueError(
-                            "mixing group found twice for transition flow number %s"
-                            % n_flow
+                            "mixing group found twice for transition flow number %s" % n_flow
                         )
                     found = True
                     continue
             if not found:
-                raise ValueError(
-                    "mixing group not found for transition flow number %s" % n_flow
-                )
+                raise ValueError("mixing group not found for transition flow number %s" % n_flow)
 
     def find_mixing_denominators(self):
         """
@@ -1709,14 +1581,12 @@ class StratifiedModel(EpiModel):
             their relative infectiousness extracted from self.infectiousness_multipliers
         """
         for strain in self.strains + ["all_strains"]:
-            (
-                self.strain_mixing_elements[strain],
-                self.strain_mixing_multipliers[strain],
-            ) = ({}, {})
+            (self.strain_mixing_elements[strain], self.strain_mixing_multipliers[strain],) = (
+                {},
+                {},
+            )
             for category in (
-                ["all_population"]
-                if self.mixing_matrix is None
-                else self.mixing_categories
+                ["all_population"] if self.mixing_matrix is None else self.mixing_categories
             ):
                 self.strain_mixing_elements[strain][category] = numpy.array(
                     [
@@ -1821,9 +1691,7 @@ class StratifiedModel(EpiModel):
         else:
             mixing_categories = self.mixing_categories
 
-        self.infectious_denominators = compartment_values[self.mixing_indices_arr].sum(
-            axis=1
-        )
+        self.infectious_denominators = compartment_values[self.mixing_indices_arr].sum(axis=1)
         self.infectious_populations = find_infectious_populations(
             compartment_values,
             strains,
@@ -1860,9 +1728,7 @@ class StratifiedModel(EpiModel):
 
         return sum(
             element_list_division(
-                element_list_multiplication(
-                    self.infectious_populations[strain], mixing_elements
-                ),
+                element_list_multiplication(self.infectious_populations[strain], mixing_elements),
                 denominator,
             )
         )
@@ -1911,9 +1777,7 @@ class StratifiedModel(EpiModel):
 
         # split the total births across entry compartments
         for compartment in [
-            comp
-            for comp in self.compartment_names
-            if find_stem(comp) == self.entry_compartment
+            comp for comp in self.compartment_names if find_stem(comp) == self.entry_compartment
         ]:
 
             # calculate adjustment to original stem entry rate
@@ -1964,10 +1828,7 @@ class StratifiedModel(EpiModel):
             )
 
             # work out which stratum and compartment transitions should be going from and to
-            if (
-                _cumulative_strata_props[origin_stratum]
-                > _cumulative_target_props[origin_stratum]
-            ):
+            if _cumulative_strata_props[origin_stratum] > _cumulative_target_props[origin_stratum]:
                 take_compartment, give_compartment, numerator, denominator = (
                     self.transition_flows.origin[i_change],
                     self.transition_flows.to[i_change],
@@ -1992,9 +1853,7 @@ class StratifiedModel(EpiModel):
 
             # update equations
             _ode_equations = increment_list_by_index(
-                _ode_equations,
-                self.compartment_names.index(take_compartment),
-                -net_flow,
+                _ode_equations, self.compartment_names.index(take_compartment), -net_flow,
             )
             _ode_equations = increment_list_by_index(
                 _ode_equations, self.compartment_names.index(give_compartment), net_flow
@@ -2021,18 +1880,16 @@ class StratifiedModel(EpiModel):
         for stratum in self.target_props[_stratification][_restriction]:
             target_prop_values[stratum] = (
                 self.target_props[_stratification][_restriction][stratum]
-                if type(self.target_props[_stratification][_restriction][stratum])
-                == float
-                else self.time_variants[
-                    self.target_props[_stratification][_restriction][stratum]
-                ](_time)
+                if type(self.target_props[_stratification][_restriction][stratum]) == float
+                else self.time_variants[self.target_props[_stratification][_restriction][stratum]](
+                    _time
+                )
             )
 
         # check that prevalence values (including time-variant values) fall between zero and one
         if sum(target_prop_values.values()) > 1.0:
             raise ValueError(
-                "total prevalence of first n-1 strata sums to more than one at time %s"
-                % _time
+                "total prevalence of first n-1 strata sums to more than one at time %s" % _time
             )
         elif any(target_prop_values.values()) < 0.0:
             raise ValueError("prevalence request of less than zero at time %s" % _time)
@@ -2041,14 +1898,10 @@ class StratifiedModel(EpiModel):
         cumulative_target_props = create_cumulative_dict(target_prop_values)
 
         # add in a cumulative value of one for the last stratum
-        cumulative_target_props.update(
-            {self.all_stratifications[_stratification][-1]: 1.0}
-        )
+        cumulative_target_props.update({self.all_stratifications[_stratification][-1]: 1.0})
         return cumulative_target_props
 
-    def find_current_strata_props(
-        self, _compartment_values, _stratification, _restriction
-    ):
+    def find_current_strata_props(self, _compartment_values, _stratification, _restriction):
         """
         find the current distribution of the population across a particular stratification, which may or may not be
             restricted to a stratum of a previously implemented stratification process
@@ -2081,9 +1934,7 @@ class StratifiedModel(EpiModel):
                     for i_comp in restriction_compartments
                     if i_comp in self.strata_indices[_stratification][stratum]
                 ]
-            ) / sum(
-                [_compartment_values[i_comp] for i_comp in restriction_compartments]
-            )
+            ) / sum([_compartment_values[i_comp] for i_comp in restriction_compartments])
 
         return create_cumulative_dict(current_strata_props)
 
@@ -2116,9 +1967,7 @@ def find_infectious_populations(
 
 @jit(nopython=True)
 def _find_infectious_populations_weighted_sum(
-    compartment_values: np.ndarray,
-    mixing_element_idxs: np.ndarray,
-    mixing_multipliers: np.ndarray,
+    compartment_values: np.ndarray, mixing_element_idxs: np.ndarray, mixing_multipliers: np.ndarray,
 ):
     mixing_elements = compartment_values[mixing_element_idxs]
     return (mixing_elements * mixing_multipliers).sum()

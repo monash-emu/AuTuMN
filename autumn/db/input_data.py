@@ -64,9 +64,7 @@ def build_input_database():
             table_with_iso = table_with_iso.drop(columns=["Index"])
 
         # Create a new 'mapped' database structure
-        table_with_iso.to_sql(
-            table_name + "_mapped", con=database.engine, if_exists="replace"
-        )
+        table_with_iso.to_sql(table_name + "_mapped", con=database.engine, if_exists="replace")
 
     return database
 

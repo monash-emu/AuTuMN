@@ -17,9 +17,8 @@ from autumn.constants import DATA_PATH
 JH_DATA_DIR = os.path.join(DATA_PATH, "john-hopkins")
 GITHUB_BASE_URL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/"
 
-country_mapping = {
-    "united-kingdom": "United Kingdom"
-}
+country_mapping = {"united-kingdom": "United Kingdom"}
+
 
 def get_all_jh_countries():
     """

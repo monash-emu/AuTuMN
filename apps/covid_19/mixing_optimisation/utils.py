@@ -32,13 +32,19 @@ def get_prior_distributions_for_opti():
             "distri_ci": [2., 25.]
         },
         {
-            "param_name": "tv_detection_b",
+            "param_name": "tv_detection_b",  # shape parameter
             "distribution": "beta",
             "distri_mean": .075,
             "distri_ci": [.05, .1]
         },
         {
-            "param_name": "prop_detected_among_symptomatic",
+            "param_name": "tv_detection_c",  # inflection point
+            "distribution": "gamma",
+            "distri_mean": 80.,
+            "distri_ci": [40., 120.]
+        },
+        {
+            "param_name": "prop_detected_among_symptomatic",  # upper asymptote
             "distribution": "beta",
             "distri_mean": .5,
             "distri_ci": [.2, .8]

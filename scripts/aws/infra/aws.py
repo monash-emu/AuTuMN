@@ -90,7 +90,7 @@ def run_instance(job_id: str, instance_type: str):
         InstanceType=instance_type,
         SecurityGroupIds=[settings.EC2_SECURITY_GROUP],
         IamInstanceProfile={"Name": settings.EC2_IAM_INSTANCE_PROFILE},
-        KeyName="wizard",
+        KeyName=settings.EC2_KEYFILE.split(".")[0],
         InstanceInitiatedShutdownBehavior="terminate",
         InstanceMarketOptions={
             "MarketType": "spot",

@@ -224,7 +224,7 @@ def stratify_by_clinical(model, model_parameters, compartments):
 
     # FIXME: Ask Romain about importation
     # work out time-variant clinical proportions for imported cases accounting for quarantine
-    if model_parameters["implement_importation"] and model_parameters["imported_cases_explict"]:
+    if model_parameters["implement_importation"]:
         rep_age_group = (
             "35"  # the clinical split will be defined according to this representative age-group
         )

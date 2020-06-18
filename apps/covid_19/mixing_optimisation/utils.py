@@ -76,56 +76,56 @@ def get_ifr_priors_from_verity():
         },
         # 10 to 19
         {
-            "param_name": "infection_fatality_props[0]",
+            "param_name": "infection_fatality_props[1]",
             "distribution": "beta",
             "distri_mean": 0.0000695,
             "distri_ci": [0.0000149, 0.000502],
         },
         # 20 to 29
         {
-            "param_name": "infection_fatality_props[0]",
+            "param_name": "infection_fatality_props[2]",
             "distribution": "beta",
             "distri_mean": 0.000309,
             "distri_ci": [0.000138, 0.000923],
         },
         # 30 to 39
         {
-            "param_name": "infection_fatality_props[0]",
+            "param_name": "infection_fatality_props[3]",
             "distribution": "beta",
             "distri_mean": 0.000844,
             "distri_ci": [0.000408, 0.00185],
         },
         # 40 to 49
         {
-            "param_name": "infection_fatality_props[0]",
+            "param_name": "infection_fatality_props[4]",
             "distribution": "beta",
             "distri_mean": 0.00161,
             "distri_ci": [0.000764, 0.00323],
         },
         # 50 to 59
         {
-            "param_name": "infection_fatality_props[0]",
+            "param_name": "infection_fatality_props[5]",
             "distribution": "beta",
             "distri_mean": 0.00595,
             "distri_ci": [0.00344, 0.0128],
         },
         # 60 to 69
         {
-            "param_name": "infection_fatality_props[0]",
+            "param_name": "infection_fatality_props[6]",
             "distribution": "beta",
             "distri_mean": 0.0193,
             "distri_ci": [0.0111, 0.0389],
         },
         # 70 to 79
         {
-            "param_name": "infection_fatality_props[0]",
+            "param_name": "infection_fatality_props[7]",
             "distribution": "beta",
             "distri_mean": 0.0428,
             "distri_ci": [0.0245, 0.0844],
         },
         # 80+
         {
-            "param_name": "infection_fatality_props[0]",
+            "param_name": "infection_fatality_props[8]",
             "distribution": "beta",
             "distri_mean": 0.078,
             "distri_ci": [0.038, 0.133],

@@ -109,7 +109,7 @@ def build_dynamic(
     if is_periodic_intervention:
         other_locations = mixing.get("other_locations")
         assert other_locations, "need to specify other_location mixing params"
-        mixing["other_locations"] = add_periodic_intervention(periodic_int_params, mixing, end_time)
+        mixing["other_locations"] = add_periodic_intervention(periodic_int_params, other_locations, end_time)
 
     def mixing_matrix_function(time: float):
         mixing_matrix = matrix_components["all_locations"]

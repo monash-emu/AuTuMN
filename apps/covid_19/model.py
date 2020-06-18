@@ -52,8 +52,9 @@ validate_params = sb.build_validator(
     # Mixing matrix
     mixing=sb.DictGeneric(str, list),
     npi_effectiveness=sb.DictGeneric(str, float),
-    reinstate_regular_prayers=bool,
-    prayers_params=sb.Dict(restart_time=float, prop_participating=float, contact_multiplier=float,),
+    is_periodic_intervention=bool,
+    periodic_intervention=sb.Dict(restart_time=float, prop_participating=float, contact_multiplier=float,
+                           duration=float, period=float),
     # Something to do with travellers?
     traveller_quarantine=sb.Dict(times=sb.List(float), values=sb.List(float),),
     # Importation of disease from outside of region
@@ -158,14 +159,14 @@ def build_model(params: dict) -> StratifiedModel:
     dynamic_mixing_params = params["mixing"]
     if dynamic_mixing_params:
         npi_effectiveness_params = params["npi_effectiveness"]
-        is_reinstate_regular_prayers = params.get("reinstate_regular_prayers")
-        prayers_params = params.get("prayers_params")
+        is_periodic_intervention = params.get("is_periodic_intervention")
+        periodic_int_params = params.get("periodic_intervention")
         dynamic_mixing_matrix = preprocess.mixing_matrix.build_dynamic(
             country,
             dynamic_mixing_params,
             npi_effectiveness_params,
-            is_reinstate_regular_prayers,
-            prayers_params,
+            is_periodic_intervention,
+            periodic_int_params,
             end_time,
         )
 

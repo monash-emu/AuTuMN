@@ -1,9 +1,11 @@
-# reinstate regular prayers
-reinstate_regular_prayers: True
-prayers_params:
+# Reinstate regular prayers
+is_periodic_intervention: True
+periodic_intervention:
   restart_time: 165
-  prop_participating: .30 # assuming 50 % of the Malaysian muslim population
+  prop_participating: .30 # assuming 50 % of the Malaysian Muslim population
   contact_multiplier: 10.
+  duration: 1.
+  period: 7.
 mixing:
   other_locations_times:
     - 46

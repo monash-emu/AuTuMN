@@ -23,7 +23,7 @@ else
     TRIGGER_DOWNSTREAM=yes
     BURN_IN=$BURN_IN_DEFAULT
 fi
-MODEL_NAME=$(echo $RUN_NAME | cut -d'-' -f1)
+MODEL_NAME=$(python3 -c "print('-'.join('$RUN_NAME'.split('-')[:-3]))")
 JOB_NAME=$MODEL_NAME-$BUILDKITE_BUILD_NUMBER
 
 log "Running full model for $MODEL_NAME with burn in $BURN_IN"

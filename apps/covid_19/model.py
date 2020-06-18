@@ -50,6 +50,7 @@ validate_params = sb.build_validator(
     tv_detection_b=float,
     tv_detection_c=float,
     tv_detection_sigma=float,
+    int_detection_gap_reduction=float,
     # Mixing matrix
     mixing=sb.DictGeneric(str, list),
     npi_effectiveness=sb.DictGeneric(str, float),

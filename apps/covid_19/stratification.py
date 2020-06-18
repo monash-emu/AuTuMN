@@ -142,8 +142,23 @@ def stratify_by_clinical(model, model_parameters, compartments):
             "hospital_non_icu": sympt_hospital_non_icu[age_idx],
         }
 
-    # Create a function for the proprotion of symptomatic people who are detected at timestep `t`.
-    scale_up_multiplier = tanh_based_scaleup(tv_detection_b, tv_detection_c, tv_detection_sigma)
+    # Create a function for the proportion of symptomatic people who are detected at timestep `t`.
+    scale_up_multiplier = \
+        tanh_based_scaleup(tv_detection_b, tv_detection_c, tv_detection_sigma)
+
+    # Modify case detection rate for future improvements in case detection
+    int_detect_gap_reduction = model_parameters['int_detection_gap_reduction']
+    intervention_start_time = 200.
+
+    def modified_scale_up_multiplier(t):
+        return float(np.piecewise(
+            t,
+            [t < intervention_start_time, t >= intervention_start_time],
+            [scale_up_multiplier(t),
+             scale_up_multiplier(t) + 1. - scale_up_multiplier(t) * int_detect_gap_reduction]
+        ))
+
+    # Will need to replace scale_up_multiplier with modified_tanh_scaleup to implement improved case detection
 
     def prop_detect_among_sympt_func(t):
         return prop_detected_among_symptomatic * scale_up_multiplier(t)

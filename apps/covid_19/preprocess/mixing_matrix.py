@@ -91,7 +91,7 @@ def build_dynamic(
             (1.0 - prop_participating) + contact_multiplier * prop_participating
         )
         while t < t_end:
-            other_locations["times"] += [t - 1, t, t + duration]
+            other_locations["times"] += [t, t + 1, t + 1 + duration]
             other_locations["values"] += [reference_val, amplified_val, reference_val]
             t += period
 

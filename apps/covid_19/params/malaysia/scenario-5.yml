@@ -4,8 +4,8 @@ periodic_intervention:
   restart_time: 165
   prop_participating: .30 # assuming 50 % of the Malaysian Muslim population
   contact_multiplier: 10.
-  duration: 7.
-  period: 1.
+  duration: 1.
+  period: 7.
 mixing:
   other_locations_times:
     - 46

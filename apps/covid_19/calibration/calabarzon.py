@@ -4,8 +4,12 @@ from apps.covid_19.calibration import base
 
 def run_calibration_chain(max_seconds: int, run_id: int):
     base.run_calibration_chain(
-        max_seconds, run_id, Region.CALABARZON, PAR_PRIORS, TARGET_OUTPUTS, mode="autumn_mcmc",
+        max_seconds, run_id, Region.CALABARZON, PAR_PRIORS, TARGET_OUTPUTS, mode="autumn_mcmc", _multipliers=MULTIPLIERS
     )
+
+MULTIPLIERS = {
+    "prevXlateXclinical_icuXamong": 16057300.0
+}  # to get absolute pop size instead of proportion
 
 
 PAR_PRIORS = [

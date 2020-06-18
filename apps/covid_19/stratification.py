@@ -155,10 +155,10 @@ def stratify_by_clinical(model, model_parameters, compartments):
             t,
             [t < intervention_start_time, t >= intervention_start_time],
             [scale_up_multiplier(t),
-             scale_up_multiplier(t) + 1. - scale_up_multiplier(t) * int_detect_gap_reduction]
+             scale_up_multiplier(t) + (1. - scale_up_multiplier(t)) * int_detect_gap_reduction]
         ))
 
-    # Will need to replace scale_up_multiplier with modified_tanh_scaleup to implement improved case detection
+    # Will need to replace scale_up_multiplier with modified_scale_up_multiplier to implement improved case detection
 
     def prop_detect_among_sympt_func(t):
         return prop_detected_among_symptomatic * scale_up_multiplier(t)

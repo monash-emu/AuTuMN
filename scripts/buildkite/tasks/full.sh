@@ -54,7 +54,7 @@ steps:
     trigger: powerbi-processing
     async: true
     build:
-      message: Triggered by full model run ${BUILDKITE_BUILD_NUMBER}
+      message: Triggered by full model run ${MODEL_NAME} (build ${BUILDKITE_BUILD_NUMBER})
       commit: ${BUILDKITE_COMMIT}
       branch: ${BUILDKITE_BRANCH}
       env:

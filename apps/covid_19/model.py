@@ -1,5 +1,6 @@
 import os
 from summer.model import StratifiedModel
+from summer.model.utils.string import find_all_strata, find_name_components
 
 from autumn.tool_kit.utils import normalise_sequence
 from autumn import constants
@@ -245,8 +246,7 @@ def build_model(params: dict) -> StratifiedModel:
 
     # Define output connections to collate
     # Track compartment output connections.
-    # FIXME: Following line should use a standard SUMMER function
-    stratum_names = list(set(["X".join(x.split("X")[1:]) for x in model.compartment_names]))
+    stratum_names = list(set([find_all_strata(x) for x in model.compartment_names]))
     incidence_connections = outputs.get_incidence_connections(stratum_names)
     progress_connections = outputs.get_progress_connections(stratum_names)
     model.output_connections = {

@@ -73,6 +73,10 @@ def find_stem(stratified_string: str):
     return stratified_string.split("X")[0]
 
 
+def find_all_strata(stratified_string: str):
+    return "X".join(find_name_components(stratified_string)[1:])
+
+
 @lru_cache(maxsize=None)
 def find_name_components(compartment):
     """

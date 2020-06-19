@@ -16,23 +16,32 @@ OPTI_PARAMS_PATH = os.path.join(FILE_DIR, "opti_params.yml")
 with open(OPTI_PARAMS_PATH, "r") as yaml_file:
     opti_params = yaml.safe_load(yaml_file)
 
-available_countries = [Region.MALAYSIA]
+available_countries = [Region.UNITED_KINGDOM]
 
 
-def objective_function(decision_variables, mode="by_age", country=Region.MALAYSIA):
+def objective_function(decision_variables, mode="by_age", country=Region.UNITED_KINGDOM, config=0,
+                       calibrated_params={}):
     """
     :param decision_variables: dictionary containing
         - mixing multipliers by age as a list if mode == "by_age"    OR
         - location multipliers as a dictionary if mode == "by_location"
     :param mode: either "by_age" or "by_location"
     :param country: the country name
+    :param config: the id of the configuration being considered
+    :param calibrated_params: a dictionary containing a set of calibrated parameters
     """
     running_model = RegionApp(country)
     build_model = running_model.build_model
     params = copy.deepcopy(running_model.params)
 
-    # update params with optimisation config
+    # update params with optimisation default config
     params["default"].update(opti_params["default"])
+
+    # update params with calibrated parameters
+    params["default"].update(calibrated_params)
+
+    # update params with specific config (Sensitivity analyses)
+    params["default"].update(opti_params["configurations"][config])
 
     # Define the two scenarios:
     #   baseline: using the decision variables
@@ -49,6 +58,9 @@ def objective_function(decision_variables, mode="by_age", country=Region.MALAYSI
 
     # set location-specific mixing back to pre-COVID rates on 1st of July or use the opti decision variable
     for loc in ["other_locations", "school", "work"]:
+        if not loc + "_values" in params["default"]["mixing"]:
+            params["default"]["mixing"][loc + "_times"] = [0.]
+            params["default"]["mixing"][loc + "_values"] = [1.]
         latest_value = params["default"]["mixing"][loc + "_values"][-1]
         params["default"]["mixing"][loc + "_times"] += [181, 183]
         if mode == "by_age":  # just return mixing to pre-COVID
@@ -127,8 +139,14 @@ if __name__ == "__main__":
         "by_location": {"other_locations": 1.0, "school": 1.0, "work": 1.0},
     }
 
-    for mode in ["by_age", "by_location"]:
+    for mode in ["by_age"]:  #, "by_location"]:
         for country in available_countries:
-            h, d, p_immune, m = objective_function(decision_vars[mode], mode, country)
-            print(country)
-            print("Immunity: " + str(h) + "\n" + "Deaths: " + str(round(d)))
+            for config in opti_params["configurations"]:
+
+                # read csv file
+
+                # loop through the list of parameter sets
+
+                h, d, p_immune, m = objective_function(decision_vars[mode], mode, country, config)
+                print("Immunity: " + str(h) + "\n" + "Deaths: " + str(round(d)) + "\n" + "Prop immune: " +
+                      str(round(p_immune, 3)))

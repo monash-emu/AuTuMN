@@ -23,6 +23,13 @@ def get_calc_notifications_covid(
             if is_progress and is_notify_stratum:
                 notifications_count += value[time_idx]
 
+        if implement_importation:
+            notifications_count += (
+                    model.time_variants["crude_birth_rate"](time)
+                    * sum(model.compartment_values)
+                    * prop_detected_func(time)
+            )
+
         return notifications_count
 
     return calculate_notifications_covid

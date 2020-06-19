@@ -86,7 +86,7 @@ hospital_props:
 icu_prop: 0.3
 
 # Infection fatality proportions - Verity et al.
-use_verity_mortality_estimates: TRUE
+use_verity_mortality_estimates: True
 infection_fatality_props:
   - 0.00002 # 0-9
   - 0.00006 # 10-19
@@ -98,7 +98,7 @@ infection_fatality_props:
   - 0.051 # 70-79
   - 0.093 # 80+
 
-# Altenative to the Verity estimates, using a double exponential model
+# Altenative to the Verity estimates, using the double exponential model: x -> exp(-a.exp(-bx))
 # Only used if use_verity_mortality_estimates is FALSE
 ifr_double_exp_model_params:
   a: 10.

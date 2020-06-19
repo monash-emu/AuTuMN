@@ -9,7 +9,7 @@ from apps.covid_19.mixing_optimisation.utils import (
 country = Region.UNITED_KINGDOM
 
 PAR_PRIORS = get_prior_distributions_for_opti()
-TARGET_OUTPUTS = get_target_outputs_for_opti(country, data_start_time=50, update_jh_data=False)
+TARGET_OUTPUTS = get_target_outputs_for_opti(country, data_start_time=50, update_jh_data=True)
 MULTIPLIERS = {}
 
 

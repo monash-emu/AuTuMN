@@ -1,1 +1,1 @@
-from . import compartments, flows, mixing_matrix, importation
+from . import compartments, flows, mixing_matrix, importation, mortality

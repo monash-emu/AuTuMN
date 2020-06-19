@@ -33,7 +33,10 @@ validate_params = sb.build_validator(
     compartment_periods_calculated=dict,
     # Infectiousness adjustments (not sure where used)
     hospital_props=sb.List(float),
+    # mortality parameters
+    use_verity_mortality_estimates=bool,
     infection_fatality_props=sb.List(float),
+    ifr_double_exp_model_params=dict,
     # Age stratified params
     agegroup_breaks=sb.List(float),
     age_based_susceptibility=sb.DictGeneric(str, float),

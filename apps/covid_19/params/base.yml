@@ -169,11 +169,15 @@ universal_death_rate: 0.
 # Parameters relating to adjusting the mixing matrix to reflect interventions
 mixing: {}
 npi_effectiveness: {}
-reinstate_regular_prayers: False
-prayers_params:
+is_periodic_intervention: False
+periodic_intervention:
   restart_time: 0
   prop_participating: 0.
   contact_multiplier: 1.
+  duration: 7.
+  period: 1.
+
+int_detection_gap_reduction: 0.
 
 # parameters od negative binomial (need to be listed for validation)
 notifications_dispersion_param: 1.

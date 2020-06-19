@@ -19,7 +19,7 @@ then
 fi
 log "Running full model for $RUN_NAME with burn-in $BURN_IN"
 
-MODEL_NAME=$(echo $RUN_NAME | cut -d'-' -f1 -)
+MODEL_NAME=$(python3 -c "print('-'.join('$RUN_NAME'.split('-')[:-3]))")
 GIT_COMMIT=$(echo $RUN_NAME | cut -d'-' -f4 -)
 
 log "Updating local AuTuMN repository to run the commit $GIT_COMMIT."

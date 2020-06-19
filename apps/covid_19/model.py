@@ -1,5 +1,6 @@
 import os
 from summer.model import StratifiedModel
+from summer.model.utils.string import find_all_strata, find_name_components
 
 from autumn.tool_kit.utils import normalise_sequence
 from autumn import constants
@@ -49,11 +50,13 @@ validate_params = sb.build_validator(
     tv_detection_b=float,
     tv_detection_c=float,
     tv_detection_sigma=float,
+    int_detection_gap_reduction=float,
     # Mixing matrix
     mixing=sb.DictGeneric(str, list),
     npi_effectiveness=sb.DictGeneric(str, float),
-    reinstate_regular_prayers=bool,
-    prayers_params=sb.Dict(restart_time=float, prop_participating=float, contact_multiplier=float,),
+    is_periodic_intervention=bool,
+    periodic_intervention=sb.Dict(restart_time=float, prop_participating=float, contact_multiplier=float,
+                           duration=float, period=float),
     # Something to do with travellers?
     traveller_quarantine=sb.Dict(times=sb.List(float), values=sb.List(float),),
     # Importation of disease from outside of region
@@ -158,14 +161,14 @@ def build_model(params: dict) -> StratifiedModel:
     dynamic_mixing_params = params["mixing"]
     if dynamic_mixing_params:
         npi_effectiveness_params = params["npi_effectiveness"]
-        is_reinstate_regular_prayers = params.get("reinstate_regular_prayers")
-        prayers_params = params.get("prayers_params")
+        is_periodic_intervention = params.get("is_periodic_intervention")
+        periodic_int_params = params.get("periodic_intervention")
         dynamic_mixing_matrix = preprocess.mixing_matrix.build_dynamic(
             country,
             dynamic_mixing_params,
             npi_effectiveness_params,
-            is_reinstate_regular_prayers,
-            prayers_params,
+            is_periodic_intervention,
+            periodic_int_params,
             end_time,
         )
 
@@ -244,8 +247,7 @@ def build_model(params: dict) -> StratifiedModel:
 
     # Define output connections to collate
     # Track compartment output connections.
-    # FIXME: Following line should use a standard SUMMER function
-    stratum_names = list(set(["X".join(x.split("X")[1:]) for x in model.compartment_names]))
+    stratum_names = list(set([find_all_strata(x) for x in model.compartment_names]))
     incidence_connections = outputs.get_incidence_connections(stratum_names)
     progress_connections = outputs.get_progress_connections(stratum_names)
     model.output_connections = {

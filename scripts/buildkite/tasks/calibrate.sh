@@ -44,7 +44,7 @@ steps:
     trigger: full-model-run
     async: true
     build:
-      message: Triggered by calibration ${BUILDKITE_BUILD_NUMBER}
+      message: Triggered by calibration ${MODEL_NAME} (build ${BUILDKITE_BUILD_NUMBER})
       commit: ${BUILDKITE_COMMIT}
       branch: ${BUILDKITE_BRANCH}
       env:

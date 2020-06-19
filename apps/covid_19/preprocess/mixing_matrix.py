@@ -15,6 +15,37 @@ LOCATIONS = ["home", "other_locations", "school", "work"]
 AGE_INDICES = list(range(16))
 
 
+def add_periodic_intervention(periodic_int_params, other_locations, end_time):
+    """
+    We assume that a proportion 'prop_participating' of the population participates in the intervention and that the
+    other-location contact rates are multiplied by 'other_location_multiplier' for the participating individuals.
+    """
+
+    # Avoid over-writing existing times, find start and end time
+    t_start = max([periodic_int_params["restart_time"], max(other_locations["times"]) + 1])
+    t = t_start
+    t_end = end_time
+
+    # Extract parameters
+    prop_participating, contact_multiplier, duration, period = \
+        periodic_int_params["prop_participating"], periodic_int_params["contact_multiplier"], \
+        periodic_int_params["duration"], periodic_int_params["period"]
+    reference_val = other_locations["values"][-1]
+
+    # Calculate the value for other locations that the contact rate increases to
+    amplified_val = reference_val * (
+            (1.0 - prop_participating) + contact_multiplier * prop_participating
+    )
+
+    # Extend dictionary of other locations
+    while t < t_end:
+        other_locations["times"] += [t, t + 1, t + 1 + duration]
+        other_locations["values"] += [reference_val, amplified_val, reference_val]
+        t += period
+
+    return other_locations
+
+
 def build_static(country: str, multipliers: np.ndarray) -> np.ndarray:
     """
     Get a non-time-varying mixing matrix.
@@ -34,8 +65,8 @@ def build_dynamic(
     country: str,
     mixing_params: dict,
     npi_effectiveness_params: dict,
-    is_reinstate_regular_prayers: bool,
-    prayers_params: dict,
+    is_periodic_intervention: bool,
+    periodic_int_params: dict,
     end_time: float,
 ) -> Callable[[float], np.ndarray]:
     """
@@ -74,25 +105,11 @@ def build_dynamic(
         # Loads a 16x16 ndarray
         matrix_components[sheet_type] = load_country_mixing_matrix(sheet_type, country)
 
-    # Update the mixing parameters to simulate re-instating regular Friday prayers from t_start to t_end. We assume that
-    # a proportion 'prop_participating' of the population participates in the prayers and that the other-location
-    # contact rates are multiplied by 'other_location_multiplier' for the participating individuals.
-    if is_reinstate_regular_prayers:
+    # Update the mixing parameters to simulate a future regular periodic process
+    if is_periodic_intervention:
         other_locations = mixing.get("other_locations")
-        t_start = max([prayers_params["restart_time"], max(other_locations["times"]) + 1])
-        t_end = end_time
-        prop_participating = prayers_params["prop_participating"]
-        contact_multiplier = prayers_params["contact_multiplier"]
         assert other_locations, "need to specify other_location mixing params"
-        t = t_start
-        reference_val = other_locations["values"][-1]
-        amplified_val = reference_val * (
-            (1.0 - prop_participating) + contact_multiplier * prop_participating
-        )
-        while t < t_end:
-            other_locations["times"] += [t, t + 1, t + 2]
-            other_locations["values"] += [reference_val, amplified_val, reference_val]
-            t += 7
+        mixing["other_locations"] = add_periodic_intervention(periodic_int_params, other_locations, end_time)
 
     def mixing_matrix_function(time: float):
         mixing_matrix = matrix_components["all_locations"]

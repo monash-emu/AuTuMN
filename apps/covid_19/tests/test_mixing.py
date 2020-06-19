@@ -14,8 +14,8 @@ def test_dynamic_mixing():
         country="Malaysia",
         mixing_params=mixing_params,
         npi_effectiveness_params={},
-        is_reinstate_regular_prayers=False,
-        prayers_params={},
+        is_periodic_intervention=False,
+        periodic_int_params={},
         end_time=365,
     )
     mm = mm_func(50)

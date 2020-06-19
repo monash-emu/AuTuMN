@@ -6,6 +6,8 @@ end_time: 180.
 
 contact_rate: .035
 
+use_verity_mortality_estimates: False
+
 mixing:
   other_locations_times:
     - 46

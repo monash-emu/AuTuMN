@@ -2,6 +2,7 @@ from apps.covid_19.john_hopkins import download_jh_data, read_john_hopkins_data_
 from autumn.plots.streamlit.run_mcmc_plots import load_mcmc_tables
 from autumn.plots.plots import _overwrite_non_accepted_mcmc_runs
 import pandas as pd
+import os
 
 
 def get_prior_distributions_for_opti():
@@ -129,8 +130,21 @@ def extract_n_mcmc_samples(calibration_output_path, n_samples=100, burn_in=500):
 
     thined_samples = combined_burned_samples.iloc[selected_indices, ]
 
-    return thined_samples
+    return thined_samples.drop(['Scenario', 'accept'], axis=1)
 
 
-# extract_n_mcmc_samples("../../../data/test_get_sample")
+def prepare_table_of_param_sets(calibration_output_path, n_samples=100, burn_in=500):
+    samples = extract_n_mcmc_samples(calibration_output_path, n_samples, burn_in)
+    for i in range(16):
+        samples["best_x" + str(i)] = ""
+    samples["best_deaths"] = ""
+    samples["all_vars_to_1_deaths"] = ""
+    samples["best_p_immune"] = ""
+    samples["all_vars_to_1_p_immune"] = ""
+
+    output_file = os.path.join(calibration_output_path, "opti_sample.csv")
+    samples.to_csv(output_file, index=False)
+
+
+# prepare_table_of_param_sets("../../../data/covid_united-kingdom/calibration-covid_united-kingdom-c4c45836-20-06-2020")
 

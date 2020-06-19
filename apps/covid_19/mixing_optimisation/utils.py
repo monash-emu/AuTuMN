@@ -1,4 +1,7 @@
 from apps.covid_19.john_hopkins import download_jh_data, read_john_hopkins_data_from_csv
+from autumn.plots.streamlit.run_mcmc_plots import load_mcmc_tables
+from autumn.plots.plots import _overwrite_non_accepted_mcmc_runs
+import pandas as pd
 
 
 def get_prior_distributions_for_opti():
@@ -106,3 +109,28 @@ def get_target_outputs_for_opti(country, data_start_time=22, update_jh_data=Fals
         )
 
     return target_outputs
+
+
+def extract_n_mcmc_samples(calibration_output_path, n_samples=100, burn_in=500):
+    mcmc_tables = load_mcmc_tables(calibration_output_path)
+    col_names = mcmc_tables[0].columns
+
+    for col_name in [c for c in col_names if c not in ["accept"]]:
+        _overwrite_non_accepted_mcmc_runs(mcmc_tables, col_name)
+
+    for i, mcmc_table in enumerate(mcmc_tables):
+        mcmc_tables[i] = mcmc_table.iloc[burn_in:]
+
+    combined_burned_samples = pd.concat(mcmc_tables)
+    nb_rows = combined_burned_samples.shape[0]
+    thining_jump = int(nb_rows / n_samples)
+
+    selected_indices = [i * thining_jump for i in range(n_samples)]
+
+    thined_samples = combined_burned_samples.iloc[selected_indices, ]
+
+    return thined_samples
+
+
+# extract_n_mcmc_samples("../../../data/test_get_sample")
+

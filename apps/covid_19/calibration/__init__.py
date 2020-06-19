@@ -8,6 +8,7 @@ from . import (
     manila,
     philippines,
     victoria,
+    nsw
 )
 
 CALIBRATIONS = {
@@ -19,6 +20,7 @@ CALIBRATIONS = {
     Region.MANILA: manila.run_calibration_chain,
     Region.PHILIPPINES: philippines.run_calibration_chain,
     Region.VICTORIA: victoria.run_calibration_chain,
+    Region.NSW: nsw.run_calibration_chain,
 }
 
 

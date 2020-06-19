@@ -228,7 +228,7 @@ mixing:
     - 0.6975
     - 0.7525
     - 0.79
-    - .14 # scenario
+    - .94 # scenario
     - 1. # scenario
   work_times:
     - 46

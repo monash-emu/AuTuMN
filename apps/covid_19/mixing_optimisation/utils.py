@@ -8,7 +8,7 @@ import os
 def get_prior_distributions_for_opti():
     prior_list = [
         {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.015, 0.050],},
-        {"param_name": "start_time", "distribution": "uniform", "distri_params": [-30.0, 40.0],},
+        {"param_name": "start_time", "distribution": "uniform", "distri_params": [0., 30.],},
         {
             "param_name": "compartment_periods_calculated.incubation.total_period",
             "distribution": "gamma",
@@ -16,16 +16,10 @@ def get_prior_distributions_for_opti():
             "distri_ci": [3.0, 7.0],
         },
         {
-            "param_name": "compartment_periods.icu_late",
+            "param_name": "compartment_periods_calculated.total_infectious.total_period",
             "distribution": "gamma",
-            "distri_mean": 10.0,
-            "distri_ci": [5.0, 15.0],
-        },
-        {
-            "param_name": "compartment_periods.icu_early",
-            "distribution": "gamma",
-            "distri_mean": 10.0,
-            "distri_ci": [2.0, 25.0],
+            "distri_mean": 7.0,
+            "distri_ci": [4.5, 9.5],
         },
         {
             "param_name": "tv_detection_b",  # shape parameter

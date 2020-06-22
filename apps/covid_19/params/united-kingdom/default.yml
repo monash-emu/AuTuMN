@@ -1,12 +1,28 @@
 country: united-kingdom
 iso3: GBR
 
-start_time: -20.
+#start_time: -20.
 end_time: 180.
 
-contact_rate: .035
-
+infectious_seed: 200
 use_verity_mortality_estimates: False
+
+# MCMC MLE
+contact_rate: 0.04
+start_time: 14.484443561255691
+compartment_periods_calculated:
+  incubation:
+    total_period: 0.9847216812139918
+compartment_periods:
+  icu_late: 10.169537450487928
+  icu_early: 8.311093933486994
+tv_detection_b: 0.05221039626701796
+tv_detection_c: 88.28872123139837
+prop_detected_among_symptomatic: 0.9308397549871293
+icu_prop: 0.20685556871651642
+ifr_double_exp_model_params:
+  a: 7.2462223185398775
+  last_representative_age: 75.16630484845253
 
 mixing:
   other_locations_times:
@@ -489,11 +505,9 @@ mixing:
     - 0.48
     - 0.48
     - 0.49
-#  school_times:
-#    - XX
-#    - XX
-#    - XX
-#  school_values:
-#    - XX
-#    - XX
-#    - XX
+  school_times:
+    - 78
+    - 80
+  school_values:
+    - 1.
+    - .1

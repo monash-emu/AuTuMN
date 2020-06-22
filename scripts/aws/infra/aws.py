@@ -92,13 +92,13 @@ def run_instance(job_id: str, instance_type: str):
         IamInstanceProfile={"Name": settings.EC2_IAM_INSTANCE_PROFILE},
         KeyName=settings.EC2_KEYFILE.split(".")[0],
         InstanceInitiatedShutdownBehavior="terminate",
-        # InstanceMarketOptions={
-        #     "MarketType": "spot",
-        #     "SpotOptions": {
-        #         "MaxPrice": settings.EC2_SPOT_MAX_PRICE,
-        #         "SpotInstanceType": "one-time",
-        #     },
-        # },
+        InstanceMarketOptions={
+            "MarketType": "spot",
+            "SpotOptions": {
+                "MaxPrice": settings.EC2_SPOT_MAX_PRICE,
+                "SpotInstanceType": "one-time",
+            },
+        },
         TagSpecifications=[
             {"ResourceType": "instance", "Tags": [{"Key": "Name", "Value": job_id}]}
         ],

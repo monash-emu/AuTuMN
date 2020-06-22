@@ -13,7 +13,6 @@ from .latency_params import (
     get_adapted_age_parameters,
 )
 from .loaded_model import LoadedModel
-from .interpolation import get_bcg_functions, add_birth_rate_functions
 from .flows import (
     add_density_infection_flows,
     add_standard_infection_flows,

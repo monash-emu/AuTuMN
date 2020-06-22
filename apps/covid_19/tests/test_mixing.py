@@ -2,18 +2,34 @@ from apps.covid_19.preprocess.mixing_matrix import build_dynamic
 
 
 def test_dynamic_mixing():
+    google_mobility_locations = {
+        "work": ["workplaces"],
+        "other_locations": [
+            "retail_and_recreation",
+            "grocery_and_pharmacy",
+            "parks",
+            "transit_stations",
+        ],
+    }
     mixing_params = {
-        "other_locations_times": [50, 60, 80, 100, 120],
-        "other_locations_values": [1, 0.4, 0.3, 0.3, 0.5],
-        "work_times": [50, 60, 80, 100, 120],
-        "work_values": [1, 0.9, 0.5, 0.3, 0.6],
-        "school_times": ["20200312", "20200314"],
-        "school_values": [1, 0],
+        "other_locations": {
+            "append": True,
+            "times": [220, 230, 240, 250, 260],
+            "values": [1, 0.4, 0.3, 0.3, 0.5],
+        },
+        "work": {
+            "append": True,
+            "times": [220, 230, 240, 250, 260],
+            "values": [1, 0.9, 0.5, 0.3, 0.6],
+        },
+        "school": {"append": False, "times": [46, 220], "values": [1, 0],},
     }
     mm_func = build_dynamic(
-        country="Malaysia",
-        mixing_params=mixing_params,
+        country_iso3="MYS",
+        region=None,
+        mixing=mixing_params,
         npi_effectiveness_params={},
+        google_mobility_locations=google_mobility_locations,
         is_periodic_intervention=False,
         periodic_int_params={},
         end_time=365,

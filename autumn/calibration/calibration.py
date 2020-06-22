@@ -191,7 +191,7 @@ class Calibration:
             derived_output_df,
             table_name="derived_outputs",
             run_idx=self.iter_num,
-            database_name=self.output_db_path,
+            database_path=self.output_db_path,
             scenario=scenario.idx,
         )
         store_database(
@@ -199,7 +199,7 @@ class Calibration:
             table_name="outputs",
             run_idx=self.iter_num,
             times=model.times,
-            database_name=self.output_db_path,
+            database_path=self.output_db_path,
             scenario=scenario.idx,
         )
 
@@ -219,7 +219,7 @@ class Calibration:
         mcmc_run_colnames.append("accept")
         mcmc_run_df = pd.DataFrame(mcmc_run_dict, columns=mcmc_run_colnames, index=[i_run])
         store_database(
-            mcmc_run_df, table_name="mcmc_run", run_idx=i_run, database_name=self.output_db_path,
+            mcmc_run_df, table_name="mcmc_run", run_idx=i_run, database_path=self.output_db_path,
         )
 
     def run_model_with_params(self, proposed_params: dict):
@@ -341,7 +341,7 @@ class Calibration:
                 mcmc_run_df,
                 table_name="mcmc_run",
                 run_idx=self.iter_num,
-                database_name=self.output_db_path,
+                database_path=self.output_db_path,
             )
 
         self.evaluated_params_ll.append((copy.copy(params), copy.copy(best_ll)))

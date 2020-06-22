@@ -8,6 +8,7 @@ def test_schema_builder():
 
 
 INPUT_SCHEMA = {
+    "region": sb.Nullable(str),
     "translations": sb.DictGeneric(str, str),
     "outputs_to_plot": sb.List(sb.Dict(name=str)),
     "pop_distribution_strata": sb.List(str),
@@ -18,6 +19,7 @@ INPUT_SCHEMA = {
 
 
 EXPECTED_SCHEMA = {
+    "region": {"type": "string", "nullable": True},
     "translations": {
         "type": "dict",
         "valuesrules": {"type": "string"},

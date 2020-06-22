@@ -57,7 +57,7 @@ def test_calibration_data_collation(temp_data_dir, num_iters, max_size_mb):
     collate_outputs_powerbi(out_db_paths, target_db_path, max_size=max_size_mb)
 
     target_db = Database(target_db_path)
-    collated_mcmc_runs = target_db.db_query("mcmc_run")
+    collated_mcmc_runs = target_db.query("mcmc_run")
     assert len(collated_mcmc_runs) == collated_mcmc_runs.accept.sum()
     assert max_size_mb / 2 <= target_db.get_size_mb() <= max_size_mb
 
@@ -108,7 +108,7 @@ def test_calibrate_autumn_mcmc(temp_data_dir):
         "derived_outputs",
         "mcmc_run",
     }
-    mcmc_runs = out_db.db_query("mcmc_run")
+    mcmc_runs = out_db.query("mcmc_run")
     max_idx = mcmc_runs.loglikelihood.idxmax()
     best_run = mcmc_runs.iloc[max_idx]
     ice_cream_sales_mle = best_run.ice_cream_sales

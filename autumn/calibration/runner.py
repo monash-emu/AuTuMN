@@ -25,7 +25,7 @@ def run_full_models_for_mcmc(
 
     logger.info("Copying mcmc_run table to %s", dest_db_path)
 
-    mcmc_run_df = src_db.db_query("mcmc_run")
+    mcmc_run_df = src_db.query("mcmc_run")
 
     # Apply burn in and save to destination
     burned_runs_str = ", ".join(mcmc_run_df[:burn_in].idx)

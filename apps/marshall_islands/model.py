@@ -12,7 +12,6 @@ from autumn.tb_model.parameters import (
     add_time_variant_parameter_to_model,
     build_scale_up_function,
 )
-from autumn.db import Database
 from autumn.tb_model.flows import (
     add_case_detection,
     add_latency_progression,
@@ -35,14 +34,10 @@ from autumn.tb_model import (
     add_standard_latency_flows,
     add_standard_natural_history_flows,
     add_standard_infection_flows,
-    add_birth_rate_functions,
     list_all_strata_for_mortality,
 )
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
-
-# Database locations
-FILE_DIR = os.path.dirname(os.path.abspath(__file__))
-INPUT_DB_PATH = os.path.join(constants.DATA_PATH, "inputs.db")
+from autumn import inputs
 
 
 def build_model(params: dict) -> StratifiedModel:
@@ -54,7 +49,6 @@ def build_model(params: dict) -> StratifiedModel:
     :return: StratifiedModel
         The final model with all parameters and stratifications
     """
-    input_database = Database(database_name=INPUT_DB_PATH)
 
     # Define compartments and initial conditions.
     compartments = [
@@ -119,7 +113,10 @@ def build_model(params: dict) -> StratifiedModel:
     )
 
     # Add crude birth rate from UN estimates (using Federated States of Micronesia as a proxy as no data for RMI)
-    tb_model = add_birth_rate_functions(tb_model, input_database, "FSM")
+    birth_rates, years = inputs.get_crude_birth_rate("FSM")
+    tb_model.time_variants["crude_birth_rate"] = scale_up_function(
+        years, birth_rates, smoothness=0.2, method=5
+    )
 
     # Find raw case detection rate with multiplier, which is 1 by default, and adjust for differences by organ status
     cdr_scaleup_raw = build_scale_up_function(
@@ -190,7 +187,6 @@ def build_model(params: dict) -> StratifiedModel:
         tb_model = stratify_by_age(
             tb_model,
             age_specific_latency_parameters,
-            input_database,
             model_parameters["all_stratifications"]["age"],
         )
     if "diabetes" in model_parameters["stratify_by"]:

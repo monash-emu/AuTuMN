@@ -86,7 +86,7 @@ def collect_map_estimate(calib_dirpath: str):
     ]
     for db_path in db_paths:
         db = Database(db_path)
-        mcmc_tables.append(db.db_query("mcmc_run").sort_values(by="loglikelihood", ascending=False))
+        mcmc_tables.append(db.query("mcmc_run").sort_values(by="loglikelihood", ascending=False))
 
     best_chain_index = np.argmax(
         [mcmc_tables[i]["loglikelihood"].iloc[0] for i in range(len(mcmc_tables))]

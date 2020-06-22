@@ -12,7 +12,7 @@ from math import log
 from matplotlib import pyplot
 from summer.model.strat_model import StratifiedModel
 
-from autumn.demography.social_mixing import load_country_mixing_matrix
+from autumn.inputs import get_country_mixing_matrix
 from autumn.tool_kit.scenarios import Scenario
 from autumn.tool_kit import schema_builder as sb
 from autumn.tool_kit.uncertainty import export_mcmc_quantiles
@@ -151,11 +151,11 @@ def plot_timeseries_with_uncertainty(
     )
     try:
         db = Database(percentile_db_path)
-        output_perc = db.db_query(output_name)
+        output_perc = db.query(output_name)
     except:
         export_mcmc_quantiles(path_to_percentile_outputs, [output_name], burn_in=burn_in)
         db = Database(percentile_db_path)
-        output_perc = db.db_query(output_name)
+        output_perc = db.query(output_name)
 
     fig, axis, _, _, _ = plotter.get_figure()
     scenario_list = "scenarios"
@@ -518,7 +518,7 @@ def plot_mixing_matrix(plotter: Plotter, model: StratifiedModel):
     for location in ["all_locations", "school", "home", "work", "other_locations"]:
         fig, axis, max_dims, n_rows, n_cols = plotter.get_figure()
         axis = sns.heatmap(
-            load_country_mixing_matrix(location, "Australia"),
+            get_country_mixing_matrix(location, "AUS"),
             yticklabels=model.mixing_categories,
             xticklabels=False,
             vmin=0.0,

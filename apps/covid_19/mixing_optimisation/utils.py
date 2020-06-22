@@ -7,8 +7,8 @@ import os
 
 def get_prior_distributions_for_opti():
     prior_list = [
-        {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.015, 0.050],},
-        {"param_name": "start_time", "distribution": "uniform", "distri_params": [0., 30.],},
+        {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.025, 0.050],},
+        {"param_name": "start_time", "distribution": "uniform", "distri_params": [0., 20.],},
         {
             "param_name": "compartment_periods_calculated.incubation.total_period",
             "distribution": "gamma",

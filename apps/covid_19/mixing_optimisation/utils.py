@@ -91,14 +91,26 @@ def get_target_outputs_for_opti(country, data_start_time=22, update_jh_data=Fals
     target_outputs = []
     for variable in ["confirmed", "deaths"]:
         data = read_john_hopkins_data_from_csv(variable, country)
-        data = [max(d, 0) for d in data]
         times = [jh_start_time + i for i in range(len(data))]
-        nb_elements_to_drop = data_start_time - jh_start_time
+
+        # Ignore negative values found in the dataset
+        censored_data_indices = []
+        for i, d in enumerate(data):
+            if d < 0:
+                censored_data_indices.append(i)
+        data = [d for i, d in enumerate(data) if i not in censored_data_indices]
+        times = [t for i, t in enumerate(times) if i not in censored_data_indices]
+
+        # remove first datapoints according to data_start_time
+        indices_to_keep = [i for i, t in enumerate(times) if t >= data_start_time]
+        times = [t for t in times if t >= data_start_time]
+        data = [d for i, d in enumerate(data) if i in indices_to_keep]
+
         target_outputs.append(
             {
                 "output_key": output_mapping[variable],
-                "years": times[nb_elements_to_drop:],
-                "values": data[nb_elements_to_drop:],
+                "years": times,
+                "values": data,
                 "loglikelihood_distri": "negative_binomial",
             }
         )
@@ -138,6 +150,7 @@ def prepare_table_of_param_sets(calibration_output_path, n_samples=100, burn_in=
 
     output_file = os.path.join(calibration_output_path, "opti_sample.csv")
     samples.to_csv(output_file, index=False)
+
 
 
 # prepare_table_of_param_sets("../../../data/covid_united-kingdom/calibration-covid_united-kingdom-c4c45836-20-06-2020")

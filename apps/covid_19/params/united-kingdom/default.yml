@@ -8,21 +8,20 @@ infectious_seed: 200
 use_verity_mortality_estimates: False
 
 # MCMC MLE
-contact_rate: 0.04
-start_time: 14.484443561255691
+contact_rate: 0.045  # 936947554662136
+start_time: 15 #29.99881516400154
 compartment_periods_calculated:
   incubation:
-    total_period: 0.9847216812139918
-compartment_periods:
-  icu_late: 10.169537450487928
-  icu_early: 8.311093933486994
-tv_detection_b: 0.05221039626701796
-tv_detection_c: 88.28872123139837
-prop_detected_among_symptomatic: 0.9308397549871293
-icu_prop: 0.20685556871651642
+    total_period: 2.4840968875557796
+  total_infectious:
+    total_period: 6.007461103499071
+tv_detection_b: 0.06696345534925771
+tv_detection_c: 91.97064344788357
+prop_detected_among_symptomatic: 0.9728450089687062
+icu_prop: 0.25605020564245934
 ifr_double_exp_model_params:
-  a: 7.2462223185398775
-  last_representative_age: 75.16630484845253
+  a: 7.1196707879796035
+  last_representative_age: 80.85024239759224
 
 mixing:
   other_locations_times:

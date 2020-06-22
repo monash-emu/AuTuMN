@@ -2,6 +2,7 @@ import os
 import copy
 
 import yaml
+import pandas as pd
 
 from autumn.constants import Region
 import autumn.post_processing as post_proc
@@ -129,6 +130,34 @@ def has_immunity_been_reached(_model):
     :return: a boolean
     """
     return max(_model.derived_outputs["incidence"]) == _model.derived_outputs["incidence"][0]
+
+
+def read_list_of_param_sets_from_csv(country, config):
+    """
+    Read a csv file containing the MCMC outputs and return a list of calibrated parameter sets. Each parameter set is
+    described as a dictionary.
+    :param country: string
+    :param config: integer used to refer to different sensitivity analyses
+    :return: a list of dictionaries
+    """
+    path_to_csv = os.path.join('calibrated_param_sets', country + '_config_' + str(config) + ".csv")
+    table = pd.read_csv(path_to_csv)
+
+    col_names_to_skip = ["idx", "loglikelihood", "best_deaths", "all_vars_to_1_deaths",
+                         "best_p_immune", "all_vars_to_1_p_immune",
+                         "notifications_dispersion_param", "infection_deathsXall_dispersion_param"]
+    for i in range(16):
+        col_names_to_skip.append("best_x" + str(i))
+
+    list_of_param_sets = []
+
+    for index, row in table.iterrows():
+        par_dict = {}
+        for col_name in [c for c in table.columns if c not in col_names_to_skip]:
+            par_dict[col_name] = row[col_name]
+        list_of_param_sets.append(par_dict)
+
+    return list_of_param_sets
 
 
 if __name__ == "__main__":

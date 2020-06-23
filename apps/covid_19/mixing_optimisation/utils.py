@@ -8,7 +8,12 @@ import os
 def get_prior_distributions_for_opti():
     prior_list = [
         {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.025, 0.050],},
-        {"param_name": "start_time", "distribution": "uniform", "distri_params": [0., 20.],},
+        {"param_name": "start_time", "distribution": "uniform", "distri_params": [0., 15.],},
+        {
+            "param_name": "npi_effectiveness.other_locations",
+            "distribution": "beta",
+            "distri_mean": .65,
+            "distri_ci": [.4, .9]},
         {
             "param_name": "compartment_periods_calculated.incubation.total_period",
             "distribution": "gamma",
@@ -49,7 +54,7 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "ifr_double_exp_model_params.a",
             "distribution": "uniform",
-            "distri_params": [7., 14.],
+            "distri_params": [6., 14.],
         },
         {
             "param_name": "ifr_double_exp_model_params.last_representative_age",

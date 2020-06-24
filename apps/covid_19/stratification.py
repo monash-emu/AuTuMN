@@ -83,8 +83,8 @@ def stratify_by_clinical(model, model_parameters, compartments):
         )
     else:
         infection_fatality_props = age_specific_ifrs_from_double_exp_model(
-            ifr_double_exp_model_params['a'],
-            ifr_double_exp_model_params['b'],
+            ifr_double_exp_model_params['k'],
+            ifr_double_exp_model_params['m'],
             ifr_double_exp_model_params['last_representative_age']
         )
 

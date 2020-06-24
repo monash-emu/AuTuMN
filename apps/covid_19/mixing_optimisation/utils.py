@@ -52,7 +52,7 @@ def get_prior_distributions_for_opti():
         },
         # parameters to derive age-specific IFRs
         {
-            "param_name": "ifr_double_exp_model_params.a",
+            "param_name": "ifr_double_exp_model_params.k",
             "distribution": "uniform",
             "distri_params": [6., 14.],
         },

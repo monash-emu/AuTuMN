@@ -24,7 +24,7 @@ tv_detection_c: 89.15519972858075
 prop_detected_among_symptomatic: 0.9931603477466184
 icu_prop: 0.3158110434245868
 ifr_double_exp_model_params:
-  a: 7.117880369390905
+  k: 7.117880369390905
   last_representative_age: 82.31538340530199
 
 mixing:

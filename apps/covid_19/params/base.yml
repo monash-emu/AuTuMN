@@ -101,8 +101,8 @@ infection_fatality_props:
 # Altenative to the Verity estimates, using the double exponential model: x -> exp(-a.exp(-bx))
 # Only used if use_verity_mortality_estimates is FALSE
 ifr_double_exp_model_params:
-  a: 10.
-  b: .015
+  k: 10.
+  m: .015
   last_representative_age: 80.
 
 # Reduced susceptibility in children - assumed, but informed by Iceland NEJM paper

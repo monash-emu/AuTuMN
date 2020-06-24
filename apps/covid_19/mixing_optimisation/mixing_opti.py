@@ -7,6 +7,7 @@ import pandas as pd
 from autumn.constants import Region
 import autumn.post_processing as post_proc
 from autumn.tool_kit.scenarios import Scenario
+from autumn.tool_kit.params import update_params
 
 from apps.covid_19 import RegionApp
 
@@ -39,7 +40,8 @@ def objective_function(decision_variables, mode="by_age", country=Region.UNITED_
     params["default"].update(opti_params["default"])
 
     # update params with calibrated parameters
-    params["default"].update(calibrated_params)
+    for par in calibrated_params:
+        params["default"] = update_params(params['default'], calibrated_params)
 
     # update params with specific config (Sensitivity analyses)
     params["default"].update(opti_params["configurations"][config])
@@ -176,5 +178,6 @@ if __name__ == "__main__":
                     h, d, p_immune, m = objective_function(decision_vars[mode], mode, country, config, param_set)
                     print("Immunity: " + str(h) + "\n" + "Deaths: " + str(round(d)) + "\n" + "Prop immune: " +
                           str(round(p_immune, 3)))
+
 
 

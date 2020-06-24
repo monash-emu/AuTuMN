@@ -164,18 +164,17 @@ if __name__ == "__main__":
     # looping through all countries and optimisation modes for testing purpose
     # optimisation will have to be performed separately for the different countries and modes.
     decision_vars = {
-        "by_age": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,],
+        "by_age": [1.0] * 16,
         "by_location": {"other_locations": 1.0, "school": 1.0, "work": 1.0},
     }
 
-    for mode in ["by_age"]:  #, "by_location"]:
+    for mode in ["by_age"]:  # , "by_location"]:
         for country in available_countries:
-            for config in opti_params["configurations"]:
+            for config in [0]:  # opti_params["configurations"]:
+                param_set_list = read_list_of_param_sets_from_csv(country, config)
+                for param_set in param_set_list:
+                    h, d, p_immune, m = objective_function(decision_vars[mode], mode, country, config, param_set)
+                    print("Immunity: " + str(h) + "\n" + "Deaths: " + str(round(d)) + "\n" + "Prop immune: " +
+                          str(round(p_immune, 3)))
 
-                # read csv file
 
-                # loop through the list of parameter sets
-
-                h, d, p_immune, m = objective_function(decision_vars[mode], mode, country, config)
-                print("Immunity: " + str(h) + "\n" + "Deaths: " + str(round(d)) + "\n" + "Prop immune: " +
-                      str(round(p_immune, 3)))

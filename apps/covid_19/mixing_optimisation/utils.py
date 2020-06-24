@@ -1,10 +1,19 @@
 from apps.covid_19.john_hopkins import download_jh_data, read_john_hopkins_data_from_csv
+from autumn.plots.streamlit.run_mcmc_plots import load_mcmc_tables
+from autumn.plots.plots import _overwrite_non_accepted_mcmc_runs
+import pandas as pd
+import os
 
 
 def get_prior_distributions_for_opti():
     prior_list = [
-        {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.015, 0.050],},
-        {"param_name": "start_time", "distribution": "uniform", "distri_params": [-30.0, 40.0],},
+        {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.025, 0.050],},
+        {"param_name": "start_time", "distribution": "uniform", "distri_params": [0., 15.],},
+        {
+            "param_name": "npi_effectiveness.other_locations",
+            "distribution": "beta",
+            "distri_mean": .65,
+            "distri_ci": [.4, .9]},
         {
             "param_name": "compartment_periods_calculated.incubation.total_period",
             "distribution": "gamma",
@@ -12,16 +21,10 @@ def get_prior_distributions_for_opti():
             "distri_ci": [3.0, 7.0],
         },
         {
-            "param_name": "compartment_periods.icu_late",
+            "param_name": "compartment_periods_calculated.total_infectious.total_period",
             "distribution": "gamma",
-            "distri_mean": 10.0,
-            "distri_ci": [5.0, 15.0],
-        },
-        {
-            "param_name": "compartment_periods.icu_early",
-            "distribution": "gamma",
-            "distri_mean": 10.0,
-            "distri_ci": [2.0, 25.0],
+            "distri_mean": 7.0,
+            "distri_ci": [4.5, 9.5],
         },
         {
             "param_name": "tv_detection_b",  # shape parameter
@@ -47,6 +50,17 @@ def get_prior_distributions_for_opti():
             "distri_mean": 0.25,
             "distri_ci": [0.15, 0.35],
         },
+        # parameters to derive age-specific IFRs
+        {
+            "param_name": "ifr_double_exp_model_params.k",
+            "distribution": "uniform",
+            "distri_params": [6., 14.],
+        },
+        {
+            "param_name": "ifr_double_exp_model_params.last_representative_age",
+            "distribution": "uniform",
+            "distri_params": [75., 85.],
+        },
         # Add negative binomial over-dispersion parameters
         {
             "param_name": "notifications_dispersion_param",
@@ -60,79 +74,7 @@ def get_prior_distributions_for_opti():
         },
     ]
 
-    prior_list += get_ifr_priors_from_verity()
-
     return prior_list
-
-
-def get_ifr_priors_from_verity():
-    ifr_priors = [
-        # 0 to 9
-        {
-            "param_name": "infection_fatality_props[0]",
-            "distribution": "beta",
-            "distri_mean": 0.0000161,
-            "distri_ci": [0.00000185, 0.000249],
-        },
-        # 10 to 19
-        {
-            "param_name": "infection_fatality_props[1]",
-            "distribution": "beta",
-            "distri_mean": 0.0000695,
-            "distri_ci": [0.0000149, 0.000502],
-        },
-        # 20 to 29
-        {
-            "param_name": "infection_fatality_props[2]",
-            "distribution": "beta",
-            "distri_mean": 0.000309,
-            "distri_ci": [0.000138, 0.000923],
-        },
-        # 30 to 39
-        {
-            "param_name": "infection_fatality_props[3]",
-            "distribution": "beta",
-            "distri_mean": 0.000844,
-            "distri_ci": [0.000408, 0.00185],
-        },
-        # 40 to 49
-        {
-            "param_name": "infection_fatality_props[4]",
-            "distribution": "beta",
-            "distri_mean": 0.00161,
-            "distri_ci": [0.000764, 0.00323],
-        },
-        # 50 to 59
-        {
-            "param_name": "infection_fatality_props[5]",
-            "distribution": "beta",
-            "distri_mean": 0.00595,
-            "distri_ci": [0.00344, 0.0128],
-        },
-        # 60 to 69
-        {
-            "param_name": "infection_fatality_props[6]",
-            "distribution": "beta",
-            "distri_mean": 0.0193,
-            "distri_ci": [0.0111, 0.0389],
-        },
-        # 70 to 79
-        {
-            "param_name": "infection_fatality_props[7]",
-            "distribution": "beta",
-            "distri_mean": 0.0428,
-            "distri_ci": [0.0245, 0.0844],
-        },
-        # 80+
-        {
-            "param_name": "infection_fatality_props[8]",
-            "distribution": "beta",
-            "distri_mean": 0.078,
-            "distri_ci": [0.038, 0.133],
-        },
-    ]
-
-    return ifr_priors
 
 
 def get_target_outputs_for_opti(country, data_start_time=22, update_jh_data=False):
@@ -154,16 +96,67 @@ def get_target_outputs_for_opti(country, data_start_time=22, update_jh_data=Fals
     target_outputs = []
     for variable in ["confirmed", "deaths"]:
         data = read_john_hopkins_data_from_csv(variable, country)
-        data = [max(d, 0) for d in data]
         times = [jh_start_time + i for i in range(len(data))]
-        nb_elements_to_drop = data_start_time - jh_start_time
+
+        # Ignore negative values found in the dataset
+        censored_data_indices = []
+        for i, d in enumerate(data):
+            if d < 0:
+                censored_data_indices.append(i)
+        data = [d for i, d in enumerate(data) if i not in censored_data_indices]
+        times = [t for i, t in enumerate(times) if i not in censored_data_indices]
+
+        # remove first datapoints according to data_start_time
+        indices_to_keep = [i for i, t in enumerate(times) if t >= data_start_time]
+        times = [t for t in times if t >= data_start_time]
+        data = [d for i, d in enumerate(data) if i in indices_to_keep]
+
         target_outputs.append(
             {
                 "output_key": output_mapping[variable],
-                "years": times[nb_elements_to_drop:],
-                "values": data[nb_elements_to_drop:],
+                "years": times,
+                "values": data,
                 "loglikelihood_distri": "negative_binomial",
             }
         )
 
     return target_outputs
+
+
+def extract_n_mcmc_samples(calibration_output_path, n_samples=100, burn_in=500):
+    mcmc_tables = load_mcmc_tables(calibration_output_path)
+    col_names = mcmc_tables[0].columns
+
+    for col_name in [c for c in col_names if c not in ["accept"]]:
+        _overwrite_non_accepted_mcmc_runs(mcmc_tables, col_name)
+
+    for i, mcmc_table in enumerate(mcmc_tables):
+        mcmc_tables[i] = mcmc_table.iloc[burn_in:]
+
+    combined_burned_samples = pd.concat(mcmc_tables)
+    nb_rows = combined_burned_samples.shape[0]
+    thining_jump = int(nb_rows / n_samples)
+
+    selected_indices = [i * thining_jump for i in range(n_samples)]
+
+    thined_samples = combined_burned_samples.iloc[selected_indices, ]
+
+    return thined_samples.drop(['Scenario', 'accept'], axis=1)
+
+
+def prepare_table_of_param_sets(calibration_output_path, n_samples=100, burn_in=500):
+    samples = extract_n_mcmc_samples(calibration_output_path, n_samples, burn_in)
+    for i in range(16):
+        samples["best_x" + str(i)] = ""
+    samples["best_deaths"] = ""
+    samples["all_vars_to_1_deaths"] = ""
+    samples["best_p_immune"] = ""
+    samples["all_vars_to_1_p_immune"] = ""
+
+    output_file = os.path.join(calibration_output_path, "opti_sample.csv")
+    samples.to_csv(output_file, index=False)
+
+
+
+# prepare_table_of_param_sets("../../../data/covid_united-kingdom/calibration-covid_united-kingdom-c4c45836-20-06-2020")
+

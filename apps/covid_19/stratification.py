@@ -9,7 +9,7 @@ from autumn.tool_kit.utils import (
 from autumn.constants import Compartment
 from autumn.summer_related.parameter_adjustments import adjust_upstream_stratified_parameter
 from autumn.curve import scale_up_function, tanh_based_scaleup
-
+from apps.covid_19.preprocess.mortality import age_specific_ifrs_from_double_exp_model
 
 def stratify_by_clinical(model, model_parameters, compartments):
     """
@@ -49,6 +49,8 @@ def stratify_by_clinical(model, model_parameters, compartments):
     infection_fatality_props_10_year = model_parameters["infection_fatality_props"]
     hospital_props_10_year = model_parameters["hospital_props"]
     symptomatic_props_10_year = model_parameters["symptomatic_props"]
+    use_verity_mortality_estimates = model_parameters["use_verity_mortality_estimates"]
+    ifr_double_exp_model_params = model_parameters["ifr_double_exp_model_params"]
 
     # Define stratification - only stratify infected compartments
     strata_to_implement = clinical_strata
@@ -71,12 +73,20 @@ def stratify_by_clinical(model, model_parameters, compartments):
     # This is defined 9x10 year bands, 0-80+, which we trransform into 16x5 year bands 0-75+
     # Calculate 75+ age bracket as half 75-79 and half 80+
     hospital_props = repeat_list_elements_average_last_two(hospital_props_10_year)
+
     # Infection fatality rate by age group.
-    # Data in props used 10 year bands 0-80+, but we want 5 year bands from 0-75+
-    # Calculate 75+ age bracket as half 75-79 and half 80+
-    infection_fatality_props = repeat_list_elements_average_last_two(
-        infection_fatality_props_10_year
-    )
+    if use_verity_mortality_estimates:
+        # Data in props used 10 year bands 0-80+, but we want 5 year bands from 0-75+
+        # Calculate 75+ age bracket as half 75-79 and half 80+
+        infection_fatality_props = repeat_list_elements_average_last_two(
+            infection_fatality_props_10_year
+        )
+    else:
+        infection_fatality_props = age_specific_ifrs_from_double_exp_model(
+            ifr_double_exp_model_params['k'],
+            ifr_double_exp_model_params['m'],
+            ifr_double_exp_model_params['last_representative_age']
+        )
 
     # Find the absolute progression proportions.
     symptomatic_props_arr = np.array(symptomatic_props)

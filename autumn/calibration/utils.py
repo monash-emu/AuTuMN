@@ -101,7 +101,7 @@ def collect_map_estimate(calib_dirpath: str):
 
 if __name__ == "__main__":
     calib_dir = os.path.join(
-        "../../data", "covid_malaysia", "calibration-covid_malaysia-6ded1afa-15-05-2020"
+        "../../data", "covid_united-kingdom", "calibration-covid_united-kingdom-c4c45836-20-06-2020"
     )
     map_estimates = collect_map_estimate(calib_dir)
     for key, value in map_estimates.items():

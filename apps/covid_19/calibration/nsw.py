@@ -68,7 +68,7 @@ PAR_PRIORS = [
 ]
 
 # _______ Define the calibration targets
-# Local transmission data
+# Local transmission data: look at malaysia for tv_detection, also adjust c, the inflection time point
 data_times = [
     13,
     14,
@@ -221,6 +221,7 @@ data_times = [
     161,
     162,
 ]
+# case counts are all cases
 case_counts = [
     0,
     1,
@@ -389,7 +390,7 @@ TARGET_OUTPUTS = [
 
 if __name__ == "__main__":
     run_calibration_chain(
-        15 * 60 , 1
+        30 * 60 , 1
     )  # first argument only relevant for autumn_mcmc mode (time limit in seconds)
 
 

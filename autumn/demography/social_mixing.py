@@ -11,6 +11,7 @@ LOCATIONS = ("all_locations", "home", "other_locations", "school", "work")
 # Map regions to countries
 COUNTRY_MAPPING = {
     "victoria": "australia",
+    "nsw": "australia",
     "manila": "philippines",
     "calabarzon": "philippines",
     "bicol": "philippines",

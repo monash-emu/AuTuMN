@@ -26,6 +26,7 @@ class Region:
     PHILIPPINES = "philippines"
     MALAYSIA = "malaysia"
     VICTORIA = "victoria"
+    NSW = "nsw"
     LIBERIA = "liberia"
     MANILA = "manila"
     CALABARZON = "calabarzon"
@@ -37,6 +38,7 @@ class Region:
         PHILIPPINES,
         MALAYSIA,
         VICTORIA,
+        NSW,
         LIBERIA,
         MANILA,
         CALABARZON,
@@ -50,6 +52,7 @@ class Region:
         LIBERIA: LIBERIA,
         AUSTRALIA: AUSTRALIA,
         VICTORIA: AUSTRALIA,
+        NSW: AUSTRALIA,
         PHILIPPINES: PHILIPPINES,
         MANILA: PHILIPPINES,
         CALABARZON: PHILIPPINES,

@@ -120,8 +120,15 @@ mixing:
     - 162
     - 163
     - 164
-    - 166 # scenario
-    - 168 # scenario
+    - 165
+    - 166
+    - 167
+    - 168
+    - 169
+    - 170
+    - 171
+    - 173 # scenario
+    - 175 # scenario
   other_locations_values:
     - 0.975
     - 0.9675
@@ -242,7 +249,14 @@ mixing:
     - 0.76
     - 0.77
     - 0.7375
-    - 0.7375  # scenario
+    - 0.745
+    - 0.7525
+    - 0.8075
+    - 0.805
+    - 0.81
+    - 0.795
+    - 0.785
+    - 0.785  # scenario
     - 1.  # scenario
   work_times:
     - 46
@@ -364,8 +378,15 @@ mixing:
     - 162
     - 163
     - 164
-    - 166  # scenario
-    - 168  # scenario
+    - 165
+    - 166
+    - 167
+    - 168
+    - 169
+    - 170
+    - 171
+    - 173  # scenario
+    - 175  # scenario
   work_values:
     - 1.02
     - 1
@@ -486,7 +507,14 @@ mixing:
     - 0.77
     - 0.77
     - 0.8
-    - .8  # scenario
+    - 0.87
+    - 0.84
+    - 0.77
+    - 0.78
+    - 0.78
+    - 0.77
+    - 0.81
+    - .81  # scenario
     - 1.  # scenario
   school_times:
     - 63

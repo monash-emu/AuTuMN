@@ -5,6 +5,19 @@ from math import exp, tanh
 
 import numpy as np
 from scipy.interpolate import UnivariateSpline
+from scipy.integrate import quad
+
+
+def numerical_integration(func, lower, upper):
+    """
+    Computes the numerical integration of a function on a segment.
+    :param func: callable
+    :param lower: lower bound of the requested integral
+    :param upper: upper bound of the requested integral
+    :return:
+    """
+    integral = quad(func, lower, upper)[0]
+    return integral
 
 
 def make_sigmoidal_curve(y_low=0, y_high=1.0, x_start=0, x_inflect=0.5, multiplier=1.0):

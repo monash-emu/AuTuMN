@@ -7,7 +7,7 @@ from apps import covid_19, marshall_islands, mongolia, sir_example
 
 
 ## Run a COVID model manually.
-REGION = Region.PHILIPPINES
+REGION = Region.NSW
 RUN_NAME = "manual-calibration"
 RUN_DESCRIPTION = "Trying to do a thing"
 region_app = covid_19.get_region_app(REGION)

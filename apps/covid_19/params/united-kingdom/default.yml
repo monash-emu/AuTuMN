@@ -7,25 +7,23 @@ end_time: 180.
 infectious_seed: 200
 use_verity_mortality_estimates: False
 
-
+# MLE estimates
+contact_rate: 0.0463121996697136
+start_time: 14.590114648689246
 npi_effectiveness:
-  other_locations: .6
-
-# MCMC MLE
-contact_rate: 0.04866541923858201
-start_time: 19.642008105537734
+  other_locations: 0.5339190164516376
 compartment_periods_calculated:
   incubation:
-    total_period: 4.09495276303927
+    total_period: 3.326291748191936
   total_infectious:
-    total_period: 4.451583638143749
-tv_detection_b: 0.07696910527649975
-tv_detection_c: 89.15519972858075
-prop_detected_among_symptomatic: 0.9931603477466184
-icu_prop: 0.3158110434245868
+    total_period: 4.681127858790497
+tv_detection_b: 0.07743204852476339
+tv_detection_c: 92.29047209008272
+prop_detected_among_symptomatic: 0.990438520098133
+icu_prop: 0.19434108848653572
 ifr_double_exp_model_params:
-  k: 7.117880369390905
-  last_representative_age: 82.31538340530199
+  k: 7.237845734202136
+  last_representative_age: 82.41761813816076
 
 mixing:
   other_locations_times:

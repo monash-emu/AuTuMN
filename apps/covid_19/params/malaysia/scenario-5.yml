@@ -1,7 +1,7 @@
 # Reinstate regular prayers
 is_periodic_intervention: True
 periodic_intervention:
-  restart_time: 165
+  restart_time: 172
   prop_participating: .30 # assuming 50 % of the Malaysian Muslim population
   contact_multiplier: 10.
   duration: 1.
@@ -127,6 +127,13 @@ mixing:
     - 162
     - 163
     - 164
+    - 165
+    - 166
+    - 167
+    - 168
+    - 169
+    - 170
+    - 171
   other_locations_values:
     - 0.975
     - 0.9675
@@ -247,6 +254,13 @@ mixing:
     - 0.76
     - 0.77
     - 0.7375
+    - 0.745
+    - 0.7525
+    - 0.8075
+    - 0.805
+    - 0.81
+    - 0.795
+    - 0.785
   work_times:
     - 46
     - 47
@@ -367,6 +381,13 @@ mixing:
     - 162
     - 163
     - 164
+    - 165
+    - 166
+    - 167
+    - 168
+    - 169
+    - 170
+    - 171
   work_values:
     - 1.02
     - 1
@@ -487,6 +508,13 @@ mixing:
     - 0.77
     - 0.77
     - 0.8
+    - 0.87
+    - 0.84
+    - 0.77
+    - 0.78
+    - 0.78
+    - 0.77
+    - 0.81
   school_times:
     - 63
     - 65

@@ -98,7 +98,7 @@ infection_fatality_props:
   - 0.051 # 70-79
   - 0.093 # 80+
 
-# Altenative to the Verity estimates, using the double exponential model: x -> exp(-a.exp(-bx))
+# Altenative to the Verity estimates, using the double exponential model: x -> exp(-k.exp(-mx))
 # Only used if use_verity_mortality_estimates is FALSE
 ifr_double_exp_model_params:
   k: 10.

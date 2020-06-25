@@ -1,20 +1,4 @@
----
-country: bicol
-iso3: BCL
-
-scenario_start_time: 140
-end_time: 365.
-
-# calibrated parameters
-start_time: 12.
-contact_rate: 0.049
-tv_detection_c: 150 # inflection point
-tv_detection_sigma: 0
-prop_detected_among_symptomatic: 0.5
-
-# other country-specific parameters
-tv_detection_b: .05 # shape parameter of the tanh-based curve
-
+# 75% return to school on August 24
 mixing:
   other_locations_times:
     - 46

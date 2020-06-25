@@ -29,6 +29,17 @@ PAR_PRIORS = [
         "distri_mean": 7.0,
         "distri_ci": [4.5, 9.5],
     },
+    # parameters to derive age-specific IFRs
+    {
+        "param_name": "ifr_double_exp_model_params.k",
+        "distribution": "uniform",
+        "distri_params": [6., 14.],
+    },
+    {
+        "param_name": "ifr_double_exp_model_params.last_representative_age",
+        "distribution": "uniform",
+        "distri_params": [75., 85.],
+    },
 ]
 
 # Death counts:

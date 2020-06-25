@@ -478,9 +478,7 @@ mixing:
     - 0.76
   school_times:
     - 42.
-    - 72.
-    - 93.
+    - 76.
   school_values:
     - 1.
-    - 0.45
-    - 0.10
+    - 0.

@@ -1,4 +1,20 @@
-# Partial (50%) workplace re-openings 8th June
+---
+country: manila
+iso3: MAN
+
+scenario_start_time: 140
+end_time: 365.
+
+# calibrated parameters
+start_time: 12.
+contact_rate: 0.049
+tv_detection_c: 150 # inflection point
+tv_detection_sigma: 0
+prop_detected_among_symptomatic: 0.5
+
+# other country-specific parameters
+tv_detection_b: .05 # shape parameter of the tanh-based curve
+
 mixing:
   other_locations_times:
     - 46
@@ -345,8 +361,6 @@ mixing:
     - 157
     - 158
     - 159
-    - 161 # scenario
-    - 163 # scenario
   work_values:
     - 1.05
     - 1.01
@@ -462,13 +476,11 @@ mixing:
     - 0.42
     - 0.53
     - 0.61
-    - 0.61 # scenario
-    - 0.81 # scenario
   school_times:
     - 42.
-    - 72.
-    - 93.
+    - 76.
+    - 237.
   school_values:
     - 1.
-    - 0.45
-    - 0.10
+    - 0.
+    - 0.50

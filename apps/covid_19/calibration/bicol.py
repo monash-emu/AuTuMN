@@ -17,6 +17,16 @@ PAR_PRIORS = [
     {"param_name": "start_time", "distribution": "uniform", "distri_params": [0.0, 40.0],},
     # Add extra params for negative binomial likelihood
     {
+        "param_name": "infection_deathsXall_dispersion_param",
+        "distribution": "uniform",
+        "distri_params": [0.1, 5.0],
+    },
+    {
+        "param_name": "notifications_dispersion_param",
+        "distribution": "uniform",
+        "distri_params": [0.1, 5.0],
+    },
+    {
         "param_name": "prevXlateXclinical_icuXamong_dispersion_param",
         "distribution": "uniform",
         "distri_params": [0.1, 5.0],

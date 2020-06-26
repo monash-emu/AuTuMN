@@ -19,6 +19,11 @@ PAR_PRIORS = [
     {"param_name": "start_time", "distribution": "uniform", "distri_params": [0.0, 40.0],},
     # Add extra params for negative binomial likelihood
     {
+        "param_name": "infection_deathsXall_dispersion_param",
+        "distribution": "uniform",
+        "distri_params": [0.1, 5.0],
+    },
+    {
         "param_name": "notifications_dispersion_param",
         "distribution": "uniform",
         "distri_params": [0.1, 5.0],
@@ -40,7 +45,7 @@ PAR_PRIORS = [
         "distri_mean": 7.0,
         "distri_ci": [4.5, 9.5],
     },
-        # parameters to derive age-specific IFRs
+    # parameters to derive age-specific IFRs
     {
         "param_name": "ifr_double_exp_model_params.k",
         "distribution": "uniform",

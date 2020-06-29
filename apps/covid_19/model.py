@@ -8,23 +8,17 @@ from autumn.constants import Compartment, BirthApproach
 from autumn.tb_model import list_all_strata_for_mortality
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
 from autumn.tool_kit import schema_builder as sb
-from autumn.db import Database, find_population_by_agegroup
+from autumn import inputs
 
 from . import outputs, preprocess
 from .stratification import stratify_by_clinical
-
-# Database locations
-FILE_DIR = os.path.dirname(os.path.abspath(__file__))
-INPUT_DB_PATH = os.path.join(constants.DATA_PATH, "inputs.db")
-
-input_database = Database(database_name=INPUT_DB_PATH)
 
 
 validate_params = sb.build_validator(
     stratify_by=sb.List(str),
     # Country info
-    country=str,
     iso3=str,
+    region=sb.Nullable(str),
     # Running time.
     start_time=float,
     end_time=float,
@@ -54,12 +48,28 @@ validate_params = sb.build_validator(
     tv_detection_c=float,
     tv_detection_sigma=float,
     int_detection_gap_reduction=float,
-    # Mixing matrix
-    mixing=sb.DictGeneric(str, list),
+    # Dynamic mixing matrix updates
+    mixing=sb.DictGeneric(
+        str,
+        sb.Dict(
+            # Whether to append or overwrite times / values
+            append=bool,
+            # Times for dynamic mixing func.
+            times=sb.List(float),
+            # Values for dynamic mixing func.
+            values=sb.List(float),
+        ),
+    ),
     npi_effectiveness=sb.DictGeneric(str, float),
     is_periodic_intervention=bool,
-    periodic_intervention=sb.Dict(restart_time=float, prop_participating=float, contact_multiplier=float,
-                           duration=float, period=float),
+    periodic_intervention=sb.Dict(
+        restart_time=float,
+        prop_participating=float,
+        contact_multiplier=float,
+        duration=float,
+        period=float,
+    ),
+    google_mobility_locations=sb.DictGeneric(str, sb.List(str)),
     # Something to do with travellers?
     traveller_quarantine=sb.Dict(times=sb.List(float), values=sb.List(float),),
     # Importation of disease from outside of region
@@ -72,7 +82,7 @@ validate_params = sb.build_validator(
     enforced_isolation_effect=float,
     self_isolation_effect=float,
     data=sb.Dict(times_imported_cases=sb.List(float), n_imported_cases=sb.List(float),),
-    microdistancing=dict,
+    microdistancing=sb.Nullable(sb.Dict(b=float, c=float, sigma=float)),
     # Other stuff
     contact_rate=float,
     infect_death=float,
@@ -96,10 +106,10 @@ def build_model(params: dict) -> StratifiedModel:
     agegroup_step = params["agegroup_breaks"][1]
     agegroup_strata = list(range(0, agegroup_max, agegroup_step))
 
-    # Calculate the country population size by age-group, using UN data
+    # Look up the country population size by age-group, using UN data
     country_iso3 = params["iso3"]
-    total_pops, _ = find_population_by_agegroup(input_database, agegroup_strata, country_iso3)
-    total_pops = [int(1e3 * total_pops[agebreak][-1]) for agebreak in list(total_pops.keys())]
+    region = params["region"]
+    total_pops = inputs.get_population_by_agegroup(agegroup_strata, country_iso3, region, year=2020)
 
     # Define compartments
     compartments = [
@@ -159,19 +169,21 @@ def build_model(params: dict) -> StratifiedModel:
     # Build mixing matrix.
     # FIXME: unit tests for build_static
     # FIXME: unit tests for build_dynamic
-    country = params["country"]
-    static_mixing_matrix = preprocess.mixing_matrix.build_static(country, None)
+    static_mixing_matrix = preprocess.mixing_matrix.build_static(country_iso3, None)
     dynamic_mixing_matrix = None
     dynamic_mixing_params = params["mixing"]
     microdistancing = params["microdistancing"]
     if dynamic_mixing_params:
         npi_effectiveness_params = params["npi_effectiveness"]
+        google_mobility_locations = params["google_mobility_locations"]
         is_periodic_intervention = params.get("is_periodic_intervention")
         periodic_int_params = params.get("periodic_intervention")
         dynamic_mixing_matrix = preprocess.mixing_matrix.build_dynamic(
-            country,
+            country_iso3,
+            region,
             dynamic_mixing_params,
             npi_effectiveness_params,
+            google_mobility_locations,
             is_periodic_intervention,
             periodic_int_params,
             end_time,

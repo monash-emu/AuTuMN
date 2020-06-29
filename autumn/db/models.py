@@ -30,7 +30,7 @@ def load_model_scenarios(
     Will apply post processing if the post processing config is supplied.
     Will store model params in the database if suppied.
     """
-    out_db = Database(database_name=database_path)
+    out_db = Database(database_path=database_path)
     scenarios = []
 
     # Load runs from the database
@@ -45,8 +45,8 @@ def load_model_scenarios(
         for scenario_name in scenario_names:
             # Load model outputs from database, build Scenario instance
             conditions = [f"Scenario='{scenario_name}'", f"idx='{run_name}'"]
-            outputs = out_db.db_query("outputs", conditions=conditions)
-            derived_outputs = out_db.db_query("derived_outputs", conditions=conditions)
+            outputs = out_db.query("outputs", conditions=conditions)
+            derived_outputs = out_db.query("derived_outputs", conditions=conditions)
             model = LoadedModel(
                 outputs=outputs.to_dict(), derived_outputs=derived_outputs.to_dict()
             )
@@ -62,7 +62,7 @@ def load_model_scenarios(
 
 
 def store_database(
-    outputs, database_name, table_name="outputs", scenario=0, run_idx=0, times=None,
+    outputs, database_path, table_name="outputs", scenario=0, run_idx=0, times=None,
 ):
     """
     store outputs from the model in sql database for use in producing outputs later
@@ -74,7 +74,7 @@ def store_database(
         outputs.insert(0, column="idx", value=f"run_{run_idx}")
         outputs.insert(1, column="Scenario", value=f"S_{scenario}")
 
-    store_db = Database(database_name)
+    store_db = Database(database_path)
     store_db.dump_df(table_name, outputs)
 
 
@@ -89,14 +89,14 @@ def store_run_models(models: List[StratifiedModel], database_path: str, run_idx:
         derived_output_df = pd.DataFrame.from_dict(model.derived_outputs)
         store_database(
             derived_output_df,
-            database_name=database_path,
+            database_path=database_path,
             table_name="derived_outputs",
             scenario=idx,
             run_idx=run_idx,
         )
         store_database(
             output_df,
-            database_name=database_path,
+            database_path=database_path,
             table_name="outputs",
             scenario=idx,
             run_idx=run_idx,
@@ -114,9 +114,9 @@ def collate_databases(src_db_paths: List[str], target_db_path: str):
     run_count = 0
     for db_path in tqdm(src_db_paths):
         source_db = Database(db_path)
-        num_runs = len(source_db.db_query("mcmc_run", column="idx"))
+        num_runs = len(source_db.query("mcmc_run", column="idx"))
         for table_name in source_db.table_names():
-            table_df = source_db.db_query(table_name)
+            table_df = source_db.query(table_name)
             should_increment_idx = "idx" in table_df.columns
 
             def increment_run(idx: str):
@@ -144,14 +144,14 @@ def prune(source_db_path: str, target_db_path: str):
     target_db = Database(target_db_path)
 
     # Find the maximum accepted loglikelihood for all runs
-    mcmc_run_df = source_db.db_query("mcmc_run")
+    mcmc_run_df = source_db.query("mcmc_run")
     accept_mask = mcmc_run_df["accept"] == 1
     max_ll_idx = mcmc_run_df[accept_mask].loglikelihood.idxmax()
     max_ll_run_name = mcmc_run_df.idx.iloc[max_ll_idx]
     tables_to_copy = [t for t in source_db.table_names()]
     tables_to_not_prune = ["uncertainty_weights", "mcmc_run"]
     for table_name in tables_to_copy:
-        table_df = source_db.db_query(table_name)
+        table_df = source_db.query(table_name)
         # Prune any table with an idx column except for mcmc_run
         should_prune = "idx" in table_df.columns and table_name not in tables_to_not_prune
         if should_prune:
@@ -177,11 +177,11 @@ def unpivot(source_db_path: str, target_db_path: str):
     tables_to_copy = [t for t in source_db.table_names() if t != "outputs"]
     for table_name in tables_to_copy:
         logger.info("Copying %s", table_name)
-        table_df = source_db.db_query(table_name)
+        table_df = source_db.query(table_name)
         target_db.dump_df(table_name, table_df)
 
     logger.info("Converting outputs to PowerBI format")
-    outputs_df = source_db.db_query("outputs")
+    outputs_df = source_db.query("outputs")
     pbi_outputs_df = unpivot_outputs(outputs_df)
     target_db.dump_df("powerbi_outputs", pbi_outputs_df)
     logger.info("Finished creating PowerBI output database at %s", target_db_path)
@@ -230,13 +230,13 @@ def load_calibration_from_db(database_directory, n_burned_per_chain=0):
     models = []
     n_loaded_iter = 0
     for db_name in db_names:
-        out_database = Database(database_name=database_directory + "/" + db_name)
+        out_database = Database(database_path=database_directory + "/" + db_name)
 
         # find accepted run indices
-        res = out_database.db_query(table_name="mcmc_run", column="idx", conditions=["accept=1"])
+        res = out_database.query(table_name="mcmc_run", column="idx", conditions=["accept=1"])
         run_ids = list(res.to_dict()["idx"].values())
         # find weights to associate with the accepted runs
-        accept = out_database.db_query(table_name="mcmc_run", column="accept")
+        accept = out_database.query(table_name="mcmc_run", column="accept")
         accept = accept["accept"].tolist()
         one_indices = [i for i, val in enumerate(accept) if val == 1]
         one_indices.append(len(accept))  # add extra index for counting
@@ -255,13 +255,13 @@ def load_calibration_from_db(database_directory, n_burned_per_chain=0):
         weights = weights[retained_indices[0] :]
         n_loaded_iter += sum(weights)
         for i, run_id in enumerate(run_ids):
-            outputs = out_database.db_query(
+            outputs = out_database.query(
                 table_name="outputs", conditions=["idx='" + str(run_id) + "'"]
             )
             output_dict = outputs.to_dict()
 
             if out_database.engine.dialect.has_table(out_database.engine, "derived_outputs"):
-                derived_outputs = out_database.db_query(
+                derived_outputs = out_database.query(
                     table_name="derived_outputs", conditions=["idx='" + str(run_id) + "'"],
                 )
 

@@ -1,0 +1,7 @@
+# INPUT DATABASE FILE HASH
+# This is a MD5 hash of the canonical input database
+# If your input db has a different hash, something is wrong
+# The database, and this file, is managed by `build_input_database`
+# You can build a new input database using `python -m apps db build --help`
+# Ensure you add this file to Git if you make changes to the database
+ccd4fab1a0c631a066410c8290559121

@@ -32,8 +32,8 @@ def add_uncertainty_weights(output_name: str, database_path: str):
 
     logger.info("Loading data into memory")
     columns = ["idx", "Scenario", "times", output_name]
-    mcmc_df = db.db_query("mcmc_run")
-    derived_outputs_df = db.db_query("derived_outputs", column=columns)
+    mcmc_df = db.query("mcmc_run")
+    derived_outputs_df = db.query("derived_outputs", column=columns)
     logger.info("Calculating weighted values for %s", output_name)
     weights_df = calc_mcmc_weighted_values(output_name, mcmc_df, derived_outputs_df)
     db.dump_df("uncertainty_weights", weights_df)
@@ -90,7 +90,7 @@ def add_uncertainty_quantiles(database_path: str):
         db.engine.execute(f"DELETE FROM uncertainty")
 
     logger.info("Loading data into memory")
-    weights_df = db.db_query("uncertainty_weights")
+    weights_df = db.query("uncertainty_weights")
     logger.info("Calculating uncertainty")
     uncertainty_df = calculate_mcmc_uncertainty(weights_df, DEFAULT_QUANTILES)
     db.dump_df("uncertainty", uncertainty_df)
@@ -217,9 +217,9 @@ def collect_all_mcmc_output_tables(calib_dirpath):
     derived_output_tables = []
     for db_path in db_paths:
         db = Database(db_path)
-        mcmc_tables.append(db.db_query("mcmc_run"))
-        output_tables.append(db.db_query("outputs"))
-        derived_output_tables.append(db.db_query("derived_outputs"))
+        mcmc_tables.append(db.query("mcmc_run"))
+        output_tables.append(db.query("outputs"))
+        derived_output_tables.append(db.query("derived_outputs"))
     return mcmc_tables, output_tables, derived_output_tables
 
 

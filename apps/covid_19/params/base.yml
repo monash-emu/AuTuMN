@@ -11,7 +11,7 @@ data:
   times_imported_cases: []
   n_imported_cases: []
 
-microdistancing: {}
+microdistancing: null
 
 traveller_quarantine:
   times: [0.]
@@ -140,7 +140,7 @@ late_infect_multiplier:
 tv_detection_b: .05 # shape parameter of the tanh-based curve
 tv_detection_c: 90 # inflection point
 tv_detection_sigma: 0. # height of the lower asymptote
-prop_detected_among_symptomatic: 0.6  # height of the upper asymptote
+prop_detected_among_symptomatic: 0.6 # height of the upper asymptote
 
 # clinical proportions for imported cases
 symptomatic_props_imported: .5
@@ -152,10 +152,11 @@ prop_detected_among_symptomatic_imported: .6
 self_isolation_effect: .67
 enforced_isolation_effect: 1.
 
-# Country to extract Prem mixing matrix from
-country: null
+# Sub region of country, null means just the country.
+region: null
 
 # Country to extract stratified population data from - should eventually use only one of country or iso3
+# Country to extract Prem mixing matrix from
 iso3: null
 
 # Initial conditions
@@ -188,6 +189,16 @@ periodic_intervention:
   period: 1.
 
 int_detection_gap_reduction: 0.
+
+# Mapping of Google Mobility locations to Autumn-specific locations
+google_mobility_locations:
+  work:
+    - workplaces
+  other_locations:
+    - retail_and_recreation
+    - grocery_and_pharmacy
+    - parks
+    - transit_stations
 
 # parameters od negative binomial (need to be listed for validation)
 notifications_dispersion_param: 1.

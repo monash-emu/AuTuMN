@@ -1,5 +1,6 @@
 """
 Cerberus schema building utilities
+See: https://docs.python-cerberus.org/en/stable/index.html
 """
 from cerberus import Validator
 
@@ -30,11 +31,13 @@ def build_schema(**schema):
 
 
 def _build_schema(schema):
+    builder_classes = [Dict, List, DictGeneric, Nullable]
+
     if schema in PRIMITIVES:
         return _build_primitive(schema)
 
     s_type = type(schema)
-    if s_type in [Dict, List, DictGeneric]:
+    if s_type in builder_classes:
         return schema.build_schema()
 
     assert type(schema) is dict, "Schema must be a dict"
@@ -45,7 +48,7 @@ def _build_schema(schema):
 
         else:
             v_type = type(v)
-            if v_type not in [Dict, List, DictGeneric]:
+            if v_type not in builder_classes:
                 raise ValueError(f"Could not build schema from type {k}: {v_type}")
 
             cerberus_schema[k] = v.build_schema()
@@ -68,6 +71,14 @@ def _build_primitive(v_type):
         return {"type": "list"}
     else:
         raise ValueError(f"Could not find type {v_type}")
+
+
+class Nullable:
+    def __init__(self, arg_schema):
+        self.arg_schema = arg_schema
+
+    def build_schema(self):
+        return {**_build_schema(self.arg_schema), "nullable": True}
 
 
 class List:

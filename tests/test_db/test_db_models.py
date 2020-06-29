@@ -39,7 +39,7 @@ def test_unpivot_outputs(tmp_path):
     )
     store_run_models([mock_model], out_db_path)
     out_db = Database(out_db_path)
-    outputs_df = out_db.db_query("outputs")
+    outputs_df = out_db.query("outputs")
     unpivoted_df = unpivot_outputs(outputs_df)
     expected_columns = [
         "idx",
@@ -260,9 +260,9 @@ def test_collate_outputs_powerbi(tmp_path):
     expected_pbi_outputs_df = pd.DataFrame(expected_pbi_outputs, columns=pbi_output_cols)
 
     # Extract the outputs
-    mcmc_df = target_db.db_query("mcmc_run")
-    derived_outputs_df = target_db.db_query("derived_outputs")
-    pbi_outputs_df = target_db.db_query("pbi_scenario_0")
+    mcmc_df = target_db.query("mcmc_run")
+    derived_outputs_df = target_db.query("derived_outputs")
+    pbi_outputs_df = target_db.query("pbi_scenario_0")
 
     # Check that the outputs are correct
     assert_frame_equal(expected_mcmc_run_df, mcmc_df)
@@ -413,9 +413,9 @@ def test_collate_outputs(tmp_path):
     expected_outputs_df = pd.DataFrame(expected_outputs, columns=outputs_cols)
 
     # Extract the outputs
-    mcmc_df = target_db.db_query("mcmc_run")
-    derived_outputs_df = target_db.db_query("derived_outputs")
-    outputs_df = target_db.db_query("outputs")
+    mcmc_df = target_db.query("mcmc_run")
+    derived_outputs_df = target_db.query("derived_outputs")
+    outputs_df = target_db.query("outputs")
 
     # Check that the outputs are correct
     assert_frame_equal(expected_mcmc_run_df, mcmc_df)
@@ -474,17 +474,17 @@ def test_create_power_bi_outputs(tmp_path):
     store_run_models(models, db_path)
     store_database(mcmc_run_df, db_path, "mcmc_run", scenario=0, run_idx=1)
     src_db = Database(db_path)
-    mcmc_run_src = src_db.db_query("mcmc_run")
-    derived_outputs_src = src_db.db_query("derived_outputs")
+    mcmc_run_src = src_db.query("mcmc_run")
+    derived_outputs_src = src_db.query("derived_outputs")
 
     # Create Power BI outputs
     create_power_bi_outputs(db_path, powerbi_db_path)
     # Query Power BI outputs
     pbi_db = Database(powerbi_db_path)
-    table_0 = pbi_db.db_query("pbi_scenario_0")
-    table_1 = pbi_db.db_query("pbi_scenario_1")
-    mcmc_run_dest = pbi_db.db_query("mcmc_run")
-    derived_outputs_dest = pbi_db.db_query("derived_outputs")
+    table_0 = pbi_db.query("pbi_scenario_0")
+    table_1 = pbi_db.query("pbi_scenario_1")
+    mcmc_run_dest = pbi_db.query("mcmc_run")
+    derived_outputs_dest = pbi_db.query("derived_outputs")
 
     # Validate derived_outputs copied over
     assert_frame_equal(derived_outputs_src, derived_outputs_dest)

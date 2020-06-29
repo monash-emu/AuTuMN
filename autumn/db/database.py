@@ -8,9 +8,9 @@ class Database:
     Interface to access data stored in a SQLite database.
     """
 
-    def __init__(self, database_name):
-        self.database_name = database_name
-        self.engine = get_sql_engine(database_name)
+    def __init__(self, database_path):
+        self.database_path = database_path
+        self.engine = get_sql_engine(database_path)
 
     def get_size_mb(self):
         """
@@ -25,10 +25,21 @@ class Database:
     def table_names(self):
         return self.engine.table_names()
 
+    def delete_everything(self):
+        """
+        Deletes and re-creates the database file.
+        """
+        try:
+            os.remove(self.database_path)
+        except FileNotFoundError:
+            pass
+
+        self.engine = get_sql_engine(self.database_path)
+
     def dump_df(self, table_name: str, dataframe: pd.DataFrame):
         dataframe.to_sql(table_name, con=self.engine, if_exists="append", index=False)
 
-    def db_query(self, table_name, column="*", conditions=[]):
+    def query(self, table_name, column="*", conditions=[]):
         """
         method to query table_name
 

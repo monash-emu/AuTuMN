@@ -42,7 +42,7 @@ def load_mcmc_tables(calib_dirpath: str):
     mcmc_tables = []
     for db_path in db_paths:
         db = Database(db_path)
-        mcmc_tables.append(db.db_query("mcmc_run"))
+        mcmc_tables.append(db.query("mcmc_run"))
 
     return mcmc_tables
 
@@ -56,7 +56,7 @@ def load_derived_output_tables(calib_dirpath: str):
     derived_output_tables = []
     for db_path in db_paths:
         db = Database(db_path)
-        derived_output_tables.append(db.db_query("derived_outputs"))
+        derived_output_tables.append(db.query("derived_outputs"))
 
     return derived_output_tables
 

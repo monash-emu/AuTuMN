@@ -10,7 +10,7 @@ import pandas as pd
 from numpy import diff, linspace
 import matplotlib.pyplot as plt
 
-from autumn.db import get_iso3_from_country_name
+from autumn.inputs import get_iso3_from_country_name
 from autumn.tool_kit.utils import find_first_index_reaching_cumulative_sum
 from autumn.constants import DATA_PATH
 

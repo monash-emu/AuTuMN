@@ -11,7 +11,7 @@ from summer.model import (
     create_sloping_step_function,
 )
 
-from autumn.db import get_pop_mortality_functions
+from autumn.inputs import get_death_rates_by_agegroup
 from autumn.tool_kit import (
     change_parameter_unit,
     add_w_to_param_names,
@@ -20,7 +20,7 @@ from autumn.constants import Compartment
 from autumn.tb_model import scale_relative_risks_for_equivalence
 
 
-def get_adapted_age_parameters(age_breakpoints, AGE_SPECIFIC_LATENCY_PARAMETERS):
+def get_adapted_age_parameters(age_breakpoints, age_specific_latency_parameters):
     """
     Get age-specific latency parameters adapted to any specification of age breakpoints
     """
@@ -29,7 +29,7 @@ def get_adapted_age_parameters(age_breakpoints, AGE_SPECIFIC_LATENCY_PARAMETERS)
         adapted_parameter_dict[parameter] = add_w_to_param_names(
             change_parameter_unit(
                 get_parameter_dict_from_function(
-                    create_step_function_from_dict(AGE_SPECIFIC_LATENCY_PARAMETERS[parameter]),
+                    create_step_function_from_dict(age_specific_latency_parameters[parameter]),
                     age_breakpoints,
                 ),
                 365.251,
@@ -38,7 +38,7 @@ def get_adapted_age_parameters(age_breakpoints, AGE_SPECIFIC_LATENCY_PARAMETERS)
     return adapted_parameter_dict
 
 
-def stratify_by_age(model_to_stratify, age_specific_latency_parameters, input_database, age_strata):
+def stratify_by_age(model_to_stratify, age_specific_latency_parameters, age_strata):
     # FIXME: This is Marshall Islands specifc - DO NOT USE outside of Marshall Islands
     age_breakpoints = [int(i_break) for i_break in age_strata]
     age_infectiousness = get_parameter_dict_from_function(
@@ -46,13 +46,24 @@ def stratify_by_age(model_to_stratify, age_specific_latency_parameters, input_da
     )
     age_params = get_adapted_age_parameters(age_breakpoints, age_specific_latency_parameters)
     age_params.update(split_age_parameter(age_breakpoints, "contact_rate"))
-    pop_morts = get_pop_mortality_functions(
-        input_database,
-        age_breakpoints,
-        country_iso_code="FSM",
-        emigration_value=0.0075,
-        emigration_start_time=1990.0,
-    )
+
+    death_rates_by_age, death_rate_years = get_death_rates_by_agegroup(age_breakpoints, "FSM")
+
+    # Add an extra fixed value after a particular time point for each mortality estimate,
+    # to simulate emigration.
+    emigration_value = 0.0075
+    emigration_start_time = 1990.0
+    for age_group in age_breakpoints:
+        for i_year in range(len(death_rate_years)):
+            if data_years[i_year] > emigration_start_time:
+                age_death_dict[age_group][i_year] += emigration_value
+
+    pop_morts = {}
+    for age_group in age_breakpoints:
+        pop_morts[age_group] = scale_up_function(
+            death_rate_years, death_rates_by_age[age_group], smoothness=0.2, method=5
+        )
+
     age_params["universal_death_rate"] = {}
     for age_break in age_breakpoints:
         model_to_stratify.time_variants["universal_death_rateXage_" + str(age_break)] = pop_morts[

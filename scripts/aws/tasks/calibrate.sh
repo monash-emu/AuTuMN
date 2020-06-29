@@ -39,6 +39,11 @@ GIT_COMMIT=$(git rev-parse HEAD)
 TIMESTAMP=$(date +%s)
 RUN_NAME="$CALIBRATION_NAME-$TIMESTAMP-$GIT_BRANCH-$GIT_COMMIT"
 
+log "Starting calibration run $RUN_NAME"
+
+log "Building input database"
+python -m apps db build
+
 # Handle script failure
 mkdir -p logs
 function onexit {
@@ -48,7 +53,6 @@ function onexit {
 }
 trap onexit EXIT
 
-log "Starting calibration run $RUN_NAME"
 log "Running $NUM_CHAINS calibration chains for $RUN_TIME seconds."
 pids=()
 for i in $(seq 1 1 $NUM_CHAINS)

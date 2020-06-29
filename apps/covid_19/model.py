@@ -72,6 +72,7 @@ validate_params = sb.build_validator(
     enforced_isolation_effect=float,
     self_isolation_effect=float,
     data=sb.Dict(times_imported_cases=sb.List(float), n_imported_cases=sb.List(float),),
+    microdistancing=dict,
     # Other stuff
     contact_rate=float,
     infect_death=float,
@@ -162,6 +163,7 @@ def build_model(params: dict) -> StratifiedModel:
     static_mixing_matrix = preprocess.mixing_matrix.build_static(country, None)
     dynamic_mixing_matrix = None
     dynamic_mixing_params = params["mixing"]
+    microdistancing = params["microdistancing"]
     if dynamic_mixing_params:
         npi_effectiveness_params = params["npi_effectiveness"]
         is_periodic_intervention = params.get("is_periodic_intervention")
@@ -173,6 +175,7 @@ def build_model(params: dict) -> StratifiedModel:
             is_periodic_intervention,
             periodic_int_params,
             end_time,
+            microdistancing,
         )
 
     # FIXME: Remove params from model_parameters

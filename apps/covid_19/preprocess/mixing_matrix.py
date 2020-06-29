@@ -3,7 +3,7 @@ from typing import Callable
 
 import numpy as np
 
-from autumn.curve import scale_up_function
+from autumn.curve import scale_up_function, tanh_based_scaleup
 
 from autumn.demography.social_mixing import load_country_mixing_matrix
 
@@ -68,6 +68,7 @@ def build_dynamic(
     is_periodic_intervention: bool,
     periodic_int_params: dict,
     end_time: float,
+    microdistancing_params: dict,
 ) -> Callable[[float], np.ndarray]:
     """
     Build a time-varing mixing matrix
@@ -111,6 +112,13 @@ def build_dynamic(
         assert other_locations, "need to specify other_location mixing params"
         mixing["other_locations"] = add_periodic_intervention(periodic_int_params, other_locations, end_time)
 
+    # Work out microdistancing function to be applied to all non-household locations
+    microdistancing_function = \
+        tanh_based_scaleup(
+            microdistancing_params["b"], microdistancing_params["c"], microdistancing_params["sigma"]
+        ) if microdistancing_params else {}
+
+    # Create mixing matrix function
     def mixing_matrix_function(time: float):
         mixing_matrix = matrix_components["all_locations"]
 
@@ -120,6 +128,8 @@ def build_dynamic(
             loc_vals = mixing[loc_key]["values"]
             loc_adj_func = scale_up_function(loc_times, loc_vals, method=4)
             location_adjustment_matrix = (loc_adj_func(time) - 1.0) * matrix_components[loc_key]
+            if microdistancing_function:
+                location_adjustment_matrix *= microdistancing_function(time)
             mixing_matrix = np.add(mixing_matrix, location_adjustment_matrix)
 
         # Make adjustments by age

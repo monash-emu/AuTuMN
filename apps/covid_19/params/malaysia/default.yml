@@ -6,6 +6,11 @@ traveller_quarantine:
   times: [73., 76.] # self-isolation from 13 March
   values: [0., 1.]
 
+microdistancing:
+  b: -0.04
+  c: 140.
+  sigma: 0.6
+
 end_time: 365.
 country: malaysia
 iso3: MYS

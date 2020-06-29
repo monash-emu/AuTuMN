@@ -12,41 +12,8 @@ BASE_DATE = datetime(2019, 12, 31, 0, 0, 0)
 
 # Locations that can be used for mixing
 LOCATIONS = ["home", "other_locations", "school", "work"]
+MICRODISTANCING_LOCATIONS = ["school", "other_locations", "work"]
 AGE_INDICES = list(range(16))
-
-
-def add_periodic_intervention(periodic_int_params, other_locations, end_time):
-    """
-    We assume that a proportion 'prop_participating' of the population participates in the intervention and that the
-    other-location contact rates are multiplied by 'other_location_multiplier' for the participating individuals.
-    """
-
-    # Avoid over-writing existing times, find start and end time
-    t_start = max([periodic_int_params["restart_time"], max(other_locations["times"]) + 1])
-    t = t_start
-    t_end = end_time
-
-    # Extract parameters
-    prop_participating, contact_multiplier, duration, period = (
-        periodic_int_params["prop_participating"],
-        periodic_int_params["contact_multiplier"],
-        periodic_int_params["duration"],
-        periodic_int_params["period"],
-    )
-    reference_val = other_locations["values"][-1]
-
-    # Calculate the value for other locations that the contact rate increases to
-    amplified_val = reference_val * (
-        (1.0 - prop_participating) + contact_multiplier * prop_participating
-    )
-
-    # Extend dictionary of other locations
-    while t < t_end:
-        other_locations["times"] += [t, t + 1, t + 1 + duration]
-        other_locations["values"] += [reference_val, amplified_val, reference_val]
-        t += period
-
-    return other_locations
 
 
 def build_static(country_iso3: str, multipliers: np.ndarray) -> np.ndarray:
@@ -163,11 +130,23 @@ def build_dynamic(
         mixing_matrix = matrix_components["all_locations"]
 
         # Apply time-varying location adjustments
-        for loc_key, loc_adj_func in loc_adj_funcs.items():
-            location_adjustment_matrix = (loc_adj_func(time) - 1.0) * matrix_components[loc_key]
-            if microdistancing_function:
-                location_adjustment_matrix *= microdistancing_function(time)
-            mixing_matrix = np.add(mixing_matrix, location_adjustment_matrix)
+        for loc_key in LOCATIONS:
+
+            # Start the adjustment value for each location from a value of 1 for "no adjustment".
+            loc_adjustment = 1
+
+            # Adjust for Google Mobility data.
+            if loc_key in loc_adj_funcs:
+                loc_adj_func = loc_adj_funcs[loc_key]
+                loc_adjustment *= loc_adj_func(time)
+
+            # Adjust for microdistancing
+            if microdistancing_function and loc_key in MICRODISTANCING_LOCATIONS:
+                loc_adjustment_matrix *= microdistancing_function(time)
+
+            # Apply adjustment by subtracting the contacts that need to come off
+            loc_adjustment_matrix = (loc_adjustment - 1) * matrix_components[loc_key]
+            mixing_matrix = np.add(mixing_matrix, loc_adjustment_matrix)
 
         # Apply time-varying age adjustments
         for row_index in range(len(AGE_INDICES)):
@@ -187,6 +166,38 @@ def build_dynamic(
         return mixing_matrix
 
     return mixing_matrix_function
+
+
+def add_periodic_intervention(periodic_int_params, other_locations, end_time):
+    """
+    We assume that a proportion 'prop_participating' of the population participates in the intervention and that the
+    other-location contact rates are multiplied by 'other_location_multiplier' for the participating individuals.
+    """
+
+    # Avoid over-writing existing times, find start and end time
+    t_start = max([periodic_int_params["restart_time"], max(other_locations["times"]) + 1])
+    t = t_start
+    t_end = end_time
+
+    # Extract parameters
+    prop_participating, contact_multiplier, duration, period = (
+        periodic_int_params["prop_participating"],
+        periodic_int_params["contact_multiplier"],
+        periodic_int_params["duration"],
+        periodic_int_params["period"],
+    )
+    reference_val = other_locations["values"][-1]
+
+    # Calculate the value for other locations that the contact rate increases to
+    amplified_val = reference_val * (
+        (1.0 - prop_participating) + contact_multiplier * prop_participating
+    )
+
+    # Extend dictionary of other locations
+    while t < t_end:
+        other_locations["times"] += [t, t + 1, t + 1 + duration]
+        other_locations["values"] += [reference_val, amplified_val, reference_val]
+        t += period
 
 
 def get_total_contact_rates_by_age(mixing_matrix, direction="horizontal"):

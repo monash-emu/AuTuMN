@@ -17,6 +17,7 @@ def test_dynamic_mixing():
         is_periodic_intervention=False,
         periodic_int_params={},
         end_time=365,
+        microdistancing_params={}
     )
     mm = mm_func(50)
     assert mm.shape == (16, 16)

@@ -11,6 +11,8 @@ data:
   times_imported_cases: []
   n_imported_cases: []
 
+microdistancing: {}
+
 traveller_quarantine:
   times: [0.]
   values: [0.]

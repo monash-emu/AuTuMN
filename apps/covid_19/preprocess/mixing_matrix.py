@@ -151,10 +151,9 @@ def build_dynamic(
         )
 
     # Work out microdistancing function to be applied to all non-household locations
-    microdistancing_function = \
-        tanh_based_scaleup(
-            microdistancing_params["b"], microdistancing_params["c"], microdistancing_params["sigma"]
-        ) if microdistancing_params else {}
+    microdistancing_function = None
+    if microdistancing_params:
+        microdistancing_function = tanh_based_scaleup(**microdistancing_params)
 
     # Create mixing matrix function
     def mixing_matrix_function(time: float):

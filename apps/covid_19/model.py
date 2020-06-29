@@ -82,7 +82,7 @@ validate_params = sb.build_validator(
     enforced_isolation_effect=float,
     self_isolation_effect=float,
     data=sb.Dict(times_imported_cases=sb.List(float), n_imported_cases=sb.List(float),),
-    microdistancing=dict,
+    microdistancing=sb.Nullable(sb.Dict(b=float, c=float, sigma=float)),
     # Other stuff
     contact_rate=float,
     infect_death=float,

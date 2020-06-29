@@ -1,8 +1,10 @@
+<div style="position: relative; padding-bottom: 66.66666666666666%; height: 0;"><iframe src="https://www.loom.com/embed/e7c00f7a1e454cb99cafc14c19dca330" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe></div>
+
 # Step 1: Install Anaconda
 
 ## Anaconda setup for Windows
 
-Open a PowerShell window as *Adminsistrator* by searching for it in your Windows menu. Run the following lines to install [Anaconda](https://www.anaconda.com/)
+Open a PowerShell window as _Administrator_ by searching for it in your Windows menu. Run the following lines to install [Anaconda](https://www.anaconda.com/)
 
 ```powershell
 # Install Chocolately package manager - https://chocolatey.org/install

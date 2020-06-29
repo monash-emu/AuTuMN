@@ -1,3 +1,0 @@
-- reinstate mixing matrix plotting function
-- fix up terrible dump of Google mobility data into Malaysia parameters yaml
-- would like to rename infectious and late (in Covid model) to early_covid and late_covid, but am failing model validation checks

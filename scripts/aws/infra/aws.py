@@ -74,11 +74,45 @@ def stop_job(job_id: str):
 
 
 def cleanup_volumes():
+    """
+    Delete orphaned volumes so we don't pay for them
+    """
     volumes = client.describe_volumes()
     volume_ids = [v["VolumeId"] for v in volumes["Volumes"] if v["State"] == "available"]
     for v_id in volume_ids:
         print(f"Deleting orphaned volume {v_id}")
         client.delete_volume(VolumeId=v_id)
+
+    if not volume_ids:
+        print("No volumes to delete.")
+
+
+def cleanup_instances():
+    """
+    Delete old EC2 instances so we don't pay for them
+    """
+    instances = describe_instances()
+    stop_instance_ids = []
+    for i in instances:
+        if i["name"] == "buildkite":
+            # Don't kill buildkite server
+            continue
+
+        launched_time = i["LaunchTime"]
+        uptime_delta = datetime.utcnow() - launched_time.replace(tzinfo=None)
+        hours = uptime_delta.total_seconds() // 3600
+        if hours > settings.EC2_MAX_HOURS:
+            launch_time_str = launched_time.isoformat()
+            print(
+                f"Stopping instance {i['name']} with id {i['InstanceId']} with {hours}h uptime since {launch_time_str}"
+            )
+            stop_instance_ids.append(i["InstanceId"])
+
+    if stop_instance_ids:
+        print("Stopping instance ids", stop_instance_ids)
+        client.terminate_instances(InstanceIds=stop_instance_ids)
+    else:
+        print("No instances to stop.")
 
 
 def run_instance(job_id: str, instance_type: str):

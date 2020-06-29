@@ -33,3 +33,4 @@ EC2_AMI = "ami-01aa2ffb8036f6376"
 EC2_SECURITY_GROUP = "sg-07264e49a069ef40a"
 EC2_IAM_INSTANCE_PROFILE = "worker-profile"
 S3_BUCKET = "autumn-data"
+EC2_MAX_HOURS = 8

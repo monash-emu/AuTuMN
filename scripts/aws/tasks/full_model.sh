@@ -34,7 +34,7 @@ log "Ensuring latest requirements are installed."
 pip install --quiet -r requirements.txt
 
 log "Building input database"
-python -m apps db build
+python3 -m apps db build
 
 log "Downloading MCMC databases"
 aws s3 cp --recursive s3://autumn-data/$RUN_NAME/data/calibration_outputs data/calibration_outputs

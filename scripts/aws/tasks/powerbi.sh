@@ -23,7 +23,7 @@ git pull
 pip install --quiet -r requirements.txt
 
 log "Building input database"
-python -m apps db build
+python3 -m apps db build
 
 log "Dowloading full model runs for $RUN_NAME"
 aws s3 cp --recursive s3://autumn-data/$RUN_NAME/data/full_model_runs data/full_model_runs

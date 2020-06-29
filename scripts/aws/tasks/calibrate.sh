@@ -42,7 +42,7 @@ RUN_NAME="$CALIBRATION_NAME-$TIMESTAMP-$GIT_BRANCH-$GIT_COMMIT"
 log "Starting calibration run $RUN_NAME"
 
 log "Building input database"
-python -m apps db build
+python3 -m apps db build
 
 # Handle script failure
 mkdir -p logs

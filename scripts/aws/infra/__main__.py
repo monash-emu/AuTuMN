@@ -48,6 +48,7 @@ def cleanup():
     Cleanup dangling AWS bits.
     """
     aws.cleanup_volumes()
+    aws.cleanup_instances()
 
 
 @click.command()

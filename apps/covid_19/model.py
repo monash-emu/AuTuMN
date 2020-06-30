@@ -167,9 +167,7 @@ def build_model(params: dict) -> StratifiedModel:
     birth_approach = BirthApproach.ADD_CRUDE if is_importation_active else BirthApproach.NO_BIRTH
 
     # Build mixing matrix.
-    # FIXME: unit tests for build_static
-    # FIXME: unit tests for build_dynamic
-    static_mixing_matrix = preprocess.mixing_matrix.build_static(country_iso3, None)
+    static_mixing_matrix = preprocess.mixing_matrix.build_static(country_iso3)
     dynamic_mixing_matrix = None
     dynamic_mixing_params = params["mixing"]
     microdistancing = params["microdistancing"]

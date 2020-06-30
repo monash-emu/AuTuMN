@@ -16,19 +16,13 @@ MICRODISTANCING_LOCATIONS = ["school", "other_locations", "work"]
 AGE_INDICES = list(range(16))
 
 
-def build_static(country_iso3: str, multipliers: np.ndarray) -> np.ndarray:
+def build_static(country_iso3: str) -> np.ndarray:
     """
-    Get a non-time-varying mixing matrix.
-    multipliers is a matrix with the ages-specific multipliers.
-    Returns the updated mixing-matrix
+    Get a non-time-varying mixing matrix for a country.
+    Each row/column represents a 5 year age bucket.
+    Matrix is 16x16, representing ages 0-80+
     """
-    mixing_matrix = get_country_mixing_matrix("all_locations", country_iso3)
-    if multipliers:
-        # Update the mixing matrix using some age-specific multipliers
-        assert mixing_matrix.shape == multipliers.shape
-        return np.multiply(mixing_matrix, multipliers)
-    else:
-        return mixing_matrix
+    return get_country_mixing_matrix("all_locations", country_iso3)
 
 
 def build_dynamic(
@@ -121,6 +115,7 @@ def build_dynamic(
     microdistancing_function = None
     if microdistancing_params:
         microdistancing_function = tanh_based_scaleup(**microdistancing_params)
+
 
     # Create mixing matrix function
     def mixing_matrix_function(time: float):

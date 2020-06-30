@@ -148,8 +148,7 @@ def _run_job(job_id, instance_type, script_name, script_args):
         remote.ssh_run_job(instance, script_name, script_args)
         time.sleep(3)
 
-    print("DEBUG: Do not stop job - manual stop required")
-    # aws.stop_job(job_id)
+    aws.stop_job(job_id)
 
 
 @click.command()

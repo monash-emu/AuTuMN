@@ -1,5 +1,4 @@
 import os
-import hashlib
 
 from autumn.tool_kit import Timer
 from autumn.db import Database
@@ -51,7 +50,7 @@ def build_input_database(force: bool = False, rebuild: bool = False):
         with Timer("Ingesting mobility data."):
             preprocess_mobility(input_db, country_df)
 
-    current_db_hash = get_file_hash(input_db_path)
+    current_db_hash = input_db.get_hash()
     if force:
         # Write the file hash
         write_file_hash(current_db_hash, input_db_hash_path)
@@ -61,8 +60,7 @@ def build_input_database(force: bool = False, rebuild: bool = False):
         is_hash_mismatch = current_db_hash != saved_db_hash
         if rebuild and is_hash_mismatch:
             msg = "Input database does not match canonical version."
-            # raise ValueError(msg)
-            print("WARNING:", msg)
+            raise ValueError(msg)
         elif is_hash_mismatch:
             print("Hash mismatch, try rebuilding database...")
             build_input_database(rebuild=True)
@@ -101,14 +99,3 @@ def write_file_hash(file_hash: str, hash_path: str):
     with open(hash_path, "w") as f:
         f.write("\n".join(text) + "\n")
 
-
-def get_file_hash(file_path: str):
-    """
-    Returns the MD5 hash of a file
-    """
-    hash_md5 = hashlib.md5()
-    with open(file_path, "rb") as f:
-        for chunk in iter(lambda: f.read(4096), b""):
-            hash_md5.update(chunk)
-
-    return hash_md5.hexdigest()

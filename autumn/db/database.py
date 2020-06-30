@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 from sqlalchemy import create_engine
+from pandas.util import hash_pandas_object
 
 
 class Database:
@@ -21,6 +22,16 @@ class Database:
         )
         size_bytes = self.engine.execute(query).first()[0]
         return size_bytes / 1024 / 1024
+
+    def get_hash(self):
+        """
+        Returns a hash of the database contents
+        """
+        table_hashes = [
+            hash_pandas_object(self.query(table_name)).mean() for table_name in self.table_names()
+        ]
+        db_hash = sum(table_hashes)
+        return f"{db_hash:0.0f}"
 
     def table_names(self):
         return self.engine.table_names()

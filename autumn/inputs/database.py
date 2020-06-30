@@ -61,7 +61,8 @@ def build_input_database(force: bool = False, rebuild: bool = False):
         is_hash_mismatch = current_db_hash != saved_db_hash
         if rebuild and is_hash_mismatch:
             msg = "Input database does not match canonical version."
-            raise ValueError(msg)
+            # raise ValueError(msg)
+            print("WARNING:", msg)
         elif is_hash_mismatch:
             print("Hash mismatch, try rebuilding database...")
             build_input_database(rebuild=True)

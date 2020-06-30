@@ -1,15 +1,180 @@
 """
 TODO: Test more mixing matrix functionality
 - test periodic interventions
-- test user-defined mixing data, append and overwrite
 - test age adjustments
 - test NPI effectiveness
 - test microdistancing
 """
+import pytest
 import numpy as np
 from numpy.testing import assert_array_equal
 
 from apps.covid_19.preprocess import mixing_matrix
+
+
+def test_update_mixing_data__with_only_mobility_data():
+    """
+    Ensure using no user-specified mixing params returns a mixing dict containing only mobility data.
+    """
+    mixing = {}
+    npi_effectiveness_params = {}
+    google_mobility_values = {"work": [1.1, 1.2, 1.3, 1.4], "other_locations": [1.5, 1.6, 1.7, 1.8]}
+    google_mobility_days = [0, 1, 2, 3]
+    is_periodic_intervention = False
+    periodic_int_params = None
+    periodic_end_time = None
+    actual_mixing = mixing_matrix.update_mixing_data(
+        mixing,
+        npi_effectiveness_params,
+        google_mobility_values,
+        google_mobility_days,
+        is_periodic_intervention,
+        periodic_int_params,
+        periodic_end_time,
+    )
+    assert actual_mixing == {
+        "work": {"values": [1.1, 1.2, 1.3, 1.4], "times": [0, 1, 2, 3],},
+        "other_locations": {"values": [1.5, 1.6, 1.7, 1.8], "times": [0, 1, 2, 3],},
+    }
+
+
+def test_update_mixing_data__with_user_specified_values():
+    """
+    Ensure user-specified date overwrites/is appended to mobility data.
+    """
+    mixing = {
+        # Expect appended
+        "work": {"values": [1.5, 1.6], "times": [4, 5], "append": True},
+        # Expect overwritten
+        "other_locations": {
+            "values": [1.55, 1.66, 1.77, 1.88, 1.99, 1.111],
+            "times": [0, 1, 2, 3, 4, 5],
+            "append": False,
+        },
+        # Expect added (not overwritten)
+        "school": {
+            "values": [1.11, 1.22, 1.33, 1.44, 1.55, 1.66],
+            "times": [0, 1, 2, 3, 4, 5],
+            "append": False,
+        },
+    }
+    npi_effectiveness_params = {}
+    google_mobility_values = {"work": [1.1, 1.2, 1.3, 1.4], "other_locations": [1.5, 1.6, 1.7, 1.8]}
+    google_mobility_days = [0, 1, 2, 3]
+    is_periodic_intervention = False
+    periodic_int_params = None
+    periodic_end_time = None
+    actual_mixing = mixing_matrix.update_mixing_data(
+        mixing,
+        npi_effectiveness_params,
+        google_mobility_values,
+        google_mobility_days,
+        is_periodic_intervention,
+        periodic_int_params,
+        periodic_end_time,
+    )
+    assert actual_mixing == {
+        "work": {"values": [1.1, 1.2, 1.3, 1.4, 1.5, 1.6], "times": [0, 1, 2, 3, 4, 5]},
+        "other_locations": {
+            "values": [1.55, 1.66, 1.77, 1.88, 1.99, 1.111],
+            "times": [0, 1, 2, 3, 4, 5],
+        },
+        "school": {"values": [1.11, 1.22, 1.33, 1.44, 1.55, 1.66], "times": [0, 1, 2, 3, 4, 5]},
+    }
+
+
+def test_update_mixing_data__with_user_specified_values__out_of_date():
+    """
+    When a user specifies mixing values where the max date is older than the latest
+    mobility data, then the app should crash.
+    """
+    mixing = {
+        # Expect crash because of stale date
+        "school": {
+            "values": [1.11, 1.22, 1.33],
+            "times": [0, 1, 2],  # Stale date, should be up to 3
+            "append": False,
+        },
+    }
+    npi_effectiveness_params = {}
+    google_mobility_values = {"work": [1.1, 1.2, 1.3, 1.4]}
+    google_mobility_days = [0, 1, 2, 3]
+    is_periodic_intervention = False
+    periodic_int_params = None
+    periodic_end_time = None
+    with pytest.raises(AssertionError):
+        mixing_matrix.update_mixing_data(
+            mixing,
+            npi_effectiveness_params,
+            google_mobility_values,
+            google_mobility_days,
+            is_periodic_intervention,
+            periodic_int_params,
+            periodic_end_time,
+        )
+
+
+def test_update_mixing_data__with_user_specified_values__missing_data_append():
+    """
+    When a user specifies mixing values that should be appended to,
+    and there is no Google mobility data to append to, then the app should crash.
+    """
+    mixing = {
+        # Expect crash because of mispecified append
+        "school": {
+            "values": [1.11, 1.22, 1.33, 1.44],
+            "times": [0, 1, 2, 3],
+            "append": True,  # No school data to append to
+        },
+    }
+    npi_effectiveness_params = {}
+    google_mobility_values = {"work": [1.1, 1.2, 1.3, 1.4]}
+    google_mobility_days = [0, 1, 2, 3]
+    is_periodic_intervention = False
+    periodic_int_params = None
+    periodic_end_time = None
+    with pytest.raises(ValueError):
+        mixing_matrix.update_mixing_data(
+            mixing,
+            npi_effectiveness_params,
+            google_mobility_values,
+            google_mobility_days,
+            is_periodic_intervention,
+            periodic_int_params,
+            periodic_end_time,
+        )
+
+
+def test_update_mixing_data__with_user_specified_values__date_clash_append():
+    """
+    When a user specifies mixing values that should be appended to,
+    and the min appended date is less than the max Google mobility date,
+    then the app should crash.
+    """
+    mixing = {
+        # Expect crash because of conflicting date
+        "work": {
+            "values": [1.11, 1.22],
+            "times": [3, 4],  # Conflicting lowest date, cannot append
+            "append": True,
+        },
+    }
+    npi_effectiveness_params = {}
+    google_mobility_values = {"work": [1.1, 1.2, 1.3, 1.4]}
+    google_mobility_days = [0, 1, 2, 3]
+    is_periodic_intervention = False
+    periodic_int_params = None
+    periodic_end_time = None
+    with pytest.raises(AssertionError):
+        mixing_matrix.update_mixing_data(
+            mixing,
+            npi_effectiveness_params,
+            google_mobility_values,
+            google_mobility_days,
+            is_periodic_intervention,
+            periodic_int_params,
+            periodic_end_time,
+        )
 
 
 def test_build_static__for_australia():
@@ -38,7 +203,7 @@ def test_build_dynamic__with_no_changes():
         google_mobility_locations=google_mobility_locations,
         is_periodic_intervention=is_periodic_intervention,
         periodic_int_params=periodic_int_params,
-        end_time=365,
+        periodic_end_time=365,
         microdistancing_params=microdistancing_params,
     )
     mm = mm_func(0)
@@ -79,7 +244,7 @@ def test_build_dynamic__with_mobility_data(monkeypatch):
         google_mobility_locations=google_mobility_locations,
         is_periodic_intervention=is_periodic_intervention,
         periodic_int_params=periodic_int_params,
-        end_time=365,
+        periodic_end_time=365,
         microdistancing_params=microdistancing_params,
     )
 
@@ -133,7 +298,7 @@ def test_build_dynamic__smoke_test():
         google_mobility_locations=google_mobility_locations,
         is_periodic_intervention=False,
         periodic_int_params={},
-        end_time=365,
+        periodic_end_time=365,
         microdistancing_params={},
     )
     mm = mm_func(50)

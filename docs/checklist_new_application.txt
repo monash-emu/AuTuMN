@@ -1,6 +1,0 @@
-To do when starting new country application with AuTuMN model
-
-1. Create country spreadsheet.
-2. Check scale-up functions. Add extra data-points and adjust smoothness if needed (default 1.0, 0.0 is exact interpolation).
-3. Run the model and check that there is no oscillations in the obtained solution. Adjust time-step / integration method accordingly.
-4. Calibrate. Remember that notification rates do not make sense until the correct population size is obtained.

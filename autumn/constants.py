@@ -47,20 +47,3 @@ class Region:
         CENTRAL_VISAYAS,
         UNITED_KINGDOM,
     ]
-    REGION_COUNTRY = {
-        UNITED_KINGDOM: UNITED_KINGDOM,
-        MALAYSIA: MALAYSIA,
-        LIBERIA: LIBERIA,
-        AUSTRALIA: AUSTRALIA,
-        VICTORIA: AUSTRALIA,
-        NSW: AUSTRALIA,
-        PHILIPPINES: PHILIPPINES,
-        MANILA: PHILIPPINES,
-        CALABARZON: PHILIPPINES,
-        BICOL: PHILIPPINES,
-        CENTRAL_VISAYAS: PHILIPPINES,
-    }
-
-    @staticmethod
-    def get_country(region: str):
-        return REGION_COUNTRY[region]

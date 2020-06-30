@@ -36,16 +36,18 @@ def merge_dicts(src: dict, dest: dict):
     """
     Merge src dict into dest dict.
     """
-    _dest = dest or {}
     for key, value in src.items():
         if isinstance(value, dict):
-            # get node or create one
-            node = _dest.setdefault(key, {})
-            merge_dicts(value, node)
+            # Get node or create one
+            node = dest.setdefault(key, {})
+            if node is None:
+                dest[key] = value
+            else:
+                merge_dicts(value, node)
         else:
-            _dest[key] = value
+            dest[key] = value
 
-    return _dest
+    return dest
 
 
 def get_git_hash():

@@ -171,6 +171,7 @@ def build_model(params: dict) -> StratifiedModel:
     dynamic_mixing_matrix = None
     dynamic_mixing_params = params["mixing"]
     microdistancing = params["microdistancing"]
+
     if dynamic_mixing_params:
         npi_effectiveness_params = params["npi_effectiveness"]
         google_mobility_locations = params["google_mobility_locations"]

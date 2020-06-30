@@ -19,6 +19,7 @@ def load_params(app_name: str, region_name: str):
     The data structure returned by this function is a little wonky for
     backwards compatibility reasons.
     """
+
     param_path = path.join(APPS_PATH, app_name, "params")
     assert path.exists(param_path), f"App name {app_name} not found at {param_path}"
     param_dirnames = [

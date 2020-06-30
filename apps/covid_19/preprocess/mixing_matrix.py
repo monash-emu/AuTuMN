@@ -40,6 +40,7 @@ def build_dynamic(
     Build a time-varing mixing matrix
     Returns a function of time which returns a 16x16 mixing matrix.
     """
+
     # Load mobility data
     google_mobility_values, google_mobility_days = get_mobility_data(
         country_iso3, region, BASE_DATE, google_mobility_locations
@@ -141,8 +142,6 @@ def update_mixing_data(
     periodic_int_params: dict,
     periodic_end_time: float,
 ):
-    """
-    """
     most_recent_day = google_mobility_days[-1]
     for loc_key in LOCATIONS:
         loc_mixing = mixing.get(loc_key)

@@ -210,7 +210,7 @@ def describe_instances():
         try:
             network_interface = aws_instance["NetworkInterfaces"][0]
             instance["ip"] = network_interface["Association"]["PublicIp"]
-        except KeyError, IndexError:
+        except (KeyError, IndexError):
             instance["ip"] = None
 
     return instances

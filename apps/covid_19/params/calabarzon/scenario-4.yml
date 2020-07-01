@@ -1,29 +1,25 @@
-# Complete release of all restrictions 1st June
+# Complete release of all restrictions 20th June
 mixing:
   other_locations:
     append: true
     times:
-      - 161 # scenario
-      - 163 # scenario
+      - 2020-06-20
     values:
-      - 0.405 # scenario
-      - 1. # scenario
+      - 1.
   work:
     append: true
     times:
-      - 161. # scenario
-      - 163. # scenario
+      - 2020-06-20
     values:
-      - 0.58 # scenario
-      - 1. # scenario
+      - 1.
   school:
     append: false
     times:
-      - 42.
-      - 72.
-      - 93.
-      - 152.
-      - 154.
+      - 2020-02-11
+      - 2020-03-12
+      - 2020-04-02
+      - 2020-06-19
+      - 2020-06-20
     values:
       - 1.
       - 0.45

@@ -144,8 +144,10 @@ def update_mixing_data(
 ):
     most_recent_day = google_mobility_days[-1]
     for loc_key in LOCATIONS:
+
         loc_mixing = mixing.get(loc_key)
         if loc_mixing:
+            loc_mixing["times"] = parse_times(loc_mixing["times"])
             # Ensure all user-specified dynamic mixing is up to date
             is_fresh_timeseries = max(loc_mixing["times"]) >= most_recent_day
             assert (
@@ -257,3 +259,13 @@ def get_total_contact_rates_by_age(mixing_matrix, direction="horizontal"):
         else:
             aggregated_contact_rates[str(5 * i)] = mixing_matrix[:, i].sum()
     return aggregated_contact_rates
+
+
+def parse_times(times):
+    """
+    Convert date strings to an integer,
+    representing days since simulation start.
+    """
+    for time in times:
+        time_date = datetime.strptime(time, "%Y%-m-%d").date()
+        yield (time_date - BASE_DATE).days

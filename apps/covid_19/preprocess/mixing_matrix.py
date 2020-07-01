@@ -72,6 +72,9 @@ def build_dynamic(
     age_adjustment_functions = {}
     for age_idx_affected in affected_age_indices:
         age_idx_key = f"age_{age_idx_affected}"
+        mixing_age_adjust[age_idx_key]["times"] = [
+                (time_date - BASE_DATE).days for time_date in mixing_age_adjust[age_idx_key]["times"]
+        ]
         age_times = mixing_age_adjust[age_idx_key]["times"]
         age_vals = mixing_age_adjust[age_idx_key]["values"]
         age_adjustment_functions[age_idx_affected] = scale_up_function(

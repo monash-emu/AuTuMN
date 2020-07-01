@@ -66,7 +66,7 @@ validate_params = sb.build_validator(
         str,
         sb.Dict(
             # Times for dynamic mixing func.
-            times=sb.List(float),
+            times=list,
             # Values for dynamic mixing func.
             values=sb.List(float),
         ),

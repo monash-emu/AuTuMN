@@ -30,6 +30,7 @@ def build_dynamic(
     country_iso3: str,
     region: str,
     mixing: dict,
+    mixing_age_adjust: dict,
     npi_effectiveness_params: dict,
     google_mobility_locations: dict,
     is_periodic_intervention: bool,
@@ -67,12 +68,12 @@ def build_dynamic(
         loc_adj_funcs[loc_key] = scale_up_function(loc_times, loc_vals, method=4)
 
     # Build the time variant age adjustment functions
-    affected_age_indices = [i for i in AGE_INDICES if f"age_{i}" in mixing]
+    affected_age_indices = [i for i in AGE_INDICES if f"age_{i}" in mixing_age_adjust]
     age_adjustment_functions = {}
     for age_idx_affected in affected_age_indices:
         age_idx_key = f"age_{age_idx_affected}"
-        age_times = mixing[age_idx_key]["times"]
-        age_vals = mixing[age_idx_key]["values"]
+        age_times = mixing_age_adjust[age_idx_key]["times"]
+        age_vals = mixing_age_adjust[age_idx_key]["values"]
         age_adjustment_functions[age_idx_affected] = scale_up_function(
             age_times, age_vals, method=4,
         )
@@ -204,20 +205,22 @@ def update_mixing_data(
 
     # Update the mixing parameters to simulate a future regular periodic process
     if is_periodic_intervention:
-        other_locations = mixing["other_locations"]
         mixing["other_locations"] = add_periodic_intervention(
-            periodic_int_params, other_locations, periodic_end_time
+            periodic_int_params, mixing["other_locations"], periodic_end_time
         )
-
     return mixing
 
 
-def add_periodic_intervention(periodic_int_params, other_locations, end_time):
+def add_periodic_intervention(periodic_int_params, old_other_locations, end_time):
     """
     We assume that a proportion 'prop_participating' of the population participates in the intervention and that the
     other-location contact rates are multiplied by 'other_location_multiplier' for the participating individuals.
     """
-
+    # Make a copy of the data
+    other_locations = {
+        "values": list(old_other_locations["values"]),
+        "times": list(old_other_locations["times"]),
+    }
     # Avoid over-writing existing times, find start and end time
     t_start = max([periodic_int_params["restart_time"], max(other_locations["times"]) + 1])
     t = t_start
@@ -242,6 +245,8 @@ def add_periodic_intervention(periodic_int_params, other_locations, end_time):
         other_locations["times"] += [t, t + 1, t + 1 + duration]
         other_locations["values"] += [reference_val, amplified_val, reference_val]
         t += period
+
+    return other_locations
 
 
 def get_total_contact_rates_by_age(mixing_matrix, direction="horizontal"):

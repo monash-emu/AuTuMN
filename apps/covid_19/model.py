@@ -49,6 +49,7 @@ validate_params = sb.build_validator(
     tv_detection_sigma=float,
     int_detection_gap_reduction=float,
     # Dynamic mixing matrix updates
+    # Time-varying mixing matrix adjutment by location
     mixing=sb.DictGeneric(
         str,
         sb.Dict(
@@ -56,6 +57,16 @@ validate_params = sb.build_validator(
             append=bool,
             # Times for dynamic mixing func.
             times=list,
+            # Values for dynamic mixing func.
+            values=sb.List(float),
+        ),
+    ),
+    # Time-varying mixing matrix adjustment by age
+    mixing_age_adjust=sb.DictGeneric(
+        str,
+        sb.Dict(
+            # Times for dynamic mixing func.
+            times=sb.List(float),
             # Values for dynamic mixing func.
             values=sb.List(float),
         ),
@@ -169,10 +180,11 @@ def build_model(params: dict) -> StratifiedModel:
     # Build mixing matrix.
     static_mixing_matrix = preprocess.mixing_matrix.build_static(country_iso3)
     dynamic_mixing_matrix = None
-    dynamic_mixing_params = params["mixing"]
+    dynamic_location_mixing_params = params["mixing"]
+    dynamic_age_mixing_params = params["mixing_age_adjust"]
     microdistancing = params["microdistancing"]
 
-    if dynamic_mixing_params:
+    if dynamic_location_mixing_params or dynamic_age_mixing_params:
         npi_effectiveness_params = params["npi_effectiveness"]
         google_mobility_locations = params["google_mobility_locations"]
         is_periodic_intervention = params.get("is_periodic_intervention")
@@ -180,7 +192,8 @@ def build_model(params: dict) -> StratifiedModel:
         dynamic_mixing_matrix = preprocess.mixing_matrix.build_dynamic(
             country_iso3,
             region,
-            dynamic_mixing_params,
+            dynamic_location_mixing_params,
+            dynamic_age_mixing_params,
             npi_effectiveness_params,
             google_mobility_locations,
             is_periodic_intervention,

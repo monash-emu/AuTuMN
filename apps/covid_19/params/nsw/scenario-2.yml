@@ -1,5 +1,5 @@
 # back to usual social mixing but using elderly cocooning
-mixing:
+mixing_age_adjust:
   age_13:
     times: [131., 133.]
     values: [1., .2]

@@ -179,6 +179,7 @@ universal_death_rate: 0.
 
 # Parameters relating to adjusting the mixing matrix to reflect interventions
 mixing: {}
+mixing_age_adjust: {}
 npi_effectiveness: {}
 is_periodic_intervention: False
 periodic_intervention:

@@ -4,9 +4,7 @@ mixing:
     append: true
     times:
       - 2020-06-20
-      - 2020-06-21
     values:
-      - 1.0
       - 1.0
   work:
     append: true
@@ -16,6 +14,8 @@ mixing:
     values:
       - 0.9
       - 1.0
+
+mixing_age_adjust:
   age_13:
     times: [131., 133.]
     values: [1., 1.]

@@ -5,11 +5,14 @@ TODO: Test more mixing matrix functionality
 - test NPI effectiveness
 - test microdistancing
 """
+from datetime import date, timedelta
 import pytest
 import numpy as np
 from numpy.testing import assert_array_equal
 
 from apps.covid_19.preprocess import mixing_matrix
+
+BASE_DATE = date(2019, 12, 31)
 
 
 def test_update_mixing_data__with_only_mobility_data():
@@ -44,17 +47,17 @@ def test_update_mixing_data__with_user_specified_values():
     """
     mixing = {
         # Expect appended
-        "work": {"values": [1.5, 1.6], "times": [4, 5], "append": True},
+        "work": {"values": [1.5, 1.6], "times": get_date([4, 5]), "append": True},
         # Expect overwritten
         "other_locations": {
             "values": [1.55, 1.66, 1.77, 1.88, 1.99, 1.111],
-            "times": [0, 1, 2, 3, 4, 5],
+            "times": get_date([0, 1, 2, 3, 4, 5]),
             "append": False,
         },
         # Expect added (not overwritten)
         "school": {
             "values": [1.11, 1.22, 1.33, 1.44, 1.55, 1.66],
-            "times": [0, 1, 2, 3, 4, 5],
+            "times": get_date([0, 1, 2, 3, 4, 5]),
             "append": False,
         },
     }
@@ -92,7 +95,7 @@ def test_update_mixing_data__with_user_specified_values__out_of_date():
         # Expect crash because of stale date
         "school": {
             "values": [1.11, 1.22, 1.33],
-            "times": [0, 1, 2],  # Stale date, should be up to 3
+            "times": get_date([0, 1, 2]),  # Stale date, should be up to 3
             "append": False,
         },
     }
@@ -123,7 +126,7 @@ def test_update_mixing_data__with_user_specified_values__missing_data_append():
         # Expect crash because of mispecified append
         "school": {
             "values": [1.11, 1.22, 1.33, 1.44],
-            "times": [0, 1, 2, 3],
+            "times": get_date([0, 1, 2, 3]),
             "append": True,  # No school data to append to
         },
     }
@@ -155,7 +158,7 @@ def test_update_mixing_data__with_user_specified_values__date_clash_append():
         # Expect crash because of conflicting date
         "work": {
             "values": [1.11, 1.22],
-            "times": [3, 4],  # Conflicting lowest date, cannot append
+            "times": get_date([3, 4]),  # Conflicting lowest date, cannot append
             "append": True,
         },
     }
@@ -280,15 +283,15 @@ def test_build_dynamic__smoke_test():
     mixing_params = {
         "other_locations": {
             "append": True,
-            "times": [220, 230, 240, 250, 260],
+            "times": get_date([220, 230, 240, 250, 260]),
             "values": [1, 0.4, 0.3, 0.3, 0.5],
         },
         "work": {
             "append": True,
-            "times": [220, 230, 240, 250, 260],
+            "times": get_date([220, 230, 240, 250, 260]),
             "values": [1, 0.9, 0.5, 0.3, 0.6],
         },
-        "school": {"append": False, "times": [46, 220], "values": [1, 0],},
+        "school": {"append": False, "times": get_date([46, 220]), "values": [1, 0],},
     }
     mm_func = mixing_matrix.build_dynamic(
         country_iso3="MYS",
@@ -308,6 +311,10 @@ def test_build_dynamic__smoke_test():
 def assert_arr_is_close(arr_a, arr_b, figs=2):
     assert arr_a.shape == arr_b.shape
     assert_array_equal(np.around(arr_a, figs), np.around(arr_b, figs))
+
+
+def get_date(days_list):
+    return [BASE_DATE + timedelta(days=days) for days in days_list]
 
 
 AUS_MIXING_MATRIX = np.array(

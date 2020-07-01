@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import date, datetime
 from typing import Callable
 
 import numpy as np
@@ -8,7 +8,8 @@ from autumn.curve import scale_up_function, tanh_based_scaleup
 from autumn.inputs import get_country_mixing_matrix, get_mobility_data
 
 # Base date used to calculate mixing matrix times.
-BASE_DATE = datetime(2019, 12, 31, 0, 0, 0)
+BASE_DATE = date(2019, 12, 31)
+BASE_DATETIME = datetime(2019, 12, 31, 0, 0, 0)
 
 # Locations that can be used for mixing
 LOCATIONS = ["home", "other_locations", "school", "work"]
@@ -43,7 +44,7 @@ def build_dynamic(
 
     # Load mobility data
     google_mobility_values, google_mobility_days = get_mobility_data(
-        country_iso3, region, BASE_DATE, google_mobility_locations
+        country_iso3, region, BASE_DATETIME, google_mobility_locations
     )
 
     # Build mixing data timeseries
@@ -147,7 +148,10 @@ def update_mixing_data(
 
         loc_mixing = mixing.get(loc_key)
         if loc_mixing:
-            loc_mixing["times"] = parse_times(loc_mixing["times"])
+            loc_mixing["times"] = [
+                (time_date - BASE_DATE).days for time_date in loc_mixing["times"]
+            ]
+
             # Ensure all user-specified dynamic mixing is up to date
             is_fresh_timeseries = max(loc_mixing["times"]) >= most_recent_day
             assert (
@@ -260,12 +264,3 @@ def get_total_contact_rates_by_age(mixing_matrix, direction="horizontal"):
             aggregated_contact_rates[str(5 * i)] = mixing_matrix[:, i].sum()
     return aggregated_contact_rates
 
-
-def parse_times(times):
-    """
-    Convert date strings to an integer,
-    representing days since simulation start.
-    """
-    for time in times:
-        time_date = datetime.strptime(time, "%Y%-m-%d").date()
-        yield (time_date - BASE_DATE).days

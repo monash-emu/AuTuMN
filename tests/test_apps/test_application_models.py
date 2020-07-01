@@ -34,7 +34,7 @@ def test_build_scenario_models(region):
         params = merge_dicts(scenario_params, default_params)
         params = {**params, "start_time": region_app.params["scenario_start_time"]}
         model = region_app.build_model(params)
-        assert type(model) is StratifiedModelgood
+        assert type(model) is StratifiedModel
 
 
 @pytest.mark.run_models

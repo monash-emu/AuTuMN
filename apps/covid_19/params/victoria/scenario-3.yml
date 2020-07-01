@@ -3,16 +3,16 @@ mixing:
   other_locations:
     append: true
     times:
-      - 158
-      - 160
+      - 2020-06-19
+      - 2020-06-21
     values:
       - .94
       - 1.
   work:
     append: true
     times:
-      - 158
-      - 160
+      - 2020-06-19
+      - 2020-06-21
     values:
       - 0.72
       - 1.0

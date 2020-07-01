@@ -3,27 +3,27 @@ mixing:
   other_locations:
     append: true
     times:
-      - 161
-      - 163
+      - 2020-06-20
+      - 2020-06-21
     values:
       - 0.4725
       - 1.
   work:
     append: true
     times:
-      - 161.
-      - 163.
+      - 2020-06-20
+      - 2020-06-21
     values:
       - 0.76
       - 1.
   school:
-    append: true
+    append: false
     times:
-      - 42.
-      - 72.
-      - 93.
-      - 152.
-      - 154.
+      - 2020-02-11
+      - 2020-03-12
+      - 2020-04-02
+      - 2020-05-31
+      - 2020-06-19
     values:
       - 1.
       - 0.45

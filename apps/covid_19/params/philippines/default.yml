@@ -20,9 +20,9 @@ mixing:
   school:
     append: false
     times:
-      - 42
-      - 76
-      - 171
+      - 2020-02-11
+      - 2020-03-16
+      - 2020-06-19
     values:
       - 1
       - 0

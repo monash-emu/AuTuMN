@@ -3,8 +3,8 @@ mixing:
   work:
     append: true
     times:
-      - 158.
-      - 160.
+      - 2020-06-19
+      - 2020-06-21
     values:
       - 0.72
       - 1.

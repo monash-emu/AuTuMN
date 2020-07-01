@@ -28,9 +28,9 @@ mixing:
   school:
     append: false
     times:
-      - 78
-      - 80
-      - 171
+      - 2020-03-18
+      - 2020-03-20
+      - 2020-06-20
     values:
       - 1.0
       - 0.1

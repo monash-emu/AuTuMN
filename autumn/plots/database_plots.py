@@ -9,7 +9,7 @@ from autumn.db.models import load_model_scenarios
 
 from . import plots
 from .scenario_plots import plot_scenarios
-from .streamlit.utils import try_find_app_code_path
+# from .streamlit.utils import try_find_app_code_path
 from .streamlit.run_mcmc_plots import load_mcmc_tables
 from .plotter import FilePlotter
 

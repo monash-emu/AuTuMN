@@ -4,7 +4,7 @@ Entry point for PyCharm users to run an application
 from autumn.constants import Region
 from autumn.plots.database_plots import plot_from_database
 from apps import covid_19, marshall_islands, mongolia, sir_example
-
+from apps.covid_19.calibration import get_calibration_func
 
 ## Run a COVID model manually.
 REGION = Region.MALAYSIA

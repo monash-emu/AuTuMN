@@ -1,11 +1,17 @@
 # back to usual social mixing but using elderly cocooning
 mixing_age_adjust:
   age_13:
-    times: [131., 133.]
+    times:
+      - 2020-05-10
+      - 2020-05-12
     values: [1., .2]
   age_14:
-    times: [131., 133.]
+    times:
+      - 2020-05-10
+      - 2020-05-12
     values: [1., .2]
   age_15:
-    times: [131., 133.]
+    times:
+      - 2020-05-10
+      - 2020-05-12
     values: [1., .2]

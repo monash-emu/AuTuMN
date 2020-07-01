@@ -130,6 +130,7 @@ data: # Daily numbers of reported imported cases. (two different approaches here
       139,
       140,
       141,
+      160,
     ]
   n_imported_cases:
     [
@@ -212,4 +213,5 @@ data: # Daily numbers of reported imported cases. (two different approaches here
       21.0,
       2.0,
       10.0,
+      1.0
     ]

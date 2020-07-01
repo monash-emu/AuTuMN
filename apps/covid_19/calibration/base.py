@@ -47,7 +47,8 @@ def run_calibration_chain(
     build_model = region_model.build_model
     params = region_model.params
     calib = Calibration(
-        f"covid_{region}",
+        "covid_19",
+        region,
         build_model,
         par_priors,
         target_outputs,

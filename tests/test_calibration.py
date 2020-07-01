@@ -29,6 +29,7 @@ def test_calibration_data_collation(temp_data_dir, num_iters, max_size_mb):
     for chain_index in range(5):
         calib = Calibration(
             "sharks",
+            "main",
             _build_mock_model,
             deepcopy(priors),
             deepcopy(target_outputs),
@@ -77,6 +78,7 @@ def test_calibrate_autumn_mcmc(temp_data_dir):
     ]
     calib = Calibration(
         "sharks",
+        "main",
         _build_mock_model,
         priors,
         target_outputs,
@@ -95,8 +97,7 @@ def test_calibrate_autumn_mcmc(temp_data_dir):
         n_chains=1,
         available_time=1e6,
     )
-    app_dir = os.path.join(temp_data_dir, "sharks")
-
+    app_dir = os.path.join(temp_data_dir, "outputs", "calibrate", "sharks", "main")
     run_dir = os.path.join(app_dir, os.listdir(app_dir)[0])
     db_fname = [fname for fname in os.listdir(run_dir) if fname.endswith(".db")][0]
     out_db_path = os.path.join(run_dir, db_fname)

@@ -25,16 +25,7 @@ with open(MLE_PARAMS_PATH, "r") as f:
 # Incorporate max likelihood params from MCMC runs
 params["default"] = merge_dicts(mle_params, params["default"])
 
-with open(POST_PROCESSING_PATH, "r") as f:
-    pp_config = yaml.safe_load(f)
-
-with open(PLOTS_PATH, "r") as f:
-    plots_config = yaml.safe_load(f)
 
 run_model = build_model_runner(
-    model_name="mongolia",
-    build_model=build_model,
-    params=params,
-    post_processing_config=pp_config,
-    plots_config=plots_config,
+    model_name="mongolia", param_set_name=None, build_model=build_model, params=params
 )

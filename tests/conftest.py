@@ -58,4 +58,5 @@ def temp_data_dir(monkeypatch, tmp_path):
     """
     path_str = tmp_path.as_posix()
     monkeypatch.setattr(constants, "DATA_PATH", path_str)
+    monkeypatch.setattr(constants, "OUTPUT_DATA_PATH", os.path.join(path_str, "outputs"))
     return path_str

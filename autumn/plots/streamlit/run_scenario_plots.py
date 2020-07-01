@@ -13,15 +13,24 @@ from . import selectors, utils
 
 
 def run_scenario_plots():
-    app_dirname, app_dirpath = selectors.app()
-    run_dirname, run_dirpath = selectors.model_run(app_dirpath)
-    if not run_dirname:
+    app_name, app_dirpath = selectors.app(run_type="run")
+    if not app_name:
+        st.write("No applications have been run yet")
+        return
+
+    param_set_name, param_set_dirpath = selectors.param_set(app_dirpath)
+    if not param_set_name:
+        st.write("No parameter set folder found")
+        return
+
+    run_datestr, run_dirpath = selectors.model_run(param_set_dirpath)
+    if not run_datestr:
         st.write("No model run folder found")
         return
 
     params = utils.load_params(run_dirpath)
-    plot_config = utils.load_plot_config(app_dirname)
-    post_processing_config = utils.load_post_processing_config(app_dirname)
+    plot_config = utils.load_plot_config(app_name, param_set_name)
+    post_processing_config = utils.load_post_processing_config(app_name)
 
     # Get database from model data dir.
     db_path = os.path.join(run_dirpath, "outputs.db")

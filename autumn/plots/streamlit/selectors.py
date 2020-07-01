@@ -85,24 +85,33 @@ def multi_compartment(model: StratifiedModel) -> List[str]:
     return chosen_compartment_names
 
 
-def app() -> Tuple[str, str]:
+def app(run_type) -> Tuple[str, str]:
     """
     Selector for users to choose which app they want to select
     from the model output data directory.
     Returns app dir and path to app dir
     """
-    APP_DIRNAMES = ["covid_", "marshall_islands", "mongolia", "dummy", "sir_example"]
-    paths = {}
-    dirnames = []
-    for dirname in os.listdir(constants.DATA_PATH):
-        dirpath = os.path.join(constants.DATA_PATH, dirname)
-        is_valid = os.path.isdir(dirpath) and any([dirname.startswith(n) for n in APP_DIRNAMES])
-        if is_valid:
-            dirnames.append(dirname)
-            paths[dirname] = dirpath
+    run_outputs_path = os.path.join(constants.OUTPUT_DATA_PATH, run_type)
+    if not os.path.exists(run_outputs_path):
+        return None, None
 
-    chosen_dirname = st.sidebar.selectbox("Select app", dirnames)
-    return chosen_dirname, paths[chosen_dirname]
+    apps = os.listdir(run_outputs_path)
+    chosen_dirname = st.sidebar.selectbox("Select app", apps)
+    return chosen_dirname, os.path.join(run_outputs_path, chosen_dirname)
+
+
+def param_set(app_output_path: str) -> Tuple[str, str]:
+    """
+    Selector for users to choose which parameter set they want to select
+    for a given application
+    Returns param set dir and path to param set dir
+    """
+    param_sets = os.listdir(app_output_path)
+    if not param_sets:
+        return None, None
+
+    chosen_param_set = st.sidebar.selectbox("Select app param set", param_sets)
+    return chosen_param_set, os.path.join(app_output_path, chosen_param_set)
 
 
 def scenario(scenarios: List[Scenario], include_all=True) -> List[Scenario]:
@@ -129,20 +138,21 @@ def scenario(scenarios: List[Scenario], include_all=True) -> List[Scenario]:
         return [scenarios[idx]]
 
 
-def calibration_run(app_dirpath: str) -> str:
+def calibration_run(param_set_dirpath: str) -> str:
     """
     Allows a user to select what model run they want, given an app 
     Returns the directory name selected.
     """
     # Read model runs from filesystem
-    model_run_dirs = [f for f in reversed(os.listdir(app_dirpath)) if f.startswith("calibration")]
+    model_run_dirs = os.listdir(param_set_dirpath)
+
     # Parse model run folder names
     model_runs = []
     for dirname in model_run_dirs:
-        datestr = "-".join(dirname.split("-")[-3:])
-        run_name = " ".join(dirname.split("-")[:-3]).title()
-        run_datetime = datetime.strptime(datestr, "%d-%m-%Y")
-        model_runs.append([run_datetime, run_name, dirname])
+        run_hash = dirname.split("-")[0]
+        datestr = "-".join(dirname.split("-")[1:])
+        run_datetime = datetime.strptime(datestr, "%Y-%m-%d")
+        model_runs.append([run_datetime, run_hash, dirname])
 
     # Sort model runs by date
     model_runs = reversed(sorted(model_runs, key=lambda i: i[0]))
@@ -150,9 +160,9 @@ def calibration_run(app_dirpath: str) -> str:
     # Create labels for the select box.
     labels = []
     model_run_dir_lookup = {}
-    for run_datetime, run_name, dirname in model_runs:
-        run_datestr = run_datetime.strftime("%d %b at %I:%M%p ")
-        label = f'{run_datestr} "{run_name}"'
+    for run_datetime, run_hash, dirname in model_runs:
+        run_datestr = run_datetime.strftime("%d %b at %I%p")
+        label = f"{run_datestr} with hash {run_hash}"
         model_run_dir_lookup[label] = dirname
         labels.append(label)
 
@@ -161,36 +171,32 @@ def calibration_run(app_dirpath: str) -> str:
         return None, None
     else:
         dirname = model_run_dir_lookup[label]
-        dirpath = os.path.join(app_dirpath, dirname)
+        dirpath = os.path.join(param_set_dirpath, dirname)
         return dirname, dirpath
 
 
-def model_run(app_dirpath: str) -> Tuple[str, str]:
+def model_run(param_set_dirpath: str) -> Tuple[str, str]:
     """
     Allows a user to select what model run they want, given an app 
     Returns the directory name selected.
     """
     # Read model runs from filesystem
-    model_run_dirs = [
-        f for f in reversed(os.listdir(app_dirpath)) if not f.startswith("calibration")
-    ]
+    model_run_dirs = os.listdir(param_set_dirpath)
+
     # Parse model run folder names
     model_runs = []
     for dirname in model_run_dirs:
-        datestr = "-".join(dirname.split("-")[-7:])
-        run_name = " ".join(dirname.split("-")[:-7]).title()
-        run_datetime = datetime.strptime(datestr, "%d-%m-%Y--%H-%M-%S")
-        model_runs.append([run_datetime, run_name, dirname])
+        run_datetime = datetime.strptime(dirname, "%Y-%m-%d--%H-%M-%S")
+        model_runs.append(run_datetime)
 
     # Sort model runs by date
-    model_runs = reversed(sorted(model_runs, key=lambda i: i[0]))
+    model_runs = reversed(sorted(model_runs))
 
     # Create labels for the select box.
     labels = []
     model_run_dir_lookup = {}
-    for run_datetime, run_name, dirname in model_runs:
-        run_datestr = run_datetime.strftime("%d %b at %I:%M%p ")
-        label = f'{run_datestr} "{run_name}"'
+    for run_datetime in model_runs:
+        label = run_datetime.strftime("%d %b at %I:%M%p %Ss ")
         model_run_dir_lookup[label] = dirname
         labels.append(label)
 
@@ -199,5 +205,5 @@ def model_run(app_dirpath: str) -> Tuple[str, str]:
         return None, None
     else:
         dirname = model_run_dir_lookup[label]
-        dirpath = os.path.join(app_dirpath, dirname)
+        dirpath = os.path.join(param_set_dirpath, dirname)
         return dirname, dirpath

@@ -16,16 +16,24 @@ from . import selectors, utils
 
 
 def run_mcmc_plots():
-    app_dirname, app_dirpath = selectors.app()
-    calib_dirname, calib_dirpath = selectors.calibration_run(app_dirpath)
-    if not calib_dirname:
-        st.write("No calibration folder found")
+    app_name, app_dirpath = selectors.app(run_type="calibrate")
+    if not app_name:
+        st.write("No calibrations have been run yet")
         return
 
-    plot_config = utils.load_plot_config(app_dirname)
+    param_set_name, param_set_dirpath = selectors.param_set(app_dirpath)
+    if not param_set_name:
+        st.write("No parameter set folder found")
+        return
+
+    calib_name, calib_dirpath = selectors.calibration_run(param_set_dirpath)
+    if not calib_name:
+        st.write("No model run folder found")
+        return
 
     # Load MCMC tables
     mcmc_tables = load_mcmc_tables(calib_dirpath)
+    plot_config = utils.load_plot_config(app_name, param_set_name)
 
     plotter = StreamlitPlotter({})
     plot_type = st.sidebar.selectbox("Select plot type", list(PLOT_FUNCS.keys()))

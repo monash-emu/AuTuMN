@@ -47,6 +47,8 @@ You can run all the scenarios for specific application using the `run` command. 
 python -m apps run covid malaysia
 ```
 
+Model run outputs are written to `data/outputs/run` and can be viewed in Streamlit (see below).
+
 ## Running a calibration
 
 You can run a model MCMC calibration as follows
@@ -62,6 +64,8 @@ python -m apps calibrate malaysia 30 0
 ```
 
 The RUN_ID argument can always be "0" for local use, it doesn't really matter.
+
+Model calibration outputs are written to `data/outputs/calibrate` and can be viewed in Streamlit (see below).
 
 ## Running Streamlit
 

@@ -8,15 +8,14 @@ from apps import covid_19, marshall_islands, mongolia, sir_example
 
 ## Run a COVID model manually.
 REGION = Region.MALAYSIA
-RUN_NAME = "manual-calibration"
-RUN_DESCRIPTION = "Trying to do a thing"
+RUN_SCENARIOS = True
 region_app = covid_19.get_region_app(REGION)
-region_app.run_model(RUN_NAME)
+region_app.run_model(RUN_SCENARIOS)
 
 ## Simple SIR model for demonstration
 # REGION = Region.AUSTRALIA
 # region_app = sir_example.get_region_app(REGION)
-# region_app.run_model(RUN_NAME)
+# region_app.run_model()
 
 ## Plot an existing model's run data to files.
 # MODEL_RUN_PATH = "data/covid_victoria/model-run-27-04-2020--17-06-42/"

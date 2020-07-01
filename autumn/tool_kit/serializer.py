@@ -36,7 +36,7 @@ def serialize_model(model: StratifiedModel) -> dict:
         "flows": {"transition": t_flows, "death": d_flows, "requested": model.requested_flows,},
         "adaptation_functions": list(model.adaptation_functions.keys()),
         "mixing": {
-            "mixing_matrix": model.mixing_matrix.tolist(),
+            "mixing_matrix": None if model.mixing_matrix is None else model.mixing_matrix.tolist(),
             "dynamic_mixing_matrix": model.dynamic_mixing_matrix,
         },
     }

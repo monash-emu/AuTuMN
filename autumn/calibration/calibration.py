@@ -21,7 +21,10 @@ from autumn.tool_kit.utils import (
 from autumn.tool_kit.scenarios import Scenario
 from autumn.plots.calibration_plots import plot_all_priors
 from autumn.tool_kit.params import update_params
-
+from autumn.tool_kit.utils import (
+    get_git_branch,
+    get_git_hash,
+)
 from .utils import (
     find_decent_starting_point,
     calculate_prior,
@@ -71,6 +74,7 @@ class Calibration:
     def __init__(
         self,
         model_name: str,
+        param_set_name: str,
         model_builder,
         priors,
         targeted_outputs,
@@ -118,14 +122,30 @@ class Calibration:
 
         self.specify_missing_prior_params()
 
-        # Setup output database directory
-        project_dir = os.path.join(constants.DATA_PATH, model_name)
+        # Setup output directory
+        project_dir = os.path.join(
+            constants.OUTPUT_DATA_PATH, "calibrate", model_name, param_set_name
+        )
         run_hash = get_data_hash(model_name, priors, targeted_outputs, multipliers)
-        timestamp = datetime.now().strftime("%d-%m-%Y")
-        out_db_dir = os.path.join(project_dir, f"calibration-{model_name}-{run_hash}-{timestamp}")
-        os.makedirs(out_db_dir, exist_ok=True)
+        timestamp = datetime.now().strftime("%Y-%m-%d")
+        output_dir = os.path.join(project_dir, f"{run_hash}-{timestamp}")
+        os.makedirs(output_dir, exist_ok=True)
+
+        # Save metadata output dir.
+        self.write_metadata(output_dir, f"params-{self.chain_index}.yml", model_parameters)
+        self.write_metadata(output_dir, f"priors-{self.chain_index}.yml", priors)
+        self.write_metadata(output_dir, f"targets-{self.chain_index}.yml", targeted_outputs)
+        metadata = {
+            "model_name": model_name,
+            "param_set_name": param_set_name,
+            "start_time": datetime.now().strftime("%Y-%m-%d--%H-%M-%S"),
+            "git_branch": get_git_branch(),
+            "git_commit": get_git_hash(),
+        }
+        self.write_metadata(output_dir, f"meta-{self.chain_index}.yml", metadata)
+
         db_name = f"outputs_calibration_chain_{self.chain_index}.db"
-        self.output_db_path = os.path.join(out_db_dir, db_name)
+        self.output_db_path = os.path.join(output_dir, db_name)
 
         self.data_as_array = None  # will contain all targeted data points in a single array
 
@@ -143,7 +163,12 @@ class Calibration:
         self.evaluated_params_ll = []  # list of tuples:  [(theta_0, ll_0), (theta_1, ll_1), ...]
 
         if self.chain_index == 0:
-            plot_all_priors(self.priors, out_db_dir)
+            plot_all_priors(self.priors, output_dir)
+
+    def write_metadata(self, output_dir, filename, data):
+        file_path = os.path.join(output_dir, filename)
+        with open(file_path, "w") as f:
+            yaml.dump(data, f)
 
     def specify_missing_prior_params(self):
         """

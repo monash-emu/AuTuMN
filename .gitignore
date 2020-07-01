@@ -18,9 +18,7 @@ env/
 *.json
 *.pkl
 *.pickle
-output*.db
-inputs.*.db
-data/
+*.db
 logs/
 
 # Python packaging stuff
@@ -34,6 +32,15 @@ dist/
 # Scripts, secrets
 osx_boot.sh
 *.secret.*
+
+# Old model runs
+data/marshall_islands
+data/mongolia
+data/covid_*
+data/sir_example_*
+
+# Models runs and calibrations
+data/outputs
 
 # Random stuff
 projects

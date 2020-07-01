@@ -16,15 +16,9 @@ from autumn.tool_kit.utils import (
 )
 from autumn.db.models import store_run_models
 
-from summer.model.utils.flowchart import create_flowchart
-
 
 def build_model_runner(
-    model_name: str,
-    build_model,
-    params: dict,
-    post_processing_config={},  # TODO: remove
-    plots_config={},  # TODO: remove
+    model_name: str, param_set_name: str, build_model, params: dict,
 ):
     """
     Factory function that returns a 'run_model' function.
@@ -33,16 +27,19 @@ def build_model_runner(
     assert build_model, "Value 'build_model' must be set."
     assert params, "Value 'params' must be set."
 
-    def run_model(run_name="model-run", run_description=""):
+    if not param_set_name:
+        param_set_name = "main-model"
+
+    def run_model(run_scenarios=True):
         """
         Run the model, save the outputs.
         """
-        print(f"Running {model_name}...")
+        print(f"Running {model_name} {param_set_name}...")
 
         # Ensure project folder exists.
-        project_dir = os.path.join(constants.DATA_PATH, model_name)
-        timestamp = datetime.now().strftime("%d-%m-%Y--%H-%M-%S")
-        output_dir = os.path.join(project_dir, f"{run_name}-{timestamp}")
+        project_dir = os.path.join(constants.OUTPUT_DATA_PATH, "run", model_name, param_set_name)
+        timestamp = datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
+        output_dir = os.path.join(project_dir, timestamp)
         os.makedirs(output_dir, exist_ok=True)
 
         # Determine where to save model outputs
@@ -56,8 +53,8 @@ def build_model_runner(
         # Save model run metadata to output dir.
         meta_path = os.path.join(output_dir, "meta.yml")
         metadata = {
-            "name": run_name,
-            "description": run_description,
+            "model_name": model_name,
+            "param_set_name": param_set_name,
             "start_time": timestamp,
             "git_branch": get_git_branch(),
             "git_commit": get_git_hash(),
@@ -77,6 +74,10 @@ def build_model_runner(
             baseline_scenario.run()
             baseline_model = baseline_scenario.model
             save_serialized_model(baseline_model, output_dir, "baseline")
+
+            if not run_scenarios:
+                # Do not run non-baseline models
+                scenarios = scenarios[:1]
 
             # Run all the other scenarios
             for scenario in scenarios[1:]:

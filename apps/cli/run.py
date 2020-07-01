@@ -18,27 +18,31 @@ def run():
 
 @run.command("covid")
 @click.argument("region", type=click.Choice(covid_19.REGION_APPS))
-def run_covid(region):
+@click.option("--no-scenarios", is_flag=True)
+def run_covid(region, no_scenarios):
     """Run the COVID model for some region"""
     region_app = covid_19.get_region_app(region)
-    region_app.run_model()
+    region_app.run_model(run_scenarios=not no_scenarios)
 
 
 @run.command("sir_example")
 @click.argument("region", type=click.Choice(sir_example.REGION_APPS))
-def run_sir_example(region):
+@click.option("--no-scenarios", is_flag=True)
+def run_sir_example(region, no_scenarios):
     """Run the SIR model for some region"""
     region_app = sir_example.get_region_app(region)
-    region_app.run_model()
+    region_app.run_model(run_scenarios=not no_scenarios)
 
 
 @run.command("rmi")
-def run_rmi():
+@click.option("--no-scenarios", is_flag=True)
+def run_rmi(no_scenarios):
     """Run the Marshall Islands TB model"""
-    marshall_islands.run_model()
+    marshall_islands.run_model(run_scenarios=not no_scenarios)
 
 
 @run.command("mongolia")
-def run_mongolia():
+@click.option("--no-scenarios", is_flag=True)
+def run_mongolia(no_scenarios):
     """Run the Mongolia TB model"""
-    mongolia.run_model()
+    mongolia.run_model(run_scenarios=not no_scenarios)

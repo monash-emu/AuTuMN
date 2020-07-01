@@ -13,7 +13,7 @@ class RegionAppBase(ABC):
         pass
 
     @abstractmethod
-    def run_model(self, run_name="model-run", run_desc=""):
+    def run_model(self, *args, **kwargs):
         pass
 
     @property

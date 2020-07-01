@@ -109,7 +109,7 @@ def build_dynamic(
 
             # Adjust for microdistancing
             if microdistancing_function and loc_key in MICRODISTANCING_LOCATIONS:
-                loc_adjustment_matrix *= microdistancing_function(time)
+                loc_adjustment *= microdistancing_function(time)
 
             # Apply adjustment by subtracting the contacts that need to come off
             loc_adjustment_matrix = (loc_adjustment - 1) * matrix_components[loc_key]

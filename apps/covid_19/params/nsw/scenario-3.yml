@@ -3,16 +3,14 @@ mixing:
   other_locations:
     append: true
     times:
-      - 2020-06-20
+      - 2020-06-28
     values:
       - 1.0
   work:
     append: true
     times:
-      - 2020-06-20
-      - 2020-06-21
+      - 2020-06-28
     values:
-      - 0.9
       - 1.0
 
 mixing_age_adjust:

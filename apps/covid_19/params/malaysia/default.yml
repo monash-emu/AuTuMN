@@ -40,11 +40,13 @@ mixing:
       - 2020-03-05
       - 2020-06-23
       - 2020-06-24 # Secondary examinations
+      - 2020-06-27
     values:
       - 1.
       - 0.
       - 0.
       - 0.1 # Secondary examinations
+      - 0.1
 
 data: # Daily numbers of reported imported cases. (two different approaches here)
   times_imported_cases:

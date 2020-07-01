@@ -1,16 +1,15 @@
-# Complete release of all restrictions 20th June
-# Note: should always be 1 week in the future
+# Complete release of all restrictions 28th June
 mixing:
   other_locations:
     append: true
     times:
-      - 2020-06-20
+      - 2020-06-28
     values:
       - 1.
   work:
     append: true
     times:
-      - 2020-06-20
+      - 2020-06-28
     values:
       - 1.
   school:
@@ -19,8 +18,8 @@ mixing:
       - 2020-02-11
       - 2020-03-11
       - 2020-04-02
-      - 2020-06-19
-      - 2020-06-20
+      - 2020-06-27
+      - 2020-06-28
     values:
       - 1.
       - 0.45

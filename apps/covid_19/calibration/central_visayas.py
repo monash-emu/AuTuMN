@@ -15,21 +15,19 @@ MULTIPLIERS = {
 
 
 PAR_PRIORS = [
-    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.010, 0.05],},
-    {"param_name": "start_time", "distribution": "uniform", "distri_params": [0.0, 40.0],},
+    {
+        "param_name": "contact_rate", 
+        "distribution": "uniform", 
+        "distri_params": [0.010, 0.05],
+    },
+    {
+        "param_name": "start_time", 
+        "distribution": "uniform", 
+        "distri_params": [0.0, 40.0],
+    },
     # Add extra params for negative binomial likelihood
     {
-        "param_name": "infection_deathsXall_dispersion_param",
-        "distribution": "uniform",
-        "distri_params": [0.1, 5.0],
-    },
-    {
         "param_name": "notifications_dispersion_param",
-        "distribution": "uniform",
-        "distri_params": [0.1, 5.0],
-    },
-    {
-        "param_name": "prevXlateXclinical_icuXamong_dispersion_param",
         "distribution": "uniform",
         "distri_params": [0.1, 5.0],
     },
@@ -45,22 +43,7 @@ PAR_PRIORS = [
         "distri_mean": 7.0,
         "distri_ci": [4.5, 9.5],
     },
-    # parameters to derive age-specific IFRs
-    {
-        "param_name": "ifr_double_exp_model_params.k",
-        "distribution": "uniform",
-        "distri_params": [8., 16.],
-    },
-    {
-        "param_name": "ifr_double_exp_model_params.last_representative_age",
-        "distribution": "uniform",
-        "distri_params": [75., 85.],
-    },
 ]
-
-# death data:
-#death_times = []
-#death_values = []
 
 # notification data:
 notification_times = [
@@ -261,27 +244,11 @@ notification_values = [
 134,
 ]
 
-# ICU data:
-#icu_times = []
-#icu_values = []
-
 TARGET_OUTPUTS = [
-#    {
- #       "output_key": "infection_deathsXall",
-  #      "years": death_times,
-   #     "values": death_values,
-    #    "loglikelihood_distri": "negative_binomial",
-    #},
     {
         "output_key": "notifications",
         "years": notification_times,
         "values": notification_values,
         "loglikelihood_distri": "negative_binomial",
     },
-    #{
-     #   "output_key": "prevXlateXclinical_icuXamong",
-      #  "years": icu_times,
-       # "values": icu_values,
-        #"loglikelihood_distri": "negative_binomial",
-    #},
 ]

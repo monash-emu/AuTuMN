@@ -8,6 +8,7 @@ from autumn.constants import Region
 import autumn.post_processing as post_proc
 from autumn.tool_kit.scenarios import Scenario
 from autumn.tool_kit.params import update_params
+from datetime import date
 
 from apps.covid_19 import RegionApp
 
@@ -50,22 +51,16 @@ def objective_function(decision_variables, mode="by_age", country=Region.UNITED_
     #   baseline: using the decision variables
     #   scenario 1: after intervention to test immunity
     if mode == "by_age":
-        mixing_update = {}
+        age_mixing_update = {}
         for age_group in range(16):
-            mixing_update["age_" + str(age_group) + "_times"] = [181, 183]
-            mixing_update["age_" + str(age_group) + "_values"] = [
-                1.0,
-                decision_variables[age_group],
-            ]
-        params["default"]["mixing"].update(mixing_update)
+            age_mixing_update["age_" + str(age_group)] = {
+                'times': [date(2020, 6, 29), date(2020, 7, 1)],
+                'values': [1.0, decision_variables[age_group]]
+            }
+        params["default"]["mixing_age_adjust"].update(age_mixing_update)
 
     # set location-specific mixing back to pre-COVID rates on 1st of July or use the opti decision variable
     for loc in ["other_locations", "school", "work"]:
-        if not loc + "_values" in params["default"]["mixing"]:
-            params["default"]["mixing"][loc + "_times"] = [0.]
-            params["default"]["mixing"][loc + "_values"] = [1.]
-        latest_value = params["default"]["mixing"][loc + "_values"][-1]
-        params["default"]["mixing"][loc + "_times"] += [181, 183]
         if mode == "by_age":  # just return mixing to pre-COVID
             new_mixing_adjustment = 1.0
         elif mode == "by_location":  # use optimisation decision variables
@@ -73,15 +68,22 @@ def objective_function(decision_variables, mode="by_age", country=Region.UNITED_
         else:
             raise ValueError("The requested mode is not supported")
 
-        params["default"]["mixing"][loc + "_values"] += [
-            latest_value,
-            new_mixing_adjustment,
-        ]
+        if loc == 'school':
+            last_value = params["default"]["mixing"][loc]['values'][-1]
+            params["default"]["mixing"][loc]['times'] += [date(2020, 6, 29), date(2020, 7, 1)]
+            params["default"]["mixing"][loc]['values'] += [last_value, 1.]
+        else:
+            XXX = .6  # FIXME last value of mixing adjustment
+            params["default"]["mixing"][loc] = {
+                'times': [date(2020, 6, 29), date(2020, 7, 1)],
+                'values': [XXX, new_mixing_adjustment],
+                'append': True
+            }
 
     # Add a scenario without any mixing multipliers
     end_time = params["default"]["end_time"]
     params["scenario_start_time"] = end_time - 1
-    params["scenarios"][1] = {"end_time": end_time + 50, "mixing": {}}
+    params["scenarios"][1] = {"end_time": end_time + 50, "mixing": {}, "mixing_age_adjust": {}}
     scenario_0 = Scenario(build_model, idx=0, params=params)
     scenario_1 = Scenario(build_model, idx=1, params=params)
     scenario_0.run()
@@ -166,7 +168,7 @@ if __name__ == "__main__":
     # looping through all countries and optimisation modes for testing purpose
     # optimisation will have to be performed separately for the different countries and modes.
     decision_vars = {
-        "by_age": [1.0] * 16,
+        "by_age": [1.] * 16,
         "by_location": {"other_locations": 1.0, "school": 1.0, "work": 1.0},
     }
 

@@ -46,7 +46,7 @@ PAR_PRIORS = [
     {
         "param_name": "ifr_double_exp_model_params.k",
         "distribution": "uniform",
-        "distri_params": [8., 16.],
+        "distri_params": [8., 14.],
     },
     {
         "param_name": "ifr_double_exp_model_params.last_representative_age",

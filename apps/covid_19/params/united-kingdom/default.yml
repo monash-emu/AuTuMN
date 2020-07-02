@@ -1,7 +1,8 @@
 iso3: GBR
 
 #start_time: -20.
-end_time: 180.
+end_time: 360.
+scenario_start_time: 182
 
 infectious_seed: 200
 use_verity_mortality_estimates: False

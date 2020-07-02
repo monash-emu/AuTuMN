@@ -200,7 +200,7 @@ if __name__ == "__main__":
     # looping through all countries and optimisation modes for testing purpose
     # optimisation will have to be performed separately for the different countries and modes.
     decision_vars = {
-        "by_age": [.0] * 16, # [0.30210397, 0.455783819,	0.250627758,	0.903096598,	0.075936739,	0.24088156,	0.002722042,	0.129826402,	0.131136458,	0.119729594,	0.000211481,	0.003760947,	0.103899082,	0.137976494,	0.057792135,	0.072422987]
+        "by_age": [1.] * 16, # [0.30210397, 0.455783819,	0.250627758,	0.903096598,	0.075936739,	0.24088156,	0.002722042,	0.129826402,	0.131136458,	0.119729594,	0.000211481,	0.003760947,	0.103899082,	0.137976494,	0.057792135,	0.072422987]
         "by_location": {"other_locations": 1.0, "school": 1.0, "work": 1.0},
     }
 

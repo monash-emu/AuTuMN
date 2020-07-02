@@ -29,7 +29,7 @@ PAR_PRIORS = [
     {
         "param_name": "notifications_dispersion_param",
         "distribution": "uniform",
-        "distri_params": [0.4, 5.0],
+        "distri_params": [0.1, 5.0],
     },
     {
         "param_name": "compartment_periods_calculated.incubation.total_period",

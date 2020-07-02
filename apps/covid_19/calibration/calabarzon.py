@@ -16,7 +16,7 @@ PAR_PRIORS = [
     {
         "param_name": "contact_rate", 
         "distribution": "uniform", 
-        "distri_params": [0.010, 0.05],
+        "distri_params": [0.04, 0.06],
     },
     {
         "param_name": "start_time", 
@@ -27,7 +27,7 @@ PAR_PRIORS = [
     {
         "param_name": "notifications_dispersion_param",
         "distribution": "uniform",
-        "distri_params": [0.1, 1.0],
+        "distri_params": [0.1, 5.0],
     },
     {
         "param_name": "compartment_periods_calculated.incubation.total_period",

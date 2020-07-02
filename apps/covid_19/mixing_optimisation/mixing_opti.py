@@ -20,35 +20,12 @@ with open(OPTI_PARAMS_PATH, "r") as yaml_file:
     opti_params = yaml.safe_load(yaml_file)
 
 available_countries = [Region.UNITED_KINGDOM]
+phase_2_end = [366, 274, 366 + 181]  # depending on the config (0: 6 months, 1: 3 months, 2: 1 year)
 
 
-def objective_function(decision_variables, root_model, mode="by_age", country=Region.UNITED_KINGDOM, config=0,
-                       calibrated_params={}):
-    """
-    :param decision_variables: dictionary containing
-        - mixing multipliers by age as a list if mode == "by_age"    OR
-        - location multipliers as a dictionary if mode == "by_location"
-    :param mode: either "by_age" or "by_location"
-    :param country: the country name
-    :param config: the id of the configuration being considered
-    :param calibrated_params: a dictionary containing a set of calibrated parameters
-    """
-    running_model = RegionApp(country)
-    build_model = running_model.build_model
-    params = copy.deepcopy(running_model.params)
-
-    # update params with optimisation default config
-    params["default"].update(opti_params["default"])
-
-    # update params with calibrated parameters
-    params["default"] = update_params(params['default'], calibrated_params)
-
-    # update params with specific config (Sensitivity analyses)
-    params["default"].update(opti_params["configurations"][config])
-
+def build_params_for_phases_2_and_3(decision_variables, config):
     # create parameters for scenario 1 which includes Phases 2 and 3
     ref_date = date(2019, 12, 31)
-    phase_2_end = [366, 274, 366 + 181]  # depending on the config (0: 6 months, 1: 3 months, 2: 1 year)
     phase_2_end_date = ref_date + timedelta(days=phase_2_end[config])
     phase_3_first_day = phase_2_end_date + timedelta(days=1)
     sc_1_params = {}
@@ -83,13 +60,44 @@ def objective_function(decision_variables, root_model, mode="by_age", country=Re
         'n_imported_cases': [0, 80, 80, 0]
     }
     sc_1_params['end_time'] = phase_2_end[config] + 365
-    params["scenarios"][1] = sc_1_params
 
+    return sc_1_params
+
+
+def objective_function(decision_variables, root_model, mode="by_age", country=Region.UNITED_KINGDOM, config=0,
+                       calibrated_params={}):
+    """
+    :param decision_variables: dictionary containing
+        - mixing multipliers by age as a list if mode == "by_age"    OR
+        - location multipliers as a dictionary if mode == "by_location"
+    :param mode: either "by_age" or "by_location"
+    :param country: the country name
+    :param config: the id of the configuration being considered
+    :param calibrated_params: a dictionary containing a set of calibrated parameters
+    """
+    running_model = RegionApp(country)
+    build_model = running_model.build_model
+    params = copy.deepcopy(running_model.params)
+
+    # update params with optimisation default config
+    params["default"].update(opti_params["default"])
+
+    # update params with calibrated parameters
+    params["default"] = update_params(params['default'], calibrated_params)
+
+    # update params with specific config (Sensitivity analyses)
+    params["default"].update(opti_params["configurations"][config])
+
+    # Define scenario 1
+    sc_1_params = build_params_for_phases_2_and_3(decision_variables, config)
+    params["scenarios"][1] = sc_1_params
     scenario_1 = Scenario(build_model, idx=1, params=params)
 
+    # Run scenario 1
     scenario_1.run(base_model=root_model)
     models = [root_model, scenario_1.model]
 
+    #____________________________       Perform diagnostics         ______________________
     # How many deaths during Phase 2
     first_july_index = models[1].derived_outputs["times"].index(183)
     end_phase2_index = models[1].derived_outputs["times"].index(phase_2_end[config])
@@ -196,11 +204,16 @@ def read_list_of_param_sets_from_csv(country, config):
     return list_of_param_sets
 
 
+def run_all_phases(decision_variables, country=Region.UNITED_KINGDOM, calibrated_params={}, mode="by_age"):
+    pass
+
+
+
 if __name__ == "__main__":
     # looping through all countries and optimisation modes for testing purpose
     # optimisation will have to be performed separately for the different countries and modes.
     decision_vars = {
-        "by_age": [1.] * 16, # [0.30210397, 0.455783819,	0.250627758,	0.903096598,	0.075936739,	0.24088156,	0.002722042,	0.129826402,	0.131136458,	0.119729594,	0.000211481,	0.003760947,	0.103899082,	0.137976494,	0.057792135,	0.072422987]
+        "by_age": [.5] * 16, # [0.30210397, 0.455783819,	0.250627758,	0.903096598,	0.075936739,	0.24088156,	0.002722042,	0.129826402,	0.131136458,	0.119729594,	0.000211481,	0.003760947,	0.103899082,	0.137976494,	0.057792135,	0.072422987]
         "by_location": {"other_locations": 1.0, "school": 1.0, "work": 1.0},
     }
 

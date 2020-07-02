@@ -4,8 +4,6 @@ default:
   end_time: 183.
   implement_importation: True
 
-scenario_start_time: 182
-
 configurations:
   0: {}
   1: {}

@@ -27,7 +27,7 @@ sudo chown -R ubuntu:ubuntu ~/code
 cd ~/code
 # git fetch
 # git checkout $GIT_COMMIT
-git pull
+git pull --quiet
 
 log "Ensuring latest requirements are installed."
 . ./env/bin/activate

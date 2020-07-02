@@ -28,7 +28,7 @@ fi
 log "Updating local AuTuMN repository to run the latest code."
 sudo chown -R ubuntu:ubuntu ~/code
 cd ~/code
-git pull
+git pull --quiet
 
 log "Ensuring latest requirements are installed."
 . ./env/bin/activate

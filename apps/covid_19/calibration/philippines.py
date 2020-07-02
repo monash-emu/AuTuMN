@@ -12,7 +12,7 @@ PAR_PRIORS = [
     {
         "param_name": "contact_rate", 
         "distribution": "uniform", 
-        "distri_params": [0.010, 0.05],
+        "distri_params": [0.010, 0.045],
     },
     {
         "param_name": "start_time", 

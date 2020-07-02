@@ -1,11 +1,12 @@
 ---
 # These parameters will be added to or overwrites those found in the original country .yml files
 default:
-  end_time: 366.
+  end_time: 183.
+  implement_importation: True
+
+scenario_start_time: 182
 
 configurations:
   0: {}
-  1: # only 3 months to achieve herd immunity
-    end_time: 276.
-  2:  # 1 year to achieve herd immunity
-    end_time: 546
+  1: {}
+  2: {}

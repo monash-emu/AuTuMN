@@ -24,6 +24,32 @@ available_countries = [Region.UNITED_KINGDOM]
 phase_2_end = [366, 274, 366 + 181]  # depending on the config (0: 6 months, 1: 3 months, 2: 1 year)
 
 
+def run_root_model(country=Region.UNITED_KINGDOM, calibrated_params={}):
+    """
+    This function runs a model to simulate the past epidemic (up until 1/7/2020) using a given calibrated parameter set.
+    Returns an integrated model for the past epidemic.
+    """
+    running_model = RegionApp(country)
+    build_model = running_model.build_model
+
+    params = copy.deepcopy(running_model.params)
+    # update params with optimisation default config
+    params["default"].update(opti_params["default"])
+    # update params with calibrated parameters
+    params["default"] = update_params(params['default'], calibrated_params)
+
+    # prepare importation rates for herd immunity testing
+    params["default"]["data"] = {
+        'times_imported_cases': [0],
+        'n_imported_cases': [0]
+    }
+
+    scenario_0 = Scenario(build_model, idx=0, params=params)
+    scenario_0.run()
+
+    return scenario_0.model
+
+
 def build_params_for_phases_2_and_3(decision_variables, config=0, mode='by_age'):
     # create parameters for scenario 1 which includes Phases 2 and 3
     ref_date = date(2019, 12, 31)
@@ -58,11 +84,24 @@ def build_params_for_phases_2_and_3(decision_variables, config=0, mode='by_age')
     sc_1_params['data'] = {
         'times_imported_cases': [phase_2_end[config], phase_2_end[config] + 1, phase_2_end[config] + 2,
                                  phase_2_end[config] + 3],
-        'n_imported_cases': [0, 80, 80, 0]
+        'n_imported_cases': [0, 50, 50, 0]
     }
-    sc_1_params['end_time'] = phase_2_end[config] + 365
+    sc_1_params['end_time'] = phase_2_end[config] + 100
 
     return sc_1_params
+
+
+def has_immunity_been_reached(_model, phase_2_end_index):
+    """
+    Determine whether herd immunity has been reached after running a model
+    :param _model: a model run with Phase 2 and
+    :return: a boolean
+    """
+    # validate herd immunity if exposed prevalence always decreases after 2 weeks in phase 3
+    early_compartments_indices = [i for i, c in enumerate(_model.compartment_names) if 'exposedX' in c]
+    time_indices = range(phase_2_end_index, len(_model.derived_outputs["times"]))
+    early_infections = [sum([_model.outputs[t, i] for i in early_compartments_indices]) for t in time_indices]
+    return max(early_infections) == early_infections[0]
 
 
 def objective_function(decision_variables, root_model, mode="by_age", country=Region.UNITED_KINGDOM, config=0,
@@ -103,6 +142,8 @@ def objective_function(decision_variables, root_model, mode="by_age", country=Re
     first_july_index = models[1].derived_outputs["times"].index(183)
     end_phase2_index = models[1].derived_outputs["times"].index(phase_2_end[config])
     total_nb_deaths = sum(models[1].derived_outputs["infection_deathsXall"][first_july_index: end_phase2_index + 1])
+    print("Max deaths: " + str(max(models[1].derived_outputs["infection_deathsXall"])))
+
 
     # What proportion immune at end of Phase 2
     recovered_indices = [
@@ -118,63 +159,6 @@ def objective_function(decision_variables, root_model, mode="by_age", country=Re
     herd_immunity = has_immunity_been_reached(models[1], end_phase2_index)   # FIXME change this
 
     return herd_immunity, total_nb_deaths, prop_immune, models
-
-
-def run_root_model(country=Region.UNITED_KINGDOM, calibrated_params={}):
-    """
-    This function runs a model to simulate the past epidemic (up until 1/7/2020) using a given calibrated parameter set.
-    Returns an integrated model for the past epidemic.
-    """
-    running_model = RegionApp(country)
-    build_model = running_model.build_model
-
-    params = copy.deepcopy(running_model.params)
-    # update params with optimisation default config
-    params["default"].update(opti_params["default"])
-    # update params with calibrated parameters
-    params["default"] = update_params(params['default'], calibrated_params)
-
-    # prepare importation rates for herd immunity testing
-    params["default"]["data"] = {
-        'times_imported_cases': [0],
-        'n_imported_cases': [0]
-    }
-
-    scenario_0 = Scenario(build_model, idx=0, params=params)
-    scenario_0.run()
-
-    return scenario_0.model
-
-
-def visualise_simulation(_models):
-
-    pps = []
-    for scenario_index in range(len(_models)):
-
-        pps.append(
-            post_proc.PostProcessing(
-                _models[scenario_index],
-                requested_outputs=["prevXinfectiousXamong", "prevXrecoveredXamong"],
-                scenario_number=scenario_index,
-                requested_times={},
-            )
-        )
-
-    # FIXME: Matt broke this
-    # old_outputs_plotter = Outputs(_models, pps, {}, plot_start_time=0)
-    # old_outputs_plotter.plot_requested_outputs()
-
-
-def has_immunity_been_reached(_model, phase_2_end_index):
-    """
-    Determine whether herd immunity has been reached after running a model
-    :param _model: a model run with Phase 2 and
-    :return: a boolean
-    """
-    # validate herd immunity if disease incidence always decreases after 1 week in phase 3
-    future_incidence_list = _model.derived_outputs["incidence"][phase_2_end_index + 7:]
-    print(future_incidence_list)
-    return max(future_incidence_list) == future_incidence_list[0]
 
 
 def read_list_of_param_sets_from_csv(country, config):
@@ -233,12 +217,12 @@ def run_all_phases(decision_variables, country=Region.UNITED_KINGDOM, config=0, 
     run_models()
 
 
-
 if __name__ == "__main__":
     # looping through all countries and optimisation modes for testing purpose
     # optimisation will have to be performed separately for the different countries and modes.
+
     decision_vars = {
-        "by_age": [.5] * 16, # [0.30210397, 0.455783819,	0.250627758,	0.903096598,	0.075936739,	0.24088156,	0.002722042,	0.129826402,	0.131136458,	0.119729594,	0.000211481,	0.003760947,	0.103899082,	0.137976494,	0.057792135,	0.072422987]
+        "by_age": [1] * 16,
         "by_location": {"other_locations": 1.0, "school": 1.0, "work": 1.0},
     }
 
@@ -249,6 +233,7 @@ if __name__ == "__main__":
                 for param_set in param_set_list:
                     # Run this line of code every time we use a new param_set and before performing optimisation
                     # This is an initialisation step
+                    param_set = {}
                     root_model = run_root_model(country, param_set)
 
                     # The following line is the one to be run again and again during optimisation
@@ -257,4 +242,5 @@ if __name__ == "__main__":
                     print("Immunity: " + str(h) + "\n" + "Deaths: " + str(round(d)) + "\n" + "Prop immune: " +
                           str(round(p_immune, 3)))
 
-    # run_all_phases([.5] * 16)
+                    # run_all_phases(decision_vars[mode], calibrated_params=param_set)
+                    # break

@@ -6,6 +6,7 @@ import pandas as pd
 
 from autumn.constants import Region
 import autumn.post_processing as post_proc
+from autumn.model_runner import build_model_runner
 from autumn.tool_kit.scenarios import Scenario
 from autumn.tool_kit.params import update_params
 from datetime import date, timedelta
@@ -23,7 +24,7 @@ available_countries = [Region.UNITED_KINGDOM]
 phase_2_end = [366, 274, 366 + 181]  # depending on the config (0: 6 months, 1: 3 months, 2: 1 year)
 
 
-def build_params_for_phases_2_and_3(decision_variables, config):
+def build_params_for_phases_2_and_3(decision_variables, config=0, mode='by_age'):
     # create parameters for scenario 1 which includes Phases 2 and 3
     ref_date = date(2019, 12, 31)
     phase_2_end_date = ref_date + timedelta(days=phase_2_end[config])
@@ -89,7 +90,7 @@ def objective_function(decision_variables, root_model, mode="by_age", country=Re
     params["default"].update(opti_params["configurations"][config])
 
     # Define scenario 1
-    sc_1_params = build_params_for_phases_2_and_3(decision_variables, config)
+    sc_1_params = build_params_for_phases_2_and_3(decision_variables, config, mode)
     params["scenarios"][1] = sc_1_params
     scenario_1 = Scenario(build_model, idx=1, params=params)
 
@@ -204,8 +205,32 @@ def read_list_of_param_sets_from_csv(country, config):
     return list_of_param_sets
 
 
-def run_all_phases(decision_variables, country=Region.UNITED_KINGDOM, calibrated_params={}, mode="by_age"):
-    pass
+def run_all_phases(decision_variables, country=Region.UNITED_KINGDOM, config=0, calibrated_params={}, mode="by_age"):
+    running_model = RegionApp(country)
+    build_model = running_model.build_model
+
+    params = copy.deepcopy(running_model.params)
+    # update params with optimisation default config
+    params["default"].update(opti_params["default"])
+    # update params with calibrated parameters
+    params["default"] = update_params(params['default'], calibrated_params)
+
+    # prepare importation rates for herd immunity testing
+    params["default"]["data"] = {
+        'times_imported_cases': [0],
+        'n_imported_cases': [0]
+    }
+
+    params["scenarios"][1] = build_params_for_phases_2_and_3(decision_variables, config, mode)
+
+    run_models = build_model_runner(
+        model_name="covid_19",
+        param_set_name=country,
+        build_model=build_model,
+        params=params
+    )
+
+    run_models()
 
 
 
@@ -231,3 +256,5 @@ if __name__ == "__main__":
                                                            param_set)
                     print("Immunity: " + str(h) + "\n" + "Deaths: " + str(round(d)) + "\n" + "Prop immune: " +
                           str(round(p_immune, 3)))
+
+    # run_all_phases([.5] * 16)

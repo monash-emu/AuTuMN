@@ -30,4 +30,5 @@ TARGET_OUTPUTS = [
 
 ]
 
-run_calibration_chain(15, 0)
+if __name__ == "__main__":
+    run_calibration_chain(5, 0)

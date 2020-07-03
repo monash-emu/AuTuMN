@@ -16,7 +16,7 @@ PAR_PRIORS = [
     {
         "param_name": "contact_rate", 
         "distribution": "uniform", 
-        "distri_params": [0.04, 0.05],
+        "distri_params": [0.015, 0.040],
     },
     {
         "param_name": "start_time", 
@@ -24,11 +24,6 @@ PAR_PRIORS = [
         "distri_params": [0.0, 40.0],
     },
     # Add extra params for negative binomial likelihood
-    {
-        "param_name": "notifications_dispersion_param",
-        "distribution": "uniform",
-        "distri_params": [0.1, 0.7],
-    },
     {
         "param_name": "compartment_periods_calculated.incubation.total_period",
         "distribution": "gamma",

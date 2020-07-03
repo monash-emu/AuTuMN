@@ -78,6 +78,17 @@ def get_prior_distributions_for_opti():
             "distri_mean": 10.0,
             "distri_ci": [5., 20.],
         },
+        # Micro-distancing
+        {
+            "param_name": "microdistancing.c",
+            "distribution": "uniform",
+            "distri_params": [90, 152],
+        },
+        {
+            "param_name": "microdistancing.sigma",
+            "distribution": "uniform",
+            "distri_params": [.5, 1.],
+        },
         # Add negative binomial over-dispersion parameters
         {
             "param_name": "notifications_dispersion_param",

@@ -17,18 +17,18 @@ start_time: 1900.
 end_time: 2035.
 time_step: 1.
 
-beta: 4.5
+#beta: 4.5
 
 
-gamma: 0.2 
+#gamma: 0.2
 universal_death_rate: 0.0142
 universal_death_rateX: 0.0142
 
 tau: 1.
 
-kappa: 3.6525 # (1.e-2 * 365.25)
-nu: 0.002008875 # (5.5e-6 * 365.25)
-epsilon: 0.401775 #(1.1e-3 * 365.25)
+#kappa: 3.6525 # (1.e-2 * 365.25)
+#nu: 0.002008875 # (5.5e-6 * 365.25)
+#epsilon: 0.401775 #(1.1e-3 * 365.25)
 
 
 rr_reinfection_once_recovered: 1
@@ -36,7 +36,7 @@ rr_reinfection_once_recovered: 1
 rr_reinfection_once_infected: 1
 
    
-infect_death: .054
+#infect_death: .054
 
 detection_rate: 0.45 # solve using CDR value and equation # data obtained for Philippines
 DST: 1
@@ -75,8 +75,19 @@ dst:
 
   
 
-prop_of_failures_developing_inh_R: 0.07
-prop_of_failures_developing_rif_R: 0.001
+#prop_of_failures_developing_inh_R: 0.07
+#prop_of_failures_developing_rif_R: 0.001
+
+
+# MCMC params
+beta: 4.578792792494148
+epsilon: 0.40143772121598814
+kappa: 3.654157463835994
+nu: 0.0020086716589979244
+gamma: 0.16281241399571644
+infect_death: 0.058448028561325686
+prop_of_failures_developing_inh_R: 0.08168056240710807
+prop_of_failures_developing_rif_R: 0.0005033688355024059
 
 
 

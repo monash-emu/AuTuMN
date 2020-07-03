@@ -1,0 +1,16 @@
+---
+# Options for post-processing outputs of the COVID-19 model
+requested_outputs: [prevXinfectiousXamong, 
+                    prevXsusceptibleXamong,
+                    prevXinfectiousXstrain_mdrXamongXinfectious,
+                    prevXinfectiousXstrain_inh_RXamongXinfectious,
+                    prevXinfectiousXstrain_rif_RXamongXinfectious
+                    ]
+multipliers:
+  prevXinfectiousXamong: 100000.
+  prevXinfectiousXstrain_inh_RXamongXinfectious: 100
+  prevXinfectiousXstrain_rif_RXamongXinfectious: 100
+  prevXinfectiousXstrain_mdrXamongXinfectious: 100
+
+
+collated_combos: []

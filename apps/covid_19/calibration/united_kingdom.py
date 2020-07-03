@@ -22,6 +22,12 @@ def run_calibration_chain(max_seconds: int, run_id: int):
 
 
 if __name__ == "__main__":
+    for i in range(len(TARGET_OUTPUTS)):
+        print(TARGET_OUTPUTS[i]['output_key'])
+        print(TARGET_OUTPUTS[i]['years'])
+        print([[v] for v in TARGET_OUTPUTS[i]['values']])
+        print()
+
     run_calibration_chain(
         30, 1
     )  # first argument only relevant for autumn_mcmc mode (time limit in seconds)

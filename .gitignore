@@ -53,3 +53,7 @@ autumn_from_summer/databases/outputs*
 autumn_from_summer/mongolia/mcmc_chistmas_2019/
 dummy/
 apps/covid_19/targets/philippines/Philippines_data_2020May20.pdf
+apps/covid_19/mixing_optimisation/optimisation_outputs/united-kingdom_config_0_results.csv
+apps/covid_19/mixing_optimisation/detection.csv
+data/test_get_sample/opti_sample.csv
+data/xls/data_liberia.csv

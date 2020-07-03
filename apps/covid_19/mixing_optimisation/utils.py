@@ -45,8 +45,8 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "prop_detected_among_symptomatic",  # upper asymptote
             "distribution": "beta",
-            "distri_mean": 0.5,
-            "distri_ci": [0.2, 0.8],
+            "distri_mean": 0.3,
+            "distri_ci": [0.1, 0.5],
         },
         {
             "param_name": "icu_prop",
@@ -57,8 +57,9 @@ def get_prior_distributions_for_opti():
         # parameters to derive age-specific IFRs
         {
             "param_name": "ifr_double_exp_model_params.k",
-            "distribution": "uniform",
-            "distri_params": [6., 14.],
+            "distribution": "gamma",
+            "distri_mean": 10,
+            "distri_ci": [9.5, 10.5],
         },
         {
             "param_name": "ifr_double_exp_model_params.last_representative_age",
@@ -77,6 +78,17 @@ def get_prior_distributions_for_opti():
             "distribution": "gamma",
             "distri_mean": 10.0,
             "distri_ci": [5., 20.],
+        },
+        # Micro-distancing
+        {
+            "param_name": "microdistancing.c",
+            "distribution": "uniform",
+            "distri_params": [90, 152],
+        },
+        {
+            "param_name": "microdistancing.sigma",
+            "distribution": "uniform",
+            "distri_params": [.6, 1.],
         },
         # Add negative binomial over-dispersion parameters
         {
@@ -151,6 +163,7 @@ def combine_and_burn_samples(calibration_output_path, burn_in=500):
         mcmc_tables[i] = mcmc_table.iloc[burn_in:]
 
     return pd.concat(mcmc_tables)
+
 
 def extract_n_mcmc_samples(calibration_output_path, n_samples=100, burn_in=500):
     combined_burned_samples = combine_and_burn_samples(calibration_output_path, burn_in)

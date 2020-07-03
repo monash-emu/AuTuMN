@@ -4,8 +4,10 @@ from apps.covid_19.calibration import base
 
 def run_calibration_chain(max_seconds: int, run_id: int):
     base.run_calibration_chain(
-        max_seconds, run_id, Region.CALABARZON, PAR_PRIORS, TARGET_OUTPUTS, mode="autumn_mcmc", _multipliers=MULTIPLIERS
+        max_seconds, run_id, Region.CALABARZON, PAR_PRIORS, TARGET_OUTPUTS, mode="autumn_mcmc", \
+        _multipliers=MULTIPLIERS
     )
+
 
 MULTIPLIERS = {
     "prevXlateXclinical_icuXamong": 16057300.0
@@ -16,7 +18,7 @@ PAR_PRIORS = [
     {
         "param_name": "contact_rate", 
         "distribution": "uniform", 
-        "distri_params": [0.04, 0.05],
+        "distri_params": [0.01, 0.04],
     },
     {
         "param_name": "start_time", 
@@ -27,7 +29,7 @@ PAR_PRIORS = [
     {
         "param_name": "notifications_dispersion_param",
         "distribution": "uniform",
-        "distri_params": [0.1, 0.7],
+        "distri_params": [0.1, 5.0],
     },
     {
         "param_name": "compartment_periods_calculated.incubation.total_period",

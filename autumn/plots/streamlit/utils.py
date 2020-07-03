@@ -32,7 +32,7 @@ def load_plot_config(app_name: str, param_set_name: str) -> dict:
     """
     Loads the plot config from the app's code dir
     """
-    if app_name == "covid_19":
+    if app_name in ["covid_19", "dr_tb_malancha"]:
         config = load_covid_plot_config(param_set_name)
     else:
         pp_config_path = os.path.join(constants.APPS_PATH, app_name, "plots.yml")

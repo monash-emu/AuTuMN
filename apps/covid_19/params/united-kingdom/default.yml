@@ -25,6 +25,11 @@ ifr_double_exp_model_params:
   k: 7.237845734202136
   last_representative_age: 82.41761813816076
 
+microdistancing:
+  b: -0.05
+  c: 140.
+  sigma: .75
+
 mixing:
   school:
     append: false

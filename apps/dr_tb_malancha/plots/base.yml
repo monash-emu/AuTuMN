@@ -1,0 +1,32 @@
+---
+# Options for plotting outputs of the SIR model
+
+
+outputs_to_plot:
+  - name: prevXinfectiousXamong
+    target_times: []
+    target_values: []
+
+parameter_category_values:
+  time: 0
+  param_names: []
+
+input_function:
+  start_time: 0
+  func_names: []
+
+pop_distribution_strata: []
+
+translations:
+  prevXinfectiousXamongX: 'Prevalence of TB infectiouns (/100,000)'
+  prevXinfectiousXstrain_inh_RXamongXinfectious: 'Proportion of INH-R (%)'
+  prevXinfectiousXstrain_rif_RXamongXinfectious: 'Proportion of RIF-R (%)'
+  prevXinfectiousXstrain_mdrXamongXinfectious: 'Proportion of MDR-R (%)'
+
+prevalence_combos: []
+#  - 'susceptible'
+#  - 'exposed'
+#  - 'infectious'
+#  - 'recovered'
+
+

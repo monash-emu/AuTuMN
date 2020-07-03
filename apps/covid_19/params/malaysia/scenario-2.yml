@@ -3,7 +3,7 @@ mixing:
   work:
     append: true
     times:
-      - 2020-07-02
+      - 2020-08-01
     values:
       # FIXME: Should be +9% on last value
       - 0.8829

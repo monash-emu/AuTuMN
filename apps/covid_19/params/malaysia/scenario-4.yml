@@ -3,7 +3,7 @@ mixing:
   work:
     append: true
     times:
-      - 2020-07-02
+      - 2020-08-01
     values:
       - 1.
   school:

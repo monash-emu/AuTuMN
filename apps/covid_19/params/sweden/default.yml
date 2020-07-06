@@ -9,10 +9,29 @@ use_verity_mortality_estimates: False
 
 microdistancing:
   b: -0.05
-  c: 115.16320008339129  # MLE
-  sigma: 0.6128211731293335  # MLE
+  c: 90.13031187480136  # MLE
+  sigma: 0.6012951627206368  # MLE
 
 # MLE estimates
+contact_rate: 0.04280445964971652
+start_time: 39.17945108911576
+npi_effectiveness:
+  other_locations: 0.8337345663940132
+compartment_periods_calculated:
+  incubation:
+    total_period: 3.011296788045698
+  total_infectious:
+    total_period: 4.092154644153357
+tv_detection_b: 0.04890631630220586
+tv_detection_c: 174.48384379533343
+prop_detected_among_symptomatic: 0.4894989717856485
+icu_prop: 0.28685473093740643
+ifr_double_exp_model_params:
+  k: 12.68238186734881
+  last_representative_age: 76.82870277313008
+compartment_periods:
+  hospital_late: 11.337338710602008
+  icu_late: 9.112435715384608
 
 mixing:
   school:

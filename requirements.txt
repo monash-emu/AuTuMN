@@ -27,8 +27,9 @@ pyDOE>=0.3.8
 pytest
 black
 
-# Error reporting
+# Cloud computing jobs
 sentry-sdk
+luigi
 
 # Debugging
 ipdb

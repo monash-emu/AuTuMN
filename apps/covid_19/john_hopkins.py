@@ -42,7 +42,7 @@ def read_john_hopkins_data_from_csv(variable="confirmed", country="Australia"):
     if country in country_mapping:
         country_name = country_mapping[country]
     else:
-        country_name = country
+        country_name = country.title()
     download_jh_data()
     filename = f"covid_{variable}.csv"
     path = os.path.join(JH_DATA_DIR, filename)

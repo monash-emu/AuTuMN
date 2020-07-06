@@ -21,7 +21,7 @@ from autumn.db.database import Database
 
 from .plotter import Plotter, COLOR_THEME
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 # Schema used to validate output plotting configuration data.

@@ -11,7 +11,7 @@ from autumn.db.models import store_run_models
 
 META_COLS = ["idx", "Scenario", "loglikelihood", "accept"]
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 def run_full_models_for_mcmc(

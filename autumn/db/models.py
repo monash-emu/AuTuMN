@@ -19,7 +19,7 @@ from autumn.tool_kit import Scenario, Timer
 from autumn.post_processing.processor import post_process
 
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 def load_model_scenarios(
@@ -276,6 +276,6 @@ def load_calibration_from_db(database_directory, n_burned_per_chain=0):
             }
             models.append(model_info_dict)
 
-    print("MCMC runs loaded.")
-    print("Number of loaded iterations after burn-in: " + str(n_loaded_iter))
+    logger.info("MCMC runs loaded.")
+    logger.info("Number of loaded iterations after burn-in: " + str(n_loaded_iter))
     return models

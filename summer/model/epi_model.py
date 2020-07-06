@@ -1,4 +1,5 @@
 import copy
+import logging
 
 import matplotlib.pyplot
 import numpy as np
@@ -19,6 +20,8 @@ from .utils import (
     find_stem,
     increment_list_by_index,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class EpiModel:
@@ -115,7 +118,7 @@ class EpiModel:
         :param: comment: string for the comment to be displayed to the user
         """
         if self.verbose:
-            print(comment)
+            logger.info(comment)
 
     """
     model construction methods
@@ -335,7 +338,7 @@ class EpiModel:
 
         # Check that all compartment values are >= 0
         if np.any(self.outputs < 0.0):
-            print("Warning: compartment(s) with negative values.")
+            logger.info("Warning: compartment(s) with negative values.")
 
         # Collate outputs to be calculated post-integration that are not just compartment sizes.
         self.calculate_post_integration_connection_outputs()
@@ -358,7 +361,7 @@ class EpiModel:
             updated ode equations in same format but with all flows implemented
         """
         if self.ticker:
-            print("Integrating at time: %s" % time)
+            logger.info("Integrating at time: %s" % time)
         self.prepare_time_step(time)
         flow_rates = np.zeros(len(self.compartment_names))
         flow_rates = self.apply_transition_flows(flow_rates, compartment_values, time)

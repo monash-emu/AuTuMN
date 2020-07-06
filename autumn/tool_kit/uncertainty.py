@@ -14,7 +14,7 @@ from autumn.db.database import Database
 
 DEFAULT_QUANTILES = [0.025, 0.25, 0.5, 0.75, 0.975]
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 def add_uncertainty_weights(output_name: str, database_path: str):

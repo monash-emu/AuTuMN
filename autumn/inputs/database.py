@@ -1,4 +1,5 @@
 import os
+import logging
 
 from autumn.tool_kit import Timer
 from autumn.db import Database
@@ -7,6 +8,8 @@ from autumn import constants
 from .mobility.preprocess import preprocess_mobility
 from .social_mixing.preprocess import preprocess_social_mixing
 from .demography.preprocess import preprocess_demography
+
+logger = logging.getLogger(__name__)
 
 _input_db = None
 input_db_hash_path = os.path.join(constants.INPUT_DATA_PATH, "inputs-hash.txt")
@@ -36,7 +39,7 @@ def build_input_database(force: bool = False, rebuild: bool = False):
     if os.path.exists(input_db_path) and not (force or rebuild):
         input_db = Database(input_db_path)
     else:
-        print("Building a new database.")
+        logger.info("Building a new database.")
         input_db = Database(input_db_path)
         with Timer("Deleting all existing data."):
             input_db.delete_everything()
@@ -62,7 +65,7 @@ def build_input_database(force: bool = False, rebuild: bool = False):
             msg = "Input database does not match canonical version."
             raise ValueError(msg)
         elif is_hash_mismatch:
-            print("Hash mismatch, try rebuilding database...")
+            logger.info("Hash mismatch, try rebuilding database...")
             build_input_database(rebuild=True)
 
     return input_db

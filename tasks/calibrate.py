@@ -9,13 +9,14 @@ from luigi.contrib.s3 import S3Target
 from autumn.tool_kit import Timer
 from autumn.inputs import build_input_database
 from autumn.inputs.database import input_db_path
-from apps.covid_19.calibration import get_calibration_func
+from autumn.plots.database_plots import plot_from_mcmc_databases
 from autumn.constants import OUTPUT_DATA_PATH
+from apps.covid_19.calibration import get_calibration_func
 
 from . import utils
 from . import settings
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 # TODO: Upload prior plots, params and calibration config
 # TODO: Upload intermediate plots and databases?
@@ -39,8 +40,9 @@ class RunCalibrate(luigi.Task):
         upload_db_tasks = [self.get_upload_db_task(i) for i in range(self.num_chains)]
         upload_log_tasks = [self.get_upload_log_task(i) for i in range(self.num_chains)]
         upload_plots_task = UploadPlotsTask(
+            num_chains=self.num_chains,
             src_path=os.path.join(BASE_DIR, "plots"),
-            dest_key=os.path.join(self.run_id, "logs"),
+            dest_key=os.path.join(self.run_id, "plots"),
             bucket=settings.S3_BUCKET,
         )
         return [*upload_log_tasks, *upload_db_tasks, upload_plots_task]
@@ -90,6 +92,18 @@ class CalibrationChainTask(luigi.Task):
         return luigi.LocalTarget(self.get_output_db_path())
 
     def run(self):
+        logfile_path = os.path.join(BASE_DIR, "logs", f"run-{self.chain_id}.log")
+        log_format = "%(asctime)s %(module)s:%(levelname)s: %(message)s"
+        logger_names = ["autumn", "summer"]
+        for logger_name in logger_names:
+            formatter = logging.Formatter(log_format)
+            handler = logging.FileHandler(logfile_path)
+            handler.setFormatter(formatter)
+            _logger = logging.getLogger(logger_name)
+            _logger.handlers = []
+            _logger.addHandler(handler)
+            _logger.setLevel(logging.INFO)
+
         msg = f"Running {self.model_name} calibration with chain id {self.chain_id} with runtime {self.runtime}s"
         with Timer(msg):
             # Run the calibration
@@ -149,16 +163,19 @@ class PlotOutputsTask(luigi.Task):
         return [CalibrationChainTask(chain_id=i) for i in range(self.num_chains)]
 
     def output(self):
-        # return local plot files?
-        db_chain_file = "/plot.png"
-        return luigi.LocalTarget(db_chain_file)
+        target_file = os.path.join(BASE_DIR, "plots", "loglikelihood-traces.png")
+        return luigi.LocalTarget(target_file)
 
     def run(self):
-        pass
+        mcmc_dir = os.path.join(BASE_DIR, "data")
+        plot_dir = os.path.join(BASE_DIR, "plots")
+        plot_from_mcmc_databases(mcmc_dir, plot_dir)
 
 
 class UploadPlotsTask(utils.UploadFileS3Task):
     """Uploads output plots"""
 
+    num_chains = luigi.IntParameter()  # The number of chains to run
+
     def requires(self):
-        return PlotOutputsTask()
+        return PlotOutputsTask(self.num_chains)

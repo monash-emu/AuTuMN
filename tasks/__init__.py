@@ -13,7 +13,8 @@ python3 -m luigi \
     --num-chains 2 \
     --CalibrationChainTask-model-name malaysia \
     --CalibrationChainTask-runtime 12 \
-    --local-scheduler
+    --local-scheduler \
+    --logging-conf-file tasks/luigi-logging.yml
 
 
 """

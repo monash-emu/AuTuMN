@@ -96,13 +96,16 @@ def collect_map_estimate(calib_dirpath: str):
     map_estimates = {}
     for param in param_list:
         map_estimates[param] = mcmc_tables[best_chain_index][param].iloc[0]
-    return map_estimates
+    return map_estimates, best_chain_index
 
 
 if __name__ == "__main__":
     calib_dir = os.path.join(
-        "../../data", "covid_united-kingdom", "calibration-covid_united-kingdom-c4c45836-20-06-2020"
+        "../../data", "outputs", "calibrate", "covid_19", "sweden", "762c076f-2020-07-06"
     )
-    map_estimates = collect_map_estimate(calib_dir)
+    map_estimates, best_chain_index = collect_map_estimate(calib_dir)
     for key, value in map_estimates.items():
         print(key + ": " + str(value))
+
+    print()
+    print("Obtained from chain " + str(best_chain_index))

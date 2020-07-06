@@ -37,8 +37,8 @@ mixing:
   school:
     append: false
     times:
-      - 2020-03-18
-      - 2020-03-20
+      - 2020-03-09
+      - 2020-03-10
       - 2020-06-27  # FIXME: update this time
     values:
       - 1.0

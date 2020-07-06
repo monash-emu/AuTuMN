@@ -8,7 +8,7 @@ traveller_quarantine:
 
 microdistancing:
   b: -0.04
-  c: 140.
+  c: 100.
   sigma: 0.6
 
 end_time: 365.

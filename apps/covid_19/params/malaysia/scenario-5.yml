@@ -1,8 +1,30 @@
-# Reinstate regular prayers July 2
-is_periodic_intervention: True
-periodic_intervention:
-  restart_time: 184
-  prop_participating: .30 # assuming 50 % of the Malaysian Muslim population
-  contact_multiplier: 10.
-  duration: 1.
-  period: 7.
+# Back to normal life from July 2
+mixing:
+  other_locations:
+    append: true
+    times:
+      - 2020-08-01
+    values:
+      - 1.
+  work:
+    append: true
+    times:
+      - 2020-07-02
+    values:
+      - 1.
+  school:
+    append: false
+    times:
+      - 2020-03-03
+      - 2020-03-05
+      - 2020-06-23
+      - 2020-06-24 # Secondary examinations
+      - 2020-07-01
+      - 2020-07-02 # Reopen
+    values:
+      - 1.
+      - 0.
+      - 0.
+      - 0.1 # Secondary examinations
+      - 0.1
+      - 1. # Reopen

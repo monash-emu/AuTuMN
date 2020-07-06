@@ -12,6 +12,7 @@ from autumn.tool_kit.params import update_params
 from datetime import date, timedelta
 
 from apps.covid_19 import RegionApp
+from apps.covid_19.mixing_optimisation.constants import *
 
 
 FILE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -20,7 +21,7 @@ OPTI_PARAMS_PATH = os.path.join(FILE_DIR, "opti_params.yml")
 with open(OPTI_PARAMS_PATH, "r") as yaml_file:
     opti_params = yaml.safe_load(yaml_file)
 
-available_countries = [Region.UNITED_KINGDOM, Region.BELGIUM, Region.ITALY, Region.SWEDEN, Region.FRANCE]
+available_countries = OPTI_REGIONS
 phase_2_end = [366, 274, 366 + 181]  # depending on the config (0: 6 months, 1: 3 months, 2: 1 year)
 
 

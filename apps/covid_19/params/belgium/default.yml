@@ -1,7 +1,7 @@
 iso3: BEL
 
 #start_time: -20.
-end_time: 360.
+end_time: 190.
 scenario_start_time: 182
 
 infectious_seed: 200

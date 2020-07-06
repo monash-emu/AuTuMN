@@ -22,7 +22,7 @@ with open(OPTI_PARAMS_PATH, "r") as yaml_file:
     opti_params = yaml.safe_load(yaml_file)
 
 available_countries = OPTI_REGIONS
-phase_2_end = [366, 274, 366 + 181]  # depending on the config (0: 6 months, 1: 3 months, 2: 1 year)
+phase_2_end = [PHASE_2_START_TIME + PHASE_2_DURATION[i] for i in range(len(PHASE_2_DURATION))]
 
 
 def run_root_model(country=Region.UNITED_KINGDOM, calibrated_params={}):
@@ -44,6 +44,7 @@ def run_root_model(country=Region.UNITED_KINGDOM, calibrated_params={}):
         'times_imported_cases': [0],
         'n_imported_cases': [0]
     }
+    params["default"]["end_time"] = PHASE_2_START_TIME
 
     scenario_0 = Scenario(build_model, idx=0, params=params)
     scenario_0.run()
@@ -54,6 +55,8 @@ def run_root_model(country=Region.UNITED_KINGDOM, calibrated_params={}):
 def build_params_for_phases_2_and_3(decision_variables, config=0, mode='by_age'):
     # create parameters for scenario 1 which includes Phases 2 and 3
     ref_date = date(2019, 12, 31)
+    phase_2_first_day = ref_date + timedelta(days=PHASE_2_START_TIME)
+    phase_1_end_date = phase_2_first_day + timedelta(days=-1)
     phase_2_end_date = ref_date + timedelta(days=phase_2_end[config])
     phase_3_first_day = phase_2_end_date + timedelta(days=1)
     sc_1_params = {}
@@ -61,7 +64,7 @@ def build_params_for_phases_2_and_3(decision_variables, config=0, mode='by_age')
         age_mixing_update = {}
         for age_group in range(16):
             age_mixing_update["age_" + str(age_group)] = {
-                'times': [date(2020, 6, 30), date(2020, 7, 1), phase_2_end_date, phase_3_first_day],
+                'times': [phase_1_end_date, phase_2_first_day, phase_2_end_date, phase_3_first_day],
                 'values': [1.0, decision_variables[age_group], decision_variables[age_group], 1.0]
             }
         sc_1_params["mixing_age_adjust"] = age_mixing_update
@@ -77,7 +80,7 @@ def build_params_for_phases_2_and_3(decision_variables, config=0, mode='by_age')
             raise ValueError("The requested mode is not supported")
 
         sc_1_params['mixing'][loc] = {
-                'times': [date(2020, 6, 30), phase_2_end_date, phase_3_first_day],
+                'times': [phase_1_end_date, phase_2_end_date, phase_3_first_day],
                 'values': [new_mixing_adjustment, new_mixing_adjustment, 1.],
                 'append': False
         }
@@ -87,7 +90,7 @@ def build_params_for_phases_2_and_3(decision_variables, config=0, mode='by_age')
                                  phase_2_end[config] + 3],
         'n_imported_cases': [0, 50, 50, 0]
     }
-    sc_1_params['end_time'] = phase_2_end[config] + 100
+    sc_1_params['end_time'] = phase_2_end[config] + PHASE_3_DURATION
 
     return sc_1_params
 
@@ -140,9 +143,9 @@ def objective_function(decision_variables, root_model, mode="by_age", country=Re
 
     #____________________________       Perform diagnostics         ______________________
     # How many deaths during Phase 2
-    first_july_index = models[1].derived_outputs["times"].index(183)
+    start_phase2_index = models[1].derived_outputs["times"].index(PHASE_2_START_TIME)
     end_phase2_index = models[1].derived_outputs["times"].index(phase_2_end[config])
-    total_nb_deaths = sum(models[1].derived_outputs["infection_deathsXall"][first_july_index: end_phase2_index + 1])
+    total_nb_deaths = sum(models[1].derived_outputs["infection_deathsXall"][start_phase2_index: end_phase2_index + 1])
     print("Max deaths: " + str(max(models[1].derived_outputs["infection_deathsXall"])))
 
 
@@ -229,12 +232,13 @@ if __name__ == "__main__":
 
     for mode in ["by_age"]:  # , "by_location"]:
         for country in available_countries:
+            print("*********** " + country + " ***********")
             for config in [0]:  # opti_params["configurations"]:
-                param_set_list = read_list_of_param_sets_from_csv(country, config)
+                # param_set_list = read_list_of_param_sets_from_csv(country, config)
+                param_set_list = [{}]
                 for param_set in param_set_list:
                     # Run this line of code every time we use a new param_set and before performing optimisation
                     # This is an initialisation step
-                    param_set = {}
                     root_model = run_root_model(country, param_set)
 
                     # The following line is the one to be run again and again during optimisation

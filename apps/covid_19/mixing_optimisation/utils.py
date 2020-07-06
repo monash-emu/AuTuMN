@@ -11,13 +11,13 @@ import copy
 
 def get_prior_distributions_for_opti():
     prior_list = [
-        {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.025, 0.050],},
-        {"param_name": "start_time", "distribution": "uniform", "distri_params": [0., 15.],},
+        {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.01, 0.06],},
+        {"param_name": "start_time", "distribution": "uniform", "distri_params": [0., 40.],},
         {
             "param_name": "npi_effectiveness.other_locations",
             "distribution": "beta",
-            "distri_mean": .65,
-            "distri_ci": [.4, .9]},
+            "distri_mean": .75,
+            "distri_ci": [.5, .95]},
         {
             "param_name": "compartment_periods_calculated.incubation.total_period",
             "distribution": "gamma",
@@ -44,9 +44,8 @@ def get_prior_distributions_for_opti():
         },
         {
             "param_name": "prop_detected_among_symptomatic",  # upper asymptote
-            "distribution": "beta",
-            "distri_mean": 0.3,
-            "distri_ci": [0.1, 0.5],
+            "distribution": "uniform",
+            "distri_params": [0.1, 0.9],
         },
         {
             "param_name": "icu_prop",
@@ -58,8 +57,8 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "ifr_double_exp_model_params.k",
             "distribution": "gamma",
-            "distri_mean": 10,
-            "distri_ci": [9.5, 10.5],
+            "distri_mean": 11.5,
+            "distri_ci": [8.5, 14.5],
         },
         {
             "param_name": "ifr_double_exp_model_params.last_representative_age",

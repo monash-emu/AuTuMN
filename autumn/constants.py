@@ -35,6 +35,11 @@ class Region:
     BICOL = "bicol"
     CENTRAL_VISAYAS = "central-visayas"
     UNITED_KINGDOM = "united-kingdom"
+    BELGIUM = "belgium"
+    ITALY = "italy"
+    SWEDEN = "sweden"
+    FRANCE = "france"
+
     REGIONS = [
         AUSTRALIA,
         PHILIPPINES,
@@ -47,4 +52,8 @@ class Region:
         BICOL,
         CENTRAL_VISAYAS,
         UNITED_KINGDOM,
+        BELGIUM,
+        ITALY,
+        SWEDEN,
+        FRANCE,
     ]

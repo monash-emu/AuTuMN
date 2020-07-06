@@ -32,8 +32,8 @@ infection_deathsXall_dispersion_param: 0.8917230289189196
 
 microdistancing:
   b: -0.05
-  c: 115.16320008339129
-  sigma: 0.6128211731293335
+  c: 115.16320008339129  # MLE
+  sigma: 0.6128211731293335  # MLE
 
 mixing:
   school:

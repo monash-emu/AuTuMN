@@ -1,0 +1,37 @@
+iso3: SWE
+
+#start_time: -20.
+end_time: 360.
+scenario_start_time: 182
+
+infectious_seed: 200
+use_verity_mortality_estimates: False
+
+microdistancing:
+  b: -0.05
+  c: 115.16320008339129  # MLE
+  sigma: 0.6128211731293335  # MLE
+
+# MLE estimates
+
+mixing:
+  school:
+    append: false
+    times:
+      - 2020-03-18
+      - 2020-03-20
+      - 2020-06-27  # FIXME: update this time
+    values:
+      - 1.0
+      - 0.1
+      - 0.1
+
+# Mapping of Google Mobility locations to Autumn-specific locations
+google_mobility_locations:
+  work:
+    - workplaces
+  other_locations:
+    # Parks not included
+    - retail_and_recreation
+    - grocery_and_pharmacy
+    - transit_stations

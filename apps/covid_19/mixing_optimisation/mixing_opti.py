@@ -20,7 +20,7 @@ OPTI_PARAMS_PATH = os.path.join(FILE_DIR, "opti_params.yml")
 with open(OPTI_PARAMS_PATH, "r") as yaml_file:
     opti_params = yaml.safe_load(yaml_file)
 
-available_countries = [Region.UNITED_KINGDOM]
+available_countries = [Region.UNITED_KINGDOM, Region.BELGIUM, Region.ITALY, Region.SWEDEN, Region.FRANCE]
 phase_2_end = [366, 274, 366 + 181]  # depending on the config (0: 6 months, 1: 3 months, 2: 1 year)
 
 

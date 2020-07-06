@@ -15,9 +15,9 @@ def get_prior_distributions_for_opti():
         {"param_name": "start_time", "distribution": "uniform", "distri_params": [0., 40.],},
         {
             "param_name": "npi_effectiveness.other_locations",
-            "distribution": "beta",
-            "distri_mean": .75,
-            "distri_ci": [.5, .95]},
+            "distribution": "uniform",
+            "distri_params": [.5, 1.],
+        },
         {
             "param_name": "compartment_periods_calculated.incubation.total_period",
             "distribution": "gamma",
@@ -32,15 +32,13 @@ def get_prior_distributions_for_opti():
         },
         {
             "param_name": "tv_detection_b",  # shape parameter
-            "distribution": "beta",
-            "distri_mean": 0.075,
-            "distri_ci": [0.05, 0.1],
+            "distribution": "uniform",
+            "distri_params": [0.05, 0.1],
         },
         {
             "param_name": "tv_detection_c",  # inflection point
-            "distribution": "gamma",
-            "distri_mean": 80.0,
-            "distri_ci": [40.0, 120.0],
+            "distribution": "uniform",
+            "distri_params": [40.0, 120.0],
         },
         {
             "param_name": "prop_detected_among_symptomatic",  # upper asymptote
@@ -56,9 +54,8 @@ def get_prior_distributions_for_opti():
         # parameters to derive age-specific IFRs
         {
             "param_name": "ifr_double_exp_model_params.k",
-            "distribution": "gamma",
-            "distri_mean": 11.5,
-            "distri_ci": [8.5, 14.5],
+            "distribution": "uniform",
+            "distri_params": [8.5, 14.5],
         },
         {
             "param_name": "ifr_double_exp_model_params.last_representative_age",
@@ -68,15 +65,13 @@ def get_prior_distributions_for_opti():
         # vary hospital durations
         {
             "param_name": "compartment_periods.hospital_late",
-            "distribution": "gamma",
-            "distri_mean": 8.0,
-            "distri_ci": [4., 15.],
+            "distribution": "uniform",
+            "distri_params": [4., 15.],
         },
         {
             "param_name": "compartment_periods.icu_late",
-            "distribution": "gamma",
-            "distri_mean": 10.0,
-            "distri_ci": [5., 20.],
+            "distribution": "uniform",
+            "distri_params": [5., 20.],
         },
         # Micro-distancing
         {

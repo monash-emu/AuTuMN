@@ -151,6 +151,26 @@ def get_target_outputs_for_opti(country, data_start_time=22, update_jh_data=Fals
     return target_outputs
 
 
+def get_weekly_summed_targets(times, values):
+    assert len(times) == len(values), "times and values must have the same length"
+    assert len(times) >= 7, "number of time points must be greater than 7 to compute weekly data"
+
+    t_low = min(times)
+    t_max = max(times)
+
+    w_times = []
+    w_values = []
+    while t_low < t_max:
+        this_week_indices = [i for i, t in enumerate(times) if t_low <= t < t_low + 7]
+        this_week_times = [times[i] for i in this_week_indices]
+        this_week_values = [values[i] for i in this_week_indices]
+        w_times.append(np.mean(this_week_times))
+        w_values.append(sum(this_week_values))
+        t_low += 7
+
+    return w_times, w_values
+
+
 def combine_and_burn_samples(calibration_output_path, burn_in=500):
     mcmc_tables = load_mcmc_tables(calibration_output_path)
     col_names = mcmc_tables[0].columns

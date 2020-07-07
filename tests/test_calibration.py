@@ -4,63 +4,104 @@ from copy import deepcopy
 import pytest
 from autumn.db import Database
 from autumn.calibration import Calibration, CalibrationMode
+from autumn.calibration.utils import sample_starting_params_from_lhs, specify_missing_prior_params
 
 from .utils import get_mock_model
 
 
-@pytest.mark.skip("Old code, needs to be re-written")
-@pytest.mark.parametrize("num_iters, max_size_mb", [(50, 0.1), (50, 0.2), (50, 0.3)])
-def test_calibration_data_collation(temp_data_dir, num_iters, max_size_mb):
-    """
-    Test that collate_powerbi_database correctly pulls data from calibration outputs into a single database.
-    """
+def test_sample_starting_params_from_lhs__with_lognormal_prior_and_one_sample():
     priors = [
-        {"param_name": "ice_cream_sales", "distribution": "uniform", "distri_params": [1, 5],}
+        {"param_name": "ice_cream_sales", "distribution": "lognormal", "distri_params": [-1, 1],}
     ]
-    target_outputs = [
+    specify_missing_prior_params(priors)
+    params = sample_starting_params_from_lhs(priors, n_samples=1)
+    assert _prepare_params(params) == _prepare_params([{"ice_cream_sales": 0.36787944117144233}])
+
+
+def test_sample_starting_params_from_lhs__with_beta_prior_and_one_sample():
+    priors = [
         {
-            "output_key": "shark_attacks",
-            "years": [2000, 2001, 2002, 2003, 2004],
-            "values": [3, 6, 9, 12, 15],
-            "loglikelihood_distri": "poisson",
+            "param_name": "ice_cream_sales",
+            "distribution": "beta",
+            "distri_mean": 0.05,
+            "distri_ci": [0.01, 0.1],
         }
     ]
+    specify_missing_prior_params(priors)
+    params = sample_starting_params_from_lhs(priors, n_samples=1)
+    assert _prepare_params(params) == _prepare_params([{"ice_cream_sales": 0.04676177079730329}])
 
-    for chain_index in range(5):
-        calib = Calibration(
-            "sharks",
-            "main",
-            _build_mock_model,
-            deepcopy(priors),
-            deepcopy(target_outputs),
-            multipliers={},
-            chain_index=chain_index,
-            model_parameters={"default": {}, "scenario_start_time": 2000, "scenarios": {},},
-        )
-        calib.run_fitting_algorithm(
-            run_mode=CalibrationMode.AUTUMN_MCMC,
-            n_iterations=num_iters,
-            n_burned=10,
-            n_chains=1,
-            available_time=1e6,
-        )
 
-    app_dir = os.path.join(temp_data_dir, "sharks")
-    run_dir = os.path.join(app_dir, os.listdir(app_dir)[0])
-    out_db_paths = [
-        os.path.join(run_dir, db_path) for db_path in os.listdir(run_dir) if db_path.endswith(".db")
+def test_sample_starting_params_from_lhs__with_gamma_prior_and_one_sample():
+    priors = [
+        {
+            "param_name": "ice_cream_sales",
+            "distribution": "gamma",
+            "distri_mean": 5.0,
+            "distri_ci": [3.0, 7.0],
+        }
     ]
-    # There should be 5 databases saved
-    assert len(out_db_paths) == 5
+    specify_missing_prior_params(priors)
+    params = sample_starting_params_from_lhs(priors, n_samples=1)
+    assert _prepare_params(params) == _prepare_params([{"ice_cream_sales": 4.932833078981056}])
 
-    # Collate the outputs into one database
-    target_db_path = os.path.join(temp_data_dir, "collated.db")
-    collate_outputs_powerbi(out_db_paths, target_db_path, max_size=max_size_mb)
 
-    target_db = Database(target_db_path)
-    collated_mcmc_runs = target_db.query("mcmc_run")
-    assert len(collated_mcmc_runs) == collated_mcmc_runs.accept.sum()
-    assert max_size_mb / 2 <= target_db.get_size_mb() <= max_size_mb
+def test_sample_starting_params_from_lhs__with_uniform_prior_and_one_sample():
+    priors = [{"param_name": "ice_cream_sales", "distribution": "uniform", "distri_params": [1, 5]}]
+    specify_missing_prior_params(priors)
+    params = sample_starting_params_from_lhs(priors, n_samples=1)
+    assert _prepare_params(params) == _prepare_params([{"ice_cream_sales": 3.0}])
+
+
+def test_sample_starting_params_from_lhs__with_uniform_priors_and_one_sample():
+    priors = [
+        {"param_name": "ice_cream_sales", "distribution": "uniform", "distri_params": [1, 5]},
+        {"param_name": "air_temp", "distribution": "uniform", "distri_params": [1, 10]},
+    ]
+    specify_missing_prior_params(priors)
+    params = sample_starting_params_from_lhs(priors, n_samples=1)
+    assert _prepare_params(params) == _prepare_params([{"ice_cream_sales": 3.0, "air_temp": 5.5}])
+
+
+def test_sample_starting_params_from_lhs__with_uniform_prior_and_two_samples():
+    priors = [{"param_name": "ice_cream_sales", "distribution": "uniform", "distri_params": [1, 5]}]
+    specify_missing_prior_params(priors)
+    params = sample_starting_params_from_lhs(priors, n_samples=2)
+    assert _prepare_params(params) == _prepare_params(
+        [{"ice_cream_sales": 2.0}, {"ice_cream_sales": 4.0}]
+    )
+
+
+def test_sample_starting_params_from_lhs__with_uniform_priors_and_two_samples():
+    priors = [
+        {"param_name": "ice_cream_sales", "distribution": "uniform", "distri_params": [1, 5]},
+        {"param_name": "air_temp", "distribution": "uniform", "distri_params": [1, 10]},
+    ]
+    specify_missing_prior_params(priors)
+    params = sample_starting_params_from_lhs(priors, n_samples=2)
+    assert _prepare_params(params) == _prepare_params(
+        [{"ice_cream_sales": 2.0, "air_temp": 3.25}, {"ice_cream_sales": 4.0, "air_temp": 7.75}],
+    ) or _prepare_params(params) == _prepare_params(
+        [{"ice_cream_sales": 4.0, "air_temp": 3.25}, {"ice_cream_sales": 2.0, "air_temp": 7.75}],
+    )
+
+
+def test_sample_starting_params_from_lhs__with_uniform_prior_and_four_samples():
+    priors = [{"param_name": "ice_cream_sales", "distribution": "uniform", "distri_params": [1, 5]}]
+    specify_missing_prior_params(priors)
+    params = sample_starting_params_from_lhs(priors, n_samples=4)
+    assert _prepare_params(params) == _prepare_params(
+        [
+            {"ice_cream_sales": 1.5},
+            {"ice_cream_sales": 2.5},
+            {"ice_cream_sales": 3.5},
+            {"ice_cream_sales": 4.5},
+        ],
+    )
+
+
+def _prepare_params(l):
+    return set([tuple(sorted(ps.items())) for ps in l])
 
 
 def test_calibrate_autumn_mcmc(temp_data_dir):

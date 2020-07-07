@@ -14,22 +14,20 @@ from scipy import stats, special
 
 from autumn import constants
 from autumn.db.models import store_database
-from autumn.tool_kit.utils import (
-    get_data_hash,
-    find_distribution_params_from_mean_and_ci,
-)
-from autumn.tool_kit.scenarios import Scenario
 from autumn.plots.calibration_plots import plot_all_priors
+from autumn.tool_kit.scenarios import Scenario
 from autumn.tool_kit.params import update_params
 from autumn.tool_kit.utils import (
     get_git_branch,
     get_git_hash,
+    get_data_hash,
 )
 from .utils import (
     find_decent_starting_point,
     calculate_prior,
+    specify_missing_prior_params,
     raise_error_unsupported_prior,
-    sample_starting_params_from_lhs
+    sample_starting_params_from_lhs,
 )
 
 BEST_LL = "best_ll"
@@ -122,8 +120,10 @@ class Calibration:
         self.multipliers = multipliers
         self.chain_index = chain_index
 
-        self.specify_missing_prior_params()
-        self.starting_point = sample_starting_params_from_lhs(self.priors, total_nb_chains)[chain_index - 1]  # FIXME, this assumes chains must have indices in {1, 2 ... total_nb_chains}
+        specify_missing_prior_params(self.priors)
+        self.starting_point = sample_starting_params_from_lhs(self.priors, total_nb_chains)[
+            chain_index - 1
+        ]  # FIXME, this assumes chains must have indices in {1, 2 ... total_nb_chains}
         # Setup output directory
         project_dir = os.path.join(
             constants.OUTPUT_DATA_PATH, "calibrate", model_name, param_set_name
@@ -171,39 +171,6 @@ class Calibration:
         file_path = os.path.join(output_dir, filename)
         with open(file_path, "w") as f:
             yaml.dump(data, f)
-
-    def specify_missing_prior_params(self):
-        """
-        Work out the prior distribution parameters if they were not specified
-        """
-        for i, p_dict in enumerate(self.priors):
-            if "distri_params" not in p_dict:
-                assert (
-                    "distri_mean" in p_dict and "distri_ci" in p_dict
-                ), "Please specify distri_mean and distri_ci."
-                if "distri_ci_width" in p_dict:
-                    distri_params = find_distribution_params_from_mean_and_ci(
-                        p_dict["distribution"],
-                        p_dict["distri_mean"],
-                        p_dict["distri_ci"],
-                        p_dict["distri_ci_width"],
-                    )
-                else:
-                    distri_params = find_distribution_params_from_mean_and_ci(
-                        p_dict["distribution"], p_dict["distri_mean"], p_dict["distri_ci"],
-                    )
-                if p_dict["distribution"] == "beta":
-                    self.priors[i]["distri_params"] = [
-                        distri_params["a"],
-                        distri_params["b"],
-                    ]
-                elif p_dict["distribution"] == "gamma":
-                    self.priors[i]["distri_params"] = [
-                        distri_params["shape"],
-                        distri_params["scale"],
-                    ]
-                else:
-                    raise_error_unsupported_prior(p_dict["distribution"])
 
     def store_model_outputs(self):
         """
@@ -629,9 +596,12 @@ class Calibration:
                     loc=prev_params[i], scale=prior_dict["jumping_sd"], size=1
                 )[0]
                 n_attempts += 1
-                if n_attempts > 1.e5:
-                    raise ValueError("Failed to draw an acceptable value for " + prior_dict['param_name'] +
-                                     "after 100,000 attempts. Check that its initial value is within the prior's support.")
+                if n_attempts > 1.0e5:
+                    raise ValueError(
+                        "Failed to draw an acceptable value for "
+                        + prior_dict["param_name"]
+                        + "after 100,000 attempts. Check that its initial value is within the prior's support."
+                    )
 
             new_params.append(sample)
         return new_params

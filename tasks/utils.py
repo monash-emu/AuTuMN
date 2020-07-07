@@ -30,16 +30,22 @@ S3_UPLOAD_CONFIG = TransferConfig(
 )
 
 # Get an AWS S3 client
-try:
-    session = boto3.session.Session(
-        region_name=settings.AWS_REGION, profile_name=settings.AWS_PROFILE
-    )
-except ProfileNotFound:
+if "AWS_ACCESS_KEY_ID" in os.environ and "AWS_SECRET_ACCESS_KEY" in os.environ:
+    # Use keys from environment variable
     session = boto3.session.Session(
         region_name=settings.AWS_REGION,
         aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
         aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
     )
+else:
+    try:
+        # Try use profile credentials from ~/.aws/credentials
+        session = boto3.session.Session(
+            region_name=settings.AWS_REGION, profile_name=settings.AWS_PROFILE
+        )
+    except ProfileNotFound:
+        # Try use IAM role credentials
+        session = boto3.session.Session(region_name=settings.AWS_REGION)
 
 s3 = session.client("s3")
 

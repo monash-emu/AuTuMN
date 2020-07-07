@@ -32,14 +32,23 @@ def get_conn(instance):
 
 def fabric_test(instance):
     with get_conn(instance) as conn:
-        update_repo(conn)
+        update_repo(conn, branch="luigi-redux")
         install_requirements(conn)
         run_id = get_run_id(conn, "test")
         set_run_id(conn, run_id)
-        # import pdb
-
-        # pdb.set_trace()
-        # pass
+        with conn.cd(CODE_PATH):
+            cmd_str = (
+                "./env/bin/python -m luigi"
+                " --module tasks"
+                " RunCalibrate"
+                " --run-id test"
+                " --num-chains 2"
+                " --CalibrationChainTask-model-name malaysia"
+                " --CalibrationChainTask-runtime 12"
+                " --local-scheduler"
+                " --logging-conf-file tasks/luigi-logging.ini"
+            )
+            conn.run(cmd_str, echo=True, pty=True)
 
 
 def set_run_id(conn: Connection, run_id: str):

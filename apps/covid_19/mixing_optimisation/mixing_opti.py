@@ -22,7 +22,9 @@ with open(OPTI_PARAMS_PATH, "r") as yaml_file:
     opti_params = yaml.safe_load(yaml_file)
 
 available_countries = OPTI_REGIONS
-phase_2_end = [PHASE_2_START_TIME + PHASE_2_DURATION[i] for i in range(len(PHASE_2_DURATION))]
+
+phase_2_end = [PHASE_2_START_TIME + opti_params['configurations'][i]['phase_two_duration'] for
+               i in opti_params['configurations'].keys()]
 
 
 def run_root_model(country=Region.UNITED_KINGDOM, calibrated_params={}):
@@ -92,6 +94,12 @@ def build_params_for_phases_2_and_3(decision_variables, config=0, mode='by_age')
     }
     sc_1_params['end_time'] = phase_2_end[config] + PHASE_3_DURATION
 
+    if "microdistancing" in opti_params['configurations'][config]:
+        if "microdistancing" in sc_1_params:
+            sc_1_params['microdistancing'].update(opti_params['configurations'][config]['microdistancing'])
+        else:
+            sc_1_params['microdistancing'] = opti_params['configurations'][config]['microdistancing']
+
     return sc_1_params
 
 
@@ -130,7 +138,7 @@ def objective_function(decision_variables, root_model, mode="by_age", country=Re
     params["default"] = update_params(params['default'], calibrated_params)
 
     # update params with specific config (Sensitivity analyses)
-    params["default"].update(opti_params["configurations"][config])
+    # params["default"].update(opti_params["configurations"][config])
 
     # Define scenario 1
     sc_1_params = build_params_for_phases_2_and_3(decision_variables, config, mode)
@@ -233,7 +241,7 @@ if __name__ == "__main__":
     for mode in ["by_age"]:  # , "by_location"]:
         for country in available_countries:
             print("*********** " + country + " ***********")
-            for config in [0]:  # opti_params["configurations"]:
+            for config in opti_params["configurations"]:
                 # param_set_list = read_list_of_param_sets_from_csv(country, config)
                 param_set_list = [{}]
                 for param_set in param_set_list:

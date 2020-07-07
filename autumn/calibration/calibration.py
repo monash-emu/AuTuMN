@@ -325,9 +325,9 @@ class Calibration:
                     elif target["loglikelihood_distri"] == "poisson":
                         for i in range(len(data)):
                             ll += (
-                                data[i] * math.log(abs(model_output[i]))
+                                round(data[i]) * math.log(abs(model_output[i]))
                                 - model_output[i]
-                                - math.log(math.factorial(data[i]))
+                                - math.log(math.factorial(round(data[i])))
                             )
                     elif target["loglikelihood_distri"] == "negative_binomial":
                         assert key + "_dispersion_param" in self.param_list
@@ -342,7 +342,7 @@ class Calibration:
                             mu = model_output[i]
                             # work out parameter p to match the distribution mean with the model output
                             p = mu / (mu + n)
-                            ll += stats.nbinom.logpmf(data[i], n, 1.0 - p)
+                            ll += stats.nbinom.logpmf(round(data[i]), n, 1.0 - p)
                     else:
                         raise ValueError("Distribution not supported in loglikelihood_distri")
 

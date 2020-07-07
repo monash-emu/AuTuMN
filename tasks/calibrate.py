@@ -60,7 +60,7 @@ class CalibrationChainTask(utils.ParallelLoggerTask):
     chain_id = luigi.IntParameter()  # Unique chain id
 
     def requires(self):
-        paths = ["logs", "data/calibration_outputs", "plots"]
+        paths = ["logs/calibrate", "data/calibration_outputs", "plots"]
         dir_tasks = [utils.BuildLocalDirectoryTask(dirname=p) for p in paths]
         return [BuildInputDatabaseTask(), *dir_tasks]
 
@@ -68,7 +68,7 @@ class CalibrationChainTask(utils.ParallelLoggerTask):
         return luigi.LocalTarget(self.get_output_db_path())
 
     def get_log_filename(self):
-        return f"run-{self.chain_id}.log"
+        return f"calibrate/run-{self.chain_id}.log"
 
     def safe_run(self):
         msg = f"Running {self.model_name} calibration with chain id {self.chain_id} with runtime {self.runtime}s"

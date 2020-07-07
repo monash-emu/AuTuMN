@@ -11,29 +11,94 @@ from . import settings
 logger = logging.getLogger(__name__)
 
 
-AWS_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SSH_OPTIONS = {
-    "StrictHostKeyChecking": "no",
-    # https://superuser.com/questions/522094/how-do-i-resolve-a-ssh-connection-closed-by-remote-host-due-to-inactivity
-    "TCPKeepAlive": "yes",
-    "ServerAliveInterval": "30",
-}
-SSH_OPT_STR = " ".join([f"-o {k}={v}" for k, v in SSH_OPTIONS.items()])
-SSH_KEY_STR = f"-i ~/.ssh/{settings.EC2_KEYFILE}"
-SSH_ARGS = f"{SSH_OPT_STR} {SSH_KEY_STR}"
 CODE_PATH = "/home/ubuntu/code"
 
 
-def fabric_test(instance):
-    num_chains = 6
-    model_name = "malaysia"
-    runtime = 12
+def run_powerbi(instance, run_id: str):
+    """Run PowerBI processing on the remote server"""
+    run_id = "test"  # FIXME: Debug
+    logger.info("Running PowerBI processing for run %s", run_id)
     with get_connection(instance) as conn:
         update_repo(conn, branch="luigi-redux")
         install_requirements(conn)
         start_luigi_scheduler(conn, instance)
+        # with conn.cd(CODE_PATH):
+        #     cmd_str = (
+        #         "./env/bin/python -m luigi"
+        #         " --module tasks"
+        #         " RunCalibrate"
+        #         f" --run-id {run_id}"
+        #         f" --num-chains {num_chains}"
+        #         f" --workers {num_chains}"
+        #         f" --CalibrationChainTask-model-name {model_name}"
+        #         f" --CalibrationChainTask-runtime {runtime}"
+        #         " --logging-conf-file tasks/luigi-logging.ini"
+        #     )
+        #     conn.run(cmd_str, echo=True, pty=True)
+        #     logger.info("Calibration chains finished.")
+        #     # Upload Luigi log files
+        #     logger.info("Uploading Luigi log files.")
+        #     src = "/home/ubuntu/code/data/outputs/luigid/luigi-server.log"
+        #     dest = f"{run_id}/logs/powerbi/luigi-worker.log"
+        #     copy_s3(conn, src, dest)
+        #     src = "/home/ubuntu/code/data/outputs/remote/luigi-worker.log"
+        #     dest = f"{run_id}/logs/powerbi/luigi-server.log"
+        #     copy_s3(conn, src, dest)
+
+        logger.info("PowerBI processing completed for %s", run_id)
+
+
+def run_full_model(instance, run_id: str, burn_in: int, use_latest_code: bool):
+    """Run full model job on the remote server"""
+    run_id = "test"  # FIXME: Debug
+    logger.info("Running full models for run %s with %s burn-in.", run_id, burn_in)
+    with get_connection(instance) as conn:
+        if use_latest_code:
+            update_repo(conn, branch="luigi-redux")
+        else:
+            set_run_id(conn, run_id)
+
+        install_requirements(conn)
+        start_luigi_scheduler(conn, instance)
+        # with conn.cd(CODE_PATH):
+        #     cmd_str = (
+        #         "./env/bin/python -m luigi"
+        #         " --module tasks"
+        #         " RunCalibrate"
+        #         f" --run-id {run_id}"
+        #         f" --num-chains {num_chains}"
+        #         f" --workers {num_chains}"
+        #         f" --CalibrationChainTask-model-name {model_name}"
+        #         f" --CalibrationChainTask-runtime {runtime}"
+        #         " --logging-conf-file tasks/luigi-logging.ini"
+        #     )
+        #     conn.run(cmd_str, echo=True, pty=True)
+        #     logger.info("Calibration chains finished.")
+        #     # Upload Luigi log files
+        #     logger.info("Uploading Luigi log files.")
+        #     src = "/home/ubuntu/code/data/outputs/luigid/luigi-server.log"
+        #     dest = f"{run_id}/logs/full/luigi-worker.log"
+        #     copy_s3(conn, src, dest)
+        #     src = "/home/ubuntu/code/data/outputs/remote/luigi-worker.log"
+        #     dest = f"{run_id}/logs/full/luigi-server.log"
+        #     copy_s3(conn, src, dest)
+
+        logger.info("Full model runs completed for %s", run_id)
+
+
+def run_calibration(
+    instance, model_name: str, num_chains: int, runtime: int, branch: str,
+):
+    """Run calibration job on the remote server"""
+    with get_connection(instance) as conn:
+        update_repo(conn, branch=branch)
+        install_requirements(conn)
+        start_luigi_scheduler(conn, instance)
         run_id = get_run_id(conn, model_name)
-        run_id = "test"
+        run_id = "test"  # FIXME: Debug
+        logger.info(
+            "Running calibration %s with %s chains for %s seconds.", model_name, num_chains, runtime
+        )
         with conn.cd(CODE_PATH):
             cmd_str = (
                 "./env/bin/python -m luigi"
@@ -47,13 +112,17 @@ def fabric_test(instance):
                 " --logging-conf-file tasks/luigi-logging.ini"
             )
             conn.run(cmd_str, echo=True, pty=True)
+            logger.info("Calibration chains finished.")
             # Upload Luigi log files
+            logger.info("Uploading Luigi log files.")
             src = "/home/ubuntu/code/data/outputs/luigid/luigi-server.log"
-            dest = f"{run_id}/logs/luigi-worker.log"
+            dest = f"{run_id}/logs/calibrate/luigi-worker.log"
             copy_s3(conn, src, dest)
             src = "/home/ubuntu/code/data/outputs/remote/luigi-worker.log"
-            dest = f"{run_id}/logs/luigi-server.log"
+            dest = f"{run_id}/logs/calibrate/luigi-server.log"
             copy_s3(conn, src, dest)
+
+        logger.info("Calibration completed for %s", run_id)
 
 
 def copy_s3(conn: Connection, src_path: str, dest_key: str):
@@ -128,6 +197,17 @@ def get_connection(instance):
     return Connection(host=ip, user="ubuntu", connect_kwargs={"key_filename": key_filepath},)
 
 
+SSH_OPTIONS = {
+    "StrictHostKeyChecking": "no",
+    # https://superuser.com/questions/522094/how-do-i-resolve-a-ssh-connection-closed-by-remote-host-due-to-inactivity
+    "TCPKeepAlive": "yes",
+    "ServerAliveInterval": "30",
+}
+SSH_OPT_STR = " ".join([f"-o {k}={v}" for k, v in SSH_OPTIONS.items()])
+SSH_KEY_STR = f"-i ~/.ssh/{settings.EC2_KEYFILE}"
+SSH_ARGS = f"{SSH_OPT_STR} {SSH_KEY_STR}"
+
+
 def ssh_interactive(instance):
     ip = instance["ip"]
     name = instance["name"]
@@ -135,32 +215,3 @@ def ssh_interactive(instance):
     cmd_str = f"ssh {SSH_ARGS} ubuntu@{ip}"
     logger.info("Entering ssh session with: %s", cmd_str)
     subprocess.call(cmd_str, shell=True)
-
-
-def ssh_run_job(instance: dict, script_name: str, script_args):
-    """
-    Copy and run a script on a given instance.
-    """
-    ip = instance["ip"]
-    name = instance["name"]
-    logger.info(f"Starting SSH session with instance {name}.")
-    run_script_path = os.path.join(AWS_DIR, "tasks", script_name)
-    if not os.path.exists(run_script_path):
-        raise FileNotFoundError(f"Could not find {run_script_path}")
-
-    # Copy script to server
-    cmd_str = f"scp {SSH_ARGS} {run_script_path} ubuntu@{ip}:/home/ubuntu/{script_name}"
-    logger.info("Uploading script with: %s", cmd_str)
-    retcode = subprocess.call(cmd_str, shell=True)
-    if not retcode == 0:
-        logger.error("scp file upload failed with return code %s", retcode)
-        sys.exit(retcode)
-
-    # Run script
-    args = " ".join([str(a) for a in script_args])
-    cmd_str = f"ssh {SSH_ARGS} ubuntu@{ip} 'bash ~/{script_name} {args}'"
-    logger.info("Running ssh session with: %s", cmd_str)
-    retcode = subprocess.call(cmd_str, shell=True)
-    if not retcode == 0:
-        logger.error("ssh session failed with return code %s", retcode)
-        sys.exit(retcode)

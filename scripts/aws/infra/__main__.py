@@ -2,6 +2,7 @@ import time
 import os
 import logging
 import click
+import functools
 
 from . import aws
 from . import remote
@@ -76,6 +77,14 @@ def ssh(name):
         click.echo(f"Instance {name} not found")
 
 
+@click.command()
+def website():
+    """
+    Update the calibrations website.
+    """
+    update_website()
+
+
 @click.group()
 def run():
     """
@@ -84,53 +93,87 @@ def run():
 
 
 @run.command("calibrate")
-@click.argument("job_name", type=str)
-@click.argument("calibration_name", type=str)
-@click.argument("num_chains", type=int)
-@click.argument("run_time", type=int)
+@click.option("--job", type=str, required=True)
+@click.option("--calibration", type=str, required=True)
+@click.option("--chains", type=int, required=True)
+@click.option("--runtime", type=int, required=True)
+@click.option("--branch", type=str, default="master")
 @click.option("--dry", is_flag=True)
-def run_calibrate(job_name, calibration_name, num_chains, run_time, dry):
+def run_calibrate(job, calibration, chains, runtime, branch, dry):
     """
-    Run a MCMC calibration
+    Run a MCMC calibration on an AWS server.
+    Example usage:
+
+        python -m infra run calibrate \
+        --job test \
+        --calibration malaysia \
+        --chains 6 \
+        --runtime 200 \
+        --branch luigi-redux
+
     """
-    job_id = f"calibrate-{job_name}"
-    script_args = [calibration_name, num_chains, run_time]
-    instance_type = aws.get_instance_type(2 * num_chains, 8)
+    job_id = f"calibrate-{job}"
+    instance_type = aws.get_instance_type(2 * chains, 8)
     if dry:
-        logger.info("Dry run: %s", instance_type)
+        logger.info("Dry run, would have used instance type: %s", instance_type)
     else:
-        _run_job(job_id, instance_type, "calibrate.sh", script_args)
+        kwargs = {
+            "num_chains": chains,
+            "model_name": calibration,
+            "runtime": runtime,
+            "branch": branch,
+        }
+        job_func = functools.partial(remote.run_calibration, **kwargs)
+        _run_job(job_id, instance_type, job_func)
 
 
 @run.command("full")
-@click.argument("job_name", type=str)
-@click.argument("run_name", type=str)
-@click.argument("burn_in", type=int)
-def run_full_model(job_name, run_name, burn_in):
+@click.option("--job", type=str, required=True)
+@click.option("--run", type=str, required=True)
+@click.option("--burn-in", type=int, required=True)
+@click.option("--latest-code", is_flag=True)
+def run_full_model(job, run, burn_in, latest_code):
     """
-    Run the full models based off an MCMC calibration
+    Run the full models based off an MCMC calibration on an AWS server.
+    Example usage:
+
+        python -m infra run full \
+        --run malaysia-1594104927-master-a22f1435b6989f607afca25e4ea59273e33a962b \
+        --job test \
+        --burn-in 1000
+
     """
-    job_id = f"full-{job_name}"
-    script_args = [run_name, burn_in]
-    instance_type = EC2InstanceType.m5_8xlarge
+    job_id = f"full-{job}"
     instance_type = aws.get_instance_type(30, 8)
-    _run_job(job_id, instance_type, "full_model.sh", script_args)
+    kwargs = {
+        "run_id": run,
+        "burn_in": burn_in,
+        "use_latest_code": latest_code,
+    }
+    job_func = functools.partial(remote.run_full_model, **kwargs)
+    _run_job(job_id, instance_type, job_func)
 
 
 @run.command("powerbi")
-@click.argument("job_name", type=str)
-@click.argument("run_name", type=str)
-def run_powerbi(job_name, run_name):
+@click.option("--job", type=str, required=True)
+@click.option("--run", type=str, required=True)
+def run_powerbi(job, run):
     """
     Run the collate a PowerBI database from the full model run outputs.
+
+        python -m infra run full \
+        --run malaysia-1594104927-master-a22f1435b6989f607afca25e4ea59273e33a962b \
+        --job test
+
     """
-    job_id = f"powerbi-{job_name}"
-    script_args = [run_name]
+    job_id = f"powerbi-{job}"
     instance_type = aws.get_instance_type(30, 32)
-    _run_job(job_id, instance_type, "powerbi.sh", script_args)
+    kwargs = {"run_id": run}
+    job_func = functools.partial(remote.run_powerbi, **kwargs)
+    _run_job(job_id, instance_type, job_func)
 
 
-def _run_job(job_id, instance_type, script_name, script_args):
+def _run_job(job_id, instance_type, job_func):
     """
     Run a job on a remote server
     """
@@ -140,37 +183,18 @@ def _run_job(job_id, instance_type, script_name, script_args):
         click.echo("Could not run job - no instances available")
         return
 
-    print("Waiting 60s for server to boot... ", end="", flush=True)
+    logger.info("Waiting 60s for %s server to boot... ", instance_type)
     time.sleep(60)
-    print("done.")
+    logger.info("Server is hopefully ready.")
     instance = aws.find_instance(job_id)
-    start_time = time.time()
-    while time.time() - start_time < 20:
-        print("Attempting to run job")
-        remote.ssh_run_job(instance, script_name, script_args)
-        time.sleep(3)
-
-    # aws.stop_job(job_id)
-
-
-@click.command()
-def website():
-    """
-    Update the calibrations website.
-    """
-    update_website()
-
-
-from .remote import fabric_test
-
-
-@click.command()
-def test():
-    instance = aws.find_instance("test4")
-    fabric_test(instance)
-
-
-cli.add_command(test)
+    try:
+        logger.info("Attempting to run job %s on instance %s", job_id, instance["InstanceId"])
+        job_func(instance=instance)
+    except Exception as e:
+        logger.exception("Running job failed")
+        raise
+    finally:
+        aws.stop_job(job_id)
 
 
 cli.add_command(website)

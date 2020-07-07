@@ -1,12 +1,16 @@
-import numpy as np
-import math
-from scipy import stats, special
 import os
-from autumn.db import Database
+import math
+from typing import List, Dict, Any
+
+import numpy as np
 from pyDOE import lhs
+from scipy import stats, special
+from scipy.optimize import minimize
+
+from autumn.db import Database
 
 
-def sample_starting_params_from_lhs(par_priors, n_samples):
+def sample_starting_params_from_lhs(par_priors: List[Dict[str, Any]], n_samples: int):
     """
     Use Latin Hypercube Sampling to define MCMC starting points
     :param par_priors: a list of dictionaries defining the prior distributions
@@ -15,15 +19,16 @@ def sample_starting_params_from_lhs(par_priors, n_samples):
     """
     list_of_starting_params = [{} for _ in range(n_samples)]
 
-    # draw a Latin hypercube (all values in [0-1])
-    hypercube = lhs(n=len(par_priors), samples=n_samples, criterion='center')
+    # Draw a Latin hypercube (all values in [0-1])
+    hypercube = lhs(n=len(par_priors), samples=n_samples, criterion="center")
 
     for j, prior_dict in enumerate(par_priors):
         for i in range(n_samples):
             prop = hypercube[i, j]
             if prior_dict["distribution"] == "uniform":
-                quantile = prior_dict["distri_params"][0] + prop * \
-                           (prior_dict["distri_params"][1] - prior_dict["distri_params"][0])
+                quantile = prior_dict["distri_params"][0] + prop * (
+                    prior_dict["distri_params"][1] - prior_dict["distri_params"][0]
+                )
             elif prior_dict["distribution"] == "lognormal":
                 mu = prior_dict["distri_params"][0]
                 sd = prior_dict["distri_params"][1]
@@ -31,15 +36,15 @@ def sample_starting_params_from_lhs(par_priors, n_samples):
             elif prior_dict["distribution"] == "beta":
                 quantile = stats.beta.ppf(
                     prop, prior_dict["distri_params"][0], prior_dict["distri_params"][1],
-                )
+                )[0]
             elif prior_dict["distribution"] == "gamma":
                 quantile = stats.gamma.ppf(
                     prop, prior_dict["distri_params"][0], 0.0, prior_dict["distri_params"][1],
-                )
+                )[0]
             else:
                 raise_error_unsupported_prior(prior_dict["distribution"])
 
-            list_of_starting_params[i][prior_dict['param_name']] = quantile
+            list_of_starting_params[i][prior_dict["param_name"]] = quantile
 
     return list_of_starting_params
 
@@ -148,3 +153,89 @@ if __name__ == "__main__":
 
     print()
     print("Obtained from chain " + str(best_chain_index))
+
+
+def specify_missing_prior_params(priors: dict):
+    """
+    Work out the prior distribution parameters if they were not specified
+    """
+    for i, p_dict in enumerate(priors):
+        if "distri_params" not in p_dict:
+            assert (
+                "distri_mean" in p_dict and "distri_ci" in p_dict
+            ), "Please specify distri_mean and distri_ci."
+            if "distri_ci_width" in p_dict:
+                distri_params = find_distribution_params_from_mean_and_ci(
+                    p_dict["distribution"],
+                    p_dict["distri_mean"],
+                    p_dict["distri_ci"],
+                    p_dict["distri_ci_width"],
+                )
+            else:
+                distri_params = find_distribution_params_from_mean_and_ci(
+                    p_dict["distribution"], p_dict["distri_mean"], p_dict["distri_ci"],
+                )
+            if p_dict["distribution"] == "beta":
+                priors[i]["distri_params"] = [
+                    distri_params["a"],
+                    distri_params["b"],
+                ]
+            elif p_dict["distribution"] == "gamma":
+                priors[i]["distri_params"] = [
+                    distri_params["shape"],
+                    distri_params["scale"],
+                ]
+            else:
+                raise_error_unsupported_prior(p_dict["distribution"])
+
+
+def find_distribution_params_from_mean_and_ci(distribution, mean, ci, ci_width=0.95):
+    """
+    Work out the parameters of a given distribution based on a desired mean and CI
+    :param distribution: string
+        either 'gamma' or 'beta' for now
+    :param mean: float
+        the desired mean value
+    :param ci: list or tuple of length 2
+        the lower and upper bounds of the CI
+    :param ci_width:
+        the width of the desired CI
+    :return:
+        a dictionary with the parameters
+    """
+    assert len(ci) == 2 and ci[1] > ci[0] and 0.0 < ci_width < 1.0
+    percentile_low = (1.0 - ci_width) / 2.0
+    percentile_up = 1.0 - percentile_low
+
+    if distribution == "beta":
+        assert 0.0 < ci[0] < 1.0 and 0.0 < ci[1] < 1.0 and 0.0 < mean < 1.0
+
+        def distance_to_minimise(a):
+            b = a * (1.0 - mean) / mean
+            vals = stats.beta.ppf([percentile_low, percentile_up], a, b)
+            dist = sum([(ci[i] - vals[i]) ** 2 for i in range(2)])
+            return dist
+
+        sol = minimize(distance_to_minimise, [1.0], bounds=[(0.0, None)])
+        best_a = sol.x
+        best_b = best_a * (1.0 - mean) / mean
+        params = {"a": best_a, "b": best_b}
+
+    elif distribution == "gamma":
+        assert ci[0] > 0 and ci[1] > 0 and mean > 0.0
+
+        def distance_to_minimise(scale):
+            shape = mean / scale
+            vals = stats.gamma.ppf([percentile_low, percentile_up], shape, 0, scale)
+            dist = sum([(ci[i] - vals[i]) ** 2 for i in range(2)])
+            return dist
+
+        sol = minimize(distance_to_minimise, [1.0], bounds=[(1.0e-11, None)])
+        best_scale = sol.x
+        best_shape = mean / best_scale
+
+        params = {"shape": best_shape, "scale": best_scale}
+    else:
+        raise ValueError(distribution + " distribution is not supported for the moment")
+
+    return params

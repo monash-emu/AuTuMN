@@ -160,7 +160,7 @@ def get_weekly_summed_targets(times, values):
         this_week_times = [times[i] for i in this_week_indices]
         this_week_values = [values[i] for i in this_week_indices]
         w_times.append(round(np.mean(this_week_times)))
-        w_values.append(sum(this_week_values))
+        w_values.append(np.mean(this_week_values))
         t_low += 7
 
     return w_times, w_values

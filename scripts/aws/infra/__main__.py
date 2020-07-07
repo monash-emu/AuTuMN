@@ -1,12 +1,14 @@
 import time
 import os
-
+import logging
 import click
 
 from . import aws
 from . import remote
 from .website import update_website
 from .settings import EC2InstanceType, EC2_INSTANCE_SPECS
+
+logger = logging.getLogger(__name__)
 
 
 @click.group()
@@ -95,7 +97,7 @@ def run_calibrate(job_name, calibration_name, num_chains, run_time, dry):
     script_args = [calibration_name, num_chains, run_time]
     instance_type = aws.get_instance_type(2 * num_chains, 8)
     if dry:
-        print("Dry run:", instance_type)
+        logger.info("Dry run: %s", instance_type)
     else:
         _run_job(job_id, instance_type, "calibrate.sh", script_args)
 
@@ -157,6 +159,18 @@ def website():
     Update the calibrations website.
     """
     update_website()
+
+
+from .remote import fabric_test
+
+
+@click.command()
+def test():
+    instance = aws.find_instance("test")
+    fabric_test(instance)
+
+
+cli.add_command(test)
 
 
 cli.add_command(website)

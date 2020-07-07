@@ -1,13 +1,26 @@
 import os
+import glob
+import logging
+from abc import ABC, abstractmethod
 
 import boto3
 import luigi
+import sentry_sdk
 from boto3.s3.transfer import TransferConfig
 from botocore.exceptions import ProfileNotFound
 from luigi.contrib.s3 import S3Target
 
+
 from . import settings
 
+logger = logging.getLogger(__name__)
+
+# Setup Sentry error reporting - https://sentry.io/welcome/
+SENTRY_DSN = os.environ.get("SENTRY_DSN")
+if SENTRY_DSN:
+    sentry_sdk.init(SENTRY_DSN)
+
+# AWS S3 upload settings
 S3_UPLOAD_EXTRA_ARGS = {"ACL": "public-read"}
 S3_UPLOAD_CONFIG = TransferConfig(
     multipart_threshold=1024 * 25,
@@ -16,6 +29,7 @@ S3_UPLOAD_CONFIG = TransferConfig(
     use_threads=True,
 )
 
+# Get an AWS S3 client
 try:
     session = boto3.session.Session(
         region_name=settings.AWS_REGION, profile_name=settings.AWS_PROFILE
@@ -30,49 +44,161 @@ except ProfileNotFound:
 s3 = session.client("s3")
 
 
-class BuildLocalDirectoryTask(luigi.Task):
+class BaseTask(luigi.Task, ABC):
+    """Ensures errors are logged correctly."""
+
+    @abstractmethod
+    def safe_run(self):
+        pass
+
+    def run(self):
+        try:
+            self.safe_run()
+        except Exception as e:
+            logger.exception("Task failed")
+            if SENTRY_DSN:
+                sentry_sdk.capture_exception()
+
+            raise
+
+
+class ParallelLoggerTask(luigi.Task, ABC):
+    """
+    Mixin to allow parallel tasks to log to multiple files in parallel
+    """
+
+    run_id = luigi.Parameter()  # Unique run id string
+
+    @abstractmethod
+    def get_log_filename(self):
+        """Returns the name of the log file for this task"""
+        pass
+
+    @abstractmethod
+    def safe_run(self):
+        pass
+
+    def run(self):
+        self.setup_logging()
+        try:
+            self.safe_run()
+        except Exception as e:
+            logger.exception("Task failed: %s", self)
+            if SENTRY_DSN:
+                sentry_sdk.capture_exception()
+
+            raise
+
+    def setup_logging(self):
+        """Setup logging for this task, to be called in run()"""
+        logfile_path = os.path.join(settings.BASE_DIR, "logs", self.get_log_filename())
+        log_format = "%(asctime)s %(module)s:%(levelname)s: %(message)s"
+        formatter = logging.Formatter(log_format)
+        handler = logging.FileHandler(logfile_path)
+        handler.setFormatter(formatter)
+        logger_names = ["tasks", "apps", "autumn", "summer"]
+        for logger_name in logger_names:
+            _logger = logging.getLogger(logger_name)
+            _logger.handlers = []
+            _logger.addHandler(handler)
+            _logger.setLevel(logging.INFO)
+
+    @staticmethod
+    def upload_chain_logs_on_success(task, exception):
+        """Ensure log files are uploaded every time the task succeeds"""
+        logger.info("Task suceeded, uploading logs: %s", task)
+        filename = task.get_log_filename()
+        src_path = os.path.join(settings.BASE_DIR, "logs", filename)
+        dest_key = os.path.join(task.run_id, "logs", filename)
+        upload_s3(src_path, dest_key)
+
+    @staticmethod
+    def upload_chain_logs_on_failure(task, exception):
+        """Ensure log files are uploaded even if the task fails"""
+        logger.info("Task failed, uploading logs: %s", task)
+        filename = task.get_log_filename()
+        src_path = os.path.join(settings.BASE_DIR, "logs", filename)
+        dest_key = os.path.join(task.run_id, "logs", filename)
+        upload_s3(src_path, dest_key)
+
+
+ParallelLoggerTask.event_handler(luigi.Event.SUCCESS)(
+    ParallelLoggerTask.upload_chain_logs_on_success
+)
+
+ParallelLoggerTask.event_handler(luigi.Event.FAILURE)(
+    ParallelLoggerTask.upload_chain_logs_on_failure
+)
+
+
+class BuildLocalDirectoryTask(BaseTask):
     """
     Creates an output directory with the specified name
     """
 
     dirname = luigi.Parameter()
-    base_path = luigi.Parameter()
 
     def get_dirpath(self):
-        return os.path.join(self.base_path, self.dirname)
+        return os.path.join(settings.BASE_DIR, self.dirname)
 
     def output(self):
         return luigi.LocalTarget(self.get_dirpath())
 
-    def run(self):
+    def safe_run(self):
         os.makedirs(self.get_dirpath(), exist_ok=True)
 
 
-class UploadFileS3Task(luigi.Task):
+class UploadFileS3Task(BaseTask, ABC):
     """
     Uploads a file or folder to S3
     """
 
-    src_path = luigi.Parameter()
-    dest_key = luigi.Parameter()
-    bucket = luigi.Parameter()
+    run_id = luigi.Parameter()  # Unique run id string
 
     def output(self):
         return S3Target(self.get_s3_uri())
 
-    def run(self):
-        if os.path.isfile(self.src_path):
-            upload_file_s3(self.src_path, self.dest_key)
-        elif os.path.isdir(self.src_path):
-            upload_folder_s3(folder_name, dest_folder_key)
-        else:
-            raise ValueError(f"Path is not a file or folder {self.src_path}")
+    def safe_run(self):
+        upload_s3(self.get_src_path(), self.get_dest_key())
+
+    @abstractmethod
+    def get_src_path(self):
+        """Returns the path of the file to upload"""
+        pass
+
+    def get_dest_key(self):
+        rel_path = os.path.relpath(self.get_src_path(), settings.BASE_DIR)
+        return os.path.join(self.run_id, rel_path)
 
     def get_s3_uri(self):
-        return os.path.join(f"s3://{self.bucket}", self.dest_key)
+        s3_uri = os.path.join(f"s3://{settings.S3_BUCKET}", self.get_dest_key())
+        return s3_uri
+
+
+def upload_s3(src_path, dest_key):
+    """Upload a file or folder to S3"""
+    if os.path.isfile(src_path):
+        upload_file_s3(src_path, dest_key)
+    elif os.path.isdir(src_path):
+        upload_folder_s3(src_path, dest_key)
+    else:
+        raise ValueError(f"Path is not a file or folder {src_path}")
+
+
+def upload_folder_s3(folder_path, dest_folder_key):
+    """Upload a folder to S3"""
+    nodes = glob.glob(os.path.join(folder_path, "**", "*"), recursive=True)
+    files = [f for f in nodes if os.path.isfile(f)]
+    rel_files = [os.path.relpath(f, folder_path) for f in files]
+    for rel_filepath in rel_files:
+        src_path = os.path.join(folder_path, rel_filepath)
+        dest_key = os.path.join(dest_folder_key, rel_filepath)
+        upload_file_s3(src_path, dest_key)
 
 
 def upload_file_s3(src_path, dest_key):
+    """Upload a file to S3"""
+    logger.info("Uploading from %s to %s", src_path, dest_key)
     s3.upload_file(
         src_path,
         settings.S3_BUCKET,
@@ -80,15 +206,3 @@ def upload_file_s3(src_path, dest_key):
         ExtraArgs=S3_UPLOAD_EXTRA_ARGS,
         Config=S3_UPLOAD_CONFIG,
     )
-
-
-def upload_folder_s3(folder_name, dest_folder_key):
-    # TODO
-    pass
-
-
-def upload_logs_on_failure(task, exception):
-    # TODO add "fail" to filename
-    # task.run_id?
-    # return upload_folder_s3(folder_name, dest_folder_key)
-    pass

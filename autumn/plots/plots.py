@@ -114,7 +114,7 @@ def plot_posterior(
     fig, axis, _, _, _ = plotter.get_figure()
     vals.hist(bins=num_bins, ax=axis)
     plotter.save_figure(
-        fig, filename=f"{param_name} posterior", title_text=f"{param_name} posterior"
+        fig, filename=f"{param_name}-posterior", title_text=f"{param_name} posterior"
     )
 
 
@@ -133,7 +133,7 @@ def plot_loglikelihood_vs_parameter(
     axis.set_ylabel("-log(-loglikelihood)")
     plotter.save_figure(
         fig,
-        filename=f"likelihood against {param_name}",
+        filename=f"likelihood-against-{param_name}",
         title_text=f"likelihood against {param_name}",
     )
 
@@ -178,7 +178,7 @@ def plot_timeseries_with_uncertainty(
     axis.set_ylabel(output_name)
 
     plotter.save_figure(
-        fig, filename=f"{output_name} uncertainty {scenario_list}", title_text=f"{output_name}",
+        fig, filename=f"{output_name}-uncertainty-{scenario_list}", title_text=f"{output_name}",
     )
 
 
@@ -218,7 +218,7 @@ def plot_agg_compartments_multi_scenario(
     if is_logscale:
         axis.set_yscale("log")
 
-    plotter.save_figure(fig, filename="aggregate compartments", title_text="aggregate compartments")
+    plotter.save_figure(fig, filename="aggregate-compartments", title_text="aggregate compartments")
 
 
 def plot_single_compartment_multi_scenario(
@@ -374,7 +374,7 @@ def plot_exponential_growth_rate(plotter: Plotter, model: StratifiedModel):
     fig, axis, max_dims, n_rows, n_cols = plotter.get_figure()
     axis.plot(model.times[:-1], growth_rates)
     axis.set_ylim([0.0, 0.25])
-    filename = "exponential_growth_rate"
+    filename = "exponential-growth-rate"
     plotter.save_figure(fig, filename=filename, title_text=filename)
 
 

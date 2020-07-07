@@ -4,3 +4,4 @@ timeago
 click
 tabulate
 awscli
+fabric

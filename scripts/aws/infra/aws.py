@@ -2,6 +2,7 @@ import os
 import subprocess
 from datetime import datetime
 from dateutil.tz import tzutc
+import logging
 
 import boto3
 from botocore.exceptions import ProfileNotFound
@@ -10,6 +11,7 @@ from tabulate import tabulate
 
 from . import settings
 
+logger = logging.getLogger(__name__)
 
 try:
     session = boto3.session.Session(
@@ -67,10 +69,10 @@ def run_job(job_id: str, instance_type=None):
 
 
 def stop_job(job_id: str):
-    print(f"Stopping EC2 instances running job {job_id}... ", end="")
+    logger.info(f"Stopping EC2 instances running job {job_id}... ")
     instance_ids = [i["InstanceId"] for i in describe_instances() if i["name"] == job_id]
     client.terminate_instances(InstanceIds=instance_ids)
-    print("request sent.")
+    logger.info("Stop request sent.")
 
 
 def cleanup_volumes():
@@ -80,11 +82,11 @@ def cleanup_volumes():
     volumes = client.describe_volumes()
     volume_ids = [v["VolumeId"] for v in volumes["Volumes"] if v["State"] == "available"]
     for v_id in volume_ids:
-        print(f"Deleting orphaned volume {v_id}")
+        logger.info(f"Deleting orphaned volume {v_id}")
         client.delete_volume(VolumeId=v_id)
 
     if not volume_ids:
-        print("No volumes to delete.")
+        logger.info("No volumes to delete.")
 
 
 def cleanup_instances():
@@ -103,20 +105,20 @@ def cleanup_instances():
         hours = uptime_delta.total_seconds() // 3600
         if hours > settings.EC2_MAX_HOURS:
             launch_time_str = launched_time.isoformat()
-            print(
+            logger.info(
                 f"Stopping instance {i['name']} with id {i['InstanceId']} with {hours}h uptime since {launch_time_str}"
             )
             stop_instance_ids.append(i["InstanceId"])
 
     if stop_instance_ids:
-        print("Stopping instance ids", stop_instance_ids)
+        logger.info("Stopping instance ids %s", stop_instance_ids)
         client.terminate_instances(InstanceIds=stop_instance_ids)
     else:
-        print("No instances to stop.")
+        logger.info("No instances to stop.")
 
 
 def run_instance(job_id: str, instance_type: str):
-    print(f"Creating EC2 instance {instance_type} for job {job_id}... ", end="")
+    logger.info(f"Creating EC2 instance {instance_type} for job {job_id}... ")
     client.run_instances(
         MaxCount=1,
         MinCount=1,
@@ -137,7 +139,7 @@ def run_instance(job_id: str, instance_type: str):
             {"ResourceType": "instance", "Tags": [{"Key": "Name", "Value": job_id}]}
         ],
     )
-    print("request sent.")
+    logger.info("Create request sent.")
 
 
 def find_instance(name):
@@ -149,15 +151,15 @@ def find_instance(name):
 
 def start_instance(instance):
     name = instance["name"]
-    print(f"Starting EC2 instance {name}")
+    logger.info(f"Starting EC2 instance {name}")
     response = client.start_instances(InstanceIds=[instance["InstanceId"]])
 
 
 def stop_instance(instance):
     name = instance["name"]
-    print(f"Stopping EC2 instance {name}")
+    logger.info(f"Stopping EC2 instance {name}")
     response = client.stop_instances(InstanceIds=[instance["InstanceId"]])
-    print(response)
+    logger.info(response)
 
 
 def is_running(instance):
@@ -167,7 +169,7 @@ def is_running(instance):
 
 def print_status(instances):
     now = datetime.utcnow().replace(tzinfo=tzutc())
-    print("\nEC2 instance statuses\n")
+    logger.info("EC2 instance statuses\n")
     table_data = [
         [
             i["name"],

@@ -14,17 +14,14 @@ python3 -m luigi \
     --CalibrationChainTask-model-name malaysia \
     --CalibrationChainTask-runtime 12 \
     --local-scheduler \
-    --logging-conf-file tasks/luigi-logging.yml
+    --logging-conf-file tasks/luigi-logging.ini
 
 
 """
 import os
 
-import sentry_sdk
 
+from .settings import BASE_DIR
 from .calibrate import RunCalibrate
 
-# Setup Sentry error reporting - https://sentry.io/welcome/
-SENTRY_DSN = os.environ.get("SENTRY_DSN")
-if SENTRY_DSN:
-    sentry_sdk.init(SENTRY_DSN)
+os.makedirs(BASE_DIR, exist_ok=True)

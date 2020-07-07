@@ -21,8 +21,6 @@ logger = logging.getLogger(__name__)
 # TODO: Upload prior plots, params and calibration config
 # TODO: Upload intermediate plots and databases?
 
-BASE_DIR = os.path.join(OUTPUT_DATA_PATH, "remote")
-
 
 class RunCalibrate(luigi.Task):
     """Master task, requires all other tasks"""
@@ -37,46 +35,24 @@ class RunCalibrate(luigi.Task):
             - all output data uploaded to S3
             - all plots uploaded to S3
         """
-        upload_db_tasks = [self.get_upload_db_task(i) for i in range(self.num_chains)]
-        upload_log_tasks = [self.get_upload_log_task(i) for i in range(self.num_chains)]
-        upload_plots_task = UploadPlotsTask(
-            num_chains=self.num_chains,
-            src_path=os.path.join(BASE_DIR, "plots"),
-            dest_key=os.path.join(self.run_id, "plots"),
-            bucket=settings.S3_BUCKET,
-        )
-        return [*upload_log_tasks, *upload_db_tasks, upload_plots_task]
-
-    def get_upload_db_task(self, chain_id):
-        filename = f"outputs_calibration_chain_{chain_id}.db"
-        return UploadDatabaseTask(
-            chain_id=chain_id,
-            src_path=os.path.join(BASE_DIR, "data", filename),
-            dest_key=os.path.join(self.run_id, "data", "calibration_outputs", filename),
-            bucket=settings.S3_BUCKET,
-        )
-
-    def get_upload_log_task(self, chain_id):
-        filename = f"run-{chain_id}.log"
-        return UploadLogs(
-            chain_id=chain_id,
-            src_path=os.path.join(BASE_DIR, "logs", filename),
-            dest_key=os.path.join(self.run_id, "logs", filename),
-            bucket=settings.S3_BUCKET,
-        )
+        upload_db_tasks = [
+            UploadDatabaseTask(run_id=self.run_id, chain_id=i) for i in range(self.num_chains)
+        ]
+        upload_plots_task = UploadPlotsTask(run_id=self.run_id, num_chains=self.num_chains,)
+        return [*upload_db_tasks, upload_plots_task]
 
 
-class BuildInputDatabaseTask(luigi.Task):
+class BuildInputDatabaseTask(utils.BaseTask):
     """Builds the input database"""
 
     def output(self):
         return luigi.LocalTarget(input_db_path)
 
-    def run(self):
+    def safe_run(self):
         build_input_database()
 
 
-class CalibrationChainTask(luigi.Task):
+class CalibrationChainTask(utils.ParallelLoggerTask):
     """Runs the calibration for a single chain"""
 
     model_name = luigi.Parameter()  # The calibration to run
@@ -84,26 +60,17 @@ class CalibrationChainTask(luigi.Task):
     chain_id = luigi.IntParameter()  # Unique chain id
 
     def requires(self):
-        paths = ["logs", "data", "plots"]
-        dir_tasks = [utils.BuildLocalDirectoryTask(dirname=p, base_path=BASE_DIR) for p in paths]
+        paths = ["logs", "data/calibration_outputs", "plots"]
+        dir_tasks = [utils.BuildLocalDirectoryTask(dirname=p) for p in paths]
         return [BuildInputDatabaseTask(), *dir_tasks]
 
     def output(self):
         return luigi.LocalTarget(self.get_output_db_path())
 
-    def run(self):
-        logfile_path = os.path.join(BASE_DIR, "logs", f"run-{self.chain_id}.log")
-        log_format = "%(asctime)s %(module)s:%(levelname)s: %(message)s"
-        logger_names = ["autumn", "summer"]
-        for logger_name in logger_names:
-            formatter = logging.Formatter(log_format)
-            handler = logging.FileHandler(logfile_path)
-            handler.setFormatter(formatter)
-            _logger = logging.getLogger(logger_name)
-            _logger.handlers = []
-            _logger.addHandler(handler)
-            _logger.setLevel(logging.INFO)
+    def get_log_filename(self):
+        return f"run-{self.chain_id}.log"
 
+    def safe_run(self):
         msg = f"Running {self.model_name} calibration with chain id {self.chain_id} with runtime {self.runtime}s"
         with Timer(msg):
             # Run the calibration
@@ -119,7 +86,9 @@ class CalibrationChainTask(luigi.Task):
         shutil.move(src_db_path, dest_db_path)
 
     def get_output_db_path(self):
-        return os.path.join(OUTPUT_DATA_PATH, "remote", "data", self.get_filename())
+        return os.path.join(
+            OUTPUT_DATA_PATH, "remote", "data", "calibration_outputs", self.get_filename()
+        )
 
     def find_src_db_path(self):
         filename = self.get_filename()
@@ -133,42 +102,36 @@ class CalibrationChainTask(luigi.Task):
         return f"outputs_calibration_chain_{self.chain_id}.db"
 
 
-# Handle failure - upload logs
-CalibrationChainTask.event_handler(luigi.Event.FAILURE)(utils.upload_logs_on_failure)
-
-
 class UploadDatabaseTask(utils.UploadFileS3Task):
 
     chain_id = luigi.IntParameter()  # Unique chain id
 
     def requires(self):
-        return CalibrationChainTask(chain_id=self.chain_id)
+        return CalibrationChainTask(run_id=self.run_id, chain_id=self.chain_id)
+
+    def get_src_path(self):
+        filename = f"outputs_calibration_chain_{self.chain_id}.db"
+        return os.path.join(settings.BASE_DIR, "data", "calibration_outputs", filename)
 
 
-class UploadLogs(utils.UploadFileS3Task):
-    """Uploads the log files for a given task"""
-
-    chain_id = luigi.IntParameter()  # Unique chain id
-
-    def requires(self):
-        return CalibrationChainTask(chain_id=self.chain_id)
-
-
-class PlotOutputsTask(luigi.Task):
+class PlotOutputsTask(utils.BaseTask):
     """Plots the database outputs"""
 
     num_chains = luigi.IntParameter()  # The number of chains to run
+    run_id = luigi.Parameter()
 
     def requires(self):
-        return [CalibrationChainTask(chain_id=i) for i in range(self.num_chains)]
+        return [
+            CalibrationChainTask(run_id=self.run_id, chain_id=i) for i in range(self.num_chains)
+        ]
 
     def output(self):
-        target_file = os.path.join(BASE_DIR, "plots", "loglikelihood-traces.png")
+        target_file = os.path.join(settings.BASE_DIR, "plots", "loglikelihood-traces.png")
         return luigi.LocalTarget(target_file)
 
-    def run(self):
-        mcmc_dir = os.path.join(BASE_DIR, "data")
-        plot_dir = os.path.join(BASE_DIR, "plots")
+    def safe_run(self):
+        mcmc_dir = os.path.join(settings.BASE_DIR, "data", "calibration_outputs")
+        plot_dir = os.path.join(settings.BASE_DIR, "plots")
         plot_from_mcmc_databases(mcmc_dir, plot_dir)
 
 
@@ -178,4 +141,7 @@ class UploadPlotsTask(utils.UploadFileS3Task):
     num_chains = luigi.IntParameter()  # The number of chains to run
 
     def requires(self):
-        return PlotOutputsTask(self.num_chains)
+        return PlotOutputsTask(run_id=self.run_id, num_chains=self.num_chains)
+
+    def get_src_path(self):
+        return os.path.join(settings.BASE_DIR, "plots")

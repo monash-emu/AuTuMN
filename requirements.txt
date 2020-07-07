@@ -20,6 +20,7 @@ graphviz>=0.4.10
 cerberus==1.3.2
 streamlit==0.58.0
 tqdm
+pyDOE>=0.3.8
 
 # Testing
 pytest

@@ -625,10 +625,16 @@ class Calibration:
             # Work out bounds for acceptable values, using the support of the prior distribution
             lower_bound, upper_bound = get_parameter_bounds_from_priors(prior_dict)
             sample = lower_bound - 10.0  # deliberately initialise out of parameter scope
+            n_attempts = 0
             while not lower_bound <= sample <= upper_bound:
                 sample = np.random.normal(
                     loc=prev_params[i], scale=prior_dict["jumping_sd"], size=1
                 )[0]
+                n_attempts += 1
+                if n_attempts > 1.e5:
+                    raise ValueError("Failed to draw an acceptable value for " + prior_dict['param_name'] +
+                                     "after 100,000 attempts. Check that its initial value is within the prior's support.")
+
             new_params.append(sample)
         return new_params
 

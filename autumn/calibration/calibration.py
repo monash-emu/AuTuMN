@@ -29,6 +29,7 @@ from .utils import (
     find_decent_starting_point,
     calculate_prior,
     raise_error_unsupported_prior,
+    sample_starting_params_from_lhs
 )
 
 BEST_LL = "best_ll"
@@ -83,6 +84,7 @@ class Calibration:
         model_parameters={},
         start_time_range=None,
         record_rejected_outputs=False,
+        total_nb_chains=1,
     ):
         self.model_name = model_name
         self.model_builder = model_builder  # a function that builds a new model without running it
@@ -121,7 +123,7 @@ class Calibration:
         self.chain_index = chain_index
 
         self.specify_missing_prior_params()
-
+        self.starting_point = sample_starting_params_from_lhs(self.priors, total_nb_chains)[chain_index - 1]  # FIXME, this assumes chains must have indices in {1, 2 ... total_nb_chains}
         # Setup output directory
         project_dir = os.path.join(
             constants.OUTPUT_DATA_PATH, "calibrate", model_name, param_set_name
@@ -614,13 +616,9 @@ class Calibration:
         if prev_params is None:
             prev_params = []
             for prior_dict in self.priors:
-                if prior_dict["param_name"] in self.model_parameters["default"]:
-                    prev_params.append(self.model_parameters["default"][prior_dict["param_name"]])
-                else:
-                    prev_params.append(find_decent_starting_point(prior_dict))
+                prev_params.append(self.starting_point[prior_dict["param_name"]])
 
         new_params = []
-
         for i, prior_dict in enumerate(self.priors):
             # Work out bounds for acceptable values, using the support of the prior distribution
             lower_bound, upper_bound = get_parameter_bounds_from_priors(prior_dict)

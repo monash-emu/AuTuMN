@@ -25,27 +25,39 @@ CODE_PATH = "/home/ubuntu/code"
 
 
 def fabric_test(instance):
+    num_chains = 6
+    model_name = "malaysia"
+    runtime = 12
     with get_connection(instance) as conn:
         update_repo(conn, branch="luigi-redux")
         install_requirements(conn)
         start_luigi_scheduler(conn, instance)
-        run_id = get_run_id(conn, "test")
+        run_id = get_run_id(conn, model_name)
+        run_id = "test"
         with conn.cd(CODE_PATH):
             cmd_str = (
                 "./env/bin/python -m luigi"
                 " --module tasks"
                 " RunCalibrate"
-                " --run-id test"
-                " --num-chains 6"
-                " --workers 6"
-                " --CalibrationChainTask-model-name malaysia"
-                " --CalibrationChainTask-runtime 12"
+                f" --run-id {run_id}"
+                f" --num-chains {num_chains}"
+                f" --workers {num_chains}"
+                f" --CalibrationChainTask-model-name {model_name}"
+                f" --CalibrationChainTask-runtime {runtime}"
                 " --logging-conf-file tasks/luigi-logging.ini"
             )
             conn.run(cmd_str, echo=True, pty=True)
+            # Upload Luigi log files
+            src = "/home/ubuntu/code/data/outputs/luigid/luigi-server.log"
+            dest = f"{run_id}/logs/luigi-worker.log"
+            copy_s3(conn, src, dest)
+            src = "/home/ubuntu/code/data/outputs/remote/luigi-worker.log"
+            dest = f"{run_id}/logs/luigi-server.log"
+            copy_s3(conn, src, dest)
 
-    # TODO: Upload /home/code/data/outputs/remote/luigi.log
-    # TODO: Upload /home/code/data/outputs/luigid/luigi-server.log
+
+def copy_s3(conn: Connection, src_path: str, dest_key: str):
+    conn.run(f"./env/bin/aws s3 cp {src_path} s3://{settings.S3_BUCKET}/{dest_key}", echo=True)
 
 
 def start_luigi_scheduler(conn: Connection, instance):

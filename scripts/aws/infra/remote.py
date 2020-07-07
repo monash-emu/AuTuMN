@@ -24,31 +24,47 @@ SSH_ARGS = f"{SSH_OPT_STR} {SSH_KEY_STR}"
 CODE_PATH = "/home/ubuntu/code"
 
 
-def get_conn(instance):
-    ip = instance["ip"]
-    key_filepath = os.path.expanduser(f"~/.ssh/{settings.EC2_KEYFILE}")
-    return Connection(host=ip, user="ubuntu", connect_kwargs={"key_filename": key_filepath},)
-
-
 def fabric_test(instance):
-    with get_conn(instance) as conn:
+    with get_connection(instance) as conn:
         update_repo(conn, branch="luigi-redux")
         install_requirements(conn)
+        start_luigi_scheduler(conn, instance)
         run_id = get_run_id(conn, "test")
-        set_run_id(conn, run_id)
         with conn.cd(CODE_PATH):
             cmd_str = (
                 "./env/bin/python -m luigi"
                 " --module tasks"
                 " RunCalibrate"
                 " --run-id test"
-                " --num-chains 2"
+                " --num-chains 6"
+                " --workers 6"
                 " --CalibrationChainTask-model-name malaysia"
                 " --CalibrationChainTask-runtime 12"
-                " --local-scheduler"
                 " --logging-conf-file tasks/luigi-logging.ini"
             )
             conn.run(cmd_str, echo=True, pty=True)
+
+    # TODO: Upload /home/code/data/outputs/remote/luigi.log
+    # TODO: Upload /home/code/data/outputs/luigid/luigi-server.log
+
+
+def start_luigi_scheduler(conn: Connection, instance):
+    """Start the Luigi scheduling server"""
+    ip = instance["ip"]
+    url = f"http://{ip}:8082/static/visualiser/index.html"
+    logger.info("Starting Luigi scheduling server")
+    log_dir = "/home/ubuntu/code/data/outputs/luigid"
+    conn.run(f"mkdir -p {log_dir}")
+    cmd_str = (
+        "/home/ubuntu/code/env/bin/luigid"
+        " --background"
+        f" --logdir {log_dir}"
+        " --address 0.0.0.0"
+        " --port 8082"
+    )
+    conn.sudo(cmd_str, echo=True)
+    logger.info("Started Luigi scheduling server")
+    logger.info("Luigi server available at %s", url)
 
 
 def set_run_id(conn: Connection, run_id: str):
@@ -80,6 +96,7 @@ def update_repo(conn: Connection, branch: str = "master"):
     logger.info("Updating git repository to run the latest code.")
     conn.sudo(f"chown -R ubuntu:ubuntu {CODE_PATH}", echo=True)
     with conn.cd(CODE_PATH):
+        conn.run("git fetch --quiet", echo=True)
         conn.run(f"git checkout --quiet {branch}", echo=True)
         conn.run("git pull --quiet", echo=True)
     logger.info("Done updating repo.")
@@ -91,6 +108,12 @@ def install_requirements(conn: Connection):
     with conn.cd(CODE_PATH):
         conn.run("./env/bin/pip install --quiet -r requirements.txt", echo=True)
     logger.info("Finished installing requirements.")
+
+
+def get_connection(instance):
+    ip = instance["ip"]
+    key_filepath = os.path.expanduser(f"~/.ssh/{settings.EC2_KEYFILE}")
+    return Connection(host=ip, user="ubuntu", connect_kwargs={"key_filename": key_filepath},)
 
 
 def ssh_interactive(instance):

@@ -19,6 +19,9 @@ python3 -m luigi \
 
 """
 import os
+import warnings
+
+warnings.simplefilter(action="ignore", category=FutureWarning)
 
 
 from .settings import BASE_DIR

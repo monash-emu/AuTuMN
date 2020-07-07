@@ -30,9 +30,17 @@ python -m apps --help
 ├── apps                    Specific applications of the framework
 ├── autumn                  AuTuMN framework module
 ├── data                    Data to be used by the models
-├── docs                    Documentation and random files
+|   ├─ inputs                   Input data for the models
+|   └─ outputs                  Module run outputs (not in source control)
+|
+├── docs                    Documentation
 ├── scripts                 Utility scripts
+|   ├─ aws                      Scripts to run tasks on AWS
+|   ├─ buildkite                Configuration of Buildkite pipelines
+|   └─ massive                  Scripts to run tasks on MASSIVE (not used)
+|
 ├── summer                  SUMMER framework module
+├── tasks                   Cloud computing tasks
 ├── tests                   Automated tests
 ├── .gitignore              Files for Git to ignore
 ├── plots.py                Streamlit entrypoint

@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 
 def plot_from_mcmc_databases(mcmc_dir: str, plot_dir: str):
-    print(f"Plotting {mcmc_dir} into {plot_dir}")
+    logger.info(f"Plotting {mcmc_dir} into {plot_dir}")
     plotter = FilePlotter(plot_dir, {})
     mcmc_tables = load_mcmc_tables(mcmc_dir)
     burn_in = 0

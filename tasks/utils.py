@@ -93,7 +93,10 @@ class ParallelLoggerTask(luigi.Task, ABC):
             if SENTRY_DSN:
                 sentry_sdk.capture_exception()
 
+            self.teardown_logging()
             raise
+
+        self.teardown_logging()
 
     def setup_logging(self):
         """Setup logging for this task, to be called in run()"""
@@ -105,9 +108,17 @@ class ParallelLoggerTask(luigi.Task, ABC):
         logger_names = ["tasks", "apps", "autumn", "summer"]
         for logger_name in logger_names:
             _logger = logging.getLogger(logger_name)
+            _logger.propagate = False
             _logger.handlers = []
             _logger.addHandler(handler)
             _logger.setLevel(logging.INFO)
+
+    def teardown_logging(self):
+        logger_names = ["tasks", "apps", "autumn", "summer"]
+        for logger_name in logger_names:
+            _logger = logging.getLogger(logger_name)
+            _logger.propagate = True
+            _logger.handlers = []
 
     @staticmethod
     def upload_chain_logs_on_success(task):

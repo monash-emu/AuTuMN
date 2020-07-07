@@ -166,7 +166,7 @@ from .remote import fabric_test
 
 @click.command()
 def test():
-    instance = aws.find_instance("test")
+    instance = aws.find_instance("test4")
     fabric_test(instance)
 
 

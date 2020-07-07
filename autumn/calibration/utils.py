@@ -1,8 +1,47 @@
 import numpy as np
 import math
-from scipy import stats
+from scipy import stats, special
 import os
 from autumn.db import Database
+from pyDOE import lhs
+
+
+def sample_starting_params_from_lhs(par_priors, n_samples):
+    """
+    Use Latin Hypercube Sampling to define MCMC starting points
+    :param par_priors: a list of dictionaries defining the prior distributions
+    :param n_samples: integer
+    :return: a list of dictionaries
+    """
+    list_of_starting_params = [{} for _ in range(n_samples)]
+
+    # draw a Latin hypercube (all values in [0-1])
+    hypercube = lhs(n=len(par_priors), samples=n_samples, criterion='center')
+
+    for j, prior_dict in enumerate(par_priors):
+        for i in range(n_samples):
+            prop = hypercube[i, j]
+            if prior_dict["distribution"] == "uniform":
+                quantile = prior_dict["distri_params"][0] + prop * \
+                           (prior_dict["distri_params"][1] - prior_dict["distri_params"][0])
+            elif prior_dict["distribution"] == "lognormal":
+                mu = prior_dict["distri_params"][0]
+                sd = prior_dict["distri_params"][1]
+                quantile = math.exp(mu + math.sqrt(2) * sd * special.erfinv(2 * prop - 1))
+            elif prior_dict["distribution"] == "beta":
+                quantile = stats.beta.ppf(
+                    prop, prior_dict["distri_params"][0], prior_dict["distri_params"][1],
+                )
+            elif prior_dict["distribution"] == "gamma":
+                quantile = stats.gamma.ppf(
+                    prop, prior_dict["distri_params"][0], 0.0, prior_dict["distri_params"][1],
+                )
+            else:
+                raise_error_unsupported_prior(prior_dict["distribution"])
+
+            list_of_starting_params[i][prior_dict['param_name']] = quantile
+
+    return list_of_starting_params
 
 
 def find_decent_starting_point(prior_dict):
@@ -101,7 +140,7 @@ def collect_map_estimate(calib_dirpath: str):
 
 if __name__ == "__main__":
     calib_dir = os.path.join(
-        "../../data", "outputs", "calibrate", "covid_19", "sweden", "762c076f-2020-07-06"
+        "../../data", "outputs", "calibrate", "covid_19", "belgium", "862c076f-2020-07-07"
     )
     map_estimates, best_chain_index = collect_map_estimate(calib_dir)
     for key, value in map_estimates.items():

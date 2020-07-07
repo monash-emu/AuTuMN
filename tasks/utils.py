@@ -115,7 +115,7 @@ class ParallelLoggerTask(luigi.Task, ABC):
         logger.info("Task suceeded, uploading logs: %s", task)
         filename = task.get_log_filename()
         src_path = os.path.join(settings.BASE_DIR, "logs", filename)
-        dest_key = os.path.join(task.run_id, "logs", filename)
+        dest_key = os.path.join(task.run_id, "logs", filename.replace(".log", ".success.log"))
         upload_s3(src_path, dest_key)
 
     @staticmethod
@@ -124,7 +124,7 @@ class ParallelLoggerTask(luigi.Task, ABC):
         logger.info("Task failed, uploading logs: %s", task)
         filename = task.get_log_filename()
         src_path = os.path.join(settings.BASE_DIR, "logs", filename)
-        dest_key = os.path.join(task.run_id, "logs", filename)
+        dest_key = os.path.join(task.run_id, "logs", filename.replace(".log", ".failure.log"))
         upload_s3(src_path, dest_key)
 
 

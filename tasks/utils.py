@@ -110,7 +110,7 @@ class ParallelLoggerTask(luigi.Task, ABC):
             _logger.setLevel(logging.INFO)
 
     @staticmethod
-    def upload_chain_logs_on_success(task, exception):
+    def upload_chain_logs_on_success(task):
         """Ensure log files are uploaded every time the task succeeds"""
         logger.info("Task suceeded, uploading logs: %s", task)
         filename = task.get_log_filename()

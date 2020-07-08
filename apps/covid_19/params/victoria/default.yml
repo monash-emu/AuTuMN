@@ -5,6 +5,11 @@ region: Victoria
 
 implement_importation: True
 
+microdistancing:
+  b: -0.04
+  c: 100.
+  sigma: 0.6
+
 infectious_seed: 0
 
 start_time: 15.

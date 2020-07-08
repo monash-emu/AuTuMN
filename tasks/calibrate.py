@@ -36,9 +36,10 @@ class RunCalibrate(luigi.Task):
             - all plots uploaded to S3
         """
         upload_db_tasks = [
-            UploadDatabaseTask(run_id=self.run_id, chain_id=i) for i in range(self.num_chains)
+            UploadDatabaseTask(run_id=self.run_id, chain_id=i, num_chains=self.num_chains)
+            for i in range(self.num_chains)
         ]
-        upload_plots_task = UploadPlotsTask(run_id=self.run_id, num_chains=self.num_chains,)
+        upload_plots_task = UploadPlotsTask(run_id=self.run_id, num_chains=self.num_chains)
         return [*upload_db_tasks, upload_plots_task]
 
 
@@ -58,6 +59,7 @@ class CalibrationChainTask(utils.ParallelLoggerTask):
     model_name = luigi.Parameter()  # The calibration to run
     runtime = luigi.IntParameter()  # Runtime in seconds
     chain_id = luigi.IntParameter()  # Unique chain id
+    num_chains = luigi.IntParameter()
 
     def requires(self):
         paths = ["logs/calibrate", "data/calibration_outputs", "plots"]
@@ -105,9 +107,12 @@ class CalibrationChainTask(utils.ParallelLoggerTask):
 class UploadDatabaseTask(utils.UploadFileS3Task):
 
     chain_id = luigi.IntParameter()  # Unique chain id
+    num_chains = luigi.IntParameter()  # The number of chains to run
 
     def requires(self):
-        return CalibrationChainTask(run_id=self.run_id, chain_id=self.chain_id)
+        return CalibrationChainTask(
+            run_id=self.run_id, chain_id=self.chain_id, num_chains=self.num_chains
+        )
 
     def get_src_path(self):
         filename = f"outputs_calibration_chain_{self.chain_id}.db"
@@ -117,12 +122,13 @@ class UploadDatabaseTask(utils.UploadFileS3Task):
 class PlotOutputsTask(utils.BaseTask):
     """Plots the database outputs"""
 
-    num_chains = luigi.IntParameter()  # The number of chains to run
     run_id = luigi.Parameter()
+    num_chains = luigi.IntParameter()  # The number of chains to run
 
     def requires(self):
         return [
-            CalibrationChainTask(run_id=self.run_id, chain_id=i) for i in range(self.num_chains)
+            CalibrationChainTask(run_id=self.run_id, chain_id=i, num_chains=self.num_chains)
+            for i in range(self.num_chains)
         ]
 
     def output(self):

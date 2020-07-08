@@ -59,7 +59,7 @@ for i in $(seq 1 1 $NUM_CHAINS)
 do
     log "Starting chain $i"
     touch logs/run-$i.log
-    nohup python3 -m apps calibrate $CALIBRATION_NAME $RUN_TIME $i &> logs/run-$i.log &
+    nohup python3 -m apps calibrate $CALIBRATION_NAME $RUN_TIME  $i --num-chains $NUM_CHAINS &> logs/run-$i.log &
     pids+=("$!")
 done
 

@@ -1,6 +1,7 @@
 from apps.covid_19.mixing_optimisation import mixing_opti as opti
 from autumn.constants import Region
 from summer.model import StratifiedModel
+import pytest
 
 AVAILABLE_MODES = ["by_age", "by_location",]
 AVAILABLE_CONFIGS = range(4)
@@ -10,6 +11,7 @@ DECISION_VARS = {
 }
 
 
+@pytest.mark.github_only
 def test_run_root_model_for_uk():
     root_model = opti.run_root_model(Region.UNITED_KINGDOM, {})
     assert type(root_model) is StratifiedModel
@@ -22,6 +24,7 @@ def test_build_params_for_phases_2_and_3():
             assert 'mixing' in scenario_params and 'end_time' in scenario_params
 
 
+@pytest.mark.github_only
 def test_full_optimisation_iteration_for_uk():
     country = Region.UNITED_KINGDOM
     root_model = opti.run_root_model(country, {})

@@ -50,6 +50,14 @@ else:
 s3 = session.client("s3")
 
 
+def get_calibration_db_filename(chain_id: int):
+    return f"outputs_calibration_chain_{chain_id}.db"
+
+
+def get_full_model_run_db_filename(chain_id: int):
+    return f"mcmc_chain_full_run_{chain_id}.db"
+
+
 class BaseTask(luigi.Task, ABC):
     """Ensures errors are logged correctly."""
 
@@ -165,9 +173,36 @@ class BuildLocalDirectoryTask(BaseTask):
         os.makedirs(self.get_dirpath(), exist_ok=True)
 
 
-class UploadFileS3Task(BaseTask, ABC):
+class DownloadS3Task(BaseTask):
     """
-    Uploads a file or folder to S3
+    Downloads a S3 hosted file or folder to local filesystem
+    """
+
+    run_id = luigi.Parameter()  # Unique run id string
+    src_path = luigi.Parameter()
+
+    def output(self):
+        return luigi.LocalTarget(self.get_dest_path())
+
+    def safe_run(self):
+        dest_path = self.get_dest_path()
+        os.makedirs(os.path.dirname(dest_path), exist_ok=True)
+        download_s3(self.get_src_key(), dest_path)
+
+    def get_dest_path(self):
+        return os.path.join(settings.BASE_DIR, self.src_path)
+
+    def get_src_key(self):
+        return os.path.join(self.run_id, self.src_path)
+
+    def get_s3_uri(self):
+        s3_uri = os.path.join(f"s3://{settings.S3_BUCKET}", self.get_src_key())
+        return s3_uri
+
+
+class UploadS3Task(BaseTask, ABC):
+    """
+    Uploads a local file or folder to S3
     """
 
     run_id = luigi.Parameter()  # Unique run id string
@@ -190,6 +225,28 @@ class UploadFileS3Task(BaseTask, ABC):
     def get_s3_uri(self):
         s3_uri = os.path.join(f"s3://{settings.S3_BUCKET}", self.get_dest_key())
         return s3_uri
+
+
+def list_s3(key_prefix: str, key_suffix: str):
+    """Returns the item keys in a path in AWS S3"""
+    response = s3.list_objects_v2(Bucket=settings.S3_BUCKET, Prefix=key_prefix)
+    objs = response["Contents"]
+    is_truncated = response["IsTruncated"]
+    while is_truncated:
+        token = response["NextContinuationToken"]
+        response = s3.list_objects_v2(
+            Bucket=settings.S3_BUCKET, Prefix=key_prefix, ContinuationToken=token
+        )
+        objs += response["Contents"]
+        is_truncated = response["IsTruncated"]
+
+    return [o["Key"] for o in objs if o["Key"].endswith(key_suffix)]
+
+
+def download_s3(src_key, dest_path):
+    """Downloads a file from AWS S3"""
+    logger.info("Downloading from %s to %s", src_key, dest_path)
+    s3.download_file(settings.S3_BUCKET, src_key, dest_path)
 
 
 def upload_s3(src_path, dest_key):

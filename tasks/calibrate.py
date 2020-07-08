@@ -4,7 +4,6 @@ import shutil
 import logging
 
 import luigi
-from luigi.contrib.s3 import S3Target
 
 from autumn.tool_kit import Timer
 from autumn.inputs import build_input_database
@@ -77,7 +76,7 @@ class CalibrationChainTask(utils.ParallelLoggerTask):
         with Timer(msg):
             # Run the calibration
             calibrate_func = get_calibration_func(self.model_name)
-            calibrate_func(self.runtime, self.chain_id)
+            calibrate_func(self.runtime, self.chain_id, self.num_chains)
 
         # Place the completed chain database in the correct output folder
         src_db_path = self.find_src_db_path()
@@ -101,10 +100,10 @@ class CalibrationChainTask(utils.ParallelLoggerTask):
         return src_paths[0]
 
     def get_filename(self):
-        return f"outputs_calibration_chain_{self.chain_id}.db"
+        return utils.get_calibration_db_filename(self.chain_id)
 
 
-class UploadDatabaseTask(utils.UploadFileS3Task):
+class UploadDatabaseTask(utils.UploadS3Task):
 
     chain_id = luigi.IntParameter()  # Unique chain id
     num_chains = luigi.IntParameter()  # The number of chains to run
@@ -115,7 +114,7 @@ class UploadDatabaseTask(utils.UploadFileS3Task):
         )
 
     def get_src_path(self):
-        filename = f"outputs_calibration_chain_{self.chain_id}.db"
+        filename = utils.get_calibration_db_filename(self.chain_id)
         return os.path.join(settings.BASE_DIR, "data", "calibration_outputs", filename)
 
 
@@ -141,7 +140,7 @@ class PlotOutputsTask(utils.BaseTask):
         plot_from_mcmc_databases(mcmc_dir, plot_dir)
 
 
-class UploadPlotsTask(utils.UploadFileS3Task):
+class UploadPlotsTask(utils.UploadS3Task):
     """Uploads output plots"""
 
     num_chains = luigi.IntParameter()  # The number of chains to run

@@ -117,6 +117,12 @@ Input data is stored in text format in the `data/inputs/` folder. All input data
 - adjust the preprocess functions in `autumn.inputs` as required
 - rebuild the database, forcing a new file hash to be written
 
+To fetch the latest data, run:
+
+```bash
+python -m apps db fetch
+```
+
 To rebuild the database with new data, run:
 
 ```bash

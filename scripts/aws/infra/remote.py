@@ -22,29 +22,14 @@ def run_powerbi(instance, run_id: str):
         update_repo(conn, branch="luigi-redux")
         install_requirements(conn)
         start_luigi_scheduler(conn, instance)
-        # with conn.cd(CODE_PATH):
-        #     cmd_str = (
-        #         "./env/bin/python -m luigi"
-        #         " --module tasks"
-        #         " RunCalibrate"
-        #         f" --run-id {run_id}"
-        #         f" --num-chains {num_chains}"
-        #         f" --workers {num_chains}"
-        #         f" --CalibrationChainTask-model-name {model_name}"
-        #         f" --CalibrationChainTask-runtime {runtime}"
-        #         " --logging-conf-file tasks/luigi-logging.ini"
-        #     )
-        #     conn.run(cmd_str, echo=True, pty=True)
-        #     logger.info("Calibration chains finished.")
-        #     # Upload Luigi log files
-        #     logger.info("Uploading Luigi log files.")
-        #     src = "/home/ubuntu/code/data/outputs/luigid/luigi-server.log"
-        #     dest = f"{run_id}/logs/powerbi/luigi-worker.log"
-        #     copy_s3(conn, src, dest)
-        #     src = "/home/ubuntu/code/data/outputs/remote/luigi-worker.log"
-        #     dest = f"{run_id}/logs/powerbi/luigi-server.log"
-        #     copy_s3(conn, src, dest)
-
+        pipeline_name = "RunPowerBI"
+        pipeline_args = {
+            "run-id": run_id,
+            "workers": 15,
+            "logging-conf-file": "tasks/luigi-logging.ini",
+        }
+        run_luigi_pipeline(pipeline_name, pipeline_args)
+        upload_luigi_logs(conn, "powerbi")
         logger.info("PowerBI processing completed for %s", run_id)
 
 
@@ -60,29 +45,17 @@ def run_full_model(instance, run_id: str, burn_in: int, use_latest_code: bool):
 
         install_requirements(conn)
         start_luigi_scheduler(conn, instance)
-        # with conn.cd(CODE_PATH):
-        #     cmd_str = (
-        #         "./env/bin/python -m luigi"
-        #         " --module tasks"
-        #         " RunCalibrate"
-        #         f" --run-id {run_id}"
-        #         f" --num-chains {num_chains}"
-        #         f" --workers {num_chains}"
-        #         f" --CalibrationChainTask-model-name {model_name}"
-        #         f" --CalibrationChainTask-runtime {runtime}"
-        #         " --logging-conf-file tasks/luigi-logging.ini"
-        #     )
-        #     conn.run(cmd_str, echo=True, pty=True)
-        #     logger.info("Calibration chains finished.")
-        #     # Upload Luigi log files
-        #     logger.info("Uploading Luigi log files.")
-        #     src = "/home/ubuntu/code/data/outputs/luigid/luigi-server.log"
-        #     dest = f"{run_id}/logs/full/luigi-worker.log"
-        #     copy_s3(conn, src, dest)
-        #     src = "/home/ubuntu/code/data/outputs/remote/luigi-worker.log"
-        #     dest = f"{run_id}/logs/full/luigi-server.log"
-        #     copy_s3(conn, src, dest)
-
+        model_name = "-".join(run_id.split("-")[:-3])
+        pipeline_name = "RunFullModels"
+        pipeline_args = {
+            "run-id": run_id,
+            "FullModelRunTask-burn-in": burn_in,
+            "FullModelRunTask-model-name": model_name,
+            "workers": 15,
+            "logging-conf-file": "tasks/luigi-logging.ini",
+        }
+        run_luigi_pipeline(pipeline_name, pipeline_args)
+        upload_luigi_logs(conn, "full_model_runs")
         logger.info("Full model runs completed for %s", run_id)
 
 
@@ -99,30 +72,40 @@ def run_calibration(
         logger.info(
             "Running calibration %s with %s chains for %s seconds.", model_name, num_chains, runtime
         )
-        with conn.cd(CODE_PATH):
-            cmd_str = (
-                "./env/bin/python -m luigi"
-                " --module tasks"
-                " RunCalibrate"
-                f" --run-id {run_id}"
-                f" --num-chains {num_chains}"
-                f" --workers {num_chains}"
-                f" --CalibrationChainTask-model-name {model_name}"
-                f" --CalibrationChainTask-runtime {runtime}"
-                " --logging-conf-file tasks/luigi-logging.ini"
-            )
-            conn.run(cmd_str, echo=True, pty=True)
-            logger.info("Calibration chains finished.")
-            # Upload Luigi log files
-            logger.info("Uploading Luigi log files.")
-            src = "/home/ubuntu/code/data/outputs/luigid/luigi-server.log"
-            dest = f"{run_id}/logs/calibrate/luigi-worker.log"
-            copy_s3(conn, src, dest)
-            src = "/home/ubuntu/code/data/outputs/remote/luigi-worker.log"
-            dest = f"{run_id}/logs/calibrate/luigi-server.log"
-            copy_s3(conn, src, dest)
-
+        pipeline_name = "RunCalibrate"
+        pipeline_args = {
+            "run-id": run_id,
+            "num-chains": num_chains,
+            "workers": num_chains,
+            "CalibrationChainTask-model-name": model_name,
+            "CalibrationChainTask-runtime": runtime,
+            "logging-conf-file": "tasks/luigi-logging.ini",
+        }
+        run_luigi_pipeline(pipeline_name, pipeline_args)
+        upload_luigi_logs(conn, "calibrate")
         logger.info("Calibration completed for %s", run_id)
+
+
+def run_luigi_pipeline(pipeline_name: str, pipeline_args: dict):
+    """Run a Luigi pipeline on the remote machine"""
+    logger.info("Running Luigi pipleine %s", pipeline_name)
+    pipeline_args_str = " ".join([f"--{k} {v}" for k, v in pipeline_args.items()])
+    cmd_str = f"./env/bin/python -m luigi --module tasks {pipeline_name} {pipeline_args_str}"
+    with conn.cd(CODE_PATH):
+        conn.run(cmd_str, echo=True, pty=True)
+
+    logger.info("Finished running Luigi pipleine %s", pipeline_name)
+
+
+def upload_luigi_logs(conn: Connection, log_folder_name: str):
+    """Upload Luigi log files from remote server to S3"""
+    logger.info("Uploading Luigi log files.")
+    src = "/home/ubuntu/code/data/outputs/luigid/luigi-server.log"
+    dest = f"{run_id}/logs/{log_folder_name}/luigi-worker.log"
+    copy_s3(conn, src, dest)
+    src = "/home/ubuntu/code/data/outputs/remote/luigi-worker.log"
+    dest = f"{run_id}/logs/{log_folder_name}/luigi-server.log"
+    copy_s3(conn, src, dest)
 
 
 def copy_s3(conn: Connection, src_path: str, dest_key: str):

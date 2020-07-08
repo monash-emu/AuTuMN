@@ -104,7 +104,12 @@ def run_calibrate(job, calibration, chains, runtime, branch, dry):
     Run a MCMC calibration on an AWS server.
     Example usage:
 
-        python -m infra run calibrate --job test --calibration malaysia --chains 6 --runtime 200 --branch luigi-redux
+        python -m infra run calibrate \
+            --job test \
+            --calibration malaysia \
+            --chains 6 \
+            --runtime 200 \
+            --branch luigi-redux
 
     """
     job_id = f"calibrate-{job}"

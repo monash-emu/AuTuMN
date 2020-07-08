@@ -39,7 +39,7 @@ mixing:
     times:
       - 2020-03-09
       - 2020-03-10
-      - 2020-06-27  # FIXME: update this time
+      - 2020-07-07  # FIXME: update this time
     values:
       - 1.0
       - 0.1

@@ -43,7 +43,7 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "prop_detected_among_symptomatic",  # upper asymptote
             "distribution": "uniform",
-            "distri_params": [0.1, 0.9],
+            "distri_params": [0.10, 0.90],
         },
         {
             "param_name": "icu_prop",
@@ -72,6 +72,12 @@ def get_prior_distributions_for_opti():
             "param_name": "compartment_periods.icu_late",
             "distribution": "uniform",
             "distri_params": [5., 20.],
+        },
+        # vary hospitalised proportions
+        {
+            "param_name": "hospital_props_multiplier",
+            "distribution": "uniform",
+            "distri_params": [.3, 1.5],
         },
         # Micro-distancing
         {

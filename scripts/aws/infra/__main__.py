@@ -104,12 +104,7 @@ def run_calibrate(job, calibration, chains, runtime, branch, dry):
     Run a MCMC calibration on an AWS server.
     Example usage:
 
-        python -m infra run calibrate \
-        --job test \
-        --calibration malaysia \
-        --chains 6 \
-        --runtime 200 \
-        --branch luigi-redux
+        python -m infra run calibrate --job test --calibration malaysia --chains 6 --runtime 200 --branch luigi-redux
 
     """
     job_id = f"calibrate-{job}"
@@ -137,10 +132,7 @@ def run_full_model(job, run, burn_in, latest_code):
     Run the full models based off an MCMC calibration on an AWS server.
     Example usage:
 
-        python -m infra run full \
-        --run malaysia-1594104927-master-a22f1435b6989f607afca25e4ea59273e33a962b \
-        --job test \
-        --burn-in 1000
+        python -m infra run full --run malaysia-159... --job test --burn-in 1000
 
     """
     job_id = f"full-{job}"
@@ -161,9 +153,7 @@ def run_powerbi(job, run):
     """
     Run the collate a PowerBI database from the full model run outputs.
 
-        python -m infra run full \
-        --run malaysia-1594104927-master-a22f1435b6989f607afca25e4ea59273e33a962b \
-        --job test
+        python -m infra run full --run malaysia-159... --job test
 
     """
     job_id = f"powerbi-{job}"

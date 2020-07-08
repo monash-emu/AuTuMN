@@ -16,7 +16,6 @@ CODE_PATH = "/home/ubuntu/code"
 
 def run_powerbi(instance, run_id: str):
     """Run PowerBI processing on the remote server"""
-    run_id = "test"  # FIXME: Debug
     logger.info("Running PowerBI processing for run %s", run_id)
     with get_connection(instance) as conn:
         update_repo(conn, branch="luigi-redux")
@@ -28,14 +27,13 @@ def run_powerbi(instance, run_id: str):
             "workers": 15,
             "logging-conf-file": "tasks/luigi-logging.ini",
         }
-        run_luigi_pipeline(pipeline_name, pipeline_args)
-        upload_luigi_logs(conn, "powerbi")
+        run_luigi_pipeline(conn, pipeline_name, pipeline_args)
+        upload_luigi_logs(conn, "powerbi", run_id)
         logger.info("PowerBI processing completed for %s", run_id)
 
 
 def run_full_model(instance, run_id: str, burn_in: int, use_latest_code: bool):
     """Run full model job on the remote server"""
-    run_id = "test"  # FIXME: Debug
     logger.info("Running full models for run %s with %s burn-in.", run_id, burn_in)
     with get_connection(instance) as conn:
         if use_latest_code:
@@ -45,7 +43,7 @@ def run_full_model(instance, run_id: str, burn_in: int, use_latest_code: bool):
 
         install_requirements(conn)
         start_luigi_scheduler(conn, instance)
-        model_name = "-".join(run_id.split("-")[:-3])
+        model_name, _, _ = read_run_id(run_id)
         pipeline_name = "RunFullModels"
         pipeline_args = {
             "run-id": run_id,
@@ -54,8 +52,8 @@ def run_full_model(instance, run_id: str, burn_in: int, use_latest_code: bool):
             "workers": 15,
             "logging-conf-file": "tasks/luigi-logging.ini",
         }
-        run_luigi_pipeline(pipeline_name, pipeline_args)
-        upload_luigi_logs(conn, "full_model_runs")
+        run_luigi_pipeline(conn, pipeline_name, pipeline_args)
+        upload_luigi_logs(conn, "full_model_runs", run_id)
         logger.info("Full model runs completed for %s", run_id)
 
 
@@ -68,7 +66,6 @@ def run_calibration(
         install_requirements(conn)
         start_luigi_scheduler(conn, instance)
         run_id = get_run_id(conn, model_name)
-        run_id = "test"  # FIXME: Debug
         logger.info(
             "Running calibration %s with %s chains for %s seconds.", model_name, num_chains, runtime
         )
@@ -81,12 +78,12 @@ def run_calibration(
             "CalibrationChainTask-runtime": runtime,
             "logging-conf-file": "tasks/luigi-logging.ini",
         }
-        run_luigi_pipeline(pipeline_name, pipeline_args)
-        upload_luigi_logs(conn, "calibrate")
+        run_luigi_pipeline(conn, pipeline_name, pipeline_args)
+        upload_luigi_logs(conn, "calibrate", run_id)
         logger.info("Calibration completed for %s", run_id)
 
 
-def run_luigi_pipeline(pipeline_name: str, pipeline_args: dict):
+def run_luigi_pipeline(conn: Connection, pipeline_name: str, pipeline_args: dict):
     """Run a Luigi pipeline on the remote machine"""
     logger.info("Running Luigi pipleine %s", pipeline_name)
     pipeline_args_str = " ".join([f"--{k} {v}" for k, v in pipeline_args.items()])
@@ -97,7 +94,7 @@ def run_luigi_pipeline(pipeline_name: str, pipeline_args: dict):
     logger.info("Finished running Luigi pipleine %s", pipeline_name)
 
 
-def upload_luigi_logs(conn: Connection, log_folder_name: str):
+def upload_luigi_logs(conn: Connection, log_folder_name: str, run_id: str):
     """Upload Luigi log files from remote server to S3"""
     logger.info("Uploading Luigi log files.")
     src = "/home/ubuntu/code/data/outputs/luigid/luigi-server.log"
@@ -109,7 +106,8 @@ def upload_luigi_logs(conn: Connection, log_folder_name: str):
 
 
 def copy_s3(conn: Connection, src_path: str, dest_key: str):
-    conn.run(f"./env/bin/aws s3 cp {src_path} s3://{settings.S3_BUCKET}/{dest_key}", echo=True)
+    with conn.cd(CODE_PATH):
+        conn.run(f"./env/bin/aws s3 cp {src_path} s3://{settings.S3_BUCKET}/{dest_key}", echo=True)
 
 
 def start_luigi_scheduler(conn: Connection, instance):
@@ -131,10 +129,20 @@ def start_luigi_scheduler(conn: Connection, instance):
     logger.info("Luigi server available at %s", url)
 
 
+def read_run_id(run_id: str):
+    """Read data from run id"""
+    parts = run_id.split("-")
+    git_commit = parts[-1]
+    timestamp = parts[-2]
+    model_name = "-".join(parts[:-2])
+    return model_name, timestamp, git_commit
+
+
 def set_run_id(conn: Connection, run_id: str):
     """Set git to use the commit for a given run ID"""
     logger.info("Setting up repo using a run id %s", run_id)
-    commit = run_id.split("-")[-1]
+    conn.sudo(f"chown -R ubuntu:ubuntu {CODE_PATH}", echo=True)
+    _, _, commit = read_run_id(run_id)
     with conn.cd(CODE_PATH):
         conn.run("git fetch --quiet", echo=True)
         conn.run(f"git checkout --quiet {commit}", echo=True)
@@ -146,11 +154,11 @@ def get_run_id(conn: Connection, job_name: str):
     """Get the run ID for a given job name name"""
     logger.info("Building run id.")
     with conn.cd(CODE_PATH):
-        git_branch = conn.run("git rev-parse --abbrev-ref HEAD", hide="out").stdout.strip()
         git_commit = conn.run("git rev-parse HEAD", hide="out").stdout.strip()
 
+    git_commit_short = git_commit[:7]
     timestamp = int(time.time())
-    run_id = f"{job_name}-{timestamp}-{git_branch}-{git_commit}"
+    run_id = f"{job_name}-{timestamp}-{git_commit_short}"
     logger.info("Using run id %s", run_id)
     return run_id
 

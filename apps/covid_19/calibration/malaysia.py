@@ -2,10 +2,11 @@ from autumn.constants import Region
 from apps.covid_19.calibration import base
 
 
-def run_calibration_chain(max_seconds: int, run_id: int):
+def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
     base.run_calibration_chain(
         max_seconds,
         run_id,
+        num_chains,
         Region.MALAYSIA,
         PAR_PRIORS,
         TARGET_OUTPUTS,
@@ -75,11 +76,7 @@ PAR_PRIORS = [
         "distribution": "uniform",
         "distri_params": [0.4, 0.9],
     },
-    {
-        "param_name": "microdistancing.c",
-        "distribution": "uniform",
-        "distri_params": [78., 124.],
-    },
+    {"param_name": "microdistancing.c", "distribution": "uniform", "distri_params": [78.0, 124.0],},
 ]
 
 # notification data, provided by the country

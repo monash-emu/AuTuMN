@@ -47,13 +47,14 @@ def run_calibration_chain(
     params = region_model.params
     calib = Calibration(
         "dr_tb_malancha",
-        region,
         build_model,
+        params,
         par_priors,
         target_outputs,
         _multipliers,
         run_id,
-        model_parameters=params,
+        total_nb_chains=1,
+        param_set_name=region,
     )
     print("Starting calibration.")
     calib.run_fitting_algorithm(

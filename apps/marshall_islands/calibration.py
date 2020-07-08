@@ -26,11 +26,12 @@ def run_calibration_chain(max_seconds: int, run_id: int):
     calib = Calibration(
         "marshall_islands",
         build_model,
+        params,
         PAR_PRIORS,
         TARGET_OUTPUTS,
         MULTIPLIERS,
         run_id,
-        model_parameters=params,
+        total_nb_chains=1,
     )
     print("Starting calibration.")
     calib.run_fitting_algorithm(

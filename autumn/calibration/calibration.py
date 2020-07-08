@@ -3,6 +3,7 @@ import os
 from time import time
 from itertools import chain, product
 from datetime import datetime
+from typing import Dict, List, Callable
 
 import math
 import pandas as pd
@@ -12,6 +13,7 @@ import autumn.post_processing as post_proc
 from scipy.optimize import Bounds, minimize
 from scipy import stats, special
 
+from summer.model import StratifiedModel
 from autumn import constants
 from autumn.db.models import store_database
 from autumn.plots.calibration_plots import plot_all_priors
@@ -73,23 +75,18 @@ class Calibration:
     def __init__(
         self,
         model_name: str,
-        param_set_name: str,
-        model_builder,
-        priors,
-        targeted_outputs,
-        multipliers,
-        chain_index,
-        model_parameters={},
-        start_time_range=None,
-        record_rejected_outputs=False,
-        total_nb_chains=1,
+        model_builder: Callable[[dict], StratifiedModel],
+        model_parameters: dict,
+        priors: List[dict],
+        targeted_outputs: List[dict],
+        multipliers: Dict[str, float],
+        chain_index: int,
+        total_nb_chains: int,
+        param_set_name: str = "main",
     ):
         self.model_name = model_name
         self.model_builder = model_builder  # a function that builds a new model without running it
         self.model_parameters = model_parameters
-        self.record_rejected_outputs = record_rejected_outputs
-        # If specified, we allow start time to vary to achieve the best fit
-        self.start_time_range = start_time_range
         self.best_start_time = None
         self.priors = priors  # a list of dictionaries. Each dictionary describes the prior distribution for a parameter
         self.param_list = [self.priors[i]["param_name"] for i in range(len(self.priors))]
@@ -120,10 +117,12 @@ class Calibration:
         self.multipliers = multipliers
         self.chain_index = chain_index
 
+        # Select starting params
         specify_missing_prior_params(self.priors)
-        self.starting_point = sample_starting_params_from_lhs(self.priors, total_nb_chains)[
-            chain_index - 1
-        ]  # FIXME, this assumes chains must have indices in {1, 2 ... total_nb_chains}
+        np.random.seed(0)  # Set deterministic random seed for Latin Hypercube Sampling
+        starting_points = sample_starting_params_from_lhs(self.priors, total_nb_chains)
+        self.starting_point = starting_points[chain_index - 1]
+
         # Setup output directory
         project_dir = os.path.join(
             constants.OUTPUT_DATA_PATH, "calibrate", model_name, param_set_name
@@ -252,12 +251,7 @@ class Calibration:
         scenario, pp = self.run_model_with_params(params)
 
         model_start_time = pp.derived_outputs["times"][0]
-        if self.start_time_range is None:
-            considered_start_times = [model_start_time]
-        else:
-            start, end = self.start_time_range
-            considered_start_times = np.linspace(start, end, num=end - start + 1)
-
+        considered_start_times = [model_start_time]
         best_start_time = None
         if self.run_mode == CalibrationMode.LEAST_SQUARES:
             # Initial best loglikelihood is a very large +ve number.
@@ -273,8 +267,6 @@ class Calibration:
                 key = target["output_key"]
                 data = np.array(target["values"])
                 if key in pp.generated_outputs:
-                    if self.start_time_range is not None:
-                        raise ValueError("variable start time implemented for derived_outputs only")
                     model_output = np.array(pp.generated_outputs[key])
                 else:
                     indices = []
@@ -469,11 +461,6 @@ class Calibration:
 
         sol = minimize(self.loglikelihood, x0, bounds=bounds)
         self.mle_estimates = sol.x
-        if self.start_time_range is not None:
-            self.best_start_time = self.loglikelihood(
-                self.mle_estimates, to_return="best_start_time"
-            )
-            print("Best start time: " + str(self.best_start_time))
 
         # FIXME: need to fix dump_mle_params_to_yaml_file
         print("Best solution:")
@@ -531,7 +518,7 @@ class Calibration:
 
             # Store model outputs
             self.store_mcmc_iteration_info(proposed_params, proposed_loglike, accept, i_run)
-            if accept or self.record_rejected_outputs:
+            if accept:
                 self.store_model_outputs()
 
             self.iter_num += 1

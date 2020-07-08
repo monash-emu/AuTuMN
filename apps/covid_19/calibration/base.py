@@ -27,6 +27,7 @@ def run_full_models_for_mcmc(region: str, burn_in: int, src_db_path: str, dest_d
 def run_calibration_chain(
     max_seconds: int,
     run_id: int,
+    num_chains: int,
     region: str,
     par_priors,
     target_outputs,
@@ -48,13 +49,14 @@ def run_calibration_chain(
     params = region_model.params
     calib = Calibration(
         "covid_19",
-        region,
         build_model,
+        params,
         par_priors,
         target_outputs,
         _multipliers,
         run_id,
-        model_parameters=params,
+        num_chains,
+        param_set_name=region,
     )
     print("Starting calibration.")
     calib.run_fitting_algorithm(

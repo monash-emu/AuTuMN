@@ -15,4 +15,4 @@ def test_covid_calibration(region):
     Calibration smoke test - make sure everything can run for 15 seconds without exploding.
     """
     calib_func = covid_calibration.get_calibration_func(region)
-    calib_func(15, 0)
+    calib_func(15, 1, 1)

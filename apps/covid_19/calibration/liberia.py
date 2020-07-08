@@ -2,9 +2,15 @@ from autumn.constants import Region
 from apps.covid_19.calibration import base
 
 
-def run_calibration_chain(max_seconds: int, run_id: int):
+def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
     base.run_calibration_chain(
-        max_seconds, run_id, Region.LIBERIA, PAR_PRIORS, TARGET_OUTPUTS, mode="autumn_mcmc",
+        max_seconds,
+        run_id,
+        num_chains,
+        Region.LIBERIA,
+        PAR_PRIORS,
+        TARGET_OUTPUTS,
+        mode="autumn_mcmc",
     )
 
 

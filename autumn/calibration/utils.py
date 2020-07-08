@@ -21,7 +21,6 @@ def sample_starting_params_from_lhs(par_priors: List[Dict[str, Any]], n_samples:
 
     # Draw a Latin hypercube (all values in [0-1])
     hypercube = lhs(n=len(par_priors), samples=n_samples, criterion="center")
-
     for j, prior_dict in enumerate(par_priors):
         for i in range(n_samples):
             prop = hypercube[i, j]

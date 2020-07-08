@@ -2,9 +2,16 @@ from autumn.constants import Region
 from apps.dr_tb_malancha.calibration import base
 
 
-def run_calibration_chain(max_seconds: int, run_id: int):
+def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
     base.run_calibration_chain(
-        max_seconds, run_id, Region.PHILIPPINES, PAR_PRIORS, TARGET_OUTPUTS, mode="autumn_mcmc", _multipliers=MULTIPLIERS
+        max_seconds,
+        run_id,
+        num_chains,
+        Region.PHILIPPINES,
+        PAR_PRIORS,
+        TARGET_OUTPUTS,
+        mode="autumn_mcmc",
+        _multipliers=MULTIPLIERS,
     )
 
 
@@ -13,18 +20,31 @@ PAR_PRIORS = [
     {"param_name": "epsilon", "distribution": "lognormal", "distri_params": [-6.78, 0.15]},
     {"param_name": "kappa", "distribution": "lognormal", "distri_params": [-4.50, 0.13]},
     {"param_name": "nu", "distribution": "lognormal", "distri_params": [-11.99, 0.34]},
-    {"param_name": "gamma", "distribution": "gamma", "distri_mean": .2, "distri_ci": [.16, .29]},
-    {"param_name": "infect_death", "distribution": "gamma", "distri_mean": .054, "distri_ci": [.05, .06]},
+    {"param_name": "gamma", "distribution": "gamma", "distri_mean": 0.2, "distri_ci": [0.16, 0.29]},
+    {
+        "param_name": "infect_death",
+        "distribution": "gamma",
+        "distri_mean": 0.054,
+        "distri_ci": [0.05, 0.06],
+    },
     # {"param_name": "universal_death_rateX", "distribution": "gamma", "distri_mean": .0142, "distri_ci": [0.0135, 0.015]},
-    {"param_name": "prop_of_failures_developing_inh_R", "distribution": "uniform", "distri_params": [0.01, 0.2]},
-    {"param_name": "prop_of_failures_developing_rif_R", "distribution": "uniform", "distri_params": [0.0005, 0.005]},
+    {
+        "param_name": "prop_of_failures_developing_inh_R",
+        "distribution": "uniform",
+        "distri_params": [0.01, 0.2],
+    },
+    {
+        "param_name": "prop_of_failures_developing_rif_R",
+        "distribution": "uniform",
+        "distri_params": [0.0005, 0.005],
+    },
 ]
 
 MULTIPLIERS = {
-    'prevXinfectiousXamong': 100000,
-    'prevXinfectiousXstrain_inh_RXamongXinfectious': 100,
-    'prevXinfectiousXstrain_rif_RXamongXinfectious': 100,
-    'prevXinfectiousXstrain_mdrXamongXinfectious': 100
+    "prevXinfectiousXamong": 100000,
+    "prevXinfectiousXstrain_inh_RXamongXinfectious": 100,
+    "prevXinfectiousXstrain_rif_RXamongXinfectious": 100,
+    "prevXinfectiousXstrain_mdrXamongXinfectious": 100,
 }
 
 TARGET_OUTPUTS = [
@@ -52,8 +72,6 @@ TARGET_OUTPUTS = [
         "values": [1.5, 1.39],
         "loglikelihood_distri": "normal",
     },
-
-
 ]
 
 if __name__ == "__main__":

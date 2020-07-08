@@ -117,19 +117,14 @@ def test_calibrate_autumn_mcmc(temp_data_dir):
             "loglikelihood_distri": "poisson",
         }
     ]
+    multipliers = {}
+    params = {
+        "default": {"start_time": 2000},
+        "scenario_start_time": 2000,
+        "scenarios": {},
+    }
     calib = Calibration(
-        "sharks",
-        "main",
-        _build_mock_model,
-        priors,
-        target_outputs,
-        multipliers={},
-        chain_index=0,
-        model_parameters={
-            "default": {"start_time": 2000},
-            "scenario_start_time": 2000,
-            "scenarios": {},
-        },
+        "sharks", _build_mock_model, params, priors, target_outputs, multipliers, 1, 1,
     )
     calib.run_fitting_algorithm(
         run_mode=CalibrationMode.AUTUMN_MCMC,

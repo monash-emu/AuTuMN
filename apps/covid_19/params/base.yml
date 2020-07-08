@@ -84,6 +84,8 @@ hospital_props:
   - 0.243 # 70-79
   - 0.273 # 80+
 
+hospital_props_multiplier: 1.
+
 # Proportion of those hospitalised that are admitted to ICU - consistent with LSHTM's LMIC estimates parameters
 icu_prop: 0.3
 

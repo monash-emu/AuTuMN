@@ -28,6 +28,7 @@ validate_params = sb.build_validator(
     compartment_periods_calculated=dict,
     # Infectiousness adjustments (not sure where used)
     hospital_props=sb.List(float),
+    hospital_props_multiplier=float,
     # mortality parameters
     use_verity_mortality_estimates=bool,
     infection_fatality_props=sb.List(float),

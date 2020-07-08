@@ -3,14 +3,18 @@ mixing:
   other_locations:
     append: true
     times:
-      - 2020-06-28
+      - 2020-07-08
+      - 2020-12-31
     values:
+      - 1.
       - 1.
   work:
     append: true
     times:
-      - 2020-06-28
+      - 2020-07-08
+      - 2020-12-31
     values:
+      - 1.
       - 1.
   school:
     append: false
@@ -20,9 +24,11 @@ mixing:
       - 2020-04-02
       - 2020-06-26
       - 2020-06-27
+      - 2020-12-31
     values:
       - 1.
       - 0.45
       - 0.10
       - 0.10
+      - 1.
       - 1.

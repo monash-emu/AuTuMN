@@ -61,6 +61,7 @@ def build_params_for_phases_2_and_3(decision_variables, config=0, mode='by_age')
     phase_1_end_date = phase_2_first_day + timedelta(days=-1)
     phase_2_end_date = ref_date + timedelta(days=phase_2_end[config])
     phase_3_first_day = phase_2_end_date + timedelta(days=1)
+
     sc_1_params = {}
     if mode == "by_age":
         age_mixing_update = {}
@@ -99,7 +100,6 @@ def build_params_for_phases_2_and_3(decision_variables, config=0, mode='by_age')
             sc_1_params['microdistancing'].update(opti_params['configurations'][config]['microdistancing'])
         else:
             sc_1_params['microdistancing'] = opti_params['configurations'][config]['microdistancing']
-
     return sc_1_params
 
 
@@ -122,6 +122,7 @@ def objective_function(decision_variables, root_model, mode="by_age", country=Re
     :param decision_variables: dictionary containing
         - mixing multipliers by age as a list if mode == "by_age"    OR
         - location multipliers as a dictionary if mode == "by_location"
+    :param root_model: integrated model supposed to model the past epidemic
     :param mode: either "by_age" or "by_location"
     :param country: the country name
     :param config: the id of the configuration being considered
@@ -131,17 +132,15 @@ def objective_function(decision_variables, root_model, mode="by_age", country=Re
     build_model = running_model.build_model
     params = copy.deepcopy(running_model.params)
 
-    # update params with optimisation default config
-    params["default"].update(opti_params["default"])
+    # Define scenario-1-specific params
+    sc_1_params_update = build_params_for_phases_2_and_3(decision_variables, config, mode)
 
-    # update params with calibrated parameters
+    # Rebuild the default parameters
+    params["default"].update(opti_params["default"])
     params["default"] = update_params(params['default'], calibrated_params)
 
-    # update params with specific config (Sensitivity analyses)
-    # params["default"].update(opti_params["configurations"][config])
-
-    # Define scenario 1
-    sc_1_params = build_params_for_phases_2_and_3(decision_variables, config, mode)
+    # Create scenario 1
+    sc_1_params = update_params(params['default'], sc_1_params_update)
     params["scenarios"][1] = sc_1_params
     scenario_1 = Scenario(build_model, idx=1, params=params)
 
@@ -234,26 +233,31 @@ if __name__ == "__main__":
     # optimisation will have to be performed separately for the different countries and modes.
 
     decision_vars = {
-        "by_age": [1] * 16,
+        "by_age": [.9] * 16,
         "by_location": {"other_locations": 1.0, "school": 1.0, "work": 1.0},
     }
+    print(phase_2_end)
 
-    for mode in ["by_age"]:  # , "by_location"]:
-        for country in available_countries:
-            print("*********** " + country + " ***********")
-            for config in opti_params["configurations"]:
+    # to produce graph with 3 phases
+    run_all_phases(decision_vars["by_age"], "sweden", 0, {}, "by_age")
+    exit()
+
+    for _mode in ["by_age"]:  # , "by_location"]:
+        for _country in ['belgium']:  # available_countries:
+            print("*********** " + _country + " ***********")
+            for _config in [0]:  # opti_params["configurations"]:
                 # param_set_list = read_list_of_param_sets_from_csv(country, config)
                 param_set_list = [{}]
                 for param_set in param_set_list:
                     # Run this line of code every time we use a new param_set and before performing optimisation
                     # This is an initialisation step
-                    root_model = run_root_model(country, param_set)
+                    _root_model = run_root_model(_country, param_set)
 
                     # The following line is the one to be run again and again during optimisation
-                    h, d, p_immune, m = objective_function(decision_vars[mode], root_model, mode, country, config,
+                    h, d, p_immune, m = objective_function(decision_vars[_mode], _root_model, _mode, _country, _config,
                                                            param_set)
                     print("Immunity: " + str(h) + "\n" + "Deaths: " + str(round(d)) + "\n" + "Prop immune: " +
                           str(round(p_immune, 3)))
 
-                    # run_all_phases(decision_vars[mode], calibrated_params=param_set)
+                    # run_all_phases(decision_vars[_mode], _country, _config, param_set, _mode)
                     # break

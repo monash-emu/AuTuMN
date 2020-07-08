@@ -123,11 +123,19 @@ To fetch the latest data, run:
 python -m apps db fetch
 ```
 
+You will need to ensure that the latest date in all user-specified mixing data params is greater than or equal to the most recent Google Mobility date.
+
 To rebuild the database with new data, run:
 
 ```bash
 python -m apps db build --force
 ```
+
+Once you are satisfied that all your models work again (run the tests), commit your changes and push up:
+
+- The updated CSV files
+- The updated `input-hash.txt` file
+- Any required changes to model parameters (eg. dynamic mixing dates)
 
 ## AWS calibration
 

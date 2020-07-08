@@ -7,7 +7,6 @@ from typing import List
 
 import numpy as np
 import pandas as pd
-from tqdm import tqdm
 
 
 from autumn.db.database import Database
@@ -287,7 +286,7 @@ def compute_mcmc_output_quantiles(
     scenario_list = sorted(derived_output_tables[0].Scenario.unique())
     quantiles_by_sc = []
     times_by_sc = []
-    for i_scenario, scenario in tqdm(enumerate(scenario_list)):
+    for i_scenario, scenario in enumerate(scenario_list):
         if scenario != "S_0":
             t_min = (
                 derived_output_tables[0]

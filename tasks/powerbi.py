@@ -68,10 +68,14 @@ class UncertaintyWeightsTask(utils.ParallelLoggerTask):
         return luigi.LocalTarget(self.get_success_path())
 
     def safe_run(self):
-        db_path = os.path.join(settings.BASE_DIR, self.get_src_db_relpath())
-        add_uncertainty_weights(self.output_name, db_path)
-        with open(self.get_success_path(), "w") as f:
-            f.write("complete")
+        msg = (
+            f"Calculating uncertainty weights for chain {self.chain_id} outputs {self.output_name}"
+        )
+        with Timer(msg):
+            db_path = os.path.join(settings.BASE_DIR, self.get_src_db_relpath())
+            add_uncertainty_weights(self.output_name, db_path)
+            with open(self.get_success_path(), "w") as f:
+                f.write("complete")
 
     def get_success_path(self):
         return os.path.join(
@@ -99,7 +103,7 @@ class PruneFullRunDatabaseTask(utils.ParallelLoggerTask):
                 run_id=self.run_id, output_name=output_name, chain_id=self.chain_id
             )
             for output_name in UNCERTAINTY_OUTPUTS
-        ]
+        ] + [utils.BuildLocalDirectoryTask(dirname="data/powerbi/pruned/")]
 
     def get_dest_path(self):
         return os.path.join(PRUNED_DIR, f"pruned-{self.chain_id}.db")
@@ -108,9 +112,10 @@ class PruneFullRunDatabaseTask(utils.ParallelLoggerTask):
         return luigi.LocalTarget(self.get_dest_path())
 
     def safe_run(self):
-        src_filename = utils.get_full_model_run_db_filename(self.chain_id)
-        src_db_path = os.path.join(settings.BASE_DIR, "data", "full_model_runs", src_filename)
-        models.prune(src_db_path, self.get_dest_path())
+        with Timer(f"Pruning database for chain {self.chain_id}"):
+            src_filename = utils.get_full_model_run_db_filename(self.chain_id)
+            src_db_path = os.path.join(settings.BASE_DIR, "data", "full_model_runs", src_filename)
+            models.prune(src_db_path, self.get_dest_path())
 
     def get_log_filename(self):
         return f"powerbi/prune-{self.chain_id}.log"
@@ -131,7 +136,13 @@ class CollationTask(utils.BaseTask):
         return luigi.LocalTarget(COLLATED_DB_PATH)
 
     def safe_run(self):
-        models.collate_databases(PRUNED_DIR, COLLATED_DB_PATH)
+        with Timer(f"Collating databases"):
+            src_db_paths = [
+                os.path.join(PRUNED_DIR, fname)
+                for fname in os.listdir(PRUNED_DIR)
+                if fname.endswith(".db")
+            ]
+            models.collate_databases(src_db_paths, COLLATED_DB_PATH)
 
 
 class CalculateUncertaintyTask(utils.BaseTask):
@@ -149,8 +160,10 @@ class CalculateUncertaintyTask(utils.BaseTask):
         return luigi.LocalTarget(COLLATED_PRUNED_DB_PATH)
 
     def safe_run(self):
-        add_uncertainty_quantiles(COLLATED_DB_PATH)
-        models.prune(COLLATED_DB_PATH, COLLATED_PRUNED_DB_PATH)
+        with Timer(f"Calculating uncertainty quartiles"):
+            add_uncertainty_quantiles(COLLATED_DB_PATH)
+        with Timer(f"Pruning final database"):
+            models.prune(COLLATED_DB_PATH, COLLATED_PRUNED_DB_PATH)
 
 
 class UnpivotTask(utils.BaseTask):
@@ -165,7 +178,8 @@ class UnpivotTask(utils.BaseTask):
         return luigi.LocalTarget(get_final_db_path(self.run_id))
 
     def safe_run(self):
-        models.unpivot(COLLATED_PRUNED_DB_PATH, get_final_db_path(self.run_id))
+        with Timer(f"Unpivoting final database"):
+            models.unpivot(COLLATED_PRUNED_DB_PATH, get_final_db_path(self.run_id))
 
 
 class UploadDatabaseTask(utils.UploadS3Task):

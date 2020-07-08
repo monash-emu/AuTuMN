@@ -9,7 +9,6 @@ from tempfile import TemporaryDirectory
 
 import numpy
 import pandas as pd
-from tqdm import tqdm
 
 from summer.model import StratifiedModel
 
@@ -112,7 +111,7 @@ def collate_databases(src_db_paths: List[str], target_db_path: str):
     logger.info("Collating db outputs into %s", target_db_path)
     target_db = Database(target_db_path)
     run_count = 0
-    for db_path in tqdm(src_db_paths):
+    for db_path in src_db_paths:
         source_db = Database(db_path)
         num_runs = len(source_db.query("mcmc_run", column="idx"))
         for table_name in source_db.table_names():

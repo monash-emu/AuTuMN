@@ -11,10 +11,10 @@ https://luigi.readthedocs.io/en/stable/running_luigi.html
 python3 -m luigi \
     --module tasks \
     RunCalibrate \
-    --run-id malaysia-1594179902-19bc131 \
+    --run-id test \
     --num-chains 2 \
     --CalibrationChainTask-model-name malaysia \
-    --CalibrationChainTask-runtime 12 \
+    --CalibrationChainTask-runtime 30 \
     --local-scheduler \
     --logging-conf-file tasks/luigi-logging.ini
 
@@ -22,7 +22,7 @@ python3 -m luigi \
 python3 -m luigi \
     --module tasks \
     RunFullModels \
-    --run-id malaysia-1594179902-19bc131 \
+    --run-id test \
     --FullModelRunTask-burn-in 0 \
     --FullModelRunTask-model-name malaysia \
     --local-scheduler \
@@ -32,7 +32,7 @@ python3 -m luigi \
 python3 -m luigi \
     --module tasks \
     RunPowerBI \
-    --run-id malaysia-1594179902-19bc131 \
+    --run-id test \
    --local-scheduler \
     --logging-conf-file tasks/luigi-logging.ini
 

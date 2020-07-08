@@ -32,7 +32,8 @@ region_app.run_model(RUN_SCENARIOS)
 
 
 ## Run a calibration
-# MAX_SECONDS = 120
-# CHAIN_ID = 0
+# MAX_SECONDS = 5
+# CHAIN_ID = 1
+# NB_CHAINS = 1
 # calibrate_func = covid_19.calibration.get_calibration_func(REGION)
-# calibrate_func(MAX_SECONDS, CHAIN_ID)
+# calibrate_func(MAX_SECONDS, CHAIN_ID, NB_CHAINS)

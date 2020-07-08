@@ -1,8 +1,8 @@
 iso3: FRA
 
 #start_time: -20.
-end_time: 190.
-scenario_start_time: 182
+end_time: 214.
+scenario_start_time: 213
 
 infectious_seed: 200
 use_verity_mortality_estimates: False

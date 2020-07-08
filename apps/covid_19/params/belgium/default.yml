@@ -1,8 +1,8 @@
 iso3: BEL
 
 #start_time: -20.
-end_time: 190.
-scenario_start_time: 182
+end_time: 214.
+scenario_start_time: 213
 
 infectious_seed: 200
 use_verity_mortality_estimates: False
@@ -11,6 +11,8 @@ microdistancing:
   b: -0.05
   c: 99.27164890127986 # MLE
   sigma: 0.6688860622737479  # MLE
+
+hospital_props_multiplier: .5
 
 # MLE estimates
 contact_rate: 0.05140657234427222
@@ -24,7 +26,7 @@ compartment_periods_calculated:
     total_period: 5.139596285999966
 tv_detection_b: 0.08702883001620004
 tv_detection_c: 118.27727897299147
-prop_detected_among_symptomatic: 0.045 # 0.14485229976709896
+prop_detected_among_symptomatic: 0.10
 icu_prop: 0.2030763050384177
 ifr_double_exp_model_params:
   k: 14.243326296932597

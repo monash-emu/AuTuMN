@@ -47,6 +47,8 @@ def run_root_model(country=Region.UNITED_KINGDOM, calibrated_params={}):
         'n_imported_cases': [0]
     }
     params["default"]["end_time"] = PHASE_2_START_TIME
+    params["default"]["scenario_start_time"] = PHASE_2_START_TIME - 1
+
 
     scenario_0 = Scenario(build_model, idx=0, params=params)
     scenario_0.run()
@@ -138,6 +140,7 @@ def objective_function(decision_variables, root_model, mode="by_age", country=Re
     # Rebuild the default parameters
     params["default"].update(opti_params["default"])
     params["default"] = update_params(params['default'], calibrated_params)
+    params["default"]['scenario_start_time'] = PHASE_2_START_TIME - 1
 
     # Create scenario 1
     sc_1_params = update_params(params['default'], sc_1_params_update)
@@ -233,14 +236,13 @@ if __name__ == "__main__":
     # optimisation will have to be performed separately for the different countries and modes.
 
     decision_vars = {
-        "by_age": [.9] * 16,
+        "by_age": [1.] * 16,
         "by_location": {"other_locations": 1.0, "school": 1.0, "work": 1.0},
     }
-    print(phase_2_end)
 
     # to produce graph with 3 phases
-    run_all_phases(decision_vars["by_age"], "sweden", 0, {}, "by_age")
-    exit()
+    # run_all_phases(decision_vars["by_age"], "belgium", 2, {}, "by_age")
+    # exit()
 
     for _mode in ["by_age"]:  # , "by_location"]:
         for _country in ['belgium']:  # available_countries:
@@ -259,5 +261,5 @@ if __name__ == "__main__":
                     print("Immunity: " + str(h) + "\n" + "Deaths: " + str(round(d)) + "\n" + "Prop immune: " +
                           str(round(p_immune, 3)))
 
-                    # run_all_phases(decision_vars[_mode], _country, _config, param_set, _mode)
-                    # break
+                    run_all_phases(decision_vars[_mode], _country, _config, param_set, _mode)
+                    break

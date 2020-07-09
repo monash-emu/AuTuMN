@@ -38,7 +38,7 @@ mixing:
       - 2020-06-08
       - 2020-06-10
       - 2020-06-27
-      - 2020-07-07
+      - 2020-07-17
     values:
       - 1.
       - 0.
@@ -46,8 +46,8 @@ mixing:
       - 0.429 # 6 / 14 to represent five grades and special schools going back
       - 0.429 # 6 / 14
       - 1. # all students back
+      - 0
       - 1
-      - 0.5
 
 data:
   times_imported_cases:

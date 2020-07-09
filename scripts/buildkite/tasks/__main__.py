@@ -33,7 +33,7 @@ def calibrate():
     num_chains = buildkite.get_metadata("mcmc-num-chains")
     run_time_hours = buildkite.get_metadata("mcmc-runtime")
     # Run the calibration
-    run_time_seconds = int(run_time_hours * 3600)
+    run_time_seconds = int(float(run_time_hours) * 3600)
     job_name = f"{model_name}-{build_number}"
     msg = "Running calbration job %s for %s model with %s chains for %s hours (%s seconds)"
     logger.info(msg, job_name, model_name, num_chains, run_time_hours, run_time_seconds)

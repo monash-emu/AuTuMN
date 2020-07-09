@@ -149,6 +149,8 @@ All outputs, logs and plots for all model runs are stored in AWS S3, and they ar
 
 Each job is run on its own server, which is transient: it will be created for the job and will be destroyed at the end.
 
+The AWS tasks are run using [Luigi](https://luigi.readthedocs.io/en/stable/index.html), which is a tool for building data processing pipeline. The Luigi tasks can be found in the `tasks` folder.
+
 ## Buildkite job runner
 
 We have a self-serve job-runner website available [here](https://buildkite.com/autumn), build on the [Buildkite](https://buildkite.com/home) platform. This website can be used to run jobs in AWS. Buildkite runs on a small persistent server in AWS. Buildkite configuration is stored in `scripts/buildkite/`.

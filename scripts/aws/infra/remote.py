@@ -35,7 +35,7 @@ def run_powerbi(instance, run_id: str):
 
 def run_full_model(instance, run_id: str, burn_in: int, use_latest_code: bool):
     """Run full model job on the remote server"""
-    msg = "Running full models for run %s with %s burn-in %s on AWS instance %s"
+    msg = "Running full models for run %s burn-in %s on AWS instance %s"
     logger.info(msg, run_id, burn_in, instance["InstanceId"])
     with get_connection(instance) as conn:
         if use_latest_code:

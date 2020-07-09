@@ -39,7 +39,7 @@ def calibrate():
     logger.info(msg, job_name, model_name, num_chains, run_time_hours, run_time_seconds)
     try:
         cmd_str = (
-            "scripts/aws/run.sh run calibrate"
+            "../aws/run.sh run calibrate"
             f" --job {job_name}"
             f" --calibration {model_name}"
             f" --chains {num_chains}"
@@ -117,10 +117,7 @@ def full():
     logger.info(msg, model_name, burn_in)
     try:
         cmd_str = (
-            "scripts/aws/run.sh run full"
-            f" --job {job_name}"
-            f" --run {run_id}"
-            f" --burn-in {burn_in}"
+            "../aws/run.sh run full" f" --job {job_name}" f" --run {run_id}" f" --burn-in {burn_in}"
         )
         proc = sp.run(cmd_str, shell=True, check=True, stdout=sp.PIPE, encoding="utf-8")
     except Exception:
@@ -175,7 +172,7 @@ def powerbi():
     job_name = f"{model_name}-{build_number}"
     logger.info("Running PowerBI post processing for model %s", model_name)
     try:
-        cmd_str = "scripts/aws/run.sh run powerbi" f" --job {job_name}" f" --run {run_id}"
+        cmd_str = "../aws/run.sh run powerbi" f" --job {job_name}" f" --run {run_id}"
         proc = sp.run(cmd_str, shell=True, check=True, stdout=sp.PIPE, encoding="utf-8")
     except Exception:
         logger.info("Failed to run PowerBI post processing for run: %s", run_id)

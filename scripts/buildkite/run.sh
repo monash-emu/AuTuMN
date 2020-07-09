@@ -11,5 +11,8 @@ then
     pip3 install --quiet -r ../aws/infra/requirements.txt
 fi
 . ../aws/env/bin/activate
+
+echo -e "\n\n=== start running autumn buildkite scripts ===\n\n"
+
 python3 -m tasks $@
 popd

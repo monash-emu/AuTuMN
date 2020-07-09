@@ -9,7 +9,8 @@ from . import buildkite
 
 logger = logging.getLogger(__name__)
 
-BURN_IN_DEFAULT = 1000 # Iterations
+BURN_IN_DEFAULT = 1000  # Iterations
+
 
 @click.group()
 def cli():
@@ -99,7 +100,7 @@ def full():
         burn_in_option = buildkite.get_metadata("full-burn-in")
         run_id = buildkite.get_metadata("run-id")
         trigger_downstream = buildkite.get_metadata("trigger-downstream")
-        burn_in = burn_in_option or  BURN_IN_DEFAULT
+        burn_in = burn_in_option or BURN_IN_DEFAULT
         if not run_id:
             logger.error("No user-supplied `run_id` found.")
             sys.exit(1)
@@ -111,7 +112,7 @@ def full():
 
     # Run the full models
     model_name, _, _ = read_run_id(run_id)
-    job_name= f"{model_name}-{build_number}""
+    job_name = f"{model_name}-{build_number}"
     msg = "Running full model for %s with burn in %s"
     logger.info(msg, model_name, burn_in)
     try:
@@ -151,7 +152,6 @@ def full():
     logger.info("Results available at %s", get_run_url(run_id))
 
 
-
 @click.command()
 def powerbi():
     """Run a PowerBI job in Buildkite"""
@@ -172,14 +172,10 @@ def powerbi():
 
     # Run the full models
     model_name, _, _ = read_run_id(run_id)
-    job_name= f"{model_name}-{build_number}""
+    job_name = f"{model_name}-{build_number}"
     logger.info("Running PowerBI post processing for model %s", model_name)
     try:
-        cmd_str = (
-            "scripts/aws/run.sh run powerbi"
-            f" --job {job_name}"
-            f" --run {run_id}"
-        )
+        cmd_str = "scripts/aws/run.sh run powerbi" f" --job {job_name}" f" --run {run_id}"
         proc = sp.run(cmd_str, shell=True, check=True, stdout=sp.PIPE, encoding="utf-8")
     except Exception:
         logger.info("Failed to run PowerBI post processing for run: %s", run_id)
@@ -187,7 +183,7 @@ def powerbi():
 
     logger.info("PowerBI post processing for model %s suceeded", model_name)
     logger.info("Results available at %s", get_run_url(run_id))
-    
+
 
 def get_run_url(run_id: str):
     return f"http://autumn-data.s3-website-ap-southeast-2.amazonaws.com/{run_id}"
@@ -200,6 +196,7 @@ def read_run_id(run_id: str):
     timestamp = parts[-2]
     model_name = "-".join(parts[:-2])
     return model_name, timestamp, git_commit
+
 
 cli.add_command(calibrate)
 cli.add_command(full)

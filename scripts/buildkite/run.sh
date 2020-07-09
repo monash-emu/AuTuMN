@@ -6,7 +6,7 @@ pushd $SCRIPT_DIR
 if [ ! -d "../aws/env" ]
 then
     echo "Installing requirements"
-    virtualenv -p python3 ../aws/env
+    virtualenv --quiet -p python3 ../aws/env
     . ../aws/env/bin/activate
     pip3 install --quiet -r ../aws/infra/requirements.txt
 fi

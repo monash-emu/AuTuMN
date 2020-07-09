@@ -5,4 +5,4 @@ click
 tabulate
 awscli
 fabric
-yaml
+pyyaml

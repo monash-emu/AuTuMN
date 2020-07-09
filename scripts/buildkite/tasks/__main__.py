@@ -176,7 +176,7 @@ def powerbi():
     logger.info("Running PowerBI post processing for model %s", model_name)
     try:
         cli_args = {
-            "job": burn_in,
+            "job": job_name,
             "run": run_id,
         }
         run_aws_script("powerbi", cli_args)

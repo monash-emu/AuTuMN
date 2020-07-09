@@ -31,10 +31,8 @@ def trigger_pipeline(pipeline_data: dict):
     proc = sp.run(cmd, shell=True, check=True, input=yaml_str, stdout=sp.PIPE, encoding="utf-8")
     stdout = proc.stdout.strip() if proc.stdout else ""
     stderr = proc.stderr.strip() if proc.stderr else ""
+    if stdout:
+        logger.info("stdout for trigger pipeline: %s", stdout)
     if stderr:
-        logger.info("stderr for metadata fetch: %s", stderr)
-    if not stdout:
-        raise ValueError(f"No stdout returned for metadata key: {key}")
-
-    return stdout
+        logger.info("stderr for trigger pipeline: %s", stderr)
 

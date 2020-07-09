@@ -3,11 +3,11 @@ steps:
     if: 'build.env("RUN_NAME") !~ /\S+/'
     fields:
       - text: "Calibration run name"
-        key: "run-name"
+        key: "run-id"
         hint: "Which calibration run should be used?"
         required: true
 
-  - command: "./scripts/buildkite/tasks/powerbi.sh"
+  - command: ./scripts/buildkite/run.sh powerbi
     label: "Run PowerBI processing"
     key: run-powerbi
   - command: ./scripts/aws/run.sh website

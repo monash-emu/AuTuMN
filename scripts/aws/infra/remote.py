@@ -80,6 +80,7 @@ def run_calibration(
         }
         run_luigi_pipeline(conn, pipeline_name, pipeline_args)
         upload_luigi_logs(conn, "calibrate", run_id)
+        # Note: this log line is used by Buildkite so don't change it.
         logger.info("Calibration completed for %s", run_id)
 
 

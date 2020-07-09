@@ -3,7 +3,7 @@ steps:
     if: 'build.env("RUN_NAME") !~ /\S+/'
     fields:
       - text: "Calibration run name"
-        key: "run-name"
+        key: "run-id"
         hint: "Which calibration run should be used?"
         required: true
 
@@ -24,7 +24,7 @@ steps:
           - label: "No"
             value: "no"
 
-  - command: "./scripts/buildkite/tasks/full.sh"
+  - command: ./scripts/buildkite/run.sh full
     label: "Run full models"
     key: run-full
   - command: ./scripts/aws/run.sh website

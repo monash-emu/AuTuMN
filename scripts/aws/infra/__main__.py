@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 @click.group()
 def cli():
     """
-    Simple AWS EC2 instance manager
+    CLI tool to run jobs on AWS EC2 instances
     """
 
 

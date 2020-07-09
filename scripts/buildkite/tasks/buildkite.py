@@ -25,10 +25,10 @@ def get_metadata(key: str):
 def trigger_pipeline(pipeline_data: dict):
     """Trigger a downstream pipeline run"""
     data_str = pprint.pformat(pipeline_data, indent=2)
-    logger.info("Triggering Buildkite pipeline: %s", data_str)
-    stdin = yaml.dump(pipeline_data)
+    logger.info("Triggering Buildkite pipeline:\n%s", data_str)
+    yaml_str = yaml.dump(pipeline_data)
     cmd = f"buildkite-agent pipeline upload"
-    proc = sp.run(cmd, shell=True, check=True, stdin=stdin, stdout=sp.PIPE, encoding="utf-8")
+    proc = sp.run(cmd, shell=True, check=True, input=yaml_str, stdout=sp.PIPE, encoding="utf-8")
     stdout = proc.stdout.strip() if proc.stdout else ""
     stderr = proc.stderr.strip() if proc.stderr else ""
     if stderr:

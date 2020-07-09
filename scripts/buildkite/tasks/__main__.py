@@ -43,7 +43,7 @@ def calibrate():
             "calibration": model_name,
             "chains": num_chains,
             "runtime": run_time_seconds,
-            "branch": "luigi-redux",  # Debug
+            "branch": "luigi-redux",  # FIXME: DEBUG
         }
         stdout = run_aws_script("calibrate", cli_args)
 

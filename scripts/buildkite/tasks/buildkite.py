@@ -12,8 +12,8 @@ def get_metadata(key: str):
     logger.info("Fetching Buildkite metadata %s", key)
     cmd = f"buildkite-agent meta-data get {key}"
     proc = sp.run(cmd, shell=True, check=True, stdout=sp.PIPE, encoding="utf-8")
-    stdout = proc.stdout.strip()
-    stderr = proc.stderr.strip()
+    stdout = proc.stdout.strip() if proc.stdout else ""
+    stderr = proc.stderr.strip() if proc.stderr else ""
     if stderr:
         logger.info("stderr for metadata fetch: %s", stderr)
     if not stdout:
@@ -29,8 +29,8 @@ def trigger_pipeline(pipeline_data: dict):
     stdin = yaml.dump(pipeline_data)
     cmd = f"buildkite-agent pipeline upload"
     proc = sp.run(cmd, shell=True, check=True, stdin=stdin, stdout=sp.PIPE, encoding="utf-8")
-    stdout = proc.stdout.strip()
-    stderr = proc.stderr.strip()
+    stdout = proc.stdout.strip() if proc.stdout else ""
+    stderr = proc.stderr.strip() if proc.stderr else ""
     if stderr:
         logger.info("stderr for metadata fetch: %s", stderr)
     if not stdout:

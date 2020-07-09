@@ -44,6 +44,7 @@ def calibrate():
             f" --calibration {model_name}"
             f" --chains {num_chains}"
             f" --runtime {run_time_seconds}"
+            " --branch luigi-redux"
         )
         proc = sp.run(cmd_str, shell=True, check=True, stdout=sp.PIPE, encoding="utf-8")
         # Get `run_id` from string with format "Calibration completed for $RUN_ID"

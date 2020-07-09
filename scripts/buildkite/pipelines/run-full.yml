@@ -1,6 +1,6 @@
 steps:
   - block: "Full model run settings"
-    if: 'build.env("RUN_NAME") !~ /\S+/'
+    if: 'build.env("RUN_ID") !~ /\S+/'
     fields:
       - text: "Calibration run name"
         key: "run-id"

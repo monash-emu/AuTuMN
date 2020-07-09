@@ -16,7 +16,8 @@ CODE_PATH = "/home/ubuntu/code"
 
 def run_powerbi(instance, run_id: str):
     """Run PowerBI processing on the remote server"""
-    logger.info("Running PowerBI processing for run %s", run_id)
+    msg = "Running PowerBI processing for run %s on AWS instance %s"
+    logger.info(msg, run_id, instance["InstanceId"])
     with get_connection(instance) as conn:
         update_repo(conn, branch="luigi-redux")
         install_requirements(conn)
@@ -34,7 +35,8 @@ def run_powerbi(instance, run_id: str):
 
 def run_full_model(instance, run_id: str, burn_in: int, use_latest_code: bool):
     """Run full model job on the remote server"""
-    logger.info("Running full models for run %s with %s burn-in.", run_id, burn_in)
+    msg = "Running full models for run %s with %s burn-in %s on AWS instance %s"
+    logger.info(msg, run_id, burn_in, instance["InstanceId"])
     with get_connection(instance) as conn:
         if use_latest_code:
             update_repo(conn, branch="luigi-redux")
@@ -61,14 +63,13 @@ def run_calibration(
     instance, model_name: str, num_chains: int, runtime: int, branch: str,
 ):
     """Run calibration job on the remote server"""
+    msg = "Running calibration %s with %s chains for %s seconds on AWS instance %s."
+    logger.info(msg, model_name, num_chains, runtime, instance["InstanceId"])
     with get_connection(instance) as conn:
         update_repo(conn, branch=branch)
         install_requirements(conn)
         start_luigi_scheduler(conn, instance)
         run_id = get_run_id(conn, model_name)
-        logger.info(
-            "Running calibration %s with %s chains for %s seconds.", model_name, num_chains, runtime
-        )
         pipeline_name = "RunCalibrate"
         pipeline_args = {
             "run-id": run_id,
@@ -90,7 +91,7 @@ def run_luigi_pipeline(conn: Connection, pipeline_name: str, pipeline_args: dict
     pipeline_args_str = " ".join([f"--{k} {v}" for k, v in pipeline_args.items()])
     cmd_str = f"./env/bin/python -m luigi --module tasks {pipeline_name} {pipeline_args_str}"
     with conn.cd(CODE_PATH):
-        conn.run(cmd_str, echo=True, pty=True)
+        conn.run(cmd_str, echo=True)
 
     logger.info("Finished running Luigi pipleine %s", pipeline_name)
 

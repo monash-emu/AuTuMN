@@ -31,6 +31,14 @@ def plot_all_priors(priors, directory):
         y_values = [calculate_prior(prior_dict, x, log=False) for x in x_values]
         zeros = [0.0 for i in x_values]
         plt.fill_between(x_values, y_values, zeros, color="cornflowerblue")
+
+        if "distri_mean" in prior_dict:
+            plt.axvline(x=prior_dict["distri_mean"], ymin=0, ymax=100*max(y_values), linewidth=1, color='red')
+        if "distri_ci" in prior_dict:
+            plt.axvline(x=prior_dict["distri_ci"][0], ymin=0, ymax=100*max(y_values), linewidth=.7, color='red')
+            plt.axvline(x=prior_dict["distri_ci"][1], ymin=0, ymax=100*max(y_values), linewidth=.7, color='red')
+
+
         plt.xlabel(prior_dict["param_name"])
         plt.ylabel("prior PDF")
 

@@ -243,7 +243,7 @@ if __name__ == "__main__":
     # exit()
 
     for _mode in ["by_age"]:  # , "by_location"]:
-        for _country in ['belgium']:  # available_countries:
+        for _country in ['belgium', 'united-kingdom']:  # available_countries:
             print("*********** " + _country + " ***********")
             for _config in [2, 3]:  # opti_params["configurations"]:
                 # param_set_list = read_list_of_param_sets_from_csv(country, config)

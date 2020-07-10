@@ -4,8 +4,6 @@ import copy
 import yaml
 import pandas as pd
 
-from autumn.constants import Region
-import autumn.post_processing as post_proc
 from autumn.model_runner import build_model_runner
 from autumn.tool_kit.scenarios import Scenario
 from autumn.tool_kit.params import update_params
@@ -47,7 +45,7 @@ def run_root_model(country=Region.UNITED_KINGDOM, calibrated_params={}):
         'n_imported_cases': [0]
     }
     params["default"]["end_time"] = PHASE_2_START_TIME
-    params["default"]["scenario_start_time"] = PHASE_2_START_TIME - 1
+    params["scenario_start_time"] = PHASE_2_START_TIME - 1
 
 
     scenario_0 = Scenario(build_model, idx=0, params=params)
@@ -93,7 +91,7 @@ def build_params_for_phases_2_and_3(decision_variables, config=0, mode='by_age')
     sc_1_params['data'] = {
         'times_imported_cases': [phase_2_end[config], phase_2_end[config] + 1, phase_2_end[config] + 2,
                                  phase_2_end[config] + 3],
-        'n_imported_cases': [0, 50, 50, 0]
+        'n_imported_cases': [0, 5, 5, 0]
     }
     sc_1_params['end_time'] = phase_2_end[config] + PHASE_3_DURATION
 
@@ -114,7 +112,7 @@ def has_immunity_been_reached(_model, phase_2_end_index):
     # validate herd immunity if exposed prevalence always decreases after 2 weeks in phase 3
     early_compartments_indices = [i for i, c in enumerate(_model.compartment_names) if 'exposedX' in c]
     time_indices = range(phase_2_end_index, len(_model.derived_outputs["times"]))
-    early_infections = [sum([_model.outputs[t, i] for i in early_compartments_indices]) for t in time_indices]
+    early_infections = [sum([_model.outputs[t, i] for i in early_compartments_indices]) for t in time_indices[14:]]
     return max(early_infections) == early_infections[0]
 
 
@@ -140,7 +138,7 @@ def objective_function(decision_variables, root_model, mode="by_age", country=Re
     # Rebuild the default parameters
     params["default"].update(opti_params["default"])
     params["default"] = update_params(params['default'], calibrated_params)
-    params["default"]['scenario_start_time'] = PHASE_2_START_TIME - 1
+    params['scenario_start_time'] = PHASE_2_START_TIME - 1
 
     # Create scenario 1
     sc_1_params = update_params(params['default'], sc_1_params_update)
@@ -247,7 +245,7 @@ if __name__ == "__main__":
     for _mode in ["by_age"]:  # , "by_location"]:
         for _country in ['belgium']:  # available_countries:
             print("*********** " + _country + " ***********")
-            for _config in [0]:  # opti_params["configurations"]:
+            for _config in [2, 3]:  # opti_params["configurations"]:
                 # param_set_list = read_list_of_param_sets_from_csv(country, config)
                 param_set_list = [{}]
                 for param_set in param_set_list:
@@ -261,5 +259,5 @@ if __name__ == "__main__":
                     print("Immunity: " + str(h) + "\n" + "Deaths: " + str(round(d)) + "\n" + "Prop immune: " +
                           str(round(p_immune, 3)))
 
-                    run_all_phases(decision_vars[_mode], _country, _config, param_set, _mode)
-                    break
+                    # run_all_phases(decision_vars[_mode], _country, _config, param_set, _mode)
+                    # break

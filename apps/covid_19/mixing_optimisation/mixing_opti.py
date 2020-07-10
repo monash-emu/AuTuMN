@@ -121,7 +121,7 @@ def objective_function(decision_variables, root_model, mode="by_age", country=Re
     """
     :param decision_variables: dictionary containing
         - mixing multipliers by age as a list if mode == "by_age"    OR
-        - location multipliers as a dictionary if mode == "by_location"
+        - location multipliers as a list if mode == "by_location"
     :param root_model: integrated model supposed to model the past epidemic
     :param mode: either "by_age" or "by_location"
     :param country: the country name
@@ -131,6 +131,15 @@ def objective_function(decision_variables, root_model, mode="by_age", country=Re
     running_model = RegionApp(country)
     build_model = running_model.build_model
     params = copy.deepcopy(running_model.params)
+
+    # reformat decision vars if locations
+    if mode == "by_location":
+        new_decision_variables = {
+            "other_locations": decision_variables[0],
+            "school": decision_variables[1],
+            "work": decision_variables[2]
+        }
+        decision_variables = new_decision_variables
 
     # Define scenario-1-specific params
     sc_1_params_update = build_params_for_phases_2_and_3(decision_variables, config, mode)
@@ -235,14 +244,14 @@ if __name__ == "__main__":
 
     decision_vars = {
         "by_age": [1.] * 16,
-        "by_location": {"other_locations": 1.0, "school": 1.0, "work": 1.0},
+        "by_location": [1., 1., 1.]
     }
 
     # to produce graph with 3 phases
     # run_all_phases(decision_vars["by_age"], "belgium", 2, {}, "by_age")
     # exit()
 
-    for _mode in ["by_age"]:  # , "by_location"]:
+    for _mode in ["by_age", "by_location"]:  # , "by_location"]:
         for _country in ['belgium', 'united-kingdom']:  # available_countries:
             print("*********** " + _country + " ***********")
             for _config in [2, 3]:  # opti_params["configurations"]:

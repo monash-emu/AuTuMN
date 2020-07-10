@@ -1,6 +1,7 @@
 import os
 import math
 from typing import List, Dict, Any
+import pandas as pd
 
 import numpy as np
 from pyDOE import lhs
@@ -145,8 +146,17 @@ def collect_map_estimate(calib_dirpath: str):
 def print_reformated_map_parameters(map_estimates):
     param_as_list_indices = {}
     for key, value in map_estimates.items():
-        if "." not in key and "[" not in key:
-            print(key + ": " + str(value))
+        if isinstance(value, pd.core.series.Series):
+            str_to_print = key + ": ["
+            values_list = value.to_list()
+            i = 0
+            for v in values_list:
+                if i > 0:
+                    str_to_print += ", "
+                str_to_print += str(v)
+                i += 1
+            str_to_print += "]"
+            print(str_to_print)
         elif "." in key:
             components = key.split('.')
             i = 0
@@ -159,14 +169,8 @@ def print_reformated_map_parameters(map_estimates):
                     str_to_print += str(value)
                 print(str_to_print)
                 i += 1
-        elif "[" in key:
-            param_stem = key.split("[")[0]
-            list_index = int(key.split("]")[0].split('[')[1])
-            if param_stem in param_as_list_indices:
-                param_as_list_indices[param_stem].append(list_index)
-            else:
-                param_as_list_indices[param_stem] = [list_index]
-
+        else:
+            print(key + ": " + str(value))
     for param_stem, index_list in param_as_list_indices.items():
         str_to_print = param_stem + ": ["
         index_list.sort()
@@ -182,7 +186,7 @@ def print_reformated_map_parameters(map_estimates):
 
 if __name__ == "__main__":
     calib_dir = os.path.join(
-        "../../data", "outputs", "calibrate", "covid_19", "belgium", "8a08fd7b-2020-07-09"
+        "../../data", "outputs", "calibrate", "covid_19", "sweden", "743e2e26-2020-07-10"
     )
     map_estimates, best_chain_index = collect_map_estimate(calib_dir)
     print_reformated_map_parameters(map_estimates)

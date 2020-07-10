@@ -10,4 +10,4 @@ OPTI_REGIONS = [
 
 ##  Definitions if the three phases
 PHASE_2_START_TIME = 214
-PHASE_3_DURATION = 60
+PHASE_3_DURATION = 90

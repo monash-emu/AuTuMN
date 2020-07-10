@@ -5,7 +5,7 @@ end_time: 214.
 scenario_start_time: 213
 
 infectious_seed: 200
-use_verity_mortality_estimates: False
+use_verity_mortality_estimates: True
 
 microdistancing:
   b: -0.05

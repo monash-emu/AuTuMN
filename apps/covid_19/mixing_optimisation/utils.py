@@ -52,16 +52,16 @@ def get_prior_distributions_for_opti():
             "distri_ci": [0.15, 0.35],
         },
         # parameters to derive age-specific IFRs
-        {
-            "param_name": "ifr_double_exp_model_params.k",
-            "distribution": "uniform",
-            "distri_params": [8.5, 14.5],
-        },
-        {
-            "param_name": "ifr_double_exp_model_params.last_representative_age",
-            "distribution": "uniform",
-            "distri_params": [75., 85.],
-        },
+        # {
+        #     "param_name": "ifr_double_exp_model_params.k",
+        #     "distribution": "uniform",
+        #     "distri_params": [8.5, 14.5],
+        # },
+        # {
+        #     "param_name": "ifr_double_exp_model_params.last_representative_age",
+        #     "distribution": "uniform",
+        #     "distri_params": [75., 85.],
+        # },
         # vary hospital durations
         {
             "param_name": "compartment_periods.hospital_late",
@@ -103,7 +103,33 @@ def get_prior_distributions_for_opti():
         },
     ]
 
+    prior_list += get_list_of_ifr_priors_from_pollan()
+
     return prior_list
+
+
+def get_list_of_ifr_priors_from_pollan():
+    """
+    Using age-specific IFR estimates based on Spanish seroprevalence survey (using Point-of-care estimates)
+    :return: list of dictionaries
+    """
+    ifr_priors = []
+    mean = [1.78e-05, 2.74e-05, 0.000113078, 0.00024269, 0.000496411, 0.00159393, 0.005751568, 0.019573324,
+            0.079267591]
+    lower = [1.52e-05, 2.45e-05, 0.000100857, 0.00021887, 0.000459997, 0.001480304, 0.005294942, 0.017692352,
+             0.068829696]
+    upper = [2.16e-05, 3.11e-05, 0.000128668, 0.000272327, 0.000539085, 0.001726451, 0.006294384, 0.021901827,
+             0.093437162]
+    for i in range(len(lower)):
+        ifr_priors.append(
+            {
+                "param_name": "infection_fatality_props[" + str(i) + "]",
+                "distribution": "beta",
+                "distri_mean": mean[i],
+                "distri_ci": [lower[i], upper[i]],
+            }
+        )
+    return ifr_priors
 
 
 def get_target_outputs_for_opti(country, data_start_time=22, update_jh_data=False):
@@ -295,6 +321,7 @@ def get_posterior_percentiles_time_variant_profile(calibration_path, function='d
     perc = np.concatenate((calculated_times, perc))
     np.savetxt(function + ".csv", perc, delimiter=',')
 
+print(get_list_of_ifr_priors_from_pollan())
 
 # prepare_table_of_param_sets("../../../data/covid_united-kingdom/calibration-covid_united-kingdom-c4c45836-20-06-2020")
 

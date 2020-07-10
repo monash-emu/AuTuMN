@@ -5,35 +5,33 @@ end_time: 214.
 scenario_start_time: 213
 
 infectious_seed: 200
-use_verity_mortality_estimates: False
+use_verity_mortality_estimates: True
 
 microdistancing:
   b: -0.05
-  c: 99.27164890127986 # MLE
-  sigma: 0.6688860622737479  # MLE
+  c: 108.55252612086493 # MLE
+  sigma: 0.6535086122143022  # MLE
 
 hospital_props_multiplier: .5
 
 # MLE estimates
-contact_rate: 0.05140657234427222
-start_time: 32.33193809731787
+contact_rate: 0.05919319201817061
+start_time: 39.611930675726306
 npi_effectiveness:
-  other_locations: 0.7997335187280273
+  other_locations: 0.9619422398740342
 compartment_periods_calculated:
   incubation:
-    total_period: 3.943417800784257
+    total_period: 2.760531650438542
   total_infectious:
-    total_period: 5.139596285999966
-tv_detection_b: 0.08702883001620004
-tv_detection_c: 118.27727897299147
-prop_detected_among_symptomatic: 0.10
-icu_prop: 0.2030763050384177
-ifr_double_exp_model_params:
-  k: 14.243326296932597
-  last_representative_age: 82.83510422866601
+    total_period: 4.4957542453434
+tv_detection_b: 0.08341963086831532
+tv_detection_c: 117.46010912326226
+prop_detected_among_symptomatic: 0.1017844994449625
+icu_prop: 0.24371306627152672
 compartment_periods:
-  hospital_late: 12.670437110817831
-  icu_late: 7.346817122522202
+  hospital_late: 13.13979106597376
+  icu_late: 8.861981683941238
+hospital_props_multiplier: 0.3730189453021552
 
 mixing:
   school:

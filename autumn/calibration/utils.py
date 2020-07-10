@@ -144,7 +144,7 @@ def collect_map_estimate(calib_dirpath: str):
 
 if __name__ == "__main__":
     calib_dir = os.path.join(
-        "../../data", "outputs", "calibrate", "covid_19", "belgium", "862c076f-2020-07-07"
+        "../../data", "outputs", "calibrate", "covid_19", "belgium", "8a08fd7b-2020-07-09"
     )
     map_estimates, best_chain_index = collect_map_estimate(calib_dir)
     for key, value in map_estimates.items():
@@ -215,7 +215,7 @@ def find_distribution_params_from_mean_and_ci(distribution, mean, ci, ci_width=0
             dist = sum([(ci[i] - vals[i]) ** 2 for i in range(2)])
             return dist
 
-        sol = minimize(distance_to_minimise, [1.0], bounds=[(0.0, None)])
+        sol = minimize(distance_to_minimise, [1.0], bounds=[(0.0, None)], tol=1.e-32)
         best_a = sol.x
         best_b = best_a * (1.0 - mean) / mean
         params = {"a": best_a, "b": best_b}

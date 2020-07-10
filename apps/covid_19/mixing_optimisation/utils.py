@@ -11,7 +11,7 @@ import copy
 
 def get_prior_distributions_for_opti():
     prior_list = [
-        {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.01, 0.06],},
+        {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.01, 0.07],},
         {"param_name": "start_time", "distribution": "uniform", "distri_params": [0., 40.],},
         {
             "param_name": "npi_effectiveness.other_locations",
@@ -43,7 +43,7 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "prop_detected_among_symptomatic",  # upper asymptote
             "distribution": "uniform",
-            "distri_params": [0.10, 0.90],
+            "distri_params": [0.05, 0.90],
         },
         {
             "param_name": "icu_prop",

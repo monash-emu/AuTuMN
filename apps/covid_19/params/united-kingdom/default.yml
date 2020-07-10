@@ -8,7 +8,7 @@ infectious_seed: 200
 use_verity_mortality_estimates: True
 
 # MLE estimates
-contact_rate: 0.04941632568265741
+contact_rate: .052 # 0.04941632568265741
 start_time: 8.349303803113564
 npi_effectiveness:
   other_locations: 0.7701284806653587
@@ -19,7 +19,7 @@ compartment_periods_calculated:
     total_period: 4.671692587711981
 tv_detection_b: 0.06048031846920275
 tv_detection_c: 82.84315193551315
-prop_detected_among_symptomatic: 0.10831183429856603
+prop_detected_among_symptomatic: .05 # 0.10831183429856603
 icu_prop: 0.2649730671608257
 compartment_periods:
   hospital_late: 8.306696239209874

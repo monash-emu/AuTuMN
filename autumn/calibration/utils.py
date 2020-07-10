@@ -142,13 +142,50 @@ def collect_map_estimate(calib_dirpath: str):
     return map_estimates, best_chain_index
 
 
+def print_reformated_map_parameters(map_estimates):
+    param_as_list_indices = {}
+    for key, value in map_estimates.items():
+        if "." not in key and "[" not in key:
+            print(key + ": " + str(value))
+        elif "." in key:
+            components = key.split('.')
+            i = 0
+            for comp in components:
+                str_to_print = ""
+                for j in range(i):
+                    str_to_print += "  "
+                str_to_print += comp + ": "
+                if i == len(components) - 1:
+                    str_to_print += str(value)
+                print(str_to_print)
+                i += 1
+        elif "[" in key:
+            param_stem = key.split("[")[0]
+            list_index = int(key.split("]")[0].split('[')[1])
+            if param_stem in param_as_list_indices:
+                param_as_list_indices[param_stem].append(list_index)
+            else:
+                param_as_list_indices[param_stem] = [list_index]
+
+    for param_stem, index_list in param_as_list_indices.items():
+        str_to_print = param_stem + ": ["
+        index_list.sort()
+        i = 0
+        for index in index_list:
+            if i > 0:
+                str_to_print += ", "
+            str_to_print += str(map_estimates[param_stem + "[" + str(index) + "]"])
+            i += 1
+        str_to_print += "]"
+        print(str_to_print)
+
+
 if __name__ == "__main__":
     calib_dir = os.path.join(
         "../../data", "outputs", "calibrate", "covid_19", "belgium", "8a08fd7b-2020-07-09"
     )
     map_estimates, best_chain_index = collect_map_estimate(calib_dir)
-    for key, value in map_estimates.items():
-        print(key + ": " + str(value))
+    print_reformated_map_parameters(map_estimates)
 
     print()
     print("Obtained from chain " + str(best_chain_index))

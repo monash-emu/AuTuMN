@@ -108,18 +108,22 @@ def get_prior_distributions_for_opti():
     return prior_list
 
 
-def get_list_of_ifr_priors_from_pollan():
+def get_list_of_ifr_priors_from_pollan(test="immunoassay"):
     """
-    Using age-specific IFR estimates based on Spanish seroprevalence survey (using Point-of-care estimates)
+    Using age-specific IFR estimates based on Spanish seroprevalence survey
+    test is either 'PoC' for Point-of-care estimates or 'immunoassay'
     :return: list of dictionaries
     """
     ifr_priors = []
-    mean = [1.78e-05, 2.74e-05, 0.000113078, 0.00024269, 0.000496411, 0.00159393, 0.005751568, 0.019573324,
-            0.079267591]
-    lower = [1.52e-05, 2.45e-05, 0.000100857, 0.00021887, 0.000459997, 0.001480304, 0.005294942, 0.017692352,
-             0.068829696]
-    upper = [2.16e-05, 3.11e-05, 0.000128668, 0.000272327, 0.000539085, 0.001726451, 0.006294384, 0.021901827,
-             0.093437162]
+    if test == "PoC":
+        mean = [1.78e-05, 2.74e-05, 0.000113078, 0.00024269, 0.000496411, 0.00159393, 0.005751568, 0.019573324, 0.079267591]
+        lower = [1.52e-05, 2.45e-05, 0.000100857, 0.00021887, 0.000459997, 0.001480304, 0.005294942, 0.017692352, 0.068829696]
+        upper = [2.16e-05, 3.11e-05, 0.000128668, 0.000272327, 0.000539085, 0.001726451, 0.006294384, 0.021901827, 0.093437162]
+    elif test == "immunoassay":
+        mean = [1.35e-05, 2.68e-05, 9.53e-05, 0.00023277, 0.000557394, 0.001902859, 0.007666306, 0.027469001, 0.106523055]
+        lower = [1.07e-05, 2.36e-05, 8.53e-05, 0.000209445, 0.000512419, 0.001749128, 0.006941435, 0.024261861, 0.08974785]
+        upper = [1.81e-05, 3.11e-05, 0.00010806, 0.00026194, 0.000611024, 0.002086216, 0.008560222, 0.03165319, 0.131010945]
+
     for i in range(len(lower)):
         ifr_priors.append(
             {
@@ -320,8 +324,6 @@ def get_posterior_percentiles_time_variant_profile(calibration_path, function='d
     calculated_times = np.array([calculated_times])
     perc = np.concatenate((calculated_times, perc))
     np.savetxt(function + ".csv", perc, delimiter=',')
-
-print(get_list_of_ifr_priors_from_pollan())
 
 # prepare_table_of_param_sets("../../../data/covid_united-kingdom/calibration-covid_united-kingdom-c4c45836-20-06-2020")
 

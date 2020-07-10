@@ -211,12 +211,13 @@ def repeat_list_elements(repetitions, list_to_repeat):
     )
 
 
-def repeat_list_elements_average_last_two(raw_props):
+def repeat_list_elements_average_last_two(raw_props, prop_over_80):
     """
-    Repeat 5-year age-specific proportions, but with 75+s taking the average of the last two groups.
+    Repeat 5-year age-specific proportions, but with 75+s taking the weighted average of the last two groups.
+    prop_over_80 is the proportion of 80+ individuals among the 75+ population.
     """
     repeated_props = repeat_list_elements(2, raw_props[:-1])
-    repeated_props[-1] = sum(raw_props[-2:]) / 2.0
+    repeated_props[-1] = (1. - prop_over_80) * raw_props[-2] + prop_over_80 * raw_props[-1]
     return repeated_props
 
 

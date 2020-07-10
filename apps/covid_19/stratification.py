@@ -10,6 +10,8 @@ from autumn.constants import Compartment
 from autumn.summer_related.parameter_adjustments import adjust_upstream_stratified_parameter
 from autumn.curve import scale_up_function, tanh_based_scaleup
 from apps.covid_19.preprocess.mortality import age_specific_ifrs_from_double_exp_model
+from autumn.inputs import get_population_by_agegroup
+
 
 def stratify_by_clinical(model, model_parameters, compartments):
     """
@@ -67,6 +69,10 @@ def stratify_by_clinical(model, model_parameters, compartments):
     model_parameters["infection_fatality_props"] = infection_fatality_props_10_year
     model_parameters["hospital_props"] = hospital_props_10_year
 
+    # Calculate the proportion of 80+ years old among the 75+ population
+    elderly_populations = get_population_by_agegroup([0, 75, 80], model_parameters["iso3"], model_parameters["region"])
+    prop_over_80 = elderly_populations[2] / sum(elderly_populations[1:])
+
     # Age dependent proportions of infected people who become symptomatic.
     # This is defined 8x10 year bands, 0-70+, which we transform into 16x5 year bands 0-75+
     symptomatic_props = repeat_list_elements(2, symptomatic_props_10_year)
@@ -74,14 +80,15 @@ def stratify_by_clinical(model, model_parameters, compartments):
     # This is defined 9x10 year bands, 0-80+, which we trransform into 16x5 year bands 0-75+
     # Calculate 75+ age bracket as half 75-79 and half 80+
     hospital_props = repeat_list_elements_average_last_two(
-        [p * hospital_props_multiplier for p in hospital_props_10_year])
+        [p * hospital_props_multiplier for p in hospital_props_10_year], prop_over_80)
 
     # Infection fatality rate by age group.
     if use_verity_mortality_estimates:
         # Data in props used 10 year bands 0-80+, but we want 5 year bands from 0-75+
-        # Calculate 75+ age bracket as half 75-79 and half 80+
+
+        # Calculate 75+ age bracket as weighted average between 75-79 and half 80+
         infection_fatality_props = repeat_list_elements_average_last_two(
-            infection_fatality_props_10_year
+            infection_fatality_props_10_year, prop_over_80
         )
     else:
         infection_fatality_props = age_specific_ifrs_from_double_exp_model(

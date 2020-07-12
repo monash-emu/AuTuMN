@@ -1,3 +1,5 @@
+import logging
+
 from autumn.calibration import (
     Calibration,
     run_full_models_for_mcmc as _run_full_models_for_mcmc,
@@ -12,6 +14,8 @@ from numpy import linspace
 N_ITERS = 100000
 N_BURNED = 0
 N_CHAINS = 1
+
+logger = logging.getLogger(__name__)
 
 
 def run_full_models_for_mcmc(region: str, burn_in: int, src_db_path: str, dest_db_path: str):
@@ -42,7 +46,7 @@ def run_calibration_chain(
     available_time: Maximum time, in seconds, to run the calibration.
     mode is either 'lsm' or 'autumn_mcmc'
     """
-    print(f"Preparing to run covid model calibration for region {region}")
+    logger.info(f"Preparing to run covid model calibration for region {region}")
 
     region_model = RegionApp(region)
     build_model = region_model.build_model
@@ -58,7 +62,7 @@ def run_calibration_chain(
         num_chains,
         param_set_name=region,
     )
-    print("Starting calibration.")
+    logger.info("Starting calibration.")
     calib.run_fitting_algorithm(
         run_mode=mode,
         n_iterations=N_ITERS,
@@ -67,7 +71,7 @@ def run_calibration_chain(
         available_time=max_seconds,
         grid_info=_grid_info,
     )
-    print(f"Finished calibration for run {run_id}.")
+    logger.info(f"Finished calibration for run {run_id}.")
 
 
 def get_priors_and_targets(region, data_type="confirmed", start_after_n_cases=1):

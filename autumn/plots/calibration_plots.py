@@ -8,7 +8,7 @@ from numpy import linspace
 from autumn.calibration.utils import calculate_prior, raise_error_unsupported_prior
 
 plt.style.use("ggplot")
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 def plot_all_priors(priors, directory):
@@ -17,7 +17,7 @@ def plot_all_priors(priors, directory):
     :param priors: list of dictionaries
     :param directory: path to directory
     """
-    print("Plotting prior distributions")
+    logger.info("Plotting prior distributions")
     path = os.path.join(directory, "prior_plots")
     os.makedirs(path, exist_ok=True)
     for i, prior_dict in enumerate(priors):

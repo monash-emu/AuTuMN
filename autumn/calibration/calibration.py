@@ -1,5 +1,6 @@
 import yaml
 import os
+import logging
 from time import time
 from itertools import chain, product
 from datetime import datetime
@@ -34,6 +35,8 @@ from .utils import (
 
 BEST_LL = "best_ll"
 BEST_START = "best_start_time"
+
+logger = logging.getLogger(__name__)
 
 
 class CalibrationMode:
@@ -219,7 +222,7 @@ class Calibration:
         """
         Run the model with a set of params.
         """
-        print(f"Running iteration {self.iter_num}...")
+        logger.info(f"Running iteration {self.iter_num}...")
 
         # Update default parameters to use calibration params.
         param_updates = {"end_time": self.end_time}
@@ -463,8 +466,7 @@ class Calibration:
         self.mle_estimates = sol.x
 
         # FIXME: need to fix dump_mle_params_to_yaml_file
-        print("Best solution:")
-        print(self.mle_estimates)
+        logger.info("Best solution: %s", self.mle_estimates)
         # self.dump_mle_params_to_yaml_file()
 
     def run_autumn_mcmc(self, n_iterations: int, n_burned: int, n_chains: int, available_time):
@@ -523,14 +525,14 @@ class Calibration:
 
             self.iter_num += 1
             iters_completed = i_run + 1
-            print(f"{iters_completed} MCMC iterations completed.")
+            logger.info(f"{iters_completed} MCMC iterations completed.")
 
             if available_time:
                 # Stop iterating if we have run out of time.
                 elapsed_time = time() - start_time
                 if elapsed_time > available_time:
                     msg = f"Stopping MCMC simulation after {iters_completed} iterations because of {available_time}s time limit"
-                    print(msg)
+                    logger.info(msg)
                     break
 
     def run_grid_based(self, grid_info):
@@ -551,7 +553,7 @@ class Calibration:
             )
 
         all_combinations = list(product(*param_values))
-        print("Total number of iterations: " + str(len(all_combinations)))
+        logger.info("Total number of iterations: " + str(len(all_combinations)))
         for params in all_combinations:
             loglike = self.loglikelihood(params)
             logprior = self.logprior(params)

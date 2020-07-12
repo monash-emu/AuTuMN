@@ -9,7 +9,6 @@ from tempfile import TemporaryDirectory
 
 import numpy
 import pandas as pd
-from tqdm import tqdm
 
 from summer.model import StratifiedModel
 
@@ -19,7 +18,7 @@ from autumn.tool_kit import Scenario, Timer
 from autumn.post_processing.processor import post_process
 
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 def load_model_scenarios(
@@ -112,7 +111,7 @@ def collate_databases(src_db_paths: List[str], target_db_path: str):
     logger.info("Collating db outputs into %s", target_db_path)
     target_db = Database(target_db_path)
     run_count = 0
-    for db_path in tqdm(src_db_paths):
+    for db_path in src_db_paths:
         source_db = Database(db_path)
         num_runs = len(source_db.query("mcmc_run", column="idx"))
         for table_name in source_db.table_names():
@@ -276,6 +275,6 @@ def load_calibration_from_db(database_directory, n_burned_per_chain=0):
             }
             models.append(model_info_dict)
 
-    print("MCMC runs loaded.")
-    print("Number of loaded iterations after burn-in: " + str(n_loaded_iter))
+    logger.info("MCMC runs loaded.")
+    logger.info("Number of loaded iterations after burn-in: " + str(n_loaded_iter))
     return models

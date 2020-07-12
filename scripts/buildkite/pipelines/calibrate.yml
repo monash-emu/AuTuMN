@@ -57,7 +57,7 @@ steps:
           - label: "No"
             value: "no"
 
-  - command: ./scripts/buildkite/tasks/calibrate.sh
+  - command: ./scripts/buildkite/run.sh calibrate
     label: Run calibration
     key: run-calibrate
   - command: ./scripts/aws/run.sh website

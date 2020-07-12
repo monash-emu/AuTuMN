@@ -2,6 +2,7 @@
 Create a static site from our S3 bucket.
 """
 import os
+import logging
 import io
 from typing import List
 from datetime import datetime
@@ -12,6 +13,7 @@ import timeago
 from . import settings
 from .aws import session
 
+logger = logging.getLogger(__name__)
 client = session.client("s3")
 
 BUCKET = settings.S3_BUCKET
@@ -90,7 +92,7 @@ def update_website():
 
 
 def update_page(path: str, children: List[str]):
-    print("Updating page", path)
+    logger.info("Updating page %s", path)
     html = ""
     title = get_pretty_name(path.split("/")[-1])
     html += render_header(title)

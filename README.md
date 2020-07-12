@@ -30,9 +30,17 @@ python -m apps --help
 ├── apps                    Specific applications of the framework
 ├── autumn                  AuTuMN framework module
 ├── data                    Data to be used by the models
-├── docs                    Documentation and random files
+|   ├─ inputs                   Input data for the models
+|   └─ outputs                  Module run outputs (not in source control)
+|
+├── docs                    Documentation
 ├── scripts                 Utility scripts
+|   ├─ aws                      Scripts to run tasks on AWS
+|   ├─ buildkite                Configuration of Buildkite pipelines
+|   └─ massive                  Scripts to run tasks on MASSIVE (not used)
+|
 ├── summer                  SUMMER framework module
+├── tasks                   Cloud computing tasks
 ├── tests                   Automated tests
 ├── .gitignore              Files for Git to ignore
 ├── plots.py                Streamlit entrypoint
@@ -109,11 +117,25 @@ Input data is stored in text format in the `data/inputs/` folder. All input data
 - adjust the preprocess functions in `autumn.inputs` as required
 - rebuild the database, forcing a new file hash to be written
 
+To fetch the latest data, run:
+
+```bash
+python -m apps db fetch
+```
+
+You will need to ensure that the latest date in all user-specified mixing data params is greater than or equal to the most recent Google Mobility date.
+
 To rebuild the database with new data, run:
 
 ```bash
 python -m apps db build --force
 ```
+
+Once you are satisfied that all your models work again (run the tests), commit your changes and push up:
+
+- The updated CSV files
+- The updated `input-hash.txt` file
+- Any required changes to model parameters (eg. dynamic mixing dates)
 
 ## AWS calibration
 
@@ -126,6 +148,8 @@ We often need to run long, computationally expensive jobs. We are currently usin
 All outputs, logs and plots for all model runs are stored in AWS S3, and they are publicly available at [this website](http://autumn-data.s3-website-ap-southeast-2.amazonaws.com). Application _should_ be uploaded if the app crashes midway.
 
 Each job is run on its own server, which is transient: it will be created for the job and will be destroyed at the end.
+
+The AWS tasks are run using [Luigi](https://luigi.readthedocs.io/en/stable/index.html), which is a tool for building data processing pipeline. The Luigi tasks can be found in the `tasks` folder.
 
 ## Buildkite job runner
 

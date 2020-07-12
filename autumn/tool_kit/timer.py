@@ -2,7 +2,7 @@ import logging
 
 from time import time
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 
 class Timer:
@@ -17,7 +17,7 @@ class Timer:
     def __enter__(self):
         self.start = time()
         msg = self.message[0].upper() + self.message[1:]
-        logger.info(f"\n{msg}...")
+        logger.info(f"{msg}...")
 
     def __exit__(self, *args):
         runtime = time() - self.start

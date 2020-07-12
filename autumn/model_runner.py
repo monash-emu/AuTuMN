@@ -2,6 +2,7 @@
 Build and run any AuTuMN model, storing the outputs
 """
 import os
+import logging
 import yaml
 from datetime import datetime
 
@@ -15,6 +16,8 @@ from autumn.tool_kit.utils import (
     get_git_hash,
 )
 from autumn.db.models import store_run_models
+
+logger = logging.getLogger(__name__)
 
 
 def build_model_runner(
@@ -34,7 +37,7 @@ def build_model_runner(
         """
         Run the model, save the outputs.
         """
-        print(f"Running {model_name} {param_set_name}...")
+        logger.info(f"Running {model_name} {param_set_name}...")
 
         # Ensure project folder exists.
         project_dir = os.path.join(constants.OUTPUT_DATA_PATH, "run", model_name, param_set_name)

@@ -11,8 +11,8 @@ import numpy as np
 from numpy.testing import assert_array_equal
 
 from apps.covid_19.preprocess import mixing_matrix
-
-BASE_DATE = date(2019, 12, 31)
+from apps.covid_19.preprocess.mixing_matrix import adjust_location
+from apps.covid_19.preprocess.mixing_matrix.utils import BASE_DATE
 
 
 def test_update_mixing_data__with_only_mobility_data():
@@ -26,7 +26,7 @@ def test_update_mixing_data__with_only_mobility_data():
     is_periodic_intervention = False
     periodic_int_params = None
     periodic_end_time = None
-    actual_mixing = mixing_matrix.update_mixing_data(
+    actual_mixing = adjust_location.update_mixing_data(
         mixing,
         npi_effectiveness_params,
         google_mobility_values,
@@ -67,7 +67,7 @@ def test_update_mixing_data__with_user_specified_values():
     is_periodic_intervention = False
     periodic_int_params = None
     periodic_end_time = None
-    actual_mixing = mixing_matrix.update_mixing_data(
+    actual_mixing = adjust_location.update_mixing_data(
         mixing,
         npi_effectiveness_params,
         google_mobility_values,
@@ -106,7 +106,7 @@ def test_update_mixing_data__with_user_specified_values__out_of_date():
     periodic_int_params = None
     periodic_end_time = None
     with pytest.raises(AssertionError):
-        mixing_matrix.update_mixing_data(
+        adjust_location.update_mixing_data(
             mixing,
             npi_effectiveness_params,
             google_mobility_values,
@@ -137,7 +137,7 @@ def test_update_mixing_data__with_user_specified_values__missing_data_append():
     periodic_int_params = None
     periodic_end_time = None
     with pytest.raises(ValueError):
-        mixing_matrix.update_mixing_data(
+        adjust_location.update_mixing_data(
             mixing,
             npi_effectiveness_params,
             google_mobility_values,
@@ -169,7 +169,7 @@ def test_update_mixing_data__with_user_specified_values__date_clash_append():
     periodic_int_params = None
     periodic_end_time = None
     with pytest.raises(AssertionError):
-        mixing_matrix.update_mixing_data(
+        adjust_location.update_mixing_data(
             mixing,
             npi_effectiveness_params,
             google_mobility_values,
@@ -231,7 +231,7 @@ def test_build_dynamic__with_mobility_data(monkeypatch):
         loc_mobility_values = {"work": [1, 1, 1, 1.5, 1.5, 1.5, 0.5, 0.5]}
         return loc_mobility_values, mobility_days
 
-    monkeypatch.setattr(mixing_matrix, "get_mobility_data", get_test_mobility_data)
+    monkeypatch.setattr(adjust_location, "get_mobility_data", get_test_mobility_data)
 
     google_mobility_locations = {"work": ["workplace"]}
     mixing_params = {}

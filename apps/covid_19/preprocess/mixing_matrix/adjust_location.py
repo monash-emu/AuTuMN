@@ -1,4 +1,3 @@
-from datetime import date, datetime
 from typing import Callable
 
 import numpy as np
@@ -7,135 +6,85 @@ from autumn.curve import scale_up_function, tanh_based_scaleup
 
 from autumn.inputs import get_country_mixing_matrix, get_mobility_data
 
-# Base date used to calculate mixing matrix times.
-BASE_DATE = date(2019, 12, 31)
-BASE_DATETIME = datetime(2019, 12, 31, 0, 0, 0)
+from .adjust_base import BaseMixingAdjustment
+from .utils import BASE_DATE, BASE_DATETIME
 
 # Locations that can be used for mixing
 LOCATIONS = ["home", "other_locations", "school", "work"]
 MICRODISTANCING_LOCATIONS = ["school", "other_locations", "work"]
-AGE_INDICES = list(range(16))
 
 
-def build_static(country_iso3: str) -> np.ndarray:
-    """
-    Get a non-time-varying mixing matrix for a country.
-    Each row/column represents a 5 year age bucket.
-    Matrix is 16x16, representing ages 0-80+
-    """
-    return get_country_mixing_matrix("all_locations", country_iso3)
-
-
-def build_dynamic(
-    country_iso3: str,
-    region: str,
-    mixing: dict,
-    mixing_age_adjust: dict,
-    npi_effectiveness_params: dict,
-    google_mobility_locations: dict,
-    is_periodic_intervention: bool,
-    periodic_int_params: dict,
-    periodic_end_time: float,
-    microdistancing_params: dict,
-) -> Callable[[float], np.ndarray]:
-    """
-    Build a time-varing mixing matrix
-    Returns a function of time which returns a 16x16 mixing matrix.
-    """
-
-    # Load mobility data
-    google_mobility_values, google_mobility_days = get_mobility_data(
-        country_iso3, region, BASE_DATETIME, google_mobility_locations
-    )
-
-    # Build mixing data timeseries
-    mixing = update_mixing_data(
-        mixing,
-        npi_effectiveness_params,
-        google_mobility_values,
-        google_mobility_days,
-        is_periodic_intervention,
-        periodic_int_params,
-        periodic_end_time,
-    )
-
-    # Build the time variant location adjustment functions from mixing timeseries
-    mixing_locations = [loc for loc in LOCATIONS if loc in mixing]
-    loc_adj_funcs = {}
-    for loc_key in mixing_locations:
-        loc_times = mixing[loc_key]["times"]
-        loc_vals = mixing[loc_key]["values"]
-        loc_adj_funcs[loc_key] = scale_up_function(loc_times, loc_vals, method=4)
-
-    # Build the time variant age adjustment functions
-    affected_age_indices = [i for i in AGE_INDICES if f"age_{i}" in mixing_age_adjust]
-    age_adjustment_functions = {}
-    for age_idx_affected in affected_age_indices:
-        age_idx_key = f"age_{age_idx_affected}"
-        mixing_age_adjust[age_idx_key]["times"] = [
-                (time_date - BASE_DATE).days for time_date in mixing_age_adjust[age_idx_key]["times"]
-        ]
-        age_times = mixing_age_adjust[age_idx_key]["times"]
-        age_vals = mixing_age_adjust[age_idx_key]["values"]
-        age_adjustment_functions[age_idx_affected] = scale_up_function(
-            age_times, age_vals, method=4,
+class LocationMixingAdjustment(BaseMixingAdjustment):
+    def __init__(
+        self,
+        country_iso3: str,
+        region: str,
+        mixing: dict,
+        npi_effectiveness_params: dict,
+        google_mobility_locations: dict,
+        is_periodic_intervention: bool,
+        periodic_int_params: dict,
+        periodic_end_time: float,
+        microdistancing_params: dict,
+    ):
+        """Build the time variant location adjustment functions"""
+        # Load mobility data
+        google_mobility_values, google_mobility_days = get_mobility_data(
+            country_iso3, region, BASE_DATETIME, google_mobility_locations
         )
+        # Build mixing data timeseries
+        mixing = update_mixing_data(
+            mixing,
+            npi_effectiveness_params,
+            google_mobility_values,
+            google_mobility_days,
+            is_periodic_intervention,
+            periodic_int_params,
+            periodic_end_time,
+        )
+        # Build the time variant location adjustment functions from mixing timeseries
+        mixing_locations = [loc for loc in LOCATIONS if loc in mixing]
+        self.loc_adj_funcs = {}
+        for loc_key in mixing_locations:
+            loc_times = mixing[loc_key]["times"]
+            loc_vals = mixing[loc_key]["values"]
+            self.loc_adj_funcs[loc_key] = scale_up_function(loc_times, loc_vals, method=4)
 
-    # Work out microdistancing function to be applied to all non-household locations
-    microdistancing_function = None
-    if microdistancing_params:
-        microdistancing_function = tanh_based_scaleup(**microdistancing_params)
+        # Work out microdistancing function to be applied to all non-household locations
+        self.microdistancing_function = None
+        if microdistancing_params:
+            self.microdistancing_function = tanh_based_scaleup(**microdistancing_params)
 
-    # Load all location-specific mixing info.
-    matrix_components = {}
-    for sheet_type in ["all_locations"] + LOCATIONS:
-        # Loads a 16x16 ndarray
-        matrix_components[sheet_type] = get_country_mixing_matrix(sheet_type, country_iso3)
+        # Load all location-specific mixing info.
+        self.matrix_components = {}
+        for sheet_type in ["all_locations"] + LOCATIONS:
+            # Loads a 16x16 ndarray
+            self.matrix_components[sheet_type] = get_country_mixing_matrix(sheet_type, country_iso3)
 
-    # Create mixing matrix function
-    def mixing_matrix_function(time: float):
+    def get_adjustment(self, time: float, mixing_matrix: np.ndarray) -> np.ndarray:
         """
-        Returns a 16x16 mixing matrix for a given time.
+        Apply time-varying location adjustments.
+        Returns a new mixing matrix, modified to adjust for dynamic mixing changes for a given point in time.
         """
-        mixing_matrix = matrix_components["all_locations"]
-
-        # Apply time-varying location adjustments
         for loc_key in LOCATIONS:
 
             # Start the adjustment value for each location from a value of 1 for "no adjustment".
             loc_adjustment = 1
 
             # Adjust for Google Mobility data.
-            if loc_key in loc_adj_funcs:
-                loc_adj_func = loc_adj_funcs[loc_key]
+            if loc_key in self.loc_adj_funcs:
+                loc_adj_func = self.loc_adj_funcs[loc_key]
                 loc_adjustment *= loc_adj_func(time)
 
             # Adjust for microdistancing
-            if microdistancing_function and loc_key in MICRODISTANCING_LOCATIONS:
-                loc_adjustment *= microdistancing_function(time)
+            if self.microdistancing_function and loc_key in MICRODISTANCING_LOCATIONS:
+                loc_adjustment *= self.microdistancing_function(time)
 
             # Apply adjustment by subtracting the contacts that need to come off
-            loc_adjustment_matrix = (loc_adjustment - 1) * matrix_components[loc_key]
+            loc_adjustment_matrix = (loc_adjustment - 1) * self.matrix_components[loc_key]
             mixing_matrix = np.add(mixing_matrix, loc_adjustment_matrix)
 
-        # Apply time-varying age adjustments
-        for row_index in range(len(AGE_INDICES)):
-            row_multiplier = (
-                age_adjustment_functions[row_index](time)
-                if row_index in affected_age_indices
-                else 1.0
-            )
-            for col_index in range(len(AGE_INDICES)):
-                col_multiplier = (
-                    age_adjustment_functions[col_index](time)
-                    if col_index in affected_age_indices
-                    else 1.0
-                )
-                mixing_matrix[row_index, col_index] *= row_multiplier * col_multiplier
-
         return mixing_matrix
-
-    return mixing_matrix_function
 
 
 def update_mixing_data(
@@ -250,25 +199,3 @@ def add_periodic_intervention(periodic_int_params, old_other_locations, end_time
         t += period
 
     return other_locations
-
-
-def get_total_contact_rates_by_age(mixing_matrix, direction="horizontal"):
-    """
-    Sum the contact-rates by age group
-    :param mixing_matrix: the input mixing matrix
-    :param direction: either 'horizontal' (infectee's perspective) or 'vertical' (infector's perspective)
-    :return: dict
-        keys are the age categories and values are the aggregated contact rates
-    """
-    assert direction in [
-        "horizontal",
-        "vertical",
-    ], "direction should be in ['horizontal', 'vertical']"
-    aggregated_contact_rates = {}
-    for i in range(16):
-        if direction == "horizontal":
-            aggregated_contact_rates[str(5 * i)] = mixing_matrix[i, :].sum()
-        else:
-            aggregated_contact_rates[str(5 * i)] = mixing_matrix[:, i].sum()
-    return aggregated_contact_rates
-

@@ -29,7 +29,7 @@ def test_sample_starting_params_from_lhs__with_beta_prior_and_one_sample():
     ]
     specify_missing_prior_params(priors)
     params = sample_starting_params_from_lhs(priors, n_samples=1)
-    assert _prepare_params(params) == _prepare_params([{"ice_cream_sales": 0.04676177079730329}])
+    assert _prepare_params(params) == _prepare_params([{"ice_cream_sales": 0.04680260472064115}])
 
 
 def test_sample_starting_params_from_lhs__with_gamma_prior_and_one_sample():

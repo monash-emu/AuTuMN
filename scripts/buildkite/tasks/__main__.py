@@ -135,7 +135,7 @@ def full():
         pipeline_data = {
             "steps": [
                 {
-                    "label": "Trigger full model run",
+                    "label": "Trigger PowerBI processing",
                     "trigger": "powerbi-processing",
                     "async": True,
                     "build": {

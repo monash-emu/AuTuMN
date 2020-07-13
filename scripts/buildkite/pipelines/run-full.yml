@@ -13,6 +13,17 @@ steps:
         required: false
         default: "1000"
 
+      - select: "Use latest code for model run"
+        key: "use-latest-code"
+        hint: Should this task use the same Git commit as the calibration, or use the latest code instead?
+        required: false
+        default: "no"
+        options:
+          - label: "Yes"
+            value: "yes"
+          - label: "No"
+            value: "no"
+
       - select: "Trigger PowerBI processing"
         key: "trigger-downstream"
         hint: Should this task trigger PowerBI processing when it is done?

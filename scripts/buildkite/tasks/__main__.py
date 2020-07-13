@@ -101,6 +101,7 @@ def full():
         burn_in_option = buildkite.get_metadata("full-burn-in")
         run_id = buildkite.get_metadata("run-id")
         trigger_downstream = buildkite.get_metadata("trigger-downstream")
+        use_latest_code = buildkite.get_metadata("use-latest-code")
         burn_in = burn_in_option or BURN_IN_DEFAULT
         if not run_id:
             logger.error("No user-supplied `run_id` found.")
@@ -109,6 +110,7 @@ def full():
         # This is a job triggered by an upstream job
         logger.info("Found run id from envar: %s", run_id)
         trigger_downstream = "yes"
+        use_latest_code = "no"
         burn_in = BURN_IN_DEFAULT
 
     # Run the full models
@@ -122,6 +124,9 @@ def full():
             "run": run_id,
             "burn-in": burn_in,
         }
+        if use_latest_code == "yes":
+            cli_args["--latest-code"] = ""
+
         run_aws_script("full", cli_args)
     except Exception:
         logger.exception("Full model run for job %s, run id %s failed", job_name, run_id)

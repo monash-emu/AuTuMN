@@ -1,21 +1,24 @@
 ---
 # Options for plotting outputs of the Marshall Island model
-outputs_to_plot: []
-
-parameter_category_values:
-  time: 2010.
-  param_names: ["contact_rate"]
-
-input_function:
-  start_time: 1940
-  func_names: ["case_detection"]
-
-pop_distribution_strata: ["location"]
-
-# FIXME: Broken code in `plot_prevalence_combinations`?
-prevalence_combos: []
-# - ["infectious", "location"]
-# - ["latent", "location"]
+outputs_to_plot:
+  - name: prevXinfectiousXamongXlocation_ebeye
+    target_times: [2017.0]
+    target_values: [[755.0, 620.0, 894.0]]
+  - name: prevXlatentXamongXlocation_majuro
+    target_times: [2017.0]
+    target_values: [[28.5]]
+  - name: reported_majuro_prevalence
+    target_times: [2018.0]
+    target_values: [[1578.0]]
+  - name: notificationsXlocation_majuro
+    target_times: [2016.0]
+    target_values: [[119.0]]
+  - name: notificationsXlocation_ebeye
+    target_times: [2016.0]
+    target_values: [[53.0]]
+  - name: notificationsXlocation_otherislands
+    target_times: [2016.0]
+    target_values: [[6.0]]
 
 translations:
   prevXinfectiousXamong: TB prevalence (/100,000)
@@ -54,24 +57,3 @@ translations:
   incidenceXlocation_majuro: Majuro - TB incidence (/100,000/y)
   incidenceXlocation_ebeye: Ebeye - TB incidence (/100,000/y)
   incidenceXlocation_otherislands: Other locations - TB incidence (/100,000/y)
-# not_sure_what_this_does:
-#   # FIXME: What is this? Why does it exist?
-#   targets_to_plot:
-#     prevXinfectiousXamongXlocation_ebeye:
-#       times: [2017.0]
-#       values: [[755.0, 620.0, 894.0]]
-#     prevXlatentXamongXlocation_majuro:
-#       times: [2017.0]
-#       values: [[28.5]]
-#     reported_majuro_prevalence:
-#       times: [2018.0]
-#       values: [[1578.0]]
-#     notificationsXlocation_majuro:
-#       times: [2016.0]
-#       values: [[119.0]]
-#     notificationsXlocation_ebeye:
-#       times: [2016.0]
-#       values: [[53.0]]
-#     notificationsXlocation_otherislands:
-#       times: [2016.0]
-#       values: [[6.0]]

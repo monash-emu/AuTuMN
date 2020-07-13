@@ -114,7 +114,7 @@ def param_set(app_output_path: str) -> Tuple[str, str]:
     return chosen_param_set, os.path.join(app_output_path, chosen_param_set)
 
 
-def scenario(scenarios: List[Scenario], include_all=True) -> List[Scenario]:
+def scenarios(scenarios: List[Scenario], include_all=True) -> List[Scenario]:
     """
     Get user to select the scenario that they want.
     User may select "All", which includes all Scenarios.

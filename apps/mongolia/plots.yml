@@ -76,19 +76,6 @@ outputs_to_plot:
         [4065],
       ]
 
-parameter_category_values:
-  time: 0
-  param_names: []
-
-input_function:
-  start_time: 1990
-  func_names: []
-
-pop_distribution_strata: []
-
-prevalence_combos: []
-# - ["infectious", "latent"]
-
 translations:
   prevXinfectiousXamong: TB prevalence (/100,000)
   prevXinfectiousXamongXage_0: TB prevalence among 0-4 y.o. (/100,000)
@@ -124,5 +111,5 @@ translations:
   strain_mdr: MDR-TB
   incidence: TB incidence (/100,000/y)
   prevXinfectiousXstrain_mdrXamong: Prevalence of MDR-TB (/100,000)
-# not_sure_what_this_does:
+  # not_sure_what_this_does:
 #   # ymax: { "prevXinfectiousXamong": 2000.0, "prevXlatentXamongXage_5": 20.0 }

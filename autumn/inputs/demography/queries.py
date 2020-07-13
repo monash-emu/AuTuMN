@@ -76,6 +76,30 @@ def get_death_rates_by_agegroup(age_breakpoints: List[float], country_iso_code: 
     return death_rates_by_agegroup, years
 
 
+def get_life_expectancy_by_agegroup(age_breakpoints: List[float], country_iso_code: str):
+    """
+    Find life expectancy from UN data that are specific to the age groups provided.
+    Returns a list of life expectancy and a list of years.
+    """
+    assert age_breakpoints == sorted(age_breakpoints)
+    assert age_breakpoints[0] == 0
+    life_expectancy_df = _get_life_expectancy(country_iso_code)
+    years = life_expectancy_df["mean_year"].unique().tolist()
+    orig_ages = life_expectancy_df["start_age"].unique().tolist()
+    year_step = 5
+    year_expectancy = {}
+    for year in years:
+        orig_expectancy = life_expectancy_df[life_expectancy_df["mean_year"] == year]["life_expectancy"].tolist()
+        new_expectancy = downsample_rate(orig_expectancy, orig_ages, year_step, age_breakpoints)
+        year_expectancy[year] = new_expectancy
+
+    life_expectancy_by_agegroup = {}
+    for i, age in enumerate(age_breakpoints):
+        life_expectancy_by_agegroup[age] = [year_expectancy[y][i] for y in years]
+
+    return life_expectancy_by_agegroup, years
+
+
 def get_iso3_from_country_name(country_name: str):
     """
     Return the iso3 code matching with a given country name.

@@ -7,6 +7,7 @@ from .demography.queries import (
     get_population_by_agegroup,
     get_iso3_from_country_name,
     get_death_rates_by_agegroup,
+    get_life_expectancy_by_agegroup,
     get_crude_birth_rate,
 )
 from .social_mixing.queries import get_country_mixing_matrix

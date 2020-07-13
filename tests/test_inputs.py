@@ -9,6 +9,7 @@ from autumn.inputs import (
     get_population_by_agegroup,
     get_crude_birth_rate,
     get_death_rates_by_agegroup,
+    get_life_expectancy_by_agegroup,
     get_country_mixing_matrix,
     get_mobility_data,
 )
@@ -78,9 +79,10 @@ def test_get_death_rates_by_agegroup():
     # assert death_rates == []
 
 
-def test_get_life_expectancy():
-    life_expectancy = _get_life_expectancy("AUS")
-    assert min(life_expectancy['mean_year']) == 1952.5 and max(life_expectancy['mean_year']) == 2017.5
+def test_get_life_expectancy_by_agegroup():
+    age_breakpoints = [0, 10, 20, 30, 40, 50, 60, 70, 80]
+    country_iso_code = "AUS"
+    life_expectancy, years = get_life_expectancy_by_agegroup(age_breakpoints, country_iso_code)
 
 
 def test_get_crude_birth_rate():

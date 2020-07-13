@@ -1,28 +1,20 @@
-# Complete release of all restrictions 28th June
+# 75% retun to work and 50% return to school on August 24
 mixing:
-  other_locations:
-    append: true
-    times:
-      - 2020-07-07  # 2020-06-28  FIXME we can't use a past date for this at the moment
-    values:
-      - 1.
   work:
     append: true
     times:
-      - 2020-07-07  # 2020-06-28  FIXME we can't use a past date for this at the moment
+      - 2020-08-24
     values:
-      - 1.
+      - 175%
   school:
     append: false
     times:
       - 2020-02-11
-      - 2020-03-12
-      - 2020-04-02
-      - 2020-06-27
-      - 2020-07-07  # 2020-06-28  FIXME we can't use a past date for this at the moment
+      - 2020-03-16
+      - 2020-08-23
+      - 2020-08-24
     values:
       - 1.
-      - 0.45
-      - 0.10
-      - 0.10
-      - 1.
+      - 0.
+      - 0
+      - 0.50

@@ -5,8 +5,6 @@ region: Calabarzon
 scenario_start_time: 140
 end_time: 365.
 
-use_verity_mortality_estimates: True
-
 # calibrated parameters
 start_time: 12.
 contact_rate: 0.049

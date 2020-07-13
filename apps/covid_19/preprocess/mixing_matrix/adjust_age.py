@@ -29,14 +29,14 @@ class AgeMixingAdjustment(BaseMixingAdjustment):
         Returns a new mixing matrix, modified to adjust for dynamic mixing changes for a given point in time.
         """
         for row_index in range(len(AGE_INDICES)):
-            if row_index in affected_age_indices:
-                row_multiplier = self.self.age_adjustment_functions[row_index](time)
+            if row_index in self.age_adjustment_functions:
+                row_multiplier = self.age_adjustment_functions[row_index](time)
             else:
                 row_multiplier = 1
 
             for col_index in range(len(AGE_INDICES)):
-                if col_index in affected_age_indices:
-                    col_multiplier = self.self.age_adjustment_functions[col_index](time)
+                if col_index in self.age_adjustment_functions:
+                    col_multiplier = self.age_adjustment_functions[col_index](time)
                 else:
                     col_multiplier = 1
 

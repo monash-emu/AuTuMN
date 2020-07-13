@@ -163,7 +163,7 @@ class CalculateUncertaintyTask(utils.BaseTask):
         with Timer(f"Calculating uncertainty quartiles"):
             add_uncertainty_quantiles(COLLATED_DB_PATH)
         with Timer(f"Pruning final database"):
-            models.prune(COLLATED_DB_PATH, COLLATED_PRUNED_DB_PATH)
+            models.prune(COLLATED_DB_PATH, COLLATED_PRUNED_DB_PATH, drop_extra_tables=True)
 
 
 class UnpivotTask(utils.BaseTask):

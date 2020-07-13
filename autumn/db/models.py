@@ -20,6 +20,8 @@ from autumn.post_processing.processor import post_process
 
 logger = logging.getLogger(__name__)
 
+TABLES_TO_KEEP = ["mcmc_run", "powerbi_outputs", "outputs", "derived_outputs", "uncertainty"]
+
 
 def load_model_scenarios(
     database_path: str, model_params={}, post_processing_config=None
@@ -133,7 +135,7 @@ def collate_databases(src_db_paths: List[str], target_db_path: str):
     logger.info("Finished collating db outputs into %s", target_db_path)
 
 
-def prune(source_db_path: str, target_db_path: str):
+def prune(source_db_path: str, target_db_path: str, drop_extra_tables=False):
     """
     Read the model outputs from a database and remove all run-related data that is not MLE.
     """
@@ -147,7 +149,14 @@ def prune(source_db_path: str, target_db_path: str):
     accept_mask = mcmc_run_df["accept"] == 1
     max_ll_idx = mcmc_run_df[accept_mask].loglikelihood.idxmax()
     max_ll_run_name = mcmc_run_df.idx.iloc[max_ll_idx]
-    tables_to_copy = [t for t in source_db.table_names()]
+
+    def should_copy(table_name: str):
+        if drop_extra_tables:
+            return table_name in TABLES_TO_KEEP
+        else:
+            return True
+
+    tables_to_copy = [t for t in source_db.table_names() if should_copy(t)]
     tables_to_not_prune = ["uncertainty_weights", "mcmc_run"]
     for table_name in tables_to_copy:
         table_df = source_db.query(table_name)

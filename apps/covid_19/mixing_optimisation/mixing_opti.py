@@ -158,12 +158,11 @@ def objective_function(decision_variables, root_model, mode="by_age", country=Re
     models = [root_model, scenario_1.model]
 
     #____________________________       Perform diagnostics         ______________________
-    # How many deaths during Phase 2
+    # How many deaths and years of life lost during Phase 2
     start_phase2_index = models[1].derived_outputs["times"].index(PHASE_2_START_TIME)
     end_phase2_index = models[1].derived_outputs["times"].index(phase_2_end[config])
     total_nb_deaths = sum(models[1].derived_outputs["infection_deathsXall"][start_phase2_index: end_phase2_index + 1])
-    print("Max deaths: " + str(max(models[1].derived_outputs["infection_deathsXall"])))
-
+    years_of_life_lost = sum(models[1].derived_outputs["years_of_life_lost"][start_phase2_index: end_phase2_index + 1])
 
     # What proportion immune at end of Phase 2
     recovered_indices = [
@@ -178,7 +177,7 @@ def objective_function(decision_variables, root_model, mode="by_age", country=Re
     # Has herd immunity been reached?
     herd_immunity = has_immunity_been_reached(models[1], end_phase2_index)   # FIXME change this
 
-    return herd_immunity, total_nb_deaths, prop_immune, models
+    return herd_immunity, total_nb_deaths, years_of_life_lost, prop_immune, models
 
 
 def read_list_of_param_sets_from_csv(country, config):
@@ -250,7 +249,7 @@ if __name__ == "__main__":
     # optimisation will have to be performed separately for the different countries and modes.
 
     decision_vars = {
-        "by_age": [0.976905827471265, 0.9996495031790845, 0.9976063523255371, 0.9830738973836737, 0.9686680175643971, 0.9909376752222436, 0.9999788378928904, 0.9899912335910133, 0.9996725302556344, 0.9844436083808886, 0.9233303655719709, 0.9761765850690055, 0.2138680839797779, 0.776541179821962, 0.034880734576954994, 0.21793180013292038],
+        "by_age": [1.] * 16,
         "by_location": [1., 1., 1.]
     }
 
@@ -258,10 +257,10 @@ if __name__ == "__main__":
     # run_all_phases(decision_vars["by_age"], "belgium", 2, {}, "by_age")
     # exit()
 
-    for _mode in ["by_age", "by_location"]:
-        for _country in ['belgium', 'united-kingdom']:  # available_countries:
+    for _mode in ["by_age"]:  #, "by_location"]:
+        for _country in ['belgium']:  #, 'united-kingdom']:  # available_countries:
             print("*********** " + _country + " ***********")
-            for _config in [2, 3]:  # opti_params["configurations"]:
+            for _config in [2]:  #, 3]:  # opti_params["configurations"]:
                 # param_set_list = read_list_of_param_sets_from_csv(country, config)
                 param_set_list = [{}]
                 for param_set in param_set_list:
@@ -270,10 +269,11 @@ if __name__ == "__main__":
                     _root_model = run_root_model(_country, param_set)
 
                     # The following line is the one to be run again and again during optimisation
-                    h, d, p_immune, m = objective_function(decision_vars[_mode], _root_model, _mode, _country, _config,
+                    h, d, yoll, p_immune, m = objective_function(decision_vars[_mode], _root_model, _mode, _country, _config,
                                                            param_set)
-                    print("Immunity: " + str(h) + "\n" + "Deaths: " + str(round(d)) + "\n" + "Prop immune: " +
-                          str(round(p_immune, 3)))
+                    print("Immunity: " + str(h) + "\n" + "Deaths: " + str(round(d)) + "\n" + "Years of life lost: " +
+                          str(round(yoll)) + "\n" + "Prop immune: " + str(round(p_immune, 3))
+                          )
 
                     # run_all_phases(decision_vars[_mode], _country, _config, param_set, _mode)
                     # break

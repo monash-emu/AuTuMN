@@ -11,6 +11,7 @@ from autumn.tool_kit.uncertainty import (
     add_uncertainty_weights,
     add_uncertainty_quantiles,
 )
+from autumn.plots.uncertainty_plots import plot_timeseries_with_uncertainty_for_powerbi
 
 from . import utils
 from . import settings
@@ -38,7 +39,7 @@ class RunPowerBI(luigi.Task):
     run_id = luigi.Parameter()  # Unique run id string
 
     def requires(self):
-        return UploadDatabaseTask(run_id=self.run_id)
+        return UploadPlotsTask(run_id=self.run_id)
 
 
 class BuildInputDatabaseTask(utils.BaseTask):
@@ -192,3 +193,39 @@ class UploadDatabaseTask(utils.UploadS3Task):
     def get_src_path(self):
         return get_final_db_path(self.run_id)
 
+
+class PlotUncertaintyTask(utils.BaseTask):
+    """Plots the database output uncertainty"""
+
+    run_id = luigi.Parameter()
+
+    def requires(self):
+        return UploadDatabaseTask(run_id=self.run_id)
+
+    def output(self):
+        target_file = os.path.join(
+            settings.BASE_DIR,
+            "plots",
+            "uncertainty",
+            "notifications",
+            "uncertainty-notifications-S_0.png",
+        )
+        return luigi.LocalTarget(target_file)
+
+    def safe_run(self):
+        plot_dir = os.path.join(settings.BASE_DIR, "plots", "uncertainty")
+        db_path = get_final_db_path(self.run_id)
+        region_name, _, _ = utils.read_run_id(self.run_id)
+        plot_timeseries_with_uncertainty_for_powerbi(region_name, db_path, plot_dir)
+
+
+class UploadPlotsTask(utils.UploadS3Task):
+    """Uploads uncertainty plots"""
+
+    run_id = luigi.Parameter()
+
+    def requires(self):
+        return PlotUncertaintyTask(run_id=self.run_id)
+
+    def get_src_path(self):
+        return os.path.join(settings.BASE_DIR, "plots", "uncertainty")

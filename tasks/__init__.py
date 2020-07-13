@@ -14,7 +14,7 @@ python3 -m luigi \
     --run-id test \
     --num-chains 2 \
     --CalibrationChainTask-model-name malaysia \
-    --CalibrationChainTask-runtime 30 \
+    --CalibrationChainTask-runtime 60 \
     --local-scheduler \
     --logging-conf-file tasks/luigi-logging.ini
 
@@ -33,7 +33,7 @@ python3 -m luigi \
     --module tasks \
     RunPowerBI \
     --run-id test \
-   --local-scheduler \
+    --local-scheduler \
     --logging-conf-file tasks/luigi-logging.ini
 
 """

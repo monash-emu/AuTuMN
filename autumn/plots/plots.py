@@ -130,6 +130,39 @@ def plot_loglikelihood_vs_parameter(
     )
 
 
+def plot_timeseries_with_uncertainty_for_powerbi(
+    plotter: Plotter,
+    output_name: str,
+    scenario_name: str,
+    quantiles: dict,
+    times: list,
+    plot_config={},
+):
+    fig, axis, _, _, _ = plotter.get_figure()
+    axis.fill_between(times, quantiles[0.025], quantiles[0.975], facecolor="lightsteelblue")
+    axis.fill_between(times, quantiles[0.25], quantiles[0.75], facecolor="cornflowerblue")
+    axis.plot(times, quantiles[0.50], color="navy")
+
+    # Add plot targets
+    output_config = {"name": output_name, "target_values": [], "target_times": []}
+    outputs_to_plot = plot_config.get("outputs_to_plot", [])
+    for o in outputs_to_plot:
+        if o["name"] == output_name:
+            output_config = o
+
+    target_values = output_config["target_values"]
+    target_times = output_config["target_times"]
+    _plot_targets_to_axis(axis, target_values, target_times, on_uncertainty_plot=True)
+
+    axis.set_xlabel("time")
+    axis.set_ylabel(output_name)
+    plotter.save_figure(
+        fig,
+        filename=f"uncertainty-{output_name}-{scenario_name}",
+        title_text=f"{output_name} for {scenario_name}",
+    )
+
+
 def plot_timeseries_with_uncertainty(
     plotter: Plotter,
     path_to_percentile_outputs: str,

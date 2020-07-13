@@ -280,3 +280,13 @@ def upload_file_s3(src_path, dest_key):
         ExtraArgs=S3_UPLOAD_EXTRA_ARGS,
         Config=S3_UPLOAD_CONFIG,
     )
+
+
+def read_run_id(run_id: str):
+    """Read data from run id"""
+    parts = run_id.split("-")
+    git_commit = parts[-1]
+    timestamp = parts[-2]
+    model_name = "-".join(parts[:-2])
+    return model_name, timestamp, git_commit
+

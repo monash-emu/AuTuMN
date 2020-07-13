@@ -38,6 +38,19 @@ def _get_death_rates(country_iso_code: str):
     return rate_df
 
 
+def _get_life_expectancy(country_iso_code: str):
+    input_db = get_input_db()
+    expectancy_df = input_db.query("life_expectancy", conditions=[f"iso3='{country_iso_code}'"],)
+
+    # Calculate mean year
+    expectancy_df["mean_year"] = (expectancy_df["start_year"] + expectancy_df["end_year"]) / 2
+
+    cols = ["mean_year", "start_age", "life_expectancy"]
+    expectancy_df = expectancy_df.drop(columns=[c for c in expectancy_df.columns if c not in cols])
+    expectancy_df = expectancy_df.sort_values(["mean_year", "start_age"])
+    return expectancy_df
+
+
 def get_death_rates_by_agegroup(age_breakpoints: List[float], country_iso_code: str):
     """
     Find death rates from UN data that are specific to the age groups provided.

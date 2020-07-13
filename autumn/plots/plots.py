@@ -2,7 +2,7 @@
 Different types of plots that use a Plotter
 """
 import logging
-from typing import List, Tuple
+from typing import List, Tuple, Callable
 import os
 
 import pandas as pd
@@ -32,14 +32,6 @@ validate_plot_config = sb.build_validator(
     outputs_to_plot=sb.List(
         sb.Dict(name=str, target_times=sb.List(float), target_values=sb.List(sb.List(float)))
     ),
-    # Plot population distribution across particular strata
-    pop_distribution_strata=sb.List(str),
-    # Plot prevalence combinations
-    prevalence_combos=sb.List(sb.List(str)),
-    # Visualise input functions over model time range.
-    input_function=sb.Dict(start_time=float, func_names=sb.List(str)),
-    # Visualise parameter values across categories for a particular time.
-    parameter_category_values=sb.Dict(time=float, param_names=sb.List(str)),
 )
 
 
@@ -428,34 +420,24 @@ def plot_prevalence_combinations(
         plotter.save_figure(fig, filename=plot_name, title_text=plot_name)
 
 
-def plot_input_function(
-    plotter: Plotter, model: StratifiedModel, func_names: List[str], plot_start_time: float,
+def plot_time_varying_input(
+    plotter: Plotter,
+    tv_key: str,
+    tv_func: Callable[[float], float],
+    times: List[float],
+    is_logscale: bool,
 ):
     """
     Plot single simple plot of a function over time
     """
-    times = model.times
-    for func_name in func_names:
-        # Plot requested func names.
-        fig, axes, max_dims, n_rows, n_cols = plotter.get_figure()
-        colour_index = 0
-        param_names = []
-        # combine all parameters from final_parameter_functions and time_variants dictionaries
-        all_param_functions = {**model.final_parameter_functions, **model.time_variants}
-        for param_name, param_func in all_param_functions.items():
-            if param_name.startswith(func_name):
-                # Plot all parameter functions starting with requested func name.
-                colour_index += 1
-                param_names.append(param_name)
-                values = list(map(param_func, times))
-                axes.plot(times, values, color=COLOR_THEME[colour_index])
+    # Plot requested func names.
+    fig, axes, max_dims, n_rows, n_cols = plotter.get_figure()
+    values = list(map(tv_func, times))
+    if is_logscale:
+        axes.set_yscale("log")
 
-        axes.legend(param_names)
-        plotter.tidy_x_axis(
-            axes, start=plot_start_time, end=max(times), max_dims=max_dims, x_label="time",
-        )
-        plotter.tidy_y_axis(axes, quantity="", max_dims=max_dims)
-        plotter.save_figure(fig, filename=func_name, title_text=func_name)
+    axes.plot(times, values)
+    plotter.save_figure(fig, filename=f"time-variant-{tv_key}", title_text=tv_key)
 
 
 def plot_parameter_category_values(

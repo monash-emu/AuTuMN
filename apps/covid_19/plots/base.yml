@@ -1,21 +1,7 @@
 ---
 # Options for plotting outputs of the COVID-19 model
 outputs_to_plot: []
-
-parameter_category_values:
-  time: 0
-  param_names: []
-
-input_function:
-  start_time: 0
-  func_names: []
-
-pop_distribution_strata:
-  - agegroup
-
 translations:
   prevXlateXclinical_icuXamong: "Prevalence of ICU cases (/million pop.)"
   infection_deathsXall: "Daily number of deaths"
   notifications: "Daily number of confirmed cases"
-
-prevalence_combos: []

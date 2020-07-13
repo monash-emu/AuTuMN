@@ -2,12 +2,19 @@
 Streamlit web UI for plotting model outputs
 """
 import os
+from importlib import import_module
 
 import streamlit as st
 
 from autumn.db.models import load_model_scenarios
 from autumn.plots import plots
 from autumn.plots.plotter import StreamlitPlotter
+from autumn.tool_kit.model_register import RegionAppBase
+from apps.covid_19.preprocess.mixing_matrix.adjust_location import (
+    LocationMixingAdjustment,
+    LOCATIONS,
+    MICRODISTANCING_LOCATIONS,
+)
 
 from . import selectors, utils
 
@@ -40,22 +47,30 @@ def run_scenario_plots():
     translations = plot_config["translations"]
     plotter = StreamlitPlotter(translations)
 
+    # Import the app so we can re-build the model if we need to
+    app_module = import_module(f"apps.{app_name}")
+    region_app = app_module.get_region_app(param_set_name)
+
     # Get user to select plot type / scenario
     plot_type = st.sidebar.selectbox("Select plot type", list(PLOT_FUNCS.keys()))
     plot_func = PLOT_FUNCS[plot_type]
-    plot_func(plotter, scenarios, plot_config)
+    plot_func(plotter, region_app, scenarios, plot_config)
 
 
-def plot_outputs_multi(plotter: StreamlitPlotter, scenarios: list, plot_config: dict):
-    chosen_scenarios = selectors.scenario(scenarios)
+def plot_outputs_multi(
+    plotter: StreamlitPlotter, app: RegionAppBase, scenarios: list, plot_config: dict
+):
+    chosen_scenarios = selectors.scenarios(scenarios)
     if chosen_scenarios:
         output_config = model_output_selector(chosen_scenarios, plot_config)
         is_logscale = st.sidebar.checkbox("Log scale")
         plots.plot_outputs_multi(plotter, chosen_scenarios, output_config, is_logscale)
 
 
-def plot_compartment(plotter: StreamlitPlotter, scenarios: list, plot_config: dict):
-    chosen_scenarios = selectors.scenario(scenarios)
+def plot_compartment(
+    plotter: StreamlitPlotter, app: RegionAppBase, scenarios: list, plot_config: dict
+):
+    chosen_scenarios = selectors.scenarios(scenarios)
     if chosen_scenarios:
         is_logscale = st.sidebar.checkbox("Log scale")
         if len(chosen_scenarios) == 1:
@@ -78,17 +93,80 @@ def plot_compartment(plotter: StreamlitPlotter, scenarios: list, plot_config: di
                 st.write("Compartment does not exist")
 
 
-def plot_compartment_aggregate(plotter: StreamlitPlotter, scenarios: list, plot_config: dict):
+def plot_compartment_aggregate(
+    plotter: StreamlitPlotter, app: RegionAppBase, scenarios: list, plot_config: dict
+):
     is_logscale = st.sidebar.checkbox("Log scale")
     names = selectors.multi_compartment(scenarios[0].model)
     plots.plot_agg_compartments_multi_scenario(plotter, scenarios, names, is_logscale)
     st.write(names)
 
 
+def plot_dynamic_inputs(
+    plotter: StreamlitPlotter, app: RegionAppBase, scenarios: list, plot_config: dict
+):
+    # Just use the base scenario for now
+    chosen_scenarios = selectors.scenarios(scenarios, include_all=False)
+    scenario = chosen_scenarios[0]
+    # Assume a COVID model
+    model = app.build_model(scenario.params["default"])
+    tvs = model.time_variants
+    tv_key = st.sidebar.selectbox("Select function", list(tvs.keys()))
+    is_logscale = st.sidebar.checkbox("Log scale")
+    tv_func = tvs[tv_key]
+    plots.plot_time_varying_input(plotter, tv_key, tv_func, model.times, is_logscale)
+
+
+def plot_location_mixing(
+    plotter: StreamlitPlotter, app: RegionAppBase, scenarios: list, plot_config: dict
+):
+    chosen_scenarios = selectors.scenarios(scenarios, include_all=False)
+    scenario = chosen_scenarios[0]
+
+    # Assume a COVID model
+    params = scenario.params["default"]
+    mixing = params.get("mixing")
+    if not mixing:
+        st.write("This model does not have location based mixing")
+
+    loc_key = st.sidebar.selectbox("Select location", LOCATIONS)
+    is_logscale = st.sidebar.checkbox("Log scale")
+
+    country_iso3 = params["iso3"]
+    region = params["region"]
+    microdistancing = params["microdistancing"]
+    npi_effectiveness_params = params["npi_effectiveness"]
+    google_mobility_locations = params["google_mobility_locations"]
+    is_periodic_intervention = params.get("is_periodic_intervention")
+    periodic_int_params = params.get("periodic_intervention")
+    adjust = LocationMixingAdjustment(
+        country_iso3,
+        region,
+        mixing,
+        npi_effectiveness_params,
+        google_mobility_locations,
+        is_periodic_intervention,
+        periodic_int_params,
+        params["end_time"],
+        microdistancing,
+    )
+
+    if adjust.microdistancing_function and loc_key in MICRODISTANCING_LOCATIONS:
+        loc_func = lambda t: adjust.microdistancing_function(t) * adjust.loc_adj_funcs[loc_key](t)
+    elif loc_key in adjust.loc_adj_funcs:
+        loc_func = lambda t: adjust.loc_adj_funcs[loc_key](t)
+    else:
+        loc_func = lambda t: 1
+
+    plots.plot_time_varying_input(plotter, loc_key, loc_func, scenario.model.times, is_logscale)
+
+
 PLOT_FUNCS = {
     "Compartment sizes": plot_compartment,
     "Compartments aggregate": plot_compartment_aggregate,
     "Scenario outputs": plot_outputs_multi,
+    "Dynamic input functions": plot_dynamic_inputs,
+    "Dynamic location mixing": plot_location_mixing,
 }
 
 

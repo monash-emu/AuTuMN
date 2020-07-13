@@ -1,1 +1,20 @@
-int_detection_gap_reduction: 0.5
+# 75% retun to work and 75% return to school on August 24
+mixing:
+  work:
+    append: true
+    times:
+      - 2020-08-24
+    values:
+      - 175%
+  school:
+    append: false
+    times:
+      - 2020-02-11
+      - 2020-03-16
+      - 2020-08-23
+      - 2020-08-24
+    values:
+      - 1.
+      - 0.
+      - 0
+      - 0.75

@@ -1,5 +1,11 @@
-# 25% return to school on August 24
+# 50% retun to work and 25% return to school on August 24
 mixing:
+  work:
+    append: true
+    times:
+      - 2020-08-24
+    values:
+      - 150%
   school:
     append: false
     times:

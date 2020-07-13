@@ -9,21 +9,5 @@ outputs_to_plot:
     target_times: []
     target_values: []
 
-parameter_category_values:
-  time: 0
-  param_names: []
-
-input_function:
-  start_time: 0
-  func_names: []
-
-pop_distribution_strata: []
-
 translations:
-  prevXinfectiousXamongX: 'Prevalence of infectious'
-
-prevalence_combos: []
-#  - 'susceptible'
-#  - 'exposed'
-#  - 'infectious'
-#  - 'recovered'
+  prevXinfectiousXamongX: "Prevalence of infectious"

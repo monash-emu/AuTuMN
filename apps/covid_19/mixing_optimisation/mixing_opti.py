@@ -109,11 +109,10 @@ def has_immunity_been_reached(_model, phase_2_end_index):
     :param _model: a model run with Phase 2 and
     :return: a boolean
     """
-    # validate herd immunity if exposed prevalence always decreases after 2 weeks in phase 3
-    early_compartments_indices = [i for i, c in enumerate(_model.compartment_names) if 'exposedX' in c]
+    # validate herd immunity if incidence always decreases after 2 weeks in phase 3
     time_indices = range(phase_2_end_index, len(_model.derived_outputs["times"]))
-    early_infections = [sum([_model.outputs[t, i] for i in early_compartments_indices]) for t in time_indices[14:]]
-    return max(early_infections) == early_infections[0]
+    incidence_vals = [_model.derived_outputs['incidence'][i] for i in time_indices[14:]]
+    return max(incidence_vals) == incidence_vals[0]
 
 
 def objective_function(decision_variables, root_model, mode="by_age", country=Region.UNITED_KINGDOM, config=0,
@@ -251,7 +250,7 @@ if __name__ == "__main__":
     # optimisation will have to be performed separately for the different countries and modes.
 
     decision_vars = {
-        "by_age": [0.976905827471265, 0.9996495031790845, 0.9976063523255371, 0.9830738973836737, 0.9686680175643971, 0.9909376752222436, 0.9999788378928904, 0.9899912335910133, 0.9996725302556344, 0.9844436083808886, 0.9233303655719709, 0.9761765850690055, 0.2138680839797779, 0.776541179821962, 0.54880734576954994, 0.51793180013292038],
+        "by_age": [0.976905827471265, 0.9996495031790845, 0.9976063523255371, 0.9830738973836737, 0.9686680175643971, 0.9909376752222436, 0.9999788378928904, 0.9899912335910133, 0.9996725302556344, 0.9844436083808886, 0.9233303655719709, 0.9761765850690055, 0.2138680839797779, 0.776541179821962, 0.034880734576954994, 0.21793180013292038],
         "by_location": [1., 1., 1.]
     }
 

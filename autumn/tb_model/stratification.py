@@ -18,6 +18,7 @@ from autumn.tool_kit import (
 )
 from autumn.constants import Compartment
 from autumn.tb_model import scale_relative_risks_for_equivalence
+from autumn.curve import scale_up_function
 
 
 def get_adapted_age_parameters(age_breakpoints, age_specific_latency_parameters):
@@ -53,13 +54,14 @@ def stratify_by_age(model_to_stratify, age_specific_latency_parameters, age_stra
     # to simulate emigration.
     emigration_value = 0.0075
     emigration_start_time = 1990.0
-    for age_group in age_breakpoints:
-        for i_year in range(len(death_rate_years)):
-            if data_years[i_year] > emigration_start_time:
-                age_death_dict[age_group][i_year] += emigration_value
+    # for age_group in age_breakpoints:
+    #     for i_year in range(len(death_rate_years)):
+    #         if data_years[i_year] > emigration_start_time:
+    #             age_death_dict[age_group][i_year] += emigration_value
 
     pop_morts = {}
     for age_group in age_breakpoints:
+
         pop_morts[age_group] = scale_up_function(
             death_rate_years, death_rates_by_age[age_group], smoothness=0.2, method=5
         )

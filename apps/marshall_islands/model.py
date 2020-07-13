@@ -38,6 +38,8 @@ from autumn.tb_model import (
 )
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
 from autumn import inputs
+from autumn.curve import scale_up_function
+
 
 
 def build_model(params: dict) -> StratifiedModel:

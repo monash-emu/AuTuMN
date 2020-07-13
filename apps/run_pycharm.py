@@ -9,10 +9,10 @@ from apps.covid_19.mixing_optimisation.constants import *
 
 ## Run a COVID model manually.
 # for REGION in OPTI_REGIONS:   # used by Romain for the optimisation project
-REGION = Region.MALAYSIA
-RUN_SCENARIOS = True
-region_app = covid_19.get_region_app(REGION)
-region_app.run_model(RUN_SCENARIOS)
+# REGION = Region.MALAYSIA
+# RUN_SCENARIOS = True
+# region_app = covid_19.get_region_app(REGION)
+# region_app.run_model(RUN_SCENARIOS)
 
 ## Simple SIR model for demonstration
 # REGION = Region.AUSTRALIA
@@ -25,6 +25,7 @@ region_app.run_model(RUN_SCENARIOS)
 # region_app = dr_tb_malancha.get_region_app(REGION)
 # region_app.run_model(RUN_SCENARIOS)
 
+marshall_islands.run_model()
 
 ## Plot an existing model's run data to files.
 # MODEL_RUN_PATH = "data/covid_victoria/model-run-27-04-2020--17-06-42/"

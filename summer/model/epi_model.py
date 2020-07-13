@@ -342,9 +342,9 @@ class EpiModel:
 
         # Collate outputs to be calculated post-integration that are not just compartment sizes.
         self.calculate_post_integration_connection_outputs()
-        self.calculate_post_integration_function_outputs()
         for death_output in self.death_output_categories:
             self.calculate_post_integration_death_outputs(death_output)
+        self.calculate_post_integration_function_outputs()
 
     def apply_all_flow_types_to_odes(self, compartment_values, time):
         """

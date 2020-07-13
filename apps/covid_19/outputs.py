@@ -52,6 +52,21 @@ def calculate_icu_prev(model, time):
     return icu_prev
 
 
+def get_calculate_years_of_life_lost(life_expectancy_by_agegroup):
+
+    def calculate_years_of_life_lost(model, time):
+        time_idx = model.times.index(time)
+        total_yoll = 0.
+        for i, agegroup in enumerate(model.all_stratifications['agegroup']):
+            for derived_output in model.derived_outputs:
+                if "infection_deathsXagegroup_" + agegroup in derived_output:
+                    total_yoll += model.derived_outputs[derived_output][time_idx] * life_expectancy_by_agegroup[i]
+
+        return total_yoll
+
+    return calculate_years_of_life_lost
+
+
 def get_progress_connections(stratum_names: str):
     """
     Track "progress": flow from early infectious cases to late infectious cases.

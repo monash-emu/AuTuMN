@@ -29,6 +29,8 @@ def build_model(params: dict) -> StratifiedModel:
     country_iso3 = params["iso3"]
     region = params["region"]
     total_pops = inputs.get_population_by_agegroup(agegroup_strata, country_iso3, region, year=2020)
+    life_expectancy = inputs.get_life_expectancy_by_agegroup(agegroup_strata, country_iso3)[0]
+    life_expectancy_latest = [life_expectancy[agegroup][-1] for agegroup in life_expectancy]
 
     # Define compartments
     compartments = [
@@ -201,4 +203,7 @@ def build_model(params: dict) -> StratifiedModel:
     model.derived_output_functions["incidence_icu"] = outputs.calculate_incidence_icu_covid
     model.derived_output_functions["prevXlateXclinical_icuXamong"] = outputs.calculate_icu_prev
     model.death_output_categories = list_all_strata_for_mortality(model.compartment_names)
+    model.derived_output_functions["years_of_life_lost"] = outputs.get_calculate_years_of_life_lost(
+        life_expectancy_latest)
+
     return model

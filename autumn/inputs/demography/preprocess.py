@@ -16,11 +16,64 @@ def preprocess_demography(input_db: Database):
     pop_df = read_population_df(loc_df)
     birth_df = read_crude_birth_df(loc_df)
     death_df = read_death_df(loc_df)
+    expect_df = read_life_expectancy_df(loc_df)
     input_db.dump_df("countries", loc_df)
     input_db.dump_df("population", pop_df)
     input_db.dump_df("birth_rates", birth_df)
     input_db.dump_df("deaths", death_df)
+    input_db.dump_df("life_expectancy", expect_df)
     return loc_df
+
+
+def read_life_expectancy_df(loc_df: pd.DataFrame):
+    """
+    Read in life expectancy by age.
+    """
+    expect_path = os.path.join(
+        POP_DIRPATH, "WPP2019_MORT_F16_1_LIFE_EXPECTANCY_BY_AGE_BOTH_SEXES.xlsx"
+    )
+    expect_df = pd.read_excel(
+        pd.ExcelFile(expect_path), header=16, index_col=0, sheet_name="ESTIMATES"
+    )
+
+    # Rename columns to a simpler format
+    expect_df.rename(columns={"Country code": "country_code"}, inplace=True)
+
+    # Drop unwanted columns
+    expect_cols = [str(5 * i) for i in range(20)] + ["100+"]
+    cols = ["country_code", "Period", *expect_cols]
+    expect_df = expect_df.drop(columns=[c for c in expect_df.columns if c not in cols])
+
+    # Add in iso3 info from location dataframe, drop country code info
+    expect_df = pd.merge(loc_df, expect_df, left_on="country_code", right_on="country_code")
+    expect_df = expect_df.drop(columns=["country_code"])
+
+    # Split period into start / end years
+    expect_df["start_year"] = expect_df["Period"].apply(lambda s: int(s.split("-")[0]))
+    expect_df["end_year"] = expect_df["Period"].apply(lambda s: int(s.split("-")[1]))
+    expect_df = expect_df.drop(columns=["Period"])
+
+    # Unpivot data so each age group gets its own row
+    expect_df = expect_df.melt(
+        id_vars=["country", "iso3", "start_year", "end_year"], value_vars=expect_cols
+    )
+    expect_df.rename(columns={"value": "life_expectancy"}, inplace=True)
+
+    def label_ages(age_str):
+        age = int(age_str.replace("+", ""))
+        return [age, age + 4]
+
+    ages_df = pd.DataFrame(
+        [label_ages(age_str) for age_str in expect_df.variable], columns=("start_age", "end_age"),
+    )
+    expect_df = expect_df.join(ages_df)
+    expect_df = expect_df.drop(columns="variable")
+
+    # Ensure all numbers are actually numbers
+    numeric_cols = ["start_year", "end_year", "start_age", "end_age", "life_expectancy"]
+    expect_df[numeric_cols] = expect_df[numeric_cols].apply(pd.to_numeric)
+    expect_df = expect_df.sort_values(["iso3", "start_year", "start_age"])
+    return expect_df
 
 
 def read_death_df(loc_df: pd.DataFrame):

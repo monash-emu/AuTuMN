@@ -30,3 +30,7 @@ Used for crude birth rate
 Used for mortality
 
 > Number of deaths by five-year age groups. Data are presented in thousands.
+
+### [WPP2019_MORT_F16_1_LIFE_EXPECTANCY_BY_AGE_BOTH_SEXES](<https://population.un.org/wpp/Download/Files/1_Indicators%20(Standard)/EXCEL_FILES/3_Mortality/WPP2019_MORT_F16_1_LIFE_EXPECTANCY_BY_AGE_BOTH_SEXES.xlsx>)
+
+Used for life expectancy

@@ -15,6 +15,22 @@ from apps.covid_19.preprocess.mixing_matrix import adjust_location
 from apps.covid_19.preprocess.mixing_matrix.utils import BASE_DATE
 
 
+@pytest.mark.parametrize(
+    "vals_in, vals_out",
+    (
+        ([1, 2, 3, 4, 5], [1, 2, 3, 4, 5]),
+        ([1, 2, "110%", 3], [1, 2, 2.2, 3]),
+        ([1, 2, "90%", 3], [1, 2, 1.8, 3]),
+        ([8, "50%", "50%", "50%"], [8, 4, 2, 1]),
+    ),
+)
+def test_parse_values(vals_in, vals_out):
+    """
+    Ensure parse values works
+    """
+    assert adjust_location.parse_values(vals_in) == vals_out
+
+
 def test_update_mixing_data__with_only_mobility_data():
     """
     Ensure using no user-specified mixing params returns a mixing dict containing only mobility data.
@@ -46,8 +62,8 @@ def test_update_mixing_data__with_user_specified_values():
     Ensure user-specified date overwrites/is appended to mobility data.
     """
     mixing = {
-        # Expect appended
-        "work": {"values": [1.5, 1.6], "times": get_date([4, 5]), "append": True},
+        # Expect appended with % increase accounted for.
+        "work": {"values": ["110%", 1.6], "times": get_date([4, 5]), "append": True},
         # Expect overwritten
         "other_locations": {
             "values": [1.55, 1.66, 1.77, 1.88, 1.99, 1.111],
@@ -77,7 +93,7 @@ def test_update_mixing_data__with_user_specified_values():
         periodic_end_time,
     )
     assert actual_mixing == {
-        "work": {"values": [1.1, 1.2, 1.3, 1.4, 1.5, 1.6], "times": [0, 1, 2, 3, 4, 5]},
+        "work": {"values": [1.1, 1.2, 1.3, 1.4, 1.54, 1.6], "times": [0, 1, 2, 3, 4, 5]},
         "other_locations": {
             "values": [1.55, 1.66, 1.77, 1.88, 1.99, 1.111],
             "times": [0, 1, 2, 3, 4, 5],

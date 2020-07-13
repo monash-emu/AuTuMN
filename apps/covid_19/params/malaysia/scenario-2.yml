@@ -5,5 +5,5 @@ mixing:
     times:
       - 2020-08-01
     values:
-      # FIXME: Should be +9% on last value
-      - 0.8829
+      # +9% on last value
+      - 109%

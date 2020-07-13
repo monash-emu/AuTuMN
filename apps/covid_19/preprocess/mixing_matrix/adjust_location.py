@@ -101,6 +101,9 @@ def update_mixing_data(
 
         loc_mixing = mixing.get(loc_key)
         if loc_mixing:
+            assert len(loc_mixing["times"]) == len(
+                loc_mixing["values"]
+            ), f"Mixing series length mismatch for {loc_key}"
             loc_mixing["times"] = [
                 (time_date - BASE_DATE).days for time_date in loc_mixing["times"]
             ]
@@ -148,6 +151,11 @@ def update_mixing_data(
                 msg = f"Cannot 'append' for {loc_key}: no Google mobility data available."
                 raise ValueError(msg)
 
+        # Convert % adjustments to fractions
+        loc_mixing = mixing.get(loc_key)
+        if loc_mixing:
+            loc_mixing["values"] = parse_values(loc_mixing["values"])
+
         # Adjust the mixing parameters by scaling them according to NPI effectiveness
         npi_adjust_val = npi_effectiveness_params.get(loc_key)
         if npi_adjust_val:
@@ -161,6 +169,27 @@ def update_mixing_data(
             periodic_int_params, mixing["other_locations"], periodic_end_time
         )
     return mixing
+
+
+def parse_values(values):
+    """
+    Convert all mixing time series values to a float
+    """
+    new_values = []
+    prev = None
+    for v in values:
+        if type(v) is str and prev and v.endswith("%"):
+            # Make this value a percent of the prev value.
+            fraction = float(v.replace("%", "")) / 100
+            new_val = prev * fraction
+        else:
+            # Do not change.
+            new_val = v
+
+        new_values.append(new_val)
+        prev = new_val
+
+    return new_values
 
 
 def add_periodic_intervention(periodic_int_params, old_other_locations, end_time):

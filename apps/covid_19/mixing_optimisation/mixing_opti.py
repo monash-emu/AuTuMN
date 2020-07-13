@@ -214,6 +214,14 @@ def run_all_phases(decision_variables, country=Region.UNITED_KINGDOM, config=0, 
     running_model = RegionApp(country)
     build_model = running_model.build_model
 
+    if mode == "by_location":
+        new_decision_variables = {
+            "other_locations": decision_variables[0],
+            "school": decision_variables[1],
+            "work": decision_variables[2]
+        }
+        decision_variables = new_decision_variables
+
     params = copy.deepcopy(running_model.params)
     # update params with optimisation default config
     params["default"].update(opti_params["default"])
@@ -243,7 +251,7 @@ if __name__ == "__main__":
     # optimisation will have to be performed separately for the different countries and modes.
 
     decision_vars = {
-        "by_age": [1.] * 16,
+        "by_age": [0.976905827471265, 0.9996495031790845, 0.9976063523255371, 0.9830738973836737, 0.9686680175643971, 0.9909376752222436, 0.9999788378928904, 0.9899912335910133, 0.9996725302556344, 0.9844436083808886, 0.9233303655719709, 0.9761765850690055, 0.2138680839797779, 0.776541179821962, 0.54880734576954994, 0.51793180013292038],
         "by_location": [1., 1., 1.]
     }
 
@@ -251,7 +259,7 @@ if __name__ == "__main__":
     # run_all_phases(decision_vars["by_age"], "belgium", 2, {}, "by_age")
     # exit()
 
-    for _mode in ["by_age", "by_location"]:  # , "by_location"]:
+    for _mode in ["by_age", "by_location"]:
         for _country in ['belgium', 'united-kingdom']:  # available_countries:
             print("*********** " + _country + " ***********")
             for _config in [2, 3]:  # opti_params["configurations"]:

@@ -15,10 +15,6 @@ def test_for_smoke__plot_scenarios():
     plot_config = {
         "translations": {},
         "outputs_to_plot": [],
-        "pop_distribution_strata": [],
-        "prevalence_combos": [],
-        "input_function": {"start_time": 0, "func_names": []},
-        "parameter_category_values": {"time": 0, "param_names": []},
     }
     # Build and run scenarios
     params = {"default": {}, "scenario_start_time": 2002, "scenarios": {1: {}}}

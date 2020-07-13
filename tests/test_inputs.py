@@ -3,7 +3,7 @@ from datetime import datetime
 import pytest
 import numpy as np
 
-from autumn.inputs.demography.queries import downsample_quantity, downsample_rate
+from autumn.inputs.demography.queries import downsample_quantity, downsample_rate, _get_life_expectancy
 from autumn.inputs import (
     build_input_database,
     get_population_by_agegroup,
@@ -76,6 +76,11 @@ def test_get_death_rates_by_agegroup():
     death_rates, years = get_death_rates_by_agegroup(age_breakpoints, country_iso_code)
     # FIXME: ADD DEATH RATES
     # assert death_rates == []
+
+
+def test_get_life_expectancy():
+    life_expectancy = _get_life_expectancy("AUS")
+    assert min(life_expectancy['mean_year']) == 1952.5 and max(life_expectancy['mean_year']) == 2017.5
 
 
 def test_get_crude_birth_rate():

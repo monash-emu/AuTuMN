@@ -10,7 +10,7 @@ steps:
   - command: ./scripts/buildkite/run.sh powerbi
     label: "Run PowerBI processing"
     key: run-powerbi
-  - command: ./scripts/aws/run.sh website
+  - command: ./scripts/website/deploy.sh
     label: Update website
     depends_on: run-powerbi
     allow_dependency_failure: true

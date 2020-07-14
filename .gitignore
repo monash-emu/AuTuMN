@@ -15,11 +15,16 @@ env/
 *.png
 
 # Data
-*.json
 *.pkl
 *.pickle
 *.db
 logs/
+
+# Website stuff
+node_modules/
+.next/
+website.json
+out/
 
 # Python packaging stuff
 autumn.egg*

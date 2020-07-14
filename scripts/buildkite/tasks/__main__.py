@@ -207,6 +207,11 @@ def run_aws_script(cmd: str, args: dict) -> str:
         sys.stdout.write(line)
         stdout_lines.append(line)
 
+    print(f"Waiting for process with PID {proc.pid} to finish.")
+    retcode = proc.wait()
+    if retcode > 0:
+        raise Exception(f"Command failed with return code {retcode}: {cmd_str}")
+
     return "".join(stdout_lines)
 
 

@@ -37,7 +37,7 @@ def test_full_optimisation_iteration_for_uk():
     root_model = opti.run_root_model(country, {})
     for mode in AVAILABLE_MODES:
         for config in AVAILABLE_CONFIGS:
-            h, d, p_immune, m = opti.objective_function(
+            h, d, yoll, p_immune, m = opti.objective_function(
                 DECISION_VARS[mode], root_model, mode, country, config
             )
 

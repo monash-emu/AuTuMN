@@ -91,7 +91,7 @@ def run_luigi_pipeline(conn: Connection, pipeline_name: str, pipeline_args: dict
     pipeline_args_str = " ".join([f"--{k} {v}" for k, v in pipeline_args.items()])
     cmd_str = f"./env/bin/python -m luigi --module tasks {pipeline_name} {pipeline_args_str}"
     with conn.cd(CODE_PATH):
-        conn.run(cmd_str, echo=True)
+        conn.run(cmd_str, echo=True, env={"LUIGI_CONFIG_PATH": "./tasks/luigi.cfg"})
 
     logger.info("Finished running Luigi pipleine %s", pipeline_name)
 

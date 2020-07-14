@@ -7,6 +7,8 @@ This module requires AWS access to run.
 You can access this script from your CLI by running the Luigi CLI:
 https://luigi.readthedocs.io/en/stable/running_luigi.html
 
+export LUIGI_CONFIG_PATH=tasks/luigi.cfg
+
 # Run a calibration
 python3 -m luigi \
     --module tasks \
@@ -14,7 +16,7 @@ python3 -m luigi \
     --run-id test \
     --num-chains 2 \
     --CalibrationChainTask-model-name malaysia \
-    --CalibrationChainTask-runtime 60 \
+    --CalibrationChainTask-runtime 30 \
     --local-scheduler \
     --logging-conf-file tasks/luigi-logging.ini
 

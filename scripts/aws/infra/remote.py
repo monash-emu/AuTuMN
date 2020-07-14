@@ -70,7 +70,9 @@ def run_calibration(
     with get_connection(instance) as conn:
         update_repo(conn, branch=branch)
         install_requirements(conn)
-        start_luigi_scheduler(conn, instance)
+        # TODO: Figure out a way to run non-local scheduler
+        #  while ensuring that we track the task from start tofinush
+        # start_luigi_scheduler(conn, instance)
         run_id = get_run_id(conn, model_name)
         pipeline_name = "RunCalibrate"
         pipeline_args = {
@@ -91,7 +93,7 @@ def run_luigi_pipeline(conn: Connection, pipeline_name: str, pipeline_args: dict
     """Run a Luigi pipeline on the remote machine"""
     logger.info("Running Luigi pipleine %s", pipeline_name)
     pipeline_args_str = " ".join([f"--{k} {v}" for k, v in pipeline_args.items()])
-    cmd_str = f"./env/bin/python -m luigi --module tasks {pipeline_name} {pipeline_args_str}"
+    cmd_str = f"./env/bin/python -m luigi --module tasks --local-scheduler {pipeline_name} {pipeline_args_str}"
     with conn.cd(CODE_PATH):
         conn.run(cmd_str, echo=True, env={"LUIGI_CONFIG_PATH": "./tasks/luigi.cfg"})
 

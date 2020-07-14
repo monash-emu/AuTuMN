@@ -18,6 +18,7 @@ python3 -m luigi \
     --CalibrationChainTask-model-name malaysia \
     --CalibrationChainTask-runtime 30 \
     --local-scheduler \
+    --workers 4 \
     --logging-conf-file tasks/luigi-logging.ini
 
 # Run full models
@@ -28,6 +29,7 @@ python3 -m luigi \
     --FullModelRunTask-burn-in 0 \
     --FullModelRunTask-model-name malaysia \
     --local-scheduler \
+    --workers 4 \
     --logging-conf-file tasks/luigi-logging.ini
 
 # Run PowerBI processing
@@ -36,6 +38,17 @@ python3 -m luigi \
     RunPowerBI \
     --run-id test \
     --local-scheduler \
+    --workers 4 \
+    --logging-conf-file tasks/luigi-logging.ini
+
+
+python3 -m luigi \
+    --module tasks RunFullModels \
+    --run-id manila-1594621996-7671bcd \
+    --FullModelRunTask-burn-in 1000 \
+    --FullModelRunTask-model-name manila \
+    --local-scheduler \
+    --workers 4 \
     --logging-conf-file tasks/luigi-logging.ini
 
 """

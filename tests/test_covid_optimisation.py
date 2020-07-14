@@ -10,7 +10,7 @@ AVAILABLE_MODES = [
 AVAILABLE_CONFIGS = range(4)
 DECISION_VARS = {
     "by_age": [1.0] * 16,
-    "by_location": {"other_locations": 1.0, "school": 1.0, "work": 1.0},
+    "by_location": [1., 1., 1.],
 }
 
 

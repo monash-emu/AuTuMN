@@ -125,7 +125,7 @@ def full():
             "burn-in": burn_in,
         }
         if use_latest_code == "yes":
-            cli_args["--latest-code"] = ""
+            cli_args["latest-code"] = ""
 
         run_aws_script("full", cli_args)
     except Exception:

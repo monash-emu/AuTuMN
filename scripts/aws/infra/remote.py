@@ -16,6 +16,7 @@ CODE_PATH = "/home/ubuntu/code"
 
 def run_powerbi(instance, run_id: str):
     """Run PowerBI processing on the remote server"""
+    run_id = run_id.lower()
     msg = "Running PowerBI processing for run %s on AWS instance %s"
     logger.info(msg, run_id, instance["InstanceId"])
     with get_connection(instance) as conn:
@@ -35,6 +36,7 @@ def run_powerbi(instance, run_id: str):
 
 def run_full_model(instance, run_id: str, burn_in: int, use_latest_code: bool):
     """Run full model job on the remote server"""
+    run_id = run_id.lower()
     msg = "Running full models for run %s burn-in %s on AWS instance %s"
     logger.info(msg, run_id, burn_in, instance["InstanceId"])
     with get_connection(instance) as conn:

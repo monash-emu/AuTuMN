@@ -120,7 +120,7 @@ def full():
     logger.info(msg, model_name, burn_in)
     try:
         cli_args = {
-            "job": burn_in,
+            "job": job_name,
             "run": run_id,
             "burn-in": burn_in,
         }

@@ -13,6 +13,8 @@ from autumn.tool_kit.uncertainty import (
 )
 from autumn.plots.uncertainty_plots import plot_timeseries_with_uncertainty_for_powerbi
 
+from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
+
 from . import utils
 from . import settings
 
@@ -27,6 +29,11 @@ UNCERTAINTY_OUTPUTS = [
     "infection_deathsXall",
     "prevXlateXclinical_icuXamong",
 ]
+OPTI_ONLY_OUTPUTS = [
+    "hospital_occupancy",
+    "proportion_seropositive",
+]
+
 
 
 def get_final_db_path(run_id: str):
@@ -99,11 +106,13 @@ class PruneFullRunDatabaseTask(utils.ParallelLoggerTask):
     chain_id = luigi.IntParameter()  # Unique chain id
 
     def requires(self):
+        output_list = UNCERTAINTY_OUTPUTS if utils.read_run_id(self.run_id) not in OPTI_REGIONS else \
+            UNCERTAINTY_OUTPUTS + OPTI_ONLY_OUTPUTS
         return [
             UncertaintyWeightsTask(
                 run_id=self.run_id, output_name=output_name, chain_id=self.chain_id
             )
-            for output_name in UNCERTAINTY_OUTPUTS
+            for output_name in output_list
         ] + [utils.BuildLocalDirectoryTask(dirname="data/powerbi/pruned/")]
 
     def get_dest_path(self):

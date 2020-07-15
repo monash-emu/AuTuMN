@@ -202,6 +202,10 @@ def build_model(params: dict) -> StratifiedModel:
     )
     model.derived_output_functions["incidence_icu"] = outputs.calculate_incidence_icu_covid
     model.derived_output_functions["prevXlateXclinical_icuXamong"] = outputs.calculate_icu_prev
+
+    model.derived_output_functions["hospital_occupancy"] = outputs.calculate_hospital_occupancy
+    model.derived_output_functions["proportion_seropositive"] = outputs.calculate_proportion_seropositive
+
     model.death_output_categories = list_all_strata_for_mortality(model.compartment_names)
     model.derived_output_functions["years_of_life_lost"] = outputs.get_calculate_years_of_life_lost(
         life_expectancy_latest)

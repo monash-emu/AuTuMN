@@ -52,6 +52,22 @@ def calculate_icu_prev(model, time):
     return icu_prev
 
 
+def calculate_hospital_occupancy(model, time):
+    hospital_prev = 0
+    for i, comp_name in enumerate(model.compartment_names):
+        if "late" in comp_name and "icu" in comp_name:  # "icu" used to map ["clinical_hospital_non_icu", "clinical_icu"]
+            hospital_prev += model.compartment_values[i]
+    return hospital_prev
+
+
+def calculate_proportion_seropositive(model, time):
+    n_seropositive = 0
+    for i, comp_name in enumerate(model.compartment_names):
+        if "recovered" in comp_name:
+            n_seropositive += model.compartment_values[i]
+    return n_seropositive / sum(model.compartment_values)
+
+
 def get_calculate_years_of_life_lost(life_expectancy_by_agegroup):
 
     def calculate_years_of_life_lost(model, time):

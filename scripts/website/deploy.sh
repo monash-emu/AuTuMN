@@ -8,7 +8,7 @@ then
     echo "Installing Python requirements"
     virtualenv --quiet -p python3 ../aws/env
     . ../aws/env/bin/activate
-    pip3 install --quiet boto3
+    pip3 install --quiet boto3 awscli
 fi
 . ../aws/env/bin/activate
 

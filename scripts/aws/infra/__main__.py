@@ -6,7 +6,6 @@ import functools
 
 from . import aws
 from . import remote
-from .website import update_website
 from .settings import EC2InstanceType, EC2_INSTANCE_SPECS
 
 logger = logging.getLogger(__name__)

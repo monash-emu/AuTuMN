@@ -127,7 +127,7 @@ def get_list_of_ifr_priors_from_pollan(test="immunoassay"):
     for i in range(len(lower)):
         ifr_priors.append(
             {
-                "param_name": "infection_fatality_props[" + str(i) + "]",
+                "param_name": "infection_fatality_props(" + str(i) + ")",
                 "distribution": "beta",
                 "distri_mean": mean[i],
                 "distri_ci": [lower[i], upper[i]],

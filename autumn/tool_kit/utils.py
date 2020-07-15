@@ -304,3 +304,19 @@ def copy_function(f, name=None):
     # in case f was given attrs (note this dict is a shallow copy):
     fn.__dict__.update(f.__dict__)
     return fn
+
+
+def print_target_to_plots_from_calibration(target_outputs):
+    print('outputs_to_plot:')
+    for i in range(len(target_outputs)):
+        target_outputs[i]["years"] = [str(t) for t in target_outputs[i]["years"]]
+        print("  - name: " + target_outputs[i]["output_key"])
+        print("    target_times: [" + ', '.join(target_outputs[i]["years"]) + "]")
+        to_print = "    target_values: ["
+        for j, val in enumerate(target_outputs[i]["values"]):
+            if j > 0:
+                to_print += ", "
+            to_print += "[" + str(val) + "]"
+        to_print += "]"
+        print(to_print)
+        print()

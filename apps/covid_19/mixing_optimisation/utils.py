@@ -1,4 +1,5 @@
 from apps.covid_19.john_hopkins import download_jh_data, read_john_hopkins_data_from_csv
+from apps.covid_19.who_data import read_who_data_from_csv
 from autumn.plots.streamlit.run_mcmc_plots import load_mcmc_tables
 from autumn.plots.plots import _overwrite_non_accepted_mcmc_runs
 import pandas as pd
@@ -136,39 +137,45 @@ def get_list_of_ifr_priors_from_pollan(test="immunoassay"):
     return ifr_priors
 
 
-def get_target_outputs_for_opti(country, data_start_time=22, update_jh_data=False):
+def get_target_outputs_for_opti(country, data_start_time=22, source='who', update_jh_data=False):
     """
     Automatically creates the calibration target list for a country in the context of the opti problem
     :param country: country name
     :param data_start_time: the desired starting point for the extracted data
-    :param update_jh_data: whether to download the data from Johns Hopkins Github again
+    :param source: 'who' or 'johns_hopkins'
     :return:
     """
-    jh_start_time = 22  # actual start time in JH csv files
-    assert data_start_time >= jh_start_time
+    assert source in ['who', 'johns_hopkins']
 
-    if update_jh_data:
-        download_jh_data()
+    if source == 'johns_hopkins':
+        jh_start_time = 22  # actual start time in JH csv files
+        assert data_start_time >= jh_start_time
+
+        if update_jh_data:
+            download_jh_data()
 
     output_mapping = {"confirmed": "notifications", "deaths": "infection_deathsXall"}
 
     target_outputs = []
     for variable in ["confirmed", "deaths"]:
-        data = read_john_hopkins_data_from_csv(variable, country)
-        times = [jh_start_time + i for i in range(len(data))]
+        if source == 'johns_hopkins':
+            data = read_john_hopkins_data_from_csv(variable, country)
+            times = [jh_start_time + i for i in range(len(data))]
 
-        # Ignore negative values found in the dataset
-        censored_data_indices = []
-        for i, d in enumerate(data):
-            if d < 0:
-                censored_data_indices.append(i)
-        data = [d for i, d in enumerate(data) if i not in censored_data_indices]
-        times = [t for i, t in enumerate(times) if i not in censored_data_indices]
+            # Ignore negative values found in the dataset
+            censored_data_indices = []
+            for i, d in enumerate(data):
+                if d < 0:
+                    censored_data_indices.append(i)
+            data = [d for i, d in enumerate(data) if i not in censored_data_indices]
+            times = [t for i, t in enumerate(times) if i not in censored_data_indices]
 
-        # remove first datapoints according to data_start_time
-        indices_to_keep = [i for i, t in enumerate(times) if t >= data_start_time]
-        times = [t for t in times if t >= data_start_time]
-        data = [d for i, d in enumerate(data) if i in indices_to_keep]
+            # remove first datapoints according to data_start_time
+            indices_to_keep = [i for i, t in enumerate(times) if t >= data_start_time]
+            times = [t for t in times if t >= data_start_time]
+            data = [d for i, d in enumerate(data) if i in indices_to_keep]
+        elif source == 'who':
+            times, data = read_who_data_from_csv(variable, country, data_start_time)
 
         target_outputs.append(
             {

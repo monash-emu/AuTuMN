@@ -146,17 +146,13 @@ def collect_map_estimate(calib_dirpath: str):
 def print_reformated_map_parameters(map_estimates):
     param_as_list_indices = {}
     for key, value in map_estimates.items():
-        if isinstance(value, pd.core.series.Series):
-            str_to_print = key + ": ["
-            values_list = value.to_list()
-            i = 0
-            for v in values_list:
-                if i > 0:
-                    str_to_print += ", "
-                str_to_print += str(v)
-                i += 1
-            str_to_print += "]"
-            print(str_to_print)
+        if '(' in key:
+            stem = key.split("(")[0]
+            index = key.split("(")[1].split(")")[0]
+            if stem not in param_as_list_indices:
+                param_as_list_indices[stem] = [index]
+            else:
+                param_as_list_indices[stem].append(index)
         elif "." in key:
             components = key.split('.')
             i = 0
@@ -178,7 +174,7 @@ def print_reformated_map_parameters(map_estimates):
         for index in index_list:
             if i > 0:
                 str_to_print += ", "
-            str_to_print += str(map_estimates[param_stem + "[" + str(index) + "]"])
+            str_to_print += str(map_estimates[param_stem + "(" + str(index) + ")"])
             i += 1
         str_to_print += "]"
         print(str_to_print)
@@ -186,7 +182,7 @@ def print_reformated_map_parameters(map_estimates):
 
 if __name__ == "__main__":
     calib_dir = os.path.join(
-        "../../data", "outputs", "calibrate", "covid_19", "sweden", "743e2e26-2020-07-10"
+        "../../data", "outputs", "calibrate", "covid_19", "spain", "8a828ceb-2020-07-15"
     )
     map_estimates, best_chain_index = collect_map_estimate(calib_dir)
     print_reformated_map_parameters(map_estimates)

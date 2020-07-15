@@ -20,17 +20,14 @@ def run_powerbi(instance, run_id: str):
     msg = "Running PowerBI processing for run %s on AWS instance %s"
     logger.info(msg, run_id, instance["InstanceId"])
     with get_connection(instance) as conn:
-        update_repo(conn, branch="luigi-redux")
+        update_repo(conn)
         install_requirements(conn)
-        start_luigi_scheduler(conn, instance)
         pipeline_name = "RunPowerBI"
         pipeline_args = {
             "run-id": run_id,
             "workers": 15,
-            "logging-conf-file": "tasks/luigi-logging.ini",
         }
         run_luigi_pipeline(conn, pipeline_name, pipeline_args)
-        upload_luigi_logs(conn, "powerbi", run_id)
         logger.info("PowerBI processing completed for %s", run_id)
 
 
@@ -41,12 +38,11 @@ def run_full_model(instance, run_id: str, burn_in: int, use_latest_code: bool):
     logger.info(msg, run_id, burn_in, instance["InstanceId"])
     with get_connection(instance) as conn:
         if use_latest_code:
-            update_repo(conn, branch="luigi-redux")
+            update_repo(conn)
         else:
             set_run_id(conn, run_id)
 
         install_requirements(conn)
-        start_luigi_scheduler(conn, instance)
         model_name, _, _ = read_run_id(run_id)
         pipeline_name = "RunFullModels"
         pipeline_args = {
@@ -54,10 +50,8 @@ def run_full_model(instance, run_id: str, burn_in: int, use_latest_code: bool):
             "FullModelRunTask-burn-in": burn_in,
             "FullModelRunTask-model-name": model_name,
             "workers": 15,
-            "logging-conf-file": "tasks/luigi-logging.ini",
         }
         run_luigi_pipeline(conn, pipeline_name, pipeline_args)
-        upload_luigi_logs(conn, "full_model_runs", run_id)
         logger.info("Full model runs completed for %s", run_id)
 
 
@@ -70,9 +64,6 @@ def run_calibration(
     with get_connection(instance) as conn:
         update_repo(conn, branch=branch)
         install_requirements(conn)
-        # TODO: Figure out a way to run non-local scheduler
-        #  while ensuring that we track the task from start tofinush
-        # start_luigi_scheduler(conn, instance)
         run_id = get_run_id(conn, model_name)
         pipeline_name = "RunCalibrate"
         pipeline_args = {
@@ -81,23 +72,25 @@ def run_calibration(
             "workers": num_chains,
             "CalibrationChainTask-model-name": model_name,
             "CalibrationChainTask-runtime": runtime,
-            "logging-conf-file": "tasks/luigi-logging.ini",
         }
         run_luigi_pipeline(conn, pipeline_name, pipeline_args)
-        # upload_luigi_logs(conn, "calibrate", run_id)
-        # Note: this log line is used by Buildkite so don't change it.
         logger.info("Calibration completed for %s", run_id)
 
 
 def run_luigi_pipeline(conn: Connection, pipeline_name: str, pipeline_args: dict):
     """Run a Luigi pipeline on the remote machine"""
+    # TODO: Figure out a way to run non-local scheduler
+    #  while ensuring that we track the task from start tofinush
+    # start_luigi_scheduler(conn, instance)
     logger.info("Running Luigi pipleine %s", pipeline_name)
     pipeline_args_str = " ".join([f"--{k} {v}" for k, v in pipeline_args.items()])
-    cmd_str = f"./env/bin/python -m luigi --module tasks --local-scheduler {pipeline_name} {pipeline_args_str}"
+    cmd_str = f"./env/bin/python -m luigi --module tasks --local-scheduler --logging-conf-file tasks/luigi-logging.ini {pipeline_name} {pipeline_args_str}"
     with conn.cd(CODE_PATH):
         conn.run(cmd_str, echo=True, env={"LUIGI_CONFIG_PATH": "./tasks/luigi.cfg"})
 
     logger.info("Finished running Luigi pipleine %s", pipeline_name)
+    # upload_luigi_logs(conn, "calibrate", run_id)
+    # Note: this log line is used by Buildkite so don't change it.
 
 
 def upload_luigi_logs(conn: Connection, log_folder_name: str, run_id: str):

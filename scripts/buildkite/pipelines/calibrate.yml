@@ -38,13 +38,13 @@ steps:
         key: "mcmc-num-chains"
         hint: "How many MCMC chains do you want to run?"
         required: false
-        default: "15"
+        default: "7"
 
       - text: "Runtime"
         key: "mcmc-runtime"
         hint: "How many hours should the model run for?"
         required: false
-        default: "5"
+        default: "0.5"
 
       - select: "Trigger full model run"
         key: "trigger-downstream"

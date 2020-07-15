@@ -100,7 +100,7 @@ def run_calibrate(job, calibration, chains, runtime, branch, dry):
             --calibration malaysia \
             --chains 6 \
             --runtime 200 \
-            --branch luigi-redux
+            --dry
 
     """
     job_id = f"calibrate-{job}"
@@ -132,7 +132,7 @@ def run_full_model(job, run, burn_in, latest_code):
 
     """
     job_id = f"full-{job}"
-    instance_type = aws.get_instance_type(30, 8)
+    instance_type = EC2InstanceType.m5_4xlarge
     kwargs = {
         "run_id": run,
         "burn_in": burn_in,
@@ -153,7 +153,7 @@ def run_powerbi(job, run):
 
     """
     job_id = f"powerbi-{job}"
-    instance_type = aws.get_instance_type(30, 32)
+    instance_type = EC2InstanceType.m5_4xlarge
     kwargs = {"run_id": run}
     job_func = functools.partial(remote.run_powerbi, **kwargs)
     _run_job(job_id, instance_type, job_func)

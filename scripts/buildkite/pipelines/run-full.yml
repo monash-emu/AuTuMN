@@ -11,7 +11,7 @@ steps:
         key: "full-burn-in"
         hint: "How many MCMC iterations should be burned?"
         required: false
-        default: "1000"
+        default: "300"
 
       - select: "Use latest code for model run"
         key: "use-latest-code"

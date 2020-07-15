@@ -6,6 +6,7 @@ import os
 import json
 
 import boto3
+from botocore.exceptions import ProfileNotFound
 
 BUCKET = "autumn-data"
 AWS_PROFILE = "autumn"

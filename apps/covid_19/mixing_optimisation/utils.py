@@ -162,20 +162,20 @@ def get_target_outputs_for_opti(country, data_start_time=22, source='who', updat
             data = read_john_hopkins_data_from_csv(variable, country)
             times = [jh_start_time + i for i in range(len(data))]
 
-            # Ignore negative values found in the dataset
-            censored_data_indices = []
-            for i, d in enumerate(data):
-                if d < 0:
-                    censored_data_indices.append(i)
-            data = [d for i, d in enumerate(data) if i not in censored_data_indices]
-            times = [t for i, t in enumerate(times) if i not in censored_data_indices]
-
             # remove first datapoints according to data_start_time
             indices_to_keep = [i for i, t in enumerate(times) if t >= data_start_time]
             times = [t for t in times if t >= data_start_time]
             data = [d for i, d in enumerate(data) if i in indices_to_keep]
         elif source == 'who':
             times, data = read_who_data_from_csv(variable, country, data_start_time)
+
+        # Ignore negative values found in the dataset
+        censored_data_indices = []
+        for i, d in enumerate(data):
+            if d < 0:
+                censored_data_indices.append(i)
+        data = [d for i, d in enumerate(data) if i not in censored_data_indices]
+        times = [t for i, t in enumerate(times) if i not in censored_data_indices]
 
         target_outputs.append(
             {

@@ -84,7 +84,7 @@ def run_calibration(
             "logging-conf-file": "tasks/luigi-logging.ini",
         }
         run_luigi_pipeline(conn, pipeline_name, pipeline_args)
-        upload_luigi_logs(conn, "calibrate", run_id)
+        # upload_luigi_logs(conn, "calibrate", run_id)
         # Note: this log line is used by Buildkite so don't change it.
         logger.info("Calibration completed for %s", run_id)
 
@@ -103,12 +103,11 @@ def run_luigi_pipeline(conn: Connection, pipeline_name: str, pipeline_args: dict
 def upload_luigi_logs(conn: Connection, log_folder_name: str, run_id: str):
     """Upload Luigi log files from remote server to S3"""
     logger.info("Uploading Luigi log files.")
-    # Using local scheduler, no logfile
-    # src = "/home/ubuntu/code/data/outputs/luigid/luigi-server.log"
-    # dest = f"{run_id}/logs/{log_folder_name}/luigi-worker.log"
-    # copy_s3(conn, src, dest)
-    src = "/home/ubuntu/code/data/outputs/remote/luigi-worker.log"
+    src = "/home/ubuntu/code/data/outputs/luigid/luigi-server.log"
     dest = f"{run_id}/logs/{log_folder_name}/luigi-server.log"
+    copy_s3(conn, src, dest)
+    src = "/home/ubuntu/code/data/outputs/remote/luigi-worker.log"
+    dest = f"{run_id}/logs/{log_folder_name}/luigi-worker.log"
     copy_s3(conn, src, dest)
 
 

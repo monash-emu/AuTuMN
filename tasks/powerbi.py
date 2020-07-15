@@ -106,8 +106,8 @@ class PruneFullRunDatabaseTask(utils.ParallelLoggerTask):
     chain_id = luigi.IntParameter()  # Unique chain id
 
     def requires(self):
-        output_list = UNCERTAINTY_OUTPUTS if utils.read_run_id(self.run_id) not in OPTI_REGIONS else \
-            UNCERTAINTY_OUTPUTS + OPTI_ONLY_OUTPUTS
+        region_name, _, _ = utils.read_run_id(self.run_id)
+        output_list = UNCERTAINTY_OUTPUTS if region_name not in OPTI_REGIONS else UNCERTAINTY_OUTPUTS + OPTI_ONLY_OUTPUTS
         return [
             UncertaintyWeightsTask(
                 run_id=self.run_id, output_name=output_name, chain_id=self.chain_id

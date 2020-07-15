@@ -47,7 +47,7 @@ PAR_PRIORS = [
     },
     # Parameters related to case importation
     {
-        "param_name": "data.n_imported_cases[-1]",
+        "param_name": "data.n_imported_cases(-1)",
         "distribution": "gamma",
         "distri_mean": 1.0,
         "distri_ci": [0.1, 2.0],

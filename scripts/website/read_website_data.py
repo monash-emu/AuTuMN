@@ -65,7 +65,11 @@ for k in keys:
     path_parts = k.split("/")
     run_id, path = path_parts[0], "/".join(path_parts[1:])
 
-    model, timestamp, commit = read_run_id(run_id)
+    try:
+        model, timestamp, commit = read_run_id(run_id)
+    except Exception:
+        continue
+
     model_names.add(model)
     if not model in runs:
         runs[model] = {}

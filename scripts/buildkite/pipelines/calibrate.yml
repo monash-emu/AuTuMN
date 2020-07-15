@@ -60,7 +60,7 @@ steps:
   - command: ./scripts/buildkite/run.sh calibrate
     label: Run calibration
     key: run-calibrate
-  - command: ./scripts/aws/run.sh website
+  - command: ./scripts/website/deploy.sh
     label: Update website
     depends_on: run-calibrate
     allow_dependency_failure: true

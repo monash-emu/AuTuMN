@@ -38,7 +38,7 @@ steps:
   - command: ./scripts/buildkite/run.sh full
     label: "Run full models"
     key: run-full
-  - command: ./scripts/aws/run.sh website
+  - command: ./scripts/website/deploy.sh
     label: Update website
     depends_on: run-full
     allow_dependency_failure: true

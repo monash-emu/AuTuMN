@@ -77,14 +77,6 @@ def ssh(name):
         click.echo(f"Instance {name} not found")
 
 
-@click.command()
-def website():
-    """
-    Update the calibrations website.
-    """
-    update_website()
-
-
 @click.group()
 def run():
     """
@@ -192,7 +184,6 @@ def _run_job(job_id, instance_type, job_func):
         aws.stop_job(job_id)
 
 
-cli.add_command(website)
 cli.add_command(logs)
 cli.add_command(cleanup)
 cli.add_command(status)

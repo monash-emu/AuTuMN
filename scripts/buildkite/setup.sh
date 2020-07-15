@@ -2,6 +2,7 @@
 # Run as root
 # TODO: Put all SSH keys in /var/lib/buildkite-agent/.ssh/
 # TODO: Add AWS creds to /etc/buildkite-agent/hooks/environment
+# TODO: Install yarn and node v12
 AGENT_TOKEN=xxx
 sh -c 'echo deb https://apt.buildkite.com/buildkite-agent stable main > /etc/apt/sources.list.d/buildkite-agent.list'
 apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 32A37959C2FA5C3C99EFBC32A79206696452D198

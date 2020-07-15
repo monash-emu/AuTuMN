@@ -22,7 +22,7 @@ def run_powerbi(instance, run_id: str):
     with get_connection(instance) as conn:
         update_repo(conn, branch="luigi-redux")
         install_requirements(conn)
-        start_luigi_scheduler(conn, instance)
+        # start_luigi_scheduler(conn, instance)
         pipeline_name = "RunPowerBI"
         pipeline_args = {
             "run-id": run_id,
@@ -30,7 +30,7 @@ def run_powerbi(instance, run_id: str):
             "logging-conf-file": "tasks/luigi-logging.ini",
         }
         run_luigi_pipeline(conn, pipeline_name, pipeline_args)
-        upload_luigi_logs(conn, "powerbi", run_id)
+        # upload_luigi_logs(conn, "powerbi", run_id)
         logger.info("PowerBI processing completed for %s", run_id)
 
 
@@ -46,7 +46,7 @@ def run_full_model(instance, run_id: str, burn_in: int, use_latest_code: bool):
             set_run_id(conn, run_id)
 
         install_requirements(conn)
-        start_luigi_scheduler(conn, instance)
+        # start_luigi_scheduler(conn, instance)
         model_name, _, _ = read_run_id(run_id)
         pipeline_name = "RunFullModels"
         pipeline_args = {
@@ -57,7 +57,7 @@ def run_full_model(instance, run_id: str, burn_in: int, use_latest_code: bool):
             "logging-conf-file": "tasks/luigi-logging.ini",
         }
         run_luigi_pipeline(conn, pipeline_name, pipeline_args)
-        upload_luigi_logs(conn, "full_model_runs", run_id)
+        # upload_luigi_logs(conn, "full_model_runs", run_id)
         logger.info("Full model runs completed for %s", run_id)
 
 

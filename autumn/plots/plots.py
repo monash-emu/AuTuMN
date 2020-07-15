@@ -64,6 +64,9 @@ def plot_loglikelihood_trace(plotter: Plotter, mcmc_tables: List[pd.DataFrame], 
 
     if burn_in:
         axis.axvline(x=burn_in, color=COLOR_THEME[1], linestyle="dotted")
+        y_min = min(table_df.loglikelihood[burn_in:])
+        y_max = max(table_df.loglikelihood[burn_in:])
+        axis.set_ylim((y_min - .2 * (y_max - y_min), y_max + .2 * (y_max - y_min)))
 
     plotter.save_figure(fig, filename="loglikelihood-traces", title_text="loglikelihood-traces")
 
@@ -364,8 +367,10 @@ def _plot_targets_to_axis(
         if is_confidence_interval:
             # Plot confidence interval
             x_vals = [time, time]
-            y_vals = values[1:]
-            axis.plot(x_vals, y_vals, "m", linewidth=1, color="red")
+            axis.plot(x_vals, values[1:], "m", linewidth=1, color="red")
+
+            axis.scatter(time, values[0], marker="o", color="red", s=30)
+            axis.scatter(time, values[0], marker="o", color="white", s=10)
         else:
             # Plot a single point estimate
             value = values[0]

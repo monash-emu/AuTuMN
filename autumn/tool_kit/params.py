@@ -76,7 +76,7 @@ def update_params(params: dict, updates: dict) -> dict:
 
         - dict entries updated as "key": val
         - nested dict entries updated as "key1.key2": val
-        - array entries updated as "arr[0]": 1
+        - array entries updated as "arr(0)": 1
 
     Example
 
@@ -94,7 +94,7 @@ def update_params(params: dict, updates: dict) -> dict:
 
 
 # Regex to match an array update request eg. "foo[1]"
-ARRAY_REQUEST_REGEX = r"^\w+\[-?\d\]$"
+ARRAY_REQUEST_REGEX = r"^\w+\(-?\d\)$"
 
 
 def _update_params(params: dict, update_key: str, update_val) -> dict:
@@ -105,13 +105,13 @@ def _update_params(params: dict, update_key: str, update_val) -> dict:
     is_nested_update = bool(nested_keys)
     if is_arr_update and is_nested_update:
         # Array item replacement followed by nested dictionary replacement.
-        key, idx_str = current_key.replace("]", "").split("[")
+        key, idx_str = current_key.replace(")", "").split("(")
         idx = int(idx_str)
         child_key = ".".join(nested_keys)
         ps[key][idx] = _update_params(ps[key][idx], child_key, update_val)
     elif is_arr_update:
         # Array item replacement.
-        key, idx_str = update_key.replace("]", "").split("[")
+        key, idx_str = update_key.replace(")", "").split("(")
         idx = int(idx_str)
         ps[key][idx] = update_val
     elif is_nested_update:

@@ -182,7 +182,7 @@ def get_target_outputs_for_opti(country, data_start_time=22, source='who', updat
                 "output_key": output_mapping[variable],
                 "years": times,
                 "values": data,
-                "loglikelihood_distri": "negative_binomial",
+                "loglikelihood_distri": "poisson",
             }
         )
 

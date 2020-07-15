@@ -8,6 +8,7 @@ from autumn.inputs import get_country_mixing_matrix, get_mobility_data
 
 from .adjust_base import BaseMixingAdjustment
 from .utils import BASE_DATE, BASE_DATETIME
+from . import funcs as parse_funcs
 
 # Locations that can be used for mixing
 LOCATIONS = ["home", "other_locations", "school", "work"]
@@ -176,18 +177,18 @@ def parse_values(values):
     Convert all mixing time series values to a float
     """
     new_values = []
-    prev = None
     for v in values:
-        if type(v) is str and prev and v.endswith("%"):
-            # Make this value a percent of the prev value.
-            fraction = float(v.replace("%", "")) / 100
-            new_val = prev * fraction
+        if type(v) is list:
+            # Apply a function to the history to get the next value.
+            func_name = v[0]
+            args = [new_values] + v[1:]
+            func = getattr(parse_funcs, func_name)
+            new_val = func(*args)
         else:
             # Do not change.
             new_val = v
 
         new_values.append(new_val)
-        prev = new_val
 
     return new_values
 

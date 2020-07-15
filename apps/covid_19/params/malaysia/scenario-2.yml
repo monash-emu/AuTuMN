@@ -3,7 +3,8 @@ mixing:
   work:
     append: true
     times:
+      - 2020-07-31
       - 2020-08-01
     values:
-      # +9% on last value
-      - 109%
+      - [repeat_prev]
+      - [add_to_prev_up_to_1, 0.09]

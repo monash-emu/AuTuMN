@@ -19,9 +19,15 @@ from apps.covid_19.preprocess.mixing_matrix.utils import BASE_DATE
     "vals_in, vals_out",
     (
         ([1, 2, 3, 4, 5], [1, 2, 3, 4, 5]),
-        ([1, 2, "110%", 3], [1, 2, 2.2, 3]),
-        ([1, 2, "90%", 3], [1, 2, 1.8, 3]),
-        ([8, "50%", "50%", "50%"], [8, 4, 2, 1]),
+        ([1, 2, ["repeat_prev"], 3], [1, 2, 2, 3]),
+        ([1, 2, ["add_to_prev", 1.23], 3], [1, 2, 3.23, 3]),
+        ([0.1, 0.5, ["add_to_prev_up_to_1", 0.3], 0.9], [0.1, 0.5, 0.8, 0.9]),
+        ([0.1, 0.8, ["add_to_prev_up_to_1", 0.3], 0.9], [0.1, 0.8, 1, 0.9]),
+        ([1, 2, ["scale_prev", -1], 3], [1, 2, 0, 3]),
+        ([0.1, 0.95, ["scale_prev_up_to_1", 1.1], 0.5], [0.1, 0.95, 1, 0.5]),
+        ([1, 2, ["scale_prev", 1.1], 3], [1, 2, 2.2, 3]),
+        ([1, 2, ["scale_prev", 0.9], 3], [1, 2, 1.8, 3]),
+        ([8, ["scale_prev", 0.5], ["scale_prev", 0.5], ["scale_prev", 0.5]], [8, 4, 2, 1]),
     ),
 )
 def test_parse_values(vals_in, vals_out):
@@ -63,7 +69,7 @@ def test_update_mixing_data__with_user_specified_values():
     """
     mixing = {
         # Expect appended with % increase accounted for.
-        "work": {"values": ["110%", 1.6], "times": get_date([4, 5]), "append": True},
+        "work": {"values": [["scale_prev", 1.1], 1.6], "times": get_date([4, 5]), "append": True},
         # Expect overwritten
         "other_locations": {
             "values": [1.55, 1.66, 1.77, 1.88, 1.99, 1.111],

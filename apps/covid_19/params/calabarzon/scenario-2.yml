@@ -3,9 +3,11 @@ mixing:
   work:
     append: true
     times:
+      - 2020-08-23
       - 2020-08-24
     values:
-      - 150%
+      - [repeat_prev]
+      - [scale_prev_up_to_1, 1.5]
   school:
     append: false
     times:

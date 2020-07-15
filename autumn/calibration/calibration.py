@@ -208,9 +208,14 @@ class Calibration:
         :param i_run: the iteration number
         """
         mcmc_run_dict = {k: v for k, v in zip(self.param_list, proposed_params)}
+        # rename parameters containing "[...]" in their name
+        for k in list(mcmc_run_dict.keys()):
+            if "[" in k:
+                new_key = k.replace("[", "##").replace("]", "")
+                mcmc_run_dict[new_key] = mcmc_run_dict.pop(k)
         mcmc_run_dict["loglikelihood"] = proposed_loglike
         mcmc_run_dict["accept"] = 1 if accept else 0
-        mcmc_run_colnames = self.param_list.copy()
+        mcmc_run_colnames = list(mcmc_run_dict.keys()).copy()
         mcmc_run_colnames.append("loglikelihood")
         mcmc_run_colnames.append("accept")
         mcmc_run_df = pd.DataFrame(mcmc_run_dict, columns=mcmc_run_colnames, index=[i_run])

@@ -33,6 +33,8 @@ steps:
             value: "sweden"
           - label: "France"
             value: "france"
+          - label: "Spain"
+            value: "spain"
 
       - text: "Number of MCMC chains"
         key: "mcmc-num-chains"

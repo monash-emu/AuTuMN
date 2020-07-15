@@ -14,6 +14,7 @@ from . import (
     italy,
     sweden,
     france,
+    spain,
 )
 
 CALIBRATIONS = {

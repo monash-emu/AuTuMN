@@ -1,0 +1,10 @@
+---
+# Options for plotting outputs of the COVID-19 model
+outputs_to_plot:
+  - name: notifications
+    target_times: []
+    target_values: []
+
+  - name: infection_deathsXall
+    target_times: []
+    target_values: []

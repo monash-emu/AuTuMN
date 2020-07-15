@@ -21,6 +21,8 @@ app.register(RegionApp(Region.BELGIUM))
 app.register(RegionApp(Region.ITALY))
 app.register(RegionApp(Region.SWEDEN))
 app.register(RegionApp(Region.FRANCE))
+app.register(RegionApp(Region.SPAIN))
+
 
 
 # Functions and data exposed to the outside world

@@ -1,7 +1,10 @@
 import os
+import logging
 import pandas as pd
 from sqlalchemy import create_engine
 from pandas.util import hash_pandas_object
+
+logger = logging.getLogger(__name__)
 
 
 class Database:
@@ -35,6 +38,9 @@ class Database:
 
     def table_names(self):
         return self.engine.table_names()
+
+    def column_names(self, table_name):
+        return [c[1] for c in self.engine.execute(f"PRAGMA table_info({table_name})")]
 
     def delete_everything(self):
         """
@@ -75,7 +81,24 @@ class Database:
             condition_chain = " AND ".join(conditions)
             query += f" WHERE {condition_chain}"
         query += ";"
-        return pd.read_sql_query(query, con=self.engine)
+        df = pd.read_sql_query(query, con=self.engine)
+
+        # Backwards compatibility fix for old column names with square brackets
+        column_names = self.column_names(table_name)
+        renames = {}
+        for column_name in column_names:
+            # Assume column is named something like foo.bar[-1]
+            # and we will rename to foo.bar(-1)
+            if "[" in column_name:
+                logger.info("Cleaning square brackets from column %s", column_name)
+                df_name = column_name.split("[")[0]
+                new_name = column_name.replace("[", "(").replace("]", ")")
+                renames[df_name] = new_name
+
+        if renames:
+            df.rename(columns=renames, inplace=True)
+
+        return df
 
 
 def get_sql_engine(db_path: str):

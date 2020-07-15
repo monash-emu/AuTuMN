@@ -24,7 +24,6 @@ def run_full_models_for_mcmc(
     dest_db = Database(dest_db_path)
 
     logger.info("Copying mcmc_run table to %s", dest_db_path)
-
     mcmc_run_df = src_db.query("mcmc_run")
 
     # Apply burn in and save to destination

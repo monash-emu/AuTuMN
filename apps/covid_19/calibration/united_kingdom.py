@@ -5,6 +5,7 @@ from apps.covid_19.mixing_optimisation.utils import (
     get_target_outputs_for_opti,
     get_weekly_summed_targets,
 )
+from autumn.tool_kit.utils import print_target_to_plots_from_calibration
 
 
 country = Region.UNITED_KINGDOM
@@ -26,12 +27,5 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
 
 
 if __name__ == "__main__":
-    for i in range(len(TARGET_OUTPUTS)):
-        print(TARGET_OUTPUTS[i]["output_key"])
-        print(TARGET_OUTPUTS[i]["years"])
-        print([[v] for v in TARGET_OUTPUTS[i]["values"]])
-        print()
+    print_target_to_plots_from_calibration(TARGET_OUTPUTS)
 
-    run_calibration_chain(
-        30, 1
-    )  # first argument only relevant for autumn_mcmc mode (time limit in seconds)

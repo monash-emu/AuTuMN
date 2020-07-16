@@ -22,7 +22,7 @@ compartment_periods:
   hospital_early: 5.
   hospital_late: 8.
   icu_early: 5.
-  icu_late: 10.
+  icu_late: 7.5
 
 # Mean time (?) spent in each compartment, defined via proportions
 compartment_periods_calculated:
@@ -87,7 +87,7 @@ hospital_props:
 hospital_props_multiplier: 1.
 
 # Proportion of those hospitalised that are admitted to ICU - consistent with LSHTM's LMIC estimates parameters
-icu_prop: 0.3
+icu_prop: 0.17
 
 # Infection fatality proportions - Verity et al.
 use_verity_mortality_estimates: True

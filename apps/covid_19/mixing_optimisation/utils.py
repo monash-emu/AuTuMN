@@ -136,11 +136,12 @@ def get_list_of_ifr_priors_from_pollan(test="immunoassay"):
     return ifr_priors
 
 
-def get_target_outputs_for_opti(country, data_start_time=22, source='who', update_jh_data=False):
+def get_target_outputs_for_opti(country, data_start_time=22, data_end_time=152, source='who', update_jh_data=False):
     """
     Automatically creates the calibration target list for a country in the context of the opti problem
     :param country: country name
-    :param data_start_time: the desired starting point for the extracted data
+    :param data_start_time: the requested starting point for the extracted data
+    :param data_end_time: the requested end point for the extracted data
     :param source: 'who' or 'johns_hopkins'
     :return:
     """
@@ -166,7 +167,7 @@ def get_target_outputs_for_opti(country, data_start_time=22, source='who', updat
             times = [t for t in times if t >= data_start_time]
             data = [d for i, d in enumerate(data) if i in indices_to_keep]
         elif source == 'who':
-            times, data = read_who_data_from_csv(variable, country, data_start_time)
+            times, data = read_who_data_from_csv(variable, country, data_start_time, data_end_time)
 
         # Ignore negative values found in the dataset
         censored_data_indices = []

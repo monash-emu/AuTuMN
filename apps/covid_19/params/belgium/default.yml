@@ -8,9 +8,11 @@ infectious_seed: 200
 use_verity_mortality_estimates: True
 
 microdistancing:
-  b: -0.05
-  c: 92.36288846892721
-  sigma: 0.64581468037293
+  function_type: tanh
+  parameters:
+    b: -0.05
+    c: 92.36288846892721
+    sigma: 0.64581468037293
 
 # MLE estimates
 contact_rate: 0.06734498928296653

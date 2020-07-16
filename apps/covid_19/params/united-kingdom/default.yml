@@ -29,9 +29,11 @@ infection_fatality_props: [7.4168714801810575e-06, 1.911233989750491e-05, 9.3275
 
 
 microdistancing:
-  b: -0.05
-  c: 111.27839659735051
-  sigma: 0.6930120595156014
+  function_type: tanh
+  parameters:
+    b: -0.05
+    c: 111.27839659735051
+    sigma: 0.6930120595156014
 
 mixing:
   school:

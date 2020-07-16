@@ -52,9 +52,14 @@ class LocationMixingAdjustment(BaseMixingAdjustment):
             self.loc_adj_funcs[loc_key] = scale_up_function(loc_times, loc_vals, method=4)
 
         # Work out microdistancing function to be applied to all non-household locations
-        self.microdistancing_function = None
-        if microdistancing_params and microdistancing_params["function_type"] == "tanh":
+        if not microdistancing_params:
+            self.microdistancing_function = None
+        elif microdistancing_params["function_type"] == "tanh":
             self.microdistancing_function = tanh_based_scaleup(**microdistancing_params["parameters"])
+        elif microdistancing_params["function_type"] == "empiric":
+            micro_times = microdistancing_params["parameters"]["times"]
+            micro_vals = microdistancing_params["parameters"]["values"]
+            self.microdistancing_function = scale_up_function(micro_times, micro_vals, method=4)
 
         # Load all location-specific mixing info.
         self.matrix_components = {}

@@ -11,4 +11,4 @@ outputs_to_plot:
 
   - name: proportion_seropositive
     target_times: [125]
-    target_values: [[0.046, 0.043, 0.05]]
+    target_values: [[0.05, 0.047, 0.054]]

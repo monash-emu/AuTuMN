@@ -72,11 +72,15 @@ PAR_PRIORS = [
         "distri_params": [0.1, 5.0],
     },
     {
-        "param_name": "microdistancing.sigma",
+        "param_name": "microdistancing.parameters.sigma",
         "distribution": "uniform",
         "distri_params": [0.4, 0.9],
     },
-    {"param_name": "microdistancing.c", "distribution": "uniform", "distri_params": [78.0, 124.0],},
+    {
+        "param_name": "microdistancing.parameters.c",
+        "distribution": "uniform",
+        "distri_params": [78.0, 124.0],
+    },
 ]
 
 # notification data, provided by the country

@@ -9,7 +9,7 @@ from apps.covid_19.mixing_optimisation.constants import *
 
 ## Run a COVID model manually.
 # for REGION in OPTI_REGIONS:   # used by Romain for the optimisation project
-REGION = Region.MALAYSIA
+REGION = Region.VICTORIA
 RUN_SCENARIOS = True
 region_app = covid_19.get_region_app(REGION)
 region_app.run_model(RUN_SCENARIOS)

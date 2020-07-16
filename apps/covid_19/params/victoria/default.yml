@@ -6,11 +6,10 @@ region: Victoria
 implement_importation: True
 
 microdistancing:
-    function_type: tanh
+    function_type: empiric
     parameters:
-        b: -0.04
-        c: 100.
-        sigma: 0.6
+        times: [46, 100]
+        values: [0.0, 0.3]
 
 infectious_seed: 0
 

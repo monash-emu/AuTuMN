@@ -92,16 +92,16 @@ def get_prior_distributions_for_opti():
             "distri_params": [.6, 1.],
         },
         # Add negative binomial over-dispersion parameters
-        {
-            "param_name": "notifications_dispersion_param",
-            "distribution": "uniform",
-            "distri_params": [0.1, 5.0],
-        },
-        {
-            "param_name": "infection_deathsXall_dispersion_param",
-            "distribution": "uniform",
-            "distri_params": [0.1, 5.0],
-        },
+        # {
+        #     "param_name": "notifications_dispersion_param",
+        #     "distribution": "uniform",
+        #     "distri_params": [0.1, 5.0],
+        # },
+        # {
+        #     "param_name": "infection_deathsXall_dispersion_param",
+        #     "distribution": "uniform",
+        #     "distri_params": [0.1, 5.0],
+        # },
     ]
 
     prior_list += get_list_of_ifr_priors_from_pollan()
@@ -122,8 +122,8 @@ def get_list_of_ifr_priors_from_pollan(test="immunoassay"):
         upper = [2.16e-05, 3.11e-05, 0.000128668, 0.000272327, 0.000539085, 0.001726451, 0.006294384, 0.021901827, 0.093437162]
     elif test == "immunoassay":
         mean = [1.35e-05, 2.68e-05, 9.53e-05, 0.00023277, 0.000557394, 0.001902859, 0.007666306, 0.027469001, 0.106523055]
-        lower = [1.07e-05, 2.36e-05, 8.53e-05, 0.000209445, 0.000512419, 0.001749128, 0.006941435, 0.024261861, 0.08974785]
-        upper = [1.81e-05, 3.11e-05, 0.00010806, 0.00026194, 0.000611024, 0.002086216, 0.008560222, 0.03165319, 0.131010945]
+        lower = [4.30E-06, 1.82E-05, 6.98E-05, 1.74E-04, 4.50E-04, 1.54E-03, 5.88E-03, 1.91E-02, 5.75E-02]
+        upper = [2.27E-05, 3.54E-05, 1.21E-04, 2.91E-04, 6.65E-04, 2.27E-03, 9.45E-03, 3.58E-02, 1.55E-01]
 
     for i in range(len(lower)):
         ifr_priors.append(
@@ -182,7 +182,7 @@ def get_target_outputs_for_opti(country, data_start_time=22, data_end_time=152, 
                 "output_key": output_mapping[variable],
                 "years": times,
                 "values": data,
-                "loglikelihood_distri": "negative_binomial",
+                "loglikelihood_distri": "normal",
             }
         )
 

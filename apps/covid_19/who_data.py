@@ -8,7 +8,7 @@ WHO_DATA_DIR = os.path.join(DATA_PATH, "who_covid")
 country_mapping = {"united-kingdom": "The United Kingdom"}
 
 
-def read_who_data_from_csv(variable="confirmed", country="Australia", data_start_time=50):
+def read_who_data_from_csv(variable="confirmed", country="Australia", data_start_time=61, data_end_time=152):
     """
     Read WHO data from csv files
     :param variable: one of "confirmed", "deaths"
@@ -31,11 +31,12 @@ def read_who_data_from_csv(variable="confirmed", country="Australia", data_start
         times[i] = delta.days
 
     start_index = times.index(data_start_time)
+    end_index = times.index(data_end_time)
 
-    times = times[start_index:]
+    times = times[start_index: end_index + 1]
     if variable == 'confirmed':
-        values = list(data[data.iloc[:, 2] == country_name].iloc[:, 4])[start_index:]
+        values = list(data[data.iloc[:, 2] == country_name].iloc[:, 4])[start_index: end_index + 1]
     elif variable == 'deaths':
-        values = list(data[data.iloc[:, 2] == country_name].iloc[:, 6])[start_index:]
+        values = list(data[data.iloc[:, 2] == country_name].iloc[:, 6])[start_index: end_index + 1]
 
     return times, values

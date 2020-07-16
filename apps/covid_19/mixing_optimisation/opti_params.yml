@@ -13,9 +13,9 @@ configurations:
     phase_two_duration: 183
     microdistancing:
       parameters:
-      sigma: 1.
+        sigma: 1.
   3:
     phase_two_duration: 365
     microdistancing:
       parameters:
-      sigma: 1.
+        sigma: 1.

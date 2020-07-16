@@ -222,19 +222,24 @@ def combine_and_burn_samples(calibration_output_path, burn_in=500):
     return pd.concat(mcmc_tables)
 
 
-def extract_n_mcmc_samples(calibration_output_path, n_samples=100, burn_in=500):
+def extract_n_mcmc_samples(calibration_output_path, n_samples=100, burn_in=500, include_mle=True):
     combined_burned_samples = combine_and_burn_samples(calibration_output_path, burn_in)
     nb_rows = combined_burned_samples.shape[0]
-    thining_jump = int(nb_rows / n_samples)
-    selected_indices = [i * thining_jump for i in range(n_samples)]
+    n_extracted = n_samples - 1 if include_mle else n_samples
+    thining_jump = int(nb_rows / n_extracted)
+    selected_indices = [i * thining_jump for i in range(n_extracted)]
 
     thined_samples = combined_burned_samples.iloc[selected_indices, ]
 
+    if include_mle:
+        # concatanate maximum likelihood row
+        mle_row = combined_burned_samples.sort_values(by='loglikelihood', ascending=False).iloc[0, :]
+        thined_samples = thined_samples.append(mle_row)
     return thined_samples.drop(['Scenario', 'accept'], axis=1)
 
 
 def prepare_table_of_param_sets(calibration_output_path, country_name, n_samples=100, burn_in=500):
-    samples = extract_n_mcmc_samples(calibration_output_path, n_samples, burn_in)
+    samples = extract_n_mcmc_samples(calibration_output_path, n_samples, burn_in, include_mle=True)
     for i in range(16):
         samples["best_x" + str(i)] = ""
     samples["best_deaths"] = ""

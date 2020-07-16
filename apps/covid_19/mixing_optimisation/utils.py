@@ -49,8 +49,8 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "icu_prop",
             "distribution": "beta",
-            "distri_mean": 0.25,
-            "distri_ci": [0.15, 0.35],
+            "distri_mean": 0.17,
+            "distri_ci": [0.10, 0.30],
         },
         # parameters to derive age-specific IFRs
         # {
@@ -67,18 +67,18 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "compartment_periods.hospital_late",
             "distribution": "uniform",
-            "distri_params": [4., 15.],
+            "distri_params": [4., 12.],
         },
         {
             "param_name": "compartment_periods.icu_late",
             "distribution": "uniform",
-            "distri_params": [5., 20.],
+            "distri_params": [4., 12.],
         },
         # vary hospitalised proportions
         {
             "param_name": "hospital_props_multiplier",
             "distribution": "uniform",
-            "distri_params": [.3, 1.5],
+            "distri_params": [.5, 2.],
         },
         # Micro-distancing
         {
@@ -129,9 +129,8 @@ def get_list_of_ifr_priors_from_pollan(test="immunoassay"):
         ifr_priors.append(
             {
                 "param_name": "infection_fatality_props(" + str(i) + ")",
-                "distribution": "beta",
-                "distri_mean": mean[i],
-                "distri_ci": [lower[i], upper[i]],
+                "distribution": "uniform",
+                "distri_params": [lower[i], upper[i]],
             }
         )
     return ifr_priors

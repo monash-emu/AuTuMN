@@ -309,13 +309,13 @@ case_counts = [
     46,
     68,
     61,
-    63,
-    67,
-    52,
-    72,
-    47,
-    38,
-    19,
+    69,
+    69,
+    54,
+    97,
+    65,
+    97,
+    163,
 ]
 
 # _______ Print targets to plot to be added to plots.yml file

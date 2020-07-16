@@ -1,5 +1,5 @@
 ---
-scenario_start_time: 130
+scenario_start_time: 178 # 07/07/2020
 iso3: AUS
 region: Victoria
 
@@ -53,7 +53,7 @@ mixing:
       - 0
       - .5 # Back to school for all and only Years 11 and 12, Year 10 for Melbourne and Mitchell Shire 
       - .5
-      - 1 
+      - 1
 
 data:
   times_imported_cases:

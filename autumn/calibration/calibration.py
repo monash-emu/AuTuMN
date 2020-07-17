@@ -368,7 +368,8 @@ class Calibration:
                         target["cis"][0][1] - target["cis"][0][0]
                     ) / 4.0
                 else:
-                    self.targeted_outputs[i]["sd"] = 0.5 / 4.0 * np.mean(target["values"])
+                    self.targeted_outputs[i]["sd"] = 0.5 / 4.0 * max(target["values"]) / 2.
+
 
     def workout_unspecified_jumping_sds(self):
         for i, prior_dict in enumerate(self.priors):

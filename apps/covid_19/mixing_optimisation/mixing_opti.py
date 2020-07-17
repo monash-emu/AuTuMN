@@ -261,9 +261,9 @@ if __name__ == "__main__":
     for _mode in ["by_age", "by_location"]:
         for _country in available_countries:
             print("*********** " + _country + " ***********")
-            for _config in [2, 3]:  #, 3]:  # opti_params["configurations"]:
+            for _config in [2, 3]:
                 param_set_list = read_list_of_param_sets_from_csv(_country)
-                # param_set_list = [param_set_list[62]]
+                # param_set_list = [param_set_list[-1]]
                 for param_set in param_set_list:
                     # Run this line of code every time we use a new param_set and before performing optimisation
                     # This is an initialisation step

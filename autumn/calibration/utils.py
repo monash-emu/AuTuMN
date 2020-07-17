@@ -132,6 +132,8 @@ def collect_map_estimate(calib_dirpath: str):
         db = Database(db_path)
         mcmc_tables.append(db.query("mcmc_run").sort_values(by="loglikelihood", ascending=False))
 
+    print([mcmc_tables[i]["loglikelihood"].iloc[0] for i in range(len(mcmc_tables))])
+
     best_chain_index = np.argmax(
         [mcmc_tables[i]["loglikelihood"].iloc[0] for i in range(len(mcmc_tables))]
     )
@@ -182,7 +184,7 @@ def print_reformated_map_parameters(map_estimates):
 
 if __name__ == "__main__":
     calib_dir = os.path.join(
-        "../../data", "outputs", "calibrate", "covid_19", "spain", "8a828ceb-2020-07-15"
+        "../../data", "outputs", "calibrate", "covid_19", "united-kingdom", "bd809038-2020-07-17"
     )
     map_estimates, best_chain_index = collect_map_estimate(calib_dir)
     print_reformated_map_parameters(map_estimates)

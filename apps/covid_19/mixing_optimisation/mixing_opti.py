@@ -93,7 +93,7 @@ def build_params_for_phases_2_and_3(decision_variables, config=0, mode='by_age')
                                  phase_2_end[config] + 3],
         'n_imported_cases': [0, 5, 5, 0]
     }
-    sc_1_params['end_time'] = phase_2_end[config] + PHASE_3_DURATION
+    sc_1_params['end_time'] = PHASE_2_START_TIME + DURATION_PHASES_2_AND_3
 
     if "microdistancing" in opti_params['configurations'][config]:
         if "microdistancing" in sc_1_params:

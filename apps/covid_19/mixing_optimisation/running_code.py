@@ -3,21 +3,21 @@ from apps.covid_19.mixing_optimisation.utils import prepare_table_of_param_sets
 
 if __name__ == "__main__":
     calib_paths = {
-        "france": "../../../data/outputs/calibrate/covid_19/france/c555531b-2020-07-17",
-        "belgium": "../../../data/outputs/calibrate/covid_19/belgium/ef2ee497-2020-07-17",
-        "spain": "../../../data/outputs/calibrate/covid_19/spain/8a828ceb-2020-07-17",
-        "italy": "../../../data/outputs/calibrate/covid_19/italy/7e60b0ba-2020-07-17",
-        "sweden": "../../../data/outputs/calibrate/covid_19/sweden/a3c5bdea-2020-07-17",
-        "united-kingdom": "../../../data/outputs/calibrate/covid_19/united-kingdom/bd809038-2020-07-17",
+        "france": "../../../data/outputs/calibrate/covid_19/france/Revised-2020-07-18",
+        # "belgium": "../../../data/outputs/calibrate/covid_19/belgium/Revised-2020-07-18",
+        # "spain": "../../../data/outputs/calibrate/covid_19/spain/Revised-2020-07-18",
+        # "italy": "../../../data/outputs/calibrate/covid_19/italy/Revised-2020-07-18",
+        # "sweden": "../../../data/outputs/calibrate/covid_19/sweden/Revised-2020-07-18",
+        # "united-kingdom": "../../../data/outputs/calibrate/covid_19/united-kingdom/Revised-2020-07-18",
     }
 
     burnin = {
-        "france": 1505,
-        "belgium": 1305,
-        "spain": 1000,
-        "italy": 1995,
-        "sweden": 1000,
-        "united-kingdom": 1000.,
+        "france": 2000,
+        "belgium": 1500,
+        "spain": 1500,
+        "italy": 2000,
+        "sweden": 1500,
+        "united-kingdom": 1500,
     }
 
     for country in calib_paths:

@@ -2,7 +2,7 @@
 iso3: PHL
 region: Metro Manila
 
-scenario_start_time: 140
+scenario_start_time: 235
 end_time: 365.
 
 # calibrated parameters

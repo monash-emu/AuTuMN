@@ -6,6 +6,7 @@ OPTI_REGIONS = [
     Region.ITALY,
     Region.SWEDEN,
     Region.FRANCE,
+    Region.SPAIN,
 ]
 
 #  Definitions if the three phases

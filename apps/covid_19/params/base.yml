@@ -207,3 +207,4 @@ google_mobility_locations:
 notifications_dispersion_param: 1.
 prevXlateXclinical_icuXamong_dispersion_param: 1.
 infection_deathsXall_dispersion_param: 1.
+proportion_seropositive_dispersion_param: 1.

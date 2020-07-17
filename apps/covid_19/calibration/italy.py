@@ -4,6 +4,7 @@ from apps.covid_19.mixing_optimisation.utils import (
     get_prior_distributions_for_opti,
     get_target_outputs_for_opti,
     get_weekly_summed_targets,
+    add_dispersion_param_prior_for_gaussian,
 )
 from autumn.tool_kit.utils import print_target_to_plots_from_calibration
 
@@ -25,6 +26,7 @@ for target in TARGET_OUTPUTS:
 
 MULTIPLIERS = {}
 
+PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS, MULTIPLIERS)
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
     base.run_calibration_chain(

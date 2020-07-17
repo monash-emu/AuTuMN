@@ -189,6 +189,28 @@ def get_target_outputs_for_opti(country, data_start_time=22, data_end_time=152, 
     return target_outputs
 
 
+def add_dispersion_param_prior_for_gaussian(par_priors, target_outputs, multipliers):
+    for t in target_outputs:
+        if t["loglikelihood_distri"] == "normal":
+            max_val = max(t["values"])
+            if t["output_key"] in multipliers:
+                max_val *= multipliers[t["output_key"]]
+            # sd that would make the 95% gaussian CI cover half of the max value (4*sd = 95% width)
+            sd_ = 0.25 * max_val / 4.0
+            lower_sd = sd_ / 2.
+            upper_sd = 2. * sd_
+
+            par_priors.append(
+                {
+                    "param_name": t["output_key"] + "_dispersion_param",
+                    "distribution": "uniform",
+                    "distri_params": [lower_sd, upper_sd],
+                },
+            )
+
+    return par_priors
+
+
 def get_weekly_summed_targets(times, values):
     assert len(times) == len(values), "times and values must have the same length"
     assert len(times) >= 7, "number of time points must be greater than 7 to compute weekly data"

@@ -158,11 +158,11 @@ def objective_function(decision_variables, root_model, mode="by_age", country=Re
     models = [root_model, scenario_1.model]
 
     #____________________________       Perform diagnostics         ______________________
-    # How many deaths and years of life lost during Phase 2
+    # How many deaths and years of life lost during Phase 2 and 3
     start_phase2_index = models[1].derived_outputs["times"].index(PHASE_2_START_TIME)
     end_phase2_index = models[1].derived_outputs["times"].index(phase_2_end[config])
-    total_nb_deaths = sum(models[1].derived_outputs["infection_deathsXall"][start_phase2_index: end_phase2_index + 1])
-    years_of_life_lost = sum(models[1].derived_outputs["years_of_life_lost"][start_phase2_index: end_phase2_index + 1])
+    total_nb_deaths = sum(models[1].derived_outputs["infection_deathsXall"][start_phase2_index:])
+    years_of_life_lost = sum(models[1].derived_outputs["years_of_life_lost"][start_phase2_index:])
 
     # What proportion immune at end of Phase 2
     recovered_indices = [
@@ -175,7 +175,7 @@ def objective_function(decision_variables, root_model, mode="by_age", country=Re
     prop_immune = nb_reco / total_pop
 
     # Has herd immunity been reached?
-    herd_immunity = has_immunity_been_reached(models[1], end_phase2_index)   # FIXME change this
+    herd_immunity = has_immunity_been_reached(models[1], end_phase2_index)
 
     return herd_immunity, total_nb_deaths, years_of_life_lost, prop_immune, models
 

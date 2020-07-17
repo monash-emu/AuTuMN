@@ -14,6 +14,10 @@ microdistancing:
     c: 94.69398920301224
     sigma: 0.9131889636815566
 
+# Only for Sweden
+tv_detection_sigma: .05
+
+
 # MLE estimates
 contact_rate: 0.03884661696601868
 start_time: 18.42912225014137

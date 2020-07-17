@@ -132,7 +132,9 @@ def collect_map_estimate(calib_dirpath: str):
         db = Database(db_path)
         mcmc_tables.append(db.query("mcmc_run").sort_values(by="loglikelihood", ascending=False))
 
+    print("Best MLE for each chains:")
     print([mcmc_tables[i]["loglikelihood"].iloc[0] for i in range(len(mcmc_tables))])
+    print()
 
     best_chain_index = np.argmax(
         [mcmc_tables[i]["loglikelihood"].iloc[0] for i in range(len(mcmc_tables))]
@@ -147,6 +149,7 @@ def collect_map_estimate(calib_dirpath: str):
 
 def print_reformated_map_parameters(map_estimates):
     param_as_list_indices = {}
+    param_stem_already_printed = []
     for key, value in map_estimates.items():
         if '(' in key:
             stem = key.split("(")[0]
@@ -159,13 +162,19 @@ def print_reformated_map_parameters(map_estimates):
             components = key.split('.')
             i = 0
             for comp in components:
+                print_this = False
                 str_to_print = ""
                 for j in range(i):
                     str_to_print += "  "
-                str_to_print += comp + ": "
-                if i == len(components) - 1:
-                    str_to_print += str(value)
-                print(str_to_print)
+                if comp not in param_stem_already_printed:
+                    str_to_print += comp + ": "
+                    print_this = True
+                    if i == len(components) - 1:
+                        str_to_print += str(value)
+                    else:
+                        param_stem_already_printed.append(comp)
+                if print_this:
+                    print(str_to_print)
                 i += 1
         else:
             print(key + ": " + str(value))
@@ -184,7 +193,7 @@ def print_reformated_map_parameters(map_estimates):
 
 if __name__ == "__main__":
     calib_dir = os.path.join(
-        "../../data", "outputs", "calibrate", "covid_19", "united-kingdom", "bd809038-2020-07-17"
+        "../../data", "outputs", "calibrate", "covid_19", "belgium", "ef2ee497-2020-07-17"  #   "Final-2020-07-17"
     )
     map_estimates, best_chain_index = collect_map_estimate(calib_dir)
     print_reformated_map_parameters(map_estimates)

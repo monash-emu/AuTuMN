@@ -11,7 +11,7 @@ from autumn.tool_kit.utils import print_target_to_plots_from_calibration
 country = Region.BELGIUM
 
 PAR_PRIORS = get_prior_distributions_for_opti()
-TARGET_OUTPUTS = get_target_outputs_for_opti(country, source='who', data_start_time=61, data_end_time=152)
+TARGET_OUTPUTS = get_target_outputs_for_opti(country, source='who', data_start_time=61, data_end_time=182)
 
 # Use weekly counts
 for target in TARGET_OUTPUTS:

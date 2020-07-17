@@ -90,4 +90,5 @@ validate_params = sb.build_validator(
     notifications_dispersion_param=float,
     prevXlateXclinical_icuXamong_dispersion_param=float,
     infection_deathsXall_dispersion_param=float,
+    proportion_seropositive_dispersion_param=float,
 )

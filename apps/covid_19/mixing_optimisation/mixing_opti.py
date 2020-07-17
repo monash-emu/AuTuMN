@@ -180,7 +180,7 @@ def objective_function(decision_variables, root_model, mode="by_age", country=Re
     return herd_immunity, total_nb_deaths, years_of_life_lost, prop_immune, models
 
 
-def read_list_of_param_sets_from_csv(country, config):
+def read_list_of_param_sets_from_csv(country):
     """
     Read a csv file containing the MCMC outputs and return a list of calibrated parameter sets. Each parameter set is
     described as a dictionary.
@@ -188,11 +188,12 @@ def read_list_of_param_sets_from_csv(country, config):
     :param config: integer used to refer to different sensitivity analyses
     :return: a list of dictionaries
     """
-    path_to_csv = os.path.join('calibrated_param_sets', country + '_config_' + str(config) + ".csv")
+    path_to_csv = os.path.join('calibrated_param_sets', country + "_calibrated_params.csv")
     table = pd.read_csv(path_to_csv)
 
     col_names_to_skip = ["idx", "loglikelihood", "best_deaths", "all_vars_to_1_deaths",
                          "best_p_immune", "all_vars_to_1_p_immune",
+                         "best_yoll", "all_vars_to_1_yoll",
                          "notifications_dispersion_param", "infection_deathsXall_dispersion_param"]
     for i in range(16):
         col_names_to_skip.append("best_x" + str(i))
@@ -257,12 +258,12 @@ if __name__ == "__main__":
     # run_all_phases(decision_vars["by_age"], "belgium", 2, {}, "by_age")
     # exit()
 
-    for _mode in ["by_age"]:  #, "by_location"]:
-        for _country in ['belgium']:  #, 'united-kingdom']:  # available_countries:
+    for _mode in ["by_age", "by_location"]:
+        for _country in available_countries:
             print("*********** " + _country + " ***********")
-            for _config in [2]:  #, 3]:  # opti_params["configurations"]:
-                # param_set_list = read_list_of_param_sets_from_csv(country, config)
-                param_set_list = [{}]
+            for _config in [2, 3]:  #, 3]:  # opti_params["configurations"]:
+                param_set_list = read_list_of_param_sets_from_csv(_country)
+                # param_set_list = [param_set_list[62]]
                 for param_set in param_set_list:
                     # Run this line of code every time we use a new param_set and before performing optimisation
                     # This is an initialisation step

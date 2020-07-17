@@ -285,7 +285,11 @@ class Calibration:
                     if "loglikelihood_distri" not in target:  # default distribution
                         target["loglikelihood_distri"] = "normal"
                     if target["loglikelihood_distri"] == "normal":
-                        ll += -(0.5 / target["sd"] ** 2) * np.sum((data - model_output) ** 2)
+                        if key + "_dispersion_param" in self.param_list:
+                            normal_sd = params[self.param_list.index(key + "_dispersion_param")]
+                        else:
+                            normal_sd = target["sd"]
+                        ll += -(0.5 / normal_sd ** 2) * np.sum((data - model_output) ** 2)
                     elif target["loglikelihood_distri"] == "poisson":
                         for i in range(len(data)):
                             ll += (
@@ -368,8 +372,7 @@ class Calibration:
                         target["cis"][0][1] - target["cis"][0][0]
                     ) / 4.0
                 else:
-                    self.targeted_outputs[i]["sd"] = 0.5 / 4.0 * max(target["values"]) / 2.
-
+                    self.targeted_outputs[i]["sd"] = 0.25 / 4.0 * max(target["values"])
 
     def workout_unspecified_jumping_sds(self):
         for i, prior_dict in enumerate(self.priors):

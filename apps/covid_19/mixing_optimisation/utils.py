@@ -12,7 +12,7 @@ import copy
 
 def get_prior_distributions_for_opti():
     prior_list = [
-        {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.01, 0.10],},
+        {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.04, 0.08],},
         {"param_name": "start_time", "distribution": "uniform", "distri_params": [0., 40.],},
         {
             "param_name": "npi_effectiveness.other_locations",
@@ -39,7 +39,7 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "tv_detection_c",  # inflection point
             "distribution": "uniform",
-            "distri_params": [40.0, 120.0],
+            "distri_params": [70.0, 110.0],
         },
         {
             "param_name": "prop_detected_among_symptomatic",  # upper asymptote

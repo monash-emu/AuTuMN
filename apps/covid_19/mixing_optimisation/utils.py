@@ -21,15 +21,13 @@ def get_prior_distributions_for_opti():
         },
         {
             "param_name": "compartment_periods_calculated.incubation.total_period",
-            "distribution": "gamma",
-            "distri_mean": 5.0,
-            "distri_ci": [3.0, 7.0],
+            "distribution": "uniform",
+            "distri_params": [3.0, 7.0],
         },
         {
             "param_name": "compartment_periods_calculated.total_infectious.total_period",
-            "distribution": "gamma",
-            "distri_mean": 7.0,
-            "distri_ci": [2., 12.],
+            "distribution": "uniform",
+            "distri_params": [5., 10.],
         },
         {
             "param_name": "tv_detection_b",  # shape parameter
@@ -44,13 +42,12 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "prop_detected_among_symptomatic",  # upper asymptote
             "distribution": "uniform",
-            "distri_params": [0.05, 0.90],
+            "distri_params": [0.10, 0.90],
         },
         {
             "param_name": "icu_prop",
-            "distribution": "beta",
-            "distri_mean": 0.17,
-            "distri_ci": [0.10, 0.30],
+            "distribution": "uniform",
+            "distri_params": [0.10, 0.30],
         },
         # parameters to derive age-specific IFRs
         # {

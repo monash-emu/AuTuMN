@@ -83,6 +83,7 @@ validate_params = sb.build_validator(
     microdistancing=sb.Nullable(sb.Dict(function_type=str, parameters=dict)),
     # Other stuff
     contact_rate=float,
+    seasonal_force=sb.Nullable(float),
     infect_death=float,
     infectious_seed=int,
     universal_death_rate=float,

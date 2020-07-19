@@ -8,6 +8,7 @@ from autumn.constants import Compartment, BirthApproach
 from autumn.tb_model import list_all_strata_for_mortality
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
 from autumn import inputs
+from autumn.environment.seasonality import get_seasonal_forcing
 
 from . import outputs, preprocess
 from .stratification import stratify_by_clinical
@@ -115,6 +116,12 @@ def build_model(params: dict) -> StratifiedModel:
     # FIXME: Remove params from model_parameters
     model_parameters = {**params, **compartment_exit_flow_rates}
     model_parameters["to_infectious"] = model_parameters["within_presympt"]
+
+    if model_parameters["seasonal_force"] > 0.:
+        time_variant_contact_rate = \
+            get_seasonal_forcing(
+                365., 173., model_parameters["seasonal_force"], model_parameters["contact_rate"]
+            )
 
     # Instantiate SUMMER model
     model = StratifiedModel(

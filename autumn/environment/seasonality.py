@@ -2,7 +2,7 @@ import numpy
 
 
 def get_seasonal_forcing(
-        period: float, shift: float, amplitude: float, average_value: float
+        period: float, shift: float, prop_amplitude: float, average_value: float
 ):
     """
     Factory function to get a trigonometric/sinusoidal function (using cosine) to represent seasonal forcing of
@@ -13,13 +13,16 @@ def get_seasonal_forcing(
         Time to complete an entire cycle of forcing
     :param shift: float
         Time at which the peak value will be reached
-    :param amplitude: float
-        Amplitude of the forcing function - HALF of the difference between peak and trough values
+    :param prop_amplitude: float
+        Amplitude of the forcing function relative to the average value
+        Note that the amplitude is HALF of the total variation in the function
     :param average_value: float
         Average value of the function, mid-way between peak and trough values
     :return:
         The seasonal forcing function
     """
+
+    amplitude = prop_amplitude * average_value
 
     def seasonal_forcing(time):
         return \
@@ -33,7 +36,7 @@ def get_seasonal_forcing(
 
 
 if __name__ == "__main__":
-    period, shift, amplitude, average = 365., 173., 0.02, 0.04
+    period, shift, amplitude, average = 365., 173., 0.5, 0.04
     x_values = numpy.linspace(0., period, 20)
     forcing_function = get_seasonal_forcing(period, shift, amplitude, average)
     for i in x_values:

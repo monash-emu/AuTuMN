@@ -249,6 +249,36 @@ def collect_iteration_weights(mcmc_tables: List[pd.DataFrame], burn_in=0):
     return weights
 
 
+def export_compartment_size(compartment_name, mcmc_tables, output_tables, derived_output_tables, weights, scenario='S_0'):
+    if "start_time" in mcmc_tables[0].columns:
+        # Find the earliest time that is common to all accepted runs (if start_time was varied).
+        max_start_time = 0
+        for mcmc_table_df in mcmc_tables:
+            mask = mcmc_table_df["accept"] == 1
+            _max_start_time = mcmc_table_df[mask]["start_time"].max()
+            if _max_start_time > max_start_time:
+                max_start_time = _max_start_time
+        t_min = round(max_start_time)
+    mask = output_tables[0]['Scenario'] == scenario
+    times = [t for t in output_tables[0][mask]['times'].unique() if t >= t_min]
+
+    compartment_values = {}
+    for i_time, time in enumerate(times):
+        output_list = []
+        for i_chain in range(len(mcmc_tables)):
+            for run_id, w in weights[i_chain].items():
+                mask = (
+                    (output_tables[i_chain].idx == run_id)
+                    & (output_tables[i_chain].times == time)
+                    & (output_tables[i_chain].Scenario == scenario)
+                )
+                output_val = float(output_tables[i_chain][compartment_name][mask])
+                output_list += [output_val] * w
+        compartment_values[str(time)] = output_list
+
+    return compartment_values
+
+
 def compute_mcmc_output_quantiles(
     mcmc_tables: List[pd.DataFrame],
     output_tables: List[pd.DataFrame],

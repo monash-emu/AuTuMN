@@ -171,7 +171,7 @@ time_step: 1
 
 # Base model definition
 contact_rate: 0.03 # Expected to be calibrated for each application
-seasonal_force: 0.
+seasonal_force: null
 icu_mortality_prop: 0.5
 
 # Compulsory parameter that is completely overwritten in stratification, rather than being modified

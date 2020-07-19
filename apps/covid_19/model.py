@@ -117,7 +117,7 @@ def build_model(params: dict) -> StratifiedModel:
     model_parameters = {**params, **compartment_exit_flow_rates}
     model_parameters["to_infectious"] = model_parameters["within_presympt"]
 
-    if model_parameters["seasonal_force"] > 0.:
+    if model_parameters["seasonal_force"]:
         time_variant_contact_rate = \
             get_seasonal_forcing(
                 365., 173., model_parameters["seasonal_force"], model_parameters["contact_rate"]

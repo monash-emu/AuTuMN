@@ -5,9 +5,12 @@ import os
 from autumn.db.database import Database
 from autumn.tool_kit.uncertainty import export_compartment_size, collect_iteration_weights, collect_all_mcmc_output_tables
 from numpy import random, mean, quantile
+import numpy as np
 
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
 from apps.covid_19.mixing_optimisation.utils import get_list_of_ifr_priors_from_pollan
+
+from autumn.curve import scale_up_function, tanh_based_scaleup
 
 import yaml
 
@@ -164,25 +167,112 @@ def plot_param_posteriors(param_values, param_info={}):
     plt.savefig("figures/param_posgteriors.png", dpi=300)
 
 
+def get_country_posterior_detection_percentiles(country_param_values):
+
+    calculated_times = range(213)
+    store_matrix = np.zeros((len(calculated_times), len(country_param_values['start_time'])))
+
+    for i in range(len(country_param_values['start_time'])):
+        if 'tv_detection_sigma' in country_param_values:
+            sigma = country_param_values['tv_detection_sigma'][i]
+        else:
+            sigma = 0.
+        my_func = tanh_based_scaleup(country_param_values['tv_detection_b'][i],
+                                     country_param_values['tv_detection_c'][i],
+                                     sigma)
+        detect_vals = [country_param_values['prop_detected_among_symptomatic'][i] * my_func(float(t)) for t in calculated_times]
+        store_matrix[:, i] = detect_vals
+
+    perc = np.percentile(store_matrix, [2.5, 25, 50, 75, 97.5], axis=1)
+    calculated_times = np.array([calculated_times])
+    perc = np.concatenate((calculated_times, perc))
+
+    return perc
+
+
+def get_all_posterior_detection_percentiles(param_values):
+    for country in OPTI_REGIONS:
+        print(country)
+        country_perc = get_country_posterior_detection_percentiles(param_values[country])
+        file_path_ = os.path.join('dumped_files', 'dumped_detection_percentiles_' + country + '.npy')
+        with open(file_path_, "wb") as f:
+            np.save(f, country_perc)
+
+
+def plot_detection_posteriors():
+
+    # load percentiles previously dumped
+    percentiles = {}
+
+    x_ticks = [32, 61, 92, 122, 153, 183]
+    x_ticks_labels = ["Feb 1", "Mar 1", "Apr 1", "May 1", "Jun 1", "Jul 1"]
+
+    for country in OPTI_REGIONS:
+        file_path_ = os.path.join('dumped_files', 'dumped_detection_percentiles_' + country + '.npy')
+        with open(file_path_, "rb") as f:
+            percentiles[country] = np.load(f)
+
+    n_panels = len(OPTI_REGIONS)
+
+    n_col = 3
+    n_row = int(n_panels // n_col)
+    if n_col * n_row < n_panels:
+        n_row += 1
+
+    fig, axs = plt.subplots(n_row, n_col, figsize=(11, 7))
+    plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.05, hspace=.3)
+    plt.style.use("ggplot")
+
+    i_col = -1
+    i_row = 0
+
+    for country in OPTI_REGIONS:
+        i_col += 1
+        if i_col >= n_col:
+            i_col = 0
+            i_row += 1
+
+        with plt.style.context('ggplot'):
+
+            times = percentiles[country][0, :]
+            median = percentiles[country][3, :]
+            low_95 = percentiles[country][1, :]
+            up_95 = percentiles[country][5, :]
+            low_50 = percentiles[country][2, :]
+            up_50 = percentiles[country][4, :]
+
+            axs[i_row, i_col].fill_between(times, low_95, up_95, facecolor="lightsteelblue")
+            axs[i_row, i_col].fill_between(times, low_50, up_50, facecolor="cornflowerblue")
+            axs[i_row, i_col].plot(times, median, color="navy")
+
+            axs[i_row, i_col].set_ylim((0., 1.))
+
+            c_title = country.title() if country != "united-kingdom" else "United Kingdom"
+
+            axs[i_row, i_col].set_title(c_title)
+            axs[i_row, i_col].set_xticks(x_ticks)
+            axs[i_row, i_col].set_xticklabels(x_ticks_labels)
+            axs[i_row, i_col].set_xlim((45, 212))
+
+            if i_col == 0:
+                axs[i_row, i_col].set_ylabel("proportion of symptomatic detected")
+            else:
+                axs[i_row, i_col].set_yticks([])
+
+    plt.savefig("figures/detection_posteriors.png")
+
+
 if __name__ == "__main__":
-    param_values = get_all_param_values('Revised-2020-07-18')
-
-    file_path = os.path.join('dumped_dict_param_posteriors.yml')
-    with open(file_path, "w") as f:
-        yaml.dump(param_values, f)
-
-    # # dummy data to get started
-    # param_values = {}
-    # for c in OPTI_REGIONS:
-    #     param_values[c] = {}
-    #     for i in range(23):
-    #         param_values[c][list(param_info.keys())[i]] = random.random(50)
+    # param_values = get_all_param_values('Revised-2020-07-18')
+    # file_path = os.path.join('dumped_files', 'dumped_dict_param_posteriors.yml')
+    # with open(file_path, "w") as f:
+    #     yaml.dump(param_values, f)
 
     # with open('dumped_dict_param_posteriors.yml', "r") as yaml_file:
     #     param_values = yaml.safe_load(yaml_file)
     #
-    # sweden_extra_par = get_param_values_by_country('sweden', )
-
+    # detection_percentiles = get_all_posterior_detection_percentiles(param_values)
 
     # plot_param_posteriors(param_values, param_info)
 
+    plot_detection_posteriors()

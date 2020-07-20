@@ -155,6 +155,7 @@ class Calibration:
 
         self.format_data_as_array()
         self.workout_unspecified_target_sds()  # for likelihood definition
+        self.workout_unspecified_time_weights()  # for likelihood weighting
         self.workout_unspecified_jumping_sds()  # for proposal function definition
 
         self.iter_num = 0
@@ -269,6 +270,7 @@ class Calibration:
             for target in self.targeted_outputs:
                 key = target["output_key"]
                 data = np.array(target["values"])
+                time_weigths = target["time_weights"]
                 if key in pp.generated_outputs:
                     model_output = np.array(pp.generated_outputs[key])
                 else:
@@ -280,7 +282,8 @@ class Calibration:
                     model_output = np.array([pp.derived_outputs[key][index] for index in indices])
 
                 if self.run_mode == CalibrationMode.LEAST_SQUARES:
-                    ll += np.sum((data - model_output) ** 2)
+                    squared_distance = (data - model_output) ** 2
+                    ll += np.sum([w * d for (w, d) in zip(time_weigths, squared_distance)])
                 else:
                     if "loglikelihood_distri" not in target:  # default distribution
                         target["loglikelihood_distri"] = "normal"
@@ -289,14 +292,15 @@ class Calibration:
                             normal_sd = params[self.param_list.index(key + "_dispersion_param")]
                         else:
                             normal_sd = target["sd"]
-                        ll += -(0.5 / normal_sd ** 2) * np.sum((data - model_output) ** 2)
+                        squared_distance = (data - model_output) ** 2
+                        ll += -(0.5 / normal_sd ** 2) * np.sum([w * d for (w, d) in zip(time_weigths, squared_distance)])
                     elif target["loglikelihood_distri"] == "poisson":
                         for i in range(len(data)):
                             ll += (
                                 round(data[i]) * math.log(abs(model_output[i]))
                                 - model_output[i]
                                 - math.log(math.factorial(round(data[i])))
-                            )
+                            ) * time_weigths[i]
                     elif target["loglikelihood_distri"] == "negative_binomial":
                         assert key + "_dispersion_param" in self.param_list
                         # the dispersion parameter varies during the MCMC. We need to retrieve its value
@@ -310,7 +314,7 @@ class Calibration:
                             mu = model_output[i]
                             # work out parameter p to match the distribution mean with the model output
                             p = mu / (mu + n)
-                            ll += stats.nbinom.logpmf(round(data[i]), n, 1.0 - p)
+                            ll += stats.nbinom.logpmf(round(data[i]), n, 1.0 - p) * time_weigths[i]
                     else:
                         raise ValueError("Distribution not supported in loglikelihood_distri")
 
@@ -373,6 +377,20 @@ class Calibration:
                     ) / 4.0
                 else:
                     self.targeted_outputs[i]["sd"] = 0.25 / 4.0 * max(target["values"])
+
+    def workout_unspecified_time_weights(self):
+        """
+        Will assign a weight to each time point of each calibration target. If no weights were requested, we will use
+        1/n for each time point, where n is the number of time points.
+        If a list of weights was specified, it will be rescaled so the weights sum to 1.
+        """
+        for i, target in enumerate(self.targeted_outputs):
+            if "time_weights" not in target.keys():
+                target["time_weights"] = [1.0 / len(target["years"])] * len(target["years"])
+            else:
+                assert isinstance(target["time_weights"], list) and len(target["time_weights"]) == len(target["years"])
+                s = sum(target["time_weights"])
+                target["time_weights"] = [w / s for w in target["time_weights"]]
 
     def workout_unspecified_jumping_sds(self):
         for i, prior_dict in enumerate(self.priors):

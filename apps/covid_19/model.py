@@ -8,6 +8,7 @@ from autumn.constants import Compartment, BirthApproach
 from autumn.tb_model import list_all_strata_for_mortality
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
 from autumn import inputs
+from autumn.environment.seasonality import get_seasonal_forcing
 
 from . import outputs, preprocess
 from .stratification import stratify_by_clinical
@@ -131,6 +132,19 @@ def build_model(params: dict) -> StratifiedModel:
     if dynamic_mixing_matrix:
         model.find_dynamic_mixing_matrix = dynamic_mixing_matrix
         model.dynamic_mixing_matrix = True
+
+    # Implement seasonal forcing if requested, making contact rate a time-variant rather than constant
+    if model_parameters["seasonal_force"]:
+        seasonal_forcing_function = \
+            get_seasonal_forcing(
+                365., 173., model_parameters["seasonal_force"], model_parameters["contact_rate"]
+            )
+        model.time_variants["contact_rate"] = \
+            seasonal_forcing_function
+        model.adaptation_functions["contact_rate"] = \
+            seasonal_forcing_function
+        model.parameters["contact_rate"] = \
+            "contact_rate"
 
     # Stratify model by age
     # Coerce age breakpoint numbers into strings - all strata are represented as strings

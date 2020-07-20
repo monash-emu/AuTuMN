@@ -84,9 +84,9 @@ def run_luigi_pipeline(conn: Connection, pipeline_name: str, pipeline_args: dict
     # start_luigi_scheduler(conn, instance)
     logger.info("Running Luigi pipleine %s", pipeline_name)
     pipeline_args_str = " ".join([f"--{k} {v}" for k, v in pipeline_args.items()])
-    cmd_str = f"./env/bin/python -m luigi --module tasks --local-scheduler --logging-conf-file tasks/luigi-logging.ini {pipeline_name} {pipeline_args_str}"
+    cmd_str = f"LUIGI_CONFIG_PATH=tasks/luigi.cfg ./env/bin/python -m luigi --module tasks --local-scheduler --logging-conf-file tasks/luigi-logging.ini {pipeline_name} {pipeline_args_str}"
     with conn.cd(CODE_PATH):
-        conn.run(cmd_str, echo=True, env={"LUIGI_CONFIG_PATH": "./tasks/luigi.cfg"})
+        conn.run(cmd_str, echo=True)
 
     logger.info("Finished running Luigi pipleine %s", pipeline_name)
     # upload_luigi_logs(conn, "calibrate", run_id)

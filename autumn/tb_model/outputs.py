@@ -2,10 +2,13 @@
 Post processing data.
 """
 import os
+from typing import List
 
 import numpy
 import pandas as pd
 import autumn.post_processing as post_proc
+
+from summer.compartment import Compartment
 import matplotlib.pyplot as plt
 
 from ..constants import Compartment
@@ -52,7 +55,7 @@ def create_request_stratified_notifications(requested_stratifications, strata_di
 
 
 def create_output_connections_for_incidence_by_stratum(
-    all_compartment_names, infectious_compartment_name=Compartment.EARLY_INFECTIOUS
+    compartments: List[Compartment], infectious_compartments: List[str]
 ):
     """
     Automatically create output connections for fully disaggregated incidence outputs
@@ -62,10 +65,11 @@ def create_output_connections_for_incidence_by_stratum(
     :return: a dictionary containing incidence output connections
     """
     out_connections = {}
-    for compartment in all_compartment_names:
-        if infectious_compartment_name in compartment:
+    for compartment in compartments:
+        if compartment.has_name_in_list(infectious_compartments):
             stratum = compartment.split(infectious_compartment_name)[1]
             for stage in ["early", "late"]:
+
                 out_connections["incidence_" + stage + stratum] = {
                     "origin": stage + "_latent",
                     "to": infectious_compartment_name,

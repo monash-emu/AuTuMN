@@ -218,7 +218,8 @@ def run_aws_script(cmd: str, args: dict) -> str:
 
 
 def get_run_url(run_id: str):
-    return f"http://autumn-data.s3-website-ap-southeast-2.amazonaws.com/{run_id}"
+    model_name, _, _ = read_run_id(run_id)
+    return f"http://www.autumn-data.com/model/{model_name}/run/{run_id}.html"
 
 
 def read_run_id(run_id: str):

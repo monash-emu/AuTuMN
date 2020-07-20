@@ -26,6 +26,7 @@ pyDOE>=0.3.8
 
 # Testing
 pytest
+pytest-parallel
 black
 
 # Cloud computing jobs

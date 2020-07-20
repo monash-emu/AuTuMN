@@ -3,13 +3,13 @@ End-to-end tests for the StratifiedModel - a disease agnostic compartmental mode
 """
 import pytest
 import numpy as np
+from numpy.testing import assert_allclose
 
 from summer.model import StratifiedModel
 from summer.constants import (
     Compartment,
     Flow,
     BirthApproach,
-    Stratification,
     IntegrationType,
 )
 
@@ -22,33 +22,34 @@ def test_strat_model__with_age__expect_ageing():
     pop = 1000
     model = StratifiedModel(
         times=_get_integration_times(2000, 2005, 1),
-        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.EARLY_INFECTIOUS],
-        initial_conditions={Compartment.SUSCEPTIBLE: pop},
+        compartment_names=["S", "I"],
+        initial_conditions={"S": pop},
         parameters={},
         requested_flows=[],
         starting_population=pop,
+        infectious_compartments=["I"],
+        birth_approach=BirthApproach.NO_BIRTH,
+        entry_compartment="S",
     )
     # Add basic age stratification
-    model.stratify(
-        Stratification.AGE,
-        strata_request=[0, 5, 15, 60],
-        compartment_types_to_stratify=[],
-        requested_proportions={},
-    )
+    model.stratify("age", strata_request=[0, 5, 15, 60], compartments_to_stratify=["S", "I"])
+
     # Run the model for 5 years.
     model.run_model(integration_type=IntegrationType.ODE_INT)
 
     # Expect everyone to generally get older, but no one should die or get sick
-    expected_output = [
-        [250.0, 250.0, 250.0, 250.0, 0.0, 0.0, 0.0, 0.0],
-        [205.0, 269.0, 270.0, 256.0, 0.0, 0.0, 0.0, 0.0],
-        [168.0, 279.0, 291.0, 262.0, 0.0, 0.0, 0.0, 0.0],
-        [137.0, 281.0, 313.0, 269.0, 0.0, 0.0, 0.0, 0.0],
-        [112.0, 278.0, 334.0, 276.0, 0.0, 0.0, 0.0, 0.0],
-        [92.0, 271.0, 354.0, 284.0, 0.0, 0.0, 0.0, 0.0],
-    ]
-    actual_output = np.round(model.outputs)
-    assert (actual_output == np.array(expected_output)).all()
+    expected_arr = np.array(
+        [
+            [250.0, 250.0, 250.0, 250.0, 0.0, 0.0, 0.0, 0.0],
+            [204.8, 269.1, 270.3, 255.8, 0.0, 0.0, 0.0, 0.0],
+            [167.7, 278.8, 291.5, 262.0, 0.0, 0.0, 0.0, 0.0],
+            [137.3, 281.2, 312.8, 268.7, 0.0, 0.0, 0.0, 0.0],
+            [112.5, 277.9, 333.7, 275.9, 0.0, 0.0, 0.0, 0.0],
+            [92.1, 270.8, 353.5, 283.6, 0.0, 0.0, 0.0, 0.0],
+        ]
+    )
+
+    assert_allclose(model.outputs, expected_arr, atol=0.1, verbose=True)
 
 
 def test_strat_model__with_age_and_starting_proportion__expect_ageing():
@@ -59,34 +60,38 @@ def test_strat_model__with_age_and_starting_proportion__expect_ageing():
     pop = 1000
     model = StratifiedModel(
         times=_get_integration_times(2000, 2005, 1),
-        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.EARLY_INFECTIOUS],
-        initial_conditions={Compartment.SUSCEPTIBLE: pop},
+        compartment_names=["S", "I"],
+        initial_conditions={"S": pop},
         parameters={},
         requested_flows=[],
         starting_population=pop,
+        infectious_compartments=["I"],
+        birth_approach=BirthApproach.NO_BIRTH,
+        entry_compartment="S",
     )
     # Add basic age stratification
     model.stratify(
-        Stratification.AGE,
+        "age",
         strata_request=[0, 5, 15, 60],
-        compartment_types_to_stratify=[],
-        requested_proportions={"0": 0.8, "5": 0.1, "15": 0.1},
+        compartments_to_stratify=["S", "I"],
+        comp_split_props={"0": 0.8, "5": 0.1, "15": 0.1},
     )
     # Run the model for 5 years.
     model.run_model(integration_type=IntegrationType.ODE_INT)
 
     # Expect everyone to generally get older, but no one should die or get sick.
     # Expect initial distribution of ages to be set according to "requested_proportions".
-    expected_output = [
-        [800.0, 100.0, 100.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        [655.0, 228.0, 114.0, 2.0, 0.0, 0.0, 0.0, 0.0],
-        [536.0, 319.0, 139.0, 5.0, 0.0, 0.0, 0.0, 0.0],
-        [439.0, 381.0, 171.0, 9.0, 0.0, 0.0, 0.0, 0.0],
-        [360.0, 421.0, 207.0, 13.0, 0.0, 0.0, 0.0, 0.0],
-        [294.0, 442.0, 245.0, 18.0, 0.0, 0.0, 0.0, 0.0],
-    ]
-    actual_output = np.round(model.outputs)
-    assert (actual_output == np.array(expected_output)).all()
+    expected_arr = np.array(
+        [
+            [800.0, 100.0, 100.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            [655.0, 228.3, 114.4, 2.4, 0.0, 0.0, 0.0, 0.0],
+            [536.3, 319.3, 139.3, 5.2, 0.0, 0.0, 0.0, 0.0],
+            [439.1, 381.3, 171.1, 8.6, 0.0, 0.0, 0.0, 0.0],
+            [359.5, 420.5, 207.2, 12.8, 0.0, 0.0, 0.0, 0.0],
+            [294.4, 442.4, 245.4, 17.8, 0.0, 0.0, 0.0, 0.0],
+        ]
+    )
+    assert_allclose(model.outputs, expected_arr, atol=0.1, verbose=True)
 
 
 def test_strat_model__with_locations__expect_no_change():
@@ -96,88 +101,37 @@ def test_strat_model__with_locations__expect_no_change():
     pop = 1000
     model = StratifiedModel(
         times=_get_integration_times(2000, 2005, 1),
-        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.EARLY_INFECTIOUS],
-        initial_conditions={Compartment.SUSCEPTIBLE: pop},
+        compartment_names=["S", "I"],
+        initial_conditions={"S": pop},
         parameters={},
         requested_flows=[],
         starting_population=pop,
+        infectious_compartments=["I"],
+        birth_approach=BirthApproach.NO_BIRTH,
+        entry_compartment="S",
     )
     # Add basic location stratification
     model.stratify(
-        Stratification.LOCATION,
+        "location",
         strata_request=["rural", "urban", "prison"],
-        compartment_types_to_stratify=[],
-        requested_proportions={"rural": 0.44, "urban": 0.55, "prison": 0.01},
+        compartments_to_stratify=["S", "I"],
+        comp_split_props={"rural": 0.44, "urban": 0.55, "prison": 0.01},
     )
     # Run the model for 5 years.
     model.run_model(integration_type=IntegrationType.ODE_INT)
 
     # Expect everyone to start in their locations, then nothing should change,
-    expected_output = [
-        [440.0, 550.0, 10.0, 0.0, 0.0, 0.0],
-        [440.0, 550.0, 10.0, 0.0, 0.0, 0.0],
-        [440.0, 550.0, 10.0, 0.0, 0.0, 0.0],
-        [440.0, 550.0, 10.0, 0.0, 0.0, 0.0],
-        [440.0, 550.0, 10.0, 0.0, 0.0, 0.0],
-        [440.0, 550.0, 10.0, 0.0, 0.0, 0.0],
-    ]
-    actual_output = np.round(model.outputs)
-    assert (actual_output == np.array(expected_output)).all()
-
-
-@pytest.mark.xfail(reason="values too brittle")
-def test_strat_model__with_locations_and_mixing__expect_varied_transmission():
-    """
-    Ensure that location-based mixing works.
-    Expect urbanites to be highly infectious t other locations, but not the reverse.
-    """
-    pop = 1000
-    model = StratifiedModel(
-        times=_get_integration_times(2000, 2005, 1),
-        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.EARLY_INFECTIOUS],
-        initial_conditions={Compartment.EARLY_INFECTIOUS: 100},
-        parameters={"contact_rate": 3},
-        requested_flows=[
-            {
-                "type": Flow.INFECTION_FREQUENCY,
-                "parameter": "contact_rate",
-                "origin": Compartment.SUSCEPTIBLE,
-                "to": Compartment.EARLY_INFECTIOUS,
-            }
-        ],
-        starting_population=pop,
+    expected_arr = np.array(
+        [
+            [440.0, 550.0, 10.0, 0.0, 0.0, 0.0],
+            [440.0, 550.0, 10.0, 0.0, 0.0, 0.0],
+            [440.0, 550.0, 10.0, 0.0, 0.0, 0.0],
+            [440.0, 550.0, 10.0, 0.0, 0.0, 0.0],
+            [440.0, 550.0, 10.0, 0.0, 0.0, 0.0],
+            [440.0, 550.0, 10.0, 0.0, 0.0, 0.0],
+        ]
     )
-    # Add basic location stratification
-    model.stratify(
-        Stratification.LOCATION,
-        strata_request=["rural", "urban", "prison"],
-        compartment_types_to_stratify=[],
-        requested_proportions={},
-        mixing_matrix=np.array(
-            [
-                # Rural people catch disease from urbanites
-                [0.0, 1.0, 0.0],
-                # Urbanites cannot catch disease from anyone
-                [0.0, 0.0, 0.0],
-                # Prisoners catch disease from urbanites
-                [0.0, 1.0, 0.0],
-            ]
-        ),
-    )
-    # Run the model for 5 years.
-    model.run_model(integration_type=IntegrationType.ODE_INT)
-
-    # Expect everyone to generally get older, but no one should die or get sick
-    expected_output = [
-        [300.0, 300.0, 300.0, 33.0, 33.0, 33.0],
-        [271.0, 300.0, 271.0, 62.0, 33.0, 62.0],
-        [246.0, 300.0, 246.0, 88.0, 33.0, 88.0],
-        [222.0, 300.0, 222.0, 111.0, 33.0, 111.0],
-        [201.0, 300.0, 201.0, 132.0, 33.0, 132.0],
-        [182.0, 300.0, 182.0, 151.0, 33.0, 151.0],
-    ]
-    actual_output = np.round(model.outputs)
-    assert (actual_output == np.array(expected_output)).all()
+    assert_allclose(model.outputs, expected_arr, atol=0.1, verbose=True)
 
 
 def _get_integration_times(start_year: int, end_year: int, time_step: int):
@@ -185,4 +139,4 @@ def _get_integration_times(start_year: int, end_year: int, time_step: int):
     Get a list of timesteps from start_year to end_year, spaced by time_step.
     """
     n_iter = int(round((end_year - start_year) / time_step)) + 1
-    return np.linspace(start_year, end_year, n_iter).tolist()
+    return np.linspace(start_year, end_year, n_iter)

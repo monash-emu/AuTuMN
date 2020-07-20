@@ -279,7 +279,9 @@ class Calibration:
                 else:
                     indices = []
                     for year in target["years"]:
-                        time_idx = scenario.model.times.index(year - time_shift)
+                        shifted_time = year - time_shift
+                        time_idxs = np.where(scenario.model.times == shifted_time)[0]
+                        time_idx = time_idxs[0]
                         indices.append(time_idx)
 
                     model_output = np.array([pp.derived_outputs[key][index] for index in indices])
@@ -296,7 +298,9 @@ class Calibration:
                         else:
                             normal_sd = target["sd"]
                         squared_distance = (data - model_output) ** 2
-                        ll += -(0.5 / normal_sd ** 2) * np.sum([w * d for (w, d) in zip(time_weigths, squared_distance)])
+                        ll += -(0.5 / normal_sd ** 2) * np.sum(
+                            [w * d for (w, d) in zip(time_weigths, squared_distance)]
+                        )
                     elif target["loglikelihood_distri"] == "poisson":
                         for i in range(len(data)):
                             ll += (
@@ -391,7 +395,9 @@ class Calibration:
             if "time_weights" not in target.keys():
                 target["time_weights"] = [1.0 / len(target["years"])] * len(target["years"])
             else:
-                assert isinstance(target["time_weights"], list) and len(target["time_weights"]) == len(target["years"])
+                assert isinstance(target["time_weights"], list) and len(
+                    target["time_weights"]
+                ) == len(target["years"])
                 s = sum(target["time_weights"])
                 target["time_weights"] = [w / s for w in target["time_weights"]]
 

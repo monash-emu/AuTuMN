@@ -2,6 +2,7 @@ from copy import deepcopy
 
 import pytest
 from summer.model import StratifiedModel
+from summer.constants import Flow, IntegrationType
 
 from apps import mongolia, covid_19, marshall_islands
 from autumn.tool_kit.utils import merge_dicts
@@ -16,8 +17,8 @@ def test_run_models_partial(region):
     """
     region_app = covid_19.get_region_app(region)
     ps = deepcopy(region_app.params["default"])
-    # Only run model for ~2 epochs.
-    ps["end_time"] = ps["start_time"] + 2
+    # Only run model for ~10 epochs.
+    ps["end_time"] = ps["start_time"] + 10
     model = region_app.build_model(ps)
     model.run_model()
 
@@ -29,7 +30,7 @@ def test_build_scenario_models(region):
     Smoke test: ensure we can build the each model with nothing crashing.
     """
     region_app = covid_19.get_region_app(region)
-    for scenario_params in region_app.params["scenarios"].values():
+    for idx, scenario_params in enumerate(region_app.params["scenarios"].values()):
         default_params = deepcopy(region_app.params["default"])
         params = merge_dicts(scenario_params, default_params)
         params = {**params, "start_time": region_app.params["scenario_start_time"]}

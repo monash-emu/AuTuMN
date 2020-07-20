@@ -145,7 +145,7 @@ We often need to run long, computationally expensive jobs. We are currently usin
 - Full model runs: Running all scenarios for all accepted MCMC parameter sets
 - PowerBI processing: Post-processing of full model runs for display in PowerBI
 
-All outputs, logs and plots for all model runs are stored in AWS S3, and they are publicly available at [this website](http://autumn-data.s3-website-ap-southeast-2.amazonaws.com). Application _should_ be uploaded if the app crashes midway.
+All outputs, logs and plots for all model runs are stored in AWS S3, and they are publicly available at [this website](http://www.autumn-data.com). Application _should_ be uploaded if the app crashes midway.
 
 Each job is run on its own server, which is transient: it will be created for the job and will be destroyed at the end.
 

@@ -3,7 +3,9 @@ Ensure that the EpiModel model produces the correct flow rates and outputs when 
 """
 import pytest
 
-from summer.model import EpiModel
+import numpy as np
+
+from summer.model import EpiModel, StratifiedModel
 from summer.constants import (
     Compartment,
     Flow,
@@ -13,53 +15,95 @@ from summer.constants import (
 )
 
 MODEL_KWARGS = {
-    "times": [2000, 2001, 2002, 2003, 2004, 2005],
-    "compartment_types": [Compartment.SUSCEPTIBLE, Compartment.EARLY_INFECTIOUS],
+    "times": np.array([0.0, 1, 2, 3, 4, 5]),
+    "compartment_names": [Compartment.SUSCEPTIBLE, Compartment.EARLY_INFECTIOUS],
     "initial_conditions": {Compartment.EARLY_INFECTIOUS: 10},
     "parameters": {},
     "requested_flows": [],
     "starting_population": 1000,
+    "infectious_compartments": [Compartment.EARLY_INFECTIOUS],
+    "birth_approach": BirthApproach.NO_BIRTH,
+    "entry_compartment": Compartment.SUSCEPTIBLE,
 }
 
 
-PARAM_VARS = "flows,params,flow_rates,expected_new_rates"
-PARAM_VALS = [
-    # No transition flows implemented, expect no flows.
-    [[], {}, [1, 2], [1, 2]],
-    # Add standard flow where 30% of infected people recover back to susceptible.
-    [
-        [
+@pytest.mark.parametrize("ModelClass", [EpiModel, StratifiedModel])
+def test_apply_flows__with_no_flows(ModelClass):
+    """
+    Expect no flow to occur because there are no flows.
+    """
+
+    model_kwargs = {
+        **MODEL_KWARGS,
+        "parameters": {},
+        "requested_flows": [],
+    }
+    model = ModelClass(**model_kwargs)
+    model.prepare_to_run()
+    model.update_tracked_quantities(model.compartment_values)
+    flow_rates = np.array([1, 2], dtype=np.float)
+    new_rates = model.apply_transition_flows(flow_rates, model.compartment_values, 0)
+    new_rates = model.apply_exit_flows(new_rates, model.compartment_values, 0)
+    new_rates = model.apply_entry_flows(new_rates, model.compartment_values, 0)
+    assert (new_rates == np.array([1, 2], dtype=np.float)).all()
+
+
+@pytest.mark.parametrize(
+    "inf_pop, sus_pop, exp_flow", [(10, 990, 99), (500, 500, 50), (0, 1000, 100), (1000, 0, 0)]
+)
+@pytest.mark.parametrize("ModelClass", [EpiModel, StratifiedModel])
+def test_apply_flows__with_standard_flow__expect_flows_applied(
+    ModelClass, inf_pop, sus_pop, exp_flow
+):
+    """
+    Expect a flow to occur proportional to the compartment size and parameter.
+    """
+    model_kwargs = {
+        **MODEL_KWARGS,
+        "parameters": {"a_param": 0.1},
+        "initial_conditions": {
+            Compartment.EARLY_INFECTIOUS: inf_pop,
+            Compartment.SUSCEPTIBLE: sus_pop,
+        },
+        "requested_flows": [
             {
                 "type": Flow.STANDARD,
-                "parameter": "recover_rate",
-                "origin": Compartment.EARLY_INFECTIOUS,
-                "to": Compartment.SUSCEPTIBLE,
+                "parameter": "a_param",
+                "origin": Compartment.SUSCEPTIBLE,
+                "to": Compartment.EARLY_INFECTIOUS,
             }
         ],
-        {"recover_rate": 0.3},
-        [1, 2],
-        [4, -1],
-    ],
-    # Add a flow with a custom flow func
-    [
-        [
-            {
-                "type": Flow.CUSTOM,
-                "parameter": "recover_rate",
-                "origin": Compartment.EARLY_INFECTIOUS,
-                "to": Compartment.SUSCEPTIBLE,
-                # Add a function that halves the rate, but uses total population.
-                "function": lambda model, flow_idx, time, compartments: 0.5 * sum(compartments),
-            }
-        ],
-        {"recover_rate": 0.3},
-        [1, 2],
-        [151, -148],
-    ],
-    # Use infection frequency, expect infection multiplier to be proportional
-    # to the proprotion of infectious to total pop.
-    [
-        [
+    }
+    model = ModelClass(**model_kwargs)
+    model.prepare_to_run()
+    model.update_tracked_quantities(model.compartment_values)
+    flow_rates = np.array([1, 2], dtype=np.float)
+
+    new_rates = model.apply_transition_flows(flow_rates, model.compartment_values, 0)
+    new_rates = model.apply_exit_flows(new_rates, model.compartment_values, 0)
+    new_rates = model.apply_entry_flows(new_rates, model.compartment_values, 0)
+
+    # Expect sus_pop * 0.1 = exp_flow
+    assert new_rates.tolist() == [1 - exp_flow, 2 + exp_flow]
+
+
+@pytest.mark.parametrize(
+    "inf_pop, sus_pop, exp_flow", [(10, 990, 198), (500, 500, 5000), (0, 1000, 0), (1000, 0, 0)]
+)
+@pytest.mark.parametrize("ModelClass", [EpiModel, StratifiedModel])
+def test_apply_flows__with_infection_frequency(ModelClass, inf_pop, sus_pop, exp_flow):
+    """
+    Use infection frequency, expect infection multiplier to be proportional
+    to the proprotion of infectious to total pop.
+    """
+    model_kwargs = {
+        **MODEL_KWARGS,
+        "parameters": {"contact_rate": 20},
+        "initial_conditions": {
+            Compartment.EARLY_INFECTIOUS: inf_pop,
+            Compartment.SUSCEPTIBLE: sus_pop,
+        },
+        "requested_flows": [
             {
                 "type": Flow.INFECTION_FREQUENCY,
                 "parameter": "contact_rate",
@@ -67,14 +111,34 @@ PARAM_VALS = [
                 "to": Compartment.EARLY_INFECTIOUS,
             }
         ],
-        {"contact_rate": 10},
-        [1, 2],
-        [-98, 101],
-    ],
-    # Use infection density, expect infection multiplier to be proportional
-    # to the infectious pop.
-    [
-        [
+    }
+    model = ModelClass(**model_kwargs)
+    model.prepare_to_run()
+    model.update_tracked_quantities(model.compartment_values)
+    flow_rates = np.array([1, 2], dtype=np.float)
+
+    new_rates = model.apply_transition_flows(flow_rates, model.compartment_values, 0)
+    new_rates = model.apply_exit_flows(new_rates, model.compartment_values, 0)
+    new_rates = model.apply_entry_flows(new_rates, model.compartment_values, 0)
+
+    # Expect sus_pop * 20 * (inf_pop / 1000) = exp_flow
+    assert new_rates.tolist() == [1 - exp_flow, 2 + exp_flow]
+
+
+@pytest.mark.parametrize(
+    "inf_pop, sus_pop, exp_flow", [(10, 990, 198), (500, 500, 5000), (0, 1000, 0), (1000, 0, 0)]
+)
+@pytest.mark.parametrize("ModelClass", [EpiModel, StratifiedModel])
+def test_apply_flows__with_infection_density(ModelClass, inf_pop, sus_pop, exp_flow):
+    """
+    Use infection density, expect infection multiplier to be proportional
+    to the infectious pop.
+    """
+    model_kwargs = {
+        **MODEL_KWARGS,
+        "parameters": {"contact_rate": 0.02},
+        "initial_conditions": {Compartment.EARLY_INFECTIOUS: inf_pop},
+        "requested_flows": [
             {
                 "type": Flow.INFECTION_DENSITY,
                 "parameter": "contact_rate",
@@ -82,148 +146,101 @@ PARAM_VALS = [
                 "to": Compartment.EARLY_INFECTIOUS,
             }
         ],
-        {"contact_rate": 0.01},
-        [1, 2],
-        [-98, 101],
-    ],
-]
-
-
-@pytest.mark.parametrize(PARAM_VARS, PARAM_VALS)
-def test_apply_transition_flows(flows, params, flow_rates, expected_new_rates):
-    """
-    Ensure user-specified compartment transition flows are applied correctly.
-    """
-    model_kwargs = {
-        **MODEL_KWARGS,
-        "parameters": params,
-        "requested_flows": flows,
     }
-    model = EpiModel(**model_kwargs)
+    model = ModelClass(**model_kwargs)
     model.prepare_to_run()
     model.update_tracked_quantities(model.compartment_values)
-    new_rates = model.apply_transition_flows(flow_rates, model.compartment_values, 2000)
-    assert new_rates == expected_new_rates
+    flow_rates = np.array([1, 2], dtype=np.float)
+
+    new_rates = model.apply_transition_flows(flow_rates, model.compartment_values, 0)
+    new_rates = model.apply_exit_flows(new_rates, model.compartment_values, 0)
+    new_rates = model.apply_entry_flows(new_rates, model.compartment_values, 0)
+
+    # Expect 0.2 * sus_pop * inf_pop = exp_flow
+    assert new_rates.tolist() == [1 - exp_flow, 2 + exp_flow]
 
 
-PARAM_VARS = "flows,params,flow_rates,expected_new_rates,expect_deaths"
-PARAM_VALS = [
-    # No death flows implemented, expect no deaths.
-    [[], {}, [1, 2], [1, 2], 0,],
-    # Add flow where 50% of infectious people die.
-    [
-        [
+@pytest.mark.parametrize("inf_pop, exp_flow", [(1000, 100), (990, 99), (50, 5), (0, 0)])
+@pytest.mark.parametrize("ModelClass", [EpiModel, StratifiedModel])
+def test_apply_infect_death_flows(ModelClass, inf_pop, exp_flow):
+    model_kwargs = {
+        **MODEL_KWARGS,
+        "parameters": {"infect_death": 0.1},
+        "initial_conditions": {Compartment.EARLY_INFECTIOUS: inf_pop},
+        "requested_flows": [
             {
-                "type": Flow.COMPARTMENT_DEATH,
+                "type": Flow.DEATH,
                 "parameter": "infect_death",
                 "origin": Compartment.EARLY_INFECTIOUS,
             }
         ],
-        {"infect_death": 0.5},
-        [1, 2],
-        [1, -3],
-        5,
-    ],
-    # Add flow where 20% of susceptible people die.
-    [
-        [
-            {
-                "type": Flow.COMPARTMENT_DEATH,
-                "parameter": "sus_death",
-                "origin": Compartment.SUSCEPTIBLE,
-            }
-        ],
-        {"sus_death": 0.2},
-        [1, 2],
-        [-197, 2],
-        198,
-    ],
-]
+    }
+    model = ModelClass(**model_kwargs)
+    model.prepare_to_run()
+    model.update_tracked_quantities(model.compartment_values)
+    flow_rates = np.array([1, 2], dtype=np.float)
+
+    new_rates = model.apply_transition_flows(flow_rates, model.compartment_values, 0)
+    new_rates = model.apply_exit_flows(new_rates, model.compartment_values, 0)
+    new_rates = model.apply_entry_flows(new_rates, model.compartment_values, 0)
+
+    # Expect 0.1 * inf_pop = exp_flow
+    assert new_rates.tolist() == [1, 2 - exp_flow]
+    assert model.total_deaths == exp_flow
 
 
-@pytest.mark.parametrize(PARAM_VARS, PARAM_VALS)
-def test_apply_compartment_death_flows(
-    flows, params, flow_rates, expected_new_rates, expect_deaths
-):
-    """
-    Ensure user-specified compartment death flows are applied correctly.
-    """
+@pytest.mark.parametrize("ModelClass", [EpiModel, StratifiedModel])
+def test_apply_univeral_death_flow(ModelClass):
     model_kwargs = {
         **MODEL_KWARGS,
-        "birth_approach": BirthApproach.REPLACE_DEATHS,
-        "parameters": params,
-        "requested_flows": flows,
+        "parameters": {"universal_death_rate": 0.1},
+        "requested_flows": [],
     }
-    model = EpiModel(**model_kwargs)
+    model = ModelClass(**model_kwargs)
     model.prepare_to_run()
-    new_rates = model.apply_compartment_death_flows(flow_rates, model.compartment_values, 2000)
-    assert new_rates == expected_new_rates
-    assert model.tracked_quantities["total_deaths"] == expect_deaths
+    model.update_tracked_quantities(model.compartment_values)
+    assert model.compartment_values.tolist() == [990, 10]
+    flow_rates = np.array([1, 2], dtype=np.float)
+    new_rates = model.apply_exit_flows(flow_rates, model.compartment_values, 0)
+    assert new_rates.tolist() == [-98, 1]
+    assert model.total_deaths == 100
 
 
-PARAM_VARS = "death_rate,flow_rates,expected_new_rates,expect_deaths"
-PARAM_VALS = [
-    # Positive death rate, expect deaths in all compartments.
-    [0.02, [1, 2], [-18.8, 1.8], 20],
-    # Zero death rate, expect no deaths.
-    [0, [1, 2], [1, 2], 0],
-]
-
-
-@pytest.mark.parametrize(PARAM_VARS, PARAM_VALS)
-def test_epi_model_apply_universal_death_flow(
-    death_rate, flow_rates, expected_new_rates, expect_deaths
-):
-    """
-    Ensure EpiModel apply universal death rates to kill all compartments in proportion to death rate.
-    """
+@pytest.mark.parametrize("ModelClass", [EpiModel, StratifiedModel])
+def test_apply_univeral_death_flow__with_no_death_rate(ModelClass):
     model_kwargs = {
         **MODEL_KWARGS,
-        "birth_approach": BirthApproach.REPLACE_DEATHS,
-        "parameters": {"universal_death_rate": death_rate,},
+        "parameters": {"universal_death_rate": 0},
+        "requested_flows": [],
     }
-    model = EpiModel(**model_kwargs)
+    model = ModelClass(**model_kwargs)
     model.prepare_to_run()
-    new_rates = model.apply_universal_death_flow(flow_rates, model.compartment_values, 2000)
-    assert new_rates == expected_new_rates
-    assert model.tracked_quantities["total_deaths"] == expect_deaths
+    model.update_tracked_quantities(model.compartment_values)
+    assert model.compartment_values.tolist() == [990, 10]
+    flow_rates = np.array([1, 2], dtype=np.float)
+    new_rates = model.apply_exit_flows(flow_rates, model.compartment_values, 0)
+    assert new_rates.tolist() == [1, 2]
+    assert model.total_deaths == 0
 
 
-def test_epi_model_apply_change_rates():
-    """
-    Ensure EpiModel apply change rates makes no change to compartment flows.
-    """
-    model = EpiModel(**MODEL_KWARGS)
-    model.prepare_to_run()
-    flow_rates = [1, 2]
-    new_rates = model.apply_change_rates(flow_rates, model.compartment_values, 2000)
-    assert new_rates == flow_rates
-
-
-def test_epi_model_apply_birth_rate__with_no_birth_approach__expect_no_births():
+@pytest.mark.parametrize("ModelClass", [EpiModel, StratifiedModel])
+def test_epi_model_apply_birth_rate__with_no_birth_approach__expect_no_births(ModelClass):
     """
     Expect no births when a no birth approach is used.
     """
     model_kwargs = {**MODEL_KWARGS, "birth_approach": BirthApproach.NO_BIRTH}
-    model = EpiModel(**model_kwargs)
+    model = ModelClass(**model_kwargs)
     model.prepare_to_run()
-    flow_rates = [1, 2]
-    new_rates = model.apply_birth_rate(flow_rates, model.compartment_values, 2000)
-    assert new_rates == flow_rates
+    model.update_tracked_quantities(model.compartment_values)
+    flow_rates = np.array([1, 2], dtype=np.float)
+    new_rates = model.apply_entry_flows(flow_rates, model.compartment_values, 0)
+    assert new_rates.tolist() == [1, 2]
 
 
-PARAM_VARS = "birth_rate,flow_rates,expected_new_rates"
-PARAM_VALS = [
-    # Positive birth rate, expect births in entry compartment.
-    [0.0035, [1, 2], [4.5, 2]],
-    # Zero birth rate, expect no births.
-    [0, [1, 2], [1, 2]],
-]
-
-
-@pytest.mark.parametrize(PARAM_VARS, PARAM_VALS)
+@pytest.mark.parametrize("birth_rate, exp_flow", [[0.0035, 3.5], [0, 0]])
+@pytest.mark.parametrize("ModelClass", [EpiModel, StratifiedModel])
 def test_epi_model_apply_birth_rate__with_crude_birth_rate__expect_births(
-    birth_rate, flow_rates, expected_new_rates
+    ModelClass, birth_rate, exp_flow
 ):
     """
     Expect births proportional to the total population and birth rate when
@@ -237,29 +254,21 @@ def test_epi_model_apply_birth_rate__with_crude_birth_rate__expect_births(
     }
     model = EpiModel(**model_kwargs)
     model.prepare_to_run()
-    new_rates = model.apply_birth_rate(flow_rates, model.compartment_values, 2000)
-    assert new_rates == expected_new_rates
+    flow_rates = np.array([1, 2], dtype=np.float)
+    new_rates = model.apply_entry_flows(flow_rates, model.compartment_values, 0)
+    assert new_rates.tolist() == [1 + exp_flow, 2]
 
 
-PARAM_VARS = "total_deaths,flow_rates,expected_new_rates"
-PARAM_VALS = [
-    # Some deaths, expect proportional births in entry compartment,
-    [4, [1, 2], [5, 2]],
-    # No deaths, expect no births.
-    [0, [1, 2], [1, 2]],
-]
-
-
-@pytest.mark.parametrize(PARAM_VARS, PARAM_VALS)
-def test_epi_model_apply_birth_rate__with_replace_deaths__expect_births(
-    total_deaths, flow_rates, expected_new_rates
-):
+@pytest.mark.parametrize("total_deaths", [1, 123, 0])
+@pytest.mark.parametrize("ModelClass", [EpiModel, StratifiedModel])
+def test_epi_model_apply_birth_rate__with_replace_deaths__expect_births(ModelClass, total_deaths):
     """
     Expect births proportional to the tracked deaths when birth approach is "replace deaths".
     """
     model_kwargs = {**MODEL_KWARGS, "birth_approach": BirthApproach.REPLACE_DEATHS}
     model = EpiModel(**model_kwargs)
     model.prepare_to_run()
-    model.tracked_quantities["total_deaths"] = total_deaths
-    new_rates = model.apply_birth_rate(flow_rates, model.compartment_values, 2000)
-    assert new_rates == expected_new_rates
+    model.total_deaths = total_deaths
+    flow_rates = np.array([1, 2], dtype=np.float)
+    new_rates = model.apply_entry_flows(flow_rates, model.compartment_values, 0)
+    assert new_rates.tolist() == [1 + total_deaths, 2]

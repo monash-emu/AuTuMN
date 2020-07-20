@@ -142,7 +142,7 @@ def sample_outputs_for_calibration_fit(
     assert len(mcmc_tables) == len(derived_output_tables)
     # For each chain grab 20 / top 100 accepted runs at random
     chosen_runs = []
-    best_ll = -1.e16
+    best_ll = -1.0e16
     best_run = None
     best_chain_index = None
     for i, mcmc_table in enumerate(mcmc_tables):
@@ -155,7 +155,7 @@ def sample_outputs_for_calibration_fit(
 
         this_chain_best_run, this_chain_best_ll = [
             np.argmax(mcmc_table.loglikelihood.tolist()),
-            np.max(mcmc_table.loglikelihood.tolist())
+            np.max(mcmc_table.loglikelihood.tolist()),
         ]
         if this_chain_best_ll > best_ll:
             best_ll = this_chain_best_ll
@@ -184,19 +184,24 @@ def sample_outputs_for_calibration_fit(
 
 
 def plot_calibration_fit(
-    plotter: Plotter, output_name: str, outputs: list, best_chain_index, plot_config={}, is_logscale=False,
+    plotter: Plotter,
+    output_name: str,
+    outputs: list,
+    best_chain_index,
+    plot_config={},
+    is_logscale=False,
 ):
     fig, axis, _, _, _ = plotter.get_figure()
 
     # Track the maximum value being plotted
-    max_value = 0.
+    max_value = 0.0
 
     for times, values in outputs:
         axis.plot(times, values)
         max_value = max(values) if max(values) > max_value else max_value
 
     # Mark the MLE run with a dotted line
-    axis.plot(outputs[-1][0], outputs[-1][1], linestyle=(0, (1, 3)), color='black', linewidth=3)
+    axis.plot(outputs[-1][0], outputs[-1][1], linestyle=(0, (1, 3)), color="black", linewidth=3)
 
     # Add plot targets
     output_config = {"name": output_name, "target_values": [], "target_times": []}
@@ -211,9 +216,11 @@ def plot_calibration_fit(
 
     # Find upper limit for y-axis
     if target_values:
-        upper_buffer = 2.
+        upper_buffer = 2.0
         max_target = max([i[0] for i in target_values])
-        upper_ylim = max_value if max_value < max_target * upper_buffer else max_target * upper_buffer
+        upper_ylim = (
+            max_value if max_value < max_target * upper_buffer else max_target * upper_buffer
+        )
     else:
         upper_ylim = max_value
 
@@ -223,7 +230,7 @@ def plot_calibration_fit(
     if is_logscale:
         axis.set_yscale("log")
     else:
-        axis.set_ylim([0., upper_ylim])
+        axis.set_ylim([0.0, upper_ylim])
 
     if is_logscale:
         filename = f"calibration-fit-{output_name}-logscale"
@@ -233,8 +240,14 @@ def plot_calibration_fit(
         title_text = f"Calibration fit for {output_name}"
 
     # add text to indicate the best chain index
-    axis.text(0.15, 0.9, 'MLE is from chain ' + str(best_chain_index),
-              horizontalalignment='center', verticalalignment='center', transform=axis.transAxes)
+    axis.text(
+        0.15,
+        0.9,
+        "MLE is from chain " + str(best_chain_index),
+        horizontalalignment="center",
+        verticalalignment="center",
+        transform=axis.transAxes,
+    )
 
     plotter.save_figure(fig, filename=filename, title_text=title_text)
 
@@ -653,10 +666,17 @@ def plot_mixing_matrix(plotter: Plotter, model: StratifiedModel):
         plotter.save_figure(fig, f"mixing_matrix_{location}")
 
 
-def plot_stacked_compartments_by_stratum(plotter: Plotter, scenarios: List[Scenario], compartment_name: str,
-                                         stratify_by: str, multicountry=False, axis=None, config=2):
+def plot_stacked_compartments_by_stratum(
+    plotter: Plotter,
+    scenarios: List[Scenario],
+    compartment_name: str,
+    stratify_by: str,
+    multicountry=False,
+    axis=None,
+    config=2,
+):
     models = [sc.model for sc in scenarios]
-    times = (models[0].times + models[1].times)
+    times = models[0].times + models[1].times
 
     if not multicountry:
         fig, axis, _, _, _ = plotter.get_figure()
@@ -664,26 +684,32 @@ def plot_stacked_compartments_by_stratum(plotter: Plotter, scenarios: List[Scena
     legend = []
     strata = models[0].all_stratifications[stratify_by]
 
-    running_total = [0.] * len(times)
+    running_total = [0.0] * len(times)
 
     blues = sns.color_palette("Blues_r", 4)
     reds = sns.color_palette("Oranges_r", 4)
     greens = sns.color_palette("BuGn_r", 4)
     purples = sns.cubehelix_palette(4)
-    purples[0] = 'pink'
+    purples[0] = "pink"
 
     strata_colors = blues + reds + greens + purples
 
     for color_idx, s in enumerate(strata):
-        group_name = str(int(5.*color_idx))
+        group_name = str(int(5.0 * color_idx))
         if color_idx < 15:
-            group_name += "-" + str(int(5.*color_idx) + 4)
+            group_name += "-" + str(int(5.0 * color_idx) + 4)
         else:
             group_name += "+"
         stratum_name = stratify_by + "_" + s
 
-        if compartment_name in [c.split("X")[0] for c in models[0].compartment_names]:  # use outputs
-            comp_names = [c for c in models[0].compartment_names if stratum_name in c.split('X') and compartment_name in c]
+        if compartment_name in [
+            c.split("X")[0] for c in models[0].compartment_names
+        ]:  # use outputs
+            comp_names = [
+                c
+                for c in models[0].compartment_names
+                if stratum_name in c.split("X") and compartment_name in c
+            ]
             comp_idx = [models[0].compartment_names.index(c) for c in comp_names]
             relevant_outputs_0 = models[0].outputs[:, comp_idx]
             values_0 = np.sum(relevant_outputs_0, axis=1)
@@ -691,30 +717,42 @@ def plot_stacked_compartments_by_stratum(plotter: Plotter, scenarios: List[Scena
             relevant_outputs_1 = models[1].outputs[:, comp_idx]
             values_1 = np.sum(relevant_outputs_1, axis=1)
 
-            if compartment_name == 'recovered':
+            if compartment_name == "recovered":
                 deno_0 = np.sum(models[0].outputs, axis=1)
-                values_0 = [100*v / d for (v, d) in zip(values_0, deno_0)]
+                values_0 = [100 * v / d for (v, d) in zip(values_0, deno_0)]
                 deno_1 = np.sum(models[1].outputs, axis=1)
-                values_1 = [100*v / d for (v, d) in zip(values_1, deno_1)]
+                values_1 = [100 * v / d for (v, d) in zip(values_1, deno_1)]
 
         else:  # use derived outputs
-            relevant_output_names = [c for c in models[0].derived_outputs if stratum_name in c.split('X') and compartment_name in c]
+            relevant_output_names = [
+                c
+                for c in models[0].derived_outputs
+                if stratum_name in c.split("X") and compartment_name in c
+            ]
             values_0 = [0] * len(models[0].times)
             values_1 = [0] * len(models[1].times)
             for out in relevant_output_names:
                 values_0 = [v + d for (v, d) in zip(values_0, models[0].derived_outputs[out])]
                 values_1 = [v + d for (v, d) in zip(values_1, models[1].derived_outputs[out])]
 
-        new_running_total = [r + v for (r, v) in zip(running_total, list(values_0) + list(values_1))]
+        new_running_total = [
+            r + v for (r, v) in zip(running_total, list(values_0) + list(values_1))
+        ]
 
-        axis.fill_between(times, running_total, new_running_total, color=strata_colors[color_idx], label=group_name)
+        axis.fill_between(
+            times,
+            running_total,
+            new_running_total,
+            color=strata_colors[color_idx],
+            label=group_name,
+        )
         legend.append(stratum_name)
         running_total = new_running_total
 
     phase_2_end = {2: 398, 3: 580}
 
-    axis.axvline(x=214, linewidth=.8, dashes=[6, 4], color='black')
-    axis.axvline(x=phase_2_end[config],linewidth=.8, dashes=[6, 4], color='black')
+    axis.axvline(x=214, linewidth=0.8, dashes=[6, 4], color="black")
+    axis.axvline(x=phase_2_end[config], linewidth=0.8, dashes=[6, 4], color="black")
 
     xticks = [61, 214, 398, 366 + 214]
     xlabs = ["1 Mar 2020", "1 Aug 2020", "1 Feb 2021", "1 Aug 2021"]
@@ -730,7 +768,7 @@ def plot_stacked_compartments_by_stratum(plotter: Plotter, scenarios: List[Scena
     ylab = {
         "recovered": "% recovered",
         "incidence": "new diseased individuals",
-        "infection_deaths": "number of deaths"
+        "infection_deaths": "number of deaths",
     }
     # axis.set_ylabel(ylab[compartment_name], fontsize=14)
 
@@ -747,13 +785,12 @@ def plot_multicountry_rainbow(country_scenarios, config, mode, objective):
     fig = pyplot.figure(constrained_layout=True, figsize=(20, 20))  # (w, h)
     widths = [1, 6, 6, 6, 2]
     heights = [1, 6, 6, 6, 6, 6, 6]
-    spec = fig.add_gridspec(ncols=5, nrows=7, width_ratios=widths,
-                            height_ratios=heights)
+    spec = fig.add_gridspec(ncols=5, nrows=7, width_ratios=widths, height_ratios=heights)
 
     output_names = ["incidence", "infection_deaths", "recovered"]
     output_titles = ["Daily disease incidence", "Daily deaths", "Percentage recovered"]
 
-    countries = ['belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']
+    countries = ["belgium", "france", "italy", "spain", "sweden", "united-kingdom"]
     country_names = [c.title() for c in countries]
     country_names[-1] = "United Kingdom"
 
@@ -761,22 +798,51 @@ def plot_multicountry_rainbow(country_scenarios, config, mode, objective):
 
     for i, country in enumerate(countries):
         for j, output in enumerate(output_names):
-            ax = fig.add_subplot(spec[i+1, j + 1])
-            h, l = plot_stacked_compartments_by_stratum(None, country_scenarios[country], output, "agegroup",
-                                                 multicountry=True, axis=ax, config=config)
+            ax = fig.add_subplot(spec[i + 1, j + 1])
+            h, l = plot_stacked_compartments_by_stratum(
+                None,
+                country_scenarios[country],
+                output,
+                "agegroup",
+                multicountry=True,
+                axis=ax,
+                config=config,
+            )
             if i == 0:
-                ax = fig.add_subplot(spec[0, j+1])
-                ax.text(0.5, 0.5, output_titles[j], fontsize=text_size, horizontalalignment='center', verticalalignment='center')
+                ax = fig.add_subplot(spec[0, j + 1])
+                ax.text(
+                    0.5,
+                    0.5,
+                    output_titles[j],
+                    fontsize=text_size,
+                    horizontalalignment="center",
+                    verticalalignment="center",
+                )
                 ax.axis("off")
 
-        ax = fig.add_subplot(spec[i+1, 0])
-        ax.text(0.5, 0.5, country_names[i], rotation=90, fontsize=text_size, horizontalalignment='center', verticalalignment='center')
+        ax = fig.add_subplot(spec[i + 1, 0])
+        ax.text(
+            0.5,
+            0.5,
+            country_names[i],
+            rotation=90,
+            fontsize=text_size,
+            horizontalalignment="center",
+            verticalalignment="center",
+        )
         ax.axis("off")
 
     if j == 2:
         ax = fig.add_subplot(spec[1:, 4])
-        ax.legend(reversed(h), reversed(l), title='Age:', fontsize=15, title_fontsize=text_size,
-                  labelspacing=1.0, loc='center')  # bbox_to_anchor=(1.4, 1.1),
+        ax.legend(
+            reversed(h),
+            reversed(l),
+            title="Age:",
+            fontsize=15,
+            title_fontsize=text_size,
+            labelspacing=1.0,
+            loc="center",
+        )  # bbox_to_anchor=(1.4, 1.1),
         ax.axis("off")
 
     out_dir = "apps/covid_19/mixing_optimisation/opti_plots/figures/rainbows/"
@@ -787,14 +853,11 @@ def plot_multicountry_rainbow(country_scenarios, config, mode, objective):
 
 def plot_hospital_occupancy(all_scenarios, country, mode, objective, ax, title):
 
-    dash_style = {
-        2: [6, 0],
-        3: [6, 3]
-    }
+    dash_style = {2: [6, 0], 3: [6, 3]}
 
     colours = {
         "hospital_occupancy": sns.cubehelix_palette(4)[3],
-        "icu_occupancy": sns.color_palette("Oranges_r", 4)[0]
+        "icu_occupancy": sns.color_palette("Oranges_r", 4)[0],
     }
 
     x_min = 214
@@ -802,14 +865,16 @@ def plot_hospital_occupancy(all_scenarios, country, mode, objective, ax, title):
     for config in [2, 3]:
         scenarios = all_scenarios[mode][objective][config][country]
         models = [sc.model for sc in scenarios]
-        times = (models[0].times + models[1].times)
+        times = models[0].times + models[1].times
 
         for output in ["hospital_occupancy", "icu_occupancy"]:
             if output == "hospital_occupancy":
                 values_0 = models[0].derived_outputs[output]
                 values_1 = models[1].derived_outputs[output]
             else:
-                comp_names = [c for c in models[0].compartment_names if "clinical_icu" in c.split('X')]
+                comp_names = [
+                    c for c in models[0].compartment_names if "clinical_icu" in c.split("X")
+                ]
                 comp_idx = [models[0].compartment_names.index(c) for c in comp_names]
                 relevant_outputs_0 = models[0].outputs[:, comp_idx]
                 values_0 = np.sum(relevant_outputs_0, axis=1)
@@ -820,7 +885,7 @@ def plot_hospital_occupancy(all_scenarios, country, mode, objective, ax, title):
             values = list(values_0) + list(values_1)
 
             times = [t for t in times if t >= x_min]
-            values = values[-len(times):]
+            values = values[-len(times) :]
 
             ax.plot(times, values, dashes=dash_style[config], color=colours[output], linewidth=2)
 
@@ -846,10 +911,9 @@ def plot_multicountry_hospital(all_scenarios, mode, objective):
     fig = pyplot.figure(constrained_layout=True, figsize=(10, 9))  # (w, h)
     widths = [1, 1]
     heights = [1, 1, 1]
-    spec = fig.add_gridspec(ncols=2, nrows=3, width_ratios=widths,
-                            height_ratios=heights)
+    spec = fig.add_gridspec(ncols=2, nrows=3, width_ratios=widths, height_ratios=heights)
 
-    countries = ['belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']
+    countries = ["belgium", "france", "italy", "spain", "sweden", "united-kingdom"]
     country_names = [c.title() for c in countries]
     country_names[-1] = "United Kingdom"
 

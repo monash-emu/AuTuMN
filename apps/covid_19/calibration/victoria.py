@@ -23,7 +23,17 @@ PAR_PRIORS = [
         "distri_params": [0.1, 5.0],
     },
     # Transmission parameter
-    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.025, 0.08],},
+    {
+        "param_name": "contact_rate",
+        "distribution": "uniform",
+        "distri_params":
+            [0.025, 0.08],
+    },
+    {
+        "param_name": "seasonal_force",
+        "distribution": "uniform",
+        "distri_params": [0., 0.8],
+    },
     # Parameters defining the natural history of COVID-19
     {
         "param_name": "non_sympt_infect_multiplier",

@@ -9,15 +9,17 @@ from numpy import random, mean, quantile
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
 from apps.covid_19.mixing_optimisation.utils import get_list_of_ifr_priors_from_pollan
 
+import yaml
+
 
 param_info = {
-    'contact_rate': {'name': 'contact rate', 'range': [0., 40.]},
+    'contact_rate': {'name': 'contact rate', 'range': [0.025, 0.08]},
     'start_time': {'name': 'model start time', 'range': [0., 40.]},
     'npi_effectiveness.other_locations': {'name': 'alpha', 'range': [0.5, 1.]},
     'compartment_periods_calculated.incubation.total_period': {'name': 'incubation time', 'range': [3., 7.]},
-    'compartment_periods_calculated.total_infectious.total_period"': {'name': 'time infectious', 'range': [5., 10.]},
+    'compartment_periods_calculated.total_infectious.total_period': {'name': 'time infectious', 'range': [5., 10.]},
     'tv_detection_b': {'name': 'detection (shape)', 'range': [.05, .1]},
-    'tv_detection_c': {'name': 'detection (inflection)', 'range': [70., 110.]},
+    'tv_detection_c': {'name': 'detection (inflection)', 'range': [70., 160.]},
     'prop_detected_among_symptomatic': {'name': 'detection (prop_final)', 'range': [.10, .90]},
     'icu_prop': {'name': 'prop ICU among hosp.', 'range': [.10, .30]},
     'compartment_periods.hospital_late': {'name': 'hopital duration', 'range': [4., 12.]},
@@ -54,6 +56,15 @@ for i in range(9):
         param_info[pollan_priors[i]["param_name"]][0]['xlabels'][1] = \
             str(10. * float(param_info[pollan_priors[i]["param_name"]][0]['xlabels'][1]))
 
+burn_in_by_country = {
+    "france": 2000,
+    "belgium": 1500,
+    "spain": 1500,
+    "italy": 2000,
+    "sweden": 1500,
+    "united-kingdom": 1500,
+}
+
 
 def get_param_values_by_country(country, calibration_folder_name, burn_in=0):
 
@@ -63,7 +74,7 @@ def get_param_values_by_country(country, calibration_folder_name, burn_in=0):
     )
     weights = collect_iteration_weights(mcmc_tables, burn_in)
 
-    dodged_columns = ["idx", "Scenario", "loglikelihood", "accept", "tv_detection_sigma"]
+    dodged_columns = ["idx", "Scenario", "loglikelihood", "accept"]
     dodged_columns += [c for c in mcmc_tables[0].columns if "dispersion_param" in c]
     param_list = [c for c in mcmc_tables[0].columns if c not in dodged_columns]
 
@@ -73,7 +84,10 @@ def get_param_values_by_country(country, calibration_folder_name, burn_in=0):
         for chain_index in range(len(mcmc_tables)):
             for run_id, w in weights[chain_index].items():
                 mask = mcmc_tables[0]['idx'] == run_id
-                values += [float(mcmc_tables[0][mask][param_name])] * w
+                try:
+                    values += [float(mcmc_tables[0][mask][param_name])] * w
+                except:
+                    print()
         country_param_values[param_name] = values
 
     return country_param_values
@@ -82,7 +96,7 @@ def get_param_values_by_country(country, calibration_folder_name, burn_in=0):
 def get_all_param_values(calibration_folder_name):
     param_values = {}
     for country in OPTI_REGIONS:
-        param_values[country] = get_param_values_by_country(country, calibration_folder_name)
+        param_values[country] = get_param_values_by_country(country, calibration_folder_name, burn_in_by_country[country])
 
     return param_values
 
@@ -153,12 +167,22 @@ def plot_param_posteriors(param_values, param_info={}):
 if __name__ == "__main__":
     param_values = get_all_param_values('Revised-2020-07-18')
 
-    # dummy data to start with
+    file_path = os.path.join('dumped_dict_param_posteriors.yml')
+    with open(file_path, "w") as f:
+        yaml.dump(param_values, f)
+
+    # # dummy data to get started
     # param_values = {}
     # for c in OPTI_REGIONS:
     #     param_values[c] = {}
     #     for i in range(23):
     #         param_values[c][list(param_info.keys())[i]] = random.random(50)
 
-    plot_param_posteriors(param_values, param_info)
+    # with open('dumped_dict_param_posteriors.yml', "r") as yaml_file:
+    #     param_values = yaml.safe_load(yaml_file)
+    #
+    # sweden_extra_par = get_param_values_by_country('sweden', )
+
+
+    # plot_param_posteriors(param_values, param_info)
 

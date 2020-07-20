@@ -64,7 +64,7 @@ def format_perc_recovered_for_joyplot(perc_recovered):
     plt.figure(dpi= 380)
     fig, axes = joypy.joyplot(data, by="Age", column=[list(d.keys())[0] for d in months])
 
-    plt.savefig('test.png')
+    plt.savefig('figures/test.png')
 
 def make_joyplot_figure(perc_recovered):
     pass

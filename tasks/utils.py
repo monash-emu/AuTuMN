@@ -208,7 +208,7 @@ class UploadS3Task(BaseTask, ABC):
     run_id = luigi.Parameter()  # Unique run id string
 
     def output(self):
-        return S3Target(self.get_s3_uri())
+        return None  # Always upload
 
     def safe_run(self):
         upload_s3(self.get_src_path(), self.get_dest_key())

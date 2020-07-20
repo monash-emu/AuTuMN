@@ -42,13 +42,8 @@ def run_mcmc_plots():
 
 
 def load_mcmc_tables(calib_dirpath: str):
-    db_paths = [
-        os.path.join(calib_dirpath, f)
-        for f in os.listdir(calib_dirpath)
-        if f.endswith(".db") and not f.startswith("mcmc_percentiles")
-    ]
     mcmc_tables = []
-    for db_path in db_paths:
+    for db_path in _find_db_paths(calib_dirpath):
         db = Database(db_path)
         mcmc_tables.append(db.query("mcmc_run"))
 
@@ -56,17 +51,21 @@ def load_mcmc_tables(calib_dirpath: str):
 
 
 def load_derived_output_tables(calib_dirpath: str):
+    derived_output_tables = []
+    for db_path in _find_db_paths(calib_dirpath):
+        db = Database(db_path)
+        derived_output_tables.append(db.query("derived_outputs"))
+
+    return derived_output_tables
+
+
+def _find_db_paths(calib_dirpath: str):
     db_paths = [
         os.path.join(calib_dirpath, f)
         for f in os.listdir(calib_dirpath)
         if f.endswith(".db") and not f.startswith("mcmc_percentiles")
     ]
-    derived_output_tables = []
-    for db_path in db_paths:
-        db = Database(db_path)
-        derived_output_tables.append(db.query("derived_outputs"))
-
-    return derived_output_tables
+    return sorted(db_paths)
 
 
 def plot_mcmc_parameter_trace(
@@ -131,11 +130,30 @@ def plot_timeseries_with_uncertainty(
     )
 
 
+def plot_calibration_fit(
+    plotter: StreamlitPlotter, calib_dir_path: str, mcmc_tables: List[pd.DataFrame], plot_config={},
+):
+    derived_output_tables = load_derived_output_tables(calib_dir_path)
+
+    # Choose which output to plot
+    non_output_cols = ["idx", "Scenario", "times"]
+    output_cols = list(set(derived_output_tables[0].columns) - set(non_output_cols))
+    output_cols = [c for c in output_cols if "X" not in c or c.endswith("Xall")]
+    chosen_output = st.sidebar.selectbox("Select derived output", output_cols)
+
+    outputs = plots.sample_outputs_for_calibration_fit(
+        chosen_output, mcmc_tables, derived_output_tables
+    )
+    is_logscale = st.sidebar.checkbox("Log scale")
+    plots.plot_calibration_fit(plotter, chosen_output, outputs, plot_config, is_logscale)
+
+
 PLOT_FUNCS = {
     "Posterior distributions": plot_posterior,
     "Loglikelihood trace": plot_loglikelihood_trace,
     "Loglikelihood vs param": plot_loglikelihood_vs_parameter,
     "Parameter trace": plot_mcmc_parameter_trace,
+    "Calibration Fit": plot_calibration_fit,
     "Predictions": plot_timeseries_with_uncertainty,
 }
 

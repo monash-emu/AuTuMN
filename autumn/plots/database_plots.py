@@ -11,7 +11,8 @@ from . import plots
 from .scenario_plots import plot_scenarios
 
 # from .streamlit.utils import try_find_app_code_path
-from .streamlit.run_mcmc_plots import load_mcmc_tables
+from .streamlit.run_mcmc_plots import load_mcmc_tables, load_derived_output_tables
+from .streamlit.utils import load_plot_config
 from .plotter import FilePlotter
 
 APP_DIRNAMES = ["covid_", "marshall_islands", "mongolia", "dummy"]
@@ -19,10 +20,11 @@ APP_DIRNAMES = ["covid_", "marshall_islands", "mongolia", "dummy"]
 logger = logging.getLogger(__name__)
 
 
-def plot_from_mcmc_databases(mcmc_dir: str, plot_dir: str):
+def plot_from_mcmc_databases(app_name: str, param_set_name: str, mcmc_dir: str, plot_dir: str):
     logger.info(f"Plotting {mcmc_dir} into {plot_dir}")
     plotter = FilePlotter(plot_dir, {})
     mcmc_tables = load_mcmc_tables(mcmc_dir)
+    derived_output_tables = load_derived_output_tables(mcmc_dir)
     burn_in = 0
     non_param_cols = ["idx", "Scenario", "loglikelihood", "accept"]
     param_options = [c for c in mcmc_tables[0].columns if c not in non_param_cols]
@@ -47,6 +49,19 @@ def plot_from_mcmc_databases(mcmc_dir: str, plot_dir: str):
     subplotter = _get_sub_plotter(plot_dir, "params-traces")
     for chosen_param in param_options:
         plots.plot_mcmc_parameter_trace(subplotter, mcmc_tables, chosen_param)
+
+    logger.info("Plotting calibration fits")
+    subplotter = _get_sub_plotter(plot_dir, "calibration-fit")
+    plot_config = load_plot_config(app_name, param_set_name)
+    outputs_to_plot = plot_config.get("outputs_to_plot", [])
+    for output_to_plot in outputs_to_plot:
+        output_name = output_to_plot["name"]
+        logger.info("Plotting calibration fit for output %s", output_name)
+        outputs = plots.sample_outputs_for_calibration_fit(
+            output_name, mcmc_tables, derived_output_tables
+        )
+        plots.plot_calibration_fit(subplotter, output_name, outputs, plot_config, is_logscale=True)
+        plots.plot_calibration_fit(subplotter, output_name, outputs, plot_config, is_logscale=False)
 
     logger.info("MCMC plots complete")
 

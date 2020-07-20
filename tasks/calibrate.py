@@ -61,7 +61,7 @@ class CalibrationChainTask(utils.ParallelLoggerTask):
     num_chains = luigi.IntParameter()
 
     def requires(self):
-        paths = ["logs/calibrate", "data/calibration_outputs", "plots"]
+        paths = ["logs/calibrate", "data/calibration_outputs"]
         dir_tasks = [utils.BuildLocalDirectoryTask(dirname=p) for p in paths]
         return [BuildInputDatabaseTask(), *dir_tasks]
 
@@ -125,10 +125,13 @@ class PlotOutputsTask(utils.BaseTask):
     num_chains = luigi.IntParameter()  # The number of chains to run
 
     def requires(self):
-        return [
+        paths = ["plots"]
+        dir_tasks = [utils.BuildLocalDirectoryTask(dirname=p) for p in paths]
+        chain_tasks = [
             CalibrationChainTask(run_id=self.run_id, chain_id=i, num_chains=self.num_chains)
             for i in range(self.num_chains)
         ]
+        return [*dir_tasks, *chain_tasks]
 
     def output(self):
         target_file = os.path.join(settings.BASE_DIR, "plots", "loglikelihood-traces.png")
@@ -137,7 +140,8 @@ class PlotOutputsTask(utils.BaseTask):
     def safe_run(self):
         mcmc_dir = os.path.join(settings.BASE_DIR, "data", "calibration_outputs")
         plot_dir = os.path.join(settings.BASE_DIR, "plots")
-        plot_from_mcmc_databases(mcmc_dir, plot_dir)
+        model_name, _, _ = utils.read_run_id(self.run_id)
+        plot_from_mcmc_databases("covid_19", model_name, mcmc_dir, plot_dir)
 
 
 class UploadPlotsTask(utils.UploadS3Task):

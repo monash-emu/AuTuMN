@@ -7,13 +7,18 @@ This module requires AWS access to run.
 You can access this script from your CLI by running the Luigi CLI:
 https://luigi.readthedocs.io/en/stable/running_luigi.html
 
+aws --profile autumn s3 rm --recursive s3://autumn-data/malaysia-111111111-aaaaaaa
+
+./scripts/website/deploy.sh
+http://www.autumn-data.com/model/malaysia/run/malaysia-111111111-aaaaaaa.html
+
 export LUIGI_CONFIG_PATH=tasks/luigi.cfg
 
 # Run a calibration
 python3 -m luigi \
     --module tasks \
     RunCalibrate \
-    --run-id test \
+    --run-id malaysia-111111111-aaaaaaa \
     --num-chains 2 \
     --CalibrationChainTask-model-name malaysia \
     --CalibrationChainTask-runtime 30 \
@@ -25,7 +30,7 @@ python3 -m luigi \
 python3 -m luigi \
     --module tasks \
     RunFullModels \
-    --run-id test \
+    --run-id malaysia-111111111-aaaaaaa \
     --FullModelRunTask-burn-in 0 \
     --FullModelRunTask-model-name malaysia \
     --local-scheduler \
@@ -36,7 +41,7 @@ python3 -m luigi \
 python3 -m luigi \
     --module tasks \
     RunPowerBI \
-    --run-id test \
+    --run-id malaysia-111111111-aaaaaaa \
     --local-scheduler \
     --workers 4 \
     --logging-conf-file tasks/luigi-logging.ini

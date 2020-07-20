@@ -67,7 +67,13 @@ const RunPage = ({ timestamp, commit, files }) => {
       <Header as="h1">
         {model}
         <Header.Subheader>
-          commit <GitCommit commit={commit} /> at {dateStr} ({id})
+          commit <GitCommit commit={commit} /> at {dateStr} (
+          <a
+            href={`https://s3.console.aws.amazon.com/s3/buckets/autumn-data/${id}/`}
+          >
+            {id}
+          </a>
+          )
         </Header.Subheader>
       </Header>
       <Tab panes={panes} />

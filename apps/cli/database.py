@@ -49,13 +49,15 @@ def plot_database(model_run_path):
 
 
 @db.command("plot-mcmc")
+@click.argument("app_name", type=str)
+@click.argument("param_set_name", type=str)
 @click.argument("src_db_dir", type=str)
 @click.argument("plot_dir", type=str)
-def plot_mcmc_database(src_db_dir, plot_dir):
+def plot_mcmc_database(app_name, param_set_name, src_db_dir, plot_dir):
     """Plot data from a MCMC run folder"""
     assert os.path.isdir(src_db_dir), f"{src_db_dir} must be a folder"
     assert os.path.isdir(plot_dir), f"{plot_dir} must be a folder"
-    plot_from_mcmc_databases(src_db_dir, plot_dir)
+    plot_from_mcmc_databases(app_name, param_set_name, src_db_dir, plot_dir)
 
 
 @db.command("plot-uncertainty")

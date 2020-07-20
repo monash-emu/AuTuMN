@@ -3,6 +3,7 @@ Different types of plots that use a Plotter
 """
 import logging
 from typing import List, Tuple, Callable
+from random import choices
 import os
 
 import pandas as pd
@@ -66,7 +67,7 @@ def plot_loglikelihood_trace(plotter: Plotter, mcmc_tables: List[pd.DataFrame], 
         axis.axvline(x=burn_in, color=COLOR_THEME[1], linestyle="dotted")
         y_min = min(table_df.loglikelihood[burn_in:])
         y_max = max(table_df.loglikelihood[burn_in:])
-        axis.set_ylim((y_min - .2 * (y_max - y_min), y_max + .2 * (y_max - y_min)))
+        axis.set_ylim((y_min - 0.2 * (y_max - y_min), y_max + 0.2 * (y_max - y_min)))
 
     plotter.save_figure(fig, filename="loglikelihood-traces", title_text="loglikelihood-traces")
 
@@ -131,6 +132,67 @@ def plot_loglikelihood_vs_parameter(
         filename=f"likelihood-against-{param_name}",
         title_text=f"likelihood against {param_name}",
     )
+
+
+def sample_outputs_for_calibration_fit(
+    output_name: str, mcmc_tables: List[pd.DataFrame], derived_output_tables: List[pd.DataFrame],
+):
+    assert len(mcmc_tables) == len(derived_output_tables)
+    # For each chain grab 20 / top 100 accepted runs at random
+    chosen_runs = []
+    for mcmc_table in mcmc_tables:
+        mask = mcmc_table["accept"] == 1
+        num_accepted = len(mcmc_table[mask])
+        choice_range = num_accepted // 3
+        num_choices = min(choice_range, 20)
+        runs = choices(mcmc_table[mask].idx.tolist()[-choice_range:], k=num_choices)
+        chosen_runs.append(runs)
+
+    outputs = []
+    for i, derived_output_table in enumerate(derived_output_tables):
+        runs = chosen_runs[i]
+        for run in runs:
+            mask = derived_output_table["idx"] == run
+            times = derived_output_table[mask].times
+            values = derived_output_table[mask][output_name]
+            outputs.append([times, values])
+
+    return outputs
+
+
+def plot_calibration_fit(
+    plotter: Plotter, output_name: str, outputs: list, plot_config={}, is_logscale=False
+):
+    fig, axis, _, _, _ = plotter.get_figure()
+
+    for times, values in outputs:
+        axis.plot(times, values)
+
+    # Add plot targets
+    output_config = {"name": output_name, "target_values": [], "target_times": []}
+    outputs_to_plot = plot_config.get("outputs_to_plot", [])
+    for o in outputs_to_plot:
+        if o["name"] == output_name:
+            output_config = o
+
+    target_values = output_config["target_values"]
+    target_times = output_config["target_times"]
+    _plot_targets_to_axis(axis, target_values, target_times, on_uncertainty_plot=False)
+
+    # Plot outputs
+    axis.set_xlabel("time")
+    axis.set_ylabel(output_name)
+    if is_logscale:
+        axis.set_yscale("log")
+
+    if is_logscale:
+        filename = f"calibration-fit-{output_name}-logscale"
+        title_text = f"Calibration fit for {output_name} (logscale)"
+    else:
+        filename = f"calibration-fit-{output_name}"
+        title_text = f"Calibration fit for {output_name}"
+
+    plotter.save_figure(fig, filename=filename, title_text=title_text)
 
 
 def plot_timeseries_with_uncertainty_for_powerbi(
@@ -377,8 +439,8 @@ def _plot_targets_to_axis(
             if on_uncertainty_plot:
                 axis.scatter(time, value, marker="o", color="black", s=10)
             else:
-                axis.scatter(time, value, marker="o", color="red", s=30)
-                axis.scatter(time, value, marker="o", color="white", s=10)
+                axis.scatter(time, value, marker="o", color="red", s=30, zorder=999)
+                axis.scatter(time, value, marker="o", color="white", s=10, zorder=999)
 
 
 def plot_exponential_growth_rate(plotter: Plotter, model: StratifiedModel):

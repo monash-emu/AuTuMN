@@ -34,7 +34,6 @@ CALIBRATIONS = {
     Region.SWEDEN: sweden.run_calibration_chain,
     Region.FRANCE: france.run_calibration_chain,
     Region.SPAIN: spain.run_calibration_chain,
-
 }
 
 

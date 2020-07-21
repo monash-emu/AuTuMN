@@ -100,5 +100,6 @@ TARGET_OUTPUTS = [
         "years": notification_times,
         "values": notification_values,
         "loglikelihood_distri": "negative_binomial",
+        "time_weights": range(1, len(notification_times) + 1),
     },
 ]

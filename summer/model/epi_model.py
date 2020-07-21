@@ -131,7 +131,7 @@ class EpiModel:
         initial_conditions,
         parameters,
         requested_flows,
-        infectious_compartment=(Compartment.EARLY_INFECTIOUS,),
+        infectious_compartment=(Compartment.EARLY_ACTIVE,),
         birth_approach=BirthApproach.NO_BIRTH,
         verbose=False,
         reporting_sigfigs=4,

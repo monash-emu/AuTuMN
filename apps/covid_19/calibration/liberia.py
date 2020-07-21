@@ -26,7 +26,7 @@ PAR_PRIORS = [
         "distri_ci": [4.0, 6.0],
     },
     {
-        "param_name": "compartment_periods_calculated.total_infectious.total_period",
+        "param_name": "compartment_periods_calculated.total_active.total_period",
         "distribution": "gamma",
         "distri_mean": 7.0,
         "distri_ci": [4.0, 10.0],

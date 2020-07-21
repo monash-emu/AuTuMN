@@ -165,7 +165,7 @@ class StratifiedModel(EpiModel):
         initial_conditions,
         parameters,
         requested_flows,
-        infectious_compartment=(Compartment.EARLY_INFECTIOUS,),
+        infectious_compartment=(Compartment.EARLY_ACTIVE,),
         birth_approach=BirthApproach.NO_BIRTH,
         verbose=False,
         reporting_sigfigs=4,
@@ -655,7 +655,7 @@ class StratifiedModel(EpiModel):
             c for c in self.compartment_names if find_stem(c) in compartments_to_stratify
         ]
         for compartment in compartments_to_stratify:
-            # Add newm stratified compartment.
+            # Add new stratified compartment.
             for stratum in strata_names:
                 name = create_stratified_name(compartment, stratification_name, stratum)
                 idx = self.compartment_names.index(compartment)

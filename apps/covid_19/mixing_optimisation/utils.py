@@ -25,7 +25,7 @@ def get_prior_distributions_for_opti():
             "distri_params": [3.0, 7.0],
         },
         {
-            "param_name": "compartment_periods_calculated.total_infectious.total_period",
+            "param_name": "compartment_periods_calculated.total_active.total_period",
             "distribution": "uniform",
             "distri_params": [5., 10.],
         },

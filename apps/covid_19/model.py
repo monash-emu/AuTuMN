@@ -38,8 +38,8 @@ def build_model(params: dict) -> StratifiedModel:
         Compartment.SUSCEPTIBLE,
         Compartment.EXPOSED,
         Compartment.PRESYMPTOMATIC,
-        Compartment.EARLY_INFECTIOUS,
-        Compartment.LATE_INFECTIOUS,
+        Compartment.EARLY_ACTIVE,
+        Compartment.LATE_ACTIVE,
         Compartment.RECOVERED,
     ]
 
@@ -47,8 +47,8 @@ def build_model(params: dict) -> StratifiedModel:
     is_infectious = {
         Compartment.EXPOSED: False,
         Compartment.PRESYMPTOMATIC: True,
-        Compartment.EARLY_INFECTIOUS: True,
-        Compartment.LATE_INFECTIOUS: True,
+        Compartment.EARLY_ACTIVE: True,
+        Compartment.LATE_ACTIVE: True,
     }
 
     # Calculate compartment periods
@@ -115,7 +115,7 @@ def build_model(params: dict) -> StratifiedModel:
 
     # FIXME: Remove params from model_parameters
     model_parameters = {**params, **compartment_exit_flow_rates}
-    model_parameters["to_infectious"] = model_parameters["within_presympt"]
+    model_parameters["to_infectious"] = model_parameters["within_incubation_presympt"]
 
     # Instantiate SUMMER model
     model = StratifiedModel(
@@ -125,7 +125,7 @@ def build_model(params: dict) -> StratifiedModel:
         model_parameters,
         flows,
         birth_approach=birth_approach,
-        entry_compartment=Compartment.LATE_INFECTIOUS,  # to model imported cases
+        entry_compartment=Compartment.LATE_ACTIVE,  # to model imported cases
         starting_population=sum(total_pops),
         infectious_compartment=[i_comp for i_comp in is_infectious if is_infectious[i_comp]],
     )

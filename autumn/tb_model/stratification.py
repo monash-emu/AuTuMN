@@ -182,7 +182,7 @@ def stratify_by_organ(model_to_stratify, model_parameters, detect_rate_by_organ,
     model_to_stratify.stratify(
         "organ",
         organ_strata,
-        [Compartment.EARLY_INFECTIOUS],
+        [Compartment.EARLY_ACTIVE],
         infectiousness_adjustments={"smearpos": 1.0, "smearneg": 0.25, "extrapul": 0.0},
         verbose=False,
         requested_proportions=props_smear,

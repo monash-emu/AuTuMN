@@ -19,26 +19,26 @@ DEFAULT_FLOWS = [
     {
         "type": Flow.STANDARD,
         "origin": Compartment.PRESYMPTOMATIC,
-        "to": Compartment.EARLY_INFECTIOUS,
+        "to": Compartment.EARLY_ACTIVE,
         "parameter": f"to_infectious",  # FIXME: Rename to "within_presympt"
     },
     {
         "type": Flow.STANDARD,
-        "origin": Compartment.EARLY_INFECTIOUS,
-        "to": Compartment.LATE_INFECTIOUS,
-        "parameter": f"within_{Compartment.EARLY_INFECTIOUS}",
+        "origin": Compartment.EARLY_ACTIVE,
+        "to": Compartment.LATE_ACTIVE,
+        "parameter": f"within_{Compartment.EARLY_ACTIVE}",
     },
     # Recovery flows
     {
         "type": Flow.STANDARD,
         "to": Compartment.RECOVERED,
-        "origin": Compartment.LATE_INFECTIOUS,
-        "parameter": f"within_{Compartment.LATE_INFECTIOUS}",
+        "origin": Compartment.LATE_ACTIVE,
+        "parameter": f"within_{Compartment.LATE_ACTIVE}",
     },
     # Infection death
     {
         "type": Flow.COMPARTMENT_DEATH,
         "parameter": "infect_death",
-        "origin": Compartment.LATE_INFECTIOUS,
+        "origin": Compartment.LATE_ACTIVE,
     },
 ]

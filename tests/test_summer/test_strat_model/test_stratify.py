@@ -502,8 +502,8 @@ def test_set_ageing_rates(age_strata, expected_flows, expected_ageing):
 def _get_model_kwargs(**kwargs):
     return {
         "times": [2000, 2001, 2002, 2003, 2004, 2005],
-        "compartment_types": [Compartment.SUSCEPTIBLE, Compartment.EARLY_INFECTIOUS],
-        "initial_conditions": {Compartment.EARLY_INFECTIOUS: 100},
+        "compartment_types": [Compartment.SUSCEPTIBLE, Compartment.EARLY_ACTIVE],
+        "initial_conditions": {Compartment.EARLY_ACTIVE: 100},
         "parameters": {},
         "requested_flows": [],
         "starting_population": 1000,

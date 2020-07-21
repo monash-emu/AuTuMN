@@ -20,7 +20,7 @@ param_info = {
     'start_time': {'name': 'model start time', 'range': [0., 40.]},
     'npi_effectiveness.other_locations': {'name': 'alpha', 'range': [0.5, 1.]},
     'compartment_periods_calculated.incubation.total_period': {'name': 'incubation time', 'range': [3., 7.]},
-    'compartment_periods_calculated.total_infectious.total_period': {'name': 'time infectious', 'range': [5., 10.]},
+    'compartment_periods_calculated.total_active.total_period': {'name': 'time active', 'range': [5., 10.]},
     'tv_detection_b': {'name': 'detection (shape)', 'range': [.05, .1]},
     'tv_detection_c': {'name': 'detection (inflection)', 'range': [70., 160.]},
     'prop_detected_among_symptomatic': {'name': 'detection (prop_final)', 'range': [.10, .90]},

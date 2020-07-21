@@ -61,8 +61,8 @@ def stratify_by_clinical(model, model_parameters, compartments):
     compartments_to_split = [
         comp
         for comp in compartments
-        if comp.startswith(Compartment.EARLY_INFECTIOUS)
-           or comp.startswith(Compartment.LATE_INFECTIOUS)
+        if comp.startswith(Compartment.EARLY_ACTIVE)
+           or comp.startswith(Compartment.LATE_ACTIVE)
     ]
 
     # FIXME: Set params to make comparison happy
@@ -243,7 +243,7 @@ def stratify_by_clinical(model, model_parameters, compartments):
         if stratum in model_parameters["late_infect_multiplier"]:
             model.individual_infectiousness_adjustments.append(
                 [
-                    [Compartment.LATE_INFECTIOUS, "clinical_" + stratum],
+                    [Compartment.LATE_ACTIVE, "clinical_" + stratum],
                     model_parameters["late_infect_multiplier"][stratum],
                 ]
             )

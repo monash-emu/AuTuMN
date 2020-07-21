@@ -57,12 +57,12 @@ def build_model(params: dict) -> StratifiedModel:
         Compartment.SUSCEPTIBLE,
         Compartment.EARLY_LATENT,
         Compartment.LATE_LATENT,
-        Compartment.EARLY_INFECTIOUS,
+        Compartment.EARLY_ACTIVE,
         Compartment.ON_TREATMENT,
         Compartment.RECOVERED,
         # Compartment.LTBI_TREATED,
     ]
-    init_pop = {Compartment.EARLY_INFECTIOUS: 10, Compartment.LATE_LATENT: 100}
+    init_pop = {Compartment.EARLY_ACTIVE: 10, Compartment.LATE_LATENT: 100}
 
     model_parameters = params
 

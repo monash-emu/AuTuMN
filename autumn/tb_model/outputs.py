@@ -29,7 +29,7 @@ def create_request_stratified_incidence(requested_stratifications, strata_dict):
             for stage in ["early", "late"]:
                 out_connections["incidence_" + stage + "X" + stratification + "_" + stratum] = {
                     "origin": stage + "_latent",
-                    "to": Compartment.EARLY_INFECTIOUS,
+                    "to": Compartment.EARLY_ACTIVE,
                     "to_condition": stratification + "_" + stratum,
                 }
     return out_connections
@@ -43,7 +43,7 @@ def create_request_stratified_notifications(requested_stratifications, strata_di
     for stratification in requested_stratifications:
         for stratum in strata_dict[stratification]:
             out_connections["notificationsX" + stratification + "_" + stratum] = {
-                "origin": Compartment.EARLY_INFECTIOUS,
+                "origin": Compartment.EARLY_ACTIVE,
                 "to": Compartment.ON_TREATMENT,
                 "origin_condition": "",
                 "to_condition": stratification + "_" + stratum,
@@ -52,7 +52,7 @@ def create_request_stratified_notifications(requested_stratifications, strata_di
 
 
 def create_output_connections_for_incidence_by_stratum(
-    all_compartment_names, infectious_compartment_name=Compartment.EARLY_INFECTIOUS
+    all_compartment_names, infectious_compartment_name=Compartment.EARLY_ACTIVE
 ):
     """
     Automatically create output connections for fully disaggregated incidence outputs
@@ -76,7 +76,7 @@ def create_output_connections_for_incidence_by_stratum(
 
 
 def list_all_strata_for_mortality(
-    all_compartment_names, infectious_compartment_name=Compartment.EARLY_INFECTIOUS
+    all_compartment_names, infectious_compartment_name=Compartment.EARLY_ACTIVE
 ):
     """
     Automatically lists all combinations of population subgroups to request disaggregated mortality outputs

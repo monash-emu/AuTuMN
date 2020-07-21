@@ -26,11 +26,11 @@ compartment_periods:
 
 # Mean time (?) spent in each compartment, defined via proportions
 compartment_periods_calculated:
-  total_infectious:
+  active:
     total_period: 7.
     proportions:
       # Proportion of the infectious period spent in the early compartment (i.e. can't be isolated for symptoms), assumed
-      infectious: 0.333
+      early: 0.333
       late: 0.667
 
   incubation:

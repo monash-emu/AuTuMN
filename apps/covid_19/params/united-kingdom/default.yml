@@ -23,7 +23,7 @@ npi_effectiveness:
 compartment_periods_calculated:
   incubation:
     total_period: 3.6919750421634894
-  total_infectious:
+  active:
     total_period: 5.686846765295515
 tv_detection_b: 0.09172247247859731
 tv_detection_c: 98.09724552296738

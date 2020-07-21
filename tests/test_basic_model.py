@@ -20,7 +20,7 @@ def test_epi_model__with_static_dynamics__expect_no_change(ModelClass):
     pop = 100
     model = ModelClass(
         times=get_integration_times(2000, 2005, 1),
-        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.EARLY_INFECTIOUS],
+        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.EARLY_ACTIVE],
         initial_conditions={Compartment.SUSCEPTIBLE: pop},
         parameters={},
         requested_flows=[],
@@ -51,7 +51,7 @@ def test_epi_model__with_birth_rate__expect_pop_increase(ModelClass):
     pop = 100
     model = ModelClass(
         times=get_integration_times(2000, 2005, 1),
-        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.EARLY_INFECTIOUS],
+        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.EARLY_ACTIVE],
         initial_conditions={Compartment.SUSCEPTIBLE: pop},
         parameters={"crude_birth_rate": 2e-2},
         requested_flows=[],
@@ -78,7 +78,7 @@ def test_epi_model__with_death_rate__expect_pop_decrease(ModelClass):
     pop = 100
     model = ModelClass(
         times=get_integration_times(2000, 2005, 1),
-        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.EARLY_INFECTIOUS],
+        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.EARLY_ACTIVE],
         initial_conditions={Compartment.SUSCEPTIBLE: pop},
         parameters={"universal_death_rate": 2e-2},
         requested_flows=[],
@@ -113,16 +113,16 @@ def test_epi_model__with_recovery_rate__expect_all_recover(ModelClass):
         times=get_integration_times(2000, 2005, 1),
         compartment_types=[
             Compartment.SUSCEPTIBLE,
-            Compartment.EARLY_INFECTIOUS,
+            Compartment.EARLY_ACTIVE,
             Compartment.RECOVERED,
         ],
-        initial_conditions={Compartment.EARLY_INFECTIOUS: pop},
+        initial_conditions={Compartment.EARLY_ACTIVE: pop},
         parameters={"recovery": 1},
         requested_flows=[
             {
                 "type": Flow.STANDARD,
                 "parameter": "recovery",
-                "origin": Compartment.EARLY_INFECTIOUS,
+                "origin": Compartment.EARLY_ACTIVE,
                 "to": Compartment.RECOVERED,
             }
         ],
@@ -155,14 +155,14 @@ def test_epi_model__with_infect_death_rate__expect_infected_pop_decrease(ModelCl
     pop = 100
     model = ModelClass(
         times=get_integration_times(2000, 2005, 1),
-        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.EARLY_INFECTIOUS],
-        initial_conditions={Compartment.EARLY_INFECTIOUS: 50},
+        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.EARLY_ACTIVE],
+        initial_conditions={Compartment.EARLY_ACTIVE: 50},
         parameters={"infect_death": 2e-2},
         requested_flows=[
             {
                 "type": Flow.COMPARTMENT_DEATH,
                 "parameter": "infect_death",
-                "origin": Compartment.EARLY_INFECTIOUS,
+                "origin": Compartment.EARLY_ACTIVE,
             }
         ],
         birth_approach=BirthApproach.NO_BIRTH,
@@ -192,7 +192,7 @@ def test_epi_model__with_no_infected__expect_no_change(ModelClass):
     pop = 100
     model = ModelClass(
         times=get_integration_times(2000, 2005, 1),
-        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.EARLY_INFECTIOUS],
+        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.EARLY_ACTIVE],
         initial_conditions={Compartment.SUSCEPTIBLE: pop},
         parameters={"contact_rate": 10},
         requested_flows=[
@@ -200,7 +200,7 @@ def test_epi_model__with_no_infected__expect_no_change(ModelClass):
                 "type": Flow.INFECTION_FREQUENCY,
                 "parameter": "contact_rate",
                 "origin": Compartment.SUSCEPTIBLE,
-                "to": Compartment.EARLY_INFECTIOUS,
+                "to": Compartment.EARLY_ACTIVE,
             }
         ],
         starting_population=pop,
@@ -229,15 +229,15 @@ def test_epi_model__with_infection_frequency__expect_all_infected(ModelClass):
     pop = 100
     model = ModelClass(
         times=get_integration_times(2000, 2005, 1),
-        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.EARLY_INFECTIOUS],
-        initial_conditions={Compartment.EARLY_INFECTIOUS: 1},
+        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.EARLY_ACTIVE],
+        initial_conditions={Compartment.EARLY_ACTIVE: 1},
         parameters={"contact_rate": 3},
         requested_flows=[
             {
                 "type": Flow.INFECTION_FREQUENCY,
                 "parameter": "contact_rate",
                 "origin": Compartment.SUSCEPTIBLE,
-                "to": Compartment.EARLY_INFECTIOUS,
+                "to": Compartment.EARLY_ACTIVE,
             }
         ],
         starting_population=pop,
@@ -261,15 +261,15 @@ def test_epi_model__with_infection_density__expect_all_infected(ModelClass):
     pop = 100
     model = ModelClass(
         times=get_integration_times(2000, 2005, 1),
-        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.EARLY_INFECTIOUS],
-        initial_conditions={Compartment.EARLY_INFECTIOUS: 1},
+        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.EARLY_ACTIVE],
+        initial_conditions={Compartment.EARLY_ACTIVE: 1},
         parameters={"contact_rate": 0.03},
         requested_flows=[
             {
                 "type": Flow.INFECTION_DENSITY,
                 "parameter": "contact_rate",
                 "origin": Compartment.SUSCEPTIBLE,
-                "to": Compartment.EARLY_INFECTIOUS,
+                "to": Compartment.EARLY_ACTIVE,
             }
         ],
         starting_population=pop,
@@ -299,12 +299,12 @@ def test_epi_model__with_complex_dynamics__expect_correct_outputs(ModelClass):
     times = get_integration_times(2000, 2005, 1)
     compartments = [
         Compartment.SUSCEPTIBLE,
-        Compartment.EARLY_INFECTIOUS,
+        Compartment.EARLY_ACTIVE,
         Compartment.LATE_LATENT,
         Compartment.EARLY_LATENT,
         Compartment.RECOVERED,
     ]
-    initial_pop = {Compartment.EARLY_INFECTIOUS: 100}
+    initial_pop = {Compartment.EARLY_ACTIVE: 100}
     params = {
         # Global birth / death params
         "crude_birth_rate": 2e-2,  # ~ 2 babies / 100 / year
@@ -347,7 +347,7 @@ def test_epi_model__with_complex_dynamics__expect_correct_outputs(ModelClass):
             "type": Flow.STANDARD,
             "parameter": "early_progression",
             "origin": Compartment.EARLY_LATENT,
-            "to": Compartment.EARLY_INFECTIOUS,
+            "to": Compartment.EARLY_ACTIVE,
         },
         # Transition from early to late latent
         {
@@ -361,26 +361,26 @@ def test_epi_model__with_complex_dynamics__expect_correct_outputs(ModelClass):
             "type": Flow.STANDARD,
             "parameter": "late_progression",
             "origin": Compartment.LATE_LATENT,
-            "to": Compartment.EARLY_INFECTIOUS,
+            "to": Compartment.EARLY_ACTIVE,
         },
         # Infected people dying.
         {
             "type": Flow.COMPARTMENT_DEATH,
             "parameter": "infect_death",
-            "origin": Compartment.EARLY_INFECTIOUS,
+            "origin": Compartment.EARLY_ACTIVE,
         },
         # Infected people recovering naturally.
         {
             "type": Flow.STANDARD,
             "parameter": "recovery",
-            "origin": Compartment.EARLY_INFECTIOUS,
+            "origin": Compartment.EARLY_ACTIVE,
             "to": Compartment.RECOVERED,
         },
         # Infectious people recovering via manual intervention
         {
             "type": Flow.STANDARD,
             "parameter": "case_detection",
-            "origin": Compartment.EARLY_INFECTIOUS,
+            "origin": Compartment.EARLY_ACTIVE,
             "to": Compartment.RECOVERED,
         },
     ]

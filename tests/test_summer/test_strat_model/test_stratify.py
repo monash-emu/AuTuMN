@@ -24,8 +24,8 @@ PARAM_VALS = [
     [
         # Starting flow
         [
-            ["standard_flows", "flow_0", "susceptible", "infectious", 0, None, None],
-            ["standard_flows", "flow_1", "infectious", "susceptible", 0, None, None],
+            ["standard_flows", "flow_0", "susceptible", "active_early", 0, None, None],
+            ["standard_flows", "flow_1", "active_early", "susceptible", 0, None, None],
         ],
         # Starting custom flow funcs
         {},
@@ -34,16 +34,16 @@ PARAM_VALS = [
         # Adjustments
         {"flow_0": {"foo": 0.2, "bar": 0.7,}},
         # Compartments to stratify
-        ["susceptible", "infectious"],
+        ["susceptible", "active_early"],
         # Expected flows
         [
-            ["standard_flows", "flow_0", "susceptible", "infectious", 0, None, None],
-            ["standard_flows", "flow_1", "infectious", "susceptible", 0, None, None],
+            ["standard_flows", "flow_0", "susceptible", "active_early", 0, None, None],
+            ["standard_flows", "flow_1", "active_early", "susceptible", 0, None, None],
             [
                 "standard_flows",
                 "flow_0Xtest_foo",
                 "susceptibleXtest_foo",
-                "infectiousXtest_foo",
+                "active_earlyXtest_foo",
                 1,
                 None,
                 None,
@@ -52,7 +52,7 @@ PARAM_VALS = [
                 "standard_flows",
                 "flow_0Xtest_bar",
                 "susceptibleXtest_bar",
-                "infectiousXtest_bar",
+                "active_earlyXtest_bar",
                 1,
                 None,
                 None,
@@ -60,7 +60,7 @@ PARAM_VALS = [
             [
                 "standard_flows",
                 "flow_1",
-                "infectiousXtest_foo",
+                "active_earlyXtest_foo",
                 "susceptibleXtest_foo",
                 1,
                 None,
@@ -69,7 +69,7 @@ PARAM_VALS = [
             [
                 "standard_flows",
                 "flow_1",
-                "infectiousXtest_bar",
+                "active_earlyXtest_bar",
                 "susceptibleXtest_bar",
                 1,
                 None,
@@ -85,8 +85,8 @@ PARAM_VALS = [
     [
         # Starting flows
         [
-            ["standard_flows", "flow_0", "susceptible", "infectious", 0, None, None],
-            ["standard_flows", "flow_1", "infectious", "susceptible", 0, None, None],
+            ["standard_flows", "flow_0", "susceptible", "active_early", 0, None, None],
+            ["standard_flows", "flow_1", "active_early", "susceptible", 0, None, None],
         ],
         # Starting custom flow funcs
         {},
@@ -98,13 +98,13 @@ PARAM_VALS = [
         ["susceptible"],
         # Expected flows
         [
-            ["standard_flows", "flow_0", "susceptible", "infectious", 0, None, None],
-            ["standard_flows", "flow_1", "infectious", "susceptible", 0, None, None],
+            ["standard_flows", "flow_0", "susceptible", "active_early", 0, None, None],
+            ["standard_flows", "flow_1", "active_early", "susceptible", 0, None, None],
             [
                 "standard_flows",
                 "flow_0Xtest_foo",
                 "susceptibleXtest_foo",
-                "infectious",
+                "active_early",
                 1,
                 None,
                 None,
@@ -113,7 +113,7 @@ PARAM_VALS = [
                 "standard_flows",
                 "flow_0Xtest_bar",
                 "susceptibleXtest_bar",
-                "infectious",
+                "active_early",
                 1,
                 None,
                 None,
@@ -121,7 +121,7 @@ PARAM_VALS = [
             [
                 "standard_flows",
                 "flow_1Xtest_foo",
-                "infectious",
+                "active_early",
                 "susceptibleXtest_foo",
                 1,
                 None,
@@ -130,7 +130,7 @@ PARAM_VALS = [
             [
                 "standard_flows",
                 "flow_1Xtest_bar",
-                "infectious",
+                "active_early",
                 "susceptibleXtest_bar",
                 1,
                 None,
@@ -153,8 +153,8 @@ PARAM_VALS = [
     [
         # Starting flow
         [
-            ["customised_flows", "flow_0", "susceptible", "infectious", 0, None, None],
-            ["customised_flows", "flow_1", "infectious", "susceptible", 0, None, None],
+            ["customised_flows", "flow_0", "susceptible", "active_early", 0, None, None],
+            ["customised_flows", "flow_1", "active_early", "susceptible", 0, None, None],
             ["customised_flows", "flow_2", "comp_0", "comp_1", 0, None, None],
         ],
         # Starting custom flow funcs
@@ -167,15 +167,15 @@ PARAM_VALS = [
         ["susceptible"],
         # Expected flows
         [
-            ["customised_flows", "flow_0", "susceptible", "infectious", 0, None, None],
-            ["customised_flows", "flow_1", "infectious", "susceptible", 0, None, None],
+            ["customised_flows", "flow_0", "susceptible", "active_early", 0, None, None],
+            ["customised_flows", "flow_1", "active_early", "susceptible", 0, None, None],
             ["customised_flows", "flow_2", "comp_0", "comp_1", 0, None, None],
-            ["customised_flows", "flow_0", "susceptibleXtest_foo", "infectious", 1, None, None,],
-            ["customised_flows", "flow_0", "susceptibleXtest_bar", "infectious", 1, None, None,],
+            ["customised_flows", "flow_0", "susceptibleXtest_foo", "active_early", 1, None, None,],
+            ["customised_flows", "flow_0", "susceptibleXtest_bar", "active_early", 1, None, None,],
             [
                 "customised_flows",
                 "flow_1Xtest_foo",
-                "infectious",
+                "active_early",
                 "susceptibleXtest_foo",
                 1,
                 None,
@@ -184,7 +184,7 @@ PARAM_VALS = [
             [
                 "customised_flows",
                 "flow_1Xtest_bar",
-                "infectious",
+                "active_early",
                 "susceptibleXtest_bar",
                 1,
                 None,
@@ -343,12 +343,12 @@ PARAM_VALS = [
     [
         ["foo", "bar"],
         {"foo": 0.5, "bar": 0.5},
-        ["susceptible", "infectious"],
+        ["susceptible", "active_early"],
         [
             "susceptibleXtest_foo",
             "susceptibleXtest_bar",
-            "infectiousXtest_foo",
-            "infectiousXtest_bar",
+            "active_earlyXtest_foo",
+            "active_earlyXtest_bar",
         ],
         [450, 450, 50, 50],
     ],
@@ -356,12 +356,12 @@ PARAM_VALS = [
     [
         ["foo", "bar"],
         {"foo": 0.1, "bar": 0.9},
-        ["susceptible", "infectious"],
+        ["susceptible", "active_early"],
         [
             "susceptibleXtest_foo",
             "susceptibleXtest_bar",
-            "infectiousXtest_foo",
-            "infectiousXtest_bar",
+            "active_earlyXtest_foo",
+            "active_earlyXtest_bar",
         ],
         [90, 810, 10, 90],
     ],
@@ -370,7 +370,7 @@ PARAM_VALS = [
         ["foo", "bar"],
         {"foo": 0.5, "bar": 0.5},
         ["susceptible"],
-        ["infectious", "susceptibleXtest_foo", "susceptibleXtest_bar"],
+        ["active_early", "susceptibleXtest_foo", "susceptibleXtest_bar"],
         [100, 450, 450],
     ],
 ]
@@ -405,8 +405,8 @@ PARAM_VALS = [
             [
                 "standard_flows",
                 "ageing0to50",
-                "infectiousXage_0",
-                "infectiousXage_50",
+                "active_earlyXage_0",
+                "active_earlyXage_50",
                 0,
                 None,
                 None,
@@ -430,8 +430,8 @@ PARAM_VALS = [
             [
                 "standard_flows",
                 "ageing0to5",
-                "infectiousXage_0",
-                "infectiousXage_5",
+                "active_earlyXage_0",
+                "active_earlyXage_5",
                 0,
                 None,
                 None,
@@ -448,8 +448,8 @@ PARAM_VALS = [
             [
                 "standard_flows",
                 "ageing5to15",
-                "infectiousXage_5",
-                "infectiousXage_15",
+                "active_earlyXage_5",
+                "active_earlyXage_15",
                 0,
                 None,
                 None,
@@ -466,8 +466,8 @@ PARAM_VALS = [
             [
                 "standard_flows",
                 "ageing15to50",
-                "infectiousXage_15",
-                "infectiousXage_50",
+                "active_earlyXage_15",
+                "active_earlyXage_50",
                 0,
                 None,
                 None,

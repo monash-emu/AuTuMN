@@ -164,7 +164,7 @@ def plot_param_posteriors(param_values, param_info={}):
     for i_col_blank in range(i_col + 1, n_col):
         axs[i_row, i_col_blank].axis("off")
 
-    plt.savefig("figures/param_posgteriors.png", dpi=300)
+    plt.savefig("figures/param_posteriors.png", dpi=300)
 
 
 def get_country_posterior_detection_percentiles(country_param_values):

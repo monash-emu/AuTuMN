@@ -17,9 +17,11 @@ traveller_quarantine:
   times: [0.]
   values: [0.]
 
-# Mean time (?) spent in each compartment
+# Mean time in days spent in each compartment
+# Note that the early period is intended to represent the pre-hospitalisations period, whereas the late period is
+# intended to represent the time in hospital or ICU (as applicable)
 compartment_periods:
-  hospital_early: 5.
+  hospital_early: 8.1
   hospital_late: 8.
   icu_early: 5.
   icu_late: 7.5

@@ -5,7 +5,7 @@ scenario_start_time: 235
 end_time: 365.
 
 # calibrated parameters
-start_time: 12.
+start_time: 12.  # FIXME: remove this parameter
 contact_rate: 0.049
 tv_detection_c: 150 # inflection point
 tv_detection_sigma: 0

@@ -362,6 +362,6 @@ TARGET_OUTPUTS = [
         "years": data_times,
         "values": case_counts,
         "loglikelihood_distri": "negative_binomial",
-        "time_weights": range(1, len(data_times) + 1),
+        "time_weights": [float(i) for i in range(1, len(data_times) + 1)],
     }
 ]

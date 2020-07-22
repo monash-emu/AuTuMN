@@ -41,7 +41,7 @@ mixing:
     times:
       - 2020-03-15
       - 2020-03-16
-      - 2020-07-07  # FIXME: update this time
+      - 2020-07-18  # google mobility data update, pls review
     values:
       - 1.0
       - 0.1

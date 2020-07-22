@@ -42,10 +42,12 @@ mixing:
       - 2020-03-18
       - 2020-03-20
       - 2020-07-07
+      - 2020-07-18 # google mobility data update, pls review
     values:
       - 1.0
       - 0.1
       - 0.1
+      - 0.1 # google mobility data update, pls review
 
 # Mapping of Google Mobility locations to Autumn-specific locations
 google_mobility_locations:

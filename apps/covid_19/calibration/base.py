@@ -29,14 +29,12 @@ BASE_CALIBRATION_PARAMS = [
     {
         "param_name": "compartment_periods_calculated.incubation.total_period",
         "distribution": "uniform",
-        "distri_mean": 5.0,
-        "distri_ci": [4.4, 5.6],
+        "distri_params": [4.4, 5.6],
     },
     {
         "param_name": "compartment_periods_calculated.total_infectious.total_period",
         "distribution": "uniform",
-        "distri_mean": 7.0,
-        "distri_ci": [4.5, 9.5],
+        "distri_params": [4.5, 9.5],
     },
 ]
 

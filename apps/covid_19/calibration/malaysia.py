@@ -18,36 +18,31 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
 
 PAR_PRIORS = BASE_CALIBRATION_PARAMS
 
-PAR_PRIORS.append([
+PAR_PRIORS += [
     {
         "param_name": "compartment_periods.icu_early",
         "distribution": "uniform",
-        "distri_mean": 12.7,
-        "distri_ci": [2.0, 25.0],
+        "distri_params": [2.0, 25.0],
     },
     {
         "param_name": "tv_detection_sigma",
         "distribution": "uniform",
-        "distri_mean": 0.25,
-        "distri_ci": [0.1, 0.4],
+        "distri_params": [0.1, 0.4],
     },
     {
         "param_name": "tv_detection_b",
         "distribution": "uniform",
-        "distri_mean": 0.075,
-        "distri_ci": [0.05, 0.1],
+        "distri_params": [0.05, 0.1],
     },
     {
         "param_name": "prop_detected_among_symptomatic",
         "distribution": "uniform",
-        "distri_mean": 0.7,
-        "distri_ci": [0.6, 0.9],
+        "distri_params": [0.6, 0.9],
     },
     {
         "param_name": "icu_prop",
         "distribution": "uniform",
-        "distri_mean": 0.17,
-        "distri_ci": [0.1, 0.35],
+        "distri_params": [0.1, 0.35],
     },
     # Add negative binomial over-dispersion parameters
     {
@@ -70,7 +65,7 @@ PAR_PRIORS.append([
         "distribution": "uniform",
         "distri_params": [78.0, 124.0],
     },
-])
+]
 
 # notification data, provided by the country
 notification_times = [

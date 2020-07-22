@@ -140,6 +140,11 @@ late_infect_multiplier:
   icu: 0.2
 
 # parameters of tanh-based scale-up function used to define time-variant detection
+#time_variant_detection:
+#  maximum_gradient: 0.05  # The shape parameter to the tanh-based curve
+#  max_change_time: 90  # Point at which curve inflection
+#  start_value: 0.  # Starting value - lower asymptote for increasing function
+#  end_value: 0.6  # End value - upper asymptote for increasing function
 tv_detection_b: .05 # shape parameter of the tanh-based curve
 tv_detection_c: 90 # inflection point
 tv_detection_sigma: 0. # height of the lower asymptote

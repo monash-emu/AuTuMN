@@ -29,14 +29,11 @@ validate_params = sb.build_validator(
     icu_mortality_prop=float,
     symptomatic_props=sb.List(float),
     icu_prop=float,
-    prop_detected_among_symptomatic=float,
     # Time-variant detection of COVID cases, used to construct a tanh function.
-    tv_detection_b=float,
-    tv_detection_c=float,
-    tv_detection_sigma=float,
+    time_variant_detection=sb.Dict(maximum_gradient=float, max_change_time=float, start_value=float, end_value=float),
     int_detection_gap_reduction=float,
     # Dynamic mixing matrix updates
-    # Time-varying mixing matrix adjutment by location
+    # Time-varying mixing matrix adjustment by location
     mixing=sb.DictGeneric(
         str,
         sb.Dict(
@@ -76,7 +73,6 @@ validate_params = sb.build_validator(
     symptomatic_props_imported=float,
     hospital_props_imported=float,
     icu_prop_imported=float,
-    prop_detected_among_symptomatic_imported=float,
     enforced_isolation_effect=float,
     self_isolation_effect=float,
     data=sb.Dict(times_imported_cases=sb.List(float), n_imported_cases=sb.List(float),),

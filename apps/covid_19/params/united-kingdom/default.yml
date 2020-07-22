@@ -24,9 +24,10 @@ compartment_periods_calculated:
     total_period: 3.6919750421634894
   total_infectious:
     total_period: 5.686846765295515
-tv_detection_b: 0.09172247247859731
-tv_detection_c: 98.09724552296738
-prop_detected_among_symptomatic: 0.12340227902434267
+time_variant_detection:
+  maximum_gradient: 0.09172247247859731
+  max_change_time: 98.09724552296738
+  end_value: 0.12340227902434267
 icu_prop: 0.2869223796413999
 compartment_periods:
   hospital_late: 9.019609923504293

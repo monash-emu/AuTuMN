@@ -37,11 +37,9 @@ def stratify_by_clinical(model, model_parameters, compartments):
     implement_importation = model_parameters["implement_importation"]
     traveller_quarantine = model_parameters["traveller_quarantine"]
     # Time variant case detection
-    prop_detected_among_symptomatic = model_parameters["prop_detected_among_symptomatic"]
+    tv_detection_end_value = model_parameters["time_variant_detection"]["end_value"]
     # FIXME: Make it clear that this for tahn
-    tv_detection_b = model_parameters["tv_detection_b"]
-    tv_detection_c = model_parameters["tv_detection_c"]
-    tv_detection_sigma = model_parameters["tv_detection_sigma"]
+    time_variant_detection_params = model_parameters["time_variant_detection"]
     # ???
     within_hospital_early = model_parameters["within_hospital_early"]
     within_icu_early = model_parameters["within_icu_early"]
@@ -163,13 +161,17 @@ def stratify_by_clinical(model, model_parameters, compartments):
 
     # Create a function for the proportion of symptomatic people who are detected at timestep `t`.
     scale_up_multiplier = \
-        tanh_based_scaleup(tv_detection_b, tv_detection_c, tv_detection_sigma)
+        tanh_based_scaleup(
+            time_variant_detection_params["maximum_gradient"],
+            time_variant_detection_params["max_change_time"],
+            time_variant_detection_params["start_value"]
+        )
 
     # Create function describing the proportion of cases detected over time
     def prop_detect_among_sympt_func(t):
 
         # Raw value without adjustment for any improved detection intervention
-        without_intervention_value = prop_detected_among_symptomatic * scale_up_multiplier(t)
+        without_intervention_value = tv_detection_end_value * scale_up_multiplier(t)
 
         # Return value modified for any future intervention that narrows the case detection gap
         int_detect_gap_reduction = model_parameters['int_detection_gap_reduction']

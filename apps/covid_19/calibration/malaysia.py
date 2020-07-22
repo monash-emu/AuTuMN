@@ -1,6 +1,6 @@
 from autumn.constants import Region
 from apps.covid_19.calibration import base
-from apps.covid_19.calibration.base import BASE_CALIBRATION_PARAMS, provide_default_calibration_params
+from apps.covid_19.calibration.base import provide_default_calibration_params
 
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
@@ -44,9 +44,8 @@ PAR_PRIORS += [
         "distribution": "uniform",
         "distri_params": [0.1, 0.35],
     },
-    # Add negative binomial over-dispersion parameters
     {
-        "param_name": "notifications_dispersion_param",
+        "param_name": "notifications_dispersion_param",  # Negative binomial dispersion parameter
         "distribution": "uniform",
         "distri_params": [0.1, 5.0],
     },

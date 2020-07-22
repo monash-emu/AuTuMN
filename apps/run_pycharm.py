@@ -7,7 +7,7 @@ from apps import covid_19, marshall_islands, mongolia, sir_example, dr_tb_malanc
 from apps.covid_19.calibration import get_calibration_func
 from apps.covid_19.mixing_optimisation.constants import *
 
-## Run a COVID model manually.
+# Run a COVID model manually.
 # for REGION in OPTI_REGIONS:   # used by Romain for the optimisation project
 # REGION = Region.VICTORIA
 # RUN_SCENARIOS = True

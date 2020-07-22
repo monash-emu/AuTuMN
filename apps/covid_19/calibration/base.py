@@ -19,7 +19,7 @@ BASE_CALIBRATION_PARAMS = [
     {
         "param_name": "contact_rate",
         "distribution": "uniform",
-        "distri_params": [0.015, 0.040],
+        "distri_params": [0.015, 0.05],
     },
     {
         "param_name": "start_time",

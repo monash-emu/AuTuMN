@@ -19,7 +19,7 @@ BASE_CALIBRATION_PARAMS = [
     {
         "param_name": "contact_rate",
         "distribution": "uniform",
-        "distri_params": [0.015, 0.040],
+        "distri_params": [0.015, 0.05],
     },
     {
         "param_name": "start_time",
@@ -37,6 +37,21 @@ BASE_CALIBRATION_PARAMS = [
         "distri_params": [4.5, 9.5],
     },
 ]
+
+
+def provide_default_calibration_params(excluded_params=()):
+    """
+    Provide the standard default parameters as listed above, unless requested not to include any.
+
+    :param excluded_params: tuple
+        strings of the parameters that are not to be returned
+    :return: list
+        calibration parameters
+    """
+
+    return \
+        [BASE_CALIBRATION_PARAMS[param] for param in range(len(BASE_CALIBRATION_PARAMS)) if
+         BASE_CALIBRATION_PARAMS[param]["param_name"] not in excluded_params]
 
 
 logger = logging.getLogger(__name__)

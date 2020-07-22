@@ -1,5 +1,6 @@
 from autumn.constants import Region
 from apps.covid_19.calibration import base
+from apps.covid_19.calibration.base import provide_default_calibration_params
 
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
@@ -13,18 +14,9 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
         mode="autumn_mcmc",
     )
 
+PAR_PRIORS = provide_default_calibration_params()
 
-PAR_PRIORS = [
-    {
-        "param_name": "contact_rate", 
-        "distribution": "uniform", 
-        "distri_params": [0.010, 0.045],
-    },
-    {
-        "param_name": "start_time", 
-        "distribution": "uniform", 
-        "distri_params": [0.0, 40.0],
-    },
+PAR_PRIORS += [
     {
         "param_name": "time_variant_detection.maximum_gradient",
         "distribution": "uniform",
@@ -45,18 +37,6 @@ PAR_PRIORS = [
         "param_name": "notifications_dispersion_param",
         "distribution": "uniform",
         "distri_params": [0.1, 5.0],
-    },
-    {
-        "param_name": "compartment_periods_calculated.incubation.total_period",
-        "distribution": "gamma",
-        "distri_mean": 5.0,
-        "distri_ci": [4.4, 5.6],
-    },
-    {
-        "param_name": "compartment_periods_calculated.total_infectious.total_period",
-        "distribution": "gamma",
-        "distri_mean": 7.0,
-        "distri_ci": [4.5, 9.5],
     },
     # parameters to derive age-specific IFRs
     {

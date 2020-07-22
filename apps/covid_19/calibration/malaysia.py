@@ -35,7 +35,7 @@ PAR_PRIORS += [
         "distri_params": [0.05, 0.1],
     },
     {
-        "param_name": "prop_detected_among_symptomatic",
+        "param_name": "time_variant_detection.end_value",
         "distribution": "uniform",
         "distri_params": [0.6, 0.9],
     },

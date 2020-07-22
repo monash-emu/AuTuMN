@@ -27,7 +27,7 @@ compartment_periods_calculated:
 time_variant_detection:
   maximum_gradient: 0.09673203583492454
   max_change_time: 86.0721524685038
-prop_detected_among_symptomatic: 0.17177956276831705
+  end_value: 0.17177956276831705
 icu_prop: 0.1881228591428481
 compartment_periods:
   hospital_late: 7.964825187227463

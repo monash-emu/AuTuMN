@@ -42,9 +42,9 @@ PAR_PRIORS = [
         "distri_params": [70.0, 110.0],
     },
     {
-            "param_name": "prop_detected_among_symptomatic",  # upper asymptote
-            "distribution": "uniform",
-            "distri_params": [0.10, 0.90],
+        "param_name": "time_variant_detection.end_value",
+        "distribution": "uniform",
+        "distri_params": [0.10, 0.90],
     },
     # Add extra params for negative binomial likelihood
     {

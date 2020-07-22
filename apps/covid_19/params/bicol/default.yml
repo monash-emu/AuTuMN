@@ -11,12 +11,11 @@ use_raw_mortality_estimates: False
 start_time: 12.
 contact_rate: 0.049
 
-prop_detected_among_symptomatic: 0.5
-
 # other country-specific parameters
 time_variant_detection:
   maximum_gradient: .05
   max_change_time: 150
+  end_value: 0.5
 
 mixing:
   school:

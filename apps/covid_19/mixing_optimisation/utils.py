@@ -40,7 +40,7 @@ def get_prior_distributions_for_opti():
             "distri_params": [70.0, 110.0],
         },
         {
-            "param_name": "prop_detected_among_symptomatic",  # upper asymptote
+            "param_name": "time_variant_detection.end_value",
             "distribution": "uniform",
             "distri_params": [0.10, 0.90],
         },
@@ -351,7 +351,7 @@ def get_posterior_percentiles_time_variant_profile(calibration_path, function='d
         for index, row in combined_burned_samples.iterrows():
             my_func = tanh_based_scaleup(row['time_variant_detection.maximum_gradient'],
                                          row['time_variant_detection.max_change_time'], 0.)
-            detect_vals = [row['prop_detected_among_symptomatic'] * my_func(t) for t in calculated_times]
+            detect_vals = [row['time_variant_detection.end_value'] * my_func(t) for t in calculated_times]
             store_matrix[:, i] = detect_vals
             i += 1
     perc = np.percentile(store_matrix, [2.5, 25, 50, 75, 97.5], axis=1)

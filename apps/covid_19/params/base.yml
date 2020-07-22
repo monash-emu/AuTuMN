@@ -145,13 +145,11 @@ time_variant_detection:
   max_change_time: 90.  # Point at which curve inflects
   start_value: 0.  # Starting value - lower asymptote for increasing function
   end_value: 0.6  # End value - upper asymptote for increasing function
-prop_detected_among_symptomatic: 0.6 # height of the upper asymptote
 
 # clinical proportions for imported cases
 symptomatic_props_imported: .5
 hospital_props_imported: .05
 icu_prop_imported: .3
-prop_detected_among_symptomatic_imported: .6
 
 # parameters to define the effect (infectiousness adjustment) of self-isolation and enforced isolation
 self_isolation_effect: .67

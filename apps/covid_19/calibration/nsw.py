@@ -33,7 +33,7 @@ PAR_PRIORS = [
     },
     # Programmatic parameters
     {
-        "param_name": "prop_detected_among_symptomatic",
+        "param_name": "time_variant_detection.end_value",
         "distribution": "beta",
         "distri_mean": 0.85,
         "distri_ci": [0.8, 0.9],

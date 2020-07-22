@@ -30,7 +30,7 @@ time_variant_detection:
     max_change_time: 80.
     maximum_gradient: 0.0604182172578674
     start_value: 0.46226447586322
-prop_detected_among_symptomatic: 0.891585432203268
+    end_value: 0.891585432203268
 icu_prop: 0.282896242081187
 
 mixing:

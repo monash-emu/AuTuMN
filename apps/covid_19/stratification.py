@@ -37,7 +37,7 @@ def stratify_by_clinical(model, model_parameters, compartments):
     implement_importation = model_parameters["implement_importation"]
     traveller_quarantine = model_parameters["traveller_quarantine"]
     # Time variant case detection
-    prop_detected_among_symptomatic = model_parameters["prop_detected_among_symptomatic"]
+    tv_detection_end_value = model_parameters["time_variant_detection"]["end_value"]
     # FIXME: Make it clear that this for tahn
     tv_detection_max_gradient = model_parameters["time_variant_detection"]["maximum_gradient"]
     tv_detection_change_time = model_parameters["time_variant_detection"]["max_change_time"]
@@ -169,7 +169,7 @@ def stratify_by_clinical(model, model_parameters, compartments):
     def prop_detect_among_sympt_func(t):
 
         # Raw value without adjustment for any improved detection intervention
-        without_intervention_value = prop_detected_among_symptomatic * scale_up_multiplier(t)
+        without_intervention_value = tv_detection_end_value * scale_up_multiplier(t)
 
         # Return value modified for any future intervention that narrows the case detection gap
         int_detect_gap_reduction = model_parameters['int_detection_gap_reduction']

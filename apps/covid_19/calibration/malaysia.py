@@ -1,5 +1,6 @@
 from autumn.constants import Region
 from apps.covid_19.calibration import base
+from apps.covid_19.calibration.base import BASE_CALIBRATION_PARAMS
 
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
@@ -15,29 +16,9 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
     )
 
 
-PAR_PRIORS = [
-    {
-        "param_name": "contact_rate",
-        "distribution": "uniform",
-        "distri_params": [0.015, 0.040],
-    },
-    {
-        "param_name": "start_time",
-        "distribution": "uniform",
-        "distri_params": [0.0, 40.0],
-    },
-    {
-        "param_name": "compartment_periods_calculated.incubation.total_period",
-        "distribution": "uniform",
-        "distri_mean": 5.0,
-        "distri_ci": [4.4, 5.6],
-    },
-    {
-        "param_name": "compartment_periods.icu_late",
-        "distribution": "uniform",
-        "distri_mean": 10.8,
-        "distri_ci": [5.0, 16.0],
-    },
+PAR_PRIORS = BASE_CALIBRATION_PARAMS
+
+PAR_PRIORS.append([
     {
         "param_name": "compartment_periods.icu_early",
         "distribution": "uniform",
@@ -89,7 +70,7 @@ PAR_PRIORS = [
         "distribution": "uniform",
         "distri_params": [78.0, 124.0],
     },
-]
+])
 
 # notification data, provided by the country
 notification_times = [

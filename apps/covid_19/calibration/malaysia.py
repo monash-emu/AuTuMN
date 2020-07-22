@@ -16,49 +16,57 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
 
 
 PAR_PRIORS = [
-    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.015, 0.040],},
-    {"param_name": "start_time", "distribution": "uniform", "distri_params": [0.0, 40.0],},
+    {
+        "param_name": "contact_rate",
+        "distribution": "uniform",
+        "distri_params": [0.015, 0.040],
+    },
+    {
+        "param_name": "start_time",
+        "distribution": "uniform",
+        "distri_params": [0.0, 40.0],
+    },
     {
         "param_name": "compartment_periods_calculated.incubation.total_period",
-        "distribution": "gamma",
+        "distribution": "uniform",
         "distri_mean": 5.0,
-        "distri_ci": [3.0, 7.0],
+        "distri_ci": [4.4, 5.6],
     },
     {
         "param_name": "compartment_periods.icu_late",
-        "distribution": "gamma",
-        "distri_mean": 10.0,
-        "distri_ci": [5.0, 15.0],
+        "distribution": "uniform",
+        "distri_mean": 10.8,
+        "distri_ci": [5.0, 16.0],
     },
     {
         "param_name": "compartment_periods.icu_early",
-        "distribution": "gamma",
-        "distri_mean": 10.0,
+        "distribution": "uniform",
+        "distri_mean": 12.7,
         "distri_ci": [2.0, 25.0],
     },
     {
         "param_name": "tv_detection_sigma",
-        "distribution": "beta",
+        "distribution": "uniform",
         "distri_mean": 0.25,
         "distri_ci": [0.1, 0.4],
     },
     {
         "param_name": "tv_detection_b",
-        "distribution": "beta",
+        "distribution": "uniform",
         "distri_mean": 0.075,
         "distri_ci": [0.05, 0.1],
     },
     {
         "param_name": "prop_detected_among_symptomatic",
-        "distribution": "beta",
+        "distribution": "uniform",
         "distri_mean": 0.7,
         "distri_ci": [0.6, 0.9],
     },
     {
         "param_name": "icu_prop",
-        "distribution": "beta",
-        "distri_mean": 0.25,
-        "distri_ci": [0.15, 0.35],
+        "distribution": "uniform",
+        "distri_mean": 0.17,
+        "distri_ci": [0.1, 0.35],
     },
     # Add negative binomial over-dispersion parameters
     {
@@ -371,7 +379,6 @@ notification_counts = [
     15,
 ]
 
-
 # ICU data (prev / million pop), provided by the country
 icu_times = [
     71,
@@ -508,7 +515,6 @@ icu_times = [
     202,
     203,
 ]
-
 icu_counts = [
     2,
     3,
@@ -645,29 +651,23 @@ icu_counts = [
     4,
 ]
 
-
 TARGET_OUTPUTS = [
     {
         "output_key": "notifications",
         "years": notification_times,
         "values": notification_counts,
         "loglikelihood_distri": "negative_binomial",
+        "time_weights": list(range(1, len(notification_times) + 1)),
     },
     {
         "output_key": "prevXlateXclinical_icuXamong",
         "years": icu_times,
         "values": icu_counts,
         "loglikelihood_distri": "negative_binomial",
+        "time_weights": list(range(1, len(icu_times) + 1)),
     },
 ]
 
 MULTIPLIERS = {
     "prevXlateXclinical_icuXamong": 32364904.0
 }  # to get absolute pop size instead of proportion
-
-# __________  For the grid-based calibration approach
-# define a grid of parameter values. The posterior probability will be evaluated at each node
-par_grid = [
-    {"param_name": "contact_rate", "lower": 0.01, "upper": 0.02, "n": 6},
-    {"param_name": "start_time", "lower": 0.0, "upper": 50.0, "n": 11},
-]

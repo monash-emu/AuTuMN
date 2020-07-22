@@ -41,7 +41,7 @@ def stratify_by_clinical(model, model_parameters, compartments):
     # FIXME: Make it clear that this for tahn
     tv_detection_max_gradient = model_parameters["time_variant_detection"]["maximum_gradient"]
     tv_detection_change_time = model_parameters["time_variant_detection"]["max_change_time"]
-    tv_detection_sigma = model_parameters["tv_detection_sigma"]
+    tv_detection_start_value = model_parameters["time_variant_detection"]["start_value"]
     # ???
     within_hospital_early = model_parameters["within_hospital_early"]
     within_icu_early = model_parameters["within_icu_early"]
@@ -163,7 +163,7 @@ def stratify_by_clinical(model, model_parameters, compartments):
 
     # Create a function for the proportion of symptomatic people who are detected at timestep `t`.
     scale_up_multiplier = \
-        tanh_based_scaleup(tv_detection_max_gradient, tv_detection_change_time, tv_detection_sigma)
+        tanh_based_scaleup(tv_detection_max_gradient, tv_detection_change_time, tv_detection_start_value)
 
     # Create function describing the proportion of cases detected over time
     def prop_detect_among_sympt_func(t):

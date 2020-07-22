@@ -32,10 +32,9 @@ validate_params = sb.build_validator(
     prop_detected_among_symptomatic=float,
     # Time-variant detection of COVID cases, used to construct a tanh function.
     time_variant_detection=sb.Dict(maximum_gradient=float, max_change_time=float, start_value=float, end_value=float),
-    tv_detection_sigma=float,
     int_detection_gap_reduction=float,
     # Dynamic mixing matrix updates
-    # Time-varying mixing matrix adjutment by location
+    # Time-varying mixing matrix adjustment by location
     mixing=sb.DictGeneric(
         str,
         sb.Dict(

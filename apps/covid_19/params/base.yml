@@ -145,7 +145,6 @@ time_variant_detection:
   max_change_time: 90.  # Point at which curve inflects
   start_value: 0.  # Starting value - lower asymptote for increasing function
   end_value: 0.6  # End value - upper asymptote for increasing function
-tv_detection_sigma: 0. # height of the lower asymptote
 prop_detected_among_symptomatic: 0.6 # height of the upper asymptote
 
 # clinical proportions for imported cases

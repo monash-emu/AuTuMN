@@ -173,8 +173,8 @@ def get_country_posterior_detection_percentiles(country_param_values):
     store_matrix = np.zeros((len(calculated_times), len(country_param_values['start_time'])))
 
     for i in range(len(country_param_values['start_time'])):
-        if 'tv_detection_sigma' in country_param_values:
-            sigma = country_param_values['tv_detection_sigma'][i]
+        if 'time_variant_detection.start_value' in country_param_values:
+            sigma = country_param_values['time_variant_detection.start_value'][i]
         else:
             sigma = 0.
         my_func = tanh_based_scaleup(country_param_values['time_variant_detection.maximum_gradient'][i],

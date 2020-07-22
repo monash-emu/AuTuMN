@@ -25,7 +25,7 @@ PAR_PRIORS += [
         "distri_params": [2.0, 25.0],
     },
     {
-        "param_name": "tv_detection_sigma",
+        "param_name": "time_variant_detection.start_value",
         "distribution": "uniform",
         "distri_params": [0.1, 0.4],
     },

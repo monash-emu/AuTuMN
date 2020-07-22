@@ -11,7 +11,6 @@ use_raw_mortality_estimates: False
 start_time: 12.
 contact_rate: 0.049
 
-tv_detection_sigma: 0
 prop_detected_among_symptomatic: 0.5
 
 # other country-specific parameters

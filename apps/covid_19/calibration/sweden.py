@@ -22,9 +22,9 @@ for i, par in enumerate(PAR_PRIORS):
 
 PAR_PRIORS.append(
     {
-            "param_name": "tv_detection_sigma",
-            "distribution": "uniform",
-            "distri_params": [0.02, 0.1],
+        "param_name": "time_variant_detection.start_value",
+        "distribution": "uniform",
+        "distri_params": [0.02, 0.1],
     }
 )
 

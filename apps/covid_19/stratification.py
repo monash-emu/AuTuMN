@@ -52,7 +52,7 @@ def stratify_by_clinical(model, model_parameters, compartments):
     hospital_props_10_year = model_parameters["hospital_props"]
     hospital_props_multiplier = model_parameters["hospital_props_multiplier"]
     symptomatic_props_10_year = model_parameters["symptomatic_props"]
-    use_verity_mortality_estimates = model_parameters["use_verity_mortality_estimates"]
+    use_raw_mortality_estimates = model_parameters["use_raw_mortality_estimates"]
     ifr_double_exp_model_params = model_parameters["ifr_double_exp_model_params"]
 
     # Define stratification - only stratify infected compartments
@@ -83,7 +83,7 @@ def stratify_by_clinical(model, model_parameters, compartments):
         [p * hospital_props_multiplier for p in hospital_props_10_year], prop_over_80)
 
     # Infection fatality rate by age group.
-    if use_verity_mortality_estimates:
+    if use_raw_mortality_estimates:
         # Data in props used 10 year bands 0-80+, but we want 5 year bands from 0-75+
 
         # Calculate 75+ age bracket as weighted average between 75-79 and half 80+

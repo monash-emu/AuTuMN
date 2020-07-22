@@ -16,7 +16,7 @@ validate_params = sb.build_validator(
     hospital_props=sb.List(float),
     hospital_props_multiplier=float,
     # mortality parameters
-    use_verity_mortality_estimates=bool,
+    use_raw_mortality_estimates=bool,
     infection_fatality_props=sb.List(float),
     ifr_double_exp_model_params=dict,
     # Age stratified params

@@ -17,7 +17,7 @@ for i, par in enumerate(PAR_PRIORS):
     if par["param_name"] == "contact_rate":
         PAR_PRIORS[i]["distri_params"] = [0.025, 0.06]
 
-    if par["param_name"] == "tv_detection_c":
+    if par["param_name"] == "time_variant_detection.max_change_time":
         PAR_PRIORS[i]["distri_params"] = [140, 160]
 
 PAR_PRIORS.append(

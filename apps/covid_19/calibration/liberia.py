@@ -32,7 +32,11 @@ PAR_PRIORS = [
         "distri_ci": [4.0, 10.0],
     },
     # to set time-variant detection
-    {"param_name": "tv_detection_c", "distribution": "uniform", "distri_params": [80, 120.0],},
+    {
+        "param_name": "time_variant_detection.max_change_time",
+        "distribution": "uniform",
+        "distri_params": [80, 120.0],
+    },
     {
         "param_name": "prop_detected_among_symptomatic",
         "distribution": "beta",

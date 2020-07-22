@@ -30,7 +30,7 @@ PAR_PRIORS += [
         "distri_params": [0.1, 0.4],
     },
     {
-        "param_name": "tv_detection_b",
+        "param_name": "time_variant_detection.maximum_gradient",
         "distribution": "uniform",
         "distri_params": [0.05, 0.1],
     },

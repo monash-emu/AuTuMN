@@ -21,8 +21,8 @@ param_info = {
     'npi_effectiveness.other_locations': {'name': 'alpha', 'range': [0.5, 1.]},
     'compartment_periods_calculated.incubation.total_period': {'name': 'incubation time', 'range': [3., 7.]},
     'compartment_periods_calculated.total_infectious.total_period': {'name': 'time infectious', 'range': [5., 10.]},
-    'tv_detection_b': {'name': 'detection (shape)', 'range': [.05, .1]},
-    'tv_detection_c': {'name': 'detection (inflection)', 'range': [70., 160.]},
+    'time_variant_detection.maximum_gradient': {'name': 'detection (shape)', 'range': [.05, .1]},
+    'time_variant_detection.max_change_time': {'name': 'detection (inflection)', 'range': [70., 160.]},
     'prop_detected_among_symptomatic': {'name': 'detection (prop_final)', 'range': [.10, .90]},
     'icu_prop': {'name': 'prop ICU among hosp.', 'range': [.10, .30]},
     'compartment_periods.hospital_late': {'name': 'hopital duration', 'range': [4., 12.]},
@@ -177,8 +177,8 @@ def get_country_posterior_detection_percentiles(country_param_values):
             sigma = country_param_values['tv_detection_sigma'][i]
         else:
             sigma = 0.
-        my_func = tanh_based_scaleup(country_param_values['tv_detection_b'][i],
-                                     country_param_values['tv_detection_c'][i],
+        my_func = tanh_based_scaleup(country_param_values['time_variant_detection.maximum_gradient'][i],
+                                     country_param_values['time_variant_detection.max_change_time'][i],
                                      sigma)
         detect_vals = [country_param_values['prop_detected_among_symptomatic'][i] * my_func(float(t)) for t in calculated_times]
         store_matrix[:, i] = detect_vals

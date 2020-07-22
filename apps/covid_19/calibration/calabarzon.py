@@ -32,14 +32,14 @@ PAR_PRIORS = [
         "distri_params": [0.0, 40.0],
     },
     {
-            "param_name": "tv_detection_b",  # shape parameter
-            "distribution": "uniform",
-            "distri_params": [0.05, 0.1],
+        "param_name": "time_variant_detection.maximum_gradient",  # shape parameter
+        "distribution": "uniform",
+        "distri_params": [0.05, 0.1],
     },
     {
-            "param_name": "tv_detection_c",  # inflection point
-            "distribution": "uniform",
-            "distri_params": [70.0, 110.0],
+        "param_name": "time_variant_detection.max_change_time",
+        "distribution": "uniform",
+        "distri_params": [70.0, 110.0],
     },
     {
             "param_name": "prop_detected_among_symptomatic",  # upper asymptote

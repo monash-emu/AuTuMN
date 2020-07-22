@@ -12,11 +12,13 @@ compartment_periods_calculated:
     total_period: 5.627117561785651
   total_infectious:
     total_period: 4.629812222907533
-tv_detection_c: 98.14653458951433 # inflection point
+
 prop_detected_among_symptomatic: 0.06361796942396405
 
 # other country-specific parameters
-tv_detection_b: .05 # shape parameter of the tanh-based curve
+time_variant_detection:
+  maximum_gradient: 0.05
+  max_change_time: 98.14653458951433
 tv_detection_sigma: 0
 
 mixing:

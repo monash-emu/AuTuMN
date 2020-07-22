@@ -1,6 +1,6 @@
 from autumn.constants import Region
 from apps.covid_19.calibration import base
-from apps.covid_19.calibration.base import BASE_CALIBRATION_PARAMS
+from apps.covid_19.calibration.base import BASE_CALIBRATION_PARAMS, provide_default_calibration_params
 
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
@@ -16,7 +16,7 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
     )
 
 
-PAR_PRIORS = BASE_CALIBRATION_PARAMS
+PAR_PRIORS = provide_default_calibration_params()
 
 PAR_PRIORS += [
     {

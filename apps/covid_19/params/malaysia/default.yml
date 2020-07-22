@@ -1,5 +1,5 @@
 ---
-scenario_start_time: 140
+scenario_start_time: 198
 implement_importation: True
 
 traveller_quarantine:
@@ -43,12 +43,14 @@ mixing:
       - 2020-06-23
       - 2020-06-24 # Secondary examinations
       - 2020-07-07
+      - 2020-07-22 # School reopen
     values:
       - 1.
       - 0.
       - 0.
       - 0.1 # Secondary examinations
       - 0.1
+      - 1
 
 data: # Daily numbers of reported imported cases. (two different approaches here)
   times_imported_cases:

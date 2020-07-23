@@ -39,6 +39,7 @@ notification_times = [
 173,
 180,
 ]
+
 notification_values = [
 2,
 2,

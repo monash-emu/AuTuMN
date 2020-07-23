@@ -160,6 +160,7 @@ notification_times = [
     202,
     203,
 ]
+
 notification_counts = [
     7,
     14,
@@ -440,6 +441,7 @@ icu_times = [
     202,
     203,
 ]
+
 icu_counts = [
     2,
     3,
@@ -600,13 +602,23 @@ MULTIPLIERS = {
 
 PAR_PRIORS = provide_default_calibration_params()
 PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "notifications")
+PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "prevXlateXclinical_icuXamong")
 
 PAR_PRIORS += [
+
+    # ICU-related
     {
         "param_name": "compartment_periods.icu_early",
         "distribution": "uniform",
         "distri_params": [2.0, 25.0],
     },
+    {
+        "param_name": "icu_prop",
+        "distribution": "uniform",
+        "distri_params": [0.1, 0.35],
+    },
+
+    # Detection-related
     {
         "param_name": "time_variant_detection.start_value",
         "distribution": "uniform",
@@ -622,16 +634,8 @@ PAR_PRIORS += [
         "distribution": "uniform",
         "distri_params": [0.6, 0.9],
     },
-    {
-        "param_name": "icu_prop",
-        "distribution": "uniform",
-        "distri_params": [0.1, 0.35],
-    },
-    {
-        "param_name": "prevXlateXclinical_icuXamong_dispersion_param",
-        "distribution": "uniform",
-        "distri_params": [0.1, 5.0],
-    },
+
+    # Microdistancing-related
     {
         "param_name": "microdistancing.parameters.sigma",
         "distribution": "uniform",
@@ -643,4 +647,3 @@ PAR_PRIORS += [
         "distri_params": [78.0, 124.0],
     },
 ]
-

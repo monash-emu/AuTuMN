@@ -86,7 +86,7 @@ def add_case_detection_params_philippines(params):
 
     return params + [
         {
-            "param_name": "time_variant_detection.maximum_gradient",  # shape parameter
+            "param_name": "time_variant_detection.maximum_gradient",
             "distribution": "uniform",
             "distri_params": [0.05, 0.1],
         },

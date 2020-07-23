@@ -54,11 +54,11 @@ def provide_default_calibration_params(excluded_params=()):
          BASE_CALIBRATION_PARAMS[param]["param_name"] not in excluded_params]
 
 
-def add_standard_dispersion_parameter(par_priors, target_outputs, output_name):
+def add_standard_dispersion_parameter(params, target_outputs, output_name):
     """
     Add standard dispersion parameter for negative binomial distribution
 
-    :param par_priors: list
+    :param params: list
         Parameter priors to be updated by this function
     :param target_outputs: list
         Target outputs, to see whether the quantity of interest is an output
@@ -69,14 +69,38 @@ def add_standard_dispersion_parameter(par_priors, target_outputs, output_name):
     """
 
     if any([i["output_key"] == output_name for i in target_outputs]):
-        par_priors += [
+        params += [
             {
                 "param_name": output_name + "_dispersion_param",
                 "distribution": "uniform",
                 "distri_params": [0.1, 5.0],
             },
         ]
-    return par_priors
+    return params
+
+
+def add_case_detection_params_philippines(params):
+    """
+    Add standard set of parameters to vary case detection for the Philippines
+    """
+
+    return params + [
+        {
+            "param_name": "time_variant_detection.maximum_gradient",  # shape parameter
+            "distribution": "uniform",
+            "distri_params": [0.05, 0.1],
+        },
+        {
+            "param_name": "time_variant_detection.max_change_time",
+            "distribution": "uniform",
+            "distri_params": [70.0, 110.0],
+        },
+        {
+            "param_name": "time_variant_detection.end_value",
+            "distribution": "uniform",
+            "distri_params": [0.10, 0.90],
+        },
+    ]
 
 
 logger = logging.getLogger(__name__)

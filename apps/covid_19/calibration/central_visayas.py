@@ -1,6 +1,7 @@
 from autumn.constants import Region
 from apps.covid_19.calibration import base
-from apps.covid_19.calibration.base import provide_default_calibration_params, add_standard_dispersion_parameter
+from apps.covid_19.calibration.base import \
+    provide_default_calibration_params, add_standard_dispersion_parameter, add_case_detection_params_philippines
 
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
@@ -75,23 +76,9 @@ TARGET_OUTPUTS = [
 
 PAR_PRIORS = provide_default_calibration_params()
 PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "notifications")
+PAR_PRIORS = add_case_detection_params_philippines(PAR_PRIORS)
 
 PAR_PRIORS += [
-    {
-        "param_name": "time_variant_detection.maximum_gradient",  # shape parameter
-        "distribution": "uniform",
-        "distri_params": [0.05, 0.1],
-    },
-    {
-        "param_name": "time_variant_detection.max_change_time",  # inflection point
-        "distribution": "uniform",
-        "distri_params": [70.0, 110.0],
-    },
-    {
-        "param_name": "time_variant_detection.end_value",  # upper asymptote
-        "distribution": "uniform",
-        "distri_params": [0.10, 0.90],
-    },
     # parameters to derive age-specific IFRs
     {
         "param_name": "ifr_double_exp_model_params.k",

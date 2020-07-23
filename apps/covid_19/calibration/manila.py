@@ -72,16 +72,6 @@ TARGET_OUTPUTS = [
     },
 ]
 
-
 PAR_PRIORS = provide_default_calibration_params()
 PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "notifications")
 PAR_PRIORS = add_case_detection_params_philippines(PAR_PRIORS)
-
-PAR_PRIORS += [
-    # parameters to derive age-specific IFRs
-    {
-        "param_name": "ifr_double_exp_model_params.k",
-        "distribution": "uniform",
-        "distri_params": [6., 14.],
-    },
-]

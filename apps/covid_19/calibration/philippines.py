@@ -3,6 +3,7 @@ from apps.covid_19.calibration import base
 from apps.covid_19.calibration.base import \
     provide_default_calibration_params, add_standard_dispersion_parameter, add_case_detection_params_philippines
 
+
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
     base.run_calibration_chain(
         max_seconds,
@@ -77,11 +78,3 @@ TARGET_OUTPUTS = [
 PAR_PRIORS = provide_default_calibration_params()
 PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "notifications")
 PAR_PRIORS = add_case_detection_params_philippines(PAR_PRIORS)
-
-PAR_PRIORS += [
-    {
-        "param_name": "ifr_double_exp_model_params.k",
-        "distribution": "uniform",
-        "distri_params": [6., 14.],
-    },
-]

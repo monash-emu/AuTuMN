@@ -4,8 +4,6 @@ iso3: PHL
 scenario_start_time: 235
 end_time: 365.
 
-use_raw_mortality_estimates: False
-
 mixing:
   school:
     append: false

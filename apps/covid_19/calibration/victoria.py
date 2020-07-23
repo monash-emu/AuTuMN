@@ -1,5 +1,6 @@
 from autumn.constants import Region
 from apps.covid_19.calibration import base
+from apps.covid_19.calibration.base import provide_default_calibration_params, add_standard_dispersion_parameter
 
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
@@ -14,77 +15,6 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
     )
 
 
-# _______ Define the priors
-PAR_PRIORS = [
-    # Extra parameter for the negative binomial likelihood
-    {
-        "param_name": "notifications_dispersion_param",
-        "distribution": "uniform",
-        "distri_params": [0.1, 5.0],
-    },
-    # Transmission parameter
-    {
-        "param_name": "contact_rate",
-        "distribution": "uniform",
-        "distri_params":
-            [0.025, 0.08],
-    },
-    {
-        "param_name": "seasonal_force",
-        "distribution": "uniform",
-        "distri_params": [0., 0.8],
-    },
-    # Parameters defining the natural history of COVID-19
-    {
-        "param_name": "non_sympt_infect_multiplier",
-        "distribution": "beta",
-        "distri_mean": 0.5,
-        "distri_ci": [0.4, 0.6],
-    },
-    {
-        "param_name": "compartment_periods_calculated.incubation.total_period",
-        "distribution": "gamma",
-        "distri_mean": 5.0,
-        "distri_ci": [3.0, 7.0],
-    },
-    # Programmatic parameters
-    {
-        "param_name": "time_variant_detection.end_value",
-        "distribution": "beta",
-        "distri_mean": 0.85,
-        "distri_ci": [0.8, 0.9],
-    },
-    # Parameter to vary the mixing adjustment in other_locations
-    {
-        "param_name": "npi_effectiveness.other_locations",
-        "distribution": "beta",
-        "distri_mean": 0.9,
-        "distri_ci": [0.8, 0.99],
-    },
-    # Parameters related to case importation
-    {
-        "param_name": "data.n_imported_cases(-1)",
-        "distribution": "gamma",
-        "distri_mean": 1.0,
-        "distri_ci": [0.1, 2.0],
-    },
-    {
-        "param_name": "self_isolation_effect",
-        "distribution": "beta",
-        "distri_mean": 0.67,
-        "distri_ci": [0.55, 0.80],
-        "distri_ci_width": 0.95,
-    },
-    {
-        "param_name": "enforced_isolation_effect",
-        "distribution": "beta",
-        "distri_mean": 0.90,
-        "distri_ci": [0.80, 0.99],
-    },
-]
-
-# _______ Define the calibration targets
-# Local transmission data
 data_times = [
     71,
     72,
@@ -352,10 +282,6 @@ case_counts = [
     363,
 ]
 
-# _______ Print targets to plot to be added to plots.yml file
-# target_to_plots = {"notifications": {"times": data_times, "values": [[d] for d in case_counts]}}
-# print(target_to_plots)
-
 TARGET_OUTPUTS = [
     {
         "output_key": "notifications",
@@ -364,4 +290,37 @@ TARGET_OUTPUTS = [
         "loglikelihood_distri": "negative_binomial",
         "time_weights": list(range(1, len(data_times) + 1)),
     }
+]
+
+PAR_PRIORS = provide_default_calibration_params()
+PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "notifications")
+
+
+PAR_PRIORS += [
+    {
+        "param_name": "seasonal_force",
+        "distribution": "uniform",
+        "distri_params": [0., 0.8],
+    },
+    # Programmatic parameters
+    {
+        "param_name": "time_variant_detection.end_value",
+        "distribution": "beta",
+        "distri_mean": 0.85,
+        "distri_ci": [0.8, 0.9],
+    },
+    # Parameters related to case importation
+    {
+        "param_name": "self_isolation_effect",
+        "distribution": "beta",
+        "distri_mean": 0.67,
+        "distri_ci": [0.55, 0.80],
+        "distri_ci_width": 0.95,
+    },
+    {
+        "param_name": "enforced_isolation_effect",
+        "distribution": "beta",
+        "distri_mean": 0.90,
+        "distri_ci": [0.80, 0.99],
+    },
 ]

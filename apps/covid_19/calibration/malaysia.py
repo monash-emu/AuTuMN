@@ -1,6 +1,6 @@
 from autumn.constants import Region
 from apps.covid_19.calibration import base
-from apps.covid_19.calibration.base import provide_default_calibration_params
+from apps.covid_19.calibration.base import provide_default_calibration_params, add_standard_dispersion_parameter
 
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
@@ -16,57 +16,7 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
     )
 
 
-PAR_PRIORS = provide_default_calibration_params()
-
-PAR_PRIORS += [
-    {
-        "param_name": "compartment_periods.icu_early",
-        "distribution": "uniform",
-        "distri_params": [2.0, 25.0],
-    },
-    {
-        "param_name": "time_variant_detection.start_value",
-        "distribution": "uniform",
-        "distri_params": [0.1, 0.4],
-    },
-    {
-        "param_name": "time_variant_detection.maximum_gradient",
-        "distribution": "uniform",
-        "distri_params": [0.05, 0.1],
-    },
-    {
-        "param_name": "time_variant_detection.end_value",
-        "distribution": "uniform",
-        "distri_params": [0.6, 0.9],
-    },
-    {
-        "param_name": "icu_prop",
-        "distribution": "uniform",
-        "distri_params": [0.1, 0.35],
-    },
-    {
-        "param_name": "notifications_dispersion_param",  # Negative binomial dispersion parameter
-        "distribution": "uniform",
-        "distri_params": [0.1, 5.0],
-    },
-    {
-        "param_name": "prevXlateXclinical_icuXamong_dispersion_param",
-        "distribution": "uniform",
-        "distri_params": [0.1, 5.0],
-    },
-    {
-        "param_name": "microdistancing.parameters.sigma",
-        "distribution": "uniform",
-        "distri_params": [0.4, 0.9],
-    },
-    {
-        "param_name": "microdistancing.parameters.c",
-        "distribution": "uniform",
-        "distri_params": [78.0, 124.0],
-    },
-]
-
-# notification data, provided by the country
+# Notification data, provided by the country
 notification_times = [
     63,
     64,
@@ -646,3 +596,51 @@ TARGET_OUTPUTS = [
 MULTIPLIERS = {
     "prevXlateXclinical_icuXamong": 32364904.0
 }  # to get absolute pop size instead of proportion
+
+
+PAR_PRIORS = provide_default_calibration_params()
+PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "notifications")
+
+PAR_PRIORS += [
+    {
+        "param_name": "compartment_periods.icu_early",
+        "distribution": "uniform",
+        "distri_params": [2.0, 25.0],
+    },
+    {
+        "param_name": "time_variant_detection.start_value",
+        "distribution": "uniform",
+        "distri_params": [0.1, 0.4],
+    },
+    {
+        "param_name": "time_variant_detection.maximum_gradient",
+        "distribution": "uniform",
+        "distri_params": [0.05, 0.1],
+    },
+    {
+        "param_name": "time_variant_detection.end_value",
+        "distribution": "uniform",
+        "distri_params": [0.6, 0.9],
+    },
+    {
+        "param_name": "icu_prop",
+        "distribution": "uniform",
+        "distri_params": [0.1, 0.35],
+    },
+    {
+        "param_name": "prevXlateXclinical_icuXamong_dispersion_param",
+        "distribution": "uniform",
+        "distri_params": [0.1, 5.0],
+    },
+    {
+        "param_name": "microdistancing.parameters.sigma",
+        "distribution": "uniform",
+        "distri_params": [0.4, 0.9],
+    },
+    {
+        "param_name": "microdistancing.parameters.c",
+        "distribution": "uniform",
+        "distri_params": [78.0, 124.0],
+    },
+]
+

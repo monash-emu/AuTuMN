@@ -54,6 +54,31 @@ def provide_default_calibration_params(excluded_params=()):
          BASE_CALIBRATION_PARAMS[param]["param_name"] not in excluded_params]
 
 
+def add_standard_dispersion_parameter(par_priors, target_outputs, output_name):
+    """
+    Add standard dispersion parameter for negative binomial distribution
+
+    :param par_priors: list
+        Parameter priors to be updated by this function
+    :param target_outputs: list
+        Target outputs, to see whether the quantity of interest is an output
+    :param output_name: str
+        Name of the output of interest
+    :return: list
+        Updated version of the parameter priors
+    """
+
+    if any([i["output_key"] == output_name for i in target_outputs]):
+        par_priors += [
+            {
+                "param_name": output_name + "_dispersion_param",
+                "distribution": "uniform",
+                "distri_params": [0.1, 5.0],
+            },
+        ]
+    return par_priors
+
+
 logger = logging.getLogger(__name__)
 
 

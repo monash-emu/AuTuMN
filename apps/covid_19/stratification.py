@@ -37,9 +37,9 @@ def stratify_by_clinical(model, model_parameters, compartments):
     implement_importation = model_parameters["implement_importation"]
     traveller_quarantine = model_parameters["traveller_quarantine"]
     # Time variant case detection
-    tv_detection_end_value = model_parameters["time_variant_detection"]["end_value"]
     # FIXME: Make it clear that this for tahn
     time_variant_detection_params = model_parameters["time_variant_detection"]
+    tv_detection_end_value = model_parameters["time_variant_detection"]["end_value"]
     # ???
     within_hospital_early = model_parameters["within_hospital_early"]
     within_icu_early = model_parameters["within_icu_early"]
@@ -164,18 +164,16 @@ def stratify_by_clinical(model, model_parameters, compartments):
         tanh_based_scaleup(
             time_variant_detection_params["maximum_gradient"],
             time_variant_detection_params["max_change_time"],
-            time_variant_detection_params["start_value"]
+            time_variant_detection_params["start_value"],
+            tv_detection_end_value
         )
 
     # Create function describing the proportion of cases detected over time
     def prop_detect_among_sympt_func(t):
 
-        # Raw value without adjustment for any improved detection intervention
-        without_intervention_value = tv_detection_end_value * scale_up_multiplier(t)
-
         # Return value modified for any future intervention that narrows the case detection gap
         int_detect_gap_reduction = model_parameters['int_detection_gap_reduction']
-        return without_intervention_value + (1. - without_intervention_value) * int_detect_gap_reduction
+        return scale_up_multiplier(t) + (1. - scale_up_multiplier(t)) * int_detect_gap_reduction
 
     # Set time-varying isolation proportions
     for age_idx, agegroup in enumerate(agegroup_strata):

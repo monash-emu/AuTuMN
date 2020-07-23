@@ -182,6 +182,34 @@ def plot_stacked_derived_outputs_by_stratum(
     st.write(derived_output)
 
 
+def plot_multicountry_rainbow(
+    plotter: StreamlitPlotter, app: RegionAppBase, scenarios: list, plot_config: dict
+):
+    countries = ['belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']
+
+    root_path = os.path.join('data', 'outputs', 'run', 'covid_19')
+
+    for mode in ['by_age']:
+        for config in [3]:
+            for objective in ["deaths"]:
+                full_path = os.path.join(root_path, mode + "_config_" + str(config) + "_" + objective)
+                country_scenarios = {}
+                for country in countries:
+                    country_dirpath = os.path.join(full_path, country)
+                    dir_name = os.listdir(country_dirpath)[0]
+                    run_dirpath = os.path.join(country_dirpath, dir_name)
+
+                    params = utils.load_params(run_dirpath)
+                    post_processing_config = utils.load_post_processing_config('covid_19')
+
+                    # Get database from model data dir.
+                    db_path = os.path.join(run_dirpath, "outputs.db")
+                    country_scenarios[country] = load_model_scenarios(db_path, params, post_processing_config)
+
+                plots.plot_multicountry_rainbow(country_scenarios, config, mode, objective)
+
+
+
 PLOT_FUNCS = {
     "Compartment sizes": plot_compartment,
     "Compartments aggregate": plot_compartment_aggregate,
@@ -190,6 +218,7 @@ PLOT_FUNCS = {
     "Dynamic location mixing": plot_location_mixing,
     "Stacked outputs by stratum": plot_stacked_compartments_by_stratum,
     "Stacked derived by stratum": plot_stacked_derived_outputs_by_stratum,
+    "Multicountry rainbow": plot_multicountry_rainbow,
 }
 
 
@@ -233,3 +262,6 @@ def model_output_selector(scenarios, plot_config):
         output_config = {"name": output_name, "target_values": [], "target_times": []}
 
     return output_config
+
+
+

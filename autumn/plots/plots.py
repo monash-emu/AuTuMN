@@ -18,6 +18,7 @@ from autumn.tool_kit.scenarios import Scenario
 from autumn.tool_kit import schema_builder as sb
 from autumn.tool_kit.uncertainty import export_mcmc_quantiles
 from autumn.db.database import Database
+import matplotlib.gridspec as gridspec
 
 
 from .plotter import Plotter, COLOR_THEME
@@ -610,13 +611,14 @@ def plot_mixing_matrix(plotter: Plotter, model: StratifiedModel):
 
 
 def plot_stacked_compartments_by_stratum(plotter: Plotter, scenarios: List[Scenario], compartment_name: str,
-                                         stratify_by: str):
+                                         stratify_by: str, multicountry=False, axis=None, config=2):
     models = [sc.model for sc in scenarios]
     times = (models[0].times + models[1].times)
 
-    fig, axis, _, _, _ = plotter.get_figure()
-    legend = []
+    if not multicountry:
+        fig, axis, _, _, _ = plotter.get_figure()
 
+    legend = []
     strata = models[0].all_stratifications[stratify_by]
 
     running_total = [0.] * len(times)
@@ -665,27 +667,78 @@ def plot_stacked_compartments_by_stratum(plotter: Plotter, scenarios: List[Scena
         legend.append(stratum_name)
         running_total = new_running_total
 
-    phase_2_end = 398   # 398 or 580
+    phase_2_end = {2: 398, 3: 580}
 
     axis.axvline(x=214, linewidth=.8, dashes=[6, 4], color='black')
-    axis.axvline(x=phase_2_end,linewidth=.8, dashes=[6, 4], color='black')
+    axis.axvline(x=phase_2_end[config],linewidth=.8, dashes=[6, 4], color='black')
 
     xticks = [61, 214, 398, 366 + 214]
     xlabs = ["1 Mar 2020", "1 Aug 2020", "1 Feb 2021", "1 Aug 2021"]
 
-    axis.set_xlim((30, phase_2_end + 180))
+    axis.set_xlim((30, phase_2_end[config] + 90))
     axis.set_xticks(xticks)
-    axis.set_xticklabels(xlabs, fontsize=10)
+    axis.set_xticklabels(xlabs, fontsize=12)
 
+    for tick in axis.yaxis.get_major_ticks():
+        tick.label.set_fontsize(12)
+    # axis.xaxis.get_major_ticks().label.set_fontsize(12)
 
     ylab = {
         "recovered": "% recovered",
         "incidence": "new diseased individuals",
         "infection_deaths": "number of deaths"
     }
-    axis.set_ylabel(ylab[compartment_name], fontsize=14)
+    # axis.set_ylabel(ylab[compartment_name], fontsize=14)
 
     handles, labels = axis.get_legend_handles_labels()
     # axis.legend(reversed(handles), reversed(labels), bbox_to_anchor=(1.4, 1.1), title='Age:')
 
-    plotter.save_figure(fig, filename="compartments", title_text="compartments")
+    if not multicountry:
+        plotter.save_figure(fig, filename="compartments", title_text="compartments")
+
+    return handles, labels
+
+
+def plot_multicountry_rainbow(country_scenarios, config, mode, objective):
+    fig = pyplot.figure(constrained_layout=True, figsize=(20, 20))  # (w, h)
+    widths = [1, 6, 6, 6, 2]
+    heights = [1, 6, 6, 6, 6, 6, 6]
+    spec = fig.add_gridspec(ncols=5, nrows=7, width_ratios=widths,
+                            height_ratios=heights)
+
+    output_names = ["incidence", "infection_deaths", "recovered"]
+    output_titles = ["Daily disease incidence", "Daily deaths", "Percentage recovered"]
+
+    countries = ['belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']
+    country_names = [c.title() for c in countries]
+    country_names[-1] = "United Kingdom"
+
+    text_size = 23
+
+    for i, country in enumerate(countries):
+        for j, output in enumerate(output_names):
+            ax = fig.add_subplot(spec[i+1, j + 1])
+            h, l = plot_stacked_compartments_by_stratum(None, country_scenarios[country], output, "agegroup",
+                                                 multicountry=True, axis=ax, config=config)
+            if i == 0:
+                ax = fig.add_subplot(spec[0, j+1])
+                ax.text(0.5, 0.5, output_titles[j], fontsize=text_size, horizontalalignment='center', verticalalignment='center')
+                ax.axis("off")
+
+        ax = fig.add_subplot(spec[i+1, 0])
+        ax.text(0.5, 0.5, country_names[i], rotation=90, fontsize=text_size, horizontalalignment='center', verticalalignment='center')
+        ax.axis("off")
+
+    if j == 2:
+        ax = fig.add_subplot(spec[1:, 4])
+        ax.legend(reversed(h), reversed(l), title='Age:', fontsize=15, title_fontsize=text_size,
+                  labelspacing=1.0, loc='center')  # bbox_to_anchor=(1.4, 1.1),
+        ax.axis("off")
+
+    out_dir = "apps/covid_19/mixing_optimisation/opti_plots/figures/rainbows/"
+    filename = out_dir + "rainbow_" + mode + "_config_" + str(config) + "_" + objective
+    pyplot.savefig(filename + ".pdf")
+    pyplot.savefig(filename + ".png", dpi=300)
+
+
+

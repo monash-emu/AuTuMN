@@ -39,8 +39,6 @@ def stratify_by_clinical(model, model_parameters, compartments):
     # Time variant case detection
     # FIXME: Make it clear that this for tahn
     time_variant_detection_params = model_parameters["time_variant_detection"]
-    tv_detection_end_value = model_parameters["time_variant_detection"]["end_value"]
-    # ???
     within_hospital_early = model_parameters["within_hospital_early"]
     within_icu_early = model_parameters["within_icu_early"]
     # Strata entry and infection death proportions
@@ -165,7 +163,7 @@ def stratify_by_clinical(model, model_parameters, compartments):
             time_variant_detection_params["maximum_gradient"],
             time_variant_detection_params["max_change_time"],
             time_variant_detection_params["start_value"],
-            tv_detection_end_value
+            time_variant_detection_params["end_value"]
         )
 
     # Create function describing the proportion of cases detected over time

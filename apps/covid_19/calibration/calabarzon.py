@@ -1,6 +1,6 @@
 from autumn.constants import Region
 from apps.covid_19.calibration import base
-from apps.covid_19.calibration.base import provide_default_calibration_params
+from apps.covid_19.calibration.base import provide_default_calibration_params, add_standard_dispersion_parameter
 
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
@@ -14,49 +14,6 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
         mode="autumn_mcmc",
         _multipliers=MULTIPLIERS,
     )
-
-
-MULTIPLIERS = {
-    "prevXlateXclinical_icuXamong": 16057300.0
-}  # to get absolute pop size instead of proportion
-
-
-PAR_PRIORS = provide_default_calibration_params()
-
-PAR_PRIORS += [
-    {
-        "param_name": "time_variant_detection.maximum_gradient",  # shape parameter
-        "distribution": "uniform",
-        "distri_params": [0.05, 0.1],
-    },
-    {
-        "param_name": "time_variant_detection.max_change_time",
-        "distribution": "uniform",
-        "distri_params": [70.0, 110.0],
-    },
-    {
-        "param_name": "time_variant_detection.end_value",
-        "distribution": "uniform",
-        "distri_params": [0.10, 0.90],
-    },
-    # Add extra params for negative binomial likelihood
-    {
-        "param_name": "notifications_dispersion_param",
-        "distribution": "uniform",
-        "distri_params": [0.1, 5.0],
-    },
-    # parameters to derive age-specific IFRs
-    {
-        "param_name": "ifr_double_exp_model_params.k",
-        "distribution": "uniform",
-        "distri_params": [6., 14.],
-    },
-    {
-        "param_name": "ifr_double_exp_model_params.last_representative_age",
-        "distribution": "uniform",
-        "distri_params": [75., 85.],
-    },
-]
 
 # notification data:
 notification_times = [
@@ -81,7 +38,6 @@ notification_times = [
 173,
 180,
 ]
-
 notification_values = [
 2,
 2,
@@ -112,5 +68,38 @@ TARGET_OUTPUTS = [
         "values": notification_values,
         "loglikelihood_distri": "negative_binomial",
         "time_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1., 1., 1., 1., 1.],
+    },
+]
+
+
+MULTIPLIERS = {
+    "prevXlateXclinical_icuXamong": 16057300.0
+}  # to get absolute pop size instead of proportion
+
+
+PAR_PRIORS = provide_default_calibration_params()
+PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "notifications")
+
+PAR_PRIORS += [
+    {
+        "param_name": "time_variant_detection.maximum_gradient",  # shape parameter
+        "distribution": "uniform",
+        "distri_params": [0.05, 0.1],
+    },
+    {
+        "param_name": "time_variant_detection.max_change_time",
+        "distribution": "uniform",
+        "distri_params": [70.0, 110.0],
+    },
+    {
+        "param_name": "time_variant_detection.end_value",
+        "distribution": "uniform",
+        "distri_params": [0.10, 0.90],
+    },
+    # parameters to derive age-specific IFRs
+    {
+        "param_name": "ifr_double_exp_model_params.k",
+        "distribution": "uniform",
+        "distri_params": [6., 14.],
     },
 ]

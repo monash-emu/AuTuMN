@@ -255,9 +255,4 @@ PAR_PRIORS += [
         "distribution": "uniform",
         "distri_params": [8.0, 16.0],
     },
-    {
-        "param_name": "ifr_double_exp_model_params.last_representative_age",
-        "distribution": "uniform",
-        "distri_params": [75.0, 85.0],
-    },
 ]

@@ -244,6 +244,8 @@ def run_all_phases(decision_variables, country=Region.UNITED_KINGDOM, config=0, 
 
     run_models()
 
+    return
+
 
 def read_csv_output_file(output_dir, country, config=2, mode="by_age", objective="deaths"):
     path_to_input_csv = os.path.join('calibrated_param_sets', country + "_calibrated_params.csv")
@@ -258,6 +260,7 @@ def read_csv_output_file(output_dir, country, config=2, mode="by_age", objective
     output_file_name = output_dir + "results_" + country + "_" + mode + "_" + str(config) + "_" + objective + ".csv"
     out_table = pd.read_csv(output_file_name, sep=" ", header=None)
     out_table.columns = col_names
+    out_table["loglikelihood"] = input_table["loglikelihood"]
 
     return out_table
 
@@ -266,7 +269,11 @@ def get_mle_params_and_vars(output_dir, country, config=2, mode="by_age", object
 
     out_table = read_csv_output_file(output_dir, country, config, mode, objective)
     n_vars = {"by_age": 16, "by_location": 3}
-    decision_vars = [float(out_table.loc[len(out_table) - 1, "best_x" + str(i)]) for i in range(n_vars[mode])]
+
+    mle_rows = out_table[out_table["loglikelihood"] == out_table.loc[len(out_table) - 1, "loglikelihood"]]
+    mle_rows = mle_rows.sort_values(by="best_" + objective)
+
+    decision_vars = [float(mle_rows.loc[mle_rows.index[0], "best_x" + str(i)]) for i in range(n_vars[mode])]
 
     params = {}
     for c in out_table.columns:
@@ -274,7 +281,7 @@ def get_mle_params_and_vars(output_dir, country, config=2, mode="by_age", object
             continue
         elif "best_" in c:
             break
-        params[c] = float(out_table.loc[len(out_table) - 1, c])
+        params[c] = float(mle_rows.loc[mle_rows.index[0], c])
 
     return params, decision_vars
 
@@ -284,11 +291,14 @@ if __name__ == "__main__":
     # optimisation will have to be performed separately for the different countries and modes.
     output_dir = "optimisation_outputs/22july2020/"
     for _country in available_countries:
-        if _country == 'spain':
-            continue
-        param_set, decision_vars = get_mle_params_and_vars(output_dir, _country, config=2, mode="by_age")
-        run_all_phases(decision_vars, _country, 2, param_set, "by_age")
-
+        print("Running for " + _country + " ...")
+        config = 2
+        mode = 'by_age'
+        objective = 'deaths'
+        param_set, decision_vars = get_mle_params_and_vars(output_dir, _country, config=config, mode="by_age",
+                                                           objective=objective)
+        run_all_phases(decision_vars, _country, config, param_set, "by_age")
+        print("... done.")
     exit()
 
     decision_vars = {

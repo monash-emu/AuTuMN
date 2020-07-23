@@ -1,7 +1,8 @@
 from autumn.constants import Region
 from apps.covid_19.calibration import base
 from apps.covid_19.calibration.base import \
-    provide_default_calibration_params, add_standard_dispersion_parameter, add_case_detection_params_philippines
+    provide_default_calibration_params, add_standard_dispersion_parameter, add_case_detection_params_philippines, \
+    assign_trailing_weights_to_halves
 
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
@@ -15,6 +16,7 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
         mode="autumn_mcmc",
         _multipliers=MULTIPLIERS,
     )
+
 
 # notification data:
 notification_times = [
@@ -63,13 +65,14 @@ notification_values = [
 655,
 ]
 
+
 TARGET_OUTPUTS = [
     {
         "output_key": "notifications",
         "years": notification_times,
         "values": notification_values,
         "loglikelihood_distri": "negative_binomial",
-        "time_weights": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1., 1., 1., 1., 1.],
+        "time_weights": assign_trailing_weights_to_halves(5, notification_times),
     },
 ]
 

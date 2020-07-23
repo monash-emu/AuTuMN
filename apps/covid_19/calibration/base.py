@@ -103,6 +103,24 @@ def add_case_detection_params_philippines(params):
     ]
 
 
+def assign_trailing_weights_to_halves(end_weights, calibration_target):
+    """
+    Create a list of (float) halves and ones, of the length of the calibration target, with the last few values being
+    ones and the earlier values being halves.
+
+    :param end_weights: int
+        How many values at the end should be ones
+    :param calibration_target: list
+        List of calibration targets to determine the length of the weights to be returned
+    :return: list
+        List of the weights as described above
+    """
+
+    time_weights = [0.5] * (len(calibration_target) - end_weights)
+    time_weights += [1.] * end_weights
+    return time_weights
+
+
 logger = logging.getLogger(__name__)
 
 

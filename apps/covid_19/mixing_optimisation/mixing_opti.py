@@ -292,12 +292,12 @@ if __name__ == "__main__":
     output_dir = "optimisation_outputs/22july2020/"
     for _country in available_countries:
         print("Running for " + _country + " ...")
-        config = 2
-        mode = 'by_age'
+        config = 3
+        mode = 'by_location'
         objective = 'deaths'
-        param_set, decision_vars = get_mle_params_and_vars(output_dir, _country, config=config, mode="by_age",
+        param_set, decision_vars = get_mle_params_and_vars(output_dir, _country, config=config, mode=mode,
                                                            objective=objective)
-        run_all_phases(decision_vars, _country, config, param_set, "by_age")
+        run_all_phases(decision_vars, _country, config, param_set, mode)
         print("... done.")
     exit()
 

@@ -1,6 +1,7 @@
 from autumn.constants import Region
 from apps.covid_19.calibration import base
-from apps.covid_19.calibration.base import provide_default_calibration_params
+from apps.covid_19.calibration.base import provide_default_calibration_params, add_standard_dispersion_parameter
+
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
     base.run_calibration_chain(
@@ -19,36 +20,6 @@ MULTIPLIERS = {
     "prevXlateXclinical_icuXamong": 6133850.0
 }  # to get absolute pop size instead of proportion
 
-PAR_PRIORS = provide_default_calibration_params()
-
-PAR_PRIORS += [
-    {
-        "param_name": "infection_deathsXall_dispersion_param",
-        "distribution": "uniform",
-        "distri_params": [0.1, 5.0],
-    },
-    {
-        "param_name": "notifications_dispersion_param",
-        "distribution": "uniform",
-        "distri_params": [0.1, 5.0],
-    },
-    {
-        "param_name": "prevXlateXclinical_icuXamong_dispersion_param",
-        "distribution": "uniform",
-        "distri_params": [0.1, 5.0],
-    },
-    # parameters to derive age-specific IFRs
-    {
-        "param_name": "ifr_double_exp_model_params.k",
-        "distribution": "uniform",
-        "distri_params": [8.0, 16.0],
-    },
-    {
-        "param_name": "ifr_double_exp_model_params.last_representative_age",
-        "distribution": "uniform",
-        "distri_params": [75.0, 85.0],
-    },
-]
 
 # death data:
 death_times = [
@@ -269,5 +240,24 @@ TARGET_OUTPUTS = [
         "years": icu_times,
         "values": icu_values,
         "loglikelihood_distri": "negative_binomial",
+    },
+]
+
+PAR_PRIORS = provide_default_calibration_params()
+PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "notifications")
+PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "infection_deathsXall")
+PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "prevXlateXclinical_icuXamong")
+
+PAR_PRIORS += [
+    # parameters to derive age-specific IFRs
+    {
+        "param_name": "ifr_double_exp_model_params.k",
+        "distribution": "uniform",
+        "distri_params": [8.0, 16.0],
+    },
+    {
+        "param_name": "ifr_double_exp_model_params.last_representative_age",
+        "distribution": "uniform",
+        "distri_params": [75.0, 85.0],
     },
 ]

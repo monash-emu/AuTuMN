@@ -607,3 +607,54 @@ def plot_mixing_matrix(plotter: Plotter, model: StratifiedModel):
             vmax=12.0,
         )
         plotter.save_figure(fig, f"mixing_matrix_{location}")
+
+
+def plot_stacked_compartments_by_stratum(plotter: Plotter, scenario: Scenario, compartment_name: str, stratify_by: str):
+    model = scenario.model
+    times = model.times
+
+    fig, axis, _, _, _ = plotter.get_figure()
+    legend = []
+
+    strata = model.all_stratifications[stratify_by]
+
+    running_total = [0.] * len(times)
+
+    blues = sns.color_palette("Blues_r", 4)
+    reds = sns.color_palette("Oranges_r", 4)
+    greens = sns.color_palette("BuGn_r", 4)
+    purples = sns.cubehelix_palette(4)
+    purples[0] = (233/255., 222/255., 187/255.)
+
+    strata_colors = blues + reds + greens + purples
+
+    for color_idx, s in enumerate(strata):
+        group_name = str(int(5.*color_idx))
+        if color_idx < 15:
+            group_name += "-" + str(int(5.*color_idx) + 4)
+        else:
+            group_name += "+"
+        stratum_name = stratify_by + "_" + s
+        comp_idx = model.compartment_names.index(compartment_name + "X" + stratum_name)
+        values = model.outputs[:, comp_idx]
+        new_running_total = [r + v for (r, v) in zip(running_total, values)]
+        axis.fill_between(times, running_total, new_running_total, color=strata_colors[color_idx], label=group_name)
+        legend.append(stratum_name)
+        running_total = new_running_total
+
+    xticks = [61, 214]
+    xlabs = ["March 1st", "August 1st"]
+    axis.set_xlim((60, max(times)))
+    axis.set_xticks(xticks)
+    axis.set_xticklabels(xlabs)
+
+    handles, labels = axis.get_legend_handles_labels()
+    # axis.legend(reversed(handles), reversed(labels), bbox_to_anchor=(1.4, 1.1), title='Age:')
+
+    plotter.save_figure(fig, filename="compartments", title_text="compartments")
+
+
+
+
+
+

@@ -161,12 +161,23 @@ def plot_location_mixing(
     plots.plot_time_varying_input(plotter, loc_key, loc_func, scenario.model.times, is_logscale)
 
 
+def plot_stacked_compartments_by_stratum(
+    plotter: StreamlitPlotter, app: RegionAppBase, scenarios: list, plot_config: dict
+):
+    chosen_scenarios = selectors.scenarios(scenarios)
+    compartment = selectors.single_compartment(chosen_scenarios[0].model).split("X")[0]
+    stratify_by = 'agegroup'
+    plots.plot_stacked_compartments_by_stratum(plotter, chosen_scenarios[0], compartment, stratify_by)
+    st.write(compartment)
+
+
 PLOT_FUNCS = {
     "Compartment sizes": plot_compartment,
     "Compartments aggregate": plot_compartment_aggregate,
     "Scenario outputs": plot_outputs_multi,
     "Dynamic input functions": plot_dynamic_inputs,
     "Dynamic location mixing": plot_location_mixing,
+    "Stacked outputs by stratum": plot_stacked_compartments_by_stratum,
 }
 
 

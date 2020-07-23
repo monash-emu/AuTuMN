@@ -19,7 +19,7 @@ BASE_CALIBRATION_PARAMS = [
     {
         "param_name": "contact_rate",
         "distribution": "uniform",
-        "distri_params": [0.015, 0.05],
+        "distri_params": [0.015, 0.07],
     },
     {
         "param_name": "start_time",
@@ -98,7 +98,7 @@ def add_case_detection_params_philippines(params):
         {
             "param_name": "time_variant_detection.end_value",
             "distribution": "uniform",
-            "distri_params": [0.10, 0.90],
+            "distri_params": [0.10, 0.70],
         },
     ]
 

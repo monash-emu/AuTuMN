@@ -13,7 +13,6 @@ app.register(RegionApp(Region.NSW))
 # app.register(RegionApp(Region.LIBERIA))
 app.register(RegionApp(Region.MANILA))
 app.register(RegionApp(Region.CALABARZON))
-app.register(RegionApp(Region.BICOL))
 app.register(RegionApp(Region.CENTRAL_VISAYAS))
 
 app.register(RegionApp(Region.UNITED_KINGDOM))

@@ -171,9 +171,9 @@ end_time: 550.
 time_step: 1
 
 # Base model definition
-contact_rate: 0.03 # Expected to be calibrated for each application
+contact_rate: 0.03  # Expected to be calibrated for each application
 seasonal_force: null
-icu_mortality_prop: 0.5
+icu_mortality_prop: 0.5  # Death proportion ceiling for ICU mortality
 
 # Compulsory parameter that is completely overwritten in stratification, rather than being modified
 infect_death: 0.
@@ -205,7 +205,7 @@ google_mobility_locations:
     - parks
     - transit_stations
 
-# parameters od negative binomial (need to be listed for validation)
+# Parameters of negative binomial (need to be listed for validation)
 notifications_dispersion_param: 1.
 prevXlateXclinical_icuXamong_dispersion_param: 1.
 infection_deathsXall_dispersion_param: 1.

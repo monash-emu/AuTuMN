@@ -609,14 +609,15 @@ def plot_mixing_matrix(plotter: Plotter, model: StratifiedModel):
         plotter.save_figure(fig, f"mixing_matrix_{location}")
 
 
-def plot_stacked_compartments_by_stratum(plotter: Plotter, scenario: Scenario, compartment_name: str, stratify_by: str):
-    model = scenario.model
-    times = model.times
+def plot_stacked_compartments_by_stratum(plotter: Plotter, scenarios: List[Scenario], compartment_name: str,
+                                         stratify_by: str):
+    models = [sc.model for sc in scenarios]
+    times = (models[0].times + models[1].times)
 
     fig, axis, _, _, _ = plotter.get_figure()
     legend = []
 
-    strata = model.all_stratifications[stratify_by]
+    strata = models[0].all_stratifications[stratify_by]
 
     running_total = [0.] * len(times)
 
@@ -624,7 +625,7 @@ def plot_stacked_compartments_by_stratum(plotter: Plotter, scenario: Scenario, c
     reds = sns.color_palette("Oranges_r", 4)
     greens = sns.color_palette("BuGn_r", 4)
     purples = sns.cubehelix_palette(4)
-    purples[0] = (233/255., 222/255., 187/255.)
+    purples[0] = 'pink'
 
     strata_colors = blues + reds + greens + purples
 
@@ -635,18 +636,54 @@ def plot_stacked_compartments_by_stratum(plotter: Plotter, scenario: Scenario, c
         else:
             group_name += "+"
         stratum_name = stratify_by + "_" + s
-        comp_idx = model.compartment_names.index(compartment_name + "X" + stratum_name)
-        values = model.outputs[:, comp_idx]
-        new_running_total = [r + v for (r, v) in zip(running_total, values)]
+
+        if compartment_name in [c.split("X")[0] for c in models[0].compartment_names]:  # use outputs
+            comp_names = [c for c in models[0].compartment_names if stratum_name in c.split('X') and compartment_name in c]
+            comp_idx = [models[0].compartment_names.index(c) for c in comp_names]
+            relevant_outputs_0 = models[0].outputs[:, comp_idx]
+            values_0 = np.sum(relevant_outputs_0, axis=1)
+
+            relevant_outputs_1 = models[1].outputs[:, comp_idx]
+            values_1 = np.sum(relevant_outputs_1, axis=1)
+
+            if compartment_name == 'recovered':
+                deno_0 = np.sum(models[0].outputs, axis=1)
+                values_0 = [100*v / d for (v, d) in zip(values_0, deno_0)]
+                deno_1 = np.sum(models[1].outputs, axis=1)
+                values_1 = [100*v / d for (v, d) in zip(values_1, deno_1)]
+
+        else:  # use derived outputs
+            relevant_output_names = [c for c in models[0].derived_outputs if stratum_name in c.split('X') and compartment_name in c]
+            values_0 = [0] * len(models[0].times)
+            values_1 = [0] * len(models[1].times)
+            for out in relevant_output_names:
+                values_0 = [v + d for (v, d) in zip(values_0, models[0].derived_outputs[out])]
+                values_1 = [v + d for (v, d) in zip(values_1, models[1].derived_outputs[out])]
+
+        new_running_total = [r + v for (r, v) in zip(running_total, list(values_0) + list(values_1))]
         axis.fill_between(times, running_total, new_running_total, color=strata_colors[color_idx], label=group_name)
         legend.append(stratum_name)
         running_total = new_running_total
 
-    xticks = [61, 214]
-    xlabs = ["March 1st", "August 1st"]
-    axis.set_xlim((60, max(times)))
+    phase_2_end = 398   # 398 or 580
+
+    axis.axvline(x=214, linewidth=.8, dashes=[6, 4], color='black')
+    axis.axvline(x=phase_2_end,linewidth=.8, dashes=[6, 4], color='black')
+
+    xticks = [61, 214, 398, 366 + 214]
+    xlabs = ["1 Mar 2020", "1 Aug 2020", "1 Feb 2021", "1 Aug 2021"]
+
+    axis.set_xlim((30, phase_2_end + 180))
     axis.set_xticks(xticks)
-    axis.set_xticklabels(xlabs)
+    axis.set_xticklabels(xlabs, fontsize=10)
+
+
+    ylab = {
+        "recovered": "% recovered",
+        "incidence": "new diseased individuals",
+        "infection_deaths": "number of deaths"
+    }
+    axis.set_ylabel(ylab[compartment_name], fontsize=14)
 
     handles, labels = axis.get_legend_handles_labels()
     # axis.legend(reversed(handles), reversed(labels), bbox_to_anchor=(1.4, 1.1), title='Age:')

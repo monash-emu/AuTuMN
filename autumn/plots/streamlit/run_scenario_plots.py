@@ -167,8 +167,19 @@ def plot_stacked_compartments_by_stratum(
     chosen_scenarios = selectors.scenarios(scenarios)
     compartment = selectors.single_compartment(chosen_scenarios[0].model).split("X")[0]
     stratify_by = 'agegroup'
-    plots.plot_stacked_compartments_by_stratum(plotter, chosen_scenarios[0], compartment, stratify_by)
+    plots.plot_stacked_compartments_by_stratum(plotter, chosen_scenarios, compartment, stratify_by)
     st.write(compartment)
+
+
+def plot_stacked_derived_outputs_by_stratum(
+    plotter: StreamlitPlotter, app: RegionAppBase, scenarios: list, plot_config: dict
+):
+    chosen_scenarios = selectors.scenarios(scenarios)
+    output_config = model_output_selector(chosen_scenarios, plot_config)
+    derived_output = output_config["name"].split("X")[0]
+    stratify_by = 'agegroup'
+    plots.plot_stacked_compartments_by_stratum(plotter, chosen_scenarios, derived_output, stratify_by)
+    st.write(derived_output)
 
 
 PLOT_FUNCS = {
@@ -178,6 +189,7 @@ PLOT_FUNCS = {
     "Dynamic input functions": plot_dynamic_inputs,
     "Dynamic location mixing": plot_location_mixing,
     "Stacked outputs by stratum": plot_stacked_compartments_by_stratum,
+    "Stacked derived by stratum": plot_stacked_derived_outputs_by_stratum,
 }
 
 

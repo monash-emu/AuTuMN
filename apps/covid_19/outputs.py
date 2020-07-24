@@ -60,6 +60,14 @@ def calculate_hospital_occupancy(model, time):
     return hospital_prev
 
 
+def calculate_icu_occupancy(model, time):
+    icu_prev = 0
+    for i, comp_name in enumerate(model.compartment_names):
+        if "late" in comp_name and "clinical_icu" in comp_name:
+            icu_prev += model.compartment_values[i]
+    return icu_prev
+
+
 def calculate_proportion_seropositive(model, time):
     n_seropositive = 0
     for i, comp_name in enumerate(model.compartment_names):

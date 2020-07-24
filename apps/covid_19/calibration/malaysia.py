@@ -586,23 +586,31 @@ TARGET_OUTPUTS = [
         "loglikelihood_distri": "negative_binomial",
         "time_weights": list(range(1, len(notification_times) + 1)),
     },
+    # {
+    #     "output_key": "prevXlateXclinical_icuXamong",
+    #     "years": icu_times,
+    #     "values": icu_counts,
+    #     "loglikelihood_distri": "negative_binomial",
+    #     "time_weights": list(range(1, len(icu_times) + 1)),
+    # },
     {
-        "output_key": "prevXlateXclinical_icuXamong",
+        "output_key": "icu_occupancy",
         "years": icu_times,
         "values": icu_counts,
         "loglikelihood_distri": "negative_binomial",
         "time_weights": list(range(1, len(icu_times) + 1)),
-    },
+    }
 ]
 
 MULTIPLIERS = {
-    "prevXlateXclinical_icuXamong": 32364904.0
+    # "prevXlateXclinical_icuXamong": 32364904.0
 }  # to get absolute pop size instead of proportion
 
 
 PAR_PRIORS = provide_default_calibration_params()
 PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "notifications")
-PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "prevXlateXclinical_icuXamong")
+# PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "prevXlateXclinical_icuXamong")
+PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "icu_occupancy")
 
 PAR_PRIORS += [
 

@@ -189,9 +189,9 @@ def plot_multicountry_rainbow(
 
     root_path = os.path.join('data', 'outputs', 'run', 'covid_19')
 
-    for mode in ['by_age']:
-        for config in [3]:
-            for objective in ["deaths"]:
+    for mode in ['by_age', 'by_location']:
+        for config in [2, 3]:
+            for objective in ["deaths", "yoll"]:
                 full_path = os.path.join(root_path, mode + "_config_" + str(config) + "_" + objective)
                 country_scenarios = {}
                 for country in countries:
@@ -205,6 +205,8 @@ def plot_multicountry_rainbow(
                     # Get database from model data dir.
                     db_path = os.path.join(run_dirpath, "outputs.db")
                     country_scenarios[country] = load_model_scenarios(db_path, params, post_processing_config)
+
+                print("Plotting multicountry rainbow for: " + mode + "_config_" + str(config) + "_" + objective)
 
                 plots.plot_multicountry_rainbow(country_scenarios, config, mode, objective)
 

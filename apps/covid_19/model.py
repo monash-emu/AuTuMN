@@ -85,8 +85,8 @@ def build_model(params: dict) -> StratifiedModel:
     flows = preprocess.flows.DEFAULT_FLOWS
 
     # Choose a birth approach
-    is_importation_active = params["implement_importation"]
-    birth_approach = BirthApproach.ADD_CRUDE if is_importation_active else BirthApproach.NO_BIRTH
+    implement_importation = params["implement_importation"]
+    birth_approach = BirthApproach.ADD_CRUDE if implement_importation else BirthApproach.NO_BIRTH
 
     # Build mixing matrix.
     static_mixing_matrix = preprocess.mixing_matrix.build_static(country_iso3)
@@ -160,14 +160,6 @@ def build_model(params: dict) -> StratifiedModel:
         "contact_rate": age_based_susceptibility,
     }
 
-    # Find total number of daily contacts for each age group from unadjusted mixing matrices
-    if is_importation_active:
-        adjust_requests.update({
-            "import_secondary_rate":
-                preprocess.mixing_matrix.get_total_contact_rates_by_age(
-                    static_mixing_matrix, direction="horizontal")
-        })
-
     # Distribute starting population over agegroups
     requested_props = {
         agegroup: prop for agegroup, prop in zip(agegroup_strata, normalise_sequence(total_pops))
@@ -183,7 +175,7 @@ def build_model(params: dict) -> StratifiedModel:
         mixing_matrix=static_mixing_matrix,
         adjustment_requests=adjust_requests,
         # FIXME: This seems awfully a lot like a parameter that should go in a YAML file.
-        entry_proportions=preprocess.importation.IMPORTATION_PROPS_BY_AGE,
+        entry_proportions=model_parameters["importation_props_by_age"],
     )
 
     model_parameters["all_stratifications"] = {"agegroup": agegroup_strata}
@@ -192,7 +184,7 @@ def build_model(params: dict) -> StratifiedModel:
     )
 
     # Set time-variant importation rate
-    if is_importation_active:
+    if implement_importation:
         import_times = params["data"]["times_imported_cases"]
         import_cases = params["data"]["n_imported_cases"]
         import_rate_func = preprocess.importation.get_importation_rate_func_as_birth_rates(
@@ -212,7 +204,6 @@ def build_model(params: dict) -> StratifiedModel:
     }
 
     # Add notifications to derived_outputs
-    implement_importation = model.parameters["implement_importation"]
     model.derived_output_functions["notifications"] = outputs.get_calc_notifications_covid(
         implement_importation, modelled_abs_detection_proportion_imported,
     )

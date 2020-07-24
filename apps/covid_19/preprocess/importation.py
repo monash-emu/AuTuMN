@@ -28,25 +28,3 @@ def get_importation_rate_func_as_birth_rates(
         return importation_numbers_scale_up(t) / sum(starting_pops)
 
     return recruitment_rate
-
-
-# dummy proportions for now:
-# FIXME: These are parameters!
-IMPORTATION_PROPS_BY_AGE = {
-    "0": 0.04,
-    "5": 0.04,
-    "10": 0.04,
-    "15": 0.04,
-    "20": 0.08,
-    "25": 0.09,
-    "30": 0.09,
-    "35": 0.09,
-    "40": 0.09,
-    "45": 0.08,
-    "50": 0.08,
-    "55": 0.08,
-    "60": 0.04,
-    "65": 0.04,
-    "70": 0.04,
-    "75": 0.04,
-}

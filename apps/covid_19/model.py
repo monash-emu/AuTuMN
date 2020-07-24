@@ -174,7 +174,6 @@ def build_model(params: dict) -> StratifiedModel:
         requested_proportions=requested_props,
         mixing_matrix=static_mixing_matrix,
         adjustment_requests=adjust_requests,
-        # FIXME: This seems awfully a lot like a parameter that should go in a YAML file.
         entry_proportions=model_parameters["importation_props_by_age"],
     )
 

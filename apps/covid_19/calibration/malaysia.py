@@ -12,7 +12,6 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
         PAR_PRIORS,
         TARGET_OUTPUTS,
         mode="autumn_mcmc",
-        _multipliers=MULTIPLIERS,
     )
 
 
@@ -586,13 +585,6 @@ TARGET_OUTPUTS = [
         "loglikelihood_distri": "negative_binomial",
         "time_weights": list(range(1, len(notification_times) + 1)),
     },
-    # {
-    #     "output_key": "prevXlateXclinical_icuXamong",
-    #     "years": icu_times,
-    #     "values": icu_counts,
-    #     "loglikelihood_distri": "negative_binomial",
-    #     "time_weights": list(range(1, len(icu_times) + 1)),
-    # },
     {
         "output_key": "icu_occupancy",
         "years": icu_times,
@@ -602,14 +594,8 @@ TARGET_OUTPUTS = [
     }
 ]
 
-MULTIPLIERS = {
-    # "prevXlateXclinical_icuXamong": 32364904.0
-}  # to get absolute pop size instead of proportion
-
-
 PAR_PRIORS = provide_default_calibration_params()
 PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "notifications")
-# PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "prevXlateXclinical_icuXamong")
 PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "icu_occupancy")
 
 PAR_PRIORS += [

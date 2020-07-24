@@ -159,12 +159,14 @@ def build_model(params: dict) -> StratifiedModel:
         # Adjust susceptibility across age groups
         "contact_rate": age_based_susceptibility,
     }
+
+    # Find total number of daily contacts for each age group
     if is_importation_active:
-        adjust_requests[
-            "import_secondary_rate"
-        ] = preprocess.mixing_matrix.get_total_contact_rates_by_age(
-            static_mixing_matrix, direction="horizontal"
-        )
+        adjust_requests.update({
+            "import_secondary_rate":
+                preprocess.mixing_matrix.get_total_contact_rates_by_age(
+                    static_mixing_matrix, direction="horizontal")
+        })
 
     # Distribute starting population over agegroups
     requested_props = {

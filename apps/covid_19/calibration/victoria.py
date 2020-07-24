@@ -292,9 +292,8 @@ TARGET_OUTPUTS = [
     }
 ]
 
-PAR_PRIORS = provide_default_calibration_params()
+PAR_PRIORS = provide_default_calibration_params(["contact_rate"])
 PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "notifications")
-
 
 PAR_PRIORS += [
     {

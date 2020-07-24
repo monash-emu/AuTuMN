@@ -171,7 +171,7 @@ def stratify_by_clinical(model, model_parameters, compartments):
     # Set time-varying isolation proportions
     for age_idx, agegroup in enumerate(agegroup_strata):
         # Pass the functions to the model
-        tv_props = TimeVaryingProprotions(age_idx, abs_props, prop_detect_among_sympt_func)
+        tv_props = TimeVaryingProportions(age_idx, abs_props, prop_detect_among_sympt_func)
         time_variants = [
             [f"prop_sympt_non_hospital_{agegroup}", tv_props.get_abs_prop_sympt_non_hospital,],
             [f"prop_sympt_isolate_{agegroup}", tv_props.get_abs_prop_isolated],
@@ -252,11 +252,8 @@ def stratify_by_clinical(model, model_parameters, compartments):
             scale_up_function(traveller_quarantine["times"], traveller_quarantine["values"], method=4)
 
         # Set fixed clinical proportions for imported cases (hospital_non_icu and icu)
-        importation_props_by_clinical = {
-            stratum:
-                stratification_adjustments[to_infectious_key][stratum] for
-            stratum in strata_to_implement[-2:]
-        }
+        importation_props_by_clinical = \
+            {stratum: stratification_adjustments[to_infectious_key][stratum] for stratum in strata_to_implement[-2:]}
 
         # Proportion entering non-symptomatic stratum reduced by quarantine, will be modelled as isolated
         def tv_prop_imported_non_sympt(t):
@@ -323,7 +320,7 @@ def subdivide_props(base_props: np.ndarray, split_props: np.ndarray):
     return split_arr, complement_arr
 
 
-class TimeVaryingProprotions:
+class TimeVaryingProportions:
     """
     Provides time-varying proportions for a given age group.
     The proportions determine which clinical stratum people transition into when they go
@@ -344,7 +341,7 @@ class TimeVaryingProprotions:
         abs_prop_isolated = abs_prop_detected - self.abs_prop_hospital
         if abs_prop_isolated < 0:
             # If more people go to hospital than are detected, ignore detection
-            # proprortion, and assume no one is being isolated.
+            # proportion, and assume no one is being isolated.
             abs_prop_isolated = 0
 
         return abs_prop_isolated

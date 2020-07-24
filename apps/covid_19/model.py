@@ -160,7 +160,7 @@ def build_model(params: dict) -> StratifiedModel:
         "contact_rate": age_based_susceptibility,
     }
 
-    # Find total number of daily contacts for each age group
+    # Find total number of daily contacts for each age group from unadjusted mixing matrices
     if is_importation_active:
         adjust_requests.update({
             "import_secondary_rate":

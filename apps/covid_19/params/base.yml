@@ -22,9 +22,9 @@ traveller_quarantine:
 # intended to represent the time in hospital or ICU (as applicable)
 compartment_periods:
   hospital_early: 8.1
-  hospital_late: 8.
-  icu_early: 5.
-  icu_late: 7.5
+  hospital_late: 18.4
+  icu_early: 12.7
+  icu_late: 10.8
 
 # Mean time (?) spent in each compartment, defined via proportions
 compartment_periods_calculated:

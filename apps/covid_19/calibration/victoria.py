@@ -15,7 +15,7 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
     )
 
 
-data_times = [
+case_times = [
     71,
     72,
     73,
@@ -398,7 +398,6 @@ icu_times = [
     204,
     205,
 ]
-
 icu_counts = [
     6,
     7,
@@ -519,14 +518,14 @@ icu_counts = [
 TARGET_OUTPUTS = [
     {
         "output_key": "notifications",
-        "years": data_times,
+        "years": case_times,
         "values": case_counts,
         "loglikelihood_distri": "negative_binomial",
-        "time_weights": list(range(1, len(data_times) + 1)),
+        "time_weights": list(range(1, len(case_times) + 1)),
     }
 ]
 
-PAR_PRIORS = provide_default_calibration_params()
+PAR_PRIORS = provide_default_calibration_params(["start_time"])
 PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "notifications")
 
 PAR_PRIORS += [

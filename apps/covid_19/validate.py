@@ -89,4 +89,5 @@ validate_params = sb.build_validator(
     infection_deathsXall_dispersion_param=float,
     proportion_seropositive_dispersion_param=float,
     icu_occupancy_dispersion_param=float,
+    importation_props_by_age=dict,
 )

@@ -40,8 +40,7 @@ def stratify_by_clinical(model, model_parameters, compartments):
     icu_prop = model_parameters["icu_prop"]
     icu_mortality_prop = model_parameters["icu_mortality_prop"]
     infection_fatality_props_10_year = model_parameters["infection_fatality_props"]
-    hospital_props_10_year = model_parameters["hospital_props"]
-    hospital_props_multiplier = model_parameters["hospital_props_multiplier"]
+    hospital_props = model_parameters["hospital_props"]
     symptomatic_props_10_year = model_parameters["symptomatic_props"]
     use_raw_mortality_estimates = model_parameters["use_raw_mortality_estimates"]
     ifr_double_exp_model_params = model_parameters["ifr_double_exp_model_params"]
@@ -58,7 +57,6 @@ def stratify_by_clinical(model, model_parameters, compartments):
 
     # FIXME: Set params to make comparison happy
     model_parameters["infection_fatality_props"] = infection_fatality_props_10_year
-    model_parameters["hospital_props"] = hospital_props_10_year
 
     # Calculate the proportion of 80+ years old among the 75+ population
     elderly_populations = get_population_by_agegroup([0, 75, 80], model_parameters["iso3"], model_parameters["region"])
@@ -67,11 +65,6 @@ def stratify_by_clinical(model, model_parameters, compartments):
     # Age dependent proportions of infected people who become symptomatic.
     # This is defined 8x10 year bands, 0-70+, which we transform into 16x5 year bands 0-75+
     symptomatic_props = repeat_list_elements(2, symptomatic_props_10_year)
-    # Age dependent proportions of symptomatic people who become hospitalised.
-    # This is defined 9x10 year bands, 0-80+, which we trransform into 16x5 year bands 0-75+
-    # Calculate 75+ age bracket as half 75-79 and half 80+
-    hospital_props = repeat_list_elements_average_last_two(
-        [p * hospital_props_multiplier for p in hospital_props_10_year], prop_over_80)
 
     # Infection fatality rate by age group.
     if use_raw_mortality_estimates:

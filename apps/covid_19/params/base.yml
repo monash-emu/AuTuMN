@@ -74,17 +74,24 @@ symptomatic_props:
   - 0.63 # 60-69
   - 0.69 # 70+
 
-# Proportion of symptomatic persons that are hospitalised - Verity et al.
+# Proportion of symptomatic persons that are hospitalised - Dutch GGD report
 hospital_props:
-  - 0.001 # 0-9
-  - 0.003 # 10-19
-  - 0.012 # 20-29
-  - 0.032 # 30-39
-  - 0.049 # 40-49
-  - 0.102 # 50-59
-  - 0.166 # 60-69
-  - 0.243 # 70-79
-  - 0.273 # 80+
+  - 0.087 # 0-4
+  - 0.009 # 5-9
+  - 0.005 # 10-14
+  - 0.008 # 15-19
+  - 0.011 # 20-24
+  - 0.011 # 25-29
+  - 0.013 # 30-34
+  - 0.015 # 35-39
+  - 0.018 # 40-44
+  - 0.040 # 45-49
+  - 0.047 # 50-54
+  - 0.070 # 55-59
+  - 0.071 # 60-64
+  - 0.114 # 65-69
+  - 0.113 # 70-74
+  - 0.071 # 75+
 
 hospital_props_multiplier: 1.
 

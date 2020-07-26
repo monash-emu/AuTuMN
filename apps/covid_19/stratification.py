@@ -213,7 +213,7 @@ def stratify_by_clinical(model, model_parameters, compartments, detected_proport
     # FIXME: Ask Romain about importation
     # Work out time-variant clinical proportions for imported cases accounting for quarantine
     if implement_importation:
-        to_infectious_key = "to_infectiousXagegroup_35"  # Arbitrarily selecting the 35-39 age group as representative
+        to_infectious_key = "to_infectiousXagegroup_" + str(model_parameters['import_representative_age'])
         tvs = model.time_variants
 
         # Create scale-up function for quarantine

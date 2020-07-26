@@ -155,14 +155,22 @@ def build_model(params: dict) -> StratifiedModel:
 
     # Detected and symptomatic proportions primarily needed for the clinical stratification
     # - except for the following function
-    # Function representing the proportion of symptomatic people detected over time
-    detected_proportion = \
-        tanh_based_scaleup(
-            detect_prop_params["maximum_gradient"],
-            detect_prop_params["max_change_time"],
-            detect_prop_params["start_value"],
-            detect_prop_params["end_value"]
-        )
+
+    # Create function describing the proportion of cases detected over time
+    def detected_proportion(t):
+
+        # Function representing the proportion of symptomatic people detected over time
+        base_prop_detect = \
+            tanh_based_scaleup(
+                detect_prop_params["maximum_gradient"],
+                detect_prop_params["max_change_time"],
+                detect_prop_params["start_value"],
+                detect_prop_params["end_value"]
+            )
+
+        # Return value modified for any future intervention that narrows the case detection gap
+        int_detect_gap_reduction = model_parameters['int_detection_gap_reduction']
+        return base_prop_detect(t) + (1. - base_prop_detect(t)) * int_detect_gap_reduction
 
     # Age dependent proportions of infected people who become symptomatic
     # This is defined 8x10 year bands, 0-70+, which we transform into 16x5 year bands 0-75+

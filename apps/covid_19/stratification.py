@@ -137,17 +137,10 @@ def stratify_by_clinical(model, model_parameters, compartments, detected_proport
             "hospital_non_icu": sympt_hospital_non_icu[age_idx],
         }
 
-    # Create function describing the proportion of cases detected over time
-    def prop_detect_among_sympt_func(t):
-
-        # Return value modified for any future intervention that narrows the case detection gap
-        int_detect_gap_reduction = model_parameters['int_detection_gap_reduction']
-        return detected_proportion(t) + (1. - detected_proportion(t)) * int_detect_gap_reduction
-
     # Set time-varying isolation proportions
     for age_idx, agegroup in enumerate(agegroup_strata):
         # Pass the functions to the model
-        tv_props = TimeVaryingProportions(age_idx, abs_props, prop_detect_among_sympt_func)
+        tv_props = TimeVaryingProportions(age_idx, abs_props, detected_proportion)
         time_variants = [
             [f"prop_sympt_non_hospital_{agegroup}", tv_props.get_abs_prop_sympt_non_hospital,],
             [f"prop_sympt_isolate_{agegroup}", tv_props.get_abs_prop_isolated],

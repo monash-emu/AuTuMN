@@ -260,7 +260,7 @@ def stratify_by_clinical(model, model_parameters, compartments, detected_proport
             importation_props_by_clinical[stratum] = "tv_prop_imported_" + stratum
 
     else:
-        importation_props_by_clinical, modelled_abs_detection_proportion_imported = {}, None
+        importation_props_by_clinical = {}
 
     # Stratify the model using the SUMMER stratification function
     model.stratify(

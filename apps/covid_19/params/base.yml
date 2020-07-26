@@ -154,11 +154,6 @@ time_variant_detection:
   start_value: 0.1  # Starting value - lower asymptote for increasing function
   end_value: 0.6  # End value - upper asymptote for increasing function
 
-# clinical proportions for imported cases
-symptomatic_props_imported: .5
-hospital_props_imported: .05
-icu_prop_imported: .3
-
 # Sub region of country, null means just the country.
 region: null
 

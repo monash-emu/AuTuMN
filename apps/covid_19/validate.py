@@ -70,9 +70,6 @@ validate_params = sb.build_validator(
     # Importation of disease from outside of region
     implement_importation=bool,
     import_secondary_rate=float,
-    symptomatic_props_imported=float,
-    hospital_props_imported=float,
-    icu_prop_imported=float,
     data=sb.Dict(times_imported_cases=sb.List(float), n_imported_cases=sb.List(float),),
     microdistancing=sb.Nullable(sb.Dict(function_type=str, parameters=dict)),
     # Other stuff

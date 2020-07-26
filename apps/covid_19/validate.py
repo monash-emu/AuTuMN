@@ -74,7 +74,6 @@ validate_params = sb.build_validator(
     hospital_props_imported=float,
     icu_prop_imported=float,
     enforced_isolation_effect=float,
-    self_isolation_effect=float,
     data=sb.Dict(times_imported_cases=sb.List(float), n_imported_cases=sb.List(float),),
     microdistancing=sb.Nullable(sb.Dict(function_type=str, parameters=dict)),
     # Other stuff

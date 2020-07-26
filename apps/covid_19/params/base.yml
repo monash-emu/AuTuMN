@@ -158,10 +158,6 @@ symptomatic_props_imported: .5
 hospital_props_imported: .05
 icu_prop_imported: .3
 
-# parameters to define the effect (infectiousness adjustment) of self-isolation and enforced isolation
-self_isolation_effect: .67
-enforced_isolation_effect: 1.
-
 # Sub region of country, null means just the country.
 region: null
 

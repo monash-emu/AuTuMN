@@ -25,7 +25,7 @@ def run_powerbi(instance, run_id: str):
         pipeline_name = "RunPowerBI"
         pipeline_args = {
             "run-id": run_id,
-            "workers": 15,
+            "workers": 7,
         }
         run_luigi_pipeline(conn, pipeline_name, pipeline_args)
         logger.info("PowerBI processing completed for %s", run_id)
@@ -49,7 +49,7 @@ def run_full_model(instance, run_id: str, burn_in: int, use_latest_code: bool):
             "run-id": run_id,
             "FullModelRunTask-burn-in": burn_in,
             "FullModelRunTask-model-name": model_name,
-            "workers": 15,
+            "workers": 7,
         }
         run_luigi_pipeline(conn, pipeline_name, pipeline_args)
         logger.info("Full model runs completed for %s", run_id)

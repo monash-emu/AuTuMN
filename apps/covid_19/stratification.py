@@ -222,7 +222,7 @@ def stratify_by_clinical(model, model_parameters, compartments, detected_proport
 
         # Clinical proportions for imported cases stay fixed for the hospitalised and critical groups (last two strata)
         importation_props_by_clinical = \
-            {stratum: stratification_adjustments[to_infectious_key][stratum] for
+            {stratum: float(stratification_adjustments[to_infectious_key][stratum]) for
              stratum in strata_to_implement[-2:]}
 
         # Proportion entering non-symptomatic stratum reduced by the quarantined (and so isolated) proportion

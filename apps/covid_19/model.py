@@ -1,4 +1,5 @@
 import os
+import copy
 from summer.model import StratifiedModel
 from summer.model.utils.string import find_all_strata, find_name_components
 
@@ -89,7 +90,7 @@ def build_model(params: dict) -> StratifiedModel:
     integration_times = get_model_times_from_inputs(round(start_time), end_time, time_step,)
 
     # Add inter-compartmental transition flows
-    flows = preprocess.flows.DEFAULT_FLOWS
+    flows = copy.deepcopy(preprocess.flows.DEFAULT_FLOWS)
 
     # Choose a birth approach
     implement_importation = params["implement_importation"]

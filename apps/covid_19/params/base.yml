@@ -167,7 +167,7 @@ infectious_seed: 10
 # Running time-related - for COVID-19 model, all times are assumed to be in days and reference time is 31st Dec 2019
 start_time: 40.
 end_time: 550.
-time_step: 1
+time_step: 1.
 
 # Base model definition
 contact_rate: 0.03 # Expected to be calibrated for each application
@@ -209,3 +209,7 @@ notifications_dispersion_param: 1.
 prevXlateXclinical_icuXamong_dispersion_param: 1.
 infection_deathsXall_dispersion_param: 1.
 proportion_seropositive_dispersion_param: 1.
+
+# parameters pertaining to waning immunity
+full_immunity: True
+immunity_duration: 90.

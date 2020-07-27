@@ -741,4 +741,86 @@ def plot_multicountry_rainbow(country_scenarios, config, mode, objective):
     pyplot.savefig(filename + ".png", dpi=300)
 
 
+def plot_hospital_occupancy(all_scenarios, country, mode, objective, ax, title):
 
+    dash_style = {
+        2: [6, 0],
+        3: [6, 3]
+    }
+
+    colours = {
+        "hospital_occupancy": sns.cubehelix_palette(4)[3],
+        "icu_occupancy": sns.color_palette("Oranges_r", 4)[0]
+    }
+
+    x_min = 214
+
+    for config in [2, 3]:
+        scenarios = all_scenarios[mode][objective][config][country]
+        models = [sc.model for sc in scenarios]
+        times = (models[0].times + models[1].times)
+
+        for output in ["hospital_occupancy", "icu_occupancy"]:
+            if output == "hospital_occupancy":
+                values_0 = models[0].derived_outputs[output]
+                values_1 = models[1].derived_outputs[output]
+            else:
+                comp_names = [c for c in models[0].compartment_names if "clinical_icu" in c.split('X')]
+                comp_idx = [models[0].compartment_names.index(c) for c in comp_names]
+                relevant_outputs_0 = models[0].outputs[:, comp_idx]
+                values_0 = np.sum(relevant_outputs_0, axis=1)
+
+                relevant_outputs_1 = models[1].outputs[:, comp_idx]
+                values_1 = np.sum(relevant_outputs_1, axis=1)
+
+            values = list(values_0) + list(values_1)
+
+            times = [t for t in times if t >= x_min]
+            values = values[-len(times):]
+
+            ax.plot(times, values, dashes=dash_style[config], color=colours[output], linewidth=2)
+
+    ax.set_title(title)
+
+    ax.set_ylabel("bed occupancy", fontsize=14)
+
+    xticks = [214, 336, 366 + 91, 366 + 213]
+    xlabs = ["1 Aug 2020", "1 Dec 2020", "1 Apr 2021", "1 Aug 2021"]
+
+    ax.set_xlim((x_min, 366 + 213))
+    ax.set_xticks(xticks)
+    ax.set_xticklabels(xlabs, fontsize=12)
+
+    for tick in ax.yaxis.get_major_ticks():
+        tick.label.set_fontsize(12)
+
+
+def plot_multicountry_hospital(all_scenarios, mode, objective):
+    """
+    Format of all_scenarios: all_scenarios[mode][objective][config][country]
+    """
+    fig = pyplot.figure(constrained_layout=True, figsize=(10, 9))  # (w, h)
+    widths = [1, 1]
+    heights = [1, 1, 1]
+    spec = fig.add_gridspec(ncols=2, nrows=3, width_ratios=widths,
+                            height_ratios=heights)
+
+    countries = ['belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']
+    country_names = [c.title() for c in countries]
+    country_names[-1] = "United Kingdom"
+
+    i_col = -1
+    i_row = 0
+    for i, country in enumerate(countries):
+        i_col += 1
+        if i_col >= 2:
+            i_col = 0
+            i_row += 1
+
+        ax = fig.add_subplot(spec[i_row, i_col])
+        plot_hospital_occupancy(all_scenarios, country, mode, objective, ax, country_names[i])
+
+    out_dir = "apps/covid_19/mixing_optimisation/opti_plots/figures/hospitals/"
+    filename = out_dir + "rainbow_" + mode + "_" + objective
+    pyplot.savefig(filename + ".pdf")
+    pyplot.savefig(filename + ".png", dpi=300)

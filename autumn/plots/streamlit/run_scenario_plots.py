@@ -186,7 +186,6 @@ def plot_multicountry_rainbow(
     plotter: StreamlitPlotter, app: RegionAppBase, scenarios: list, plot_config: dict
 ):
     countries = ['belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']
-
     root_path = os.path.join('data', 'outputs', 'run', 'covid_19')
 
     for mode in ['by_age', 'by_location']:
@@ -211,6 +210,35 @@ def plot_multicountry_rainbow(
                 plots.plot_multicountry_rainbow(country_scenarios, config, mode, objective)
 
 
+def plot_multicounty_hospital(
+    plotter: StreamlitPlotter, app: RegionAppBase, scenarios: list, plot_config: dict
+):
+    countries = ['belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']
+    root_path = os.path.join('data', 'outputs', 'run', 'covid_19')
+
+    all_scenarios = {}
+    for mode in ['by_age', 'by_location']:
+        all_scenarios[mode] = {}
+        for objective in ["deaths", "yoll"]:
+            all_scenarios[mode][objective] = {}
+            for config in [2, 3]:
+                full_path = os.path.join(root_path, mode + "_config_" + str(config) + "_" + objective)
+                all_scenarios[mode][objective][config] = {}
+                for country in countries:
+                    country_dirpath = os.path.join(full_path, country)
+                    dir_name = os.listdir(country_dirpath)[0]
+                    run_dirpath = os.path.join(country_dirpath, dir_name)
+
+                    params = utils.load_params(run_dirpath)
+                    post_processing_config = utils.load_post_processing_config('covid_19')
+
+                    # Get database from model data dir.
+                    db_path = os.path.join(run_dirpath, "outputs.db")
+                    all_scenarios[mode][objective][config][country] = load_model_scenarios(db_path, params, post_processing_config)
+
+            print("Plotting multicountry hospital for: " + mode + "_" + objective)
+            plots.plot_multicountry_hospital(all_scenarios, mode, objective)
+
 
 PLOT_FUNCS = {
     "Compartment sizes": plot_compartment,
@@ -221,6 +249,7 @@ PLOT_FUNCS = {
     "Stacked outputs by stratum": plot_stacked_compartments_by_stratum,
     "Stacked derived by stratum": plot_stacked_derived_outputs_by_stratum,
     "Multicountry rainbow": plot_multicountry_rainbow,
+    "Multicountry hospital": plot_multicounty_hospital,
 }
 
 

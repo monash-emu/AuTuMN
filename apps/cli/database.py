@@ -125,7 +125,7 @@ def uncertainty_weights(output_name: str, db_path: str):
     Requires MCMC run metadata.
     """
     assert os.path.isfile(db_path), f"{db_path} must be a file"
-    add_uncertainty_weights(output_name, db_path)
+    add_uncertainty_weights([output_name], db_path)
 
 
 @uncertainty.command("quantiles")

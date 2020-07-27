@@ -25,9 +25,11 @@ yarn build
 echo "Uploading web assets"
 if [[ -d ~/.aws/ ]]
 then
-    aws --profile autumn s3 cp --recursive out s3://www.autumn-data.com
+    aws --profile autumn s3 rm --quiet --recursive s3://www.autumn-data.com
+    aws --profile autumn s3 cp --quiet --recursive out s3://www.autumn-data.com
 else
-    aws s3 cp --recursive out s3://www.autumn-data.com
+    aws s3 rm --quiet --recursive s3://www.autumn-data.com
+    aws s3 cp --quiet --recursive out s3://www.autumn-data.com
 fi
 echo "Done uploading website"
 popd

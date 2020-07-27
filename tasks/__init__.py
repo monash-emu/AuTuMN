@@ -7,10 +7,11 @@ This module requires AWS access to run.
 You can access this script from your CLI by running the Luigi CLI:
 https://luigi.readthedocs.io/en/stable/running_luigi.html
 
-aws --profile autumn s3 rm --recursive s3://autumn-data/malaysia-111111111-aaaaaaa
+rm -rf data/outputs/remote data/outputs/calibrate
+aws --profile autumn s3 rm --recursive s3://autumn-data/manila-111111111-aaaaaaa
 
 ./scripts/website/deploy.sh
-http://www.autumn-data.com/model/malaysia/run/malaysia-111111111-aaaaaaa.html
+http://www.autumn-data.com/model/manila/run/manila-111111111-aaaaaaa.html
 
 export LUIGI_CONFIG_PATH=tasks/luigi.cfg
 
@@ -18,10 +19,10 @@ export LUIGI_CONFIG_PATH=tasks/luigi.cfg
 python3 -m luigi \
     --module tasks \
     RunCalibrate \
-    --run-id malaysia-111111111-aaaaaaa \
+    --run-id manila-111111111-aaaaaaa \
     --num-chains 2 \
-    --CalibrationChainTask-model-name malaysia \
-    --CalibrationChainTask-runtime 30 \
+    --CalibrationChainTask-model-name manila \
+    --CalibrationChainTask-runtime 60 \
     --local-scheduler \
     --workers 4 \
     --logging-conf-file tasks/luigi-logging.ini
@@ -30,30 +31,20 @@ python3 -m luigi \
 python3 -m luigi \
     --module tasks \
     RunFullModels \
-    --run-id malaysia-111111111-aaaaaaa \
+    --run-id manila-111111111-aaaaaaa \
     --FullModelRunTask-burn-in 0 \
-    --FullModelRunTask-model-name malaysia \
+    --FullModelRunTask-model-name manila \
     --local-scheduler \
-    --workers 4 \
+    --workers 6 \
     --logging-conf-file tasks/luigi-logging.ini
 
 # Run PowerBI processing
 python3 -m luigi \
     --module tasks \
     RunPowerBI \
-    --run-id malaysia-111111111-aaaaaaa \
+    --run-id manila-111111111-aaaaaaa \
     --local-scheduler \
-    --workers 4 \
-    --logging-conf-file tasks/luigi-logging.ini
-
-
-python3 -m luigi \
-    --module tasks RunFullModels \
-    --run-id manila-1594621996-7671bcd \
-    --FullModelRunTask-burn-in 1000 \
-    --FullModelRunTask-model-name manila \
-    --local-scheduler \
-    --workers 4 \
+    --workers 6 \
     --logging-conf-file tasks/luigi-logging.ini
 
 """

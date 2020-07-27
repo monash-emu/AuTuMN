@@ -6,9 +6,11 @@ import styled from 'styled-components'
 
 export const Page = ({ title, children }) => {
   useEffect(() => {
-    const href = window.location.href
-    if (!href.endsWith('.html')) {
-      window.location = href + '.html'
+    if (location.host === 'www.autumn-data.com') {
+      const href = location.href
+      if (!href.endsWith('.html') && location.pathname != '/') {
+        window.location = href + '.html'
+      }
     }
   }, [])
   return (

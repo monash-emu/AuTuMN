@@ -35,7 +35,6 @@ OPTI_ONLY_OUTPUTS = [
 ]
 
 
-
 def get_final_db_path(run_id: str):
     return os.path.join(settings.BASE_DIR, "data", "powerbi", f"powerbi-{run_id}.db")
 
@@ -64,7 +63,6 @@ class UncertaintyWeightsTask(utils.ParallelLoggerTask):
 
     run_id = luigi.Parameter()  # Unique run id string
     chain_id = luigi.IntParameter()  # Unique chain id
-    output_name = luigi.Parameter()
 
     def requires(self):
         download_task = utils.DownloadS3Task(run_id=self.run_id, src_path=self.get_src_db_relpath())
@@ -76,19 +74,22 @@ class UncertaintyWeightsTask(utils.ParallelLoggerTask):
         return luigi.LocalTarget(self.get_success_path())
 
     def safe_run(self):
-        msg = (
-            f"Calculating uncertainty weights for chain {self.chain_id} outputs {self.output_name}"
-        )
+        msg = f"Calculating uncertainty weights for chain {self.chain_id}"
         with Timer(msg):
+            region_name, _, _ = utils.read_run_id(self.run_id)
+            output_list = (
+                UNCERTAINTY_OUTPUTS
+                if region_name not in OPTI_REGIONS
+                else UNCERTAINTY_OUTPUTS + OPTI_ONLY_OUTPUTS
+            )
             db_path = os.path.join(settings.BASE_DIR, self.get_src_db_relpath())
-            add_uncertainty_weights(self.output_name, db_path)
+            add_uncertainty_weights(output_list, db_path)
             with open(self.get_success_path(), "w") as f:
                 f.write("complete")
 
     def get_success_path(self):
         return os.path.join(
-            settings.BASE_DIR,
-            f"data/powerbi/weights-success/{self.chain_id}-{self.output_name}.txt",
+            settings.BASE_DIR, f"data/powerbi/weights-success/chain-{self.chain_id}.txt",
         )
 
     def get_src_db_relpath(self):
@@ -96,7 +97,7 @@ class UncertaintyWeightsTask(utils.ParallelLoggerTask):
         return os.path.join("data", "full_model_runs", src_filename)
 
     def get_log_filename(self):
-        return f"powerbi/weights-{self.chain_id}-{self.output_name}.log"
+        return f"powerbi/weights-{self.chain_id}.log"
 
 
 class PruneFullRunDatabaseTask(utils.ParallelLoggerTask):
@@ -106,14 +107,10 @@ class PruneFullRunDatabaseTask(utils.ParallelLoggerTask):
     chain_id = luigi.IntParameter()  # Unique chain id
 
     def requires(self):
-        region_name, _, _ = utils.read_run_id(self.run_id)
-        output_list = UNCERTAINTY_OUTPUTS if region_name not in OPTI_REGIONS else UNCERTAINTY_OUTPUTS + OPTI_ONLY_OUTPUTS
         return [
-            UncertaintyWeightsTask(
-                run_id=self.run_id, output_name=output_name, chain_id=self.chain_id
-            )
-            for output_name in output_list
-        ] + [utils.BuildLocalDirectoryTask(dirname="data/powerbi/pruned/")]
+            UncertaintyWeightsTask(run_id=self.run_id, chain_id=self.chain_id),
+            utils.BuildLocalDirectoryTask(dirname="data/powerbi/pruned/"),
+        ]
 
     def get_dest_path(self):
         return os.path.join(PRUNED_DIR, f"pruned-{self.chain_id}.db")

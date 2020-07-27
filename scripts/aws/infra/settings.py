@@ -4,6 +4,7 @@ import secrets
 class EC2InstanceType:
     r5_2xlarge = "r5.2xlarge"
     m5_2xlarge = "m5.2xlarge"
+    r5_4xlarge = "r5.4xlarge"
     m5_4xlarge = "m5.4xlarge"
     m5_8xlarge = "m5.8xlarge"
     c5_9xlarge = "c5.9xlarge"
@@ -16,6 +17,7 @@ class EC2InstanceType:
 EC2_INSTANCE_SPECS = {
     EC2InstanceType.r5_2xlarge: {"cores": 8, "ram": 64, "price": 15},
     EC2InstanceType.m5_2xlarge: {"cores": 8, "ram": 32, "price": 15},
+    EC2InstanceType.r5_4xlarge: {"cores": 16, "ram": 128, "price": 30},
     EC2InstanceType.m5_4xlarge: {"cores": 16, "ram": 64, "price": 30},
     EC2InstanceType.m5_8xlarge: {"cores": 32, "ram": 128, "price": 60},
     EC2InstanceType.c5_9xlarge: {"cores": 36, "ram": 72, "price": 61},

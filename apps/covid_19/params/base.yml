@@ -141,7 +141,8 @@ age_based_susceptibility:
 # NON-AGE-STRATIFIED PARAMETERS
 
 # Adjust the infectiousness of clinical strata - assumed
-non_sympt_infect_multiplier: 0.5
+presympt_infect_multiplier: 0.7
+non_sympt_infect_multiplier: 0.7
 late_infect_multiplier:
   sympt_isolate: 0.2
   hospital_non_icu: 0.2

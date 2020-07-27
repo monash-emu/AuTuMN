@@ -224,6 +224,12 @@ def build_model(params: dict) -> StratifiedModel:
 
     model_parameters["all_stratifications"] = {"agegroup": agegroup_strings}
 
+    # Allow pre-symptomatics to be less infectious
+    model.individual_infectiousness_adjustments = \
+        [
+            [[Compartment.PRESYMPTOMATIC], model_parameters["presympt_infect_multiplier"]]
+        ]
+
     # Stratify by clinical
     stratify_by_clinical(model, model_parameters, compartments, detected_proportion, symptomatic_props)
 

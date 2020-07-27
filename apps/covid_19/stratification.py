@@ -192,9 +192,7 @@ def stratify_by_clinical(model, model_parameters, compartments, detected_proport
         }
     )
 
-    # Sort out all infectiousness adjustments for entire model here
-    # Sort out all infectiousness adjustments for all compartments of the model.
-    # Now make adjustment for asymptomatic patients only
+    # Make infectiousness adjustment for asymptomatic patients only
     strata_infectiousness = {}
     for stratum in strata_to_implement:
         if stratum + "_infect_multiplier" in model_parameters:

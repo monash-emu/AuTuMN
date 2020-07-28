@@ -139,6 +139,7 @@ def plot_location_mixing(
     google_mobility_locations = params["google_mobility_locations"]
     is_periodic_intervention = params.get("is_periodic_intervention")
     periodic_int_params = params.get("periodic_intervention")
+    smooth_google_data = params.get("smooth_google_data")
     adjust = LocationMixingAdjustment(
         country_iso3,
         region,
@@ -149,6 +150,7 @@ def plot_location_mixing(
         periodic_int_params,
         params["end_time"],
         microdistancing,
+        smooth_google_data,
     )
 
     if adjust.microdistancing_function and loc_key in MICRODISTANCING_LOCATIONS:

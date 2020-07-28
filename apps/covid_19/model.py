@@ -102,6 +102,7 @@ def build_model(params: dict) -> StratifiedModel:
     dynamic_location_mixing_params = params["mixing"]
     dynamic_age_mixing_params = params["mixing_age_adjust"]
     microdistancing = params["microdistancing"]
+    smooth_google_data = params["smooth_google_data"]
 
     if dynamic_location_mixing_params or dynamic_age_mixing_params:
         npi_effectiveness_params = params["npi_effectiveness"]
@@ -119,6 +120,7 @@ def build_model(params: dict) -> StratifiedModel:
             periodic_int_params,
             end_time,
             microdistancing,
+            smooth_google_data,
         )
 
     # FIXME: Remove params from model_parameters

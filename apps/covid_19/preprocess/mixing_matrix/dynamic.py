@@ -18,6 +18,7 @@ def build_dynamic(
     periodic_int_params: dict,
     periodic_end_time: float,
     microdistancing_params: dict,
+    smooth_google_data: bool,
 ) -> Callable[[float], np.ndarray]:
     """
     Build a time-varing mixing matrix
@@ -37,6 +38,7 @@ def build_dynamic(
             periodic_int_params,
             periodic_end_time,
             microdistancing_params,
+            smooth_google_data,
         )
 
     static_mixing_matrix = build_static(country_iso3)

@@ -205,6 +205,8 @@ google_mobility_locations:
     - parks
     - transit_stations
 
+smooth_google_data: False  # whether to apply a 7-day moving average
+
 # Parameters of negative binomial (need to be listed for validation)
 notifications_dispersion_param: 1.
 prevXlateXclinical_icuXamong_dispersion_param: 1.

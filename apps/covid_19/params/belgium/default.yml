@@ -1,5 +1,7 @@
 iso3: BEL
 
+smooth_google_data: True
+
 #start_time: -20.
 end_time: 214.
 scenario_start_time: 213

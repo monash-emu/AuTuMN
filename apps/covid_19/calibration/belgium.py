@@ -3,6 +3,7 @@ from autumn.constants import Region
 from apps.covid_19.mixing_optimisation.utils import (
     get_prior_distributions_for_opti,
     get_target_outputs_for_opti,
+    get_hospital_targets_for_opti,
     get_weekly_summed_targets,
     add_dispersion_param_prior_for_gaussian,
 )
@@ -12,7 +13,11 @@ from autumn.tool_kit.utils import print_target_to_plots_from_calibration
 country = Region.BELGIUM
 
 PAR_PRIORS = get_prior_distributions_for_opti()
-TARGET_OUTPUTS = get_target_outputs_for_opti(country, source='who', data_start_time=61, data_end_time=182)
+TARGET_OUTPUTS = get_target_outputs_for_opti(country, source='who', data_start_time=61, data_end_time=197)  # notifications and deaths
+
+hospital_outputs = get_hospital_targets_for_opti(country, data_start_time=61, data_end_time=197)
+
+TARGET_OUTPUTS += hospital_outputs
 
 # Use weekly counts
 for target in TARGET_OUTPUTS:

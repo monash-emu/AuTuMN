@@ -12,7 +12,7 @@ import copy
 
 def get_prior_distributions_for_opti():
     prior_list = [
-        {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.04, 0.08],},
+        {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.02, 0.08],},
         {"param_name": "start_time", "distribution": "uniform", "distri_params": [0., 40.],},
         {
             "param_name": "npi_effectiveness.other_locations",
@@ -42,40 +42,29 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "time_variant_detection.end_value",
             "distribution": "uniform",
-            "distri_params": [0.10, 0.90],
+            "distri_params": [0.20, 0.80],
         },
         {
             "param_name": "icu_prop",
             "distribution": "uniform",
-            "distri_params": [0.10, 0.30],
+            "distri_params": [0.15, 0.20],
         },
-        # parameters to derive age-specific IFRs
-        # {
-        #     "param_name": "ifr_double_exp_model_params.k",
-        #     "distribution": "uniform",
-        #     "distri_params": [8.5, 14.5],
-        # },
-        # {
-        #     "param_name": "ifr_double_exp_model_params.last_representative_age",
-        #     "distribution": "uniform",
-        #     "distri_params": [75., 85.],
-        # },
         # vary hospital durations
         {
             "param_name": "compartment_periods.hospital_late",
             "distribution": "uniform",
-            "distri_params": [4., 12.],
+            "distri_params": [17.7, 20.4],
         },
         {
             "param_name": "compartment_periods.icu_late",
             "distribution": "uniform",
-            "distri_params": [4., 12.],
+            "distri_params": [9., 13.],
         },
         # vary hospitalised proportions
         {
             "param_name": "hospital_props_multiplier",
             "distribution": "uniform",
-            "distri_params": [.5, 2.],
+            "distri_params": [.8, 1.2],
         },
         # Micro-distancing
         {
@@ -88,17 +77,6 @@ def get_prior_distributions_for_opti():
             "distribution": "uniform",
             "distri_params": [.6, 1.],
         },
-        # Add negative binomial over-dispersion parameters
-        # {
-        #     "param_name": "notifications_dispersion_param",
-        #     "distribution": "uniform",
-        #     "distri_params": [0.1, 5.0],
-        # },
-        # {
-        #     "param_name": "infection_deathsXall_dispersion_param",
-        #     "distribution": "uniform",
-        #     "distri_params": [0.1, 5.0],
-        # },
     ]
 
     prior_list += get_list_of_ifr_priors_from_pollan()

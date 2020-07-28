@@ -13,7 +13,7 @@ import copy
 
 def get_prior_distributions_for_opti():
     prior_list = [
-        {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.02, 0.08],},
+        {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.02, 0.05],},
         {"param_name": "start_time", "distribution": "uniform", "distri_params": [0., 40.],},
         {
             "param_name": "npi_effectiveness.other_locations",
@@ -29,6 +29,11 @@ def get_prior_distributions_for_opti():
             "param_name": "compartment_periods_calculated.total_infectious.total_period",
             "distribution": "uniform",
             "distri_params": [5., 10.],
+        },
+        {
+            "param_name": "time_variant_detection.start_value",
+            "distribution": "uniform",
+            "distri_params": [0., 0.10],
         },
         {
             "param_name": "time_variant_detection.maximum_gradient",

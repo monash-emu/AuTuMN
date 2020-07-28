@@ -1,5 +1,6 @@
 from apps.covid_19.john_hopkins import download_jh_data, read_john_hopkins_data_from_csv
 from apps.covid_19.who_data import read_who_data_from_csv
+from apps.covid_19.hospital_data import read_hospital_data_from_csv
 from autumn.plots.streamlit.run_mcmc_plots import load_mcmc_tables
 from autumn.plots.plots import _overwrite_non_accepted_mcmc_runs
 import pandas as pd
@@ -132,7 +133,7 @@ def get_target_outputs_for_opti(country, data_start_time=22, data_end_time=152, 
     output_mapping = {"confirmed": "notifications", "deaths": "infection_deathsXall"}
 
     target_outputs = []
-    for variable in ["confirmed", "deaths"]:
+    for variable in ["confirmed"]:  #  , "deaths"]:
         if source == 'johns_hopkins':
             data = read_john_hopkins_data_from_csv(variable, country)
             times = [jh_start_time + i for i in range(len(data))]
@@ -160,6 +161,34 @@ def get_target_outputs_for_opti(country, data_start_time=22, data_end_time=152, 
                 "loglikelihood_distri": "normal",
             }
         )
+
+    return target_outputs
+
+
+def get_hospital_targets_for_opti(country, data_start_time=22, data_end_time=152):
+
+    output = {
+        'belgium': 'hospital_occupancy'
+    }
+    output_mapping = {"hospital_occupancy": "hospital_occupancy", "icu_occupancy": "icu_occupancy"}
+    times, data = read_hospital_data_from_csv(output[country], country, data_start_time, data_end_time)
+
+    # Ignore negative values found in the dataset
+    censored_data_indices = []
+    for i, d in enumerate(data):
+        if d < 0:
+            censored_data_indices.append(i)
+    data = [d for i, d in enumerate(data) if i not in censored_data_indices]
+    times = [t for i, t in enumerate(times) if i not in censored_data_indices]
+
+    target_outputs = [
+        {
+            "output_key": output_mapping[output[country]],
+            "years": times,
+            "values": data,
+            "loglikelihood_distri": "normal",
+        }
+    ]
 
     return target_outputs
 

@@ -110,7 +110,6 @@ def calculate_mcmc_uncertainty(weights_df: pd.DataFrame, quantiles: List[float])
     output_names = weights_df.output_name.unique()
     times = sorted(weights_df.times.unique())
     scenarios = weights_df.Scenario.unique()
-    uncertainty_data = []
     threads_args_list = []
     for scenario in scenarios:
         for output_name in output_names:
@@ -120,15 +119,16 @@ def calculate_mcmc_uncertainty(weights_df: pd.DataFrame, quantiles: List[float])
                 times,
                 weights_df,
                 quantiles,
-                uncertainty_data,
             )
             threads_args_list.append(thread_args)
 
     num_workers = multiprocessing.cpu_count() - 2
-    with futures.ThreadPoolExecutor(max_workers=num_workers) as ex:
+    with futures.ProcessPoolExecutor(max_workers=num_workers) as ex:
         fs = [ex.submit(calculate_quantiles, *args) for args in threads_args_list]
         futures.wait(fs, timeout=None, return_when=futures.FIRST_EXCEPTION)
 
+    uncertainty_results = (f.result() for f in fs)
+    uncertainty_data = (quantile for sublist in uncertainty_results for quantile in sublist)
     uncertainty_df = pd.DataFrame(uncertainty_data)
     return uncertainty_df
 
@@ -139,8 +139,8 @@ def calculate_quantiles(
     times: List[int],
     weights_df: pd.DataFrame,
     quantiles: List[float],
-    uncertainty_data: List[dict],
 ):
+    uncertainty_data = []
     for time in times:
         time_mask = weights_df["times"] == time
         scenario_mask = weights_df["Scenario"] == scenario
@@ -161,6 +161,8 @@ def calculate_quantiles(
                 "value": q_value,
             }
             uncertainty_data.append(datum)
+
+    return uncertainty_data
 
 
 def run_idx_to_int(run_idx: str) -> int:

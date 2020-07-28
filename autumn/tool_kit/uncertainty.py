@@ -94,12 +94,14 @@ def add_uncertainty_quantiles(database_path: str):
     logger.info("Loading data into memory")
     weights_df = db.query("uncertainty_weights")
     logger.info("Calculating uncertainty")
-    uncertainty_df = calculate_mcmc_uncertainty(weights_df, DEFAULT_QUANTILES)
+    uncertainty_df = calculate_mcmc_uncertainty(weights_df, DEFAULT_QUANTILES, database_path)
     db.dump_df("uncertainty", uncertainty_df)
     logger.info("Finished writing uncertainties")
 
 
-def calculate_mcmc_uncertainty(weights_df: pd.DataFrame, quantiles: List[float]) -> pd.DataFrame:
+def calculate_mcmc_uncertainty(
+    weights_df: pd.DataFrame, quantiles: List[float], database_path: str
+) -> pd.DataFrame:
     """
     Calculate quantiles from a table of weighted values.
     See calc_mcmc_weighted_values for how these weights are calculated.
@@ -117,7 +119,7 @@ def calculate_mcmc_uncertainty(weights_df: pd.DataFrame, quantiles: List[float])
                 scenario,
                 output_name,
                 times,
-                weights_df,
+                database_path,
                 quantiles,
             )
             threads_args_list.append(thread_args)
@@ -134,12 +136,10 @@ def calculate_mcmc_uncertainty(weights_df: pd.DataFrame, quantiles: List[float])
 
 
 def calculate_quantiles(
-    scenario: str,
-    output_name: str,
-    times: List[int],
-    weights_df: pd.DataFrame,
-    quantiles: List[float],
+    scenario: str, output_name: str, times: List[int], database_path: str, quantiles: List[float],
 ):
+    db = Database(database_path)
+    weights_df = db.query("uncertainty_weights")
     uncertainty_data = []
     for time in times:
         time_mask = weights_df["times"] == time

@@ -32,6 +32,8 @@ def calibrate():
     model_name = buildkite.get_metadata("model-name")
     num_chains = buildkite.get_metadata("mcmc-num-chains")
     run_time_hours = buildkite.get_metadata("mcmc-runtime")
+    git_branch = buildkite.get_metadata("mcmc-branch")
+
     # Run the calibration
     run_time_seconds = int(float(run_time_hours) * 3600)
     job_name = f"{model_name}-{build_number}"
@@ -43,6 +45,7 @@ def calibrate():
             "calibration": model_name,
             "chains": num_chains,
             "runtime": run_time_seconds,
+            "branch": git_branch,
         }
         stdout = run_aws_script("calibrate", cli_args)
 

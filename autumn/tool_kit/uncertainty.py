@@ -94,14 +94,12 @@ def add_uncertainty_quantiles(database_path: str):
     logger.info("Loading data into memory")
     weights_df = db.query("uncertainty_weights")
     logger.info("Calculating uncertainty")
-    uncertainty_df = calculate_mcmc_uncertainty(weights_df, DEFAULT_QUANTILES, database_path)
+    uncertainty_df = calculate_mcmc_uncertainty(weights_df, DEFAULT_QUANTILES)
     db.dump_df("uncertainty", uncertainty_df)
     logger.info("Finished writing uncertainties")
 
 
-def calculate_mcmc_uncertainty(
-    weights_df: pd.DataFrame, quantiles: List[float], database_path: str
-) -> pd.DataFrame:
+def calculate_mcmc_uncertainty(weights_df: pd.DataFrame, quantiles: List[float]) -> pd.DataFrame:
     """
     Calculate quantiles from a table of weighted values.
     See calc_mcmc_weighted_values for how these weights are calculated.
@@ -113,56 +111,32 @@ def calculate_mcmc_uncertainty(
     times = sorted(weights_df.times.unique())
     scenarios = weights_df.Scenario.unique()
     threads_args_list = []
+    uncertainty_data = []
     for scenario in scenarios:
         for output_name in output_names:
-            thread_args = (
-                scenario,
-                output_name,
-                times,
-                database_path,
-                quantiles,
-            )
-            threads_args_list.append(thread_args)
+            for time in times:
+                time_mask = weights_df["times"] == time
+                scenario_mask = weights_df["Scenario"] == scenario
+                output_mask = weights_df["output_name"] == output_name
+                mask = time_mask & scenario_mask & output_mask
+                masked_df = weights_df[mask]
+                if masked_df.empty:
+                    continue
 
-    num_workers = multiprocessing.cpu_count() - 2
-    with futures.ProcessPoolExecutor(max_workers=num_workers) as ex:
-        fs = [ex.submit(calculate_quantiles, *args) for args in threads_args_list]
-        futures.wait(fs, timeout=None, return_when=futures.FIRST_EXCEPTION)
+                weighted_values = np.repeat(masked_df.value, masked_df.weight)
+                quantile_vals = np.quantile(weighted_values, quantiles)
+                for q_idx, q_value in enumerate(quantile_vals):
+                    datum = {
+                        "Scenario": scenario,
+                        "type": output_name,
+                        "time": time,
+                        "quantile": quantiles[q_idx],
+                        "value": q_value,
+                    }
+                    uncertainty_data.append(datum)
 
-    uncertainty_results = (f.result() for f in fs)
-    uncertainty_data = (quantile for sublist in uncertainty_results for quantile in sublist)
     uncertainty_df = pd.DataFrame(uncertainty_data)
     return uncertainty_df
-
-
-def calculate_quantiles(
-    scenario: str, output_name: str, times: List[int], database_path: str, quantiles: List[float],
-):
-    db = Database(database_path)
-    weights_df = db.query("uncertainty_weights")
-    uncertainty_data = []
-    for time in times:
-        time_mask = weights_df["times"] == time
-        scenario_mask = weights_df["Scenario"] == scenario
-        output_mask = weights_df["output_name"] == output_name
-        mask = time_mask & scenario_mask & output_mask
-        masked_df = weights_df[mask]
-        if masked_df.empty:
-            continue
-
-        weighted_values = np.repeat(masked_df.value, masked_df.weight)
-        quantile_vals = np.quantile(weighted_values, quantiles)
-        for q_idx, q_value in enumerate(quantile_vals):
-            datum = {
-                "Scenario": scenario,
-                "type": output_name,
-                "time": time,
-                "quantile": quantiles[q_idx],
-                "value": q_value,
-            }
-            uncertainty_data.append(datum)
-
-    return uncertainty_data
 
 
 def run_idx_to_int(run_idx: str) -> int:

@@ -8,7 +8,7 @@ You can access this script from your CLI by running the Luigi CLI:
 https://luigi.readthedocs.io/en/stable/running_luigi.html
 
 rm -rf data/outputs/remote data/outputs/calibrate
-aws --profile autumn s3 rm --recursive s3://autumn-data/manila-111111111-aaaaaaa
+aws --profile autumn s3 rm --quiet --recursive s3://autumn-data/manila-111111111-aaaaaaa
 
 ./scripts/website/deploy.sh
 http://www.autumn-data.com/model/manila/run/manila-111111111-aaaaaaa.html
@@ -24,7 +24,7 @@ python3 -m luigi \
     --CalibrationChainTask-model-name manila \
     --CalibrationChainTask-runtime 60 \
     --local-scheduler \
-    --workers 4 \
+    --workers 2 \
     --logging-conf-file tasks/luigi-logging.ini
 
 # Run full models
@@ -35,7 +35,7 @@ python3 -m luigi \
     --FullModelRunTask-burn-in 0 \
     --FullModelRunTask-model-name manila \
     --local-scheduler \
-    --workers 6 \
+    --workers 2 \
     --logging-conf-file tasks/luigi-logging.ini
 
 # Run PowerBI processing

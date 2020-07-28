@@ -19,6 +19,8 @@ from . import outputs, preprocess
 from .stratification import stratify_by_clinical
 from .validate import validate_params
 
+import copy
+
 
 def build_model(params: dict) -> StratifiedModel:
     """
@@ -126,6 +128,20 @@ def build_model(params: dict) -> StratifiedModel:
     # FIXME: Remove params from model_parameters
     model_parameters = {**params, **compartment_exit_flow_rates}
     model_parameters["to_infectious"] = model_parameters["within_presympt"]
+
+    model_parameters['immunity_loss_rate'] = 1. / params['immunity_duration']
+
+    # implement waning immunity
+    if not params['full_immunity']:
+
+        flows.append(
+            {
+                "type": 'standard_flows',
+                "origin": Compartment.RECOVERED,
+                "to": Compartment.SUSCEPTIBLE,
+                "parameter": "immunity_loss_rate",
+            }
+        )
 
     # Instantiate SUMMER model
     model = StratifiedModel(

@@ -169,8 +169,78 @@ def plot_stacked_compartments_by_stratum(
     chosen_scenarios = selectors.scenarios(scenarios)
     compartment = selectors.single_compartment(chosen_scenarios[0].model).split("X")[0]
     stratify_by = 'agegroup'
-    plots.plot_stacked_compartments_by_stratum(plotter, chosen_scenarios[0], compartment, stratify_by)
+    plots.plot_stacked_compartments_by_stratum(plotter, chosen_scenarios, compartment, stratify_by)
     st.write(compartment)
+
+
+def plot_stacked_derived_outputs_by_stratum(
+    plotter: StreamlitPlotter, app: RegionAppBase, scenarios: list, plot_config: dict
+):
+    chosen_scenarios = selectors.scenarios(scenarios)
+    output_config = model_output_selector(chosen_scenarios, plot_config)
+    derived_output = output_config["name"].split("X")[0]
+    stratify_by = 'agegroup'
+    plots.plot_stacked_compartments_by_stratum(plotter, chosen_scenarios, derived_output, stratify_by)
+    st.write(derived_output)
+
+
+def plot_multicountry_rainbow(
+    plotter: StreamlitPlotter, app: RegionAppBase, scenarios: list, plot_config: dict
+):
+    countries = ['belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']
+    root_path = os.path.join('data', 'outputs', 'run', 'covid_19')
+
+    for mode in ['by_age', 'by_location']:
+        for config in [2, 3]:
+            for objective in ["deaths", "yoll"]:
+                full_path = os.path.join(root_path, mode + "_config_" + str(config) + "_" + objective)
+                country_scenarios = {}
+                for country in countries:
+                    country_dirpath = os.path.join(full_path, country)
+                    dir_name = os.listdir(country_dirpath)[0]
+                    run_dirpath = os.path.join(country_dirpath, dir_name)
+
+                    params = utils.load_params(run_dirpath)
+                    post_processing_config = utils.load_post_processing_config('covid_19')
+
+                    # Get database from model data dir.
+                    db_path = os.path.join(run_dirpath, "outputs.db")
+                    country_scenarios[country] = load_model_scenarios(db_path, params, post_processing_config)
+
+                print("Plotting multicountry rainbow for: " + mode + "_config_" + str(config) + "_" + objective)
+
+                plots.plot_multicountry_rainbow(country_scenarios, config, mode, objective)
+
+
+def plot_multicounty_hospital(
+    plotter: StreamlitPlotter, app: RegionAppBase, scenarios: list, plot_config: dict
+):
+    countries = ['belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']
+    root_path = os.path.join('data', 'outputs', 'run', 'covid_19')
+
+    all_scenarios = {}
+    for mode in ['by_age', 'by_location']:
+        all_scenarios[mode] = {}
+        for objective in ["deaths", "yoll"]:
+            all_scenarios[mode][objective] = {}
+            for config in [2, 3]:
+                full_path = os.path.join(root_path, mode + "_config_" + str(config) + "_" + objective)
+                all_scenarios[mode][objective][config] = {}
+                for country in countries:
+                    country_dirpath = os.path.join(full_path, country)
+                    dir_name = os.listdir(country_dirpath)[0]
+                    run_dirpath = os.path.join(country_dirpath, dir_name)
+
+                    params = utils.load_params(run_dirpath)
+                    post_processing_config = utils.load_post_processing_config('covid_19')
+
+                    # Get database from model data dir.
+                    db_path = os.path.join(run_dirpath, "outputs.db")
+                    all_scenarios[mode][objective][config][country] = load_model_scenarios(db_path, params, post_processing_config)
+
+            print("Plotting multicountry hospital for: " + mode + "_" + objective)
+            plots.plot_multicountry_hospital(all_scenarios, mode, objective)
+
 
 
 PLOT_FUNCS = {
@@ -179,7 +249,11 @@ PLOT_FUNCS = {
     "Scenario outputs": plot_outputs_multi,
     "Dynamic input functions": plot_dynamic_inputs,
     "Dynamic location mixing": plot_location_mixing,
-    "Stacked outputs by stratum": plot_stacked_compartments_by_stratum,
+    # "Stacked outputs by stratum": plot_stacked_compartments_by_stratum,
+    # "Stacked derived by stratum": plot_stacked_derived_outputs_by_stratum,
+    # "Multicountry rainbow": plot_multicountry_rainbow,
+    # "Multicountry hospital": plot_multicounty_hospital,
+
 }
 
 
@@ -223,3 +297,6 @@ def model_output_selector(scenarios, plot_config):
         output_config = {"name": output_name, "target_values": [], "target_times": []}
 
     return output_config
+
+
+

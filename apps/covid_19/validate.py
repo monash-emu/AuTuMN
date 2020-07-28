@@ -16,7 +16,7 @@ validate_params = sb.build_validator(
     hospital_props=sb.List(float),
     hospital_props_multiplier=float,
     # mortality parameters
-    use_verity_mortality_estimates=bool,
+    use_raw_mortality_estimates=bool,
     infection_fatality_props=sb.List(float),
     ifr_double_exp_model_params=dict,
     # Age stratified params
@@ -24,19 +24,17 @@ validate_params = sb.build_validator(
     age_based_susceptibility=sb.DictGeneric(str, float),
     # Clinical status stratified params
     clinical_strata=sb.List(str),
+    presympt_infect_multiplier=float,
     non_sympt_infect_multiplier=float,
     late_infect_multiplier=sb.Dict(sympt_isolate=float, hospital_non_icu=float, icu=float),
     icu_mortality_prop=float,
     symptomatic_props=sb.List(float),
     icu_prop=float,
-    prop_detected_among_symptomatic=float,
     # Time-variant detection of COVID cases, used to construct a tanh function.
-    tv_detection_b=float,
-    tv_detection_c=float,
-    tv_detection_sigma=float,
+    time_variant_detection=sb.Dict(maximum_gradient=float, max_change_time=float, start_value=float, end_value=float),
     int_detection_gap_reduction=float,
     # Dynamic mixing matrix updates
-    # Time-varying mixing matrix adjutment by location
+    # Time-varying mixing matrix adjustment by location
     mixing=sb.DictGeneric(
         str,
         sb.Dict(
@@ -68,17 +66,12 @@ validate_params = sb.build_validator(
         period=float,
     ),
     google_mobility_locations=sb.DictGeneric(str, sb.List(str)),
+    smooth_google_data=bool,
     # Something to do with travellers?
     traveller_quarantine=sb.Dict(times=sb.List(float), values=sb.List(float),),
     # Importation of disease from outside of region
     implement_importation=bool,
     import_secondary_rate=float,
-    symptomatic_props_imported=float,
-    hospital_props_imported=float,
-    icu_prop_imported=float,
-    prop_detected_among_symptomatic_imported=float,
-    enforced_isolation_effect=float,
-    self_isolation_effect=float,
     data=sb.Dict(times_imported_cases=sb.List(float), n_imported_cases=sb.List(float),),
     microdistancing=sb.Nullable(sb.Dict(function_type=str, parameters=dict)),
     # Other stuff
@@ -95,4 +88,7 @@ validate_params = sb.build_validator(
     # for immunity wane
     full_immunity=bool,
     immunity_duration=float,
+    icu_occupancy_dispersion_param=float,
+    importation_props_by_age=dict,
+    import_representative_age=int,
 )

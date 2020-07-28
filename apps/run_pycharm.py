@@ -7,10 +7,10 @@ from apps import covid_19, marshall_islands, mongolia, sir_example, dr_tb_malanc
 from apps.covid_19.calibration import get_calibration_func
 from apps.covid_19.mixing_optimisation.constants import *
 
-## Run a COVID model manually.
+# Run a COVID model manually.
 # for REGION in OPTI_REGIONS:   # used by Romain for the optimisation project
 REGION = Region.VICTORIA
-RUN_SCENARIOS = True
+RUN_SCENARIOS = False
 region_app = covid_19.get_region_app(REGION)
 region_app.run_model(RUN_SCENARIOS)
 
@@ -36,5 +36,5 @@ region_app.run_model(RUN_SCENARIOS)
 # MAX_SECONDS = 5
 # CHAIN_ID = 1
 # NB_CHAINS = 1
-# calibrate_func = covid_19.calibration.get_calibration_func(REGION)
+# calibrate_func = covid_19.calibration.get_calibration_func(Region.MALAYSIA)
 # calibrate_func(MAX_SECONDS, CHAIN_ID, NB_CHAINS)

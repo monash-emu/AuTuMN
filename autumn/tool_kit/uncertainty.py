@@ -16,27 +16,30 @@ DEFAULT_QUANTILES = [0.025, 0.25, 0.5, 0.75, 0.975]
 logger = logging.getLogger(__name__)
 
 
-def add_uncertainty_weights(output_name: str, database_path: str):
+def add_uncertainty_weights(output_names: List[str], database_path: str):
     """
     Calculate uncertainty weights for a given MCMC chain and derived output.
     Saves requested weights in a table 'uncertainty_weights'.
     """
-    logger.info("Adding uncertainty_weights for %s to %s", output_name, database_path)
-    db = Database(database_path)
-    if "uncertainty_weights" in db.table_names():
-        logger.info(
-            "Deleting %s from existing uncertainty_weights table in %s", output_name, database_path,
-        )
-        db.engine.execute(f"DELETE FROM uncertainty_weights WHERE output_name='{output_name}'")
+    for output_name in output_names:
+        logger.info("Adding uncertainty_weights for %s to %s", output_name, database_path)
+        db = Database(database_path)
+        if "uncertainty_weights" in db.table_names():
+            logger.info(
+                "Deleting %s from existing uncertainty_weights table in %s",
+                output_name,
+                database_path,
+            )
+            db.engine.execute(f"DELETE FROM uncertainty_weights WHERE output_name='{output_name}'")
 
-    logger.info("Loading data into memory")
-    columns = ["idx", "Scenario", "times", output_name]
-    mcmc_df = db.query("mcmc_run")
-    derived_outputs_df = db.query("derived_outputs", column=columns)
-    logger.info("Calculating weighted values for %s", output_name)
-    weights_df = calc_mcmc_weighted_values(output_name, mcmc_df, derived_outputs_df)
-    db.dump_df("uncertainty_weights", weights_df)
-    logger.info("Finished writing %s uncertainty weights", output_name)
+        logger.info("Loading data into memory")
+        columns = ["idx", "Scenario", "times", output_name]
+        mcmc_df = db.query("mcmc_run")
+        derived_outputs_df = db.query("derived_outputs", column=columns)
+        logger.info("Calculating weighted values for %s", output_name)
+        weights_df = calc_mcmc_weighted_values(output_name, mcmc_df, derived_outputs_df)
+        db.dump_df("uncertainty_weights", weights_df)
+        logger.info("Finished writing %s uncertainty weights", output_name)
 
 
 def calc_mcmc_weighted_values(
@@ -91,12 +94,14 @@ def add_uncertainty_quantiles(database_path: str):
     logger.info("Loading data into memory")
     weights_df = db.query("uncertainty_weights")
     logger.info("Calculating uncertainty")
-    uncertainty_df = calculate_mcmc_uncertainty(weights_df, DEFAULT_QUANTILES)
+    uncertainty_df = calculate_mcmc_uncertainty(weights_df, DEFAULT_QUANTILES, database_path)
     db.dump_df("uncertainty", uncertainty_df)
     logger.info("Finished writing uncertainties")
 
 
-def calculate_mcmc_uncertainty(weights_df: pd.DataFrame, quantiles: List[float]) -> pd.DataFrame:
+def calculate_mcmc_uncertainty(
+    weights_df: pd.DataFrame, quantiles: List[float], database_path: str
+) -> pd.DataFrame:
     """
     Calculate quantiles from a table of weighted values.
     See calc_mcmc_weighted_values for how these weights are calculated.
@@ -107,7 +112,6 @@ def calculate_mcmc_uncertainty(weights_df: pd.DataFrame, quantiles: List[float])
     output_names = weights_df.output_name.unique()
     times = sorted(weights_df.times.unique())
     scenarios = weights_df.Scenario.unique()
-    uncertainty_data = []
     threads_args_list = []
     for scenario in scenarios:
         for output_name in output_names:
@@ -115,29 +119,28 @@ def calculate_mcmc_uncertainty(weights_df: pd.DataFrame, quantiles: List[float])
                 scenario,
                 output_name,
                 times,
-                weights_df,
+                database_path,
                 quantiles,
-                uncertainty_data,
             )
             threads_args_list.append(thread_args)
 
     num_workers = multiprocessing.cpu_count() - 2
-    with futures.ThreadPoolExecutor(max_workers=num_workers) as ex:
+    with futures.ProcessPoolExecutor(max_workers=num_workers) as ex:
         fs = [ex.submit(calculate_quantiles, *args) for args in threads_args_list]
         futures.wait(fs, timeout=None, return_when=futures.FIRST_EXCEPTION)
 
+    uncertainty_results = (f.result() for f in fs)
+    uncertainty_data = (quantile for sublist in uncertainty_results for quantile in sublist)
     uncertainty_df = pd.DataFrame(uncertainty_data)
     return uncertainty_df
 
 
 def calculate_quantiles(
-    scenario: str,
-    output_name: str,
-    times: List[int],
-    weights_df: pd.DataFrame,
-    quantiles: List[float],
-    uncertainty_data: List[dict],
+    scenario: str, output_name: str, times: List[int], database_path: str, quantiles: List[float],
 ):
+    db = Database(database_path)
+    weights_df = db.query("uncertainty_weights")
+    uncertainty_data = []
     for time in times:
         time_mask = weights_df["times"] == time
         scenario_mask = weights_df["Scenario"] == scenario
@@ -158,6 +161,8 @@ def calculate_quantiles(
                 "value": q_value,
             }
             uncertainty_data.append(datum)
+
+    return uncertainty_data
 
 
 def run_idx_to_int(run_idx: str) -> int:
@@ -249,7 +254,9 @@ def collect_iteration_weights(mcmc_tables: List[pd.DataFrame], burn_in=0):
     return weights
 
 
-def export_compartment_size(compartment_name, mcmc_tables, output_tables, derived_output_tables, weights, scenario='S_0'):
+def export_compartment_size(
+    compartment_name, mcmc_tables, output_tables, derived_output_tables, weights, scenario="S_0"
+):
     if "start_time" in mcmc_tables[0].columns:
         # Find the earliest time that is common to all accepted runs (if start_time was varied).
         max_start_time = 0
@@ -259,8 +266,8 @@ def export_compartment_size(compartment_name, mcmc_tables, output_tables, derive
             if _max_start_time > max_start_time:
                 max_start_time = _max_start_time
         t_min = round(max_start_time)
-    mask = output_tables[0]['Scenario'] == scenario
-    times = [t for t in output_tables[0][mask]['times'].unique() if t >= t_min]
+    mask = output_tables[0]["Scenario"] == scenario
+    times = [t for t in output_tables[0][mask]["times"].unique() if t >= t_min]
 
     compartment_values = {}
     for i_time, time in enumerate(times):

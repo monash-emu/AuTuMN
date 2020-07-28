@@ -1,11 +1,13 @@
 iso3: FRA
 
+smooth_google_data: True
+
 #start_time: -20.
 end_time: 214.
 scenario_start_time: 213
 
 infectious_seed: 200
-use_verity_mortality_estimates: True
+use_raw_mortality_estimates: True
 
 microdistancing:
   function_type: tanh
@@ -24,9 +26,10 @@ compartment_periods_calculated:
     total_period: 3.0075158318324964
   total_infectious:
     total_period: 5.24314655577747
-tv_detection_b: 0.09673203583492454
-tv_detection_c: 86.0721524685038
-prop_detected_among_symptomatic: 0.17177956276831705
+time_variant_detection:
+  maximum_gradient: 0.09673203583492454
+  max_change_time: 86.0721524685038
+  end_value: 0.17177956276831705
 icu_prop: 0.1881228591428481
 compartment_periods:
   hospital_late: 7.964825187227463
@@ -41,7 +44,7 @@ mixing:
     times:
       - 2020-03-15
       - 2020-03-16
-      - 2020-07-07  # FIXME: update this time
+      - 2020-07-18  # google mobility data update, pls review
     values:
       - 1.0
       - 0.1

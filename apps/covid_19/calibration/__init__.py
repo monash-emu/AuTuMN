@@ -1,6 +1,5 @@
 from autumn.constants import Region
 from . import (
-    bicol,
     calabarzon,
     central_visayas,
     liberia,
@@ -18,7 +17,6 @@ from . import (
 )
 
 CALIBRATIONS = {
-    Region.BICOL: bicol.run_calibration_chain,
     Region.CALABARZON: calabarzon.run_calibration_chain,
     Region.CENTRAL_VISAYAS: central_visayas.run_calibration_chain,
     # No Google Mobility data for Liberia

@@ -153,7 +153,7 @@ def run_powerbi(job, run):
 
     """
     job_id = f"powerbi-{job}"
-    instance_type = EC2InstanceType.m5_4xlarge
+    instance_type = EC2InstanceType.r5_4xlarge
     kwargs = {"run_id": run}
     job_func = functools.partial(remote.run_powerbi, **kwargs)
     _run_job(job_id, instance_type, job_func)

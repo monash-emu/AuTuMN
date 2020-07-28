@@ -33,7 +33,7 @@ PAR_PRIORS = [
     },
     # Programmatic parameters
     {
-        "param_name": "prop_detected_among_symptomatic",
+        "param_name": "time_variant_detection.end_value",
         "distribution": "beta",
         "distri_mean": 0.85,
         "distri_ci": [0.8, 0.9],
@@ -51,19 +51,6 @@ PAR_PRIORS = [
         "distribution": "gamma",
         "distri_mean": 1.0,
         "distri_ci": [0.1, 2.0],
-    },
-    {
-        "param_name": "self_isolation_effect",
-        "distribution": "beta",
-        "distri_mean": 0.67,
-        "distri_ci": [0.55, 0.80],
-        "distri_ci_width": 0.95,
-    },
-    {
-        "param_name": "enforced_isolation_effect",
-        "distribution": "beta",
-        "distri_mean": 0.90,
-        "distri_ci": [0.80, 0.99],
     },
 ]
 

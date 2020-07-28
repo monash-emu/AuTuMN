@@ -1,12 +1,13 @@
 iso3: GBR
 
+smooth_google_data: True
+
 #start_time: -20.
 end_time: 214.
 scenario_start_time: 213
 
 infectious_seed: 200
-use_verity_mortality_estimates: True
-
+use_raw_mortality_estimates: True
 
 microdistancing:
   function_type: tanh
@@ -25,9 +26,10 @@ compartment_periods_calculated:
     total_period: 3.6919750421634894
   total_infectious:
     total_period: 5.686846765295515
-tv_detection_b: 0.09172247247859731
-tv_detection_c: 98.09724552296738
-prop_detected_among_symptomatic: 0.12340227902434267
+time_variant_detection:
+  maximum_gradient: 0.09172247247859731
+  max_change_time: 98.09724552296738
+  end_value: 0.12340227902434267
 icu_prop: 0.2869223796413999
 compartment_periods:
   hospital_late: 9.019609923504293
@@ -43,10 +45,12 @@ mixing:
       - 2020-03-18
       - 2020-03-20
       - 2020-07-07
+      - 2020-07-18 # google mobility data update, pls review
     values:
       - 1.0
       - 0.1
       - 0.1
+      - 0.1 # google mobility data update, pls review
 
 # Mapping of Google Mobility locations to Autumn-specific locations
 google_mobility_locations:

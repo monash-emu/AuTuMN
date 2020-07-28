@@ -15,16 +15,16 @@ PAR_PRIORS = get_prior_distributions_for_opti()
 
 for i, par in enumerate(PAR_PRIORS):
     if par["param_name"] == "contact_rate":
-        PAR_PRIORS[i]["distri_params"] = [0.025, 0.06]
+        PAR_PRIORS[i]["distri_params"] = [0.015, 0.05]
 
-    if par["param_name"] == "tv_detection_c":
+    if par["param_name"] == "time_variant_detection.max_change_time":
         PAR_PRIORS[i]["distri_params"] = [140, 160]
 
 PAR_PRIORS.append(
     {
-            "param_name": "tv_detection_sigma",
-            "distribution": "uniform",
-            "distri_params": [0.02, 0.1],
+        "param_name": "time_variant_detection.start_value",
+        "distribution": "uniform",
+        "distri_params": [0.02, 0.1],
     }
 )
 

@@ -1,5 +1,5 @@
 ---
-scenario_start_time: 188 # 06/07/2020
+scenario_start_time: 209 # 06/07/2020
 iso3: AUS
 region: Victoria
 
@@ -20,14 +20,10 @@ contact_rate: 0.024
 seasonal_force: 0.7
 non_sympt_infect_multiplier: .464939
 
-# Replaced by `age_based_susceptibility`
-# young_reduced_susceptibility: .4484674
-prop_detected_among_symptomatic: .8035
+time_variant_detection:
+  end_value: 0.8035
 npi_effectiveness:
   other_locations: .9697829
-
-#self_isolation_effect: .434371
-enforced_isolation_effect: .9858
 
 mixing:
   school:

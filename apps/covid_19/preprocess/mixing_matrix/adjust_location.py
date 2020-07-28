@@ -5,6 +5,7 @@ import numpy as np
 from autumn.curve import scale_up_function, tanh_based_scaleup
 
 from autumn.inputs import get_country_mixing_matrix, get_mobility_data
+from autumn.tool_kit.utils import apply_moving_average
 
 from .adjust_base import BaseMixingAdjustment
 from .utils import BASE_DATE, BASE_DATETIME
@@ -27,12 +28,16 @@ class LocationMixingAdjustment(BaseMixingAdjustment):
         periodic_int_params: dict,
         periodic_end_time: float,
         microdistancing_params: dict,
+        smooth_google_data: bool,
     ):
         """Build the time variant location adjustment functions"""
         # Load mobility data
         google_mobility_values, google_mobility_days = get_mobility_data(
             country_iso3, region, BASE_DATETIME, google_mobility_locations
         )
+        if smooth_google_data:
+            for loc in google_mobility_values:
+                google_mobility_values[loc] = apply_moving_average(google_mobility_values[loc], 7)
         # Build mixing data timeseries
         mixing = update_mixing_data(
             mixing,

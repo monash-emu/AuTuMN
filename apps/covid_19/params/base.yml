@@ -6,6 +6,7 @@ scenario_start_time: 85
 # MODEL STRUCTURE PARAMETERS
 
 implement_importation: False
+import_representative_age: 35
 import_secondary_rate: 0.
 data:
   times_imported_cases: []
@@ -17,12 +18,14 @@ traveller_quarantine:
   times: [0.]
   values: [0.]
 
-# Mean time (?) spent in each compartment
+# Mean time in days spent in each compartment
+# Note that the early period is intended to represent the pre-hospitalisations period, whereas the late period is
+# intended to represent the time in hospital or ICU (as applicable)
 compartment_periods:
-  hospital_early: 5.
-  hospital_late: 8.
-  icu_early: 5.
-  icu_late: 7.5
+  hospital_early: 8.1
+  hospital_late: 18.4
+  icu_early: 12.7
+  icu_late: 10.8
 
 # Mean time (?) spent in each compartment, defined via proportions
 compartment_periods_calculated:
@@ -72,44 +75,50 @@ symptomatic_props:
   - 0.63 # 60-69
   - 0.69 # 70+
 
-# Proportion of symptomatic persons that are hospitalised - Verity et al.
+# Proportion of symptomatic persons that are hospitalised - Dutch GGD report
 hospital_props:
-  - 0.001 # 0-9
-  - 0.003 # 10-19
-  - 0.012 # 20-29
-  - 0.032 # 30-39
-  - 0.049 # 40-49
-  - 0.102 # 50-59
-  - 0.166 # 60-69
-  - 0.243 # 70-79
-  - 0.273 # 80+
+  - 0.087 # 0-4
+  - 0.009 # 5-9
+  - 0.005 # 10-14
+  - 0.008 # 15-19
+  - 0.011 # 20-24
+  - 0.011 # 25-29
+  - 0.013 # 30-34
+  - 0.015 # 35-39
+  - 0.018 # 40-44
+  - 0.040 # 45-49
+  - 0.047 # 50-54
+  - 0.070 # 55-59
+  - 0.071 # 60-64
+  - 0.114 # 65-69
+  - 0.113 # 70-74
+  - 0.071 # 75+
 
 hospital_props_multiplier: 1.
 
 # Proportion of those hospitalised that are admitted to ICU - consistent with LSHTM's LMIC estimates parameters
 icu_prop: 0.17
 
-# Infection fatality proportions - Verity et al.
-use_verity_mortality_estimates: True
+# Infection fatality proportions - now calculated using the Spanish serosurvey data by Pollan et al.
+use_raw_mortality_estimates: True
 infection_fatality_props:
-  - 0.00002 # 0-9
-  - 0.00006 # 10-19
-  - 0.0003 # 20-29
-  - 0.0008 # 30-39
-  - 0.0015 # 40-49
-  - 0.006 # 50-59
-  - 0.022 # 60-69
-  - 0.051 # 70-79
-  - 0.093 # 80+
+  - 1.35e-05 # 0-9
+  - 2.7e-05 # 10-19
+  - 9.5e-05 # 20-29
+  - 2.3e-04 # 30-39
+  - 5.6e-04 # 40-49
+  - 1.9e-03 # 50-59
+  - 7.7e-03 # 60-69
+  - 0.027 # 70-79
+  - 0.11 # 80+
 
-# Altenative to the Verity estimates, using the double exponential model: x -> exp(-k.exp(-mx))
-# Only used if use_verity_mortality_estimates is FALSE
+# Altenative to the raw estimates, using the double exponential model: x -> exp(-k.exp(-mx))
+# Only used if use_raw_mortality_estimates is FALSE
 ifr_double_exp_model_params:
   k: 10.
   m: .015
   last_representative_age: 80.
 
-# Reduced susceptibility in children - assumed, but informed by Iceland NEJM paper
 # Age-based susceptibility from LSHTM, used mean values
 age_based_susceptibility:
   "0": 0.40 # 0-4
@@ -132,27 +141,19 @@ age_based_susceptibility:
 # NON-AGE-STRATIFIED PARAMETERS
 
 # Adjust the infectiousness of clinical strata - assumed
-non_sympt_infect_multiplier: 0.5
+presympt_infect_multiplier: 0.7
+non_sympt_infect_multiplier: 0.7
 late_infect_multiplier:
   sympt_isolate: 0.2
   hospital_non_icu: 0.2
   icu: 0.2
 
 # parameters of tanh-based scale-up function used to define time-variant detection
-tv_detection_b: .05 # shape parameter of the tanh-based curve
-tv_detection_c: 90 # inflection point
-tv_detection_sigma: 0. # height of the lower asymptote
-prop_detected_among_symptomatic: 0.6 # height of the upper asymptote
-
-# clinical proportions for imported cases
-symptomatic_props_imported: .5
-hospital_props_imported: .05
-icu_prop_imported: .3
-prop_detected_among_symptomatic_imported: .6
-
-# parameters to define the effect (infectiousness adjustment) of self-isolation and enforced isolation
-self_isolation_effect: .67
-enforced_isolation_effect: 1.
+time_variant_detection:
+  maximum_gradient: 0.05  # The shape parameter to the tanh-based curve
+  max_change_time: 90.  # Point at which curve inflects
+  start_value: 0.1  # Starting value - lower asymptote for increasing function
+  end_value: 0.6  # End value - upper asymptote for increasing function
 
 # Sub region of country, null means just the country.
 region: null
@@ -170,9 +171,9 @@ end_time: 550.
 time_step: 1.
 
 # Base model definition
-contact_rate: 0.03 # Expected to be calibrated for each application
+contact_rate: 0.03  # Expected to be calibrated for each application
 seasonal_force: null
-icu_mortality_prop: 0.5
+icu_mortality_prop: 0.5  # Death proportion ceiling for ICU mortality
 
 # Compulsory parameter that is completely overwritten in stratification, rather than being modified
 infect_death: 0.
@@ -204,7 +205,9 @@ google_mobility_locations:
     - parks
     - transit_stations
 
-# parameters od negative binomial (need to be listed for validation)
+smooth_google_data: False  # whether to apply a 7-day moving average
+
+# Parameters of negative binomial (need to be listed for validation)
 notifications_dispersion_param: 1.
 prevXlateXclinical_icuXamong_dispersion_param: 1.
 infection_deathsXall_dispersion_param: 1.
@@ -213,3 +216,23 @@ proportion_seropositive_dispersion_param: 1.
 # parameters pertaining to waning immunity
 full_immunity: True
 immunity_duration: 90.
+
+icu_occupancy_dispersion_param: 1.
+
+importation_props_by_age:
+    "0": 0.04
+    "5": 0.04
+    "10": 0.04
+    "15": 0.04
+    "20": 0.08
+    "25": 0.09
+    "30": 0.09
+    "35": 0.09
+    "40": 0.09
+    "45": 0.08
+    "50": 0.08
+    "55": 0.08
+    "60": 0.04
+    "65": 0.04
+    "70": 0.04
+    "75": 0.04

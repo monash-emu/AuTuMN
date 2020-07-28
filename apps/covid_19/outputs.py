@@ -8,7 +8,7 @@ NOTIFICATION_STRATUM = ["sympt_isolate", "hospital_non_icu", "icu"]
 
 
 def get_calc_notifications_covid(
-    implement_importation, prop_detected_func,
+    include_importation, prop_detected_func,
 ):
     def calculate_notifications_covid(model: StratifiedModel, time: float):
         """
@@ -23,7 +23,7 @@ def get_calc_notifications_covid(
             if is_progress and is_notify_stratum:
                 notifications_count += value[time_idx]
 
-        if implement_importation:
+        if include_importation:
             notifications_count += (
                     model.time_variants["crude_birth_rate"](time)
                     * sum(model.compartment_values)
@@ -53,11 +53,33 @@ def calculate_icu_prev(model, time):
 
 
 def calculate_hospital_occupancy(model, time):
-    hospital_prev = 0
+    hospital_prev = 0.
+    period_icu_patients_in_hospital = \
+        max(
+            model.parameters["compartment_periods"]["icu_early"] -
+            model.parameters["compartment_periods"]["hospital_early"],
+            0.
+        )
+    proportion_icu_patients_in_hospital = \
+        period_icu_patients_in_hospital / \
+        model.parameters["compartment_periods"]["icu_early"]
     for i, comp_name in enumerate(model.compartment_names):
         if "late" in comp_name and "icu" in comp_name:  # "icu" used to map ["clinical_hospital_non_icu", "clinical_icu"]
             hospital_prev += model.compartment_values[i]
+        if "infectious" in comp_name and "clinical_icu" in comp_name:
+            hospital_prev += \
+                model.compartment_values[i] * \
+                proportion_icu_patients_in_hospital
+
     return hospital_prev
+
+
+def calculate_icu_occupancy(model, time):
+    icu_prev = 0
+    for i, comp_name in enumerate(model.compartment_names):
+        if "late" in comp_name and "clinical_icu" in comp_name:
+            icu_prev += model.compartment_values[i]
+    return icu_prev
 
 
 def calculate_proportion_seropositive(model, time):

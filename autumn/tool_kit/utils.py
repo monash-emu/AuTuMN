@@ -320,3 +320,18 @@ def print_target_to_plots_from_calibration(target_outputs):
         to_print += "]"
         print(to_print)
         print()
+
+
+def apply_moving_average(data, period):
+    """
+    Smooth the data by applying moving average with a specified period
+    :param data: a list
+    :param period: an integer
+    """
+    smooth_data = []
+    for i, d in enumerate(data):
+        n_backwards_timepoints = period - 1 if i >= period - 1 else i
+        smooth_data.append(
+            float(numpy.mean(data[i - n_backwards_timepoints: i + 1]))
+        )
+    return smooth_data

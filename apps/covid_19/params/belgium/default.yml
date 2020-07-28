@@ -1,11 +1,13 @@
 iso3: BEL
 
+smooth_google_data: True
+
 #start_time: -20.
 end_time: 214.
 scenario_start_time: 213
 
 infectious_seed: 200
-use_verity_mortality_estimates: True
+use_raw_mortality_estimates: True
 
 microdistancing:
   function_type: tanh
@@ -24,9 +26,10 @@ compartment_periods_calculated:
     total_period: 3.0710556391076644
   total_infectious:
     total_period: 5.218990643399594
-tv_detection_b: 0.06423583269054811
-tv_detection_c: 94.53838202924926
-prop_detected_among_symptomatic: 0.11745668540194786
+time_variant_detection:
+  maximum_gradient: 0.06423583269054811
+  max_change_time: 94.53838202924926
+  end_value: 0.11745668540194786
 icu_prop: 0.20308883880182196
 compartment_periods:
   hospital_late: 7.939307834630262

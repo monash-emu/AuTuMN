@@ -1,5 +1,6 @@
 from autumn.constants import Region
 from apps.covid_19.calibration import base
+from apps.covid_19.calibration.base import provide_default_calibration_params
 
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
@@ -14,27 +15,22 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
     )
 
 
-# CHANGE ALL THE VALUES BELOW
+PAR_PRIORS = provide_default_calibration_params(("start_time",))
 
-PAR_PRIORS = [
-    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.010, 0.05],},
-    {"param_name": "start_time", "distribution": "uniform", "distri_params": [0.0, 60.0],},
+PAR_PRIORS += [
     {
-        "param_name": "compartment_periods_calculated.incubation.total_period",
-        "distribution": "gamma",
-        "distri_mean": 5.0,
-        "distri_ci": [4.0, 6.0],
-    },
-    {
-        "param_name": "compartment_periods_calculated.total_infectious.total_period",
-        "distribution": "gamma",
-        "distri_mean": 7.0,
-        "distri_ci": [4.0, 10.0],
+        "param_name": "start_time",
+        "distribution": "uniform",
+        "distri_params": [0.0, 60.0],
     },
     # to set time-variant detection
-    {"param_name": "tv_detection_c", "distribution": "uniform", "distri_params": [80, 120.0],},
     {
-        "param_name": "prop_detected_among_symptomatic",
+        "param_name": "time_variant_detection.max_change_time",
+        "distribution": "uniform",
+        "distri_params": [80, 120.0],
+    },
+    {
+        "param_name": "time_variant_detection.end_value",
         "distribution": "beta",
         "distri_mean": 0.5,
         "distri_ci": [0.3, 0.7],

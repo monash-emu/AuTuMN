@@ -1,5 +1,8 @@
 from autumn.constants import Region
 from apps.covid_19.calibration import base
+from apps.covid_19.calibration.base import \
+    provide_default_calibration_params, add_standard_dispersion_parameter, add_case_detection_params_philippines, \
+    assign_trailing_weights_to_halves
 
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
@@ -15,43 +18,7 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
     )
 
 
-MULTIPLIERS = {
-    "prevXlateXclinical_icuXamong": 16057300.0
-}  # to get absolute pop size instead of proportion
-
-
-PAR_PRIORS = [
-    {
-        "param_name": "contact_rate", 
-        "distribution": "uniform", 
-        "distri_params": [0.010, 0.045],
-        },
-    {
-        "param_name": "start_time", 
-        "distribution": "uniform", 
-        "distri_params": [0.0, 40.0],
-        },
-    # Add extra params for negative binomial likelihood
-    {
-        "param_name": "notifications_dispersion_param",
-        "distribution": "uniform",
-        "distri_params": [0.1, 5.0],
-    },
-    {
-        "param_name": "compartment_periods_calculated.incubation.total_period",
-        "distribution": "gamma",
-        "distri_mean": 5.0,
-        "distri_ci": [4.4, 5.6],
-    },
-    {
-        "param_name": "compartment_periods_calculated.total_infectious.total_period",
-        "distribution": "gamma",
-        "distri_mean": 7.0,
-        "distri_ci": [4.5, 9.5],
-    },
-]
-
-# notification data:
+# Notification data:
 notification_times = [
 44,
 53,
@@ -73,30 +40,35 @@ notification_times = [
 166,
 173,
 180,
+187,
+194,
 ]
 
 notification_values = [
-2,
-2,
 1,
-12,
-44,
-148,
-260,
-262,
-257,
-148,
+1,
+1,
+2,
+8,
+22,
+32,
+36,
+39,
+22,
+15,
+15,
+15,
+17,
+33,
+25,
+32,
+41,
+55,
+93,
 109,
-97,
-103,
-123,
-237,
-171,
-223,
-286,
-389,
-655,
+184,
 ]
+
 
 TARGET_OUTPUTS = [
     {
@@ -104,5 +76,16 @@ TARGET_OUTPUTS = [
         "years": notification_times,
         "values": notification_values,
         "loglikelihood_distri": "negative_binomial",
+        "time_weights": assign_trailing_weights_to_halves(5, notification_times),
     },
 ]
+
+
+MULTIPLIERS = {
+    "prevXlateXclinical_icuXamong": 16057300.0
+}  # to get absolute pop size instead of proportion
+
+
+PAR_PRIORS = provide_default_calibration_params()
+PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "notifications")
+PAR_PRIORS = add_case_detection_params_philippines(PAR_PRIORS)

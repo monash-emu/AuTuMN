@@ -220,6 +220,7 @@ def test_build_dynamic__with_no_changes():
     is_periodic_intervention = False
     periodic_int_params = {}
     microdistancing_params = {}
+    smooth_google_data = False
     mm_func = mixing_matrix.build_dynamic(
         country_iso3="AUS",
         region=None,
@@ -231,6 +232,7 @@ def test_build_dynamic__with_no_changes():
         periodic_int_params=periodic_int_params,
         periodic_end_time=365,
         microdistancing_params=microdistancing_params,
+        smooth_google_data=smooth_google_data,
     )
     mm = mm_func(0)
     assert_arr_is_close(mm, AUS_MIXING_MATRIX)
@@ -261,6 +263,7 @@ def test_build_dynamic__with_mobility_data(monkeypatch):
     is_periodic_intervention = False
     periodic_int_params = {}
     microdistancing_params = {}
+    smooth_google_data = False
 
     mm_func = mixing_matrix.build_dynamic(
         country_iso3="AUS",
@@ -273,6 +276,7 @@ def test_build_dynamic__with_mobility_data(monkeypatch):
         periodic_int_params=periodic_int_params,
         periodic_end_time=365,
         microdistancing_params=microdistancing_params,
+        smooth_google_data=smooth_google_data,
     )
 
     # Work mixing adjustment should be 1, expect no change
@@ -328,6 +332,7 @@ def test_build_dynamic__smoke_test():
         periodic_int_params={},
         periodic_end_time=365,
         microdistancing_params={},
+        smooth_google_data=True,
     )
     mm = mm_func(50)
     assert mm.shape == (16, 16)

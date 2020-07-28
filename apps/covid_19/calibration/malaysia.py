@@ -1,5 +1,6 @@
 from autumn.constants import Region
 from apps.covid_19.calibration import base
+from apps.covid_19.calibration.base import provide_default_calibration_params, add_standard_dispersion_parameter
 
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
@@ -11,79 +12,10 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
         PAR_PRIORS,
         TARGET_OUTPUTS,
         mode="autumn_mcmc",
-        _multipliers=MULTIPLIERS,
     )
 
 
-PAR_PRIORS = [
-    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.015, 0.040],},
-    {"param_name": "start_time", "distribution": "uniform", "distri_params": [0.0, 40.0],},
-    {
-        "param_name": "compartment_periods_calculated.incubation.total_period",
-        "distribution": "gamma",
-        "distri_mean": 5.0,
-        "distri_ci": [3.0, 7.0],
-    },
-    {
-        "param_name": "compartment_periods.icu_late",
-        "distribution": "gamma",
-        "distri_mean": 10.0,
-        "distri_ci": [5.0, 15.0],
-    },
-    {
-        "param_name": "compartment_periods.icu_early",
-        "distribution": "gamma",
-        "distri_mean": 10.0,
-        "distri_ci": [2.0, 25.0],
-    },
-    {
-        "param_name": "tv_detection_sigma",
-        "distribution": "beta",
-        "distri_mean": 0.25,
-        "distri_ci": [0.1, 0.4],
-    },
-    {
-        "param_name": "tv_detection_b",
-        "distribution": "beta",
-        "distri_mean": 0.075,
-        "distri_ci": [0.05, 0.1],
-    },
-    {
-        "param_name": "prop_detected_among_symptomatic",
-        "distribution": "beta",
-        "distri_mean": 0.7,
-        "distri_ci": [0.6, 0.9],
-    },
-    {
-        "param_name": "icu_prop",
-        "distribution": "beta",
-        "distri_mean": 0.25,
-        "distri_ci": [0.15, 0.35],
-    },
-    # Add negative binomial over-dispersion parameters
-    {
-        "param_name": "notifications_dispersion_param",
-        "distribution": "uniform",
-        "distri_params": [0.1, 5.0],
-    },
-    {
-        "param_name": "prevXlateXclinical_icuXamong_dispersion_param",
-        "distribution": "uniform",
-        "distri_params": [0.1, 5.0],
-    },
-    {
-        "param_name": "microdistancing.parameters.sigma",
-        "distribution": "uniform",
-        "distri_params": [0.4, 0.9],
-    },
-    {
-        "param_name": "microdistancing.parameters.c",
-        "distribution": "uniform",
-        "distri_params": [78.0, 124.0],
-    },
-]
-
-# notification data, provided by the country
+# Notification data, provided by the country
 notification_times = [
     63,
     64,
@@ -204,7 +136,30 @@ notification_times = [
     179,
     180,
     181,
+    182,
+    183,
+    184,
+    185,
+    186,
+    187,
+    188,
+    189,
+    190,
+    191,
+    192,
+    193,
+    194,
+    195,
+    196,
+    197,
+    198,
+    199,
+    200,
+    201,
+    202,
+    203,
 ]
+
 notification_counts = [
     7,
     14,
@@ -325,8 +280,29 @@ notification_counts = [
     10,
     18,
     3,
+    2,
+    1,
+    3,
+    5,
+    10,
+    5,
+    5,
+    6,
+    3,
+    6,
+    13,
+    8,
+    14,
+    7,
+    4,
+    5,
+    3,
+    18,
+    9,
+    15,
+    21,
+    15,
 ]
-
 
 # ICU data (prev / million pop), provided by the country
 icu_times = [
@@ -441,6 +417,28 @@ icu_times = [
     179,
     180,
     181,
+    182,
+    183,
+    184,
+    185,
+    186,
+    187,
+    188,
+    189,
+    190,
+    191,
+    192,
+    193,
+    194,
+    195,
+    196,
+    197,
+    198,
+    199,
+    200,
+    201,
+    202,
+    203,
 ]
 
 icu_counts = [
@@ -555,8 +553,29 @@ icu_counts = [
     2,
     2,
     4,
+    4,
+    4,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    2,
+    3,
+    3,
+    4,
+    6,
+    5,
+    5,
+    3,
+    1,
+    2,
+    3,
+    4,
 ]
-
 
 TARGET_OUTPUTS = [
     {
@@ -564,22 +583,61 @@ TARGET_OUTPUTS = [
         "years": notification_times,
         "values": notification_counts,
         "loglikelihood_distri": "negative_binomial",
+        "time_weights": list(range(1, len(notification_times) + 1)),
     },
     {
-        "output_key": "prevXlateXclinical_icuXamong",
+        "output_key": "icu_occupancy",
         "years": icu_times,
         "values": icu_counts,
         "loglikelihood_distri": "negative_binomial",
-    },
+        "time_weights": list(range(1, len(icu_times) + 1)),
+    }
 ]
 
-MULTIPLIERS = {
-    "prevXlateXclinical_icuXamong": 32364904.0
-}  # to get absolute pop size instead of proportion
+PAR_PRIORS = provide_default_calibration_params()
+PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "notifications")
+PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "icu_occupancy")
 
-# __________  For the grid-based calibration approach
-# define a grid of parameter values. The posterior probability will be evaluated at each node
-par_grid = [
-    {"param_name": "contact_rate", "lower": 0.01, "upper": 0.02, "n": 6},
-    {"param_name": "start_time", "lower": 0.0, "upper": 50.0, "n": 11},
+PAR_PRIORS += [
+
+    # ICU-related
+    {
+        "param_name": "compartment_periods.icu_early",
+        "distribution": "uniform",
+        "distri_params": [2.0, 25.0],
+    },
+    {
+        "param_name": "icu_prop",
+        "distribution": "uniform",
+        "distri_params": [0.1, 0.35],
+    },
+
+    # Detection-related
+    {
+        "param_name": "time_variant_detection.start_value",
+        "distribution": "uniform",
+        "distri_params": [0.1, 0.4],
+    },
+    {
+        "param_name": "time_variant_detection.maximum_gradient",
+        "distribution": "uniform",
+        "distri_params": [0.05, 0.1],
+    },
+    {
+        "param_name": "time_variant_detection.end_value",
+        "distribution": "uniform",
+        "distri_params": [0.6, 0.9],
+    },
+
+    # Microdistancing-related
+    {
+        "param_name": "microdistancing.parameters.sigma",
+        "distribution": "uniform",
+        "distri_params": [0.4, 0.9],
+    },
+    {
+        "param_name": "microdistancing.parameters.c",
+        "distribution": "uniform",
+        "distri_params": [78.0, 124.0],
+    },
 ]

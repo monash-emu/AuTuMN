@@ -14,14 +14,11 @@ end_time: 365.
 contact_rate: 0.024
 non_sympt_infect_multiplier: .464939
 
-# Replaced by `age_based_susceptibility`
-# young_reduced_susceptibility: .4484674
-prop_detected_among_symptomatic: .8035
+time_variant_detection:
+  end_value: 0.8035
+
 npi_effectiveness:
   other_locations: .9697829
-
-#self_isolation_effect: .434371
-enforced_isolation_effect: .9858
 
 mixing:
   school:
@@ -34,6 +31,7 @@ mixing:
       - 2020-06-08
       - 2020-06-10
       - 2020-07-07
+      - 2020-07-18 # google mobility data update, pls review
     values:
       - 1.
       - 0.
@@ -42,6 +40,7 @@ mixing:
       - 1 # 6 / 14
       - 1. # all students back
       - 1
+      - 1 # google mobility data update, pls review
 
 data:
   times_imported_cases:

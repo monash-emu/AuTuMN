@@ -15,6 +15,112 @@ N_ITERS = 100000
 N_BURNED = 0
 N_CHAINS = 1
 
+BASE_CALIBRATION_PARAMS = [
+    {
+        "param_name": "contact_rate",
+        "distribution": "uniform",
+        "distri_params": [0.015, 0.07],
+    },
+    {
+        "param_name": "start_time",
+        "distribution": "uniform",
+        "distri_params": [0.0, 40.0],
+    },
+    {
+        "param_name": "compartment_periods_calculated.incubation.total_period",
+        "distribution": "uniform",
+        "distri_params": [4.4, 5.6],
+    },
+    {
+        "param_name": "compartment_periods_calculated.total_infectious.total_period",
+        "distribution": "uniform",
+        "distri_params": [4.5, 9.5],
+    },
+]
+
+
+def provide_default_calibration_params(excluded_params=()):
+    """
+    Provide the standard default parameters as listed above, unless requested not to include any.
+
+    :param excluded_params: tuple
+        strings of the parameters that are not to be returned
+    :return: list
+        calibration parameters
+    """
+
+    return \
+        [BASE_CALIBRATION_PARAMS[param] for param in range(len(BASE_CALIBRATION_PARAMS)) if
+         BASE_CALIBRATION_PARAMS[param]["param_name"] not in excluded_params]
+
+
+def add_standard_dispersion_parameter(params, target_outputs, output_name):
+    """
+    Add standard dispersion parameter for negative binomial distribution
+
+    :param params: list
+        Parameter priors to be updated by this function
+    :param target_outputs: list
+        Target outputs, to see whether the quantity of interest is an output
+    :param output_name: str
+        Name of the output of interest
+    :return: list
+        Updated version of the parameter priors
+    """
+
+    if any([i["output_key"] == output_name for i in target_outputs]):
+        params += [
+            {
+                "param_name": output_name + "_dispersion_param",
+                "distribution": "uniform",
+                "distri_params": [0.1, 5.0],
+            },
+        ]
+    return params
+
+
+def add_case_detection_params_philippines(params):
+    """
+    Add standard set of parameters to vary case detection for the Philippines
+    """
+
+    return params + [
+        {
+            "param_name": "time_variant_detection.maximum_gradient",
+            "distribution": "uniform",
+            "distri_params": [0.05, 0.1],
+        },
+        {
+            "param_name": "time_variant_detection.max_change_time",
+            "distribution": "uniform",
+            "distri_params": [70.0, 110.0],
+        },
+        {
+            "param_name": "time_variant_detection.end_value",
+            "distribution": "uniform",
+            "distri_params": [0.10, 0.70],
+        },
+    ]
+
+
+def assign_trailing_weights_to_halves(end_weights, calibration_target):
+    """
+    Create a list of (float) halves and ones, of the length of the calibration target, with the last few values being
+    ones and the earlier values being halves.
+
+    :param end_weights: int
+        How many values at the end should be ones
+    :param calibration_target: list
+        List of calibration targets to determine the length of the weights to be returned
+    :return: list
+        List of the weights as described above
+    """
+
+    time_weights = [0.5] * (len(calibration_target) - end_weights)
+    time_weights += [1.] * end_weights
+    return time_weights
+
+
 logger = logging.getLogger(__name__)
 
 

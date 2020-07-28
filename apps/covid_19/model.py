@@ -1,6 +1,11 @@
 import os
+import copy
 from summer.model import StratifiedModel
 from summer.model.utils.string import find_all_strata, find_name_components
+
+from autumn.tool_kit.utils import repeat_list_elements
+
+from autumn.curve import tanh_based_scaleup
 
 from autumn.tool_kit.utils import normalise_sequence
 from autumn import constants
@@ -23,10 +28,16 @@ def build_model(params: dict) -> StratifiedModel:
     """
     validate_params(params)
 
-    # Get the agegroup strata breakpoints.
+    detect_prop_params = params["time_variant_detection"]
+    import_representative_age = params["import_representative_age"]
+    import_times = params["data"]["times_imported_cases"]
+    import_cases = params["data"]["n_imported_cases"]
     agegroup_max = params["agegroup_breaks"][0]
     agegroup_step = params["agegroup_breaks"][1]
     agegroup_strata = list(range(0, agegroup_max, agegroup_step))
+    start_time = params["start_time"]
+    end_time = params["end_time"]
+    time_step = params["time_step"]
 
     # Look up the country population size by age-group, using UN data
     country_iso3 = params["iso3"]
@@ -78,17 +89,14 @@ def build_model(params: dict) -> StratifiedModel:
     init_pop[Compartment.SUSCEPTIBLE] = sum(total_pops) - sum(init_pop.values())
 
     # Set integration times
-    start_time = params["start_time"]
-    end_time = params["end_time"]
-    time_step = params["time_step"]
     integration_times = get_model_times_from_inputs(round(start_time), end_time, time_step,)
 
     # Add inter-compartmental transition flows
     flows = copy.deepcopy(preprocess.flows.DEFAULT_FLOWS)
 
     # Choose a birth approach
-    is_importation_active = params["implement_importation"]
-    birth_approach = BirthApproach.ADD_CRUDE if is_importation_active else BirthApproach.NO_BIRTH
+    implement_importation = params["implement_importation"]
+    birth_approach = BirthApproach.ADD_CRUDE if implement_importation else BirthApproach.NO_BIRTH
 
     # Build mixing matrix.
     static_mixing_matrix = preprocess.mixing_matrix.build_static(country_iso3)
@@ -96,6 +104,7 @@ def build_model(params: dict) -> StratifiedModel:
     dynamic_location_mixing_params = params["mixing"]
     dynamic_age_mixing_params = params["mixing_age_adjust"]
     microdistancing = params["microdistancing"]
+    smooth_google_data = params["smooth_google_data"]
 
     if dynamic_location_mixing_params or dynamic_age_mixing_params:
         npi_effectiveness_params = params["npi_effectiveness"]
@@ -113,6 +122,7 @@ def build_model(params: dict) -> StratifiedModel:
             periodic_int_params,
             end_time,
             microdistancing,
+            smooth_google_data,
         )
 
     # FIXME: Remove params from model_parameters
@@ -162,58 +172,84 @@ def build_model(params: dict) -> StratifiedModel:
         model.parameters["contact_rate"] = \
             "contact_rate"
 
+    # Detected and symptomatic proportions primarily needed for the clinical stratification
+    # - except for the following function
+
+    # Create function describing the proportion of cases detected over time
+    def detected_proportion(t):
+
+        # Function representing the proportion of symptomatic people detected over time
+        base_prop_detect = \
+            tanh_based_scaleup(
+                detect_prop_params["maximum_gradient"],
+                detect_prop_params["max_change_time"],
+                detect_prop_params["start_value"],
+                detect_prop_params["end_value"]
+            )
+
+        # Return value modified for any future intervention that narrows the case detection gap
+        int_detect_gap_reduction = model_parameters['int_detection_gap_reduction']
+        return base_prop_detect(t) + (1. - base_prop_detect(t)) * int_detect_gap_reduction
+
+    # Age dependent proportions of infected people who become symptomatic
+    # This is defined 8x10 year bands, 0-70+, which we transform into 16x5 year bands 0-75+
+    symptomatic_props = \
+        repeat_list_elements(2, model_parameters["symptomatic_props"])
+
+    def modelled_abs_detection_proportion_imported(t):
+        return symptomatic_props[agegroup_strata.index(import_representative_age)] * \
+               detected_proportion(t)
+
+    # Set time-variant importation rate
+    if implement_importation:
+        import_rate_func = \
+            preprocess.importation.get_importation_rate_func_as_birth_rates(
+                import_times, import_cases, modelled_abs_detection_proportion_imported, total_pops,
+            )
+        model.parameters["crude_birth_rate"] = "crude_birth_rate"
+        model.time_variants["crude_birth_rate"] = import_rate_func
+
     # Stratify model by age
     # Coerce age breakpoint numbers into strings - all strata are represented as strings
-    agegroup_strata = [str(s) for s in agegroup_strata]
+    agegroup_strings = [str(s) for s in agegroup_strata]
     # Create parameter adjustment request for age stratifications
     age_based_susceptibility = params["age_based_susceptibility"]
     adjust_requests = {
         # No change, but distinction is required for later stratification by clinical status
-        "to_infectious": {s: 1 for s in agegroup_strata},
-        "infect_death": {s: 1 for s in agegroup_strata},
-        "within_late": {s: 1 for s in agegroup_strata},
+        "to_infectious": {s: 1 for s in agegroup_strings},
+        "infect_death": {s: 1 for s in agegroup_strings},
+        "within_late": {s: 1 for s in agegroup_strings},
         # Adjust susceptibility across age groups
         "contact_rate": age_based_susceptibility,
     }
-    if is_importation_active:
-        adjust_requests[
-            "import_secondary_rate"
-        ] = preprocess.mixing_matrix.get_total_contact_rates_by_age(
-            static_mixing_matrix, direction="horizontal"
-        )
 
     # Distribute starting population over agegroups
     requested_props = {
-        agegroup: prop for agegroup, prop in zip(agegroup_strata, normalise_sequence(total_pops))
+        agegroup: prop for agegroup, prop in zip(agegroup_strings, normalise_sequence(total_pops))
     }
 
     # We use "agegroup" instead of "age" for this model, to avoid triggering automatic demography features
     # (which work on the assumption that the time unit is years, so would be totally wrong)
     model.stratify(
         "agegroup",
-        agegroup_strata,
+        agegroup_strings,
         compartment_types_to_stratify=[],  # Apply to all compartments
         requested_proportions=requested_props,
         mixing_matrix=static_mixing_matrix,
         adjustment_requests=adjust_requests,
-        # FIXME: This seems awfully a lot like a parameter that should go in a YAML file.
-        entry_proportions=preprocess.importation.IMPORTATION_PROPS_BY_AGE,
+        entry_proportions=model_parameters["importation_props_by_age"],
     )
 
-    model_parameters["all_stratifications"] = {"agegroup": agegroup_strata}
-    modelled_abs_detection_proportion_imported = stratify_by_clinical(
-        model, model_parameters, compartments
-    )
+    model_parameters["all_stratifications"] = {"agegroup": agegroup_strings}
 
-    # Set time-variant importation rate
-    if is_importation_active:
-        import_times = params["data"]["times_imported_cases"]
-        import_cases = params["data"]["n_imported_cases"]
-        import_rate_func = preprocess.importation.get_importation_rate_func_as_birth_rates(
-            import_times, import_cases, modelled_abs_detection_proportion_imported, total_pops,
-        )
-        model.parameters["crude_birth_rate"] = "crude_birth_rate"
-        model.time_variants["crude_birth_rate"] = import_rate_func
+    # Allow pre-symptomatics to be less infectious
+    model.individual_infectiousness_adjustments = \
+        [
+            [[Compartment.PRESYMPTOMATIC], model_parameters["presympt_infect_multiplier"]]
+        ]
+
+    # Stratify by clinical
+    stratify_by_clinical(model, model_parameters, compartments, detected_proportion, symptomatic_props)
 
     # Define output connections to collate
     # Track compartment output connections.
@@ -226,18 +262,23 @@ def build_model(params: dict) -> StratifiedModel:
     }
 
     # Add notifications to derived_outputs
-    implement_importation = model.parameters["implement_importation"]
-    model.derived_output_functions["notifications"] = outputs.get_calc_notifications_covid(
-        implement_importation, modelled_abs_detection_proportion_imported,
-    )
-    model.derived_output_functions["incidence_icu"] = outputs.calculate_incidence_icu_covid
-    model.derived_output_functions["prevXlateXclinical_icuXamong"] = outputs.calculate_icu_prev
-
-    model.derived_output_functions["hospital_occupancy"] = outputs.calculate_hospital_occupancy
-    model.derived_output_functions["proportion_seropositive"] = outputs.calculate_proportion_seropositive
-
-    model.death_output_categories = list_all_strata_for_mortality(model.compartment_names)
-    model.derived_output_functions["years_of_life_lost"] = outputs.get_calculate_years_of_life_lost(
-        life_expectancy_latest)
+    model.derived_output_functions["notifications"] = \
+        outputs.get_calc_notifications_covid(implement_importation, modelled_abs_detection_proportion_imported)
+    model.derived_output_functions["local_notifications"] = \
+        outputs.get_calc_notifications_covid(False, modelled_abs_detection_proportion_imported)
+    model.derived_output_functions["incidence_icu"] = \
+        outputs.calculate_incidence_icu_covid
+    model.derived_output_functions["prevXlateXclinical_icuXamong"] = \
+        outputs.calculate_icu_prev
+    model.derived_output_functions["hospital_occupancy"] = \
+        outputs.calculate_hospital_occupancy
+    model.derived_output_functions["proportion_seropositive"] = \
+        outputs.calculate_proportion_seropositive
+    model.derived_output_functions["icu_occupancy"] = \
+        outputs.calculate_icu_occupancy
+    model.death_output_categories = \
+        list_all_strata_for_mortality(model.compartment_names)
+    model.derived_output_functions["years_of_life_lost"] = \
+        outputs.get_calculate_years_of_life_lost(life_expectancy_latest)
 
     return model

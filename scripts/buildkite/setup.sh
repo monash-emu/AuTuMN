@@ -30,6 +30,13 @@ systemctl enable --now buildkite-agent@6
 systemctl enable --now buildkite-agent@7
 systemctl enable --now buildkite-agent@8
 systemctl enable --now buildkite-agent@9
+systemctl enable --now buildkite-agent@10
+systemctl enable --now buildkite-agent@11
+systemctl enable --now buildkite-agent@12
+systemctl enable --now buildkite-agent@13
+systemctl enable --now buildkite-agent@14
+systemctl enable --now buildkite-agent@15
+systemctl enable --now buildkite-agent@16
 
 apt-get install -qq python3-pip virtualenv
 
@@ -43,5 +50,10 @@ systemctl disable buildkite-agent@6
 systemctl disable buildkite-agent@7
 systemctl disable buildkite-agent@8
 systemctl disable buildkite-agent@9
-
-
+systemctl enable --now buildkite-agent@10
+systemctl enable --now buildkite-agent@11
+systemctl enable --now buildkite-agent@12
+systemctl enable --now buildkite-agent@13
+systemctl enable --now buildkite-agent@14
+systemctl enable --now buildkite-agent@15
+systemctl enable --now buildkite-agent@16

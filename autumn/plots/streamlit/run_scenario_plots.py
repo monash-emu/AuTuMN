@@ -139,6 +139,7 @@ def plot_location_mixing(
     google_mobility_locations = params["google_mobility_locations"]
     is_periodic_intervention = params.get("is_periodic_intervention")
     periodic_int_params = params.get("periodic_intervention")
+    smooth_google_data = params.get("smooth_google_data")
     adjust = LocationMixingAdjustment(
         country_iso3,
         region,
@@ -149,6 +150,7 @@ def plot_location_mixing(
         periodic_int_params,
         params["end_time"],
         microdistancing,
+        smooth_google_data,
     )
 
     if adjust.microdistancing_function and loc_key in MICRODISTANCING_LOCATIONS:
@@ -240,16 +242,18 @@ def plot_multicounty_hospital(
             plots.plot_multicountry_hospital(all_scenarios, mode, objective)
 
 
+
 PLOT_FUNCS = {
     "Compartment sizes": plot_compartment,
     "Compartments aggregate": plot_compartment_aggregate,
     "Scenario outputs": plot_outputs_multi,
     "Dynamic input functions": plot_dynamic_inputs,
     "Dynamic location mixing": plot_location_mixing,
-    "Stacked outputs by stratum": plot_stacked_compartments_by_stratum,
-    "Stacked derived by stratum": plot_stacked_derived_outputs_by_stratum,
-    "Multicountry rainbow": plot_multicountry_rainbow,
-    "Multicountry hospital": plot_multicounty_hospital,
+    # "Stacked outputs by stratum": plot_stacked_compartments_by_stratum,
+    # "Stacked derived by stratum": plot_stacked_derived_outputs_by_stratum,
+    # "Multicountry rainbow": plot_multicountry_rainbow,
+    # "Multicountry hospital": plot_multicounty_hospital,
+
 }
 
 

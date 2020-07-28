@@ -1,5 +1,5 @@
 ---
-scenario_start_time: 140
+scenario_start_time: 198
 implement_importation: True
 
 traveller_quarantine:
@@ -16,9 +16,6 @@ microdistancing:
 end_time: 365.
 iso3: MYS
 
-# Make case detection time-variant
-tv_detection_c: 80. # inflection time
-
 contact_rate: 0.026261071031329
 start_time: 31.0692731013737
 compartment_periods_calculated:
@@ -29,9 +26,11 @@ compartment_periods:
   icu_late: 2.88703733417247
   icu_early: 21.1707377760239
 
-tv_detection_sigma: 0.46226447586322
-tv_detection_b: 0.0604182172578674
-prop_detected_among_symptomatic: 0.891585432203268
+time_variant_detection:
+    max_change_time: 80.
+    maximum_gradient: 0.0604182172578674
+    start_value: 0.46226447586322
+    end_value: 0.891585432203268
 icu_prop: 0.282896242081187
 
 mixing:
@@ -43,12 +42,14 @@ mixing:
       - 2020-06-23
       - 2020-06-24 # Secondary examinations
       - 2020-07-07
+      - 2020-07-22 # School reopen
     values:
       - 1.
       - 0.
       - 0.
       - 0.1 # Secondary examinations
       - 0.1
+      - 1
 
 data: # Daily numbers of reported imported cases. (two different approaches here)
   times_imported_cases:

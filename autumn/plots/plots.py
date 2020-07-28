@@ -663,6 +663,7 @@ def plot_stacked_compartments_by_stratum(plotter: Plotter, scenarios: List[Scena
                 values_1 = [v + d for (v, d) in zip(values_1, models[1].derived_outputs[out])]
 
         new_running_total = [r + v for (r, v) in zip(running_total, list(values_0) + list(values_1))]
+
         axis.fill_between(times, running_total, new_running_total, color=strata_colors[color_idx], label=group_name)
         legend.append(stratum_name)
         running_total = new_running_total
@@ -824,3 +825,4 @@ def plot_multicountry_hospital(all_scenarios, mode, objective):
     filename = out_dir + "rainbow_" + mode + "_" + objective
     pyplot.savefig(filename + ".pdf")
     pyplot.savefig(filename + ".png", dpi=300)
+

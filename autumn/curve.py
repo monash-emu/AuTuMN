@@ -91,17 +91,36 @@ def make_two_step_curve(y_low, y_med, y_high, x_start, x_med, x_end):
     return curve
 
 
-def tanh_based_scaleup(b, c, sigma):
+# def tanh_based_scaleup(b, c, sigma, lower_asymptote=0., upper_asymptote=1.):
+#     """
+#     return the function t: (1 - sigma) / 2 * tanh(b * (a - c)) + (1 + sigma) / 2
+#     :param b: shape parameter
+#     :param c: inflection point
+#     :param sigma: lowest asymptotic value
+#     :return: a function
+#     """
+#
+#     def tanh_scaleup(t):
+#         return \
+#             lower_asymptote + \
+#             ((1 - sigma) / 2 * tanh(b * (t - c)) + (1 + sigma) / 2) * (upper_asymptote - lower_asymptote)
+#
+#     return tanh_scaleup
+
+def tanh_based_scaleup(b, c, sigma, upper_asymptote=1.):
     """
     return the function t: (1 - sigma) / 2 * tanh(b * (a - c)) + (1 + sigma) / 2
     :param b: shape parameter
     :param c: inflection point
     :param sigma: lowest asymptotic value
+    :param upper_asymptote: highest asymptotic value
     :return: a function
     """
 
     def tanh_scaleup(t):
-        return (1 - sigma) / 2 * tanh(b * (t - c)) + (1 + sigma) / 2
+        return (tanh(b * (t - c)) / 2. + 0.5) * \
+               (upper_asymptote - sigma) + \
+               sigma
 
     return tanh_scaleup
 
@@ -843,47 +862,3 @@ if __name__ == "__main__":
     # pylab.xlim(1950, 2020)
     # pylab.ylim(0, 5)
     # pylab.show()
-
-    # y_high = 3
-    # y_med = 0.5 * y_high
-    # curve = make_two_step_curve(0, y_med, y_high, 1950, 1995, 2015)
-    # x_vals = np.linspace(1950, 2050, 150)
-    # pylab.plot(x_vals, map(curve, x_vals))
-    # pylab.xlim(1950, 2020)
-    # pylab.ylim(0, 5)
-    # pylab.show()
-
-    x = (
-        1880.0,
-        1890.0,
-        1900.0,
-        1910.0,
-        1930.0,
-        1950.0,
-        1990.0,
-        1997.0,
-        2000.0,
-        2002.0,
-        2005.0,
-    )
-    y = np.random.rand(len(x))
-
-    f = scale_up_function(x, y, method=1, intervention_end=[2010, 1.0])
-    g = scale_up_function(
-        x, y, method=2, intervention_end=[2010, 1.0], intervention_start_date=2008
-    )
-    h = scale_up_function(x, y, method=3, intervention_end=[2010, 1.0])
-    k = scale_up_function(x, y, method=4, intervention_end=[2010, 1.0])
-    p = scale_up_function(x, y, method=5, intervention_end=[2020, 1.0])
-    q = scale_up_function(x, y, method=5, bound_low=0.0, bound_up=1.0, intervention_end=[2010, 1.0])
-
-    x_vals = np.linspace(min(x) - 0.1 * (max(x) - min(x)), max(x) + 0.1 * (max(x) - min(x)), 1000)
-    pylab.plot(x_vals, map(f, x_vals), color="r")
-    pylab.plot(x_vals, map(g, x_vals), color="b")
-    pylab.plot(x_vals, map(h, x_vals), color="g")
-    pylab.plot(x_vals, map(k, x_vals), color="purple")  # ok
-    pylab.plot(x_vals, map(p, x_vals), color="orange")  # ok
-    pylab.plot(x_vals, map(q, x_vals), color="cyan")  # ok
-
-    pylab.plot(x, y, "ro")
-    pylab.show()

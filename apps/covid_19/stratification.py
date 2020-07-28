@@ -2,7 +2,6 @@ import numpy as np
 
 from autumn.tool_kit.utils import (
     find_rates_and_complements_from_ifr,
-    repeat_list_elements,
     repeat_list_elements_average_last_two,
     element_wise_list_division,
 )
@@ -13,7 +12,7 @@ from apps.covid_19.preprocess.mortality import age_specific_ifrs_from_double_exp
 from autumn.inputs import get_population_by_agegroup
 
 
-def stratify_by_clinical(model, model_parameters, compartments):
+def stratify_by_clinical(model, model_parameters, compartments, detected_proportion, symptomatic_props):
     """
     Stratify the infectious compartments of the covid model (not including the pre-symptomatic compartments, which are
     actually infectious)
@@ -28,36 +27,23 @@ def stratify_by_clinical(model, model_parameters, compartments):
         - should we ditch this?
 
     """
-    # General stratification
     agegroup_strata = model_parameters["all_stratifications"]["agegroup"]
     all_stratifications = model_parameters["all_stratifications"]
     clinical_strata = model_parameters["clinical_strata"]
-    # Infection rate multiplication
-    # Importation
     implement_importation = model_parameters["implement_importation"]
     traveller_quarantine = model_parameters["traveller_quarantine"]
-    # Time variant case detection
-    prop_detected_among_symptomatic = model_parameters["prop_detected_among_symptomatic"]
-    # FIXME: Make it clear that this for tahn
-    tv_detection_b = model_parameters["tv_detection_b"]
-    tv_detection_c = model_parameters["tv_detection_c"]
-    tv_detection_sigma = model_parameters["tv_detection_sigma"]
-    # ???
     within_hospital_early = model_parameters["within_hospital_early"]
     within_icu_early = model_parameters["within_icu_early"]
-    # Strata entry and infection death proportions
     icu_prop = model_parameters["icu_prop"]
     icu_mortality_prop = model_parameters["icu_mortality_prop"]
     infection_fatality_props_10_year = model_parameters["infection_fatality_props"]
-    hospital_props_10_year = model_parameters["hospital_props"]
-    hospital_props_multiplier = model_parameters["hospital_props_multiplier"]
-    symptomatic_props_10_year = model_parameters["symptomatic_props"]
-    use_verity_mortality_estimates = model_parameters["use_verity_mortality_estimates"]
+    hospital_props = model_parameters["hospital_props"]
+    use_raw_mortality_estimates = model_parameters["use_raw_mortality_estimates"]
     ifr_double_exp_model_params = model_parameters["ifr_double_exp_model_params"]
 
     # Define stratification - only stratify infected compartments
     strata_to_implement = clinical_strata
-    model_parameters["all_stratifications"]["clinical"] = strata_to_implement
+    all_stratifications["clinical"] = strata_to_implement
     compartments_to_split = [
         comp
         for comp in compartments
@@ -67,23 +53,13 @@ def stratify_by_clinical(model, model_parameters, compartments):
 
     # FIXME: Set params to make comparison happy
     model_parameters["infection_fatality_props"] = infection_fatality_props_10_year
-    model_parameters["hospital_props"] = hospital_props_10_year
 
     # Calculate the proportion of 80+ years old among the 75+ population
     elderly_populations = get_population_by_agegroup([0, 75, 80], model_parameters["iso3"], model_parameters["region"])
     prop_over_80 = elderly_populations[2] / sum(elderly_populations[1:])
 
-    # Age dependent proportions of infected people who become symptomatic.
-    # This is defined 8x10 year bands, 0-70+, which we transform into 16x5 year bands 0-75+
-    symptomatic_props = repeat_list_elements(2, symptomatic_props_10_year)
-    # Age dependent proportions of symptomatic people who become hospitalised.
-    # This is defined 9x10 year bands, 0-80+, which we trransform into 16x5 year bands 0-75+
-    # Calculate 75+ age bracket as half 75-79 and half 80+
-    hospital_props = repeat_list_elements_average_last_two(
-        [p * hospital_props_multiplier for p in hospital_props_10_year], prop_over_80)
-
     # Infection fatality rate by age group.
-    if use_verity_mortality_estimates:
+    if use_raw_mortality_estimates:
         # Data in props used 10 year bands 0-80+, but we want 5 year bands from 0-75+
 
         # Calculate 75+ age bracket as weighted average between 75-79 and half 80+
@@ -110,7 +86,7 @@ def stratify_by_clinical(model, model_parameters, compartments):
         "sympt": sympt.tolist(),
         "non_sympt": non_sympt.tolist(),
         "hospital": sympt_hospital.tolist(),
-        "sympt_non_hospital": sympt_non_hospital.tolist(),  # Overidden by a by time-varying proprotion later
+        "sympt_non_hospital": sympt_non_hospital.tolist(),  # Over-ridden by a by time-varying proportion later
         "icu": sympt_hospital_icu.tolist(),
         "hospital_non_icu": sympt_hospital_non_icu.tolist(),
     }
@@ -151,7 +127,7 @@ def stratify_by_clinical(model, model_parameters, compartments):
     }
 
     # Progression rates into the infectious compartment(s)
-    # Define progresion rates into non-symptomatic compartments using parameter adjustment.
+    # Define progression rates into non-symptomatic compartments using parameter adjustment.
     stratification_adjustments = {}
     for age_idx, age in enumerate(agegroup_strata):
         key = f"to_infectiousXagegroup_{age}"
@@ -161,24 +137,10 @@ def stratify_by_clinical(model, model_parameters, compartments):
             "hospital_non_icu": sympt_hospital_non_icu[age_idx],
         }
 
-    # Create a function for the proportion of symptomatic people who are detected at timestep `t`.
-    scale_up_multiplier = \
-        tanh_based_scaleup(tv_detection_b, tv_detection_c, tv_detection_sigma)
-
-    # Create function describing the proportion of cases detected over time
-    def prop_detect_among_sympt_func(t):
-
-        # Raw value without adjustment for any improved detection intervention
-        without_intervention_value = prop_detected_among_symptomatic * scale_up_multiplier(t)
-
-        # Return value modified for any future intervention that narrows the case detection gap
-        int_detect_gap_reduction = model_parameters['int_detection_gap_reduction']
-        return without_intervention_value + (1. - without_intervention_value) * int_detect_gap_reduction
-
     # Set time-varying isolation proportions
     for age_idx, agegroup in enumerate(agegroup_strata):
         # Pass the functions to the model
-        tv_props = TimeVaryingProprotions(age_idx, abs_props, prop_detect_among_sympt_func)
+        tv_props = TimeVaryingProportions(age_idx, abs_props, detected_proportion)
         time_variants = [
             [f"prop_sympt_non_hospital_{agegroup}", tv_props.get_abs_prop_sympt_non_hospital,],
             [f"prop_sympt_isolate_{agegroup}", tv_props.get_abs_prop_isolated],
@@ -210,7 +172,7 @@ def stratify_by_clinical(model, model_parameters, compartments):
                 param,
                 strata_to_implement[3:],
                 "agegroup",
-                model_parameters["all_stratifications"]["agegroup"],
+                all_stratifications["agegroup"],
                 [
                     progression_death_rates["hospital_" + param],
                     progression_death_rates["icu_" + param],
@@ -224,15 +186,13 @@ def stratify_by_clinical(model, model_parameters, compartments):
     stratification_adjustments.update(
         {
             "within_infectious": {
-                "hospital_non_icuW": model_parameters["within_hospital_early"],
-                "icuW": model_parameters["within_icu_early"],
+                "hospital_non_icuW": within_hospital_early,
+                "icuW": within_icu_early,
             },
         }
     )
 
-    # Sort out all infectiousness adjustments for entire model here
-    # Sort out all infectiousness adjustments for all compartments of the model.
-    # Now make adjustment for asymptomatic patients only
+    # Make infectiousness adjustment for asymptomatic patients only
     strata_infectiousness = {}
     for stratum in strata_to_implement:
         if stratum + "_infect_multiplier" in model_parameters:
@@ -249,77 +209,49 @@ def stratify_by_clinical(model, model_parameters, compartments):
             )
 
     # FIXME: Ask Romain about importation
-    # work out time-variant clinical proportions for imported cases accounting for quarantine
-    if model_parameters["implement_importation"]:
-        rep_age_group = (
-            "35"  # the clinical split will be defined according to this representative age-group
-        )
-        tvs = model.time_variants  # to reduce verbosity
+    # Work out time-variant clinical proportions for imported cases accounting for quarantine
+    if implement_importation:
+        to_infectious_key = "to_infectiousXagegroup_" + str(model_parameters['import_representative_age'])
+        tvs = model.time_variants
 
-        # create scale-up function for quarantine
-        quarantine_scale_up = scale_up_function(
-            model_parameters["traveller_quarantine"]["times"],
-            model_parameters["traveller_quarantine"]["values"],
-            method=4,
-        )
+        # Create scale-up function for quarantine
+        quarantine_scale_up = \
+            scale_up_function(traveller_quarantine["times"], traveller_quarantine["values"], method=4)
 
-        # set fixed clinical proportions for imported cases (hospital_non_icu and icu)
-        importation_props_by_clinical = {
-            "hospital_non_icu": stratification_adjustments[
-                "to_infectiousXagegroup_" + rep_age_group
-                ]["hospital_non_icu"],
-            "icu": stratification_adjustments["to_infectiousXagegroup_" + rep_age_group]["icu"],
-        }
+        # Clinical proportions for imported cases stay fixed for the hospitalised and critical groups (last two strata)
+        importation_props_by_clinical = \
+            {stratum: float(stratification_adjustments[to_infectious_key][stratum]) for
+             stratum in strata_to_implement[-2:]}
 
-        # create time-variant function for remaining imported clinical proportions
-        tv_prop_imported_non_sympt = lambda t: stratification_adjustments[
-                                                   "to_infectiousXagegroup_" + rep_age_group
-                                                   ]["non_sympt"] * (1.0 - quarantine_scale_up(t))
+        # Proportion entering non-symptomatic stratum reduced by the quarantined (and so isolated) proportion
+        def tv_prop_imported_non_sympt(t):
+            return stratification_adjustments[to_infectious_key]["non_sympt"] * \
+                   (1. - quarantine_scale_up(t))
 
-        tv_prop_imported_sympt_non_hospital = lambda t: tvs[
-                                                            stratification_adjustments["to_infectiousXagegroup_" + rep_age_group][
-                                                                "sympt_non_hospital"
-                                                            ]
-                                                        ](t) * (1.0 - quarantine_scale_up(t))
+        # Proportion ambulatory also reduced by quarantined proportion due to isolation
+        def tv_prop_imported_sympt_non_hospital(t):
+            return tvs[stratification_adjustments[to_infectious_key]["sympt_non_hospital"]](t) * \
+                   (1. - quarantine_scale_up(t))
 
-        tv_prop_imported_sympt_isolate = lambda t: tvs[
-                                                       stratification_adjustments["to_infectiousXagegroup_" + rep_age_group]["sympt_isolate"]
-                                                   ](t) + quarantine_scale_up(t) * (
-                                                           tvs[
-                                                               stratification_adjustments["to_infectiousXagegroup_" + rep_age_group][
-                                                                   "sympt_non_hospital"
-                                                               ]
-                                                           ](t)
-                                                           + stratification_adjustments["to_infectiousXagegroup_" + rep_age_group]["non_sympt"]
-                                                   )
+        # Proportion isolated includes those that would have been detected anyway and the ones above quarantined
+        def tv_prop_imported_sympt_isolate(t):
+            return tvs[stratification_adjustments[to_infectious_key]["sympt_isolate"]](t) + \
+                   quarantine_scale_up(t) * \
+                   (tvs[stratification_adjustments[to_infectious_key]["sympt_non_hospital"]](t) +
+                    stratification_adjustments[to_infectious_key]["non_sympt"])
 
         # Pass time-variant functions to the model object
-        model.time_variants["tv_prop_imported_non_sympt"] = tv_prop_imported_non_sympt
-        model.time_variants[
-            "tv_prop_imported_sympt_non_hospital"
-        ] = tv_prop_imported_sympt_non_hospital
-        model.time_variants["tv_prop_imported_sympt_isolate"] = tv_prop_imported_sympt_isolate
-
-        for stratum in ["non_sympt", "sympt_isolate", "sympt_non_hospital"]:
+        model.time_variants["tv_prop_imported_non_sympt"] = \
+            tv_prop_imported_non_sympt
+        model.time_variants["tv_prop_imported_sympt_non_hospital"] = \
+            tv_prop_imported_sympt_non_hospital
+        model.time_variants["tv_prop_imported_sympt_isolate"] = \
+            tv_prop_imported_sympt_isolate
+        for stratum in strata_to_implement[:3]:
             importation_props_by_clinical[stratum] = "tv_prop_imported_" + stratum
-
-        # create absolute time-variant case detection proportion that will be returned to be used to set importation flow
-        def modelled_abs_detection_proportion_imported(t):
-            return (
-                    stratification_adjustments["to_infectiousXagegroup_" + rep_age_group]["icu"]
-                    + stratification_adjustments["to_infectiousXagegroup_" + rep_age_group][
-                        "hospital_non_icu"
-                    ]
-                    + tvs[
-                        stratification_adjustments["to_infectiousXagegroup_" + rep_age_group][
-                            "sympt_isolate"
-                        ]
-                    ](t)
-            )
 
     else:
         importation_props_by_clinical = {}
-        modelled_abs_detection_proportion_imported = None
 
     # Stratify the model using the SUMMER stratification function
     model.stratify(
@@ -334,7 +266,6 @@ def stratify_by_clinical(model, model_parameters, compartments):
         entry_proportions=importation_props_by_clinical,
         verbose=False,
     )
-    return modelled_abs_detection_proportion_imported
 
 
 def subdivide_props(base_props: np.ndarray, split_props: np.ndarray):
@@ -347,7 +278,7 @@ def subdivide_props(base_props: np.ndarray, split_props: np.ndarray):
     return split_arr, complement_arr
 
 
-class TimeVaryingProprotions:
+class TimeVaryingProportions:
     """
     Provides time-varying proportions for a given age group.
     The proportions determine which clinical stratum people transition into when they go
@@ -368,7 +299,7 @@ class TimeVaryingProprotions:
         abs_prop_isolated = abs_prop_detected - self.abs_prop_hospital
         if abs_prop_isolated < 0:
             # If more people go to hospital than are detected, ignore detection
-            # proprortion, and assume no one is being isolated.
+            # proportion, and assume no one is being isolated.
             abs_prop_isolated = 0
 
         return abs_prop_isolated

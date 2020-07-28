@@ -56,6 +56,3 @@ google_mobility_locations:
     - retail_and_recreation
     - grocery_and_pharmacy
     - transit_stations
-
-full_immunity: False
-immunity_duration: 90.

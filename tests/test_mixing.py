@@ -220,7 +220,7 @@ def test_build_dynamic__with_no_changes():
     is_periodic_intervention = False
     periodic_int_params = {}
     microdistancing_params = {}
-    smooth_google_data = True
+    smooth_google_data = False
     mm_func = mixing_matrix.build_dynamic(
         country_iso3="AUS",
         region=None,
@@ -263,7 +263,7 @@ def test_build_dynamic__with_mobility_data(monkeypatch):
     is_periodic_intervention = False
     periodic_int_params = {}
     microdistancing_params = {}
-    smooth_google_data = True
+    smooth_google_data = False
 
     mm_func = mixing_matrix.build_dynamic(
         country_iso3="AUS",

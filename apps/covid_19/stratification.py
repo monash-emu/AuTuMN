@@ -41,6 +41,9 @@ def stratify_by_clinical(model, model_parameters, compartments, detected_proport
     use_raw_mortality_estimates = model_parameters["use_raw_mortality_estimates"]
     ifr_double_exp_model_params = model_parameters["ifr_double_exp_model_params"]
 
+    # apply multiplyer to hospital proportions
+    hospital_props = [p * model_parameters["hospital_props_multiplier"] for p in hospital_props]
+
     # Define stratification - only stratify infected compartments
     strata_to_implement = clinical_strata
     all_stratifications["clinical"] = strata_to_implement

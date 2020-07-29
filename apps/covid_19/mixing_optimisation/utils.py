@@ -43,7 +43,7 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "time_variant_detection.end_value",
             "distribution": "uniform",
-            "distri_params": [0.20, 0.80],
+            "distri_params": [0.20, 0.50],
         },
         {
             "param_name": "icu_prop",
@@ -71,12 +71,12 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "microdistancing.parameters.c",
             "distribution": "uniform",
-            "distri_params": [90, 152],
+            "distri_params": [90, 130],
         },
         {
             "param_name": "microdistancing.parameters.sigma",
             "distribution": "uniform",
-            "distri_params": [.6, 1.],
+            "distri_params": [.6, .75],
         },
     ]
 

@@ -18,12 +18,12 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "compartment_periods_calculated.incubation.total_period",
             "distribution": "uniform",
-            "distri_params": [4.4, 5.6],
+            "distri_params": [3, 7],
         },
         {
             "param_name": "compartment_periods_calculated.total_infectious.total_period",
             "distribution": "uniform",
-            "distri_params": [4.5, 9.5],
+            "distri_params": [4, 10],
         },
         {
             "param_name": "time_variant_detection.start_value",
@@ -162,7 +162,7 @@ def get_target_outputs_for_opti(country, data_start_time=22, data_end_time=152, 
             }
         )
 
-    if country in ["france", "belgium", "united-kingdom"]:
+    if country in ["france", "belgium", "united-kingdom", "spain"]:
         hospital_targets = get_hospital_targets_for_opti(country, data_start_time, data_end_time)
         target_outputs += hospital_targets
     return target_outputs
@@ -174,6 +174,7 @@ def get_hospital_targets_for_opti(country, data_start_time=22, data_end_time=152
         'belgium': 'hospital_admission',
         'france': 'hospital_admission',
         'united-kingdom': 'hospital_admission',
+        'spain': 'hospital_admission',
     }
     if country not in output:
         print("hospital output not specifoed for " + country)

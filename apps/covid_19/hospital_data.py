@@ -20,7 +20,7 @@ def read_hospital_data_from_csv(variable="hospital_occupancy", country="belgium"
         country_name = country.title()
     filename = f"hospital_data_europe.csv"
     path = os.path.join(HOSPITAL_DATA_DIR, filename)
-    data = pd.read_csv(path)
+    data = pd.read_csv(path, sep=',')
 
     column_name = country + "_" + variable
     mask_1 = data['time'] >= data_start_time

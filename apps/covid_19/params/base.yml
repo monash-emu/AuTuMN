@@ -213,6 +213,7 @@ prevXlateXclinical_icuXamong_dispersion_param: 1.
 infection_deathsXall_dispersion_param: 1.
 proportion_seropositive_dispersion_param: 1.
 hospital_occupancy_dispersion_param: 1.
+new_hospital_admissions_dispersion_param: 1.
 
 # parameters pertaining to waning immunity
 full_immunity: True

@@ -18,13 +18,7 @@ for i, par in enumerate(PAR_PRIORS):
         PAR_PRIORS[i]["distri_params"] = [0.02, 0.04]
         PAR_PRIORS[i]["start_time"] = [0., 20.]
 
-
-
 TARGET_OUTPUTS = get_target_outputs_for_opti(country, source='who', data_start_time=61, data_end_time=197)  # notifications and deaths
-
-hospital_outputs = get_hospital_targets_for_opti(country, data_start_time=61, data_end_time=197)
-
-TARGET_OUTPUTS += hospital_outputs
 
 # Use weekly counts
 for target in TARGET_OUTPUTS:

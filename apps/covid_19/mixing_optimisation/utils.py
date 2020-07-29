@@ -162,14 +162,20 @@ def get_target_outputs_for_opti(country, data_start_time=22, data_end_time=152, 
             }
         )
 
+    hospital_targets = get_hospital_targets_for_opti(country, data_start_time, data_end_time)
+    target_outputs += hospital_targets
     return target_outputs
 
 
 def get_hospital_targets_for_opti(country, data_start_time=22, data_end_time=152):
 
     output = {
-        'belgium': 'hospital_occupancy'
+        'belgium': 'hospital_occupancy',
+        'france': 'hospital_occupancy',
     }
+    if country not in output:
+        print("hospital output not specifoed for " + country)
+        return []
     output_mapping = {"hospital_occupancy": "hospital_occupancy", "icu_occupancy": "icu_occupancy"}
     times, data = read_hospital_data_from_csv(output[country], country, data_start_time, data_end_time)
 

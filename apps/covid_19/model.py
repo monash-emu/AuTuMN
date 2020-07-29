@@ -270,6 +270,7 @@ def build_model(params: dict) -> StratifiedModel:
         outputs.calculate_incidence_icu_covid
     model.derived_output_functions["prevXlateXclinical_icuXamong"] = \
         outputs.calculate_icu_prev
+    model.derived_output_functions["new_hospital_admissions"] = outputs.calculate_new_hospital_admissions_covid
     model.derived_output_functions["hospital_occupancy"] = \
         outputs.calculate_hospital_occupancy
     model.derived_output_functions["proportion_seropositive"] = \

@@ -44,6 +44,15 @@ def calculate_incidence_icu_covid(model, time):
     return incidence_icu
 
 
+def calculate_new_hospital_admissions_covid(model, time):
+    time_idx = model.times.index(time)
+    hosp_admissions = 0.0
+    for key, value in model.derived_outputs.items():
+        if "progress" in find_name_components(key) and "icu" in key:
+            hosp_admissions += value[time_idx]
+    return hosp_admissions
+
+
 def calculate_icu_prev(model, time):
     icu_prev = 0
     for i, comp_name in enumerate(model.compartment_names):

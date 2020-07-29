@@ -35,15 +35,6 @@ def get_calc_notifications_covid(
     return calculate_notifications_covid
 
 
-def calculate_incidence_icu_covid(model, time):
-    time_idx = model.times.index(time)
-    incidence_icu = 0.0
-    for key, value in model.derived_outputs.items():
-        if "incidence" in find_name_components(key) and "clinical_icu" in find_name_components(key):
-            incidence_icu += value[time_idx]
-    return incidence_icu
-
-
 def calculate_new_hospital_admissions_covid(model, time):
     time_idx = model.times.index(time)
     hosp_admissions = 0.0
@@ -51,6 +42,15 @@ def calculate_new_hospital_admissions_covid(model, time):
         if "progress" in find_name_components(key) and "icu" in key:
             hosp_admissions += value[time_idx]
     return hosp_admissions
+
+
+def calculate_new_icu_admissions_covid(model, time):
+    time_idx = model.times.index(time)
+    icu_admissions = 0.0
+    for key, value in model.derived_outputs.items():
+        if "progress" in find_name_components(key) and "clinical_icu" in key:
+            icu_admissions += value[time_idx]
+    return icu_admissions
 
 
 def calculate_icu_prev(model, time):

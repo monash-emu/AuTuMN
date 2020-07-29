@@ -162,7 +162,7 @@ def get_target_outputs_for_opti(country, data_start_time=22, data_end_time=152, 
             }
         )
 
-    if country in ["france", "belgium"]:
+    if country in ["france", "belgium", "united-kingdom"]:
         hospital_targets = get_hospital_targets_for_opti(country, data_start_time, data_end_time)
         target_outputs += hospital_targets
     return target_outputs
@@ -172,7 +172,8 @@ def get_hospital_targets_for_opti(country, data_start_time=22, data_end_time=152
 
     output = {
         'belgium': 'hospital_admission',
-        'france': 'hospital_occupancy',
+        'france': 'hospital_admission',
+        'united-kingdom': 'hospital_admission',
     }
     if country not in output:
         print("hospital output not specifoed for " + country)

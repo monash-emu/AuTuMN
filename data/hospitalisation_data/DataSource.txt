@@ -3,3 +3,16 @@ https://datastudio.google.com/embed/u/0/reporting/c14a5cfc-cab7-4812-848c-036917
 
 France
 https://www.data.gouv.fr/fr/datasets/donnees-hospitalieres-relatives-a-lepidemie-de-covid-19/
+
+Italy
+............
+
+Spain
+MoH report (PDF file)
+
+Sweden
+...........
+
+UK
+From the beta website:
+https://coronavirus-staging.data.gov.uk/healthcare

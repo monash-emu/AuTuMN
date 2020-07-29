@@ -106,16 +106,15 @@ def stratify_by_clinical(model, model_parameters, compartments, detected_proport
         target_icu_abs_mort = abs_props["icu"][age_idx] * icu_mortality_prop
         left_over_mort = infection_fatality_props[age_idx] - target_icu_abs_mort
 
-        # If some IFR will be left over for the hospitalised
-        if left_over_mort > 0.0:
-            # If the left over for the hospitalised-non-icu is less than the absolute hospital-non-icu proportion
-            if left_over_mort <= abs_props['hospital_non_icu'][age_idx]:
-                hospital_death_prop = left_over_mort
-                icu_death_prop = target_icu_abs_mort
-            # Otherwise we need to inflate ICU deaths
-            else:
-                hospital_death_prop = abs_props['hospital_non_icu'][age_idx]
-                icu_death_prop = infection_fatality_props[age_idx] - abs_props['hospital_non_icu'][age_idx]
+        # If enough IFR left over to allow partial mortality for the hospitalised
+        if 0.0 < left_over_mort <= abs_props['hospital_non_icu'][age_idx]:
+            hospital_death_prop = left_over_mort
+            icu_death_prop = target_icu_abs_mort
+
+        # Otherwise if there is too much excess death to fit in hospital, inflate the ICU proportion
+        elif left_over_mort > abs_props['hospital_non_icu'][age_idx]:
+            hospital_death_prop = abs_props['hospital_non_icu'][age_idx]
+            icu_death_prop = infection_fatality_props[age_idx] - abs_props['hospital_non_icu'][age_idx]
 
         # Otherwise if all IFR taken up by ICU
         else:

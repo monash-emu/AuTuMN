@@ -211,7 +211,7 @@ def add_dispersion_param_prior_for_gaussian(par_priors, target_outputs, multipli
             # sd_ that would make the 95% gaussian CI cover half of the max value (4*sd = 95% width)
             sd_ = 0.25 * max_val / 4.0
             lower_sd = sd_ / 2.
-            upper_sd = 4. * sd_
+            upper_sd = 2. * sd_
 
             par_priors.append(
                 {

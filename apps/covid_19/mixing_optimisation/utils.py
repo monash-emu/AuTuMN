@@ -16,19 +16,14 @@ def get_prior_distributions_for_opti():
         {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.02, 0.05],},
         {"param_name": "start_time", "distribution": "uniform", "distri_params": [0., 40.],},
         {
-            "param_name": "npi_effectiveness.other_locations",
-            "distribution": "uniform",
-            "distri_params": [.5, 1.],
-        },
-        {
             "param_name": "compartment_periods_calculated.incubation.total_period",
             "distribution": "uniform",
-            "distri_params": [3.0, 7.0],
+            "distri_params": [4.4, 5.6],
         },
         {
             "param_name": "compartment_periods_calculated.total_infectious.total_period",
             "distribution": "uniform",
-            "distri_params": [5., 10.],
+            "distri_params": [4.5, 9.5],
         },
         {
             "param_name": "time_variant_detection.start_value",

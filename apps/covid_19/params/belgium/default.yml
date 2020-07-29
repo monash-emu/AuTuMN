@@ -14,7 +14,7 @@ microdistancing:
   parameters:
     b: -0.05
     c: 103.74146078590786
-    sigma: 0.699306272355138
+    sigma: 0.6
 
 # MLE estimates
 contact_rate: 0.03302564911907216

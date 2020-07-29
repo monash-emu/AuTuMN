@@ -5,7 +5,9 @@ France
 https://www.data.gouv.fr/fr/datasets/donnees-hospitalieres-relatives-a-lepidemie-de-covid-19/
 
 Italy
-............
+Github 
+https://github.com/pcm-dpc/COVID-19/tree/master/dati-andamento-nazionale
+file: dpc-covid19-ita-andamento-nazionale.csv
 
 Spain
 MoH report (PDF file)

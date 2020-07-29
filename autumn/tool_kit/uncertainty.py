@@ -108,22 +108,19 @@ def calculate_mcmc_uncertainty(weights_df: pd.DataFrame, quantiles: List[float])
     Calculate quantiles from a table of weighted values.
     See calc_mcmc_weighted_values for how these weights are calculated.
     """
-
-    # For a given time and output we want the weighted vcals
-
     output_names = weights_df.output_name.unique()
     times = sorted(weights_df.times.unique())
     scenarios = weights_df.Scenario.unique()
-    threads_args_list = []
     uncertainty_data = []
     for scenario in scenarios:
+        scenario_mask = weights_df["Scenario"] == scenario
+        scenario_df = weights_df[scenario_mask]
         for output_name in output_names:
+            output_mask = scenario_df["output_name"] == output_name
+            output_df = scenario_df[output_mask]
             for time in times:
-                time_mask = weights_df["times"] == time
-                scenario_mask = weights_df["Scenario"] == scenario
-                output_mask = weights_df["output_name"] == output_name
-                mask = time_mask & scenario_mask & output_mask
-                masked_df = weights_df[mask]
+                time_mask = output_df["times"] == time
+                masked_df = output_df[time_mask]
                 if masked_df.empty:
                     continue
 

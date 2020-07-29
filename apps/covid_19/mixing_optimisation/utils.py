@@ -162,8 +162,9 @@ def get_target_outputs_for_opti(country, data_start_time=22, data_end_time=152, 
             }
         )
 
-    hospital_targets = get_hospital_targets_for_opti(country, data_start_time, data_end_time)
-    target_outputs += hospital_targets
+    if country in ["france", "belgium"]:
+        hospital_targets = get_hospital_targets_for_opti(country, data_start_time, data_end_time)
+        target_outputs += hospital_targets
     return target_outputs
 
 

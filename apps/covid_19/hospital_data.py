@@ -5,8 +5,6 @@ import datetime
 
 
 HOSPITAL_DATA_DIR = os.path.join(DATA_PATH, "hospitalisation_data")
-country_mapping = {"united-kingdom": "The United Kingdom"}
-
 
 def read_hospital_data_from_csv(variable="hospital_occupancy", country="belgium", data_start_time=61, data_end_time=152):
     """
@@ -14,13 +12,9 @@ def read_hospital_data_from_csv(variable="hospital_occupancy", country="belgium"
     :param variable: one of 'hospital_occupancy', 'hospital_admission', 'icu_occupancy', 'icu_admission'
     :param country: country
     """
-    if country in country_mapping:
-        country_name = country_mapping[country]
-    else:
-        country_name = country.title()
-    filename = f"hospital_data_europe.csv"
+    filename = f"hospital_data_europe.xlsx"
     path = os.path.join(HOSPITAL_DATA_DIR, filename)
-    data = pd.read_csv(path, sep=',')
+    data = pd.read_excel(path, sep=',')
 
     column_name = country + "_" + variable
     mask_1 = data['time'] >= data_start_time

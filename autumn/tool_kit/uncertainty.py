@@ -21,9 +21,9 @@ def add_uncertainty_weights(output_names: List[str], database_path: str):
     Calculate uncertainty weights for a given MCMC chain and derived output.
     Saves requested weights in a table 'uncertainty_weights'.
     """
+    db = Database(database_path)
+    # Delete old data.
     for output_name in output_names:
-        logger.info("Adding uncertainty_weights for %s to %s", output_name, database_path)
-        db = Database(database_path)
         if "uncertainty_weights" in db.table_names():
             logger.info(
                 "Deleting %s from existing uncertainty_weights table in %s",
@@ -32,50 +32,54 @@ def add_uncertainty_weights(output_names: List[str], database_path: str):
             )
             db.engine.execute(f"DELETE FROM uncertainty_weights WHERE output_name='{output_name}'")
 
-        logger.info("Loading data into memory")
-        columns = ["idx", "Scenario", "times", output_name]
-        mcmc_df = db.query("mcmc_run")
-        derived_outputs_df = db.query("derived_outputs", column=columns)
-        logger.info("Calculating weighted values for %s", output_name)
-        weights_df = calc_mcmc_weighted_values(output_name, mcmc_df, derived_outputs_df)
-        db.dump_df("uncertainty_weights", weights_df)
-        logger.info("Finished writing %s uncertainty weights", output_name)
-
-
-def calc_mcmc_weighted_values(
-    output_name: str, mcmc_df: pd.DataFrame, derived_output_df: pd.DataFrame,
-) -> pd.DataFrame:
-    """
-    Calculate quantiles for a given derived output.
-    Note that this must be run on each MCMC chain individually.
-    """
-    # Calculate weights
+    # Add new data
+    logger.info("Loading MCMC run metadata into memory")
+    mcmc_df = db.query("mcmc_run")
     mcmc_df["run_int"] = mcmc_df["idx"].apply(run_idx_to_int)
     mcmc_df = mcmc_df.sort_values(["run_int"])
     max_run_idx = mcmc_df["run_int"].max()
-    weights = np.zeros(max_run_idx + 1)
-    last_run_int = None
-    for run_int, accept in zip(mcmc_df["run_int"], mcmc_df["accept"]):
-        if accept:
-            weights[run_int] = 1
-            last_run_int = run_int
-        elif last_run_int is None:
-            continue
-        else:
-            weights[last_run_int] += 1
 
-    # Add weights to weights dataframe
-    weights_df = derived_output_df.copy()
-    weights_df = weights_df.rename(columns={output_name: "value"})
-    weights_df["output_name"] = output_name
-    weights_df["weight"] = 0
-    for run_idx in weights_df.idx.unique():
-        run_int = run_idx_to_int(run_idx)
-        weight = weights[run_int]
-        run_mask = weights_df["idx"] == run_idx
-        weights_df.loc[run_mask, "weight"] = weight
+    logger.info("Loading derived outputs data into memory")
+    columns = ["idx", "Scenario", "times", *output_names]
+    derived_outputs_df = db.query("derived_outputs", column=columns)
 
-    return weights_df
+    for output_name in output_names:
+        logger.info("Adding uncertainty_weights for %s to %s", output_name, database_path)
+        if "uncertainty_weights" in db.table_names():
+            logger.info(
+                "Deleting %s from existing uncertainty_weights table in %s",
+                output_name,
+                database_path,
+            )
+            db.engine.execute(f"DELETE FROM uncertainty_weights WHERE output_name='{output_name}'")
+
+        # Calculate weights
+        logger.info("Calculating weighted values for %s", output_name)
+        weights = np.zeros(max_run_idx + 1)
+        last_run_int = None
+        for run_int, accept in zip(mcmc_df["run_int"], mcmc_df["accept"]):
+            if accept:
+                weights[run_int] = 1
+                last_run_int = run_int
+            elif last_run_int is None:
+                continue
+            else:
+                weights[last_run_int] += 1
+
+        # Add weights to weights dataframe
+        weights_df = (
+            derived_outputs_df.copy()
+            .drop(columns=[o for o in output_names if o != output_name])
+            .rename(columns={output_name: "value"})
+        )
+        weights_df["output_name"] = output_name
+        select_weight = lambda run_idx: weights[run_idx_to_int(run_idx)]
+        weights_df["weight"] = weights_df["idx"].apply(select_weight)
+
+        db.dump_df("uncertainty_weights", weights_df)
+        logger.info("Finished writing %s uncertainty weights", output_name)
+
+    logger.info("Finished writing all uncertainty weights")
 
 
 def add_uncertainty_quantiles(database_path: str):

@@ -23,7 +23,7 @@ start_time: 5.323651322897666
 compartment_periods_calculated:
   incubation:
     total_period: 3.868538028845811
-  total_infectious:
+  active:
     total_period: 5.186534378286037
 time_variant_detection:
   start_value: 0.003469653671391958

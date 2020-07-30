@@ -37,7 +37,7 @@ compartment_periods_calculated:
       # Proportion of the exposed period spent infectious - i.e. "presymptomatic", assumed
       late_exposed: 0.5
 
-  total_infectious:
+  active:
     total_period: 7.
     proportions:
       # Proportion of the infectious period spent in the early compartment (i.e. can't be isolated for symptoms), assumed

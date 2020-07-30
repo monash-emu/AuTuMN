@@ -10,7 +10,7 @@ start_time: 3
 compartment_periods_calculated:
   incubation:
     total_period: 5.627117561785651
-  total_infectious:
+  active:
     total_period: 4.629812222907533
 
 # other country-specific parameters

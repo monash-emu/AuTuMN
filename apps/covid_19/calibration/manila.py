@@ -41,31 +41,69 @@ notification_times = [
 180,
 187,
 194,
+201,
 ]
 
 notification_values = [
-1,
+2,
 1,
 2,
-8,
-52,
-108,
-164,
-135,
+15,
+54,
+112,
+144,
+147,
+194,
+141,
+145,
+144,
+163,
+167,
+214,
 168,
-126,
-128,
-133,
-143,
-140,
-288,
-188,
-232,
+205,
+237,
+322,
+507,
+880,
+1117,
+1265,
+]
+# ICU data:
+icu_times = [
+110,
+117,
+124,
+131,
+138,
+145,
+152,
+159,
+166,
+173,
+180,
+187,
+194,
+201,
+208,
+]
+
+icu_values = [
+82,
+161,
+206,
+244,
+226,
 224,
-381,
-610,
-800,
-1205,
+221,
+226,
+219,
+224,
+236,
+222,
+291,
+359,
+368,
 ]
 
 TARGET_OUTPUTS = [
@@ -76,8 +114,16 @@ TARGET_OUTPUTS = [
         "loglikelihood_distri": "negative_binomial",
         "time_weights": assign_trailing_weights_to_halves(5, notification_times),
     },
+        {
+        "output_key": "icu_occupancy",
+        "years": icu_times,
+        "values": icu_values,
+        "loglikelihood_distri": "negative_binomial",
+        "time_weights": list(range(1, len(icu_times) + 1)),
+    }
 ]
 
 PAR_PRIORS = provide_default_calibration_params()
 PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "notifications")
+PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "icu_occupancy")
 PAR_PRIORS = add_case_detection_params_philippines(PAR_PRIORS)

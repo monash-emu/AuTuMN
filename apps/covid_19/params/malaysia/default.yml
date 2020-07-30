@@ -43,6 +43,7 @@ mixing:
       - 2020-06-24 # Secondary examinations
       - 2020-07-07
       - 2020-07-22 # School reopen
+      - 2020-08-01 # google mobility data update, pls review
     values:
       - 1.
       - 0.
@@ -50,6 +51,7 @@ mixing:
       - 0.1 # Secondary examinations
       - 0.1
       - 1
+      - 1 # google mobility data update, pls review
 
 data: # Daily numbers of reported imported cases. (two different approaches here)
   times_imported_cases:

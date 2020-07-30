@@ -27,7 +27,7 @@ BASE_CALIBRATION_PARAMS = [
         "distri_params": [0.0, 40.0],
     },
     {
-        "param_name": "compartment_periods_calculated.incubation.total_period",
+        "param_name": "compartment_periods_calculated.exposed.total_period",
         "distribution": "uniform",
         "distri_params": [4.4, 5.6],
     },

@@ -3,6 +3,7 @@ from apps.covid_19.calibration import base
 from apps.covid_19.calibration.base import \
     provide_default_calibration_params, add_standard_dispersion_parameter, add_case_detection_params_philippines, \
     assign_trailing_weights_to_halves
+from apps.covid_19.constants import Compartment
 
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
@@ -127,7 +128,7 @@ TARGET_OUTPUTS = [
 
 
 MULTIPLIERS = {
-    "prevXlate_activeXclinical_icuXamong": 16057300.0
+    f"prevX{Compartment.LATE_ACTIVE}Xclinical_icuXamong": 16057300.0
 }  # to get absolute pop size instead of proportion
 
 

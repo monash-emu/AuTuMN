@@ -56,7 +56,7 @@ def calculate_new_icu_admissions_covid(model, time):
 def calculate_icu_prev(model, time):
     icu_prev = 0
     for i, comp_name in enumerate(model.compartment_names):
-        if "late_active" in comp_name and "clinical_icu" in comp_name:
+        if Compartment.LATE_ACTIVE in comp_name and "clinical_icu" in comp_name:
             icu_prev += model.compartment_values[i]
     return icu_prev
 

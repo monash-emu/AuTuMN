@@ -265,7 +265,7 @@ def build_model(params: dict) -> StratifiedModel:
         outputs.get_calc_notifications_covid(implement_importation, modelled_abs_detection_proportion_imported)
     model.derived_output_functions["local_notifications"] = \
         outputs.get_calc_notifications_covid(False, modelled_abs_detection_proportion_imported)
-    model.derived_output_functions["prevXlate_activeXclinical_icuXamong"] = \
+    model.derived_output_functions[f"prevX{Compartment.LATE_ACTIVE}Xclinical_icuXamong"] = \
         outputs.calculate_icu_prev
     model.derived_output_functions["new_hospital_admissions"] = \
         outputs.calculate_new_hospital_admissions_covid

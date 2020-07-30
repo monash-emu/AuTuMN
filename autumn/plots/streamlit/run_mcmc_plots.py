@@ -11,6 +11,7 @@ from autumn.db import Database
 from autumn.tool_kit.uncertainty import collect_all_mcmc_output_tables
 from autumn.plots import plots
 from autumn.plots.plotter import StreamlitPlotter
+from autumn.calibration.utils import collect_map_estimate, print_reformated_map_parameters
 
 from . import selectors, utils
 
@@ -148,6 +149,13 @@ def plot_calibration_fit(
     plots.plot_calibration_fit(plotter, chosen_output, outputs, plot_config, is_logscale)
 
 
+def print_mle_parameters(
+    plotter: StreamlitPlotter, calib_dir_path: str, mcmc_tables: List[pd.DataFrame], plot_config={},
+):
+    mle_params, _ = collect_map_estimate(calib_dir_path)
+    print_reformated_map_parameters(mle_params)
+
+
 PLOT_FUNCS = {
     "Posterior distributions": plot_posterior,
     "Loglikelihood trace": plot_loglikelihood_trace,
@@ -155,6 +163,7 @@ PLOT_FUNCS = {
     "Parameter trace": plot_mcmc_parameter_trace,
     "Calibration Fit": plot_calibration_fit,
     "Predictions": plot_timeseries_with_uncertainty,
+    # "Print MLE parameters": print_mle_parameters,
 }
 
 
@@ -173,3 +182,4 @@ def parameter_selector(mcmc_table: pd.DataFrame):
     non_param_cols = ["idx", "Scenario", "loglikelihood", "accept"]
     param_options = [c for c in mcmc_table.columns if c not in non_param_cols]
     return st.sidebar.selectbox("Select parameter", param_options)
+

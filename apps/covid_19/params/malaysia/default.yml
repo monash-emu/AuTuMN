@@ -19,7 +19,7 @@ iso3: MYS
 contact_rate: 0.026261071031329
 start_time: 31.0692731013737
 compartment_periods_calculated:
-  incubation:
+  exposed:
     total_period: 3.90213647584108
 
 compartment_periods:

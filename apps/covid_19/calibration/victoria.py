@@ -647,7 +647,7 @@ TARGET_OUTPUTS = [
         "years": case_times,
         "values": case_counts,
         "loglikelihood_distri": "negative_binomial",
-        "time_weights": list(range(1, len(case_times) + 1)),
+        "time_weights": list(range(1, len(case_times) - 6)) + [250.] * 7,
     }
 ]
 
@@ -666,5 +666,11 @@ PAR_PRIORS += [
         "distribution": "beta",
         "distri_mean": 0.85,
         "distri_ci": [0.8, 0.9],
+    },
+    {
+        "param_name": "compartment_periods.icu_early",
+        "distribution": "gamma",
+        "distri_mean": 12.,
+        "distri_ci": [4., 20.],
     },
 ]

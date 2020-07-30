@@ -175,11 +175,11 @@ def sample_outputs_for_calibration_fit(
             values = derived_output_table[mask][output_name]
             outputs.append([times, values])
 
-    return outputs
+    return outputs, best_chain_index
 
 
 def plot_calibration_fit(
-    plotter: Plotter, output_name: str, outputs: list, plot_config={}, is_logscale=False
+    plotter: Plotter, output_name: str, outputs: list, best_chain_index, plot_config={}, is_logscale=False,
 ):
     fig, axis, _, _, _ = plotter.get_figure()
 
@@ -212,6 +212,10 @@ def plot_calibration_fit(
     else:
         filename = f"calibration-fit-{output_name}"
         title_text = f"Calibration fit for {output_name}"
+
+    # add text to indicate the best chain index
+    axis.text(0.15, 0.9, 'MLE is from chain ' + str(best_chain_index),
+              horizontalalignment='center', verticalalignment='center', transform=axis.transAxes)
 
     plotter.save_figure(fig, filename=filename, title_text=title_text)
 

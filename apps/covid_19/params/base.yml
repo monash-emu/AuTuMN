@@ -75,6 +75,9 @@ symptomatic_props:
   - 0.63 # 60-69
   - 0.69 # 70+
 
+symptomatic_props_multiplier: 1.
+
+
 # Proportion of symptomatic persons that are hospitalised - Dutch GGD report
 hospital_props:
   - 0.087 # 0-4

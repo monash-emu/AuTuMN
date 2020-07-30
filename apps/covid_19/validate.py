@@ -29,6 +29,7 @@ validate_params = sb.build_validator(
     late_infect_multiplier=sb.Dict(sympt_isolate=float, hospital_non_icu=float, icu=float),
     icu_mortality_prop=float,
     symptomatic_props=sb.List(float),
+    symptomatic_props_multiplier=float,
     icu_prop=float,
     # Time-variant detection of COVID cases, used to construct a tanh function.
     time_variant_detection=sb.Dict(maximum_gradient=float, max_change_time=float, start_value=float, end_value=float),
@@ -93,4 +94,5 @@ validate_params = sb.build_validator(
     icu_occupancy_dispersion_param=float,
     importation_props_by_age=dict,
     import_representative_age=int,
+
 )

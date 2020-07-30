@@ -33,9 +33,9 @@ compartment_periods_calculated:
   incubation:
     total_period: 5.
     proportions:
-      exposed: 0.5
+      early_exposed: 0.5
       # Proportion of the exposed period spent infectious - i.e. "presymptomatic", assumed
-      presympt: 0.5
+      late_exposed: 0.5
 
   total_infectious:
     total_period: 7.
@@ -145,7 +145,7 @@ age_based_susceptibility:
 # NON-AGE-STRATIFIED PARAMETERS
 
 # Adjust the infectiousness of clinical strata - assumed
-presympt_infect_multiplier: 0.7
+late_exposed_infect_multiplier: 0.7
 non_sympt_infect_multiplier: 0.7
 late_infect_multiplier:
   sympt_isolate: 0.2

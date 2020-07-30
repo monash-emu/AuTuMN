@@ -126,7 +126,7 @@ def build_model(params: dict) -> StratifiedModel:
 
     # FIXME: Remove params from model_parameters
     model_parameters = {**params, **compartment_exit_flow_rates}
-    model_parameters["to_infectious"] = model_parameters["within_presympt"]
+    model_parameters["to_infectious"] = model_parameters["within_" + Compartment.PRESYMPTOMATIC]
 
     model_parameters['immunity_loss_rate'] = 1. / params['immunity_duration']
 
@@ -244,7 +244,7 @@ def build_model(params: dict) -> StratifiedModel:
     # Allow pre-symptomatics to be less infectious
     model.individual_infectiousness_adjustments = \
         [
-            [[Compartment.PRESYMPTOMATIC], model_parameters["presympt_infect_multiplier"]]
+            [[Compartment.PRESYMPTOMATIC], model_parameters["late_exposed_infect_multiplier"]]
         ]
 
     # Stratify by clinical

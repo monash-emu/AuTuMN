@@ -24,7 +24,7 @@ validate_params = sb.build_validator(
     age_based_susceptibility=sb.DictGeneric(str, float),
     # Clinical status stratified params
     clinical_strata=sb.List(str),
-    presympt_infect_multiplier=float,
+    late_exposed_infect_multiplier=float,
     non_sympt_infect_multiplier=float,
     late_infect_multiplier=sb.Dict(sympt_isolate=float, hospital_non_icu=float, icu=float),
     icu_mortality_prop=float,

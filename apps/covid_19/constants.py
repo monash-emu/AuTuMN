@@ -6,8 +6,8 @@ class Compartment:
     """
 
     SUSCEPTIBLE = "susceptible"
-    EXPOSED = "exposed"
-    PRESYMPTOMATIC = "presympt"
+    EXPOSED = "early_exposed"
+    PRESYMPTOMATIC = "late_exposed"
     EARLY_INFECTIOUS = "early_active"
     LATE_INFECTIOUS = "late_active"
     RECOVERED = "recovered"

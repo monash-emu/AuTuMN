@@ -9,10 +9,10 @@ from apps.covid_19.mixing_optimisation.constants import *
 
 # Run a COVID model manually.
 # for REGION in OPTI_REGIONS:   # used by Romain for the optimisation project
-REGION = Region.VICTORIA
-RUN_SCENARIOS = True
-region_app = covid_19.get_region_app(REGION)
-region_app.run_model(RUN_SCENARIOS)
+# REGION = Region.VICTORIA
+# RUN_SCENARIOS = True
+# region_app = covid_19.get_region_app(REGION)
+# region_app.run_model(RUN_SCENARIOS)
 
 ## Simple SIR model for demonstration
 # REGION = Region.AUSTRALIA
@@ -33,8 +33,8 @@ region_app.run_model(RUN_SCENARIOS)
 
 
 ## Run a calibration
-# MAX_SECONDS = 5
-# CHAIN_ID = 1
-# NB_CHAINS = 1
-# calibrate_func = covid_19.calibration.get_calibration_func(Region.MALAYSIA)
-# calibrate_func(MAX_SECONDS, CHAIN_ID, NB_CHAINS)
+MAX_SECONDS = 5
+CHAIN_ID = 1
+NB_CHAINS = 1
+calibrate_func = covid_19.calibration.get_calibration_func(Region.VICTORIA)
+calibrate_func(MAX_SECONDS, CHAIN_ID, NB_CHAINS)

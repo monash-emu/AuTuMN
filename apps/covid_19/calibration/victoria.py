@@ -641,22 +641,20 @@ icu_counts = [
     41,
 ]
 
-time_weights = list(range(1, len(case_times) - 6)) + [250.] * 7
-
 TARGET_OUTPUTS = [
     {
         "output_key": "notifications",
         "years": case_times,
         "values": case_counts,
         "loglikelihood_distri": "negative_binomial",
-        "time_weights": time_weights,
+        "time_weights": list(range(1, len(case_times) - 6)) + [250.] * 7,
     },
     {
         "output_key": "icu_occupancy",
         "years": icu_times,
         "values": icu_counts,
         "loglikelihood_distri": "negative_binomial",
-        "time_weights": time_weights,
+        "time_weights": list(range(1, len(icu_times) - 6)) + [250.] * 7,
     },
 ]
 
@@ -667,7 +665,8 @@ PAR_PRIORS += [
     {
         "param_name": "seasonal_force",
         "distribution": "beta",
-        "distri_params": [0., 0.7],
+        "distri_mean": 0.3,
+        "distri_ci": [0.1, 0.7],
     },
     # Programmatic parameters
     {

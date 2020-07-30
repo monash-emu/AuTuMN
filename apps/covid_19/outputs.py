@@ -144,7 +144,7 @@ def get_incidence_connections(stratum_names: str):
     """
     incidence_connections = {
         "incidence": {
-            "origin": Compartment.PRESYMPTOMATIC,
+            "origin": Compartment.LATE_EXPOSED,
             "to": Compartment.EARLY_INFECTIOUS,
             "origin_condition": "",
             "to_condition": "",
@@ -153,7 +153,7 @@ def get_incidence_connections(stratum_names: str):
     for stratum_name in stratum_names:
         output_key = f"incidenceX{stratum_name}"
         incidence_connections[output_key] = {
-            "origin": Compartment.PRESYMPTOMATIC,
+            "origin": Compartment.LATE_EXPOSED,
             "to": Compartment.EARLY_INFECTIOUS,
             "origin_condition": "",
             "to_condition": stratum_name,

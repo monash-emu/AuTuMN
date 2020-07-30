@@ -48,8 +48,8 @@ def build_model(params: dict) -> StratifiedModel:
     # Define compartments
     compartments = [
         Compartment.SUSCEPTIBLE,
-        Compartment.EXPOSED,
-        Compartment.PRESYMPTOMATIC,
+        Compartment.EARLY_EXPOSED,
+        Compartment.LATE_EXPOSED,
         Compartment.EARLY_INFECTIOUS,
         Compartment.LATE_INFECTIOUS,
         Compartment.RECOVERED,
@@ -57,8 +57,8 @@ def build_model(params: dict) -> StratifiedModel:
 
     # Indicate whether the compartments representing active disease are infectious
     is_infectious = {
-        Compartment.EXPOSED: False,
-        Compartment.PRESYMPTOMATIC: True,
+        Compartment.EARLY_EXPOSED: False,
+        Compartment.LATE_EXPOSED: True,
         Compartment.EARLY_INFECTIOUS: True,
         Compartment.LATE_INFECTIOUS: True,
     }
@@ -126,7 +126,7 @@ def build_model(params: dict) -> StratifiedModel:
 
     # FIXME: Remove params from model_parameters
     model_parameters = {**params, **compartment_exit_flow_rates}
-    model_parameters["to_infectious"] = model_parameters["within_" + Compartment.PRESYMPTOMATIC]
+    model_parameters["to_infectious"] = model_parameters["within_" + Compartment.LATE_EXPOSED]
 
     model_parameters['immunity_loss_rate'] = 1. / params['immunity_duration']
 
@@ -244,7 +244,7 @@ def build_model(params: dict) -> StratifiedModel:
     # Allow pre-symptomatics to be less infectious
     model.individual_infectiousness_adjustments = \
         [
-            [[Compartment.PRESYMPTOMATIC], model_parameters["late_exposed_infect_multiplier"]]
+            [[Compartment.LATE_EXPOSED], model_parameters[Compartment.LATE_EXPOSED + "_infect_multiplier"]]
         ]
 
     # Stratify by clinical

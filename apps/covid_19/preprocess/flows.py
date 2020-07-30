@@ -6,19 +6,19 @@ DEFAULT_FLOWS = [
     {
         "type": Flow.INFECTION_FREQUENCY,
         "origin": Compartment.SUSCEPTIBLE,
-        "to": Compartment.EXPOSED,
+        "to": Compartment.EARLY_EXPOSED,
         "parameter": "contact_rate",
     },
     # Transition flows.
     {
         "type": Flow.STANDARD,
-        "origin": Compartment.EXPOSED,
-        "to": Compartment.PRESYMPTOMATIC,
-        "parameter": f"within_{Compartment.EXPOSED}",
+        "origin": Compartment.EARLY_EXPOSED,
+        "to": Compartment.LATE_EXPOSED,
+        "parameter": f"within_{Compartment.EARLY_EXPOSED}",
     },
     {
         "type": Flow.STANDARD,
-        "origin": Compartment.PRESYMPTOMATIC,
+        "origin": Compartment.LATE_EXPOSED,
         "to": Compartment.EARLY_INFECTIOUS,
         "parameter": f"to_infectious",  # FIXME: Rename to "within_presympt"
     },

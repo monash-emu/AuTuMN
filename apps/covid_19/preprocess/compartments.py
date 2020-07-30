@@ -13,7 +13,7 @@ def calc_compartment_periods(
         props_def = calc_period_def["proportions"]
         total_props = 0
         for comp_name, prop in props_def.items():
-            final_periods[comp_name] = period * prop
+            final_periods[f"{comp_name}_{calc_period_name}"] = period * prop
             total_props += prop
 
         assert total_props == 1, f"Proportions for {calc_period_name} must sum to 1"

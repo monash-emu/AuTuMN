@@ -22,7 +22,7 @@ start_time: 14.113505907047967
 npi_effectiveness:
   other_locations: 0.8969795054652112
 compartment_periods_calculated:
-  incubation:
+  exposed:
     total_period: 3.0075158318324964
   active:
     total_period: 5.24314655577747

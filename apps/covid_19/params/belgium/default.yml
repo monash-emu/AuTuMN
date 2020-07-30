@@ -21,7 +21,7 @@ contact_rate: 0.03302564911907216
 start_time: 5.323651322897666
 
 compartment_periods_calculated:
-  incubation:
+  exposed:
     total_period: 3.868538028845811
   active:
     total_period: 5.186534378286037

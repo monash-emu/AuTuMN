@@ -19,7 +19,7 @@ param_info = {
     'contact_rate': {'name': 'contact rate', 'range': [0.025, 0.08]},
     'start_time': {'name': 'model start time', 'range': [0., 40.]},
     'npi_effectiveness.other_locations': {'name': 'alpha', 'range': [0.5, 1.]},
-    'compartment_periods_calculated.incubation.total_period': {'name': 'incubation time', 'range': [3., 7.]},
+    'compartment_periods_calculated.exposed.total_period': {'name': 'incubation time', 'range': [3., 7.]},
     'compartment_periods_calculated.active.total_period': {'name': 'time infectious', 'range': [5., 10.]},
     'time_variant_detection.maximum_gradient': {'name': 'detection (shape)', 'range': [.05, .1]},
     'time_variant_detection.max_change_time': {'name': 'detection (inflection)', 'range': [70., 160.]},

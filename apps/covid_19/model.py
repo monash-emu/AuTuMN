@@ -50,8 +50,8 @@ def build_model(params: dict) -> StratifiedModel:
         Compartment.SUSCEPTIBLE,
         Compartment.EARLY_EXPOSED,
         Compartment.LATE_EXPOSED,
-        Compartment.EARLY_INFECTIOUS,
-        Compartment.LATE_INFECTIOUS,
+        Compartment.EARLY_ACTIVE,
+        Compartment.LATE_ACTIVE,
         Compartment.RECOVERED,
     ]
 
@@ -59,8 +59,8 @@ def build_model(params: dict) -> StratifiedModel:
     is_infectious = {
         Compartment.EARLY_EXPOSED: False,
         Compartment.LATE_EXPOSED: True,
-        Compartment.EARLY_INFECTIOUS: True,
-        Compartment.LATE_INFECTIOUS: True,
+        Compartment.EARLY_ACTIVE: True,
+        Compartment.LATE_ACTIVE: True,
     }
 
     # Calculate compartment periods
@@ -150,7 +150,7 @@ def build_model(params: dict) -> StratifiedModel:
         model_parameters,
         flows,
         birth_approach=birth_approach,
-        entry_compartment=Compartment.LATE_INFECTIOUS,  # to model imported cases
+        entry_compartment=Compartment.LATE_ACTIVE,  # to model imported cases
         starting_population=sum(total_pops),
         infectious_compartment=[i_comp for i_comp in is_infectious if is_infectious[i_comp]],
     )
@@ -215,9 +215,9 @@ def build_model(params: dict) -> StratifiedModel:
     age_based_susceptibility = params["age_based_susceptibility"]
     adjust_requests = {
         # No change, but distinction is required for later stratification by clinical status
-        "to_infectious": {s: 1 for s in agegroup_strings},
+        "to_" + Compartment.EARLY_ACTIVE: {s: 1 for s in agegroup_strings},
         "infect_death": {s: 1 for s in agegroup_strings},
-        "within_late_active": {s: 1 for s in agegroup_strings},
+        "within_" + Compartment.LATE_ACTIVE: {s: 1 for s in agegroup_strings},
         # Adjust susceptibility across age groups
         "contact_rate": age_based_susceptibility,
     }

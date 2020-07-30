@@ -120,8 +120,8 @@ def get_progress_connections(stratum_names: str):
     """
     progress_connections = {
         "progress": {
-            "origin": Compartment.EARLY_INFECTIOUS,
-            "to": Compartment.LATE_INFECTIOUS,
+            "origin": Compartment.EARLY_ACTIVE,
+            "to": Compartment.LATE_ACTIVE,
             "origin_condition": "",
             "to_condition": "",
         }
@@ -129,8 +129,8 @@ def get_progress_connections(stratum_names: str):
     for stratum_name in stratum_names:
         output_key = f"progressX{stratum_name}"
         progress_connections[output_key] = {
-            "origin": Compartment.EARLY_INFECTIOUS,
-            "to": Compartment.LATE_INFECTIOUS,
+            "origin": Compartment.EARLY_ACTIVE,
+            "to": Compartment.LATE_ACTIVE,
             "origin_condition": "",
             "to_condition": stratum_name,
         }
@@ -145,7 +145,7 @@ def get_incidence_connections(stratum_names: str):
     incidence_connections = {
         "incidence": {
             "origin": Compartment.LATE_EXPOSED,
-            "to": Compartment.EARLY_INFECTIOUS,
+            "to": Compartment.EARLY_ACTIVE,
             "origin_condition": "",
             "to_condition": "",
         }
@@ -154,7 +154,7 @@ def get_incidence_connections(stratum_names: str):
         output_key = f"incidenceX{stratum_name}"
         incidence_connections[output_key] = {
             "origin": Compartment.LATE_EXPOSED,
-            "to": Compartment.EARLY_INFECTIOUS,
+            "to": Compartment.EARLY_ACTIVE,
             "origin_condition": "",
             "to_condition": stratum_name,
         }

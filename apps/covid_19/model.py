@@ -1,19 +1,18 @@
-import os
-import copy
+
 from summer.model import StratifiedModel
-from summer.model.utils.string import find_all_strata, find_name_components
+from summer.model.utils.string import find_all_strata
 
 from autumn.tool_kit.utils import repeat_list_elements
 
 from autumn.curve import tanh_based_scaleup
 
 from autumn.tool_kit.utils import normalise_sequence
-from autumn import constants
-from autumn.constants import Compartment, BirthApproach
+from autumn.constants import BirthApproach
 from autumn.tb_model import list_all_strata_for_mortality
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
 from autumn import inputs
 from autumn.environment.seasonality import get_seasonal_forcing
+from apps.covid_19.constants import Compartment
 
 from . import outputs, preprocess
 from .stratification import stratify_by_clinical
@@ -49,19 +48,19 @@ def build_model(params: dict) -> StratifiedModel:
     # Define compartments
     compartments = [
         Compartment.SUSCEPTIBLE,
-        Compartment.EXPOSED,
-        Compartment.PRESYMPTOMATIC,
-        Compartment.EARLY_INFECTIOUS,
-        Compartment.LATE_INFECTIOUS,
+        Compartment.EARLY_EXPOSED,
+        Compartment.LATE_EXPOSED,
+        Compartment.EARLY_ACTIVE,
+        Compartment.LATE_ACTIVE,
         Compartment.RECOVERED,
     ]
 
     # Indicate whether the compartments representing active disease are infectious
     is_infectious = {
-        Compartment.EXPOSED: False,
-        Compartment.PRESYMPTOMATIC: True,
-        Compartment.EARLY_INFECTIOUS: True,
-        Compartment.LATE_INFECTIOUS: True,
+        Compartment.EARLY_EXPOSED: False,
+        Compartment.LATE_EXPOSED: True,
+        Compartment.EARLY_ACTIVE: True,
+        Compartment.LATE_ACTIVE: True,
     }
 
     # Calculate compartment periods
@@ -127,7 +126,7 @@ def build_model(params: dict) -> StratifiedModel:
 
     # FIXME: Remove params from model_parameters
     model_parameters = {**params, **compartment_exit_flow_rates}
-    model_parameters["to_infectious"] = model_parameters["within_presympt"]
+    model_parameters["to_infectious"] = model_parameters["within_" + Compartment.LATE_EXPOSED]
 
     model_parameters['immunity_loss_rate'] = 1. / params['immunity_duration']
 
@@ -151,7 +150,7 @@ def build_model(params: dict) -> StratifiedModel:
         model_parameters,
         flows,
         birth_approach=birth_approach,
-        entry_compartment=Compartment.LATE_INFECTIOUS,  # to model imported cases
+        entry_compartment=Compartment.LATE_ACTIVE,  # to model imported cases
         starting_population=sum(total_pops),
         infectious_compartment=[i_comp for i_comp in is_infectious if is_infectious[i_comp]],
     )
@@ -216,9 +215,9 @@ def build_model(params: dict) -> StratifiedModel:
     age_based_susceptibility = params["age_based_susceptibility"]
     adjust_requests = {
         # No change, but distinction is required for later stratification by clinical status
-        "to_infectious": {s: 1 for s in agegroup_strings},
+        "to_" + Compartment.EARLY_ACTIVE: {s: 1 for s in agegroup_strings},
         "infect_death": {s: 1 for s in agegroup_strings},
-        "within_late": {s: 1 for s in agegroup_strings},
+        "within_" + Compartment.LATE_ACTIVE: {s: 1 for s in agegroup_strings},
         # Adjust susceptibility across age groups
         "contact_rate": age_based_susceptibility,
     }
@@ -245,7 +244,7 @@ def build_model(params: dict) -> StratifiedModel:
     # Allow pre-symptomatics to be less infectious
     model.individual_infectiousness_adjustments = \
         [
-            [[Compartment.PRESYMPTOMATIC], model_parameters["presympt_infect_multiplier"]]
+            [[Compartment.LATE_EXPOSED], model_parameters[Compartment.LATE_EXPOSED + "_infect_multiplier"]]
         ]
 
     # Stratify by clinical
@@ -266,14 +265,16 @@ def build_model(params: dict) -> StratifiedModel:
         outputs.get_calc_notifications_covid(implement_importation, modelled_abs_detection_proportion_imported)
     model.derived_output_functions["local_notifications"] = \
         outputs.get_calc_notifications_covid(False, modelled_abs_detection_proportion_imported)
-    model.derived_output_functions["prevXlateXclinical_icuXamong"] = \
+    model.derived_output_functions[f"prevX{Compartment.LATE_ACTIVE}Xclinical_icuXamong"] = \
         outputs.calculate_icu_prev
-    model.derived_output_functions["new_hospital_admissions"] = outputs.calculate_new_hospital_admissions_covid
+    model.derived_output_functions["new_hospital_admissions"] = \
+        outputs.calculate_new_hospital_admissions_covid
     model.derived_output_functions["hospital_occupancy"] = \
         outputs.calculate_hospital_occupancy
     model.derived_output_functions["proportion_seropositive"] = \
         outputs.calculate_proportion_seropositive
-    model.derived_output_functions["new_icu_admissions"] = outputs.calculate_new_icu_admissions_covid
+    model.derived_output_functions["new_icu_admissions"] = \
+        outputs.calculate_new_icu_admissions_covid
     model.derived_output_functions["icu_occupancy"] = \
         outputs.calculate_icu_occupancy
     model.death_output_categories = \

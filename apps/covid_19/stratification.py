@@ -5,11 +5,12 @@ from autumn.tool_kit.utils import (
     repeat_list_elements_average_last_two,
     element_wise_list_division,
 )
-from autumn.constants import Compartment
 from autumn.summer_related.parameter_adjustments import adjust_upstream_stratified_parameter
-from autumn.curve import scale_up_function, tanh_based_scaleup
+from autumn.curve import scale_up_function
 from apps.covid_19.preprocess.mortality import age_specific_ifrs_from_double_exp_model
 from autumn.inputs import get_population_by_agegroup
+
+from apps.covid_19.constants import Compartment
 
 
 def stratify_by_clinical(model, model_parameters, compartments, detected_proportion, symptomatic_props):
@@ -53,8 +54,8 @@ def stratify_by_clinical(model, model_parameters, compartments, detected_proport
     compartments_to_split = [
         comp
         for comp in compartments
-        if comp.startswith(Compartment.EARLY_INFECTIOUS)
-           or comp.startswith(Compartment.LATE_INFECTIOUS)
+        if comp.startswith(Compartment.EARLY_ACTIVE)
+           or comp.startswith(Compartment.LATE_ACTIVE)
     ]
 
     # FIXME: Set params to make comparison happy
@@ -215,7 +216,7 @@ def stratify_by_clinical(model, model_parameters, compartments, detected_proport
         if stratum in model_parameters["late_infect_multiplier"]:
             model.individual_infectiousness_adjustments.append(
                 [
-                    [Compartment.LATE_INFECTIOUS, "clinical_" + stratum],
+                    [Compartment.LATE_ACTIVE, "clinical_" + stratum],
                     model_parameters["late_infect_multiplier"][stratum],
                 ]
             )

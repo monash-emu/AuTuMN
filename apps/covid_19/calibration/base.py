@@ -32,7 +32,7 @@ BASE_CALIBRATION_PARAMS = [
         "distri_params": [4.4, 5.6],
     },
     {
-        "param_name": "compartment_periods_calculated.total_infectious.total_period",
+        "param_name": "compartment_periods_calculated.active.total_period",
         "distribution": "uniform",
         "distri_params": [4.5, 9.5],
     },

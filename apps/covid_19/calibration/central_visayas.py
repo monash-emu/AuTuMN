@@ -19,7 +19,7 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
 
 
 MULTIPLIERS = {
-    "prevXlateXclinical_icuXamong": 7957050.0
+    "prevXlate_activeXclinical_icuXamong": 7957050.0
 }  # to get absolute pop size instead of proportion
 
 

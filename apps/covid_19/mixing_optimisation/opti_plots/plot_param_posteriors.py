@@ -20,7 +20,7 @@ param_info = {
     'start_time': {'name': 'model start time', 'range': [0., 40.]},
     'npi_effectiveness.other_locations': {'name': 'alpha', 'range': [0.5, 1.]},
     'compartment_periods_calculated.incubation.total_period': {'name': 'incubation time', 'range': [3., 7.]},
-    'compartment_periods_calculated.total_infectious.total_period': {'name': 'time infectious', 'range': [5., 10.]},
+    'compartment_periods_calculated.active.total_period': {'name': 'time infectious', 'range': [5., 10.]},
     'time_variant_detection.maximum_gradient': {'name': 'detection (shape)', 'range': [.05, .1]},
     'time_variant_detection.max_change_time': {'name': 'detection (inflection)', 'range': [70., 160.]},
     'time_variant_detection.end_value': {'name': 'detection (prop_final)', 'range': [.10, .90]},

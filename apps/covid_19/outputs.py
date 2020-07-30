@@ -1,8 +1,8 @@
-from autumn.constants import Compartment
 
-from datetime import date
 from summer.model import StratifiedModel
 from summer.model.utils.string import find_name_components
+from apps.covid_19.constants import Compartment
+
 
 NOTIFICATION_STRATUM = ["sympt_isolate", "hospital_non_icu", "icu"]
 
@@ -56,7 +56,7 @@ def calculate_new_icu_admissions_covid(model, time):
 def calculate_icu_prev(model, time):
     icu_prev = 0
     for i, comp_name in enumerate(model.compartment_names):
-        if "late" in comp_name and "clinical_icu" in comp_name:
+        if Compartment.LATE_ACTIVE in comp_name and "clinical_icu" in comp_name:
             icu_prev += model.compartment_values[i]
     return icu_prev
 
@@ -120,8 +120,8 @@ def get_progress_connections(stratum_names: str):
     """
     progress_connections = {
         "progress": {
-            "origin": Compartment.EARLY_INFECTIOUS,
-            "to": Compartment.LATE_INFECTIOUS,
+            "origin": Compartment.EARLY_ACTIVE,
+            "to": Compartment.LATE_ACTIVE,
             "origin_condition": "",
             "to_condition": "",
         }
@@ -129,8 +129,8 @@ def get_progress_connections(stratum_names: str):
     for stratum_name in stratum_names:
         output_key = f"progressX{stratum_name}"
         progress_connections[output_key] = {
-            "origin": Compartment.EARLY_INFECTIOUS,
-            "to": Compartment.LATE_INFECTIOUS,
+            "origin": Compartment.EARLY_ACTIVE,
+            "to": Compartment.LATE_ACTIVE,
             "origin_condition": "",
             "to_condition": stratum_name,
         }
@@ -144,8 +144,8 @@ def get_incidence_connections(stratum_names: str):
     """
     incidence_connections = {
         "incidence": {
-            "origin": Compartment.PRESYMPTOMATIC,
-            "to": Compartment.EARLY_INFECTIOUS,
+            "origin": Compartment.LATE_EXPOSED,
+            "to": Compartment.EARLY_ACTIVE,
             "origin_condition": "",
             "to_condition": "",
         }
@@ -153,8 +153,8 @@ def get_incidence_connections(stratum_names: str):
     for stratum_name in stratum_names:
         output_key = f"incidenceX{stratum_name}"
         incidence_connections[output_key] = {
-            "origin": Compartment.PRESYMPTOMATIC,
-            "to": Compartment.EARLY_INFECTIOUS,
+            "origin": Compartment.LATE_EXPOSED,
+            "to": Compartment.EARLY_ACTIVE,
             "origin_condition": "",
             "to_condition": stratum_name,
         }

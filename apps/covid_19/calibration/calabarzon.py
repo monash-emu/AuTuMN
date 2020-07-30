@@ -133,4 +133,5 @@ MULTIPLIERS = {
 
 PAR_PRIORS = provide_default_calibration_params()
 PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "notifications")
+PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "icu_occupancy")
 PAR_PRIORS = add_case_detection_params_philippines(PAR_PRIORS)

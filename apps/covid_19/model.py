@@ -217,7 +217,7 @@ def build_model(params: dict) -> StratifiedModel:
         # No change, but distinction is required for later stratification by clinical status
         "to_infectious": {s: 1 for s in agegroup_strings},
         "infect_death": {s: 1 for s in agegroup_strings},
-        "within_late": {s: 1 for s in agegroup_strings},
+        "within_late_active": {s: 1 for s in agegroup_strings},
         # Adjust susceptibility across age groups
         "contact_rate": age_based_susceptibility,
     }
@@ -265,14 +265,16 @@ def build_model(params: dict) -> StratifiedModel:
         outputs.get_calc_notifications_covid(implement_importation, modelled_abs_detection_proportion_imported)
     model.derived_output_functions["local_notifications"] = \
         outputs.get_calc_notifications_covid(False, modelled_abs_detection_proportion_imported)
-    model.derived_output_functions["prevXlateXclinical_icuXamong"] = \
+    model.derived_output_functions["prevXlate_activeXclinical_icuXamong"] = \
         outputs.calculate_icu_prev
-    model.derived_output_functions["new_hospital_admissions"] = outputs.calculate_new_hospital_admissions_covid
+    model.derived_output_functions["new_hospital_admissions"] = \
+        outputs.calculate_new_hospital_admissions_covid
     model.derived_output_functions["hospital_occupancy"] = \
         outputs.calculate_hospital_occupancy
     model.derived_output_functions["proportion_seropositive"] = \
         outputs.calculate_proportion_seropositive
-    model.derived_output_functions["new_icu_admissions"] = outputs.calculate_new_icu_admissions_covid
+    model.derived_output_functions["new_icu_admissions"] = \
+        outputs.calculate_new_icu_admissions_covid
     model.derived_output_functions["icu_occupancy"] = \
         outputs.calculate_icu_occupancy
     model.death_output_categories = \

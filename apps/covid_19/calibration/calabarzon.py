@@ -127,7 +127,7 @@ TARGET_OUTPUTS = [
 
 
 MULTIPLIERS = {
-    "prevXlateXclinical_icuXamong": 16057300.0
+    "prevXlate_activeXclinical_icuXamong": 16057300.0
 }  # to get absolute pop size instead of proportion
 
 

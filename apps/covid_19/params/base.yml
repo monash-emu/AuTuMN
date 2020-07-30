@@ -29,12 +29,6 @@ compartment_periods:
 
 # Mean time (?) spent in each compartment, defined via proportions
 compartment_periods_calculated:
-  total_infectious:
-    total_period: 7.
-    proportions:
-      # Proportion of the infectious period spent in the early compartment (i.e. can't be isolated for symptoms), assumed
-      infectious: 0.333
-      late: 0.667
 
   incubation:
     total_period: 5.
@@ -42,6 +36,13 @@ compartment_periods_calculated:
       exposed: 0.5
       # Proportion of the exposed period spent infectious - i.e. "presymptomatic", assumed
       presympt: 0.5
+
+  total_infectious:
+    total_period: 7.
+    proportions:
+      # Proportion of the infectious period spent in the early compartment (i.e. can't be isolated for symptoms), assumed
+      early_active: 0.333
+      late_active: 0.667
 
 # Stratification-related requests
 stratify_by:

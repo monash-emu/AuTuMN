@@ -2,6 +2,6 @@
 # Options for plotting outputs of the COVID-19 model
 outputs_to_plot: []
 translations:
-  prevXlateXclinical_icuXamong: "Prevalence of ICU cases (/million pop.)"
+  prevXlate_activeXclinical_icuXamong: "Prevalence of ICU cases (/million pop.)"
   infection_deathsXall: "Daily number of deaths"
   notifications: "Daily number of confirmed cases"

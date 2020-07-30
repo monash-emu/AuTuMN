@@ -162,9 +162,9 @@ def get_target_outputs_for_opti(country, data_start_time=22, data_end_time=152, 
             }
         )
 
-    if country in ["france", "belgium", "united-kingdom", "spain"]:
-        hospital_targets = get_hospital_targets_for_opti(country, data_start_time, data_end_time)
-        target_outputs += hospital_targets
+    hospital_targets = get_hospital_targets_for_opti(country, data_start_time, data_end_time)
+    target_outputs += hospital_targets
+
     return target_outputs
 
 
@@ -175,12 +175,14 @@ def get_hospital_targets_for_opti(country, data_start_time=22, data_end_time=152
         'france': 'hospital_admission',
         'united-kingdom': 'hospital_admission',
         'spain': 'hospital_admission',
+        'italy': 'hospital_occupancy',
+        'sweden': 'icu_admission',
     }
     if country not in output:
-        print("hospital output not specifoed for " + country)
+        print("Warning: hospital output not specifoed for " + country)
         return []
     output_mapping = {"hospital_occupancy": "hospital_occupancy", "icu_occupancy": "icu_occupancy",
-                      "hospital_admission": "new_hospital_admissions"}
+                      "hospital_admission": "new_hospital_admissions", "icu_admission": "new_icu_admissions"}
     times, data = read_hospital_data_from_csv(output[country], country, data_start_time, data_end_time)
 
     # Ignore negative values found in the dataset

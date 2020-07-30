@@ -142,11 +142,11 @@ def plot_calibration_fit(
     output_cols = [c for c in output_cols if "X" not in c or c.endswith("Xall")]
     chosen_output = st.sidebar.selectbox("Select derived output", output_cols)
 
-    outputs = plots.sample_outputs_for_calibration_fit(
+    outputs, best_chain_index = plots.sample_outputs_for_calibration_fit(
         chosen_output, mcmc_tables, derived_output_tables
     )
     is_logscale = st.sidebar.checkbox("Log scale")
-    plots.plot_calibration_fit(plotter, chosen_output, outputs, plot_config, is_logscale)
+    plots.plot_calibration_fit(plotter, chosen_output, outputs, best_chain_index, plot_config, is_logscale)
 
 
 def print_mle_parameters(
@@ -163,7 +163,7 @@ PLOT_FUNCS = {
     "Parameter trace": plot_mcmc_parameter_trace,
     "Calibration Fit": plot_calibration_fit,
     "Predictions": plot_timeseries_with_uncertainty,
-    # "Print MLE parameters": print_mle_parameters,
+    "Print MLE parameters": print_mle_parameters,
 }
 
 

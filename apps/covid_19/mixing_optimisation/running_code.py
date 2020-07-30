@@ -12,7 +12,7 @@ if __name__ == "__main__":
     }
 
     burnin = {
-        "france": 0,
+        "france": 0,  
         "belgium": 1500,
         "spain": 1500,
         "italy": 2000,

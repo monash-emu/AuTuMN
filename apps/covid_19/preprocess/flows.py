@@ -1,5 +1,5 @@
-from autumn.constants import Flow, Compartment
-
+from autumn.constants import Flow
+from apps.covid_19.constants import Compartment
 
 DEFAULT_FLOWS = [
     # Infection flows.

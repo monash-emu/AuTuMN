@@ -5,11 +5,12 @@ from autumn.tool_kit.utils import (
     repeat_list_elements_average_last_two,
     element_wise_list_division,
 )
-from autumn.constants import Compartment
 from autumn.summer_related.parameter_adjustments import adjust_upstream_stratified_parameter
-from autumn.curve import scale_up_function, tanh_based_scaleup
+from autumn.curve import scale_up_function
 from apps.covid_19.preprocess.mortality import age_specific_ifrs_from_double_exp_model
 from autumn.inputs import get_population_by_agegroup
+
+from apps.covid_19.constants import Compartment
 
 
 def stratify_by_clinical(model, model_parameters, compartments, detected_proportion, symptomatic_props):

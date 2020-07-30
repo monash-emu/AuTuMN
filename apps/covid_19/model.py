@@ -1,19 +1,18 @@
-import os
-import copy
+
 from summer.model import StratifiedModel
-from summer.model.utils.string import find_all_strata, find_name_components
+from summer.model.utils.string import find_all_strata
 
 from autumn.tool_kit.utils import repeat_list_elements
 
 from autumn.curve import tanh_based_scaleup
 
 from autumn.tool_kit.utils import normalise_sequence
-from autumn import constants
-from autumn.constants import Compartment, BirthApproach
+from autumn.constants import BirthApproach
 from autumn.tb_model import list_all_strata_for_mortality
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
 from autumn import inputs
 from autumn.environment.seasonality import get_seasonal_forcing
+from apps.covid_19.constants import Compartment
 
 from . import outputs, preprocess
 from .stratification import stratify_by_clinical

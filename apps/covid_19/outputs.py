@@ -1,8 +1,8 @@
-from autumn.constants import Compartment
 
-from datetime import date
 from summer.model import StratifiedModel
 from summer.model.utils.string import find_name_components
+from apps.covid_19.constants import Compartment
+
 
 NOTIFICATION_STRATUM = ["sympt_isolate", "hospital_non_icu", "icu"]
 

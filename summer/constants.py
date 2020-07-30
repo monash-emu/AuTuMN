@@ -16,7 +16,6 @@ class Compartment:
     EARLY_INFECTIOUS = "infectious"
     RECOVERED = "recovered"
     LATE_INFECTIOUS = "late"
-    PRESYMPTOMATIC = "presympt"
     ON_TREATMENT = "on_treatment"
     LTBI_TREATED = "ltbi_treated"
 

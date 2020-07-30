@@ -141,7 +141,10 @@ def sample_outputs_for_calibration_fit(
     assert len(mcmc_tables) == len(derived_output_tables)
     # For each chain grab 20 / top 100 accepted runs at random
     chosen_runs = []
-    for mcmc_table in mcmc_tables:
+    best_ll = -1.e16
+    best_run = None
+    best_chain_index = None
+    for i, mcmc_table in enumerate(mcmc_tables):
         mask = mcmc_table["accept"] == 1
         num_accepted = len(mcmc_table[mask])
         choice_range = num_accepted // 3
@@ -149,9 +152,23 @@ def sample_outputs_for_calibration_fit(
         runs = choices(mcmc_table[mask].idx.tolist()[-choice_range:], k=num_choices)
         chosen_runs.append(runs)
 
+        this_chain_best_run, this_chain_best_ll = [
+            np.argmax(mcmc_table.loglikelihood.tolist()),
+            np.max(mcmc_table.loglikelihood.tolist())
+        ]
+        if this_chain_best_ll > best_ll:
+            best_ll = this_chain_best_ll
+            best_run = mcmc_table.idx.tolist()[this_chain_best_run]
+            best_chain_index = i
+
     outputs = []
     for i, derived_output_table in enumerate(derived_output_tables):
         runs = chosen_runs[i]
+
+        # automatically append MLE run as the last chosen run
+        if i == best_chain_index:
+            runs[-1] = best_run
+
         for run in runs:
             mask = derived_output_table["idx"] == run
             times = derived_output_table[mask].times
@@ -168,6 +185,9 @@ def plot_calibration_fit(
 
     for times, values in outputs:
         axis.plot(times, values)
+
+    # re-plot MLE run with wider line
+    axis.plot(outputs[-1][0], outputs[-1][1], linestyle=(0, (1, 3)), color='black', linewidth=3)
 
     # Add plot targets
     output_config = {"name": output_name, "target_values": [], "target_times": []}

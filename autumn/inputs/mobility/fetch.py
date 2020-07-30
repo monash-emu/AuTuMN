@@ -12,4 +12,9 @@ MOBILITY_CSV_PATH = os.path.join(MOBILITY_DIRPATH, "Google_Mobility_Report.csv")
 
 
 def fetch_mobility_data():
-    pd.read_csv(GOOGLE_MOBILITY_URL).to_csv(MOBILITY_CSV_PATH)
+    df = pd.read_csv(GOOGLE_MOBILITY_URL)
+    df[df.country_region_code !="US"].to_csv(MOBILITY_CSV_PATH)
+
+    
+    
+

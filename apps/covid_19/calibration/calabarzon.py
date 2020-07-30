@@ -42,6 +42,7 @@ notification_times = [
 180,
 187,
 194,
+201,
 ]
 
 notification_values = [
@@ -51,24 +52,61 @@ notification_values = [
 2,
 8,
 22,
+27,
+35,
+44,
 32,
-36,
-39,
-22,
-15,
-15,
-15,
 17,
-33,
-25,
-32,
-41,
-55,
-93,
-109,
-184,
+17,
+14,
+20,
+23,
+20,
+27,
+28,
+54,
+86,
+122,
+166,
+224,
 ]
 
+# ICU data:
+icu_times = [
+110,
+117,
+124,
+131,
+138,
+145,
+152,
+159,
+166,
+173,
+180,
+187,
+194,
+201,
+208,
+]
+
+icu_values = [
+1,
+15,
+40,
+50,
+59,
+56,
+58,
+55,
+41,
+53,
+55,
+41,
+48,
+64,
+78,
+]
 
 TARGET_OUTPUTS = [
     {
@@ -78,6 +116,13 @@ TARGET_OUTPUTS = [
         "loglikelihood_distri": "negative_binomial",
         "time_weights": assign_trailing_weights_to_halves(5, notification_times),
     },
+        {
+        "output_key": "icu_occupancy",
+        "years": icu_times,
+        "values": icu_values,
+        "loglikelihood_distri": "negative_binomial",
+        "time_weights": list(range(1, len(icu_times) + 1)),
+    }
 ]
 
 

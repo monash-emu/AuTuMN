@@ -2,7 +2,7 @@
 
 class Compartment:
     """
-    A model compartment.
+    A COVID-19 model compartment.
     """
 
     SUSCEPTIBLE = "susceptible"

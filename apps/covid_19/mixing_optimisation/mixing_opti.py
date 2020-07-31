@@ -247,8 +247,10 @@ def run_all_phases(decision_variables, country=Region.UNITED_KINGDOM, config=0, 
     return
 
 
-def read_csv_output_file(output_dir, country, config=2, mode="by_age", objective="deaths"):
+def read_csv_output_file(output_dir, country, config=2, mode="by_age", objective="deaths", from_streamlit=False):
     path_to_input_csv = os.path.join('calibrated_param_sets', country + "_calibrated_params.csv")
+    if from_streamlit:
+        path_to_input_csv = os.path.join('apps', 'covid_19', 'mixing_optimisation', path_to_input_csv)
     input_table = pd.read_csv(path_to_input_csv)
 
     col_names = [c for c in input_table.columns if c not in ["loglikelihood"] and "dispersion_param" not in c]
@@ -257,10 +259,12 @@ def read_csv_output_file(output_dir, country, config=2, mode="by_age", objective
         removed_columns = ["best_x" + str(i) for i in range(3, 16)]
         col_names = [c for c in col_names if c not in removed_columns]
 
-    output_file_name = output_dir + "results_" + country + "_" + mode + "_" + str(config) + "_" + objective + ".csv"
-    out_table = pd.read_csv(output_file_name, sep=" ", header=None)
-    out_table.columns = col_names
-    out_table["loglikelihood"] = input_table["loglikelihood"]
+    # output_file_name = os.path.join(output_dir, "results_" + country + "_" + mode + "_" + str(config) + "_" + objective + ".csv")
+    # out_table = pd.read_csv(output_file_name, sep=" ", header=None)
+    # out_table.columns = col_names
+    # out_table["loglikelihood"] = input_table["loglikelihood"]
+    output_file_name = os.path.join(output_dir, "results_.csv")
+    out_table = pd.read_csv(output_file_name)
 
     return out_table
 

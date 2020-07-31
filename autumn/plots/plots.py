@@ -869,3 +869,32 @@ def plot_multicountry_hospital(all_scenarios, mode, objective):
     pyplot.savefig(filename + ".pdf")
     pyplot.savefig(filename + ".png", dpi=300)
 
+
+def plot_optimal_plan(all_results, config, country, mode, ax):
+    ax.text(0,0,country + str(config) + mode)
+
+
+def plot_multicountry_optimal_plan(all_results, mode):
+    countries = ['belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']
+
+    fig = pyplot.figure(constrained_layout=True, figsize=(15, 20))  # (w, h)
+    widths = [1, 8, 8]
+    heights = [1, 4, 4, 4, 4, 4, 4]
+    spec = fig.add_gridspec(ncols=3, nrows=7, width_ratios=widths,
+                            height_ratios=heights)
+
+    countries = ['belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']
+    country_names = [c.title() for c in countries]
+    country_names[-1] = "United Kingdom"
+
+    for j, config in enumerate([2, 3]):
+        for i, country in enumerate(countries):
+            ax = fig.add_subplot(spec[i+1, j + 1])
+            plot_optimal_plan(all_results, config, country, mode, ax)
+
+    out_dir = "apps/covid_19/mixing_optimisation/opti_plots/figures/optimal_plans/"
+    filename = out_dir + "optimal_plan_" + mode
+    pyplot.savefig(filename + ".pdf")
+    pyplot.savefig(filename + ".png", dpi=300)
+
+

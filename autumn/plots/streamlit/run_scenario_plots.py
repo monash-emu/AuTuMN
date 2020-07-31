@@ -15,6 +15,7 @@ from apps.covid_19.preprocess.mixing_matrix.adjust_location import (
     LOCATIONS,
     MICRODISTANCING_LOCATIONS,
 )
+from apps.covid_19.mixing_optimisation.mixing_opti import read_csv_output_file
 
 from . import selectors, utils
 
@@ -242,6 +243,25 @@ def plot_multicounty_hospital(
             plots.plot_multicountry_hospital(all_scenarios, mode, objective)
 
 
+def plot_multicountry_optimal_plan(
+    plotter: StreamlitPlotter, app: RegionAppBase, scenarios: list, plot_config: dict
+):
+    countries = ['belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']
+    root_path = os.path.join('apps', 'covid_19', 'mixing_optimisation', 'optimisation_outputs', 'test_outputs')
+
+    for mode in ['by_age', 'by_location']:
+        all_results = {}
+        for objective in ["deaths", "yoll"]:
+            all_results[objective] = {}
+            for config in [2, 3]:
+                all_results[objective][config] = {}
+                for country in countries:
+                    all_results[objective][config][country] = \
+                        read_csv_output_file(root_path, country, config=config, mode=mode, objective=objective,
+                                             from_streamlit=True)
+
+        plots.plot_multicountry_optimal_plan(all_results, mode=mode)
+
 
 PLOT_FUNCS = {
     "Compartment sizes": plot_compartment,
@@ -253,7 +273,7 @@ PLOT_FUNCS = {
     # "Stacked derived by stratum": plot_stacked_derived_outputs_by_stratum,
     # "Multicountry rainbow": plot_multicountry_rainbow,
     # "Multicountry hospital": plot_multicounty_hospital,
-
+    "Multicountry optimal plan": plot_multicountry_optimal_plan,
 }
 
 

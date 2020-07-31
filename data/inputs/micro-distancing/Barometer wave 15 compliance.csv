@@ -1,0 +1,118 @@
+date,state,question,response,count,respondents
+2020-07-08,ACT,1.5m compliance,Always,30,95
+2020-07-08,ACT,1.5m compliance,No,2,95
+2020-07-08,ACT,1.5m compliance,Often,43,95
+2020-07-08,ACT,1.5m compliance,Rarely,4,95
+2020-07-08,ACT,1.5m compliance,Sometimes,16,95
+2020-07-08,ACT,cough,A tissue,20,95
+2020-07-08,ACT,cough,"Something else (e.g. a hanky, clothing)",7,95
+2020-07-08,ACT,cough,Your elbow,46,95
+2020-07-08,ACT,cough,Your hand,22,95
+2020-07-08,ACT,hand hygine,"I washed or sanitised my hands as soon as I could, but there was a delay",37,95
+2020-07-08,ACT,hand hygine,No,5,95
+2020-07-08,ACT,hand hygine,"Yes, I washed or sanitised my hands immediately afterward",53,95
+2020-07-08,ACT,non-household contact,No,58,95
+2020-07-08,ACT,non-household contact,Yes,37,95
+2020-07-08,NSW,1.5m compliance,Always,151,388
+2020-07-08,NSW,1.5m compliance,No,9,388
+2020-07-08,NSW,1.5m compliance,Often,146,388
+2020-07-08,NSW,1.5m compliance,Rarely,15,388
+2020-07-08,NSW,1.5m compliance,Sometimes,67,388
+2020-07-08,NSW,cough,A tissue,81,388
+2020-07-08,NSW,cough,Nothing,10,388
+2020-07-08,NSW,cough,"Something else (e.g. a hanky, clothing)",45,388
+2020-07-08,NSW,cough,Your elbow,205,388
+2020-07-08,NSW,cough,Your hand,47,388
+2020-07-08,NSW,hand hygine,"I washed or sanitised my hands as soon as I could, but there was a delay",94,388
+2020-07-08,NSW,hand hygine,No,22,388
+2020-07-08,NSW,hand hygine,"Yes, I washed or sanitised my hands immediately afterward",272,388
+2020-07-08,NSW,non-household contact,No,244,388
+2020-07-08,NSW,non-household contact,Yes,144,388
+2020-07-08,NT,1.5m compliance,Always,5,27
+2020-07-08,NT,1.5m compliance,No,2,27
+2020-07-08,NT,1.5m compliance,Often,15,27
+2020-07-08,NT,1.5m compliance,Rarely,4,27
+2020-07-08,NT,1.5m compliance,Sometimes,1,27
+2020-07-08,NT,cough,A tissue,7,27
+2020-07-08,NT,cough,"Something else (e.g. a hanky, clothing)",5,27
+2020-07-08,NT,cough,Your elbow,12,27
+2020-07-08,NT,cough,Your hand,3,27
+2020-07-08,NT,hand hygine,"I washed or sanitised my hands as soon as I could, but there was a delay",7,27
+2020-07-08,NT,hand hygine,No,4,27
+2020-07-08,NT,hand hygine,"Yes, I washed or sanitised my hands immediately afterward",16,27
+2020-07-08,NT,non-household contact,No,15,27
+2020-07-08,NT,non-household contact,Yes,12,27
+2020-07-08,QLD,1.5m compliance,Always,142,368
+2020-07-08,QLD,1.5m compliance,No,6,368
+2020-07-08,QLD,1.5m compliance,Often,156,368
+2020-07-08,QLD,1.5m compliance,Rarely,8,368
+2020-07-08,QLD,1.5m compliance,Sometimes,56,368
+2020-07-08,QLD,cough,A tissue,62,368
+2020-07-08,QLD,cough,Nothing,7,368
+2020-07-08,QLD,cough,"Something else (e.g. a hanky, clothing)",50,368
+2020-07-08,QLD,cough,Your elbow,199,368
+2020-07-08,QLD,cough,Your hand,50,368
+2020-07-08,QLD,hand hygine,"I washed or sanitised my hands as soon as I could, but there was a delay",114,368
+2020-07-08,QLD,hand hygine,No,38,368
+2020-07-08,QLD,hand hygine,"Yes, I washed or sanitised my hands immediately afterward",216,368
+2020-07-08,QLD,non-household contact,No,230,368
+2020-07-08,QLD,non-household contact,Yes,138,368
+2020-07-08,SA,1.5m compliance,Always,117,311
+2020-07-08,SA,1.5m compliance,Often,145,311
+2020-07-08,SA,1.5m compliance,Rarely,11,311
+2020-07-08,SA,1.5m compliance,Sometimes,38,311
+2020-07-08,SA,cough,A tissue,53,311
+2020-07-08,SA,cough,Nothing,5,311
+2020-07-08,SA,cough,"Something else (e.g. a hanky, clothing)",35,311
+2020-07-08,SA,cough,Your elbow,177,311
+2020-07-08,SA,cough,Your hand,41,311
+2020-07-08,SA,hand hygine,"I washed or sanitised my hands as soon as I could, but there was a delay",94,311
+2020-07-08,SA,hand hygine,No,24,311
+2020-07-08,SA,hand hygine,"Yes, I washed or sanitised my hands immediately afterward",193,311
+2020-07-08,SA,non-household contact,No,191,311
+2020-07-08,SA,non-household contact,Yes,120,311
+2020-07-08,TAS,1.5m compliance,Always,34,86
+2020-07-08,TAS,1.5m compliance,No,2,86
+2020-07-08,TAS,1.5m compliance,Often,38,86
+2020-07-08,TAS,1.5m compliance,Rarely,2,86
+2020-07-08,TAS,1.5m compliance,Sometimes,10,86
+2020-07-08,TAS,cough,A tissue,12,86
+2020-07-08,TAS,cough,Nothing,3,86
+2020-07-08,TAS,cough,"Something else (e.g. a hanky, clothing)",14,86
+2020-07-08,TAS,cough,Your elbow,49,86
+2020-07-08,TAS,cough,Your hand,8,86
+2020-07-08,TAS,hand hygine,"I washed or sanitised my hands as soon as I could, but there was a delay",32,86
+2020-07-08,TAS,hand hygine,No,1,86
+2020-07-08,TAS,hand hygine,"Yes, I washed or sanitised my hands immediately afterward",53,86
+2020-07-08,TAS,non-household contact,No,59,86
+2020-07-08,TAS,non-household contact,Yes,27,86
+2020-07-08,VIC,1.5m compliance,Always,176,403
+2020-07-08,VIC,1.5m compliance,No,6,403
+2020-07-08,VIC,1.5m compliance,Often,171,403
+2020-07-08,VIC,1.5m compliance,Rarely,7,403
+2020-07-08,VIC,1.5m compliance,Sometimes,43,403
+2020-07-08,VIC,cough,A tissue,73,403
+2020-07-08,VIC,cough,Nothing,9,403
+2020-07-08,VIC,cough,"Something else (e.g. a hanky, clothing)",45,403
+2020-07-08,VIC,cough,Your elbow,234,403
+2020-07-08,VIC,cough,Your hand,42,403
+2020-07-08,VIC,hand hygine,"I washed or sanitised my hands as soon as I could, but there was a delay",102,403
+2020-07-08,VIC,hand hygine,No,25,403
+2020-07-08,VIC,hand hygine,"Yes, I washed or sanitised my hands immediately afterward",276,403
+2020-07-08,VIC,non-household contact,No,278,403
+2020-07-08,VIC,non-household contact,Yes,125,403
+2020-07-08,WA,1.5m compliance,Always,101,358
+2020-07-08,WA,1.5m compliance,No,8,358
+2020-07-08,WA,1.5m compliance,Often,171,358
+2020-07-08,WA,1.5m compliance,Rarely,10,358
+2020-07-08,WA,1.5m compliance,Sometimes,68,358
+2020-07-08,WA,cough,A tissue,69,358
+2020-07-08,WA,cough,Nothing,12,358
+2020-07-08,WA,cough,"Something else (e.g. a hanky, clothing)",43,358
+2020-07-08,WA,cough,Your elbow,191,358
+2020-07-08,WA,cough,Your hand,43,358
+2020-07-08,WA,hand hygine,"I washed or sanitised my hands as soon as I could, but there was a delay",126,358
+2020-07-08,WA,hand hygine,No,34,358
+2020-07-08,WA,hand hygine,"Yes, I washed or sanitised my hands immediately afterward",198,358
+2020-07-08,WA,non-household contact,No,176,358
+2020-07-08,WA,non-household contact,Yes,182,358

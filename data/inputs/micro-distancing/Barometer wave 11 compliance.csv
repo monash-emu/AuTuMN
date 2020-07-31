@@ -1,0 +1,142 @@
+"date","state","question","response","count","respondents"
+"2020-06-03","ACT","cough","Your elbow",55,91
+"2020-06-03","ACT","cough","Your hand",10,91
+"2020-06-03","ACT","cough","A tissue",11,91
+"2020-06-03","ACT","cough","Something else (e.g. a hanky, clothing)",10,91
+"2020-06-03","ACT","cough","Nothing",5,91
+"2020-06-03","ACT","non-household contact","No",59,91
+"2020-06-03","ACT","non-household contact","Yes",32,91
+"2020-06-03","ACT","1.5m compliance","Rarely",2,91
+"2020-06-03","ACT","1.5m compliance","Sometimes",11,91
+"2020-06-03","ACT","1.5m compliance","Often",37,91
+"2020-06-03","ACT","1.5m compliance","Always",41,91
+"2020-06-03","ACT","hand hygine","Yes, I washed or sanitised my hands immediately afterward",52,91
+"2020-06-03","ACT","hand hygine","I washed or sanitised my hands as soon as I could, but there was a delay",32,91
+"2020-06-03","ACT","hand hygine","No",7,91
+"2020-06-03","Australia","cough","Your elbow",1117,2038
+"2020-06-03","Australia","cough","Your hand",257,2038
+"2020-06-03","Australia","cough","A tissue",365,2038
+"2020-06-03","Australia","cough","Something else (e.g. a hanky, clothing)",220,2038
+"2020-06-03","Australia","cough","Nothing",79,2038
+"2020-06-03","Australia","non-household contact","No",1394,2038
+"2020-06-03","Australia","non-household contact","Yes",644,2038
+"2020-06-03","Australia","1.5m compliance","No",32,2038
+"2020-06-03","Australia","1.5m compliance","Rarely",67,2038
+"2020-06-03","Australia","1.5m compliance","Sometimes",236,2038
+"2020-06-03","Australia","1.5m compliance","Often",816,2038
+"2020-06-03","Australia","1.5m compliance","Always",887,2038
+"2020-06-03","Australia","hand hygine","Yes, I washed or sanitised my hands immediately afterward",1285,2038
+"2020-06-03","Australia","hand hygine","I washed or sanitised my hands as soon as I could, but there was a delay",591,2038
+"2020-06-03","Australia","hand hygine","No",162,2038
+"2020-06-03","New South Wales","cough","Your elbow",225,398
+"2020-06-03","New South Wales","cough","Your hand",51,398
+"2020-06-03","New South Wales","cough","A tissue",65,398
+"2020-06-03","New South Wales","cough","Something else (e.g. a hanky, clothing)",45,398
+"2020-06-03","New South Wales","cough","Nothing",12,398
+"2020-06-03","New South Wales","non-household contact","No",283,398
+"2020-06-03","New South Wales","non-household contact","Yes",115,398
+"2020-06-03","New South Wales","1.5m compliance","No",5,398
+"2020-06-03","New South Wales","1.5m compliance","Rarely",13,398
+"2020-06-03","New South Wales","1.5m compliance","Sometimes",47,398
+"2020-06-03","New South Wales","1.5m compliance","Often",151,398
+"2020-06-03","New South Wales","1.5m compliance","Always",182,398
+"2020-06-03","New South Wales","hand hygine","Yes, I washed or sanitised my hands immediately afterward",271,398
+"2020-06-03","New South Wales","hand hygine","I washed or sanitised my hands as soon as I could, but there was a delay",107,398
+"2020-06-03","New South Wales","hand hygine","No",20,398
+"2020-06-03","Northern Territory","cough","Your elbow",17,29
+"2020-06-03","Northern Territory","cough","Your hand",6,29
+"2020-06-03","Northern Territory","cough","A tissue",2,29
+"2020-06-03","Northern Territory","cough","Something else (e.g. a hanky, clothing)",2,29
+"2020-06-03","Northern Territory","cough","Nothing",2,29
+"2020-06-03","Northern Territory","non-household contact","No",12,29
+"2020-06-03","Northern Territory","non-household contact","Yes",17,29
+"2020-06-03","Northern Territory","1.5m compliance","Rarely",4,29
+"2020-06-03","Northern Territory","1.5m compliance","Sometimes",4,29
+"2020-06-03","Northern Territory","1.5m compliance","Often",14,29
+"2020-06-03","Northern Territory","1.5m compliance","Always",7,29
+"2020-06-03","Northern Territory","hand hygine","Yes, I washed or sanitised my hands immediately afterward",19,29
+"2020-06-03","Northern Territory","hand hygine","I washed or sanitised my hands as soon as I could, but there was a delay",5,29
+"2020-06-03","Northern Territory","hand hygine","No",5,29
+"2020-06-03","Other","cough","Your elbow",1,4
+"2020-06-03","Other","cough","A tissue",2,4
+"2020-06-03","Other","cough","Something else (e.g. a hanky, clothing)",1,4
+"2020-06-03","Other","non-household contact","No",1,4
+"2020-06-03","Other","non-household contact","Yes",3,4
+"2020-06-03","Other","1.5m compliance","Sometimes",2,4
+"2020-06-03","Other","1.5m compliance","Always",2,4
+"2020-06-03","Other","hand hygine","Yes, I washed or sanitised my hands immediately afterward",2,4
+"2020-06-03","Other","hand hygine","I washed or sanitised my hands as soon as I could, but there was a delay",2,4
+"2020-06-03","Queensland","cough","Your elbow",172,361
+"2020-06-03","Queensland","cough","Your hand",47,361
+"2020-06-03","Queensland","cough","A tissue",72,361
+"2020-06-03","Queensland","cough","Something else (e.g. a hanky, clothing)",53,361
+"2020-06-03","Queensland","cough","Nothing",17,361
+"2020-06-03","Queensland","non-household contact","No",255,361
+"2020-06-03","Queensland","non-household contact","Yes",106,361
+"2020-06-03","Queensland","1.5m compliance","No",6,361
+"2020-06-03","Queensland","1.5m compliance","Rarely",11,361
+"2020-06-03","Queensland","1.5m compliance","Sometimes",26,361
+"2020-06-03","Queensland","1.5m compliance","Often",150,361
+"2020-06-03","Queensland","1.5m compliance","Always",168,361
+"2020-06-03","Queensland","hand hygine","Yes, I washed or sanitised my hands immediately afterward",219,361
+"2020-06-03","Queensland","hand hygine","I washed or sanitised my hands as soon as I could, but there was a delay",112,361
+"2020-06-03","Queensland","hand hygine","No",30,361
+"2020-06-03","South Australia","cough","Your elbow",167,305
+"2020-06-03","South Australia","cough","Your hand",32,305
+"2020-06-03","South Australia","cough","A tissue",54,305
+"2020-06-03","South Australia","cough","Something else (e.g. a hanky, clothing)",40,305
+"2020-06-03","South Australia","cough","Nothing",12,305
+"2020-06-03","South Australia","non-household contact","No",199,305
+"2020-06-03","South Australia","non-household contact","Yes",106,305
+"2020-06-03","South Australia","1.5m compliance","No",5,305
+"2020-06-03","South Australia","1.5m compliance","Rarely",8,305
+"2020-06-03","South Australia","1.5m compliance","Sometimes",40,305
+"2020-06-03","South Australia","1.5m compliance","Often",119,305
+"2020-06-03","South Australia","1.5m compliance","Always",133,305
+"2020-06-03","South Australia","hand hygine","Yes, I washed or sanitised my hands immediately afterward",183,305
+"2020-06-03","South Australia","hand hygine","I washed or sanitised my hands as soon as I could, but there was a delay",89,305
+"2020-06-03","South Australia","hand hygine","No",33,305
+"2020-06-03","Tasmania","cough","Your elbow",50,84
+"2020-06-03","Tasmania","cough","Your hand",9,84
+"2020-06-03","Tasmania","cough","A tissue",12,84
+"2020-06-03","Tasmania","cough","Something else (e.g. a hanky, clothing)",10,84
+"2020-06-03","Tasmania","cough","Nothing",3,84
+"2020-06-03","Tasmania","non-household contact","No",61,84
+"2020-06-03","Tasmania","non-household contact","Yes",23,84
+"2020-06-03","Tasmania","1.5m compliance","Rarely",2,84
+"2020-06-03","Tasmania","1.5m compliance","Sometimes",9,84
+"2020-06-03","Tasmania","1.5m compliance","Often",35,84
+"2020-06-03","Tasmania","1.5m compliance","Always",38,84
+"2020-06-03","Tasmania","hand hygine","Yes, I washed or sanitised my hands immediately afterward",56,84
+"2020-06-03","Tasmania","hand hygine","I washed or sanitised my hands as soon as I could, but there was a delay",22,84
+"2020-06-03","Tasmania","hand hygine","No",6,84
+"2020-06-03","Victoria","cough","Your elbow",244,412
+"2020-06-03","Victoria","cough","Your hand",44,412
+"2020-06-03","Victoria","cough","A tissue",76,412
+"2020-06-03","Victoria","cough","Something else (e.g. a hanky, clothing)",35,412
+"2020-06-03","Victoria","cough","Nothing",13,412
+"2020-06-03","Victoria","non-household contact","No",300,412
+"2020-06-03","Victoria","non-household contact","Yes",112,412
+"2020-06-03","Victoria","1.5m compliance","No",8,412
+"2020-06-03","Victoria","1.5m compliance","Rarely",9,412
+"2020-06-03","Victoria","1.5m compliance","Sometimes",57,412
+"2020-06-03","Victoria","1.5m compliance","Often",154,412
+"2020-06-03","Victoria","1.5m compliance","Always",184,412
+"2020-06-03","Victoria","hand hygine","Yes, I washed or sanitised my hands immediately afterward",275,412
+"2020-06-03","Victoria","hand hygine","I washed or sanitised my hands as soon as I could, but there was a delay",106,412
+"2020-06-03","Victoria","hand hygine","No",31,412
+"2020-06-03","Western Australia","cough","Your elbow",186,354
+"2020-06-03","Western Australia","cough","Your hand",58,354
+"2020-06-03","Western Australia","cough","A tissue",71,354
+"2020-06-03","Western Australia","cough","Something else (e.g. a hanky, clothing)",24,354
+"2020-06-03","Western Australia","cough","Nothing",15,354
+"2020-06-03","Western Australia","non-household contact","No",224,354
+"2020-06-03","Western Australia","non-household contact","Yes",130,354
+"2020-06-03","Western Australia","1.5m compliance","No",8,354
+"2020-06-03","Western Australia","1.5m compliance","Rarely",18,354
+"2020-06-03","Western Australia","1.5m compliance","Sometimes",40,354
+"2020-06-03","Western Australia","1.5m compliance","Often",156,354
+"2020-06-03","Western Australia","1.5m compliance","Always",132,354
+"2020-06-03","Western Australia","hand hygine","Yes, I washed or sanitised my hands immediately afterward",208,354
+"2020-06-03","Western Australia","hand hygine","I washed or sanitised my hands as soon as I could, but there was a delay",116,354
+"2020-06-03","Western Australia","hand hygine","No",30,354

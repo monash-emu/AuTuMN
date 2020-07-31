@@ -5,6 +5,7 @@ import logging
 from typing import List, Tuple, Callable
 from random import choices
 import os
+import copy
 
 import pandas as pd
 import seaborn as sns
@@ -164,17 +165,21 @@ def sample_outputs_for_calibration_fit(
     outputs = []
     for i, derived_output_table in enumerate(derived_output_tables):
         runs = chosen_runs[i]
-
-        # automatically append MLE run as the last chosen run
         if i == best_chain_index:
-            runs[-1] = best_run
+            runs.append(best_run)
 
         for run in runs:
             mask = derived_output_table["idx"] == run
             times = derived_output_table[mask].times
             values = derived_output_table[mask][output_name]
-            outputs.append([times, values])
 
+            if run == best_run:  # save the MLE run for the end of the outputs list
+                mle_output = [copy.deepcopy(times), copy.deepcopy(values)]
+            else:
+                outputs.append([times, values])
+
+    # automatically use the MLE run as the last chosen run
+    outputs[-1] = mle_output
     return outputs, best_chain_index
 
 
@@ -186,7 +191,7 @@ def plot_calibration_fit(
     for times, values in outputs:
         axis.plot(times, values)
 
-    # re-plot MLE run with wider line
+    # Mark the MLE run with a dotted line
     axis.plot(outputs[-1][0], outputs[-1][1], linestyle=(0, (1, 3)), color='black', linewidth=3)
 
     # Add plot targets

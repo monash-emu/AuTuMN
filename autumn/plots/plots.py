@@ -20,6 +20,7 @@ from autumn.tool_kit import schema_builder as sb
 from autumn.tool_kit.uncertainty import export_mcmc_quantiles
 from autumn.db.database import Database
 import matplotlib.gridspec as gridspec
+import matplotlib.patches as patches
 
 
 from .plotter import Plotter, COLOR_THEME
@@ -642,7 +643,10 @@ def plot_mixing_matrix(plotter: Plotter, model: StratifiedModel):
 def plot_stacked_compartments_by_stratum(plotter: Plotter, scenarios: List[Scenario], compartment_name: str,
                                          stratify_by: str, multicountry=False, axis=None, config=2):
     models = [sc.model for sc in scenarios]
-    times = (models[0].times + models[1].times)
+    times = (models[0].times[:-1] + models[1].times)
+
+    phase_2_start = 214
+    phase_2_end = {2: 398, 3: 580}
 
     if not multicountry:
         fig, axis, _, _, _ = plotter.get_figure()
@@ -657,6 +661,14 @@ def plot_stacked_compartments_by_stratum(plotter: Plotter, scenarios: List[Scena
     greens = sns.color_palette("BuGn_r", 4)
     purples = sns.cubehelix_palette(4)
     purples[0] = 'pink'
+
+    # mark Phase 2 in the background:
+    rect = patches.Rectangle((phase_2_start, 0), phase_2_end[config] - phase_2_start, 1.e9, linewidth=0,
+                              facecolor='gold', alpha=.2)
+    rect.set_zorder(1)
+
+    # Add the patch to the Axes
+    axis.add_patch(rect)
 
     strata_colors = blues + reds + greens + purples
 
@@ -691,16 +703,18 @@ def plot_stacked_compartments_by_stratum(plotter: Plotter, scenarios: List[Scena
                 values_0 = [v + d for (v, d) in zip(values_0, models[0].derived_outputs[out])]
                 values_1 = [v + d for (v, d) in zip(values_1, models[1].derived_outputs[out])]
 
-        new_running_total = [r + v for (r, v) in zip(running_total, list(values_0) + list(values_1))]
+        new_running_total = [r + v for (r, v) in zip(running_total, list(values_0)[:-1] + list(values_1))]
 
-        axis.fill_between(times, running_total, new_running_total, color=strata_colors[color_idx], label=group_name)
+        axis.fill_between(times, running_total, new_running_total, color=strata_colors[color_idx], label=group_name,
+                          zorder=2, alpha=1.)
         legend.append(stratum_name)
         running_total = new_running_total
 
-    phase_2_end = {2: 398, 3: 580}
+    max_val = max(running_total)
+    axis.set_ylim((0, 1.1 * max_val))
 
-    axis.axvline(x=214, linewidth=.8, dashes=[6, 4], color='black')
-    axis.axvline(x=phase_2_end[config],linewidth=.8, dashes=[6, 4], color='black')
+    # axis.axvline(x=phase_2_start, linewidth=.8, dashes=[6, 4], color='black')
+    # axis.axvline(x=phase_2_end[config],linewidth=.8, dashes=[6, 4], color='black')
 
     xticks = [61, 214, 398, 366 + 214]
     xlabs = ["1 Mar 2020", "1 Aug 2020", "1 Feb 2021", "1 Aug 2021"]

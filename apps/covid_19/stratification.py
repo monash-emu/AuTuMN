@@ -84,7 +84,7 @@ def stratify_by_clinical(model, model_parameters, compartments, detected_proport
     # Find the absolute progression proportions.
     symptomatic_props_arr = np.array(symptomatic_props)
     hospital_props_arr = np.array(hospital_props)
-    # Determine the absolute proportion of presymptomatic who become sympt vs non-sympt.
+    # Determine the absolute proportion of early exposed who become sympt vs non-sympt
     sympt, non_sympt = subdivide_props(1, symptomatic_props_arr)
     # Determine the absolute proportion of sympt who become hospitalized vs non-hospitalized.
     sympt_hospital, sympt_non_hospital = subdivide_props(sympt, hospital_props_arr)
@@ -297,7 +297,7 @@ class TimeVaryingProportions:
     """
     Provides time-varying proportions for a given age group.
     The proportions determine which clinical stratum people transition into when they go
-    from being presymptomatic to early infectious.
+    from being early exposed to late exposed.
     """
 
     def __init__(self, age_idx, abs_props, prop_detect_func):

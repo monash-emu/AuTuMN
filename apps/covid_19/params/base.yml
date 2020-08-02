@@ -115,6 +115,7 @@ infection_fatality_props:
   - 7.7e-03 # 60-69
   - 0.027 # 70-79
   - 0.11 # 80+
+ifr_multiplier: 1.
 
 # Altenative to the raw estimates, using the double exponential model: x -> exp(-k.exp(-mx))
 # Only used if use_raw_mortality_estimates is FALSE

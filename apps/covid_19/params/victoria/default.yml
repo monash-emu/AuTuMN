@@ -18,7 +18,6 @@ end_time: 365.
 
 contact_rate: 0.024
 seasonal_force: 0.7
-non_sympt_infect_multiplier: .464939
 
 time_variant_detection:
   end_value: 0.8035

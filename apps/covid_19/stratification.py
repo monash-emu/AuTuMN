@@ -59,7 +59,11 @@ def stratify_by_clinical(model, model_parameters, compartments, detected_proport
     ]
 
     # FIXME: Set params to make comparison happy
-    model_parameters["infection_fatality_props"] = infection_fatality_props_10_year
+    model_parameters["infection_fatality_props"] = [
+        ifr * adjustment for
+        ifr, adjustment in
+        zip(infection_fatality_props_10_year, model_parameters["ifr_multipliers"])
+    ]
 
     # Calculate the proportion of 80+ years old among the 75+ population
     elderly_populations = get_population_by_agegroup([0, 75, 80], model_parameters["iso3"], model_parameters["region"])

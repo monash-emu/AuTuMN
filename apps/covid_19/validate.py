@@ -18,6 +18,7 @@ validate_params = sb.build_validator(
     # mortality parameters
     use_raw_mortality_estimates=bool,
     infection_fatality_props=sb.List(float),
+    ifr_multipliers=sb.List(float),
     ifr_double_exp_model_params=dict,
     # Age stratified params
     agegroup_breaks=sb.List(float),
@@ -95,5 +96,4 @@ validate_params = sb.build_validator(
     icu_occupancy_dispersion_param=float,
     importation_props_by_age=dict,
     import_representative_age=int,
-
 )

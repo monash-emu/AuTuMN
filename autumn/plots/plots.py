@@ -968,7 +968,7 @@ def plot_multicountry_optimal_plan(all_results, mode):
     country_names = [c.title() for c in countries]
     country_names[-1] = "United Kingdom"
 
-    config_names = ("6-month mitigation phase", "12-month mitigation phase")
+    config_names = ("Six-month mitigation phase", "Twelve-month mitigation phase")
 
     for j, config in enumerate([2, 3]):
         for i, country in enumerate(countries):

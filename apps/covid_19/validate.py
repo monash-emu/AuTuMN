@@ -83,7 +83,7 @@ validate_params = sb.build_validator(
     universal_death_rate=float,
     # for MCMC calibration with negative binomial likelihood
     notifications_dispersion_param=float,
-    prevXlateXclinical_icuXamong_dispersion_param=float,
+    prevXlate_activeXclinical_icuXamong_dispersion_param=float,
     infection_deathsXall_dispersion_param=float,
     proportion_seropositive_dispersion_param=float,
     hospital_occupancy_dispersion_param=float,

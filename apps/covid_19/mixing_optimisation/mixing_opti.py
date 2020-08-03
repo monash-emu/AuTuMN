@@ -290,6 +290,38 @@ def get_mle_params_and_vars(output_dir, country, config=2, mode="by_age", object
     return params, decision_vars
 
 
+def drop_yml_scenario_file(output_dir, country, config=2, mode="by_age", objective="deaths"):
+
+    _, decision_vars = get_mle_params_and_vars(output_dir, country, config, mode, objective)
+    sc_params = build_params_for_phases_2_and_3(decision_vars, config, mode)
+
+    scenario_mapping = {
+        1: "by_age_2_deaths",
+        2: "by_age_2_yoll",
+        3: "by_age_3_deaths",
+        4: "by_age_3_yoll",
+        5: "by_location_2_deaths",
+        6: "by_location_2_yoll",
+        7: "by_location_3_deaths",
+        8: "by_location_3_yoll",
+    }
+    for key, val in scenario_mapping.items():
+        if val == mode + "_" + str(config) + "_" + objective:
+            sc_index = key
+    param_file_path = "../params/" + country + "/scenario-" + str(sc_index)
+
+    with open(param_file_path, "w") as f:
+        yaml.dump(sc_params, f)
+
+
+def write_all_yml_files_from_outputs(output_dir):
+    for country in OPTI_REGIONS:
+        for config in [2, 3]:
+            for mode in ["by_age", "by_location"]:
+                for objective in ["deaths", "yoll"]:
+                    drop_yml_scenario_file(output_dir, country, config, mode, objective)
+
+
 if __name__ == "__main__":
     # looping through all countries and optimisation modes for testing purpose
     # optimisation will have to be performed separately for the different countries and modes.

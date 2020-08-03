@@ -890,6 +890,12 @@ def plot_optimal_plan(all_results, config, country, mode, ax):
     }
     bar_width = .37
 
+    # arrows
+    arrow_par = {
+        "by_age": {'width': .015, 'head_width': .06, 'head_length': .01},
+        "by_location": {'width': .007, 'head_width': .03, 'head_length': .01},
+    }
+
     ymax = 0.
     for i_age in range(n_vars[mode]):
         x_pos = i_age + 1.
@@ -897,13 +903,15 @@ def plot_optimal_plan(all_results, config, country, mode, ax):
         for objective in ('deaths', 'yoll'):
             value = data[objective]['best_x' + str(i_age)].iloc[0]
             value = np.random.random()  # FIXME
-            rect = patches.Rectangle((x_pos + delta_xpos * bar_width, 0.), bar_width, value, linewidth=.5,
+            rect = patches.Rectangle((x_pos + delta_xpos * bar_width, 0.), bar_width, value, linewidth=.8,
                               facecolor=colours[objective], edgecolor='black')
             ax.add_patch(rect)
 
             arrow_length = .2 * np.random.random()
             ax.arrow(x=x_pos + delta_xpos * bar_width + .5 * bar_width, y=value, dx=0, dy=arrow_length,
-                     color='black', length_includes_head=True, width=.015, head_width=.06, head_length=.01)
+                     color='black', length_includes_head=True,
+                     width=arrow_par[mode]['width'], head_width=arrow_par[mode]['head_width'],
+                     head_length=arrow_par[mode]['head_length'])
 
             delta_xpos = 0
             ymax = max([ymax, value + arrow_length])
@@ -924,7 +932,7 @@ def plot_optimal_plan(all_results, config, country, mode, ax):
         minor_ticks = [1, 2, 3]
 
         ylab = "Relative contact rate"
-        ax.set_xticklabels(("other locations", "schools", "workplaces"), minor=True, fontsize=11)
+        ax.set_xticklabels(("other locations", "schools", "workplaces"), minor=True, fontsize=13)
 
     ax.axhline(y=1., color='black', dashes=(4, 6), linewidth=.8)
 
@@ -948,6 +956,8 @@ def plot_multicountry_optimal_plan(all_results, mode):
         'by_location': 12
     }
     fig = pyplot.figure(constrained_layout=True, figsize=(fig_width[mode], 20))  # (w, h)
+    pyplot.rcParams["font.family"] = "Times New Roman"
+
     widths = [1, 8, 8]
     heights = [1, 4, 4, 4, 4, 4, 4]
     spec = fig.add_gridspec(ncols=3, nrows=7, width_ratios=widths,
@@ -967,15 +977,14 @@ def plot_multicountry_optimal_plan(all_results, mode):
 
             if j == 0:
                 ax = fig.add_subplot(spec[i+1, 0])
-                ax.text(0.5, 0.5, country_names[i], rotation=90, fontsize=text_size,
-                        horizontalalignment='center', verticalalignment='center')
+                ax.text(0.8, 0.5, country_names[i], rotation=90, fontsize=text_size,
+                        horizontalalignment='center', verticalalignment='center', fontweight='normal')
                 ax.axis("off")
 
         ax = fig.add_subplot(spec[0, j + 1])
-        ax.text(0.5, 0.5, config_names[j], fontsize=text_size, horizontalalignment='center', verticalalignment='center')
+        ax.text(0.5, 0.5, config_names[j], fontsize=text_size, horizontalalignment='center', verticalalignment='center',
+                fontweight='normal')
         ax.axis("off")
-
-    pyplot.rcParams["font.family"] = "Times New Roman"
 
     out_dir = "apps/covid_19/mixing_optimisation/opti_plots/figures/optimal_plans/"
     filename = out_dir + "optimal_plan_" + mode

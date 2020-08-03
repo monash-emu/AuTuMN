@@ -779,6 +779,8 @@ def plot_multicountry_rainbow(country_scenarios, config, mode, objective):
                   labelspacing=1.0, loc='center')  # bbox_to_anchor=(1.4, 1.1),
         ax.axis("off")
 
+    pyplot.rcParams["font.family"] = "Times New Roman"
+
     out_dir = "apps/covid_19/mixing_optimisation/opti_plots/figures/rainbows/"
     filename = out_dir + "rainbow_" + mode + "_config_" + str(config) + "_" + objective
     pyplot.savefig(filename + ".pdf")
@@ -864,6 +866,8 @@ def plot_multicountry_hospital(all_scenarios, mode, objective):
         ax = fig.add_subplot(spec[i_row, i_col])
         plot_hospital_occupancy(all_scenarios, country, mode, objective, ax, country_names[i])
 
+    pyplot.rcParams["font.family"] = "Times New Roman"
+
     out_dir = "apps/covid_19/mixing_optimisation/opti_plots/figures/hospitals/"
     filename = out_dir + "rainbow_" + mode + "_" + objective
     pyplot.savefig(filename + ".pdf")
@@ -871,30 +875,111 @@ def plot_multicountry_hospital(all_scenarios, mode, objective):
 
 
 def plot_optimal_plan(all_results, config, country, mode, ax):
-    ax.text(0,0,country + str(config) + mode)
+
+    data = {
+        'deaths': all_results['deaths'][config][country],
+        'yoll': all_results['yoll'][config][country],
+    }
+    colours = {
+        'deaths': 'lightcoral',
+        'yoll': 'skyblue',
+    }
+    n_vars = {
+        'by_age': 16,
+        'by_location': 3,
+    }
+    bar_width = .37
+
+    ymax = 0.
+    for i_age in range(n_vars[mode]):
+        x_pos = i_age + 1.
+        delta_xpos = -1
+        for objective in ('deaths', 'yoll'):
+            value = data[objective]['best_x' + str(i_age)].iloc[0]
+            value = np.random.random()  # FIXME
+            rect = patches.Rectangle((x_pos + delta_xpos * bar_width, 0.), bar_width, value, linewidth=.5,
+                              facecolor=colours[objective], edgecolor='black')
+            ax.add_patch(rect)
+
+            arrow_length = .2 * np.random.random()
+            ax.arrow(x=x_pos + delta_xpos * bar_width + .5 * bar_width, y=value, dx=0, dy=arrow_length,
+                     color='black', length_includes_head=True, width=.015, head_width=.06, head_length=.01)
+
+            delta_xpos = 0
+            ymax = max([ymax, value + arrow_length])
+
+    if mode == "by_age":
+        # X axis settings
+        major_ticks = [i + .5 for i in range(1, 16)]
+        minor_ticks = range(1, 17)
+        age_names = [ str(i*5) + "-" + str(i*5 + 4) for i in range(16)]
+        age_names[-1] = "75+"
+
+        ax.set_xticklabels(age_names, minor=True, rotation=45, fontsize=11)
+
+        # Y axis settinds
+        ylab = "Age-specific mixing factor"
+    else:
+        major_ticks = [1.5, 2.5]
+        minor_ticks = [1, 2, 3]
+
+        ylab = "Relative contact rate"
+        ax.set_xticklabels(("other locations", "schools", "workplaces"), minor=True, fontsize=11)
+
+    ax.axhline(y=1., color='black', dashes=(4, 6), linewidth=.8)
+
+    ax.set_xticks(major_ticks)
+    ax.set_xticks(minor_ticks, minor=True)
+
+    ax.set_xticklabels("", major=True)
+    ax.tick_params(axis="x", which="minor", length=0)
+    ax.tick_params(axis="x", which="major", length=4)
+    ax.set_xlim((0.5, n_vars[mode] + .5))
+
+    ax.set_ylim((0, max((ymax, 1.))))
+
+    if config == 2:
+        ax.set_ylabel(ylab, fontsize=14)
 
 
 def plot_multicountry_optimal_plan(all_results, mode):
-    countries = ['belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']
-
-    fig = pyplot.figure(constrained_layout=True, figsize=(15, 20))  # (w, h)
+    fig_width = {
+        'by_age': 20,
+        'by_location': 12
+    }
+    fig = pyplot.figure(constrained_layout=True, figsize=(fig_width[mode], 20))  # (w, h)
     widths = [1, 8, 8]
     heights = [1, 4, 4, 4, 4, 4, 4]
     spec = fig.add_gridspec(ncols=3, nrows=7, width_ratios=widths,
-                            height_ratios=heights)
+                            height_ratios=heights, hspace=0)
+    text_size = 23
 
     countries = ['belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']
     country_names = [c.title() for c in countries]
     country_names[-1] = "United Kingdom"
+
+    config_names = ("6-month mitigation phase", "12-month mitigation phase")
 
     for j, config in enumerate([2, 3]):
         for i, country in enumerate(countries):
             ax = fig.add_subplot(spec[i+1, j + 1])
             plot_optimal_plan(all_results, config, country, mode, ax)
 
+            if j == 0:
+                ax = fig.add_subplot(spec[i+1, 0])
+                ax.text(0.5, 0.5, country_names[i], rotation=90, fontsize=text_size,
+                        horizontalalignment='center', verticalalignment='center')
+                ax.axis("off")
+
+        ax = fig.add_subplot(spec[0, j + 1])
+        ax.text(0.5, 0.5, config_names[j], fontsize=text_size, horizontalalignment='center', verticalalignment='center')
+        ax.axis("off")
+
+    pyplot.rcParams["font.family"] = "Times New Roman"
+
     out_dir = "apps/covid_19/mixing_optimisation/opti_plots/figures/optimal_plans/"
     filename = out_dir + "optimal_plan_" + mode
-    pyplot.savefig(filename + ".pdf")
+    # pyplot.savefig(filename + ".pdf")
     pyplot.savefig(filename + ".png", dpi=300)
 
 

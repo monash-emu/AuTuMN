@@ -1,5 +1,5 @@
 from apps.covid_19.mixing_optimisation.utils import prepare_table_of_param_sets
-
+from apps.covid_19.mixing_optimisation.mixing_opti import run_sensitivity_perturbations
 
 if __name__ == "__main__":
     calib_paths = {
@@ -20,8 +20,11 @@ if __name__ == "__main__":
         "united-kingdom": 1500,
     }
 
-    for country in calib_paths:
-        prepare_table_of_param_sets(calib_paths[country],
-                                    country,
-                                    n_samples=2,
-                                    burn_in=burnin[country])
+    # for country in calib_paths:
+    #     prepare_table_of_param_sets(calib_paths[country],
+    #                                 country,
+    #                                 n_samples=2,
+    #                                 burn_in=burnin[country])
+
+
+    run_sensitivity_perturbations('optimisation_outputs/test_outputs/', 'sweden', 2, "by_age", "deaths", tol=.01)

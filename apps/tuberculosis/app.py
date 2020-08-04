@@ -15,7 +15,7 @@ class RegionApp(RegionAppBase):
     def __init__(self, region: str):
         self.region = region
         self._run_model = build_model_runner(
-            model_name="dr_tb_malancha",
+            model_name="tuberculosis",
             param_set_name=self.region,
             build_model=self.build_model,
             params=self.params,
@@ -29,7 +29,7 @@ class RegionApp(RegionAppBase):
 
     @property
     def params(self):
-        return load_params("dr_tb_malancha", self.region)
+        return load_params("tuberculosis", self.region)
 
     @property
     def plots_config(self):

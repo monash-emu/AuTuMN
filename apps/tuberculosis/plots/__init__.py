@@ -14,7 +14,7 @@ def load_plot_config(region_name: str):
     Load  plot config requested COVID region.
     This is for loading only, please do not put any pre-processing in here.
     """
-    plots_path = path.join(APPS_PATH, "dr_tb_malancha", "plots")
+    plots_path = path.join(APPS_PATH, "tuberculosis", "plots")
 
     # Load base plot config
     base_yaml_path = path.join(plots_path, "base.yml")

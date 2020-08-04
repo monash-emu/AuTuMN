@@ -9,7 +9,7 @@ from . import buildkite
 
 logger = logging.getLogger(__name__)
 
-BURN_IN_DEFAULT = 50  # Iterations
+BURN_IN_DEFAULT = 1  # Iterations
 
 
 @click.group()

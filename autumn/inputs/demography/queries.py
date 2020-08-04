@@ -29,6 +29,8 @@ def _get_death_rates(country_iso_code: str):
         death_df, pop_df, left_on=["start_year", "start_age"], right_on=["year", "start_age"]
     )
 
+    rate_df['population'] = rate_df['population'].where(rate_df['population'] > 0., 1.)
+
     # Calculate death rate.
     rate_df["death_rate"] = rate_df["death_count"] / (rate_df["population"] * rate_df["period"])
 

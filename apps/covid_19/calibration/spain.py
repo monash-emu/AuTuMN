@@ -32,18 +32,6 @@ TARGET_OUTPUTS = get_target_outputs_for_opti(country, source='who', data_start_t
 for target in TARGET_OUTPUTS:
     target["years"], target["values"] = get_weekly_summed_targets(target["years"], target["values"])
 
-
-# Add target for Prop immune
-TARGET_OUTPUTS.append(
-    {
-        "output_key": 'proportion_seropositive',
-        "years": [125.],
-        "values": [0.05],
-        "sd": 0.004,
-        "loglikelihood_distri": "normal",
-    }
-)
-
 MULTIPLIERS = {}
 
 PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS, MULTIPLIERS)

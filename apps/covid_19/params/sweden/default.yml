@@ -16,10 +16,6 @@ microdistancing:
     c: 90.1067944456138
     sigma: 0.5628864829157544
 
-
-npi_effectiveness:
-  other_locations: 0.6692893264546589
-
 contact_rate: 0.030175013926891574
 start_time: 4.849284832046685
 compartment_periods_calculated:

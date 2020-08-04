@@ -12,10 +12,17 @@ from autumn.tool_kit.utils import print_target_to_plots_from_calibration
 country = Region.ITALY
 
 PAR_PRIORS = get_prior_distributions_for_opti()
+update_priors = {
+    "contact_rate": [0.025, 0.040],
+    "start_time": [0., 20.],
+    "time_variant_detection.max_change_time": [90., 110.],
+    "time_variant_detection.end_value": [.15, .35],
+    "hospital_props_multiplier": [.75, 1.],
+}
 
 for i, par in enumerate(PAR_PRIORS):
-    if par["param_name"] == "contact_rate":
-        PAR_PRIORS[i]["distri_params"] = [0.015, 0.06]
+    if par["param_name"] in update_priors:
+        PAR_PRIORS[i]["distri_params"] = update_priors[par["param_name"]]
 
 
 TARGET_OUTPUTS = get_target_outputs_for_opti(country, source='who', data_start_time=61, data_end_time=182)

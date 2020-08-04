@@ -13,20 +13,16 @@ country = Region.SWEDEN
 
 PAR_PRIORS = get_prior_distributions_for_opti()
 
+update_priors = {
+    "contact_rate": [0.020, 0.040],
+    "start_time": [0., 20.],
+    "time_variant_detection.max_change_time": [140., 160.],
+    "time_variant_detection.end_value": [.5, .8],
+}
+
 for i, par in enumerate(PAR_PRIORS):
-    if par["param_name"] == "contact_rate":
-        PAR_PRIORS[i]["distri_params"] = [0.015, 0.05]
-
-    if par["param_name"] == "time_variant_detection.max_change_time":
-        PAR_PRIORS[i]["distri_params"] = [140, 160]
-
-PAR_PRIORS.append(
-    {
-        "param_name": "time_variant_detection.start_value",
-        "distribution": "uniform",
-        "distri_params": [0.02, 0.1],
-    }
-)
+    if par["param_name"] in update_priors:
+        PAR_PRIORS[i]["distri_params"] = update_priors[par["param_name"]]
 
 
 TARGET_OUTPUTS = get_target_outputs_for_opti(country, source='who', data_start_time=61, data_end_time=182)

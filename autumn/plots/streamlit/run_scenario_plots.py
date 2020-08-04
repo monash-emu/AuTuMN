@@ -263,6 +263,67 @@ def plot_multicountry_optimal_plan(
         plots.plot_multicountry_optimal_plan(all_results, mode=mode)
 
 
+def plot_multicountry_mobility(
+    plotter: StreamlitPlotter, app: RegionAppBase, scenarios: list, plot_config: dict
+):
+    countries = ['belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']
+    root_path = os.path.join('data', 'outputs', 'run', 'covid_19')
+
+    all_values = {}
+    times = range(215)
+
+    for country in countries:
+        all_values[country] = {}
+        country_dirpath = os.path.join(root_path, country, "for_mobility")
+
+        params = utils.load_params(country_dirpath)
+
+        # load_model_scenarios(db_path, params, post_processing_config)
+
+        # Assume a COVID model
+        params = params["default"]
+        mixing = params.get("mixing")
+        if not mixing:
+            st.write("This model does not have location based mixing")
+        country_iso3 = params["iso3"]
+        region = params["region"]
+        microdistancing = {}  # params["microdistancing"]
+        npi_effectiveness_params = {}  # params["npi_effectiveness"]
+        google_mobility_locations = params["google_mobility_locations"]
+        is_periodic_intervention = params.get("is_periodic_intervention")
+        periodic_int_params = params.get("periodic_intervention")
+        smooth_google_data = params.get("smooth_google_data")
+
+        if country == "sweden":
+            print(mixing)
+
+        adjust = LocationMixingAdjustment(
+            country_iso3,
+            region,
+            mixing,
+            npi_effectiveness_params,
+            google_mobility_locations,
+            is_periodic_intervention,
+            periodic_int_params,
+            params["end_time"],
+            microdistancing,
+            smooth_google_data,
+        )
+
+        for loc_key in ("other_locations", "school", "work"):
+
+            if adjust.microdistancing_function and loc_key in MICRODISTANCING_LOCATIONS:
+                loc_func = lambda t: adjust.microdistancing_function(t) * adjust.loc_adj_funcs[loc_key](t)
+            elif loc_key in adjust.loc_adj_funcs:
+                loc_func = lambda t: adjust.loc_adj_funcs[loc_key](t)
+            else:
+                loc_func = lambda t: 1
+
+            values = [loc_func(t) for t in times]
+            all_values[country][loc_key] = values
+
+    plots.plot_multicountry_mobility(all_values)
+
 PLOT_FUNCS = {
     "Compartment sizes": plot_compartment,
     "Compartments aggregate": plot_compartment_aggregate,
@@ -274,6 +335,7 @@ PLOT_FUNCS = {
     # "Multicountry rainbow": plot_multicountry_rainbow,
     # "Multicountry hospital": plot_multicounty_hospital,
     "Multicountry optimal plan": plot_multicountry_optimal_plan,
+    "Multicountry mobility data": plot_multicountry_mobility,
 }
 
 

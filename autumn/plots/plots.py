@@ -992,3 +992,63 @@ def plot_multicountry_optimal_plan(all_results, mode):
     pyplot.savefig(filename + ".png", dpi=300)
 
 
+def plot_mobility(all_values, country, loc_key, axis):
+
+    times = list(range(215))
+    values = all_values[country][loc_key]
+
+    my_color = sns.cubehelix_palette(4)[-1]
+
+    axis.plot(times, values, linewidth=2, color=my_color)
+
+    xticks = [92, 153, 214]
+    xlabs = ["1 Apr 2020", "1 Jun 2020", "1 Aug 2020"]
+
+    axis.set_xlim((60, 214))
+    axis.set_xticks(xticks)
+    axis.set_xticklabels(xlabs, fontsize=12)
+
+    axis.set_ylim((0., 1.1))
+
+
+def plot_multicountry_mobility(all_values):
+    fig = pyplot.figure(constrained_layout=True, figsize=(18, 20))  # (w, h)
+    widths = [1, 6, 6, 6]
+    heights = [1, 6, 6, 6, 6, 6, 6]
+    spec = fig.add_gridspec(ncols=4, nrows=7, width_ratios=widths,
+                            height_ratios=heights)
+
+    location_names = {
+        "other_locations": "other locations",
+        "school": "schools",
+        "work": "workplaces",
+    }
+
+    countries = ['belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']
+    country_names = [c.title() for c in countries]
+    country_names[-1] = "United Kingdom"
+
+    text_size = 23
+
+    for i, country in enumerate(countries):
+        for j, loc_key in enumerate(["other_locations", "work", "school"]):
+            ax = fig.add_subplot(spec[i+1, j + 1])
+            plot_mobility(all_values, country, loc_key, axis=ax)
+            if i == 0:
+                ax = fig.add_subplot(spec[0, j+1])
+                ax.text(0.5, 0.5, location_names[loc_key], fontsize=text_size, horizontalalignment='center', verticalalignment='center')
+                ax.axis("off")
+
+        ax = fig.add_subplot(spec[i+1, 0])
+        ax.text(0.5, 0.5, country_names[i], rotation=90, fontsize=text_size, horizontalalignment='center', verticalalignment='center')
+        ax.axis("off")
+
+    pyplot.rcParams["font.family"] = "Times New Roman"
+
+    out_dir = "apps/covid_19/mixing_optimisation/opti_plots/figures/inputs/"
+    filename = out_dir + "mobility_inputs"
+    # pyplot.savefig(filename + ".pdf")
+    pyplot.savefig(filename + ".png", dpi=300)
+
+
+

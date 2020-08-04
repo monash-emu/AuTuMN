@@ -29,8 +29,15 @@ UNCERTAINTY_OUTPUTS = [
     "infection_deathsXall",
     "prevXlate_activeXclinical_icuXamong",
 ]
-OPTI_ONLY_OUTPUTS = [
+
+OPTI_UNCERTAINTY_OUTPUTS = [
+    "incidence",
+    "notifications",
+    "infection_deathsXall",
     "hospital_occupancy",
+    "new_hospital_admissions",
+    "icu_occupancy",
+    "new_icu_admissions",
     "proportion_seropositive",
 ]
 
@@ -80,7 +87,7 @@ class UncertaintyWeightsTask(utils.ParallelLoggerTask):
             output_list = (
                 UNCERTAINTY_OUTPUTS
                 if region_name not in OPTI_REGIONS
-                else UNCERTAINTY_OUTPUTS + OPTI_ONLY_OUTPUTS
+                else OPTI_UNCERTAINTY_OUTPUTS
             )
             db_path = os.path.join(settings.BASE_DIR, self.get_src_db_relpath())
             add_uncertainty_weights(output_list, db_path)

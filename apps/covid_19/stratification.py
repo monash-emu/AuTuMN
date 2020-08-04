@@ -42,21 +42,22 @@ def stratify_by_clinical(model, model_parameters, compartments, detected_proport
     use_raw_mortality_estimates = model_parameters["use_raw_mortality_estimates"]
     ifr_double_exp_model_params = model_parameters["ifr_double_exp_model_params"]
 
-    # apply multiplier to symptomatic proportions
+    # Apply multiplier to symptomatic proportions
     symptomatic_props = [min([p * model_parameters["symptomatic_props_multiplier"], 1.]) for p in symptomatic_props]
 
-    # apply multiplyer to hospital proportions
+    # Apply multiplier to hospital proportions
     hospital_props = [min([p * model_parameters["hospital_props_multiplier"], 1.]) for p in hospital_props]
 
     # Define stratification - only stratify infected compartments
     strata_to_implement = clinical_strata
     all_stratifications["clinical"] = strata_to_implement
-    compartments_to_split = [
-        comp
-        for comp in compartments
-        if comp.startswith(Compartment.EARLY_ACTIVE)
-           or comp.startswith(Compartment.LATE_ACTIVE)
-    ]
+    compartments_to_split = \
+        [
+            comp for comp in compartments
+            if comp.startswith(Compartment.LATE_EXPOSED)
+               or comp.startswith(Compartment.EARLY_ACTIVE)
+               or comp.startswith(Compartment.LATE_ACTIVE)
+        ]
 
     # FIXME: Set params to make comparison happy
     model_parameters["infection_fatality_props"] = infection_fatality_props_10_year
@@ -83,7 +84,7 @@ def stratify_by_clinical(model, model_parameters, compartments, detected_proport
     # Find the absolute progression proportions.
     symptomatic_props_arr = np.array(symptomatic_props)
     hospital_props_arr = np.array(hospital_props)
-    # Determine the absolute proportion of presymptomatic who become sympt vs non-sympt.
+    # Determine the absolute proportion of early exposed who become sympt vs non-sympt
     sympt, non_sympt = subdivide_props(1, symptomatic_props_arr)
     # Determine the absolute proportion of sympt who become hospitalized vs non-hospitalized.
     sympt_hospital, sympt_non_hospital = subdivide_props(sympt, hospital_props_arr)
@@ -143,7 +144,7 @@ def stratify_by_clinical(model, model_parameters, compartments, detected_proport
     # Define progression rates into non-symptomatic compartments using parameter adjustment.
     stratification_adjustments = {}
     for age_idx, age in enumerate(agegroup_strata):
-        key = f"to_infectiousXagegroup_{age}"
+        key = f"to_{Compartment.LATE_EXPOSED}Xagegroup_{age}"
         stratification_adjustments[key] = {
             "non_sympt": non_sympt[age_idx],
             "icu": sympt_hospital_icu[age_idx],
@@ -162,7 +163,7 @@ def stratify_by_clinical(model, model_parameters, compartments, detected_proport
             model.time_variants[name] = func
 
         # Tell the model to use these time varying functions for the stratification adjustments.
-        agegroup_adj = stratification_adjustments[f"to_infectiousXagegroup_{agegroup}"]
+        agegroup_adj = stratification_adjustments[f"to_{Compartment.LATE_EXPOSED}Xagegroup_{agegroup}"]
         agegroup_adj["sympt_non_hospital"] = f"prop_sympt_non_hospital_{agegroup}"
         agegroup_adj["sympt_isolate"] = f"prop_sympt_isolate_{agegroup}"
 
@@ -224,7 +225,8 @@ def stratify_by_clinical(model, model_parameters, compartments, detected_proport
     # FIXME: Ask Romain about importation
     # Work out time-variant clinical proportions for imported cases accounting for quarantine
     if implement_importation:
-        to_infectious_key = "to_infectiousXagegroup_" + str(model_parameters['import_representative_age'])
+        to_infectious_key = \
+            f"to_{Compartment.LATE_EXPOSED}Xagegroup_" + str(model_parameters['import_representative_age'])
         tvs = model.time_variants
 
         # Create scale-up function for quarantine
@@ -295,7 +297,7 @@ class TimeVaryingProportions:
     """
     Provides time-varying proportions for a given age group.
     The proportions determine which clinical stratum people transition into when they go
-    from being presymptomatic to early infectious.
+    from being early exposed to late exposed.
     """
 
     def __init__(self, age_idx, abs_props, prop_detect_func):

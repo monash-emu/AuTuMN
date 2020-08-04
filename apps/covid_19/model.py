@@ -126,7 +126,7 @@ def build_model(params: dict) -> StratifiedModel:
 
     # FIXME: Remove params from model_parameters
     model_parameters = {**params, **compartment_exit_flow_rates}
-    model_parameters["to_infectious"] = model_parameters["within_" + Compartment.LATE_EXPOSED]
+    model_parameters[f"to_{Compartment.LATE_EXPOSED}"] = model_parameters["within_" + Compartment.EARLY_EXPOSED]
 
     model_parameters['immunity_loss_rate'] = 1. / params['immunity_duration']
 
@@ -215,7 +215,7 @@ def build_model(params: dict) -> StratifiedModel:
     age_based_susceptibility = params["age_based_susceptibility"]
     adjust_requests = {
         # No change, but distinction is required for later stratification by clinical status
-        "to_" + Compartment.EARLY_ACTIVE: {s: 1 for s in agegroup_strings},
+        "to_" + Compartment.LATE_EXPOSED: {s: 1 for s in agegroup_strings},
         "infect_death": {s: 1 for s in agegroup_strings},
         "within_" + Compartment.LATE_ACTIVE: {s: 1 for s in agegroup_strings},
         # Adjust susceptibility across age groups

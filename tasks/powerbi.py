@@ -27,7 +27,7 @@ UNCERTAINTY_OUTPUTS = [
     "incidence",
     "notifications",
     "infection_deathsXall",
-    "prevXlateXclinical_icuXamong",
+    "prevXlate_activeXclinical_icuXamong",
 ]
 OPTI_ONLY_OUTPUTS = [
     "hospital_occupancy",

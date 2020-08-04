@@ -26,7 +26,7 @@ for i, par in enumerate(PAR_PRIORS):
         PAR_PRIORS[i]["distri_params"] = update_priors[par["param_name"]]
 
 
-TARGET_OUTPUTS = get_target_outputs_for_opti(country, source='who', data_start_time=61, data_end_time=182)
+TARGET_OUTPUTS = get_target_outputs_for_opti(country, source='who', data_start_time=61, data_end_time=197)
 
 # Use weekly counts
 for target in TARGET_OUTPUTS:

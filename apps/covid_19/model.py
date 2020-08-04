@@ -278,7 +278,7 @@ def build_model(params: dict) -> StratifiedModel:
     model.derived_output_functions["icu_occupancy"] = \
         outputs.calculate_icu_occupancy
     model.death_output_categories = \
-        list_all_strata_for_mortality(model.compartment_names)
+        list_all_strata_for_mortality(model.compartment_names, "_active")
     model.derived_output_functions["years_of_life_lost"] = \
         outputs.get_calculate_years_of_life_lost(life_expectancy_latest)
 

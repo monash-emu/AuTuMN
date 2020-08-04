@@ -75,9 +75,7 @@ def create_output_connections_for_incidence_by_stratum(
     return out_connections
 
 
-def list_all_strata_for_mortality(
-    all_compartment_names, infectious_compartment_name=Compartment.EARLY_INFECTIOUS
-):
+def list_all_strata_for_mortality(all_compartment_names, infectious_compartment_name):
     """
     Automatically lists all combinations of population subgroups to request disaggregated mortality outputs
 

@@ -18,7 +18,7 @@ update_priors = {
     "time_variant_detection.max_change_time": [70., 100.],
     "time_variant_detection.end_value": [.2, .3],
     "symptomatic_props_multiplier": [1.1, 1.3],
-    "hospital_props_multiplier": [1.1, 1.3],
+    "hospital_props_multiplier": [1.5, 2.],
 }
 
 for i, par in enumerate(PAR_PRIORS):

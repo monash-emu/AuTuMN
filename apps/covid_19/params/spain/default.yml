@@ -16,8 +16,6 @@ microdistancing:
     c: 92.15136875316382
     sigma: 0.42  #8494768225528
 
-npi_effectiveness:
-  other_locations: 0.9771492388926657
 
 # MLE estimates
 contact_rate: 0.0378 # 0.042187156777757355

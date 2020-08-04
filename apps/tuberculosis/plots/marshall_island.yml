@@ -1,4 +1,0 @@
-outputs_to_plot:
-  - name: notifications  # dummy data for now
-    target_times: [2007, 2016]
-    target_values: [[6.9, 5.9, 7.9], [5.9, 4.9, 6.9]]

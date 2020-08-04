@@ -1,0 +1,97 @@
+---
+# # When to introduce the scenario interventions taking off from the baseline
+# scenario_start_time: 50
+
+# Parameters used to build a general model of DS-TB to understand rise in DR in Philippines
+default:
+  country: philippines
+  iso3: PHL
+
+ 
+scenario_start_time: 2020.0
+
+country: null
+iso3: null
+
+start_time: 1900.
+end_time: 2035.
+time_step: 1.
+
+#beta: 4.5
+
+
+#gamma: 0.2
+universal_death_rate: 0.0142
+universal_death_rateX: 0.0142
+
+tau: 1.
+
+#kappa: 3.6525 # (1.e-2 * 365.25)
+#nu: 0.002008875 # (5.5e-6 * 365.25)
+#epsilon: 0.401775 #(1.1e-3 * 365.25)
+
+
+rr_reinfection_once_recovered: 1
+
+rr_reinfection_once_infected: 1
+
+   
+#infect_death: .054
+
+detection_rate: 0.45 # solve using CDR value and equation # data obtained for Philippines
+DST: 1
+TSR: .85 # data reported in WHO
+
+
+cdr:
+  1950.: 0.1
+  1960.: .1
+  1970.: .3 
+  1980.: .35
+  1990.: .45
+  2000.: .6
+  2010.: .55
+  2015: .58
+  
+tsr:
+  1950.: 0.2
+  1960.: .3 
+  1970.: .4
+  1980.: .4 
+  1990.: .45 
+  2000.: .55 
+  2010.: .55
+  2015: .6
+  
+dst: 
+  1950.: 0.3
+  1960.: 0.45
+  1970.: 0.55
+  1980.: .7
+  1990.: .75
+  2000.: .85
+  2010.: 0.8
+  2015: 0.8
+
+  
+
+#prop_of_failures_developing_inh_R: 0.07
+#prop_of_failures_developing_rif_R: 0.001
+
+
+# MCMC params
+beta: 4.578792792494148
+epsilon: 0.40143772121598814
+kappa: 3.654157463835994
+nu: 0.0020086716589979244
+gamma: 0.16281241399571644
+infect_death: 0.058448028561325686
+prop_of_failures_developing_inh_R: 0.08168056240710807
+prop_of_failures_developing_rif_R: 0.0005033688355024059
+
+
+
+scenarios: {}
+# N.B: Scenario keys have to be sequential integers from one, or won't be compatible with dashboards
+
+

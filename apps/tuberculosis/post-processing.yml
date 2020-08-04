@@ -1,5 +1,0 @@
----
-# Options for post-processing outputs of the TB model
-requested_outputs: []
-multipliers: {}
-collated_combos: []

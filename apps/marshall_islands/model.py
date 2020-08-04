@@ -41,6 +41,7 @@ from autumn import inputs
 from autumn.curve import scale_up_function
 
 
+
 def build_model(params: dict) -> StratifiedModel:
     """
     Build the master function to run the TB model for the Republic of the Marshall Islands
@@ -50,6 +51,7 @@ def build_model(params: dict) -> StratifiedModel:
     :return: StratifiedModel
         The final model with all parameters and stratifications
     """
+
     # Define compartments and initial conditions.
     compartments = [
         Compartment.SUSCEPTIBLE,
@@ -74,11 +76,6 @@ def build_model(params: dict) -> StratifiedModel:
     integration_times = get_model_times_from_inputs(
         model_parameters["start_time"], model_parameters["end_time"], model_parameters["time_step"],
     )
-
-    # Change latency rates from daily to yearly values
-    for par_name in ['early_progression', 'stabilisation', 'late_progression']:
-        for name_ending in ["", "_0", "_5", "_15"]:
-            model_parameters[par_name + name_ending] *= 365.25
 
     # Sequentially add groups of flows to flows list
     flows = add_standard_infection_flows([])

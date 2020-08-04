@@ -1,0 +1,16 @@
+outputs_to_plot:
+  - name: prevXinfectiousXamong
+    target_times: [2007, 2016]
+    target_values: [[463, 333, 592], [512, 420, 603]]
+
+  - name: prevXinfectiousXstrain_inh_RXamongXinfectious
+    target_times: [2007, 2016]
+    target_values: [[6.1, 4.5, 8.2], [10.26, 9.02, 11.65]]
+
+  - name: prevXinfectiousXstrain_rif_RXamongXinfectious
+    target_times: [2007, 2016]
+    target_values: [[0.8, 0.5, 1.5], [0.61, 0.34, 1.09]]
+
+  - name: prevXinfectiousXstrain_mdrXamongXinfectious
+    target_times: [2007, 2016]
+    target_values: [[1.5, 0.1, 2.4], [1.39, 0.89, 2.18]]

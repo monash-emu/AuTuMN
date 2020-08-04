@@ -1,5 +1,0 @@
----
-# Options for plotting outputs of the SIR model
-outputs_to_plot: []
-
-translations: {}

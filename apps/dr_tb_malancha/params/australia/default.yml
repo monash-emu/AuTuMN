@@ -1,0 +1,74 @@
+---
+# Parameters used to build a general model of DS-TB
+
+region: australia
+iso3: AUS
+
+beta: 2.85
+
+time_step: 1.
+
+gamma: 0.2 
+universal_death_rate: 0.0142
+universal_death_rateX: 0.0142
+
+
+
+kappa: 3.6525 # (1.e-2 * 365.25)
+nu: 0.002008875 # (5.5e-6 * 365.25)
+epsilon: 0.401775 #(1.1e-3 * 365.25)
+
+
+rr_reinfection_once_recovered: 1
+
+rr_reinfection_once_infected: 1
+
+infect_death: .024
+
+delta: 0.00005
+  #theta: 0.0000316
+  
+
+prop_of_failures_developing_inh_R: 0.001
+  
+prop_of_failures_developing_rif_R: 0.00001
+
+detection_rate: 1.0 # solve using CDR value and equation # data obtained for Australia
+DST: 1
+TSR: .87 # data reported in WHO
+
+
+cdr:
+    1950.: 0.2
+    1960.: .55 
+    1970.: .65
+    1980.: .75 
+    1990.: .85
+    2000.: .9
+    2010.: .9
+    2015.: .9
+
+tsr: 
+    1950.: 0.3
+    1960.: .45 
+    1970.: .65 
+    1980.: .7 
+    1990.: .75 
+    2000.: .8 
+    2010.: .8 
+    2015.: .85
+
+dst: 
+    1950.: 0.3 
+    1960.: .6 
+    1970.: .7 
+    1980.: .75 
+    1990.: .8 
+    2000.: .85
+    2010.: .9
+    2015.: .95
+
+
+
+scenarios: {}
+# # N.B: Scenario keys have to be sequential integers from one, or won't be compatible with dashboards

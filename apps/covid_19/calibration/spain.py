@@ -13,12 +13,13 @@ country = Region.SPAIN
 
 PAR_PRIORS = get_prior_distributions_for_opti()
 update_priors = {
-    "contact_rate": [0.03, 0.050],
-    "start_time": [10., 20.],
+    "contact_rate": [0.03, 0.05],
+    "start_time": [0., 20.],
     "time_variant_detection.max_change_time": [70., 100.],
-    "time_variant_detection.end_value": [.2, .3],
+    "time_variant_detection.end_value": [.2, .4],
     "symptomatic_props_multiplier": [1.1, 1.3],
-    "hospital_props_multiplier": [1.5, 2.],
+    "hospital_props_multiplier": [1.1, 1.3],
+    "microdistancing.parameters.c": [80, 110],
 }
 
 for i, par in enumerate(PAR_PRIORS):

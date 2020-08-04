@@ -8,6 +8,8 @@ app.register(RegionApp(Region.AUSTRALIA))
 app.register(RegionApp(Region.PHILIPPINES))
 app.register(RegionApp(Region.MALAYSIA))
 app.register(RegionApp(Region.VICTORIA))
+app.register(RegionApp(Region.WEST_MELBOURNE))
+app.register(RegionApp(Region.NORTH_MELBOURNE))
 app.register(RegionApp(Region.NSW))
 # No Google Mobility data for Liberia
 # app.register(RegionApp(Region.LIBERIA))

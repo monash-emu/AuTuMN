@@ -28,6 +28,8 @@ class Region:
     PHILIPPINES = "philippines"
     MALAYSIA = "malaysia"
     VICTORIA = "victoria"
+    WEST_MELBOURNE = "west_melbourne"
+    NORTH_MELBOURNE = "north_melbourne"
     NSW = "nsw"
     LIBERIA = "liberia"
     MANILA = "manila"
@@ -46,6 +48,8 @@ class Region:
         PHILIPPINES,
         MALAYSIA,
         VICTORIA,
+        WEST_MELBOURNE,
+        NORTH_MELBOURNE,
         NSW,
         LIBERIA,
         MANILA,

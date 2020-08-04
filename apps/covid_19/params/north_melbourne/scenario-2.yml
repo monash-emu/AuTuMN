@@ -1,0 +1,17 @@
+# back to usual social mixing but using elderly cocooning
+mixing:
+  other_locations:
+    append: true
+    times:
+#      - 2020-07-07 # google mobility data update, pls review
+#      - 2020-07-08 # google mobility data update, pls review
+#      - 2020-07-12 # google mobility data update, pls review
+      - 2020-08-17
+      - 2020-08-19
+    values:
+#      - .322 # google mobility data update, pls review
+#      - .322 # google mobility data update, pls review
+#      - .1 # google mobility data update, pls review
+      - .1
+      - 1.0
+ 

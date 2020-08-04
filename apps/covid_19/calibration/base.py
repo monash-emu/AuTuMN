@@ -79,7 +79,7 @@ def add_standard_dispersion_parameter(params, target_outputs, output_name):
     return params
 
 
-def add_case_detection_params_philippines(params):
+def add_standard_philippines_params(params):
     """
     Add standard set of parameters to vary case detection for the Philippines
     """
@@ -99,6 +99,11 @@ def add_case_detection_params_philippines(params):
             "param_name": "time_variant_detection.end_value",
             "distribution": "uniform",
             "distri_params": [0.10, 0.70],
+        },
+        {
+            "param_name": "ifr_multiplier",
+            "distribution": "uniform",
+            "distri_params": [1., 3.],
         },
     ]
 

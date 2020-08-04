@@ -1,7 +1,7 @@
 from autumn.constants import Region
 from apps.covid_19.calibration import base
 from apps.covid_19.calibration.base import \
-    provide_default_calibration_params, add_standard_dispersion_parameter, add_case_detection_params_philippines, \
+    provide_default_calibration_params, add_standard_dispersion_parameter, add_standard_philippines_params, \
     assign_trailing_weights_to_halves
 
 
@@ -130,4 +130,4 @@ TARGET_OUTPUTS = [
 PAR_PRIORS = provide_default_calibration_params()
 PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "notifications")
 PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "icu_occupancy")
-PAR_PRIORS = add_case_detection_params_philippines(PAR_PRIORS)
+PAR_PRIORS = add_standard_philippines_params(PAR_PRIORS)

@@ -256,6 +256,10 @@ def get_weekly_summed_targets(times, values):
 def combine_and_burn_samples(calibration_output_path, burn_in=500):
     mcmc_tables = load_mcmc_tables(calibration_output_path)
     col_names = mcmc_tables[0].columns
+    col_names = [c for c in col_names if "dispersion_param" not in c]
+    col_to_drop = [str(c) for c in mcmc_tables[0].columns if c not in col_names]
+    for i in range(len(mcmc_tables)):
+        mcmc_tables[i] = mcmc_tables[i].drop(columns=col_to_drop)
 
     for col_name in [c for c in col_names if c not in ["accept"]]:
         _overwrite_non_accepted_mcmc_runs(mcmc_tables, col_name)

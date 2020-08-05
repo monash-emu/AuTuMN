@@ -10,7 +10,7 @@ from autumn.curve import scale_up_function
 from apps.covid_19.preprocess.mortality import age_specific_ifrs_from_double_exp_model
 from autumn.inputs import get_population_by_agegroup
 
-from apps.covid_19.constants import Compartment
+from apps.covid_19.constants import Compartment, ClinicalStratum
 
 
 def stratify_by_clinical(model, model_parameters, compartments, detected_proportion, symptomatic_props):
@@ -30,7 +30,6 @@ def stratify_by_clinical(model, model_parameters, compartments, detected_proport
     """
     agegroup_strata = model_parameters["all_stratifications"]["agegroup"]
     all_stratifications = model_parameters["all_stratifications"]
-    clinical_strata = model_parameters["clinical_strata"]
     implement_importation = model_parameters["implement_importation"]
     traveller_quarantine = model_parameters["traveller_quarantine"]
     within_hospital_early = model_parameters["within_hospital_early"]
@@ -49,8 +48,13 @@ def stratify_by_clinical(model, model_parameters, compartments, detected_proport
     hospital_props = [min([p * model_parameters["hospital_props_multiplier"], 1.]) for p in hospital_props]
 
     # Define stratification - only stratify infected compartments
-    strata_to_implement = clinical_strata
-    all_stratifications["clinical"] = strata_to_implement
+    strata_to_implement = [
+        ClinicalStratum.NON_SYMPT,
+        ClinicalStratum.SYMPT_NON_HOSPITAL,
+        ClinicalStratum.SYMPT_ISOLATE,
+        ClinicalStratum.HOSPITAL_NON_ICU,
+        ClinicalStratum.ICU
+    ]
     compartments_to_split = \
         [
             comp for comp in compartments
@@ -148,9 +152,9 @@ def stratify_by_clinical(model, model_parameters, compartments, detected_proport
     for age_idx, age in enumerate(agegroup_strata):
         key = f"to_{Compartment.LATE_EXPOSED}Xagegroup_{age}"
         stratification_adjustments[key] = {
-            "non_sympt": non_sympt[age_idx],
-            "icu": sympt_hospital_icu[age_idx],
-            "hospital_non_icu": sympt_hospital_non_icu[age_idx],
+            ClinicalStratum.NON_SYMPT: non_sympt[age_idx],
+            ClinicalStratum.ICU: sympt_hospital_icu[age_idx],
+            ClinicalStratum.HOSPITAL_NON_ICU: sympt_hospital_non_icu[age_idx],
         }
 
     # Set time-varying isolation proportions
@@ -158,16 +162,16 @@ def stratify_by_clinical(model, model_parameters, compartments, detected_proport
         # Pass the functions to the model
         tv_props = TimeVaryingProportions(age_idx, abs_props, detected_proportion)
         time_variants = [
-            [f"prop_sympt_non_hospital_{agegroup}", tv_props.get_abs_prop_sympt_non_hospital,],
-            [f"prop_sympt_isolate_{agegroup}", tv_props.get_abs_prop_isolated],
+            [f"prop_{ClinicalStratum.SYMPT_NON_HOSPITAL}_{agegroup}", tv_props.get_abs_prop_sympt_non_hospital,],
+            [f"prop_{ClinicalStratum.SYMPT_ISOLATE}_{agegroup}", tv_props.get_abs_prop_isolated],
         ]
         for name, func in time_variants:
             model.time_variants[name] = func
 
         # Tell the model to use these time varying functions for the stratification adjustments.
         agegroup_adj = stratification_adjustments[f"to_{Compartment.LATE_EXPOSED}Xagegroup_{agegroup}"]
-        agegroup_adj["sympt_non_hospital"] = f"prop_sympt_non_hospital_{agegroup}"
-        agegroup_adj["sympt_isolate"] = f"prop_sympt_isolate_{agegroup}"
+        agegroup_adj[ClinicalStratum.SYMPT_NON_HOSPITAL] = f"prop_{ClinicalStratum.SYMPT_NON_HOSPITAL}_{agegroup}"
+        agegroup_adj[ClinicalStratum.SYMPT_ISOLATE] = f"prop_{ClinicalStratum.SYMPT_ISOLATE}_{agegroup}"
 
     # Calculate death rates and progression rates for hospitalised and ICU patients
     progression_death_rates = {}
@@ -242,27 +246,27 @@ def stratify_by_clinical(model, model_parameters, compartments, detected_proport
 
         # Proportion entering non-symptomatic stratum reduced by the quarantined (and so isolated) proportion
         def tv_prop_imported_non_sympt(t):
-            return stratification_adjustments[to_infectious_key]["non_sympt"] * \
+            return stratification_adjustments[to_infectious_key][ClinicalStratum.NON_SYMPT] * \
                    (1. - quarantine_scale_up(t))
 
         # Proportion ambulatory also reduced by quarantined proportion due to isolation
         def tv_prop_imported_sympt_non_hospital(t):
-            return tvs[stratification_adjustments[to_infectious_key]["sympt_non_hospital"]](t) * \
+            return tvs[stratification_adjustments[to_infectious_key][ClinicalStratum.SYMPT_NON_HOSPITAL]](t) * \
                    (1. - quarantine_scale_up(t))
 
         # Proportion isolated includes those that would have been detected anyway and the ones above quarantined
         def tv_prop_imported_sympt_isolate(t):
-            return tvs[stratification_adjustments[to_infectious_key]["sympt_isolate"]](t) + \
+            return tvs[stratification_adjustments[to_infectious_key][ClinicalStratum.SYMPT_ISOLATE]](t) + \
                    quarantine_scale_up(t) * \
-                   (tvs[stratification_adjustments[to_infectious_key]["sympt_non_hospital"]](t) +
-                    stratification_adjustments[to_infectious_key]["non_sympt"])
+                   (tvs[stratification_adjustments[to_infectious_key][ClinicalStratum.SYMPT_NON_HOSPITAL]](t) +
+                    stratification_adjustments[to_infectious_key][ClinicalStratum.NON_SYMPT])
 
         # Pass time-variant functions to the model object
-        model.time_variants["tv_prop_imported_non_sympt"] = \
+        model.time_variants[f"tv_prop_imported_{ClinicalStratum.NON_SYMPT}"] = \
             tv_prop_imported_non_sympt
-        model.time_variants["tv_prop_imported_sympt_non_hospital"] = \
+        model.time_variants[f"tv_prop_imported_{ClinicalStratum.SYMPT_NON_HOSPITAL}"] = \
             tv_prop_imported_sympt_non_hospital
-        model.time_variants["tv_prop_imported_sympt_isolate"] = \
+        model.time_variants[f"tv_prop_imported_{ClinicalStratum.SYMPT_ISOLATE}"] = \
             tv_prop_imported_sympt_isolate
         for stratum in strata_to_implement[:3]:
             importation_props_by_clinical[stratum] = "tv_prop_imported_" + stratum

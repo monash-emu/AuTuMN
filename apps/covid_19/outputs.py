@@ -1,10 +1,10 @@
 
 from summer.model import StratifiedModel
 from summer.model.utils.string import find_name_components
-from apps.covid_19.constants import Compartment
+from apps.covid_19.constants import Compartment, ClinicalStratum
 
 
-NOTIFICATION_STRATUM = ["sympt_isolate", "hospital_non_icu", "icu"]
+NOTIFICATION_STRATUM = [ClinicalStratum.SYMPT_ISOLATE, ClinicalStratum.HOSPITAL_NON_ICU, ClinicalStratum.ICU]
 
 
 def get_calc_notifications_covid(
@@ -39,7 +39,7 @@ def calculate_new_hospital_admissions_covid(model, time):
     time_idx = model.times.index(time)
     hosp_admissions = 0.0
     for key, value in model.derived_outputs.items():
-        if "progress" in find_name_components(key) and "icu" in key:
+        if "progress" in find_name_components(key) and ClinicalStratum.ICU in key:
             hosp_admissions += value[time_idx]
     return hosp_admissions
 
@@ -48,7 +48,7 @@ def calculate_new_icu_admissions_covid(model, time):
     time_idx = model.times.index(time)
     icu_admissions = 0.0
     for key, value in model.derived_outputs.items():
-        if "progress" in find_name_components(key) and "clinical_icu" in key:
+        if "progress" in find_name_components(key) and f"clinical_{ClinicalStratum.ICU}" in key:
             icu_admissions += value[time_idx]
     return icu_admissions
 
@@ -56,7 +56,7 @@ def calculate_new_icu_admissions_covid(model, time):
 def calculate_icu_prev(model, time):
     icu_prev = 0
     for i, comp_name in enumerate(model.compartment_names):
-        if Compartment.LATE_ACTIVE in comp_name and "clinical_icu" in comp_name:
+        if Compartment.LATE_ACTIVE in comp_name and f"clinical_{ClinicalStratum.ICU}" in comp_name:
             icu_prev += model.compartment_values[i]
     return icu_prev
 
@@ -73,9 +73,10 @@ def calculate_hospital_occupancy(model, time):
         period_icu_patients_in_hospital / \
         model.parameters["compartment_periods"]["icu_early"]
     for i, comp_name in enumerate(model.compartment_names):
-        if Compartment.LATE_ACTIVE in comp_name and "icu" in comp_name:  # "icu" used to map ["clinical_hospital_non_icu", "clinical_icu"]
+        # "icu" used to map ["clinical_hospital_non_icu", "clinical_icu"]
+        if Compartment.LATE_ACTIVE in comp_name and "icu" in comp_name:
             hospital_prev += model.compartment_values[i]
-        if Compartment.EARLY_ACTIVE in comp_name and "clinical_icu" in comp_name:
+        if Compartment.EARLY_ACTIVE in comp_name and f"clinical_{ClinicalStratum.ICU}" in comp_name:
             hospital_prev += \
                 model.compartment_values[i] * \
                 proportion_icu_patients_in_hospital
@@ -86,7 +87,7 @@ def calculate_hospital_occupancy(model, time):
 def calculate_icu_occupancy(model, time):
     icu_prev = 0
     for i, comp_name in enumerate(model.compartment_names):
-        if Compartment.LATE_ACTIVE in comp_name and "clinical_icu" in comp_name:
+        if Compartment.LATE_ACTIVE in comp_name and f"clinical_{ClinicalStratum.ICU}" in comp_name:
             icu_prev += model.compartment_values[i]
     return icu_prev
 
@@ -94,7 +95,7 @@ def calculate_icu_occupancy(model, time):
 def calculate_proportion_seropositive(model, time):
     n_seropositive = 0
     for i, comp_name in enumerate(model.compartment_names):
-        if "recovered" in comp_name:
+        if Compartment.RECOVERED in comp_name:
             n_seropositive += model.compartment_values[i]
     return n_seropositive / sum(model.compartment_values)
 

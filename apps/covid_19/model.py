@@ -12,7 +12,7 @@ from autumn.tb_model import list_all_strata_for_mortality
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
 from autumn import inputs
 from autumn.environment.seasonality import get_seasonal_forcing
-from apps.covid_19.constants import Compartment
+from apps.covid_19.constants import Compartment, ClinicalStratum
 
 from . import outputs, preprocess
 from .stratification import stratify_by_clinical
@@ -265,7 +265,7 @@ def build_model(params: dict) -> StratifiedModel:
         outputs.get_calc_notifications_covid(implement_importation, modelled_abs_detection_proportion_imported)
     model.derived_output_functions["local_notifications"] = \
         outputs.get_calc_notifications_covid(False, modelled_abs_detection_proportion_imported)
-    model.derived_output_functions[f"prevX{Compartment.LATE_ACTIVE}Xclinical_icuXamong"] = \
+    model.derived_output_functions[f"prevX{Compartment.LATE_ACTIVE}Xclinical_{ClinicalStratum.ICU}Xamong"] = \
         outputs.calculate_icu_prev
     model.derived_output_functions["new_hospital_admissions"] = \
         outputs.calculate_new_hospital_admissions_covid

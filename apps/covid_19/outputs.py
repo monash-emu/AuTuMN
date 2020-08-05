@@ -15,10 +15,10 @@ def get_calc_notifications_covid(
         Returns the number of notifications for a given time.
         The fully stratified incidence outputs must be available before calling this function
         """
-        notifications_count = 0.0
+        notifications_count = 0.
         time_idx = model.times.index(time)
         for key, value in model.derived_outputs.items():
-            is_progress = "progressX" in key
+            is_progress = "progress" in find_name_components(key)
             is_notify_stratum = any([stratum in key for stratum in NOTIFICATION_STRATUM])
             if is_progress and is_notify_stratum:
                 notifications_count += value[time_idx]
@@ -48,16 +48,18 @@ def calculate_new_icu_admissions_covid(model, time):
     time_idx = model.times.index(time)
     icu_admissions = 0.0
     for key, value in model.derived_outputs.items():
-        if "progress" in find_name_components(key) and f"clinical_{ClinicalStratum.ICU}" in key:
+        if "progress" in find_name_components(key) and \
+                f"clinical_{ClinicalStratum.ICU}" in find_name_components(key):
             icu_admissions += value[time_idx]
     return icu_admissions
 
 
 def calculate_icu_prev(model, time):
     icu_prev = 0
-    for i, comp_name in enumerate(model.compartment_names):
-        if Compartment.LATE_ACTIVE in comp_name and f"clinical_{ClinicalStratum.ICU}" in comp_name:
-            icu_prev += model.compartment_values[i]
+    for i_comp, comp_name in enumerate(model.compartment_names):
+        if Compartment.LATE_ACTIVE in find_name_components(comp_name) and \
+                f"clinical_{ClinicalStratum.ICU}" in find_name_components(comp_name):
+            icu_prev += model.compartment_values[i_comp]
     return icu_prev
 
 
@@ -72,13 +74,19 @@ def calculate_hospital_occupancy(model, time):
     proportion_icu_patients_in_hospital = \
         period_icu_patients_in_hospital / \
         model.parameters["compartment_periods"]["icu_early"]
-    for i, comp_name in enumerate(model.compartment_names):
-        # "icu" used to map ["clinical_hospital_non_icu", "clinical_icu"]
-        if Compartment.LATE_ACTIVE in comp_name and "icu" in comp_name:
-            hospital_prev += model.compartment_values[i]
-        if Compartment.EARLY_ACTIVE in comp_name and f"clinical_{ClinicalStratum.ICU}" in comp_name:
+    for i_comp, comp_name in enumerate(model.compartment_names):
+
+        # Both ICU and hospital late active compartments
+        if Compartment.LATE_ACTIVE in find_name_components(comp_name) and \
+                (f"clinical_{ClinicalStratum.ICU}" in find_name_components(comp_name) or
+                 f"clinical_{ClinicalStratum.HOSPITAL_NON_ICU}" in find_name_components(comp_name)):
+            hospital_prev += model.compartment_values[i_comp]
+
+        # A proportion of the early active ICU compartment
+        if Compartment.EARLY_ACTIVE in find_name_components(comp_name) and \
+                f"clinical_{ClinicalStratum.ICU}" in comp_name:
             hospital_prev += \
-                model.compartment_values[i] * \
+                model.compartment_values[i_comp] * \
                 proportion_icu_patients_in_hospital
 
     return hospital_prev
@@ -86,17 +94,18 @@ def calculate_hospital_occupancy(model, time):
 
 def calculate_icu_occupancy(model, time):
     icu_prev = 0
-    for i, comp_name in enumerate(model.compartment_names):
-        if Compartment.LATE_ACTIVE in comp_name and f"clinical_{ClinicalStratum.ICU}" in comp_name:
-            icu_prev += model.compartment_values[i]
+    for i_comp, comp_name in enumerate(model.compartment_names):
+        if Compartment.LATE_ACTIVE in find_name_components(comp_name) and \
+                f"clinical_{ClinicalStratum.ICU}" in find_name_components(comp_name):
+            icu_prev += model.compartment_values[i_comp]
     return icu_prev
 
 
 def calculate_proportion_seropositive(model, time):
-    n_seropositive = 0
-    for i, comp_name in enumerate(model.compartment_names):
-        if Compartment.RECOVERED in comp_name:
-            n_seropositive += model.compartment_values[i]
+    n_seropositive = 0.
+    for i_comp, comp_name in enumerate(model.compartment_names):
+        if Compartment.RECOVERED in find_name_components(comp_name):
+            n_seropositive += model.compartment_values[i_comp]
     return n_seropositive / sum(model.compartment_values)
 
 
@@ -105,10 +114,12 @@ def get_calculate_years_of_life_lost(life_expectancy_by_agegroup):
     def calculate_years_of_life_lost(model, time):
         time_idx = model.times.index(time)
         total_yoll = 0.
-        for i, agegroup in enumerate(model.all_stratifications['agegroup']):
+        for i_group, agegroup in enumerate(model.all_stratifications["agegroup"]):
             for derived_output in model.derived_outputs:
-                if "infection_deathsXagegroup_" + agegroup in derived_output:
-                    total_yoll += model.derived_outputs[derived_output][time_idx] * life_expectancy_by_agegroup[i]
+                if f"infection_deathsXagegroup_{agegroup}" in derived_output:
+                    total_yoll += \
+                        model.derived_outputs[derived_output][time_idx] * \
+                        life_expectancy_by_agegroup[i_group]
 
         return total_yoll
 

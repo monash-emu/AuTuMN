@@ -12,7 +12,7 @@ mixing:
 #      - .322 # google mobility data update, pls review
 #      - .322 # google mobility data update, pls review
 #      - .1 # google mobility data update, pls review
-      - .1
+      - [repeat_prev]
       - 1
   work:
     append: true
@@ -26,5 +26,5 @@ mixing:
 #      - .325 # google mobility data update, pls review
 #      - .325 # google mobility data update, pls review
 #      - .1 # google mobility data update, pls review
-      - .1
+      - [repeat_prev]
       - 1

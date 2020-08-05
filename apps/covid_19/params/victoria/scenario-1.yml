@@ -12,5 +12,5 @@ mixing:
 #      - .325 # google mobility data update, pls review
 #      - .325 # google mobility data update, pls review
 #      - 0.1 # google mobility data update, pls review
-      - 0.1
+      - [repeat_prev]
       - 1

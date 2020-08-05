@@ -73,9 +73,9 @@ def calculate_hospital_occupancy(model, time):
         period_icu_patients_in_hospital / \
         model.parameters["compartment_periods"]["icu_early"]
     for i, comp_name in enumerate(model.compartment_names):
-        if "late" in comp_name and "icu" in comp_name:  # "icu" used to map ["clinical_hospital_non_icu", "clinical_icu"]
+        if Compartment.LATE_ACTIVE in comp_name and "icu" in comp_name:  # "icu" used to map ["clinical_hospital_non_icu", "clinical_icu"]
             hospital_prev += model.compartment_values[i]
-        if "infectious" in comp_name and "clinical_icu" in comp_name:
+        if Compartment.EARLY_ACTIVE in comp_name and "clinical_icu" in comp_name:
             hospital_prev += \
                 model.compartment_values[i] * \
                 proportion_icu_patients_in_hospital
@@ -86,7 +86,7 @@ def calculate_hospital_occupancy(model, time):
 def calculate_icu_occupancy(model, time):
     icu_prev = 0
     for i, comp_name in enumerate(model.compartment_names):
-        if "late" in comp_name and "clinical_icu" in comp_name:
+        if Compartment.LATE_ACTIVE in comp_name and "clinical_icu" in comp_name:
             icu_prev += model.compartment_values[i]
     return icu_prev
 

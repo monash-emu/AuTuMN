@@ -31,9 +31,8 @@ region_app.run_model(RUN_SCENARIOS)
 # MODEL_RUN_PATH = "data/covid_victoria/model-run-27-04-2020--17-06-42/"
 # plot_from_database(MODEL_RUN_PATH)
 
-
 ## Run a calibration
-# MAX_SECONDS = 5
+# MAX_SECONDS = 30
 # CHAIN_ID = 1
 # NB_CHAINS = 1
 # calibrate_func = covid_19.calibration.get_calibration_func(Region.VICTORIA)

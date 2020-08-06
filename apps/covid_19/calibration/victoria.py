@@ -689,9 +689,29 @@ PAR_PRIORS += [
         "distri_ci": [0.6, 0.9],
     },
     {
+        "param_name": "testing_to_detection.maximum_detection",
+        "distribution": "uniform",
+        "distri_params": [0.6, 0.95],
+    },
+    {
         "param_name": "compartment_periods.icu_early",
         "distribution": "gamma",
         "distri_mean": 12.,
         "distri_ci": [4., 20.],
     },
+    {
+        "param_name": "compartment_periods.icu_late",
+        "distribution": "uniform",
+        "distri_params": [5., 15.],
+    },
+    {
+        "param_name": "icu_prop",
+        "distribution": "uniform",
+        "distri_params": [0.12, 0.22],
+    },
+    {
+        "param_name": "symptomatic_props_multiplier",
+        "distribution": "uniform",
+        "distri_params": [0.5, 2.]
+    }
 ]

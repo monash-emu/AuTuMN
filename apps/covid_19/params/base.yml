@@ -74,7 +74,6 @@ symptomatic_props:
 
 symptomatic_props_multiplier: 1.
 
-
 # Proportion of symptomatic persons that are hospitalised - Dutch GGD report
 hospital_props:
   - 0.087 # 0-4
@@ -186,7 +185,7 @@ universal_death_rate: 0.
 mixing: {}
 mixing_age_adjust: {}
 npi_effectiveness: {}
-is_periodic_intervention: False
+is_periodic_intervention: false
 periodic_intervention:
   restart_time: 0
   prop_participating: 0.
@@ -206,7 +205,7 @@ google_mobility_locations:
     - parks
     - transit_stations
 
-smooth_google_data: False  # whether to apply a 7-day moving average
+smooth_google_data: false  # whether to apply a 7-day moving average
 
 # Parameters of negative binomial (need to be listed for validation)
 notifications_dispersion_param: 1.
@@ -216,12 +215,11 @@ proportion_seropositive_dispersion_param: 1.
 hospital_occupancy_dispersion_param: 1.
 new_hospital_admissions_dispersion_param: 1.
 new_icu_admissions_dispersion_param: 1.
+icu_occupancy_dispersion_param: 1.
 
 # parameters pertaining to waning immunity
-full_immunity: True
+full_immunity: true
 immunity_duration: 90.
-
-icu_occupancy_dispersion_param: 1.
 
 importation_props_by_age:
     "0": 0.04

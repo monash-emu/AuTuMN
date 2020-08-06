@@ -655,6 +655,12 @@ icu_counts = [
 
 TARGET_OUTPUTS = [
     {
+        "param_name": "seasonal_force",
+        "distribution": "beta",
+        "distri_mean": 0.3,
+        "distri_ci": [0.1, 0.7],
+    },
+    {
         "output_key": "notifications",
         "years": case_times,
         "values": case_counts,

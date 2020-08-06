@@ -373,53 +373,50 @@ def evaluate_extra_deaths(decision_vars, extra_contribution, i, root_model, mode
     population = sum(m[0].compartment_values)
     delta_deaths_per_million = (this_d - best_d) / population * 1.e6
 
-    print(str(extra_contribution) + ": " + str(delta_deaths_per_million))
-
     return delta_deaths_per_million
 
 
-def run_sensitivity_perturbations(output_dir, country, config=2, mode="by_age", objective="deaths", target_deaths=10,
-                                  tol=.01):
+def run_sensitivity_perturbations_up(output_dir, country, config=2, mode="by_age", objective="deaths", target_deaths=10,
+                                     tol=.02):
     # target_deaths is a number of deaths per million people
     mle_params, decision_vars = get_mle_params_and_vars(output_dir, country, config, mode, objective)
     root_model = run_root_model(country, mle_params)
-
-    decision_vars = [.96] * 16  # Fixme
 
     h, best_d, yoll, p_immune, m = objective_function(decision_vars, root_model, mode, country, config, mle_params)
 
     delta_contributions = []
     for i in range(len(decision_vars)):
-        print("#########################")
         print("Age group " + str(i))
         extra_contribution_lower = 0.
-        extra_contribution_upper = .5
+        extra_contribution_upper = 1. - decision_vars[i]
 
-        # find an upper bound:
-        delta_deaths_per_million = evaluate_extra_deaths(decision_vars, extra_contribution_upper, i, root_model, mode, country,
-                                                         config, mle_params, best_d)
-        while delta_deaths_per_million < target_deaths:
-            extra_contribution_upper *= 2.
-            delta_deaths_per_million = evaluate_extra_deaths(decision_vars, extra_contribution_upper, i, root_model, mode, country,
-                                                             config, mle_params, best_d)
-        while (extra_contribution_upper - extra_contribution_lower) > tol:
-            evaluation_point = (extra_contribution_lower + extra_contribution_upper) / 2.
-            delta_deaths_per_million = evaluate_extra_deaths(decision_vars, evaluation_point, i, root_model, mode, country,
-                                                             config, mle_params, best_d)
-            if delta_deaths_per_million > target_deaths:
-                extra_contribution_upper = evaluation_point
-            else:
-                extra_contribution_lower = evaluation_point
-
-        if (extra_contribution_upper - target_deaths) < (target_deaths - extra_contribution_lower):
+        if extra_contribution_upper < tol:
             best_solution = extra_contribution_upper
         else:
-            best_solution = extra_contribution_lower
+            # find an upper bound:
+            delta_deaths_per_million = evaluate_extra_deaths(decision_vars, extra_contribution_upper, i, root_model, mode, country,
+                                                             config, mle_params, best_d)
+            if delta_deaths_per_million < target_deaths:
+                best_solution = extra_contribution_upper
+            else:
+                while (extra_contribution_upper - extra_contribution_lower) > tol:
+                    evaluation_point = (extra_contribution_lower + extra_contribution_upper) / 2.
+                    delta_deaths_per_million = evaluate_extra_deaths(decision_vars, evaluation_point, i, root_model, mode, country,
+                                                                     config, mle_params, best_d)
+                    if delta_deaths_per_million > target_deaths:
+                        extra_contribution_upper = evaluation_point
+                    else:
+                        extra_contribution_lower = evaluation_point
+
+                if (extra_contribution_upper - target_deaths) < (target_deaths - extra_contribution_lower):
+                    best_solution = extra_contribution_upper
+                else:
+                    best_solution = extra_contribution_lower
 
         delta_contributions.append(best_solution)
 
         print(best_solution)
-    output_file_path = "/sensitivy/" + country + "_" + mode + "_" + str(config) + "_" + objective + ".yml"
+    output_file_path = os.path.join("optimisation_outputs", "sensitivity", country + "_" + mode + "_" + str(config) + "_" + objective + "_upper.yml")
 
     with open(output_file_path, "w") as f:
         yaml.dump(delta_contributions, f)

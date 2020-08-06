@@ -1,5 +1,5 @@
 from apps.covid_19.mixing_optimisation.utils import prepare_table_of_param_sets
-from apps.covid_19.mixing_optimisation.mixing_opti import run_sensitivity_perturbations
+from apps.covid_19.mixing_optimisation.mixing_opti import run_sensitivity_perturbations_up
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
 
 if __name__ == "__main__":
@@ -15,13 +15,20 @@ if __name__ == "__main__":
         "united-kingdom": 0,
     }
 
-    for country in OPTI_REGIONS:
-        path = "../../../data/outputs/calibrate/covid_19/" + country + "/" + common_folder_name
+    # for country in OPTI_REGIONS:
+    #     path = "../../../data/outputs/calibrate/covid_19/" + country + "/" + common_folder_name
+    #
+    #     prepare_table_of_param_sets(path,
+    #                                 country,
+    #                                 n_samples=2,
+    #                                 burn_in=burnin[country])
 
-        prepare_table_of_param_sets(path,
-                                    country,
-                                    n_samples=2,
-                                    burn_in=burnin[country])
-
-
-    # run_sensitivity_perturbations('optimisation_outputs/test_outputs/', 'sweden', 2, "by_age", "deaths", tol=.01)
+    for country in burnin:
+        for objective in ["deaths", "yoll"]:
+            for mode in ["by_age"]:  #, "by_location"]:
+                for config in [2, 3]:
+                    print()
+                    print()
+                    print(country + " " + objective + " " + mode + " " + str(config))
+                    run_sensitivity_perturbations_up('optimisation_outputs/6Aug2020/', country, config, mode, objective,
+                                                     target_deaths=10, tol=.02)

@@ -176,11 +176,10 @@ def build_model(params: dict) -> StratifiedModel:
 
     # Detected and symptomatic proportions primarily needed for the clinical stratification
     # - except for the following function
-    maximum_detection = 0.9
-    shape_parameter = 1e-4
 
-    if True:
-
+    if model_parameters["testing_to_detection"]:
+        maximum_detection = model_parameters["testing_to_detection"]["maximum_detection"]
+        shape_parameter = model_parameters["testing_to_detection"]["shape_parameter"]
         data, values = \
             get_vic_testing_numbers()
         function_values = \
@@ -203,7 +202,7 @@ def build_model(params: dict) -> StratifiedModel:
                 )
 
             # Return value modified for any future intervention that narrows the case detection gap
-            int_detect_gap_reduction = model_parameters['int_detection_gap_reduction']
+            int_detect_gap_reduction = model_parameters["int_detection_gap_reduction"]
             return base_prop_detect(t) + (1. - base_prop_detect(t)) * int_detect_gap_reduction
 
     # Age dependent proportions of infected people who become symptomatic

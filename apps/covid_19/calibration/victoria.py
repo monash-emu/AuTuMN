@@ -655,12 +655,6 @@ icu_counts = [
 
 TARGET_OUTPUTS = [
     {
-        "param_name": "seasonal_force",
-        "distribution": "beta",
-        "distri_mean": 0.3,
-        "distri_ci": [0.1, 0.7],
-    },
-    {
         "output_key": "notifications",
         "years": case_times,
         "values": case_counts,
@@ -682,6 +676,12 @@ PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "icu_
 
 PAR_PRIORS += [
     # Programmatic parameters
+    {
+        "param_name": "seasonal_force",
+        "distribution": "beta",
+        "distri_mean": 0.3,
+        "distri_ci": [0.1, 0.7],
+    },
     {
         "param_name": "time_variant_detection.end_value",
         "distribution": "beta",

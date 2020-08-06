@@ -678,9 +678,8 @@ PAR_PRIORS += [
     # Programmatic parameters
     {
         "param_name": "seasonal_force",
-        "distribution": "beta",
-        "distri_mean": 0.3,
-        "distri_ci": [0.1, 0.7],
+        "distribution": "uniform",
+        "distri_params": [0., 0.4],
     },
     {
         "param_name": "time_variant_detection.end_value",
@@ -717,6 +716,6 @@ PAR_PRIORS += [
     {
         "param_name": "testing_to_detection.shape_parameter",
         "distribution": "uniform",
-        "distri_params": [-5, -3]
+        "distri_params": [-6, -3]
     }
 ]

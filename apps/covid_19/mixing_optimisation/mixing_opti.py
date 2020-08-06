@@ -92,8 +92,11 @@ def build_params_for_phases_2_and_3(decision_variables, config=0, mode='by_age')
     sc_1_params['data'] = {
         'times_imported_cases': [phase_2_end[config], phase_2_end[config] + 1, phase_2_end[config] + 2,
                                  phase_2_end[config] + 3],
-        'n_imported_cases': [0, 5, 5, 0]
+        'n_imported_cases': [0, 0, 0, 0]  # FIXME TURN ON IMPORTAION BEFORE RUNNIN ANY OPTIMISATION. use [0, 5, 5, 0]
     }
+
+    assert sum([sc_1_params['data']['n_imported_cases']]) > 0., "Romain needs to turn on importation before running any opti!"
+
     sc_1_params['end_time'] = PHASE_2_START_TIME + DURATION_PHASES_2_AND_3
 
     if "microdistancing" in opti_params['configurations'][config]:

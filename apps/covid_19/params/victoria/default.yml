@@ -21,7 +21,7 @@ start_time: 15.
 end_time: 365.
 
 contact_rate: 0.024
-seasonal_force: 0.7
+seasonal_force: 0.1
 
 mixing:
   school:

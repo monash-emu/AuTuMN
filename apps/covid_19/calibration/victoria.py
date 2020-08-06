@@ -713,5 +713,10 @@ PAR_PRIORS += [
         "param_name": "symptomatic_props_multiplier",
         "distribution": "uniform",
         "distri_params": [0.5, 2.]
+    },
+    {
+        "param_name": "testing_to_detection.shape_parameter",
+        "distribution": "uniform",
+        "distri_params": [-5, -3]
     }
 ]

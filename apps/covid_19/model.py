@@ -6,7 +6,7 @@ from autumn.tool_kit.utils import repeat_list_elements
 from data.inputs.testing.testing import get_vic_testing_numbers
 
 from autumn.curve import tanh_based_scaleup, scale_up_function
-from apps.covid_19.preprocess.testing import convert_tests_to_prop
+from apps.covid_19.preprocess.testing import convert_tests_to_prop, convert_exponent_to_value
 
 from autumn.tool_kit.utils import normalise_sequence
 from autumn.constants import BirthApproach
@@ -179,7 +179,7 @@ def build_model(params: dict) -> StratifiedModel:
 
     if model_parameters["testing_to_detection"]:
         maximum_detection = model_parameters["testing_to_detection"]["maximum_detection"]
-        shape_parameter = model_parameters["testing_to_detection"]["shape_parameter"]
+        shape_parameter = convert_exponent_to_value(model_parameters["testing_to_detection"]["shape_parameter"])
         data, values = \
             get_vic_testing_numbers()
         function_values = \

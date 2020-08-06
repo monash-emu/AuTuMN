@@ -7,7 +7,7 @@ implement_importation: true
 
 testing_to_detection:
     maximum_detection: 0.9
-    shape_parameter: 1.e-4
+    shape_parameter: -4
 
 microdistancing:
     function_type: empiric

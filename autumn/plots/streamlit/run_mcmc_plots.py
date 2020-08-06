@@ -64,7 +64,7 @@ def _find_db_paths(calib_dirpath: str):
     db_paths = [
         os.path.join(calib_dirpath, f)
         for f in os.listdir(calib_dirpath)
-        if f.endswith(".db") and not f.startswith("mcmc_percentiles")
+        if f.endswith(".db") and not f.startswith("mcmc_percentiles") and not f.startswith("powerbi")
     ]
     return sorted(db_paths)
 

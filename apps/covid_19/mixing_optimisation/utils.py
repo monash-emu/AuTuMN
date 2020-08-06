@@ -1,7 +1,7 @@
 from apps.covid_19.john_hopkins import download_jh_data, read_john_hopkins_data_from_csv
 from apps.covid_19.who_data import read_who_data_from_csv
 from apps.covid_19.hospital_data import read_hospital_data_from_csv
-from autumn.plots.streamlit.run_mcmc_plots import load_mcmc_tables
+from autumn.plots.streamlit.run_mcmc_plots import load_mcmc_tables, load_derived_output_tables
 from autumn.plots.plots import _overwrite_non_accepted_mcmc_runs
 import pandas as pd
 import os
@@ -9,7 +9,7 @@ from matplotlib import pyplot as plt
 from autumn.curve import scale_up_function, tanh_based_scaleup
 import numpy as np
 import copy
-
+from autumn.db import Database
 
 def get_prior_distributions_for_opti():
     prior_list = [
@@ -301,6 +301,109 @@ def prepare_table_of_param_sets(calibration_output_path, country_name, n_samples
     samples.to_csv(output_file, index=False)
 
 
+############# To create main table outputs
+def read_percentile_from_pbi_table(calibration_output_path, scenario=0, quantile=0.5, time=0., type='notifications'):
+    db_path = [
+        os.path.join(calibration_output_path, f)
+        for f in os.listdir(calibration_output_path)
+        if f.startswith("powerbi")
+    ][0]
+
+    db = Database(db_path)
+    unc_table = db.query("uncertainty")
+
+    mask_1 = unc_table["Scenario"] == "S_" + str(scenario)
+    mask_2 = unc_table["quantile"] == quantile
+    mask_3 = unc_table["time"] == time
+    mask_4 = unc_table["type"] == type
+    mask = [m_1 and m_2 and m_3 and m_4 for (m_1, m_2, m_3, m_4) in zip(mask_1, mask_2, mask_3, mask_4)]
+    value = float(unc_table[mask]["value"])
+
+    return value
+
+
+def read_cumulative_output_from_output_table(calibration_output_path, scenario, time_range, model_output):
+    derived_output_tables = load_derived_output_tables(calibration_output_path)
+
+    cumulative_values = []
+    for d_t in derived_output_tables:
+        mask_1 = d_t["Scenario"] == "S_" + str(scenario)
+        mask_2 = d_t["times"] >= time_range[0]
+        if time_range[1] == "end":
+            mask = [m_1 and m_2 for (m_1, m_2) in zip(mask_1, mask_2)]
+        else:
+            mask_3 = d_t["times"] <= time_range[1]
+            mask = [m_1 and m_2 and m_3 for (m_1, m_2, m_3) in zip(mask_1, mask_2, mask_3)]
+        d_t = d_t[mask]  # a 2d array
+        sum_by_run = d_t.groupby(['idx'])[model_output].sum()
+        cumulative_values += list(sum_by_run)
+
+    return cumulative_values
+
+
+def get_uncertainty_cell_value(calibration_output_path, output, config, mode):
+    # output is in ["deaths_before", "deaths_unmitigated", "deaths_opti_deaths", "deaths_opti_yoll",
+    #                "yoll_before", "yoll_unmitigated", "yoll_opti_deaths", "yoll_opti_yoll"]
+    scenario = 0  # FIXME must be a function of config and mode and the objective specified in the output name
+
+    multiplier = {
+        "infection_deathsXall": 1000.,
+        "years_of_life_lost": 1000.
+    }
+    rounding = {
+        "infection_deathsXall": 1,
+        "years_of_life_lost": 0
+    }
+
+    if 'deaths_' in output:
+        model_output = 'infection_deathsXall'
+    else:
+        model_output = 'years_of_life_lost'
+
+    if "_before" in output:
+        time_range = [0, 213]
+    else:
+        time_range = [214, 'end']
+
+    # read the percentile
+    cum_values = read_cumulative_output_from_output_table(calibration_output_path, scenario, time_range, model_output)
+    quantiles = list(np.quantile(np.array(cum_values), [.025, .5, .975]))
+    median = round(multiplier[model_output] * quantiles[1], rounding[model_output])
+    lower = round(multiplier[model_output] * quantiles[0], rounding[model_output])
+    upper = round(multiplier[model_output] * quantiles[2], rounding[model_output])
+
+    cell_content = str(median) + " (" + str(lower) + "-" + str(upper) + ")"
+    return cell_content
+
+
+def make_main_outputs_table(calibration_folder_name, config, mode):
+    countries = ['belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']
+    country_names = [c.title() for c in countries]
+    country_names[-1] = "United Kingdom"
+
+    column_names = ["country",
+                    "deaths_before", "deaths_unmitigated", "deaths_opti_deaths", "deaths_opti_yoll",
+                     "yoll_before", "yoll_unmitigated", "yoll_opti_deaths", "yoll_opti_yoll"
+                    ]
+    column_names = ["country", "deaths_before"]  # FIXME remove this
+
+    table = pd.DataFrame(columns=column_names)
+    for i, country in enumerate(countries):
+        print(country)
+        calibration_output_path = "../../../data/outputs/calibrate/covid_19/" + country + "/" + calibration_folder_name
+        row_as_list = [country]
+        for output in [c for c in column_names if c != "country"]:
+            print(output)
+            row_as_list.append(
+                get_uncertainty_cell_value(calibration_output_path, output, config, mode)
+            )
+
+        table.loc[i] = row_as_list
+
+    table.to_csv("../../../data/outputs/calibrate/covid_19/main_outputs_" + mode + "_config_" + str(config) + ".csv")
+
+###########################################
+
 def plot_mixing_params_over_time(mixing_params, npi_effectiveness_range):
 
     titles = {'home': 'Household', 'work': 'Workplace', 'school': 'School', 'other_locations': 'Other locations'}
@@ -399,3 +502,7 @@ def get_posterior_percentiles_time_variant_profile(calibration_path, function='d
 #     'school': [1,1],
 # }
 # plot_mixing_params_over_time(mixing_pars, npi_effectiveness_range)
+
+out_dir = "../../../data/outputs/calibrate/covid_19/france/Final-2020-08-04"
+
+make_main_outputs_table('Final-2020-08-04', 2, "by_age")

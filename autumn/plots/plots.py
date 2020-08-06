@@ -902,16 +902,15 @@ def plot_optimal_plan(all_results, config, country, mode, ax):
         delta_xpos = -1
         for objective in ('deaths', 'yoll'):
             value = data[objective]['best_x' + str(i_age)].iloc[0]
-            value = np.random.random()  # FIXME
             rect = patches.Rectangle((x_pos + delta_xpos * bar_width, 0.), bar_width, value, linewidth=.8,
                               facecolor=colours[objective], edgecolor='black')
             ax.add_patch(rect)
 
-            arrow_length = .2 * np.random.random()
-            ax.arrow(x=x_pos + delta_xpos * bar_width + .5 * bar_width, y=value, dx=0, dy=arrow_length,
-                     color='black', length_includes_head=True,
-                     width=arrow_par[mode]['width'], head_width=arrow_par[mode]['head_width'],
-                     head_length=arrow_par[mode]['head_length'])
+            # arrow_length = .2 * np.random.random() # FIXME
+            # ax.arrow(x=x_pos + delta_xpos * bar_width + .5 * bar_width, y=value, dx=0, dy=arrow_length,
+            #          color='black', length_includes_head=True,
+            #          width=arrow_par[mode]['width'], head_width=arrow_par[mode]['head_width'],
+            #          head_length=arrow_par[mode]['head_length'])
 
             delta_xpos = 0
             ymax = max([ymax, value + arrow_length])

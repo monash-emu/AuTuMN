@@ -247,7 +247,7 @@ def plot_multicountry_optimal_plan(
     plotter: StreamlitPlotter, app: RegionAppBase, scenarios: list, plot_config: dict
 ):
     countries = ['belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']
-    root_path = os.path.join('apps', 'covid_19', 'mixing_optimisation', 'optimisation_outputs', 'test_outputs')
+    root_path = os.path.join('apps', 'covid_19', 'mixing_optimisation', 'optimisation_outputs', '6Aug2020')
 
     for mode in ['by_age', 'by_location']:
         all_results = {}
@@ -335,7 +335,7 @@ PLOT_FUNCS = {
     # "Multicountry rainbow": plot_multicountry_rainbow,
     # "Multicountry hospital": plot_multicounty_hospital,
     "Multicountry optimal plan": plot_multicountry_optimal_plan,
-    "Multicountry mobility data": plot_multicountry_mobility,
+    # "Multicountry mobility data": plot_multicountry_mobility,
 }
 
 

@@ -5,12 +5,19 @@ region: Victoria
 
 implement_importation: True
 
+microdistancing:
+    function_type: empiric
+    parameters:
+        times: [87, 94, 101, 108, 113, 120, 127, 134, 141, 148, 155, 162, 169, 176, 190, 197, 204]
+        values: [0.47, 0.33, 0.35, 0.33, 0.45, 0.47, 0.45, 0.46, 0.51, 0.55, 0.56, 0.57, 0.61, 0.6, 0.57, 0.52, 0.45]
+
 infectious_seed: 0
 
 start_time: 15.
 end_time: 365.
 
 contact_rate: 0.024
+seasonal_force: 0.7
 
 time_variant_detection:
   end_value: 0.8035

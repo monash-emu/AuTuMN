@@ -15,9 +15,15 @@ class AgeMixingAdjustment(BaseMixingAdjustment):
         affected_age_indices = [i for i in AGE_INDICES if f"age_{i}" in mixing_age_adjust]
         for age_idx in affected_age_indices:
             key = f"age_{age_idx}"
-            mixing_age_adjust[key]["times"] = [
-                (time_date - BASE_DATE).days for time_date in mixing_age_adjust[key]["times"]
-            ]
+
+            for i, time_date in enumerate(mixing_age_adjust[key]["times"]):
+                if not isinstance(time_date, int):
+                    mixing_age_adjust[key]["times"][i] = (time_date - BASE_DATE).days
+            #
+            #
+            # mixing_age_adjust[key]["times"] = [
+            #     (time_date - BASE_DATE).days for time_date in mixing_age_adjust[key]["times"]
+            # ]
             age_times = mixing_age_adjust[key]["times"]
             age_vals = mixing_age_adjust[key]["values"]
             func = scale_up_function(age_times, age_vals, method=4)

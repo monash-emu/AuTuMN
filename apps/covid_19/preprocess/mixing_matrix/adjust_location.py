@@ -115,9 +115,14 @@ def update_mixing_data(
             assert len(loc_mixing["times"]) == len(
                 loc_mixing["values"]
             ), f"Mixing series length mismatch for {loc_key}"
-            loc_mixing["times"] = [
-                (time_date - BASE_DATE).days for time_date in loc_mixing["times"]
-            ]
+
+            for i, time_date in enumerate(loc_mixing["times"]):
+                if not isinstance(time_date, int):
+                    loc_mixing["times"][i] = (time_date - BASE_DATE).days
+            #
+            # loc_mixing["times"] = [
+            #     (time_date - BASE_DATE).days for time_date in loc_mixing["times"]
+            # ]
 
             # Ensure all user-specified dynamic mixing is up to date
             is_fresh_timeseries = max(loc_mixing["times"]) >= most_recent_day

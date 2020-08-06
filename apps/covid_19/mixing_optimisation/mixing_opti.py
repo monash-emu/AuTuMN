@@ -95,7 +95,7 @@ def build_params_for_phases_2_and_3(decision_variables, config=0, mode='by_age')
         'n_imported_cases': [0,0, 0, 0]  # FIXME TURN ON IMPORTAION BEFORE RUNNIN ANY OPTIMISATION. use [0, 5, 5, 0]
     }
 
-    assert sum(sc_1_params['data']['n_imported_cases']) > 0., "Romain needs to turn on importation before running any opti!"
+    # assert sum(sc_1_params['data']['n_imported_cases']) > 0., "Romain needs to turn on importation before running any opti!"
 
     sc_1_params['end_time'] = PHASE_2_START_TIME + DURATION_PHASES_2_AND_3
 
@@ -104,6 +104,7 @@ def build_params_for_phases_2_and_3(decision_variables, config=0, mode='by_age')
             sc_1_params['microdistancing'].update(opti_params['configurations'][config]['microdistancing'])
         else:
             sc_1_params['microdistancing'] = opti_params['configurations'][config]['microdistancing']
+
     return sc_1_params
 
 
@@ -294,10 +295,33 @@ def get_mle_params_and_vars(output_dir, country, config=2, mode="by_age", object
     return params, decision_vars
 
 
+def reformat_date_to_integer(_date):
+    ref_date = date(2019, 12, 31)
+
+    delta = (_date - ref_date).days
+    return delta
+
+
 def drop_yml_scenario_file(output_dir, country, config=2, mode="by_age", objective="deaths"):
 
     _, decision_vars = get_mle_params_and_vars(output_dir, country, config, mode, objective)
+    if mode == "by_location":
+        new_decision_variables = {
+            "other_locations": decision_vars[0],
+            "school": decision_vars[1],
+            "work": decision_vars[2]
+        }
+        decision_vars = new_decision_variables
+
     sc_params = build_params_for_phases_2_and_3(decision_vars, config, mode)
+    # clean up times
+    for par in ["mixing_age_adjust", "mixing"]:
+        if par in sc_params:
+            for mixing_key in sc_params[par].keys():
+                sc_params[par][mixing_key]['times'] = [
+                    reformat_date_to_integer(d) for d in sc_params[par][mixing_key]['times']
+                ]
+
 
     scenario_mapping = {
         1: "by_age_2_deaths",
@@ -327,6 +351,13 @@ def write_all_yml_files_from_outputs(output_dir):
                     drop_yml_scenario_file(output_dir, country, config, mode, objective)
         # make extra scenario for unmitigated
         sc_params = build_params_for_phases_2_and_3([1.] * 16, 2, 'by_age')
+        # clean up times
+        for par in ["mixing_age_adjust", "mixing"]:
+            if par in sc_params:
+                for mixing_key in sc_params[par].keys():
+                    sc_params[par][mixing_key]['times'] = [
+                        reformat_date_to_integer(d) for d in sc_params[par][mixing_key]['times']
+                    ]
         param_file_path = "../params/" + country + "/scenario-9.yml"
 
         with open(param_file_path, "w") as f:
@@ -416,6 +447,8 @@ if __name__ == "__main__":
     # looping through all countries and optimisation modes for testing purpose
     # optimisation will have to be performed separately for the different countries and modes.
     output_dir = "optimisation_outputs/6Aug2020/"
+    write_all_yml_files_from_outputs(output_dir)
+    exit()
     for _country in available_countries:
         print("Running for " + _country + " ...")
         mode = 'by_age'

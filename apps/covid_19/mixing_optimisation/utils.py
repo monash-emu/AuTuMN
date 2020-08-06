@@ -408,7 +408,7 @@ def make_main_outputs_table(calibration_folder_name, config, mode):
                     "deaths_before", "deaths_unmitigated", "deaths_opti_deaths", "deaths_opti_yoll",
                      "yoll_before", "yoll_unmitigated", "yoll_opti_deaths", "yoll_opti_yoll"
                     ]
-    column_names = ["country", "deaths_before"]  # FIXME remove this
+    # column_names = ["country", "deaths_before"]  # FIXME remove this
 
     table = pd.DataFrame(columns=column_names)
     for i, country in enumerate(countries):

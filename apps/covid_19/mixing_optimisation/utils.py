@@ -344,17 +344,6 @@ def read_cumulative_output_from_output_table(calibration_output_path, scenario, 
 def get_uncertainty_cell_value(calibration_output_path, output, config, mode):
     # output is in ["deaths_before", "deaths_unmitigated", "deaths_opti_deaths", "deaths_opti_yoll",
     #                "yoll_before", "yoll_unmitigated", "yoll_opti_deaths", "yoll_opti_yoll"]
-    scenario = 0  # FIXME must be a function of config and mode and the objective specified in the output name
-
-    multiplier = {
-        "infection_deathsXall": 1000.,
-        "years_of_life_lost": 1000.
-    }
-    rounding = {
-        "infection_deathsXall": 1,
-        "years_of_life_lost": 0
-    }
-
     if 'deaths_' in output:
         model_output = 'infection_deathsXall'
     else:
@@ -364,6 +353,40 @@ def get_uncertainty_cell_value(calibration_output_path, output, config, mode):
         time_range = [0, 213]
     else:
         time_range = [214, 'end']
+
+    if "_yoll" in output:
+        objective = "yoll"
+    else:
+        objective = "deaths"
+
+    scenario_mapping = {
+        1: "by_age_2_deaths",
+        2: "by_age_2_yoll",
+        3: "by_age_3_deaths",
+        4: "by_age_3_yoll",
+        5: "by_location_2_deaths",
+        6: "by_location_2_yoll",
+        7: "by_location_3_deaths",
+        8: "by_location_3_yoll",
+        9: "unmitigated"
+    }
+
+    full_tag = mode + "_" + str(config) + "_" + objective
+    if "unmitigated" in output:
+        scenario = 9
+    else:
+        scenario = [key for key, val in scenario_mapping.items() if val == full_tag][0]
+
+    scenario = 0  # FIXME remove this !
+
+    multiplier = {
+        "infection_deathsXall": 1. / 1000.,
+        "years_of_life_lost": 1. / 1000.
+    }
+    rounding = {
+        "infection_deathsXall": 1,
+        "years_of_life_lost": 0
+    }
 
     # read the percentile
     cum_values = read_cumulative_output_from_output_table(calibration_output_path, scenario, time_range, model_output)
@@ -402,8 +425,8 @@ def make_main_outputs_table(calibration_folder_name, config, mode):
 
     table.to_csv("../../../data/outputs/calibrate/covid_19/main_outputs_" + mode + "_config_" + str(config) + ".csv")
 
-###########################################
 
+###########################################
 def plot_mixing_params_over_time(mixing_params, npi_effectiveness_range):
 
     titles = {'home': 'Household', 'work': 'Workplace', 'school': 'School', 'other_locations': 'Other locations'}

@@ -305,6 +305,7 @@ def drop_yml_scenario_file(output_dir, country, config=2, mode="by_age", objecti
         6: "by_location_2_yoll",
         7: "by_location_3_deaths",
         8: "by_location_3_yoll",
+        9: "unmitigated",  # not used, just for completeness
     }
     for key, val in scenario_mapping.items():
         if val == mode + "_" + str(config) + "_" + objective:

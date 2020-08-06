@@ -6,6 +6,7 @@ from autumn.tool_kit.utils import repeat_list_elements
 from data.inputs.testing.testing import get_vic_testing_numbers
 
 from autumn.curve import tanh_based_scaleup, scale_up_function
+from apps.covid_19.preprocess.testing import convert_tests_to_prop
 
 from autumn.tool_kit.utils import normalise_sequence
 from autumn.constants import BirthApproach
@@ -175,23 +176,18 @@ def build_model(params: dict) -> StratifiedModel:
 
     # Detected and symptomatic proportions primarily needed for the clinical stratification
     # - except for the following function
-
     maximum_detection = 0.9
+    shape_parameter = 1e-4
 
     if True:
 
-        shape_parameter = 1e-4
-
-        def convert_tests_to_prop(t):
-            return maximum_detection * (1. - np.exp(-shape_parameter * t))
-
-
-        data, values = get_vic_testing_numbers()
-        function_values = [convert_tests_to_prop(i_value) for i_value in values]
-
+        data, values = \
+            get_vic_testing_numbers()
+        function_values = \
+            [convert_tests_to_prop(i_value, maximum_detection, shape_parameter) for
+             i_value in values]
         detected_proportion = scale_up_function(data, function_values, smoothness=0.2, method=5)
 
-        print()
     else:
 
         # Create function describing the proportion of cases detected over time

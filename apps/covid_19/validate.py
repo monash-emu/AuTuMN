@@ -95,5 +95,8 @@ validate_params = sb.build_validator(
     icu_occupancy_dispersion_param=float,
     importation_props_by_age=dict,
     import_representative_age=int,
-
+    testing_to_detection=sb.Nullable(sb.Dict(
+        maximum_detection=float,
+        shape_parameter=float
+    )),
 )

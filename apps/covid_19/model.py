@@ -3,8 +3,10 @@ from summer.model import StratifiedModel
 from summer.model.utils.string import find_all_strata
 
 from autumn.tool_kit.utils import repeat_list_elements
+from data.inputs.testing.testing import get_vic_testing_numbers
 
-from autumn.curve import tanh_based_scaleup
+from autumn.curve import tanh_based_scaleup, scale_up_function
+from apps.covid_19.preprocess.testing import convert_tests_to_prop
 
 from autumn.tool_kit.utils import normalise_sequence
 from autumn.constants import BirthApproach
@@ -19,6 +21,7 @@ from .stratification import stratify_by_clinical
 from .validate import validate_params
 
 import copy
+import numpy as np
 
 
 def build_model(params: dict) -> StratifiedModel:
@@ -174,21 +177,33 @@ def build_model(params: dict) -> StratifiedModel:
     # Detected and symptomatic proportions primarily needed for the clinical stratification
     # - except for the following function
 
-    # Create function describing the proportion of cases detected over time
-    def detected_proportion(t):
+    if model_parameters["testing_to_detection"]:
+        maximum_detection = model_parameters["testing_to_detection"]["maximum_detection"]
+        shape_parameter = model_parameters["testing_to_detection"]["shape_parameter"]
+        data, values = \
+            get_vic_testing_numbers()
+        function_values = \
+            [convert_tests_to_prop(i_value, maximum_detection, shape_parameter) for
+             i_value in values]
+        detected_proportion = scale_up_function(data, function_values, smoothness=0.2, method=5)
 
-        # Function representing the proportion of symptomatic people detected over time
-        base_prop_detect = \
-            tanh_based_scaleup(
-                detect_prop_params["maximum_gradient"],
-                detect_prop_params["max_change_time"],
-                detect_prop_params["start_value"],
-                detect_prop_params["end_value"]
-            )
+    else:
 
-        # Return value modified for any future intervention that narrows the case detection gap
-        int_detect_gap_reduction = model_parameters['int_detection_gap_reduction']
-        return base_prop_detect(t) + (1. - base_prop_detect(t)) * int_detect_gap_reduction
+        # Create function describing the proportion of cases detected over time
+        def detected_proportion(t):
+
+            # Function representing the proportion of symptomatic people detected over time
+            base_prop_detect = \
+                tanh_based_scaleup(
+                    detect_prop_params["maximum_gradient"],
+                    detect_prop_params["max_change_time"],
+                    detect_prop_params["start_value"],
+                    detect_prop_params["end_value"]
+                )
+
+            # Return value modified for any future intervention that narrows the case detection gap
+            int_detect_gap_reduction = model_parameters["int_detection_gap_reduction"]
+            return base_prop_detect(t) + (1. - base_prop_detect(t)) * int_detect_gap_reduction
 
     # Age dependent proportions of infected people who become symptomatic
     # This is defined 8x10 year bands, 0-70+, which we transform into 16x5 year bands 0-75+

@@ -5,6 +5,10 @@ region: Victoria
 
 implement_importation: True
 
+testing_to_detection:
+    maximum_detection: 0.9
+    shape_parameter: 1.e-4
+
 microdistancing:
     function_type: empiric
     parameters:

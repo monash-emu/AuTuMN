@@ -321,6 +321,12 @@ def write_all_yml_files_from_outputs(output_dir):
             for mode in ["by_age", "by_location"]:
                 for objective in ["deaths", "yoll"]:
                     drop_yml_scenario_file(output_dir, country, config, mode, objective)
+        # make extra scenario for unmitigated
+        sc_params = build_params_for_phases_2_and_3([1.] * 16, 2, 'by_age')
+        param_file_path = "../params/" + country + "/scenario-9.yml"
+
+        with open(param_file_path, "w") as f:
+            yaml.dump(sc_params, f)
 
 
 def evaluate_extra_deaths(decision_vars, extra_contribution, i, root_model, mode, country,

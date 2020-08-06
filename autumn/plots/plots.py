@@ -188,8 +188,12 @@ def plot_calibration_fit(
 ):
     fig, axis, _, _, _ = plotter.get_figure()
 
+    # Track the maximum value being plotted
+    max_value = 0.
+
     for times, values in outputs:
         axis.plot(times, values)
+        max_value = max(values) if max(values) > max_value else max_value
 
     # Mark the MLE run with a dotted line
     axis.plot(outputs[-1][0], outputs[-1][1], linestyle=(0, (1, 3)), color='black', linewidth=3)
@@ -205,11 +209,21 @@ def plot_calibration_fit(
     target_times = output_config["target_times"]
     _plot_targets_to_axis(axis, target_values, target_times, on_uncertainty_plot=False)
 
+    # Find upper limit for y-axis
+    if target_values:
+        upper_buffer = 2.
+        max_target = max([i[0] for i in target_values])
+        upper_ylim = max_value if max_value < max_target * upper_buffer else max_target * upper_buffer
+    else:
+        upper_ylim = max_value
+
     # Plot outputs
     axis.set_xlabel("time")
     axis.set_ylabel(output_name)
     if is_logscale:
         axis.set_yscale("log")
+    else:
+        axis.set_ylim([0., upper_ylim])
 
     if is_logscale:
         filename = f"calibration-fit-{output_name}-logscale"

@@ -16,20 +16,22 @@ import yaml
 
 
 param_info = {
-    'contact_rate': {'name': 'contact rate', 'range': [0.025, 0.08]},
+    'contact_rate': {'name': 'transmission prob.', 'range': [0.02, 0.06]},
     'start_time': {'name': 'model start time', 'range': [0., 40.]},
-    'npi_effectiveness.other_locations': {'name': 'alpha', 'range': [0.5, 1.]},
+    # 'npi_effectiveness.other_locations': {'name': 'alpha', 'range': [0.5, 1.]},
     'compartment_periods_calculated.incubation.total_period': {'name': 'incubation time', 'range': [3., 7.]},
-    'compartment_periods_calculated.total_infectious.total_period': {'name': 'time infectious', 'range': [5., 10.]},
+    'compartment_periods_calculated.total_infectious.total_period': {'name': 'time infectious', 'range': [4., 10.]},
     'time_variant_detection.maximum_gradient': {'name': 'detection (shape)', 'range': [.05, .1]},
     'time_variant_detection.max_change_time': {'name': 'detection (inflection)', 'range': [70., 160.]},
     'time_variant_detection.end_value': {'name': 'detection (prop_final)', 'range': [.10, .90]},
-    'icu_prop': {'name': 'prop ICU among hosp.', 'range': [.10, .30]},
-    'compartment_periods.hospital_late': {'name': 'hopital duration', 'range': [4., 12.]},
-    'compartment_periods.icu_late': {'name': 'time in ICU', 'range': [4., 12.]},
-    'hospital_props_multiplier': {'name': 'hosp. prop. multiplier', 'range': [.5, 2.0]},
-    'microdistancing.parameters.c': {'name': 'microdistancing (inflection)', 'range': [90, 152]},
-    'microdistancing.parameters.sigma': {'name': 'microdistancing (final)', 'range': [.6, 1.]},
+    'time_variant_detection.start_value': {'name': 'detection (prop_start)', 'range': [0., .10]},
+    'icu_prop': {'name': 'prop ICU among hosp.', 'range': [.15, .20]},
+    'compartment_periods.hospital_late': {'name': 'hopital duration', 'range': [17.7, 20.4]},
+    'compartment_periods.icu_late': {'name': 'time in ICU', 'range': [9., 13.]},
+    'hospital_props_multiplier': {'name': 'hosp. prop. multiplier', 'range': [.6, 1.4]},
+    'symptomatic_props_multiplier': {'name': 'sympt. prop. multiplier', 'range': [.6, 1.4]},
+    'microdistancing.parameters.c': {'name': 'microdistancing (inflection)', 'range': [80, 130]},
+    'microdistancing.parameters.sigma': {'name': 'microdistancing (final)', 'range': [.4, .75]},
 }
 
 pollan_priors = get_list_of_ifr_priors_from_pollan()
@@ -60,12 +62,12 @@ for i in range(9):
             str(10. * float(param_info[pollan_priors[i]["param_name"]][0]['xlabels'][1]))
 
 burn_in_by_country = {
-    "france": 2000,
-    "belgium": 1500,
-    "spain": 1500,
-    "italy": 2000,
-    "sweden": 1500,
-    "united-kingdom": 1500,
+    "france": 1000,
+    "belgium": 1000,
+    "spain": 1000,
+    "italy": 1000,
+    "sweden": 1000,
+    "united-kingdom": 1000,
 }
 
 
@@ -142,7 +144,7 @@ def plot_param_posteriors(param_values, param_info={}):
         axs[i_row, i_col].plot([0], [0])
         axs[i_row, i_col].set_ylim((0.5, 6.5))
 
-        axs[i_row, i_col].set_title(param_info[param_name]['name'])
+        axs[i_row, i_col].set_title(param_info[param_name]['name'], fontsize=10.5)
         axs[i_row, i_col].set_xlim(param_info[param_name]['range'])
 
         # Format x-ticks if requested
@@ -164,7 +166,7 @@ def plot_param_posteriors(param_values, param_info={}):
     for i_col_blank in range(i_col + 1, n_col):
         axs[i_row, i_col_blank].axis("off")
 
-    plt.savefig("figures/param_posteriors.png", dpi=300)
+    plt.savefig("figures/param_posteriors_5Aug2020.png", dpi=300)
 
 
 def get_country_posterior_detection_percentiles(country_param_values):
@@ -219,8 +221,9 @@ def plot_detection_posteriors():
     if n_col * n_row < n_panels:
         n_row += 1
 
-    fig, axs = plt.subplots(n_row, n_col, figsize=(11, 7))
-    plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.05, hspace=.3)
+    fig, axs = plt.subplots(n_row, n_col, figsize=(13, 7))
+    plt.rcParams["font.family"] = "Times New Roman"
+    plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.15, hspace=.5)
     plt.style.use("ggplot")
 
     i_col = -1
@@ -255,24 +258,27 @@ def plot_detection_posteriors():
             axs[i_row, i_col].set_xlim((45, 212))
 
             if i_col == 0:
-                axs[i_row, i_col].set_ylabel("proportion of symptomatic detected")
-            else:
-                axs[i_row, i_col].set_yticks([])
+                axs[i_row, i_col].set_ylabel("proportion of symptomatic\ndetected")
+            # else:
+            #     axs[i_row, i_col].set_yticks([])
 
-    plt.savefig("figures/detection_posteriors.png")
+    plt.savefig("figures/detection_posteriors_5Aug2020.png")
 
 
 if __name__ == "__main__":
-    # param_values = get_all_param_values('Revised-2020-07-18')
+    # param_values = get_all_param_values('Final-2020-08-04')
     # file_path = os.path.join('dumped_files', 'dumped_dict_param_posteriors.yml')
     # with open(file_path, "w") as f:
     #     yaml.dump(param_values, f)
-
-    # with open('dumped_dict_param_posteriors.yml', "r") as yaml_file:
-    #     param_values = yaml.safe_load(yaml_file)
     #
-    # detection_percentiles = get_all_posterior_detection_percentiles(param_values)
+    # with open('dumped_files/dumped_dict_param_posteriors.yml', "r") as yaml_file:
+    #     param_values = yaml.safe_load(yaml_file)
+    # print("loaded")
+    # #
+    # get_all_posterior_detection_percentiles(param_values)
+    # print("percentiles calculated")
+
+    plot_detection_posteriors()
 
     # plot_param_posteriors(param_values, param_info)
 
-    plot_detection_posteriors()

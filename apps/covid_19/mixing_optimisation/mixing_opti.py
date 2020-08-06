@@ -257,18 +257,16 @@ def read_csv_output_file(output_dir, country, config=2, mode="by_age", objective
         path_to_input_csv = os.path.join('apps', 'covid_19', 'mixing_optimisation', path_to_input_csv)
     input_table = pd.read_csv(path_to_input_csv)
 
-    col_names = [c for c in input_table.columns if c not in ["loglikelihood"] and "dispersion_param" not in c]
+    col_names = [c for c in input_table.columns if c not in ["loglikelihood", 'idx'] and "dispersion_param" not in c]
 
     if mode == "by_location":
         removed_columns = ["best_x" + str(i) for i in range(3, 16)]
         col_names = [c for c in col_names if c not in removed_columns]
 
-    # output_file_name = os.path.join(output_dir, "results_" + country + "_" + mode + "_" + str(config) + "_" + objective + ".csv")
-    # out_table = pd.read_csv(output_file_name, sep=" ", header=None)
-    # out_table.columns = col_names
-    # out_table["loglikelihood"] = input_table["loglikelihood"]
-    output_file_name = os.path.join(output_dir, "results_.csv")
-    out_table = pd.read_csv(output_file_name)
+    output_file_name = os.path.join(output_dir, "results_" + country + "_" + mode + "_" + str(config) + "_" + objective + ".csv")
+    out_table = pd.read_csv(output_file_name, sep=" ", header=None)
+    out_table.columns = col_names
+    out_table["loglikelihood"] = input_table["loglikelihood"]
 
     return out_table
 
@@ -397,26 +395,26 @@ def run_sensitivity_perturbations(output_dir, country, config=2, mode="by_age", 
 if __name__ == "__main__":
     # looping through all countries and optimisation modes for testing purpose
     # optimisation will have to be performed separately for the different countries and modes.
-    # output_dir = "optimisation_outputs/22july2020/"
-    # for _country in available_countries:
-    #     print("Running for " + _country + " ...")
-    #     config = 3
-    #     mode = 'by_location'
-    #     objective = 'deaths'
-    #     param_set, decision_vars = get_mle_params_and_vars(output_dir, _country, config=config, mode=mode,
-    #                                                        objective=objective)
-    #     run_all_phases(decision_vars, _country, config, param_set, mode)
-    #     print("... done.")
-    # exit()
+    output_dir = "optimisation_outputs/6Aug2020/"
+    for _country in available_countries:
+        print("Running for " + _country + " ...")
+        config = 2
+        mode = 'by_age'
+        objective = 'deaths'
+        param_set, decision_vars = get_mle_params_and_vars(output_dir, _country, config=config, mode=mode,
+                                                           objective=objective)
+        run_all_phases(decision_vars, _country, config, param_set, mode)
+        print("... done.")
+    exit()
 
-    decision_vars = {
-        "by_age": [0.99403736,0.966716181,0.99528575,0.996704989,0.999250901,0.99909351,0.996430804,0.99494714,0.999902635,0.999955508,0.988036486,0.970353795,0.03743012,0.170611743,0.004352714,0.243200946],
-        "by_location": [1., 1., 1.]
-    }
+    # decision_vars = {
+    #     "by_age": [0.99403736,0.966716181,0.99528575,0.996704989,0.999250901,0.99909351,0.996430804,0.99494714,0.999902635,0.999955508,0.988036486,0.970353795,0.03743012,0.170611743,0.004352714,0.243200946],
+    #     "by_location": [1., 1., 1.]
+    # }
 
     # to produce graph with 3 phases
-    run_all_phases(decision_vars["by_age"], "sweden", 2, {}, "by_age")
-    exit()
+    # run_all_phases(decision_vars["by_age"], "sweden", 2, {}, "by_age")
+    # exit()
 
     for _mode in ["by_age", "by_location"]:
         for _country in available_countries:

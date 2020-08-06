@@ -92,7 +92,7 @@ def build_params_for_phases_2_and_3(decision_variables, config=0, mode='by_age')
     sc_1_params['data'] = {
         'times_imported_cases': [phase_2_end[config], phase_2_end[config] + 1, phase_2_end[config] + 2,
                                  phase_2_end[config] + 3],
-        'n_imported_cases': [0, 0, 0, 0]  # FIXME TURN ON IMPORTAION BEFORE RUNNIN ANY OPTIMISATION. use [0, 5, 5, 0]
+        'n_imported_cases': [0,0, 0, 0]  # FIXME TURN ON IMPORTAION BEFORE RUNNIN ANY OPTIMISATION. use [0, 5, 5, 0]
     }
 
     assert sum(sc_1_params['data']['n_imported_cases']) > 0., "Romain needs to turn on importation before running any opti!"
@@ -289,6 +289,8 @@ def get_mle_params_and_vars(output_dir, country, config=2, mode="by_age", object
             break
         params[c] = float(mle_rows.loc[mle_rows.index[0], c])
 
+    # print("Guillaume's outputs for best_death: " + str(float(mle_rows.loc[mle_rows.index[0], 'best_deaths'])))
+
     return params, decision_vars
 
 
@@ -392,19 +394,46 @@ def run_sensitivity_perturbations(output_dir, country, config=2, mode="by_age", 
         yaml.dump(delta_contributions, f)
 
 
+def explore_optimal_plan(decision_vars, _root_model, mode, _country, config, param_set, delta=.1):
+    n_vars = {'by_age': 16, "by_location": 3}
+    h, d, yoll, p_immune, m = objective_function(decision_vars, _root_model, mode, _country, config,
+                                                    param_set)
+    print("Baseline Deaths: " + str(round(d)))
+    print("Baseline herd immunity: " + str(h))
+    print("#############################")
+
+    for i in range(n_vars[mode]):
+        test_vars = copy.deepcopy(decision_vars)
+        test_vars[i] += delta
+        test_vars[i] = min([test_vars[i], 1.])
+        test_vars[i] = max([test_vars[i], 0.])
+
+        h, d, yoll, p_immune, m = objective_function(test_vars, _root_model, mode, _country, config,
+                                                    param_set)
+        print("Deaths " + str(i) + ": " + str(int(round(d))) + " " + str(h) + "\t" + str(decision_vars[i]) + " -->" + str(test_vars[i]))
+
 if __name__ == "__main__":
     # looping through all countries and optimisation modes for testing purpose
     # optimisation will have to be performed separately for the different countries and modes.
     output_dir = "optimisation_outputs/6Aug2020/"
     for _country in available_countries:
         print("Running for " + _country + " ...")
-        config = 2
         mode = 'by_age'
-        objective = 'deaths'
-        param_set, decision_vars = get_mle_params_and_vars(output_dir, _country, config=config, mode=mode,
-                                                           objective=objective)
-        run_all_phases(decision_vars, _country, config, param_set, mode)
-        print("... done.")
+        for config in [2, 3]:
+            for objective in ["deaths", "yoll"]:
+                print("config_" + str(config) + " objective_" + objective)
+                param_set, decision_vars = get_mle_params_and_vars(output_dir, _country, config=config, mode=mode,
+                                                              objective=objective)
+                # _root_model = run_root_model(_country, param_set)
+                #
+                # h, d, yoll, p_immune, m = objective_function(decision_vars, _root_model, mode, _country, config,
+                #                             param_set)
+                # print("Immunity: " + str(h) + "\n" + "Deaths: " + str(round(d)) + "\n" + "Years of life lost: " +
+                # str(round(yoll)) + "\n" + "Prop immune: " + str(round(p_immune, 3))
+                # )
+
+                run_all_phases(decision_vars, _country, config, param_set, mode)
+                print("... done.")
     exit()
 
     # decision_vars = {

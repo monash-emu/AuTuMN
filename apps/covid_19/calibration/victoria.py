@@ -1,6 +1,5 @@
 from autumn.constants import Region
 from apps.covid_19.calibration import base
-from apps.covid_19.calibration.base import provide_default_calibration_params, add_standard_dispersion_parameter
 from apps.covid_19.mixing_optimisation.utils import add_dispersion_param_prior_for_gaussian
 
 
@@ -671,44 +670,60 @@ TARGET_OUTPUTS = [
     },
 ]
 
-PAR_PRIORS = provide_default_calibration_params(["start_time"])
+PAR_PRIORS = [
+    {
+        "param_name": "contact_rate",
+        "distribution": "uniform",
+        "distri_params": [0.02, 0.03],
+    },
+    {
+        "param_name": "compartment_periods_calculated.exposed.total_period",
+        "distribution": "uniform",
+        "distri_params": [3., 5.],
+    },
+    # {
+    #     "param_name": "compartment_periods_calculated.active.total_period",
+    #     "distribution": "uniform",
+    #     "distri_params": [4.5, 9.5],
+    # },
+]
 
 PAR_PRIORS += [
     {
         "param_name": "seasonal_force",
         "distribution": "uniform",
-        "distri_params": [0., 0.4],
+        "distri_params": [0.3, 0.6],
     },
-    {
-        "param_name": "compartment_periods.icu_early",
-        "distribution": "gamma",
-        "distri_mean": 12.,
-        "distri_ci": [4., 20.],
-    },
-    {
-        "param_name": "compartment_periods.icu_late",
-        "distribution": "uniform",
-        "distri_params": [5., 15.],
-    },
+    # {
+    #     "param_name": "compartment_periods.icu_early",
+    #     "distribution": "gamma",
+    #     "distri_mean": 12.,
+    #     "distri_ci": [4., 20.],
+    # },
+    # {
+    #     "param_name": "compartment_periods.icu_late",
+    #     "distribution": "uniform",
+    #     "distri_params": [5., 15.],
+    # },
     {
         "param_name": "icu_prop",
         "distribution": "uniform",
-        "distri_params": [0.12, 0.22],
+        "distri_params": [0.15, 0.2],
     },
-    {
-        "param_name": "symptomatic_props_multiplier",
-        "distribution": "uniform",
-        "distri_params": [0.5, 2.]
-    },
+    # {
+    #     "param_name": "symptomatic_props_multiplier",
+    #     "distribution": "uniform",
+    #     "distri_params": [0.5, 2.]
+    # },
     {
         "param_name": "testing_to_detection.shape_parameter",
         "distribution": "uniform",
-        "distri_params": [-6, -3]
+        "distri_params": [-5, -4]
     },
     {
         "param_name": "testing_to_detection.maximum_detection",
         "distribution": "uniform",
-        "distri_params": [0.6, 0.95],
+        "distri_params": [0.6, 0.8],
     },
 ]
 

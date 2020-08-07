@@ -1,53 +1,65 @@
 ---
-scenario_start_time: 209 # 06/07/2020
 iso3: AUS
 region: Victoria
-
 implement_importation: true
-
-testing_to_detection:
-    maximum_detection: 0.9
-    shape_parameter: -4
-
-microdistancing:
-    function_type: empiric
-    parameters:
-        times: [87, 94, 101, 108, 113, 120, 127, 134, 141, 148, 155, 162, 169, 176, 190, 197, 204]
-        values: [0.47, 0.33, 0.35, 0.33, 0.45, 0.47, 0.45, 0.46, 0.51, 0.55, 0.56, 0.57, 0.61, 0.6, 0.57, 0.52, 0.45]
-
 infectious_seed: 0
 
 start_time: 25.
 end_time: 365.
+scenario_start_time: 257  # 13/09/2020
 
 contact_rate: 0.024
-seasonal_force: 0.1
+seasonal_force: 0.5
+
+compartment_periods_calculated:
+    exposed:
+        total_period: 3.8
+
+testing_to_detection:
+    maximum_detection: 0.7
+    shape_parameter: -4.5
+
+microdistancing:
+    function_type: empiric
+    parameters:
+        times: [89, 90, 162, 163, 181, 182, 215, 216]
+        values: [1., 0.4, 0.4, 0.8, 0.8, 0.7, 0.7, 0.4]
+
+    # 30th March, day 90, stage 3 enforced
+    # 9th June, day 162, stage 3 released (I think)
+    # 20th June, day 172, restrictions tightened, only five visitors at home
+    # (21st June, day 173, seasonal forcing peaks)
+    # 30th June, day 182, postcode lockdowns
+    # 4th July, day 186, two more postcodes locked down
+    # 9th July, day 191, stage 3 enforced
+    # 22nd July, day 204, face coverings
+    # 2nd August, day 215, stage 4 enforced
 
 mixing:
   school:
     append: false
     times:
       - 2020-03-24
-      - 2020-03-25
+      - 2020-03-25 # School holidays brought forward to 24th March
       - 2020-05-25
-      - 2020-05-27
+      - 2020-05-27 # 6 / 14 to represent five grades and special schools going back
       - 2020-06-08
-      - 2020-06-10
+      - 2020-06-10 # All students back to school
       - 2020-06-26
       - 2020-06-27
-      - 2020-07-13
+      - 2020-07-13  # Back to school for all and only Years 11 and 12, Year 10 for Melbourne and Mitchell Shire
       - 2020-08-03
       - 2020-08-04
     values:
       - 1.
       - 0.
       - 0.
-      - 0.429 # 6 / 14 to represent five grades and special schools going back
-      - 0.429 # 6 / 14
-      - 1. # all students back
+      - 0.429
+      - 0.429
+      - 1.
       - 1.
       - 0
-      - .5 # Back to school for all and only Years 11 and 12, Year 10 for Melbourne and Mitchell Shire 
+      - .5
       - .5
       - 0.
 

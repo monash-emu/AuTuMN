@@ -892,21 +892,24 @@ def plot_optimal_plan(all_results, config, country, mode, ax):
     bar_width = .37
 
     # arrows
-    arrow_par = {
-        "by_age": {'width': .015, 'head_width': .06, 'head_length': .01},
-        "by_location": {'width': .007, 'head_width': .03, 'head_length': .01},
-    }
+    # arrow_par = {
+    #     "by_age": {'width': .015, 'head_width': .06, 'head_length': .01},
+    #     "by_location": {'width': .007, 'head_width': .03, 'head_length': .01},
+    # }
 
 
     sensi_outputs = {}
-    directions = ["down"]
+    directions = ["down", "up"]
     for objective in ('deaths', 'yoll'):
         sensi_outputs[objective] = {}
         for direction in directions:
-            path = "apps/covid_19/mixing_optimisation/optimisation_outputs/sensitivity/" + direction + "/" +\
-                   country + "_" + mode + "_" + str(config) + "_" + objective + "_upper.yml"
-            with open(path, "r") as yaml_file:
-                sensi_outputs[objective][direction] = yaml.safe_load(yaml_file)
+            path = "apps/covid_19/mixing_optimisation/optimisation_outputs/sensitivity/" +\
+                   country + "_" + mode + "_" + str(config) + "_" + objective + "_" + direction + ".yml"
+            try:
+                with open(path, "r") as yaml_file:
+                    sensi_outputs[objective][direction] = yaml.safe_load(yaml_file)
+            except:
+                sensi_outputs[objective][direction] = 0.
 
     ymax = 0.
     for i_age in range(n_vars[mode]):
@@ -922,10 +925,13 @@ def plot_optimal_plan(all_results, config, country, mode, ax):
                 arrow_length = sensi_outputs[objective][direction][i_age]
                 if direction == "down":
                     arrow_length *= -1.
-                ax.arrow(x=x_pos + delta_xpos * bar_width + .5 * bar_width, y=value, dx=0, dy=arrow_length,
-                         color='black', length_includes_head=True,
-                         width=arrow_par[mode]['width'], head_width=arrow_par[mode]['head_width'],
-                         head_length=arrow_par[mode]['head_length'])
+                # ax.arrow(x=x_pos + delta_xpos * bar_width + .5 * bar_width, y=value, dx=0, dy=arrow_length,
+                #          color='black', length_includes_head=True,
+                #          width=arrow_par[mode]['width'], head_width=arrow_par[mode]['head_width'],
+                #          head_length=arrow_par[mode]['head_length'])
+                _x = x_pos + delta_xpos * bar_width + .5 * bar_width
+                ax.plot((_x, _x), (value, value + arrow_length), color='black', lwd=1)
+
                 ymax = max([ymax, value + arrow_length])
 
             delta_xpos = 0

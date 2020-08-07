@@ -525,7 +525,7 @@ def get_posterior_percentiles_time_variant_profile(calibration_path, function='d
 #     'school': [1,1],
 # }
 # plot_mixing_params_over_time(mixing_pars, npi_effectiveness_range)
-
-out_dir = "../../../data/outputs/calibrate/covid_19/france/Final-2020-08-04"
-
-make_main_outputs_table('Final-2020-08-04', 2, "by_age")
+#
+# out_dir = "../../../data/outputs/calibrate/covid_19/france/Final-2020-08-04"
+#
+# make_main_outputs_table('Final-2020-08-04', 2, "by_age")

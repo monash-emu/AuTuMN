@@ -24,6 +24,7 @@ import matplotlib.patches as patches
 
 
 from .plotter import Plotter, COLOR_THEME
+import yaml
 
 logger = logging.getLogger(__name__)
 
@@ -783,7 +784,7 @@ def plot_multicountry_rainbow(country_scenarios, config, mode, objective):
 
     out_dir = "apps/covid_19/mixing_optimisation/opti_plots/figures/rainbows/"
     filename = out_dir + "rainbow_" + mode + "_config_" + str(config) + "_" + objective
-    pyplot.savefig(filename + ".pdf")
+    # pyplot.savefig(filename + ".pdf")
     pyplot.savefig(filename + ".png", dpi=300)
 
 
@@ -896,6 +897,17 @@ def plot_optimal_plan(all_results, config, country, mode, ax):
         "by_location": {'width': .007, 'head_width': .03, 'head_length': .01},
     }
 
+
+    sensi_outputs = {}
+    directions = ["down"]
+    for objective in ('deaths', 'yoll'):
+        sensi_outputs[objective] = {}
+        for direction in directions:
+            path = "apps/covid_19/mixing_optimisation/optimisation_outputs/sensitivity/" + direction + "/" +\
+                   country + "_" + mode + "_" + str(config) + "_" + objective + "_upper.yml"
+            with open(path, "r") as yaml_file:
+                sensi_outputs[objective][direction] = yaml.safe_load(yaml_file)
+
     ymax = 0.
     for i_age in range(n_vars[mode]):
         x_pos = i_age + 1.
@@ -906,14 +918,17 @@ def plot_optimal_plan(all_results, config, country, mode, ax):
                               facecolor=colours[objective], edgecolor='black')
             ax.add_patch(rect)
 
-            # arrow_length = .2 * np.random.random() # FIXME
-            # ax.arrow(x=x_pos + delta_xpos * bar_width + .5 * bar_width, y=value, dx=0, dy=arrow_length,
-            #          color='black', length_includes_head=True,
-            #          width=arrow_par[mode]['width'], head_width=arrow_par[mode]['head_width'],
-            #          head_length=arrow_par[mode]['head_length'])
+            for direction in directions:
+                arrow_length = sensi_outputs[objective][direction][i_age]
+                if direction == "down":
+                    arrow_length *= -1.
+                ax.arrow(x=x_pos + delta_xpos * bar_width + .5 * bar_width, y=value, dx=0, dy=arrow_length,
+                         color='black', length_includes_head=True,
+                         width=arrow_par[mode]['width'], head_width=arrow_par[mode]['head_width'],
+                         head_length=arrow_par[mode]['head_length'])
+                ymax = max([ymax, value + arrow_length])
 
             delta_xpos = 0
-            ymax = max([ymax, value + arrow_length])
 
     if mode == "by_age":
         # X axis settings

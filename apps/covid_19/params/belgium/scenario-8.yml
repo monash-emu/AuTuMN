@@ -1,0 +1,46 @@
+data:
+  n_imported_cases:
+  - 0
+  - 0
+  - 0
+  - 0
+  times_imported_cases:
+  - 579
+  - 580
+  - 581
+  - 582
+end_time: 669
+microdistancing:
+  parameters:
+    sigma: 1.0
+mixing:
+  other_locations:
+    append: false
+    times:
+    - 213
+    - 579
+    - 580
+    values:
+    - 0.4587972956570237
+    - 0.4587972956570237
+    - 1.0
+  school:
+    append: false
+    times:
+    - 213
+    - 579
+    - 580
+    values:
+    - 0.7658556538500353
+    - 0.7658556538500353
+    - 1.0
+  work:
+    append: false
+    times:
+    - 213
+    - 579
+    - 580
+    values:
+    - 0.9803200511054356
+    - 0.9803200511054356
+    - 1.0

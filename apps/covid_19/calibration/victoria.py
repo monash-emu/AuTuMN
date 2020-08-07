@@ -679,46 +679,42 @@ PAR_PRIORS = [
     {
         "param_name": "compartment_periods_calculated.exposed.total_period",
         "distribution": "uniform",
-        "distri_params": [3., 5.],
+        "distri_params": [3., 4.5],
     },
-    # {
-    #     "param_name": "compartment_periods_calculated.active.total_period",
-    #     "distribution": "uniform",
-    #     "distri_params": [4.5, 9.5],
-    # },
-]
-
-PAR_PRIORS += [
+    {
+        "param_name": "compartment_periods_calculated.active.total_period",
+        "distribution": "uniform",
+        "distri_params": [6., 8.],
+    },
     {
         "param_name": "seasonal_force",
         "distribution": "uniform",
-        "distri_params": [0.3, 0.6],
+        "distri_params": [0.35, 0.6],
     },
-    # {
-    #     "param_name": "compartment_periods.icu_early",
-    #     "distribution": "gamma",
-    #     "distri_mean": 12.,
-    #     "distri_ci": [4., 20.],
-    # },
-    # {
-    #     "param_name": "compartment_periods.icu_late",
-    #     "distribution": "uniform",
-    #     "distri_params": [5., 15.],
-    # },
+    {
+        "param_name": "compartment_periods.icu_early",
+        "distribution": "uniform",
+        "distri_ci": [8., 17.],
+    },
+    {
+        "param_name": "compartment_periods.icu_late",
+        "distribution": "uniform",
+        "distri_params": [5., 15.],
+    },
     {
         "param_name": "icu_prop",
         "distribution": "uniform",
         "distri_params": [0.15, 0.2],
     },
-    # {
-    #     "param_name": "symptomatic_props_multiplier",
-    #     "distribution": "uniform",
-    #     "distri_params": [0.5, 2.]
-    # },
+    {
+        "param_name": "symptomatic_props_multiplier",
+        "distribution": "uniform",
+        "distri_params": [0.8, 1.2]
+    },
     {
         "param_name": "testing_to_detection.shape_parameter",
         "distribution": "uniform",
-        "distri_params": [-5, -4]
+        "distri_params": [-5, -3.5]
     },
     {
         "param_name": "testing_to_detection.maximum_detection",

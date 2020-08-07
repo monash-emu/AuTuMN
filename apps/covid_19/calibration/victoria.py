@@ -648,20 +648,26 @@ icu_counts = [
     41,
 ]
 
+# Define weights for the calibration dates of interest
+case_weights = list(range(1, len(case_times) + 1))
+case_weights[-7:] = [i_weight * 2. for i_weight in case_weights[-7:]]
+icu_weights = list(range(1, len(icu_times) + 1))
+icu_weights[-7:] = [i_weight * 2. for i_weight in icu_weights[-7:]]
+
 TARGET_OUTPUTS = [
     {
         "output_key": "notifications",
         "years": case_times,
         "values": case_counts,
         "loglikelihood_distri": "normal",
-        "time_weights": list(range(1, len(case_times) - 6)) + [250.] * 7,
+        "time_weights": case_weights,
     },
     {
         "output_key": "icu_occupancy",
         "years": icu_times,
         "values": icu_counts,
         "loglikelihood_distri": "normal",
-        "time_weights": list(range(1, len(icu_times) - 6)) + [250.] * 7,
+        "time_weights": icu_weights,
     },
 ]
 
@@ -672,11 +678,6 @@ PAR_PRIORS += [
         "param_name": "seasonal_force",
         "distribution": "uniform",
         "distri_params": [0., 0.4],
-    },
-    {
-        "param_name": "testing_to_detection.maximum_detection",
-        "distribution": "uniform",
-        "distri_params": [0.6, 0.95],
     },
     {
         "param_name": "compartment_periods.icu_early",
@@ -703,7 +704,12 @@ PAR_PRIORS += [
         "param_name": "testing_to_detection.shape_parameter",
         "distribution": "uniform",
         "distri_params": [-6, -3]
-    }
+    },
+    {
+        "param_name": "testing_to_detection.maximum_detection",
+        "distribution": "uniform",
+        "distri_params": [0.6, 0.95],
+    },
 ]
 
 PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS, {})

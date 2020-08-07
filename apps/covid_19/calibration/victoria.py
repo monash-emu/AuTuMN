@@ -3,6 +3,7 @@ from apps.covid_19.calibration import base
 from apps.covid_19.calibration.base import provide_default_calibration_params, add_standard_dispersion_parameter
 from apps.covid_19.mixing_optimisation.utils import add_dispersion_param_prior_for_gaussian
 
+
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
     base.run_calibration_chain(
         max_seconds,
@@ -523,9 +524,6 @@ icu_times = [
     209,
     210,
     211,
-    212,
-    213,
-    214,
 ]
 icu_counts = [
     6,
@@ -648,9 +646,6 @@ icu_counts = [
     44,
     42,
     41,
-    34,
-    36,
-    41,
 ]
 
 TARGET_OUTPUTS = [
@@ -671,22 +666,13 @@ TARGET_OUTPUTS = [
 ]
 
 PAR_PRIORS = provide_default_calibration_params(["start_time"])
-# PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "notifications")
-# PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "icu_occupancy")
 
 PAR_PRIORS += [
-    # Programmatic parameters
     {
         "param_name": "seasonal_force",
         "distribution": "uniform",
         "distri_params": [0., 0.4],
     },
-    # {
-    #     "param_name": "time_variant_detection.end_value",
-    #     "distribution": "beta",
-    #     "distri_mean": 0.85,
-    #     "distri_ci": [0.6, 0.9],
-    # },
     {
         "param_name": "testing_to_detection.maximum_detection",
         "distribution": "uniform",

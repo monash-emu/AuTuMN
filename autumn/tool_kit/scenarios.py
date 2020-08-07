@@ -51,47 +51,47 @@ class Scenario:
         If a base model is provided, then run the scenario from the scenario start time.
         If a parameter update function is provided, it will be used to update params before the model is run.
         """
-        with Timer(f"Running scenario: {self.name}"):
-            params = None
-            if not base_model:
-                # This model is the baseline model
-                assert self.is_baseline, "Can only run base model if Scenario idx is 0"
-                params = self.params["default"]
-                if update_func:
-                    # Apply extra parameter updates
-                    params = update_func(params)
 
-                self.model = self.model_builder(params)
-            else:
-                # This is a scenario model, based off the baseline model
-                assert not self.is_baseline, "Can only run scenario model if Scenario idx is > 0"
+        params = None
+        if not base_model:
+            # This model is the baseline model
+            assert self.is_baseline, "Can only run base model if Scenario idx is 0"
+            params = self.params["default"]
+            if update_func:
+                # Apply extra parameter updates
+                params = update_func(params)
 
-                # Construct scenario params by merging scenario-specific params into default params
-                default_params = self.params["default"]
-                scenario_params = self.params["scenarios"][self.idx]
-                params = merge_dicts(scenario_params, default_params)
+            self.model = self.model_builder(params)
+        else:
+            # This is a scenario model, based off the baseline model
+            assert not self.is_baseline, "Can only run scenario model if Scenario idx is > 0"
 
-                if update_func:
-                    # Apply extra parameter updates
-                    params = update_func(params)
+            # Construct scenario params by merging scenario-specific params into default params
+            default_params = self.params["default"]
+            scenario_params = self.params["scenarios"][self.idx]
+            params = merge_dicts(scenario_params, default_params)
 
-                # Override start time.
-                params = {**params, "start_time": self.params["scenario_start_time"]}
+            if update_func:
+                # Apply extra parameter updates
+                params = update_func(params)
 
-                base_times = base_model.times
-                base_outputs = base_model.outputs
+            # Override start time.
+            params = {**params, "start_time": self.params["scenario_start_time"]}
 
-                # Find the time step from which we will start the scenario
-                start_index = get_scenario_start_index(base_times, params["start_time"])
-                start_time = base_times[start_index]
-                init_compartments = base_outputs[start_index, :]
+            base_times = base_model.times
+            base_outputs = base_model.outputs
 
-                # Create the new scenario model using the scenario-specific params,
-                # ensuring the initial conditions are the same for the given start time.
-                self.model = self.model_builder(params)
-                self.model.compartment_values = init_compartments
+            # Find the time step from which we will start the scenario
+            start_index = get_scenario_start_index(base_times, params["start_time"])
+            start_time = base_times[start_index]
+            init_compartments = base_outputs[start_index, :]
 
-            self.model.run_model(IntegrationType.SOLVE_IVP)
+            # Create the new scenario model using the scenario-specific params,
+            # ensuring the initial conditions are the same for the given start time.
+            self.model = self.model_builder(params)
+            self.model.compartment_values = init_compartments
+
+        self.model.run_model(IntegrationType.SOLVE_IVP)
 
     @property
     def is_baseline(self):

@@ -365,31 +365,39 @@ def write_all_yml_files_from_outputs(output_dir):
 
 
 def evaluate_extra_deaths(decision_vars, extra_contribution, i, root_model, mode, country,
-                                            config, mle_params, best_d, direction="up"):
+                                            config, mle_params, best_objective, objective, direction="up"):
     tested_decision_vars = copy.deepcopy(decision_vars)
     if direction == "up":
         tested_decision_vars[i] += extra_contribution
     else:
         tested_decision_vars[i] -= extra_contribution
-    h, this_d, yoll, p_immune, m = objective_function(tested_decision_vars, root_model, mode, country,
+    h, this_d, this_yoll, p_immune, m = objective_function(tested_decision_vars, root_model, mode, country,
                                                   config, mle_params)
+    this_objective = {
+        'deaths': this_d,
+        'yoll': this_yoll
+    }
 
     if not h:
         delta_deaths_per_million = 1.e6
     else:
         population = sum(m[0].compartment_values)
-        delta_deaths_per_million = (this_d - best_d) / population * 1.e6
+        delta_deaths_per_million = (this_objective[objective] - best_objective) / population * 1.e6
 
     return delta_deaths_per_million
 
 
-def run_sensitivity_perturbations(output_dir, country, config=2, mode="by_age", objective="deaths", target_deaths=10,
-                                     tol=.02, direction="up"):
+def run_sensitivity_perturbations(output_dir, country, config=2, mode="by_age", objective="deaths",
+                                  target_objective_per_million=20, tol=.02, direction="up"):
     # target_deaths is a number of deaths per million people
     mle_params, decision_vars = get_mle_params_and_vars(output_dir, country, config, mode, objective)
     root_model = run_root_model(country, mle_params)
 
-    h, best_d, yoll, p_immune, m = objective_function(decision_vars, root_model, mode, country, config, mle_params)
+    h, best_d, best_yoll, p_immune, m = objective_function(decision_vars, root_model, mode, country, config, mle_params)
+    best_objective = {
+        'deaths': best_d,
+        'yoll': best_yoll,
+    }
 
     delta_contributions = []
     for i in range(len(decision_vars)):
@@ -405,16 +413,18 @@ def run_sensitivity_perturbations(output_dir, country, config=2, mode="by_age", 
         else:
             # find an upper bound (lower if direction is down):
             delta_deaths_per_million = evaluate_extra_deaths(decision_vars, extra_contribution_upper, i, root_model, mode, country,
-                                                             config, mle_params, best_d, direction)
-            if delta_deaths_per_million < target_deaths:
+                                                             config, mle_params, best_objective[objective], objective,
+                                                             direction)
+            if delta_deaths_per_million < target_objective_per_million:
                 best_solution = extra_contribution_upper
             else:
                 loop_count = 0
                 while (extra_contribution_upper - extra_contribution_lower) > tol:
                     evaluation_point = (extra_contribution_lower + extra_contribution_upper) / 2.
                     delta_deaths_per_million = evaluate_extra_deaths(decision_vars, evaluation_point, i, root_model, mode, country,
-                                                                     config, mle_params, best_d)
-                    if delta_deaths_per_million > target_deaths:
+                                                                     config, mle_params, best_objective[objective],
+                                                                     objective, direction)
+                    if delta_deaths_per_million > target_objective_per_million:
                         extra_contribution_upper = evaluation_point
                     else:
                         extra_contribution_lower = evaluation_point
@@ -423,7 +433,7 @@ def run_sensitivity_perturbations(output_dir, country, config=2, mode="by_age", 
                         print("FLAG INFINITE LOOP")
                         break
 
-                if (extra_contribution_upper - target_deaths) < (target_deaths - extra_contribution_lower):
+                if (extra_contribution_upper - target_objective_per_million) < (target_objective_per_million - extra_contribution_lower):
                     best_solution = extra_contribution_upper
                 else:
                     best_solution = extra_contribution_lower
@@ -431,7 +441,7 @@ def run_sensitivity_perturbations(output_dir, country, config=2, mode="by_age", 
         delta_contributions.append(best_solution)
 
         print(best_solution)
-    output_file_path = os.path.join("optimisation_outputs", "sensitivity", country + "_" + mode + "_" + str(config) + "_" + objective + "_upper.yml")
+    output_file_path = os.path.join("optimisation_outputs", "sensitivity", country + "_" + mode + "_" + str(config) + "_" + objective + "_" + direction + ".yml")
 
     with open(output_file_path, "w") as f:
         yaml.dump(delta_contributions, f)

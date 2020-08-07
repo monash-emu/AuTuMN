@@ -23,7 +23,11 @@ if __name__ == "__main__":
     #                                 n_samples=2,
     #                                 burn_in=burnin[country])
 
-    direction = "down"
+    direction = "up"  # FIXME
+    target_objective = {
+        "deaths": 20,
+        "yoll": 1000,
+    }
 
     for country in burnin:
         for objective in ["deaths", "yoll"]:
@@ -33,4 +37,5 @@ if __name__ == "__main__":
                     print()
                     print(country + " " + objective + " " + mode + " " + str(config) + " " + direction)
                     run_sensitivity_perturbations('optimisation_outputs/6Aug2020/', country, config, mode, objective,
-                                                   target_deaths=10, tol=.02, direction=direction)
+                                                  target_objective_per_million=target_objective[objective], tol=.02,
+                                                  direction=direction)

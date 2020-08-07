@@ -16,7 +16,8 @@ PAR_PRIORS = get_prior_distributions_for_opti()
 update_priors = {
     "contact_rate": [0.020, 0.040],
     "start_time": [0., 20.],
-    "time_variant_detection.max_change_time": [140., 160.],
+    "time_variant_detection.max_change_time": [145., 155.],
+    "microdistancing.parameters.c": [80., 100.],
     "time_variant_detection.end_value": [.5, .8],
 }
 
@@ -30,7 +31,6 @@ TARGET_OUTPUTS = get_target_outputs_for_opti(country, source='who', data_start_t
 MULTIPLIERS = {}
 
 PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS, MULTIPLIERS)
-
 
 # Use weekly counts
 for target in TARGET_OUTPUTS:

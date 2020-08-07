@@ -29,7 +29,7 @@ BASE_CALIBRATION_PARAMS = [
     {
         "param_name": "compartment_periods_calculated.exposed.total_period",
         "distribution": "uniform",
-        "distri_params": [4.4, 5.6],
+        "distri_params": [3., 6.],
     },
     {
         "param_name": "compartment_periods_calculated.active.total_period",

@@ -17,11 +17,11 @@ microdistancing:
 
 infectious_seed: 0
 
-start_time: 15.
+start_time: 25.
 end_time: 365.
 
 contact_rate: 0.024
-seasonal_force: 0.7
+seasonal_force: 0.1
 
 mixing:
   school:
@@ -54,6 +54,7 @@ mixing:
 data:
   times_imported_cases:
     [
+      25,
       26,
       27,
       28,
@@ -222,6 +223,7 @@ data:
     ]
   n_imported_cases:
     [
+      0.0001,
       1,
       0,
       0,

@@ -8,11 +8,14 @@ start_time: 160.
 end_time: 365.
 scenario_start_time: 257  # 13/09/2020
 
-contact_rate: 0.04
+contact_rate: 0.037
 seasonal_force: 0.3
 
 compartment_periods:
-    icu_early: 5.
+    icu_early: 10.
+
+hospital_props_multiplier: 1.5
+icu_prop: 0.12
 
 compartment_periods_calculated:
     exposed:
@@ -25,18 +28,18 @@ testing_to_detection:
 microdistancing:
     function_type: empiric
     parameters:
-        times: [181, 182, 191, 192, 215, 216]
-        values: [1., 0.8, 0.8, 0.6, 0.6, 0.5]
+        times: [181, 182, 185, 186, 191, 192, 215, 216]
+        values: [1., 0.8, 0.8, 0.7, 0.7, 0.6, 0.6, 0.4]
 
     # 30th March, day 90, stage 3 enforced
     # 9th June, day 162, stage 3 released (I think)
     # 20th June, day 172, restrictions tightened, only five visitors at home
     # (21st June, day 173, seasonal forcing peaks)
-    # 30th June, day 182, postcode lockdowns
-    # 4th July, day 186, two more postcodes locked down
-    # 9th July, day 191, stage 3 enforced
-    # 22nd July, day 204, face coverings
-    # 2nd August, day 215, stage 4 enforced
+    # 30th June, day 182, postcode lockdowns - 20% microdistancing
+    # 4th July, day 186, two more postcodes locked down - 10% further microdistancing
+    # 9th July, day 191, stage 3 enforced - 10% further microdistancing
+    # 22nd July, day 204, face coverings - 10% further microdistancing
+    # 2nd August, day 215, stage 4 enforced - 20% further microdistancing
 
 mixing:
   school:

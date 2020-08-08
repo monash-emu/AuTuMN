@@ -323,16 +323,24 @@ def drop_yml_scenario_file(output_dir, country, config=2, mode="by_age", objecti
                 ]
 
 
+    # scenario_mapping = {
+    #     1: "by_age_2_deaths",
+    #     2: "by_age_2_yoll",
+    #     3: "by_age_3_deaths",
+    #     4: "by_age_3_yoll",
+    #     5: "by_location_2_deaths",
+    #     6: "by_location_2_yoll",
+    #     7: "by_location_3_deaths",
+    #     8: "by_location_3_yoll",
+    #     9: "unmitigated",  # not used, just for completeness
+    # }
+
     scenario_mapping = {
         1: "by_age_2_deaths",
         2: "by_age_2_yoll",
         3: "by_age_3_deaths",
         4: "by_age_3_yoll",
-        5: "by_location_2_deaths",
-        6: "by_location_2_yoll",
-        7: "by_location_3_deaths",
-        8: "by_location_3_yoll",
-        9: "unmitigated",  # not used, just for completeness
+        5: "unmitigated",  # not used, just for completeness
     }
     for key, val in scenario_mapping.items():
         if val == mode + "_" + str(config) + "_" + objective:
@@ -464,6 +472,7 @@ def explore_optimal_plan(decision_vars, _root_model, mode, _country, config, par
         h, d, yoll, p_immune, m = objective_function(test_vars, _root_model, mode, _country, config,
                                                     param_set)
         print("Deaths " + str(i) + ": " + str(int(round(d))) + " " + str(h) + "\t" + str(decision_vars[i]) + " -->" + str(test_vars[i]))
+
 
 if __name__ == "__main__":
     # looping through all countries and optimisation modes for testing purpose

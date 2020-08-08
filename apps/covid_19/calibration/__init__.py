@@ -30,7 +30,7 @@ CALIBRATIONS = {
     Region.PHILIPPINES: philippines.run_calibration_chain,
     Region.VICTORIA: victoria.run_calibration_chain,
     # Region.WEST_MELBOURNE: west_melbourne.run_calibration_chain,
-    Region.NORTH_MELBOURNE: north_melbourne.run_calibration_chain,
+    # Region.NORTH_MELBOURNE: north_melbourne.run_calibration_chain,
     Region.NSW: nsw.run_calibration_chain,
     Region.UNITED_KINGDOM: united_kingdom.run_calibration_chain,
     Region.BELGIUM: belgium.run_calibration_chain,

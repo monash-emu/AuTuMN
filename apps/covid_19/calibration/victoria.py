@@ -734,6 +734,11 @@ PAR_PRIORS = [
         "distribution": "uniform",
         "distri_params": [0.6, 0.8],
     },
+    {
+        "param_name": "hospital_props_multiplier",
+        "distribution": "uniform",
+        "distri_params": [1., 2.],
+    },
 ]
 
 PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS, {})

@@ -4,12 +4,15 @@ region: Victoria
 implement_importation: true
 infectious_seed: 0
 
-start_time: 25.
+start_time: 160.
 end_time: 365.
 scenario_start_time: 257  # 13/09/2020
 
-contact_rate: 0.024
-seasonal_force: 0.5
+contact_rate: 0.04
+seasonal_force: 0.3
+
+compartment_periods:
+    icu_early: 5.
 
 compartment_periods_calculated:
     exposed:
@@ -22,8 +25,8 @@ testing_to_detection:
 microdistancing:
     function_type: empiric
     parameters:
-        times: [89, 90, 162, 163, 181, 182, 215, 216]
-        values: [1., 0.4, 0.4, 0.8, 0.8, 0.7, 0.7, 0.4]
+        times: [181, 182, 191, 192, 215, 216]
+        values: [1., 0.8, 0.8, 0.6, 0.6, 0.5]
 
     # 30th March, day 90, stage 3 enforced
     # 9th June, day 162, stage 3 released (I think)

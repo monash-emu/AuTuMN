@@ -1086,4 +1086,131 @@ def plot_multicountry_mobility(all_values):
     pyplot.savefig(filename + ".png", dpi=300)
 
 
+def plot_hospital_uncertainty(pbi_outputs_dir, country, axis):
+    dir_content = os.listdir(pbi_outputs_dir)
+    for f in dir_content:
+        if country in f:
+            db_name = f
+
+    db_path = os.path.join(pbi_outputs_dir, db_name)
+    db = Database(db_path)
+    uncertainty_df = db.query("uncertainty")
+    outputs = uncertainty_df["type"].unique().tolist()
+    quantile_vals = uncertainty_df["quantile"].unique().tolist()
+
+    mask = uncertainty_df["type"] == 'hospital_occupancy'
+    output_df = uncertainty_df[mask]
+    data = {}
+    max_plotted_time = 600.
+
+    max_q = 0.
+    for scenario in range(5):
+        sc_name = "S_" + str(scenario)
+        data[sc_name] = {}
+        mask = output_df["Scenario"] == sc_name
+        scenario_df = output_df[mask]
+        times = list(scenario_df.time.unique())[1:]
+        if max_plotted_time in times:
+            cut_tail = True
+        else:
+            cut_tail = False
+
+        if cut_tail:
+            max_time_index = times.index(max_plotted_time)
+            times = times[:max_time_index + 1]
+
+        quantiles = {}
+        for q in quantile_vals:
+            mask = scenario_df["quantile"] == q
+            quantiles[q] = scenario_df[mask]["value"].tolist()[1:]
+            if cut_tail:
+                quantiles[q] = quantiles[q][:max_time_index + 1]
+                max_q = max([max_q, max(quantiles[q])])
+        data[sc_name]['quantiles'] = quantiles
+        data[sc_name]['times'] = list(times)
+
+    break_width = 10
+    dates_to_tick = [
+        [214., "1 Aug 2020"],
+        [366. + 32., "1 Feb 2021"]
+    ]
+    x_ticks = [61]
+    x_tick_labs = ['1 mar 2020']
+    last_t_plotted = 0
+    for scenario in range(5):
+        sc_name = "S_" + str(scenario)
+        t_shift = last_t_plotted - data[sc_name]['times'][0]
+        if scenario >= 2:
+            t_shift += break_width
+        times = [t_shift + t for t in data[sc_name]['times']]
+
+        for tick in dates_to_tick:
+            requested_time = tick[0]
+            requested_label = tick[1]
+            graph_time = t_shift + requested_time
+            x_ticks.append(graph_time)
+            x_tick_labs.append(requested_label)
+
+        if scenario > 0:
+            axis.fill_between(times, data[sc_name]['quantiles'][0.025], data[sc_name]['quantiles'][0.975], facecolor="lightsteelblue")
+            axis.fill_between(times, data[sc_name]['quantiles'][0.25], data[sc_name]['quantiles'][0.75], facecolor="cornflowerblue")
+            axis.plot(times, data[sc_name]['quantiles'][0.50], color="navy")
+        else:
+            axis.fill_between(times, data[sc_name]['quantiles'][0.025], data[sc_name]['quantiles'][0.975], facecolor="plum")
+            axis.fill_between(times, data[sc_name]['quantiles'][0.25], data[sc_name]['quantiles'][0.75], facecolor="mediumorchid")
+            axis.plot(times, data[sc_name]['quantiles'][0.50], color="black")
+        last_t_plotted = max(times)
+
+        if scenario == 0:
+            axis.axvline(x=last_t_plotted, color='black', linestyle="dotted")
+        else:
+            rect = patches.Rectangle((last_t_plotted, 0), break_width, 1.e9, linewidth=0,
+                              facecolor='white')
+            # rect.set_zorder(1)
+            axis.add_patch(rect)
+
+    axis.set_xlim((60., last_t_plotted))
+    axis.set_ylim((0, max_q * 1.05))
+
+    axis.set_xticks(x_ticks)
+    axis.set_xticklabels(x_tick_labs)
+    axis.tick_params(axis="x", which="major", length=7)
+
+
+
+def plot_multicountry_hospital_uncertainty(pbi_outputs_dir, immunity):
+    fig = pyplot.figure(constrained_layout=True, figsize=(20, 20))  # (w, h)
+    widths = [1, 19]
+    heights = [1, 6, 6, 6, 6, 6, 6]
+    spec = fig.add_gridspec(ncols=2, nrows=7, width_ratios=widths,
+                            height_ratios=heights)
+
+    countries = ['italy'] # 'belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']
+    country_names = [c.title() for c in countries]
+    country_names[-1] = "United Kingdom"
+
+    text_size = 23
+
+    for i, country in enumerate(countries):
+        ax = fig.add_subplot(spec[i+1, 0])
+        ax.text(0.5, 0.5, country_names[i], rotation=90, fontsize=text_size, horizontalalignment='center', verticalalignment='center')
+        ax.axis("off")
+
+        ax = fig.add_subplot(spec[i+1, 1])
+        plot_hospital_uncertainty(pbi_outputs_dir, country, axis=ax)
+
+        if i == 0:
+            ax = fig.add_subplot(spec[0, 1])
+            ax.text(0.5, 0.5, 'ADD SOME TEXT HERE', fontsize=text_size, horizontalalignment='center', verticalalignment='center')
+            ax.axis("off")
+
+    pyplot.rcParams["font.family"] = "Times New Roman"
+
+    out_dir = "apps/covid_19/mixing_optimisation/opti_plots/figures/hospital_uncertainty/"
+    filename = out_dir + "hospital_uncertainty_by_age_" + immunity
+    # pyplot.savefig(filename + ".pdf")
+    pyplot.savefig(filename + ".png", dpi=300)
+
+
+
 

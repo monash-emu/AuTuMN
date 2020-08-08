@@ -694,7 +694,7 @@ PAR_PRIORS = [
     {
         "param_name": "compartment_periods.icu_early",
         "distribution": "uniform",
-        "distri_ci": [8., 17.],
+        "distri_params": [8., 17.],
     },
     {
         "param_name": "compartment_periods.icu_late",

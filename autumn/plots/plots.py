@@ -976,7 +976,7 @@ def plot_optimal_plan(all_results, config, country, mode, ax):
     ax.tick_params(axis="x", which="major", length=4)
     ax.set_xlim((0.5, n_vars[mode] + .5))
 
-    ax.set_ylim((0, max((ymax, 1.))))
+    ax.set_ylim((0, max((ymax, 1.05))))
 
 
     if config == 2:
@@ -987,7 +987,7 @@ def plot_multicountry_optimal_plan(all_results, mode):
     pyplot.style.use("default")
 
     fig_width = {
-        'by_age': 25,
+        'by_age': 20,
         'by_location': 12
     }
     fig = pyplot.figure(constrained_layout=True, figsize=(fig_width[mode], 20))  # (w, h)

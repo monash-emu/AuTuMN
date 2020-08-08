@@ -374,10 +374,12 @@ def get_uncertainty_cell_value(calibration_output_path, output, config, mode):
     full_tag = mode + "_" + str(config) + "_" + objective
     if "unmitigated" in output:
         scenario = 9
+    elif "_before" in output:
+        scenario = 0
     else:
         scenario = [key for key, val in scenario_mapping.items() if val == full_tag][0]
 
-    scenario = 0  # FIXME remove this !
+    #scenario = 0  # FIXME remove this !
 
     multiplier = {
         "infection_deathsXall": 1. / 1000.,
@@ -396,6 +398,9 @@ def get_uncertainty_cell_value(calibration_output_path, output, config, mode):
     upper = round(multiplier[model_output] * quantiles[2], rounding[model_output])
 
     cell_content = str(median) + " (" + str(lower) + "-" + str(upper) + ")"
+
+    print(cell_content)
+
     return cell_content
 
 
@@ -528,4 +533,5 @@ def get_posterior_percentiles_time_variant_profile(calibration_path, function='d
 #
 # out_dir = "../../../data/outputs/calibrate/covid_19/france/Final-2020-08-04"
 #
-# make_main_outputs_table('Final-2020-08-04', 2, "by_age")
+
+    # make_main_outputs_table('Final-2020-08-08', 2, "by_age")

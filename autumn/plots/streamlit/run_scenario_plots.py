@@ -333,7 +333,7 @@ PLOT_FUNCS = {
     # "Stacked outputs by stratum": plot_stacked_compartments_by_stratum,
     # "Stacked derived by stratum": plot_stacked_derived_outputs_by_stratum,
     "Multicountry rainbow": plot_multicountry_rainbow,
-    # "Multicountry hospital": plot_multicounty_hospital,
+    "Multicountry hospital": plot_multicounty_hospital,
     "Multicountry optimal plan": plot_multicountry_optimal_plan,
     # "Multicountry mobility data": plot_multicountry_mobility,
 }

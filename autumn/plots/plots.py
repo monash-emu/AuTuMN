@@ -784,7 +784,7 @@ def plot_multicountry_rainbow(country_scenarios, config, mode, objective):
 
     out_dir = "apps/covid_19/mixing_optimisation/opti_plots/figures/rainbows/"
     filename = out_dir + "rainbow_" + mode + "_config_" + str(config) + "_" + objective
-    # pyplot.savefig(filename + ".pdf")
+    pyplot.savefig(filename + ".pdf")
     pyplot.savefig(filename + ".png", dpi=300)
 
 
@@ -800,7 +800,15 @@ def plot_hospital_occupancy(all_scenarios, country, mode, objective, ax, title):
         "icu_occupancy": sns.color_palette("Oranges_r", 4)[0]
     }
 
-    x_min = 214
+    x_min = 61. # 214
+
+
+    # mark Phase 2 in the background:
+    phase_2_start = 214
+    phase_2_end = {2: 398, 3: 580}
+    rect = patches.Rectangle((phase_2_start, 0), phase_2_end[config] - phase_2_start, 1.e9, linewidth=0,
+                              facecolor='gold', alpha=.2)
+    rect.set_zorder(1)
 
     for config in [2, 3]:
         scenarios = all_scenarios[mode][objective][config][country]
@@ -870,8 +878,8 @@ def plot_multicountry_hospital(all_scenarios, mode, objective):
     pyplot.rcParams["font.family"] = "Times New Roman"
 
     out_dir = "apps/covid_19/mixing_optimisation/opti_plots/figures/hospitals/"
-    filename = out_dir + "rainbow_" + mode + "_" + objective
-    pyplot.savefig(filename + ".pdf")
+    filename = out_dir + "hospital_" + mode + "_" + objective
+    # pyplot.savefig(filename + ".pdf")
     pyplot.savefig(filename + ".png", dpi=300)
 
 
@@ -889,7 +897,7 @@ def plot_optimal_plan(all_results, config, country, mode, ax):
         'by_age': 16,
         'by_location': 3,
     }
-    bar_width = .37
+    bar_width = .32
 
     # arrows
     # arrow_par = {
@@ -897,7 +905,8 @@ def plot_optimal_plan(all_results, config, country, mode, ax):
     #     "by_location": {'width': .007, 'head_width': .03, 'head_length': .01},
     # }
 
-
+    ax.grid(linewidth=.5, zorder=0, linestyle="dotted")
+    ax.set_axisbelow(True)
     sensi_outputs = {}
     directions = ["down", "up"]
     for objective in ('deaths', 'yoll'):
@@ -909,7 +918,7 @@ def plot_optimal_plan(all_results, config, country, mode, ax):
                 with open(path, "r") as yaml_file:
                     sensi_outputs[objective][direction] = yaml.safe_load(yaml_file)
             except:
-                sensi_outputs[objective][direction] = 0.
+                sensi_outputs[objective][direction] = [0.] * n_vars[mode]
 
     ymax = 0.
     for i_age in range(n_vars[mode]):
@@ -918,8 +927,11 @@ def plot_optimal_plan(all_results, config, country, mode, ax):
         for objective in ('deaths', 'yoll'):
             value = data[objective]['best_x' + str(i_age)].iloc[0]
             rect = patches.Rectangle((x_pos + delta_xpos * bar_width, 0.), bar_width, value, linewidth=.8,
-                              facecolor=colours[objective], edgecolor='black')
+                              facecolor=colours[objective], edgecolor='black', zorder=1)
             ax.add_patch(rect)
+
+            # ax.plot((x_pos + delta_xpos * bar_width, x_pos + delta_xpos * bar_width + bar_width), (value, value),
+            #         color=colours[objective])
 
             for direction in directions:
                 arrow_length = sensi_outputs[objective][direction][i_age]
@@ -930,7 +942,7 @@ def plot_optimal_plan(all_results, config, country, mode, ax):
                 #          width=arrow_par[mode]['width'], head_width=arrow_par[mode]['head_width'],
                 #          head_length=arrow_par[mode]['head_length'])
                 _x = x_pos + delta_xpos * bar_width + .5 * bar_width
-                ax.plot((_x, _x), (value, value + arrow_length), color='black', lwd=1)
+                ax.plot((_x, _x), (value, value + arrow_length), color='black', linewidth=2, zorder=3)
 
                 ymax = max([ymax, value + arrow_length])
 
@@ -966,13 +978,16 @@ def plot_optimal_plan(all_results, config, country, mode, ax):
 
     ax.set_ylim((0, max((ymax, 1.))))
 
+
     if config == 2:
         ax.set_ylabel(ylab, fontsize=14)
 
 
 def plot_multicountry_optimal_plan(all_results, mode):
+    pyplot.style.use("default")
+
     fig_width = {
-        'by_age': 20,
+        'by_age': 25,
         'by_location': 12
     }
     fig = pyplot.figure(constrained_layout=True, figsize=(fig_width[mode], 20))  # (w, h)

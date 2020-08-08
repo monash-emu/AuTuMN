@@ -82,9 +82,9 @@ def stratify_by_clinical(model, model_parameters, compartments, detected_proport
         )
     else:
         infection_fatality_props = age_specific_ifrs_from_double_exp_model(
-            ifr_double_exp_model_params['k'],
-            ifr_double_exp_model_params['m'],
-            ifr_double_exp_model_params['last_representative_age']
+            ifr_double_exp_model_params["k"],
+            ifr_double_exp_model_params["m"],
+            ifr_double_exp_model_params["last_representative_age"]
         )
 
     # Find the absolute progression proportions.
@@ -101,8 +101,8 @@ def stratify_by_clinical(model, model_parameters, compartments, detected_proport
         "non_sympt": non_sympt.tolist(),
         "hospital": sympt_hospital.tolist(),
         "sympt_non_hospital": sympt_non_hospital.tolist(),  # Over-ridden by a by time-varying proportion later
-        "icu": sympt_hospital_icu.tolist(),
-        "hospital_non_icu": sympt_hospital_non_icu.tolist(),
+        ClinicalStratum.ICU: sympt_hospital_icu.tolist(),
+        ClinicalStratum.HOSPITAL_NON_ICU: sympt_hospital_non_icu.tolist(),
     }
 
     # Calculate the absolute proportion of all patients who should eventually reach hospital death or ICU death.
@@ -114,18 +114,18 @@ def stratify_by_clinical(model, model_parameters, compartments, detected_proport
             abs_props["hospital"][age_idx] = infection_fatality_props[age_idx]
 
         # Find the target absolute ICU mortality and the amount left over from IFRs to go to hospital, if any
-        target_icu_abs_mort = abs_props["icu"][age_idx] * icu_mortality_prop
+        target_icu_abs_mort = abs_props[ClinicalStratum.ICU][age_idx] * icu_mortality_prop
         left_over_mort = infection_fatality_props[age_idx] - target_icu_abs_mort
 
         # If enough IFR left over to allow partial mortality for the hospitalised
-        if 0.0 < left_over_mort <= abs_props['hospital_non_icu'][age_idx]:
+        if 0.0 < left_over_mort <= abs_props[ClinicalStratum.HOSPITAL_NON_ICU][age_idx]:
             hospital_death_prop = left_over_mort
             icu_death_prop = target_icu_abs_mort
 
         # Otherwise if there is too much excess death to fit in hospital, inflate the ICU proportion
-        elif left_over_mort > abs_props['hospital_non_icu'][age_idx]:
-            hospital_death_prop = abs_props['hospital_non_icu'][age_idx]
-            icu_death_prop = infection_fatality_props[age_idx] - abs_props['hospital_non_icu'][age_idx]
+        elif left_over_mort > abs_props[ClinicalStratum.HOSPITAL_NON_ICU][age_idx]:
+            hospital_death_prop = abs_props[ClinicalStratum.HOSPITAL_NON_ICU][age_idx]
+            icu_death_prop = infection_fatality_props[age_idx] - abs_props[ClinicalStratum.HOSPITAL_NON_ICU][age_idx]
 
         # Otherwise if all IFR taken up by ICU
         else:
@@ -141,9 +141,9 @@ def stratify_by_clinical(model, model_parameters, compartments, detected_proport
     # fatality rate for hospitalised patients
     rel_props = {
         "hospital_death": element_wise_list_division(
-            abs_props["hospital_death"], abs_props["hospital_non_icu"]
+            abs_props["hospital_death"], abs_props[ClinicalStratum.HOSPITAL_NON_ICU]
         ),
-        "icu_death": element_wise_list_division(abs_props["icu_death"], abs_props["icu"]),
+        "icu_death": element_wise_list_division(abs_props["icu_death"], abs_props[ClinicalStratum.ICU]),
     }
 
     # Progression rates into the infectious compartment(s)
@@ -182,7 +182,7 @@ def stratify_by_clinical(model, model_parameters, compartments, detected_proport
         ) = find_rates_and_complements_from_ifr(
             rel_props[stratum + "_death"],
             1,
-            [model_parameters["within_" + stratum + "_late"]] * 16,
+            [model_parameters[f"within_{stratum}_late"]] * 16,
             )
 
     # Death and non-death progression between infectious compartments towards the recovered compartment
@@ -205,9 +205,9 @@ def stratify_by_clinical(model, model_parameters, compartments, detected_proport
     # FIXME: Ask Romain if he knows why we bother doing this.
     stratification_adjustments.update(
         {
-            "within_infectious": {
-                "hospital_non_icuW": within_hospital_early,
-                "icuW": within_icu_early,
+            f"within_{Compartment.EARLY_ACTIVE}": {
+                f"{ClinicalStratum.HOSPITAL_NON_ICU}W": within_hospital_early,
+                f"{ClinicalStratum.ICU}W": within_icu_early,
             },
         }
     )
@@ -232,7 +232,7 @@ def stratify_by_clinical(model, model_parameters, compartments, detected_proport
     # Work out time-variant clinical proportions for imported cases accounting for quarantine
     if implement_importation:
         to_infectious_key = \
-            f"to_{Compartment.LATE_EXPOSED}Xagegroup_" + str(model_parameters['import_representative_age'])
+            f"to_{Compartment.LATE_EXPOSED}Xagegroup_" + str(model_parameters["import_representative_age"])
         tvs = model.time_variants
 
         # Create scale-up function for quarantine

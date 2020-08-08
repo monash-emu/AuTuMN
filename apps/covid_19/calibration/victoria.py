@@ -708,7 +708,7 @@ PAR_PRIORS = [
     {
         "param_name": "compartment_periods_calculated.exposed.total_period",
         "distribution": "uniform",
-        "distri_params": [3., 5.],
+        "distri_params": [4., 6.],
     },
     {
         "param_name": "compartment_periods_calculated.active.total_period",
@@ -748,18 +748,18 @@ PAR_PRIORS = [
     {
         "param_name": "testing_to_detection.maximum_detection",
         "distribution": "uniform",
-        "distri_params": [0.6, 0.8],
+        "distri_params": [0.6, 0.9],
     },
     {
         "param_name": "hospital_props_multiplier",
         "distribution": "uniform",
         "distri_params": [1., 2.],
     },
-    {
-        "param_name": "ifr_multiplier",
-        "distribution": "uniform",
-        "distri_params": [0.67, 1.5],
-    },
+    # {
+    #     "param_name": "ifr_multiplier",
+    #     "distribution": "uniform",
+    #     "distri_params": [0.67, 1.5],
+    # },
 ]
 
 PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS, {})

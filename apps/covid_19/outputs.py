@@ -182,3 +182,16 @@ def get_notifications_at_sympt_onset(model, time):
                 f"clinical_{ClinicalStratum.NON_SYMPT}" not in find_name_components(key):
             notifications_sympt_onset += value[i_time]
     return notifications_sympt_onset
+
+
+# The code below applies to the optimisation countries only. But please leave it here for now.
+
+
+def calculate_cum_deaths(model, time):
+    time_idx = model.times.index(time)
+    return sum(model.derived_outputs["infection_deathsXall"][: time_idx + 1])
+
+
+def calculate_cum_years_of_life_lost(model, time):
+    time_idx = model.times.index(time)
+    return sum(model.derived_outputs["years_of_life_lost"][: time_idx + 1])

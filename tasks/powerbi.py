@@ -31,7 +31,6 @@ UNCERTAINTY_OUTPUTS = [
 ]
 
 OPTI_UNCERTAINTY_OUTPUTS = [
-    "incidence",
     "notifications",
     "infection_deathsXall",
     "hospital_occupancy",
@@ -39,6 +38,8 @@ OPTI_UNCERTAINTY_OUTPUTS = [
     "icu_occupancy",
     "new_icu_admissions",
     "proportion_seropositive",
+    "accum_deaths",
+    "accum_years_of_life_lost",
 ]
 
 

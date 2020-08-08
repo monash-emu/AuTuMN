@@ -15,6 +15,7 @@ from autumn.tool_kit.scenarios import get_model_times_from_inputs
 from autumn import inputs
 from autumn.environment.seasonality import get_seasonal_forcing
 from apps.covid_19.constants import Compartment, ClinicalStratum
+from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
 
 from . import outputs, preprocess
 from .stratification import stratify_by_clinical
@@ -294,9 +295,15 @@ def build_model(params: dict) -> StratifiedModel:
         outputs.calculate_icu_occupancy
     model.death_output_categories = \
         list_all_strata_for_mortality(model.compartment_names, "_active")
-    model.derived_output_functions["years_of_life_lost"] = \
-        outputs.get_calculate_years_of_life_lost(life_expectancy_latest)
     model.derived_output_functions["notifications_at_sympt_onset"] = \
         outputs.get_notifications_at_sympt_onset
+
+    if region in OPTI_REGIONS:  # Please leave this here as it is currently used for the optimisation project
+        model.derived_output_functions["years_of_life_lost"] = \
+            outputs.get_calculate_years_of_life_lost(life_expectancy_latest)
+        model.derived_output_functions["accum_deaths"] = \
+            outputs.calculate_cum_deaths
+        model.derived_output_functions["accum_years_of_life_lost"] = \
+            outputs.calculate_cum_years_of_life_lost
 
     return model

@@ -178,7 +178,7 @@ def stratify_by_clinical(model, model_parameters, compartments, detected_proport
     for stratum in ("hospital", "icu"):
         (
             progression_death_rates[stratum + "_infect_death"],
-            progression_death_rates[stratum + "_within_late"],
+            progression_death_rates[stratum + f"_within_{Compartment.LATE_ACTIVE}"],
         ) = find_rates_and_complements_from_ifr(
             rel_props[stratum + "_death"],
             1,
@@ -186,7 +186,7 @@ def stratify_by_clinical(model, model_parameters, compartments, detected_proport
             )
 
     # Death and non-death progression between infectious compartments towards the recovered compartment
-    for param in ("within_late", "infect_death"):
+    for param in (f"within_{Compartment.LATE_ACTIVE}", "infect_death"):
         stratification_adjustments.update(
             adjust_upstream_stratified_parameter(
                 param,

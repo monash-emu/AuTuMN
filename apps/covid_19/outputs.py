@@ -182,3 +182,8 @@ def get_notifications_at_sympt_onset(model, time):
                 f"clinical_{ClinicalStratum.NON_SYMPT}" not in find_name_components(key):
             notifications_sympt_onset += value[i_time]
     return notifications_sympt_onset
+
+
+def get_infection_deaths(model, time):
+    i_time = model.times.index(time)
+    return model.derived_outputs['infection_deathsXall'][i_time]

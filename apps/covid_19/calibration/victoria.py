@@ -656,6 +656,16 @@ icu_counts = [
     41,
 ]
 
+death_times = [
+    175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194,
+    195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214,
+    215, 216, 217, 218, 219, 220, 221
+]
+death_counts = [
+    0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1, 1, 0, 2, 1, 2, 3, 3, 3, 1, 3, 2, 5, 7, 5, 10, 6, 6, 9, 13,
+    8, 3, 7, 13, 11, 15, 8, 11, 12
+]
+
 # Define weights for the calibration dates of interest
 case_weights = list(range(1, len(case_times) + 1))
 case_weights[-7:] = [i_weight * 2. for i_weight in case_weights[-7:]]
@@ -679,6 +689,12 @@ TARGET_OUTPUTS = [
         "output_key": "icu_occupancy",
         "years": icu_times,
         "values": icu_counts,
+        "loglikelihood_distri": "normal",
+    },
+    {
+        "output_key": "total_infection_deaths",
+        "years": death_times,
+        "values": death_counts,
         "loglikelihood_distri": "normal",
     },
 ]
@@ -738,6 +754,11 @@ PAR_PRIORS = [
         "param_name": "hospital_props_multiplier",
         "distribution": "uniform",
         "distri_params": [1., 2.],
+    },
+    {
+        "param_name": "ifr_multiplier",
+        "distribution": "uniform",
+        "distri_params": [0.67, 1.5],
     },
 ]
 

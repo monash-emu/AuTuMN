@@ -89,6 +89,7 @@ validate_params = sb.build_validator(
     hospital_occupancy_dispersion_param=float,
     new_hospital_admissions_dispersion_param=float,
     new_icu_admissions_dispersion_param=float,
+    total_infection_deaths_dispersion_param=float,
     # for immunity wane
     full_immunity=bool,
     immunity_duration=float,

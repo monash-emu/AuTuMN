@@ -129,7 +129,7 @@ def build_model(params: dict) -> StratifiedModel:
 
     # FIXME: Remove params from model_parameters
     model_parameters = {**params, **compartment_exit_flow_rates}
-    model_parameters[f"to_{Compartment.LATE_EXPOSED}"] = model_parameters["within_" + Compartment.EARLY_EXPOSED]
+    model_parameters[f"to_{Compartment.LATE_EXPOSED}"] = model_parameters[f"within_{Compartment.EARLY_EXPOSED}"]
 
     model_parameters['immunity_loss_rate'] = 1. / params['immunity_duration']
 
@@ -298,5 +298,7 @@ def build_model(params: dict) -> StratifiedModel:
         outputs.get_calculate_years_of_life_lost(life_expectancy_latest)
     model.derived_output_functions["notifications_at_sympt_onset"] = \
         outputs.get_notifications_at_sympt_onset
+    model.derived_output_functions["total_infection_deaths"] = \
+        outputs.get_infection_deaths
 
     return model

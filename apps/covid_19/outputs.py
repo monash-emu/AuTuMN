@@ -160,3 +160,15 @@ def get_incidence_connections(stratum_names: str):
         }
 
     return incidence_connections
+
+
+#############  Only for the opti countries
+
+def calculate_cum_deaths(model, time):
+    time_idx = model.times.index(time)
+    return sum(model.derived_outputs["infection_deathsXall"][: time_idx + 1])
+
+
+def calculate_cum_years_of_life_lost(model, time):
+    time_idx = model.times.index(time)
+    return sum(model.derived_outputs["years_of_life_lost"][: time_idx + 1])

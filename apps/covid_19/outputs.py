@@ -187,3 +187,14 @@ def get_notifications_at_sympt_onset(model, time):
 def get_infection_deaths(model, time):
     i_time = model.times.index(time)
     return model.derived_outputs['infection_deathsXall'][i_time]
+
+
+# The code below applies to the optimisation countries only. But please leave it here for now.
+def calculate_cum_deaths(model, time):
+    time_idx = model.times.index(time)
+    return sum(model.derived_outputs["infection_deathsXall"][: time_idx + 1])
+
+
+def calculate_cum_years_of_life_lost(model, time):
+    time_idx = model.times.index(time)
+    return sum(model.derived_outputs["years_of_life_lost"][: time_idx + 1])

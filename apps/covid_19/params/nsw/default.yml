@@ -31,7 +31,7 @@ mixing:
       - 2020-06-08
       - 2020-06-10
       - 2020-07-07
-      - 2020-08-01 # google mobility data update, pls review
+      - 2020-08-11 # google mobility data update, pls review
     values:
       - 1.
       - 0.

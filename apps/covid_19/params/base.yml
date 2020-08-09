@@ -220,7 +220,7 @@ new_hospital_admissions_dispersion_param: 1.
 new_icu_admissions_dispersion_param: 1.
 
 # parameters pertaining to waning immunity
-full_immunity: True
+full_immunity: False
 immunity_duration: 90.
 
 icu_occupancy_dispersion_param: 1.

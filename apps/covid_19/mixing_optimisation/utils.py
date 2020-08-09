@@ -341,18 +341,16 @@ def read_cumulative_output_from_output_table(calibration_output_path, scenario, 
     return cumulative_values
 
 
-def get_uncertainty_cell_value(calibration_output_path, output, config, mode):
+def get_uncertainty_cell_value(uncertainty_df, output, config):
     # output is in ["deaths_before", "deaths_unmitigated", "deaths_opti_deaths", "deaths_opti_yoll",
     #                "yoll_before", "yoll_unmitigated", "yoll_opti_deaths", "yoll_opti_yoll"]
-    if 'deaths_' in output:
-        model_output = 'infection_deathsXall'
-    else:
-        model_output = 'years_of_life_lost'
 
-    if "_before" in output:
-        time_range = [0, 213]
+    if 'deaths_' in output:
+        type = 'accum_deaths'
     else:
-        time_range = [214, 'end']
+        type = 'accum_years_of_life_lost'
+    mask_output = uncertainty_df["type"] == type
+    output_df = uncertainty_df[mask_output]
 
     if "_yoll" in output:
         objective = "yoll"
@@ -379,38 +377,44 @@ def get_uncertainty_cell_value(calibration_output_path, output, config, mode):
         5: "unmitigated",  # not used, just for completeness
     }
 
-    full_tag = mode + "_" + str(config) + "_" + objective
+    full_tag = "by_age_" + str(config) + "_" + objective
     if "unmitigated" in output:
-        scenario = 9
+        scenario = 5
     elif "_before" in output:
         scenario = 0
     else:
         scenario = [key for key, val in scenario_mapping.items() if val == full_tag][0]
 
+    mask_scenario = output_df["Scenario"] == "S_" + str(scenario)
+    output_df = output_df[mask_scenario]
+
+    mask_time = output_df["time"] == max(output_df['time'])
+    output_df = output_df[mask_time]
+
+    mask_025 = output_df["quantile"] == 0.025
+    mask_50 = output_df["quantile"] == 0.5
+    mask_975 = output_df["quantile"] == 0.975
+
     multiplier = {
-        "infection_deathsXall": 1. / 1000.,
-        "years_of_life_lost": 1. / 1000.
+        "accum_deaths": 1. / 1000.,
+        "accum_years_of_life_lost": 1. / 1000.
     }
     rounding = {
-        "infection_deathsXall": 1,
-        "years_of_life_lost": 0
+        "accum_deaths": 1,
+        "accum_years_of_life_lost": 0
     }
 
     # read the percentile
-    cum_values = read_cumulative_output_from_output_table(calibration_output_path, scenario, time_range, model_output)
-    quantiles = list(np.quantile(np.array(cum_values), [.025, .5, .975]))
-    median = round(multiplier[model_output] * quantiles[1], rounding[model_output])
-    lower = round(multiplier[model_output] * quantiles[0], rounding[model_output])
-    upper = round(multiplier[model_output] * quantiles[2], rounding[model_output])
+    median = round(multiplier[type] * float(output_df[mask_50]["value"]), rounding[type])
+    lower = round(multiplier[type] * float(output_df[mask_025]["value"]), rounding[type])
+    upper = round(multiplier[type] * float(output_df[mask_975]["value"]), rounding[type])
 
     cell_content = str(median) + " (" + str(lower) + "-" + str(upper) + ")"
-
-    print(cell_content)
 
     return cell_content
 
 
-def make_main_outputs_table(calibration_folder_name, config, mode):
+def make_main_outputs_tables():
     countries = ['belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']
     country_names = [c.title() for c in countries]
     country_names[-1] = "United Kingdom"
@@ -419,22 +423,33 @@ def make_main_outputs_table(calibration_folder_name, config, mode):
                     "deaths_before", "deaths_unmitigated", "deaths_opti_deaths", "deaths_opti_yoll",
                      "yoll_before", "yoll_unmitigated", "yoll_opti_deaths", "yoll_opti_yoll"
                     ]
-    # column_names = ["country", "deaths_before"]  # FIXME remove this
 
-    table = pd.DataFrame(columns=column_names)
-    for i, country in enumerate(countries):
-        print(country)
-        calibration_output_path = "../../../data/outputs/calibrate/covid_19/" + country + "/" + calibration_folder_name
-        row_as_list = [country]
-        for output in [c for c in column_names if c != "country"]:
-            print(output)
-            row_as_list.append(
-                get_uncertainty_cell_value(calibration_output_path, output, config, mode)
-            )
+    for immunity in ["fully_immune", "partial_immune"]:
+        table = pd.DataFrame(columns=column_names)
+        i_row = -1
+        for i, country in enumerate(countries):
+            pbi_outputs_dir = "../../../data/pbi_outputs_for_opti/" + immunity
+            dir_content = os.listdir(pbi_outputs_dir)
+            for f in dir_content:
+                if country in f:
+                    db_name = f
 
-        table.loc[i] = row_as_list
+            db_path = os.path.join(pbi_outputs_dir, db_name)
+            db = Database(db_path)
+            uncertainty_df = db.query("uncertainty")
 
-    table.to_csv("../../../data/outputs/calibrate/covid_19/main_outputs_" + mode + "_config_" + str(config) + ".csv")
+            for config in [2, 3]:
+                i_row += 1
+                row_as_list = [country]
+                for output in [c for c in column_names if c != "country"]:
+                    print(output)
+                    row_as_list.append(
+                        get_uncertainty_cell_value(uncertainty_df, output, config)
+                    )
+
+                table.loc[i_row] = row_as_list
+
+        table.to_csv("../../../data/pbi_outputs_for_opti/" + immunity + "/output_table_" + immunity + ".csv")
 
 
 ###########################################
@@ -540,4 +555,9 @@ def get_posterior_percentiles_time_variant_profile(calibration_path, function='d
 # out_dir = "../../../data/outputs/calibrate/covid_19/france/Final-2020-08-04"
 #
 
-    # make_main_outputs_table('Final-2020-08-08', 2, "by_age")
+    make_main_outputs_tables()
+
+
+if __name__ == "__main__":
+    make_main_outputs_tables()
+

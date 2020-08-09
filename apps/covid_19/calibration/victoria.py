@@ -93,6 +93,11 @@ PAR_PRIORS = [
         "distri_params": [0.025, 0.05],
     },
     {
+        "param_name": "seasonal_force",
+        "distribution": "uniform",
+        "distri_params": [0., 0.4],
+    },
+    {
         "param_name": "compartment_periods_calculated.exposed.total_period",
         "distribution": "uniform",
         "distri_params": [4., 6.],
@@ -101,26 +106,6 @@ PAR_PRIORS = [
         "param_name": "compartment_periods_calculated.active.total_period",
         "distribution": "uniform",
         "distri_params": [6., 8.],
-    },
-    {
-        "param_name": "seasonal_force",
-        "distribution": "uniform",
-        "distri_params": [0.2, 0.4],
-    },
-    {
-        "param_name": "compartment_periods.icu_early",
-        "distribution": "uniform",
-        "distri_params": [5., 17.],
-    },
-    {
-        "param_name": "compartment_periods.icu_late",
-        "distribution": "uniform",
-        "distri_params": [5., 15.],
-    },
-    {
-        "param_name": "icu_prop",
-        "distribution": "uniform",
-        "distri_params": [0.08, 0.2],
     },
     {
         "param_name": "symptomatic_props_multiplier",
@@ -140,13 +125,28 @@ PAR_PRIORS = [
     {
         "param_name": "hospital_props_multiplier",
         "distribution": "uniform",
-        "distri_params": [1., 2.],
+        "distri_params": [0.8, 1.6],
     },
-    # {
-    #     "param_name": "ifr_multiplier",
-    #     "distribution": "uniform",
-    #     "distri_params": [0.67, 1.5],
-    # },
+    {
+        "param_name": "ifr_multiplier",
+        "distribution": "uniform",
+        "distri_params": [0.8, 1.25],
+    },
+    {
+        "param_name": "icu_prop",
+        "distribution": "uniform",
+        "distri_params": [0.08, 0.2],
+    },
+    {
+        "param_name": "compartment_periods.icu_early",
+        "distribution": "uniform",
+        "distri_params": [5., 17.],
+    },
+    {
+        "param_name": "compartment_periods.icu_late",
+        "distribution": "uniform",
+        "distri_params": [5., 15.],
+    },
 ]
 
 PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS, {})

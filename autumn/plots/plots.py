@@ -1095,7 +1095,6 @@ def plot_hospital_uncertainty(pbi_outputs_dir, country, axis):
     db_path = os.path.join(pbi_outputs_dir, db_name)
     db = Database(db_path)
     uncertainty_df = db.query("uncertainty")
-    outputs = uncertainty_df["type"].unique().tolist()
     quantile_vals = uncertainty_df["quantile"].unique().tolist()
 
     mask = uncertainty_df["type"] == 'hospital_occupancy'
@@ -1132,7 +1131,7 @@ def plot_hospital_uncertainty(pbi_outputs_dir, country, axis):
         data[sc_name]['quantiles'] = quantiles
         data[sc_name]['times'] = list(times)
 
-    break_width = 20
+    break_width = 13
     dates_to_tick = [
         [214., "1 Aug 20"],
         [366. + 32., "1 Feb 21"]
@@ -1143,9 +1142,13 @@ def plot_hospital_uncertainty(pbi_outputs_dir, country, axis):
     title_x = []
     for scenario in range(5):
         sc_name = "S_" + str(scenario)
-        t_shift = last_t_plotted - data[sc_name]['times'][0]
-        if scenario >= 2:
-            t_shift += break_width
+        if scenario > 0:
+            t_shift = last_t_plotted - data[sc_name]['times'][0]
+            if scenario >= 2:
+                t_shift += break_width
+        else:
+            t_shift = 0.
+
         times = [t_shift + t for t in data[sc_name]['times']]
 
         title_x.append(np.mean(times))
@@ -1172,10 +1175,11 @@ def plot_hospital_uncertainty(pbi_outputs_dir, country, axis):
         else:
             rect = patches.Rectangle((last_t_plotted, 0), break_width, 1.e9, linewidth=0, hatch="/",
                               facecolor='peachpuff')
-            # rect.set_zorder(1)
+            rect.set_zorder(2)
             axis.add_patch(rect)
 
-    axis.set_xlim((60., last_t_plotted))
+    x_lims = (50., last_t_plotted)
+    axis.set_xlim(x_lims)
     axis.set_ylim((0, max_q * 1.05))
 
     axis.set_xticks(x_ticks)
@@ -1187,10 +1191,10 @@ def plot_hospital_uncertainty(pbi_outputs_dir, country, axis):
     for tick in axis.yaxis.get_major_ticks():
         tick.label.set_fontsize(14)
 
-    axis.set_ylabel("Hospital beds", fontsize=17)
+    axis.set_ylabel("Hospital beds", fontsize=19)
     pyplot.margins(y=10.)
 
-    return title_x, (60., last_t_plotted)
+    return title_x, x_lims
 
 
 def plot_multicountry_hospital_uncertainty(pbi_outputs_dir, immunity):
@@ -1200,7 +1204,7 @@ def plot_multicountry_hospital_uncertainty(pbi_outputs_dir, immunity):
 
 
     widths = [1, 19]
-    heights = [1, 6, 6, 6, 6, 6, 6]
+    heights = [2, 6, 6, 6, 6, 6, 6]
     spec = fig.add_gridspec(ncols=2, nrows=7, width_ratios=widths,
                             height_ratios=heights)
 
@@ -1208,6 +1212,7 @@ def plot_multicountry_hospital_uncertainty(pbi_outputs_dir, immunity):
     country_names = [c.title() for c in countries]
     country_names[-1] = "United Kingdom"
 
+    titles_down = ["wave", "minimising deaths", "minimising YLLs", "minimising deaths", "minimising YLLs"]
     text_size = 23
 
     for i, country in enumerate(countries):
@@ -1216,17 +1221,26 @@ def plot_multicountry_hospital_uncertainty(pbi_outputs_dir, immunity):
         ax.axis("off")
 
         ax = fig.add_subplot(spec[i+1, 1])
-        if country in ['belgium', 'italy', 'spain']:
-            title_x, x_lim = plot_hospital_uncertainty(pbi_outputs_dir, country, axis=ax)
-        else:
-            ax.text(.5, .5, "Results pending")
+        title_x, x_lim = plot_hospital_uncertainty(pbi_outputs_dir, country, axis=ax)
 
         if i == 0:
             ax = fig.add_subplot(spec[0, 1])
-            ax.text(0.5, 0.5, 'ADD SOME TEXT HERE', fontsize=text_size, horizontalalignment='center', verticalalignment='center')
+
+            title_x[0] = 125.
+            # Write "Past"
+            ax.text(title_x[0], .8, "Past", fontsize=text_size, horizontalalignment='center', verticalalignment='center')
+            # Write "6-month mitigation"
+            ax.text(np.mean(title_x[1:3]), .8, "6-month mitigation", fontsize=text_size, horizontalalignment='center', verticalalignment='center')
+            # Write "12-month mitigation"
+            ax.text(np.mean(title_x[3:5]), .8, "12-month mitigation", fontsize=text_size, horizontalalignment='center', verticalalignment='center')
 
             for sc in range(5):
-                ax.text(title_x[sc], .5, "text",fontsize=text_size, horizontalalignment='center', verticalalignment='center')
+                ax.text(title_x[sc], 0.3, titles_down[sc], fontsize=text_size, horizontalalignment='center', verticalalignment='center')
+
+            ax.axvline(x=213, color='black', ymin=.15, ymax=1.)
+            ax.axvline(x=1002, color='black', ymin=.15, ymax=1.)
+
+
             ax.set_xlim(x_lim)
             ax.axis("off")
 

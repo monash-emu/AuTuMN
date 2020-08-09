@@ -103,7 +103,7 @@ def add_standard_philippines_params(params):
         {
             "param_name": "ifr_multiplier",
             "distribution": "uniform",
-            "distri_params": [1., 2.],
+            "distri_params": [1., 2.28],
         },
     ]
 

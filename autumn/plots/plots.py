@@ -1103,6 +1103,9 @@ def plot_hospital_uncertainty(pbi_outputs_dir, country, axis):
     data = {}
     max_plotted_time = 600.
 
+    axis.grid(linewidth=1., zorder=0, linestyle="dotted")
+    axis.set_axisbelow(True)
+
     max_q = 0.
     for scenario in range(5):
         sc_name = "S_" + str(scenario)
@@ -1125,24 +1128,27 @@ def plot_hospital_uncertainty(pbi_outputs_dir, country, axis):
             quantiles[q] = scenario_df[mask]["value"].tolist()[1:]
             if cut_tail:
                 quantiles[q] = quantiles[q][:max_time_index + 1]
-                max_q = max([max_q, max(quantiles[q])])
+            max_q = max([max_q, max(quantiles[q])])
         data[sc_name]['quantiles'] = quantiles
         data[sc_name]['times'] = list(times)
 
-    break_width = 10
+    break_width = 20
     dates_to_tick = [
-        [214., "1 Aug 2020"],
-        [366. + 32., "1 Feb 2021"]
+        [214., "1 Aug 20"],
+        [366. + 32., "1 Feb 21"]
     ]
     x_ticks = [61]
-    x_tick_labs = ['1 mar 2020']
+    x_tick_labs = ['1 Mar 20']
     last_t_plotted = 0
+    title_x = []
     for scenario in range(5):
         sc_name = "S_" + str(scenario)
         t_shift = last_t_plotted - data[sc_name]['times'][0]
         if scenario >= 2:
             t_shift += break_width
         times = [t_shift + t for t in data[sc_name]['times']]
+
+        title_x.append(np.mean(times))
 
         for tick in dates_to_tick:
             requested_time = tick[0]
@@ -1162,10 +1168,10 @@ def plot_hospital_uncertainty(pbi_outputs_dir, country, axis):
         last_t_plotted = max(times)
 
         if scenario == 0:
-            axis.axvline(x=last_t_plotted, color='black', linestyle="dotted")
+            axis.axvline(x=last_t_plotted, color='black', dashes=(3, 3))
         else:
-            rect = patches.Rectangle((last_t_plotted, 0), break_width, 1.e9, linewidth=0,
-                              facecolor='white')
+            rect = patches.Rectangle((last_t_plotted, 0), break_width, 1.e9, linewidth=0, hatch="/",
+                              facecolor='peachpuff')
             # rect.set_zorder(1)
             axis.add_patch(rect)
 
@@ -1176,16 +1182,29 @@ def plot_hospital_uncertainty(pbi_outputs_dir, country, axis):
     axis.set_xticklabels(x_tick_labs)
     axis.tick_params(axis="x", which="major", length=7)
 
+    for tick in axis.xaxis.get_major_ticks():
+        tick.label.set_fontsize(14)
+    for tick in axis.yaxis.get_major_ticks():
+        tick.label.set_fontsize(14)
+
+    axis.set_ylabel("Hospital beds", fontsize=17)
+    pyplot.margins(y=10.)
+
+    return title_x, (60., last_t_plotted)
 
 
 def plot_multicountry_hospital_uncertainty(pbi_outputs_dir, immunity):
     fig = pyplot.figure(constrained_layout=True, figsize=(20, 20))  # (w, h)
+    pyplot.style.use("default")
+    pyplot.rcParams["hatch.linewidth"] = 1.
+
+
     widths = [1, 19]
     heights = [1, 6, 6, 6, 6, 6, 6]
     spec = fig.add_gridspec(ncols=2, nrows=7, width_ratios=widths,
                             height_ratios=heights)
 
-    countries = ['italy'] # 'belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']
+    countries = ['belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']
     country_names = [c.title() for c in countries]
     country_names[-1] = "United Kingdom"
 
@@ -1197,11 +1216,18 @@ def plot_multicountry_hospital_uncertainty(pbi_outputs_dir, immunity):
         ax.axis("off")
 
         ax = fig.add_subplot(spec[i+1, 1])
-        plot_hospital_uncertainty(pbi_outputs_dir, country, axis=ax)
+        if country in ['belgium', 'italy', 'spain']:
+            title_x, x_lim = plot_hospital_uncertainty(pbi_outputs_dir, country, axis=ax)
+        else:
+            ax.text(.5, .5, "Results pending")
 
         if i == 0:
             ax = fig.add_subplot(spec[0, 1])
             ax.text(0.5, 0.5, 'ADD SOME TEXT HERE', fontsize=text_size, horizontalalignment='center', verticalalignment='center')
+
+            for sc in range(5):
+                ax.text(title_x[sc], .5, "text",fontsize=text_size, horizontalalignment='center', verticalalignment='center')
+            ax.set_xlim(x_lim)
             ax.axis("off")
 
     pyplot.rcParams["font.family"] = "Times New Roman"

@@ -8,8 +8,9 @@ implement_importation: True
 microdistancing:
     function_type: empiric
     parameters:
-        times: [87, 94, 101, 108, 113, 120, 127, 134, 141, 148, 155, 162, 169, 176, 190, 197, 204]
-        values: [0.47, 0.33, 0.35, 0.33, 0.45, 0.47, 0.45, 0.46, 0.51, 0.55, 0.56, 0.57, 0.61, 0.6, 0.57, 0.52, 0.45]
+        multiplier: 0.05
+        times: [181, 182, 185, 186, 191, 192, 202, 204, 215, 216]
+        values: [0., 2., 2., 3., 3., 5., 5., 7., 7., 9.]
 
 infectious_seed: 0
 

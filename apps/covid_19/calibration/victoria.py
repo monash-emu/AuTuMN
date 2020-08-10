@@ -147,6 +147,11 @@ PAR_PRIORS = [
         "distribution": "uniform",
         "distri_params": [5., 15.],
     },
+    {
+        "param_name": "microdistancing.parameters.multiplier",
+        "distribution": "uniform",
+        "distri_params": [0.03, 0.08],
+    }
 ]
 
 PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS, {})

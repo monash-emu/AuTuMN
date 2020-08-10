@@ -63,7 +63,9 @@ class LocationMixingAdjustment(BaseMixingAdjustment):
             self.microdistancing_function = tanh_based_scaleup(**microdistancing_params["parameters"])
         elif microdistancing_params["function_type"] == "empiric":
             micro_times = microdistancing_params["parameters"]["times"]
-            micro_vals = microdistancing_params["parameters"]["values"]
+            multiplier = microdistancing_params["parameters"]["multiplier"]
+            micro_vals = \
+                [1. - multiplier * value for value in microdistancing_params["parameters"]["values"]]
             self.microdistancing_function = scale_up_function(micro_times, micro_vals, method=4)
 
         # Load all location-specific mixing info.

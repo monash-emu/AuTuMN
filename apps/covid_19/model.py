@@ -300,9 +300,10 @@ def build_model(params: dict) -> StratifiedModel:
     model.derived_output_functions["total_infection_deaths"] = \
         outputs.get_infection_deaths
 
+    model.derived_output_functions["years_of_life_lost"] = \
+        outputs.get_calculate_years_of_life_lost(life_expectancy_latest)
+
     if region in OPTI_REGIONS:  # Please leave this here as it is currently used for the optimisation project
-        model.derived_output_functions["years_of_life_lost"] = \
-            outputs.get_calculate_years_of_life_lost(life_expectancy_latest)
         model.derived_output_functions["accum_deaths"] = \
             outputs.calculate_cum_deaths
         model.derived_output_functions["accum_years_of_life_lost"] = \

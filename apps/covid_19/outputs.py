@@ -179,7 +179,9 @@ def get_notifications_at_sympt_onset(model, time):
     notifications_sympt_onset = 0.
     for key, value in model.derived_outputs.items():
         if "incidence" in find_name_components(key) and \
-                f"clinical_{ClinicalStratum.NON_SYMPT}" not in find_name_components(key):
+                (f"clinical_{ClinicalStratum.SYMPT_ISOLATE}" in find_name_components(key)
+                 or f"clinical_{ClinicalStratum.HOSPITAL_NON_ICU}" in find_name_components(key)
+                 or f"clinical_{ClinicalStratum.ICU}" in find_name_components(key)):
             notifications_sympt_onset += value[i_time]
     return notifications_sympt_onset
 

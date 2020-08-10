@@ -60,6 +60,9 @@ def get_parameter_bounds_from_priors(prior_dict):
     elif prior_dict["distribution"] in ["lognormal", "gamma", "weibull", "exponential"]:
         lower_bound = 0.0
         upper_bound = float("inf")
+    elif prior_dict["distribution"] == "trunc_normal":
+        lower_bound = prior_dict["trunc_range"][0]
+        upper_bound = prior_dict["trunc_range"][1]
     elif prior_dict["distribution"] == "beta":
         lower_bound = 0.0
         upper_bound = 1.0
@@ -402,6 +405,13 @@ class Calibration:
                     sd = prior_dict["distri_params"][1]
                     quantile_2_5 = math.exp(mu + math.sqrt(2) * sd * special.erfinv(2 * 0.025 - 1))
                     quantile_97_5 = math.exp(mu + math.sqrt(2) * sd * special.erfinv(2 * 0.975 - 1))
+                    prior_width = quantile_97_5 - quantile_2_5
+                elif prior_dict["distribution"] == "trunc_normal":
+                    mu = prior_dict["distri_params"][0]
+                    sd = prior_dict["distri_params"][1]
+                    bounds = prior_dict["trunc_range"]
+                    quantile_2_5 = stats.truncnorm.ppf(.025, bounds[0], bounds[1], loc=mu, scale=sd)
+                    quantile_97_5 = stats.truncnorm.ppf(.975, bounds[0], bounds[1], loc=mu, scale=sd)
                     prior_width = quantile_97_5 - quantile_2_5
                 elif prior_dict["distribution"] == "beta":
                     quantile_2_5 = stats.beta.ppf(

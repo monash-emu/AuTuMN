@@ -33,6 +33,11 @@ def sample_starting_params_from_lhs(par_priors: List[Dict[str, Any]], n_samples:
                 mu = prior_dict["distri_params"][0]
                 sd = prior_dict["distri_params"][1]
                 quantile = math.exp(mu + math.sqrt(2) * sd * special.erfinv(2 * prop - 1))
+            elif prior_dict["distribution"] == "trunc_normal":
+                mu = prior_dict["distri_params"][0]
+                sd = prior_dict["distri_params"][1]
+                bounds = prior_dict["trunc_range"]
+                quantile = stats.truncnorm.ppf(prop, bounds[0], bounds[1], loc=mu, scale=sd)
             elif prior_dict["distribution"] == "beta":
                 quantile = stats.beta.ppf(
                     prop, prior_dict["distri_params"][0], prior_dict["distri_params"][1],
@@ -94,6 +99,14 @@ def calculate_prior(prior_dict, x, log=True):
             )  # see documentation of stats.lognorm for scale
         else:
             y = stats.lognorm.pdf(x=x, s=sd, scale=math.exp(mu))
+    elif prior_dict["distribution"] == "trunc_normal":
+        mu = prior_dict["distri_params"][0]
+        sd = prior_dict["distri_params"][1]
+        bounds = prior_dict["trunc_range"]
+        if log:
+            y = stats.truncnorm.logpdf(x, bounds[0], bounds[1], loc=mu, scale=sd)
+        else:
+            y = stats.truncnorm.pdf(x, bounds[0], bounds[1], loc=mu, scale=sd)
     elif prior_dict["distribution"] == "beta":
         a = prior_dict["distri_params"][0]
         b = prior_dict["distri_params"][1]

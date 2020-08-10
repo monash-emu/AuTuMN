@@ -1,6 +1,7 @@
 from autumn.constants import Region
 from apps.covid_19.calibration import base
 from apps.covid_19.mixing_optimisation.utils import add_dispersion_param_prior_for_gaussian
+import numpy as np
 
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
@@ -99,18 +100,21 @@ PAR_PRIORS = [
     },
     {
         "param_name": "compartment_periods_calculated.exposed.total_period",
-        "distribution": "uniform",
-        "distri_params": [4., 6.],
+        "distribution": "trunc_normal",
+        "distri_params": [5., 0.7],
+        "trunc_range": [1., np.inf],
     },
     {
         "param_name": "compartment_periods_calculated.active.total_period",
-        "distribution": "uniform",
-        "distri_params": [6., 8.],
+        "distribution": "trunc_normal",
+        "distri_params": [7., 0.7],
+        "trunc_range": [1., np.inf],
     },
     {
         "param_name": "symptomatic_props_multiplier",
-        "distribution": "uniform",
-        "distri_params": [0.8, 1.2]
+        "distribution": "trunc_normal",
+        "distri_params": [1., 0.1],
+        "trunc_range": [0.5, np.inf],
     },
     {
         "param_name": "testing_to_detection.shape_parameter",
@@ -124,13 +128,15 @@ PAR_PRIORS = [
     },
     {
         "param_name": "hospital_props_multiplier",
-        "distribution": "uniform",
-        "distri_params": [0.8, 1.6],
+        "distribution": "trunc_normal",
+        "distri_params": [1., 0.25],
+        "trunc_range": [0.1, np.inf],
     },
     {
         "param_name": "ifr_multiplier",
-        "distribution": "uniform",
-        "distri_params": [0.8, 1.25],
+        "distribution": "trunc_normal",
+        "distri_params": [1., 0.25],
+        "trunc_range": [0.1, np.inf],
     },
     {
         "param_name": "icu_prop",

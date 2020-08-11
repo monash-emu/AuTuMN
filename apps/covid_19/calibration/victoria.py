@@ -67,24 +67,28 @@ TARGET_OUTPUTS = [
         "years": case_times,
         "values": case_counts,
         "loglikelihood_distri": "normal",
+        "time_weights": list(range(1, len(case_times) + 1)),
     },
     {
         "output_key": "hospital_occupancy",
         "years": hospital_times,
         "values": hospital_counts,
         "loglikelihood_distri": "normal",
+        "time_weights": list(range(1, len(hospital_times) + 1)),
     },
     {
         "output_key": "icu_occupancy",
         "years": icu_times,
         "values": icu_counts,
         "loglikelihood_distri": "normal",
+        "time_weights": list(range(1, len(icu_times) + 1)),
     },
     {
         "output_key": "total_infection_deaths",
         "years": death_times,
         "values": death_counts,
         "loglikelihood_distri": "normal",
+        "time_weights": list(range(1, len(death_times) + 1)),
     },
 ]
 

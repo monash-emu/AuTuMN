@@ -214,7 +214,7 @@ def read_list_of_param_sets_from_csv(country):
     return list_of_param_sets
 
 
-def run_all_phases(decision_variables, country=Region.UNITED_KINGDOM, config=0, calibrated_params={}, mode="by_age"):
+def make_model_builder(decision_variables, country=Region.UNITED_KINGDOM, config=0, calibrated_params={}, mode="by_age"):
     running_model = RegionApp(country)
     build_model = running_model.build_model
 
@@ -240,15 +240,17 @@ def run_all_phases(decision_variables, country=Region.UNITED_KINGDOM, config=0, 
 
     params["scenarios"][1] = build_params_for_phases_2_and_3(decision_variables, config, mode)
 
-    run_models = build_model_runner(
+    return build_model_runner(
         model_name="covid_19",
         param_set_name=country,
         build_model=build_model,
         params=params
     )
 
-    run_models()
 
+def run_all_phases(decision_variables, country=Region.UNITED_KINGDOM, config=0, calibrated_params={}, mode="by_age"):
+    run_models = make_model_builder(decision_variables, country, config, calibrated_params, mode)
+    run_models()
     return
 
 
@@ -475,12 +477,21 @@ def explore_optimal_plan(decision_vars, _root_model, mode, _country, config, par
         print("Deaths " + str(i) + ": " + str(int(round(d))) + " " + str(h) + "\t" + str(decision_vars[i]) + " -->" + str(test_vars[i]))
 
 
+def plot_mixing_matrices(output_dir, country, config=2, mode="by_age", objective="deaths"):
+    params, decision_vars = get_mle_params_and_vars(output_dir, country, config, mode, objective)
+
+    # run_models = make_model_builder(decision_vars, country, config, params, mode)
+
+
+
+
+
 if __name__ == "__main__":
     # looping through all countries and optimisation modes for testing purpose
     # optimisation will have to be performed separately for the different countries and modes.
     output_dir = "optimisation_outputs/6Aug2020/"
-    write_all_yml_files_from_outputs(output_dir)
-    exit()
+    # write_all_yml_files_from_outputs(output_dir)
+    # exit()
     for _country in available_countries:
         print("Running for " + _country + " ...")
         mode = 'by_age'

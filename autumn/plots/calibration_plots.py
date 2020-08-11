@@ -4,6 +4,7 @@ import logging
 from matplotlib import pyplot as plt
 from scipy import stats
 from numpy import linspace
+import numpy as np
 
 from autumn.calibration.utils import calculate_prior, raise_error_unsupported_prior
 
@@ -79,9 +80,19 @@ def workout_plot_x_range(prior_dict):
         scale = prior_dict["distri_params"][1]
         x_range = stats.gamma.ppf([0.005, 0.995], shape, 0.0, scale)
     elif prior_dict["distribution"] == "trunc_normal":
+        lower = prior_dict["trunc_range"][0]
+        upper = prior_dict["trunc_range"][1]
+        x_range = [lower - .05 * (upper - lower), upper + .05 * (upper - lower)]
+
         mean = prior_dict["distri_params"][0]
         sd = prior_dict["distri_params"][1]
         x_range = stats.norm.ppf([0.005, 0.995], mean, sd)
+
+        if lower != -np.inf:
+            x_range[0] = lower - .05 * (x_range[1] - lower)
+        if upper != np.inf:
+            x_range[1] = upper + .05 * (upper - x_range[0])
+
     else:
         raise_error_unsupported_prior(prior_dict["distribution"])
 

@@ -21,9 +21,10 @@ compartment_periods_calculated:
     exposed:
         total_period: 3.8
 
+# Example nadir values for shape parameter -3 = 60% of max, -3.5 = 30% max, -4 = 10% max, -4.5 = 3% max
 testing_to_detection:
     maximum_detection: 0.7
-    shape_parameter: -4.5
+    shape_parameter: -3.
 
 microdistancing:
     function_type: empiric

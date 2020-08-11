@@ -122,11 +122,6 @@ PAR_PRIORS = [
         "trunc_range": [0.5, np.inf],
     },
     {
-        "param_name": "testing_to_detection.shape_parameter",
-        "distribution": "uniform",
-        "distri_params": [-5, -3.5]
-    },
-    {
         "param_name": "testing_to_detection.maximum_detection",
         "distribution": "uniform",
         "distri_params": [0.6, 0.9],

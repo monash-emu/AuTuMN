@@ -335,13 +335,14 @@ def drop_yml_scenario_file(output_dir, country, config=2, mode="by_age", objecti
     #     9: "unmitigated",  # not used, just for completeness
     # }
 
+    #
     scenario_mapping = {
-        1: "by_age_2_deaths",
-        2: "by_age_2_yoll",
-        3: "by_age_3_deaths",
-        4: "by_age_3_yoll",
-        5: "unmitigated",  # not used, just for completeness
+        1: "by_location_2_deaths",
+        2: "by_location_2_yoll",
+        3: "by_location_3_deaths",
+        4: "by_location_3_yoll"
     }
+
     for key, val in scenario_mapping.items():
         if val == mode + "_" + str(config) + "_" + objective:
             sc_index = key
@@ -354,7 +355,7 @@ def drop_yml_scenario_file(output_dir, country, config=2, mode="by_age", objecti
 def write_all_yml_files_from_outputs(output_dir):
     for country in OPTI_REGIONS:
         for config in [2, 3]:
-            for mode in ["by_age"]: # , "by_location"]:
+            for mode in ["by_location"]:
                 for objective in ["deaths", "yoll"]:
                     drop_yml_scenario_file(output_dir, country, config, mode, objective)
         # make extra scenario for unmitigated
@@ -366,10 +367,10 @@ def write_all_yml_files_from_outputs(output_dir):
                     sc_params[par][mixing_key]['times'] = [
                         reformat_date_to_integer(d) for d in sc_params[par][mixing_key]['times']
                     ]
-        param_file_path = "../params/" + country + "/scenario-5.yml"
-
-        with open(param_file_path, "w") as f:
-            yaml.dump(sc_params, f)
+        # param_file_path = "../params/" + country + "/scenario-5.yml"
+        #
+        # with open(param_file_path, "w") as f:
+        #     yaml.dump(sc_params, f)
 
 
 def evaluate_extra_deaths(decision_vars, extra_contribution, i, root_model, mode, country,

@@ -744,11 +744,14 @@ def plot_stacked_compartments_by_stratum(plotter: Plotter, scenarios: List[Scena
     return handles, labels
 
 
-def plot_multicountry_rainbow(country_scenarios, config, mode, objective):
-    fig = pyplot.figure(constrained_layout=True, figsize=(20, 20))  # (w, h)
+def plot_multicountry_rainbow(country_scenarios, config, mode, objective, include_config=False):
+    fig_h = 20 if not include_config else 21
+    heights = [1, 6, 6, 6, 6, 6, 6] if not include_config else [2, 1, 6, 6, 6, 6, 6, 6]
+
+    fig = pyplot.figure(constrained_layout=True, figsize=(20, fig_h))  # (w, h)
+
     widths = [1, 6, 6, 6, 2]
-    heights = [1, 6, 6, 6, 6, 6, 6]
-    spec = fig.add_gridspec(ncols=5, nrows=7, width_ratios=widths,
+    spec = fig.add_gridspec(ncols=5, nrows=len(heights), width_ratios=widths,
                             height_ratios=heights)
 
     output_names = ["incidence", "infection_deaths", "recovered"]
@@ -761,16 +764,18 @@ def plot_multicountry_rainbow(country_scenarios, config, mode, objective):
     text_size = 23
 
     for i, country in enumerate(countries):
+        i_grid = i + 2 if include_config else i+1
         for j, output in enumerate(output_names):
-            ax = fig.add_subplot(spec[i+1, j + 1])
+            ax = fig.add_subplot(spec[i_grid, j + 1])
             h, l = plot_stacked_compartments_by_stratum(None, country_scenarios[country], output, "agegroup",
                                                  multicountry=True, axis=ax, config=config)
             if i == 0:
-                ax = fig.add_subplot(spec[0, j+1])
+                i_grid_output_labs = 1 if include_config else 0
+                ax = fig.add_subplot(spec[i_grid_output_labs, j+1])
                 ax.text(0.5, 0.5, output_titles[j], fontsize=text_size, horizontalalignment='center', verticalalignment='center')
                 ax.axis("off")
 
-        ax = fig.add_subplot(spec[i+1, 0])
+        ax = fig.add_subplot(spec[i_grid, 0])
         ax.text(0.5, 0.5, country_names[i], rotation=90, fontsize=text_size, horizontalalignment='center', verticalalignment='center')
         ax.axis("off")
 
@@ -778,6 +783,15 @@ def plot_multicountry_rainbow(country_scenarios, config, mode, objective):
         ax = fig.add_subplot(spec[1:, 4])
         ax.legend(reversed(h), reversed(l), title='Age:', fontsize=15, title_fontsize=text_size,
                   labelspacing=1.0, loc='center')  # bbox_to_anchor=(1.4, 1.1),
+        ax.axis("off")
+
+    if include_config:
+        ax = fig.add_subplot(spec[0, :])
+        obj_name = 'deaths' if objective == 'deaths' else 'years of life lost'
+        config_name = '6-month' if config == 2 else '12-month'
+
+        config_label = "Optimisation by " + mode[3:] + " minimising " + obj_name + " with " + config_name + " mitigation"
+        ax.text(0., 0.5, config_label, fontsize=text_size, horizontalalignment='left', verticalalignment='center')
         ax.axis("off")
 
     pyplot.rcParams["font.family"] = "Times New Roman"

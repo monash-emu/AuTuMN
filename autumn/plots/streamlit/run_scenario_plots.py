@@ -210,7 +210,7 @@ def plot_multicountry_rainbow(
 
                 print("Plotting multicountry rainbow for: " + mode + "_config_" + str(config) + "_" + objective)
 
-                plots.plot_multicountry_rainbow(country_scenarios, config, mode, objective)
+                plots.plot_multicountry_rainbow(country_scenarios, config, mode, objective, include_config=True)
 
 
 def plot_multicounty_hospital(

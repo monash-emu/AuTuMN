@@ -156,7 +156,7 @@ PAR_PRIORS = [
     {
         "param_name": "microdistancing.parameters.multiplier",
         "distribution": "uniform",
-        "distri_params": [0.04, 0.1],
+        "distri_params": [0.04, 0.08],
     }
 ]
 

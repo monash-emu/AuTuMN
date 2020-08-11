@@ -410,8 +410,10 @@ class Calibration:
                     mu = prior_dict["distri_params"][0]
                     sd = prior_dict["distri_params"][1]
                     bounds = prior_dict["trunc_range"]
-                    quantile_2_5 = stats.truncnorm.ppf(.025, bounds[0], bounds[1], loc=mu, scale=sd)
-                    quantile_97_5 = stats.truncnorm.ppf(.975, bounds[0], bounds[1], loc=mu, scale=sd)
+                    quantile_2_5 = stats.truncnorm.ppf(.025, (bounds[0] - mu) / sd,
+                                                       (bounds[1] - mu) / sd, loc=mu, scale=sd)
+                    quantile_97_5 = stats.truncnorm.ppf(.975, (bounds[0] - mu) / sd,
+                                                       ( bounds[1] - mu) / sd, loc=mu, scale=sd)
                     prior_width = quantile_97_5 - quantile_2_5
                 elif prior_dict["distribution"] == "beta":
                     quantile_2_5 = stats.beta.ppf(

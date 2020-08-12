@@ -341,12 +341,12 @@ def read_cumulative_output_from_output_table(calibration_output_path, scenario, 
     return cumulative_values
 
 
-def get_uncertainty_cell_value(uncertainty_df, output, config):
+def get_uncertainty_cell_value(uncertainty_df, output, config, mode):
     # output is in ["deaths_before", "deaths_unmitigated", "deaths_opti_deaths", "deaths_opti_yoll",
     #                "yoll_before", "yoll_unmitigated", "yoll_opti_deaths", "yoll_opti_yoll"]
 
-    # if "before" in output or "unmitigated" in output:
-    #     return ""
+    if mode == 'by_location' and "unmitigated" in output:
+        return ""
 
     if 'deaths_' in output:
         type = 'accum_deaths'
@@ -360,27 +360,15 @@ def get_uncertainty_cell_value(uncertainty_df, output, config):
     else:
         objective = "deaths"
 
-    # scenario_mapping = {
-    #     1: "by_age_2_deaths",
-    #     2: "by_age_2_yoll",
-    #     3: "by_age_3_deaths",
-    #     4: "by_age_3_yoll",
-    #     5: "by_location_2_deaths",
-    #     6: "by_location_2_yoll",
-    #     7: "by_location_3_deaths",
-    #     8: "by_location_3_yoll",
-    #     9: "unmitigated"
-    # }
-
     scenario_mapping = {
-        1: "by_age_2_deaths",
-        2: "by_age_2_yoll",
-        3: "by_age_3_deaths",
-        4: "by_age_3_yoll",
+        1: mode + "_2_deaths",
+        2: mode + "_2_yoll",
+        3: mode + "_3_deaths",
+        4: mode + "_3_yoll",
         5: "unmitigated",  # not used, just for completeness
     }
 
-    full_tag = "by_age_" + str(config) + "_" + objective
+    full_tag = mode + "_" + str(config) + "_" + objective
     if "unmitigated" in output:
         scenario = 5
     elif "_before" in output:
@@ -447,7 +435,7 @@ def make_main_outputs_tables(mode):
                 for output in [c for c in column_names if c != "country"]:
                     print(output)
                     row_as_list.append(
-                        get_uncertainty_cell_value(uncertainty_df, output, config)
+                        get_uncertainty_cell_value(uncertainty_df, output, config, mode)
                     )
 
                 table.loc[i_row] = row_as_list
@@ -560,5 +548,5 @@ def get_posterior_percentiles_time_variant_profile(calibration_path, function='d
 #
 
 if __name__ == "__main__":
-    make_main_outputs_tables("by_age")
+    make_main_outputs_tables("by_location")
 

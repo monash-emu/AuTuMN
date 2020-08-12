@@ -1262,7 +1262,7 @@ def plot_multicountry_hospital_uncertainty(pbi_outputs_dir, immunity):
 
     out_dir = "apps/covid_19/mixing_optimisation/opti_plots/figures/hospital_uncertainty/"
     filename = out_dir + "hospital_uncertainty_by_age_" + immunity
-    # pyplot.savefig(filename + ".pdf")
+    pyplot.savefig(filename + ".pdf")
     pyplot.savefig(filename + ".png", dpi=300)
 
 

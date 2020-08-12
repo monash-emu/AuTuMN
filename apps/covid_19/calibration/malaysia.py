@@ -171,7 +171,14 @@ notification_times = [
     214,
     215,
     216,
-
+    217,
+    218,
+    219,
+    220,
+    221,
+    222,
+    223,
+    224,
 ]
 
 notification_counts = [
@@ -329,6 +336,14 @@ notification_counts = [
     9,
     14,
     2,
+    1,
+    21,
+    15,
+    25,
+    7,
+    13,
+    11,
+    9,
 ]
 
 # ICU data (prev / million pop), provided by the country
@@ -479,6 +494,14 @@ icu_times = [
     214,
     215,
     216,
+    217,
+    218,
+    219,
+    220,
+    221,
+    222,
+    223,
+    224,
 ]
 
 icu_counts = [
@@ -628,6 +651,14 @@ icu_counts = [
     2,
     2,
     1,
+    0,
+    2,
+    2,
+    2,
+    2,
+    1,
+    1,
+    2,
 ]
 
 TARGET_OUTPUTS = [

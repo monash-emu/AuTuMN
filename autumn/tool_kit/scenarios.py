@@ -69,11 +69,12 @@ class Scenario:
             # Construct scenario params by merging scenario-specific params into default params
             default_params = self.params["default"]
             scenario_params = self.params["scenarios"][self.idx]
-            params = merge_dicts(scenario_params, default_params)
 
             if update_func:
                 # Apply extra parameter updates
-                params = update_func(params)
+                default_params = update_func(default_params)
+
+            params = merge_dicts(scenario_params, default_params)
 
             # Override start time.
             params = {**params, "start_time": self.params["scenario_start_time"]}

@@ -12,7 +12,8 @@ from datetime import date, timedelta
 
 from apps.covid_19 import RegionApp
 from apps.covid_19.mixing_optimisation.constants import *
-
+from apps.covid_19.preprocess.mixing_matrix.dynamic import build_dynamic
+from autumn.inputs.demography.queries import get_iso3_from_country_name
 
 FILE_DIR = os.path.dirname(os.path.abspath(__file__))
 OPTI_PARAMS_PATH = os.path.join(FILE_DIR, "opti_params.yml")
@@ -477,19 +478,30 @@ def explore_optimal_plan(decision_vars, _root_model, mode, _country, config, par
         print("Deaths " + str(i) + ": " + str(int(round(d))) + " " + str(h) + "\t" + str(decision_vars[i]) + " -->" + str(test_vars[i]))
 
 
-def plot_mixing_matrices(output_dir, country, config=2, mode="by_age", objective="deaths"):
+def get_mixing_matrices(output_dir, country, config=2, mode="by_age", objective="deaths"):
+
+    iso_3 = get_iso3_from_country_name(country.title()) if country != "united-kingdom" else "GBR"
     params, decision_vars = get_mle_params_and_vars(output_dir, country, config, mode, objective)
 
-    # run_models = make_model_builder(decision_vars, country, config, params, mode)
+    sc_1_params = build_params_for_phases_2_and_3(decision_vars, config, mode)
+    if mode == 'by_location':
+        sc_1_params['mixing_age_adjust'] = {}
 
+    mixing_func = build_dynamic(iso_3, country, mixing=sc_1_params['mixing'], mixing_age_adjust=sc_1_params['mixing_age_adjust'],
+                                 npi_effectiveness_params={},google_mobility_locations={}, is_periodic_intervention=False,
+                                 periodic_int_params={}, periodic_end_time=0., microdistancing_params={}, smooth_google_data=True)
 
+    original_prem = mixing_func(10000.)
+    optimised = mixing_func(PHASE_2_START_TIME + 10.)
 
+    return original_prem, optimised
 
 
 if __name__ == "__main__":
     # looping through all countries and optimisation modes for testing purpose
     # optimisation will have to be performed separately for the different countries and modes.
     output_dir = "optimisation_outputs/6Aug2020/"
+
     # write_all_yml_files_from_outputs(output_dir)
     # exit()
     for _country in available_countries:

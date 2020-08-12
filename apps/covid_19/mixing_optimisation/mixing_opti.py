@@ -293,7 +293,7 @@ def get_mle_params_and_vars(output_dir, country, config=2, mode="by_age", object
             break
         params[c] = float(mle_rows.loc[mle_rows.index[0], c])
 
-    print("Guillaume's outputs for best_death: " + str(float(mle_rows.loc[mle_rows.index[0], 'best_deaths'])))
+    # print("Guillaume's outputs for best_death: " + str(float(mle_rows.loc[mle_rows.index[0], 'best_deaths'])))
 
     return params, decision_vars
 

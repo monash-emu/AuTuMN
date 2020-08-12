@@ -15,7 +15,7 @@ from apps.covid_19.preprocess.mixing_matrix.adjust_location import (
     LOCATIONS,
     MICRODISTANCING_LOCATIONS,
 )
-from apps.covid_19.mixing_optimisation.mixing_opti import read_csv_output_file
+from apps.covid_19.mixing_optimisation.mixing_opti import read_csv_output_file, get_mixing_matrices
 
 from . import selectors, utils
 
@@ -262,6 +262,29 @@ def plot_multicountry_optimal_plan(
 
         plots.plot_multicountry_optimal_plan(all_results, mode=mode)
 
+def plot_multicountry_optimised_matrices(
+    plotter: StreamlitPlotter, app: RegionAppBase, scenarios: list, plot_config: dict
+):
+    countries = ['belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']
+    root_path = os.path.join('apps', 'covid_19', 'mixing_optimisation', 'optimisation_outputs', '6Aug2020')
+
+    for mode in ["by_age", "by_location"]:
+        optimised_matrices = {}
+        original_matrices = {}
+        for country in countries:
+            optimised_matrices[country] = {}
+            for objective in ["deaths", "yoll"]:
+                optimised_matrices[country][objective] = {}
+                for config in [2, 3]:
+                    original, optimised = get_mixing_matrices(root_path, country, config, mode, objective, from_streamlit=True)
+                    optimised_matrices[country][objective][config] = optimised
+            original_matrices[country] = original
+
+        plots.plot_multicountry_optimised_matrices(original_matrices, optimised_matrices, mode, include_config=True)
+
+
+
+
 
 def plot_multicountry_mobility(
     plotter: StreamlitPlotter, app: RegionAppBase, scenarios: list, plot_config: dict
@@ -335,6 +358,7 @@ PLOT_FUNCS = {
     "Multicountry rainbow": plot_multicountry_rainbow,
     "Multicountry hospital": plot_multicounty_hospital,
     "Multicountry optimal plan": plot_multicountry_optimal_plan,
+    "Multicountry optimised matrices": plot_multicountry_optimised_matrices,
     # "Multicountry mobility data": plot_multicountry_mobility,
 }
 

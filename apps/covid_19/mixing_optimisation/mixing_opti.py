@@ -275,9 +275,9 @@ def read_csv_output_file(output_dir, country, config=2, mode="by_age", objective
     return out_table
 
 
-def get_mle_params_and_vars(output_dir, country, config=2, mode="by_age", objective="deaths"):
+def get_mle_params_and_vars(output_dir, country, config=2, mode="by_age", objective="deaths", from_streamlit=False):
 
-    out_table = read_csv_output_file(output_dir, country, config, mode, objective)
+    out_table = read_csv_output_file(output_dir, country, config, mode, objective, from_streamlit)
     n_vars = {"by_age": 16, "by_location": 3}
 
     mle_rows = out_table[out_table["loglikelihood"] == out_table.loc[len(out_table) - 1, "loglikelihood"]]
@@ -293,7 +293,7 @@ def get_mle_params_and_vars(output_dir, country, config=2, mode="by_age", object
             break
         params[c] = float(mle_rows.loc[mle_rows.index[0], c])
 
-    # print("Guillaume's outputs for best_death: " + str(float(mle_rows.loc[mle_rows.index[0], 'best_deaths'])))
+    print("Guillaume's outputs for best_death: " + str(float(mle_rows.loc[mle_rows.index[0], 'best_deaths'])))
 
     return params, decision_vars
 
@@ -478,18 +478,29 @@ def explore_optimal_plan(decision_vars, _root_model, mode, _country, config, par
         print("Deaths " + str(i) + ": " + str(int(round(d))) + " " + str(h) + "\t" + str(decision_vars[i]) + " -->" + str(test_vars[i]))
 
 
-def get_mixing_matrices(output_dir, country, config=2, mode="by_age", objective="deaths"):
+def get_mixing_matrices(output_dir, country, config=2, mode="by_age", objective="deaths", from_streamlit=False):
 
     iso_3 = get_iso3_from_country_name(country.title()) if country != "united-kingdom" else "GBR"
-    params, decision_vars = get_mle_params_and_vars(output_dir, country, config, mode, objective)
+    params, decision_vars = get_mle_params_and_vars(output_dir, country, config, mode, objective, from_streamlit)
+
+    if mode == "by_location":
+        new_decision_variables = {
+            "other_locations": decision_vars[0],
+            "school": decision_vars[1],
+            "work": decision_vars[2]
+        }
+        decision_vars = new_decision_variables
 
     sc_1_params = build_params_for_phases_2_and_3(decision_vars, config, mode)
     if mode == 'by_location':
         sc_1_params['mixing_age_adjust'] = {}
 
+
     mixing_func = build_dynamic(iso_3, country, mixing=sc_1_params['mixing'], mixing_age_adjust=sc_1_params['mixing_age_adjust'],
-                                 npi_effectiveness_params={},google_mobility_locations={}, is_periodic_intervention=False,
-                                 periodic_int_params={}, periodic_end_time=0., microdistancing_params={}, smooth_google_data=True)
+                                npi_effectiveness_params={},
+                                google_mobility_locations={'work': ['workplaces'], 'other_locations': ['retail_and_recreation', 'grocery_and_pharmacy', 'transit_stations']},
+                                is_periodic_intervention=False, periodic_int_params={}, periodic_end_time=0.,
+                                microdistancing_params={}, smooth_google_data=True)
 
     original_prem = mixing_func(10000.)
     optimised = mixing_func(PHASE_2_START_TIME + 10.)
@@ -520,7 +531,7 @@ if __name__ == "__main__":
                 # str(round(yoll)) + "\n" + "Prop immune: " + str(round(p_immune, 3))
                 # )
 
-                run_all_phases(decision_vars, _country, config, param_set, mode)
+                # run_all_phases(decision_vars, _country, config, param_set, mode)
                 print("... done.")
     exit()
 

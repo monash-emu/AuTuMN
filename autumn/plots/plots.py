@@ -1266,5 +1266,100 @@ def plot_multicountry_hospital_uncertainty(pbi_outputs_dir, immunity):
     pyplot.savefig(filename + ".png", dpi=300)
 
 
+def plot_mixing_matrix_opti(matrix, axis, fig, vmax, include_legend):
+
+    axis.matshow(matrix)
+    vmin = 0.
+    # vmax_all = np.amax(self.model_runner.model_diagnostics[scenario]['contact_matrices'][key]['all'])
+    # vmax = np.amax(self.model_runner.model_diagnostics[scenario]['contact_matrices'][key][location])
+
+    pyplot.gca().xaxis.tick_bottom()
+
+    with pyplot.style.context(('seaborn-dark')):
+        im = axis.imshow(matrix.transpose(), cmap='hot', origin='lower', vmin=vmin, vmax=vmax)
+
+        if include_legend:
+            cbar = fig.colorbar(im, ax=axis)
+            cbar.ax.set_ylabel('n contacts per day', rotation=90, va="bottom", fontsize=15)
+
+            cbar.ax.yaxis.set_label_coords(4., 0.5)
+
+        ticks = [i - .5 for i in range(16)]
+        labs = [str(int(i*5.)) for i in range(16)]
+
+        axis.set_xticks(ticks)
+        axis.set_xticklabels(labs)
+        axis.set_xlabel('index age')
+
+        axis.set_yticks(ticks)
+        axis.set_yticklabels(labs)
+        axis.set_ylabel('contact age')
+
+
+def plot_multicountry_optimised_matrices(original_matrices, optimised_matrices, mode, include_config=False):
+    fig_h = 23 if not include_config else 25
+    heights = [1, 6, 6, 6, 6, 6, 6] if not include_config else [2, 1, 6, 6, 6, 6, 6, 6]
+    pyplot.rcParams["axes.grid"] = False
+
+    fig = pyplot.figure(constrained_layout=True, figsize=(22, fig_h))  # (w, h)
+
+    widths = [1, 5, 5, 5, 5, 5]
+    spec = fig.add_gridspec(ncols=6, nrows=len(heights), width_ratios=widths,
+                            height_ratios=heights, hspace=0, wspace=0)
+
+    output_names = ['unmitigated', 'optimising deaths (6 mo.)', 'optimising deaths (12 mo.)', 'optimising YLLs (6 mo.)', 'optimising YLLs (6 mo.)']
+
+    countries = ['belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']
+    country_names = [c.title() for c in countries]
+    country_names[-1] = "United Kingdom"
+
+    text_size = 23
+
+    for i, country in enumerate(countries):
+        i_grid = i + 2 if include_config else i+1
+        j = 0
+        vmax = np.max(original_matrices[country])
+        for objective in ["original", "deaths", "yoll"]:
+            for config in [2, 3]:
+                j += 1
+                if objective == 'original':
+                    matrix = original_matrices[country]
+                else:
+                    matrix = optimised_matrices[country][objective][config]
+                ax = fig.add_subplot(spec[i_grid, j])
+                include_legend = True if j == 5 else False
+                plot_mixing_matrix_opti(matrix, ax, fig, vmax, include_legend)
+
+                if i == 0:
+                    i_grid_output_labs = 1 if include_config else 0
+                    ax = fig.add_subplot(spec[i_grid_output_labs, j])
+                    ax.text(0.5, 0.5, output_names[j - 1], fontsize=text_size, horizontalalignment='center', verticalalignment='center')
+                    ax.axis("off")
+
+                if objective == "original":
+                    break
+
+        ax = fig.add_subplot(spec[i_grid, 0])
+        ax.text(0.5, 0.5, country_names[i], rotation=90, fontsize=text_size, horizontalalignment='center', verticalalignment='center')
+        ax.axis("off")
+
+    if include_config:
+        ax = fig.add_subplot(spec[0, :])
+        obj_name = 'deaths' if objective == 'deaths' else 'years of life lost'
+        config_name = '6-month' if config == 2 else '12-month'
+
+        config_label = "Optimisation by " + mode[3:]
+        ax.text(0., 0.5, config_label, fontsize=text_size, horizontalalignment='left', verticalalignment='center')
+        ax.axis("off")
+
+    pyplot.rcParams["font.family"] = "Times New Roman"
+
+    out_dir = "apps/covid_19/mixing_optimisation/opti_plots/figures/optimised_matrices/"
+    filename = out_dir + "matrices_" + mode
+    pyplot.savefig(filename + ".pdf")
+    pyplot.savefig(filename + ".png", dpi=300)
+
+
+
 
 

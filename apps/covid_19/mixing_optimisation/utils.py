@@ -345,6 +345,9 @@ def get_uncertainty_cell_value(uncertainty_df, output, config):
     # output is in ["deaths_before", "deaths_unmitigated", "deaths_opti_deaths", "deaths_opti_yoll",
     #                "yoll_before", "yoll_unmitigated", "yoll_opti_deaths", "yoll_opti_yoll"]
 
+    # if "before" in output or "unmitigated" in output:
+    #     return ""
+
     if 'deaths_' in output:
         type = 'accum_deaths'
     else:
@@ -414,7 +417,7 @@ def get_uncertainty_cell_value(uncertainty_df, output, config):
     return cell_content
 
 
-def make_main_outputs_tables():
+def make_main_outputs_tables(mode):
     countries = ['belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']
     country_names = [c.title() for c in countries]
     country_names[-1] = "United Kingdom"
@@ -424,11 +427,11 @@ def make_main_outputs_tables():
                      "yoll_before", "yoll_unmitigated", "yoll_opti_deaths", "yoll_opti_yoll"
                     ]
 
-    for immunity in ["fully_immune", "partial_immune"]:
+    for immunity in ["fully_immune"]: # , "partial_immune"]:
         table = pd.DataFrame(columns=column_names)
         i_row = -1
         for i, country in enumerate(countries):
-            pbi_outputs_dir = "../../../data/pbi_outputs_for_opti/" + immunity
+            pbi_outputs_dir = "../../../data/pbi_outputs_for_opti/" + mode + "/" + immunity
             dir_content = os.listdir(pbi_outputs_dir)
             for f in dir_content:
                 if country in f:
@@ -449,7 +452,8 @@ def make_main_outputs_tables():
 
                 table.loc[i_row] = row_as_list
 
-        table.to_csv("../../../data/pbi_outputs_for_opti/" + immunity + "/output_table_" + immunity + ".csv")
+        table.to_csv("../../../data/pbi_outputs_for_opti/" + mode + "/" + immunity + "/output_table_" + immunity + "_" +
+                     mode + ".csv")
 
 
 ###########################################
@@ -559,5 +563,5 @@ def get_posterior_percentiles_time_variant_profile(calibration_path, function='d
 
 
 if __name__ == "__main__":
-    make_main_outputs_tables()
+    make_main_outputs_tables("by_location")
 

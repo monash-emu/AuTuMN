@@ -219,10 +219,6 @@ hospital_occupancy_dispersion_param: 1.
 new_hospital_admissions_dispersion_param: 1.
 new_icu_admissions_dispersion_param: 1.
 
-# parameters pertaining to waning immunity
-full_immunity: True
-immunity_duration: 183.
-
 icu_occupancy_dispersion_param: 1.
 
 importation_props_by_age:
@@ -242,3 +238,9 @@ importation_props_by_age:
     "65": 0.04
     "70": 0.04
     "75": 0.04
+
+# parameters pertaining to waning immunity
+full_immunity: True
+immunity_duration: 183.
+stratify_by_history: False
+rel_prop_symptomatic_experienced: .5

@@ -95,5 +95,6 @@ validate_params = sb.build_validator(
     icu_occupancy_dispersion_param=float,
     importation_props_by_age=dict,
     import_representative_age=int,
-
+    stratify_by_history=bool,
+    rel_prop_symptomatic_experienced=float,
 )

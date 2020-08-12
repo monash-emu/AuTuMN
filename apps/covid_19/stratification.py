@@ -280,6 +280,42 @@ def stratify_by_clinical(model, model_parameters, compartments, detected_proport
     )
 
 
+def stratify_model_by_history(model, model_parameters, rel_prop_symptomatic_experienced):
+    assert not model_parameters['full_immunity'], "Stratification by history requested with full immunity"
+
+    stratification_adjustments = {
+        "immunity_loss_rate": {'naive': 0., 'experienced': 1.}
+    }
+
+    # adjust parameters defining progression from presymptomatic to early disease to obtain the requested proportion
+    for agegroup in model.all_stratifications['agegroup']:  # e.g. '0'
+        rate_non_sympt = model.parameters["to_infectiousXagegroup_" + agegroup + "Xclinical_non_sympt"] * model.parameters["to_infectious"]
+        total_progression_rate = model.parameters['within_presympt']
+        rate_sympt = total_progression_rate - rate_non_sympt
+
+        # multiplier for symptomatic is rel_prop_symptomatic_experienced
+        # multiplier for asymptomatic rate is 1 + rate_sympt / rate_non_sympt * (1 - rel_prop_symptomatic_experienced)
+        non_sympt_multiplier = 1 + rate_sympt / rate_non_sympt * (1. - rel_prop_symptomatic_experienced)
+        for clinical_stratum in model.all_stratifications['clinical']:
+            param_name = "to_infectiousXagegroup_" + agegroup + " Xclinical_" + clinical_stratum
+            if "non_sympt" in clinical_stratum:
+                stratification_adjustments[param_name] = {'naive': 1., 'experienced': non_sympt_multiplier}
+            else:
+                stratification_adjustments[param_name] = {'naive': 1., 'experienced': rel_prop_symptomatic_experienced}
+
+    # Stratify the model using the SUMMER stratification function
+    model.stratify(
+        "history",
+        ['naive', 'experienced'],
+        [Compartment.SUSCEPTIBLE, Compartment.EXPOSED, Compartment.PRESYMPTOMATIC],
+        requested_proportions={
+            'naive': 1.0, 'experienced': 0.
+        },
+        adjustment_requests=stratification_adjustments,
+        verbose=False,
+    )
+
+
 def subdivide_props(base_props: np.ndarray, split_props: np.ndarray):
     """
     Split an array (base_array) of proportions into two arrays (split_arr, complement_arr)

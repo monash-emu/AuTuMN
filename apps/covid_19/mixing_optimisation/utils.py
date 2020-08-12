@@ -559,9 +559,6 @@ def get_posterior_percentiles_time_variant_profile(calibration_path, function='d
 # out_dir = "../../../data/outputs/calibrate/covid_19/france/Final-2020-08-04"
 #
 
-    make_main_outputs_tables()
-
-
 if __name__ == "__main__":
-    make_main_outputs_tables("by_location")
+    make_main_outputs_tables("by_age")
 

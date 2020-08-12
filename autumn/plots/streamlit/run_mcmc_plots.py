@@ -134,8 +134,9 @@ def plot_timeseries_with_uncertainty(
 def plot_multicountry_hospital_uncertainty(
     plotter: StreamlitPlotter, calib_dir_path: str, mcmc_tables: List[pd.DataFrame], plot_config={},
 ):
-    for immunity in ["fully_immune", "partial_immune"]:
-        pbi_outputs_dir = 'data/pbi_outputs_for_opti/' + immunity
+    for immunity in ["fully_immune"]: #, "partial_immune"]:
+        mode = "by_age"
+        pbi_outputs_dir = 'data/pbi_outputs_for_opti/' + mode + "/" + immunity
         plots.plot_multicountry_hospital_uncertainty(pbi_outputs_dir, immunity)
 
 def plot_calibration_fit(

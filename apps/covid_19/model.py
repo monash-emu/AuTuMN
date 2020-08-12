@@ -16,7 +16,7 @@ from autumn import inputs
 from autumn.environment.seasonality import get_seasonal_forcing
 
 from . import outputs, preprocess
-from .stratification import stratify_by_clinical
+from .stratification import stratify_by_clinical, stratify_model_by_history
 from .validate import validate_params
 
 import copy
@@ -97,6 +97,9 @@ def build_model(params: dict) -> StratifiedModel:
     # Choose a birth approach
     implement_importation = params["implement_importation"]
     birth_approach = BirthApproach.ADD_CRUDE if implement_importation else BirthApproach.NO_BIRTH
+
+    stratify_by_history = params['stratify_by_history']
+    rel_prop_symptomatic_experienced = params['rel_prop_symptomatic_experienced']
 
     # Build mixing matrix.
     static_mixing_matrix = preprocess.mixing_matrix.build_static(country_iso3)
@@ -216,9 +219,9 @@ def build_model(params: dict) -> StratifiedModel:
     age_based_susceptibility = params["age_based_susceptibility"]
     adjust_requests = {
         # No change, but distinction is required for later stratification by clinical status
-        "to_infectious": {s: 1 for s in agegroup_strings},
-        "infect_death": {s: 1 for s in agegroup_strings},
-        "within_late": {s: 1 for s in agegroup_strings},
+        "to_infectious": {s: 1. for s in agegroup_strings},
+        "infect_death": {s: 1. for s in agegroup_strings},
+        "within_late": {s: 1. for s in agegroup_strings},
         # Adjust susceptibility across age groups
         "contact_rate": age_based_susceptibility,
     }
@@ -250,6 +253,12 @@ def build_model(params: dict) -> StratifiedModel:
 
     # Stratify by clinical
     stratify_by_clinical(model, model_parameters, compartments, detected_proportion, symptomatic_props)
+
+
+    # Stratify by history
+    if stratify_by_history:
+        stratify_model_by_history(model, model_parameters, rel_prop_symptomatic_experienced)
+
 
     # Define output connections to collate
     # Track compartment output connections.

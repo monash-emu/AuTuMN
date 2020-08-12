@@ -325,25 +325,11 @@ def drop_yml_scenario_file(output_dir, country, config=2, mode="by_age", objecti
                     reformat_date_to_integer(d) for d in sc_params[par][mixing_key]['times']
                 ]
 
-
-    # scenario_mapping = {
-    #     1: "by_age_2_deaths",
-    #     2: "by_age_2_yoll",
-    #     3: "by_age_3_deaths",
-    #     4: "by_age_3_yoll",
-    #     5: "by_location_2_deaths",
-    #     6: "by_location_2_yoll",
-    #     7: "by_location_3_deaths",
-    #     8: "by_location_3_yoll",
-    #     9: "unmitigated",  # not used, just for completeness
-    # }
-
-    #
     scenario_mapping = {
-        1: "by_location_2_deaths",
-        2: "by_location_2_yoll",
-        3: "by_location_3_deaths",
-        4: "by_location_3_yoll"
+        1: mode + "_2_deaths",
+        2: mode + "_2_yoll",
+        3: mode + "_3_deaths",
+        4: mode + "_3_yoll",
     }
 
     for key, val in scenario_mapping.items():
@@ -355,25 +341,25 @@ def drop_yml_scenario_file(output_dir, country, config=2, mode="by_age", objecti
         yaml.dump(sc_params, f)
 
 
-def write_all_yml_files_from_outputs(output_dir):
+def write_all_yml_files_from_outputs(output_dir, mode="by_age"):
     for country in OPTI_REGIONS:
         for config in [2, 3]:
-            for mode in ["by_location"]:
-                for objective in ["deaths", "yoll"]:
-                    drop_yml_scenario_file(output_dir, country, config, mode, objective)
+            for objective in ["deaths", "yoll"]:
+                drop_yml_scenario_file(output_dir, country, config, mode, objective)
+        if mode == "by_age":
         # make extra scenario for unmitigated
-        sc_params = build_params_for_phases_2_and_3([1.] * 16, 2, 'by_age')
-        # clean up times
-        for par in ["mixing_age_adjust", "mixing"]:
-            if par in sc_params:
-                for mixing_key in sc_params[par].keys():
-                    sc_params[par][mixing_key]['times'] = [
-                        reformat_date_to_integer(d) for d in sc_params[par][mixing_key]['times']
-                    ]
-        # param_file_path = "../params/" + country + "/scenario-5.yml"
-        #
-        # with open(param_file_path, "w") as f:
-        #     yaml.dump(sc_params, f)
+            sc_params = build_params_for_phases_2_and_3([1.] * 16, 2, 'by_age')
+            # clean up times
+            for par in ["mixing_age_adjust", "mixing"]:
+                if par in sc_params:
+                    for mixing_key in sc_params[par].keys():
+                        sc_params[par][mixing_key]['times'] = [
+                            reformat_date_to_integer(d) for d in sc_params[par][mixing_key]['times']
+                        ]
+            param_file_path = "../params/" + country + "/scenario-5.yml"
+
+            with open(param_file_path, "w") as f:
+                yaml.dump(sc_params, f)
 
 
 def evaluate_extra_deaths(decision_vars, extra_contribution, i, root_model, mode, country,
@@ -513,8 +499,8 @@ if __name__ == "__main__":
     # optimisation will have to be performed separately for the different countries and modes.
     output_dir = "optimisation_outputs/6Aug2020/"
 
-    # write_all_yml_files_from_outputs(output_dir)
-    # exit()
+    write_all_yml_files_from_outputs(output_dir, mode="by_age")
+    exit()
     for _country in available_countries:
         print("Running for " + _country + " ...")
         mode = 'by_age'

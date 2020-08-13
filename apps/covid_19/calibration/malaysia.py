@@ -667,14 +667,12 @@ TARGET_OUTPUTS = [
         "years": notification_times,
         "values": notification_counts,
         "loglikelihood_distri": "negative_binomial",
-        "time_weights": list(range(1, len(notification_times) + 1)),
     },
     {
         "output_key": "icu_occupancy",
         "years": icu_times,
         "values": icu_counts,
         "loglikelihood_distri": "negative_binomial",
-        "time_weights": list(range(1, len(icu_times) + 1)),
     }
 ]
 

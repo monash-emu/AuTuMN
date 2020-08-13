@@ -14,9 +14,10 @@ def get_importation_rate_func_as_birth_rates(
     """
 
     # Inflate importation numbers to account for undetected cases (assumed to be asymptomatic or sympt non hospital)
-    actual_imported_cases = \
-        [importation_n_cases[i_time] / detect_prop_func(time) for
-         i_time, time in enumerate(importation_times)]
+    actual_imported_cases = [
+        importation_n_cases[i_time] / detect_prop_func(time)
+        for i_time, time in enumerate(importation_times)
+    ]
 
     # Scale-up curve for importation numbers
     importation_numbers_scale_up = scale_up_function(

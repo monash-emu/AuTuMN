@@ -2,7 +2,7 @@ from numpy import linspace
 
 from summer.model.strat_model import StratifiedModel
 from autumn.post_processing.processor import post_process
-from summer.constants import IntegrationType
+from summer.constants import IntegrationType, Flow
 
 import pytest
 
@@ -28,7 +28,7 @@ def _get_model():
         {"beta": 400, "recovery": 365 / 13, "infect_death": 1},
         [
             {
-                "type": "standard_flows",
+                "type": Flow.STANDARD,
                 "parameter": "recovery",
                 "origin": "infectious",
                 "to": "recovered",
@@ -42,15 +42,10 @@ def _get_model():
             {"type": "compartment_death", "parameter": "infect_death", "origin": "infectious",},
         ],
         output_connections={},
-        verbose=False,
     )
 
     model.stratify(
-        "strain",
-        ["sensitive", "resistant"],
-        ["infectious"],
-        requested_proportions={},
-        verbose=False,
+        "strain", ["sensitive", "resistant"], ["infectious"], requested_proportions={},
     )
 
     age_mixing = None
@@ -62,7 +57,6 @@ def _get_model():
         {"recovery": {"1": 0.5, "10": 0.8}},
         infectiousness_adjustments={"1": 0.8},
         mixing_matrix=age_mixing,
-        verbose=False,
     )
 
     model.run_model(integration_type=IntegrationType.ODE_INT)

@@ -10,7 +10,8 @@ Open a PowerShell window as _Administrator_ by searching for it in your Windows 
 # Install Chocolately package manager - https://chocolatey.org/install
 Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 # Use Chocolately to install Anaconda
-choco install anaconda3
+choco install anaconda3 -y --force
+# Close and re-open powershell as an administrator
 # Setup Anaconda to work with PowerShell
 conda init powershell
 ```

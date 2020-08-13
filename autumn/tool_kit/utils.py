@@ -193,7 +193,7 @@ def get_integration_times(start_year: int, end_year: int, time_step: int):
     Get a list of timesteps from start_year to end_year, spaced by time_step.
     """
     n_iter = int(round((end_year - start_year) / time_step)) + 1
-    return numpy.linspace(start_year, end_year, n_iter).tolist()
+    return numpy.linspace(start_year, end_year, n_iter)
 
 
 def element_wise_list_summation(list_1, list_2):
@@ -217,7 +217,7 @@ def repeat_list_elements_average_last_two(raw_props, prop_over_80):
     prop_over_80 is the proportion of 80+ individuals among the 75+ population.
     """
     repeated_props = repeat_list_elements(2, raw_props[:-1])
-    repeated_props[-1] = (1. - prop_over_80) * raw_props[-2] + prop_over_80 * raw_props[-1]
+    repeated_props[-1] = (1.0 - prop_over_80) * raw_props[-2] + prop_over_80 * raw_props[-1]
     return repeated_props
 
 
@@ -307,11 +307,11 @@ def copy_function(f, name=None):
 
 
 def print_target_to_plots_from_calibration(target_outputs):
-    print('outputs_to_plot:')
+    print("outputs_to_plot:")
     for i in range(len(target_outputs)):
         target_outputs[i]["years"] = [str(t) for t in target_outputs[i]["years"]]
         print("  - name: " + target_outputs[i]["output_key"])
-        print("    target_times: [" + ', '.join(target_outputs[i]["years"]) + "]")
+        print("    target_times: [" + ", ".join(target_outputs[i]["years"]) + "]")
         to_print = "    target_values: ["
         for j, val in enumerate(target_outputs[i]["values"]):
             if j > 0:

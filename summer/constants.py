@@ -3,6 +3,16 @@ Constants used in building SUMMER models.
 """
 
 
+class FlowAdjustment:
+    """
+    A type of adjustment to a stratified flow.
+    """
+
+    OVERWRITE = "OVERWRITE"  # Overwrite with a value
+    MULTIPLY = "MULTIPLY"  # Multiply with a value
+    COMPOSE = "COMPOSE"  # Compose with a function
+
+
 class Compartment:
     """
     A model compartment.
@@ -25,12 +35,27 @@ class Flow:
     A type of flow between model compartments
     """
 
-    CUSTOM = "customised_flows"
-    STANDARD = "standard_flows"
+    # Transition flows: where people are moving from one compartment to another
+    STANDARD = "standard"
     INFECTION_FREQUENCY = "infection_frequency"
     INFECTION_DENSITY = "infection_density"
-    COMPARTMENT_DEATH = "compartment_death"
-    STRATA_CHANGE = "strata_change"
+    TRANSITION_FLOWS = (
+        STANDARD,
+        INFECTION_FREQUENCY,
+        INFECTION_DENSITY,
+    )
+    INFECTION_FLOWS = (INFECTION_DENSITY, INFECTION_FREQUENCY)
+
+    # Entry flows: where people are entering the population (births, imports)
+    BIRTH = "birth"
+    IMPORT = "import"
+    ENTRY_FLOWS = (BIRTH, IMPORT)
+
+    # Exit flows: where people are leaving the population (deaths, exports)
+    DEATH = "compartment_death"
+    UNIVERSAL_DEATH = "universal_death"
+    DEATH_FLOWS = (DEATH, UNIVERSAL_DEATH)
+    EXIT_FLOWS = (DEATH, UNIVERSAL_DEATH)
 
 
 class BirthApproach:

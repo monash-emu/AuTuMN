@@ -4,7 +4,7 @@ from summer.model import StratifiedModel
 
 from autumn.plots import plot_scenarios
 from autumn.tool_kit import Scenario, get_integration_times
-from autumn.constants import Compartment, Stratification
+from autumn.constants import BirthApproach
 
 
 def test_for_smoke__plot_scenarios():
@@ -32,17 +32,15 @@ def _build_model(*args, **kwargs):
     pop = 1000
     model = StratifiedModel(
         times=get_integration_times(2000, 2005, 1),
-        compartment_types=[Compartment.SUSCEPTIBLE, Compartment.INFECTIOUS],
-        initial_conditions={Compartment.SUSCEPTIBLE: pop},
+        compartment_names=["S", "I"],
+        initial_conditions={"S": pop},
         parameters={},
         requested_flows=[],
         starting_population=pop,
+        infectious_compartments=["I"],
+        birth_approach=BirthApproach.NO_BIRTH,
+        entry_compartment="S",
     )
     # Add basic age stratification
-    model.stratify(
-        Stratification.AGE,
-        strata_request=[0, 5, 15, 60],
-        compartment_types_to_stratify=[],
-        requested_proportions={},
-    )
+    model.stratify("age", strata_request=[0, 5, 15, 60], compartments_to_stratify=["S", "I"])
     return model

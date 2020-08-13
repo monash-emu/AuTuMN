@@ -14,13 +14,13 @@ DEFAULT_FLOWS = [
         "type": Flow.STANDARD,
         "origin": Compartment.EARLY_EXPOSED,
         "to": Compartment.LATE_EXPOSED,
-        "parameter": f"to_{Compartment.LATE_EXPOSED}",
+        "parameter": f"within_{Compartment.EARLY_EXPOSED}",
     },
     {
         "type": Flow.STANDARD,
         "origin": Compartment.LATE_EXPOSED,
         "to": Compartment.EARLY_ACTIVE,
-        "parameter": f"within_{Compartment.LATE_EXPOSED}",  # FIXME: Rename to "within_presympt"
+        "parameter": f"within_{Compartment.LATE_EXPOSED}",
     },
     {
         "type": Flow.STANDARD,
@@ -36,9 +36,5 @@ DEFAULT_FLOWS = [
         "parameter": f"within_{Compartment.LATE_ACTIVE}",
     },
     # Infection death
-    {
-        "type": Flow.COMPARTMENT_DEATH,
-        "parameter": "infect_death",
-        "origin": Compartment.LATE_ACTIVE,
-    },
+    {"type": Flow.DEATH, "parameter": "infect_death", "origin": Compartment.LATE_ACTIVE},
 ]

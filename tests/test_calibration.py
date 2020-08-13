@@ -1,7 +1,10 @@
 import os
 from copy import deepcopy
 
+
 import pytest
+import numpy as np
+
 from autumn.db import Database
 from autumn.calibration import Calibration, CalibrationMode
 from autumn.calibration.utils import sample_starting_params_from_lhs, specify_missing_prior_params
@@ -161,7 +164,7 @@ def _build_mock_model(params):
     ice_cream_sales = params["ice_cream_sales"]
     vals = [0, 1, 2, 3, 4, 5]
     mock_model = get_mock_model(
-        times=[1999, 2000, 2001, 2002, 2003, 2004],
+        times=np.array([1999, 2000, 2001, 2002, 2003, 2004]),
         outputs=[
             [300.0, 300.0, 300.0, 33.0, 33.0, 33.0, 93.0, 39.0],
             [271.0, 300.0, 271.0, 62.0, 33.0, 62.0, 93.0, 69.0],

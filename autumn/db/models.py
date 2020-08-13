@@ -68,7 +68,7 @@ def store_database(
     """
     store outputs from the model in sql database for use in producing outputs later
     """
-    if times:
+    if times is not None:
         outputs.insert(0, column="times", value=times)
 
     if table_name != "mcmc_run_info":

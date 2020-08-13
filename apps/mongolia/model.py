@@ -9,6 +9,7 @@ from summer.model import (
     find_name_components,
     find_stem,
 )
+from summer.constants import Flow
 from summer.model.utils.parameter_processing import (
     get_parameter_dict_from_function,
     logistic_scaling_function,
@@ -105,7 +106,7 @@ def build_model(params: dict) -> StratifiedModel:
     # add case detection process to basic model
     tb_model.add_transition_flow(
         {
-            "type": "standard_flows",
+            "type": Flow.STANDARD,
             "parameter": "case_detection",
             "origin": "infectious",
             "to": "recovered",
@@ -174,24 +175,20 @@ def build_model(params: dict) -> StratifiedModel:
 
         return total_tb_detected * prop_of_relevant_latent
 
-    tb_model.add_transition_flow(
-        {
-            "type": "customised_flows",
-            "parameter": "ipt_rate",
-            "origin": "early_latent",
-            "to": "recovered",
-            "function": ipt_flow_func,
-        }
-    )
+    # FIXME: Matt broke this.
+    # tb_model.add_transition_flow(
+    #     {
+    #         "type": "customised_flows",
+    #         "parameter": "ipt_rate",
+    #         "origin": "early_latent",
+    #         "to": "recovered",
+    #         "function": ipt_flow_func,
+    #     }
+    # )
 
     # add ACF flow
     tb_model.add_transition_flow(
-        {
-            "type": "standard_flows",
-            "parameter": "acf_rate",
-            "origin": "infectious",
-            "to": "recovered",
-        }
+        {"type": Flow.STANDARD, "parameter": "acf_rate", "origin": "infectious", "to": "recovered",}
     )
 
     # load time-variant case detection rate
@@ -292,7 +289,6 @@ def build_model(params: dict) -> StratifiedModel:
             "strain",
             ["ds", "mdr"],
             ["early_latent", "late_latent", "infectious"],
-            verbose=False,
             requested_proportions={"mdr": 0.0},
             adjustment_requests={
                 "contact_rate": {"ds": 1.0, "mdr": 1.0},
@@ -310,11 +306,10 @@ def build_model(params: dict) -> StratifiedModel:
 
         tb_model.add_transition_flow(
             {
-                "type": "standard_flows",
+                "type": Flow.STANDARD,
                 "parameter": "dr_amplification",
                 "origin": "infectiousXstrain_ds",
                 "to": "infectiousXstrain_mdr",
-                "implement": len(tb_model.all_stratifications),
             }
         )
 
@@ -387,7 +382,6 @@ def build_model(params: dict) -> StratifiedModel:
             {},
             adjustment_requests=age_params,
             infectiousness_adjustments=age_infectiousness,
-            verbose=False,
         )
 
         # patch for IPT to overwrite parameters when ds_ipt has been turned off while we still need some coverage at baseline
@@ -422,7 +416,6 @@ def build_model(params: dict) -> StratifiedModel:
             ["smearpos", "smearneg", "extrapul"],
             ["infectious"],
             infectiousness_adjustments={"smearpos": 1.0, "smearneg": 0.25, "extrapul": 0.0,},
-            verbose=False,
             requested_proportions=props_smear,
             adjustment_requests={
                 "recovery": recovery_adjustments,
@@ -489,7 +482,6 @@ def build_model(params: dict) -> StratifiedModel:
             ["rural_province", "urban_nonger", "urban_ger", "prison"],
             [],
             requested_proportions=props_location,
-            verbose=False,
             entry_proportions=props_location,
             adjustment_requests=location_adjustments,
             mixing_matrix=location_mixing,

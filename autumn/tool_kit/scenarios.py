@@ -126,4 +126,4 @@ def get_model_times_from_inputs(start_time, end_time, time_step):
     Find the time steps for model integration from the submitted requests, ensuring the time points are evenly spaced.
     """
     n_times = int(round((end_time - start_time) / time_step)) + 1
-    return numpy.linspace(start_time, end_time, n_times).tolist()
+    return numpy.linspace(start_time, end_time, n_times)

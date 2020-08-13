@@ -1,7 +1,12 @@
 # PyTest configuration file.
 # See pytest fixtue docs: https://docs.pytest.org/en/latest/fixture.html
 import os
+import pickle
+
 import pytest
+import numpy as np
+from numpy.testing import assert_array_equal, assert_allclose
+
 
 from autumn.db import database, models
 from autumn import constants
@@ -11,6 +16,7 @@ from .utils import in_memory_db_factory, get_deterministic_random_seed
 
 get_in_memory_db = in_memory_db_factory()
 
+APPROVAL_DIR = os.path.join(constants.OUTPUT_DATA_PATH, "approvals")
 IS_GITHUB_CI = os.environ.get("GITHUB_ACTION", False)
 
 
@@ -63,3 +69,34 @@ def temp_data_dir(monkeypatch, tmp_path):
     monkeypatch.setattr(constants, "DATA_PATH", path_str)
     monkeypatch.setattr(constants, "OUTPUT_DATA_PATH", os.path.join(path_str, "outputs"))
     return path_str
+
+
+@pytest.fixture
+def verify(*args, **kwargs):
+    """
+    Provides a verify function for approval tests.
+    https://understandlegacycode.com/approval-tests/
+    """
+    os.makedirs(APPROVAL_DIR, exist_ok=True)
+
+    def _verify(obj, key: str):
+        fpath = os.path.join(APPROVAL_DIR, f"{key}.pickle")
+        if os.path.exists(fpath):
+            # Check against existing fixture
+            with open(fpath, "rb") as f:
+                target = pickle.load(f)
+
+            if type(obj) is np.ndarray:
+
+                err_msg = f"Approval fixture array mismatch for {key}"
+                assert_allclose(obj, target, atol=1, rtol=0.02, err_msg=err_msg, verbose=True)
+            else:
+                assert obj == target, f"Approval fixture mismatch for {key}"
+
+        else:
+            # Silently write new fixture
+            with open(fpath, "wb") as f:
+                pickle.dump(obj, f)
+
+    return _verify
+

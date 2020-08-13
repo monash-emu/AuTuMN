@@ -31,7 +31,6 @@ compartment_periods:
 
 # Mean time (?) spent in each compartment, defined via proportions
 compartment_periods_calculated:
-
   exposed:
     total_period: 5.
     proportions:
@@ -45,11 +44,6 @@ compartment_periods_calculated:
       # Proportion of the infectious period spent in the early compartment (i.e. can't be isolated for symptoms), assumed
       early: 0.333
       late: 0.667
-
-# Stratification-related requests
-stratify_by:
-  - agegroup
-  - clinical
 
 # Currently must use only four strata, because deaths will not be calculated correctly otherwise - should be quickly
 # adaptable to fewer strata as needed, though
@@ -150,10 +144,10 @@ late_infect_multiplier:
 
 # parameters of tanh-based scale-up function used to define time-variant detection
 time_variant_detection:
-  maximum_gradient: 0.05  # The shape parameter to the tanh-based curve
-  max_change_time: 90.  # Point at which curve inflects
-  start_value: 0.1  # Starting value - lower asymptote for increasing function
-  end_value: 0.6  # End value - upper asymptote for increasing function
+  maximum_gradient: 0.05 # The shape parameter to the tanh-based curve
+  max_change_time: 90. # Point at which curve inflects
+  start_value: 0.1 # Starting value - lower asymptote for increasing function
+  end_value: 0.6 # End value - upper asymptote for increasing function
 
 # Sub region of country, null means just the country.
 region: null
@@ -171,9 +165,9 @@ end_time: 550.
 time_step: 1.
 
 # Base model definition
-contact_rate: 0.03  # Expected to be calibrated for each application
+contact_rate: 0.03 # Expected to be calibrated for each application
 seasonal_force: null
-icu_mortality_prop: 0.5  # Death proportion ceiling for ICU mortality
+icu_mortality_prop: 0.5 # Death proportion ceiling for ICU mortality
 
 # Compulsory parameter that is completely overwritten in stratification, rather than being modified
 infect_death: 0.
@@ -205,7 +199,7 @@ google_mobility_locations:
     - parks
     - transit_stations
 
-smooth_google_data: false  # whether to apply a 7-day moving average
+smooth_google_data: false # whether to apply a 7-day moving average
 
 # Parameters of negative binomial (need to be listed for validation)
 notifications_dispersion_param: 1.
@@ -223,19 +217,19 @@ full_immunity: true
 immunity_duration: 90.
 
 importation_props_by_age:
-    "0": 0.04
-    "5": 0.04
-    "10": 0.04
-    "15": 0.04
-    "20": 0.08
-    "25": 0.09
-    "30": 0.09
-    "35": 0.09
-    "40": 0.09
-    "45": 0.08
-    "50": 0.08
-    "55": 0.08
-    "60": 0.04
-    "65": 0.04
-    "70": 0.04
-    "75": 0.04
+  "0": 0.04
+  "5": 0.04
+  "10": 0.04
+  "15": 0.04
+  "20": 0.08
+  "25": 0.09
+  "30": 0.09
+  "35": 0.09
+  "40": 0.09
+  "45": 0.08
+  "50": 0.08
+  "55": 0.08
+  "60": 0.04
+  "65": 0.04
+  "70": 0.04
+  "75": 0.04

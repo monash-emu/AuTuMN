@@ -92,7 +92,6 @@ def stratify_by_age(model_to_stratify, age_specific_latency_parameters, age_stra
         {},
         adjustment_requests=age_params,
         infectiousness_adjustments=age_infectiousness,
-        verbose=False,
     )
     return model_to_stratify
 
@@ -125,7 +124,6 @@ def stratify_by_diabetes(
             "diabetes",
             diabetes_strata,
             [],
-            verbose=False,
             requested_proportions=diabetes_starting_and_entry_props,
             adjustment_requests=adjustment_dict,
             entry_proportions=diabetes_starting_and_entry_props,
@@ -149,7 +147,6 @@ def stratify_by_diabetes(
             "diabetes",
             diabetes_strata,
             [],
-            verbose=False,
             requested_proportions=diabetes_starting_and_entry_props,
             adjustment_requests=adjustment_dict,
             entry_proportions=diabetes_starting_and_entry_props,
@@ -184,7 +181,6 @@ def stratify_by_organ(model_to_stratify, model_parameters, detect_rate_by_organ,
         organ_strata,
         [Compartment.EARLY_INFECTIOUS],
         infectiousness_adjustments={"smearpos": 1.0, "smearneg": 0.25, "extrapul": 0.0},
-        verbose=False,
         requested_proportions=props_smear,
         adjustment_requests={
             "recovery": recovery_adjustments,
@@ -245,7 +241,6 @@ def stratify_by_location(tb_model, model_parameters, location_strata):
         location_strata,
         [],
         requested_proportions=props_location,
-        verbose=False,
         entry_proportions=props_location,
         adjustment_requests=location_adjustments,
         mixing_matrix=location_mixing,

@@ -668,17 +668,17 @@ TARGET_OUTPUTS = [
         "values": notification_counts,
         "loglikelihood_distri": "negative_binomial",
     },
-    {
-        "output_key": "icu_occupancy",
-        "years": icu_times,
-        "values": icu_counts,
-        "loglikelihood_distri": "negative_binomial",
-    }
+    # {
+    #     "output_key": "icu_occupancy",
+    #     "years": icu_times,
+    #     "values": icu_counts,
+    #     "loglikelihood_distri": "negative_binomial",
+    # }
 ]
 
 PAR_PRIORS = provide_default_calibration_params()
 PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "notifications")
-PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "icu_occupancy")
+# PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "icu_occupancy")
 
 PAR_PRIORS += [
 
@@ -686,12 +686,12 @@ PAR_PRIORS += [
     {
         "param_name": "compartment_periods.icu_early",
         "distribution": "uniform",
-        "distri_params": [2.0, 25.0],
+        "distri_params": [10.0, 25.0],
     },
     {
         "param_name": "icu_prop",
         "distribution": "uniform",
-        "distri_params": [0.1, 0.35],
+        "distri_params": [0.12, 0.2],
     },
 
     # Detection-related

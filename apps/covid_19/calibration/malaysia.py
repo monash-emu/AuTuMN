@@ -1,6 +1,7 @@
 from autumn.constants import Region
 from apps.covid_19.calibration import base
 from apps.covid_19.calibration.base import provide_default_calibration_params, add_standard_dispersion_parameter
+from apps.covid_19.mixing_optimisation.utils import add_dispersion_param_prior_for_gaussian
 
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
@@ -666,19 +667,21 @@ TARGET_OUTPUTS = [
         "output_key": "notifications",
         "years": notification_times,
         "values": notification_counts,
-        "loglikelihood_distri": "negative_binomial",
+        "loglikelihood_distri": "normal",
     },
-    # {
-    #     "output_key": "icu_occupancy",
-    #     "years": icu_times,
-    #     "values": icu_counts,
-    #     "loglikelihood_distri": "negative_binomial",
-    # }
+    {
+        "output_key": "icu_occupancy",
+        "years": icu_times,
+        "values": icu_counts,
+        "loglikelihood_distri": "normal",
+    }
 ]
 
 PAR_PRIORS = provide_default_calibration_params()
-PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "notifications")
+# PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "notifications")
 # PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "icu_occupancy")
+
+PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS, {})
 
 PAR_PRIORS += [
 
@@ -715,7 +718,7 @@ PAR_PRIORS += [
     {
         "param_name": "microdistancing.parameters.sigma",
         "distribution": "uniform",
-        "distri_params": [0.4, 0.9],
+        "distri_params": [0.3, 0.7],
     },
     {
         "param_name": "microdistancing.parameters.c",

@@ -305,8 +305,7 @@ def reformat_date_to_integer(_date):
     return delta
 
 
-def drop_yml_scenario_file(output_dir, country, config=2, mode="by_age", objective="deaths"):
-
+def get_params_for_phases_2_and_3_from_opti_outptuts(output_dir, country, config, mode, objective):
     _, decision_vars = get_mle_params_and_vars(output_dir, country, config, mode, objective)
     if mode == "by_location":
         new_decision_variables = {
@@ -324,6 +323,11 @@ def drop_yml_scenario_file(output_dir, country, config=2, mode="by_age", objecti
                 sc_params[par][mixing_key]['times'] = [
                     reformat_date_to_integer(d) for d in sc_params[par][mixing_key]['times']
                 ]
+    return sc_params
+
+
+def drop_yml_scenario_file(output_dir, country, config=2, mode="by_age", objective="deaths"):
+    sc_params = get_params_for_phases_2_and_3_from_opti_outptuts(output_dir, country, config, mode, objective)
 
     scenario_mapping = {
         1: mode + "_2_deaths",
@@ -360,6 +364,31 @@ def write_all_yml_files_from_outputs(output_dir, mode="by_age"):
 
             with open(param_file_path, "w") as f:
                 yaml.dump(sc_params, f)
+
+
+def write_all_yml_files_for_immunity_scenarios(output_dir):
+
+    durations = [183., 2*365.25]
+    rel_prop_sympts = [1., .5]
+
+    mode = "by_age"
+    config = 2
+    objective = "yoll"
+
+    for country in OPTI_REGIONS:
+        sc_params = get_params_for_phases_2_and_3_from_opti_outptuts(output_dir, country, config, mode, objective)
+        sc_params['full_immunity'] = False
+
+        sc_index = 0
+        for duration in durations:
+            sc_params['immunity_duration'] = duration
+            for rel_prop_sympt in rel_prop_sympts:
+                sc_index += 1
+                sc_params['rel_prop_symptomatic_experienced'] = rel_prop_sympt
+
+                param_file_path = "../params/" + country + "/scenario-" + str(sc_index) + ".yml"
+                with open(param_file_path, "w") as f:
+                    yaml.dump(sc_params, f)
 
 
 def evaluate_extra_deaths(decision_vars, extra_contribution, i, root_model, mode, country,
@@ -500,6 +529,7 @@ if __name__ == "__main__":
     output_dir = "optimisation_outputs/6Aug2020/"
 
     write_all_yml_files_from_outputs(output_dir, mode="by_age")
+    # write_all_yml_files_for_immunity_scenarios(output_dir)
     exit()
     for _country in available_countries:
         print("Running for " + _country + " ...")

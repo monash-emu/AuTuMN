@@ -297,7 +297,7 @@ def stratify_model_by_history(model, model_parameters, rel_prop_symptomatic_expe
         # multiplier for asymptomatic rate is 1 + rate_sympt / rate_non_sympt * (1 - rel_prop_symptomatic_experienced)
         non_sympt_multiplier = 1 + rate_sympt / rate_non_sympt * (1. - rel_prop_symptomatic_experienced)
         for clinical_stratum in model.all_stratifications['clinical']:
-            param_name = "to_infectiousXagegroup_" + agegroup + " Xclinical_" + clinical_stratum
+            param_name = "to_infectiousXagegroup_" + agegroup + "Xclinical_" + clinical_stratum
             if "non_sympt" in clinical_stratum:
                 stratification_adjustments[param_name] = {'naive': 1., 'experienced': non_sympt_multiplier}
             else:

@@ -281,7 +281,7 @@ def stratify_by_clinical(model, model_parameters, compartments, detected_proport
 
 
 def stratify_model_by_history(model, model_parameters, rel_prop_symptomatic_experienced):
-    assert not model_parameters['full_immunity'], "Stratification by history requested with full immunity"
+    # assert not model_parameters['full_immunity'], "Stratification by history requested with full immunity"
 
     stratification_adjustments = {
         "immunity_loss_rate": {'naive': 0., 'experienced': 1.}

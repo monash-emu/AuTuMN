@@ -1360,6 +1360,116 @@ def plot_multicountry_optimised_matrices(original_matrices, optimised_matrices, 
     pyplot.savefig(filename + ".png", dpi=300)
 
 
+def plot_waning_immunity_graph(scenarios: List[Scenario], output, axis, config):
+    models = [sc.model for sc in scenarios]
+    times = (models[0].times[:-1] + models[1].times)
+
+    phase_2_start = 214
+    phase_2_end = {2: 398, 3: 580}
+    # mark Phase 2 in the background:
+    rect = patches.Rectangle((phase_2_start, 0), phase_2_end[config] - phase_2_start, 1.e9, linewidth=0,
+                              facecolor='gold', alpha=.2)
+    rect.set_zorder(1)
+    axis.add_patch(rect)
+
+    scenario_names = [
+        "baseline",
+        "persistent immunity",
+        "6 months immunity",
+        "6 months immunity and\n50% less symptomatic",
+        "24 months immunity",
+        "24 months immunity and\n50% less symptomatic",
+    ]
+
+    sc_colors = ['black', 'black', 'mediumaquamarine', 'blue', 'lightcoral', 'crimson']
+
+    y_max = 0.
+    for scenario in [0, 2, 3, 4, 5, 1]:
+        times = models[scenario].times
+        values = models[scenario].derived_outputs[output]
+        if scenario == 0:
+            axis.plot(times, values, linewidth=3., color=sc_colors[scenario],
+                      zorder=2)
+        else:
+            axis.plot(times, values, linewidth=3., label=scenario_names[scenario], color=sc_colors[scenario],
+                      zorder=2)
+        y_max = max([y_max, max(values)])
+    xticks = [61, 214, 398, 366 + 214, 366 + 365]
+    xlabs = ["1 Mar 20", "1 Aug 20", "1 Feb 21", "1 Aug 21", "31 Dec 21"]
+
+    axis.set_xlim((30, max(times)))
+    axis.set_xticks(xticks)
+    axis.set_xticklabels(xlabs, fontsize=12)
+
+    axis.set_ylim((0., y_max*1.05))
+
+
+    for tick in axis.yaxis.get_major_ticks():
+        tick.label.set_fontsize(12)
+    # axis.xaxis.get_major_ticks().label.set_fontsize(12)
+
+    handles, labels = axis.get_legend_handles_labels()
+
+    return handles, labels
+
+
+def plot_multicountry_waning_immunity(country_scenarios, config, mode, objective, include_config=False):
+    fig_h = 20 if not include_config else 21
+    heights = [1, 6, 6, 6, 6, 6, 6] if not include_config else [2, 1, 6, 6, 6, 6, 6, 6]
+    pyplot.rcParams["font.family"] = "Times New Roman"
+    pyplot.style.use("default")
+    fig = pyplot.figure(constrained_layout=True, figsize=(24, fig_h))  # (w, h)
+
+    widths = [1, 6, 6, 6, 2]
+    spec = fig.add_gridspec(ncols=5, nrows=len(heights), width_ratios=widths,
+                            height_ratios=heights)
+
+    output_names = ["incidence", "infection_deathsXall", "hospital_occupancy"]
+    output_titles = ["Daily disease incidence", "Daily deaths", "Hospital occupancy"]
+
+    countries = ['belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']
+    country_names = [c.title() for c in countries]
+    country_names[-1] = "United Kingdom"
+
+    text_size = 23
+
+    for i, country in enumerate(countries):
+        i_grid = i + 2 if include_config else i+1
+        for j, output in enumerate(output_names):
+            ax = fig.add_subplot(spec[i_grid, j + 1])
+            h, l = plot_waning_immunity_graph(country_scenarios[country], output, axis=ax, config=config)
+            if i == 0:
+                i_grid_output_labs = 1 if include_config else 0
+                ax = fig.add_subplot(spec[i_grid_output_labs, j+1])
+                ax.text(0.5, 0.5, output_titles[j], fontsize=text_size, horizontalalignment='center', verticalalignment='center')
+                ax.axis("off")
+
+        ax = fig.add_subplot(spec[i_grid, 0])
+        ax.text(0.5, 0.5, country_names[i], rotation=90, fontsize=text_size, horizontalalignment='center', verticalalignment='center')
+        ax.axis("off")
+
+    if j == 2:
+        ax = fig.add_subplot(spec[1:, 4])
+        leg = ax.legend(h, l, fontsize=15, labelspacing=1.0, loc='center')  # bbox_to_anchor=(1.4, 1.1),
+        for line in leg.get_lines():
+            line.set_linewidth(5.0)
+        ax.axis("off")
+
+    if include_config:
+        ax = fig.add_subplot(spec[0, :])
+        obj_name = 'deaths' if objective == 'deaths' else 'years of life lost'
+        config_name = '6-month' if config == 2 else '12-month'
+
+        config_label = "Optimisation by " + mode[3:] + " minimising " + obj_name + " with " + config_name + " mitigation"
+        ax.text(0., 0.5, config_label, fontsize=text_size, horizontalalignment='left', verticalalignment='center')
+        ax.axis("off")
+
+
+    out_dir = "apps/covid_19/mixing_optimisation/opti_plots/figures/waning_immunity/"
+    filename = out_dir + "waning_immunity_" + mode + "_config_" + str(config) + "_" + objective
+    pyplot.savefig(filename + ".pdf")
+    pyplot.savefig(filename + ".png", dpi=300)
+
 
 
 

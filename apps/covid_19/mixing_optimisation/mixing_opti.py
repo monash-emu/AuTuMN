@@ -372,14 +372,18 @@ def write_all_yml_files_for_immunity_scenarios(output_dir):
     rel_prop_sympts = [1., .5]
 
     mode = "by_age"
-    config = 2
+    config = 3
     objective = "yoll"
 
     for country in OPTI_REGIONS:
         sc_params = get_params_for_phases_2_and_3_from_opti_outptuts(output_dir, country, config, mode, objective)
-        sc_params['full_immunity'] = False
+        sc_params['end_time'] = 366 + 365
+        param_file_path = "../params/" + country + "/scenario-1.yml"
+        with open(param_file_path, "w") as f:
+            yaml.dump(sc_params, f)
 
-        sc_index = 0
+        sc_params['full_immunity'] = False
+        sc_index = 1
         for duration in durations:
             sc_params['immunity_duration'] = duration
             for rel_prop_sympt in rel_prop_sympts:
@@ -528,8 +532,8 @@ if __name__ == "__main__":
     # optimisation will have to be performed separately for the different countries and modes.
     output_dir = "optimisation_outputs/6Aug2020/"
 
-    write_all_yml_files_from_outputs(output_dir, mode="by_age")
-    # write_all_yml_files_for_immunity_scenarios(output_dir)
+    # write_all_yml_files_from_outputs(output_dir, mode="by_age")
+    write_all_yml_files_for_immunity_scenarios(output_dir)
     exit()
     for _country in available_countries:
         print("Running for " + _country + " ...")

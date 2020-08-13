@@ -262,6 +262,7 @@ def plot_multicountry_optimal_plan(
 
         plots.plot_multicountry_optimal_plan(all_results, mode=mode)
 
+
 def plot_multicountry_optimised_matrices(
     plotter: StreamlitPlotter, app: RegionAppBase, scenarios: list, plot_config: dict
 ):
@@ -347,6 +348,36 @@ def plot_multicountry_mobility(
 
     plots.plot_multicountry_mobility(all_values)
 
+
+def plot_multicountry_waning_immunity(
+    plotter: StreamlitPlotter, app: RegionAppBase, scenarios: list, plot_config: dict
+):
+    countries = ['belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']
+    root_path = os.path.join('data', 'scenario_outputs_waning_immunity')
+
+    for mode in ['by_age']:  #, 'by_location']:
+        for config in [3]:  #, 3]:
+            for objective in ["yoll"]:  # , "deaths"]
+                full_path = os.path.join(root_path, mode + "_" + str(config) + "_" + objective)
+                country_scenarios = {}
+                for country in countries:
+                    country_dirpath = os.path.join(full_path, country)
+                    dir_name = os.listdir(country_dirpath)[0]
+                    run_dirpath = os.path.join(country_dirpath, dir_name)
+
+                    params = utils.load_params(run_dirpath)
+                    post_processing_config = utils.load_post_processing_config('covid_19')
+
+                    # Get database from model data dir.
+                    db_path = os.path.join(run_dirpath, "outputs.db")
+                    country_scenarios[country] = load_model_scenarios(db_path, params, post_processing_config)
+
+                print("Plotting multicountry waning immunity for: " + mode + "_config_" + str(config) + "_" + objective)
+
+                plots.plot_multicountry_waning_immunity(country_scenarios, config, mode, objective, include_config=True)
+
+
+
 PLOT_FUNCS = {
     "Compartment sizes": plot_compartment,
     "Compartments aggregate": plot_compartment_aggregate,
@@ -359,6 +390,7 @@ PLOT_FUNCS = {
     "Multicountry hospital": plot_multicounty_hospital,
     "Multicountry optimal plan": plot_multicountry_optimal_plan,
     "Multicountry optimised matrices": plot_multicountry_optimised_matrices,
+    "Multicountry waning immunity": plot_multicountry_waning_immunity,
     # "Multicountry mobility data": plot_multicountry_mobility,
 }
 

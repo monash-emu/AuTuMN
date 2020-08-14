@@ -187,3 +187,5 @@ apps/covid_19/mixing_optimisation/opti_plots/figures/hospital_uncertainty/hospit
 apps/covid_19/mixing_optimisation/opti_plots/figures/hospital_uncertainty/hospital_uncertainty_by_location_fully_immune.pdf
 data/pbi_outputs_for_opti/by_age/fully_immune/output_table_fully_immune_by_age.csv
 data/pbi_outputs_for_opti/by_location/fully_immune/output_table_fully_immune_by_location.csv
+*.pdf
+*.yml

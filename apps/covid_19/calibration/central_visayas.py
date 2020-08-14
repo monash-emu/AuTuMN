@@ -19,7 +19,7 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
         mode="autumn_mcmc",
     )
 
-
+# START CALIBRATION VALUES
 # Notification data:
 notification_times = [
     44,
@@ -111,6 +111,8 @@ icu_values = [
     79,
     72,
 ]
+
+# END CALIBRATION VALUES
 
 TARGET_OUTPUTS = [
     {

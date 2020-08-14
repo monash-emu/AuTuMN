@@ -12,6 +12,10 @@ from autumn.tool_kit.utils import print_target_to_plots_from_calibration
 
 country = Region.BELGIUM
 
+# START CALIBRATION VALUES
+# END CALIBRATION VALUES
+
+
 PAR_PRIORS = get_prior_distributions_for_opti()
 for i, par in enumerate(PAR_PRIORS):
     if par["param_name"] == "contact_rate":

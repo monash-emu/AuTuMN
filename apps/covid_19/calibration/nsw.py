@@ -7,6 +7,8 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
         max_seconds, run_id, num_chains, Region.NSW, PAR_PRIORS, TARGET_OUTPUTS, mode="autumn_mcmc",
     )
 
+# START CALIBRATION VALUES
+# END CALIBRATION VALUES
 
 # _______ Define the priors
 PAR_PRIORS = [

@@ -14,6 +14,8 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
         mode="autumn_mcmc",
     )
 
+# START CALIBRATION VALUES
+# END CALIBRATION VALUES
 
 PAR_PRIORS = provide_default_calibration_params(("start_time",))
 

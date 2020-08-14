@@ -17,6 +17,7 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
         mode="autumn_mcmc",
     )
 
+# START CALIBRATION VALUES
 
 case_times = [
     25,
@@ -655,6 +656,8 @@ icu_counts = [
     36,
     41,
 ]
+
+# END CALIBRATION VALUES
 
 TARGET_OUTPUTS = [
     {

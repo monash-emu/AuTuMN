@@ -189,8 +189,9 @@ class EpiModel:
         for idx, c in enumerate(self.compartment_names):
             c.idx = idx
 
-    # Cache return values to prevent re-computation. This will leak memory, which is fine.
-    @lru_cache(maxsize=None)
+    # Cache return values to prevent re-computation. This will a little leak memory, which is fine.
+    # Floating point return type is 8 bytes, meaning 2**17 values is ~1MB of memory.
+    @lru_cache(maxsize=2 ** 17)
     def get_parameter_value(self, name: str, time: float):
         """
         Get parameter value at a given time

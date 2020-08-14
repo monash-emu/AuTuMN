@@ -37,6 +37,7 @@ dist/
 # Scripts, secrets
 osx_boot.sh
 *.secret.*
+fil-result/
 
 # Old model runs
 data/marshall_islands

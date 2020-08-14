@@ -53,4 +53,3 @@ def build_dynamic(
         return adjusted_mixing_matrix
 
     return mixing_matrix_function
-

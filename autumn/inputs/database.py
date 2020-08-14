@@ -101,4 +101,3 @@ def write_file_hash(file_hash: str, hash_path: str):
     ]
     with open(hash_path, "w") as f:
         f.write("\n".join(text) + "\n")
-

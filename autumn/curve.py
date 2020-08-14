@@ -107,7 +107,8 @@ def make_two_step_curve(y_low, y_med, y_high, x_start, x_med, x_end):
 #
 #     return tanh_scaleup
 
-def tanh_based_scaleup(b, c, sigma, upper_asymptote=1.):
+
+def tanh_based_scaleup(b, c, sigma, upper_asymptote=1.0):
     """
     return the function t: (1 - sigma) / 2 * tanh(b * (a - c)) + (1 + sigma) / 2
     :param b: shape parameter
@@ -118,9 +119,7 @@ def tanh_based_scaleup(b, c, sigma, upper_asymptote=1.):
     """
 
     def tanh_scaleup(t):
-        return (tanh(b * (t - c)) / 2. + 0.5) * \
-               (upper_asymptote - sigma) + \
-               sigma
+        return (tanh(b * (t - c)) / 2.0 + 0.5) * (upper_asymptote - sigma) + sigma
 
     return tanh_scaleup
 

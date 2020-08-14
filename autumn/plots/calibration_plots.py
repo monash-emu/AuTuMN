@@ -34,11 +34,28 @@ def plot_all_priors(priors, directory):
         plt.fill_between(x_values, y_values, zeros, color="cornflowerblue")
 
         if "distri_mean" in prior_dict:
-            plt.axvline(x=prior_dict["distri_mean"], ymin=0, ymax=100*max(y_values), linewidth=1, color='red')
+            plt.axvline(
+                x=prior_dict["distri_mean"],
+                ymin=0,
+                ymax=100 * max(y_values),
+                linewidth=1,
+                color="red",
+            )
         if "distri_ci" in prior_dict:
-            plt.axvline(x=prior_dict["distri_ci"][0], ymin=0, ymax=100*max(y_values), linewidth=.7, color='red')
-            plt.axvline(x=prior_dict["distri_ci"][1], ymin=0, ymax=100*max(y_values), linewidth=.7, color='red')
-
+            plt.axvline(
+                x=prior_dict["distri_ci"][0],
+                ymin=0,
+                ymax=100 * max(y_values),
+                linewidth=0.7,
+                color="red",
+            )
+            plt.axvline(
+                x=prior_dict["distri_ci"][1],
+                ymin=0,
+                ymax=100 * max(y_values),
+                linewidth=0.7,
+                color="red",
+            )
 
         plt.xlabel(prior_dict["param_name"])
         plt.ylabel("prior PDF")
@@ -82,16 +99,16 @@ def workout_plot_x_range(prior_dict):
     elif prior_dict["distribution"] == "trunc_normal":
         lower = prior_dict["trunc_range"][0]
         upper = prior_dict["trunc_range"][1]
-        x_range = [lower - .05 * (upper - lower), upper + .05 * (upper - lower)]
+        x_range = [lower - 0.05 * (upper - lower), upper + 0.05 * (upper - lower)]
 
         mean = prior_dict["distri_params"][0]
         sd = prior_dict["distri_params"][1]
         x_range = stats.norm.ppf([0.005, 0.995], mean, sd)
 
         if lower != -np.inf:
-            x_range[0] = lower - .05 * (x_range[1] - lower)
+            x_range[0] = lower - 0.05 * (x_range[1] - lower)
         if upper != np.inf:
-            x_range[1] = upper + .05 * (upper - x_range[0])
+            x_range[1] = upper + 0.05 * (upper - x_range[0])
 
     else:
         raise_error_unsupported_prior(prior_dict["distribution"])

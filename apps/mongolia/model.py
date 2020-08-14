@@ -561,11 +561,9 @@ def build_model(params: dict) -> StratifiedModel:
 
     if "mortality" in derived_output_types:
         # prepare death outputs for all strata
-        tb_model.death_output_categories = \
-            list_all_strata_for_mortality(
-                tb_model.compartment_names,
-                "infectious"
-            )
+        tb_model.death_output_categories = list_all_strata_for_mortality(
+            tb_model.compartment_names, "infectious"
+        )
 
     ############################################
     #       population sizes for costing

@@ -60,8 +60,12 @@ def plot_from_mcmc_databases(app_name: str, param_set_name: str, mcmc_dir: str, 
         outputs, best_chain_index = plots.sample_outputs_for_calibration_fit(
             output_name, mcmc_tables, derived_output_tables
         )
-        plots.plot_calibration_fit(subplotter, output_name, outputs, best_chain_index, plot_config, is_logscale=True)
-        plots.plot_calibration_fit(subplotter, output_name, outputs, best_chain_index, plot_config, is_logscale=False)
+        plots.plot_calibration_fit(
+            subplotter, output_name, outputs, best_chain_index, plot_config, is_logscale=True
+        )
+        plots.plot_calibration_fit(
+            subplotter, output_name, outputs, best_chain_index, plot_config, is_logscale=False
+        )
 
     logger.info("MCMC plots complete")
 

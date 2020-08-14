@@ -41,7 +41,6 @@ from autumn import inputs
 from autumn.curve import scale_up_function
 
 
-
 def build_model(params: dict) -> StratifiedModel:
     """
     Build the master function to run the TB model for the Republic of the Marshall Islands
@@ -111,7 +110,9 @@ def build_model(params: dict) -> StratifiedModel:
         birth_approach="add_crude_birth_rate",
         starting_population=model_parameters["start_population"],
         output_connections=out_connections,
-        death_output_categories=list_all_strata_for_mortality(compartments, Compartment.EARLY_INFECTIOUS),
+        death_output_categories=list_all_strata_for_mortality(
+            compartments, Compartment.EARLY_INFECTIOUS
+        ),
     )
 
     # Add crude birth rate from UN estimates (using Federated States of Micronesia as a proxy as no data for RMI)

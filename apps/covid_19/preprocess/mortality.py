@@ -14,13 +14,13 @@ def age_specific_ifrs_from_double_exp_model(k, m, representative_age_oldest_grou
     for age_index in range(16):
         if age_index < 15:
             ifr_list.append(
-                numerical_integration(lambda x: exp(-k * exp(-m * x)),
-                                      age_index * 5., (age_index + 1) * 5.) / 5.
+                numerical_integration(
+                    lambda x: exp(-k * exp(-m * x)), age_index * 5.0, (age_index + 1) * 5.0
+                )
+                / 5.0
             )
         else:
-            ifr_list.append(
-                exp(-k * exp(-m * representative_age_oldest_group))
-            )
+            ifr_list.append(exp(-k * exp(-m * representative_age_oldest_group)))
     return ifr_list
 
 
@@ -37,12 +37,12 @@ def age_specific_ifrs_from_exp_tanh_model(k, b, c, representative_age_oldest_gro
         if age_index < 15:
             ifr_list.append(
                 numerical_integration(
-                    lambda x: exp(-k*(0.5*tanh(b*(x-c)) + 0.5)),
-                    age_index * 5., (age_index + 1) * 5.)
-                / 5.
+                    lambda x: exp(-k * (0.5 * tanh(b * (x - c)) + 0.5)),
+                    age_index * 5.0,
+                    (age_index + 1) * 5.0,
+                )
+                / 5.0
             )
         else:
-            ifr_list.append(
-                exp(-k*(0.5*tanh(b*(representative_age_oldest_group-c)) + 0.5))
-            )
+            ifr_list.append(exp(-k * (0.5 * tanh(b * (representative_age_oldest_group - c)) + 0.5)))
     return ifr_list

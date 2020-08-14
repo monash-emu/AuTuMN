@@ -14,7 +14,7 @@ import copy
 def get_prior_distributions_for_opti():
     prior_list = [
         {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.02, 0.06],},
-        {"param_name": "start_time", "distribution": "uniform", "distri_params": [0., 40.],},
+        {"param_name": "start_time", "distribution": "uniform", "distri_params": [0.0, 40.0],},
         {
             "param_name": "compartment_periods_calculated.exposed.total_period",
             "distribution": "uniform",
@@ -28,7 +28,7 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "time_variant_detection.start_value",
             "distribution": "uniform",
-            "distri_params": [0., 0.10],
+            "distri_params": [0.0, 0.10],
         },
         {
             "param_name": "time_variant_detection.maximum_gradient",
@@ -45,11 +45,7 @@ def get_prior_distributions_for_opti():
             "distribution": "uniform",
             "distri_params": [0.10, 0.50],
         },
-        {
-            "param_name": "icu_prop",
-            "distribution": "uniform",
-            "distri_params": [0.15, 0.20],
-        },
+        {"param_name": "icu_prop", "distribution": "uniform", "distri_params": [0.15, 0.20],},
         # vary hospital durations
         {
             "param_name": "compartment_periods.hospital_late",
@@ -59,19 +55,18 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "compartment_periods.icu_late",
             "distribution": "uniform",
-            "distri_params": [9., 13.],
+            "distri_params": [9.0, 13.0],
         },
         # vary symptomatic and hospitalised proportions
         {
             "param_name": "symptomatic_props_multiplier",
             "distribution": "uniform",
-            "distri_params": [.75, 1.25],
-        }
-        ,
+            "distri_params": [0.75, 1.25],
+        },
         {
             "param_name": "hospital_props_multiplier",
             "distribution": "uniform",
-            "distri_params": [.75, 1.25],
+            "distri_params": [0.75, 1.25],
         },
         # Micro-distancing
         {
@@ -82,7 +77,7 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "microdistancing.parameters.sigma",
             "distribution": "uniform",
-            "distri_params": [.4, .75],
+            "distri_params": [0.4, 0.75],
         },
     ]
 
@@ -99,13 +94,73 @@ def get_list_of_ifr_priors_from_pollan(test="immunoassay"):
     """
     ifr_priors = []
     if test == "PoC":
-        mean = [1.78e-05, 2.74e-05, 0.000113078, 0.00024269, 0.000496411, 0.00159393, 0.005751568, 0.019573324, 0.079267591]
-        lower = [1.52e-05, 2.45e-05, 0.000100857, 0.00021887, 0.000459997, 0.001480304, 0.005294942, 0.017692352, 0.068829696]
-        upper = [2.16e-05, 3.11e-05, 0.000128668, 0.000272327, 0.000539085, 0.001726451, 0.006294384, 0.021901827, 0.093437162]
+        mean = [
+            1.78e-05,
+            2.74e-05,
+            0.000113078,
+            0.00024269,
+            0.000496411,
+            0.00159393,
+            0.005751568,
+            0.019573324,
+            0.079267591,
+        ]
+        lower = [
+            1.52e-05,
+            2.45e-05,
+            0.000100857,
+            0.00021887,
+            0.000459997,
+            0.001480304,
+            0.005294942,
+            0.017692352,
+            0.068829696,
+        ]
+        upper = [
+            2.16e-05,
+            3.11e-05,
+            0.000128668,
+            0.000272327,
+            0.000539085,
+            0.001726451,
+            0.006294384,
+            0.021901827,
+            0.093437162,
+        ]
     elif test == "immunoassay":
-        mean = [1.35e-05, 2.68e-05, 9.53e-05, 0.00023277, 0.000557394, 0.001902859, 0.007666306, 0.027469001, 0.106523055]
-        lower = [4.30E-06, 1.82E-05, 6.98E-05, 1.74E-04, 4.50E-04, 1.54E-03, 5.88E-03, 1.91E-02, 5.75E-02]
-        upper = [2.27E-05, 3.54E-05, 1.21E-04, 2.91E-04, 6.65E-04, 2.27E-03, 9.45E-03, 3.58E-02, 1.55E-01]
+        mean = [
+            1.35e-05,
+            2.68e-05,
+            9.53e-05,
+            0.00023277,
+            0.000557394,
+            0.001902859,
+            0.007666306,
+            0.027469001,
+            0.106523055,
+        ]
+        lower = [
+            4.30e-06,
+            1.82e-05,
+            6.98e-05,
+            1.74e-04,
+            4.50e-04,
+            1.54e-03,
+            5.88e-03,
+            1.91e-02,
+            5.75e-02,
+        ]
+        upper = [
+            2.27e-05,
+            3.54e-05,
+            1.21e-04,
+            2.91e-04,
+            6.65e-04,
+            2.27e-03,
+            9.45e-03,
+            3.58e-02,
+            1.55e-01,
+        ]
 
     for i in range(len(lower)):
         ifr_priors.append(
@@ -118,7 +173,9 @@ def get_list_of_ifr_priors_from_pollan(test="immunoassay"):
     return ifr_priors
 
 
-def get_target_outputs_for_opti(country, data_start_time=22, data_end_time=152, source='who', update_jh_data=False):
+def get_target_outputs_for_opti(
+    country, data_start_time=22, data_end_time=152, source="who", update_jh_data=False
+):
     """
     Automatically creates the calibration target list for a country in the context of the opti problem
     :param country: country name
@@ -127,9 +184,9 @@ def get_target_outputs_for_opti(country, data_start_time=22, data_end_time=152, 
     :param source: 'who' or 'johns_hopkins'
     :return:
     """
-    assert source in ['who', 'johns_hopkins']
+    assert source in ["who", "johns_hopkins"]
 
-    if source == 'johns_hopkins':
+    if source == "johns_hopkins":
         jh_start_time = 22  # actual start time in JH csv files
         assert data_start_time >= jh_start_time
 
@@ -140,7 +197,7 @@ def get_target_outputs_for_opti(country, data_start_time=22, data_end_time=152, 
 
     target_outputs = []
     for variable in ["confirmed"]:  #  , "deaths"]:
-        if source == 'johns_hopkins':
+        if source == "johns_hopkins":
             data = read_john_hopkins_data_from_csv(variable, country)
             times = [jh_start_time + i for i in range(len(data))]
 
@@ -148,7 +205,7 @@ def get_target_outputs_for_opti(country, data_start_time=22, data_end_time=152, 
             indices_to_keep = [i for i, t in enumerate(times) if t >= data_start_time]
             times = [t for t in times if t >= data_start_time]
             data = [d for i, d in enumerate(data) if i in indices_to_keep]
-        elif source == 'who':
+        elif source == "who":
             times, data = read_who_data_from_csv(variable, country, data_start_time, data_end_time)
 
         # Ignore negative values found in the dataset
@@ -177,19 +234,25 @@ def get_target_outputs_for_opti(country, data_start_time=22, data_end_time=152, 
 def get_hospital_targets_for_opti(country, data_start_time=22, data_end_time=152):
 
     output = {
-        'belgium': 'hospital_admission',
-        'france': 'hospital_admission',
-        'united-kingdom': 'hospital_admission',
-        'spain': 'hospital_admission',
-        'italy': 'hospital_occupancy',
-        'sweden': 'icu_admission',
+        "belgium": "hospital_admission",
+        "france": "hospital_admission",
+        "united-kingdom": "hospital_admission",
+        "spain": "hospital_admission",
+        "italy": "hospital_occupancy",
+        "sweden": "icu_admission",
     }
     if country not in output:
         print("Warning: hospital output not specifoed for " + country)
         return []
-    output_mapping = {"hospital_occupancy": "hospital_occupancy", "icu_occupancy": "icu_occupancy",
-                      "hospital_admission": "new_hospital_admissions", "icu_admission": "new_icu_admissions"}
-    times, data = read_hospital_data_from_csv(output[country], country, data_start_time, data_end_time)
+    output_mapping = {
+        "hospital_occupancy": "hospital_occupancy",
+        "icu_occupancy": "icu_occupancy",
+        "hospital_admission": "new_hospital_admissions",
+        "icu_admission": "new_icu_admissions",
+    }
+    times, data = read_hospital_data_from_csv(
+        output[country], country, data_start_time, data_end_time
+    )
 
     # Ignore negative values found in the dataset
     censored_data_indices = []
@@ -219,8 +282,8 @@ def add_dispersion_param_prior_for_gaussian(par_priors, target_outputs, multipli
                 max_val *= multipliers[t["output_key"]]
             # sd_ that would make the 95% gaussian CI cover half of the max value (4*sd = 95% width)
             sd_ = 0.25 * max_val / 4.0
-            lower_sd = sd_ / 2.
-            upper_sd = 2. * sd_
+            lower_sd = sd_ / 2.0
+            upper_sd = 2.0 * sd_
 
             par_priors.append(
                 {
@@ -273,13 +336,17 @@ def extract_n_mcmc_samples(calibration_output_path, n_samples=100, burn_in=500, 
     thining_jump = int(nb_rows / n_extracted)
     selected_indices = [i * thining_jump for i in range(n_extracted)]
 
-    thined_samples = combined_burned_samples.iloc[selected_indices, ]
+    thined_samples = combined_burned_samples.iloc[
+        selected_indices,
+    ]
 
     if include_mle:
         # concatanate maximum likelihood row
-        mle_row = combined_burned_samples.sort_values(by='loglikelihood', ascending=False).iloc[0, :]
+        mle_row = combined_burned_samples.sort_values(by="loglikelihood", ascending=False).iloc[
+            0, :
+        ]
         thined_samples = thined_samples.append(mle_row)
-    return thined_samples.drop(['Scenario', 'accept'], axis=1)
+    return thined_samples.drop(["Scenario", "accept"], axis=1)
 
 
 def prepare_table_of_param_sets(calibration_output_path, country_name, n_samples=100, burn_in=500):
@@ -293,50 +360,75 @@ def prepare_table_of_param_sets(calibration_output_path, country_name, n_samples
     samples["best_p_immune"] = ""
     samples["all_vars_to_1_p_immune"] = ""
 
-    output_file = os.path.join("calibrated_param_sets", country_name + "_calibrated_params" + ".csv")
+    output_file = os.path.join(
+        "calibrated_param_sets", country_name + "_calibrated_params" + ".csv"
+    )
     samples.to_csv(output_file, index=False)
 
 
 def plot_mixing_params_over_time(mixing_params, npi_effectiveness_range):
 
-    titles = {'home': 'Household', 'work': 'Workplace', 'school': 'School', 'other_locations': 'Other locations'}
-    y_labs = {'home': 'h', 'work': 'w', 'school': 's', 'other_locations': 'l'}
-    date_ticks = {32: '1/2', 47: '16/2', 61: '1/3', 76: '16/3', 92: '1/4', 107: '16/4', 122: '1/5', 137: '16/5', 152: '1/6'}
+    titles = {
+        "home": "Household",
+        "work": "Workplace",
+        "school": "School",
+        "other_locations": "Other locations",
+    }
+    y_labs = {"home": "h", "work": "w", "school": "s", "other_locations": "l"}
+    date_ticks = {
+        32: "1/2",
+        47: "16/2",
+        61: "1/3",
+        76: "16/3",
+        92: "1/4",
+        107: "16/4",
+        122: "1/5",
+        137: "16/5",
+        152: "1/6",
+    }
     # use italics for y_labs
     for key in y_labs:
-        y_labs[key] = '$\it{' + y_labs[key] + '}$(t)'
+        y_labs[key] = "$\it{" + y_labs[key] + "}$(t)"
 
     plt.style.use("ggplot")
-    for i_loc, location in enumerate([
-        loc
-        for loc in ["home", "other_locations", "school", "work"]
-        if loc + "_times" in mixing_params
-    ]):
+    for i_loc, location in enumerate(
+        [
+            loc
+            for loc in ["home", "other_locations", "school", "work"]
+            if loc + "_times" in mixing_params
+        ]
+    ):
         plt.figure(i_loc)
         x = list(np.linspace(0.0, 152.0, num=10000))
         y = []
         for indice_npi_effect_range in [0, 1]:
-            npi_effect = {key: val[indice_npi_effect_range] for key, val in npi_effectiveness_range.items()}
+            npi_effect = {
+                key: val[indice_npi_effect_range] for key, val in npi_effectiveness_range.items()
+            }
 
-            modified_mixing_params = apply_npi_effectiveness(copy.deepcopy(mixing_params), npi_effect)
+            modified_mixing_params = apply_npi_effectiveness(
+                copy.deepcopy(mixing_params), npi_effect
+            )
 
             location_adjustment = scale_up_function(
-                modified_mixing_params[location + "_times"], modified_mixing_params[location + "_values"], method=4
+                modified_mixing_params[location + "_times"],
+                modified_mixing_params[location + "_values"],
+                method=4,
             )
 
             _y = [location_adjustment(t) for t in x]
             y.append(_y)
-            plt.plot(x, _y, color='navy')
+            plt.plot(x, _y, color="navy")
 
-        plt.fill_between(x, y[0], y[1], color='cornflowerblue')
-        plt.xlim((30., 152.))
+        plt.fill_between(x, y[0], y[1], color="cornflowerblue")
+        plt.xlim((30.0, 152.0))
         plt.ylim((0, 1.1))
 
         plt.xticks(list(date_ticks.keys()), list(date_ticks.values()))
-        plt.xlabel('Date in 2020')
+        plt.xlabel("Date in 2020")
         plt.ylabel(y_labs[location])
         plt.title(titles[location])
-        plt.savefig('mixing_adjustment_' + location + '.png')
+        plt.savefig("mixing_adjustment_" + location + ".png")
 
 
 def apply_npi_effectiveness(mixing_params, npi_effectiveness):
@@ -356,13 +448,17 @@ def apply_npi_effectiveness(mixing_params, npi_effectiveness):
         if loc + "_times" in mixing_params
     ]:
         if location in npi_effectiveness:
-            mixing_params[location + '_values'] = [1. - (1. - val) * npi_effectiveness[location]
-                                                   for val in mixing_params[location + '_values']]
+            mixing_params[location + "_values"] = [
+                1.0 - (1.0 - val) * npi_effectiveness[location]
+                for val in mixing_params[location + "_values"]
+            ]
 
     return mixing_params
 
 
-def get_posterior_percentiles_time_variant_profile(calibration_path, function='detection', burn_in=0):
+def get_posterior_percentiles_time_variant_profile(
+    calibration_path, function="detection", burn_in=0
+):
     """
     :param calibration_path: string
     :param function: only 'detection' for now
@@ -371,18 +467,23 @@ def get_posterior_percentiles_time_variant_profile(calibration_path, function='d
     combined_burned_samples = combine_and_burn_samples(calibration_path, burn_in)
     calculated_times = range(200)
     store_matrix = np.zeros((len(calculated_times), combined_burned_samples.shape[0]))
-    if function == 'detection':
+    if function == "detection":
         i = 0
         for index, row in combined_burned_samples.iterrows():
-            my_func = tanh_based_scaleup(row['time_variant_detection.maximum_gradient'],
-                                         row['time_variant_detection.max_change_time'], 0.)
-            detect_vals = [row['time_variant_detection.end_value'] * my_func(t) for t in calculated_times]
+            my_func = tanh_based_scaleup(
+                row["time_variant_detection.maximum_gradient"],
+                row["time_variant_detection.max_change_time"],
+                0.0,
+            )
+            detect_vals = [
+                row["time_variant_detection.end_value"] * my_func(t) for t in calculated_times
+            ]
             store_matrix[:, i] = detect_vals
             i += 1
     perc = np.percentile(store_matrix, [2.5, 25, 50, 75, 97.5], axis=1)
     calculated_times = np.array([calculated_times])
     perc = np.concatenate((calculated_times, perc))
-    np.savetxt(function + ".csv", perc, delimiter=',')
+    np.savetxt(function + ".csv", perc, delimiter=",")
 
 
 # if __name__ == "__main__":

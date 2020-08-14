@@ -29,7 +29,9 @@ PAR_PRIORS.append(
 )
 
 
-TARGET_OUTPUTS = get_target_outputs_for_opti(country, source='who', data_start_time=61, data_end_time=182)
+TARGET_OUTPUTS = get_target_outputs_for_opti(
+    country, source="who", data_start_time=61, data_end_time=182
+)
 
 MULTIPLIERS = {}
 

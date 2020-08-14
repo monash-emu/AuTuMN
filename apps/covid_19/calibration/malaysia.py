@@ -1,6 +1,9 @@
 from autumn.constants import Region
 from apps.covid_19.calibration import base
-from apps.covid_19.calibration.base import provide_default_calibration_params, add_standard_dispersion_parameter
+from apps.covid_19.calibration.base import (
+    provide_default_calibration_params,
+    add_standard_dispersion_parameter,
+)
 from apps.covid_19.mixing_optimisation.utils import add_dispersion_param_prior_for_gaussian
 
 
@@ -674,7 +677,7 @@ TARGET_OUTPUTS = [
         "years": icu_times,
         "values": icu_counts,
         "loglikelihood_distri": "negative_binomial",
-    }
+    },
 ]
 
 PAR_PRIORS = provide_default_calibration_params()
@@ -684,19 +687,13 @@ PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "icu_
 # PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS, {})
 
 PAR_PRIORS += [
-
     # ICU-related
     {
         "param_name": "compartment_periods.icu_early",
         "distribution": "uniform",
         "distri_params": [5.0, 25.0],
     },
-    {
-        "param_name": "icu_prop",
-        "distribution": "uniform",
-        "distri_params": [0.12, 0.25],
-    },
-
+    {"param_name": "icu_prop", "distribution": "uniform", "distri_params": [0.12, 0.25],},
     # Detection-related
     {
         "param_name": "time_variant_detection.start_value",
@@ -713,7 +710,6 @@ PAR_PRIORS += [
         "distribution": "uniform",
         "distri_params": [0.6, 0.9],
     },
-
     # Microdistancing-related
     {
         "param_name": "microdistancing.parameters.sigma",

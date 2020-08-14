@@ -1,5 +1,3 @@
-
-
 class Compartment:
     """
     A COVID-19 model compartment.
@@ -20,4 +18,3 @@ class ClinicalStratum:
     SYMPT_ISOLATE = "sympt_isolate"
     HOSPITAL_NON_ICU = "hospital_non_icu"
     ICU = "icu"
-

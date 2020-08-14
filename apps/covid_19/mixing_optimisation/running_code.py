@@ -21,7 +21,6 @@ if __name__ == "__main__":
     }
 
     for country in calib_paths:
-        prepare_table_of_param_sets(calib_paths[country],
-                                    country,
-                                    n_samples=2,
-                                    burn_in=burnin[country])
+        prepare_table_of_param_sets(
+            calib_paths[country], country, n_samples=2, burn_in=burnin[country]
+        )

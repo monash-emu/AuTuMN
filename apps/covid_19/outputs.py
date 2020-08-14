@@ -299,4 +299,3 @@ def get_infection_death_connections(compartments: List[Compartment]):
         )
 
     return connections
-

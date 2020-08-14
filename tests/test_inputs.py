@@ -3,7 +3,11 @@ from datetime import datetime
 import pytest
 import numpy as np
 
-from autumn.inputs.demography.queries import downsample_quantity, downsample_rate, _get_life_expectancy
+from autumn.inputs.demography.queries import (
+    downsample_quantity,
+    downsample_rate,
+    _get_life_expectancy,
+)
 from autumn.inputs import (
     build_input_database,
     get_population_by_agegroup,
@@ -491,4 +495,3 @@ AUS_ALL_LOCATIONS_MIXING_MATRIX = np.array(
         ],
     ]
 )
-

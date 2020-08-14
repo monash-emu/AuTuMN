@@ -4,7 +4,11 @@ from matplotlib import pyplot as plt
 from matplotlib import cm
 import os
 from autumn.db.database import Database
-from autumn.tool_kit.uncertainty import export_compartment_size, collect_iteration_weights, collect_all_mcmc_output_tables
+from autumn.tool_kit.uncertainty import (
+    export_compartment_size,
+    collect_iteration_weights,
+    collect_all_mcmc_output_tables,
+)
 import yaml
 
 
@@ -17,21 +21,31 @@ def get_perc_recovered_by_age_and_time(calibration_output_path, country_name, bu
     perc_recovered = {}
     for agegroup_index in range(3):  # range(16)
         agegroup = 5 * agegroup_index
-        n_recovered = export_compartment_size("recoveredXagegroup_" + str(agegroup),  mcmc_tables, output_tables, derived_output_tables, weights)
+        n_recovered = export_compartment_size(
+            "recoveredXagegroup_" + str(agegroup),
+            mcmc_tables,
+            output_tables,
+            derived_output_tables,
+            weights,
+        )
 
         # work out denominator
         popsizes = {key: [0] * len(list(n_recovered.values())[0]) for key in n_recovered.keys()}
         for comp in output_tables[0].columns:
             if "agegroup_" + str(agegroup) in comp:
-                comp_sizes = export_compartment_size(comp,  mcmc_tables, output_tables, derived_output_tables, weights)
+                comp_sizes = export_compartment_size(
+                    comp, mcmc_tables, output_tables, derived_output_tables, weights
+                )
                 for key in n_recovered:
                     popsizes[key] = [x + y for (x, y) in zip(popsizes[key], comp_sizes[key])]
 
         perc_recovered[agegroup] = {}
         for key in n_recovered:
-            perc_recovered[agegroup][key] = [100 * x / y for (x, y) in zip(n_recovered[key], popsizes[key])]
+            perc_recovered[agegroup][key] = [
+                100 * x / y for (x, y) in zip(n_recovered[key], popsizes[key])
+            ]
 
-    file_path = os.path.join('dumped_dict.yml')
+    file_path = os.path.join("dumped_dict.yml")
     with open(file_path, "w") as f:
         yaml.dump(perc_recovered, f)
 
@@ -39,12 +53,7 @@ def get_perc_recovered_by_age_and_time(calibration_output_path, country_name, bu
 
 
 def format_perc_recovered_for_joyplot(perc_recovered):
-    months = [
-        {"March": 61.0},
-        {"April": 92.0},
-        {"May": 122.0},
-        {"June": 153.0}
-    ]
+    months = [{"March": 61.0}, {"April": 92.0}, {"May": 122.0}, {"June": 153.0}]
     n_sample = len(list(perc_recovered[0].values())[0])
     data = pd.DataFrame()
     for month_dict in months:
@@ -61,10 +70,11 @@ def format_perc_recovered_for_joyplot(perc_recovered):
             data.loc[i] = month_values + ["age_" + str(agegroup)]
             i += 1
 
-    plt.figure(dpi= 380)
+    plt.figure(dpi=380)
     fig, axes = joypy.joyplot(data, by="Age", column=[list(d.keys())[0] for d in months])
 
-    plt.savefig('figures/test.png')
+    plt.savefig("figures/test.png")
+
 
 def make_joyplot_figure(perc_recovered):
     pass
@@ -77,7 +87,7 @@ if __name__ == "__main__":
 
     print("perc calculated")
 
-    with open('dumped_dict.yml', "r") as yaml_file:
+    with open("dumped_dict.yml", "r") as yaml_file:
         dumped = yaml.safe_load(yaml_file)
     perc_reco = dumped
 

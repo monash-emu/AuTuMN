@@ -29,7 +29,7 @@ def _get_death_rates(country_iso_code: str):
         death_df, pop_df, left_on=["start_year", "start_age"], right_on=["year", "start_age"]
     )
 
-    rate_df['population'] = rate_df['population'].where(rate_df['population'] > 0., 1.)
+    rate_df["population"] = rate_df["population"].where(rate_df["population"] > 0.0, 1.0)
 
     # Calculate death rate.
     rate_df["death_rate"] = rate_df["death_count"] / (rate_df["population"] * rate_df["period"])
@@ -91,7 +91,9 @@ def get_life_expectancy_by_agegroup(age_breakpoints: List[float], country_iso_co
     year_step = 5
     year_expectancy = {}
     for year in years:
-        orig_expectancy = life_expectancy_df[life_expectancy_df["mean_year"] == year]["life_expectancy"].tolist()
+        orig_expectancy = life_expectancy_df[life_expectancy_df["mean_year"] == year][
+            "life_expectancy"
+        ].tolist()
         new_expectancy = downsample_rate(orig_expectancy, orig_ages, year_step, age_breakpoints)
         year_expectancy[year] = new_expectancy
 

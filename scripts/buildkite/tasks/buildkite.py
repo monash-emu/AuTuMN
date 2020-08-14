@@ -35,4 +35,3 @@ def trigger_pipeline(pipeline_data: dict):
         logger.info("stdout for trigger pipeline: %s", stdout)
     if stderr:
         logger.info("stderr for trigger pipeline: %s", stderr)
-

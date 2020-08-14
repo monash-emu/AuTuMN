@@ -12,7 +12,9 @@ from autumn.tool_kit.utils import print_target_to_plots_from_calibration
 country = Region.SPAIN
 
 PAR_PRIORS = get_prior_distributions_for_opti()
-TARGET_OUTPUTS = get_target_outputs_for_opti(country, source='who', data_start_time=61, data_end_time=182)
+TARGET_OUTPUTS = get_target_outputs_for_opti(
+    country, source="who", data_start_time=61, data_end_time=182
+)
 
 # Use weekly counts
 for target in TARGET_OUTPUTS:
@@ -22,8 +24,8 @@ for target in TARGET_OUTPUTS:
 # Add target for Prop immune
 TARGET_OUTPUTS.append(
     {
-        "output_key": 'proportion_seropositive',
-        "years": [125.],
+        "output_key": "proportion_seropositive",
+        "years": [125.0],
         "values": [0.05],
         "sd": 0.004,
         "loglikelihood_distri": "normal",
@@ -51,4 +53,3 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
 
 if __name__ == "__main__":
     print_target_to_plots_from_calibration(TARGET_OUTPUTS)
-

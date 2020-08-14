@@ -43,4 +43,3 @@ class AgeMixingAdjustment(BaseMixingAdjustment):
                 mixing_matrix[row_index, col_index] *= row_multiplier * col_multiplier
 
         return mixing_matrix
-

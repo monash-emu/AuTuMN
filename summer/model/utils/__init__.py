@@ -30,4 +30,3 @@ from .string import (
     find_stratum_index_from_string,
 )
 from .validation import validate_stratify, validate_model
-

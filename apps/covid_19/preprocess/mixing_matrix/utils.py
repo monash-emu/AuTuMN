@@ -27,4 +27,3 @@ def get_total_contact_rates_by_age(mixing_matrix, direction="horizontal"):
         else:
             aggregated_contact_rates[str(5 * i)] = mixing_matrix[:, i].sum()
     return aggregated_contact_rates
-

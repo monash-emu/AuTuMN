@@ -37,8 +37,9 @@ def sample_starting_params_from_lhs(par_priors: List[Dict[str, Any]], n_samples:
                 mu = prior_dict["distri_params"][0]
                 sd = prior_dict["distri_params"][1]
                 bounds = prior_dict["trunc_range"]
-                quantile = stats.truncnorm.ppf(prop, (bounds[0] - mu) / sd,
-                                               (bounds[1] - mu) / sd, loc=mu, scale=sd)
+                quantile = stats.truncnorm.ppf(
+                    prop, (bounds[0] - mu) / sd, (bounds[1] - mu) / sd, loc=mu, scale=sd
+                )
             elif prior_dict["distribution"] == "beta":
                 quantile = stats.beta.ppf(
                     prop, prior_dict["distri_params"][0], prior_dict["distri_params"][1],
@@ -105,11 +106,13 @@ def calculate_prior(prior_dict, x, log=True):
         sd = prior_dict["distri_params"][1]
         bounds = prior_dict["trunc_range"]
         if log:
-            y = stats.truncnorm.logpdf(x, (bounds[0] - mu) / sd,
-                                       (bounds[1] - mu) / sd, loc=mu, scale=sd)
+            y = stats.truncnorm.logpdf(
+                x, (bounds[0] - mu) / sd, (bounds[1] - mu) / sd, loc=mu, scale=sd
+            )
         else:
-            y = stats.truncnorm.pdf(x, (bounds[0] - mu) / sd,
-                                    (bounds[1] - mu) / sd, loc=mu, scale=sd)
+            y = stats.truncnorm.pdf(
+                x, (bounds[0] - mu) / sd, (bounds[1] - mu) / sd, loc=mu, scale=sd
+            )
     elif prior_dict["distribution"] == "beta":
         a = prior_dict["distri_params"][0]
         b = prior_dict["distri_params"][1]
@@ -171,7 +174,7 @@ def print_reformated_map_parameters(map_estimates):
     param_as_list_indices = {}
     param_stem_already_printed = []
     for key, value in map_estimates.items():
-        if '(' in key:
+        if "(" in key:
             stem = key.split("(")[0]
             index = key.split("(")[1].split(")")[0]
             if stem not in param_as_list_indices:
@@ -179,7 +182,7 @@ def print_reformated_map_parameters(map_estimates):
             else:
                 param_as_list_indices[stem].append(index)
         elif "." in key:
-            components = key.split('.')
+            components = key.split(".")
             i = 0
             for comp in components:
                 print_this = False
@@ -213,7 +216,12 @@ def print_reformated_map_parameters(map_estimates):
 
 if __name__ == "__main__":
     calib_dir = os.path.join(
-        "../../data", "outputs", "calibrate", "covid_19", "belgium", "ef2ee497-2020-07-17"  #   "Final-2020-07-17"
+        "../../data",
+        "outputs",
+        "calibrate",
+        "covid_19",
+        "belgium",
+        "ef2ee497-2020-07-17",  #   "Final-2020-07-17"
     )
     map_estimates, best_chain_index = collect_map_estimate(calib_dir)
     print_reformated_map_parameters(map_estimates)
@@ -283,7 +291,7 @@ def find_distribution_params_from_mean_and_ci(distribution, mean, ci, ci_width=0
             dist = sum([(ci[i] - vals[i]) ** 2 for i in range(2)])
             return dist
 
-        sol = minimize(distance_to_minimise, [1.0], bounds=[(0.0, None)], tol=1.e-32)
+        sol = minimize(distance_to_minimise, [1.0], bounds=[(0.0, None)], tol=1.0e-32)
         best_a = sol.x
         best_b = best_a * (1.0 - mean) / mean
         params = {"a": best_a, "b": best_b}

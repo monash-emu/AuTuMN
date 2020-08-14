@@ -9,8 +9,6 @@ from . import (
     victoria,
     north_melbourne,
     west_melbourne,
-
-
     nsw,
     united_kingdom,
     belgium,

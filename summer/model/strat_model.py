@@ -258,4 +258,3 @@ class StratifiedModel(EpiModel):
         """
         idx = self.get_force_idx(source)
         return self.infection_density[idx][0]
-

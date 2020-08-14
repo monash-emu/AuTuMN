@@ -55,4 +55,3 @@ def get_mobility_data(country_iso_code: str, region: str, base_date: datetime, l
     days = mob_df["date"].apply(lambda d: (d - base_date).days).tolist()
     loc_mobility_values = {loc: mob_df[loc].tolist() for loc in location_map.keys()}
     return loc_mobility_values, days
-

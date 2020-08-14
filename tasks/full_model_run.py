@@ -84,4 +84,3 @@ class UploadDatabaseTask(utils.UploadS3Task):
     def get_src_path(self):
         filename = utils.get_full_model_run_db_filename(self.chain_id)
         return os.path.join(settings.BASE_DIR, "data", "full_model_runs", filename)
-

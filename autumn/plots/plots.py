@@ -932,4 +932,3 @@ def plot_multicountry_hospital(all_scenarios, mode, objective):
     filename = out_dir + "rainbow_" + mode + "_" + objective
     pyplot.savefig(filename + ".pdf")
     pyplot.savefig(filename + ".png", dpi=300)
-

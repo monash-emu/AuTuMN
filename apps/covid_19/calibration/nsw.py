@@ -379,4 +379,3 @@ if __name__ == "__main__":
     run_calibration_chain(
         30 * 60, 1
     )  # first argument only relevant for autumn_mcmc mode (time limit in seconds)
-

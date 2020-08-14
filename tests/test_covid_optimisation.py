@@ -41,4 +41,3 @@ def test_full_optimisation_iteration_for_uk():
             h, d, yoll, p_immune, m = opti.objective_function(
                 DECISION_VARS[mode], root_model, mode, country, config
             )
-

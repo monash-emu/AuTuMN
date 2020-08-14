@@ -266,4 +266,3 @@ def test_transition_flow_stratify_dest_but_not_source__with_flow_adjustments():
     assert new_flows[1].adjustments == [(FlowAdjustment.MULTIPLY, 0.5)]
     assert new_flows[1].source == Compartment("infect", strat_names=[], strat_values={})
     assert new_flows[1].dest == Compartment("happy", strat_names=["age"], strat_values={"age": "2"})
-

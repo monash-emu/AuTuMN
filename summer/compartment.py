@@ -95,4 +95,3 @@ class Compartment:
         Hash operator override
         """
         return hash(self._str)
-

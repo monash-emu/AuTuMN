@@ -289,4 +289,3 @@ def read_run_id(run_id: str):
     timestamp = parts[-2]
     model_name = "-".join(parts[:-2])
     return model_name, timestamp, git_commit
-

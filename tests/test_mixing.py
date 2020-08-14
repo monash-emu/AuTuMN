@@ -932,4 +932,3 @@ AUS_WORK_MIXING_MATRIX = np.array(
         ],
     ]
 )
-

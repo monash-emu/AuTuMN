@@ -21,8 +21,10 @@ with open(OPTI_PARAMS_PATH, "r") as yaml_file:
 
 available_countries = OPTI_REGIONS
 
-phase_2_end = [PHASE_2_START_TIME + opti_params['configurations'][i]['phase_two_duration'] for
-               i in opti_params['configurations'].keys()]
+phase_2_end = [
+    PHASE_2_START_TIME + opti_params["configurations"][i]["phase_two_duration"]
+    for i in opti_params["configurations"].keys()
+]
 
 
 def run_root_model(country=Region.UNITED_KINGDOM, calibrated_params={}):
@@ -37,16 +39,12 @@ def run_root_model(country=Region.UNITED_KINGDOM, calibrated_params={}):
     # update params with optimisation default config
     params["default"].update(opti_params["default"])
     # update params with calibrated parameters
-    params["default"] = update_params(params['default'], calibrated_params)
+    params["default"] = update_params(params["default"], calibrated_params)
 
     # prepare importation rates for herd immunity testing
-    params["default"]["data"] = {
-        'times_imported_cases': [0],
-        'n_imported_cases': [0]
-    }
+    params["default"]["data"] = {"times_imported_cases": [0], "n_imported_cases": [0]}
     params["default"]["end_time"] = PHASE_2_START_TIME
     params["scenario_start_time"] = PHASE_2_START_TIME - 1
-
 
     scenario_0 = Scenario(build_model, idx=0, params=params)
     scenario_0.run()
@@ -54,7 +52,7 @@ def run_root_model(country=Region.UNITED_KINGDOM, calibrated_params={}):
     return scenario_0.model
 
 
-def build_params_for_phases_2_and_3(decision_variables, config=0, mode='by_age'):
+def build_params_for_phases_2_and_3(decision_variables, config=0, mode="by_age"):
     # create parameters for scenario 1 which includes Phases 2 and 3
     ref_date = date(2019, 12, 31)
     phase_2_first_day = ref_date + timedelta(days=PHASE_2_START_TIME)
@@ -67,13 +65,13 @@ def build_params_for_phases_2_and_3(decision_variables, config=0, mode='by_age')
         age_mixing_update = {}
         for age_group in range(16):
             age_mixing_update["age_" + str(age_group)] = {
-                'times': [phase_1_end_date, phase_2_first_day, phase_2_end_date, phase_3_first_day],
-                'values': [1.0, decision_variables[age_group], decision_variables[age_group], 1.0]
+                "times": [phase_1_end_date, phase_2_first_day, phase_2_end_date, phase_3_first_day],
+                "values": [1.0, decision_variables[age_group], decision_variables[age_group], 1.0],
             }
         sc_1_params["mixing_age_adjust"] = age_mixing_update
 
     # set location-specific mixing back to pre-COVID rates on 1st of July or use the opti decision variable
-    sc_1_params['mixing'] = {}
+    sc_1_params["mixing"] = {}
     for loc in ["other_locations", "school", "work"]:
         if mode == "by_age":  # just return mixing to pre-COVID
             new_mixing_adjustment = 1.0
@@ -82,24 +80,32 @@ def build_params_for_phases_2_and_3(decision_variables, config=0, mode='by_age')
         else:
             raise ValueError("The requested mode is not supported")
 
-        sc_1_params['mixing'][loc] = {
-                'times': [phase_1_end_date, phase_2_end_date, phase_3_first_day],
-                'values': [new_mixing_adjustment, new_mixing_adjustment, 1.],
-                'append': False
+        sc_1_params["mixing"][loc] = {
+            "times": [phase_1_end_date, phase_2_end_date, phase_3_first_day],
+            "values": [new_mixing_adjustment, new_mixing_adjustment, 1.0],
+            "append": False,
         }
 
-    sc_1_params['data'] = {
-        'times_imported_cases': [phase_2_end[config], phase_2_end[config] + 1, phase_2_end[config] + 2,
-                                 phase_2_end[config] + 3],
-        'n_imported_cases': [0, 5, 5, 0]
+    sc_1_params["data"] = {
+        "times_imported_cases": [
+            phase_2_end[config],
+            phase_2_end[config] + 1,
+            phase_2_end[config] + 2,
+            phase_2_end[config] + 3,
+        ],
+        "n_imported_cases": [0, 5, 5, 0],
     }
-    sc_1_params['end_time'] = PHASE_2_START_TIME + DURATION_PHASES_2_AND_3
+    sc_1_params["end_time"] = PHASE_2_START_TIME + DURATION_PHASES_2_AND_3
 
-    if "microdistancing" in opti_params['configurations'][config]:
+    if "microdistancing" in opti_params["configurations"][config]:
         if "microdistancing" in sc_1_params:
-            sc_1_params['microdistancing'].update(opti_params['configurations'][config]['microdistancing'])
+            sc_1_params["microdistancing"].update(
+                opti_params["configurations"][config]["microdistancing"]
+            )
         else:
-            sc_1_params['microdistancing'] = opti_params['configurations'][config]['microdistancing']
+            sc_1_params["microdistancing"] = opti_params["configurations"][config][
+                "microdistancing"
+            ]
     return sc_1_params
 
 
@@ -111,12 +117,18 @@ def has_immunity_been_reached(_model, phase_2_end_index):
     """
     # validate herd immunity if incidence always decreases after 2 weeks in phase 3
     time_indices = range(phase_2_end_index, len(_model.derived_outputs["times"]))
-    incidence_vals = [_model.derived_outputs['incidence'][i] for i in time_indices[14:]]
+    incidence_vals = [_model.derived_outputs["incidence"][i] for i in time_indices[14:]]
     return max(incidence_vals) == incidence_vals[0]
 
 
-def objective_function(decision_variables, root_model, mode="by_age", country=Region.UNITED_KINGDOM, config=0,
-                       calibrated_params={}):
+def objective_function(
+    decision_variables,
+    root_model,
+    mode="by_age",
+    country=Region.UNITED_KINGDOM,
+    config=0,
+    calibrated_params={},
+):
     """
     :param decision_variables: dictionary containing
         - mixing multipliers by age as a list if mode == "by_age"    OR
@@ -136,7 +148,7 @@ def objective_function(decision_variables, root_model, mode="by_age", country=Re
         new_decision_variables = {
             "other_locations": decision_variables[0],
             "school": decision_variables[1],
-            "work": decision_variables[2]
+            "work": decision_variables[2],
         }
         decision_variables = new_decision_variables
 
@@ -145,11 +157,11 @@ def objective_function(decision_variables, root_model, mode="by_age", country=Re
 
     # Rebuild the default parameters
     params["default"].update(opti_params["default"])
-    params["default"] = update_params(params['default'], calibrated_params)
-    params['scenario_start_time'] = PHASE_2_START_TIME - 1
+    params["default"] = update_params(params["default"], calibrated_params)
+    params["scenario_start_time"] = PHASE_2_START_TIME - 1
 
     # Create scenario 1
-    sc_1_params = update_params(params['default'], sc_1_params_update)
+    sc_1_params = update_params(params["default"], sc_1_params_update)
     params["scenarios"][1] = sc_1_params
     scenario_1 = Scenario(build_model, idx=1, params=params)
 
@@ -157,7 +169,7 @@ def objective_function(decision_variables, root_model, mode="by_age", country=Re
     scenario_1.run(base_model=root_model)
     models = [root_model, scenario_1.model]
 
-    #____________________________       Perform diagnostics         ______________________
+    # ____________________________       Perform diagnostics         ______________________
     # How many deaths and years of life lost during Phase 2 and 3
     start_phase2_index = models[1].derived_outputs["times"].index(PHASE_2_START_TIME)
     end_phase2_index = models[1].derived_outputs["times"].index(phase_2_end[config])
@@ -171,7 +183,9 @@ def objective_function(decision_variables, root_model, mode="by_age", country=Re
         if "recovered" in models[1].compartment_names[i]
     ]
     nb_reco = sum([models[1].outputs[end_phase2_index, i] for i in recovered_indices])
-    total_pop = sum([models[1].outputs[end_phase2_index, i] for i in range(len(models[1].compartment_names))])
+    total_pop = sum(
+        [models[1].outputs[end_phase2_index, i] for i in range(len(models[1].compartment_names))]
+    )
     prop_immune = nb_reco / total_pop
 
     # Has herd immunity been reached?
@@ -188,13 +202,21 @@ def read_list_of_param_sets_from_csv(country):
     :param config: integer used to refer to different sensitivity analyses
     :return: a list of dictionaries
     """
-    path_to_csv = os.path.join('calibrated_param_sets', country + "_calibrated_params.csv")
+    path_to_csv = os.path.join("calibrated_param_sets", country + "_calibrated_params.csv")
     table = pd.read_csv(path_to_csv)
 
-    col_names_to_skip = ["idx", "loglikelihood", "best_deaths", "all_vars_to_1_deaths",
-                         "best_p_immune", "all_vars_to_1_p_immune",
-                         "best_yoll", "all_vars_to_1_yoll",
-                         "notifications_dispersion_param", "infection_deathsXall_dispersion_param"]
+    col_names_to_skip = [
+        "idx",
+        "loglikelihood",
+        "best_deaths",
+        "all_vars_to_1_deaths",
+        "best_p_immune",
+        "all_vars_to_1_p_immune",
+        "best_yoll",
+        "all_vars_to_1_yoll",
+        "notifications_dispersion_param",
+        "infection_deathsXall_dispersion_param",
+    ]
     for i in range(16):
         col_names_to_skip.append("best_x" + str(i))
 
@@ -209,7 +231,9 @@ def read_list_of_param_sets_from_csv(country):
     return list_of_param_sets
 
 
-def run_all_phases(decision_variables, country=Region.UNITED_KINGDOM, config=0, calibrated_params={}, mode="by_age"):
+def run_all_phases(
+    decision_variables, country=Region.UNITED_KINGDOM, config=0, calibrated_params={}, mode="by_age"
+):
     running_model = RegionApp(country)
     build_model = running_model.build_model
 
@@ -217,7 +241,7 @@ def run_all_phases(decision_variables, country=Region.UNITED_KINGDOM, config=0, 
         new_decision_variables = {
             "other_locations": decision_variables[0],
             "school": decision_variables[1],
-            "work": decision_variables[2]
+            "work": decision_variables[2],
         }
         decision_variables = new_decision_variables
 
@@ -225,21 +249,15 @@ def run_all_phases(decision_variables, country=Region.UNITED_KINGDOM, config=0, 
     # update params with optimisation default config
     params["default"].update(opti_params["default"])
     # update params with calibrated parameters
-    params["default"] = update_params(params['default'], calibrated_params)
+    params["default"] = update_params(params["default"], calibrated_params)
 
     # prepare importation rates for herd immunity testing
-    params["default"]["data"] = {
-        'times_imported_cases': [0],
-        'n_imported_cases': [0]
-    }
+    params["default"]["data"] = {"times_imported_cases": [0], "n_imported_cases": [0]}
 
     params["scenarios"][1] = build_params_for_phases_2_and_3(decision_variables, config, mode)
 
     run_models = build_model_runner(
-        model_name="covid_19",
-        param_set_name=country,
-        build_model=build_model,
-        params=params
+        model_name="covid_19", param_set_name=country, build_model=build_model, params=params
     )
 
     run_models()
@@ -248,16 +266,29 @@ def run_all_phases(decision_variables, country=Region.UNITED_KINGDOM, config=0, 
 
 
 def read_csv_output_file(output_dir, country, config=2, mode="by_age", objective="deaths"):
-    path_to_input_csv = os.path.join('calibrated_param_sets', country + "_calibrated_params.csv")
+    path_to_input_csv = os.path.join("calibrated_param_sets", country + "_calibrated_params.csv")
     input_table = pd.read_csv(path_to_input_csv)
 
-    col_names = [c for c in input_table.columns if c not in ["loglikelihood"] and "dispersion_param" not in c]
+    col_names = [
+        c for c in input_table.columns if c not in ["loglikelihood"] and "dispersion_param" not in c
+    ]
 
     if mode == "by_location":
         removed_columns = ["best_x" + str(i) for i in range(3, 16)]
         col_names = [c for c in col_names if c not in removed_columns]
 
-    output_file_name = output_dir + "results_" + country + "_" + mode + "_" + str(config) + "_" + objective + ".csv"
+    output_file_name = (
+        output_dir
+        + "results_"
+        + country
+        + "_"
+        + mode
+        + "_"
+        + str(config)
+        + "_"
+        + objective
+        + ".csv"
+    )
     out_table = pd.read_csv(output_file_name, sep=" ", header=None)
     out_table.columns = col_names
     out_table["loglikelihood"] = input_table["loglikelihood"]
@@ -270,10 +301,14 @@ def get_mle_params_and_vars(output_dir, country, config=2, mode="by_age", object
     out_table = read_csv_output_file(output_dir, country, config, mode, objective)
     n_vars = {"by_age": 16, "by_location": 3}
 
-    mle_rows = out_table[out_table["loglikelihood"] == out_table.loc[len(out_table) - 1, "loglikelihood"]]
+    mle_rows = out_table[
+        out_table["loglikelihood"] == out_table.loc[len(out_table) - 1, "loglikelihood"]
+    ]
     mle_rows = mle_rows.sort_values(by="best_" + objective)
 
-    decision_vars = [float(mle_rows.loc[mle_rows.index[0], "best_x" + str(i)]) for i in range(n_vars[mode])]
+    decision_vars = [
+        float(mle_rows.loc[mle_rows.index[0], "best_x" + str(i)]) for i in range(n_vars[mode])
+    ]
 
     params = {}
     for c in out_table.columns:
@@ -293,17 +328,35 @@ if __name__ == "__main__":
     for _country in available_countries:
         print("Running for " + _country + " ...")
         config = 3
-        mode = 'by_location'
-        objective = 'deaths'
-        param_set, decision_vars = get_mle_params_and_vars(output_dir, _country, config=config, mode=mode,
-                                                           objective=objective)
+        mode = "by_location"
+        objective = "deaths"
+        param_set, decision_vars = get_mle_params_and_vars(
+            output_dir, _country, config=config, mode=mode, objective=objective
+        )
         run_all_phases(decision_vars, _country, config, param_set, mode)
         print("... done.")
     exit()
 
     decision_vars = {
-        "by_age": [0.99403736,0.966716181,0.99528575,0.996704989,0.999250901,0.99909351,0.996430804,0.99494714,0.999902635,0.999955508,0.988036486,0.970353795,0.03743012,0.170611743,0.004352714,0.243200946],
-        "by_location": [1., 1., 1.]
+        "by_age": [
+            0.99403736,
+            0.966716181,
+            0.99528575,
+            0.996704989,
+            0.999250901,
+            0.99909351,
+            0.996430804,
+            0.99494714,
+            0.999902635,
+            0.999955508,
+            0.988036486,
+            0.970353795,
+            0.03743012,
+            0.170611743,
+            0.004352714,
+            0.243200946,
+        ],
+        "by_location": [1.0, 1.0, 1.0],
     }
 
     # to produce graph with 3 phases
@@ -322,11 +375,22 @@ if __name__ == "__main__":
                     _root_model = run_root_model(_country, param_set)
 
                     # The following line is the one to be run again and again during optimisation
-                    h, d, yoll, p_immune, m = objective_function(decision_vars[_mode], _root_model, _mode, _country, _config,
-                                                           param_set)
-                    print("Immunity: " + str(h) + "\n" + "Deaths: " + str(round(d)) + "\n" + "Years of life lost: " +
-                          str(round(yoll)) + "\n" + "Prop immune: " + str(round(p_immune, 3))
-                          )
+                    h, d, yoll, p_immune, m = objective_function(
+                        decision_vars[_mode], _root_model, _mode, _country, _config, param_set
+                    )
+                    print(
+                        "Immunity: "
+                        + str(h)
+                        + "\n"
+                        + "Deaths: "
+                        + str(round(d))
+                        + "\n"
+                        + "Years of life lost: "
+                        + str(round(yoll))
+                        + "\n"
+                        + "Prop immune: "
+                        + str(round(p_immune, 3))
+                    )
 
                     # run_all_phases(decision_vars[_mode], _country, _config, param_set, _mode)
                     # break

@@ -89,4 +89,3 @@ def test_stratify():
     assert c_loc._strat_names == ("age", "location")
     assert c_loc._strat_values == {"age": "15", "location": "work"}
     assert c_loc.serialize() == "infectedXage_15Xlocation_work"
-

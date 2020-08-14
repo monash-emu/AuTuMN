@@ -53,4 +53,3 @@ class CrudeBirthFlow(BaseEntryFlow):
 @jit(nopython=True)
 def _find_sum(compartment_values: np.ndarray) -> float:
     return compartment_values.sum()
-

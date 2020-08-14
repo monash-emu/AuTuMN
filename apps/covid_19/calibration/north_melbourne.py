@@ -1,6 +1,9 @@
 from autumn.constants import Region
 from apps.covid_19.calibration import base
-from apps.covid_19.calibration.base import provide_default_calibration_params, add_standard_dispersion_parameter
+from apps.covid_19.calibration.base import (
+    provide_default_calibration_params,
+    add_standard_dispersion_parameter,
+)
 
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
@@ -659,14 +662,14 @@ TARGET_OUTPUTS = [
         "years": case_times,
         "values": case_counts,
         "loglikelihood_distri": "negative_binomial",
-        "time_weights": list(range(1, len(case_times) - 6)) + [250.] * 7,
+        "time_weights": list(range(1, len(case_times) - 6)) + [250.0] * 7,
     },
     {
         "output_key": "icu_occupancy",
         "years": icu_times,
         "values": icu_counts,
         "loglikelihood_distri": "negative_binomial",
-        "time_weights": list(range(1, len(icu_times) - 6)) + [250.] * 7,
+        "time_weights": list(range(1, len(icu_times) - 6)) + [250.0] * 7,
     },
 ]
 
@@ -691,7 +694,7 @@ PAR_PRIORS += [
     {
         "param_name": "compartment_periods.icu_early",
         "distribution": "gamma",
-        "distri_mean": 12.,
-        "distri_ci": [4., 20.],
+        "distri_mean": 12.0,
+        "distri_ci": [4.0, 20.0],
     },
 ]

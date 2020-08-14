@@ -16,9 +16,11 @@ PAR_PRIORS = get_prior_distributions_for_opti()
 for i, par in enumerate(PAR_PRIORS):
     if par["param_name"] == "contact_rate":
         PAR_PRIORS[i]["distri_params"] = [0.02, 0.04]
-        PAR_PRIORS[i]["start_time"] = [0., 20.]
+        PAR_PRIORS[i]["start_time"] = [0.0, 20.0]
 
-TARGET_OUTPUTS = get_target_outputs_for_opti(country, source='who', data_start_time=61, data_end_time=197)  # notifications and deaths
+TARGET_OUTPUTS = get_target_outputs_for_opti(
+    country, source="who", data_start_time=61, data_end_time=197
+)  # notifications and deaths
 
 # Use weekly counts
 for target in TARGET_OUTPUTS:

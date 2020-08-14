@@ -99,4 +99,3 @@ def verify(*args, **kwargs):
                 pickle.dump(obj, f)
 
     return _verify
-

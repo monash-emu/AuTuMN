@@ -146,7 +146,9 @@ def plot_calibration_fit(
         chosen_output, mcmc_tables, derived_output_tables
     )
     is_logscale = st.sidebar.checkbox("Log scale")
-    plots.plot_calibration_fit(plotter, chosen_output, outputs, best_chain_index, plot_config, is_logscale)
+    plots.plot_calibration_fit(
+        plotter, chosen_output, outputs, best_chain_index, plot_config, is_logscale
+    )
 
 
 def print_mle_parameters(
@@ -182,4 +184,3 @@ def parameter_selector(mcmc_table: pd.DataFrame):
     non_param_cols = ["idx", "Scenario", "loglikelihood", "accept"]
     param_options = [c for c in mcmc_table.columns if c not in non_param_cols]
     return st.sidebar.selectbox("Select parameter", param_options)
-

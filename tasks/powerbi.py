@@ -86,9 +86,7 @@ class UncertaintyWeightsTask(utils.ParallelLoggerTask):
         with Timer(msg):
             region_name, _, _ = utils.read_run_id(self.run_id)
             output_list = (
-                UNCERTAINTY_OUTPUTS
-                if region_name not in OPTI_REGIONS
-                else OPTI_UNCERTAINTY_OUTPUTS
+                UNCERTAINTY_OUTPUTS if region_name not in OPTI_REGIONS else OPTI_UNCERTAINTY_OUTPUTS
             )
             db_path = os.path.join(settings.BASE_DIR, self.get_src_db_relpath())
             add_uncertainty_weights(output_list, db_path)

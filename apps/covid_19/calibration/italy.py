@@ -18,7 +18,9 @@ for i, par in enumerate(PAR_PRIORS):
         PAR_PRIORS[i]["distri_params"] = [0.015, 0.06]
 
 
-TARGET_OUTPUTS = get_target_outputs_for_opti(country, source='who', data_start_time=61, data_end_time=182)
+TARGET_OUTPUTS = get_target_outputs_for_opti(
+    country, source="who", data_start_time=61, data_end_time=182
+)
 
 # Use weekly counts
 for target in TARGET_OUTPUTS:
@@ -27,6 +29,7 @@ for target in TARGET_OUTPUTS:
 MULTIPLIERS = {}
 
 PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS, MULTIPLIERS)
+
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
     base.run_calibration_chain(

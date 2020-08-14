@@ -25,7 +25,6 @@ app.register(RegionApp(Region.FRANCE))
 app.register(RegionApp(Region.SPAIN))
 
 
-
 # Functions and data exposed to the outside world
 REGION_APPS = app.region_names
 get_region_app = app.get_region_app

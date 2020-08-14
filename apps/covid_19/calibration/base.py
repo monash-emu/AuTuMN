@@ -16,20 +16,12 @@ N_BURNED = 0
 N_CHAINS = 1
 
 BASE_CALIBRATION_PARAMS = [
-    {
-        "param_name": "contact_rate",
-        "distribution": "uniform",
-        "distri_params": [0.015, 0.07],
-    },
-    {
-        "param_name": "start_time",
-        "distribution": "uniform",
-        "distri_params": [0.0, 40.0],
-    },
+    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.015, 0.07],},
+    {"param_name": "start_time", "distribution": "uniform", "distri_params": [0.0, 40.0],},
     {
         "param_name": "compartment_periods_calculated.exposed.total_period",
         "distribution": "uniform",
-        "distri_params": [3., 6.],
+        "distri_params": [3.0, 6.0],
     },
     {
         "param_name": "compartment_periods_calculated.active.total_period",
@@ -49,9 +41,11 @@ def provide_default_calibration_params(excluded_params=()):
         calibration parameters
     """
 
-    return \
-        [BASE_CALIBRATION_PARAMS[param] for param in range(len(BASE_CALIBRATION_PARAMS)) if
-         BASE_CALIBRATION_PARAMS[param]["param_name"] not in excluded_params]
+    return [
+        BASE_CALIBRATION_PARAMS[param]
+        for param in range(len(BASE_CALIBRATION_PARAMS))
+        if BASE_CALIBRATION_PARAMS[param]["param_name"] not in excluded_params
+    ]
 
 
 def add_standard_dispersion_parameter(params, target_outputs, output_name):
@@ -100,11 +94,7 @@ def add_standard_philippines_params(params):
             "distribution": "uniform",
             "distri_params": [0.10, 0.70],
         },
-        {
-            "param_name": "ifr_multiplier",
-            "distribution": "uniform",
-            "distri_params": [1., 2.28],
-        },
+        {"param_name": "ifr_multiplier", "distribution": "uniform", "distri_params": [1.0, 2.28],},
     ]
 
 
@@ -122,7 +112,7 @@ def assign_trailing_weights_to_halves(end_weights, calibration_target):
     """
 
     time_weights = [0.5] * (len(calibration_target) - end_weights)
-    time_weights += [1.] * end_weights
+    time_weights += [1.0] * end_weights
     return time_weights
 
 

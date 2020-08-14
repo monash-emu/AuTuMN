@@ -60,12 +60,15 @@ class LocationMixingAdjustment(BaseMixingAdjustment):
         if not microdistancing_params:
             self.microdistancing_function = None
         elif microdistancing_params["function_type"] == "tanh":
-            self.microdistancing_function = tanh_based_scaleup(**microdistancing_params["parameters"])
+            self.microdistancing_function = tanh_based_scaleup(
+                **microdistancing_params["parameters"]
+            )
         elif microdistancing_params["function_type"] == "empiric":
             micro_times = microdistancing_params["parameters"]["times"]
             multiplier = microdistancing_params["parameters"]["multiplier"]
-            micro_vals = \
-                [1. - multiplier * value for value in microdistancing_params["parameters"]["values"]]
+            micro_vals = [
+                1.0 - multiplier * value for value in microdistancing_params["parameters"]["values"]
+            ]
             self.microdistancing_function = scale_up_function(micro_times, micro_vals, method=4)
 
         # Load all location-specific mixing info.

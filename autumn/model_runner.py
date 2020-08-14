@@ -89,4 +89,3 @@ def build_model_runner(
             store_run_models(models, output_db_path)
 
     return run_model
-

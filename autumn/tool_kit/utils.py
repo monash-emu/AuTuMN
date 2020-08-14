@@ -331,7 +331,5 @@ def apply_moving_average(data, period):
     smooth_data = []
     for i, d in enumerate(data):
         n_backwards_timepoints = period - 1 if i >= period - 1 else i
-        smooth_data.append(
-            float(numpy.mean(data[i - n_backwards_timepoints: i + 1]))
-        )
+        smooth_data.append(float(numpy.mean(data[i - n_backwards_timepoints : i + 1])))
     return smooth_data

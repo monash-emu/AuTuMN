@@ -18,11 +18,7 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
 PAR_PRIORS = provide_default_calibration_params(("start_time",))
 
 PAR_PRIORS += [
-    {
-        "param_name": "start_time",
-        "distribution": "uniform",
-        "distri_params": [0.0, 60.0],
-    },
+    {"param_name": "start_time", "distribution": "uniform", "distri_params": [0.0, 60.0],},
     # to set time-variant detection
     {
         "param_name": "time_variant_detection.max_change_time",

@@ -35,4 +35,3 @@ def test_death_flow_get_net_flow_with_adjust(FlowClass):
 
 def _get_param_value(name, time):
     return 2 * time
-

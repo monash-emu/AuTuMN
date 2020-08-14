@@ -538,4 +538,3 @@ def test_epi_model__with_complex_dynamics__expect_correct_outputs(ModelClass):
         ]
     )
     assert_allclose(model.outputs, expected_arr, atol=0.1, verbose=True)
-

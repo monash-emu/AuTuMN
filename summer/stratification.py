@@ -183,4 +183,3 @@ def get_stratified_compartment_values(
             new_comp_values.append(comp_values[idx])
 
     return np.array(new_comp_values)
-

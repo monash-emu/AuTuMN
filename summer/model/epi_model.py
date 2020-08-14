@@ -244,22 +244,9 @@ class EpiModel:
         Also calculates post-processing outputs after the ODE integration is complete.
         """
         self.prepare_to_run()
-
-        def ode_func(compartment_values: np.ndarray, time: float):
-            """
-            Inner loop of ODE solver which describes ODE dynamics.
-            Returns the flow rates at the current timestep,
-            given the current compartment values and time.
-            """
-            # FIXME: update_tracked_quantities depends on prepare_time_step in strat model
-            self.prepare_time_step(time)
-            self.update_tracked_quantities(compartment_values)
-            return self.get_flow_rates(compartment_values, time)
-
         self.outputs = solve_ode(
-            integration_type, ode_func, self.compartment_values, self.times, solver_args
+            integration_type, self.get_flow_rates, self.compartment_values, self.times, solver_args
         )
-
         # Check that all compartment values are >= 0
         if np.any(self.outputs < 0.0):
             # TODO: Print size of deviation.
@@ -267,28 +254,21 @@ class EpiModel:
 
         self.derived_outputs = self.calculate_derived_outputs()
 
-    def update_tracked_quantities(self, compartment_values):
-        """
-        Update quantities that emerge during model running (not pre-defined functions of time)
-        """
-        self.total_deaths = 0
-        self.find_infectious_population(compartment_values)
-
-    def prepare_time_step(self, time):
-        """
-        Perform any tasks needed for execution of each integration time step
-        """
-        pass
-
     def get_flow_rates(self, compartment_values: np.ndarray, time: float):
         """
-        Get net flows into, out of, and between all compartments
+        Get net flows into, out of, and between all compartments.
+        Order of args determined by solve_ode func.
         """
+        self.prepare_time_step(time, compartment_values)
         flow_rates = np.zeros(compartment_values.shape)
         for flow_func in self.flow_functions:
             flow_rates = flow_func(flow_rates, compartment_values, time)
 
         return flow_rates
+
+    def prepare_time_step(self, time: float, compartment_values: np.ndarray):
+        self.total_deaths = 0
+        self.find_infectious_population(time, compartment_values)
 
     def apply_transition_flows(
         self, flow_rates: np.ndarray, compartment_values: np.ndarray, time: float
@@ -337,7 +317,7 @@ class EpiModel:
     def get_infection_density_multipier(self, source: Compartment):
         return self.population_infectious
 
-    def find_infectious_population(self, compartment_values):
+    def find_infectious_population(self, time: float, compartment_values: np.ndarray):
         """
         Finds the effective infectious population
         """
@@ -350,12 +330,9 @@ class EpiModel:
         This is used for calculating derived outputs.
         Returns the compartment values for that time step.
         """
+        time = self.times[time_idx]
         compartment_values = self.outputs[time_idx]
-        # FIXME: prepare time step also needs to be called for dynamic mixing matrix to be updated.
-        # FIXME: roll these into one thing to prevent future mistakes.
-        # time = self.times[time_idx]
-        # self.prepare_time_step(time)
-        self.update_tracked_quantities(compartment_values)
+        self.prepare_time_step(time, compartment_values)
         return compartment_values
 
     def calculate_derived_outputs(self):

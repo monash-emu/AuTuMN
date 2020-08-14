@@ -40,7 +40,7 @@ def test_apply_flows__with_no_flows(ModelClass):
     }
     model = ModelClass(**model_kwargs)
     model.prepare_to_run()
-    model.update_tracked_quantities(model.compartment_values)
+    model.prepare_time_step(0, model.compartment_values)
     flow_rates = np.array([1, 2], dtype=np.float)
     new_rates = model.apply_transition_flows(flow_rates, model.compartment_values, 0)
     new_rates = model.apply_exit_flows(new_rates, model.compartment_values, 0)
@@ -76,7 +76,7 @@ def test_apply_flows__with_standard_flow__expect_flows_applied(
     }
     model = ModelClass(**model_kwargs)
     model.prepare_to_run()
-    model.update_tracked_quantities(model.compartment_values)
+    model.prepare_time_step(0, model.compartment_values)
     flow_rates = np.array([1, 2], dtype=np.float)
 
     new_rates = model.apply_transition_flows(flow_rates, model.compartment_values, 0)
@@ -114,7 +114,7 @@ def test_apply_flows__with_infection_frequency(ModelClass, inf_pop, sus_pop, exp
     }
     model = ModelClass(**model_kwargs)
     model.prepare_to_run()
-    model.update_tracked_quantities(model.compartment_values)
+    model.prepare_time_step(0, model.compartment_values)
     flow_rates = np.array([1, 2], dtype=np.float)
 
     new_rates = model.apply_transition_flows(flow_rates, model.compartment_values, 0)
@@ -149,7 +149,7 @@ def test_apply_flows__with_infection_density(ModelClass, inf_pop, sus_pop, exp_f
     }
     model = ModelClass(**model_kwargs)
     model.prepare_to_run()
-    model.update_tracked_quantities(model.compartment_values)
+    model.prepare_time_step(0, model.compartment_values)
     flow_rates = np.array([1, 2], dtype=np.float)
 
     new_rates = model.apply_transition_flows(flow_rates, model.compartment_values, 0)
@@ -177,7 +177,7 @@ def test_apply_infect_death_flows(ModelClass, inf_pop, exp_flow):
     }
     model = ModelClass(**model_kwargs)
     model.prepare_to_run()
-    model.update_tracked_quantities(model.compartment_values)
+    model.prepare_time_step(0, model.compartment_values)
     flow_rates = np.array([1, 2], dtype=np.float)
 
     new_rates = model.apply_transition_flows(flow_rates, model.compartment_values, 0)
@@ -198,7 +198,7 @@ def test_apply_univeral_death_flow(ModelClass):
     }
     model = ModelClass(**model_kwargs)
     model.prepare_to_run()
-    model.update_tracked_quantities(model.compartment_values)
+    model.prepare_time_step(0, model.compartment_values)
     assert model.compartment_values.tolist() == [990, 10]
     flow_rates = np.array([1, 2], dtype=np.float)
     new_rates = model.apply_exit_flows(flow_rates, model.compartment_values, 0)
@@ -215,7 +215,7 @@ def test_apply_univeral_death_flow__with_no_death_rate(ModelClass):
     }
     model = ModelClass(**model_kwargs)
     model.prepare_to_run()
-    model.update_tracked_quantities(model.compartment_values)
+    model.prepare_time_step(0, model.compartment_values)
     assert model.compartment_values.tolist() == [990, 10]
     flow_rates = np.array([1, 2], dtype=np.float)
     new_rates = model.apply_exit_flows(flow_rates, model.compartment_values, 0)
@@ -231,7 +231,7 @@ def test_epi_model_apply_birth_rate__with_no_birth_approach__expect_no_births(Mo
     model_kwargs = {**MODEL_KWARGS, "birth_approach": BirthApproach.NO_BIRTH}
     model = ModelClass(**model_kwargs)
     model.prepare_to_run()
-    model.update_tracked_quantities(model.compartment_values)
+    model.prepare_time_step(0, model.compartment_values)
     flow_rates = np.array([1, 2], dtype=np.float)
     new_rates = model.apply_entry_flows(flow_rates, model.compartment_values, 0)
     assert new_rates.tolist() == [1, 2]

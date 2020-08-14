@@ -639,14 +639,14 @@ def plot_mixing_matrix(plotter: Plotter, model: StratifiedModel):
     logger.error("Mixing matrix plotter does not work - no matrices will be plotted.")
     return
 
-    if model.mixing_matrix is None:
-        logger.debug("No mixing matrix found, skipping model.")
+    if model._static_mixing_matrix is None:
+        logger.debug("No static mixing matrix found, skipping model.")
         return
 
     fig, axis, max_dims, n_rows, n_cols = plotter.get_figure()
 
     axis = sns.heatmap(
-        model.mixing_matrix,
+        model._static_mixing_matrix,
         yticklabels=model.mixing_categories,
         xticklabels=False,
         vmin=0.0,

@@ -141,10 +141,7 @@ def build_model(params: dict) -> StratifiedModel:
             microdistancing,
             smooth_google_data,
         )
-    if dynamic_mixing_matrix:
-        # FIXME: This feature doesn't work if we apply 2 mixing matrices.
-        model.find_dynamic_mixing_matrix = dynamic_mixing_matrix
-        model.dynamic_mixing_matrix = True
+        model.set_dynamic_mixing_matrix(dynamic_mixing_matrix)
 
     # Implement seasonal forcing if requested, making contact rate a time-variant rather than constant
     if params["seasonal_force"]:

@@ -39,7 +39,7 @@ def test_strat_basic_get_infection_multipier():
     assert model.category_lookup == {0: 0, 1: 0, 2: 0}
 
     # Do pre-iteration FoI calcs
-    model.update_tracked_quantities(model.compartment_values)
+    model.prepare_time_step(0, model.compartment_values)
     assert_array_equal(model.category_populations, np.array([[1000]]))
     assert_array_equal(model.infection_density, np.array([[10.0]]))
     assert_array_equal(model.infection_frequency, np.array([[0.01]]))
@@ -77,7 +77,7 @@ def test_strat_get_infection_multipier__with_age_strat_and_no_mixing():
     assert model.category_lookup == {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
 
     # Do pre-iteration FoI calcs
-    model.update_tracked_quantities(model.compartment_values)
+    model.prepare_time_step(0, model.compartment_values)
     assert_array_equal(model.category_populations, np.array([[1000]]))
     assert_array_equal(model.infection_density, np.array([[10.0]]))
     assert_array_equal(model.infection_frequency, np.array([[0.01]]))
@@ -143,7 +143,7 @@ def test_strat_get_infection_multipier__with_age_strat_and_simple_mixing():
     assert model.category_lookup == {0: 0, 1: 1, 2: 0, 3: 1, 4: 0, 5: 1}
 
     # Do pre-iteration FoI calcs
-    model.update_tracked_quantities(model.compartment_values)
+    model.prepare_time_step(0, model.compartment_values)
     child_density = 5
     adult_density = 5
     assert child_density == 0.5 * 5 + 0.5 * 5
@@ -206,7 +206,7 @@ def test_strat_get_infection_multipier__with_age_split_and_simple_mixing():
     assert model.category_lookup == {0: 0, 1: 1, 2: 0, 3: 1, 4: 0, 5: 1}
 
     # Do pre-iteration FoI calcs
-    model.update_tracked_quantities(model.compartment_values)
+    model.prepare_time_step(0, model.compartment_values)
     child_density = 5
     adult_density = 5
     assert child_density == 0.5 * 5 + 0.5 * 5
@@ -267,7 +267,7 @@ def test_strat_get_infection_multipier__with_age_strat_and_mixing():
     assert model.category_lookup == {0: 0, 1: 1, 2: 0, 3: 1, 4: 0, 5: 1}
 
     # Do pre-iteration FoI calcs
-    model.update_tracked_quantities(model.compartment_values)
+    model.prepare_time_step(0, model.compartment_values)
     assert_array_equal(model.category_populations, np.array([[200.0], [800.0]]))
     child_density = 28
     adult_density = 66
@@ -343,7 +343,7 @@ def test_strat_get_infection_multipier__with_double_strat_and_no_mixing():
     assert model.category_lookup == expected_lookup
 
     # Do pre-iteration FoI calcs
-    model.update_tracked_quantities(model.compartment_values)
+    model.prepare_time_step(0, model.compartment_values)
     assert_array_equal(model.category_populations, np.array([[1000]]))
     assert_array_equal(model.infection_density, np.array([[10.0]]))
     assert_array_equal(model.infection_frequency, np.array([[0.01]]))
@@ -416,7 +416,7 @@ def test_strat_get_infection_multipier__with_double_strat_and_first_strat_mixing
     assert model.category_lookup == exp_lookup
 
     # Do pre-iteration FoI calcs
-    model.update_tracked_quantities(model.compartment_values)
+    model.prepare_time_step(0, model.compartment_values)
     assert_array_equal(model.category_populations, np.array([[300.0], [700.0]]))
     child_density = 27
     adult_density = 64
@@ -497,7 +497,7 @@ def test_strat_get_infection_multipier__with_double_strat_and_second_strat_mixin
     assert model.category_lookup == exp_lookup
 
     # Do pre-iteration FoI calcs
-    model.update_tracked_quantities(model.compartment_values)
+    model.prepare_time_step(0, model.compartment_values)
     assert_array_equal(model.category_populations, np.array([[500.0], [500.0]]))
     work_density = 25
     home_density = 60
@@ -557,7 +557,7 @@ def test_strat_get_infection_multipier__with_double_strat_and_both_strats_mixing
             [5 * 17, 5 * 19, 7 * 17, 7 * 19],
         ]
     )
-    assert_array_equal(model.mixing_matrix, expected_mixing)
+    assert_array_equal(model._static_mixing_matrix, expected_mixing)
     assert model.mixing_categories == [
         {"agegroup": "child", "location": "work"},
         {"agegroup": "child", "location": "home"},
@@ -611,7 +611,7 @@ def test_strat_get_infection_multipier__with_double_strat_and_both_strats_mixing
     assert model.category_lookup == exp_lookup
 
     # Do pre-iteration FoI calcs
-    model.update_tracked_quantities(model.compartment_values)
+    model.prepare_time_step(0, model.compartment_values)
     exp_pops = np.array(
         [
             [150],  # children at work

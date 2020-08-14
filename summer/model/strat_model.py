@@ -1,6 +1,6 @@
 import copy
 import itertools
-from typing import List, Dict
+from typing import List, Dict, Callable
 
 import numpy as np
 
@@ -64,12 +64,19 @@ class StratifiedModel(EpiModel):
         # Columns are the strata who are infectors.
         # Rows are the strata who are infected.
         # This matrix can be stratified multiple times.
-        self.mixing_matrix = np.array([[1]])
+        self._static_mixing_matrix = np.array([[1]])
+        # A time-based function that can replace the mixing matrix.
+        # This cannot be automatically stratified.
+        self._dynamic_mixing_matrix = None
         # A list of dicts that has the strata required to match a row in the mixing matrix.
         self.mixing_categories = [{}]
 
-        # A time-based function that can replace the mixing matrix.
-        self.dynamic_mixing_matrix = False
+    def set_dynamic_mixing_matrix(self, matrix_func: Callable[[float], np.ndarray]):
+        """
+        Set model to use a time-varying mixing matrix.
+        FIXME: This API is very very unintuitive. It's not obvious which mixing matrix gets used by the model.
+        """
+        self._dynamic_mixing_matrix = matrix_func
 
     def stratify(
         self,
@@ -114,7 +121,7 @@ class StratifiedModel(EpiModel):
         # Stratify the mixing matrix if a new one is provided.
         if mixing_matrix is not None:
             # Use Kronecker product of old and new mixing matrices.
-            self.mixing_matrix = np.kron(self.mixing_matrix, mixing_matrix)
+            self._static_mixing_matrix = np.kron(self._static_mixing_matrix, mixing_matrix)
             self.mixing_categories = strat.update_mixing_categories(self.mixing_categories)
 
         # Prepare infectiousness levels for force of infection adjustments.
@@ -146,26 +153,6 @@ class StratifiedModel(EpiModel):
         compartment_idx_lookup = {name: idx for idx, name in enumerate(self.compartment_names)}
         for flow in self.flows:
             flow.update_compartment_indices(compartment_idx_lookup)
-
-    def prepare_to_run(self):
-        """
-        methods that can be run prior to integration to save various function calls being made at every time step
-        """
-        super().prepare_to_run()
-        self.prepare_force_of_infection()
-
-    def prepare_time_step(self, time):
-        """
-        Perform any tasks needed for execution of each integration time step
-        """
-        if self.dynamic_mixing_matrix:
-            self.mixing_matrix = self.find_dynamic_mixing_matrix(time)
-
-    def find_dynamic_mixing_matrix(self, time):
-        """
-        Function for overwriting in application to create time-variant mixing matrix
-        """
-        return self.mixing_matrix
 
     def prepare_force_of_infection(self):
         """
@@ -221,10 +208,14 @@ class StratifiedModel(EpiModel):
         """
         return self.category_lookup[source.idx]
 
-    def find_infectious_population(self, compartment_values):
+    def find_infectious_population(self, time: float, compartment_values: np.ndarray):
         """
-        find vectors for the total infectious populations and the total population that is needed in the case of frequency-dependent transmission
+        Finds the effective infectious population.
         """
+        if self._dynamic_mixing_matrix:
+            mixing_matrix = self._dynamic_mixing_matrix(time)
+        else:
+            mixing_matrix = self._static_mixing_matrix
 
         # Calculate total number of people per category.
         # A vector with size (num_cats x 1).
@@ -236,12 +227,12 @@ class StratifiedModel(EpiModel):
         infected_values = compartment_values * self.infectiousness_multipliers
         infected_values_transposed = infected_values.reshape((infected_values.shape[0], 1))
         infectious_populations = np.matmul(self.category_matrix, infected_values_transposed)
-        self.infection_density = np.matmul(self.mixing_matrix, infectious_populations)
+        self.infection_density = np.matmul(mixing_matrix, infectious_populations)
 
         # Calculate total infected person frequency per category, including adjustment factors.
         # A vector with size (num_cats x 1).
         category_frequency = infectious_populations / self.category_populations
-        self.infection_frequency = np.matmul(self.mixing_matrix, category_frequency)
+        self.infection_frequency = np.matmul(mixing_matrix, category_frequency)
 
     def get_infection_frequency_multipier(self, source: Compartment):
         """

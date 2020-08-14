@@ -11,7 +11,6 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
         PAR_PRIORS,
         TARGET_OUTPUTS,
         mode="autumn_mcmc",
-        _multipliers=MULTIPLIERS,
     )
 
 
@@ -19,7 +18,6 @@ PAR_PRIORS = [
     {"param_name": "beta", "distribution": "uniform", "distri_params": [1.0, 4.0],},
 ]
 
-MULTIPLIERS = {"prevXinfectiousXamong": 100000}
 
 TARGET_OUTPUTS = [
     {

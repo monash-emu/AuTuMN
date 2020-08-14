@@ -31,7 +31,6 @@ def run_calibration_chain(
     target_outputs,
     mode="autumn_mcmc",
     _grid_info=None,
-    _multipliers={},
 ):
     """
     Run a calibration chain for the covid model
@@ -51,7 +50,6 @@ def run_calibration_chain(
         params,
         par_priors,
         target_outputs,
-        _multipliers,
         run_id,
         total_nb_chains=1,
         param_set_name=region,

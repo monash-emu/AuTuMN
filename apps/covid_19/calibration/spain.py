@@ -32,9 +32,7 @@ TARGET_OUTPUTS.append(
     }
 )
 
-MULTIPLIERS = {}
-
-PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS, MULTIPLIERS)
+PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS)
 
 # par_grid = [
 #     {"param_name": "contact_rate", "lower": 0.05197245019634231, "upper": .0542, "n": 2},

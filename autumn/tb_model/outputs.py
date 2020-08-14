@@ -6,7 +6,6 @@ from typing import List
 
 import numpy
 import pandas as pd
-import autumn.post_processing as post_proc
 
 from summer.compartment import Compartment
 import matplotlib.pyplot as plt
@@ -134,14 +133,14 @@ def get_post_processing_results(
                 req_multipliers[output] = 1.0e2
 
         pps.append(
-            post_proc.PostProcessing(
-                models[scenario_index],
-                requested_outputs=req_outputs,
-                scenario_number=scenario_list[scenario_index],
-                requested_times=req_times,
-                multipliers=req_multipliers,
-                ymax=ymax,
-            )
+            # post_proc.PostProcessing(
+            #     models[scenario_index],
+            #     requested_outputs=req_outputs,
+            #     scenario_number=scenario_list[scenario_index],
+            #     requested_times=req_times,
+            #     multipliers=req_multipliers,
+            #     ymax=ymax,
+            # )
         )
         return pps
 
@@ -287,58 +286,6 @@ def compare_marshall_notifications(
     )
     fig.tight_layout(rect=[0.0, 0.0, 1.0, 0.95])
     fig.savefig(os.path.join(out_dir, "notification_comparisons.png"))
-
-
-def create_mcmc_outputs(
-    mcmc_models,
-    req_outputs,
-    req_times={},
-    req_multipliers={},
-    ymax={},
-    out_dir="outputs_tes",
-    targets_to_plot={},
-    translation_dictionary={},
-    scenario_list=[],
-    plot_start_time=1990,
-):
-    """similar to create_multi_scenario_outputs but using MCMC outputs"""
-    if not os.path.exists(out_dir):
-        os.mkdir(out_dir)
-
-    for output in req_outputs:
-        if (
-            output[0:15] == "prevXinfectious"
-            and output != "prevXinfectiousXstrain_mdrXamongXinfectious"
-        ):
-            req_multipliers[output] = 1.0e5
-        elif output[0:11] == "prevXlatent":
-            req_multipliers[output] = 1.0e2
-
-    pps = []
-    for scenario_index in range(len(mcmc_models)):
-        pps.append(
-            post_proc.PostProcessing(
-                mcmc_models[scenario_index]["model"],
-                requested_outputs=req_outputs,
-                scenario_number=scenario_list[scenario_index],
-                requested_times=req_times,
-                multipliers=req_multipliers,
-                ymax=ymax,
-            )
-        )
-
-    mcmc_weights = [mcmc_models[i]["weight"] for i in range(len(mcmc_models))]
-    outputs = Outputs(
-        mcmc_models,
-        pps,
-        output_options={},
-        targets_to_plot=targets_to_plot,
-        out_dir=out_dir,
-        translation_dict=translation_dictionary,
-        mcmc_weights=mcmc_weights,
-        plot_start_time=plot_start_time,
-    )
-    outputs.plot_requested_outputs()
 
 
 def plot_time_variant_param(function, time_span, title=""):

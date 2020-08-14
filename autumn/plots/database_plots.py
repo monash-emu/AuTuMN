@@ -96,13 +96,8 @@ def plot_from_database(run_path: str):
 
     plots.validate_plot_config(plot_config)
 
-    # Load post processing config from the project dir
-    post_processing_path = os.path.join(app_code_path, "post-processing.yml")
-    with open(post_processing_path, "r") as f:
-        post_processing_config = yaml.safe_load(f)
-
     # Get database from model data dir.
     db_path = os.path.join(run_path, "outputs.db")
-    scenarios = load_model_scenarios(db_path, params, post_processing_config)
+    scenarios = load_model_scenarios(db_path, params)
 
     plot_scenarios(scenarios, run_path, plot_config)

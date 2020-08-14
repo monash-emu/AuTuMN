@@ -17,13 +17,7 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
         PAR_PRIORS,
         TARGET_OUTPUTS,
         mode="autumn_mcmc",
-        _multipliers=MULTIPLIERS,
     )
-
-
-MULTIPLIERS = {
-    "prevXlate_activeXclinical_icuXamong": 7957050.0
-}  # to get absolute pop size instead of proportion
 
 
 # Notification data:

@@ -120,15 +120,12 @@ def test_calibrate_autumn_mcmc(temp_data_dir):
             "loglikelihood_distri": "poisson",
         }
     ]
-    multipliers = {}
     params = {
         "default": {"start_time": 2000},
         "scenario_start_time": 2000,
         "scenarios": {},
     }
-    calib = Calibration(
-        "sharks", _build_mock_model, params, priors, target_outputs, multipliers, 1, 1,
-    )
+    calib = Calibration("sharks", _build_mock_model, params, priors, target_outputs, 1, 1,)
     calib.run_fitting_algorithm(
         run_mode=CalibrationMode.AUTUMN_MCMC,
         n_iterations=50,
@@ -174,8 +171,8 @@ def _build_mock_model(params):
             [182.0, 300.0, 182.0, 151.0, 33.0, 151.0, 39.0, 159.0],
         ],
         derived_outputs={
-            "times": [1999, 2000, 2001, 2002, 2003, 2004],
-            "shark_attacks": [ice_cream_sales * i for i in vals],
+            "times": np.array([1999, 2000, 2001, 2002, 2003, 2004]),
+            "shark_attacks": np.array([ice_cream_sales * i for i in vals]),
         },
     )
     return mock_model

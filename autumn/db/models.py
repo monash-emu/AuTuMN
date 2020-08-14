@@ -15,7 +15,6 @@ from summer.model import StratifiedModel
 from ..db.database import Database, get_sql_engine
 from autumn.tb_model.loaded_model import LoadedModel
 from autumn.tool_kit import Scenario, Timer
-from autumn.post_processing.processor import post_process
 
 
 logger = logging.getLogger(__name__)
@@ -23,9 +22,7 @@ logger = logging.getLogger(__name__)
 TABLES_TO_KEEP = ["mcmc_run", "powerbi_outputs", "outputs", "derived_outputs", "uncertainty"]
 
 
-def load_model_scenarios(
-    database_path: str, model_params={}, post_processing_config=None
-) -> List[Scenario]:
+def load_model_scenarios(database_path: str, model_params={}) -> List[Scenario]:
     """
     Load model scenarios from an output database.
     Will apply post processing if the post processing config is supplied.
@@ -54,9 +51,6 @@ def load_model_scenarios(
             idx = int(scenario_name.split("_")[1])
             chain_idx = int(run_name.split("_")[1])
             scenario = Scenario.load_from_db(idx, chain_idx, model, params=model_params)
-            if post_processing_config:
-                scenario.generated_outputs = post_process(model, post_processing_config)
-
             scenarios.append(scenario)
 
     return scenarios

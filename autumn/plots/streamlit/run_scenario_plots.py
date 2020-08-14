@@ -37,11 +37,10 @@ def run_scenario_plots():
 
     params = utils.load_params(run_dirpath)
     plot_config = utils.load_plot_config(app_name, param_set_name)
-    post_processing_config = utils.load_post_processing_config(app_name)
 
     # Get database from model data dir.
     db_path = os.path.join(run_dirpath, "outputs.db")
-    scenarios = load_model_scenarios(db_path, params, post_processing_config)
+    scenarios = load_model_scenarios(db_path, params)
 
     # Create plotter which will write to streamlit UI.
     translations = plot_config["translations"]
@@ -205,13 +204,10 @@ def plot_multicountry_rainbow(
                     run_dirpath = os.path.join(country_dirpath, dir_name)
 
                     params = utils.load_params(run_dirpath)
-                    post_processing_config = utils.load_post_processing_config("covid_19")
 
                     # Get database from model data dir.
                     db_path = os.path.join(run_dirpath, "outputs.db")
-                    country_scenarios[country] = load_model_scenarios(
-                        db_path, params, post_processing_config
-                    )
+                    country_scenarios[country] = load_model_scenarios(db_path, params)
 
                 print(
                     "Plotting multicountry rainbow for: "
@@ -247,12 +243,11 @@ def plot_multicounty_hospital(
                     run_dirpath = os.path.join(country_dirpath, dir_name)
 
                     params = utils.load_params(run_dirpath)
-                    post_processing_config = utils.load_post_processing_config("covid_19")
 
                     # Get database from model data dir.
                     db_path = os.path.join(run_dirpath, "outputs.db")
                     all_scenarios[mode][objective][config][country] = load_model_scenarios(
-                        db_path, params, post_processing_config
+                        db_path, params
                     )
 
             print("Plotting multicountry hospital for: " + mode + "_" + objective)

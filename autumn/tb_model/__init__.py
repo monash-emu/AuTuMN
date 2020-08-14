@@ -3,7 +3,6 @@ Tools to build a tuberculosis
 """
 
 from .outputs import (
-    create_mcmc_outputs,
     create_output_connections_for_incidence_by_stratum,
     list_all_strata_for_mortality,
     plot_time_variant_param,

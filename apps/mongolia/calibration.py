@@ -28,7 +28,6 @@ def run_calibration_chain(max_seconds: int, run_id: int):
         params["default"],
         PAR_PRIORS,
         TARGET_OUTPUTS,
-        MULTIPLIERS,
         run_id,
         total_nb_chains=1,
     )
@@ -87,8 +86,8 @@ TARGET_OUTPUTS = [
     # {"output_key": "notifications", "years": [2015.0], "values": [4685.0]},
 ]
 
-MULTIPLIERS = {
-    "prevXinfectiousXamong": 1.0e5,
-    "prevXlatentXamongXage_5": 1.0e4,
-    "prevXinfectiousXstrain_mdrXamongXinfectious": 1.0e4,
-}
+# MULTIPLIERS = {
+#     "prevXinfectiousXamong": 1.0e5,
+#     "prevXlatentXamongXage_5": 1.0e4,
+#     "prevXinfectiousXstrain_mdrXamongXinfectious": 1.0e4,
+# }

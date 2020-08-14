@@ -20,11 +20,8 @@ class Country:
 
 
 FILE_DIR = os.path.dirname(os.path.abspath(__file__))
-POST_PROCESSING_PATH = os.path.join(FILE_DIR, "post-processing.yml")
 PLOTS_PATH = os.path.join(FILE_DIR, "base.yml")
 
-with open(POST_PROCESSING_PATH, "r") as f:
-    pp_config = yaml.safe_load(f)
 
 with open(PLOTS_PATH, "r") as f:
     plots_config = yaml.safe_load(f)
@@ -37,7 +34,6 @@ class CountryModel:
             model_name=f"sir_drug_resistance_{country}",
             build_model=self.build_model,
             params=self.params,
-            post_processing_config=pp_config,
             plots_config=plots_config,
         )
 

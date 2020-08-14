@@ -11,7 +11,6 @@ from .model import build_model
 
 FILE_DIR = os.path.dirname(os.path.abspath(__file__))
 PARAMS_PATH = os.path.join(FILE_DIR, "params.yml")
-POST_PROCESSING_PATH = os.path.join(FILE_DIR, "post-processing.yml")
 PLOTS_PATH = os.path.join(FILE_DIR, "plots.yml")
 
 with open(PARAMS_PATH, "r") as f:

@@ -18,7 +18,6 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
         PAR_PRIORS,
         TARGET_OUTPUTS,
         mode="autumn_mcmc",
-        _multipliers=MULTIPLIERS,
     )
 
 
@@ -134,11 +133,6 @@ TARGET_OUTPUTS = [
         "time_weights": list(range(1, len(icu_times) + 1)),
     },
 ]
-
-
-MULTIPLIERS = {
-    f"prevX{Compartment.LATE_ACTIVE}Xclinical_icuXamong": 16057300.0
-}  # to get absolute pop size instead of proportion
 
 
 PAR_PRIORS = provide_default_calibration_params()

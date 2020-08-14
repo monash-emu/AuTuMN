@@ -10,7 +10,6 @@ import math
 import pandas as pd
 import numpy as np
 import copy
-import autumn.post_processing as post_proc
 from scipy.optimize import Bounds, minimize
 from scipy import stats, special
 
@@ -85,7 +84,6 @@ class Calibration:
         model_parameters: dict,
         priors: List[dict],
         targeted_outputs: List[dict],
-        multipliers: Dict[str, float],
         chain_index: int,
         total_nb_chains: int,
         param_set_name: str = "main",
@@ -120,7 +118,6 @@ class Calibration:
         # the models after the last calibration targets.
         self.end_time = 2 + max([max(t["years"]) for t in targeted_outputs])
 
-        self.multipliers = multipliers
         self.chain_index = chain_index
 
         # Select starting params
@@ -133,7 +130,7 @@ class Calibration:
         project_dir = os.path.join(
             constants.OUTPUT_DATA_PATH, "calibrate", model_name, param_set_name
         )
-        run_hash = get_data_hash(model_name, priors, targeted_outputs, multipliers)
+        run_hash = get_data_hash(model_name, priors, targeted_outputs)
         timestamp = datetime.now().strftime("%Y-%m-%d")
         output_dir = os.path.join(project_dir, f"{run_hash}-{timestamp}")
         os.makedirs(output_dir, exist_ok=True)
@@ -238,26 +235,15 @@ class Calibration:
         scenario = Scenario(self.model_builder, 0, params)
         scenario.run()
         self.latest_scenario = scenario
-
-        _req_outs = [o for o in self.targeted_outputs if "prevX" in o["output_key"]]
-        requested_outputs = [o["output_key"] for o in _req_outs]
-        requested_times = {o["output_key"]: o["years"] for o in _req_outs}
-        pp = post_proc.PostProcessing(
-            scenario.model,
-            requested_outputs=requested_outputs,
-            requested_times=requested_times,
-            multipliers=self.multipliers,
-        )
-
-        return scenario, pp
+        return scenario
 
     def loglikelihood(self, params, to_return=BEST_LL):
         """
         Calculate the loglikelihood for a set of parameters
         """
-        scenario, pp = self.run_model_with_params(params)
-
-        model_start_time = pp.derived_outputs["times"][0]
+        scenario = self.run_model_with_params(params)
+        model = scenario.model
+        model_start_time = model.times[0]
         considered_start_times = [model_start_time]
         best_start_time = None
         if self.run_mode == CalibrationMode.LEAST_SQUARES:
@@ -274,18 +260,14 @@ class Calibration:
                 key = target["output_key"]
                 data = np.array(target["values"])
                 time_weigths = target["time_weights"]
-                if key in pp.generated_outputs:
-                    model_output = np.array(pp.generated_outputs[key])
-                else:
-                    indices = []
-                    for year in target["years"]:
-                        shifted_time = year - time_shift
-                        time_idxs = np.where(scenario.model.times == shifted_time)[0]
-                        time_idx = time_idxs[0]
-                        indices.append(time_idx)
+                indices = []
+                for year in target["years"]:
+                    shifted_time = year - time_shift
+                    time_idxs = np.where(scenario.model.times == shifted_time)[0]
+                    time_idx = time_idxs[0]
+                    indices.append(time_idx)
 
-                    model_output = np.array([pp.derived_outputs[key][index] for index in indices])
-
+                model_output = model.derived_outputs[key][indices]
                 if self.run_mode == CalibrationMode.LEAST_SQUARES:
                     squared_distance = (data - model_output) ** 2
                     ll += np.sum([w * d for (w, d) in zip(time_weigths, squared_distance)])

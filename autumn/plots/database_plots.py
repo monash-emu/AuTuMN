@@ -12,7 +12,6 @@ from .scenario_plots import plot_scenarios
 
 # from .streamlit.utils import try_find_app_code_path
 from .streamlit.run_mcmc_plots import load_mcmc_tables, load_derived_output_tables
-from .streamlit.utils import load_plot_config
 from .plotter import FilePlotter
 
 APP_DIRNAMES = ["covid_", "marshall_islands", "mongolia", "dummy"]

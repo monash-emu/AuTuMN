@@ -1,30 +1,37 @@
-from autumn.constants import Region
 from autumn.tool_kit.model_register import App
 
-from .app import RegionApp
+from .regions.victoria import victoria_region
+from .regions.philippines import philippines_region
+from .regions.manila import manila_region
+from .regions.calabarzon import calabarzon_region
+from .regions.central_visayas import central_visayas_region
+from .regions.malaysia import malaysia_region
+from .regions.united_kingdom import united_kingdom_region
+from .regions.sweden import sweden_region
+from .regions.spain import spain_region
+from .regions.italy import italy_region
+from .regions.france import france_region
+from .regions.belgium import belgium_region
 
-app = App()
-app.register(RegionApp(Region.AUSTRALIA))
-app.register(RegionApp(Region.PHILIPPINES))
-app.register(RegionApp(Region.MALAYSIA))
-app.register(RegionApp(Region.VICTORIA))
-app.register(RegionApp(Region.WEST_MELBOURNE))
-app.register(RegionApp(Region.NORTH_MELBOURNE))
-app.register(RegionApp(Region.NSW))
-# No Google Mobility data for Liberia
-# app.register(RegionApp(Region.LIBERIA))
-app.register(RegionApp(Region.MANILA))
-app.register(RegionApp(Region.CALABARZON))
-app.register(RegionApp(Region.CENTRAL_VISAYAS))
+# Used by each region to register its model.
+app = App("covid_19")
 
-app.register(RegionApp(Region.UNITED_KINGDOM))
-app.register(RegionApp(Region.BELGIUM))
-app.register(RegionApp(Region.ITALY))
-app.register(RegionApp(Region.SWEDEN))
-app.register(RegionApp(Region.FRANCE))
-app.register(RegionApp(Region.SPAIN))
+# Australia
+app.register(victoria_region)
 
+# Malaysia
+app.register(malaysia_region)
 
-# Functions and data exposed to the outside world
-REGION_APPS = app.region_names
-get_region_app = app.get_region_app
+# Philippines regions
+app.register(philippines_region)
+app.register(manila_region)
+app.register(calabarzon_region)
+app.register(central_visayas_region)
+
+# Mixing optimization regions
+app.register(belgium_region)
+app.register(united_kingdom_region)
+app.register(italy_region)
+app.register(france_region)
+app.register(sweden_region)
+app.register(spain_region)

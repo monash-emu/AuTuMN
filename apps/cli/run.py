@@ -8,7 +8,7 @@ You can access this script from your CLI by running:
 """
 import click
 
-from apps import covid_19, marshall_islands, mongolia, sir_example
+from apps import covid_19, sir_example
 
 
 @click.group()
@@ -17,32 +17,18 @@ def run():
 
 
 @run.command("covid")
-@click.argument("region", type=click.Choice(covid_19.REGION_APPS))
+@click.argument("region", type=click.Choice(covid_19.app.region_names))
 @click.option("--no-scenarios", is_flag=True)
 def run_covid(region, no_scenarios):
     """Run the COVID model for some region"""
-    region_app = covid_19.get_region_app(region)
-    region_app.run_model(run_scenarios=not no_scenarios)
+    covid_region = covid_19.app.get_region(region)
+    covid_region.run_model(run_scenarios=not no_scenarios)
 
 
-@run.command("sir_example")
-@click.argument("region", type=click.Choice(sir_example.REGION_APPS))
+@run.command("example")
+@click.argument("region", type=click.Choice(sir_example.app.region_names))
 @click.option("--no-scenarios", is_flag=True)
 def run_sir_example(region, no_scenarios):
-    """Run the SIR model for some region"""
-    region_app = sir_example.get_region_app(region)
-    region_app.run_model(run_scenarios=not no_scenarios)
-
-
-@run.command("rmi")
-@click.option("--no-scenarios", is_flag=True)
-def run_rmi(no_scenarios):
-    """Run the Marshall Islands TB model"""
-    marshall_islands.run_model(run_scenarios=not no_scenarios)
-
-
-@run.command("mongolia")
-@click.option("--no-scenarios", is_flag=True)
-def run_mongolia(no_scenarios):
-    """Run the Mongolia TB model"""
-    mongolia.run_model(run_scenarios=not no_scenarios)
+    """Run the SIR example model for some region"""
+    sir_region = sir_example.app.get_region(region)
+    sir_region.run_model(run_scenarios=not no_scenarios)

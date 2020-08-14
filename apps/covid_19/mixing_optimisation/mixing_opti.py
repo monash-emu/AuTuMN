@@ -9,7 +9,7 @@ from autumn.tool_kit.scenarios import Scenario
 from autumn.tool_kit.params import update_params
 from datetime import date, timedelta
 
-from apps.covid_19 import RegionApp
+from apps import covid_19
 from apps.covid_19.mixing_optimisation.constants import *
 
 
@@ -32,7 +32,7 @@ def run_root_model(country=Region.UNITED_KINGDOM, calibrated_params={}):
     This function runs a model to simulate the past epidemic (up until 1/7/2020) using a given calibrated parameter set.
     Returns an integrated model for the past epidemic.
     """
-    running_model = RegionApp(country)
+    running_model = covid_19.app.get_region(country)
     build_model = running_model.build_model
 
     params = copy.deepcopy(running_model.params)
@@ -139,7 +139,7 @@ def objective_function(
     :param config: the id of the configuration being considered
     :param calibrated_params: a dictionary containing a set of calibrated parameters
     """
-    running_model = RegionApp(country)
+    running_model = covid_19.app.get_region(country)
     build_model = running_model.build_model
     params = copy.deepcopy(running_model.params)
 
@@ -234,7 +234,7 @@ def read_list_of_param_sets_from_csv(country):
 def run_all_phases(
     decision_variables, country=Region.UNITED_KINGDOM, config=0, calibrated_params={}, mode="by_age"
 ):
-    running_model = RegionApp(country)
+    running_model = covid_19.app.get_region(country)
     build_model = running_model.build_model
 
     if mode == "by_location":

@@ -6,7 +6,7 @@ import luigi
 from autumn.tool_kit import Timer
 from autumn.inputs import build_input_database
 from autumn.inputs.database import input_db_path
-from apps.covid_19.calibration.base import run_full_models_for_mcmc
+from apps.covid_19.calibration import run_full_models_for_mcmc
 
 from . import utils
 from . import settings

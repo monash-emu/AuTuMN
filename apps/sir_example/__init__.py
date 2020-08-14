@@ -1,16 +1,8 @@
-import os
-import yaml
-
 from autumn.tool_kit.model_register import App
-from autumn.constants import Region
 
-from .app import RegionApp
+from .regions.australia import australia_region
+from .regions.philippines import philippines_region
 
-
-app = App()
-app.register(RegionApp(Region.AUSTRALIA))
-app.register(RegionApp(Region.PHILIPPINES))
-
-# Functions and data exposed to the outside world
-REGION_APPS = app.region_names
-get_region_app = app.get_region_app
+app = App("sir_example")
+app.register(philippines_region)
+app.register(australia_region)

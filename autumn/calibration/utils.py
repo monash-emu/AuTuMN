@@ -11,6 +11,26 @@ from scipy.optimize import minimize
 from autumn.db import Database
 
 
+def add_dispersion_param_prior_for_gaussian(par_priors, target_outputs):
+    for t in target_outputs:
+        if t["loglikelihood_distri"] == "normal":
+            max_val = max(t["values"])
+            # sd_ that would make the 95% gaussian CI cover half of the max value (4*sd = 95% width)
+            sd_ = 0.25 * max_val / 4.0
+            lower_sd = sd_ / 2.0
+            upper_sd = 2.0 * sd_
+
+            par_priors.append(
+                {
+                    "param_name": t["output_key"] + "_dispersion_param",
+                    "distribution": "uniform",
+                    "distri_params": [lower_sd, upper_sd],
+                },
+            )
+
+    return par_priors
+
+
 def sample_starting_params_from_lhs(par_priors: List[Dict[str, Any]], n_samples: int):
     """
     Use Latin Hypercube Sampling to define MCMC starting points

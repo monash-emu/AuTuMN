@@ -1,14 +1,16 @@
-from apps.covid_19.john_hopkins import download_jh_data, read_john_hopkins_data_from_csv
-from apps.covid_19.who_data import read_who_data_from_csv
-from apps.covid_19.hospital_data import read_hospital_data_from_csv
+from .hospital_data import read_hospital_data_from_csv
 from autumn.plots.streamlit.run_mcmc_plots import load_mcmc_tables
 from autumn.plots.plots import _overwrite_non_accepted_mcmc_runs
+from autumn.inputs import get_john_hopkins_data
+from autumn.calibration.utils import add_dispersion_param_prior_for_gaussian
 import pandas as pd
 import os
 from matplotlib import pyplot as plt
 from autumn.curve import scale_up_function, tanh_based_scaleup
 import numpy as np
 import copy
+
+from .who_data import read_who_data_from_csv
 
 
 def get_prior_distributions_for_opti():
@@ -190,14 +192,12 @@ def get_target_outputs_for_opti(
         jh_start_time = 22  # actual start time in JH csv files
         assert data_start_time >= jh_start_time
 
-        if update_jh_data:
-            download_jh_data()
-
     output_mapping = {"confirmed": "notifications", "deaths": "infection_deathsXall"}
 
     target_outputs = []
     for variable in ["confirmed"]:  #  , "deaths"]:
         if source == "johns_hopkins":
+            data = get_john_hopkins_data(variable, country, latest=update_jh_data)
             data = read_john_hopkins_data_from_csv(variable, country)
             times = [jh_start_time + i for i in range(len(data))]
 
@@ -272,26 +272,6 @@ def get_hospital_targets_for_opti(country, data_start_time=22, data_end_time=152
     ]
 
     return target_outputs
-
-
-def add_dispersion_param_prior_for_gaussian(par_priors, target_outputs):
-    for t in target_outputs:
-        if t["loglikelihood_distri"] == "normal":
-            max_val = max(t["values"])
-            # sd_ that would make the 95% gaussian CI cover half of the max value (4*sd = 95% width)
-            sd_ = 0.25 * max_val / 4.0
-            lower_sd = sd_ / 2.0
-            upper_sd = 2.0 * sd_
-
-            par_priors.append(
-                {
-                    "param_name": t["output_key"] + "_dispersion_param",
-                    "distribution": "uniform",
-                    "distri_params": [lower_sd, upper_sd],
-                },
-            )
-
-    return par_priors
 
 
 def get_weekly_summed_targets(times, values):

@@ -497,11 +497,21 @@ def run_sensitivity_minimum_mixing(output_dir):
                     print("evaluate objective for " + country + " " + str(config) + " " + objective)
                     h, d, yoll, p_immune, _ = objective_function(modified_vars, root_model, mode, country,
                                                                  config, mle_params)
-                    results[country][config][objective][min_mixing] = [h, d, yoll, p_immune]
+                    res_dict = {'h': bool(h), 'd': float(d), 'yoll': float(yoll), 'p_immune': float(p_immune)}
+                    results[country][config][objective][min_mixing] = res_dict
 
     param_file_path = "optimisation_outputs/sensitivity_min_mixing/results.yml"
     with open(param_file_path, "w") as f:
         yaml.dump(results, f)
+    return results
+
+
+def read_sensitivity_min_mix_res():
+    res_path = "optimisation_outputs/sensitivity_min_mixing/results.yml"
+
+    with open(res_path, "r") as yaml_file:
+        results = yaml.safe_load(yaml_file)
+
     return results
 
 
@@ -557,6 +567,9 @@ def get_mixing_matrices(output_dir, country, config=2, mode="by_age", objective=
 if __name__ == "__main__":
     # looping through all countries and optimisation modes for testing purpose
     # optimisation will have to be performed separately for the different countries and modes.
+    # res = read_sensitivity_min_mix_res()
+    # exit()
+
     output_dir = "optimisation_outputs/6Aug2020/"
     run_sensitivity_minimum_mixing(output_dir)
     exit()

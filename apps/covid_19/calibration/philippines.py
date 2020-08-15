@@ -123,8 +123,8 @@ TARGET_OUTPUTS = [
         "output_key": "notifications",
         "years": notification_times,
         "values": notification_values,
-        "loglikelihood_distri": "negative_binomial",
-        "time_weights": assign_trailing_weights_to_halves(5, notification_times),
+        "loglikelihood_distri": "normal",
+        # "time_weights": assign_trailing_weights_to_halves(5, notification_times),
     },
     # {
     #     "output_key": "icu_occupancy",

@@ -377,6 +377,11 @@ def plot_multicountry_waning_immunity(
                 plots.plot_multicountry_waning_immunity(country_scenarios, config, mode, objective, include_config=True)
 
 
+def plot_multicountry_min_mixing_sensitivity(
+    plotter: StreamlitPlotter, app: RegionAppBase, scenarios: list, plot_config: dict
+):
+    plots.plot_multicountry_min_mixing_sensitivity()
+
 
 PLOT_FUNCS = {
     "Compartment sizes": plot_compartment,
@@ -391,6 +396,7 @@ PLOT_FUNCS = {
     "Multicountry optimal plan": plot_multicountry_optimal_plan,
     "Multicountry optimised matrices": plot_multicountry_optimised_matrices,
     "Multicountry waning immunity": plot_multicountry_waning_immunity,
+    "Multicountry min mixing sensitivity": plot_multicountry_min_mixing_sensitivity,
     # "Multicountry mobility data": plot_multicountry_mobility,
 }
 

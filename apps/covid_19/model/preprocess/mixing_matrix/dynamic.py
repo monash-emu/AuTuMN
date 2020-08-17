@@ -14,9 +14,6 @@ def build_dynamic(
     mixing_age_adjust: dict,
     npi_effectiveness_params: dict,
     google_mobility_locations: dict,
-    is_periodic_intervention: bool,
-    periodic_int_params: dict,
-    periodic_end_time: float,
     microdistancing_params: dict,
     smooth_google_data: bool,
 ) -> Callable[[float], np.ndarray]:
@@ -34,9 +31,6 @@ def build_dynamic(
             mixing,
             npi_effectiveness_params,
             google_mobility_locations,
-            is_periodic_intervention,
-            periodic_int_params,
-            periodic_end_time,
             microdistancing_params,
             smooth_google_data,
         )

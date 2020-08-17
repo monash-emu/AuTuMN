@@ -23,9 +23,6 @@ class LocationMixingAdjustment(BaseMixingAdjustment):
         mixing: dict,
         npi_effectiveness_params: dict,
         google_mobility_locations: dict,
-        is_periodic_intervention: bool,
-        periodic_int_params: dict,
-        periodic_end_time: float,
         microdistancing_params: dict,
         smooth_google_data: bool,
     ):
@@ -43,9 +40,6 @@ class LocationMixingAdjustment(BaseMixingAdjustment):
             npi_effectiveness_params,
             google_mobility_values,
             google_mobility_days,
-            is_periodic_intervention,
-            periodic_int_params,
-            periodic_end_time,
         )
         # Build the time variant location adjustment functions from mixing timeseries
         mixing_locations = [loc for loc in LOCATIONS if loc in mixing]
@@ -107,9 +101,6 @@ def update_mixing_data(
     npi_effectiveness_params: dict,
     google_mobility_values: dict,
     google_mobility_days: list,
-    is_periodic_intervention: bool,
-    periodic_int_params: dict,
-    periodic_end_time: float,
 ):
     most_recent_day = google_mobility_days[-1]
     for loc_key in LOCATIONS:
@@ -178,11 +169,6 @@ def update_mixing_data(
                 1 - (1 - val) * npi_adjust_val for val in mixing[loc_key]["values"]
             ]
 
-    # Update the mixing parameters to simulate a future regular periodic process
-    if is_periodic_intervention:
-        mixing["other_locations"] = add_periodic_intervention(
-            periodic_int_params, mixing["other_locations"], periodic_end_time
-        )
     return mixing
 
 
@@ -205,41 +191,3 @@ def parse_values(values):
         new_values.append(new_val)
 
     return new_values
-
-
-def add_periodic_intervention(periodic_int_params, old_other_locations, end_time):
-    """
-    We assume that a proportion 'prop_participating' of the population participates in the intervention and that the
-    other-location contact rates are multiplied by 'other_location_multiplier' for the participating individuals.
-    """
-    # Make a copy of the data
-    other_locations = {
-        "values": list(old_other_locations["values"]),
-        "times": list(old_other_locations["times"]),
-    }
-    # Avoid over-writing existing times, find start and end time
-    t_start = max([periodic_int_params["restart_time"], max(other_locations["times"]) + 1])
-    t = t_start
-    t_end = end_time
-
-    # Extract parameters
-    prop_participating, contact_multiplier, duration, period = (
-        periodic_int_params["prop_participating"],
-        periodic_int_params["contact_multiplier"],
-        periodic_int_params["duration"],
-        periodic_int_params["period"],
-    )
-    reference_val = other_locations["values"][-1]
-
-    # Calculate the value for other locations that the contact rate increases to
-    amplified_val = reference_val * (
-        (1.0 - prop_participating) + contact_multiplier * prop_participating
-    )
-
-    # Extend dictionary of other locations
-    while t < t_end:
-        other_locations["times"] += [t, t + 1, t + 1 + duration]
-        other_locations["values"] += [reference_val, amplified_val, reference_val]
-        t += period
-
-    return other_locations

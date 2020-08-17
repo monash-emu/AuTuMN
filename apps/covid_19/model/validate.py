@@ -59,14 +59,6 @@ validate_params = sb.build_validator(
         ),
     ),
     npi_effectiveness=sb.DictGeneric(str, float),
-    is_periodic_intervention=bool,
-    periodic_intervention=sb.Dict(
-        restart_time=float,
-        prop_participating=float,
-        contact_multiplier=float,
-        duration=float,
-        period=float,
-    ),
     google_mobility_locations=sb.DictGeneric(str, sb.List(str)),
     smooth_google_data=bool,
     # Something to do with travellers?

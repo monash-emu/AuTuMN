@@ -179,13 +179,6 @@ universal_death_rate: 0.
 mixing: {}
 mixing_age_adjust: {}
 npi_effectiveness: {}
-is_periodic_intervention: false
-periodic_intervention:
-  restart_time: 0
-  prop_participating: 0.
-  contact_multiplier: 1.
-  duration: 7.
-  period: 1.
 
 int_detection_gap_reduction: 0.
 

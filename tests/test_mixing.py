@@ -45,17 +45,11 @@ def test_update_mixing_data__with_only_mobility_data():
     npi_effectiveness_params = {}
     google_mobility_values = {"work": [1.1, 1.2, 1.3, 1.4], "other_locations": [1.5, 1.6, 1.7, 1.8]}
     google_mobility_days = [0, 1, 2, 3]
-    is_periodic_intervention = False
-    periodic_int_params = None
-    periodic_end_time = None
     actual_mixing = adjust_location.update_mixing_data(
         mixing,
         npi_effectiveness_params,
         google_mobility_values,
         google_mobility_days,
-        is_periodic_intervention,
-        periodic_int_params,
-        periodic_end_time,
     )
     assert actual_mixing == {
         "work": {"values": [1.1, 1.2, 1.3, 1.4], "times": [0, 1, 2, 3],},
@@ -86,17 +80,11 @@ def test_update_mixing_data__with_user_specified_values():
     npi_effectiveness_params = {}
     google_mobility_values = {"work": [1.1, 1.2, 1.3, 1.4], "other_locations": [1.5, 1.6, 1.7, 1.8]}
     google_mobility_days = [0, 1, 2, 3]
-    is_periodic_intervention = False
-    periodic_int_params = None
-    periodic_end_time = None
     actual_mixing = adjust_location.update_mixing_data(
         mixing,
         npi_effectiveness_params,
         google_mobility_values,
         google_mobility_days,
-        is_periodic_intervention,
-        periodic_int_params,
-        periodic_end_time,
     )
     assert actual_mixing == {
         "work": {"values": [1.1, 1.2, 1.3, 1.4, 1.54, 1.6], "times": [0, 1, 2, 3, 4, 5]},
@@ -124,18 +112,12 @@ def test_update_mixing_data__with_user_specified_values__out_of_date():
     npi_effectiveness_params = {}
     google_mobility_values = {"work": [1.1, 1.2, 1.3, 1.4]}
     google_mobility_days = [0, 1, 2, 3]
-    is_periodic_intervention = False
-    periodic_int_params = None
-    periodic_end_time = None
     with pytest.raises(AssertionError):
         adjust_location.update_mixing_data(
             mixing,
             npi_effectiveness_params,
             google_mobility_values,
             google_mobility_days,
-            is_periodic_intervention,
-            periodic_int_params,
-            periodic_end_time,
         )
 
 
@@ -164,9 +146,6 @@ def test_update_mixing_data__with_user_specified_values__missing_data_append():
             npi_effectiveness_params,
             google_mobility_values,
             google_mobility_days,
-            is_periodic_intervention,
-            periodic_int_params,
-            periodic_end_time,
         )
 
 
@@ -187,18 +166,12 @@ def test_update_mixing_data__with_user_specified_values__date_clash_append():
     npi_effectiveness_params = {}
     google_mobility_values = {"work": [1.1, 1.2, 1.3, 1.4]}
     google_mobility_days = [0, 1, 2, 3]
-    is_periodic_intervention = False
-    periodic_int_params = None
-    periodic_end_time = None
     with pytest.raises(AssertionError):
         adjust_location.update_mixing_data(
             mixing,
             npi_effectiveness_params,
             google_mobility_values,
             google_mobility_days,
-            is_periodic_intervention,
-            periodic_int_params,
-            periodic_end_time,
         )
 
 
@@ -228,9 +201,6 @@ def test_build_dynamic__with_no_changes():
         mixing_age_adjust={},
         npi_effectiveness_params=npi_effectiveness_params,
         google_mobility_locations=google_mobility_locations,
-        is_periodic_intervention=is_periodic_intervention,
-        periodic_int_params=periodic_int_params,
-        periodic_end_time=365,
         microdistancing_params=microdistancing_params,
         smooth_google_data=smooth_google_data,
     )
@@ -272,9 +242,6 @@ def test_build_dynamic__with_mobility_data(monkeypatch):
         mixing_age_adjust={},
         npi_effectiveness_params=npi_effectiveness_params,
         google_mobility_locations=google_mobility_locations,
-        is_periodic_intervention=is_periodic_intervention,
-        periodic_int_params=periodic_int_params,
-        periodic_end_time=365,
         microdistancing_params=microdistancing_params,
         smooth_google_data=smooth_google_data,
     )
@@ -328,9 +295,6 @@ def test_build_dynamic__smoke_test():
         mixing_age_adjust={},
         npi_effectiveness_params={},
         google_mobility_locations=google_mobility_locations,
-        is_periodic_intervention=False,
-        periodic_int_params={},
-        periodic_end_time=365,
         microdistancing_params={},
         smooth_google_data=True,
     )

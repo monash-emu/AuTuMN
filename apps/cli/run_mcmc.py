@@ -8,8 +8,8 @@ You can access this script from your CLI by running:
 """
 import click
 
-from apps.covid_19 import calibration as covid_calibration
-from apps.covid_19.calibration.base import run_full_models_for_mcmc
+from apps import covid_19
+from apps.covid_19.calibration import run_full_models_for_mcmc
 
 
 @click.group()
@@ -19,7 +19,7 @@ def run_mcmc():
     """
 
 
-for region in covid_calibration.CALIBRATIONS.keys():
+for region in covid_19.app.region_names:
 
     @run_mcmc.command(region)
     @click.argument("burn_in", type=int)

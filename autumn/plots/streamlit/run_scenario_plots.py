@@ -9,66 +9,58 @@ import streamlit as st
 from autumn.db.models import load_model_scenarios
 from autumn.plots import plots
 from autumn.plots.plotter import StreamlitPlotter
-from autumn.tool_kit.model_register import RegionAppBase
-from apps.covid_19.preprocess.mixing_matrix.adjust_location import (
+from autumn.tool_kit.model_register import AppRegion
+from apps.covid_19.model.preprocess.mixing_matrix.adjust_location import (
     LocationMixingAdjustment,
     LOCATIONS,
     MICRODISTANCING_LOCATIONS,
 )
 
-from . import selectors, utils
+from . import selectors
 
 
 def run_scenario_plots():
-    app_name, app_dirpath = selectors.app(run_type="run")
+    app_name, app_dirpath = selectors.app_name(run_type="run")
     if not app_name:
         st.write("No applications have been run yet")
         return
 
-    param_set_name, param_set_dirpath = selectors.param_set(app_dirpath)
-    if not param_set_name:
+    region_name, region_dirpath = selectors.region_name(app_dirpath)
+    if not region_name:
         st.write("No parameter set folder found")
         return
 
-    run_datestr, run_dirpath = selectors.model_run(param_set_dirpath)
+    run_datestr, run_dirpath = selectors.model_run(region_dirpath)
     if not run_datestr:
         st.write("No model run folder found")
         return
 
-    params = utils.load_params(run_dirpath)
-    plot_config = utils.load_plot_config(app_name, param_set_name)
+    # Import the app so we can re-build the model if we need to
+    app_module = import_module(f"apps.{app_name}")
+    app_region = app_module.app.get_region(region_name)
 
     # Get database from model data dir.
     db_path = os.path.join(run_dirpath, "outputs.db")
-    scenarios = load_model_scenarios(db_path, params)
+    scenarios = load_model_scenarios(db_path, app_region.params)
 
     # Create plotter which will write to streamlit UI.
-    translations = plot_config["translations"]
-    plotter = StreamlitPlotter(translations)
-
-    # Import the app so we can re-build the model if we need to
-    app_module = import_module(f"apps.{app_name}")
-    region_app = app_module.get_region_app(param_set_name)
+    plotter = StreamlitPlotter(app_region.targets)
 
     # Get user to select plot type / scenario
     plot_type = st.sidebar.selectbox("Select plot type", list(PLOT_FUNCS.keys()))
     plot_func = PLOT_FUNCS[plot_type]
-    plot_func(plotter, region_app, scenarios, plot_config)
+    plot_func(plotter, app_region, scenarios)
 
 
-def plot_outputs_multi(
-    plotter: StreamlitPlotter, app: RegionAppBase, scenarios: list, plot_config: dict
-):
+def plot_outputs_multi(plotter: StreamlitPlotter, app: AppRegion, scenarios: list):
     chosen_scenarios = selectors.scenarios(scenarios)
     if chosen_scenarios:
-        output_config = model_output_selector(chosen_scenarios, plot_config)
+        output_config = model_output_selector(chosen_scenarios, app.targets)
         is_logscale = st.sidebar.checkbox("Log scale")
         plots.plot_outputs_multi(plotter, chosen_scenarios, output_config, is_logscale)
 
 
-def plot_compartment(
-    plotter: StreamlitPlotter, app: RegionAppBase, scenarios: list, plot_config: dict
-):
+def plot_compartment(plotter: StreamlitPlotter, app: AppRegion, scenarios: list):
     chosen_scenarios = selectors.scenarios(scenarios)
     if chosen_scenarios:
         is_logscale = st.sidebar.checkbox("Log scale")
@@ -92,18 +84,14 @@ def plot_compartment(
                 st.write("Compartment does not exist")
 
 
-def plot_compartment_aggregate(
-    plotter: StreamlitPlotter, app: RegionAppBase, scenarios: list, plot_config: dict
-):
+def plot_compartment_aggregate(plotter: StreamlitPlotter, app: AppRegion, scenarios: list):
     is_logscale = st.sidebar.checkbox("Log scale")
     names = selectors.multi_compartment(scenarios[0].model)
     plots.plot_agg_compartments_multi_scenario(plotter, scenarios, names, is_logscale)
     st.write(names)
 
 
-def plot_dynamic_inputs(
-    plotter: StreamlitPlotter, app: RegionAppBase, scenarios: list, plot_config: dict
-):
+def plot_dynamic_inputs(plotter: StreamlitPlotter, app: AppRegion, scenarios: list):
     # Just use the base scenario for now
     chosen_scenarios = selectors.scenarios(scenarios, include_all=False)
     scenario = chosen_scenarios[0]
@@ -116,9 +104,7 @@ def plot_dynamic_inputs(
     plots.plot_time_varying_input(plotter, tv_key, tv_func, model.times, is_logscale)
 
 
-def plot_location_mixing(
-    plotter: StreamlitPlotter, app: RegionAppBase, scenarios: list, plot_config: dict
-):
+def plot_location_mixing(plotter: StreamlitPlotter, app: AppRegion, scenarios: list):
     chosen_scenarios = selectors.scenarios(scenarios, include_all=False)
     scenario = chosen_scenarios[0]
 
@@ -163,7 +149,7 @@ def plot_location_mixing(
 
 
 def plot_stacked_compartments_by_stratum(
-    plotter: StreamlitPlotter, app: RegionAppBase, scenarios: list, plot_config: dict
+    plotter: StreamlitPlotter, app: AppRegion, scenarios: list
 ):
     chosen_scenarios = selectors.scenarios(scenarios)
     compartment = selectors.single_compartment(chosen_scenarios[0].model).split("X")[0]
@@ -173,7 +159,7 @@ def plot_stacked_compartments_by_stratum(
 
 
 def plot_stacked_derived_outputs_by_stratum(
-    plotter: StreamlitPlotter, app: RegionAppBase, scenarios: list, plot_config: dict
+    plotter: StreamlitPlotter, app: AppRegion, scenarios: list
 ):
     chosen_scenarios = selectors.scenarios(scenarios)
     output_config = model_output_selector(chosen_scenarios, plot_config)
@@ -185,9 +171,7 @@ def plot_stacked_derived_outputs_by_stratum(
     st.write(derived_output)
 
 
-def plot_multicountry_rainbow(
-    plotter: StreamlitPlotter, app: RegionAppBase, scenarios: list, plot_config: dict
-):
+def plot_multicountry_rainbow(plotter: StreamlitPlotter, app: AppRegion, scenarios: list):
     countries = ["belgium", "france", "italy", "spain", "sweden", "united-kingdom"]
     root_path = os.path.join("data", "outputs", "run", "covid_19")
 
@@ -221,9 +205,7 @@ def plot_multicountry_rainbow(
                 plots.plot_multicountry_rainbow(country_scenarios, config, mode, objective)
 
 
-def plot_multicounty_hospital(
-    plotter: StreamlitPlotter, app: RegionAppBase, scenarios: list, plot_config: dict
-):
+def plot_multicounty_hospital(plotter: StreamlitPlotter, app: AppRegion, scenarios: list):
     countries = ["belgium", "france", "italy", "spain", "sweden", "united-kingdom"]
     root_path = os.path.join("data", "outputs", "run", "covid_19")
 
@@ -267,13 +249,13 @@ PLOT_FUNCS = {
 }
 
 
-def model_output_selector(scenarios, plot_config):
+def model_output_selector(scenarios, targets):
     """
     Allow user to select the output that they want to select.
     Returns an output config dictionary.
     """
     # Get a list of all the outputs requested by user
-    outputs_to_plot = plot_config["outputs_to_plot"]
+    outputs_to_plot = list(targets.values())
 
     # Get a list of all possible output names
     output_names = []
@@ -302,8 +284,8 @@ def model_output_selector(scenarios, plot_config):
 
     # Construct an output config for the plotting code.
     try:
-        output_config = next(o for o in outputs_to_plot if o["name"] == output_name)
+        output_config = next(o for o in outputs_to_plot if o["output_key"] == output_name)
     except StopIteration:
-        output_config = {"name": output_name, "target_values": [], "target_times": []}
+        output_config = {"output_key": output_name, "values": [], "times": []}
 
     return output_config

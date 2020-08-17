@@ -85,7 +85,7 @@ def multi_compartment(model: StratifiedModel) -> List[str]:
     return chosen_compartment_names
 
 
-def app(run_type) -> Tuple[str, str]:
+def app_name(run_type) -> Tuple[str, str]:
     """
     Selector for users to choose which app they want to select
     from the model output data directory.
@@ -100,7 +100,7 @@ def app(run_type) -> Tuple[str, str]:
     return chosen_dirname, os.path.join(run_outputs_path, chosen_dirname)
 
 
-def param_set(app_output_path: str) -> Tuple[str, str]:
+def region_name(app_output_path: str) -> Tuple[str, str]:
     """
     Selector for users to choose which parameter set they want to select
     for a given application

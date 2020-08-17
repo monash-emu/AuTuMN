@@ -6,7 +6,6 @@ from autumn.tool_kit import export_mcmc_quantiles
 from autumn.plots import plots
 from autumn.plots.plotter import FilePlotter
 from autumn.db import Database
-from apps.covid_19.plots import load_plot_config
 
 logger = logging.getLogger(__name__)
 

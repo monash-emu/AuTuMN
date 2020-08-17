@@ -9,37 +9,38 @@ import streamlit as st
 
 from autumn.db import Database
 from autumn.tool_kit.uncertainty import collect_all_mcmc_output_tables
+from autumn.tool_kit.params import load_targets
 from autumn.plots import plots
 from autumn.plots.plotter import StreamlitPlotter
 from autumn.calibration.utils import collect_map_estimate, print_reformated_map_parameters
 
-from . import selectors, utils
+from . import selectors
 
 
 def run_mcmc_plots():
-    app_name, app_dirpath = selectors.app(run_type="calibrate")
+    app_name, app_dirpath = selectors.app_name(run_type="calibrate")
     if not app_name:
         st.write("No calibrations have been run yet")
         return
 
-    param_set_name, param_set_dirpath = selectors.param_set(app_dirpath)
-    if not param_set_name:
-        st.write("No parameter set folder found")
+    region_name, region_dirpath = selectors.region_name(app_dirpath)
+    if not region_name:
+        st.write("No region folder found")
         return
 
-    calib_name, calib_dirpath = selectors.calibration_run(param_set_dirpath)
+    calib_name, calib_dirpath = selectors.calibration_run(region_dirpath)
     if not calib_name:
         st.write("No model run folder found")
         return
 
     # Load MCMC tables
     mcmc_tables = load_mcmc_tables(calib_dirpath)
-    plot_config = utils.load_plot_config(app_name, param_set_name)
+    targets = load_targets(app_name, region_name)
 
-    plotter = StreamlitPlotter({})
+    plotter = StreamlitPlotter(targets)
     plot_type = st.sidebar.selectbox("Select plot type", list(PLOT_FUNCS.keys()))
     plot_func = PLOT_FUNCS[plot_type]
-    plot_func(plotter, calib_dirpath, mcmc_tables, plot_config)
+    plot_func(plotter, calib_dirpath, mcmc_tables, targets)
 
 
 def load_mcmc_tables(calib_dirpath: str):
@@ -70,14 +71,14 @@ def _find_db_paths(calib_dirpath: str):
 
 
 def plot_mcmc_parameter_trace(
-    plotter: StreamlitPlotter, calib_dir_path: str, mcmc_tables: List[pd.DataFrame], plot_config={},
+    plotter: StreamlitPlotter, calib_dir_path: str, mcmc_tables: List[pd.DataFrame], targets: dict,
 ):
     chosen_param = parameter_selector(mcmc_tables[0])
     plots.plot_mcmc_parameter_trace(plotter, mcmc_tables, chosen_param)
 
 
 def plot_loglikelihood_trace(
-    plotter: StreamlitPlotter, calib_dir_path: str, mcmc_tables: List[pd.DataFrame], plot_config={},
+    plotter: StreamlitPlotter, calib_dir_path: str, mcmc_tables: List[pd.DataFrame], targets: dict,
 ):
     burn_in = burn_in_selector(mcmc_tables)
     plots.plot_loglikelihood_trace(plotter, mcmc_tables, burn_in)
@@ -86,7 +87,7 @@ def plot_loglikelihood_trace(
 
 
 def plot_posterior(
-    plotter: StreamlitPlotter, calib_dir_path: str, mcmc_tables: List[pd.DataFrame], plot_config={},
+    plotter: StreamlitPlotter, calib_dir_path: str, mcmc_tables: List[pd.DataFrame], targets: dict,
 ):
     chosen_param = parameter_selector(mcmc_tables[0])
     num_bins = st.sidebar.slider("Number of bins", 1, 50, 16)
@@ -94,7 +95,7 @@ def plot_posterior(
 
 
 def plot_loglikelihood_vs_parameter(
-    plotter: StreamlitPlotter, calib_dir_path: str, mcmc_tables: List[pd.DataFrame], plot_config={},
+    plotter: StreamlitPlotter, calib_dir_path: str, mcmc_tables: List[pd.DataFrame], targets: dict,
 ):
     burn_in = burn_in_selector(mcmc_tables)
     non_param_cols = ["idx", "Scenario", "loglikelihood", "accept"]
@@ -104,7 +105,7 @@ def plot_loglikelihood_vs_parameter(
 
 
 def plot_timeseries_with_uncertainty(
-    plotter: StreamlitPlotter, calib_dir_path: str, mcmc_tables: List[pd.DataFrame], plot_config={},
+    plotter: StreamlitPlotter, calib_dir_path: str, mcmc_tables: List[pd.DataFrame], targets: dict,
 ):
     derived_output_tables = load_derived_output_tables(calib_dir_path)
     # Choose one or more scenarios
@@ -127,12 +128,12 @@ def plot_timeseries_with_uncertainty(
         chosen_output,
         scenario_indices=chosen_scenarios,
         burn_in=burn_in,
-        plot_config=plot_config,
+        targets=targets,
     )
 
 
 def plot_calibration_fit(
-    plotter: StreamlitPlotter, calib_dir_path: str, mcmc_tables: List[pd.DataFrame], plot_config={},
+    plotter: StreamlitPlotter, calib_dir_path: str, mcmc_tables: List[pd.DataFrame], targets: dict,
 ):
     derived_output_tables = load_derived_output_tables(calib_dir_path)
 
@@ -147,12 +148,12 @@ def plot_calibration_fit(
     )
     is_logscale = st.sidebar.checkbox("Log scale")
     plots.plot_calibration_fit(
-        plotter, chosen_output, outputs, best_chain_index, plot_config, is_logscale
+        plotter, chosen_output, outputs, best_chain_index, targets, is_logscale
     )
 
 
 def print_mle_parameters(
-    plotter: StreamlitPlotter, calib_dir_path: str, mcmc_tables: List[pd.DataFrame], plot_config={},
+    plotter: StreamlitPlotter, calib_dir_path: str, mcmc_tables: List[pd.DataFrame], targets: dict,
 ):
     mle_params, _ = collect_map_estimate(calib_dir_path)
     print_reformated_map_parameters(mle_params)

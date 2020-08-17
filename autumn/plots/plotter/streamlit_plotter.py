@@ -8,8 +8,8 @@ class StreamlitPlotter(BasePlotter):
     Plots stuff in Streamlit.
     """
 
-    def __init__(self, translation_dict: dict):
-        self.translation_dict = translation_dict
+    def __init__(self, targets: dict):
+        self.translation_dict = {t["output_key"]: t["title"] for t in targets.values()}
 
     def save_figure(self, fig, filename: str, subdir=None, title_text=None):
         if title_text:

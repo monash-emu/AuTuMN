@@ -9,8 +9,8 @@ class FilePlotter(BasePlotter):
     Plots stuff to a PNG file.
     """
 
-    def __init__(self, out_dir: str, translation_dict: dict):
-        self.translation_dict = translation_dict
+    def __init__(self, out_dir: str, targets: dict):
+        self.translation_dict = {t["output_key"]: t["title"] for t in targets.values()}
         self.out_dir = out_dir
 
     def save_figure(self, fig, filename: str, subdir=None, title_text=None):

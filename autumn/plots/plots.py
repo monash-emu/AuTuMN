@@ -16,7 +16,6 @@ from summer.model.strat_model import StratifiedModel
 
 from autumn.inputs import get_country_mixing_matrix
 from autumn.tool_kit.scenarios import Scenario
-from autumn.tool_kit import schema_builder as sb
 from autumn.tool_kit.uncertainty import export_mcmc_quantiles
 from autumn.db.database import Database
 import matplotlib.gridspec as gridspec
@@ -25,17 +24,6 @@ import matplotlib.gridspec as gridspec
 from .plotter import Plotter, COLOR_THEME
 
 logger = logging.getLogger(__name__)
-
-
-# Schema used to validate output plotting configuration data.
-validate_plot_config = sb.build_validator(
-    # A list of translation mappings used to format plot titles.
-    translations=sb.DictGeneric(str, str),
-    # List of derived / generated outputs to plot
-    outputs_to_plot=sb.List(
-        sb.Dict(name=str, target_times=sb.List(float), target_values=sb.List(sb.List(float)))
-    ),
-)
 
 
 def plot_mcmc_parameter_trace(plotter: Plotter, mcmc_tables: List[pd.DataFrame], param_name: str):
@@ -184,12 +172,7 @@ def sample_outputs_for_calibration_fit(
 
 
 def plot_calibration_fit(
-    plotter: Plotter,
-    output_name: str,
-    outputs: list,
-    best_chain_index,
-    plot_config={},
-    is_logscale=False,
+    plotter: Plotter, output_name: str, outputs: list, best_chain_index, targets, is_logscale=False,
 ):
     fig, axis, _, _, _ = plotter.get_figure()
 
@@ -204,20 +187,19 @@ def plot_calibration_fit(
     axis.plot(outputs[-1][0], outputs[-1][1], linestyle=(0, (1, 3)), color="black", linewidth=3)
 
     # Add plot targets
-    output_config = {"name": output_name, "target_values": [], "target_times": []}
-    outputs_to_plot = plot_config.get("outputs_to_plot", [])
-    for o in outputs_to_plot:
-        if o["name"] == output_name:
-            output_config = o
+    output_config = {"output_key": output_name, "values": [], "times": []}
+    for t in targets.values():
+        if t["output_key"] == output_name:
+            output_config = t
 
-    target_values = output_config["target_values"]
-    target_times = output_config["target_times"]
-    _plot_targets_to_axis(axis, target_values, target_times, on_uncertainty_plot=False)
+    values = output_config["values"]
+    times = output_config["times"]
+    _plot_targets_to_axis(axis, values, times, on_uncertainty_plot=False)
 
     # Find upper limit for y-axis
-    if target_values:
+    if values:
         upper_buffer = 2.0
-        max_target = max([i[0] for i in target_values])
+        max_target = max(values)
         upper_ylim = (
             max_value if max_value < max_target * upper_buffer else max_target * upper_buffer
         )
@@ -253,12 +235,7 @@ def plot_calibration_fit(
 
 
 def plot_timeseries_with_uncertainty_for_powerbi(
-    plotter: Plotter,
-    output_name: str,
-    scenario_name: str,
-    quantiles: dict,
-    times: list,
-    plot_config={},
+    plotter: Plotter, output_name: str, scenario_name: str, quantiles: dict, times: list, targets,
 ):
     fig, axis, _, _, _ = plotter.get_figure()
     axis.fill_between(times, quantiles[0.025], quantiles[0.975], facecolor="lightsteelblue")
@@ -266,15 +243,14 @@ def plot_timeseries_with_uncertainty_for_powerbi(
     axis.plot(times, quantiles[0.50], color="navy")
 
     # Add plot targets
-    output_config = {"name": output_name, "target_values": [], "target_times": []}
-    outputs_to_plot = plot_config.get("outputs_to_plot", [])
-    for o in outputs_to_plot:
-        if o["name"] == output_name:
-            output_config = o
+    output_config = {"values": [], "times": []}
+    for t in targets.values():
+        if t["output_key"] == output_name:
+            output_config = t
 
-    target_values = output_config["target_values"]
-    target_times = output_config["target_times"]
-    _plot_targets_to_axis(axis, target_values, target_times, on_uncertainty_plot=True)
+    values = output_config["values"]
+    times = output_config["times"]
+    _plot_targets_to_axis(axis, values, times, on_uncertainty_plot=True)
 
     axis.set_xlabel("time")
     axis.set_ylabel(output_name)
@@ -291,7 +267,7 @@ def plot_timeseries_with_uncertainty(
     output_name: str,
     scenario_indices,
     burn_in,
-    plot_config={},
+    targets,
 ):
     percentile_db_path = os.path.join(
         path_to_percentile_outputs, "mcmc_percentiles_burned_" + str(burn_in) + ".db"
@@ -312,15 +288,16 @@ def plot_timeseries_with_uncertainty(
         axis.fill_between(df.times, df.q_2_5, df.q_97_5, facecolor="lightsteelblue")
         axis.fill_between(df.times, df.q_25, df.q_75, facecolor="cornflowerblue")
         axis.plot(df.times, df.q_50, color="navy")
-    try:
-        output_config = next(o for o in plot_config["outputs_to_plot"] if o["name"] == output_name)
-    except StopIteration:
-        output_config = {"name": output_name, "target_values": [], "target_times": []}
 
-    target_values = output_config["target_values"]
-    # target_values = [[t_list[0] * 32.364904] for t_list in target_values] # for Malaysia ICU prev
-    target_times = output_config["target_times"]
-    _plot_targets_to_axis(axis, target_values, target_times, on_uncertainty_plot=True)
+    output_config = {"values": [], "times": []}
+    for t in targets.values():
+        if t["output_key"] == output_name:
+            output_config = t
+
+    values = output_config["values"]
+    times = output_config["times"]
+
+    _plot_targets_to_axis(axis, values, times, on_uncertainty_plot=True)
     axis.set_xlabel("time")
     axis.set_ylabel(output_name)
 
@@ -422,7 +399,7 @@ def plot_outputs_multi(
     Plot the model derived/generated outputs requested by the user for multiple single scenarios, on one plot.
     """
     fig, axis, _, _, _ = plotter.get_figure()
-    output_name = output_config["name"]
+    output_name = output_config["output_key"]
     legend = []
     for idx, scenario in enumerate(reversed(scenarios)):
         color_idx = len(scenarios) - idx - 1
@@ -430,9 +407,9 @@ def plot_outputs_multi(
         legend.append(scenario.name)
 
     axis.legend(legend)
-    target_values = output_config["target_values"]
-    target_times = output_config["target_times"]
-    _plot_targets_to_axis(axis, target_values, target_times)
+    values = output_config["values"]
+    times = output_config["times"]
+    _plot_targets_to_axis(axis, values, times)
     if is_logscale:
         axis.set_yscale("log")
 
@@ -473,31 +450,22 @@ def _plot_outputs_to_axis(axis, scenario: Scenario, name: str, color_idx=0, alph
         logger.error("Could not plot output named %s - non-list data format.", name)
 
 
-def _plot_targets_to_axis(
-    axis, target_values: List[float], target_times: List[int], on_uncertainty_plot=False
-):
+def _plot_targets_to_axis(axis, values: List[float], times: List[int], on_uncertainty_plot=False):
     """
     Plot output value calibration targets as points on the axis.
+    # TODO: add back ability to plot confidence interval
+    x_vals = [time, time]
+    axis.plot(x_vals, values[1:], "m", linewidth=1, color="red")
+    axis.scatter(time, values[0], marker="o", color="red", s=30)
+    axis.scatter(time, values[0], marker="o", color="white", s=10)
     """
-    assert len(target_times) == len(target_values), "Targets have inconsistent length"
-    for i, time in enumerate(target_times):
-        values = target_values[i]
-        is_confidence_interval = len(values) > 1
-        if is_confidence_interval:
-            # Plot confidence interval
-            x_vals = [time, time]
-            axis.plot(x_vals, values[1:], "m", linewidth=1, color="red")
-
-            axis.scatter(time, values[0], marker="o", color="red", s=30)
-            axis.scatter(time, values[0], marker="o", color="white", s=10)
-        else:
-            # Plot a single point estimate
-            value = values[0]
-            if on_uncertainty_plot:
-                axis.scatter(time, value, marker="o", color="black", s=10)
-            else:
-                axis.scatter(time, value, marker="o", color="red", s=30, zorder=999)
-                axis.scatter(time, value, marker="o", color="white", s=10, zorder=999)
+    assert len(times) == len(values), "Targets have inconsistent length"
+    # Plot a single point estimate
+    if on_uncertainty_plot:
+        axis.scatter(times, values, marker="o", color="black", s=10)
+    else:
+        axis.scatter(times, values, marker="o", color="red", s=30, zorder=999)
+        axis.scatter(times, values, marker="o", color="white", s=10, zorder=999)
 
 
 def plot_exponential_growth_rate(plotter: Plotter, model: StratifiedModel):

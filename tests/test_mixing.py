@@ -10,9 +10,9 @@ import pytest
 import numpy as np
 from numpy.testing import assert_array_equal
 
-from apps.covid_19.preprocess import mixing_matrix
-from apps.covid_19.preprocess.mixing_matrix import adjust_location
-from apps.covid_19.preprocess.mixing_matrix.utils import BASE_DATE
+from apps.covid_19.model.preprocess import mixing_matrix
+from apps.covid_19.model.preprocess.mixing_matrix import adjust_location
+from apps.covid_19.model.preprocess.mixing_matrix.utils import BASE_DATE
 
 
 @pytest.mark.parametrize(

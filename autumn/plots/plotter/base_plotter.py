@@ -54,30 +54,7 @@ class BasePlotter(ABC):
         """
         Get a more readable version of a string for figure title.
         """
-        if title in self.translation_dict.keys():
-            return self.translation_dict[title]
-        elif title[0:22] == "distribution_of_strata":
-            return "Population distribution by " + title.split("X")[1]
-        elif title[0:4] == "prev":
-            char = "Prevalence of "
-            numerator_groups = title.split("among")[0].split("X")[1:]
-            for group in numerator_groups:
-                char += group + " "
-
-            subgroup = title.split("among")[1]
-            if len(subgroup) > 0:
-                char += "("
-                need_comma = False
-                for group in subgroup.split("X"):
-                    if len(group) > 0:
-                        if need_comma:
-                            char += ", "
-                        char += group
-                        need_comma = True
-                char += ")"
-            return char
-        else:
-            return title
+        return self.translation_dict.get(title, title)
 
     def tidy_x_axis(self, axis, start, end, max_dims, labels_off=False, x_label=None):
         """

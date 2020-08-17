@@ -11,6 +11,29 @@ from autumn.constants import APPS_PATH
 from autumn.tool_kit.utils import merge_dicts
 
 
+def load_targets(app_name: str, region_name: str):
+    """
+    Load calibration targets from a YAML file
+    """
+    region_name = region_name.replace("-", "_")
+
+    region_path = path.join(APPS_PATH, app_name, "regions")
+    region_dirnames = [
+        d
+        for d in os.listdir(region_path)
+        if path.isdir(path.join(region_path, d)) and not d == "__pycache__"
+    ]
+    assert region_name in region_dirnames, f"Region name {region_name} is not in {region_dirnames}"
+    region_dir = path.join(region_path, region_name)
+
+    # Load app default param config
+    targets_path = path.join(region_dir, "targets.yml")
+    with open(targets_path, "r") as f:
+        targets = yaml.safe_load(f)
+
+    return targets
+
+
 def load_params(app_name: str, region_name: str):
     """
     Load  parameters for the requested app and region.
@@ -19,21 +42,24 @@ def load_params(app_name: str, region_name: str):
     The data structure returned by this function is a little wonky for
     backwards compatibility reasons.
     """
-
-    param_path = path.join(APPS_PATH, app_name, "params")
-    assert path.exists(param_path), f"App name {app_name} not found at {param_path}"
-    param_dirnames = [
-        d
-        for d in os.listdir(param_path)
-        if path.isdir(path.join(param_path, d)) and not d == "__pycache__"
-    ]
-    assert region_name in param_dirnames, f"Region name {region_name} is not in {param_dirnames}"
-    app_param_dir = path.join(param_path, region_name)
+    region_name = region_name.replace("-", "_")
 
     # Load base param config
-    base_yaml_path = path.join(param_path, "base.yml")
+    base_yaml_path = path.join(APPS_PATH, app_name, "params.yml")
+    assert path.exists(
+        base_yaml_path
+    ), f"App name {app_name} base parameters not found at {param_path}"
     with open(base_yaml_path, "r") as f:
         base_params = yaml.safe_load(f)
+
+    region_path = path.join(APPS_PATH, app_name, "regions")
+    region_dirnames = [
+        d
+        for d in os.listdir(region_path)
+        if path.isdir(path.join(region_path, d)) and not d == "__pycache__"
+    ]
+    assert region_name in region_dirnames, f"Region name {region_name} is not in {region_dirnames}"
+    app_param_dir = path.join(region_path, region_name, "params")
 
     # Load app default param config
     default_param_path = path.join(app_param_dir, "default.yml")

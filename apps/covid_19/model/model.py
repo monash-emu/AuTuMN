@@ -196,16 +196,18 @@ def build_model(params: dict) -> StratifiedModel:
             int_detect_gap_reduction = params["int_detection_gap_reduction"]
             return base_prop_detect(t) + (1.0 - base_prop_detect(t)) * int_detect_gap_reduction
 
-    # Determine how many people who are imported are detected... or something like that.
-    # Age dependent proportions of infected people who become symptomatic
+    # Determine how many importations there are, including the undetected and asymptomatic importations
     # This is defined 8x10 year bands, 0-70+, which we transform into 16x5 year bands 0-75+
     symptomatic_props = repeat_list_elements(2, params["symptomatic_props"])
-    import_representative_age = params["import_representative_age"]
-    age_idx = agegroup_strata.index(import_representative_age)
-    import_symptomatic_props = symptomatic_props[age_idx]
+    import_symptomatic_prop = \
+        sum(
+            [import_prop * sympt_prop
+             for import_prop, sympt_prop in
+             zip(params['importation_props_by_age'].values(), symptomatic_props)]
+        )
 
     def modelled_abs_detection_proportion_imported(t):
-        return import_symptomatic_props * detected_proportion(t)
+        return import_symptomatic_prop * detected_proportion(t)
 
     # Set time-variant importation rate for the importation flow.
     if implement_importation:

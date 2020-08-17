@@ -17,8 +17,4 @@ mixing:
       - 1
       - 0
       - 0
-<<<<<<< HEAD:apps/covid_19/params/philippines/default.yml
-      - 0 
-=======
       - 0
->>>>>>> Restructure COVID app:apps/covid_19/regions/philippines/params/default.yml

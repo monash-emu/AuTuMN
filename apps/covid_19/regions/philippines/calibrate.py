@@ -33,16 +33,8 @@ TARGET_OUTPUTS = [
         "loglikelihood_distri": "normal",
 #        "time_weights": assign_trailing_weights_to_halves(5, notifications["times"]),
     },
-#    {
-#        "output_key": "icu_occupancy",
-#        "years": icu_occupancy["times"],
-#        "values": icu_occupancy["values"],
-#        "loglikelihood_distri": "negative_binomial",
-#        "time_weights": list(range(1, len(icu_occupancy["times"]) + 1)),
-#    },
 ]
 
 PAR_PRIORS = provide_default_calibration_params()
 PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "notifications")
-# PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "icu_occupancy")
 PAR_PRIORS = add_standard_philippines_params(PAR_PRIORS)

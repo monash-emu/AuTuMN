@@ -260,60 +260,63 @@ def stratify_by_clinical(model, params, compartments, detected_proportion, sympt
             params["import_representative_age"]
         to_infectious_key = \
             f"within_{Compartment.EARLY_EXPOSED}Xagegroup_{represent_age_group}"
-        tvs = \
-            model.time_variants
+        tvs, importation_props_by_clinical = \
+            model.time_variants, {}
 
-        # Create scale-up function for quarantine
-        quarantine_scale_up = \
-            scale_up_function(
-                traveller_quarantine["times"], traveller_quarantine["values"], method=4
-            )
+        for agegroup in agegroup_strata:
 
-        # Clinical proportions for imported cases stay fixed for the hospitalised and critical groups (last two strata)
-        importation_props_by_clinical = \
-            {
-                stratum: float(flow_adjustments[to_infectious_key][stratum])
-                for stratum in hospital_strata
-            }
+            # Create scale-up function for quarantine
+            quarantine_scale_up = \
+                scale_up_function(
+                    traveller_quarantine["times"], traveller_quarantine["values"], method=4
+                )
 
-        # Proportion entering non-symptomatic stratum reduced by the quarantined (and so isolated) proportion
-        def tv_prop_imported_non_sympt(t):
-            return flow_adjustments[to_infectious_key][ClinicalStratum.NON_SYMPT] * (
-                1.0 - quarantine_scale_up(t)
-            )
+            # Clinical proportions for imported cases stay fixed for the hospitalised and critical groups (last two strata)
+            importation_props_by_clinical[agegroup] = \
+                {
+                    stratum: float(flow_adjustments[to_infectious_key][stratum])
+                    for stratum in hospital_strata
+                }
 
-        # Proportion ambulatory also reduced by quarantined proportion due to isolation
-        def tv_prop_imported_sympt_non_hospital(t):
-            return tvs[flow_adjustments[to_infectious_key][ClinicalStratum.SYMPT_NON_HOSPITAL]](
-                t
-            ) * (1.0 - quarantine_scale_up(t))
+            # Proportion entering non-symptomatic stratum reduced by the quarantined (and so isolated) proportion
+            def tv_prop_imported_non_sympt(t):
+                return flow_adjustments[to_infectious_key][ClinicalStratum.NON_SYMPT] * (
+                    1.0 - quarantine_scale_up(t)
+                )
 
-        # Proportion isolated includes those that would have been detected anyway and the ones above quarantined
-        def tv_prop_imported_sympt_isolate(t):
-            return tvs[flow_adjustments[to_infectious_key][ClinicalStratum.SYMPT_ISOLATE]](
-                t
-            ) + quarantine_scale_up(t) * (
-                tvs[flow_adjustments[to_infectious_key][ClinicalStratum.SYMPT_NON_HOSPITAL]](t)
-                + flow_adjustments[to_infectious_key][ClinicalStratum.NON_SYMPT]
-            )
+            # Proportion ambulatory also reduced by quarantined proportion due to isolation
+            def tv_prop_imported_sympt_non_hospital(t):
+                return tvs[flow_adjustments[to_infectious_key][ClinicalStratum.SYMPT_NON_HOSPITAL]](
+                    t
+                ) * (1.0 - quarantine_scale_up(t))
 
-        # Pass time-variant functions to the model object
-        model.time_variants[
-            f"tv_prop_imported_{ClinicalStratum.NON_SYMPT}"
-        ] = tv_prop_imported_non_sympt
-        model.time_variants[
-            f"tv_prop_imported_{ClinicalStratum.SYMPT_NON_HOSPITAL}"
-        ] = tv_prop_imported_sympt_non_hospital
-        model.time_variants[
-            f"tv_prop_imported_{ClinicalStratum.SYMPT_ISOLATE}"
-        ] = tv_prop_imported_sympt_isolate
-        for stratum in non_hospital_strata:
-            importation_props_by_clinical[stratum] = \
-                f"tv_prop_imported_{stratum}"
+            # Proportion isolated includes those that would have been detected anyway and the ones above quarantined
+            def tv_prop_imported_sympt_isolate(t):
+                return tvs[flow_adjustments[to_infectious_key][ClinicalStratum.SYMPT_ISOLATE]](
+                    t
+                ) + quarantine_scale_up(t) * (
+                    tvs[flow_adjustments[to_infectious_key][ClinicalStratum.SYMPT_NON_HOSPITAL]](t)
+                    + flow_adjustments[to_infectious_key][ClinicalStratum.NON_SYMPT]
+                )
+
+            # Pass time-variant functions to the model object
+            if str(agegroup) == represent_age_group:
+                model.time_variants[
+                    f"tv_prop_imported_{ClinicalStratum.NON_SYMPT}"
+                ] = tv_prop_imported_non_sympt
+                model.time_variants[
+                    f"tv_prop_imported_{ClinicalStratum.SYMPT_NON_HOSPITAL}"
+                ] = tv_prop_imported_sympt_non_hospital
+                model.time_variants[
+                    f"tv_prop_imported_{ClinicalStratum.SYMPT_ISOLATE}"
+                ] = tv_prop_imported_sympt_isolate
+                for stratum in non_hospital_strata:
+                    importation_props_by_clinical[agegroup][stratum] = \
+                        f"tv_prop_imported_{stratum}"
 
         for agegroup in agegroup_strata:
             flow_adjustments[f"importation_rateXagegroup_{agegroup}"] = \
-                importation_props_by_clinical
+                importation_props_by_clinical[str(represent_age_group)]
 
     # Stratify the model using the SUMMER stratification function
     model.stratify(

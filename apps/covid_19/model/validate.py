@@ -18,7 +18,6 @@ validate_params = sb.build_validator(
     use_raw_mortality_estimates=bool,
     infection_fatality_props=sb.List(float),
     ifr_multiplier=float,
-    ifr_double_exp_model_params=dict,
     # Age stratified params
     agegroup_breaks=sb.List(float),
     age_based_susceptibility=sb.DictGeneric(str, float),

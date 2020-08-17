@@ -10,7 +10,6 @@ from autumn.curve import scale_up_function
 from autumn.inputs import get_population_by_agegroup
 
 from apps.covid_19.constants import Compartment, ClinicalStratum
-from .preprocess.mortality import age_specific_ifrs_from_double_exp_model
 
 
 def stratify_by_clinical(model, params, compartments, detected_proportion, symptomatic_props):
@@ -40,8 +39,6 @@ def stratify_by_clinical(model, params, compartments, detected_proportion, sympt
     icu_mortality_prop = params["icu_mortality_prop"]
     infection_fatality_props_10_year = params["infection_fatality_props"]
     hospital_props = params["hospital_props"]
-    use_raw_mortality_estimates = params["use_raw_mortality_estimates"]
-    ifr_double_exp_model_params = params["ifr_double_exp_model_params"]
 
     # Apply multiplier to symptomatic proportions
     symptomatic_props = [
@@ -85,19 +82,12 @@ def stratify_by_clinical(model, params, compartments, detected_proportion, sympt
     prop_over_80 = elderly_populations[2] / sum(elderly_populations[1:])
 
     # Infection fatality rate by age group.
-    if use_raw_mortality_estimates:
-        # Data in props used 10 year bands 0-80+, but we want 5 year bands from 0-75+
+    # Data in props used 10 year bands 0-80+, but we want 5 year bands from 0-75+
 
-        # Calculate 75+ age bracket as weighted average between 75-79 and half 80+
-        infection_fatality_props = repeat_list_elements_average_last_two(
-            infection_fatality_props_10_year, prop_over_80
-        )
-    else:
-        infection_fatality_props = age_specific_ifrs_from_double_exp_model(
-            ifr_double_exp_model_params["k"],
-            ifr_double_exp_model_params["m"],
-            ifr_double_exp_model_params["last_representative_age"],
-        )
+    # Calculate 75+ age bracket as weighted average between 75-79 and half 80+
+    infection_fatality_props = repeat_list_elements_average_last_two(
+        infection_fatality_props_10_year, prop_over_80
+    )
 
     # Find the absolute progression proportions.
     symptomatic_props_arr = np.array(symptomatic_props)

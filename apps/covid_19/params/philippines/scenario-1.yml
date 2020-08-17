@@ -1,9 +1,9 @@
-# 50% return to work and 25% return to school on August 24
+# 50% return to work and 25% return to school on October 5
 mixing:
   work:
     append: true
     times:
-      - 2020-08-24
+      - 2020-10-05
     values:
       - 0.50
   school:
@@ -11,8 +11,8 @@ mixing:
     times:
       - 2020-02-11
       - 2020-03-16
-      - 2020-08-23
-      - 2020-08-24
+      - 2020-10-04
+      - 2020-10-05
     values:
       - 1.
       - 0.

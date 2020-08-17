@@ -22,7 +22,7 @@ python3 -m luigi \
     --run-id manila-111111111-aaaaaaa \
     --num-chains 2 \
     --CalibrationChainTask-model-name manila \
-    --CalibrationChainTask-runtime 60 \
+    --CalibrationChainTask-runtime 30 \
     --local-scheduler \
     --workers 2 \
     --logging-conf-file tasks/luigi-logging.ini

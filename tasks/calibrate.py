@@ -10,7 +10,7 @@ from autumn.inputs import build_input_database
 from autumn.inputs.database import input_db_path
 from autumn.plots.database_plots import plot_from_mcmc_databases
 from autumn.constants import OUTPUT_DATA_PATH
-from apps.covid_19.calibration import get_calibration_func
+from apps import covid_19
 
 from . import utils
 from . import settings
@@ -75,8 +75,8 @@ class CalibrationChainTask(utils.ParallelLoggerTask):
         msg = f"Running {self.model_name} calibration with chain id {self.chain_id} with runtime {self.runtime}s"
         with Timer(msg):
             # Run the calibration
-            calibrate_func = get_calibration_func(self.model_name)
-            calibrate_func(self.runtime, self.chain_id, self.num_chains)
+            region_app = covid_19.app.get_region(self.model_name)
+            region_app.calibrate_model(self.runtime, self.chain_id, self.num_chains)
 
         # Place the completed chain database in the correct output folder
         src_db_path = self.find_src_db_path()

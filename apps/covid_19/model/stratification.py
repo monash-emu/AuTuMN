@@ -254,24 +254,27 @@ def stratify_by_clinical(model, params, compartments, detected_proportion, sympt
     # FIXME: This is not a desirable API, it's not really clear what is happening.
     model.individual_infectiousness_adjustments = clinical_inf_overwrites
 
-    # FIXME: Ask Romain about importation
     # Work out time-variant clinical proportions for imported cases accounting for quarantine
     if implement_importation:
-        to_infectious_key = f"within_{Compartment.EARLY_EXPOSED}Xagegroup_" + str(
+        represent_age_group = \
             params["import_representative_age"]
-        )
-        tvs = model.time_variants
+        to_infectious_key = \
+            f"within_{Compartment.EARLY_EXPOSED}Xagegroup_{represent_age_group}"
+        tvs = \
+            model.time_variants
 
         # Create scale-up function for quarantine
-        quarantine_scale_up = scale_up_function(
-            traveller_quarantine["times"], traveller_quarantine["values"], method=4
-        )
+        quarantine_scale_up = \
+            scale_up_function(
+                traveller_quarantine["times"], traveller_quarantine["values"], method=4
+            )
 
         # Clinical proportions for imported cases stay fixed for the hospitalised and critical groups (last two strata)
-        importation_props_by_clinical = {
-            stratum: float(flow_adjustments[to_infectious_key][stratum])
-            for stratum in hospital_strata
-        }
+        importation_props_by_clinical = \
+            {
+                stratum: float(flow_adjustments[to_infectious_key][stratum])
+                for stratum in hospital_strata
+            }
 
         # Proportion entering non-symptomatic stratum reduced by the quarantined (and so isolated) proportion
         def tv_prop_imported_non_sympt(t):
@@ -305,15 +308,12 @@ def stratify_by_clinical(model, params, compartments, detected_proportion, sympt
             f"tv_prop_imported_{ClinicalStratum.SYMPT_ISOLATE}"
         ] = tv_prop_imported_sympt_isolate
         for stratum in non_hospital_strata:
-            importation_props_by_clinical[stratum] = f"tv_prop_imported_{stratum}"
+            importation_props_by_clinical[stratum] = \
+                f"tv_prop_imported_{stratum}"
 
-    else:
-        importation_props_by_clinical = {}
-
-    if params["implement_importation"]:
         for agegroup in agegroup_strata:
-            key = f"importation_rateXagegroup_{agegroup}"
-            flow_adjustments[key] = importation_props_by_clinical
+            flow_adjustments[f"importation_rateXagegroup_{agegroup}"] = \
+                importation_props_by_clinical
 
     # Stratify the model using the SUMMER stratification function
     model.stratify(

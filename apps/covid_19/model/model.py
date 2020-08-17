@@ -126,8 +126,6 @@ def build_model(params: dict) -> StratifiedModel:
     smooth_google_data = params["smooth_google_data"]
     npi_effectiveness_params = params["npi_effectiveness"]
     google_mobility_locations = params["google_mobility_locations"]
-    is_periodic_intervention = params.get("is_periodic_intervention")
-    periodic_int_params = params.get("periodic_intervention")
     # FIXME: Why wouldn't we always use Google mobiliy data?
     if dynamic_location_mixing_params or dynamic_age_mixing_params:
         dynamic_mixing_matrix = preprocess.mixing_matrix.build_dynamic(
@@ -137,9 +135,6 @@ def build_model(params: dict) -> StratifiedModel:
             dynamic_age_mixing_params,
             npi_effectiveness_params,
             google_mobility_locations,
-            is_periodic_intervention,
-            periodic_int_params,
-            end_time,
             microdistancing,
             smooth_google_data,
         )

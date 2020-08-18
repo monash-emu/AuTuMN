@@ -11,8 +11,8 @@ import click
 
 from autumn.db import models
 from autumn.inputs import build_input_database, fetch_input_data
-from autumn.plots.database_plots import plot_from_database, plot_from_mcmc_databases
-from autumn.plots.uncertainty_plots import plot_timeseries_with_uncertainty_for_powerbi
+from autumn.plots.database_plots import plot_from_mcmc_databases
+from autumn.plots.uncertainty_plots import plot_timeseries_with_uncertainty
 from autumn.tool_kit.uncertainty import (
     add_uncertainty_weights,
     add_uncertainty_quantiles,
@@ -64,7 +64,7 @@ def plot_mcmc_database(region, src_db_dir, plot_dir):
     """
     assert os.path.isfile(src_db_dir), f"{src_db_dir} must be a file"
     assert os.path.isdir(plot_dir), f"{plot_dir} must be a folder"
-    plot_timeseries_with_uncertainty_for_powerbi(region, src_db_dir, plot_dir)
+    plot_timeseries_with_uncertainty(region, src_db_dir, plot_dir)
 
 
 @db.command("collate")

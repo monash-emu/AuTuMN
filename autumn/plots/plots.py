@@ -16,7 +16,6 @@ from summer.model.strat_model import StratifiedModel
 
 from autumn.inputs import get_country_mixing_matrix
 from autumn.tool_kit.scenarios import Scenario
-from autumn.tool_kit.uncertainty import export_mcmc_quantiles
 from autumn.db.database import Database
 import matplotlib.gridspec as gridspec
 
@@ -258,51 +257,6 @@ def plot_timeseries_with_uncertainty_for_powerbi(
         fig,
         filename=f"uncertainty-{output_name}-{scenario_name}",
         title_text=f"{output_name} for {scenario_name}",
-    )
-
-
-def plot_timeseries_with_uncertainty(
-    plotter: Plotter,
-    path_to_percentile_outputs: str,
-    output_name: str,
-    scenario_indices,
-    burn_in,
-    targets,
-):
-    percentile_db_path = os.path.join(
-        path_to_percentile_outputs, "mcmc_percentiles_burned_" + str(burn_in) + ".db"
-    )
-    try:
-        db = Database(percentile_db_path)
-        output_perc = db.query(output_name)
-    except:
-        export_mcmc_quantiles(path_to_percentile_outputs, [output_name], burn_in=burn_in)
-        db = Database(percentile_db_path)
-        output_perc = db.query(output_name)
-
-    fig, axis, _, _, _ = plotter.get_figure()
-    scenario_list = "scenarios"
-    for scenario_index in scenario_indices[::-1]:  # loop in reverse scenario order
-        scenario_list += " " + str(scenario_index)
-        df = output_perc[output_perc.Scenario == "S_" + str(scenario_index)]
-        axis.fill_between(df.times, df.q_2_5, df.q_97_5, facecolor="lightsteelblue")
-        axis.fill_between(df.times, df.q_25, df.q_75, facecolor="cornflowerblue")
-        axis.plot(df.times, df.q_50, color="navy")
-
-    output_config = {"values": [], "times": []}
-    for t in targets.values():
-        if t["output_key"] == output_name:
-            output_config = t
-
-    values = output_config["values"]
-    times = output_config["times"]
-
-    _plot_targets_to_axis(axis, values, times, on_uncertainty_plot=True)
-    axis.set_xlabel("time")
-    axis.set_ylabel(output_name)
-
-    plotter.save_figure(
-        fig, filename=f"{output_name}-uncertainty-{scenario_list}", title_text=f"{output_name}",
     )
 
 

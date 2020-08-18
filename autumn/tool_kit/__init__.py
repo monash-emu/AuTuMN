@@ -11,4 +11,3 @@ from .utils import (
     get_integration_times,
     return_function_of_function,
 )
-from .uncertainty import export_mcmc_quantiles

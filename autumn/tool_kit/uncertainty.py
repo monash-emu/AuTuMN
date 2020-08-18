@@ -35,9 +35,6 @@ def add_uncertainty_weights(output_names: List[str], database_path: str):
     # Add new data
     logger.info("Loading MCMC run metadata into memory")
     mcmc_df = db.query("mcmc_run")
-    mcmc_df["run_int"] = mcmc_df["idx"].apply(run_idx_to_int)
-    mcmc_df = mcmc_df.sort_values(["run_int"])
-    max_run_idx = mcmc_df["run_int"].max()
 
     logger.info("Loading derived outputs data into memory")
     columns = ["idx", "Scenario", "times", *output_names]
@@ -53,33 +50,45 @@ def add_uncertainty_weights(output_names: List[str], database_path: str):
             )
             db.engine.execute(f"DELETE FROM uncertainty_weights WHERE output_name='{output_name}'")
 
-        # Calculate weights
-        logger.info("Calculating weighted values for %s", output_name)
-        weights = np.zeros(max_run_idx + 1)
-        last_run_int = None
-        for run_int, accept in zip(mcmc_df["run_int"], mcmc_df["accept"]):
-            if accept:
-                weights[run_int] = 1
-                last_run_int = run_int
-            elif last_run_int is None:
-                continue
-            else:
-                weights[last_run_int] += 1
-
-        # Add weights to weights dataframe
-        weights_df = (
-            derived_outputs_df.copy()
-            .drop(columns=[o for o in output_names if o != output_name])
-            .rename(columns={output_name: "value"})
-        )
-        weights_df["output_name"] = output_name
-        select_weight = lambda run_idx: weights[run_idx_to_int(run_idx)]
-        weights_df["weight"] = weights_df["idx"].apply(select_weight)
-
+        weights_df = calculate_uncertainty_weights(output_name, mcmc_df, derived_outputs_df)
         db.dump_df("uncertainty_weights", weights_df)
         logger.info("Finished writing %s uncertainty weights", output_name)
 
     logger.info("Finished writing all uncertainty weights")
+
+
+def calculate_uncertainty_weights(
+    output_name: str, mcmc_df: pd.DataFrame, derived_outputs_df: pd.DataFrame
+) -> pd.DataFrame:
+    """
+    Calculate uncertainty weights for a given MCMC chain and derived output.
+    """
+    logger.info("Calculating weighted values for %s", output_name)
+    mcmc_df["run_int"] = mcmc_df["idx"].apply(run_idx_to_int)
+    mcmc_df = mcmc_df.sort_values(["run_int"])
+    max_run_idx = mcmc_df["run_int"].max()
+    weights = np.zeros(max_run_idx + 1)
+    last_run_int = None
+    for run_int, accept in zip(mcmc_df["run_int"], mcmc_df["accept"]):
+        if accept:
+            weights[run_int] = 1
+            last_run_int = run_int
+        elif last_run_int is None:
+            continue
+        else:
+            weights[last_run_int] += 1
+
+    # Add weights to weights dataframe
+    cols = ["idx", "Scenario", "times", output_name]
+    weights_df = (
+        derived_outputs_df.copy()
+        .drop(columns=[c for c in derived_outputs_df.columns if c not in cols])
+        .rename(columns={output_name: "value"})
+    )
+    weights_df["output_name"] = output_name
+    select_weight = lambda run_idx: weights[run_idx_to_int(run_idx)]
+    weights_df["weight"] = weights_df["idx"].apply(select_weight)
+    return weights_df
 
 
 def add_uncertainty_quantiles(database_path: str):
@@ -146,43 +155,6 @@ def run_idx_to_int(run_idx: str) -> int:
 
 def run_int_to_idx(run_int: int) -> str:
     return f"run_{run_int}"
-
-
-def export_mcmc_quantiles(
-    path_to_mcmc_outputs, output_names: List[str], q_list=DEFAULT_QUANTILES, burn_in=0,
-):
-    """
-    Create a separate database containing MCMC quartile data, based on a set of MCMC output databases
-    """
-    out_db_path = os.path.join(
-        path_to_mcmc_outputs, "mcmc_percentiles_burned_" + str(burn_in) + ".db"
-    )
-    output_db = Database(out_db_path)
-    mcmc_tables, output_tables, derived_output_tables = collect_all_mcmc_output_tables(
-        path_to_mcmc_outputs
-    )
-    weights = collect_iteration_weights(mcmc_tables, burn_in)
-    for output_name in output_names:
-        times, quantiles = compute_mcmc_output_quantiles(
-            mcmc_tables, output_tables, derived_output_tables, weights, output_name, q_list,
-        )
-        column_names = ["times", "Scenario"]
-        for q in q_list:
-            c_name = "q_" + str(100 * q).replace(".", "_")
-            if c_name[-2:] == "_0":
-                c_name = c_name[:-2]
-            column_names.append(c_name)
-        out_table = pd.DataFrame(columns=column_names)
-        for sc_index in range(len(times)):
-            this_sc_table = pd.DataFrame(columns=column_names)
-            this_sc_table.times = times[sc_index]
-            this_sc_table.Scenario = ["S_" + str(sc_index)] * len(times[sc_index])
-            for i_quantile, q in enumerate(q_list):
-                c_name = column_names[i_quantile + 2]
-                this_sc_table[c_name] = quantiles[sc_index][:, i_quantile]
-            out_table = pd.concat([out_table, this_sc_table])
-
-        output_db.dump_df(output_name, out_table)
 
 
 def collect_all_mcmc_output_tables(calib_dirpath):
@@ -260,100 +232,3 @@ def export_compartment_size(
 
     return compartment_values
 
-
-def compute_mcmc_output_quantiles(
-    mcmc_tables: List[pd.DataFrame],
-    output_tables: List[pd.DataFrame],
-    derived_output_tables: List[pd.DataFrame],
-    weights: List[int],
-    output_name: str,
-    q_list: List[float],
-):
-    if "start_time" in mcmc_tables[0].columns:
-        # Find the earliest time that is common to all accepted runs (if start_time was varied).
-        max_start_time = 0
-        for mcmc_table_df in mcmc_tables:
-            mask = mcmc_table_df["accept"] == 1
-            _max_start_time = mcmc_table_df[mask]["start_time"].max()
-            if _max_start_time > max_start_time:
-                max_start_time = _max_start_time
-
-        t_min = round(max_start_time)
-    else:
-        # Find the common start time.
-        t_min = output_tables[0].times[0]
-
-    # Find the common end time.
-    t_max = list(output_tables[0].times)[-1]
-
-    # Add cumulate output if required (not sure what this means).
-    should_add_cumulate = (
-        output_name not in derived_output_tables[0].columns and output_name[:8] == "cumulate"
-    )
-    if should_add_cumulate:
-        derived_output_tables = add_cumulate_output_to_derived_outputs(
-            derived_output_tables, output_name[9:]
-        )
-
-    scenario_list = sorted(derived_output_tables[0].Scenario.unique())
-    quantiles_by_sc = []
-    times_by_sc = []
-    for i_scenario, scenario in enumerate(scenario_list):
-        if scenario != "S_0":
-            t_min = (
-                derived_output_tables[0]
-                .times[derived_output_tables[0].Scenario == scenario]
-                .iloc[0]
-            )
-
-        steps = int(t_max - t_min + 1)
-        times = np.linspace(t_min, t_max, num=steps).tolist()
-        quantiles = np.zeros((len(times), 5))
-
-        for i_time, time in enumerate(times):
-            output_list = []
-            for i_chain in range(len(mcmc_tables)):
-                for run_id, w in weights[i_chain].items():
-                    mask = (
-                        (derived_output_tables[i_chain].idx == run_id)
-                        & (derived_output_tables[i_chain].times == time)
-                        & (derived_output_tables[i_chain].Scenario == scenario)
-                    )
-                    output_val = float(derived_output_tables[i_chain][output_name][mask])
-                    output_list += [output_val] * w
-            quantiles[i_time, :] = np.quantile(output_list, q_list)
-
-        quantiles_by_sc.append(quantiles)
-        times_by_sc.append(times)
-
-    return times_by_sc, quantiles_by_sc
-
-
-def add_cumulate_output_to_derived_outputs(
-    derived_output_tables: List[pd.DataFrame], output_name: str
-):
-    """
-    Add an extra column in the output database for the cumulate value of a given output.
-    """
-    assert output_name in derived_output_tables[0].columns
-    for i_chain in range(len(derived_output_tables)):
-        derived_output_tables[i_chain].sort_values(by=["idx", "Scenario", "times"])
-        cum_sum = 0.0
-        cum_sum_column = []
-        last_sc_index = derived_output_tables[i_chain]["Scenario"].iloc[0]
-        last_run_index = derived_output_tables[i_chain]["idx"].iloc[0]
-        for i_row in range(len(derived_output_tables[i_chain].index)):
-            this_sc_index = derived_output_tables[i_chain]["Scenario"].iloc[i_row]
-            this_run_index = derived_output_tables[i_chain]["idx"].iloc[i_row]
-            value = derived_output_tables[i_chain][output_name].iloc[i_row]
-            if this_sc_index == last_sc_index and this_run_index == last_run_index:
-                cum_sum += value
-            else:
-                cum_sum = value
-                if this_sc_index != last_sc_index:
-                    last_sc_index = this_sc_index
-                if this_run_index != last_run_index:
-                    last_run_index = this_run_index
-            cum_sum_column.append(cum_sum)
-        derived_output_tables[i_chain]["cumulate_" + output_name] = cum_sum_column
-    return derived_output_tables

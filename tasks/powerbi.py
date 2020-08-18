@@ -11,7 +11,7 @@ from autumn.tool_kit.uncertainty import (
     add_uncertainty_weights,
     add_uncertainty_quantiles,
 )
-from autumn.plots.uncertainty_plots import plot_timeseries_with_uncertainty_for_powerbi
+from autumn.plots.uncertainty_plots import plot_timeseries_with_uncertainty
 
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
 
@@ -228,7 +228,7 @@ class PlotUncertaintyTask(utils.BaseTask):
         plot_dir = os.path.join(settings.BASE_DIR, "plots", "uncertainty")
         db_path = get_final_db_path(self.run_id)
         region_name, _, _ = utils.read_run_id(self.run_id)
-        plot_timeseries_with_uncertainty_for_powerbi(region_name, db_path, plot_dir)
+        plot_timeseries_with_uncertainty(region_name, db_path, plot_dir)
 
 
 class UploadPlotsTask(utils.UploadS3Task):

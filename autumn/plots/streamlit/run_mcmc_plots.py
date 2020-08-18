@@ -8,11 +8,16 @@ import pandas as pd
 import streamlit as st
 
 from autumn.db import Database
-from autumn.tool_kit.uncertainty import collect_all_mcmc_output_tables
 from autumn.tool_kit.params import load_targets
 from autumn.plots import plots
 from autumn.plots.plotter import StreamlitPlotter
 from autumn.calibration.utils import collect_map_estimate, print_reformated_map_parameters
+from autumn.tool_kit.uncertainty import (
+    calculate_uncertainty_weights,
+    calculate_mcmc_uncertainty,
+    DEFAULT_QUANTILES,
+)
+
 
 from . import selectors
 
@@ -52,11 +57,17 @@ def load_mcmc_tables(calib_dirpath: str):
     return mcmc_tables
 
 
-def load_derived_output_tables(calib_dirpath: str):
+def load_derived_output_tables(calib_dirpath: str, column: str = None):
     derived_output_tables = []
     for db_path in _find_db_paths(calib_dirpath):
         db = Database(db_path)
-        derived_output_tables.append(db.query("derived_outputs"))
+        if not column:
+            df = db.query("derived_outputs")
+            derived_output_tables.append(df)
+        else:
+            cols = ["idx", "Scenario", "times", column]
+            df = db.query("derived_outputs", column=cols)
+            derived_output_tables.append(df)
 
     return derived_output_tables
 
@@ -107,34 +118,34 @@ def plot_loglikelihood_vs_parameter(
 def plot_timeseries_with_uncertainty(
     plotter: StreamlitPlotter, calib_dir_path: str, mcmc_tables: List[pd.DataFrame], targets: dict,
 ):
-    derived_output_tables = load_derived_output_tables(calib_dir_path)
-    # Choose one or more scenarios
-    scenario_strs = list(derived_output_tables[0].Scenario.unique())
-    scenario_idxs = [int(s.replace("S_", "")) for s in scenario_strs]
-    scenario_names = ["Baseline" if i == 0 else f"Scenario {i}" for i in scenario_idxs]
-    chosen_scenario_names = st.sidebar.multiselect("Select scenarios", scenario_names, "Baseline")
-    chosen_scenarios = [scenario_idxs[scenario_names.index(n)] for n in chosen_scenario_names]
-
-    # Choose which output to plot
-    non_output_cols = ["idx", "Scenario", "times"]
-    output_cols = list(set(derived_output_tables[0].columns) - set(non_output_cols))
-    output_cols = [c for c in output_cols if "X" not in c or c.endswith("Xall")]
-    chosen_output = st.sidebar.selectbox("Select derived output", output_cols)
-    # Select burn in with a slider
+    available_outputs = [o["output_key"] for o in targets.values()]
+    chosen_output = st.sidebar.selectbox("Select calibration target", available_outputs)
     burn_in = burn_in_selector(mcmc_tables)
-    plots.plot_timeseries_with_uncertainty(
-        plotter,
-        calib_dir_path,
-        chosen_output,
-        scenario_indices=chosen_scenarios,
-        burn_in=burn_in,
-        targets=targets,
-    )
+    derived_output_tables = load_derived_output_tables(calib_dir_path, column=chosen_output)
+
+    weights_df = None
+    for raw_mcmc_df, derived_output_df in zip(mcmc_tables, derived_output_tables):
+        mcmc_df = raw_mcmc_df[burn_in:]
+        _weights_df = calculate_uncertainty_weights(chosen_output, mcmc_df, derived_output_df)
+        if weights_df is None:
+            weights_df = _weights_df
+        else:
+            weights_df = weights_df.append(_weights_df)
+
+    uncertainty_df = calculate_mcmc_uncertainty(weights_df, DEFAULT_QUANTILES)
+    times = uncertainty_df.time.unique()
+    quantiles = {}
+    for q in DEFAULT_QUANTILES:
+        mask = uncertainty_df["quantile"] == q
+        quantiles[q] = uncertainty_df[mask]["value"].tolist()
+
+    plots.plot_timeseries_with_uncertainty(plotter, chosen_output, "S_0", quantiles, times, targets)
 
 
 def plot_calibration_fit(
     plotter: StreamlitPlotter, calib_dir_path: str, mcmc_tables: List[pd.DataFrame], targets: dict,
 ):
+
     derived_output_tables = load_derived_output_tables(calib_dir_path)
 
     # Choose which output to plot
@@ -160,12 +171,12 @@ def print_mle_parameters(
 
 
 PLOT_FUNCS = {
-    "Posterior distributions": plot_posterior,
     "Loglikelihood trace": plot_loglikelihood_trace,
+    "Output uncertainty": plot_timeseries_with_uncertainty,
+    "Output calibration fit": plot_calibration_fit,
+    "Posterior distributions": plot_posterior,
     "Loglikelihood vs param": plot_loglikelihood_vs_parameter,
     "Parameter trace": plot_mcmc_parameter_trace,
-    "Calibration Fit": plot_calibration_fit,
-    "Predictions": plot_timeseries_with_uncertainty,
     "Print MLE parameters": print_mle_parameters,
 }
 

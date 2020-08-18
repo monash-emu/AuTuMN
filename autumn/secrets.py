@@ -11,6 +11,7 @@ import pyAesCrypt
 
 from autumn.constants import DATA_PATH, APPS_PATH
 
+SALT = "ElvHoxZ83kAUgqy9x2KqM"
 BUFFER_SIZE = 64 * 1024
 HASH_FILE = os.path.join(DATA_PATH, "secret-hashes.json")
 
@@ -21,6 +22,7 @@ def read(password: str):
     """
     Decrypt all secrets into secret files.
     """
+    check_password(password)
     encrypt_glob = os.path.join(APPS_PATH, "**", "*.encrypted.*")
     encrypt_paths = glob.glob(encrypt_glob, recursive=True)
     num_files = len(encrypt_paths)
@@ -38,6 +40,7 @@ def write(file_path: str, password: str):
     """
     Decrypt all secrets into secret files.
     """
+    check_password(password)
     assert (
         ".secret." in file_path
     ), "Can only encrypt files that are marked as secret with *.secret.*"
@@ -45,6 +48,14 @@ def write(file_path: str, password: str):
     encrypt_path = file_path.replace(".secret.", ".encrypted.")
     pyAesCrypt.encryptFile(file_path, encrypt_path, password, BUFFER_SIZE)
     check_hash(file_path)
+
+
+def check_password(password: str):
+    password_hash = get_str_hash(password + SALT)
+    with open(HASH_FILE, "r") as f:
+        hashes = json.load(f)
+
+    assert hashes["password"] == password_hash, f"Wrong password."
 
 
 def set_hash(file_path: str):
@@ -58,9 +69,9 @@ def set_hash(file_path: str):
     with open(HASH_FILE, "r") as f:
         hashes = json.load(f)
 
-    hashes = {k: v for k, v in hashes.items() if os.path.exists(k)}
+    hashes = {k: v for k, v in hashes.items() if os.path.exists(k) or k == "password"}
     fp_key = os.path.relpath(file_path)
-    hashes[fp_key] = get_hash(file_path)
+    hashes[fp_key] = get_file_hash(file_path)
 
     with open(HASH_FILE, "w") as f:
         json.dump(hashes, f)
@@ -77,15 +88,19 @@ def check_hash(file_path: str):
     with open(HASH_FILE, "r") as f:
         hashes = json.load(f)
 
-    file_hash = get_hash(file_path)
+    file_hash = get_file_hash(file_path)
     fp_key = os.path.relpath(file_path)
     assert (
         hashes[fp_key] == file_hash
     ), f"Secret file {fp_key} is not using the latest data, try re-reading encrypted files."
 
 
-def get_hash(file_path: str):
+def get_file_hash(file_path: str):
     with open(file_path, "rb") as f:
         file_bytes = f.read()
         return hashlib.sha256(file_bytes).hexdigest()
 
+
+def get_str_hash(s: str):
+    s_bytes = s.encode("utf-8")
+    return hashlib.sha256(s_bytes).hexdigest()

@@ -35,7 +35,7 @@ TARGET_OUTPUTS = [
         "output_key": "icu_occupancy",
         "years": icu_occupancy["times"],
         "values": icu_occupancy["values"],
-        "loglikelihood_distri": "negative_binomial",
+        "loglikelihood_distri": "normal",
     },
 ]
 

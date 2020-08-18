@@ -33,12 +33,12 @@ TARGET_OUTPUTS = [
         "loglikelihood_distri": "normal",
         "time_weights": assign_trailing_weights_to_halves(14, notifications["times"]),
     },
-    {
-        "output_key": "icu_occupancy",
-        "years": icu_occupancy["times"],
-        "values": icu_occupancy["values"],
-        "loglikelihood_distri": "normal",
-    },
+#    {
+#        "output_key": "icu_occupancy",
+#        "years": icu_occupancy["times"],
+#        "values": icu_occupancy["values"],
+#        "loglikelihood_distri": "normal",
+#    },
     {
         "output_key": "total_infection_deaths",
         "years": icu_occupancy["times"],

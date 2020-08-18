@@ -4,6 +4,7 @@ from apps.covid_19.calibration import (
     provide_default_calibration_params,
     add_standard_dispersion_parameter,
     add_standard_philippines_params,
+    assign_trailing_weights_to_halves
 )
 from autumn.tool_kit.params import load_targets
 
@@ -30,6 +31,7 @@ TARGET_OUTPUTS = [
         "years": notifications["times"],
         "values": notifications["values"],
         "loglikelihood_distri": "normal",
+        "time_weights": assign_trailing_weights_to_halves(14, notifications["times"]),
     },
     {
         "output_key": "icu_occupancy",
@@ -41,4 +43,5 @@ TARGET_OUTPUTS = [
 
 PAR_PRIORS = provide_default_calibration_params()
 PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "notifications")
+PAR_PRIORS = add_standard_dispersion_parameter(PAR_PRIORS, TARGET_OUTPUTS, "icu_occupancy")
 PAR_PRIORS = add_standard_philippines_params(PAR_PRIORS)

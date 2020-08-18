@@ -1,10 +1,8 @@
----
-# Options for plotting outputs of the COVID-19 model
-notifications:
-  title: Daily number of confirmed cases
-  output_key: notifications
-  times:
-    [
+{
+  "notifications": {
+    "title": "Daily number of confirmed cases",
+    "output_key": "notifications",
+    "times": [
       64.0,
       71.0,
       78.0,
@@ -22,10 +20,9 @@ notifications:
       162.0,
       169.0,
       176.0,
-      181.0,
-    ]
-  values:
-    [
+      181.0
+    ],
+    "values": [
       21.142857142857142,
       109.0,
       117.42857142857143,
@@ -43,14 +40,13 @@ notifications:
       963.5714285714286,
       908.4285714285714,
       1299.142857142857,
-      843.3333333333334,
+      843.3333333333334
     ]
-
-new_icu_admissions:
-  title: New ICU admissions
-  output_key: new_icu_admissions
-  times:
-    [
+  },
+  "new_icu_admissions": {
+    "title": "New ICU admissions",
+    "output_key": "new_icu_admissions",
+    "times": [
       69.0,
       76.0,
       83.0,
@@ -67,10 +63,9 @@ new_icu_admissions:
       160.0,
       167.0,
       174.0,
-      180.0,
-    ]
-  values:
-    [
+      180.0
+    ],
+    "values": [
       1.1428571428571428,
       7.571428571428571,
       36.0,
@@ -87,14 +82,13 @@ new_icu_admissions:
       21.857142857142858,
       17.571428571428573,
       11.857142857142858,
-      7.6,
+      7.6
     ]
-
-infection_deathsXall:
-  title: Daily number of deaths
-  output_key: infection_deathsXall
-  times:
-    [
+  },
+  "infection_deathsXall": {
+    "title": "Daily number of deaths",
+    "output_key": "infection_deathsXall",
+    "times": [
       53.0,
       60.0,
       67.0,
@@ -115,10 +109,9 @@ infection_deathsXall:
       172.0,
       179.0,
       186.0,
-      193.0,
-    ]
-  values:
-    [
+      193.0
+    ],
+    "values": [
       0.0,
       0.0,
       0.0,
@@ -139,5 +132,7 @@ infection_deathsXall:
       33.0,
       26.857142857142858,
       17.571428571428573,
-      14.714285714285714,
+      14.714285714285714
     ]
+  }
+}

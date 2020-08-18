@@ -1,10 +1,8 @@
----
-# Options for plotting outputs of the COVID-19 model
-infection_deathsXall:
-  title: Daily number of deaths
-  output_key: infection_deathsXall
-  times:
-    [
+{
+  "infection_deathsXall": {
+    "title": "Daily number of deaths",
+    "output_key": "infection_deathsXall",
+    "times": [
       53.0,
       60.0,
       67.0,
@@ -25,10 +23,9 @@ infection_deathsXall:
       172.0,
       179.0,
       186.0,
-      193.0,
-    ]
-  values:
-    [
+      193.0
+    ],
+    "values": [
       0.0,
       0.0,
       0.42857142857142855,
@@ -49,14 +46,13 @@ infection_deathsXall:
       130.14285714285714,
       132.57142857142858,
       94.42857142857143,
-      84.85714285714286,
+      84.85714285714286
     ]
-
-notifications:
-  title: Daily number of confirmed cases
-  output_key: notifications
-  times:
-    [
+  },
+  "notifications": {
+    "title": "Daily number of confirmed cases",
+    "output_key": "notifications",
+    "times": [
       64.0,
       71.0,
       78.0,
@@ -74,10 +70,9 @@ notifications:
       162.0,
       169.0,
       176.0,
-      181.0,
-    ]
-  values:
-    [
+      181.0
+    ],
+    "values": [
       20.714285714285715,
       77.71428571428571,
       468.0,
@@ -95,14 +90,13 @@ notifications:
       1377.0,
       1266.4285714285713,
       1077.857142857143,
-      868.3333333333334,
+      868.3333333333334
     ]
-
-new_hospital_admissions:
-  title: New new_hospital_admissions
-  output_key: new_hospital_admissions
-  times:
-    [
+  },
+  "new_hospital_admissions": {
+    "title": "New new_hospital_admissions",
+    "output_key": "new_hospital_admissions",
+    "times": [
       86.0,
       93.0,
       100.0,
@@ -117,10 +111,9 @@ new_hospital_admissions:
       163.0,
       170.0,
       177.0,
-      182.0,
-    ]
-  values:
-    [
+      182.0
+    ],
+    "values": [
       2228.714285714286,
       3069.5714285714284,
       2529.8571428571427,
@@ -135,5 +128,7 @@ new_hospital_admissions:
       431.14285714285717,
       365.2857142857143,
       303.2857142857143,
-      271.5,
+      271.5
     ]
+  }
+}

@@ -93,7 +93,7 @@ def add_standard_philippines_params(params):
         {
             "param_name": "time_variant_detection.end_value",
             "distribution": "uniform",
-            "distri_params": [0.5, 0.8],
+            "distri_params": [0.1, 0.4],
         },
         {
             "param_name": "ifr_multiplier",

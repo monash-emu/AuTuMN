@@ -1,9 +1,8 @@
----
-notifications:
-  output_key: notifications
-  title: Daily number of confirmed cases
-  times:
-    [
+{
+  "notifications": {
+    "output_key": "notifications",
+    "title": "Daily number of confirmed cases",
+    "times": [
       62,
       63,
       64,
@@ -161,10 +160,9 @@ notifications:
       216,
       217,
       218,
-      219,
-    ]
-  values:
-    [
+      219
+    ],
+    "values": [
       6,
       9,
       16,
@@ -322,14 +320,13 @@ notifications:
       1648,
       1659,
       1673,
-      1677,
+      1677
     ]
-
-icu_occupancy:
-  output_key: icu_occupancy
-  title: ICU occupancy
-  times:
-    [
+  },
+  "icu_occupancy": {
+    "output_key": "icu_occupancy",
+    "title": "ICU occupancy",
+    "times": [
       110,
       117,
       124,
@@ -346,10 +343,9 @@ icu_occupancy:
       201,
       208,
       215,
-      222,
-    ]
-  values:
-    [
+      222
+    ],
+    "values": [
       93,
       188,
       224,
@@ -366,14 +362,13 @@ icu_occupancy:
       359,
       368,
       385,
-      418,
+      418
     ]
-
-total_infection_deaths:
-  output_key: total_infection_deaths
-  title: Daily number of deaths
-  times:
-    [
+  },
+  "total_infection_deaths": {
+    "output_key": "total_infection_deaths",
+    "title": "Daily number of deaths",
+    "times": [
       74,
       75,
       76,
@@ -510,10 +505,9 @@ total_infection_deaths:
       214,
       215,
       216,
-      217,
-    ]
-  values:
-    [
+      217
+    ],
+    "values": [
       3,
       4,
       6,
@@ -650,5 +644,7 @@ total_infection_deaths:
       10,
       11,
       11,
-      12,
+      12
     ]
+  }
+}

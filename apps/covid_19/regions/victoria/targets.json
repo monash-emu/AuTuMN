@@ -1,8 +1,8 @@
-notifications:
-  title: Daily number of confirmed cases
-  output_key: notifications
-  times:
-    [
+{
+  "notifications": {
+    "title": "Daily number of confirmed cases",
+    "output_key": "notifications",
+    "times": [
       160,
       161,
       162,
@@ -67,10 +67,9 @@ notifications:
       221,
       222,
       223,
-      224,
-    ]
-  values:
-    [
+      224
+    ],
+    "values": [
       2,
       0,
       4,
@@ -135,14 +134,13 @@ notifications:
       466,
       394,
       322,
-      331,
+      331
     ]
-
-hospital_occupancy:
-  title: Hospital occupancy
-  output_key: hospital_occupancy
-  times:
-    [
+  },
+  "hospital_occupancy": {
+    "title": "Hospital occupancy",
+    "output_key": "hospital_occupancy",
+    "times": [
       196,
       197,
       198,
@@ -170,10 +168,9 @@ hospital_occupancy:
       220,
       221,
       222,
-      223,
-    ]
-  values:
-    [
+      223
+    ],
+    "values": [
       85,
       111,
       114,
@@ -201,14 +198,13 @@ hospital_occupancy:
       632,
       659,
       658,
-      664,
+      664
     ]
-
-icu_occupancy:
-  title: ICU occupancy
-  output_key: icu_occupancy
-  times:
-    [
+  },
+  "icu_occupancy": {
+    "title": "ICU occupancy",
+    "output_key": "icu_occupancy",
+    "times": [
       160,
       161,
       162,
@@ -272,10 +268,9 @@ icu_occupancy:
       220,
       221,
       222,
-      223,
-    ]
-  values:
-    [
+      223
+    ],
+    "values": [
       2,
       1,
       2,
@@ -339,14 +334,13 @@ icu_occupancy:
       51,
       53,
       51,
-      54,
+      54
     ]
-
-total_infection_deaths:
-  title: Daily number of deaths
-  output_key: total_infection_deaths
-  times:
-    [
+  },
+  "total_infection_deaths": {
+    "title": "Daily number of deaths",
+    "output_key": "total_infection_deaths",
+    "times": [
       175,
       176,
       177,
@@ -396,10 +390,9 @@ total_infection_deaths:
       221,
       222,
       223,
-      224,
-    ]
-  values:
-    [
+      224
+    ],
+    "values": [
       0,
       1,
       0,
@@ -449,18 +442,19 @@ total_infection_deaths:
       12,
       16,
       18,
-      19,
+      19
     ]
-
-incidence:
-  title: Incidence
-  output_key: incidence
-  times: []
-  values: []
-
-# FIXME: This is the same as icu_occupancy.
-icu_prevalence:
-  title: Prevalence of ICU cases
-  output_key: prevXlate_activeXclinical_icuXamong
-  times: []
-  values: []
+  },
+  "incidence": {
+    "title": "Incidence",
+    "output_key": "incidence",
+    "times": [],
+    "values": []
+  },
+  "icu_prevalence": {
+    "title": "Prevalence of ICU cases",
+    "output_key": "prevXlate_activeXclinical_icuXamong",
+    "times": [],
+    "values": []
+  }
+}

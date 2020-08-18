@@ -1,10 +1,8 @@
----
-notifications:
-  output_key: notifications
-  # Malaysia: country data
-  title: Daily number of confirmed cases
-  times:
-    [
+{
+  "notifications": {
+    "output_key": "notifications",
+    "title": "Daily number of confirmed cases",
+    "times": [
       63,
       64,
       65,
@@ -166,10 +164,9 @@ notifications:
       221,
       222,
       223,
-      224,
-    ]
-  values:
-    [
+      224
+    ],
+    "values": [
       7,
       14,
       5,
@@ -331,15 +328,13 @@ notifications:
       7,
       13,
       11,
-      9,
+      9
     ]
-
-infection_deathsXall:
-  output_key: infection_deathsXall
-  # Malaysia (deaths, country data):
-  title: Daily number of deaths
-  times:
-    [
+  },
+  "infection_deathsXall": {
+    "output_key": "infection_deathsXall",
+    "title": "Daily number of deaths",
+    "times": [
       77,
       78,
       79,
@@ -487,10 +482,9 @@ infection_deathsXall:
       221,
       222,
       223,
-      224,
-    ]
-  values:
-    [
+      224
+    ],
+    "values": [
       2,
       0,
       0,
@@ -638,14 +632,13 @@ infection_deathsXall:
       0,
       0,
       0,
-      0,
+      0
     ]
-
-icu_occupancy:
-  output_key: icu_occupancy
-  title: ICU occupancy
-  times:
-    [
+  },
+  "icu_occupancy": {
+    "output_key": "icu_occupancy",
+    "title": "ICU occupancy",
+    "times": [
       71,
       72,
       73,
@@ -799,10 +792,9 @@ icu_occupancy:
       221,
       222,
       223,
-      224,
-    ]
-  values:
-    [
+      224
+    ],
+    "values": [
       2,
       3,
       4,
@@ -956,5 +948,7 @@ icu_occupancy:
       2,
       1,
       1,
-      2,
+      2
     ]
+  }
+}

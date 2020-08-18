@@ -1,9 +1,8 @@
----
-notifications:
-  output_key: notifications
-  title: notifications
-  times:
-    [
+{
+  "notifications": {
+    "output_key": "notifications",
+    "title": "notifications",
+    "times": [
       64.0,
       71.0,
       78.0,
@@ -21,10 +20,9 @@ notifications:
       162.0,
       168.0,
       176.0,
-      181.0,
-    ]
-  values:
-    [
+      181.0
+    ],
+    "values": [
       679.2857142857143,
       2182.0,
       4631.571428571428,
@@ -42,14 +40,13 @@ notifications:
       253.42857142857142,
       309.0,
       278.57142857142856,
-      158.33333333333334,
+      158.33333333333334
     ]
-
-hospital_occupancy:
-  output_key: hospital_occupancy
-  title: hospital_occupancy
-  times:
-    [
+  },
+  "hospital_occupancy": {
+    "output_key": "hospital_occupancy",
+    "title": "hospital_occupancy",
+    "times": [
       64.0,
       71.0,
       78.0,
@@ -67,10 +64,9 @@ hospital_occupancy:
       162.0,
       169.0,
       176.0,
-      181.0,
-    ]
-  values:
-    [
+      181.0
+    ],
+    "values": [
       1829.4285714285713,
       6926.285714285715,
       16182.857142857143,
@@ -88,14 +84,13 @@ hospital_occupancy:
       4575.714285714285,
       3243.8571428571427,
       1821.142857142857,
-      1219.0,
+      1219.0
     ]
-
-infection_deathsXall:
-  output_key: infection_deathsXall
-  title: infection_deathsXall
-  times:
-    [
+  },
+  "infection_deathsXall": {
+    "output_key": "infection_deathsXall",
+    "title": "infection_deathsXall",
+    "times": [
       53.0,
       60.0,
       67.0,
@@ -116,10 +111,9 @@ infection_deathsXall:
       172.0,
       179.0,
       186.0,
-      193.0,
-    ]
-  values:
-    [
+      193.0
+    ],
+    "values": [
       1.7142857142857142,
       9.714285714285714,
       78.71428571428571,
@@ -140,5 +134,7 @@ infection_deathsXall:
       40.857142857142854,
       12.428571428571429,
       17.857142857142858,
-      14.0,
+      14.0
     ]
+  }
+}

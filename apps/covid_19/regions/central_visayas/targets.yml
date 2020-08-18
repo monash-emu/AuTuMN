@@ -276,7 +276,26 @@ icu_occupancy:
       215,
       222,
     ]
-  values: [3, 17, 20, 19, 21, 21, 26, 30, 32, 50, 60, 76, 82, 72, 80, 72, 56]
+  values: 
+    [
+      3,
+      17,
+      20,
+      19,
+      21,
+      21,
+      26,
+      30,
+      32,
+      50,
+      60,
+      76,
+      82,
+      72,
+      80,
+      72,
+      56,
+    ]
 
 total_infection_deaths:
   output_key: total_infection_deaths

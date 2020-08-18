@@ -16,23 +16,6 @@ microdistancing:
 end_time: 365.
 iso3: MYS
 
-contact_rate: 0.026261071031329
-start_time: 31.0692731013737
-compartment_periods_calculated:
-  exposed:
-    total_period: 3.90213647584108
-
-compartment_periods:
-  icu_late: 2.88703733417247
-  icu_early: 21.1707377760239
-
-time_variant_detection:
-    max_change_time: 80.
-    maximum_gradient: 0.0604182172578674
-    start_value: 0.46226447586322
-    end_value: 0.891585432203268
-icu_prop: 0.282896242081187
-
 mixing:
   school:
     append: false
@@ -220,3 +203,21 @@ data: # Daily numbers of reported imported cases. (two different approaches here
       10.0,
       1.0
     ]
+
+importation_props_by_age:
+  "0": 0.06
+  "5": 0.06
+  "10": 0.06
+  "15": 0.06
+  "20": 0.06
+  "25": 0.07
+  "30": 0.07
+  "35": 0.07
+  "40": 0.07
+  "45": 0.06
+  "50": 0.06
+  "55": 0.06
+  "60": 0.06
+  "65": 0.06
+  "70": 0.06
+  "75": 0.06

@@ -64,7 +64,12 @@ PAR_PRIORS += [
     {
         "param_name": "icu_prop",
         "distribution": "uniform",
-        "distri_params": [0.12, 0.25],
+        "distri_params": [0.15, 0.3],
+    },
+    {
+        "param_name": "hospital_props_multiplier",
+        "distribution": "uniform",
+        "distri_params": [0.8, 1.5],
     },
     # Detection-related
     {

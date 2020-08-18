@@ -4,6 +4,7 @@ Used to load model parameters from file
 import os
 import re
 import yaml
+import json
 from copy import deepcopy
 from os import path
 
@@ -27,9 +28,9 @@ def load_targets(app_name: str, region_name: str):
     region_dir = path.join(region_path, region_name)
 
     # Load app default param config
-    targets_path = path.join(region_dir, "targets.yml")
+    targets_path = path.join(region_dir, "targets.json")
     with open(targets_path, "r") as f:
-        targets = yaml.safe_load(f)
+        targets = json.load(f)
 
     return targets
 

@@ -5,12 +5,12 @@ from autumn.constants import Region
 from apps import covid_19, sir_example
 
 # Run a COVID model manually.
-app_region = covid_19.app.get_region(Region.MALAYSIA)
-app_region.run_model(run_scenarios=True)
+# app_region = covid_19.app.get_region(Region.MALAYSIA)
+# app_region.run_model(run_scenarios=True)
 
-# # Simple SIR model for demonstration
-# app_region = sir_example.app.get_region(Region.Region.AUSTRALIA)
-# app_region.run_model()
+# Simple SIR model for demonstration
+app_region = sir_example.app.get_region(Region.AUSTRALIA)
+app_region.run_model()
 
 # # Run a calibration
 # app_region = covid_19.app.get_region(Region.VICTORIA)

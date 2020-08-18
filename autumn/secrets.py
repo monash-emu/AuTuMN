@@ -1,0 +1,91 @@
+"""
+Utilities for managing secret data that is kept under source control.
+"""
+import os
+import json
+import logging
+import hashlib
+import glob
+
+import pyAesCrypt
+
+from autumn.constants import DATA_PATH, APPS_PATH
+
+BUFFER_SIZE = 64 * 1024
+HASH_FILE = os.path.join(DATA_PATH, "secret-hashes.json")
+
+logger = logging.getLogger(__name__)
+
+
+def read(password: str):
+    """
+    Decrypt all secrets into secret files.
+    """
+    encrypt_glob = os.path.join(APPS_PATH, "**", "*.encrypted.*")
+    encrypt_paths = glob.glob(encrypt_glob, recursive=True)
+    num_files = len(encrypt_paths)
+    logger.info("Decrypting %s files", num_files)
+    for encrypt_path in encrypt_paths:
+        secret_path = encrypt_path.replace(".encrypted.", ".secret.")
+        logger.info("Decrypting %s into %s", encrypt_path, secret_path)
+        pyAesCrypt.decryptFile(encrypt_path, secret_path, password, BUFFER_SIZE)
+        check_hash(secret_path)
+
+    logger.info("Finished decrypting %s files", num_files)
+
+
+def write(file_path: str, password: str):
+    """
+    Decrypt all secrets into secret files.
+    """
+    assert (
+        ".secret." in file_path
+    ), "Can only encrypt files that are marked as secret with *.secret.*"
+    set_hash(file_path)
+    encrypt_path = file_path.replace(".secret.", ".encrypted.")
+    pyAesCrypt.encryptFile(file_path, encrypt_path, password, BUFFER_SIZE)
+    check_hash(file_path)
+
+
+def set_hash(file_path: str):
+    """
+    Check that a secret file is the latest version. 
+    """
+    assert (
+        ".secret." in file_path
+    ), "Can only set the hash for files that are marked as secret with *.secret.*"
+    pass
+    with open(HASH_FILE, "r") as f:
+        hashes = json.load(f)
+
+    hashes = {k: v for k, v in hashes.items() if os.path.exists(k)}
+    fp_key = os.path.relpath(file_path)
+    hashes[fp_key] = get_hash(file_path)
+
+    with open(HASH_FILE, "w") as f:
+        json.dump(hashes, f)
+
+
+def check_hash(file_path: str):
+    """
+    Check that a secret file is the latest version. 
+    """
+    assert (
+        ".secret." in file_path
+    ), "Can only check the hash files that are marked as secret with *.secret.*"
+    pass
+    with open(HASH_FILE, "r") as f:
+        hashes = json.load(f)
+
+    file_hash = get_hash(file_path)
+    fp_key = os.path.relpath(file_path)
+    assert (
+        hashes[fp_key] == file_hash
+    ), f"Secret file {fp_key} is not using the latest data, try re-reading encrypted files."
+
+
+def get_hash(file_path: str):
+    with open(file_path, "rb") as f:
+        file_bytes = f.read()
+        return hashlib.sha256(file_bytes).hexdigest()
+

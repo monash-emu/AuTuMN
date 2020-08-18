@@ -5,9 +5,9 @@ from apps.sir_example.model import build_model
 
 from .calibrate import run_calibration_chain
 
-philippines_region = AppRegion(
+victoria_region = AppRegion(
     app_name="sir_example",
-    region_name=Region.PHILIPPINES,
+    region_name=Region.VICTORIA,
     build_model=build_model,
     calibrate_model=run_calibration_chain,
 )

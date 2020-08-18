@@ -15,6 +15,7 @@ from .database import db
 from .run import run
 from .run_mcmc import run_mcmc
 from .calibrate import calibrate
+from .secrets import secrets
 
 # Setup Sentry error reporting - https://sentry.io/welcome/
 SENTRY_DSN = os.environ.get("SENTRY_DSN")
@@ -31,4 +32,5 @@ cli.add_command(run)
 cli.add_command(run_mcmc)
 cli.add_command(calibrate)
 cli.add_command(db)
+cli.add_command(secrets)
 cli()

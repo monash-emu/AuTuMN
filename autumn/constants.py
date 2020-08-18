@@ -20,7 +20,6 @@ DATA_PATH = os.path.join(BASE_PATH, "data")
 INPUT_DATA_PATH = os.path.join(DATA_PATH, "inputs")
 OUTPUT_DATA_PATH = os.path.join(DATA_PATH, "outputs")
 APPS_PATH = os.path.join(BASE_PATH, "apps")
-EXCEL_PATH = os.path.join(DATA_PATH, "xls")
 
 
 class Region:

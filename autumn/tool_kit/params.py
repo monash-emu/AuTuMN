@@ -10,6 +10,7 @@ from os import path
 
 from autumn.constants import APPS_PATH
 from autumn.tool_kit.utils import merge_dicts
+from autumn.secrets import check_hash
 
 
 def load_targets(app_name: str, region_name: str):
@@ -29,8 +30,18 @@ def load_targets(app_name: str, region_name: str):
 
     # Load app default param config
     targets_path = path.join(region_dir, "targets.json")
-    with open(targets_path, "r") as f:
-        targets = json.load(f)
+    secret_targets_path = path.join(region_dir, "targets.secret.json")
+    if os.path.exists(targets_path):
+        with open(targets_path, "r") as f:
+            targets = json.load(f)
+    elif os.path.exists(secret_targets_path):
+        check_hash(secret_targets_path)
+        with open(secret_targets_path, "r") as f:
+            targets = json.load(f)
+    else:
+        raise ValueError(
+            f"No targets.json or targets.secrets.json found for {app_name} {region_name}"
+        )
 
     return targets
 

@@ -4,9 +4,6 @@
 scenario_start_time: 50
 
 # Parameters used to build a general model of COVID-19 disease for application to Australia or internationally
-country: null
-iso3: null
-
 start_time: 0.
 end_time: 100.
 time_step: 1

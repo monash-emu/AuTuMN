@@ -1315,15 +1315,53 @@ def plot_percentile(pbi_outputs_dir, output, country, plot_configs, axis, show_y
 
 
     # Add plot targets
-    output_config = {"name": output, "target_values": [], "target_times": []}
-    outputs_to_plot = plot_configs[country].get("outputs_to_plot", [])
-    for o in outputs_to_plot:
-        if o["name"] == output:
-            output_config = o
+    if output == 'proportion_seropositive':
+        target_values = []
+        surveys = {
+            'belgium': [
+                {'time_window': [90., 96], 'value': .029, 'ci': [.023, .034]},  # 30 mar  5 Apr
+                {'time_window': [111, 117], 'value': .06, 'ci': [.051, .071]},  # 20 -26 Apr
+                {'time_window': [139, 146], 'value': .069, 'ci': [.059, .080]},  # 18 -25 May
+                {'time_window': [160, 165], 'value': .055, 'ci': [.047, .065]},  # 8 - 13 jun
+                {'time_window': [181, 185], 'value': .045, 'ci': [.037, .054]},  # 29 Jun -3 Jul
+            ],
+            'france': [
+                {'time_window': [85., 98], 'value': .0271},
+            ],
+            'italy': [
+                {'time_window': [146., 197], 'value': .0250},  # 25 may 15 jul
+            ],
+            'spain': [
+                {'time_window': [112, 132], 'value': .05, 'ci': [0.047, 0.054]},
+            ],
+            'sweden': [
+                {'time_window': [122, 152], 'value': .108, 'ci': [0.079, 0.137]},
+            ],
+            'united-kingdom': [
+                {'time_window': [118, 124], 'value': .0710},
+                {'time_window': [172, 195], 'value': .06, 'ci': [.058, .061]},
+            ]
+        }
 
-    target_values = output_config["target_values"]
-    target_times = output_config["target_times"]
-    _plot_targets_to_axis(axis, target_values, target_times, on_uncertainty_plot=True)
+        for s in surveys[country]:
+
+            if "ci" in s:
+                rect = patches.Rectangle((s['time_window'][0], s['ci'][0]),
+                                         s['time_window'][1] - s['time_window'][0],
+                                         s['ci'][1] - s['ci'][0],
+                                         linewidth=0, facecolor='gold', alpha=.4)
+                rect.set_zorder(1)
+                axis.add_patch(rect)
+            axis.plot(s['time_window'], [s['value']] * 2, linewidth=1.5, color='black')
+    else:
+        output_config = {"name": output, "target_values": [], "target_times": []}
+        outputs_to_plot = plot_configs[country].get("outputs_to_plot", [])
+        for o in outputs_to_plot:
+            if o["name"] == output:
+                output_config = o
+        target_values = output_config["target_values"]
+        target_times = output_config["target_times"]
+        _plot_targets_to_axis(axis, target_values, target_times, on_uncertainty_plot=True)
 
     c_title = country.title() if country != "united-kingdom" else "United Kingdom"
 
@@ -1340,7 +1378,6 @@ def plot_percentile(pbi_outputs_dir, output, country, plot_configs, axis, show_y
     axis.set_ylim((0, y_max * 1.3))
 
 
-
 def plot_multicountry_percentile(pbi_outputs_dir, output, plot_configs):
     n_panels = 6
     n_col = 3
@@ -1352,7 +1389,6 @@ def plot_multicountry_percentile(pbi_outputs_dir, output, plot_configs):
     pyplot.rcParams["font.family"] = "Times New Roman"
     pyplot.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.15, hspace=.4)
     pyplot.style.use("ggplot")
-
     countries = ['belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']
     country_names = [c.title() for c in countries]
     country_names[-1] = "United Kingdom"
@@ -1375,7 +1411,7 @@ def plot_multicountry_percentile(pbi_outputs_dir, output, plot_configs):
 
     out_dir = "apps/covid_19/mixing_optimisation/opti_plots/figures/percentiles/"
     filename = out_dir + output
-    # pyplot.savefig(filename + ".pdf")
+    pyplot.savefig(filename + ".pdf")
     pyplot.savefig(filename + ".png", dpi=300)
 
 

@@ -3,8 +3,8 @@ mixing:
   work:
     append: true
     times:
-      - 2020-08-05 # google mobility data update, pls review
-      - 2020-08-11 # google mobility data update, pls review
+      - 2020-08-15 # google mobility data update, pls review
+      - 2020-08-25 # google mobility data update, pls review
     values:
       - [repeat_prev]
       - [add_to_prev_up_to_1, 0.09]

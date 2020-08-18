@@ -34,7 +34,10 @@ def preprocess_mobility(input_db: Database, country_df):
     mob_df = pd.read_csv(MOBILITY_CSV_PATH)
 
     # Drop all sub-region 2 data, too detailed.
-    mob_df = mob_df[mob_df["sub_region_2"].isnull()]
+    mob_df = mob_df[
+        (mob_df["sub_region_2"].isnull())
+        & (mob_df["metro_area"].isnull())
+        ]
 
     mob_cols = [c for c in mob_df.columns if c.endswith(MOBILITY_SUFFIX)]
     for c in mob_cols:

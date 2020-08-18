@@ -43,7 +43,7 @@ mixing:
       - 2020-06-24 # Secondary examinations
       - 2020-07-07
       - 2020-07-22 # School reopen
-      - 2020-08-11 # google mobility data update, pls review
+      - 2020-08-25 # google mobility data update, pls review
     values:
       - 1.
       - 0.

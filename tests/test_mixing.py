@@ -278,15 +278,15 @@ def test_build_dynamic__smoke_test():
     mixing_params = {
         "other_locations": {
             "append": True,
-            "times": get_date([220, 230, 240, 250, 260]),
+            "times": get_date([230, 240, 250, 260, 270]),
             "values": [1, 0.4, 0.3, 0.3, 0.5],
         },
         "work": {
             "append": True,
-            "times": get_date([220, 230, 240, 250, 260]),
+            "times": get_date([230, 240, 250, 260, 270]),
             "values": [1, 0.9, 0.5, 0.3, 0.6],
         },
-        "school": {"append": False, "times": get_date([46, 220]), "values": [1, 0],},
+        "school": {"append": False, "times": get_date([56, 230]), "values": [1, 0],},
     }
     mm_func = mixing_matrix.build_dynamic(
         country_iso3="MYS",

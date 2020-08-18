@@ -3,6 +3,6 @@ mixing:
   work:
     append: true
     times:
-      - 2020-08-05
+      - 2020-08-15
     values:
       - 1.

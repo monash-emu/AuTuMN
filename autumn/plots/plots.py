@@ -1266,6 +1266,110 @@ def plot_multicountry_hospital_uncertainty(pbi_outputs_dir, immunity):
     pyplot.savefig(filename + ".png", dpi=300)
 
 
+def plot_percentile(pbi_outputs_dir, output, country, plot_configs, axis, show_ylabel):
+
+    ylabs = {
+        "infection_deathsXall": "daily number of deaths (weekly average)",
+        "proportion_seropositive": "proportion recovered",
+        'hospital_occupancy': 'number of beds',
+        "new_hospital_admissions": 'new hospitalisations',
+        'icu_occupancy': 'ICU beds',
+        "new_icu_admissions": 'new ICU admissions',
+    }
+
+
+    dir_content = os.listdir(pbi_outputs_dir)
+    for f in dir_content:
+        if country in f:
+            db_name = f
+
+    db_path = os.path.join(pbi_outputs_dir, db_name)
+    db = Database(db_path)
+    uncertainty_df = db.query("uncertainty")
+    quantile_vals = uncertainty_df["quantile"].unique().tolist()
+
+    mask = uncertainty_df["type"] == output
+    output_df = uncertainty_df[mask]
+
+    mask = output_df["Scenario"] == 'S_0'
+    scenario_df = output_df[mask]
+    times = list(scenario_df.time.unique())[1:]
+    quantiles = {}
+    for q in quantile_vals:
+        mask = scenario_df["quantile"] == q
+        quantiles[q] = scenario_df[mask]["value"].tolist()[1:]
+
+
+    axis.fill_between(times, quantiles[0.025], quantiles[0.975], facecolor="lightsteelblue")
+    axis.fill_between(times, quantiles[0.25], quantiles[0.75], facecolor="cornflowerblue")
+    axis.plot(times, quantiles[0.50], color="navy")
+
+
+    # Add plot targets
+    output_config = {"name": output, "target_values": [], "target_times": []}
+    outputs_to_plot = plot_configs[country].get("outputs_to_plot", [])
+    for o in outputs_to_plot:
+        if o["name"] == output:
+            output_config = o
+
+    target_values = output_config["target_values"]
+    target_times = output_config["target_times"]
+    _plot_targets_to_axis(axis, target_values, target_times, on_uncertainty_plot=True)
+
+    c_title = country.title() if country != "united-kingdom" else "United Kingdom"
+
+    axis.set_title(c_title)
+    axis.set_xlim((45, 212))
+    axis.set_xlabel("days since 31/12/2019")
+    if show_ylabel:
+        axis.set_ylabel(ylabs[output])
+
+    if len(target_values) > 0:
+        y_max = max([max([t[0] for t in target_values]), max(quantiles[0.975])])
+    else:
+        y_max = max(quantiles[0.975])
+    axis.set_ylim((0, y_max * 1.3))
+
+
+
+def plot_multicountry_percentile(pbi_outputs_dir, output, plot_configs):
+    n_panels = 6
+    n_col = 3
+    n_row = int(n_panels // n_col)
+    if n_col * n_row < n_panels:
+        n_row += 1
+
+    fig, axs = pyplot.subplots(n_row, n_col, figsize=(15, 8))
+    pyplot.rcParams["font.family"] = "Times New Roman"
+    pyplot.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=0.15, hspace=.4)
+    pyplot.style.use("ggplot")
+
+    countries = ['belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']
+    country_names = [c.title() for c in countries]
+    country_names[-1] = "United Kingdom"
+
+    text_size = 23
+
+    i_col = -1
+    i_row = 0
+    for country in countries:
+        i_col += 1
+        if i_col >= n_col:
+            i_col = 0
+            i_row += 1
+
+        show_ylabel = i_col == 0
+
+        with pyplot.style.context('ggplot'):
+            plot_percentile(pbi_outputs_dir, output, country, plot_configs, axs[i_row, i_col], show_ylabel)
+
+
+    out_dir = "apps/covid_19/mixing_optimisation/opti_plots/figures/percentiles/"
+    filename = out_dir + output
+    # pyplot.savefig(filename + ".pdf")
+    pyplot.savefig(filename + ".png", dpi=300)
+
+
 def plot_mixing_matrix_opti(matrix, axis, fig, vmax, include_legend):
 
     axis.matshow(matrix)

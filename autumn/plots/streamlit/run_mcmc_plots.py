@@ -139,6 +139,21 @@ def plot_multicountry_hospital_uncertainty(
         pbi_outputs_dir = 'data/pbi_outputs_for_opti/' + mode + "/" + immunity
         plots.plot_multicountry_hospital_uncertainty(pbi_outputs_dir, immunity)
 
+
+def plot_multicountry_percentile(
+    plotter: StreamlitPlotter, calib_dir_path: str, mcmc_tables: List[pd.DataFrame], plot_config={},
+):
+    pbi_outputs_dir = 'data/pbi_outputs_for_opti/by_age/fully_immune'
+    for output in ['infection_deathsXall', 'proportion_seropositive', 'hospital_occupancy', "new_hospital_admissions",
+                   'icu_occupancy', "new_icu_admissions"]:
+        plot_configs = {}
+        for country in ['belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']:
+            plot_configs[country] = utils.load_plot_config('covid_19', country)
+
+        plots.plot_multicountry_percentile(pbi_outputs_dir, output, plot_configs)
+
+
+
 def plot_calibration_fit(
     plotter: StreamlitPlotter, calib_dir_path: str, mcmc_tables: List[pd.DataFrame], plot_config={},
 ):
@@ -173,6 +188,8 @@ PLOT_FUNCS = {
     "Predictions": plot_timeseries_with_uncertainty,
     "Print MLE parameters": print_mle_parameters,
     "Multicountry hospital uncertainty": plot_multicountry_hospital_uncertainty,
+    "Multicountry percentile": plot_multicountry_percentile,
+
 }
 
 

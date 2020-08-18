@@ -31,7 +31,13 @@ TARGET_OUTPUTS = [
         "years": notifications["times"],
         "values": notifications["values"],
         "loglikelihood_distri": "normal",
-#        "time_weights": assign_trailing_weights_to_halves(5, notifications["times"]),
+        "time_weights": assign_trailing_weights_to_halves(14, notifications["times"]),
+    },
+    {
+        "output_key": "icu_occupancy",
+        "years": icu_occupancy["times"],
+        "values": icu_occupancy["values"],
+        "loglikelihood_distri": "normal",
     },
 ]
 

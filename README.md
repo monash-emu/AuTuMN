@@ -101,6 +101,33 @@ pytest -v
 
 Tests are also run automatically via [GitHub Actions](https://github.com/monash-emu/AuTuMN/actions) on any pull request or commit to the `master` branch.
 
+## Reading and writing secrets
+
+There are some files that we do not want to share publicly. These are encrypted and use the filename `*.encrypted.*`.
+
+### Reading all encrypted files
+
+To read the encrypted files you will need to know the project password.
+Once you have the password, then you can read the files:
+
+```bash
+python -m apps secrets read
+```
+
+The decrypted files will have the filename `*.secret.*`. **Do not remove this or change the filename**.
+
+This will throw an error if you enter the incorrect password, or if the read file does not match the hashes stored in `data/secret-hashes.json`.
+
+### Writing all encrypted files
+
+To write a new encrypted file, first name your file  `*.secret.*` and then use the CLI to encrypt it:
+
+```bash
+python -m apps secrets write apps/foo/bar.secret.json
+```
+
+A new file called `apps/foo/bar.encrypted.json` will be created. You can commit this to GitHub.
+
 ## Formatting
 
 The codebase can be auto-formatted using [Black](https://github.com/psf/black):

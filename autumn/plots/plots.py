@@ -1100,7 +1100,15 @@ def plot_multicountry_mobility(all_values):
     pyplot.savefig(filename + ".png", dpi=300)
 
 
-def plot_hospital_uncertainty(pbi_outputs_dir, country, axis):
+def plot_multiscenario_uncertainty(pbi_outputs_dir, country, axis, output):
+    ylabs = {
+        "infection_deathsXall": "daily number of deaths (weekly average)",
+        "proportion_seropositive": "proportion recovered",
+        'hospital_occupancy': 'number of beds',
+        "new_hospital_admissions": 'new hospitalisations',
+        'icu_occupancy': 'ICU beds',
+        "new_icu_admissions": 'new ICU admissions',
+    }
     dir_content = os.listdir(pbi_outputs_dir)
     for f in dir_content:
         if country in f:
@@ -1111,7 +1119,7 @@ def plot_hospital_uncertainty(pbi_outputs_dir, country, axis):
     uncertainty_df = db.query("uncertainty")
     quantile_vals = uncertainty_df["quantile"].unique().tolist()
 
-    mask = uncertainty_df["type"] == 'hospital_occupancy'
+    mask = uncertainty_df["type"] == output
     output_df = uncertainty_df[mask]
     data = {}
     max_plotted_time = 600.
@@ -1205,13 +1213,13 @@ def plot_hospital_uncertainty(pbi_outputs_dir, country, axis):
     for tick in axis.yaxis.get_major_ticks():
         tick.label.set_fontsize(14)
 
-    axis.set_ylabel("Hospital beds", fontsize=19)
+    axis.set_ylabel(ylabs[output], fontsize=19)
     pyplot.margins(y=10.)
 
     return title_x, x_lims
 
 
-def plot_multicountry_hospital_uncertainty(pbi_outputs_dir, immunity):
+def plot_multicountry_multiscenario_uncertainty(pbi_outputs_dir, immunity, output):
     fig = pyplot.figure(constrained_layout=True, figsize=(20, 20))  # (w, h)
     pyplot.style.use("default")
     pyplot.rcParams["hatch.linewidth"] = 1.
@@ -1235,7 +1243,7 @@ def plot_multicountry_hospital_uncertainty(pbi_outputs_dir, immunity):
         ax.axis("off")
 
         ax = fig.add_subplot(spec[i+1, 1])
-        title_x, x_lim = plot_hospital_uncertainty(pbi_outputs_dir, country, axis=ax)
+        title_x, x_lim = plot_multiscenario_uncertainty(pbi_outputs_dir, country, ax, output)
 
         if i == 0:
             ax = fig.add_subplot(spec[0, 1])
@@ -1260,8 +1268,8 @@ def plot_multicountry_hospital_uncertainty(pbi_outputs_dir, immunity):
 
     pyplot.rcParams["font.family"] = "Times New Roman"
 
-    out_dir = "apps/covid_19/mixing_optimisation/opti_plots/figures/hospital_uncertainty/"
-    filename = out_dir + "hospital_uncertainty_by_age_" + immunity
+    out_dir = "apps/covid_19/mixing_optimisation/opti_plots/figures/multiscenario_uncertainty/"
+    filename = out_dir + output + "_uncertainty_by_age_" + immunity
     pyplot.savefig(filename + ".pdf")
     pyplot.savefig(filename + ".png", dpi=300)
 
@@ -1275,6 +1283,7 @@ def plot_percentile(pbi_outputs_dir, output, country, plot_configs, axis, show_y
         "new_hospital_admissions": 'new hospitalisations',
         'icu_occupancy': 'ICU beds',
         "new_icu_admissions": 'new ICU admissions',
+        'notifications': "new confirmed cases"
     }
 
 

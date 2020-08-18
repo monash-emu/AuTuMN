@@ -131,13 +131,15 @@ def plot_timeseries_with_uncertainty(
     )
 
 
-def plot_multicountry_hospital_uncertainty(
+def plot_multicountry_muliscenario_uncertainty(
     plotter: StreamlitPlotter, calib_dir_path: str, mcmc_tables: List[pd.DataFrame], plot_config={},
 ):
-    for immunity in ["fully_immune"]: #, "partial_immune"]:
-        mode = "by_age"
-        pbi_outputs_dir = 'data/pbi_outputs_for_opti/' + mode + "/" + immunity
-        plots.plot_multicountry_hospital_uncertainty(pbi_outputs_dir, immunity)
+    for output in ['infection_deathsXall', 'proportion_seropositive', 'hospital_occupancy', "new_hospital_admissions",
+                   'icu_occupancy', "new_icu_admissions"]:
+        for immunity in ["fully_immune"]: #, "partial_immune"]:
+            mode = "by_age"
+            pbi_outputs_dir = 'data/pbi_outputs_for_opti/' + mode + "/" + immunity
+            plots.plot_multicountry_multiscenario_uncertainty(pbi_outputs_dir, immunity, output)
 
 
 def plot_multicountry_percentile(
@@ -145,13 +147,12 @@ def plot_multicountry_percentile(
 ):
     pbi_outputs_dir = 'data/pbi_outputs_for_opti/by_age/fully_immune'
     for output in ['infection_deathsXall', 'proportion_seropositive', 'hospital_occupancy', "new_hospital_admissions",
-                   'icu_occupancy', "new_icu_admissions"]:
+                   'icu_occupancy', "new_icu_admissions", 'notifications']:
         plot_configs = {}
         for country in ['belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']:
             plot_configs[country] = utils.load_plot_config('covid_19', country)
 
         plots.plot_multicountry_percentile(pbi_outputs_dir, output, plot_configs)
-
 
 
 def plot_calibration_fit(
@@ -187,7 +188,7 @@ PLOT_FUNCS = {
     "Calibration Fit": plot_calibration_fit,
     "Predictions": plot_timeseries_with_uncertainty,
     "Print MLE parameters": print_mle_parameters,
-    "Multicountry hospital uncertainty": plot_multicountry_hospital_uncertainty,
+    "Multicountry multiscenario uncertainty": plot_multicountry_muliscenario_uncertainty,
     "Multicountry percentile": plot_multicountry_percentile,
 
 }

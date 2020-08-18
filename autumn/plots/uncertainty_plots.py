@@ -1,7 +1,6 @@
 import os
 import logging
 from typing import List
-from autumn.tool_kit import export_mcmc_quantiles
 from autumn.tool_kit.params import load_targets
 
 from autumn.plots import plots
@@ -11,13 +10,10 @@ from autumn.db import Database
 logger = logging.getLogger(__name__)
 
 
-def plot_timeseries_with_uncertainty_for_powerbi(
-    region_name: str, powerbi_db_path: str, output_dir: str
-):
+def plot_timeseries_with_uncertainty(region_name: str, powerbi_db_path: str, output_dir: str):
     """
     works on powerbi version
     Assumes a COVID model.
-    TODO: Unify PowerBI and local version
     """
     os.makedirs(output_dir, exist_ok=True)
     targets = load_targets("covid_19", region_name)
@@ -42,33 +38,6 @@ def plot_timeseries_with_uncertainty_for_powerbi(
 
             times = scenario_df.time.unique()
             logger.info("Plotting uncertainty for output %s, scenario %s", output_name, scenario)
-            plots.plot_timeseries_with_uncertainty_for_powerbi(
+            plots.plot_timeseries_with_uncertainty(
                 plotter, output_name, scenario, quantiles, times, targets
             )
-
-
-def plot_timeseries_with_uncertainty(
-    path_to_percentile_outputs: str, output_names: List[str], scenario_list=[0], burn_in=0,
-):
-    """
-    works on local version
-    TODO: Deprecate
-    """
-    percentile_db_path = os.path.join(
-        path_to_percentile_outputs, "mcmc_percentiles_burned_" + str(burn_in) + ".db"
-    )
-    if not os.path.exists(percentile_db_path):
-        export_mcmc_quantiles(path_to_percentile_outputs, output_names, burn_in=burn_in)
-
-    plotter = FilePlotter(path_to_percentile_outputs, {})
-    for output_name in output_names:
-        plots.plot_timeseries_with_uncertainty(
-            plotter, path_to_percentile_outputs, output_name, scenario_list, burn_in=burn_in,
-        )
-
-
-if __name__ == "__main__":
-    plot_timeseries_with_uncertainty(
-        "../../data/covid_malaysia/calibration-covid_malaysia-fake-18-05-2020",
-        ["incidence", "cumulate_incidence"],
-    )

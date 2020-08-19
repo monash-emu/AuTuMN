@@ -2,7 +2,7 @@
   "infection_deathsXall": {
     "output_key": "infection_deathsXall",
     "title": "infection_deathsXall",
-    "target_times": [
+    "times": [
       53.0,
       60.0,
       67.0,
@@ -25,7 +25,7 @@
       186.0,
       193.0
     ],
-    "target_values": [
+    "values": [
       0.0,
       0.42857142857142855,
       4.142857142857143,
@@ -52,7 +52,7 @@
   "notifications": {
     "output_key": "notifications",
     "title": "notifications",
-    "target_times": [
+    "times": [
       64.0,
       71.0,
       78.0,
@@ -72,7 +72,7 @@
       176.0,
       181.0
     ],
-    "target_values": [
+    "values": [
       86.57142857142857,
       537.5714285714286,
       1403.857142857143,
@@ -96,7 +96,7 @@
   "new_hospital_admissions": {
     "output_key": "new_hospital_admissions",
     "title": "new_hospital_admissions",
-    "target_times": [
+    "times": [
       82.0,
       89.0,
       96.0,
@@ -113,7 +113,7 @@
       173.0,
       180.0
     ],
-    "target_values": [
+    "values": [
       2056.5714285714284,
       3389.8571428571427,
       3056.4285714285716,

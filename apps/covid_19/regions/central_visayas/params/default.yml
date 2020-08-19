@@ -18,3 +18,17 @@ mixing:
       - 0.
       - 0
       - 0
+
+microdistancing:
+    function_type: empiric
+    parameters:
+        multiplier: 0.05
+        times: [122, 137, 153, 168, 198, 214]
+        values: [4., 3., 1., 3., 2., 1.,]
+
+    # 1 May, day 122, general community quarantine (GCQ) with enhanced community quarantine (ECQ) for Cebu
+    # 16 May, day 137, Cebu switches to modified general enhanced community quarantine (MECQ), GCQ continues for rest of region 
+    # 1 June, day 153, Cebu switches to GCQ joining the rest of the region
+    # 16 June, day 168, Cebu switches back to ECQ, Talisay switches to MECQ, rest of region continues GCQ   
+    # 16 July, day 198, Cebu switches to MECQ, rest of region switches to MGCQ
+    # 1 Aug, day 214,  Cebu switches to GCQ, rest of region continues MGCQ

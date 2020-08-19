@@ -56,7 +56,7 @@ def run_root_model(country=Region.UNITED_KINGDOM, calibrated_params={}):
     return scenario_0.model
 
 
-def build_params_for_phases_2_and_3(decision_variables, config=0, mode='by_age'):
+def build_params_for_phases_2_and_3(decision_variables, config=0, mode='by_age', final_mixing=1.):
     # create parameters for scenario 1 which includes Phases 2 and 3
     ref_date = date(2019, 12, 31)
     phase_2_first_day = ref_date + timedelta(days=PHASE_2_START_TIME)
@@ -70,7 +70,7 @@ def build_params_for_phases_2_and_3(decision_variables, config=0, mode='by_age')
         for age_group in range(16):
             age_mixing_update["age_" + str(age_group)] = {
                 'times': [phase_1_end_date, phase_2_first_day, phase_2_end_date, phase_3_first_day],
-                'values': [1.0, decision_variables[age_group], decision_variables[age_group], 1.0]
+                'values': [1.0, decision_variables[age_group], decision_variables[age_group], final_mixing]
             }
         sc_1_params["mixing_age_adjust"] = age_mixing_update
 
@@ -86,7 +86,7 @@ def build_params_for_phases_2_and_3(decision_variables, config=0, mode='by_age')
 
         sc_1_params['mixing'][loc] = {
                 'times': [phase_1_end_date, phase_2_end_date, phase_3_first_day],
-                'values': [new_mixing_adjustment, new_mixing_adjustment, 1.],
+                'values': [new_mixing_adjustment, new_mixing_adjustment, final_mixing],
                 'append': False
         }
 
@@ -305,7 +305,7 @@ def reformat_date_to_integer(_date):
     return delta
 
 
-def get_params_for_phases_2_and_3_from_opti_outptuts(output_dir, country, config, mode, objective):
+def get_params_for_phases_2_and_3_from_opti_outptuts(output_dir, country, config, mode, objective, final_mixing=1.):
     _, decision_vars = get_mle_params_and_vars(output_dir, country, config, mode, objective)
     if mode == "by_location":
         new_decision_variables = {
@@ -315,7 +315,7 @@ def get_params_for_phases_2_and_3_from_opti_outptuts(output_dir, country, config
         }
         decision_vars = new_decision_variables
 
-    sc_params = build_params_for_phases_2_and_3(decision_vars, config, mode)
+    sc_params = build_params_for_phases_2_and_3(decision_vars, config, mode, final_mixing)
     # clean up times
     for par in ["mixing_age_adjust", "mixing"]:
         if par in sc_params:
@@ -326,8 +326,8 @@ def get_params_for_phases_2_and_3_from_opti_outptuts(output_dir, country, config
     return sc_params
 
 
-def drop_yml_scenario_file(output_dir, country, config=2, mode="by_age", objective="deaths"):
-    sc_params = get_params_for_phases_2_and_3_from_opti_outptuts(output_dir, country, config, mode, objective)
+def drop_yml_scenario_file(output_dir, country, config=2, mode="by_age", objective="deaths", final_mixing=1.):
+    sc_params = get_params_for_phases_2_and_3_from_opti_outptuts(output_dir, country, config, mode, objective, final_mixing)
 
     scenario_mapping = {
         1: mode + "_2_deaths",
@@ -366,17 +366,17 @@ def write_all_yml_files_from_outputs(output_dir, mode="by_age"):
                 yaml.dump(sc_params, f)
 
 
-def write_all_yml_files_for_immunity_scenarios(output_dir):
+def write_all_yml_files_for_immunity_scenarios(output_dir, final_mixing=1.):
 
     durations = [183., 2*365.25]
     rel_prop_sympts = [1., .5]
 
     mode = "by_age"
-    config = 3
-    objective = "yoll"
+    config = 2
+    objective = "deaths"
 
     for country in OPTI_REGIONS:
-        sc_params = get_params_for_phases_2_and_3_from_opti_outptuts(output_dir, country, config, mode, objective)
+        sc_params = get_params_for_phases_2_and_3_from_opti_outptuts(output_dir, country, config, mode, objective, final_mixing)
         sc_params['end_time'] = 366 + 365
         param_file_path = "../params/" + country + "/scenario-1.yml"
         with open(param_file_path, "w") as f:
@@ -571,16 +571,15 @@ if __name__ == "__main__":
     # exit()
 
     output_dir = "optimisation_outputs/6Aug2020/"
-    run_sensitivity_minimum_mixing(output_dir)
-    exit()
+    # run_sensitivity_minimum_mixing(output_dir)
+    # exit()
     # write_all_yml_files_from_outputs(output_dir, mode="by_age")
-    write_all_yml_files_for_immunity_scenarios(output_dir)
-    exit()
+    write_all_yml_files_for_immunity_scenarios(output_dir, final_mixing=.8)
     for _country in available_countries:
         print("Running for " + _country + " ...")
         mode = 'by_age'
-        for config in [2, 3]:
-            for objective in ["deaths", "yoll"]:
+        for config in [2]:
+            for objective in ["deaths"]:
                 print("config_" + str(config) + " objective_" + objective)
                 param_set, decision_vars = get_mle_params_and_vars(output_dir, _country, config=config, mode=mode,
                                                               objective=objective)
@@ -592,7 +591,7 @@ if __name__ == "__main__":
                 # str(round(yoll)) + "\n" + "Prop immune: " + str(round(p_immune, 3))
                 # )
 
-                # run_all_phases(decision_vars, _country, config, param_set, mode)
+                run_all_phases(decision_vars, _country, config, param_set, mode)
                 print("... done.")
     exit()
 

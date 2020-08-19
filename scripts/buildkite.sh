@@ -1,5 +1,6 @@
 #!/bin/bash
-# Entrypoint to run tasks
+# Entrypoint to run buildkite tasks
+# IMPORTANT: This is used by the Buildkite server.
 set -e
 SCRIPT_DIR=$(dirname $0)
 cd  $SCRIPT_DIR
@@ -17,6 +18,6 @@ fi
 
 echo ">>> Start running Autumn scripts"
 
-time python3 -m remote $@
+time python3 -m remote buildkite $@
 
 echo ">>> Finished running Autumn scripts"

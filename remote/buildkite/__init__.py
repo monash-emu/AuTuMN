@@ -7,6 +7,7 @@ import click
 
 from . import buildkite
 from .update import update_pipelines
+from remote import aws
 
 logger = logging.getLogger(__name__)
 
@@ -44,30 +45,9 @@ def calibrate():
     job_name = f"{model_name}-{build_number}"
     msg = "Running calbration job %s for %s model with %s chains for %s hours (%s seconds)"
     logger.info(msg, job_name, model_name, num_chains, run_time_hours, run_time_seconds)
-    try:
-        cli_args = {
-            "job": job_name,
-            "calibration": model_name,
-            "chains": num_chains,
-            "runtime": run_time_seconds,
-        }
-        stdout = run_aws_script("calibrate", cli_args)
-
-        # Get `run_id` from string with format "... Calibration completed for $RUN_ID"
-        run_id = None
-        lines = (l.strip() for l in stdout.split("\n"))
-        for l in lines:
-            if "Calibration completed for " in l:
-                run_id = l.split(" ")[-1]
-
-        if not run_id:
-            raise ValueError("Could not find `run_id` in stdout")
-
-    except Exception:
-        logger.exception("Calibration for job %s failed", job_name)
-        sys.exit(1)
-
-    logging.info("Calibration for job %s succeeded", job_name)
+    aws.run_calibrate(
+        job=job_name, calibration=model_name, chains=num_chains, runtime=run_time_seconds
+    )
     if trigger_downstream != "yes":
         logger.info("Not triggering full model run.")
     else:
@@ -124,21 +104,9 @@ def full():
     job_name = f"{model_name}-{build_number}"
     msg = "Running full model for %s with burn in %s"
     logger.info(msg, model_name, burn_in)
-    try:
-        cli_args = {
-            "job": job_name,
-            "run": run_id,
-            "burn-in": burn_in,
-        }
-        if use_latest_code == "yes":
-            cli_args["latest-code"] = ""
-
-        run_aws_script("full", cli_args)
-    except Exception:
-        logger.exception("Full model run for job %s, run id %s failed", job_name, run_id)
-        sys.exit(1)
-
-    logging.info("Full model run job %s succeeded", job_name)
+    aws.run_full_model(
+        job=job_name, run=run_id, burn_in=burn_in, latest_code=use_latest_code == "yes"
+    )
     if trigger_downstream != "yes":
         logger.info("Not triggering PowerBI processing.")
     else:
@@ -185,44 +153,14 @@ def powerbi():
     model_name, _, _ = read_run_id(run_id)
     job_name = f"{model_name}-{build_number}"
     logger.info("Running PowerBI post processing for model %s", model_name)
-    try:
-        cli_args = {
-            "job": job_name,
-            "run": run_id,
-        }
-        run_aws_script("powerbi", cli_args)
-    except Exception:
-        logger.info("Failed to run PowerBI post processing for run: %s", run_id)
-        sys.exit(1)
-
+    aws.run_powerbi(job=job_name, run=run_id)
     logger.info("PowerBI post processing for model %s suceeded", model_name)
     logger.info("Results available at %s", get_run_url(run_id))
 
 
-def run_aws_script(cmd: str, args: dict) -> str:
-    """
-    Run the AWS CLI script, streams stdout to the user and returns stdout as a string.
-    """
-    args_str = " ".join([f"--{k} {v}" for k, v in args.items()])
-    cmd_str = f"../aws/run.sh run {cmd} {args_str}"
-    stdout_lines = []
-    proc = sp.Popen(
-        cmd_str, stdout=sp.PIPE, shell=True, stderr=sp.STDOUT, encoding="utf-8", bufsize=1
-    )
-    for line in iter(proc.stdout.readline, ""):
-        sys.stdout.write(line)
-        stdout_lines.append(line)
-
-    print(f"Waiting for process with PID {proc.pid} to finish.")
-    retcode = proc.wait()
-    if retcode > 0:
-        raise Exception(f"Command failed with return code {retcode}: {cmd_str}")
-
-    return "".join(stdout_lines)
-
-
 def get_run_url(run_id: str):
-    return f"http://autumn-data.s3-website-ap-southeast-2.amazonaws.com/{run_id}"
+    model_name, _, _ = read_run_id(run_id)
+    return f"http://www.autumn-data.com/model/{run_id}/run/{run_id}.html"
 
 
 def read_run_id(run_id: str):

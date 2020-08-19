@@ -20,7 +20,7 @@ logging.getLogger("boto3").setLevel(logging.WARNING)
 logging.getLogger("botocore").setLevel(logging.WARNING)
 logging.getLogger("nose").setLevel(logging.WARNING)
 
-from .aws import aws
+from .aws import aws_cli
 from .buildkite import buildkite
 
 
@@ -29,6 +29,6 @@ def cli():
     """Remote tasks CLI"""
 
 
-cli.add_command(aws)
+cli.add_command(aws_cli, "aws")
 cli.add_command(buildkite)
 cli()

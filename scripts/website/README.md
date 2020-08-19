@@ -1,7 +1,6 @@
 # Autumn Results Website
 
-This is a static website built to allow users to explore Autumn calibration results that are stored in AWS S3.
-It is also hosted on AWS S3 [here](http://autumn-data.s3-website-ap-southeast-2.amazonaws.com/)
+This is a static website built to allow users to explore Autumn calibration results that are stored in AWS S3. It is hosted on AWS S3 [here](http://www.autumn-data.com)
 
 This site is built using [NextJS](https://nextjs.org/).
 

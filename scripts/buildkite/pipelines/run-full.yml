@@ -35,7 +35,7 @@ steps:
           - label: "No"
             value: "no"
 
-  - command: ./scripts/remote.sh buildkite full
+  - command: ./scripts/buildkite.sh full
     label: "Run full models"
     key: run-full
   - command: ./scripts/website/deploy.sh

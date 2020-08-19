@@ -8,17 +8,15 @@ import luigi
 import sentry_sdk
 from boto3.s3.transfer import TransferConfig
 from botocore.exceptions import ProfileNotFound
-from luigi.contrib.s3 import S3Target
+from luigi.contrib.s3 import S3Target, S3Client
 
 
 from . import settings
 
 logger = logging.getLogger(__name__)
 
-# Setup Sentry error reporting - https://sentry.io/welcome/
 SENTRY_DSN = os.environ.get("SENTRY_DSN")
-if SENTRY_DSN:
-    sentry_sdk.init(SENTRY_DSN)
+
 
 # AWS S3 upload settings
 S3_UPLOAD_EXTRA_ARGS = {"ACL": "public-read"}
@@ -48,6 +46,9 @@ else:
         session = boto3.session.Session(region_name=settings.AWS_REGION)
 
 s3 = session.client("s3")
+
+luigi_s3_client = S3Client()
+luigi_s3_client.s3 = session.resource("s3")
 
 
 def get_calibration_db_filename(chain_id: int):
@@ -208,7 +209,7 @@ class UploadS3Task(BaseTask, ABC):
     run_id = luigi.Parameter()  # Unique run id string
 
     def output(self):
-        return S3Target(self.get_s3_uri())
+        return S3Target(self.get_s3_uri(), client=luigi_s3_client)
 
     def safe_run(self):
         upload_s3(self.get_src_path(), self.get_dest_key())

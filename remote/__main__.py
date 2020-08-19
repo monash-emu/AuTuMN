@@ -6,21 +6,22 @@ You can access this script from your CLI by running:
     python -m remote --help
 
 """
+import os
+import logging
 import warnings
 
-warnings.simplefilter(action="ignore", category=FutureWarning)
-
-import os
 import click
 
-import sentry_sdk
+# Configure command logging
+logging.basicConfig(format="%(asctime)s %(module)s:%(levelname)s: %(message)s", level=logging.INFO)
 
-from .luigi import luigi
+# Configure logging for the Boto3 library
+logging.getLogger("boto3").setLevel(logging.WARNING)
+logging.getLogger("botocore").setLevel(logging.WARNING)
+logging.getLogger("nose").setLevel(logging.WARNING)
 
-# Setup Sentry error reporting - https://sentry.io/welcome/
-SENTRY_DSN = os.environ.get("SENTRY_DSN")
-if SENTRY_DSN:
-    sentry_sdk.init(SENTRY_DSN)
+from .aws import aws
+from .buildkite import buildkite
 
 
 @click.group()
@@ -28,5 +29,6 @@ def cli():
     """Remote tasks CLI"""
 
 
-cli.add_command(luigi)
+cli.add_command(aws)
+cli.add_command(buildkite)
 cli()

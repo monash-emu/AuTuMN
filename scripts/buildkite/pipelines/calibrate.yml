@@ -65,7 +65,7 @@ steps:
           - label: "No"
             value: "no"
 
-  - command: ./scripts/buildkite/run.sh calibrate
+  - command: ./scripts/remote.sh buildkite calibrate
     label: Run calibration
     key: run-calibrate
   - command: ./scripts/website/deploy.sh

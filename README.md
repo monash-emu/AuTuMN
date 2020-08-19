@@ -34,13 +34,10 @@ python -m apps --help
 |   └─ outputs                  Module run outputs (not in source control)
 |
 ├── docs                    Documentation
+├── remote                  Remote server orchestration tasks
 ├── scripts                 Utility scripts
-|   ├─ aws                      Scripts to run tasks on AWS
-|   ├─ buildkite                Configuration of Buildkite pipelines
-|   └─ massive                  Scripts to run tasks on MASSIVE (not used)
-|
 ├── summer                  SUMMER framework module
-├── tasks                   Cloud computing tasks
+├── tasks                   Remote server pipeline tasks with Luigi
 ├── tests                   Automated tests
 ├── .gitignore              Files for Git to ignore
 ├── plots.py                Streamlit entrypoint

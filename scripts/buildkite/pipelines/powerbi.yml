@@ -7,7 +7,7 @@ steps:
         hint: "Which calibration run should be used?"
         required: true
 
-  - command: ./scripts/buildkite/run.sh powerbi
+  - command: ./scripts/remote.sh buildkite powerbi
     label: "Run PowerBI processing"
     key: run-powerbi
   - command: ./scripts/website/deploy.sh

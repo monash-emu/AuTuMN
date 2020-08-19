@@ -25,6 +25,7 @@ class RunCalibrate(luigi.Task):
     """Master task, requires all other tasks"""
 
     run_id = luigi.Parameter()  # Unique run id string
+    runtime = luigi.IntParameter()  # Runtime in seconds
     num_chains = luigi.IntParameter()
 
     def requires(self):
@@ -35,10 +36,14 @@ class RunCalibrate(luigi.Task):
             - all plots uploaded to S3
         """
         upload_db_tasks = [
-            UploadDatabaseTask(run_id=self.run_id, chain_id=i, num_chains=self.num_chains)
+            UploadDatabaseTask(
+                run_id=self.run_id, chain_id=i, num_chains=self.num_chains, runtime=self.runtime
+            )
             for i in range(self.num_chains)
         ]
-        upload_plots_task = UploadPlotsTask(run_id=self.run_id, num_chains=self.num_chains)
+        upload_plots_task = UploadPlotsTask(
+            run_id=self.run_id, num_chains=self.num_chains, runtime=self.runtime
+        )
         return [*upload_db_tasks, upload_plots_task]
 
 
@@ -55,7 +60,7 @@ class BuildInputDatabaseTask(utils.BaseTask):
 class CalibrationChainTask(utils.ParallelLoggerTask):
     """Runs the calibration for a single chain"""
 
-    model_name = luigi.Parameter()  # The calibration to run
+    run_id = luigi.Parameter()  # The calibration to run
     runtime = luigi.IntParameter()  # Runtime in seconds
     chain_id = luigi.IntParameter()  # Unique chain id
     num_chains = luigi.IntParameter()
@@ -72,10 +77,11 @@ class CalibrationChainTask(utils.ParallelLoggerTask):
         return f"calibrate/run-{self.chain_id}.log"
 
     def safe_run(self):
-        msg = f"Running {self.model_name} calibration with chain id {self.chain_id} with runtime {self.runtime}s"
+        model_name, _, _ = utils.read_run_id(self.run_id)
+        msg = f"Running {model_name} calibration with chain id {self.chain_id} with runtime {self.runtime}s"
         with Timer(msg):
             # Run the calibration
-            region_app = covid_19.app.get_region(self.model_name)
+            region_app = covid_19.app.get_region(model_name)
             region_app.calibrate_model(self.runtime, self.chain_id, self.num_chains)
 
         # Place the completed chain database in the correct output folder
@@ -106,11 +112,15 @@ class CalibrationChainTask(utils.ParallelLoggerTask):
 class UploadDatabaseTask(utils.UploadS3Task):
 
     chain_id = luigi.IntParameter()  # Unique chain id
+    runtime = luigi.IntParameter()  # Runtime in seconds
     num_chains = luigi.IntParameter()  # The number of chains to run
 
     def requires(self):
         return CalibrationChainTask(
-            run_id=self.run_id, chain_id=self.chain_id, num_chains=self.num_chains
+            run_id=self.run_id,
+            chain_id=self.chain_id,
+            num_chains=self.num_chains,
+            runtime=self.runtime,
         )
 
     def get_src_path(self):
@@ -122,13 +132,16 @@ class PlotOutputsTask(utils.BaseTask):
     """Plots the database outputs"""
 
     run_id = luigi.Parameter()
+    runtime = luigi.IntParameter()  # Runtime in seconds
     num_chains = luigi.IntParameter()  # The number of chains to run
 
     def requires(self):
         paths = ["plots"]
         dir_tasks = [utils.BuildLocalDirectoryTask(dirname=p) for p in paths]
         chain_tasks = [
-            CalibrationChainTask(run_id=self.run_id, chain_id=i, num_chains=self.num_chains)
+            CalibrationChainTask(
+                run_id=self.run_id, chain_id=i, num_chains=self.num_chains, runtime=self.runtime
+            )
             for i in range(self.num_chains)
         ]
         return [*dir_tasks, *chain_tasks]
@@ -147,10 +160,12 @@ class PlotOutputsTask(utils.BaseTask):
 class UploadPlotsTask(utils.UploadS3Task):
     """Uploads output plots"""
 
+    run_id = luigi.Parameter()
+    runtime = luigi.IntParameter()  # Runtime in seconds
     num_chains = luigi.IntParameter()  # The number of chains to run
 
     def requires(self):
-        return PlotOutputsTask(run_id=self.run_id, num_chains=self.num_chains)
+        return PlotOutputsTask(run_id=self.run_id, runtime=self.runtime, num_chains=self.num_chains)
 
     def get_src_path(self):
         return os.path.join(settings.BASE_DIR, "plots")

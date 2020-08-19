@@ -6,6 +6,7 @@ import subprocess as sp
 import click
 
 from . import buildkite
+from .update import update_pipelines
 
 logger = logging.getLogger(__name__)
 
@@ -13,13 +14,19 @@ BURN_IN_DEFAULT = 50  # Iterations
 
 
 @click.group()
-def cli():
+def buildkite():
     """
     CLI tool for running Buildkite jobs
     """
 
 
-@click.command()
+@buildkite.command()
+def update():
+    """Update Builkite pipelines to use all registered COVID models"""
+    update_pipelines()
+
+
+@buildkite.command()
 def calibrate():
     """Run a calibration job in Buildkite"""
     logger.info("Starting calibration.")
@@ -32,8 +39,6 @@ def calibrate():
     model_name = buildkite.get_metadata("model-name")
     num_chains = buildkite.get_metadata("mcmc-num-chains")
     run_time_hours = buildkite.get_metadata("mcmc-runtime")
-    git_branch = buildkite.get_metadata("mcmc-branch")
-
     # Run the calibration
     run_time_seconds = int(float(run_time_hours) * 3600)
     job_name = f"{model_name}-{build_number}"
@@ -45,7 +50,6 @@ def calibrate():
             "calibration": model_name,
             "chains": num_chains,
             "runtime": run_time_seconds,
-            "branch": git_branch,
         }
         stdout = run_aws_script("calibrate", cli_args)
 
@@ -88,7 +92,7 @@ def calibrate():
     logger.info("Results available at %s", get_run_url(run_id))
 
 
-@click.command()
+@buildkite.command()
 def full():
     """Run a full model run job in Buildkite"""
     logger.info("Starting a full model run.")
@@ -159,7 +163,7 @@ def full():
     logger.info("Results available at %s", get_run_url(run_id))
 
 
-@click.command()
+@buildkite.command()
 def powerbi():
     """Run a PowerBI job in Buildkite"""
     logger.info("Starting PowerBI post processing.")
@@ -218,8 +222,7 @@ def run_aws_script(cmd: str, args: dict) -> str:
 
 
 def get_run_url(run_id: str):
-    model_name, _, _ = read_run_id(run_id)
-    return f"http://www.autumn-data.com/model/{model_name}/run/{run_id}.html"
+    return f"http://autumn-data.s3-website-ap-southeast-2.amazonaws.com/{run_id}"
 
 
 def read_run_id(run_id: str):
@@ -229,9 +232,3 @@ def read_run_id(run_id: str):
     timestamp = parts[-2]
     model_name = "-".join(parts[:-2])
     return model_name, timestamp, git_commit
-
-
-cli.add_command(calibrate)
-cli.add_command(full)
-cli.add_command(powerbi)
-cli()

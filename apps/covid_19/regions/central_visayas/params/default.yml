@@ -26,8 +26,8 @@ microdistancing:
         times: [121, 122, 123, 137, 138, 153, 154, 168, 169, 198, 199, 214, 215, 228]
         values: [0, 4, 4, 3.5, 3.5, 3, 3, 6, 6, 3, 3, 2.5, 2.5, 1]
 
-    # 1 May, day 122, general community quarantine (GCQ) with enhanced community quarantine (ECQ) for Cebu
-    # 16 May, day 137, Cebu switches to modified general enhanced community quarantine (MECQ), GCQ continues for rest of region 
+    # 1 May, day 122, GCQ enforced everywhere with ECQ enforced for Cebu
+    # 16 May, day 137, Cebu switches to modified MECQ, GCQ continues for rest of region 
     # 1 June, day 153, Cebu switches to GCQ joining the rest of the region
     # 16 June, day 168, Cebu switches back to ECQ, Talisay switches to MECQ, rest of region continues GCQ   
     # 16 July, day 198, Cebu switches to MECQ, rest of region switches to MGCQ
@@ -36,7 +36,7 @@ microdistancing:
     
     # no restrictions = 0
     # face fasks = 1
-    # MGCQ = 2
-    # GCQ = 3
-    # MECQ = 4
-    # ECQ = 5
+    # modified general community quarantine (MGCQ) = 2
+    # general community quarantine (GCQ) = 3
+    # modified enhanced community quarantine (MECQ) = 4
+    # enhanced community quarantine (ECQ) = 5

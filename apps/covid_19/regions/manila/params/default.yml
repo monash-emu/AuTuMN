@@ -18,3 +18,24 @@ mixing:
       - 0.
       - 0
       - 0
+
+microdistancing:
+    function_type: empiric
+    parameters:
+        multiplier: 0.05
+        times: [75, 76, 137, 138, 153, 154, 215, 216, 232]
+        values: [0, 5, 4, 4, 3, 3, 5, 5, 2]
+
+    # 16 March, day 76, ECQ enforced for whole region
+    # 16 May, day 137, MECQ enforced for whole region
+    # 1 June, day 153, GCQ for all regions
+    # 2 Aug, day 215, ECQ enformed
+    # 15 Aug, day 228, face masks/shields required
+    # 19 Aug, day 232, GCQ enforced + face masks/sheilds
+    
+    # no restrictions = 0
+    # face fasks = 1
+    # modified general community quarantine (MGCQ) = 2
+    # general community quarantine (GCQ) = 3
+    # modified enhanced community quarantine (MECQ) = 4
+    # enhanced community quarantine (ECQ) = 5

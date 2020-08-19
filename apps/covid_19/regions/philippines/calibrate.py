@@ -32,7 +32,7 @@ TARGET_OUTPUTS = [
         "years": notifications["times"],
         "values": notifications["values"],
         "loglikelihood_distri": "normal",
-        "time_weights": assign_trailing_weights_to_halves(14, notifications["times"]),
+    #    "time_weights": assign_trailing_weights_to_halves(14, notifications["times"]),
     },
    {
        "output_key": "icu_occupancy",
@@ -53,10 +53,10 @@ PAR_PRIORS = provide_default_calibration_params()
 PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS)
 PAR_PRIORS = add_standard_philippines_params(PAR_PRIORS)
 
-PAR_PRIORS += [
-    {
-        "param_name": "microdistancing.parameters.multiplier",
-        "distribution": "uniform",
-        "distri_params": [0.04, 0.08],
-    },
-]
+# PAR_PRIORS += [
+#     {
+#         "param_name": "microdistancing.parameters.multiplier",
+#         "distribution": "uniform",
+#         "distri_params": [0.04, 0.08],
+#     },
+# ]

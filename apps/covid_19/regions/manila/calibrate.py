@@ -11,7 +11,7 @@ from autumn.tool_kit.params import load_targets
 
 targets = load_targets("covid_19", Region.MANILA)
 notifications = targets["notifications"]
-icu_occupancy = targets["icu_occupancy"]
+#icu_occupancy = targets["icu_occupancy"]
 
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
@@ -31,15 +31,14 @@ TARGET_OUTPUTS = [
         "output_key": "notifications",
         "years": notifications["times"],
         "values": notifications["values"],
-        "loglikelihood_distri": "negative_binomial",
-        "time_weights": assign_trailing_weights_to_halves(5, notifications["times"]),
+        "loglikelihood_distri": "normal",
     },
-    {
-       "output_key": "icu_occupancy",
-       "years": icu_occupancy["times"],
-       "values": icu_occupancy["values"],
-       "loglikelihood_distri": "normal",
-   },
+#     {
+#        "output_key": "icu_occupancy",
+#        "years": icu_occupancy["times"],
+#        "values": icu_occupancy["values"],
+#        "loglikelihood_distri": "normal",
+#    },
 ]
 
 PAR_PRIORS = provide_default_calibration_params(excluded_params=("start_time"))

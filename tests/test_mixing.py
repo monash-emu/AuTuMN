@@ -5,7 +5,7 @@ TODO: Test more mixing matrix functionality
 - test NPI effectiveness
 - test microdistancing
 """
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 import pytest
 import numpy as np
 from numpy.testing import assert_array_equal
@@ -46,10 +46,7 @@ def test_update_mixing_data__with_only_mobility_data():
     google_mobility_values = {"work": [1.1, 1.2, 1.3, 1.4], "other_locations": [1.5, 1.6, 1.7, 1.8]}
     google_mobility_days = [0, 1, 2, 3]
     actual_mixing = adjust_location.update_mixing_data(
-        mixing,
-        npi_effectiveness_params,
-        google_mobility_values,
-        google_mobility_days,
+        mixing, npi_effectiveness_params, google_mobility_values, google_mobility_days,
     )
     assert actual_mixing == {
         "work": {"values": [1.1, 1.2, 1.3, 1.4], "times": [0, 1, 2, 3],},
@@ -63,17 +60,21 @@ def test_update_mixing_data__with_user_specified_values():
     """
     mixing = {
         # Expect appended with % increase accounted for.
-        "work": {"values": [["scale_prev", 1.1], 1.6], "times": get_date([4, 5]), "append": True},
+        "work": {
+            "values": [["scale_prev", 1.1], 1.6],
+            "times": get_date_from_base([4, 5]),
+            "append": True,
+        },
         # Expect overwritten
         "other_locations": {
             "values": [1.55, 1.66, 1.77, 1.88, 1.99, 1.111],
-            "times": get_date([0, 1, 2, 3, 4, 5]),
+            "times": get_date_from_base([0, 1, 2, 3, 4, 5]),
             "append": False,
         },
         # Expect added (not overwritten)
         "school": {
             "values": [1.11, 1.22, 1.33, 1.44, 1.55, 1.66],
-            "times": get_date([0, 1, 2, 3, 4, 5]),
+            "times": get_date_from_base([0, 1, 2, 3, 4, 5]),
             "append": False,
         },
     }
@@ -81,10 +82,7 @@ def test_update_mixing_data__with_user_specified_values():
     google_mobility_values = {"work": [1.1, 1.2, 1.3, 1.4], "other_locations": [1.5, 1.6, 1.7, 1.8]}
     google_mobility_days = [0, 1, 2, 3]
     actual_mixing = adjust_location.update_mixing_data(
-        mixing,
-        npi_effectiveness_params,
-        google_mobility_values,
-        google_mobility_days,
+        mixing, npi_effectiveness_params, google_mobility_values, google_mobility_days,
     )
     assert actual_mixing == {
         "work": {"values": [1.1, 1.2, 1.3, 1.4, 1.54, 1.6], "times": [0, 1, 2, 3, 4, 5]},
@@ -105,7 +103,7 @@ def test_update_mixing_data__with_user_specified_values__out_of_date():
         # Expect crash because of stale date
         "school": {
             "values": [1.11, 1.22, 1.33],
-            "times": get_date([0, 1, 2]),  # Stale date, should be up to 3
+            "times": get_date_from_base([0, 1, 2]),  # Stale date, should be up to 3
             "append": False,
         },
     }
@@ -114,10 +112,7 @@ def test_update_mixing_data__with_user_specified_values__out_of_date():
     google_mobility_days = [0, 1, 2, 3]
     with pytest.raises(AssertionError):
         adjust_location.update_mixing_data(
-            mixing,
-            npi_effectiveness_params,
-            google_mobility_values,
-            google_mobility_days,
+            mixing, npi_effectiveness_params, google_mobility_values, google_mobility_days,
         )
 
 
@@ -130,7 +125,7 @@ def test_update_mixing_data__with_user_specified_values__missing_data_append():
         # Expect crash because of mispecified append
         "school": {
             "values": [1.11, 1.22, 1.33, 1.44],
-            "times": get_date([0, 1, 2, 3]),
+            "times": get_date_from_base([0, 1, 2, 3]),
             "append": True,  # No school data to append to
         },
     }
@@ -142,10 +137,7 @@ def test_update_mixing_data__with_user_specified_values__missing_data_append():
     periodic_end_time = None
     with pytest.raises(ValueError):
         adjust_location.update_mixing_data(
-            mixing,
-            npi_effectiveness_params,
-            google_mobility_values,
-            google_mobility_days,
+            mixing, npi_effectiveness_params, google_mobility_values, google_mobility_days,
         )
 
 
@@ -159,7 +151,7 @@ def test_update_mixing_data__with_user_specified_values__date_clash_append():
         # Expect crash because of conflicting date
         "work": {
             "values": [1.11, 1.22],
-            "times": get_date([3, 4]),  # Conflicting lowest date, cannot append
+            "times": get_date_from_base([3, 4]),  # Conflicting lowest date, cannot append
             "append": True,
         },
     }
@@ -168,10 +160,7 @@ def test_update_mixing_data__with_user_specified_values__date_clash_append():
     google_mobility_days = [0, 1, 2, 3]
     with pytest.raises(AssertionError):
         adjust_location.update_mixing_data(
-            mixing,
-            npi_effectiveness_params,
-            google_mobility_values,
-            google_mobility_days,
+            mixing, npi_effectiveness_params, google_mobility_values, google_mobility_days,
         )
 
 
@@ -278,15 +267,19 @@ def test_build_dynamic__smoke_test():
     mixing_params = {
         "other_locations": {
             "append": True,
-            "times": get_date([230, 240, 250, 260, 270]),
+            "times": get_date_from_now([10, 20, 30, 40, 50]),
             "values": [1, 0.4, 0.3, 0.3, 0.5],
         },
         "work": {
             "append": True,
-            "times": get_date([230, 240, 250, 260, 270]),
+            "times": get_date_from_now([10, 20, 30, 40, 50]),
             "values": [1, 0.9, 0.5, 0.3, 0.6],
         },
-        "school": {"append": False, "times": get_date([56, 230]), "values": [1, 0],},
+        "school": {
+            "append": False,
+            "times": get_date_from_base([56]) + get_date_from_now([10]),
+            "values": [1, 0],
+        },
     }
     mm_func = mixing_matrix.build_dynamic(
         country_iso3="MYS",
@@ -307,7 +300,11 @@ def assert_arr_is_close(arr_a, arr_b, figs=2):
     assert_array_equal(np.around(arr_a, figs), np.around(arr_b, figs))
 
 
-def get_date(days_list):
+def get_date_from_now(days_list):
+    return [datetime.now().date() + timedelta(days=days) for days in days_list]
+
+
+def get_date_from_base(days_list):
     return [BASE_DATE + timedelta(days=days) for days in days_list]
 
 

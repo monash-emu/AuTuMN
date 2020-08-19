@@ -23,8 +23,8 @@ microdistancing:
     function_type: empiric
     parameters:
         multiplier: 0.05
-        times: [122, 137, 153, 168, 198, 214]
-        values: [3., 2.5, 2., 2.6, 2., 1.5,]
+        times: [121, 122, 123, 137, 138, 153, 154, 168, 169, 198, 199, 214, 215, 228]
+        values: [0, 4, 4, 3.5, 3.5, 3, 3, 6, 6, 3, 3, 2.5, 2.5, 1]
 
     # 1 May, day 122, general community quarantine (GCQ) with enhanced community quarantine (ECQ) for Cebu
     # 16 May, day 137, Cebu switches to modified general enhanced community quarantine (MECQ), GCQ continues for rest of region 
@@ -32,3 +32,11 @@ microdistancing:
     # 16 June, day 168, Cebu switches back to ECQ, Talisay switches to MECQ, rest of region continues GCQ   
     # 16 July, day 198, Cebu switches to MECQ, rest of region switches to MGCQ
     # 1 Aug, day 214,  Cebu switches to GCQ, rest of region continues MGCQ
+    # 15 Aug, day 228, face masks/shields required
+    
+    # no restrictions = 0
+    # face fasks = 1
+    # MGCQ = 2
+    # GCQ = 3
+    # MECQ = 4
+    # ECQ = 5

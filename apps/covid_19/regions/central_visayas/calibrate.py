@@ -12,7 +12,7 @@ from autumn.tool_kit.params import load_targets
 targets = load_targets("covid_19", Region.CENTRAL_VISAYAS)
 notifications = targets["notifications"]
 icu_occupancy = targets["icu_occupancy"]
-total_infection_deaths = targets["total_infection_deaths"]
+# total_infection_deaths = targets["total_infection_deaths"]
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
     base.run_calibration_chain(
@@ -24,7 +24,6 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
         TARGET_OUTPUTS,
         mode="autumn_mcmc",
     )
-
 
 TARGET_OUTPUTS = [
     {
@@ -40,14 +39,27 @@ TARGET_OUTPUTS = [
        "values": icu_occupancy["values"],
        "loglikelihood_distri": "normal",
    },
-   {
-       "output_key": total_infection_deaths["output_key"],
-       "years": total_infection_deaths["times"],
-       "values": total_infection_deaths["values"],
-       "loglikelihood_distri": "normal",
-   },
+#    {
+#        "output_key": total_infection_deaths["output_key"],
+#        "years": total_infection_deaths["times"],
+#        "values": total_infection_deaths["values"],
+#        "loglikelihood_distri": "normal",
+#    },
 ]
 
-PAR_PRIORS = provide_default_calibration_params()
+PAR_PRIORS = provide_default_calibration_params(excluded_params=("start_time"))
 PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS)
 PAR_PRIORS = add_standard_philippines_params(PAR_PRIORS)
+
+PAR_PRIORS += [
+    {
+        "param_name": "start_time",
+        "distribution": "uniform",
+        "distri_params": [50., 70.],
+    },
+    {
+        "param_name": "microdistancing.parameters.multiplier",
+        "distribution": "uniform",
+        "distri_params": [0.04, 0.08],
+    },
+]

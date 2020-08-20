@@ -79,14 +79,16 @@ def build_params_for_phases_2_and_3(decision_variables, config=0, mode='by_age',
     for loc in ["other_locations", "school", "work"]:
         if mode == "by_age":  # just return mixing to pre-COVID
             new_mixing_adjustment = 1.0
+            final_mixing_value = 1.0
         elif mode == "by_location":  # use optimisation decision variables
             new_mixing_adjustment = decision_variables[loc]
+            final_mixing_value = final_mixing
         else:
             raise ValueError("The requested mode is not supported")
 
         sc_1_params['mixing'][loc] = {
                 'times': [phase_1_end_date, phase_2_end_date, phase_3_first_day],
-                'values': [new_mixing_adjustment, new_mixing_adjustment, final_mixing],
+                'values': [new_mixing_adjustment, new_mixing_adjustment, final_mixing_value],
                 'append': False
         }
 
@@ -215,7 +217,8 @@ def read_list_of_param_sets_from_csv(country):
     return list_of_param_sets
 
 
-def make_model_builder(decision_variables, country=Region.UNITED_KINGDOM, config=0, calibrated_params={}, mode="by_age"):
+def make_model_builder(decision_variables, country=Region.UNITED_KINGDOM, config=0, calibrated_params={}, mode="by_age",
+                       build_scenario_1=True):
     running_model = RegionApp(country)
     build_model = running_model.build_model
 
@@ -239,7 +242,8 @@ def make_model_builder(decision_variables, country=Region.UNITED_KINGDOM, config
         'n_imported_cases': [0]
     }
 
-    params["scenarios"][1] = build_params_for_phases_2_and_3(decision_variables, config, mode)
+    if build_scenario_1:
+        params["scenarios"][1] = build_params_for_phases_2_and_3(decision_variables, config, mode)
 
     return build_model_runner(
         model_name="covid_19",
@@ -249,8 +253,9 @@ def make_model_builder(decision_variables, country=Region.UNITED_KINGDOM, config
     )
 
 
-def run_all_phases(decision_variables, country=Region.UNITED_KINGDOM, config=0, calibrated_params={}, mode="by_age"):
-    run_models = make_model_builder(decision_variables, country, config, calibrated_params, mode)
+def run_all_phases(decision_variables, country=Region.UNITED_KINGDOM, config=0, calibrated_params={}, mode="by_age",
+                   build_scenario_1=True):
+    run_models = make_model_builder(decision_variables, country, config, calibrated_params, mode, build_scenario_1)
     run_models()
     return
 
@@ -393,6 +398,32 @@ def write_all_yml_files_for_immunity_scenarios(output_dir, final_mixing=1.):
                 param_file_path = "../params/" + country + "/scenario-" + str(sc_index) + ".yml"
                 with open(param_file_path, "w") as f:
                     yaml.dump(sc_params, f)
+
+
+def write_all_yml_files_for_pessimistic_immunity_scenarios(output_dir):
+
+    immunity_duration = 183.
+    rel_prop_sympt = 1.
+
+    mode = "by_age"
+    config = 3
+    objective = "yoll"
+
+    for country in OPTI_REGIONS:
+        sc_index = 0
+        for final_mixing in [.7, .8, .9, 1.]:
+            sc_index += 1
+
+            sc_params = get_params_for_phases_2_and_3_from_opti_outptuts(output_dir, country, config, mode, objective,
+                                                                         final_mixing=final_mixing)
+            sc_params['end_time'] = 366 + 365
+            sc_params['full_immunity'] = False
+            sc_params['immunity_duration'] = immunity_duration
+            sc_params['rel_prop_symptomatic_experienced'] = rel_prop_sympt
+
+            param_file_path = "../params/" + country + "/scenario-" + str(sc_index) + ".yml"
+            with open(param_file_path, "w") as f:
+                yaml.dump(sc_params, f)
 
 
 def evaluate_extra_deaths(decision_vars, extra_contribution, i, root_model, mode, country,
@@ -551,7 +582,6 @@ def get_mixing_matrices(output_dir, country, config=2, mode="by_age", objective=
     if mode == 'by_location':
         sc_1_params['mixing_age_adjust'] = {}
 
-
     mixing_func = build_dynamic(iso_3, country, mixing=sc_1_params['mixing'], mixing_age_adjust=sc_1_params['mixing_age_adjust'],
                                 npi_effectiveness_params={},
                                 google_mobility_locations={'work': ['workplaces'], 'other_locations': ['retail_and_recreation', 'grocery_and_pharmacy', 'transit_stations']},
@@ -574,12 +604,15 @@ if __name__ == "__main__":
     # run_sensitivity_minimum_mixing(output_dir)
     # exit()
     # write_all_yml_files_from_outputs(output_dir, mode="by_age")
-    write_all_yml_files_for_immunity_scenarios(output_dir, final_mixing=.8)
+    # write_all_yml_files_for_immunity_scenarios(output_dir, final_mixing=1.)
+
+    write_all_yml_files_for_pessimistic_immunity_scenarios(output_dir)
+
     for _country in available_countries:
         print("Running for " + _country + " ...")
         mode = 'by_age'
-        for config in [2]:
-            for objective in ["deaths"]:
+        for config in [3]:
+            for objective in ["yoll"]:
                 print("config_" + str(config) + " objective_" + objective)
                 param_set, decision_vars = get_mle_params_and_vars(output_dir, _country, config=config, mode=mode,
                                                               objective=objective)
@@ -591,7 +624,7 @@ if __name__ == "__main__":
                 # str(round(yoll)) + "\n" + "Prop immune: " + str(round(p_immune, 3))
                 # )
 
-                run_all_phases(decision_vars, _country, config, param_set, mode)
+                run_all_phases(decision_vars, _country, config, param_set, mode, build_scenario_1=False)
                 print("... done.")
     exit()
 

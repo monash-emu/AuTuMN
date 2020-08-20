@@ -12,13 +12,14 @@ from .regions.spain import spain_region
 from .regions.italy import italy_region
 from .regions.france import france_region
 from .regions.belgium import belgium_region
+from .regions.dhhs import dhhs_region
 
 # Used by each region to register its model.
 app = App("covid_19")
 
 # Australia
 app.register(victoria_region)
-
+app.register(dhhs_region)
 # Malaysia
 app.register(malaysia_region)
 

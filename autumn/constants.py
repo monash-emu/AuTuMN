@@ -41,6 +41,7 @@ class Region:
     SWEDEN = "sweden"
     FRANCE = "france"
     SPAIN = "spain"
+    DHHS ="dhhs"
 
     REGIONS = [
         AUSTRALIA,
@@ -61,4 +62,5 @@ class Region:
         SWEDEN,
         FRANCE,
         SPAIN,
+        DHHS,
     ]

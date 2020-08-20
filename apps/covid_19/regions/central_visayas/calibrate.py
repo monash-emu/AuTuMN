@@ -55,7 +55,7 @@ PAR_PRIORS += [
     {
         "param_name": "start_time",
         "distribution": "uniform",
-        "distri_params": [50., 70.],
+        "distri_params": [40., 60.],
     },
     {
         "param_name": "microdistancing.parameters.multiplier",

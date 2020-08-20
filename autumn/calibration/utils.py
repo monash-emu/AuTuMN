@@ -334,3 +334,18 @@ def find_distribution_params_from_mean_and_ci(distribution, mean, ci, ci_width=0
         raise ValueError(distribution + " distribution is not supported for the moment")
 
     return params
+
+
+def ignore_calibration_target_after_date(target, date):
+    indices = \
+        [i_time for
+         i_time, time in enumerate(target['times']) if
+         time > date]
+    truncated_target = \
+        {
+            "times":
+                [target['times'][i_time] for i_time in indices],
+            "values":
+                [target['values'][i_time] for i_time in indices]
+        }
+    return truncated_target

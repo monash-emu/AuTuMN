@@ -6,11 +6,15 @@ from apps.covid_19.calibration import (
     add_standard_philippines_params,
     assign_trailing_weights_to_halves,
 )
-from autumn.calibration.utils import add_dispersion_param_prior_for_gaussian
+from autumn.calibration.utils import \
+    add_dispersion_param_prior_for_gaussian, ignore_calibration_target_after_date
 from autumn.tool_kit.params import load_targets
 
 targets = load_targets("covid_19", Region.CALABARZON)
-notifications = targets["notifications"]
+
+
+notifications = \
+    ignore_calibration_target_after_date(targets["notifications"], 120)
 #icu_occupancy = targets["icu_occupancy"]
 
 
@@ -47,11 +51,6 @@ PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS)
 PAR_PRIORS = add_standard_philippines_params(PAR_PRIORS)
 
 PAR_PRIORS += [
-    {
-        "param_name": "start_time",
-        "distribution": "uniform",
-        "distri_params": [40., 60.],
-    },
     {
         "param_name": "microdistancing.parameters.multiplier",
         "distribution": "uniform",

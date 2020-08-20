@@ -1128,6 +1128,9 @@ def plot_multiscenario_uncertainty(pbi_outputs_dir, country, axis, output):
     axis.set_axisbelow(True)
 
     max_q = 0.
+    print()
+    print(country)
+
     for scenario in range(5):
         sc_name = "S_" + str(scenario)
         data[sc_name] = {}
@@ -1152,6 +1155,17 @@ def plot_multiscenario_uncertainty(pbi_outputs_dir, country, axis, output):
             max_q = max([max_q, max(quantiles[q])])
         data[sc_name]['quantiles'] = quantiles
         data[sc_name]['times'] = list(times)
+
+        if scenario > 0:
+            time_end_phase_2 = 214 + 180 if scenario in [1, 2] else 214 + 366
+            time_index = times.index(time_end_phase_2)
+            print("Scenario " + str(scenario))
+            print(str(round(100*quantiles[.5][time_index], 1)) + " (" + str(round(100*quantiles[.025][time_index],1)) + " - " + str(round(100*quantiles[.975][time_index], 1)) + ")")
+            print()
+
+
+
+
 
     break_width = 13
     dates_to_tick = [
@@ -1307,7 +1321,6 @@ def plot_percentile(pbi_outputs_dir, output, country, plot_configs, axis, show_y
     for q in quantile_vals:
         mask = scenario_df["quantile"] == q
         quantiles[q] = scenario_df[mask]["value"].tolist()[1:]
-
 
     axis.fill_between(times, quantiles[0.025], quantiles[0.975], facecolor="lightsteelblue")
     axis.fill_between(times, quantiles[0.25], quantiles[0.75], facecolor="cornflowerblue")
@@ -1509,31 +1522,45 @@ def plot_multicountry_optimised_matrices(original_matrices, optimised_matrices, 
     pyplot.savefig(filename + ".png", dpi=300)
 
 
-def plot_waning_immunity_graph(scenarios: List[Scenario], output, axis, config):
+def plot_waning_immunity_graph(scenarios: List[Scenario], output, axis, config, pessimistic=False):
     models = [sc.model for sc in scenarios]
     times = (models[0].times[:-1] + models[1].times)
 
     phase_2_start = 214
     phase_2_end = {2: 398, 3: 580}
     # mark Phase 2 in the background:
-    rect = patches.Rectangle((phase_2_start, 0), phase_2_end[config] - phase_2_start, 1.e9, linewidth=0,
+    rect = patches.Rectangle((phase_2_start, -1000), phase_2_end[config] - phase_2_start, 2.e9, linewidth=0,
                               facecolor='gold', alpha=.2)
     rect.set_zorder(1)
     axis.add_patch(rect)
 
-    scenario_names = [
-        "baseline",
-        "persistent immunity",
-        "6 months immunity",
-        "6 months immunity and\n50% less symptomatic",
-        "24 months immunity",
-        "24 months immunity and\n50% less symptomatic",
-    ]
+    if not pessimistic:
+        scenario_names = [
+            "baseline",
+            "persistent immunity",
+            "6 months immunity",
+            "6 months immunity and\n50% less symptomatic",
+            "24 months immunity",
+            "24 months immunity and\n50% less symptomatic",
+        ]
+        sc_colors = ['black', 'black', 'mediumaquamarine', 'blue', 'lightcoral', 'crimson']
+        sc_order = [0, 2, 3, 4, 5, 1]
+    else:
+        scenario_names = [
+            "baseline",
+            "70% mixing factor",
+            "80% mixing factor",
+            "90% mixing factor",
+            "no mixing reduction",
+        ]
+        sc_colors = ['black', 'blue', 'cornflowerblue', 'mediumorchid', 'violet']
+        sc_colors = ['black', 'black', 'blue', 'cornflowerblue', 'deepskyblue']
+        sc_order = [0, 4, 3, 2, 1]
 
-    sc_colors = ['black', 'black', 'mediumaquamarine', 'blue', 'lightcoral', 'crimson']
+    axis.axhline(y=0, linewidth=.5, color='grey')
 
     y_max = 0.
-    for scenario in [0, 2, 3, 4, 5, 1]:
+    for scenario in sc_order:
         times = models[scenario].times
         values = models[scenario].derived_outputs[output]
         if scenario == 0:
@@ -1550,7 +1577,7 @@ def plot_waning_immunity_graph(scenarios: List[Scenario], output, axis, config):
     axis.set_xticks(xticks)
     axis.set_xticklabels(xlabs, fontsize=12)
 
-    axis.set_ylim((0., y_max*1.05))
+    axis.set_ylim((-0.05*y_max, y_max*1.05))
 
 
     for tick in axis.yaxis.get_major_ticks():
@@ -1562,7 +1589,7 @@ def plot_waning_immunity_graph(scenarios: List[Scenario], output, axis, config):
     return handles, labels
 
 
-def plot_multicountry_waning_immunity(country_scenarios, config, mode, objective, include_config=False):
+def plot_multicountry_waning_immunity(country_scenarios, config, mode, objective, include_config=False, pessimistic=False):
     fig_h = 20 if not include_config else 21
     heights = [1, 6, 6, 6, 6, 6, 6] if not include_config else [2, 1, 6, 6, 6, 6, 6, 6]
     pyplot.rcParams["font.family"] = "Times New Roman"
@@ -1586,7 +1613,7 @@ def plot_multicountry_waning_immunity(country_scenarios, config, mode, objective
         i_grid = i + 2 if include_config else i+1
         for j, output in enumerate(output_names):
             ax = fig.add_subplot(spec[i_grid, j + 1])
-            h, l = plot_waning_immunity_graph(country_scenarios[country], output, axis=ax, config=config)
+            h, l = plot_waning_immunity_graph(country_scenarios[country], output, axis=ax, config=config, pessimistic=pessimistic)
             if i == 0:
                 i_grid_output_labs = 1 if include_config else 0
                 ax = fig.add_subplot(spec[i_grid_output_labs, j+1])
@@ -1618,6 +1645,7 @@ def plot_multicountry_waning_immunity(country_scenarios, config, mode, objective
     filename = out_dir + "waning_immunity_" + mode + "_config_" + str(config) + "_" + objective
     pyplot.savefig(filename + ".pdf")
     pyplot.savefig(filename + ".png", dpi=300)
+    pyplot.savefig(filename + "_low_res.png", dpi=100)
 
 
 def plot_sensitivity_min_mixing(results, country, config, axis):

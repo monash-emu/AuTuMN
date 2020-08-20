@@ -284,9 +284,6 @@ def plot_multicountry_optimised_matrices(
         plots.plot_multicountry_optimised_matrices(original_matrices, optimised_matrices, mode, include_config=True)
 
 
-
-
-
 def plot_multicountry_mobility(
     plotter: StreamlitPlotter, app: RegionAppBase, scenarios: list, plot_config: dict
 ):
@@ -355,10 +352,14 @@ def plot_multicountry_waning_immunity(
     countries = ['belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']
     root_path = os.path.join('data', 'scenario_outputs_waning_immunity')
 
+    pessimistic = True
+
     for mode in ['by_age']:  #, 'by_location']:
-        for config in [3]:  #, 3]:
-            for objective in ["yoll"]:  # , "deaths"]
+        for config in [2, 3]: #, 3]:
+            for objective in ["deaths", "yoll"]:  #, "yoll"]:  # , "deaths"]
                 full_path = os.path.join(root_path, mode + "_" + str(config) + "_" + objective)
+                if pessimistic:
+                    full_path += "_pessimistic"
                 country_scenarios = {}
                 for country in countries:
                     country_dirpath = os.path.join(full_path, country)
@@ -374,13 +375,15 @@ def plot_multicountry_waning_immunity(
 
                 print("Plotting multicountry waning immunity for: " + mode + "_config_" + str(config) + "_" + objective)
 
-                plots.plot_multicountry_waning_immunity(country_scenarios, config, mode, objective, include_config=True)
+                plots.plot_multicountry_waning_immunity(country_scenarios, config, mode, objective, include_config=True,
+                                                        pessimistic=pessimistic)
 
 
 def plot_multicountry_min_mixing_sensitivity(
     plotter: StreamlitPlotter, app: RegionAppBase, scenarios: list, plot_config: dict
 ):
     plots.plot_multicountry_min_mixing_sensitivity()
+
 
 
 PLOT_FUNCS = {

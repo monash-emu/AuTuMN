@@ -56,4 +56,9 @@ PAR_PRIORS += [
         "distribution": "uniform",
         "distri_params": [0.04, 0.12],
     },
+    {
+        "param_name": "infectious_seed",
+        "distribution": "uniform",
+        "distri_params": [10., 50.],
+    }
 ]

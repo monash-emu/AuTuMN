@@ -71,7 +71,7 @@ validate_params = sb.build_validator(
     contact_rate=float,
     seasonal_force=sb.Nullable(float),
     infect_death=float,
-    infectious_seed=int,
+    infectious_seed=float,
     universal_death_rate=float,
     # for MCMC calibration with negative binomial likelihood
     notifications_dispersion_param=float,

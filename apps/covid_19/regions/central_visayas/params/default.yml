@@ -4,6 +4,7 @@ region: Central Visayas
 
 scenario_start_time: 279
 end_time: 365.
+hospital_props_multiplier: 2.
 
 mixing:
   school:
@@ -24,12 +25,12 @@ microdistancing:
     parameters:
         multiplier: 0.05
         times: [121, 122, 123, 137, 138, 153, 154, 168, 169, 198, 199, 214, 215, 229]
-        values: [0, 4, 4, 3.5, 3.5, 3, 3, 6, 6, 3, 3, 2.5, 2.5, 3]
+        values: [0, 6, 6, 5, 5, 4, 4, 8, 8, 4, 4, 3, 3, 3]
 
     # 1 May, day 122, GCQ enforced everywhere with ECQ enforced for Cebu
     # 16 May, day 137, Cebu switches to modified MECQ, GCQ continues for rest of region 
     # 1 June, day 153, Cebu switches to GCQ joining the rest of the region
-    # 16 June, day 168, Cebu switches back to ECQ, Talisay switches to MECQ, rest of region continues GCQ   
+    # 16 June, day 168, Cebu switches back to ECQ, Talisay switches to MECQ, rest of region continues GCQ; inflated to 8 to help dynamics  
     # 16 July, day 198, Cebu switches to MECQ, rest of region switches to MGCQ
     # 1 Aug, day 214,  Cebu, Lapu-Lapu, and Mandaue switch to GCQ, rest of region continues MGCQ
     # 15 Aug, day 228, face masks/shields required
@@ -38,6 +39,6 @@ microdistancing:
     # no restrictions = 0
     # face fasks = 1
     # modified general community quarantine (MGCQ) = 2
-    # general community quarantine (GCQ) = 3
-    # modified enhanced community quarantine (MECQ) = 4
-    # enhanced community quarantine (ECQ) = 5
+    # general community quarantine (GCQ) = 4
+    # modified enhanced community quarantine (MECQ) = 6
+    # enhanced community quarantine (ECQ) = 8

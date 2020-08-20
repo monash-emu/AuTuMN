@@ -4,6 +4,7 @@ region: Calabarzon
 
 scenario_start_time: 279
 end_time: 365.
+hospital_props_multiplier: 2.
 
 mixing:
   school:
@@ -24,7 +25,7 @@ microdistancing:
     parameters:
         multiplier: 0.05
         times: [75, 76, 77, 137, 138, 153, 154, 198, 199, 214, 215, 229]
-        values: [0, 5, 5, 3.5, 3.5, 3, 3, 2, 2, 4.5, 4.5, 3]
+        values: [0, 8, 8, 5, 5, 4, 4, 2, 2, 6, 6, 3]
 
     # 16 March, day 76, ECQ enforced for whole region
     # 16 May, day 137, GCQ continues for most of region with MECQ enforced for Laguna
@@ -37,6 +38,6 @@ microdistancing:
     # no restrictions = 0
     # face fasks = 1
     # modified general community quarantine (MGCQ) = 2
-    # general community quarantine (GCQ) = 3
-    # modified enhanced community quarantine (MECQ) = 4
-    # enhanced community quarantine (ECQ) = 5
+    # general community quarantine (GCQ) = 4
+    # modified enhanced community quarantine (MECQ) = 6
+    # enhanced community quarantine (ECQ) = 8

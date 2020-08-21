@@ -19,12 +19,12 @@ mixing:
       - 0
       - 0
 
-# microdistancing:
-#     function_type: empiric
-#     parameters:
-#         multiplier: 0.05
-#         times: [75, 76, 122, 123, 137, 138, 153, 154, 228]
-#         values: [0, 8, 6, 6, 5, 5, 3, 3, 3.5]
+microdistancing:
+    function_type: empiric
+    parameters:
+        multiplier: 0.05
+        times: [75, 76, 77, 122, 123, 137, 138, 153, 154, 228]
+        values: [0, 5, 5, 4, 4, 3.5, 3.5, 2.5, 2.5, 3]
 
     # 16 March, day 76, ECQ enforced
     # 1 May, day 122, ECQ / GCQ enforced
@@ -35,6 +35,6 @@ mixing:
     # no restrictions = 0
     # face fasks = 1
     # modified general community quarantine (MGCQ) = 2
-    # general community quarantine (GCQ) = 4
-    # modified enhanced community quarantine (MECQ) = 6
-    # enhanced community quarantine (ECQ) = 8
+    # general community quarantine (GCQ) = 3
+    # modified enhanced community quarantine (MECQ) = 4
+    # enhanced community quarantine (ECQ) = 5

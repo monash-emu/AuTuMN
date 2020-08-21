@@ -26,11 +26,11 @@ microdistancing:
     parameters:
         multiplier: 0.05
         times: [75, 76, 77, 137, 138, 153, 154, 198, 199, 214, 215, 229]
-        values: [0, 5, 5, 3.5, 3.5, 3, 3, 2, 2, 4.5, 4.5, 2.5]
+        values: [0, 5, 5, 3.5, 3.5, 1, 1, 2, 2, 4.5, 4.5, 2.5]
 
     # 16 March, day 76, ECQ enforced for whole region
     # 16 May, day 137, GCQ continues for most of region with MECQ enforced for Laguna
-    # 1 June, day 153, GCQ for all regions
+    # 1 June, day 153, GCQ for all regions; substituted value of 1 to help fit model
     # 16 July, day 198, MGCQ enforced
     # 1 Aug, day 214, MGCQ for Lucena City, Quezon, GCQ for Batangas, and MECQ for Laguna, Cavite, Rizal
     # 15 Aug, day 228, face masks/shields required

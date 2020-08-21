@@ -49,9 +49,9 @@ PAR_PRIORS += [
         "distribution": "uniform",
         "distri_params": [40., 60.],
     },
-    # {
-    #     "param_name": "microdistancing.parameters.multiplier",
-    #     "distribution": "uniform",
-    #     "distri_params": [0.04, 0.12],
-    # },
+    {
+        "param_name": "microdistancing.parameters.multiplier",
+        "distribution": "uniform",
+        "distri_params": [0.04, 0.16],
+    },
 ]

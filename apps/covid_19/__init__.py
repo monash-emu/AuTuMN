@@ -12,14 +12,34 @@ from .regions.spain import spain_region
 from .regions.italy import italy_region
 from .regions.france import france_region
 from .regions.belgium import belgium_region
-from .regions.dhhs import dhhs_region
+from .regions.north_metro import north_metro_region
+from .regions.south_east_metro import south_east_metro_region
+from .regions.south_metro import south_metro_region
+from .regions.west_metro import west_metro_region
+from .regions.barwon_south_west import barwon_south_west_region
+from .regions.gippsland import gippsland_region
+from .regions.hume import hume_region
+from .regions.loddon_mallee import loddon_mallee_region
+from .regions.grampians import grampians_region
+
+
 
 # Used by each region to register its model.
 app = App("covid_19")
 
 # Australia
 app.register(victoria_region)
-app.register(dhhs_region)
+app.register(north_metro_region)
+app.register(south_east_metro_region)
+app.register(south_metro_region)
+app.register(west_metro_region)
+app.register(barwon_south_west_region)
+app.register(gippsland_region)
+app.register(hume_region)
+app.register(loddon_mallee_region)
+app.register(grampians_region)
+
+
 # Malaysia
 app.register(malaysia_region)
 

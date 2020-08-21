@@ -6,7 +6,7 @@ from autumn.calibration.utils import add_dispersion_param_prior_for_gaussian
 
 from apps.covid_19 import calibration as base
 
-targets = load_targets("covid_19", Region.DHHS)
+targets = load_targets("covid_19", Region.GIPPSLAND)
 notifications = targets["notifications"]
 hospital_occupancy = targets["hospital_occupancy"]
 icu_occupancy = targets["icu_occupancy"]
@@ -15,7 +15,7 @@ total_infection_deaths = targets["total_infection_deaths"]
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
     base.run_calibration_chain(
-        max_seconds, run_id, num_chains, Region.DHHS, PAR_PRIORS, TARGET_OUTPUTS,
+        max_seconds, run_id, num_chains, Region.GIPPSLAND, PAR_PRIORS, TARGET_OUTPUTS,
     )
 
 

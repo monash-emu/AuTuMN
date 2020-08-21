@@ -5,9 +5,9 @@ from apps.covid_19.model import build_model
 
 from .calibrate import run_calibration_chain
 
-dhhs_region = AppRegion(
+gippsland_region = AppRegion(
     app_name="covid_19",
-    region_name=Region.DHHS,
+    region_name=Region.GIPPSLAND,
     build_model=build_model,
     calibrate_model=run_calibration_chain,
 )

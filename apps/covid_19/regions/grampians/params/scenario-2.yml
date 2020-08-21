@@ -1,0 +1,11 @@
+# Workplace contact rates back to pre-covid levels at end stage 4 period
+mixing:
+  work:
+    append: true
+    times:
+      - 2020-09-13
+      - 2020-09-14
+    values:
+      - [repeat_prev]
+      - 1.
+ 

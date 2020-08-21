@@ -41,7 +41,15 @@ class Region:
     SWEDEN = "sweden"
     FRANCE = "france"
     SPAIN = "spain"
-    DHHS ="dhhs"
+    NORTH_METRO ="north_metro"
+    SOUTH_EAST_METRO = "south_east_metro"
+    SOUTH_METRO = "south_metro"
+    WEST_METRO = "west_metro"
+    BARWON_SOUTH_WEST = "barwon_south_west"
+    GIPPSLAND = "gippsland"
+    HUME = "hume"
+    LODDON_MALLEE = "loddon_mallee"
+    GRAMPIANS = "grampians"
 
     REGIONS = [
         AUSTRALIA,
@@ -62,5 +70,13 @@ class Region:
         SWEDEN,
         FRANCE,
         SPAIN,
-        DHHS,
+        NORTH_METRO,
+        SOUTH_EAST_METRO,
+        SOUTH_METRO,
+        WEST_METRO,
+        BARWON_SOUTH_WEST,
+        GIPPSLAND,
+        HUME,
+        LODDON_MALLEE,
+        GRAMPIANS,
     ]

@@ -1,4 +1,4 @@
-import numpy as np
+from apps.covid_19.calibration import add_standard_victoria_params
 
 from autumn.constants import Region
 from autumn.tool_kit.params import load_targets
@@ -50,60 +50,6 @@ TARGET_OUTPUTS = [
     },
 ]
 
-PAR_PRIORS = [
-    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.025, 0.05],},
-    {"param_name": "seasonal_force", "distribution": "uniform", "distri_params": [0.0, 0.4],},
-    {
-        "param_name": "compartment_periods_calculated.exposed.total_period",
-        "distribution": "trunc_normal",
-        "distri_params": [5.0, 0.7],
-        "trunc_range": [1.0, np.inf],
-    },
-    {
-        "param_name": "compartment_periods_calculated.active.total_period",
-        "distribution": "trunc_normal",
-        "distri_params": [7.0, 0.7],
-        "trunc_range": [1.0, np.inf],
-    },
-    {
-        "param_name": "symptomatic_props_multiplier",
-        "distribution": "trunc_normal",
-        "distri_params": [1.0, 0.1],
-        "trunc_range": [0.5, np.inf],
-    },
-    {
-        "param_name": "testing_to_detection.maximum_detection",
-        "distribution": "uniform",
-        "distri_params": [0.6, 0.9],
-    },
-    {
-        "param_name": "hospital_props_multiplier",
-        "distribution": "trunc_normal",
-        "distri_params": [1.0, 0.25],
-        "trunc_range": [0.1, np.inf],
-    },
-    {
-        "param_name": "ifr_multiplier",
-        "distribution": "trunc_normal",
-        "distri_params": [1.0, 0.25],
-        "trunc_range": [0.1, np.inf],
-    },
-    {"param_name": "icu_prop", "distribution": "uniform", "distri_params": [0.08, 0.2],},
-    {
-        "param_name": "compartment_periods.icu_early",
-        "distribution": "uniform",
-        "distri_params": [5.0, 17.0],
-    },
-    {
-        "param_name": "compartment_periods.icu_late",
-        "distribution": "uniform",
-        "distri_params": [5.0, 15.0],
-    },
-    {
-        "param_name": "microdistancing.parameters.multiplier",
-        "distribution": "uniform",
-        "distri_params": [0.04, 0.08],
-    },
-]
+PAR_PRIORS = add_standard_victoria_params([])
 
 PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS)

@@ -33,7 +33,8 @@ def build_model(params: dict) -> StratifiedModel:
     agegroup_strata = list(range(0, agegroup_max, agegroup_step))
     country_iso3 = params["iso3"]
     region = params["region"]
-    total_pops = inputs.get_population_by_agegroup(agegroup_strata, country_iso3, region, year=2020)
+    pop_region = params['pop_region_override'] if params["pop_region_override"] else params["region"]
+    total_pops = inputs.get_population_by_agegroup(agegroup_strata, country_iso3, pop_region, year=params["pop_year"])
 
     # Define model compartments.
     compartments = [

@@ -143,6 +143,8 @@ time_variant_detection:
 
 # Sub region of country, null means just the country.
 region: null
+pop_region_override: null
+pop_year: 2020
 
 # Country to extract stratified population data from - should eventually use only one of country or iso3
 # Country to extract Prem mixing matrix from

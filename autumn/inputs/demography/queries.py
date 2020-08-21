@@ -147,8 +147,9 @@ def get_population_by_agegroup(
         ],
     )
     pop_df = pop_df.sort_values(["start_age"])
-    orig_ages = pop_df["start_age"].tolist()
-    orig_pop = pop_df["population"].tolist()
+    pop_df_with_data = pop_df.dropna(subset=['population'])
+    orig_ages = pop_df_with_data["start_age"].tolist()
+    orig_pop = pop_df_with_data["population"].tolist()
     assert len(orig_ages) == len(orig_pop)
     population = downsample_quantity(orig_pop, orig_ages, age_breakpoints)
     return [int(p) for p in population]

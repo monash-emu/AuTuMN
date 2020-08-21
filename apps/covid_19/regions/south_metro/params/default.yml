@@ -1,6 +1,8 @@
 ---
 iso3: AUS
-region: Victoria # TODO -> Mili change to correct region once input.DB has pop values for the HC.
+region: Victoria
+pop_region_override: SOUTH_METRO
+pop_year: 2018
 implement_importation: true
 infectious_seed: 0
 

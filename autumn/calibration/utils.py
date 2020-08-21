@@ -336,7 +336,7 @@ def find_distribution_params_from_mean_and_ci(distribution, mean, ci, ci_width=0
     return params
 
 
-def ignore_calibration_target_after_date(target, date):
+def ignore_calibration_target_before_date(target, date):
     indices = \
         [i_time for
          i_time, time in enumerate(target['times']) if

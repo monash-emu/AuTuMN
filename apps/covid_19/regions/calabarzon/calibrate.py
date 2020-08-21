@@ -12,11 +12,8 @@ from autumn.tool_kit.params import load_targets
 
 targets = load_targets("covid_19", Region.CALABARZON)
 
-
 notifications = \
     ignore_calibration_target_after_date(targets["notifications"], 100)
-#icu_occupancy = targets["icu_occupancy"]
-
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
     base.run_calibration_chain(

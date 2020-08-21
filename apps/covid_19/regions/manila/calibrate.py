@@ -6,13 +6,15 @@ from apps.covid_19.calibration import (
     add_standard_philippines_params,
     assign_trailing_weights_to_halves,
 )
-from autumn.calibration.utils import add_dispersion_param_prior_for_gaussian
+from autumn.calibration.utils import \
+    add_dispersion_param_prior_for_gaussian, ignore_calibration_target_after_date
 from autumn.tool_kit.params import load_targets
 
 targets = load_targets("covid_19", Region.MANILA)
 notifications = targets["notifications"]
-#icu_occupancy = targets["icu_occupancy"]
 
+notifications = \
+    ignore_calibration_target_after_date(targets["notifications"], 100)
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
     base.run_calibration_chain(

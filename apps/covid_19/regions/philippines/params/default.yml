@@ -19,12 +19,12 @@ mixing:
       - 0
       - 0
 
-microdistancing:
-    function_type: empiric
-    parameters:
-        multiplier: 0.05
-        times: [75, 76, 122, 123, 137, 138, 153, 154, 228]
-        values: [0, 8, 6, 6, 5, 5, 3, 3, 3.5]
+# microdistancing:
+#     function_type: empiric
+#     parameters:
+#         multiplier: 0.05
+#         times: [75, 76, 122, 123, 137, 138, 153, 154, 228]
+#         values: [0, 8, 6, 6, 5, 5, 3, 3, 3.5]
 
     # 16 March, day 76, ECQ enforced
     # 1 May, day 122, ECQ / GCQ enforced

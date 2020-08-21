@@ -13,8 +13,8 @@ from autumn.tool_kit.params import load_targets
 targets = load_targets("covid_19", Region.PHILIPPINES)
 notifications = targets["notifications"]
 
-#notifications = \
-#    ignore_calibration_target_after_date(targets["notifications"], 100)
+notifications = \
+    ignore_calibration_target_after_date(targets["notifications"], 100)
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
     base.run_calibration_chain(
@@ -36,18 +36,6 @@ TARGET_OUTPUTS = [
         "loglikelihood_distri": "normal",
         "time_weights": assign_trailing_weights_to_halves(14, notifications["times"]),
     },
-#    {
-#        "output_key": "icu_occupancy",
-#        "years": icu_occupancy["times"],
-#        "values": icu_occupancy["values"],
-#        "loglikelihood_distri": "normal",
-#    },
-    # {
-    #     "output_key": "total_infection_deaths",
-    #     "years": total_infection_deaths["times"],
-    #     "values": total_infection_deaths["values"],
-    #     "loglikelihood_distri": "normal",
-    # },
 ]
 
 

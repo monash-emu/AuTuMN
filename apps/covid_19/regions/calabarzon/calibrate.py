@@ -7,13 +7,13 @@ from apps.covid_19.calibration import (
     assign_trailing_weights_to_halves,
 )
 from autumn.calibration.utils import \
-    add_dispersion_param_prior_for_gaussian, ignore_calibration_target_before_date
+    add_dispersion_param_prior_for_gaussian, ignore_calibration_target_after_date
 from autumn.tool_kit.params import load_targets
 
 targets = load_targets("covid_19", Region.CALABARZON)
 
 notifications = \
-    ignore_calibration_target_before_date(targets["notifications"], 100)
+    ignore_calibration_target_after_date(targets["notifications"], 100)
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
     base.run_calibration_chain(
@@ -49,9 +49,14 @@ PAR_PRIORS = add_standard_philippines_params(PAR_PRIORS)
 
 PAR_PRIORS += [
     {
+    {
+        "param_name": "start_time",
+        "distribution": "uniform",
+        "distri_params": [40., 60.],
+    },
         "param_name": "microdistancing.parameters.multiplier",
         "distribution": "uniform",
-        "distri_params": [0.04, 0.12],
+        "distri_params": [0.04, 0.16],
     },
     {
         "param_name": "infectious_seed",

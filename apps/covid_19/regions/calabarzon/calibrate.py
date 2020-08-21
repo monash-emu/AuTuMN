@@ -7,7 +7,7 @@ from apps.covid_19.calibration import (
     assign_trailing_weights_to_halves,
 )
 from autumn.calibration.utils import \
-    add_dispersion_param_prior_for_gaussian, ignore_calibration_target_after_date
+    add_dispersion_param_prior_for_gaussian, ignore_calibration_target_before_date
 from autumn.tool_kit.params import load_targets
 
 targets = load_targets("covid_19", Region.CALABARZON)

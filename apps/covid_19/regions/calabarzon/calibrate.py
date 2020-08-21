@@ -14,7 +14,7 @@ targets = load_targets("covid_19", Region.CALABARZON)
 
 
 notifications = \
-    ignore_calibration_target_after_date(targets["notifications"], 120)
+    ignore_calibration_target_after_date(targets["notifications"], 100)
 #icu_occupancy = targets["icu_occupancy"]
 
 
@@ -59,6 +59,6 @@ PAR_PRIORS += [
     {
         "param_name": "infectious_seed",
         "distribution": "uniform",
-        "distri_params": [10., 50.],
+        "distri_params": [10., 100.],
     }
 ]

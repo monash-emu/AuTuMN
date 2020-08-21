@@ -2,7 +2,7 @@
 iso3: PHL
 region: Calabarzon
 
-start_time: 120.
+start_time: 100.
 scenario_start_time: 279
 end_time: 365.
 hospital_props_multiplier: 2.

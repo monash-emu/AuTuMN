@@ -175,6 +175,44 @@ def add_standard_victoria_params(params):
     ]
 
 
+def add_standard_victoria_targets(target_outputs, targets):
+    notifications = targets["notifications"]
+    hospital_occupancy = targets["hospital_occupancy"]
+    icu_occupancy = targets["icu_occupancy"]
+    total_infection_deaths = targets["total_infection_deaths"]
+
+    return target_outputs + [
+        {
+            "output_key": notifications["output_key"],
+            "years": notifications["times"],
+            "values": notifications["values"],
+            "loglikelihood_distri": "normal",
+            "time_weights": list(range(1, len(notifications["times"]) + 1)),
+        },
+        {
+            "output_key": hospital_occupancy["output_key"],
+            "years": hospital_occupancy["times"],
+            "values": hospital_occupancy["values"],
+            "loglikelihood_distri": "normal",
+            "time_weights": list(range(1, len(hospital_occupancy["times"]) + 1)),
+        },
+        {
+            "output_key": icu_occupancy["output_key"],
+            "years": icu_occupancy["times"],
+            "values": icu_occupancy["values"],
+            "loglikelihood_distri": "normal",
+            "time_weights": list(range(1, len(icu_occupancy["times"]) + 1)),
+        },
+        {
+            "output_key": total_infection_deaths["output_key"],
+            "years": total_infection_deaths["times"],
+            "values": total_infection_deaths["values"],
+            "loglikelihood_distri": "normal",
+            "time_weights": list(range(1, len(total_infection_deaths["times"]) + 1)),
+        },
+    ]
+
+
 def assign_trailing_weights_to_halves(end_weights, calibration_target):
     """
     Create a list of (float) halves and ones, of the length of the calibration target, with the last few values being

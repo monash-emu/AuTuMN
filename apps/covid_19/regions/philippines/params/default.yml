@@ -23,8 +23,8 @@ microdistancing:
     function_type: empiric
     parameters:
         multiplier: 0.05
-        times: [75, 76, 77, 122, 123, 137, 138, 153, 154, 228]
-        values: [0, 5, 5, 4, 4, 3.5, 3.5, 2.5, 2.5, 3]
+        times: [75, 76, 122, 123, 137, 138, 153, 154, 227, 228]
+        values: [0, 4.5, 4.5, 4, 4, 3.5, 3.5, 3., 3., 5.]
 
     # 16 March, day 76, ECQ enforced
     # 1 May, day 122, ECQ / GCQ enforced

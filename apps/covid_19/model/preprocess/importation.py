@@ -26,6 +26,8 @@ def get_importation_rate_func_as_birth_rates(
 
     # Divide through by total population to create per capita rate and return
     def recruitment_rate(t):
+
+        # Should remove the division and the multiplication by population in summer.flow.importation get_net_flow
         return importation_numbers_scale_up(t) / sum(starting_pops)
 
     return recruitment_rate

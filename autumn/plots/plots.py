@@ -1037,7 +1037,7 @@ def plot_multicountry_optimal_plan(all_results, mode):
 
     out_dir = "apps/covid_19/mixing_optimisation/opti_plots/figures/optimal_plans/"
     filename = out_dir + "optimal_plan_" + mode
-    # pyplot.savefig(filename + ".pdf")
+    pyplot.savefig(filename + ".pdf")
     pyplot.savefig(filename + ".png", dpi=300)
 
 
@@ -1718,4 +1718,94 @@ def plot_multicountry_min_mixing_sensitivity():
     pyplot.savefig(filename + ".png", dpi=300)
 
 
+def plot_attack_rates_by_age(all_scenarios, config, country, mode, objective, ax):
 
+    scenario = all_scenarios[mode][config][objective][country][1]
+    model = scenario.model
+    times = model.times
+
+    phase_2_end_time = 214 + 180 if config == 2 else 214 + 366
+    time_index = times.index(phase_2_end_time)
+
+    ind = range(16)
+    heights = []
+
+    ax.grid(linewidth=.5, zorder=0, linestyle="dotted", axis='y')
+    ax.set_axisbelow(True)
+
+    for age_index in range(16):
+        age_group_name = "agegroup_" + str(int(5. * age_index))
+        comp_names = [c for c in model.compartment_names if age_group_name in c.split('X') and "recovered" in c.split('X')]
+        comp_idx = [model.compartment_names.index(c) for c in comp_names]
+        reco = np.sum(model.outputs[time_index, comp_idx])
+
+        comp_names = [c for c in model.compartment_names if age_group_name in c.split('X')]
+        comp_idx = [model.compartment_names.index(c) for c in comp_names]
+        pop = np.sum(model.outputs[time_index, comp_idx])
+
+        heights.append(100 * reco / pop)
+
+    ax.bar(ind, heights, width=.5, color='mediumorchid')
+
+    xlabs = [str(i*5) + "-" + str(i*5 + 4) for i in range(16)]
+    xlabs[-1] = "75+"
+    ax.set_xticks(ind)
+    ax.set_xticklabels(xlabs, rotation=45, fontsize=10)
+
+    ax.set_ylim((0, 100.))
+
+    if config == 2 and objective == 'deaths':
+        ax.set_ylabel("% recovered", fontsize=16)
+
+
+
+def plot_multicountry_attack_rates_by_age(all_scenarios, mode='by_age'):
+
+    # all_scenarios[mode][config][objective][country]
+    pyplot.style.use("default")
+
+    fig = pyplot.figure(constrained_layout=True, figsize=(25, 20))  # (w, h)
+    pyplot.rcParams["font.family"] = "Times New Roman"
+
+    widths = [1, 4, 4, 4, 4]
+    heights = [1, 4, 4, 4, 4, 4, 4]
+    spec = fig.add_gridspec(ncols=5, nrows=7, width_ratios=widths,
+                            height_ratios=heights, hspace=0, wspace=0)
+    text_size = 23
+
+    countries = ['belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']
+    country_names = [c.title() for c in countries]
+    country_names[-1] = "United Kingdom"
+
+    config_names = ("Six-month mitigation phase", "Twelve-month mitigation phase")
+    objective_names = ("minimising deaths", "minimising YLLs")
+
+    col_index = 0
+    for j, config in enumerate([2, 3]):
+        for h, objective in enumerate(["deaths", 'yoll']):
+            col_index += 1
+            for i, country in enumerate(countries):
+                ax = fig.add_subplot(spec[i+1, col_index])
+                plot_attack_rates_by_age(all_scenarios, config, country, mode, objective, ax)
+
+                if j + h == 0:
+                    ax = fig.add_subplot(spec[i+1, 0])
+                    ax.text(0.8, 0.5, country_names[i], rotation=90, fontsize=text_size,
+                            horizontalalignment='center', verticalalignment='center', fontweight='normal')
+                    ax.axis("off")
+
+        ax = fig.add_subplot(spec[0, 2*j + 1: 2*j+3])
+        ax.text(0.5, 0.8, config_names[j], fontsize=text_size, horizontalalignment='center', verticalalignment='center',
+                fontweight='normal')
+
+        x_pos_labels = [.25, .75]
+        for h in [0, 1]:
+            ax.text(x_pos_labels[h], 0., objective_names[h], fontsize=text_size, horizontalalignment='center', verticalalignment='center',
+                    fontweight='normal')
+        ax.axis("off")
+
+    out_dir = "apps/covid_19/mixing_optimisation/opti_plots/figures/age_specific_attack_rates/"
+    filename = out_dir + "age_specific_attack_rates_" + mode
+    pyplot.savefig(filename + ".pdf")
+    pyplot.savefig(filename + ".png", dpi=300)
+    pyplot.savefig(filename + "low_res.png", dpi=100)

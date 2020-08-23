@@ -385,6 +385,37 @@ def plot_multicountry_min_mixing_sensitivity(
     plots.plot_multicountry_min_mixing_sensitivity()
 
 
+def plot_multicountry_attack_rates_by_age(
+    plotter: StreamlitPlotter, app: RegionAppBase, scenarios: list, plot_config: dict
+):
+    countries = ['belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']
+    root_path = os.path.join('data', 'scenario_outputs_waning_immunity')
+
+    all_scenarios = {}
+    for mode in ['by_age']:  #, 'by_location']:
+        all_scenarios[mode] = {}
+        for config in [2, 3]: #, 3]:
+            all_scenarios[mode][config] = {}
+            for objective in ["deaths", "yoll"]:  #, "yoll"]:  # , "deaths"]
+                all_scenarios[mode][config][objective] = {}
+                full_path = os.path.join(root_path, mode + "_" + str(config) + "_" + objective)
+
+                for country in countries:
+                    country_dirpath = os.path.join(full_path, country)
+                    dir_name = os.listdir(country_dirpath)[0]
+                    run_dirpath = os.path.join(country_dirpath, dir_name)
+
+                    params = utils.load_params(run_dirpath)
+                    post_processing_config = utils.load_post_processing_config('covid_19')
+
+                    # Get database from model data dir.
+                    db_path = os.path.join(run_dirpath, "outputs.db")
+                    all_scenarios[mode][config][objective][country] = load_model_scenarios(db_path, params, post_processing_config)
+
+    print("Plotting multicountry attack rates by age for")
+
+    plots.plot_multicountry_attack_rates_by_age(all_scenarios)
+
 
 PLOT_FUNCS = {
     "Compartment sizes": plot_compartment,
@@ -400,6 +431,7 @@ PLOT_FUNCS = {
     "Multicountry optimised matrices": plot_multicountry_optimised_matrices,
     "Multicountry waning immunity": plot_multicountry_waning_immunity,
     "Multicountry min mixing sensitivity": plot_multicountry_min_mixing_sensitivity,
+    "Multicountry attack rate by age": plot_multicountry_attack_rates_by_age,
     # "Multicountry mobility data": plot_multicountry_mobility,
 }
 

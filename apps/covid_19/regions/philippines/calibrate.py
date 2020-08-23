@@ -16,6 +16,7 @@ notifications = targets["notifications"]
 notifications = \
     ignore_calibration_target_before_date(targets["notifications"], 100)
 
+
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
     base.run_calibration_chain(
         max_seconds,
@@ -39,7 +40,7 @@ TARGET_OUTPUTS = [
 ]
 
 
-PAR_PRIORS = provide_default_calibration_params(excluded_params=("start_time"))
+PAR_PRIORS = provide_default_calibration_params(excluded_params=("start_time",))
 PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS)
 PAR_PRIORS = add_standard_philippines_params(PAR_PRIORS)
 

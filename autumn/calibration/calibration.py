@@ -511,7 +511,7 @@ class Calibration:
         last_accepted_params = None
         last_acceptance_quantity = None  # acceptance quantity is defined as loglike + logprior
         last_acceptance_loglike = None
-        for i_run in range(n_iterations + n_burned):
+        for i_run in range(int(n_iterations + n_burned)):
             # Propose new paramameter set.
             proposed_params = self.propose_new_params(last_accepted_params)
 

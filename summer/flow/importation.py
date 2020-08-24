@@ -12,7 +12,6 @@ from .base import BaseEntryFlow
 class ImportFlow(BaseEntryFlow):
     """
     Calculates importation, based on the current population size.
-    TODO: Remove population component
     """
 
     type = FlowType.IMPORT

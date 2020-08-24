@@ -191,8 +191,8 @@ def build_model(params: dict) -> StratifiedModel:
         # Calculate CDRs and the resulting CDR function over time
         cdr_from_tests_func = \
             create_cdr_function(
-                assumed_cdr_parameter,
-                assumed_tests_parameter
+                assumed_tests_parameter,
+                assumed_cdr_parameter
             )
         detected_proportion = \
             scale_up_function(

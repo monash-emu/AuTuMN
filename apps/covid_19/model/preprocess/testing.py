@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def create_cdr_function(assumed_cdr: float, assumed_tests: int):
+def create_cdr_function(assumed_tests: int, assumed_cdr: float):
     """
     Factory function for finding CDRs from number of tests done in setting modelled
     To work out the function, only one parameter is needed, so this can be estimated from one known point on the curve,

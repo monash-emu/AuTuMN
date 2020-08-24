@@ -18,13 +18,17 @@ class RunFullModels(luigi.Task):
     """Master task, requires all other tasks"""
 
     run_id = luigi.Parameter()  # Unique run id string
+    burn_in = luigi.Parameter()
 
     def requires(self):
         # Get number of uploaded dbs
         key_prefix = os.path.join(self.run_id, "data/calibration_outputs")
         chain_db_keys = utils.list_s3(key_prefix, key_suffix=".db")
         chain_db_idxs = [int(k.replace(".db", "").split("_")[-1]) for k in chain_db_keys]
-        return [UploadDatabaseTask(run_id=self.run_id, chain_id=i) for i in chain_db_idxs]
+        return [
+            UploadDatabaseTask(run_id=self.run_id, burn_in=self.burn_in, chain_id=i)
+            for i in chain_db_idxs
+        ]
 
 
 class BuildInputDatabaseTask(utils.BaseTask):
@@ -40,8 +44,8 @@ class BuildInputDatabaseTask(utils.BaseTask):
 class FullModelRunTask(utils.ParallelLoggerTask):
     """Runs the calibration for a single chain"""
 
+    run_id = luigi.Parameter()  # Unique run id string
     chain_id = luigi.IntParameter()  # Unique chain id
-    model_name = luigi.Parameter()  # The calibration to run
     burn_in = luigi.IntParameter()
 
     def requires(self):
@@ -58,11 +62,12 @@ class FullModelRunTask(utils.ParallelLoggerTask):
         return f"full_model_runs/run-{self.chain_id}.log"
 
     def safe_run(self):
-        msg = f"Running {self.model_name} full model with burn-in of {self.burn_in}s"
+        model_name, _, _ = utils.read_run_id(self.run_id)
+        msg = f"Running {model_name} full model with burn-in of {self.burn_in}s"
         with Timer(msg):
             src_db_path = os.path.join(settings.BASE_DIR, self.get_src_db_relpath())
             run_full_models_for_mcmc(
-                self.model_name, self.burn_in, src_db_path, self.get_output_db_path()
+                model_name, self.burn_in, src_db_path, self.get_output_db_path()
             )
 
     def get_src_db_relpath(self):
@@ -76,10 +81,12 @@ class FullModelRunTask(utils.ParallelLoggerTask):
 
 class UploadDatabaseTask(utils.UploadS3Task):
 
+    run_id = luigi.Parameter()  # Unique run id string
     chain_id = luigi.IntParameter()  # Unique chain id
+    burn_in = luigi.Parameter()
 
     def requires(self):
-        return FullModelRunTask(run_id=self.run_id, chain_id=self.chain_id)
+        return FullModelRunTask(run_id=self.run_id, burn_in=self.burn_in, chain_id=self.chain_id)
 
     def get_src_path(self):
         filename = utils.get_full_model_run_db_filename(self.chain_id)

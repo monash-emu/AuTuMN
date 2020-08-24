@@ -1,4 +1,4 @@
-# MASSIVE Job Scripts
+# MASSIVE Job Scripts [NO LONGER USED]
 
 This folder contains scripts which help you run parameter jobs on the [MASSIVE](https://www.monash.edu/research/infrastructure/platforms-pages/massive) computer cluster.
 

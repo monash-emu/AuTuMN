@@ -97,7 +97,7 @@ def powerbi():
     params = PowerBIParams()
     run_id = params.run_id
     model_name, _, _ = read_run_id(run_id)
-    job_name = f"{model_name}-{build_number}"
+    job_name = f"{model_name}-{params.buildkite.build_number}"
     logger.info("Running PowerBI post processing for model %s", model_name)
     aws.run_powerbi(job=job_name, run=run_id, branch="master")
     logger.info("PowerBI post processing for model %s suceeded", model_name)

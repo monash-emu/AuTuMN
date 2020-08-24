@@ -12,5 +12,9 @@ validate_params = sb.build_validator(
     time_step=float,
     # disease model
     contact_rate=float,
-    recovery_rate= float,
+    stabilisation_rate=float,
+    late_activation_rate=float,
+    early_activation_rate=float,
+    recovery_rate=float,
+    infect_death=float,
 )

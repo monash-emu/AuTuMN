@@ -181,13 +181,15 @@ def build_model(params: dict) -> StratifiedModel:
         testing_to_detection = params["testing_to_detection"]
         maximum_detection = testing_to_detection["maximum_detection"]
         shape_parameter = convert_exponent_to_value(testing_to_detection["shape_parameter"])
-        test_data, test_values = get_vic_testing_numbers()
+        test_dates, test_values = get_vic_testing_numbers()
+        per_capita_tests = [i_tests / sum(total_pops) for i_tests in test_values]
         func_values = [
             convert_tests_to_prop(v, maximum_detection, shape_parameter) for v in test_values
         ]
-        detected_proportion = scale_up_function(test_data, func_values, smoothness=0.2, method=5)
+        detected_proportion = scale_up_function(test_dates, func_values, smoothness=0.2, method=5)
     else:
         detect_prop_params = params["time_variant_detection"]
+
         # Create function describing the proportion of cases detected over time
         def detected_proportion(t):
             # Function representing the proportion of symptomatic people detected over time

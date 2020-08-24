@@ -233,7 +233,7 @@ def plot_calibration_fit(
     plotter.save_figure(fig, filename=filename, title_text=title_text)
 
 
-def plot_timeseries_with_uncertainty_for_powerbi(
+def plot_timeseries_with_uncertainty(
     plotter: Plotter, output_name: str, scenario_name: str, quantiles: dict, times: list, targets,
 ):
     fig, axis, _, _, _ = plotter.get_figure()

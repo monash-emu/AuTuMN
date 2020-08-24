@@ -22,7 +22,7 @@ def get_metadata(key: str):
     return stdout
 
 
-def trigger_pipeline(pipeline_data: dict):
+def _trigger_pipeline(pipeline_data: dict):
     """Trigger a downstream pipeline run"""
     data_str = pprint.pformat(pipeline_data, indent=2)
     logger.info("Triggering Buildkite pipeline:\n%s", data_str)
@@ -35,3 +35,22 @@ def trigger_pipeline(pipeline_data: dict):
         logger.info("stdout for trigger pipeline: %s", stdout)
     if stderr:
         logger.info("stderr for trigger pipeline: %s", stderr)
+
+
+def trigger_pipeline(label: str, target: str, msg: str, run_id: str, params):
+    pipeline_data = {
+        "steps": [
+            {
+                "label": label,
+                "trigger": target,
+                "async": True,
+                "build": {
+                    "message": msg,
+                    "commit": params.buildkite.commit,
+                    "branch": params.buildkite.branch,
+                    "env": {"RUN_ID": run_id},
+                },
+            }
+        ]
+    }
+    _trigger_pipeline(pipeline_data)

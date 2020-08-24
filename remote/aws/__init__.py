@@ -12,20 +12,20 @@ logger = logging.getLogger(__name__)
 
 
 @click.group()
-def cli():
+def aws_cli():
     """
     CLI tool to run jobs on AWS EC2 instances
     """
 
 
-@click.command()
+@aws_cli.command()
 def status():
     """Print EC2 instance status"""
     instances = aws.describe_instances()
     aws.print_status(instances)
 
 
-@click.command()
+@aws_cli.command()
 @click.argument("job_id")
 @click.argument("instance_type", type=click.Choice(EC2_INSTANCE_SPECS.keys()))
 def start(job_id, instance_type):
@@ -35,7 +35,7 @@ def start(job_id, instance_type):
     aws.run_job(job_id, instance_type)
 
 
-@click.command()
+@aws_cli.command()
 @click.argument("job_id")
 def stop(job_id):
     """
@@ -44,7 +44,7 @@ def stop(job_id):
     aws.stop_job(job_id)
 
 
-@click.command()
+@aws_cli.command()
 def cleanup():
     """
     Cleanup dangling AWS bits.
@@ -53,7 +53,7 @@ def cleanup():
     aws.cleanup_instances()
 
 
-@click.command()
+@aws_cli.command()
 @click.argument("run_name")
 def logs(run_name):
     """Get all logs for a given run"""
@@ -63,7 +63,7 @@ def logs(run_name):
     aws.download_s3(s3_key, dest)
 
 
-@click.command()
+@aws_cli.command()
 @click.argument("name")
 def ssh(name):
     """SSH into an EC2 instance"""
@@ -93,18 +93,9 @@ def run():
 def run_calibrate(job, calibration, chains, runtime, branch, dry):
     """
     Run a MCMC calibration on an AWS server.
-    Example usage:
-
-        python -m infra run calibrate \
-            --job test \
-            --calibration malaysia \
-            --chains 6 \
-            --runtime 200 \
-            --dry
-
     """
     job_id = f"calibrate-{job}"
-    instance_type = aws.get_instance_type(2 * chains, 8)
+    instance_type = aws.get_instance_type(chains, 8)
     if dry:
         logger.info("Dry run, would have used instance type: %s", instance_type)
     else:
@@ -115,7 +106,7 @@ def run_calibrate(job, calibration, chains, runtime, branch, dry):
             "branch": branch,
         }
         job_func = functools.partial(remote.run_calibration, **kwargs)
-        _run_job(job_id, instance_type, job_func)
+        return _run_job(job_id, instance_type, job_func)
 
 
 @run.command("full")
@@ -123,20 +114,18 @@ def run_calibrate(job, calibration, chains, runtime, branch, dry):
 @click.option("--run", type=str, required=True)
 @click.option("--burn-in", type=int, required=True)
 @click.option("--latest-code", is_flag=True)
-def run_full_model(job, run, burn_in, latest_code):
+@click.option("--branch", type=str, default="master")
+def run_full_model(job, run, burn_in, latest_code, branch):
     """
     Run the full models based off an MCMC calibration on an AWS server.
-    Example usage:
-
-        python -m infra run full --run malaysia-159... --job test --burn-in 1000
-
     """
     job_id = f"full-{job}"
-    instance_type = EC2InstanceType.m5_4xlarge
+    instance_type = EC2InstanceType.r5_2xlarge
     kwargs = {
         "run_id": run,
         "burn_in": burn_in,
         "use_latest_code": latest_code,
+        "branch": branch,
     }
     job_func = functools.partial(remote.run_full_model, **kwargs)
     _run_job(job_id, instance_type, job_func)
@@ -145,16 +134,14 @@ def run_full_model(job, run, burn_in, latest_code):
 @run.command("powerbi")
 @click.option("--job", type=str, required=True)
 @click.option("--run", type=str, required=True)
-def run_powerbi(job, run):
+@click.option("--branch", type=str, default="master")
+def run_powerbi(job, run, branch):
     """
     Run the collate a PowerBI database from the full model run outputs.
-
-        python -m infra run full --run malaysia-159... --job test
-
     """
     job_id = f"powerbi-{job}"
-    instance_type = EC2InstanceType.r5_4xlarge
-    kwargs = {"run_id": run}
+    instance_type = EC2InstanceType.r5_2xlarge
+    kwargs = {"run_id": run, "branch": branch}
     job_func = functools.partial(remote.run_powerbi, **kwargs)
     _run_job(job_id, instance_type, job_func)
 
@@ -173,21 +160,18 @@ def _run_job(job_id, instance_type, job_func):
     time.sleep(60)
     logger.info("Server is hopefully ready.")
     instance = aws.find_instance(job_id)
+    return_value = None
     try:
         logger.info("Attempting to run job %s on instance %s", job_id, instance["InstanceId"])
-        job_func(instance=instance)
+        return_value = job_func(instance=instance)
+        logging.info("Job %s succeeded.", job_id)
     except Exception as e:
         logger.exception("Running job failed")
         raise
     finally:
         aws.stop_job(job_id)
 
+    return return_value
 
-cli.add_command(logs)
-cli.add_command(cleanup)
-cli.add_command(status)
-cli.add_command(ssh)
-cli.add_command(start)
-cli.add_command(stop)
-cli.add_command(run)
-cli()
+
+aws_cli.add_command(run)

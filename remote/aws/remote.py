@@ -14,41 +14,40 @@ logger = logging.getLogger(__name__)
 CODE_PATH = "/home/ubuntu/code"
 
 
-def run_powerbi(instance, run_id: str):
+def run_powerbi(instance, run_id: str, branch: str):
     """Run PowerBI processing on the remote server"""
     run_id = run_id.lower()
     msg = "Running PowerBI processing for run %s on AWS instance %s"
     logger.info(msg, run_id, instance["InstanceId"])
     with get_connection(instance) as conn:
-        update_repo(conn)
+        update_repo(conn, branch=branch)
         install_requirements(conn)
-        pipeline_name = "RunPowerBI"
+        pipeline_name = "powerbi"
         pipeline_args = {
-            "run-id": run_id,
+            "run": run_id,
             "workers": 7,
         }
         run_luigi_pipeline(conn, pipeline_name, pipeline_args)
         logger.info("PowerBI processing completed for %s", run_id)
 
 
-def run_full_model(instance, run_id: str, burn_in: int, use_latest_code: bool):
+def run_full_model(instance, run_id: str, burn_in: int, use_latest_code: bool, branch: str):
     """Run full model job on the remote server"""
     run_id = run_id.lower()
     msg = "Running full models for run %s burn-in %s on AWS instance %s"
     logger.info(msg, run_id, burn_in, instance["InstanceId"])
     with get_connection(instance) as conn:
         if use_latest_code:
-            update_repo(conn)
+            update_repo(conn, branch=branch)
         else:
             set_run_id(conn, run_id)
 
         install_requirements(conn)
         model_name, _, _ = read_run_id(run_id)
-        pipeline_name = "RunFullModels"
+        pipeline_name = "full"
         pipeline_args = {
-            "run-id": run_id,
-            "FullModelRunTask-burn-in": burn_in,
-            "FullModelRunTask-model-name": model_name,
+            "run": run_id,
+            "burn": burn_in,
             "workers": 7,
         }
         run_luigi_pipeline(conn, pipeline_name, pipeline_args)
@@ -61,71 +60,33 @@ def run_calibration(
     """Run calibration job on the remote server"""
     msg = "Running calibration %s with %s chains for %s seconds on AWS instance %s."
     logger.info(msg, model_name, num_chains, runtime, instance["InstanceId"])
+    run_id = None
     with get_connection(instance) as conn:
         update_repo(conn, branch=branch)
         install_requirements(conn)
         run_id = get_run_id(conn, model_name)
-        pipeline_name = "RunCalibrate"
+        pipeline_name = "calibrate"
         pipeline_args = {
-            "run-id": run_id,
-            "num-chains": num_chains,
+            "run": run_id,
+            "chains": num_chains,
+            "runtime": runtime,
             "workers": num_chains,
-            "CalibrationChainTask-model-name": model_name,
-            "CalibrationChainTask-runtime": runtime,
         }
         run_luigi_pipeline(conn, pipeline_name, pipeline_args)
         logger.info("Calibration completed for %s", run_id)
 
+    return run_id
+
 
 def run_luigi_pipeline(conn: Connection, pipeline_name: str, pipeline_args: dict):
     """Run a Luigi pipeline on the remote machine"""
-    # TODO: Figure out a way to run non-local scheduler
-    #  while ensuring that we track the task from start tofinush
-    # start_luigi_scheduler(conn, instance)
     logger.info("Running Luigi pipleine %s", pipeline_name)
     pipeline_args_str = " ".join([f"--{k} {v}" for k, v in pipeline_args.items()])
-    cmd_str = f"LUIGI_CONFIG_PATH=tasks/luigi.cfg ./env/bin/python -m luigi --module tasks --local-scheduler --logging-conf-file tasks/luigi-logging.ini {pipeline_name} {pipeline_args_str}"
+    cmd_str = f"./env/bin/python -m tasks {pipeline_name} {pipeline_args_str}"
     with conn.cd(CODE_PATH):
         conn.run(cmd_str, echo=True)
 
     logger.info("Finished running Luigi pipleine %s", pipeline_name)
-    # upload_luigi_logs(conn, "calibrate", run_id)
-    # Note: this log line is used by Buildkite so don't change it.
-
-
-def upload_luigi_logs(conn: Connection, log_folder_name: str, run_id: str):
-    """Upload Luigi log files from remote server to S3"""
-    logger.info("Uploading Luigi log files.")
-    src = "/home/ubuntu/code/data/outputs/luigid/luigi-server.log"
-    dest = f"{run_id}/logs/{log_folder_name}/luigi-server.log"
-    copy_s3(conn, src, dest)
-    src = "/home/ubuntu/code/data/outputs/remote/luigi-worker.log"
-    dest = f"{run_id}/logs/{log_folder_name}/luigi-worker.log"
-    copy_s3(conn, src, dest)
-
-
-def copy_s3(conn: Connection, src_path: str, dest_key: str):
-    with conn.cd(CODE_PATH):
-        conn.run(f"./env/bin/aws s3 cp {src_path} s3://{settings.S3_BUCKET}/{dest_key}", echo=True)
-
-
-def start_luigi_scheduler(conn: Connection, instance):
-    """Start the Luigi scheduling server"""
-    ip = instance["ip"]
-    url = f"http://{ip}:8082/static/visualiser/index.html"
-    logger.info("Starting Luigi scheduling server")
-    log_dir = "/home/ubuntu/code/data/outputs/luigid"
-    conn.run(f"mkdir -p {log_dir}")
-    cmd_str = (
-        "/home/ubuntu/code/env/bin/luigid"
-        " --background"
-        f" --logdir {log_dir}"
-        " --address 0.0.0.0"
-        " --port 8082"
-    )
-    conn.sudo(cmd_str, echo=True)
-    logger.info("Started Luigi scheduling server")
-    logger.info("Luigi server available at %s", url)
 
 
 def read_run_id(run_id: str):

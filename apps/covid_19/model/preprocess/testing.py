@@ -15,6 +15,9 @@ def create_cdr_function(assumed_tests: int, assumed_cdr: float):
     Function to provide CDR for a certain number of tests
     """
 
+    assert assumed_tests >= 0, "Number of tests at certain CDR must be positive"
+    assert 1. >= assumed_cdr >= 0., "CDR for given number of tests must be between zero and one"
+
     # Find the single unknown parameter to the function
     exponent_multiplier = assumed_tests * np.log(1. - assumed_cdr)
 

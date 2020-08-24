@@ -2,6 +2,9 @@ from summer.model import StratifiedModel
 from autumn.constants import Compartment, BirthApproach, Flow
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
 
+from . import outputs
+from .validate import validate_params
+
 
 def build_model(params: dict) -> StratifiedModel:
     """
@@ -58,35 +61,10 @@ def build_model(params: dict) -> StratifiedModel:
     # This is not strictly necessary in this simple model, but becomes useful
     # when the compartments are stratified.
     func_outputs = {
-        "prevalence_infectious": calculate_prevalence_infectious,
-        "prevalence_susceptible": calculate_prevalence_susceptible,
+        "prevalence_infectious": outputs.calculate_prevalence_infectious,
+        "prevalence_susceptible": outputs.calculate_prevalence_susceptible,
     }
     sir_model.add_function_derived_outputs(func_outputs)
 
     return sir_model
 
-
-def calculate_prevalence_susceptible(time_idx, model, compartment_values, derived_outputs):
-    """
-    Calculate the total number of susceptible people at each time-step.
-    """
-    prevalence_susceiptible = 0
-    for i, comp in enumerate(model.compartment_names):
-        is_susceiptible = comp.has_name(Compartment.SUSCEPTIBLE)
-        if is_susceiptible:
-            prevalence_susceiptible += compartment_values[i]
-
-    return prevalence_susceiptible
-
-
-def calculate_prevalence_infectious(time_idx, model, compartment_values, derived_outputs):
-    """
-    Calculate the total number of infectious people at each time-step.
-    """
-    prevalence_infectious = 0
-    for i, comp in enumerate(model.compartment_names):
-        is_infectious = comp.has_name(Compartment.INFECTIOUS)
-        if is_infectious:
-            prevalence_infectious += compartment_values[i]
-
-    return prevalence_infectious

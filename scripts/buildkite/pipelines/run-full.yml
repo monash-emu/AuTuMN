@@ -8,7 +8,7 @@ steps:
         required: true
 
       - text: "Burn-in"
-        key: "full-burn-in"
+        key: "burn-in"
         hint: "How many MCMC iterations should be burned?"
         required: false
 

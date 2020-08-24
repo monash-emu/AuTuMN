@@ -1,5 +1,6 @@
 steps:
   - block: Calibration settings
+    if: 'build.env("RUN_ID") !~ /\S+/'
     fields:
       - hint: Which model do you want to run?
         key: model-name
@@ -49,7 +50,7 @@ steps:
         required: true
         select: Model Region
       - hint: How many MCMC chains do you want to run?
-        key: mcmc-num-chains
+        key: num-chains
         required: false
         text: Number of MCMC chains
       - hint: Which Git branch do you want to use?

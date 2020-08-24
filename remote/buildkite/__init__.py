@@ -5,9 +5,10 @@ import subprocess as sp
 
 import click
 
-from . import buildkite
+from autumn.constants import Region
 from remote import aws
 
+from . import buildkite
 from .update import update_pipelines
 from .params import CalibrateParams, FullModelRunParams, PowerBIParams
 
@@ -51,8 +52,7 @@ def calibrate():
             label="Trigger full model run",
             target="full-model-run",
             msg=f"Triggered by calibration {params.model_name} (build {params.buildkite.build_number})",
-            run_id=run_id,
-            params=params,
+            env={"RUN_ID": run_id},
         )
 
     logger.info("Results available at %s", get_run_url(run_id))
@@ -83,8 +83,7 @@ def full():
             label="Trigger PowerBI processing",
             target="powerbi-processing",
             msg=f"Triggered by full model run {params.model_name} (build {params.buildkite.build_number})",
-            run_id=run_id,
-            params=params,
+            env={"RUN_ID": run_id},
         )
 
     logger.info("Results available at %s", get_run_url(run_id))
@@ -116,3 +115,67 @@ def read_run_id(run_id: str):
     timestamp = parts[-2]
     model_name = "-".join(parts[:-2])
     return model_name, timestamp, git_commit
+
+
+@click.group()
+def trigger():
+    """
+    Trigger the run of run a bunch of jobs
+    """
+
+
+@trigger.command("victoria")
+def trigger_victoria():
+    """
+    Trigger all Victorian models
+    """
+    logger.info("Triggering all Victorian regional calibrations.")
+    model_names = [
+        Region.NORTH_MELBOURNE,
+        Region.NORTH_METRO,
+        Region.SOUTH_EAST_METRO,
+        Region.SOUTH_METRO,
+        Region.WEST_METRO,
+        Region.BARWON_SOUTH_WEST,
+        Region.GIPPSLAND,
+        Region.HUME,
+        Region.LODDON_MALLEE,
+        Region.GRAMPIANS,
+    ]
+    _trigger_models(model_names)
+
+
+@trigger.command("philippines")
+def trigger_philippines():
+    """
+    Trigger all Philippines models
+    """
+    logger.info("Triggering all Philippines regional calibrations.")
+    model_names = [
+        Region.PHILIPPINES,
+        Region.MANILA,
+        Region.CALABARZON,
+        Region.CENTRAL_VISAYAS,
+    ]
+    _trigger_models(model_names)
+
+
+def _trigger_models(models):
+    params = CalibrateParams()
+    for model in models:
+        buildkite.trigger_pipeline(
+            label=f"Trigger calibration for {model}",
+            target="calibration",
+            msg=f"{model} calibration triggered by bulk run (build {params.buildkite.build_number})",
+            meta={
+                "model-name": model,
+                "trigger-downstream": params.trigger_downstream,
+                "num-chains": params.chains,
+                "mcmc-runtime": params.runtime,
+                "mcmc-branch": params.branch,
+            },
+        )
+
+
+buildkite.add_command(trigger)
+

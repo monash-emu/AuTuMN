@@ -4,6 +4,8 @@ import subprocess as sp
 
 import yaml
 
+from .params import BuildkiteParams
+
 logger = logging.getLogger(__name__)
 
 
@@ -37,7 +39,8 @@ def _trigger_pipeline(pipeline_data: dict):
         logger.info("stderr for trigger pipeline: %s", stderr)
 
 
-def trigger_pipeline(label: str, target: str, msg: str, run_id: str, params):
+def trigger_pipeline(label: str, target: str, msg: str, env: dict = {}, meta: dict = {}):
+    buildkite_params = BuildkiteParams()
     pipeline_data = {
         "steps": [
             {
@@ -46,9 +49,10 @@ def trigger_pipeline(label: str, target: str, msg: str, run_id: str, params):
                 "async": True,
                 "build": {
                     "message": msg,
-                    "commit": params.buildkite.commit,
-                    "branch": params.buildkite.branch,
-                    "env": {"RUN_ID": run_id},
+                    "commit": buildkite_params.commit,
+                    "branch": buildkite_params.branch,
+                    "env": env,
+                    "meta_data": meta,
                 },
             }
         ]

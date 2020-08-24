@@ -18,17 +18,35 @@ class BuildkiteParams:
         self.branch = os.environ["BUILDKITE_BRANCH"]
 
 
-class CalibrateParams:
-    """Params for calibrating a model"""
-
+class BaseParams:
     def __init__(self):
         self.buildkite = BuildkiteParams()
+        self.env_run_id = os.environ.get("RUN_ID")
+        if self.env_run_id:
+            logger.info("Found run id from envar: %s", run_id)
+        else:
+            logger.info("Using user-supplied run name.")
+
+    @property
+    def run_id(self):
+        if self.env_run_id:
+            return self.env_run_id
+        else:
+            run_id = buildkite.get_metadata("run-id")
+            if not run_id:
+                raise ValueError("No user-supplied `run_id` found.")
+            else:
+                return run_id
 
     @property
     def trigger_downstream(self):
         """Whether we should trigger a downstream build."""
         trigger_str = buildkite.get_metadata("trigger-downstream") or "yes"
         return trigger_str == "yes"
+
+
+class CalibrateParams(BaseParams):
+    """Params for calibrating a model"""
 
     @property
     def model_name(self):
@@ -38,7 +56,7 @@ class CalibrateParams:
     @property
     def chains(self):
         """Number of parallel chains to run."""
-        num_chains = buildkite.get_metadata("mcmc-num-chains") or 7
+        num_chains = buildkite.get_metadata("num-chains") or 7
         return int(num_chains)
 
     @property
@@ -53,46 +71,18 @@ class CalibrateParams:
         return buildkite.get_metadata("mcmc-branch") or "master"
 
 
-class FullModelRunParams:
+class FullModelRunParams(BaseParams):
     """Params for a full model run"""
 
     BURN_IN_DEFAULT = 50
-
-    def __init__(self):
-        self.buildkite = BuildkiteParams()
-        self.env_run_id = os.environ.get("RUN_ID")
-        if self.env_run_id:
-            logger.info("Found run id from envar: %s", run_id)
-        else:
-            logger.info("Using user-supplied run name.")
-
-    @property
-    def run_id(self):
-        if self.env_run_id:
-            return self.env_run_id
-        else:
-            run_id = buildkite.get_metadata("run-id")
-            if not run_id:
-                raise ValueError("No user-supplied `run_id` found.")
-            else:
-                return run_id
 
     @property
     def burn_in(self):
         if self.env_run_id:
             return self.BURN_IN_DEFAULT
         else:
-            burn_in_option = buildkite.get_metadata("full-burn-in")
+            burn_in_option = buildkite.get_metadata("burn-in")
             return int(burn_in_option) if burn_in_option else self.BURN_IN_DEFAULT
-
-    @property
-    def trigger_downstream(self):
-        """Whether we should trigger a downstream build."""
-        if self.env_run_id:
-            return True
-        else:
-            trigger_str = buildkite.get_metadata("trigger-downstream") or "yes"
-            return trigger_str == "yes"
 
     @property
     def use_latest_code(self):
@@ -103,24 +93,5 @@ class FullModelRunParams:
             return use_latest_code == "yes"
 
 
-class PowerBIParams:
+class PowerBIParams(BaseParams):
     """Params for a powerbi post processing job"""
-
-    def __init__(self):
-        self.buildkite = BuildkiteParams()
-        self.env_run_id = os.environ.get("RUN_ID")
-        if self.env_run_id:
-            logger.info("Found run id from envar: %s", run_id)
-        else:
-            logger.info("Using user-supplied run name.")
-
-    @property
-    def run_id(self):
-        if self.env_run_id:
-            return self.env_run_id
-        else:
-            run_id = buildkite.get_metadata("run-id")
-            if not run_id:
-                raise ValueError("No user-supplied `run_id` found.")
-            else:
-                return run_id

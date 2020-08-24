@@ -178,14 +178,31 @@ def build_model(params: dict) -> StratifiedModel:
 
     # Determine the proportion of cases detected over time as `detected_proportion`.
     if params["testing_to_detection"]:
-        testing_to_detection = params["testing_to_detection"]
-        maximum_detection = testing_to_detection["maximum_detection"]
-        shape_parameter = convert_exponent_to_value(testing_to_detection["shape_parameter"])
+
+        # Parameters that will need to go into ymls
+        assumed_tests_parameter = 1000.
+        assumed_cdr_parameter = 0.25
+
+        # Tests numbers that should be more general to any application
         test_dates, test_values = get_vic_testing_numbers()
         per_capita_tests = [i_tests / sum(total_pops) for i_tests in test_values]
-        func_values = [
-            convert_tests_to_prop(v, maximum_detection, shape_parameter) for v in test_values
-        ]
+
+        # Factory function for finding CDRs from number of tests done in setting modelled
+        def create_cdr_function(assumed_cdr, assumed_tests):
+            exponent_multiplier = \
+                assumed_tests * np.log(1. - assumed_cdr)
+
+            def get_cdr_from_tests(tests_per_capita):
+                return 1. - np.exp(exponent_multiplier * tests_per_capita)
+
+            return get_cdr_from_tests
+
+        # Calculate CDRs based on assumptions above
+        cdr_from_tests_func = \
+            create_cdr_function(assumed_cdr_parameter, assumed_tests_parameter)
+        func_values = [cdr_from_tests_func(i_tests) for i_tests in per_capita_tests]
+
+        # Fit curve to final values
         detected_proportion = scale_up_function(test_dates, func_values, smoothness=0.2, method=5)
     else:
         detect_prop_params = params["time_variant_detection"]

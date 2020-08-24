@@ -25,3 +25,7 @@ early_activation_rate: 1.
 # natural history
 recovery_rate: .2
 infect_death: .2
+
+# relative risks of reinfection
+rr_infection_latent: .21
+rr_infection_recovered: 1.

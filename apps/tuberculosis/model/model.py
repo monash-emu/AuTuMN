@@ -41,6 +41,9 @@ def build_model(params: dict) -> StratifiedModel:
     if params['override_latency_rates']:
         params = preprocess.latency.get_unstratified_parameter_values(params)
 
+    # set reinfection contact rate parameters
+    for state in ['latent', 'recovered']:
+        params['contact_rate_from_' + state] = params['contact_rate'] * params['rr_infection_' + state]
 
     # Create the model.
     tb_model = StratifiedModel(

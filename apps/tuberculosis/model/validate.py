@@ -16,4 +16,6 @@ validate_params = sb.build_validator(
     early_activation_rate=float,
     recovery_rate=float,
     infect_death=float,
+    rr_infection_latent=float,
+    rr_infection_recovered=float,
 )

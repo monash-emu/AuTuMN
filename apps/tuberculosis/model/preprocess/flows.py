@@ -9,6 +9,18 @@ DEFAULT_FLOWS = [
         "to": Compartment.EARLY_LATENT,
         "parameter": "contact_rate",
     },
+    {
+        "type": Flow.INFECTION_FREQUENCY,
+        "origin": Compartment.LATE_LATENT,
+        "to": Compartment.EARLY_LATENT,
+        "parameter": "contact_rate_from_latent",
+    },
+    {
+        "type": Flow.INFECTION_FREQUENCY,
+        "origin": Compartment.LATE_LATENT,
+        "to": Compartment.EARLY_LATENT,
+        "parameter": "contact_rate_from_recovered",
+    },
     # Transition flows.
     {
         "type": Flow.STANDARD,

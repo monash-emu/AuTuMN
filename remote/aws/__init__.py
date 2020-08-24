@@ -1,5 +1,6 @@
 import time
 import os
+import sys
 import logging
 import click
 import functools
@@ -166,7 +167,7 @@ def _run_job(job_id, instance_type, job_func):
         aws.run_job(job_id, instance_type)
     except aws.NoInstanceAvailable:
         click.echo("Could not run job - no instances available")
-        return
+        sys.exit(-1)
 
     logger.info("Waiting 60s for %s server to boot... ", instance_type)
     time.sleep(60)
@@ -177,8 +178,8 @@ def _run_job(job_id, instance_type, job_func):
         logger.info("Attempting to run job %s on instance %s", job_id, instance["InstanceId"])
         return_value = job_func(instance=instance)
         logging.info("Job %s succeeded.", job_id)
-    except Exception as e:
-        logger.exception("Running job failed")
+    except Exception:
+        logger.error(f"Running job {job_id} failed")
         raise
     finally:
         aws.stop_job(job_id)

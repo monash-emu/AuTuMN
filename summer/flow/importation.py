@@ -1,7 +1,6 @@
 from typing import List, Tuple, Dict, Callable
 
 import numpy as np
-from numba import jit
 
 from summer.constants import Flow as FlowType
 from summer.compartment import Compartment
@@ -32,9 +31,7 @@ class ImportFlow(BaseEntryFlow):
         self.param_func = param_func
 
     def get_net_flow(self, compartment_values, time):
-        population = _find_sum(compartment_values)
-        parameter_value = self.get_weight_value(time)
-        return parameter_value * population
+        return self.get_weight_value(time)
 
     def copy(self, **kwargs):
         """
@@ -50,7 +47,3 @@ class ImportFlow(BaseEntryFlow):
     def __repr__(self):
         return f"<ImportFlow to {self.dest} with {self.param_name}>"
 
-
-@jit(nopython=True)
-def _find_sum(compartment_values: np.ndarray) -> float:
-    return compartment_values.sum()

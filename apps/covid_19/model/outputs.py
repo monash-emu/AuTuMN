@@ -46,10 +46,8 @@ def get_calc_notifications_covid(
 
         if include_importation:
             time = model.times[time_idx]
-            notifications_count += (
-                model.get_parameter_value("importation_rate", time)
-                * compartment_values.sum()
-                * prop_detected_func(time)
+            notifications_count += prop_detected_func(time) * model.get_parameter_value(
+                "importation_rate", time
             )
 
         return notifications_count

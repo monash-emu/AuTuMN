@@ -33,8 +33,12 @@ def build_model(params: dict) -> StratifiedModel:
     agegroup_strata = list(range(0, agegroup_max, agegroup_step))
     country_iso3 = params["iso3"]
     region = params["region"]
-    pop_region = params['pop_region_override'] if params["pop_region_override"] else params["region"]
-    total_pops = inputs.get_population_by_agegroup(agegroup_strata, country_iso3, pop_region, year=params["pop_year"])
+    pop_region = (
+        params["pop_region_override"] if params["pop_region_override"] else params["region"]
+    )
+    total_pops = inputs.get_population_by_agegroup(
+        agegroup_strata, country_iso3, pop_region, year=params["pop_year"]
+    )
 
     # Define model compartments.
     compartments = [
@@ -200,12 +204,14 @@ def build_model(params: dict) -> StratifiedModel:
     # Determine how many importations there are, including the undetected and asymptomatic importations
     # This is defined 8x10 year bands, 0-70+, which we transform into 16x5 year bands 0-75+
     symptomatic_props = repeat_list_elements(2, params["symptomatic_props"])
-    import_symptomatic_prop = \
-        sum(
-            [import_prop * sympt_prop
-             for import_prop, sympt_prop in
-             zip(params['importation_props_by_age'].values(), symptomatic_props)]
-        )
+    import_symptomatic_prop = sum(
+        [
+            import_prop * sympt_prop
+            for import_prop, sympt_prop in zip(
+                params["importation_props_by_age"].values(), symptomatic_props
+            )
+        ]
+    )
 
     def modelled_abs_detection_proportion_imported(t):
         return import_symptomatic_prop * detected_proportion(t)
@@ -215,7 +221,7 @@ def build_model(params: dict) -> StratifiedModel:
         import_times = params["data"]["times_imported_cases"]
         import_cases = params["data"]["n_imported_cases"]
         import_rate_func = preprocess.importation.get_importation_rate_func_as_birth_rates(
-            import_times, import_cases, modelled_abs_detection_proportion_imported, total_pops,
+            import_times, import_cases, modelled_abs_detection_proportion_imported
         )
         model.time_variants["importation_rate"] = import_rate_func
 

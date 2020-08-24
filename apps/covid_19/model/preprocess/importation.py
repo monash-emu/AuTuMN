@@ -3,10 +3,7 @@ from autumn.curve import scale_up_function
 
 
 def get_importation_rate_func_as_birth_rates(
-    importation_times: List[float],
-    importation_n_cases: List[float],
-    detect_prop_func,
-    starting_pops: list,
+    importation_times: List[float], importation_n_cases: List[float], detect_prop_func,
 ):
     """
     When imported cases are explicitly simulated as part of the modelled population. They enter the late_infectious
@@ -28,6 +25,6 @@ def get_importation_rate_func_as_birth_rates(
     def recruitment_rate(t):
 
         # Should remove the division and the multiplication by population in summer.flow.importation get_net_flow
-        return importation_numbers_scale_up(t) / sum(starting_pops)
+        return importation_numbers_scale_up(t)
 
     return recruitment_rate

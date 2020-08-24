@@ -18,7 +18,7 @@ from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
 
 from . import outputs, preprocess
 from .stratification import stratify_by_clinical
-from .preprocess.testing import convert_tests_to_prop, convert_exponent_to_value
+from .preprocess.testing import create_cdr_function
 from .validate import validate_params
 
 
@@ -183,27 +183,25 @@ def build_model(params: dict) -> StratifiedModel:
         assumed_tests_parameter = 1000.
         assumed_cdr_parameter = 0.25
 
-        # Tests numbers that should be more general to any application
+        # Tests numbers
+        # FIXME: this should be made more general to any application
         test_dates, test_values = get_vic_testing_numbers()
         per_capita_tests = [i_tests / sum(total_pops) for i_tests in test_values]
 
-        # Factory function for finding CDRs from number of tests done in setting modelled
-        def create_cdr_function(assumed_cdr, assumed_tests):
-            exponent_multiplier = \
-                assumed_tests * np.log(1. - assumed_cdr)
-
-            def get_cdr_from_tests(tests_per_capita):
-                return 1. - np.exp(exponent_multiplier * tests_per_capita)
-
-            return get_cdr_from_tests
-
-        # Calculate CDRs based on assumptions above
+        # Calculate CDRs and the resulting CDR function over time
         cdr_from_tests_func = \
-            create_cdr_function(assumed_cdr_parameter, assumed_tests_parameter)
-        func_values = [cdr_from_tests_func(i_tests) for i_tests in per_capita_tests]
+            create_cdr_function(
+                assumed_cdr_parameter,
+                assumed_tests_parameter
+            )
+        detected_proportion = \
+            scale_up_function(
+                test_dates,
+                [cdr_from_tests_func(i_tests) for i_tests in per_capita_tests],
+                smoothness=0.2,
+                method=5
+            )
 
-        # Fit curve to final values
-        detected_proportion = scale_up_function(test_dates, func_values, smoothness=0.2, method=5)
     else:
         detect_prop_params = params["time_variant_detection"]
 

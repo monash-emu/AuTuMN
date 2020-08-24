@@ -29,6 +29,8 @@ rr_infection_latent: .21
 rr_infection_recovered: 1.
 
 # changes by organ status
+incidence_props_pulmonary: .75
+incidence_props_smear_positive_among_pulmonary: .75
 smear_negative_infect_multiplier: .25
 extrapulmonary_infect_multiplier: 0.
 infect_death_dict:

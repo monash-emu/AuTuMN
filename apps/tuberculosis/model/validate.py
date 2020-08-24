@@ -21,6 +21,8 @@ validate_params = sb.build_validator(
     # stratification requests
     stratify_by=list,
     # defining organ stratification
+    incidence_props_pulmonary=float,
+    incidence_props_smear_positive_among_pulmonary=float,
     smear_negative_infect_multiplier=float,
     extrapulmonary_infect_multiplier=float,
 )

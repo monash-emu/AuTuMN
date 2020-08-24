@@ -72,11 +72,6 @@ PAR_PRIORS = [
         "trunc_range": [0.5, np.inf],
     },
     {
-        "param_name": "testing_to_detection.maximum_detection",
-        "distribution": "uniform",
-        "distri_params": [0.6, 0.9],
-    },
-    {
         "param_name": "hospital_props_multiplier",
         "distribution": "trunc_normal",
         "distri_params": [1.0, 0.25],

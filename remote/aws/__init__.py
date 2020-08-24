@@ -93,15 +93,6 @@ def run():
 def run_calibrate(job, calibration, chains, runtime, branch, dry):
     """
     Run a MCMC calibration on an AWS server.
-    Example usage:
-
-        python -m infra run calibrate \
-            --job test \
-            --calibration malaysia \
-            --chains 6 \
-            --runtime 200 \
-            --dry
-
     """
     job_id = f"calibrate-{job}"
     instance_type = aws.get_instance_type(2 * chains, 8)
@@ -126,13 +117,9 @@ def run_calibrate(job, calibration, chains, runtime, branch, dry):
 def run_full_model(job, run, burn_in, latest_code):
     """
     Run the full models based off an MCMC calibration on an AWS server.
-    Example usage:
-
-        python -m infra run full --run malaysia-159... --job test --burn-in 1000
-
     """
     job_id = f"full-{job}"
-    instance_type = EC2InstanceType.m5_4xlarge
+    instance_type = EC2InstanceType.r5_2xlarge
     kwargs = {
         "run_id": run,
         "burn_in": burn_in,
@@ -148,12 +135,9 @@ def run_full_model(job, run, burn_in, latest_code):
 def run_powerbi(job, run):
     """
     Run the collate a PowerBI database from the full model run outputs.
-
-        python -m infra run full --run malaysia-159... --job test
-
     """
     job_id = f"powerbi-{job}"
-    instance_type = EC2InstanceType.r5_4xlarge
+    instance_type = EC2InstanceType.r5_2xlarge
     kwargs = {"run_id": run}
     job_func = functools.partial(remote.run_powerbi, **kwargs)
     _run_job(job_id, instance_type, job_func)

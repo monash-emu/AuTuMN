@@ -1,26 +1,25 @@
-# AWS Calibration
+# Remote tasks in AWS / Buildkite
 
-These scripts allow you to run AuTuMN calibrations in AWS.
+These scripts allow you to run AuTuMN tasks in AWS. You will need to either set up your AWS credentials as a profile or environment variables.
 
-```
-# Ensure aws requirements are installed
-cd aws
-pip install -r infra/requirements.txt
+```bash
+# Install requirements
+pip install -r remote/requirements.txt
 
-# Access command line tool
-python -m infra
+# View CLI options
+python -m remote
 
-# Run calibration, first argument is a job name to refer to the job.
-python -m run calibrate job1 malaysia 30 3600
+# View AWS EC2 instance statuses
+python -m remote aws status
 
-# The calibration will print a "run name", which refers to the results,
-# eg. malaysia-1590992312-master-b7ddb47361e6eda87bf05a18405f208ff5e3f2b0
+# Run an MCMC calibration
+python -m remote aws run calibrate --job test --calibration malaysia --chains 6 --runtime 120
 
-# Run the full models for a given calibration run and burn in
-python -m run full job2 malaysia-1590992312-master-b7ddb47361e6eda87bf05a18405f208ff5e3f2b0 10
+# Run a full model run based on calibration results
+python -m infra run full --run malaysia-xxxx-yyy --job test --burn-in 1000
 
-# Finally, generate a PowerBI database from the full model runs
-python -m run powerbi job3 malaysia-1590992312-master-b7ddb47361e6eda87bf05a18405f208ff5e3f2b0
+# Generate PowerBI outputs from full model run data
+python -m infra run full --run malaysia-xxx-yyy --job test
 ```
 
 ## Calibration stages

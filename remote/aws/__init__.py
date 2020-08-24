@@ -90,6 +90,10 @@ def run():
 @click.option("--runtime", type=int, required=True)
 @click.option("--branch", type=str, default="master")
 @click.option("--dry", is_flag=True)
+def run_calibrate_cli(job, calibration, chains, runtime, branch, dry):
+    run_calibrate(job, calibration, chains, runtime, branch, dry)
+
+
 def run_calibrate(job, calibration, chains, runtime, branch, dry):
     """
     Run a MCMC calibration on an AWS server.
@@ -115,6 +119,10 @@ def run_calibrate(job, calibration, chains, runtime, branch, dry):
 @click.option("--burn-in", type=int, required=True)
 @click.option("--latest-code", is_flag=True)
 @click.option("--branch", type=str, default="master")
+def run_full_model_cli(job, run, burn_in, latest_code, branch):
+    run_full_model(job, run, burn_in, latest_code, branch)
+
+
 def run_full_model(job, run, burn_in, latest_code, branch):
     """
     Run the full models based off an MCMC calibration on an AWS server.
@@ -135,6 +143,10 @@ def run_full_model(job, run, burn_in, latest_code, branch):
 @click.option("--job", type=str, required=True)
 @click.option("--run", type=str, required=True)
 @click.option("--branch", type=str, default="master")
+def run_powerbi_cli(job, run, branch):
+    run_powerbi(job, run, branch)
+
+
 def run_powerbi(job, run, branch):
     """
     Run the collate a PowerBI database from the full model run outputs.

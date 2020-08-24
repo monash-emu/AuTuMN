@@ -1,71 +1,79 @@
-# https://buildkite.com/docs/pipelines/input-step
 steps:
-  - block: "Calibration settings"
+  - block: Calibration settings
     fields:
-      - select: "Model Region"
-        key: "model-name"
-        hint: Which model do you want to run?
-        required: true
+      - hint: Which model do you want to run?
+        key: model-name
         options:
-          - label: "Malaysia"
-            value: "malaysia"
-          - label: "Philippines"
-            value: "philippines"
-          - label: "Victoria"
-            value: "victoria"
-          - label: "Bicol"
-            value: "bicol"
-          - label: "Calabarzon"
-            value: "calabarzon"
-          - label: "Central Visayas"
-            value: "central-visayas"
-          - label: "Liberia"
-            value: "liberia"
-          - label: "Manila"
-            value: "manila"
-          - label: "United Kingdom"
-            value: "united-kingdom"
-          - label: "Belgium"
-            value: "belgium"
-          - label: "Italy"
-            value: "italy"
-          - label: "Sweden"
-            value: "sweden"
-          - label: "France"
-            value: "france"
-          - label: "Spain"
-            value: "spain"
-
-      - text: "Number of MCMC chains"
-        key: "mcmc-num-chains"
-        hint: "How many MCMC chains do you want to run?"
+          - label: Victoria
+            value: victoria
+          - label: North Metro
+            value: north-metro
+          - label: South East Metro
+            value: south-east-metro
+          - label: South Metro
+            value: south-metro
+          - label: West Metro
+            value: west-metro
+          - label: Barwon South West
+            value: barwon-south-west
+          - label: Gippsland
+            value: gippsland
+          - label: Hume
+            value: hume
+          - label: Loddon Mallee
+            value: loddon-mallee
+          - label: Grampians
+            value: grampians
+          - label: Malaysia
+            value: malaysia
+          - label: Philippines
+            value: philippines
+          - label: Manila
+            value: manila
+          - label: Calabarzon
+            value: calabarzon
+          - label: Central Visayas
+            value: central-visayas
+          - label: Belgium
+            value: belgium
+          - label: United Kingdom
+            value: united-kingdom
+          - label: Italy
+            value: italy
+          - label: France
+            value: france
+          - label: Sweden
+            value: sweden
+          - label: Spain
+            value: spain
+        required: true
+        select: Model Region
+      - hint: How many MCMC chains do you want to run?
+        key: mcmc-num-chains
         required: false
-
-      - text: "Git branch name"
-        key: "mcmc-branch"
-        hint: "Which Git branch do you want to use?"
+        text: Number of MCMC chains
+      - hint: Which Git branch do you want to use?
+        key: mcmc-branch
         required: false
-
-      - text: "Runtime"
-        key: "mcmc-runtime"
-        hint: "How many hours should the model run for?"
+        text: Git branch name
+      - hint: How many hours should the model run for?
+        key: mcmc-runtime
         required: false
-
-      - select: "Trigger full model run"
-        key: "trigger-downstream"
+        text: Runtime
+      - default: "yes"
         hint: Should this task trigger a full model run when it is done?
-        required: false
-        default: "yes"
+        key: trigger-downstream
         options:
           - label: "Yes"
             value: "yes"
           - label: "No"
             value: "no"
-
+        required: false
+        select: Trigger full model run
   - command: ./scripts/buildkite.sh calibrate
-    label: Run calibration
     key: run-calibrate
-  - command: ./scripts/website/deploy.sh
-    label: Update website
+    label: Run calibration
+  - allow_dependency_failure: true
+    command: ./scripts/website/deploy.sh
     depends_on: run-calibrate
-    allow_dependency_failure: true
+    label: Update website

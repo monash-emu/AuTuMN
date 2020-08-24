@@ -6,6 +6,7 @@ from autumn.tool_kit.scenarios import get_model_times_from_inputs
 
 from . import preprocess, outputs
 from .validate import validate_params
+from .stratification import stratify_by_organ
 
 
 def build_model(params: dict) -> StratifiedModel:
@@ -58,11 +59,12 @@ def build_model(params: dict) -> StratifiedModel:
         starting_population=1000000,
     )
 
+    if "organ" in params['stratify_by']:
+        stratify_by_organ(tb_model, params, compartments)
+
     # Register derived output functions
     # These functions calculate 'derived' outputs of interest, based on the
-    # model's compartment values. These are calculated after the model is run.
-    # This is not strictly necessary in this simple model, but becomes useful
-    # when the compartments are stratified.
+    # model's compartment values or flows. These are calculated after the model is run.
     func_outputs = {
         "prevalence_infectious": outputs.calculate_prevalence_infectious,
         "prevalence_susceptible": outputs.calculate_prevalence_susceptible,

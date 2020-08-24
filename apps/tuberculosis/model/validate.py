@@ -8,7 +8,7 @@ validate_params = sb.build_validator(
     start_time=float,
     end_time=float,
     time_step=float,
-    # disease model
+    # base disease model
     contact_rate=float,
     override_latency_rates=bool,
     stabilisation_rate=float,
@@ -18,4 +18,9 @@ validate_params = sb.build_validator(
     infect_death=float,
     rr_infection_latent=float,
     rr_infection_recovered=float,
+    # stratification requests
+    stratify_by=list,
+    # defining organ stratification
+    smear_negative_infect_multiplier=float,
+    extrapulmonary_infect_multiplier=float,
 )

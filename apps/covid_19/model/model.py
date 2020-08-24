@@ -18,7 +18,7 @@ from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
 
 from . import outputs, preprocess
 from .stratification import stratify_by_clinical
-from .preprocess.testing import convert_tests_to_prop, convert_exponent_to_value
+from .preprocess.testing import create_cdr_function
 from .validate import validate_params
 
 
@@ -178,16 +178,33 @@ def build_model(params: dict) -> StratifiedModel:
 
     # Determine the proportion of cases detected over time as `detected_proportion`.
     if params["testing_to_detection"]:
-        testing_to_detection = params["testing_to_detection"]
-        maximum_detection = testing_to_detection["maximum_detection"]
-        shape_parameter = convert_exponent_to_value(testing_to_detection["shape_parameter"])
-        test_data, test_values = get_vic_testing_numbers()
-        func_values = [
-            convert_tests_to_prop(v, maximum_detection, shape_parameter) for v in test_values
-        ]
-        detected_proportion = scale_up_function(test_data, func_values, smoothness=0.2, method=5)
+
+        # Parameters that will need to go into ymls
+        assumed_tests_parameter = 1000.
+        assumed_cdr_parameter = 0.25
+
+        # Tests numbers
+        # FIXME: this should be made more general to any application
+        test_dates, test_values = get_vic_testing_numbers()
+        per_capita_tests = [i_tests / sum(total_pops) for i_tests in test_values]
+
+        # Calculate CDRs and the resulting CDR function over time
+        cdr_from_tests_func = \
+            create_cdr_function(
+                assumed_tests_parameter,
+                assumed_cdr_parameter
+            )
+        detected_proportion = \
+            scale_up_function(
+                test_dates,
+                [cdr_from_tests_func(i_tests) for i_tests in per_capita_tests],
+                smoothness=0.2,
+                method=5
+            )
+
     else:
         detect_prop_params = params["time_variant_detection"]
+
         # Create function describing the proportion of cases detected over time
         def detected_proportion(t):
             # Function representing the proportion of symptomatic people detected over time

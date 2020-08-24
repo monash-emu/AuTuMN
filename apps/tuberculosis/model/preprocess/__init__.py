@@ -1,1 +1,1 @@
-from . import flows
+from . import flows, latency

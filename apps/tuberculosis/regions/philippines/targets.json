@@ -2,7 +2,7 @@
   "prevalence_infectious": {
     "title": "Prevalence of infectious",
     "output_key": "prevalence_infectious",
-    "times": [25.0, 30.0],
+    "times": [1950.0, 1970.0],
     "values": [7.0, 5.0]
   }
 }

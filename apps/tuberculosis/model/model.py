@@ -12,6 +12,8 @@ def build_model(params: dict) -> StratifiedModel:
     """
     Build the master function to run a simple SIR model
     """
+    validate_params(params)
+
     # Define model compartments.
     compartments = [
         Compartment.SUSCEPTIBLE,
@@ -35,15 +37,20 @@ def build_model(params: dict) -> StratifiedModel:
     # Define initial conditions - 1 infectious person.
     init_conditions = {Compartment.INFECTIOUS: 1}
 
+    # load latency parameters
+    if params['override_latency_rates']:
+        params = preprocess.latency.get_unstratified_parameter_values(params)
+
+
     # Create the model.
-    sir_model = StratifiedModel(
+    tb_model = StratifiedModel(
         times=integration_times,
         compartment_names=compartments,
         initial_conditions=init_conditions,
         parameters=params,
         requested_flows=flows,
         infectious_compartments=infectious_comps,
-        birth_approach=BirthApproach.NO_BIRTH,
+        birth_approach=BirthApproach.ADD_CRUDE,
         entry_compartment=Compartment.SUSCEPTIBLE,
         starting_population=1000000,
     )
@@ -57,7 +64,7 @@ def build_model(params: dict) -> StratifiedModel:
         "prevalence_infectious": outputs.calculate_prevalence_infectious,
         "prevalence_susceptible": outputs.calculate_prevalence_susceptible,
     }
-    sir_model.add_function_derived_outputs(func_outputs)
+    tb_model.add_function_derived_outputs(func_outputs)
 
-    return sir_model
+    return tb_model
 

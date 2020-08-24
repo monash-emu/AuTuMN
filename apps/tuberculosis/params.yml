@@ -4,14 +4,24 @@
 scenario_start_time: 50
 
 # Parameters used to build a general model of tuberculosis
-start_time: 0.
-end_time: 100.
+start_time: 1900.
+end_time: 2035.
 time_step: 1
 
+# Country caracteristics
+iso3: null
+region: null
+
+
 # basic infection and disease parameters
-contact_rate: 0.3
-stabilisation_rate: 2.
-late_activation_rate: 1.e-6
-early_activation_rate: .1
-recovery_rate: 1.
+contact_rate: 10.
+
+# latency-related parameters
+override_latency_rates: True  # priority for the values loaded from preprocess.latency. Turn off if we fit these params
+stabilisation_rate: 1.
+late_activation_rate: 1.
+early_activation_rate: 1.
+
+# natural history
+recovery_rate: .2
 infect_death: .2

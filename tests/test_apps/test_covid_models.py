@@ -34,7 +34,7 @@ def test_cdr_values():
                 1000.,
                 cdr_at_1000_tests
             )
-        for i_tests in list(np.linspace(0., 1e3, 11.)) + list(np.linspace(0., 1e5, 11.)):
+        for i_tests in list(np.linspace(0., 1e3, 11)) + list(np.linspace(0., 1e5, 11)):
             assert cdr_function(i_tests) >= 0.
             assert cdr_function(i_tests) <= 1.
 

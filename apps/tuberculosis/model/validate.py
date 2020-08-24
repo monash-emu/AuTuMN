@@ -14,8 +14,8 @@ validate_params = sb.build_validator(
     stabilisation_rate=float,
     late_activation_rate=float,
     early_activation_rate=float,
-    recovery_rate=float,
-    infect_death=float,
+    recovery_rate_dict=dict,
+    infect_death_dict=dict,
     rr_infection_latent=float,
     rr_infection_recovered=float,
     # stratification requests

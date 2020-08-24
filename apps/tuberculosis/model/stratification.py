@@ -18,7 +18,14 @@ def stratify_by_organ(model, params, compartments):
         if stratum + "_infect_multiplier" in params:
             strata_infectiousness[stratum] = params[stratum + "_infect_multiplier"]
 
-    flow_adjustments = {}  # FIXME
+    flow_adjustments = {}
+    for param_name in ['infect_death', 'recovery_rate']:
+        flow_adjustments[param_name] = {}
+        for organ_stratum in organ_strata:
+            flow_adjustments[param_name][organ_stratum + "W"] = params[param_name + "_dict"][organ_stratum]
+    splitting_proportions = {
+
+    }
 
     model.stratify(
         "organ",

@@ -46,6 +46,10 @@ def build_model(params: dict) -> StratifiedModel:
     for state in ['latent', 'recovered']:
         params['contact_rate_from_' + state] = params['contact_rate'] * params['rr_infection_' + state]
 
+    # assign unstratified parameter values to infection death and self-recovery processes
+    for param_name in ['infect_death', 'recovery_rate']:
+        params[param_name] = params[param_name + "_dict"]['unstratified']
+
     # Create the model.
     tb_model = StratifiedModel(
         times=integration_times,

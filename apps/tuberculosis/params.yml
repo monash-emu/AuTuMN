@@ -24,10 +24,6 @@ stabilisation_rate: 1.
 late_activation_rate: 1.
 early_activation_rate: 1.
 
-# natural history
-recovery_rate: .2
-infect_death: .2
-
 # relative risks of reinfection
 rr_infection_latent: .21
 rr_infection_recovered: 1.
@@ -35,3 +31,13 @@ rr_infection_recovered: 1.
 # changes by organ status
 smear_negative_infect_multiplier: .25
 extrapulmonary_infect_multiplier: 0.
+infect_death_dict:
+  unstratified: .2
+  smear_positive: 0.389  # Ragonent et al. (CID 2020)
+  smear_negative: 0.025  # Ragonent et al. (CID 2020)
+  extrapulmonary: 0.025  # assumed equal to that of smear-negative PTB
+recovery_rate_dict:
+  unstratified: .2
+  smear_positive: 0.231  # Ragonent et al. (CID 2020)
+  smear_negative: 0.130  # Ragonent et al. (CID 2020)
+  extrapulmonary: 0.130  # assumed equal to that of smear-negative PTB

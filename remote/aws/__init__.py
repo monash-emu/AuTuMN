@@ -95,7 +95,7 @@ def run_calibrate(job, calibration, chains, runtime, branch, dry):
     Run a MCMC calibration on an AWS server.
     """
     job_id = f"calibrate-{job}"
-    instance_type = aws.get_instance_type(2 * chains, 8)
+    instance_type = aws.get_instance_type(chains, 8)
     if dry:
         logger.info("Dry run, would have used instance type: %s", instance_type)
     else:
@@ -114,7 +114,8 @@ def run_calibrate(job, calibration, chains, runtime, branch, dry):
 @click.option("--run", type=str, required=True)
 @click.option("--burn-in", type=int, required=True)
 @click.option("--latest-code", is_flag=True)
-def run_full_model(job, run, burn_in, latest_code):
+@click.option("--branch", type=str, default="master")
+def run_full_model(job, run, burn_in, latest_code, branch):
     """
     Run the full models based off an MCMC calibration on an AWS server.
     """
@@ -124,6 +125,7 @@ def run_full_model(job, run, burn_in, latest_code):
         "run_id": run,
         "burn_in": burn_in,
         "use_latest_code": latest_code,
+        "branch": branch,
     }
     job_func = functools.partial(remote.run_full_model, **kwargs)
     _run_job(job_id, instance_type, job_func)
@@ -132,13 +134,14 @@ def run_full_model(job, run, burn_in, latest_code):
 @run.command("powerbi")
 @click.option("--job", type=str, required=True)
 @click.option("--run", type=str, required=True)
-def run_powerbi(job, run):
+@click.option("--branch", type=str, default="master")
+def run_powerbi(job, run, branch):
     """
     Run the collate a PowerBI database from the full model run outputs.
     """
     job_id = f"powerbi-{job}"
     instance_type = EC2InstanceType.r5_2xlarge
-    kwargs = {"run_id": run}
+    kwargs = {"run_id": run, "branch": branch}
     job_func = functools.partial(remote.run_powerbi, **kwargs)
     _run_job(job_id, instance_type, job_func)
 

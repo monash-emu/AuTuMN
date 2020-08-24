@@ -14,13 +14,13 @@ logger = logging.getLogger(__name__)
 CODE_PATH = "/home/ubuntu/code"
 
 
-def run_powerbi(instance, run_id: str):
+def run_powerbi(instance, run_id: str, branch: str):
     """Run PowerBI processing on the remote server"""
     run_id = run_id.lower()
     msg = "Running PowerBI processing for run %s on AWS instance %s"
     logger.info(msg, run_id, instance["InstanceId"])
     with get_connection(instance) as conn:
-        update_repo(conn)
+        update_repo(conn, branch=branch)
         install_requirements(conn)
         pipeline_name = "powerbi"
         pipeline_args = {
@@ -31,14 +31,14 @@ def run_powerbi(instance, run_id: str):
         logger.info("PowerBI processing completed for %s", run_id)
 
 
-def run_full_model(instance, run_id: str, burn_in: int, use_latest_code: bool):
+def run_full_model(instance, run_id: str, burn_in: int, use_latest_code: bool, branch: str):
     """Run full model job on the remote server"""
     run_id = run_id.lower()
     msg = "Running full models for run %s burn-in %s on AWS instance %s"
     logger.info(msg, run_id, burn_in, instance["InstanceId"])
     with get_connection(instance) as conn:
         if use_latest_code:
-            update_repo(conn)
+            update_repo(conn, branch=branch)
         else:
             set_run_id(conn, run_id)
 

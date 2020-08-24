@@ -40,19 +40,16 @@ steps:
         key: "mcmc-num-chains"
         hint: "How many MCMC chains do you want to run?"
         required: false
-        default: "7"
 
       - text: "Git branch name"
         key: "mcmc-branch"
         hint: "Which Git branch do you want to use?"
         required: false
-        default: "master"
 
       - text: "Runtime"
         key: "mcmc-runtime"
         hint: "How many hours should the model run for?"
         required: false
-        default: "0.5"
 
       - select: "Trigger full model run"
         key: "trigger-downstream"

@@ -106,7 +106,7 @@ def run_calibrate(job, calibration, chains, runtime, branch, dry):
             "branch": branch,
         }
         job_func = functools.partial(remote.run_calibration, **kwargs)
-        _run_job(job_id, instance_type, job_func)
+        return _run_job(job_id, instance_type, job_func)
 
 
 @run.command("full")
@@ -160,15 +160,18 @@ def _run_job(job_id, instance_type, job_func):
     time.sleep(60)
     logger.info("Server is hopefully ready.")
     instance = aws.find_instance(job_id)
+    return_value = None
     try:
         logger.info("Attempting to run job %s on instance %s", job_id, instance["InstanceId"])
-        job_func(instance=instance)
+        return_value = job_func(instance=instance)
         logging.info("Job %s succeeded.", job_id)
     except Exception as e:
         logger.exception("Running job failed")
         raise
     finally:
         aws.stop_job(job_id)
+
+    return return_value
 
 
 aws_cli.add_command(run)

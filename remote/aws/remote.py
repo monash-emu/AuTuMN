@@ -60,6 +60,7 @@ def run_calibration(
     """Run calibration job on the remote server"""
     msg = "Running calibration %s with %s chains for %s seconds on AWS instance %s."
     logger.info(msg, model_name, num_chains, runtime, instance["InstanceId"])
+    run_id = None
     with get_connection(instance) as conn:
         update_repo(conn, branch=branch)
         install_requirements(conn)
@@ -73,6 +74,8 @@ def run_calibration(
         }
         run_luigi_pipeline(conn, pipeline_name, pipeline_args)
         logger.info("Calibration completed for %s", run_id)
+
+    return run_id
 
 
 def run_luigi_pipeline(conn: Connection, pipeline_name: str, pipeline_args: dict):

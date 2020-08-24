@@ -64,7 +64,7 @@ def build_model(params: dict) -> StratifiedModel:
     )
 
     if "organ" in params['stratify_by']:
-        stratify_by_organ(tb_model, params, compartments)
+        stratify_by_organ(tb_model, params)
 
     # Register derived output functions
     # These functions calculate 'derived' outputs of interest, based on the

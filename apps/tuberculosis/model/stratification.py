@@ -1,7 +1,7 @@
 from apps.tuberculosis.constants import Compartment, OrganStratum
 
 
-def stratify_by_organ(model, params, compartments):
+def stratify_by_organ(model, params):
 
     compartments_to_stratify = [
         Compartment.INFECTIOUS,

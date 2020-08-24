@@ -8,7 +8,7 @@ import click
 from autumn.constants import Region
 from remote import aws
 
-from . import buildkite
+from .buildkite import trigger_pipeline
 from .update import update_pipelines
 from .params import CalibrateParams, FullModelRunParams, PowerBIParams
 
@@ -48,7 +48,7 @@ def calibrate():
         logger.info("Not triggering full model run.")
     else:
         logger.info("Triggering full model run.")
-        buildkite.trigger_pipeline(
+        trigger_pipeline(
             label="Trigger full model run",
             target="full-model-run",
             msg=f"Triggered by calibration {params.model_name} (build {params.buildkite.build_number})",
@@ -79,7 +79,7 @@ def full():
         logger.info("Not triggering PowerBI processing.")
     else:
         logger.info("Triggering PowerBI processing.")
-        buildkite.trigger_pipeline(
+        trigger_pipeline(
             label="Trigger PowerBI processing",
             target="powerbi-processing",
             msg=f"Triggered by full model run {params.model_name} (build {params.buildkite.build_number})",
@@ -163,7 +163,7 @@ def trigger_philippines():
 def _trigger_models(models):
     params = CalibrateParams()
     for model in models:
-        buildkite.trigger_pipeline(
+        trigger_pipeline(
             label=f"Trigger calibration for {model}",
             target="calibration",
             msg=f"{model} calibration triggered by bulk run (build {params.buildkite.build_number})",

@@ -16,10 +16,10 @@ python -m remote aws status
 python -m remote aws run calibrate --job test --calibration malaysia --chains 6 --runtime 120
 
 # Run a full model run based on calibration results
-python -m infra run full --run malaysia-xxxx-yyy --job test --burn-in 1000
+python -m remote aws run full --run malaysia-1598235214-83586eb --job test --burn-in 0
 
 # Generate PowerBI outputs from full model run data
-python -m infra run full --run malaysia-xxx-yyy --job test
+python -m remote aws run powerbi --run malaysia-1598235214-83586eb --job test
 ```
 
 ## Calibration stages

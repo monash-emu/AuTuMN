@@ -40,13 +40,20 @@ def calibrate():
     model_name = buildkite.get_metadata("model-name")
     num_chains = buildkite.get_metadata("mcmc-num-chains")
     run_time_hours = buildkite.get_metadata("mcmc-runtime")
+    mcmc_branch = buildkite.get_metadata("mcmc-branch")
+
     # Run the calibration
     run_time_seconds = int(float(run_time_hours) * 3600)
     job_name = f"{model_name}-{build_number}"
     msg = "Running calbration job %s for %s model with %s chains for %s hours (%s seconds)"
     logger.info(msg, job_name, model_name, num_chains, run_time_hours, run_time_seconds)
     aws.run_calibrate(
-        job=job_name, calibration=model_name, chains=num_chains, runtime=run_time_seconds
+        job=job_name,
+        calibration=model_name,
+        chains=num_chains,
+        runtime=run_time_seconds,
+        branch=mcmc_branch,
+        dry=False,
     )
     if trigger_downstream != "yes":
         logger.info("Not triggering full model run.")
@@ -105,7 +112,11 @@ def full():
     msg = "Running full model for %s with burn in %s"
     logger.info(msg, model_name, burn_in)
     aws.run_full_model(
-        job=job_name, run=run_id, burn_in=burn_in, latest_code=use_latest_code == "yes"
+        job=job_name,
+        run=run_id,
+        burn_in=burn_in,
+        latest_code=use_latest_code == "yes",
+        branch="master",
     )
     if trigger_downstream != "yes":
         logger.info("Not triggering PowerBI processing.")
@@ -153,7 +164,7 @@ def powerbi():
     model_name, _, _ = read_run_id(run_id)
     job_name = f"{model_name}-{build_number}"
     logger.info("Running PowerBI post processing for model %s", model_name)
-    aws.run_powerbi(job=job_name, run=run_id)
+    aws.run_powerbi(job=job_name, run=run_id, branch="master")
     logger.info("PowerBI post processing for model %s suceeded", model_name)
     logger.info("Results available at %s", get_run_url(run_id))
 

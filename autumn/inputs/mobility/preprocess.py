@@ -122,18 +122,23 @@ def preprocess_mobility(input_db: Database, country_df):
     dhhs_cluster_mobility = reshape_to_clusters(mob_df)
 
     # Drop all sub-region 2 data, too detailed.
-    mob_df = mob_df[(mob_df["sub_region_2"].isnull()) & (mob_df["metro_area"].isnull())]
+    major_region_mask = mob_df["sub_region_2"].isnull() & mob_df["metro_area"].isnull()
+    mob_df = mob_df[major_region_mask].copy()
 
     # These two regions are the same
     mob_df.loc[(mob_df.sub_region_1 == "National Capital Region"), "sub_region_1"] = "Metro Manila"
 
     mob_df = mob_df.append(dhhs_cluster_mobility)
 
+    # Drop all rows that have NA values in 1 or more mobility columns.
     mob_cols = [c for c in mob_df.columns if c.endswith(MOBILITY_SUFFIX)]
+    mask = False
+    for c in mob_cols:
+        mask = mask | mob_df[c].isnull()
+
+    mob_df = mob_df[~mask].copy()
     for c in mob_cols:
         # Convert percent values to decimal: 1.0 being no change.
-        # Replace NA values with 1 - no change from baseline.
-        mob_df[c] = mob_df[c].fillna(0)
         mob_df[c] = mob_df[c].apply(lambda x: 1 + x / 100)
 
     # Drop unused columns, rename kept columns

@@ -1,0 +1,15 @@
+steps:
+- block: Powerbi Processing Settings
+  fields:
+  - hint: Which calibration run should be used?
+    key: run-id
+    required: true
+    text: Calibration run name
+  if: build.env("SKIP_INPUT") == null
+  key: powerbi-processing-settings
+- command: ./scripts/buildkite.sh powerbi
+  key: run-powerbi
+  label: Run Powerbi
+- command: ./scripts/website/deploy.sh
+  key: update-website
+  label: Update Website

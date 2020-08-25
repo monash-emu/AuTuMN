@@ -30,6 +30,3 @@ def calculate_prevalence_infectious(time_idx, model, compartment_values, derived
             prevalence_infectious += compartment_values[i]
 
     return prevalence_infectious
-
-
-

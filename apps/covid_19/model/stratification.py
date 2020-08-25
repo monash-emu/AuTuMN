@@ -256,54 +256,58 @@ def stratify_by_clinical(model, params, compartments, detected_proportion, sympt
 
     # Work out time-variant clinical proportions for imported cases accounting for quarantine
     if implement_importation:
-        tvs, importation_props_by_clinical = \
-            model.time_variants, {}
+        tvs, importation_props_by_clinical = model.time_variants, {}
 
         # Create scale-up function for quarantine
-        quarantine_func = \
-            scale_up_function(
-                traveller_quarantine["times"], traveller_quarantine["values"], method=4
-            )
+        quarantine_func = scale_up_function(
+            traveller_quarantine["times"], traveller_quarantine["values"], method=4
+        )
 
         # Loop through age groups and set the appropriate clinical proportions
         for agegroup in agegroup_strata:
-            param_key = \
-                f"within_{Compartment.EARLY_EXPOSED}Xagegroup_{agegroup}"
+            param_key = f"within_{Compartment.EARLY_EXPOSED}Xagegroup_{agegroup}"
 
             # Proportion entering non-symptomatic stratum reduced by the quarantined (and so isolated) proportion
-            model.time_variants[f"tv_prop_importedX{agegroup}X{ClinicalStratum.NON_SYMPT}"] = \
-                lambda t: \
-                    flow_adjustments[param_key][ClinicalStratum.NON_SYMPT] * \
-                    (1. - quarantine_func(t))
+            model.time_variants[
+                f"tv_prop_importedX{agegroup}X{ClinicalStratum.NON_SYMPT}"
+            ] = lambda t: flow_adjustments[param_key][ClinicalStratum.NON_SYMPT] * (
+                1.0 - quarantine_func(t)
+            )
 
             # Proportion ambulatory also reduced by quarantined proportion due to isolation
-            model.time_variants[f"tv_prop_importedX{agegroup}X{ClinicalStratum.SYMPT_NON_HOSPITAL}"] = \
-                lambda t: \
-                    tvs[flow_adjustments[param_key][ClinicalStratum.SYMPT_NON_HOSPITAL]](t) * \
-                    (1. - quarantine_func(t))
+            model.time_variants[
+                f"tv_prop_importedX{agegroup}X{ClinicalStratum.SYMPT_NON_HOSPITAL}"
+            ] = lambda t: tvs[flow_adjustments[param_key][ClinicalStratum.SYMPT_NON_HOSPITAL]](
+                t
+            ) * (
+                1.0 - quarantine_func(t)
+            )
 
             # Proportion isolated includes those that would have been detected anyway and the ones above quarantined
-            model.time_variants[f"tv_prop_importedX{agegroup}X{ClinicalStratum.SYMPT_ISOLATE}"] = \
-                lambda t: \
-                    quarantine_func(t) * \
-                    (tvs[flow_adjustments[param_key][ClinicalStratum.SYMPT_NON_HOSPITAL]](t) +
-                     flow_adjustments[param_key][ClinicalStratum.NON_SYMPT]) + \
-                    tvs[flow_adjustments[param_key][ClinicalStratum.SYMPT_ISOLATE]](t)
+            model.time_variants[
+                f"tv_prop_importedX{agegroup}X{ClinicalStratum.SYMPT_ISOLATE}"
+            ] = lambda t: quarantine_func(t) * (
+                tvs[flow_adjustments[param_key][ClinicalStratum.SYMPT_NON_HOSPITAL]](t)
+                + flow_adjustments[param_key][ClinicalStratum.NON_SYMPT]
+            ) + tvs[
+                flow_adjustments[param_key][ClinicalStratum.SYMPT_ISOLATE]
+            ](
+                t
+            )
 
             # Create request with correct syntax for SUMMER for hospitalised and then non-hospitalised
-            importation_props_by_clinical[agegroup] = \
-                {
-                    stratum: float(flow_adjustments[param_key][stratum])
-                    for stratum in hospital_strata
-                }
+            importation_props_by_clinical[agegroup] = {
+                stratum: float(flow_adjustments[param_key][stratum]) for stratum in hospital_strata
+            }
             importation_props_by_clinical[agegroup].update(
                 {
                     stratum: f"tv_prop_importedX{agegroup}X{stratum}"
                     for stratum in non_hospital_strata
                 }
             )
-            flow_adjustments[f"importation_rateXagegroup_{agegroup}"] = \
-                importation_props_by_clinical[agegroup]
+            flow_adjustments[
+                f"importation_rateXagegroup_{agegroup}"
+            ] = importation_props_by_clinical[agegroup]
 
     # Stratify the model using the SUMMER stratification function
     model.stratify(

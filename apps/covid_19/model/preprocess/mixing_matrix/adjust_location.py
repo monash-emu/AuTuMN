@@ -36,10 +36,7 @@ class LocationMixingAdjustment(BaseMixingAdjustment):
                 google_mobility_values[loc] = apply_moving_average(google_mobility_values[loc], 7)
         # Build mixing data timeseries
         mixing = update_mixing_data(
-            mixing,
-            npi_effectiveness_params,
-            google_mobility_values,
-            google_mobility_days,
+            mixing, npi_effectiveness_params, google_mobility_values, google_mobility_days,
         )
         # Build the time variant location adjustment functions from mixing timeseries
         mixing_locations = [loc for loc in LOCATIONS if loc in mixing]

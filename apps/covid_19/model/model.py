@@ -180,7 +180,7 @@ def build_model(params: dict) -> StratifiedModel:
     if params["testing_to_detection"]:
 
         # Parameters that will need to go into ymls
-        assumed_tests_parameter = 1000.
+        assumed_tests_parameter = 1000.0
         assumed_cdr_parameter = 0.25
 
         # Tests numbers
@@ -189,18 +189,13 @@ def build_model(params: dict) -> StratifiedModel:
         per_capita_tests = [i_tests / sum(total_pops) for i_tests in test_values]
 
         # Calculate CDRs and the resulting CDR function over time
-        cdr_from_tests_func = \
-            create_cdr_function(
-                assumed_tests_parameter,
-                assumed_cdr_parameter
-            )
-        detected_proportion = \
-            scale_up_function(
-                test_dates,
-                [cdr_from_tests_func(i_tests) for i_tests in per_capita_tests],
-                smoothness=0.2,
-                method=5
-            )
+        cdr_from_tests_func = create_cdr_function(assumed_tests_parameter, assumed_cdr_parameter)
+        detected_proportion = scale_up_function(
+            test_dates,
+            [cdr_from_tests_func(i_tests) for i_tests in per_capita_tests],
+            smoothness=0.2,
+            method=5,
+        )
 
     else:
         detect_prop_params = params["time_variant_detection"]

@@ -43,4 +43,3 @@ PRIORS = [
     {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.025, 0.05],},
     {"param_name": "recovery_rate", "distribution": "uniform", "distri_params": [0.9, 1.2],},
 ]
-

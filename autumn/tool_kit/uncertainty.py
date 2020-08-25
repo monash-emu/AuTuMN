@@ -231,4 +231,3 @@ def export_compartment_size(
         compartment_values[str(time)] = output_list
 
     return compartment_values
-

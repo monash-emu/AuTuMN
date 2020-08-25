@@ -15,10 +15,10 @@ def test_run_models_partial(region):
     Smoke test: ensure we can build and run each default model with various stratification requests with nothing crashing.
     Does not include scenarios, plotting, etc.
     """
-    for stratify_by in ([], ['organ']):
+    for stratify_by in ([], ["organ"]):
         region_app = tuberculosis.app.get_region(region)
         ps = deepcopy(region_app.params["default"])
-        ps['stratify_by'] = stratify_by
+        ps["stratify_by"] = stratify_by
         # Only run model for ~10 epochs.
         ps["end_time"] = ps["start_time"] + 10
         model = region_app.build_model(ps)
@@ -48,9 +48,9 @@ def test_run_models_full(region):
     Smoke test: ensure our models run to completion for any stratification request without crashing.
     This takes ~30s per model.
     """
-    for stratify_by in ([], ['organ']):
+    for stratify_by in ([], ["organ"]):
         region_app = tuberculosis.app.get_region(region)
         ps = deepcopy(region_app.params["default"])
-        ps['stratify_by'] = stratify_by
+        ps["stratify_by"] = stratify_by
         model = region_app.build_model(ps)
         model.run_model()

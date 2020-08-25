@@ -39,16 +39,18 @@ def build_model(params: dict) -> StratifiedModel:
     init_conditions = {Compartment.INFECTIOUS: 1}
 
     # load latency parameters
-    if params['override_latency_rates']:
+    if params["override_latency_rates"]:
         params = preprocess.latency.get_unstratified_parameter_values(params)
 
     # set reinfection contact rate parameters
-    for state in ['latent', 'recovered']:
-        params['contact_rate_from_' + state] = params['contact_rate'] * params['rr_infection_' + state]
+    for state in ["latent", "recovered"]:
+        params["contact_rate_from_" + state] = (
+            params["contact_rate"] * params["rr_infection_" + state]
+        )
 
     # assign unstratified parameter values to infection death and self-recovery processes
-    for param_name in ['infect_death', 'recovery_rate']:
-        params[param_name] = params[param_name + "_dict"]['unstratified']
+    for param_name in ["infect_death", "recovery_rate"]:
+        params[param_name] = params[param_name + "_dict"]["unstratified"]
 
     # Create the model.
     tb_model = StratifiedModel(
@@ -63,7 +65,7 @@ def build_model(params: dict) -> StratifiedModel:
         starting_population=1000000,
     )
 
-    if "organ" in params['stratify_by']:
+    if "organ" in params["stratify_by"]:
         stratify_by_organ(tb_model, params)
 
     # Register derived output functions
@@ -76,4 +78,3 @@ def build_model(params: dict) -> StratifiedModel:
     tb_model.add_function_derived_outputs(func_outputs)
 
     return tb_model
-

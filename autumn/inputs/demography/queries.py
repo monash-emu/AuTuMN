@@ -147,7 +147,7 @@ def get_population_by_agegroup(
         ],
     )
     pop_df = pop_df.sort_values(["start_age"])
-    pop_df_with_data = pop_df.dropna(subset=['population'])
+    pop_df_with_data = pop_df.dropna(subset=["population"])
     orig_ages = pop_df_with_data["start_age"].tolist()
     orig_pop = pop_df_with_data["population"].tolist()
     assert len(orig_ages) == len(orig_pop)

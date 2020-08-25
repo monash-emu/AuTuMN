@@ -55,4 +55,3 @@ def download_daily_reports(output_dir: str):
         path = os.path.join(output_dir, filename)
         df = pd.read_csv(url)
         df.to_csv(path)
-

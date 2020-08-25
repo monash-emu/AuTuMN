@@ -20,17 +20,20 @@ def stratify_by_organ(model, params):
 
     # define differential natural history by organ status
     flow_adjustments = {}
-    for param_name in ['infect_death', 'recovery_rate']:
+    for param_name in ["infect_death", "recovery_rate"]:
         flow_adjustments[param_name] = {}
         for organ_stratum in organ_strata:
-            flow_adjustments[param_name][organ_stratum + "W"] = params[param_name + "_dict"][organ_stratum]
+            flow_adjustments[param_name][organ_stratum + "W"] = params[param_name + "_dict"][
+                organ_stratum
+            ]
 
     # Adjust the progression rates by organ using the requested incidence proportions
     splitting_proportions = {
-        "smear_positive": params['incidence_props_pulmonary'] * params["incidence_props_smear_positive_among_pulmonary"],
-        "smear_negative": params['incidence_props_pulmonary'] *
-                          (1. - params["incidence_props_smear_positive_among_pulmonary"]),
-        "extrapulmonary": 1. - params['incidence_props_pulmonary'],
+        "smear_positive": params["incidence_props_pulmonary"]
+        * params["incidence_props_smear_positive_among_pulmonary"],
+        "smear_negative": params["incidence_props_pulmonary"]
+        * (1.0 - params["incidence_props_smear_positive_among_pulmonary"]),
+        "extrapulmonary": 1.0 - params["incidence_props_pulmonary"],
     }
     for stage in ["early", "late"]:
         flow_adjustments[stage + "_activation_rate"] = splitting_proportions
@@ -43,4 +46,3 @@ def stratify_by_organ(model, params):
         infectiousness_adjustments=strata_infectiousness,
         flow_adjustments=flow_adjustments,
     )
-

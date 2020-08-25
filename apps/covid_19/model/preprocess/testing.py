@@ -16,10 +16,10 @@ def create_cdr_function(assumed_tests: int, assumed_cdr: float):
     """
 
     assert assumed_tests >= 0, "Number of tests at certain CDR must be positive"
-    assert 1. >= assumed_cdr >= 0., "CDR for given number of tests must be between zero and one"
+    assert 1.0 >= assumed_cdr >= 0.0, "CDR for given number of tests must be between zero and one"
 
     # Find the single unknown parameter to the function
-    exponent_multiplier = assumed_tests * np.log(1. - assumed_cdr)
+    exponent_multiplier = assumed_tests * np.log(1.0 - assumed_cdr)
 
     # Construct the function based on this parameter
-    return lambda tests_per_capita: 1. - np.exp(exponent_multiplier * tests_per_capita)
+    return lambda tests_per_capita: 1.0 - np.exp(exponent_multiplier * tests_per_capita)

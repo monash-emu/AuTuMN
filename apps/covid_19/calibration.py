@@ -96,27 +96,15 @@ def add_standard_philippines_params(params):
             "distribution": "uniform",
             "distri_params": [0.1, 0.4],
         },
-        {
-            "param_name": "ifr_multiplier",
-            "distribution": "uniform",
-            "distri_params": [1.5, 2.28]
-        },
+        {"param_name": "ifr_multiplier", "distribution": "uniform", "distri_params": [1.5, 2.28]},
     ]
 
 
 def add_standard_victoria_params(params):
 
     return params + [
-        {
-            "param_name": "contact_rate",
-            "distribution": "uniform",
-            "distri_params": [0.025, 0.05],
-        },
-        {
-            "param_name": "seasonal_force",
-            "distribution": "uniform",
-            "distri_params": [0.0, 0.4],
-        },
+        {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.025, 0.05],},
+        {"param_name": "seasonal_force", "distribution": "uniform", "distri_params": [0.0, 0.4],},
         {
             "param_name": "compartment_periods_calculated.exposed.total_period",
             "distribution": "trunc_normal",
@@ -147,11 +135,7 @@ def add_standard_victoria_params(params):
             "distri_params": [1.0, 0.25],
             "trunc_range": [0.1, np.inf],
         },
-        {
-            "param_name": "icu_prop",
-            "distribution": "uniform",
-            "distri_params": [0.08, 0.2],
-        },
+        {"param_name": "icu_prop", "distribution": "uniform", "distri_params": [0.08, 0.2],},
         {
             "param_name": "compartment_periods.icu_early",
             "distribution": "uniform",

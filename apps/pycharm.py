@@ -9,8 +9,8 @@ app_region = covid_19.app.get_region(Region.BARWON_SOUTH_WEST)
 app_region.run_model(run_scenarios=True)
 
 # Simple SIR model for demonstration
-#app_region = sir_example.app.get_region(Region.AUSTRALIA)
-#app_region.run_model()
+# app_region = sir_example.app.get_region(Region.AUSTRALIA)
+# app_region.run_model()
 
 
 # app_region = tuberculosis.app.get_region(Region.PHILIPPINES)

@@ -70,4 +70,3 @@ def _get_sub_plotter(plot_dir: str, subplot_dirname: str):
     subplot_dir = os.path.join(plot_dir, subplot_dirname)
     os.makedirs(subplot_dir, exist_ok=True)
     return FilePlotter(subplot_dir, {})
-

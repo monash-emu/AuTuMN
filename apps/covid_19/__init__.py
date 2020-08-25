@@ -23,7 +23,6 @@ from .regions.loddon_mallee import loddon_mallee_region
 from .regions.grampians import grampians_region
 
 
-
 # Used by each region to register its model.
 app = App("covid_19")
 

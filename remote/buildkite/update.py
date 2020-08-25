@@ -22,3 +22,18 @@ def update_pipelines():
 
     with open(PIPELINE_PATH, "w") as f:
         yaml.dump(pipeline, f)
+
+
+def update_pipelines():
+    for p in PIPELINES:
+        p.save()
+
+
+PIPELINES = [
+    Pipeline(path="scripts/buildkite/pipelines/calibrate.yml"),
+    Pipeline(path="scripts/buildkite/pipelines/run-full.yml"),
+    Pipeline(path="scripts/buildkite/pipelines/powerbi.yml"),
+    Pipeline(path="scripts/buildkite/pipelines/calibrate-victoria.yml"),
+    Pipeline(path="scripts/buildkite/pipelines/calibrate-philippines.yml"),
+]
+

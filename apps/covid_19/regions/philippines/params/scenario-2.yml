@@ -1,4 +1,4 @@
-# 50% return to work and 50% return to school on October 5
+# SCENARIO DESCRIPTION: 50% return to work and 50% return to school on October 5
 mixing:
   work:
     append: true

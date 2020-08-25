@@ -5,7 +5,7 @@ steps:
     key: run-id
     required: true
     text: Calibration run name
-  - default: 50
+  - default: '50'
     hint: How many MCMC iterations should be burned?
     key: burn-in
     required: true

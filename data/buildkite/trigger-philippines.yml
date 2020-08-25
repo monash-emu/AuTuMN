@@ -1,7 +1,7 @@
 steps:
 - block: Calibration Settings
   fields:
-  - default: 7
+  - default: '7'
     hint: How many MCMC chains do you want to run?
     key: num-chains
     required: true
@@ -11,7 +11,7 @@ steps:
     key: mcmc-branch
     required: true
     text: Model git branch name
-  - default: 0.5
+  - default: '0.5'
     hint: How many hours should the model run for?
     key: mcmc-runtime
     required: true

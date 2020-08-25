@@ -134,7 +134,7 @@ class BaseInputField:
             "required": True,
         }
         if self.default is not None:
-            input_dict["default"] = self.default
+            input_dict["default"] = str(self.default)
 
         return input_dict
 

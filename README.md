@@ -14,10 +14,10 @@ See [this guide](./docs/setup.md) for information on how to set up this project.
 All of Autumn's features can be accessed from the command line. You can run commands as follows:
 
 ```bash
-python -m apps <YOUR COMMANDS>
+python -m apps <YOUR COMMANDS HERE>
 ```
 
-To see a list of options, try:
+To see a list of options, try the help prompt:
 
 ```bash
 python -m apps --help
@@ -161,7 +161,7 @@ Once you are satisfied that all your models work again (run the tests), commit y
 - The updated `input-hash.txt` file
 - Any required changes to model parameters (eg. dynamic mixing dates)
 
-## AWS calibration
+## AWS Calibration
 
 We often need to run long, computationally expensive jobs. We are currently using Amazon Web Services (AWS) to do this. The scripts and documentation that allow you to do this can be found in the `scripts/aws/` folder. The following jobs are run in AWS:
 

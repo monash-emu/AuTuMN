@@ -1,4 +1,4 @@
-# Re-open schools at current planned end of stage 4 lockdowns
+# SCENARIO DESCRIPTION: Re-open schools at current planned end of stage 4 lockdowns
 mixing:
   school:
     append: false

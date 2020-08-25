@@ -36,13 +36,23 @@ def start(job_id, instance_type):
     aws.run_job(job_id, instance_type)
 
 
+PROTECTED_INSTANCES = ["buildkite"]
+
+
 @aws_cli.command()
 @click.argument("job_id")
 def stop(job_id):
     """
-    Stop a job
+    Stop a job, stops all jobs if "all"
     """
-    aws.stop_job(job_id)
+    if job_id == "all":
+        for i in aws.describe_instances():
+            if i["name"] not in PROTECTED_INSTANCES:
+                job_id = i["name"]
+                aws.stop_job(job_id)
+
+    else:
+        aws.stop_job(job_id)
 
 
 @aws_cli.command()

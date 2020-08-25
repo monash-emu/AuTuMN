@@ -1,12 +1,14 @@
 import pandas as pd
-
+import os
 from autumn.db import Database
 
 from .fetch import MOBILITY_CSV_PATH
+from autumn import constants
 
 NAN = float("nan")
 MOBILITY_SUFFIX = "_percent_change_from_baseline"
-
+MOBILITY_DIRPATH = os.path.join(constants.INPUT_DATA_PATH, "mobility")
+MOBILITY_LGA_PATH = os.path.join(MOBILITY_DIRPATH, "LGA to Cluster mapping dictionary with proportions.csv")
 
 COUNTRY_NAME_ISO3_MAP = {
     "Bolivia": "BOL",
@@ -171,7 +173,7 @@ def reshape_to_clusters(gm_df):
     gm_df["sub_region_1"] = gm_df["sub_region_2"]
     gm_df.loc[(gm_df.sub_region_1.isnull()),"sub_region_1"] = "Victoria"
     
-    lga_df = pd.read_csv(".\data\inputs\mobility\LGA to Cluster mapping dictionary with proportions.csv") 
+    lga_df = pd.read_csv(MOBILITY_LGA_PATH) 
     lga_df.replace({"lga_name":VIC_LGA_MAP}, inplace=True)
     lga_df = pd.merge(lga_df, gm_df, how="left", left_on="lga_name", right_on="sub_region_1")
 

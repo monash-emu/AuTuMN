@@ -3,37 +3,37 @@ from remote.buildkite.buildkite import (
     CommandStep,
     InputStep,
     TextInputField,
+    BooleanInputField,
     SelectInputField,
 )
 
 
 run_id_field = TextInputField(
     key="run-id",
-    text="Calibration run name",
+    title="Calibration run name",
     hint="Which calibration run should be used?",
     type=str,
 )
 burn_in_field = TextInputField(
     key="burn-in",
-    text="Burn-in",
+    title="Burn-in",
     hint="How many MCMC iterations should be burned?",
     type=int,
     default=50,
 )
 use_latest_code_field = SelectInputField(
     key="use-latest-code",
-    select="Use latest code for model run",
+    title="Use latest code for model run",
     hint="Should this task use the same Git commit as the calibration, or use the latest code instead?",
     type=bool,
     options=[{"label": "Yes", "value": "yes"}, {"label": "No", "value": ""}],
     default="",
 )
-trigger_field = SelectInputField(
+trigger_field = BooleanInputField(
     key="trigger-downstream",
-    select="Trigger full model run",
+    title="Trigger full model run",
     hint="Should this task trigger a full model run when it is done?",
     type=bool,
-    options=[{"label": "Yes", "value": "yes"}, {"label": "No", "value": ""}],
     default="yes",
 )
 fields = [

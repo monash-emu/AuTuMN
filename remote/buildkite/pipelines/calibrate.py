@@ -4,6 +4,7 @@ from remote.buildkite.buildkite import (
     InputStep,
     TextInputField,
     SelectInputField,
+    BooleanInputField,
 )
 
 
@@ -17,37 +18,36 @@ def get_region_options():
 model_field = SelectInputField(
     key="model-name",
     hint="Which model do you want to run?",
-    select="Model Region",
+    title="Model Region",
     options=get_region_options,
     type=str,
 )
 chains_field = TextInputField(
     key="num-chains",
-    text="Number of MCMC chains",
+    title="Number of MCMC chains",
     hint="How many MCMC chains do you want to run?",
     default=7,
     type=int,
 )
 branch_field = TextInputField(
     key="mcmc-branch",
-    text="Model git branch name",
+    title="Model git branch name",
     hint="Which git branch do you want to use to run the model?",
     default="master",
     type=str,
 )
 runtime_field = TextInputField(
     key="mcmc-runtime",
-    text="Runtime",
+    title="Runtime",
     hint="How many hours should the model run for?",
     default=0.5,
     type=lambda s: int(float(s * 3600)),
 )
-trigger_field = SelectInputField(
+trigger_field = BooleanInputField(
     key="trigger-downstream",
     hint="Should this task trigger a full model run when it is done?",
-    select="Trigger full model run",
+    title="Trigger full model run",
     type=bool,
-    options=[{"label": "Yes", "value": "yes"}, {"label": "No", "value": ""}],
     default="yes",
 )
 fields = [

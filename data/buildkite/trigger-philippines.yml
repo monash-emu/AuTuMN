@@ -23,7 +23,7 @@ steps:
     - label: 'Yes'
       value: 'yes'
     - label: 'No'
-      value: ''
+      value: 'no'
     required: true
     select: Trigger full model run
   key: calibration-settings

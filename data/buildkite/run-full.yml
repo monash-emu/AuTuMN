@@ -28,7 +28,7 @@ steps:
     - label: 'Yes'
       value: 'yes'
     - label: 'No'
-      value: ''
+      value: 'no'
     required: true
     select: Trigger full model run
   if: build.env("SKIP_INPUT") == null

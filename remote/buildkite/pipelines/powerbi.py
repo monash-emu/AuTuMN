@@ -8,7 +8,7 @@ from remote.buildkite.buildkite import (
 
 run_id_field = TextInputField(
     key="run-id",
-    text="Calibration run name",
+    title="Calibration run name",
     hint="Which calibration run should be used?",
     type=str,
 )

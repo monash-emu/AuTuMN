@@ -121,11 +121,12 @@ class InputStep:
 
 
 class BaseInputField:
-    def __init__(self, key: str, hint: str, type, default=None):
+    def __init__(self, key: str, title: str, hint: str, type, default=None):
         self.key = key
         self.hint = hint
         self.default = default
         self.type = type
+        self.title = title
 
     def to_dict(self):
         input_dict = {
@@ -144,20 +145,15 @@ class BaseInputField:
 
 
 class TextInputField(BaseInputField):
-    def __init__(self, text: str, *args, **kwargs):
-        self.text = text
-        super().__init__(*args, **kwargs)
-
     def to_dict(self):
         return {
             **super().to_dict(),
-            "text": self.text,
+            "text": self.title,
         }
 
 
 class SelectInputField(BaseInputField):
-    def __init__(self, select: str, options: list, *args, **kwargs):
-        self.select = select
+    def __init__(self, options: list, *args, **kwargs):
         self.options = options
         if not callable(options):
             assert all([type(o) is dict and "label" in o and "value" in o for o in options])
@@ -166,6 +162,20 @@ class SelectInputField(BaseInputField):
     def to_dict(self):
         return {
             **super().to_dict(),
-            "select": self.select,
+            "select": self.title,
             "options": self.options() if callable(self.options) else self.options,
         }
+
+
+class BooleanInputField(BaseInputField):
+    def to_dict(self):
+        return {
+            **super().to_dict(),
+            "select": self.title,
+            "options": [{"label": "Yes", "value": "yes"}, {"label": "No", "value": "no"}],
+        }
+
+    def get_value(self):
+        val_str = get_metadata(self.key)
+        val_bool = val_str == "yes"
+        return self.type(val_bool)

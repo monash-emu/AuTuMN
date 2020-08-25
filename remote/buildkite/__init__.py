@@ -215,7 +215,7 @@ def _trigger_models(models, p):
                 cp.model_field.key: model,
                 cp.chains_field.key: chains,
                 cp.branch_field.key: branch,
-                cp.runtime_field.key: runtime,
+                cp.runtime_field.key: runtime / 3600.0,
                 cp.trigger_field.key: trigger_downstream,
             },
         )

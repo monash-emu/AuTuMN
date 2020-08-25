@@ -1,0 +1,83 @@
+steps:
+- block: Calibration Settings
+  fields:
+  - hint: Which model do you want to run?
+    key: model-name
+    options:
+    - label: Victoria
+      value: victoria
+    - label: North Metro
+      value: north-metro
+    - label: South East Metro
+      value: south-east-metro
+    - label: South Metro
+      value: south-metro
+    - label: West Metro
+      value: west-metro
+    - label: Barwon South West
+      value: barwon-south-west
+    - label: Gippsland
+      value: gippsland
+    - label: Hume
+      value: hume
+    - label: Loddon Mallee
+      value: loddon-mallee
+    - label: Grampians
+      value: grampians
+    - label: Malaysia
+      value: malaysia
+    - label: Philippines
+      value: philippines
+    - label: Manila
+      value: manila
+    - label: Calabarzon
+      value: calabarzon
+    - label: Central Visayas
+      value: central-visayas
+    - label: Belgium
+      value: belgium
+    - label: United Kingdom
+      value: united-kingdom
+    - label: Italy
+      value: italy
+    - label: France
+      value: france
+    - label: Sweden
+      value: sweden
+    - label: Spain
+      value: spain
+    required: true
+    select: Model Region
+  - default: 7
+    hint: How many MCMC chains do you want to run?
+    key: num-chains
+    required: true
+    text: Number of MCMC chains
+  - default: master
+    hint: Which git branch do you want to use to run the model?
+    key: mcmc-branch
+    required: true
+    text: Model git branch name
+  - default: 0.5
+    hint: How many hours should the model run for?
+    key: mcmc-runtime
+    required: true
+    text: Runtime
+  - default: 'yes'
+    hint: Should this task trigger a full model run when it is done?
+    key: trigger-downstream
+    options:
+    - label: 'Yes'
+      value: 'yes'
+    - label: 'No'
+      value: ''
+    required: true
+    select: Trigger full model run
+  if: build.env("SKIP_INPUT") == null
+  key: calibration-settings
+- command: ./scripts/buildkite.sh calibrate
+  key: run-calibration
+  label: Run Calibration
+- command: ./scripts/website/deploy.sh
+  key: update-website
+  label: Update Website

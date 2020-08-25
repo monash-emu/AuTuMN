@@ -45,16 +45,16 @@ fields = [
 input_step = InputStep(
     key="full-model-run-settings", run_condition='build.env("SKIP_INPUT") == null', fields=fields
 )
-powerbi_step = CommandStep(key="run-full", command="./scripts/buildkite.sh full",)
+full_model_run_step = CommandStep(key="run-full", command="./scripts/buildkite.sh full",)
 website_step = CommandStep(
     key="update-website",
     command="./scripts/website/deploy.sh",
-    depends_on=powerbi_step,
+    depends_on=full_model_run_step,
     allow_dependency_failure=True,
 )
 steps = [
     input_step,
-    powerbi_step,
+    full_model_run_step,
     website_step,
 ]
 pipeline = Pipeline(key="run-full", steps=steps)

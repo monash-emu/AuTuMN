@@ -10,6 +10,8 @@ steps:
 - command: ./scripts/buildkite.sh powerbi
   key: run-powerbi
   label: Run Powerbi
-- command: ./scripts/website/deploy.sh
+- allow_dependency_failure: true
+  command: ./scripts/website/deploy.sh
+  depends_on: run-powerbi
   key: update-website
   label: Update Website

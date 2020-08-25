@@ -88,14 +88,16 @@ class CommandStep:
         return self.key.replace("-", " ").title()
 
     def to_dict(self):
-        return {
+        cmd_dict = {
             "command": self.command,
             "key": self.key,
             "label": self.label,
         }
         if self.depends_on is not None:
-            input_dict["depends_on"] = self.depends_on.key
-            input_dict["allow_dependency_failure"] = self.allow_dependency_failure
+            cmd_dict["depends_on"] = self.depends_on.key
+            cmd_dict["allow_dependency_failure"] = self.allow_dependency_failure
+
+        return cmd_dict
 
 
 class InputStep:

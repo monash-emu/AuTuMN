@@ -3,14 +3,14 @@
 set -e
 SCRIPT_DIR=$(dirname $0)
 pushd $SCRIPT_DIR
-if [ ! -d "../aws/env" ]
+if [ ! -d "../../env" ]
 then
     echo "Installing Python requirements"
-    virtualenv --quiet -p python3 ../aws/env
-    . ../aws/env/bin/activate
+    virtualenv --quiet -p python3 ../../env
+    . ../../env/bin/activate
     pip3 install --quiet boto3 awscli
 fi
-. ../aws/env/bin/activate
+. ../../env/bin/activate
 
 echo "Fetching website data"
 ./read_website_data.py
@@ -32,4 +32,14 @@ else
     aws s3 cp --quiet --recursive out s3://www.autumn-data.com
 fi
 echo "Done uploading website"
+
+if [[ ! -z "$BUILDKITE_BUILD_NUMBER" ]]
+then
+    echo "Cleaning up data"
+    rm website.json
+    rm -rf out
+    rm -rf node_modules
+    deactivate
+    rm -rf ../../env
+fi
 popd

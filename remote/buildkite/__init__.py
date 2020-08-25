@@ -166,7 +166,6 @@ def trigger_victoria():
     """
     logger.info("Triggering all Victorian regional calibrations.")
     model_names = [
-        Region.NORTH_MELBOURNE,
         Region.NORTH_METRO,
         Region.SOUTH_EAST_METRO,
         Region.SOUTH_METRO,

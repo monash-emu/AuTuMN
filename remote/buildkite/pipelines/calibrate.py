@@ -41,7 +41,7 @@ runtime_field = TextInputField(
     title="Runtime",
     hint="How many hours should the model run for?",
     default=0.5,
-    type=lambda s: int(float(s * 3600)),
+    type=lambda s: int(float(s) * 3600),
 )
 trigger_field = BooleanInputField(
     key="trigger-downstream",

@@ -14,7 +14,7 @@ See [this guide](./docs/setup.md) for information on how to set up this project.
 All of Autumn's features can be accessed from the command line. You can run commands as follows:
 
 ```bash
-python -m apps <YOUR COMMANDS>
+python -m apps <YOUR COMMANDS HERE>
 ```
 
 To see a list of options, try:

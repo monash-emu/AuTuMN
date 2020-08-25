@@ -17,7 +17,7 @@ All of Autumn's features can be accessed from the command line. You can run comm
 python -m apps <YOUR COMMANDS HERE>
 ```
 
-To see a list of options, try:
+To see a list of options, try the help prompt:
 
 ```bash
 python -m apps --help

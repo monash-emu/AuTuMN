@@ -7,7 +7,7 @@ AuTuMN
 This project is a Python disease modelling framework used by the [AuTuMN tuberculosis modelling project](http://www.tb-modelling.com/index.php).
 It is currently being applied to COVID-19 as well. This project is used by the Monash Univeristy Epidemiological Modelling Unit.
 
-See [this guide](./docs/setup.md) for information on how to set up this project. See [here](./docs/adding-new-covid-model.md) for steps on how to add a new COVID model.
+See [this guide](./docs/setup.md) for information on how to set up this project.
 
 ## Using the command line
 

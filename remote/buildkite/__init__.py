@@ -52,6 +52,7 @@ def calibrate():
     runtime = calibrate_pipeline.runtime_field.get_value()
     branch = calibrate_pipeline.branch_field.get_value()
     trigger_downstream = calibrate_pipeline.trigger_field.get_value()
+    is_spot = calibrate_pipeline.spot_field.get_value()
     params_str = pprint.pformat({f.key: f.get_value() for f in calibrate_pipeline.fields}, indent=2)
     job_name = f"{model_name}-{build_number}"
 
@@ -62,6 +63,7 @@ def calibrate():
         chains=chains,
         runtime=runtime,
         branch=branch,
+        is_spot=is_spot,
         dry=False,
     )
     logger.info("\n=====\nRun ID: %s\n=====\n", run_id)
@@ -79,7 +81,8 @@ def calibrate():
                 fp.run_id_field.key: run_id,
                 fp.burn_in_field.key: fp.burn_in_field.default,
                 fp.use_latest_code_field.key: fp.use_latest_code_field.default,
-                fp.trigger_field.key: fp.trigger_field.default,
+                fp.trigger_field.key: trigger_downstream,
+                fp.spot_field.key: is_spot,
             },
         )
 
@@ -96,6 +99,7 @@ def full():
     burn_in = full_pipeline.burn_in_field.get_value()
     use_latest_code = full_pipeline.use_latest_code_field.get_value()
     trigger_downstream = full_pipeline.trigger_field.get_value()
+    is_spot = full_pipeline.spot_field.get_value()
     params_str = pprint.pformat({f.key: f.get_value() for f in full_pipeline.fields}, indent=2)
     model_name, _, _ = read_run_id(run_id)
     job_name = f"{model_name}-{build_number}"
@@ -103,7 +107,12 @@ def full():
     logger.info("\n=====\nRun ID: %s\n=====\n", run_id)
     logger.info("Running full model run job %s with params:\n%s\n", job_name, params_str)
     aws.run_full_model(
-        job=job_name, run=run_id, burn_in=burn_in, latest_code=use_latest_code, branch="master"
+        job=job_name,
+        run=run_id,
+        burn_in=burn_in,
+        latest_code=use_latest_code,
+        branch="master",
+        is_spot=is_spot,
     )
     if not trigger_downstream:
         logger.info("Not triggering PowerBI processing.")
@@ -115,7 +124,7 @@ def full():
             target="powerbi-processing",
             msg=f"Triggered by full model run {model_name} (build {build_number})",
             env={"SKIP_INPUT": "true"},
-            meta={pp.run_id_field.key: run_id},
+            meta={pp.run_id_field.key: run_id, pp.spot_field.key: is_spot},
         )
     logger.info("\n=====\nRun ID: %s\n=====\n", run_id)
     logger.info("Results available at %s", get_run_url(run_id))
@@ -127,13 +136,14 @@ def powerbi():
     logger.info("Gathering data for PowerBI post processing.")
     build_number = os.environ["BUILDKITE_BUILD_NUMBER"]
     run_id = powerbi_pipeline.run_id_field.get_value()
+    is_spot = powerbi_pipeline.spot_field.get_value()
     params_str = pprint.pformat({f.key: f.get_value() for f in powerbi_pipeline.fields}, indent=2)
     model_name, _, _ = read_run_id(run_id)
     job_name = f"{model_name}-{build_number}"
 
     logger.info("\n=====\nRun ID: %s\n=====\n", run_id)
     logger.info("Running PowerBI post processing job %s with params:\n%s\n", job_name, params_str)
-    aws.run_powerbi(job=job_name, run=run_id, branch="master")
+    aws.run_powerbi(job=job_name, run=run_id, branch="master", is_spot=is_spot)
     logger.info("\n=====\nRun ID: %s\n=====\n", run_id)
     logger.info("Results available at %s", get_run_url(run_id))
 
@@ -201,6 +211,7 @@ def _trigger_models(models, p):
     chains = p.chains_field.get_value()
     runtime = p.runtime_field.get_value()
     branch = p.branch_field.get_value()
+    is_spot = p.spot_field.get_value()
     trigger_downstream = p.trigger_field.get_value()
     params_str = pprint.pformat({f.key: f.get_value() for f in p.fields}, indent=2,)
     cp = calibrate_pipeline
@@ -217,6 +228,7 @@ def _trigger_models(models, p):
                 cp.branch_field.key: branch,
                 cp.runtime_field.key: runtime / 3600.0,
                 cp.trigger_field.key: trigger_downstream,
+                cp.spot_field.key: is_spot,
             },
         )
 

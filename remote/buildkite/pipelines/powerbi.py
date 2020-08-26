@@ -3,6 +3,7 @@ from remote.buildkite.buildkite import (
     CommandStep,
     InputStep,
     TextInputField,
+    BooleanInputField,
 )
 
 
@@ -12,7 +13,15 @@ run_id_field = TextInputField(
     hint="Which calibration run should be used?",
     type=str,
 )
-fields = [run_id_field]
+spot_field = BooleanInputField(
+    key="spot-instance",
+    title="Use spot instances",
+    hint="Is 1/3 of the price but sometimes randomly fails.",
+    default="yes",
+    type=bool,
+)
+
+fields = [run_id_field, spot_field]
 input_step = InputStep(
     key="powerbi-processing-settings",
     run_condition='build.env("SKIP_INPUT") == null',

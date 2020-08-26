@@ -61,11 +61,11 @@ class NoInstanceAvailable(Exception):
     pass
 
 
-def run_job(job_id: str, instance_type=None):
+def run_job(job_id: str, instance_type=None, is_spot=False):
     if not instance_type:
         instance_type = settings.EC2InstanceType.m5_8xlarge
 
-    run_instance(job_id, instance_type)
+    run_instance(job_id, instance_type, is_spot)
 
 
 def stop_job(job_id: str):
@@ -117,28 +117,31 @@ def cleanup_instances():
         logger.info("No instances to stop.")
 
 
-def run_instance(job_id: str, instance_type: str):
+def run_instance(job_id: str, instance_type: str, is_spot: bool):
     logger.info(f"Creating EC2 instance {instance_type} for job {job_id}... ")
-    client.run_instances(
-        MaxCount=1,
-        MinCount=1,
-        ImageId=settings.EC2_AMI,
-        InstanceType=instance_type,
-        SecurityGroupIds=[settings.EC2_SECURITY_GROUP],
-        IamInstanceProfile={"Name": settings.EC2_IAM_INSTANCE_PROFILE},
-        KeyName=settings.EC2_KEYFILE.split(".")[0],
-        InstanceInitiatedShutdownBehavior="terminate",
-        InstanceMarketOptions={
+    kwargs = {
+        "MaxCount": 1,
+        "MinCount": 1,
+        "ImageId": settings.EC2_AMI,
+        "InstanceType": instance_type,
+        "SecurityGroupIds": [settings.EC2_SECURITY_GROUP],
+        "IamInstanceProfile": {"Name": settings.EC2_IAM_INSTANCE_PROFILE},
+        "KeyName": settings.EC2_KEYFILE.split(".")[0],
+        "InstanceInitiatedShutdownBehavior": "terminate",
+        "TagSpecifications": [
+            {"ResourceType": "instance", "Tags": [{"Key": "Name", "Value": job_id}]}
+        ],
+    }
+    if is_spot:
+        kwargs["InstanceMarketOptions"] = {
             "MarketType": "spot",
             "SpotOptions": {
                 "MaxPrice": settings.EC2_SPOT_MAX_PRICE,
                 "SpotInstanceType": "one-time",
             },
-        },
-        TagSpecifications=[
-            {"ResourceType": "instance", "Tags": [{"Key": "Name", "Value": job_id}]}
-        ],
-    )
+        }
+
+    client.run_instances(**kwargs)
     logger.info("Create request sent.")
 
 

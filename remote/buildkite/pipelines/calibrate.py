@@ -45,17 +45,26 @@ runtime_field = TextInputField(
 )
 trigger_field = BooleanInputField(
     key="trigger-downstream",
-    hint="Should this task trigger a full model run when it is done?",
     title="Trigger full model run",
-    type=bool,
+    hint="Should this task trigger a full model run when it is done?",
     default="yes",
+    type=bool,
 )
+spot_field = BooleanInputField(
+    key="spot-instance",
+    title="Use spot instances",
+    hint="Is 1/3 of the price but sometimes randomly fails.",
+    default="yes",
+    type=bool,
+)
+
 fields = [
     model_field,
     chains_field,
     branch_field,
     runtime_field,
     trigger_field,
+    spot_field,
 ]
 input_step = InputStep(
     key="calibration-settings", run_condition='build.env("SKIP_INPUT") == null', fields=fields

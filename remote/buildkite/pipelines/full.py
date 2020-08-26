@@ -36,11 +36,19 @@ trigger_field = BooleanInputField(
     type=bool,
     default="yes",
 )
+spot_field = BooleanInputField(
+    key="spot-instance",
+    title="Use spot instances",
+    hint="Is 1/3 of the price but sometimes randomly fails.",
+    default="yes",
+    type=bool,
+)
 fields = [
     run_id_field,
     burn_in_field,
     use_latest_code_field,
     trigger_field,
+    spot_field,
 ]
 input_step = InputStep(
     key="full-model-run-settings", run_condition='build.env("SKIP_INPUT") == null', fields=fields

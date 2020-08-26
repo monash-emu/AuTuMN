@@ -1345,7 +1345,9 @@ def plot_percentile(pbi_outputs_dir, output, country, plot_configs, axis, show_y
                 {'time_window': [146., 197], 'value': .0250},  # 25 may 15 jul
             ],
             'spain': [
-                {'time_window': [112, 132], 'value': .05, 'ci': [0.047, 0.054]},
+                {'time_window': [118, 132], 'value': .05, 'ci': [0.047, 0.054]},
+                {'time_window': [139, 153], 'value': .052, 'ci': [0.049, 0.055]},
+                {'time_window': [160, 174], 'value': .052, 'ci': [0.049, 0.055]},
             ],
             'sweden': [
                 {'time_window': [122, 152], 'value': .108, 'ci': [0.079, 0.137]},

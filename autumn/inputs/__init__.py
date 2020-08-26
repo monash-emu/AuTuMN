@@ -2,6 +2,7 @@ from autumn.tool_kit import Timer
 
 from .database import build_input_database
 from .mobility.fetch import fetch_mobility_data
+from .covid_au.fetch import fetch_covid_au_data
 from .john_hopkins.fetch import fetch_john_hopkins_data
 
 from .demography.queries import (
@@ -15,6 +16,7 @@ from .demography.queries import (
 from .social_mixing.queries import get_country_mixing_matrix
 from .mobility.queries import get_mobility_data
 from .john_hopkins.queries import get_john_hopkins_data
+from .covid_au.queries import get_vic_testing_numbers
 
 
 def fetch_input_data():
@@ -27,3 +29,6 @@ def fetch_input_data():
 
     with Timer("Fetching John Hopkins data."):
         fetch_john_hopkins_data()
+
+    with Timer("Fetching COVID AU data."):
+        fetch_covid_au_data()

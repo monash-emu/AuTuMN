@@ -11,8 +11,6 @@ from autumn.tool_kit.scenarios import get_model_times_from_inputs
 from autumn.tool_kit.utils import normalise_sequence, repeat_list_elements
 from summer.model import StratifiedModel
 
-from data.inputs.testing.testing import get_vic_testing_numbers
-
 from apps.covid_19.constants import Compartment, ClinicalStratum
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
 
@@ -179,29 +177,21 @@ def build_model(params: dict) -> StratifiedModel:
     # Determine the proportion of cases detected over time as `detected_proportion`.
     if params["testing_to_detection"]:
 
-        # Parameters that will need to go into ymls
-        assumed_tests_parameter, assumed_cdr_parameter = \
-            params["testing_to_detection"]["assumed_tests_parameter"], \
-            params["testing_to_detection"]["assumed_cdr_parameter"]
-
         # Tests numbers
-        # FIXME: this should be made more general to any application
-        test_dates, test_values = get_vic_testing_numbers()
-        per_capita_tests = [i_tests / sum(total_pops) for i_tests in test_values]
+        # FIXME: this should be made more general to any application, not just VIC specific.
+        test_dates, test_values = inputs.get_vic_testing_numbers()
+        per_capita_tests = test_values / sum(total_pops)
 
         # Calculate CDRs and the resulting CDR function over time
-        cdr_from_tests_func = \
-            create_cdr_function(
-                assumed_tests_parameter,
-                assumed_cdr_parameter
-            )
-        detected_proportion = \
-            scale_up_function(
-                test_dates,
-                [cdr_from_tests_func(i_tests) for i_tests in per_capita_tests],
-                smoothness=0.2,
-                method=5
-            )
+        assumed_tests_parameter = params["testing_to_detection"]["assumed_tests_parameter"]
+        assumed_cdr_parameter = params["testing_to_detection"]["assumed_cdr_parameter"]
+        cdr_from_tests_func = create_cdr_function(assumed_tests_parameter, assumed_cdr_parameter)
+        detected_proportion = scale_up_function(
+            test_dates,
+            [cdr_from_tests_func(i_tests) for i_tests in per_capita_tests],
+            smoothness=0.2,
+            method=5,
+        )
 
     else:
         detect_prop_params = params["time_variant_detection"]

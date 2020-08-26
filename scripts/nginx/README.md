@@ -26,6 +26,7 @@ See docs on passwords [here](https://docs.nginx.com/nginx/admin-guide/security-c
 Current users are:
 
 - bicol in /etc/nginx/bicol.passwords
+- victoria in /etc/nginx/victoria.passwords
 
 To create a password file
 

@@ -1,6 +1,6 @@
 # SCENARIO DESCRIPTION: BASELINE
 ---
-scenario_start_time: 230
+parent: apps/covid_19/params.yml
 implement_importation: True
 
 traveller_quarantine:
@@ -8,11 +8,11 @@ traveller_quarantine:
   values: [0., 1.]
 
 microdistancing:
-    function_type: tanh
-    parameters:
-        b: -0.04
-        c: 100.
-        sigma: 0.6
+  function_type: tanh
+  parameters:
+    b: -0.04
+    c: 100.
+    sigma: 0.6
 
 end_time: 365.
 iso3: MYS
@@ -202,7 +202,7 @@ data: # Daily numbers of reported imported cases. (two different approaches here
       21.0,
       2.0,
       10.0,
-      1.0
+      1.0,
     ]
 
 importation_props_by_age:

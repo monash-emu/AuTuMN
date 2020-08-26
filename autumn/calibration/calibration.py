@@ -231,9 +231,9 @@ class Calibration:
             param_updates[param_name] = proposed_params[i]
 
         params = copy.deepcopy(self.model_parameters)
-        params["default"] = update_params(params["default"], param_updates)
+        update_func = lambda ps: update_params(ps, param_updates)
         scenario = Scenario(self.model_builder, 0, params)
-        scenario.run()
+        scenario.run(update_func=update_func)
         self.latest_scenario = scenario
         return scenario
 

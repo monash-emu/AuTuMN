@@ -1,5 +1,6 @@
 # SCENARIO DESCRIPTION: BASELINE
 ---
+parent: apps/covid_19/params.yml
 iso3: AUS
 region: Victoria
 pop_region_override: SOUTH__EAST_METRO
@@ -9,41 +10,40 @@ infectious_seed: 0
 
 start_time: 160.
 end_time: 365.
-scenario_start_time: 257  # 13/09/2020
 
 contact_rate: 0.034
 seasonal_force: 0.3
 
 compartment_periods:
-    icu_early: 10.
+  icu_early: 10.
 
 hospital_props_multiplier: 1.5
 icu_prop: 0.12
 
 compartment_periods_calculated:
-    exposed:
-        total_period: 3.8
+  exposed:
+    total_period: 3.8
 
 testing_to_detection:
-    assumed_tests_parameter: 1000
-    assumed_cdr_parameter: 0.25
+  assumed_tests_parameter: 1000
+  assumed_cdr_parameter: 0.25
 
 microdistancing:
-    function_type: empiric
-    parameters:
-        multiplier: 0.05
-        times: [181, 182, 185, 186, 191, 192, 202, 204, 215, 216]
-        values: [0., 2., 2., 3., 3., 5., 5., 7., 7., 9.]
+  function_type: empiric
+  parameters:
+    multiplier: 0.05
+    times: [181, 182, 185, 186, 191, 192, 202, 204, 215, 216]
+    values: [0., 2., 2., 3., 3., 5., 5., 7., 7., 9.]
 
-    # 30th March, day 90, stage 3 enforced
-    # 9th June, day 162, stage 3 released (I think)
-    # 20th June, day 172, restrictions tightened, only five visitors at home
-    # (21st June, day 173, seasonal forcing peaks)
-    # 30th June, day 182, postcode lockdowns - two units microdistancing
-    # 4th July, day 186, two more postcodes locked down - one unit further microdistancing
-    # 9th July, day 191, stage 3 enforced - two units further microdistancing
-    # 22nd July, day 204, face coverings - two units further microdistancing
-    # 2nd August, day 215, stage 4 enforced - two units further microdistancing
+  # 30th March, day 90, stage 3 enforced
+  # 9th June, day 162, stage 3 released (I think)
+  # 20th June, day 172, restrictions tightened, only five visitors at home
+  # (21st June, day 173, seasonal forcing peaks)
+  # 30th June, day 182, postcode lockdowns - two units microdistancing
+  # 4th July, day 186, two more postcodes locked down - one unit further microdistancing
+  # 9th July, day 191, stage 3 enforced - two units further microdistancing
+  # 22nd July, day 204, face coverings - two units further microdistancing
+  # 2nd August, day 215, stage 4 enforced - two units further microdistancing
 
 mixing:
   school:
@@ -57,10 +57,10 @@ mixing:
       - 2020-06-10 # All students back to school
       - 2020-06-26
       - 2020-06-27
-      - 2020-07-13  # Back to school for all and only Years 11 and 12, Year 10 for Melbourne and Mitchell Shire
+      - 2020-07-13 # Back to school for all and only Years 11 and 12, Year 10 for Melbourne and Mitchell Shire
       - 2020-08-03
       - 2020-08-04
-      - 2020-08-25  # Google mobility update, pls review and remove
+      - 2020-08-25 # Google mobility update, pls review and remove
     values:
       - 1.
       - 0.

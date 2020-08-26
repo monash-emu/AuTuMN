@@ -1,2 +1,3 @@
 ---
-iso3: 'PHL'
+parent: apps/tuberculosis/params.yml
+iso3: "PHL"

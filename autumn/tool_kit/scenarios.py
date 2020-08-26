@@ -12,9 +12,7 @@ from autumn.tool_kit.timer import Timer
 
 from ..constants import IntegrationType
 
-from .utils import merge_dicts
-
-validate_params = sb.build_validator(default=dict, scenario_start_time=float, scenarios=dict)
+validate_params = sb.build_validator(default=dict, scenarios=dict)
 
 ModelBuilderType = Callable[[dict], StratifiedModel]
 
@@ -39,7 +37,7 @@ class Scenario:
         """
         Construct a Scenario from a model that's been loaded from an output database.
         """
-        empty_params = {"default": {}, "scenario_start_time": 0, "scenarios": {}}
+        empty_params = {"default": {}, "scenarios": {}}
         params = params or empty_params
         scenario = Scenario(None, idx, params, chain_idx=chain_idx)
         scenario.model = model
@@ -67,16 +65,10 @@ class Scenario:
                 assert not self.is_baseline, "Can only run scenario model if Scenario idx is > 0"
 
                 # Construct scenario params by merging scenario-specific params into default params
-                default_params = self.params["default"]
-                scenario_params = self.params["scenarios"][self.idx]
-                params = merge_dicts(scenario_params, default_params)
-
+                params = self.params["scenarios"][self.idx]
                 if update_func:
                     # Apply extra parameter updates
                     params = update_func(params)
-
-                # Override start time.
-                params = {**params, "start_time": self.params["scenario_start_time"]}
 
                 base_times = base_model.times
                 base_outputs = base_model.outputs
@@ -104,17 +96,13 @@ class Scenario:
         return self.model and self.model.outputs is not None
 
 
-def get_scenario_start_index(base_times, scenario_start_time):
+def get_scenario_start_index(base_times, start_time):
     """
     Returns the index of the closest time step that is at, or before the scenario start time.
     """
-    indices_after_start_index = [
-        idx for idx, time in enumerate(base_times) if time > scenario_start_time
-    ]
+    indices_after_start_index = [idx for idx, time in enumerate(base_times) if time > start_time]
     if not indices_after_start_index:
-        raise ValueError(
-            f"Scenario start time {scenario_start_time} is set after the baseline time range."
-        )
+        raise ValueError(f"Scenario start time {start_time} is set after the baseline time range.")
 
     index_after_start_index = min(indices_after_start_index)
     start_index = max([0, index_after_start_index - 1])

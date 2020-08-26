@@ -1,4 +1,6 @@
 # SCENARIO DESCRIPTION: Back to normal life from July 2
+parent: apps/covid_19/regions/malaysia/params/default.yml
+start_time: 230
 mixing:
   other_locations:
     append: true

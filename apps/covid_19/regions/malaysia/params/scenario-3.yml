@@ -1,4 +1,6 @@
 # SCENARIO DESCRIPTION: 100% of labor force back into the office from July 2
+parent: apps/covid_19/regions/malaysia/params/default.yml
+start_time: 230
 mixing:
   work:
     append: true

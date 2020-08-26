@@ -1,7 +1,6 @@
 ---
+parent: null
 # Base parameters for the sir_example model.
-# When to introduce the scenario interventions taking off from the baseline
-scenario_start_time: 50
 
 # Parameters used to build a general model of COVID-19 disease for application to Australia or internationally
 start_time: 0.

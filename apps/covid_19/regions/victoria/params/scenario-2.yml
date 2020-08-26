@@ -1,4 +1,6 @@
 # SCENARIO DESCRIPTION: Workplace contact rates back to pre-covid levels at end stage 4 period
+parent: apps/covid_19/regions/victoria/params/default.yml
+start_time: 257 # 13/09/2020
 mixing:
   work:
     append: true
@@ -8,4 +10,3 @@ mixing:
     values:
       - [repeat_prev]
       - 1.
- 

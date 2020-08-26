@@ -1,7 +1,6 @@
 ---
+parent: null
 # Base parameters for the tuberculosis model.
-# When to introduce the scenario interventions taking off from the baseline
-scenario_start_time: 50
 
 # Parameters used to build a general model of tuberculosis
 start_time: 1900.
@@ -13,13 +12,13 @@ iso3: null
 region: null
 
 # model structure
-stratify_by: ['organ']
+stratify_by: ["organ"]
 
 # basic infection and disease parameters
 contact_rate: 10.
 
 # latency-related parameters
-override_latency_rates: True  # priority for the values loaded from preprocess.latency. Turn off if we fit these params
+override_latency_rates: True # priority for the values loaded from preprocess.latency. Turn off if we fit these params
 stabilisation_rate: 1.
 late_activation_rate: 1.
 early_activation_rate: 1.
@@ -35,11 +34,11 @@ smear_negative_infect_multiplier: .25
 extrapulmonary_infect_multiplier: 0.
 infect_death_dict:
   unstratified: .2
-  smear_positive: 0.389  # Ragonent et al. (CID 2020)
-  smear_negative: 0.025  # Ragonent et al. (CID 2020)
-  extrapulmonary: 0.025  # assumed equal to that of smear-negative PTB
+  smear_positive: 0.389 # Ragonent et al. (CID 2020)
+  smear_negative: 0.025 # Ragonent et al. (CID 2020)
+  extrapulmonary: 0.025 # assumed equal to that of smear-negative PTB
 recovery_rate_dict:
   unstratified: .2
-  smear_positive: 0.231  # Ragonent et al. (CID 2020)
-  smear_negative: 0.130  # Ragonent et al. (CID 2020)
-  extrapulmonary: 0.130  # assumed equal to that of smear-negative PTB
+  smear_positive: 0.231 # Ragonent et al. (CID 2020)
+  smear_negative: 0.130 # Ragonent et al. (CID 2020)
+  extrapulmonary: 0.130 # assumed equal to that of smear-negative PTB

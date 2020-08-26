@@ -1,1 +1,3 @@
+parent: apps/sir_example/regions/australia/params/default.yml
+start_time: 50
 contact_rate: 2.

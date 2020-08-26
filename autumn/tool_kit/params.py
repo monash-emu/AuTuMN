@@ -55,15 +55,40 @@ def load_params(app_name: str, region_name: str):
     backwards compatibility reasons.
     """
     region_name = region_name.replace("-", "_")
+    param_filepaths = get_param_filepaths(app_name, region_name)
+    params = {"scenarios": {}}
+    is_name_correct = lambda n: re.match(r"^(default)|(scenario-\d+)$", n)
+    for param_filepath in param_filepaths:
+        name = param_filepath.split("/")[-1].split(".")[0]
+        msg = f"Badly formed param filename {name}: must be default.yml or scenario-1.yml"
+        assert is_name_correct(name), msg
+        if name == "default":
+            params["default"] = load_param_file(param_filepath)
+        else:
+            scenario_idx = int(name.split("-")[-1])
+            params["scenarios"][scenario_idx] = load_param_file(param_filepath)
 
-    # Load base param config
-    base_yaml_path = path.join(APPS_PATH, app_name, "params.yml")
-    assert path.exists(
-        base_yaml_path
-    ), f"App name {app_name} base parameters not found at {param_path}"
-    with open(base_yaml_path, "r") as f:
-        base_params = yaml.safe_load(f)
+    assert "default" in params, "Region must have a 'default.yml' parameter file."
+    return params
 
+
+def load_param_file(path: str):
+    data = read_yaml_file(path)
+    parent_path = data["parent"]
+    del data["parent"]
+    if not parent_path:
+        return data
+    else:
+        parent_data = load_param_file(parent_path)
+        return merge_dicts(data, parent_data)
+
+
+def read_yaml_file(path: str):
+    with open(path, "r") as f:
+        return yaml.safe_load(f)
+
+
+def get_param_filepaths(app_name: str, region_name: str):
     region_path = path.join(APPS_PATH, app_name, "regions")
     region_dirnames = [
         d
@@ -71,40 +96,12 @@ def load_params(app_name: str, region_name: str):
         if path.isdir(path.join(region_path, d)) and not d == "__pycache__"
     ]
     assert region_name in region_dirnames, f"Region name {region_name} is not in {region_dirnames}"
-    app_param_dir = path.join(region_path, region_name, "params")
-
-    # Load app default param config
-    default_param_path = path.join(app_param_dir, "default.yml")
-    with open(default_param_path, "r") as f:
-        app_default_params = yaml.safe_load(f)
-
-    default_params = merge_dicts(app_default_params, base_params)
-
-    # Load scenario specific params for the given app
-    scenarios = {}
-    scenaro_params_fnames = [
-        fname
-        for fname in os.listdir(app_param_dir)
-        if fname.startswith("scenario-") and fname.endswith(".yml")
+    dirpath = path.join(region_path, region_name, "params")
+    return [
+        path.join(dirpath, fname)
+        for fname in os.listdir(dirpath)
+        if fname.endswith(".yml") or fname.endswith(".yaml")
     ]
-    for fname in scenaro_params_fnames:
-        scenario_idx = int(fname.split("-")[-1].split(".")[0])
-        yaml_path = path.join(app_param_dir, fname)
-        with open(yaml_path, "r") as f:
-            scenarios[scenario_idx] = yaml.safe_load(f)
-
-    # By convention this is outside of the default params
-    scenario_start_time = None
-    if "scenario_start_time" in default_params:
-        scenario_start_time = default_params["scenario_start_time"]
-        del default_params["scenario_start_time"]
-
-    # Return backwards-compatible data structure
-    return {
-        "default": default_params,
-        "scenarios": scenarios,
-        "scenario_start_time": scenario_start_time,
-    }
 
 
 def update_params(params: dict, updates: dict) -> dict:

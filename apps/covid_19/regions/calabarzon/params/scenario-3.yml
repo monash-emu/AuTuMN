@@ -1,4 +1,6 @@
 # SCENARIO DESCRIPTION: 75% return to work and 25% return to school on October 5
+parent: apps/covid_19/regions/calabarzon/params/default.yml
+start_time: 279
 mixing:
   work:
     append: true

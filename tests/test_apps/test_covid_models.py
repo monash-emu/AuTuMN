@@ -60,7 +60,6 @@ def test_build_scenario_models(region):
     for idx, scenario_params in enumerate(region_app.params["scenarios"].values()):
         default_params = deepcopy(region_app.params["default"])
         params = merge_dicts(scenario_params, default_params)
-        params = {**params, "start_time": region_app.params["scenario_start_time"]}
         model = region_app.build_model(params)
         assert type(model) is StratifiedModel
 

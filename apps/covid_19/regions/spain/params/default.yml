@@ -1,11 +1,12 @@
 # SCENARIO DESCRIPTION: BASELINE
+parent: apps/covid_19/params.yml
 iso3: ESP
 
 smooth_google_data: True
 
 #start_time: -20.
 end_time: 214.
-scenario_start_time: 213
+# scenario_start_time: 213
 
 infectious_seed: 200
 use_raw_mortality_estimates: True
@@ -36,8 +37,18 @@ compartment_periods:
   hospital_late: 9.11041196656284
   icu_late: 4.564321238273781
 hospital_props_multiplier: 0.9378397229324557
-infection_fatality_props: [4.975280648886719e-06, 3.471637948934056e-05, 0.0001101016442880599, 0.00017502080317978891, 0.0005959629031098799, 0.002142384704186386, 0.007160420939585963, 0.03419571732037352, 0.14735193995972676]
-
+infection_fatality_props:
+  [
+    4.975280648886719e-06,
+    3.471637948934056e-05,
+    0.0001101016442880599,
+    0.00017502080317978891,
+    0.0005959629031098799,
+    0.002142384704186386,
+    0.007160420939585963,
+    0.03419571732037352,
+    0.14735193995972676,
+  ]
 
 mixing:
   school:

@@ -1,4 +1,6 @@
 # SCENARIO DESCRIPTION: Reopen schools on the July 2
+parent: apps/covid_19/regions/malaysia/params/default.yml
+start_time: 230
 mixing:
   school:
     append: false

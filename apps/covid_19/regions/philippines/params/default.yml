@@ -1,8 +1,8 @@
 # SCENARIO DESCRIPTION: BASELINE
 ---
+parent: apps/covid_19/params.yml
 iso3: PHL
 
-scenario_start_time: 279
 end_time: 365.
 hospital_props_multiplier: 2.
 
@@ -21,21 +21,19 @@ mixing:
       - 0
 
 microdistancing:
-    function_type: empiric
-    parameters:
-        multiplier: 0.05
-        times: [75, 76, 77, 122, 123, 137, 138, 153, 154, 227, 228]
-        values: [0, 4.2, 4.2, 4., 4., 3.5, 3.5, 3.2, 3.2, 5.5, 5.5]
-
-    # 16 March, day 76, ECQ enforced
-    # 1 May, day 122, ECQ / GCQ enforced
-    # 16 May, day 137, MECQ / GCQ enforced
-    # 1 June, day 153, GCQ / MGCQ enforced
-    # 15 Aug, day 228, GCQ / MGCQ enforced + face masks/shields required
-    
-    # no restrictions = 0
-    # face fasks = 1
-    # modified general community quarantine (MGCQ) = 2
-    # general community quarantine (GCQ) = 3
-    # modified enhanced community quarantine (MECQ) = 4
-    # enhanced community quarantine (ECQ) = 5
+  function_type: empiric
+  parameters:
+    multiplier: 0.05
+    times: [75, 76, 77, 122, 123, 137, 138, 153, 154, 227, 228]
+    values: [0, 4.2, 4.2, 4., 4., 3.5, 3.5, 3.2, 3.2, 5.5, 5.5]
+  # 16 March, day 76, ECQ enforced
+  # 1 May, day 122, ECQ / GCQ enforced
+  # 16 May, day 137, MECQ / GCQ enforced
+  # 1 June, day 153, GCQ / MGCQ enforced
+  # 15 Aug, day 228, GCQ / MGCQ enforced + face masks/shields required
+  # no restrictions = 0
+  # face fasks = 1
+  # modified general community quarantine (MGCQ) = 2
+  # general community quarantine (GCQ) = 3
+  # modified enhanced community quarantine (MECQ) = 4
+  # enhanced community quarantine (ECQ) = 5

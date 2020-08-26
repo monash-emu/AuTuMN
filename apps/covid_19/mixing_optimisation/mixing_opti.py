@@ -44,7 +44,8 @@ def run_root_model(country=Region.UNITED_KINGDOM, calibrated_params={}):
     # prepare importation rates for herd immunity testing
     params["default"]["data"] = {"times_imported_cases": [0], "n_imported_cases": [0]}
     params["default"]["end_time"] = PHASE_2_START_TIME
-    params["scenario_start_time"] = PHASE_2_START_TIME - 1
+    for scenario in params["scenarios"].values():
+        scenario["start_time"] = PHASE_2_START_TIME - 1
 
     scenario_0 = Scenario(build_model, idx=0, params=params)
     scenario_0.run()
@@ -158,7 +159,8 @@ def objective_function(
     # Rebuild the default parameters
     params["default"].update(opti_params["default"])
     params["default"] = update_params(params["default"], calibrated_params)
-    params["scenario_start_time"] = PHASE_2_START_TIME - 1
+    for scenario in params["scenarios"].values():
+        scenario["start_time"] = PHASE_2_START_TIME - 1
 
     # Create scenario 1
     sc_1_params = update_params(params["default"], sc_1_params_update)

@@ -1,697 +1,697 @@
-lga_id,lga_name,cluster_id,cluster_name,proportion
-20110,Alpine (S),1,North Metro,0.0368
-20110,Alpine (S),2,South & East Metro,0.0059
-20110,Alpine (S),3,South Metro,0.0166
-20110,Alpine (S),4,West Metro,0.0609
-20110,Alpine (S),5,Barwon South West,0.0011
-20110,Alpine (S),6,Gippsland,0.0017
-20110,Alpine (S),8,Hume,0.8751
-20110,Alpine (S),9,Loddon Mallee,0.002
-20260,Ararat (RC),1,North Metro,0.0187
-20260,Ararat (RC),2,South & East Metro,0.0034
-20260,Ararat (RC),3,South Metro,0.0145
-20260,Ararat (RC),4,West Metro,0.0338
-20260,Ararat (RC),5,Barwon South West,0.0262
-20260,Ararat (RC),7,Grampians,0.9013
-20260,Ararat (RC),8,Hume,0.0002
-20260,Ararat (RC),9,Loddon Mallee,0.0021
-20570,Ballarat (C),1,North Metro,0.0154
-20570,Ballarat (C),2,South & East Metro,0.0037
-20570,Ballarat (C),3,South Metro,0.0125
-20570,Ballarat (C),4,West Metro,0.0504
-20570,Ballarat (C),5,Barwon South West,0.0168
-20570,Ballarat (C),6,Gippsland,0.0006
-20570,Ballarat (C),7,Grampians,0.8974
-20570,Ballarat (C),8,Hume,0.0007
-20570,Ballarat (C),9,Loddon Mallee,0.0025
-20660,Banyule (C),1,North Metro,0.8723
-20660,Banyule (C),2,South & East Metro,0.0249
-20660,Banyule (C),3,South Metro,0.0133
-20660,Banyule (C),4,West Metro,0.0849
-20660,Banyule (C),5,Barwon South West,0.0015
-20660,Banyule (C),6,Gippsland,0.0009
-20660,Banyule (C),7,Grampians,0.0004
-20660,Banyule (C),8,Hume,0.0011
-20660,Banyule (C),9,Loddon Mallee,0.0008
-20740,Bass Coast (S),1,North Metro,0.0283
-20740,Bass Coast (S),2,South & East Metro,0.1917
-20740,Bass Coast (S),3,South Metro,0.0807
-20740,Bass Coast (S),4,West Metro,0.0339
-20740,Bass Coast (S),5,Barwon South West,0.0005
-20740,Bass Coast (S),6,Gippsland,0.6637
-20740,Bass Coast (S),7,Grampians,0.0002
-20740,Bass Coast (S),8,Hume,0.0006
-20740,Bass Coast (S),9,Loddon Mallee,0.0004
-20830,Baw Baw (S),1,North Metro,0.0192
-20830,Baw Baw (S),2,South & East Metro,0.1579
-20830,Baw Baw (S),3,South Metro,0.0324
-20830,Baw Baw (S),4,West Metro,0.0287
-20830,Baw Baw (S),5,Barwon South West,0.0008
-20830,Baw Baw (S),6,Gippsland,0.7593
-20830,Baw Baw (S),7,Grampians,0.0003
-20830,Baw Baw (S),8,Hume,0.0005
-20830,Baw Baw (S),9,Loddon Mallee,0.001
-20910,Bayside (C),1,North Metro,0.0256
-20910,Bayside (C),2,South & East Metro,0.184
-20910,Bayside (C),3,South Metro,0.7066
-20910,Bayside (C),4,West Metro,0.0801
-20910,Bayside (C),5,Barwon South West,0.0014
-20910,Bayside (C),6,Gippsland,0.0007
-20910,Bayside (C),7,Grampians,0.0003
-20910,Bayside (C),8,Hume,0.0011
-20910,Bayside (C),9,Loddon Mallee,0.0004
-21010,Benalla (RC),1,North Metro,0.0365
-21010,Benalla (RC),2,South & East Metro,0.006
-21010,Benalla (RC),3,South Metro,0.0147
-21010,Benalla (RC),4,West Metro,0.0504
-21010,Benalla (RC),5,Barwon South West,0.0017
-21010,Benalla (RC),6,Gippsland,0.001
-21010,Benalla (RC),7,Grampians,0.0003
-21010,Benalla (RC),8,Hume,0.8873
-21010,Benalla (RC),9,Loddon Mallee,0.0021
-21110,Boroondara (C),1,North Metro,0.3153
-21110,Boroondara (C),2,South & East Metro,0.3922
-21110,Boroondara (C),3,South Metro,0.127
-21110,Boroondara (C),4,West Metro,0.1598
-21110,Boroondara (C),5,Barwon South West,0.0025
-21110,Boroondara (C),6,Gippsland,0.0014
-21110,Boroondara (C),7,Grampians,0.0005
-21110,Boroondara (C),8,Hume,0.0007
-21110,Boroondara (C),9,Loddon Mallee,0.0006
-21180,Brimbank (C),1,North Metro,0.0568
-21180,Brimbank (C),2,South & East Metro,0.0061
-21180,Brimbank (C),3,South Metro,0.0155
-21180,Brimbank (C),4,West Metro,0.9185
-21180,Brimbank (C),5,Barwon South West,0.0012
-21180,Brimbank (C),6,Gippsland,0.0003
-21180,Brimbank (C),7,Grampians,0.0006
-21180,Brimbank (C),8,Hume,0.0005
-21180,Brimbank (C),9,Loddon Mallee,0.0005
-21270,Buloke (S),1,North Metro,0.0338
-21270,Buloke (S),2,South & East Metro,0.0101
-21270,Buloke (S),3,South Metro,0.0116
-21270,Buloke (S),4,West Metro,0.0435
-21270,Buloke (S),5,Barwon South West,0.0111
-21270,Buloke (S),6,Gippsland,0.0005
-21270,Buloke (S),7,Grampians,0.4505
-21270,Buloke (S),8,Hume,0.0029
-21270,Buloke (S),9,Loddon Mallee,0.436
-21370,Campaspe (S),1,North Metro,0.0445
-21370,Campaspe (S),2,South & East Metro,0.0049
-21370,Campaspe (S),3,South Metro,0.0099
-21370,Campaspe (S),4,West Metro,0.0358
-21370,Campaspe (S),5,Barwon South West,0.0012
-21370,Campaspe (S),6,Gippsland,0.0005
-21370,Campaspe (S),7,Grampians,0.0014
-21370,Campaspe (S),8,Hume,0.3056
-21370,Campaspe (S),9,Loddon Mallee,0.5963
-21450,Cardinia (S),1,North Metro,0.021
-21450,Cardinia (S),2,South & East Metro,0.8373
-21450,Cardinia (S),3,South Metro,0.0387
-21450,Cardinia (S),4,West Metro,0.034
-21450,Cardinia (S),5,Barwon South West,0.0007
-21450,Cardinia (S),6,Gippsland,0.0669
-21450,Cardinia (S),7,Grampians,0.0005
-21450,Cardinia (S),8,Hume,0.0004
-21450,Cardinia (S),9,Loddon Mallee,0.0005
-21610,Casey (C),1,North Metro,0.0188
-21610,Casey (C),2,South & East Metro,0.8419
-21610,Casey (C),3,South Metro,0.1022
-21610,Casey (C),4,West Metro,0.0312
-21610,Casey (C),5,Barwon South West,0.0004
-21610,Casey (C),6,Gippsland,0.0042
-21610,Casey (C),7,Grampians,0.0004
-21610,Casey (C),8,Hume,0.0005
-21610,Casey (C),9,Loddon Mallee,0.0003
-21670,Central Goldfields (S),1,North Metro,0.0153
-21670,Central Goldfields (S),2,South & East Metro,0.0053
-21670,Central Goldfields (S),3,South Metro,0.0102
-21670,Central Goldfields (S),4,West Metro,0.0343
-21670,Central Goldfields (S),5,Barwon South West,0.0175
-21670,Central Goldfields (S),6,Gippsland,0.001
-21670,Central Goldfields (S),7,Grampians,0.8173
-21670,Central Goldfields (S),8,Hume,0.0007
-21670,Central Goldfields (S),9,Loddon Mallee,0.0983
-21750,Colac-Otway (S),1,North Metro,0.0073
-21750,Colac-Otway (S),2,South & East Metro,0.0032
-21750,Colac-Otway (S),3,South Metro,0.0126
-21750,Colac-Otway (S),4,West Metro,0.0342
-21750,Colac-Otway (S),5,Barwon South West,0.936
-21750,Colac-Otway (S),7,Grampians,0.0048
-21750,Colac-Otway (S),8,Hume,0.0007
-21750,Colac-Otway (S),9,Loddon Mallee,0.0012
-21830,Corangamite (S),1,North Metro,0.0199
-21830,Corangamite (S),2,South & East Metro,0.0034
-21830,Corangamite (S),3,South Metro,0.0106
-21830,Corangamite (S),4,West Metro,0.0611
-21830,Corangamite (S),5,Barwon South West,0.8534
-21830,Corangamite (S),6,Gippsland,0.0005
-21830,Corangamite (S),7,Grampians,0.0493
-21830,Corangamite (S),8,Hume,0.0005
-21830,Corangamite (S),9,Loddon Mallee,0.0012
-21890,Darebin (C),1,North Metro,0.8269
-21890,Darebin (C),2,South & East Metro,0.0134
-21890,Darebin (C),3,South Metro,0.0171
-21890,Darebin (C),4,West Metro,0.1393
-21890,Darebin (C),5,Barwon South West,0.0009
-21890,Darebin (C),6,Gippsland,0.0006
-21890,Darebin (C),7,Grampians,0.0004
-21890,Darebin (C),8,Hume,0.0008
-21890,Darebin (C),9,Loddon Mallee,0.0006
-22110,East Gippsland (S),1,North Metro,0.0282
-22110,East Gippsland (S),2,South & East Metro,0.0454
-22110,East Gippsland (S),3,South Metro,0.0373
-22110,East Gippsland (S),4,West Metro,0.0368
-22110,East Gippsland (S),5,Barwon South West,0.0009
-22110,East Gippsland (S),6,Gippsland,0.8492
-22110,East Gippsland (S),7,Grampians,0.0005
-22110,East Gippsland (S),8,Hume,0.0012
-22110,East Gippsland (S),9,Loddon Mallee,0.0005
-22170,Frankston (C),1,North Metro,0.0152
-22170,Frankston (C),2,South & East Metro,0.1428
-22170,Frankston (C),3,South Metro,0.8071
-22170,Frankston (C),4,West Metro,0.0297
-22170,Frankston (C),5,Barwon South West,0.0007
-22170,Frankston (C),6,Gippsland,0.0025
-22170,Frankston (C),7,Grampians,0.0002
-22170,Frankston (C),8,Hume,0.0013
-22170,Frankston (C),9,Loddon Mallee,0.0005
-22250,Gannawarra (S),1,North Metro,0.04
-22250,Gannawarra (S),2,South & East Metro,0.006
-22250,Gannawarra (S),3,South Metro,0.0237
-22250,Gannawarra (S),4,West Metro,0.0393
-22250,Gannawarra (S),5,Barwon South West,0.0017
-22250,Gannawarra (S),6,Gippsland,0.0007
-22250,Gannawarra (S),7,Grampians,0.0012
-22250,Gannawarra (S),8,Hume,0.0041
-22250,Gannawarra (S),9,Loddon Mallee,0.8833
-22310,Glen Eira (C),1,North Metro,0.0341
-22310,Glen Eira (C),2,South & East Metro,0.3796
-22310,Glen Eira (C),3,South Metro,0.4963
-22310,Glen Eira (C),4,West Metro,0.0868
-22310,Glen Eira (C),5,Barwon South West,0.0008
-22310,Glen Eira (C),6,Gippsland,0.0005
-22310,Glen Eira (C),7,Grampians,0.0011
-22310,Glen Eira (C),8,Hume,0.0003
-22310,Glen Eira (C),9,Loddon Mallee,0.0005
-22410,Glenelg (S),1,North Metro,0.0166
-22410,Glenelg (S),2,South & East Metro,0.0023
-22410,Glenelg (S),3,South Metro,0.0074
-22410,Glenelg (S),4,West Metro,0.0325
-22410,Glenelg (S),5,Barwon South West,0.932
-22410,Glenelg (S),6,Gippsland,0.0004
-22410,Glenelg (S),7,Grampians,0.0074
-22410,Glenelg (S),8,Hume,0.0005
-22410,Glenelg (S),9,Loddon Mallee,0.0011
-22490,Golden Plains (S),1,North Metro,0.0107
-22490,Golden Plains (S),2,South & East Metro,0.0032
-22490,Golden Plains (S),3,South Metro,0.0146
-22490,Golden Plains (S),4,West Metro,0.0604
-22490,Golden Plains (S),5,Barwon South West,0.5004
-22490,Golden Plains (S),6,Gippsland,0.0003
-22490,Golden Plains (S),7,Grampians,0.4077
-22490,Golden Plains (S),8,Hume,0.0005
-22490,Golden Plains (S),9,Loddon Mallee,0.0021
-22620,Greater Bendigo (C),1,North Metro,0.0299
-22620,Greater Bendigo (C),2,South & East Metro,0.0065
-22620,Greater Bendigo (C),3,South Metro,0.0106
-22620,Greater Bendigo (C),4,West Metro,0.0479
-22620,Greater Bendigo (C),5,Barwon South West,0.0013
-22620,Greater Bendigo (C),6,Gippsland,0.0004
-22620,Greater Bendigo (C),7,Grampians,0.0041
-22620,Greater Bendigo (C),8,Hume,0.0026
-22620,Greater Bendigo (C),9,Loddon Mallee,0.8968
-22670,Greater Dandenong (C),1,North Metro,0.0244
-22670,Greater Dandenong (C),2,South & East Metro,0.9138
-22670,Greater Dandenong (C),3,South Metro,0.0395
-22670,Greater Dandenong (C),4,West Metro,0.0202
-22670,Greater Dandenong (C),5,Barwon South West,0.0003
-22670,Greater Dandenong (C),6,Gippsland,0.0011
-22670,Greater Dandenong (C),7,Grampians,0.0001
-22670,Greater Dandenong (C),8,Hume,0.0003
-22670,Greater Dandenong (C),9,Loddon Mallee,0.0003
-22750,Greater Geelong (C),1,North Metro,0.0109
-22750,Greater Geelong (C),2,South & East Metro,0.0027
-22750,Greater Geelong (C),3,South Metro,0.0128
-22750,Greater Geelong (C),4,West Metro,0.0433
-22750,Greater Geelong (C),5,Barwon South West,0.9263
-22750,Greater Geelong (C),6,Gippsland,0.0004
-22750,Greater Geelong (C),7,Grampians,0.0019
-22750,Greater Geelong (C),8,Hume,0.0008
-22750,Greater Geelong (C),9,Loddon Mallee,0.001
-22830,Greater Shepparton (C),1,North Metro,0.0575
-22830,Greater Shepparton (C),2,South & East Metro,0.0056
-22830,Greater Shepparton (C),3,South Metro,0.0105
-22830,Greater Shepparton (C),4,West Metro,0.0578
-22830,Greater Shepparton (C),5,Barwon South West,0.0006
-22830,Greater Shepparton (C),6,Gippsland,0.0006
-22830,Greater Shepparton (C),7,Grampians,0.0004
-22830,Greater Shepparton (C),8,Hume,0.8513
-22830,Greater Shepparton (C),9,Loddon Mallee,0.0158
-22910,Hepburn (S),1,North Metro,0.0296
-22910,Hepburn (S),2,South & East Metro,0.0115
-22910,Hepburn (S),3,South Metro,0.0236
-22910,Hepburn (S),4,West Metro,0.08
-22910,Hepburn (S),5,Barwon South West,0.0139
-22910,Hepburn (S),6,Gippsland,0.0002
-22910,Hepburn (S),7,Grampians,0.7962
-22910,Hepburn (S),8,Hume,0.001
-22910,Hepburn (S),9,Loddon Mallee,0.0439
-22980,Hindmarsh (S),1,North Metro,0.0222
-22980,Hindmarsh (S),2,South & East Metro,0.0031
-22980,Hindmarsh (S),3,South Metro,0.0096
-22980,Hindmarsh (S),4,West Metro,0.0333
-22980,Hindmarsh (S),5,Barwon South West,0.0413
-22980,Hindmarsh (S),6,Gippsland,0.0004
-22980,Hindmarsh (S),7,Grampians,0.883
-22980,Hindmarsh (S),8,Hume,0.0015
-22980,Hindmarsh (S),9,Loddon Mallee,0.0057
-23110,Hobsons Bay (C),1,North Metro,0.0757
-23110,Hobsons Bay (C),2,South & East Metro,0.0077
-23110,Hobsons Bay (C),3,South Metro,0.0414
-23110,Hobsons Bay (C),4,West Metro,0.8686
-23110,Hobsons Bay (C),5,Barwon South West,0.0032
-23110,Hobsons Bay (C),6,Gippsland,0.0004
-23110,Hobsons Bay (C),7,Grampians,0.001
-23110,Hobsons Bay (C),8,Hume,0.0016
-23110,Hobsons Bay (C),9,Loddon Mallee,0.0004
-23190,Horsham (RC),1,North Metro,0.0157
-23190,Horsham (RC),2,South & East Metro,0.0021
-23190,Horsham (RC),3,South Metro,0.0071
-23190,Horsham (RC),4,West Metro,0.0555
-23190,Horsham (RC),5,Barwon South West,0.0293
-23190,Horsham (RC),6,Gippsland,0.0002
-23190,Horsham (RC),7,Grampians,0.8862
-23190,Horsham (RC),8,Hume,0.0002
-23190,Horsham (RC),9,Loddon Mallee,0.0036
-23270,Hume (C),1,North Metro,0.588
-23270,Hume (C),2,South & East Metro,0.007
-23270,Hume (C),3,South Metro,0.0138
-23270,Hume (C),4,West Metro,0.3822
-23270,Hume (C),5,Barwon South West,0.0006
-23270,Hume (C),6,Gippsland,0.0003
-23270,Hume (C),7,Grampians,0.0023
-23270,Hume (C),8,Hume,0.0048
-23270,Hume (C),9,Loddon Mallee,0.001
-23350,Indigo (S),1,North Metro,0.0345
-23350,Indigo (S),2,South & East Metro,0.0109
-23350,Indigo (S),3,South Metro,0.022
-23350,Indigo (S),4,West Metro,0.052
-23350,Indigo (S),5,Barwon South West,0.0019
-23350,Indigo (S),6,Gippsland,0.0003
-23350,Indigo (S),8,Hume,0.8779
-23350,Indigo (S),9,Loddon Mallee,0.0005
-23430,Kingston (C),1,North Metro,0.0217
-23430,Kingston (C),2,South & East Metro,0.4659
-23430,Kingston (C),3,South Metro,0.4644
-23430,Kingston (C),4,West Metro,0.0449
-23430,Kingston (C),5,Barwon South West,0.0007
-23430,Kingston (C),6,Gippsland,0.001
-23430,Kingston (C),7,Grampians,0.0004
-23430,Kingston (C),8,Hume,0.0005
-23430,Kingston (C),9,Loddon Mallee,0.0005
-23670,Knox (C),1,North Metro,0.0454
-23670,Knox (C),2,South & East Metro,0.8794
-23670,Knox (C),3,South Metro,0.0296
-23670,Knox (C),4,West Metro,0.0422
-23670,Knox (C),5,Barwon South West,0.0006
-23670,Knox (C),6,Gippsland,0.0016
-23670,Knox (C),7,Grampians,0.0002
-23670,Knox (C),8,Hume,0.0006
-23670,Knox (C),9,Loddon Mallee,0.0004
-23810,Latrobe (C),1,North Metro,0.0177
-23810,Latrobe (C),2,South & East Metro,0.0638
-23810,Latrobe (C),3,South Metro,0.0278
-23810,Latrobe (C),4,West Metro,0.0253
-23810,Latrobe (C),5,Barwon South West,0.0005
-23810,Latrobe (C),6,Gippsland,0.8639
-23810,Latrobe (C),7,Grampians,0.0002
-23810,Latrobe (C),8,Hume,0.0005
-23810,Latrobe (C),9,Loddon Mallee,0.0004
-23940,Loddon (S),1,North Metro,0.0301
-23940,Loddon (S),2,South & East Metro,0.0069
-23940,Loddon (S),3,South Metro,0.0056
-23940,Loddon (S),4,West Metro,0.0582
-23940,Loddon (S),5,Barwon South West,0.0049
-23940,Loddon (S),6,Gippsland,0.0013
-23940,Loddon (S),7,Grampians,0.0438
-23940,Loddon (S),8,Hume,0.0046
-23940,Loddon (S),9,Loddon Mallee,0.8446
-24130,Macedon Ranges (S),1,North Metro,0.1117
-24130,Macedon Ranges (S),2,South & East Metro,0.0121
-24130,Macedon Ranges (S),3,South Metro,0.0284
-24130,Macedon Ranges (S),4,West Metro,0.503
-24130,Macedon Ranges (S),5,Barwon South West,0.0044
-24130,Macedon Ranges (S),6,Gippsland,0.0004
-24130,Macedon Ranges (S),7,Grampians,0.2106
-24130,Macedon Ranges (S),8,Hume,0.0166
-24130,Macedon Ranges (S),9,Loddon Mallee,0.1129
-24210,Manningham (C),1,North Metro,0.3761
-24210,Manningham (C),2,South & East Metro,0.524
-24210,Manningham (C),3,South Metro,0.0205
-24210,Manningham (C),4,West Metro,0.0765
-24210,Manningham (C),5,Barwon South West,0.001
-24210,Manningham (C),6,Gippsland,0.0007
-24210,Manningham (C),7,Grampians,0.0003
-24210,Manningham (C),8,Hume,0.0006
-24210,Manningham (C),9,Loddon Mallee,0.0003
-24250,Mansfield (S),1,North Metro,0.0305
-24250,Mansfield (S),2,South & East Metro,0.0355
-24250,Mansfield (S),3,South Metro,0.0207
-24250,Mansfield (S),4,West Metro,0.064
-24250,Mansfield (S),5,Barwon South West,0.0013
-24250,Mansfield (S),6,Gippsland,0.0016
-24250,Mansfield (S),7,Grampians,0.0007
-24250,Mansfield (S),8,Hume,0.8444
-24250,Mansfield (S),9,Loddon Mallee,0.0013
-24330,Maribyrnong (C),1,North Metro,0.0744
-24330,Maribyrnong (C),2,South & East Metro,0.0088
-24330,Maribyrnong (C),3,South Metro,0.0269
-24330,Maribyrnong (C),4,West Metro,0.8854
-24330,Maribyrnong (C),5,Barwon South West,0.0023
-24330,Maribyrnong (C),6,Gippsland,0.0006
-24330,Maribyrnong (C),7,Grampians,0.0006
-24330,Maribyrnong (C),8,Hume,0.0007
-24330,Maribyrnong (C),9,Loddon Mallee,0.0003
-24410,Maroondah (C),1,North Metro,0.0666
-24410,Maroondah (C),2,South & East Metro,0.8559
-24410,Maroondah (C),3,South Metro,0.0224
-24410,Maroondah (C),4,West Metro,0.051
-24410,Maroondah (C),5,Barwon South West,0.0007
-24410,Maroondah (C),6,Gippsland,0.0013
-24410,Maroondah (C),7,Grampians,0.0003
-24410,Maroondah (C),8,Hume,0.0012
-24410,Maroondah (C),9,Loddon Mallee,0.0006
-24600,Melbourne (C),1,North Metro,0.1753
-24600,Melbourne (C),2,South & East Metro,0.019
-24600,Melbourne (C),3,South Metro,0.1425
-24600,Melbourne (C),4,West Metro,0.6575
-24600,Melbourne (C),5,Barwon South West,0.0026
-24600,Melbourne (C),6,Gippsland,0.0009
-24600,Melbourne (C),7,Grampians,0.0008
-24600,Melbourne (C),8,Hume,0.0007
-24600,Melbourne (C),9,Loddon Mallee,0.0006
-24650,Melton (S),1,North Metro,0.0735
-24650,Melton (S),2,South & East Metro,0.0084
-24650,Melton (S),3,South Metro,0.0205
-24650,Melton (S),4,West Metro,0.8801
-24650,Melton (S),5,Barwon South West,0.003
-24650,Melton (S),6,Gippsland,0.0003
-24650,Melton (S),7,Grampians,0.0118
-24650,Melton (S),8,Hume,0.0014
-24650,Melton (S),9,Loddon Mallee,0.0011
-24780,Mildura (RC),1,North Metro,0.0211
-24780,Mildura (RC),2,South & East Metro,0.0051
-24780,Mildura (RC),3,South Metro,0.0265
-24780,Mildura (RC),4,West Metro,0.05
-24780,Mildura (RC),5,Barwon South West,0.0011
-24780,Mildura (RC),6,Gippsland,0.0001
-24780,Mildura (RC),7,Grampians,0.0019
-24780,Mildura (RC),8,Hume,0.0008
-24780,Mildura (RC),9,Loddon Mallee,0.8934
-24850,Mitchell (S),1,North Metro,0.5838
-24850,Mitchell (S),2,South & East Metro,0.0074
-24850,Mitchell (S),3,South Metro,0.016
-24850,Mitchell (S),4,West Metro,0.1184
-24850,Mitchell (S),5,Barwon South West,0.0014
-24850,Mitchell (S),6,Gippsland,0.0004
-24850,Mitchell (S),7,Grampians,0.0033
-24850,Mitchell (S),8,Hume,0.26
-24850,Mitchell (S),9,Loddon Mallee,0.0093
-24900,Moira (S),1,North Metro,0.0419
-24900,Moira (S),2,South & East Metro,0.0072
-24900,Moira (S),3,South Metro,0.0121
-24900,Moira (S),4,West Metro,0.0562
-24900,Moira (S),5,Barwon South West,0.0011
-24900,Moira (S),6,Gippsland,0.0004
-24900,Moira (S),7,Grampians,0.0005
-24900,Moira (S),8,Hume,0.8549
-24900,Moira (S),9,Loddon Mallee,0.0258
-24970,Monash (C),1,North Metro,0.0395
-24970,Monash (C),2,South & East Metro,0.8432
-24970,Monash (C),3,South Metro,0.0715
-24970,Monash (C),4,West Metro,0.0435
-24970,Monash (C),5,Barwon South West,0.0005
-24970,Monash (C),6,Gippsland,0.001
-24970,Monash (C),7,Grampians,0.0003
-24970,Monash (C),8,Hume,0.0004
-24970,Monash (C),9,Loddon Mallee,0.0002
-25060,Moonee Valley (C),1,North Metro,0.1035
-25060,Moonee Valley (C),2,South & East Metro,0.0063
-25060,Moonee Valley (C),3,South Metro,0.0289
-25060,Moonee Valley (C),4,West Metro,0.8562
-25060,Moonee Valley (C),5,Barwon South West,0.0022
-25060,Moonee Valley (C),6,Gippsland,0.0005
-25060,Moonee Valley (C),7,Grampians,0.0005
-25060,Moonee Valley (C),8,Hume,0.0005
-25060,Moonee Valley (C),9,Loddon Mallee,0.0015
-25150,Moorabool (S),1,North Metro,0.0402
-25150,Moorabool (S),2,South & East Metro,0.0077
-25150,Moorabool (S),3,South Metro,0.0213
-25150,Moorabool (S),4,West Metro,0.5774
-25150,Moorabool (S),5,Barwon South West,0.0357
-25150,Moorabool (S),6,Gippsland,0.0013
-25150,Moorabool (S),7,Grampians,0.3112
-25150,Moorabool (S),8,Hume,0.0006
-25150,Moorabool (S),9,Loddon Mallee,0.0045
-25250,Moreland (C),1,North Metro,0.292
-25250,Moreland (C),2,South & East Metro,0.0062
-25250,Moreland (C),3,South Metro,0.0177
-25250,Moreland (C),4,West Metro,0.6802
-25250,Moreland (C),5,Barwon South West,0.0012
-25250,Moreland (C),6,Gippsland,0.0008
-25250,Moreland (C),7,Grampians,0.0003
-25250,Moreland (C),8,Hume,0.0011
-25250,Moreland (C),9,Loddon Mallee,0.0005
-25340,Mornington Peninsula (S),1,North Metro,0.0169
-25340,Mornington Peninsula (S),2,South & East Metro,0.0738
-25340,Mornington Peninsula (S),3,South Metro,0.8754
-25340,Mornington Peninsula (S),4,West Metro,0.0275
-25340,Mornington Peninsula (S),5,Barwon South West,0.0009
-25340,Mornington Peninsula (S),6,Gippsland,0.0032
-25340,Mornington Peninsula (S),7,Grampians,0.0006
-25340,Mornington Peninsula (S),8,Hume,0.0009
-25340,Mornington Peninsula (S),9,Loddon Mallee,0.0008
-25430,Mount Alexander (S),1,North Metro,0.0411
-25430,Mount Alexander (S),2,South & East Metro,0.008
-25430,Mount Alexander (S),3,South Metro,0.0235
-25430,Mount Alexander (S),4,West Metro,0.0581
-25430,Mount Alexander (S),5,Barwon South West,0.0039
-25430,Mount Alexander (S),6,Gippsland,0.0005
-25430,Mount Alexander (S),7,Grampians,0.0657
-25430,Mount Alexander (S),8,Hume,0.0009
-25430,Mount Alexander (S),9,Loddon Mallee,0.7982
-25490,Moyne (S),1,North Metro,0.0252
-25490,Moyne (S),2,South & East Metro,0.0055
-25490,Moyne (S),3,South Metro,0.0062
-25490,Moyne (S),4,West Metro,0.0281
-25490,Moyne (S),5,Barwon South West,0.9245
-25490,Moyne (S),6,Gippsland,0.0002
-25490,Moyne (S),7,Grampians,0.0079
-25490,Moyne (S),8,Hume,0.0014
-25490,Moyne (S),9,Loddon Mallee,0.001
-25620,Murrindindi (S),1,North Metro,0.2571
-25620,Murrindindi (S),2,South & East Metro,0.2899
-25620,Murrindindi (S),3,South Metro,0.0213
-25620,Murrindindi (S),4,West Metro,0.0698
-25620,Murrindindi (S),5,Barwon South West,0.0008
-25620,Murrindindi (S),6,Gippsland,0.0012
-25620,Murrindindi (S),7,Grampians,0.0006
-25620,Murrindindi (S),8,Hume,0.3566
-25620,Murrindindi (S),9,Loddon Mallee,0.0027
-25710,Nillumbik (S),1,North Metro,0.8029
-25710,Nillumbik (S),2,South & East Metro,0.0702
-25710,Nillumbik (S),3,South Metro,0.0215
-25710,Nillumbik (S),4,West Metro,0.0988
-25710,Nillumbik (S),5,Barwon South West,0.0014
-25710,Nillumbik (S),6,Gippsland,0.0009
-25710,Nillumbik (S),7,Grampians,0.0005
-25710,Nillumbik (S),8,Hume,0.003
-25710,Nillumbik (S),9,Loddon Mallee,0.0006
-25810,Northern Grampians (S),1,North Metro,0.0208
-25810,Northern Grampians (S),2,South & East Metro,0.0072
-25810,Northern Grampians (S),3,South Metro,0.0089
-25810,Northern Grampians (S),4,West Metro,0.0366
-25810,Northern Grampians (S),5,Barwon South West,0.0208
-25810,Northern Grampians (S),7,Grampians,0.8328
-25810,Northern Grampians (S),8,Hume,0.0019
-25810,Northern Grampians (S),9,Loddon Mallee,0.0708
-25900,Port Phillip (C),1,North Metro,0.0567
-25900,Port Phillip (C),2,South & East Metro,0.0305
-25900,Port Phillip (C),3,South Metro,0.7188
-25900,Port Phillip (C),4,West Metro,0.1889
-25900,Port Phillip (C),5,Barwon South West,0.002
-25900,Port Phillip (C),6,Gippsland,0.0009
-25900,Port Phillip (C),7,Grampians,0.0009
-25900,Port Phillip (C),8,Hume,0.0007
-25900,Port Phillip (C),9,Loddon Mallee,0.0005
-25990,Pyrenees (S),1,North Metro,0.0302
-25990,Pyrenees (S),2,South & East Metro,0.009
-25990,Pyrenees (S),3,South Metro,0.0277
-25990,Pyrenees (S),4,West Metro,0.0481
-25990,Pyrenees (S),5,Barwon South West,0.0183
-25990,Pyrenees (S),6,Gippsland,0.0011
-25990,Pyrenees (S),7,Grampians,0.8524
-25990,Pyrenees (S),9,Loddon Mallee,0.0133
-26080,Queenscliffe (B),1,North Metro,0.0421
-26080,Queenscliffe (B),2,South & East Metro,0.0065
-26080,Queenscliffe (B),3,South Metro,0.0178
-26080,Queenscliffe (B),4,West Metro,0.0535
-26080,Queenscliffe (B),5,Barwon South West,0.8784
-26080,Queenscliffe (B),9,Loddon Mallee,0.0016
-26170,South Gippsland (S),1,North Metro,0.0284
-26170,South Gippsland (S),2,South & East Metro,0.1099
-26170,South Gippsland (S),3,South Metro,0.0663
-26170,South Gippsland (S),4,West Metro,0.0346
-26170,South Gippsland (S),5,Barwon South West,0.0015
-26170,South Gippsland (S),6,Gippsland,0.7578
-26170,South Gippsland (S),7,Grampians,0.0003
-26170,South Gippsland (S),8,Hume,0.0006
-26170,South Gippsland (S),9,Loddon Mallee,0.0006
-26260,Southern Grampians (S),1,North Metro,0.013
-26260,Southern Grampians (S),2,South & East Metro,0.0025
-26260,Southern Grampians (S),3,South Metro,0.0069
-26260,Southern Grampians (S),4,West Metro,0.0351
-26260,Southern Grampians (S),5,Barwon South West,0.9196
-26260,Southern Grampians (S),7,Grampians,0.0222
-26260,Southern Grampians (S),9,Loddon Mallee,0.0008
-26350,Stonnington (C),1,North Metro,0.0485
-26350,Stonnington (C),2,South & East Metro,0.1284
-26350,Stonnington (C),3,South Metro,0.6762
-26350,Stonnington (C),4,West Metro,0.1418
-26350,Stonnington (C),5,Barwon South West,0.0025
-26350,Stonnington (C),6,Gippsland,0.0009
-26350,Stonnington (C),7,Grampians,0.0006
-26350,Stonnington (C),8,Hume,0.0007
-26350,Stonnington (C),9,Loddon Mallee,0.0004
-26430,Strathbogie (S),1,North Metro,0.1168
-26430,Strathbogie (S),2,South & East Metro,0.0068
-26430,Strathbogie (S),3,South Metro,0.0271
-26430,Strathbogie (S),4,West Metro,0.1034
-26430,Strathbogie (S),5,Barwon South West,0.0024
-26430,Strathbogie (S),6,Gippsland,0.0009
-26430,Strathbogie (S),7,Grampians,0.0012
-26430,Strathbogie (S),8,Hume,0.7244
-26430,Strathbogie (S),9,Loddon Mallee,0.017
-26490,Surf Coast (S),1,North Metro,0.0192
-26490,Surf Coast (S),2,South & East Metro,0.0055
-26490,Surf Coast (S),3,South Metro,0.0214
-26490,Surf Coast (S),4,West Metro,0.0983
-26490,Surf Coast (S),5,Barwon South West,0.8469
-26490,Surf Coast (S),6,Gippsland,0.0009
-26490,Surf Coast (S),7,Grampians,0.0031
-26490,Surf Coast (S),8,Hume,0.0021
-26490,Surf Coast (S),9,Loddon Mallee,0.0025
-26610,Swan Hill (RC),1,North Metro,0.0419
-26610,Swan Hill (RC),2,South & East Metro,0.0074
-26610,Swan Hill (RC),3,South Metro,0.0101
-26610,Swan Hill (RC),4,West Metro,0.0538
-26610,Swan Hill (RC),5,Barwon South West,0.0011
-26610,Swan Hill (RC),6,Gippsland,0.0001
-26610,Swan Hill (RC),7,Grampians,0.0028
-26610,Swan Hill (RC),8,Hume,0.0012
-26610,Swan Hill (RC),9,Loddon Mallee,0.8815
-26670,Towong (S),1,North Metro,0.0356
-26670,Towong (S),2,South & East Metro,0.0116
-26670,Towong (S),3,South Metro,0.008
-26670,Towong (S),4,West Metro,0.0523
-26670,Towong (S),5,Barwon South West,0.0007
-26670,Towong (S),6,Gippsland,0.0007
-26670,Towong (S),8,Hume,0.8911
-26700,Wangaratta (RC),1,North Metro,0.017
-26700,Wangaratta (RC),2,South & East Metro,0.0062
-26700,Wangaratta (RC),3,South Metro,0.0103
-26700,Wangaratta (RC),4,West Metro,0.0587
-26700,Wangaratta (RC),5,Barwon South West,0.0003
-26700,Wangaratta (RC),6,Gippsland,0.0008
-26700,Wangaratta (RC),7,Grampians,0.0005
-26700,Wangaratta (RC),8,Hume,0.9049
-26700,Wangaratta (RC),9,Loddon Mallee,0.0013
-26730,Warrnambool (C),1,North Metro,0.0203
-26730,Warrnambool (C),2,South & East Metro,0.0043
-26730,Warrnambool (C),3,South Metro,0.0095
-26730,Warrnambool (C),4,West Metro,0.0294
-26730,Warrnambool (C),5,Barwon South West,0.9313
-26730,Warrnambool (C),6,Gippsland,0.0004
-26730,Warrnambool (C),7,Grampians,0.004
-26730,Warrnambool (C),8,Hume,0.0002
-26730,Warrnambool (C),9,Loddon Mallee,0.0005
-26810,Wellington (S),1,North Metro,0.0397
-26810,Wellington (S),2,South & East Metro,0.0527
-26810,Wellington (S),3,South Metro,0.0244
-26810,Wellington (S),4,West Metro,0.0314
-26810,Wellington (S),5,Barwon South West,0.0024
-26810,Wellington (S),6,Gippsland,0.8476
-26810,Wellington (S),7,Grampians,0.0005
-26810,Wellington (S),8,Hume,0.0006
-26810,Wellington (S),9,Loddon Mallee,0.0008
-26890,West Wimmera (S),1,North Metro,0.0142
-26890,West Wimmera (S),2,South & East Metro,0.0007
-26890,West Wimmera (S),3,South Metro,0.0121
-26890,West Wimmera (S),4,West Metro,0.0376
-26890,West Wimmera (S),5,Barwon South West,0.125
-26890,West Wimmera (S),7,Grampians,0.8075
-26890,West Wimmera (S),9,Loddon Mallee,0.0028
-26980,Whitehorse (C),1,North Metro,0.0917
-26980,Whitehorse (C),2,South & East Metro,0.817
-26980,Whitehorse (C),3,South Metro,0.0289
-26980,Whitehorse (C),4,West Metro,0.0594
-26980,Whitehorse (C),5,Barwon South West,0.001
-26980,Whitehorse (C),6,Gippsland,0.0011
-26980,Whitehorse (C),7,Grampians,0.0004
-26980,Whitehorse (C),8,Hume,0.0003
-26980,Whitehorse (C),9,Loddon Mallee,0.0001
-27070,Whittlesea (C),1,North Metro,0.8817
-27070,Whittlesea (C),2,South & East Metro,0.0097
-27070,Whittlesea (C),3,South Metro,0.0107
-27070,Whittlesea (C),4,West Metro,0.0903
-27070,Whittlesea (C),5,Barwon South West,0.0009
-27070,Whittlesea (C),6,Gippsland,0.0005
-27070,Whittlesea (C),7,Grampians,0.0005
-27070,Whittlesea (C),8,Hume,0.0052
-27070,Whittlesea (C),9,Loddon Mallee,0.0006
-27170,Wodonga (RC),1,North Metro,0.0374
-27170,Wodonga (RC),2,South & East Metro,0.009
-27170,Wodonga (RC),3,South Metro,0.0161
-27170,Wodonga (RC),4,West Metro,0.061
-27170,Wodonga (RC),5,Barwon South West,0.0004
-27170,Wodonga (RC),6,Gippsland,0.0005
-27170,Wodonga (RC),7,Grampians,0.0004
-27170,Wodonga (RC),8,Hume,0.8737
-27170,Wodonga (RC),9,Loddon Mallee,0.0015
-27260,Wyndham (C),1,North Metro,0.0835
-27260,Wyndham (C),2,South & East Metro,0.0065
-27260,Wyndham (C),3,South Metro,0.0216
-27260,Wyndham (C),4,West Metro,0.8703
-27260,Wyndham (C),5,Barwon South West,0.0158
-27260,Wyndham (C),6,Gippsland,0.0003
-27260,Wyndham (C),7,Grampians,0.001
-27260,Wyndham (C),8,Hume,0.0005
-27260,Wyndham (C),9,Loddon Mallee,0.0005
-27350,Yarra (C),1,North Metro,0.5838
-27350,Yarra (C),2,South & East Metro,0.0222
-27350,Yarra (C),3,South Metro,0.087
-27350,Yarra (C),4,West Metro,0.3022
-27350,Yarra (C),5,Barwon South West,0.0016
-27350,Yarra (C),6,Gippsland,0.0008
-27350,Yarra (C),7,Grampians,0.0007
-27350,Yarra (C),8,Hume,0.0011
-27350,Yarra (C),9,Loddon Mallee,0.0006
-27450,Yarra Ranges (S),1,North Metro,0.0579
-27450,Yarra Ranges (S),2,South & East Metro,0.8637
-27450,Yarra Ranges (S),3,South Metro,0.0207
-27450,Yarra Ranges (S),4,West Metro,0.051
-27450,Yarra Ranges (S),5,Barwon South West,0.001
-27450,Yarra Ranges (S),6,Gippsland,0.0024
-27450,Yarra Ranges (S),7,Grampians,0.0003
-27450,Yarra Ranges (S),8,Hume,0.0021
-27450,Yarra Ranges (S),9,Loddon Mallee,0.0009
-27630,Yarriambiack (S),1,North Metro,0.0158
-27630,Yarriambiack (S),2,South & East Metro,0.0036
-27630,Yarriambiack (S),3,South Metro,0.0184
-27630,Yarriambiack (S),4,West Metro,0.0509
-27630,Yarriambiack (S),5,Barwon South West,0.0177
-27630,Yarriambiack (S),6,Gippsland,0.0003
-27630,Yarriambiack (S),7,Grampians,0.8509
-27630,Yarriambiack (S),8,Hume,0.0013
-27630,Yarriambiack (S),9,Loddon Mallee,0.0411
+lga_id,lga_name,cluster_id,cluster_name,proportion,population
+20110,Alpine (S),1,North Metro,0.0368,12730
+20110,Alpine (S),2,South & East Metro,0.0059,12730
+20110,Alpine (S),3,South Metro,0.0166,12730
+20110,Alpine (S),4,West Metro,0.0609,12730
+20110,Alpine (S),5,Barwon South West,0.0011,12730
+20110,Alpine (S),6,Gippsland,0.0017,12730
+20110,Alpine (S),8,Hume,0.8751,12730
+20110,Alpine (S),9,Loddon Mallee,0.002,12730
+20260,Ararat (RC),1,North Metro,0.0187,11795
+20260,Ararat (RC),2,South & East Metro,0.0034,11795
+20260,Ararat (RC),3,South Metro,0.0145,11795
+20260,Ararat (RC),4,West Metro,0.0338,11795
+20260,Ararat (RC),5,Barwon South West,0.0262,11795
+20260,Ararat (RC),7,Grampians,0.9013,11795
+20260,Ararat (RC),8,Hume,0.0002,11795
+20260,Ararat (RC),9,Loddon Mallee,0.0021,11795
+20570,Ballarat (C),1,North Metro,0.0154,107325
+20570,Ballarat (C),2,South & East Metro,0.0037,107325
+20570,Ballarat (C),3,South Metro,0.0125,107325
+20570,Ballarat (C),4,West Metro,0.0504,107325
+20570,Ballarat (C),5,Barwon South West,0.0168,107325
+20570,Ballarat (C),6,Gippsland,0.0006,107325
+20570,Ballarat (C),7,Grampians,0.8974,107325
+20570,Ballarat (C),8,Hume,0.0007,107325
+20570,Ballarat (C),9,Loddon Mallee,0.0025,107325
+20660,Banyule (C),1,North Metro,0.8723,130237
+20660,Banyule (C),2,South & East Metro,0.0249,130237
+20660,Banyule (C),3,South Metro,0.0133,130237
+20660,Banyule (C),4,West Metro,0.0849,130237
+20660,Banyule (C),5,Barwon South West,0.0015,130237
+20660,Banyule (C),6,Gippsland,0.0009,130237
+20660,Banyule (C),7,Grampians,0.0004,130237
+20660,Banyule (C),8,Hume,0.0011,130237
+20660,Banyule (C),9,Loddon Mallee,0.0008,130237
+20740,Bass Coast (S),1,North Metro,0.0283,35327
+20740,Bass Coast (S),2,South & East Metro,0.1917,35327
+20740,Bass Coast (S),3,South Metro,0.0807,35327
+20740,Bass Coast (S),4,West Metro,0.0339,35327
+20740,Bass Coast (S),5,Barwon South West,0.0005,35327
+20740,Bass Coast (S),6,Gippsland,0.6637,35327
+20740,Bass Coast (S),7,Grampians,0.0002,35327
+20740,Bass Coast (S),8,Hume,0.0006,35327
+20740,Bass Coast (S),9,Loddon Mallee,0.0004,35327
+20830,Baw Baw (S),1,North Metro,0.0192,52015
+20830,Baw Baw (S),2,South & East Metro,0.1579,52015
+20830,Baw Baw (S),3,South Metro,0.0324,52015
+20830,Baw Baw (S),4,West Metro,0.0287,52015
+20830,Baw Baw (S),5,Barwon South West,0.0008,52015
+20830,Baw Baw (S),6,Gippsland,0.7593,52015
+20830,Baw Baw (S),7,Grampians,0.0003,52015
+20830,Baw Baw (S),8,Hume,0.0005,52015
+20830,Baw Baw (S),9,Loddon Mallee,0.001,52015
+20910,Bayside (C),1,North Metro,0.0256,105718
+20910,Bayside (C),2,South & East Metro,0.184,105718
+20910,Bayside (C),3,South Metro,0.7066,105718
+20910,Bayside (C),4,West Metro,0.0801,105718
+20910,Bayside (C),5,Barwon South West,0.0014,105718
+20910,Bayside (C),6,Gippsland,0.0007,105718
+20910,Bayside (C),7,Grampians,0.0003,105718
+20910,Bayside (C),8,Hume,0.0011,105718
+20910,Bayside (C),9,Loddon Mallee,0.0004,105718
+21010,Benalla (RC),1,North Metro,0.0365,14024
+21010,Benalla (RC),2,South & East Metro,0.006,14024
+21010,Benalla (RC),3,South Metro,0.0147,14024
+21010,Benalla (RC),4,West Metro,0.0504,14024
+21010,Benalla (RC),5,Barwon South West,0.0017,14024
+21010,Benalla (RC),6,Gippsland,0.001,14024
+21010,Benalla (RC),7,Grampians,0.0003,14024
+21010,Benalla (RC),8,Hume,0.8873,14024
+21010,Benalla (RC),9,Loddon Mallee,0.0021,14024
+21110,Boroondara (C),1,North Metro,0.3153,181289
+21110,Boroondara (C),2,South & East Metro,0.3922,181289
+21110,Boroondara (C),3,South Metro,0.127,181289
+21110,Boroondara (C),4,West Metro,0.1598,181289
+21110,Boroondara (C),5,Barwon South West,0.0025,181289
+21110,Boroondara (C),6,Gippsland,0.0014,181289
+21110,Boroondara (C),7,Grampians,0.0005,181289
+21110,Boroondara (C),8,Hume,0.0007,181289
+21110,Boroondara (C),9,Loddon Mallee,0.0006,181289
+21180,Brimbank (C),1,North Metro,0.0568,208714
+21180,Brimbank (C),2,South & East Metro,0.0061,208714
+21180,Brimbank (C),3,South Metro,0.0155,208714
+21180,Brimbank (C),4,West Metro,0.9185,208714
+21180,Brimbank (C),5,Barwon South West,0.0012,208714
+21180,Brimbank (C),6,Gippsland,0.0003,208714
+21180,Brimbank (C),7,Grampians,0.0006,208714
+21180,Brimbank (C),8,Hume,0.0005,208714
+21180,Brimbank (C),9,Loddon Mallee,0.0005,208714
+21270,Buloke (S),1,North Metro,0.0338,6184
+21270,Buloke (S),2,South & East Metro,0.0101,6184
+21270,Buloke (S),3,South Metro,0.0116,6184
+21270,Buloke (S),4,West Metro,0.0435,6184
+21270,Buloke (S),5,Barwon South West,0.0111,6184
+21270,Buloke (S),6,Gippsland,0.0005,6184
+21270,Buloke (S),7,Grampians,0.4505,6184
+21270,Buloke (S),8,Hume,0.0029,6184
+21270,Buloke (S),9,Loddon Mallee,0.436,6184
+21370,Campaspe (S),1,North Metro,0.0445,37592
+21370,Campaspe (S),2,South & East Metro,0.0049,37592
+21370,Campaspe (S),3,South Metro,0.0099,37592
+21370,Campaspe (S),4,West Metro,0.0358,37592
+21370,Campaspe (S),5,Barwon South West,0.0012,37592
+21370,Campaspe (S),6,Gippsland,0.0005,37592
+21370,Campaspe (S),7,Grampians,0.0014,37592
+21370,Campaspe (S),8,Hume,0.3056,37592
+21370,Campaspe (S),9,Loddon Mallee,0.5963,37592
+21450,Cardinia (S),1,North Metro,0.021,107120
+21450,Cardinia (S),2,South & East Metro,0.8373,107120
+21450,Cardinia (S),3,South Metro,0.0387,107120
+21450,Cardinia (S),4,West Metro,0.034,107120
+21450,Cardinia (S),5,Barwon South West,0.0007,107120
+21450,Cardinia (S),6,Gippsland,0.0669,107120
+21450,Cardinia (S),7,Grampians,0.0005,107120
+21450,Cardinia (S),8,Hume,0.0004,107120
+21450,Cardinia (S),9,Loddon Mallee,0.0005,107120
+21610,Casey (C),1,North Metro,0.0188,340419
+21610,Casey (C),2,South & East Metro,0.8419,340419
+21610,Casey (C),3,South Metro,0.1022,340419
+21610,Casey (C),4,West Metro,0.0312,340419
+21610,Casey (C),5,Barwon South West,0.0004,340419
+21610,Casey (C),6,Gippsland,0.0042,340419
+21610,Casey (C),7,Grampians,0.0004,340419
+21610,Casey (C),8,Hume,0.0005,340419
+21610,Casey (C),9,Loddon Mallee,0.0003,340419
+21670,Central Goldfields (S),1,North Metro,0.0153,13209
+21670,Central Goldfields (S),2,South & East Metro,0.0053,13209
+21670,Central Goldfields (S),3,South Metro,0.0102,13209
+21670,Central Goldfields (S),4,West Metro,0.0343,13209
+21670,Central Goldfields (S),5,Barwon South West,0.0175,13209
+21670,Central Goldfields (S),6,Gippsland,0.001,13209
+21670,Central Goldfields (S),7,Grampians,0.8173,13209
+21670,Central Goldfields (S),8,Hume,0.0007,13209
+21670,Central Goldfields (S),9,Loddon Mallee,0.0983,13209
+21750,Colac-Otway (S),1,North Metro,0.0073,21503
+21750,Colac-Otway (S),2,South & East Metro,0.0032,21503
+21750,Colac-Otway (S),3,South Metro,0.0126,21503
+21750,Colac-Otway (S),4,West Metro,0.0342,21503
+21750,Colac-Otway (S),5,Barwon South West,0.936,21503
+21750,Colac-Otway (S),7,Grampians,0.0048,21503
+21750,Colac-Otway (S),8,Hume,0.0007,21503
+21750,Colac-Otway (S),9,Loddon Mallee,0.0012,21503
+21830,Corangamite (S),1,North Metro,0.0199,16140
+21830,Corangamite (S),2,South & East Metro,0.0034,16140
+21830,Corangamite (S),3,South Metro,0.0106,16140
+21830,Corangamite (S),4,West Metro,0.0611,16140
+21830,Corangamite (S),5,Barwon South West,0.8534,16140
+21830,Corangamite (S),6,Gippsland,0.0005,16140
+21830,Corangamite (S),7,Grampians,0.0493,16140
+21830,Corangamite (S),8,Hume,0.0005,16140
+21830,Corangamite (S),9,Loddon Mallee,0.0012,16140
+21890,Darebin (C),1,North Metro,0.8269,161609
+21890,Darebin (C),2,South & East Metro,0.0134,161609
+21890,Darebin (C),3,South Metro,0.0171,161609
+21890,Darebin (C),4,West Metro,0.1393,161609
+21890,Darebin (C),5,Barwon South West,0.0009,161609
+21890,Darebin (C),6,Gippsland,0.0006,161609
+21890,Darebin (C),7,Grampians,0.0004,161609
+21890,Darebin (C),8,Hume,0.0008,161609
+21890,Darebin (C),9,Loddon Mallee,0.0006,161609
+22110,East Gippsland (S),1,North Metro,0.0282,46818
+22110,East Gippsland (S),2,South & East Metro,0.0454,46818
+22110,East Gippsland (S),3,South Metro,0.0373,46818
+22110,East Gippsland (S),4,West Metro,0.0368,46818
+22110,East Gippsland (S),5,Barwon South West,0.0009,46818
+22110,East Gippsland (S),6,Gippsland,0.8492,46818
+22110,East Gippsland (S),7,Grampians,0.0005,46818
+22110,East Gippsland (S),8,Hume,0.0012,46818
+22110,East Gippsland (S),9,Loddon Mallee,0.0005,46818
+22170,Frankston (C),1,North Metro,0.0152,141845
+22170,Frankston (C),2,South & East Metro,0.1428,141845
+22170,Frankston (C),3,South Metro,0.8071,141845
+22170,Frankston (C),4,West Metro,0.0297,141845
+22170,Frankston (C),5,Barwon South West,0.0007,141845
+22170,Frankston (C),6,Gippsland,0.0025,141845
+22170,Frankston (C),7,Grampians,0.0002,141845
+22170,Frankston (C),8,Hume,0.0013,141845
+22170,Frankston (C),9,Loddon Mallee,0.0005,141845
+22250,Gannawarra (S),1,North Metro,0.04,10547
+22250,Gannawarra (S),2,South & East Metro,0.006,10547
+22250,Gannawarra (S),3,South Metro,0.0237,10547
+22250,Gannawarra (S),4,West Metro,0.0393,10547
+22250,Gannawarra (S),5,Barwon South West,0.0017,10547
+22250,Gannawarra (S),6,Gippsland,0.0007,10547
+22250,Gannawarra (S),7,Grampians,0.0012,10547
+22250,Gannawarra (S),8,Hume,0.0041,10547
+22250,Gannawarra (S),9,Loddon Mallee,0.8833,10547
+22310,Glen Eira (C),1,North Metro,0.0341,153858
+22310,Glen Eira (C),2,South & East Metro,0.3796,153858
+22310,Glen Eira (C),3,South Metro,0.4963,153858
+22310,Glen Eira (C),4,West Metro,0.0868,153858
+22310,Glen Eira (C),5,Barwon South West,0.0008,153858
+22310,Glen Eira (C),6,Gippsland,0.0005,153858
+22310,Glen Eira (C),7,Grampians,0.0011,153858
+22310,Glen Eira (C),8,Hume,0.0003,153858
+22310,Glen Eira (C),9,Loddon Mallee,0.0005,153858
+22410,Glenelg (S),1,North Metro,0.0166,19665
+22410,Glenelg (S),2,South & East Metro,0.0023,19665
+22410,Glenelg (S),3,South Metro,0.0074,19665
+22410,Glenelg (S),4,West Metro,0.0325,19665
+22410,Glenelg (S),5,Barwon South West,0.932,19665
+22410,Glenelg (S),6,Gippsland,0.0004,19665
+22410,Glenelg (S),7,Grampians,0.0074,19665
+22410,Glenelg (S),8,Hume,0.0005,19665
+22410,Glenelg (S),9,Loddon Mallee,0.0011,19665
+22490,Golden Plains (S),1,North Metro,0.0107,23120
+22490,Golden Plains (S),2,South & East Metro,0.0032,23120
+22490,Golden Plains (S),3,South Metro,0.0146,23120
+22490,Golden Plains (S),4,West Metro,0.0604,23120
+22490,Golden Plains (S),5,Barwon South West,0.5004,23120
+22490,Golden Plains (S),6,Gippsland,0.0003,23120
+22490,Golden Plains (S),7,Grampians,0.4077,23120
+22490,Golden Plains (S),8,Hume,0.0005,23120
+22490,Golden Plains (S),9,Loddon Mallee,0.0021,23120
+22620,Greater Bendigo (C),1,North Metro,0.0299,116045
+22620,Greater Bendigo (C),2,South & East Metro,0.0065,116045
+22620,Greater Bendigo (C),3,South Metro,0.0106,116045
+22620,Greater Bendigo (C),4,West Metro,0.0479,116045
+22620,Greater Bendigo (C),5,Barwon South West,0.0013,116045
+22620,Greater Bendigo (C),6,Gippsland,0.0004,116045
+22620,Greater Bendigo (C),7,Grampians,0.0041,116045
+22620,Greater Bendigo (C),8,Hume,0.0026,116045
+22620,Greater Bendigo (C),9,Loddon Mallee,0.8968,116045
+22670,Greater Dandenong (C),1,North Metro,0.0244,166094
+22670,Greater Dandenong (C),2,South & East Metro,0.9138,166094
+22670,Greater Dandenong (C),3,South Metro,0.0395,166094
+22670,Greater Dandenong (C),4,West Metro,0.0202,166094
+22670,Greater Dandenong (C),5,Barwon South West,0.0003,166094
+22670,Greater Dandenong (C),6,Gippsland,0.0011,166094
+22670,Greater Dandenong (C),7,Grampians,0.0001,166094
+22670,Greater Dandenong (C),8,Hume,0.0003,166094
+22670,Greater Dandenong (C),9,Loddon Mallee,0.0003,166094
+22750,Greater Geelong (C),1,North Metro,0.0109,252217
+22750,Greater Geelong (C),2,South & East Metro,0.0027,252217
+22750,Greater Geelong (C),3,South Metro,0.0128,252217
+22750,Greater Geelong (C),4,West Metro,0.0433,252217
+22750,Greater Geelong (C),5,Barwon South West,0.9263,252217
+22750,Greater Geelong (C),6,Gippsland,0.0004,252217
+22750,Greater Geelong (C),7,Grampians,0.0019,252217
+22750,Greater Geelong (C),8,Hume,0.0008,252217
+22750,Greater Geelong (C),9,Loddon Mallee,0.001,252217
+22830,Greater Shepparton (C),1,North Metro,0.0575,66007
+22830,Greater Shepparton (C),2,South & East Metro,0.0056,66007
+22830,Greater Shepparton (C),3,South Metro,0.0105,66007
+22830,Greater Shepparton (C),4,West Metro,0.0578,66007
+22830,Greater Shepparton (C),5,Barwon South West,0.0006,66007
+22830,Greater Shepparton (C),6,Gippsland,0.0006,66007
+22830,Greater Shepparton (C),7,Grampians,0.0004,66007
+22830,Greater Shepparton (C),8,Hume,0.8513,66007
+22830,Greater Shepparton (C),9,Loddon Mallee,0.0158,66007
+22910,Hepburn (S),1,North Metro,0.0296,15812
+22910,Hepburn (S),2,South & East Metro,0.0115,15812
+22910,Hepburn (S),3,South Metro,0.0236,15812
+22910,Hepburn (S),4,West Metro,0.08,15812
+22910,Hepburn (S),5,Barwon South West,0.0139,15812
+22910,Hepburn (S),6,Gippsland,0.0002,15812
+22910,Hepburn (S),7,Grampians,0.7962,15812
+22910,Hepburn (S),8,Hume,0.001,15812
+22910,Hepburn (S),9,Loddon Mallee,0.0439,15812
+22980,Hindmarsh (S),1,North Metro,0.0222,5645
+22980,Hindmarsh (S),2,South & East Metro,0.0031,5645
+22980,Hindmarsh (S),3,South Metro,0.0096,5645
+22980,Hindmarsh (S),4,West Metro,0.0333,5645
+22980,Hindmarsh (S),5,Barwon South West,0.0413,5645
+22980,Hindmarsh (S),6,Gippsland,0.0004,5645
+22980,Hindmarsh (S),7,Grampians,0.883,5645
+22980,Hindmarsh (S),8,Hume,0.0015,5645
+22980,Hindmarsh (S),9,Loddon Mallee,0.0057,5645
+23110,Hobsons Bay (C),1,North Metro,0.0757,96470
+23110,Hobsons Bay (C),2,South & East Metro,0.0077,96470
+23110,Hobsons Bay (C),3,South Metro,0.0414,96470
+23110,Hobsons Bay (C),4,West Metro,0.8686,96470
+23110,Hobsons Bay (C),5,Barwon South West,0.0032,96470
+23110,Hobsons Bay (C),6,Gippsland,0.0004,96470
+23110,Hobsons Bay (C),7,Grampians,0.001,96470
+23110,Hobsons Bay (C),8,Hume,0.0016,96470
+23110,Hobsons Bay (C),9,Loddon Mallee,0.0004,96470
+23190,Horsham (RC),1,North Metro,0.0157,19875
+23190,Horsham (RC),2,South & East Metro,0.0021,19875
+23190,Horsham (RC),3,South Metro,0.0071,19875
+23190,Horsham (RC),4,West Metro,0.0555,19875
+23190,Horsham (RC),5,Barwon South West,0.0293,19875
+23190,Horsham (RC),6,Gippsland,0.0002,19875
+23190,Horsham (RC),7,Grampians,0.8862,19875
+23190,Horsham (RC),8,Hume,0.0002,19875
+23190,Horsham (RC),9,Loddon Mallee,0.0036,19875
+23270,Hume (C),1,North Metro,0.588,224394
+23270,Hume (C),2,South & East Metro,0.007,224394
+23270,Hume (C),3,South Metro,0.0138,224394
+23270,Hume (C),4,West Metro,0.3822,224394
+23270,Hume (C),5,Barwon South West,0.0006,224394
+23270,Hume (C),6,Gippsland,0.0003,224394
+23270,Hume (C),7,Grampians,0.0023,224394
+23270,Hume (C),8,Hume,0.0048,224394
+23270,Hume (C),9,Loddon Mallee,0.001,224394
+23350,Indigo (S),1,North Metro,0.0345,16490
+23350,Indigo (S),2,South & East Metro,0.0109,16490
+23350,Indigo (S),3,South Metro,0.022,16490
+23350,Indigo (S),4,West Metro,0.052,16490
+23350,Indigo (S),5,Barwon South West,0.0019,16490
+23350,Indigo (S),6,Gippsland,0.0003,16490
+23350,Indigo (S),8,Hume,0.8779,16490
+23350,Indigo (S),9,Loddon Mallee,0.0005,16490
+23430,Kingston (C),1,North Metro,0.0217,163431
+23430,Kingston (C),2,South & East Metro,0.4659,163431
+23430,Kingston (C),3,South Metro,0.4644,163431
+23430,Kingston (C),4,West Metro,0.0449,163431
+23430,Kingston (C),5,Barwon South West,0.0007,163431
+23430,Kingston (C),6,Gippsland,0.001,163431
+23430,Kingston (C),7,Grampians,0.0004,163431
+23430,Kingston (C),8,Hume,0.0005,163431
+23430,Kingston (C),9,Loddon Mallee,0.0005,163431
+23670,Knox (C),1,North Metro,0.0454,163203
+23670,Knox (C),2,South & East Metro,0.8794,163203
+23670,Knox (C),3,South Metro,0.0296,163203
+23670,Knox (C),4,West Metro,0.0422,163203
+23670,Knox (C),5,Barwon South West,0.0006,163203
+23670,Knox (C),6,Gippsland,0.0016,163203
+23670,Knox (C),7,Grampians,0.0002,163203
+23670,Knox (C),8,Hume,0.0006,163203
+23670,Knox (C),9,Loddon Mallee,0.0004,163203
+23810,Latrobe (C),1,North Metro,0.0177,75211
+23810,Latrobe (C),2,South & East Metro,0.0638,75211
+23810,Latrobe (C),3,South Metro,0.0278,75211
+23810,Latrobe (C),4,West Metro,0.0253,75211
+23810,Latrobe (C),5,Barwon South West,0.0005,75211
+23810,Latrobe (C),6,Gippsland,0.8639,75211
+23810,Latrobe (C),7,Grampians,0.0002,75211
+23810,Latrobe (C),8,Hume,0.0005,75211
+23810,Latrobe (C),9,Loddon Mallee,0.0004,75211
+23940,Loddon (S),1,North Metro,0.0301,7513
+23940,Loddon (S),2,South & East Metro,0.0069,7513
+23940,Loddon (S),3,South Metro,0.0056,7513
+23940,Loddon (S),4,West Metro,0.0582,7513
+23940,Loddon (S),5,Barwon South West,0.0049,7513
+23940,Loddon (S),6,Gippsland,0.0013,7513
+23940,Loddon (S),7,Grampians,0.0438,7513
+23940,Loddon (S),8,Hume,0.0046,7513
+23940,Loddon (S),9,Loddon Mallee,0.8446,7513
+24130,Macedon Ranges (S),1,North Metro,0.1117,49388
+24130,Macedon Ranges (S),2,South & East Metro,0.0121,49388
+24130,Macedon Ranges (S),3,South Metro,0.0284,49388
+24130,Macedon Ranges (S),4,West Metro,0.503,49388
+24130,Macedon Ranges (S),5,Barwon South West,0.0044,49388
+24130,Macedon Ranges (S),6,Gippsland,0.0004,49388
+24130,Macedon Ranges (S),7,Grampians,0.2106,49388
+24130,Macedon Ranges (S),8,Hume,0.0166,49388
+24130,Macedon Ranges (S),9,Loddon Mallee,0.1129,49388
+24210,Manningham (C),1,North Metro,0.3761,125508
+24210,Manningham (C),2,South & East Metro,0.524,125508
+24210,Manningham (C),3,South Metro,0.0205,125508
+24210,Manningham (C),4,West Metro,0.0765,125508
+24210,Manningham (C),5,Barwon South West,0.001,125508
+24210,Manningham (C),6,Gippsland,0.0007,125508
+24210,Manningham (C),7,Grampians,0.0003,125508
+24210,Manningham (C),8,Hume,0.0006,125508
+24210,Manningham (C),9,Loddon Mallee,0.0003,125508
+24250,Mansfield (S),1,North Metro,0.0305,8979
+24250,Mansfield (S),2,South & East Metro,0.0355,8979
+24250,Mansfield (S),3,South Metro,0.0207,8979
+24250,Mansfield (S),4,West Metro,0.064,8979
+24250,Mansfield (S),5,Barwon South West,0.0013,8979
+24250,Mansfield (S),6,Gippsland,0.0016,8979
+24250,Mansfield (S),7,Grampians,0.0007,8979
+24250,Mansfield (S),8,Hume,0.8444,8979
+24250,Mansfield (S),9,Loddon Mallee,0.0013,8979
+24330,Maribyrnong (C),1,North Metro,0.0744,91387
+24330,Maribyrnong (C),2,South & East Metro,0.0088,91387
+24330,Maribyrnong (C),3,South Metro,0.0269,91387
+24330,Maribyrnong (C),4,West Metro,0.8854,91387
+24330,Maribyrnong (C),5,Barwon South West,0.0023,91387
+24330,Maribyrnong (C),6,Gippsland,0.0006,91387
+24330,Maribyrnong (C),7,Grampians,0.0006,91387
+24330,Maribyrnong (C),8,Hume,0.0007,91387
+24330,Maribyrnong (C),9,Loddon Mallee,0.0003,91387
+24410,Maroondah (C),1,North Metro,0.0666,117498
+24410,Maroondah (C),2,South & East Metro,0.8559,117498
+24410,Maroondah (C),3,South Metro,0.0224,117498
+24410,Maroondah (C),4,West Metro,0.051,117498
+24410,Maroondah (C),5,Barwon South West,0.0007,117498
+24410,Maroondah (C),6,Gippsland,0.0013,117498
+24410,Maroondah (C),7,Grampians,0.0003,117498
+24410,Maroondah (C),8,Hume,0.0012,117498
+24410,Maroondah (C),9,Loddon Mallee,0.0006,117498
+24600,Melbourne (C),1,North Metro,0.1753,169961
+24600,Melbourne (C),2,South & East Metro,0.019,169961
+24600,Melbourne (C),3,South Metro,0.1425,169961
+24600,Melbourne (C),4,West Metro,0.6575,169961
+24600,Melbourne (C),5,Barwon South West,0.0026,169961
+24600,Melbourne (C),6,Gippsland,0.0009,169961
+24600,Melbourne (C),7,Grampians,0.0008,169961
+24600,Melbourne (C),8,Hume,0.0007,169961
+24600,Melbourne (C),9,Loddon Mallee,0.0006,169961
+24650,Melton (S),1,North Metro,0.0735,156713
+24650,Melton (S),2,South & East Metro,0.0084,156713
+24650,Melton (S),3,South Metro,0.0205,156713
+24650,Melton (S),4,West Metro,0.8801,156713
+24650,Melton (S),5,Barwon South West,0.003,156713
+24650,Melton (S),6,Gippsland,0.0003,156713
+24650,Melton (S),7,Grampians,0.0118,156713
+24650,Melton (S),8,Hume,0.0014,156713
+24650,Melton (S),9,Loddon Mallee,0.0011,156713
+24780,Mildura (RC),1,North Metro,0.0211,55515
+24780,Mildura (RC),2,South & East Metro,0.0051,55515
+24780,Mildura (RC),3,South Metro,0.0265,55515
+24780,Mildura (RC),4,West Metro,0.05,55515
+24780,Mildura (RC),5,Barwon South West,0.0011,55515
+24780,Mildura (RC),6,Gippsland,0.0001,55515
+24780,Mildura (RC),7,Grampians,0.0019,55515
+24780,Mildura (RC),8,Hume,0.0008,55515
+24780,Mildura (RC),9,Loddon Mallee,0.8934,55515
+24850,Mitchell (S),1,North Metro,0.5838,44299
+24850,Mitchell (S),2,South & East Metro,0.0074,44299
+24850,Mitchell (S),3,South Metro,0.016,44299
+24850,Mitchell (S),4,West Metro,0.1184,44299
+24850,Mitchell (S),5,Barwon South West,0.0014,44299
+24850,Mitchell (S),6,Gippsland,0.0004,44299
+24850,Mitchell (S),7,Grampians,0.0033,44299
+24850,Mitchell (S),8,Hume,0.26,44299
+24850,Mitchell (S),9,Loddon Mallee,0.0093,44299
+24900,Moira (S),1,North Metro,0.0419,29799
+24900,Moira (S),2,South & East Metro,0.0072,29799
+24900,Moira (S),3,South Metro,0.0121,29799
+24900,Moira (S),4,West Metro,0.0562,29799
+24900,Moira (S),5,Barwon South West,0.0011,29799
+24900,Moira (S),6,Gippsland,0.0004,29799
+24900,Moira (S),7,Grampians,0.0005,29799
+24900,Moira (S),8,Hume,0.8549,29799
+24900,Moira (S),9,Loddon Mallee,0.0258,29799
+24970,Monash (C),1,North Metro,0.0395,200077
+24970,Monash (C),2,South & East Metro,0.8432,200077
+24970,Monash (C),3,South Metro,0.0715,200077
+24970,Monash (C),4,West Metro,0.0435,200077
+24970,Monash (C),5,Barwon South West,0.0005,200077
+24970,Monash (C),6,Gippsland,0.001,200077
+24970,Monash (C),7,Grampians,0.0003,200077
+24970,Monash (C),8,Hume,0.0004,200077
+24970,Monash (C),9,Loddon Mallee,0.0002,200077
+25060,Moonee Valley (C),1,North Metro,0.1035,127883
+25060,Moonee Valley (C),2,South & East Metro,0.0063,127883
+25060,Moonee Valley (C),3,South Metro,0.0289,127883
+25060,Moonee Valley (C),4,West Metro,0.8562,127883
+25060,Moonee Valley (C),5,Barwon South West,0.0022,127883
+25060,Moonee Valley (C),6,Gippsland,0.0005,127883
+25060,Moonee Valley (C),7,Grampians,0.0005,127883
+25060,Moonee Valley (C),8,Hume,0.0005,127883
+25060,Moonee Valley (C),9,Loddon Mallee,0.0015,127883
+25150,Moorabool (S),1,North Metro,0.0402,34158
+25150,Moorabool (S),2,South & East Metro,0.0077,34158
+25150,Moorabool (S),3,South Metro,0.0213,34158
+25150,Moorabool (S),4,West Metro,0.5774,34158
+25150,Moorabool (S),5,Barwon South West,0.0357,34158
+25150,Moorabool (S),6,Gippsland,0.0013,34158
+25150,Moorabool (S),7,Grampians,0.3112,34158
+25150,Moorabool (S),8,Hume,0.0006,34158
+25150,Moorabool (S),9,Loddon Mallee,0.0045,34158
+25250,Moreland (C),1,North Metro,0.292,181725
+25250,Moreland (C),2,South & East Metro,0.0062,181725
+25250,Moreland (C),3,South Metro,0.0177,181725
+25250,Moreland (C),4,West Metro,0.6802,181725
+25250,Moreland (C),5,Barwon South West,0.0012,181725
+25250,Moreland (C),6,Gippsland,0.0008,181725
+25250,Moreland (C),7,Grampians,0.0003,181725
+25250,Moreland (C),8,Hume,0.0011,181725
+25250,Moreland (C),9,Loddon Mallee,0.0005,181725
+25340,Mornington Peninsula (S),1,North Metro,0.0169,165822
+25340,Mornington Peninsula (S),2,South & East Metro,0.0738,165822
+25340,Mornington Peninsula (S),3,South Metro,0.8754,165822
+25340,Mornington Peninsula (S),4,West Metro,0.0275,165822
+25340,Mornington Peninsula (S),5,Barwon South West,0.0009,165822
+25340,Mornington Peninsula (S),6,Gippsland,0.0032,165822
+25340,Mornington Peninsula (S),7,Grampians,0.0006,165822
+25340,Mornington Peninsula (S),8,Hume,0.0009,165822
+25340,Mornington Peninsula (S),9,Loddon Mallee,0.0008,165822
+25430,Mount Alexander (S),1,North Metro,0.0411,19514
+25430,Mount Alexander (S),2,South & East Metro,0.008,19514
+25430,Mount Alexander (S),3,South Metro,0.0235,19514
+25430,Mount Alexander (S),4,West Metro,0.0581,19514
+25430,Mount Alexander (S),5,Barwon South West,0.0039,19514
+25430,Mount Alexander (S),6,Gippsland,0.0005,19514
+25430,Mount Alexander (S),7,Grampians,0.0657,19514
+25430,Mount Alexander (S),8,Hume,0.0009,19514
+25430,Mount Alexander (S),9,Loddon Mallee,0.7982,19514
+25490,Moyne (S),1,North Metro,0.0252,16887
+25490,Moyne (S),2,South & East Metro,0.0055,16887
+25490,Moyne (S),3,South Metro,0.0062,16887
+25490,Moyne (S),4,West Metro,0.0281,16887
+25490,Moyne (S),5,Barwon South West,0.9245,16887
+25490,Moyne (S),6,Gippsland,0.0002,16887
+25490,Moyne (S),7,Grampians,0.0079,16887
+25490,Moyne (S),8,Hume,0.0014,16887
+25490,Moyne (S),9,Loddon Mallee,0.001,16887
+25620,Murrindindi (S),1,North Metro,0.2571,14478
+25620,Murrindindi (S),2,South & East Metro,0.2899,14478
+25620,Murrindindi (S),3,South Metro,0.0213,14478
+25620,Murrindindi (S),4,West Metro,0.0698,14478
+25620,Murrindindi (S),5,Barwon South West,0.0008,14478
+25620,Murrindindi (S),6,Gippsland,0.0012,14478
+25620,Murrindindi (S),7,Grampians,0.0006,14478
+25620,Murrindindi (S),8,Hume,0.3566,14478
+25620,Murrindindi (S),9,Loddon Mallee,0.0027,14478
+25710,Nillumbik (S),1,North Metro,0.8029,64941
+25710,Nillumbik (S),2,South & East Metro,0.0702,64941
+25710,Nillumbik (S),3,South Metro,0.0215,64941
+25710,Nillumbik (S),4,West Metro,0.0988,64941
+25710,Nillumbik (S),5,Barwon South West,0.0014,64941
+25710,Nillumbik (S),6,Gippsland,0.0009,64941
+25710,Nillumbik (S),7,Grampians,0.0005,64941
+25710,Nillumbik (S),8,Hume,0.003,64941
+25710,Nillumbik (S),9,Loddon Mallee,0.0006,64941
+25810,Northern Grampians (S),1,North Metro,0.0208,11431
+25810,Northern Grampians (S),2,South & East Metro,0.0072,11431
+25810,Northern Grampians (S),3,South Metro,0.0089,11431
+25810,Northern Grampians (S),4,West Metro,0.0366,11431
+25810,Northern Grampians (S),5,Barwon South West,0.0208,11431
+25810,Northern Grampians (S),7,Grampians,0.8328,11431
+25810,Northern Grampians (S),8,Hume,0.0019,11431
+25810,Northern Grampians (S),9,Loddon Mallee,0.0708,11431
+25900,Port Phillip (C),1,North Metro,0.0567,113200
+25900,Port Phillip (C),2,South & East Metro,0.0305,113200
+25900,Port Phillip (C),3,South Metro,0.7188,113200
+25900,Port Phillip (C),4,West Metro,0.1889,113200
+25900,Port Phillip (C),5,Barwon South West,0.002,113200
+25900,Port Phillip (C),6,Gippsland,0.0009,113200
+25900,Port Phillip (C),7,Grampians,0.0009,113200
+25900,Port Phillip (C),8,Hume,0.0007,113200
+25900,Port Phillip (C),9,Loddon Mallee,0.0005,113200
+25990,Pyrenees (S),1,North Metro,0.0302,7353
+25990,Pyrenees (S),2,South & East Metro,0.009,7353
+25990,Pyrenees (S),3,South Metro,0.0277,7353
+25990,Pyrenees (S),4,West Metro,0.0481,7353
+25990,Pyrenees (S),5,Barwon South West,0.0183,7353
+25990,Pyrenees (S),6,Gippsland,0.0011,7353
+25990,Pyrenees (S),7,Grampians,0.8524,7353
+25990,Pyrenees (S),9,Loddon Mallee,0.0133,7353
+26080,Queenscliffe (B),1,North Metro,0.0421,2982
+26080,Queenscliffe (B),2,South & East Metro,0.0065,2982
+26080,Queenscliffe (B),3,South Metro,0.0178,2982
+26080,Queenscliffe (B),4,West Metro,0.0535,2982
+26080,Queenscliffe (B),5,Barwon South West,0.8784,2982
+26080,Queenscliffe (B),9,Loddon Mallee,0.0016,2982
+26170,South Gippsland (S),1,North Metro,0.0284,29576
+26170,South Gippsland (S),2,South & East Metro,0.1099,29576
+26170,South Gippsland (S),3,South Metro,0.0663,29576
+26170,South Gippsland (S),4,West Metro,0.0346,29576
+26170,South Gippsland (S),5,Barwon South West,0.0015,29576
+26170,South Gippsland (S),6,Gippsland,0.7578,29576
+26170,South Gippsland (S),7,Grampians,0.0003,29576
+26170,South Gippsland (S),8,Hume,0.0006,29576
+26170,South Gippsland (S),9,Loddon Mallee,0.0006,29576
+26260,Southern Grampians (S),1,North Metro,0.013,16135
+26260,Southern Grampians (S),2,South & East Metro,0.0025,16135
+26260,Southern Grampians (S),3,South Metro,0.0069,16135
+26260,Southern Grampians (S),4,West Metro,0.0351,16135
+26260,Southern Grampians (S),5,Barwon South West,0.9196,16135
+26260,Southern Grampians (S),7,Grampians,0.0222,16135
+26260,Southern Grampians (S),9,Loddon Mallee,0.0008,16135
+26350,Stonnington (C),1,North Metro,0.0485,116207
+26350,Stonnington (C),2,South & East Metro,0.1284,116207
+26350,Stonnington (C),3,South Metro,0.6762,116207
+26350,Stonnington (C),4,West Metro,0.1418,116207
+26350,Stonnington (C),5,Barwon South West,0.0025,116207
+26350,Stonnington (C),6,Gippsland,0.0009,116207
+26350,Stonnington (C),7,Grampians,0.0006,116207
+26350,Stonnington (C),8,Hume,0.0007,116207
+26350,Stonnington (C),9,Loddon Mallee,0.0004,116207
+26430,Strathbogie (S),1,North Metro,0.1168,10645
+26430,Strathbogie (S),2,South & East Metro,0.0068,10645
+26430,Strathbogie (S),3,South Metro,0.0271,10645
+26430,Strathbogie (S),4,West Metro,0.1034,10645
+26430,Strathbogie (S),5,Barwon South West,0.0024,10645
+26430,Strathbogie (S),6,Gippsland,0.0009,10645
+26430,Strathbogie (S),7,Grampians,0.0012,10645
+26430,Strathbogie (S),8,Hume,0.7244,10645
+26430,Strathbogie (S),9,Loddon Mallee,0.017,10645
+26490,Surf Coast (S),1,North Metro,0.0192,32251
+26490,Surf Coast (S),2,South & East Metro,0.0055,32251
+26490,Surf Coast (S),3,South Metro,0.0214,32251
+26490,Surf Coast (S),4,West Metro,0.0983,32251
+26490,Surf Coast (S),5,Barwon South West,0.8469,32251
+26490,Surf Coast (S),6,Gippsland,0.0009,32251
+26490,Surf Coast (S),7,Grampians,0.0031,32251
+26490,Surf Coast (S),8,Hume,0.0021,32251
+26490,Surf Coast (S),9,Loddon Mallee,0.0025,32251
+26610,Swan Hill (RC),1,North Metro,0.0419,20759
+26610,Swan Hill (RC),2,South & East Metro,0.0074,20759
+26610,Swan Hill (RC),3,South Metro,0.0101,20759
+26610,Swan Hill (RC),4,West Metro,0.0538,20759
+26610,Swan Hill (RC),5,Barwon South West,0.0011,20759
+26610,Swan Hill (RC),6,Gippsland,0.0001,20759
+26610,Swan Hill (RC),7,Grampians,0.0028,20759
+26610,Swan Hill (RC),8,Hume,0.0012,20759
+26610,Swan Hill (RC),9,Loddon Mallee,0.8815,20759
+26670,Towong (S),1,North Metro,0.0356,6054
+26670,Towong (S),2,South & East Metro,0.0116,6054
+26670,Towong (S),3,South Metro,0.008,6054
+26670,Towong (S),4,West Metro,0.0523,6054
+26670,Towong (S),5,Barwon South West,0.0007,6054
+26670,Towong (S),6,Gippsland,0.0007,6054
+26670,Towong (S),8,Hume,0.8911,6054
+26700,Wangaratta (RC),1,North Metro,0.017,29087
+26700,Wangaratta (RC),2,South & East Metro,0.0062,29087
+26700,Wangaratta (RC),3,South Metro,0.0103,29087
+26700,Wangaratta (RC),4,West Metro,0.0587,29087
+26700,Wangaratta (RC),5,Barwon South West,0.0003,29087
+26700,Wangaratta (RC),6,Gippsland,0.0008,29087
+26700,Wangaratta (RC),7,Grampians,0.0005,29087
+26700,Wangaratta (RC),8,Hume,0.9049,29087
+26700,Wangaratta (RC),9,Loddon Mallee,0.0013,29087
+26730,Warrnambool (C),1,North Metro,0.0203,34862
+26730,Warrnambool (C),2,South & East Metro,0.0043,34862
+26730,Warrnambool (C),3,South Metro,0.0095,34862
+26730,Warrnambool (C),4,West Metro,0.0294,34862
+26730,Warrnambool (C),5,Barwon South West,0.9313,34862
+26730,Warrnambool (C),6,Gippsland,0.0004,34862
+26730,Warrnambool (C),7,Grampians,0.004,34862
+26730,Warrnambool (C),8,Hume,0.0002,34862
+26730,Warrnambool (C),9,Loddon Mallee,0.0005,34862
+26810,Wellington (S),1,North Metro,0.0397,44019
+26810,Wellington (S),2,South & East Metro,0.0527,44019
+26810,Wellington (S),3,South Metro,0.0244,44019
+26810,Wellington (S),4,West Metro,0.0314,44019
+26810,Wellington (S),5,Barwon South West,0.0024,44019
+26810,Wellington (S),6,Gippsland,0.8476,44019
+26810,Wellington (S),7,Grampians,0.0005,44019
+26810,Wellington (S),8,Hume,0.0006,44019
+26810,Wellington (S),9,Loddon Mallee,0.0008,44019
+26890,West Wimmera (S),1,North Metro,0.0142,3862
+26890,West Wimmera (S),2,South & East Metro,0.0007,3862
+26890,West Wimmera (S),3,South Metro,0.0121,3862
+26890,West Wimmera (S),4,West Metro,0.0376,3862
+26890,West Wimmera (S),5,Barwon South West,0.125,3862
+26890,West Wimmera (S),7,Grampians,0.8075,3862
+26890,West Wimmera (S),9,Loddon Mallee,0.0028,3862
+26980,Whitehorse (C),1,North Metro,0.0917,176196
+26980,Whitehorse (C),2,South & East Metro,0.817,176196
+26980,Whitehorse (C),3,South Metro,0.0289,176196
+26980,Whitehorse (C),4,West Metro,0.0594,176196
+26980,Whitehorse (C),5,Barwon South West,0.001,176196
+26980,Whitehorse (C),6,Gippsland,0.0011,176196
+26980,Whitehorse (C),7,Grampians,0.0004,176196
+26980,Whitehorse (C),8,Hume,0.0003,176196
+26980,Whitehorse (C),9,Loddon Mallee,0.0001,176196
+27070,Whittlesea (C),1,North Metro,0.8817,223322
+27070,Whittlesea (C),2,South & East Metro,0.0097,223322
+27070,Whittlesea (C),3,South Metro,0.0107,223322
+27070,Whittlesea (C),4,West Metro,0.0903,223322
+27070,Whittlesea (C),5,Barwon South West,0.0009,223322
+27070,Whittlesea (C),6,Gippsland,0.0005,223322
+27070,Whittlesea (C),7,Grampians,0.0005,223322
+27070,Whittlesea (C),8,Hume,0.0052,223322
+27070,Whittlesea (C),9,Loddon Mallee,0.0006,223322
+27170,Wodonga (RC),1,North Metro,0.0374,41429
+27170,Wodonga (RC),2,South & East Metro,0.009,41429
+27170,Wodonga (RC),3,South Metro,0.0161,41429
+27170,Wodonga (RC),4,West Metro,0.061,41429
+27170,Wodonga (RC),5,Barwon South West,0.0004,41429
+27170,Wodonga (RC),6,Gippsland,0.0005,41429
+27170,Wodonga (RC),7,Grampians,0.0004,41429
+27170,Wodonga (RC),8,Hume,0.8737,41429
+27170,Wodonga (RC),9,Loddon Mallee,0.0015,41429
+27260,Wyndham (C),1,North Metro,0.0835,255322
+27260,Wyndham (C),2,South & East Metro,0.0065,255322
+27260,Wyndham (C),3,South Metro,0.0216,255322
+27260,Wyndham (C),4,West Metro,0.8703,255322
+27260,Wyndham (C),5,Barwon South West,0.0158,255322
+27260,Wyndham (C),6,Gippsland,0.0003,255322
+27260,Wyndham (C),7,Grampians,0.001,255322
+27260,Wyndham (C),8,Hume,0.0005,255322
+27260,Wyndham (C),9,Loddon Mallee,0.0005,255322
+27350,Yarra (C),1,North Metro,0.5838,98521
+27350,Yarra (C),2,South & East Metro,0.0222,98521
+27350,Yarra (C),3,South Metro,0.087,98521
+27350,Yarra (C),4,West Metro,0.3022,98521
+27350,Yarra (C),5,Barwon South West,0.0016,98521
+27350,Yarra (C),6,Gippsland,0.0008,98521
+27350,Yarra (C),7,Grampians,0.0007,98521
+27350,Yarra (C),8,Hume,0.0011,98521
+27350,Yarra (C),9,Loddon Mallee,0.0006,98521
+27450,Yarra Ranges (S),1,North Metro,0.0579,158173
+27450,Yarra Ranges (S),2,South & East Metro,0.8637,158173
+27450,Yarra Ranges (S),3,South Metro,0.0207,158173
+27450,Yarra Ranges (S),4,West Metro,0.051,158173
+27450,Yarra Ranges (S),5,Barwon South West,0.001,158173
+27450,Yarra Ranges (S),6,Gippsland,0.0024,158173
+27450,Yarra Ranges (S),7,Grampians,0.0003,158173
+27450,Yarra Ranges (S),8,Hume,0.0021,158173
+27450,Yarra Ranges (S),9,Loddon Mallee,0.0009,158173
+27630,Yarriambiack (S),1,North Metro,0.0158,6658
+27630,Yarriambiack (S),2,South & East Metro,0.0036,6658
+27630,Yarriambiack (S),3,South Metro,0.0184,6658
+27630,Yarriambiack (S),4,West Metro,0.0509,6658
+27630,Yarriambiack (S),5,Barwon South West,0.0177,6658
+27630,Yarriambiack (S),6,Gippsland,0.0003,6658
+27630,Yarriambiack (S),7,Grampians,0.8509,6658
+27630,Yarriambiack (S),8,Hume,0.0013,6658
+27630,Yarriambiack (S),9,Loddon Mallee,0.0411,6658

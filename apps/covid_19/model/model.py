@@ -172,8 +172,10 @@ def build_model(params: dict) -> StratifiedModel:
         mixing_matrix=static_mixing_matrix,
     )
 
-    # Determine the proportion of cases detected over time as `detected_proportion`.
+    # Determine the proportion of cases detected over time as the detected_proportion
     if params["testing_to_detection"]:
+        assumed_tests_parameter = params["testing_to_detection"]["assumed_tests_parameter"]
+        assumed_cdr_parameter = params["testing_to_detection"]["assumed_cdr_parameter"]
 
         # Tests data
         test_dates, test_values = \
@@ -181,15 +183,14 @@ def build_model(params: dict) -> StratifiedModel:
                 get_international_testing_numbers(params["iso3"])
 
         # Convert test numbers to per capita testing rates
-        per_capita_tests = [i_tests / sum(total_pops) for i_tests in test_values]
+        per_capita_tests = \
+            [i_tests / sum(total_pops) for i_tests in test_values]
 
         # Calculate CDRs and the resulting CDR function over time
-        assumed_tests_parameter = params["testing_to_detection"]["assumed_tests_parameter"]
-        assumed_cdr_parameter = params["testing_to_detection"]["assumed_cdr_parameter"]
         cdr_from_tests_func = create_cdr_function(assumed_tests_parameter, assumed_cdr_parameter)
         detected_proportion = scale_up_function(
             test_dates,
-            [cdr_from_tests_func(i_tests) for i_tests in per_capita_tests],
+            [cdr_from_tests_func(i_test_rate) for i_test_rate in per_capita_tests],
             smoothness=0.2,
             method=5,
         )
@@ -197,9 +198,7 @@ def build_model(params: dict) -> StratifiedModel:
     else:
         detect_prop_params = params["time_variant_detection"]
 
-        # Create function describing the proportion of cases detected over time
         def detected_proportion(t):
-            # Function representing the proportion of symptomatic people detected over time
             return tanh_based_scaleup(
                 detect_prop_params["maximum_gradient"],
                 detect_prop_params["max_change_time"],
@@ -274,7 +273,6 @@ def build_model(params: dict) -> StratifiedModel:
         "hospital_occupancy": calculate_hospital_occupancy,
         "proportion_seropositive": outputs.calculate_proportion_seropositive,
         "new_hospital_admissions": outputs.calculate_new_hospital_admissions_covid,
-        "proportion_seropositive": outputs.calculate_proportion_seropositive,
         "new_icu_admissions": outputs.calculate_new_icu_admissions_covid,
         "icu_occupancy": outputs.calculate_icu_occupancy,
         "notifications_at_sympt_onset": outputs.get_notifications_at_sympt_onset,

@@ -9,6 +9,7 @@ from .mobility.preprocess import preprocess_mobility
 from .social_mixing.preprocess import preprocess_social_mixing
 from .demography.preprocess import preprocess_demography
 from .covid_au.preprocess import preprocess_covid_au
+from .our_world_in_data.preprocess import preprocess_our_world_in_data
 
 logger = logging.getLogger(__name__)
 
@@ -45,8 +46,11 @@ def build_input_database(force: bool = False, rebuild: bool = False):
         with Timer("Deleting all existing data."):
             input_db.delete_everything()
 
-        with Timer("Ingesting COVID AU data"):
+        with Timer("Ingesting COVID AU data."):
             preprocess_covid_au(input_db)
+
+        with Timer("Ingesting Our World in Data data."):
+            preprocess_our_world_in_data(input_db)
 
         with Timer("Ingesting demography data."):
             country_df = preprocess_demography(input_db)

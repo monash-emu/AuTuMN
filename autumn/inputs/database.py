@@ -9,7 +9,7 @@ from .mobility.preprocess import preprocess_mobility
 from .social_mixing.preprocess import preprocess_social_mixing
 from .demography.preprocess import preprocess_demography
 from .covid_au.preprocess import preprocess_covid_au
-from .our_world_in_data.preprocess import preprocess_our_world_in_data
+from .owid.preprocess import preprocess_our_world_in_data
 
 logger = logging.getLogger(__name__)
 

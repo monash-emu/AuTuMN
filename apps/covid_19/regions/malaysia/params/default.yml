@@ -4,7 +4,7 @@ parent: apps/covid_19/params.yml
 implement_importation: True
 
 traveller_quarantine:
-  times: [73., 76.] # self-isolation from 13 March
+  times: [73., 76.]  # self-isolation from 13 March
   values: [0., 1.]
 
 microdistancing:

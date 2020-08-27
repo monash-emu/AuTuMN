@@ -204,7 +204,7 @@ def build_model(params: dict) -> StratifiedModel:
                 detect_prop_params["max_change_time"],
                 detect_prop_params["start_value"],
                 detect_prop_params["end_value"],
-            )
+            )(t)
 
     # Determine how many importations there are, including the undetected and asymptomatic importations
     # This is defined 8x10 year bands, 0-70+, which we transform into 16x5 year bands 0-75+

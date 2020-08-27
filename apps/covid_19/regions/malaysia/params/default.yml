@@ -4,14 +4,14 @@ parent: apps/covid_19/params.yml
 implement_importation: True
 
 traveller_quarantine:
-  times: [73., 76.]  # self-isolation from 13 March
+  times: [73., 76.]  # Self-isolation from 13 March
   values: [0., 1.]
 
-testing_to_detection:
-  assumed_tests_parameter: 1.e-03
-  assumed_cdr_parameter: 0.25
+#testing_to_detection:
+#  assumed_tests_parameter: 1.e-03
+#  assumed_cdr_parameter: 0.25
 
-microdistancing:
+microdistancing:  # Want to change this to empiric
   function_type: tanh
   parameters:
     b: -0.04
@@ -33,7 +33,7 @@ mixing:
       - 2020-07-16
       - 2020-07-22  # Schools reopen
       - 2020-07-23
-      - 2020-08-27
+      - 2020-08-27  # Not sure why I need this, but the code crashes without it
     values:
       - 1.
       - 0.

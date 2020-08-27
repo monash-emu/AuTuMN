@@ -123,26 +123,23 @@ def build_model(params: dict) -> StratifiedModel:
 
     # Build a dynamic, age-based mixing matrix.
     static_mixing_matrix = preprocess.mixing_matrix.build_static(country_iso3)
-    dynamic_mixing_matrix = None
     dynamic_location_mixing_params = params["mixing"]
     dynamic_age_mixing_params = params["mixing_age_adjust"]
     microdistancing = params["microdistancing"]
     smooth_google_data = params["smooth_google_data"]
     npi_effectiveness_params = params["npi_effectiveness"]
     google_mobility_locations = params["google_mobility_locations"]
-    # FIXME: Why wouldn't we always use Google mobiliy data?
-    if dynamic_location_mixing_params or dynamic_age_mixing_params:
-        dynamic_mixing_matrix = preprocess.mixing_matrix.build_dynamic(
-            country_iso3,
-            region,
-            dynamic_location_mixing_params,
-            dynamic_age_mixing_params,
-            npi_effectiveness_params,
-            google_mobility_locations,
-            microdistancing,
-            smooth_google_data,
-        )
-        model.set_dynamic_mixing_matrix(dynamic_mixing_matrix)
+    dynamic_mixing_matrix = preprocess.mixing_matrix.build_dynamic(
+        country_iso3,
+        region,
+        dynamic_location_mixing_params,
+        dynamic_age_mixing_params,
+        npi_effectiveness_params,
+        google_mobility_locations,
+        microdistancing,
+        smooth_google_data,
+    )
+    model.set_dynamic_mixing_matrix(dynamic_mixing_matrix)
 
     # Implement seasonal forcing if requested, making contact rate a time-variant rather than constant
     if params["seasonal_force"]:
@@ -179,11 +176,11 @@ def build_model(params: dict) -> StratifiedModel:
     if params["testing_to_detection"]:
 
         # Tests data
-        if params["iso3"] == "AUS":
-            test_dates, test_values = inputs.get_vic_testing_numbers()
-        else:
-            test_dates, test_values = get_international_testing_numbers(params["iso3"])
+        test_dates, test_values = \
+            inputs.get_vic_testing_numbers() if params["iso3"] == "AUS" else \
+                get_international_testing_numbers(params["iso3"])
 
+        # Convert test numbers to per capita testing rates
         per_capita_tests = [i_tests / sum(total_pops) for i_tests in test_values]
 
         # Calculate CDRs and the resulting CDR function over time
@@ -203,15 +200,12 @@ def build_model(params: dict) -> StratifiedModel:
         # Create function describing the proportion of cases detected over time
         def detected_proportion(t):
             # Function representing the proportion of symptomatic people detected over time
-            base_prop_detect = tanh_based_scaleup(
+            return tanh_based_scaleup(
                 detect_prop_params["maximum_gradient"],
                 detect_prop_params["max_change_time"],
                 detect_prop_params["start_value"],
                 detect_prop_params["end_value"],
             )
-            # Return value modified for any future intervention that narrows the case detection gap
-            int_detect_gap_reduction = params["int_detection_gap_reduction"]
-            return base_prop_detect(t) + (1.0 - base_prop_detect(t)) * int_detect_gap_reduction
 
     # Determine how many importations there are, including the undetected and asymptomatic importations
     # This is defined 8x10 year bands, 0-70+, which we transform into 16x5 year bands 0-75+

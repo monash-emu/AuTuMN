@@ -1,4 +1,0 @@
-# SCENARIO DESCRIPTION: Halved case detection
-parent: apps/covid_19/regions/victoria/params/default.yml
-start_time: 257 # 13/09/2020
-int_detection_gap_reduction: 0.5

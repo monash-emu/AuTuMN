@@ -173,8 +173,6 @@ mixing: {}
 mixing_age_adjust: {}
 npi_effectiveness: {}
 
-int_detection_gap_reduction: 0.
-
 # Mapping of Google Mobility locations to Autumn-specific locations
 google_mobility_locations:
   work:

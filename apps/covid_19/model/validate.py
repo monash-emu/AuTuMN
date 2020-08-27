@@ -35,7 +35,6 @@ validate_params = sb.build_validator(
     time_variant_detection=sb.Dict(
         maximum_gradient=float, max_change_time=float, start_value=float, end_value=float
     ),
-    int_detection_gap_reduction=float,
     # Dynamic mixing matrix updates
     # Time-varying mixing matrix adjustment by location
     mixing=sb.DictGeneric(

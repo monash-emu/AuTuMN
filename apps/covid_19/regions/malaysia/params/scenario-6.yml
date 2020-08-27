@@ -1,4 +1,0 @@
-# SCENARIO DESCRIPTION: Halved case detection
-parent: apps/covid_19/regions/malaysia/params/default.yml
-start_time: 230
-int_detection_gap_reduction: 0.5

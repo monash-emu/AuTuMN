@@ -60,8 +60,9 @@ def load_params(app_name: str, region_name: str):
     is_name_correct = lambda n: re.match(r"^(default)|(scenario-\d+)$", n)
     for param_filepath in param_filepaths:
         name = param_filepath.replace("\\", "/").split("/")[-1].split(".")[0]
-        msg = f"Badly formed param filename {name}: must be default.yml or scenario-1.yml"
-        assert is_name_correct(name), msg
+        if not is_name_correct(name):
+            continue
+
         if name == "default":
             params["default"] = load_param_file(param_filepath)
         else:

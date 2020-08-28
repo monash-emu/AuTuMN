@@ -1,10 +1,8 @@
 # SCENARIO DESCRIPTION: BASELINE
 ---
 parent: apps/covid_19/phl_submodel_params.yml
-iso3: PHL
 region: Metro Manila
 
-end_time: 365.
 hospital_props_multiplier: 2.
 
 mixing:

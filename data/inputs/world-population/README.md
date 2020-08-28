@@ -19,6 +19,11 @@ The UN WPP2019 dataset does not contain these figures.
 
 TODO: Document the provenance of the region data.
 
+Data for DHHS health clusters obtained from
+LGA population https://www.abs.gov.au/ausstats/subscriber.nsf/log?openagent&14100do0001_2014-19.xlsx&1410.0&Data%20Cubes&76DD7F46FAF7345CCA2585B20017416A&0&2014-19&28.07.2020&Latest
+and combined with 'LGA to Cluster mapping dictionary with proportions.csv' (.\data\inputs\mobility) to arrive at the static values for sub-regions.
+
+
 ### [WPP2019_FERT_F03_CRUDE_BIRTH_RATE](<https://population.un.org/wpp/Download/Files/1_Indicators%20(Standard)/EXCEL_FILES/2_Fertility/WPP2019_FERT_F03_CRUDE_BIRTH_RATE.xlsx>)
 
 Used for crude birth rate

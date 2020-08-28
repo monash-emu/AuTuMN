@@ -167,24 +167,28 @@ def get_iso3(country_name: str, country_df):
 
 
 def reshape_to_clusters(gm_df):
+    '''
+    Takes the google mobility data frame and creates new DHHS health cluster mobility values.
+    
+    Input: Pandas data frame google mobility 
+    Output: Pandas data frame of DHHS health clusters and VIC
+    '''
 
     # Before dropping sub_region_2 capture Victorian LGAs.
-    gm_df = gm_df[
-        (gm_df.sub_region_1 == "Victoria")
-        # & (gm_df.sub_region_2.notnull())
-    ]
+    gm_df = gm_df[(gm_df.sub_region_1 == "Victoria")]
     gm_df["sub_region_1"] = gm_df["sub_region_2"]
     gm_df.loc[(gm_df.sub_region_1.isnull()), "sub_region_1"] = "Victoria"
 
+    # Read in LGA proportion and removed undesired LGAs.
     lga_df = pd.read_csv(MOBILITY_LGA_PATH)
     lga_df.replace({"lga_name": VIC_LGA_MAP}, inplace=True)
-
     lga_df = lga_df[lga_df.lga_name.notnull()]
+
+    # Calculate LGA and health cluster populations proportions.
     lga_df["lga_pop_prop"] = lga_df.proportion*lga_df.population
     hc_pop = lga_df.groupby(["cluster_name"]).sum().reset_index()[["cluster_name","lga_pop_prop"]]
     hc_pop.rename(columns={"lga_pop_prop":"hc_pop"}, inplace=True)
     lga_df = pd.merge(lga_df, hc_pop, how="left", left_on="cluster_name", right_on="cluster_name")
-
     lga_df = pd.merge(lga_df, gm_df, how="left", left_on="lga_name", right_on="sub_region_1")
 
     list_of_columns = [
@@ -196,6 +200,7 @@ def reshape_to_clusters(gm_df):
         "residential_percent_change_from_baseline",
     ]
 
+    # Weight mobility values and reconstruct data frame. 
     multiplied_columns = lga_df[list_of_columns].multiply(lga_df.lga_pop_prop/lga_df.hc_pop, axis="index")
     cluster_df = lga_df[["cluster_name", "date"]]
 

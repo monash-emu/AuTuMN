@@ -1,6 +1,6 @@
 # SCENARIO DESCRIPTION: BASELINE
 ---
-parent: apps/covid_19/params.yml
+parent: apps/covid_19/phl_submodel_params.yml
 iso3: PHL
 region: Calabarzon
 

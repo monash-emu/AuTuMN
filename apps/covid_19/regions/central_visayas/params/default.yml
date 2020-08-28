@@ -1,10 +1,8 @@
 # SCENARIO DESCRIPTION: BASELINE
 ---
-parent: apps/covid_19/params.yml
-iso3: PHL
+parent: apps/covid_19/phl_submodel_params.yml
 region: Central Visayas
 
-end_time: 365.
 hospital_props_multiplier: 2.
 
 mixing:
@@ -14,7 +12,7 @@ mixing:
       - 2020-02-11
       - 2020-03-16
       - 2020-07-07
-      - 2020-08-25 # If Google mobility passes this point, please update to one week in the future
+      - 2020-08-25  # If Google mobility passes this point, please update to one week in the future
     values:
       - 1.
       - 0.

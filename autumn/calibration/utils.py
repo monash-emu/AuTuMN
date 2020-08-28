@@ -338,8 +338,18 @@ def find_distribution_params_from_mean_and_ci(distribution, mean, ci, ci_width=0
 
 def ignore_calibration_target_before_date(target, date):
     indices = [i_time for i_time, time in enumerate(target["times"]) if time > date]
-    truncated_target = {
+    return truncate_target(target, indices)
+
+
+def ignore_calibration_target_before_index(target, index):
+
+    # Truncate the target based on the index requested, including that index itself (which is why one is subtracted)
+    indices = [i_index for i_index in range(len(target["times"])) if i_index > index - 1]
+    return truncate_target(target, indices)
+
+
+def truncate_target(target, indices):
+    return {
         "times": [target["times"][i_time] for i_time in indices],
         "values": [target["values"][i_time] for i_time in indices],
     }
-    return truncated_target

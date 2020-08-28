@@ -9,13 +9,17 @@ from apps.covid_19.calibration import (
 from autumn.calibration.utils import (
     add_dispersion_param_prior_for_gaussian,
     ignore_calibration_target_before_date,
+    ignore_calibration_target_before_index
 )
 from autumn.tool_kit.params import load_targets
 
 targets = load_targets("covid_19", Region.PHILIPPINES)
 notifications = targets["notifications"]
 
-notifications = ignore_calibration_target_before_date(targets["notifications"], 100)
+notifications = \
+    ignore_calibration_target_before_date(targets["notifications"], 100)
+icu_occupancy = \
+    ignore_calibration_target_before_index(targets["icu_occupancy"], len(targets["icu_occupancy"]["times"]) - 1)
 
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):

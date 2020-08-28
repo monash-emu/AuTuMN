@@ -121,21 +121,25 @@ def add_standard_philippines_params(params):
 
     return params + [
         {
-            "param_name": "time_variant_detection.maximum_gradient",
+            "param_name": "ifr_multiplier",
             "distribution": "uniform",
-            "distri_params": [0.05, 0.1],
+            "distri_params": [1.5, 2.28]
         },
         {
-            "param_name": "time_variant_detection.max_change_time",
+            "param_name": "testing_to_detection.assumed_cdr_parameter",
             "distribution": "uniform",
-            "distri_params": [70.0, 110.0],
+            "distri_params": [0.3, 0.5],
         },
         {
-            "param_name": "time_variant_detection.end_value",
+            "param_name": "start_time",
             "distribution": "uniform",
-            "distri_params": [0.1, 0.4],
+            "distri_params": [40.0, 60.0],
         },
-        {"param_name": "ifr_multiplier", "distribution": "uniform", "distri_params": [1.5, 2.28]},
+        {
+            "param_name": "microdistancing.parameters.multiplier",
+            "distribution": "uniform",
+            "distri_params": [0.04, 0.16],
+        },
     ]
 
 
@@ -182,7 +186,11 @@ def add_standard_victoria_params(params):
             "distri_params": [1.0, 0.25],
             "trunc_range": [0.1, np.inf],
         },
-        {"param_name": "icu_prop", "distribution": "uniform", "distri_params": [0.08, 0.2],},
+        {
+            "param_name": "icu_prop",
+            "distribution": "uniform",
+            "distri_params": [0.08, 0.2],
+        },
         {
             "param_name": "compartment_periods.icu_early",
             "distribution": "uniform",

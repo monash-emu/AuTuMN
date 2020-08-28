@@ -277,10 +277,10 @@ def build_model(params: dict) -> StratifiedModel:
         "icu_occupancy": outputs.calculate_icu_occupancy,
         "notifications_at_sympt_onset": outputs.get_notifications_at_sympt_onset,
         "total_infection_deaths": outputs.get_infection_deaths,
+        "accum_deaths": outputs.calculate_cum_deaths,
     }
     if region in OPTI_REGIONS:
         # Derived outputs for the optimization project.
-        func_outputs["accum_deaths"] = outputs.calculate_cum_deaths
         func_outputs["accum_years_of_life_lost"] = outputs.calculate_cum_years_of_life_lost
 
     model.add_function_derived_outputs(func_outputs)

@@ -10,6 +10,7 @@ from autumn.calibration import (
 from autumn.tool_kit.utils import find_first_index_reaching_cumulative_sum
 from autumn.inputs import get_john_hopkins_data
 from autumn.tool_kit.params import load_params
+from autumn.calibration.utils import ignore_calibration_target_before_date
 
 from .model import build_model
 
@@ -18,8 +19,16 @@ N_BURNED = 0
 N_CHAINS = 1
 
 BASE_CALIBRATION_PARAMS = [
-    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.015, 0.07],},
-    {"param_name": "start_time", "distribution": "uniform", "distri_params": [0.0, 40.0],},
+    {
+        "param_name": "contact_rate",
+        "distribution": "uniform",
+        "distri_params": [0.015, 0.07],
+    },
+    {
+        "param_name": "start_time",
+        "distribution": "uniform",
+        "distri_params": [0.0, 40.0],
+    },
     {
         "param_name": "compartment_periods_calculated.exposed.total_period",
         "distribution": "uniform",
@@ -75,6 +84,36 @@ def add_standard_dispersion_parameter(params, target_outputs, output_name):
     return params
 
 
+def add_standard_philippines_targets(targets):
+
+    # Ignore notification values before day 100
+    notifications = \
+        ignore_calibration_target_before_date(targets["notifications"], 100)
+
+    return [
+        {
+            "output_key": "notifications",
+            "years": notifications["times"],
+            "values": notifications["values"],
+            "loglikelihood_distri": "normal",
+            "time_weights": assign_trailing_weights_to_halves(14, notifications["times"]),
+        },
+        {
+            "output_key": "icu_occupancy",
+            "years": [targets["icu_occupancy"]["times"][-1]],
+            "values": [targets["icu_occupancy"]["values"][-1]],
+            "loglikelihood_distri": "normal",
+
+        },
+        {
+            "output_key": "accum_deaths",
+            "years": [targets["total_infection_deaths"]["times"][-1]],
+            "values": [float(sum(targets["total_infection_deaths"]["values"]))],
+            "loglikelihood_distri": "normal",
+        },
+    ]
+
+
 def add_standard_philippines_params(params):
     """
     Add standard set of parameters to vary case detection for the Philippines
@@ -103,8 +142,16 @@ def add_standard_philippines_params(params):
 def add_standard_victoria_params(params):
 
     return params + [
-        {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.025, 0.05],},
-        {"param_name": "seasonal_force", "distribution": "uniform", "distri_params": [0.0, 0.4],},
+        {
+            "param_name": "contact_rate",
+            "distribution": "uniform",
+            "distri_params": [0.025, 0.05],
+        },
+        {
+            "param_name": "seasonal_force",
+            "distribution": "uniform",
+            "distri_params": [0.0, 0.4],
+        },
         {
             "param_name": "compartment_periods_calculated.exposed.total_period",
             "distribution": "trunc_normal",

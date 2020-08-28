@@ -195,6 +195,7 @@ new_hospital_admissions_dispersion_param: 1.
 new_icu_admissions_dispersion_param: 1.
 icu_occupancy_dispersion_param: 1.
 total_infection_deaths_dispersion_param: 1.
+accum_deaths_dispersion_param: 1.
 
 # parameters pertaining to waning immunity
 full_immunity: true

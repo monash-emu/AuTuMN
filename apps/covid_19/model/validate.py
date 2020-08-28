@@ -91,4 +91,5 @@ validate_params = sb.build_validator(
     testing_to_detection=sb.Nullable(
         sb.Dict(assumed_tests_parameter=float, assumed_cdr_parameter=float)
     ),
+    accum_deaths_dispersion_param=float,
 )

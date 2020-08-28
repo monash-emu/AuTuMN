@@ -46,7 +46,16 @@ PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS)
 PAR_PRIORS = add_standard_philippines_params(PAR_PRIORS)
 
 PAR_PRIORS += [
-    {"param_name": "start_time", "distribution": "uniform", "distri_params": [40.0, 60.0],},
+    {
+        "param_name": "start_time",
+        "distribution": "uniform",
+        "distri_params": [40.0, 60.0],
+    },
+    {
+        "param_name": "testing_to_detection.assumed_cdr_parameter",
+        "distribution": "uniform",
+        "distri_params": [0.3, 0.5],
+    },
     {
         "param_name": "microdistancing.parameters.multiplier",
         "distribution": "uniform",

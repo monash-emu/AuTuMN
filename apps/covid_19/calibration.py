@@ -155,7 +155,7 @@ def add_standard_victoria_params(params):
         {
             "param_name": "compartment_periods_calculated.exposed.total_period",
             "distribution": "trunc_normal",
-            "distri_params": [5.0, 0.7],
+            "distri_params": [6.0, 0.7],
             "trunc_range": [1.0, np.inf],
         },
         {

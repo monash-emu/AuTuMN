@@ -29,9 +29,9 @@ testing_to_detection:
 microdistancing:
   function_type: empiric
   parameters:
-    multiplier: 0.05
+    max_effect: 0.45
     times: [181, 182, 185, 186, 191, 192, 202, 204, 215, 216]
-    values: [0., 2., 2., 3., 3., 5., 5., 7., 7., 9.]
+    values: [0., 0.22, 0.22, 0.33, 0.33, 0.56, 0.56, 0.78, 0.78, 1.]
 
   # 30th March, day 90, stage 3 enforced
   # 9th June, day 162, stage 3 released (I think)

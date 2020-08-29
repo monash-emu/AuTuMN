@@ -55,7 +55,7 @@ class LocationMixingAdjustment(BaseMixingAdjustment):
             )
         elif microdistancing_params["function_type"] == "empiric":
             micro_times = microdistancing_params["parameters"]["times"]
-            multiplier = microdistancing_params["parameters"]["multiplier"]
+            multiplier = microdistancing_params["parameters"]["max_effect"]
             micro_vals = [
                 1.0 - multiplier * value for value in microdistancing_params["parameters"]["values"]
             ]

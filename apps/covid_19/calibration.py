@@ -136,7 +136,7 @@ def add_standard_philippines_params(params):
             "distri_params": [40.0, 60.0],
         },
         {
-            "param_name": "microdistancing.parameters.multiplier",
+            "param_name": "microdistancing.parameters.max_effect",
             "distribution": "uniform",
             "distri_params": [0.04, 0.16],
         },
@@ -202,7 +202,7 @@ def add_standard_victoria_params(params):
             "distri_params": [5.0, 15.0],
         },
         {
-            "param_name": "microdistancing.parameters.multiplier",
+            "param_name": "microdistancing.parameters.max_effect",
             "distribution": "uniform",
             "distri_params": [0.04, 0.08],
         },

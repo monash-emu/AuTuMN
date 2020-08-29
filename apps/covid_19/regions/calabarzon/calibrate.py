@@ -7,7 +7,6 @@ from apps.covid_19.calibration import (
 )
 from autumn.calibration.utils import (
     add_dispersion_param_prior_for_gaussian,
-    ignore_calibration_target_before_date,
 )
 from autumn.tool_kit.params import load_targets
 

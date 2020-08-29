@@ -1,7 +1,4 @@
-import os
 from copy import deepcopy
-
-import numpy as np
 
 from autumn import inputs
 from autumn.constants import Flow, BirthApproach
@@ -12,7 +9,7 @@ from autumn.tool_kit.utils import normalise_sequence, repeat_list_elements
 from summer.model import StratifiedModel
 from autumn.inputs.owid.queries import get_international_testing_numbers
 
-from apps.covid_19.constants import Compartment, ClinicalStratum
+from apps.covid_19.constants import Compartment
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
 
 from . import outputs, preprocess

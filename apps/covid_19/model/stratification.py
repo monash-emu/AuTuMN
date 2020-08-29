@@ -78,7 +78,7 @@ def stratify_by_clinical(model, params, compartments, detected_proportion, sympt
     ]
 
     # Calculate the proportion of 80+ years old among the 75+ population
-    elderly_populations = get_population_by_agegroup([0, 75, 80], params["iso3"], params["region"])
+    elderly_populations = get_population_by_agegroup([0, 75, 80], params["iso3"], params["mobility_region"])
     prop_over_80 = elderly_populations[2] / sum(elderly_populations[1:])
 
     # Infection fatality rate by age group.

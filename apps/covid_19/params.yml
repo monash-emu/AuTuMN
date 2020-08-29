@@ -141,8 +141,8 @@ time_variant_detection:
   end_value: 0.6 # End value - upper asymptote for increasing function
 
 # Sub region of country, null means just the country.
-region: null
-pop_region_override: null
+mobility_region: null
+pop_region: null
 pop_year: 2020
 
 # Country to extract stratified population data from - should eventually use only one of country or iso3

@@ -1,4 +1,4 @@
 # SCENARIO DESCRIPTION: BASELINE
 ---
 parent: apps/covid_19/vic_submodel_params.yml
-pop_region_override: NORTH_METRO
+pop_region: NORTH_METRO

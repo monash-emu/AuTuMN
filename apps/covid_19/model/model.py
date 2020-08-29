@@ -31,10 +31,8 @@ def build_model(params: dict) -> StratifiedModel:
     agegroup_max, agegroup_step = params["agegroup_breaks"]
     agegroup_strata = list(range(0, agegroup_max, agegroup_step))
     country_iso3 = params["iso3"]
-    region = params["region"]
-    pop_region = (
-        params["pop_region_override"] if params["pop_region_override"] else params["region"]
-    )
+    mobility_region = params["mobility_region"]
+    pop_region = params["pop_region"]
     total_pops = inputs.get_population_by_agegroup(
         agegroup_strata, country_iso3, pop_region, year=params["pop_year"]
     )
@@ -131,7 +129,7 @@ def build_model(params: dict) -> StratifiedModel:
     google_mobility_locations = params["google_mobility_locations"]
     dynamic_mixing_matrix = preprocess.mixing_matrix.build_dynamic(
         country_iso3,
-        region,
+        mobility_region,
         dynamic_location_mixing_params,
         dynamic_age_mixing_params,
         npi_effectiveness_params,
@@ -279,7 +277,7 @@ def build_model(params: dict) -> StratifiedModel:
         "total_infection_deaths": outputs.get_infection_deaths,
         "accum_deaths": outputs.calculate_cum_deaths,
     }
-    if region in OPTI_REGIONS:
+    if mobility_region in OPTI_REGIONS:
         # Derived outputs for the optimization project.
         func_outputs["accum_years_of_life_lost"] = outputs.calculate_cum_years_of_life_lost
 

@@ -1,4 +1,4 @@
 # SCENARIO DESCRIPTION: BASELINE
 ---
 parent: apps/covid_19/vic_submodel_params.yml
-pop_region_override: HUME
+pop_region: HUME

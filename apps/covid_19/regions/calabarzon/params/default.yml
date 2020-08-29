@@ -1,7 +1,8 @@
 # SCENARIO DESCRIPTION: BASELINE
 ---
 parent: apps/covid_19/phl_submodel_params.yml
-region: Calabarzon
+pop_region: Calabarzon
+mobility_region: Calabarzon
 
 start_time: 100.
 hospital_props_multiplier: 2.

@@ -1,7 +1,8 @@
 # SCENARIO DESCRIPTION: BASELINE
 ---
 parent: apps/covid_19/phl_submodel_params.yml
-region: Central Visayas
+mobility_region: Central Visayas
+pop_region: Central Visayas
 
 hospital_props_multiplier: 2.
 

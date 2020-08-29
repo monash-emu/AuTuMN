@@ -23,9 +23,9 @@ mixing:
 microdistancing:
   function_type: empiric
   parameters:
-    multiplier: 0.05
+    multiplier: 0.25
     times: [75, 76, 77, 137, 138, 153, 154, 214, 215, 231]
-    values: [0, 5, 5, 4, 4, 3, 3, 4, 4, 2]
+    values: [0, 1., 1., 0.8, 0.8, 0.6, 0.6, 0.8, 0.8, 0.4]
   # 16 March, day 76, ECQ enforced for whole region
   # 16 May, day 137, MECQ enforced for whole region
   # 1 June, day 153, GCQ for all regions

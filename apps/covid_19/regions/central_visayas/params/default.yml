@@ -23,10 +23,10 @@ mixing:
 microdistancing:
   function_type: empiric
   parameters:
-    multiplier: 0.05
+    multiplier: 0.4
     times:
       [121, 122, 123, 137, 138, 153, 154, 168, 169, 198, 199, 214, 215, 229]
-    values: [0, 6, 6, 5, 5, 4, 4, 8, 8, 4, 4, 3, 3, 3]
+    values: [0, 0.75, 0.75, 0.625, 0.625, 0.5, 0.5, 1., 1., 0.5, 0.5, 0.6, 0.6, 0.6]
   # 1 May, day 122, GCQ enforced everywhere with ECQ enforced for Cebu
   # 16 May, day 137, Cebu switches to modified MECQ, GCQ continues for rest of region
   # 1 June, day 153, Cebu switches to GCQ joining the rest of the region

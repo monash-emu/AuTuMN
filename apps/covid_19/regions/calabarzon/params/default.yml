@@ -24,9 +24,9 @@ mixing:
 microdistancing:
   function_type: empiric
   parameters:
-    multiplier: 0.05
+    multiplier: 0.25
     times: [75, 76, 77, 137, 138, 153, 154, 198, 199, 214, 215, 229]
-    values: [0, 5, 5, 3.5, 3.5, 1, 1, 2, 2, 4.5, 4.5, 2.5]
+    values: [0, 1., 1., 0.7, 0.7, 0.2, 0.2, 0.4, 0.4, 0.9, 0.9, 0.9]
   # 16 March, day 76, ECQ enforced for whole region
   # 16 May, day 137, GCQ continues for most of region with MECQ enforced for Laguna
   # 1 June, day 153, GCQ for all regions; substituted value of 1 to help fit model

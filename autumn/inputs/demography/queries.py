@@ -138,19 +138,6 @@ def get_population_by_agegroup(
     Returns a list of ints, each item being the population for that age bracket.
     """
 
-    # if region in [
-    #     "BARWON_SOUTH_WEST",
-    #     "GIPPSLAND",
-    #     "GRAMPIANS",
-    #     "HUME",
-    #     "LODDON_MALLEE",
-    #     "NORTH_METRO",
-    #     "SOUTH_EAST_METRO",
-    #     "SOUTH_METRO",
-    #     "WEST_METRO",
-    # ]:
-    #     region = Region.VICTORIA
-    #
     assert age_breakpoints == sorted(age_breakpoints)
     assert age_breakpoints[0] == 0
     input_db = get_input_db()

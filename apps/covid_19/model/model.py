@@ -129,6 +129,9 @@ def build_model(params: dict) -> StratifiedModel:
     dynamic_location_mixing_params = params["mixing"]
     dynamic_age_mixing_params = params["mixing_age_adjust"]
     microdistancing = params["microdistancing"]
+    assert \
+        max(microdistancing['parameters']['values']) == 0., \
+        "Maximum value of microdistancing function requests should be one"
     smooth_google_data = params["smooth_google_data"]
     npi_effectiveness_params = params["npi_effectiveness"]
     google_mobility_locations = params["google_mobility_locations"]

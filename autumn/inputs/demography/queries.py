@@ -1,6 +1,8 @@
 """
 Read demography data from input database.
 """
+from autumn.constants import Region
+
 from typing import List
 from functools import lru_cache
 
@@ -135,6 +137,7 @@ def get_population_by_agegroup(
     Find population for age bins.
     Returns a list of ints, each item being the population for that age bracket.
     """
+
     assert age_breakpoints == sorted(age_breakpoints)
     assert age_breakpoints[0] == 0
     input_db = get_input_db()

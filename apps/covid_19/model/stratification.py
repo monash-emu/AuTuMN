@@ -12,13 +12,13 @@ from autumn.inputs import get_population_by_agegroup
 from apps.covid_19.constants import Compartment, ClinicalStratum
 
 
-def stratify_by_clinical(model, params, compartments, detected_proportion, symptomatic_props):
+def stratify_by_clinical(model, params, detected_proportion, symptomatic_props):
     """
     Stratify the infectious compartments of the covid model (not including the pre-symptomatic compartments, which are
     actually infectious)
 
     - notifications are derived from progress from early to late for some strata
-    - the proportion of people moving from presymt to early infectious, conditioned on age group
+    - the proportion of people moving from presympt to early infectious, conditioned on age group
     - rate of which people flow through these compartments (reciprocal of time, using within_* which is a rate of ppl / day)
     - infectiousness levels adjusted by early/late and for clinical strata
     - we start with an age stratified infection fatality rate
@@ -78,7 +78,8 @@ def stratify_by_clinical(model, params, compartments, detected_proportion, sympt
     ]
 
     # Calculate the proportion of 80+ years old among the 75+ population
-    elderly_populations = get_population_by_agegroup([0, 75, 80], params["iso3"], params["region"])
+    elderly_populations = \
+        get_population_by_agegroup([0, 75, 80], params["iso3"], params["pop_region"], year=params["pop_year"])
     prop_over_80 = elderly_populations[2] / sum(elderly_populations[1:])
 
     # Infection fatality rate by age group.
@@ -107,7 +108,7 @@ def stratify_by_clinical(model, params, compartments, detected_proportion, sympt
         ClinicalStratum.HOSPITAL_NON_ICU: sympt_hospital_non_icu.tolist(),
     }
 
-    # Calculate the absolute proportion of all patients who should eventually reach hospital death or ICU death.
+    # Calculate the absolute proportion of all patients who should eventually reach hospital death or ICU death
     # Find IFR that needs to be contributed by ICU and non-ICU hospital deaths
     hospital_death, icu_death = [], []
     for age_idx, agegroup in enumerate(agegroup_strata):
@@ -142,7 +143,7 @@ def stratify_by_clinical(model, params, compartments, detected_proportion, sympt
 
     abs_props.update({"hospital_death": hospital_death, "icu_death": icu_death})
 
-    # FIXME: These depend on static variables which have been made time-variant.
+    # FIXME: These depend on static variables which have been made time-variant
     # fatality rate for hospitalised patients
     rel_props = {
         "hospital_death": element_wise_list_division(

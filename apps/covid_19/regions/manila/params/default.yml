@@ -1,7 +1,8 @@
 # SCENARIO DESCRIPTION: BASELINE
 ---
 parent: apps/covid_19/phl_submodel_params.yml
-region: Metro Manila
+pop_region: Metro Manila
+mobility_region: Metro Manila
 
 hospital_props_multiplier: 2.
 

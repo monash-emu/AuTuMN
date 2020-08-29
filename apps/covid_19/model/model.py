@@ -1,7 +1,4 @@
-import os
 from copy import deepcopy
-
-import numpy as np
 
 from autumn import inputs
 from autumn.constants import Flow, BirthApproach
@@ -12,7 +9,7 @@ from autumn.tool_kit.utils import normalise_sequence, repeat_list_elements
 from summer.model import StratifiedModel
 from autumn.inputs.owid.queries import get_international_testing_numbers
 
-from apps.covid_19.constants import Compartment, ClinicalStratum
+from apps.covid_19.constants import Compartment
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
 
 from . import outputs, preprocess
@@ -27,14 +24,12 @@ def build_model(params: dict) -> StratifiedModel:
     """
     validate_params(params)
 
-    # Get country population by age-group.
+    # Get country population by age-group
     agegroup_max, agegroup_step = params["agegroup_breaks"]
     agegroup_strata = list(range(0, agegroup_max, agegroup_step))
     country_iso3 = params["iso3"]
-    region = params["region"]
-    pop_region = (
-        params["pop_region_override"] if params["pop_region_override"] else params["region"]
-    )
+    mobility_region = params["mobility_region"]
+    pop_region = params["pop_region"]
     total_pops = inputs.get_population_by_agegroup(
         agegroup_strata, country_iso3, pop_region, year=params["pop_year"]
     )
@@ -55,24 +50,32 @@ def build_model(params: dict) -> StratifiedModel:
         Compartment.EARLY_ACTIVE,
         Compartment.LATE_ACTIVE,
     ]
-    disease_comps = [Compartment.EARLY_EXPOSED, *infectious_comps]
+    disease_comps = [
+        Compartment.EARLY_EXPOSED,
+        *infectious_comps
+    ]
 
-    # Calculate time periods spent in various compartments.
-    base_periods = params["compartment_periods"]
-    periods_calc = params["compartment_periods_calculated"]
+    # Calculate time periods spent in various compartments
+    base_periods = \
+        params["compartment_periods"]
+    periods_calc = \
+        params["compartment_periods_calculated"]
     compartment_periods = preprocess.compartments.calc_compartment_periods(
         base_periods, periods_calc
     )
 
     # Distribute infectious seed across infectious compartments
-    infectious_seed = params["infectious_seed"]
-    total_disease_time = sum([compartment_periods[c] for c in disease_comps])
+    infectious_seed = \
+        params["infectious_seed"]
+    total_disease_time = \
+        sum([compartment_periods[c] for c in disease_comps])
     init_pop = {
         c: infectious_seed * compartment_periods[c] / total_disease_time for c in disease_comps
     }
 
     # Force the remainder starting population to go to S compartment (Required as entry_compartment is late_infectious)
-    init_pop[Compartment.SUSCEPTIBLE] = sum(total_pops) - sum(init_pop.values())
+    init_pop[Compartment.SUSCEPTIBLE] = \
+        sum(total_pops) - sum(init_pop.values())
 
     # Set integration times
     start_time = params["start_time"]
@@ -84,10 +87,10 @@ def build_model(params: dict) -> StratifiedModel:
     flows = deepcopy(preprocess.flows.DEFAULT_FLOWS)
     flow_params = {
         "contact_rate": params["contact_rate"],
-        "infect_death": 0,  # Overwritten in clinical stratification.
-        # within_{comp_name} transition params are set below.
+        "infect_death": 0,  # Placeholder to be overwritten in clinical stratification
+        # within_{comp_name} transition params are set below
     }
-    # Add parameters for the in-disease progression flows
+    # Add parameters for the during-disease progression flows
     for comp_name, comp_period in compartment_periods.items():
         flow_params[f"within_{comp_name}"] = 1.0 / comp_period
 
@@ -105,7 +108,7 @@ def build_model(params: dict) -> StratifiedModel:
 
     implement_importation = params["implement_importation"]
     if implement_importation:
-        # Implement importation of people, importation_rate is later as time varying function.
+        # Implement importation of people, importation_rate is later as time varying function
         flows.append({"type": Flow.IMPORT, "parameter": "importation_rate"})
 
     # Create SUMMER model
@@ -116,12 +119,12 @@ def build_model(params: dict) -> StratifiedModel:
         flow_params,
         flows,
         birth_approach=BirthApproach.NO_BIRTH,
-        entry_compartment=Compartment.LATE_ACTIVE,  # to model imported cases
+        entry_compartment=Compartment.LATE_ACTIVE,  # To model imported cases
         starting_population=sum(total_pops),
         infectious_compartments=infectious_comps,
     )
 
-    # Build a dynamic, age-based mixing matrix.
+    # Build a dynamic, age-based mixing matrix
     static_mixing_matrix = preprocess.mixing_matrix.build_static(country_iso3)
     dynamic_location_mixing_params = params["mixing"]
     dynamic_age_mixing_params = params["mixing_age_adjust"]
@@ -131,7 +134,7 @@ def build_model(params: dict) -> StratifiedModel:
     google_mobility_locations = params["google_mobility_locations"]
     dynamic_mixing_matrix = preprocess.mixing_matrix.build_dynamic(
         country_iso3,
-        region,
+        mobility_region,
         dynamic_location_mixing_params,
         dynamic_age_mixing_params,
         npi_effectiveness_params,
@@ -174,25 +177,11 @@ def build_model(params: dict) -> StratifiedModel:
 
     # Determine the proportion of cases detected over time as the detected_proportion
     if params["testing_to_detection"]:
-        assumed_tests_parameter = params["testing_to_detection"]["assumed_tests_parameter"]
-        assumed_cdr_parameter = params["testing_to_detection"]["assumed_cdr_parameter"]
-
-        # Tests data
-        test_dates, test_values = \
-            inputs.get_vic_testing_numbers() if params["iso3"] == "AUS" else \
-                get_international_testing_numbers(params["iso3"])
-
-        # Convert test numbers to per capita testing rates
-        per_capita_tests = \
-            [i_tests / sum(total_pops) for i_tests in test_values]
-
-        # Calculate CDRs and the resulting CDR function over time
-        cdr_from_tests_func = create_cdr_function(assumed_tests_parameter, assumed_cdr_parameter)
-        detected_proportion = scale_up_function(
-            test_dates,
-            [cdr_from_tests_func(i_test_rate) for i_test_rate in per_capita_tests],
-            smoothness=0.2,
-            method=5,
+        detected_proportion = find_cdr_function_from_test_data(
+            params["testing_to_detection"]["assumed_tests_parameter"],
+            params["testing_to_detection"]["assumed_cdr_parameter"],
+            country_iso3,
+            total_pops
         )
 
     else:
@@ -230,11 +219,11 @@ def build_model(params: dict) -> StratifiedModel:
         )
         model.time_variants["importation_rate"] = import_rate_func
 
-    # Stratify the model by clinical status.
-    stratify_by_clinical(model, params, compartments, detected_proportion, symptomatic_props)
-    # Finished building the model.
+    # Stratify the model by clinical status
+    stratify_by_clinical(model, params, detected_proportion, symptomatic_props)
+    # Finished building the model
 
-    # Set up derived outputs.
+    # Set up derived outputs
     # Define which flows we should track for derived outputs
     incidence_connections = outputs.get_incidence_connections(model.compartment_names)
     progress_connections = outputs.get_progress_connections(model.compartment_names)
@@ -279,9 +268,34 @@ def build_model(params: dict) -> StratifiedModel:
         "total_infection_deaths": outputs.get_infection_deaths,
         "accum_deaths": outputs.calculate_cum_deaths,
     }
-    if region in OPTI_REGIONS:
+    if mobility_region in OPTI_REGIONS:
         # Derived outputs for the optimization project.
         func_outputs["accum_years_of_life_lost"] = outputs.calculate_cum_years_of_life_lost
 
     model.add_function_derived_outputs(func_outputs)
     return model
+
+
+def find_cdr_function_from_test_data(
+        assumed_tests_parameter,
+        assumed_cdr_parameter,
+        country_iso3,
+        total_pops,
+):
+    # Tests data
+    test_dates, test_values = \
+        inputs.get_vic_testing_numbers() if country_iso3 == "AUS" else \
+            get_international_testing_numbers(country_iso3)
+
+    # Convert test numbers to per capita testing rates
+    per_capita_tests = \
+        [i_tests / sum(total_pops) for i_tests in test_values]
+
+    # Calculate CDRs and the resulting CDR function over time
+    cdr_from_tests_func = create_cdr_function(assumed_tests_parameter, assumed_cdr_parameter)
+    return scale_up_function(
+        test_dates,
+        [cdr_from_tests_func(i_test_rate) for i_test_rate in per_capita_tests],
+        smoothness=0.2,
+        method=5,
+    )

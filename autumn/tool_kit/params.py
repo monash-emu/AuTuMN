@@ -8,7 +8,7 @@ import json
 from copy import deepcopy
 from os import path
 
-from autumn.constants import APPS_PATH
+from autumn.constants import APPS_PATH, BASE_PATH
 from autumn.tool_kit.utils import merge_dicts
 from autumn.secrets import check_hash
 
@@ -80,7 +80,8 @@ def load_param_file(path: str):
     if not parent_path:
         return data
     else:
-        parent_data = load_param_file(parent_path)
+        abs_parent_path = os.path.join(BASE_PATH, parent_path)
+        parent_data = load_param_file(abs_parent_path)
         return merge_dicts(data, parent_data)
 
 

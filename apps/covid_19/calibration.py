@@ -31,8 +31,9 @@ BASE_CALIBRATION_PARAMS = [
     },
     {
         "param_name": "compartment_periods_calculated.exposed.total_period",
-        "distribution": "uniform",
-        "distri_params": [3.0, 6.0],
+        "distribution": "trunc_normal",
+        "distri_params": [5.5, 0.97],
+        "trunc_range": [1.0, np.inf],
     },
     {
         "param_name": "compartment_periods_calculated.active.total_period",
@@ -159,7 +160,7 @@ def add_standard_victoria_params(params):
         {
             "param_name": "compartment_periods_calculated.exposed.total_period",
             "distribution": "trunc_normal",
-            "distri_params": [6.0, 0.7],
+            "distri_params": [5.5, 0.97],
             "trunc_range": [1.0, np.inf],
         },
         {

@@ -18,10 +18,6 @@ compartment_periods:
 hospital_props_multiplier: 1.5
 icu_prop: 0.12
 
-compartment_periods_calculated:
-  exposed:
-    total_period: 3.8
-
 testing_to_detection:
   assumed_tests_parameter: 1.e-03
   assumed_cdr_parameter: 0.25

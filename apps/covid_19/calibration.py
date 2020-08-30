@@ -1,14 +1,10 @@
 import logging
-
-from numpy import linspace
 import numpy as np
 
 from autumn.calibration import (
     Calibration,
     run_full_models_for_mcmc as _run_full_models_for_mcmc,
 )
-from autumn.tool_kit.utils import find_first_index_reaching_cumulative_sum
-from autumn.inputs import get_john_hopkins_data
 from autumn.tool_kit.params import load_params
 from autumn.calibration.utils import ignore_calibration_target_before_date
 
@@ -17,6 +13,13 @@ from .model import build_model
 N_ITERS = 100000
 N_BURNED = 0
 N_CHAINS = 1
+
+logger = logging.getLogger(__name__)
+
+
+"""
+Base parameters
+"""
 
 BASE_CALIBRATION_PARAMS = [
 
@@ -51,24 +54,6 @@ BASE_CALIBRATION_PARAMS = [
 ]
 
 
-def assign_trailing_weights_to_halves(end_weights, calibration_target):
-    """
-    Create a list of (float) halves and ones, of the length of the calibration target, with the last few values being
-    ones and the earlier values being halves.
-
-    :param end_weights: int
-        How many values at the end should be ones
-    :param calibration_target: list
-        List of calibration targets to determine the length of the weights to be returned
-    :return: list
-        List of the weights as described above
-    """
-
-    time_weights = [0.5] * (len(calibration_target) - end_weights)
-    time_weights += [1.0] * end_weights
-    return time_weights
-
-
 def provide_default_calibration_params(excluded_params=()):
     """
     Provide the standard default parameters as listed above, unless requested not to include any.
@@ -86,7 +71,9 @@ def provide_default_calibration_params(excluded_params=()):
     ]
 
 
-logger = logging.getLogger(__name__)
+"""
+General calibration methods
+"""
 
 
 def run_full_models_for_mcmc(region: str, burn_in: int, src_db_path: str, dest_db_path: str):
@@ -138,57 +125,6 @@ def run_calibration_chain(
     logger.info(f"Finished calibration for run {run_id}.")
 
 
-def get_priors_and_targets(region, data_type="confirmed", start_after_n_cases=1):
-    """
-    Automatically build prior distributions and calibration targets using John Hopkins data
-    :param region: the region name
-    :param data_type: either "confirmed" or "deaths"
-    :return:
-    """
-
-    # for JH data, day_1 is '1/22/20', that is 22 Jan 2020
-    n_daily_cases = get_john_hopkins_data(data_type, country=region.title(), latest=True)
-
-    # get the subset of data points starting after 1st case detected
-    index_start = find_first_index_reaching_cumulative_sum(n_daily_cases, start_after_n_cases)
-    data_of_interest = n_daily_cases[index_start:]
-
-    start_day = index_start + 22  # because JH data starts 22/1
-
-    PAR_PRIORS = [
-        {
-            "param_name": "contact_rate",
-            "distribution": "uniform",
-            "distri_params": [0.1, 4.0],
-        },
-        {
-            "param_name": "start_time",
-            "distribution": "uniform",
-            "distri_params": [-30, start_day - 1],
-        },
-    ]
-
-    output_key = {
-        "confirmed": "notifications",
-        "deaths": "infection_deathsXall"
-    }
-
-    assert data_type in output_key
-
-    TARGET_OUTPUTS = [
-        {
-            "output_key": output_key[data_type],
-            "years": linspace(
-                start_day, start_day + len(data_of_interest) - 1, num=len(data_of_interest),
-            ),
-            "values": data_of_interest,
-            "loglikelihood_distri": "poisson",
-        }
-    ]
-
-    return PAR_PRIORS, TARGET_OUTPUTS
-
-
 def add_standard_dispersion_parameter(params, target_outputs, output_name):
     """
     Add standard dispersion parameter for negative binomial distribution
@@ -216,6 +152,8 @@ def add_standard_dispersion_parameter(params, target_outputs, output_name):
 
 """
 Application-specific methods
+
+Philippines
 """
 
 
@@ -276,6 +214,29 @@ def add_standard_philippines_targets(targets):
             "loglikelihood_distri": "normal",
         },
     ]
+
+
+def assign_trailing_weights_to_halves(end_weights, calibration_target):
+    """
+    Create a list of (float) halves and ones, of the length of the calibration target, with the last few values being
+    ones and the earlier values being halves.
+
+    :param end_weights: int
+        How many values at the end should be ones
+    :param calibration_target: list
+        List of calibration targets to determine the length of the weights to be returned
+    :return: list
+        List of the weights as described above
+    """
+
+    time_weights = [0.5] * (len(calibration_target) - end_weights)
+    time_weights += [1.0] * end_weights
+    return time_weights
+
+
+"""
+Victoria
+"""
 
 
 def add_standard_victoria_params(params):

@@ -6,7 +6,7 @@ implement_importation: True
 
 traveller_quarantine:
   times: [73., 76.]  # Self-isolation from 13 March
-  values: [0., 1.]
+  values: [0., 0.7]
 
 contact_rate: 0.02
 

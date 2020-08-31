@@ -21,13 +21,12 @@ burn_in_field = TextInputField(
     type=int,
     default=500,
 )
-use_latest_code_field = SelectInputField(
+use_latest_code_field = BooleanInputField(
     key="use-latest-code",
     title="Use latest code for model run",
     hint="Should this task use the same Git commit as the calibration, or use the latest code instead?",
     type=bool,
-    options=[{"label": "Yes", "value": "yes"}, {"label": "No", "value": ""}],
-    default="",
+    default="no",
 )
 trigger_field = BooleanInputField(
     key="trigger-downstream",

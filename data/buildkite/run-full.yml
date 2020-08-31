@@ -10,7 +10,7 @@ steps:
     key: burn-in
     required: true
     text: Burn-in
-  - default: ''
+  - default: 'no'
     hint: Should this task use the same Git commit as the calibration, or use the
       latest code instead?
     key: use-latest-code
@@ -18,7 +18,7 @@ steps:
     - label: 'Yes'
       value: 'yes'
     - label: 'No'
-      value: ''
+      value: 'no'
     required: true
     select: Use latest code for model run
   - default: 'yes'

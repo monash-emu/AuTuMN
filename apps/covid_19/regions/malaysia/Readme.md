@@ -11,6 +11,8 @@ Excel sheet is titled is: ‘New _import_ICU cases in Malaysia_updated 30 August 2
 Location:	https://drive.google.com/file/d/1mnZcmj2jfmrap1ytyg_ErD1DZ7zDptyJ/view?usp=sharing
 Use case:	For case notifications, we extract column A (Date) and column B (New Cases (A)).
 			For ICU occupancy, we extract column A (Date) and column F (Total ICU Usage including ventilator usage (E)).
-
+			For case importation, we extract column A (Date) and column B (Imported cases (B))
+			
 The target values are extracted and the date index is calculated on a local excel spreadsheet. 
 These values are then entered into the targets.json file for this region.
+Case importations values are entered into default.yml.

@@ -63,6 +63,11 @@ steps:
     key: mcmc-runtime
     required: true
     text: Runtime
+  - default: '500'
+    hint: How many MCMC iterations should be burned?
+    key: burn-in
+    required: true
+    text: Burn-in
   - default: 'yes'
     hint: Should this task trigger a full model run when it is done?
     key: trigger-downstream

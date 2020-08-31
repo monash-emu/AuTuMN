@@ -50,6 +50,7 @@ def calibrate():
     model_name = calibrate_pipeline.model_field.get_value()
     chains = calibrate_pipeline.chains_field.get_value()
     runtime = calibrate_pipeline.runtime_field.get_value()
+    burn_in = calibrate_pipeline.burn_in_field.get_value()
     branch = calibrate_pipeline.branch_field.get_value()
     trigger_downstream = calibrate_pipeline.trigger_field.get_value()
     is_spot = calibrate_pipeline.spot_field.get_value()
@@ -79,7 +80,7 @@ def calibrate():
             env={"SKIP_INPUT": "true"},
             meta={
                 fp.run_id_field.key: run_id,
-                fp.burn_in_field.key: fp.burn_in_field.default,
+                fp.burn_in_field.key: burn_in,
                 fp.use_latest_code_field.key: fp.use_latest_code_field.default,
                 fp.trigger_field.key: trigger_downstream,
                 fp.spot_field.key: is_spot,
@@ -210,6 +211,7 @@ def _trigger_models(models, p):
     build_number = os.environ["BUILDKITE_BUILD_NUMBER"]
     chains = p.chains_field.get_value()
     runtime = p.runtime_field.get_value()
+    burn_in = p.burn_in_field.get_value()
     branch = p.branch_field.get_value()
     is_spot = p.spot_field.get_value()
     trigger_downstream = p.trigger_field.get_value()
@@ -227,6 +229,7 @@ def _trigger_models(models, p):
                 cp.chains_field.key: chains,
                 cp.branch_field.key: branch,
                 cp.runtime_field.key: runtime / 3600.0,
+                cp.burn_in_field.key: burn_in,
                 cp.trigger_field.key: trigger_downstream,
                 cp.spot_field.key: is_spot,
             },

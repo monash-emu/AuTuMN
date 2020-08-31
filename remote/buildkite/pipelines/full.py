@@ -19,7 +19,7 @@ burn_in_field = TextInputField(
     title="Burn-in",
     hint="How many MCMC iterations should be burned?",
     type=int,
-    default=50,
+    default=500,
 )
 use_latest_code_field = SelectInputField(
     key="use-latest-code",

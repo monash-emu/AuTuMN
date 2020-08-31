@@ -97,10 +97,9 @@ def test_update_mixing_data__with_user_specified_values():
 def test_update_mixing_data__with_user_specified_values__out_of_date():
     """
     When a user specifies mixing values where the max date is older than the latest
-    mobility data, then the app should crash.
+    mobility data, then this should still work (no crash).
     """
     mixing = {
-        # Expect crash because of stale date
         "school": {
             "values": [1.11, 1.22, 1.33],
             "times": get_date_from_base([0, 1, 2]),  # Stale date, should be up to 3
@@ -110,10 +109,13 @@ def test_update_mixing_data__with_user_specified_values__out_of_date():
     npi_effectiveness_params = {}
     google_mobility_values = {"work": [1.1, 1.2, 1.3, 1.4]}
     google_mobility_days = [0, 1, 2, 3]
-    with pytest.raises(AssertionError):
-        adjust_location.update_mixing_data(
-            mixing, npi_effectiveness_params, google_mobility_values, google_mobility_days,
-        )
+    actual_mixing = adjust_location.update_mixing_data(
+        mixing, npi_effectiveness_params, google_mobility_values, google_mobility_days,
+    )
+    assert actual_mixing == {
+        "work": {"values": [1.1, 1.2, 1.3, 1.4], "times": [0, 1, 2, 3]},
+        "school": {"values": [1.11, 1.22, 1.33], "times": [0, 1, 2]},
+    }
 
 
 def test_update_mixing_data__with_user_specified_values__missing_data_append():
@@ -145,23 +147,25 @@ def test_update_mixing_data__with_user_specified_values__date_clash_append():
     """
     When a user specifies mixing values that should be appended to,
     and the min appended date is less than the max Google mobility date,
-    then the app should crash.
+    then the appended data should overwrite historical mobility data.
     """
     mixing = {
         # Expect crash because of conflicting date
         "work": {
-            "values": [1.11, 1.22],
-            "times": get_date_from_base([3, 4]),  # Conflicting lowest date, cannot append
+            "values": [1.11, 1.22, 1.33],
+            "times": get_date_from_base([3, 4, 5]),  # Conflicting lowest date, cannot append
             "append": True,
         },
     }
     npi_effectiveness_params = {}
     google_mobility_values = {"work": [1.1, 1.2, 1.3, 1.4]}
-    google_mobility_days = [0, 1, 2, 3]
-    with pytest.raises(AssertionError):
-        adjust_location.update_mixing_data(
-            mixing, npi_effectiveness_params, google_mobility_values, google_mobility_days,
-        )
+    google_mobility_days = [0, 1, 2, 3, 4]
+    actual_mixing = adjust_location.update_mixing_data(
+        mixing, npi_effectiveness_params, google_mobility_values, google_mobility_days,
+    )
+    assert actual_mixing == {
+        "work": {"values": [1.1, 1.2, 1.3, 1.11, 1.22, 1.33], "times": [0, 1, 2, 3, 4, 5]},
+    }
 
 
 def test_build_static__for_australia():

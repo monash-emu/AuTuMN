@@ -104,18 +104,13 @@ def update_mixing_data(
 
         loc_mixing = mixing.get(loc_key)
         if loc_mixing:
+            # Ensure this location's mixing times and values match.
             assert len(loc_mixing["times"]) == len(
                 loc_mixing["values"]
             ), f"Mixing series length mismatch for {loc_key}"
             loc_mixing["times"] = [
                 (time_date - BASE_DATE).days for time_date in loc_mixing["times"]
             ]
-
-            # Ensure all user-specified dynamic mixing is up to date
-            is_fresh_timeseries = max(loc_mixing["times"]) >= most_recent_day
-            assert (
-                is_fresh_timeseries
-            ), f"Dynamic mixing for {loc_key} is out of date, max date less than {most_recent_day}"
 
         # Add historical Google mobility data to user-specified mixing params
         mobility_values = google_mobility_values.get(loc_key)
@@ -130,11 +125,24 @@ def update_mixing_data(
             elif loc_mixing["append"]:
                 # Append user-specified mixing data to historical mobility data
                 first_append_day = min(loc_mixing["times"])
-                assert most_recent_day < first_append_day, f"Cannot append {loc_key}, dates clash."
-                mixing[loc_key] = {
-                    "times": google_mobility_days + loc_mixing["times"],
-                    "values": mobility_values + loc_mixing["values"],
-                }
+                if most_recent_day < first_append_day:
+                    # Appended days happen after the Google Mobility data, so we can just append them.
+                    mixing[loc_key] = {
+                        "times": google_mobility_days + loc_mixing["times"],
+                        "values": mobility_values + loc_mixing["values"],
+                    }
+                else:
+                    # Appended days start during the Google Mobility data, so we must merge them.
+                    merge_idx = None
+                    for idx, day in enumerate(google_mobility_days):
+                        if day >= first_append_day:
+                            merge_idx = idx
+                            break
+                    mixing[loc_key] = {
+                        "times": google_mobility_days[:merge_idx] + loc_mixing["times"],
+                        "values": mobility_values[:merge_idx] + loc_mixing["values"],
+                    }
+
             else:
                 # Don't append, overwrite: insert the user-specified data
                 mixing[loc_key] = {

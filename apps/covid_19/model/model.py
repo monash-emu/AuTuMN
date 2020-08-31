@@ -305,5 +305,4 @@ def find_cdr_function_from_test_data(
         smoothness=0.2,
         method=5,
         bound_low=0.,
-        bound_up=1.
     )

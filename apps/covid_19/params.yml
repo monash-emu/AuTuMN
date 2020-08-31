@@ -1,58 +1,84 @@
 ---
 parent: null
 
-# Parameters used to build a general model of COVID-19 disease for application to Australia or internationally
+# Parameters used to build a general model of COVID-19 disease
+
 # MODEL STRUCTURE PARAMETERS
 
-implement_importation: False
-import_secondary_rate: 0.
-data:
-  times_imported_cases: []
-  n_imported_cases: []
-
-microdistancing: null
-
-testing_to_detection: null
-
-traveller_quarantine:
-  times: [0.]
-  values: [0.]
-
-# Mean time in days spent in each compartment
-# Note that the early period is intended to represent the pre-hospitalisations period, whereas the late period is
-# intended to represent the time in hospital or ICU (as applicable)
-compartment_periods:
-  hospital_early: 8.1
-  hospital_late: 18.4
-  icu_early: 12.7
-  icu_late: 10.8
-
-# Mean time (?) spent in each compartment, defined via proportions
-compartment_periods_calculated:
-  exposed:
-    total_period: 5.5
-    proportions:
-      early: 0.5
-      # Proportion of the exposed period spent infectious - i.e. "presymptomatic", assumed
-      late: 0.5
-
-  active:
-    total_period: 7.
-    proportions:
-      # Proportion of the infectious period spent in the early compartment (i.e. can't be isolated for symptoms), assumed
-      early: 0.333
-      late: 0.667
-
-# Currently must use only four strata, because deaths will not be calculated correctly otherwise - should be quickly
-# adaptable to fewer strata as needed, though
 agegroup_breaks:
   - 80
   - 5
 
-# AGE-STRATIFIED PARAMETERS
+# Sub-region of country, null means just the country.
+mobility_region: null
+pop_region: null
+pop_year: 2020
+
+# Base model definition
+seasonal_force: null
+
+# Compulsory parameter that is completely overwritten in stratification, rather than being modified
+infect_death: 0.
+
+# Compulsory parameter for all models, even though there are no population-wide deaths
+universal_death_rate: 0.
+
+# Parameters pertaining to waning immunity
+full_immunity: true
+immunity_duration: 90.
+
+# Parameters relating to adjusting the mixing matrix to reflect interventions
+mixing: {}
+mixing_age_adjust: {}
+npi_effectiveness: {}
+
+# Mapping of Google mobility locations to Prem-specific locations
+google_mobility_locations:
+  work:
+    - workplaces
+  other_locations:
+    - retail_and_recreation
+    - grocery_and_pharmacy
+    - parks
+    - transit_stations
+
+smooth_google_data: false # whether to apply a 7-day moving average
+
+# Country to extract stratified population data from - should eventually use only one of country or iso3
+iso3: null
+
+# Initial conditions
+infectious_seed: 10
+
+# Running time-related - for COVID-19 model, all times are assumed to be in days and reference time is 31st Dec 2019
+start_time: 40.
+end_time: 550.
+time_step: 1.
+
+# FIXED BIOLOGICAL PARAMETERS
+
+contact_rate: 0.03  # Routinely calibrated, see calibration file
+
+# Mean time (?) spent in each compartment, defined via proportions
+compartment_periods_calculated:
+  exposed:
+    total_period: 5.5  # Routinely calibrated, see calibration file
+    proportions:
+      early: 0.5
+      # Proportion of the exposed period spent infectious - i.e. "presymptomatic"
+      late: 0.5
+
+  active:
+    total_period: 8.  # Routinely calibrated, see calibration file
+    proportions:
+      # Proportion of the infectious period spent in the early compartment (i.e. can't be isolated for symptoms)
+      early: 0.333
+      late: 0.667
+
+# AGE-STRATIFIED BIOLOGICAL PARAMETERS
 
 # Infectiousness progression adjustments - in ten year brackets that need to be adapted to model strata later
-# Extracted from the LSHTM's "Age-dependent effects in the ..." Fig 2b, upper-left panel
+# From the LSHTM's "Age-dependent effects in the ..." Fig 2b, upper-left panel
 # Mean estimated values used. a.k.a "clinical fraction".
 symptomatic_props:
   - 0.29 # 0-9
@@ -63,46 +89,7 @@ symptomatic_props:
   - 0.49 # 50-59
   - 0.63 # 60-69
   - 0.69 # 70+
-
 symptomatic_props_multiplier: 1.
-
-# Proportion of symptomatic persons that are hospitalised - Dutch GGD report
-hospital_props:
-  - 0.087 # 0-4
-  - 0.009 # 5-9
-  - 0.005 # 10-14
-  - 0.008 # 15-19
-  - 0.011 # 20-24
-  - 0.011 # 25-29
-  - 0.013 # 30-34
-  - 0.015 # 35-39
-  - 0.018 # 40-44
-  - 0.040 # 45-49
-  - 0.047 # 50-54
-  - 0.070 # 55-59
-  - 0.071 # 60-64
-  - 0.114 # 65-69
-  - 0.113 # 70-74
-  - 0.071 # 75+
-
-hospital_props_multiplier: 1.
-
-# Proportion of those hospitalised that are admitted to ICU - consistent with LSHTM's LMIC estimates parameters
-icu_prop: 0.17
-
-# Infection fatality proportions - now calculated using the Spanish serosurvey data by Pollan et al.
-use_raw_mortality_estimates: True
-infection_fatality_props:
-  - 1.35e-05 # 0-9
-  - 2.7e-05 # 10-19
-  - 9.5e-05 # 20-29
-  - 2.3e-04 # 30-39
-  - 5.6e-04 # 40-49
-  - 1.9e-03 # 50-59
-  - 7.7e-03 # 60-69
-  - 0.027 # 70-79
-  - 0.11 # 80+
-ifr_multiplier: 1.
 
 # Age-based susceptibility from LSHTM, used mean values
 age_based_susceptibility:
@@ -123,83 +110,31 @@ age_based_susceptibility:
   "70": 0.74 # 70-74
   "75": 0.74 # 75+
 
-# NON-AGE-STRATIFIED PARAMETERS
-
-# Adjust the infectiousness of clinical strata - assumed
-late_exposed_infect_multiplier: 1.0
-non_sympt_infect_multiplier: 0.5
-late_infect_multiplier:
-  sympt_isolate: 0.2
-  hospital_non_icu: 0.2
-  icu: 0.2
-
-# parameters of tanh-based scale-up function used to define time-variant detection
-time_variant_detection:
-  maximum_gradient: 0.05 # The shape parameter to the tanh-based curve
-  max_change_time: 90. # Point at which curve inflects
-  start_value: 0.1 # Starting value - lower asymptote for increasing function
-  end_value: 0.6 # End value - upper asymptote for increasing function
-
-# Sub region of country, null means just the country.
-mobility_region: null
-pop_region: null
-pop_year: 2020
-
-# Country to extract stratified population data from - should eventually use only one of country or iso3
-# Country to extract Prem mixing matrix from
-iso3: null
-
-# Initial conditions
-infectious_seed: 10
-
-# Running time-related - for COVID-19 model, all times are assumed to be in days and reference time is 31st Dec 2019
-start_time: 40.
-end_time: 550.
-time_step: 1.
-
-# Base model definition
-contact_rate: 0.03 # Expected to be calibrated for each application
-seasonal_force: null
+# Infection fatality proportions - now calculated using the Spanish serosurvey data by Pollan et al.
+use_raw_mortality_estimates: True
+infection_fatality_props:
+  - 1.35e-05 # 0-9
+  - 2.7e-05 # 10-19
+  - 9.5e-05 # 20-29
+  - 2.3e-04 # 30-39
+  - 5.6e-04 # 40-49
+  - 1.9e-03 # 50-59
+  - 7.7e-03 # 60-69
+  - 0.027 # 70-79
+  - 0.11 # 80+
+ifr_multiplier: 1.
 icu_mortality_prop: 0.5 # Death proportion ceiling for ICU mortality
 
-# Compulsory parameter that is completely overwritten in stratification, rather than being modified
-infect_death: 0.
+# IMPORTATION-RELATED PARAMETERS
 
-# Compulsory parameter for all models, even though there are no population-wide deaths
-universal_death_rate: 0.
-
-# Parameters relating to adjusting the mixing matrix to reflect interventions
-mixing: {}
-mixing_age_adjust: {}
-npi_effectiveness: {}
-
-# Mapping of Google Mobility locations to Autumn-specific locations
-google_mobility_locations:
-  work:
-    - workplaces
-  other_locations:
-    - retail_and_recreation
-    - grocery_and_pharmacy
-    - parks
-    - transit_stations
-
-smooth_google_data: false # whether to apply a 7-day moving average
-
-# Parameters of negative binomial (need to be listed for validation)
-notifications_dispersion_param: 1.
-prevXlate_activeXclinical_icuXamong_dispersion_param: 1.
-infection_deathsXall_dispersion_param: 1.
-proportion_seropositive_dispersion_param: 1.
-hospital_occupancy_dispersion_param: 1.
-new_hospital_admissions_dispersion_param: 1.
-new_icu_admissions_dispersion_param: 1.
-icu_occupancy_dispersion_param: 1.
-total_infection_deaths_dispersion_param: 1.
-accum_deaths_dispersion_param: 1.
-
-# parameters pertaining to waning immunity
-full_immunity: true
-immunity_duration: 90.
+implement_importation: False
+import_secondary_rate: 0.
+data:
+  times_imported_cases: []
+  n_imported_cases: []
+traveller_quarantine:
+  times: [0.]
+  values: [0.]
 
 importation_props_by_age:
   "0": 0.04
@@ -218,3 +153,69 @@ importation_props_by_age:
   "65": 0.04
   "70": 0.04
   "75": 0.04
+
+# HEALTH SYSTEM OR RESPONSE-RELATED PARAMETERS
+
+microdistancing: null
+
+# Proportion of symptomatic persons that are hospitalised - Dutch GGD report
+hospital_props:
+  - 0.087 # 0-4
+  - 0.009 # 5-9
+  - 0.005 # 10-14
+  - 0.008 # 15-19
+  - 0.011 # 20-24
+  - 0.011 # 25-29
+  - 0.013 # 30-34
+  - 0.015 # 35-39
+  - 0.018 # 40-44
+  - 0.040 # 45-49
+  - 0.047 # 50-54
+  - 0.070 # 55-59
+  - 0.071 # 60-64
+  - 0.114 # 65-69
+  - 0.113 # 70-74
+  - 0.071 # 75+
+hospital_props_multiplier: 1.  # Multiplier to the above age-stratified parameters
+icu_prop: 0.17  # Proportion of those hospitalised that are admitted to ICU
+
+# Mean time in days spent in each compartment
+# Note that the early period is intended to represent the pre-hospitalisations period, whereas the late period is
+# intended to represent the time in hospital or ICU (as applicable)
+compartment_periods:
+  hospital_early: 8.1
+  hospital_late: 18.4
+  icu_early: 12.7
+  icu_late: 10.8
+
+# Infectiousness adjustments, including the effect of isolation following detection
+late_exposed_infect_multiplier: 1.0
+non_sympt_infect_multiplier: 0.5
+late_infect_multiplier:
+  sympt_isolate: 0.2
+  hospital_non_icu: 0.2
+  icu: 0.2
+
+# parameters of tanh-based scale-up function used to define time-variant detection
+
+time_variant_detection:
+  maximum_gradient: 0.05 # The shape parameter to the tanh-based curve
+  max_change_time: 90. # Point at which curve inflects
+  start_value: 0.1 # Starting value - lower asymptote for increasing function
+  end_value: 0.6 # End value - upper asymptote for increasing function
+
+testing_to_detection: null
+
+# PARAMETERS THAT RELATE TO CALIBRATION ONLY
+
+# Parameters of negative binomial (need to be listed for validation to pass)
+notifications_dispersion_param: 1.
+prevXlate_activeXclinical_icuXamong_dispersion_param: 1.
+infection_deathsXall_dispersion_param: 1.
+proportion_seropositive_dispersion_param: 1.
+hospital_occupancy_dispersion_param: 1.
+new_hospital_admissions_dispersion_param: 1.
+new_icu_admissions_dispersion_param: 1.
+icu_occupancy_dispersion_param: 1.
+total_infection_deaths_dispersion_param: 1.
+accum_deaths_dispersion_param: 1.

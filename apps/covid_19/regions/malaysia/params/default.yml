@@ -14,9 +14,23 @@ traveller_quarantine:
 microdistancing:
   function_type: empiric
   parameters:
-    max_effect: 0.7
-    times: [77, 78, 133, 134, 161, 162]
-    values: [0., 1., 1., 0.95, 0.95, 0.9]
+    max_effect: 0.6
+    times:
+      - 77
+      - 78
+      - 133
+      - 134
+      - 161
+      - 162
+
+    # Parameters currently seem a bit extreme - in order to stop epidemic rebound
+    values:
+      - 0.
+      - 1.  # MCO starts (18th March)
+      - 1.
+      - 0.95  # CMCO starts (12th May)
+      - 0.95
+      - 0.9  # RMCO starts (10th June)
 
 end_time: 200.
 iso3: MYS

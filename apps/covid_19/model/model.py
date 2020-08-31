@@ -304,4 +304,5 @@ def find_cdr_function_from_test_data(
         [cdr_from_tests_func(i_test_rate) for i_test_rate in per_capita_tests],
         smoothness=0.2,
         method=5,
+        bound_low=0.,
     )

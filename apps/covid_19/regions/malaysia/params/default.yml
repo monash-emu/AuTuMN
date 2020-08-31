@@ -1,15 +1,18 @@
 # SCENARIO DESCRIPTION: BASELINE
 ---
 parent: apps/covid_19/params.yml
+iso3: MYS
 implement_importation: True
 
 traveller_quarantine:
   times: [73., 76.]  # Self-isolation from 13 March
   values: [0., 1.]
 
-#testing_to_detection:
-#  assumed_tests_parameter: 1.e-03
-#  assumed_cdr_parameter: 0.25
+contact_rate: 0.02
+
+testing_to_detection:
+  assumed_tests_parameter: 1.e-04
+  assumed_cdr_parameter: 0.4
 
 microdistancing:
   function_type: empiric
@@ -28,12 +31,9 @@ microdistancing:
       - 0.
       - 1.  # MCO starts (18th March)
       - 1.
-      - 0.95  # CMCO starts (12th May)
-      - 0.95
-      - 0.9  # RMCO starts (10th June)
-
-end_time: 200.
-iso3: MYS
+      - 0.75  # CMCO starts (12th May)
+      - 0.75
+      - 0.5  # RMCO starts (10th June)
 
 mixing:
   school:

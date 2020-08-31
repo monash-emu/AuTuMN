@@ -37,7 +37,7 @@ BASE_CALIBRATION_PARAMS = [
         "distri_params": [0.0, 40.0],
     },
 
-    # Rationale described in parameters table of the methods Gdoc at:
+    # Rationale for the following two parameters described in parameters table of the methods Gdoc at:
     # https://docs.google.com/document/d/1Uhzqm1CbIlNXjowbpTlJpIphxOm34pbx8au2PeqpRXs/edit#
     {
         "param_name": "compartment_periods_calculated.exposed.total_period",
@@ -45,11 +45,11 @@ BASE_CALIBRATION_PARAMS = [
         "distri_params": [5.5, 0.97],
         "trunc_range": [1.0, np.inf],
     },
-
     {
         "param_name": "compartment_periods_calculated.active.total_period",
-        "distribution": "uniform",
-        "distri_params": [4.5, 9.5],
+        "distribution": "trunc_normal",
+        "distri_params": [6.5, 0.77],
+        "trunc_range": [1.0, np.inf],
     },
 ]
 

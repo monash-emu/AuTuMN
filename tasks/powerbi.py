@@ -12,8 +12,7 @@ from autumn.tool_kit.uncertainty import (
     add_uncertainty_quantiles,
 )
 from autumn.plots.uncertainty_plots import plot_timeseries_with_uncertainty
-from autumn.constants import OUTPUT_DATA_PATH, PASSWORD_ENVAR
-from autumn import secrets
+from autumn.constants import OUTPUT_DATA_PATH
 
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
 
@@ -65,8 +64,6 @@ class BuildInputDatabaseTask(utils.BaseTask):
         return luigi.LocalTarget(input_db_path)
 
     def safe_run(self):
-        password = os.environ[PASSWORD_ENVAR]
-        secrets.read(password)
         build_input_database()
 
 

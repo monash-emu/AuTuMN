@@ -23,15 +23,17 @@ def read(password: str):
     Decrypt all secrets into secret files.
     """
     check_password(password)
-    encrypt_glob = os.path.join(APPS_PATH, "**", "*.encrypted.*")
-    encrypt_paths = glob.glob(encrypt_glob, recursive=True)
-    num_files = len(encrypt_paths)
-    logger.info("Decrypting %s files", num_files)
-    for encrypt_path in encrypt_paths:
-        secret_path = encrypt_path.replace(".encrypted.", ".secret.")
-        logger.info("Decrypting %s into %s", encrypt_path, secret_path)
-        pyAesCrypt.decryptFile(encrypt_path, secret_path, password, BUFFER_SIZE)
-        check_hash(secret_path)
+    encrypt_dirs = [DATA_PATH, APPS_PATH]
+    for encrypt_dir in encrypt_dirs:
+        encrypt_glob = os.path.join(encrypt_dir, "**", "*.encrypted.*")
+        encrypt_paths = glob.glob(encrypt_glob, recursive=True)
+        num_files = len(encrypt_paths)
+        logger.info("Decrypting %s files from %s", num_files, encrypt_dir)
+        for encrypt_path in encrypt_paths:
+            secret_path = encrypt_path.replace(".encrypted.", ".secret.")
+            logger.info("\tDecrypting %s", encrypt_path)
+            pyAesCrypt.decryptFile(encrypt_path, secret_path, password, BUFFER_SIZE)
+            check_hash(secret_path)
 
     logger.info("Finished decrypting %s files", num_files)
 

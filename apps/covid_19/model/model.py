@@ -178,6 +178,15 @@ def build_model(params: dict) -> StratifiedModel:
 
     # Determine the proportion of cases detected over time as the detected_proportion
     if params["testing_to_detection"]:
+
+        # Use state denominator for testing rates for the Victorian health cluster models
+        testing_region = "Victoria" if country_iso3 == "AUS" else pop_region
+        testing_year = 2020 if country_iso3 == "AUS" else params["pop_year"]
+
+        total_pops = inputs.get_population_by_agegroup(
+            agegroup_strata, country_iso3, testing_region, year=testing_year
+        )
+
         detected_proportion = find_cdr_function_from_test_data(
             params["testing_to_detection"]["assumed_tests_parameter"],
             params["testing_to_detection"]["assumed_cdr_parameter"],

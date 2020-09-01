@@ -73,7 +73,7 @@ def stratify_by_clinical(model, params, detected_proportion, symptomatic_props):
     ]
 
     # FIXME: Set params to make comparison happy
-    params["infection_fatality_props"] = [
+    infection_fatality_props_10_year = [
         ifr * params["ifr_multiplier"] for ifr in infection_fatality_props_10_year
     ]
 

@@ -245,12 +245,17 @@ def add_standard_victoria_params(params):
         {
             "param_name": "contact_rate",
             "distribution": "uniform",
-            "distri_params": [0.025, 0.05],
+            "distri_params": [0.015, 0.04],
         },
         {
             "param_name": "seasonal_force",
             "distribution": "uniform",
-            "distri_params": [0.0, 0.4],
+            "distri_params": [0.0, 0.5],
+        },
+        {
+            "param_name": "testing_to_detection.assumed_cdr_parameter",
+            "distribution": "uniform",
+            "distri_params": [0.15, 0.4],
         },
         {
             "param_name": "compartment_periods_calculated.exposed.total_period",
@@ -271,44 +276,21 @@ def add_standard_victoria_params(params):
             "trunc_range": [0.5, np.inf],
         },
         {
-            "param_name": "hospital_props_multiplier",
-            "distribution": "trunc_normal",
-            "distri_params": [1.0, 0.25],
-            "trunc_range": [0.1, np.inf],
-        },
-        {
             "param_name": "ifr_multiplier",
             "distribution": "trunc_normal",
-            "distri_params": [1.0, 0.25],
+            "distri_params": [1.0, 1.0],
             "trunc_range": [0.1, np.inf],
-        },
-        {
-            "param_name": "icu_prop",
-            "distribution": "uniform",
-            "distri_params": [0.08, 0.2],
-        },
-        {
-            "param_name": "compartment_periods.icu_early",
-            "distribution": "uniform",
-            "distri_params": [5.0, 17.0],
-        },
-        {
-            "param_name": "compartment_periods.icu_late",
-            "distribution": "uniform",
-            "distri_params": [5.0, 15.0],
         },
         {
             "param_name": "microdistancing.parameters.max_effect",
             "distribution": "uniform",
-            "distri_params": [0.25, 0.6],
+            "distri_params": [0.4, 0.95],
         },
     ]
 
 
 def add_standard_victoria_targets(target_outputs, targets):
     notifications = targets["notifications"]
-    hospital_occupancy = targets["hospital_occupancy"]
-    icu_occupancy = targets["icu_occupancy"]
     total_infection_deaths = targets["total_infection_deaths"]
 
     return target_outputs + [
@@ -317,27 +299,17 @@ def add_standard_victoria_targets(target_outputs, targets):
             "years": notifications["times"],
             "values": notifications["values"],
             "loglikelihood_distri": "normal",
-            "time_weights": list(range(1, len(notifications["times"]) + 1)),
-        },
-        {
-            "output_key": hospital_occupancy["output_key"],
-            "years": hospital_occupancy["times"],
-            "values": hospital_occupancy["values"],
-            "loglikelihood_distri": "normal",
-            "time_weights": list(range(1, len(hospital_occupancy["times"]) + 1)),
-        },
-        {
-            "output_key": icu_occupancy["output_key"],
-            "years": icu_occupancy["times"],
-            "values": icu_occupancy["values"],
-            "loglikelihood_distri": "normal",
-            "time_weights": list(range(1, len(icu_occupancy["times"]) + 1)),
+            "time_weights": get_trapezoidal_weights(notifications["times"]),
         },
         {
             "output_key": total_infection_deaths["output_key"],
             "years": total_infection_deaths["times"],
             "values": total_infection_deaths["values"],
             "loglikelihood_distri": "normal",
-            "time_weights": list(range(1, len(total_infection_deaths["times"]) + 1)),
+            "time_weights": get_trapezoidal_weights(total_infection_deaths["times"]),
         },
     ]
+
+
+def get_trapezoidal_weights(target_times):
+    return list(range(len(target_times), len(target_times) * 2))

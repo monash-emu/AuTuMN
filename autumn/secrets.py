@@ -90,9 +90,10 @@ def check_hash(file_path: str):
 
     file_hash = get_file_hash(file_path)
     fp_key = os.path.relpath(file_path)
-    assert (
-        hashes[fp_key] == file_hash
-    ), f"Secret file {fp_key} is not using the latest data, try re-reading encrypted files."
+    if fp_key in hashes:
+        assert (
+            hashes[fp_key] == file_hash
+        ), f"Secret file {fp_key} is not using the latest data, try re-reading encrypted files."
 
 
 def get_file_hash(file_path: str):

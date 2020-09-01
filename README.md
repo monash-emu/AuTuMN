@@ -14,13 +14,17 @@ See [this guide](./docs/setup.md) for information on how to set up this project.
 All of Autumn's features can be accessed from the command line. You can run commands as follows:
 
 ```bash
+# Run applications
 python -m apps <YOUR COMMANDS HERE>
+# Run utilities
+python -m autumn <YOUR COMMANDS HERE>
 ```
 
 To see a list of options, try the help prompt:
 
 ```bash
 python -m apps --help
+python -m autumn --help
 ```
 
 ## Project structure
@@ -108,7 +112,7 @@ To read the encrypted files you will need to know the project password.
 Once you have the password, then you can read the files:
 
 ```bash
-python -m apps secrets read
+python -m autumn secrets read
 ```
 
 The decrypted files will have the filename `*.secret.*`. **Do not remove this or change the filename**.
@@ -120,7 +124,7 @@ This will throw an error if you enter the incorrect password, or if the read fil
 To write a new encrypted file, first name your file  `*.secret.*` and then use the CLI to encrypt it:
 
 ```bash
-python -m apps secrets write apps/foo/bar.secret.json
+python -m autumn secrets write apps/foo/bar.secret.json
 ```
 
 A new file called `apps/foo/bar.encrypted.json` will be created. You can commit this to GitHub.
@@ -144,7 +148,7 @@ Input data is stored in text format in the `data/inputs/` folder. All input data
 To fetch the latest data, run:
 
 ```bash
-python -m apps db fetch
+python -m autumn db fetch
 ```
 
 You will need to ensure that the latest date in all user-specified mixing data params is greater than or equal to the most recent Google Mobility date.
@@ -152,7 +156,7 @@ You will need to ensure that the latest date in all user-specified mixing data p
 To rebuild the database with new data, run:
 
 ```bash
-python -m apps db build --force
+python -m autumn db build --force
 ```
 
 Once you are satisfied that all your models work again (run the tests), commit your changes and push up:

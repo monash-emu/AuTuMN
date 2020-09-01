@@ -39,9 +39,16 @@ def load_targets(app_name: str, region_name: str):
         with open(secret_targets_path, "r") as f:
             targets = json.load(f)
     else:
-        raise ValueError(
-            f"No targets.json or targets.secrets.json found for {app_name} {region_name}"
-        )
+        msg = f"""
+
+Some calibration targets are missing!
+No targets.json or targets.secrets.json found for {app_name} {region_name}
+Have you tried decrypting your data? Try running this from the command line:
+
+    python -m autumn secrets read
+
+"""
+        raise ValueError(msg)
 
     return targets
 

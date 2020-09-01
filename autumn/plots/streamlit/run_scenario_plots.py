@@ -10,11 +10,6 @@ from autumn.db.models import load_model_scenarios
 from autumn.plots import plots
 from autumn.plots.plotter import StreamlitPlotter
 from autumn.tool_kit.model_register import AppRegion
-from apps.covid_19.model.preprocess.mixing_matrix.adjust_location import (
-    LocationMixingAdjustment,
-    LOCATIONS,
-    MICRODISTANCING_LOCATIONS,
-)
 
 from . import selectors
 
@@ -105,6 +100,8 @@ def plot_dynamic_inputs(plotter: StreamlitPlotter, app: AppRegion, scenarios: li
 
 
 def plot_location_mixing(plotter: StreamlitPlotter, app: AppRegion, scenarios: list):
+    st.write("FIXME: Depends on apps folder")
+    return
     chosen_scenarios = selectors.scenarios(scenarios, include_all=False)
     scenario = chosen_scenarios[0]
 

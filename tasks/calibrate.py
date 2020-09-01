@@ -9,7 +9,8 @@ from autumn.tool_kit import Timer
 from autumn.inputs import build_input_database
 from autumn.inputs.database import input_db_path
 from autumn.plots.database_plots import plot_from_mcmc_databases
-from autumn.constants import OUTPUT_DATA_PATH
+from autumn.constants import OUTPUT_DATA_PATH, PASSWORD_ENVAR
+from autumn import secrets
 from apps import covid_19
 
 from . import utils
@@ -54,6 +55,8 @@ class BuildInputDatabaseTask(utils.BaseTask):
         return luigi.LocalTarget(input_db_path)
 
     def safe_run(self):
+        password = os.environ[PASSWORD_ENVAR]
+        secrets.read(password)
         build_input_database()
 
 

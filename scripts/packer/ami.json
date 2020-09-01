@@ -34,14 +34,18 @@
     }
   ],
   "variables": {
-    "sentry_dsn": "{{env `SENTRY_DSN`}}"
+    "sentry_dsn": "{{env `SENTRY_DSN`}}",
+    "autumn_password": "{{env `AUTUMN_PASSWORD`}}"
   },
   "provisioners": [
     {
       "type": "shell",
       "script": "./setup-ami.sh",
       "execute_command": "echo 'packer' | sudo -S sh -c '{{ .Vars }} {{ .Path }}'",
-      "environment_vars": ["SENTRY_DSN={{user `sentry_dsn`}}"]
+      "environment_vars": [
+        "SENTRY_DSN={{user `sentry_dsn`}}",
+        "AUTUMN_PASSWORD={{user `autumn_password`}}"
+      ]
     }
   ]
 }

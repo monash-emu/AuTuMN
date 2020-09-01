@@ -28,6 +28,10 @@ jobs:
             ${{ runner.os }}-
       - name: Install Python dependencies
         run: pip install -r requirements.txt
+      - name: Decrypt secrets
+        run: python -m autumn secrets read
+        env:
+          AUTUMN_PASSWORD: ${{ secrets.AUTUMN_PASSWORD }}
       - name: Test with pytest
         run: pytest -W ignore -vv -m "not run_models and not calibrate_models and not mixing_optimisation"
   test_runs:
@@ -50,6 +54,10 @@ jobs:
             ${{ runner.os }}-
       - name: Install Python dependencies
         run: pip install -r requirements.txt
+      - name: Decrypt secrets
+        run: python -m autumn secrets read
+        env:
+          AUTUMN_PASSWORD: ${{ secrets.AUTUMN_PASSWORD }}
       - name: Test with pytest
         run: pytest -W ignore -vv -m run_models
   test_calibrations:
@@ -72,6 +80,10 @@ jobs:
             ${{ runner.os }}-
       - name: Install Python dependencies
         run: pip install -r requirements.txt
+      - name: Decrypt secrets
+        run: python -m autumn secrets read
+        env:
+          AUTUMN_PASSWORD: ${{ secrets.AUTUMN_PASSWORD }}
       - name: Test with pytest
         run: pytest -W ignore -vv -m calibrate_models
   # test_mixing_optimisation:

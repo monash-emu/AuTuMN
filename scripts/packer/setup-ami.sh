@@ -9,6 +9,7 @@ timeout 180 /bin/bash -c 'until stat /var/lib/cloud/instance/boot-finished 2>/de
 
 echo ">>> Setting global environment variables"
 echo "SENTRY_DSN=\"$SENTRY_DSN\"" >> /etc/environment
+echo "AUTUMN_PASSWORD=\"$AUTUMN_PASSWORD\"" >> /etc/environment
 echo "PYTHONUNBUFFERED=1" >> /etc/environment
 cat /etc/environment
 

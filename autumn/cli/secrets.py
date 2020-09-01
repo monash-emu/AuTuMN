@@ -1,8 +1,10 @@
+import os
 from getpass import getpass
 
 import click
 
 from autumn import secrets as secrets_module
+from autumn.constants import PASSWORD_ENVAR
 
 
 @click.group()
@@ -11,11 +13,11 @@ def secrets():
 
 
 @secrets.command("read")
-@click.option("--password", type=str, default="")
-def read_secrets(password: str):
+def read_secrets():
     """
     Decrypt all secrets into secret files.
     """
+    password = os.environ.get(PASSWORD_ENVAR, "")
     if not password:
         password = getpass(prompt="Enter the encryption password:")
 
@@ -24,11 +26,11 @@ def read_secrets(password: str):
 
 @secrets.command("write")
 @click.argument("file_path", type=str)
-@click.option("--password", type=str, default="")
-def write_secret(file_path: str, password: str):
+def write_secret(file_path: str):
     """
     Encrypt a secret
     """
+    password = os.environ.get(PASSWORD_ENVAR, "")
     if not password:
         password = getpass(prompt="Enter the encryption password:")
 

@@ -6,5 +6,10 @@ then
     echo "SENTRY_DSN must be set"
     exit 1
 fi
+if [[ -z "$AUTUMN_PASSWORD" ]]
+then
+    echo "AUTUMN_PASSWORD must be set"
+    exit 1
+fi
 packer validate ami.json
 packer build ami.json

@@ -6,6 +6,9 @@ mobility_region: Metro Manila
 
 hospital_props_multiplier: 2.
 
+testing_to_detection:
+  assumed_tests_parameter: 2.25e-05
+
 mixing:
   school:
     append: false
@@ -33,8 +36,8 @@ microdistancing:
   # 15 Aug, day 228, face masks/shields required
   # 18 Aug, day 231, GCQ enforced + face masks/sheilds
   # no restrictions = 0
-  # face fasks = 1
-  # modified general community quarantine (MGCQ) = 2
-  # general community quarantine (GCQ) = 3
-  # modified enhanced community quarantine (MECQ) = 4
-  # enhanced community quarantine (ECQ) = 5
+  # face fasks = 0.1
+  # modified general community quarantine (MGCQ) = 0.3
+  # general community quarantine (GCQ) = 0.6
+  # modified enhanced community quarantine (MECQ) = 0.8
+  # enhanced community quarantine (ECQ) = 1.0

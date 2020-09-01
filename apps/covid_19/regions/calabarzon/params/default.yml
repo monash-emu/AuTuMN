@@ -4,8 +4,10 @@ parent: apps/covid_19/phl_submodel_params.yml
 pop_region: Calabarzon
 mobility_region: Calabarzon
 
-start_time: 100.
 hospital_props_multiplier: 2.
+
+testing_to_detection:
+  assumed_tests_parameter: 2.98e-05
 
 mixing:
   school:
@@ -26,17 +28,17 @@ microdistancing:
   parameters:
     max_effect: 0.25
     times: [75, 76, 77, 137, 138, 153, 154, 198, 199, 214, 215, 229]
-    values: [0, 1., 1., 0.7, 0.7, 0.2, 0.2, 0.4, 0.4, 0.9, 0.9, 0.9]
+    values: [0, 1., 1., 0.7, 0.7, 0.2, 0.2, 0.3, 0.3, 0.85, 0.85, 0.9]
   # 16 March, day 76, ECQ enforced for whole region
   # 16 May, day 137, GCQ continues for most of region with MECQ enforced for Laguna
-  # 1 June, day 153, GCQ for all regions; substituted value of 1 to help fit model
+  # 1 June, day 153, GCQ for all regions; substituted value of 0.2 to help fit model
   # 16 July, day 198, MGCQ enforced
   # 1 Aug, day 214, MGCQ for Lucena City, Quezon, GCQ for Batangas, and MECQ for Laguna, Cavite, Rizal
   # 15 Aug, day 228, face masks/shields required
-  # 16 Aug, day 229, MGCQ for Lucena City, GCQ for other parts of the region
+  # 16 Aug, day 229, MGCQ for Lucena City, GCQ for other parts of the region; substitued 0.9 to help fit model
   # no restrictions = 0
-  # face fasks = 1
-  # modified general community quarantine (MGCQ) = 2
-  # general community quarantine (GCQ) = 3
-  # modified enhanced community quarantine (MECQ) = 4
-  # enhanced community quarantine (ECQ) = 5
+  # face fasks = 0.1
+  # modified general community quarantine (MGCQ) = 0.3
+  # general community quarantine (GCQ) = 0.6
+  # modified enhanced community quarantine (MECQ) = 0.8
+  # enhanced community quarantine (ECQ) = 1.0

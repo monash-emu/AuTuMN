@@ -4,22 +4,15 @@ parent: apps/covid_19/params.yml
 iso3: AUS
 pop_year: 2018
 implement_importation: false
-infectious_seed: 10
-
-compartment_periods_calculated:
-  exposed:
-    total_period: 3.  # Routinely calibrated, see calibration file
+infectious_seed: 100
 
 start_time: 135
-end_time: 250
+end_time: 365
 
-contact_rate: 0.034
-seasonal_force: 0.1
+contact_rate: 0.021
+seasonal_force: 0.5
 
-compartment_periods:
-  icu_early: 10.
-
-icu_prop: 0.12
+ifr_multiplier: 2.
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-03
@@ -28,7 +21,7 @@ testing_to_detection:
 microdistancing:
   function_type: empiric
   parameters:
-    max_effect: 0.7
+    max_effect: 0.9
     times:
       # 30th March, day 90, stage 3 enforced
       # 9th June, day 162, stage 3 released (I think)
@@ -49,10 +42,10 @@ microdistancing:
       - 0.05
       - 0.08  # 4th July, day 186, two more postcodes locked down
       - 0.08
-      - 0.3  # 9th July, day 191, stage 3 enforced
-      - 0.3
-      - 0.8  # 22nd July, day 204, face coverings
-      - 0.8
+      - 0.2  # 9th July, day 191, stage 3 enforced
+      - 0.2
+      - 0.5  # 22nd July, day 204, face coverings
+      - 0.5
       - 1.  # 2nd August, day 215, stage 4 enforced
 
 mixing:
@@ -70,7 +63,7 @@ mixing:
       - 2020-07-13 # Back to school for all and only Years 11 and 12, Year 10 for Melbourne and Mitchell Shire
       - 2020-08-03
       - 2020-08-04
-      - 2020-08-25 # Google mobility update, pls review and remove
+      - 2020-08-25
     values:
       - 1.
       - 0.
@@ -83,4 +76,4 @@ mixing:
       - .5
       - .5
       - 0.
-      - 0. # Google mobility update, pls review and remove
+      - 0.

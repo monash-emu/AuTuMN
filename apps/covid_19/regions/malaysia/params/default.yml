@@ -26,7 +26,6 @@ microdistancing:
       - 161
       - 162
 
-    # Parameters currently seem a bit extreme - in order to stop epidemic rebound
     values:
       - 0.
       - 1.  # MCO starts (18th March)

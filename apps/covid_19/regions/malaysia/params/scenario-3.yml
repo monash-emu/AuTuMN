@@ -1,0 +1,27 @@
+# SCENARIO DESCRIPTION: SCENARIO 3, BACK TO NORMAL
+---
+parent: apps/covid_19/regions/malaysia/params/default.yml
+
+start_time: 250.
+
+mixing:
+  work:
+    append: true
+    times:
+      - 2020-09-07
+    values:
+      - 1.
+  other_locations:
+    append: true
+    times:
+      - 2020-09-07
+    values:
+      - 1.
+
+microdistancing:
+  parameters:
+    times:
+      - 251
+    values:
+      - 1.
+

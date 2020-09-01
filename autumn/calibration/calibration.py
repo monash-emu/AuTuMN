@@ -96,11 +96,8 @@ class Calibration:
         self.model_parameters = model_parameters
         self.best_start_time = None
         self.priors = priors  # a list of dictionaries. Each dictionary describes the prior distribution for a parameter
-        # self.adaptive_proposal = adaptive_proposal
-        if chain_index == 1:
-            self.adaptive_proposal = True
-        else:
-            self.adaptive_proposal = False
+        self.adaptive_proposal = adaptive_proposal
+
         self.param_list = [self.priors[i]["param_name"] for i in range(len(self.priors))]
         self.targeted_outputs = (
             targeted_outputs  # a list of dictionaries. Each dictionary describes a target
@@ -640,10 +637,16 @@ class Calibration:
                 prev_params.append(self.starting_point[prior_dict["param_name"]])
 
         new_params = []
-        if self.adaptive_proposal and self.iter_num > ADAPTIVE_METROPOLIS['N_STEPS_FIXED_PROPOSAL']:
+        use_adaptive_proposal = self.adaptive_proposal and self.iter_num > ADAPTIVE_METROPOLIS['N_STEPS_FIXED_PROPOSAL']
+
+        if use_adaptive_proposal:
             adaptive_cov_matrix = self.build_adaptive_covariance_matrix()
-            new_params = self.sample_from_adaptive_gaussian(prev_params, adaptive_cov_matrix)
-        else:
+            if np.all((adaptive_cov_matrix == 0)):
+                use_adaptive_proposal = False  # we can't use the adaptive method for this step as the covariance is 0.
+            else:
+                new_params = self.sample_from_adaptive_gaussian(prev_params, adaptive_cov_matrix)
+
+        if not use_adaptive_proposal:
             for i, prior_dict in enumerate(self.priors):
                 # Work out bounds for acceptable values, using the support of the prior distribution
                 lower_bound = self.param_bounds[i, 0]

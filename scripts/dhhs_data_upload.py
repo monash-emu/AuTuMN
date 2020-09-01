@@ -29,19 +29,19 @@ for region in CLUSTER_MAP:
     current_cluster = CLUSTER_MAP[region].lower()
     update_df = dhhs_df[dhhs_df.cluster_name== current_cluster]
 
-    with open(REGION_FOLDER+"\\"+current_cluster+"\\targets.json", mode='r') as TARGET_JSON:
+    with open(REGION_FOLDER+"\\"+current_cluster+"\\targets.secret.json", mode='r') as TARGET_JSON:
         update_frame = json.load(TARGET_JSON)
     
 
-    update_frame['notifications']['times'] = list(dhhs_df.date_index)
-    update_frame['notifications']['values'] = list(dhhs_df.new)
-    update_frame['hospital_occupancy']['times'] = list(dhhs_df.date_index)
-    update_frame['hospital_occupancy']['values'] = list(dhhs_df.incident_ward)
-    update_frame['icu_occupancy']['times'] = list(dhhs_df.date_index)
-    update_frame['icu_occupancy']['values'] = list(dhhs_df.incident_icu)
-    update_frame['total_infection_deaths']['times'] = list(dhhs_df.date_index)
-    update_frame['total_infection_deaths']['values'] = list(dhhs_df.deaths)
+    update_frame['notifications']['times'] = list(update_df.date_index)
+    update_frame['notifications']['values'] = list(update_df.new)
+    update_frame['hospital_occupancy']['times'] = list(update_df.date_index)
+    update_frame['hospital_occupancy']['values'] = list(update_df.incident_ward)
+    update_frame['icu_occupancy']['times'] = list(update_df.date_index)
+    update_frame['icu_occupancy']['values'] = list(update_df.incident_icu)
+    update_frame['total_infection_deaths']['times'] = list(update_df.date_index)
+    update_frame['total_infection_deaths']['values'] = list(update_df.deaths)
 
-    with open(REGION_FOLDER+"\\"+current_cluster+"\\targets.json", mode='w')as TARGET_JSON:
+    with open(REGION_FOLDER+"\\"+current_cluster+"\\targets.secret.json", mode='w')as TARGET_JSON:
         json.dump(update_frame,TARGET_JSON)
 

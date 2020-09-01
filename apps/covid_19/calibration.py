@@ -250,8 +250,9 @@ def add_standard_victoria_params(params):
         {
             "param_name": "seasonal_force",
             "distribution": "uniform",
-            "distri_params": [0.0, 0.4],
+            "distri_params": [0.0, 0.2],
         },
+        # Might change this to uniform to allow a shorter incubation period
         {
             "param_name": "compartment_periods_calculated.exposed.total_period",
             "distribution": "trunc_normal",

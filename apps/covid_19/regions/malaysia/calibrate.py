@@ -59,7 +59,7 @@ PAR_PRIORS += [
     },
     {
         "param_name": "icu_prop",
-        "distribution": "uniform",
+        "distribution": "uniform",  
         "distri_params": [0.12, 0.25],
     },
     {
@@ -76,6 +76,6 @@ PAR_PRIORS += [
     {
         "param_name": "microdistancing.parameters.max_effect",
         "distribution": "uniform",
-        "distri_params": [0.2, 0.7],
+        "distri_params": [0.2, 0.8],
     },
 ]

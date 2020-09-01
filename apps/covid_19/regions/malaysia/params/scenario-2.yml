@@ -1,0 +1,13 @@
+# SCENARIO DESCRIPTION: SCENARIO 2, RETURN TO WORK
+---
+parent: apps/covid_19/regions/malaysia/params/default.yml
+
+start_time: 250.
+
+mixing:
+  work:
+    append: true
+    times:
+      - 2020-09-07
+    values:
+      - 1.

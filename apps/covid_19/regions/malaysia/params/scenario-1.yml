@@ -1,0 +1,12 @@
+# SCENARIO DESCRIPTION: SCENARIO 1, END MICRO-DISTANCING
+---
+parent: apps/covid_19/regions/malaysia/params/default.yml
+
+start_time: 250.
+
+microdistancing:
+  parameters:
+    times:
+      - 251
+    values:
+      - 0.

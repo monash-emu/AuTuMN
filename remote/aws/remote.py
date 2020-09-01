@@ -22,6 +22,7 @@ def run_powerbi(instance, run_id: str, branch: str):
     with get_connection(instance) as conn:
         update_repo(conn, branch=branch)
         install_requirements(conn)
+        read_secrets(conn)
         pipeline_name = "powerbi"
         pipeline_args = {
             "run": run_id,
@@ -43,6 +44,7 @@ def run_full_model(instance, run_id: str, burn_in: int, use_latest_code: bool, b
             set_run_id(conn, run_id)
 
         install_requirements(conn)
+        read_secrets(conn)
         model_name, _, _ = read_run_id(run_id)
         pipeline_name = "full"
         pipeline_args = {
@@ -64,6 +66,7 @@ def run_calibration(
     with get_connection(instance) as conn:
         update_repo(conn, branch=branch)
         install_requirements(conn)
+        read_secrets(conn)
         run_id = get_run_id(conn, model_name)
         pipeline_name = "calibrate"
         pipeline_args = {
@@ -132,6 +135,13 @@ def update_repo(conn: Connection, branch: str = "master"):
         conn.run(f"git checkout --quiet {branch}", echo=True)
         conn.run("git pull --quiet", echo=True)
     logger.info("Done updating repo.")
+
+
+def read_secrets(conn: Connection):
+    """Read any encrypted files"""
+    logger.info("Decrypting Autumn secrets.")
+    with conn.cd(CODE_PATH):
+        conn.run("./env/bin/python -m autumn secrets read", echo=True)
 
 
 def install_requirements(conn: Connection):

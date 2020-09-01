@@ -10,8 +10,8 @@ from autumn.tool_kit.params import load_targets
 
 targets = load_targets("covid_19", Region.PHILIPPINES)
 TARGET_OUTPUTS = add_standard_philippines_targets(targets)
-PAR_PRIORS = provide_default_calibration_params(excluded_params=("start_time",))
-#PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS)
+PAR_PRIORS = provide_default_calibration_params()
+PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS)
 PAR_PRIORS = add_standard_philippines_params(PAR_PRIORS)
 
 

@@ -223,16 +223,17 @@ def model_run(param_set_dirpath: str) -> Tuple[str, str]:
     # Create labels for the select box.
     labels = []
     model_run_dir_lookup = {}
-    for run_datetime in model_runs:
+    for idx, run_datetime in enumerate(model_runs):
         label = run_datetime.strftime("%d %b at %I:%M%p %Ss ")
-        model_run_dir_lookup[label] = dirname
+        model_run_dir_lookup[label] = idx
         labels.append(label)
 
     label = st.sidebar.selectbox("Select app model run", labels)
     if not label:
         return None, None
     else:
-        dirname = model_run_dir_lookup[label]
+        idx = model_run_dir_lookup[label]
+        dirname = model_run_dirs[idx]
         dirpath = os.path.join(param_set_dirpath, dirname)
         return dirname, dirpath
 

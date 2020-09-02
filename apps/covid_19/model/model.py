@@ -9,13 +9,10 @@ from autumn.tool_kit.utils import normalise_sequence, repeat_list_elements
 from summer.model import StratifiedModel
 from autumn.inputs.owid.queries import get_international_testing_numbers
 from autumn.inputs.imports.queries import get_all_vic_region_imports
-from autumn.constants import Region
-
-from autumn.tool_kit.params import load_targets
-
 
 from apps.covid_19.constants import Compartment
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
+from apps.covid_19.model.importation import get_all_vic_notifications
 
 from . import outputs, preprocess
 from .stratification import stratify_by_clinical
@@ -317,14 +314,4 @@ def find_cdr_function_from_test_data(
     )
 
 
-def get_all_vic_notifications():
-    import_aggs = None
-    for region in Region.VICTORIA_SUBREGIONS:
-        import_times, import_values = get_region_notifications(region)
-        import_aggs = [i + j for i, j in zip(import_aggs, import_values)] if import_aggs else import_values
-    return import_times, import_aggs
 
-
-def get_region_notifications(region):
-    notifications = load_targets("covid_19", region.lower().replace("-", "_"))["notifications"]
-    return notifications["times"], notifications["values"]

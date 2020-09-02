@@ -1,4 +1,6 @@
 from copy import deepcopy
+import os
+import json
 
 from autumn import inputs
 from autumn.constants import Flow, BirthApproach
@@ -11,6 +13,7 @@ from autumn.inputs.owid.queries import get_international_testing_numbers
 
 from apps.covid_19.constants import Compartment
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
+from autumn.constants import BASE_PATH, Region
 
 from . import outputs, preprocess
 from .stratification import stratify_by_clinical
@@ -254,6 +257,20 @@ def build_model(params: dict) -> StratifiedModel:
     life_expectancy = inputs.get_life_expectancy_by_agegroup(agegroup_strata, country_iso3)[0]
     life_expectancy_latest = [life_expectancy[agegroup][-1] for agegroup in life_expectancy]
     life_lost_func = outputs.get_calculate_years_of_life_lost(life_expectancy_latest)
+
+
+    imports_path = os.path.join(BASE_PATH, "data\\inputs\\imports")
+
+    for region in Region.VICTORIA_SUBREGIONS:
+        region_filename = region.replace("-", "_")
+        imports_filename = os.path.join(imports_path, f"{region_filename}.secret.json")
+        with open(imports_filename, "r") as file:
+            imports = json.load(file)["notifications"]
+            import_times = imports["times"]
+            import_values = imports["values"]
+            print(len(import_values))
+
+    print()
 
     # Build hospital occupancy func.
     compartment_periods = params["compartment_periods"]

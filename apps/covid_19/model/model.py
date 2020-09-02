@@ -8,9 +8,11 @@ from autumn.tool_kit.scenarios import get_model_times_from_inputs
 from autumn.tool_kit.utils import normalise_sequence, repeat_list_elements
 from summer.model import StratifiedModel
 from autumn.inputs.owid.queries import get_international_testing_numbers
+from autumn.inputs.imports.queries import get_all_vic_region_imports
 
 from apps.covid_19.constants import Compartment
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
+from apps.covid_19.model.importation import get_all_vic_notifications
 
 from . import outputs, preprocess
 from .stratification import stratify_by_clinical
@@ -300,3 +302,6 @@ def find_cdr_function_from_test_data(
         method=5,
         bound_low=0.0,
     )
+
+
+

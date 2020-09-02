@@ -82,3 +82,15 @@ class Region:
         LODDON_MALLEE,
         GRAMPIANS,
     ]
+
+    VICTORIA_SUBREGIONS = [
+        NORTH_METRO,
+        SOUTH_EAST_METRO,
+        SOUTH_METRO,
+        WEST_METRO,
+        BARWON_SOUTH_WEST,
+        GIPPSLAND,
+        HUME,
+        LODDON_MALLEE,
+        GRAMPIANS,
+    ]

@@ -96,7 +96,7 @@ class Calibration:
         self.model_parameters = model_parameters
         self.best_start_time = None
         self.priors = priors  # a list of dictionaries. Each dictionary describes the prior distribution for a parameter
-        self.adaptive_proposal = True if chain_index > 2 else False  # adaptive_proposal
+        self.adaptive_proposal = True if chain_index == 1 else False  # adaptive_proposal
 
         self.param_list = [self.priors[i]["param_name"] for i in range(len(self.priors))]
         self.targeted_outputs = (

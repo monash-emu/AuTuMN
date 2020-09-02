@@ -32,11 +32,7 @@ def plot_mcmc_parameter_trace(plotter: Plotter, mcmc_tables: List[pd.DataFrame],
     _overwrite_non_accepted_mcmc_runs(mcmc_tables, column_name=param_name)
     fig, axis, _, _, _ = plotter.get_figure()
     for idx, table_df in enumerate(mcmc_tables):
-        if idx < 3:
-            color = 'black'
-        else:
-            color = 'red'
-        table_df[param_name].plot.line(ax=axis, alpha=0.8, linewidth=0.7, color=color)
+        table_df[param_name].plot.line(ax=axis, alpha=0.8, linewidth=0.7)
 
     axis.set_ylabel(param_name)
     axis.set_xlabel("MCMC iterations")
@@ -51,11 +47,7 @@ def plot_loglikelihood_trace(plotter: Plotter, mcmc_tables: List[pd.DataFrame], 
     fig, axis, _, _, _ = plotter.get_figure()
 
     for idx, table_df in enumerate(mcmc_tables):
-        if idx < 3:
-            color = 'black'
-        else:
-            color = 'red'
-        table_df.loglikelihood.plot.line(ax=axis, alpha=0.8, linewidth=0.7, color=color)
+        table_df.loglikelihood.plot.line(ax=axis, alpha=0.8, linewidth=0.7)
 
     axis.set_ylabel("Loglikelihood")
     axis.set_xlabel("MCMC iterations")

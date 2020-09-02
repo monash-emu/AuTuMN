@@ -9,6 +9,7 @@ from autumn.tool_kit.utils import normalise_sequence, repeat_list_elements
 from summer.model import StratifiedModel
 
 from apps.covid_19.constants import Compartment
+from apps.covid_19.model.importation import get_all_vic_notifications, get_region_notifications
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
 
 from . import outputs, preprocess
@@ -97,9 +98,9 @@ def build_model(params: dict) -> StratifiedModel:
             }
         )
 
+    # Just set the importation flow (if required) without specifying its value, which is done later
     implement_importation = params["implement_importation"]
     if implement_importation:
-        # Implement importation of people, importation_rate is later as time varying function
         flows.append({"type": Flow.IMPORT, "parameter": "importation_rate"})
 
     # Create SUMMER model
@@ -143,8 +144,8 @@ def build_model(params: dict) -> StratifiedModel:
         )
         model.time_variants["contact_rate"] = seasonal_func
 
-    # Stratify the model by age group.
-    # Adjust flow parameters for different age strata.
+    # Stratify the model by age group
+    # Adjust flow parameters for different age strata
     flow_adjustments = {
         # Adjust susceptibility across age groups
         "contact_rate": params["age_based_susceptibility"],
@@ -211,7 +212,16 @@ def build_model(params: dict) -> StratifiedModel:
     def modelled_abs_detection_proportion_imported(t):
         return import_symptomatic_prop * detected_proportion(t)
 
-    # Set time-variant importation rate for the importation flow.
+    # Set time-variant importation rate for the importation flow
+    importation_data = \
+        [0.] * len(get_all_vic_notifications()[0])
+    importation_data = \
+        [i_imports + j_imports for i_imports, j_imports in
+         zip(get_all_vic_notifications(excluded_regions=(pop_region,))[1], importation_data)]
+    # importation_data = \
+    #     [i_imports + j_imports for i_imports, j_imports in
+    #      zip(get_region_notifications(pop_region)[1], importation_data)]
+
     if implement_importation:
         import_times = params["data"]["times_imported_cases"]
         import_cases = params["data"]["n_imported_cases"]

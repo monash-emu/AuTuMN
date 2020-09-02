@@ -14,6 +14,8 @@ from apps.covid_19.model.preprocess import mixing_matrix
 from apps.covid_19.model.preprocess.mixing_matrix import adjust_location
 from apps.covid_19.model.preprocess.mixing_matrix.utils import BASE_DATE
 
+from autumn.inputs.social_mixing.queries import get_mixing_matrix_specific_agegroups, get_country_mixing_matrix
+
 
 @pytest.mark.parametrize(
     "vals_in, vals_out",
@@ -297,6 +299,19 @@ def test_build_dynamic__smoke_test():
     )
     mm = mm_func(50)
     assert mm.shape == (16, 16)
+
+
+def test_age_mixing_matrix_variable_agegroups__smoke_test():
+    requested_age_breaks = [0, 20, 50]
+    out_matrix = get_mixing_matrix_specific_agegroups('AUS', requested_age_breaks)
+    assert out_matrix.shape == (3, 3)
+
+
+def test_age_mixing_matrix_variable_agegroups__conservation():
+    requested_age_breaks = [i * 5. for i in range(16)]   #same as original Prem age groups
+    prem_matrix = get_country_mixing_matrix('all_locations', 'AUS')
+    out_matrix = get_mixing_matrix_specific_agegroups('AUS', requested_age_breaks)
+    assert out_matrix == prem_matrix
 
 
 def assert_arr_is_close(arr_a, arr_b, figs=2):

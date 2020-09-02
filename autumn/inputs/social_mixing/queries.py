@@ -5,6 +5,7 @@ from functools import lru_cache
 
 from autumn.inputs.database import get_input_db
 
+from autumn.inputs import get_population_by_agegroup
 
 LOCATIONS = ("all_locations", "home", "other_locations", "school", "work")
 
@@ -28,3 +29,45 @@ def get_country_mixing_matrix(mixing_location: str, country_iso_code: str):
     matrix = np.array(mix_df)
     assert matrix.shape == (16, 16), "Mixing matrix is not 16x16"
     return matrix
+
+
+def get_mixing_matrix_specific_agegroups(country_iso_code: str, requested_age_breaks: list):
+    """
+    Build an age-specific mixing matrix using any age categories
+    :param country_iso_code:
+    :param requested_age_breaks:
+    :return:
+    """
+    assert all([age % 5 == 0 for age in requested_age_breaks]), "All breakpoints must be multiples of 5"
+    original_matrix = get_country_mixing_matrix('all_locations', country_iso_code)
+    original_age_breaks = [i * 5. for i in range(16)]
+    original_populations = get_population_by_agegroup(
+        original_age_breaks, country_iso_code, year=2015  # 2015 to match Prem estimates
+    )
+
+    n_req_groups = len(requested_age_breaks)
+    # get list of original agegroup indices that match each requested age group index
+    agegroup_index_mapping = []
+    for i, req_age_break in enumerate(requested_age_breaks):
+        mapping_indices = [k for k in range(16) if original_age_breaks[k] >= req_age_break]
+        if i < len(requested_age_breaks) - 1:
+            mapping_indices = [k for k in mapping_indices if original_age_breaks[k] < requested_age_breaks[i + 1]]
+
+        agegroup_index_mapping.append(
+            mapping_indices
+        )
+
+    out_matrix = np.zeros((n_req_groups, n_req_groups))
+    for i_contactor in range(n_req_groups):
+        total_contactor_group_population = sum([original_populations[h] for h in agegroup_index_mapping[i_contactor]])
+        rel_contactor_population_props = [original_populations[h]/total_contactor_group_population
+                                 for h in agegroup_index_mapping[i_contactor]]
+        for j_contactee in range(n_req_groups):
+            total_contacts_new_format = 0.
+            for h, i_contactor_original in enumerate(agegroup_index_mapping[i_contactor]):
+                total_contacts_new_format += rel_contactor_population_props[h] *\
+                                             sum([original_matrix[i_contactor_original, p] for
+                                                  p in agegroup_index_mapping[j_contactee]])
+            out_matrix[i_contactor, j_contactee] = total_contacts_new_format
+
+    return out_matrix

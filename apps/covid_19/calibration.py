@@ -243,31 +243,14 @@ def add_standard_victoria_params(params):
 
     return params + [
         {
-            "param_name": "contact_rate",
-            "distribution": "uniform",
-            "distri_params": [0.015, 0.04],
-        },
-        {
             "param_name": "seasonal_force",
             "distribution": "uniform",
-            "distri_params": [0.0, 0.5],
+            "distri_params": [0.0, 0.4],
         },
         {
             "param_name": "testing_to_detection.assumed_cdr_parameter",
             "distribution": "uniform",
             "distri_params": [0.15, 0.4],
-        },
-        {
-            "param_name": "compartment_periods_calculated.exposed.total_period",
-            "distribution": "trunc_normal",
-            "distri_params": [5.5, 0.97],
-            "trunc_range": [1.0, np.inf],
-        },
-        {
-            "param_name": "compartment_periods_calculated.active.total_period",
-            "distribution": "trunc_normal",
-            "distri_params": [7.0, 0.7],
-            "trunc_range": [1.0, np.inf],
         },
         {
             "param_name": "symptomatic_props_multiplier",
@@ -278,13 +261,26 @@ def add_standard_victoria_params(params):
         {
             "param_name": "ifr_multiplier",
             "distribution": "trunc_normal",
-            "distri_params": [1.0, 1.0],
-            "trunc_range": [0.1, np.inf],
+            "distri_params": [1.0, 0.8],
+            "trunc_range": [0.2, np.inf],
+        },
+        {
+            "param_name": "compartment_periods.icu_early",
+            "distribution": "trunc_normal",
+            "distri_params": [12.7, 4.0],
+            "trunc_range": [3.0, np.inf],
+        },
+        {
+            "param_name": "compartment_periods.icu_late",
+            "distribution": "trunc_normal",
+            "distri_params": [10.8, 4.0],
+            "trunc_range": [3.0, np.inf],
         },
         {
             "param_name": "microdistancing.parameters.max_effect",
-            "distribution": "uniform",
-            "distri_params": [0.4, 0.95],
+            "distribution": "beta",
+            "distri_mean": 0.8,
+            "distri_ci": [0.4, 0.95],
         },
     ]
 

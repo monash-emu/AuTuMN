@@ -31,6 +31,22 @@ def plot_flow_params(
         plotter, f"flow-params-{param_name}", flow_funcs, model.times, is_logscale
     )
 
+    init_dict = {}
+    for f in flows:
+        f_name = ""
+        src = getattr(f, "source", None)
+        dest = getattr(f, "dest", None)
+        if src:
+            f_name += f"from {src}"
+        if dest:
+            f_name += f" to {dest}"
+
+        f_name = f_name.strip()
+        init_dict[f_name] = f.get_weight_value(0)
+
+    st.write("Values at start time:")
+    st.write(init_dict)
+
 
 PLOT_FUNCS["Flow weights"] = plot_flow_params
 

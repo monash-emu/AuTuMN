@@ -201,12 +201,15 @@ def stratify_by_clinical(model, params, detected_proportion, symptomatic_props):
 
     # Calculate death rates and progression rates for hospitalised and ICU patients
     progression_death_rates = {}
-    for param_name, stratum in [["hospital", "hospital_non_icu"], ["icu", "icu"]]:
+    for param_stem, param_name, stratum in \
+            (("non_sympt", "within_late_active", "non_sympt"),
+             ("hospital", "within_hospital_late", "hospital_non_icu"),
+             ("icu", "within_icu_late", "icu")):
         (
-            progression_death_rates[param_name + "_infect_death"],
-            progression_death_rates[param_name + f"_within_{Compartment.LATE_ACTIVE}"],
+            progression_death_rates[param_stem + "_infect_death"],
+            progression_death_rates[param_stem + f"_within_{Compartment.LATE_ACTIVE}"],
         ) = find_rates_and_complements_from_ifr(
-            relative_death_props[stratum], 1, [model.parameters[f"within_{param_name}_late"]] * 16,
+            relative_death_props[stratum], 1, [model.parameters[param_name]] * 16,
         )
 
     # Death and non-death progression between infectious compartments towards the recovered compartment

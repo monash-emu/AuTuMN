@@ -113,19 +113,33 @@ def app_name(run_type) -> Tuple[str, str]:
         return chosen_dirname, os.path.join(run_outputs_path, chosen_dirname)
 
 
-def region_name(app_output_path: str) -> Tuple[str, str]:
+def output_region_name(app_output_path: str) -> Tuple[str, str]:
     """
     Selector for users to choose which parameter set they want to select
     for a given application
     Returns param set dir and path to param set dir
     """
-    region_path = os.path.join(app_output_path, "regions")
+    param_sets = os.listdir(app_output_path)
+    if not param_sets:
+        return None, None
+
+    chosen_param_set = st.sidebar.selectbox("Select app region", param_sets)
+    return chosen_param_set, os.path.join(app_output_path, chosen_param_set)
+
+
+def app_region_name(app_name: str) -> Tuple[str, str]:
+    """
+    Selector for users to choose which parameter set they want to select
+    for a given application
+    Returns param set dir and path to param set dir
+    """
+    region_path = os.path.join(constants.APPS_PATH, app_name, "regions")
     regions = [r.replace("_", "-") for r in os.listdir(region_path)]
     if not regions:
         return None, None
 
     chosen_region = st.sidebar.selectbox("Select app region", regions)
-    return chosen_region, os.path.join(app_output_path, chosen_region)
+    return chosen_region, os.path.join(region_path, chosen_region.replace("-", "_"))
 
 
 def scenarios(scenarios: List[Scenario], include_all=True) -> List[Scenario]:

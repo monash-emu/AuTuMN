@@ -18,7 +18,7 @@ def run_dashboard():
         st.write("No calibrations have been run yet")
         return
 
-    region_name, region_dirpath = selectors.region_name(app_dirpath)
+    region_name, region_dirpath = selectors.output_region_name(app_dirpath)
     if not region_name:
         st.write("No region folder found")
         return

@@ -19,7 +19,7 @@ def run_dashboard():
         st.write("No application folder found")
         return
 
-    region_name, region_dirpath = selectors.region_name(app_dirpath)
+    region_name, region_dirpath = selectors.app_region_name(app_name)
     if not region_name:
         st.write("No parameter set folder found")
         return

@@ -109,51 +109,60 @@ def stratify_by_clinical(model, params, detected_proportion, symptomatic_props):
         ClinicalStratum.HOSPITAL_NON_ICU: sympt_hospital_non_icu.tolist(),
     }
 
-    # Calculate the absolute proportion of all patients who should eventually reach hospital death or ICU death
-    # Find IFR that needs to be contributed by ICU and non-ICU hospital deaths
-    hospital_death, icu_death = [], []
-    for age_idx, agegroup in enumerate(agegroup_strata):
-        # If IFR for age group is greater than absolute proportion hospitalised, increased hospitalised proportion
-        if infection_fatality_props[age_idx] > abs_props["hospital"][age_idx]:
-            abs_props["hospital"][age_idx] = infection_fatality_props[age_idx]
+    # Find where the absolute number of deaths accrue
+    abs_death_props = {
+        ClinicalStratum.NON_SYMPT: [0.] * len(agegroup_strata),
+        ClinicalStratum.ICU: [0.] * len(agegroup_strata),
+        ClinicalStratum.HOSPITAL_NON_ICU: [0.] * len(agegroup_strata),
+    }
+    for age_idx in range(len(agegroup_strata)):
 
-        # Find the target absolute ICU mortality and the amount left over from IFRs to go to hospital, if any
-        target_icu_abs_mort = abs_props[ClinicalStratum.ICU][age_idx] * icu_mortality_prop
-        left_over_mort = infection_fatality_props[age_idx] - target_icu_abs_mort
+        # Make sure there are enough symptomatic people to fill the IFR
+        assert \
+            abs_props["non_sympt"][age_idx] + abs_props["hospital"][age_idx] > \
+            infection_fatality_props[age_idx]
 
-        # If enough IFR left over to allow partial mortality for the hospitalised
-        if 0.0 < left_over_mort <= abs_props[ClinicalStratum.HOSPITAL_NON_ICU][age_idx]:
-            hospital_death_prop = left_over_mort
-            icu_death_prop = target_icu_abs_mort
-
-        # Otherwise if there is too much excess death to fit in hospital, inflate the ICU proportion
-        elif left_over_mort > abs_props[ClinicalStratum.HOSPITAL_NON_ICU][age_idx]:
-            hospital_death_prop = abs_props[ClinicalStratum.HOSPITAL_NON_ICU][age_idx]
-            icu_death_prop = (
+        # Absolute proportion of all patients dying in ICU
+        abs_death_props[ClinicalStratum.ICU][age_idx] = \
+            min(
+                abs_props[ClinicalStratum.ICU][age_idx] *
+                icu_mortality_prop,  # Maximum ICU mortality allowed
                 infection_fatality_props[age_idx]
-                - abs_props[ClinicalStratum.HOSPITAL_NON_ICU][age_idx]
             )
 
-        # Otherwise if all IFR taken up by ICU
-        else:
-            hospital_death_prop = 0.0
-            icu_death_prop = infection_fatality_props[age_idx]
+        # Absolute proportion of all patients dying in hospital
+        abs_death_props[ClinicalStratum.HOSPITAL_NON_ICU][age_idx] = \
+            min(
+                max(
+                    infection_fatality_props[age_idx] -
+                    abs_death_props[ClinicalStratum.ICU][age_idx],  # If left over mortality from ICU for hospitalised
+                    0.  # Otherwise zero
+                ),
+                abs_props[ClinicalStratum.HOSPITAL_NON_ICU][age_idx]
+            )
 
-        hospital_death.append(hospital_death_prop)
-        icu_death.append(icu_death_prop)
+        # Absolute proportion of all patients dying out of hospital
+        abs_death_props[ClinicalStratum.NON_SYMPT][age_idx] = \
+            max(
+                infection_fatality_props[age_idx] -
+                abs_death_props[ClinicalStratum.ICU][age_idx] -
+                abs_death_props[ClinicalStratum.HOSPITAL_NON_ICU][age_idx],  # If left over mortality from hospitalised
+                0.  # Otherwise zero
+            )
 
-    abs_props.update({"hospital_death": hospital_death, "icu_death": icu_death})
+        # Check everything sums up properly
+        allowed_rounding_error = 6
+        assert \
+            round(abs_death_props[ClinicalStratum.ICU][age_idx] + \
+                  abs_death_props[ClinicalStratum.HOSPITAL_NON_ICU][age_idx] + \
+                  abs_death_props[ClinicalStratum.NON_SYMPT][age_idx], allowed_rounding_error) == \
+            round(infection_fatality_props[age_idx], allowed_rounding_error)
 
-    # FIXME: These depend on static variables which have been made time-variant
-    # fatality rate for hospitalised patients
-    rel_props = {
-        "hospital_death": element_wise_list_division(
-            abs_props["hospital_death"], abs_props[ClinicalStratum.HOSPITAL_NON_ICU]
-        ),
-        "icu_death": element_wise_list_division(
-            abs_props["icu_death"], abs_props[ClinicalStratum.ICU]
-        ),
-    }
+    relative_death_props = {}
+    for stratum in (ClinicalStratum.NON_SYMPT, ClinicalStratum.HOSPITAL_NON_ICU, ClinicalStratum.ICU):
+        relative_death_props.update({
+            stratum: element_wise_list_division(abs_death_props[stratum], abs_props[stratum], must_be_prop=True)
+        })
 
     # Progression rates into the infectious compartment(s)
     # Define progression rates into non-symptomatic compartments using parameter adjustment.
@@ -192,12 +201,12 @@ def stratify_by_clinical(model, params, detected_proportion, symptomatic_props):
 
     # Calculate death rates and progression rates for hospitalised and ICU patients
     progression_death_rates = {}
-    for stratum in ("hospital", "icu"):
+    for param_name, stratum in [["hospital", "hospital_non_icu"], ["icu", "icu"]]:
         (
-            progression_death_rates[stratum + "_infect_death"],
-            progression_death_rates[stratum + f"_within_{Compartment.LATE_ACTIVE}"],
+            progression_death_rates[param_name + "_infect_death"],
+            progression_death_rates[param_name + f"_within_{Compartment.LATE_ACTIVE}"],
         ) = find_rates_and_complements_from_ifr(
-            rel_props[stratum + "_death"], 1, [model.parameters[f"within_{stratum}_late"]] * 16,
+            relative_death_props[stratum], 1, [model.parameters[f"within_{param_name}_late"]] * 16,
         )
 
     # Death and non-death progression between infectious compartments towards the recovered compartment

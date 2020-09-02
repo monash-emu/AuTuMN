@@ -258,26 +258,6 @@ def build_model(params: dict) -> StratifiedModel:
     life_expectancy_latest = [life_expectancy[agegroup][-1] for agegroup in life_expectancy]
     life_lost_func = outputs.get_calculate_years_of_life_lost(life_expectancy_latest)
 
-    def get_region_imports(region_name):
-        imports_path = os.path.join(BASE_PATH, "data\\inputs\\imports")
-        region_filename = region_name.replace("-", "_")
-        imports_filename = os.path.join(imports_path, f"{region_filename}.secret.json")
-        with open(imports_filename, "r") as file:
-            import_notifications = json.load(file)["notifications"]
-            times = import_notifications["times"]
-            values = import_notifications["values"]
-        return times, values
-
-    def get_all_vic_region_imports():
-        import_aggregates = None
-        for region in Region.VICTORIA_SUBREGIONS:
-            import_times, import_values = get_region_imports(region)
-            if import_aggregates:
-                import_aggregates = [i + j for i, j in zip(import_values, import_aggregates)]
-            else:
-                import_aggregates = import_values
-        return import_times, import_aggregates
-
     import_times, import_aggs = get_all_vic_region_imports()
 
     # Build hospital occupancy func.
@@ -335,3 +315,25 @@ def find_cdr_function_from_test_data(
         method=5,
         bound_low=0.,
     )
+
+
+def get_region_imports(region_name):
+    imports_path = os.path.join(BASE_PATH, "data\\inputs\\imports")
+    region_filename = region_name.replace("-", "_")
+    imports_filename = os.path.join(imports_path, f"{region_filename}.secret.json")
+    with open(imports_filename, "r") as file:
+        import_notifications = json.load(file)["notifications"]
+        times = import_notifications["times"]
+        values = import_notifications["values"]
+    return times, values
+
+
+def get_all_vic_region_imports():
+    import_aggregates = None
+    for region in Region.VICTORIA_SUBREGIONS:
+        import_times, import_values = get_region_imports(region)
+        if import_aggregates:
+            import_aggregates = [i + j for i, j in zip(import_values, import_aggregates)]
+        else:
+            import_aggregates = import_values
+    return import_times, import_aggregates

@@ -22,21 +22,10 @@ Base parameters
 """
 
 BASE_CALIBRATION_PARAMS = [
-
     # Arbitrary, but always required and this range should span the range of values that would be needed
-    {
-        "param_name": "contact_rate",
-        "distribution": "uniform",
-        "distri_params": [0.015, 0.07],
-    },
-
+    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.015, 0.07],},
     # Arbitrary, but useful to allow epidemic to take off from a flexible time
-    {
-        "param_name": "start_time",
-        "distribution": "uniform",
-        "distri_params": [0.0, 40.0],
-    },
-
+    {"param_name": "start_time", "distribution": "uniform", "distri_params": [0.0, 40.0],},
     # Rationale for the following two parameters described in parameters table of the methods Gdoc at:
     # https://docs.google.com/document/d/1Uhzqm1CbIlNXjowbpTlJpIphxOm34pbx8au2PeqpRXs/edit#
     {
@@ -163,21 +152,13 @@ def add_standard_philippines_params(params):
     """
 
     return params + [
-        {
-            "param_name": "ifr_multiplier",
-            "distribution": "uniform",
-            "distri_params": [1.5, 2.28]
-        },
+        {"param_name": "ifr_multiplier", "distribution": "uniform", "distri_params": [1.5, 2.28]},
         {
             "param_name": "testing_to_detection.assumed_cdr_parameter",
             "distribution": "uniform",
             "distri_params": [0.3, 0.5],
         },
-        {
-            "param_name": "start_time",
-            "distribution": "uniform",
-            "distri_params": [40.0, 60.0],
-        },
+        {"param_name": "start_time", "distribution": "uniform", "distri_params": [40.0, 60.0],},
         {
             "param_name": "microdistancing.parameters.max_effect",
             "distribution": "uniform",
@@ -189,8 +170,7 @@ def add_standard_philippines_params(params):
 def add_standard_philippines_targets(targets):
 
     # Ignore notification values before day 100
-    notifications = \
-        ignore_calibration_target_before_date(targets["notifications"], 100)
+    notifications = ignore_calibration_target_before_date(targets["notifications"], 100)
 
     return [
         {
@@ -205,7 +185,6 @@ def add_standard_philippines_targets(targets):
             "years": [targets["icu_occupancy"]["times"]],
             "values": [targets["icu_occupancy"]["values"]],
             "loglikelihood_distri": "uniform",
-
         },
         {
             "output_key": "accum_deaths",
@@ -242,11 +221,7 @@ Victoria
 def add_standard_victoria_params(params):
 
     return params + [
-        {
-            "param_name": "seasonal_force",
-            "distribution": "uniform",
-            "distri_params": [0.0, 0.4],
-        },
+        {"param_name": "seasonal_force", "distribution": "uniform", "distri_params": [0.0, 0.4],},
         {
             "param_name": "testing_to_detection.assumed_cdr_parameter",
             "distribution": "uniform",

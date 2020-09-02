@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import List, Tuple
 
 import streamlit as st
+import pandas as pd
 
 from autumn import constants
 from autumn.tool_kit import Scenario
@@ -91,16 +92,28 @@ def app_name(run_type) -> Tuple[str, str]:
     from the model output data directory.
     Returns app dir and path to app dir
     """
-    run_outputs_path = os.path.join(constants.OUTPUT_DATA_PATH, run_type)
-    if not os.path.exists(run_outputs_path):
-        return None, None
+    if run_type == "model":
+        apps = sorted(
+            [
+                d
+                for d in os.listdir(constants.APPS_PATH)
+                if os.path.isdir(os.path.join(constants.APPS_PATH, d))
+                and d not in ["cli", "legacy", "__pycache__"]
+            ]
+        )
+        chosen_dirname = st.sidebar.selectbox("Select app", apps)
+        return chosen_dirname, os.path.join(constants.APPS_PATH, chosen_dirname)
+    else:
+        run_outputs_path = os.path.join(constants.OUTPUT_DATA_PATH, run_type)
+        if not os.path.exists(run_outputs_path):
+            return None, None
 
-    apps = os.listdir(run_outputs_path)
-    chosen_dirname = st.sidebar.selectbox("Select app", apps)
-    return chosen_dirname, os.path.join(run_outputs_path, chosen_dirname)
+        apps = os.listdir(run_outputs_path)
+        chosen_dirname = st.sidebar.selectbox("Select app", apps)
+        return chosen_dirname, os.path.join(run_outputs_path, chosen_dirname)
 
 
-def region_name(app_output_path: str) -> Tuple[str, str]:
+def output_region_name(app_output_path: str) -> Tuple[str, str]:
     """
     Selector for users to choose which parameter set they want to select
     for a given application
@@ -110,8 +123,23 @@ def region_name(app_output_path: str) -> Tuple[str, str]:
     if not param_sets:
         return None, None
 
-    chosen_param_set = st.sidebar.selectbox("Select app param set", param_sets)
+    chosen_param_set = st.sidebar.selectbox("Select app region", param_sets)
     return chosen_param_set, os.path.join(app_output_path, chosen_param_set)
+
+
+def app_region_name(app_name: str) -> Tuple[str, str]:
+    """
+    Selector for users to choose which parameter set they want to select
+    for a given application
+    Returns param set dir and path to param set dir
+    """
+    region_path = os.path.join(constants.APPS_PATH, app_name, "regions")
+    regions = [r.replace("_", "-") for r in os.listdir(region_path)]
+    if not regions:
+        return None, None
+
+    chosen_region = st.sidebar.selectbox("Select app region", regions)
+    return chosen_region, os.path.join(region_path, chosen_region.replace("-", "_"))
 
 
 def scenarios(scenarios: List[Scenario], include_all=True) -> List[Scenario]:
@@ -195,15 +223,33 @@ def model_run(param_set_dirpath: str) -> Tuple[str, str]:
     # Create labels for the select box.
     labels = []
     model_run_dir_lookup = {}
-    for run_datetime in model_runs:
+    for idx, run_datetime in enumerate(model_runs):
         label = run_datetime.strftime("%d %b at %I:%M%p %Ss ")
-        model_run_dir_lookup[label] = dirname
+        model_run_dir_lookup[label] = idx
         labels.append(label)
 
     label = st.sidebar.selectbox("Select app model run", labels)
     if not label:
         return None, None
     else:
-        dirname = model_run_dir_lookup[label]
+        idx = model_run_dir_lookup[label]
+        dirname = model_run_dirs[idx]
         dirpath = os.path.join(param_set_dirpath, dirname)
         return dirname, dirpath
+
+
+def burn_in(mcmc_tables: List[pd.DataFrame]):
+    """
+    Slider for selecting how much burn in we should apply to an MCMC trace.
+    """
+    min_length = min([len(t) for t in mcmc_tables])
+    return st.sidebar.slider("Burn-in", 0, min_length, 0)
+
+
+def parameter(mcmc_table: pd.DataFrame):
+    """
+    Drop down for selecting parameters
+    """
+    non_param_cols = ["idx", "Scenario", "loglikelihood", "accept"]
+    param_options = [c for c in mcmc_table.columns if c not in non_param_cols]
+    return st.sidebar.selectbox("Select parameter", param_options)

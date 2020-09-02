@@ -33,6 +33,7 @@ python -m autumn --help
 ├── .github                 GitHub config
 ├── apps                    Specific applications of the framework
 ├── autumn                  AuTuMN framework module
+├── dash                   Streamlit dashboards
 ├── data                    Data to be used by the models
 |   ├─ inputs                   Input data for the models
 |   └─ outputs                  Module run outputs (not in source control)
@@ -81,13 +82,12 @@ Model calibration outputs are written to `data/outputs/calibrate` and can be vie
 We use [Streamlit](https://www.streamlit.io/) to visualise the output of local model runs. You can run streamlit from the command line to view your model's outputs as follows:
 
 ```bash
+# View model inputs
 streamlit run plots.py
-```
-
-If you want to view the outputs of a calibration, run:
-
-```bash
+# View calibration results
 streamlit run plots.py mcmc
+# View model run results
+streamlit run plots.py scenario
 ```
 
 ## Running the automated tests
@@ -131,10 +131,11 @@ A new file called `apps/foo/bar.encrypted.json` will be created. You can commit 
 
 ## Formatting
 
-The codebase can be auto-formatted using [Black](https://github.com/psf/black):
+The codebase can be auto-formatted using [Black](https://github.com/psf/black).
+You can auto-format the code as follows, this will never break anything:
 
 ```
-./scripts/format.ps1
+black .
 ```
 
 ## Input data

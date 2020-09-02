@@ -3,11 +3,9 @@ from apps.covid_19 import calibration as base
 from apps.covid_19.calibration import (
     provide_default_calibration_params,
     add_standard_philippines_params,
-    add_standard_philippines_targets
+    add_standard_philippines_targets,
 )
-from autumn.calibration.utils import (
-    add_dispersion_param_prior_for_gaussian,
-)
+from autumn.calibration.utils import add_dispersion_param_prior_for_gaussian
 from autumn.tool_kit.params import load_targets
 
 targets = load_targets("covid_19", Region.CALABARZON)
@@ -16,11 +14,7 @@ PAR_PRIORS = provide_default_calibration_params()
 PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS)
 PAR_PRIORS = add_standard_philippines_params(PAR_PRIORS)
 PAR_PRIORS += [
-    {
-        "param_name": "infectious_seed",
-        "distribution": "uniform",
-        "distri_params": [10.0, 100.0],
-    },
+    {"param_name": "infectious_seed", "distribution": "uniform", "distri_params": [10.0, 100.0],},
 ]
 
 

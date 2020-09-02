@@ -1,0 +1,38 @@
+"""
+Streamlit web UI for plotting MCMC outputs
+"""
+import streamlit as st
+
+from autumn.tool_kit.params import load_targets
+from autumn.db.models import load_mcmc_tables
+from autumn.plots.plotter import StreamlitPlotter
+
+
+from dash import selectors
+from .plots import PLOT_FUNCS
+
+
+def run_dashboard():
+    app_name, app_dirpath = selectors.app_name(run_type="calibrate")
+    if not app_name:
+        st.write("No calibrations have been run yet")
+        return
+
+    region_name, region_dirpath = selectors.output_region_name(app_dirpath)
+    if not region_name:
+        st.write("No region folder found")
+        return
+
+    calib_name, calib_dirpath = selectors.calibration_run(region_dirpath)
+    if not calib_name:
+        st.write("No model run folder found")
+        return
+
+    # Load MCMC tables
+    mcmc_tables = load_mcmc_tables(calib_dirpath)
+    targets = load_targets(app_name, region_name)
+
+    plotter = StreamlitPlotter(targets)
+    plot_type = st.sidebar.selectbox("Select plot type", list(PLOT_FUNCS.keys()))
+    plot_func = PLOT_FUNCS[plot_type]
+    plot_func(plotter, calib_dirpath, mcmc_tables, targets)

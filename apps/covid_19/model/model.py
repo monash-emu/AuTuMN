@@ -50,32 +50,24 @@ def build_model(params: dict) -> StratifiedModel:
         Compartment.EARLY_ACTIVE,
         Compartment.LATE_ACTIVE,
     ]
-    disease_comps = [
-        Compartment.EARLY_EXPOSED,
-        *infectious_comps
-    ]
+    disease_comps = [Compartment.EARLY_EXPOSED, *infectious_comps]
 
     # Calculate time periods spent in various compartments
-    base_periods = \
-        params["compartment_periods"]
-    periods_calc = \
-        params["compartment_periods_calculated"]
+    base_periods = params["compartment_periods"]
+    periods_calc = params["compartment_periods_calculated"]
     compartment_periods = preprocess.compartments.calc_compartment_periods(
         base_periods, periods_calc
     )
 
     # Distribute infectious seed across infectious compartments
-    infectious_seed = \
-        params["infectious_seed"]
-    total_disease_time = \
-        sum([compartment_periods[c] for c in disease_comps])
+    infectious_seed = params["infectious_seed"]
+    total_disease_time = sum([compartment_periods[c] for c in disease_comps])
     init_pop = {
         c: infectious_seed * compartment_periods[c] / total_disease_time for c in disease_comps
     }
 
     # Force the remainder starting population to go to S compartment (Required as entry_compartment is late_infectious)
-    init_pop[Compartment.SUSCEPTIBLE] = \
-        sum(total_pops) - sum(init_pop.values())
+    init_pop[Compartment.SUSCEPTIBLE] = sum(total_pops) - sum(init_pop.values())
 
     # Set integration times
     start_time = params["start_time"]
@@ -191,7 +183,7 @@ def build_model(params: dict) -> StratifiedModel:
             params["testing_to_detection"]["assumed_tests_parameter"],
             params["testing_to_detection"]["assumed_cdr_parameter"],
             country_iso3,
-            total_pops
+            total_pops,
         )
 
     else:
@@ -287,19 +279,17 @@ def build_model(params: dict) -> StratifiedModel:
 
 
 def find_cdr_function_from_test_data(
-        assumed_tests_parameter,
-        assumed_cdr_parameter,
-        country_iso3,
-        total_pops,
+    assumed_tests_parameter, assumed_cdr_parameter, country_iso3, total_pops,
 ):
     # Tests data
-    test_dates, test_values = \
-        inputs.get_vic_testing_numbers() if country_iso3 == "AUS" else \
-            get_international_testing_numbers(country_iso3)
+    test_dates, test_values = (
+        inputs.get_vic_testing_numbers()
+        if country_iso3 == "AUS"
+        else get_international_testing_numbers(country_iso3)
+    )
 
     # Convert test numbers to per capita testing rates
-    per_capita_tests = \
-        [i_tests / sum(total_pops) for i_tests in test_values]
+    per_capita_tests = [i_tests / sum(total_pops) for i_tests in test_values]
 
     # Calculate CDRs and the resulting CDR function over time
     cdr_from_tests_func = create_cdr_function(assumed_tests_parameter, assumed_cdr_parameter)
@@ -308,5 +298,5 @@ def find_cdr_function_from_test_data(
         [cdr_from_tests_func(i_test_rate) for i_test_rate in per_capita_tests],
         smoothness=0.2,
         method=5,
-        bound_low=0.,
+        bound_low=0.0,
     )

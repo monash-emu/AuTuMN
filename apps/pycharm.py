@@ -6,7 +6,7 @@ import os
 from autumn.constants import Region
 from apps import covid_19, sir_example, tuberculosis
 
-os.chdir('..')  # Make repo root the current directory
+os.chdir("..")  # Make repo root the current directory
 
 # Run a COVID model manually.
 app_region = covid_19.app.get_region(Region.CENTRAL_VISAYAS)

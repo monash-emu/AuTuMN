@@ -5,9 +5,7 @@ from apps.covid_19.calibration import (
     add_standard_philippines_params,
     add_standard_philippines_targets,
 )
-from autumn.calibration.utils import (
-    add_dispersion_param_prior_for_gaussian,
-)
+from autumn.calibration.utils import add_dispersion_param_prior_for_gaussian
 from autumn.tool_kit.params import load_targets
 
 targets = load_targets("covid_19", Region.MANILA)

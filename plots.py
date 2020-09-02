@@ -18,37 +18,23 @@ If not, install project requirements
 Run from a command line shell (with env active) using
 
     streamlit run plots.py
-    OR
     streamlit run plots.py mcmc
+    streamlit run plots.py scenario
 
 
 Website: https://www.streamlit.io/
 Docs: https://docs.streamlit.io/
 """
-import os
 import sys
 
-# Plus fix Streamlit hot reloading, which requires PYTHONPATH hacks
-# https://github.com/streamlit/streamlit/issues/1176
-MODULE_DIRNAMES = ["summer", "autumn"]
-PROJECT_PATH = os.path.dirname(os.path.abspath(__file__))
-dirpaths = []
-for module_dirname in MODULE_DIRNAMES:
-    dirpaths += [
-        os.path.join(PROJECT_PATH, d)
-        for d, _, _ in os.walk(module_dirname)
-        if not "__pycache__" in d
-    ]
+from dash.dashboards import calibration
+from dash.dashboards import scenario
+from dash.dashboards import model
 
-pypath = os.environ.get("PYTHONPATH")
-if pypath:
-    dirpaths = pypath.split(":") + dirpaths
-
-os.environ["PYTHONPATH"] = ":".join(dirpaths)
-
-from autumn.plots.streamlit import run_scenario_plots, run_mcmc_plots
 
 if len(sys.argv) > 1 and sys.argv[1] == "mcmc":
-    run_mcmc_plots()
+    calibration.run_dashboard()
+elif len(sys.argv) > 1 and sys.argv[1] == "scenario":
+    scenario.run_dashboard()
 else:
-    run_scenario_plots()
+    model.run_dashboard()

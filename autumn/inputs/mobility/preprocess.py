@@ -31,86 +31,86 @@ COUNTRY_NAME_ISO3_MAP = {
 }
 
 VIC_LGA_MAP = {
-    "Alpine (S)" : "Alpine Shire",
-    "Ararat (RC)" : None,
-    "Ballarat (C)" : "Ballarat City",
-    "Banyule (C)" : "Banyule City",
-    "Bass Coast (S)" : "Bass Coast Shire",
-    "Baw Baw (S)" : "Baw Baw Shire",
-    "Bayside (C)" : "Bayside City",
-    "Benalla (RC)" : "Benalla Rural City",
-    "Boroondara (C)" : "Boroondara City",
-    "Brimbank (C)" : "Brimbank City",
-    "Buloke (S)" : None,
-    "Campaspe (S)" : "Campaspe Shire",
-    "Cardinia (S)" : "Cardinia Shire",
-    "Casey (C)" : "City of Casey",
-    "Central Goldfields (S)" : "Central Goldfields Shire",
-    "Colac-Otway (S)" : "Colac Otway Shire",
-    "Corangamite (S)" : "Corangamite Shire",
-    "Darebin (C)" : "Darebin City",
-    "East Gippsland (S)" : "East Gippsland Shire",
-    "Frankston (C)" : "Frankston City",
-    "Gannawarra (S)" : None,
-    "Glen Eira (C)" : "Glen Eira City",
-    "Glenelg (S)" : "Glenelg Shire",
-    "Golden Plains (S)" : "Golden Plains Shire",
-    "Greater Bendigo (C)" : "Greater Bendigo City",
-    "Greater Dandenong (C)" : "Greater Dandenong City",
-    "Greater Geelong (C)" : "Greater Geelong City",
-    "Greater Shepparton (C)" : "Greater Shepparton City",
-    "Hepburn (S)" : "Hepburn Shire",
-    "Hindmarsh (S)" : None,
-    "Hobsons Bay (C)" : "Hobsons Bay City",
-    "Horsham (RC)" : "Horsham Rural City",
-    "Hume (C)" : "City of Hume",
-    "Indigo (S)" : "Indigo Shire",
-    "Kingston (C)" : "Kingston City",
-    "Knox (C)" : "City of Knox",
-    "Latrobe (C)" : "Latrobe City",
-    "Loddon (S)" : None,
-    "Macedon Ranges (S)" : "Macedon Ranges Shire",
-    "Manningham (C)" : "Manningham City",
-    "Mansfield (S)" : None,
-    "Maribyrnong (C)" : "City of Maribyrnong",
-    "Maroondah (C)" : "Maroondah City",
-    "Melbourne (C)" : "Melbourne City",
-    "Melton (S)" : "Melton City",
-    "Mildura (RC)" : "Mildura Rural City",
-    "Mitchell (S)" : "Mitchell Shire",
-    "Moira (S)" : "Moira Shire",
-    "Monash (C)" : "Monash City",
-    "Moonee Valley (C)" : "Moonee Valley City",
-    "Moorabool (S)" : "Moorabool Shire",
-    "Moreland (C)" : "Moorabool Shire",
-    "Mornington Peninsula (S)" : "Shire of Mornington Peninsula",
-    "Mount Alexander (S)" : "Mount Alexander Shire",
-    "Moyne (S)" : "Moyne Shire",
-    "Murrindindi (S)" : "Murrindindi Shire",
-    "Nillumbik (S)" : "Nillumbik Shire",
-    "Northern Grampians (S)" : "Northern Grampians Shire",
-    "Port Phillip (C)" : "Port Phillip City",
-    "Pyrenees (S)" : None,
-    "Queenscliffe (B)" : None,
-    "South Gippsland (S)" : "South Gippsland Shire",
-    "Southern Grampians (S)" : "Southern Grampians Shire",
-    "Stonnington (C)" : "Stonnington City",
-    "Strathbogie (S)" : None,
-    "Surf Coast (S)" : "Surf Coast Shire",
-    "Swan Hill (RC)" : "Swan Hill Rural City",
-    "Towong (S)" : None,
-    "Wangaratta (RC)" : "Wangaratta Rural City",
-    "Warrnambool (C)" : "Warrnambool City",
-    "Wellington (S)" : "Wellington Shire",
-    "West Wimmera (S)" : None,
-    "Whitehorse (C)" : "Whitehorse City",
-    "Whittlesea (C)" : "Whittlesea City",
-    "Wodonga (RC)" : "Wodonga City",
-    "Wyndham (C)" : "City of Wyndham",
-    "Yarra (C)" : "City of Yarra",
-    "Yarra Ranges (S)" : "Yarra Ranges Shire",
-    "Yarriambiack (S)" : None
-    }
+    "Alpine (S)": "Alpine Shire",
+    "Ararat (RC)": None,
+    "Ballarat (C)": "Ballarat City",
+    "Banyule (C)": "Banyule City",
+    "Bass Coast (S)": "Bass Coast Shire",
+    "Baw Baw (S)": "Baw Baw Shire",
+    "Bayside (C)": "Bayside City",
+    "Benalla (RC)": "Benalla Rural City",
+    "Boroondara (C)": "Boroondara City",
+    "Brimbank (C)": "Brimbank City",
+    "Buloke (S)": None,
+    "Campaspe (S)": "Campaspe Shire",
+    "Cardinia (S)": "Cardinia Shire",
+    "Casey (C)": "City of Casey",
+    "Central Goldfields (S)": "Central Goldfields Shire",
+    "Colac-Otway (S)": "Colac Otway Shire",
+    "Corangamite (S)": "Corangamite Shire",
+    "Darebin (C)": "Darebin City",
+    "East Gippsland (S)": "East Gippsland Shire",
+    "Frankston (C)": "Frankston City",
+    "Gannawarra (S)": None,
+    "Glen Eira (C)": "Glen Eira City",
+    "Glenelg (S)": "Glenelg Shire",
+    "Golden Plains (S)": "Golden Plains Shire",
+    "Greater Bendigo (C)": "Greater Bendigo City",
+    "Greater Dandenong (C)": "Greater Dandenong City",
+    "Greater Geelong (C)": "Greater Geelong City",
+    "Greater Shepparton (C)": "Greater Shepparton City",
+    "Hepburn (S)": "Hepburn Shire",
+    "Hindmarsh (S)": None,
+    "Hobsons Bay (C)": "Hobsons Bay City",
+    "Horsham (RC)": "Horsham Rural City",
+    "Hume (C)": "City of Hume",
+    "Indigo (S)": "Indigo Shire",
+    "Kingston (C)": "Kingston City",
+    "Knox (C)": "City of Knox",
+    "Latrobe (C)": "Latrobe City",
+    "Loddon (S)": None,
+    "Macedon Ranges (S)": "Macedon Ranges Shire",
+    "Manningham (C)": "Manningham City",
+    "Mansfield (S)": None,
+    "Maribyrnong (C)": "City of Maribyrnong",
+    "Maroondah (C)": "Maroondah City",
+    "Melbourne (C)": "Melbourne City",
+    "Melton (S)": "Melton City",
+    "Mildura (RC)": "Mildura Rural City",
+    "Mitchell (S)": "Mitchell Shire",
+    "Moira (S)": "Moira Shire",
+    "Monash (C)": "Monash City",
+    "Moonee Valley (C)": "Moonee Valley City",
+    "Moorabool (S)": "Moorabool Shire",
+    "Moreland (C)": "Moorabool Shire",
+    "Mornington Peninsula (S)": "Shire of Mornington Peninsula",
+    "Mount Alexander (S)": "Mount Alexander Shire",
+    "Moyne (S)": "Moyne Shire",
+    "Murrindindi (S)": "Murrindindi Shire",
+    "Nillumbik (S)": "Nillumbik Shire",
+    "Northern Grampians (S)": "Northern Grampians Shire",
+    "Port Phillip (C)": "Port Phillip City",
+    "Pyrenees (S)": None,
+    "Queenscliffe (B)": None,
+    "South Gippsland (S)": "South Gippsland Shire",
+    "Southern Grampians (S)": "Southern Grampians Shire",
+    "Stonnington (C)": "Stonnington City",
+    "Strathbogie (S)": None,
+    "Surf Coast (S)": "Surf Coast Shire",
+    "Swan Hill (RC)": "Swan Hill Rural City",
+    "Towong (S)": None,
+    "Wangaratta (RC)": "Wangaratta Rural City",
+    "Warrnambool (C)": "Warrnambool City",
+    "Wellington (S)": "Wellington Shire",
+    "West Wimmera (S)": None,
+    "Whitehorse (C)": "Whitehorse City",
+    "Whittlesea (C)": "Whittlesea City",
+    "Wodonga (RC)": "Wodonga City",
+    "Wyndham (C)": "City of Wyndham",
+    "Yarra (C)": "City of Yarra",
+    "Yarra Ranges (S)": "Yarra Ranges Shire",
+    "Yarriambiack (S)": None,
+}
 
 
 def preprocess_mobility(input_db: Database, country_df):
@@ -167,12 +167,12 @@ def get_iso3(country_name: str, country_df):
 
 
 def reshape_to_clusters(gm_df):
-    '''
+    """
     Takes the google mobility data frame and creates new DHHS health cluster mobility values.
     
     Input: Pandas data frame google mobility 
     Output: Pandas data frame of DHHS health clusters and VIC
-    '''
+    """
 
     # Before dropping sub_region_2 capture Victorian LGAs.
     gm_df = gm_df[(gm_df.sub_region_1 == "Victoria")]
@@ -185,9 +185,9 @@ def reshape_to_clusters(gm_df):
     lga_df = lga_df[lga_df.lga_name.notnull()]
 
     # Calculate LGA and health cluster populations proportions.
-    lga_df["lga_pop_prop"] = lga_df.proportion*lga_df.population
-    hc_pop = lga_df.groupby(["cluster_name"]).sum().reset_index()[["cluster_name","lga_pop_prop"]]
-    hc_pop.rename(columns={"lga_pop_prop":"hc_pop"}, inplace=True)
+    lga_df["lga_pop_prop"] = lga_df.proportion * lga_df.population
+    hc_pop = lga_df.groupby(["cluster_name"]).sum().reset_index()[["cluster_name", "lga_pop_prop"]]
+    hc_pop.rename(columns={"lga_pop_prop": "hc_pop"}, inplace=True)
     lga_df = pd.merge(lga_df, hc_pop, how="left", left_on="cluster_name", right_on="cluster_name")
     lga_df = pd.merge(lga_df, gm_df, how="left", left_on="lga_name", right_on="sub_region_1")
 
@@ -200,8 +200,10 @@ def reshape_to_clusters(gm_df):
         "residential_percent_change_from_baseline",
     ]
 
-    # Weight mobility values and reconstruct data frame. 
-    multiplied_columns = lga_df[list_of_columns].multiply(lga_df.lga_pop_prop/lga_df.hc_pop, axis="index")
+    # Weight mobility values and reconstruct data frame.
+    multiplied_columns = lga_df[list_of_columns].multiply(
+        lga_df.lga_pop_prop / lga_df.hc_pop, axis="index"
+    )
     cluster_df = lga_df[["cluster_name", "date"]]
 
     cluster_df = pd.concat([cluster_df, multiplied_columns], axis=1, sort=False)

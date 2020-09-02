@@ -17,6 +17,3 @@ def get_international_testing_numbers(iso3):
     test_dates = list(df_with_data.date.apply(date_str_to_int).to_numpy())
     test_numbers = list(df_with_data.loc[:, "new_tests"])
     return test_dates, test_numbers
-
-
-

@@ -2,21 +2,18 @@ from copy import deepcopy
 
 from autumn import inputs
 from autumn.constants import Flow, BirthApproach
-from autumn.curve import tanh_based_scaleup, scale_up_function
+from autumn.curve import tanh_based_scaleup
 from autumn.environment.seasonality import get_seasonal_forcing
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
 from autumn.tool_kit.utils import normalise_sequence, repeat_list_elements
 from summer.model import StratifiedModel
-from autumn.inputs.owid.queries import get_international_testing_numbers
-from autumn.inputs.imports.queries import get_all_vic_region_imports
 
 from apps.covid_19.constants import Compartment
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
-from apps.covid_19.model.importation import get_all_vic_notifications
 
 from . import outputs, preprocess
 from .stratification import stratify_by_clinical
-from .preprocess.testing import create_cdr_function
+from .preprocess.testing import find_cdr_function_from_test_data
 from .validate import validate_params
 
 
@@ -244,12 +241,12 @@ def build_model(params: dict) -> StratifiedModel:
         False, modelled_abs_detection_proportion_imported
     )
 
-    # Build life expectancy derived output function.
+    # Build life expectancy derived output function
     life_expectancy = inputs.get_life_expectancy_by_agegroup(agegroup_strata, country_iso3)[0]
     life_expectancy_latest = [life_expectancy[agegroup][-1] for agegroup in life_expectancy]
     life_lost_func = outputs.get_calculate_years_of_life_lost(life_expectancy_latest)
 
-    # Build hospital occupancy func.
+    # Build hospital occupancy func
     compartment_periods = params["compartment_periods"]
     icu_early_period = compartment_periods["icu_early"]
     hospital_early_period = compartment_periods["hospital_early"]
@@ -278,30 +275,3 @@ def build_model(params: dict) -> StratifiedModel:
 
     model.add_function_derived_outputs(func_outputs)
     return model
-
-
-def find_cdr_function_from_test_data(
-    assumed_tests_parameter, assumed_cdr_parameter, country_iso3, total_pops,
-):
-    # Tests data
-    test_dates, test_values = (
-        inputs.get_vic_testing_numbers()
-        if country_iso3 == "AUS"
-        else get_international_testing_numbers(country_iso3)
-    )
-
-    # Convert test numbers to per capita testing rates
-    per_capita_tests = [i_tests / sum(total_pops) for i_tests in test_values]
-
-    # Calculate CDRs and the resulting CDR function over time
-    cdr_from_tests_func = create_cdr_function(assumed_tests_parameter, assumed_cdr_parameter)
-    return scale_up_function(
-        test_dates,
-        [cdr_from_tests_func(i_test_rate) for i_test_rate in per_capita_tests],
-        smoothness=0.2,
-        method=5,
-        bound_low=0.0,
-    )
-
-
-

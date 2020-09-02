@@ -182,15 +182,15 @@ def add_standard_philippines_targets(targets):
         },
         {
             "output_key": "icu_occupancy",
-            "years": [targets["icu_occupancy"]["times"]],
-            "values": [targets["icu_occupancy"]["values"]],
-            "loglikelihood_distri": "uniform",
+            "years": [targets["icu_occupancy"]["times"][-1]],
+            "values": [targets["icu_occupancy"]["values"][-1]],
+            "loglikelihood_distri": "normal",
         },
         {
             "output_key": "accum_deaths",
-            "years": [targets["total_infection_deaths"]["times"]],
-            "values": [targets["total_infection_deaths"]["values"]],
-            "loglikelihood_distri": "uniform",
+            "years": [targets["total_infection_deaths"]["times"][-1]],
+            "values": [targets["total_infection_deaths"]["values"][-1]],
+            "loglikelihood_distri": "normal",
         },
     ]
 

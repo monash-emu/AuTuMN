@@ -14,7 +14,7 @@ PAR_PRIORS = provide_default_calibration_params()
 PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS)
 PAR_PRIORS = add_standard_philippines_params(PAR_PRIORS)
 PAR_PRIORS += [
-    {"param_name": "infectious_seed", "distribution": "uniform", "distri_params": [10.0, 100.0],},
+    {"param_name": "infectious_seed", "distribution": "uniform", "distri_params": [10.0, 60.0],},
 ]
 
 

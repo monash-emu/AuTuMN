@@ -354,13 +354,13 @@
   "icu_occupancy": {
     "output_key": "icu_occupancy",
     "title": "ICU occupancy",
-    "times": [243],
-    "values": [39]
+    "times": [242, 243],
+    "values": [0, 39]
   },
   "total_infection_deaths": {
-    "output_key": "total_infection_deaths",
-    "title": "Daily number of deaths",
-    "times": [240],
-    "values": [1004]
+    "output_key": "accum_deaths",
+    "title": "Cumulative number of deaths",
+    "times": [239, 240],
+    "values": [0, 1004]
   }
 }

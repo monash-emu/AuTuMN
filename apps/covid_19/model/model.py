@@ -1,6 +1,4 @@
 from copy import deepcopy
-import os
-import json
 
 from autumn import inputs
 from autumn.constants import Flow, BirthApproach
@@ -10,10 +8,14 @@ from autumn.tool_kit.scenarios import get_model_times_from_inputs
 from autumn.tool_kit.utils import normalise_sequence, repeat_list_elements
 from summer.model import StratifiedModel
 from autumn.inputs.owid.queries import get_international_testing_numbers
+from autumn.inputs.imports.queries import get_all_vic_region_imports
+from autumn.constants import Region
+
+from autumn.tool_kit.params import load_targets
+
 
 from apps.covid_19.constants import Compartment
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
-from autumn.constants import BASE_PATH, Region
 
 from . import outputs, preprocess
 from .stratification import stratify_by_clinical
@@ -84,7 +86,7 @@ def build_model(params: dict) -> StratifiedModel:
     start_time = params["start_time"]
     end_time = params["end_time"]
     time_step = params["time_step"]
-    import_times = get_model_times_from_inputs(round(start_time), end_time, time_step,)
+    times = get_model_times_from_inputs(round(start_time), end_time, time_step,)
 
     # Add inter-compartmental transition flows
     flows = deepcopy(preprocess.flows.DEFAULT_FLOWS)
@@ -116,7 +118,7 @@ def build_model(params: dict) -> StratifiedModel:
 
     # Create SUMMER model
     model = StratifiedModel(
-        import_times,
+        times,
         compartments,
         init_pop,
         flow_params,
@@ -258,8 +260,6 @@ def build_model(params: dict) -> StratifiedModel:
     life_expectancy_latest = [life_expectancy[agegroup][-1] for agegroup in life_expectancy]
     life_lost_func = outputs.get_calculate_years_of_life_lost(life_expectancy_latest)
 
-    import_times, import_aggs = get_all_vic_region_imports()
-
     # Build hospital occupancy func.
     compartment_periods = params["compartment_periods"]
     icu_early_period = compartment_periods["icu_early"]
@@ -317,23 +317,14 @@ def find_cdr_function_from_test_data(
     )
 
 
-def get_region_imports(region_name):
-    imports_path = os.path.join(BASE_PATH, "data\\inputs\\imports")
-    region_filename = region_name.replace("-", "_")
-    imports_filename = os.path.join(imports_path, f"{region_filename}.secret.json")
-    with open(imports_filename, "r") as file:
-        import_notifications = json.load(file)["notifications"]
-        times = import_notifications["times"]
-        values = import_notifications["values"]
-    return times, values
-
-
-def get_all_vic_region_imports():
-    import_aggregates = None
+def get_all_vic_notifications():
+    import_aggs = None
     for region in Region.VICTORIA_SUBREGIONS:
-        import_times, import_values = get_region_imports(region)
-        if import_aggregates:
-            import_aggregates = [i + j for i, j in zip(import_values, import_aggregates)]
-        else:
-            import_aggregates = import_values
-    return import_times, import_aggregates
+        import_times, import_values = get_region_notifications(region)
+        import_aggs = [i + j for i, j in zip(import_aggs, import_values)] if import_aggs else import_values
+    return import_times, import_aggs
+
+
+def get_region_notifications(region):
+    notifications = load_targets("covid_19", region.lower().replace("-", "_"))["notifications"]
+    return notifications["times"], notifications["values"]

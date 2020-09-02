@@ -21,6 +21,7 @@ def build_model(params: dict) -> StratifiedModel:
         Compartment.EARLY_LATENT,
         Compartment.LATE_LATENT,
         Compartment.INFECTIOUS,
+        Compartment.ON_TREATMENT,
         Compartment.RECOVERED,
     ]
     infectious_comps = [
@@ -49,7 +50,7 @@ def build_model(params: dict) -> StratifiedModel:
         )
 
     # assign unstratified parameter values to infection death and self-recovery processes
-    for param_name in ["infect_death", "recovery_rate"]:
+    for param_name in ["infect_death_rate", "self_recovery_rate"]:
         params[param_name] = params[param_name + "_dict"]["unstratified"]
 
     # Create the model.

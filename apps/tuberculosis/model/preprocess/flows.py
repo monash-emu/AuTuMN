@@ -40,13 +40,32 @@ DEFAULT_FLOWS = [
         "to": Compartment.INFECTIOUS,
         "parameter": "early_activation_rate",
     },
-    # Recovery flows
+    # Post-active-disease flows
     {
         "type": Flow.STANDARD,
         "origin": Compartment.INFECTIOUS,
         "to": Compartment.RECOVERED,
-        "parameter": "recovery_rate",
+        "parameter": "self_recovery_rate",
+    },
+    {
+        "type": Flow.STANDARD,
+        "origin": Compartment.INFECTIOUS,
+        "to": Compartment.ON_TREATMENT,
+        "parameter": "detection_rate",
+    },
+    {
+        "type": Flow.STANDARD,
+        "origin": Compartment.ON_TREATMENT,
+        "to": Compartment.RECOVERED,
+        "parameter": "treatment_recovery_rate",
+    },
+    {
+        "type": Flow.STANDARD,
+        "origin": Compartment.ON_TREATMENT,
+        "to": Compartment.INFECTIOUS,
+        "parameter": "relapse_rate",
     },
     # Infection death
-    {"type": Flow.DEATH, "parameter": "infect_death", "origin": Compartment.INFECTIOUS},
+    {"type": Flow.DEATH, "parameter": "infect_death_rate", "origin": Compartment.INFECTIOUS},
+    {"type": Flow.DEATH, "parameter": "treatment_death_rate", "origin": Compartment.ON_TREATMENT},
 ]

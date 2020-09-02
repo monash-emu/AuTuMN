@@ -20,7 +20,7 @@ def stratify_by_organ(model, params):
 
     # define differential natural history by organ status
     flow_adjustments = {}
-    for param_name in ["infect_death", "recovery_rate"]:
+    for param_name in ["infect_death_rate", "self_recovery_rate"]:
         flow_adjustments[param_name] = {}
         for organ_stratum in organ_strata:
             flow_adjustments[param_name][organ_stratum + "W"] = params[param_name + "_dict"][

@@ -23,6 +23,13 @@ stabilisation_rate: 1.
 late_activation_rate: 1.
 early_activation_rate: 1.
 
+
+# parameters related to post-disease-flows
+detection_rate: 0.  # FIXME
+treatment_recovery_rate: 0.  # FIXME
+relapse_rate: 0.  # FIXME
+treatment_death_rate: 0.  # FIXME
+
 # relative risks of reinfection
 rr_infection_latent: .21
 rr_infection_recovered: 1.
@@ -32,12 +39,12 @@ incidence_props_pulmonary: .75
 incidence_props_smear_positive_among_pulmonary: .75
 smear_negative_infect_multiplier: .25
 extrapulmonary_infect_multiplier: 0.
-infect_death_dict:
+infect_death_rate_dict:
   unstratified: .2
   smear_positive: 0.389 # Ragonent et al. (CID 2020)
   smear_negative: 0.025 # Ragonent et al. (CID 2020)
   extrapulmonary: 0.025 # assumed equal to that of smear-negative PTB
-recovery_rate_dict:
+self_recovery_rate_dict:
   unstratified: .2
   smear_positive: 0.231 # Ragonent et al. (CID 2020)
   smear_negative: 0.130 # Ragonent et al. (CID 2020)

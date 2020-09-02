@@ -7,6 +7,7 @@ class Compartment:
     EARLY_LATENT = "early_latent"
     LATE_LATENT = "late_latent"
     INFECTIOUS = "infectious"
+    ON_TREATMENT = "on_treatment"
     RECOVERED = "recovered"
 
 

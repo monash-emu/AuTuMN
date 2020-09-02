@@ -130,4 +130,3 @@ def print_mle_parameters(
 
 
 PLOT_FUNCS["Print MLE parameters"] = print_mle_parameters
-

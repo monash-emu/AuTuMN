@@ -1,5 +1,8 @@
-from apps.covid_19.calibration import add_standard_victoria_params, add_standard_victoria_targets, \
-    provide_default_calibration_params
+from apps.covid_19.calibration import (
+    add_standard_victoria_params,
+    add_standard_victoria_targets,
+    provide_default_calibration_params,
+)
 from autumn.constants import Region
 from autumn.tool_kit.params import load_targets
 from autumn.calibration.utils import add_dispersion_param_prior_for_gaussian

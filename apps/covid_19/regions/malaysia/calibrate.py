@@ -1,8 +1,6 @@
 from autumn.constants import Region
 from apps.covid_19 import calibration as base
-from apps.covid_19.calibration import (
-    provide_default_calibration_params,
-)
+from apps.covid_19.calibration import provide_default_calibration_params
 from apps.covid_19.mixing_optimisation.utils import add_dispersion_param_prior_for_gaussian
 from autumn.tool_kit.params import load_targets
 
@@ -41,11 +39,7 @@ TARGET_OUTPUTS = [
 PAR_PRIORS = provide_default_calibration_params(excluded_params=("start_time"))
 
 PAR_PRIORS += [
-    {
-        "param_name": "start_time",
-        "distribution": "uniform",
-        "distri_params": [40.0, 60.0],
-    },
+    {"param_name": "start_time", "distribution": "uniform", "distri_params": [40.0, 60.0],},
 ]
 
 PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS)
@@ -57,11 +51,7 @@ PAR_PRIORS += [
         "distribution": "uniform",
         "distri_params": [5.0, 25.0],
     },
-    {
-        "param_name": "icu_prop",
-        "distribution": "uniform",  
-        "distri_params": [0.12, 0.25],
-    },
+    {"param_name": "icu_prop", "distribution": "uniform", "distri_params": [0.12, 0.25],},
     {
         "param_name": "hospital_props_multiplier",
         "distribution": "uniform",

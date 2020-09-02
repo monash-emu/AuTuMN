@@ -131,10 +131,11 @@ A new file called `apps/foo/bar.encrypted.json` will be created. You can commit 
 
 ## Formatting
 
-The codebase can be auto-formatted using [Black](https://github.com/psf/black):
+The codebase can be auto-formatted using [Black](https://github.com/psf/black).
+You can auto-format the code as follows, this will never break anything:
 
 ```
-./scripts/format.ps1
+black .
 ```
 
 ## Input data

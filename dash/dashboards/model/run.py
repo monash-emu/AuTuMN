@@ -35,4 +35,3 @@ def run_dashboard():
     plot_type = st.sidebar.selectbox("Select plot type", list(PLOT_FUNCS.keys()))
     plot_func = PLOT_FUNCS[plot_type]
     plot_func(plotter, app_region)
-

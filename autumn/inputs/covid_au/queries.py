@@ -21,4 +21,3 @@ def get_vic_testing_numbers():
     epsilon = 1e-6  # A really tiny number to avoid having any zeros
     avg_vals = np.array(apply_moving_average(test_values, 7)) + epsilon
     return test_dates, avg_vals
-

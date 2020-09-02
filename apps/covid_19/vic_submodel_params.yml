@@ -9,7 +9,7 @@ infectious_seed: 100
 start_time: 135
 end_time: 365
 
-contact_rate: 0.021
+contact_rate: 0.019
 seasonal_force: 0.5
 
 ifr_multiplier: 2.

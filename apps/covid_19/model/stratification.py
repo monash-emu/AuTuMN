@@ -1,4 +1,5 @@
 import numpy as np
+import warnings
 
 from autumn.tool_kit.utils import (
     find_rates_and_complements_from_ifr,
@@ -118,9 +119,10 @@ def stratify_by_clinical(model, params, detected_proportion, symptomatic_props):
     for age_idx in range(len(agegroup_strata)):
 
         # Make sure there are enough symptomatic people to fill the IFR
-        assert \
-            abs_props["non_sympt"][age_idx] + abs_props["hospital"][age_idx] > \
-            infection_fatality_props[age_idx]
+        if infection_fatality_props[age_idx] > \
+                abs_props["non_sympt"][age_idx] + abs_props["hospital"][age_idx]:
+            infection_fatality_props[age_idx] = abs_props["non_sympt"][age_idx] + abs_props["hospital"][age_idx]
+            warnings.warn(f"Decreasing the IFR for age group number {age_idx} because IFR > constant proportions")
 
         # Absolute proportion of all patients dying in ICU
         abs_death_props[ClinicalStratum.ICU][age_idx] = \

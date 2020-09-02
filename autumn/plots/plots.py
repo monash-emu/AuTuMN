@@ -370,14 +370,19 @@ def plot_outputs_multi(
     plotter.save_figure(fig, filename=output_name, title_text=output_name)
 
 
-def plot_outputs_single(plotter: Plotter, scenario: Scenario, output_config: dict):
+def plot_outputs_single(
+    plotter: Plotter, scenario: Scenario, output_config: dict, is_logscale=False
+):
     """
     Plot the model derived/generated outputs requested by the user for a single scenario.
     """
     fig, axis, _, _, _ = plotter.get_figure()
-    output_name = output_config["name"]
-    target_values = output_config["target_values"]
-    target_times = output_config["target_times"]
+    if is_logscale:
+        axis.set_yscale("log")
+
+    output_name = output_config["output_key"]
+    target_values = output_config["values"]
+    target_times = output_config["times"]
     _plot_outputs_to_axis(axis, scenario, output_name)
     _plot_targets_to_axis(axis, target_values, target_times)
     plotter.save_figure(fig, filename=output_name, subdir="outputs", title_text=output_name)
@@ -388,20 +393,9 @@ def _plot_outputs_to_axis(axis, scenario: Scenario, name: str, color_idx=0, alph
     Plot outputs requested by output_config from scenario to the provided axis.
     """
     model = scenario.model
-    generated_outputs = scenario.generated_outputs
-    if generated_outputs and name in generated_outputs:
-        plot_values = generated_outputs[name]
-    elif name in model.derived_outputs:
-        plot_values = model.derived_outputs[name]
-    else:
-        logger.error("Could not plot output named %s - not found.", name)
-        return
-
+    plot_values = model.derived_outputs[name]
     # Plot the values as a line.
-    if type(plot_values) is list:
-        axis.plot(model.times, plot_values, color=COLOR_THEME[color_idx], alpha=alpha)
-    else:
-        logger.error("Could not plot output named %s - non-list data format.", name)
+    axis.plot(model.times, plot_values, color=COLOR_THEME[color_idx], alpha=alpha)
 
 
 def _plot_targets_to_axis(axis, values: List[float], times: List[int], on_uncertainty_plot=False):
@@ -511,11 +505,18 @@ def plot_time_varying_input(
     """
     # Plot requested func names.
     fig, axes, max_dims, n_rows, n_cols = plotter.get_figure()
-    values = list(map(tv_func, times))
     if is_logscale:
         axes.set_yscale("log")
 
-    axes.plot(times, values)
+    if type(tv_func) is not list:
+        funcs = [tv_func]
+    else:
+        funcs = tv_func
+
+    for func in funcs:
+        values = list(map(func, times))
+        axes.plot(times, values)
+
     plotter.save_figure(fig, filename=f"time-variant-{tv_key}", title_text=tv_key)
 
 

@@ -1,5 +1,5 @@
 from .hospital_data import read_hospital_data_from_csv
-from autumn.plots.streamlit.run_mcmc_plots import load_mcmc_tables
+from autumn.db.models import load_mcmc_tables
 from autumn.plots.plots import _overwrite_non_accepted_mcmc_runs
 from autumn.inputs import get_john_hopkins_data
 from autumn.calibration.utils import add_dispersion_param_prior_for_gaussian

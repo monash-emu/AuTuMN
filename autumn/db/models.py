@@ -56,6 +56,39 @@ def load_model_scenarios(database_path: str, model_params={}) -> List[Scenario]:
     return scenarios
 
 
+def load_mcmc_tables(calib_dirpath: str):
+    mcmc_tables = []
+    for db_path in _find_db_paths(calib_dirpath):
+        db = Database(db_path)
+        mcmc_tables.append(db.query("mcmc_run"))
+
+    return mcmc_tables
+
+
+def load_derived_output_tables(calib_dirpath: str, column: str = None):
+    derived_output_tables = []
+    for db_path in _find_db_paths(calib_dirpath):
+        db = Database(db_path)
+        if not column:
+            df = db.query("derived_outputs")
+            derived_output_tables.append(df)
+        else:
+            cols = ["idx", "Scenario", "times", column]
+            df = db.query("derived_outputs", column=cols)
+            derived_output_tables.append(df)
+
+    return derived_output_tables
+
+
+def _find_db_paths(calib_dirpath: str):
+    db_paths = [
+        os.path.join(calib_dirpath, f)
+        for f in os.listdir(calib_dirpath)
+        if f.endswith(".db") and not f.startswith("mcmc_percentiles")
+    ]
+    return sorted(db_paths)
+
+
 def store_database(
     outputs, database_path, table_name="outputs", scenario=0, run_idx=0, times=None,
 ):

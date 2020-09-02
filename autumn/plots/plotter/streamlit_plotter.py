@@ -18,3 +18,4 @@ class StreamlitPlotter(BasePlotter):
             st.markdown(md, unsafe_allow_html=True)
 
         st.pyplot(fig, dpi=300, bbox_inches="tight")
+

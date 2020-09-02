@@ -8,8 +8,7 @@ import logging
 from autumn.tool_kit.params import load_targets
 
 from . import plots
-
-from .streamlit.run_mcmc_plots import load_mcmc_tables, load_derived_output_tables
+from autumn.db.models import load_mcmc_tables, load_derived_output_tables
 from .plotter import FilePlotter
 
 APP_DIRNAMES = ["covid_", "marshall_islands", "mongolia", "dummy"]

@@ -6,7 +6,7 @@ from autumn import constants
 from autumn import secrets
 
 
-DHHS_DATA = os.path.join(constants.INPUT_DATA_PATH, "monashmodelextract_20200901.csv")
+DHHS_DATA = os.path.join(constants.INPUT_DATA_PATH, "monashmodelextract.csv")
 REGION_FOLDER = os.path.join(constants.APPS_PATH, "covid_19\\regions")
 IMPORT_FOLDER = os.path.join(constants.INPUT_DATA_PATH, "imports")
 

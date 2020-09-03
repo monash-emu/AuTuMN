@@ -3,8 +3,9 @@ parent: apps/covid_19/params.yml
 
 iso3: AUS
 pop_year: 2018
-implement_importation: false
-infectious_seed: 100
+implement_importation: true
+infectious_seed: 0
+movement_prop: 0.3
 
 start_time: 135
 end_time: 365

@@ -9,7 +9,8 @@ from autumn.tool_kit.utils import normalise_sequence, repeat_list_elements
 from summer.model import StratifiedModel
 
 from apps.covid_19.constants import Compartment
-from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
+from apps.covid_19.model.importation import get_all_vic_notifications
+from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS, Region
 
 from . import outputs, preprocess
 from .stratification import stratify_by_clinical
@@ -32,6 +33,8 @@ def build_model(params: dict) -> StratifiedModel:
     total_pops = inputs.get_population_by_agegroup(
         agegroup_strata, country_iso3, pop_region, year=params["pop_year"]
     )
+    implement_importation = params["implement_importation"]
+    movement_prop = params["movement_prop"]
 
     # Define model compartments.
     compartments = [
@@ -97,9 +100,8 @@ def build_model(params: dict) -> StratifiedModel:
             }
         )
 
-    implement_importation = params["implement_importation"]
+    # Just set the importation flow (if required) without specifying its value, which is done later
     if implement_importation:
-        # Implement importation of people, importation_rate is later as time varying function
         flows.append({"type": Flow.IMPORT, "parameter": "importation_rate"})
 
     # Create SUMMER model
@@ -143,8 +145,8 @@ def build_model(params: dict) -> StratifiedModel:
         )
         model.time_variants["contact_rate"] = seasonal_func
 
-    # Stratify the model by age group.
-    # Adjust flow parameters for different age strata.
+    # Stratify the model by age group
+    # Adjust flow parameters for different age strata
     flow_adjustments = {
         # Adjust susceptibility across age groups
         "contact_rate": params["age_based_susceptibility"],
@@ -174,7 +176,7 @@ def build_model(params: dict) -> StratifiedModel:
         testing_region = "Victoria" if country_iso3 == "AUS" else pop_region
         testing_year = 2020 if country_iso3 == "AUS" else params["pop_year"]
 
-        total_pops = inputs.get_population_by_agegroup(
+        testing_pops = inputs.get_population_by_agegroup(
             agegroup_strata, country_iso3, testing_region, year=testing_year
         )
 
@@ -182,7 +184,7 @@ def build_model(params: dict) -> StratifiedModel:
             params["testing_to_detection"]["assumed_tests_parameter"],
             params["testing_to_detection"]["assumed_cdr_parameter"],
             country_iso3,
-            total_pops,
+            testing_pops,
         )
 
     else:
@@ -211,10 +213,16 @@ def build_model(params: dict) -> StratifiedModel:
     def modelled_abs_detection_proportion_imported(t):
         return import_symptomatic_prop * detected_proportion(t)
 
-    # Set time-variant importation rate for the importation flow.
     if implement_importation:
-        import_times = params["data"]["times_imported_cases"]
-        import_cases = params["data"]["n_imported_cases"]
+        if pop_region and pop_region.lower().replace("__", "_").replace("_", "-") in Region.VICTORIA_SUBREGIONS:
+            import_times, importation_data = get_all_vic_notifications(excluded_regions=(pop_region,))
+            movement_to_region = sum(total_pops) / sum(testing_pops) * movement_prop
+            import_cases = [i_cases * movement_to_region for i_cases in importation_data]
+
+        else:
+            import_times = params["data"]["times_imported_cases"]
+            import_cases = params["data"]["n_imported_cases"]
+
         import_rate_func = preprocess.importation.get_importation_rate_func_as_birth_rates(
             import_times, import_cases, modelled_abs_detection_proportion_imported
         )

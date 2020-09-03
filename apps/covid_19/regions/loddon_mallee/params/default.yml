@@ -3,3 +3,6 @@
 parent: apps/covid_19/vic_submodel_params.yml
 pop_region: LODDON_MALLEE
 mobility_region: LODDON_MALLEE
+
+movement_prop: 0.15
+contact_rate: 0.01

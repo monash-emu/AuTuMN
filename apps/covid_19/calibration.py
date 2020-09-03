@@ -235,7 +235,18 @@ Victoria
 """
 
 
-def add_standard_victoria_params(params):
+def add_standard_victoria_params(params, region):
+
+    params += [
+        {
+            "param_name": "contact_rate",
+            "distribution": "uniform",
+            "distri_params": [
+                0.012 if region in Region.VICTORIA_METRO else 0.06,
+                0.07
+            ],
+        },
+    ]
 
     return params + [
         {
@@ -287,7 +298,7 @@ def add_standard_victoria_params(params):
         {
             "param_name": "movement_prop",
             "distribution": "uniform",
-            "distri_params": [0.1, 0.4],
+            "distri_params": [0.05, 0.4],
         },
     ]
 
@@ -295,18 +306,10 @@ def add_standard_victoria_params(params):
 def add_standard_victoria_targets(target_outputs, targets, region):
 
     notifications_to_ignore = 2
-    deaths_to_ignore = 3
-    new_hosp_to_ignore = 7
-    new_icu_to_ignore = 7
-
-    # Disregard last two notification values
     notification_times = targets["notifications"]["times"][:-notifications_to_ignore]
     notification_values = targets["notifications"]["values"][:-notifications_to_ignore]
 
-    # Disregard last three death values
-    total_infection_death_times = targets["total_infection_deaths"]["times"][:-deaths_to_ignore]
-    total_infection_death_values = targets["total_infection_deaths"]["values"][:-deaths_to_ignore]
-
+    # Calibrate all Victoria sub-regions to notifications
     target_outputs += [
         {
             "output_key": targets["notifications"]["output_key"],
@@ -314,17 +317,27 @@ def add_standard_victoria_targets(target_outputs, targets, region):
             "values": notification_values,
             "loglikelihood_distri": "normal",
             "time_weights": get_trapezoidal_weights(notification_times),
-        },
-        {
-            "output_key": targets["total_infection_deaths"]["output_key"],
-            "years": total_infection_death_times,
-            "values": total_infection_death_values,
-            "loglikelihood_distri": "normal",
-            "time_weights": get_trapezoidal_weights(total_infection_death_times),
-        },
+        }
     ]
 
-    if region != Region.VICTORIA:
+    # Also calibrate Victoria metro sub-regions to deaths, hospital admission and ICU admissions
+    if region in Region.VICTORIA_METRO:
+
+        deaths_to_ignore = 3
+        total_infection_death_times = targets["total_infection_deaths"]["times"][:-deaths_to_ignore]
+        total_infection_death_values = targets["total_infection_deaths"]["values"][:-deaths_to_ignore]
+
+        target_outputs += [
+            {
+                "output_key": targets["total_infection_deaths"]["output_key"],
+                "years": total_infection_death_times,
+                "values": total_infection_death_values,
+                "loglikelihood_distri": "normal",
+                "time_weights": get_trapezoidal_weights(total_infection_death_times),
+            },
+        ]
+
+        new_hosp_to_ignore = 7
         hospital_admission_times = targets["hospital_admissions"]["times"][:-new_hosp_to_ignore]
         hospital_admission_values = targets["hospital_admissions"]["values"][:-new_hosp_to_ignore]
 
@@ -334,12 +347,10 @@ def add_standard_victoria_targets(target_outputs, targets, region):
                 "years": hospital_admission_times,
                 "values": hospital_admission_values,
                 "loglikelihood_distri": "normal",
-                # "time_weights": get_trapezoidal_weights(hospital_admission_times)
             },
         ]
 
-    if region not in (Region.VICTORIA, Region.HUME, Region.LODDON_MALLEE, Region.GIPPSLAND):
-
+        new_icu_to_ignore = 7
         icu_admission_times = targets["icu_admissions"]["times"][:-new_icu_to_ignore]
         icu_admission_values = targets["icu_admissions"]["values"][:-new_icu_to_ignore]
 
@@ -349,7 +360,6 @@ def add_standard_victoria_targets(target_outputs, targets, region):
                 "years": icu_admission_times,
                 "values": icu_admission_values,
                 "loglikelihood_distri": "normal",
-                # "time_weights": get_trapezoidal_weights(icu_admission_times)
             },
         ]
 

@@ -337,7 +337,6 @@ def add_standard_victoria_targets(target_outputs, targets, region):
             "years": notification_times,
             "values": notification_values,
             "loglikelihood_distri": "normal",
-            "time_weights": get_trapezoidal_weights(notification_times),
         }
     ]
 
@@ -354,7 +353,6 @@ def add_standard_victoria_targets(target_outputs, targets, region):
                 "years": total_infection_death_times,
                 "values": total_infection_death_values,
                 "loglikelihood_distri": "normal",
-                "time_weights": get_trapezoidal_weights(total_infection_death_times),
             },
         ]
 

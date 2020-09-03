@@ -261,23 +261,29 @@ def add_standard_victoria_params(params):
 
 
 def add_standard_victoria_targets(target_outputs, targets):
-    notifications = targets["notifications"]
-    total_infection_deaths = targets["total_infection_deaths"]
+
+    # Disregard last two notification values
+    notification_times = targets["notifications"]["times"][:-2]
+    notification_values = targets["notifications"]["values"][:-2]
+
+    # Disregard last three death values
+    total_infection_death_times = targets["total_infection_deaths"]["times"][:-3]
+    total_infection_death_values = targets["total_infection_deaths"]["values"][:-3]
 
     return target_outputs + [
         {
-            "output_key": notifications["output_key"],
-            "years": notifications["times"],
-            "values": notifications["values"],
+            "output_key": targets["notifications"]["output_key"],
+            "years": notification_times,
+            "values": notification_values,
             "loglikelihood_distri": "normal",
-            "time_weights": get_trapezoidal_weights(notifications["times"]),
+            "time_weights": get_trapezoidal_weights(notification_times),
         },
         {
-            "output_key": total_infection_deaths["output_key"],
-            "years": total_infection_deaths["times"],
-            "values": total_infection_deaths["values"],
+            "output_key": targets["total_infection_deaths"]["output_key"],
+            "years": total_infection_death_times,
+            "values": total_infection_death_values,
             "loglikelihood_distri": "normal",
-            "time_weights": get_trapezoidal_weights(total_infection_deaths["times"]),
+            "time_weights": get_trapezoidal_weights(total_infection_death_times),
         },
     ]
 

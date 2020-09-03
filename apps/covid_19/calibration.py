@@ -293,19 +293,20 @@ def add_standard_victoria_params(params):
 
 def add_standard_victoria_targets(target_outputs, targets, region):
 
+    notifications_to_ignore = 2
+    deaths_to_ignore = 3
+    new_hosp_to_ignore = 7
+    new_icu_to_ignore = 7
+
     # Disregard last two notification values
-    notification_times = targets["notifications"]["times"][:-2]
-    notification_values = targets["notifications"]["values"][:-2]
+    notification_times = targets["notifications"]["times"][:-notifications_to_ignore]
+    notification_values = targets["notifications"]["values"][:-notifications_to_ignore]
 
     # Disregard last three death values
-    total_infection_death_times = targets["total_infection_deaths"]["times"][:-3]
-    total_infection_death_values = targets["total_infection_deaths"]["values"][:-3]
+    total_infection_death_times = targets["total_infection_deaths"]["times"][:-deaths_to_ignore]
+    total_infection_death_values = targets["total_infection_deaths"]["values"][:-deaths_to_ignore]
 
-    if region != "victoria":
-        print()
-
-
-    return target_outputs + [
+    target_outputs += [
         {
             "output_key": targets["notifications"]["output_key"],
             "years": notification_times,
@@ -321,6 +322,31 @@ def add_standard_victoria_targets(target_outputs, targets, region):
             "time_weights": get_trapezoidal_weights(total_infection_death_times),
         },
     ]
+
+    if region != "victoria":
+        hospital_admission_times = targets["hospital_admissions"]["times"][:-new_hosp_to_ignore]
+        hospital_admission_values = targets["hospital_admissions"]["values"][:-new_hosp_to_ignore]
+        icu_admission_times = targets["icu_admissions"]["times"][:-new_icu_to_ignore]
+        icu_admission_values = targets["icu_admissions"]["values"][:-new_icu_to_ignore]
+
+        target_outputs += [
+            {
+                "output_key": "new_hospital_admissions",
+                "years": hospital_admission_times,
+                "values": hospital_admission_values,
+                "loglikelihood_distri": "normal",
+                "time_weights": get_trapezoidal_weights(hospital_admission_times)
+            },
+            {
+                "output_key": "new_icu_admissions",
+                "years": icu_admission_times,
+                "values": icu_admission_values,
+                "loglikelihood_distri": "normal",
+                "time_weights": get_trapezoidal_weights(icu_admission_times)
+            },
+        ]
+
+    return target_outputs
 
 
 def get_trapezoidal_weights(target_times):

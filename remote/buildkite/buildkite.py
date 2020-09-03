@@ -182,6 +182,9 @@ class BooleanInputField(BaseInputField):
             "options": [{"label": "Yes", "value": "yes"}, {"label": "No", "value": "no"}],
         }
 
+    def get_option(self, value: bool):
+        return "yes" if value else "no"
+
     def get_value(self):
         if self._value is not None:
             return self._value

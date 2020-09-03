@@ -33,6 +33,8 @@ def build_model(params: dict) -> StratifiedModel:
     total_pops = inputs.get_population_by_agegroup(
         agegroup_strata, country_iso3, pop_region, year=params["pop_year"]
     )
+    implement_importation = params["implement_importation"]
+    movement_prop = params["movement_prop"]
 
     # Define model compartments.
     compartments = [
@@ -99,7 +101,6 @@ def build_model(params: dict) -> StratifiedModel:
         )
 
     # Just set the importation flow (if required) without specifying its value, which is done later
-    implement_importation = params["implement_importation"]
     if implement_importation:
         flows.append({"type": Flow.IMPORT, "parameter": "importation_rate"})
 
@@ -213,8 +214,7 @@ def build_model(params: dict) -> StratifiedModel:
         return import_symptomatic_prop * detected_proportion(t)
 
     if implement_importation:
-        if pop_region and pop_region.lower().replace("_", "-") in Region.VICTORIA_SUBREGIONS:
-            movement_prop = 0.1
+        if pop_region and pop_region.lower().replace("__", "_").replace("_", "-") in Region.VICTORIA_SUBREGIONS:
             import_times, importation_data = get_all_vic_notifications(excluded_regions=(pop_region,))
             movement_to_region = sum(total_pops) / sum(testing_pops) * movement_prop
             import_cases = [i_cases * movement_to_region for i_cases in importation_data]

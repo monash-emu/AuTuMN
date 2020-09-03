@@ -3,5 +3,3 @@
 parent: apps/covid_19/vic_submodel_params.yml
 pop_region: NORTH_METRO
 mobility_region: NORTH_METRO
-
-implement_importation: true

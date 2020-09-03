@@ -79,11 +79,7 @@ class Region:
         GRAMPIANS,
     ]
 
-    VICTORIA_SUBREGIONS = [
-        NORTH_METRO,
-        SOUTH_EAST_METRO,
-        SOUTH_METRO,
-        WEST_METRO,
+    VICTORIA_RURAL = [
         BARWON_SOUTH_WEST,
         GIPPSLAND,
         HUME,
@@ -91,3 +87,12 @@ class Region:
         GRAMPIANS,
         VICTORIA,
     ]
+
+    VICTORIA_METRO = [
+        NORTH_METRO,
+        SOUTH_EAST_METRO,
+        SOUTH_METRO,
+        WEST_METRO,
+    ]
+
+    VICTORIA_SUBREGIONS = VICTORIA_RURAL + VICTORIA_METRO

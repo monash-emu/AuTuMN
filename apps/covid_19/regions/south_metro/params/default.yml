@@ -3,3 +3,5 @@
 parent: apps/covid_19/vic_submodel_params.yml
 pop_region: SOUTH_METRO
 mobility_region: SOUTH_METRO
+
+start_time: 152.

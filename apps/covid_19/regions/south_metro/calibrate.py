@@ -11,8 +11,8 @@ from apps.covid_19 import calibration as base
 targets = load_targets("covid_19", Region.SOUTH_METRO)
 TARGET_OUTPUTS = add_standard_victoria_targets([], targets, Region.SOUTH_METRO)
 
-PAR_PRIORS = provide_default_calibration_params(["start_time"])
-PAR_PRIORS = add_standard_victoria_params(PAR_PRIORS)
+PAR_PRIORS = provide_default_calibration_params(("start_time", "contact_rate"))
+PAR_PRIORS = add_standard_victoria_params(PAR_PRIORS, Region.SOUTH_METRO)
 PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS)
 
 

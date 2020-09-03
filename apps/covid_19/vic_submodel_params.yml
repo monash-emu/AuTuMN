@@ -10,7 +10,7 @@ movement_prop: 0.3
 hospital_props_multiplier: 2.
 ifr_multiplier: 2.
 
-start_time: 130
+start_time: 140
 end_time: 365
 
 contact_rate: 0.023

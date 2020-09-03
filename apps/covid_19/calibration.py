@@ -334,7 +334,7 @@ def add_standard_victoria_targets(target_outputs, targets, region):
                 "years": hospital_admission_times,
                 "values": hospital_admission_values,
                 "loglikelihood_distri": "normal",
-                "time_weights": get_trapezoidal_weights(hospital_admission_times)
+                # "time_weights": get_trapezoidal_weights(hospital_admission_times)
             },
         ]
 
@@ -349,7 +349,7 @@ def add_standard_victoria_targets(target_outputs, targets, region):
                 "years": icu_admission_times,
                 "values": icu_admission_values,
                 "loglikelihood_distri": "normal",
-                "time_weights": get_trapezoidal_weights(icu_admission_times)
+                # "time_weights": get_trapezoidal_weights(icu_admission_times)
             },
         ]
 

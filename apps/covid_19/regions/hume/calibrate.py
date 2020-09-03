@@ -9,7 +9,7 @@ from autumn.calibration.utils import add_dispersion_param_prior_for_gaussian
 from apps.covid_19 import calibration as base
 
 targets = load_targets("covid_19", Region.HUME)
-TARGET_OUTPUTS = add_standard_victoria_targets([], targets)
+TARGET_OUTPUTS = add_standard_victoria_targets([], targets, Region.HUME)
 
 PAR_PRIORS = provide_default_calibration_params(["start_time"])
 PAR_PRIORS = add_standard_victoria_params(PAR_PRIORS)

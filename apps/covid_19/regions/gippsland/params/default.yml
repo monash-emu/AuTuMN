@@ -1,6 +1,6 @@
 # SCENARIO DESCRIPTION: BASELINE
 ---
-parent: apps/covid_19/vic_submodel_params.yml
+parent: apps/covid_19/vic_rural_submodel_params.yml
 pop_region: GIPPSLAND
 mobility_region: GIPPSLAND
 

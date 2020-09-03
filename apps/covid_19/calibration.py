@@ -7,6 +7,7 @@ from autumn.calibration import (
 )
 from autumn.tool_kit.params import load_params
 from autumn.calibration.utils import ignore_calibration_target_before_date
+from autumn.constants import Region
 
 from .model import build_model
 
@@ -323,11 +324,9 @@ def add_standard_victoria_targets(target_outputs, targets, region):
         },
     ]
 
-    if region != "victoria":
+    if region != Region.VICTORIA:
         hospital_admission_times = targets["hospital_admissions"]["times"][:-new_hosp_to_ignore]
         hospital_admission_values = targets["hospital_admissions"]["values"][:-new_hosp_to_ignore]
-        icu_admission_times = targets["icu_admissions"]["times"][:-new_icu_to_ignore]
-        icu_admission_values = targets["icu_admissions"]["values"][:-new_icu_to_ignore]
 
         target_outputs += [
             {
@@ -337,6 +336,14 @@ def add_standard_victoria_targets(target_outputs, targets, region):
                 "loglikelihood_distri": "normal",
                 "time_weights": get_trapezoidal_weights(hospital_admission_times)
             },
+        ]
+
+    if region not in (Region.VICTORIA, Region.HUME, Region.LODDON_MALLEE, Region.GIPPSLAND):
+
+        icu_admission_times = targets["icu_admissions"]["times"][:-new_icu_to_ignore]
+        icu_admission_values = targets["icu_admissions"]["values"][:-new_icu_to_ignore]
+
+        target_outputs += [
             {
                 "output_key": "new_icu_admissions",
                 "years": icu_admission_times,

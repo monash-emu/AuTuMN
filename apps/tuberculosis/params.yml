@@ -12,7 +12,8 @@ iso3: null
 region: null
 
 # model structure
-stratify_by: ["organ"]
+stratify_by: ["age", "organ"]
+age_breakpoints: [0, 5, 15, 30, 45, 60, 75]
 
 # basic infection and disease parameters
 contact_rate: 10.
@@ -33,6 +34,9 @@ treatment_death_rate: 0.  # FIXME
 # relative risks of reinfection
 rr_infection_latent: .21
 rr_infection_recovered: 1.
+
+# changes by age
+age_infectiousness_switch: 15.
 
 # changes by organ status
 incidence_props_pulmonary: .75

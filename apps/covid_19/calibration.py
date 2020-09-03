@@ -251,6 +251,12 @@ def add_standard_victoria_params(params, region):
                 "distri_mean": 0.8,
                 "distri_ci": [0.4, 0.95],
             },
+            {
+                "param_name": "ifr_multiplier",
+                "distribution": "trunc_normal",
+                "distri_params": [1.0, 1.0],
+                "trunc_range": [0.2, np.inf],
+            },
         ]
 
     elif region in Region.VICTORIA_RURAL:
@@ -266,6 +272,12 @@ def add_standard_victoria_params(params, region):
                 "distribution": "beta",
                 "distri_mean": 0.6,
                 "distri_ci": [0.3, 0.85],
+            },
+            {
+                "param_name": "ifr_multiplier",  # Less to constrain this, so just to propagate some uncertainty
+                "distribution": "trunc_normal",
+                "distri_params": [1.0, 0.3],
+                "trunc_range": [0.2, np.inf],
             },
         ]
 
@@ -285,12 +297,6 @@ def add_standard_victoria_params(params, region):
             "distribution": "trunc_normal",
             "distri_params": [1.0, 0.1],
             "trunc_range": [0.5, np.inf],
-        },
-        {
-            "param_name": "ifr_multiplier",
-            "distribution": "trunc_normal",
-            "distri_params": [1.0, 1.0],
-            "trunc_range": [0.2, np.inf],
         },
         {
             "param_name": "hospital_props_multiplier",

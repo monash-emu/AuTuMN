@@ -75,8 +75,10 @@ def get_parameter_bounds_from_priors(prior_dict):
 
 class Calibration:
     """
-    this class handles model calibration using an MCMC algorithm if sampling from the posterior distribution is
+    This class handles model calibration using a Bayesian algorithm if sampling from the posterior distribution is
     required, or using maximum likelihood estimation if only one calibrated parameter set is required.
+    A Metropolis Hastings algorithm is used with or without adaptive proposal function. The adaptive approach employed
+    was published by Haario et al. ('An  adaptive  Metropolis  algorithm', Bernoulli 7(2), 2001, 223-242)
     """
 
     def __init__(

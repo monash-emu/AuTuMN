@@ -16,7 +16,7 @@ def get_region_imports(region_name):
 
 def get_all_vic_region_imports():
     import_aggregates = None
-    for region in Region.VICTORIA_SUBREGIONS:
+    for region in [r for r in Region.VICTORIA_SUBREGIONS if r != "victoria"]:
         import_times, import_values = \
             get_region_imports(region)
         import_aggregates = \

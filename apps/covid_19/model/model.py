@@ -9,8 +9,8 @@ from autumn.tool_kit.utils import normalise_sequence, repeat_list_elements
 from summer.model import StratifiedModel
 
 from apps.covid_19.constants import Compartment
-from apps.covid_19.model.importation import get_all_vic_notifications, get_region_notifications
-from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
+from apps.covid_19.model.importation import get_all_vic_notifications
+from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS, Region
 
 from . import outputs, preprocess
 from .stratification import stratify_by_clinical
@@ -175,7 +175,7 @@ def build_model(params: dict) -> StratifiedModel:
         testing_region = "Victoria" if country_iso3 == "AUS" else pop_region
         testing_year = 2020 if country_iso3 == "AUS" else params["pop_year"]
 
-        total_pops = inputs.get_population_by_agegroup(
+        testing_pops = inputs.get_population_by_agegroup(
             agegroup_strata, country_iso3, testing_region, year=testing_year
         )
 
@@ -183,7 +183,7 @@ def build_model(params: dict) -> StratifiedModel:
             params["testing_to_detection"]["assumed_tests_parameter"],
             params["testing_to_detection"]["assumed_cdr_parameter"],
             country_iso3,
-            total_pops,
+            testing_pops,
         )
 
     else:
@@ -212,19 +212,17 @@ def build_model(params: dict) -> StratifiedModel:
     def modelled_abs_detection_proportion_imported(t):
         return import_symptomatic_prop * detected_proportion(t)
 
-    # Set time-variant importation rate for the importation flow
-    importation_data = \
-        [0.] * len(get_all_vic_notifications()[0])
-    importation_data = \
-        [i_imports + j_imports for i_imports, j_imports in
-         zip(get_all_vic_notifications(excluded_regions=(pop_region,))[1], importation_data)]
-    # importation_data = \
-    #     [i_imports + j_imports for i_imports, j_imports in
-    #      zip(get_region_notifications(pop_region)[1], importation_data)]
-
     if implement_importation:
-        import_times = params["data"]["times_imported_cases"]
-        import_cases = params["data"]["n_imported_cases"]
+        if pop_region.lower().replace("_", "-") in Region.VICTORIA_SUBREGIONS:
+            movement_prop = 0.1
+            import_times, importation_data = get_all_vic_notifications(excluded_regions=(pop_region,))
+            movement_to_region = sum(total_pops) / sum(testing_pops) * movement_prop
+            import_cases = [i_cases * movement_to_region for i_cases in importation_data]
+
+        else:
+            import_times = params["data"]["times_imported_cases"]
+            import_cases = params["data"]["n_imported_cases"]
+
         import_rate_func = preprocess.importation.get_importation_rate_func_as_birth_rates(
             import_times, import_cases, modelled_abs_detection_proportion_imported
         )

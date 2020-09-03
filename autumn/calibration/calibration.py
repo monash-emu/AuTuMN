@@ -32,6 +32,8 @@ from .utils import (
     sample_starting_params_from_lhs,
 )
 
+from .constants import ADAPTIVE_METROPOLIS
+
 BEST_LL = "best_ll"
 BEST_START = "best_start_time"
 
@@ -87,12 +89,15 @@ class Calibration:
         chain_index: int,
         total_nb_chains: int,
         param_set_name: str = "main",
+        adaptive_proposal: bool = True,
     ):
         self.model_name = model_name
         self.model_builder = model_builder  # a function that builds a new model without running it
         self.model_parameters = model_parameters
         self.best_start_time = None
         self.priors = priors  # a list of dictionaries. Each dictionary describes the prior distribution for a parameter
+        self.adaptive_proposal = adaptive_proposal
+
         self.param_list = [self.priors[i]["param_name"] for i in range(len(self.priors))]
         self.targeted_outputs = (
             targeted_outputs  # a list of dictionaries. Each dictionary describes a target
@@ -158,11 +163,13 @@ class Calibration:
         self.workout_unspecified_time_weights()  # for likelihood weighting
         self.workout_unspecified_jumping_sds()  # for proposal function definition
 
+        self.param_bounds = self.get_parameter_bounds()
+
         self.iter_num = 0
         self.latest_scenario = None
         self.run_mode = None
         self.main_table = {}
-        self.mcmc_trace = None  # will store the results of the MCMC model calibration
+        self.mcmc_trace_matrix = None  # will store the results of the MCMC model calibration
         self.mle_estimates = {}  # will store the results of the maximum-likelihood calibration
 
         self.evaluated_params_ll = []  # list of tuples:  [(theta_0, ll_0), (theta_1, ll_1), ...]
@@ -502,11 +509,7 @@ class Calibration:
             msg = "Autumn MCMC method does not support multiple-chain runs at the moment."
             raise ValueError(msg)
 
-        self.mcmc_trace = {}  # will store param trace and loglikelihood evolution
-        for prior_dict in self.priors:
-            self.mcmc_trace[prior_dict["param_name"]] = []
-
-        self.mcmc_trace["loglikelihood"] = []
+        self.mcmc_trace_matrix = None # will store param trace and loglikelihood evolution
 
         last_accepted_params = None
         last_acceptance_quantity = None  # acceptance quantity is defined as loglike + logprior
@@ -540,7 +543,7 @@ class Calibration:
                 last_acceptance_quantity = proposed_acceptance_quantity
                 last_acceptance_loglike = proposed_loglike
 
-            self.update_mcmc_trace(last_accepted_params, last_acceptance_loglike)
+            self.update_mcmc_trace(last_accepted_params)
 
             # Store model outputs
             self.store_mcmc_iteration_info(proposed_params, proposed_loglike, accept, i_run)
@@ -586,6 +589,41 @@ class Calibration:
             self.store_mcmc_iteration_info(params, a_posteriori_logproba, False, self.iter_num)
             self.iter_num += 1
 
+    def build_adaptive_covariance_matrix(self):
+        scaling_factor = 2.4 * 2.4 / len(self.priors)  # from Haario et al. 2001
+
+        cov_matrix = np.cov(self.mcmc_trace_matrix, rowvar=False)
+        adaptive_cov_matrix = scaling_factor * cov_matrix + scaling_factor * ADAPTIVE_METROPOLIS['EPSILON'] *\
+                              np.eye(len(self.priors))
+        return adaptive_cov_matrix
+
+    def get_parameter_bounds(self):
+        param_bounds = None
+        for i, prior_dict in enumerate(self.priors):
+            # Work out bounds for acceptable values, using the support of the prior distribution
+            lower_bound, upper_bound = get_parameter_bounds_from_priors(prior_dict)
+            if i == 0:
+                param_bounds = np.array([[lower_bound, upper_bound]])
+            else:
+                param_bounds = np.concatenate((param_bounds, np.array([[lower_bound, upper_bound]])))
+        return param_bounds
+
+    def sample_from_adaptive_gaussian(self, prev_params, adaptive_cov_matrix):
+        lower_bounds = self.param_bounds[:, 0]
+        upper_bounds = self.param_bounds[:, 1]
+
+        new_params = copy.deepcopy(lower_bounds)
+        new_params[0] -= 10.
+        n_attempts = 0
+        while any(lower_bounds > new_params) or any(upper_bounds < new_params):
+            new_params = np.random.multivariate_normal(prev_params, adaptive_cov_matrix)
+            n_attempts += 1
+            if n_attempts > 1.e4:
+                raise ValueError(
+                            "Failed to draw an acceptable parameter set after 10,000 attempts."
+                        )
+        return new_params
+
     def propose_new_params(self, prev_params):
         """
         calculated the joint log prior
@@ -599,24 +637,35 @@ class Calibration:
                 prev_params.append(self.starting_point[prior_dict["param_name"]])
 
         new_params = []
-        for i, prior_dict in enumerate(self.priors):
-            # Work out bounds for acceptable values, using the support of the prior distribution
-            lower_bound, upper_bound = get_parameter_bounds_from_priors(prior_dict)
-            sample = lower_bound - 10.0  # deliberately initialise out of parameter scope
-            n_attempts = 0
-            while not lower_bound <= sample <= upper_bound:
-                sample = np.random.normal(
-                    loc=prev_params[i], scale=prior_dict["jumping_sd"], size=1
-                )[0]
-                n_attempts += 1
-                if n_attempts > 1.0e5:
-                    raise ValueError(
-                        "Failed to draw an acceptable value for "
-                        + prior_dict["param_name"]
-                        + "after 100,000 attempts. Check that its initial value is within the prior's support."
-                    )
+        use_adaptive_proposal = self.adaptive_proposal and self.iter_num > ADAPTIVE_METROPOLIS['N_STEPS_FIXED_PROPOSAL']
 
-            new_params.append(sample)
+        if use_adaptive_proposal:
+            adaptive_cov_matrix = self.build_adaptive_covariance_matrix()
+            if np.all((adaptive_cov_matrix == 0)):
+                use_adaptive_proposal = False  # we can't use the adaptive method for this step as the covariance is 0.
+            else:
+                new_params = self.sample_from_adaptive_gaussian(prev_params, adaptive_cov_matrix)
+
+        if not use_adaptive_proposal:
+            for i, prior_dict in enumerate(self.priors):
+                # Work out bounds for acceptable values, using the support of the prior distribution
+                lower_bound = self.param_bounds[i, 0]
+                upper_bound = self.param_bounds[i, 1]
+                sample = lower_bound - 10.0  # deliberately initialise out of parameter scope
+                n_attempts = 0
+                while not lower_bound <= sample <= upper_bound:
+                    sample = np.random.normal(
+                        loc=prev_params[i], scale=prior_dict["jumping_sd"], size=1
+                    )[0]
+                    n_attempts += 1
+                    if n_attempts > 1.0e4:
+                        raise ValueError(
+                            "Failed to draw an acceptable value for "
+                            + prior_dict["param_name"]
+                            + "after 10,000 attempts. Check that its initial value is within the prior's support."
+                        )
+
+                new_params.append(sample)
         return new_params
 
     def logprior(self, params):
@@ -632,15 +681,16 @@ class Calibration:
 
         return logp
 
-    def update_mcmc_trace(self, params_to_store, loglike_to_store):
+    def update_mcmc_trace(self, params_to_store):
         """
         store mcmc iteration into param_trace
         :param params_to_store: model parameters as a list of values ordered using the order of self.priors
         :param loglike_to_store: current loglikelihood value
         """
-        for i, prior_dict in enumerate(self.priors):
-            self.mcmc_trace[prior_dict["param_name"]].append(params_to_store[i])
-        self.mcmc_trace["loglikelihood"].append(loglike_to_store)
+        if self.mcmc_trace_matrix is None:
+            self.mcmc_trace_matrix = np.array([params_to_store])
+        else:
+            self.mcmc_trace_matrix = np.concatenate((self.mcmc_trace_matrix, np.array([params_to_store])))
 
     def dump_mle_params_to_yaml_file(self):
 

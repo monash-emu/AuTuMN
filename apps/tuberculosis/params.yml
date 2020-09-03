@@ -17,6 +17,7 @@ age_breakpoints: [0, 5, 15, 30, 45, 60, 75]
 
 # basic infection and disease parameters
 contact_rate: 10.
+on_treatment_infect_multiplier: .08
 
 # latency-related parameters
 override_latency_rates: True # priority for the values loaded from preprocess.latency. Turn off if we fit these params

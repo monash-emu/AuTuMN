@@ -25,6 +25,7 @@ validate_params = sb.build_validator(
     infect_death_rate_dict=dict,
     rr_infection_latent=float,
     rr_infection_recovered=float,
+    on_treatment_infect_multiplier=float,
     # characterising age stratification
     age_infectiousness_switch=float,
     # defining organ stratification

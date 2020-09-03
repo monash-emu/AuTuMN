@@ -29,6 +29,15 @@ def build_model(params: dict) -> StratifiedModel:
         Compartment.ON_TREATMENT,
     ]
 
+    # prepare infectiousness adjustment for individuals on treatment
+    treatment_infectiousness_adjustment = [
+        {
+            "comp_name": Compartment.ON_TREATMENT,
+            "comp_strata": {},
+            "value": params["on_treatment_infect_multiplier"],
+        }
+    ]
+
     # Define inter-compartmental flows.
     flows = deepcopy(preprocess.flows.DEFAULT_FLOWS)
 
@@ -66,6 +75,9 @@ def build_model(params: dict) -> StratifiedModel:
         entry_compartment=Compartment.SUSCEPTIBLE,
         starting_population=1000000,
     )
+
+    # Apply infectiousness adjustment for individuals on treatment
+    tb_model.individual_infectiousness_adjustments = treatment_infectiousness_adjustment
 
     if "organ" in params["stratify_by"]:
         stratify_by_organ(tb_model, params)

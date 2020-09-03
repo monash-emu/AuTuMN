@@ -213,7 +213,7 @@ def build_model(params: dict) -> StratifiedModel:
         return import_symptomatic_prop * detected_proportion(t)
 
     if implement_importation:
-        if pop_region.lower().replace("_", "-") in Region.VICTORIA_SUBREGIONS:
+        if pop_region and pop_region.lower().replace("_", "-") in Region.VICTORIA_SUBREGIONS:
             movement_prop = 0.1
             import_times, importation_data = get_all_vic_notifications(excluded_regions=(pop_region,))
             movement_to_region = sum(total_pops) / sum(testing_pops) * movement_prop

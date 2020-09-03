@@ -1,4 +1,5 @@
 from apps.tuberculosis.constants import Compartment, OrganStratum
+from apps.tuberculosis.model.preprocess.latency import get_adapted_age_parameters
 from math import log, exp
 
 
@@ -53,13 +54,17 @@ def stratify_by_age(model, params, compartments):
     strata_infectiousness = calculate_age_specific_infectiousness(params['age_breakpoints'],
                                                                   params['age_infectiousness_switch'])
 
+    flow_adjustments = {}
+    if params["override_latency_rates"]:
+        flow_adjustments.update(get_adapted_age_parameters(params['age_breakpoints']))
+
     # trigger model stratification
     model.stratify(
         "age",
         params['age_breakpoints'],
         compartments,
         infectiousness_adjustments=strata_infectiousness,
-        # flow_adjustments=flow_adjustments,
+        flow_adjustments=flow_adjustments,
     )
 
 

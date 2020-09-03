@@ -1,2 +1,24 @@
 ---
 parent: apps/covid_19/vic_submodel_params.yml
+
+microdistancing:
+  function_type: empiric
+  parameters:
+    max_effect: 0.9
+    times:
+      # 30th March, day 90, stage 3 enforced
+      # 9th June, day 162, stage 3 released (I think)
+      # 20th June, day 172, restrictions tightened, only five visitors at home
+      - 181
+      - 192
+      - 202
+      - 204  # 22nd July, day 204, face coverings
+      - 215
+      - 216  # 2nd August, day 215, stage 3 enforced
+    values:
+      - 0.
+      - 0.2
+      - 0.2
+      - 0.5  # 22nd July, day 204, face coverings
+      - 0.5
+      - 1.  # 2nd August, day 215, stage 3 enforced

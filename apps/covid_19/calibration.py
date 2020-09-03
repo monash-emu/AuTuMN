@@ -237,16 +237,37 @@ Victoria
 
 def add_standard_victoria_params(params, region):
 
-    params += [
-        {
-            "param_name": "contact_rate",
-            "distribution": "uniform",
-            "distri_params": [
-                0.012 if region in Region.VICTORIA_METRO else 0.06,
-                0.07
-            ],
-        },
-    ]
+    if region in Region.VICTORIA_METRO:
+
+        params += [
+            {
+                "param_name": "contact_rate",
+                "distribution": "uniform",
+                "distri_params": [0.012, 0.07],
+            },
+            {
+                "param_name": "microdistancing.parameters.max_effect",
+                "distribution": "beta",
+                "distri_mean": 0.8,
+                "distri_ci": [0.4, 0.95],
+            },
+        ]
+
+    elif region in Region.VICTORIA_RURAL:
+
+        params += [
+            {
+                "param_name": "contact_rate",
+                "distribution": "uniform",
+                "distri_params": [0.006, 0.07],
+            },
+            {
+                "param_name": "microdistancing.parameters.max_effect",
+                "distribution": "beta",
+                "distri_mean": 0.6,
+                "distri_ci": [0.3, 0.85],
+            },
+        ]
 
     return params + [
         {
@@ -288,12 +309,6 @@ def add_standard_victoria_params(params, region):
             "distribution": "trunc_normal",
             "distri_params": [10.8, 4.0],
             "trunc_range": [3.0, np.inf],
-        },
-        {
-            "param_name": "microdistancing.parameters.max_effect",
-            "distribution": "beta",
-            "distri_mean": 0.8,
-            "distri_ci": [0.4, 0.95],
         },
         {
             "param_name": "movement_prop",

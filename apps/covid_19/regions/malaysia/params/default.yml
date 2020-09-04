@@ -5,8 +5,24 @@ iso3: MYS
 implement_importation: True
 
 traveller_quarantine:
-  times: [73., 76.]  # Self-isolation from 13 March
-  values: [0., 0.7]
+  times:
+    - 72.
+    - 73.  # Self-isolation from 13 March
+    - 91.
+    - 92.  # Quarantine centres from 1st April
+    - 161.
+    - 162.  # Back to home quarantine 10th June
+    - 175.
+    - 176.  # Back to quarantine centres from 24th July
+  values:
+    - 0.0
+    - 0.5  # Self-isolation from 13 March
+    - 0.5
+    - 0.8  # Quarantine centres from 1st April
+    - 0.8
+    - 0.5  # Back to home quarantine 10th June
+    - 0.5
+    - 0.8  # Back to quarantine centres from 24th July
 
 contact_rate: 0.02
 
@@ -51,10 +67,10 @@ mixing:
       - 1.
       - 0.
       - 0.
-      - 0.1
-      - 0.1
       - 0.2
       - 0.2
+      - 0.35
+      - 0.35
       - 1.
       - 1.
 

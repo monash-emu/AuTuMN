@@ -156,8 +156,10 @@ class CalculateUncertaintyTask(utils.BaseTask):
         return luigi.LocalTarget(COLLATED_PRUNED_DB_PATH)
 
     def safe_run(self):
+        region_name, _, _ = utils.read_run_id(self.run_id)
+        targets = load_targets("covid_19", region_name)
         with Timer(f"Calculating uncertainty quartiles"):
-            add_uncertainty_quantiles(COLLATED_DB_PATH)
+            add_uncertainty_quantiles(COLLATED_DB_PATH, targets)
         with Timer(f"Pruning final database"):
             models.prune(COLLATED_DB_PATH, COLLATED_PRUNED_DB_PATH, drop_extra_tables=True)
 

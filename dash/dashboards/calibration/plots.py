@@ -10,7 +10,6 @@ from autumn.calibration.utils import collect_map_estimate, print_reformated_map_
 from autumn.tool_kit.uncertainty import (
     calculate_uncertainty_weights,
     calculate_mcmc_uncertainty,
-    DEFAULT_QUANTILES,
 )
 
 
@@ -73,6 +72,7 @@ def plot_timeseries_with_uncertainty(
 ):
     available_outputs = [o["output_key"] for o in targets.values()]
     chosen_output = st.sidebar.selectbox("Select calibration target", available_outputs)
+    chosen_target = next(t for t in targets.values() if t["output_key"] == chosen_output)
     burn_in = selectors.burn_in(mcmc_tables)
     derived_output_tables = load_derived_output_tables(calib_dir_path, column=chosen_output)
 
@@ -85,10 +85,10 @@ def plot_timeseries_with_uncertainty(
         else:
             weights_df = weights_df.append(_weights_df)
 
-    uncertainty_df = calculate_mcmc_uncertainty(weights_df, DEFAULT_QUANTILES)
+    uncertainty_df = calculate_mcmc_uncertainty(weights_df, targets)
     times = uncertainty_df.time.unique()
     quantiles = {}
-    for q in DEFAULT_QUANTILES:
+    for q in chosen_target["quantiles"]:
         mask = uncertainty_df["quantile"] == q
         quantiles[q] = uncertainty_df[mask]["value"].tolist()
 

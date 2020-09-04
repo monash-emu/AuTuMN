@@ -38,7 +38,7 @@ TARGETS_MAP = {
     "notifications": "new",
     "hospital_occupancy": "ward",
     "icu_occupancy": "icu",
-    "total_infection_deaths": "deaths",
+    "infection_deaths": "deaths",
     "icu_admissions": "incident_icu",
     "hospital_admissions": "incident_ward",
 }

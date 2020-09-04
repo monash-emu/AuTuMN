@@ -337,9 +337,9 @@
       54
     ]
   },
-  "total_infection_deaths": {
+  "infection_deaths": {
     "title": "Daily number of deaths",
-    "output_key": "total_infection_deaths",
+    "output_key": "infection_deaths",
     "times": [
       175,
       176,
@@ -453,7 +453,7 @@
   },
   "icu_prevalence": {
     "title": "Prevalence of ICU cases",
-    "output_key": "prevXlate_activeXclinical_icuXamong",
+    "output_key": "icu_occupancy",
     "times": [],
     "values": []
   }

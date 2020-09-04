@@ -1,4 +1,10 @@
 {
+  "incidence": {
+    "title": "Incidence",
+    "output_key": "incidence",
+    "times": [],
+    "values": []
+  },
   "notifications": {
     "output_key": "notifications",
     "title": "Daily number of confirmed cases",
@@ -357,7 +363,7 @@
     "times": [242, 243],
     "values": [0, 39]
   },
-  "total_infection_deaths": {
+  "infection_deaths": {
     "output_key": "accum_deaths",
     "title": "Cumulative number of deaths",
     "times": [239, 240],

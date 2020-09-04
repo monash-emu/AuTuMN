@@ -175,7 +175,7 @@ def objective_function(
     # How many deaths and years of life lost during Phase 2 and 3
     start_phase2_index = models[1].derived_outputs["times"].index(PHASE_2_START_TIME)
     end_phase2_index = models[1].derived_outputs["times"].index(phase_2_end[config])
-    total_nb_deaths = sum(models[1].derived_outputs["infection_deathsXall"][start_phase2_index:])
+    total_nb_deaths = sum(models[1].derived_outputs["infection_deaths"][start_phase2_index:])
     years_of_life_lost = sum(models[1].derived_outputs["years_of_life_lost"][start_phase2_index:])
 
     # What proportion immune at end of Phase 2
@@ -217,7 +217,7 @@ def read_list_of_param_sets_from_csv(country):
         "best_yoll",
         "all_vars_to_1_yoll",
         "notifications_dispersion_param",
-        "infection_deathsXall_dispersion_param",
+        "infection_deaths_dispersion_param",
     ]
     for i in range(16):
         col_names_to_skip.append("best_x" + str(i))

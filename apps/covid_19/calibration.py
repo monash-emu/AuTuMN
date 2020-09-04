@@ -24,17 +24,9 @@ Base parameters
 
 BASE_CALIBRATION_PARAMS = [
     # Arbitrary, but always required and this range should span the range of values that would be needed
-    {
-        "param_name": "contact_rate",
-        "distribution": "uniform",
-        "distri_params": [0.015, 0.07],
-    },
+    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.015, 0.07],},
     # Arbitrary, but useful to allow epidemic to take off from a flexible time
-    {
-        "param_name": "start_time",
-        "distribution": "uniform",
-        "distri_params": [0.0, 40.0],
-    },
+    {"param_name": "start_time", "distribution": "uniform", "distri_params": [0.0, 40.0],},
     # Rationale for the following two parameters described in parameters table of the methods Gdoc at:
     # https://docs.google.com/document/d/1Uhzqm1CbIlNXjowbpTlJpIphxOm34pbx8au2PeqpRXs/edit#
     {
@@ -161,21 +153,13 @@ def add_standard_philippines_params(params):
     """
 
     return params + [
-        {
-            "param_name": "ifr_multiplier",
-            "distribution": "uniform",
-            "distri_params": [1.5, 2.28]
-        },
+        {"param_name": "ifr_multiplier", "distribution": "uniform", "distri_params": [1.5, 2.28]},
         {
             "param_name": "testing_to_detection.assumed_cdr_parameter",
             "distribution": "uniform",
             "distri_params": [0.3, 0.5],
         },
-        {
-            "param_name": "start_time",
-            "distribution": "uniform",
-            "distri_params": [40.0, 60.0],
-        },
+        {"param_name": "start_time", "distribution": "uniform", "distri_params": [40.0, 60.0],},
         {
             "param_name": "microdistancing.parameters.max_effect",
             "distribution": "uniform",
@@ -205,8 +189,8 @@ def add_standard_philippines_targets(targets):
         },
         {
             "output_key": "accum_deaths",
-            "years": [targets["total_infection_deaths"]["times"][-1]],
-            "values": [targets["total_infection_deaths"]["values"][-1]],
+            "years": [targets["infection_deaths"]["times"][-1]],
+            "values": [targets["infection_deaths"]["values"][-1]],
             "loglikelihood_distri": "normal",
         },
     ]
@@ -255,7 +239,7 @@ def add_standard_victoria_params(params, region):
                 "param_name": "ifr_multiplier",
                 "distribution": "trunc_normal",
                 "distri_params": [1.0, 1.0],
-                "trunc_range": [0.25, 4.],
+                "trunc_range": [0.25, 4.0],
             },
         ]
 
@@ -277,16 +261,12 @@ def add_standard_victoria_params(params, region):
                 "param_name": "ifr_multiplier",  # Less to constrain this, so just to propagate some uncertainty
                 "distribution": "trunc_normal",
                 "distri_params": [1.0, 0.3],
-                "trunc_range": [0.25, 4.],
+                "trunc_range": [0.25, 4.0],
             },
         ]
 
     return params + [
-        {
-            "param_name": "seasonal_force",
-            "distribution": "uniform",
-            "distri_params": [0.0, 0.4],
-        },
+        {"param_name": "seasonal_force", "distribution": "uniform", "distri_params": [0.0, 0.4],},
         {
             "param_name": "testing_to_detection.assumed_cdr_parameter",
             "distribution": "uniform",
@@ -302,7 +282,7 @@ def add_standard_victoria_params(params, region):
             "param_name": "hospital_props_multiplier",
             "distribution": "trunc_normal",
             "distri_params": [1.0, 1.0],
-            "trunc_range": [0.2, np.inf]
+            "trunc_range": [0.2, np.inf],
         },
         {
             "param_name": "compartment_periods.icu_early",
@@ -316,11 +296,7 @@ def add_standard_victoria_params(params, region):
             "distri_params": [10.8, 4.0],
             "trunc_range": [3.0, np.inf],
         },
-        {
-            "param_name": "movement_prop",
-            "distribution": "uniform",
-            "distri_params": [0.05, 0.4],
-        },
+        {"param_name": "movement_prop", "distribution": "uniform", "distri_params": [0.05, 0.4],},
     ]
 
 
@@ -344,12 +320,12 @@ def add_standard_victoria_targets(target_outputs, targets, region):
     if region in Region.VICTORIA_METRO:
 
         deaths_to_ignore = 3
-        total_infection_death_times = targets["total_infection_deaths"]["times"][:-deaths_to_ignore]
-        total_infection_death_values = targets["total_infection_deaths"]["values"][:-deaths_to_ignore]
+        total_infection_death_times = targets["infection_deaths"]["times"][:-deaths_to_ignore]
+        total_infection_death_values = targets["infection_deaths"]["values"][:-deaths_to_ignore]
 
         target_outputs += [
             {
-                "output_key": targets["total_infection_deaths"]["output_key"],
+                "output_key": targets["infection_deaths"]["output_key"],
                 "years": total_infection_death_times,
                 "values": total_infection_death_values,
                 "loglikelihood_distri": "normal",

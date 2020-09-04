@@ -85,9 +85,9 @@
       7.6
     ]
   },
-  "infection_deathsXall": {
+  "infection_deaths": {
     "title": "Daily number of deaths",
-    "output_key": "infection_deathsXall",
+    "output_key": "infection_deaths",
     "times": [
       53.0,
       60.0,

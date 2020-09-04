@@ -1,7 +1,7 @@
 {
-  "infection_deathsXall": {
-    "output_key": "infection_deathsXall",
-    "title": "infection_deathsXall",
+  "infection_deaths": {
+    "output_key": "infection_deaths",
+    "title": "infection_deaths",
     "times": [
       53.0,
       60.0,

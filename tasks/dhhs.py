@@ -50,8 +50,8 @@ class BuildFinalCSVTask(utils.BaseTask):
         csv_path = os.path.join(DHHS_DIR, filename)
         s3_dest_key = f"/dhhs/{filename}"
 
-        # MAKE THE CSV
-        # utils.upload_s3(csv_path, s3_dest_key)
+        # Upload the CSV
+        utils.upload_s3(csv_path, s3_dest_key)
 
     def output(self):
         filename = f"vic-forecast-{self.commit}-{DATESTAMP}.csv"
@@ -59,15 +59,16 @@ class BuildFinalCSVTask(utils.BaseTask):
         return utils.S3Target(s3_uri, client=utils.luigi_s3_client)
 
     def requires(self):
-        get_vic_full_run_dbs_for_commit
-        return BuildRegionCSVTask(commit=self.commit)
+        # dbs = get_vic_full_run_dbs_for_commit(self.commit)
+        # downloads = [DownloadFullModelRunTask(s3_key=k, region=r) for r, k in dbs.items()]
+        downloads = []
+        return [BuildRegionCSVTask(commit=self.commit), *downloads]
 
 
 class BuildRegionCSVTask(utils.BaseTask):
     def safe_run(self):
         filename = f"vic-forecast-{self.commit}-{DATESTAMP}.csv"
         csv_path = os.path.join(DHHS_DIR, filename)
-
         powerbi_path = os.path.join(DHHS_DIR, "powerbi")
         for db_name in os.listdir(powerbi_path):
             db_path = os.path.join(powerbi_path, db_name)
@@ -81,9 +82,6 @@ class BuildRegionCSVTask(utils.BaseTask):
                 df.to_csv(csv_path, mode="a", header=False)
             else:
                 df.to_csv(csv_path, mode="w")
-
-        # MAKE THE CSV
-        # utils.upload_s3(csv_path, s3_dest_key)
 
     def output(self):
         filename = f"vic-forecast-{self.commit}-{DATESTAMP}.csv"

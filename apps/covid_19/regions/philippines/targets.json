@@ -3,7 +3,14 @@
     "title": "Incidence",
     "output_key": "incidence",
     "times": [],
-    "values": []
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
   },
   "notifications": {
     "output_key": "notifications",
@@ -359,18 +366,51 @@
       2822,
       2320,
       1867
+    ],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
     ]
   },
   "icu_occupancy": {
     "output_key": "icu_occupancy",
     "title": "ICU occupancy",
-    "times": [242, 243],
-    "values": [0, 862]
+    "times": [
+      242,
+      243
+    ],
+    "values": [
+      0,
+      862
+    ],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
   },
   "infection_deaths": {
     "output_key": "accum_deaths",
     "title": "Cumulative number of deaths",
-    "times": [240, 241],
-    "values": [0, 3521]
+    "times": [
+      240,
+      241
+    ],
+    "values": [
+      0,
+      3521
+    ],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
   }
 }

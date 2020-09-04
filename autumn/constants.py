@@ -96,3 +96,12 @@ class Region:
     ]
 
     VICTORIA_SUBREGIONS = VICTORIA_RURAL + VICTORIA_METRO
+
+    @staticmethod
+    def to_filename(name: str):
+        return name.replace("-", "_")
+
+    @staticmethod
+    def to_name(filename: str):
+        return filename.replace("_", "-")
+

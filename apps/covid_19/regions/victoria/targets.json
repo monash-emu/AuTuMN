@@ -135,6 +135,15 @@
       394,
       322,
       331
+    ],
+    "quantiles": [
+      1,
+      2.5,
+      25,
+      50,
+      75,
+      97.5,
+      99
     ]
   },
   "hospital_occupancy": {
@@ -199,6 +208,15 @@
       659,
       658,
       664
+    ],
+    "quantiles": [
+      1,
+      2.5,
+      25,
+      50,
+      75,
+      97.5,
+      99
     ]
   },
   "icu_occupancy": {
@@ -335,6 +353,15 @@
       53,
       51,
       54
+    ],
+    "quantiles": [
+      1,
+      2.5,
+      25,
+      50,
+      75,
+      97.5,
+      99
     ]
   },
   "infection_deaths": {
@@ -443,18 +470,45 @@
       16,
       18,
       19
+    ],
+    "quantiles": [
+      1,
+      2.5,
+      25,
+      50,
+      75,
+      97.5,
+      99
     ]
   },
   "incidence": {
     "title": "Incidence",
     "output_key": "incidence",
     "times": [],
-    "values": []
+    "values": [],
+    "quantiles": [
+      1,
+      2.5,
+      25,
+      50,
+      75,
+      97.5,
+      99
+    ]
   },
   "icu_prevalence": {
     "title": "Prevalence of ICU cases",
     "output_key": "icu_occupancy",
     "times": [],
-    "values": []
+    "values": [],
+    "quantiles": [
+      1,
+      2.5,
+      25,
+      50,
+      75,
+      97.5,
+      99
+    ]
   }
 }

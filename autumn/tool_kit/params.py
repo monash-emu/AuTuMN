@@ -16,6 +16,9 @@ from autumn.secrets import check_hash
 def load_targets(app_name: str, region_name: str):
     """
     Load calibration targets from a YAML file
+    TODO: Validate data structure on load:
+        - schema is correct
+        - times and values are same length
     """
     region_name = region_name.replace("-", "_")
 

@@ -28,7 +28,7 @@ def run_dhhs(instance, commit: str, branch: str):
             "workers": 60,
         }
         run_luigi_pipeline(conn, pipeline_name, pipeline_args)
-        logger.info("PowerBI processing completed for %s", run_id)
+        logger.info("DHHS processing completed for commit %s", commit)
 
 
 def run_powerbi(instance, run_id: str, branch: str):

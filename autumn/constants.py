@@ -85,7 +85,6 @@ class Region:
         HUME,
         LODDON_MALLEE,
         GRAMPIANS,
-        VICTORIA,
     ]
 
     VICTORIA_METRO = [

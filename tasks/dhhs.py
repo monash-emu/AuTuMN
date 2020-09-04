@@ -23,6 +23,19 @@ OUTPUTS = [
     "icu_occupancy",
 ]
 
+RUN_IDS = {
+    "barwon-south-west": "barwon-south-west-1599174882-32a84bc",
+    "gippsland": "gippsland-1599137595-1334b1d",
+    "grampians": "grampians-1599174885-32a84bc",
+    "hume": "hume-1599137596-1334b1d",
+    "loddon-mallee": "loddon-mallee-1599137600-1334b1d",
+    "south-east-metro": "south-east-metro-1599137596-1334b1d",
+    "south-metro": "south-metro-1599137595-1334b1d",
+    "west-metro": "west-metro-1599137595-1334b1d",
+    "north-metro": "north-metro-1599137595-1334b1d",
+}
+
+
 """
 1. Get run ids for commit, validate them.
 2. Read in PowerBI database for each region
@@ -41,7 +54,7 @@ class RunDHHS(luigi.Task):
     commit = luigi.Parameter()
 
     def requires(self):
-        return BuildRegionCSVTask(commit=self.commit)
+        return BuildFinalCSVTask(commit=self.commit)
 
 
 class BuildFinalCSVTask(utils.BaseTask):
@@ -50,14 +63,14 @@ class BuildFinalCSVTask(utils.BaseTask):
     def safe_run(self):
         filename = f"vic-forecast-{self.commit}-{DATESTAMP}.csv"
         csv_path = os.path.join(DHHS_DIR, filename)
-        s3_dest_key = f"/dhhs/{filename}"
+        s3_dest_key = f"dhhs/{filename}"
 
         # Upload the CSV
         utils.upload_s3(csv_path, s3_dest_key)
 
     def output(self):
         filename = f"vic-forecast-{self.commit}-{DATESTAMP}.csv"
-        s3_uri = os.path.join(f"s3://{settings.S3_BUCKET}", f"/dhhs/{filename}")
+        s3_uri = os.path.join(f"s3://{settings.S3_BUCKET}", f"dhhs/{filename}")
         return utils.S3Target(s3_uri, client=utils.luigi_s3_client)
 
     def requires(self):
@@ -84,9 +97,9 @@ class BuildRegionCSVTask(utils.BaseTask):
             df["region"] = "_".join(db_name.split("-")[1:-2]).upper()
             df = df[["region", "type", "time", "quantile", "value"]]
             if os.path.exists(csv_path):
-                df.to_csv(csv_path, mode="a", header=False)
+                df.to_csv(csv_path, mode="a", header=False, index=False)
             else:
-                df.to_csv(csv_path, mode="w")
+                df.to_csv(csv_path, mode="w", index=False)
 
     def output(self):
         filename = f"vic-forecast-{self.commit}-{DATESTAMP}.csv"
@@ -109,8 +122,7 @@ class DownloadFullModelRunTask(utils.BaseTask):
     def safe_run(self):
         dest_path = self.get_dest_path()
         os.makedirs(os.path.dirname(dest_path), exist_ok=True)
-        s3_uri = os.path.join(f"s3://{settings.S3_BUCKET}", self.s3_key)
-        download_s3(s3_uri, dest_path)
+        utils.download_s3(self.s3_key, dest_path)
 
     def get_dest_path(self):
         return os.path.join(DHHS_DIR, "full", self.region, self.filename)
@@ -130,8 +142,7 @@ class DownloadPowerBITask(utils.BaseTask):
     def safe_run(self):
         dest_path = self.get_dest_path()
         os.makedirs(os.path.dirname(dest_path), exist_ok=True)
-        s3_uri = os.path.join(f"s3://{settings.S3_BUCKET}", self.s3_key)
-        download_s3(s3_uri, dest_path)
+        utils.download_s3(self.s3_key, dest_path)
 
     def get_dest_path(self):
         return os.path.join(DHHS_DIR, "powerbi", self.filename)
@@ -144,8 +155,16 @@ class DownloadPowerBITask(utils.BaseTask):
 def get_vic_full_run_dbs_for_commit(commit: str):
     keys = {}
     for region in Region.VICTORIA_SUBREGIONS:
-        region_db_keys = utils.list_s3(key_prefix=region, key_suffix=".db")
-        region_db_keys = [k for k in region_db_keys if commit in k and "mcmc_chain_full_run" in k]
+        if region == Region.VICTORIA:
+            continue
+
+        # region_db_keys = utils.list_s3(key_prefix=region, key_suffix=".db")
+        # region_db_keys = [k for k in region_db_keys if commit in k and "mcmc_chain_full_run" in k]
+
+        run_id = RUN_IDS[region]
+        region_db_keys = utils.list_s3(key_prefix=run_id, key_suffix=".db")
+        region_db_keys = [k for k in region_db_keys if "mcmc_chain_full_run" in k]
+
         msg = f"There should exactly one set of full model run databases for {region} with commit {commit}: {region_db_keys}"
         filenames = [k.split("/")[-1] for k in region_db_keys]
         assert len(filenames) == len(set(filenames)), msg
@@ -157,8 +176,16 @@ def get_vic_full_run_dbs_for_commit(commit: str):
 def get_vic_powerbi_dbs_for_commit(commit: str):
     keys = []
     for region in Region.VICTORIA_SUBREGIONS:
-        region_db_keys = utils.list_s3(key_prefix=region, key_suffix=".db")
-        region_db_keys = [k for k in region_db_keys if commit in k and "powerbi" in k]
+        if region == Region.VICTORIA:
+            continue
+
+        run_id = RUN_IDS[region]
+        region_db_keys = utils.list_s3(key_prefix=run_id, key_suffix=".db")
+        region_db_keys = [k for k in region_db_keys if "powerbi" in k]
+
+        # region_db_keys = utils.list_s3(key_prefix=region, key_suffix=".db")
+        # region_db_keys = [k for k in region_db_keys if commit in k and "powerbi" in k]
+
         msg = f"There should exactly one PowerBI database for {region} with commit {commit}: {region_db_keys}"
         assert len(region_db_keys) == 1, msg
         keys.append(region_db_keys[0])

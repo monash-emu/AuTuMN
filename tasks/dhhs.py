@@ -45,6 +45,8 @@ class RunDHHS(luigi.Task):
 
 
 class BuildFinalCSVTask(utils.BaseTask):
+    commit = luigi.Parameter()
+
     def safe_run(self):
         filename = f"vic-forecast-{self.commit}-{DATESTAMP}.csv"
         csv_path = os.path.join(DHHS_DIR, filename)
@@ -66,6 +68,9 @@ class BuildFinalCSVTask(utils.BaseTask):
 
 
 class BuildRegionCSVTask(utils.BaseTask):
+
+    commit = luigi.Parameter()
+
     def safe_run(self):
         filename = f"vic-forecast-{self.commit}-{DATESTAMP}.csv"
         csv_path = os.path.join(DHHS_DIR, filename)
@@ -141,7 +146,7 @@ def get_vic_full_run_dbs_for_commit(commit: str):
     for region in Region.VICTORIA_SUBREGIONS:
         region_db_keys = utils.list_s3(key_prefix=region, key_suffix=".db")
         region_db_keys = [k for k in region_db_keys if commit in k and "mcmc_chain_full_run" in k]
-        msg = f"There should only be one set of full model run databases for {region} with commit {commit}: {region_db_keys}"
+        msg = f"There should exactly one set of full model run databases for {region} with commit {commit}: {region_db_keys}"
         filenames = [k.split("/")[-1] for k in region_db_keys]
         assert len(filenames) == len(set(filenames)), msg
         keys[region] = region_db_keys
@@ -154,7 +159,7 @@ def get_vic_powerbi_dbs_for_commit(commit: str):
     for region in Region.VICTORIA_SUBREGIONS:
         region_db_keys = utils.list_s3(key_prefix=region, key_suffix=".db")
         region_db_keys = [k for k in region_db_keys if commit in k and "powerbi" in k]
-        msg = f"There should only be one PowerBI database for {region} with commit {commit}: {region_db_keys}"
+        msg = f"There should exactly one PowerBI database for {region} with commit {commit}: {region_db_keys}"
         assert len(region_db_keys) == 1, msg
         keys.append(region_db_keys[0])
 

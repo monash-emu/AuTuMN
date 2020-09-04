@@ -21,6 +21,13 @@ def add_uncertainty_weights(output_names: List[str], database_path: str):
     Saves requested weights in a table 'uncertainty_weights'.
     """
     db = Database(database_path)
+
+    # HACK START
+    output_names = [
+        "total_infection_deaths" if o == "infection_deaths" else o for o in output_names
+    ]
+    # HACK END
+
     # Delete old data.
     for output_name in output_names:
         if "uncertainty_weights" in db.table_names():

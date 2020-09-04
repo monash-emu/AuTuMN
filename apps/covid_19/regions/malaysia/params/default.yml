@@ -4,6 +4,8 @@ parent: apps/covid_19/params.yml
 iso3: MYS
 implement_importation: True
 
+start_time: 60.
+
 traveller_quarantine:
   times:
     - 72.

@@ -37,15 +37,6 @@ TARGET_OUTPUTS = [
 ]
 
 PAR_PRIORS = provide_default_calibration_params(excluded_params=("start_time",))
-
-PAR_PRIORS += [
-    {
-        "param_name": "start_time",
-        "distribution": "uniform",
-        "distri_params": [40.0, 60.0],
-    },
-]
-
 PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS)
 
 PAR_PRIORS += [

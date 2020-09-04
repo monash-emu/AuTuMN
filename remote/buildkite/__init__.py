@@ -162,7 +162,7 @@ def dhhs():
     git_commit = dhhs_pipeline.commit_field.get_value()
     is_spot = dhhs_pipeline.spot_field.get_value()
     params_str = pprint.pformat({f.key: f.get_value() for f in dhhs_pipeline.fields}, indent=2)
-    logger.info("Running DHHS post processing job %s with params:\n%s\n", job_name, params_str)
+    logger.info("Running DHHS post processing job %s with params:\n%s\n", build_number, params_str)
     aws.run_dhhs(job=build_number, commit=git_commit, branch="master", is_spot=is_spot)
 
 

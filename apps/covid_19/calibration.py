@@ -320,12 +320,12 @@ def add_standard_victoria_targets(target_outputs, targets, region):
     if region in Region.VICTORIA_METRO:
 
         deaths_to_ignore = 3
-        total_infection_death_times = targets["total_infection_deaths"]["times"][:-deaths_to_ignore]
-        total_infection_death_values = targets["total_infection_deaths"]["values"][:-deaths_to_ignore]
+        total_infection_death_times = targets["infection_deaths"]["times"][:-deaths_to_ignore]
+        total_infection_death_values = targets["infection_deaths"]["values"][:-deaths_to_ignore]
 
         target_outputs += [
             {
-                "output_key": targets["total_infection_deaths"]["output_key"],
+                "output_key": targets["infection_deaths"]["output_key"],
                 "years": total_infection_death_times,
                 "values": total_infection_death_values,
                 "loglikelihood_distri": "normal",

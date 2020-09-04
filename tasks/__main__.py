@@ -3,7 +3,7 @@ Runs remote tasks
 
 You can access this script from your CLI by running:
 
-    python -m remote --help
+    python -m tasks --help
 
 """
 import os

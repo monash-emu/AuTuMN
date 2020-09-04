@@ -82,8 +82,8 @@ def calibrate():
                 fp.run_id_field.key: run_id,
                 fp.burn_in_field.key: burn_in,
                 fp.use_latest_code_field.key: fp.use_latest_code_field.default,
-                fp.trigger_field.key: trigger_downstream,
-                fp.spot_field.key: is_spot,
+                fp.trigger_field.key: fp.trigger_field.get_option(trigger_downstream),
+                fp.spot_field.key: fp.spot_field.get_option(is_spot),
             },
         )
 
@@ -125,7 +125,10 @@ def full():
             target="powerbi-processing",
             msg=f"Triggered by full model run {model_name} (build {build_number})",
             env={"SKIP_INPUT": "true"},
-            meta={pp.run_id_field.key: run_id, pp.spot_field.key: is_spot},
+            meta={
+                pp.run_id_field.key: run_id,
+                pp.spot_field.key: pp.spot_field.get_option(is_spot),
+            },
         )
     logger.info("\n=====\nRun ID: %s\n=====\n", run_id)
     logger.info("Results available at %s", get_run_url(run_id))
@@ -230,8 +233,8 @@ def _trigger_models(models, p):
                 cp.branch_field.key: branch,
                 cp.runtime_field.key: runtime / 3600.0,
                 cp.burn_in_field.key: burn_in,
-                cp.trigger_field.key: trigger_downstream,
-                cp.spot_field.key: is_spot,
+                cp.trigger_field.key: cp.trigger_field.get_option(trigger_downstream),
+                cp.spot_field.key: cp.spot_field.get_option(is_spot),
             },
         )
 

@@ -56,6 +56,7 @@ objs = fetch_all_objects()
 keys = [o["Key"] for o in objs]
 print("Found", len(keys), "objects.")
 model_names = set()
+dhhs_files = []
 runs = {}
 print("Creating data structure...")
 for k in keys:
@@ -64,6 +65,11 @@ for k in keys:
 
     path_parts = k.split("/")
     run_id, path = path_parts[0], "/".join(path_parts[1:])
+
+    if k.startswith("dhhs"):
+        name = path_parts[-1]
+        file = {"filename": name, "url": os.path.join(BUCKET_URL, k)}
+        dhhs_files.append(file)
 
     try:
         model, timestamp, commit = read_run_id(run_id)
@@ -90,6 +96,7 @@ for k in keys:
 data = {
     "models": list(model_names),
     "runs": runs,
+    "dhhs": dhhs_files,
 }
 output_path = "website.json"
 print("Writing website data to", output_path)

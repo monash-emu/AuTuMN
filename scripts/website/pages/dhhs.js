@@ -6,11 +6,9 @@ import moment from 'moment'
 import { Page } from 'comps/page'
 
 export async function getStaticProps() {
-  return {
-    props: {
-      files: [{ filename: 'foo.csv', url: 'https://google.com' }],
-    },
-  }
+  const data = await import('../website.json')
+  const { dhhs } = data.default
+  return { props: { files: dhhs } }
 }
 
 const DHHSPage = ({ files }) => {

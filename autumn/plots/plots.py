@@ -898,11 +898,16 @@ def plot_multicountry_hospital(all_scenarios, mode, objective):
 
 
 def plot_optimal_plan(all_results, config, country, mode, ax):
-
     data = {
         'deaths': all_results['deaths'][config][country],
         'yoll': all_results['yoll'][config][country],
     }
+    deaths = data['deaths']['best_deaths']
+    p_immune = data['deaths']['best_p_immune']
+
+    ax.text(14, 1.7, 'deaths: ' + str(round(float(deaths))))
+    ax.text(14, 1.4, '% ever-infected: ' + str(round(100*float(p_immune))))
+
     colours = {
         'deaths': 'lightcoral',
         'yoll': 'skyblue',
@@ -921,18 +926,18 @@ def plot_optimal_plan(all_results, config, country, mode, ax):
 
     ax.grid(linewidth=.5, zorder=0, linestyle="dotted")
     ax.set_axisbelow(True)
-    sensi_outputs = {}
-    directions = ["down", "up"]
-    for objective in ('deaths', 'yoll'):
-        sensi_outputs[objective] = {}
-        for direction in directions:
-            path = "apps/covid_19/mixing_optimisation/optimisation_outputs/sensitivity/" +\
-                   country + "_" + mode + "_" + str(config) + "_" + objective + "_" + direction + ".yml"
-            try:
-                with open(path, "r") as yaml_file:
-                    sensi_outputs[objective][direction] = yaml.safe_load(yaml_file)
-            except:
-                sensi_outputs[objective][direction] = [0.] * n_vars[mode]
+    # sensi_outputs = {}
+    # directions = ["down", "up"]
+    # for objective in ('deaths', 'yoll'):
+    #     sensi_outputs[objective] = {}
+    #     for direction in directions:
+    #         path = "apps/covid_19/mixing_optimisation/optimisation_outputs/sensitivity/" +\
+    #                country + "_" + mode + "_" + str(config) + "_" + objective + "_" + direction + ".yml"
+    #         try:
+    #             with open(path, "r") as yaml_file:
+    #                 sensi_outputs[objective][direction] = yaml.safe_load(yaml_file)
+    #         except:
+    #             sensi_outputs[objective][direction] = [0.] * n_vars[mode]
 
     ymax = 0.
     for i_age in range(n_vars[mode]):
@@ -947,18 +952,18 @@ def plot_optimal_plan(all_results, config, country, mode, ax):
             # ax.plot((x_pos + delta_xpos * bar_width, x_pos + delta_xpos * bar_width + bar_width), (value, value),
             #         color=colours[objective])
 
-            for direction in directions:
-                arrow_length = sensi_outputs[objective][direction][i_age]
-                if direction == "down":
-                    arrow_length *= -1.
-                # ax.arrow(x=x_pos + delta_xpos * bar_width + .5 * bar_width, y=value, dx=0, dy=arrow_length,
-                #          color='black', length_includes_head=True,
-                #          width=arrow_par[mode]['width'], head_width=arrow_par[mode]['head_width'],
-                #          head_length=arrow_par[mode]['head_length'])
-                _x = x_pos + delta_xpos * bar_width + .5 * bar_width
-                ax.plot((_x, _x), (value, value + arrow_length), color='black', linewidth=2, zorder=3)
-
-                ymax = max([ymax, value + arrow_length])
+            # for direction in directions:
+            #     arrow_length = sensi_outputs[objective][direction][i_age]
+            #     if direction == "down":
+            #         arrow_length *= -1.
+            #     # ax.arrow(x=x_pos + delta_xpos * bar_width + .5 * bar_width, y=value, dx=0, dy=arrow_length,
+            #     #          color='black', length_includes_head=True,
+            #     #          width=arrow_par[mode]['width'], head_width=arrow_par[mode]['head_width'],
+            #     #          head_length=arrow_par[mode]['head_length'])
+            #     _x = x_pos + delta_xpos * bar_width + .5 * bar_width
+            #     ax.plot((_x, _x), (value, value + arrow_length), color='black', linewidth=2, zorder=3)
+            #
+            #     ymax = max([ymax, value + arrow_length])
 
             delta_xpos = 0
 
@@ -990,7 +995,8 @@ def plot_optimal_plan(all_results, config, country, mode, ax):
     ax.tick_params(axis="x", which="major", length=4)
     ax.set_xlim((0.5, n_vars[mode] + .5))
 
-    ax.set_ylim((0, max((ymax, 1.05))))
+    # ax.set_ylim((0, max((ymax, 1.05))))
+    ax.set_ylim((0, 2.))
 
 
     if config == 2:
@@ -1035,7 +1041,7 @@ def plot_multicountry_optimal_plan(all_results, mode):
                 fontweight='normal')
         ax.axis("off")
 
-    out_dir = "apps/covid_19/mixing_optimisation/opti_plots/figures/optimal_plans/"
+    out_dir = "apps/covid_19/mixing_optimisation/opti_plots/figures/optimal_plans_upper_2/"
     filename = out_dir + "optimal_plan_" + mode
     pyplot.savefig(filename + ".pdf")
     pyplot.savefig(filename + ".png", dpi=300)

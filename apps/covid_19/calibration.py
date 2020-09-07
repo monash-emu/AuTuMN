@@ -24,9 +24,17 @@ Base parameters
 
 BASE_CALIBRATION_PARAMS = [
     # Arbitrary, but always required and this range should span the range of values that would be needed
-    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.015, 0.07],},
+    {
+        "param_name": "contact_rate",
+        "distribution": "uniform",
+        "distri_params": [0.015, 0.07],
+    },
     # Arbitrary, but useful to allow epidemic to take off from a flexible time
-    {"param_name": "start_time", "distribution": "uniform", "distri_params": [0.0, 40.0],},
+    {
+        "param_name": "start_time",
+        "distribution": "uniform",
+        "distri_params": [0.0, 40.0],
+    },
     # Rationale for the following two parameters described in parameters table of the methods Gdoc at:
     # https://docs.google.com/document/d/1Uhzqm1CbIlNXjowbpTlJpIphxOm34pbx8au2PeqpRXs/edit#
     {
@@ -266,7 +274,11 @@ def add_standard_victoria_params(params, region):
         ]
 
     return params + [
-        {"param_name": "seasonal_force", "distribution": "uniform", "distri_params": [0.0, 0.4],},
+        {
+            "param_name": "seasonal_force",
+            "distribution": "uniform",
+            "distri_params": [0.0, 0.4],
+        },
         {
             "param_name": "testing_to_detection.assumed_cdr_parameter",
             "distribution": "uniform",
@@ -296,7 +308,11 @@ def add_standard_victoria_params(params, region):
             "distri_params": [10.8, 4.0],
             "trunc_range": [3.0, np.inf],
         },
-        {"param_name": "movement_prop", "distribution": "uniform", "distri_params": [0.05, 0.4],},
+        {
+            "param_name": "movement_prop",
+            "distribution": "uniform",
+            "distri_params": [0.05, 0.4],
+        },
     ]
 
 

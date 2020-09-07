@@ -41,6 +41,16 @@ def build_model(params: dict) -> StratifiedModel:
     # Define inter-compartmental flows.
     flows = deepcopy(preprocess.flows.DEFAULT_FLOWS)
 
+    # Set treatment-outcome-related flows
+    mu = 1/60.  # FIXME: this should be a time-variant age-dependant quantity
+    TSR = params['treatment_success_rate']
+    params['treatment_recovery_rate'] = 1 / params['treatment_duration']
+    params['treatment_death_rate'] = params['treatment_recovery_rate'] * (1. - TSR) / TSR *\
+                                     params['prop_death_among_negative_tx_outcome'] /\
+                                     (1. + params['prop_death_among_negative_tx_outcome']) -\
+                                     mu
+    params['relapse_rate'] = (params['treatment_death_rate'] + mu) / params['prop_death_among_negative_tx_outcome']
+
     # Define model times.
     integration_times = get_model_times_from_inputs(
         round(params["start_time"]), params["end_time"], params["time_step"]
@@ -73,7 +83,7 @@ def build_model(params: dict) -> StratifiedModel:
         infectious_compartments=infectious_comps,
         birth_approach=BirthApproach.ADD_CRUDE,
         entry_compartment=Compartment.SUSCEPTIBLE,
-        starting_population=1000000,
+        starting_population=100000000,
     )
 
     # Apply infectiousness adjustment for individuals on treatment

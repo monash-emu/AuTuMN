@@ -16,8 +16,7 @@ stratify_by: ["age", "organ"]
 age_breakpoints: [0, 5, 15, 30, 45, 60, 75]
 
 # basic infection and disease parameters
-contact_rate: 10.
-on_treatment_infect_multiplier: .08
+contact_rate: 15.
 
 # latency-related parameters
 override_latency_rates: True # priority for the values loaded from preprocess.latency. Turn off if we fit these params
@@ -27,10 +26,12 @@ early_activation_rate: 1.
 
 
 # parameters related to post-disease-flows
-detection_rate: 0.  # FIXME
-treatment_recovery_rate: 0.  # FIXME
-relapse_rate: 0.  # FIXME
-treatment_death_rate: 0.  # FIXME
+detection_rate: 0.2
+treatment_duration: .5
+treatment_success_rate: .8
+prop_death_among_negative_tx_outcome: 0.2
+on_treatment_infect_multiplier: 0.08
+
 
 # relative risks of reinfection
 rr_infection_latent: .21

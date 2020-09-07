@@ -18,13 +18,14 @@ validate_params = sb.build_validator(
     late_activation_rate=float,
     early_activation_rate=float,
     detection_rate=float,
-    treatment_recovery_rate=float,
-    relapse_rate=float,
-    treatment_death_rate=float,
     self_recovery_rate_dict=dict,
     infect_death_rate_dict=dict,
     rr_infection_latent=float,
     rr_infection_recovered=float,
+    # treatment-related parameters
+    treatment_duration=float,
+    treatment_success_rate=float,
+    prop_death_among_negative_tx_outcome=float,
     on_treatment_infect_multiplier=float,
     # characterising age stratification
     age_infectiousness_switch=float,

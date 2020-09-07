@@ -111,7 +111,6 @@ def load_dhhs_df(acquired: int):
     df = pd.read_csv(DHHS_CSV)
     # Ignore last day, since reporting may not be accurate.
     df = df[:-1]
-    
     df.date = pd.to_datetime(df["date"], infer_datetime_format=True)
     df = df[df.acquired == acquired][
         ["date", "cluster", "new", "deaths", "incident_ward", "ward", "incident_icu", "icu"]
@@ -120,9 +119,7 @@ def load_dhhs_df(acquired: int):
     df["cluster_name"] = df.cluster
     df["cluster_name"] = df.cluster_name.replace(CLUSTER_MAP).str.lower()
     df["date_index"] = (df.date - pd.datetime(2019, 12, 31)).dt.days
-    
-    # df = df[(df.date_index != 244) & (df.date_index != 243)]
-
+    df = df[(df.date_index != 244) & (df.date_index != 243)]
     return df
 
 

@@ -24,19 +24,18 @@ def build_model(params: dict) -> StratifiedModel:
     """
     validate_params(params)
 
-    # Set age groups
-    agegroup_max, agegroup_step = params["agegroup_breaks"]
-    agegroup_strata = list(range(0, agegroup_max, agegroup_step))
+    """
+    Integration times
+    """
 
-    # Get country population by age-group
-    country_iso3 = params["iso3"]
-    mobility_region = params["mobility_region"]
-    pop_region = params["pop_region"]
-    total_pops = inputs.get_population_by_agegroup(
-        agegroup_strata, country_iso3, pop_region, year=params["pop_year"]
-    )
+    start_time, end_time, time_step = params["start_time"], params["end_time"], params["time_step"]
+    times = get_model_times_from_inputs(round(start_time), end_time, time_step,)
 
-    # Define infectious, disease compartments
+    """
+    Compartments
+    """
+
+    # Define infectious compartments
     infectious_comps = [
         Compartment.LATE_EXPOSED,
         Compartment.EARLY_ACTIVE,
@@ -56,11 +55,60 @@ def build_model(params: dict) -> StratifiedModel:
         *disease_comps
     ]
 
-    # Calculate time periods spent in various compartments
+    """
+    Basic intercompartmental flows
+    """
+
+    # Time periods calculated from periods (or "sojourn times")
     base_periods = params["compartment_periods"]
     periods_calc = params["compartment_periods_calculated"]
     compartment_periods = preprocess.compartments.calc_compartment_periods(
         base_periods, periods_calc
+    )
+
+    # Inter-compartmental transition flows
+    flows = deepcopy(preprocess.flows.DEFAULT_FLOWS)
+    flow_params = {
+        "contact_rate": params["contact_rate"],
+        "infect_death": 0,  # Placeholder to be overwritten in clinical stratification
+    }
+
+    # Add parameters for the during-disease progression flows
+    for comp_name, comp_period in compartment_periods.items():
+        flow_params[f"within_{comp_name}"] = 1.0 / comp_period
+
+    # Waning immunity (if requested)
+    if not params["full_immunity"]:
+        flow_params["immunity_loss_rate"] = 1.0 / params["immunity_duration"]
+        flows.append(
+            {
+                "type": Flow.STANDARD,
+                "origin": Compartment.RECOVERED,
+                "to": Compartment.SUSCEPTIBLE,
+                "parameter": "immunity_loss_rate",
+            }
+        )
+
+    # Just set the importation flow without specifying its value, which is done later (if requested)
+    # Entry compartment is set to LATE_ACTIVE in the model creation process, because the default would be susceptible
+    implement_importation = params["implement_importation"]
+    if implement_importation:
+        flows.append({"type": Flow.IMPORT, "parameter": "importation_rate"})
+
+    """
+    Population creation and distribution
+    """
+
+    # Set age groups
+    agegroup_max, agegroup_step = params["agegroup_breaks"]
+    agegroup_strata = list(range(0, agegroup_max, agegroup_step))
+
+    # Get country population by age-group
+    country_iso3 = params["iso3"]
+    mobility_region = params["mobility_region"]
+    pop_region = params["pop_region"]
+    total_pops = inputs.get_population_by_agegroup(
+        agegroup_strata, country_iso3, pop_region, year=params["pop_year"]
     )
 
     # Distribute infectious seed across infectious split sub-compartments
@@ -74,39 +122,10 @@ def build_model(params: dict) -> StratifiedModel:
     # (must be specified because entry_compartment is late_infectious)
     init_pop[Compartment.SUSCEPTIBLE] = sum(total_pops) - sum(init_pop.values())
 
-    # Set integration times
-    start_time, end_time, time_step = params["start_time"], params["end_time"], params["time_step"]
-    times = get_model_times_from_inputs(round(start_time), end_time, time_step,)
+    """
+    Model instantiation
+    """
 
-    # Add inter-compartmental transition flows
-    flows = deepcopy(preprocess.flows.DEFAULT_FLOWS)
-    flow_params = {
-        "contact_rate": params["contact_rate"],
-        "infect_death": 0,  # Placeholder to be overwritten in clinical stratification
-    }
-    # Add parameters for the during-disease progression flows
-    for comp_name, comp_period in compartment_periods.items():
-        flow_params[f"within_{comp_name}"] = 1.0 / comp_period
-
-    # Implement waning immunity
-    if not params["full_immunity"]:
-        flow_params["immunity_loss_rate"] = 1.0 / params["immunity_duration"]
-        flows.append(
-            {
-                "type": Flow.STANDARD,
-                "origin": Compartment.RECOVERED,
-                "to": Compartment.SUSCEPTIBLE,
-                "parameter": "immunity_loss_rate",
-            }
-        )
-
-    # Just set the importation flow (if required) without specifying its value, which is done later
-    # Entry compartment is set to LATE_ACTIVE in the model creation process, because the default would be susceptible
-    implement_importation = params["implement_importation"]
-    if implement_importation:
-        flows.append({"type": Flow.IMPORT, "parameter": "importation_rate"})
-
-    # Create SUMMER model
     model = StratifiedModel(
         times,
         compartments,
@@ -119,7 +138,20 @@ def build_model(params: dict) -> StratifiedModel:
         infectious_compartments=infectious_comps,
     )
 
-    # Build a dynamic, age-based mixing matrix
+    """
+    Seasonal forcing
+    """
+
+    if params["seasonal_force"]:
+        seasonal_func = get_seasonal_forcing(
+            365.0, 173.0, params["seasonal_force"], params["contact_rate"]
+        )
+        model.time_variants["contact_rate"] = seasonal_func
+
+    """
+    Dynamic heterogeneous mixing by age
+    """
+
     static_mixing_matrix = preprocess.mixing_matrix.build_static(country_iso3)
     dynamic_location_mixing_params = params["mixing"]
     dynamic_age_mixing_params = params["mixing_age_adjust"]
@@ -139,26 +171,25 @@ def build_model(params: dict) -> StratifiedModel:
     )
     model.set_dynamic_mixing_matrix(dynamic_mixing_matrix)
 
-    # Implement seasonal forcing if requested, making contact rate a time-variant rather than constant
-    if params["seasonal_force"]:
-        seasonal_func = get_seasonal_forcing(
-            365.0, 173.0, params["seasonal_force"], params["contact_rate"]
-        )
-        model.time_variants["contact_rate"] = seasonal_func
+    """
+    Age stratification
+    """
 
-    # Stratify the model by age group
-    # Adjust flow parameters for different age strata
-    flow_adjustments = {
-        # Adjust susceptibility across age groups
-        "contact_rate": params["age_based_susceptibility"],
-        # Adjust importation proportions
-        "importation_rate": params["importation_props_by_age"],
-    }
-    # Distribute starting population over the different agegroups
+    # Distribution of starting population (evenly over age groups)
     comp_split_props = {
         str(agegroup): prop
         for agegroup, prop in zip(agegroup_strata, normalise_sequence(total_pops))
     }
+
+    flow_adjustments = {
+        "contact_rate": params["age_based_susceptibility"],
+        "importation_rate": params["importation_props_by_age"],
+    }
+
+    # Determine how many importations there are, including the undetected and asymptomatic importations
+    # This is defined 8x10 year bands, 0-70+, which we transform into 16x5 year bands 0-75+
+    symptomatic_props = repeat_list_elements(2, params["symptomatic_props"])
+
     # We use "agegroup" instead of "age" for this model, to avoid triggering automatic demography features
     # (which also works on the assumption that the time unit is years, so would be totally wrong)
     model.stratify(
@@ -170,8 +201,16 @@ def build_model(params: dict) -> StratifiedModel:
         mixing_matrix=static_mixing_matrix,
     )
 
-    # Determine the proportion of cases detected over time as the detected_proportion
+    """
+    Case detection
+    """
+
+    # More empiric approach based on per capita testing rates
     if params["testing_to_detection"]:
+        assumed_tests_parameter = \
+            params["testing_to_detection"]["assumed_tests_parameter"]
+        assumed_cdr_parameter = \
+            params["testing_to_detection"]["assumed_cdr_parameter"]  # Typically a calibration parameter
 
         # Use state denominator for testing rates for the Victorian health cluster models
         testing_region = "Victoria" if country_iso3 == "AUS" else pop_region
@@ -182,12 +221,13 @@ def build_model(params: dict) -> StratifiedModel:
         )
 
         detected_proportion = find_cdr_function_from_test_data(
-            params["testing_to_detection"]["assumed_tests_parameter"],
-            params["testing_to_detection"]["assumed_cdr_parameter"],
+            assumed_tests_parameter,
+            assumed_cdr_parameter,
             country_iso3,
             testing_pops,
         )
 
+    # Approach based on a hyperbolic tan function
     else:
         detect_prop_params = params["time_variant_detection"]
 
@@ -199,9 +239,10 @@ def build_model(params: dict) -> StratifiedModel:
                 detect_prop_params["end_value"],
             )(t)
 
-    # Determine how many importations there are, including the undetected and asymptomatic importations
-    # This is defined 8x10 year bands, 0-70+, which we transform into 16x5 year bands 0-75+
-    symptomatic_props = repeat_list_elements(2, params["symptomatic_props"])
+    """
+    Importation 
+    """
+
     import_symptomatic_prop = sum(
         [
             import_prop * sympt_prop
@@ -238,10 +279,12 @@ def build_model(params: dict) -> StratifiedModel:
 
     # Stratify the model by clinical status
     stratify_by_clinical(model, params, detected_proportion, symptomatic_props)
-    # Finished building the model
+
+    """
+    Set up and track derived output functions
+    """
 
     # Set up derived outputs
-    # Define which flows we should track for derived outputs
     incidence_connections = outputs.get_incidence_connections(model.compartment_names)
     progress_connections = outputs.get_progress_connections(model.compartment_names)
     death_output_connections = outputs.get_infection_death_connections(model.compartment_names)
@@ -270,25 +313,29 @@ def build_model(params: dict) -> StratifiedModel:
         icu_early_period, hospital_early_period
     )
 
-    # Register derived output functions
     func_outputs = {
-        # Notifiactions
+
+        # Case-related
         "notifications": notification_func,
         "local_notifications": local_notification_func,
         "notifications_at_sympt_onset": outputs.get_notifications_at_sympt_onset,
-        "proportion_seropositive": outputs.calculate_proportion_seropositive,
-        # Deaths
+
+        # Death-related
         "years_of_life_lost": life_lost_func,
         "accum_deaths": outputs.calculate_cum_deaths,
-        # People in hospital.
+
+        # Health care-related
         "hospital_occupancy": calculate_hospital_occupancy,
-        "new_hospital_admissions": outputs.calculate_new_hospital_admissions_covid,
-        # People in ICU.
-        "new_icu_admissions": outputs.calculate_new_icu_admissions_covid,
         "icu_occupancy": outputs.calculate_icu_occupancy,
+        "new_hospital_admissions": outputs.calculate_new_hospital_admissions_covid,
+        "new_icu_admissions": outputs.calculate_new_icu_admissions_covid,
+
+        # Other
+        "proportion_seropositive": outputs.calculate_proportion_seropositive,
     }
+
+    # Derived outputs for the optimization project.
     if mobility_region in OPTI_REGIONS:
-        # Derived outputs for the optimization project.
         func_outputs["accum_years_of_life_lost"] = outputs.calculate_cum_years_of_life_lost
 
     model.add_function_derived_outputs(func_outputs)

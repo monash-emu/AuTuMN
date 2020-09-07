@@ -83,22 +83,6 @@ def calculate_new_icu_admissions_covid(
     return icu_admissions
 
 
-def calculate_icu_prev(
-    time_idx: int,
-    model: StratifiedModel,
-    compartment_values: np.ndarray,
-    derived_outputs: Dict[str, np.ndarray],
-):
-    icu_prev = 0
-    for i, comp in enumerate(model.compartment_names):
-        is_infectious = comp.has_name(CompartmentType.LATE_ACTIVE)
-        is_hospital_icu = comp.has_stratum("clinical", ClinicalStratum.ICU)
-        if is_infectious and is_hospital_icu:
-            icu_prev += compartment_values[i]
-
-    return icu_prev
-
-
 def get_calculate_hospital_occupancy(icu_early_period, hospital_early_period):
     def calculate_hospital_occupancy(
         time_idx: int,
@@ -202,7 +186,7 @@ def calculate_cum_deaths(
     """
     Cumulative deaths, used for minimize deaths optimization.
     """
-    return derived_outputs["infection_deathsXall"][: (time_idx + 1)].sum()
+    return derived_outputs["infection_deaths"][: (time_idx + 1)].sum()
 
 
 def calculate_cum_years_of_life_lost(
@@ -215,19 +199,6 @@ def calculate_cum_years_of_life_lost(
     Cumulative years of life lost, used for minimize YOLL optimization.
     """
     return derived_outputs["years_of_life_lost"][: time_idx + 1].sum()
-
-
-def get_infection_deaths(
-    time_idx: int,
-    model: StratifiedModel,
-    compartment_values: np.ndarray,
-    derived_outputs: Dict[str, np.ndarray],
-):
-    """
-    Rename total infection deaths - used for optimization?
-    FIXME: Why do we need to do this?.
-    """
-    return derived_outputs["infection_deathsXall"][time_idx]
 
 
 def get_progress_connections(comps: List[Compartment]):
@@ -284,7 +255,7 @@ def get_infection_death_connections(compartments: List[Compartment]):
     Assumes only late infectious can die from the infection.
     """
     connections = {}
-    connections["infection_deathsXall"] = InfectionDeathFlowOutput(
+    connections["infection_deaths"] = InfectionDeathFlowOutput(
         source=CompartmentType.LATE_ACTIVE, source_strata={}
     )
     for comp in compartments:

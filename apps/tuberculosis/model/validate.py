@@ -8,6 +8,9 @@ validate_params = sb.build_validator(
     start_time=float,
     end_time=float,
     time_step=float,
+    # model structure,
+    stratify_by=list,
+    age_breakpoints=list,
     # base disease model
     contact_rate=float,
     override_latency_rates=bool,
@@ -22,8 +25,9 @@ validate_params = sb.build_validator(
     infect_death_rate_dict=dict,
     rr_infection_latent=float,
     rr_infection_recovered=float,
-    # stratification requests
-    stratify_by=list,
+    on_treatment_infect_multiplier=float,
+    # characterising age stratification
+    age_infectiousness_switch=float,
     # defining organ stratification
     incidence_props_pulmonary=float,
     incidence_props_smear_positive_among_pulmonary=float,

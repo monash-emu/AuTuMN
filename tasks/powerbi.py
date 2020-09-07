@@ -7,6 +7,7 @@ from autumn.tool_kit import Timer
 from autumn.inputs import build_input_database
 from autumn.inputs.database import input_db_path
 from autumn.db import models
+from autumn.tool_kit.params import load_targets
 from autumn.tool_kit.uncertainty import (
     add_uncertainty_weights,
     add_uncertainty_quantiles,
@@ -24,24 +25,6 @@ logger = logging.getLogger(__name__)
 PRUNED_DIR = os.path.join(settings.BASE_DIR, "data/powerbi/pruned/")
 COLLATED_DB_PATH = os.path.join(settings.BASE_DIR, "data/powerbi/collated.db")
 COLLATED_PRUNED_DB_PATH = os.path.join(settings.BASE_DIR, "data/powerbi/collated-pruned.db")
-UNCERTAINTY_OUTPUTS = [
-    "incidence",
-    "notifications",
-    "infection_deathsXall",
-    "prevXlate_activeXclinical_icuXamong",
-]
-
-OPTI_UNCERTAINTY_OUTPUTS = [
-    "notifications",
-    "infection_deathsXall",
-    "hospital_occupancy",
-    "new_hospital_admissions",
-    "icu_occupancy",
-    "new_icu_admissions",
-    "proportion_seropositive",
-    "accum_deaths",
-    "accum_years_of_life_lost",
-]
 
 
 def get_final_db_path(run_id: str):
@@ -86,9 +69,8 @@ class UncertaintyWeightsTask(utils.ParallelLoggerTask):
         msg = f"Calculating uncertainty weights for chain {self.chain_id}"
         with Timer(msg):
             region_name, _, _ = utils.read_run_id(self.run_id)
-            output_list = (
-                UNCERTAINTY_OUTPUTS if region_name not in OPTI_REGIONS else OPTI_UNCERTAINTY_OUTPUTS
-            )
+            targets = load_targets("covid_19", region_name)
+            output_list = [t["output_key"] for t in targets.values()]
             db_path = os.path.join(settings.BASE_DIR, self.get_src_db_relpath())
             add_uncertainty_weights(output_list, db_path)
             with open(self.get_success_path(), "w") as f:
@@ -174,8 +156,10 @@ class CalculateUncertaintyTask(utils.BaseTask):
         return luigi.LocalTarget(COLLATED_PRUNED_DB_PATH)
 
     def safe_run(self):
+        region_name, _, _ = utils.read_run_id(self.run_id)
+        targets = load_targets("covid_19", region_name)
         with Timer(f"Calculating uncertainty quartiles"):
-            add_uncertainty_quantiles(COLLATED_DB_PATH)
+            add_uncertainty_quantiles(COLLATED_DB_PATH, targets)
         with Timer(f"Pruning final database"):
             models.prune(COLLATED_DB_PATH, COLLATED_PRUNED_DB_PATH, drop_extra_tables=True)
 

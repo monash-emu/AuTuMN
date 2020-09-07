@@ -79,15 +79,28 @@ class Region:
         GRAMPIANS,
     ]
 
-    VICTORIA_SUBREGIONS = [
-        NORTH_METRO,
-        SOUTH_EAST_METRO,
-        SOUTH_METRO,
-        WEST_METRO,
+    VICTORIA_RURAL = [
         BARWON_SOUTH_WEST,
         GIPPSLAND,
         HUME,
         LODDON_MALLEE,
         GRAMPIANS,
-        VICTORIA,
     ]
+
+    VICTORIA_METRO = [
+        NORTH_METRO,
+        SOUTH_EAST_METRO,
+        SOUTH_METRO,
+        WEST_METRO,
+    ]
+
+    VICTORIA_SUBREGIONS = VICTORIA_RURAL + VICTORIA_METRO
+
+    @staticmethod
+    def to_filename(name: str):
+        return name.replace("-", "_")
+
+    @staticmethod
+    def to_name(filename: str):
+        return filename.replace("_", "-")
+

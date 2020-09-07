@@ -172,6 +172,26 @@ def run_powerbi(job, run, branch, is_spot):
     _run_job(job_id, instance_type, is_spot, job_func)
 
 
+@run.command("dhhs")
+@click.option("--job", type=str, required=True)
+@click.option("--commit", type=str, required=True)
+@click.option("--branch", type=str, default="master")
+@click.option("--spot", is_flag=True)
+def run_dhhs_cli(job, commit, branch, spot):
+    run_dhhs(job, commit, branch, spot)
+
+
+def run_dhhs(job, commit, branch, is_spot):
+    """
+    Perform DHHS post processing.
+    """
+    job_id = f"dhhs-{job}"
+    instance_type = EC2InstanceType.m5_16xlarge
+    kwargs = {"commit": commit, "branch": branch}
+    job_func = functools.partial(remote.run_dhhs, **kwargs)
+    _run_job(job_id, instance_type, is_spot, job_func)
+
+
 def _run_job(job_id: str, instance_type: str, is_spot: bool, job_func):
     """
     Run a job on a remote server

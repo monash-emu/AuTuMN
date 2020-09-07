@@ -11,7 +11,6 @@ import pandas as pd
 
 from autumn.db.database import Database
 
-DEFAULT_QUANTILES = [0.025, 0.25, 0.5, 0.75, 0.975]
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +21,7 @@ def add_uncertainty_weights(output_names: List[str], database_path: str):
     Saves requested weights in a table 'uncertainty_weights'.
     """
     db = Database(database_path)
+
     # Delete old data.
     for output_name in output_names:
         if "uncertainty_weights" in db.table_names():
@@ -91,7 +91,7 @@ def calculate_uncertainty_weights(
     return weights_df
 
 
-def add_uncertainty_quantiles(database_path: str):
+def add_uncertainty_quantiles(database_path: str, targets: dict):
     """
     Add an uncertainty table to a given database, based on mcmc_run and derived_outputs.
     The table will have columns scenario/type/time/quantile/value.
@@ -107,24 +107,26 @@ def add_uncertainty_quantiles(database_path: str):
     logger.info("Loading data into memory")
     weights_df = db.query("uncertainty_weights")
     logger.info("Calculating uncertainty")
-    uncertainty_df = calculate_mcmc_uncertainty(weights_df, DEFAULT_QUANTILES)
+    uncertainty_df = calculate_mcmc_uncertainty(weights_df, targets)
     db.dump_df("uncertainty", uncertainty_df)
     logger.info("Finished writing uncertainties")
 
 
-def calculate_mcmc_uncertainty(weights_df: pd.DataFrame, quantiles: List[float]) -> pd.DataFrame:
+def calculate_mcmc_uncertainty(weights_df: pd.DataFrame, targets: dict) -> pd.DataFrame:
     """
     Calculate quantiles from a table of weighted values.
     See calc_mcmc_weighted_values for how these weights are calculated.
     """
-    output_names = weights_df.output_name.unique()
     times = sorted(weights_df.times.unique())
     scenarios = weights_df.Scenario.unique()
     uncertainty_data = []
     for scenario in scenarios:
         scenario_mask = weights_df["Scenario"] == scenario
         scenario_df = weights_df[scenario_mask]
-        for output_name in output_names:
+        for target in targets.values():
+            quantiles = target["quantiles"]
+            output_name = target["output_key"]
+
             output_mask = scenario_df["output_name"] == output_name
             output_df = scenario_df[output_mask]
             for time in times:

@@ -76,17 +76,15 @@ validate_params = sb.build_validator(
     universal_death_rate=float,
     # for MCMC calibration with negative binomial likelihood
     notifications_dispersion_param=float,
-    prevXlate_activeXclinical_icuXamong_dispersion_param=float,
-    infection_deathsXall_dispersion_param=float,
+    icu_occupancy_dispersion_param=float,
+    infection_deaths_dispersion_param=float,
     proportion_seropositive_dispersion_param=float,
     hospital_occupancy_dispersion_param=float,
     new_hospital_admissions_dispersion_param=float,
     new_icu_admissions_dispersion_param=float,
-    total_infection_deaths_dispersion_param=float,
     # for immunity wane
     full_immunity=bool,
     immunity_duration=float,
-    icu_occupancy_dispersion_param=float,
     importation_props_by_age=dict,
     testing_to_detection=sb.Nullable(
         sb.Dict(assumed_tests_parameter=float, assumed_cdr_parameter=float)

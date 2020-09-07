@@ -1,4 +1,17 @@
 {
+  "incidence": {
+    "title": "Incidence",
+    "output_key": "incidence",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
   "notifications": {
     "output_key": "notifications",
     "title": "Daily number of confirmed cases",
@@ -369,10 +382,17 @@
       11,
       17,
       6
+    ],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
     ]
   },
-  "infection_deathsXall": {
-    "output_key": "infection_deathsXall",
+  "infection_deaths": {
+    "output_key": "infection_deaths",
     "title": "Daily number of deaths",
     "times": [
       77,
@@ -713,6 +733,13 @@
       0,
       1,
       1
+    ],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
     ]
   },
   "icu_occupancy": {
@@ -1069,6 +1096,13 @@
       8,
       7,
       6
+    ],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
     ]
   }
 }

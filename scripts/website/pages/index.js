@@ -25,24 +25,36 @@ export async function getStaticProps() {
   return { props: { models, modelFacts } }
 }
 
+const IGNORE_MODEL_NAMES = ['test', 'dhhs']
+
 const HomePage = ({ models, modelFacts }) => {
   return (
     <Page title="Autumn Data">
       <h1>COVID Models</h1>
       <List relaxed divided size="medium">
-        {models.sort().map((m) => (
-          <List.Item key={m}>
-            <Header as="h3">
-              <Link href="/model/[model]" as={`/model/${m}`}>
-                <a>{m}</a>
-              </Link>
-            </Header>
-            <List.Description>
-              {modelFacts[m].numRuns} runs - last run was{' '}
-              {moment(modelFacts[m].mostRecent.timestamp, 'X').fromNow()}
-            </List.Description>
-          </List.Item>
-        ))}
+        <List.Item key="dhhs">
+          <Header as="h3">
+            <Link href="/dhhs" as={`/dhhs`}>
+              <a>DHHS Reports</a>
+            </Link>
+          </Header>
+        </List.Item>
+        {models
+          .filter((m) => !IGNORE_MODEL_NAMES.includes(m))
+          .sort()
+          .map((m) => (
+            <List.Item key={m}>
+              <Header as="h3">
+                <Link href="/model/[model]" as={`/model/${m}`}>
+                  <a>{m}</a>
+                </Link>
+              </Header>
+              <List.Description>
+                {modelFacts[m].numRuns} runs - last run was{' '}
+                {moment(modelFacts[m].mostRecent.timestamp, 'X').fromNow()}
+              </List.Description>
+            </List.Item>
+          ))}
       </List>
     </Page>
   )

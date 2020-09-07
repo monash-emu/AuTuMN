@@ -192,7 +192,7 @@ def get_target_outputs_for_opti(
         jh_start_time = 22  # actual start time in JH csv files
         assert data_start_time >= jh_start_time
 
-    output_mapping = {"confirmed": "notifications", "deaths": "infection_deathsXall"}
+    output_mapping = {"confirmed": "notifications", "deaths": "infection_deaths"}
 
     target_outputs = []
     for variable in ["confirmed"]:  #  , "deaths"]:

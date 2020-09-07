@@ -1,4 +1,6 @@
 from apps.tuberculosis.constants import Compartment, OrganStratum
+from apps.tuberculosis.model.preprocess.latency import get_adapted_age_parameters
+from math import log, exp
 
 
 def stratify_by_organ(model, params):
@@ -46,3 +48,47 @@ def stratify_by_organ(model, params):
         infectiousness_adjustments=strata_infectiousness,
         flow_adjustments=flow_adjustments,
     )
+
+
+def stratify_by_age(model, params, compartments):
+    strata_infectiousness = calculate_age_specific_infectiousness(params['age_breakpoints'],
+                                                                  params['age_infectiousness_switch'])
+
+    flow_adjustments = {}
+    if params["override_latency_rates"]:
+        flow_adjustments.update(get_adapted_age_parameters(params['age_breakpoints']))
+
+    # trigger model stratification
+    model.stratify(
+        "age",
+        params['age_breakpoints'],
+        compartments,
+        infectiousness_adjustments=strata_infectiousness,
+        flow_adjustments=flow_adjustments,
+    )
+
+
+def calculate_age_specific_infectiousness(age_breakpoints, age_infectiousness_switch):
+    """
+    We assume that infectiousness increases with age
+    A sigmoidal function (x -> 1 / (1 + exp(-(x-alpha)))) is used to model a progressive increase  with  age.
+    This is the approach used in Ragonnet et al. (BMC Medicine, 2019)
+    :param age_breakpoints: model age brealpoints
+    :param age_infectiousness_switch: parameter alpha
+    :return:
+    """
+    infectiousness_by_agegroup = {}
+    for i, age_low in enumerate(age_breakpoints):
+        if i < len(age_breakpoints) - 1:
+            age_up = age_breakpoints[i + 1]
+            # Calculate the average of the sigmoidal function(x -> 1 / (1 + exp(-(x-alpha)))) between the age bounds
+            average_infectiousness = \
+                (log(1 + exp(age_up - age_infectiousness_switch)) -
+                 log(1 + exp(age_low - age_infectiousness_switch))
+                 ) / (age_up - age_low)
+        else:  # set infectiousness to 1. for the oldest age group
+            average_infectiousness = 1.
+
+        infectiousness_by_agegroup[str(age_low)] = average_infectiousness
+
+    return infectiousness_by_agegroup

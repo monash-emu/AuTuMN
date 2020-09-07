@@ -86,7 +86,6 @@ def check_hash(file_path: str):
     assert (
         ".secret." in file_path
     ), "Can only check the hash files that are marked as secret with *.secret.*"
-    pass
     with open(HASH_FILE, "r") as f:
         hashes = json.load(f)
 

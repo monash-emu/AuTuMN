@@ -6,7 +6,7 @@ from autumn.tool_kit.scenarios import get_model_times_from_inputs
 
 from . import preprocess, outputs
 from .validate import validate_params
-from .stratification import stratify_by_organ
+from .stratification import stratify_by_organ, stratify_by_age
 
 
 def build_model(params: dict) -> StratifiedModel:
@@ -26,6 +26,16 @@ def build_model(params: dict) -> StratifiedModel:
     ]
     infectious_comps = [
         Compartment.INFECTIOUS,
+        Compartment.ON_TREATMENT,
+    ]
+
+    # prepare infectiousness adjustment for individuals on treatment
+    treatment_infectiousness_adjustment = [
+        {
+            "comp_name": Compartment.ON_TREATMENT,
+            "comp_strata": {},
+            "value": params["on_treatment_infect_multiplier"],
+        }
     ]
 
     # Define inter-compartmental flows.
@@ -66,8 +76,15 @@ def build_model(params: dict) -> StratifiedModel:
         starting_population=1000000,
     )
 
+    # Apply infectiousness adjustment for individuals on treatment
+    tb_model.individual_infectiousness_adjustments = treatment_infectiousness_adjustment
+
     if "organ" in params["stratify_by"]:
         stratify_by_organ(tb_model, params)
+
+    if "age" in params["stratify_by"]:
+        stratify_by_age(tb_model, params, compartments)
+
 
     # Register derived output functions
     # These functions calculate 'derived' outputs of interest, based on the

@@ -7,6 +7,7 @@ from autumn.calibration import (
 )
 from autumn.tool_kit.params import load_params
 from autumn.calibration.utils import ignore_calibration_target_before_date
+from autumn.constants import Region
 
 from .model import build_model
 
@@ -188,8 +189,8 @@ def add_standard_philippines_targets(targets):
         },
         {
             "output_key": "accum_deaths",
-            "years": [targets["total_infection_deaths"]["times"][-1]],
-            "values": [targets["total_infection_deaths"]["values"][-1]],
+            "years": [targets["infection_deaths"]["times"][-1]],
+            "values": [targets["infection_deaths"]["values"][-1]],
             "loglikelihood_distri": "normal",
         },
     ]
@@ -218,14 +219,58 @@ Victoria
 """
 
 
-def add_standard_victoria_params(params):
+def add_standard_victoria_params(params, region):
+
+    if region in Region.VICTORIA_METRO:
+
+        params += [
+            {
+                "param_name": "contact_rate",
+                "distribution": "uniform",
+                "distri_params": [0.012, 0.07],
+            },
+            {
+                "param_name": "microdistancing.parameters.max_effect",
+                "distribution": "beta",
+                "distri_mean": 0.8,
+                "distri_ci": [0.4, 0.95],
+            },
+            {
+                "param_name": "ifr_multiplier",
+                "distribution": "trunc_normal",
+                "distri_params": [1.0, 1.0],
+                "trunc_range": [0.25, 4.0],
+            },
+        ]
+
+    elif region in Region.VICTORIA_RURAL:
+
+        params += [
+            {
+                "param_name": "contact_rate",
+                "distribution": "uniform",
+                "distri_params": [0.006, 0.07],
+            },
+            {
+                "param_name": "microdistancing.parameters.max_effect",
+                "distribution": "beta",
+                "distri_mean": 0.6,
+                "distri_ci": [0.3, 0.85],
+            },
+            {
+                "param_name": "ifr_multiplier",  # Less to constrain this, so just to propagate some uncertainty
+                "distribution": "trunc_normal",
+                "distri_params": [1.0, 0.3],
+                "trunc_range": [0.25, 4.0],
+            },
+        ]
 
     return params + [
         {"param_name": "seasonal_force", "distribution": "uniform", "distri_params": [0.0, 0.4],},
         {
             "param_name": "testing_to_detection.assumed_cdr_parameter",
             "distribution": "uniform",
-            "distri_params": [0.15, 0.4],
+            "distri_params": [0.08, 0.3],
         },
         {
             "param_name": "symptomatic_props_multiplier",
@@ -234,9 +279,9 @@ def add_standard_victoria_params(params):
             "trunc_range": [0.5, np.inf],
         },
         {
-            "param_name": "ifr_multiplier",
+            "param_name": "hospital_props_multiplier",
             "distribution": "trunc_normal",
-            "distri_params": [1.0, 0.8],
+            "distri_params": [1.0, 1.0],
             "trunc_range": [0.2, np.inf],
         },
         {
@@ -251,35 +296,69 @@ def add_standard_victoria_params(params):
             "distri_params": [10.8, 4.0],
             "trunc_range": [3.0, np.inf],
         },
-        {
-            "param_name": "microdistancing.parameters.max_effect",
-            "distribution": "beta",
-            "distri_mean": 0.8,
-            "distri_ci": [0.4, 0.95],
-        },
+        {"param_name": "movement_prop", "distribution": "uniform", "distri_params": [0.05, 0.4],},
     ]
 
 
-def add_standard_victoria_targets(target_outputs, targets):
-    notifications = targets["notifications"]
-    total_infection_deaths = targets["total_infection_deaths"]
+def add_standard_victoria_targets(target_outputs, targets, region):
 
-    return target_outputs + [
+    notifications_to_ignore = 2
+    notification_times = targets["notifications"]["times"][:-notifications_to_ignore]
+    notification_values = targets["notifications"]["values"][:-notifications_to_ignore]
+
+    # Calibrate all Victoria sub-regions to notifications
+    target_outputs += [
         {
-            "output_key": notifications["output_key"],
-            "years": notifications["times"],
-            "values": notifications["values"],
+            "output_key": targets["notifications"]["output_key"],
+            "years": notification_times,
+            "values": notification_values,
             "loglikelihood_distri": "normal",
-            "time_weights": get_trapezoidal_weights(notifications["times"]),
-        },
-        {
-            "output_key": total_infection_deaths["output_key"],
-            "years": total_infection_deaths["times"],
-            "values": total_infection_deaths["values"],
-            "loglikelihood_distri": "normal",
-            "time_weights": get_trapezoidal_weights(total_infection_deaths["times"]),
-        },
+        }
     ]
+
+    # Also calibrate Victoria metro sub-regions to deaths, hospital admission and ICU admissions
+    if region in Region.VICTORIA_METRO:
+
+        deaths_to_ignore = 3
+        total_infection_death_times = targets["infection_deaths"]["times"][:-deaths_to_ignore]
+        total_infection_death_values = targets["infection_deaths"]["values"][:-deaths_to_ignore]
+
+        target_outputs += [
+            {
+                "output_key": targets["infection_deaths"]["output_key"],
+                "years": total_infection_death_times,
+                "values": total_infection_death_values,
+                "loglikelihood_distri": "normal",
+            },
+        ]
+
+        new_hosp_to_ignore = 7
+        hospital_admission_times = targets["hospital_admissions"]["times"][:-new_hosp_to_ignore]
+        hospital_admission_values = targets["hospital_admissions"]["values"][:-new_hosp_to_ignore]
+
+        target_outputs += [
+            {
+                "output_key": "new_hospital_admissions",
+                "years": hospital_admission_times,
+                "values": hospital_admission_values,
+                "loglikelihood_distri": "normal",
+            },
+        ]
+
+        new_icu_to_ignore = 7
+        icu_admission_times = targets["icu_admissions"]["times"][:-new_icu_to_ignore]
+        icu_admission_values = targets["icu_admissions"]["values"][:-new_icu_to_ignore]
+
+        target_outputs += [
+            {
+                "output_key": "new_icu_admissions",
+                "years": icu_admission_times,
+                "values": icu_admission_values,
+                "loglikelihood_distri": "normal",
+            },
+        ]
+
+    return target_outputs
 
 
 def get_trapezoidal_weights(target_times):

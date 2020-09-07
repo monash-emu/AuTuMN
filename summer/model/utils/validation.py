@@ -58,7 +58,7 @@ def get_stratify_schema(model, stratification_name, strata_names, compartments_t
         "strata_request": {
             "type": "list",
             "check_with": check_strata_request(
-                stratification_name, compartments_to_stratify, model.compartment_names
+                stratification_name, compartments_to_stratify, model.original_compartment_names
             ),
             "schema": {"type": ["string", "integer"]},
         },

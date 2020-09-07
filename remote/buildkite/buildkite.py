@@ -129,6 +129,7 @@ class BaseInputField:
         self.default = default
         self.type = type
         self.title = title
+        self._value = None
 
     def to_dict(self):
         input_dict = {
@@ -142,8 +143,12 @@ class BaseInputField:
         return input_dict
 
     def get_value(self):
+        if self._value is not None:
+            return self._value
+
         val_str = get_metadata(self.key)
-        return self.type(val_str)
+        self._value = self.type(val_str)
+        return self._value
 
 
 class TextInputField(BaseInputField):
@@ -177,7 +182,14 @@ class BooleanInputField(BaseInputField):
             "options": [{"label": "Yes", "value": "yes"}, {"label": "No", "value": "no"}],
         }
 
+    def get_option(self, value: bool):
+        return "yes" if value else "no"
+
     def get_value(self):
+        if self._value is not None:
+            return self._value
+
         val_str = get_metadata(self.key)
         val_bool = val_str == "yes"
-        return self.type(val_bool)
+        self._value = self.type(val_bool)
+        return self._value

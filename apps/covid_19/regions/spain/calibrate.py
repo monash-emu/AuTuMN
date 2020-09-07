@@ -41,7 +41,7 @@ PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS)
 #     {"param_name": "contact_rate", "lower": 0.05197245019634231, "upper": .0542, "n": 2},
 #     {"param_name": "time_variant_detection.end_value", "lower":  0.3, "upper": 0.6446446106435421, "n": 2},
 #     {"param_name": "notifications_dispersion_param", "lower":  2.612847051667734, "upper": 2.612847051667734, "n": 1},
-#     {"param_name": "infection_deathsXall_dispersion_param", "lower":  0.35446059129060864, "upper": 0.35446059129060864, "n": 1},
+#     {"param_name": "infection_deaths_dispersion_param", "lower":  0.35446059129060864, "upper": 0.35446059129060864, "n": 1},
 #
 # ]
 

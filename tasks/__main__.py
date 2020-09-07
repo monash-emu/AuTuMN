@@ -3,7 +3,7 @@ Runs remote tasks
 
 You can access this script from your CLI by running:
 
-    python -m remote --help
+    python -m tasks --help
 
 """
 import os
@@ -39,6 +39,7 @@ from .settings import BASE_DIR
 from .calibrate import RunCalibrate
 from .full_model_run import RunFullModels
 from .powerbi import RunPowerBI
+from .dhhs import RunDHHS
 from .utils import read_run_id
 
 
@@ -86,9 +87,21 @@ def run_full_models(run, burn, workers):
 @click.option("--workers", type=int, required=True)
 def run_powerbi(run, workers):
     """
-    Run full model pipeline.
+    Run PowerBI post-processing.
     """
     task = RunPowerBI(run_id=run)
+    result = luigi.build([task], workers=workers, local_scheduler=True, detailed_summary=True)
+    _handle_result(result)
+
+
+@cli.command("dhhs")
+@click.option("--commit", type=str, required=True)
+@click.option("--workers", type=int, required=True)
+def run_dhhs(commit, workers):
+    """
+    Run DHHS post processing.
+    """
+    task = RunDHHS(commit=commit)
     result = luigi.build([task], workers=workers, local_scheduler=True, detailed_summary=True)
     _handle_result(result)
 

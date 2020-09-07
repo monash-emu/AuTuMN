@@ -237,9 +237,21 @@ def plot_timeseries_with_uncertainty(
     plotter: Plotter, output_name: str, scenario_name: str, quantiles: dict, times: list, targets,
 ):
     fig, axis, _, _, _ = plotter.get_figure()
-    axis.fill_between(times, quantiles[0.025], quantiles[0.975], facecolor="lightsteelblue")
-    axis.fill_between(times, quantiles[0.25], quantiles[0.75], facecolor="cornflowerblue")
-    axis.plot(times, quantiles[0.50], color="navy")
+    title = plotter.get_plot_title(output_name)
+    # Plot quantiles
+    colors = ["lightsteelblue", "cornflowerblue", "royalblue"]
+    q_keys = sorted([float(k) for k in quantiles.keys()])
+    num_quantiles = len(q_keys)
+    half_length = num_quantiles // 2
+    for i in range(half_length):
+        color = colors[i]
+        start_key = q_keys[i]
+        end_key = q_keys[-(i + 1)]
+        axis.fill_between(times, quantiles[start_key], quantiles[end_key], facecolor=color)
+
+    if num_quantiles % 2:
+        q_key = q_keys[half_length]
+        axis.plot(times, quantiles[q_key], color="navy")
 
     # Add plot targets
     output_config = {"values": [], "times": []}
@@ -253,10 +265,15 @@ def plot_timeseries_with_uncertainty(
 
     axis.set_xlabel("time")
     axis.set_ylabel(output_name)
+    scenario_title = (
+        "baseline scenario"
+        if scenario_name == "S_0"
+        else "scenario #" + scenario_name.split("_")[1]
+    )
     plotter.save_figure(
         fig,
         filename=f"uncertainty-{output_name}-{scenario_name}",
-        title_text=f"{output_name} for {scenario_name}",
+        title_text=f"{title} for {scenario_title}",
     )
 
 

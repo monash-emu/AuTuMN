@@ -135,6 +135,15 @@
       394,
       322,
       331
+    ],
+    "quantiles": [
+      0.01,
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975,
+      0.99
     ]
   },
   "hospital_occupancy": {
@@ -199,6 +208,15 @@
       659,
       658,
       664
+    ],
+    "quantiles": [
+      0.01,
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975,
+      0.99
     ]
   },
   "icu_occupancy": {
@@ -335,11 +353,20 @@
       53,
       51,
       54
+    ],
+    "quantiles": [
+      0.01,
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975,
+      0.99
     ]
   },
-  "total_infection_deaths": {
+  "infection_deaths": {
     "title": "Daily number of deaths",
-    "output_key": "total_infection_deaths",
+    "output_key": "infection_deaths",
     "times": [
       175,
       176,
@@ -443,18 +470,45 @@
       16,
       18,
       19
+    ],
+    "quantiles": [
+      0.01,
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975,
+      0.99
     ]
   },
   "incidence": {
     "title": "Incidence",
     "output_key": "incidence",
     "times": [],
-    "values": []
+    "values": [],
+    "quantiles": [
+      0.01,
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975,
+      0.99
+    ]
   },
   "icu_prevalence": {
     "title": "Prevalence of ICU cases",
-    "output_key": "prevXlate_activeXclinical_icuXamong",
+    "output_key": "icu_occupancy",
     "times": [],
-    "values": []
+    "values": [],
+    "quantiles": [
+      0.01,
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975,
+      0.99
+    ]
   }
 }

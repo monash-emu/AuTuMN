@@ -57,19 +57,19 @@ time_step: 1.
 
 # FIXED BIOLOGICAL PARAMETERS
 
-contact_rate: 0.03  # Routinely calibrated, see calibration file
+contact_rate: 0.03 # Routinely calibrated, see calibration file
 
 # Mean time (?) spent in each compartment, defined via proportions
 compartment_periods_calculated:
   exposed:
-    total_period: 5.5  # Routinely calibrated, see calibration file
+    total_period: 5.5 # Routinely calibrated, see calibration file
     proportions:
       early: 0.5
       # Proportion of the exposed period spent infectious - i.e. "presymptomatic"
       late: 0.5
 
   active:
-    total_period: 8.  # Routinely calibrated, see calibration file
+    total_period: 8. # Routinely calibrated, see calibration file
     proportions:
       # Proportion of the infectious period spent in the early compartment (i.e. can't be isolated for symptoms)
       early: 0.333
@@ -177,8 +177,8 @@ hospital_props:
   - 0.114 # 65-69
   - 0.113 # 70-74
   - 0.071 # 75+
-hospital_props_multiplier: 1.  # Multiplier to the above age-stratified parameters
-icu_prop: 0.17  # Proportion of those hospitalised that are admitted to ICU
+hospital_props_multiplier: 1. # Multiplier to the above age-stratified parameters
+icu_prop: 0.17 # Proportion of those hospitalised that are admitted to ICU
 
 # Mean time in days spent in each compartment
 # Note that the early period is intended to represent the pre-hospitalisations period, whereas the late period is
@@ -211,12 +211,10 @@ testing_to_detection: null
 
 # Parameters of negative binomial (need to be listed for validation to pass)
 notifications_dispersion_param: 1.
-prevXlate_activeXclinical_icuXamong_dispersion_param: 1.
-infection_deathsXall_dispersion_param: 1.
+icu_occupancy_dispersion_param: 1.
 proportion_seropositive_dispersion_param: 1.
 hospital_occupancy_dispersion_param: 1.
 new_hospital_admissions_dispersion_param: 1.
 new_icu_admissions_dispersion_param: 1.
-icu_occupancy_dispersion_param: 1.
-total_infection_deaths_dispersion_param: 1.
+infection_deaths_dispersion_param: 1.
 accum_deaths_dispersion_param: 1.

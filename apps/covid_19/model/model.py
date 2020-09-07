@@ -214,8 +214,14 @@ def build_model(params: dict) -> StratifiedModel:
         return import_symptomatic_prop * detected_proportion(t)
 
     if implement_importation:
-        if pop_region and pop_region.lower().replace("__", "_").replace("_", "-") in Region.VICTORIA_SUBREGIONS:
-            import_times, importation_data = get_all_vic_notifications(excluded_regions=(pop_region,))
+        if (
+            pop_region
+            and pop_region.lower().replace("__", "_").replace("_", "-")
+            in Region.VICTORIA_SUBREGIONS
+        ):
+            import_times, importation_data = get_all_vic_notifications(
+                excluded_regions=(pop_region,)
+            )
             movement_to_region = sum(total_pops) / sum(testing_pops) * movement_prop
             import_cases = [i_cases * movement_to_region for i_cases in importation_data]
 
@@ -264,18 +270,20 @@ def build_model(params: dict) -> StratifiedModel:
 
     # Register derived output functions
     func_outputs = {
+        # Notifiactions
         "notifications": notification_func,
         "local_notifications": local_notification_func,
-        "years_of_life_lost": life_lost_func,
-        "prevXlate_activeXclinical_icuXamong": outputs.calculate_icu_prev,
-        "hospital_occupancy": calculate_hospital_occupancy,
+        "notifications_at_sympt_onset": outputs.get_notifications_at_sympt_onset,
         "proportion_seropositive": outputs.calculate_proportion_seropositive,
+        # Deaths
+        "years_of_life_lost": life_lost_func,
+        "accum_deaths": outputs.calculate_cum_deaths,
+        # People in hospital.
+        "hospital_occupancy": calculate_hospital_occupancy,
         "new_hospital_admissions": outputs.calculate_new_hospital_admissions_covid,
+        # People in ICU.
         "new_icu_admissions": outputs.calculate_new_icu_admissions_covid,
         "icu_occupancy": outputs.calculate_icu_occupancy,
-        "notifications_at_sympt_onset": outputs.get_notifications_at_sympt_onset,
-        "total_infection_deaths": outputs.get_infection_deaths,
-        "accum_deaths": outputs.calculate_cum_deaths,
     }
     if mobility_region in OPTI_REGIONS:
         # Derived outputs for the optimization project.

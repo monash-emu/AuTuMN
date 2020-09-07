@@ -46,16 +46,15 @@ def multi_compartment(model: StratifiedModel) -> List[str]:
 
     # Choose compartments to aggregate
     original_compartments = get_original_compartments(model)
-    compartment_choices = st.multiselect(
-        "compartments", ["All"] + original_compartments, default="All"
-    )
+    options = ["All"] + original_compartments
+    compartment_choices = st.multiselect("compartments", options, default=["All"])
     chosen_compartments = "All" if "All" in compartment_choices else compartment_choices
 
     # Choose strata to aggregate
     chosen_strata = {}
     for strat_name, strata in model.all_stratifications.items():
         options = ["All"] + strata
-        choices = st.multiselect(strat_name, options, default="All")
+        choices = st.multiselect(strat_name, options, default=["All"])
         chosen_strata[strat_name] = "All" if "All" in choices else choices
 
     # Figure out which compartment names we just chose.
@@ -246,10 +245,9 @@ def burn_in(mcmc_tables: List[pd.DataFrame]):
     return st.sidebar.slider("Burn-in", 0, min_length, 0)
 
 
-def parameter(mcmc_table: pd.DataFrame):
+def parameter(mcmc_params: pd.DataFrame):
     """
     Drop down for selecting parameters
     """
-    non_param_cols = ["idx", "Scenario", "loglikelihood", "accept"]
-    param_options = [c for c in mcmc_table.columns if c not in non_param_cols]
-    return st.sidebar.selectbox("Select parameter", param_options)
+    options = mcmc_params["name"].unique().tolist()
+    return st.sidebar.selectbox("Select parameter", options)

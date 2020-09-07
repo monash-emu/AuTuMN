@@ -1,22 +1,20 @@
 import os
 import logging
-from typing import List
-from autumn.tool_kit.params import load_targets
 
-from autumn.plots import plots
 from autumn.plots.plotter import FilePlotter
 from autumn.db import Database
+
+from . import plots
 
 logger = logging.getLogger(__name__)
 
 
-def plot_timeseries_with_uncertainty(region_name: str, powerbi_db_path: str, output_dir: str):
+def plot_uncertainty(targets: dict, powerbi_db_path: str, output_dir: str):
     """
     works on powerbi version
     Assumes a COVID model.
     """
     os.makedirs(output_dir, exist_ok=True)
-    targets = load_targets("covid_19", region_name)
     db = Database(powerbi_db_path)
     uncertainty_df = db.query("uncertainty")
     outputs = uncertainty_df["type"].unique().tolist()

@@ -102,5 +102,5 @@ class Region:
 
     @staticmethod
     def to_name(filename: str):
-        return filename.replace("_", "-")
+        return filename.replace("_", "-").lower()
 

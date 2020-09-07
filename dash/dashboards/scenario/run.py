@@ -6,7 +6,7 @@ from importlib import import_module
 
 import streamlit as st
 
-from autumn.db.models import load_model_scenarios
+from autumn import db
 from autumn.plots.plotter import StreamlitPlotter
 
 from dash import selectors
@@ -35,7 +35,7 @@ def run_dashboard():
 
     # Get database from model data dir.
     db_path = os.path.join(run_dirpath, "outputs.db")
-    scenarios = load_model_scenarios(db_path, app_region.params)
+    scenarios = db.load.load_model_scenarios(db_path, app_region.params)
 
     # Create plotter which will write to streamlit UI.
     plotter = StreamlitPlotter(app_region.targets)

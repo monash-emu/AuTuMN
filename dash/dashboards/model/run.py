@@ -6,7 +6,6 @@ from importlib import import_module
 
 import streamlit as st
 
-from autumn.db.models import load_model_scenarios
 from autumn.plots.plotter import StreamlitPlotter
 
 from dash import selectors

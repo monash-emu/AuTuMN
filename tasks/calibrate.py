@@ -8,8 +8,8 @@ import luigi
 from autumn.tool_kit import Timer
 from autumn.inputs import build_input_database
 from autumn.inputs.database import input_db_path
-from autumn.plots.database_plots import plot_from_mcmc_databases
 from autumn.constants import OUTPUT_DATA_PATH
+from autumn import plots
 from apps import covid_19
 
 from . import utils
@@ -154,7 +154,8 @@ class PlotOutputsTask(utils.BaseTask):
         mcmc_dir = os.path.join(settings.BASE_DIR, "data", "calibration_outputs")
         plot_dir = os.path.join(settings.BASE_DIR, "plots")
         model_name, _, _ = utils.read_run_id(self.run_id)
-        plot_from_mcmc_databases("covid_19", model_name, mcmc_dir, plot_dir)
+        targets = load_targets("covid_19", region_name)
+        plots.calibration.plot_post_calibration(targets, mcmc_dir, plot_dir)
 
 
 class UploadPlotsTask(utils.UploadS3Task):

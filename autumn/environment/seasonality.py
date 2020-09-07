@@ -36,3 +36,11 @@ if __name__ == "__main__":
     forcing_function = get_seasonal_forcing(period, shift, amplitude, average)
     for i in x_values:
         print(f"date: {i}, \t value: {forcing_function(i)}")
+
+
+flow_adjustments = {
+    "contact_rate": {"0W": 0.5, "5W": 0.7,},
+    "contact_rateXorgan_heart": {"0W": 0.5, "5W": 0.7,},
+    "contact_rateXorgan_lung": {"0W": 0.5, "5W": 0.7,},
+}
+

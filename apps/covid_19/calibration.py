@@ -1,10 +1,7 @@
 import logging
 import numpy as np
 
-from autumn.calibration import (
-    Calibration,
-    run_full_models_for_mcmc as _run_full_models_for_mcmc,
-)
+from autumn.calibration import Calibration
 from autumn.tool_kit.params import load_params
 from autumn.calibration.utils import ignore_calibration_target_before_date
 from autumn.constants import Region
@@ -72,15 +69,6 @@ def provide_default_calibration_params(excluded_params=()):
 """
 General calibration methods
 """
-
-
-def run_full_models_for_mcmc(region: str, burn_in: int, src_db_path: str, dest_db_path: str):
-    """
-    Run the full baseline model and all scenarios for all accepted MCMC runs in src db.
-    """
-
-    params = load_params("covid_19", region)
-    _run_full_models_for_mcmc(burn_in, src_db_path, dest_db_path, build_model, params)
 
 
 def run_calibration_chain(

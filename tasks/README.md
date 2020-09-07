@@ -18,7 +18,7 @@ python -m tasks calibrate --run  manila-111111111-aaaaaaa --chains 2 --runtime 3
 ### Run full models
 
 ```
-python -m tasks full --run  manila-111111111-aaaaaaa --burn 0 --workers 2
+python -m tasks full --run  manila-111111111-aaaaaaa --burn 2 --workers 2
 ```
 
 ### Run PowerBI processing

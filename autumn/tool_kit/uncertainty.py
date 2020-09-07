@@ -22,12 +22,6 @@ def add_uncertainty_weights(output_names: List[str], database_path: str):
     """
     db = Database(database_path)
 
-    # HACK START
-    output_names = [
-        "total_infection_deaths" if o == "infection_deaths" else o for o in output_names
-    ]
-    # HACK END
-
     # Delete old data.
     for output_name in output_names:
         if "uncertainty_weights" in db.table_names():
@@ -69,10 +63,6 @@ def calculate_uncertainty_weights(
     """
     Calculate uncertainty weights for a given MCMC chain and derived output.
     """
-    # HACK START
-    output_name = "total_infection_deaths" if output_name == "infection_deaths" else output_name
-    # HACK END
-
     logger.info("Calculating weighted values for %s", output_name)
     mcmc_df["run_int"] = mcmc_df["idx"].apply(run_idx_to_int)
     mcmc_df = mcmc_df.sort_values(["run_int"])
@@ -136,12 +126,6 @@ def calculate_mcmc_uncertainty(weights_df: pd.DataFrame, targets: dict) -> pd.Da
         for target in targets.values():
             quantiles = target["quantiles"]
             output_name = target["output_key"]
-
-            # HACK START
-            output_name = (
-                "total_infection_deaths" if output_name == "infection_deaths" else output_name
-            )
-            # HACK END
 
             output_mask = scenario_df["output_name"] == output_name
             output_df = scenario_df[output_mask]

@@ -24,17 +24,17 @@ def build_model(params: dict) -> StratifiedModel:
     """
     validate_params(params)
 
-    # Get country population by age-group
+    # Set age groups
     agegroup_max, agegroup_step = params["agegroup_breaks"]
     agegroup_strata = list(range(0, agegroup_max, agegroup_step))
+
+    # Get country population by age-group
     country_iso3 = params["iso3"]
     mobility_region = params["mobility_region"]
     pop_region = params["pop_region"]
     total_pops = inputs.get_population_by_agegroup(
         agegroup_strata, country_iso3, pop_region, year=params["pop_year"]
     )
-    implement_importation = params["implement_importation"]
-    movement_prop = params["movement_prop"]
 
     # Define infectious, disease compartments
     infectious_comps = [
@@ -75,9 +75,7 @@ def build_model(params: dict) -> StratifiedModel:
     init_pop[Compartment.SUSCEPTIBLE] = sum(total_pops) - sum(init_pop.values())
 
     # Set integration times
-    start_time = params["start_time"]
-    end_time = params["end_time"]
-    time_step = params["time_step"]
+    start_time, end_time, time_step = params["start_time"], params["end_time"], params["time_step"]
     times = get_model_times_from_inputs(round(start_time), end_time, time_step,)
 
     # Add inter-compartmental transition flows
@@ -85,14 +83,13 @@ def build_model(params: dict) -> StratifiedModel:
     flow_params = {
         "contact_rate": params["contact_rate"],
         "infect_death": 0,  # Placeholder to be overwritten in clinical stratification
-        # within_{comp_name} transition params are set below
     }
     # Add parameters for the during-disease progression flows
     for comp_name, comp_period in compartment_periods.items():
         flow_params[f"within_{comp_name}"] = 1.0 / comp_period
 
+    # Implement waning immunity
     if not params["full_immunity"]:
-        # Implement waning immunity
         flow_params["immunity_loss_rate"] = 1.0 / params["immunity_duration"]
         flows.append(
             {
@@ -104,6 +101,8 @@ def build_model(params: dict) -> StratifiedModel:
         )
 
     # Just set the importation flow (if required) without specifying its value, which is done later
+    # Entry compartment is set to LATE_ACTIVE in the model creation process, because the default would be susceptible
+    implement_importation = params["implement_importation"]
     if implement_importation:
         flows.append({"type": Flow.IMPORT, "parameter": "importation_rate"})
 
@@ -115,7 +114,7 @@ def build_model(params: dict) -> StratifiedModel:
         flow_params,
         flows,
         birth_approach=BirthApproach.NO_BIRTH,
-        entry_compartment=Compartment.LATE_ACTIVE,  # To model imported cases
+        entry_compartment=Compartment.LATE_ACTIVE,
         starting_population=sum(total_pops),
         infectious_compartments=infectious_comps,
     )
@@ -125,7 +124,6 @@ def build_model(params: dict) -> StratifiedModel:
     dynamic_location_mixing_params = params["mixing"]
     dynamic_age_mixing_params = params["mixing_age_adjust"]
     microdistancing = params["microdistancing"]
-
     smooth_google_data = params["smooth_google_data"]
     npi_effectiveness_params = params["npi_effectiveness"]
     google_mobility_locations = params["google_mobility_locations"]
@@ -208,8 +206,8 @@ def build_model(params: dict) -> StratifiedModel:
         [
             import_prop * sympt_prop
             for import_prop, sympt_prop in zip(
-                params["importation_props_by_age"].values(), symptomatic_props
-            )
+            params["importation_props_by_age"].values(), symptomatic_props
+        )
         ]
     )
 
@@ -218,13 +216,14 @@ def build_model(params: dict) -> StratifiedModel:
 
     if implement_importation:
         if (
-            pop_region
-            and pop_region.lower().replace("__", "_").replace("_", "-")
-            in Region.VICTORIA_SUBREGIONS
+                pop_region
+                and pop_region.lower().replace("__", "_").replace("_", "-")
+                in Region.VICTORIA_SUBREGIONS
         ):
             import_times, importation_data = get_all_vic_notifications(
                 excluded_regions=(pop_region,)
             )
+            movement_prop = params["movement_prop"]
             movement_to_region = sum(total_pops) / sum(testing_pops) * movement_prop
             import_cases = [i_cases * movement_to_region for i_cases in importation_data]
 

@@ -1,7 +1,7 @@
 import numpy
 
 
-def get_seasonal_forcing(period: float, shift: float, prop_amplitude: float, average_value: float):
+def get_seasonal_forcing(period: float, shift: float, seasonal_force_magnitude: float, average_value: float):
     """
     Factory function to get a trigonometric/sinusoidal function (using cosine) to represent seasonal forcing of
     transmission in a model.
@@ -11,16 +11,17 @@ def get_seasonal_forcing(period: float, shift: float, prop_amplitude: float, ave
         Time to complete an entire cycle of forcing
     :param shift: float
         Time at which the peak value will be reached
-    :param prop_amplitude: float
+    :param seasonal_force_magnitude: float
         Amplitude of the forcing function relative to the average value
-        Note that the amplitude is HALF of the total variation in the function
+        Note that the amplitude is the total variation in transmission from trough to peak (consistent with the approach
+            of others - e.g. Kissler et al. Science)
     :param average_value: float
         Average value of the function, mid-way between peak and trough values
     :return:
         The seasonal forcing function
     """
 
-    amplitude = prop_amplitude * average_value
+    amplitude = seasonal_force_magnitude * average_value / 2.
 
     def seasonal_forcing(time):
         return numpy.cos((time - shift) * 2.0 * numpy.pi / period) * amplitude + average_value

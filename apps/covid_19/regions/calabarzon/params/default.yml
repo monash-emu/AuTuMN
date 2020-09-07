@@ -7,7 +7,7 @@ mobility_region: Calabarzon
 hospital_props_multiplier: 2.
 
 testing_to_detection:
-  assumed_tests_parameter: 2.98e-05
+  assumed_tests_parameter: 8.36e-06
 
 mixing:
   school:

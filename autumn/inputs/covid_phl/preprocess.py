@@ -1,0 +1,61 @@
+# Make lists of testing facilities and associated region
+facilities = [ # calabarzon facilities
+                 'Batangas Medical Center GeneXpert Laboratory', 
+                 'Daniel O. Mercado Medical Center',
+                 'De La Salle Medical and Health Sciences Institute',
+                 'Greencity Medical Center',
+                 'Lucena United Doctors Hospital and Medical Center',
+                 'Mary Mediatrix Medical Center',
+                 'Ospital ng Imus',
+                 'Qualimed Hospital Sta. Rosa',
+                ' San Pablo College Medical Center', 
+                 'San Pablo District Hospital',
+                 'UPLB Covid-19 Molecular Laboratory',
+                 # central visayas facilities
+                 'Allegiant Regional Care Hospital',
+                 'Cebu Doctors University Hospital, Inc.',
+                 'Cebu TB Reference Laboratory - Molecular Facility for COVID-19 Testing',
+                 'Chong Hua Hospital',
+                 'Governor Celestino Gallares Memorial Medical Center',
+                 'Prime Care Alpha Covid-19 Testing Laboratory',
+                 'University of Cebu Medical Center',
+                 'Vicente Sotto Memorial Medical Center (VSMMC)',
+                 # metro manila facilities
+                 'Amang Rodriguez Memorial Center GeneXpert Laboratory',
+                 'Asian Hospital and Medical Center',
+                 'Chinese General Hospital',
+                 'De Los Santos Medical Center',
+                 'Dr. Jose N. Rodriguez Memorial Hospital and Sanitarium (TALA) GeneXpert Laboratory',
+                 'Dr. Jose N. Rodriguez Memorial Hospital and Sanitarium (TALA) RT PCR',
+                 'Fe del Mundo Medical center',
+                 'Hi-Precision Diagnostics (QC)',
+                 'Lung Center of the Philippines (LCP)',
+                 'Lung Center of the Philippines GeneXpert Laboratory',
+                 'Makati Medical Center (MMC)',
+                 'Marikina Molecular Diagnostics Laboratory (MMDL)',
+                 'National Kidney and Transplant Institute', 
+                 'National Kidney and Transplant Institute GeneXpert Laboratory',
+                 'Philippine Children\'s Medical Center', 
+                 'Philippine Heart Center GeneXpert Laboratory',
+                 'Safeguard DNA Diagnostics, Inc',
+                 'San Miguel Foundation Testing Laboratory',
+                 'Singapore Diagnostics',
+                 'St. Luke\'s Medical Center - BGC (HB) GeneXpert Laboratory',
+                 'St. Luke\'s Medical Center - BGC (SLMC-BGC)',
+                 'St. Luke\'s Medical Center - Quezon City (SLMC-QC)',
+                 'Sta. Ana Hospital - Closed System Molecular Laboratory (GeneXpert)',
+                 'The Medical City (TMC)',
+                 'Tondo Medical Center GeneXpert Laboratory',
+                 'Tropical Disease Foundation',
+                 'University of Perpetual Help DALTA Medical Center, Inc.',
+                 'UP-PGH Molecular Laboratory',
+                 'UP National Institutes of Health (UP-NIH)',
+                 'UP Philippine Genome Center',
+                 'Veteran Memorial Medical Center',
+                 'Victoriano Luna - AFRIMS'
+                 ]
+
+regions = []
+regions.extend(['calabarzon' for i in range(11)])
+regions.extend(['central-visayas' for i in range(8)])
+regions.extend(['manila' for i in range(32)])

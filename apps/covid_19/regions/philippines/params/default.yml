@@ -5,7 +5,7 @@ parent: apps/covid_19/phl_submodel_params.yml
 hospital_props_multiplier: 2.
 
 testing_to_detection:
-  assumed_tests_parameter: 6.18e-06
+  assumed_tests_parameter: 2.00e-06
 
 mixing:
   school:

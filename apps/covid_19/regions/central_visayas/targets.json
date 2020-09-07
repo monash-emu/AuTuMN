@@ -374,14 +374,8 @@
   "icu_occupancy": {
     "output_key": "icu_occupancy",
     "title": "ICU occupancy",
-    "times": [
-      242,
-      243
-    ],
-    "values": [
-      0,
-      39
-    ],
+    "times": [243],
+    "values": [39],
     "quantiles": [
       0.025,
       0.25,
@@ -393,14 +387,8 @@
   "infection_deaths": {
     "output_key": "accum_deaths",
     "title": "Cumulative number of deaths",
-    "times": [
-      239,
-      240
-    ],
-    "values": [
-      0,
-      1004
-    ],
+    "times": [240],
+    "values": [1004],
     "quantiles": [
       0.025,
       0.25,

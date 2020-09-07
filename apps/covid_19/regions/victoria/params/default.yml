@@ -1,6 +1,0 @@
-# SCENARIO DESCRIPTION: BASELINE
----
-parent: apps/covid_19/vic_submodel_params.yml
-pop_region: Victoria
-mobility_region: Victoria
-pop_year: 2020

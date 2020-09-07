@@ -1,6 +1,5 @@
 from autumn.tool_kit.model_register import App
 
-from .regions.victoria import victoria_region
 from .regions.philippines import philippines_region
 from .regions.manila import manila_region
 from .regions.calabarzon import calabarzon_region
@@ -27,7 +26,6 @@ from .regions.grampians import grampians_region
 app = App("covid_19")
 
 # Australia
-app.register(victoria_region)
 app.register(north_metro_region)
 app.register(south_east_metro_region)
 app.register(south_metro_region)

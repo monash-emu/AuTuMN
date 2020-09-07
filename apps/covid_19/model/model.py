@@ -36,23 +36,25 @@ def build_model(params: dict) -> StratifiedModel:
     implement_importation = params["implement_importation"]
     movement_prop = params["movement_prop"]
 
-    # Define model compartments.
-    compartments = [
-        Compartment.SUSCEPTIBLE,
-        Compartment.EARLY_EXPOSED,
-        Compartment.LATE_EXPOSED,
-        Compartment.EARLY_ACTIVE,
-        Compartment.LATE_ACTIVE,
-        Compartment.RECOVERED,
-    ]
-
-    # Define infectious, disease compartments.
+    # Define infectious, disease compartments
     infectious_comps = [
         Compartment.LATE_EXPOSED,
         Compartment.EARLY_ACTIVE,
         Compartment.LATE_ACTIVE,
     ]
-    disease_comps = [Compartment.EARLY_EXPOSED, *infectious_comps]
+
+    # Extend to infected compartments
+    disease_comps = [
+        Compartment.EARLY_EXPOSED,
+        *infectious_comps
+    ]
+
+    # Extent to all compartments
+    compartments = [
+        Compartment.SUSCEPTIBLE,
+        Compartment.RECOVERED,
+        *disease_comps
+    ]
 
     # Calculate time periods spent in various compartments
     base_periods = params["compartment_periods"]
@@ -61,14 +63,15 @@ def build_model(params: dict) -> StratifiedModel:
         base_periods, periods_calc
     )
 
-    # Distribute infectious seed across infectious compartments
+    # Distribute infectious seed across infectious split sub-compartments
     infectious_seed = params["infectious_seed"]
     total_disease_time = sum([compartment_periods[c] for c in disease_comps])
     init_pop = {
         c: infectious_seed * compartment_periods[c] / total_disease_time for c in disease_comps
     }
 
-    # Force the remainder starting population to go to S compartment (Required as entry_compartment is late_infectious)
+    # Assign the remainder starting population to the S compartment
+    # (must be specified because entry_compartment is late_infectious)
     init_pop[Compartment.SUSCEPTIBLE] = sum(total_pops) - sum(init_pop.values())
 
     # Set integration times

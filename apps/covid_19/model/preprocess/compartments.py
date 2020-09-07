@@ -5,8 +5,10 @@ def calc_compartment_periods(
     periods: Dict[str, float], periods_calculated: dict
 ) -> Dict[str, float]:
     """
-    Calculate compartment periods from provided parameters.
+    Calculate compartment periods from the provided splits into early and late components of the exposed and active
+    periods.
     """
+
     final_periods = {**periods}
     for calc_period_name, calc_period_def in periods_calculated.items():
         period = calc_period_def["total_period"]

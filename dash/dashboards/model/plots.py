@@ -6,11 +6,11 @@ from autumn.tool_kit.scenarios import Scenario, get_model_times_from_inputs
 from autumn.plots import plots
 from autumn.tool_kit.params import load_params
 
-from apps.covid_19.model.preprocess.mixing_matrix.adjust_location import (
-    LocationMixingAdjustment,
-    LOCATIONS,
-    MICRODISTANCING_LOCATIONS,
-)
+# from apps.covid_19.model.preprocess.mixing_matrix.adjust_location import (
+#     LocationMixingAdjustment,
+#     LOCATIONS,
+#     MICRODISTANCING_LOCATIONS,
+# )
 
 
 PLOT_FUNCS = {}

@@ -3,6 +3,8 @@ from copy import deepcopy
 from summer.model import StratifiedModel
 from autumn.constants import Compartment, BirthApproach, Flow
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
+from autumn import inputs
+from autumn.curve import scale_up_function
 
 from . import preprocess, outputs
 from .validate import validate_params
@@ -87,6 +89,12 @@ def build_model(params: dict) -> StratifiedModel:
         birth_approach=BirthApproach.ADD_CRUDE,
         entry_compartment=Compartment.SUSCEPTIBLE,
         starting_population=100000000,
+    )
+
+    # Add crude birth rate from UN estimates (using Federated States of Micronesia as a proxy as no data for RMI)
+    birth_rates, years = inputs.get_crude_birth_rate(params['iso3'])
+    tb_model.time_variants["crude_birth_rate"] = scale_up_function(
+        years, birth_rates, smoothness=0.2, method=5
     )
 
     # Apply infectiousness adjustment for individuals on treatment

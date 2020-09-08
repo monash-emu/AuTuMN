@@ -48,9 +48,9 @@ microdistancing:
       - 0.
       - 1.  # MCO starts (18th March)
       - 1.
-      - 0.85  # CMCO starts (12th May)
-      - 0.85
-      - 0.7  # RMCO starts (10th June)
+      - 0.9  # CMCO starts (12th May)
+      - 0.9
+      - 0.8  # RMCO starts (10th June)
 
 mixing:
   school:
@@ -64,7 +64,6 @@ mixing:
       - 2020-07-16
       - 2020-07-22  # Schools reopen
       - 2020-07-23
-      - 2020-08-27  # Not sure why I need this, but the code crashes without it
     values:
       - 1.
       - 0.
@@ -73,7 +72,6 @@ mixing:
       - 0.2
       - 0.35
       - 0.35
-      - 1.
       - 1.
 
 data: # Daily numbers of reported imported cases. (two different approaches here)

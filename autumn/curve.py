@@ -815,7 +815,7 @@ def scale_up_function(
             if (bound_up is not None) and (t <= x[-1]):
                 y_t = min((y_t, bound_up))  # Security check. Normally not needed
 
-            return y_t
+            return float(y_t)
 
         return curve
 
@@ -825,20 +825,20 @@ def scale_up_function(
     def curve(t):
         t = t / coef
         if t <= x[0]:  # Constant before x[0]
-            return y[0]
+            return float(y[0])
         elif t >= x[-1]:  # Constant after x[0]
             if intervention_end is not None:
                 if t >= t_intervention_start / coef:
-                    return curve_intervention(t * coef)
+                    return float(curve_intervention(t * coef))
                 else:
-                    return y[-1]
+                    return float(y[-1])
             else:
-                return y[-1]
+                return float(y[-1])
         else:
             index = len(x[x <= t]) - 1
             p = m[index, :]  # Corresponding coefficients
             y_t = p[0] * t ** 3 + p[1] * t ** 2 + p[2] * t + p[3]
-            return y_t
+            return float(y_t)
 
     return curve
 

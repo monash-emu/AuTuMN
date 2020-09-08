@@ -32,6 +32,7 @@ def read(password: str):
         for encrypt_path in encrypt_paths:
             secret_path = encrypt_path.replace(".encrypted.", ".secret.")
             logger.info("\tDecrypting %s", encrypt_path)
+            os.remove(secret_path)
             pyAesCrypt.decryptFile(encrypt_path, secret_path, password, BUFFER_SIZE)
             check_hash(secret_path)
 
@@ -48,6 +49,7 @@ def write(file_path: str, password: str):
     ), "Can only encrypt files that are marked as secret with *.secret.*"
     set_hash(file_path)
     encrypt_path = file_path.replace(".secret.", ".encrypted.")
+    os.remove(encrypt_path)
     pyAesCrypt.encryptFile(file_path, encrypt_path, password, BUFFER_SIZE)
     check_hash(file_path)
 

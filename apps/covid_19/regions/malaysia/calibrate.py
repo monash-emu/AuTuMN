@@ -8,19 +8,6 @@ targets = load_targets("covid_19", Region.MALAYSIA)
 notifications = targets["notifications"]
 icu_occupancy = targets["icu_occupancy"]
 
-
-def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
-    base.run_calibration_chain(
-        max_seconds,
-        run_id,
-        num_chains,
-        Region.MALAYSIA,
-        PAR_PRIORS,
-        TARGET_OUTPUTS,
-        mode="autumn_mcmc",
-    )
-
-
 TARGET_OUTPUTS = [
     {
         "output_key": "notifications",
@@ -40,7 +27,13 @@ PAR_PRIORS = provide_default_calibration_params(excluded_params=("start_time",))
 PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS)
 
 PAR_PRIORS += [
+
     # Health system-related
+    {
+        "param_name": "hospital_props_multiplier",
+        "distribution": "uniform",
+        "distri_params": [0.7, 1.3],
+    },
     {
         "param_name": "compartment_periods.icu_early",
         "distribution": "uniform",
@@ -51,20 +44,30 @@ PAR_PRIORS += [
         "distribution": "uniform",
         "distri_params": [0.12, 0.25],
     },
-    {
-        "param_name": "hospital_props_multiplier",
-        "distribution": "uniform",
-        "distri_params": [0.7, 1.3],
-    },
+
+    # Detection
     {
         "param_name": "testing_to_detection.assumed_cdr_parameter",
         "distribution": "uniform",
         "distri_params": [0.2, 0.6],
     },
-    # Detection-related
+
+    # Microdistancing
     {
         "param_name": "microdistancing.parameters.max_effect",
         "distribution": "uniform",
-        "distri_params": [0.2, 0.8],
+        "distri_params": [0.3, 0.9],
     },
 ]
+
+
+def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
+    base.run_calibration_chain(
+        max_seconds,
+        run_id,
+        num_chains,
+        Region.MALAYSIA,
+        PAR_PRIORS,
+        TARGET_OUTPUTS,
+        mode="autumn_mcmc",
+    )

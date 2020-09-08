@@ -11,6 +11,8 @@ validate_params = sb.build_validator(
     # model structure,
     stratify_by=list,
     age_breakpoints=list,
+    # demographics
+    universal_death_rate=float,
     # base disease model
     contact_rate=float,
     override_latency_rates=bool,

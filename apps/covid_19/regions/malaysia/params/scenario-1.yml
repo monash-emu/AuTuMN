@@ -2,11 +2,11 @@
 ---
 parent: apps/covid_19/regions/malaysia/params/default.yml
 
-start_time: 250.
+start_time: 257.
 
 microdistancing:
   parameters:
     times:
-      - 251
+      - 258
     values:
       - 0.

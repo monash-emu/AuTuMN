@@ -2,12 +2,12 @@
 ---
 parent: apps/covid_19/regions/malaysia/params/default.yml
 
-start_time: 250.
+start_time: 257.
 
 mixing:
   work:
     append: true
     times:
-      - 2020-09-07
+      - 2020-09-14
     values:
       - 1.

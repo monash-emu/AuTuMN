@@ -29,7 +29,8 @@ def read(password: str):
         encrypt_paths = glob.glob(encrypt_glob, recursive=True)
         num_files = len(encrypt_paths)
         logger.info("Decrypting %s files from %s", num_files, encrypt_dir)
-        for encrypt_path in encrypt_paths:
+        for path in encrypt_paths:
+            encrypt_path = path.replace("\\", "/")
             secret_path = encrypt_path.replace(".encrypted.", ".secret.")
             logger.info("\tDecrypting %s", encrypt_path)
             pyAesCrypt.decryptFile(encrypt_path, secret_path, password, BUFFER_SIZE)
@@ -47,7 +48,7 @@ def write(file_path: str, password: str):
         ".secret." in file_path
     ), "Can only encrypt files that are marked as secret with *.secret.*"
     set_hash(file_path)
-    encrypt_path = file_path.replace(".secret.", ".encrypted.")
+    encrypt_path = file_path.replace(".secret.", ".encrypted.").replace("\\", "/")
     pyAesCrypt.encryptFile(file_path, encrypt_path, password, BUFFER_SIZE)
     check_hash(file_path)
 
@@ -72,7 +73,7 @@ def set_hash(file_path: str):
         hashes = json.load(f)
 
     hashes = {k: v for k, v in hashes.items() if os.path.exists(k) or k == "password"}
-    fp_key = os.path.relpath(file_path)
+    fp_key = os.path.relpath(file_path).replace("\\", "/")
     hashes[fp_key] = get_file_hash(file_path)
 
     with open(HASH_FILE, "w") as f:
@@ -90,7 +91,7 @@ def check_hash(file_path: str):
         hashes = json.load(f)
 
     file_hash = get_file_hash(file_path)
-    fp_key = os.path.relpath(file_path)
+    fp_key = os.path.relpath(file_path).replace("\\", "/")
     if fp_key in hashes:
         assert (
             hashes[fp_key] == file_hash

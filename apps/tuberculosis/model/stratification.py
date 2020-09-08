@@ -98,7 +98,6 @@ def stratify_by_organ(model, params):
     )
 
 
-
 def calculate_age_specific_infectiousness(age_breakpoints, age_infectiousness_switch):
     """
     We assume that infectiousness increases with age

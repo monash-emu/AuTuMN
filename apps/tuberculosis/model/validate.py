@@ -12,6 +12,7 @@ validate_params = sb.build_validator(
     stratify_by=list,
     age_breakpoints=list,
     # demographics
+    start_population_size=float,
     universal_death_rate=float,
     # base disease model
     contact_rate=float,

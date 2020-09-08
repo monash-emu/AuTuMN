@@ -30,3 +30,7 @@ def calculate_prevalence_infectious(time_idx, model, compartment_values, derived
             prevalence_infectious += compartment_values[i]
 
     return prevalence_infectious
+
+
+def calculate_population_size(time_idx, model, compartment_values, derived_outputs):
+    return sum(compartment_values)

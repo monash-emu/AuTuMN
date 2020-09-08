@@ -16,6 +16,7 @@ stratify_by: ["age", "organ"]
 age_breakpoints: [0, 5, 15, 30, 45, 60, 75]
 
 # demographics
+start_population_size: 5000000
 universal_death_rate: .014
 
 # basic infection and disease parameters

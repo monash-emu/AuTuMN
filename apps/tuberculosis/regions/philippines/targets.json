@@ -4,5 +4,11 @@
     "output_key": "prevalence_infectious",
     "times": [2016.0],
     "values": [1000000]
+  },
+  "population_size": {
+    "title": "Population size",
+    "output_key": "population_size",
+    "times": [2018.0],
+    "values": [106700000]
   }
 }

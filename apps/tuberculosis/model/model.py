@@ -93,7 +93,7 @@ def build_model(params: dict) -> StratifiedModel:
         infectious_compartments=infectious_comps,
         birth_approach=BirthApproach.ADD_CRUDE,
         entry_compartment=Compartment.SUSCEPTIBLE,
-        starting_population=100000000,
+        starting_population=params['start_population_size'],
     )
 
     # Apply infectiousness adjustment for individuals on treatment
@@ -118,6 +118,7 @@ def build_model(params: dict) -> StratifiedModel:
     func_outputs = {
         "prevalence_infectious": outputs.calculate_prevalence_infectious,
         "prevalence_susceptible": outputs.calculate_prevalence_susceptible,
+        "population_size": outputs.calculate_population_size,
     }
     tb_model.add_function_derived_outputs(func_outputs)
 

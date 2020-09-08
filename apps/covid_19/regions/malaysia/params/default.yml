@@ -201,6 +201,13 @@ data: # Daily numbers of reported imported cases. (two different approaches here
       241,
       242,
       243,
+      244,
+      245,
+      246,
+      247,
+      248,
+      249,
+      250
     ]
   n_imported_cases:
     [
@@ -328,6 +335,13 @@ data: # Daily numbers of reported imported cases. (two different approaches here
       8,
       10,
       15,
+      4,
+      5,
+      4,
+      4,
+      7,
+      4,
+      3
     ]
 
 importation_props_by_age:

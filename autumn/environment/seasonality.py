@@ -22,6 +22,7 @@ def get_seasonal_forcing(period: float, shift: float, seasonal_force_magnitude: 
     """
 
     amplitude = seasonal_force_magnitude * average_value / 2.
+    assert amplitude <= average_value, "Seasonal forcing function will go negative based on submitted parameters"
 
     def seasonal_forcing(time):
         return numpy.cos((time - shift) * 2.0 * numpy.pi / period) * amplitude + average_value

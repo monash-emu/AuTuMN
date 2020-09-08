@@ -17,12 +17,14 @@ validate_params = sb.build_validator(
     stabilisation_rate=float,
     late_activation_rate=float,
     early_activation_rate=float,
-    detection_rate=float,
     self_recovery_rate_dict=dict,
     infect_death_rate_dict=dict,
     rr_infection_latent=float,
     rr_infection_recovered=float,
-    # treatment-related parameters
+    # detection
+    passive_screening_rate=float,
+    passive_screening_sensitivity=dict,
+    # treatment
     treatment_duration=float,
     treatment_success_rate=float,
     prop_death_among_negative_tx_outcome=float,

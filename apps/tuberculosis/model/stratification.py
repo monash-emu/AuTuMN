@@ -29,6 +29,12 @@ def stratify_by_organ(model, params):
                 organ_stratum
             ]
 
+    # define differential detection rates by organ status
+    flow_adjustments['detection_rate'] = {}
+    for organ_stratum in organ_strata:
+        flow_adjustments['detection_rate'][organ_stratum + "W"] = params['passive_screening_rate'] *\
+                                                                  params['passive_screening_sensitivity'][organ_stratum]
+
     # Adjust the progression rates by organ using the requested incidence proportions
     splitting_proportions = {
         "smear_positive": params["incidence_props_pulmonary"]

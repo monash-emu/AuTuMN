@@ -41,7 +41,10 @@ def build_model(params: dict) -> StratifiedModel:
     # Define inter-compartmental flows.
     flows = deepcopy(preprocess.flows.DEFAULT_FLOWS)
 
-    # Set treatment-outcome-related flows
+    # Set unstratified detection flow parameter
+    params['detection_rate'] = params['passive_screening_rate'] * params['passive_screening_sensitivity']['unstratified']
+
+    # Set unstratified treatment-outcome-related parameters
     mu = 1/60.  # FIXME: this should be a time-variant age-dependant quantity
     TSR = params['treatment_success_rate']
     params['treatment_recovery_rate'] = 1 / params['treatment_duration']

@@ -6,6 +6,37 @@ from autumn.curve import scale_up_function
 from math import log, exp
 
 
+def stratify_by_age(model, params, compartments):
+
+    flow_adjustments = {}
+
+    # age-specific all-causes mortality rate  # FIXME: This is not working for some reason
+    death_rates_by_age, death_rate_years = get_death_rates_by_agegroup(params['age_breakpoints'], params['iso3'])
+    flow_adjustments['universal_death_rate'] = {}
+    for age_group in params['age_breakpoints']:
+        name = 'universal_death_rate_' + str(age_group)
+        flow_adjustments['universal_death_rate'][str(age_group)] = name
+        model.time_variants[name] = scale_up_function(
+            death_rate_years, death_rates_by_age[age_group], smoothness=0.2, method=5
+        )
+        model.parameters[name] = name
+    # age-specific latency progresison rates
+    if params["override_latency_rates"]:
+        flow_adjustments.update(get_adapted_age_parameters(params['age_breakpoints']))
+
+    # age-specific infectiousness
+    strata_infectiousness = calculate_age_specific_infectiousness(params['age_breakpoints'],
+                                                                  params['age_infectiousness_switch'])
+    # trigger model stratification
+    model.stratify(
+        "age",
+        params['age_breakpoints'],
+        compartments,
+        infectiousness_adjustments=strata_infectiousness,
+        flow_adjustments=flow_adjustments,
+    )
+
+
 def stratify_by_organ(model, params):
 
     compartments_to_stratify = [
@@ -26,17 +57,25 @@ def stratify_by_organ(model, params):
     # define differential natural history by organ status
     flow_adjustments = {}
     for param_name in ["infect_death_rate", "self_recovery_rate"]:
-        flow_adjustments[param_name] = {}
-        for organ_stratum in organ_strata:
-            flow_adjustments[param_name][organ_stratum + "W"] = params[param_name + "_dict"][
-                organ_stratum
-            ]
+        stratified_param_names = [param_name]
+        for stratification in model.stratifications:
+            stratified_param_names += [param_name + "X" + stratification.name + "_" + s for s in stratification.strata]
+        for stratified_param_name in stratified_param_names:
+            flow_adjustments[stratified_param_name] = {}
+            for organ_stratum in organ_strata:
+                flow_adjustments[stratified_param_name][organ_stratum + "W"] = params[param_name + "_dict"][
+                    organ_stratum
+                ]
 
     # define differential detection rates by organ status
-    flow_adjustments['detection_rate'] = {}
-    for organ_stratum in organ_strata:
-        flow_adjustments['detection_rate'][organ_stratum + "W"] = params['passive_screening_rate'] *\
-                                                                  params['passive_screening_sensitivity'][organ_stratum]
+    stratified_param_names = ['detection_rate']
+    for stratification in model.stratifications:
+        stratified_param_names += ['detection_rate' + "X" + stratification.name + "_" + s for s in stratification.strata]
+    for stratified_param_name in stratified_param_names:
+        flow_adjustments[stratified_param_name] = {}
+        for organ_stratum in organ_strata:
+            flow_adjustments[stratified_param_name][organ_stratum + "W"] =\
+                params['passive_screening_rate'] * params['passive_screening_sensitivity'][organ_stratum]
 
     # Adjust the progression rates by organ using the requested incidence proportions
     splitting_proportions = {
@@ -58,37 +97,6 @@ def stratify_by_organ(model, params):
         flow_adjustments=flow_adjustments,
     )
 
-
-def stratify_by_age(model, params, compartments):
-
-    flow_adjustments = {}
-
-    # age-specific all-causes mortality rate
-    death_rates_by_age, death_rate_years = get_death_rates_by_agegroup(params['age_breakpoints'], params['iso3'])
-    flow_adjustments['universal_death_rate'] = {}
-    for age_group in params['age_breakpoints']:
-        name = 'universal_death_rateX' + str(age_group)
-        flow_adjustments['universal_death_rate'][str(age_group) + "W"] = name
-        model.time_variants[name] = scale_up_function(
-            death_rate_years, death_rates_by_age[age_group], smoothness=0.2, method=5
-        )
-        model.parameters[name] = name
-    # age-specific latency progresison rates
-    if params["override_latency_rates"]:
-        flow_adjustments.update(get_adapted_age_parameters(params['age_breakpoints']))
-
-
-    # age-specific infectiousness
-    strata_infectiousness = calculate_age_specific_infectiousness(params['age_breakpoints'],
-                                                                  params['age_infectiousness_switch'])
-    # trigger model stratification
-    model.stratify(
-        "age",
-        params['age_breakpoints'],
-        compartments,
-        infectiousness_adjustments=strata_infectiousness,
-        flow_adjustments=flow_adjustments,
-    )
 
 
 def calculate_age_specific_infectiousness(age_breakpoints, age_infectiousness_switch):

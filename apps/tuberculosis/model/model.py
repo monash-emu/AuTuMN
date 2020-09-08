@@ -79,6 +79,10 @@ def build_model(params: dict) -> StratifiedModel:
     for param_name in ["infect_death_rate", "self_recovery_rate"]:
         params[param_name] = params[param_name + "_dict"]["unstratified"]
 
+    # if age-stratification is used, the baseline mortality rate is set to 1 so it can get multiplied by a time-variant
+    if "age" in params["stratify_by"]:
+        params['universal_death_rate'] = 1.
+
     # Create the model.
     tb_model = StratifiedModel(
         times=integration_times,
@@ -95,11 +99,11 @@ def build_model(params: dict) -> StratifiedModel:
     # Apply infectiousness adjustment for individuals on treatment
     tb_model.individual_infectiousness_adjustments = treatment_infectiousness_adjustment
 
-    if "organ" in params["stratify_by"]:
-        stratify_by_organ(tb_model, params)
-
     if "age" in params["stratify_by"]:
         stratify_by_age(tb_model, params, compartments)
+
+    if "organ" in params["stratify_by"]:
+        stratify_by_organ(tb_model, params)
 
     # Load time-variant birth rates
     birth_rates, years = inputs.get_crude_birth_rate(params['iso3'])

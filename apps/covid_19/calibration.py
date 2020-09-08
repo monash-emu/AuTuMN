@@ -167,7 +167,11 @@ def add_standard_philippines_params(params):
             "distribution": "uniform",
             "distri_params": [0.3, 0.5],
         },
-        {"param_name": "start_time", "distribution": "uniform", "distri_params": [40.0, 60.0],},
+        {
+            "param_name": "start_time",
+            "distribution": "uniform",
+            "distri_params": [40.0, 60.0],
+        },
         {
             "param_name": "microdistancing.parameters.max_effect",
             "distribution": "uniform",

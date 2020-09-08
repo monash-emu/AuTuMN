@@ -57,9 +57,9 @@ microdistancing:
     max_effect: 0.9
     times:
       - 137
-      - 138  # 12th May, increase in visitor allowance (?partial release from stage 3)
+      - 138  # 12th May, increase in visitor allowance (partial release from stage 3)
       - 151
-      - 152  # 26th May, entertainment/leisure partial reopening (?partial release from stage 3)
+      - 152  # 26th May, entertainment/leisure partial reopening (partial release from stage 3)
       - 173
       - 174  # 22nd June, visitors reduced
       - 181
@@ -74,8 +74,8 @@ microdistancing:
       - 215
       - 216  # 2nd August, stage 4 enforced metro Melbourne
     values:
-      - 0.15
-      - 0.15
+      - 0.4
+      - 0.1
       - 0.1
       - 0.05
       - 0.05

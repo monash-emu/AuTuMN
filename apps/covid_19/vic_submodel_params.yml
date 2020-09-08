@@ -56,38 +56,39 @@ microdistancing:
   parameters:
     max_effect: 0.9
     times:
-      - 137
+      # Note model currently starts at the start-time specified again (19th May for the first round of DHHS projections)
+      - 137  # Coming in at stage 3 from 29th March, but beginning to release as May progresses
       - 138  # 12th May, increase in visitor allowance (partial release from stage 3)
       - 151
       - 152  # 26th May, entertainment/leisure partial reopening (partial release from stage 3)
       - 173
       - 174  # 22nd June, visitors reduced
       - 181
-      - 182  # 30th June, postcode lockdowns (currently ignoring)
+      - 182  # 30th June, postcode lockdowns (currently ignored)
       - 185
-      - 186  # 4th July, two more postcodes locked down (currently ignoring)
+      - 186  # 4th July, two more postcodes locked down (currently ignored)
       - 191
-      - 192  # 9th July, stage 3 enforced
-      - 193  # 10th July, face coverings encouraged
+      - 192  # 9th July, stage 3 re-enforced
+      - 193  # 10th July, face coverings encouraged (currently ignored)
       - 202
       - 204  # 23rd July, face coverings mandated
       - 215
       - 216  # 2nd August, stage 4 enforced metro Melbourne
     values:
       - 0.4
-      - 0.1
-      - 0.1
-      - 0.05
-      - 0.05
-      - 0.1
-      - 0.1
-      - 0.1
-      - 0.1
-      - 0.1
-      - 0.1
+      - 0.2  # 12th May
       - 0.2
+      - 0.1  # 26th May
+      - 0.1
+      - 0.2  # 22nd June
       - 0.2
+      - 0.2  # 30th June
       - 0.2
-      - 0.5
-      - 0.5
-      - 1.
+      - 0.2  # 4th July
+      - 0.2
+      - 0.4  # 9th July
+      - 0.4  # 10th July
+      - 0.4
+      - 0.6  # 23rd July
+      - 0.6
+      - 1.  # 2nd August

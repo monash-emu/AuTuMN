@@ -3,10 +3,13 @@ from copy import deepcopy
 from summer.model import StratifiedModel
 from autumn.constants import Compartment, BirthApproach, Flow
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
+from autumn import inputs
+from autumn.curve import scale_up_function
 
-from . import preprocess, outputs
-from .validate import validate_params
-from .stratification import stratify_by_organ, stratify_by_age
+
+from apps.tuberculosis.model import preprocess, outputs
+from apps.tuberculosis.model.validate import validate_params
+from apps.tuberculosis.model.stratification import stratify_by_organ, stratify_by_age
 
 
 def build_model(params: dict) -> StratifiedModel:
@@ -98,6 +101,12 @@ def build_model(params: dict) -> StratifiedModel:
     if "age" in params["stratify_by"]:
         stratify_by_age(tb_model, params, compartments)
 
+    # Load time-variant birth rates
+    birth_rates, years = inputs.get_crude_birth_rate(params['iso3'])
+    birth_rates = [b / 1000. for b in birth_rates]  # birth rates are provided / 1000 population
+    tb_model.time_variants["crude_birth_rate"] = scale_up_function(
+        years, birth_rates, smoothness=0.2, method=5
+    )
 
     # Register derived output functions
     # These functions calculate 'derived' outputs of interest, based on the

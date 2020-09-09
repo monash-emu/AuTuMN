@@ -16,9 +16,7 @@ PHL_doh_link = '1U0iNYB9ZEMTYRMp9Eh1yYOocJ9rbLsXI'
 PHL_fassster_link = '1JLi6uTbUIe1DNNI_cjT5QysPhcSnq5_2'
 
 # destination folders filepaths
-base_dir = os.path.abspath(os.curdir) 
-#BASE_DIR = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
-#sys.path.append(BASE_DIR)
+base_dir = os.path.dirname(os.path.abspath(os.curdir)) 
 PHL_doh_dest = './data/targets/PHL_icu.csv'
 PHL_fassster_dest = './data/targets/PHL_ConfirmedCases.zip'
 icu_dest = './data/targets/PHL_icu_processed.csv'
@@ -45,10 +43,10 @@ def process_phl_data():
     # rename regions
     doh_data['region'] = doh_data['region'].replace({'NATIONAL CAPITAL REGION (NCR)': 'manila',
                                                      'REGION IV-A (CALABAR ZON)': 'calabarzon', 
-                                                     'REGION VII (CENTRAL VISAYAS)': 'central-visayas'})
+                                                     'REGION VII (CENTRAL VISAYAS)': 'central_visayas'})
     fassster_data['Region'] = fassster_data['Region'].replace({'NCR': 'manila',
                                                      '4A': 'calabarzon', 
-                                                     '07': 'central-visayas'})
+                                                     '07': 'central_visayas'})
     # duplicate data to create 'philippines' region and join with original dataset
     doh_data_dup = doh_data.copy()
     fassster_data_dup = fassster_data.copy()    
@@ -57,7 +55,7 @@ def process_phl_data():
     doh_data = doh_data.append(doh_data_dup)
     fassster_data = fassster_data.append(fassster_data_dup)
     # filter by regions (exclude all regions not modeled) 
-    regions = ['calabarzon', 'central-visayas', 'manila', 'philippines']
+    regions = ['calabarzon', 'central_visayas', 'manila', 'philippines']
     doh_data = doh_data[doh_data['region'].isin(regions)]
     fassster_data = fassster_data[fassster_data['Region'].isin(regions)]
     ## most recent ICU data

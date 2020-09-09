@@ -120,7 +120,8 @@ def stratify_by_clinical(model, params, detected_proportion, symptomatic_props):
 
         # Make sure there are enough asymptomatic and hospitalised proportions to fill the IFR
         infection_fatality_props[age_idx] = min(
-            abs_props["non_sympt"][age_idx] + abs_props["hospital"][age_idx],
+            abs_props["non_sympt"][age_idx] + abs_props[ClinicalStratum.HOSPITAL_NON_ICU][age_idx] +
+            abs_props[ClinicalStratum.ICU][age_idx] * icu_mortality_prop,
             infection_fatality_props[age_idx]
         )
 

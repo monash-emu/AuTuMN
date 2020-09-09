@@ -118,11 +118,11 @@ def stratify_by_clinical(model, params, detected_proportion, symptomatic_props):
     }
     for age_idx in range(len(agegroup_strata)):
 
-        # Make sure there are enough symptomatic people to fill the IFR
-        if infection_fatality_props[age_idx] > \
-                abs_props["non_sympt"][age_idx] + abs_props["hospital"][age_idx]:
-            infection_fatality_props[age_idx] = abs_props["non_sympt"][age_idx] + abs_props["hospital"][age_idx]
-            warnings.warn(f"Decreasing the IFR for age group number {age_idx} because IFR > constant proportions")
+        # Make sure there are enough asymptomatic and hospitalised proportions to fill the IFR
+        infection_fatality_props[age_idx] = min(
+            abs_props["non_sympt"][age_idx] + abs_props["hospital"][age_idx],
+            infection_fatality_props[age_idx]
+        )
 
         # Absolute proportion of all patients dying in ICU
         abs_death_props[ClinicalStratum.ICU][age_idx] = \
@@ -140,7 +140,7 @@ def stratify_by_clinical(model, params, detected_proportion, symptomatic_props):
                     abs_death_props[ClinicalStratum.ICU][age_idx],  # If left over mortality from ICU for hospitalised
                     0.  # Otherwise zero
                 ),
-                abs_props[ClinicalStratum.HOSPITAL_NON_ICU][age_idx]
+                abs_props[ClinicalStratum.HOSPITAL_NON_ICU][age_idx]  # Otherwise fill up hospitalised
             )
 
         # Absolute proportion of all patients dying out of hospital

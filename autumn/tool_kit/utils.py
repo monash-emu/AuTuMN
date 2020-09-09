@@ -291,7 +291,7 @@ def element_wise_list_division(numerator, denominator, must_be_prop=False):
     Simple function to find the quotients of two lists.
     """
     if must_be_prop:
-        assert all([num <= den for num, den in zip(numerator, denominator)]), \
+        assert all([num <= 1.01 * den for num, den in zip(numerator, denominator)]), \
             f"Numerators: {numerator} \n Denominators: {denominator}"
     return [num / den for num, den in zip(numerator, denominator)]
 

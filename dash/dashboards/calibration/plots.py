@@ -48,24 +48,14 @@ def print_mle_parameters(
         else:
             df = table_df
 
-    accept_mask = df["accept"] == 1
-    max_ll = df[accept_mask]["loglikelihood"].max()
-    max_ll_mask = accept_mask & (df["loglikelihood"] == max_ll)
-    run_id = df[max_ll_mask]["run"].iloc[0]
-    chain_id = df[max_ll_mask]["chain"].iloc[0]
-
     param_df = None
     for table_df in mcmc_params:
         if param_df is not None:
             param_df = param_df.append(table_df)
         else:
             param_df = table_df
-    param_mask = (param_df["run"] == run_id) & (param_df["chain"] == chain_id)
 
-    params = {}
-    for idx, row in param_df[param_mask].iterrows():
-        params[row["name"]] = row["value"]
-
+    params = db.process.find_mle_params(df, param_df)
     st.write(params)
 
 

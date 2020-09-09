@@ -62,6 +62,18 @@ def find_mle_run(df: pd.DataFrame) -> pd.DataFrame:
     return df[max_ll_mask].copy()
 
 
+def find_mle_params(mcmc_df: pd.DataFrame, param_df: pd.DataFrame) -> dict:
+    mle_run_df = find_mle_run(mcmc_df)
+    run_id = mle_run_df["run"].iloc[0]
+    chain_id = mle_run_df["chain"].iloc[0]
+    param_mask = (param_df["run"] == run_id) & (param_df["chain"] == chain_id)
+    params = {}
+    for _, row in param_df[param_mask].iterrows():
+        params[row["name"]] = row["value"]
+
+    return params
+
+
 def prune(source_db_path: str, target_db_path: str, targets=None):
     """
     Read the model outputs from a database and remove all run-related data that is not MLE.

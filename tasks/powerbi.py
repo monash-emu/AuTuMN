@@ -167,7 +167,7 @@ class PlotUncertaintyTask(utils.BaseTask):
             "plots",
             "uncertainty",
             "notifications",
-            "uncertainty-notifications-S_0.png",
+            "uncertainty-notifications-0.png",
         )
         return luigi.LocalTarget(target_file)
 

@@ -49,15 +49,6 @@ def load_model_scenarios(database_path: str, model_params: dict) -> List[Scenari
     return scenarios
 
 
-def load_mcmc_tables(calib_dirpath: str):
-    mcmc_tables = []
-    for db_path in _find_db_paths(calib_dirpath):
-        db = Database(db_path)
-        mcmc_tables.append(db.query("mcmc_run"))
-
-    return mcmc_tables
-
-
 def load_mcmc_params(db: Database, run_id: int):
     """
     Returns a dict of params
@@ -73,6 +64,28 @@ def load_mcmc_params_tables(calib_dirpath: str):
         mcmc_tables.append(db.query("mcmc_params"))
 
     return mcmc_tables
+
+
+def load_mcmc_tables(calib_dirpath: str):
+    mcmc_tables = []
+    for db_path in _find_db_paths(calib_dirpath):
+        db = Database(db_path)
+        mcmc_tables.append(db.query("mcmc_run"))
+
+    return mcmc_tables
+
+
+def append_tables(tables: List[pd.DataFrame]):
+    # TODO: Use this in load_mcmc_tables / load_mcmc_params_tables / load_derived_output_tables
+    assert tables
+    df = None
+    for table_df in tables:
+        if df is not None:
+            df = df.append(table_df)
+        else:
+            df = table_df
+
+    return df
 
 
 def load_derived_output_tables(calib_dirpath: str, column: str = None):

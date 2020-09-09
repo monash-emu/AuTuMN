@@ -85,8 +85,8 @@ def prune(source_db_path: str, target_db_path: str, targets=None):
     # Find the maximum accepted loglikelihood for all runs
     mcmc_run_df = source_db.query("mcmc_run")
     mle_run_df = find_mle_run(mcmc_run_df)
-    mle_run_id = mle_run_df.run
-    mle_chain_id = mle_run_df.chain
+    mle_run_id = mle_run_df.run.iloc[0]
+    mle_chain_id = mle_run_df.chain.iloc[0]
     # Copy tables over, pruning some.
     tables_to_copy = source_db.table_names()
     for table_name in tables_to_copy:

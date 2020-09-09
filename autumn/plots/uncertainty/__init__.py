@@ -25,9 +25,9 @@ def plot_uncertainty(targets: dict, powerbi_db_path: str, output_dir: str):
         plotter = FilePlotter(this_output_dir, targets)
         mask = uncertainty_df["type"] == output_name
         output_df = uncertainty_df[mask]
-        scenarios = output_df.Scenario.unique().tolist()
+        scenarios = output_df["scenario"].unique().tolist()
         for scenario in scenarios:
-            mask = output_df["Scenario"] == scenario
+            mask = output_df["scenario"] == scenario
             scenario_df = output_df[mask]
             quantiles = {}
             for q in quantile_vals:

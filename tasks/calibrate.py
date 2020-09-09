@@ -9,6 +9,7 @@ from autumn.tool_kit import Timer
 from autumn.inputs import build_input_database
 from autumn.inputs.database import input_db_path
 from autumn.constants import OUTPUT_DATA_PATH
+from autumn.tool_kit.params import load_targets
 from autumn import plots
 from apps import covid_19
 
@@ -154,7 +155,7 @@ class PlotOutputsTask(utils.BaseTask):
         mcmc_dir = os.path.join(settings.BASE_DIR, "data", "calibration_outputs")
         plot_dir = os.path.join(settings.BASE_DIR, "plots")
         model_name, _, _ = utils.read_run_id(self.run_id)
-        targets = load_targets("covid_19", region_name)
+        targets = load_targets("covid_19", model_name)
         plots.calibration.plot_post_calibration(targets, mcmc_dir, plot_dir)
 
 

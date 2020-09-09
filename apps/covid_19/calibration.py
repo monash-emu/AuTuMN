@@ -273,7 +273,7 @@ def add_standard_victoria_params(params, region):
                 "param_name": "ifr_multiplier",  # Less to constrain this, so just to propagate some uncertainty
                 "distribution": "trunc_normal",
                 "distri_params": [1.0, 0.3],
-                "trunc_range": [0.25, 4.0],
+                "trunc_range": [0.33, 3.0],
             },
         ]
 

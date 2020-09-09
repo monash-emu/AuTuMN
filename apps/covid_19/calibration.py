@@ -221,51 +221,21 @@ Victoria
 
 def add_standard_victoria_params(params, region):
 
-    if region in Region.VICTORIA_METRO:
-
-        params += [
-            {
-                "param_name": "contact_rate",
-                "distribution": "uniform",
-                "distri_params": [0.012, 0.07],
-            },
-            {
-                "param_name": "microdistancing.parameters.max_effect",
-                "distribution": "beta",
-                "distri_mean": 0.8,
-                "distri_ci": [0.4, 0.95],
-            },
-            {
-                "param_name": "ifr_multiplier",
-                "distribution": "trunc_normal",
-                "distri_params": [1.0, 1.0],
-                "trunc_range": [0.25, 4.0],
-            },
-        ]
-
-    elif region in Region.VICTORIA_RURAL:
-
-        params += [
-            {
-                "param_name": "contact_rate",
-                "distribution": "uniform",
-                "distri_params": [0.006, 0.07],
-            },
-            {
-                "param_name": "microdistancing.parameters.max_effect",
-                "distribution": "beta",
-                "distri_mean": 0.6,
-                "distri_ci": [0.3, 0.85],
-            },
-            {
-                "param_name": "ifr_multiplier",  # Less to constrain this, so just to propagate some uncertainty
-                "distribution": "trunc_normal",
-                "distri_params": [1.0, 0.3],
-                "trunc_range": [0.33, 3.0],
-            },
-        ]
-
     return params + [
+        {
+            "param_name": "contact_rate",
+            "distribution": "uniform",
+            "distri_params": [0.006 if region in Region.VICTORIA_RURAL else 0.012, 0.07],
+        },
+        {
+            "param_name": "ifr_multiplier",  # Less to constrain this, so just to propagate some uncertainty
+            "distribution": "trunc_normal",
+            "distri_params": [1.0, 0.3 if region in Region.VICTORIA_RURAL else 1.0],
+            "trunc_range": [
+                0.33 if region in Region.VICTORIA_RURAL else 0.25,
+                3.0 if region in Region.VICTORIA_RURAL else 4.0,
+            ],
+        },
         {
             "param_name": "seasonal_force",
             "distribution": "uniform",
@@ -304,6 +274,12 @@ def add_standard_victoria_params(params, region):
             "param_name": "movement_prop",
             "distribution": "uniform",
             "distri_params": [0.05, 0.4],
+        },
+        {
+            "param_name": "microdistancing.parameters.max_effect",
+            "distribution": "beta",
+            "distri_mean": 0.8,
+            "distri_ci": [0.4, 0.95],
         },
     ]
 

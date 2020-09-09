@@ -65,34 +65,32 @@ def process_phl_data():
     icu_occ_at_maxDate =  doh_data.groupby(['region'], as_index = False)['times', 'icu_o'].max()
     icu_occ_at_maxDate.to_csv(icu_dest)
     ## accumulated deaths
-    fassster_data = fassster_data[fassster_data['Date_Died'].notna()]
-    fassster_data['Date_Died'] = pd.to_datetime(fassster_data['Date_Died'])
-    fassster_data['times'] = fassster_data.Date_Died - COVID_BASE_DATETIME
-    fassster_data['times'] = fassster_data['times'] / np.timedelta64(1, 'D')
-    fassster_data['value'] = 1
-    cumulative_deaths_max_date = fassster_data.groupby(['Region'], as_index = False)['times'].max()
-    cumulative_deaths_agg = fassster_data.groupby(['Region'], as_index = False)['value'].sum()
-    cumulative_deaths = cumulative_deaths_max_date.join(cumulative_deaths_agg.set_index('Region'), on = 'Region')
+    fassster_data_deaths = fassster_data[fassster_data['Date_Died'].notna()]
+    fassster_data_deaths['Date_Died'] = pd.to_datetime(fassster_data_deaths['Date_Died'])
+    fassster_data_deaths['times'] = fassster_data_deaths.Date_Died - COVID_BASE_DATETIME
+    fassster_data_deaths['times'] = fassster_data_deaths['times'] / np.timedelta64(1, 'D')
+    accum_deaths = fassster_data_deaths.groupby(['Region']).size()
+    accum_deaths = accum_deaths.to_frame(name = 'accum_deaths').reset_index()
+    cumulative_deaths_max_date = fassster_data_deaths.groupby(['Region'], as_index = False)['times'].max().reset_index(0, drop = True)
+    cumulative_deaths = cumulative_deaths_max_date.join(accum_deaths.set_index('Region'), on = 'Region')
     cumulative_deaths.to_csv(deaths_dest)
     ## notifications
-    fassster_data['imputed_Date_Admitted'] = pd.to_datetime(fassster_data['imputed_Date_Admitted'])
+    fassster_data_agg = fassster_data.groupby(['Region', 'imputed_Date_Admitted']).size()
+    fassster_data_agg = fassster_data_agg.to_frame(name = 'daily_notifications').reset_index()
+    fassster_data_agg['imputed_Date_Admitted'] = pd.to_datetime(fassster_data_agg['imputed_Date_Admitted'])
     # make sure all dates within range are included
-    dateIndex = pd.date_range(min(fassster_data['imputed_Date_Admitted']), max(fassster_data['imputed_Date_Admitted']))
-    all_regions_x_dates = pd.DataFrame(list(itertools.product(regions, dateIndex)), columns = ['Region', 'imputed_Date_Admitted'])
-    all_regions_x_dates['imputed_Date_Admitted'] = pd.to_datetime(all_regions_x_dates['imputed_Date_Admitted'])
-    fassster_data['times'] = fassster_data.imputed_Date_Admitted - COVID_BASE_DATETIME
-    fassster_data['times'] = fassster_data['times'] / np.timedelta64(1, 'D')
-    # give each case a value of 1 and a value of 0 for rows added for missing dates
-    fassster_data.loc[fassster_data['times'].isna() == True, 'daily_notifications'] = 0
-    fassster_data.loc[fassster_data['times'].isna() == False, 'daily_notifications'] = 1
-    # sum values by day and region
-    fassster_data_agg = fassster_data.groupby(['Region', 'times'], as_index = False)['daily_notifications'].sum()
+    fassster_data_agg['times'] = fassster_data_agg.imputed_Date_Admitted - COVID_BASE_DATETIME
+    fassster_data_agg['times'] = fassster_data_agg['times'] / np.timedelta64(1, 'D')
+    timeIndex = np.arange(min(fassster_data_agg['times']), max(fassster_data_agg['times']), 1.).tolist()
+    all_regions_x_times = pd.DataFrame(list(itertools.product(regions, timeIndex)), columns = ['Region', 'times'])
+    fassster_agg_complete = pd.merge(fassster_data_agg, all_regions_x_times, on = ['Region', 'times'], how = 'outer')
+    fassster_agg_complete.loc[fassster_agg_complete['daily_notifications'].isna() == True, 'daily_notifications'] = 0
     # calculate a 7-day rolling window value
-    fassster_data_agg = fassster_data_agg.sort_values(['Region', 'times'], ascending=[True, True])
-    fassster_data_agg['mean_daily_notifications'] = fassster_data_agg.groupby('Region').rolling(7)['daily_notifications'].mean().reset_index(0, drop = True)
-    fassster_data_agg['mean_daily_notifications'] = np.round(fassster_data_agg['daily_notifications'])
-    fassster_data_final = fassster_data_agg[['Region', 'times', 'mean_daily_notifications']]
-    fassster_data_final = fassster_data_final[fassster_data_final.times > 60]
+    fassster_agg_complete = fassster_agg_complete.sort_values(['Region', 'times'], ascending=[True, True])
+    fassster_agg_complete['mean_daily_notifications'] = fassster_agg_complete.groupby('Region').rolling(7)['daily_notifications'].mean().reset_index(0, drop = True)
+    fassster_agg_complete['mean_daily_notifications'] = np.round(fassster_agg_complete['mean_daily_notifications'])
+    fassster_data_final = fassster_agg_complete[fassster_agg_complete.times > 60]
+    fassster_data_final = fassster_data_final[fassster_data_final.times < max(fassster_data_final.times)-9]
     fassster_data_final.to_csv(notifications_dest)
     # remove pre-processed files
     os.remove(up_to_data_fassster_filename)
@@ -119,7 +117,7 @@ def update_calibration_phl():
             targets['icu_occupancy']['times'] = list(icu_tmp['times'])
             targets['icu_occupancy']['values'] = list(icu_tmp['icu_o'])
             targets['infection_deaths']['times'] = list(deaths_tmp['times'])
-            targets['infection_deaths']['values'] = list(deaths_tmp['value'])
+            targets['infection_deaths']['values'] = list(deaths_tmp['accum_deaths'])
 
         with open(file_path, "w") as f:
             json.dump(targets, f, indent=2)

@@ -23,7 +23,7 @@ class DerivedOutputCalculator:
         """
         Returns the derived outputs for a model.
         """
-        derived_outputs = {"times": model.times}
+        derived_outputs = {}
 
         # Initialize outputs
         base_output = np.zeros(model.times.shape)

@@ -1,6 +1,6 @@
 from .hospital_data import read_hospital_data_from_csv
-from autumn.db.models import load_mcmc_tables
-from autumn.plots.plots import _overwrite_non_accepted_mcmc_runs
+from autumn import db
+from autumn.plots.calibration.plots import _overwrite_non_accepted_mcmc_runs
 from autumn.inputs import get_john_hopkins_data
 from autumn.calibration.utils import add_dispersion_param_prior_for_gaussian
 import pandas as pd
@@ -295,7 +295,7 @@ def get_weekly_summed_targets(times, values):
 
 
 def combine_and_burn_samples(calibration_output_path, burn_in=500):
-    mcmc_tables = load_mcmc_tables(calibration_output_path)
+    mcmc_tables = db.load.load_mcmc_tables(calibration_output_path)
     col_names = mcmc_tables[0].columns
 
     for col_name in [c for c in col_names if c not in ["accept"]]:

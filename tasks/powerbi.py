@@ -6,16 +6,9 @@ import luigi
 from autumn.tool_kit import Timer
 from autumn.inputs import build_input_database
 from autumn.inputs.database import input_db_path
-from autumn.db import models
 from autumn.tool_kit.params import load_targets
-from autumn.tool_kit.uncertainty import (
-    add_uncertainty_weights,
-    add_uncertainty_quantiles,
-)
-from autumn.plots.uncertainty_plots import plot_timeseries_with_uncertainty
 from autumn.constants import OUTPUT_DATA_PATH
-
-from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
+from autumn import db, plots
 
 from . import utils
 from . import settings
@@ -50,45 +43,6 @@ class BuildInputDatabaseTask(utils.BaseTask):
         build_input_database()
 
 
-class UncertaintyWeightsTask(utils.ParallelLoggerTask):
-    """Calculates uncertainty weights for each database"""
-
-    run_id = luigi.Parameter()  # Unique run id string
-    chain_id = luigi.IntParameter()  # Unique chain id
-
-    def requires(self):
-        download_task = utils.DownloadS3Task(run_id=self.run_id, src_path=self.get_src_db_relpath())
-        paths = ["logs/powerbi", "data/powerbi/weights-success/"]
-        dir_tasks = [utils.BuildLocalDirectoryTask(dirname=p) for p in paths]
-        return [BuildInputDatabaseTask(), download_task, *dir_tasks]
-
-    def output(self):
-        return luigi.LocalTarget(self.get_success_path())
-
-    def safe_run(self):
-        msg = f"Calculating uncertainty weights for chain {self.chain_id}"
-        with Timer(msg):
-            region_name, _, _ = utils.read_run_id(self.run_id)
-            targets = load_targets("covid_19", region_name)
-            output_list = [t["output_key"] for t in targets.values()]
-            db_path = os.path.join(settings.BASE_DIR, self.get_src_db_relpath())
-            add_uncertainty_weights(output_list, db_path)
-            with open(self.get_success_path(), "w") as f:
-                f.write("complete")
-
-    def get_success_path(self):
-        return os.path.join(
-            settings.BASE_DIR, f"data/powerbi/weights-success/chain-{self.chain_id}.txt",
-        )
-
-    def get_src_db_relpath(self):
-        src_filename = utils.get_full_model_run_db_filename(self.chain_id)
-        return os.path.join("data", "full_model_runs", src_filename)
-
-    def get_log_filename(self):
-        return f"powerbi/weights-{self.chain_id}.log"
-
-
 class PruneFullRunDatabaseTask(utils.ParallelLoggerTask):
     """Prunes unneeded data for each full model run db"""
 
@@ -96,9 +50,13 @@ class PruneFullRunDatabaseTask(utils.ParallelLoggerTask):
     chain_id = luigi.IntParameter()  # Unique chain id
 
     def requires(self):
+        src_filename = utils.get_full_model_run_db_filename(self.chain_id)
+        src_db_relpath = os.path.join("data", "full_model_runs", src_filename)
         return [
-            UncertaintyWeightsTask(run_id=self.run_id, chain_id=self.chain_id),
-            utils.BuildLocalDirectoryTask(dirname="data/powerbi/pruned/"),
+            BuildInputDatabaseTask(),
+            utils.DownloadS3Task(run_id=self.run_id, src_path=src_db_relpath),
+            utils.BuildLocalDirectoryTask(dirname="logs/powerbi"),
+            utils.BuildLocalDirectoryTask(dirname="data/powerbi/pruned"),
         ]
 
     def get_dest_path(self):
@@ -108,10 +66,13 @@ class PruneFullRunDatabaseTask(utils.ParallelLoggerTask):
         return luigi.LocalTarget(self.get_dest_path())
 
     def safe_run(self):
+        region_name, _, _ = utils.read_run_id(self.run_id)
+        targets = load_targets("covid_19", region_name)
         with Timer(f"Pruning database for chain {self.chain_id}"):
             src_filename = utils.get_full_model_run_db_filename(self.chain_id)
             src_db_path = os.path.join(settings.BASE_DIR, "data", "full_model_runs", src_filename)
-            models.prune(src_db_path, self.get_dest_path())
+            dest_db_path = self.get_dest_path()
+            db.process.prune(src_db_path, dest_db_path, targets=targets)
 
     def get_log_filename(self):
         return f"powerbi/prune-{self.chain_id}.log"
@@ -138,7 +99,7 @@ class CollationTask(utils.BaseTask):
                 for fname in os.listdir(PRUNED_DIR)
                 if fname.endswith(".db")
             ]
-            models.collate_databases(src_db_paths, COLLATED_DB_PATH)
+            db.process.collate_databases(src_db_paths, COLLATED_DB_PATH)
 
 
 class CalculateUncertaintyTask(utils.BaseTask):
@@ -159,9 +120,10 @@ class CalculateUncertaintyTask(utils.BaseTask):
         region_name, _, _ = utils.read_run_id(self.run_id)
         targets = load_targets("covid_19", region_name)
         with Timer(f"Calculating uncertainty quartiles"):
-            add_uncertainty_quantiles(COLLATED_DB_PATH, targets)
+            db.uncertainty.add_uncertainty_quantiles(COLLATED_DB_PATH, targets)
+
         with Timer(f"Pruning final database"):
-            models.prune(COLLATED_DB_PATH, COLLATED_PRUNED_DB_PATH, drop_extra_tables=True)
+            db.process.prune(COLLATED_DB_PATH, COLLATED_PRUNED_DB_PATH)
 
 
 class UnpivotTask(utils.BaseTask):
@@ -177,7 +139,7 @@ class UnpivotTask(utils.BaseTask):
 
     def safe_run(self):
         with Timer(f"Unpivoting final database"):
-            models.unpivot(COLLATED_PRUNED_DB_PATH, get_final_db_path(self.run_id))
+            db.process.unpivot(COLLATED_PRUNED_DB_PATH, get_final_db_path(self.run_id))
 
 
 class UploadDatabaseTask(utils.UploadS3Task):
@@ -205,15 +167,16 @@ class PlotUncertaintyTask(utils.BaseTask):
             "plots",
             "uncertainty",
             "notifications",
-            "uncertainty-notifications-S_0.png",
+            "uncertainty-notifications-0.png",
         )
         return luigi.LocalTarget(target_file)
 
     def safe_run(self):
+        region_name, _, _ = utils.read_run_id(self.run_id)
+        targets = load_targets("covid_19", region_name)
         plot_dir = os.path.join(settings.BASE_DIR, "plots", "uncertainty")
         db_path = get_final_db_path(self.run_id)
-        region_name, _, _ = utils.read_run_id(self.run_id)
-        plot_timeseries_with_uncertainty(region_name, db_path, plot_dir)
+        plots.uncertainty.plot_uncertainty(targets, db_path, plot_dir)
 
 
 class UploadPlotsTask(utils.UploadS3Task):

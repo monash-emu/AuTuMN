@@ -27,14 +27,14 @@ Docs: https://docs.streamlit.io/
 """
 import sys
 
-from dash.dashboards import calibration
-from dash.dashboards import scenario
-from dash.dashboards import model
+from dash.dashboards import calibration, scenario, model, dhhs
 
 
 if len(sys.argv) > 1 and sys.argv[1] == "mcmc":
     calibration.run_dashboard()
 elif len(sys.argv) > 1 and sys.argv[1] == "scenario":
     scenario.run_dashboard()
+elif len(sys.argv) > 1 and sys.argv[1] == "dhhs":
+    dhhs.run_dashboard()
 else:
     model.run_dashboard()

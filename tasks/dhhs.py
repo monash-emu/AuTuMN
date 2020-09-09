@@ -23,26 +23,7 @@ OUTPUTS = [
     "icu_occupancy",
 ]
 
-RUN_IDS = {
-    "barwon-south-west": "barwon-south-west-1599174882-32a84bc",
-    "gippsland": "gippsland-1599137595-1334b1d",
-    "grampians": "grampians-1599174885-32a84bc",
-    "hume": "hume-1599137596-1334b1d",
-    "loddon-mallee": "loddon-mallee-1599137600-1334b1d",
-    "south-east-metro": "south-east-metro-1599137596-1334b1d",
-    "south-metro": "south-metro-1599137595-1334b1d",
-    "west-metro": "west-metro-1599137595-1334b1d",
-    "north-metro": "north-metro-1599137595-1334b1d",
-}
 
-
-"""
-1. Get run ids for commit, validate them.
-2. Read in PowerBI database for each region
-3. Collate uncertainties into a single CSV for all OUTPUTS
-4. Put results CSV somewhere
-5. Update website build
-"""
 DHHS_DIR = os.path.join(settings.BASE_DIR, "data", "outputs", "dhhs")
 DATESTAMP = datetime.now().isoformat().split(".")[0].replace(":", "-")
 BASE_DATETIME = datetime(2019, 12, 31, 0, 0, 0)
@@ -91,8 +72,8 @@ class BuildRegionCSVTask(utils.BaseTask):
         for db_name in os.listdir(powerbi_path):
             db_path = os.path.join(powerbi_path, db_name)
             db = Database(db_path)
-            df = db.query("uncertainty", conditions=["Scenario='S_0'"])
-            df.drop(columns=["Scenario"], inplace=True)
+            df = db.query("uncertainty", conditions=["scenario=0"])
+            df.drop(columns=["scenario"], inplace=True)
             df.time = df.time.apply(lambda days: BASE_DATETIME + timedelta(days=days))
             df["region"] = "_".join(db_name.split("-")[1:-2]).upper()
             df = df[["region", "type", "time", "quantile", "value"]]
@@ -158,12 +139,8 @@ def get_vic_full_run_dbs_for_commit(commit: str):
         if region == Region.VICTORIA:
             continue
 
-        # region_db_keys = utils.list_s3(key_prefix=region, key_suffix=".db")
-        # region_db_keys = [k for k in region_db_keys if commit in k and "mcmc_chain_full_run" in k]
-
-        run_id = RUN_IDS[region]
-        region_db_keys = utils.list_s3(key_prefix=run_id, key_suffix=".db")
-        region_db_keys = [k for k in region_db_keys if "mcmc_chain_full_run" in k]
+        region_db_keys = utils.list_s3(key_prefix=region, key_suffix=".db")
+        region_db_keys = [k for k in region_db_keys if commit in k and "mcmc_chain_full_run" in k]
 
         msg = f"There should exactly one set of full model run databases for {region} with commit {commit}: {region_db_keys}"
         filenames = [k.split("/")[-1] for k in region_db_keys]
@@ -179,12 +156,8 @@ def get_vic_powerbi_dbs_for_commit(commit: str):
         if region == Region.VICTORIA:
             continue
 
-        run_id = RUN_IDS[region]
-        region_db_keys = utils.list_s3(key_prefix=run_id, key_suffix=".db")
-        region_db_keys = [k for k in region_db_keys if "powerbi" in k]
-
-        # region_db_keys = utils.list_s3(key_prefix=region, key_suffix=".db")
-        # region_db_keys = [k for k in region_db_keys if commit in k and "powerbi" in k]
+        region_db_keys = utils.list_s3(key_prefix=region, key_suffix=".db")
+        region_db_keys = [k for k in region_db_keys if commit in k and "powerbi" in k]
 
         msg = f"There should exactly one PowerBI database for {region} with commit {commit}: {region_db_keys}"
         assert len(region_db_keys) == 1, msg

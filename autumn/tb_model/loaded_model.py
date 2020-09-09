@@ -1,5 +1,7 @@
 import numpy
 
+ID_COLS = ["chain", "run", "scenario", "times"]
+
 
 class LoadedModel:
     """
@@ -7,22 +9,16 @@ class LoadedModel:
     """
 
     def __init__(self, outputs, derived_outputs):
-        self.compartment_names = [
-            name for name in outputs.keys() if name not in ["idx", "Scenario", "times"]
-        ]
+        self.compartment_names = [name for name in outputs.keys() if name not in ID_COLS]
 
         self.outputs = numpy.column_stack(
-            [
-                list(column.values())
-                for name, column in outputs.items()
-                if name not in ["idx", "Scenario", "times"]
-            ]
+            [list(column.values()) for name, column in outputs.items() if name not in ID_COLS]
         )
         self.derived_outputs = (
             {
                 key: list(value.values())
                 for key, value in derived_outputs.items()
-                if key not in ["idx", "Scenario", "times"]
+                if key not in ID_COLS
             }
             if derived_outputs is not None
             else None

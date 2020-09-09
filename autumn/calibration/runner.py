@@ -6,7 +6,7 @@ from autumn.db import Database
 from autumn.tool_kit.params import update_params
 from autumn.tool_kit.scenarios import Scenario
 from autumn.tool_kit.timer import Timer
-from autumn.db.models import store_run_models
+from autumn import db
 
 
 META_COLS = ["idx", "Scenario", "loglikelihood", "accept"]
@@ -22,31 +22,18 @@ def run_full_models_for_mcmc(
     """
     src_db = Database(src_db_path)
     dest_db = Database(dest_db_path)
-
-    logger.info("Copying mcmc_run table to %s", dest_db_path)
-    mcmc_run_df = src_db.query("mcmc_run")
-
-    # Apply burn in and save to destination
-    burned_runs_str = ", ".join(mcmc_run_df[:burn_in].idx)
-    logger.info("Burned MCMC runs %s", burned_runs_str)
-    mcmc_run_df = mcmc_run_df[burn_in:]
-    dest_db.dump_df("mcmc_run", mcmc_run_df)
-
-    mcmc_runs = list(mcmc_run_df.T.to_dict().values())
-    for mcmc_run in mcmc_runs:
-        meta = {k: v for k, v in mcmc_run.items() if k in META_COLS}
-        if not meta["accept"]:
-            logger.info("Ignoring non-accepted MCMC run %s", meta["idx"])
+    db.process.apply_burn_in(src_db, dest_db, burn_in)
+    mcmc_run_df = dest_db.query("mcmc_run")
+    for idx, mcmc_run in mcmc_run_df.iterrows():
+        run_id = mcmc_run["run"]
+        chain_id = mcmc_run["chain"]
+        if not mcmc_run["accept"]:
+            logger.info("Ignoring non-accepted MCMC run %s", run_id)
             continue
 
-        logger.info("Running full model for MCMC run %s", meta["idx"])
-        param_updates = {k: v for k, v in mcmc_run.items() if k not in META_COLS}
-
-        run_idx = meta["idx"].split("_")[-1]
-
-        def update_func(ps: dict):
-            return update_params(ps, param_updates)
-
+        logger.info("Running full model for MCMC run %s", run_id)
+        param_updates = db.load.load_mcmc_params(dest_db, run_id)
+        update_func = lambda ps: update_params(ps, param_updates)
         with Timer("Running model scenarios"):
             num_scenarios = 1 + len(params["scenarios"].keys())
             scenarios = []
@@ -65,6 +52,8 @@ def run_full_models_for_mcmc(
 
         with Timer("Saving model outputs to the database"):
             models = [s.model for s in scenarios]
-            store_run_models(models, dest_db_path, run_idx=run_idx)
+            db.store.store_run_models(
+                models, dest_db_path, run_id=int(run_id), chain_id=int(chain_id)
+            )
 
     logger.info("Finished running full models for all accepted MCMC runs.")

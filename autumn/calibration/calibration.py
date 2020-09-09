@@ -15,8 +15,7 @@ from scipy import stats, special
 
 from summer.model import StratifiedModel
 from autumn import constants
-from autumn.db.models import store_database
-from autumn.plots.calibration_plots import plot_all_priors
+from autumn import db, plots
 from autumn.tool_kit.scenarios import Scenario
 from autumn.tool_kit.params import update_params
 from autumn.tool_kit.utils import (
@@ -168,6 +167,8 @@ class Calibration:
         self.param_bounds = self.get_parameter_bounds()
 
         self.iter_num = 0
+        self.last_accepted_run = 0
+
         self.latest_scenario = None
         self.run_mode = None
         self.main_table = {}
@@ -177,7 +178,7 @@ class Calibration:
         self.evaluated_params_ll = []  # list of tuples:  [(theta_0, ll_0), (theta_1, ll_1), ...]
 
         if self.chain_index == 0:
-            plot_all_priors(self.priors, output_dir)
+            plots.calibration.plot_pre_calibration(self.priors, output_dir)
 
     def write_metadata(self, output_dir, filename, data):
         file_path = os.path.join(output_dir, filename)
@@ -191,25 +192,21 @@ class Calibration:
         scenario = self.latest_scenario
         assert scenario, "No model has been run"
         model = scenario.model
-        out_df = pd.DataFrame(model.outputs, columns=model.compartment_names)
-        derived_output_df = pd.DataFrame.from_dict(model.derived_outputs)
-        store_database(
-            derived_output_df,
-            table_name="derived_outputs",
-            run_idx=self.iter_num,
+        db.store.store_run_models(
+            models=[model],
             database_path=self.output_db_path,
-            scenario=scenario.idx,
-        )
-        store_database(
-            out_df,
-            table_name="outputs",
-            run_idx=self.iter_num,
-            times=model.times,
-            database_path=self.output_db_path,
-            scenario=scenario.idx,
+            run_id=self.iter_num,
+            chain_id=self.chain_index,
         )
 
-    def store_mcmc_iteration_info(self, proposed_params, proposed_loglike, accept, i_run):
+    def store_mcmc_iteration_info(
+        self,
+        proposed_params: list,
+        proposed_loglike: float,
+        proposed_acceptance_quantity: float,
+        accept: bool,
+        i_run: int,
+    ):
         """
         Records the MCMC iteration details
         :param proposed_params: the current parameter values
@@ -217,15 +214,27 @@ class Calibration:
         :param accept: whether the iteration was accepted or not
         :param i_run: the iteration number
         """
-        mcmc_run_dict = {k: v for k, v in zip(self.param_list, proposed_params)}
-        mcmc_run_dict["loglikelihood"] = proposed_loglike
-        mcmc_run_dict["accept"] = 1 if accept else 0
-        mcmc_run_colnames = self.param_list.copy()
-        mcmc_run_colnames.append("loglikelihood")
-        mcmc_run_colnames.append("accept")
-        mcmc_run_df = pd.DataFrame(mcmc_run_dict, columns=mcmc_run_colnames, index=[i_run])
-        store_database(
-            mcmc_run_df, table_name="mcmc_run", run_idx=i_run, database_path=self.output_db_path,
+        if accept:
+            weight = 1
+            self.last_accepted_run = i_run
+        else:
+            weight = 0
+            db.store.increment_mcmc_weight(
+                database_path=self.output_db_path,
+                run_id=self.last_accepted_run,
+                chain_id=self.chain_index,
+            )
+
+        params = {k: v for k, v in zip(self.param_list, proposed_params)}
+        db.store.store_mcmc_run(
+            database_path=self.output_db_path,
+            run_id=i_run,
+            chain_id=self.chain_index,
+            weight=weight,
+            loglikelihood=proposed_loglike,
+            ap_loglikelihood=proposed_acceptance_quantity,
+            accept=1 if accept else 0,
+            params=params,
         )
 
     def run_model_with_params(self, proposed_params: dict):
@@ -325,19 +334,9 @@ class Calibration:
                 best_ll, best_start_time = (ll, considered_start_time)
 
         if self.run_mode == CalibrationMode.LEAST_SQUARES:
-            mcmc_run_dict = {k: v for k, v in zip(self.param_list, params)}
-            mcmc_run_dict["loglikelihood"] = best_ll
-            mcmc_run_colnames = self.param_list.copy()
-            mcmc_run_colnames = mcmc_run_colnames.append("loglikelihood")
-            mcmc_run_df = pd.DataFrame(
-                mcmc_run_dict, columns=mcmc_run_colnames, index=[self.iter_num]
-            )
-            store_database(
-                mcmc_run_df,
-                table_name="mcmc_run",
-                run_idx=self.iter_num,
-                database_path=self.output_db_path,
-            )
+            # FIXME: Store a record of the MCMC run.
+            logger.error("No data stored for least squares")
+            pass
 
         self.evaluated_params_ll.append((copy.copy(params), copy.copy(best_ll)))
 
@@ -511,7 +510,7 @@ class Calibration:
             msg = "Autumn MCMC method does not support multiple-chain runs at the moment."
             raise ValueError(msg)
 
-        self.mcmc_trace_matrix = None # will store param trace and loglikelihood evolution
+        self.mcmc_trace_matrix = None  # will store param trace and loglikelihood evolution
 
         last_accepted_params = None
         last_acceptance_quantity = None  # acceptance quantity is defined as loglike + logprior
@@ -548,7 +547,9 @@ class Calibration:
             self.update_mcmc_trace(last_accepted_params)
 
             # Store model outputs
-            self.store_mcmc_iteration_info(proposed_params, proposed_loglike, accept, i_run)
+            self.store_mcmc_iteration_info(
+                proposed_params, proposed_loglike, proposed_acceptance_quantity, accept, i_run,
+            )
             if accept:
                 self.store_model_outputs()
 
@@ -588,15 +589,18 @@ class Calibration:
             logprior = self.logprior(params)
             a_posteriori_logproba = loglike + logprior
 
-            self.store_mcmc_iteration_info(params, a_posteriori_logproba, False, self.iter_num)
+            self.store_mcmc_iteration_info(
+                params, a_posteriori_logproba, a_posteriori_logproba, False, self.iter_num
+            )
             self.iter_num += 1
 
     def build_adaptive_covariance_matrix(self):
         scaling_factor = 2.4 * 2.4 / len(self.priors)  # from Haario et al. 2001
 
         cov_matrix = np.cov(self.mcmc_trace_matrix, rowvar=False)
-        adaptive_cov_matrix = scaling_factor * cov_matrix + scaling_factor * ADAPTIVE_METROPOLIS['EPSILON'] *\
-                              np.eye(len(self.priors))
+        adaptive_cov_matrix = scaling_factor * cov_matrix + scaling_factor * ADAPTIVE_METROPOLIS[
+            "EPSILON"
+        ] * np.eye(len(self.priors))
         return adaptive_cov_matrix
 
     def get_parameter_bounds(self):
@@ -607,7 +611,9 @@ class Calibration:
             if i == 0:
                 param_bounds = np.array([[lower_bound, upper_bound]])
             else:
-                param_bounds = np.concatenate((param_bounds, np.array([[lower_bound, upper_bound]])))
+                param_bounds = np.concatenate(
+                    (param_bounds, np.array([[lower_bound, upper_bound]]))
+                )
         return param_bounds
 
     def sample_from_adaptive_gaussian(self, prev_params, adaptive_cov_matrix):
@@ -615,15 +621,15 @@ class Calibration:
         upper_bounds = self.param_bounds[:, 1]
 
         new_params = copy.deepcopy(lower_bounds)
-        new_params[0] -= 10.
+        new_params[0] -= 10.0
         n_attempts = 0
         while any(lower_bounds > new_params) or any(upper_bounds < new_params):
             new_params = np.random.multivariate_normal(prev_params, adaptive_cov_matrix)
             n_attempts += 1
-            if n_attempts > 1.e4:
+            if n_attempts > 1.0e4:
                 raise ValueError(
-                            "Failed to draw an acceptable parameter set after 10,000 attempts."
-                        )
+                    "Failed to draw an acceptable parameter set after 10,000 attempts."
+                )
         return new_params
 
     def propose_new_params(self, prev_params):
@@ -639,12 +645,16 @@ class Calibration:
                 prev_params.append(self.starting_point[prior_dict["param_name"]])
 
         new_params = []
-        use_adaptive_proposal = self.adaptive_proposal and self.iter_num > ADAPTIVE_METROPOLIS['N_STEPS_FIXED_PROPOSAL']
+        use_adaptive_proposal = (
+            self.adaptive_proposal and self.iter_num > ADAPTIVE_METROPOLIS["N_STEPS_FIXED_PROPOSAL"]
+        )
 
         if use_adaptive_proposal:
             adaptive_cov_matrix = self.build_adaptive_covariance_matrix()
             if np.all((adaptive_cov_matrix == 0)):
-                use_adaptive_proposal = False  # we can't use the adaptive method for this step as the covariance is 0.
+                use_adaptive_proposal = (
+                    False  # we can't use the adaptive method for this step as the covariance is 0.
+                )
             else:
                 new_params = self.sample_from_adaptive_gaussian(prev_params, adaptive_cov_matrix)
 
@@ -692,7 +702,9 @@ class Calibration:
         if self.mcmc_trace_matrix is None:
             self.mcmc_trace_matrix = np.array([params_to_store])
         else:
-            self.mcmc_trace_matrix = np.concatenate((self.mcmc_trace_matrix, np.array([params_to_store])))
+            self.mcmc_trace_matrix = np.concatenate(
+                (self.mcmc_trace_matrix, np.array([params_to_store]))
+            )
 
     def dump_mle_params_to_yaml_file(self):
 

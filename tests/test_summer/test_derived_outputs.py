@@ -14,8 +14,7 @@ def test_calculate_derived_outputs__with_no_outputs_requested():
     calc = DerivedOutputCalculator()
     model = _get_model()
     derived_outputs = calc.calculate(model)
-    derived_outputs.keys() == ["times"]
-    assert_array_equal(derived_outputs["times"], np.array([5.0, 6.0, 7.0, 8.0, 9.0, 10.0]))
+    derived_outputs.keys() == []
 
 
 def test_calculate_derived_outputs__with_no_strata_requested():
@@ -34,8 +33,7 @@ def test_calculate_derived_outputs__with_no_strata_requested():
 
     model = _get_model()
     derived_outputs = calc.calculate(model)
-    derived_outputs.keys() == ["times", "infection", "recovery", "infect_death", "infect_exit"]
-    assert_array_equal(derived_outputs["times"], np.array([5.0, 6.0, 7.0, 8.0, 9.0, 10.0]))
+    derived_outputs.keys() == ["infection", "recovery", "infect_death", "infect_exit"]
     assert_array_equal(derived_outputs["infect_death"], np.array([0, 200, 200, 300, 200, 300]))
     assert_array_equal(derived_outputs["recovery"], np.array([0, 120, 120, 180, 120, 180]))
     assert_array_equal(derived_outputs["infect_exit"], np.array([0, 320, 320, 480, 320, 480]))
@@ -62,8 +60,7 @@ def test_calculate_derived_outputs__with_strata_requested():
 
     model = _get_model()
     derived_outputs = calc.calculate(model)
-    derived_outputs.keys() == ["times", "infection", "recovery", "infect_death", "infect_exit"]
-    assert_array_equal(derived_outputs["times"], np.array([5.0, 6.0, 7.0, 8.0, 9.0, 10.0]))
+    derived_outputs.keys() == ["infection", "recovery", "infect_death", "infect_exit"]
     assert_array_equal(derived_outputs["infection"], np.array([0, 6, 4, 3, 2, 0]))
     assert_array_equal(derived_outputs["infect_death"], np.array([0, 50, 50, 75, 50, 75]))
     assert_array_equal(derived_outputs["recovery"], np.array([0, 30, 30, 45, 30, 45]))

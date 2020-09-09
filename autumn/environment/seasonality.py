@@ -1,7 +1,9 @@
 import numpy
 
 
-def get_seasonal_forcing(period: float, shift: float, seasonal_force_magnitude: float, average_value: float):
+def get_seasonal_forcing(
+    period: float, shift: float, seasonal_force_magnitude: float, average_value: float
+):
     """
     Factory function to get a trigonometric/sinusoidal function (using cosine) to represent seasonal forcing of
     transmission in a model.
@@ -21,8 +23,10 @@ def get_seasonal_forcing(period: float, shift: float, seasonal_force_magnitude: 
         The seasonal forcing function
     """
 
-    amplitude = seasonal_force_magnitude * average_value / 2.
-    assert amplitude <= average_value, "Seasonal forcing function will go negative based on submitted parameters"
+    amplitude = seasonal_force_magnitude * average_value / 2.0
+    assert (
+        amplitude <= average_value
+    ), "Seasonal forcing function will go negative based on submitted parameters"
 
     def seasonal_forcing(time):
         return numpy.cos((time - shift) * 2.0 * numpy.pi / period) * amplitude + average_value
@@ -36,3 +40,4 @@ if __name__ == "__main__":
     forcing_function = get_seasonal_forcing(period, shift, amplitude, average)
     for i in x_values:
         print(f"date: {i}, \t value: {forcing_function(i)}")
+

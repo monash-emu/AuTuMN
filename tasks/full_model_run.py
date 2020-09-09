@@ -6,8 +6,9 @@ import luigi
 from autumn.tool_kit import Timer
 from autumn.inputs import build_input_database
 from autumn.inputs.database import input_db_path
-from apps.covid_19.calibration import run_full_models_for_mcmc
 from autumn.constants import OUTPUT_DATA_PATH
+from autumn.calibration import run_full_models_for_mcmc
+from apps import covid_19
 
 from . import utils
 from . import settings
@@ -64,11 +65,13 @@ class FullModelRunTask(utils.ParallelLoggerTask):
 
     def safe_run(self):
         model_name, _, _ = utils.read_run_id(self.run_id)
+        region_app = covid_19.app.get_region(model_name)
+        src_db_path = os.path.join(settings.BASE_DIR, self.get_src_db_relpath())
+        dest_db_path = self.get_output_db_path()
         msg = f"Running {model_name} full model with burn-in of {self.burn_in}s"
         with Timer(msg):
-            src_db_path = os.path.join(settings.BASE_DIR, self.get_src_db_relpath())
             run_full_models_for_mcmc(
-                model_name, self.burn_in, src_db_path, self.get_output_db_path()
+                self.burn_in, src_db_path, dest_db_path, region_app.build_model, region_app.params
             )
 
     def get_src_db_relpath(self):

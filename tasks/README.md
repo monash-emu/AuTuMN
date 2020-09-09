@@ -12,19 +12,19 @@ python -m tasks
 ### Run a calibration
 
 ```
-python -m tasks calibrate --run  manila-111111111-aaaaaaa --chains 2 --runtime 30 --workers 2
+python -m tasks calibrate --run  manila-111111111-aaaaaaa --chains 4 --runtime 60 --workers 4
 ```
 
 ### Run full models
 
 ```
-python -m tasks full --run  manila-111111111-aaaaaaa --burn 0 --workers 2
+python -m tasks full --run  manila-111111111-aaaaaaa --burn 2 --workers 4
 ```
 
 ### Run PowerBI processing
 
 ```
-python -m tasks powerbi --run  manila-111111111-aaaaaaa --workers 2
+python -m tasks powerbi --run  manila-111111111-aaaaaaa --workers 4
 ```
 
 ### Clean up test task

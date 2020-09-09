@@ -3,8 +3,8 @@ import streamlit as st
 from autumn.plots.plotter import StreamlitPlotter
 from autumn.tool_kit.model_register import AppRegion
 from autumn.tool_kit.scenarios import Scenario, get_model_times_from_inputs
-from autumn.plots import plots
 from autumn.tool_kit.params import load_params
+from autumn import plots
 
 from apps.covid_19.model.preprocess.mixing_matrix.adjust_location import (
     LocationMixingAdjustment,
@@ -27,7 +27,7 @@ def plot_flow_params(
     flows = [f for f in model.flows if f.param_name == param_name]
     is_logscale = st.sidebar.checkbox("Log scale")
     flow_funcs = [f.get_weight_value for f in flows]
-    plots.plot_time_varying_input(
+    plots.model.plots.plot_time_varying_input(
         plotter, f"flow-params-{param_name}", flow_funcs, model.times, is_logscale
     )
 
@@ -61,7 +61,7 @@ def plot_dynamic_inputs(
     tv_key = st.sidebar.selectbox("Select function", tv_options)
     is_logscale = st.sidebar.checkbox("Log scale")
     tv_func = tvs[tv_key]
-    plots.plot_time_varying_input(plotter, tv_key, tv_func, model.times, is_logscale)
+    plots.model.plots.plot_time_varying_input(plotter, tv_key, tv_func, model.times, is_logscale)
 
 
 PLOT_FUNCS["Time variant functions"] = plot_dynamic_inputs
@@ -109,7 +109,7 @@ def plot_location_mixing(plotter: StreamlitPlotter, app: AppRegion):
     else:
         loc_func = lambda t: 1
 
-    plots.plot_time_varying_input(plotter, loc_key, loc_func, times, is_logscale)
+    plots.model.plots.plot_time_varying_input(plotter, loc_key, loc_func, times, is_logscale)
 
 
 PLOT_FUNCS["Dynamic location mixing"] = plot_location_mixing
@@ -128,7 +128,7 @@ def plot_model_targets(
     title = st.sidebar.selectbox("Select a target", title_options)
     target = target_name_lookup[title]
     is_logscale = st.sidebar.checkbox("Log scale")
-    plots.plot_outputs_single(plotter, scenario, target, is_logscale)
+    plots.model.plots.plot_outputs_single(plotter, scenario, target, is_logscale)
 
 
 PLOT_FUNCS["Calibration targets"] = plot_model_targets

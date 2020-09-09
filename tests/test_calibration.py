@@ -5,6 +5,7 @@ from copy import deepcopy
 import pytest
 import numpy as np
 
+from autumn import db
 from autumn.db import Database
 from autumn.calibration import Calibration, CalibrationMode
 from autumn.calibration.utils import sample_starting_params_from_lhs, specify_missing_prior_params
@@ -143,11 +144,13 @@ def test_calibrate_autumn_mcmc(temp_data_dir):
         "outputs",
         "derived_outputs",
         "mcmc_run",
+        "mcmc_params",
     }
+
     mcmc_runs = out_db.query("mcmc_run")
-    max_idx = mcmc_runs.loglikelihood.idxmax()
-    best_run = mcmc_runs.iloc[max_idx]
-    ice_cream_sales_mle = best_run.ice_cream_sales
+    mcmc_params = out_db.query("mcmc_params")
+    mle_params = db.process.find_mle_params(mcmc_runs, mcmc_params)
+    ice_cream_sales_mle = mle_params["ice_cream_sales"]
     # This value is non-deterministic due to fixed seed.
     assert 2.9 < ice_cream_sales_mle < 3.1
 
@@ -169,9 +172,6 @@ def _build_mock_model(params):
             [201.0, 300.0, 201.0, 132.0, 33.0, 132.0, 39.0, 139.0],
             [182.0, 300.0, 182.0, 151.0, 33.0, 151.0, 39.0, 159.0],
         ],
-        derived_outputs={
-            "times": np.array([1999, 2000, 2001, 2002, 2003, 2004]),
-            "shark_attacks": np.array([ice_cream_sales * i for i in vals]),
-        },
+        derived_outputs={"shark_attacks": np.array([ice_cream_sales * i for i in vals]),},
     )
     return mock_model

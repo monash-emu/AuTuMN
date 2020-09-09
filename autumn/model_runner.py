@@ -14,7 +14,7 @@ from autumn.tool_kit.utils import (
     get_git_branch,
     get_git_hash,
 )
-from autumn.db.models import store_run_models
+from autumn import db
 
 logger = logging.getLogger(__name__)
 
@@ -86,6 +86,6 @@ def build_model_runner(
 
         with Timer("Saving model outputs to the database"):
             models = [s.model for s in scenarios]
-            store_run_models(models, output_db_path)
+            db.store.store_run_models(models, output_db_path, run_id=0)
 
     return run_model

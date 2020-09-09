@@ -5,10 +5,9 @@ import os
 
 import streamlit as st
 
-from autumn.db.models import load_model_scenarios
-from autumn.plots import plots
-from autumn.plots.plotter import StreamlitPlotter
+from autumn import plots, db
 from autumn.tool_kit.model_register import AppRegion
+from autumn.plots.plotter import StreamlitPlotter
 
 from dash import selectors
 
@@ -20,7 +19,7 @@ def plot_outputs_multi(plotter: StreamlitPlotter, app: AppRegion, scenarios: lis
     if chosen_scenarios:
         output_config = model_output_selector(chosen_scenarios, app.targets)
         is_logscale = st.sidebar.checkbox("Log scale")
-        plots.plot_outputs_multi(plotter, chosen_scenarios, output_config, is_logscale)
+        plots.model.plots.plot_outputs_multi(plotter, chosen_scenarios, output_config, is_logscale)
 
 
 PLOT_FUNCS["Scenario outputs"] = plot_outputs_multi
@@ -35,7 +34,7 @@ def plot_compartment(plotter: StreamlitPlotter, app: AppRegion, scenarios: list)
             scenario = chosen_scenarios[0]
             compartment_options = scenario.model.compartment_names
             compartments = selectors.multi_compartment(scenario.model)
-            plots.plot_multi_compartments_single_scenario(
+            plots.model.plots.plot_multi_compartments_single_scenario(
                 plotter, scenario, compartments, is_logscale
             )
         else:
@@ -43,7 +42,7 @@ def plot_compartment(plotter: StreamlitPlotter, app: AppRegion, scenarios: list)
             compartment_options = chosen_scenarios[0].model.compartment_names
             compartment = selectors.single_compartment(chosen_scenarios[0].model)
             if compartment:
-                plots.plot_single_compartment_multi_scenario(
+                plots.model.plots.plot_single_compartment_multi_scenario(
                     plotter, chosen_scenarios, compartment, is_logscale
                 )
             else:
@@ -56,7 +55,7 @@ PLOT_FUNCS["Compartment sizes"] = plot_compartment
 def plot_compartment_aggregate(plotter: StreamlitPlotter, app: AppRegion, scenarios: list):
     is_logscale = st.sidebar.checkbox("Log scale")
     names = selectors.multi_compartment(scenarios[0].model)
-    plots.plot_agg_compartments_multi_scenario(plotter, scenarios, names, is_logscale)
+    plots.model.plots.plot_agg_compartments_multi_scenario(plotter, scenarios, names, is_logscale)
     st.write(names)
 
 
@@ -69,7 +68,9 @@ def plot_stacked_compartments_by_stratum(
     chosen_scenarios = selectors.scenarios(scenarios)
     compartment = selectors.single_compartment(chosen_scenarios[0].model).split("X")[0]
     stratify_by = "agegroup"
-    plots.plot_stacked_compartments_by_stratum(plotter, chosen_scenarios, compartment, stratify_by)
+    plots.model.plots.plot_stacked_compartments_by_stratum(
+        plotter, chosen_scenarios, compartment, stratify_by
+    )
     st.write(compartment)
 
 
@@ -80,10 +81,10 @@ def plot_stacked_derived_outputs_by_stratum(
     plotter: StreamlitPlotter, app: AppRegion, scenarios: list
 ):
     chosen_scenarios = selectors.scenarios(scenarios)
-    output_config = model_output_selector(chosen_scenarios, plot_config)
-    derived_output = output_config["name"].split("X")[0]
+    output_config = model_output_selector(chosen_scenarios, app.targets)
+    derived_output = output_config["output_key"].split("X")[0]
     stratify_by = "agegroup"
-    plots.plot_stacked_compartments_by_stratum(
+    plots.model.plots.plot_stacked_compartments_by_stratum(
         plotter, chosen_scenarios, derived_output, stratify_by
     )
     st.write(derived_output)
@@ -112,7 +113,7 @@ def plot_multicountry_rainbow(plotter: StreamlitPlotter, app: AppRegion, scenari
 
                     # Get database from model data dir.
                     db_path = os.path.join(run_dirpath, "outputs.db")
-                    country_scenarios[country] = load_model_scenarios(db_path, params)
+                    country_scenarios[country] = db.load.load_model_scenarios(db_path, params)
 
                 print(
                     "Plotting multicountry rainbow for: "
@@ -123,7 +124,9 @@ def plot_multicountry_rainbow(plotter: StreamlitPlotter, app: AppRegion, scenari
                     + objective
                 )
 
-                plots.plot_multicountry_rainbow(country_scenarios, config, mode, objective)
+                plots.model.plots.plot_multicountry_rainbow(
+                    country_scenarios, config, mode, objective
+                )
 
 
 PLOT_FUNCS["Multicountry rainbow"] = plot_multicountry_rainbow
@@ -152,12 +155,12 @@ def plot_multicounty_hospital(plotter: StreamlitPlotter, app: AppRegion, scenari
 
                     # Get database from model data dir.
                     db_path = os.path.join(run_dirpath, "outputs.db")
-                    all_scenarios[mode][objective][config][country] = load_model_scenarios(
+                    all_scenarios[mode][objective][config][country] = db.load.load_model_scenarios(
                         db_path, params
                     )
 
             print("Plotting multicountry hospital for: " + mode + "_" + objective)
-            plots.plot_multicountry_hospital(all_scenarios, mode, objective)
+            plots.model.plots.plot_multicountry_hospital(all_scenarios, mode, objective)
 
 
 PLOT_FUNCS["Multicountry hospital"] = plot_multicounty_hospital
@@ -174,23 +177,11 @@ def model_output_selector(scenarios, targets):
     # Get a list of all possible output names
     base_scenario = scenarios[0]
     output_names = base_scenario.model.derived_outputs.keys()
+    output_names = [n for n in output_names if n not in ["chain", "run", "scenario"]]
 
     # Find the names of all the output types and get user to select one
     output_base_names = list(set([n.split("X")[0] for n in output_names]))
-    output_base_name = st.sidebar.selectbox("Select output type", output_base_names)
-
-    # Find the names of all the strata available to be plotted
-    output_strata_names = [
-        "X".join(n.split("X")[1:]) for n in output_names if n.startswith(output_base_name)
-    ]
-    has_strata_names = any(output_strata_names)
-    if has_strata_names:
-        # If there are strata names to select, get the user to select one.
-        output_strata = st.sidebar.selectbox("Select output strata", output_strata_names)
-        output_name = f"{output_base_name}X{output_strata}"
-    else:
-        # Otherwise just use the base name - no selection required.
-        output_name = output_base_name
+    output_name = st.sidebar.selectbox("Select output type", output_base_names)
 
     # Construct an output config for the plotting code.
     try:

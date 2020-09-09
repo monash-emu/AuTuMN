@@ -8,7 +8,7 @@ import numpy as np
 from numpy.testing import assert_array_equal, assert_allclose
 
 
-from autumn.db import database, models
+from autumn.db import database
 from autumn import constants
 from autumn.calibration import calibration
 
@@ -47,7 +47,6 @@ def memory_db(monkeypatch):
     Automatically run at the start of every test run.
     """
     monkeypatch.setattr(database, "get_sql_engine", get_in_memory_db)
-    monkeypatch.setattr(models, "get_sql_engine", get_in_memory_db)
 
 
 @pytest.fixture(autouse=True)

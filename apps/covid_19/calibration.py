@@ -149,7 +149,11 @@ def add_standard_philippines_params(params):
     """
 
     return params + [
-        {"param_name": "ifr_multiplier", "distribution": "uniform", "distri_params": [1.5, 2.28]},
+        {
+            "param_name": "ifr_multiplier",
+            "distribution": "uniform",
+            "distri_params": [1.5, 2.28]
+        },
         {
             "param_name": "testing_to_detection.assumed_cdr_parameter",
             "distribution": "uniform",
@@ -185,13 +189,13 @@ def add_standard_philippines_targets(targets):
             "output_key": "icu_occupancy",
             "years": [targets["icu_occupancy"]["times"][-1]],
             "values": [targets["icu_occupancy"]["values"][-1]],
-            "loglikelihood_distri": "normal",
+            "loglikelihood_distri": "negative_binomial",
         },
         {
             "output_key": "accum_deaths",
             "years": [targets["infection_deaths"]["times"][-1]],
             "values": [targets["infection_deaths"]["values"][-1]],
-            "loglikelihood_distri": "normal",
+            "loglikelihood_distri": "negative_binomial",
         },
     ]
 

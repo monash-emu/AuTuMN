@@ -132,7 +132,7 @@ def stratify_by_clinical(model, params, detected_proportion, symptomatic_props):
                 infection_fatality_props[age_idx]
             )
 
-        # Absolute proportion of all patients dying in hospital
+        # Absolute proportion of all patients dying in hospital, excluding ICU
         abs_death_props[ClinicalStratum.HOSPITAL_NON_ICU][age_idx] = \
             min(
                 max(

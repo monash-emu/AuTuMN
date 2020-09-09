@@ -167,7 +167,11 @@ def add_standard_philippines_params(params):
             "distribution": "uniform",
             "distri_params": [0.3, 0.5],
         },
-        {"param_name": "start_time", "distribution": "uniform", "distri_params": [40.0, 60.0],},
+        {
+            "param_name": "start_time",
+            "distribution": "uniform",
+            "distri_params": [40.0, 60.0],
+        },
         {
             "param_name": "microdistancing.parameters.max_effect",
             "distribution": "uniform",
@@ -269,7 +273,7 @@ def add_standard_victoria_params(params, region):
                 "param_name": "ifr_multiplier",  # Less to constrain this, so just to propagate some uncertainty
                 "distribution": "trunc_normal",
                 "distri_params": [1.0, 0.3],
-                "trunc_range": [0.25, 4.0],
+                "trunc_range": [0.33, 3.0],
             },
         ]
 

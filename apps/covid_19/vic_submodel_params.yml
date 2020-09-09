@@ -10,7 +10,7 @@ movement_prop: 0.3
 hospital_props_multiplier: 2.
 ifr_multiplier: 2.
 
-start_time: 140
+start_time: 140  # 19th May
 end_time: 365
 
 contact_rate: 0.023
@@ -20,49 +20,19 @@ testing_to_detection:
   assumed_tests_parameter: 1.e-03
   assumed_cdr_parameter: 0.15
 
-microdistancing:
-  function_type: empiric
-  parameters:
-    max_effect: 0.9
-    times:
-      # 30th March, day 90, stage 3 enforced
-      # 9th June, day 162, stage 3 released (I think)
-      # 20th June, day 172, restrictions tightened, only five visitors at home
-      - 181
-      - 182  # 30th June, day 182, postcode lockdowns
-      - 185
-      - 186  # 4th July, day 186, two more postcodes locked down
-      - 191
-      - 192  # 9th July, day 191, stage 3 enforced
-      - 202
-      - 204  # 22nd July, day 204, face coverings
-      - 215
-      - 216  # 2nd August, day 215, stage 4 enforced
-    values:
-      - 0.
-      - 0.05  # 30th June, day 182, postcode lockdowns
-      - 0.05
-      - 0.08  # 4th July, day 186, two more postcodes locked down
-      - 0.08
-      - 0.2  # 9th July, day 191, stage 3 enforced
-      - 0.2
-      - 0.5  # 22nd July, day 204, face coverings
-      - 0.5
-      - 1.  # 2nd August, day 215, stage 4 enforced
-
 mixing:
   school:
     append: false
     times:
       - 2020-03-24
-      - 2020-03-25 # School holidays brought forward to 24th March
+      - 2020-03-25  # School holidays brought forward to 24th March
       - 2020-05-25
-      - 2020-05-27 # 6 / 14 to represent five grades and special schools going back
+      - 2020-05-26  # 400,000 students return
       - 2020-06-08
-      - 2020-06-10 # All students back to school
+      - 2020-06-10  # Remaining 618,000 students return
       - 2020-06-26
       - 2020-06-27
-      - 2020-07-13 # Back to school for all and only Years 11 and 12, Year 10 for Melbourne and Mitchell Shire
+      - 2020-07-13  # Back to school for all and only Years 11 and 12, Year 10 for Melbourne and Mitchell Shire
       - 2020-08-03
       - 2020-08-04
       - 2020-08-25
@@ -70,8 +40,8 @@ mixing:
       - 1.
       - 0.
       - 0.
-      - 0.429
-      - 0.429
+      - 0.393
+      - 0.393
       - 1.
       - 1.
       - 0
@@ -79,3 +49,46 @@ mixing:
       - .5
       - 0.
       - 0.
+
+# Metro Melbourne clusters macrodistancing function
+microdistancing:
+  function_type: empiric
+  parameters:
+    max_effect: 0.9
+    times:
+      # Note model currently starts at the start-time specified again (19th May for the first round of DHHS projections)
+      - 137  # Coming in at stage 3 from 29th March, but beginning to release as May progresses
+      - 138  # 12th May, increase in visitor allowance (partial release from stage 3)
+      - 151
+      - 152  # 26th May, entertainment/leisure partial reopening (partial release from stage 3)
+      - 173
+      - 174  # 22nd June, visitors reduced
+      - 181
+      - 182  # 30th June, postcode lockdowns (currently ignored)
+      - 185
+      - 186  # 4th July, two more postcodes locked down (currently ignored)
+      - 191
+      - 192  # 9th July, stage 3 re-enforced
+      - 193  # 10th July, face coverings encouraged (currently ignored)
+      - 202
+      - 204  # 23rd July, face coverings mandated
+      - 215
+      - 216  # 2nd August, stage 4 enforced metro Melbourne
+    values:
+      - 0.4
+      - 0.2  # 12th May
+      - 0.2
+      - 0.1  # 26th May
+      - 0.1
+      - 0.2  # 22nd June
+      - 0.2
+      - 0.2  # 30th June
+      - 0.2
+      - 0.2  # 4th July
+      - 0.2
+      - 0.4  # 9th July
+      - 0.4  # 10th July
+      - 0.4
+      - 0.6  # 23rd July
+      - 0.6
+      - 1.  # 2nd August

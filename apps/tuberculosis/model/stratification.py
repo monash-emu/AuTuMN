@@ -5,6 +5,8 @@ from autumn.curve import scale_up_function
 
 from math import log, exp
 
+import itertools
+
 
 def stratify_by_age(model, params, compartments):
 
@@ -63,9 +65,7 @@ def apply_universal_stratification(model, compartments, stratification_name, str
     # prepare parameter adjustments
     flow_adjustments = {}
     for param_name, adjustment in stratification_details['adjustments'].items():
-        stratified_param_names = [param_name]
-        for stratification in model.stratifications:
-            stratified_param_names += [param_name + "X" + stratification.name + "_" + s for s in stratification.strata]
+        stratified_param_names = get_stratified_param_names(param_name, model.stratifications)
         for stratified_param_name in stratified_param_names:
             flow_adjustments[stratified_param_name] = {}
             for stratum in stratification_details['strata']:
@@ -101,9 +101,7 @@ def stratify_by_organ(model, params):
     # define differential natural history by organ status
     flow_adjustments = {}
     for param_name in ["infect_death_rate", "self_recovery_rate"]:
-        stratified_param_names = [param_name]
-        for stratification in model.stratifications:
-            stratified_param_names += [param_name + "X" + stratification.name + "_" + s for s in stratification.strata]
+        stratified_param_names = get_stratified_param_names(param_name, model.stratifications)
         for stratified_param_name in stratified_param_names:
             flow_adjustments[stratified_param_name] = {}
             for organ_stratum in organ_strata:
@@ -112,9 +110,7 @@ def stratify_by_organ(model, params):
                 ]
 
     # define differential detection rates by organ status
-    stratified_param_names = ['detection_rate']
-    for stratification in model.stratifications:
-        stratified_param_names += ['detection_rate' + "X" + stratification.name + "_" + s for s in stratification.strata]
+    stratified_param_names = get_stratified_param_names('detection_rate', model.stratifications)
     for stratified_param_name in stratified_param_names:
         flow_adjustments[stratified_param_name] = {}
         for organ_stratum in organ_strata:
@@ -189,3 +185,16 @@ def make_relapse_rate_func(age_group, model, params, tsr):
             return (params['treatment_death_rate'] + model.time_variants['universal_death_rate_' + str(age_group)](t)) /\
                  params['prop_death_among_negative_tx_outcome']
     return relapse_rate_func
+
+
+def get_stratified_param_names(param_name, stratifications):
+    stratified_param_names = [param_name]
+    all_strata_names = []
+    for stratification in stratifications:
+        all_strata_names.append([stratification.name + "_" + s for s in stratification.strata])
+    for strata_combo in itertools.product(*all_strata_names):
+        strata_combo_string = ""
+        for strata in strata_combo:
+            strata_combo_string += "X" + strata
+        stratified_param_names.append(param_name + strata_combo_string)
+    return stratified_param_names

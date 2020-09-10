@@ -166,24 +166,29 @@ def calculate_age_specific_infectiousness(age_breakpoints, age_infectiousness_sw
 
 def make_treatment_death_func(age_group, model, params, tsr):
     def treatment_death_func(t):
-        if model.time_variants['universal_death_rate_' + str(age_group)](t) >=\
-                params['prop_death_among_negative_tx_outcome'] * (1. / tsr - 1.):
+        tsr_ceiling = params['prop_death_among_negative_tx_outcome'] * params['treatment_recovery_rate'] /\
+                     (params['prop_death_among_negative_tx_outcome'] * params['treatment_recovery_rate'] +
+                      model.time_variants['universal_death_rate_' + str(age_group)](t))
+        if tsr >= tsr_ceiling:
             return 0.
         else:
-            return params['treatment_recovery_rate'] * (1. - tsr) / tsr * params['prop_death_among_negative_tx_outcome'] /\
-                (1. + params['prop_death_among_negative_tx_outcome']) -\
-                model.time_variants['universal_death_rate_' + str(age_group)](t)
+            return params['prop_death_among_negative_tx_outcome'] * params['treatment_recovery_rate'] *\
+                (1. - tsr) / tsr - model.time_variants['universal_death_rate_' + str(age_group)](t)
     return treatment_death_func
 
 
 def make_relapse_rate_func(age_group, model, params, tsr):
     def relapse_rate_func(t):
-        if model.time_variants['universal_death_rate_' + str(age_group)](t) >=\
-                params['prop_death_among_negative_tx_outcome'] * (1. / tsr - 1.):
-            return 0.
+        tsr_ceiling = params['prop_death_among_negative_tx_outcome'] * params['treatment_recovery_rate'] /\
+                     (params['prop_death_among_negative_tx_outcome'] * params['treatment_recovery_rate'] +
+                      model.time_variants['universal_death_rate_' + str(age_group)](t))
+        if tsr >= tsr_ceiling:
+            mu_t = 0.  # treatment_death_rate
         else:
-            return (params['treatment_death_rate'] + model.time_variants['universal_death_rate_' + str(age_group)](t)) /\
-                 params['prop_death_among_negative_tx_outcome']
+            mu_t = params['prop_death_among_negative_tx_outcome'] * params['treatment_recovery_rate'] *\
+                (1. - tsr) / tsr - model.time_variants['universal_death_rate_' + str(age_group)](t)
+        return (model.time_variants['universal_death_rate_' + str(age_group)](t) + mu_t) *\
+            (1. / params['prop_death_among_negative_tx_outcome'] - 1.)
     return relapse_rate_func
 
 

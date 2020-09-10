@@ -87,17 +87,15 @@ def process_unstratified_parameter_values(params):
         params['treatment_death_rate'] = 1.
         params['relapse_rate'] = 1.
     else:
-        tsr = params['treatment_success_rate']
-        if params['universal_death_rate'] >= params['prop_death_among_negative_tx_outcome'] * (1. / tsr - 1.):
-            params['treatment_death_rate'] = 0.
-            params['relapse_rate'] = 0.
-        else:
-            params['treatment_death_rate'] = params['treatment_recovery_rate'] * (1. - tsr) / tsr *\
-                                             params['prop_death_among_negative_tx_outcome'] /\
-                                             (1. + params['prop_death_among_negative_tx_outcome']) -\
-                                             params['universal_death_rate']
-            params['relapse_rate'] = (params['treatment_death_rate'] + params['universal_death_rate']) /\
-                                     params['prop_death_among_negative_tx_outcome']
+        tsr = min(params['treatment_success_rate'],
+                  params['treatment_recovery_rate'] /
+                  (params['treatment_recovery_rate'] + params['universal_death_rate'])
+                  )
+        params['treatment_death_rate'] = params['prop_death_among_negative_tx_outcome'] *\
+                                         params['treatment_recovery_rate'] * (1. - tsr) / tsr -\
+                                         params['universal_death_rate']
+        params['relapse_rate'] = (params['treatment_death_rate'] + params['universal_death_rate']) *\
+                                 (1. / params['prop_death_among_negative_tx_outcome'] - 1.)
 
     # load latency parameters
     if params["override_latency_rates"]:

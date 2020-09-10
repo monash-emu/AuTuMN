@@ -3,11 +3,14 @@ Processing data from the output database.
 """
 import os
 import logging
+import random
 from typing import List
 
 import pandas as pd
+import numpy as np
 
 from ..db.database import Database
+from .load import append_tables
 
 
 logger = logging.getLogger(__name__)
@@ -169,3 +172,19 @@ def unpivot_outputs(output_df: pd.DataFrame):
     output_df = output_df.join(new_cols_df)
     output_df = output_df.drop(columns="variable")
     return output_df
+
+
+def sample_runs(mcmc_df: pd.DataFrame, num_samples: int):
+    """
+    Returns a list of chain ids + run ids for each sampled run.
+    Choose runs with probability proprotional to their acceptance weights.
+    """
+    run_choices = list(zip(mcmc_df["chain"].tolist(), mcmc_df["run"].tolist()))
+    assert num_samples < len(run_choices), "Must be more samples than choices"
+    weights = mcmc_df["weight"].to_numpy()
+    sample_pr = weights / weights.sum()
+    idxs = np.array([i for i in range(len(weights))])
+    chosen_idxs = np.random.choice(idxs, size=num_samples, replace=False, p=sample_pr)
+    chosen_runs = [run_choices[i] for i in chosen_idxs]
+    return chosen_runs
+

@@ -223,6 +223,7 @@ def plot_loglikelihood_vs_parameter(
 def sample_outputs_for_calibration_fit(
     output_name: str, mcmc_tables: List[pd.DataFrame], do_tables: List[pd.DataFrame],
 ):
+    # TODO: Throw away half the chain 1st
     assert len(mcmc_tables) == len(do_tables)
     mcmc_df = None
     for table_df in mcmc_tables:

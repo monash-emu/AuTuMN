@@ -116,8 +116,8 @@ class BuildFinalCSVTask(utils.BaseTask):
         uncertainty_df.to_csv(csv_path, mode="a", header=False, index=False)
 
         # Upload the CSV
-        # s3_dest_key = f"dhhs/{filename}"
-        # utils.upload_s3(csv_path, s3_dest_key)
+        s3_dest_key = f"dhhs/{filename}"
+        utils.upload_s3(csv_path, s3_dest_key)
 
     def output(self):
         filename = f"vic-forecast-{self.commit}-{DATESTAMP}.csv"

@@ -15,7 +15,8 @@ Use case:	For case notifications, we extract column A (Date) and column B (New C
 			
 The target values are extracted and the date index is calculated on a local excel spreadsheet. 
 These values are then entered into the targets.json file for this region.
-Case importations values are entered into default.yml.
+Case importations values are entered into default.yml. A zero corresponding to the day before the first importation
+observation should be added to the data entered (as well as adding the date itself). 
 
 Testing data are extracted from the OWID database (on the recommendation of in-country staff).
 There is one very high relative to the other values, which is removed in pre-processing and the overall

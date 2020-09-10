@@ -181,9 +181,13 @@ def build_model(params: dict) -> StratifiedModel:
         for agegroup, prop in zip(agegroup_strata, normalise_sequence(total_pops))
     }
 
+    importation_props_by_age = \
+        params["importation_props_by_age"] if \
+            params["importation_props_by_age"] else \
+            {str(agegroup_strata[i]): 1. / len(agegroup_strata) for i in range(len(agegroup_strata))}
     flow_adjustments = {
         "contact_rate": params["age_based_susceptibility"],
-        "importation_rate": params["importation_props_by_age"],
+        "importation_rate": importation_props_by_age,
     }
 
     # Determine how many importations there are, including the undetected and asymptomatic importations
@@ -247,7 +251,7 @@ def build_model(params: dict) -> StratifiedModel:
         [
             import_prop * sympt_prop
             for import_prop, sympt_prop in zip(
-            params["importation_props_by_age"].values(), symptomatic_props
+            importation_props_by_age.values(), symptomatic_props
         )
         ]
     )

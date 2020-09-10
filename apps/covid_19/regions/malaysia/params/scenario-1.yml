@@ -1,4 +1,4 @@
-# SCENARIO DESCRIPTION: SCENARIO 1, END MICRO-DISTANCING
+# SCENARIO DESCRIPTION: Scenario 1, end micro-distancing
 ---
 parent: apps/covid_19/regions/malaysia/params/default.yml
 

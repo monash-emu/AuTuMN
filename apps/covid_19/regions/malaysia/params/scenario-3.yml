@@ -1,4 +1,4 @@
-# SCENARIO DESCRIPTION: SCENARIO 3, BACK TO NORMAL
+# SCENARIO DESCRIPTION: Scenario 3, Back to normal
 ---
 parent: apps/covid_19/regions/malaysia/params/default.yml
 
@@ -23,5 +23,5 @@ microdistancing:
     times:
       - 258
     values:
-      - 1.
+      - 0.
 

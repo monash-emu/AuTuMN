@@ -1,4 +1,4 @@
-# SCENARIO DESCRIPTION: SCENARIO 2, RETURN TO WORK
+# SCENARIO DESCRIPTION: Scenario 2, Back to work
 ---
 parent: apps/covid_19/regions/malaysia/params/default.yml
 

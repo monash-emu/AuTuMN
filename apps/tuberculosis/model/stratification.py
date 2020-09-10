@@ -10,7 +10,7 @@ def stratify_by_age(model, params, compartments):
 
     flow_adjustments = {}
 
-    # age-specific all-causes mortality rate  # FIXME: This is not working for some reason
+    # age-specific all-causes mortality rate
     death_rates_by_age, death_rate_years = get_death_rates_by_agegroup(params['age_breakpoints'], params['iso3'])
     flow_adjustments['universal_death_rate'] = {}
     for age_group in params['age_breakpoints']:
@@ -27,6 +27,23 @@ def stratify_by_age(model, params, compartments):
     # age-specific infectiousness
     strata_infectiousness = calculate_age_specific_infectiousness(params['age_breakpoints'],
                                                                   params['age_infectiousness_switch'])
+
+    # age-specific relapse and treatment death
+    tsr = params['treatment_success_rate']
+    factory_functions = {
+        'treatment_death_rate': make_treatment_death_func,
+        'relapse_rate': make_relapse_rate_func,
+    }
+    for param_stem in factory_functions:
+        flow_adjustments[param_stem] = {}
+        for age_group in params['age_breakpoints']:
+            flow_adjustments[param_stem][str(age_group)] = param_stem + '_' + str(age_group)
+
+            model.time_variants[param_stem + '_' + str(age_group)] = factory_functions[param_stem](
+                age_group, model, params, tsr
+            )
+            model.parameters[param_stem + '_' + str(age_group)] = param_stem + '_' + str(age_group)
+
     # trigger model stratification
     model.stratify(
         "age",
@@ -122,3 +139,26 @@ def calculate_age_specific_infectiousness(age_breakpoints, age_infectiousness_sw
         infectiousness_by_agegroup[str(age_low)] = average_infectiousness
 
     return infectiousness_by_agegroup
+
+
+def make_treatment_death_func(age_group, model, params, tsr):
+    def treatment_death_func(t):
+        if model.time_variants['universal_death_rate_' + str(age_group)](t) >=\
+                params['prop_death_among_negative_tx_outcome'] * (1. / tsr - 1.):
+            return 0.
+        else:
+            return params['treatment_recovery_rate'] * (1. - tsr) / tsr * params['prop_death_among_negative_tx_outcome'] /\
+                (1. + params['prop_death_among_negative_tx_outcome']) -\
+                model.time_variants['universal_death_rate_' + str(age_group)](t)
+    return treatment_death_func
+
+
+def make_relapse_rate_func(age_group, model, params, tsr):
+    def relapse_rate_func(t):
+        if model.time_variants['universal_death_rate_' + str(age_group)](t) >=\
+                params['prop_death_among_negative_tx_outcome'] * (1. / tsr - 1.):
+            return 0.
+        else:
+            return (params['treatment_death_rate'] + model.time_variants['universal_death_rate_' + str(age_group)](t)) /\
+                 params['prop_death_among_negative_tx_outcome']
+    return relapse_rate_func

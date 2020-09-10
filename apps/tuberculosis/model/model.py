@@ -48,14 +48,22 @@ def build_model(params: dict) -> StratifiedModel:
     params['detection_rate'] = params['passive_screening_rate'] * params['passive_screening_sensitivity']['unstratified']
 
     # Set unstratified treatment-outcome-related parameters
-    mu = 1/60.  # FIXME: this should be a time-variant age-dependant quantity
-    TSR = params['treatment_success_rate']
     params['treatment_recovery_rate'] = 1 / params['treatment_duration']
-    params['treatment_death_rate'] = params['treatment_recovery_rate'] * (1. - TSR) / TSR *\
-                                     params['prop_death_among_negative_tx_outcome'] /\
-                                     (1. + params['prop_death_among_negative_tx_outcome']) -\
-                                     mu
-    params['relapse_rate'] = (params['treatment_death_rate'] + mu) / params['prop_death_among_negative_tx_outcome']
+    if "age" in params["stratify_by"]:  # relapse and treatment death need to be adjusted by age later
+        params['treatment_death_rate'] = 1.
+        params['relapse_rate'] = 1.
+    else:
+        tsr = params['treatment_success_rate']
+        if params['universal_death_rate'] >= params['prop_death_among_negative_tx_outcome'] * (1. / tsr - 1.):
+            params['treatment_death_rate'] = 0.
+            params['relapse_rate'] = 0.
+        else:
+            params['treatment_death_rate'] = params['treatment_recovery_rate'] * (1. - tsr) / tsr *\
+                                             params['prop_death_among_negative_tx_outcome'] /\
+                                             (1. + params['prop_death_among_negative_tx_outcome']) -\
+                                             params['universal_death_rate']
+            params['relapse_rate'] = (params['treatment_death_rate'] + params['universal_death_rate']) /\
+                                     params['prop_death_among_negative_tx_outcome']
 
     # Define model times.
     integration_times = get_model_times_from_inputs(

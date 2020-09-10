@@ -55,7 +55,7 @@ class BuildFinalCSVTask(utils.BaseTask):
         # Get sample runs from all chains
         mcmc_df = None
         do_df = None
-        num_chosen_per_chain = 5
+        num_chosen_per_chain = 120
         for region in Region.VICTORIA_SUBREGIONS:
             if region == Region.VICTORIA:
                 continue

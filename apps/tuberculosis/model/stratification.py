@@ -54,6 +54,33 @@ def stratify_by_age(model, params, compartments):
     )
 
 
+def apply_universal_stratification(model, compartments, stratification_name, stratification_details):
+    """
+    Stratify all model compartments based on a user-defined stratification request. This stratification can only adjust
+    the parameters that are directly implemented in the model. That is, adjustment requests to parameters that are used
+    for pre-processing but not directly linked to a flow will have no effect.
+    """
+    # prepare parameter adjustments
+    flow_adjustments = {}
+    for param_name, adjustment in stratification_details['adjustments'].items():
+        stratified_param_names = [param_name]
+        for stratification in model.stratifications:
+            stratified_param_names += [param_name + "X" + stratification.name + "_" + s for s in stratification.strata]
+        for stratified_param_name in stratified_param_names:
+            flow_adjustments[stratified_param_name] = {}
+            for stratum in stratification_details['strata']:
+                flow_adjustments[stratified_param_name][stratum] = adjustment
+
+    # apply stratification
+    model.stratify(
+        stratification_name,
+        stratification_details['strata'],
+        compartments,
+        comp_split_props=stratification_details['proportions'],
+        flow_adjustments=flow_adjustments,
+    )
+
+
 def stratify_by_organ(model, params):
 
     compartments_to_stratify = [

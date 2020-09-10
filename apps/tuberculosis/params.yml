@@ -12,8 +12,18 @@ iso3: null
 region: null
 
 # model structure
-stratify_by: ["age", "organ"]
+stratify_by: ['age', 'organ', 'universal_location']   # stratifications starting with "universal_" apply to all compartments
 age_breakpoints: [0, 5, 15, 30, 45, 60, 75]
+universal_stratifications:  # this specifies user-defined universal stratifications
+  universal_location:
+    strata: ['rural', 'urban']
+    proportions:
+      rural: .2
+      urban: .8
+    adjustments:
+      contact_rate: 1.2
+      detection_rate: .5
+
 
 # demographics
 start_population_size: 5000000

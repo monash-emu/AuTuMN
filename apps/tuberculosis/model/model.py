@@ -7,7 +7,7 @@ from autumn.tool_kit.demography import set_model_time_variant_birth_rate
 
 from apps.tuberculosis.model import preprocess, outputs
 from apps.tuberculosis.model.validate import validate_params
-from apps.tuberculosis.model.stratification import stratify_by_organ, stratify_by_age
+from apps.tuberculosis.model.stratification import stratify_by_organ, stratify_by_age, apply_universal_stratification
 
 
 def build_model(params: dict) -> StratifiedModel:
@@ -69,9 +69,14 @@ def build_model(params: dict) -> StratifiedModel:
     # Apply infectiousness adjustment for individuals on treatment
     tb_model.individual_infectiousness_adjustments = treatment_infectiousness_adjustment
 
-    # apply stratifications
+    # apply age stratification
     if "age" in params["stratify_by"]:
         stratify_by_age(tb_model, params, compartments)
+
+    # apply user-defined universal stratifications
+    for stratification in [s for s in params["stratify_by"] if s[:10] == "universal_"]:
+        stratification_details = params['universal_stratifications'][stratification]
+        apply_universal_stratification(tb_model, compartments, stratification, stratification_details)
 
     if "organ" in params["stratify_by"]:
         stratify_by_organ(tb_model, params)

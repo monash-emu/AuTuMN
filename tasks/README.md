@@ -15,6 +15,7 @@ python -m tasks
 python -m tasks calibrate --run  manila-111111111-aaaaaaa --chains 4 --runtime 60 --workers 4
 ```
 
+
 ### Run full models
 
 ```
@@ -25,6 +26,12 @@ python -m tasks full --run  manila-111111111-aaaaaaa --burn 2 --workers 4
 
 ```
 python -m tasks powerbi --run  manila-111111111-aaaaaaa --workers 4
+```
+
+### Run DHHS processing
+
+```
+python -m tasks dhhs --commit aaaaaaa --workers 7
 ```
 
 ### Clean up test task

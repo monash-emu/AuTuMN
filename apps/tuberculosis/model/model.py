@@ -3,9 +3,7 @@ from copy import deepcopy
 from summer.model import StratifiedModel
 from autumn.constants import Compartment, BirthApproach, Flow
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
-from autumn import inputs
-from autumn.curve import scale_up_function
-
+from autumn.tool_kit.demography import set_model_time_variant_birth_rate
 
 from apps.tuberculosis.model import preprocess, outputs
 from apps.tuberculosis.model.validate import validate_params
@@ -17,6 +15,11 @@ def build_model(params: dict) -> StratifiedModel:
     Build the master function to run a simple SIR model
     """
     validate_params(params)
+
+    # Define model times.
+    integration_times = get_model_times_from_inputs(
+        round(params["start_time"]), params["end_time"], params["time_step"]
+    )
 
     # Define model compartments.
     compartments = [
@@ -32,6 +35,9 @@ def build_model(params: dict) -> StratifiedModel:
         Compartment.ON_TREATMENT,
     ]
 
+    # Define initial conditions - 1 infectious person.
+    init_conditions = {Compartment.INFECTIOUS: 1}
+
     # prepare infectiousness adjustment for individuals on treatment
     treatment_infectiousness_adjustment = [
         {
@@ -44,52 +50,8 @@ def build_model(params: dict) -> StratifiedModel:
     # Define inter-compartmental flows.
     flows = deepcopy(preprocess.flows.DEFAULT_FLOWS)
 
-    # Set unstratified detection flow parameter
-    params['detection_rate'] = params['passive_screening_rate'] * params['passive_screening_sensitivity']['unstratified']
-
-    # Set unstratified treatment-outcome-related parameters
-    params['treatment_recovery_rate'] = 1 / params['treatment_duration']
-    if "age" in params["stratify_by"]:  # relapse and treatment death need to be adjusted by age later
-        params['treatment_death_rate'] = 1.
-        params['relapse_rate'] = 1.
-    else:
-        tsr = params['treatment_success_rate']
-        if params['universal_death_rate'] >= params['prop_death_among_negative_tx_outcome'] * (1. / tsr - 1.):
-            params['treatment_death_rate'] = 0.
-            params['relapse_rate'] = 0.
-        else:
-            params['treatment_death_rate'] = params['treatment_recovery_rate'] * (1. - tsr) / tsr *\
-                                             params['prop_death_among_negative_tx_outcome'] /\
-                                             (1. + params['prop_death_among_negative_tx_outcome']) -\
-                                             params['universal_death_rate']
-            params['relapse_rate'] = (params['treatment_death_rate'] + params['universal_death_rate']) /\
-                                     params['prop_death_among_negative_tx_outcome']
-
-    # Define model times.
-    integration_times = get_model_times_from_inputs(
-        round(params["start_time"]), params["end_time"], params["time_step"]
-    )
-
-    # Define initial conditions - 1 infectious person.
-    init_conditions = {Compartment.INFECTIOUS: 1}
-
-    # load latency parameters
-    if params["override_latency_rates"]:
-        params = preprocess.latency.get_unstratified_parameter_values(params)
-
-    # set reinfection contact rate parameters
-    for state in ["latent", "recovered"]:
-        params["contact_rate_from_" + state] = (
-            params["contact_rate"] * params["rr_infection_" + state]
-        )
-
-    # assign unstratified parameter values to infection death and self-recovery processes
-    for param_name in ["infect_death_rate", "self_recovery_rate"]:
-        params[param_name] = params[param_name + "_dict"]["unstratified"]
-
-    # if age-stratification is used, the baseline mortality rate is set to 1 so it can get multiplied by a time-variant
-    if "age" in params["stratify_by"]:
-        params['universal_death_rate'] = 1.
+    # Set some parameter values or parameters that require pre-processing
+    params = preprocess.flows.process_unstratified_parameter_values(params)
 
     # Create the model.
     tb_model = StratifiedModel(
@@ -107,6 +69,7 @@ def build_model(params: dict) -> StratifiedModel:
     # Apply infectiousness adjustment for individuals on treatment
     tb_model.individual_infectiousness_adjustments = treatment_infectiousness_adjustment
 
+    # apply stratifications
     if "age" in params["stratify_by"]:
         stratify_by_age(tb_model, params, compartments)
 
@@ -114,11 +77,7 @@ def build_model(params: dict) -> StratifiedModel:
         stratify_by_organ(tb_model, params)
 
     # Load time-variant birth rates
-    birth_rates, years = inputs.get_crude_birth_rate(params['iso3'])
-    birth_rates = [b / 1000. for b in birth_rates]  # birth rates are provided / 1000 population
-    tb_model.time_variants["crude_birth_rate"] = scale_up_function(
-        years, birth_rates, smoothness=0.2, method=5
-    )
+    set_model_time_variant_birth_rate(tb_model, params['iso3'])
 
     # Register derived output functions
     # These functions calculate 'derived' outputs of interest, based on the

@@ -9,6 +9,7 @@ from autumn import db
 from autumn.constants import Region
 from autumn.db.database import Database
 from autumn.tool_kit.params import load_targets
+import pandas as pd
 
 from . import utils
 from . import settings
@@ -53,56 +54,51 @@ class BuildFinalCSVTask(utils.BaseTask):
         outputs = [t["output_key"] for t in targets.values()]
 
         # Get sample runs from all chains
-        mcmc_df = None
-        do_df = None
-        num_chosen_per_chain = 120
+        num_chosen = 800
+        start_t = 140
+        end_t = 365
+        times = np.linspace(start_t, end_t, end_t - start_t + 1)
+        samples = []
+        for _ in range(num_chosen):
+            sample = {}
+            sample["weights"] = np.zeros(len(times))
+            for o in outputs:
+                sample[o] = np.zeros(len(times))
+
+            samples.append(sample)
+
         for region in Region.VICTORIA_SUBREGIONS:
             if region == Region.VICTORIA:
                 continue
 
             region_dir = os.path.join(DHHS_DIR, "full", region)
             mcmc_tables = db.process.append_tables(db.load.load_mcmc_tables(region_dir))
-            do_tables = db.process.append_tables(db.load.load_derived_output_tables(region_dir))
-            num_chains = mcmc_tables.chain.max() + 1
-            num_chosen = num_chosen_per_chain * num_chains
             chosen_runs = db.process.sample_runs(mcmc_tables, num_chosen)
+            mcmc_tables = mcmc_tables.set_index(["chain", "run"])
+            do_tables = db.load.load_derived_output_tables(region_dir)
+            do_tables = db.process.append_tables(do_tables).set_index(["chain", "run"])
 
-            mcmc_mask = None
-            for chain, run in chosen_runs:
-                mask = (mcmc_tables["chain"] == chain) & (mcmc_tables["run"] == run)
-                mcmc_mask = mask if mcmc_mask is None else (mcmc_mask | mask)
+            for idx, (chain, run) in enumerate(chosen_runs):
+                mcmc_row = mcmc_tables.loc[(chain, run), :]
+                sample = samples[idx]
+                sample["weights"] += mcmc_tables.loc[(chain, run), "weight"]
 
-            do_mask = None
-            for chain, run in chosen_runs:
-                mask = (do_tables["chain"] == chain) & (do_tables["run"] == run)
-                do_mask = mask if do_mask is None else (do_mask | mask)
+                run_start_t = do_tables.loc[(chain, run), "times"].iloc[0]
+                t_offset = int(run_start_t - start_t)
+                for o in outputs:
+                    sample[o][t_offset:] += do_tables.loc[(chain, run), o]
 
-            mcmc_chosen = mcmc_tables[mcmc_mask].copy()
-            do_chosen = do_tables[do_mask].copy()
-            assert len(mcmc_chosen) == num_chosen
+        columns = ["scenario", "times", "weight", *outputs]
+        data = {
+            "scenario": np.concatenate([np.zeros(len(times)) for _ in range(num_chosen)]),
+            "times": np.concatenate([times for _ in range(num_chosen)]),
+            "weight": np.concatenate([s["weights"] for s in samples]),
+        }
+        for o in outputs:
+            data[o] = np.concatenate([s[o] for s in samples])
 
-            # Aggregate weights over regions
-            if mcmc_df is None:
-                mcmc_df = mcmc_chosen
-            else:
-                mcmc_df["weight"] = mcmc_df["weight"].to_numpy() + mcmc_chosen["weight"].to_numpy()
-
-            # Aggregate outputs over regions
-            if do_df is None:
-                do_df = do_chosen
-            else:
-                common_times = np.intersect1d(do_df["times"], do_chosen["times"])
-                min_t, max_t = common_times.min(), common_times.max()
-                do_df_mask = (do_df["times"] >= min_t) & (do_df["times"] <= max_t)
-                do_chosen_mask = (do_chosen["times"] >= min_t) & (do_chosen["times"] <= max_t)
-                for output in outputs:
-                    output_sum = (
-                        do_df[do_df_mask][output].to_numpy()
-                        + do_chosen[do_chosen_mask][output].to_numpy()
-                    )
-                    do_df[do_df_mask][output] = output_sum
-
-        uncertainty_df = db.uncertainty.calculate_mcmc_uncertainty(mcmc_df, do_df, targets)
+        df = pd.DataFrame(data=data, columns=columns)
+        uncertainty_df = db.uncertainty._calculate_mcmc_uncertainty(df, targets)
 
         # Add Victorian uncertainty to the existing CSV
         baseline_mask = uncertainty_df["scenario"] == 0

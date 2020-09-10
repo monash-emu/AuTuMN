@@ -44,6 +44,14 @@ def calculate_mcmc_uncertainty(
     """
     df = pd.merge(do_df, mcmc_df, on=["run", "chain"])
     df.drop(columns=["chain", "run", "loglikelihood", "ap_loglikelihood", "accept"], inplace=True)
+    return _calculate_mcmc_uncertainty(df, targets)
+
+
+def _calculate_mcmc_uncertainty(df: pd.DataFrame, targets: dict) -> pd.DataFrame:
+    """
+    Calculate quantiles from a table of weighted values.
+    See calc_mcmc_weighted_values for how these weights are calculated.
+    """
     times = sorted(df["times"].unique())
     scenarios = df["scenario"].unique()
     uncertainty_data = []

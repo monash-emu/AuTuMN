@@ -57,15 +57,14 @@ time_step: 1.
 
 # FIXED BIOLOGICAL PARAMETERS
 
-contact_rate: 0.03 # Routinely calibrated, see calibration file
+contact_rate: 0.03  # Routinely calibrated, see respective calibration files
 
 # Mean time (?) spent in each compartment, defined via proportions
 compartment_periods_calculated:
   exposed:
-    total_period: 5.5 # Routinely calibrated, see calibration file
+    total_period: 5.5  # Routinely calibrated, see calibration file
     proportions:
-      early: 0.5
-      # Proportion of the exposed period spent infectious - i.e. "presymptomatic"
+      early: 0.5  # Proportion of the exposed period spent infectious - i.e. "presymptomatic"
       late: 0.5
 
   active:
@@ -180,8 +179,7 @@ late_infect_multiplier:
   hospital_non_icu: 0.2
   icu: 0.2
 
-# parameters of tanh-based scale-up function used to define time-variant detection
-
+# Parameters of tanh-based scale-up function used to define time-variant detection, if that approach selected
 time_variant_detection:
   maximum_gradient: 0.05 # The shape parameter to the tanh-based curve
   max_change_time: 90. # Point at which curve inflects

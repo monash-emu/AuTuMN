@@ -4,11 +4,6 @@ parent: apps/covid_19/phl_submodel_params.yml
 mobility_region: Central Visayas
 pop_region: Central Visayas
 
-hospital_props_multiplier: 2.
-
-testing_to_detection:
-  assumed_tests_parameter: 3.54e-05
-
 mixing:
   school:
     append: false

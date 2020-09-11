@@ -4,11 +4,6 @@ parent: apps/covid_19/phl_submodel_params.yml
 pop_region: Metro Manila
 mobility_region: Metro Manila
 
-hospital_props_multiplier: 2.
-
-testing_to_detection:
-  assumed_tests_parameter: 1.5e-05
-
 mixing:
   school:
     append: false

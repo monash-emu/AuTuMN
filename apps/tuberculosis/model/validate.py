@@ -30,7 +30,7 @@ validate_params = sb.build_validator(
     passive_screening_sensitivity=dict,
     # treatment
     treatment_duration=float,
-    treatment_success_rate=float,
+    time_variant_tsr=dict,
     prop_death_among_negative_tx_outcome=float,
     on_treatment_infect_multiplier=float,
     # characterising age stratification

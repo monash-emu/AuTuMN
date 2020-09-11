@@ -1,6 +1,7 @@
 from autumn.constants import Flow
 from apps.tuberculosis.constants import Compartment
 from .latency import get_unstratified_parameter_values
+from autumn.curve import scale_up_function
 
 DEFAULT_FLOWS = [
     # Infection flows.
@@ -86,16 +87,31 @@ def process_unstratified_parameter_values(params):
     if "age" in params["stratify_by"]:  # relapse and treatment death need to be adjusted by age later
         params['treatment_death_rate'] = 1.
         params['relapse_rate'] = 1.
+        treatment_death_func = None
+        relapse_func = None
     else:
-        tsr = min(params['treatment_success_rate'],
-                  params['treatment_recovery_rate'] /
-                  (params['treatment_recovery_rate'] + params['universal_death_rate'])
-                  )
-        params['treatment_death_rate'] = params['prop_death_among_negative_tx_outcome'] *\
-                                         params['treatment_recovery_rate'] * (1. - tsr) / tsr -\
-                                         params['universal_death_rate']
-        params['relapse_rate'] = (params['treatment_death_rate'] + params['universal_death_rate']) *\
-                                 (1. / params['prop_death_among_negative_tx_outcome'] - 1.)
+        input_time_variant_tsr = scale_up_function(
+            list(params['time_variant_tsr'].keys()),
+            list(params['time_variant_tsr'].values()),
+            method=4,
+        )
+        effective_tsr_func = lambda t: min(
+            input_time_variant_tsr(t),
+            params['treatment_recovery_rate'] * params['prop_death_among_negative_tx_outcome'] /
+            (params['treatment_recovery_rate'] * params['prop_death_among_negative_tx_outcome'] +
+             params['universal_death_rate'])
+        )
+
+        def treatment_death_func(t):
+            return params['prop_death_among_negative_tx_outcome'] * params['treatment_recovery_rate'] *\
+                   (1. - effective_tsr_func(t)) / effective_tsr_func(t) - params['universal_death_rate']
+
+        def relapse_func(t):
+            return (treatment_death_func(t) + params['universal_death_rate']) *\
+                   (1. / params['prop_death_among_negative_tx_outcome'] - 1.)
+
+        params['treatment_death_rate'] = 'treatment_death_rate'
+        params['relapse_rate'] = 'relapse_rate'
 
     # load latency parameters
     if params["override_latency_rates"]:
@@ -115,4 +131,4 @@ def process_unstratified_parameter_values(params):
     if "age" in params["stratify_by"]:
         params['universal_death_rate'] = 1.
 
-    return params
+    return params, treatment_death_func, relapse_func

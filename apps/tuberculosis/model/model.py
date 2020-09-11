@@ -51,7 +51,7 @@ def build_model(params: dict) -> StratifiedModel:
     flows = deepcopy(preprocess.flows.DEFAULT_FLOWS)
 
     # Set some parameter values or parameters that require pre-processing
-    params = preprocess.flows.process_unstratified_parameter_values(params)
+    params, treatment_death_func, relapse_func = preprocess.flows.process_unstratified_parameter_values(params)
 
     # Create the model.
     tb_model = StratifiedModel(
@@ -72,6 +72,10 @@ def build_model(params: dict) -> StratifiedModel:
     # apply age stratification
     if "age" in params["stratify_by"]:
         stratify_by_age(tb_model, params, compartments)
+    else:
+        # set time-variant functions for treatment death and relapse rates
+        tb_model.time_variants['treatment_death_rate'] = treatment_death_func
+        tb_model.time_variants['relapse_rate'] = relapse_func
 
     # apply user-defined universal stratifications
     for stratification in [s for s in params["stratify_by"] if s[:10] == "universal_"]:

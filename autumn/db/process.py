@@ -100,16 +100,18 @@ def prune(source_db_path: str, target_db_path: str, targets=None):
             mle_mask = (table_df["run"] == mle_run_id) & (table_df["chain"] == mle_chain_id)
             max_ll_table_df = table_df[mle_mask]
             target_db.dump_df(table_name, max_ll_table_df)
-        elif table_name == "derived_outputs" and targets:
-            # Drop all columns that aren't targets
-            output_keys = [t["output_key"] for t in targets.values()]
-            logger.info(
-                "Pruning derived_outputs so that it only contains target outputs: %s", output_keys
-            )
-            cols = ["chain", "run", "scenario", "times", *output_keys]
-            drop_cols = [c for c in table_df.columns if c not in cols]
-            table_df.drop(columns=drop_cols, inplace=True)
-            target_db.dump_df(table_name, table_df)
+        # Commented to obtain full model outputs
+        #elif table_name == "derived_outputs" and targets:
+        #    # Drop all columns that aren't targets
+        #    output_keys = [t["output_key"] for t in targets.values()]
+        #    logger.info(
+        #        "Pruning derived_outputs so that it only contains target outputs: %s", output_keys
+        #    )
+        #    cols = ["chain", "run", "scenario", "times", *output_keys]
+        #    drop_cols = [c for c in table_df.columns if c not in cols]
+        #    table_df.drop(columns=drop_cols, inplace=True)
+        #    target_db.dump_df(table_name, table_df)
+
         elif table_name == "derived_outputs":
             # Drop everything except the MLE run
             logger.info("Pruning derived_outputs so that it only contains max likelihood runs")

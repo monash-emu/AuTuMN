@@ -4,11 +4,6 @@ parent: apps/covid_19/phl_submodel_params.yml
 pop_region: Calabarzon
 mobility_region: Calabarzon
 
-hospital_props_multiplier: 2.
-
-testing_to_detection:
-  assumed_tests_parameter: 8.36e-06
-
 mixing:
   school:
     append: false

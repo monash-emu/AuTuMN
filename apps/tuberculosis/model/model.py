@@ -1,5 +1,4 @@
 from copy import deepcopy
-
 from summer.model import StratifiedModel
 from autumn.constants import Compartment, BirthApproach, Flow
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
@@ -51,7 +50,8 @@ def build_model(params: dict) -> StratifiedModel:
     flows = deepcopy(preprocess.flows.DEFAULT_FLOWS)
 
     # Set some parameter values or parameters that require pre-processing
-    params, treatment_death_func, relapse_func = preprocess.flows.process_unstratified_parameter_values(params)
+    params, treatment_death_func, relapse_func, detection_rate_func =\
+        preprocess.flows.process_unstratified_parameter_values(params)
 
     # Create the model.
     tb_model = StratifiedModel(
@@ -84,6 +84,8 @@ def build_model(params: dict) -> StratifiedModel:
 
     if "organ" in params["stratify_by"]:
         stratify_by_organ(tb_model, params)
+    else:
+        tb_model.time_variants['detection_rate'] = detection_rate_func
 
     # Load time-variant birth rates
     set_model_time_variant_birth_rate(tb_model, params['iso3'])

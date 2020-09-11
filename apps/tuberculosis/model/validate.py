@@ -26,7 +26,7 @@ validate_params = sb.build_validator(
     rr_infection_latent=float,
     rr_infection_recovered=float,
     # detection
-    passive_screening_rate=float,
+    time_variant_presentation_delay=dict,
     passive_screening_sensitivity=dict,
     # treatment
     treatment_duration=float,

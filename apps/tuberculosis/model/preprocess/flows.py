@@ -1,7 +1,8 @@
 from autumn.constants import Flow
 from apps.tuberculosis.constants import Compartment
 from .latency import get_unstratified_parameter_values
-from autumn.curve import scale_up_function
+from autumn.curve import scale_up_function, tanh_based_scaleup
+
 
 DEFAULT_FLOWS = [
     # Infection flows.
@@ -79,8 +80,23 @@ def process_unstratified_parameter_values(params):
     involves combining multiple input parameters to determine a model parameter
     :return:
     """
+
     # Set unstratified detection flow parameter
-    params['detection_rate'] = params['passive_screening_rate'] * params['passive_screening_sensitivity']['unstratified']
+    if "organ" in params["stratify_by"]:
+        params['detection_rate'] = 1
+        detection_rate_func = None
+    else:
+        presentation_delay_func = tanh_based_scaleup(
+            params['time_variant_presentation_delay']['maximum_gradient'],
+            params['time_variant_presentation_delay']['max_change_time'],
+            params['time_variant_presentation_delay']['end_value'],
+            params['time_variant_presentation_delay']['start_value'],
+        )
+
+        def detection_rate_func(t):
+            return 1. / presentation_delay_func(t) * params['passive_screening_sensitivity']['unstratified']
+
+        params['detection_rate'] = 'detection_rate'
 
     # Set unstratified treatment-outcome-related parameters
     params['treatment_recovery_rate'] = 1 / params['treatment_duration']
@@ -131,4 +147,4 @@ def process_unstratified_parameter_values(params):
     if "age" in params["stratify_by"]:
         params['universal_death_rate'] = 1.
 
-    return params, treatment_death_func, relapse_func
+    return params, treatment_death_func, relapse_func, detection_rate_func

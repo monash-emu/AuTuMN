@@ -22,7 +22,7 @@ microdistancing:
   function_type: empiric
   parameters:
     max_effect: 0.25
-    times: [75, 76, 77, 137, 138, 153, 154, 198, 199, 214, 215, 229]
+    times: [75, 76, 137, 138, 153, 154, 198, 199, 214, 215, 228, 229]
     values: [0, 1., 1., 0.7, 0.7, 0.2, 0.2, 0.3, 0.3, 0.85, 0.85, 0.9]
   # 16 March, day 76, ECQ enforced for whole region
   # 16 May, day 137, GCQ continues for most of region with MECQ enforced for Laguna

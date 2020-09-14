@@ -22,7 +22,7 @@ microdistancing:
   function_type: empiric
   parameters:
     max_effect: 0.25
-    times: [75, 76, 77, 137, 138, 153, 154, 214, 215, 231]
+    times: [75, 76, 137, 138, 153, 154, 214, 215, 230, 231]
     values: [0, 1., 1., 0.8, 0.8, 0.6, 0.6, 0.8, 0.8, 0.4]
   # 16 March, day 76, ECQ enforced for whole region
   # 16 May, day 137, MECQ enforced for whole region

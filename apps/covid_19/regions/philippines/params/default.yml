@@ -20,8 +20,8 @@ microdistancing:
   function_type: empiric
   parameters:
     max_effect: 0.28
-    times: [75, 76, 77, 122, 123, 137, 138, 153, 154, 227, 228]
-    values: [0, 0.76, 0.76, 0.73, 0.73, 0.64, 0.64, 0.58, 0.58, 1., 1.]
+    times: [75, 76, 121, 122, 136, 137, 153, 154, 227, 228]
+    values: [0., 0.76, 0.76, 0.73, 0.73, 0.64, 0.64, 0.58, 0.58, 1.]
   # 16 March, day 76, ECQ enforced
   # 1 May, day 122, ECQ / GCQ enforced
   # 16 May, day 137, MECQ / GCQ enforced

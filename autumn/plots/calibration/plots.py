@@ -120,7 +120,7 @@ def plot_mcmc_parameter_trace(plotter: Plotter, mcmc_params: List[pd.DataFrame],
     for idx, table_df in enumerate(mcmc_params):
         param_mask = table_df["name"] == param_name
         param_df = table_df[param_mask]
-        param_df["value"].plot.line(ax=axis, alpha=0.8, linewidth=0.7)
+        axis.plot(param_df["run"], param_df["value"], alpha=0.8, linewidth=0.7)
 
     axis.set_ylabel(param_name)
     axis.set_xlabel("MCMC iterations")

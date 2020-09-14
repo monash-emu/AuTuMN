@@ -12,7 +12,7 @@ iso3: null
 region: null
 
 # requested outputs
-calculated_outputs: ['prevalence_infectious', 'prevalence_latent', 'population_size']
+calculated_outputs: ['prevalence_infectious', 'percentage_latent', 'population_size']
 
 # model structure
 # stratifications by age and by organ are pre-defined but they must be requested to be activated

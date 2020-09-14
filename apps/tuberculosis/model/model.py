@@ -98,8 +98,8 @@ def build_model(params: dict) -> StratifiedModel:
     # model's compartment values or flows. These are calculated after the model is run.
     func_outputs = {
         "prevalence_infectious": outputs.calculate_prevalence_infectious,
-        "prevalence_susceptible": outputs.calculate_prevalence_susceptible,
-        "prevalence_latent": outputs.calculate_percentage_latent,
+        "percentage_susceptible": outputs.calculate_percentage_susceptible,
+        "percentage_latent": outputs.calculate_percentage_latent,
         "population_size": outputs.calculate_population_size,
     }
     calculated_func_outputs = {key: value for key, value in func_outputs.items() if key in params['calculated_outputs']}

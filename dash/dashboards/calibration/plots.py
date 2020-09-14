@@ -12,6 +12,36 @@ from dash import selectors
 PLOT_FUNCS = {}
 
 
+def plot_timeseries_with_uncertainty(
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+):
+    available_outputs = [o["output_key"] for o in targets.values()]
+    chosen_output = st.sidebar.selectbox("Select calibration target", available_outputs)
+    chosen_target = next(t for t in targets.values() if t["output_key"] == chosen_output)
+    targets = {k: v for k, v in targets.items() if v["output_key"] == chosen_output}
+    derived_output_tables = db.load.load_derived_output_tables(calib_dir_path)
+    mcmc_all_df = db.process.append_tables(mcmc_tables)
+    do_all_df = db.process.append_tables(derived_output_tables)
+
+    # Determine max chain length, throw away first half of that
+    max_run = mcmc_all_df["run"].max()
+    half_max = max_run // 2
+    mcmc_all_df = mcmc_all_df[mcmc_all_df["run"] >= half_max]
+
+    uncertainty_df = db.uncertainty.calculate_mcmc_uncertainty(mcmc_all_df, do_all_df, targets)
+    is_logscale = st.sidebar.checkbox("Log scale")
+    plots.uncertainty.plots.plot_timeseries_with_uncertainty(
+        plotter, uncertainty_df, chosen_output, 0, targets, is_logscale
+    )
+
+
+PLOT_FUNCS["Output uncertainty"] = plot_timeseries_with_uncertainty
+
+
 def plot_calibration_fit(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
@@ -55,64 +85,13 @@ def print_mle_parameters(
     mcmc_params: List[pd.DataFrame],
     targets: dict,
 ):
-    df = None
-    for table_df in mcmc_tables:
-        if df is not None:
-            df = df.append(table_df)
-        else:
-            df = table_df
-
-    param_df = None
-    for table_df in mcmc_params:
-        if param_df is not None:
-            param_df = param_df.append(table_df)
-        else:
-            param_df = table_df
-
+    df = db.process.append_tables(mcmc_tables)
+    param_df = db.process.append_tables(mcmc_params)
     params = db.process.find_mle_params(df, param_df)
     st.write(params)
 
 
 PLOT_FUNCS["Print MLE parameters"] = print_mle_parameters
-
-
-def plot_timeseries_with_uncertainty(
-    plotter: StreamlitPlotter,
-    calib_dir_path: str,
-    mcmc_tables: List[pd.DataFrame],
-    mcmc_params: List[pd.DataFrame],
-    targets: dict,
-):
-    available_outputs = [o["output_key"] for o in targets.values()]
-    chosen_output = st.sidebar.selectbox("Select calibration target", available_outputs)
-    chosen_target = next(t for t in targets.values() if t["output_key"] == chosen_output)
-    targets = {k: v for k, v in targets.items() if v["output_key"] == chosen_output}
-
-    derived_output_tables = db.load.load_derived_output_tables(calib_dir_path)
-    mcmc_all_df = None
-    do_all_df = None
-    for mcmc_df, do_df in zip(mcmc_tables, derived_output_tables):
-        if mcmc_all_df is None:
-            mcmc_all_df = mcmc_df
-            do_all_df = do_df
-        else:
-            mcmc_all_df = mcmc_all_df.append(mcmc_df)
-            do_all_df = do_all_df.append(do_df)
-
-    uncertainty_df = db.uncertainty.calculate_mcmc_uncertainty(mcmc_all_df, do_all_df, targets)
-
-    times = uncertainty_df.time.unique()
-    quantiles = {}
-    for q in chosen_target["quantiles"]:
-        mask = uncertainty_df["quantile"] == q
-        quantiles[q] = uncertainty_df[mask]["value"].tolist()
-
-    plots.uncertainty.plots.plot_timeseries_with_uncertainty(
-        plotter, chosen_output, 0, quantiles, times, targets
-    )
-
-
-PLOT_FUNCS["Output uncertainty"] = plot_timeseries_with_uncertainty
 
 
 def plot_loglikelihood_vs_parameter(

@@ -60,12 +60,18 @@ def stratify_by_age(model, params, compartments):
     )
 
 
-def apply_universal_stratification(model, compartments, stratification_name, stratification_details):
+def apply_user_defined_stratification(model, compartments, stratification_name, stratification_details):
     """
     Stratify all model compartments based on a user-defined stratification request. This stratification can only adjust
     the parameters that are directly implemented in the model. That is, adjustment requests to parameters that are used
     for pre-processing but not directly linked to a flow will have no effect.
     """
+    # also adjust reinfection contact rates if the primary contact rate is adjusted
+    if 'contact_rate' in stratification_details['adjustments']:
+        for stage in ['latent', 'recovered']:
+            param_name = 'contact_rate_from_' + stage
+            if param_name not in stratification_details['adjustments']:
+                stratification_details['adjustments'][param_name] = stratification_details['adjustments']['contact_rate']
     # prepare parameter adjustments
     flow_adjustments = {}
     for param_name, adjustment in stratification_details['adjustments'].items():

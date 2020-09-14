@@ -6,7 +6,7 @@ from autumn.tool_kit.demography import set_model_time_variant_birth_rate
 
 from apps.tuberculosis.model import preprocess, outputs
 from apps.tuberculosis.model.validate import validate_params
-from apps.tuberculosis.model.stratification import stratify_by_organ, stratify_by_age, apply_universal_stratification
+from apps.tuberculosis.model.stratification import stratify_by_organ, stratify_by_age, apply_user_defined_stratification
 
 
 def build_model(params: dict) -> StratifiedModel:
@@ -77,10 +77,13 @@ def build_model(params: dict) -> StratifiedModel:
         tb_model.time_variants['treatment_death_rate'] = treatment_death_func
         tb_model.time_variants['relapse_rate'] = relapse_func
 
-    # apply user-defined universal stratifications
-    for stratification in [s for s in params["stratify_by"] if s[:10] == "universal_"]:
-        stratification_details = params['universal_stratifications'][stratification]
-        apply_universal_stratification(tb_model, compartments, stratification, stratification_details)
+    # apply user-defined stratifications
+    user_defined_stratifications = [s for s in list(params['user_defined_stratifications'].keys()) if
+                                    s in params["stratify_by"]]
+    for stratification in user_defined_stratifications:
+        assert "_" not in stratification, "Stratification name should not include '_'"
+        stratification_details = params['user_defined_stratifications'][stratification]
+        apply_user_defined_stratification(tb_model, compartments, stratification, stratification_details)
 
     if "organ" in params["stratify_by"]:
         stratify_by_organ(tb_model, params)

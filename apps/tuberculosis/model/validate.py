@@ -11,7 +11,7 @@ validate_params = sb.build_validator(
     # model structure,
     stratify_by=list,
     age_breakpoints=list,
-    universal_stratifications=dict,
+    user_defined_stratifications=dict,
     # demographics
     start_population_size=float,
     universal_death_rate=float,

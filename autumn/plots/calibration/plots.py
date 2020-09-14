@@ -14,7 +14,7 @@ import numpy as np
 from matplotlib import pyplot
 from scipy import stats
 
-from autumn.db.process import find_mle_run
+from autumn import db
 from autumn.calibration.utils import calculate_prior, raise_error_unsupported_prior
 from autumn.plots.plotter import Plotter, COLOR_THEME
 
@@ -223,21 +223,14 @@ def plot_loglikelihood_vs_parameter(
 def sample_outputs_for_calibration_fit(
     output_name: str, mcmc_tables: List[pd.DataFrame], do_tables: List[pd.DataFrame],
 ):
-    # TODO: Throw away half the chain 1st
     assert len(mcmc_tables) == len(do_tables)
-    mcmc_df = None
-    for table_df in mcmc_tables:
-        if mcmc_df is not None:
-            mcmc_df = mcmc_df.append(table_df)
-        else:
-            mcmc_df = table_df
+    mcmc_df = db.process.append_tables(mcmc_tables)
+    do_df = db.process.append_tables(do_tables)
 
-    do_df = None
-    for table_df in do_tables:
-        if do_df is not None:
-            do_df = do_df.append(table_df)
-        else:
-            do_df = table_df
+    # Determine max chain length, throw away first half of that
+    max_run = mcmc_df["run"].max()
+    half_max = max_run // 2
+    mcmc_df = mcmc_df[mcmc_df["run"] >= half_max]
 
     # Choose runs with probability proprotional to their weights.
     weights = mcmc_df["weight"].tolist()
@@ -253,7 +246,7 @@ def sample_outputs_for_calibration_fit(
         outputs.append([times, values])
 
     # Find MLE run
-    mle_df = find_mle_run(mcmc_df)
+    mle_df = db.process.find_mle_run(mcmc_df)
     run = mle_df["run"].iloc[0]
     chain = mle_df["chain"].iloc[0]
     # Automatically use the MLE run as the last chosen run

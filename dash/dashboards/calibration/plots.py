@@ -12,20 +12,6 @@ from dash import selectors
 PLOT_FUNCS = {}
 
 
-def plot_mcmc_parameter_trace(
-    plotter: StreamlitPlotter,
-    calib_dir_path: str,
-    mcmc_tables: List[pd.DataFrame],
-    mcmc_params: List[pd.DataFrame],
-    targets: dict,
-):
-    chosen_param = selectors.parameter(mcmc_params[0])
-    plots.calibration.plots.plot_mcmc_parameter_trace(plotter, mcmc_params, chosen_param)
-
-
-PLOT_FUNCS["Parameter trace"] = plot_mcmc_parameter_trace
-
-
 def plot_calibration_fit(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
@@ -46,6 +32,20 @@ def plot_calibration_fit(
 
 
 PLOT_FUNCS["Output calibration fit"] = plot_calibration_fit
+
+
+def plot_mcmc_parameter_trace(
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+):
+    chosen_param = selectors.parameter(mcmc_params[0])
+    plots.calibration.plots.plot_mcmc_parameter_trace(plotter, mcmc_params, chosen_param)
+
+
+PLOT_FUNCS["Parameter trace"] = plot_mcmc_parameter_trace
 
 
 def print_mle_parameters(

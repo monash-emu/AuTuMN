@@ -11,7 +11,7 @@ from apps.tuberculosis.model.stratification import stratify_by_organ, stratify_b
 
 def build_model(params: dict) -> StratifiedModel:
     """
-    Build the master function to run a simple SIR model
+    Build the master function to run a tuberculosis model
     """
     validate_params(params)
 
@@ -99,8 +99,10 @@ def build_model(params: dict) -> StratifiedModel:
     func_outputs = {
         "prevalence_infectious": outputs.calculate_prevalence_infectious,
         "prevalence_susceptible": outputs.calculate_prevalence_susceptible,
+        "prevalence_latent": outputs.calculate_percentage_latent,
         "population_size": outputs.calculate_population_size,
     }
-    tb_model.add_function_derived_outputs(func_outputs)
+    calculated_func_outputs = {key: value for key, value in func_outputs.items() if key in params['calculated_outputs']}
+    tb_model.add_function_derived_outputs(calculated_func_outputs)
 
     return tb_model

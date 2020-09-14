@@ -19,6 +19,19 @@ def calculate_prevalence_susceptible(time_idx, model, compartment_values, derive
     return prevalence_susceiptible
 
 
+def calculate_percentage_latent(time_idx, model, compartment_values, derived_outputs):
+    """
+    Calculate the total number of infectious people at each time-step.
+    """
+    prevalence_latent = 0
+    for i, comp in enumerate(model.compartment_names):
+        is_latent = comp.has_name(Compartment.EARLY_LATENT) or comp.has_name(Compartment.LATE_LATENT)
+        if is_latent:
+            prevalence_latent += compartment_values[i]
+    population_size = sum(compartment_values)
+    return 100. * prevalence_latent / population_size
+
+
 def calculate_prevalence_infectious(time_idx, model, compartment_values, derived_outputs):
     """
     Calculate the total number of infectious people at each time-step.

@@ -26,7 +26,6 @@ python -m tasks full --run  manila-111111111-aaaaaaa --burn 2 --workers 4
 
 ```
 python -m tasks powerbi --run  manila-111111111-aaaaaaa --workers 4
-python -m tasks powerbi --run  philippines-1599783984-46edf4d --workers 1
 ```
 
 ### Run DHHS processing

@@ -38,10 +38,16 @@ def plot_post_calibration(targets: dict, mcmc_dir: str, plot_dir: str):
     derived_output_tables = db.load.load_derived_output_tables(mcmc_dir)
     param_options = mcmc_params[0]["name"].unique().tolist()
 
-    logger.info("Plotting loglikelihood traces")
-    num_iters = len(mcmc_tables[0])
-    plots.plot_loglikelihood_trace(plotter, mcmc_tables, PLOT_BURN_IN)
-    plots.plot_burn_in(plotter, num_iters, PLOT_BURN_IN)
+    logger.info("Plotting calibration fits")
+    subplotter = _get_sub_plotter(plot_dir, "calibration-fit")
+    for target in targets.values():
+        output_name = target["output_key"]
+        logger.info("Plotting calibration fit for output %s", output_name)
+        outputs = plots.sample_outputs_for_calibration_fit(
+            output_name, mcmc_tables, derived_output_tables
+        )
+        plots.plot_calibration_fit(subplotter, output_name, outputs, targets, is_logscale=True)
+        plots.plot_calibration_fit(subplotter, output_name, outputs, targets, is_logscale=False)
 
     logger.info("Plotting posterior distributions")
     num_bins = 16
@@ -59,16 +65,13 @@ def plot_post_calibration(targets: dict, mcmc_dir: str, plot_dir: str):
     for chosen_param in param_options:
         plots.plot_mcmc_parameter_trace(subplotter, mcmc_params, chosen_param)
 
-    logger.info("Plotting calibration fits")
-    subplotter = _get_sub_plotter(plot_dir, "calibration-fit")
-    for target in targets.values():
-        output_name = target["output_key"]
-        logger.info("Plotting calibration fit for output %s", output_name)
-        outputs = plots.sample_outputs_for_calibration_fit(
-            output_name, mcmc_tables, derived_output_tables
-        )
-        plots.plot_calibration_fit(subplotter, output_name, outputs, targets, is_logscale=True)
-        plots.plot_calibration_fit(subplotter, output_name, outputs, targets, is_logscale=False)
+    logger.info("Plotting acceptance ratios")
+    plots.plot_acceptance_ratio(plotter, mcmc_tables)
+
+    logger.info("Plotting loglikelihood traces")
+    num_iters = len(mcmc_tables[0])
+    plots.plot_burn_in(plotter, num_iters, PLOT_BURN_IN)
+    plots.plot_loglikelihood_trace(plotter, mcmc_tables, PLOT_BURN_IN)
 
     logger.info("MCMC plots complete")
 

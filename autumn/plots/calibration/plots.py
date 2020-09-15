@@ -21,6 +21,32 @@ from autumn.plots.plotter import Plotter, COLOR_THEME
 logger = logging.getLogger(__name__)
 
 
+def plot_acceptance_ratio(plotter: Plotter, mcmc_tables: List[pd.DataFrame]):
+    """
+    Plot the prameter traces for each MCMC run.
+    """
+    fig, axis, _, _, _ = plotter.get_figure()
+    mcmc_df = db.process.append_tables(mcmc_tables)
+    chains = mcmc_df["chain"].unique().tolist()
+    for chain in chains:
+        df = mcmc_df[mcmc_df["chain"] == chain]
+        count = 0
+        total = 0
+        ratios = []
+        for accept in df["accept"]:
+            total += 1
+            if accept:
+                count += 1
+
+            ratios.append(count / total)
+
+        axis.plot(ratios, alpha=0.8, linewidth=0.7)
+
+    axis.set_ylabel("Acceptance Ratio")
+    axis.set_xlabel("MCMC iterations")
+    plotter.save_figure(fig, filename=f"acceptance_ratio", title_text=f"Acceptance Ratio")
+
+
 def plot_prior(i: int, prior_dict: dict, path: str):
     if prior_dict["distribution"] == "lognormal":
         logger.error("Cannot plot prior distributions for lognormal.")

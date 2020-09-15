@@ -66,13 +66,11 @@ class PruneFullRunDatabaseTask(utils.ParallelLoggerTask):
         return luigi.LocalTarget(self.get_dest_path())
 
     def safe_run(self):
-        region_name, _, _ = utils.read_run_id(self.run_id)
-        targets = load_targets("covid_19", region_name)
         with Timer(f"Pruning database for chain {self.chain_id}"):
             src_filename = utils.get_full_model_run_db_filename(self.chain_id)
             src_db_path = os.path.join(settings.BASE_DIR, "data", "full_model_runs", src_filename)
             dest_db_path = self.get_dest_path()
-            db.process.prune(src_db_path, dest_db_path, targets=targets)
+            db.process.prune_chain(src_db_path, dest_db_path)
 
     def get_log_filename(self):
         return f"powerbi/prune-{self.chain_id}.log"
@@ -123,7 +121,7 @@ class CalculateUncertaintyTask(utils.BaseTask):
             db.uncertainty.add_uncertainty_quantiles(COLLATED_DB_PATH, targets)
 
         with Timer(f"Pruning final database"):
-            db.process.prune(COLLATED_DB_PATH, COLLATED_PRUNED_DB_PATH)
+            db.process.prune_final(COLLATED_DB_PATH, COLLATED_PRUNED_DB_PATH)
 
 
 class UnpivotTask(utils.BaseTask):

@@ -43,7 +43,7 @@ def calculate_mcmc_uncertainty(
     See calc_mcmc_weighted_values for how these weights are calculated.
     """
     df = pd.merge(do_df, mcmc_df, on=["run", "chain"])
-    df.drop(columns=["chain", "run", "loglikelihood", "ap_loglikelihood", "accept"], inplace=True)
+    df.drop(columns=["loglikelihood", "ap_loglikelihood", "accept"], inplace=True)
     return _calculate_mcmc_uncertainty(df, targets)
 
 

@@ -42,7 +42,7 @@ def apply_burn_in(src_db: Database, dest_db: Database, burn_in: int):
     dest_db.dump_df("mcmc_params", mcmc_params_burned_df)
 
 
-def collate_databases(src_db_paths: List[str], target_db_path: str):
+def collate_databases(src_db_paths: List[str], target_db_path: str, tables=None):
     """
     Collate the output of many calibration databases into a single database.
     Run names are renamed to be ascending in the final database.
@@ -50,8 +50,14 @@ def collate_databases(src_db_paths: List[str], target_db_path: str):
     logger.info("Collating db outputs into %s", target_db_path)
     target_db = Database(target_db_path)
     for db_path in src_db_paths:
+        logger.info("Reading data from %s", db_path)
         source_db = Database(db_path)
         for table_name in source_db.table_names():
+            if tables and table_name not in tables:
+                logger.info("Skipping table %s", table_name)
+                continue
+
+            logger.info("Copying table %s", table_name)
             table_df = source_db.query(table_name)
             target_db.dump_df(table_name, table_df)
 

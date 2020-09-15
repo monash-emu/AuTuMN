@@ -4,11 +4,13 @@ Storing model data in the database
 import logging
 from typing import List
 
+import yaml
 import pandas as pd
 
 from summer.model import StratifiedModel
 from autumn.db.database import Database
 
+from . import process
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +22,18 @@ def increment_mcmc_weight(
     db = Database(database_path)
     sql = f"UPDATE mcmc_run SET weight = weight + 1 WHERE chain={chain_id} AND run={run_id}"
     db.engine.execute(sql)
+
+
+def save_mle_params(database_path: str, target_path: str):
+    """
+    Saves the MCMC parameters for the MLE run as a YAML file in the target path.
+    """
+    db = Database(database_path)
+    mcmc_df = db.query("mcmc_run")
+    param_df = db.query("mcmc_params")
+    mle_params = process.find_mle_params(mcmc_df, param_df)
+    with open(target_path, "w") as f:
+        yaml.dump(mle_params, f)
 
 
 def store_mcmc_run(

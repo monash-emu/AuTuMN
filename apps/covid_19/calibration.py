@@ -157,7 +157,7 @@ def add_standard_philippines_params(params, region):
         {
             "param_name": "ifr_multiplier",
             "distribution": "uniform",
-            "distri_params": [1.5, 2.28]
+            "distri_params": [1.8, 2.28]
         },
         {
             "param_name": "testing_to_detection.assumed_cdr_parameter",

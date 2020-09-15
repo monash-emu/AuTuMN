@@ -3,7 +3,7 @@
     "title": "TB prevalence (/100,000)",
     "output_key": "prevalence_infectious",
     "times": [2016.0],
-    "values": [1000000]
+    "values": [1000]
   },
   "percentage_latent": {
     "title": "LTBI prevalence (%)",

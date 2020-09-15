@@ -143,7 +143,7 @@ Philippines
 """
 
 
-def add_standard_philippines_params(params):
+def add_standard_philippines_params(params, region):
     """
     Add standard set of parameters to vary case detection for the Philippines
     """
@@ -167,7 +167,10 @@ def add_standard_philippines_params(params):
         {
             "param_name": "microdistancing.parameters.max_effect",
             "distribution": "uniform",
-            "distri_params": [0.25, 0.75],
+            "distri_params": [
+                0.25,
+                0.9 if region == Region.CENTRAL_VISAYAS else 0.75
+            ],
         },
     ]
 

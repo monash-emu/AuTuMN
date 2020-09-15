@@ -77,9 +77,42 @@ def find_mle_params(mcmc_df: pd.DataFrame, param_df: pd.DataFrame) -> dict:
     return params
 
 
-def prune(source_db_path: str, target_db_path: str, targets=None):
+def prune_chain(source_db_path: str, target_db_path: str):
+    """
+    Read the model outputs from a database and removes output data that is not MLE.
+    This is an operation applied to each chain's database.
+    """
+    logger.info("Pruning %s into %s", source_db_path, target_db_path)
+    source_db = Database(source_db_path)
+    target_db = Database(target_db_path)
+
+    # Find the maximum accepted loglikelihood for all runs
+    mcmc_run_df = source_db.query("mcmc_run")
+    mle_run_df = find_mle_run(mcmc_run_df)
+    mle_run_id = mle_run_df.run.iloc[0]
+    mle_chain_id = mle_run_df.chain.iloc[0]
+    # Copy tables over, pruning some.
+    tables_to_copy = source_db.table_names()
+    for table_name in tables_to_copy:
+        table_df = source_db.query(table_name)
+        if table_name == "outputs":
+            # Drop everything except the MLE run
+            logger.info("Pruning outputs so that it only contains max likelihood runs")
+            mle_mask = (table_df["run"] == mle_run_id) & (table_df["chain"] == mle_chain_id)
+            max_ll_table_df = table_df[mle_mask]
+            target_db.dump_df(table_name, max_ll_table_df)
+        elif table_name:
+            # Copy table over (mcmc_run, mcmc_params, derived_outputs)
+            logger.info("Copying %s", table_name)
+            target_db.dump_df(table_name, table_df)
+
+    logger.info("Finished pruning %s into %s", source_db_path, target_db_path)
+
+
+def prune_final(source_db_path: str, target_db_path: str):
     """
     Read the model outputs from a database and remove all run-related data that is not MLE.
+    This is the final pruning for the collated database.
     """
     logger.info("Pruning %s into %s", source_db_path, target_db_path)
     source_db = Database(source_db_path)
@@ -107,7 +140,7 @@ def prune(source_db_path: str, target_db_path: str, targets=None):
             max_ll_table_df = table_df[mle_mask]
             target_db.dump_df(table_name, max_ll_table_df)
         elif table_name:
-            # Copy table over
+            # Copy table over (mcmc_run, mcmc_params)
             logger.info("Copying %s", table_name)
             target_db.dump_df(table_name, table_df)
 

@@ -12,6 +12,19 @@ from dash import selectors
 PLOT_FUNCS = {}
 
 
+def plot_acceptance_ratio(
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+):
+    plots.calibration.plots.plot_acceptance_ratio(plotter, mcmc_tables)
+
+
+PLOT_FUNCS["Acceptance ratio"] = plot_acceptance_ratio
+
+
 def plot_timeseries_with_uncertainty(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
@@ -31,8 +44,8 @@ def plot_timeseries_with_uncertainty(
     max_run = mcmc_all_df["run"].max()
     half_max = max_run // 2
     mcmc_all_df = mcmc_all_df[mcmc_all_df["run"] >= half_max]
-
     uncertainty_df = db.uncertainty.calculate_mcmc_uncertainty(mcmc_all_df, do_all_df, targets)
+
     is_logscale = st.sidebar.checkbox("Log scale")
     plots.uncertainty.plots.plot_timeseries_with_uncertainty(
         plotter, uncertainty_df, chosen_output, 0, targets, is_logscale

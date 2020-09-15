@@ -29,7 +29,7 @@ microdistancing:
   # 1 June, day 153, GCQ for all regions; substituted value of 0.2 to help fit model
   # 16 July, day 198, MGCQ enforced
   # 1 Aug, day 214, MGCQ for Lucena City, Quezon, GCQ for Batangas, and MECQ for Laguna, Cavite, Rizal
-  # 15 Aug, day 228, face masks/shields required
+  # (15 Aug, day 228, face masks/shields required)
   # 16 Aug, day 229, MGCQ for Lucena City, GCQ for other parts of the region; substitued 0.9 to help fit model
   # no restrictions = 0
   # face fasks = 0.1

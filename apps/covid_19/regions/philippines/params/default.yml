@@ -21,10 +21,16 @@ microdistancing:
   parameters:
     max_effect: 0.28
     times: [75, 76, 121, 122, 136, 137, 153, 154, 227, 228]
-    values: [0., 0.76, 0.76, 0.73, 0.73, 0.64, 0.64, 0.58, 0.58, 1.]
+    values: [0., 1., 1., 0.8, 0.8, 0.7, 0.7, 0.45, 0.45, 0.5]
   # 16 March, day 76, ECQ enforced
   # 1 May, day 122, ECQ / GCQ enforced
   # 16 May, day 137, MECQ / GCQ enforced
   # 1 June, day 153, GCQ / MGCQ enforced
-  # 15 Aug, day 228, GCQ / MGCQ enforced + face masks/shields required
+  # 15 Aug, day 228, GCQ / MGCQ enforced + face masks
+  # no restrictions = 0
+  # face fasks = 0.1
+  # modified general community quarantine (MGCQ) = 0.3
+  # general community quarantine (GCQ) = 0.6
+  # modified enhanced community quarantine (MECQ) = 0.8
+  # enhanced community quarantine (ECQ) = 1.0
 

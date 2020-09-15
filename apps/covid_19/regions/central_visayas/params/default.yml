@@ -22,8 +22,8 @@ microdistancing:
   function_type: empiric
   parameters:
     max_effect: 0.4
-    times: [121, 122, 137, 138, 153, 154, 168, 169, 198, 199, 214, 215, 229, 230]
-    values: [0, 0.75, 0.75, 0.625, 0.625, 0.5, 0.5, 1., 1., 0.5, 0.5, 0.6, 0.6, 0.6]
+    times: [121, 122, 137, 138, 153, 154, 168, 169, 198, 199, 214, 215, 229, 230, 244, 245]
+    values: [0, 0.8, 0.8, 0.7, 0.7, 0.6, 0.6, 1., 1., 0.5, 0.5, 0.6, 0.6, 0.45, 0.45, 0.2]
   # 1 May, day 122, GCQ enforced everywhere with ECQ enforced for Cebu
   # 16 May, day 137, Cebu switches to modified MECQ, GCQ continues for rest of region
   # 1 June, day 153, Cebu switches to GCQ joining the rest of the region
@@ -32,4 +32,10 @@ microdistancing:
   # 1 Aug, day 214,  Cebu, Lapu-Lapu, and Mandaue switch to GCQ, rest of region continues MGCQ
   # (15 Aug, day 228, face masks/shields required)
   # (16 Aug, day 229, Cebu, Lapu-Lapu, Mandaue, Talisay, and Minglanila under GCQ, all other areas of region MGCQ)
-
+  # 1 Sept, day 244, region swtiches to MGCQ + face masks
+  # no restrictions = 0
+  # face fasks = 0.1
+  # modified general community quarantine (MGCQ) = 0.3
+  # general community quarantine (GCQ) = 0.6
+  # modified enhanced community quarantine (MECQ) = 0.8
+  # enhanced community quarantine (ECQ) = 1.0

@@ -1,5 +1,5 @@
-,Region,times,value
-0,calabarzon,247.0,372
-1,central-visayas,245.0,1023
-2,manila,247.0,1895
-3,philippines,248.0,3840
+,Region,times,accum_deaths
+0,calabarzon,254.0,426
+1,central_visayas,254.0,1092
+2,manila,255.0,2113
+3,philippines,255.0,4317

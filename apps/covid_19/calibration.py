@@ -150,6 +150,11 @@ def add_standard_philippines_params(params, region):
 
     return params + [
         {
+            "param_name": "contact_rate",
+            "distribution": "uniform",
+            "distri_params": [0.03, 0.05],
+        },
+        {
             "param_name": "ifr_multiplier",
             "distribution": "uniform",
             "distri_params": [1.5, 2.28]

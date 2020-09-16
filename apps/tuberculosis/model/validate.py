@@ -43,3 +43,7 @@ validate_params = sb.build_validator(
     smear_negative_infect_multiplier=float,
     extrapulmonary_infect_multiplier=float,
 )
+
+
+def check_param_values(params):
+    assert all([v > 0. for v in params['time_variant_tsr'].values()]), "Treatment success rate should always be > 0."

@@ -5,7 +5,7 @@ from autumn.tool_kit.scenarios import get_model_times_from_inputs
 from autumn.tool_kit.demography import set_model_time_variant_birth_rate
 
 from apps.tuberculosis.model import preprocess, outputs
-from apps.tuberculosis.model.validate import validate_params
+from apps.tuberculosis.model.validate import validate_params, check_param_values
 from apps.tuberculosis.model.stratification import stratify_by_organ, stratify_by_age, apply_user_defined_stratification
 
 
@@ -13,7 +13,8 @@ def build_model(params: dict) -> StratifiedModel:
     """
     Build the master function to run a tuberculosis model
     """
-    validate_params(params)
+    validate_params(params)  # perform validation of parameter format
+    check_param_values(params)  # perform validation of some parameter values
 
     # Define model times.
     integration_times = get_model_times_from_inputs(

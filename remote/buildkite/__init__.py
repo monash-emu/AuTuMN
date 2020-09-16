@@ -168,7 +168,7 @@ def dhhs():
 
 def get_run_url(run_id: str):
     model_name, _, _ = read_run_id(run_id)
-    return f"http://www.autumn-data.com/model/{run_id}/run/{run_id}.html"
+    return f"http://www.autumn-data.com/model/{model_name}/run/{run_id}.html"
 
 
 def read_run_id(run_id: str):

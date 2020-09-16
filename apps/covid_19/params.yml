@@ -41,6 +41,8 @@ google_mobility_locations:
     - grocery_and_pharmacy
     - parks
     - transit_stations
+  home:
+    - residential
 
 smooth_google_data: false # whether to apply a 7-day moving average
 

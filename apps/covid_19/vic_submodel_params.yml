@@ -43,6 +43,11 @@ mixing:
       - 0.  # 9th July
 
 # Metro Melbourne clusters macrodistancing function
+microdistancing_locations:
+  - home
+  - other_locations
+  - school
+  - work
 microdistancing:
   function_type: empiric
   parameters:
@@ -103,7 +108,7 @@ importation_props_by_age:
   "70": 0.04
   "75": 0.04
 
-traveller_quarantine:
+import_quarantine:
   times:
     - 72.
     - 191.

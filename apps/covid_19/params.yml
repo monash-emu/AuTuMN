@@ -133,7 +133,7 @@ import_secondary_rate: 0.
 data:
   times_imported_cases: []
   n_imported_cases: []
-traveller_quarantine:
+import_quarantine:
   times: [0.]
   values: [0.]
 
@@ -141,7 +141,6 @@ traveller_quarantine:
 
 microdistancing: null
 microdistancing_locations:
-#  - home
   - other_locations
   - school
   - work

@@ -62,7 +62,7 @@ validate_params = sb.build_validator(
     google_mobility_locations=sb.DictGeneric(str, sb.List(str)),
     smooth_google_data=bool,
     # Something to do with travellers?
-    traveller_quarantine=sb.Dict(times=sb.List(float), values=sb.List(float),),
+    import_quarantine=sb.Dict(times=sb.List(float), values=sb.List(float),),
     # Importation of disease from outside of region
     implement_importation=bool,
     import_secondary_rate=float,

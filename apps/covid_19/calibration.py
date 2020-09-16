@@ -253,7 +253,7 @@ def add_standard_victoria_params(params, region):
         {
             "param_name": "seasonal_force",
             "distribution": "uniform",
-            "distri_params": [0.0, 0.4],
+            "distri_params": [0.0, 0.3],
         },
         {
             "param_name": "testing_to_detection.assumed_cdr_parameter",
@@ -293,7 +293,7 @@ def add_standard_victoria_params(params, region):
             "param_name": "microdistancing.parameters.max_effect",
             "distribution": "beta",
             "distri_mean": 0.8,
-            "distri_ci": [0.4, 0.95],
+            "distri_ci": [0.4, 0.9],
         },
     ]
 

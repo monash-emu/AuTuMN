@@ -33,7 +33,7 @@ def stratify_by_clinical(model, params, detected_proportion, symptomatic_props):
     # Infection rate multiplication
     # Importation
     implement_importation = params["implement_importation"]
-    traveller_quarantine = params["traveller_quarantine"]
+    import_quarantine = params["import_quarantine"]
     within_hospital_early = model.parameters["within_hospital_early"]
     within_icu_early = model.parameters["within_icu_early"]
     icu_prop = params["icu_prop"]
@@ -277,7 +277,7 @@ def stratify_by_clinical(model, params, detected_proportion, symptomatic_props):
 
         # Create scale-up function for quarantine
         quarantine_func = scale_up_function(
-            traveller_quarantine["times"], traveller_quarantine["values"], method=4
+            import_quarantine["times"], import_quarantine["values"], method=4
         )
 
         # Loop through age groups and set the appropriate clinical proportions

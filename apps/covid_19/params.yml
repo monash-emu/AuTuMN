@@ -133,13 +133,17 @@ import_secondary_rate: 0.
 data:
   times_imported_cases: []
   n_imported_cases: []
-traveller_quarantine:
+import_quarantine:
   times: [0.]
   values: [0.]
 
 # HEALTH SYSTEM AND PUBLIC HEALTH RESPONSE-RELATED PARAMETERS
 
 microdistancing: null
+microdistancing_locations:
+  - other_locations
+  - school
+  - work
 
 # Proportion of symptomatic persons that are hospitalised - Dutch GGD report
 hospital_props:

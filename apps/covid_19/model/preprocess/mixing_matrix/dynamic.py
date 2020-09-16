@@ -16,6 +16,7 @@ def build_dynamic(
     google_mobility_locations: dict,
     microdistancing_params: dict,
     smooth_google_data: bool,
+    microdistancing_locations: list,
 ) -> Callable[[float], np.ndarray]:
     """
     Build a time-varing mixing matrix
@@ -33,6 +34,7 @@ def build_dynamic(
             google_mobility_locations,
             microdistancing_params,
             smooth_google_data,
+            microdistancing_locations,
         )
 
     static_mixing_matrix = build_static(country_iso3)
@@ -43,7 +45,7 @@ def build_dynamic(
         Returns a 16x16 mixing matrix for a given time.
         """
         mixing_matrix = np.copy(static_mixing_matrix)
-        adjusted_mixing_matrix = adjuster.get_adjustment(time, mixing_matrix)
+        adjusted_mixing_matrix = adjuster.get_adjustment(time, mixing_matrix, microdistancing_locations)
         return adjusted_mixing_matrix
 
     return mixing_matrix_function

@@ -6,7 +6,7 @@ implement_importation: True
 
 start_time: 60.
 
-traveller_quarantine:
+import_quarantine:
   times:
     - 72.
     - 73.  # Self-isolation from 13 March

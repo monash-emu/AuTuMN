@@ -9,7 +9,6 @@ from autumn import plots
 from apps.covid_19.model.preprocess.mixing_matrix.adjust_location import (
     LocationMixingAdjustment,
     LOCATIONS,
-    MICRODISTANCING_LOCATIONS,
 )
 
 
@@ -93,6 +92,7 @@ def plot_location_mixing(plotter: StreamlitPlotter, app: AppRegion):
     npi_effectiveness_params = params["npi_effectiveness"]
     google_mobility_locations = params["google_mobility_locations"]
     smooth_google_data = params.get("smooth_google_data")
+    microdistancing_locations = ["home", "other_locations", "school", "work"]
     adjust = LocationMixingAdjustment(
         country_iso3,
         region,
@@ -102,7 +102,7 @@ def plot_location_mixing(plotter: StreamlitPlotter, app: AppRegion):
         microdistancing,
         smooth_google_data,
     )
-    if adjust.microdistancing_function and loc_key in MICRODISTANCING_LOCATIONS:
+    if adjust.microdistancing_function and loc_key in microdistancing_locations:
         loc_func = lambda t: adjust.microdistancing_function(t) * adjust.loc_adj_funcs[loc_key](t)
     elif loc_key in adjust.loc_adj_funcs:
         loc_func = lambda t: adjust.loc_adj_funcs[loc_key](t)

@@ -185,8 +185,6 @@ def test_build_dynamic__with_no_changes():
     google_mobility_locations = {}
     mixing_params = {}
     npi_effectiveness_params = {}
-    is_periodic_intervention = False
-    periodic_int_params = {}
     microdistancing_params = {}
     smooth_google_data = False
     microdistancing_locations = ["home", "other_locations", "school", "work"]

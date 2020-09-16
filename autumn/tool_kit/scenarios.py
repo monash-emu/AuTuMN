@@ -65,9 +65,13 @@ class Scenario:
 
                 # Construct scenario params by merging scenario-specific params into default params
                 params = self.params["scenarios"][self.idx]
+                start_time = params["start_time"]
                 if update_func:
                     # Apply extra parameter updates
                     params = update_func(params)
+
+                # Ensure start time cannot be overwritten for a scenario
+                params["start_time"] = start_time
 
                 base_times = base_model.times
                 base_outputs = base_model.outputs

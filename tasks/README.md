@@ -36,10 +36,27 @@ python -m tasks dhhs --commit aaaaaaa --workers 7
 
 ### Clean up test task
 
+Clean up everything
+
 ```bash
 rm -rf data/outputs/remote data/outputs/calibrate
 aws --profile autumn s3 rm --quiet --recursive s3://autumn-data/manila-111111111-aaaaaaa
 ```
+
+Clean up full model runs only
+
+```bash
+rm -rf data/outputs/remote data/outputs/calibrate
+aws --profile autumn s3 rm --quiet --recursive s3://autumn-data/manila-111111111-aaaaaaa/data/full_model_runs
+```
+
+Clean up powerbi only
+
+```bash
+rm -rf data/outputs/remote data/outputs/calibrate
+aws --profile autumn s3 rm --quiet --recursive s3://autumn-data/manila-111111111-aaaaaaa/data/powerbi
+```
+
 
 ### Rebuild the website
 

@@ -31,14 +31,16 @@ def get_country_mixing_matrix(mixing_location: str, country_iso_code: str):
     return matrix
 
 
-def get_mixing_matrix_specific_agegroups(country_iso_code: str, requested_age_breaks: list):
+def get_mixing_matrix_specific_agegroups(country_iso_code: str, requested_age_breaks: list, time_unit='days'):
     """
     Build an age-specific mixing matrix using any age categories
-    :param country_iso_code:
-    :param requested_age_breaks:
-    :return:
+    :param country_iso_code: character string of length 3
+    :param requested_age_breaks: list of integers
+    :param time_unit: one of ['days', 'years']
+    :return: numpy matrix
     """
     assert all([age % 5 == 0 for age in requested_age_breaks]), "All breakpoints must be multiples of 5"
+    assert time_unit in ['days', 'years'], "The requested time-unit must be either 'days' or 'years'"
     original_matrix = get_country_mixing_matrix('all_locations', country_iso_code)
     original_age_breaks = [i * 5. for i in range(16)]
     original_populations = get_population_by_agegroup(
@@ -70,4 +72,6 @@ def get_mixing_matrix_specific_agegroups(country_iso_code: str, requested_age_br
                                                   p in agegroup_index_mapping[j_contactee]])
             out_matrix[i_contactor, j_contactee] = total_contacts_new_format
 
+    if time_unit == 'years':
+        out_matrix *= 365.25
     return out_matrix

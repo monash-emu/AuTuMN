@@ -1,6 +1,7 @@
 from apps.tuberculosis.constants import Compartment, OrganStratum
 from apps.tuberculosis.model.preprocess.latency import get_adapted_age_parameters
 from autumn.inputs import get_death_rates_by_agegroup
+from autumn.inputs.social_mixing.queries import get_mixing_matrix_specific_agegroups
 from autumn.curve import scale_up_function, tanh_based_scaleup
 
 from math import log, exp
@@ -51,6 +52,10 @@ def stratify_by_age(model, params, compartments):
             )
             model.parameters[param_stem + '_' + str(age_group)] = param_stem + '_' + str(age_group)
 
+    # get mixing matrix
+    mixing_matrix = get_mixing_matrix_specific_agegroups(params['iso3'], params['age_breakpoints'])
+
+
     # trigger model stratification
     model.stratify(
         "age",
@@ -58,6 +63,7 @@ def stratify_by_age(model, params, compartments):
         compartments,
         infectiousness_adjustments=strata_infectiousness,
         flow_adjustments=flow_adjustments,
+        mixing_matrix=mixing_matrix,
     )
 
 

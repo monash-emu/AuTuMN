@@ -232,10 +232,12 @@ def plot_loglikelihood_vs_parameter(
     """
     fig, axis, _, _, _ = plotter.get_figure()
     for mcmc_df, param_df in zip(mcmc_tables, mcmc_params):
-        ll_vals = mcmc_df[mcmc_df["accept"] == 1]["loglikelihood"]
-        p_vals = param_df[param_df["name"] == param_name].value
-        log_ll_vals = [-log(-x) for x in ll_vals]
-        axis.plot(p_vals, log_ll_vals, ".")
+        df = param_df.merge(mcmc_df, on=["run", "chain"])
+        mask = (df["accept"] == 1) & (df["name"] == param_name)
+        df = df[mask]
+        param_values = df["value"]
+        loglikelihood_values = [-log(-v) for v in df["loglikelihood"]]
+        axis.plot(param_values, loglikelihood_values, ".")
 
     axis.set_xlabel(param_name)
     axis.set_ylabel("-log(-loglikelihood)")

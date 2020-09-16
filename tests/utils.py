@@ -1,7 +1,9 @@
 import os
+import random
 from unittest import mock
 
 import numpy as np
+import pandas as pd
 from sqlalchemy import create_engine
 
 
@@ -56,3 +58,80 @@ def in_memory_db_factory():
             return engine
 
     return get_in_memory_db_engine
+
+
+def build_synthetic_calibration(targets: dict, funcs: list, chains: int, runs: int, times: int):
+    chains = list(range(chains))  # Simulate calibration chains
+    runs = list(range(runs))  # Runs per chain
+    times = list(range(times))  # Timesteps per run
+    outputs = [o["output_key"] for o in targets.values()]
+
+    # Build dataframes for database tables.
+    do_columns = ["chain", "run", "scenario", "times"]
+    do_data = {"chain": [], "run": [], "scenario": [], "times": []}
+    for o in outputs:
+        do_columns.append(o)
+        do_data[o] = []
+
+    mcmc_columns = ["chain", "run", "loglikelihood", "ap_loglikelihood", "accept", "weight"]
+    mcmc_data = {
+        "chain": [],
+        "run": [],
+        "loglikelihood": [],
+        "ap_loglikelihood": [],
+        "accept": [],
+        "weight": [],
+    }
+
+    params = ["bar", "baz"]
+    params_columns = ["chain", "run", "name", "value"]
+    params_data = {
+        "chain": [],
+        "run": [],
+        "name": [],
+        "value": [],
+    }
+
+    # Create synthetic data
+    for chain in chains:
+        last_accept_idx = 0
+        for run_idx, run in enumerate(runs):
+            # Simulate filling the mcmc_run table.
+            mcmc_data["chain"].append(chain)
+            mcmc_data["run"].append(run)
+            mcmc_data["loglikelihood"].append(-1 * random.random())
+            mcmc_data["ap_loglikelihood"].append(-1 * random.random())
+
+            for param in params:
+                params_data["chain"].append(chain)
+                params_data["run"].append(run)
+                params_data["name"].append(param)
+                params_data["value"].append(random.random())
+
+            is_accepted = random.random() > 0.6
+            if not is_accepted:
+                accept = 0
+                weight = 0
+            else:
+                accept = 1
+                weight = 1
+                idx = run_idx - last_accept_idx
+                last_accept_idx = run_idx
+                if mcmc_data["weight"]:
+                    mcmc_data["weight"][-idx] = idx
+
+            mcmc_data["weight"].append(weight)
+            mcmc_data["accept"].append(accept)
+            for time in times:
+                # Simulate filling the derived_outputs table.
+                do_data["chain"].append(chain)
+                do_data["run"].append(run)
+                do_data["scenario"].append(0)
+                do_data["times"].append(time)
+                for idx, o in enumerate(outputs):
+                    do_data[o].append(funcs[idx](time))
+
+    do_df = pd.DataFrame(columns=do_columns, data=do_data)
+    mcmc_df = pd.DataFrame(columns=mcmc_columns, data=mcmc_data)
+    params_df = pd.DataFrame(columns=params_columns, data=params_data)
+    return do_df, mcmc_df, params_df

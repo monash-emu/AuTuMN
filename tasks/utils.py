@@ -26,6 +26,14 @@ S3_UPLOAD_CONFIG = TransferConfig(
     multipart_chunksize=1024 * 25,
     use_threads=True,
 )
+S3_DOWNLOAD_CONFIG = TransferConfig(
+    multipart_threshold=1024 * 25,
+    max_concurrency=10,
+    multipart_chunksize=1024 * 25,
+    use_threads=True,
+    num_download_attempts=3,
+)
+
 
 # Get an AWS S3 client
 if "AWS_ACCESS_KEY_ID" in os.environ and "AWS_SECRET_ACCESS_KEY" in os.environ:
@@ -247,7 +255,7 @@ def list_s3(key_prefix: str, key_suffix: str):
 def download_s3(src_key, dest_path):
     """Downloads a file from AWS S3"""
     logger.info("Downloading from %s to %s", src_key, dest_path)
-    s3.download_file(settings.S3_BUCKET, src_key, dest_path)
+    s3.download_file(settings.S3_BUCKET, src_key, dest_path, Config=S3_DOWNLOAD_CONFIG)
 
 
 def upload_s3(src_path, dest_key):

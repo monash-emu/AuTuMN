@@ -189,6 +189,7 @@ def test_build_dynamic__with_no_changes():
     periodic_int_params = {}
     microdistancing_params = {}
     smooth_google_data = False
+    microdistancing_locations = ["home", "other_locations", "school", "work"]
     mm_func = mixing_matrix.build_dynamic(
         country_iso3="AUS",
         region=None,
@@ -198,6 +199,7 @@ def test_build_dynamic__with_no_changes():
         google_mobility_locations=google_mobility_locations,
         microdistancing_params=microdistancing_params,
         smooth_google_data=smooth_google_data,
+        microdistancing_locations=microdistancing_locations,
     )
     mm = mm_func(0)
     assert_arr_is_close(mm, AUS_MIXING_MATRIX)
@@ -222,11 +224,15 @@ def test_build_dynamic__with_mobility_data(monkeypatch):
 
     monkeypatch.setattr(adjust_location, "get_mobility_data", get_test_mobility_data)
 
+    microdistancing_locations = [
+        "home",
+        "other_locations",
+        "school",
+        "work"
+    ]
     google_mobility_locations = {"work": ["workplace"]}
     mixing_params = {}
     npi_effectiveness_params = {}
-    is_periodic_intervention = False
-    periodic_int_params = {}
     microdistancing_params = {}
     smooth_google_data = False
 
@@ -239,6 +245,7 @@ def test_build_dynamic__with_mobility_data(monkeypatch):
         google_mobility_locations=google_mobility_locations,
         microdistancing_params=microdistancing_params,
         smooth_google_data=smooth_google_data,
+        microdistancing_locations=microdistancing_locations,
     )
 
     # Work mixing adjustment should be 1, expect no change
@@ -261,6 +268,12 @@ def test_build_dynamic__smoke_test():
     Smoke test with typical input data.
     Doesn't actually verify anything.
     """
+    microdistancing_locations = [
+        "home",
+        "other_locations",
+        "school",
+        "work"
+    ]
     google_mobility_locations = {
         "work": ["workplaces"],
         "other_locations": [
@@ -296,6 +309,7 @@ def test_build_dynamic__smoke_test():
         google_mobility_locations=google_mobility_locations,
         microdistancing_params={},
         smooth_google_data=True,
+        microdistancing_locations=microdistancing_locations,
     )
     mm = mm_func(50)
     assert mm.shape == (16, 16)

@@ -159,6 +159,7 @@ def build_model(params: dict) -> StratifiedModel:
     smooth_google_data = params["smooth_google_data"]
     npi_effectiveness_params = params["npi_effectiveness"]
     google_mobility_locations = params["google_mobility_locations"]
+    microdistancing_locations = params["microdistancing_locations"]
     dynamic_mixing_matrix = preprocess.mixing_matrix.build_dynamic(
         country_iso3,
         mobility_region,
@@ -168,6 +169,7 @@ def build_model(params: dict) -> StratifiedModel:
         google_mobility_locations,
         microdistancing,
         smooth_google_data,
+        microdistancing_locations,
     )
     model.set_dynamic_mixing_matrix(dynamic_mixing_matrix)
 

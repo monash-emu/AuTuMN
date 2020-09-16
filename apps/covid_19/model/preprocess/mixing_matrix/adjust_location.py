@@ -12,7 +12,6 @@ from . import funcs as parse_funcs
 
 # Locations that can be used for mixing
 LOCATIONS = ["home", "other_locations", "school", "work"]
-MICRODISTANCING_LOCATIONS = ["school", "other_locations", "work"]
 
 
 class LocationMixingAdjustment(BaseMixingAdjustment):
@@ -25,6 +24,7 @@ class LocationMixingAdjustment(BaseMixingAdjustment):
         google_mobility_locations: dict,
         microdistancing_params: dict,
         smooth_google_data: bool,
+        microdistancing_locations: list,
     ):
         """Build the time variant location adjustment functions"""
         # Load mobility data
@@ -67,7 +67,7 @@ class LocationMixingAdjustment(BaseMixingAdjustment):
             # Loads a 16x16 ndarray
             self.matrix_components[sheet_type] = get_country_mixing_matrix(sheet_type, country_iso3)
 
-    def get_adjustment(self, time: float, mixing_matrix: np.ndarray) -> np.ndarray:
+    def get_adjustment(self, time: float, mixing_matrix: np.ndarray, microdistancing_locations: list) -> np.ndarray:
         """
         Apply time-varying location adjustments.
         Returns a new mixing matrix, modified to adjust for dynamic mixing changes for a given point in time.
@@ -83,7 +83,7 @@ class LocationMixingAdjustment(BaseMixingAdjustment):
                 loc_adjustment *= loc_adj_func(time)
 
             # Adjust for microdistancing
-            if self.microdistancing_function and loc_key in MICRODISTANCING_LOCATIONS:
+            if self.microdistancing_function and loc_key in microdistancing_locations:
                 loc_adjustment *= self.microdistancing_function(time)
 
             # Apply adjustment by subtracting the contacts that need to come off

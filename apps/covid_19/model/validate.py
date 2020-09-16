@@ -68,6 +68,7 @@ validate_params = sb.build_validator(
     import_secondary_rate=float,
     data=sb.Dict(times_imported_cases=sb.List(float), n_imported_cases=sb.List(float),),
     microdistancing=sb.Nullable(sb.Dict(function_type=str, parameters=dict)),
+    microdistancing_locations=list,
     # Other stuff
     contact_rate=float,
     seasonal_force=sb.Nullable(float),

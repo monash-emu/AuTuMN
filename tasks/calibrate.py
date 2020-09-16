@@ -2,6 +2,7 @@ import os
 import glob
 import shutil
 import logging
+from tempfile import TemporaryDirectory
 
 import luigi
 
@@ -205,11 +206,12 @@ class GetParamsTask(utils.BaseTask):
             for dbname in os.listdir(mcmc_dir)
             if "chain" in dbname and dbname.endswith(".db")
         ]
-        collated_db_path = os.path.join(mcmc_dir, "collated.db")
-        db.process.collate_databases(
-            database_paths, collated_db_path, tables=["mcmc_run", "mcmc_params"]
-        )
-        db.store.save_mle_params(collated_db_path, MLE_PARAMS_PATH)
+        with TemporaryDirectory() as tmp_dir_path:
+            collated_db_path = os.path.join(tmp_dir_path, "collated.db")
+            db.process.collate_databases(
+                database_paths, collated_db_path, tables=["mcmc_run", "mcmc_params"]
+            )
+            db.store.save_mle_params(collated_db_path, MLE_PARAMS_PATH)
 
 
 class UploadParamsTask(utils.UploadS3Task):

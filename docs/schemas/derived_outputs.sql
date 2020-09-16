@@ -1,8 +1,13 @@
 CREATE TABLE derived_outputs (
+	-- Calibration chain ID
 	chain BIGINT, 
+	-- Calibration iteration ID
 	run BIGINT, 
+	-- Model scenario
 	scenario BIGINT, 
+	-- Model times
 	times FLOAT, 
+	-- Below: all derived outputs used by PowerBI
 	incidence FLOAT, 
 	incidenceXagegroup_0 FLOAT, 
 	incidenceXagegroup_0Xclinical_non_sympt FLOAT, 

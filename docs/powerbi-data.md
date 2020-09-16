@@ -7,29 +7,24 @@ Here we describe the database tables and what's in them. The data described here
 
 ### MCMC Run
 
-See [here](./schemas/mcmc_run.sql) for the table schema.
-The MCMC run table tracks the progress of the calibration process. It contains metadata on each iteration.
+The MCMC run table tracks the progress of the calibration process. It contains metadata on each iteration. See [here](./schemas/mcmc_run.sql) for the table schema.
 
 ### MCMC Params
 
-See [here](./schemas/mcmc_params.sql) for the table schema.
-The MCMC params table tracks the parameters used for each iteration of the calibration.
-
+The MCMC params table tracks the parameters used for each iteration of the calibration. See [here](./schemas/mcmc_params.sql) for the table schema.
 
 ### PowerBI Outputs
 
-See [here](./schemas/powerbi_outputs.sql) for the table schema.
-This table contains the model's compartment values for the maximum likelihood (MLE) parameter set from the calibration. This is the "best fit" model.
+This table contains the model's compartment values for the maximum likelihood (MLE) parameter set from the calibration. This is the "best fit" model. See [here](./schemas/powerbi_outputs.sql) for the table schema.
 
 ### Derived Outputs
 
-See [here](./schemas/derived_outputs.sql) for the table schema.
-This table contains additional values, calculated from the outputs of the MLE model.
+This table contains additional values, calculated from the outputs of the MLE model. See [here](./schemas/derived_outputs.sql) for the table schema.
 
 ### Uncertainty
 
-See [here](./schemas/uncertainty.sql) for the table schema.
-This table contains uncertainty estimates around some derived outputs, which are computed from all of the accepted MCMC iterations.
+This table contains uncertainty estimates around some derived outputs, which are computed from all of the accepted MCMC iterations. See [here](./schemas/uncertainty.sql) for the table schema.
+
 
 
 

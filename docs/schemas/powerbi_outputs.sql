@@ -1,10 +1,18 @@
 CREATE TABLE powerbi_outputs (
+	-- Calibration chain ID
 	chain BIGINT, 
+	-- Calibration iteration ID
 	run BIGINT, 
+	-- Model scenario
 	scenario BIGINT, 
+	-- Model times
 	times FLOAT, 
+	-- Compartment value
 	value FLOAT, 
-	agegroup TEXT, /* You can change this to a BIGINT to save space.*/
+	-- Compartment age group
+	agegroup TEXT,
+	-- Compartment clinical strata
 	clinical TEXT, 
+	-- Compartment name
 	compartment TEXT
 );

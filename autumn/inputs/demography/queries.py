@@ -12,9 +12,14 @@ import pandas as pd
 from autumn.inputs.database import get_input_db
 
 INF = float("inf")
+MAPPING_ISO_CODE = {
+    "RMI": "FSM",
+}
 
 
 def _get_death_rates(country_iso_code: str):
+    if country_iso_code in MAPPING_ISO_CODE:
+        country_iso_code = MAPPING_ISO_CODE[country_iso_code]
     input_db = get_input_db()
     death_df = input_db.query("deaths", conditions=[f"iso3='{country_iso_code}'"],)
     pop_df = input_db.query(
@@ -124,6 +129,8 @@ def get_crude_birth_rate(country_iso_code: str):
     Gets crude birth rate over time for a given country.
     Returns a list of birth rates and a list of years.
     """
+    if country_iso_code in MAPPING_ISO_CODE:
+        country_iso_code = MAPPING_ISO_CODE[country_iso_code]
     input_db = get_input_db()
     birth_df = input_db.query("birth_rates", conditions=[f"iso3='{country_iso_code}'"])
     birth_df = birth_df.sort_values(["mean_year"])
@@ -137,7 +144,8 @@ def get_population_by_agegroup(
     Find population for age bins.
     Returns a list of ints, each item being the population for that age bracket.
     """
-
+    if country_iso_code in MAPPING_ISO_CODE:
+        country_iso_code = MAPPING_ISO_CODE[country_iso_code]
     assert age_breakpoints == sorted(age_breakpoints)
     assert age_breakpoints[0] == 0
     input_db = get_input_db()

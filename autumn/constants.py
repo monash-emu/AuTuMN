@@ -51,6 +51,7 @@ class Region:
     HUME = "hume"
     LODDON_MALLEE = "loddon-mallee"
     GRAMPIANS = "grampians"
+    MARSHALL_ISLANDS = "marshall-islands"
 
     REGIONS = [
         AUSTRALIA,
@@ -78,6 +79,7 @@ class Region:
         HUME,
         LODDON_MALLEE,
         GRAMPIANS,
+        MARSHALL_ISLANDS,
     ]
 
     VICTORIA_RURAL = [

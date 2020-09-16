@@ -1,0 +1,20 @@
+---
+parent: apps/tuberculosis/params.yml
+iso3: "RMI"
+
+stratify_by: ['age']  #['age', 'location', 'organ']
+age_breakpoints: [0, 5, 15, 35, 50]
+user_defined_stratifications:  # this specifies user-defined  stratifications
+  location:
+    strata: ['majuro', 'ebeye', 'other']
+    proportions:
+      majuro: .523
+      ebeye: .2
+      other: .0.277
+    adjustments:
+      contact_rate:
+        rural: 1.2
+      detection_rate:
+        rural: .65
+
+start_population_size: 100000

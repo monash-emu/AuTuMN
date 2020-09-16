@@ -8,7 +8,9 @@ from autumn.inputs.database import get_input_db
 from autumn.inputs import get_population_by_agegroup
 
 LOCATIONS = ("all_locations", "home", "other_locations", "school", "work")
-
+MAPPING_ISO_CODE = {
+    "RMI": "KIR",
+}
 
 # Cache result beecause this gets called 1000s of times during calibration.
 @lru_cache(maxsize=None)
@@ -19,6 +21,8 @@ def get_country_mixing_matrix(mixing_location: str, country_iso_code: str):
     giving us a 16x16 matrix.
     """
     assert mixing_location in LOCATIONS, f"Invalid mixing location {mixing_location}"
+    if country_iso_code in MAPPING_ISO_CODE:
+        country_iso_code = MAPPING_ISO_CODE[country_iso_code]
     input_db = get_input_db()
     cols = [f"X{n}" for n in range(1, 17)]
     mix_df = input_db.query(

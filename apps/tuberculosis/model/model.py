@@ -36,7 +36,10 @@ def build_model(params: dict) -> StratifiedModel:
     ]
 
     # Define initial conditions - 1 infectious person.
-    init_conditions = {Compartment.INFECTIOUS: 1}
+    init_conditions = {
+        Compartment.INFECTIOUS: 1,
+        Compartment.LATE_LATENT: params['start_population_size'] * .30,
+    }
 
     # prepare infectiousness adjustment for individuals on treatment
     treatment_infectiousness_adjustment = [

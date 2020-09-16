@@ -10,7 +10,7 @@ from autumn.inputs import build_input_database
 from autumn.inputs.database import input_db_path
 from autumn.constants import OUTPUT_DATA_PATH
 from autumn.tool_kit.params import load_targets
-from autumn import plots
+from autumn import plots, db
 from apps import covid_19
 
 from . import utils
@@ -20,6 +20,8 @@ logger = logging.getLogger(__name__)
 
 # TODO: Upload prior plots, params and calibration config
 # TODO: Upload intermediate plots and databases?
+
+MLE_PARAMS_PATH = os.path.join(settings.BASE_DIR, "data", "calibration_outputs", "mle-params.yml")
 
 
 class RunCalibrate(luigi.Task):
@@ -45,7 +47,10 @@ class RunCalibrate(luigi.Task):
         upload_plots_task = UploadPlotsTask(
             run_id=self.run_id, num_chains=self.num_chains, runtime=self.runtime
         )
-        return [*upload_db_tasks, upload_plots_task]
+        upload_params_task = UploadParamsTask(
+            run_id=self.run_id, num_chains=self.num_chains, runtime=self.runtime
+        )
+        return [*upload_db_tasks, upload_plots_task, upload_params_task]
 
 
 class BuildInputDatabaseTask(utils.BaseTask):
@@ -171,3 +176,51 @@ class UploadPlotsTask(utils.UploadS3Task):
 
     def get_src_path(self):
         return os.path.join(settings.BASE_DIR, "plots")
+
+
+class GetParamsTask(utils.BaseTask):
+    """Get MLE parameters from final database"""
+
+    run_id = luigi.Parameter()
+    runtime = luigi.IntParameter()  # Runtime in seconds
+    num_chains = luigi.IntParameter()  # The number of chains to run
+
+    def requires(self):
+        return [
+            CalibrationChainTask(
+                run_id=self.run_id, chain_id=i, num_chains=self.num_chains, runtime=self.runtime
+            )
+            for i in range(self.num_chains)
+        ]
+
+    def output(self):
+        return luigi.LocalTarget(MLE_PARAMS_PATH)
+
+    def safe_run(self):
+        # Collate all database's MCMC runs and params into a single db
+        mcmc_dir = os.path.join(settings.BASE_DIR, "data", "calibration_outputs")
+
+        database_paths = [
+            os.path.join(mcmc_dir, dbname)
+            for dbname in os.listdir(mcmc_dir)
+            if "chain" in dbname and dbname.endswith(".db")
+        ]
+        collated_db_path = os.path.join(mcmc_dir, "collated.db")
+        db.process.collate_databases(
+            database_paths, collated_db_path, tables=["mcmc_run", "mcmc_params"]
+        )
+        db.store.save_mle_params(collated_db_path, MLE_PARAMS_PATH)
+
+
+class UploadParamsTask(utils.UploadS3Task):
+    """Uploads MLE parameters"""
+
+    run_id = luigi.Parameter()
+    runtime = luigi.IntParameter()  # Runtime in seconds
+    num_chains = luigi.IntParameter()  # The number of chains to run
+
+    def requires(self):
+        return GetParamsTask(run_id=self.run_id, num_chains=self.num_chains, runtime=self.runtime)
+
+    def get_src_path(self):
+        return MLE_PARAMS_PATH

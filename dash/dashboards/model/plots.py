@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import streamlit as st
 
 from autumn.plots.plotter import StreamlitPlotter
@@ -5,13 +7,14 @@ from autumn.tool_kit.model_register import AppRegion
 from autumn.tool_kit.scenarios import Scenario, get_model_times_from_inputs
 from autumn.tool_kit.params import load_params
 from autumn import plots
+from autumn.inputs import get_mobility_data
 
 from apps.covid_19.model.preprocess.mixing_matrix.adjust_location import (
     LocationMixingAdjustment,
     LOCATIONS,
 )
 
-
+BASE_DATE = datetime(2020, 1, 1, 0, 0, 0)
 PLOT_FUNCS = {}
 
 
@@ -114,6 +117,23 @@ def plot_location_mixing(plotter: StreamlitPlotter, app: AppRegion):
 
 
 PLOT_FUNCS["Dynamic location mixing"] = plot_location_mixing
+
+
+def plot_mobility_raw(
+    plotter: StreamlitPlotter, app: AppRegion,
+):
+    params = app.params["default"]
+    values, days = get_mobility_data(
+        params["iso3"], params["mobility_region"], BASE_DATE, params["google_mobility_locations"],
+    )
+    options = list(params["google_mobility_locations"].keys())
+    loc_key = st.sidebar.selectbox("Select location", options)
+    values_lookup = {days[i]: values[loc_key][i] for i in range(len(days))}
+    loc_func = lambda t: values_lookup[t]
+    plots.model.plots.plot_time_varying_input(plotter, loc_key, loc_func, days, is_logscale=False)
+
+
+PLOT_FUNCS["Google Mobility Raw"] = plot_mobility_raw
 
 
 def plot_model_targets(

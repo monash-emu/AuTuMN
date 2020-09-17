@@ -40,11 +40,22 @@ universal_death_rate: .014
 contact_rate: 1.4
 
 # latency-related parameters
-override_latency_rates: True # priority for the values loaded from preprocess.latency. Turn off if we fit these params
-stabilisation_rate: 1.
-late_activation_rate: 1.
-early_activation_rate: 1.
-
+age_specific_latency:
+  early_activation_rate:
+    unstratified: 1.1e-3
+    0: 6.6e-3
+    5: 2.7e-3
+    15: 2.7e-4
+  stabilisation_rate:
+    unstratified: 1.0e-2
+    0: 1.2e-2
+    5: 1.2e-2
+    15: 5.4e-3
+  late_activation_rate:
+    unstratified: 5.5e-6
+    0: 1.9e-11
+    5: 6.4e-6
+    15: 3.3e-6
 
 # parameters related to post-disease-flows
 time_variant_presentation_delay:
@@ -86,3 +97,7 @@ passive_screening_sensitivity:
   smear_positive: 1. # dummy value
   smear_negative: .7 # dummy value
   extrapulmonary: 0.5 # dummy value
+
+inflate_reactivation_for_diabetes: False
+
+extra_params: {}  # used to add parameters used for specific applications

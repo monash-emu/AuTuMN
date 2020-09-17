@@ -132,9 +132,8 @@ def process_unstratified_parameter_values(params):
         params['treatment_death_rate'] = 'treatment_death_rate'
         params['relapse_rate'] = 'relapse_rate'
 
-    # load latency parameters
-    if params["override_latency_rates"]:
-        params = get_unstratified_parameter_values(params)
+    # load unstratified latency parameters
+    params = get_unstratified_parameter_values(params)
 
     # set reinfection contact rate parameters
     for state in ["latent", "recovered"]:

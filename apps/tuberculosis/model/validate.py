@@ -20,10 +20,7 @@ validate_params = sb.build_validator(
     universal_death_rate=float,
     # base disease model
     contact_rate=float,
-    override_latency_rates=bool,
-    stabilisation_rate=float,
-    late_activation_rate=float,
-    early_activation_rate=float,
+    age_specific_latency=dict,
     self_recovery_rate_dict=dict,
     infect_death_rate_dict=dict,
     rr_infection_latent=float,
@@ -43,6 +40,9 @@ validate_params = sb.build_validator(
     incidence_props_smear_positive_among_pulmonary=float,
     smear_negative_infect_multiplier=float,
     extrapulmonary_infect_multiplier=float,
+    # other
+    inflate_reactivation_for_diabetes=bool,
+    extra_params=dict,
 )
 
 

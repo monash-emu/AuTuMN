@@ -26,3 +26,11 @@ outputs_stratification:
   prevalence_infectious: ['location']
   percentage_latent: ['location']
   notifications: ['location']
+
+
+inflate_reactivation_for_diabetes: True
+
+extra_params:
+  diabetes_age_start: 25.
+  rr_progression_diabetes: 3.6
+  prop_diabetes: .3

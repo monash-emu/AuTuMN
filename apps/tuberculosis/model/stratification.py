@@ -23,9 +23,9 @@ def stratify_by_age(model, params, compartments):
             death_rate_years, death_rates_by_age[age_group], smoothness=0.2, method=5
         )
         model.parameters[name] = name
+
     # age-specific latency progresison rates
-    if params["override_latency_rates"]:
-        flow_adjustments.update(get_adapted_age_parameters(params['age_breakpoints']))
+    flow_adjustments.update(get_adapted_age_parameters(params['age_breakpoints'], params['age_specific_latency']))
 
     # age-specific infectiousness
     strata_infectiousness = calculate_age_specific_infectiousness(params['age_breakpoints'],

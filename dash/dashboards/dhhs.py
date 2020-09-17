@@ -36,8 +36,6 @@ def run_dashboard():
 
     outputs = region_df["type"].unique().tolist()
     output = st.selectbox("Select output", outputs)
-    output_mask = region_df["type"] == output
-    output_df = region_df[output_mask].drop(columns=["type"])
     target = {
         "output_key": output,
         "times": [],
@@ -49,15 +47,11 @@ def run_dashboard():
             target = t
             break
 
-    dates = pd.to_datetime(output_df["time"], infer_datetime_format=True)
-    times = (dates - BASE_DATE).dt.days.unique().tolist()
-    quantiles = {}
-    for q in target["quantiles"]:
-        mask = output_df["quantile"] == q
-        quantiles[q] = output_df[mask]["value"].tolist()
-
+    dates = pd.to_datetime(region_df["time"], infer_datetime_format=True)
+    region_df["time"] = (dates - BASE_DATE).dt.days
+    region_df["scenario"] = 0
     plots.uncertainty.plots.plot_timeseries_with_uncertainty(
-        plotter, output, 0, quantiles, times, targets
+        plotter, uncertainty_df=region_df, output_name=output, scenario=0, targets=targets,
     )
 
 

@@ -20,7 +20,6 @@ def plot_timeseries_with_uncertainty(
     targets: dict,
     is_logscale=False,
 ):
-
     mask = (uncertainty_df["type"] == output_name) & (uncertainty_df["scenario"] == scenario)
     df = uncertainty_df[mask]
     times = df.time.unique()

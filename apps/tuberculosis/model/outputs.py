@@ -8,9 +8,12 @@ from autumn.constants import Compartment
 
 def make_infectious_prevalence_calculation_function(stratum_filters=[]):
     """
-    :param example of stratum_filters:
+    Make a derived output function that calculates TB prevalence, stratified or non-stratified depending on the
+    requested stratum_filters.
+    :param stratum_filters: list of dictionaries.
+    example of stratum_filters:
         [{'name': 'age', 'value': '15'}, {'name':'organ', 'value':'smear_positive'}]
-    :return:
+    :return: a derived output function
     """
     def calculate_prevalence_infectious(time_idx, model, compartment_values, derived_outputs):
         """
@@ -34,9 +37,12 @@ def make_infectious_prevalence_calculation_function(stratum_filters=[]):
 
 def make_latency_percentage_calculation_function(stratum_filters=[]):
     """
-    :param example of stratum_filters:
+    Make a derived output function that calculates LTBI prevalence, stratified or non-stratified depending on the
+    requested stratum_filters.
+    :param stratum_filters: list of dictionaries.
+    example of stratum_filters:
         [{'name': 'age', 'value': '15'}, {'name':'organ', 'value':'smear_positive'}]
-    :return:
+    :return: a derived output function
     """
     def calculate_prevalence_infectious(time_idx, model, compartment_values, derived_outputs):
         """
@@ -62,6 +68,15 @@ def calculate_population_size(time_idx, model, compartment_values, derived_outpu
 
 
 def calculate_stratum_population_size(compartment_values, model, stratum_filters):
+    """
+    Calculate the population size of a given stratum.
+    :param compartment_values: list of compartment sizes
+    :param model: model object
+    :param stratum_filters: list of dictionaries
+    example of stratum_filters:
+        [{'name': 'age', 'value': '15'}, {'name':'organ', 'value':'smear_positive'}]
+    :return: float
+    """
     relevant_filter_names = [s.name for s in model.stratifications if
                              set(s.compartments) == set(model.original_compartment_names)]
 
@@ -86,6 +101,14 @@ def calculate_stratum_population_size(compartment_values, model, stratum_filters
 
 
 def get_all_derived_output_functions(calculated_outputs, outputs_stratification, model_stratifications):
+    """
+    Will automatically make and register the derived outputs based on the user-requested calculated_outputs and
+    outputs_stratification
+    :param calculated_outputs: list of requested derived outputs
+    :param outputs_stratification: dict defining which derived outputs should be stratified and by which factor
+    :param model_stratifications: dict containing all model stratifications
+    :return: dict
+    """
     simple_functions = {
         "population_size": calculate_population_size,
     }

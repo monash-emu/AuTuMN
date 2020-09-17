@@ -66,40 +66,32 @@ def make_latency_percentage_calculation_function(stratum_filters=[]):
     return calculate_prevalence_infectious
 
 
-def get_notifications_connections(comps: List[Compartment]):
+def get_notifications_connections(comps: List[Compartment], source_stratum=None):
     """
     Track "notifications": flow from infectious to treatment compartment.
     """
+    output_name = "notifications"
+    if source_stratum:
+        output_name += "X" + source_stratum[0] + "_" + source_stratum[1]
+        source_strata = {source_stratum[0]: source_stratum[1]}
+    else:
+        source_strata = {}
     return _get_transition_flow_connections(
-        output_name="notifications",
+        output_name=output_name,
         source=Compartment.INFECTIOUS,
         dest=Compartment.ON_TREATMENT,
         comps=comps,
+        source_strata=source_strata
     )
 
 
 def _get_transition_flow_connections(
-    output_name: str, source: str, dest: str, comps: List[Compartment]
+    output_name: str, source: str, dest: str, comps: List[Compartment], source_strata={}, dest_strata={}
 ):
     connections = {}
     connections[output_name] = TransitionFlowOutput(
-        source=source, dest=dest, source_strata={}, dest_strata={},
+        source=source, dest=dest, source_strata=source_strata, dest_strata=dest_strata,
     )
-    for comp in comps:
-        if not comp.has_name(dest):
-            continue
-
-        strata = comp.get_strata()
-        for i in range(1, len(strata) + 1):
-            strata_used = strata[0:i]
-            output_key = "X".join([output_name, *strata_used])
-            strat_vals_used = {
-                k: v for k, v in comp._strat_values.items() if f"{k}_{v}" in strata_used
-            }
-            connections[output_key] = TransitionFlowOutput(
-                source=source, dest=dest, source_strata={}, dest_strata=strat_vals_used,
-            )
-
     return connections
 
 
@@ -209,6 +201,16 @@ def get_all_derived_output_functions(calculated_outputs, outputs_stratification,
         elif requested_output in flow_functions:
             connection = flow_functions[requested_output](model.compartment_names)
             model.add_flow_derived_outputs(connection)
+            if requested_output in outputs_stratification:
+                for stratification_name in outputs_stratification[requested_output]:
+                    if stratification_name in model_stratification_names:
+                        stratification = [model.stratifications[i] for i, s in enumerate(model.stratifications) if
+                                          s.name == stratification_name][0]
+                        for stratum in stratification.strata:
+                            connection = flow_functions[requested_output](model.compartment_names,
+                                                                          [stratification_name, stratum]
+                                                                          )
+                            model.add_flow_derived_outputs(connection)
         else:
             raise ValueError(requested_output + " not among simple_functions, factory_functions or flow_functions")
 

@@ -5,7 +5,7 @@ start_time: 1900.
 end_time: 2020.
 time_step: 1
 
-stratify_by: ['location']  #['age', 'location', 'organ']
+stratify_by: ['location', 'age']  #, 'location', 'organ']
 age_breakpoints: [0, 5, 15, 35, 50, 70]
 user_defined_stratifications:  # this specifies user-defined  stratifications
   location:

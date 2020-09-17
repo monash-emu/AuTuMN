@@ -116,6 +116,7 @@ def get_all_derived_output_functions(calculated_outputs, outputs_stratification,
         "prevalence_infectious": make_infectious_prevalence_calculation_function,
         "percentage_latent": make_latency_percentage_calculation_function,
     }
+    model_stratification_names = [s.name for s in model_stratifications]
     derived_output_functions = {}
     for requested_output in calculated_outputs:
         if requested_output in simple_functions:
@@ -126,13 +127,14 @@ def get_all_derived_output_functions(calculated_outputs, outputs_stratification,
             # add potential stratified outputs
             if requested_output in outputs_stratification:
                 for stratification_name in outputs_stratification[requested_output]:
-                    stratification = [model_stratifications[i] for i, s in enumerate(model_stratifications) if
-                                      s.name == stratification_name][0]
-                    for stratum in stratification.strata:
-                        derived_output_functions[requested_output + "X" + stratification_name + "_" + stratum] = \
-                            factory_functions[requested_output]([
-                                {'name': stratification_name, 'value': stratum}
-                            ])
+                    if stratification_name in model_stratification_names:
+                        stratification = [model_stratifications[i] for i, s in enumerate(model_stratifications) if
+                                          s.name == stratification_name][0]
+                        for stratum in stratification.strata:
+                            derived_output_functions[requested_output + "X" + stratification_name + "_" + stratum] = \
+                                factory_functions[requested_output]([
+                                    {'name': stratification_name, 'value': stratum}
+                                ])
         else:
             raise ValueError(requested_output + " not among simple_functions or factory_functions")
     return derived_output_functions

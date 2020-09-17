@@ -98,16 +98,13 @@ def build_model(params: dict) -> StratifiedModel:
     # Load time-variant birth rates
     set_model_time_variant_birth_rate(tb_model, params['iso3'])
 
-    # Register derived output functions
-    # These functions calculate 'derived' outputs of interest, based on the
-    # model's compartment values or flows. These are calculated after the model is run.
-    func_outputs = {
-        "prevalence_infectious": outputs.calculate_prevalence_infectious,
-        "percentage_susceptible": outputs.calculate_percentage_susceptible,
-        "percentage_latent": outputs.calculate_percentage_latent,
-        "population_size": outputs.calculate_population_size,
-    }
-    calculated_func_outputs = {key: value for key, value in func_outputs.items() if key in params['calculated_outputs']}
+    # Register derived output functions, which are calculations based on the model's compartment values or flows.
+    # These are calculated after the model is run.
+    calculated_func_outputs = outputs.get_all_derived_output_functions(
+        params['calculated_outputs'],
+        params['outputs_stratification'],
+        tb_model.stratifications,
+    )
     tb_model.add_function_derived_outputs(calculated_func_outputs)
 
     return tb_model

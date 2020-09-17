@@ -10,6 +10,7 @@ validate_params = sb.build_validator(
     time_step=float,
     # output requests
     calculated_outputs=list,
+    outputs_stratification=dict,
     # model structure,
     stratify_by=list,
     age_breakpoints=list,

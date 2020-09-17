@@ -12,24 +12,25 @@ iso3: null
 region: null
 
 # requested outputs
-calculated_outputs: ['prevalence_infectious', 'percentage_latent', 'population_size']
+calculated_outputs: ['prevalence_infectious']
+outputs_stratification: {}
 
 # model structure
 # stratifications by 'age' and by 'organ' are pre-defined but they must be requested to be activated
 # other stratifications can be requested as "user_defined_stratifications"
 stratify_by: ['age']  #['age', 'location', 'organ']
 age_breakpoints: [0, 5, 15, 30, 45, 60, 75]
-user_defined_stratifications:  # this specifies user-defined  stratifications
-  location:
-    strata: ['rural', 'urban']
-    proportions:
-      rural: .2
-      urban: .8
-    adjustments:
-      contact_rate:
-        rural: 1.2
-      detection_rate:
-        rural: .65
+user_defined_stratifications: {}  # this specifies user-defined  stratifications
+#  location:
+#    strata: ['rural', 'urban']
+#    proportions:
+#      rural: .2
+#      urban: .8
+#    adjustments:
+#      contact_rate:
+#        rural: 1.2
+#      detection_rate:
+#        rural: .65
 
 # demographics
 start_population_size: 5000000

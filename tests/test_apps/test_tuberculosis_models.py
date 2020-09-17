@@ -6,6 +6,13 @@ from summer.constants import Flow, IntegrationType
 
 from apps import tuberculosis
 from autumn.tool_kit.utils import merge_dicts
+from itertools import chain, combinations
+
+
+def powerset(iterable):
+    "powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"
+    s = list(iterable)
+    return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
 
 
 @pytest.mark.local_only
@@ -15,10 +22,12 @@ def test_run_models_partial(region):
     Smoke test: ensure we can build and run each default model with various stratification requests with nothing crashing.
     Does not include scenarios, plotting, etc.
     """
-    for stratify_by in ([], ["organ"]):
-        region_app = tuberculosis.app.get_region(region)
+    region_app = tuberculosis.app.get_region(region)
+    ps = deepcopy(region_app.params["default"])
+    original_stratify_by = deepcopy(ps["stratify_by"])
+    for stratify_by in powerset(original_stratify_by):
         ps = deepcopy(region_app.params["default"])
-        ps["stratify_by"] = stratify_by
+        ps["stratify_by"] = list(stratify_by)
         # Only run model for ~10 epochs.
         ps["end_time"] = ps["start_time"] + 10
         model = region_app.build_model(ps)

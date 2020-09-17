@@ -4,8 +4,10 @@ iso3: "RMI"
 start_time: 1900.
 end_time: 2020.
 time_step: 1
+start_population_size: 15000
 
-stratify_by: ['location', 'age']  #, 'location', 'organ']
+# MODEL STRUCTURE
+stratify_by: ['location']  # ['location', 'age', 'organ']
 age_breakpoints: [0, 5, 15, 35, 50, 70]
 user_defined_stratifications:  # this specifies user-defined  stratifications
   location:
@@ -16,11 +18,10 @@ user_defined_stratifications:  # this specifies user-defined  stratifications
       other: .277
     adjustments:
       contact_rate:
-        majuro: 1.5
+        majuro: 1.
 
-start_population_size: 15000
-
-calculated_outputs: ['prevalence_infectious', 'percentage_latent', 'population_size']
+# REQUESTED OUTPUTS
+calculated_outputs: ['prevalence_infectious', 'percentage_latent', 'population_size', 'notifications', 'mortality']
 outputs_stratification:
   prevalence_infectious: ['location']
   percentage_latent: ['location']

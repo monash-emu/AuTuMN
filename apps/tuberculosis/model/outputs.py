@@ -1,9 +1,12 @@
 """
 FIXME: These all need tests.
 """
-from typing import List, Dict
-import numpy as np
+from typing import List
 from autumn.constants import Compartment
+from summer.model.derived_outputs import (
+    InfectionDeathFlowOutput,
+    TransitionFlowOutput,
+)
 
 
 def make_infectious_prevalence_calculation_function(stratum_filters=[]):
@@ -63,6 +66,63 @@ def make_latency_percentage_calculation_function(stratum_filters=[]):
     return calculate_prevalence_infectious
 
 
+def get_notifications_connections(comps: List[Compartment]):
+    """
+    Track "notifications": flow from infectious to treatment compartment.
+    """
+    return _get_transition_flow_connections(
+        output_name="notifications",
+        source=Compartment.INFECTIOUS,
+        dest=Compartment.ON_TREATMENT,
+        comps=comps,
+    )
+
+
+def _get_transition_flow_connections(
+    output_name: str, source: str, dest: str, comps: List[Compartment]
+):
+    connections = {}
+    connections[output_name] = TransitionFlowOutput(
+        source=source, dest=dest, source_strata={}, dest_strata={},
+    )
+    for comp in comps:
+        if not comp.has_name(dest):
+            continue
+
+        strata = comp.get_strata()
+        for i in range(1, len(strata) + 1):
+            strata_used = strata[0:i]
+            output_key = "X".join([output_name, *strata_used])
+            strat_vals_used = {
+                k: v for k, v in comp._strat_values.items() if f"{k}_{v}" in strata_used
+            }
+            connections[output_key] = TransitionFlowOutput(
+                source=source, dest=dest, source_strata={}, dest_strata=strat_vals_used,
+            )
+
+    return connections
+
+
+def get_mortality_flow_infectious(comps: List[Compartment]):
+    connections = {}
+    connections["mortality_infectious"] = InfectionDeathFlowOutput(
+        source=Compartment.INFECTIOUS, source_strata={}
+    )
+    return connections
+
+
+def get_mortality_flow_on_treatment(comps: List[Compartment]):
+    connections = {}
+    connections["mortality_on_treatment"] = InfectionDeathFlowOutput(
+        source=Compartment.ON_TREATMENT, source_strata={}
+    )
+    return connections
+
+
+def calculate_tb_mortality(time_idx, model, compartment_values, derived_outputs):
+    return derived_outputs['mortality_infectious'][time_idx] + derived_outputs['mortality_on_treatment'][time_idx]
+
+
 def calculate_population_size(time_idx, model, compartment_values, derived_outputs):
     return sum(compartment_values)
 
@@ -100,7 +160,7 @@ def calculate_stratum_population_size(compartment_values, model, stratum_filters
     return sum([compartment_values[i] for i in relevant_compartment_indices])
 
 
-def get_all_derived_output_functions(calculated_outputs, outputs_stratification, model_stratifications):
+def get_all_derived_output_functions(calculated_outputs, outputs_stratification, model):
     """
     Will automatically make and register the derived outputs based on the user-requested calculated_outputs and
     outputs_stratification
@@ -111,12 +171,23 @@ def get_all_derived_output_functions(calculated_outputs, outputs_stratification,
     """
     simple_functions = {
         "population_size": calculate_population_size,
+        "mortality": calculate_tb_mortality,
     }
     factory_functions = {
         "prevalence_infectious": make_infectious_prevalence_calculation_function,
         "percentage_latent": make_latency_percentage_calculation_function,
     }
-    model_stratification_names = [s.name for s in model_stratifications]
+    flow_functions = {
+        "notifications": get_notifications_connections,
+        "mortality_infectious": get_mortality_flow_infectious,
+        "mortality_on_treatment": get_mortality_flow_on_treatment,
+    }
+
+    # need to add two intermediate derived outputs to capture mortality flows
+    if "mortality" in calculated_outputs:
+        calculated_outputs = ["mortality_infectious", "mortality_on_treatment"] + calculated_outputs
+
+    model_stratification_names = [s.name for s in model.stratifications]
     derived_output_functions = {}
     for requested_output in calculated_outputs:
         if requested_output in simple_functions:
@@ -128,13 +199,17 @@ def get_all_derived_output_functions(calculated_outputs, outputs_stratification,
             if requested_output in outputs_stratification:
                 for stratification_name in outputs_stratification[requested_output]:
                     if stratification_name in model_stratification_names:
-                        stratification = [model_stratifications[i] for i, s in enumerate(model_stratifications) if
+                        stratification = [model.stratifications[i] for i, s in enumerate(model.stratifications) if
                                           s.name == stratification_name][0]
                         for stratum in stratification.strata:
                             derived_output_functions[requested_output + "X" + stratification_name + "_" + stratum] = \
                                 factory_functions[requested_output]([
                                     {'name': stratification_name, 'value': stratum}
                                 ])
+        elif requested_output in flow_functions:
+            connection = flow_functions[requested_output](model.compartment_names)
+            model.add_flow_derived_outputs(connection)
         else:
-            raise ValueError(requested_output + " not among simple_functions or factory_functions")
-    return derived_output_functions
+            raise ValueError(requested_output + " not among simple_functions, factory_functions or flow_functions")
+
+    model.add_function_derived_outputs(derived_output_functions)

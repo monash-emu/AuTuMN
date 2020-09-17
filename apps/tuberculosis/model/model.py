@@ -100,11 +100,10 @@ def build_model(params: dict) -> StratifiedModel:
 
     # Register derived output functions, which are calculations based on the model's compartment values or flows.
     # These are calculated after the model is run.
-    calculated_func_outputs = outputs.get_all_derived_output_functions(
+    outputs.get_all_derived_output_functions(
         params['calculated_outputs'],
         params['outputs_stratification'],
-        tb_model.stratifications,
+        tb_model
     )
-    tb_model.add_function_derived_outputs(calculated_func_outputs)
 
     return tb_model

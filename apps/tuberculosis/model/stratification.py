@@ -5,7 +5,7 @@ from autumn.inputs.social_mixing.queries import get_mixing_matrix_specific_agegr
 from autumn.curve import scale_up_function, tanh_based_scaleup
 
 from math import log, exp
-
+import numpy as np
 import itertools
 
 
@@ -97,6 +97,12 @@ def apply_user_defined_stratification(model, compartments, stratification_name, 
             for stratum in adjustment:
                 flow_adjustments[stratified_param_name][stratum] = adjustment[stratum]
 
+    # format mixing matrix
+    if 'mixing_matrix' in stratification_details:
+        mixing_matrix = np.array([row for row in stratification_details['mixing_matrix']])
+    else:
+        mixing_matrix = None
+
     # apply stratification
     model.stratify(
         stratification_name,
@@ -104,6 +110,7 @@ def apply_user_defined_stratification(model, compartments, stratification_name, 
         compartments,
         comp_split_props=stratification_details['proportions'],
         flow_adjustments=flow_adjustments,
+        mixing_matrix=mixing_matrix
     )
 
 

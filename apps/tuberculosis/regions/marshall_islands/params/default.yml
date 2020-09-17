@@ -16,6 +16,10 @@ user_defined_stratifications:  # this specifies user-defined  stratifications
       majuro: .523
       ebeye: .2
       other: .277
+    mixing_matrix:
+      - [0.9, 0.05, 0.05]
+      - [0.05, 0.9, 0.05]
+      - [0.05, 0.05, 0.9]
     adjustments:
       contact_rate:
         majuro: 1.

@@ -31,7 +31,6 @@ def stratify_by_age(model, params, compartments):
             flow_adjustments,
             params['age_breakpoints'],
             params['extra_params']['prop_diabetes'],
-            params['extra_params']['diabetes_age_start'],
             params['extra_params']['rr_progression_diabetes']
         )
 

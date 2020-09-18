@@ -35,6 +35,11 @@ outputs_stratification:
 inflate_reactivation_for_diabetes: True
 
 extra_params:
-  diabetes_age_start: 25.
+  prop_diabetes:
+    0: 0.01
+    5: 0.05
+    15: 0.2
+    35: 0.4
+    50: 0.7
+    70: 0.7
   rr_progression_diabetes: 3.6
-  prop_diabetes: .3

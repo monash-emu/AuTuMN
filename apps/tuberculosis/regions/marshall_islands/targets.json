@@ -7,7 +7,7 @@
   },
   "prevalence_infectiousXlocation_ebeye": {
     "title": "TB prevalence in Ebeye (/100,000)",
-    "output_key": "prevalence_infectiousXlocation_majuro",
+    "output_key": "prevalence_infectiousXlocation_ebeye",
     "times": [2017.0],
     "values": [755.0]
   },

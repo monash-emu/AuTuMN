@@ -13,7 +13,7 @@ from autumn.inputs.database import get_input_db
 
 INF = float("inf")
 MAPPING_ISO_CODE = {
-    "RMI": "FSM",
+    "MHL": "FSM",
 }
 
 

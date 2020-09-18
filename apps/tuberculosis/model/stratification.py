@@ -34,7 +34,6 @@ def stratify_by_age(model, params, compartments):
             params['extra_params']['rr_progression_diabetes']
         )
 
-
     # age-specific infectiousness
     strata_infectiousness = calculate_age_specific_infectiousness(params['age_breakpoints'],
                                                                   params['age_infectiousness_switch'])

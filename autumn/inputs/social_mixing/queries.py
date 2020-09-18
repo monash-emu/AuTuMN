@@ -9,7 +9,7 @@ from autumn.inputs import get_population_by_agegroup
 
 LOCATIONS = ("all_locations", "home", "other_locations", "school", "work")
 MAPPING_ISO_CODE = {
-    "RMI": "KIR",
+    "MHL": "KIR",
 }
 
 # Cache result beecause this gets called 1000s of times during calibration.

@@ -20,6 +20,10 @@ def get_adapted_age_parameters(age_breakpoints, age_specific_latency):
     adapted_parameter_dict = {}
     for parameter in ("early_activation_rate", "stabilisation_rate", "late_activation_rate"):
         del age_specific_latency[parameter]['unstratified']
+        for age_break in ['0', '5', '15']:
+            old_key = "age_" + age_break
+            new_key = int(age_break)
+            age_specific_latency[parameter][new_key] = age_specific_latency[parameter].pop(old_key)
         adapted_parameter_dict[parameter] = add_w_to_param_names(
             change_parameter_unit(
                 get_parameter_dict_from_function(

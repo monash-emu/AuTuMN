@@ -43,19 +43,19 @@ contact_rate: 1.4
 age_specific_latency:
   early_activation_rate:
     unstratified: 1.1e-3
-    0: 6.6e-3
-    5: 2.7e-3
-    15: 2.7e-4
+    age_0: 6.6e-3
+    age_5: 2.7e-3
+    age_15: 2.7e-4
   stabilisation_rate:
     unstratified: 1.0e-2
-    0: 1.2e-2
-    5: 1.2e-2
-    15: 5.4e-3
+    age_0: 1.2e-2
+    age_5: 1.2e-2
+    age_15: 5.4e-3
   late_activation_rate:
     unstratified: 5.5e-6
-    0: 1.9e-11
-    5: 6.4e-6
-    15: 3.3e-6
+    age_0: 1.9e-11
+    age_5: 6.4e-6
+    age_15: 3.3e-6
 
 # parameters related to post-disease-flows
 time_variant_presentation_delay:

@@ -38,6 +38,11 @@ PRIORS = [
         "distri_params": [1., 10.]
     },
     {
+        "param_name": "time_variant_presentation_delay.end_value",
+        "distribution": "uniform",
+        "distri_params": [.5, 4.]  # roughly CDR in 30-80 %
+    },
+    {
         "param_name": "user_defined_stratifications.location.adjustments.detection_rate.ebeye",
         "distribution": "uniform",
         "distri_params": [0.5, 2.0],

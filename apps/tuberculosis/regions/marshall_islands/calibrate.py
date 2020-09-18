@@ -7,7 +7,8 @@ from autumn.tool_kit.params import load_params, load_targets
 from apps.tuberculosis.model import build_model
 
 targets = load_targets("tuberculosis", Region.MARSHALL_ISLANDS)
-prevalence_infectious = targets["prevalence_infectious"]
+
+prevalence_infectious = targets["prevalence_infectiousXlocation_majuro"]
 
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):

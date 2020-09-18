@@ -9,8 +9,6 @@ from apps.tuberculosis.calibration_utils import get_latency_priors_from_epidemic
 
 targets = load_targets("tuberculosis", Region.MARSHALL_ISLANDS)
 
-prevalence_infectious = targets["prevalence_infectiousXlocation_majuro"]
-
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
     params = load_params("tuberculosis", Region.MARSHALL_ISLANDS)
@@ -40,12 +38,6 @@ PRIORS = [
         "distri_params": [1., 10.]
     },
     {
-        "param_name": "contact_rate",
-        "distribution": "uniform",
-        "distri_params": [1., 10.]
-    },
-
-    {
         "param_name": "user_defined_stratifications.location.adjustments.detection_rate.ebeye",
         "distribution": "uniform",
         "distri_params": [0.5, 2.0],
@@ -55,8 +47,12 @@ PRIORS = [
         "distribution": "uniform",
         "distri_params": [0.5, 2.0],
     },
+    {
+        "param_name": "extra_params.rr_progression_diabetes",
+        "distribution": "uniform",
+        "distri_params": [2.25, 5.73],
+    },
 ]
-
 # add latency parameters
 for param_name in ['early_activation_rate', 'late_activation_rate']:
     for agegroup in ['age_0', 'age_5', 'age_15']:
@@ -64,11 +60,22 @@ for param_name in ['early_activation_rate', 'late_activation_rate']:
             get_latency_priors_from_epidemics(param_name, agegroup)
         )
 
-TARGET_OUTPUTS = [
-    {
-        "output_key": prevalence_infectious["output_key"],
-        "years": prevalence_infectious["times"],
-        "values": prevalence_infectious["values"],
-        "loglikelihood_distri": "normal",
-    },
+targets_to_use = [
+    'prevalence_infectiousXlocation_majuro',
+    'prevalence_infectiousXlocation_ebeye',
+    'percentage_latentXlocation_majuro',
+    'notificationsXlocation_majuro',
+    'notificationsXlocation_ebeye',
+    'notificationsXlocation_other'
 ]
+TARGET_OUTPUTS = []
+for t_name, t in targets.items():
+    if t['output_key'] in targets_to_use:
+        TARGET_OUTPUTS.append(
+            {
+                "output_key": t['output_key'],
+                "years": t["times"],
+                "values": t["values"],
+                "loglikelihood_distri": "normal",
+            },
+        )

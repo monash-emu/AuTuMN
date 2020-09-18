@@ -166,7 +166,10 @@ def stratify_by_organ(model, params):
         "extrapulmonary": 1.0 - params["incidence_props_pulmonary"],
     }
     for stage in ["early", "late"]:
-        flow_adjustments[stage + "_activation_rate"] = splitting_proportions
+        param_stem = stage + "_activation_rate"
+        stratified_param_names = get_stratified_param_names(param_stem, model.stratifications)
+        for stratified_param_name in stratified_param_names:
+            flow_adjustments[stratified_param_name] = splitting_proportions
 
     # trigger model stratification
     model.stratify(

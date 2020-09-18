@@ -27,13 +27,13 @@
     "title": "Notifications in Ebeye",
     "output_key": "notificationsXlocation_ebeye",
     "times": [2016.0],
-    "values": [119]
+    "values": [53]
   },
   "notificationsXlocation_other": {
     "title": "Notifications in Other Islands",
     "output_key": "notificationsXlocation_other",
-    "times": [2016.0],
-    "values": [119]
+    "times": [2014.0],
+    "values": [10]
   },
   "population_size": {
     "title": "Population size",

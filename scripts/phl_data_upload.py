@@ -12,8 +12,8 @@ from google_drive_downloader import GoogleDriveDownloader as gdd
 import json
 
 # shareable google drive links
-PHL_doh_link = '1KASTR-tKQGhCj37hnzYzvR4TTlTJ-xyj'
-PHL_fassster_link = '1uNQhBfZLTFixOqIn10HmE1PBfgTPD3db'
+PHL_doh_link = '10s1I5xyHEAR_QqPvzRiF0ozamAbq_A8M'
+PHL_fassster_link = '1dOxtDxLn2aMqsxveXFgt0w-0s10gWKJB'
 
 # destination folders filepaths
 base_dir = os.path.dirname(os.path.abspath(os.curdir)) 
@@ -59,16 +59,16 @@ def process_phl_data():
     doh_data = doh_data[doh_data['region'].isin(regions)]
     fassster_data = fassster_data[fassster_data['Region'].isin(regions)]
     ## most recent ICU data
-    doh_data['reportdate'] = pd.to_datetime(doh_data['reportdate'])
+    doh_data.loc[:,'reportdate'] = pd.to_datetime(doh_data['reportdate'])
     doh_data['times'] = doh_data.reportdate - COVID_BASE_DATETIME
     doh_data['times'] = doh_data['times'] / np.timedelta64(1, 'D')
-    icu_occ_at_maxDate =  doh_data.groupby(['region'], as_index = False)['times', 'icu_o'].max()
+    icu_occ_at_maxDate =  doh_data.groupby(['region'], as_index = False)[['times', 'icu_o']].max()
     icu_occ_at_maxDate.to_csv(icu_dest)
     ## accumulated deaths
     fassster_data_deaths = fassster_data[fassster_data['Date_Died'].notna()]
-    fassster_data_deaths['Date_Died'] = pd.to_datetime(fassster_data_deaths['Date_Died'])
-    fassster_data_deaths['times'] = fassster_data_deaths.Date_Died - COVID_BASE_DATETIME
-    fassster_data_deaths['times'] = fassster_data_deaths['times'] / np.timedelta64(1, 'D')
+    fassster_data_deaths.loc[:,'Date_Died'] = pd.to_datetime(fassster_data_deaths['Date_Died'])
+    fassster_data_deaths.loc[:,'times'] = fassster_data_deaths.loc[:,'Date_Died'] - COVID_BASE_DATETIME
+    fassster_data_deaths['times'] = fassster_data_deaths['times'] / np.timedelta64(1, 'D') # warning
     accum_deaths = fassster_data_deaths.groupby(['Region']).size()
     accum_deaths = accum_deaths.to_frame(name = 'accum_deaths').reset_index()
     cumulative_deaths_max_date = fassster_data_deaths.groupby(['Region'], as_index = False)['times'].max().reset_index(0, drop = True)

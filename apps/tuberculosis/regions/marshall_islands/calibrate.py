@@ -33,14 +33,24 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
 
 PRIORS = [
     {
-        "param_name": "contact_rate",
+        "param_name": "start_population_size",
         "distribution": "uniform",
-        "distri_params": [1., 10.]
+        "distri_params": [2000, 30000]
     },
     {
-        "param_name": "time_variant_presentation_delay.end_value",
+        "param_name": "start_time",
         "distribution": "uniform",
-        "distri_params": [.5, 4.]  # roughly CDR in 30-80 %
+        "distri_params": [1900, 1950]
+    },
+    {
+        "param_name": "contact_rate",
+        "distribution": "uniform",
+        "distri_params": [.5, 5.]
+    },
+    {
+        "param_name": "time_variant_tb_screening_rate.end_value",
+        "distribution": "uniform",
+        "distri_params": [.3, 3.]  # roughly 25-80% of diseased individuals screened
     },
     {
         "param_name": "user_defined_stratifications.location.adjustments.detection_rate.ebeye",
@@ -71,7 +81,8 @@ targets_to_use = [
     'percentage_latentXlocation_majuro',
     'notificationsXlocation_majuro',
     'notificationsXlocation_ebeye',
-    'notificationsXlocation_other'
+    'notificationsXlocation_other',
+    'population_size',
 ]
 TARGET_OUTPUTS = []
 for t_name, t in targets.items():

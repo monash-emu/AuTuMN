@@ -66,7 +66,7 @@ def build_model(params: dict) -> StratifiedModel:
         infectious_compartments=infectious_comps,
         birth_approach=BirthApproach.ADD_CRUDE,
         entry_compartment=Compartment.SUSCEPTIBLE,
-        starting_population=params['start_population_size'],
+        starting_population=int(params['start_population_size']),
     )
 
     # Apply infectiousness adjustment for individuals on treatment

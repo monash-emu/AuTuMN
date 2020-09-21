@@ -50,8 +50,8 @@
   "population_size": {
     "title": "Population size",
     "output_key": "population_size",
-    "times": [1960.0, 1990.0, 2019.0],
-    "values": [14662, 47271, 58791]
+    "times": [2019.0],
+    "values": [58791]
   },
   "incidence": {
     "title": "TB incidence (/100,000)",

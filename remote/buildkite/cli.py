@@ -7,7 +7,7 @@ import pprint
 import click
 
 from autumn.constants import Region
-from remote import aws
+from remote import aws.cli as aws
 from remote.aws.utils import read_run_id
 
 from .buildkite import trigger_pipeline

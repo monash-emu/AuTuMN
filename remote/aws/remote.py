@@ -2,11 +2,11 @@ import os
 import sys
 import subprocess
 import logging
-import time
 
 from fabric import Connection
 
 from . import settings
+from .utils import build_run_id, read_run_id
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +62,6 @@ def run_full_model(instance, run_id: str, burn_in: int, use_latest_code: bool, b
 
         install_requirements(conn)
         read_secrets(conn)
-        model_name, _, _ = read_run_id(run_id)
         pipeline_name = "full"
         pipeline_args = {
             "run": run_id,
@@ -74,17 +73,17 @@ def run_full_model(instance, run_id: str, burn_in: int, use_latest_code: bool, b
 
 
 def run_calibration(
-    instance, model_name: str, num_chains: int, runtime: int, branch: str,
+    instance, app_name: str, region_name: str, num_chains: int, runtime: int, branch: str,
 ):
     """Run calibration job on the remote server"""
-    msg = "Running calibration %s with %s chains for %s seconds on AWS instance %s."
-    logger.info(msg, model_name, num_chains, runtime, instance["InstanceId"])
+    msg = "Running calibration %s %s with %s chains for %s seconds on AWS instance %s."
+    logger.info(msg, app_name, region_name, num_chains, runtime, instance["InstanceId"])
     run_id = None
     with get_connection(instance) as conn:
         update_repo(conn, branch=branch)
         install_requirements(conn)
         read_secrets(conn)
-        run_id = get_run_id(conn, model_name)
+        run_id = get_run_id(conn, app_name, region_name)
         pipeline_name = "calibrate"
         pipeline_args = {
             "run": run_id,
@@ -109,20 +108,11 @@ def run_luigi_pipeline(conn: Connection, pipeline_name: str, pipeline_args: dict
     logger.info("Finished running Luigi pipleine %s", pipeline_name)
 
 
-def read_run_id(run_id: str):
-    """Read data from run id"""
-    parts = run_id.split("-")
-    git_commit = parts[-1]
-    timestamp = parts[-2]
-    model_name = "-".join(parts[:-2])
-    return model_name, timestamp, git_commit
-
-
 def set_run_id(conn: Connection, run_id: str):
     """Set git to use the commit for a given run ID"""
     logger.info("Setting up repo using a run id %s", run_id)
     conn.sudo(f"chown -R ubuntu:ubuntu {CODE_PATH}", echo=True)
-    _, _, commit = read_run_id(run_id)
+    _, _, _, commit = read_run_id(run_id)
     with conn.cd(CODE_PATH):
         conn.run("git fetch --quiet", echo=True)
         conn.run(f"git checkout --quiet {commit}", echo=True)
@@ -130,15 +120,14 @@ def set_run_id(conn: Connection, run_id: str):
     logger.info("Done updating repo.")
 
 
-def get_run_id(conn: Connection, job_name: str):
+def get_run_id(conn: Connection, app_name: str, region_name: str):
     """Get the run ID for a given job name name"""
     logger.info("Building run id.")
     with conn.cd(CODE_PATH):
         git_commit = conn.run("git rev-parse HEAD", hide="out").stdout.strip()
 
-    git_commit_short = git_commit[:7]
-    timestamp = int(time.time())
-    run_id = f"{job_name}-{timestamp}-{git_commit_short}"
+    git_commit = git_commit[:7]
+    run_id = build_run_id(app_name, region_name, git_commit)
     logger.info("Using run id %s", run_id)
     return run_id
 

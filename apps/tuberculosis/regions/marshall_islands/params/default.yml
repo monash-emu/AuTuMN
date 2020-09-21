@@ -43,7 +43,7 @@ time_variant_tsr:  # should always be > 0
 
 
 # REQUESTED OUTPUTS
-calculated_outputs: ['prevalence_infectious', 'percentage_latent', 'population_size', 'notifications', 'mortality']
+calculated_outputs: ['prevalence_infectious', 'percentage_latent', 'population_size', 'notifications', 'mortality', 'incidence']
 outputs_stratification:
   prevalence_infectious: ['location']
   percentage_latent: ['location']

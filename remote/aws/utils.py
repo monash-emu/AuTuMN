@@ -3,10 +3,11 @@ import time
 
 def read_run_id(run_id: str):
     """Read data from run id"""
-    parts = run_id.split("-")
-    if len(parts) > 2:
+    parts = run_id.split("/")
+    if len(parts) < 2:
         # It's an old style path
         # central-visayas-1600644750-9fdd80c
+        parts = run_id.split("-")
         git_commit = parts[-1]
         timestamp = parts[-2]
         region_name = "-".join(parts[:-2])
@@ -14,7 +15,6 @@ def read_run_id(run_id: str):
     else:
         # It's an new style path
         # covid_19/central-visayas/1600644750/9fdd80c
-        parts = run_id.split("/")
         app_name = parts[0]
         region_name = parts[1]
         timestamp = parts[2]

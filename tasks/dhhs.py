@@ -42,6 +42,69 @@ class RunDHHS(luigi.Task):
         return BuildFinalCSVTask(commit=self.commit)
 
 
+class BuildEnsembleTask(utils.BaseTask):
+    commit = luigi.Parameter()
+
+    def output(self):
+        filename = f"vic-ensemble-{self.commit}-{DATESTAMP}.csv"
+        s3_uri = os.path.join(f"s3://{settings.S3_BUCKET}", f"ensemble/{filename}")
+        return utils.S3Target(s3_uri, client=utils.luigi_s3_client)
+
+    def requires(self):
+        dbs = get_vic_full_run_dbs_for_commit(self.commit)
+        downloads = []
+        for region, s3_keys in dbs.items():
+            for s3_key in s3_keys:
+                task = DownloadFullModelRunTask(s3_key=s3_key, region=region)
+                downloads.append(task)
+
+        return downloads
+
+    def safe_run(self):
+        """
+        Build predections for non-vic ensemble reporting
+        """
+        csv_path = os.path.join(DHHS_DIR, filename)
+        OUTPUT = "notifications_at_sympt_onset"
+
+        # Get sample runs from all chains
+        num_chosen = 2000
+        start_t = (datetime.now() - BASE_DATETIME).days  # Now
+        end_t = min(start_t + 7 * 6, 365)  # 6 weeks from now
+        times = np.linspace(start_t, end_t, end_t - start_t + 1)
+        samples = []
+        for idx in range(num_chosen):
+            samples[idx] = np.zeros(len(times))
+
+        for region in Region.VICTORIA_SUBREGIONS:
+            if region == Region.VICTORIA:
+                continue
+
+            region_dir = os.path.join(DHHS_DIR, "full", region)
+            mcmc_tables = db.process.append_tables(db.load.load_mcmc_tables(region_dir))
+            chosen_runs = db.process.sample_runs(mcmc_tables, num_chosen)
+            do_tables = db.load.load_derived_output_tables(region_dir)
+            do_tables = db.process.append_tables(do_tables).set_index(["chain", "run"])
+            for idx, (chain, run) in enumerate(chosen_runs):
+                run_start_t = do_tables.loc[(chain, run), "times"].iloc[0]
+                start_idx = start_t - run_start_t
+                end_idx = end_t - run_start_t
+                samples[idx] += do_tables.loc[(chain, run), OUTPUT][start_idx:end_idx]
+
+        columns = ["run", "times", OUTPUT]
+        data = {
+            "run": np.concatenate([idx * np.ones(len(times)) for idx in range(num_chosen)]),
+            "times": np.concatenate([times for _ in range(num_chosen)]),
+            OUTPUT: np.concatenate(samples),
+        }
+        df = pd.DataFrame(data=data, columns=columns)
+        df.to_csv(csv_path, index=False)
+
+        # Upload the CSV
+        s3_dest_key = f"ensemble/{filename}"
+        utils.upload_s3(csv_path, s3_dest_key)
+
+
 class BuildFinalCSVTask(utils.BaseTask):
     commit = luigi.Parameter()
 

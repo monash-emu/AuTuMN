@@ -4,9 +4,16 @@ Reads data from AWS S3 and saves in a JSON that can be consumed by a website bui
 """
 import os
 import json
+import sys
 
 import boto3
 from botocore.exceptions import ProfileNotFound
+
+# Do some super sick path hacks to get script to work from command line.
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+sys.path.append(BASE_DIR)
+
+from remote.aws.utils import read_run_id
 
 BUCKET = "autumn-data"
 AWS_PROFILE = "autumn"
@@ -38,15 +45,6 @@ def fetch_all_objects():
     return objs
 
 
-def read_run_id(run_id: str):
-    """Read data from run id"""
-    parts = run_id.split("-")
-    git_commit = parts[-1]
-    timestamp = parts[-2]
-    model_name = "-".join(parts[:-2])
-    return model_name, timestamp, git_commit
-
-
 def is_website_asset(key):
     return key.endswith(".html")
 
@@ -55,47 +53,57 @@ print("Fetching object list from AWS S3")
 objs = fetch_all_objects()
 keys = [o["Key"] for o in objs]
 print("Found", len(keys), "objects.")
-model_names = set()
 dhhs_files = []
-runs = {}
+apps = {}
 print("Creating data structure...")
 for k in keys:
     if is_website_asset(k):
         continue
 
-    path_parts = k.split("/")
-    run_id, path = path_parts[0], "/".join(path_parts[1:])
-
     if k.startswith("dhhs"):
+        # DHHS specific data, not model runs.
+        path_parts = k.split("/")
         name = path_parts[-1]
         file = {"filename": name, "url": os.path.join(BUCKET_URL, k)}
         dhhs_files.append(file)
-
-    try:
-        model, timestamp, commit = read_run_id(run_id)
-    except Exception:
         continue
 
-    model_names.add(model)
-    if not model in runs:
-        runs[model] = {}
+    if k.startswith("covid_19") or k.startswith("tuberculosis"):
+        # New storage structure.
+        # app/region/timestamp/commit/path
+        path_parts = k.split("/")
+        run_id = "/".join(path_parts[0:4])
+        path = "/".join(path_parts[4:])
+    else:
+        # Old storage structure.
+        # modelname-timestamp-commit/path
+        path_parts = k.split("/")
+        run_id, path = path_parts[0], "/".join(path_parts[1:])
 
-    if not run_id in runs[model]:
-        runs[model][run_id] = {
+    app_name, region_name, timestamp, commit = read_run_id(run_id)
+    if not app_name in apps:
+        apps[app_name] = {}
+
+    if not region_name in apps[app_name]:
+        apps[app_name][region_name] = {}
+
+    uuid = f"{timestamp}-{commit}"
+    if not uuid in apps[app_name][region_name]:
+        apps[app_name][region_name][uuid] = {
             "id": run_id,
-            "model": model,
+            "app": app_name,
+            "region": region_name,
             "timestamp": timestamp,
             "commit": commit,
             "files": [],
         }
 
     file = {"path": path, "url": os.path.join(BUCKET_URL, run_id, path)}
-    runs[model][run_id]["files"].append(file)
+    apps[app_name][region_name][uuid]["files"].append(file)
 
 
 data = {
-    "models": list(model_names),
-    "runs": runs,
+    "apps": apps,
     "dhhs": dhhs_files,
 }
 output_path = "website.json"

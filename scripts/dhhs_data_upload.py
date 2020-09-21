@@ -130,8 +130,11 @@ def update_calibration(password: str):
             targets = json.load(f)
 
         for key, val in TARGETS_MAP.items():
-            targets[key]["times"] = list(update_df["date_index"])
-            targets[key]["values"] = list(update_df[val])
+            # Drop the NaN value rows from CHRIS data.
+            temp_df = update_df[["date_index",val]].dropna(0, subset=[val])
+
+            targets[key]["times"] = list(temp_df["date_index"])
+            targets[key]["values"] = list(temp_df[val])
 
         with open(file_path, "w") as f:
             json.dump(targets, f, indent=2)
@@ -201,7 +204,7 @@ def load_chris_df(load:str):
 
     # Sort and remove duplicates to obtain max for a given date. 
     df.sort_values(by=["cluster_name","date_index","value"], ascending=[True,True,False], inplace =True)
-    df.drop_duplicates(["cluster_name","date_index", "value",],keep='first',inplace=True)
+    df.drop_duplicates(["cluster_name","date_index"],keep='first',inplace=True)
     df["cluster_name"] = df.cluster_name.replace(CHRIS_MAP).str.lower()
 
     df = df.groupby(["date_index","cluster_name"]).sum().reset_index()

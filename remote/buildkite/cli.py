@@ -7,7 +7,8 @@ import pprint
 import click
 
 from autumn.constants import Region
-from remote import aws
+from remote.aws import cli as aws
+from remote.aws.utils import read_run_id
 
 from .buildkite import trigger_pipeline
 from .pipelines import (
@@ -23,13 +24,13 @@ logger = logging.getLogger(__name__)
 
 
 @click.group()
-def buildkite():
+def buildkite_cli():
     """
     CLI tool for running Buildkite jobs
     """
 
 
-@buildkite.command()
+@buildkite_cli.command()
 def update():
     """Update Builkite pipelines to use all registered COVID models"""
     pipelines = [
@@ -44,7 +45,7 @@ def update():
         pipeline.save()
 
 
-@buildkite.command()
+@buildkite_cli.command()
 def calibrate():
     """Run a calibration job in Buildkite"""
     logger.info("Gathering data for calibration.")
@@ -57,12 +58,16 @@ def calibrate():
     trigger_downstream = calibrate_pipeline.trigger_field.get_value()
     is_spot = calibrate_pipeline.spot_field.get_value()
     params_str = pprint.pformat({f.key: f.get_value() for f in calibrate_pipeline.fields}, indent=2)
-    job_name = f"{model_name}-{build_number}"
+
+    # Decode combined app + model name from user input.
+    app_name, region_name = model_name.split(":")
+    job_name = f"{app_name}-{region_name}-{build_number}"
 
     logger.info("Running calbration job %s with params:\n%s\n", job_name, params_str)
     run_id = aws.run_calibrate(
         job=job_name,
-        calibration=model_name,
+        app=app_name,
+        region=region_name,
         chains=chains,
         runtime=runtime,
         branch=branch,
@@ -78,7 +83,7 @@ def calibrate():
         trigger_pipeline(
             label="Trigger full model run",
             target="full-model-run",
-            msg=f"Triggered by calibration {model_name} (build {build_number})",
+            msg=f"Triggered by calibration {app_name} {region_name} (build {build_number})",
             env={"SKIP_INPUT": "true"},
             meta={
                 fp.run_id_field.key: run_id,
@@ -93,7 +98,7 @@ def calibrate():
     logger.info("Results available at %s", get_run_url(run_id))
 
 
-@buildkite.command()
+@buildkite_cli.command()
 def full():
     """Run a full model run job in Buildkite"""
     logger.info("Gathering data for a full model run.")
@@ -104,8 +109,8 @@ def full():
     trigger_downstream = full_pipeline.trigger_field.get_value()
     is_spot = full_pipeline.spot_field.get_value()
     params_str = pprint.pformat({f.key: f.get_value() for f in full_pipeline.fields}, indent=2)
-    model_name, _, _ = read_run_id(run_id)
-    job_name = f"{model_name}-{build_number}"
+    app_name, region_name, _, _ = read_run_id(run_id)
+    job_name = f"{app_name}-{region_name}-{build_number}"
 
     logger.info("\n=====\nRun ID: %s\n=====\n", run_id)
     logger.info("Running full model run job %s with params:\n%s\n", job_name, params_str)
@@ -125,7 +130,7 @@ def full():
         trigger_pipeline(
             label="Trigger PowerBI processing",
             target="powerbi-processing",
-            msg=f"Triggered by full model run {model_name} (build {build_number})",
+            msg=f"Triggered by full model run {app_name} {region_name} (build {build_number})",
             env={"SKIP_INPUT": "true"},
             meta={
                 pp.run_id_field.key: run_id,
@@ -136,7 +141,7 @@ def full():
     logger.info("Results available at %s", get_run_url(run_id))
 
 
-@buildkite.command()
+@buildkite_cli.command()
 def powerbi():
     """Run a PowerBI job in Buildkite"""
     logger.info("Gathering data for PowerBI post processing.")
@@ -144,8 +149,8 @@ def powerbi():
     run_id = powerbi_pipeline.run_id_field.get_value()
     is_spot = powerbi_pipeline.spot_field.get_value()
     params_str = pprint.pformat({f.key: f.get_value() for f in powerbi_pipeline.fields}, indent=2)
-    model_name, _, _ = read_run_id(run_id)
-    job_name = f"{model_name}-{build_number}"
+    app_name, region_name, _, _ = read_run_id(run_id)
+    job_name = f"{app_name}-{region_name}-{build_number}"
 
     logger.info("\n=====\nRun ID: %s\n=====\n", run_id)
     logger.info("Running PowerBI post processing job %s with params:\n%s\n", job_name, params_str)
@@ -154,7 +159,7 @@ def powerbi():
     logger.info("Results available at %s", get_run_url(run_id))
 
 
-@buildkite.command()
+@buildkite_cli.command()
 def dhhs():
     """Run a DHHS post-processing job in Buildkite"""
     logger.info("Gathering data for DHHS post processing.")
@@ -167,17 +172,8 @@ def dhhs():
 
 
 def get_run_url(run_id: str):
-    model_name, _, _ = read_run_id(run_id)
-    return f"http://www.autumn-data.com/model/{model_name}/run/{run_id}.html"
-
-
-def read_run_id(run_id: str):
-    """Read data from run id"""
-    parts = run_id.split("-")
-    git_commit = parts[-1]
-    timestamp = parts[-2]
-    model_name = "-".join(parts[:-2])
-    return model_name, timestamp, git_commit
+    app_name, region_name, timestamp, commit = read_run_id(run_id)
+    return f"http://www.autumn-data.com/app/{app_name}/region/{region_name}/run/{timestamp}-{commit}.html"
 
 
 @click.group()
@@ -193,7 +189,7 @@ def trigger_victoria():
     Trigger all Victorian models
     """
     logger.info("Triggering all Victorian regional calibrations.")
-    model_names = [
+    region_names = [
         Region.NORTH_METRO,
         Region.SOUTH_EAST_METRO,
         Region.SOUTH_METRO,
@@ -204,7 +200,7 @@ def trigger_victoria():
         Region.LODDON_MALLEE,
         Region.GRAMPIANS,
     ]
-    _trigger_models(model_names, trigger_victoria_pipeline)
+    _trigger_models(region_names, trigger_victoria_pipeline)
 
 
 @trigger.command("philippines")
@@ -213,16 +209,16 @@ def trigger_philippines():
     Trigger all Philippines models
     """
     logger.info("Triggering all Philippines regional calibrations.")
-    model_names = [
+    region_names = [
         Region.PHILIPPINES,
         Region.MANILA,
         Region.CALABARZON,
         Region.CENTRAL_VISAYAS,
     ]
-    _trigger_models(model_names, trigger_philippines_pipeline)
+    _trigger_models(region_names, trigger_philippines_pipeline)
 
 
-def _trigger_models(models, p):
+def _trigger_models(regions, p):
 
     logger.info("Gathering data for calibration trigger.")
     build_number = os.environ["BUILDKITE_BUILD_NUMBER"]
@@ -234,7 +230,8 @@ def _trigger_models(models, p):
     trigger_downstream = p.trigger_field.get_value()
     params_str = pprint.pformat({f.key: f.get_value() for f in p.fields}, indent=2,)
     cp = calibrate_pipeline
-    for model in models:
+    for region in regions:
+        model = f"covid_19:{region}"
         logger.info("Triggering model calibration %s with params:\n%s\n", model, params_str)
         trigger_pipeline(
             label=f"Trigger calibration for {model}",
@@ -253,4 +250,4 @@ def _trigger_models(models, p):
         )
 
 
-buildkite.add_command(trigger)
+buildkite_cli.add_command(trigger)

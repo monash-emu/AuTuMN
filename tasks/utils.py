@@ -10,7 +10,7 @@ from boto3.s3.transfer import TransferConfig
 from botocore.exceptions import ProfileNotFound
 from luigi.contrib.s3 import S3Target, S3Client
 
-
+from remote.aws.utils import read_run_id
 from . import settings
 
 logger = logging.getLogger(__name__)
@@ -57,6 +57,12 @@ s3 = session.client("s3")
 
 luigi_s3_client = S3Client()
 luigi_s3_client.s3 = session.resource("s3")
+
+
+def get_app_region(run_id: str):
+    app_name, region_name, _, _ = read_run_id(run_id)
+    app_module = settings.APP_MAP[app_name]
+    return app_module.app.get_region(region_name)
 
 
 def get_calibration_db_filename(chain_id: int):
@@ -289,12 +295,3 @@ def upload_file_s3(src_path, dest_key):
         ExtraArgs=S3_UPLOAD_EXTRA_ARGS,
         Config=S3_UPLOAD_CONFIG,
     )
-
-
-def read_run_id(run_id: str):
-    """Read data from run id"""
-    parts = run_id.split("-")
-    git_commit = parts[-1]
-    timestamp = parts[-2]
-    model_name = "-".join(parts[:-2])
-    return model_name, timestamp, git_commit

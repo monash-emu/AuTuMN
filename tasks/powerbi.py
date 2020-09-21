@@ -6,7 +6,6 @@ import luigi
 from autumn.tool_kit import Timer
 from autumn.inputs import build_input_database
 from autumn.inputs.database import input_db_path
-from autumn.tool_kit.params import load_targets
 from autumn.constants import OUTPUT_DATA_PATH
 from autumn import db, plots
 
@@ -21,7 +20,8 @@ COLLATED_PRUNED_DB_PATH = os.path.join(settings.BASE_DIR, "data/powerbi/collated
 
 
 def get_final_db_path(run_id: str):
-    return os.path.join(settings.BASE_DIR, "data", "powerbi", f"powerbi-{run_id}.db")
+    run_slug = run_id.replace("/", "-")
+    return os.path.join(settings.BASE_DIR, "data", "powerbi", f"powerbi-{run_slug}.db")
 
 
 class RunPowerBI(luigi.Task):
@@ -115,10 +115,9 @@ class CalculateUncertaintyTask(utils.BaseTask):
         return luigi.LocalTarget(COLLATED_PRUNED_DB_PATH)
 
     def safe_run(self):
-        region_name, _, _ = utils.read_run_id(self.run_id)
-        targets = load_targets("covid_19", region_name)
+        app_region = utils.get_app_region(self.run_id)
         with Timer(f"Calculating uncertainty quartiles"):
-            db.uncertainty.add_uncertainty_quantiles(COLLATED_DB_PATH, targets)
+            db.uncertainty.add_uncertainty_quantiles(COLLATED_DB_PATH, app_region.targets)
 
         with Timer(f"Pruning final database"):
             db.process.prune_final(COLLATED_DB_PATH, COLLATED_PRUNED_DB_PATH)
@@ -160,21 +159,19 @@ class PlotUncertaintyTask(utils.BaseTask):
         return UploadDatabaseTask(run_id=self.run_id)
 
     def output(self):
-        target_file = os.path.join(
-            settings.BASE_DIR,
-            "plots",
-            "uncertainty",
-            "notifications",
-            "uncertainty-notifications-0.png",
-        )
-        return luigi.LocalTarget(target_file)
+        app_region = utils.get_app_region(self.run_id)
+        target_names = [t["output_key"] for t in app_region.targets.values() if t.get("quantiles")]
+        target_files = [
+            os.path.join(settings.BASE_DIR, "plots", "uncertainty", o, f"uncertainty-{o}-0.png",)
+            for o in target_names
+        ]
+        return [luigi.LocalTarget(f) for f in target_files]
 
     def safe_run(self):
-        region_name, _, _ = utils.read_run_id(self.run_id)
-        targets = load_targets("covid_19", region_name)
+        app_region = utils.get_app_region(self.run_id)
         plot_dir = os.path.join(settings.BASE_DIR, "plots", "uncertainty")
         db_path = get_final_db_path(self.run_id)
-        plots.uncertainty.plot_uncertainty(targets, db_path, plot_dir)
+        plots.uncertainty.plot_uncertainty(app_region.targets, db_path, plot_dir)
 
 
 class UploadPlotsTask(utils.UploadS3Task):

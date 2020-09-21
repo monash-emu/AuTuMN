@@ -10,9 +10,7 @@ from autumn.tool_kit import Timer
 from autumn.inputs import build_input_database
 from autumn.inputs.database import input_db_path
 from autumn.constants import OUTPUT_DATA_PATH
-from autumn.tool_kit.params import load_targets
 from autumn import plots, db
-from apps import covid_19
 
 from . import utils
 from . import settings
@@ -84,12 +82,11 @@ class CalibrationChainTask(utils.ParallelLoggerTask):
         return f"calibrate/run-{self.chain_id}.log"
 
     def safe_run(self):
-        model_name, _, _ = utils.read_run_id(self.run_id)
-        msg = f"Running {model_name} calibration with chain id {self.chain_id} with runtime {self.runtime}s"
+        app_region = utils.get_app_region(self.run_id)
+        msg = f"Running {app_region.app_name} {app_region.region_name} calibration with chain id {self.chain_id} with runtime {self.runtime}s"
         with Timer(msg):
             # Run the calibration
-            region_app = covid_19.app.get_region(model_name)
-            region_app.calibrate_model(self.runtime, self.chain_id, self.num_chains)
+            app_region.calibrate_model(self.runtime, self.chain_id, self.num_chains)
 
         # Place the completed chain database in the correct output folder
         src_db_path = self.find_src_db_path()
@@ -160,9 +157,8 @@ class PlotOutputsTask(utils.BaseTask):
     def safe_run(self):
         mcmc_dir = os.path.join(settings.BASE_DIR, "data", "calibration_outputs")
         plot_dir = os.path.join(settings.BASE_DIR, "plots")
-        model_name, _, _ = utils.read_run_id(self.run_id)
-        targets = load_targets("covid_19", model_name)
-        plots.calibration.plot_post_calibration(targets, mcmc_dir, plot_dir)
+        app_region = utils.get_app_region(self.run_id)
+        plots.calibration.plot_post_calibration(app_region.targets, mcmc_dir, plot_dir)
 
 
 class UploadPlotsTask(utils.UploadS3Task):

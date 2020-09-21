@@ -96,17 +96,18 @@ def run():
 
 @run.command("calibrate")
 @click.option("--job", type=str, required=True)
-@click.option("--calibration", type=str, required=True)
+@click.option("--app", type=str, required=True)
+@click.option("--region", type=str, required=True)
 @click.option("--chains", type=int, required=True)
 @click.option("--runtime", type=int, required=True)
 @click.option("--branch", type=str, default="master")
 @click.option("--spot", is_flag=True)
 @click.option("--dry", is_flag=True)
-def run_calibrate_cli(job, calibration, chains, runtime, branch, spot, dry):
-    run_calibrate(job, calibration, chains, runtime, branch, spot, dry)
+def run_calibrate_cli(job, app, region, chains, runtime, branch, spot, dry):
+    run_calibrate(job, app, region, chains, runtime, branch, spot, dry)
 
 
-def run_calibrate(job, calibration, chains, runtime, branch, is_spot, dry):
+def run_calibrate(job, app, region, chains, runtime, branch, is_spot, dry):
     """
     Run a MCMC calibration on an AWS server.
     """
@@ -117,7 +118,8 @@ def run_calibrate(job, calibration, chains, runtime, branch, is_spot, dry):
     else:
         kwargs = {
             "num_chains": chains,
-            "model_name": calibration,
+            "app_name": app,
+            "region_name": region,
             "runtime": runtime,
             "branch": branch,
         }

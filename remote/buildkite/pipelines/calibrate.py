@@ -11,9 +11,17 @@ from .full import burn_in_field
 
 def get_region_options():
     """Dynamically fetch region options from COVID app"""
-    from apps.covid_19 import app
+    from apps import covid_19, tuberculosis
 
-    return [{"label": n.replace("-", " ").title(), "value": n} for n in app.region_names]
+    covid_options = [
+        {"label": n.replace("-", " ").title() + " (COVID)", "value": f"covid_19:{n}"}
+        for n in covid_19.app.region_names
+    ]
+    tb_options = [
+        {"label": n.replace("-", " ").title() + " (TB)", "value": f"tuberculosis:{n}"}
+        for n in tuberculosis.app.region_names
+    ]
+    return covid_options + tb_options
 
 
 model_field = SelectInputField(

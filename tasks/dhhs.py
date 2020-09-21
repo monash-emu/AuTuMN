@@ -209,7 +209,8 @@ def get_vic_full_run_dbs_for_commit(commit: str):
         if region == Region.VICTORIA:
             continue
 
-        region_db_keys = utils.list_s3(key_prefix=region, key_suffix=".db")
+        prefix = f"covid_19/{region}"
+        region_db_keys = utils.list_s3(key_prefix=prefix, key_suffix=".db")
         region_db_keys = [k for k in region_db_keys if commit in k and "mcmc_chain_full_run" in k]
 
         msg = f"There should exactly one set of full model run databases for {region} with commit {commit}: {region_db_keys}"
@@ -226,7 +227,8 @@ def get_vic_powerbi_dbs_for_commit(commit: str):
         if region == Region.VICTORIA:
             continue
 
-        region_db_keys = utils.list_s3(key_prefix=region, key_suffix=".db")
+        prefix = f"covid_19/{region}"
+        region_db_keys = utils.list_s3(key_prefix=prefix, key_suffix=".db")
         region_db_keys = [k for k in region_db_keys if commit in k and "powerbi" in k]
 
         msg = f"There should exactly one PowerBI database for {region} with commit {commit}: {region_db_keys}"

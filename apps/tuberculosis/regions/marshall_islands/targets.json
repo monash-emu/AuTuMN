@@ -21,7 +21,8 @@
     "title": "Notifications in Majuro",
     "output_key": "notificationsXlocation_majuro",
     "times": [2016.0],
-    "values": [119]
+    "values": [119],
+    "quantiles": [0.25, 0.5, 0.75]
   },
   "notificationsXlocation_ebeye": {
     "title": "Notifications in Ebeye",

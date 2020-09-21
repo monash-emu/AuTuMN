@@ -8,6 +8,8 @@ import json
 import boto3
 from botocore.exceptions import ProfileNotFound
 
+from remote.aws.utils import read_run_id
+
 BUCKET = "autumn-data"
 AWS_PROFILE = "autumn"
 AWS_REGION = "ap-southeast-2"
@@ -38,15 +40,6 @@ def fetch_all_objects():
     return objs
 
 
-def read_run_id(run_id: str):
-    """Read data from run id"""
-    parts = run_id.split("-")
-    git_commit = parts[-1]
-    timestamp = parts[-2]
-    model_name = "-".join(parts[:-2])
-    return model_name, timestamp, git_commit
-
-
 def is_website_asset(key):
     return key.endswith(".html")
 
@@ -72,9 +65,11 @@ for k in keys:
         dhhs_files.append(file)
 
     try:
-        model, timestamp, commit = read_run_id(run_id)
+        app_name, region_name, model, timestamp, commit = read_run_id(run_id)
     except Exception:
         continue
+
+    assert False, "Matt needs to fix this."
 
     model_names.add(model)
     if not model in runs:
@@ -83,7 +78,8 @@ for k in keys:
     if not run_id in runs[model]:
         runs[model][run_id] = {
             "id": run_id,
-            "model": model,
+            "app": app_name,
+            "region": region_name,
             "timestamp": timestamp,
             "commit": commit,
             "files": [],

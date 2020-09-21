@@ -65,7 +65,10 @@ def _calculate_mcmc_uncertainty(df: pd.DataFrame, targets: dict) -> pd.DataFrame
                 continue
 
             for target in targets.values():
-                quantiles = target["quantiles"]
+                quantiles = target.get("quantiles")
+                if not quantiles:
+                    continue
+
                 output_name = target["output_key"]
                 weighted_values = np.repeat(masked_df[output_name], masked_df["weight"])
                 quantile_vals = np.quantile(weighted_values, quantiles)

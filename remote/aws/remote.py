@@ -76,8 +76,8 @@ def run_calibration(
     instance, app_name: str, region_name: str, num_chains: int, runtime: int, branch: str,
 ):
     """Run calibration job on the remote server"""
-    msg = "Running calibration %s with %s chains for %s seconds on AWS instance %s."
-    logger.info(msg, model_name, num_chains, runtime, instance["InstanceId"])
+    msg = "Running calibration %s %s with %s chains for %s seconds on AWS instance %s."
+    logger.info(msg, app_name, region_name, num_chains, runtime, instance["InstanceId"])
     run_id = None
     with get_connection(instance) as conn:
         update_repo(conn, branch=branch)

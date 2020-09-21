@@ -53,7 +53,7 @@ def make_latency_percentage_calculation_function(stratum_filters=[]):
         """
         prev_latent = sum(
             [compartment_values[i] for i, compartment in enumerate(model.compartment_names) if
-             ((compartment.has_name(Compartment.EARLY_LATENT) or compartment.has_name(Compartment.EARLY_LATENT)) and
+             ((compartment.has_name(Compartment.EARLY_LATENT) or compartment.has_name(Compartment.LATE_LATENT)) and
               all([compartment.has_stratum(stratum['name'], stratum['value']) for stratum in stratum_filters])
               )
              ]
@@ -150,7 +150,8 @@ def get_mortality_flow_on_treatment(comps: List[Compartment]):
 
 
 def calculate_incidence(time_idx, model, compartment_values, derived_outputs):
-    return derived_outputs['incidence_early'][time_idx] + derived_outputs['incidence_late'][time_idx]
+    return (derived_outputs['incidence_early'][time_idx] + derived_outputs['incidence_late'][time_idx]) /\
+           sum(compartment_values) * 1.e5
 
 
 def calculate_tb_mortality(time_idx, model, compartment_values, derived_outputs):

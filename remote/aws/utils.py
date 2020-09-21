@@ -25,4 +25,4 @@ def read_run_id(run_id: str):
 
 def build_run_id(app_name: str, region_name: str, git_commit: str):
     timestamp = int(time.time())
-    return "/".join([app_name, region_name, timestamp, git_commit_short])
+    return "/".join([app_name, region_name, timestamp, git_commit])

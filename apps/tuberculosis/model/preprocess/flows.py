@@ -86,16 +86,15 @@ def process_unstratified_parameter_values(params):
         params['detection_rate'] = 1
         detection_rate_func = None
     else:
-        presentation_delay_func = tanh_based_scaleup(
-            params['time_variant_presentation_delay']['maximum_gradient'],
-            params['time_variant_presentation_delay']['max_change_time'],
-            params['time_variant_presentation_delay']['end_value'],
-            params['time_variant_presentation_delay']['start_value'],
+        screening_rate_func = tanh_based_scaleup(
+            params['time_variant_tb_screening_rate']['maximum_gradient'],
+            params['time_variant_tb_screening_rate']['max_change_time'],
+            params['time_variant_tb_screening_rate']['start_value'],
+            params['time_variant_tb_screening_rate']['end_value'],
         )
 
         def detection_rate_func(t):
-            return 1. / presentation_delay_func(t) * params['passive_screening_sensitivity']['unstratified']
-
+            return screening_rate_func(t) * params['passive_screening_sensitivity']['unstratified']
         params['detection_rate'] = 'detection_rate'
 
     # Set unstratified treatment-outcome-related parameters

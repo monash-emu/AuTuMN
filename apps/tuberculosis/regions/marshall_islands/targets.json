@@ -1,4 +1,10 @@
 {
+  "prevalence_infectious": {
+    "title": "TB prevalence (/100,000)",
+    "output_key": "prevalence_infectious",
+    "times": [],
+    "values": []
+  },
   "prevalence_infectiousXlocation_majuro": {
     "title": "TB prevalence in Majuro (/100,000)",
     "output_key": "prevalence_infectiousXlocation_majuro",
@@ -10,6 +16,12 @@
     "output_key": "prevalence_infectiousXlocation_ebeye",
     "times": [2017.0],
     "values": [755.0]
+  },
+  "percentage_latent": {
+    "title": "LTBI prevalence (%)",
+    "output_key": "percentage_latent",
+    "times": [],
+    "values": []
   },
   "percentage_latentXlocation_majuro": {
     "title": "LTBI prevalence in Majuro (%)",
@@ -40,5 +52,11 @@
     "output_key": "population_size",
     "times": [1960.0, 1990.0, 2019.0],
     "values": [14662, 47271, 58791]
+  },
+  "incidence": {
+    "title": "TB incidence (/100,000)",
+    "output_key": "incidence",
+    "times": [],
+    "values": []
   }
 }

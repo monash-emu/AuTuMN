@@ -3,6 +3,8 @@ from apps.tuberculosis.model.preprocess.latency import get_adapted_age_parameter
 from autumn.inputs import get_death_rates_by_agegroup
 from autumn.inputs.social_mixing.queries import get_mixing_matrix_specific_agegroups
 from autumn.curve import scale_up_function, tanh_based_scaleup
+from summer.model.utils.parameter_processing import get_parameter_dict_from_function
+from summer.model import create_sloping_step_function
 
 from math import log, exp
 import numpy as np
@@ -62,6 +64,14 @@ def stratify_by_age(model, params, compartments):
     # get mixing matrix
     mixing_matrix = get_mixing_matrix_specific_agegroups(params['iso3'], params['age_breakpoints'])
 
+    # add BCG effect without stratifying for BCG
+    bcg_wane = create_sloping_step_function(15.0, 0.3, 30.0, 1.0)
+    age_bcg_efficacy_dict = get_parameter_dict_from_function(
+        lambda value: bcg_wane(value), params['age_breakpoints']
+    )
+    flow_adjustments.update(
+        {"contact_rate": age_bcg_efficacy_dict}
+    )
 
     # trigger model stratification
     model.stratify(
@@ -142,11 +152,11 @@ def stratify_by_organ(model, params):
                 ]
 
     # define differential detection rates by organ status
-    presentation_delay_func = tanh_based_scaleup(
-            params['time_variant_presentation_delay']['maximum_gradient'],
-            params['time_variant_presentation_delay']['max_change_time'],
-            params['time_variant_presentation_delay']['end_value'],
-            params['time_variant_presentation_delay']['start_value'],
+    screening_rate_func = tanh_based_scaleup(
+            params['time_variant_tb_screening_rate']['maximum_gradient'],
+            params['time_variant_tb_screening_rate']['max_change_time'],
+            params['time_variant_tb_screening_rate']['start_value'],
+            params['time_variant_tb_screening_rate']['end_value'],
         )
     stratified_param_names = get_stratified_param_names('detection_rate', model.stratifications)
     for stratified_param_name in stratified_param_names:
@@ -154,7 +164,7 @@ def stratify_by_organ(model, params):
         for organ_stratum in organ_strata:
             flow_adjustments[stratified_param_name][organ_stratum] = stratified_param_name + '_' + organ_stratum
             model.time_variants[stratified_param_name + '_' + organ_stratum] =\
-                make_detection_func(organ_stratum, params, presentation_delay_func)
+                make_detection_func(organ_stratum, params, screening_rate_func)
             model.parameters[stratified_param_name + '_' + organ_stratum] = stratified_param_name + '_' + organ_stratum
 
     # Adjust the progression rates by organ using the requested incidence proportions
@@ -243,9 +253,9 @@ def make_relapse_rate_func(age_group, model, params, time_variant_tsr):
     return relapse_rate_func
 
 
-def make_detection_func(organ_stratum, params, presentation_delay_func):
+def make_detection_func(organ_stratum, params, screening_rate_func):
     def detection_func(t):
-        return 1. / presentation_delay_func(t) * params['passive_screening_sensitivity'][organ_stratum]
+        return screening_rate_func(t) * params['passive_screening_sensitivity'][organ_stratum]
     return detection_func
 
 

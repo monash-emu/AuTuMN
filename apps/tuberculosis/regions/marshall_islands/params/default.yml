@@ -1,14 +1,14 @@
 ---
 parent: apps/tuberculosis/params.yml
 iso3: "MHL"
-start_time: 1940.
+start_time: 1800.
 end_time: 2020.
 time_step: 1.
-start_population_size: 12000
+start_population_size: 1700
 
 # MODEL STRUCTURE
 stratify_by: ['location', 'age', 'organ']
-age_breakpoints: [0, 5, 15, 35, 50, 70]
+age_breakpoints: [0, 5, 15, 35, 50]
 user_defined_stratifications:  # this specifies user-defined  stratifications
   location:
     strata: ['majuro', 'ebeye', 'other']
@@ -31,12 +31,12 @@ user_defined_stratifications:  # this specifies user-defined  stratifications
         other: 1.
 
 # calibrated parameters
-contact_rate: 1.5
-time_variant_presentation_delay:
-  maximum_gradient: -0.05 # The shape parameter to the tanh-based curve
+contact_rate: 1.1
+time_variant_tb_screening_rate:
+  maximum_gradient: 0.05 # The shape parameter to the tanh-based curve
   max_change_time: 1980. # Point at which curve inflects
-  start_value: 10. # Starting value - upper asymptote
-  end_value: 1. # End value - lower asymptote
+  start_value: 0. # Starting value - lower asymptote
+  end_value: 1. # End value - upper asymptote
 time_variant_tsr:  # should always be > 0
   1950: .6
   2017.: 0.87

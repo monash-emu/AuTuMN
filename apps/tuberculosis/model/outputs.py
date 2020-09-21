@@ -85,6 +85,44 @@ def get_notifications_connections(comps: List[Compartment], source_stratum=None)
     )
 
 
+def get_incidence_early_connections(comps: List[Compartment], source_stratum=None):
+    """
+    Track "notifications": flow from infectious to treatment compartment.
+    """
+    output_name = "incidence_early"
+    if source_stratum:
+        output_name += "X" + source_stratum[0] + "_" + source_stratum[1]
+        source_strata = {source_stratum[0]: source_stratum[1]}
+    else:
+        source_strata = {}
+    return _get_transition_flow_connections(
+        output_name=output_name,
+        source=Compartment.EARLY_LATENT,
+        dest=Compartment.INFECTIOUS,
+        comps=comps,
+        source_strata=source_strata
+    )
+
+
+def get_incidence_late_connections(comps: List[Compartment], source_stratum=None):
+    """
+    Track "notifications": flow from infectious to treatment compartment.
+    """
+    output_name = "incidence_late"
+    if source_stratum:
+        output_name += "X" + source_stratum[0] + "_" + source_stratum[1]
+        source_strata = {source_stratum[0]: source_stratum[1]}
+    else:
+        source_strata = {}
+    return _get_transition_flow_connections(
+        output_name=output_name,
+        source=Compartment.LATE_LATENT,
+        dest=Compartment.INFECTIOUS,
+        comps=comps,
+        source_strata=source_strata
+    )
+
+
 def _get_transition_flow_connections(
     output_name: str, source: str, dest: str, comps: List[Compartment], source_strata={}, dest_strata={}
 ):
@@ -109,6 +147,10 @@ def get_mortality_flow_on_treatment(comps: List[Compartment]):
         source=Compartment.ON_TREATMENT, source_strata={}
     )
     return connections
+
+
+def calculate_incidence(time_idx, model, compartment_values, derived_outputs):
+    return derived_outputs['incidence_early'][time_idx] + derived_outputs['incidence_late'][time_idx]
 
 
 def calculate_tb_mortality(time_idx, model, compartment_values, derived_outputs):
@@ -163,6 +205,7 @@ def get_all_derived_output_functions(calculated_outputs, outputs_stratification,
     """
     simple_functions = {
         "population_size": calculate_population_size,
+        "incidence": calculate_incidence,
         "mortality": calculate_tb_mortality,
     }
     factory_functions = {
@@ -171,9 +214,14 @@ def get_all_derived_output_functions(calculated_outputs, outputs_stratification,
     }
     flow_functions = {
         "notifications": get_notifications_connections,
+        "incidence_early": get_incidence_early_connections,
+        "incidence_late": get_incidence_late_connections,
         "mortality_infectious": get_mortality_flow_infectious,
         "mortality_on_treatment": get_mortality_flow_on_treatment,
     }
+    # need to add two intermediate derived outputs to capture mortality flows
+    if "incidence" in calculated_outputs:
+        calculated_outputs = ["incidence_early", "incidence_late"] + calculated_outputs
 
     # need to add two intermediate derived outputs to capture mortality flows
     if "mortality" in calculated_outputs:

@@ -5,49 +5,49 @@ steps:
     key: model-name
     options:
     - label: North Metro (COVID)
-      value: covid_19-north-metro
+      value: covid_19:north-metro
     - label: South East Metro (COVID)
-      value: covid_19-south-east-metro
+      value: covid_19:south-east-metro
     - label: South Metro (COVID)
-      value: covid_19-south-metro
+      value: covid_19:south-metro
     - label: West Metro (COVID)
-      value: covid_19-west-metro
+      value: covid_19:west-metro
     - label: Barwon South West (COVID)
-      value: covid_19-barwon-south-west
+      value: covid_19:barwon-south-west
     - label: Gippsland (COVID)
-      value: covid_19-gippsland
+      value: covid_19:gippsland
     - label: Hume (COVID)
-      value: covid_19-hume
+      value: covid_19:hume
     - label: Loddon Mallee (COVID)
-      value: covid_19-loddon-mallee
+      value: covid_19:loddon-mallee
     - label: Grampians (COVID)
-      value: covid_19-grampians
+      value: covid_19:grampians
     - label: Malaysia (COVID)
-      value: covid_19-malaysia
+      value: covid_19:malaysia
     - label: Philippines (COVID)
-      value: covid_19-philippines
+      value: covid_19:philippines
     - label: Manila (COVID)
-      value: covid_19-manila
+      value: covid_19:manila
     - label: Calabarzon (COVID)
-      value: covid_19-calabarzon
+      value: covid_19:calabarzon
     - label: Central Visayas (COVID)
-      value: covid_19-central-visayas
+      value: covid_19:central-visayas
     - label: Belgium (COVID)
-      value: covid_19-belgium
+      value: covid_19:belgium
     - label: United Kingdom (COVID)
-      value: covid_19-united-kingdom
+      value: covid_19:united-kingdom
     - label: Italy (COVID)
-      value: covid_19-italy
+      value: covid_19:italy
     - label: France (COVID)
-      value: covid_19-france
+      value: covid_19:france
     - label: Sweden (COVID)
-      value: covid_19-sweden
+      value: covid_19:sweden
     - label: Spain (COVID)
-      value: covid_19-spain
+      value: covid_19:spain
     - label: Philippines (TB)
-      value: tuberculosis-philippines
+      value: tuberculosis:philippines
     - label: Marshall Islands (TB)
-      value: tuberculosis-marshall-islands
+      value: tuberculosis:marshall-islands
     required: true
     select: Model Region
   - default: '7'

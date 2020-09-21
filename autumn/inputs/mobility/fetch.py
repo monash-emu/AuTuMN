@@ -21,4 +21,8 @@ def fetch_mobility_data():
         & (df.country_region_code != "CO")
         & (df.country_region_code != "CA")
         & (df.country_region_code != "EC")
+        & (df.country_region_code != "PL")
+        & (df.country_region_code != "TR")
+        & (df.country_region_code != "RO")
+        & (df.country_region_code != "NG")
     ].to_csv(MOBILITY_CSV_PATH)

@@ -173,7 +173,7 @@ def dhhs():
 
 def get_run_url(run_id: str):
     app_name, region_name, timestamp, commit = read_run_id(run_id)
-    return f"http://www.autumn-data.com/app/{app_name}/region/{region_name}/run/{timestamp}/{commit}.html"
+    return f"http://www.autumn-data.com/app/{app_name}/region/{region_name}/run/{timestamp}-{commit}.html"
 
 
 @click.group()

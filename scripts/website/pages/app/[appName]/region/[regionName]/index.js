@@ -9,20 +9,33 @@ import moment from 'moment'
 import { GitCommit } from 'comps/commit'
 
 export async function getStaticPaths() {
-  const data = await import('../../../website.json')
+  const data = await import('../../../../../website.json')
+  const { apps } = data.default
+  const paths = []
+  for (let appName of Object.keys(apps)) {
+    for (let regionName of Object.keys(apps[appName])) {
+      paths.push({ params: { appName, regionName } })
+    }
+  }
   return {
-    paths: data.default.models.map((model) => ({ params: { model } })),
+    paths,
     fallback: false,
   }
 }
-export async function getStaticProps({ params: { model } }) {
-  const data = await import('../../../website.json')
-  const { runs, models } = data.default
-  const modelRuns = Object.values(runs[model])
+export async function getStaticProps({ params: { appName, regionName } }) {
+  const data = await import('../../../../../website.json')
+  const { apps } = data.default
+  const regionRuns = []
+  for (let uuid of Object.keys(apps[appName][regionName])) {
+    const run = apps[appName][regionName][uuid]
+    regionRuns.push(run)
+  }
+  const runs = regionRuns
     .sort((a, b) => b.timestamp - a.timestamp)
-    .map(({ id, model, timestamp, commit, files }) => ({
+    .map(({ id, app, region, timestamp, commit, files }) => ({
       id,
-      model,
+      app,
+      region,
       timestamp,
       commit,
       isPowerBI:
@@ -35,39 +48,53 @@ export async function getStaticProps({ params: { model } }) {
           .length > 0,
     }))
 
-  return { props: { modelRuns } }
+  return { props: { runs } }
 }
 
-const ModelPage = ({ modelRuns }) => {
+const RegionPage = ({ runs }) => {
   const router = useRouter()
-  const { model } = router.query
+  const { appName, regionName } = router.query
   return (
-    <Page title={`Autumn Data - ${model}`}>
+    <Page title="Autumn Data">
       <Header as="h1">
-        {model}
-        <Header.Subheader>{modelRuns.length} runs total</Header.Subheader>
+        {regionName.replace('-', ' ')} ({appName.replace('_', ' ')})
+        <Header.Subheader>{runs.length} runs total</Header.Subheader>
       </Header>
       <List relaxed divided size="medium">
-        {modelRuns.map((mr) => (
-          <ModelRunListItem key={mr.id} {...mr} />
+        {runs.map((mr) => (
+          <RunListItem key={mr.id} {...mr} />
         ))}
       </List>
     </Page>
   )
 }
 
-const ModelRunListItem = ({
+const RunListItem = ({
   id,
-  model,
+  app,
+  region,
   timestamp,
   commit,
   isPowerBI,
   isFull,
   isCalib,
 }) => {
+  let uuid // timestamp-commit
+  if (id.includes('/')) {
+    // New run id format
+    // app/region/timestamp/commit
+    uuid = id.split('/').slice(-2).join('-')
+  } else {
+    // Old run id format
+    // modelname-timestamp-commit
+    uuid = id.split('-').slice(-2).join('-')
+  }
   return (
     <List.Item key={id}>
-      <Link href="/model/[model]/run/[id]" as={`/model/${model}/run/${id}`}>
+      <Link
+        href="/app/[appName]/region/[regionName]/run/[uuid]"
+        as={`/app/${app}/region/${region}/run/${uuid}`}
+      >
         <List.Header as="a">{id}</List.Header>
       </Link>
       <List.Description>
@@ -95,4 +122,4 @@ const ModelRunListItem = ({
   )
 }
 
-export default ModelPage
+export default RegionPage

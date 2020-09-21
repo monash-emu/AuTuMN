@@ -11,27 +11,35 @@ import { Page } from 'comps/page'
 import { GitCommit } from 'comps/commit'
 
 export async function getStaticPaths() {
-  const data = await import('../../../../website.json')
-  const { runs, models } = data.default
-  const runIds = models
-    .map((m) => Object.values(runs[m]))
-    .reduce((a, b) => [...a, ...b], [])
+  const data = await import('../../../../../../website.json')
+  const { apps } = data.default
+  const paths = []
+  for (let appName of Object.keys(apps)) {
+    for (let regionName of Object.keys(apps[appName])) {
+      for (let uuid of Object.keys(apps[appName][regionName])) {
+        paths.push({ params: { appName, regionName, uuid } })
+      }
+    }
+  }
   return {
-    paths: runIds.map(({ id, model }) => ({ params: { id, model } })),
+    paths,
     fallback: false,
   }
 }
 
-export async function getStaticProps({ params: { id, model } }) {
-  const data = await import('../../../../website.json')
-  const { runs } = data.default
-  const { timestamp, commit, files } = runs[model][id]
-  return { props: { timestamp, commit, files } }
+export async function getStaticProps({
+  params: { appName, regionName, uuid },
+}) {
+  const data = await import('../../../../../../website.json')
+  const { apps } = data.default
+
+  const { id, timestamp, commit, files } = apps[appName][regionName][uuid]
+  return { props: { id, timestamp, commit, files } }
 }
 
-const RunPage = ({ timestamp, commit, files }) => {
+const RunPage = ({ id, timestamp, commit, files }) => {
   const router = useRouter()
-  const { id, model } = router.query
+  const { appName, regionName, uuid } = router.query
   const dateStr = moment(timestamp, 'X').format('dddd, MMMM Do YYYY, h:mm a')
   const fs = files.map((f) => ({ ...f, filename: f.path.split('/').pop() }))
   const panes = [
@@ -65,15 +73,14 @@ const RunPage = ({ timestamp, commit, files }) => {
   return (
     <Page title="Autumn Data">
       <Header as="h1">
-        {model}
+        {regionName.replace('-', ' ')} ({appName.replace('_', ' ')})
         <Header.Subheader>
-          commit <GitCommit commit={commit} /> at {dateStr} (
+          commit <GitCommit commit={commit} /> at {dateStr} <br />
           <a
             href={`https://s3.console.aws.amazon.com/s3/buckets/autumn-data/${id}/`}
           >
             {id}
           </a>
-          )
         </Header.Subheader>
       </Header>
       <Tab panes={panes} />

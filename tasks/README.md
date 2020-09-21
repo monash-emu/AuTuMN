@@ -50,7 +50,7 @@ aws --profile autumn s3 rm --quiet --recursive s3://autumn-data/tuberculosis/mar
 
 ### Rebuild the website
 
-To rebuild the website at http://www.autumn-data.com/app/covid_19/region/manila/run/111111111/aaaaaaa.html
+To rebuild the website at http://www.autumn-data.com/app/covid_19/region/manila/run/111111111-aaaaaaa.html
 
 ```bash
 ./scripts/website/deploy.sh

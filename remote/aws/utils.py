@@ -4,7 +4,7 @@ import time
 def read_run_id(run_id: str):
     """Read data from run id"""
     parts = run_id.split("-")
-    if len(parts) > 3:
+    if len(parts) > 2:
         # It's an old style path
         # central-visayas-1600644750-9fdd80c
         git_commit = parts[-1]

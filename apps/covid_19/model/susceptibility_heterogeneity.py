@@ -1,4 +1,5 @@
 import scipy.special as special
+import scipy.integrate as integrate
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -25,17 +26,54 @@ def get_gamma(coeff_var: float):
     return gamma_func
 
 
-def produce_gomes_exfig1():
+def numeric_integrate_gamma(coeff_var: float, lower_terminal: float, upper_terminal: float):
+    """
+    Numerically integrate previous function over a requested range
+    :param coeff_var:
+    Coefficient of variation or CV
+    :param lower_terminal:
+    Lower terminal value for numeric integration
+    :param upper_terminal:
+    Upper terminal value for numeric integration
+    :return:
+    Area under curve between lower and upper terminal
+    """
+
+    return integrate.quad(get_gamma(coeff_var), lower_terminal, upper_terminal)[0]
+
+
+def produce_gomes_exfig1(coeffs: list, add_hist=False, bins=3, x_values=50, plot_upper_limit=3.):
     """
     Produce figure equivalent to Extended Data Fig 1 of Aguas et al pre-print
     :return:
     """
 
+    x_values = np.linspace(0.1, plot_upper_limit, x_values)  # Can't go to zero under some coeffs
     gamma_plot = plt.figure()
-    axis = gamma_plot.add_subplot(1, 1, 1)
-    for coeff in [0.5, 1., 2.]:
+    axis = gamma_plot.add_subplot(111)
+    for coeff in coeffs:
         gamma_func = get_gamma(coeff)
-        x_values = np.linspace(0.1, 3., 50)
+
+        # Line graph of the raw function
         y_values = [gamma_func(i) for i in x_values]
-        axis.plot(x_values, y_values)
+        axis.plot(x_values, y_values, color="k")
+
+        # Numeric integration over parts of the function domain
+        if add_hist:
+            lower_terminals, heights, lower_terminal = [], [], 0.
+            integration_width = plot_upper_limit / bins
+            for i_bin in range(bins):
+                lower_terminals.append(lower_terminal)
+                upper_terminal = \
+                    lower_terminal + integration_width
+                heights.append(
+                    numeric_integrate_gamma(coeff, lower_terminal, upper_terminal)
+                )
+                lower_terminal = \
+                    upper_terminal
+            axis.bar(lower_terminals, heights, width=integration_width, align="edge")
+
     return gamma_plot
+
+
+# produce_gomes_exfig1(coeffs=[0.5, 1., 2.], x_values=100).savefig("gomes_exfig1.jpg")

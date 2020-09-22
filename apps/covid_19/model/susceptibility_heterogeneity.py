@@ -26,11 +26,10 @@ def get_gamma(coeff_var: float):
     return gamma_func
 
 
-def numeric_integrate_gamma(coeff_var: float, lower_terminal: float, upper_terminal: float):
+def numeric_integrate_gamma(lower_terminal: float, upper_terminal: float, gamma_function):
     """
     Numerically integrate previous function over a requested range
-    :param coeff_var:
-    Coefficient of variation or CV
+
     :param lower_terminal:
     Lower terminal value for numeric integration
     :param upper_terminal:
@@ -39,10 +38,10 @@ def numeric_integrate_gamma(coeff_var: float, lower_terminal: float, upper_termi
     Area under curve between lower and upper terminal
     """
 
-    return integrate.quad(get_gamma(coeff_var), lower_terminal, upper_terminal)[0]
+    return integrate.quad(gamma_function, lower_terminal, upper_terminal)[0]
 
 
-def get_bin_heights(plot_upper_limit, n_bins, coeff):
+def get_gamma_data(plot_upper_limit, n_bins, coeff):
     """
 
     Note lower limit of zero is assumed
@@ -53,28 +52,44 @@ def get_bin_heights(plot_upper_limit, n_bins, coeff):
     :return:
     """
 
+    # Prelims
     lower_terminal, lower_terminals, upper_terminals, heights = \
         0., [], [], []
     bin_width = \
         plot_upper_limit / n_bins
+
+    # Get the gamma function based on the coefficient needed
+    gamma_function = get_gamma(coeff)
+
     for i_bin in range(n_bins):
+
+        # Record the upper and lower terminals
         lower_terminals.append(
             lower_terminal
         )
         upper_terminals.append(
             lower_terminal + bin_width
         )
+
+        # Numeric integration between lower and upper terminals
         heights.append(
             numeric_integrate_gamma(
-                coeff,
+                gamma_function,
                 lower_terminals[-1],
-                upper_terminals[-1])
+                upper_terminals[-1],
+            )
         )
+
+        # Move to the next value
         lower_terminal = \
             upper_terminals[-1]
+
+    # Normalise using the average of the integration heights
     normalised_heights = [
         i_height / np.average(heights) for i_height in heights
     ]
+
+    # Return everything just in case
     return lower_terminals, upper_terminals, normalised_heights, bin_width
 
 
@@ -84,9 +99,12 @@ def produce_gomes_exfig1(coeffs: list, add_hist=False, n_bins=3, x_values=50, pl
     :return:
     """
 
+    # Prelims
     x_values = np.linspace(0.1, plot_upper_limit, x_values)  # Can't go to zero under some coeffs
     gamma_plot = plt.figure()
     axis = gamma_plot.add_subplot(111)
+
+    # For each requested coefficient of variation
     for coeff in coeffs:
         gamma_func = get_gamma(coeff)
 
@@ -96,7 +114,12 @@ def produce_gomes_exfig1(coeffs: list, add_hist=False, n_bins=3, x_values=50, pl
 
         # Numeric integration over parts of the function domain
         if add_hist:
-            lower_terminals, _, normalised_heights, bin_width = get_bin_heights(plot_upper_limit, n_bins, coeff)
+            lower_terminals, _, normalised_heights, bin_width = \
+                get_gamma_data(
+                    plot_upper_limit,
+                    n_bins,
+                    coeff
+                )
             axis.bar(
                 lower_terminals, 
                 normalised_heights, 
@@ -104,6 +127,7 @@ def produce_gomes_exfig1(coeffs: list, add_hist=False, n_bins=3, x_values=50, pl
                 align="edge"
             )
 
+    # Return the figure
     return gamma_plot
 
 

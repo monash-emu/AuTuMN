@@ -42,7 +42,43 @@ def numeric_integrate_gamma(coeff_var: float, lower_terminal: float, upper_termi
     return integrate.quad(get_gamma(coeff_var), lower_terminal, upper_terminal)[0]
 
 
-def produce_gomes_exfig1(coeffs: list, add_hist=False, bins=3, x_values=50, plot_upper_limit=3.):
+def get_bin_heights(plot_upper_limit, n_bins, coeff):
+    """
+
+    Note lower limit of zero is assumed
+
+    :param plot_upper_limit:
+    :param n_bins:
+    :param coeff:
+    :return:
+    """
+
+    lower_terminal, lower_terminals, upper_terminals, heights = \
+        0., [], [], []
+    bin_width = \
+        plot_upper_limit / n_bins
+    for i_bin in range(n_bins):
+        lower_terminals.append(
+            lower_terminal
+        )
+        upper_terminals.append(
+            lower_terminal + bin_width
+        )
+        heights.append(
+            numeric_integrate_gamma(
+                coeff,
+                lower_terminals[-1],
+                upper_terminals[-1])
+        )
+        lower_terminal = \
+            upper_terminals[-1]
+    normalised_heights = [
+        i_height / np.average(heights) for i_height in heights
+    ]
+    return lower_terminals, upper_terminals, normalised_heights, bin_width
+
+
+def produce_gomes_exfig1(coeffs: list, add_hist=False, n_bins=3, x_values=50, plot_upper_limit=3.):
     """
     Produce figure equivalent to Extended Data Fig 1 of Aguas et al pre-print
     :return:
@@ -60,20 +96,15 @@ def produce_gomes_exfig1(coeffs: list, add_hist=False, bins=3, x_values=50, plot
 
         # Numeric integration over parts of the function domain
         if add_hist:
-            lower_terminals, heights, lower_terminal = [], [], 0.
-            integration_width = plot_upper_limit / bins
-            for i_bin in range(bins):
-                lower_terminals.append(lower_terminal)
-                upper_terminal = \
-                    lower_terminal + integration_width
-                heights.append(
-                    numeric_integrate_gamma(coeff, lower_terminal, upper_terminal)
-                )
-                lower_terminal = \
-                    upper_terminal
-            axis.bar(lower_terminals, heights, width=integration_width, align="edge")
+            lower_terminals, _, normalised_heights, bin_width = get_bin_heights(plot_upper_limit, n_bins, coeff)
+            axis.bar(
+                lower_terminals, 
+                normalised_heights, 
+                width=bin_width, 
+                align="edge"
+            )
 
     return gamma_plot
 
 
-# produce_gomes_exfig1(coeffs=[0.5, 1., 2.], x_values=100).savefig("gomes_exfig1.jpg")
+produce_gomes_exfig1(coeffs=[0.5, 1., 2.], x_values=100, add_hist=False).savefig("gomes_exfig1.jpg")

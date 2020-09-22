@@ -5,14 +5,21 @@ import styled from 'styled-components'
 import moment from 'moment'
 
 import { Page } from 'comps/page'
+import { fileToDate } from 'utils'
 
 /*
-dhhs = [
-  {
-    filename: "foo.csv",
-    url: "http://google.com",
-  },
-]
+reports = {
+    "foo": {
+      "title": "Foo Report",
+      "description": "Weekly report for Foo",
+      "files": [
+        {
+          filename: "foo.csv",
+          url: "http://google.com",
+        },
+      ]
+    },
+}
 
 apps = {
   "covid_19": {
@@ -34,53 +41,81 @@ apps = {
   }
 }
 */
-const IGNORE_MODEL_NAMES = ['test', 'dhhs']
+const IGNORE_MODEL_NAMES = ['test']
 
 export async function getStaticProps() {
   const data = await import('../website.json')
-  const { dhhs, apps } = data.default
+  const { reports, apps } = data.default
   const appData = []
-  for (let appName of Object.keys(apps)) {
-    if (IGNORE_MODEL_NAMES.includes(appName)) continue
+  const reportData = []
+  for (let name of Object.keys(reports)) {
     let mostRecent = 0
     let numRuns = 0
-    for (let regionName of Object.keys(apps[appName])) {
-      for (let uuid of Object.keys(apps[appName][regionName])) {
+    for (let file of reports[name].files) {
+      numRuns++
+      const timestamp = fileToDate(file)
+      if (timestamp > mostRecent) {
+        mostRecent = timestamp
+      }
+    }
+    reportData.push({
+      name: reports[name].title,
+      slug: name,
+      mostRecent,
+      numRuns,
+    })
+  }
+  for (let name of Object.keys(apps)) {
+    if (IGNORE_MODEL_NAMES.includes(name)) continue
+    if (Object.keys(reports).includes(name)) continue
+    let mostRecent = 0
+    let numRuns = 0
+    for (let regionName of Object.keys(apps[name])) {
+      for (let uuid of Object.keys(apps[name][regionName])) {
         numRuns++
-        const run = apps[appName][regionName][uuid]
+        const run = apps[name][regionName][uuid]
         if (run.timestamp > mostRecent) {
           mostRecent = run.timestamp
         }
       }
     }
     appData.push({
-      appName,
+      name,
       mostRecent,
       numRuns,
     })
   }
-  return { props: { appData } }
+  return { props: { appData, reportData } }
 }
 
-const AppPage = ({ appData }) => {
+const AppPage = ({ appData, reportData }) => {
   return (
     <Page title="Autumn Data">
       <h1>Autumn Results</h1>
       <List relaxed divided size="medium">
-        <List.Item key="dhhs">
-          <Header as="h3">
-            <Link href="/dhhs" as={`/dhhs`}>
-              <a>DHHS Reports</a>
-            </Link>
-          </Header>
-        </List.Item>
-        {appData
-          .sort((a, b) => (a.appName > b.appName ? 1 : -1))
-          .map(({ appName, mostRecent, numRuns }) => (
-            <List.Item key={appName}>
+        {reportData
+          .sort((a, b) => (a.name > b.name ? 1 : -1))
+          .map(({ name, slug, mostRecent, numRuns }) => (
+            <List.Item key={name}>
               <Header as="h3">
-                <Link href="/app/[appName]" as={`/app/${appName}`}>
-                  <a>{appName.replace('_', ' ')}</a>
+                <Link href="/report/[name]" as={`/report/${slug}`}>
+                  <a>{name.replace('_', ' ')} Report</a>
+                </Link>
+              </Header>
+              <List.Description>
+                {numRuns} runs - last run was{' '}
+                {moment(mostRecent, 'X').fromNow()}
+              </List.Description>
+            </List.Item>
+          ))}
+
+        {appData
+          .sort((a, b) => (a.name > b.name ? 1 : -1))
+          .map(({ name, mostRecent, numRuns }) => (
+            <List.Item key={name}>
+              <Header as="h3">
+                <Link href="/app/[name]" as={`/app/${name}`}>
+                  <a>{name.replace('_', ' ')} App</a>
                 </Link>
               </Header>
               <List.Description>

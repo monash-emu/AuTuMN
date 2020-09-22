@@ -53,22 +53,38 @@ print("Fetching object list from AWS S3")
 objs = fetch_all_objects()
 keys = [o["Key"] for o in objs]
 print("Found", len(keys), "objects.")
-dhhs_files = []
+APPS = ["covid_19", "tuberculosis"]
 apps = {}
+reports = {
+    "dhhs": {"title": "DHHS", "description": "Weekly report for DHHS", "files": []},
+    "ensemble": {
+        "title": "Monash Ensemble",
+        "description": "Weekly forceast for the Commonwealth ensemble model, collated by Rob Hyndman",
+        "files": [],
+    },
+}
+
+
 print("Creating data structure...")
 for k in keys:
     if is_website_asset(k):
         continue
 
-    if k.startswith("dhhs"):
-        # DHHS specific data, not model runs.
-        path_parts = k.split("/")
-        name = path_parts[-1]
-        file = {"filename": name, "url": os.path.join(BUCKET_URL, k)}
-        dhhs_files.append(file)
+    is_report = False
+    for report in reports.keys():
+        if k.startswith(report):
+            # Report specific data, not model runs.
+            path_parts = k.split("/")
+            name = path_parts[-1]
+            file = {"filename": name, "url": os.path.join(BUCKET_URL, k)}
+            reports[report]["files"].append(file)
+            is_report = True
+            break
+
+    if is_report:
         continue
 
-    if k.startswith("covid_19") or k.startswith("tuberculosis"):
+    if any([k.startswith(app) for app in APPS]):
         # New storage structure.
         # app/region/timestamp/commit/path
         path_parts = k.split("/")
@@ -104,7 +120,7 @@ for k in keys:
 
 data = {
     "apps": apps,
-    "dhhs": dhhs_files,
+    "reports": reports,
 }
 output_path = "website.json"
 print("Writing website data to", output_path)

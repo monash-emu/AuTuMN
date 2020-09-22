@@ -16,7 +16,7 @@ from . import settings
 
 logger = logging.getLogger(__name__)
 
-
+ENSEMBLE_OUTPUT = "notifications_at_sympt_onset"
 OUTPUTS = [
     "incidence",
     "notifications",
@@ -26,6 +26,8 @@ OUTPUTS = [
     "new_icu_admissions",
     "icu_occupancy",
 ]
+DHHS_NUM_CHOSEN = 800
+ENSEMBLE_NUM_CHOSEN = 2000
 
 
 DHHS_DIR = os.path.join(settings.BASE_DIR, "data", "outputs", "dhhs")
@@ -69,21 +71,19 @@ class BuildEnsembleTask(utils.BaseTask):
         """
         filename = f"vic-ensemble-{self.commit}-{DATESTAMP}.csv"
         csv_path = os.path.join(DHHS_DIR, filename)
-        OUTPUT = "notifications_at_sympt_onset"
 
         # Get sample runs from all chains
-        num_chosen = 2000
         start_t = (datetime.now() - BASE_DATETIME).days  # Now
         end_t = min(start_t + 7 * 6 + 1, 365)  # 6 weeks from now
         times = np.linspace(start_t, end_t - 1, end_t - start_t, dtype=np.int64)
-        samples = [np.zeros(end_t - start_t) for _ in range(num_chosen)]
+        samples = [np.zeros(end_t - start_t) for _ in range(ENSEMBLE_NUM_CHOSEN)]
         for region in Region.VICTORIA_SUBREGIONS:
             if region == Region.VICTORIA:
                 continue
 
             region_dir = os.path.join(DHHS_DIR, "full", region)
             mcmc_tables = db.process.append_tables(db.load.load_mcmc_tables(region_dir))
-            chosen_runs = db.process.sample_runs(mcmc_tables, num_chosen)
+            chosen_runs = db.process.sample_runs(mcmc_tables, ENSEMBLE_NUM_CHOSEN)
             do_tables = db.load.load_derived_output_tables(region_dir)
             do_tables = db.process.append_tables(do_tables).set_index(["chain", "run"])
             for idx, (chain, run) in enumerate(chosen_runs):
@@ -93,15 +93,15 @@ class BuildEnsembleTask(utils.BaseTask):
                 df = do_tables.loc[(chain, run)].iloc[start_idx:end_idx]
                 is_times_equal = (df["times"].to_numpy() == times).all()
                 assert is_times_equal, "All samples must have correct time range"
-                samples[idx] += df[OUTPUT].to_numpy()
+                samples[idx] += df[ENSEMBLE_OUTPUT].to_numpy()
 
-        columns = ["run", "times", OUTPUT]
+        columns = ["run", "times", ENSEMBLE_OUTPUT]
         data = {
             "run": np.concatenate(
-                [idx * np.ones(len(times), dtype=np.int64) for idx in range(num_chosen)]
+                [idx * np.ones(len(times), dtype=np.int64) for idx in range(ENSEMBLE_NUM_CHOSEN)]
             ),
-            "times": np.concatenate([times for _ in range(num_chosen)]),
-            OUTPUT: np.concatenate(samples),
+            "times": np.concatenate([times for _ in range(ENSEMBLE_NUM_CHOSEN)]),
+            ENSEMBLE_OUTPUT: np.concatenate(samples),
         }
         df = pd.DataFrame(data=data, columns=columns)
         df.to_csv(csv_path, index=False)
@@ -123,12 +123,11 @@ class BuildFinalCSVTask(utils.BaseTask):
         outputs = [t["output_key"] for t in targets.values()]
 
         # Get sample runs from all chains
-        num_chosen = 800
         start_t = 140
         end_t = 365
         times = np.linspace(start_t, end_t, end_t - start_t + 1)
         samples = []
-        for _ in range(num_chosen):
+        for _ in range(DHHS_NUM_CHOSEN):
             sample = {}
             sample["weights"] = np.zeros(len(times))
             for o in outputs:
@@ -142,7 +141,7 @@ class BuildFinalCSVTask(utils.BaseTask):
 
             region_dir = os.path.join(DHHS_DIR, "full", region)
             mcmc_tables = db.process.append_tables(db.load.load_mcmc_tables(region_dir))
-            chosen_runs = db.process.sample_runs(mcmc_tables, num_chosen)
+            chosen_runs = db.process.sample_runs(mcmc_tables, DHHS_NUM_CHOSEN)
             mcmc_tables = mcmc_tables.set_index(["chain", "run"])
             do_tables = db.load.load_derived_output_tables(region_dir)
             do_tables = db.process.append_tables(do_tables).set_index(["chain", "run"])
@@ -159,8 +158,8 @@ class BuildFinalCSVTask(utils.BaseTask):
 
         columns = ["scenario", "times", "weight", *outputs]
         data = {
-            "scenario": np.concatenate([np.zeros(len(times)) for _ in range(num_chosen)]),
-            "times": np.concatenate([times for _ in range(num_chosen)]),
+            "scenario": np.concatenate([np.zeros(len(times)) for _ in range(DHHS_NUM_CHOSEN)]),
+            "times": np.concatenate([times for _ in range(DHHS_NUM_CHOSEN)]),
             "weight": np.concatenate([s["weights"] for s in samples]),
         }
         for o in outputs:
@@ -182,7 +181,7 @@ class BuildFinalCSVTask(utils.BaseTask):
 
         # Upload the CSV
         s3_dest_key = f"dhhs/{filename}"
-        # utils.upload_s3(csv_path, s3_dest_key)
+        utils.upload_s3(csv_path, s3_dest_key)
 
     def output(self):
         filename = f"vic-forecast-{self.commit}-{DATESTAMP}.csv"

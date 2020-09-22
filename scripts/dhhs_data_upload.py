@@ -196,7 +196,7 @@ def load_chris_df(load:str):
        'Effective From':"E_F", 'Effective To':"E_T"}, inplace=True)
 
     df = df[df.type==load][["cluster_name","state","value","E_F"]]
-    df["E_F"] = pd.to_datetime(df["E_F"], infer_datetime_format=True)
+    df["E_F"] = pd.to_datetime(df["E_F"], format='%d/%m/%Y %H:%M:%S', infer_datetime_format=True)
     df["date_index"] = (df["E_F"] - pd.datetime(2019, 12, 31)).dt.days
     df = df.astype({"value":int})
     df = df[["cluster_name","date_index","value"]]

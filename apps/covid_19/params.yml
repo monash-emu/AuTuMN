@@ -27,6 +27,9 @@ universal_death_rate: 0.
 full_immunity: true
 immunity_duration: 90.
 
+# Heterogeneity in susceptibility
+susceptibility_heterogeneity: []
+
 # Parameters relating to adjusting the mixing matrix to reflect interventions
 mixing: {}
 mixing_age_adjust: {}

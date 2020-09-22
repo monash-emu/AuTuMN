@@ -287,6 +287,32 @@ def build_model(params: dict) -> StratifiedModel:
     stratify_by_clinical(model, params, detected_proportion, symptomatic_props)
 
     """
+    Susceptibility stratification
+    """
+
+    susceptibility_heterogeneity = params["susceptibility_heterogeneity"]
+    if susceptibility_heterogeneity:
+
+        # Turn list of susceptibility adjustments into dictionary of the right format for adjustments
+        susc_adjustments = {
+            f"suscept_{i_susc}": susc_value
+            for i_susc, susc_value in enumerate(susceptibility_heterogeneity)
+        }
+
+        # Apply to all age groups individually (given current SUMMER API)
+        susceptibility_adjustments = {
+            f"contact_rateXagegroup_{str(i_agegroup)}": susc_adjustments for i_agegroup in agegroup_strata
+        }
+
+        # Stratify
+        model.stratify(
+            "suscept",
+            list(susc_adjustments.keys()),
+            [Compartment.SUSCEPTIBLE],
+            flow_adjustments=susceptibility_adjustments
+        )
+
+    """
     Set up and track derived output functions
     """
 

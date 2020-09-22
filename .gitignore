@@ -3,6 +3,7 @@ Pipfile.lock
 **/*.pyc
 venv/
 env/
+condaenv/
 .pytest_cache
 *.cprof
 

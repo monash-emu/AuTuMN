@@ -39,7 +39,10 @@ class RunDHHS(luigi.Task):
     commit = luigi.Parameter()
 
     def requires(self):
-        return BuildFinalCSVTask(commit=self.commit)
+        return [
+            BuildFinalCSVTask(commit=self.commit),
+            BuildEnsembleTask(commit=self.commit),
+        ]
 
 
 class BuildEnsembleTask(utils.BaseTask):
@@ -64,18 +67,16 @@ class BuildEnsembleTask(utils.BaseTask):
         """
         Build predections for non-vic ensemble reporting
         """
+        filename = f"vic-ensemble-{self.commit}-{DATESTAMP}.csv"
         csv_path = os.path.join(DHHS_DIR, filename)
         OUTPUT = "notifications_at_sympt_onset"
 
         # Get sample runs from all chains
         num_chosen = 2000
         start_t = (datetime.now() - BASE_DATETIME).days  # Now
-        end_t = min(start_t + 7 * 6, 365)  # 6 weeks from now
-        times = np.linspace(start_t, end_t, end_t - start_t + 1)
-        samples = []
-        for idx in range(num_chosen):
-            samples[idx] = np.zeros(len(times))
-
+        end_t = min(start_t + 7 * 6 + 1, 365)  # 6 weeks from now
+        times = np.linspace(start_t, end_t - 1, end_t - start_t, dtype=np.int64)
+        samples = [np.zeros(end_t - start_t) for _ in range(num_chosen)]
         for region in Region.VICTORIA_SUBREGIONS:
             if region == Region.VICTORIA:
                 continue
@@ -87,13 +88,18 @@ class BuildEnsembleTask(utils.BaseTask):
             do_tables = db.process.append_tables(do_tables).set_index(["chain", "run"])
             for idx, (chain, run) in enumerate(chosen_runs):
                 run_start_t = do_tables.loc[(chain, run), "times"].iloc[0]
-                start_idx = start_t - run_start_t
-                end_idx = end_t - run_start_t
-                samples[idx] += do_tables.loc[(chain, run), OUTPUT][start_idx:end_idx]
+                start_idx = int(start_t - run_start_t)
+                end_idx = int(end_t - run_start_t)
+                df = do_tables.loc[(chain, run)].iloc[start_idx:end_idx]
+                is_times_equal = (df["times"].to_numpy() == times).all()
+                assert is_times_equal, "All samples must have correct time range"
+                samples[idx] += df[OUTPUT].to_numpy()
 
         columns = ["run", "times", OUTPUT]
         data = {
-            "run": np.concatenate([idx * np.ones(len(times)) for idx in range(num_chosen)]),
+            "run": np.concatenate(
+                [idx * np.ones(len(times), dtype=np.int64) for idx in range(num_chosen)]
+            ),
             "times": np.concatenate([times for _ in range(num_chosen)]),
             OUTPUT: np.concatenate(samples),
         }
@@ -176,7 +182,7 @@ class BuildFinalCSVTask(utils.BaseTask):
 
         # Upload the CSV
         s3_dest_key = f"dhhs/{filename}"
-        utils.upload_s3(csv_path, s3_dest_key)
+        # utils.upload_s3(csv_path, s3_dest_key)
 
     def output(self):
         filename = f"vic-forecast-{self.commit}-{DATESTAMP}.csv"

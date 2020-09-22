@@ -1,5 +1,3 @@
-<div style="position: relative; padding-bottom: 66.66666666666666%; height: 0;"><iframe src="https://www.loom.com/embed/e7c00f7a1e454cb99cafc14c19dca330" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe></div>
-
 # Step 1: Install Anaconda
 
 ## Anaconda setup for Windows
@@ -22,13 +20,17 @@ Download Anaconda and run the installer in a bash prompt:
 
 ```bash
 # Download Anaconda
-DOWNLOAD_URL=https://repo.anaconda.com/archive/Anaconda3-2019.10-Linux-x86_64.sh
-wget -O /tmp/anaconda.sh $DOWNLOAD_URL
+DOWNLOAD_URL=https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+wget -O /tmp/conda.sh $DOWNLOAD_URL
 # Install Anaconda
 cd /tmp/
-bash anaconda.sh
+bash conda.sh
 # Setup Anaconda to work with bash
-conda init bash
+# - accept license agreenment
+# - default install location is okay
+# - ask the installer to "initialize Miniconda" for you
+. ~/.bashrc
+conda config --set auto_activate_base false
 ```
 
 # Step 2: Set up Anaconda environment

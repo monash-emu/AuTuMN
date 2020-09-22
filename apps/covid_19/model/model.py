@@ -290,21 +290,23 @@ def build_model(params: dict) -> StratifiedModel:
     Susceptibility stratification
     """
 
-    reduced_susceptibility = 0.5
-    susceptibility_adjustments = {
-        f"contact_rateXagegroup_{str(i_agegroup)}":
-            {
-                "high": 1.,
-                "low": reduced_susceptibility
-            }
-        for i_agegroup in agegroup_strata
-    }
-    model.stratify(
-        "susceptibility",
-        ["high", "low"],
-        [Compartment.SUSCEPTIBLE],
-        flow_adjustments=susceptibility_adjustments
-    )
+    if params['susceptibility_heterogeneity']:
+
+        reduced_susceptibility = 0.5
+        susceptibility_adjustments = {
+            f"contact_rateXagegroup_{str(i_agegroup)}":
+                {
+                    "high": 1.,
+                    "low": reduced_susceptibility
+                }
+            for i_agegroup in agegroup_strata
+        }
+        model.stratify(
+            "susceptibility",
+            ["high", "low"],
+            [Compartment.SUSCEPTIBLE],
+            flow_adjustments=susceptibility_adjustments
+        )
 
     """
     Set up and track derived output functions

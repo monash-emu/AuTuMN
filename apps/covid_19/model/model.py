@@ -294,8 +294,10 @@ def build_model(params: dict) -> StratifiedModel:
     if susceptibility_heterogeneity:
 
         # Turn list of susceptibility adjustments into dictionary of the right format for adjustments
-        susc_adjustments = \
-            {f"suscept_{i_susc}": susc_value for i_susc, susc_value in enumerate(susceptibility_heterogeneity)}
+        susc_adjustments = {
+            f"suscept_{i_susc}": susc_value
+            for i_susc, susc_value in enumerate(susceptibility_heterogeneity)
+        }
 
         # Apply to all age groups individually (given current SUMMER API)
         susceptibility_adjustments = {

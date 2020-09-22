@@ -4,14 +4,6 @@ parent: apps/covid_19/params.yml
 iso3: MYS
 implement_importation: True
 
-susceptibility_heterogeneity:
-  levels:
-    - high
-    - low
-  values:
-    - 1.
-    - 0.5
-
 start_time: 60.
 
 import_quarantine:

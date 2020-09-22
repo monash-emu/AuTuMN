@@ -86,7 +86,7 @@ validate_params = sb.build_validator(
     # for immunity wane
     full_immunity=bool,
     immunity_duration=float,
-    susceptibility_heterogeneity=sb.Nullable(sb.Dict(levels=list, values=list)),
+    susceptibility_heterogeneity=sb.Nullable(list),
     importation_props_by_age=sb.Nullable(dict),
     testing_to_detection=sb.Nullable(
         sb.Dict(assumed_tests_parameter=float, assumed_cdr_parameter=float)

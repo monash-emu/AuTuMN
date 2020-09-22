@@ -8,18 +8,17 @@ def get_gamma(coeff_var: float):
     Use function described in caption to Extended Data Fig 1 of Aguas et al pre-print to produce gamma distribution
     from coefficient of variation and independent variable.
 
-    :param x:
-    Independent variable
     :param coeff_var:
     Independent variable
-    :return:
+    :return: callable
+    Function that provides the gamma distribution from the coefficient of variation
     """
 
     recip_cv_2 = coeff_var ** -2.
 
-    def gamma_func(x: float):
-        return x ** (recip_cv_2 - 1.) * \
-               np.exp(-x * recip_cv_2) / \
+    def gamma_func(x_value: float):
+        return x_value ** (recip_cv_2 - 1.) * \
+               np.exp(-x_value * recip_cv_2) / \
                special.gamma(recip_cv_2) / \
                coeff_var ** (2. * recip_cv_2)
 

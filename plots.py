@@ -27,7 +27,7 @@ Docs: https://docs.streamlit.io/
 """
 import sys
 
-from dash.dashboards import calibration, scenario, model, dhhs
+from dash.dashboards import calibration, scenario, model, dhhs, ensemble
 
 
 if len(sys.argv) > 1 and sys.argv[1] == "mcmc":
@@ -36,5 +36,7 @@ elif len(sys.argv) > 1 and sys.argv[1] == "scenario":
     scenario.run_dashboard()
 elif len(sys.argv) > 1 and sys.argv[1] == "dhhs":
     dhhs.run_dashboard()
+elif len(sys.argv) > 1 and sys.argv[1] == "ensemble":
+    ensemble.run_dashboard()
 else:
     model.run_dashboard()

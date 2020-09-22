@@ -23,7 +23,6 @@ def plot_flow_params(
 ):
     # Assume a COVID model
     model = app.build_model(app.params["default"])
-
     param_names = sorted(list({f.param_name for f in model.flows}))
     param_name = st.sidebar.selectbox("Select parameter", param_names)
     flows = [f for f in model.flows if f.param_name == param_name]

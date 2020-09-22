@@ -20,23 +20,29 @@ Run from a command line shell (with env active) using
     streamlit run plots.py
     streamlit run plots.py mcmc
     streamlit run plots.py scenario
+    streamlit run plots.py dhhs
+    streamlit run plots.py ensemble
 
 
 Website: https://www.streamlit.io/
 Docs: https://docs.streamlit.io/
 """
+
 import sys
 
-from dash.dashboards import calibration, scenario, model, dhhs, ensemble
-
+from dash.dashboards.model.run import run_dashboard as run_model_dashboard
+from dash.dashboards.calibration.run import run_dashboard as run_calibration_dashboard
+from dash.dashboards.scenario.run import run_dashboard as run_scenario_dashboard
+from dash.dashboards.dhhs import run_dashboard as run_dhhs_dashboard
+from dash.dashboards.ensemble import run_dashboard as run_ensemble_dashboard
 
 if len(sys.argv) > 1 and sys.argv[1] == "mcmc":
-    calibration.run_dashboard()
+    run_calibration_dashboard()
 elif len(sys.argv) > 1 and sys.argv[1] == "scenario":
-    scenario.run_dashboard()
+    run_scenario_dashboard()
 elif len(sys.argv) > 1 and sys.argv[1] == "dhhs":
-    dhhs.run_dashboard()
+    run_dhhs_dashboard()
 elif len(sys.argv) > 1 and sys.argv[1] == "ensemble":
-    ensemble.run_dashboard()
+    run_ensemble_dashboard()
 else:
-    model.run_dashboard()
+    run_model_dashboard()

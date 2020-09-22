@@ -9,7 +9,7 @@ pandas==0.24.2
 scipy==1.1.0
 pymc3==3.7  # Probabilistic programming
 xlrd>=1.2.0  # Reading Excel files via Pandas
-numba
+numba==0.51.0
 pyDOE>=0.3.8
 
 # Database access
@@ -21,9 +21,9 @@ pyyaml==5.3
 python-slugify==4.0.0
 graphviz>=0.4.10
 cerberus==1.3.2
-streamlit==0.58.0
+streamlit==0.67.0
 pyDOE>=0.3.8
-pyAesCrypt
+pyAesCrypt==0.4.3
 googledrivedownloader >=0.4
 
 # Testing
@@ -33,7 +33,7 @@ black
 
 # Cloud computing jobs
 sentry-sdk
-luigi
+luigi==3.0.1
 
 # Debugging
 ipdb

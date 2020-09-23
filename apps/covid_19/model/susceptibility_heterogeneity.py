@@ -26,7 +26,7 @@ def get_gamma(coeff_var: float):
     return gamma_func
 
 
-def numeric_integrate_gamma(lower_terminal: float, upper_terminal: float, gamma_function):
+def numeric_integrate_gamma(gamma_function, lower_terminal: float, upper_terminal: float):
     """
     Numerically integrate previous function over a requested range
 
@@ -41,12 +41,12 @@ def numeric_integrate_gamma(lower_terminal: float, upper_terminal: float, gamma_
     return integrate.quad(gamma_function, lower_terminal, upper_terminal)[0]
 
 
-def get_gamma_data(plot_upper_limit, n_bins, coeff):
+def get_gamma_data(domain_upper_limit, n_bins, coeff):
     """
 
     Note lower limit of zero is assumed
 
-    :param plot_upper_limit:
+    :param domain_upper_limit:
     :param n_bins:
     :param coeff:
     :return:
@@ -56,7 +56,7 @@ def get_gamma_data(plot_upper_limit, n_bins, coeff):
     lower_terminal, lower_terminals, upper_terminals, heights = \
         0., [], [], []
     bin_width = \
-        plot_upper_limit / n_bins
+        domain_upper_limit / n_bins
 
     # Get the gamma function based on the coefficient needed
     gamma_function = get_gamma(coeff)
@@ -84,13 +84,17 @@ def get_gamma_data(plot_upper_limit, n_bins, coeff):
         lower_terminal = \
             upper_terminals[-1]
 
+    # Find mid-points as the representative values
+    mid_points = \
+        [(lower + upper) / 2. for lower, upper in zip(lower_terminals, upper_terminals)]
+
     # Normalise using the average of the integration heights
     normalised_heights = [
-        i_height / np.average(heights) for i_height in heights
+        i_height / sum(heights) for i_height in heights
     ]
 
     # Return everything just in case
-    return lower_terminals, upper_terminals, normalised_heights, bin_width
+    return lower_terminals, upper_terminals, mid_points, normalised_heights, bin_width
 
 
 def produce_gomes_exfig1(coeffs: list, add_hist=False, n_bins=3, x_values=50, plot_upper_limit=3.):
@@ -114,7 +118,7 @@ def produce_gomes_exfig1(coeffs: list, add_hist=False, n_bins=3, x_values=50, pl
 
         # Numeric integration over parts of the function domain
         if add_hist:
-            lower_terminals, _, normalised_heights, bin_width = \
+            lower_terminals, _, _, normalised_heights, bin_width = \
                 get_gamma_data(
                     plot_upper_limit,
                     n_bins,
@@ -131,4 +135,11 @@ def produce_gomes_exfig1(coeffs: list, add_hist=False, n_bins=3, x_values=50, pl
     return gamma_plot
 
 
-produce_gomes_exfig1(coeffs=[0.5, 1., 2.], x_values=100, add_hist=False).savefig("gomes_exfig1.jpg")
+# produce_gomes_exfig1(coeffs=[0.5], x_values=100, n_bins=10, add_hist=True).savefig("gomes_exfig1.jpg")
+#
+# lower_terminals, upper_terminals, mid_points, normalised_heights, bin_width = get_gamma_data(3., 10, 0.5)
+# print(f"lower terminals: {lower_terminals}")
+# print(f"upper terminals: {upper_terminals}")
+# print(f"normalised heights: {normalised_heights}")
+# print(f"bin width: {bin_width}")
+# print(sum(normalised_heights))

@@ -39,6 +39,10 @@ universal_death_rate: .014
 # basic infection and disease parameters
 contact_rate: 1.4
 
+# BCG coverage
+time_variant_bcg_perc:
+  1930: 0.
+  1990: 99.
 # latency-related parameters
 age_specific_latency:
   early_activation_rate:

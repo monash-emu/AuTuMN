@@ -99,8 +99,7 @@ def get_gamma_data(domain_upper_limit, n_bins, coeff):
 
 def produce_gomes_exfig1(coeffs: list, add_hist=False, n_bins=3, x_values=50, plot_upper_limit=3.):
     """
-    Produce figure equivalent to Extended Data Fig 1 of Aguas et al pre-print
-    :return:
+    Produce figure equivalent to Extended Data Fig 1 of Aguas et al pre-print as a check
     """
 
     # Prelims
@@ -140,6 +139,6 @@ def produce_gomes_exfig1(coeffs: list, add_hist=False, n_bins=3, x_values=50, pl
 # lower_terminals, upper_terminals, mid_points, normalised_heights, bin_width = get_gamma_data(3., 10, 0.5)
 # print(f"lower terminals: {lower_terminals}")
 # print(f"upper terminals: {upper_terminals}")
+# print(f"mid-points: {mid_points}")
 # print(f"normalised heights: {normalised_heights}")
 # print(f"bin width: {bin_width}")
-# print(sum(normalised_heights))

@@ -7,6 +7,7 @@ from autumn.environment.seasonality import get_seasonal_forcing
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
 from autumn.tool_kit.utils import normalise_sequence, repeat_list_elements
 from summer.model import StratifiedModel
+from apps.covid_19.model.susceptibility_heterogeneity import get_gamma_data
 
 from apps.covid_19.constants import Compartment
 from apps.covid_19.model.importation import get_all_vic_notifications
@@ -291,12 +292,31 @@ def build_model(params: dict) -> StratifiedModel:
     """
 
     susceptibility_heterogeneity = params["susceptibility_heterogeneity"]
-    if susceptibility_heterogeneity:
 
-        # Turn list of susceptibility adjustments into dictionary of the right format for adjustments
+    if susceptibility_heterogeneity:
+        tail_cut = susceptibility_heterogeneity["tail_cut"]
+        bins = susceptibility_heterogeneity["bins"]
+        coeff_var = susceptibility_heterogeneity["coeff_var"]
+
+        # Interpret data requests
+        _, _, susc_values, susc_pop_props, _ = get_gamma_data(tail_cut, bins, coeff_var)
+
+        # Define strata names
+        susc_strata_names = [
+            f"suscept_{i_susc}" for
+            i_susc in range(bins)
+        ]
+
+        # Assign susceptibility values
         susc_adjustments = {
-            f"suscept_{i_susc}": susc_value
-            for i_susc, susc_value in enumerate(susceptibility_heterogeneity)
+            susc_name: susc_value for
+            susc_name, susc_value in zip(susc_strata_names, susc_values)
+        }
+
+        # Assign proportions of the population
+        sus_pop_splits = {
+            susc_name: susc_prop for
+            susc_name, susc_prop in zip(susc_strata_names, susc_pop_props)
         }
 
         # Apply to all age groups individually (given current SUMMER API)
@@ -309,7 +329,8 @@ def build_model(params: dict) -> StratifiedModel:
             "suscept",
             list(susc_adjustments.keys()),
             [Compartment.SUSCEPTIBLE],
-            flow_adjustments=susceptibility_adjustments
+            flow_adjustments=susceptibility_adjustments,
+            comp_split_props=sus_pop_splits,
         )
 
     """

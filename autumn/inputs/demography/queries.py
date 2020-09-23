@@ -65,8 +65,7 @@ def get_death_rates_by_agegroup(age_breakpoints: List[float], country_iso_code: 
     Find death rates from UN data that are specific to the age groups provided.
     Returns a list of death rates and a list of years.
     """
-    assert age_breakpoints == sorted(age_breakpoints)
-    assert age_breakpoints[0] == 0
+    age_breakpoints = _check_age_breakpoints(age_breakpoints)
     input_db = get_input_db()
     rate_df = _get_death_rates(country_iso_code)
     years = rate_df["mean_year"].unique().tolist()
@@ -90,8 +89,7 @@ def get_life_expectancy_by_agegroup(age_breakpoints: List[float], country_iso_co
     Find life expectancy from UN data that are specific to the age groups provided.
     Returns a list of life expectancy and a list of years.
     """
-    assert age_breakpoints == sorted(age_breakpoints)
-    assert age_breakpoints[0] == 0
+    age_breakpoints = _check_age_breakpoints(age_breakpoints)
     life_expectancy_df = _get_life_expectancy(country_iso_code)
     years = life_expectancy_df["mean_year"].unique().tolist()
     orig_ages = life_expectancy_df["start_age"].unique().tolist()
@@ -138,7 +136,7 @@ def get_crude_birth_rate(country_iso_code: str):
 
 
 def get_population_by_agegroup(
-    age_breakpoints: List[float], country_iso_code: str, region: str = None, year: int = 2020
+    age_breakpoints: List[str], country_iso_code: str, region: str = None, year: int = 2020
 ):
     """
     Find population for age bins.
@@ -146,8 +144,8 @@ def get_population_by_agegroup(
     """
     if country_iso_code in MAPPING_ISO_CODE:
         country_iso_code = MAPPING_ISO_CODE[country_iso_code]
-    assert age_breakpoints == sorted(age_breakpoints)
-    assert age_breakpoints[0] == 0
+
+    age_breakpoints = _check_age_breakpoints(age_breakpoints)
     input_db = get_input_db()
     pop_df = input_db.query(
         "population",
@@ -248,3 +246,10 @@ def get_bin_weights(orig_bins: List[float], new_bins: List[float]):
                 weights[i_o, i_n] = (new_end - orig_start) / (orig_end - orig_start)
 
     return weights
+
+
+def _check_age_breakpoints(age_breakpoints: List[str]) -> List[float]:
+    age_breakpoints = [int(s) for s in age_breakpoints]
+    assert age_breakpoints == sorted(age_breakpoints)
+    assert age_breakpoints[0] == 0
+    return age_breakpoints

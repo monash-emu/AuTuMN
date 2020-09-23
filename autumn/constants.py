@@ -7,7 +7,6 @@ import os
 from summer.constants import (
     BirthApproach,
     IntegrationType,
-    Stratification,
     Compartment,
     Flow,
 )

@@ -10,7 +10,6 @@ import pandas as pd
 from summer.constants import (
     Flow,
     BirthApproach,
-    Stratification,
     IntegrationType,
 )
 from summer.compartment import Compartment

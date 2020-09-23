@@ -7,7 +7,6 @@ import numpy as np
 from summer.constants import (
     Flow,
     BirthApproach,
-    Stratification,
     IntegrationType,
 )
 from summer.model.epi_model import EpiModel

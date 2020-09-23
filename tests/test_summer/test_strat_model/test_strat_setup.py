@@ -10,7 +10,6 @@ from summer.constants import (
     Compartment,
     Flow,
     BirthApproach,
-    Stratification,
     IntegrationType,
 )
 
@@ -56,7 +55,7 @@ def test_stratify_flows_partial():
     vals = np.array([800, 200])
     assert_array_equal(model.compartment_values, vals)
     model.stratify(
-        Stratification.LOCATION,
+        "location",
         strata_request=["home", "work", "other"],
         compartments_to_stratify=["inf"],
         requested_proportions={"home": 0.6},
@@ -170,7 +169,7 @@ def test_stratify_flows_full():
     vals = np.array([800, 200])
     assert_array_equal(model.compartment_values, vals)
     model.stratify(
-        Stratification.LOCATION,
+        "location",
         strata_request=["home", "work", "other"],
         compartments_to_stratify=[],
         requested_proportions={"home": 0.6},
@@ -273,7 +272,7 @@ def test_stratify_flows_full__with_adjustment_requests():
     vals = np.array([800, 200])
     assert_array_equal(model.compartment_values, vals)
     model.stratify(
-        Stratification.LOCATION,
+        "location",
         strata_request=["home", "work"],
         compartments_to_stratify=[],
         requested_proportions={"home": 0.6},
@@ -348,7 +347,7 @@ def test_stratify_compartments_full():
     vals = np.array([800, 200])
     assert_array_equal(model.compartment_values, vals)
     model.stratify(
-        Stratification.LOCATION,
+        "location",
         strata_request=["home", "work", "other"],
         compartments_to_stratify=[],
         requested_proportions={"home": 0.6},
@@ -385,7 +384,7 @@ def test_stratify_compartments_partial():
     vals = np.array([800, 200])
     assert_array_equal(model.compartment_values, vals)
     model.stratify(
-        Stratification.LOCATION,
+        "location",
         strata_request=["home", "work", "other"],
         compartments_to_stratify=["sus"],
         requested_proportions={"home": 0.6},

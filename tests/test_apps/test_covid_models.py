@@ -41,9 +41,9 @@ def test_no_seasonal_forcing():
     Test seasonal forcing function returns the average value when the magnitude is zero
     """
 
-    seasonal_forcing_function = get_seasonal_forcing(365., 0., 0., 1.)
-    for i_time in np.linspace(-100., 100., 50):
-        assert seasonal_forcing_function(i_time) == 1.
+    seasonal_forcing_function = get_seasonal_forcing(365.0, 0.0, 0.0, 1.0)
+    for i_time in np.linspace(-100.0, 100.0, 50):
+        assert seasonal_forcing_function(i_time) == 1.0
 
 
 def test_peak_trough_seasonal_forcing():
@@ -51,12 +51,13 @@ def test_peak_trough_seasonal_forcing():
     Test seasonal forcing returns the peak and trough values appropriately
     """
 
-    seasonal_forcing_function = get_seasonal_forcing(365., 0., 2., 1.)
-    assert seasonal_forcing_function(0.) == 2.
-    assert seasonal_forcing_function(365.) == 2.
-    assert seasonal_forcing_function(365. / 2.) == 0.
+    seasonal_forcing_function = get_seasonal_forcing(365.0, 0.0, 2.0, 1.0)
+    assert seasonal_forcing_function(0.0) == 2.0
+    assert seasonal_forcing_function(365.0) == 2.0
+    assert seasonal_forcing_function(365.0 / 2.0) == 0.0
 
 
+@pytest.mark.skip
 @pytest.mark.local_only
 @pytest.mark.parametrize("region", covid_19.app.region_names)
 def test_run_models_partial(region):
@@ -72,6 +73,7 @@ def test_run_models_partial(region):
     model.run_model()
 
 
+@pytest.mark.skip
 @pytest.mark.local_only
 @pytest.mark.parametrize("region", covid_19.app.region_names)
 def test_build_scenario_models(region):
@@ -86,13 +88,36 @@ def test_build_scenario_models(region):
         assert type(model) is StratifiedModel
 
 
-@pytest.mark.run_models
-@pytest.mark.github_only
+# @pytest.mark.run_models
+# @pytest.mark.github_only
 @pytest.mark.parametrize("region", covid_19.app.region_names)
-def test_run_models_full(region):
+def test_run_models_full(region, verify):
     """
     Smoke test: ensure our models run to completion without crashing.
     This takes ~30s per model.
     """
     region_app = covid_19.app.get_region(region)
-    region_app.run_model()
+    model = region_app.build_model(region_app.params["default"])
+    verify(model.parameters, f"parameters-{region}")
+    verify(model.times, f"times-{region}")
+    verify(model.compartment_names, f"compartment_names-{region}")
+    verify(list(model.time_variants.keys()), f"time_variants-{region}")
+    verify(model.mixing_categories, f"mixing_categories-{region}")
+    flows = []
+    for f in model.flows:
+        flow_data = [f.param_name]
+        if getattr(f, "source", ""):
+            flow_data.append(str(f.source))
+        if getattr(f, "dest", ""):
+            flow_data.append(str(f.dest))
+
+        adjs = "x".join(["=".join([str(i) for i in a]) for a in f.adjustments])
+        flow_data.append(adjs)
+        flows.append("-".join(flow_data))
+
+    verify(flows, f"flows-{region}")
+
+    model.run_model()
+    verify(model.outputs, f"outputs-{region}")
+    for output, arr in model.derived_outputs.items():
+        verify(arr, f"do-{output}-{region}")

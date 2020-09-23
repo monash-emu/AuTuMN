@@ -65,12 +65,23 @@ def stratify_by_age(model, params, compartments):
     mixing_matrix = get_mixing_matrix_specific_agegroups(params['iso3'], params['age_breakpoints'])
 
     # add BCG effect without stratifying for BCG
-    bcg_wane = create_sloping_step_function(15.0, 0.3, 30.0, 1.0)
-    age_bcg_efficacy_dict = get_parameter_dict_from_function(
+    bcg_wane = create_sloping_step_function(15.0, .3, 30.0, 1.0)
+    bcg_susceptibility_multilier_dict = get_parameter_dict_from_function(
         lambda value: bcg_wane(value), params['age_breakpoints']
     )
+    bcg_coverage_func = scale_up_function(
+        list(params['time_variant_bcg_perc'].keys()),
+        list(params['time_variant_bcg_perc'].values()),
+        method=4
+    )
+    for agegroup, multiplier in bcg_susceptibility_multilier_dict.items():
+        if multiplier < 1.:
+            name = 'contact_rate_' + agegroup
+            bcg_susceptibility_multilier_dict[agegroup] = name
+            model.time_variants[name] = make_bcg_multiplier_func(bcg_coverage_func, multiplier)
+            model.parameters[name] = name
     flow_adjustments.update(
-        {"contact_rate": age_bcg_efficacy_dict}
+        {"contact_rate": bcg_susceptibility_multilier_dict}
     )
 
     # trigger model stratification
@@ -215,6 +226,12 @@ def calculate_age_specific_infectiousness(age_breakpoints, age_infectiousness_sw
         infectiousness_by_agegroup[str(age_low)] = average_infectiousness
 
     return infectiousness_by_agegroup
+
+
+def make_bcg_multiplier_func(bcg_coverage_func, multiplier):
+    def bcg_multiplier_func(t):
+                return 1. - bcg_coverage_func(t) / 100. * (1. - multiplier)
+    return bcg_multiplier_func
 
 
 def make_treatment_recovery_func(age_group, model, params, time_variant_tsr):

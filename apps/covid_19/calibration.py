@@ -242,13 +242,10 @@ def add_standard_victoria_params(params, region):
             "distri_params": [0.006 if region in Region.VICTORIA_RURAL else 0.012, 0.07],
         },
         {
-            "param_name": "ifr_multiplier",  # Less to constrain this, so just to propagate some uncertainty
+            "param_name": "ifr_multiplier",
             "distribution": "trunc_normal",
-            "distri_params": [1.0, 0.3 if region in Region.VICTORIA_RURAL else 1.0],
-            "trunc_range": [
-                0.33 if region in Region.VICTORIA_RURAL else 0.25,
-                3.0 if region in Region.VICTORIA_RURAL else 4.0,
-            ],
+            "distri_params": [1.5, 0.5],
+            "trunc_range": [0.33, 3.],
         },
         {
             "param_name": "seasonal_force",

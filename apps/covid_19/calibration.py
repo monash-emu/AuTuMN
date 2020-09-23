@@ -358,6 +358,21 @@ def add_standard_victoria_targets(target_outputs, targets, region):
             },
         ]
 
+    elif region == Region.NORTH_METRO:
+
+        new_icu_to_ignore = 7
+        icu_admission_times = targets["icu_admissions"]["times"][:-new_icu_to_ignore]
+        icu_admission_values = targets["icu_admissions"]["values"][:-new_icu_to_ignore]
+
+        target_outputs += [
+            {
+                "output_key": "new_icu_admissions",
+                "years": icu_admission_times,
+                "values": icu_admission_values,
+                "loglikelihood_distri": "normal",
+            },
+        ]
+
     return target_outputs
 
 

@@ -24,7 +24,7 @@ def make_infectious_prevalence_calculation_function(stratum_filters=[]):
         """
         prev_infectious = sum(
             [compartment_values[i] for i, compartment in enumerate(model.compartment_names) if
-             (compartment.has_name(Compartment.INFECTIOUS) and all(
+             ((compartment.has_name(Compartment.INFECTIOUS) or compartment.has_name(Compartment.ON_TREATMENT)) and all(
                  [compartment.has_stratum(stratum['name'], stratum['value']) for stratum in stratum_filters]
                 )
               )

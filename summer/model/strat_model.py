@@ -94,7 +94,7 @@ class StratifiedModel(EpiModel):
         stratification_name: The name of the stratification
         strata_names: The names of the strata to apply
         compartments_to_stratify: The compartments that will have the stratification applied. Falsey args interpreted as "all".
-        comp_split_props: Request to split existing population in the compartments according to specific proprotions
+        comp_split_props: Request to split existing population in the compartments according to specific proportions
         flow_adjustments: TODO
         infectiousness_adjustments: TODO
         mixing_matrix: TODO

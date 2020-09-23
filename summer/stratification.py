@@ -129,7 +129,7 @@ def get_all_proportions(strata_names: List[str], strata_proportions: Dict[str, f
     remaining_names = [n for n in strata_names if n not in strata_proportions]
     count_remaining = len(remaining_names)
     assert set(strata_proportions.keys()).issubset(strata_names), "Invalid proprotion keys"
-    assert proportion_allocated <= 1, "Sum of proportions must not exceed 1.0"
+    assert proportion_allocated <= 1.0000001, "Sum of proportions must not exceed 1.0"
     if not remaining_names:
         eps = 1e-12
         assert 1 - proportion_allocated < eps, "Sum of proportions must be 1.0"

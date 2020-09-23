@@ -9,17 +9,17 @@ from apps import covid_19, sir_example, tuberculosis
 os.chdir("..")  # Make repo root the current directory
 
 # Run a COVID model manually.
-# app_region = covid_19.app.get_region(Region.LODDON_MALLEE)
-# app_region.run_model(run_scenarios=False)
+app_region = covid_19.app.get_region(Region.PHILIPPINES)
+app_region.run_model(run_scenarios=False)
 
 # Simple SIR model for demonstration
 # app_region = sir_example.app.get_region(Region.AUSTRALIA)
 # app_region.run_model()M
 
 
-app_region = tuberculosis.app.get_region(Region.LODDON_MALLEE)
-app_region.run_model(run_scenarios=True)
-app_region.calibrate_model(max_seconds=20, run_id=0, num_chains=1)
+# app_region = tuberculosis.app.get_region(Region.LODDON_MALLEE)
+# app_region.run_model(run_scenarios=True)
+# app_region.calibrate_model(max_seconds=20, run_id=0, num_chains=1)
 
 
 # # Run a calibration

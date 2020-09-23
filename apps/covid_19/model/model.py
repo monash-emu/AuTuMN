@@ -7,6 +7,7 @@ from autumn.environment.seasonality import get_seasonal_forcing
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
 from autumn.tool_kit.utils import normalise_sequence, repeat_list_elements
 from summer.model import StratifiedModel
+from apps.covid_19.model.susceptibility_heterogeneity import get_gamma_data
 
 from apps.covid_19.constants import Compartment
 from apps.covid_19.model.importation import get_all_vic_notifications
@@ -291,26 +292,33 @@ def build_model(params: dict) -> StratifiedModel:
     """
 
     susceptibility_heterogeneity = params["susceptibility_heterogeneity"]
-    if susceptibility_heterogeneity:
 
-        # Turn list of susceptibility adjustments into dictionary of the right format for adjustments
-        susc_adjustments = {
-            f"suscept_{i_susc}": susc_value
-            for i_susc, susc_value in enumerate(susceptibility_heterogeneity)
-        }
+    # if susceptibility_heterogeneity:
 
-        # Apply to all age groups individually (given current SUMMER API)
-        susceptibility_adjustments = {
-            f"contact_rateXagegroup_{str(i_agegroup)}": susc_adjustments for i_agegroup in agegroup_strata
-        }
+    _, _, susc_values, susc_pop_props, _ = get_gamma_data(4., 10, 0.5)
 
-        # Stratify
-        model.stratify(
-            "suscept",
-            list(susc_adjustments.keys()),
-            [Compartment.SUSCEPTIBLE],
-            flow_adjustments=susceptibility_adjustments
-        )
+    # work out susceptibility strata keys first in one go *******
+
+    susc_adjustments = {
+        f"suscept_{i_susc}": susc_value
+        for i_susc, susc_value in enumerate(susc_values)
+    }
+
+    sus_pop_splits = {f"suscept_{i}": susc_pop_props[i] for i in range(10)}
+
+    # Apply to all age groups individually (given current SUMMER API)
+    susceptibility_adjustments = {
+        f"contact_rateXagegroup_{str(i_agegroup)}": susc_adjustments for i_agegroup in agegroup_strata
+    }
+
+    # Stratify
+    model.stratify(
+        "suscept",
+        list(susc_adjustments.keys()),
+        [Compartment.SUSCEPTIBLE],
+        flow_adjustments=susceptibility_adjustments,
+        comp_split_props=sus_pop_splits,
+    )
 
     """
     Set up and track derived output functions

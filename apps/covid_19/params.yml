@@ -28,7 +28,7 @@ full_immunity: true
 immunity_duration: 90.
 
 # Heterogeneity in susceptibility
-susceptibility_heterogeneity: []
+susceptibility_heterogeneity: {}
 
 # Parameters relating to adjusting the mixing matrix to reflect interventions
 mixing: {}

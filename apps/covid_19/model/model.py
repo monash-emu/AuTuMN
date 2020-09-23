@@ -293,32 +293,45 @@ def build_model(params: dict) -> StratifiedModel:
 
     susceptibility_heterogeneity = params["susceptibility_heterogeneity"]
 
-    # if susceptibility_heterogeneity:
+    if susceptibility_heterogeneity:
+        tail_cut = susceptibility_heterogeneity["tail_cut"]
+        bins = susceptibility_heterogeneity["bins"]
+        coeff_var = susceptibility_heterogeneity["coeff_var"]
 
-    _, _, susc_values, susc_pop_props, _ = get_gamma_data(4., 10, 0.5)
+        # Interpret data requests
+        _, _, susc_values, susc_pop_props, _ = get_gamma_data(tail_cut, bins, coeff_var)
 
-    # work out susceptibility strata keys first in one go *******
+        # Define strata names
+        susc_strata_names = [
+            f"suscept_{i_susc}" for
+            i_susc in range(bins)
+        ]
 
-    susc_adjustments = {
-        f"suscept_{i_susc}": susc_value
-        for i_susc, susc_value in enumerate(susc_values)
-    }
+        # Assign susceptibility values
+        susc_adjustments = {
+            susc_name: susc_value for
+            susc_name, susc_value in zip(susc_strata_names, susc_values)
+        }
 
-    sus_pop_splits = {f"suscept_{i}": susc_pop_props[i] for i in range(10)}
+        # Assign proportions of the population
+        sus_pop_splits = {
+            susc_name: susc_prop for
+            susc_name, susc_prop in zip(susc_strata_names, susc_pop_props)
+        }
 
-    # Apply to all age groups individually (given current SUMMER API)
-    susceptibility_adjustments = {
-        f"contact_rateXagegroup_{str(i_agegroup)}": susc_adjustments for i_agegroup in agegroup_strata
-    }
+        # Apply to all age groups individually (given current SUMMER API)
+        susceptibility_adjustments = {
+            f"contact_rateXagegroup_{str(i_agegroup)}": susc_adjustments for i_agegroup in agegroup_strata
+        }
 
-    # Stratify
-    model.stratify(
-        "suscept",
-        list(susc_adjustments.keys()),
-        [Compartment.SUSCEPTIBLE],
-        flow_adjustments=susceptibility_adjustments,
-        comp_split_props=sus_pop_splits,
-    )
+        # Stratify
+        model.stratify(
+            "suscept",
+            list(susc_adjustments.keys()),
+            [Compartment.SUSCEPTIBLE],
+            flow_adjustments=susceptibility_adjustments,
+            comp_split_props=sus_pop_splits,
+        )
 
     """
     Set up and track derived output functions

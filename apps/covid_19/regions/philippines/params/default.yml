@@ -2,6 +2,11 @@
 ---
 parent: apps/covid_19/phl_submodel_params.yml
 
+susceptibility_heterogeneity:
+  tail_cut: 4.
+  bins: 10
+  coeff_var: 0.5
+
 mixing:
   school:
     append: false

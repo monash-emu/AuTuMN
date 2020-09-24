@@ -1,7 +1,14 @@
 import scipy.special as special
 import scipy.integrate as integrate
+<<<<<<< HEAD
 import numpy as np
 import matplotlib.pyplot as plt
+=======
+from scipy import optimize
+import numpy as np
+import matplotlib.pyplot as plt
+from math import sqrt
+>>>>>>> susc-heterogeneity
 
 
 def get_gamma(coeff_var: float):
@@ -41,6 +48,7 @@ def numeric_integrate_gamma(gamma_function, lower_terminal: float, upper_termina
     return integrate.quad(gamma_function, lower_terminal, upper_terminal)[0]
 
 
+<<<<<<< HEAD
 def get_gamma_data(domain_upper_limit, n_bins, coeff):
     """
 
@@ -52,16 +60,45 @@ def get_gamma_data(domain_upper_limit, n_bins, coeff):
     :return:
     """
 
+=======
+def get_gamma_data(tail_start_point, n_bins, coeff):
+    """
+    Compute a discretised version of a gamma distribution with mean 1 and a given coefficient of variation (sd/mean).
+    The discretisation involves numerical solving to ensure the coefficient of variation is preserved. However, the mean
+    of the discrete ditribution may be different to 1.
+    :param tail_start_point: the last lower terminal
+    :param n_bins: number of bins (including tail)
+    :param coeff: requested coefficient of variation
+    :return:
+    """
+    # First address a few singular scenarios
+    if n_bins == 1 and coeff > 0.:
+        raise ValueError("Cannot compute a positive coefficient of variation using a single bin")
+    elif n_bins > 1 and coeff == 0.:
+        raise ValueError("Cannot compute a null coefficient of variation using multiple bins")
+    elif n_bins == 1:
+        return [0.], [float("inf")], 1., 1., float("inf")
+
+    n_finite_bins = n_bins - 1
+>>>>>>> susc-heterogeneity
     # Prelims
     lower_terminal, lower_terminals, upper_terminals, heights = \
         0., [], [], []
     bin_width = \
+<<<<<<< HEAD
         domain_upper_limit / n_bins
+=======
+        tail_start_point / n_finite_bins
+>>>>>>> susc-heterogeneity
 
     # Get the gamma function based on the coefficient needed
     gamma_function = get_gamma(coeff)
 
+<<<<<<< HEAD
     for i_bin in range(n_bins):
+=======
+    for i_bin in range(n_finite_bins):
+>>>>>>> susc-heterogeneity
 
         # Record the upper and lower terminals
         lower_terminals.append(
@@ -84,10 +121,17 @@ def get_gamma_data(domain_upper_limit, n_bins, coeff):
         lower_terminal = \
             upper_terminals[-1]
 
+<<<<<<< HEAD
+=======
+    # the last height is the remaining area under the curve (tail)
+    heights.append(1. - sum(heights))
+
+>>>>>>> susc-heterogeneity
     # Find mid-points as the representative values
     mid_points = \
         [(lower + upper) / 2. for lower, upper in zip(lower_terminals, upper_terminals)]
 
+<<<<<<< HEAD
     # Normalise using the average of the integration heights
     normalised_heights = [
         i_height / sum(heights) for i_height in heights
@@ -95,6 +139,49 @@ def get_gamma_data(domain_upper_limit, n_bins, coeff):
 
     # Return everything just in case
     return lower_terminals, upper_terminals, mid_points, normalised_heights, bin_width
+=======
+    # add the last representative point such that modelled_CV = input_CV
+    mid_points.append(
+        find_last_representative_point(mid_points, heights, coeff)
+    )
+    lower_terminals.append(upper_terminals[-1])
+    upper_terminals.append(float('inf'))
+
+    # Return everything just in case
+    return lower_terminals, upper_terminals, mid_points, heights, bin_width
+
+
+def find_last_representative_point(mid_points, heights, coeff):
+    """
+    Find the last representative value of the discretised gamma distribution such that the requested coefficient of
+    variation is presered.
+    """
+
+    def coeff_bias(last_point):
+        values = mid_points + [last_point]
+        mean = sum([prop * val for prop, val in zip(heights, values)])
+        variance = sum([prop*(val - mean)**2 for prop, val in zip(heights, values)])
+        modelled_cv = sqrt(variance) / mean
+        return modelled_cv - coeff
+
+    solution = optimize.root(coeff_bias, x0=mid_points[-1])
+    best_last_point = solution.x[0]
+
+    assert best_last_point > mid_points[-1]
+
+    return best_last_point
+
+
+def check_modelled_susc_cv(values, props, input_cv):
+    """
+    Check that the modelled coefficient of variation is close to the requested one.
+    """
+    mean = sum([prop * val for prop, val in zip(props, values)])
+    variance = sum([prop*(val - mean)**2 for prop, val in zip(props, values)])
+    modelled_cv = sqrt(variance) / mean
+    relative_error = abs(modelled_cv - input_cv) / input_cv
+    assert relative_error <= .1, "The modelled CV is not close enough to the input CV."
+>>>>>>> susc-heterogeneity
 
 
 def produce_gomes_exfig1(coeffs: list, add_hist=False, n_bins=3, x_values=50, plot_upper_limit=3.):
@@ -134,6 +221,7 @@ def produce_gomes_exfig1(coeffs: list, add_hist=False, n_bins=3, x_values=50, pl
     return gamma_plot
 
 
+<<<<<<< HEAD
 # produce_gomes_exfig1(coeffs=[0.5], x_values=100, n_bins=10, add_hist=True).savefig("gomes_exfig1.jpg")
 #
 # lower_terminals, upper_terminals, mid_points, normalised_heights, bin_width = get_gamma_data(3., 10, 0.5)
@@ -142,3 +230,14 @@ def produce_gomes_exfig1(coeffs: list, add_hist=False, n_bins=3, x_values=50, pl
 # print(f"mid-points: {mid_points}")
 # print(f"normalised heights: {normalised_heights}")
 # print(f"bin width: {bin_width}")
+=======
+if __name__ == '__main__':
+    produce_gomes_exfig1(coeffs=[5.], x_values=100, n_bins=10, add_hist=True).savefig("gomes_exfig1.jpg")
+
+    # lower_terminals, upper_terminals, mid_points, normalised_heights, bin_width = get_gamma_data(3., 10, 0.5)
+    # print(f"lower terminals: {lower_terminals}")
+    # print(f"upper terminals: {upper_terminals}")
+    # print(f"mid-points: {mid_points}")
+    # print(f"normalised heights: {normalised_heights}")
+    # print(f"bin width: {bin_width}")
+>>>>>>> susc-heterogeneity

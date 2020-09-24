@@ -104,7 +104,7 @@ class BuildEnsembleTask(utils.BaseTask):
             ENSEMBLE_OUTPUT: np.concatenate(samples),
         }
         df = pd.DataFrame(data=data, columns=columns)
-        df['times'] = df['times']apply(lambda days: BASE_DATETIME + timedelta(days=days))
+        df["times"] = df["times"].apply(lambda days: BASE_DATETIME + timedelta(days=days))
         df.to_csv(csv_path, index=False)
 
         # Upload the CSV

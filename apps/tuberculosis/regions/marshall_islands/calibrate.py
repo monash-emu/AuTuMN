@@ -3,6 +3,8 @@ import logging
 from autumn.constants import Region
 from autumn.calibration import Calibration
 from autumn.tool_kit.params import load_params, load_targets
+from autumn.calibration.utils import add_dispersion_param_prior_for_gaussian
+
 
 from apps.tuberculosis.model import build_model
 from apps.tuberculosis.calibration_utils import get_latency_priors_from_epidemics
@@ -32,25 +34,25 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
 
 
 PRIORS = [
-    {
-        "param_name": "start_population_size",
-        "distribution": "uniform",
-        "distri_params": [2000, 30000]
-    },
-    {
-        "param_name": "start_time",
-        "distribution": "uniform",
-        "distri_params": [1900, 1950]
-    },
+    # {
+    #     "param_name": "start_population_size",
+    #     "distribution": "uniform",
+    #     "distri_params": [2000, 30000]
+    # },
+    # {
+    #     "param_name": "start_time",
+    #     "distribution": "uniform",
+    #     "distri_params": [1900, 1950]
+    # },
     {
         "param_name": "contact_rate",
         "distribution": "uniform",
-        "distri_params": [.5, 5.]
+        "distri_params": [.1, 2.]
     },
     {
         "param_name": "time_variant_tb_screening_rate.end_value",
         "distribution": "uniform",
-        "distri_params": [.3, 3.]  # roughly 25-80% of diseased individuals screened
+        "distri_params": [.1, 3.]
     },
     {
         "param_name": "user_defined_stratifications.location.adjustments.detection_rate.ebeye",
@@ -95,3 +97,5 @@ for t_name, t in targets.items():
                 "loglikelihood_distri": "normal",
             },
         )
+
+PRIORS = add_dispersion_param_prior_for_gaussian(PRIORS, TARGET_OUTPUTS)

@@ -5,6 +5,7 @@ from .regions.manila import manila_region
 from .regions.calabarzon import calabarzon_region
 from .regions.central_visayas import central_visayas_region
 from .regions.malaysia import malaysia_region
+from .regions.sabah import sabah_region
 from .regions.united_kingdom import united_kingdom_region
 from .regions.sweden import sweden_region
 from .regions.spain import spain_region
@@ -39,6 +40,7 @@ app.register(grampians_region)
 
 # Malaysia
 app.register(malaysia_region)
+app.register(sabah_region)
 
 # Philippines regions
 app.register(philippines_region)

@@ -52,6 +52,7 @@ class Region:
     LODDON_MALLEE = "loddon-mallee"
     GRAMPIANS = "grampians"
     MARSHALL_ISLANDS = "marshall-islands"
+    SABAH = "sabah"
 
     REGIONS = [
         AUSTRALIA,
@@ -80,6 +81,7 @@ class Region:
         LODDON_MALLEE,
         GRAMPIANS,
         MARSHALL_ISLANDS,
+        SABAH
     ]
 
     VICTORIA_RURAL = [

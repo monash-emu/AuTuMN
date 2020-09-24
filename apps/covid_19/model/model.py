@@ -7,7 +7,7 @@ from autumn.environment.seasonality import get_seasonal_forcing
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
 from autumn.tool_kit.utils import normalise_sequence, repeat_list_elements
 from summer.model import StratifiedModel
-from apps.covid_19.model.susceptibility_heterogeneity import get_gamma_data
+from apps.covid_19.model.susceptibility_heterogeneity import get_gamma_data, check_modelled_susc_cv
 
 from apps.covid_19.constants import Compartment
 from apps.covid_19.model.importation import get_all_vic_notifications
@@ -300,6 +300,7 @@ def build_model(params: dict) -> StratifiedModel:
 
         # Interpret data requests
         _, _, susc_values, susc_pop_props, _ = get_gamma_data(tail_cut, bins, coeff_var)
+        check_modelled_susc_cv(susc_values, susc_pop_props, coeff_var)
 
         # Define strata names
         susc_strata_names = [

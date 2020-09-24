@@ -67,7 +67,7 @@ time_variant_bcg_perc:
 # calibrated parameters
 contact_rate: .46
 time_variant_tb_screening_rate:
-  maximum_gradient: 5  #05 # The shape parameter to the tanh-based curve
+  maximum_gradient: .05 # The shape parameter to the tanh-based curve
   max_change_time: 1980. # Point at which curve inflects
   start_value: 0. # Starting value - lower asymptote
   end_value: .1 # End value - upper asymptote

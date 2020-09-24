@@ -102,9 +102,13 @@ def get_gamma_data(tail_start_point, n_bins, coeff):
         [(lower + upper) / 2. for lower, upper in zip(lower_terminals, upper_terminals)]
 
     # add the last representative point such that modelled_CV = input_CV
-    mid_points.append(
-        find_last_representative_point(mid_points, heights, coeff)
-    )
+    last_point, last_height = find_last_representative_point(mid_points, heights, coeff)
+    mid_points.append(last_point)
+    heights[-1] = last_height
+
+    # rescale heights
+    heights = [h / sum(heights) for h in heights]
+
     lower_terminals.append(upper_terminals[-1])
     upper_terminals.append(float('inf'))
 
@@ -118,19 +122,30 @@ def find_last_representative_point(mid_points, heights, coeff):
     variation is presered.
     """
 
-    def coeff_bias(last_point):
-        values = mid_points + [last_point]
-        mean = sum([prop * val for prop, val in zip(heights, values)])
-        variance = sum([prop*(val - mean)**2 for prop, val in zip(heights, values)])
-        modelled_cv = sqrt(variance) / mean
-        return modelled_cv - coeff
+    def coeff_bias(last_quantities):
+        """
 
-    solution = optimize.root(coeff_bias, x0=mid_points[-1])
+        :param: last_quantities = [last_point, last_height]
+        :return:
+        """
+        if any(last_quantities<=0):
+            return 1.e10, 1.e10
+        last_point, last_height = last_quantities
+        values = mid_points + [last_point]
+        heights[-1] = last_height
+        rescaled_heights = [h / sum(heights) for h in heights]
+        mean = sum([prop * val for prop, val in zip(rescaled_heights, values)])
+        variance = sum([prop*(val - mean)**2 for prop, val in zip(rescaled_heights, values)])
+        modelled_cv = sqrt(variance) / mean
+        return modelled_cv - coeff, mean - 1.
+
+    solution = optimize.root(coeff_bias, x0=[mid_points[-1], heights[-1]])
     best_last_point = solution.x[0]
+    best_last_height = solution.x[1]
 
     assert best_last_point > mid_points[-1]
 
-    return best_last_point
+    return best_last_point, best_last_height
 
 
 def check_modelled_susc_cv(values, props, input_cv):
@@ -182,8 +197,13 @@ def produce_gomes_exfig1(coeffs: list, add_hist=False, n_bins=3, x_values=50, pl
 
 
 if __name__ == '__main__':
-    produce_gomes_exfig1(coeffs=[5.], x_values=100, n_bins=10, add_hist=True).savefig("gomes_exfig1.jpg")
+    tail = 4.
+    n = 100
+    coeff = 2.
+    lower_terminals, upper_terminals, mid_points, heights, bin_width = get_gamma_data(tail, n, coeff)
+    check_modelled_susc_cv(mid_points, heights, coeff)
 
+    # produce_gomes_exfig1(coeffs=[5.], x_values=100, n_bins=10, add_hist=True).savefig("gomes_exfig1.jpg")
     # lower_terminals, upper_terminals, mid_points, normalised_heights, bin_width = get_gamma_data(3., 10, 0.5)
     # print(f"lower terminals: {lower_terminals}")
     # print(f"upper terminals: {upper_terminals}")

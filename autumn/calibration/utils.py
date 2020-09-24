@@ -9,7 +9,7 @@ from scipy import stats, special
 from scipy.optimize import minimize
 
 from autumn.db import Database
-
+import yaml
 
 def add_dispersion_param_prior_for_gaussian(par_priors, target_outputs):
     for t in target_outputs:
@@ -27,7 +27,6 @@ def add_dispersion_param_prior_for_gaussian(par_priors, target_outputs):
                     "distri_params": [lower_sd, upper_sd],
                 },
             )
-
     return par_priors
 
 
@@ -194,6 +193,8 @@ def print_reformated_map_parameters(map_estimates):
     param_as_list_indices = {}
     param_stem_already_printed = []
     for key, value in map_estimates.items():
+        if "dispersion_param" in key:
+            continue
         if "(" in key:
             stem = key.split("(")[0]
             index = key.split("(")[1].split(")")[0]
@@ -235,19 +236,25 @@ def print_reformated_map_parameters(map_estimates):
 
 
 if __name__ == "__main__":
-    calib_dir = os.path.join(
-        "../../data",
-        "outputs",
-        "calibrate",
-        "covid_19",
-        "belgium",
-        "ef2ee497-2020-07-17",  #   "Final-2020-07-17"
-    )
-    map_estimates, best_chain_index = collect_map_estimate(calib_dir)
+    PARAMS_PATH = "../../apps/tuberculosis/regions/marshall_islands/params/mle-params.yml"
+
+    with open(PARAMS_PATH, "r") as f:
+        map_estimates = yaml.safe_load(f)
     print_reformated_map_parameters(map_estimates)
 
-    print()
-    print("Obtained from chain " + str(best_chain_index))
+    # calib_dir = os.path.join(
+    #     "../../data",
+    #     "outputs",
+    #     "calibrate",
+    #     "covid_19",
+    #     "belgium",
+    #     "ef2ee497-2020-07-17",  #   "Final-2020-07-17"
+    # )
+    # map_estimates, best_chain_index = collect_map_estimate(calib_dir)
+    # print_reformated_map_parameters(map_estimates)
+    #
+    # print()
+    # print("Obtained from chain " + str(best_chain_index))
 
 
 def specify_missing_prior_params(priors: dict):

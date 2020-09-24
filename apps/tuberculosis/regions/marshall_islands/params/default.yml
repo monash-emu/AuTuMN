@@ -27,8 +27,8 @@ user_defined_stratifications:  # this specifies user-defined  stratifications
         other: 1.
       detection_rate:
         majuro: 1.
-        ebeye: 1.
-        other: 1.
+        ebeye: 1.6786000040607503
+        other: 0.5018196675663678
 
 # BCG coverage
 time_variant_bcg_perc:
@@ -64,16 +64,38 @@ time_variant_bcg_perc:
   2018: 98.
   2019: 89.
 
-# calibrated parameters
-contact_rate: .46
+time_variant_tsr:  # should always be > 0
+  1950: .6
+  2017.: 0.87
+
 time_variant_tb_screening_rate:
   maximum_gradient: .05 # The shape parameter to the tanh-based curve
   max_change_time: 1980. # Point at which curve inflects
   start_value: 0. # Starting value - lower asymptote
-  end_value: .1 # End value - upper asymptote
-time_variant_tsr:  # should always be > 0
-  1950: .6
-  2017.: 0.87
+  end_value: 0.13309195366287707
+
+extra_params:
+  prop_diabetes:
+    0: 0.01
+    5: 0.05
+    15: 0.2
+    35: 0.4
+    50: 0.7
+    70: 0.7
+  rr_progression_diabetes: 3.3729636822007314
+
+# calibrated parameters
+age_specific_latency:
+  early_activation_rate:
+    age_0: 0.005391540407789577
+    age_15: 0.00033039704280804255
+    age_5: 0.001843487341854491
+  late_activation_rate:
+    age_0: 9.430694060050837e-06
+    age_15: 6.379176392561021e-06
+    age_5: 1.4724001036290526e-05
+
+contact_rate: 0.41043122702821716
 
 
 # REQUESTED OUTPUTS
@@ -86,12 +108,3 @@ outputs_stratification:
 
 inflate_reactivation_for_diabetes: True
 
-extra_params:
-  prop_diabetes:
-    0: 0.01
-    5: 0.05
-    15: 0.2
-    35: 0.4
-    50: 0.7
-    70: 0.7
-  rr_progression_diabetes: 3.6

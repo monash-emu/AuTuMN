@@ -43,7 +43,7 @@ class RunDHHS(luigi.Task):
     def requires(self):
         return [
             BuildFinalCSVTask(commit=self.commit),
-            BuildEnsembleTask(commit=self.commit),
+            # BuildEnsembleTask(commit=self.commit),
         ]
 
 
@@ -104,6 +104,7 @@ class BuildEnsembleTask(utils.BaseTask):
             ENSEMBLE_OUTPUT: np.concatenate(samples),
         }
         df = pd.DataFrame(data=data, columns=columns)
+        df['times'] = df['times']apply(lambda days: BASE_DATETIME + timedelta(days=days))
         df.to_csv(csv_path, index=False)
 
         # Upload the CSV
@@ -213,7 +214,7 @@ class BuildRegionCSVTask(utils.BaseTask):
             df = db.query("uncertainty", conditions=["scenario=0"])
             df.drop(columns=["scenario"], inplace=True)
             df.time = df.time.apply(lambda days: BASE_DATETIME + timedelta(days=days))
-            df["region"] = "_".join(db_name.split("-")[1:-2]).upper()
+            df["region"] = "_".join(db_name.split("-")[2:-2]).upper()
             df = df[["region", "type", "time", "quantile", "value"]]
             if os.path.exists(csv_path):
                 df.to_csv(csv_path, mode="a", header=False, index=False)

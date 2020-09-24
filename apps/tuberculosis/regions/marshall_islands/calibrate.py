@@ -34,11 +34,11 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
 
 
 PRIORS = [
-    # {
-    #     "param_name": "start_population_size",
-    #     "distribution": "uniform",
-    #     "distri_params": [2000, 30000]
-    # },
+    {
+        "param_name": "start_population_size",
+        "distribution": "uniform",
+        "distri_params": [500, 3000]
+    },
     # {
     #     "param_name": "start_time",
     #     "distribution": "uniform",
@@ -47,12 +47,12 @@ PRIORS = [
     {
         "param_name": "contact_rate",
         "distribution": "uniform",
-        "distri_params": [.1, 2.]
+        "distri_params": [.3, .6]
     },
     {
         "param_name": "time_variant_tb_screening_rate.end_value",
         "distribution": "uniform",
-        "distri_params": [.1, 3.]
+        "distri_params": [.1, 1.]
     },
     {
         "param_name": "user_defined_stratifications.location.adjustments.detection_rate.ebeye",

@@ -115,7 +115,7 @@ def update_mixing_data(
         # Add historical Google mobility data to user-specified mixing params
         mobility_values = google_mobility_values.get(loc_key)
         if mobility_values:
-            # Google moblity values for this location
+            # Google mobility values for this location
             if not loc_mixing:
                 # Just insert the mobility data
                 mixing[loc_key] = {

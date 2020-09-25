@@ -44,8 +44,8 @@ google_mobility_locations:
     - grocery_and_pharmacy
     - parks
     - transit_stations
-#  home:
-#    - residential
+  home:
+    - residential
 
 smooth_google_data: false # whether to apply a 7-day moving average
 
@@ -146,6 +146,7 @@ import_quarantine:
 
 microdistancing: null
 microdistancing_locations:
+  - home
   - other_locations
   - school
   - work

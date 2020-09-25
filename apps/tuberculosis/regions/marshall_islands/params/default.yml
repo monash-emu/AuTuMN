@@ -4,7 +4,7 @@ iso3: "MHL"
 start_time: 1800.
 end_time: 2020.
 time_step: 1.
-start_population_size: 1150
+start_population_size: 2297
 
 # MODEL STRUCTURE
 stratify_by: ['age', 'location']  #  ['location', 'age', 'organ']
@@ -27,8 +27,8 @@ user_defined_stratifications:  # this specifies user-defined  stratifications
         other: 1.
       detection_rate:
         majuro: 1.
-        ebeye: 1.6786000040607503
-        other: 0.5018196675663678
+        ebeye: 1.971693211981919
+        other: 0.5058652657609035
 
 # BCG coverage
 time_variant_bcg_perc:
@@ -70,9 +70,9 @@ time_variant_tsr:  # should always be > 0
 
 time_variant_tb_screening_rate:
   maximum_gradient: .05 # The shape parameter to the tanh-based curve
-  max_change_time: 1980. # Point at which curve inflects
+  max_change_time: 2004. # Point at which curve inflects
   start_value: 0. # Starting value - lower asymptote
-  end_value: 0.13309195366287707
+  end_value: 0.10864045755431437
 
 extra_params:
   prop_diabetes:
@@ -82,21 +82,11 @@ extra_params:
     35: 0.4
     50: 0.7
     70: 0.7
-  rr_progression_diabetes: 3.3729636822007314
+  rr_progression_diabetes: 2.5769552797408206
 
 # calibrated parameters
-age_specific_latency:
-  early_activation_rate:
-    age_0: 0.005391540407789577
-    age_15: 0.00033039704280804255
-    age_5: 0.001843487341854491
-  late_activation_rate:
-    age_0: 9.430694060050837e-06
-    age_15: 6.379176392561021e-06
-    age_5: 1.4724001036290526e-05
-
-contact_rate: 0.41043122702821716
-
+contact_rate: 0.5925364488247081
+late_reactivation_multiplier: 1.
 
 # REQUESTED OUTPUTS
 calculated_outputs: ['prevalence_infectious', 'percentage_latent', 'population_size', 'notifications', 'mortality', 'incidence']

@@ -11,9 +11,10 @@ from scipy.optimize import minimize
 from autumn.db import Database
 import yaml
 
+
 def add_dispersion_param_prior_for_gaussian(par_priors, target_outputs):
     for t in target_outputs:
-        if t["loglikelihood_distri"] == "normal":
+        if t["loglikelihood_distri"] == "normal" and "sd" not in t:
             max_val = max(t["values"])
             # sd_ that would make the 95% gaussian CI cover half of the max value (4*sd = 95% width)
             sd_ = 0.25 * max_val / 4.0

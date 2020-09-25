@@ -50,6 +50,11 @@ PRIORS = [
         "distri_params": [.3, .6]
     },
     {
+        "param_name": "late_reactivation_multiplier",
+        "distribution": "uniform",
+        "distri_params": [.5, 2.]
+    },
+    {
         "param_name": "time_variant_tb_screening_rate.end_value",
         "distribution": "uniform",
         "distri_params": [.1, 1.]
@@ -57,12 +62,12 @@ PRIORS = [
     {
         "param_name": "user_defined_stratifications.location.adjustments.detection_rate.ebeye",
         "distribution": "uniform",
-        "distri_params": [0.5, 2.0],
+        "distri_params": [0.5, 3.0],
     },
     {
         "param_name": "user_defined_stratifications.location.adjustments.detection_rate.other",
         "distribution": "uniform",
-        "distri_params": [0.5, 2.0],
+        "distri_params": [0.5, 3.0],
     },
     {
         "param_name": "extra_params.rr_progression_diabetes",
@@ -70,12 +75,6 @@ PRIORS = [
         "distri_params": [2.25, 5.73],
     },
 ]
-# add latency parameters
-for param_name in ['early_activation_rate', 'late_activation_rate']:
-    for agegroup in ['age_0', 'age_5', 'age_15']:
-        PRIORS.append(
-            get_latency_priors_from_epidemics(param_name, agegroup)
-        )
 
 targets_to_use = [
     'prevalence_infectiousXlocation_majuro',
@@ -86,6 +85,14 @@ targets_to_use = [
     'notificationsXlocation_other',
     'population_size',
 ]
+
+target_sds = {
+    'percentage_latentXlocation_majuro': .4,
+    'prevalence_infectiousXlocation_majuro': 80.,
+    'prevalence_infectiousXlocation_ebeye': 120.,
+    'population_size': 2500.,
+}
+
 TARGET_OUTPUTS = []
 for t_name, t in targets.items():
     if t['output_key'] in targets_to_use:
@@ -97,5 +104,8 @@ for t_name, t in targets.items():
                 "loglikelihood_distri": "normal",
             },
         )
+        if t['output_key'] in target_sds:
+            TARGET_OUTPUTS[-1]["sd"] = target_sds[t['output_key']]
+
 
 PRIORS = add_dispersion_param_prior_for_gaussian(PRIORS, TARGET_OUTPUTS)

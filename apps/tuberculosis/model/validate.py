@@ -8,6 +8,7 @@ validate_params = sb.build_validator(
     start_time=float,
     end_time=float,
     time_step=float,
+    critical_ranges=list,
     # output requests
     calculated_outputs=list,
     outputs_stratification=dict,

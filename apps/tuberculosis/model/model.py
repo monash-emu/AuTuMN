@@ -18,7 +18,7 @@ def build_model(params: dict) -> StratifiedModel:
 
     # Define model times.
     integration_times = get_model_times_from_inputs(
-        round(params["start_time"]), params["end_time"], params["time_step"]
+        round(params["start_time"]), params["end_time"], params["time_step"], params["critical_ranges"]
     )
 
     # Define model compartments.

@@ -4,6 +4,7 @@ iso3: "MHL"
 start_time: 1800.
 end_time: 2020.
 time_step: 1.
+critical_ranges: [[2016., 2019.]]
 start_population_size: 2297
 
 # MODEL STRUCTURE

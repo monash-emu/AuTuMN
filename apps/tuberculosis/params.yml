@@ -6,6 +6,7 @@ parent: null
 start_time: 1800.
 end_time: 2020.
 time_step: 1
+critical_ranges: []
 
 # Country caracteristics
 iso3: null

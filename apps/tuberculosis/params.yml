@@ -105,6 +105,11 @@ passive_screening_sensitivity:
 
 inflate_reactivation_for_diabetes: False
 
+#____________________#
+#   Interventions    #
+time_variant_acf: []
+acf_screening_sensitivity: .75
+
 extra_params: {}  # used to add parameters used for specific applications
 
 # FIXME: the parameters below should disappear

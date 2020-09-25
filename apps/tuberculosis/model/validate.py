@@ -42,6 +42,9 @@ validate_params = sb.build_validator(
     incidence_props_smear_positive_among_pulmonary=float,
     smear_negative_infect_multiplier=float,
     extrapulmonary_infect_multiplier=float,
+    # interventions
+    time_variant_acf=list,
+    acf_screening_sensitivity=float,
     # other
     inflate_reactivation_for_diabetes=bool,
     extra_params=dict,

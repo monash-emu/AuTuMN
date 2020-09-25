@@ -21,6 +21,7 @@ validate_params = sb.build_validator(
     # base disease model
     contact_rate=float,
     age_specific_latency=dict,
+    late_reactivation_multiplier=float,
     self_recovery_rate_dict=dict,
     infect_death_rate_dict=dict,
     rr_infection_latent=float,

@@ -1,46 +1,10 @@
 import scipy.special as special
 import scipy.integrate as integrate
+from scipy.stats import gamma as gamma_dist
 from scipy import optimize
 import numpy as np
 import matplotlib.pyplot as plt
 from math import sqrt
-
-
-def get_gamma(coeff_var: float):
-    """
-    Use function described in caption to Extended Data Fig 1 of Aguas et al pre-print to produce gamma distribution
-    from coefficient of variation and independent variable.
-
-    :param coeff_var:
-    Independent variable
-    :return: callable
-    Function that provides the gamma distribution from the coefficient of variation
-    """
-
-    recip_cv_2 = coeff_var ** -2.
-
-    def gamma_func(x_value: float):
-        return x_value ** (recip_cv_2 - 1.) * \
-               np.exp(-x_value * recip_cv_2) / \
-               special.gamma(recip_cv_2) / \
-               coeff_var ** (2. * recip_cv_2)
-
-    return gamma_func
-
-
-def numeric_integrate_gamma(gamma_function, lower_terminal: float, upper_terminal: float):
-    """
-    Numerically integrate previous function over a requested range
-
-    :param lower_terminal:
-    Lower terminal value for numeric integration
-    :param upper_terminal:
-    Upper terminal value for numeric integration
-    :return:
-    Area under curve between lower and upper terminal
-    """
-
-    return integrate.quad(gamma_function, lower_terminal, upper_terminal)[0]
 
 
 def get_gamma_data(tail_start_point, n_bins, coeff):
@@ -68,9 +32,6 @@ def get_gamma_data(tail_start_point, n_bins, coeff):
     bin_width = \
         tail_start_point / n_finite_bins
 
-    # Get the gamma function based on the coefficient needed
-    gamma_function = get_gamma(coeff)
-
     for i_bin in range(n_finite_bins):
 
         # Record the upper and lower terminals
@@ -81,14 +42,8 @@ def get_gamma_data(tail_start_point, n_bins, coeff):
             lower_terminal + bin_width
         )
 
-        # Numeric integration between lower and upper terminals
-        heights.append(
-            numeric_integrate_gamma(
-                gamma_function,
-                lower_terminals[-1],
-                upper_terminals[-1],
-            )
-        )
+        gamma_distri = gamma_dist(coeff ** -2., scale=coeff ** 2.)
+        heights.append(gamma_distri.cdf(upper_terminals[-1]) - gamma_distri.cdf(lower_terminals[-1]))
 
         # Move to the next value
         lower_terminal = \
@@ -171,10 +126,10 @@ def produce_gomes_exfig1(coeffs: list, add_hist=False, n_bins=3, x_values=50, pl
 
     # For each requested coefficient of variation
     for coeff in coeffs:
-        gamma_func = get_gamma(coeff)
+        gamma_distri = gamma_dist(coeff ** -2., scale=coeff ** 2.)
 
         # Line graph of the raw function
-        y_values = [gamma_func(i) for i in x_values]
+        y_values = [gamma_distri.pdf(i) for i in x_values]
         axis.plot(x_values, y_values, color="k")
 
         # Numeric integration over parts of the function domain

@@ -156,8 +156,8 @@ def stratify_by_clinical(model, params, detected_proportion, symptomatic_props):
         # Check everything sums up properly
         allowed_rounding_error = 6
         assert \
-            round(abs_death_props[ClinicalStratum.ICU][age_idx] + \
-                  abs_death_props[ClinicalStratum.HOSPITAL_NON_ICU][age_idx] + \
+            round(abs_death_props[ClinicalStratum.ICU][age_idx] +
+                  abs_death_props[ClinicalStratum.HOSPITAL_NON_ICU][age_idx] +
                   abs_death_props[ClinicalStratum.NON_SYMPT][age_idx], allowed_rounding_error) == \
             round(infection_fatality_props[age_idx], allowed_rounding_error)
 
@@ -232,7 +232,6 @@ def stratify_by_clinical(model, params, detected_proportion, symptomatic_props):
         )
 
     # Over-write rate of progression for early compartments for hospital and ICU
-    # FIXME: Ask Romain if he knows why we bother doing this.
     flow_adjustments.update(
         {
             f"within_{Compartment.EARLY_ACTIVE}Xagegroup_{agegroup}": {
@@ -249,7 +248,6 @@ def stratify_by_clinical(model, params, detected_proportion, symptomatic_props):
         if stratum + "_infect_multiplier" in params:
             strata_infectiousness[stratum] = params[stratum + "_infect_multiplier"]
 
-    # Make adjustment for isolation/quarantine
     # Allow pre-symptomatics to be less infectious
     clinical_inf_overwrites = [
         {
@@ -259,6 +257,7 @@ def stratify_by_clinical(model, params, detected_proportion, symptomatic_props):
         }
     ]
 
+    # Make infectiousness adjustment for isolation/quarantine
     for stratum in clinical_strata:
         if stratum in params["late_infect_multiplier"]:
             adjustment = {

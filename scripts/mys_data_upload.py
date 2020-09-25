@@ -9,6 +9,7 @@ to ./data/inputs/covid_mys/COVID_MYS_DEATH.csv for now!
 import os
 import sys
 import json
+import yaml
 from datetime import datetime
 from google_drive_downloader import GoogleDriveDownloader as gdd
 from autumn import constants
@@ -17,7 +18,6 @@ import pandas as pd
 
 # From WHO google drive folder
 CASE_DATA_URL = "1mnZcmj2jfmrap1ytyg_ErD1DZ7zDptyJ"  # shareable link
-# DEATH_DATA_URL = "1cQe1k7GQRKFzcfXXxdL7_pTNQUMpOAPX3PqhPsI4xt8"
 COVID_MYS_DIRPATH = os.path.join(constants.INPUT_DATA_PATH, "covid_mys")
 COVID_MYS_CASE_PATH = os.path.join(COVID_MYS_DIRPATH, "COVID_MYS_CASE.xlsx")
 COVID_MYS_DEATH_PATH = os.path.join(COVID_MYS_DIRPATH, "COVID_MYS_DEATH.csv")
@@ -25,7 +25,6 @@ COVID_MYS_DEATH_PATH = os.path.join(COVID_MYS_DIRPATH, "COVID_MYS_DEATH.csv")
 gdd.download_file_from_google_drive(
     file_id=CASE_DATA_URL, dest_path=COVID_MYS_CASE_PATH, overwrite=True
 )
-# gdd.download_file_from_google_drive(file_id = DEATH_DATA_URL, dest_path = COVID_MYS_DEATH_PATH,overwrite=True)
 
 COVID_BASE_DATE = pd.datetime(2019, 12, 31)
 REGION_DIR = os.path.join(constants.APPS_PATH, "covid_19", "regions", "malaysia")
@@ -60,6 +59,28 @@ def update_calibration():
         targets[key]["values"] = list(temp_df[val])
     with open(file_path, "w") as f:
         json.dump(targets, f, indent=2)
+    with open(REGION_DIR + "\\params\\default.yml", "r") as f:
+        default = f.readlines()
+    end = default.index("  times_imported_cases:\n")
+    default = default[:end]
+
+    with open(REGION_DIR + "\\params\\default.yml", "r") as f:
+        tmp = yaml.load(f, Loader=yaml.FullLoader)
+    tmp = {key: val for key, val in tmp.items() if key == "data"}
+
+    temp_df = df[["date_index", "IC"]].dropna(0, subset=["IC"])
+    temp_df = temp_df[temp_df.date_index != 94]
+    tmp["data"]["times_imported_cases"] = list(temp_df["date_index"])
+    tmp["data"]["n_imported_cases"] = list(temp_df["IC"])
+
+    with open(REGION_DIR + "\\params\\default.yml", "w") as f:
+        yaml.dump(tmp, f)
+    with open(REGION_DIR + "\\params\\default.yml", "r") as f:
+        append = f.readlines()
+    default = default + append[1:]
+
+    with open(REGION_DIR + "\\params\\default.yml", "w") as f:
+        f.writelines(default)
 
 
 def load_mys_data():

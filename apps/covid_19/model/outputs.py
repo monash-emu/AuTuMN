@@ -23,6 +23,11 @@ NOTIFICATION_STRATUM = [
     ClinicalStratum.ICU,
 ]
 
+HOSPITAL_STRATUM = [
+    ClinicalStratum.HOSPITAL_NON_ICU,
+    ClinicalStratum.ICU,
+]
+
 
 def get_calc_notifications_covid(
     include_importation, prop_detected_func,
@@ -63,7 +68,7 @@ def calculate_new_hospital_admissions_covid(
 ):
     hosp_admissions = 0.0
     for output_name, output_values in derived_outputs.items():
-        if "progressX" in output_name and ClinicalStratum.ICU in output_name:
+        if "progressX" in output_name and any([stratum in output_name for stratum in HOSPITAL_STRATUM]):
             hosp_admissions += output_values[time_idx]
 
     return hosp_admissions

@@ -105,3 +105,12 @@ passive_screening_sensitivity:
 inflate_reactivation_for_diabetes: False
 
 extra_params: {}  # used to add parameters used for specific applications
+
+# FIXME: the parameters below should disappear
+prevalence_infectiousXlocation_majuro_dispersion_param: 1.
+prevalence_infectiousXlocation_ebeye_dispersion_param: 1.
+percentage_latentXlocation_majuro_dispersion_param: 1.
+notificationsXlocation_majuro_dispersion_param: 1.
+notificationsXlocation_ebeye_dispersion_param: 1.
+notificationsXlocation_other_dispersion_param: 1.
+population_size_dispersion_param: 1.

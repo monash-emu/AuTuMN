@@ -3,31 +3,36 @@
     "title": "TB prevalence (/100,000)",
     "output_key": "prevalence_infectious",
     "times": [],
-    "values": []
+    "values": [],
+    "quantiles": [0.25, 0.5, 0.75]
   },
   "prevalence_infectiousXlocation_majuro": {
     "title": "TB prevalence in Majuro (/100,000)",
     "output_key": "prevalence_infectiousXlocation_majuro",
     "times": [2018.0],
-    "values": [1578.0]
+    "values": [1578.0],
+    "quantiles": [0.25, 0.5, 0.75]
   },
   "prevalence_infectiousXlocation_ebeye": {
     "title": "TB prevalence in Ebeye (/100,000)",
     "output_key": "prevalence_infectiousXlocation_ebeye",
     "times": [2017.0],
-    "values": [755.0]
+    "values": [755.0],
+    "quantiles": [0.25, 0.5, 0.75]
   },
   "percentage_latent": {
     "title": "LTBI prevalence (%)",
     "output_key": "percentage_latent",
     "times": [],
-    "values": []
+    "values": [],
+    "quantiles": [0.25, 0.5, 0.75]
   },
   "percentage_latentXlocation_majuro": {
     "title": "LTBI prevalence in Majuro (%)",
     "output_key": "percentage_latentXlocation_majuro",
     "times": [2016.0],
-    "values": [28.5]
+    "values": [28.5],
+    "quantiles": [0.25, 0.5, 0.75]
   },
   "notificationsXlocation_majuro": {
     "title": "Notifications in Majuro",
@@ -40,24 +45,34 @@
     "title": "Notifications in Ebeye",
     "output_key": "notificationsXlocation_ebeye",
     "times": [2016.0],
-    "values": [53]
+    "values": [53],
+    "quantiles": [0.25, 0.5, 0.75]
   },
   "notificationsXlocation_other": {
     "title": "Notifications in Other Islands",
     "output_key": "notificationsXlocation_other",
     "times": [2014.0],
-    "values": [10]
+    "values": [10],
+    "quantiles": [0.25, 0.5, 0.75]
   },
   "population_size": {
     "title": "Population size",
     "output_key": "population_size",
     "times": [2019.0],
-    "values": [58791]
+    "values": [58791],
+    "quantiles": [0.25, 0.5, 0.75]
   },
   "incidence": {
     "title": "TB incidence (/100,000)",
     "output_key": "incidence",
     "times": [],
-    "values": []
-  }
+    "values": [],
+    "quantiles": [0.25, 0.5, 0.75]
+  },
+  "mortality": {
+    "title": "Number of TB deaths",
+    "output_key": "mortality",
+    "times": [2018.0],
+    "values": [28.0] ,
+    "quantiles": [0.25, 0.5, 0.75] }
 }

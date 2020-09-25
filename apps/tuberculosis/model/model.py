@@ -96,7 +96,7 @@ def build_model(params: dict) -> StratifiedModel:
     for stratification in user_defined_stratifications:
         assert "_" not in stratification, "Stratification name should not include '_'"
         stratification_details = params['user_defined_stratifications'][stratification]
-        apply_user_defined_stratification(tb_model, compartments, stratification, stratification_details)
+        apply_user_defined_stratification(tb_model, compartments, stratification, stratification_details, implement_acf)
 
     if "organ" in params["stratify_by"]:
         stratify_by_organ(tb_model, params)

@@ -161,7 +161,7 @@ def process_unstratified_parameter_values(params, implement_acf):
     # ACF flow parameter
     acf_detection_func = None
     if implement_acf:
-        if len(params['time_variant_acf']) == 1 and len(params['time_variant_acf'][0]['stratum_filters']) == 0:
+        if len(params['time_variant_acf']) == 1 and params['time_variant_acf'][0]['stratum_filter'] is None:
             # universal ACF is applied
             acf_detection_func = scale_up_function(
                 list(params['time_variant_acf'][0]['time_variant_screening_rate'].keys()),

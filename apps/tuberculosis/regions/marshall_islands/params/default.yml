@@ -91,16 +91,16 @@ late_reactivation_multiplier: 1.
 #____________________#
 #   Interventions    #
 time_variant_acf:
-  - stratum_filters: []  # {'location': 'ebeye'}
+  - stratum_filter: {'location': 'ebeye'}
     time_variant_screening_rate:
       2000: 0.
       2017: 1.
       2018: 0.
-#  - stratum_filters: [{'location': 'majuro'}]
-#    time_variant_screening_rate:
-#      2000: 0.
-#      2018: 1.
-#      2019: 0.
+  - stratum_filter: {'location': 'majuro'}
+    time_variant_screening_rate:
+      2000: 0.
+      2018: 1.
+      2019: 0.
 
 
 

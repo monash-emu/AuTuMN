@@ -112,9 +112,32 @@ def get_scenario_start_index(base_times, start_time):
     return start_index
 
 
-def get_model_times_from_inputs(start_time, end_time, time_step):
+def get_model_times_from_inputs(start_time, end_time, time_step, critical_ranges=[]):
     """
     Find the time steps for model integration from the submitted requests, ensuring the time points are evenly spaced.
+    Use a refined time-step within critical ranges
     """
-    n_times = int(round((end_time - start_time) / time_step)) + 1
-    return numpy.linspace(start_time, end_time, n_times)
+    times = []
+    interval_start = start_time
+    for critical_range in critical_ranges:
+        # add regularly-spaced points up until the start of the critical range
+        interval_end = critical_range[0]
+        if interval_end > interval_start:
+            times += list(
+                numpy.arange(interval_start, interval_end, time_step)
+            )
+        # add points over the critical range with smaller time step
+        interval_start = interval_end
+        interval_end = critical_range[1]
+        if interval_end > interval_start:
+            times += list(
+                numpy.arange(interval_start, interval_end, time_step / 10.)
+            )
+        interval_start = interval_end
+
+    if end_time > interval_start:
+        times += list(
+            numpy.arange(interval_start, end_time, time_step)
+        )
+    times.append(end_time)
+    return numpy.array(times)

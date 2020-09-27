@@ -73,8 +73,15 @@ DEFAULT_FLOWS = [
     {"type": Flow.DEATH, "parameter": "treatment_death_rate", "origin": Compartment.ON_TREATMENT},
 ]
 
+ACF_FLOW = {
+    "type": Flow.STANDARD,
+    "origin": Compartment.INFECTIOUS,
+    "to": Compartment.ON_TREATMENT,
+    "parameter": "acf_detection_rate",
+}
 
-def process_unstratified_parameter_values(params):
+
+def process_unstratified_parameter_values(params, implement_acf):
     """
     This function calculates some unstratified parameter values for parameters that need pre-processing. This usually
     involves combining multiple input parameters to determine a model parameter
@@ -151,4 +158,19 @@ def process_unstratified_parameter_values(params):
     if "age" in params["stratify_by"]:
         params['universal_death_rate'] = 1.
 
-    return params, treatment_recovery_func, treatment_death_func, relapse_func, detection_rate_func
+    # ACF flow parameter
+    acf_detection_func = None
+    if implement_acf:
+        if len(params['time_variant_acf']) == 1 and params['time_variant_acf'][0]['stratum_filter'] is None:
+            # universal ACF is applied
+            acf_detection_func = scale_up_function(
+                list(params['time_variant_acf'][0]['time_variant_screening_rate'].keys()),
+                [v * params['acf_screening_sensitivity'] for
+                 v in list(params['time_variant_acf'][0]['time_variant_screening_rate'].values())],
+                method=4
+            )
+            params['acf_detection_rate'] = 'acf_detection_rate'
+        else:
+            params['acf_detection_rate'] = 1.
+
+    return params, treatment_recovery_func, treatment_death_func, relapse_func, detection_rate_func, acf_detection_func

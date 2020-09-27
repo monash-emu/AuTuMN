@@ -18,7 +18,7 @@ def build_model(params: dict) -> StratifiedModel:
 
     # Define model times.
     integration_times = get_model_times_from_inputs(
-        round(params["start_time"]), params["end_time"], params["time_step"]
+        round(params["start_time"]), params["end_time"], params["time_step"], params["critical_ranges"]
     )
 
     # Define model compartments.
@@ -52,9 +52,14 @@ def build_model(params: dict) -> StratifiedModel:
     # Define inter-compartmental flows.
     flows = deepcopy(preprocess.flows.DEFAULT_FLOWS)
 
+    # is ACF implemented?
+    implement_acf = len(params['time_variant_acf']) > 0
+    if implement_acf:
+        flows.append(preprocess.flows.ACF_FLOW)
+
     # Set some parameter values or parameters that require pre-processing
-    params, treatment_recovery_func, treatment_death_func, relapse_func, detection_rate_func =\
-        preprocess.flows.process_unstratified_parameter_values(params)
+    params, treatment_recovery_func, treatment_death_func, relapse_func, detection_rate_func, acf_detection_rate_func =\
+        preprocess.flows.process_unstratified_parameter_values(params, implement_acf)
 
     # Create the model.
     tb_model = StratifiedModel(
@@ -68,6 +73,10 @@ def build_model(params: dict) -> StratifiedModel:
         entry_compartment=Compartment.SUSCEPTIBLE,
         starting_population=int(params['start_population_size']),
     )
+
+    # register acf_detection_function
+    if acf_detection_rate_func is not None:
+        tb_model.time_variants['acf_detection_rate'] = acf_detection_rate_func
 
     # Apply infectiousness adjustment for individuals on treatment
     tb_model.individual_infectiousness_adjustments = treatment_infectiousness_adjustment
@@ -87,7 +96,7 @@ def build_model(params: dict) -> StratifiedModel:
     for stratification in user_defined_stratifications:
         assert "_" not in stratification, "Stratification name should not include '_'"
         stratification_details = params['user_defined_stratifications'][stratification]
-        apply_user_defined_stratification(tb_model, compartments, stratification, stratification_details)
+        apply_user_defined_stratification(tb_model, compartments, stratification, stratification_details, implement_acf)
 
     if "organ" in params["stratify_by"]:
         stratify_by_organ(tb_model, params)

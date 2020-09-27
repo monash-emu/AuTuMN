@@ -6,6 +6,7 @@ parent: null
 start_time: 1800.
 end_time: 2020.
 time_step: 1
+critical_ranges: []
 
 # Country caracteristics
 iso3: null
@@ -104,6 +105,11 @@ passive_screening_sensitivity:
   extrapulmonary: 0.5 # dummy value
 
 inflate_reactivation_for_diabetes: False
+
+#____________________#
+#   Interventions    #
+time_variant_acf: []
+acf_screening_sensitivity: .75
 
 extra_params: {}  # used to add parameters used for specific applications
 

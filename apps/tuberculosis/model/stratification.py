@@ -95,7 +95,7 @@ def stratify_by_age(model, params, compartments):
     )
 
 
-def apply_user_defined_stratification(model, compartments, stratification_name, stratification_details):
+def apply_user_defined_stratification(model, compartments, stratification_name, stratification_details, implement_acf):
     """
     Stratify all model compartments based on a user-defined stratification request. This stratification can only adjust
     the parameters that are directly implemented in the model. That is, adjustment requests to parameters that are used
@@ -121,6 +121,27 @@ def apply_user_defined_stratification(model, compartments, stratification_name, 
         mixing_matrix = np.array([row for row in stratification_details['mixing_matrix']])
     else:
         mixing_matrix = None
+
+    # ACF intervention
+    if implement_acf:
+        acf_adjustments = {}
+        for acf_int in model.parameters['time_variant_acf']:
+            if stratification_name in acf_int['stratum_filter']:
+                param_name = 'acf_detection_rateX' + stratification_name + '_' + stratum
+                stratum = acf_int['stratum_filter'][stratification_name]
+                model.time_variants[param_name] = make_acf_adjustment_func(
+                    acf_int['time_variant_screening_rate'],
+                    model.parameters['acf_screening_sensitivity']
+                )
+                model.parameters[param_name] = param_name
+                acf_adjustments[stratum] = param_name
+        if acf_adjustments:
+            for stratum in stratification_details['strata']:
+                if stratum not in acf_adjustments:
+                    acf_adjustments[stratum] = 0.
+        stratified_param_names = get_stratified_param_names('acf_detection_rate', model.stratifications)
+        for stratified_param_name in stratified_param_names:
+            flow_adjustments[stratified_param_name] = acf_adjustments
 
     # apply stratification
     model.stratify(
@@ -276,6 +297,16 @@ def make_detection_func(organ_stratum, params, screening_rate_func):
     return detection_func
 
 
+def make_acf_adjustment_func(time_variant_screening_rate, acf_screening_sensitivity):
+    acf_detection_func = scale_up_function(
+        list(time_variant_screening_rate.keys()),
+        [v * acf_screening_sensitivity for
+         v in list(time_variant_screening_rate.values())],
+        method=4
+    )
+    return acf_detection_func
+
+
 def get_stratified_param_names(param_name, stratifications):
     stratified_param_names = [param_name]
     all_strata_names = []
@@ -287,3 +318,4 @@ def get_stratified_param_names(param_name, stratifications):
             strata_combo_string += "X" + strata
         stratified_param_names.append(param_name + strata_combo_string)
     return stratified_param_names
+

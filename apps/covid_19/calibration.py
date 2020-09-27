@@ -242,15 +242,21 @@ def add_standard_victoria_params(params, region):
             "distri_params": [0.006 if region in Region.VICTORIA_RURAL else 0.012, 0.07],
         },
         {
+            "param_name": "seasonal_force",
+            "distribution": "uniform",
+            "distri_params": [0.0, 0.3],
+        },
+        {
+            "param_name": "symptomatic_props_multiplier",
+            "distribution": "trunc_normal",
+            "distri_params": [1.0, 0.1],
+            "trunc_range": [0.5, np.inf],
+        },
+        {
             "param_name": "ifr_multiplier",
             "distribution": "trunc_normal",
             "distri_params": [1.5, 0.5],
             "trunc_range": [0.33, 3.],
-        },
-        {
-            "param_name": "seasonal_force",
-            "distribution": "uniform",
-            "distri_params": [0.0, 0.3],
         },
         {
             "param_name": "testing_to_detection.assumed_cdr_parameter",
@@ -258,10 +264,9 @@ def add_standard_victoria_params(params, region):
             "distri_params": [0.08, 0.3],
         },
         {
-            "param_name": "symptomatic_props_multiplier",
-            "distribution": "trunc_normal",
-            "distri_params": [1.0, 0.1],
-            "trunc_range": [0.5, np.inf],
+            "param_name": "movement_prop",
+            "distribution": "uniform",
+            "distri_params": [0.05, 0.4],
         },
         {
             "param_name": "hospital_props_multiplier",
@@ -280,11 +285,6 @@ def add_standard_victoria_params(params, region):
             "distribution": "trunc_normal",
             "distri_params": [10.8, 4.0],
             "trunc_range": [3.0, np.inf],
-        },
-        {
-            "param_name": "movement_prop",
-            "distribution": "uniform",
-            "distri_params": [0.05, 0.4],
         },
         {
             "param_name": "microdistancing.parameters.max_effect",

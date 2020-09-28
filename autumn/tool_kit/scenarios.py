@@ -140,4 +140,8 @@ def get_model_times_from_inputs(start_time, end_time, time_step, critical_ranges
             numpy.arange(interval_start, end_time, time_step)
         )
     times.append(end_time)
+
+    # clean up time values ending .9999999999
+    times = [round(t, 5) for t in times]
+
     return numpy.array(times)

@@ -37,7 +37,7 @@ PRIORS = [
     {
         "param_name": "start_population_size",
         "distribution": "uniform",
-        "distri_params": [500, 3000]
+        "distri_params": [500, 2000]
     },
     # {
     #     "param_name": "start_time",
@@ -57,7 +57,7 @@ PRIORS = [
     {
         "param_name": "time_variant_tb_screening_rate.end_value",
         "distribution": "uniform",
-        "distri_params": [.1, 1.]
+        "distri_params": [.3, .5]
     },
     {
         "param_name": "user_defined_stratifications.location.adjustments.detection_rate.ebeye",

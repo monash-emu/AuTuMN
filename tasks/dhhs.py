@@ -27,7 +27,7 @@ OUTPUTS = [
     "icu_occupancy",
 ]
 DHHS_NUM_CHOSEN = 800
-ENSEMBLE_NUM_CHOSEN = 2000
+ENSEMBLE_NUM_CHOSEN = 1000
 
 
 DHHS_DIR = os.path.join(settings.BASE_DIR, "data", "outputs", "dhhs")
@@ -43,7 +43,7 @@ class RunDHHS(luigi.Task):
     def requires(self):
         return [
             BuildFinalCSVTask(commit=self.commit),
-            # BuildEnsembleTask(commit=self.commit),
+            BuildEnsembleTask(commit=self.commit),
         ]
 
 

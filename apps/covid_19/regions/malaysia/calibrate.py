@@ -27,24 +27,6 @@ PAR_PRIORS = provide_default_calibration_params(excluded_params=("start_time",))
 PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS)
 
 PAR_PRIORS += [
-
-    # Health system-related
-    {
-        "param_name": "hospital_props_multiplier",
-        "distribution": "uniform",
-        "distri_params": [0.7, 1.3],
-    },
-    {
-        "param_name": "compartment_periods.icu_early",
-        "distribution": "uniform",
-        "distri_params": [5.0, 25.0],
-    },
-    {
-        "param_name": "icu_prop",
-        "distribution": "uniform",
-        "distri_params": [0.12, 0.25],
-    },
-
     # Detection
     {
         "param_name": "testing_to_detection.assumed_cdr_parameter",
@@ -57,6 +39,23 @@ PAR_PRIORS += [
         "param_name": "microdistancing.parameters.max_effect",
         "distribution": "uniform",
         "distri_params": [0.3, 0.9],
+    },
+
+    # Health system-related
+    {
+        "param_name": "hospital_props_multiplier",
+        "distribution": "uniform",
+        "distri_params": [0.7, 1.3],
+    },
+    {
+        "param_name": "icu_prop",
+        "distribution": "uniform",
+        "distri_params": [0.12, 0.25],
+    },
+    {
+        "param_name": "compartment_periods.icu_early",
+        "distribution": "uniform",
+        "distri_params": [5.0, 25.0],
     },
 ]
 

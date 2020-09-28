@@ -80,20 +80,27 @@ ACF_FLOW = {
     "parameter": "acf_detection_rate",
 }
 
-PREVENTIVE_TREATMENT_FLOWS = [
-    {
-        "type": Flow.STANDARD,
-        "origin": Compartment.EARLY_LATENT,
-        "to": Compartment.RECOVERED,
-        "parameter": "preventive_treatment_rate",
-    },
-    {
-        "type": Flow.STANDARD,
-        "origin": Compartment.LATE_LATENT,
-        "to": Compartment.RECOVERED,
-        "parameter": "preventive_treatment_rate",
-    },
-]
+
+def get_preventive_treatment_flows(destination_compartment):
+    to_compartment = {
+        'susceptible': Compartment.SUSCEPTIBLE,
+        'recovered': Compartment.RECOVERED
+    }
+    preventive_treatment_flows = [
+        {
+            "type": Flow.STANDARD,
+            "origin": Compartment.EARLY_LATENT,
+            "to": to_compartment[destination_compartment],
+            "parameter": "preventive_treatment_rate",
+        },
+        {
+            "type": Flow.STANDARD,
+            "origin": Compartment.LATE_LATENT,
+            "to": to_compartment[destination_compartment],
+            "parameter": "preventive_treatment_rate",
+        },
+    ]
+    return preventive_treatment_flows
 
 
 def process_unstratified_parameter_values(params, implement_acf, implement_ltbi_screening):

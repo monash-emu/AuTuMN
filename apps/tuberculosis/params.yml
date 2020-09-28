@@ -114,6 +114,7 @@ acf_screening_sensitivity: .75
 time_variant_ltbi_screening: []
 ltbi_screening_sensitivity: .75
 pt_efficacy: .7
+pt_destination_compartment: 'recovered' # either 'recovered' or 'susceptible'
 
 extra_params: {}  # used to add parameters used for specific applications
 

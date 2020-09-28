@@ -60,7 +60,7 @@ def build_model(params: dict) -> StratifiedModel:
     # is ltbi screening implemented?
     implement_ltbi_screening = len(params['time_variant_ltbi_screening']) > 0
     if implement_ltbi_screening:
-        flows += preprocess.flows.PREVENTIVE_TREATMENT_FLOWS
+        flows += preprocess.flows.get_preventive_treatment_flows(params['pt_destination_compartment'])
 
     # Set some parameter values or parameters that require pre-processing
     params, treatment_recovery_func, treatment_death_func, relapse_func, detection_rate_func, acf_detection_rate_func, preventive_treatment_func =\

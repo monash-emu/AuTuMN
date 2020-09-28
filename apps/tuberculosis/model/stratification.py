@@ -138,6 +138,7 @@ def apply_user_defined_stratification(model, compartments, stratification_name, 
             'prop_detected_effectively_moving': model.parameters['pt_efficacy'],
         }
     }
+    # FIXME: ACF should also be made age-specific
     for int_type in ['acf', 'ltbi_screening']:
         if int_details[int_type]['implement_switch']:
             int_adjustments = {}

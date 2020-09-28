@@ -46,6 +46,9 @@ validate_params = sb.build_validator(
     # interventions
     time_variant_acf=list,
     acf_screening_sensitivity=float,
+    time_variant_ltbi_screening=list,
+    ltbi_screening_sensitivity=float,
+    pt_efficacy=float,
     # other
     inflate_reactivation_for_diabetes=bool,
     extra_params=dict,

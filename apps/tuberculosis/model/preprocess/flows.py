@@ -80,8 +80,23 @@ ACF_FLOW = {
     "parameter": "acf_detection_rate",
 }
 
+PREVENTIVE_TREATMENT_FLOWS = [
+    {
+        "type": Flow.STANDARD,
+        "origin": Compartment.EARLY_LATENT,
+        "to": Compartment.RECOVERED,
+        "parameter": "preventive_treatment_rate",
+    },
+    {
+        "type": Flow.STANDARD,
+        "origin": Compartment.LATE_LATENT,
+        "to": Compartment.RECOVERED,
+        "parameter": "preventive_treatment_rate",
+    },
+]
 
-def process_unstratified_parameter_values(params, implement_acf):
+
+def process_unstratified_parameter_values(params, implement_acf, implement_ltbi_screening):
     """
     This function calculates some unstratified parameter values for parameters that need pre-processing. This usually
     involves combining multiple input parameters to determine a model parameter
@@ -173,4 +188,21 @@ def process_unstratified_parameter_values(params, implement_acf):
         else:
             params['acf_detection_rate'] = 1.
 
-    return params, treatment_recovery_func, treatment_death_func, relapse_func, detection_rate_func, acf_detection_func
+    # Preventive treatment flow parameters
+    preventive_treatment_func = None
+    if implement_ltbi_screening:
+        if len(params['time_variant_ltbi_screening']) == 1 and\
+                params['time_variant_ltbi_screening'][0]['stratum_filter'] is None:
+            # universal LTBI screening is applied
+            preventive_treatment_func = scale_up_function(
+                list(params['time_variant_ltbi_screening'][0]['time_variant_screening_rate'].keys()),
+                [v * params['ltbi_screening_sensitivity' * params['pt_efficacy']] for
+                 v in list(params['time_variant_ltbi_screening'][0]['time_variant_screening_rate'].values())],
+                method=4
+            )
+            params['preventive_treatment_rate'] = 'preventive_treatment_rate'
+        else:
+            params['preventive_treatment_rate'] = 1.
+
+    return params, treatment_recovery_func, treatment_death_func, relapse_func, detection_rate_func,\
+           acf_detection_func, preventive_treatment_func

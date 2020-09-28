@@ -95,7 +95,8 @@ def stratify_by_age(model, params, compartments):
     )
 
 
-def apply_user_defined_stratification(model, compartments, stratification_name, stratification_details, implement_acf):
+def apply_user_defined_stratification(model, compartments, stratification_name, stratification_details, implement_acf,
+                                      implement_ltbi_screening):
     """
     Stratify all model compartments based on a user-defined stratification request. This stratification can only adjust
     the parameters that are directly implemented in the model. That is, adjustment requests to parameters that are used
@@ -122,26 +123,44 @@ def apply_user_defined_stratification(model, compartments, stratification_name, 
     else:
         mixing_matrix = None
 
-    # ACF intervention
-    if implement_acf:
-        acf_adjustments = {}
-        for acf_int in model.parameters['time_variant_acf']:
-            if stratification_name in acf_int['stratum_filter']:
-                param_name = 'acf_detection_rateX' + stratification_name + '_' + stratum
-                stratum = acf_int['stratum_filter'][stratification_name]
-                model.time_variants[param_name] = make_acf_adjustment_func(
-                    acf_int['time_variant_screening_rate'],
-                    model.parameters['acf_screening_sensitivity']
-                )
-                model.parameters[param_name] = param_name
-                acf_adjustments[stratum] = param_name
-        if acf_adjustments:
-            for stratum in stratification_details['strata']:
-                if stratum not in acf_adjustments:
-                    acf_adjustments[stratum] = 0.
-        stratified_param_names = get_stratified_param_names('acf_detection_rate', model.stratifications)
-        for stratified_param_name in stratified_param_names:
-            flow_adjustments[stratified_param_name] = acf_adjustments
+    # ACF and preventive treatment interventions
+    int_details = {
+        'acf': {
+            'implement_switch': implement_acf,
+            'parameter_name': 'acf_detection_rate',
+            'sensitivity': model.parameters['acf_screening_sensitivity'],
+            'prop_detected_effectively_moving': 1.,
+        },
+        'ltbi_screening': {
+            'implement_switch': implement_ltbi_screening,
+            'parameter_name': 'preventive_treatment_rate',
+            'sensitivity': model.parameters['ltbi_screening_sensitivity'],
+            'prop_detected_effectively_moving': model.parameters['pt_efficacy'],
+        }
+    }
+    for int_type in ['acf', 'ltbi_screening']:
+        if int_details[int_type]['implement_switch']:
+            int_adjustments = {}
+            for intervention in model.parameters['time_variant_' + int_type]:
+                if stratification_name in intervention['stratum_filter']:
+                    param_name = int_details[int_type]['parameter_name'] + 'X' + stratification_name + '_' + stratum
+                    stratum = intervention['stratum_filter'][stratification_name]
+                    model.time_variants[param_name] = make_intervention_adjustment_func(
+                        intervention['time_variant_screening_rate'],
+                        int_details[int_type]['sensitivity'],
+                        int_details[int_type]['prop_detected_effectively_moving'],
+                    )
+                    model.parameters[param_name] = param_name
+                    int_adjustments[stratum] = param_name
+            if int_adjustments:
+                for stratum in stratification_details['strata']:
+                    if stratum not in int_adjustments:
+                        int_adjustments[stratum] = 0.
+            stratified_param_names = get_stratified_param_names(
+                int_details[int_type]['parameter_name'], model.stratifications
+            )
+            for stratified_param_name in stratified_param_names:
+                flow_adjustments[stratified_param_name] = int_adjustments
 
     # apply stratification
     model.stratify(
@@ -297,10 +316,10 @@ def make_detection_func(organ_stratum, params, screening_rate_func):
     return detection_func
 
 
-def make_acf_adjustment_func(time_variant_screening_rate, acf_screening_sensitivity):
+def make_intervention_adjustment_func(time_variant_screening_rate, sensitivity, prop_detected_effectively_moving):
     acf_detection_func = scale_up_function(
         list(time_variant_screening_rate.keys()),
-        [v * acf_screening_sensitivity for
+        [v * sensitivity * prop_detected_effectively_moving for
          v in list(time_variant_screening_rate.values())],
         method=4
     )

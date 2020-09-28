@@ -111,6 +111,10 @@ inflate_reactivation_for_diabetes: False
 time_variant_acf: []
 acf_screening_sensitivity: .75
 
+time_variant_ltbi_screening: []
+ltbi_screening_sensitivity: .75
+pt_efficacy: .7
+
 extra_params: {}  # used to add parameters used for specific applications
 
 # FIXME: the parameters below should disappear

@@ -2,7 +2,7 @@ from copy import deepcopy
 
 import numpy as np
 
-from summer import StratifiedModel
+from summer.model import StratifiedModel
 from autumn import inputs
 from autumn.constants import Flow, BirthApproach
 from autumn.curve import tanh_based_scaleup, scale_up_function

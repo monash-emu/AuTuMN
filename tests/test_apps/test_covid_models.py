@@ -57,7 +57,6 @@ def test_peak_trough_seasonal_forcing():
     assert seasonal_forcing_function(365.0 / 2.0) == 0.0
 
 
-@pytest.mark.skip
 @pytest.mark.local_only
 @pytest.mark.parametrize("region", covid_19.app.region_names)
 def test_run_models_partial(region):
@@ -73,7 +72,6 @@ def test_run_models_partial(region):
     model.run_model()
 
 
-@pytest.mark.skip
 @pytest.mark.local_only
 @pytest.mark.parametrize("region", covid_19.app.region_names)
 def test_build_scenario_models(region):

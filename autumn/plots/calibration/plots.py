@@ -20,6 +20,21 @@ from autumn.plots.plotter import Plotter, COLOR_THEME
 
 logger = logging.getLogger(__name__)
 
+PLOT_TEXT_DICT = {
+    "contact_rate": "risk per contact",
+    "compartment_periods_calculated.exposed.total_period": "incubation period",
+    "compartment_periods_calculated.active.total_period": "duration active",
+    "hospital_props_multiplier": "hospital risk multiplier",
+    "compartment_periods.icu_early": "pre-ICU period",
+    "icu_prop": "ICU proportion",
+    "testing_to_detection.assumed_cdr_parameter": "CDR at base testing rate",
+    "microdistancing.parameters.max_effect": "max effect microdistancing",
+}
+
+
+def get_plot_text_dict(param_string):
+    return PLOT_TEXT_DICT[param_string] if param_string in PLOT_TEXT_DICT else param_string
+
 
 def plot_acceptance_ratio(plotter: Plotter, mcmc_tables: List[pd.DataFrame]):
     """
@@ -228,28 +243,35 @@ def plot_multiple_posteriors(
     Plots the posterior distribution of a given parameter in a histogram.
     """
 
+    # Except not the dispersion parameters - only the epidemiological ones
     parameters = \
         [param for param in mcmc_params[0].loc[:, "name"].unique().tolist() if
          "dispersion_param" not in param]
-    fig, axes, _, _, _, indices = plotter.get_figure(len(parameters))
+    fig, axes, _, n_rows, n_cols, indices = plotter.get_figure(len(parameters))
 
-    for i, param_name in enumerate(parameters):
-        vals_df = None
-        for table_df in mcmc_params:
-            param_mask = table_df["name"] == param_name
-            table_vals = table_df[param_mask].value
-            if vals_df is not None:
-                vals_df = vals_df.append(table_vals)
-            else:
-                vals_df = table_vals
+    for i in range(n_rows * n_cols):
+        if i < len(parameters):
+            param_name = parameters[i]
 
-        axis = axes[indices[i][0], indices[i][1]]
+            # Working axis
+            axis = axes[indices[i][0], indices[i][1]]
 
-        vals_df.hist(bins=num_bins, ax=axis)
-        axis.set_title(param_name[: 25], fontsize=6)
-        pyplot.setp(axis.get_yticklabels(), fontsize=5)
-        pyplot.setp(axis.get_xticklabels(), fontsize=5)
+            vals_df = None
+            for table_df in mcmc_params:
+                param_mask = table_df["name"] == param_name
+                table_vals = table_df[param_mask].value
+                if vals_df is not None:
+                    vals_df = vals_df.append(table_vals)
+                else:
+                    vals_df = table_vals
 
+            # Plot histograms
+            vals_df.hist(bins=num_bins, ax=axis)
+            axis.set_title(get_plot_text_dict(param_name), fontsize=8)
+            pyplot.setp(axis.get_yticklabels(), fontsize=5)
+            pyplot.setp(axis.get_xticklabels(), fontsize=5)
+
+    # FIXME: This should really be cleaned up to cope with different numbers of parameters
     axes[-1, -1].axis("off")
 
     fig.tight_layout()

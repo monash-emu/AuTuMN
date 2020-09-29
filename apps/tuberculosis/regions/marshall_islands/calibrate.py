@@ -37,7 +37,7 @@ PRIORS = [
     {
         "param_name": "start_population_size",
         "distribution": "uniform",
-        "distri_params": [500, 5000]
+        "distri_params": [500, 10000]
     },
     # {
     #     "param_name": "start_time",
@@ -82,7 +82,7 @@ targets_to_use = [
     'percentage_latentXlocation_majuro',
     'notificationsXlocation_majuro',
     'notificationsXlocation_ebeye',
-    # 'notificationsXlocation_other',
+    'notificationsXlocation_other',
     'population_size',
 ]
 

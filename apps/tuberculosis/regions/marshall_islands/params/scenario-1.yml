@@ -1,4 +1,4 @@
-# SCENARIO DESCRIPTION: 50% return to work and 25% return to school on October 5
+# SCENARIO DESCRIPTION: The intervention implemented in the field
 parent: apps/tuberculosis/regions/marshall_islands/params/default.yml
 start_time: 2016
 

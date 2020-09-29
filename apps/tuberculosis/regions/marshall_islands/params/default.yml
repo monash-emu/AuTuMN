@@ -2,10 +2,10 @@
 parent: apps/tuberculosis/params.yml
 iso3: "MHL"
 start_time: 1800.
-end_time: 2020.
+end_time: 2035.
 time_step: 1.
 critical_ranges: [] # [[2017., 2019.]]
-start_population_size: 779.0449616260668
+start_population_size: 1500.
 
 # MODEL STRUCTURE
 stratify_by: ['age', 'location']  #  ['location', 'age', 'organ']

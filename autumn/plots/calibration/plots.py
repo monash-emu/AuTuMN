@@ -21,7 +21,7 @@ from autumn.plots.plotter import Plotter, COLOR_THEME
 logger = logging.getLogger(__name__)
 
 PLOT_TEXT_DICT = {
-    "contact_rate": "risk per contact",
+    "contact_rate": "infection risk per contact",
     "compartment_periods_calculated.exposed.total_period": "incubation period",
     "compartment_periods_calculated.active.total_period": "duration active",
     "hospital_props_multiplier": "hospital risk multiplier",
@@ -250,11 +250,10 @@ def plot_multiple_posteriors(
     fig, axes, _, n_rows, n_cols, indices = plotter.get_figure(len(parameters))
 
     for i in range(n_rows * n_cols):
+        axis = axes[indices[i][0], indices[i][1]]
+
         if i < len(parameters):
             param_name = parameters[i]
-
-            # Working axis
-            axis = axes[indices[i][0], indices[i][1]]
 
             vals_df = None
             for table_df in mcmc_params:
@@ -271,8 +270,8 @@ def plot_multiple_posteriors(
             pyplot.setp(axis.get_yticklabels(), fontsize=5)
             pyplot.setp(axis.get_xticklabels(), fontsize=5)
 
-    # FIXME: This should really be cleaned up to cope with different numbers of parameters
-    axes[-1, -1].axis("off")
+        else:
+            axis.axis("off")
 
     fig.tight_layout()
     plotter.save_figure(fig, filename=f"all_posteriors")

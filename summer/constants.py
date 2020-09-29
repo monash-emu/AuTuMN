@@ -78,12 +78,3 @@ class IntegrationType:
     EULER = "euler"
     RUNGE_KUTTA = "rk4"
 
-
-class Stratification:
-    """
-    Attribute used to stratify the population within compartments. 
-    """
-
-    AGE = "age"
-    STRAIN = "strain"
-    LOCATION = "location"

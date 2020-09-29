@@ -15,7 +15,6 @@ from summer.constants import (
     Compartment,
     Flow,
     BirthApproach,
-    Stratification,
     IntegrationType,
 )
 from summer import flow

@@ -41,9 +41,9 @@ def test_no_seasonal_forcing():
     Test seasonal forcing function returns the average value when the magnitude is zero
     """
 
-    seasonal_forcing_function = get_seasonal_forcing(365., 0., 0., 1.)
-    for i_time in np.linspace(-100., 100., 50):
-        assert seasonal_forcing_function(i_time) == 1.
+    seasonal_forcing_function = get_seasonal_forcing(365.0, 0.0, 0.0, 1.0)
+    for i_time in np.linspace(-100.0, 100.0, 50):
+        assert seasonal_forcing_function(i_time) == 1.0
 
 
 def test_peak_trough_seasonal_forcing():
@@ -51,10 +51,10 @@ def test_peak_trough_seasonal_forcing():
     Test seasonal forcing returns the peak and trough values appropriately
     """
 
-    seasonal_forcing_function = get_seasonal_forcing(365., 0., 2., 1.)
-    assert seasonal_forcing_function(0.) == 2.
-    assert seasonal_forcing_function(365.) == 2.
-    assert seasonal_forcing_function(365. / 2.) == 0.
+    seasonal_forcing_function = get_seasonal_forcing(365.0, 0.0, 2.0, 1.0)
+    assert seasonal_forcing_function(0.0) == 2.0
+    assert seasonal_forcing_function(365.0) == 2.0
+    assert seasonal_forcing_function(365.0 / 2.0) == 0.0
 
 
 @pytest.mark.local_only
@@ -89,10 +89,11 @@ def test_build_scenario_models(region):
 @pytest.mark.run_models
 @pytest.mark.github_only
 @pytest.mark.parametrize("region", covid_19.app.region_names)
-def test_run_models_full(region):
+def test_run_models_full(region, verify):
     """
     Smoke test: ensure our models run to completion without crashing.
     This takes ~30s per model.
     """
     region_app = covid_19.app.get_region(region)
-    region_app.run_model()
+    model = region_app.build_model(region_app.params["default"])
+    model.run_model()

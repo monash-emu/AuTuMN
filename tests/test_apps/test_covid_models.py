@@ -67,7 +67,7 @@ def test_run_models_partial(region):
     region_app = covid_19.app.get_region(region)
     ps = deepcopy(region_app.params["default"])
     # Only run model for ~10 epochs.
-    ps["end_time"] = ps["start_time"] + 10
+    ps["time"]["end"] = ps["time"]["start"] + 10
     model = region_app.build_model(ps)
     model.run_model()
 

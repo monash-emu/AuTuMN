@@ -1,5 +1,8 @@
 # SCENARIO DESCRIPTION: BASELINE
 ---
 parent: apps/covid_19/vic_submodel_params.yml
-pop_region: SOUTH_EAST_METRO
-mobility_region: SOUTH_EAST_METRO
+population:
+  region: SOUTH_EAST_METRO
+
+mobility:
+  region: SOUTH_EAST_METRO

@@ -1,5 +1,7 @@
 # SCENARIO DESCRIPTION: BASELINE
 ---
 parent: apps/covid_19/vic_rural_submodel_params.yml
-pop_region: BARWON_SOUTH_WEST
-mobility_region: BARWON_SOUTH_WEST
+population:
+  region: BARWON_SOUTH_WEST
+mobility:
+  region: BARWON_SOUTH_WEST

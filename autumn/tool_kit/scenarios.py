@@ -65,19 +65,19 @@ class Scenario:
 
                 # Construct scenario params by merging scenario-specific params into default params
                 params = self.params["scenarios"][self.idx]
-                start_time = params["start_time"]
+                start_time = params["time"]["start"]
                 if update_func:
                     # Apply extra parameter updates
                     params = update_func(params)
 
                 # Ensure start time cannot be overwritten for a scenario
-                params["start_time"] = start_time
+                params["time"]["start"] = start_time
 
                 base_times = base_model.times
                 base_outputs = base_model.outputs
 
                 # Find the time step from which we will start the scenario
-                start_index = get_scenario_start_index(base_times, params["start_time"])
+                start_index = get_scenario_start_index(base_times, params["time"]["start"])
                 start_time = base_times[start_index]
                 init_compartments = base_outputs[start_index, :]
 
@@ -123,22 +123,16 @@ def get_model_times_from_inputs(start_time, end_time, time_step, critical_ranges
         # add regularly-spaced points up until the start of the critical range
         interval_end = critical_range[0]
         if interval_end > interval_start:
-            times += list(
-                numpy.arange(interval_start, interval_end, time_step)
-            )
+            times += list(numpy.arange(interval_start, interval_end, time_step))
         # add points over the critical range with smaller time step
         interval_start = interval_end
         interval_end = critical_range[1]
         if interval_end > interval_start:
-            times += list(
-                numpy.arange(interval_start, interval_end, time_step / 10.)
-            )
+            times += list(numpy.arange(interval_start, interval_end, time_step / 10.0))
         interval_start = interval_end
 
     if end_time > interval_start:
-        times += list(
-            numpy.arange(interval_start, end_time, time_step)
-        )
+        times += list(numpy.arange(interval_start, end_time, time_step))
     times.append(end_time)
 
     # clean up time values ending .9999999999

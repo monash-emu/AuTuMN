@@ -1,22 +1,26 @@
 # SCENARIO DESCRIPTION: 50% return to work and 50% return to school on October 5
 parent: apps/covid_19/regions/manila/params/default.yml
-start_time: 279
-mixing:
-  work:
-    append: true
-    times:
-      - 2020-10-05
-    values:
-      - 0.50
-  school:
-    append: false
-    times:
-      - 2020-02-11
-      - 2020-03-16
-      - 2020-10-04
-      - 2020-10-05
-    values:
-      - 1.
-      - 0.
-      - 0
-      - 0.50
+
+time:
+  start: 279
+
+mobility:
+  mixing:
+    work:
+      append: true
+      times:
+        - 2020-10-05
+      values:
+        - 0.50
+    school:
+      append: false
+      times:
+        - 2020-02-11
+        - 2020-03-16
+        - 2020-10-04
+        - 2020-10-05
+      values:
+        - 1.
+        - 0.
+        - 0
+        - 0.50

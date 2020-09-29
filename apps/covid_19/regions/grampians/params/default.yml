@@ -1,5 +1,8 @@
 # SCENARIO DESCRIPTION: BASELINE
 ---
 parent: apps/covid_19/vic_rural_submodel_params.yml
-pop_region: GRAMPIANS
-mobility_region: GRAMPIANS
+
+population:
+  region: GRAMPIANS
+mobility:
+  region: GRAMPIANS

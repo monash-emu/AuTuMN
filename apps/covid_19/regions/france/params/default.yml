@@ -1,73 +1,79 @@
 # SCENARIO DESCRIPTION: BASELINE
 parent: apps/covid_19/params.yml
-iso3: FRA
 
-smooth_google_data: True
-
-#start_time: -20.
-end_time: 214.
-# scenario_start_time: 213
+country:
+  iso3: FRA
 
 infectious_seed: 200
-use_raw_mortality_estimates: True
-
-microdistancing:
-  function_type: tanh
-  parameters:
-    b: -0.05
-    c: 103.09927831302906
-    sigma: 0.6036260253557013
-
-# MLE estimates
 contact_rate: 0.0403594999216988
-start_time: 14.113505907047967
-npi_effectiveness:
-  other_locations: 0.8969795054652112
-compartment_periods_calculated:
-  exposed:
-    total_period: 3.0075158318324964
-  active:
-    total_period: 5.24314655577747
-time_variant_detection:
+
+time:
+  start: 14.113505907047967
+  end: 214.
+
+mobility:
+  smooth_google_data: True
+  microdistancing:
+    function_type: tanh
+    parameters:
+      b: -0.05
+      c: 103.09927831302906
+      sigma: 0.6036260253557013
+  npi_effectiveness:
+    other_locations: 0.8969795054652112
+  mixing:
+    school:
+      append: false
+      times:
+        - 2020-03-15
+        - 2020-03-16
+        - 2020-08-25 # google mobility data update, pls review
+      values:
+        - 1.0
+        - 0.1
+        - 0.1 # google mobility data update, pls review
+
+  # Mapping of Google Mobility locations to Autumn-specific locations
+  google_mobility_locations:
+    work:
+      - workplaces
+    other_locations:
+      # Parks not included
+      - retail_and_recreation
+      - grocery_and_pharmacy
+      - transit_stations
+
+sojourn:
+  compartment_periods_calculated:
+    exposed:
+      total_period: 3.0075158318324964
+    active:
+      total_period: 5.24314655577747
+  compartment_periods:
+    hospital_late: 7.964825187227463
+    icu_late: 4.8155362024386665
+
+case_detection:
   maximum_gradient: 0.09673203583492454
   max_change_time: 86.0721524685038
   end_value: 0.17177956276831705
-icu_prop: 0.1881228591428481
-compartment_periods:
-  hospital_late: 7.964825187227463
-  icu_late: 4.8155362024386665
-hospital_props_multiplier: 0.5364328385372396
-infection_fatality_props:
-  [
-    1.707898940815044e-05,
-    3.532637356552306e-05,
-    0.00011408155401283625,
-    0.0002851843538606258,
-    0.0004823239187294602,
-    0.0021715903794688424,
-    0.00825312140482674,
-    0.026615607457836997,
-    0.14419439083680757,
-  ]
 
-mixing:
-  school:
-    append: false
-    times:
-      - 2020-03-15
-      - 2020-03-16
-      - 2020-08-25 # google mobility data update, pls review
-    values:
-      - 1.0
-      - 0.1
-      - 0.1 # google mobility data update, pls review
+clinical_stratification:
+  icu_prop: 0.1881228591428481
+  props:
+    hospital:
+      multiplier: 0.5364328385372396
 
-# Mapping of Google Mobility locations to Autumn-specific locations
-google_mobility_locations:
-  work:
-    - workplaces
-  other_locations:
-    # Parks not included
-    - retail_and_recreation
-    - grocery_and_pharmacy
-    - transit_stations
+infection_fatality:
+  props:
+    [
+      1.707898940815044e-05,
+      3.532637356552306e-05,
+      0.00011408155401283625,
+      0.0002851843538606258,
+      0.0004823239187294602,
+      0.0021715903794688424,
+      0.00825312140482674,
+      0.026615607457836997,
+      0.14419439083680757,
+    ]

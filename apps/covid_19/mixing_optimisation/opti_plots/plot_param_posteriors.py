@@ -31,12 +31,9 @@ param_info = {
         "name": "time infectious",
         "range": [5.0, 10.0],
     },
-    "time_variant_detection.maximum_gradient": {"name": "detection (shape)", "range": [0.05, 0.1]},
-    "time_variant_detection.max_change_time": {
-        "name": "detection (inflection)",
-        "range": [70.0, 160.0],
-    },
-    "time_variant_detection.end_value": {"name": "detection (prop_final)", "range": [0.10, 0.90]},
+    "case_detection.maximum_gradient": {"name": "detection (shape)", "range": [0.05, 0.1]},
+    "case_detection.max_change_time": {"name": "detection (inflection)", "range": [70.0, 160.0],},
+    "case_detection.end_value": {"name": "detection (prop_final)", "range": [0.10, 0.90]},
     "icu_prop": {"name": "prop ICU among hosp.", "range": [0.10, 0.30]},
     "compartment_periods.hospital_late": {"name": "hopital duration", "range": [4.0, 12.0]},
     "compartment_periods.icu_late": {"name": "time in ICU", "range": [4.0, 12.0]},
@@ -200,17 +197,17 @@ def get_country_posterior_detection_percentiles(country_param_values):
     store_matrix = np.zeros((len(calculated_times), len(country_param_values["start_time"])))
 
     for i in range(len(country_param_values["start_time"])):
-        if "time_variant_detection.start_value" in country_param_values:
-            sigma = country_param_values["time_variant_detection.start_value"][i]
+        if "case_detection.start_value" in country_param_values:
+            sigma = country_param_values["case_detection.start_value"][i]
         else:
             sigma = 0.0
         my_func = tanh_based_scaleup(
-            country_param_values["time_variant_detection.maximum_gradient"][i],
-            country_param_values["time_variant_detection.max_change_time"][i],
+            country_param_values["case_detection.maximum_gradient"][i],
+            country_param_values["case_detection.max_change_time"][i],
             sigma,
         )
         detect_vals = [
-            country_param_values["time_variant_detection.end_value"][i] * my_func(float(t))
+            country_param_values["case_detection.end_value"][i] * my_func(float(t))
             for t in calculated_times
         ]
         store_matrix[:, i] = detect_vals

@@ -1,41 +1,43 @@
 ---
 parent: apps/covid_19/vic_submodel_params.yml
 
-start_time: 152.
+time:
+  start: 152.
 
-# Regional Victoria clusters macrodistancing function
-microdistancing:
-  function_type: empiric
-  parameters:
-    max_effect: 0.9
-    times:
-      # Note model currently starts at the start-time specified above (19th May for the first round of DHHS projections)
-      - 137  # Coming in at stage 3 from 29th March, but beginning to release as May progresses
-      - 138  # 12th May, increase in visitor allowance (partial release from stage 3)
-      - 151
-      - 152  # 26th May, entertainment/leisure partial reopening (partial release from stage 3)
-      - 173
-      - 174  # 22nd June, visitors reduced
-      - 200
-      - 201  # 18th July, face coverings encouraged (currently ignored)
-      - 215
-      - 216  # 2nd August, stage 3 enforced and face coverings mandated
-      - 256
-      - 257  # 13th September, social bubbles, phased return of some workforces and education (but school holidays)
-      - 259
-      - 260  # 16th September, increased reopening for sport, recreation, ceremonies and special occasions
-    values:
-      - 0.4
-      - 0.2  # 12th May
-      - 0.2
-      - 0.1  # 26th May
-      - 0.1
-      - 0.2  # 22nd June
-      - 0.2
-      - 0.2  # 18th July
-      - 0.2
-      - 0.6  # 2nd August
-      - 0.6
-      - 0.5  # 13th September
-      - 0.5
-      - 0.4  # 16th September
+mobility:
+  # Regional Victoria clusters macrodistancing function
+  microdistancing:
+    function_type: empiric
+    parameters:
+      max_effect: 0.9
+      times:
+        # Note model currently starts at the start-time specified above (19th May for the first round of DHHS projections)
+        - 137 # Coming in at stage 3 from 29th March, but beginning to release as May progresses
+        - 138 # 12th May, increase in visitor allowance (partial release from stage 3)
+        - 151
+        - 152 # 26th May, entertainment/leisure partial reopening (partial release from stage 3)
+        - 173
+        - 174 # 22nd June, visitors reduced
+        - 200
+        - 201 # 18th July, face coverings encouraged (currently ignored)
+        - 215
+        - 216 # 2nd August, stage 3 enforced and face coverings mandated
+        - 256
+        - 257 # 13th September, social bubbles, phased return of some workforces and education (but school holidays)
+        - 259
+        - 260 # 16th September, increased reopening for sport, recreation, ceremonies and special occasions
+      values:
+        - 0.4
+        - 0.2 # 12th May
+        - 0.2
+        - 0.1 # 26th May
+        - 0.1
+        - 0.2 # 22nd June
+        - 0.2
+        - 0.2 # 18th July
+        - 0.2
+        - 0.6 # 2nd August
+        - 0.6
+        - 0.5 # 13th September
+        - 0.5
+        - 0.4 # 16th September

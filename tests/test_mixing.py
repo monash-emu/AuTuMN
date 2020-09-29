@@ -13,8 +13,12 @@ from numpy.testing import assert_array_equal
 from apps.covid_19.model.preprocess import mixing_matrix
 from apps.covid_19.model.preprocess.mixing_matrix import adjust_location
 from apps.covid_19.model.preprocess.mixing_matrix.utils import BASE_DATE
+from apps.covid_19.model.parameters import Mobility, Country, MixingLocation
 
-from autumn.inputs.social_mixing.queries import get_mixing_matrix_specific_agegroups, get_country_mixing_matrix
+from autumn.inputs.social_mixing.queries import (
+    get_mixing_matrix_specific_agegroups,
+    get_country_mixing_matrix,
+)
 
 
 @pytest.mark.parametrize(
@@ -62,21 +66,17 @@ def test_update_mixing_data__with_user_specified_values():
     """
     mixing = {
         # Expect appended with % increase accounted for.
-        "work": {
-            "values": [["scale_prev", 1.1], 1.6],
-            "times": get_date_from_base([4, 5]),
-            "append": True,
-        },
+        "work": {"values": [["scale_prev", 1.1], 1.6], "times": ([4, 5]), "append": True,},
         # Expect overwritten
         "other_locations": {
             "values": [1.55, 1.66, 1.77, 1.88, 1.99, 1.111],
-            "times": get_date_from_base([0, 1, 2, 3, 4, 5]),
+            "times": ([0, 1, 2, 3, 4, 5]),
             "append": False,
         },
         # Expect added (not overwritten)
         "school": {
             "values": [1.11, 1.22, 1.33, 1.44, 1.55, 1.66],
-            "times": get_date_from_base([0, 1, 2, 3, 4, 5]),
+            "times": ([0, 1, 2, 3, 4, 5]),
             "append": False,
         },
     }
@@ -104,7 +104,7 @@ def test_update_mixing_data__with_user_specified_values__out_of_date():
     mixing = {
         "school": {
             "values": [1.11, 1.22, 1.33],
-            "times": get_date_from_base([0, 1, 2]),  # Stale date, should be up to 3
+            "times": ([0, 1, 2]),  # Stale date, should be up to 3
             "append": False,
         },
     }
@@ -129,7 +129,7 @@ def test_update_mixing_data__with_user_specified_values__missing_data_append():
         # Expect crash because of mispecified append
         "school": {
             "values": [1.11, 1.22, 1.33, 1.44],
-            "times": get_date_from_base([0, 1, 2, 3]),
+            "times": ([0, 1, 2, 3]),
             "append": True,  # No school data to append to
         },
     }
@@ -155,7 +155,7 @@ def test_update_mixing_data__with_user_specified_values__date_clash_append():
         # Expect crash because of conflicting date
         "work": {
             "values": [1.11, 1.22, 1.33],
-            "times": get_date_from_base([3, 4, 5]),  # Conflicting lowest date, cannot append
+            "times": ([3, 4, 5]),  # Conflicting lowest date, cannot append
             "append": True,
         },
     }
@@ -189,15 +189,16 @@ def test_build_dynamic__with_no_changes():
     smooth_google_data = False
     microdistancing_locations = ["home", "other_locations", "school", "work"]
     mm_func = mixing_matrix.build_dynamic(
-        country_iso3="AUS",
-        region=None,
-        mixing=mixing_params,
-        mixing_age_adjust={},
-        npi_effectiveness_params=npi_effectiveness_params,
-        google_mobility_locations=google_mobility_locations,
-        microdistancing_params=microdistancing_params,
-        smooth_google_data=smooth_google_data,
-        microdistancing_locations=microdistancing_locations,
+        country=Country(iso3="AUS"),
+        mobility=Mobility(
+            region=None,
+            mixing=mixing_params,
+            npi_effectiveness={},
+            google_mobility_locations=google_mobility_locations,
+            smooth_google_data=smooth_google_data,
+            microdistancing=None,
+            microdistancing_locations=microdistancing_locations,
+        ),
     )
     mm = mm_func(0)
     assert_arr_is_close(mm, AUS_MIXING_MATRIX)
@@ -222,28 +223,22 @@ def test_build_dynamic__with_mobility_data(monkeypatch):
 
     monkeypatch.setattr(adjust_location, "get_mobility_data", get_test_mobility_data)
 
-    microdistancing_locations = [
-        "home",
-        "other_locations",
-        "school",
-        "work"
-    ]
+    microdistancing_locations = ["home", "other_locations", "school", "work"]
     google_mobility_locations = {"work": ["workplace"]}
     mixing_params = {}
     npi_effectiveness_params = {}
-    microdistancing_params = {}
     smooth_google_data = False
-
     mm_func = mixing_matrix.build_dynamic(
-        country_iso3="AUS",
-        region=None,
-        mixing=mixing_params,
-        mixing_age_adjust={},
-        npi_effectiveness_params=npi_effectiveness_params,
-        google_mobility_locations=google_mobility_locations,
-        microdistancing_params=microdistancing_params,
-        smooth_google_data=smooth_google_data,
-        microdistancing_locations=microdistancing_locations,
+        country=Country(iso3="AUS"),
+        mobility=Mobility(
+            region=None,
+            mixing=mixing_params,
+            npi_effectiveness={},
+            google_mobility_locations=google_mobility_locations,
+            smooth_google_data=False,
+            microdistancing=None,
+            microdistancing_locations=microdistancing_locations,
+        ),
     )
 
     # Work mixing adjustment should be 1, expect no change
@@ -266,12 +261,7 @@ def test_build_dynamic__smoke_test():
     Smoke test with typical input data.
     Doesn't actually verify anything.
     """
-    microdistancing_locations = [
-        "home",
-        "other_locations",
-        "school",
-        "work"
-    ]
+    microdistancing_locations = ["home", "other_locations", "school", "work"]
     google_mobility_locations = {
         "work": ["workplaces"],
         "other_locations": [
@@ -282,32 +272,29 @@ def test_build_dynamic__smoke_test():
         ],
     }
     mixing_params = {
-        "other_locations": {
-            "append": True,
-            "times": get_date_from_now([10, 20, 30, 40, 50]),
-            "values": [1, 0.4, 0.3, 0.3, 0.5],
-        },
-        "work": {
-            "append": True,
-            "times": get_date_from_now([10, 20, 30, 40, 50]),
-            "values": [1, 0.9, 0.5, 0.3, 0.6],
-        },
-        "school": {
-            "append": False,
-            "times": get_date_from_base([56]) + get_date_from_now([10]),
-            "values": [1, 0],
-        },
+        "other_locations": MixingLocation(
+            append=True,
+            times=get_date_from_now([10, 20, 30, 40, 50]),
+            values=[1, 0.4, 0.3, 0.3, 0.5],
+        ),
+        "work": MixingLocation(
+            append=True,
+            times=get_date_from_now([10, 20, 30, 40, 50]),
+            values=[1, 0.9, 0.5, 0.3, 0.6],
+        ),
+        "school": MixingLocation(append=False, times=get_date_from_now([10, 20]), values=[1, 0]),
     }
     mm_func = mixing_matrix.build_dynamic(
-        country_iso3="MYS",
-        region=None,
-        mixing=mixing_params,
-        mixing_age_adjust={},
-        npi_effectiveness_params={},
-        google_mobility_locations=google_mobility_locations,
-        microdistancing_params={},
-        smooth_google_data=True,
-        microdistancing_locations=microdistancing_locations,
+        country=Country(iso3="MYS"),
+        mobility=Mobility(
+            region=None,
+            mixing=mixing_params,
+            npi_effectiveness={},
+            google_mobility_locations=google_mobility_locations,
+            smooth_google_data=True,
+            microdistancing=None,
+            microdistancing_locations=microdistancing_locations,
+        ),
     )
     mm = mm_func(50)
     assert mm.shape == (16, 16)
@@ -320,7 +307,7 @@ def test_age_mixing_matrix_variable_agegroups__smoke_test():
 
 
 def test_age_mixing_matrix_variable_agegroups__conservation():
-    requested_age_breaks = [i * 5. for i in range(16)]   # same as original Prem age groups
+    requested_age_breaks = [i * 5.0 for i in range(16)]  # same as original Prem age groups
     prem_matrix = get_country_mixing_matrix("all_locations", "AUS")
     out_matrix = get_mixing_matrix_specific_agegroups("AUS", requested_age_breaks)
     assert np.array_equal(out_matrix, prem_matrix)
@@ -333,10 +320,6 @@ def assert_arr_is_close(arr_a, arr_b, figs=2):
 
 def get_date_from_now(days_list):
     return [datetime.now().date() + timedelta(days=days) for days in days_list]
-
-
-def get_date_from_base(days_list):
-    return [BASE_DATE + timedelta(days=days) for days in days_list]
 
 
 AUS_MIXING_MATRIX = np.array(

@@ -14,20 +14,19 @@ BASE_DATE = pd.datetime(2019, 12, 31)
 PLOT_FUNCS = {}
 
 
-def plot_posterior(
+def plot_all_posteriors(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
     mcmc_tables: List[pd.DataFrame],
     mcmc_params: List[pd.DataFrame],
     targets: dict,
 ):
-    chosen_param = selectors.parameter(mcmc_params[0])
 
     num_bins = st.sidebar.slider("Number of bins", 1, 50, 16)
     plots.calibration.plots.plot_multiple_posteriors(plotter, mcmc_params, num_bins)
 
 
-PLOT_FUNCS["Posterior"] = plot_posterior
+PLOT_FUNCS["All posteriors"] = plot_all_posteriors
 
 
 def run_dashboard():

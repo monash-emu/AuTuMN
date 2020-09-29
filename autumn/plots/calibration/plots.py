@@ -228,12 +228,12 @@ def plot_multiple_posteriors(
     Plots the posterior distribution of a given parameter in a histogram.
     """
 
-    parameters = mcmc_params[0].loc[:, "name"].unique().tolist()
+    parameters = \
+        [param for param in mcmc_params[0].loc[:, "name"].unique().tolist() if
+         "dispersion_param" not in param]
     fig, axes, _, _, _, indices = plotter.get_figure(len(parameters))
 
     for i, param_name in enumerate(parameters):
-        import streamlit as st
-        st.write(param_name)
         vals_df = None
         for table_df in mcmc_params:
             param_mask = table_df["name"] == param_name
@@ -243,8 +243,16 @@ def plot_multiple_posteriors(
             else:
                 vals_df = table_vals
 
-        vals_df.hist(bins=num_bins, ax=axes[indices[i][0], indices[i][1]])
-        axes[indices[i][0], indices[i][1]].set_title(param_name)
+        axis = axes[indices[i][0], indices[i][1]]
+
+        vals_df.hist(bins=num_bins, ax=axis)
+        axis.set_title(param_name[: 25], fontsize=6)
+        pyplot.setp(axis.get_yticklabels(), fontsize=5)
+        pyplot.setp(axis.get_xticklabels(), fontsize=5)
+
+    axes[-1, -1].axis("off")
+
+    fig.tight_layout()
     plotter.save_figure(fig, filename=f"all_posteriors")
 
 

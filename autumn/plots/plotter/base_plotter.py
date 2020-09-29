@@ -46,7 +46,7 @@ class BasePlotter(ABC):
             fig.set_figheight(3.5)
             fig.subplots_adjust(bottom=0.15, top=0.85)
         else:
-            fig, axes = pyplot.subplots(n_rows, n_cols)
+            fig, axes = pyplot.subplots(n_rows, n_cols, sharey=True)
             for panel in range(n_panels):
                 indices.append(new_find_panel_grid_indices(panel, n_rows, n_cols))
         return fig, axes, max([n_rows, n_cols]), n_rows, n_cols, indices

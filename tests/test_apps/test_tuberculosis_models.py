@@ -33,6 +33,7 @@ def test_tb_run_models_partial(region):
         ps["stratify_by"] = list(stratify_by)
         # Only run model for ~10 epochs.
         ps["end_time"] = ps["start_time"] + 10
+        ps["critical_ranges"] = []
         model = region_app.build_model(ps)
         model.run_model()
 

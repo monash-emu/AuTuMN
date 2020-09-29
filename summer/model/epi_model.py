@@ -31,6 +31,8 @@ from .derived_outputs import DerivedOutputCalculator
 
 logger = logging.getLogger(__name__)
 
+OUTPUTS_NEGATIVE_TOLERANCE = -1e-4
+
 
 class EpiModel:
     """
@@ -246,10 +248,10 @@ class EpiModel:
         self.outputs = solve_ode(
             integration_type, self.get_flow_rates, self.compartment_values, self.times, solver_args
         )
-        # Check that all compartment values are >= 0
-        if np.any(self.outputs < 0.0):
-            # TODO: Print size of deviation.
-            logger.info("Warning: compartment(s) with negative values.")
+
+        if np.any(self.outputs < OUTPUTS_NEGATIVE_TOLERANCE):
+            msg = f"Negative compartment size found in model output, value smaller than {OUTPUTS_NEGATIVE_TOLERANCE}"
+            raise ValueError(msg)
 
         self.derived_outputs = self.calculate_derived_outputs()
 
@@ -258,10 +260,14 @@ class EpiModel:
         Get net flows into, out of, and between all compartments.
         Order of args determined by solve_ode func.
         """
-        self.prepare_time_step(time, compartment_values)
-        flow_rates = np.zeros(compartment_values.shape)
+        # Zero out compartment sizes to prevent negative values from messing up calcs.
+        comp_vals = compartment_values.copy()
+        zero_mask = comp_vals < 0
+        comp_vals[zero_mask] = 0
+        self.prepare_time_step(time, comp_vals)
+        flow_rates = np.zeros(comp_vals.shape)
         for flow_func in self.flow_functions:
-            flow_rates = flow_func(flow_rates, compartment_values, time)
+            flow_rates = flow_func(flow_rates, comp_vals, time)
 
         return flow_rates
 

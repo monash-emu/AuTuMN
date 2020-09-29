@@ -35,16 +35,18 @@ def test_calculate_mcmc_uncertainty():
     # Calculate uncertainty from synthetic data.
     unc_df = calculate_mcmc_uncertainty(mcmc_df, do_df, targets)
     # Check that calculated quantiles are correct for incidence.
+    TOLERANCE = 0.1
+
     for quantile in quantiles:
         mask = (unc_df["quantile"] == quantile) & (unc_df["type"] == "incidence")
         vals = (unc_df[mask]["value"] - unc_df[mask]["time"]).to_numpy()
-        assert ((vals > (quantile - 0.07)) * (vals < (quantile + 0.07))).all()
+        assert ((vals > (quantile - TOLERANCE)) * (vals < (quantile + TOLERANCE))).all()
 
     # Check that calculated quantiles are correct for foo.
     for quantile in quantiles:
         mask = (unc_df["quantile"] == quantile) & (unc_df["type"] == "foo")
         vals = (unc_df[mask]["value"] - unc_df[mask]["time"].apply(lambda t: t ** 2)).to_numpy()
-        assert ((vals > (quantile - 0.07)) * (vals < (quantile + 0.07))).all()
+        assert ((vals > (quantile - TOLERANCE)) * (vals < (quantile + TOLERANCE))).all()
 
 
 # Functions to calculate uncertainty for.

@@ -88,8 +88,8 @@ def test_build_scenario_models(region):
         assert type(model) is StratifiedModel
 
 
-# @pytest.mark.run_models
-# @pytest.mark.github_only
+@pytest.mark.run_models
+@pytest.mark.github_only
 @pytest.mark.parametrize("region", covid_19.app.region_names)
 def test_run_models_full(region, verify):
     """
@@ -98,26 +98,4 @@ def test_run_models_full(region, verify):
     """
     region_app = covid_19.app.get_region(region)
     model = region_app.build_model(region_app.params["default"])
-    verify(model.parameters, f"parameters-{region}")
-    verify(model.times, f"times-{region}")
-    verify(model.compartment_names, f"compartment_names-{region}")
-    verify(list(model.time_variants.keys()), f"time_variants-{region}")
-    verify(model.mixing_categories, f"mixing_categories-{region}")
-    flows = []
-    for f in model.flows:
-        flow_data = [f.param_name]
-        if getattr(f, "source", ""):
-            flow_data.append(str(f.source))
-        if getattr(f, "dest", ""):
-            flow_data.append(str(f.dest))
-
-        adjs = "x".join(["=".join([str(i) for i in a]) for a in f.adjustments])
-        flow_data.append(adjs)
-        flows.append("-".join(flow_data))
-
-    verify(flows, f"flows-{region}")
-
     model.run_model()
-    verify(model.outputs, f"outputs-{region}")
-    for output, arr in model.derived_outputs.items():
-        verify(arr, f"do-{output}-{region}")

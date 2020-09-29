@@ -21,7 +21,7 @@ def run_dashboard():
     df = get_url_df(url)
 
     plotter = StreamlitPlotter({})
-    fig, axis, _, _, _ = plotter.get_figure()
+    fig, axis, _, _, _, _ = plotter.get_figure()
     runs = df.run.unique().tolist()
     is_logscale = st.checkbox("Log scale")
 

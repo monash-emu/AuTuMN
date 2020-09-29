@@ -10,11 +10,9 @@ from typing import List
 from dash import selectors
 from autumn.tool_kit.params import load_targets
 
-
 BASE_DATE = pd.datetime(2019, 12, 31)
-
-
 PLOT_FUNCS = {}
+
 
 def plot_posterior(
     plotter: StreamlitPlotter,
@@ -24,8 +22,9 @@ def plot_posterior(
     targets: dict,
 ):
     chosen_param = selectors.parameter(mcmc_params[0])
+
     num_bins = st.sidebar.slider("Number of bins", 1, 50, 16)
-    plots.calibration.plots.plot_posterior(plotter, mcmc_params, chosen_param, num_bins)
+    plots.calibration.plots.plot_multiple_posteriors(plotter, mcmc_params, num_bins)
 
 
 PLOT_FUNCS["Posterior"] = plot_posterior

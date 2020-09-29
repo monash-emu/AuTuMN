@@ -36,6 +36,7 @@ class BasePlotter(ABC):
         """
         pyplot.style.use("ggplot")
         n_rows, n_cols = requested_grid if requested_grid else find_subplot_grid(n_panels)
+        indices = []
         horizontal_position_one_axis = 0.11 if room_for_legend else 0.15
         if n_panels == 1:
             fig = pyplot.figure()
@@ -45,10 +46,10 @@ class BasePlotter(ABC):
             fig.set_figheight(3.5)
             fig.subplots_adjust(bottom=0.15, top=0.85)
         else:
-            fig, axes = pyplot.subplots(n_rows, n_cols, sharey=share_yaxis)
-            for panel in range(n_panels, n_rows * n_cols):
-                find_panel_grid_indices(axes, panel, n_rows, n_cols).axis("off")
-        return fig, axes, max([n_rows, n_cols]), n_rows, n_cols
+            fig, axes = pyplot.subplots(n_rows, n_cols)
+            for panel in range(n_panels):
+                indices.append(new_find_panel_grid_indices(panel, n_rows, n_cols))
+        return fig, axes, max([n_rows, n_cols]), n_rows, n_cols, indices
 
     def get_plot_title(self, title: str):
         """
@@ -202,6 +203,23 @@ def find_panel_grid_indices(axes, index, n_rows, n_columns):
         (index + 1) % n_columns - 1 if n_rows > 1 else None,
     )
     return axes[row, column] if n_rows > 1 else axes[index]
+
+
+def new_find_panel_grid_indices(index, n_rows, n_columns):
+    """
+    Find the subplot index for a plot panel from the number of the panel and the number of columns of sub-plots.
+
+    Args:
+        index: The number of the panel counting up from zero
+        n_rows: Number of rows of sub-plots in figure
+        n_columns: Number of columns of sub-plots in figure
+    """
+
+    row, column = (
+        numpy.floor_divide(index, n_columns),
+        index % n_columns if n_rows > 1 else None,
+    )
+    return row, column
 
 
 def get_label_font_size(max_dim):

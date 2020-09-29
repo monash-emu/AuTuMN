@@ -25,7 +25,7 @@ def plot_acceptance_ratio(plotter: Plotter, mcmc_tables: List[pd.DataFrame]):
     """
     Plot the prameter traces for each MCMC run.
     """
-    fig, axis, _, _, _ = plotter.get_figure()
+    fig, axis, _, _, _, _ = plotter.get_figure()
     mcmc_df = db.process.append_tables(mcmc_tables)
     chains = mcmc_df["chain"].unique().tolist()
     for chain in chains:
@@ -142,7 +142,7 @@ def plot_mcmc_parameter_trace(plotter: Plotter, mcmc_params: List[pd.DataFrame],
     """
     Plot the prameter traces for each MCMC run.
     """
-    fig, axis, _, _, _ = plotter.get_figure()
+    fig, axis, _, _, _, _ = plotter.get_figure()
     for idx, table_df in enumerate(mcmc_params):
         param_mask = table_df["name"] == param_name
         param_df = table_df[param_mask]
@@ -157,7 +157,7 @@ def plot_loglikelihood_trace(plotter: Plotter, mcmc_tables: List[pd.DataFrame], 
     """
     Plot the loglikelihood traces for each MCMC run.
     """
-    fig, axis, _, _, _ = plotter.get_figure()
+    fig, axis, _, _, _, _ = plotter.get_figure()
 
     for idx, table_df in enumerate(mcmc_tables):
         accept_mask = table_df["accept"] == 1
@@ -179,7 +179,7 @@ def plot_burn_in(plotter: Plotter, num_iters: int, burn_in: int):
     """
     Plot the trade off been num iters and burn-in for MCMC runs.
     """
-    fig, axis, _, _, _ = plotter.get_figure()
+    fig, axis, _, _, _, _ = plotter.get_figure()
 
     def floor(n):
         val = num_iters - n
@@ -187,7 +187,7 @@ def plot_burn_in(plotter: Plotter, num_iters: int, burn_in: int):
 
     values = [floor(i) for i in range(num_iters)]
 
-    fig, axis, _, _, _ = plotter.get_figure()
+    fig, axis, _, _, _, _ = plotter.get_figure()
 
     axis.plot(values, color=COLOR_THEME[0])
     axis.set_ylabel("Number iters after burn-in")
@@ -214,11 +214,38 @@ def plot_posterior(
         else:
             vals_df = table_vals
 
-    fig, axis, _, _, _ = plotter.get_figure()
+    fig, axis, _, _, _, _ = plotter.get_figure()
     vals_df.hist(bins=num_bins, ax=axis)
     plotter.save_figure(
         fig, filename=f"{param_name}-posterior", title_text=f"{param_name} posterior"
     )
+
+
+def plot_multiple_posteriors(
+    plotter: Plotter, mcmc_params: List[pd.DataFrame], num_bins: int
+):
+    """
+    Plots the posterior distribution of a given parameter in a histogram.
+    """
+
+    parameters = mcmc_params[0].loc[:, "name"].unique().tolist()
+    fig, axes, _, _, _, indices = plotter.get_figure(len(parameters))
+
+    for i, param_name in enumerate(parameters):
+        import streamlit as st
+        st.write(param_name)
+        vals_df = None
+        for table_df in mcmc_params:
+            param_mask = table_df["name"] == param_name
+            table_vals = table_df[param_mask].value
+            if vals_df is not None:
+                vals_df = vals_df.append(table_vals)
+            else:
+                vals_df = table_vals
+
+        vals_df.hist(bins=num_bins, ax=axes[indices[i][0], indices[i][1]])
+        axes[indices[i][0], indices[i][1]].set_title(param_name)
+    plotter.save_figure(fig, filename=f"all_posteriors")
 
 
 def plot_loglikelihood_vs_parameter(
@@ -230,7 +257,7 @@ def plot_loglikelihood_vs_parameter(
     """
     Plots the loglikelihood against parameter values.
     """
-    fig, axis, _, _, _ = plotter.get_figure()
+    fig, axis, _, _, _, _ = plotter.get_figure()
     for mcmc_df, param_df in zip(mcmc_tables, mcmc_params):
         df = param_df.merge(mcmc_df, on=["run", "chain"])
         mask = (df["accept"] == 1) & (df["name"] == param_name)
@@ -289,7 +316,7 @@ def sample_outputs_for_calibration_fit(
 def plot_calibration_fit(
     plotter: Plotter, output_name: str, outputs: list, targets, is_logscale=False,
 ):
-    fig, axis, _, _, _ = plotter.get_figure()
+    fig, axis, _, _, _, _ = plotter.get_figure()
 
     # Track the maximum value being plotted
     max_value = 0.0

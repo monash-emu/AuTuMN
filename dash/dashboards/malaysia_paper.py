@@ -25,7 +25,10 @@ def plot_all_posteriors(
     num_bins = st.sidebar.slider("Number of bins", 1, 50, 16)
     title_font_size = st.sidebar.slider("Title font size", 1, 15, 8)
     label_font_size = st.sidebar.slider("Label font size", 1, 15, 8)
-    plots.calibration.plots.plot_multiple_posteriors(plotter, mcmc_params, num_bins, title_font_size, label_font_size)
+    capitalise_first_letter = st.checkbox("Title start capital")
+    plots.calibration.plots.plot_multiple_posteriors(
+        plotter, mcmc_params, num_bins, title_font_size, label_font_size, capitalise_first_letter
+    )
 
 
 PLOT_FUNCS["All posteriors"] = plot_all_posteriors

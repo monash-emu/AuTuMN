@@ -241,6 +241,7 @@ def plot_posterior(
 
 def plot_multiple_posteriors(
     plotter: Plotter, mcmc_params: List[pd.DataFrame], num_bins: int, title_font_size: int, label_font_size: int,
+        capitalise_first_letter: bool,
 ):
     """
     Plots the posterior distribution of a given parameter in a histogram.
@@ -269,7 +270,11 @@ def plot_multiple_posteriors(
 
             # Plot histograms
             vals_df.hist(bins=num_bins, ax=axis)
-            axis.set_title(get_plot_text_dict(param_name, capitalise_first_letter=True), fontsize=title_font_size)
+            axis.set_title(
+                get_plot_text_dict(
+                    param_name, capitalise_first_letter=capitalise_first_letter
+                ), fontsize=title_font_size
+            )
             pyplot.setp(axis.get_yticklabels(), fontsize=label_font_size)
             pyplot.setp(axis.get_xticklabels(), fontsize=label_font_size)
 

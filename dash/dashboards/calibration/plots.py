@@ -159,3 +159,31 @@ def plot_loglikelihood_trace(
 
 PLOT_FUNCS["Loglikelihood trace"] = plot_loglikelihood_trace
 
+
+def plot_all_posteriors(
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+):
+
+    # Implement user request options
+    num_bins = \
+        st.sidebar.slider("Number of bins", 1, 50, 16)
+    title_font_size = \
+        st.sidebar.slider("Title font size", 1, 15, 8)
+    label_font_size = \
+        st.sidebar.slider("Label font size", 1, 15, 8)
+    dpi_request = \
+        st.sidebar.slider("DPI", 50, 2000, 300)
+    capitalise_first_letter = \
+        st.sidebar.checkbox("Title start capital")
+
+    # Plot
+    plots.calibration.plots.plot_multiple_posteriors(
+        plotter, mcmc_params, num_bins, title_font_size, label_font_size, capitalise_first_letter, dpi_request
+    )
+
+
+PLOT_FUNCS["All posteriors"] = plot_all_posteriors

@@ -35,7 +35,6 @@ from dash.dashboards.calibration.run import run_dashboard as run_calibration_das
 from dash.dashboards.scenario.run import run_dashboard as run_scenario_dashboard
 from dash.dashboards.dhhs import run_dashboard as run_dhhs_dashboard
 from dash.dashboards.ensemble import run_dashboard as run_ensemble_dashboard
-from dash.dashboards.malaysia_paper import run_dashboard as run_malaysia_dashboard
 
 if len(sys.argv) > 1 and sys.argv[1] == "mcmc":
     run_calibration_dashboard()
@@ -45,7 +44,5 @@ elif len(sys.argv) > 1 and sys.argv[1] == "dhhs":
     run_dhhs_dashboard()
 elif len(sys.argv) > 1 and sys.argv[1] == "ensemble":
     run_ensemble_dashboard()
-elif len(sys.argv) > 1 and sys.argv[1] == "malaysia_paper":
-    run_malaysia_dashboard()
 else:
     run_model_dashboard()

@@ -4,11 +4,11 @@ iso3: "MHL"
 start_time: 1800.
 end_time: 2035.
 time_step: 1.
-critical_ranges: [] # [[2017., 2019.]]
-start_population_size: 1500.
+critical_ranges: [[2017., 2019.]]
+start_population_size: 4000.
 
 # MODEL STRUCTURE
-stratify_by: ['age', 'location']  #  ['location', 'age', 'organ']
+stratify_by: ['age', 'organ', 'location']
 age_breakpoints: [0, 5, 15, 35, 50]
 user_defined_stratifications:  # this specifies user-defined  stratifications
   location:
@@ -18,9 +18,9 @@ user_defined_stratifications:  # this specifies user-defined  stratifications
       ebeye: .2
       other: .277
     mixing_matrix:
-      - [0.9, 0.05, 0.05]
-      - [0.05, 0.9, 0.05]
-      - [0.05, 0.05, 0.9]
+      - [0.95, 0.025, 0.025]
+      - [0.025, 0.95, 0.025]
+      - [0.025, 0.025, 0.95]
     adjustments:
       contact_rate:
         majuro: 1.
@@ -28,8 +28,8 @@ user_defined_stratifications:  # this specifies user-defined  stratifications
         other: 1.
       detection_rate:
         majuro: 1.
-        ebeye: 1.6324652791616359
-        other:  0.5104416584945072
+        ebeye: 1.5
+        other: 1.
 
 # BCG coverage
 time_variant_bcg_perc:
@@ -70,10 +70,10 @@ time_variant_tsr:  # should always be > 0
   2017.: 0.8
 
 time_variant_tb_screening_rate:
-  maximum_gradient: .2 # The shape parameter to the tanh-based curve
-  max_change_time: 2004. # Point at which curve inflects
+  maximum_gradient: .1 # The shape parameter to the tanh-based curve
+  max_change_time: 1990. # Point at which curve inflects
   start_value: 0. # Starting value - lower asymptote
-  end_value: .4  # 0.16260618523658296
+  end_value: 0.4
 
 extra_params:
   prop_diabetes:
@@ -83,11 +83,11 @@ extra_params:
     35: 0.4
     50: 0.7
     70: 0.7
-  rr_progression_diabetes: 5.23959127455454
+  rr_progression_diabetes: 5.
 
 # calibrated parameters
-contact_rate: .38 # 0.30052039736402314
-late_reactivation_multiplier: 1.965299052937187
+contact_rate: 1.7
+late_reactivation_multiplier: 1.
 
 #____________________#
 #   Interventions    #

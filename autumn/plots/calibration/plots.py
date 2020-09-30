@@ -178,6 +178,62 @@ def plot_mcmc_parameter_trace(plotter: Plotter, mcmc_params: List[pd.DataFrame],
     plotter.save_figure(fig, filename=f"{param_name}-traces", title_text=f"{param_name}-traces")
 
 
+def plot_multiple_param_traces(
+        plotter: Plotter,
+        mcmc_params: List[pd.DataFrame],
+        title_font_size: int,
+        label_font_size: int,
+        capitalise_first_letter: bool,
+        dpi_request: int
+):
+
+    # Except not the dispersion parameters - only the epidemiological ones
+    parameters = \
+        [param for param in mcmc_params[0].loc[:, "name"].unique().tolist() if
+         "dispersion_param" not in param]
+
+    fig, axes, _, n_rows, n_cols, indices = \
+        plotter.get_figure(len(parameters), share_xaxis=True, share_yaxis=False)
+
+    for i in range(n_rows * n_cols):
+        axis = axes[indices[i][0], indices[i][1]]
+
+        if i < len(parameters):
+            param_name = parameters[i]
+
+            vals_df = None
+            for table_df in mcmc_params:
+                param_mask = table_df["name"] == param_name
+                table_vals = table_df[param_mask].value
+                if vals_df is not None:
+                    vals_df = vals_df.append(table_vals)
+                else:
+                    vals_df = table_vals
+
+            for idx, table_df in enumerate(mcmc_params):
+                param_mask = table_df["name"] == param_name
+                param_df = table_df[param_mask]
+                axis.plot(param_df["run"], param_df["value"], alpha=0.8, linewidth=0.7)
+
+            axis.set_title(
+                get_plot_text_dict(
+                    param_name, capitalise_first_letter=capitalise_first_letter
+                ), fontsize=title_font_size
+            )
+
+            if indices[i][0] == n_rows - 1:
+                x_label = "Iterations" if capitalise_first_letter else "iterations"
+                axis.set_xlabel(x_label, fontsize=label_font_size)
+            pyplot.setp(axis.get_yticklabels(), fontsize=label_font_size)
+            pyplot.setp(axis.get_xticklabels(), fontsize=label_font_size)
+
+        else:
+            axis.axis("off")
+
+    fig.tight_layout()
+    plotter.save_figure(fig, filename=f"all_posteriors", dpi_request=dpi_request)
+
+
 def plot_loglikelihood_trace(plotter: Plotter, mcmc_tables: List[pd.DataFrame], burn_in=0):
     """
     Plot the loglikelihood traces for each MCMC run.

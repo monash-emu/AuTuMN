@@ -39,7 +39,9 @@ def get_plot_text_dict(param_string, capitalise_first_letter=False):
     return text
 
 
-def plot_acceptance_ratio(plotter: Plotter, mcmc_tables: List[pd.DataFrame]):
+def plot_acceptance_ratio(
+        plotter: Plotter, mcmc_tables: List[pd.DataFrame], label_font_size=6, dpi_request=300
+):
     """
     Plot the prameter traces for each MCMC run.
     """
@@ -60,9 +62,14 @@ def plot_acceptance_ratio(plotter: Plotter, mcmc_tables: List[pd.DataFrame]):
 
         axis.plot(ratios, alpha=0.8, linewidth=0.7)
 
-    axis.set_ylabel("Acceptance Ratio")
-    axis.set_xlabel("MCMC iterations")
-    plotter.save_figure(fig, filename=f"acceptance_ratio", title_text=f"Acceptance Ratio")
+    axis.set_ylabel("Acceptance ratio", fontsize=label_font_size)
+    axis.set_ylim(bottom=0.)
+    axis.set_xlabel("Iterations", fontsize=label_font_size)
+    pyplot.setp(axis.get_yticklabels(), fontsize=label_font_size)
+    pyplot.setp(axis.get_xticklabels(), fontsize=label_font_size)
+    plotter.save_figure(
+        fig, filename=f"acceptance_ratio", title_text=f"Acceptance Ratio", dpi_request=dpi_request
+    )
 
 
 def plot_prior(i: int, prior_dict: dict, path: str):
@@ -282,7 +289,7 @@ def plot_multiple_posteriors(
             axis.axis("off")
 
     fig.tight_layout()
-    plotter.save_figure(fig, filename=f"all_posteriors", dpi=dpi_request)
+    plotter.save_figure(fig, filename=f"all_posteriors", dpi_request=dpi_request)
 
 
 def plot_loglikelihood_vs_parameter(

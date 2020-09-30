@@ -19,7 +19,13 @@ def plot_acceptance_ratio(
     mcmc_params: List[pd.DataFrame],
     targets: dict,
 ):
-    plots.calibration.plots.plot_acceptance_ratio(plotter, mcmc_tables)
+    label_font_size = \
+        st.sidebar.slider("Label font size", 1, 15, 10)
+    dpi_request = \
+        st.sidebar.slider("DPI", 50, 2000, 300)
+    plots.calibration.plots.plot_acceptance_ratio(
+        plotter, mcmc_tables, label_font_size=label_font_size, dpi_request=dpi_request
+    )
 
 
 PLOT_FUNCS["Acceptance ratio"] = plot_acceptance_ratio

@@ -15,7 +15,7 @@ class BasePlotter(ABC):
         pass
 
     @abstractmethod
-    def save_figure(self, fig, filename: str, subdir=None, title_text=None):
+    def save_figure(self, fig, filename: str, subdir=None, title_text=None, dpi_request=300):
         pass
 
     def get_figure(

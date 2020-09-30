@@ -98,6 +98,10 @@ def build_model(params: dict) -> StratifiedModel:
         tb_model.time_variants['treatment_death_rate'] = treatment_death_func
         tb_model.time_variants['relapse_rate'] = relapse_func
 
+    # Load time-variant birth rates
+    set_model_time_variant_birth_rate(tb_model, params['iso3'])
+
+
     # apply user-defined stratifications
     user_defined_stratifications = [s for s in list(params['user_defined_stratifications'].keys()) if
                                     s in params["stratify_by"]]
@@ -111,9 +115,6 @@ def build_model(params: dict) -> StratifiedModel:
         stratify_by_organ(tb_model, params)
     else:
         tb_model.time_variants['detection_rate'] = detection_rate_func
-
-    # Load time-variant birth rates
-    set_model_time_variant_birth_rate(tb_model, params['iso3'])
 
     # Register derived output functions, which are calculations based on the model's compartment values or flows.
     # These are calculated after the model is run.

@@ -151,4 +151,21 @@ def plot_model_targets(
     plots.model.plots.plot_outputs_single(plotter, scenario, target, is_logscale)
 
 
+def plot_model_multi_targets(
+    plotter: StreamlitPlotter, app: AppRegion,
+):
+    # Assume a COVID model
+    scenario = Scenario(app.build_model, idx=0, params=app.params)
+    with st.spinner("Running model..."):
+        scenario.run()
+    is_logscale = st.sidebar.checkbox("Log scale")
+    target_name_lookup = {t["title"]: t for t in app.targets.values()}
+    titles = ['Population size', 'TB prevalence (/100,000)', 'Notifications']  # FIXME: Could come from a multi-selector
+    target_list = [target_name_lookup[title] for title in titles]
+    plots.model.plots.plot_multi_targets(plotter, scenario, target_list, is_logscale)
+
+
 PLOT_FUNCS["Calibration targets"] = plot_model_targets
+
+
+PLOT_FUNCS["Calibration multi-targets"] = plot_model_multi_targets

@@ -108,6 +108,10 @@ def apply_user_defined_stratification(model, compartments, stratification_name, 
             param_name = 'contact_rate_from_' + stage
             if param_name not in stratification_details['adjustments']:
                 stratification_details['adjustments'][param_name] = stratification_details['adjustments']['contact_rate']
+
+    # adjust crude birth rate according to the strata proportions
+    stratification_details['adjustments']['crude_birth_rate'] = stratification_details['proportions']
+
     # prepare parameter adjustments
     flow_adjustments = {}
     for param_name, adjustment in stratification_details['adjustments'].items():

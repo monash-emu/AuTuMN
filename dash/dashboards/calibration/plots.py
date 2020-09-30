@@ -144,22 +144,6 @@ def plot_posterior(
 PLOT_FUNCS["Posterior distributions"] = plot_posterior
 
 
-def plot_loglikelihood_trace(
-    plotter: StreamlitPlotter,
-    calib_dir_path: str,
-    mcmc_tables: List[pd.DataFrame],
-    mcmc_params: List[pd.DataFrame],
-    targets: dict,
-):
-    burn_in = selectors.burn_in(mcmc_tables)
-    plots.calibration.plots.plot_loglikelihood_trace(plotter, mcmc_tables, burn_in)
-    num_iters = len(mcmc_tables[0])
-    plots.calibration.plots.plot_burn_in(plotter, num_iters, burn_in)
-
-
-PLOT_FUNCS["Loglikelihood trace"] = plot_loglikelihood_trace
-
-
 def plot_all_posteriors(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
@@ -187,3 +171,17 @@ def plot_all_posteriors(
 
 
 PLOT_FUNCS["All posteriors"] = plot_all_posteriors
+
+
+def plot_loglikelihood_trace(
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+):
+    burn_in = selectors.burn_in(mcmc_tables)
+    plots.calibration.plots.plot_loglikelihood_trace(plotter, mcmc_tables, burn_in)
+
+
+PLOT_FUNCS["Loglikelihood trace"] = plot_loglikelihood_trace

@@ -37,17 +37,12 @@ PRIORS = [
     {
         "param_name": "start_population_size",
         "distribution": "uniform",
-        "distri_params": [500, 10000]
+        "distri_params": [2000, 6000]
     },
-    # {
-    #     "param_name": "start_time",
-    #     "distribution": "uniform",
-    #     "distri_params": [1900, 1950]
-    # },
     {
         "param_name": "contact_rate",
         "distribution": "uniform",
-        "distri_params": [.3, .6]
+        "distri_params": [1.5, 2.0]
     },
     {
         "param_name": "late_reactivation_multiplier",
@@ -62,12 +57,12 @@ PRIORS = [
     {
         "param_name": "user_defined_stratifications.location.adjustments.detection_rate.ebeye",
         "distribution": "uniform",
-        "distri_params": [0.5, 3.0],
+        "distri_params": [0.5, 1.5],
     },
     {
         "param_name": "user_defined_stratifications.location.adjustments.detection_rate.other",
         "distribution": "uniform",
-        "distri_params": [0.5, 3.0],
+        "distri_params": [0.5, 1.5],
     },
     {
         "param_name": "extra_params.rr_progression_diabetes",
@@ -82,7 +77,6 @@ targets_to_use = [
     'percentage_latentXlocation_majuro',
     'notificationsXlocation_majuro',
     'notificationsXlocation_ebeye',
-    'notificationsXlocation_other',
     'population_size',
 ]
 

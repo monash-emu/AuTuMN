@@ -12,6 +12,35 @@ from dash import selectors
 PLOT_FUNCS = {}
 
 
+def create_standard_plotting_sidebar():
+    # Implement user request options
+    title_font_size = \
+        st.sidebar.slider("Title font size", 1, 15, 8)
+    label_font_size = \
+        st.sidebar.slider("Label font size", 1, 15, 8)
+    dpi_request = \
+        st.sidebar.slider("DPI", 50, 2000, 300)
+    capitalise_first_letter = \
+        st.sidebar.checkbox("Title start capital")
+    return title_font_size, label_font_size, dpi_request, capitalise_first_letter
+
+
+def print_mle_parameters(
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+):
+    df = db.process.append_tables(mcmc_tables)
+    param_df = db.process.append_tables(mcmc_params)
+    params = db.process.find_mle_params(df, param_df)
+    st.write(params)
+
+
+PLOT_FUNCS["Print MLE parameters"] = print_mle_parameters
+
+
 def plot_acceptance_ratio(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
@@ -97,20 +126,22 @@ def plot_mcmc_parameter_trace(
 PLOT_FUNCS["Parameter trace"] = plot_mcmc_parameter_trace
 
 
-def print_mle_parameters(
-    plotter: StreamlitPlotter,
-    calib_dir_path: str,
-    mcmc_tables: List[pd.DataFrame],
-    mcmc_params: List[pd.DataFrame],
-    targets: dict,
+def plot_all_param_traces(
+        plotter: StreamlitPlotter,
+        calib_dir_path: str,
+        mcmc_tables: List[pd.DataFrame],
+        mcmc_params: List[pd.DataFrame],
+        targets: dict,
 ):
-    df = db.process.append_tables(mcmc_tables)
-    param_df = db.process.append_tables(mcmc_params)
-    params = db.process.find_mle_params(df, param_df)
-    st.write(params)
+
+    title_font_size, label_font_size, dpi_request, capitalise_first_letter = \
+        create_standard_plotting_sidebar()
+    plots.calibration.plots.plot_multiple_param_traces(
+        plotter, mcmc_params, title_font_size, label_font_size, capitalise_first_letter, dpi_request
+    )
 
 
-PLOT_FUNCS["Print MLE parameters"] = print_mle_parameters
+PLOT_FUNCS["All param traces"] = plot_all_param_traces
 
 
 def plot_loglikelihood_vs_parameter(
@@ -136,50 +167,14 @@ def plot_loglike_vs_all_params(
         mcmc_params: List[pd.DataFrame],
         targets: dict,
 ):
-
-    # Implement user request options
-    title_font_size = \
-        st.sidebar.slider("Title font size", 1, 15, 8)
-    label_font_size = \
-        st.sidebar.slider("Label font size", 1, 15, 8)
-    dpi_request = \
-        st.sidebar.slider("DPI", 50, 2000, 300)
-    capitalise_first_letter = \
-        st.sidebar.checkbox("Title start capital")
-
+    title_font_size, label_font_size, dpi_request, capitalise_first_letter = \
+        create_standard_plotting_sidebar()
     plots.calibration.plots.plot_all_params_vs_loglike(
         plotter, mcmc_tables, mcmc_params, title_font_size, label_font_size, capitalise_first_letter, dpi_request
     )
 
 
-PLOT_FUNCS["All params vs loglike"] = plot_loglike_vs_all_params
-
-
-def plot_all_param_traces(
-        plotter: StreamlitPlotter,
-        calib_dir_path: str,
-        mcmc_tables: List[pd.DataFrame],
-        mcmc_params: List[pd.DataFrame],
-        targets: dict,
-):
-
-    # Implement user request options
-    title_font_size = \
-        st.sidebar.slider("Title font size", 1, 15, 8)
-    label_font_size = \
-        st.sidebar.slider("Label font size", 1, 15, 8)
-    dpi_request = \
-        st.sidebar.slider("DPI", 50, 2000, 300)
-    capitalise_first_letter = \
-        st.sidebar.checkbox("Title start capital")
-
-    # Plot
-    plots.calibration.plots.plot_multiple_param_traces(
-        plotter, mcmc_params, title_font_size, label_font_size, capitalise_first_letter, dpi_request
-    )
-
-
-PLOT_FUNCS["All param traces"] = plot_all_param_traces
+PLOT_FUNCS["All loglike vs params"] = plot_loglike_vs_all_params
 
 
 def plot_posterior(
@@ -189,8 +184,10 @@ def plot_posterior(
     mcmc_params: List[pd.DataFrame],
     targets: dict,
 ):
-    chosen_param = selectors.parameter(mcmc_params[0])
-    num_bins = st.sidebar.slider("Number of bins", 1, 50, 16)
+    chosen_param = \
+        selectors.parameter(mcmc_params[0])
+    num_bins = \
+        st.sidebar.slider("Number of bins", 1, 50, 16)
     plots.calibration.plots.plot_posterior(plotter, mcmc_params, chosen_param, num_bins)
 
 
@@ -205,19 +202,10 @@ def plot_all_posteriors(
     targets: dict,
 ):
 
-    # Implement user request options
+    title_font_size, label_font_size, dpi_request, capitalise_first_letter = \
+        create_standard_plotting_sidebar()
     num_bins = \
         st.sidebar.slider("Number of bins", 1, 50, 16)
-    title_font_size = \
-        st.sidebar.slider("Title font size", 1, 15, 8)
-    label_font_size = \
-        st.sidebar.slider("Label font size", 1, 15, 8)
-    dpi_request = \
-        st.sidebar.slider("DPI", 50, 2000, 300)
-    capitalise_first_letter = \
-        st.sidebar.checkbox("Title start capital")
-
-    # Plot
     plots.calibration.plots.plot_multiple_posteriors(
         plotter, mcmc_params, num_bins, title_font_size, label_font_size, capitalise_first_letter, dpi_request
     )

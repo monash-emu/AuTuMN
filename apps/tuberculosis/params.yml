@@ -72,9 +72,7 @@ time_variant_tb_screening_rate:
 treatment_duration: .5
 prop_death_among_negative_tx_outcome: 0.2
 on_treatment_infect_multiplier: 0.08
-time_variant_tsr:  # should always be > 0
-  1950: 0.1
-  2020.: 0.8
+time_variant_tsr:  {}
 
 # relative risks of reinfection
 rr_infection_latent: .21

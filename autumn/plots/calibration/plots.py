@@ -32,8 +32,11 @@ PLOT_TEXT_DICT = {
 }
 
 
-def get_plot_text_dict(param_string):
-    return PLOT_TEXT_DICT[param_string] if param_string in PLOT_TEXT_DICT else param_string
+def get_plot_text_dict(param_string, capitalise_first_letter=False):
+    text = PLOT_TEXT_DICT[param_string] if param_string in PLOT_TEXT_DICT else param_string
+    if capitalise_first_letter:
+        text = text[0].upper() + text[1:]
+    return text
 
 
 def plot_acceptance_ratio(plotter: Plotter, mcmc_tables: List[pd.DataFrame]):
@@ -237,7 +240,7 @@ def plot_posterior(
 
 
 def plot_multiple_posteriors(
-    plotter: Plotter, mcmc_params: List[pd.DataFrame], num_bins: int
+    plotter: Plotter, mcmc_params: List[pd.DataFrame], num_bins: int, title_font_size: int, label_font_size: int,
 ):
     """
     Plots the posterior distribution of a given parameter in a histogram.
@@ -266,9 +269,9 @@ def plot_multiple_posteriors(
 
             # Plot histograms
             vals_df.hist(bins=num_bins, ax=axis)
-            axis.set_title(get_plot_text_dict(param_name), fontsize=8)
-            pyplot.setp(axis.get_yticklabels(), fontsize=5)
-            pyplot.setp(axis.get_xticklabels(), fontsize=5)
+            axis.set_title(get_plot_text_dict(param_name, capitalise_first_letter=True), fontsize=title_font_size)
+            pyplot.setp(axis.get_yticklabels(), fontsize=label_font_size)
+            pyplot.setp(axis.get_xticklabels(), fontsize=label_font_size)
 
         else:
             axis.axis("off")

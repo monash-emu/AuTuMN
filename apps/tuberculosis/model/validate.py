@@ -5,10 +5,7 @@ validate_params = sb.build_validator(
     iso3=str,
     region=sb.Nullable(str),
     # Running time.
-    start_time=float,
-    end_time=float,
-    time_step=float,
-    critical_ranges=list,
+    time=sb.Dict(start=float, end=float, step=float, critical_ranges=list,),
     # output requests
     calculated_outputs=list,
     outputs_stratification=dict,
@@ -65,4 +62,6 @@ validate_params = sb.build_validator(
 
 
 def check_param_values(params):
-    assert all([v > 0. for v in params['time_variant_tsr'].values()]), "Treatment success rate should always be > 0."
+    assert all(
+        [v > 0.0 for v in params["time_variant_tsr"].values()]
+    ), "Treatment success rate should always be > 0."

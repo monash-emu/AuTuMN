@@ -21,25 +21,34 @@ import yaml
 
 param_info = {
     "contact_rate": {"name": "contact rate", "range": [0.025, 0.08]},
-    "start_time": {"name": "model start time", "range": [0.0, 40.0]},
-    "npi_effectiveness.other_locations": {"name": "alpha", "range": [0.5, 1.0]},
-    "compartment_periods_calculated.exposed.total_period": {
+    "time.start": {"name": "model start time", "range": [0.0, 40.0]},
+    "mobility.npi_effectiveness.other_locations": {"name": "alpha", "range": [0.5, 1.0]},
+    "sojourn.compartment_periods_calculated.exposed.total_period": {
         "name": "incubation time",
         "range": [3.0, 7.0],
     },
-    "compartment_periods_calculated.active.total_period": {
+    "sojourn.compartment_periods_calculated.active.total_period": {
         "name": "time infectious",
         "range": [5.0, 10.0],
     },
     "case_detection.maximum_gradient": {"name": "detection (shape)", "range": [0.05, 0.1]},
     "case_detection.max_change_time": {"name": "detection (inflection)", "range": [70.0, 160.0],},
     "case_detection.end_value": {"name": "detection (prop_final)", "range": [0.10, 0.90]},
-    "icu_prop": {"name": "prop ICU among hosp.", "range": [0.10, 0.30]},
-    "compartment_periods.hospital_late": {"name": "hopital duration", "range": [4.0, 12.0]},
-    "compartment_periods.icu_late": {"name": "time in ICU", "range": [4.0, 12.0]},
-    "hospital_props_multiplier": {"name": "hosp. prop. multiplier", "range": [0.5, 2.0]},
-    "microdistancing.parameters.c": {"name": "microdistancing (inflection)", "range": [90, 152]},
-    "microdistancing.parameters.sigma": {"name": "microdistancing (final)", "range": [0.6, 1.0]},
+    "clinical_stratification.icu_prop": {"name": "prop ICU among hosp.", "range": [0.10, 0.30]},
+    "sojourn.compartment_periods.hospital_late": {"name": "hopital duration", "range": [4.0, 12.0]},
+    "sojourn.compartment_periods.icu_late": {"name": "time in ICU", "range": [4.0, 12.0]},
+    "clinical_stratification.props.hospital.multiplier": {
+        "name": "hosp. prop. multiplier",
+        "range": [0.5, 2.0],
+    },
+    "mobility.microdistancing.parameters.c": {
+        "name": "microdistancing (inflection)",
+        "range": [90, 152],
+    },
+    "mobility.microdistancing.parameters.sigma": {
+        "name": "microdistancing (final)",
+        "range": [0.6, 1.0],
+    },
 }
 
 pollan_priors = get_list_of_ifr_priors_from_pollan()
@@ -194,9 +203,9 @@ def plot_param_posteriors(param_values, param_info={}):
 def get_country_posterior_detection_percentiles(country_param_values):
 
     calculated_times = range(213)
-    store_matrix = np.zeros((len(calculated_times), len(country_param_values["start_time"])))
+    store_matrix = np.zeros((len(calculated_times), len(country_param_values["time.start"])))
 
-    for i in range(len(country_param_values["start_time"])):
+    for i in range(len(country_param_values["time.start"])):
         if "case_detection.start_value" in country_param_values:
             sigma = country_param_values["case_detection.start_value"][i]
         else:

@@ -203,3 +203,12 @@ class Parameters:
     testing_to_detection: Optional[TestingToDetection]
     susceptibility_heterogeneity: Optional[SusceptibilityHeterogeneity]
     importation: Optional[Importation]
+    # Dummy parameters - not used
+    notifications_dispersion_param: float
+    icu_occupancy_dispersion_param: float
+    proportion_seropositive_dispersion_param: float
+    hospital_occupancy_dispersion_param: float
+    new_hospital_admissions_dispersion_param: float
+    new_icu_admissions_dispersion_param: float
+    infection_deaths_dispersion_param: float
+    accum_deaths_dispersion_param: float

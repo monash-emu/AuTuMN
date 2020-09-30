@@ -16,14 +16,14 @@ from .who_data import read_who_data_from_csv
 def get_prior_distributions_for_opti():
     prior_list = [
         {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.02, 0.06],},
-        {"param_name": "start_time", "distribution": "uniform", "distri_params": [0.0, 40.0],},
+        {"param_name": "time.start", "distribution": "uniform", "distri_params": [0.0, 40.0],},
         {
-            "param_name": "compartment_periods_calculated.exposed.total_period",
+            "param_name": "sojourn.compartment_periods_calculated.exposed.total_period",
             "distribution": "uniform",
             "distri_params": [3, 7],
         },
         {
-            "param_name": "compartment_periods_calculated.active.total_period",
+            "param_name": "sojourn.compartment_periods_calculated.active.total_period",
             "distribution": "uniform",
             "distri_params": [4, 10],
         },
@@ -47,37 +47,41 @@ def get_prior_distributions_for_opti():
             "distribution": "uniform",
             "distri_params": [0.10, 0.50],
         },
-        {"param_name": "icu_prop", "distribution": "uniform", "distri_params": [0.15, 0.20],},
+        {
+            "param_name": "clinical_stratification.icu_prop",
+            "distribution": "uniform",
+            "distri_params": [0.15, 0.20],
+        },
         # vary hospital durations
         {
-            "param_name": "compartment_periods.hospital_late",
+            "param_name": "sojourn.compartment_periods.hospital_late",
             "distribution": "uniform",
             "distri_params": [17.7, 20.4],
         },
         {
-            "param_name": "compartment_periods.icu_late",
+            "param_name": "sojourn.compartment_periods.icu_late",
             "distribution": "uniform",
             "distri_params": [9.0, 13.0],
         },
         # vary symptomatic and hospitalised proportions
         {
-            "param_name": "symptomatic_props_multiplier",
+            "param_name": "clinical_stratification.props.symptomatic.multiplier",
             "distribution": "uniform",
             "distri_params": [0.75, 1.25],
         },
         {
-            "param_name": "hospital_props_multiplier",
+            "param_name": "clinical_stratification.props.hospital.multiplier",
             "distribution": "uniform",
             "distri_params": [0.75, 1.25],
         },
         # Micro-distancing
         {
-            "param_name": "microdistancing.parameters.c",
+            "param_name": "mobility.microdistancing.parameters.c",
             "distribution": "uniform",
             "distri_params": [90, 130],
         },
         {
-            "param_name": "microdistancing.parameters.sigma",
+            "param_name": "mobility.microdistancing.parameters.sigma",
             "distribution": "uniform",
             "distri_params": [0.4, 0.75],
         },
@@ -167,7 +171,7 @@ def get_list_of_ifr_priors_from_pollan(test="immunoassay"):
     for i in range(len(lower)):
         ifr_priors.append(
             {
-                "param_name": "infection_fatality_props(" + str(i) + ")",
+                "param_name": "infection_fatality.props(" + str(i) + ")",
                 "distribution": "uniform",
                 "distri_params": [lower[i], upper[i]],
             }

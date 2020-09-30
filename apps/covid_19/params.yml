@@ -167,3 +167,14 @@ case_detection:
 testing_to_detection: null
 
 importation: null
+
+# Fake parameters used in calibration for negative binomial (need to be listed for validation to pass)
+# Not used by model.
+notifications_dispersion_param: 1.
+icu_occupancy_dispersion_param: 1.
+proportion_seropositive_dispersion_param: 1.
+hospital_occupancy_dispersion_param: 1.
+new_hospital_admissions_dispersion_param: 1.
+new_icu_admissions_dispersion_param: 1.
+infection_deaths_dispersion_param: 1.
+accum_deaths_dispersion_param: 1.

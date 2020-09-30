@@ -1,18 +1,21 @@
 ---
 parent: apps/tuberculosis/params.yml
 iso3: "MHL"
-start_time: 1800.
-end_time: 2035.
-time_step: 1.
-critical_ranges: [[2017., 2019.]]
+
+time:
+  start: 1800.
+  end: 2035.
+  step: 1.
+  critical_ranges: [[2017., 2019.]]
+
 start_population_size: 4000.
 
 # MODEL STRUCTURE
-stratify_by: ['age', 'organ', 'location']
+stratify_by: ["age", "organ", "location"]
 age_breakpoints: [0, 5, 15, 35, 50]
-user_defined_stratifications:  # this specifies user-defined  stratifications
+user_defined_stratifications: # this specifies user-defined  stratifications
   location:
-    strata: ['majuro', 'ebeye', 'other']
+    strata: ["majuro", "ebeye", "other"]
     proportions:
       majuro: .523
       ebeye: .2
@@ -65,7 +68,7 @@ time_variant_bcg_perc:
   2018: 98.
   2019: 89.
 
-time_variant_tsr:  # should always be > 0
+time_variant_tsr: # should always be > 0
   1995: .25
   2017.: 0.8
 
@@ -114,12 +117,18 @@ late_reactivation_multiplier: 1.
 #      2019: 0.
 
 # REQUESTED OUTPUTS
-calculated_outputs: ['prevalence_infectious', 'percentage_latent', 'population_size', 'notifications', 'mortality', 'incidence']
+calculated_outputs:
+  [
+    "prevalence_infectious",
+    "percentage_latent",
+    "population_size",
+    "notifications",
+    "mortality",
+    "incidence",
+  ]
 outputs_stratification:
-  prevalence_infectious: ['location']
-  percentage_latent: ['location']
-  notifications: ['location']
-
+  prevalence_infectious: ["location"]
+  percentage_latent: ["location"]
+  notifications: ["location"]
 
 inflate_reactivation_for_diabetes: True
-

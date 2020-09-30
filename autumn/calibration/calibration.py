@@ -105,10 +105,10 @@ class Calibration:
         )
 
         # Validate target output start time.
-        model_start = model_parameters["default"]["start_time"]
+        model_start = model_parameters["default"]["time"]["start"]
         max_prior_start = None
         for p in priors:
-            if p["param_name"] == "start_time":
+            if p["param_name"] == "time.start":
                 max_prior_start = max(p["distri_params"])
 
         for t in targeted_outputs:
@@ -244,7 +244,7 @@ class Calibration:
         logger.info(f"Running iteration {self.iter_num}...")
 
         # Update default parameters to use calibration params.
-        param_updates = {"end_time": self.end_time}
+        param_updates = {"time.end": self.end_time}
         for i, param_name in enumerate(self.param_list):
             param_updates[param_name] = proposed_params[i]
 
@@ -712,7 +712,7 @@ class Calibration:
         for i, param_name in enumerate(self.param_list):
             dict_to_dump[param_name] = float(self.mle_estimates[i])
         if self.best_start_time is not None:
-            dict_to_dump["start_time"] = self.best_start_time
+            dict_to_dump["time.start"] = self.best_start_time
 
         file_path = os.path.join(constants.DATA_PATH, self.model_name, "mle_params.yml")
         with open(file_path, "w") as outfile:

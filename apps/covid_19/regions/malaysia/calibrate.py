@@ -23,7 +23,7 @@ TARGET_OUTPUTS = [
     },
 ]
 
-PAR_PRIORS = provide_default_calibration_params(excluded_params=("start_time",))
+PAR_PRIORS = provide_default_calibration_params(excluded_params=("time.start",))
 PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS)
 
 PAR_PRIORS += [
@@ -33,27 +33,25 @@ PAR_PRIORS += [
         "distribution": "uniform",
         "distri_params": [0.2, 0.6],
     },
-
     # Microdistancing
     {
-        "param_name": "microdistancing.parameters.max_effect",
+        "param_name": "mobility.microdistancing.parameters.max_effect",
         "distribution": "uniform",
         "distri_params": [0.3, 0.9],
     },
-
     # Health system-related
     {
-        "param_name": "hospital_props_multiplier",
+        "param_name": "clinical_stratification.props.hospital.multiplier",
         "distribution": "uniform",
         "distri_params": [0.7, 1.3],
     },
     {
-        "param_name": "icu_prop",
+        "param_name": "clinical_stratification.icu_prop",
         "distribution": "uniform",
         "distri_params": [0.12, 0.25],
     },
     {
-        "param_name": "compartment_periods.icu_early",
+        "param_name": "sojourn.compartment_periods.icu_early",
         "distribution": "uniform",
         "distri_params": [5.0, 25.0],
     },

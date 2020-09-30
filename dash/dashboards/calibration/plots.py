@@ -112,6 +112,30 @@ def plot_calibration_fit(
 PLOT_FUNCS["Output calibration fit"] = plot_calibration_fit
 
 
+def plot_multi_output_fit(
+        plotter: StreamlitPlotter,
+        calib_dir_path: str,
+        mcmc_tables: List[pd.DataFrame],
+        mcmc_params: List[pd.DataFrame],
+        targets: dict,
+):
+    available_outputs = [o["output_key"] for o in targets.values()]
+    is_logscale = st.sidebar.checkbox("Log scale")
+
+    outputs = {}
+    for output in available_outputs:
+        derived_output_tables = db.load.load_derived_output_tables(calib_dir_path, column=output)
+        outputs[output] = plots.calibration.plots.sample_outputs_for_calibration_fit(
+            output, mcmc_tables, derived_output_tables
+        )
+    plots.calibration.plots.plot_multi_fit(
+        plotter, available_outputs, outputs, targets, is_logscale
+    )
+
+
+PLOT_FUNCS["Multi-output fit"] = plot_multi_output_fit
+
+
 def plot_mcmc_parameter_trace(
     plotter: StreamlitPlotter,
     calib_dir_path: str,

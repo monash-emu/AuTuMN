@@ -507,6 +507,59 @@ def plot_calibration_fit(
     plotter.save_figure(fig, filename=filename, title_text=title_text)
 
 
+def plot_multi_fit(
+        plotter: Plotter, output_names: list, outputs: dict, targets, is_logscale=False,
+):
+
+    fig, axes, _, n_rows, n_cols, indices = \
+        plotter.get_figure(len(output_names), share_xaxis=True)
+
+    for i_output, output in enumerate(output_names):
+        axis = axes[indices[i_output][0], indices[i_output][1]]
+
+        # Track the maximum value being plotted
+        max_value = 0.0
+
+        for times, values in outputs[output]:
+            axis.plot(times, values)
+            max_value = max(values) if max(values) > max_value else max_value
+
+        # Mark the MLE run with a dotted line
+        axis.plot(outputs[output][-1][0], outputs[output][-1][1], linestyle=(0, (1, 3)), color="black", linewidth=3)
+
+        # Add plot targets
+        output_config = {"output_key": output, "values": [], "times": []}
+        for t in targets.values():
+            if t["output_key"] == output:
+                output_config = t
+
+        values = output_config["values"]
+        times = output_config["times"]
+        _plot_targets_to_axis(axis, values, times, on_uncertainty_plot=False)
+
+        # Find upper limit for y-axis
+        if values:
+            upper_buffer = 2.0
+            max_target = max(values)
+            upper_ylim = (
+                max_value if max_value < max_target * upper_buffer else max_target * upper_buffer
+            )
+        else:
+            upper_ylim = max_value
+
+        # Plot outputs[output]
+        axis.set_title(output)
+        if is_logscale:
+            axis.set_yscale("log")
+        else:
+            axis.set_ylim([0.0, upper_ylim])
+
+        filename = f"calibration-fit-{output}"
+
+    fig.tight_layout()
+    plotter.save_figure(fig, filename=filename)
+
+
 def _overwrite_non_accepted_mcmc_runs(mcmc_tables: List[pd.DataFrame], column_name: str):
     """
     Count non-accepted rows in a MCMC trace as the last accepted row.

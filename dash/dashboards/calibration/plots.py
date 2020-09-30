@@ -152,7 +152,7 @@ def plot_loglikelihood_vs_parameter(
     targets: dict,
 ):
     chosen_param = selectors.parameter(mcmc_params[0])
-    plots.calibration.plots.plot_loglikelihood_vs_parameter(
+    plots.calibration.plots.plot_single_param_loglike(
         plotter, mcmc_tables, mcmc_params, chosen_param
     )
 

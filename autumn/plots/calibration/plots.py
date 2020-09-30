@@ -280,12 +280,7 @@ def plot_burn_in(plotter: Plotter, num_iters: int, burn_in: int):
     plotter.save_figure(fig, filename="burn-in", title_text="burn-in")
 
 
-def plot_posterior(
-    plotter: Plotter, mcmc_params: List[pd.DataFrame], param_name: str, num_bins: int
-):
-    """
-    Plots the posterior distribution of a given parameter in a histogram.
-    """
+def get_posterior(mcmc_params, param_name):
     vals_df = None
     for table_df in mcmc_params:
         param_mask = table_df["name"] == param_name
@@ -294,7 +289,16 @@ def plot_posterior(
             vals_df = vals_df.append(table_vals)
         else:
             vals_df = table_vals
+    return vals_df
 
+
+def plot_posterior(
+    plotter: Plotter, mcmc_params: List[pd.DataFrame], param_name: str, num_bins: int
+):
+    """
+    Plots the posterior distribution of a given parameter in a histogram.
+    """
+    vals_df = get_posterior(mcmc_params, param_name)
     fig, axis, _, _, _, _ = plotter.get_figure()
     vals_df.hist(bins=num_bins, ax=axis)
     plotter.save_figure(
@@ -321,15 +325,7 @@ def plot_multiple_posteriors(
 
         if i < len(parameters):
             param_name = parameters[i]
-
-            vals_df = None
-            for table_df in mcmc_params:
-                param_mask = table_df["name"] == param_name
-                table_vals = table_df[param_mask].value
-                if vals_df is not None:
-                    vals_df = vals_df.append(table_vals)
-                else:
-                    vals_df = table_vals
+            vals_df = get_posterior(mcmc_params, param_name)
 
             # Plot histograms
             vals_df.hist(bins=num_bins, ax=axis)
@@ -348,7 +344,17 @@ def plot_multiple_posteriors(
     plotter.save_figure(fig, filename=f"all_posteriors", dpi_request=dpi_request)
 
 
-def plot_loglikelihood_vs_parameter(
+def plot_param_vs_loglike(mcmc_tables, mcmc_params, param_name, axis):
+    for mcmc_df, param_df in zip(mcmc_tables, mcmc_params):
+        df = param_df.merge(mcmc_df, on=["run", "chain"])
+        mask = (df["accept"] == 1) & (df["name"] == param_name)
+        df = df[mask]
+        param_values = df["value"]
+        loglikelihood_values = [-log(-v) for v in df["loglikelihood"]]
+        axis.plot(param_values, loglikelihood_values, ".")
+
+
+def plot_single_param_loglike(
     plotter: Plotter,
     mcmc_tables: List[pd.DataFrame],
     mcmc_params: List[pd.DataFrame],
@@ -358,14 +364,7 @@ def plot_loglikelihood_vs_parameter(
     Plots the loglikelihood against parameter values.
     """
     fig, axis, _, _, _, _ = plotter.get_figure()
-    for mcmc_df, param_df in zip(mcmc_tables, mcmc_params):
-        df = param_df.merge(mcmc_df, on=["run", "chain"])
-        mask = (df["accept"] == 1) & (df["name"] == param_name)
-        df = df[mask]
-        param_values = df["value"]
-        loglikelihood_values = [-log(-v) for v in df["loglikelihood"]]
-        axis.plot(param_values, loglikelihood_values, ".")
-
+    plot_param_vs_loglike(mcmc_tables, mcmc_params, param_name, axis)
     axis.set_xlabel(param_name)
     axis.set_ylabel("-log(-loglikelihood)")
     plotter.save_figure(
@@ -398,21 +397,12 @@ def plot_all_params_vs_loglike(
 
         if i < len(parameters):
             param_name = parameters[i]
-
-            for mcmc_df, param_df in zip(mcmc_tables, mcmc_params):
-                df = param_df.merge(mcmc_df, on=["run", "chain"])
-                mask = (df["accept"] == 1) & (df["name"] == param_name)
-                df = df[mask]
-                param_values = df["value"]
-                loglikelihood_values = [-log(-v) for v in df["loglikelihood"]]
-                axis.plot(param_values, loglikelihood_values, ".")
-
+            plot_param_vs_loglike(mcmc_tables, mcmc_params, param_name, axis)
             axis.set_title(
                 get_plot_text_dict(
                     param_name, capitalise_first_letter=capitalise_first_letter
                 ), fontsize=title_font_size
             )
-
             if indices[i][0] == n_rows - 1:
                 x_label = "Iterations" if capitalise_first_letter else "iterations"
                 axis.set_xlabel(x_label, fontsize=label_font_size)

@@ -30,7 +30,7 @@ def plot_agg_compartments_multi_scenario(
     """
     Plot multiple compartments with values aggregated for a multiple scenarios.
     """
-    fig, axis, _, _, _ = plotter.get_figure()
+    fig, axis, _, _, _, _ = plotter.get_figure()
     legend = []
     for color_idx, scenario in enumerate(scenarios):
         model = scenario.model
@@ -55,7 +55,7 @@ def plot_single_compartment_multi_scenario(
     """
     Plot the selected output compartment for a multiple scenarios.
     """
-    fig, axis, _, _, _ = plotter.get_figure()
+    fig, axis, _, _, _, _ = plotter.get_figure()
     legend = []
     for color_idx, scenario in enumerate(scenarios):
         model = scenario.model
@@ -80,7 +80,7 @@ def plot_multi_compartments_single_scenario(
     model = scenario.model
     times = model.times
 
-    fig, axis, _, _, _ = plotter.get_figure()
+    fig, axis, _, _, _, _ = plotter.get_figure()
     legend = []
     for color_idx, compartment_name in enumerate(reversed(compartments)):
         comp_idx = model.compartment_names.index(compartment_name)
@@ -102,7 +102,7 @@ def plot_outputs_multi(
     """
     Plot the model derived/generated outputs requested by the user for multiple single scenarios, on one plot.
     """
-    fig, axis, _, _, _ = plotter.get_figure()
+    fig, axis, _, _, _, _ = plotter.get_figure()
     output_name = output_config["output_key"]
     legend = []
     for idx, scenario in enumerate(reversed(scenarios)):
@@ -128,9 +128,8 @@ def plot_outputs_single(
     """
     Plot the model derived/generated outputs requested by the user for a single scenario.
     """
-    single_panel = axis is None
-    if single_panel:
-        fig, axis, _, _, _ = plotter.get_figure()
+    fig, axis, _, _, _, _ = plotter.get_figure()
+
     if is_logscale:
         axis.set_yscale("log")
 
@@ -210,7 +209,7 @@ def plot_time_varying_input(
     Plot single simple plot of a function over time
     """
     # Plot requested func names.
-    fig, axes, max_dims, n_rows, n_cols = plotter.get_figure()
+    fig, axes, max_dims, n_rows, n_cols, _ = plotter.get_figure()
     if is_logscale:
         axes.set_yscale("log")
 
@@ -242,7 +241,7 @@ def plot_stacked_compartments_by_stratum(
     times = models[0].times + models[1].times
 
     if not multicountry:
-        fig, axis, _, _, _ = plotter.get_figure()
+        fig, axis, _, _, _, _ = plotter.get_figure()
 
     legend = []
     strata = models[0].all_stratifications[stratify_by]

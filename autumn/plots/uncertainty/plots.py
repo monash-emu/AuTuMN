@@ -29,7 +29,7 @@ def plot_timeseries_with_uncertainty(
         mask = df["quantile"] == q
         quantiles[q] = df[mask]["value"].tolist()
 
-    fig, axis, _, _, _ = plotter.get_figure()
+    fig, axis, _, _, _, _ = plotter.get_figure()
     title = plotter.get_plot_title(output_name)
     # Plot quantiles
     colors = ["lightsteelblue", "cornflowerblue", "royalblue"]

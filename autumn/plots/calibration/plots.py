@@ -20,12 +20,32 @@ from autumn.plots.plotter import Plotter, COLOR_THEME
 
 logger = logging.getLogger(__name__)
 
+PLOT_TEXT_DICT = {
+    "contact_rate": "infection risk per contact",
+    "compartment_periods_calculated.exposed.total_period": "incubation period",
+    "compartment_periods_calculated.active.total_period": "duration active",
+    "hospital_props_multiplier": "hospital risk multiplier",
+    "compartment_periods.icu_early": "pre-ICU period",
+    "icu_prop": "ICU proportion",
+    "testing_to_detection.assumed_cdr_parameter": "CDR at base testing rate",
+    "microdistancing.parameters.max_effect": "max effect microdistancing",
+}
 
-def plot_acceptance_ratio(plotter: Plotter, mcmc_tables: List[pd.DataFrame]):
+
+def get_plot_text_dict(param_string, capitalise_first_letter=False):
+    text = PLOT_TEXT_DICT[param_string] if param_string in PLOT_TEXT_DICT else param_string
+    if capitalise_first_letter:
+        text = text[0].upper() + text[1:]
+    return text
+
+
+def plot_acceptance_ratio(
+        plotter: Plotter, mcmc_tables: List[pd.DataFrame], label_font_size=6, dpi_request=300
+):
     """
     Plot the prameter traces for each MCMC run.
     """
-    fig, axis, _, _, _ = plotter.get_figure()
+    fig, axis, _, _, _, _ = plotter.get_figure()
     mcmc_df = db.process.append_tables(mcmc_tables)
     chains = mcmc_df["chain"].unique().tolist()
     for chain in chains:
@@ -42,9 +62,14 @@ def plot_acceptance_ratio(plotter: Plotter, mcmc_tables: List[pd.DataFrame]):
 
         axis.plot(ratios, alpha=0.8, linewidth=0.7)
 
-    axis.set_ylabel("Acceptance Ratio")
-    axis.set_xlabel("MCMC iterations")
-    plotter.save_figure(fig, filename=f"acceptance_ratio", title_text=f"Acceptance Ratio")
+    axis.set_ylabel("Acceptance ratio", fontsize=label_font_size)
+    axis.set_ylim(bottom=0.)
+    axis.set_xlabel("Iterations", fontsize=label_font_size)
+    pyplot.setp(axis.get_yticklabels(), fontsize=label_font_size)
+    pyplot.setp(axis.get_xticklabels(), fontsize=label_font_size)
+    plotter.save_figure(
+        fig, filename=f"acceptance_ratio", title_text=f"Acceptance Ratio", dpi_request=dpi_request
+    )
 
 
 def plot_prior(i: int, prior_dict: dict, path: str):
@@ -142,7 +167,7 @@ def plot_mcmc_parameter_trace(plotter: Plotter, mcmc_params: List[pd.DataFrame],
     """
     Plot the prameter traces for each MCMC run.
     """
-    fig, axis, _, _, _ = plotter.get_figure()
+    fig, axis, _, _, _, _ = plotter.get_figure()
     for idx, table_df in enumerate(mcmc_params):
         param_mask = table_df["name"] == param_name
         param_df = table_df[param_mask]
@@ -157,7 +182,7 @@ def plot_loglikelihood_trace(plotter: Plotter, mcmc_tables: List[pd.DataFrame], 
     """
     Plot the loglikelihood traces for each MCMC run.
     """
-    fig, axis, _, _, _ = plotter.get_figure()
+    fig, axis, _, _, _, _ = plotter.get_figure()
 
     for idx, table_df in enumerate(mcmc_tables):
         accept_mask = table_df["accept"] == 1
@@ -179,7 +204,7 @@ def plot_burn_in(plotter: Plotter, num_iters: int, burn_in: int):
     """
     Plot the trade off been num iters and burn-in for MCMC runs.
     """
-    fig, axis, _, _, _ = plotter.get_figure()
+    fig, axis, _, _, _, _ = plotter.get_figure()
 
     def floor(n):
         val = num_iters - n
@@ -187,7 +212,7 @@ def plot_burn_in(plotter: Plotter, num_iters: int, burn_in: int):
 
     values = [floor(i) for i in range(num_iters)]
 
-    fig, axis, _, _, _ = plotter.get_figure()
+    fig, axis, _, _, _, _ = plotter.get_figure()
 
     axis.plot(values, color=COLOR_THEME[0])
     axis.set_ylabel("Number iters after burn-in")
@@ -214,11 +239,57 @@ def plot_posterior(
         else:
             vals_df = table_vals
 
-    fig, axis, _, _, _ = plotter.get_figure()
+    fig, axis, _, _, _, _ = plotter.get_figure()
     vals_df.hist(bins=num_bins, ax=axis)
     plotter.save_figure(
         fig, filename=f"{param_name}-posterior", title_text=f"{param_name} posterior"
     )
+
+
+def plot_multiple_posteriors(
+    plotter: Plotter, mcmc_params: List[pd.DataFrame], num_bins: int, title_font_size: int, label_font_size: int,
+        capitalise_first_letter: bool, dpi_request: int
+):
+    """
+    Plots the posterior distribution of a given parameter in a histogram.
+    """
+
+    # Except not the dispersion parameters - only the epidemiological ones
+    parameters = \
+        [param for param in mcmc_params[0].loc[:, "name"].unique().tolist() if
+         "dispersion_param" not in param]
+    fig, axes, _, n_rows, n_cols, indices = plotter.get_figure(len(parameters))
+
+    for i in range(n_rows * n_cols):
+        axis = axes[indices[i][0], indices[i][1]]
+
+        if i < len(parameters):
+            param_name = parameters[i]
+
+            vals_df = None
+            for table_df in mcmc_params:
+                param_mask = table_df["name"] == param_name
+                table_vals = table_df[param_mask].value
+                if vals_df is not None:
+                    vals_df = vals_df.append(table_vals)
+                else:
+                    vals_df = table_vals
+
+            # Plot histograms
+            vals_df.hist(bins=num_bins, ax=axis)
+            axis.set_title(
+                get_plot_text_dict(
+                    param_name, capitalise_first_letter=capitalise_first_letter
+                ), fontsize=title_font_size
+            )
+            pyplot.setp(axis.get_yticklabels(), fontsize=label_font_size)
+            pyplot.setp(axis.get_xticklabels(), fontsize=label_font_size)
+
+        else:
+            axis.axis("off")
+
+    fig.tight_layout()
+    plotter.save_figure(fig, filename=f"all_posteriors", dpi_request=dpi_request)
 
 
 def plot_loglikelihood_vs_parameter(
@@ -230,7 +301,7 @@ def plot_loglikelihood_vs_parameter(
     """
     Plots the loglikelihood against parameter values.
     """
-    fig, axis, _, _, _ = plotter.get_figure()
+    fig, axis, _, _, _, _ = plotter.get_figure()
     for mcmc_df, param_df in zip(mcmc_tables, mcmc_params):
         df = param_df.merge(mcmc_df, on=["run", "chain"])
         mask = (df["accept"] == 1) & (df["name"] == param_name)
@@ -289,7 +360,7 @@ def sample_outputs_for_calibration_fit(
 def plot_calibration_fit(
     plotter: Plotter, output_name: str, outputs: list, targets, is_logscale=False,
 ):
-    fig, axis, _, _, _ = plotter.get_figure()
+    fig, axis, _, _, _, _ = plotter.get_figure()
 
     # Track the maximum value being plotted
     max_value = 0.0

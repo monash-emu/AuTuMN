@@ -375,6 +375,57 @@ def plot_loglikelihood_vs_parameter(
     )
 
 
+def plot_all_params_vs_loglike(
+        plotter: Plotter,
+        mcmc_tables: List[pd.DataFrame],
+        mcmc_params: List[pd.DataFrame],
+        title_font_size: int,
+        label_font_size: int,
+        capitalise_first_letter: bool,
+        dpi_request: int,
+):
+
+    # Except not the dispersion parameters - only the epidemiological ones
+    parameters = \
+        [param for param in mcmc_params[0].loc[:, "name"].unique().tolist() if
+         "dispersion_param" not in param]
+
+    fig, axes, _, n_rows, n_cols, indices = \
+        plotter.get_figure(len(parameters), share_xaxis=False, share_yaxis=True)
+
+    for i in range(n_rows * n_cols):
+        axis = axes[indices[i][0], indices[i][1]]
+
+        if i < len(parameters):
+            param_name = parameters[i]
+
+            for mcmc_df, param_df in zip(mcmc_tables, mcmc_params):
+                df = param_df.merge(mcmc_df, on=["run", "chain"])
+                mask = (df["accept"] == 1) & (df["name"] == param_name)
+                df = df[mask]
+                param_values = df["value"]
+                loglikelihood_values = [-log(-v) for v in df["loglikelihood"]]
+                axis.plot(param_values, loglikelihood_values, ".")
+
+            axis.set_title(
+                get_plot_text_dict(
+                    param_name, capitalise_first_letter=capitalise_first_letter
+                ), fontsize=title_font_size
+            )
+
+            if indices[i][0] == n_rows - 1:
+                x_label = "Iterations" if capitalise_first_letter else "iterations"
+                axis.set_xlabel(x_label, fontsize=label_font_size)
+            pyplot.setp(axis.get_yticklabels(), fontsize=label_font_size)
+            pyplot.setp(axis.get_xticklabels(), fontsize=label_font_size)
+
+        else:
+            axis.axis("off")
+
+    fig.tight_layout()
+    plotter.save_figure(fig, filename=f"all_posteriors", dpi_request=dpi_request)
+
+
 def sample_outputs_for_calibration_fit(
     output_name: str, mcmc_tables: List[pd.DataFrame], do_tables: List[pd.DataFrame],
 ):

@@ -129,6 +129,32 @@ def plot_loglikelihood_vs_parameter(
 PLOT_FUNCS["Loglikelihood vs param"] = plot_loglikelihood_vs_parameter
 
 
+def plot_loglike_vs_all_params(
+        plotter: StreamlitPlotter,
+        calib_dir_path: str,
+        mcmc_tables: List[pd.DataFrame],
+        mcmc_params: List[pd.DataFrame],
+        targets: dict,
+):
+
+    # Implement user request options
+    title_font_size = \
+        st.sidebar.slider("Title font size", 1, 15, 8)
+    label_font_size = \
+        st.sidebar.slider("Label font size", 1, 15, 8)
+    dpi_request = \
+        st.sidebar.slider("DPI", 50, 2000, 300)
+    capitalise_first_letter = \
+        st.sidebar.checkbox("Title start capital")
+
+    plots.calibration.plots.plot_all_params_vs_loglike(
+        plotter, mcmc_tables, mcmc_params, title_font_size, label_font_size, capitalise_first_letter, dpi_request
+    )
+
+
+PLOT_FUNCS["All params vs loglike"] = plot_loglike_vs_all_params
+
+
 def plot_all_param_traces(
         plotter: StreamlitPlotter,
         calib_dir_path: str,

@@ -10,6 +10,7 @@ import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot
 import matplotlib.gridspec as gridspec
+from math import ceil
 
 from autumn.tool_kit.scenarios import Scenario
 
@@ -17,6 +18,10 @@ from autumn.tool_kit.scenarios import Scenario
 from autumn.plots.plotter import Plotter, COLOR_THEME
 
 logger = logging.getLogger(__name__)
+
+
+X_MIN = None
+X_MAX = None
 
 
 def plot_agg_compartments_multi_scenario(
@@ -112,16 +117,20 @@ def plot_outputs_multi(
     if is_logscale:
         axis.set_yscale("log")
 
+    if X_MIN is not None and X_MAX is not None:
+        axis.set_xlim((X_MIN, X_MAX))
     plotter.save_figure(fig, filename=output_name, title_text=output_name)
 
 
 def plot_outputs_single(
-    plotter: Plotter, scenario: Scenario, output_config: dict, is_logscale=False
+    plotter: Plotter, scenario: Scenario, output_config: dict, is_logscale=False, axis=None
 ):
     """
     Plot the model derived/generated outputs requested by the user for a single scenario.
     """
-    fig, axis, _, _, _ = plotter.get_figure()
+    single_panel = axis is None
+    if single_panel:
+        fig, axis, _, _, _ = plotter.get_figure()
     if is_logscale:
         axis.set_yscale("log")
 
@@ -130,7 +139,36 @@ def plot_outputs_single(
     target_times = output_config["times"]
     _plot_outputs_to_axis(axis, scenario, output_name)
     _plot_targets_to_axis(axis, target_values, target_times)
-    plotter.save_figure(fig, filename=output_name, subdir="outputs", title_text=output_name)
+
+    if X_MIN is not None and X_MAX is not None:
+        axis.set_xlim((X_MIN, X_MAX))
+
+    if single_panel:
+        plotter.save_figure(fig, filename=output_name, subdir="outputs", title_text=output_name)
+
+
+def plot_multi_targets(
+    plotter: Plotter, scenario: Scenario, output_configs: list, is_logscale=False
+):
+    max_n_col = 2
+    n_panels = len(output_configs)
+    n_cols = min(max_n_col, n_panels)
+    n_rows = ceil(n_panels / max_n_col)
+
+    fig = pyplot.figure(constrained_layout=True, figsize=(n_cols * 7, n_rows * 5))  # (w, h)
+    spec = fig.add_gridspec(ncols=n_cols, nrows=n_rows)
+
+    i_col = 0
+    i_row = 0
+    for output_config in output_configs:
+        ax = fig.add_subplot(spec[i_row, i_col])
+        plot_outputs_single(plotter, scenario, output_config, is_logscale, ax)
+        ax.set_title(output_config['title'])
+        i_col += 1
+        if i_col == max_n_col:
+            i_col = 0
+            i_row += 1
+    plotter.save_figure(fig, filename='multi_targets', subdir="outputs", title_text='')
 
 
 def _plot_outputs_to_axis(axis, scenario: Scenario, name: str, color_idx=0, alpha=1):
@@ -184,6 +222,9 @@ def plot_time_varying_input(
     for func in funcs:
         values = list(map(func, times))
         axes.plot(times, values)
+
+    if X_MIN is not None and X_MAX is not None:
+        axes.set_xlim((X_MIN, X_MAX))
 
     plotter.save_figure(fig, filename=f"time-variant-{tv_key}", title_text=tv_key)
 

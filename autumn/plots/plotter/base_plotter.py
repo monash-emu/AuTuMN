@@ -19,7 +19,7 @@ class BasePlotter(ABC):
         pass
 
     def get_figure(
-        self, n_panels=1, room_for_legend=False, requested_grid=None, share_yaxis="none"
+        self, n_panels=1, room_for_legend=False, requested_grid=None, share_xaxis=False, share_yaxis="none"
     ):
         """
         Initialise the subplots (or single plot) according to the number of panels required.
@@ -46,7 +46,7 @@ class BasePlotter(ABC):
             fig.set_figheight(3.5)
             fig.subplots_adjust(bottom=0.15, top=0.85)
         else:
-            fig, axes = pyplot.subplots(n_rows, n_cols, sharey=True)
+            fig, axes = pyplot.subplots(n_rows, n_cols, sharex=share_xaxis, sharey=share_yaxis)
             for panel in range(n_rows * n_cols):
                 indices.append(new_find_panel_grid_indices(panel, n_rows, n_cols))
         return fig, axes, max([n_rows, n_cols]), n_rows, n_cols, indices

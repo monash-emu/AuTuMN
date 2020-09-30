@@ -241,7 +241,7 @@ def plot_posterior(
 
 def plot_multiple_posteriors(
     plotter: Plotter, mcmc_params: List[pd.DataFrame], num_bins: int, title_font_size: int, label_font_size: int,
-        capitalise_first_letter: bool,
+        capitalise_first_letter: bool, dpi_request: int
 ):
     """
     Plots the posterior distribution of a given parameter in a histogram.
@@ -282,7 +282,7 @@ def plot_multiple_posteriors(
             axis.axis("off")
 
     fig.tight_layout()
-    plotter.save_figure(fig, filename=f"all_posteriors")
+    plotter.save_figure(fig, filename=f"all_posteriors", dpi=dpi_request)
 
 
 def plot_loglikelihood_vs_parameter(

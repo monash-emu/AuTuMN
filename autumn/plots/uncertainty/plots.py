@@ -8,8 +8,17 @@ import pandas as pd
 
 from autumn.plots.plotter import Plotter
 from autumn.plots.calibration.plots import _plot_targets_to_axis
+from matplotlib import colors
 
 logger = logging.getLogger(__name__)
+
+
+def make_colors_transparent(raw_color_list, alphas):
+    for i in range(len(raw_color_list)):
+        for j in range(len(raw_color_list[i])):
+            rgb_color = list(colors.colorConverter.to_rgb(raw_color_list[i][j]))
+            raw_color_list[i][j] = rgb_color + [alphas[i]]
+    return raw_color_list
 
 
 def plot_timeseries_with_uncertainty(
@@ -29,6 +38,8 @@ def plot_timeseries_with_uncertainty(
         ["lightsteelblue", "cornflowerblue", "royalblue", "navy"],
         ["plum", "mediumorchid", "darkviolet", "black"],
     )
+    alphas = (1., .6)
+    colors = make_colors_transparent(colors, alphas)
 
     for scenario in scenarios:
         color_index = min(scenario, 1)

@@ -69,17 +69,20 @@ def plot_timeseries_with_uncertainty(
 ):
     available_outputs = [o["output_key"] for o in targets.values()]
     chosen_output = st.sidebar.selectbox("Select calibration target", available_outputs)
-    chosen_target = next(t for t in targets.values() if t["output_key"] == chosen_output)
     targets = {k: v for k, v in targets.items() if v["output_key"] == chosen_output}
-    derived_output_tables = db.load.load_derived_output_tables(calib_dir_path)
-    mcmc_all_df = db.process.append_tables(mcmc_tables)
-    do_all_df = db.process.append_tables(derived_output_tables)
 
-    # Determine max chain length, throw away first half of that
-    max_run = mcmc_all_df["run"].max()
-    half_max = max_run // 2
-    mcmc_all_df = mcmc_all_df[mcmc_all_df["run"] >= half_max]
-    uncertainty_df = db.uncertainty.calculate_mcmc_uncertainty(mcmc_all_df, do_all_df, targets)
+    try:  # if PBI processing has been performed already
+        uncertainty_df = db.load.load_uncertainty_table(calib_dir_path)
+    except:  # calculates percentiles
+        derived_output_tables = db.load.load_derived_output_tables(calib_dir_path)
+        mcmc_all_df = db.process.append_tables(mcmc_tables)
+        do_all_df = db.process.append_tables(derived_output_tables)
+
+        # Determine max chain length, throw away first half of that
+        max_run = mcmc_all_df["run"].max()
+        half_max = max_run // 2
+        mcmc_all_df = mcmc_all_df[mcmc_all_df["run"] >= half_max]
+        uncertainty_df = db.uncertainty.calculate_mcmc_uncertainty(mcmc_all_df, do_all_df, targets)
 
     is_logscale = st.sidebar.checkbox("Log scale")
     plots.uncertainty.plots.plot_timeseries_with_uncertainty(

@@ -75,6 +75,12 @@ def load_mcmc_tables(calib_dirpath: str):
     return mcmc_tables
 
 
+def load_uncertainty_table(calib_dirpath: str):
+    db_path = _find_db_paths(calib_dirpath)[0]
+    db = Database(db_path)
+    return db.query("uncertainty")
+
+
 def append_tables(tables: List[pd.DataFrame]):
     # TODO: Use this in load_mcmc_tables / load_mcmc_params_tables / load_derived_output_tables
     assert tables

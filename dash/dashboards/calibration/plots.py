@@ -25,6 +25,16 @@ def create_standard_plotting_sidebar():
     return title_font_size, label_font_size, dpi_request, capitalise_first_letter
 
 
+def create_xrange_selector(x_min, x_max):
+    x_min = st.sidebar.slider("Plot start time", x_min, x_max, x_min)
+    x_max = st.sidebar.slider("Plot end time", x_min, x_max, x_max)
+    return x_min, x_max
+
+
+def create_multi_scenario_selector(available_scenarios):
+    return st.multiselect('Select scebarios', available_scenarios)
+
+
 def print_mle_parameters(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
@@ -84,9 +94,16 @@ def plot_timeseries_with_uncertainty(
         mcmc_all_df = mcmc_all_df[mcmc_all_df["run"] >= half_max]
         uncertainty_df = db.uncertainty.calculate_mcmc_uncertainty(mcmc_all_df, do_all_df, targets)
 
+    x_min = round(min(uncertainty_df['time']))
+    x_max = round(max(uncertainty_df['time']))
+    x_low, x_up = create_xrange_selector(x_min, x_max)
+
+    available_scenarios = uncertainty_df['scenario'].unique()
+    selected_scenarios = create_multi_scenario_selector(available_scenarios)
+
     is_logscale = st.sidebar.checkbox("Log scale")
     plots.uncertainty.plots.plot_timeseries_with_uncertainty(
-        plotter, uncertainty_df, chosen_output, 0, targets, is_logscale
+        plotter, uncertainty_df, chosen_output, selected_scenarios, targets, is_logscale, x_low, x_up
     )
 
 

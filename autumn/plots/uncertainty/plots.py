@@ -16,35 +16,43 @@ def plot_timeseries_with_uncertainty(
     plotter: Plotter,
     uncertainty_df: pd.DataFrame,
     output_name: str,
-    scenario: int,
+    scenarios: list,
     targets: dict,
     is_logscale=False,
+    x_low=0.,
+    x_up=2000.
 ):
-    mask = (uncertainty_df["type"] == output_name) & (uncertainty_df["scenario"] == scenario)
-    df = uncertainty_df[mask]
-    times = df.time.unique()
-    quantiles = {}
-    quantile_vals = df["quantile"].unique().tolist()
-    for q in quantile_vals:
-        mask = df["quantile"] == q
-        quantiles[q] = df[mask]["value"].tolist()
-
     fig, axis, _, _, _, _ = plotter.get_figure()
     title = plotter.get_plot_title(output_name)
     # Plot quantiles
-    colors = ["lightsteelblue", "cornflowerblue", "royalblue"]
-    q_keys = sorted([float(k) for k in quantiles.keys()])
-    num_quantiles = len(q_keys)
-    half_length = num_quantiles // 2
-    for i in range(half_length):
-        color = colors[i]
-        start_key = q_keys[i]
-        end_key = q_keys[-(i + 1)]
-        axis.fill_between(times, quantiles[start_key], quantiles[end_key], facecolor=color)
+    colors = (
+        ["lightsteelblue", "cornflowerblue", "royalblue", "navy"],
+        ["plum", "mediumorchid", "darkviolet", "black"],
+    )
 
-    if num_quantiles % 2:
-        q_key = q_keys[half_length]
-        axis.plot(times, quantiles[q_key], color="navy")
+    for scenario in scenarios:
+        color_index = min(scenario, 1)
+        mask = (uncertainty_df["type"] == output_name) & (uncertainty_df["scenario"] == scenario) &\
+               (uncertainty_df["time"] <= x_up) & (uncertainty_df["time"] >= x_low)
+        df = uncertainty_df[mask]
+        times = df.time.unique()
+        quantiles = {}
+        quantile_vals = df["quantile"].unique().tolist()
+        for q in quantile_vals:
+            mask = df["quantile"] == q
+            quantiles[q] = df[mask]["value"].tolist()
+        q_keys = sorted([float(k) for k in quantiles.keys()])
+        num_quantiles = len(q_keys)
+        half_length = num_quantiles // 2
+        for i in range(half_length):
+            color = colors[color_index][i]
+            start_key = q_keys[i]
+            end_key = q_keys[-(i + 1)]
+            axis.fill_between(times, quantiles[start_key], quantiles[end_key], facecolor=color)
+
+        if num_quantiles % 2:
+            q_key = q_keys[half_length]
+            axis.plot(times, quantiles[q_key], color=colors[color_index][3])
 
     # Add plot targets
     output_config = {"values": [], "times": []}
@@ -61,9 +69,10 @@ def plot_timeseries_with_uncertainty(
     if is_logscale:
         axis.set_yscale("log")
 
-    scenario_title = "baseline scenario" if scenario == 0 else f"scenario #{scenario}"
+    scenarios_string = ", ".join([str(t) for t in scenarios])
+    scenario_title = "baseline scenario" if scenarios == [0] else "Scenarios " + scenarios_string
     plotter.save_figure(
         fig,
-        filename=f"uncertainty-{output_name}-{scenario}",
+        filename=f"uncertainty-{output_name}",
         title_text=f"{title} for {scenario_title}",
     )

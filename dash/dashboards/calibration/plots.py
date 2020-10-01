@@ -32,7 +32,7 @@ def create_xrange_selector(x_min, x_max):
 
 
 def create_multi_scenario_selector(available_scenarios):
-    return st.multiselect('Select scebarios', available_scenarios)
+    return st.multiselect('Select scenarios', available_scenarios)
 
 
 def print_mle_parameters(

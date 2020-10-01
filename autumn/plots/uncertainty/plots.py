@@ -68,6 +68,8 @@ def plot_timeseries_with_uncertainty(
     axis.set_ylabel(output_name)
     if is_logscale:
         axis.set_yscale("log")
+    else:
+        axis.set_ylim(ymin=0)
 
     scenarios_string = ", ".join([str(t) for t in scenarios])
     scenario_title = "baseline scenario" if scenarios == [0] else "Scenarios " + scenarios_string

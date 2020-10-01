@@ -70,7 +70,7 @@
     "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "incidence": {
-    "title": "TB incidence (/100,000)",
+    "title": "TB incidence (/100,000/y)",
     "output_key": "incidence",
     "times": [],
     "values": [],

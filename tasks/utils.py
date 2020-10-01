@@ -202,7 +202,16 @@ class DownloadS3Task(BaseTask):
     def safe_run(self):
         dest_path = self.get_dest_path()
         os.makedirs(os.path.dirname(dest_path), exist_ok=True)
-        download_s3(self.get_src_key(), dest_path)
+        retries = 0
+        try:
+            download_s3(self.get_src_key(), dest_path)
+        except Exception:
+            retries += 1
+            if retries < 3:
+                logger.exception(f"Download to {dest_path} failed, trying again.")
+            else:
+                logger.error(f"Download to {dest_path} failed, tried 3 times, still failing.")
+                raise
 
     def get_dest_path(self):
         return os.path.join(settings.BASE_DIR, self.src_path)

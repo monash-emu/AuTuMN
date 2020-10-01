@@ -123,6 +123,7 @@ def plot_multi_output_fit(
         targets: dict,
 ):
     available_outputs = [o["output_key"] for o in targets.values()]
+    title_font_size, label_font_size, dpi_request, capitalise_first_letter = create_standard_plotting_sidebar()
     is_logscale = st.sidebar.checkbox("Log scale")
 
     outputs = {}
@@ -132,7 +133,8 @@ def plot_multi_output_fit(
             output, mcmc_tables, derived_output_tables
         )
     plots.calibration.plots.plot_multi_fit(
-        plotter, available_outputs, outputs, targets, is_logscale
+        plotter, available_outputs, outputs, targets, is_logscale, title_font_size, label_font_size, dpi_request,
+        capitalise_first_letter
     )
 
 

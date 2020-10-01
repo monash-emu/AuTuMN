@@ -29,6 +29,8 @@ PLOT_TEXT_DICT = {
     "icu_prop": "ICU proportion",
     "testing_to_detection.assumed_cdr_parameter": "CDR at base testing rate",
     "microdistancing.parameters.max_effect": "max effect microdistancing",
+    "infection_deaths": "mortality",
+    "icu_occupancy": "ICU occupancy",
     # TB model parameters
     "start_population_size": "initial population size",
     "late_reactivation_multiplier": "late reactivation multiplier",
@@ -36,6 +38,7 @@ PLOT_TEXT_DICT = {
     "user_defined_stratifications.location.adjustments.detection_rate.ebeye": "rel. screening rate (Ebeye)",
     "user_defined_stratifications.location.adjustments.detection_rate.other": "rel. screening rate (Other Isl.)",
     "extra_params.rr_progression_diabetes": "rel. progression rate (diabetes)",
+
 }
 
 
@@ -516,6 +519,7 @@ def plot_calibration_fit(
 
 def plot_multi_fit(
         plotter: Plotter, output_names: list, outputs: dict, targets, is_logscale=False,
+        title_font_size=8, label_font_size=8, dpi_request=300, capitalise_first_letter=False,
 ):
 
     fig, axes, _, n_rows, n_cols, indices = \
@@ -555,16 +559,23 @@ def plot_multi_fit(
             upper_ylim = max_value
 
         # Plot outputs[output]
-        axis.set_title(output)
+        axis.set_title(
+            get_plot_text_dict(
+                output, capitalise_first_letter=capitalise_first_letter
+            ), fontsize=title_font_size
+        )
         if is_logscale:
             axis.set_yscale("log")
         else:
             axis.set_ylim([0.0, upper_ylim])
 
+        pyplot.setp(axis.get_yticklabels(), fontsize=label_font_size)
+        pyplot.setp(axis.get_xticklabels(), fontsize=label_font_size)
+
         filename = f"calibration-fit-{output}"
 
     fig.tight_layout()
-    plotter.save_figure(fig, filename=filename)
+    plotter.save_figure(fig, filename=filename, dpi_request=dpi_request)
 
 
 def _overwrite_non_accepted_mcmc_runs(mcmc_tables: List[pd.DataFrame], column_name: str):

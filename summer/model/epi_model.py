@@ -31,7 +31,7 @@ from .derived_outputs import DerivedOutputCalculator
 
 logger = logging.getLogger(__name__)
 
-OUTPUTS_NEGATIVE_TOLERANCE = -1e-4
+OUTPUTS_NEGATIVE_TOLERANCE = -1e0
 
 
 class EpiModel:

@@ -1,39 +1,41 @@
 # SCENARIO DESCRIPTION: BASELINE
 ---
 parent: apps/covid_19/phl_submodel_params.yml
-pop_region: Metro Manila
-mobility_region: Metro Manila
+population:
+  region: Metro Manila
 
-mixing:
-  school:
-    append: false
-    times:
-      - 2020-02-11
-      - 2020-03-16
-      - 2020-07-07
-      - 2020-08-25  # If Google mobility passes this point, please update to one week in the future
-    values:
-      - 1.
-      - 0.
-      - 0
-      - 0
+mobility:
+  region: Metro Manila
+  mixing:
+    school:
+      append: false
+      times:
+        - 2020-02-11
+        - 2020-03-16
+        - 2020-07-07
+        - 2020-08-25 # If Google mobility passes this point, please update to one week in the future
+      values:
+        - 1.
+        - 0.
+        - 0
+        - 0
 
-microdistancing:
-  function_type: empiric
-  parameters:
-    max_effect: 0.25
-    times: [75, 76, 137, 138, 153, 154, 214, 215, 230, 231, 244, 245]
-    values: [0, 1., 1., 0.8, 0.8, 0.6, 0.6, 0.8, 0.8, 0.35, 0.35, 0.5]
-  # 16 March, day 76, ECQ enforced for whole region
-  # 16 May, day 137, MECQ enforced for whole region
-  # 1 June, day 153, GCQ for all regions
-  # 1 Aug, day 214, MECQ enforced
-  # (15 Aug, day 228, face masks/shields required)
-  # 18 Aug, day 231, GCQ enforced + face masks/sheilds
-  # 1 Sept, day 244, Metro Manila GCQ continues, everywhere else, MGCQ + face masks
-  # no restrictions = 0
-  # face fasks = 0.1
-  # modified general community quarantine (MGCQ) = 0.3
-  # general community quarantine (GCQ) = 0.6
-  # modified enhanced community quarantine (MECQ) = 0.8
-  # enhanced community quarantine (ECQ) = 1.0
+  microdistancing:
+    function_type: empiric
+    parameters:
+      max_effect: 0.25
+      times: [75, 76, 137, 138, 153, 154, 214, 215, 230, 231, 244, 245]
+      values: [0, 1., 1., 0.8, 0.8, 0.6, 0.6, 0.8, 0.8, 0.35, 0.35, 0.5]
+    # 16 March, day 76, ECQ enforced for whole region
+    # 16 May, day 137, MECQ enforced for whole region
+    # 1 June, day 153, GCQ for all regions
+    # 1 Aug, day 214, MECQ enforced
+    # (15 Aug, day 228, face masks/shields required)
+    # 18 Aug, day 231, GCQ enforced + face masks/sheilds
+    # 1 Sept, day 244, Metro Manila GCQ continues, everywhere else, MGCQ + face masks
+    # no restrictions = 0
+    # face fasks = 0.1
+    # modified general community quarantine (MGCQ) = 0.3
+    # general community quarantine (GCQ) = 0.6
+    # modified enhanced community quarantine (MECQ) = 0.8
+    # enhanced community quarantine (ECQ) = 1.0

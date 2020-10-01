@@ -21,27 +21,19 @@ Base parameters
 
 BASE_CALIBRATION_PARAMS = [
     # Arbitrary, but always required and this range should span the range of values that would be needed
-    {
-        "param_name": "contact_rate",
-        "distribution": "uniform",
-        "distri_params": [0.015, 0.07],
-    },
+    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.015, 0.07],},
     # Arbitrary, but useful to allow epidemic to take off from a flexible time
-    {
-        "param_name": "start_time",
-        "distribution": "uniform",
-        "distri_params": [0.0, 40.0],
-    },
+    {"param_name": "time.start", "distribution": "uniform", "distri_params": [0.0, 40.0],},
     # Rationale for the following two parameters described in parameters table of the methods Gdoc at:
     # https://docs.google.com/document/d/1Uhzqm1CbIlNXjowbpTlJpIphxOm34pbx8au2PeqpRXs/edit#
     {
-        "param_name": "compartment_periods_calculated.exposed.total_period",
+        "param_name": "sojourn.compartment_periods_calculated.exposed.total_period",
         "distribution": "trunc_normal",
         "distri_params": [5.5, 0.97],
         "trunc_range": [1.0, np.inf],
     },
     {
-        "param_name": "compartment_periods_calculated.active.total_period",
+        "param_name": "sojourn.compartment_periods_calculated.active.total_period",
         "distribution": "trunc_normal",
         "distri_params": [6.5, 0.77],
         "trunc_range": [1.0, np.inf],
@@ -79,7 +71,7 @@ def run_calibration_chain(
     par_priors,
     target_outputs,
     mode="autumn_mcmc",
-    adaptive_proposal=True
+    adaptive_proposal=True,
 ):
     """
     Run a calibration chain for the covid model
@@ -130,7 +122,7 @@ def add_standard_dispersion_parameter(params, target_outputs, output_name):
     if any([i_target["output_key"] == output_name for i_target in target_outputs]):
         params += [
             {
-                "param_name": output_name + "_dispersion_param",
+                "param_name": f"{output_name}_dispersion_param",
                 "distribution": "uniform",
                 "distri_params": [0.1, 5.0],
             },
@@ -151,33 +143,22 @@ def add_standard_philippines_params(params, region):
     """
 
     return params + [
+        {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.03, 0.05],},
         {
-            "param_name": "contact_rate",
+            "param_name": "infection_fatality.multiplier",
             "distribution": "uniform",
-            "distri_params": [0.03, 0.05],
-        },
-        {
-            "param_name": "ifr_multiplier",
-            "distribution": "uniform",
-            "distri_params": [1.8, 2.28]
+            "distri_params": [1.8, 2.28],
         },
         {
             "param_name": "testing_to_detection.assumed_cdr_parameter",
             "distribution": "uniform",
             "distri_params": [0.1, 0.4],
         },
+        {"param_name": "time.start", "distribution": "uniform", "distri_params": [40.0, 60.0],},
         {
-            "param_name": "start_time",
+            "param_name": "mobility.microdistancing.parameters.max_effect",
             "distribution": "uniform",
-            "distri_params": [40.0, 60.0],
-        },
-        {
-            "param_name": "microdistancing.parameters.max_effect",
-            "distribution": "uniform",
-            "distri_params": [
-                0.25,
-                0.9 if region == Region.CENTRAL_VISAYAS else 0.75
-            ],
+            "distri_params": [0.25, 0.9 if region == Region.CENTRAL_VISAYAS else 0.75],
         },
     ]
 
@@ -241,22 +222,18 @@ def add_standard_victoria_params(params, region):
             "distribution": "uniform",
             "distri_params": [0.006 if region in Region.VICTORIA_RURAL else 0.012, 0.07],
         },
+        {"param_name": "seasonal_force", "distribution": "uniform", "distri_params": [0.0, 0.3],},
         {
-            "param_name": "seasonal_force",
-            "distribution": "uniform",
-            "distri_params": [0.0, 0.3],
-        },
-        {
-            "param_name": "symptomatic_props_multiplier",
+            "param_name": "clinical_stratification.props.symptomatic.multiplier",
             "distribution": "trunc_normal",
             "distri_params": [1.0, 0.1],
             "trunc_range": [0.5, np.inf],
         },
         {
-            "param_name": "ifr_multiplier",
+            "param_name": "infection_fatality.multiplier",
             "distribution": "trunc_normal",
             "distri_params": [1.5, 0.5],
-            "trunc_range": [0.33, 3.],
+            "trunc_range": [0.33, 3.0],
         },
         {
             "param_name": "testing_to_detection.assumed_cdr_parameter",
@@ -264,30 +241,30 @@ def add_standard_victoria_params(params, region):
             "distri_params": [0.08, 0.3],
         },
         {
-            "param_name": "movement_prop",
+            "param_name": "importation.movement_prop",
             "distribution": "uniform",
             "distri_params": [0.05, 0.4],
         },
         {
-            "param_name": "hospital_props_multiplier",
+            "param_name": "clinical_stratification.props.hospital.multiplier",
             "distribution": "trunc_normal",
             "distri_params": [1.0, 1.0],
             "trunc_range": [0.2, np.inf],
         },
         {
-            "param_name": "compartment_periods.icu_early",
+            "param_name": "sojourn.compartment_periods.icu_early",
             "distribution": "trunc_normal",
             "distri_params": [12.7, 4.0],
             "trunc_range": [3.0, np.inf],
         },
         {
-            "param_name": "compartment_periods.icu_late",
+            "param_name": "sojourn.compartment_periods.icu_late",
             "distribution": "trunc_normal",
             "distri_params": [10.8, 4.0],
             "trunc_range": [3.0, np.inf],
         },
         {
-            "param_name": "microdistancing.parameters.max_effect",
+            "param_name": "mobility.microdistancing.parameters.max_effect",
             "distribution": "beta",
             "distri_mean": 0.8,
             "distri_ci": [0.4, 0.9],

@@ -16,13 +16,11 @@ from autumn.tool_kit.utils import (
 )
 
 from apps.covid_19.constants import Compartment, ClinicalStratum
-from apps.covid_19.model.importation import get_all_vic_notifications
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS, Region
-
-from . import outputs, preprocess
-from .preprocess.testing import find_cdr_function_from_test_data
-from .validate import validate_params
-
+from apps.covid_19.model import outputs, preprocess
+from apps.covid_19.model.importation import get_all_vic_notifications
+from apps.covid_19.model.parameters import Parameters
+from apps.covid_19.model.preprocess.testing import find_cdr_function_from_test_data
 
 """
 Compartments
@@ -43,28 +41,23 @@ def build_model(params: dict) -> StratifiedModel:
     """
     Build the compartmental model from the provided parameters.
     """
-    validate_params(params)
+    params = Parameters(**params)
 
     """
     Integration times
     """
-    start_time, end_time, time_step = params["start_time"], params["end_time"], params["time_step"]
-    times = get_model_times_from_inputs(round(start_time), end_time, time_step,)
+    times = get_model_times_from_inputs(round(params.time.start), params.time.end, params.time.step)
 
     """
     Basic intercompartmental flows
     """
     # Time periods calculated from periods (or "sojourn times")
-    base_periods = params["compartment_periods"]
-    periods_calc = params["compartment_periods_calculated"]
-    compartment_periods = preprocess.compartments.calc_compartment_periods(
-        base_periods, periods_calc
-    )
+    compartment_periods = preprocess.compartments.calc_compartment_periods(params.sojourn)
 
     # Inter-compartmental transition flows
     flows = deepcopy(preprocess.flows.DEFAULT_FLOWS)
     flow_params = {
-        "contact_rate": params["contact_rate"],
+        "contact_rate": params.contact_rate,
         "infect_death": 0,  # Placeholder to be overwritten in clinical stratification
     }
 
@@ -73,8 +66,8 @@ def build_model(params: dict) -> StratifiedModel:
         flow_params[f"within_{comp_name}"] = 1.0 / comp_period
 
     # Waning immunity (if requested)
-    if not params["full_immunity"]:
-        flow_params["immunity_loss_rate"] = 1.0 / params["immunity_duration"]
+    if params.waning_immunity_duration is not None:
+        flow_params["immunity_loss_rate"] = 1.0 / params.waning_immunity_duration
         flows.append(
             {
                 "type": Flow.STANDARD,
@@ -86,31 +79,27 @@ def build_model(params: dict) -> StratifiedModel:
 
     # Just set the importation flow without specifying its value, which is done later (if requested)
     # Entry compartment is set to LATE_ACTIVE in the model creation process, because the default would be susceptible
-    implement_importation = params["implement_importation"]
-    if implement_importation:
+    if params.importation is not None:
         flows.append({"type": Flow.IMPORT, "parameter": "importation_rate"})
 
     """
     Population creation and distribution
     """
-
     # Set age groups
-    agegroup_max, agegroup_step = params["agegroup_breaks"]
-    agegroup_strata = [str(s) for s in range(0, agegroup_max, agegroup_step)]
+    age_params = params.age_stratification
+    agegroup_strata = [str(s) for s in range(0, age_params.max_age, age_params.age_step_size)]
 
     # Get country population by age-group
-    country_iso3 = params["iso3"]
-    mobility_region = params["mobility_region"]
-    pop_region = params["pop_region"]
+    country = params.country
+    pop = params.population
     total_pops = inputs.get_population_by_agegroup(
-        agegroup_strata, country_iso3, pop_region, year=params["pop_year"]
+        agegroup_strata, country.iso3, pop.region, year=pop.year
     )
 
     # Distribute infectious seed across infectious split sub-compartments
-    infectious_seed = params["infectious_seed"]
     total_disease_time = sum([compartment_periods[c] for c in DISEASE_COMPARTMENTS])
     init_pop = {
-        c: infectious_seed * compartment_periods[c] / total_disease_time
+        c: params.infectious_seed * compartment_periods[c] / total_disease_time
         for c in DISEASE_COMPARTMENTS
     }
 
@@ -121,7 +110,6 @@ def build_model(params: dict) -> StratifiedModel:
     """
     Model instantiation
     """
-
     model = StratifiedModel(
         times,
         COMPARTMENTS,
@@ -137,36 +125,17 @@ def build_model(params: dict) -> StratifiedModel:
     """
     Seasonal forcing
     """
-
-    if params["seasonal_force"]:
+    if params.seasonal_force is not None:
         seasonal_func = get_seasonal_forcing(
-            365.0, 173.0, params["seasonal_force"], params["contact_rate"]
+            365.0, 173.0, params.seasonal_force, params.contact_rate
         )
         model.time_variants["contact_rate"] = seasonal_func
 
     """
     Dynamic heterogeneous mixing by age
     """
-
-    static_mixing_matrix = preprocess.mixing_matrix.build_static(country_iso3)
-    dynamic_location_mixing_params = params["mixing"]
-    dynamic_age_mixing_params = params["mixing_age_adjust"]
-    microdistancing = params["microdistancing"]
-    smooth_google_data = params["smooth_google_data"]
-    npi_effectiveness_params = params["npi_effectiveness"]
-    google_mobility_locations = params["google_mobility_locations"]
-    microdistancing_locations = params["microdistancing_locations"]
-    dynamic_mixing_matrix = preprocess.mixing_matrix.build_dynamic(
-        country_iso3,
-        mobility_region,
-        dynamic_location_mixing_params,
-        dynamic_age_mixing_params,
-        npi_effectiveness_params,
-        google_mobility_locations,
-        microdistancing,
-        smooth_google_data,
-        microdistancing_locations,
-    )
+    static_mixing_matrix = preprocess.mixing_matrix.build_static(country.iso3)
+    dynamic_mixing_matrix = preprocess.mixing_matrix.build_dynamic(country, params.mobility)
     model.set_dynamic_mixing_matrix(dynamic_mixing_matrix)
 
     """
@@ -178,13 +147,15 @@ def build_model(params: dict) -> StratifiedModel:
         agegroup: prop for agegroup, prop in zip(agegroup_strata, normalise_sequence(total_pops))
     }
 
-    if params["importation_props_by_age"]:
-        importation_props_by_age = params["importation_props_by_age"]
+    importation = params.importation
+    if importation and importation.props_by_age:
+        importation_props_by_age = importation.props_by_age
     else:
+        # FIXME: Isn't this done by default?
         importation_props_by_age = {s: 1.0 / len(agegroup_strata) for s in agegroup_strata}
 
     flow_adjustments = {
-        "contact_rate": params["age_based_susceptibility"],
+        "contact_rate": age_params.susceptibility,
         "importation_rate": importation_props_by_age,
     }
 
@@ -202,36 +173,31 @@ def build_model(params: dict) -> StratifiedModel:
     """
     Case detection
     """
-
-    # More empiric approach based on per capita testing rates
-    if params["testing_to_detection"]:
-        assumed_tests_parameter = params["testing_to_detection"]["assumed_tests_parameter"]
-        assumed_cdr_parameter = params["testing_to_detection"][
-            "assumed_cdr_parameter"
-        ]  # Typically a calibration parameter
+    if params.testing_to_detection is not None:
+        # More empiric approach based on per capita testing rates
+        testing_to_detection = params.testing_to_detection
+        assumed_tests_parameter = testing_to_detection.assumed_tests_parameter
+        assumed_cdr_parameter = testing_to_detection.assumed_cdr_parameter
 
         # Use state denominator for testing rates for the Victorian health cluster models
-        testing_region = "Victoria" if country_iso3 == "AUS" else pop_region
-        testing_year = 2020 if country_iso3 == "AUS" else params["pop_year"]
-
+        testing_region = "Victoria" if country.iso3 == "AUS" else pop.region
+        testing_year = 2020 if country.iso3 == "AUS" else params.population.year
         testing_pops = inputs.get_population_by_agegroup(
-            agegroup_strata, country_iso3, testing_region, year=testing_year
+            agegroup_strata, country.iso3, testing_region, year=testing_year
         )
-
         detected_proportion = find_cdr_function_from_test_data(
-            assumed_tests_parameter, assumed_cdr_parameter, country_iso3, testing_pops,
+            assumed_tests_parameter, assumed_cdr_parameter, country.iso3, testing_pops,
         )
-
-    # Approach based on a hyperbolic tan function
     else:
-        detect_prop_params = params["time_variant_detection"]
+        # Approach based on a hyperbolic tan function
+        case_detection = params.case_detection
 
         def detected_proportion(t):
             return tanh_based_scaleup(
-                detect_prop_params["maximum_gradient"],
-                detect_prop_params["max_change_time"],
-                detect_prop_params["start_value"],
-                detect_prop_params["end_value"],
+                case_detection.maximum_gradient,
+                case_detection.max_change_time,
+                case_detection.start_value,
+                case_detection.end_value,
             )(t)
 
     """
@@ -239,7 +205,9 @@ def build_model(params: dict) -> StratifiedModel:
     """
     # Determine how many importations there are, including the undetected and asymptomatic importations
     # This is defined 8x10 year bands, 0-70+, which we transform into 16x5 year bands 0-75+
-    symptomatic_props = repeat_list_elements(2, params["symptomatic_props"])
+    symptomatic_props = repeat_list_elements(
+        2, params.clinical_stratification.props.symptomatic.props
+    )
     import_symptomatic_prop = sum(
         [
             import_prop * sympt_prop
@@ -250,22 +218,19 @@ def build_model(params: dict) -> StratifiedModel:
     def modelled_abs_detection_proportion_imported(t):
         return import_symptomatic_prop * detected_proportion(t)
 
-    if implement_importation:
-        if (
-            pop_region
-            and pop_region.lower().replace("__", "_").replace("_", "-")
-            in Region.VICTORIA_SUBREGIONS
-        ):
+    if importation is not None:
+        is_region_vic = pop.region and Region.to_name(pop.region) in Region.VICTORIA_SUBREGIONS
+        if is_region_vic:
             import_times, importation_data = get_all_vic_notifications(
-                excluded_regions=(pop_region,)
+                excluded_regions=(pop.region,)
             )
-            movement_prop = params["movement_prop"]
-            movement_to_region = sum(total_pops) / sum(testing_pops) * movement_prop
+            movement_to_region = (
+                sum(total_pops) / sum(testing_pops) * params.importation.movement_prop
+            )
             import_cases = [i_cases * movement_to_region for i_cases in importation_data]
-
         else:
-            import_times = params["data"]["times_imported_cases"]
-            import_cases = params["data"]["n_imported_cases"]
+            import_times = params.importation.case_timeseries.times
+            import_cases = params.importation.case_timeseries.values
 
         import_rate_func = preprocess.importation.get_importation_rate_func_as_birth_rates(
             import_times, import_cases, modelled_abs_detection_proportion_imported
@@ -287,6 +252,7 @@ def build_model(params: dict) -> StratifiedModel:
         - should we ditch this?
 
     """
+    clinical_params = params.clinical_stratification
     agegroup_strata = model.stratifications[0].strata
     clinical_strata = [
         ClinicalStratum.NON_SYMPT,
@@ -308,30 +274,26 @@ def build_model(params: dict) -> StratifiedModel:
     """
     Infectiousness adjustments
     """
-    strata_infectiousness = {}
-    for stratum in clinical_strata:
-        key = f"{stratum}_infect_multiplier"
-        if key in params:
-            strata_infectiousness[stratum] = params[key]
-
-    """
-    Make an infectiousness adjustment for isolation/quarantine
-    Adjust infectiousness for pre-symptomatics so that they are less infectious.
-    """
+    # Multiplicative adjustments.
+    strata_infectiousness = {
+        ClinicalStratum.NON_SYMPT: clinical_params.non_sympt_infect_multiplier,
+    }
+    # Overwrite adjustments
+    # Make an infectiousness adjustment for isolation/quarantine
+    # Adjust infectiousness for pre-symptomatics so that they are less infectious.
     clinical_inf_overwrites = [
         {
             "comp_name": Compartment.LATE_EXPOSED,
             "comp_strata": {},
-            "value": params[f"{Compartment.LATE_EXPOSED}_infect_multiplier"],
+            "value": clinical_params.late_exposed_infect_multiplier,
         }
     ]
-
     for stratum in clinical_strata:
-        if stratum in params["late_infect_multiplier"]:
+        if stratum in clinical_params.late_infect_multiplier:
             adjustment = {
                 "comp_name": Compartment.LATE_ACTIVE,
                 "comp_strata": {"clinical": stratum},
-                "value": params["late_infect_multiplier"][stratum],
+                "value": clinical_params.late_infect_multiplier[stratum],
             }
             clinical_inf_overwrites.append(adjustment)
 
@@ -343,28 +305,29 @@ def build_model(params: dict) -> StratifiedModel:
     """
 
     # Proportion of people in age group who die, given the number infected: dead / total infected.
+    infection_fatality = params.infection_fatality
     infection_fatality_props = get_infection_fatality_proportions(
-        infection_fatality_props_10_year=params["infection_fatality_props"],
-        infection_rate_multiplier=params["ifr_multiplier"],
-        iso3=params["iso3"],
-        pop_region=params["pop_region"],
-        pop_year=params["pop_year"],
+        infection_fatality_props_10_year=infection_fatality.props,
+        infection_rate_multiplier=infection_fatality.multiplier,
+        iso3=country.iso3,
+        pop_region=pop.region,
+        pop_year=pop.year,
     )
 
     # Get the proportion of people in each clinical stratum, relative to total people in compartment.
     abs_props = get_absolute_strata_proportions(
         symptomatic_props=symptomatic_props,
-        icu_props=params["icu_prop"],
-        hospital_props=params["hospital_props"],
-        symptomatic_props_multiplier=params["symptomatic_props_multiplier"],
-        hospital_props_multiplier=params["hospital_props_multiplier"],
+        icu_props=clinical_params.icu_prop,
+        hospital_props=clinical_params.props.hospital.props,
+        symptomatic_props_multiplier=clinical_params.props.symptomatic.multiplier,
+        hospital_props_multiplier=clinical_params.props.hospital.multiplier,
     )
 
     # Get the proportion of people who die for each strata/agegroup, relative to total infected.
     abs_death_props = get_absolute_death_proportions(
         abs_props=abs_props,
         infection_fatality_props=infection_fatality_props,
-        icu_mortality_prop=params["icu_mortality_prop"],
+        icu_mortality_prop=clinical_params.icu_mortality_prop,
     )
 
     # Calculate relative death proportions for each strata / agegroup.
@@ -466,15 +429,14 @@ def build_model(params: dict) -> StratifiedModel:
 
     # Work out time-variant clinical proportions for imported cases accounting for quarantine
     import_adjs = {}
-    implement_importation = params["implement_importation"]
-    import_quarantine = params["import_quarantine"]
-    if implement_importation:
+    if importation is not None:
         tvs = model.time_variants
         importation_props_by_clinical = {}
 
         # Create scale-up function for quarantine
+        quarantine_timeseries = importation.quarantine_timeseries
         quarantine_func = scale_up_function(
-            import_quarantine["times"], import_quarantine["values"], method=4
+            quarantine_timeseries.times, quarantine_timeseries.values, method=4
         )
 
         # Loop through age groups and set the appropriate clinical proportions
@@ -551,13 +513,10 @@ def build_model(params: dict) -> StratifiedModel:
     """
     Susceptibility stratification
     """
-
-    susceptibility_heterogeneity = params["susceptibility_heterogeneity"]
-
-    if susceptibility_heterogeneity:
-        tail_cut = susceptibility_heterogeneity["tail_cut"]
-        bins = susceptibility_heterogeneity["bins"]
-        coeff_var = susceptibility_heterogeneity["coeff_var"]
+    if params.susceptibility_heterogeneity is not None:
+        tail_cut = params.susceptibility_heterogeneity.tail_cut
+        bins = params.susceptibility_heterogeneity.bins
+        coeff_var = params.susceptibility_heterogeneity.coeff_var
 
         # Interpret data requests
         _, _, susc_values, susc_pop_props, _ = get_gamma_data(tail_cut, bins, coeff_var)
@@ -604,20 +563,21 @@ def build_model(params: dict) -> StratifiedModel:
     model.add_flow_derived_outputs(death_output_connections)
 
     # Build notification derived output function
+    is_importation_active = params.importation is not None
     notification_func = outputs.get_calc_notifications_covid(
-        implement_importation, modelled_abs_detection_proportion_imported,
+        is_importation_active, modelled_abs_detection_proportion_imported,
     )
     local_notification_func = outputs.get_calc_notifications_covid(
         False, modelled_abs_detection_proportion_imported
     )
 
     # Build life expectancy derived output function
-    life_expectancy = inputs.get_life_expectancy_by_agegroup(agegroup_strata, country_iso3)[0]
+    life_expectancy = inputs.get_life_expectancy_by_agegroup(agegroup_strata, country.iso3)[0]
     life_expectancy_latest = [life_expectancy[agegroup][-1] for agegroup in life_expectancy]
     life_lost_func = outputs.get_calculate_years_of_life_lost(life_expectancy_latest)
 
     # Build hospital occupancy func
-    compartment_periods = params["compartment_periods"]
+    compartment_periods = params.sojourn.compartment_periods
     icu_early_period = compartment_periods["icu_early"]
     hospital_early_period = compartment_periods["hospital_early"]
     calculate_hospital_occupancy = outputs.get_calculate_hospital_occupancy(
@@ -642,7 +602,7 @@ def build_model(params: dict) -> StratifiedModel:
     }
 
     # Derived outputs for the optimization project.
-    if mobility_region in OPTI_REGIONS:
+    if params.mobility.region in OPTI_REGIONS:
         func_outputs["accum_years_of_life_lost"] = outputs.calculate_cum_years_of_life_lost
 
     model.add_function_derived_outputs(func_outputs)

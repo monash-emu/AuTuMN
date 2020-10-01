@@ -62,12 +62,12 @@ def collect_iteration_weights(mcmc_tables: List[pd.DataFrame], burn_in=0):
 def export_compartment_size(
     compartment_name, mcmc_tables, output_tables, derived_output_tables, weights, scenario="S_0"
 ):
-    if "start_time" in mcmc_tables[0].columns:
+    if "time.start" in mcmc_tables[0].columns:
         # Find the earliest time that is common to all accepted runs (if start_time was varied).
         max_start_time = 0
         for mcmc_table_df in mcmc_tables:
             mask = mcmc_table_df["accept"] == 1
-            _max_start_time = mcmc_table_df[mask]["start_time"].max()
+            _max_start_time = mcmc_table_df[mask]["time.start"].max()
             if _max_start_time > max_start_time:
                 max_start_time = _max_start_time
         t_min = round(max_start_time)

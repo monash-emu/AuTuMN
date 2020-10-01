@@ -1,11 +1,30 @@
 """
 Utilities for helping build a mixing matrix
 """
-from datetime import date, datetime
+from typing import List
+from datetime import date, datetime, timedelta
 
-# Base date used to calculate mixing matrix times.
-BASE_DATE = date(2019, 12, 31)
-BASE_DATETIME = datetime(2019, 12, 31, 0, 0, 0)
+from apps.covid_19.constants import BASE_DATE, BASE_DATETIME
+
+
+def date_to_days(dates: List[date]) -> List[int]:
+    return datetime_to_days(dates_to_datetimes(dates))
+
+
+def days_to_dates(days: List[int]) -> List[datetime]:
+    return [BASE_DATE + timedelta(days=d) for d in days]
+
+
+def dates_to_datetimes(dates: List[date]) -> List[datetime]:
+    return [datetime(d.year, d.month, d.day) for d in dates]
+
+
+def datetime_to_days(datetimes: List[datetime]) -> List[int]:
+    return [(dt - BASE_DATETIME).days for dt in datetimes]
+
+
+def days_to_datetime(days: List[int]) -> List[datetime]:
+    return [BASE_DATETIME + timedelta(days=d) for d in days]
 
 
 def get_total_contact_rates_by_age(mixing_matrix, direction="horizontal"):

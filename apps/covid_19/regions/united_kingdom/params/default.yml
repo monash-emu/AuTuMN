@@ -1,75 +1,81 @@
 # SCENARIO DESCRIPTION: BASELINE
 parent: apps/covid_19/params.yml
-iso3: GBR
-
-smooth_google_data: True
-
-#start_time: -20.
-end_time: 214.
-# scenario_start_time: 213
 
 infectious_seed: 200
-use_raw_mortality_estimates: True
-
-microdistancing:
-  function_type: tanh
-  parameters:
-    b: -0.05
-    c: 97.60274587831591
-    sigma: 0.6098709965069964
-
-# MLE estimates
 contact_rate: 0.04808021298530427
-start_time: 9.898075441019099
-npi_effectiveness:
-  other_locations: 0.572145160572256
-compartment_periods_calculated:
-  exposed:
-    total_period: 3.6919750421634894
-  active:
-    total_period: 5.686846765295515
-time_variant_detection:
+
+country:
+  iso3: GBR
+
+time:
+  end: 214.
+  start: 9.898075441019099
+
+case_detection:
   maximum_gradient: 0.09172247247859731
   max_change_time: 98.09724552296738
   end_value: 0.12340227902434267
-icu_prop: 0.2869223796413999
-compartment_periods:
-  hospital_late: 9.019609923504293
-  icu_late: 10.29875608887663
-hospital_props_multiplier: 0.5400591596534211
-infection_fatality_props:
-  [
-    5.792371325929951e-06,
-    2.13222368344005e-05,
-    0.00011442742529120341,
-    0.00017671347735780823,
-    0.0006084983251764101,
-    0.0015939855622595469,
-    0.008045336001339009,
-    0.02286439848161898,
-    0.11652004248414055,
-  ]
 
-mixing:
-  school:
-    append: false
-    times:
-      - 2020-03-18
-      - 2020-03-20
-      - 2020-07-07
-      - 2020-08-25 # google mobility data update, pls review
-    values:
-      - 1.0
-      - 0.1
-      - 0.1
-      - 0.1 # google mobility data update, pls review
+clinical_stratification:
+  icu_prop: 0.2869223796413999
+  props:
+    hospital:
+      multiplier: 0.5400591596534211
 
-# Mapping of Google Mobility locations to Autumn-specific locations
-google_mobility_locations:
-  work:
-    - workplaces
-  other_locations:
-    # Parks not included
-    - retail_and_recreation
-    - grocery_and_pharmacy
-    - transit_stations
+mobility:
+  smooth_google_data: True
+  microdistancing:
+    function_type: tanh
+    parameters:
+      b: -0.05
+      c: 97.60274587831591
+      sigma: 0.6098709965069964
+  npi_effectiveness:
+    other_locations: 0.572145160572256
+  mixing:
+    school:
+      append: false
+      times:
+        - 2020-03-18
+        - 2020-03-20
+        - 2020-07-07
+        - 2020-08-25 # google mobility data update, pls review
+      values:
+        - 1.0
+        - 0.1
+        - 0.1
+        - 0.1 # google mobility data update, pls review
+
+  # Mapping of Google Mobility locations to Autumn-specific locations
+  google_mobility_locations:
+    work:
+      - workplaces
+    other_locations:
+      # Parks not included
+      - retail_and_recreation
+      - grocery_and_pharmacy
+      - transit_stations
+
+sojourn:
+  compartment_periods_calculated:
+    exposed:
+      total_period: 3.6919750421634894
+    active:
+      total_period: 5.686846765295515
+  compartment_periods:
+    hospital_late: 9.019609923504293
+    icu_late: 10.29875608887663
+
+infection_fatality:
+  props:
+    [
+      5.792371325929951e-06,
+      2.13222368344005e-05,
+      0.00011442742529120341,
+      0.00017671347735780823,
+      0.0006084983251764101,
+      0.0015939855622595469,
+      0.008045336001339009,
+      0.02286439848161898,
+      0.11652004248414055,
+    ]

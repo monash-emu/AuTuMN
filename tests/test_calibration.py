@@ -122,7 +122,7 @@ def test_calibrate_autumn_mcmc(temp_data_dir):
         }
     ]
     params = {
-        "default": {"start_time": 2000},
+        "default": {"time": {"start": 2000}},
         "scenarios": {},
     }
     calib = Calibration("sharks", _build_mock_model, params, priors, target_outputs, 1, 1,)

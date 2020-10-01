@@ -2,42 +2,40 @@
 ---
 parent: apps/covid_19/phl_submodel_params.yml
 
-#contact_rate: 0.054
-#
 susceptibility_heterogeneity:
   tail_cut: 4.
   bins: 10
   coeff_var: 2.
 
-mixing:
-  school:
-    append: false
-    times:
-      - 2020-02-11
-      - 2020-03-16
-      - 2020-07-07
-      - 2020-08-25  # If Google mobility passes this point, please update to one week in the future
-    values:
-      - 1
-      - 0
-      - 0
-      - 0
+mobility:
+  mixing:
+    school:
+      append: false
+      times:
+        - 2020-02-11
+        - 2020-03-16
+        - 2020-07-07
+        - 2020-08-25 # If Google mobility passes this point, please update to one week in the future
+      values:
+        - 1
+        - 0
+        - 0
+        - 0
 
-microdistancing:
-  function_type: empiric
-  parameters:
-    max_effect: 0.28
-    times: [75, 76, 121, 122, 136, 137, 153, 154, 227, 228]
-    values: [0., 1., 1., 0.8, 0.8, 0.7, 0.7, 0.45, 0.45, 0.5]
-  # 16 March, day 76, ECQ enforced
-  # 1 May, day 122, ECQ / GCQ enforced
-  # 16 May, day 137, MECQ / GCQ enforced
-  # 1 June, day 153, GCQ / MGCQ enforced
-  # 15 Aug, day 228, GCQ / MGCQ enforced + face masks
-  # no restrictions = 0
-  # face fasks = 0.1
-  # modified general community quarantine (MGCQ) = 0.3
-  # general community quarantine (GCQ) = 0.6
-  # modified enhanced community quarantine (MECQ) = 0.8
-  # enhanced community quarantine (ECQ) = 1.0
-
+  microdistancing:
+    function_type: empiric
+    parameters:
+      max_effect: 0.28
+      times: [75, 76, 121, 122, 136, 137, 153, 154, 227, 228]
+      values: [0., 1., 1., 0.8, 0.8, 0.7, 0.7, 0.45, 0.45, 0.5]
+    # 16 March, day 76, ECQ enforced
+    # 1 May, day 122, ECQ / GCQ enforced
+    # 16 May, day 137, MECQ / GCQ enforced
+    # 1 June, day 153, GCQ / MGCQ enforced
+    # 15 Aug, day 228, GCQ / MGCQ enforced + face masks
+    # no restrictions = 0
+    # face fasks = 0.1
+    # modified general community quarantine (MGCQ) = 0.3
+    # general community quarantine (GCQ) = 0.6
+    # modified enhanced community quarantine (MECQ) = 0.8
+    # enhanced community quarantine (ECQ) = 1.0

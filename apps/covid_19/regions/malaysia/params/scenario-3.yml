@@ -2,26 +2,27 @@
 ---
 parent: apps/covid_19/regions/malaysia/params/default.yml
 
-start_time: 257.
+time:
+  start: 257.
 
-mixing:
-  work:
-    append: true
-    times:
-      - 2020-09-14
-    values:
-      - 1.
-  other_locations:
-    append: true
-    times:
-      - 2020-09-14
-    values:
-      - 1.
+mobility:
+  mixing:
+    work:
+      append: true
+      times:
+        - 2020-09-14
+      values:
+        - 1.
+    other_locations:
+      append: true
+      times:
+        - 2020-09-14
+      values:
+        - 1.
 
-microdistancing:
-  parameters:
-    times:
-      - 258
-    values:
-      - 0.
-
+  microdistancing:
+    parameters:
+      times:
+        - 258
+      values:
+        - 0.

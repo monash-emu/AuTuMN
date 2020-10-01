@@ -1,13 +1,20 @@
-from typing import Callable
+from typing import Callable, Dict
 
 import numpy as np
 
 from autumn.curve import scale_up_function, tanh_based_scaleup
 from autumn.inputs import get_country_mixing_matrix, get_mobility_data
 from autumn.tool_kit.utils import apply_moving_average
+from apps.covid_19.model.parameters import (
+    Country,
+    Mobility,
+    MixingLocation,
+)
 
 from .adjust_base import BaseMixingAdjustment
-from .utils import BASE_DATE, BASE_DATETIME
+from apps.covid_19.constants import BASE_DATE, BASE_DATETIME
+from apps.covid_19.model.preprocess.mixing_matrix import utils
+
 from . import funcs as parse_funcs
 
 # Locations that can be used for mixing
@@ -15,18 +22,17 @@ LOCATIONS = ["home", "other_locations", "school", "work"]
 
 
 class LocationMixingAdjustment(BaseMixingAdjustment):
-    def __init__(
-        self,
-        country_iso3: str,
-        region: str,
-        mixing: dict,
-        npi_effectiveness_params: dict,
-        google_mobility_locations: dict,
-        microdistancing_params: dict,
-        smooth_google_data: bool,
-        microdistancing_locations: list,
-    ):
+    def __init__(self, country: Country, mobility: Mobility):
         """Build the time variant location adjustment functions"""
+        country_iso3 = country.iso3
+        region = mobility.region
+        mixing = mobility.mixing
+        npi_effectiveness_params = mobility.npi_effectiveness
+        google_mobility_locations = mobility.google_mobility_locations
+        microdistancing_params = mobility.microdistancing
+        smooth_google_data = mobility.smooth_google_data
+        microdistancing_locations = mobility.microdistancing_locations
+
         # Load mobility data
         google_mobility_values, google_mobility_days = get_mobility_data(
             country_iso3, region, BASE_DATETIME, google_mobility_locations
@@ -36,7 +42,10 @@ class LocationMixingAdjustment(BaseMixingAdjustment):
                 google_mobility_values[loc] = apply_moving_average(google_mobility_values[loc], 7)
         # Build mixing data timeseries
         mixing = update_mixing_data(
-            mixing, npi_effectiveness_params, google_mobility_values, google_mobility_days,
+            {k: v.dict() for k, v in mixing.items()},
+            npi_effectiveness_params,
+            google_mobility_values,
+            google_mobility_days,
         )
         # Build the time variant location adjustment functions from mixing timeseries
         mixing_locations = [loc for loc in LOCATIONS if loc in mixing]
@@ -49,15 +58,15 @@ class LocationMixingAdjustment(BaseMixingAdjustment):
         # Work out microdistancing function to be applied to all non-household locations
         if not microdistancing_params:
             self.microdistancing_function = None
-        elif microdistancing_params["function_type"] == "tanh":
+        elif microdistancing_params.function_type == "tanh":
             self.microdistancing_function = tanh_based_scaleup(
-                **microdistancing_params["parameters"]
+                **microdistancing_params.parameters.dict()
             )
-        elif microdistancing_params["function_type"] == "empiric":
-            micro_times = microdistancing_params["parameters"]["times"]
-            multiplier = microdistancing_params["parameters"]["max_effect"]
+        elif microdistancing_params.function_type == "empiric":
+            micro_times = microdistancing_params.parameters.times
+            multiplier = microdistancing_params.parameters.max_effect
             micro_vals = [
-                1.0 - multiplier * value for value in microdistancing_params["parameters"]["values"]
+                1.0 - multiplier * value for value in microdistancing_params.parameters.values
             ]
             self.microdistancing_function = scale_up_function(micro_times, micro_vals, method=4)
 
@@ -67,7 +76,9 @@ class LocationMixingAdjustment(BaseMixingAdjustment):
             # Loads a 16x16 ndarray
             self.matrix_components[sheet_type] = get_country_mixing_matrix(sheet_type, country_iso3)
 
-    def get_adjustment(self, time: float, mixing_matrix: np.ndarray, microdistancing_locations: list) -> np.ndarray:
+    def get_adjustment(
+        self, time: float, mixing_matrix: np.ndarray, microdistancing_locations: list
+    ) -> np.ndarray:
         """
         Apply time-varying location adjustments.
         Returns a new mixing matrix, modified to adjust for dynamic mixing changes for a given point in time.
@@ -101,16 +112,12 @@ def update_mixing_data(
 ):
     most_recent_day = google_mobility_days[-1]
     for loc_key in LOCATIONS:
-
         loc_mixing = mixing.get(loc_key)
         if loc_mixing:
             # Ensure this location's mixing times and values match.
             assert len(loc_mixing["times"]) == len(
                 loc_mixing["values"]
             ), f"Mixing series length mismatch for {loc_key}"
-            loc_mixing["times"] = [
-                (time_date - BASE_DATE).days for time_date in loc_mixing["times"]
-            ]
 
         # Add historical Google mobility data to user-specified mixing params
         mobility_values = google_mobility_values.get(loc_key)
@@ -127,10 +134,8 @@ def update_mixing_data(
                 first_append_day = min(loc_mixing["times"])
                 if most_recent_day < first_append_day:
                     # Appended days happen after the Google Mobility data, so we can just append them.
-                    mixing[loc_key] = {
-                        "times": google_mobility_days + loc_mixing["times"],
-                        "values": mobility_values + loc_mixing["values"],
-                    }
+                    mixing[loc_key]["times"] = google_mobility_days + loc_mixing["times"]
+                    mixing[loc_key]["values"] = mobility_values + loc_mixing["values"]
                 else:
                     # Appended days start during the Google Mobility data, so we must merge them.
                     merge_idx = None
@@ -138,25 +143,21 @@ def update_mixing_data(
                         if day >= first_append_day:
                             merge_idx = idx
                             break
-                    mixing[loc_key] = {
-                        "times": google_mobility_days[:merge_idx] + loc_mixing["times"],
-                        "values": mobility_values[:merge_idx] + loc_mixing["values"],
-                    }
+                    mixing[loc_key]["times"] = (
+                        google_mobility_days[:merge_idx] + loc_mixing["times"]
+                    )
+                    mixing[loc_key]["values"] = mobility_values[:merge_idx] + loc_mixing["values"]
 
             else:
                 # Don't append, overwrite: insert the user-specified data
-                mixing[loc_key] = {
-                    "times": loc_mixing["times"],
-                    "values": loc_mixing["values"],
-                }
+                mixing[loc_key]["times"] = loc_mixing["times"]
+                mixing[loc_key]["values"] = loc_mixing["values"]
         elif loc_mixing:
             # No Google mobility data, but we still have user-specified data.
             if not loc_mixing["append"]:
                 # Use user-specified data
-                mixing[loc_key] = {
-                    "times": loc_mixing["times"],
-                    "values": loc_mixing["values"],
-                }
+                mixing[loc_key]["times"] = loc_mixing["times"]
+                mixing[loc_key]["values"] = loc_mixing["values"]
             else:
                 # User has specified "append", but there is nothing to append to.
                 msg = f"Cannot 'append' for {loc_key}: no Google mobility data available."
@@ -174,6 +175,7 @@ def update_mixing_data(
                 1 - (1 - val) * npi_adjust_val for val in mixing[loc_key]["values"]
             ]
 
+    mixing = {k: {"values": v["values"], "times": v["times"]} for k, v in mixing.items()}
     return mixing
 
 

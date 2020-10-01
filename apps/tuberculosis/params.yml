@@ -3,25 +3,26 @@ parent: null
 # Base parameters for the tuberculosis model.
 
 # Parameters used to build a general model of tuberculosis
-start_time: 1800.
-end_time: 2020.
-time_step: 1
-critical_ranges: []
+time:
+  start: 1800.
+  end: 2020.
+  step: 1
+  critical_ranges: []
 
 # Country caracteristics
 iso3: null
 region: null
 
 # requested outputs
-calculated_outputs: ['prevalence_infectious']
+calculated_outputs: ["prevalence_infectious"]
 outputs_stratification: {}
 
 # model structure
 # stratifications by 'age' and by 'organ' are pre-defined but they must be requested to be activated
 # other stratifications can be requested as "user_defined_stratifications"
-stratify_by: ['age']  #['age', 'location', 'organ']
+stratify_by: ["age"] #['age', 'location', 'organ']
 age_breakpoints: [0, 5, 15, 30, 45, 60, 75]
-user_defined_stratifications: {}  # this specifies user-defined  stratifications
+user_defined_stratifications: {} # this specifies user-defined  stratifications
 #  location:
 #    strata: ['rural', 'urban']
 #    proportions:
@@ -72,7 +73,7 @@ time_variant_tb_screening_rate:
 treatment_duration: .5
 prop_death_among_negative_tx_outcome: 0.2
 on_treatment_infect_multiplier: 0.08
-time_variant_tsr:  {}
+time_variant_tsr: {}
 
 # relative risks of reinfection
 rr_infection_latent: .21
@@ -112,9 +113,9 @@ acf_screening_sensitivity: .75
 time_variant_ltbi_screening: []
 ltbi_screening_sensitivity: .75
 pt_efficacy: .7
-pt_destination_compartment: 'recovered' # either 'recovered' or 'susceptible'
+pt_destination_compartment: "recovered" # either 'recovered' or 'susceptible'
 
-extra_params: {}  # used to add parameters used for specific applications
+extra_params: {} # used to add parameters used for specific applications
 
 # FIXME: the parameters below should disappear
 prevalence_infectiousXlocation_majuro_dispersion_param: 1.

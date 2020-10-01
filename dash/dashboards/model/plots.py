@@ -80,9 +80,9 @@ def plot_location_mixing(plotter: StreamlitPlotter, app: AppRegion):
         st.write("This model does not have location based mixing")
         return
 
-    start_time = params["start_time"]
-    end_time = params["end_time"]
-    time_step = params["time_step"]
+    start_time = params["time"]["start"]
+    end_time = params["time"]["end"]
+    time_step = params["time"]["step"]
     times = get_model_times_from_inputs(round(start_time), end_time, time_step,)
 
     loc_key = st.sidebar.selectbox("Select location", LOCATIONS)
@@ -160,7 +160,11 @@ def plot_model_multi_targets(
         scenario.run()
     is_logscale = st.sidebar.checkbox("Log scale")
     target_name_lookup = {t["title"]: t for t in app.targets.values()}
-    titles = ['Population size', 'TB prevalence (/100,000)', 'Notifications']  # FIXME: Could come from a multi-selector
+    titles = [
+        "Population size",
+        "TB prevalence (/100,000)",
+        "Notifications",
+    ]  # FIXME: Could come from a multi-selector
     target_list = [target_name_lookup[title] for title in titles]
     plots.model.plots.plot_multi_targets(plotter, scenario, target_list, is_logscale)
 

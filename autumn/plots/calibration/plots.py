@@ -31,6 +31,14 @@ PLOT_TEXT_DICT = {
     "microdistancing.parameters.max_effect": "max effect microdistancing",
     "infection_deaths": "mortality",
     "icu_occupancy": "ICU occupancy",
+    # TB model parameters
+    "start_population_size": "initial population size",
+    "late_reactivation_multiplier": "late reactivation multiplier",
+    "time_variant_tb_screening_rate.end_value": "final screening rate",
+    "user_defined_stratifications.location.adjustments.detection_rate.ebeye": "rel. screening rate (Ebeye)",
+    "user_defined_stratifications.location.adjustments.detection_rate.other": "rel. screening rate (Other Isl.)",
+    "extra_params.rr_progression_diabetes": "rel. progression rate (diabetes)",
+
 }
 
 

@@ -62,13 +62,13 @@ class MixingLocation(BaseModel):
     # Values for dynamic mixing func.
     values: List[Any]
 
-    @root_validator(pre=True)
+    @root_validator(pre=True, allow_reuse=True)
     def check_lengths(cls, values):
         vs, ts = values.get("values"), values.get("times")
         assert len(ts) == len(vs), f"Mixing series length mismatch."
         return values
 
-    @validator("times", pre=True)
+    @validator("times", pre=True, allow_reuse=True)
     def parse_dates_to_days(cls, dates):
         return [(d - BASE_DATE).days for d in dates]
 

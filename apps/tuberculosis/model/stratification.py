@@ -30,6 +30,7 @@ def stratify_by_age(model, params, compartments):
     flow_adjustments.update(get_adapted_age_parameters(params['age_breakpoints'], params['age_specific_latency']))
     if params['inflate_reactivation_for_diabetes']:
         flow_adjustments = edit_adjustments_for_diabetes(
+            model,
             flow_adjustments,
             params['age_breakpoints'],
             params['extra_params']['prop_diabetes'],

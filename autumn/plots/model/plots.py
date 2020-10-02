@@ -123,7 +123,7 @@ def plot_outputs_multi(
 
 
 def plot_outputs_single(
-    plotter: Plotter, scenario: Scenario, output_config: dict, is_logscale=False, axis=None
+    plotter: Plotter, scenario: Scenario, output_config: dict, is_logscale=False, axis=None, single_panel=True
 ):
     """
     Plot the model derived/generated outputs requested by the user for a single scenario.
@@ -161,7 +161,7 @@ def plot_multi_targets(
     i_row = 0
     for output_config in output_configs:
         ax = fig.add_subplot(spec[i_row, i_col])
-        plot_outputs_single(plotter, scenario, output_config, is_logscale, ax)
+        plot_outputs_single(plotter, scenario, output_config, is_logscale, ax, single_panel=False)
         ax.set_title(output_config['title'])
         i_col += 1
         if i_col == max_n_col:

@@ -91,12 +91,10 @@ infect_death_rate_dict:
   unstratified: .2
   smear_positive: 0.389 # Ragonent et al. (CID 2020)
   smear_negative: 0.025 # Ragonent et al. (CID 2020)
-  extrapulmonary: 0.025 # assumed equal to that of smear-negative PTB
 self_recovery_rate_dict:
   unstratified: .2
   smear_positive: 0.231 # Ragonent et al. (CID 2020)
   smear_negative: 0.130 # Ragonent et al. (CID 2020)
-  extrapulmonary: 0.130 # assumed equal to that of smear-negative PTB
 passive_screening_sensitivity:
   unstratified: .75
   smear_positive: 1. # dummy value

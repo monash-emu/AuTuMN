@@ -203,8 +203,10 @@ def stratify_by_organ(model, params):
         for stratified_param_name in stratified_param_names:
             flow_adjustments[stratified_param_name] = {}
             for organ_stratum in organ_strata:
+                organ_stratum_ = organ_stratum if organ_stratum != OrganStratum.EXTRAPULMONARY else\
+                    OrganStratum.SMEAR_NEGATIVE
                 flow_adjustments[stratified_param_name][organ_stratum + "W"] = params[param_name + "_dict"][
-                    organ_stratum
+                    organ_stratum_
                 ]
 
     # define differential detection rates by organ status

@@ -1984,10 +1984,26 @@
 1982,2020-09-28,Victoria,VIC,4,3,6807,4,41,-2,-1,-1
 1983,2020-09-28,Western Australia,WA,0,0,0,0,2,-1,0,0
 1984,2020-09-29,Australian Capital Territory,ACT,0,0,391,0,0,0,0,0
-1985,2020-09-29,New South Wales,NSW,2,0,6381,2,0,0,0,0
+1985,2020-09-29,New South Wales,NSW,2,0,6381,2,0,1,0,0
 1986,2020-09-29,Northern Territory,NT,0,0,450,0,0,0,0,0
 1987,2020-09-29,Queensland,QLD,0,0,4368,0,0,0,0,0
 1988,2020-09-29,South Australia,SA,0,0,2635,0,0,0,0,0
 1989,2020-09-29,Tasmania,TAS,0,0,284,0,0,0,0,0
-1990,2020-09-29,Victoria,VIC,9,7,8226,9,36,0,0,0
+1990,2020-09-29,Victoria,VIC,9,7,8226,9,36,-3,-3,0
 1991,2020-09-29,Western Australia,WA,8,0,3275,8,0,0,0,0
+1992,2020-09-30,Australian Capital Territory,ACT,0,0,480,0,0,0,0,0
+1993,2020-09-30,New South Wales,NSW,4,0,13575,4,0,-1,0,0
+1994,2020-09-30,Northern Territory,NT,0,0,314,0,0,0,0,0
+1995,2020-09-30,Queensland,QLD,0,0,6789,0,1,-2,0,0
+1996,2020-09-30,South Australia,SA,0,0,3050,0,2,0,0,0
+1997,2020-09-30,Tasmania,TAS,0,0,599,0,0,0,0,0
+1998,2020-09-30,Victoria,VIC,11,4,17937,11,28,-2,1,-1
+1999,2020-09-30,Western Australia,WA,0,0,5327,0,0,0,0,0
+2000,2020-10-01,Australian Capital Territory,ACT,0,0,457,0,0,0,0,0
+2001,2020-10-01,New South Wales,NSW,3,0,13072,3,0,1,0,0
+2002,2020-10-01,Northern Territory,NT,0,0,0,0,0,0,0,0
+2003,2020-10-01,Queensland,QLD,0,0,5758,0,1,0,0,0
+2004,2020-10-01,South Australia,SA,0,0,2990,0,0,0,0,0
+2005,2020-10-01,Tasmania,TAS,0,0,0,0,0,0,0,0
+2006,2020-10-01,Victoria,VIC,14,2,14729,14,28,-6,0,0
+2007,2020-10-01,Western Australia,WA,1,0,4089,1,1,0,0,0

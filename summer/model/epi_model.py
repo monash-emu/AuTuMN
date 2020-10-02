@@ -249,10 +249,6 @@ class EpiModel:
             integration_type, self.get_flow_rates, self.compartment_values, self.times, solver_args
         )
 
-        if np.any(self.outputs < OUTPUTS_NEGATIVE_TOLERANCE):
-            msg = f"Negative compartment size found in model output, value smaller than {OUTPUTS_NEGATIVE_TOLERANCE}"
-            raise ValueError(msg)
-
         self.derived_outputs = self.calculate_derived_outputs()
 
     def get_flow_rates(self, compartment_values: np.ndarray, time: float):

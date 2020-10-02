@@ -83,7 +83,7 @@ rr_infection_recovered: 1.
 age_infectiousness_switch: 15.
 
 # changes by organ status
-incidence_props_pulmonary: .75
+incidence_props_pulmonary: .85
 incidence_props_smear_positive_among_pulmonary: .75
 smear_negative_infect_multiplier: .25
 extrapulmonary_infect_multiplier: 0.

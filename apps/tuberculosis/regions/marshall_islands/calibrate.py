@@ -7,7 +7,7 @@ from autumn.calibration.utils import add_dispersion_param_prior_for_gaussian
 
 
 from apps.tuberculosis.model import build_model
-from apps.tuberculosis.calibration_utils import get_latency_priors_from_epidemics
+from apps.tuberculosis.calibration_utils import get_latency_priors_from_epidemics, get_natural_history_priors_from_cid
 
 targets = load_targets("tuberculosis", Region.MARSHALL_ISLANDS)
 
@@ -69,7 +69,25 @@ PRIORS = [
         "distribution": "uniform",
         "distri_params": [2.25, 5.73],
     },
+    {
+        "param_name": "rr_infection_recovered",
+        "distribution": "uniform",
+        "distri_params": [.5, 2.0],
+    },
+    {
+        "param_name": "pt_efficacy",
+        "distribution": "uniform",
+        "distri_params": [.8, .85],
+    },
 ]
+
+# Add uncertainty around natural history using our CID estimates
+for param_name in ['infect_death_rate', 'self_recovery_rate']:
+    for organ in ['smear_positive', 'smear_negative']:
+        PRIORS.append(
+            get_natural_history_priors_from_cid(param_name, organ)
+        )
+
 
 targets_to_use = [
     'prevalence_infectiousXlocation_majuro',

@@ -26,8 +26,8 @@ mobility:
     function_type: empiric
     parameters:
       max_effect: 0.28
-      times: [75, 76, 121, 122, 136, 137, 153, 154, 227, 228]
-      values: [0., 1., 1., 0.8, 0.8, 0.7, 0.7, 0.45, 0.45, 0.5]
+      times: [75, 228]
+      values: [0., 1.]
     # 16 March, day 76, ECQ enforced
     # 1 May, day 122, ECQ / GCQ enforced
     # 16 May, day 137, MECQ / GCQ enforced

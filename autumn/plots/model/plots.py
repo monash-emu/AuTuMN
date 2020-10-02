@@ -128,7 +128,8 @@ def plot_outputs_single(
     """
     Plot the model derived/generated outputs requested by the user for a single scenario.
     """
-    fig, axis, _, _, _, _ = plotter.get_figure()
+    if single_panel:
+        fig, axis, _, _, _, _ = plotter.get_figure()
 
     if is_logscale:
         axis.set_yscale("log")

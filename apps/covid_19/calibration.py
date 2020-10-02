@@ -41,21 +41,27 @@ BASE_CALIBRATION_PARAMS = [
 ]
 
 
-def provide_default_calibration_params(excluded_params=()):
+def provide_default_calibration_params(excluded_params=(), override_params=[]):
     """
     Provide the standard default parameters as listed above, unless requested not to include any.
 
     :param excluded_params: tuple
         strings of the parameters that are not to be returned
+    :param override_params: list of dictionaries
     :return: list
         calibration parameters
     """
-
-    return [
+    params_to_skip = [
+        prior_dict["param_name"] for prior_dict in override_params
+    ]
+    params_to_skip += list(excluded_params)
+    priors = [
         BASE_CALIBRATION_PARAMS[param]
         for param in range(len(BASE_CALIBRATION_PARAMS))
-        if BASE_CALIBRATION_PARAMS[param]["param_name"] not in excluded_params
+        if BASE_CALIBRATION_PARAMS[param]["param_name"] not in params_to_skip
     ]
+    priors += override_params
+    return priors
 
 
 """

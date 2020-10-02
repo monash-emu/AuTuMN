@@ -61,23 +61,25 @@ def update_calibration():
         json.dump(targets, f, indent=2)
     with open(REGION_DIR + "\\params\\default.yml", "r") as f:
         default = f.readlines()
-    end = default.index("  times_imported_cases:\n")
+    end = default.index("  case_timeseries:\n")
     default = default[:end]
 
     with open(REGION_DIR + "\\params\\default.yml", "r") as f:
         tmp = yaml.load(f, Loader=yaml.FullLoader)
-    tmp = {key: val for key, val in tmp.items() if key == "data"}
+    tmp = {key: val for key, val in tmp.items() if key == "importation"}
 
     temp_df = df[["date_index", "IC"]].dropna(0, subset=["IC"])
     temp_df = temp_df[temp_df.date_index != 94]
-    tmp["data"]["times_imported_cases"] = list(temp_df["date_index"])
-    tmp["data"]["n_imported_cases"] = list(temp_df["IC"])
+    tmp["importation"]["case_timeseries"]["times"] = list(temp_df["date_index"])
+    tmp["importation"]["case_timeseries"]["values"] = list(temp_df["IC"])
 
     with open(REGION_DIR + "\\params\\default.yml", "w") as f:
         yaml.dump(tmp, f)
     with open(REGION_DIR + "\\params\\default.yml", "r") as f:
         append = f.readlines()
-    default = default + append[1:]
+
+    end = append.index("  movement_prop: null\n")
+    default = default + append[1:end]
 
     with open(REGION_DIR + "\\params\\default.yml", "w") as f:
         f.writelines(default)

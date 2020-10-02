@@ -4,11 +4,11 @@ iso3: "MHL"
 
 time:
   start: 1800.
-  end: 2035.
+  end: 2050.
   step: 1.
   critical_ranges: [[2017., 2019.]]
 
-start_population_size: 4000.
+start_population_size: 2000.
 
 # MODEL STRUCTURE
 stratify_by: ["age", "organ", "location"]
@@ -31,8 +31,8 @@ user_defined_stratifications: # this specifies user-defined  stratifications
         other: 1.
       detection_rate:
         majuro: 1.
-        ebeye: 1.5
-        other: 1.
+        ebeye: 1.495354866232787
+        other: 1.2325688858220845
 
 # BCG coverage
 time_variant_bcg_perc:
@@ -76,7 +76,7 @@ time_variant_tb_screening_rate:
   maximum_gradient: .1 # The shape parameter to the tanh-based curve
   max_change_time: 1990. # Point at which curve inflects
   start_value: 0. # Starting value - lower asymptote
-  end_value: 0.4
+  end_value: 0.4057634920539735
 
 extra_params:
   prop_diabetes:
@@ -86,11 +86,11 @@ extra_params:
     35: 0.4
     50: 0.7
     70: 0.7
-  rr_progression_diabetes: 5.
+  rr_progression_diabetes: 5.643402828077587
 
 # calibrated parameters
-contact_rate: 1.7
-late_reactivation_multiplier: 1.
+contact_rate: 1.5
+late_reactivation_multiplier: 0.7117191601170418
 
 # REQUESTED OUTPUTS
 calculated_outputs:

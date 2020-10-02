@@ -65,8 +65,8 @@
   "population_size": {
     "title": "Population size",
     "output_key": "population_size",
-    "times": [2019.0],
-    "values": [58791],
+    "times": [2011.0],
+    "values": [53158.0],
     "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "incidence": {

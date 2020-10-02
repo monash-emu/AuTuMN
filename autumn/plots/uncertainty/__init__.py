@@ -26,5 +26,5 @@ def plot_uncertainty(targets: dict, powerbi_db_path: str, output_dir: str):
         for scenario in scenarios:
             logger.info("Plotting uncertainty for output %s, scenario %s", output_name, scenario)
             plots.plot_timeseries_with_uncertainty(
-                plotter, uncertainty_df, output_name, scenario, targets
+                plotter, uncertainty_df, output_name, [scenario], targets
             )

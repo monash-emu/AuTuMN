@@ -37,12 +37,12 @@ PRIORS = [
     {
         "param_name": "start_population_size",
         "distribution": "uniform",
-        "distri_params": [2000, 6000]
+        "distri_params": [1000, 6000]
     },
     {
         "param_name": "contact_rate",
         "distribution": "uniform",
-        "distri_params": [1.5, 2.0]
+        "distri_params": [1.2, 2.0]
     },
     {
         "param_name": "late_reactivation_multiplier",

@@ -25,9 +25,8 @@ mobility:
     parameters:
       max_effect: 0.25
       times:
-        [75, 76, 137, 138, 153, 154, 198, 199, 214, 215, 228, 229, 244, 245]
-      values:
-        [0, 1., 1., 0.9, 0.9, 0.6, 0.6, 0.3, 0.3, 0.57, 0.57, 0.5, 0.5, 0.5]
+      times: [75, 228]
+      values: [0., 1.]
     # 16 March, day 76, ECQ enforced for whole region
     # 16 May, day 137, GCQ continues for most of region with MECQ enforced for Laguna
     # 1 June, day 153, GCQ for all regions

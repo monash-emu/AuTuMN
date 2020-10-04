@@ -25,44 +25,8 @@ mobility:
     function_type: empiric
     parameters:
       max_effect: 0.4
-      times:
-        [
-          121,
-          122,
-          137,
-          138,
-          153,
-          154,
-          168,
-          169,
-          198,
-          199,
-          214,
-          215,
-          229,
-          230,
-          244,
-          245,
-        ]
-      values:
-        [
-          0,
-          0.8,
-          0.8,
-          0.7,
-          0.7,
-          0.6,
-          0.6,
-          1.,
-          1.,
-          0.5,
-          0.5,
-          0.6,
-          0.6,
-          0.45,
-          0.45,
-          0.2,
-        ]
+      times: [75, 228]
+      values: [0., 1.]
     # 1 May, day 122, GCQ enforced everywhere with ECQ enforced for Cebu
     # 16 May, day 137, Cebu switches to modified MECQ, GCQ continues for rest of region
     # 1 June, day 153, Cebu switches to GCQ joining the rest of the region

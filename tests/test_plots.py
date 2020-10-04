@@ -99,7 +99,7 @@ def test_plot_uncertainty(tmp_path):
     # Create plots
     plot_uncertainty(targets, powerbi_db_path, output_dir)
     # Check plots
-    expected_foo_path = os.path.join(tmp_path, "foo", "uncertainty-foo-0.png")
-    expected_incidence_path = os.path.join(tmp_path, "incidence", "uncertainty-incidence-0.png")
+    expected_foo_path = os.path.join(tmp_path, "foo", "uncertainty-foo.png")
+    expected_incidence_path = os.path.join(tmp_path, "incidence", "uncertainty-incidence.png")
     assert os.path.exists(expected_foo_path)
     assert os.path.exists(expected_incidence_path)

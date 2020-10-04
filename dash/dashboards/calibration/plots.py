@@ -14,14 +14,10 @@ PLOT_FUNCS = {}
 
 def create_standard_plotting_sidebar():
     # Implement user request options
-    title_font_size = \
-        st.sidebar.slider("Title font size", 1, 15, 8)
-    label_font_size = \
-        st.sidebar.slider("Label font size", 1, 15, 8)
-    dpi_request = \
-        st.sidebar.slider("DPI", 50, 2000, 300)
-    capitalise_first_letter = \
-        st.sidebar.checkbox("Title start capital")
+    title_font_size = st.sidebar.slider("Title font size", 1, 15, 8)
+    label_font_size = st.sidebar.slider("Label font size", 1, 15, 8)
+    dpi_request = st.sidebar.slider("DPI", 50, 2000, 300)
+    capitalise_first_letter = st.sidebar.checkbox("Title start capital")
     return title_font_size, label_font_size, dpi_request, capitalise_first_letter
 
 
@@ -32,7 +28,7 @@ def create_xrange_selector(x_min, x_max):
 
 
 def create_multi_scenario_selector(available_scenarios):
-    return st.multiselect('Select scenarios', available_scenarios)
+    return st.multiselect("Select scenarios", available_scenarios)
 
 
 def print_mle_parameters(
@@ -58,10 +54,8 @@ def plot_acceptance_ratio(
     mcmc_params: List[pd.DataFrame],
     targets: dict,
 ):
-    label_font_size = \
-        st.sidebar.slider("Label font size", 1, 15, 10)
-    dpi_request = \
-        st.sidebar.slider("DPI", 50, 2000, 300)
+    label_font_size = st.sidebar.slider("Label font size", 1, 15, 10)
+    dpi_request = st.sidebar.slider("DPI", 50, 2000, 300)
     plots.calibration.plots.plot_acceptance_ratio(
         plotter, mcmc_tables, label_font_size=label_font_size, dpi_request=dpi_request
     )
@@ -94,16 +88,23 @@ def plot_timeseries_with_uncertainty(
         mcmc_all_df = mcmc_all_df[mcmc_all_df["run"] >= half_max]
         uncertainty_df = db.uncertainty.calculate_mcmc_uncertainty(mcmc_all_df, do_all_df, targets)
 
-    x_min = round(min(uncertainty_df['time']))
-    x_max = round(max(uncertainty_df['time']))
+    x_min = round(min(uncertainty_df["time"]))
+    x_max = round(max(uncertainty_df["time"]))
     x_low, x_up = create_xrange_selector(x_min, x_max)
 
-    available_scenarios = uncertainty_df['scenario'].unique()
+    available_scenarios = uncertainty_df["scenario"].unique()
     selected_scenarios = create_multi_scenario_selector(available_scenarios)
 
     is_logscale = st.sidebar.checkbox("Log scale")
     plots.uncertainty.plots.plot_timeseries_with_uncertainty(
-        plotter, uncertainty_df, chosen_output, selected_scenarios, targets, is_logscale, x_low, x_up
+        plotter,
+        uncertainty_df,
+        chosen_output,
+        selected_scenarios,
+        targets,
+        is_logscale,
+        x_low,
+        x_up,
     )
 
 
@@ -133,14 +134,19 @@ PLOT_FUNCS["Output calibration fit"] = plot_calibration_fit
 
 
 def plot_multi_output_fit(
-        plotter: StreamlitPlotter,
-        calib_dir_path: str,
-        mcmc_tables: List[pd.DataFrame],
-        mcmc_params: List[pd.DataFrame],
-        targets: dict,
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
 ):
     available_outputs = [o["output_key"] for o in targets.values()]
-    title_font_size, label_font_size, dpi_request, capitalise_first_letter = create_standard_plotting_sidebar()
+    (
+        title_font_size,
+        label_font_size,
+        dpi_request,
+        capitalise_first_letter,
+    ) = create_standard_plotting_sidebar()
     is_logscale = st.sidebar.checkbox("Log scale")
 
     outputs = {}
@@ -150,8 +156,15 @@ def plot_multi_output_fit(
             output, mcmc_tables, derived_output_tables
         )
     plots.calibration.plots.plot_multi_fit(
-        plotter, available_outputs, outputs, targets, is_logscale, title_font_size, label_font_size, dpi_request,
-        capitalise_first_letter
+        plotter,
+        available_outputs,
+        outputs,
+        targets,
+        is_logscale,
+        title_font_size,
+        label_font_size,
+        dpi_request,
+        capitalise_first_letter,
     )
 
 
@@ -173,15 +186,19 @@ PLOT_FUNCS["Parameter trace"] = plot_mcmc_parameter_trace
 
 
 def plot_all_param_traces(
-        plotter: StreamlitPlotter,
-        calib_dir_path: str,
-        mcmc_tables: List[pd.DataFrame],
-        mcmc_params: List[pd.DataFrame],
-        targets: dict,
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
 ):
 
-    title_font_size, label_font_size, dpi_request, capitalise_first_letter = \
-        create_standard_plotting_sidebar()
+    (
+        title_font_size,
+        label_font_size,
+        dpi_request,
+        capitalise_first_letter,
+    ) = create_standard_plotting_sidebar()
     plots.calibration.plots.plot_multiple_param_traces(
         plotter, mcmc_params, title_font_size, label_font_size, capitalise_first_letter, dpi_request
     )
@@ -207,16 +224,26 @@ PLOT_FUNCS["Loglikelihood vs param"] = plot_loglikelihood_vs_parameter
 
 
 def plot_loglike_vs_all_params(
-        plotter: StreamlitPlotter,
-        calib_dir_path: str,
-        mcmc_tables: List[pd.DataFrame],
-        mcmc_params: List[pd.DataFrame],
-        targets: dict,
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
 ):
-    title_font_size, label_font_size, dpi_request, capitalise_first_letter = \
-        create_standard_plotting_sidebar()
+    (
+        title_font_size,
+        label_font_size,
+        dpi_request,
+        capitalise_first_letter,
+    ) = create_standard_plotting_sidebar()
     plots.calibration.plots.plot_all_params_vs_loglike(
-        plotter, mcmc_tables, mcmc_params, title_font_size, label_font_size, capitalise_first_letter, dpi_request
+        plotter,
+        mcmc_tables,
+        mcmc_params,
+        title_font_size,
+        label_font_size,
+        capitalise_first_letter,
+        dpi_request,
     )
 
 
@@ -230,10 +257,8 @@ def plot_posterior(
     mcmc_params: List[pd.DataFrame],
     targets: dict,
 ):
-    chosen_param = \
-        selectors.parameter(mcmc_params[0])
-    num_bins = \
-        st.sidebar.slider("Number of bins", 1, 50, 16)
+    chosen_param = selectors.parameter(mcmc_params[0])
+    num_bins = st.sidebar.slider("Number of bins", 1, 50, 16)
     plots.calibration.plots.plot_posterior(plotter, mcmc_params, chosen_param, num_bins)
 
 
@@ -248,12 +273,21 @@ def plot_all_posteriors(
     targets: dict,
 ):
 
-    title_font_size, label_font_size, dpi_request, capitalise_first_letter = \
-        create_standard_plotting_sidebar()
-    num_bins = \
-        st.sidebar.slider("Number of bins", 1, 50, 16)
+    (
+        title_font_size,
+        label_font_size,
+        dpi_request,
+        capitalise_first_letter,
+    ) = create_standard_plotting_sidebar()
+    num_bins = st.sidebar.slider("Number of bins", 1, 50, 16)
     plots.calibration.plots.plot_multiple_posteriors(
-        plotter, mcmc_params, num_bins, title_font_size, label_font_size, capitalise_first_letter, dpi_request
+        plotter,
+        mcmc_params,
+        num_bins,
+        title_font_size,
+        label_font_size,
+        capitalise_first_letter,
+        dpi_request,
     )
 
 

@@ -1,6 +1,7 @@
 """
 Plotting projection uncertainty.
 """
+from typing import List
 import logging
 from datetime import datetime
 
@@ -12,67 +13,40 @@ from matplotlib import colors
 
 logger = logging.getLogger(__name__)
 
-
-def make_colors_transparent(raw_color_list, alphas):
-    for i in range(len(raw_color_list)):
-        for j in range(len(raw_color_list[i])):
-            rgb_color = list(colors.colorConverter.to_rgb(raw_color_list[i][j]))
-            raw_color_list[i][j] = rgb_color + [alphas[i]]
-    return raw_color_list
+ALPHAS = (1.0, 0.6)
+COLORS = (
+    ["lightsteelblue", "cornflowerblue", "royalblue", "navy"],
+    ["plum", "mediumorchid", "darkviolet", "black"],
+)
 
 
 def plot_timeseries_with_uncertainty(
     plotter: Plotter,
     uncertainty_df: pd.DataFrame,
     output_name: str,
-    scenarios: list,
+    scenario_idxs: List[int],
     targets: dict,
     is_logscale=False,
-    x_low=0.,
-    x_up=2000.
+    x_low=0.0,
+    x_up=1e6,
 ):
+    """
+    Plots the uncertainty timeseries for one or more scenarios.
+    Also plots any calibration targets that are provided.
+    """
     fig, axis, _, _, _, _ = plotter.get_figure()
-    title = plotter.get_plot_title(output_name)
-    # Plot quantiles
-    colors = (
-        ["lightsteelblue", "cornflowerblue", "royalblue", "navy"],
-        ["plum", "mediumorchid", "darkviolet", "black"],
-    )
-    alphas = (1., .6)
-    colors = make_colors_transparent(colors, alphas)
+    colors = _apply_transparency(COLORS, ALPHAS)
 
-    for scenario in scenarios:
-        color_index = min(scenario, 1)
-        mask = (uncertainty_df["type"] == output_name) & (uncertainty_df["scenario"] == scenario) &\
-               (uncertainty_df["time"] <= x_up) & (uncertainty_df["time"] >= x_low)
-        df = uncertainty_df[mask]
-        times = df.time.unique()
-        quantiles = {}
-        quantile_vals = df["quantile"].unique().tolist()
-        for q in quantile_vals:
-            mask = df["quantile"] == q
-            quantiles[q] = df[mask]["value"].tolist()
-        q_keys = sorted([float(k) for k in quantiles.keys()])
-        num_quantiles = len(q_keys)
-        half_length = num_quantiles // 2
-        for i in range(half_length):
-            color = colors[color_index][i]
-            start_key = q_keys[i]
-            end_key = q_keys[-(i + 1)]
-            axis.fill_between(times, quantiles[start_key], quantiles[end_key], facecolor=color)
-
-        if num_quantiles % 2:
-            q_key = q_keys[half_length]
-            axis.plot(times, quantiles[q_key], color=colors[color_index][3])
+    # Plot each scenario on a single axis.
+    for scenario_idx in scenario_idxs:
+        color_idx = min(scenario_idx, 1)
+        scenario_colors = colors[color_idx]
+        _plot_uncertainty(
+            axis, uncertainty_df, output_name, scenario_idx, x_up, x_low, scenario_colors
+        )
 
     # Add plot targets
-    output_config = {"values": [], "times": []}
-    for t in targets.values():
-        if t["output_key"] == output_name:
-            output_config = t
-
-    values = output_config["values"]
-    times = output_config["times"]
+    values, times = _get_target_values(targets, output_name)
     _plot_targets_to_axis(axis, values, times, on_uncertainty_plot=True)
 
     axis.set_xlabel("time")
@@ -82,10 +56,71 @@ def plot_timeseries_with_uncertainty(
     else:
         axis.set_ylim(ymin=0)
 
-    scenarios_string = ", ".join([str(t) for t in scenarios])
-    scenario_title = "baseline scenario" if scenarios == [0] else "Scenarios " + scenarios_string
-    plotter.save_figure(
-        fig,
-        filename=f"uncertainty-{output_name}",
-        title_text=f"{title} for {scenario_title}",
+    output_title = plotter.get_plot_title(output_name)
+    if scenario_idxs == [0]:
+        title = f"{output_title} for baseline scenario"
+    else:
+        scenarios_string = ", ".join(map(str, scenario_idxs))
+        title = f"{output_title} for scenarios {scenarios_string}"
+
+    idx_str = "-".join(map(str, scenario_idxs))
+    filename = f"uncertainty-{output_name}-{idx_str}"
+    plotter.save_figure(fig, filename=filename, title_text=title)
+
+
+def _plot_uncertainty(
+    axis,
+    uncertainty_df: pd.DataFrame,
+    output_name: str,
+    scenario_idx: int,
+    x_up: float,
+    x_low: float,
+    colors: List[str],
+):
+    """Plots the uncertainty values in the provided dataframe to an axis"""
+    mask = (
+        (uncertainty_df["type"] == output_name)
+        & (uncertainty_df["scenario"] == scenario_idx)
+        & (uncertainty_df["time"] <= x_up)
+        & (uncertainty_df["time"] >= x_low)
     )
+    df = uncertainty_df[mask]
+    times = df.time.unique()
+    quantiles = {}
+    quantile_vals = df["quantile"].unique().tolist()
+    for q in quantile_vals:
+        mask = df["quantile"] == q
+        quantiles[q] = df[mask]["value"].tolist()
+    q_keys = sorted([float(k) for k in quantiles.keys()])
+    num_quantiles = len(q_keys)
+    half_length = num_quantiles // 2
+    for i in range(half_length):
+        color = colors[i]
+        start_key = q_keys[i]
+        end_key = q_keys[-(i + 1)]
+        axis.fill_between(times, quantiles[start_key], quantiles[end_key], facecolor=color)
+
+    if num_quantiles % 2:
+        q_key = q_keys[half_length]
+        axis.plot(times, quantiles[q_key], color=colors[3])
+
+
+def _get_target_values(targets: dict, output_name: str):
+    """Pulls out values for a given target"""
+    output_config = {"values": [], "times": []}
+    for t in targets.values():
+        if t["output_key"] == output_name:
+            output_config = t
+
+    values = output_config["values"]
+    times = output_config["times"]
+    return values, times
+
+
+def _apply_transparency(color_list: List[str], alphas: List[str]):
+    """Make a list of colours transparent, based on a list of alphas"""
+    for i in range(len(color_list)):
+        for j in range(len(color_list[i])):
+            rgb_color = list(colors.colorConverter.to_rgb(color_list[i][j]))
+            color_list[i][j] = rgb_color + [alphas[i]]
+    return color_list

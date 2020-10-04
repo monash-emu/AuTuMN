@@ -102,7 +102,7 @@ class CollationTask(utils.BaseTask):
 
 class CalculateUncertaintyTask(utils.BaseTask):
     """
-    Calculates uncertainty for model outputs and 
+    Calculates uncertainty for model outputs and
     prunes collated database and unpiovot data into PowerBI friendly form.
     """
 
@@ -162,7 +162,13 @@ class PlotUncertaintyTask(utils.BaseTask):
         app_region = utils.get_app_region(self.run_id)
         target_names = [t["output_key"] for t in app_region.targets.values() if t.get("quantiles")]
         target_files = [
-            os.path.join(settings.BASE_DIR, "plots", "uncertainty", o, f"uncertainty-{o}-0.png",)
+            os.path.join(
+                settings.BASE_DIR,
+                "plots",
+                "uncertainty",
+                o,
+                f"uncertainty-{o}-0.png",
+            )
             for o in target_names
         ]
         return [luigi.LocalTarget(f) for f in target_files]

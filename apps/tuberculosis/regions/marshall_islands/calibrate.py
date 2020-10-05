@@ -50,9 +50,19 @@ PRIORS = [
         "distri_params": [.5, 2.]
     },
     {
+        "param_name": "time_variant_tb_screening_rate.max_change_time",
+        "distribution": "uniform",
+        "distri_params": [1990., 2020.]
+    },
+    {
+        "param_name": "time_variant_tb_screening_rate.maximum_gradient",
+        "distribution": "uniform",
+        "distri_params": [.07, .1]
+    },
+    {
         "param_name": "time_variant_tb_screening_rate.end_value",
         "distribution": "uniform",
-        "distri_params": [.3, .5]
+        "distri_params": [.5, 1.]
     },
     {
         "param_name": "user_defined_stratifications.location.adjustments.detection_rate.ebeye",

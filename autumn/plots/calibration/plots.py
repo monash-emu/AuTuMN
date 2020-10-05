@@ -565,7 +565,7 @@ def _plot_targets_to_axis(axis, values: List[float], times: List[int], on_uncert
     assert len(times) == len(values), "Targets have inconsistent length"
     # Plot a single point estimate
     if on_uncertainty_plot:
-        axis.scatter(times, values, marker="o", color="black", s=10)
+        axis.scatter(times, values, marker="o", color="black", s=10, zorder=999)
     else:
         axis.scatter(times, values, marker="o", color="red", s=30, zorder=999)
         axis.scatter(times, values, marker="o", color="white", s=10, zorder=999)

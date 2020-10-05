@@ -101,10 +101,13 @@ calculated_outputs:
     "notifications",
     "mortality",
     "incidence",
+    "cumulative_diseased",
+    "cumulative_deaths"
   ]
 outputs_stratification:
   prevalence_infectious: ["location"]
   percentage_latent: ["location"]
   notifications: ["location"]
+cumulative_output_start_time: 2018.
 
 inflate_reactivation_for_diabetes: True

@@ -7,6 +7,7 @@ from summer.model.derived_outputs import (
     InfectionDeathFlowOutput,
     TransitionFlowOutput,
 )
+import numpy as np
 
 
 def make_infectious_prevalence_calculation_function(stratum_filters=[]):
@@ -155,7 +156,33 @@ def calculate_incidence(time_idx, model, compartment_values, derived_outputs):
 
 
 def calculate_tb_mortality(time_idx, model, compartment_values, derived_outputs):
-    return derived_outputs['mortality_infectious'][time_idx] + derived_outputs['mortality_on_treatment'][time_idx]
+    return derived_outputs['mortality_infectious'][time_idx] + derived_outputs['mortality_on_treatment'][time_idx] /\
+           sum(compartment_values) * 1.e5
+
+
+def make_cumulative_output_func(output, start_time_cumul):
+    """
+    Create a derived output function for cumulative output
+    :param output: one of ["cumulative_deaths", "cumulative_diseased"]
+    :param start_time_cumul: the reference time
+    :return: a derived output function
+    """
+    base_derived_outputs = {
+        'cumulative_diseased': ['incidence_early', 'incidence_late'],
+        'cumulative_deaths': ['mortality_infectious', 'mortality_on_treatment'],
+    }
+
+    def calculate_cumulative_output(time_idx, model, compartment_values, derived_outputs):
+        ref_time_idx = min(np.where(model.times >= start_time_cumul)[0])
+        if time_idx < ref_time_idx:
+            return 0.
+        else:
+            total = derived_outputs[output][time_idx - 1]
+            for relevant_output in base_derived_outputs[output]:
+                total += derived_outputs[relevant_output][time_idx]
+            return total
+
+    return calculate_cumulative_output
 
 
 def calculate_population_size(time_idx, model, compartment_values, derived_outputs):
@@ -220,6 +247,10 @@ def get_all_derived_output_functions(calculated_outputs, outputs_stratification,
         "mortality_infectious": get_mortality_flow_infectious,
         "mortality_on_treatment": get_mortality_flow_on_treatment,
     }
+    cumulative_functions = {
+        "cumulative_deaths": make_cumulative_output_func,
+        "cumulative_diseased": make_cumulative_output_func,
+    }
     # need to add two intermediate derived outputs to capture mortality flows
     if "incidence" in calculated_outputs:
         calculated_outputs = ["incidence_early", "incidence_late"] + calculated_outputs
@@ -260,6 +291,10 @@ def get_all_derived_output_functions(calculated_outputs, outputs_stratification,
                                                                           [stratification_name, stratum]
                                                                           )
                             model.add_flow_derived_outputs(connection)
+        elif requested_output in cumulative_functions:
+            derived_output_functions[requested_output] = cumulative_functions[requested_output](
+                requested_output, model.parameters['cumulative_output_start_time']
+            )
         else:
             raise ValueError(requested_output + " not among simple_functions, factory_functions or flow_functions")
 

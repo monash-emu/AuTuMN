@@ -11,6 +11,7 @@ from math import ceil
 from autumn.plots.plotter import Plotter
 from autumn.plots.calibration.plots import _plot_targets_to_axis
 from matplotlib import colors, pyplot
+from matplotlib.ticker import FormatStrFormatter
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,7 @@ def plot_timeseries_with_uncertainty(
     x_low=0.0,
     x_up=1e6,
     axis=None,
+    n_xticks=None
 ):
     """
     Plots the uncertainty timeseries for one or more scenarios.
@@ -54,6 +56,9 @@ def plot_timeseries_with_uncertainty(
     _plot_targets_to_axis(axis, values, times, on_uncertainty_plot=True)
 
     axis.set_xlabel("time")
+    if n_xticks is not None:
+        pyplot.locator_params(axis='x', nbins=n_xticks)
+
     output_title = plotter.get_plot_title(output_name)
     axis.set_ylabel(output_title)
     if is_logscale:
@@ -118,10 +123,12 @@ def plot_multi_output_timeseries_with_uncertainty(
     all_targets: dict,
     is_logscale=False,
     x_low=0.,
-    x_up=2000.
+    x_up=2000.,
+    n_xticks=None
 ):
     if len(output_names) * len(scenarios) == 0:
         return
+    # pyplot.rcParams.update({'font.size': 15})
 
     max_n_col = 2
     n_panels = len(output_names)
@@ -137,7 +144,7 @@ def plot_multi_output_timeseries_with_uncertainty(
         targets = {k: v for k, v in all_targets.items() if v["output_key"] == output_name}
         ax = fig.add_subplot(spec[i_row, i_col])
         plot_timeseries_with_uncertainty(
-            plotter, uncertainty_df, output_name, scenarios, targets, is_logscale, x_low, x_up, ax
+            plotter, uncertainty_df, output_name, scenarios, targets, is_logscale, x_low, x_up, ax, n_xticks
         )
         i_col += 1
         if i_col == max_n_col:

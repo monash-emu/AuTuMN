@@ -140,8 +140,9 @@ def plot_multiple_timeseries_with_uncertainty(
     available_scenarios = uncertainty_df['scenario'].unique()
     selected_scenarios = create_multi_scenario_selector(available_scenarios)
     is_logscale = st.sidebar.checkbox("Log scale")
+    n_xticks = st.sidebar.slider("Number of x ticks", 1, 10, 6)
     plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(
-        plotter, uncertainty_df, chosen_outputs, selected_scenarios, targets, is_logscale, x_low, x_up
+        plotter, uncertainty_df, chosen_outputs, selected_scenarios, targets, is_logscale, x_low, x_up, n_xticks
     )
 
 

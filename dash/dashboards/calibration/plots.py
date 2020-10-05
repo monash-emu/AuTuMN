@@ -111,6 +111,43 @@ def plot_timeseries_with_uncertainty(
 PLOT_FUNCS["Output uncertainty"] = plot_timeseries_with_uncertainty
 
 
+def plot_multiple_timeseries_with_uncertainty(
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+):
+    available_outputs = [o["output_key"] for o in targets.values()]
+    chosen_outputs = st.multiselect('Select outputs', available_outputs)
+    try:  # if PBI processing has been performed already
+        uncertainty_df = db.load.load_uncertainty_table(calib_dir_path)
+    except:  # calculates percentiles
+        derived_output_tables = db.load.load_derived_output_tables(calib_dir_path)
+        mcmc_all_df = db.process.append_tables(mcmc_tables)
+        do_all_df = db.process.append_tables(derived_output_tables)
+
+        # Determine max chain length, throw away first half of that
+        max_run = mcmc_all_df["run"].max()
+        half_max = max_run // 2
+        mcmc_all_df = mcmc_all_df[mcmc_all_df["run"] >= half_max]
+        uncertainty_df = db.uncertainty.calculate_mcmc_uncertainty(mcmc_all_df, do_all_df, targets)
+
+    x_min = round(min(uncertainty_df['time']))
+    x_max = round(max(uncertainty_df['time']))
+    x_low, x_up = create_xrange_selector(x_min, x_max)
+
+    available_scenarios = uncertainty_df['scenario'].unique()
+    selected_scenarios = create_multi_scenario_selector(available_scenarios)
+    is_logscale = st.sidebar.checkbox("Log scale")
+    plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(
+        plotter, uncertainty_df, chosen_outputs, selected_scenarios, targets, is_logscale, x_low, x_up
+    )
+
+
+PLOT_FUNCS["Multi-output uncertainty"] = plot_multiple_timeseries_with_uncertainty
+
+
 def plot_calibration_fit(
     plotter: StreamlitPlotter,
     calib_dir_path: str,

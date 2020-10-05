@@ -6,10 +6,11 @@ import logging
 from datetime import datetime
 
 import pandas as pd
+from math import ceil
 
 from autumn.plots.plotter import Plotter
 from autumn.plots.calibration.plots import _plot_targets_to_axis
-from matplotlib import colors
+from matplotlib import colors, pyplot
 
 logger = logging.getLogger(__name__)
 
@@ -29,12 +30,15 @@ def plot_timeseries_with_uncertainty(
     is_logscale=False,
     x_low=0.0,
     x_up=1e6,
+    axis=None,
 ):
     """
     Plots the uncertainty timeseries for one or more scenarios.
     Also plots any calibration targets that are provided.
     """
-    fig, axis, _, _, _, _ = plotter.get_figure()
+    single_panel = axis is None
+    if single_panel:
+        fig, axis, _, _, _, _ = plotter.get_figure()
     colors = _apply_transparency(COLORS, ALPHAS)
 
     # Plot each scenario on a single axis.
@@ -50,22 +54,23 @@ def plot_timeseries_with_uncertainty(
     _plot_targets_to_axis(axis, values, times, on_uncertainty_plot=True)
 
     axis.set_xlabel("time")
-    axis.set_ylabel(output_name)
+    output_title = plotter.get_plot_title(output_name)
+    axis.set_ylabel(output_title)
     if is_logscale:
         axis.set_yscale("log")
     else:
         axis.set_ylim(ymin=0)
 
-    output_title = plotter.get_plot_title(output_name)
     if scenario_idxs == [0]:
         title = f"{output_title} for baseline scenario"
     else:
         scenarios_string = ", ".join(map(str, scenario_idxs))
         title = f"{output_title} for scenarios {scenarios_string}"
 
-    idx_str = "-".join(map(str, scenario_idxs))
-    filename = f"uncertainty-{output_name}-{idx_str}"
-    plotter.save_figure(fig, filename=filename, title_text=title)
+    if single_panel:
+        idx_str = "-".join(map(str, scenario_idxs))
+        filename = f"uncertainty-{output_name}-{idx_str}"
+        plotter.save_figure(fig, filename=filename, title_text=title)
 
 
 def _plot_uncertainty(
@@ -103,6 +108,43 @@ def _plot_uncertainty(
     if num_quantiles % 2:
         q_key = q_keys[half_length]
         axis.plot(times, quantiles[q_key], color=colors[3])
+
+
+def plot_multi_output_timeseries_with_uncertainty(
+    plotter: Plotter,
+    uncertainty_df: pd.DataFrame,
+    output_names: str,
+    scenarios: list,
+    all_targets: dict,
+    is_logscale=False,
+    x_low=0.,
+    x_up=2000.
+):
+    if len(output_names) * len(scenarios) == 0:
+        return
+
+    max_n_col = 2
+    n_panels = len(output_names)
+    n_cols = min(max_n_col, n_panels)
+    n_rows = ceil(n_panels / max_n_col)
+
+    fig = pyplot.figure(constrained_layout=True, figsize=(n_cols * 7, n_rows * 5))  # (w, h)
+    spec = fig.add_gridspec(ncols=n_cols, nrows=n_rows)
+
+    i_col = 0
+    i_row = 0
+    for output_name in output_names:
+        targets = {k: v for k, v in all_targets.items() if v["output_key"] == output_name}
+        ax = fig.add_subplot(spec[i_row, i_col])
+        plot_timeseries_with_uncertainty(
+            plotter, uncertainty_df, output_name, scenarios, targets, is_logscale, x_low, x_up, ax
+        )
+        i_col += 1
+        if i_col == max_n_col:
+            i_col = 0
+            i_row += 1
+
+    plotter.save_figure(fig, filename='multi_uncertainty', subdir="outputs", title_text='')
 
 
 def _get_target_values(targets: dict, output_name: str):

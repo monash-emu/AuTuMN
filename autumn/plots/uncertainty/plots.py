@@ -146,6 +146,10 @@ def plot_multi_output_timeseries_with_uncertainty(
 
     plotter.save_figure(fig, filename='multi_uncertainty', subdir="outputs", title_text='')
 
+    # out_dir = "apps/tuberculosis/regions/marshall_islands/figures/calibration_targets/"
+    # filename = out_dir + "targets"
+    # pyplot.savefig(filename + ".pdf")
+
 
 def _get_target_values(targets: dict, output_name: str):
     """Pulls out values for a given target"""

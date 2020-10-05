@@ -34,11 +34,18 @@ PLOT_TEXT_DICT = {
     # TB model parameters
     "start_population_size": "initial population size",
     "late_reactivation_multiplier": "late reactivation multiplier",
-    "time_variant_tb_screening_rate.end_value": "final screening rate",
+    "time_variant_tb_screening_rate.maximum_gradient": "screening profile (shape)",
+    "time_variant_tb_screening_rate.max_change_time": "screening profile (inflection)",
+    "time_variant_tb_screening_rate.end_value": "screening profile (final rate)",
     "user_defined_stratifications.location.adjustments.detection_rate.ebeye": "rel. screening rate (Ebeye)",
     "user_defined_stratifications.location.adjustments.detection_rate.other": "rel. screening rate (Other Isl.)",
     "extra_params.rr_progression_diabetes": "rel. progression rate (diabetes)",
-
+    "rr_infection_recovered": "RR infection (recovered)",
+    "pt_efficacy": "PT efficacy",
+    "infect_death_rate_dict.smear_positive": "TB mortality (smear-pos)",
+    "infect_death_rate_dict.smear_negative": "TB mortality (smear-neg)",
+    "self_recovery_rate_dict.smear_positive": "Self cure rate (smear-pos)",
+    "self_recovery_rate_dict.smear_negative": "Self cure rate (smear-neg)",
 }
 
 

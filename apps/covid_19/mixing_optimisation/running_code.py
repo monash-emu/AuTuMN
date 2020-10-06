@@ -1,26 +1,41 @@
 from apps.covid_19.mixing_optimisation.utils import prepare_table_of_param_sets
-
+from apps.covid_19.mixing_optimisation.mixing_opti import run_sensitivity_perturbations
+from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
 
 if __name__ == "__main__":
-    calib_paths = {
-        # "france": "../../../data/outputs/calibrate/covid_19/france/UsingHosp-2020-07-30",
-        # "belgium": "../../../data/outputs/calibrate/covid_19/belgium/Revised-2020-07-18",
-        # "spain": "../../../data/outputs/calibrate/covid_19/spain/Revised-2020-07-18",
-        # "italy": "../../../data/outputs/calibrate/covid_19/italy/Revised-2020-07-18",
-        "sweden": "../../../data/outputs/calibrate/covid_19/sweden/UsingHosp-2020-07-30",
-        # "united-kingdom": "../../../data/outputs/calibrate/covid_19/united-kingdom/Revised-2020-07-18",
-    }
+
+    common_folder_name = 'Final-2020-08-04'
 
     burnin = {
         "france": 0,
-        "belgium": 1500,
-        "spain": 1500,
-        "italy": 2000,
+        "belgium": 0,
+        "spain": 0,
+        "italy": 0,
         "sweden": 0,
-        "united-kingdom": 1500,
+        "united-kingdom": 0,
     }
 
-    for country in calib_paths:
-        prepare_table_of_param_sets(
-            calib_paths[country], country, n_samples=2, burn_in=burnin[country]
-        )
+    # for country in OPTI_REGIONS:
+    #     path = "../../../data/outputs/calibrate/covid_19/" + country + "/" + common_folder_name
+    #
+    #     prepare_table_of_param_sets(path,
+    #                                 country,
+    #                                 n_samples=2,
+    #                                 burn_in=burnin[country])
+
+    direction = "up"  # FIXME
+    target_objective = {
+        "deaths": 20,
+        "yoll": 1000,
+    }
+
+    for country in burnin:
+        for objective in ["deaths", "yoll"]:
+            for mode in ["by_age", "by_location"]:
+                for config in [2, 3]:
+                    print()
+                    print()
+                    print(country + " " + objective + " " + mode + " " + str(config) + " " + direction)
+                    run_sensitivity_perturbations('optimisation_outputs/6Aug2020/', country, config, mode, objective,
+                                                  target_objective_per_million=target_objective[objective], tol=.02,
+                                                  direction=direction)

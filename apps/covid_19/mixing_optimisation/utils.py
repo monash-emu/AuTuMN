@@ -1,16 +1,81 @@
-from .hospital_data import read_hospital_data_from_csv
 from autumn import db
 from autumn.plots.calibration.plots import _overwrite_non_accepted_mcmc_runs
-from autumn.inputs import get_john_hopkins_data
 from autumn.calibration.utils import add_dispersion_param_prior_for_gaussian
+
 import pandas as pd
 import os
 from matplotlib import pyplot as plt
 from autumn.curve import scale_up_function, tanh_based_scaleup
 import numpy as np
 import copy
+from autumn.db import Database
+import datetime
 
-from .who_data import read_who_data_from_csv
+WHO_DATA_FILE = os.path.join("who_covid", f"WHO-COVID-19-global-data.csv")
+HOSPITAL_DATA_DIR = os.path.join("hospitalisation_data")
+country_mapping = {"united-kingdom": "The United Kingdom"}
+
+
+def read_who_data_from_csv(
+    variable="confirmed", country="Australia", data_start_time=61, data_end_time=152
+):
+    """
+    Read WHO data from csv files
+    :param variable: one of "confirmed", "deaths"
+    :param country: country
+    """
+
+    #FIXME
+    return [50., 51., 52., 53., 54., 55., 56., 57.], [1.] * 8
+
+    if country in country_mapping:
+        country_name = country_mapping[country]
+    else:
+        country_name = country.title()
+    path = WHO_DATA_FILE
+    data = pd.read_csv(path)
+    times = list(data[data.iloc[:, 2] == country_name].iloc[:, 0])
+
+    date_ref = datetime.date(2019, 12, 31)
+    for i, time_string in enumerate(times):
+        components = time_string.split("-")
+        time_date = datetime.date(int(components[0]), int(components[1]), int(components[2]))
+        delta = time_date - date_ref
+        times[i] = delta.days
+
+    start_index = times.index(data_start_time)
+    end_index = times.index(data_end_time)
+
+    times = times[start_index : end_index + 1]
+    if variable == "confirmed":
+        values = list(data[data.iloc[:, 2] == country_name].iloc[:, 4])[start_index : end_index + 1]
+    elif variable == "deaths":
+        values = list(data[data.iloc[:, 2] == country_name].iloc[:, 6])[start_index : end_index + 1]
+
+    return times, values
+
+
+def read_hospital_data_from_csv(variable="hospital_occupancy", country="belgium", data_start_time=61, data_end_time=152):
+    """
+    Read hospital data from file 'hospital_data_europe.csv'
+    :param variable: one of 'hospital_occupancy', 'hospital_admission', 'icu_occupancy', 'icu_admission'
+    :param country: country
+    """
+    # FIXME
+    return [50., 51., 52., 53., 54., 55., 56., 57.], [1.] * 8
+    filename = f"hospital_data_europe.xlsx"
+    path = os.path.join(HOSPITAL_DATA_DIR, filename)
+    data = pd.read_excel(path, sep=',')
+
+    column_name = country + "_" + variable
+    mask_1 = data['time'] >= data_start_time
+    mask_2 = data['time'] <= data_end_time
+    mask_3 = pd.notnull(data[column_name])
+    mask = [m_1 and m_2 and m_3 for (m_1, m_2, m_3) in zip(mask_1, mask_2, mask_3)]
+    times = [float(t) for t in data[mask]['time']]
+    values = [float(v) for v in data[mask][column_name]]
+
+    return times, values
 
 
 def get_prior_distributions_for_opti():
@@ -86,97 +151,7 @@ def get_prior_distributions_for_opti():
             "distri_params": [0.4, 0.75],
         },
     ]
-
-    prior_list += get_list_of_ifr_priors_from_pollan()
-
     return prior_list
-
-
-def get_list_of_ifr_priors_from_pollan(test="immunoassay"):
-    """
-    Using age-specific IFR estimates based on Spanish seroprevalence survey
-    test is either 'PoC' for Point-of-care estimates or 'immunoassay'
-    :return: list of dictionaries
-    """
-    ifr_priors = []
-    if test == "PoC":
-        mean = [
-            1.78e-05,
-            2.74e-05,
-            0.000113078,
-            0.00024269,
-            0.000496411,
-            0.00159393,
-            0.005751568,
-            0.019573324,
-            0.079267591,
-        ]
-        lower = [
-            1.52e-05,
-            2.45e-05,
-            0.000100857,
-            0.00021887,
-            0.000459997,
-            0.001480304,
-            0.005294942,
-            0.017692352,
-            0.068829696,
-        ]
-        upper = [
-            2.16e-05,
-            3.11e-05,
-            0.000128668,
-            0.000272327,
-            0.000539085,
-            0.001726451,
-            0.006294384,
-            0.021901827,
-            0.093437162,
-        ]
-    elif test == "immunoassay":
-        mean = [
-            1.35e-05,
-            2.68e-05,
-            9.53e-05,
-            0.00023277,
-            0.000557394,
-            0.001902859,
-            0.007666306,
-            0.027469001,
-            0.106523055,
-        ]
-        lower = [
-            4.30e-06,
-            1.82e-05,
-            6.98e-05,
-            1.74e-04,
-            4.50e-04,
-            1.54e-03,
-            5.88e-03,
-            1.91e-02,
-            5.75e-02,
-        ]
-        upper = [
-            2.27e-05,
-            3.54e-05,
-            1.21e-04,
-            2.91e-04,
-            6.65e-04,
-            2.27e-03,
-            9.45e-03,
-            3.58e-02,
-            1.55e-01,
-        ]
-
-    for i in range(len(lower)):
-        ifr_priors.append(
-            {
-                "param_name": "infection_fatality.props(" + str(i) + ")",
-                "distribution": "uniform",
-                "distri_params": [lower[i], upper[i]],
-            }
-        )
-    return ifr_priors
 
 
 def get_target_outputs_for_opti(
@@ -190,26 +165,13 @@ def get_target_outputs_for_opti(
     :param source: 'who' or 'johns_hopkins'
     :return:
     """
-    assert source in ["who", "johns_hopkins"]
-
-    if source == "johns_hopkins":
-        jh_start_time = 22  # actual start time in JH csv files
-        assert data_start_time >= jh_start_time
+    assert source in ["who"]
 
     output_mapping = {"confirmed": "notifications", "deaths": "infection_deaths"}
 
     target_outputs = []
     for variable in ["confirmed"]:  #  , "deaths"]:
-        if source == "johns_hopkins":
-            data = get_john_hopkins_data(variable, country, latest=update_jh_data)
-            data = read_john_hopkins_data_from_csv(variable, country)
-            times = [jh_start_time + i for i in range(len(data))]
-
-            # remove first datapoints according to data_start_time
-            indices_to_keep = [i for i, t in enumerate(times) if t >= data_start_time]
-            times = [t for t in times if t >= data_start_time]
-            data = [d for i, d in enumerate(data) if i in indices_to_keep]
-        elif source == "who":
+        if source == "who":
             times, data = read_who_data_from_csv(variable, country, data_start_time, data_end_time)
 
         # Ignore negative values found in the dataset
@@ -348,6 +310,151 @@ def prepare_table_of_param_sets(calibration_output_path, country_name, n_samples
     samples.to_csv(output_file, index=False)
 
 
+############# To create main table outputs
+def read_percentile_from_pbi_table(calibration_output_path, scenario=0, quantile=0.5, time=0., type='notifications'):
+    db_path = [
+        os.path.join(calibration_output_path, f)
+        for f in os.listdir(calibration_output_path)
+        if f.startswith("powerbi")
+    ][0]
+
+    db = Database(db_path)
+    unc_table = db.query("uncertainty")
+
+    mask_1 = unc_table["Scenario"] == "S_" + str(scenario)
+    mask_2 = unc_table["quantile"] == quantile
+    mask_3 = unc_table["time"] == time
+    mask_4 = unc_table["type"] == type
+    mask = [m_1 and m_2 and m_3 and m_4 for (m_1, m_2, m_3, m_4) in zip(mask_1, mask_2, mask_3, mask_4)]
+    value = float(unc_table[mask]["value"])
+
+    return value
+
+
+# FIXME: load_derived_output_tables is broken or not found
+def read_cumulative_output_from_output_table(calibration_output_path, scenario, time_range, model_output):
+    derived_output_tables = load_derived_output_tables(calibration_output_path)
+
+    cumulative_values = []
+    for d_t in derived_output_tables:
+        mask_1 = d_t["Scenario"] == "S_" + str(scenario)
+        mask_2 = d_t["times"] >= time_range[0]
+        if time_range[1] == "end":
+            mask = [m_1 and m_2 for (m_1, m_2) in zip(mask_1, mask_2)]
+        else:
+            mask_3 = d_t["times"] <= time_range[1]
+            mask = [m_1 and m_2 and m_3 for (m_1, m_2, m_3) in zip(mask_1, mask_2, mask_3)]
+        d_t = d_t[mask]  # a 2d array
+        sum_by_run = d_t.groupby(['idx'])[model_output].sum()
+        cumulative_values += list(sum_by_run)
+
+    return cumulative_values
+
+
+def get_uncertainty_cell_value(uncertainty_df, output, config, mode):
+    # output is in ["deaths_before", "deaths_unmitigated", "deaths_opti_deaths", "deaths_opti_yoll",
+    #                "yoll_before", "yoll_unmitigated", "yoll_opti_deaths", "yoll_opti_yoll"]
+
+    if mode == 'by_location' and "unmitigated" in output:
+        return ""
+
+    if 'deaths_' in output:
+        type = 'accum_deaths'
+    else:
+        type = 'accum_years_of_life_lost'
+    mask_output = uncertainty_df["type"] == type
+    output_df = uncertainty_df[mask_output]
+
+    if "_yoll" in output:
+        objective = "yoll"
+    else:
+        objective = "deaths"
+
+    scenario_mapping = {
+        1: mode + "_2_deaths",
+        2: mode + "_2_yoll",
+        3: mode + "_3_deaths",
+        4: mode + "_3_yoll",
+        5: "unmitigated",  # not used, just for completeness
+    }
+
+    full_tag = mode + "_" + str(config) + "_" + objective
+    if "unmitigated" in output:
+        scenario = 5
+    elif "_before" in output:
+        scenario = 0
+    else:
+        scenario = [key for key, val in scenario_mapping.items() if val == full_tag][0]
+
+    mask_scenario = output_df["Scenario"] == "S_" + str(scenario)
+    output_df = output_df[mask_scenario]
+
+    mask_time = output_df["time"] == max(output_df['time'])
+    output_df = output_df[mask_time]
+
+    mask_025 = output_df["quantile"] == 0.025
+    mask_50 = output_df["quantile"] == 0.5
+    mask_975 = output_df["quantile"] == 0.975
+
+    multiplier = {
+        "accum_deaths": 1. / 1000.,
+        "accum_years_of_life_lost": 1. / 1000.
+    }
+    rounding = {
+        "accum_deaths": 1,
+        "accum_years_of_life_lost": 0
+    }
+
+    # read the percentile
+    median = round(multiplier[type] * float(output_df[mask_50]["value"]), rounding[type])
+    lower = round(multiplier[type] * float(output_df[mask_025]["value"]), rounding[type])
+    upper = round(multiplier[type] * float(output_df[mask_975]["value"]), rounding[type])
+
+    cell_content = str(median) + " (" + str(lower) + "-" + str(upper) + ")"
+
+    return cell_content
+
+
+def make_main_outputs_tables(mode):
+    countries = ['belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']
+    country_names = [c.title() for c in countries]
+    country_names[-1] = "United Kingdom"
+
+    column_names = ["country",
+                    "deaths_before", "deaths_unmitigated", "deaths_opti_deaths", "deaths_opti_yoll",
+                     "yoll_before", "yoll_unmitigated", "yoll_opti_deaths", "yoll_opti_yoll"
+                    ]
+
+    for immunity in ["fully_immune"]: # , "partial_immune"]:
+        table = pd.DataFrame(columns=column_names)
+        i_row = -1
+        for i, country in enumerate(countries):
+            pbi_outputs_dir = "../../../data/pbi_outputs_for_opti/" + mode + "/" + immunity
+            dir_content = os.listdir(pbi_outputs_dir)
+            for f in dir_content:
+                if country in f:
+                    db_name = f
+
+            db_path = os.path.join(pbi_outputs_dir, db_name)
+            db = Database(db_path)
+            uncertainty_df = db.query("uncertainty")
+
+            for config in [2, 3]:
+                i_row += 1
+                row_as_list = [country]
+                for output in [c for c in column_names if c != "country"]:
+                    print(output)
+                    row_as_list.append(
+                        get_uncertainty_cell_value(uncertainty_df, output, config, mode)
+                    )
+
+                table.loc[i_row] = row_as_list
+
+        table.to_csv("../../../data/pbi_outputs_for_opti/" + mode + "/" + immunity + "/output_table_" + immunity + "_" +
+                     mode + ".csv")
+
+
+###########################################
 def plot_mixing_params_over_time(mixing_params, npi_effectiveness_range):
 
     titles = {
@@ -474,3 +581,9 @@ def get_posterior_percentiles_time_variant_profile(
 #     'school': [1,1],
 # }
 # plot_mixing_params_over_time(mixing_pars, npi_effectiveness_range)
+#
+# out_dir = "../../../data/outputs/calibrate/covid_19/france/Final-2020-08-04"
+#
+
+# if __name__ == "__main__":
+#     make_main_outputs_tables("by_location")

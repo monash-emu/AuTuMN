@@ -158,7 +158,7 @@ def add_standard_philippines_params(params, region):
         {
             "param_name": "testing_to_detection.assumed_cdr_parameter",
             "distribution": "uniform",
-            "distri_params": [0.1, 0.4],
+            "distri_params": [0.02, 0.40],
         },
         {"param_name": "time.start", "distribution": "uniform", "distri_params": [40.0, 60.0],},
         {

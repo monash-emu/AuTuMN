@@ -373,16 +373,18 @@ def plot_param_matrix(
         mcmc_params: List[pd.DataFrame],
         targets: dict,
 ):
+    parameters = mcmc_params[0]["name"].unique().tolist()
+    chain_length = int(len(mcmc_params[0]) / len(parameters))
+    burn_in = st.sidebar.slider("Burn in", 0, chain_length, min([100, chain_length]))
     label_font_size = st.sidebar.slider("Label font size", 1, 15, 8)
     label_chars = st.sidebar.slider("Label characters", 1, 10, 2)
     bins = st.sidebar.slider("Bins", 4, 50, 20)
     style = st.sidebar.selectbox("Style", ["Shade", "Scatter"])
     dpi_request = st.sidebar.slider("DPI", 50, 2000, 300)
-    parameters = mcmc_params[0]["name"].unique().tolist()
-    st.write(parameters)
     plots.calibration.plots.plot_param_vs_param(
-        plotter, mcmc_params, parameters, style, bins, label_font_size, label_chars, dpi_request
+        plotter, mcmc_params, parameters, burn_in, style, bins, label_font_size, label_chars, dpi_request
     )
+    st.write(parameters)
 
 
 PLOT_FUNCS["Param versus param"] = plot_param_matrix

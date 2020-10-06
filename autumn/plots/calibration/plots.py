@@ -446,6 +446,7 @@ def plot_param_vs_param(
         plotter: Plotter,
         mcmc_params: List[pd.DataFrame],
         parameters: list,
+        burn_in: int,
         style: str,
         bins: int,
         label_font_size: int,
@@ -464,13 +465,17 @@ def plot_param_vs_param(
     for x_idx, x_param_name in enumerate(parameters):
         x_data[x_param_name] = []
         for chain in range(len(mcmc_params)):
-            x_param_mask = mcmc_params[chain]["name"] == x_param_name
-            x_data[x_param_name] += mcmc_params[chain][x_param_mask]["value"].to_list()
+            x_param_mask = \
+                mcmc_params[chain]["name"] == x_param_name
+            x_data[x_param_name] += \
+                mcmc_params[chain][x_param_mask]["value"].to_list()[burn_in:]
     for y_idx, y_param_name in enumerate(parameters):
         y_data[y_param_name] = []
         for chain in range(len(mcmc_params)):
-            y_param_mask = mcmc_params[chain]["name"] == y_param_name
-            y_data[y_param_name] += mcmc_params[chain][y_param_mask]["value"].to_list()
+            y_param_mask = \
+                mcmc_params[chain]["name"] == y_param_name
+            y_data[y_param_name] += \
+                mcmc_params[chain][y_param_mask]["value"].to_list()[burn_in:]
 
     # Loop over parameter combinations
     for x_idx, x_param_name in enumerate(parameters):
@@ -479,14 +484,20 @@ def plot_param_vs_param(
             axis.xaxis.set_ticks([])
             axis.yaxis.set_ticks([])
 
-            # Plotting
+            # Plot
             if x_idx > y_idx:
                 if style == "Scatter":
-                    axis.scatter(x_data[x_param_name], y_data[y_param_name], alpha=0.5, s=0.1, color="k")
+                    axis.scatter(
+                        x_data[x_param_name], y_data[y_param_name], alpha=0.5, s=0.1, color="k"
+                    )
                 else:
-                    axis.hist2d(x_data[x_param_name], y_data[y_param_name], bins=bins)
+                    axis.hist2d(
+                        x_data[x_param_name], y_data[y_param_name], bins=bins
+                    )
             elif x_idx == y_idx:
-                axis.hist(x_data[x_param_name], color=[0.2, 0.2, 0.6] if style == "Shade" else "k", bins=bins)
+                axis.hist(
+                    x_data[x_param_name], color=[0.2, 0.2, 0.6] if style == "Shade" else "k", bins=bins
+                )
             else:
                 axis.axis("off")
 

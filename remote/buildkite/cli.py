@@ -17,6 +17,7 @@ from .pipelines import (
     powerbi as powerbi_pipeline,
     trigger_philippines as trigger_philippines_pipeline,
     trigger_victoria as trigger_victoria_pipeline,
+    trigger_europe as trigger_europe_pipeline,
     dhhs as dhhs_pipeline,
 )
 
@@ -40,6 +41,7 @@ def update():
         trigger_philippines_pipeline.pipeline,
         trigger_victoria_pipeline.pipeline,
         dhhs_pipeline.pipeline,
+        trigger_europe_pipeline.pipeline,
     ]
     for pipeline in pipelines:
         pipeline.save()
@@ -183,6 +185,23 @@ def trigger():
     """
 
 
+@trigger.command("europe")
+def trigger_europe():
+    """
+    Trigger all European mixing optimization models
+    """
+    logger.info("Triggering all European mixing optimisation calibrations.")
+    region_names = [
+        UNITED_KINGDOM,
+        BELGIUM,
+        ITALY,
+        SWEDEN,
+        FRANCE,
+        SPAIN,
+    ]
+    _trigger_models(region_names, trigger_europe_pipeline)
+
+
 @trigger.command("victoria")
 def trigger_victoria():
     """
@@ -228,7 +247,10 @@ def _trigger_models(regions, p):
     branch = p.branch_field.get_value()
     is_spot = p.spot_field.get_value()
     trigger_downstream = p.trigger_field.get_value()
-    params_str = pprint.pformat({f.key: f.get_value() for f in p.fields}, indent=2,)
+    params_str = pprint.pformat(
+        {f.key: f.get_value() for f in p.fields},
+        indent=2,
+    )
     cp = calibrate_pipeline
     for region in regions:
         model = f"covid_19:{region}"

@@ -24,6 +24,8 @@ steps:
       value: covid_19:grampians
     - label: Malaysia (COVID)
       value: covid_19:malaysia
+    - label: Sabah (COVID)
+      value: covid_19:sabah
     - label: Philippines (COVID)
       value: covid_19:philippines
     - label: Manila (COVID)

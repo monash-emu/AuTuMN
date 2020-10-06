@@ -435,7 +435,9 @@ def plot_param_vs_param_by_chain(plotter: Plotter, mcmc_params: List[pd.DataFram
     plotter.save_figure(fig, filename="parameter_correlation_matrix", dpi_request=dpi_request)
 
 
-def plot_param_vs_param(plotter: Plotter, mcmc_params: List[pd.DataFrame], label_font_size, label_chars, dpi_request):
+def plot_param_vs_param(
+        plotter: Plotter, mcmc_params: List[pd.DataFrame], style, bins, label_font_size, label_chars, dpi_request
+):
     """
     Plot the prameter traces for each MCMC run.
     """
@@ -463,7 +465,10 @@ def plot_param_vs_param(plotter: Plotter, mcmc_params: List[pd.DataFrame], label
         for y_idx, y_param_name in enumerate(parameters):
             axis = axes[x_idx, y_idx]
             if x_idx > y_idx:
-                axis.scatter(x_data[x_param_name], y_data[y_param_name], alpha=0.5, s=0.1)
+                if style == "Scatter":
+                    axis.scatter(x_data[x_param_name], y_data[y_param_name], alpha=0.5, s=0.1, color="k")
+                else:
+                    axis.hist2d(x_data[x_param_name], y_data[y_param_name], bins=bins)
                 axis.xaxis.set_ticklabels([])
                 axis.xaxis.set_ticks([])
                 axis.yaxis.set_ticklabels([])
@@ -473,7 +478,7 @@ def plot_param_vs_param(plotter: Plotter, mcmc_params: List[pd.DataFrame], label
                 if x_idx == len(parameters) - 1:
                     axis.set_xlabel(y_param_name[:label_chars], fontsize=label_font_size)
             elif x_idx == y_idx:
-                axis.hist(x_data[x_param_name])
+                axis.hist(x_data[x_param_name], color="darkblue", bins=bins)
                 axis.xaxis.set_ticklabels([])
                 axis.xaxis.set_ticks([])
                 axis.yaxis.set_ticklabels([])

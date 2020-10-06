@@ -24,6 +24,10 @@ def read_who_data_from_csv(
     :param variable: one of "confirmed", "deaths"
     :param country: country
     """
+
+    #FIXME
+    return [50., 51., 52., 53., 54., 55., 56., 57.], [1.] * 8
+
     if country in country_mapping:
         country_name = country_mapping[country]
     else:
@@ -57,6 +61,8 @@ def read_hospital_data_from_csv(variable="hospital_occupancy", country="belgium"
     :param variable: one of 'hospital_occupancy', 'hospital_admission', 'icu_occupancy', 'icu_admission'
     :param country: country
     """
+    # FIXME
+    return [50., 51., 52., 53., 54., 55., 56., 57.], [1.] * 8
     filename = f"hospital_data_europe.xlsx"
     path = os.path.join(HOSPITAL_DATA_DIR, filename)
     data = pd.read_excel(path, sep=',')

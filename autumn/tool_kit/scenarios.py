@@ -139,3 +139,31 @@ def get_model_times_from_inputs(start_time, end_time, time_step, critical_ranges
     times = [round(t, 5) for t in times]
 
     return numpy.array(times)
+
+
+def calculate_differential_outputs(models):
+    """
+    :param models: list of fully run models.
+    :return: list of models with additional derived_outputs
+    """
+    for derived_ouptut in models[0].derived_outputs:
+        differentiate = True  # FIXME: should be determined based on targets.json
+        if differentiate:
+            diff_type = 'relative'  # FIXME: should be determined based on targets.json
+            baseline_output = models[0].derived_outputs[derived_ouptut]
+            for model in models:
+                sc_output = model.derived_outputs[derived_ouptut]
+                idx_shift = len(baseline_output) - len(sc_output)
+                new_output_name = diff_type[:3] + "_diff_" + derived_ouptut
+                if diff_type == 'relative':
+                    diff_output = [(sc_val - baseline_val / baseline_val) * 100. for baseline_val, sc_val in
+                                   zip(baseline_output[idx_shift:], sc_output)]
+                elif diff_type == 'absolute':
+                    diff_output = [sc_val - baseline_val for baseline_val, sc_val in
+                                   zip(baseline_output[idx_shift:], sc_output)]
+                else:
+                    raise ValueError("Differential outputs must be 'relative' or 'absolute'")
+
+                model.derived_outputs[new_output_name] = idx_shift * [0.] + diff_output
+    return models
+

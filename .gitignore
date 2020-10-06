@@ -553,3 +553,6 @@ data/scenario_outputs_waning_immunity/by_age_3_yoll_pessimistic/united-kingdom/2
 data/scenario_outputs_waning_immunity/by_age_3_yoll_pessimistic/united-kingdom/2020-08-19--14-11-58/models/scenario-3.yml
 data/scenario_outputs_waning_immunity/by_age_3_yoll_pessimistic/united-kingdom/2020-08-19--14-11-58/models/scenario-4.yml
 data/scenario_outputs_waning_immunity/by_age_3_yoll_pessimistic/united-kingdom/2020-08-19--14-11-58/params.yml
+apps/pycharm.py
+apps/tuberculosis/regions/marshall_islands/figures/calibration_targets/targets.pdf
+apps/tuberculosis/regions/marshall_islands/figures/main_outputs/main_outputs.pdf

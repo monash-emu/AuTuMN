@@ -7,7 +7,7 @@ from autumn.tool_kit.params import update_params
 from autumn.tool_kit.scenarios import Scenario
 from autumn.tool_kit.timer import Timer
 from autumn import db
-
+from autumn.tool_kit.scenarios import calculate_differential_outputs
 
 META_COLS = ["idx", "Scenario", "loglikelihood", "accept"]
 
@@ -52,6 +52,7 @@ def run_full_models_for_mcmc(
 
         with Timer("Saving model outputs to the database"):
             models = [s.model for s in scenarios]
+            models = calculate_differential_outputs(models)
             db.store.store_run_models(
                 models, dest_db_path, run_id=int(run_id), chain_id=int(chain_id)
             )

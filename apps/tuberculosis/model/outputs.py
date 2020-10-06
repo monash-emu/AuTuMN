@@ -173,6 +173,8 @@ def make_cumulative_output_func(output, start_time_cumul):
     }
 
     def calculate_cumulative_output(time_idx, model, compartment_values, derived_outputs):
+        if start_time_cumul > max(model.times):
+            return 0.
         ref_time_idx = min(np.where(model.times >= start_time_cumul)[0])
         if time_idx < ref_time_idx:
             return 0.

@@ -391,6 +391,50 @@ def plot_single_param_loglike(
     )
 
 
+def plot_param_vs_param(plotter: Plotter, mcmc_params: List[pd.DataFrame], label_font_size, label_chars, dpi_request):
+    """
+    Plot the prameter traces for each MCMC run.
+    """
+
+    parameters = mcmc_params[0]["name"].unique().tolist()
+    fig, axes, _, _, _, _ = plotter.get_figure(n_panels=len(parameters) ** 2)
+
+    import streamlit as st
+    st.write(parameters)
+
+    for chain in range(len(mcmc_params)):
+        for x_idx, x_param_name in enumerate(parameters):
+            x_param_mask = mcmc_params[chain]["name"] == x_param_name
+            for y_idx, y_param_name in enumerate(parameters):
+                y_param_mask = mcmc_params[chain]["name"] == y_param_name
+                axis = axes[x_idx, y_idx]
+                if x_idx > y_idx:
+                    axis.scatter(
+                        mcmc_params[chain][x_param_mask]["value"].to_list(),
+                        mcmc_params[chain][y_param_mask]["value"].to_list(),
+                        alpha=0.5,
+                        s=0.1
+                    )
+                    axis.xaxis.set_ticklabels([])
+                    axis.xaxis.set_ticks([])
+                    axis.yaxis.set_ticklabels([])
+                    axis.yaxis.set_ticks([])
+                    if y_idx == 0:
+                        axis.set_ylabel(x_param_name[:label_chars], rotation=0, fontsize=label_font_size)
+                    if x_idx == len(parameters) - 1:
+                        axis.set_xlabel(y_param_name[:label_chars], fontsize=label_font_size)
+                elif x_idx == y_idx:
+                    axis.hist(mcmc_params[chain][x_param_mask]["value"].to_list())
+                    axis.xaxis.set_ticklabels([])
+                    axis.xaxis.set_ticks([])
+                    axis.yaxis.set_ticklabels([])
+                    axis.yaxis.set_ticks([])
+                else:
+                    axis.axis("off")
+
+    plotter.save_figure(fig, filename="parameter_correlation_matrix", dpi_request=dpi_request)
+
+
 def plot_all_params_vs_loglike(
         plotter: Plotter,
         mcmc_tables: List[pd.DataFrame],

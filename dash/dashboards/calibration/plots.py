@@ -344,3 +344,19 @@ def plot_loglikelihood_trace(
 
 
 PLOT_FUNCS["Loglikelihood trace"] = plot_loglikelihood_trace
+
+
+def plot_param_matrix(
+        plotter: StreamlitPlotter,
+        calib_dir_path: str,
+        mcmc_tables: List[pd.DataFrame],
+        mcmc_params: List[pd.DataFrame],
+        targets: dict,
+):
+    label_font_size = st.sidebar.slider("Label font size", 1, 15, 8)
+    label_chars = st.sidebar.slider("Label characters", 1, 10, 2)
+    dpi_request = st.sidebar.slider("DPI", 50, 2000, 300)
+    plots.calibration.plots.plot_param_vs_param(plotter, mcmc_params, label_font_size, label_chars, dpi_request)
+
+
+PLOT_FUNCS["Param versus param"] = plot_param_matrix

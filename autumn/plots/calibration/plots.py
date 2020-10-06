@@ -478,7 +478,7 @@ def plot_param_vs_param(
                 if x_idx == len(parameters) - 1:
                     axis.set_xlabel(y_param_name[:label_chars], fontsize=label_font_size)
             elif x_idx == y_idx:
-                axis.hist(x_data[x_param_name], color="darkblue", bins=bins)
+                axis.hist(x_data[x_param_name], color=[0.2, 0.2, 0.6] if style == "Shade" else "k", bins=bins)
                 axis.xaxis.set_ticklabels([])
                 axis.xaxis.set_ticks([])
                 axis.yaxis.set_ticklabels([])

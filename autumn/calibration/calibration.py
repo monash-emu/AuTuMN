@@ -446,6 +446,7 @@ class Calibration:
         n_chains=1,
         available_time=None,
         grid_info=None,
+        haario_scaling_factor=2.4,
     ):
         """
         master method to run model calibration.
@@ -467,7 +468,7 @@ class Calibration:
 
         # Run the selected fitting algorithm.
         if run_mode == CalibrationMode.AUTUMN_MCMC:
-            self.run_autumn_mcmc(n_iterations, n_burned, n_chains, available_time)
+            self.run_autumn_mcmc(n_iterations, n_burned, n_chains, available_time, haario_scaling_factor)
         elif run_mode == CalibrationMode.LEAST_SQUARES:
             self.run_least_squares()
         elif run_mode == CalibrationMode.GRID_BASED:
@@ -501,7 +502,7 @@ class Calibration:
         logger.info("Best solution: %s", self.mle_estimates)
         # self.dump_mle_params_to_yaml_file()
 
-    def run_autumn_mcmc(self, n_iterations: int, n_burned: int, n_chains: int, available_time):
+    def run_autumn_mcmc(self, n_iterations: int, n_burned: int, n_chains: int, available_time, haario_scaling_factor):
         """
         Run our hand-rolled MCMC algoruthm to calibrate model parameters.
         """
@@ -517,7 +518,7 @@ class Calibration:
         last_acceptance_loglike = None
         for i_run in range(int(n_iterations + n_burned)):
             # Propose new paramameter set.
-            proposed_params = self.propose_new_params(last_accepted_params)
+            proposed_params = self.propose_new_params(last_accepted_params, haario_scaling_factor)
 
             # Evaluate log-likelihood.
             proposed_loglike = self.loglikelihood(proposed_params)
@@ -594,8 +595,10 @@ class Calibration:
             )
             self.iter_num += 1
 
-    def build_adaptive_covariance_matrix(self):
-        scaling_factor = 2.4 * 2.4 / len(self.priors)  # from Haario et al. 2001
+    def build_adaptive_covariance_matrix(self, haario_scaling_factor):
+        scaling_factor = haario_scaling_factor ** 2 / len(self.priors)  # from Haario et al. 2001
+
+        print(scaling_factor)
 
         cov_matrix = np.cov(self.mcmc_trace_matrix, rowvar=False)
         adaptive_cov_matrix = scaling_factor * cov_matrix + scaling_factor * ADAPTIVE_METROPOLIS[
@@ -632,7 +635,7 @@ class Calibration:
                 )
         return new_params
 
-    def propose_new_params(self, prev_params):
+    def propose_new_params(self, prev_params, haario_scaling_factor=2.4):
         """
         calculated the joint log prior
         :param prev_params: last accepted parameter values as a list ordered using the order of self.priors
@@ -650,7 +653,7 @@ class Calibration:
         )
 
         if use_adaptive_proposal:
-            adaptive_cov_matrix = self.build_adaptive_covariance_matrix()
+            adaptive_cov_matrix = self.build_adaptive_covariance_matrix(haario_scaling_factor)
             if np.all((adaptive_cov_matrix == 0)):
                 use_adaptive_proposal = (
                     False  # we can't use the adaptive method for this step as the covariance is 0.

@@ -107,6 +107,7 @@ def run_calibration_chain(
         n_burned=N_BURNED,
         n_chains=N_CHAINS,
         available_time=max_seconds,
+        haario_scaling_factor=params['default']['haario_scaling_factor']
     )
     logger.info(f"Finished calibration for run {run_id}.")
 

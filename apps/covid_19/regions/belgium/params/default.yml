@@ -1,8 +1,8 @@
 # SCENARIO DESCRIPTION: BASELINE
-parent: apps/covid_19/params.yml
+parent: apps/covid_19/eur_optimisation_params.yml
 
 infectious_seed: 200
-contact_rate: 0.03302564911907216
+#contact_rate: 0.03302564911907216
 
 country:
   iso3: BEL

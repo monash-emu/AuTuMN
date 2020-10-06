@@ -1,5 +1,5 @@
 # SCENARIO DESCRIPTION: BASELINE
-parent: apps/covid_19/params.yml
+parent: apps/covid_19/eur_optimisation_params.yml
 
 country:
   iso3: FRA

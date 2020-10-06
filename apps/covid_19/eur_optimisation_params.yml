@@ -46,3 +46,37 @@ clinical_stratification:
     sympt_isolate: 0.2
     hospital_non_icu: 0.2
     icu: 0.2
+
+infection_fatality:
+  multiplier: 1.
+  # Infection fatality proportions - now calculated using the Cauchemez estimates (Age-specific mortality and immunity patterns of SARS-CoV-2 infection in 45 countries)
+  props:
+    - .00002  # 0-4
+    - .000005  # 5-9
+    - .000005  # 10-14
+    - .000015
+    - .00004
+    - .00009
+    - .00017
+    - .00029
+    - .00053
+    - .00086
+    - .00154
+    - .00241
+    - .00359
+    - .00642
+    - 0.01076
+    - 0.02276 # 75-79
+    - 0.07274 # 80+
+
+mobility:
+  # Mapping of Google Mobility locations to Autumn-specific locations
+  google_mobility_locations:
+    work:
+      - workplaces
+    other_locations:
+      # Parks not included
+      - retail_and_recreation
+      - grocery_and_pharmacy
+      - transit_stations
+  smooth_google_data: true # whether to apply a 7-day moving average

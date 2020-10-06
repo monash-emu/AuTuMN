@@ -1,4 +1,4 @@
-The configurations will be all combinations of the following options:
+﻿The configurations will be all combinations of the following options:
 - 6 countries
   belgium, united-kingdom, spain, italy, sweden, france.
 
@@ -11,6 +11,3 @@ The configurations will be all combinations of the following options:
 - 2 optimisation modes
    - “by age”: social mixing is mitigated according to age
    - “by location”: social mixing is mitigated by location type (schools, workplaces and locations other than schools, workplaces and homes)
-
-- Multiple uncertainty parameter samples
-  Each optimisation scenario will be run multiple times using N different calibrated parameter sets (MCMC posterior samples) to account for uncertainty. We'll probably use N=100.

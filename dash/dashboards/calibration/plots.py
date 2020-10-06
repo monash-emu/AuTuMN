@@ -353,15 +353,17 @@ def plot_param_matrix_by_chain(
         mcmc_params: List[pd.DataFrame],
         targets: dict,
 ):
+    """
+    Now unused because I prefer the version that isn't by chain.
+    """
     label_font_size = st.sidebar.slider("Label font size", 1, 15, 8)
     label_chars = st.sidebar.slider("Label characters", 1, 10, 2)
     dpi_request = st.sidebar.slider("DPI", 50, 2000, 300)
+    parameters = mcmc_params[0]["name"].unique().tolist()
+    st.write(parameters)
     plots.calibration.plots.plot_param_vs_param_by_chain(
-        plotter, mcmc_params, label_font_size, label_chars, dpi_request
+        plotter, mcmc_params, parameters, label_font_size, label_chars, dpi_request
     )
-
-
-PLOT_FUNCS["Param versus param by chain"] = plot_param_matrix_by_chain
 
 
 def plot_param_matrix(
@@ -376,8 +378,10 @@ def plot_param_matrix(
     bins = st.sidebar.slider("Bins", 4, 50, 20)
     style = st.sidebar.selectbox("Style", ["Shade", "Scatter"])
     dpi_request = st.sidebar.slider("DPI", 50, 2000, 300)
+    parameters = mcmc_params[0]["name"].unique().tolist()
+    st.write(parameters)
     plots.calibration.plots.plot_param_vs_param(
-        plotter, mcmc_params, style, bins, label_font_size, label_chars, dpi_request
+        plotter, mcmc_params, parameters, style, bins, label_font_size, label_chars, dpi_request
     )
 
 

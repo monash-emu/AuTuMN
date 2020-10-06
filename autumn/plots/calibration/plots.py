@@ -7,6 +7,7 @@ import logging
 from math import log
 from typing import List, Tuple, Callable
 from random import choices
+import streamlit as st
 
 import pandas as pd
 import seaborn as sns
@@ -391,23 +392,32 @@ def plot_single_param_loglike(
     )
 
 
-def plot_param_vs_param_by_chain(plotter: Plotter, mcmc_params: List[pd.DataFrame], label_font_size, label_chars, dpi_request):
+def plot_param_vs_param_by_chain(
+        plotter: Plotter,
+        mcmc_params: List[pd.DataFrame],
+        parameters: list,
+        label_font_size: int,
+        label_chars: int,
+        dpi_request: int
+):
     """
-    Plot the prameter traces for each MCMC run.
+    Plot the parameter traces for each MCMC chain with separate colouring.
     """
 
-    parameters = mcmc_params[0]["name"].unique().tolist()
     fig, axes, _, _, _, _ = plotter.get_figure(n_panels=len(parameters) ** 2)
-
-    import streamlit as st
-    st.write(parameters)
 
     for chain in range(len(mcmc_params)):
         for x_idx, x_param_name in enumerate(parameters):
             x_param_mask = mcmc_params[chain]["name"] == x_param_name
             for y_idx, y_param_name in enumerate(parameters):
                 y_param_mask = mcmc_params[chain]["name"] == y_param_name
+
+                # Get axis and turn off ticks
                 axis = axes[x_idx, y_idx]
+                axis.xaxis.set_ticks([])
+                axis.yaxis.set_ticks([])
+
+                # Plot
                 if x_idx > y_idx:
                     axis.scatter(
                         mcmc_params[chain][x_param_mask]["value"].to_list(),
@@ -415,77 +425,78 @@ def plot_param_vs_param_by_chain(plotter: Plotter, mcmc_params: List[pd.DataFram
                         alpha=0.5,
                         s=0.1
                     )
-                    axis.xaxis.set_ticklabels([])
-                    axis.xaxis.set_ticks([])
-                    axis.yaxis.set_ticklabels([])
-                    axis.yaxis.set_ticks([])
-                    if y_idx == 0:
-                        axis.set_ylabel(x_param_name[:label_chars], rotation=0, fontsize=label_font_size)
-                    if x_idx == len(parameters) - 1:
-                        axis.set_xlabel(y_param_name[:label_chars], fontsize=label_font_size)
                 elif x_idx == y_idx:
-                    axis.hist(mcmc_params[chain][x_param_mask]["value"].to_list())
-                    axis.xaxis.set_ticklabels([])
-                    axis.xaxis.set_ticks([])
-                    axis.yaxis.set_ticklabels([])
-                    axis.yaxis.set_ticks([])
+                    axis.hist(
+                        mcmc_params[chain][x_param_mask]["value"].to_list()
+                    )
                 else:
                     axis.axis("off")
 
+                # Set labels
+                if y_idx == 0:
+                    axis.set_ylabel(x_param_name[:label_chars], rotation=0, fontsize=label_font_size)
+                if x_idx == len(parameters) - 1:
+                    axis.set_xlabel(y_param_name[:label_chars], fontsize=label_font_size)
+
+    # Save
     plotter.save_figure(fig, filename="parameter_correlation_matrix", dpi_request=dpi_request)
 
 
 def plot_param_vs_param(
-        plotter: Plotter, mcmc_params: List[pd.DataFrame], style, bins, label_font_size, label_chars, dpi_request
+        plotter: Plotter,
+        mcmc_params: List[pd.DataFrame],
+        parameters: list,
+        style: str,
+        bins: int,
+        label_font_size: int,
+        label_chars: int,
+        dpi_request: int
 ):
     """
-    Plot the prameter traces for each MCMC run.
+    Plot the parameter correlation matrices for each parameter combination.
     """
 
-    parameters = mcmc_params[0]["name"].unique().tolist()
+    # Prelims
     fig, axes, _, _, _, _ = plotter.get_figure(n_panels=len(parameters) ** 2)
-
-    import streamlit as st
-    st.write(parameters)
     x_data, y_data = {}, {}
 
+    # Get x and y data separately and collate up over the chains
     for x_idx, x_param_name in enumerate(parameters):
         x_data[x_param_name] = []
         for chain in range(len(mcmc_params)):
             x_param_mask = mcmc_params[chain]["name"] == x_param_name
             x_data[x_param_name] += mcmc_params[chain][x_param_mask]["value"].to_list()
-
     for y_idx, y_param_name in enumerate(parameters):
         y_data[y_param_name] = []
         for chain in range(len(mcmc_params)):
             y_param_mask = mcmc_params[chain]["name"] == y_param_name
             y_data[y_param_name] += mcmc_params[chain][y_param_mask]["value"].to_list()
 
+    # Loop over parameter combinations
     for x_idx, x_param_name in enumerate(parameters):
         for y_idx, y_param_name in enumerate(parameters):
             axis = axes[x_idx, y_idx]
+            axis.xaxis.set_ticks([])
+            axis.yaxis.set_ticks([])
+
+            # Plotting
             if x_idx > y_idx:
                 if style == "Scatter":
                     axis.scatter(x_data[x_param_name], y_data[y_param_name], alpha=0.5, s=0.1, color="k")
                 else:
                     axis.hist2d(x_data[x_param_name], y_data[y_param_name], bins=bins)
-                axis.xaxis.set_ticklabels([])
-                axis.xaxis.set_ticks([])
-                axis.yaxis.set_ticklabels([])
-                axis.yaxis.set_ticks([])
-                if y_idx == 0:
-                    axis.set_ylabel(x_param_name[:label_chars], rotation=0, fontsize=label_font_size)
-                if x_idx == len(parameters) - 1:
-                    axis.set_xlabel(y_param_name[:label_chars], fontsize=label_font_size)
             elif x_idx == y_idx:
                 axis.hist(x_data[x_param_name], color=[0.2, 0.2, 0.6] if style == "Shade" else "k", bins=bins)
-                axis.xaxis.set_ticklabels([])
-                axis.xaxis.set_ticks([])
-                axis.yaxis.set_ticklabels([])
-                axis.yaxis.set_ticks([])
             else:
                 axis.axis("off")
 
+            # Axis labels
+            if y_idx == 0:
+                axis.set_ylabel(x_param_name[:label_chars], rotation=0, fontsize=label_font_size, labelpad=10)
+            if x_idx == len(parameters) - 1:
+                axis.set_xlabel(y_param_name[:label_chars], fontsize=label_font_size, labelpad=3)
+
+    # Save
     plotter.save_figure(fig, filename="parameter_correlation_matrix", dpi_request=dpi_request)
 
 

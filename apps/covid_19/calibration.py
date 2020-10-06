@@ -161,11 +161,11 @@ def add_standard_philippines_params(params, region):
             "distri_params": [0.02, 0.40],
         },
         {"param_name": "time.start", "distribution": "uniform", "distri_params": [40.0, 60.0],},
-        # {
-        #     "param_name": "mobility.microdistancing.parameters.max_effect",
-        #     "distribution": "uniform",
-        #     "distri_params": [0.25, 0.75],
-        # },
+        {
+            "param_name": "mobility.microdistancing.parameters.max_effect",
+            "distribution": "uniform",
+            "distri_params": [0.25, 0.75],
+        },
         {
             "param_name": "infectious_seed", 
             "distribution": "uniform", 

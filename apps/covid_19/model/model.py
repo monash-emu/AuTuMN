@@ -762,9 +762,15 @@ def get_infection_fatality_proportions(
     )
     prop_over_80 = elderly_populations[2] / sum(elderly_populations[1:])
     # Infection fatality rate by age group.
-    # Data in props used 10 year bands 0-80+, but we want 5 year bands from 0-75+
+    # Data in props may have used 10 year bands 0-80+, but we want 5 year bands from 0-75+
     # Calculate 75+ age bracket as weighted average between 75-79 and half 80+
-    return repeat_list_elements_average_last_two(if_props_10_year, prop_over_80)
+    if len(infection_fatality_props_10_year) == 17:
+        last_ifr = if_props_10_year[-1] * prop_over_80 + if_props_10_year[-2] * (1 - prop_over_80)
+        ifrs_by_age = if_props_10_year[:-1]
+        ifrs_by_age[-1] = last_ifr
+    else:
+        ifrs_by_age = repeat_list_elements_average_last_two(if_props_10_year, prop_over_80)
+    return ifrs_by_age
 
 
 def subdivide_props(base_props: np.ndarray, split_props: np.ndarray):

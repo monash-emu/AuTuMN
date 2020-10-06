@@ -190,6 +190,7 @@ class Parameters:
     infectious_seed: float
     seasonal_force: Optional[float]  # Seasonal forcing factor
     waning_immunity_duration: Optional[float]
+    haario_scaling_factor: float
     # Modular parameters.
     time: Time
     country: Country

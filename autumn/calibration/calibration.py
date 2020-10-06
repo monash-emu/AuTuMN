@@ -597,9 +597,6 @@ class Calibration:
 
     def build_adaptive_covariance_matrix(self, haario_scaling_factor):
         scaling_factor = haario_scaling_factor ** 2 / len(self.priors)  # from Haario et al. 2001
-
-        print(scaling_factor)
-
         cov_matrix = np.cov(self.mcmc_trace_matrix, rowvar=False)
         adaptive_cov_matrix = scaling_factor * cov_matrix + scaling_factor * ADAPTIVE_METROPOLIS[
             "EPSILON"

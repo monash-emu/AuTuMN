@@ -490,6 +490,8 @@ def plot_param_vs_param(
                     axis.scatter(
                         x_data[x_param_name], y_data[y_param_name], alpha=0.5, s=0.1, color="k"
                     )
+                elif style == "KDE":
+                    sns.kdeplot(x_data[x_param_name], y_data[y_param_name], ax=axis, shade=True, levels=5, lw=1.)
                 else:
                     axis.hist2d(
                         x_data[x_param_name], y_data[y_param_name], bins=bins

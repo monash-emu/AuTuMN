@@ -379,7 +379,7 @@ def plot_param_matrix(
     label_font_size = st.sidebar.slider("Label font size", 1, 15, 8)
     label_chars = st.sidebar.slider("Label characters", 1, 10, 2)
     bins = st.sidebar.slider("Bins", 4, 50, 20)
-    style = st.sidebar.selectbox("Style", ["Shade", "Scatter"])
+    style = st.sidebar.selectbox("Style", ["Shade", "Scatter", "KDE"])
     dpi_request = st.sidebar.slider("DPI", 50, 2000, 300)
     plots.calibration.plots.plot_param_vs_param(
         plotter, mcmc_params, parameters, burn_in, style, bins, label_font_size, label_chars, dpi_request

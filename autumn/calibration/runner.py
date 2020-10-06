@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 def run_full_models_for_mcmc(
-    burn_in: int, src_db_path: str, dest_db_path: str, build_model, params: dict
+    burn_in: int, src_db_path: str, dest_db_path: str, build_model, params: dict, targets: dict
 ):
     """
     Run the full baseline model and all scenarios for all accepted MCMC runs in src db.
@@ -52,7 +52,7 @@ def run_full_models_for_mcmc(
 
         with Timer("Saving model outputs to the database"):
             models = [s.model for s in scenarios]
-            models = calculate_differential_outputs(models)
+            models = calculate_differential_outputs(models, targets)
             db.store.store_run_models(
                 models, dest_db_path, run_id=int(run_id), chain_id=int(chain_id)
             )

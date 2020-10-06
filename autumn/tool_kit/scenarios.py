@@ -141,7 +141,7 @@ def get_model_times_from_inputs(start_time, end_time, time_step, critical_ranges
     return numpy.array(times)
 
 
-def calculate_differential_outputs(models):
+def calculate_differential_outputs(models, targets):
     """
     :param models: list of fully run models.
     :return: list of models with additional derived_outputs

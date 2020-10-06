@@ -1,37 +1,10 @@
 # SCENARIO DESCRIPTION: BASELINE
 parent: apps/covid_19/eur_optimisation_params.yml
 
-infectious_seed: 200
-contact_rate: 0.04808021298530427
-
 country:
   iso3: GBR
 
-time:
-  end: 214.
-  start: 9.898075441019099
-
-case_detection:
-  maximum_gradient: 0.09172247247859731
-  max_change_time: 98.09724552296738
-  end_value: 0.12340227902434267
-
-clinical_stratification:
-  icu_prop: 0.2869223796413999
-  props:
-    hospital:
-      multiplier: 0.5400591596534211
-
 mobility:
-  smooth_google_data: True
-  microdistancing:
-    function_type: tanh
-    parameters:
-      b: -0.05
-      c: 97.60274587831591
-      sigma: 0.6098709965069964
-  npi_effectiveness:
-    other_locations: 0.572145160572256
   mixing:
     school:
       append: false
@@ -45,37 +18,3 @@ mobility:
         - 0.1
         - 0.1
         - 0.1 # google mobility data update, pls review
-
-  # Mapping of Google Mobility locations to Autumn-specific locations
-  google_mobility_locations:
-    work:
-      - workplaces
-    other_locations:
-      # Parks not included
-      - retail_and_recreation
-      - grocery_and_pharmacy
-      - transit_stations
-
-sojourn:
-  compartment_periods_calculated:
-    exposed:
-      total_period: 3.6919750421634894
-    active:
-      total_period: 5.686846765295515
-  compartment_periods:
-    hospital_late: 9.019609923504293
-    icu_late: 10.29875608887663
-
-infection_fatality:
-  props:
-    [
-      5.792371325929951e-06,
-      2.13222368344005e-05,
-      0.00011442742529120341,
-      0.00017671347735780823,
-      0.0006084983251764101,
-      0.0015939855622595469,
-      0.008045336001339009,
-      0.02286439848161898,
-      0.11652004248414055,
-    ]

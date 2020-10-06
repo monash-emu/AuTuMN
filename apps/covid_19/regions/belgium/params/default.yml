@@ -1,24 +1,10 @@
 # SCENARIO DESCRIPTION: BASELINE
 parent: apps/covid_19/eur_optimisation_params.yml
 
-infectious_seed: 200
-#contact_rate: 0.03302564911907216
-
 country:
   iso3: BEL
 
-time:
-  start: 5.323651322897666
-  end: 214.
-
 mobility:
-  smooth_google_data: True
-  microdistancing:
-    function_type: tanh
-    parameters:
-      b: -0.05
-      c: 103.74146078590786
-      sigma: 0.6
   mixing:
     school:
       append: false
@@ -32,48 +18,3 @@ mobility:
         - 0.1
         - 0.1
         - 0.1 # Included as part of google mobility update, please review.
-  # Mapping of Google Mobility locations to Autumn-specific locations
-  google_mobility_locations:
-    work:
-      - workplaces
-    other_locations:
-      # Parks not included
-      - retail_and_recreation
-      - grocery_and_pharmacy
-      - transit_stations
-
-sojourn:
-  compartment_periods_calculated:
-    exposed:
-      total_period: 3.868538028845811
-    active:
-      total_period: 5.186534378286037
-  compartment_periods:
-    hospital_late: 18.25951967530422
-    icu_late: 10.32462455152818
-
-case_detection:
-  start_value: 0.003469653671391958
-  maximum_gradient: 0.08912334109547207
-  max_change_time: 84.25193210704154
-  end_value: 0.2829483488660447
-
-clinical_stratification:
-  icu_prop: 0.15177524702449352
-  props:
-    hospital:
-      multiplier: 1.1314040059918642
-
-infection_fatality:
-  props:
-    [
-      6.071333710203001e-06,
-      3.063942739039405e-05,
-      0.00011014513925170467,
-      0.0001985123078165001,
-      0.0004565124764614646,
-      0.0016659898620038922,
-      0.006589986968286609,
-      0.029473052699617544,
-      0.1126432283915645,
-    ]

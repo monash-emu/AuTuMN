@@ -192,12 +192,12 @@ def trigger_europe():
     """
     logger.info("Triggering all European mixing optimisation calibrations.")
     region_names = [
-        UNITED_KINGDOM,
-        BELGIUM,
-        ITALY,
-        SWEDEN,
-        FRANCE,
-        SPAIN,
+        Region.UNITED_KINGDOM,
+        Region.BELGIUM,
+        Region.ITALY,
+        Region.SWEDEN,
+        Region.FRANCE,
+        Region.SPAIN,
     ]
     _trigger_models(region_names, trigger_europe_pipeline)
 

@@ -515,16 +515,16 @@ def plot_param_vs_param(
         x_data[x_param_name] = []
         for chain in range(len(mcmc_params)):
             x_param_mask = \
-                mcmc_params[chain]["name"] == x_param_name
+                (mcmc_params[chain]["name"] == x_param_name) & (mcmc_params[chain]["run"] > burn_in)
             x_data[x_param_name] += \
-                mcmc_params[chain][x_param_mask]["value"].to_list()[burn_in:]
+                mcmc_params[chain][x_param_mask]["value"].to_list()
     for y_idx, y_param_name in enumerate(parameters):
         y_data[y_param_name] = []
         for chain in range(len(mcmc_params)):
             y_param_mask = \
-                mcmc_params[chain]["name"] == y_param_name
+                (mcmc_params[chain]["name"] == y_param_name) & (mcmc_params[chain]["run"] > burn_in)
             y_data[y_param_name] += \
-                mcmc_params[chain][y_param_mask]["value"].to_list()[burn_in:]
+                mcmc_params[chain][y_param_mask]["value"].to_list()
 
     # Loop over parameter combinations
     for x_idx, x_param_name in enumerate(parameters):

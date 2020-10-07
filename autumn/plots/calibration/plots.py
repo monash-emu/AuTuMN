@@ -429,14 +429,38 @@ def plot_parallel_coordinates(
         [param for param in mcmc_params[0].loc[:, "name"].unique().tolist() if
          "dispersion_param" not in param]
 
-    fig, axis, _, _, _, _ = plotter.get_figure()
-    combined_mcmc_df = None
     target_n_lines = 500.
     n_samples = int(target_n_lines / len(mcmc_tables))
+    combined_mcmc_df = merge_and_pivot_mcmc_parameters_loglike(
+        mcmc_tables,
+        mcmc_params,
+        parameters,
+        n_samples_per_chain=n_samples
+    )
+    w = len(parameters) * 200
+    h = 800
+    labels = {}
+    for param in parameters:
+        labels[param] = PLOT_TEXT_DICT[param] if param in PLOT_TEXT_DICT else param
+    figure = px.parallel_coordinates(
+        combined_mcmc_df,
+        color='fitness',
+        dimensions=parameters,
+        labels=labels,
+        color_continuous_scale=px.colors.diverging.Tealrose,
+        height=h,
+        width=w
+    )
+    figure.show()
+
+
+def merge_and_pivot_mcmc_parameters_loglike(mcmc_tables, mcmc_params, parameters, n_samples_per_chain=None):
+
+    combined_mcmc_df = None
     for mcmc_df, param_df in zip(mcmc_tables, mcmc_params):
         mask = mcmc_df["accept"] == 1
         mcmc_df = mcmc_df[mask]
-        n_iter = min(n_samples, len(mcmc_df.index))
+        n_iter = len(mcmc_df.index) if n_samples_per_chain is None else min(n_samples_per_chain, len(mcmc_df.index))
         mcmc_df = mcmc_df.iloc[-n_iter:]
         for param in parameters:
             param_vals = []
@@ -455,22 +479,27 @@ def plot_parallel_coordinates(
             combined_mcmc_df = combined_mcmc_df.append(mcmc_df)
 
     combined_mcmc_df['fitness'] = [-log(-v) for v in combined_mcmc_df["loglikelihood"]]
+    return combined_mcmc_df
 
-    w = len(parameters) * 200
-    h = 800
-    labels = {}
-    for param in parameters:
-        labels[param] = PLOT_TEXT_DICT[param] if param in PLOT_TEXT_DICT else param
-    figure = px.parallel_coordinates(
-        combined_mcmc_df,
-        color='fitness',
-        dimensions=parameters,
-        labels=labels,
-        color_continuous_scale=px.colors.diverging.Tealrose,
-        height=h,
-        width=w
+
+def plot_loglikelihood_surface(
+        plotter: Plotter,
+        mcmc_tables: List[pd.DataFrame],
+        mcmc_params: List[pd.DataFrame],
+        param_1,
+        param_2,
+):
+    combined_mcmc_df = merge_and_pivot_mcmc_parameters_loglike(
+        mcmc_tables,
+        mcmc_params,
+        [param_1, param_2]
     )
-    figure.show()
+
+    fig = px.scatter_3d(combined_mcmc_df, x=param_1, y=param_2, z='fitness',
+              color='chain')
+    fig.show()
+
+
 
 def plot_single_param_loglike(
         plotter: Plotter,

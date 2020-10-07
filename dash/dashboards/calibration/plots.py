@@ -425,3 +425,25 @@ def plot_parallel_coordinates(
 
 PLOT_FUNCS["Parallel Coordinates"] = plot_parallel_coordinates
 
+
+def plot_loglikelihood_surface(
+        plotter: StreamlitPlotter,
+        calib_dir_path: str,
+        mcmc_tables: List[pd.DataFrame],
+        mcmc_params: List[pd.DataFrame],
+        targets: dict,
+):
+    options = mcmc_params[0]["name"].unique().tolist()
+    param_1 = st.sidebar.selectbox("Select parameter 1", options)
+    param_2 = st.sidebar.selectbox("Select parameter 2", options)
+
+    plots.calibration.plots.plot_loglikelihood_surface(
+        plotter,
+        mcmc_tables,
+        mcmc_params,
+        param_1,
+        param_2,
+    )
+
+
+PLOT_FUNCS["Loglikelihood 3d scatter"] = plot_loglikelihood_surface

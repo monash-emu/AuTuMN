@@ -2,6 +2,7 @@
 matplotlib>=1.4.2
 seaborn==0.9.0
 joypy>=0.2.2
+plotly>=4.11.0
 
 # Numerical computing
 numpy>=1.14.1

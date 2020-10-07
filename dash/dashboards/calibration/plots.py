@@ -407,3 +407,21 @@ def plot_param_matrix(
 
 
 PLOT_FUNCS["Param versus param"] = plot_param_matrix
+
+
+def plot_parallel_coordinates(
+        plotter: StreamlitPlotter,
+        calib_dir_path: str,
+        mcmc_tables: List[pd.DataFrame],
+        mcmc_params: List[pd.DataFrame],
+        targets: dict,
+):
+    plots.calibration.plots.plot_parallel_coordinates(
+        plotter,
+        mcmc_tables,
+        mcmc_params,
+    )
+
+
+PLOT_FUNCS["Parallel Coordinates"] = plot_parallel_coordinates
+

@@ -14,6 +14,7 @@ import seaborn as sns
 import numpy as np
 from matplotlib import pyplot
 from scipy import stats
+import plotly.express as px
 
 from autumn import db
 from autumn.calibration.utils import calculate_prior, raise_error_unsupported_prior
@@ -418,6 +419,58 @@ def plot_param_vs_loglike(mcmc_tables, mcmc_params, param_name, burn_in, axis):
         loglikelihood_values = [-log(-v) for v in df["loglikelihood"]]
         axis.plot(param_values, loglikelihood_values, ".")
 
+
+def plot_parallel_coordinates(
+        plotter: Plotter,
+        mcmc_tables: List[pd.DataFrame],
+        mcmc_params: List[pd.DataFrame],
+):
+    parameters = \
+        [param for param in mcmc_params[0].loc[:, "name"].unique().tolist() if
+         "dispersion_param" not in param]
+
+    fig, axis, _, _, _, _ = plotter.get_figure()
+    combined_mcmc_df = None
+    target_n_lines = 500.
+    n_samples = int(target_n_lines / len(mcmc_tables))
+    for mcmc_df, param_df in zip(mcmc_tables, mcmc_params):
+        mask = mcmc_df["accept"] == 1
+        mcmc_df = mcmc_df[mask]
+        n_iter = min(n_samples, len(mcmc_df.index))
+        mcmc_df = mcmc_df.iloc[-n_iter:]
+        for param in parameters:
+            param_vals = []
+            for c, r in zip(mcmc_df["chain"], mcmc_df["run"]):
+                mask1 = param_df["chain"] == c
+                mask2 = param_df['name'] == param
+                mask3 = param_df["run"] == r
+                param_vals.append(
+                   param_df[mask1][mask2][mask3]["value"].iloc[0]
+                )
+            mcmc_df[param] = param_vals
+
+        if combined_mcmc_df is None:
+            combined_mcmc_df = mcmc_df
+        else:
+            combined_mcmc_df = combined_mcmc_df.append(mcmc_df)
+
+    combined_mcmc_df['fitness'] = [-log(-v) for v in combined_mcmc_df["loglikelihood"]]
+
+    w = len(parameters) * 200
+    h = 800
+    labels = {}
+    for param in parameters:
+        labels[param] = PLOT_TEXT_DICT[param] if param in PLOT_TEXT_DICT else param
+    figure = px.parallel_coordinates(
+        combined_mcmc_df,
+        color='fitness',
+        dimensions=parameters,
+        labels=labels,
+        color_continuous_scale=px.colors.diverging.Tealrose,
+        height=h,
+        width=w
+    )
+    figure.show()
 
 def plot_single_param_loglike(
         plotter: Plotter,

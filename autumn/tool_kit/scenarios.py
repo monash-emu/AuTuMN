@@ -1,9 +1,9 @@
 """
 Utilities for running multiple model scenarios
 """
-import numpy
+import numpy as np
 from copy import deepcopy
-from typing import Callable
+from typing import Callable, List
 
 from summer.model import StratifiedModel
 
@@ -123,49 +123,67 @@ def get_model_times_from_inputs(start_time, end_time, time_step, critical_ranges
         # add regularly-spaced points up until the start of the critical range
         interval_end = critical_range[0]
         if interval_end > interval_start:
-            times += list(numpy.arange(interval_start, interval_end, time_step))
+            times += list(np.arange(interval_start, interval_end, time_step))
         # add points over the critical range with smaller time step
         interval_start = interval_end
         interval_end = critical_range[1]
         if interval_end > interval_start:
-            times += list(numpy.arange(interval_start, interval_end, time_step / 10.0))
+            times += list(np.arange(interval_start, interval_end, time_step / 10.0))
         interval_start = interval_end
 
     if end_time > interval_start:
-        times += list(numpy.arange(interval_start, end_time, time_step))
+        times += list(np.arange(interval_start, end_time, time_step))
     times.append(end_time)
 
     # clean up time values ending .9999999999
     times = [round(t, 5) for t in times]
 
-    return numpy.array(times)
+    return np.array(times)
 
 
-def calculate_differential_outputs(models, targets):
+def calculate_differential_outputs(models: List[StratifiedModel], targets: dict):
     """
     :param models: list of fully run models.
     :param targets: dictionary containing targets.
     :return: list of models with additional derived_outputs
     """
-    for derived_ouptut in models[0].derived_outputs:
-        if 'differentiate' in targets[derived_ouptut]:
-            diff_type = targets[derived_ouptut]['differentiate']
-            if diff_type not in ['relative', 'absolute']:
-                continue
-            baseline_output = models[0].derived_outputs[derived_ouptut]
-            for model in models:
-                sc_output = model.derived_outputs[derived_ouptut]
-                idx_shift = len(baseline_output) - len(sc_output)
-                new_output_name = diff_type[:3] + "_diff_" + derived_ouptut
-                if diff_type == 'relative':
-                    diff_output = [(sc_val - baseline_val / baseline_val) * 100. for baseline_val, sc_val in
-                                   zip(baseline_output[idx_shift:], sc_output)]
-                elif diff_type == 'absolute':
-                    diff_output = [sc_val - baseline_val for baseline_val, sc_val in
-                                   zip(baseline_output[idx_shift:], sc_output)]
-                else:
-                    raise ValueError("Differential outputs must be 'relative' or 'absolute'")
+    baseline_derived_outputs = models[0].derived_outputs
 
-                model.derived_outputs[new_output_name] = idx_shift * [0.] + diff_output
+    baseline_derived_output_keys = list(baseline_derived_outputs.keys())
+    for derived_ouptut in baseline_derived_output_keys:
+        target = targets.get(derived_ouptut)
+        if not target:
+            continue
+
+        diff_type = target.get("differentiate")
+        if not diff_type:
+            continue
+
+        baseline_output = baseline_derived_outputs[derived_ouptut]
+        for model in models:
+            sc_output = model.derived_outputs[derived_ouptut]
+            idx_shift = len(baseline_output) - len(sc_output)
+            output_arr = np.zeros(sc_output.shape)
+            if diff_type == "relative":
+                new_output_name = f"rel_diff_{derived_ouptut}"
+                for idx in range(len(sc_output)):
+                    sc_val = sc_output[idx]
+                    baseline_val = baseline_output[idx + idx_shift]
+                    if baseline_val == 0:
+                        # Zero for undefined diffs
+                        output_arr[idx] = 0
+                    else:
+                        output_arr[idx] = (sc_val - baseline_val / baseline_val) * 100.0
+
+            elif diff_type == "absolute":
+                new_output_name = f"abs_diff_{derived_ouptut}"
+                for idx in range(len(sc_output)):
+                    sc_val = sc_output[idx]
+                    baseline_val = baseline_output[idx + idx_shift]
+                    output_arr[idx] = sc_val - baseline_val
+            else:
+                raise ValueError("Differential outputs must be 'relative' or 'absolute'")
+
+            model.derived_outputs[new_output_name] = output_arr
+
     return models
-

@@ -72,9 +72,7 @@ class FullModelRunTask(utils.ParallelLoggerTask):
         app_name, region_name, _, _ = read_run_id(self.run_id)
         targets = load_targets(app_name, region_name)
         with Timer(msg):
-            run_full_models_for_mcmc(
-                self.burn_in, src_db_path, dest_db_path, app_region.build_model, app_region.params, targets
-            )
+            run_full_models_for_mcmc(self.burn_in, src_db_path, dest_db_path, app_region)
 
     def get_src_db_relpath(self):
         filename = utils.get_calibration_db_filename(self.chain_id)

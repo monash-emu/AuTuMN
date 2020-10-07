@@ -186,7 +186,10 @@ def build_model(params: dict) -> StratifiedModel:
             agegroup_strata, country.iso3, testing_region, year=testing_year
         )
         detected_proportion = find_cdr_function_from_test_data(
-            assumed_tests_parameter, assumed_cdr_parameter, country.iso3, testing_pops,
+            assumed_tests_parameter,
+            assumed_cdr_parameter,
+            country.iso3,
+            testing_pops,
         )
     else:
         # Approach based on a hyperbolic tan function
@@ -370,8 +373,8 @@ def build_model(params: dict) -> StratifiedModel:
     # Progression rates into the infectious compartment(s)
     # Define progression rates into non-symptomatic compartments using parameter adjustment.
     early_exposed_adjs = {}
-    for age_idx, age in enumerate(agegroup_strata):
-        key = f"within_{Compartment.EARLY_EXPOSED}Xagegroup_{age}"
+    for age_idx, agegroup in enumerate(agegroup_strata):
+        key = f"within_{Compartment.EARLY_EXPOSED}Xagegroup_{agegroup}"
         early_exposed_adjs[key] = {
             ClinicalStratum.NON_SYMPT: abs_props[ClinicalStratum.NON_SYMPT][age_idx],
             ClinicalStratum.ICU: abs_props[ClinicalStratum.ICU][age_idx],
@@ -385,9 +388,11 @@ def build_model(params: dict) -> StratifiedModel:
         get_abs_prop_sympt_non_hospital = get_abs_prop_sympt_non_hospital_factory(
             age_idx, abs_props, get_abs_prop_isolated
         )
-        model.time_variants[f"prop_{ClinicalStratum.SYMPT_ISOLATE}_{age}"] = get_abs_prop_isolated
         model.time_variants[
-            f"prop_{ClinicalStratum.SYMPT_NON_HOSPITAL}_{age}"
+            f"prop_{ClinicalStratum.SYMPT_ISOLATE}_{agegroup}"
+        ] = get_abs_prop_isolated
+        model.time_variants[
+            f"prop_{ClinicalStratum.SYMPT_NON_HOSPITAL}_{agegroup}"
         ] = get_abs_prop_sympt_non_hospital
 
     """
@@ -565,7 +570,8 @@ def build_model(params: dict) -> StratifiedModel:
     # Build notification derived output function
     is_importation_active = params.importation is not None
     notification_func = outputs.get_calc_notifications_covid(
-        is_importation_active, modelled_abs_detection_proportion_imported,
+        is_importation_active,
+        modelled_abs_detection_proportion_imported,
     )
     local_notification_func = outputs.get_calc_notifications_covid(
         False, modelled_abs_detection_proportion_imported
@@ -730,26 +736,36 @@ def get_absolute_death_proportions(abs_props, infection_fatality_props, icu_mort
 
         # Check everything sums up properly
         allowed_rounding_error = 6
-        assert round(
-            abs_death_props[ClinicalStratum.ICU][age_idx]
-            + abs_death_props[ClinicalStratum.HOSPITAL_NON_ICU][age_idx]
-            + abs_death_props[ClinicalStratum.NON_SYMPT][age_idx],
-            allowed_rounding_error,
-        ) == round(age_ifr_props, allowed_rounding_error)
+        assert (
+            round(
+                abs_death_props[ClinicalStratum.ICU][age_idx]
+                + abs_death_props[ClinicalStratum.HOSPITAL_NON_ICU][age_idx]
+                + abs_death_props[ClinicalStratum.NON_SYMPT][age_idx],
+                allowed_rounding_error,
+            )
+            == round(age_ifr_props, allowed_rounding_error)
+        )
         # Check everything sums up properly
         allowed_rounding_error = 6
-        assert round(
-            abs_death_props[ClinicalStratum.ICU][age_idx]
-            + abs_death_props[ClinicalStratum.HOSPITAL_NON_ICU][age_idx]
-            + abs_death_props[ClinicalStratum.NON_SYMPT][age_idx],
-            allowed_rounding_error,
-        ) == round(age_ifr_props, allowed_rounding_error)
+        assert (
+            round(
+                abs_death_props[ClinicalStratum.ICU][age_idx]
+                + abs_death_props[ClinicalStratum.HOSPITAL_NON_ICU][age_idx]
+                + abs_death_props[ClinicalStratum.NON_SYMPT][age_idx],
+                allowed_rounding_error,
+            )
+            == round(age_ifr_props, allowed_rounding_error)
+        )
 
     return abs_death_props
 
 
 def get_infection_fatality_proportions(
-    infection_fatality_props_10_year, infection_rate_multiplier, iso3, pop_region, pop_year,
+    infection_fatality_props_10_year,
+    infection_rate_multiplier,
+    iso3,
+    pop_region,
+    pop_year,
 ):
     """
     Returns the Proportion of people in age group who die, given the total number of people in that compartment.

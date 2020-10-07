@@ -58,7 +58,7 @@ def plot_post_calibration(targets: dict, mcmc_dir: str, plot_dir: str):
     logger.info("Plotting loglikelihood vs params")
     subplotter = _get_sub_plotter(plot_dir, "params-vs-loglikelihood")
     for chosen_param in param_options:
-        plots.plot_single_param_loglike(subplotter, mcmc_tables, mcmc_params, chosen_param)
+        plots.plot_single_param_loglike(subplotter, mcmc_tables, mcmc_params, 0, chosen_param)
 
     logger.info("Plotting parameter traces")
     subplotter = _get_sub_plotter(plot_dir, "params-traces")

@@ -57,8 +57,25 @@ def get_plot_text_dict(param_string, capitalise_first_letter=False):
     return text
 
 
+def find_max_burn_in(mcmc_params):
+    chain_length = 0
+    for i_chain in range(len(mcmc_params)):
+        parameters = mcmc_params[i_chain]["name"].unique().tolist()
+        chain_length = max(int(len(mcmc_params[0]) / len(parameters)), chain_length)
+    return chain_length
+
+
+"""
+Parameter diagnostics
+"""
+
+
 def plot_acceptance_ratio(
-        plotter: Plotter, mcmc_tables: List[pd.DataFrame], label_font_size=6, dpi_request=300
+        plotter: Plotter,
+        mcmc_tables: List[pd.DataFrame],
+        burn_in: int,
+        label_font_size=6,
+        dpi_request=300
 ):
     """
     Plot the prameter traces for each MCMC run.
@@ -79,6 +96,8 @@ def plot_acceptance_ratio(
             ratios.append(count / total)
 
         axis.plot(ratios, alpha=0.8, linewidth=0.7)
+        if burn_in > 0:
+            axis.axvline(x=burn_in, color=COLOR_THEME[1], linestyle="dotted")
 
     axis.set_ylabel("Acceptance ratio", fontsize=label_font_size)
     axis.set_ylim(bottom=0.)
@@ -181,7 +200,12 @@ def workout_plot_x_range(prior_dict):
     return x_range
 
 
-def plot_mcmc_parameter_trace(plotter: Plotter, mcmc_params: List[pd.DataFrame], param_name: str):
+def plot_mcmc_parameter_trace(
+        plotter: Plotter,
+        mcmc_params: List[pd.DataFrame],
+        burn_in: int,
+        param_name: str
+):
     """
     Plot the prameter traces for each MCMC run.
     """
@@ -190,6 +214,8 @@ def plot_mcmc_parameter_trace(plotter: Plotter, mcmc_params: List[pd.DataFrame],
         param_mask = table_df["name"] == param_name
         param_df = table_df[param_mask]
         axis.plot(param_df["run"], param_df["value"], alpha=0.8, linewidth=0.7)
+        if burn_in > 0:
+            axis.axvline(x=burn_in, color=COLOR_THEME[1], linestyle="dotted")
 
     axis.set_ylabel(param_name)
     axis.set_xlabel("MCMC iterations")
@@ -199,6 +225,7 @@ def plot_mcmc_parameter_trace(plotter: Plotter, mcmc_params: List[pd.DataFrame],
 def plot_multiple_param_traces(
         plotter: Plotter,
         mcmc_params: List[pd.DataFrame],
+        burn_in: int,
         title_font_size: int,
         label_font_size: int,
         capitalise_first_letter: bool,
@@ -244,6 +271,9 @@ def plot_multiple_param_traces(
                 axis.set_xlabel(x_label, fontsize=label_font_size)
             pyplot.setp(axis.get_yticklabels(), fontsize=label_font_size)
             pyplot.setp(axis.get_xticklabels(), fontsize=label_font_size)
+
+            if burn_in > 0:
+                axis.axvline(x=burn_in, color=COLOR_THEME[1], linestyle="dotted")
 
         else:
             axis.axis("off")
@@ -298,25 +328,30 @@ def plot_burn_in(plotter: Plotter, num_iters: int, burn_in: int):
     plotter.save_figure(fig, filename="burn-in", title_text="burn-in")
 
 
-def get_posterior(mcmc_params, param_name):
+def get_posterior(mcmc_params, param_name, burn_in=0):
     vals_df = None
     for table_df in mcmc_params:
         param_mask = table_df["name"] == param_name
         table_vals = table_df[param_mask].value
+        table_vals_after_burn = table_vals[burn_in:]
         if vals_df is not None:
-            vals_df = vals_df.append(table_vals)
+            vals_df = vals_df.append(table_vals_after_burn)
         else:
-            vals_df = table_vals
+            vals_df = table_vals_after_burn
     return vals_df
 
 
 def plot_posterior(
-    plotter: Plotter, mcmc_params: List[pd.DataFrame], param_name: str, num_bins: int
+        plotter: Plotter,
+        mcmc_params: List[pd.DataFrame],
+        burn_in: int,
+        param_name: str,
+        num_bins: int
 ):
     """
     Plots the posterior distribution of a given parameter in a histogram.
     """
-    vals_df = get_posterior(mcmc_params, param_name)
+    vals_df = get_posterior(mcmc_params, param_name, burn_in)
     fig, axis, _, _, _, _ = plotter.get_figure()
     vals_df.hist(bins=num_bins, ax=axis)
     plotter.save_figure(
@@ -325,8 +360,14 @@ def plot_posterior(
 
 
 def plot_multiple_posteriors(
-    plotter: Plotter, mcmc_params: List[pd.DataFrame], num_bins: int, title_font_size: int, label_font_size: int,
-        capitalise_first_letter: bool, dpi_request: int
+        plotter: Plotter,
+        mcmc_params: List[pd.DataFrame],
+        burn_in: int,
+        num_bins: int,
+        title_font_size: int,
+        label_font_size: int,
+        capitalise_first_letter: bool,
+        dpi_request: int
 ):
     """
     Plots the posterior distribution of a given parameter in a histogram.
@@ -343,7 +384,7 @@ def plot_multiple_posteriors(
 
         if i < len(parameters):
             param_name = parameters[i]
-            vals_df = get_posterior(mcmc_params, param_name)
+            vals_df = get_posterior(mcmc_params, param_name, burn_in)
 
             # Plot histograms
             vals_df.hist(bins=num_bins, ax=axis)

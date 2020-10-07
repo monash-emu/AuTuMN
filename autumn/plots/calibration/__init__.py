@@ -53,7 +53,7 @@ def plot_post_calibration(targets: dict, mcmc_dir: str, plot_dir: str):
     num_bins = 16
     subplotter = _get_sub_plotter(plot_dir, "posteriors")
     for chosen_param in param_options:
-        plots.plot_posterior(subplotter, mcmc_params, chosen_param, num_bins)
+        plots.plot_posterior(subplotter, mcmc_params, 0, chosen_param, num_bins)
 
     logger.info("Plotting loglikelihood vs params")
     subplotter = _get_sub_plotter(plot_dir, "params-vs-loglikelihood")
@@ -63,10 +63,10 @@ def plot_post_calibration(targets: dict, mcmc_dir: str, plot_dir: str):
     logger.info("Plotting parameter traces")
     subplotter = _get_sub_plotter(plot_dir, "params-traces")
     for chosen_param in param_options:
-        plots.plot_mcmc_parameter_trace(subplotter, mcmc_params, chosen_param)
+        plots.plot_mcmc_parameter_trace(subplotter, mcmc_params, 0, chosen_param)
 
     logger.info("Plotting acceptance ratios")
-    plots.plot_acceptance_ratio(plotter, mcmc_tables)
+    plots.plot_acceptance_ratio(plotter, mcmc_tables, 0)
 
     logger.info("Plotting loglikelihood traces")
     num_iters = len(mcmc_tables[0])

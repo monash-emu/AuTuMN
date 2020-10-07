@@ -144,12 +144,14 @@ def get_model_times_from_inputs(start_time, end_time, time_step, critical_ranges
 def calculate_differential_outputs(models, targets):
     """
     :param models: list of fully run models.
+    :param targets: dictionary containing targets.
     :return: list of models with additional derived_outputs
     """
     for derived_ouptut in models[0].derived_outputs:
-        differentiate = True  # FIXME: should be determined based on targets.json
-        if differentiate:
-            diff_type = 'relative'  # FIXME: should be determined based on targets.json
+        if 'differentiate' in targets[derived_ouptut]:
+            diff_type = targets[derived_ouptut]['differentiate']
+            if diff_type not in ['relative', 'absolute']:
+                continue
             baseline_output = models[0].derived_outputs[derived_ouptut]
             for model in models:
                 sc_output = model.derived_outputs[derived_ouptut]

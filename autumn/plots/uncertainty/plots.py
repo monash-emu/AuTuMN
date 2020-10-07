@@ -63,7 +63,7 @@ def plot_timeseries_with_uncertainty(
     axis.set_ylabel(output_title)
     if is_logscale:
         axis.set_yscale("log")
-    else:
+    elif not (output_name.startswith('rel_diff') or output_name.startswith('abs_diff')):
         axis.set_ylim(ymin=0)
 
     if scenario_idxs == [0]:

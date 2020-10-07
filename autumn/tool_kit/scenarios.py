@@ -173,7 +173,7 @@ def calculate_differential_outputs(models: List[StratifiedModel], targets: dict)
                         # Zero for undefined diffs
                         output_arr[idx] = 0
                     else:
-                        output_arr[idx] = (sc_val - baseline_val / baseline_val) * 100.0
+                        output_arr[idx] = (sc_val - baseline_val) / baseline_val * 100.0
 
             elif diff_type == "absolute":
                 new_output_name = f"abs_diff_{derived_ouptut}"

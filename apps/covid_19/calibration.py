@@ -150,7 +150,11 @@ def add_standard_philippines_params(params, region):
     """
 
     return params + [
-        {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.03, 0.05],},
+        {
+            "param_name": "contact_rate",
+            "distribution": "uniform",
+            "distri_params": [0.03, 0.05],
+        },
         {
             "param_name": "infection_fatality.multiplier",
             "distribution": "uniform",
@@ -161,7 +165,11 @@ def add_standard_philippines_params(params, region):
             "distribution": "uniform",
             "distri_params": [0.02, 0.40],
         },
-        {"param_name": "time.start", "distribution": "uniform", "distri_params": [40.0, 60.0],},
+        {
+            "param_name": "time.start",
+            "distribution": "uniform",
+            "distri_params": [40.0, 60.0],
+        },
         {
             "param_name": "mobility.microdistancing.parameters.max_effect",
             "distribution": "uniform",
@@ -234,7 +242,11 @@ def add_standard_victoria_params(params, region):
             "distribution": "uniform",
             "distri_params": [0.006 if region in Region.VICTORIA_RURAL else 0.012, 0.07],
         },
-        {"param_name": "seasonal_force", "distribution": "uniform", "distri_params": [0.0, 0.3],},
+        {
+            "param_name": "seasonal_force",
+            "distribution": "uniform",
+            "distri_params": [0.0, 0.3],
+        },
         {
             "param_name": "clinical_stratification.props.symptomatic.multiplier",
             "distribution": "trunc_normal",
@@ -279,7 +291,7 @@ def add_standard_victoria_params(params, region):
             "param_name": "mobility.microdistancing.parameters.max_effect",
             "distribution": "beta",
             "distri_mean": 0.8,
-            "distri_ci": [0.4, 0.9],
+            "distri_ci": [0.55, 0.9],
         },
     ]
 

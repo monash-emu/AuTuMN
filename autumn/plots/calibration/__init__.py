@@ -44,7 +44,7 @@ def plot_post_calibration(targets: dict, mcmc_dir: str, plot_dir: str):
         output_name = target["output_key"]
         logger.info("Plotting calibration fit for output %s", output_name)
         outputs = plots.sample_outputs_for_calibration_fit(
-            output_name, mcmc_tables, derived_output_tables
+            output_name, mcmc_tables, derived_output_tables, 0
         )
         plots.plot_calibration_fit(subplotter, output_name, outputs, targets, is_logscale=True)
         plots.plot_calibration_fit(subplotter, output_name, outputs, targets, is_logscale=False)

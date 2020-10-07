@@ -605,18 +605,22 @@ def plot_all_params_vs_loglike(
 
 
 def sample_outputs_for_calibration_fit(
-    output_name: str, mcmc_tables: List[pd.DataFrame], do_tables: List[pd.DataFrame],
+        output_name: str,
+        mcmc_tables: List[pd.DataFrame],
+        do_tables: List[pd.DataFrame],
+        burn_in: int,
 ):
     assert len(mcmc_tables) == len(do_tables)
     mcmc_df = db.process.append_tables(mcmc_tables)
     do_df = db.process.append_tables(do_tables)
 
-    # Determine max chain length, throw away first half of that
-    max_run = mcmc_df["run"].max()
-    half_max = max_run // 2
-    mcmc_df = mcmc_df[mcmc_df["run"] >= half_max]
+    # Determine max chain length, throw away first half of that if no burn-in request
+    discard_point = mcmc_df["run"].max() // 2 if \
+        burn_in == 0 else \
+        burn_in
+    mcmc_df = mcmc_df[mcmc_df["run"] >= discard_point]
 
-    # Choose runs with probability proprotional to their weights.
+    # Choose runs with probability proportional to their weights.
     weights = mcmc_df["weight"].tolist()
     run_choices = list(zip(mcmc_df["chain"].tolist(), mcmc_df["run"].tolist()))
     num_chosen = 20 * len(mcmc_tables)

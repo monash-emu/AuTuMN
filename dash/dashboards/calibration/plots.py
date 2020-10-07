@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 
 from autumn.plots.plotter import StreamlitPlotter
-from autumn.plots.calibration.plots import find_max_burn_in
+from autumn.plots.calibration.plots import find_min_chain_length_from_mcmc_tables
 from autumn import db, plots
 
 from dash import selectors
@@ -54,7 +54,7 @@ def plot_acceptance_ratio(
     targets: dict,
 ):
     label_font_size = st.sidebar.slider("Label font size", 1, 15, 10)
-    chain_length = find_max_burn_in(mcmc_params)
+    chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
     burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
     dpi_request = st.sidebar.slider("DPI", 50, 2000, 300)
     plots.calibration.plots.plot_acceptance_ratio(
@@ -218,7 +218,7 @@ def plot_mcmc_parameter_trace(
     targets: dict,
 ):
     chosen_param = selectors.parameter(mcmc_params[0])
-    chain_length = find_max_burn_in(mcmc_params)
+    chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
     burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
     plots.calibration.plots.plot_mcmc_parameter_trace(plotter, mcmc_params, burn_in, chosen_param)
 
@@ -240,7 +240,7 @@ def plot_all_param_traces(
         dpi_request,
         capitalise_first_letter,
     ) = create_standard_plotting_sidebar()
-    chain_length = find_max_burn_in(mcmc_params)
+    chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
     burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
     plots.calibration.plots.plot_multiple_param_traces(
         plotter, mcmc_params, burn_in, title_font_size, label_font_size, capitalise_first_letter, dpi_request
@@ -258,8 +258,10 @@ def plot_loglikelihood_vs_parameter(
     targets: dict,
 ):
     chosen_param = selectors.parameter(mcmc_params[0])
+    chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
+    burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
     plots.calibration.plots.plot_single_param_loglike(
-        plotter, mcmc_tables, mcmc_params, chosen_param
+        plotter, mcmc_tables, mcmc_params, burn_in, chosen_param
     )
 
 
@@ -279,10 +281,13 @@ def plot_loglike_vs_all_params(
         dpi_request,
         capitalise_first_letter,
     ) = create_standard_plotting_sidebar()
+    chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
+    burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
     plots.calibration.plots.plot_all_params_vs_loglike(
         plotter,
         mcmc_tables,
         mcmc_params,
+        burn_in,
         title_font_size,
         label_font_size,
         capitalise_first_letter,
@@ -301,7 +306,7 @@ def plot_posterior(
     targets: dict,
 ):
     chosen_param = selectors.parameter(mcmc_params[0])
-    chain_length = find_max_burn_in(mcmc_params)
+    chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
     burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
     num_bins = st.sidebar.slider("Number of bins", 1, 50, 16)
     plots.calibration.plots.plot_posterior(plotter, mcmc_params, burn_in, chosen_param, num_bins)
@@ -324,7 +329,7 @@ def plot_all_posteriors(
         dpi_request,
         capitalise_first_letter,
     ) = create_standard_plotting_sidebar()
-    chain_length = find_max_burn_in(mcmc_params)
+    chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
     burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
     num_bins = st.sidebar.slider("Number of bins", 1, 50, 16)
     plots.calibration.plots.plot_multiple_posteriors(
@@ -384,7 +389,7 @@ def plot_param_matrix(
         targets: dict,
 ):
     parameters = mcmc_params[0]["name"].unique().tolist()
-    chain_length = find_max_burn_in(mcmc_params)
+    chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
     burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
     label_font_size = st.sidebar.slider("Label font size", 1, 15, 8)
     label_chars = st.sidebar.slider("Label characters", 1, 10, 2)

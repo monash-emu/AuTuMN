@@ -57,12 +57,17 @@ def get_plot_text_dict(param_string, capitalise_first_letter=False):
     return text
 
 
-def find_max_burn_in(mcmc_params):
-    chain_length = 0
-    for i_chain in range(len(mcmc_params)):
-        parameters = mcmc_params[i_chain]["name"].unique().tolist()
-        chain_length = max(int(len(mcmc_params[0]) / len(parameters)), chain_length)
-    return chain_length
+# def find_max_burn_in(mcmc_params):
+#     chain_length = 0
+#     for i_chain in range(len(mcmc_params)):
+#         parameters = mcmc_params[i_chain]["name"].unique().tolist()
+#         chain_length = max(int(len(mcmc_params[0]) / len(parameters)), chain_length)
+#     return chain_length
+
+
+def find_min_chain_length_from_mcmc_tables(mcmc_tables):
+    chain_lengths = [mcmc_tables[i_chain]["run"].tolist()[-1] for i_chain in range(len(mcmc_tables))]
+    return min(chain_lengths)
 
 
 """
@@ -78,24 +83,26 @@ def plot_acceptance_ratio(
         dpi_request=300
 ):
     """
-    Plot the prameter traces for each MCMC run.
+    Plot the progressive acceptance ratio over iterations.
     """
     fig, axis, _, _, _, _ = plotter.get_figure()
     mcmc_df = db.process.append_tables(mcmc_tables)
     chains = mcmc_df["chain"].unique().tolist()
     for chain in chains:
         df = mcmc_df[mcmc_df["chain"] == chain]
-        count = 0
-        total = 0
-        ratios = []
+
+        # Collate acceptances and ratio
+        count, total, ratios = 0, 0, []
         for accept in df["accept"]:
             total += 1
             if accept:
                 count += 1
-
             ratios.append(count / total)
 
+        # Plot
         axis.plot(ratios, alpha=0.8, linewidth=0.7)
+
+        # Add vertical line for burn-in point
         if burn_in > 0:
             axis.axvline(x=burn_in, color=COLOR_THEME[1], linestyle="dotted")
 
@@ -403,10 +410,10 @@ def plot_multiple_posteriors(
     plotter.save_figure(fig, filename=f"all_posteriors", dpi_request=dpi_request)
 
 
-def plot_param_vs_loglike(mcmc_tables, mcmc_params, param_name, axis):
+def plot_param_vs_loglike(mcmc_tables, mcmc_params, param_name, burn_in, axis):
     for mcmc_df, param_df in zip(mcmc_tables, mcmc_params):
         df = param_df.merge(mcmc_df, on=["run", "chain"])
-        mask = (df["accept"] == 1) & (df["name"] == param_name)
+        mask = (df["accept"] == 1) & (df["name"] == param_name) & (df["run"] > burn_in)
         df = df[mask]
         param_values = df["value"]
         loglikelihood_values = [-log(-v) for v in df["loglikelihood"]]
@@ -414,16 +421,17 @@ def plot_param_vs_loglike(mcmc_tables, mcmc_params, param_name, axis):
 
 
 def plot_single_param_loglike(
-    plotter: Plotter,
-    mcmc_tables: List[pd.DataFrame],
-    mcmc_params: List[pd.DataFrame],
-    param_name: str,
+        plotter: Plotter,
+        mcmc_tables: List[pd.DataFrame],
+        mcmc_params: List[pd.DataFrame],
+        burn_in: int,
+        param_name: str,
 ):
     """
     Plots the loglikelihood against parameter values.
     """
     fig, axis, _, _, _, _ = plotter.get_figure()
-    plot_param_vs_loglike(mcmc_tables, mcmc_params, param_name, axis)
+    plot_param_vs_loglike(mcmc_tables, mcmc_params, param_name, burn_in, axis)
     axis.set_xlabel(param_name)
     axis.set_ylabel("-log(-loglikelihood)")
     plotter.save_figure(
@@ -558,6 +566,7 @@ def plot_all_params_vs_loglike(
         plotter: Plotter,
         mcmc_tables: List[pd.DataFrame],
         mcmc_params: List[pd.DataFrame],
+        burn_in: int,
         title_font_size: int,
         label_font_size: int,
         capitalise_first_letter: bool,
@@ -577,7 +586,7 @@ def plot_all_params_vs_loglike(
 
         if i < len(parameters):
             param_name = parameters[i]
-            plot_param_vs_loglike(mcmc_tables, mcmc_params, param_name, axis)
+            plot_param_vs_loglike(mcmc_tables, mcmc_params, param_name, burn_in, axis)
             axis.set_title(
                 get_plot_text_dict(
                     param_name, capitalise_first_letter=capitalise_first_letter

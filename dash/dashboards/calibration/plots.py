@@ -158,10 +158,12 @@ def plot_calibration_fit(
     targets: dict,
 ):
     available_outputs = [o["output_key"] for o in targets.values()]
+    chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
+    burn_in = st.sidebar.slider("Burn in (select 0 for default behaviour of discarding first half)", 0, chain_length, 0)
     chosen_output = st.sidebar.selectbox("Select calibration target", available_outputs)
     derived_output_tables = db.load.load_derived_output_tables(calib_dir_path, column=chosen_output)
     outputs = plots.calibration.plots.sample_outputs_for_calibration_fit(
-        chosen_output, mcmc_tables, derived_output_tables
+        chosen_output, mcmc_tables, derived_output_tables, burn_in=burn_in
     )
     is_logscale = st.sidebar.checkbox("Log scale")
     plots.calibration.plots.plot_calibration_fit(

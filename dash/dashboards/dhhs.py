@@ -51,7 +51,7 @@ def run_dashboard():
     region_df["time"] = (dates - BASE_DATE).dt.days
     region_df["scenario"] = 0
     plots.uncertainty.plots.plot_timeseries_with_uncertainty(
-        plotter, uncertainty_df=region_df, output_name=output, scenario=[0], targets=targets,
+        plotter, uncertainty_df=region_df, output_name=output, scenario_idxs=[0], targets=targets,
     )
 
 

@@ -15,7 +15,7 @@ python -m tasks
 RUN_ID="covid_19/manila/111111111/aaaaaaa"
 RUN_ID="tuberculosis/marshall-islands/111111111/aaaaaaa"
 
-python -m tasks calibrate --run  $RUN_ID --chains 4 --runtime 60 --workers 4
+python -m tasks calibrate --run  $RUN_ID --chains 4 --runtime 120 --workers 4
 ```
 
 

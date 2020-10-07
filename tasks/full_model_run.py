@@ -4,6 +4,7 @@ import logging
 import luigi
 
 from autumn.tool_kit import Timer
+from autumn.tool_kit.params import load_targets
 from autumn.inputs import build_input_database
 from autumn.inputs.database import input_db_path
 from autumn.constants import OUTPUT_DATA_PATH
@@ -11,6 +12,7 @@ from autumn.calibration import run_full_models_for_mcmc
 
 from . import utils
 from . import settings
+from remote.aws.utils import read_run_id
 
 logger = logging.getLogger(__name__)
 
@@ -67,10 +69,10 @@ class FullModelRunTask(utils.ParallelLoggerTask):
         src_db_path = os.path.join(settings.BASE_DIR, self.get_src_db_relpath())
         dest_db_path = self.get_output_db_path()
         msg = f"Running {app_region.app_name} {app_region.region_name} full model with burn-in of {self.burn_in}s"
+        app_name, region_name, _, _ = read_run_id(self.run_id)
+        targets = load_targets(app_name, region_name)
         with Timer(msg):
-            run_full_models_for_mcmc(
-                self.burn_in, src_db_path, dest_db_path, app_region.build_model, app_region.params
-            )
+            run_full_models_for_mcmc(self.burn_in, src_db_path, dest_db_path, app_region)
 
     def get_src_db_relpath(self):
         filename = utils.get_calibration_db_filename(self.chain_id)

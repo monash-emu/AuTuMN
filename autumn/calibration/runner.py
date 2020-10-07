@@ -7,16 +7,15 @@ from autumn.tool_kit.params import update_params
 from autumn.tool_kit.scenarios import Scenario
 from autumn.tool_kit.timer import Timer
 from autumn import db
-
+from autumn.tool_kit.model_register import AppRegion
+from autumn.tool_kit.scenarios import calculate_differential_outputs
 
 META_COLS = ["idx", "Scenario", "loglikelihood", "accept"]
 
 logger = logging.getLogger(__name__)
 
 
-def run_full_models_for_mcmc(
-    burn_in: int, src_db_path: str, dest_db_path: str, build_model, params: dict
-):
+def run_full_models_for_mcmc(burn_in: int, src_db_path: str, dest_db_path: str, app: AppRegion):
     """
     Run the full baseline model and all scenarios for all accepted MCMC runs in src db.
     """
@@ -35,10 +34,10 @@ def run_full_models_for_mcmc(
         param_updates = db.load.load_mcmc_params(dest_db, run_id)
         update_func = lambda ps: update_params(ps, param_updates)
         with Timer("Running model scenarios"):
-            num_scenarios = 1 + len(params["scenarios"].keys())
+            num_scenarios = 1 + len(app.params["scenarios"].keys())
             scenarios = []
             for scenario_idx in range(num_scenarios):
-                scenario = Scenario(build_model, scenario_idx, params)
+                scenario = Scenario(app.build_model, scenario_idx, app.params)
                 scenarios.append(scenario)
 
             # Run the baseline scenario.
@@ -52,6 +51,7 @@ def run_full_models_for_mcmc(
 
         with Timer("Saving model outputs to the database"):
             models = [s.model for s in scenarios]
+            models = calculate_differential_outputs(models, app.targets)
             db.store.store_run_models(
                 models, dest_db_path, run_id=int(run_id), chain_id=int(chain_id)
             )

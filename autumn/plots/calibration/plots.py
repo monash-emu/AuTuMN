@@ -620,7 +620,7 @@ def sample_outputs_for_calibration_fit(
         burn_in
     mcmc_df = mcmc_df[mcmc_df["run"] >= discard_point]
 
-    # Choose runs with probability proprotional to their weights.
+    # Choose runs with probability proportional to their weights.
     weights = mcmc_df["weight"].tolist()
     run_choices = list(zip(mcmc_df["chain"].tolist(), mcmc_df["run"].tolist()))
     num_chosen = 20 * len(mcmc_tables)

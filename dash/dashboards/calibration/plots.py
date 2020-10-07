@@ -189,12 +189,14 @@ def plot_multi_output_fit(
         capitalise_first_letter,
     ) = create_standard_plotting_sidebar()
     is_logscale = st.sidebar.checkbox("Log scale")
+    chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
+    burn_in = st.sidebar.slider("Burn in (select 0 for default behaviour of discarding first half)", 0, chain_length, 0)
 
     outputs = {}
     for output in available_outputs:
         derived_output_tables = db.load.load_derived_output_tables(calib_dir_path, column=output)
         outputs[output] = plots.calibration.plots.sample_outputs_for_calibration_fit(
-            output, mcmc_tables, derived_output_tables
+            output, mcmc_tables, derived_output_tables, burn_in,
         )
     plots.calibration.plots.plot_multi_fit(
         plotter,

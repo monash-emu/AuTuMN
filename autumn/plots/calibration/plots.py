@@ -338,13 +338,12 @@ def plot_burn_in(plotter: Plotter, num_iters: int, burn_in: int):
 def get_posterior(mcmc_params, param_name, burn_in=0):
     vals_df = None
     for table_df in mcmc_params:
-        param_mask = table_df["name"] == param_name
+        param_mask = (table_df["name"] == param_name) & (table_df["run"] > burn_in)
         table_vals = table_df[param_mask].value
-        table_vals_after_burn = table_vals[burn_in:]
         if vals_df is not None:
-            vals_df = vals_df.append(table_vals_after_burn)
+            vals_df = vals_df.append(table_vals)
         else:
-            vals_df = table_vals_after_burn
+            vals_df = table_vals
     return vals_df
 
 

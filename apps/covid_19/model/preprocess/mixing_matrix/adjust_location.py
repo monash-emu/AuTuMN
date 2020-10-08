@@ -31,7 +31,6 @@ class LocationMixingAdjustment(BaseMixingAdjustment):
         google_mobility_locations = mobility.google_mobility_locations
         microdistancing_params = mobility.microdistancing
         smooth_google_data = mobility.smooth_google_data
-        microdistancing_locations = mobility.microdistancing_locations
 
         # Load mobility data
         google_mobility_values, google_mobility_days = get_mobility_data(
@@ -40,6 +39,7 @@ class LocationMixingAdjustment(BaseMixingAdjustment):
         if smooth_google_data:
             for loc in google_mobility_values:
                 google_mobility_values[loc] = apply_moving_average(google_mobility_values[loc], 7)
+
         # Build mixing data timeseries
         mixing = update_mixing_data(
             {k: v.dict() for k, v in mixing.items()},
@@ -47,28 +47,19 @@ class LocationMixingAdjustment(BaseMixingAdjustment):
             google_mobility_values,
             google_mobility_days,
         )
-        # Build the time variant location adjustment functions from mixing timeseries
-        mixing_locations = [loc for loc in LOCATIONS if loc in mixing]
+
+        # Build the time variant location-specific macrodistancing adjustment functions from mixing timeseries
+        macrodistancing_locations = [loc for loc in LOCATIONS if loc in mixing]
         self.loc_adj_funcs = {}
-        for loc_key in mixing_locations:
+        for loc_key in macrodistancing_locations:
             loc_times = mixing[loc_key]["times"]
             loc_vals = mixing[loc_key]["values"]
-            self.loc_adj_funcs[loc_key] = scale_up_function(loc_times, loc_vals, method=4)
+            self.loc_adj_funcs[loc_key] = \
+                scale_up_function(loc_times, loc_vals, method=4)
 
-        # Work out microdistancing function to be applied to all non-household locations
-        if not microdistancing_params:
-            self.microdistancing_function = None
-        elif microdistancing_params.function_type == "tanh":
-            self.microdistancing_function = tanh_based_scaleup(
-                **microdistancing_params.parameters.dict()
-            )
-        elif microdistancing_params.function_type == "empiric":
-            micro_times = microdistancing_params.parameters.times
-            multiplier = microdistancing_params.parameters.max_effect
-            micro_vals = [
-                1.0 - multiplier * value for value in microdistancing_params.parameters.values
-            ]
-            self.microdistancing_function = scale_up_function(micro_times, micro_vals, method=4)
+        # Apply the microdistancing function
+        self.microdistancing_function = \
+            apply_microdistancing(microdistancing_params)
 
         # Load all location-specific mixing info.
         self.matrix_components = {}
@@ -177,6 +168,29 @@ def update_mixing_data(
 
     mixing = {k: {"values": v["values"], "times": v["times"]} for k, v in mixing.items()}
     return mixing
+
+
+def apply_microdistancing(params):
+    """
+    Work out microdistancing function to be applied as a multiplier to some or all of the Prem locations as requested in
+    the microdistancing_locations.
+    """
+
+    if not params:
+        microdistancing_function = None
+    elif params.function_type == "tanh":
+        microdistancing_function = tanh_based_scaleup(
+            **params.parameters.dict()
+        )
+    elif params.function_type == "empiric":
+        micro_times = params.parameters.times
+        multiplier = params.parameters.max_effect
+        micro_vals = [
+            1.0 - multiplier * value for value in params.parameters.values
+        ]
+        microdistancing_function = scale_up_function(micro_times, micro_vals, method=4)
+
+    return microdistancing_function
 
 
 def parse_values(values):

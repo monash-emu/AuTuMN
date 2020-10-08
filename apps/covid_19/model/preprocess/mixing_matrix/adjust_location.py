@@ -29,7 +29,7 @@ class LocationMixingAdjustment(BaseMixingAdjustment):
         mixing = mobility.mixing
         npi_effectiveness_params = mobility.npi_effectiveness
         google_mobility_locations = mobility.google_mobility_locations
-        microdistancing_params = mobility.microdistancing
+        microdistancing_params = mobility.microdistancing.behaviour
         smooth_google_data = mobility.smooth_google_data
 
         # Load mobility data

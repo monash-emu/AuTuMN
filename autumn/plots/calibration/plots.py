@@ -808,6 +808,23 @@ def plot_multi_fit(
     plotter.save_figure(fig, filename=filename, dpi_request=dpi_request)
 
 
+def plot_cdr_curves(
+        plotter: Plotter,
+        mcmc_tables: List[pd.DataFrame],
+        mcmc_params,
+        burn_in: int,
+):
+    fig, axis, _, _, _, _ = plotter.get_figure()
+
+    testing_to_detection_values = []
+    for i_chain in range(len(mcmc_params)):
+        param_mask = mcmc_params[i_chain]["name"] == "testing_to_detection.assumed_cdr_parameter"
+        testing_to_detection_values += mcmc_params[i_chain]["value"][param_mask].tolist()
+    st.write(testing_to_detection_values)
+
+    # plotter.save_figure(fig, filename=f"cdr_curves")
+
+
 def _overwrite_non_accepted_mcmc_runs(mcmc_tables: List[pd.DataFrame], column_name: str):
     """
     Count non-accepted rows in a MCMC trace as the last accepted row.

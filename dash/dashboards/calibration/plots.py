@@ -47,11 +47,11 @@ PLOT_FUNCS["Print MLE parameters"] = print_mle_parameters
 
 
 def plot_acceptance_ratio(
-    plotter: StreamlitPlotter,
-    calib_dir_path: str,
-    mcmc_tables: List[pd.DataFrame],
-    mcmc_params: List[pd.DataFrame],
-    targets: dict,
+        plotter: StreamlitPlotter,
+        calib_dir_path: str,
+        mcmc_tables: List[pd.DataFrame],
+        mcmc_params: List[pd.DataFrame],
+        targets: dict,
 ):
     label_font_size = st.sidebar.slider("Label font size", 1, 15, 10)
     chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
@@ -63,6 +63,19 @@ def plot_acceptance_ratio(
 
 
 PLOT_FUNCS["Acceptance ratio"] = plot_acceptance_ratio
+
+
+def plot_cdr_curves(
+        plotter: StreamlitPlotter,
+        calib_dir_path: str,
+        mcmc_tables: List[pd.DataFrame],
+        mcmc_params: List[pd.DataFrame],
+        targets: dict,
+):
+    plots.calibration.plots.plot_cdr_curves(plotter, mcmc_tables, mcmc_params, 0)
+
+
+PLOT_FUNCS["CDR curves"] = plot_cdr_curves
 
 
 def plot_timeseries_with_uncertainty(

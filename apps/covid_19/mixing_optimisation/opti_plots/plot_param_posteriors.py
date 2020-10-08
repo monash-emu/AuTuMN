@@ -41,11 +41,11 @@ param_info = {
         "name": "hosp. prop. multiplier",
         "range": [0.5, 2.0],
     },
-    "mobility.microdistancing.parameters.c": {
+    "mobility.microdistancing.behaviour.parameters.c": {
         "name": "microdistancing (inflection)",
         "range": [90, 152],
     },
-    "mobility.microdistancing.parameters.sigma": {
+    "mobility.microdistancing.behaviour.parameters.sigma": {
         "name": "microdistancing (final)",
         "range": [0.6, 1.0],
     },

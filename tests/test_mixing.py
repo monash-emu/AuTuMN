@@ -196,7 +196,7 @@ def test_build_dynamic__with_no_changes():
             npi_effectiveness={},
             google_mobility_locations=google_mobility_locations,
             smooth_google_data=smooth_google_data,
-            microdistancing=None,
+            microdistancing={},
             microdistancing_locations=microdistancing_locations,
         ),
     )
@@ -236,7 +236,7 @@ def test_build_dynamic__with_mobility_data(monkeypatch):
             npi_effectiveness={},
             google_mobility_locations=google_mobility_locations,
             smooth_google_data=False,
-            microdistancing=None,
+            microdistancing={},
             microdistancing_locations=microdistancing_locations,
         ),
     )
@@ -292,7 +292,7 @@ def test_build_dynamic__smoke_test():
             npi_effectiveness={},
             google_mobility_locations=google_mobility_locations,
             smooth_google_data=True,
-            microdistancing=None,
+            microdistancing={},
             microdistancing_locations=microdistancing_locations,
         ),
     )

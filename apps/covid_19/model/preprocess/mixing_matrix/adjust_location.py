@@ -59,7 +59,9 @@ class LocationMixingAdjustment(BaseMixingAdjustment):
 
         # Apply the microdistancing function
         self.microdistancing_function = \
-            apply_microdistancing(microdistancing_params)
+            apply_microdistancing(microdistancing_params) if \
+                microdistancing_params else \
+                None
 
         # Load all location-specific mixing info.
         self.matrix_components = {}
@@ -176,22 +178,16 @@ def apply_microdistancing(params):
     the microdistancing_locations.
     """
 
-    if not params:
-        microdistancing_function = None
-    else:
-        if params.behaviour.function_type == "tanh":
-            microdistancing_function = tanh_based_scaleup(
-                **params.behaviour.parameters.dict()
-            )
-        elif params.behaviour.function_type == "empiric":
-            micro_times = params.behaviour.parameters.times
-            multiplier = params.behaviour.parameters.max_effect
+    for microdist_type in params:
+        if params[microdist_type].function_type == "tanh":
+            return tanh_based_scaleup(**params[microdist_type].parameters.dict())
+        elif params[microdist_type].function_type == "empiric":
+            micro_times = params[microdist_type].parameters["times"]
+            multiplier = params[microdist_type].parameters["max_effect"]
             micro_vals = [
-                1.0 - multiplier * value for value in params.behaviour.parameters.values
+                1.0 - multiplier * value for value in params[microdist_type].parameters["values"]
             ]
-            microdistancing_function = scale_up_function(micro_times, micro_vals, method=4)
-
-    return microdistancing_function
+            return scale_up_function(micro_times, micro_vals, method=4)
 
 
 def parse_values(values):

@@ -1,5 +1,6 @@
 # SCENARIO DESCRIPTION: MHS compliance of 30% return
 parent: apps/covid_19/regions/calabarzon/params/default.yml
+
 time:
   start: 279
 
@@ -10,4 +11,4 @@ mobility:
         times:
           - 288
         values:
-          - 0.3`
+          - 0.3

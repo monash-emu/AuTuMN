@@ -90,12 +90,16 @@ class MicroDistancingFunc(BaseModel):
     parameters: Union[EmpiricMicrodistancingParams, TanhMicrodistancingParams]
 
 
+class MicroDistancingFuncList(BaseModel):
+    behaviour: MicroDistancingFunc
+
+
 class Mobility(BaseModel):
     """Google mobility params"""
 
     region: Optional[str]  # None/null means default to parent country
     mixing: Dict[str, MixingLocation]
-    microdistancing: Optional[MicroDistancingFunc]
+    microdistancing: Optional[MicroDistancingFuncList]
     microdistancing_locations: List[str]
     smooth_google_data: bool
     npi_effectiveness: Dict[str, float]

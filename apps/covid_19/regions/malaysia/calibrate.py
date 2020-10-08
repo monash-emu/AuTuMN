@@ -49,7 +49,7 @@ PAR_PRIORS += [
     },
     # Microdistancing
     {
-        "param_name": "mobility.microdistancing.parameters.max_effect",
+        "param_name": "mobility.microdistancing.behaviour.parameters.max_effect",
         "distribution": "uniform",
         "distri_params": [0.3, 0.9],
     },

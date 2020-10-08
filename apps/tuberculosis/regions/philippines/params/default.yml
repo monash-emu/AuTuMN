@@ -6,3 +6,13 @@ iso3: "PHL"
 time_variant_tsr: # should always be > 0
   1995: 0.5
   2017.: 0.5
+
+calculated_outputs:
+  [
+    "prevalence_infectious",
+    "percentage_latent",
+    "population_size",
+    "notifications",
+    "mortality",
+    "incidence",
+  ]

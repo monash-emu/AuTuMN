@@ -150,6 +150,9 @@ def plot_outputs_single(
 def plot_multi_targets(
     plotter: Plotter, scenario: Scenario, output_configs: list, is_logscale=False
 ):
+    if len(output_configs) == 0:
+        return
+
     max_n_col = 2
     n_panels = len(output_configs)
     n_cols = min(max_n_col, n_panels)

@@ -156,16 +156,16 @@ def plot_model_multi_targets(
 ):
     # Assume a COVID model
     scenario = Scenario(app.build_model, idx=0, params=app.params)
-    with st.spinner("Running model..."):
-        scenario.run()
+
     is_logscale = st.sidebar.checkbox("Log scale")
+
     target_name_lookup = {t["title"]: t for t in app.targets.values()}
-    titles = [
-        "Population size",
-        "TB prevalence (/100,000)",
-        "Notifications",
-    ]  # FIXME: Could come from a multi-selector
+    title_options = sorted(list(target_name_lookup.keys()))
+    titles = st.multiselect("Select outputs", title_options)
     target_list = [target_name_lookup[title] for title in titles]
+    if len(target_list) > 0:
+        with st.spinner("Running model..."):
+            scenario.run()
     plots.model.plots.plot_multi_targets(plotter, scenario, target_list, is_logscale)
 
 

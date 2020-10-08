@@ -17,7 +17,7 @@ from autumn.inputs import (
     get_country_mixing_matrix,
     get_mobility_data,
 )
-
+from scripts.read_who_covid_data import read_who_data_from_csv
 
 @pytest.mark.github_only
 def test_build_input_database():
@@ -197,6 +197,12 @@ def test_downsample_quantity__with_big_end_bucket():
     expected_new_amounts = [2.5, 6.5]
     new_amounts = downsample_quantity(old_amounts, old_breakpoints, new_breakpoints)
     assert round_list(new_amounts) == round_list(expected_new_amounts)
+
+
+def test_read_who_covid_data():
+    times, values = read_who_data_from_csv()
+    assert len(times) == len(values)
+    assert max(times) > 0
 
 
 def round_list(items):

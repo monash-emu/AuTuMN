@@ -213,6 +213,24 @@ def calculate_cum_deaths(
     return derived_outputs["infection_deaths"][: (time_idx + 1)].sum()
 
 
+def make_agespecific_cum_deaths_func(agegroup):
+    def calculate_cum_deaths_by_age(
+        time_idx: int,
+        model: StratifiedModel,
+        compartment_values: np.ndarray,
+        derived_outputs: Dict[str, np.ndarray],
+    ):
+        starts_with = f"infection_deathsXagegroup_{agegroup}X"
+        deaths_by_age = 0
+        for derived_output_name in list(derived_outputs.keys()):
+            if derived_output_name.startswith(starts_with):
+                deaths_by_age += derived_outputs[derived_output_name][: (time_idx + 1)].sum()
+
+        return deaths_by_age
+
+    return calculate_cum_deaths_by_age
+
+
 def calculate_cum_years_of_life_lost(
     time_idx: int,
     model: StratifiedModel,

@@ -615,6 +615,7 @@ def build_model(params: dict) -> StratifiedModel:
             func_outputs[f"proportion_seropositiveX{age_key}"] = outputs.make_age_specific_seroprevalence_output(
                 agegroup
             )
+            func_outputs[f"accum_deathsX{age_key}"] = outputs.make_agespecific_cum_deaths_func(agegroup)
 
     model.add_function_derived_outputs(func_outputs)
     return model

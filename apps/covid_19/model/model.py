@@ -16,7 +16,7 @@ from autumn.tool_kit.utils import (
 )
 
 from apps.covid_19.constants import Compartment, ClinicalStratum
-from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS, Region
+from apps.covid_19.mixing_optimisation.constants import OPTI_ISO3S, Region
 from apps.covid_19.model import outputs, preprocess
 from apps.covid_19.model.importation import get_all_vic_notifications
 from apps.covid_19.model.parameters import Parameters
@@ -608,8 +608,13 @@ def build_model(params: dict) -> StratifiedModel:
     }
 
     # Derived outputs for the optimization project.
-    if params.mobility.region in OPTI_REGIONS:
+    if params.country.iso3 in OPTI_ISO3S:
         func_outputs["accum_years_of_life_lost"] = outputs.calculate_cum_years_of_life_lost
+        for agegroup in agegroup_strata:
+            age_key = f"agegroup_{agegroup}"
+            func_outputs[f"proportion_seropositiveX{age_key}"] = outputs.make_age_specific_seroprevalence_output(
+                agegroup
+            )
 
     model.add_function_derived_outputs(func_outputs)
     return model

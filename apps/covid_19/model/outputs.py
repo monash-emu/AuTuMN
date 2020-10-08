@@ -145,6 +145,25 @@ def calculate_proportion_seropositive(
     return n_seropositive / compartment_values.sum()
 
 
+def make_age_specific_seroprevalence_output(agegroup):
+    def calculate_proportion_seropositive_by_age(
+        time_idx: int,
+        model: StratifiedModel,
+        compartment_values: np.ndarray,
+        derived_outputs: Dict[str, np.ndarray],
+    ):
+        n_seropositive = 0
+        agegroup_population = 0
+        for i, comp in enumerate(model.compartment_names):
+            if comp.has_stratum("agegroup", agegroup):
+                agegroup_population += compartment_values[i]
+                if comp.has_name(CompartmentType.RECOVERED):
+                    n_seropositive += compartment_values[i]
+        return n_seropositive / agegroup_population
+
+    return calculate_proportion_seropositive_by_age
+
+
 def get_calculate_years_of_life_lost(life_expectancy_by_agegroup):
     def calculate_years_of_life_lost(
         time_idx: int,

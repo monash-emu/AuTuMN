@@ -29,7 +29,7 @@ class LocationMixingAdjustment(BaseMixingAdjustment):
         mixing = mobility.mixing
         npi_effectiveness_params = mobility.npi_effectiveness
         google_mobility_locations = mobility.google_mobility_locations
-        microdistancing_params = mobility.microdistancing.behaviour if mobility.microdistancing else None
+        microdistancing_params = mobility.microdistancing
         smooth_google_data = mobility.smooth_google_data
 
         # Load mobility data
@@ -178,17 +178,18 @@ def apply_microdistancing(params):
 
     if not params:
         microdistancing_function = None
-    elif params.function_type == "tanh":
-        microdistancing_function = tanh_based_scaleup(
-            **params.parameters.dict()
-        )
-    elif params.function_type == "empiric":
-        micro_times = params.parameters.times
-        multiplier = params.parameters.max_effect
-        micro_vals = [
-            1.0 - multiplier * value for value in params.parameters.values
-        ]
-        microdistancing_function = scale_up_function(micro_times, micro_vals, method=4)
+    else:
+        if params.behaviour.function_type == "tanh":
+            microdistancing_function = tanh_based_scaleup(
+                **params.behaviour.parameters.dict()
+            )
+        elif params.behaviour.function_type == "empiric":
+            micro_times = params.behaviour.parameters.times
+            multiplier = params.behaviour.parameters.max_effect
+            micro_vals = [
+                1.0 - multiplier * value for value in params.behaviour.parameters.values
+            ]
+            microdistancing_function = scale_up_function(micro_times, micro_vals, method=4)
 
     return microdistancing_function
 

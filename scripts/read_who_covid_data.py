@@ -5,7 +5,7 @@ import json
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
 
 base_dir = os.path.dirname(os.path.abspath(os.curdir))
-WHO_DATA_FILE = os.path.join(base_dir + "\\data\\who_covid\\WHO-COVID-19-global-data.csv")
+WHO_DATA_FILE = os.path.join(base_dir, "data", "who_covid", "WHO-COVID-19-global-data.csv")
 who_country_mapping = {"united-kingdom": "The United Kingdom"}
 
 

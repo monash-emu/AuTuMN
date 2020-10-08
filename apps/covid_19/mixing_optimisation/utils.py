@@ -9,50 +9,9 @@ from autumn.curve import scale_up_function, tanh_based_scaleup
 import numpy as np
 import copy
 from autumn.db import Database
-import datetime
 
-WHO_DATA_FILE = os.path.join("who_covid", f"WHO-COVID-19-global-data.csv")
 HOSPITAL_DATA_DIR = os.path.join("hospitalisation_data")
 country_mapping = {"united-kingdom": "The United Kingdom"}
-
-
-def read_who_data_from_csv(
-    variable="confirmed", country="Australia", data_start_time=61, data_end_time=152
-):
-    """
-    Read WHO data from csv files
-    :param variable: one of "confirmed", "deaths"
-    :param country: country
-    """
-
-    #FIXME
-    return [50., 51., 52., 53., 54., 55., 56., 57.], [1.] * 8
-
-    if country in country_mapping:
-        country_name = country_mapping[country]
-    else:
-        country_name = country.title()
-    path = WHO_DATA_FILE
-    data = pd.read_csv(path)
-    times = list(data[data.iloc[:, 2] == country_name].iloc[:, 0])
-
-    date_ref = datetime.date(2019, 12, 31)
-    for i, time_string in enumerate(times):
-        components = time_string.split("-")
-        time_date = datetime.date(int(components[0]), int(components[1]), int(components[2]))
-        delta = time_date - date_ref
-        times[i] = delta.days
-
-    start_index = times.index(data_start_time)
-    end_index = times.index(data_end_time)
-
-    times = times[start_index : end_index + 1]
-    if variable == "confirmed":
-        values = list(data[data.iloc[:, 2] == country_name].iloc[:, 4])[start_index : end_index + 1]
-    elif variable == "deaths":
-        values = list(data[data.iloc[:, 2] == country_name].iloc[:, 6])[start_index : end_index + 1]
-
-    return times, values
 
 
 def read_hospital_data_from_csv(variable="hospital_occupancy", country="belgium", data_start_time=61, data_end_time=152):

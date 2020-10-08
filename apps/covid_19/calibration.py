@@ -163,7 +163,7 @@ def add_standard_philippines_params(params, region):
         {
             "param_name": "testing_to_detection.assumed_cdr_parameter",
             "distribution": "uniform",
-            "distri_params": [0.02, 0.40],
+            "distri_params": [0.02, 0.15],
         },
         {
             "param_name": "time.start",
@@ -262,7 +262,7 @@ def add_standard_victoria_params(params, region):
         {
             "param_name": "testing_to_detection.assumed_cdr_parameter",
             "distribution": "uniform",
-            "distri_params": [0.08, 0.3],
+            "distri_params": [0.2, 0.5],
         },
         {
             "param_name": "importation.movement_prop",

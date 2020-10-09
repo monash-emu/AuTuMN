@@ -100,12 +100,12 @@ def get_prior_distributions_for_opti():
         },
         # Micro-distancing
         {
-            "param_name": "mobility.microdistancing.parameters.c",
+            "param_name": "mobility.microdistancing.behaviour.parameters.c",
             "distribution": "uniform",
             "distri_params": [90, 130],
         },
         {
-            "param_name": "mobility.microdistancing.parameters.sigma",
+            "param_name": "mobility.microdistancing.behaviour.parameters.sigma",
             "distribution": "uniform",
             "distri_params": [0.4, 0.75],
         },

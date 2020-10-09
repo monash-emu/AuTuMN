@@ -87,7 +87,7 @@ mobility:
   #  home:
   #    - residential
   smooth_google_data: false # whether to apply a 7-day moving average
-  microdistancing: null
+  microdistancing: {}
   microdistancing_locations:
     - other_locations
     - school

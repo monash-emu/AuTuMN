@@ -6,8 +6,9 @@ time:
 
 mobility:
   microdistancing:
-    parameters:
-      times:
-        - 288
-      values:
-        - 0.5
+    behaviour:
+      parameters:
+        times:
+          - 288
+        values:
+          - 0.5

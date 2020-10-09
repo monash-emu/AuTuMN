@@ -171,7 +171,7 @@ def add_standard_philippines_params(params, region):
             "distri_params": [40.0, 60.0],
         },
         {
-            "param_name": "mobility.microdistancing.parameters.max_effect",
+            "param_name": "mobility.microdistancing.behaviour.parameters.max_effect",
             "distribution": "uniform",
             "distri_params": [0.25, 0.75],
         },
@@ -288,7 +288,7 @@ def add_standard_victoria_params(params, region):
             "trunc_range": [3.0, np.inf],
         },
         {
-            "param_name": "mobility.microdistancing.parameters.max_effect",
+            "param_name": "mobility.microdistancing.behaviour.parameters.max_effect",
             "distribution": "beta",
             "distri_mean": 0.8,
             "distri_ci": [0.55, 0.9],

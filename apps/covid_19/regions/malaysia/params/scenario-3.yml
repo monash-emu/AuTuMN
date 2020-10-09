@@ -21,8 +21,9 @@ mobility:
         - 1.
 
   microdistancing:
-    parameters:
-      times:
-        - 258
-      values:
-        - 0.
+    behaviour:
+      parameters:
+        times:
+          - 258
+        values:
+          - 0.

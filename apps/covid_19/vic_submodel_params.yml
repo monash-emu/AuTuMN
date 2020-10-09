@@ -56,54 +56,55 @@ mobility:
     - school
     - work
   microdistancing:
-    function_type: empiric
-    parameters:
-      max_effect: 0.65
-      times:
-        # Note model currently starts at the start-time specified again (19th May for the first round of DHHS projections)
-        - 137 # Coming in at stage 3 from 29th March, but beginning to release as May progresses
-        - 138 # 12th May, increase in visitor allowance (partial release from stage 3)
-        - 151
-        - 152 # 26th May, entertainment/leisure partial reopening (partial release from stage 3)
-        - 173
-        - 174 # 22nd June, visitors reduced
-        - 181
-        - 182 # 30th June, postcode lockdowns (ignored)
-        - 185
-        - 186 # 4th July, two more postcodes locked down (ignored)
-        - 191
-        - 192 # 9th July, stage 3 re-enforced
-        - 193 # 10th July, face coverings encouraged (ignored)
-        - 202
-        - 204 # 23rd July, face coverings mandated (Chu et al. RD -0.143 (-0.159, -0.107), which is a different quantity)
-        - 215
-        - 216 # 2nd August, stage 4 metro Melbourne, stage 3 elsewhere (note that metro clusters span both)
-        - 256
-        - 257 # 13th September, expanded social interaction
-        - 270
-        - 271 # 27th September, social bubbles, phased return of some workforces and education
-      values:
-        - 0.4
-        - 0.15 # 12th May
-        - 0.15
-        - 0.1 # 26th May
-        - 0.1
-        - 0.15 # 22nd June
-        - 0.15
-        - 0.15 # 30th June
-        - 0.15
-        - 0.15 # 4th July
-        - 0.15
-        - 0.65 # 9th July
-        - 0.65 # 10th July
-        - 0.65
-        - 0.65 # 23rd July
-        - 0.8
-        - 1. # 2nd August
-        - 0.9
-        - 0.9 # 13th September
-        - 0.8
-        - 0.7 # 27th September
+    behaviour:
+      function_type: empiric
+      parameters:
+        max_effect: 0.65
+        times:
+          # Note model currently starts at the start-time specified again (19th May for the first round of DHHS projections)
+          - 137 # Coming in at stage 3 from 29th March, but beginning to release as May progresses
+          - 138 # 12th May, increase in visitor allowance (partial release from stage 3)
+          - 151
+          - 152 # 26th May, entertainment/leisure partial reopening (partial release from stage 3)
+          - 173
+          - 174 # 22nd June, visitors reduced
+          - 181
+          - 182 # 30th June, postcode lockdowns (ignored)
+          - 185
+          - 186 # 4th July, two more postcodes locked down (ignored)
+          - 191
+          - 192 # 9th July, stage 3 re-enforced
+          - 193 # 10th July, face coverings encouraged (ignored)
+          - 202
+          - 204 # 23rd July, face coverings mandated (Chu et al. RD -0.143 (-0.159, -0.107), which is a different quantity)
+          - 215
+          - 216 # 2nd August, stage 4 metro Melbourne, stage 3 elsewhere (note that metro clusters span both)
+          - 256
+          - 257 # 13th September, expanded social interaction
+          - 270
+          - 271 # 27th September, social bubbles, phased return of some workforces and education
+        values:
+          - 0.4
+          - 0.15 # 12th May
+          - 0.15
+          - 0.1 # 26th May
+          - 0.1
+          - 0.15 # 22nd June
+          - 0.15
+          - 0.15 # 30th June
+          - 0.15
+          - 0.15 # 4th July
+          - 0.15
+          - 0.65 # 9th July
+          - 0.65 # 10th July
+          - 0.65
+          - 0.65 # 23rd July
+          - 0.8
+          - 1. # 2nd August
+          - 0.9
+          - 0.9 # 13th September
+          - 0.8
+          - 0.7 # 27th September
 
 importation:
   movement_prop: 0.3

@@ -63,12 +63,12 @@ PRIORS = [
     {
         "param_name": "time_variant_tb_screening_rate.end_value",
         "distribution": "uniform",
-        "distri_params": [.5, .7]
+        "distri_params": [.4, .55]
     },
     {
         "param_name": "user_defined_stratifications.location.adjustments.detection_rate.ebeye",
         "distribution": "uniform",
-        "distri_params": [1.0, 1.5],  # [.5, 1.5]
+        "distri_params": [1.3, 2.],  # [.5, 1.5]
     },
     {
         "param_name": "user_defined_stratifications.location.adjustments.detection_rate.other",

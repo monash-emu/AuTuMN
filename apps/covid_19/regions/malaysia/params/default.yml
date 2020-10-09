@@ -17,16 +17,6 @@ testing_to_detection:
     
 mobility:
   microdistancing:
-    behaviour_adjuster:
-      function_type: empiric
-      parameters:
-        max_effect: 1.
-        times:
-          - 200.
-          - 201.
-        values:
-          - 1.
-          - 0.
     behaviour:
       function_type: empiric
       parameters:

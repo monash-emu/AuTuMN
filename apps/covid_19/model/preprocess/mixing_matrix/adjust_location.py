@@ -180,7 +180,7 @@ def apply_microdistancing(params):
 
     # Collate the components to the microdistancing function
     microdist_component_funcs = []
-    for microdist_type in [param for param in params if "_adjuster" not in params]:
+    for microdist_type in [param for param in params if "_adjuster" not in param]:
         adjustment_string = f"{microdist_type}_adjuster"
         unadjusted_microdist_func = \
             get_microdist_func_component(params, microdist_type)

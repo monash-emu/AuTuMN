@@ -53,6 +53,11 @@ PAR_PRIORS += [
         "distribution": "uniform",
         "distri_params": [0.3, 0.9],
     },
+    {
+        "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.sigma",
+        "distribution": "uniform",
+        "distri_params": [0., 0.5],
+    },
     # Health system-related
     {
         "param_name": "clinical_stratification.props.hospital.multiplier",

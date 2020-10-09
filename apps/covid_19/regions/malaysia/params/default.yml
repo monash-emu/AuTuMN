@@ -24,17 +24,16 @@ mobility:
         times:
           - 77
           - 78
-          - 133
-          - 134
-          - 161
-          - 162
         values:
           - 0.
           - 1. # MCO starts (18th March)
-          - 1.
-          - 0.9 # CMCO starts (12th May)
-          - 0.9
-          - 0.8 # RMCO starts (10th June)
+    behaviour_adjuster:
+      function_type: tanh
+      parameters:
+        max_effect: 1.
+        b: -0.05
+        c: 275.
+        sigma: 0.6
   mixing:
     school:
       append: false

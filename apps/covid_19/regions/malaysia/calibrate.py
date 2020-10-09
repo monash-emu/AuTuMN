@@ -58,6 +58,11 @@ PAR_PRIORS += [
         "distribution": "uniform",
         "distri_params": [0., 0.5],
     },
+    {
+        "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.c",
+        "distribution": "uniform",
+        "distri_params": [153., 275.],  # 1st June to 1st October
+    },
     # Health system-related
     {
         "param_name": "clinical_stratification.props.hospital.multiplier",

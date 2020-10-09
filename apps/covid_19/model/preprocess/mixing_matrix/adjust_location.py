@@ -182,10 +182,10 @@ def apply_microdistancing(params):
         if params[microdist_type].function_type == "tanh":
             return tanh_based_scaleup(**params[microdist_type].parameters.dict())
         elif params[microdist_type].function_type == "empiric":
-            micro_times = params[microdist_type].parameters["times"]
-            multiplier = params[microdist_type].parameters["max_effect"]
+            micro_times = params[microdist_type].parameters.times
+            multiplier = params[microdist_type].parameters.max_effect
             micro_vals = [
-                1.0 - multiplier * value for value in params[microdist_type].parameters["values"]
+                1.0 - multiplier * value for value in params[microdist_type].parameters.values
             ]
             return scale_up_function(micro_times, micro_vals, method=4)
 

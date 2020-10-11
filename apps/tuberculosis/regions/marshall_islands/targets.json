@@ -107,7 +107,7 @@
     "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "rel_diff_cumulative_deaths": {
-    "title": "Reduction in cumulative deaths(%)",
+    "title": "Reduction in cumulative deaths (%)",
     "output_key": "rel_diff_cumulative_deaths",
     "times": [],
     "values": [],

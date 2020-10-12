@@ -18,7 +18,7 @@ PLOT_FUNCS = {}
 def write_mcmc_centiles(
         mcmc_params,
         burn_in,
-        decimal_places,
+        sig_figs,
         centiles,
 ):
     """
@@ -35,7 +35,7 @@ def write_mcmc_centiles(
     for param_name in parameters:
         param_values = get_posterior(mcmc_params, param_name, burn_in)
         centile_values = np.percentile(param_values, centiles)
-        rounded_centile_values = [round(i_value, decimal_places) for i_value in centile_values]
+        rounded_centile_values = [round_sig_fig(i_value, sig_figs) for i_value in centile_values]
         params_df.loc[param_name] = rounded_centile_values
 
     # Display
@@ -53,6 +53,15 @@ def create_downloadable_csv(data_frame_to_download, filename):
     text = "click here to download CSV containing the following data"
     html_str = f'<a download="{filename}.csv" href="data:file/csv;name={filename}.csv;base64,{b64_str}">{text}</a>'
     st.markdown(html_str, unsafe_allow_html=True)
+
+
+# FIXME: This is too general a function, shouldn't go in here
+def round_sig_fig(number: float, significant_figures: int):
+    """
+    Returns the submitted number rounded to the requested number of significant figures.
+    """
+    decimal_places = significant_figures - (int(np.floor(np.log10(abs(number)))) + 1)
+    return round(number, decimal_places)
 
 
 def create_standard_plotting_sidebar():
@@ -379,7 +388,7 @@ def plot_all_posteriors(
     chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
     burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
     num_bins = st.sidebar.slider("Number of bins", 1, 50, 16)
-    decimal_places = st.sidebar.slider("Decimal places", 0, 6, 3)
+    sig_figs = st.sidebar.slider("Significant figures", 0, 6, 3)
     plots.calibration.plots.plot_multiple_posteriors(
         plotter,
         mcmc_params,
@@ -391,7 +400,7 @@ def plot_all_posteriors(
         dpi_request,
     )
 
-    write_mcmc_centiles(mcmc_params, burn_in, decimal_places, [25, 50, 97.5])
+    write_mcmc_centiles(mcmc_params, burn_in, sig_figs, [2.5, 50, 97.5])
 
 
 PLOT_FUNCS["All posteriors"] = plot_all_posteriors
@@ -493,3 +502,4 @@ def plot_loglikelihood_surface(
 
 
 PLOT_FUNCS["Loglikelihood 3d scatter"] = plot_loglikelihood_surface
+

@@ -59,6 +59,9 @@ def get_plot_text_dict(param_string, capitalise_first_letter=False):
     return text
 
 
+def get_epi_params(mcmc_params):
+    return [param for param in mcmc_params[0].loc[:, "name"].unique().tolist() if "dispersion_param" not in param]
+
 # def find_max_burn_in(mcmc_params):
 #     chain_length = 0
 #     for i_chain in range(len(mcmc_params)):
@@ -382,9 +385,7 @@ def plot_multiple_posteriors(
     """
 
     # Except not the dispersion parameters - only the epidemiological ones
-    parameters = \
-        [param for param in mcmc_params[0].loc[:, "name"].unique().tolist() if
-         "dispersion_param" not in param]
+    parameters = get_epi_params(mcmc_params)
     fig, axes, _, n_rows, n_cols, indices = plotter.get_figure(len(parameters))
 
     for i in range(n_rows * n_cols):

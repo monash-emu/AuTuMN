@@ -1,15 +1,41 @@
 from typing import List
 
+import numpy as np
 import pandas as pd
 import streamlit as st
 
 from autumn.plots.plotter import StreamlitPlotter
-from autumn.plots.calibration.plots import find_min_chain_length_from_mcmc_tables
+from autumn.plots.calibration.plots import find_min_chain_length_from_mcmc_tables, get_posterior, get_epi_params
 from autumn import db, plots
 
 from dash import selectors
 
 PLOT_FUNCS = {}
+
+
+# FIXME: This is not in the right place - need to ask Matt where this should go
+def write_mcmc_centiles(
+        mcmc_params,
+        burn_in,
+        decimal_places,
+        centiles,
+):
+
+    # Get parameter names
+    parameters = get_epi_params(mcmc_params)
+
+    # Create empty dataframe
+    params_df = pd.DataFrame(index=parameters, columns=centiles)
+
+    # Populate with data
+    for param_name in parameters:
+        param_values = get_posterior(mcmc_params, param_name, burn_in)
+        centile_values = np.percentile(param_values, centiles)
+        rounded_centile_values = [round(i_value, decimal_places) for i_value in centile_values]
+        params_df.loc[param_name] = rounded_centile_values
+
+    # Display
+    st.write(params_df)
 
 
 def create_standard_plotting_sidebar():
@@ -336,6 +362,7 @@ def plot_all_posteriors(
     chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
     burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
     num_bins = st.sidebar.slider("Number of bins", 1, 50, 16)
+    decimal_places = st.sidebar.slider("Decimal places", 0, 6, 3)
     plots.calibration.plots.plot_multiple_posteriors(
         plotter,
         mcmc_params,
@@ -346,6 +373,8 @@ def plot_all_posteriors(
         capitalise_first_letter,
         dpi_request,
     )
+
+    write_mcmc_centiles(mcmc_params, burn_in, decimal_places, [0.25, 0.5, 0.975])
 
 
 PLOT_FUNCS["All posteriors"] = plot_all_posteriors

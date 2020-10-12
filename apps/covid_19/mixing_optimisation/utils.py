@@ -69,7 +69,7 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "case_detection.end_value",
             "distribution": "uniform",
-            "distri_params": [0.10, 0.50],
+            "distri_params": [0.10, 0.80],
         },
         {
             "param_name": "clinical_stratification.icu_prop",
@@ -111,49 +111,6 @@ def get_prior_distributions_for_opti():
         },
     ]
     return prior_list
-
-
-def get_target_outputs_for_opti(
-    country, data_start_time=22, data_end_time=152, source="who", update_jh_data=False
-):
-    """
-    Automatically creates the calibration target list for a country in the context of the opti problem
-    :param country: country name
-    :param data_start_time: the requested starting point for the extracted data
-    :param data_end_time: the requested end point for the extracted data
-    :param source: 'who' or 'johns_hopkins'
-    :return:
-    """
-    assert source in ["who"]
-
-    output_mapping = {"confirmed": "notifications", "deaths": "infection_deaths"}
-
-    target_outputs = []
-    for variable in ["confirmed"]:  #  , "deaths"]:
-        if source == "who":
-            times, data = read_who_data_from_csv(variable, country, data_start_time, data_end_time)
-
-        # Ignore negative values found in the dataset
-        censored_data_indices = []
-        for i, d in enumerate(data):
-            if d < 0:
-                censored_data_indices.append(i)
-        data = [d for i, d in enumerate(data) if i not in censored_data_indices]
-        times = [t for i, t in enumerate(times) if i not in censored_data_indices]
-
-        target_outputs.append(
-            {
-                "output_key": output_mapping[variable],
-                "years": times,
-                "values": data,
-                "loglikelihood_distri": "normal",
-            }
-        )
-
-    hospital_targets = get_hospital_targets_for_opti(country, data_start_time, data_end_time)
-    target_outputs += hospital_targets
-
-    return target_outputs
 
 
 def get_hospital_targets_for_opti(country, data_start_time=22, data_end_time=152):

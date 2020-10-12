@@ -48,6 +48,7 @@ PLOT_TEXT_DICT = {
     "infect_death_rate_dict.smear_negative": "TB mortality (smear-neg)",
     "self_recovery_rate_dict.smear_positive": "Self cure rate (smear-pos)",
     "self_recovery_rate_dict.smear_negative": "Self cure rate (smear-neg)",
+    "proportion_seropositive": "seropositive proportion",
 }
 
 
@@ -57,6 +58,9 @@ def get_plot_text_dict(param_string, capitalise_first_letter=False):
         text = text[0].upper() + text[1:]
     return text
 
+
+def get_epi_params(mcmc_params):
+    return [param for param in mcmc_params[0].loc[:, "name"].unique().tolist() if "dispersion_param" not in param]
 
 # def find_max_burn_in(mcmc_params):
 #     chain_length = 0
@@ -381,9 +385,7 @@ def plot_multiple_posteriors(
     """
 
     # Except not the dispersion parameters - only the epidemiological ones
-    parameters = \
-        [param for param in mcmc_params[0].loc[:, "name"].unique().tolist() if
-         "dispersion_param" not in param]
+    parameters = get_epi_params(mcmc_params)
     fig, axes, _, n_rows, n_cols, indices = plotter.get_figure(len(parameters))
 
     for i in range(n_rows * n_cols):
@@ -791,18 +793,22 @@ def plot_multi_fit(
     fig, axes, _, n_rows, n_cols, indices = \
         plotter.get_figure(len(output_names), share_xaxis=True)
 
-    for i_output, output in enumerate(output_names):
-        axis = plot_calibration(
-            axes[indices[i_output][0], indices[i_output][1]], output, outputs[output], targets, is_logscale
-        )
-        axis.set_title(
-            get_plot_text_dict(
-                output, capitalise_first_letter=capitalise_first_letter
-            ), fontsize=title_font_size
-        )
-        pyplot.setp(axis.get_yticklabels(), fontsize=label_font_size)
-        pyplot.setp(axis.get_xticklabels(), fontsize=label_font_size)
-        filename = f"calibration-fit-{output}"
+    for i_output in range(n_rows * n_cols):
+        if i_output < len(output_names):
+            output = output_names[i_output]
+            axis = plot_calibration(
+                axes[indices[i_output][0], indices[i_output][1]], output, outputs[output], targets, is_logscale
+            )
+            axis.set_title(
+                get_plot_text_dict(
+                    output, capitalise_first_letter=capitalise_first_letter
+                ), fontsize=title_font_size
+            )
+            pyplot.setp(axis.get_yticklabels(), fontsize=label_font_size)
+            pyplot.setp(axis.get_xticklabels(), fontsize=label_font_size)
+            filename = f"calibration-fit-{output}"
+        else:
+            axes[indices[i_output][0], indices[i_output][1]].axis("off")
 
     fig.tight_layout()
     plotter.save_figure(fig, filename=filename, dpi_request=dpi_request)

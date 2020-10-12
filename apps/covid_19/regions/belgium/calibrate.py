@@ -35,6 +35,8 @@ for target in TARGET_OUTPUTS:
 
 PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS)
 
+TARGET_OUTPUTS = base.remove_early_points_to_prevent_crash(TARGET_OUTPUTS, PAR_PRIORS)
+
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
     base.run_calibration_chain(

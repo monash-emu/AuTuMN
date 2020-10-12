@@ -137,6 +137,26 @@ def add_standard_dispersion_parameter(params, target_outputs, output_name):
     return params
 
 
+def remove_early_points_to_prevent_crash(target_outputs, priors):
+    """
+    Trim the beginning of the time series when model start time is varied during the MCMC
+    """
+    idx = None
+    for i, p in enumerate(priors):
+        if p["param_name"] == "time.start":
+            idx = i
+            break
+
+    if idx is not None:
+        latest_start_time = priors[idx]["distri_params"][1]
+        for target in target_outputs:
+            first_idx_to_keep = next(x[0] for x in enumerate(target["years"]) if x[1] > latest_start_time)
+            target["years"] = target["years"][first_idx_to_keep:]
+            target["values"] = target["values"][first_idx_to_keep:]
+
+    return target_outputs
+
+
 """
 Application-specific methods
 

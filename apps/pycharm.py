@@ -6,6 +6,7 @@ import os
 from autumn.constants import Region
 from apps import covid_19, sir_example, tuberculosis
 
+from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
 os.chdir("..")  # Make repo root the current directory
 
 # Run a COVID model manually.
@@ -25,3 +26,9 @@ app_region.run_model(run_scenarios=False)
 # # Run a calibration
 # app_region = covid_19.app.get_region(Region.BARWON_SOUTH_WEST)
 # app_region.calibrate_model(max_seconds=30, run_id=1, num_chains=1)
+
+
+# Used by Romain, please do not delete
+# for region in OPTI_REGIONS:
+#     app_region = covid_19.app.get_region(region)
+#     app_region.calibrate_model(max_seconds=5, run_id=1, num_chains=1)

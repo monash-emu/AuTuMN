@@ -21,6 +21,9 @@ def write_mcmc_centiles(
         decimal_places,
         centiles,
 ):
+    """
+    Write a table of parameter centiles from the MCMC chain outputs.
+    """
 
     # Get parameter names
     parameters = get_epi_params(mcmc_params)
@@ -36,14 +39,17 @@ def write_mcmc_centiles(
         params_df.loc[param_name] = rounded_centile_values
 
     # Display
-    create_downloadable_csv(params_df)
+    create_downloadable_csv(params_df, "posterior_centiles")
     st.write(params_df)
 
 
-def create_downloadable_csv(data_frame_to_download):
+# FIXME: This should possibly go into a file up one level in the directory structure
+def create_downloadable_csv(data_frame_to_download, filename):
+    """
+    Create a link for a downloadable CSV file available in the streamlit interface.
+    """
     csv_bytes = data_frame_to_download.to_csv(index=False).encode()
     b64_str = base64.b64encode(csv_bytes).decode()
-    filename = "posterior_centiles"
     text = "click here to download CSV containing the following data"
     html_str = f'<a download="{filename}.csv" href="data:file/csv;name={filename}.csv;base64,{b64_str}">{text}</a>'
     st.markdown(html_str, unsafe_allow_html=True)
@@ -385,7 +391,7 @@ def plot_all_posteriors(
         dpi_request,
     )
 
-    write_mcmc_centiles(mcmc_params, burn_in, decimal_places, [0.25, 0.5, 0.975])
+    write_mcmc_centiles(mcmc_params, burn_in, decimal_places, [25, 50, 97.5])
 
 
 PLOT_FUNCS["All posteriors"] = plot_all_posteriors

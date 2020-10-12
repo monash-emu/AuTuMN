@@ -3,6 +3,8 @@ import os
 import datetime
 import json
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
+from apps.covid_19.mixing_optimisation.utils import get_weekly_summed_targets
+
 
 base_dir = os.path.dirname(os.path.abspath(os.curdir))
 WHO_DATA_FILE = os.path.join(base_dir, "data", "who_covid", "WHO-COVID-19-global-data.csv")
@@ -50,7 +52,7 @@ def read_who_data_from_csv(
 
 
 def drop_who_data_to_targets(
-    country="australia", data_start_time=0, data_end_time=365
+    country="australia", data_start_time=0, data_end_time=365, weekly_average=True
 ):
     data = {}
     output_name = {
@@ -61,6 +63,8 @@ def drop_who_data_to_targets(
         times, values = read_who_data_from_csv(
             variable, country, data_start_time, data_end_time
         )
+        if weekly_average:
+            times, values = get_weekly_summed_targets(times, values)
         data[variable] = {'times': times, 'values': values}
 
     region = country if country != "united-kingdom" else "united_kingdom"

@@ -6,6 +6,12 @@ from autumn.tool_kit.params import load_params
 from autumn.calibration.utils import ignore_calibration_target_before_date
 from autumn.constants import Region
 
+from apps.covid_19.mixing_optimisation.utils import (
+    get_prior_distributions_for_opti,
+    add_dispersion_param_prior_for_gaussian,
+)
+from autumn.tool_kit.params import load_targets
+
 from .model import build_model
 
 N_ITERS = 100000
@@ -379,3 +385,36 @@ def add_standard_victoria_targets(target_outputs, targets, region):
 
 def get_trapezoidal_weights(target_times):
     return list(range(len(target_times), len(target_times) * 2))
+
+
+"""
+European countries for the optimisation project
+"""
+
+
+def get_targets_and_priors_for_opti(country):
+    targets = load_targets("covid_19", country)
+    notifications = targets["notifications"]
+    deaths = targets["infection_deaths"]
+
+    par_priors = get_prior_distributions_for_opti()
+
+    target_outputs = [
+        {
+            "output_key": "notifications",
+            "years": notifications["times"],
+            "values": notifications["values"],
+            "loglikelihood_distri": "normal",
+        },
+        {
+            "output_key": "infection_deaths",
+            "years": deaths["times"],
+            "values": deaths["values"],
+            "loglikelihood_distri": "normal",
+        },
+    ]
+
+    par_priors = add_dispersion_param_prior_for_gaussian(par_priors, target_outputs)
+    target_outputs = remove_early_points_to_prevent_crash(target_outputs, par_priors)
+
+    return target_outputs, par_priors

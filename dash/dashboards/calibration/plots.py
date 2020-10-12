@@ -9,6 +9,7 @@ from autumn.plots.calibration.plots import find_min_chain_length_from_mcmc_table
 from autumn import db, plots
 
 from dash import selectors
+import base64
 
 PLOT_FUNCS = {}
 
@@ -35,7 +36,17 @@ def write_mcmc_centiles(
         params_df.loc[param_name] = rounded_centile_values
 
     # Display
+    create_downloadable_csv(params_df)
     st.write(params_df)
+
+
+def create_downloadable_csv(data_frame_to_download):
+    csv_bytes = data_frame_to_download.to_csv(index=False).encode()
+    b64_str = base64.b64encode(csv_bytes).decode()
+    filename = "posterior_centiles"
+    text = "click here to download CSV containing the following data"
+    html_str = f'<a download="{filename}.csv" href="data:file/csv;name={filename}.csv;base64,{b64_str}">{text}</a>'
+    st.markdown(html_str, unsafe_allow_html=True)
 
 
 def create_standard_plotting_sidebar():

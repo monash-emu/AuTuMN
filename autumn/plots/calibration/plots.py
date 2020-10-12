@@ -48,6 +48,7 @@ PLOT_TEXT_DICT = {
     "infect_death_rate_dict.smear_negative": "TB mortality (smear-neg)",
     "self_recovery_rate_dict.smear_positive": "Self cure rate (smear-pos)",
     "self_recovery_rate_dict.smear_negative": "Self cure rate (smear-neg)",
+    "proportion_seropositive": "seropositive proportion",
 }
 
 

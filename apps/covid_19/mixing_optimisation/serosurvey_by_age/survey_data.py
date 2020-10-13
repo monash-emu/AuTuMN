@@ -53,7 +53,7 @@ def read_uk_data():
     """
     survey = [
         {
-            "time_range": [],
+            "time_range": [172, 195],  # 20 June to 13 July 2020
             "measures": [
                 {"age_range": [18, 25], "central": 7.9, "ci": [7.3, 8.5]},
                 {"age_range": [25, 35], "central": 7.8, "ci": [7.4, 8.3]},

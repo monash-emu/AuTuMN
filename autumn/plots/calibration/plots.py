@@ -19,9 +19,6 @@ import plotly.express as px
 from autumn import db
 from autumn.calibration.utils import calculate_prior, raise_error_unsupported_prior
 from autumn.plots.plotter import Plotter, COLOR_THEME
-from autumn import inputs
-from apps.covid_19.model.preprocess.testing import find_cdr_function_from_test_data
-from autumn.tool_kit.scenarios import get_model_times_from_inputs
 
 logger = logging.getLogger(__name__)
 
@@ -786,6 +783,31 @@ def plot_calibration_fit(
     plotter.save_figure(fig, filename=filename, title_text=title_text)
 
 
+def plot_cdr_curves(
+        plotter: Plotter,
+        times,
+        detected_proportion,
+):
+    # Get basic plotting structures
+    fig, axis, _, _, _, _ = plotter.get_figure()
+
+    # Plot outputs
+    for i_curve in range(len(detected_proportion)):
+        axis.plot(
+            times,
+            [detected_proportion[i_curve](i_time) for i_time in times],
+            alpha=0.3,
+            color="k",
+            linewidth=2.
+        )
+
+    # Tidy
+    axis.set_xlabel("time")
+    axis.set_ylabel("case detection rate (proportion)")
+    axis.set_ylim([0., 1.])
+    plotter.save_figure(fig, filename=f"cdr_curves")
+
+
 def plot_multi_fit(
         plotter: Plotter, output_names: list, outputs: dict, targets, is_logscale=False,
         title_font_size=8, label_font_size=8, dpi_request=300, capitalise_first_letter=False,
@@ -809,49 +831,6 @@ def plot_multi_fit(
 
     fig.tight_layout()
     plotter.save_figure(fig, filename=filename, dpi_request=dpi_request)
-
-
-def plot_cdr_curves(
-        plotter: Plotter,
-        mcmc_tables: List[pd.DataFrame],
-        mcmc_params,
-        burn_in: int,
-):
-    fig, axis, _, _, _, _ = plotter.get_figure()
-
-    # Manually input some parameters - need to change this
-    assumed_tests_parameter = 1.0e-4
-    iso3 = "PHL"
-    testing_year = 2020
-    times = get_model_times_from_inputs(round(40.), 365., 1.)
-    agegroup_strata = [str(s) for s in range(0, 80, 5)]
-
-    # Collate parameters
-    testing_to_detection_values = []
-    for i_chain in range(len(mcmc_params)):
-        param_mask = \
-            mcmc_params[i_chain]["name"] == "testing_to_detection.assumed_cdr_parameter"
-        testing_to_detection_values += \
-            mcmc_params[i_chain]["value"][param_mask].tolist()
-
-    # Get CDR function
-    testing_pops = inputs.get_population_by_agegroup(
-        agegroup_strata, iso3, None, year=testing_year
-    )
-    for assumed_cdr_parameter in testing_to_detection_values:
-        detected_proportion = find_cdr_function_from_test_data(
-            assumed_tests_parameter,
-            assumed_cdr_parameter,
-            iso3,
-            testing_pops,
-        )
-
-        # Plot outputs
-        axis.plot(times, [detected_proportion(i_time) for i_time in times], alpha=0.3, color="k", linewidth=2.)
-        axis.set_xlabel("time")
-        axis.set_ylabel("case detection rate (proportion)")
-        axis.set_ylim([0., 1.])
-    plotter.save_figure(fig, filename=f"cdr_curves")
 
 
 def _overwrite_non_accepted_mcmc_runs(mcmc_tables: List[pd.DataFrame], column_name: str):

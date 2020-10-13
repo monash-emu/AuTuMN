@@ -46,6 +46,30 @@ def reformat_belgium_agegroup(string):
         return [age_low, age_high]
 
 
+def read_uk_data():
+    """
+    From Ward et al. reporting on REACT2 study
+    :return:
+    """
+    survey = [
+        {
+            "time_range": [],
+            "measures": [
+                {"age_range": [18, 25], "central": 7.9, "ci": [7.3, 8.5]},
+                {"age_range": [25, 35], "central": 7.8, "ci": [7.4, 8.3]},
+                {"age_range": [35, 45], "central": 6.1, "ci": [5.7, 6.6]},
+                {"age_range": [45, 55], "central": 6.4, "ci": [6.0, 6.9]},
+                {"age_range": [55, 65], "central": 5.9, "ci": [5.5, 6.4]},
+                {"age_range": [65, 75], "central": 3.2, "ci": [2.8, 3.6]},
+                {"age_range": [75], "central": 3.3, "ci": [2.9, 3.8]},
+            ]
+        }
+    ]
+
+    return survey
+
+
 serosurvey_data_perc = {
-    "belgium": read_belgium_data()
+    "belgium": read_belgium_data(),
+    "united-kingdom": read_uk_data(),
 }

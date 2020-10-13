@@ -1,7 +1,10 @@
-# from apps.covid_19.mixing_optimisation import mixing_opti as opti
+from unittest import mock
+
+import pytest
+
 from autumn.constants import Region
 from summer.model import StratifiedModel
-import pytest
+from apps.covid_19.mixing_optimisation import mixing_opti as opti
 
 AVAILABLE_MODES = [
     "by_age",
@@ -14,15 +17,31 @@ DECISION_VARS = {
 }
 
 
-@pytest.mark.xfail
-@pytest.mark.mixing_optimisation
+@pytest.mark.local_only
+@pytest.mark.parametrize("region", Region.MIXING_OPTI_REGIONS)
+@mock.patch("apps.covid_19.mixing_optimisation.mixing_opti.PHASE_2_START_TIME", 10)
+def test_run_root_models_partial(region):
+    """
+    Smoke test: ensure we can build and run each root model with nothing crashing.
+    """
+    model = opti.run_root_model(region, {})
+    assert type(model) is StratifiedModel
+    assert model.outputs is not None
+
+
 @pytest.mark.github_only
-def test_run_root_model_for_uk():
-    root_model = opti.run_root_model(Region.UNITED_KINGDOM, {})
-    assert type(root_model) is StratifiedModel
+@pytest.mark.mixing_optimisation
+@pytest.mark.parametrize("region", Region.MIXING_OPTI_REGIONS)
+def test_run_root_models_full(region):
+    """
+    Smoke test: ensure we can build and run each root model with nothing crashing.
+    """
+    model = opti.run_root_model(region, {})
+    assert type(model) is StratifiedModel
+    assert model.outputs is not None
 
 
-@pytest.mark.xfail
+@pytest.mark.skip
 def test_build_params_for_phases_2_and_3():
     for mode in AVAILABLE_MODES:
         for config in AVAILABLE_CONFIGS:
@@ -32,7 +51,7 @@ def test_build_params_for_phases_2_and_3():
             assert "mixing" in scenario_params and "end_time" in scenario_params
 
 
-@pytest.mark.xfail
+@pytest.mark.skip
 @pytest.mark.mixing_optimisation
 @pytest.mark.github_only
 def test_full_optimisation_iteration_for_uk():

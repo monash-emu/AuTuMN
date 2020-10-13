@@ -80,7 +80,23 @@ class Region:
         LODDON_MALLEE,
         GRAMPIANS,
         MARSHALL_ISLANDS,
-        SABAH
+        SABAH,
+    ]
+
+    MIXING_OPTI_REGIONS = [
+        UNITED_KINGDOM,
+        BELGIUM,
+        ITALY,
+        SWEDEN,
+        FRANCE,
+        SPAIN,
+    ]
+
+    PHILIPPINES_REGIONS = [
+        PHILIPPINES,
+        MANILA,
+        CALABARZON,
+        CENTRAL_VISAYAS,
     ]
 
     VICTORIA_RURAL = [
@@ -107,4 +123,3 @@ class Region:
     @staticmethod
     def to_name(filename: str):
         return filename.replace("_", "-").lower()
-

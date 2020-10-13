@@ -1,4 +1,6 @@
-﻿The configurations will be all combinations of the following options:
+﻿# COVID-19 Social Mixing Optimization Project
+
+The configurations will be all combinations of the following options:
 - 6 countries
   belgium, united-kingdom, spain, italy, sweden, france.
 

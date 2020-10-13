@@ -36,4 +36,4 @@ def run_dashboard():
     plotter = StreamlitPlotter(targets)
     plot_type = st.sidebar.selectbox("Select plot type", list(PLOT_FUNCS.keys()))
     plot_func = PLOT_FUNCS[plot_type]
-    plot_func(plotter, calib_dirpath, mcmc_tables, mcmc_params, targets)
+    plot_func(plotter, calib_dirpath, mcmc_tables, mcmc_params, targets, app_name, region_name)

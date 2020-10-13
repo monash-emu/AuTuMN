@@ -1,17 +1,18 @@
 import pandas as pd
+import json
 
 # format:
-serosurvey_data = {
-    "belgium":
-        [
-            {
-                "time_range": [],
-                "measures": [
-                    {"age_range": [0, 5], "central": 0., "ci": []}
-                ]
-            }
-        ],
-}
+# serosurvey_data = {
+#     "belgium":
+#         [
+#             {
+#                 "time_range": [],
+#                 "measures": [
+#                     {"age_range": [0, 5], "central": 0., "ci": []}
+#                 ]
+#             }
+#         ],
+# }
 
 
 def read_belgium_data():
@@ -43,7 +44,7 @@ def reformat_belgium_agegroup(string):
     else:
         age_low = string.split(",")[0].split("[")[1]
         age_high = string.split(",")[1][:-1]
-        return [age_low, age_high]
+        return [int(age_low), int(age_high)]
 
 
 def read_uk_data():
@@ -69,7 +70,41 @@ def read_uk_data():
     return survey
 
 
+def read_spain_data():
+    df = pd.read_csv('spain_data.csv')
+    survey = {
+        "time_range": [118, 132],  # 27Apr - 11May
+        "measures": []
+    }
+    for index, row in df.iterrows():
+        val = row["perc_immu"]
+        measure = {
+            "age_range": reformat_spain_agegroup(row["age"]),
+            "central": float(val.split(" (")[0]),
+            "ci": [
+                float(val.split("&&")[0].split("(")[1]),
+                float(val.split("&&")[1].split(")")[0])
+            ]
+        }
+        survey["measures"].append(measure)
+
+    return [survey]
+
+
+def reformat_spain_agegroup(string):
+    if string == "90":
+        return [90]
+    elif string == "0":
+        return [0, 1]
+    else:
+        return [int(string.split("&&")[0]), int(string.split("&&")[1]) + 1]
+
+
 serosurvey_data_perc = {
     "belgium": read_belgium_data(),
     "united-kingdom": read_uk_data(),
+    "spain": read_spain_data(),
 }
+
+with open('serosurvey_data.json', 'w') as json_file:
+    json.dump(serosurvey_data_perc, json_file)

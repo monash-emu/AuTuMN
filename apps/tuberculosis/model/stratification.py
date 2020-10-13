@@ -79,7 +79,7 @@ def stratify_by_age(model, params, compartments):
         if multiplier < 1.:
             name = 'contact_rate_' + agegroup
             bcg_susceptibility_multilier_dict[agegroup] = name
-            model.time_variants[name] = make_bcg_multiplier_func(bcg_coverage_func, multiplier)
+            model.time_variants[name] = make_bcg_multiplier_func(bcg_coverage_func, multiplier, agegroup)
             model.parameters[name] = name
     flow_adjustments.update(
         {"contact_rate": bcg_susceptibility_multilier_dict}
@@ -276,9 +276,9 @@ def calculate_age_specific_infectiousness(age_breakpoints, age_infectiousness_sw
     return infectiousness_by_agegroup
 
 
-def make_bcg_multiplier_func(bcg_coverage_func, multiplier):
+def make_bcg_multiplier_func(bcg_coverage_func, multiplier, agegroup):
     def bcg_multiplier_func(t):
-                return 1. - bcg_coverage_func(t) / 100. * (1. - multiplier)
+        return 1. - bcg_coverage_func(t - float(agegroup)) / 100. * (1. - multiplier)
     return bcg_multiplier_func
 
 

@@ -52,6 +52,11 @@ def get_prior_distributions_for_opti():
             "distri_params": [4, 10],
         },
         {
+            "param_name": "infection_fatality.multiplier",
+            "distribution": "uniform",
+            "distri_params": [.8, 1.2],
+        },
+        {
             "param_name": "case_detection.start_value",
             "distribution": "uniform",
             "distri_params": [0.0, 0.10],
@@ -64,50 +69,56 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "case_detection.max_change_time",
             "distribution": "uniform",
-            "distri_params": [70.0, 110.0],
+            "distri_params": [70.0, 180.0],
         },
         {
             "param_name": "case_detection.end_value",
             "distribution": "uniform",
             "distri_params": [0.10, 0.80],
         },
-        {
-            "param_name": "clinical_stratification.icu_prop",
-            "distribution": "uniform",
-            "distri_params": [0.15, 0.20],
-        },
+        # {
+        #     "param_name": "clinical_stratification.icu_prop",
+        #     "distribution": "uniform",
+        #     "distri_params": [0.15, 0.20],
+        # },
         # vary hospital durations
-        {
-            "param_name": "sojourn.compartment_periods.hospital_late",
-            "distribution": "uniform",
-            "distri_params": [17.7, 20.4],
-        },
-        {
-            "param_name": "sojourn.compartment_periods.icu_late",
-            "distribution": "uniform",
-            "distri_params": [9.0, 13.0],
-        },
+        # {
+        #     "param_name": "sojourn.compartment_periods.hospital_late",
+        #     "distribution": "uniform",
+        #     "distri_params": [17.7, 20.4],
+        # },
+        # {
+        #     "param_name": "sojourn.compartment_periods.icu_late",
+        #     "distribution": "uniform",
+        #     "distri_params": [9.0, 13.0],
+        # },
         # vary symptomatic and hospitalised proportions
-        {
-            "param_name": "clinical_stratification.props.symptomatic.multiplier",
-            "distribution": "uniform",
-            "distri_params": [0.75, 1.25],
-        },
-        {
-            "param_name": "clinical_stratification.props.hospital.multiplier",
-            "distribution": "uniform",
-            "distri_params": [0.75, 1.25],
-        },
+        # {
+        #     "param_name": "clinical_stratification.props.symptomatic.multiplier",
+        #     "distribution": "uniform",
+        #     "distri_params": [0.75, 1.25],
+        # },
+        # {
+        #     "param_name": "clinical_stratification.props.hospital.multiplier",
+        #     "distribution": "uniform",
+        #     "distri_params": [0.75, 1.25],
+        # },
         # Micro-distancing
         {
             "param_name": "mobility.microdistancing.behaviour.parameters.c",
             "distribution": "uniform",
-            "distri_params": [90, 130],
+            "distri_params": [80, 120],
         },
         {
             "param_name": "mobility.microdistancing.behaviour.parameters.upper_asymptote",
             "distribution": "uniform",
             "distri_params": [.25, .75],
+        },
+        # Seasonal forcing
+        {
+            "param_name": "seasonal_force",
+            "distribution": "uniform",
+            "distri_params": [-0.3, 0.],
         },
     ]
     return prior_list

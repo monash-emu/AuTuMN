@@ -7,7 +7,7 @@ import streamlit as st
 from autumn.plots.plotter import StreamlitPlotter
 from autumn.plots.calibration.plots import find_min_chain_length_from_mcmc_tables, get_posterior, get_epi_params
 from autumn import db, plots
-from dash.utils import create_downloadable_csv, round_sig_fig, create_standard_plotting_sidebar, create_xrange_selector
+from dash.utils import create_downloadable_csv, round_sig_fig
 from dash import selectors
 
 PLOT_FUNCS = {}
@@ -102,7 +102,7 @@ def plot_timeseries_with_uncertainty(
 
     x_min = round(min(uncertainty_df["time"]))
     x_max = round(max(uncertainty_df["time"]))
-    x_low, x_up = create_xrange_selector(x_min, x_max)
+    x_low, x_up = selectors.create_xrange_selector(x_min, x_max)
 
     available_scenarios = uncertainty_df["scenario"].unique()
     selected_scenarios = st.multiselect("Select scenarios", available_scenarios)
@@ -147,7 +147,7 @@ def plot_multiple_timeseries_with_uncertainty(
 
     x_min = round(min(uncertainty_df['time']))
     x_max = round(max(uncertainty_df['time']))
-    x_low, x_up = create_xrange_selector(x_min, x_max)
+    x_low, x_up = selectors.create_xrange_selector(x_min, x_max)
 
     available_scenarios = uncertainty_df['scenario'].unique()
     selected_scenarios = st.multiselect("Select scenarios", available_scenarios)
@@ -198,7 +198,7 @@ def plot_multi_output_fit(
         label_font_size,
         dpi_request,
         capitalise_first_letter,
-    ) = create_standard_plotting_sidebar()
+    ) = selectors.create_standard_plotting_sidebar()
     is_logscale = st.sidebar.checkbox("Log scale")
     chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
     burn_in = st.sidebar.slider("Burn in (select 0 for default behaviour of discarding first half)", 0, chain_length, 0)
@@ -254,7 +254,7 @@ def plot_all_param_traces(
         label_font_size,
         dpi_request,
         capitalise_first_letter,
-    ) = create_standard_plotting_sidebar()
+    ) = selectors.create_standard_plotting_sidebar()
     chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
     burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
     plots.calibration.plots.plot_multiple_param_traces(
@@ -295,7 +295,7 @@ def plot_loglike_vs_all_params(
         label_font_size,
         dpi_request,
         capitalise_first_letter,
-    ) = create_standard_plotting_sidebar()
+    ) = selectors.create_standard_plotting_sidebar()
     chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
     burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
     plots.calibration.plots.plot_all_params_vs_loglike(
@@ -343,7 +343,7 @@ def plot_all_posteriors(
         label_font_size,
         dpi_request,
         capitalise_first_letter,
-    ) = create_standard_plotting_sidebar()
+    ) = selectors.create_standard_plotting_sidebar()
     chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
     burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
     num_bins = st.sidebar.slider("Number of bins", 1, 50, 16)

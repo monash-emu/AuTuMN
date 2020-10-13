@@ -1,8 +1,6 @@
-from importlib import import_module
-
 import streamlit as st
 import pandas as pd
-from autumn import db, plots
+from autumn import plots
 from autumn.constants import Region
 from autumn.plots.plotter import StreamlitPlotter
 from apps import covid_19
@@ -31,27 +29,31 @@ def run_dashboard():
         targets = app_region.targets
     else:
         targets = {}
+        for region in Region.VICTORIA_SUBREGIONS:
+            app_region = covid_19.app.get_region(region)
+            region_targets = app_region.targets
+            for key, target in region_targets.items():
+                if key in targets:
+                    targets[key]["values"] = [
+                        a + b for a, b in zip(targets[key]["values"], target["values"])
+                    ]
+                else:
+                    targets[key] = target
 
     plotter = StreamlitPlotter(targets)
 
     outputs = region_df["type"].unique().tolist()
     output = st.selectbox("Select output", outputs)
-    target = {
-        "output_key": output,
-        "times": [],
-        "values": [],
-        "quantiles": [0.01, 0.025, 0.25, 0.5, 0.75, 0.975, 0.99],
-    }
-    for t in targets.values():
-        if t["output_key"] == output:
-            target = t
-            break
 
     dates = pd.to_datetime(region_df["time"], infer_datetime_format=True)
     region_df["time"] = (dates - BASE_DATE).dt.days
     region_df["scenario"] = 0
     plots.uncertainty.plots.plot_timeseries_with_uncertainty(
-        plotter, uncertainty_df=region_df, output_name=output, scenario_idxs=[0], targets=targets,
+        plotter,
+        uncertainty_df=region_df,
+        output_name=output,
+        scenario_idxs=[0],
+        targets=targets,
     )
 
 

@@ -9,50 +9,9 @@ from autumn.curve import scale_up_function, tanh_based_scaleup
 import numpy as np
 import copy
 from autumn.db import Database
-import datetime
 
-WHO_DATA_FILE = os.path.join("who_covid", f"WHO-COVID-19-global-data.csv")
 HOSPITAL_DATA_DIR = os.path.join("hospitalisation_data")
 country_mapping = {"united-kingdom": "The United Kingdom"}
-
-
-def read_who_data_from_csv(
-    variable="confirmed", country="Australia", data_start_time=61, data_end_time=152
-):
-    """
-    Read WHO data from csv files
-    :param variable: one of "confirmed", "deaths"
-    :param country: country
-    """
-
-    #FIXME
-    return [50., 51., 52., 53., 54., 55., 56., 57.], [1.] * 8
-
-    if country in country_mapping:
-        country_name = country_mapping[country]
-    else:
-        country_name = country.title()
-    path = WHO_DATA_FILE
-    data = pd.read_csv(path)
-    times = list(data[data.iloc[:, 2] == country_name].iloc[:, 0])
-
-    date_ref = datetime.date(2019, 12, 31)
-    for i, time_string in enumerate(times):
-        components = time_string.split("-")
-        time_date = datetime.date(int(components[0]), int(components[1]), int(components[2]))
-        delta = time_date - date_ref
-        times[i] = delta.days
-
-    start_index = times.index(data_start_time)
-    end_index = times.index(data_end_time)
-
-    times = times[start_index : end_index + 1]
-    if variable == "confirmed":
-        values = list(data[data.iloc[:, 2] == country_name].iloc[:, 4])[start_index : end_index + 1]
-    elif variable == "deaths":
-        values = list(data[data.iloc[:, 2] == country_name].iloc[:, 6])[start_index : end_index + 1]
-
-    return times, values
 
 
 def read_hospital_data_from_csv(variable="hospital_occupancy", country="belgium", data_start_time=61, data_end_time=152):
@@ -110,7 +69,7 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "case_detection.end_value",
             "distribution": "uniform",
-            "distri_params": [0.10, 0.50],
+            "distri_params": [0.10, 0.80],
         },
         {
             "param_name": "clinical_stratification.icu_prop",
@@ -141,60 +100,17 @@ def get_prior_distributions_for_opti():
         },
         # Micro-distancing
         {
-            "param_name": "mobility.microdistancing.parameters.c",
+            "param_name": "mobility.microdistancing.behaviour.parameters.c",
             "distribution": "uniform",
             "distri_params": [90, 130],
         },
         {
-            "param_name": "mobility.microdistancing.parameters.sigma",
+            "param_name": "mobility.microdistancing.behaviour.parameters.sigma",
             "distribution": "uniform",
             "distri_params": [0.4, 0.75],
         },
     ]
     return prior_list
-
-
-def get_target_outputs_for_opti(
-    country, data_start_time=22, data_end_time=152, source="who", update_jh_data=False
-):
-    """
-    Automatically creates the calibration target list for a country in the context of the opti problem
-    :param country: country name
-    :param data_start_time: the requested starting point for the extracted data
-    :param data_end_time: the requested end point for the extracted data
-    :param source: 'who' or 'johns_hopkins'
-    :return:
-    """
-    assert source in ["who"]
-
-    output_mapping = {"confirmed": "notifications", "deaths": "infection_deaths"}
-
-    target_outputs = []
-    for variable in ["confirmed"]:  #  , "deaths"]:
-        if source == "who":
-            times, data = read_who_data_from_csv(variable, country, data_start_time, data_end_time)
-
-        # Ignore negative values found in the dataset
-        censored_data_indices = []
-        for i, d in enumerate(data):
-            if d < 0:
-                censored_data_indices.append(i)
-        data = [d for i, d in enumerate(data) if i not in censored_data_indices]
-        times = [t for i, t in enumerate(times) if i not in censored_data_indices]
-
-        target_outputs.append(
-            {
-                "output_key": output_mapping[variable],
-                "years": times,
-                "values": data,
-                "loglikelihood_distri": "normal",
-            }
-        )
-
-    hospital_targets = get_hospital_targets_for_opti(country, data_start_time, data_end_time)
-    target_outputs += hospital_targets
-
-    return target_outputs
 
 
 def get_hospital_targets_for_opti(country, data_start_time=22, data_end_time=152):

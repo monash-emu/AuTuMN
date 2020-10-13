@@ -71,8 +71,9 @@ mobility:
       - transit_stations
   smooth_google_data: true
   microdistancing:
-    function_type: tanh
-    parameters:
-      b: -0.05
-      c: 100.
-      sigma: 0.6
+    behaviour:
+      function_type: tanh
+      parameters:
+        b: -0.05
+        c: 100.
+        sigma: 0.6

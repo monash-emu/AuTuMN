@@ -145,6 +145,25 @@ def calculate_proportion_seropositive(
     return n_seropositive / compartment_values.sum()
 
 
+def make_age_specific_seroprevalence_output(agegroup):
+    def calculate_proportion_seropositive_by_age(
+        time_idx: int,
+        model: StratifiedModel,
+        compartment_values: np.ndarray,
+        derived_outputs: Dict[str, np.ndarray],
+    ):
+        n_seropositive = 0
+        agegroup_population = 0
+        for i, comp in enumerate(model.compartment_names):
+            if comp.has_stratum("agegroup", agegroup):
+                agegroup_population += compartment_values[i]
+                if comp.has_name(CompartmentType.RECOVERED):
+                    n_seropositive += compartment_values[i]
+        return n_seropositive / agegroup_population
+
+    return calculate_proportion_seropositive_by_age
+
+
 def get_calculate_years_of_life_lost(life_expectancy_by_agegroup):
     def calculate_years_of_life_lost(
         time_idx: int,
@@ -192,6 +211,24 @@ def calculate_cum_deaths(
     Cumulative deaths, used for minimize deaths optimization.
     """
     return derived_outputs["infection_deaths"][: (time_idx + 1)].sum()
+
+
+def make_agespecific_cum_deaths_func(agegroup):
+    def calculate_cum_deaths_by_age(
+        time_idx: int,
+        model: StratifiedModel,
+        compartment_values: np.ndarray,
+        derived_outputs: Dict[str, np.ndarray],
+    ):
+        starts_with = f"infection_deathsXagegroup_{agegroup}X"
+        deaths_by_age = 0
+        for derived_output_name in list(derived_outputs.keys()):
+            if derived_output_name.startswith(starts_with):
+                deaths_by_age += derived_outputs[derived_output_name][: (time_idx + 1)].sum()
+
+        return deaths_by_age
+
+    return calculate_cum_deaths_by_age
 
 
 def calculate_cum_years_of_life_lost(

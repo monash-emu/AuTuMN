@@ -17,23 +17,23 @@ testing_to_detection:
     
 mobility:
   microdistancing:
-    function_type: empiric
-    parameters:
-      max_effect: 0.6
-      times:
-        - 77
-        - 78
-        - 133
-        - 134
-        - 161
-        - 162
-      values:
-        - 0.
-        - 1. # MCO starts (18th March)
-        - 1.
-        - 0.9 # CMCO starts (12th May)
-        - 0.9
-        - 0.8 # RMCO starts (10th June)
+    behaviour:
+      function_type: empiric
+      parameters:
+        max_effect: 0.6
+        times:
+          - 77
+          - 78
+        values:
+          - 0.
+          - 1. # MCO starts (18th March)
+    behaviour_adjuster:
+      function_type: tanh
+      parameters:
+        max_effect: 1.
+        b: -0.05
+        c: 275.
+        sigma: 0.6
   mixing:
     school:
       append: false
@@ -239,6 +239,13 @@ importation:
     - 276
     - 277
     - 278
+    - 279
+    - 280
+    - 281
+    - 282
+    - 283
+    - 284
+    - 285
     values:
     - 72.0
     - 25.0
@@ -399,3 +406,10 @@ importation:
     - 0.0
     - 0.0
     - 1.0
+    - 3.0
+    - 3.0
+    - 3.0
+    - 4.0
+    - 2.0
+    - 2.0
+    - 8.0

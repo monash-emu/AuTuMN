@@ -6,6 +6,12 @@ from autumn.tool_kit.params import load_params
 from autumn.calibration.utils import ignore_calibration_target_before_date
 from autumn.constants import Region
 
+from apps.covid_19.mixing_optimisation.utils import (
+    get_prior_distributions_for_opti,
+    add_dispersion_param_prior_for_gaussian,
+)
+from autumn.tool_kit.params import load_targets
+
 from .model import build_model
 
 N_ITERS = 100000
@@ -137,6 +143,26 @@ def add_standard_dispersion_parameter(params, target_outputs, output_name):
     return params
 
 
+def remove_early_points_to_prevent_crash(target_outputs, priors):
+    """
+    Trim the beginning of the time series when model start time is varied during the MCMC
+    """
+    idx = None
+    for i, p in enumerate(priors):
+        if p["param_name"] == "time.start":
+            idx = i
+            break
+
+    if idx is not None:
+        latest_start_time = priors[idx]["distri_params"][1]
+        for target in target_outputs:
+            first_idx_to_keep = next(x[0] for x in enumerate(target["years"]) if x[1] > latest_start_time)
+            target["years"] = target["years"][first_idx_to_keep:]
+            target["values"] = target["values"][first_idx_to_keep:]
+
+    return target_outputs
+
+
 """
 Application-specific methods
 
@@ -163,7 +189,7 @@ def add_standard_philippines_params(params, region):
         {
             "param_name": "testing_to_detection.assumed_cdr_parameter",
             "distribution": "uniform",
-            "distri_params": [0.02, 0.40],
+            "distri_params": [0.02, 0.15],
         },
         {
             "param_name": "time.start",
@@ -171,7 +197,7 @@ def add_standard_philippines_params(params, region):
             "distri_params": [40.0, 60.0],
         },
         {
-            "param_name": "mobility.microdistancing.parameters.max_effect",
+            "param_name": "mobility.microdistancing.behaviour.parameters.max_effect",
             "distribution": "uniform",
             "distri_params": [0.25, 0.75],
         },
@@ -262,7 +288,7 @@ def add_standard_victoria_params(params, region):
         {
             "param_name": "testing_to_detection.assumed_cdr_parameter",
             "distribution": "uniform",
-            "distri_params": [0.08, 0.3],
+            "distri_params": [0.2, 0.5],
         },
         {
             "param_name": "importation.movement_prop",
@@ -288,7 +314,7 @@ def add_standard_victoria_params(params, region):
             "trunc_range": [3.0, np.inf],
         },
         {
-            "param_name": "mobility.microdistancing.parameters.max_effect",
+            "param_name": "mobility.microdistancing.behaviour.parameters.max_effect",
             "distribution": "beta",
             "distri_mean": 0.8,
             "distri_ci": [0.55, 0.9],
@@ -359,3 +385,36 @@ def add_standard_victoria_targets(target_outputs, targets, region):
 
 def get_trapezoidal_weights(target_times):
     return list(range(len(target_times), len(target_times) * 2))
+
+
+"""
+European countries for the optimisation project
+"""
+
+
+def get_targets_and_priors_for_opti(country):
+    targets = load_targets("covid_19", country)
+    notifications = targets["notifications"]
+    deaths = targets["infection_deaths"]
+
+    par_priors = get_prior_distributions_for_opti()
+
+    target_outputs = [
+        {
+            "output_key": "notifications",
+            "years": notifications["times"],
+            "values": notifications["values"],
+            "loglikelihood_distri": "normal",
+        },
+        {
+            "output_key": "infection_deaths",
+            "years": deaths["times"],
+            "values": deaths["values"],
+            "loglikelihood_distri": "normal",
+        },
+    ]
+
+    par_priors = add_dispersion_param_prior_for_gaussian(par_priors, target_outputs)
+    target_outputs = remove_early_points_to_prevent_crash(target_outputs, par_priors)
+
+    return target_outputs, par_priors

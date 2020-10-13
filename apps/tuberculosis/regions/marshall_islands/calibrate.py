@@ -38,7 +38,7 @@ PRIORS = [
     {
         "param_name": "start_population_size",
         "distribution": "uniform",
-        "distri_params": [1000, 6000]
+        "distri_params": [2000, 5000]
     },
     {
         "param_name": "contact_rate",
@@ -53,7 +53,7 @@ PRIORS = [
     {
         "param_name": "time_variant_tb_screening_rate.max_change_time",
         "distribution": "uniform",
-        "distri_params": [1990., 2020.]
+        "distri_params": [2000., 2020.]
     },
     {
         "param_name": "time_variant_tb_screening_rate.maximum_gradient",
@@ -63,12 +63,12 @@ PRIORS = [
     {
         "param_name": "time_variant_tb_screening_rate.end_value",
         "distribution": "uniform",
-        "distri_params": [.5, 1.]
+        "distri_params": [.4, .55]
     },
     {
         "param_name": "user_defined_stratifications.location.adjustments.detection_rate.ebeye",
         "distribution": "uniform",
-        "distri_params": [0.5, 1.5],
+        "distri_params": [1.3, 2.],  # [.5, 1.5]
     },
     {
         "param_name": "user_defined_stratifications.location.adjustments.detection_rate.other",
@@ -78,7 +78,7 @@ PRIORS = [
     {
         "param_name": "extra_params.rr_progression_diabetes",
         "distribution": "uniform",
-        "distri_params": [2.25, 5.73],
+        "distri_params": [2.25, 4.0],  #5.73],
     },
     {
         "param_name": "rr_infection_recovered",

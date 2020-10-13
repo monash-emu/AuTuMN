@@ -31,7 +31,6 @@ class LocationMixingAdjustment(BaseMixingAdjustment):
         google_mobility_locations = mobility.google_mobility_locations
         microdistancing_params = mobility.microdistancing
         smooth_google_data = mobility.smooth_google_data
-        microdistancing_locations = mobility.microdistancing_locations
 
         # Load mobility data
         google_mobility_values, google_mobility_days = get_mobility_data(
@@ -40,6 +39,7 @@ class LocationMixingAdjustment(BaseMixingAdjustment):
         if smooth_google_data:
             for loc in google_mobility_values:
                 google_mobility_values[loc] = apply_moving_average(google_mobility_values[loc], 7)
+
         # Build mixing data timeseries
         mixing = update_mixing_data(
             {k: v.dict() for k, v in mixing.items()},
@@ -47,28 +47,21 @@ class LocationMixingAdjustment(BaseMixingAdjustment):
             google_mobility_values,
             google_mobility_days,
         )
-        # Build the time variant location adjustment functions from mixing timeseries
-        mixing_locations = [loc for loc in LOCATIONS if loc in mixing]
+
+        # Build the time variant location-specific macrodistancing adjustment functions from mixing timeseries
+        macrodistancing_locations = [loc for loc in LOCATIONS if loc in mixing]
         self.loc_adj_funcs = {}
-        for loc_key in mixing_locations:
+        for loc_key in macrodistancing_locations:
             loc_times = mixing[loc_key]["times"]
             loc_vals = mixing[loc_key]["values"]
-            self.loc_adj_funcs[loc_key] = scale_up_function(loc_times, loc_vals, method=4)
+            self.loc_adj_funcs[loc_key] = \
+                scale_up_function(loc_times, loc_vals, method=4)
 
-        # Work out microdistancing function to be applied to all non-household locations
-        if not microdistancing_params:
-            self.microdistancing_function = None
-        elif microdistancing_params.function_type == "tanh":
-            self.microdistancing_function = tanh_based_scaleup(
-                **microdistancing_params.parameters.dict()
-            )
-        elif microdistancing_params.function_type == "empiric":
-            micro_times = microdistancing_params.parameters.times
-            multiplier = microdistancing_params.parameters.max_effect
-            micro_vals = [
-                1.0 - multiplier * value for value in microdistancing_params.parameters.values
-            ]
-            self.microdistancing_function = scale_up_function(micro_times, micro_vals, method=4)
+        # Apply the microdistancing function
+        self.microdistancing_function = \
+            apply_microdistancing(microdistancing_params) if \
+                microdistancing_params else \
+                None
 
         # Load all location-specific mixing info.
         self.matrix_components = {}
@@ -177,6 +170,74 @@ def update_mixing_data(
 
     mixing = {k: {"values": v["values"], "times": v["times"]} for k, v in mixing.items()}
     return mixing
+
+
+def apply_microdistancing(params):
+    """
+    Work out microdistancing function to be applied as a multiplier to some or all of the Prem locations as requested in
+    the microdistancing_locations.
+    """
+
+    # Collate the components to the microdistancing function
+    microdist_component_funcs = []
+    for microdist_type in [param for param in params if "_adjuster" not in param]:
+        adjustment_string = f"{microdist_type}_adjuster"
+        unadjusted_microdist_func = \
+            get_microdist_func_component(params, microdist_type)
+        microdist_component_funcs.append(
+            get_microdist_adjustment(params, adjustment_string, unadjusted_microdist_func)
+        )
+
+    # Generate the overall composite contact adjustment function as the product of the reciprocal all the components
+    def microdist_composite_func(time):
+        return \
+            np.product(
+                [
+                    1. - microdist_component_funcs[i_func](time) for
+                    i_func in range(len(microdist_component_funcs))
+                ]
+            )
+
+    return microdist_composite_func
+
+
+def get_empiric_microdist_func(params, microdist_type):
+    """
+    Construct a microdistancing function according to the "empiric" request format.
+    """
+
+    micro_times = params[microdist_type].parameters.times
+    multiplier = params[microdist_type].parameters.max_effect
+    micro_vals = [
+        multiplier * value for value in params[microdist_type].parameters.values
+    ]
+    return scale_up_function(micro_times, micro_vals, method=4)
+
+
+def get_microdist_adjustment(params, adjustment_string, unadjusted_microdist_func):
+    """
+    Adjust an existing microdistancing function according to another function that modifies this function (if one
+    exists / has been requested).
+    """
+
+    if adjustment_string in params:
+        waning_adjustment = \
+            get_microdist_func_component(params, adjustment_string)
+        return lambda time: unadjusted_microdist_func(time) * waning_adjustment(time)
+    else:
+        return unadjusted_microdist_func
+
+
+def get_microdist_func_component(params, adjustment_string):
+    """
+    Get one function of time using the standard parameter request structure for any microdistancing function or
+    adjustment to a microdistancing function.
+    """
+
+    if params[adjustment_string].function_type == "tanh":
+        return tanh_based_scaleup(**params[adjustment_string].parameters.dict())
+    elif params[adjustment_string].function_type == "empiric":
+        return get_empiric_microdist_func(params, adjustment_string)
 
 
 def parse_values(values):

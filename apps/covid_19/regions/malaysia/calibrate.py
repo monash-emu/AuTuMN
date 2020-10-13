@@ -45,13 +45,23 @@ PAR_PRIORS += [
     {
         "param_name": "testing_to_detection.assumed_cdr_parameter",
         "distribution": "uniform",
-        "distri_params": [0.2, 0.6],
+        "distri_params": [0.12, 0.5],
     },
     # Microdistancing
     {
-        "param_name": "mobility.microdistancing.parameters.max_effect",
+        "param_name": "mobility.microdistancing.behaviour.parameters.max_effect",
         "distribution": "uniform",
         "distri_params": [0.3, 0.9],
+    },
+    {
+        "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.sigma",
+        "distribution": "uniform",
+        "distri_params": [0., 0.5],
+    },
+    {
+        "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.c",
+        "distribution": "uniform",
+        "distri_params": [153., 275.],  # 1st June to 1st October
     },
     # Health system-related
     {

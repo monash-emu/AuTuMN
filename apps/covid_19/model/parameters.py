@@ -95,7 +95,7 @@ class Mobility(BaseModel):
 
     region: Optional[str]  # None/null means default to parent country
     mixing: Dict[str, MixingLocation]
-    microdistancing: Optional[MicroDistancingFunc]
+    microdistancing: Dict[str, MicroDistancingFunc]
     microdistancing_locations: List[str]
     smooth_google_data: bool
     npi_effectiveness: Dict[str, float]

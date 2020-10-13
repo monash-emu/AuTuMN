@@ -85,7 +85,6 @@ extra_params:
     15: 0.2
     35: 0.4
     50: 0.7
-    70: 0.7
   rr_progression_diabetes: 5.643402828077587
 
 # calibrated parameters

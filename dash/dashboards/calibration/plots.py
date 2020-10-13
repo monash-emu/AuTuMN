@@ -1,36 +1,47 @@
 from typing import List
 
+import numpy as np
 import pandas as pd
 import streamlit as st
 
 from autumn.plots.plotter import StreamlitPlotter
-from autumn.plots.calibration.plots import find_min_chain_length_from_mcmc_tables
-from autumn import db, plots
+from autumn.plots.calibration.plots import find_min_chain_length_from_mcmc_tables, get_posterior, get_epi_params
+from autumn import db, plots, inputs
 from apps.covid_19.model.preprocess.testing import find_cdr_function_from_test_data
-from autumn import inputs
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
 
+from dash.utils import create_downloadable_csv, round_sig_fig
 from dash import selectors
 
 PLOT_FUNCS = {}
 
 
-def create_standard_plotting_sidebar():
-    title_font_size = st.sidebar.slider("Title font size", 1, 15, 8)
-    label_font_size = st.sidebar.slider("Label font size", 1, 15, 8)
-    dpi_request = st.sidebar.slider("DPI", 50, 2000, 300)
-    capitalise_first_letter = st.sidebar.checkbox("Title start capital")
-    return title_font_size, label_font_size, dpi_request, capitalise_first_letter
+def write_mcmc_centiles(
+        mcmc_params,
+        burn_in,
+        sig_figs,
+        centiles,
+):
+    """
+    Write a table of parameter centiles from the MCMC chain outputs.
+    """
 
+    # Get parameter names
+    parameters = get_epi_params(mcmc_params)
 
-def create_xrange_selector(x_min, x_max):
-    x_min = st.sidebar.slider("Plot start time", x_min, x_max, x_min)
-    x_max = st.sidebar.slider("Plot end time", x_min, x_max, x_max)
-    return x_min, x_max
+    # Create empty dataframe
+    params_df = pd.DataFrame(index=parameters, columns=centiles)
 
+    # Populate with data
+    for param_name in parameters:
+        param_values = get_posterior(mcmc_params, param_name, burn_in)
+        centile_values = np.percentile(param_values, centiles)
+        rounded_centile_values = [round_sig_fig(i_value, sig_figs) for i_value in centile_values]
+        params_df.loc[param_name] = rounded_centile_values
 
-def create_multi_scenario_selector(available_scenarios):
-    return st.multiselect("Select scenarios", available_scenarios)
+    # Display
+    create_downloadable_csv(params_df, "posterior_centiles")
+    st.write(params_df)
 
 
 def print_mle_parameters(
@@ -139,10 +150,10 @@ def plot_timeseries_with_uncertainty(
 
     x_min = round(min(uncertainty_df["time"]))
     x_max = round(max(uncertainty_df["time"]))
-    x_low, x_up = create_xrange_selector(x_min, x_max)
+    x_low, x_up = selectors.create_xrange_selector(x_min, x_max)
 
     available_scenarios = uncertainty_df["scenario"].unique()
-    selected_scenarios = create_multi_scenario_selector(available_scenarios)
+    selected_scenarios = st.multiselect("Select scenarios", available_scenarios)
 
     is_logscale = st.sidebar.checkbox("Log scale")
     plots.uncertainty.plots.plot_timeseries_with_uncertainty(
@@ -184,10 +195,10 @@ def plot_multiple_timeseries_with_uncertainty(
 
     x_min = round(min(uncertainty_df['time']))
     x_max = round(max(uncertainty_df['time']))
-    x_low, x_up = create_xrange_selector(x_min, x_max)
+    x_low, x_up = selectors.create_xrange_selector(x_min, x_max)
 
     available_scenarios = uncertainty_df['scenario'].unique()
-    selected_scenarios = create_multi_scenario_selector(available_scenarios)
+    selected_scenarios = st.multiselect("Select scenarios", available_scenarios)
     is_logscale = st.sidebar.checkbox("Log scale")
     n_xticks = st.sidebar.slider("Number of x ticks", 1, 10, 6)
     plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(
@@ -235,7 +246,7 @@ def plot_multi_output_fit(
         label_font_size,
         dpi_request,
         capitalise_first_letter,
-    ) = create_standard_plotting_sidebar()
+    ) = selectors.create_standard_plotting_sidebar()
     is_logscale = st.sidebar.checkbox("Log scale")
     chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
     burn_in = st.sidebar.slider("Burn in (select 0 for default behaviour of discarding first half)", 0, chain_length, 0)
@@ -291,7 +302,7 @@ def plot_all_param_traces(
         label_font_size,
         dpi_request,
         capitalise_first_letter,
-    ) = create_standard_plotting_sidebar()
+    ) = selectors.create_standard_plotting_sidebar()
     chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
     burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
     plots.calibration.plots.plot_multiple_param_traces(
@@ -332,7 +343,7 @@ def plot_loglike_vs_all_params(
         label_font_size,
         dpi_request,
         capitalise_first_letter,
-    ) = create_standard_plotting_sidebar()
+    ) = selectors.create_standard_plotting_sidebar()
     chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
     burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
     plots.calibration.plots.plot_all_params_vs_loglike(
@@ -380,10 +391,11 @@ def plot_all_posteriors(
         label_font_size,
         dpi_request,
         capitalise_first_letter,
-    ) = create_standard_plotting_sidebar()
+    ) = selectors.create_standard_plotting_sidebar()
     chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
     burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
     num_bins = st.sidebar.slider("Number of bins", 1, 50, 16)
+    sig_figs = st.sidebar.slider("Significant figures", 0, 6, 3)
     plots.calibration.plots.plot_multiple_posteriors(
         plotter,
         mcmc_params,
@@ -394,6 +406,8 @@ def plot_all_posteriors(
         capitalise_first_letter,
         dpi_request,
     )
+
+    write_mcmc_centiles(mcmc_params, burn_in, sig_figs, [2.5, 50, 97.5])
 
 
 PLOT_FUNCS["All posteriors"] = plot_all_posteriors
@@ -495,3 +509,4 @@ def plot_loglikelihood_surface(
 
 
 PLOT_FUNCS["Loglikelihood 3d scatter"] = plot_loglikelihood_surface
+

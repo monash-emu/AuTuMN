@@ -30,7 +30,7 @@
   "percentage_latentXlocation_majuro": {
     "title": "LTBI prevalence in Majuro (%)",
     "output_key": "percentage_latentXlocation_majuro",
-    "times": [2016.0],
+    "times": [2018.0],
     "values": [28.5],
     "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
@@ -100,14 +100,14 @@
     "differentiate": "relative"
   },
   "rel_diff_cumulative_diseased": {
-    "title": "Number of averted cases",
+    "title": "Reduction in cumulative disease (%)",
     "output_key": "rel_diff_cumulative_diseased",
     "times": [],
     "values": [],
     "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "rel_diff_cumulative_deaths": {
-    "title": "Number of averted deaths",
+    "title": "Reduction in cumulative deaths (%)",
     "output_key": "rel_diff_cumulative_deaths",
     "times": [],
     "values": [],

@@ -251,3 +251,17 @@ def parameter(mcmc_params: pd.DataFrame):
     """
     options = mcmc_params["name"].unique().tolist()
     return st.sidebar.selectbox("Select parameter", options)
+
+
+def create_standard_plotting_sidebar():
+    title_font_size = st.sidebar.slider("Title font size", 1, 15, 8)
+    label_font_size = st.sidebar.slider("Label font size", 1, 15, 8)
+    dpi_request = st.sidebar.slider("DPI", 50, 2000, 300)
+    capitalise_first_letter = st.sidebar.checkbox("Title start capital")
+    return title_font_size, label_font_size, dpi_request, capitalise_first_letter
+
+
+def create_xrange_selector(x_min, x_max):
+    x_min = st.sidebar.slider("Plot start time", x_min, x_max, x_min)
+    x_max = st.sidebar.slider("Plot end time", x_min, x_max, x_max)
+    return x_min, x_max

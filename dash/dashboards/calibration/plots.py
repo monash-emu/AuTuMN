@@ -7,14 +7,12 @@ import streamlit as st
 from autumn.plots.plotter import StreamlitPlotter
 from autumn.plots.calibration.plots import find_min_chain_length_from_mcmc_tables, get_posterior, get_epi_params
 from autumn import db, plots
-
+from dash.utils import create_downloadable_csv, round_sig_fig, create_standard_plotting_sidebar, create_xrange_selector
 from dash import selectors
-import base64
 
 PLOT_FUNCS = {}
 
 
-# FIXME: This is not in the right place - need to ask Matt where this should go
 def write_mcmc_centiles(
         mcmc_params,
         burn_in,
@@ -41,45 +39,6 @@ def write_mcmc_centiles(
     # Display
     create_downloadable_csv(params_df, "posterior_centiles")
     st.write(params_df)
-
-
-# FIXME: This should possibly go into a file up one level in the directory structure
-def create_downloadable_csv(data_frame_to_download, filename):
-    """
-    Create a link for a downloadable CSV file available in the streamlit interface.
-    """
-    csv_bytes = data_frame_to_download.to_csv(index=False).encode()
-    b64_str = base64.b64encode(csv_bytes).decode()
-    text = "click here to download CSV containing the following data"
-    html_str = f'<a download="{filename}.csv" href="data:file/csv;name={filename}.csv;base64,{b64_str}">{text}</a>'
-    st.markdown(html_str, unsafe_allow_html=True)
-
-
-# FIXME: This is too general a function, shouldn't go in here
-def round_sig_fig(number: float, significant_figures: int):
-    """
-    Returns the submitted number rounded to the requested number of significant figures.
-    """
-    decimal_places = significant_figures - (int(np.floor(np.log10(abs(number)))) + 1)
-    return round(number, decimal_places)
-
-
-def create_standard_plotting_sidebar():
-    title_font_size = st.sidebar.slider("Title font size", 1, 15, 8)
-    label_font_size = st.sidebar.slider("Label font size", 1, 15, 8)
-    dpi_request = st.sidebar.slider("DPI", 50, 2000, 300)
-    capitalise_first_letter = st.sidebar.checkbox("Title start capital")
-    return title_font_size, label_font_size, dpi_request, capitalise_first_letter
-
-
-def create_xrange_selector(x_min, x_max):
-    x_min = st.sidebar.slider("Plot start time", x_min, x_max, x_min)
-    x_max = st.sidebar.slider("Plot end time", x_min, x_max, x_max)
-    return x_min, x_max
-
-
-def create_multi_scenario_selector(available_scenarios):
-    return st.multiselect("Select scenarios", available_scenarios)
 
 
 def print_mle_parameters(
@@ -146,7 +105,7 @@ def plot_timeseries_with_uncertainty(
     x_low, x_up = create_xrange_selector(x_min, x_max)
 
     available_scenarios = uncertainty_df["scenario"].unique()
-    selected_scenarios = create_multi_scenario_selector(available_scenarios)
+    selected_scenarios = st.multiselect("Select scenarios", available_scenarios)
 
     is_logscale = st.sidebar.checkbox("Log scale")
     plots.uncertainty.plots.plot_timeseries_with_uncertainty(
@@ -191,7 +150,7 @@ def plot_multiple_timeseries_with_uncertainty(
     x_low, x_up = create_xrange_selector(x_min, x_max)
 
     available_scenarios = uncertainty_df['scenario'].unique()
-    selected_scenarios = create_multi_scenario_selector(available_scenarios)
+    selected_scenarios = st.multiselect("Select scenarios", available_scenarios)
     is_logscale = st.sidebar.checkbox("Log scale")
     n_xticks = st.sidebar.slider("Number of x ticks", 1, 10, 6)
     plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(

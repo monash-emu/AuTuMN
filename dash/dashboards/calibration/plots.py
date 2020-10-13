@@ -3,7 +3,9 @@ from typing import List
 import numpy as np
 import pandas as pd
 import streamlit as st
+import os
 
+from autumn.tool_kit.params import load_params
 from autumn.plots.plotter import StreamlitPlotter
 from autumn.plots.calibration.plots import find_min_chain_length_from_mcmc_tables, get_posterior, get_epi_params
 from autumn import db, plots, inputs
@@ -87,13 +89,30 @@ def plot_cdr_curves(
         targets: dict,
 ):
 
-    # Manually input some parameters - need to change this
-    assumed_tests_parameter = 1.0e-4
-    iso3 = "PHL"
-    testing_year = 2020
-    times = get_model_times_from_inputs(round(40.), 365., 1.)
-    agegroup_strata = [str(s) for s in range(0, 80, 5)]
+    app_name = "covid_19"
+    st.write(f"WARNING - this is hard coded for {app_name} app")
+    region = "philippines"
+    st.write(f"WARNING - this is hard coded for {region} region")
+
+    # This should remain fixed, because it is only relevant to this particular function
     param_name = "testing_to_detection.assumed_cdr_parameter"
+    region_name = region.replace("-", "_")
+
+    # Extract parameters relevant to this function
+    params = load_params(app_name, region_name)
+    default_params = params["default"]
+
+    iso3 = default_params["country"]["iso3"]
+    testing_year = default_params["population"]["year"]
+    assumed_tests_parameter = default_params["testing_to_detection"]["assumed_tests_parameter"]
+    agegroup_params = default_params["age_stratification"]
+    time_params = default_params["time"]
+
+    # Manually input some parameters - need to change this
+    times = \
+        get_model_times_from_inputs(time_params["start"], time_params["end"], time_params["step"])
+    agegroup_strata = \
+        [str(s) for s in range(0, agegroup_params["max_age"], agegroup_params["age_step_size"])]
 
     # Collate parameters into one structure
     testing_to_detection_values = []

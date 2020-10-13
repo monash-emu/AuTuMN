@@ -237,5 +237,213 @@
       0.75,
       0.975
     ]
+  },
+  "proportion_seropositiveXagegroup_0": {
+    "output_key": "proportion_seropositiveXagegroup_0",
+    "title": "seropositive prop (age 0)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "proportion_seropositiveXagegroup_5": {
+    "output_key": "proportion_seropositiveXagegroup_5",
+    "title": "seropositive prop (age 5)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "proportion_seropositiveXagegroup_10": {
+    "output_key": "proportion_seropositiveXagegroup_10",
+    "title": "seropositive prop (age 10)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "proportion_seropositiveXagegroup_15": {
+    "output_key": "proportion_seropositiveXagegroup_15",
+    "title": "seropositive prop (age 15)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "proportion_seropositiveXagegroup_20": {
+    "output_key": "proportion_seropositiveXagegroup_20",
+    "title": "seropositive prop (age 20)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "proportion_seropositiveXagegroup_25": {
+    "output_key": "proportion_seropositiveXagegroup_25",
+    "title": "seropositive prop (age 25)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "proportion_seropositiveXagegroup_30": {
+    "output_key": "proportion_seropositiveXagegroup_30",
+    "title": "seropositive prop (age 30)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "proportion_seropositiveXagegroup_35": {
+    "output_key": "proportion_seropositiveXagegroup_35",
+    "title": "seropositive prop (age 35)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "proportion_seropositiveXagegroup_40": {
+    "output_key": "proportion_seropositiveXagegroup_40",
+    "title": "seropositive prop (age 40)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "proportion_seropositiveXagegroup_45": {
+    "output_key": "proportion_seropositiveXagegroup_45",
+    "title": "seropositive prop (age 45)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "proportion_seropositiveXagegroup_50": {
+    "output_key": "proportion_seropositiveXagegroup_50",
+    "title": "seropositive prop (age 50)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "proportion_seropositiveXagegroup_55": {
+    "output_key": "proportion_seropositiveXagegroup_55",
+    "title": "seropositive prop (age 55)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "proportion_seropositiveXagegroup_60": {
+    "output_key": "proportion_seropositiveXagegroup_60",
+    "title": "seropositive prop (age 60)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "proportion_seropositiveXagegroup_65": {
+    "output_key": "proportion_seropositiveXagegroup_65",
+    "title": "seropositive prop (age 65)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "proportion_seropositiveXagegroup_70": {
+    "output_key": "proportion_seropositiveXagegroup_70",
+    "title": "seropositive prop (age 70)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "proportion_seropositiveXagegroup_75": {
+    "output_key": "proportion_seropositiveXagegroup_75",
+    "title": "seropositive prop (age 75)",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
   }
 }

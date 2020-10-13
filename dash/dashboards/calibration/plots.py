@@ -6,7 +6,10 @@ import streamlit as st
 
 from autumn.plots.plotter import StreamlitPlotter
 from autumn.plots.calibration.plots import find_min_chain_length_from_mcmc_tables, get_posterior, get_epi_params
-from autumn import db, plots
+from autumn import db, plots, inputs
+from apps.covid_19.model.preprocess.testing import find_cdr_function_from_test_data
+from autumn.tool_kit.scenarios import get_model_times_from_inputs
+
 from dash.utils import create_downloadable_csv, round_sig_fig
 from dash import selectors
 
@@ -58,11 +61,11 @@ PLOT_FUNCS["Print MLE parameters"] = print_mle_parameters
 
 
 def plot_acceptance_ratio(
-    plotter: StreamlitPlotter,
-    calib_dir_path: str,
-    mcmc_tables: List[pd.DataFrame],
-    mcmc_params: List[pd.DataFrame],
-    targets: dict,
+        plotter: StreamlitPlotter,
+        calib_dir_path: str,
+        mcmc_tables: List[pd.DataFrame],
+        mcmc_params: List[pd.DataFrame],
+        targets: dict,
 ):
     label_font_size = st.sidebar.slider("Label font size", 1, 15, 10)
     chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
@@ -74,6 +77,51 @@ def plot_acceptance_ratio(
 
 
 PLOT_FUNCS["Acceptance ratio"] = plot_acceptance_ratio
+
+
+def plot_cdr_curves(
+        plotter: StreamlitPlotter,
+        calib_dir_path: str,
+        mcmc_tables: List[pd.DataFrame],
+        mcmc_params: List[pd.DataFrame],
+        targets: dict,
+):
+
+    # Manually input some parameters - need to change this
+    assumed_tests_parameter = 1.0e-4
+    iso3 = "PHL"
+    testing_year = 2020
+    times = get_model_times_from_inputs(round(40.), 365., 1.)
+    agegroup_strata = [str(s) for s in range(0, 80, 5)]
+    param_name = "testing_to_detection.assumed_cdr_parameter"
+
+    # Collate parameters into one structure
+    testing_to_detection_values = []
+    for i_chain in range(len(mcmc_params)):
+        param_mask = \
+            mcmc_params[i_chain]["name"] == param_name
+        testing_to_detection_values += \
+            mcmc_params[i_chain]["value"][param_mask].tolist()
+
+    # Get CDR function
+    testing_pops = inputs.get_population_by_agegroup(
+        agegroup_strata, iso3, None, year=testing_year
+    )
+    detected_proportion = []
+    for assumed_cdr_parameter in testing_to_detection_values:
+        detected_proportion.append(
+            find_cdr_function_from_test_data(
+                assumed_tests_parameter,
+                assumed_cdr_parameter,
+                iso3,
+                testing_pops,
+            )
+        )
+
+    plots.calibration.plots.plot_cdr_curves(plotter, times, detected_proportion)
+
+
+PLOT_FUNCS["CDR curves"] = plot_cdr_curves
 
 
 def plot_timeseries_with_uncertainty(

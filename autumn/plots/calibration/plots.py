@@ -785,6 +785,31 @@ def plot_calibration_fit(
     plotter.save_figure(fig, filename=filename, title_text=title_text)
 
 
+def plot_cdr_curves(
+        plotter: Plotter,
+        times,
+        detected_proportion,
+):
+    # Get basic plotting structures
+    fig, axis, _, _, _, _ = plotter.get_figure()
+
+    # Plot outputs
+    for i_curve in range(len(detected_proportion)):
+        axis.plot(
+            times,
+            [detected_proportion[i_curve](i_time) for i_time in times],
+            alpha=0.3,
+            color="k",
+            linewidth=2.
+        )
+
+    # Tidy
+    axis.set_xlabel("time")
+    axis.set_ylabel("case detection rate (proportion)")
+    axis.set_ylim([0., 1.])
+    plotter.save_figure(fig, filename=f"cdr_curves")
+
+
 def plot_multi_fit(
         plotter: Plotter, output_names: list, outputs: dict, targets, is_logscale=False,
         title_font_size=8, label_font_size=8, dpi_request=300, capitalise_first_letter=False,

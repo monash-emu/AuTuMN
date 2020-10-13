@@ -182,6 +182,7 @@ def build_model(params: dict) -> StratifiedModel:
         # Use state denominator for testing rates for the Victorian health cluster models
         testing_region = "Victoria" if country.iso3 == "AUS" else pop.region
         testing_year = 2020 if country.iso3 == "AUS" else params.population.year
+        print(agegroup_strata)
         testing_pops = inputs.get_population_by_agegroup(
             agegroup_strata, country.iso3, testing_region, year=testing_year
         )

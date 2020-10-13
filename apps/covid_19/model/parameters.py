@@ -83,6 +83,7 @@ class TanhMicrodistancingParams(BaseModel):
     b: float
     c: float
     sigma: float
+    upper_asymptote: float
 
 
 class MicroDistancingFunc(BaseModel):

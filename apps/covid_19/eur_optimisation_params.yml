@@ -70,10 +70,11 @@ mobility:
       - grocery_and_pharmacy
       - transit_stations
   smooth_google_data: true
-  microdistancing:
+  microdistancing:   # increasing function, starting from sigma=0 (no microdistancing) ending at upper_asymptote
     behaviour:
       function_type: tanh
       parameters:
-        b: -0.05
+        b: .05
         c: 100.
-        sigma: 0.6
+        sigma: 0.
+        upper_asymptote: .6

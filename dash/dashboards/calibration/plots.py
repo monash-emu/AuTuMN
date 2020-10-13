@@ -3,7 +3,9 @@ from typing import List
 import numpy as np
 import pandas as pd
 import streamlit as st
+import os
 
+from autumn.tool_kit.params import load_params
 from autumn.plots.plotter import StreamlitPlotter
 from autumn.plots.calibration.plots import find_min_chain_length_from_mcmc_tables, get_posterior, get_epi_params
 from autumn import db, plots, inputs
@@ -50,6 +52,8 @@ def print_mle_parameters(
     mcmc_tables: List[pd.DataFrame],
     mcmc_params: List[pd.DataFrame],
     targets: dict,
+    app_name: str,
+    region: str,
 ):
     df = db.process.append_tables(mcmc_tables)
     param_df = db.process.append_tables(mcmc_params)
@@ -66,6 +70,8 @@ def plot_acceptance_ratio(
         mcmc_tables: List[pd.DataFrame],
         mcmc_params: List[pd.DataFrame],
         targets: dict,
+        app_name: str,
+        region: str,
 ):
     label_font_size = st.sidebar.slider("Label font size", 1, 15, 10)
     chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
@@ -85,15 +91,29 @@ def plot_cdr_curves(
         mcmc_tables: List[pd.DataFrame],
         mcmc_params: List[pd.DataFrame],
         targets: dict,
+        app_name: str,
+        region: str,
 ):
 
-    # Manually input some parameters - need to change this
-    assumed_tests_parameter = 1.0e-4
-    iso3 = "PHL"
-    testing_year = 2020
-    times = get_model_times_from_inputs(round(40.), 365., 1.)
-    agegroup_strata = [str(s) for s in range(0, 80, 5)]
+    # This should remain fixed, because it is only relevant to this particular function
     param_name = "testing_to_detection.assumed_cdr_parameter"
+    region_name = region.replace("-", "_")
+
+    # Extract parameters relevant to this function
+    params = load_params(app_name, region_name)
+    default_params = params["default"]
+
+    iso3 = default_params["country"]["iso3"]
+    testing_year = default_params["population"]["year"]
+    assumed_tests_parameter = default_params["testing_to_detection"]["assumed_tests_parameter"]
+    agegroup_params = default_params["age_stratification"]
+    time_params = default_params["time"]
+
+    # Manually input some parameters - need to change this
+    times = \
+        get_model_times_from_inputs(time_params["start"], time_params["end"], time_params["step"])
+    agegroup_strata = \
+        [str(s) for s in range(0, agegroup_params["max_age"], agegroup_params["age_step_size"])]
 
     # Collate parameters into one structure
     testing_to_detection_values = []
@@ -130,6 +150,8 @@ def plot_timeseries_with_uncertainty(
     mcmc_tables: List[pd.DataFrame],
     mcmc_params: List[pd.DataFrame],
     targets: dict,
+    app_name: str,
+    region: str,
 ):
     available_outputs = [o["output_key"] for o in targets.values()]
     chosen_output = st.sidebar.selectbox("Select calibration target", available_outputs)
@@ -177,6 +199,8 @@ def plot_multiple_timeseries_with_uncertainty(
     mcmc_tables: List[pd.DataFrame],
     mcmc_params: List[pd.DataFrame],
     targets: dict,
+    app_name: str,
+    region: str,
 ):
     available_outputs = [o["output_key"] for o in targets.values()]
     chosen_outputs = st.multiselect('Select outputs', available_outputs)
@@ -215,6 +239,8 @@ def plot_calibration_fit(
     mcmc_tables: List[pd.DataFrame],
     mcmc_params: List[pd.DataFrame],
     targets: dict,
+    app_name: str,
+    region: str,
 ):
     available_outputs = [o["output_key"] for o in targets.values()]
     chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
@@ -239,6 +265,8 @@ def plot_multi_output_fit(
     mcmc_tables: List[pd.DataFrame],
     mcmc_params: List[pd.DataFrame],
     targets: dict,
+    app_name: str,
+    region: str,
 ):
     available_outputs = [o["output_key"] for o in targets.values()]
     (
@@ -279,6 +307,8 @@ def plot_mcmc_parameter_trace(
     mcmc_tables: List[pd.DataFrame],
     mcmc_params: List[pd.DataFrame],
     targets: dict,
+    app_name: str,
+    region: str,
 ):
     chosen_param = selectors.parameter(mcmc_params[0])
     chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
@@ -295,6 +325,8 @@ def plot_all_param_traces(
     mcmc_tables: List[pd.DataFrame],
     mcmc_params: List[pd.DataFrame],
     targets: dict,
+    app_name: str,
+    region: str,
 ):
 
     (
@@ -319,6 +351,8 @@ def plot_loglikelihood_vs_parameter(
     mcmc_tables: List[pd.DataFrame],
     mcmc_params: List[pd.DataFrame],
     targets: dict,
+    app_name: str,
+    region: str,
 ):
     chosen_param = selectors.parameter(mcmc_params[0])
     chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
@@ -337,6 +371,8 @@ def plot_loglike_vs_all_params(
     mcmc_tables: List[pd.DataFrame],
     mcmc_params: List[pd.DataFrame],
     targets: dict,
+    app_name: str,
+    region: str,
 ):
     (
         title_font_size,
@@ -367,6 +403,8 @@ def plot_posterior(
     mcmc_tables: List[pd.DataFrame],
     mcmc_params: List[pd.DataFrame],
     targets: dict,
+    app_name: str,
+    region: str,
 ):
     chosen_param = selectors.parameter(mcmc_params[0])
     chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
@@ -384,6 +422,8 @@ def plot_all_posteriors(
     mcmc_tables: List[pd.DataFrame],
     mcmc_params: List[pd.DataFrame],
     targets: dict,
+    app_name: str,
+    region: str,
 ):
 
     (
@@ -414,11 +454,13 @@ PLOT_FUNCS["All posteriors"] = plot_all_posteriors
 
 
 def plot_loglikelihood_trace(
-    plotter: StreamlitPlotter,
-    calib_dir_path: str,
-    mcmc_tables: List[pd.DataFrame],
-    mcmc_params: List[pd.DataFrame],
-    targets: dict,
+        plotter: StreamlitPlotter,
+        calib_dir_path: str,
+        mcmc_tables: List[pd.DataFrame],
+        mcmc_params: List[pd.DataFrame],
+        targets: dict,
+        app_name: str,
+        region: str,
 ):
     burn_in = selectors.burn_in(mcmc_tables)
     plots.calibration.plots.plot_loglikelihood_trace(plotter, mcmc_tables, burn_in)
@@ -433,6 +475,8 @@ def plot_param_matrix_by_chain(
         mcmc_tables: List[pd.DataFrame],
         mcmc_params: List[pd.DataFrame],
         targets: dict,
+        app_name: str,
+        region: str,
 ):
     """
     Now unused because I prefer the version that isn't by chain.
@@ -453,6 +497,8 @@ def plot_param_matrix(
         mcmc_tables: List[pd.DataFrame],
         mcmc_params: List[pd.DataFrame],
         targets: dict,
+        app_name: str,
+        region: str,
 ):
     parameters = mcmc_params[0]["name"].unique().tolist()
     chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
@@ -477,6 +523,8 @@ def plot_parallel_coordinates(
         mcmc_tables: List[pd.DataFrame],
         mcmc_params: List[pd.DataFrame],
         targets: dict,
+        app_name: str,
+        region: str,
 ):
     plots.calibration.plots.plot_parallel_coordinates(
         plotter,
@@ -494,6 +542,8 @@ def plot_loglikelihood_surface(
         mcmc_tables: List[pd.DataFrame],
         mcmc_params: List[pd.DataFrame],
         targets: dict,
+        app_name: str,
+        region: str,
 ):
     options = mcmc_params[0]["name"].unique().tolist()
     param_1 = st.sidebar.selectbox("Select parameter 1", options)

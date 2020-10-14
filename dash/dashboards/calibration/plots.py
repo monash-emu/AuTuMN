@@ -99,7 +99,7 @@ def plot_cdr_curves(
     param_name = "testing_to_detection.assumed_cdr_parameter"
     region_name = region.replace("-", "_")
     end_date = st.sidebar.slider("End date", 1, 365, 275)
-    alpha = st.sidebar.slider("Alpha/darkness", 0.0, 1.0, 0.1)
+    alpha = st.sidebar.slider("Alpha/darkness", 0.0, 0.5, 0.2, step=0.005)
     label_rotation = st.sidebar.slider("Label rotation", 0, 90, 0)
 
     # Extract parameters relevant to this function

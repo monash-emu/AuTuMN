@@ -160,6 +160,55 @@ def plot_multi_output_timeseries_with_uncertainty(
     # pyplot.savefig(filename + ".pdf")
 
 
+def plot_seroprevalence_by_age(
+    plotter: Plotter,
+    uncertainty_df: pd.DataFrame,
+    scenario_id: int,
+    time: float,
+    ref_date=datetime.date(2019, 12, 31)
+):
+    fig, axis, _, _, _, _ = plotter.get_figure()
+    mask = (
+        (uncertainty_df["scenario"] == scenario_id)
+        & (uncertainty_df["time"] == time)
+    )
+    df = uncertainty_df[mask]
+    quantile_vals = df["quantile"].unique().tolist()
+    seroprevalence_by_age = {}
+    sero_outputs = [output for output in df["type"].unique().tolist() if "proportion_seropositiveXagegroup_" in output]
+    if len(sero_outputs) == 0:
+        return
+
+    for output in sero_outputs:
+        output_mask = df["type"] == output
+        age = output.split("proportion_seropositiveXagegroup_")[1]
+        seroprevalence_by_age[age] = {}
+        for q in quantile_vals:
+            q_mask = df["quantile"] == q
+            seroprevalence_by_age[age][q] = [100. * v for v in df[output_mask][q_mask]["value"].tolist()]
+
+    q_keys = sorted(quantile_vals)
+    num_quantiles = len(q_keys)
+    half_length = num_quantiles // 2
+
+    for age in list(seroprevalence_by_age.keys()):
+        x_pos = 2.5 + float(age)
+        axis.plot([x_pos, x_pos], [seroprevalence_by_age[age][q_keys[0]], seroprevalence_by_age[age][q_keys[-1]]],
+                  "-", color='black', lw=.5)
+
+        if num_quantiles % 2:
+            q_key = q_keys[half_length]
+            axis.plot(x_pos, seroprevalence_by_age[age][q_key], 'o', color='black', markersize=2)
+
+    axis.set_xlabel('age (years)', fontsize=10)
+    axis.set_ylabel('% seropositive', fontsize=10)
+
+    _date = ref_date + datetime.timedelta(days=time)
+
+    axis.set_title(f'seroprevalence on {_date}', fontsize=12)
+    plotter.save_figure(fig, filename='sero_by_age', subdir="outputs", title_text='')
+
+
 def _get_target_values(targets: dict, output_name: str):
     """Pulls out values for a given target"""
     output_config = {"values": [], "times": []}

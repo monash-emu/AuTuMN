@@ -12,6 +12,7 @@ from autumn.plots.plotter import Plotter
 from autumn.plots.calibration.plots import _plot_targets_to_axis
 from matplotlib import colors, pyplot
 from autumn.plots.utils import change_xaxis_to_date
+from numpy import mean
 
 logger = logging.getLogger(__name__)
 
@@ -159,6 +160,103 @@ def plot_multi_output_timeseries_with_uncertainty(
     # filename = out_dir + "targets"
     # pyplot.savefig(filename + ".pdf")
 
+
+def plot_seroprevalence_by_age(
+    plotter: Plotter,
+    uncertainty_df: pd.DataFrame,
+    scenario_id: int,
+    time: float,
+    ref_date=datetime.date(2019, 12, 31),
+    axis=None
+):
+    single_panel = axis is None
+    if single_panel:
+        fig, axis, _, _, _, _ = plotter.get_figure()
+    mask = (
+        (uncertainty_df["scenario"] == scenario_id)
+        & (uncertainty_df["time"] == time)
+    )
+    df = uncertainty_df[mask]
+    quantile_vals = df["quantile"].unique().tolist()
+    seroprevalence_by_age = {}
+    sero_outputs = [output for output in df["type"].unique().tolist() if "proportion_seropositiveXagegroup_" in output]
+    if len(sero_outputs) == 0:
+        axis.text(0., .5, "Age-specific seroprevalence outputs are not available for this run")
+    else:
+        for output in sero_outputs:
+            output_mask = df["type"] == output
+            age = output.split("proportion_seropositiveXagegroup_")[1]
+            seroprevalence_by_age[age] = {}
+            for q in quantile_vals:
+                q_mask = df["quantile"] == q
+                seroprevalence_by_age[age][q] = [100. * v for v in df[output_mask][q_mask]["value"].tolist()]
+
+        q_keys = sorted(quantile_vals)
+        num_quantiles = len(q_keys)
+        half_length = num_quantiles // 2
+
+        for age in list(seroprevalence_by_age.keys()):
+            x_pos = 2.5 + float(age)
+            axis.plot([x_pos, x_pos], [seroprevalence_by_age[age][q_keys[0]], seroprevalence_by_age[age][q_keys[-1]]],
+                      "-", color='black', lw=.7)
+
+            if num_quantiles % 2:
+                q_key = q_keys[half_length]
+                axis.plot(x_pos, seroprevalence_by_age[age][q_key], 'o', color='black', markersize=2)
+
+        axis.set_xlabel('age (years)', fontsize=10)
+        axis.set_ylabel('% seropositive', fontsize=10)
+
+        _date = ref_date + datetime.timedelta(days=time)
+
+        axis.set_title(f'seroprevalence on {_date}', fontsize=12)
+
+    if single_panel:
+        plotter.save_figure(fig, filename='sero_by_age', subdir="outputs", title_text='')
+
+
+def plot_seroprevalence_by_age_against_targets(
+    plotter,
+    uncertainty_df,
+    selected_scenario,
+    serosurvey_data,
+    n_columns
+):
+    n_surveys = len(serosurvey_data)
+    n_rows = ceil(n_surveys / n_columns)
+
+    with pyplot.style.context('default'):
+        fig = pyplot.figure(constrained_layout=True, figsize=(n_columns * 7, n_rows * 5))  # (w, h)
+        spec = fig.add_gridspec(ncols=n_columns, nrows=n_rows)
+
+        i_row = 0
+        i_col = 0
+        for survey in serosurvey_data:
+            # plot model outputs
+            midpoint_time = int(mean(survey["time_range"]))
+            ax = fig.add_subplot(spec[i_row, i_col])
+            plot_seroprevalence_by_age(
+                plotter,
+                uncertainty_df,
+                selected_scenario,
+                time=midpoint_time,
+                axis=ax
+            )
+
+            # add data
+            for measure in survey["measures"]:
+                mid_age = mean(measure["age_range"])
+                ax.plot([mid_age, mid_age], [measure["ci"][0], measure["ci"][1]],
+                          "-", color='red', lw=.7)
+                ax.plot(mid_age, measure["central"], "o", color="red", ms=2)
+                ax.axvline(x=measure["age_range"][0], linestyle="--", color='grey', lw=.5)
+
+            i_col += 1
+            if i_col == n_columns:
+                i_row += 1
+                i_col = 0
+    
+        plotter.save_figure(fig, filename='multi_sero_by_age', subdir="outputs", title_text='')
 
 def _get_target_values(targets: dict, output_name: str):
     """Pulls out values for a given target"""

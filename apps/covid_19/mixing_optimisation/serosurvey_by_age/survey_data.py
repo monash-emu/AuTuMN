@@ -1,6 +1,5 @@
 import pandas as pd
 import json
-
 # format:
 # serosurvey_data = {
 #     "belgium":
@@ -13,6 +12,8 @@ import json
 #             }
 #         ],
 # }
+import os
+from autumn.constants import APPS_PATH
 
 
 def read_belgium_data():
@@ -100,11 +101,19 @@ def reformat_spain_agegroup(string):
         return [int(string.split("&&")[0]), int(string.split("&&")[1]) + 1]
 
 
-serosurvey_data_perc = {
-    "belgium": read_belgium_data(),
-    "united-kingdom": read_uk_data(),
-    "spain": read_spain_data(),
-}
+def get_serosurvey_data():
+    path = os.path.join(APPS_PATH, "covid_19", "mixing_optimisation", "serosurvey_by_age", "serosurvey_data.json")
+    with open(path) as f:
+        serosurveys = json.load(f)
+    return serosurveys
 
-with open('serosurvey_data.json', 'w') as json_file:
-    json.dump(serosurvey_data_perc, json_file)
+
+if __name__ == "__main__":
+    serosurvey_data_perc = {
+        "belgium": read_belgium_data(),
+        "united-kingdom": read_uk_data(),
+        "spain": read_spain_data(),
+    }
+
+    with open('serosurvey_data.json', 'w') as json_file:
+        json.dump(serosurvey_data_perc, json_file)

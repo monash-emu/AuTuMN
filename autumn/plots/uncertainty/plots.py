@@ -57,7 +57,7 @@ def plot_timeseries_with_uncertainty(
     _plot_targets_to_axis(axis, values, times, on_uncertainty_plot=True)
 
     # Sort out x-axis
-    change_xaxis_to_date(axis, ref_date)
+    change_xaxis_to_date(fig, axis, ref_date)
     if n_xticks is not None:
         pyplot.locator_params(axis='x', nbins=n_xticks)
 

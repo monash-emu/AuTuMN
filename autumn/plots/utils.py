@@ -2,7 +2,7 @@ import matplotlib.ticker as ticker
 import datetime
 
 
-def change_xaxis_to_date(axis, ref_date, date_str_format="%#d-%b"):
+def change_xaxis_to_date(axis, ref_date, date_str_format="%#d-%b", rotation=30):
     """
     Change the format of a numerically formatted x-axis to date.
     """
@@ -13,4 +13,4 @@ def change_xaxis_to_date(axis, ref_date, date_str_format="%#d-%b"):
 
     date_format = ticker.FuncFormatter(to_date)
     axis.xaxis.set_major_formatter(date_format)
-    axis.xaxis.set_tick_params(rotation=30)
+    axis.xaxis.set_tick_params(rotation=rotation)

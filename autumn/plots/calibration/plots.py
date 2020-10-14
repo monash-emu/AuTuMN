@@ -791,6 +791,9 @@ def plot_cdr_curves(
         plotter: Plotter,
         times,
         detected_proportion,
+        end_date,
+        alpha,
+        rotation,
 ):
     # Get basic plotting structures
     fig, axis, _, _, _, _ = plotter.get_figure()
@@ -800,14 +803,15 @@ def plot_cdr_curves(
         axis.plot(
             times,
             [detected_proportion[i_curve](i_time) for i_time in times],
-            alpha=0.3,
+            alpha=alpha,
             color="k",
             linewidth=2.
         )
 
     # Tidy
-    change_xaxis_to_date(axis, ref_date=datetime.date(2019, 12, 31))
-    axis.set_ylabel("case detection rate (proportion)")
+    change_xaxis_to_date(axis, ref_date=datetime.date(2019, 12, 31), rotation=rotation)
+    axis.set_xlim(right=end_date)
+    axis.set_ylabel("proportion symptomatic cases detected")
     axis.set_ylim([0., 1.])
     plotter.save_figure(fig, filename=f"cdr_curves")
 

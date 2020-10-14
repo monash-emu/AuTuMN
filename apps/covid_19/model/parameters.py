@@ -99,6 +99,7 @@ class Mobility(BaseModel):
     microdistancing: Dict[str, MicroDistancingFunc]
     microdistancing_locations: List[str]
     smooth_google_data: bool
+    square_mobility_effect: bool
     npi_effectiveness: Dict[str, float]
     google_mobility_locations: Dict[str, List[str]]
 

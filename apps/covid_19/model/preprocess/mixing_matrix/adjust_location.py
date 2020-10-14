@@ -31,6 +31,7 @@ class LocationMixingAdjustment(BaseMixingAdjustment):
         google_mobility_locations = mobility.google_mobility_locations
         microdistancing_params = mobility.microdistancing
         smooth_google_data = mobility.smooth_google_data
+        square_mobility_effect = mobility.square_mobility_effect
 
         # Load mobility data
         google_mobility_values, google_mobility_days = get_mobility_data(
@@ -53,13 +54,16 @@ class LocationMixingAdjustment(BaseMixingAdjustment):
         self.loc_adj_funcs = {}
         for loc_key in macrodistancing_locations:
             loc_times = mixing[loc_key]["times"]
-            loc_vals = mixing[loc_key]["values"]
+            if square_mobility_effect:
+                loc_vals = [v**2 for v in mixing[loc_key]["values"]]
+            else:
+                loc_vals = mixing[loc_key]["values"]
             self.loc_adj_funcs[loc_key] = \
                 scale_up_function(loc_times, loc_vals, method=4)
 
         # Apply the microdistancing function
         self.microdistancing_function = \
-            apply_microdistancing(microdistancing_params) if \
+            apply_microdistancing(microdistancing_params, square_mobility_effect) if \
                 microdistancing_params else \
                 None
 
@@ -172,7 +176,7 @@ def update_mixing_data(
     return mixing
 
 
-def apply_microdistancing(params):
+def apply_microdistancing(params, square_mobility_effect):
     """
     Work out microdistancing function to be applied as a multiplier to some or all of the Prem locations as requested in
     the microdistancing_locations.
@@ -190,10 +194,11 @@ def apply_microdistancing(params):
 
     # Generate the overall composite contact adjustment function as the product of the reciprocal all the components
     def microdist_composite_func(time):
+        power = 2 if square_mobility_effect else 1
         return \
             np.product(
                 [
-                    1. - microdist_component_funcs[i_func](time) for
+                    (1. - microdist_component_funcs[i_func](time)) ** power for
                     i_func in range(len(microdist_component_funcs))
                 ]
             )

@@ -5,6 +5,33 @@ time:
   start: 152.
 
 mobility:
+  mixing:
+    school:
+      append: false
+      times:
+        - 2020-03-24
+        - 2020-03-25  # School holidays brought forward to 25th March
+        - 2020-05-25
+        - 2020-05-26  # 400,000 students return
+        - 2020-06-08
+        - 2020-06-09  # Remaining 618,000 students return
+        - 2020-07-08
+        - 2020-07-09  # Schools close for stage 3
+        - 2020-10-05
+        - 2020-10-06  # Schools re-open for term 4
+      values:
+        - 1.
+        - 0.  # 25th March
+        - 0.
+        - 0.393  # 26th May
+        - 0.393
+        - 1.  # 9th June
+        - 1.
+        - 0.  # 9th July
+        - 0.
+        - 1.  # 5th October
+
+
   # Regional Victoria clusters macrodistancing function
   microdistancing:
     behaviour:

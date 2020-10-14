@@ -69,7 +69,7 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "case_detection.max_change_time",
             "distribution": "uniform",
-            "distri_params": [70.0, 180.0],
+            "distri_params": [100, 250],
         },
         {
             "param_name": "case_detection.end_value",
@@ -98,11 +98,11 @@ def get_prior_distributions_for_opti():
         #     "distribution": "uniform",
         #     "distri_params": [0.75, 1.25],
         # },
-        # {
-        #     "param_name": "clinical_stratification.props.hospital.multiplier",
-        #     "distribution": "uniform",
-        #     "distri_params": [0.75, 1.25],
-        # },
+        {
+            "param_name": "clinical_stratification.props.hospital.multiplier",
+            "distribution": "uniform",
+            "distri_params": [0.75, 1.25],
+        },
         # Micro-distancing
         {
             "param_name": "mobility.microdistancing.behaviour.parameters.c",
@@ -112,13 +112,7 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "mobility.microdistancing.behaviour.parameters.upper_asymptote",
             "distribution": "uniform",
-            "distri_params": [.25, .75],
-        },
-        # Seasonal forcing
-        {
-            "param_name": "seasonal_force",
-            "distribution": "uniform",
-            "distri_params": [-0.3, 0.],
+            "distri_params": [.10, .70],
         },
     ]
     return prior_list

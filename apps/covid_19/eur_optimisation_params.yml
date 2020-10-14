@@ -79,6 +79,3 @@ mobility:
         c: 90.
         sigma: 0.
         upper_asymptote: .4
-
-
-seasonal_force: -0.2

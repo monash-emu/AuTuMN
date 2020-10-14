@@ -1,18 +1,18 @@
+import autumn
 import pytest
 
 from apps import covid_19, tuberculosis
-from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
+
 
 @pytest.mark.calibrate_models
 @pytest.mark.github_only
 @pytest.mark.parametrize("region", covid_19.app.region_names)
 def test_covid_calibration(region):
     """
-    Calibration smoke test - make sure everything can run for 15 seconds without exploding.
+    Calibration smoke test - make sure everything can run for 10 seconds without exploding.
     """
-    if region not in OPTI_REGIONS:
-        region_app = covid_19.app.get_region(region)
-        region_app.calibrate_model(10, 1, 1)
+    region_app = covid_19.app.get_region(region)
+    region_app.calibrate_model(10, 1, 1)
 
 
 @pytest.mark.calibrate_models

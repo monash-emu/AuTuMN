@@ -191,15 +191,7 @@ def trigger_europe():
     Trigger all European mixing optimization models
     """
     logger.info("Triggering all European mixing optimisation calibrations.")
-    region_names = [
-        Region.UNITED_KINGDOM,
-        Region.BELGIUM,
-        Region.ITALY,
-        Region.SWEDEN,
-        Region.FRANCE,
-        Region.SPAIN,
-    ]
-    _trigger_models(region_names, trigger_europe_pipeline)
+    _trigger_models(Region.MIXING_OPTI_REGIONS, trigger_europe_pipeline)
 
 
 @trigger.command("victoria")
@@ -208,18 +200,7 @@ def trigger_victoria():
     Trigger all Victorian models
     """
     logger.info("Triggering all Victorian regional calibrations.")
-    region_names = [
-        Region.NORTH_METRO,
-        Region.SOUTH_EAST_METRO,
-        Region.SOUTH_METRO,
-        Region.WEST_METRO,
-        Region.BARWON_SOUTH_WEST,
-        Region.GIPPSLAND,
-        Region.HUME,
-        Region.LODDON_MALLEE,
-        Region.GRAMPIANS,
-    ]
-    _trigger_models(region_names, trigger_victoria_pipeline)
+    _trigger_models(Region.VICTORIA_SUBREGIONS, trigger_victoria_pipeline)
 
 
 @trigger.command("philippines")
@@ -228,13 +209,7 @@ def trigger_philippines():
     Trigger all Philippines models
     """
     logger.info("Triggering all Philippines regional calibrations.")
-    region_names = [
-        Region.PHILIPPINES,
-        Region.MANILA,
-        Region.CALABARZON,
-        Region.CENTRAL_VISAYAS,
-    ]
-    _trigger_models(region_names, trigger_philippines_pipeline)
+    _trigger_models(Region.PHILIPPINES_REGIONS, trigger_philippines_pipeline)
 
 
 def _trigger_models(regions, p):

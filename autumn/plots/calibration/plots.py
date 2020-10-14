@@ -826,13 +826,12 @@ def plot_multi_fit(
             axis = plot_calibration(
                 axes[indices[i_output][0], indices[i_output][1]], output, outputs[output], targets, is_logscale
             )
+            change_xaxis_to_date(axis, datetime.date(2019, 12, 31))
             axis.set_title(
                 get_plot_text_dict(
                     output, capitalise_first_letter=capitalise_first_letter
                 ), fontsize=title_font_size
             )
-            pyplot.setp(axis.get_yticklabels(), fontsize=label_font_size)
-            pyplot.setp(axis.get_xticklabels(), fontsize=label_font_size)
             filename = f"calibration-fit-{output}"
         else:
             axes[indices[i_output][0], indices[i_output][1]].axis("off")

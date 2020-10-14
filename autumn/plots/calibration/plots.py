@@ -806,7 +806,7 @@ def plot_cdr_curves(
         )
 
     # Tidy
-    axis.set_xlabel("time")
+    change_xaxis_to_date(axis, ref_date=datetime.date(2019, 12, 31))
     axis.set_ylabel("case detection rate (proportion)")
     axis.set_ylim([0., 1.])
     plotter.save_figure(fig, filename=f"cdr_curves")

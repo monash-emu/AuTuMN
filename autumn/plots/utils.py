@@ -8,7 +8,8 @@ def change_xaxis_to_date(axis, ref_date):
     """
 
     def to_date(x_value, pos):
-        return ref_date + datetime.timedelta(days=x_value)
+        date = ref_date + datetime.timedelta(days=x_value)
+        return date.strftime("%d-%m")
 
     date_format = ticker.FuncFormatter(to_date)
     axis.xaxis.set_major_formatter(date_format)

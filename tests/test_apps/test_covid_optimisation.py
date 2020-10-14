@@ -6,16 +6,6 @@ from autumn.constants import Region
 from summer.model import StratifiedModel
 from apps.covid_19.mixing_optimisation import mixing_opti as opti
 
-AVAILABLE_MODES = [
-    "by_age",
-    "by_location",
-]
-AVAILABLE_CONFIGS = range(4)
-DECISION_VARS = {
-    "by_age": [1.0] * 16,
-    "by_location": [1.0, 1.0, 1.0],
-}
-
 
 @pytest.mark.local_only
 @pytest.mark.parametrize("region", Region.MIXING_OPTI_REGIONS)
@@ -41,14 +31,15 @@ def test_run_root_models_full(region):
     assert model.outputs is not None
 
 
-@pytest.mark.skip
-def test_build_params_for_phases_2_and_3():
-    for mode in AVAILABLE_MODES:
-        for config in AVAILABLE_CONFIGS:
-            scenario_params = opti.build_params_for_phases_2_and_3(
-                DECISION_VARS[mode], config=config, mode=mode
-            )
-            assert "mixing" in scenario_params and "end_time" in scenario_params
+AVAILABLE_MODES = [
+    "by_age",
+    "by_location",
+]
+AVAILABLE_CONFIGS = range(4)
+DECISION_VARS = {
+    "by_age": [1.0] * 16,
+    "by_location": [1.0, 1.0, 1.0],
+}
 
 
 @pytest.mark.skip
@@ -62,3 +53,23 @@ def test_full_optimisation_iteration_for_uk():
             h, d, yoll, p_immune, m = opti.objective_function(
                 DECISION_VARS[mode], root_model, mode, country, config
             )
+
+
+@pytest.mark.skip
+@pytest.mark.parametrize("config", AVAILABLE_CONFIGS)
+@pytest.mark.parametrize("mode", AVAILABLE_MODES)
+def test_build_params_for_phases_2_and_3(mode, config):
+    scenario_params = opti.build_params_for_phases_2_and_3(
+        DECISION_VARS[mode], config=config, mode=mode
+    )
+    assert "mixing" in scenario_params
+    assert "end_time" in scenario_params
+
+
+@pytest.mark.skip
+def test_build_params_for_phases_2_and_3(mode, config):
+    scenario_params = opti.build_params_for_phases_2_and_3(
+        DECISION_VARS[mode], config=config, mode=mode
+    )
+    assert "mixing" in scenario_params
+    assert "end_time" in scenario_params

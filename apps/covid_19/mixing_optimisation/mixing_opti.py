@@ -11,11 +11,12 @@ from autumn.tool_kit.params import update_params, merge_dicts
 from datetime import date, timedelta
 
 from apps import covid_19
-from apps.covid_19.mixing_optimisation.constants import PHASE_2_START_TIME
+from apps.covid_19.mixing_optimisation.constants import PHASE_2_START_TIME, DURATION_PHASES_2_AND_3
 from apps.covid_19.model.preprocess.mixing_matrix.dynamic import build_dynamic
 from autumn.inputs.demography.queries import get_iso3_from_country_name
 
 
+REF_DATE = date(2019, 12, 31)
 FILE_DIR = os.path.dirname(os.path.abspath(__file__))
 OPTI_PARAMS_PATH = os.path.join(FILE_DIR, "opti_params.yml")
 
@@ -52,19 +53,38 @@ def run_root_model(region: str, calibrated_params: dict = {}):
     return base_scenario.model
 
 
-def build_params_for_phases_2_and_3(decision_variables, config=0, mode="by_age", final_mixing=1.0):
-    # create parameters for scenario 1 which includes Phases 2 and 3
-    ref_date = date(2019, 12, 31)
-    phase_2_first_day = ref_date + timedelta(days=PHASE_2_START_TIME)
+AGE_MODE = "by_age"
+LOCATION_MODE = "by_location"
+MIXING_LOCS = ["other_locations", "school", "work"]
+
+
+def build_params_for_phases_2_and_3(
+    decision_variables: dict, config: int = 0, mode: str = AGE_MODE, final_mixing: float = 1.0
+):
+    """
+    Build the scenario parameters that includes phases 2 and 3
+    """
+
+    scenario_params = {}
+
+    # Set start and end times.
+    scenario_params["time"]["start"] = PHASE_2_START_TIME - 1
+    scenario_params["time"]["end"] = PHASE_2_START_TIME + DURATION_PHASES_2_AND_3
+
+    # Convert time integers to dates.
+    phase_2_end_days = phase_2_end[config]
+    phase_2_first_day = REF_DATE + timedelta(days=PHASE_2_START_TIME)
     phase_1_end_date = phase_2_first_day + timedelta(days=-1)
-    phase_2_end_date = ref_date + timedelta(days=phase_2_end[config])
+    phase_2_end_date = REF_DATE + timedelta(days=phase_2_end_days)
     phase_3_first_day = phase_2_end_date + timedelta(days=1)
 
-    sc_1_params = {}
-    if mode == "by_age":
+    # Apply social mixing adjustments
+    if mode == AGE_MODE:
+        # Age based mixing optimisation.
         age_mixing_update = {}
         for age_group in range(16):
-            age_mixing_update["age_" + str(age_group)] = {
+            key = f"age_{age_group}"
+            age_mixing_update[key] = {
                 "times": [phase_1_end_date, phase_2_first_day, phase_2_end_date, phase_3_first_day],
                 "values": [
                     1.0,
@@ -73,49 +93,51 @@ def build_params_for_phases_2_and_3(decision_variables, config=0, mode="by_age",
                     final_mixing,
                 ],
             }
-        sc_1_params["mixing_age_adjust"] = age_mixing_update
+        scenario_params["mixing_age_adjust"] = age_mixing_update
 
-    # set location-specific mixing back to pre-COVID rates on 1st of July or use the opti decision variable
-    sc_1_params["mixing"] = {}
-    for loc in ["other_locations", "school", "work"]:
-        if mode == "by_age":  # just return mixing to pre-COVID
-            new_mixing_adjustment = 1.0
-            final_mixing_value = 1.0
-        elif mode == "by_location":  # use optimisation decision variables
-            new_mixing_adjustment = decision_variables[loc]
-            final_mixing_value = final_mixing
-        else:
-            raise ValueError("The requested mode is not supported")
+        # Set location-specific mixing back to pre-COVID rates on 1st of July.
+        scenario_params["mixing"] = {}
+        for loc in MIXING_LOCS:
+            scenario_params["mixing"][loc] = {
+                "times": [phase_1_end_date, phase_2_end_date, phase_3_first_day],
+                "values": [1.0, 1.0, 1.0],
+                "append": False,
+            }
+    elif mode == LOCATION_MODE:
+        # Set location-specific mixing to  use the opti decision variable.
+        scenario_params["mixing"] = {}
+        for loc in MIXING_LOCS:
+            # Use optimisation decision variables
+            scenario_params["mixing"][loc] = {
+                "times": [phase_1_end_date, phase_2_end_date, phase_3_first_day],
+                "values": [decision_variables[loc], decision_variables[loc], final_mixing],
+                "append": False,
+            }
+    else:
+        raise ValueError("The requested mode is not supported")
 
-        sc_1_params["mixing"][loc] = {
-            "times": [phase_1_end_date, phase_2_end_date, phase_3_first_day],
-            "values": [new_mixing_adjustment, new_mixing_adjustment, final_mixing_value],
-            "append": False,
-        }
-
-    sc_1_params["data"] = {
-        "times_imported_cases": [
-            phase_2_end[config],
-            phase_2_end[config] + 1,
-            phase_2_end[config] + 2,
-            phase_2_end[config] + 3,
-        ],
-        "n_imported_cases": [0, 5, 5, 0],
+    # Seed a new wave of infections with some importations.
+    # This tests whether herd immunity has actually been reached.
+    scenario_params["importation"] = {
+        "props_by_age": None,
+        "movement_prop": None,
+        "quarantine_timeseries": {"times": [], "values": []},
+        "case_timeseries": {
+            "times": [phase_2_end_days + i for i in range(4)],
+            "values": [0, 5, 5, 0],
+        },
     }
 
-    sc_1_params["time"]["start"] = PHASE_2_START_TIME - 1
-    sc_1_params["time"]["end"] = PHASE_2_START_TIME + DURATION_PHASES_2_AND_3
-
-    if "microdistancing" in opti_params["configurations"][config]:
-        if "microdistancing" in sc_1_params:
-            sc_1_params["microdistancing"].update(
-                opti_params["configurations"][config]["microdistancing"]
-            )
+    # Add optmisized microdistancing params to the scenario.
+    microdistancing_opti_params = opti_params["configurations"][config].get("microdistancing")
+    microdistancing_scenario_params = scenario_params.get("microdistancing")
+    if microdistancing_opti_params:
+        if microdistancing_scenario_params:
+            scenario_params["microdistancing"].update(microdistancing_opti_params)
         else:
-            sc_1_params["microdistancing"] = opti_params["configurations"][config][
-                "microdistancing"
-            ]
-    return sc_1_params
+            scenario_params["microdistancing"] = microdistancing_opti_params
+
+    return scenario_params
 
 
 def has_immunity_been_reached(_model, phase_2_end_index):
@@ -364,10 +386,7 @@ def get_mle_params_and_vars(
 
 
 def reformat_date_to_integer(_date):
-    ref_date = date(2019, 12, 31)
-
-    delta = (_date - ref_date).days
-    return delta
+    return (_date - REF_DATE).days
 
 
 def get_params_for_phases_2_and_3_from_opti_outptuts(

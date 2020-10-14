@@ -2,7 +2,8 @@ import pandas as pd
 import os
 import datetime
 import json
-from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
+
+from autumn.constants import Region
 from apps.covid_19.mixing_optimisation.utils import get_weekly_summed_targets
 
 
@@ -55,30 +56,25 @@ def drop_who_data_to_targets(
     country="australia", data_start_time=0, data_end_time=365, weekly_average=True
 ):
     data = {}
-    output_name = {
-        "confirmed": "notifications",
-        "deaths": "infection_deaths"
-    }
+    output_name = {"confirmed": "notifications", "deaths": "infection_deaths"}
     for variable in ["confirmed", "deaths"]:
-        times, values = read_who_data_from_csv(
-            variable, country, data_start_time, data_end_time
-        )
+        times, values = read_who_data_from_csv(variable, country, data_start_time, data_end_time)
         if weekly_average:
             times, values = get_weekly_summed_targets(times, values)
-        data[variable] = {'times': times, 'values': values}
+        data[variable] = {"times": times, "values": values}
 
     region = country if country != "united-kingdom" else "united_kingdom"
     target_path = os.path.join("../apps", "covid_19", "regions", region, "targets.json")
 
     with open(target_path, mode="r") as f:
-            targets = json.load(f)
-            for variable in ["confirmed", "deaths"]:
-                targets[output_name[variable]]['times'] = data[variable]['times']
-                targets[output_name[variable]]['values'] = data[variable]['values']
+        targets = json.load(f)
+        for variable in ["confirmed", "deaths"]:
+            targets[output_name[variable]]["times"] = data[variable]["times"]
+            targets[output_name[variable]]["values"] = data[variable]["values"]
     with open(target_path, "w") as f:
         json.dump(targets, f, indent=2)
 
 
 if __name__ == "__main__":
-    for country in OPTI_REGIONS:
+    for country in Region.MIXING_OPTI_REGIONS:
         drop_who_data_to_targets(country)

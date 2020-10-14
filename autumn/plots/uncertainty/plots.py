@@ -3,7 +3,7 @@ Plotting projection uncertainty.
 """
 from typing import List
 import logging
-from datetime import datetime
+import datetime
 
 import pandas as pd
 from math import ceil
@@ -11,7 +11,7 @@ from math import ceil
 from autumn.plots.plotter import Plotter
 from autumn.plots.calibration.plots import _plot_targets_to_axis
 from matplotlib import colors, pyplot
-from matplotlib.ticker import FormatStrFormatter
+import matplotlib.ticker as ticker
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +42,12 @@ def plot_timeseries_with_uncertainty(
     if single_panel:
         fig, axis, _, _, _, _ = plotter.get_figure()
     colors = _apply_transparency(COLORS, ALPHAS)
+
+    def to_date(x_value, pos, ref_date=datetime.date(2019, 12, 31)):
+        return ref_date + datetime.timedelta(days=x_value)
+
+    date_format = ticker.FuncFormatter(to_date)
+    axis.xaxis.set_major_formatter(date_format)
 
     # Plot each scenario on a single axis.
     for scenario_idx in scenario_idxs:

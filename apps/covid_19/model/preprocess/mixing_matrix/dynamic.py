@@ -2,11 +2,12 @@ from typing import Callable
 
 import numpy as np
 
-from apps.covid_19.model.parameters import Country, Mobility
+from apps.covid_19.model.parameters import Country, Mobility, MixingType
 
 
 from .static import build_static
 from .adjust_location import LocationMixingAdjustment
+from .adjust_age import AgeMixingAdjustment
 
 
 def build_dynamic(country: Country, mobility: Mobility) -> Callable[[float], np.ndarray]:
@@ -14,7 +15,11 @@ def build_dynamic(country: Country, mobility: Mobility) -> Callable[[float], np.
     Build a time-varing mixing matrix
     Returns a function of time which returns a 16x16 mixing matrix.
     """
-    adjuster = LocationMixingAdjustment(country, mobility)
+    if mobility.mixing_type == MixingType.location:
+        adjuster = LocationMixingAdjustment(country, mobility)
+    elif mobility.mixing_type == MixingType.age:
+        adjuster = AgeMixingAdjustment(mobility)
+
     static_mixing_matrix = build_static(country.iso3)
 
     # Create mixing matrix function

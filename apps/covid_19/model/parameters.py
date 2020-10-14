@@ -1,7 +1,7 @@
 """
 Type definition for model parameters
 """
-from datetime import datetime, date
+from enum import Enum
 from typing import List, Optional, Dict, Any, Union
 from pydantic import BaseModel, validator, root_validator
 from pydantic.dataclasses import dataclass
@@ -54,7 +54,7 @@ class Sojourn(BaseModel):
     compartment_periods_calculated: Dict[str, CalcPeriod]
 
 
-class MixingLocation(BaseModel):
+class MixingCategory(BaseModel):
     # Whether to append or overwrite times / values
     append: bool
     # Times for dynamic mixing func.
@@ -91,11 +91,17 @@ class MicroDistancingFunc(BaseModel):
     parameters: Union[EmpiricMicrodistancingParams, TanhMicrodistancingParams]
 
 
+class MixingType(str, Enum):
+    age = "age"
+    location = "location"
+
+
 class Mobility(BaseModel):
     """Google mobility params"""
 
     region: Optional[str]  # None/null means default to parent country
-    mixing: Dict[str, MixingLocation]
+    mixing_type: MixingType
+    mixing: Dict[str, MixingCategory]
     microdistancing: Dict[str, MicroDistancingFunc]
     microdistancing_locations: List[str]
     smooth_google_data: bool

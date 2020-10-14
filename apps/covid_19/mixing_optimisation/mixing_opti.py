@@ -14,6 +14,7 @@ from apps import covid_19
 from apps.covid_19.mixing_optimisation.constants import PHASE_2_START_TIME, DURATION_PHASES_2_AND_3
 from apps.covid_19.model.preprocess.mixing_matrix.dynamic import build_dynamic
 from autumn.inputs.demography.queries import get_iso3_from_country_name
+from apps.covid_19.model.preprocess.mixing_matrix.adjust_age import AGE_GROUPS
 
 
 REF_DATE = date(2019, 12, 31)
@@ -79,12 +80,11 @@ def build_params_for_phases_2_and_3(
     phase_3_first_day = phase_2_end_date + timedelta(days=1)
 
     # Apply social mixing adjustments
+    scenario_params["mobility"] = {"mixing": {}}
     if mode == AGE_MODE:
         # Age based mixing optimisation.
-        age_mixing_update = {}
-        for age_group in range(16):
-            key = f"age_{age_group}"
-            age_mixing_update[key] = {
+        for age_group in AGE_GROUPS:
+            scenario_params["mobility"]["mixing"][age_group] = {
                 "times": [phase_1_end_date, phase_2_first_day, phase_2_end_date, phase_3_first_day],
                 "values": [
                     1.0,
@@ -92,10 +92,11 @@ def build_params_for_phases_2_and_3(
                     decision_variables[age_group],
                     final_mixing,
                 ],
+                "append": False,
             }
-        scenario_params["mixing_age_adjust"] = age_mixing_update
 
         # Set location-specific mixing back to pre-COVID rates on 1st of July.
+        # ie. use pre-covid contact matrices.
         scenario_params["mixing"] = {}
         for loc in MIXING_LOCS:
             scenario_params["mixing"][loc] = {
@@ -103,6 +104,7 @@ def build_params_for_phases_2_and_3(
                 "values": [1.0, 1.0, 1.0],
                 "append": False,
             }
+
     elif mode == LOCATION_MODE:
         # Set location-specific mixing to  use the opti decision variable.
         scenario_params["mixing"] = {}

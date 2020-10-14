@@ -73,6 +73,7 @@ sojourn:
 # Parameters relating to adjusting the mixing matrix to reflect interventions
 mobility:
   region: null
+  mixing_type: location
   mixing: {}
   npi_effectiveness: {}
   # Mapping of Google mobility locations to Prem-specific locations
@@ -170,7 +171,7 @@ testing_to_detection: null
 importation: null
 
 # Multiplier scaling the covariance matrix in the Haario Metropolis. 2.4 is the value recommended by Haario.
-haario_scaling_factor: 2.4  # Greater values increase jumping step size and reduce the acceptance ratio
+haario_scaling_factor: 2.4 # Greater values increase jumping step size and reduce the acceptance ratio
 
 # Fake parameters used in calibration for negative binomial (need to be listed for validation to pass)
 # Not used by model.

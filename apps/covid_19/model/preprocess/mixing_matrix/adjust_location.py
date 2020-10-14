@@ -1,19 +1,12 @@
-from typing import Callable, Dict
-
 import numpy as np
 
 from autumn.curve import scale_up_function, tanh_based_scaleup
 from autumn.inputs import get_country_mixing_matrix, get_mobility_data
 from autumn.tool_kit.utils import apply_moving_average
-from apps.covid_19.model.parameters import (
-    Country,
-    Mobility,
-    MixingLocation,
-)
+from apps.covid_19.model.parameters import Country, Mobility, MixingType
 
 from .adjust_base import BaseMixingAdjustment
-from apps.covid_19.constants import BASE_DATE, BASE_DATETIME
-from apps.covid_19.model.preprocess.mixing_matrix import utils
+from apps.covid_19.constants import BASE_DATETIME
 
 from . import funcs as parse_funcs
 
@@ -24,6 +17,7 @@ LOCATIONS = ["home", "other_locations", "school", "work"]
 class LocationMixingAdjustment(BaseMixingAdjustment):
     def __init__(self, country: Country, mobility: Mobility):
         """Build the time variant location adjustment functions"""
+        assert mobility.mixing_type == MixingType.location
         country_iso3 = country.iso3
         region = mobility.region
         mixing = mobility.mixing
@@ -55,17 +49,17 @@ class LocationMixingAdjustment(BaseMixingAdjustment):
         for loc_key in macrodistancing_locations:
             loc_times = mixing[loc_key]["times"]
             if square_mobility_effect:
-                loc_vals = [v**2 for v in mixing[loc_key]["values"]]
+                loc_vals = [v ** 2 for v in mixing[loc_key]["values"]]
             else:
                 loc_vals = mixing[loc_key]["values"]
-            self.loc_adj_funcs[loc_key] = \
-                scale_up_function(loc_times, loc_vals, method=4)
+            self.loc_adj_funcs[loc_key] = scale_up_function(loc_times, loc_vals, method=4)
 
         # Apply the microdistancing function
-        self.microdistancing_function = \
-            apply_microdistancing(microdistancing_params, square_mobility_effect) if \
-                microdistancing_params else \
-                None
+        self.microdistancing_function = (
+            apply_microdistancing(microdistancing_params, square_mobility_effect)
+            if microdistancing_params
+            else None
+        )
 
         # Load all location-specific mixing info.
         self.matrix_components = {}
@@ -186,8 +180,7 @@ def apply_microdistancing(params, square_mobility_effect):
     microdist_component_funcs = []
     for microdist_type in [param for param in params if "_adjuster" not in param]:
         adjustment_string = f"{microdist_type}_adjuster"
-        unadjusted_microdist_func = \
-            get_microdist_func_component(params, microdist_type)
+        unadjusted_microdist_func = get_microdist_func_component(params, microdist_type)
         microdist_component_funcs.append(
             get_microdist_adjustment(params, adjustment_string, unadjusted_microdist_func)
         )
@@ -195,13 +188,12 @@ def apply_microdistancing(params, square_mobility_effect):
     # Generate the overall composite contact adjustment function as the product of the reciprocal all the components
     def microdist_composite_func(time):
         power = 2 if square_mobility_effect else 1
-        return \
-            np.product(
-                [
-                    (1. - microdist_component_funcs[i_func](time)) ** power for
-                    i_func in range(len(microdist_component_funcs))
-                ]
-            )
+        return np.product(
+            [
+                (1.0 - microdist_component_funcs[i_func](time)) ** power
+                for i_func in range(len(microdist_component_funcs))
+            ]
+        )
 
     return microdist_composite_func
 
@@ -213,9 +205,7 @@ def get_empiric_microdist_func(params, microdist_type):
 
     micro_times = params[microdist_type].parameters.times
     multiplier = params[microdist_type].parameters.max_effect
-    micro_vals = [
-        multiplier * value for value in params[microdist_type].parameters.values
-    ]
+    micro_vals = [multiplier * value for value in params[microdist_type].parameters.values]
     return scale_up_function(micro_times, micro_vals, method=4)
 
 
@@ -226,8 +216,7 @@ def get_microdist_adjustment(params, adjustment_string, unadjusted_microdist_fun
     """
 
     if adjustment_string in params:
-        waning_adjustment = \
-            get_microdist_func_component(params, adjustment_string)
+        waning_adjustment = get_microdist_func_component(params, adjustment_string)
         return lambda time: unadjusted_microdist_func(time) * waning_adjustment(time)
     else:
         return unadjusted_microdist_func

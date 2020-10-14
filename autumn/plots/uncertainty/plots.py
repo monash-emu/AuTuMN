@@ -3,7 +3,7 @@ Plotting projection uncertainty.
 """
 from typing import List
 import logging
-from datetime import datetime
+import datetime
 
 import pandas as pd
 from math import ceil
@@ -11,7 +11,7 @@ from math import ceil
 from autumn.plots.plotter import Plotter
 from autumn.plots.calibration.plots import _plot_targets_to_axis
 from matplotlib import colors, pyplot
-from matplotlib.ticker import FormatStrFormatter
+from autumn.plots.utils import change_xaxis_to_date
 
 logger = logging.getLogger(__name__)
 
@@ -23,16 +23,17 @@ COLORS = (
 
 
 def plot_timeseries_with_uncertainty(
-    plotter: Plotter,
-    uncertainty_df: pd.DataFrame,
-    output_name: str,
-    scenario_idxs: List[int],
-    targets: dict,
-    is_logscale=False,
-    x_low=0.0,
-    x_up=1e6,
-    axis=None,
-    n_xticks=None
+        plotter: Plotter,
+        uncertainty_df: pd.DataFrame,
+        output_name: str,
+        scenario_idxs: List[int],
+        targets: dict,
+        is_logscale=False,
+        x_low=0.0,
+        x_up=1e6,
+        axis=None,
+        n_xticks=None,
+        ref_date=datetime.date(2019, 12, 31),
 ):
     """
     Plots the uncertainty timeseries for one or more scenarios.
@@ -55,7 +56,8 @@ def plot_timeseries_with_uncertainty(
     values, times = _get_target_values(targets, output_name)
     _plot_targets_to_axis(axis, values, times, on_uncertainty_plot=True)
 
-    axis.set_xlabel("time")
+    # Sort out x-axis
+    change_xaxis_to_date(axis, ref_date)
     if n_xticks is not None:
         pyplot.locator_params(axis='x', nbins=n_xticks)
 

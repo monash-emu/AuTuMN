@@ -2,12 +2,11 @@
 Calibration plots
 """
 import os
-import copy
 import logging
 from math import log
-from typing import List, Tuple, Callable
+from typing import List
 from random import choices
-import streamlit as st
+import datetime
 
 import pandas as pd
 import seaborn as sns
@@ -19,6 +18,7 @@ import plotly.express as px
 from autumn import db
 from autumn.calibration.utils import calculate_prior, raise_error_unsupported_prior
 from autumn.plots.plotter import Plotter, COLOR_THEME
+from autumn.plots.utils import change_xaxis_to_date
 
 logger = logging.getLogger(__name__)
 
@@ -776,6 +776,8 @@ def plot_calibration_fit(
     plot_calibration(
         axis, output_name, outputs, targets, is_logscale
     )
+    ref_date = datetime.date(2019, 12, 31)
+    change_xaxis_to_date(axis, ref_date)
     if is_logscale:
         filename = f"calibration-fit-{output_name}-logscale"
         title_text = f"Calibration fit for {output_name} (logscale)"
@@ -824,13 +826,12 @@ def plot_multi_fit(
             axis = plot_calibration(
                 axes[indices[i_output][0], indices[i_output][1]], output, outputs[output], targets, is_logscale
             )
+            change_xaxis_to_date(axis, datetime.date(2019, 12, 31))
             axis.set_title(
                 get_plot_text_dict(
                     output, capitalise_first_letter=capitalise_first_letter
                 ), fontsize=title_font_size
             )
-            pyplot.setp(axis.get_yticklabels(), fontsize=label_font_size)
-            pyplot.setp(axis.get_xticklabels(), fontsize=label_font_size)
             filename = f"calibration-fit-{output}"
         else:
             axes[indices[i_output][0], indices[i_output][1]].axis("off")

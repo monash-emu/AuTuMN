@@ -1,19 +1,14 @@
-"""
-TODO: Test more mixing matrix functionality
-- test periodic interventions
-- test age adjustments
-- test NPI effectiveness
-- test microdistancing
-"""
-from datetime import date, timedelta, datetime
-import pytest
+from datetime import timedelta, datetime
+
 import numpy as np
 from numpy.testing import assert_array_equal
 
-from apps.covid_19.model.preprocess import mixing_matrix
-from apps.covid_19.model.preprocess.mixing_matrix import adjust_location
-from apps.covid_19.model.preprocess.mixing_matrix.utils import BASE_DATE
-from apps.covid_19.model.parameters import Mobility, Country, MixingCategory
+from autumn.inputs import get_country_mixing_matrix
+from apps.covid_19.model.preprocess.mixing_matrix import build_dynamic_mixing_matrix
+from apps.covid_19.model.preprocess.mixing_matrix import mobility
+
+from apps.covid_19.model.parameters import Mobility, Country, MixingLocation
+
 
 from autumn.inputs.social_mixing.queries import (
     get_mixing_matrix_specific_agegroups,
@@ -21,185 +16,11 @@ from autumn.inputs.social_mixing.queries import (
 )
 
 
-@pytest.mark.parametrize(
-    "vals_in, vals_out",
-    (
-        ([1, 2, 3, 4, 5], [1, 2, 3, 4, 5]),
-        ([1, 2, ["repeat_prev"], 3], [1, 2, 2, 3]),
-        ([1, 2, ["add_to_prev", 1.23], 3], [1, 2, 3.23, 3]),
-        ([0.1, 0.5, ["add_to_prev_up_to_1", 0.3], 0.9], [0.1, 0.5, 0.8, 0.9]),
-        ([0.1, 0.8, ["add_to_prev_up_to_1", 0.3], 0.9], [0.1, 0.8, 1, 0.9]),
-        ([1, 2, ["scale_prev", -1], 3], [1, 2, 0, 3]),
-        ([0.1, 0.95, ["scale_prev_up_to_1", 1.1], 0.5], [0.1, 0.95, 1, 0.5]),
-        ([1, 2, ["scale_prev", 1.1], 3], [1, 2, 2.2, 3]),
-        ([1, 2, ["scale_prev", 0.9], 3], [1, 2, 1.8, 3]),
-        ([8, ["scale_prev", 0.5], ["scale_prev", 0.5], ["scale_prev", 0.5]], [8, 4, 2, 1]),
-    ),
-)
-def test_parse_values(vals_in, vals_out):
-    """
-    Ensure parse values works
-    """
-    assert adjust_location.parse_values(vals_in) == vals_out
-
-
-def test_update_mixing_data__with_only_mobility_data():
-    """
-    Ensure using no user-specified mixing params returns a mixing dict containing only mobility data.
-    """
-    mixing = {}
-    npi_effectiveness_params = {}
-    google_mobility_values = {"work": [1.1, 1.2, 1.3, 1.4], "other_locations": [1.5, 1.6, 1.7, 1.8]}
-    google_mobility_days = [0, 1, 2, 3]
-    actual_mixing = adjust_location.update_mixing_data(
-        mixing,
-        npi_effectiveness_params,
-        google_mobility_values,
-        google_mobility_days,
-    )
-    assert actual_mixing == {
-        "work": {
-            "values": [1.1, 1.2, 1.3, 1.4],
-            "times": [0, 1, 2, 3],
-        },
-        "other_locations": {
-            "values": [1.5, 1.6, 1.7, 1.8],
-            "times": [0, 1, 2, 3],
-        },
-    }
-
-
-def test_update_mixing_data__with_user_specified_values():
-    """
-    Ensure user-specified date overwrites/is appended to mobility data.
-    """
-    mixing = {
-        # Expect appended with % increase accounted for.
-        "work": {
-            "values": [["scale_prev", 1.1], 1.6],
-            "times": ([4, 5]),
-            "append": True,
-        },
-        # Expect overwritten
-        "other_locations": {
-            "values": [1.55, 1.66, 1.77, 1.88, 1.99, 1.111],
-            "times": ([0, 1, 2, 3, 4, 5]),
-            "append": False,
-        },
-        # Expect added (not overwritten)
-        "school": {
-            "values": [1.11, 1.22, 1.33, 1.44, 1.55, 1.66],
-            "times": ([0, 1, 2, 3, 4, 5]),
-            "append": False,
-        },
-    }
-    npi_effectiveness_params = {}
-    google_mobility_values = {"work": [1.1, 1.2, 1.3, 1.4], "other_locations": [1.5, 1.6, 1.7, 1.8]}
-    google_mobility_days = [0, 1, 2, 3]
-    actual_mixing = adjust_location.update_mixing_data(
-        mixing,
-        npi_effectiveness_params,
-        google_mobility_values,
-        google_mobility_days,
-    )
-    assert actual_mixing == {
-        "work": {"values": [1.1, 1.2, 1.3, 1.4, 1.54, 1.6], "times": [0, 1, 2, 3, 4, 5]},
-        "other_locations": {
-            "values": [1.55, 1.66, 1.77, 1.88, 1.99, 1.111],
-            "times": [0, 1, 2, 3, 4, 5],
-        },
-        "school": {"values": [1.11, 1.22, 1.33, 1.44, 1.55, 1.66], "times": [0, 1, 2, 3, 4, 5]},
-    }
-
-
-def test_update_mixing_data__with_user_specified_values__out_of_date():
-    """
-    When a user specifies mixing values where the max date is older than the latest
-    mobility data, then this should still work (no crash).
-    """
-    mixing = {
-        "school": {
-            "values": [1.11, 1.22, 1.33],
-            "times": ([0, 1, 2]),  # Stale date, should be up to 3
-            "append": False,
-        },
-    }
-    npi_effectiveness_params = {}
-    google_mobility_values = {"work": [1.1, 1.2, 1.3, 1.4]}
-    google_mobility_days = [0, 1, 2, 3]
-    actual_mixing = adjust_location.update_mixing_data(
-        mixing,
-        npi_effectiveness_params,
-        google_mobility_values,
-        google_mobility_days,
-    )
-    assert actual_mixing == {
-        "work": {"values": [1.1, 1.2, 1.3, 1.4], "times": [0, 1, 2, 3]},
-        "school": {"values": [1.11, 1.22, 1.33], "times": [0, 1, 2]},
-    }
-
-
-def test_update_mixing_data__with_user_specified_values__missing_data_append():
-    """
-    When a user specifies mixing values that should be appended to,
-    and there is no Google mobility data to append to, then the app should crash.
-    """
-    mixing = {
-        # Expect crash because of mispecified append
-        "school": {
-            "values": [1.11, 1.22, 1.33, 1.44],
-            "times": ([0, 1, 2, 3]),
-            "append": True,  # No school data to append to
-        },
-    }
-    npi_effectiveness_params = {}
-    google_mobility_values = {"work": [1.1, 1.2, 1.3, 1.4]}
-    google_mobility_days = [0, 1, 2, 3]
-    is_periodic_intervention = False
-    periodic_int_params = None
-    periodic_end_time = None
-    with pytest.raises(ValueError):
-        adjust_location.update_mixing_data(
-            mixing,
-            npi_effectiveness_params,
-            google_mobility_values,
-            google_mobility_days,
-        )
-
-
-def test_update_mixing_data__with_user_specified_values__date_clash_append():
-    """
-    When a user specifies mixing values that should be appended to,
-    and the min appended date is less than the max Google mobility date,
-    then the appended data should overwrite historical mobility data.
-    """
-    mixing = {
-        # Expect crash because of conflicting date
-        "work": {
-            "values": [1.11, 1.22, 1.33],
-            "times": ([3, 4, 5]),  # Conflicting lowest date, cannot append
-            "append": True,
-        },
-    }
-    npi_effectiveness_params = {}
-    google_mobility_values = {"work": [1.1, 1.2, 1.3, 1.4]}
-    google_mobility_days = [0, 1, 2, 3, 4]
-    actual_mixing = adjust_location.update_mixing_data(
-        mixing,
-        npi_effectiveness_params,
-        google_mobility_values,
-        google_mobility_days,
-    )
-    assert actual_mixing == {
-        "work": {"values": [1.1, 1.2, 1.3, 1.11, 1.22, 1.33], "times": [0, 1, 2, 3, 4, 5]},
-    }
-
-
 def test_build_static__for_australia():
     """
     Ensure the correct static mixing matrix for australia is produced
     """
-    mm = mixing_matrix.build_static("AUS")
+    mm = get_country_mixing_matrix("all_locations", "AUS")
     assert_arr_is_close(mm, AUS_MIXING_MATRIX)
 
 
@@ -207,24 +28,19 @@ def test_build_dynamic__with_no_changes():
     """
     Ensure dynamic mixing matrix has no change over time, if no changes are supplied.
     """
-    google_mobility_locations = {}
-    mixing_params = {}
-    npi_effectiveness_params = {}
-    microdistancing_params = {}
-    smooth_google_data = False
-    microdistancing_locations = ["home", "other_locations", "school", "work"]
-    mm_func = mixing_matrix.build_dynamic(
+    mm_func = build_dynamic_mixing_matrix(
+        base_matrix=AUS_MIXING_MATRIX,
         country=Country(iso3="AUS"),
         mobility=Mobility(
             region=None,
-            mixing=mixing_params,
+            mixing={},
             npi_effectiveness={},
-            mixing_type="location",
+            age_mixing=None,
             square_mobility_effect=False,
-            google_mobility_locations=google_mobility_locations,
-            smooth_google_data=smooth_google_data,
+            google_mobility_locations={},
+            smooth_google_data=False,
             microdistancing={},
-            microdistancing_locations=microdistancing_locations,
+            microdistancing_locations=["home", "other_locations", "school", "work"],
         ),
     )
     mm = mm_func(0)
@@ -248,25 +64,20 @@ def test_build_dynamic__with_mobility_data(monkeypatch):
         loc_mobility_values = {"work": [1, 1, 1, 1.5, 1.5, 1.5, 0.5, 0.5]}
         return loc_mobility_values, mobility_days
 
-    monkeypatch.setattr(adjust_location, "get_mobility_data", get_test_mobility_data)
-
-    microdistancing_locations = ["home", "other_locations", "school", "work"]
-    google_mobility_locations = {"work": ["workplace"]}
-    mixing_params = {}
-    npi_effectiveness_params = {}
-    smooth_google_data = False
-    mm_func = mixing_matrix.build_dynamic(
+    monkeypatch.setattr(mobility, "get_mobility_data", get_test_mobility_data)
+    mm_func = build_dynamic_mixing_matrix(
+        base_matrix=AUS_MIXING_MATRIX,
         country=Country(iso3="AUS"),
         mobility=Mobility(
             region=None,
-            mixing=mixing_params,
-            mixing_type="location",
+            mixing={},
+            age_mixing=None,
             square_mobility_effect=False,
             npi_effectiveness={},
-            google_mobility_locations=google_mobility_locations,
+            google_mobility_locations={"work": ["workplace"]},
             smooth_google_data=False,
             microdistancing={},
-            microdistancing_locations=microdistancing_locations,
+            microdistancing_locations=["home", "other_locations", "school", "work"],
         ),
     )
 
@@ -290,41 +101,41 @@ def test_build_dynamic__smoke_test():
     Smoke test with typical input data.
     Doesn't actually verify anything.
     """
-    microdistancing_locations = ["home", "other_locations", "school", "work"]
-    google_mobility_locations = {
-        "work": ["workplaces"],
-        "other_locations": [
-            "retail_and_recreation",
-            "grocery_and_pharmacy",
-            "parks",
-            "transit_stations",
-        ],
-    }
-    mixing_params = {
-        "other_locations": MixingCategory(
-            append=True,
-            times=get_date_from_now([10, 20, 30, 40, 50]),
-            values=[1, 0.4, 0.3, 0.3, 0.5],
-        ),
-        "work": MixingCategory(
-            append=True,
-            times=get_date_from_now([10, 20, 30, 40, 50]),
-            values=[1, 0.9, 0.5, 0.3, 0.6],
-        ),
-        "school": MixingCategory(append=False, times=get_date_from_now([10, 20]), values=[1, 0]),
-    }
-    mm_func = mixing_matrix.build_dynamic(
+    mm_func = build_dynamic_mixing_matrix(
+        base_matrix=AUS_MIXING_MATRIX,
         country=Country(iso3="MYS"),
         mobility=Mobility(
             region=None,
-            mixing=mixing_params,
-            mixing_type="location",
+            mixing={
+                "other_locations": MixingLocation(
+                    append=True,
+                    times=get_date_from_now([10, 20, 30, 40, 50]),
+                    values=[1, 0.4, 0.3, 0.3, 0.5],
+                ),
+                "work": MixingLocation(
+                    append=True,
+                    times=get_date_from_now([10, 20, 30, 40, 50]),
+                    values=[1, 0.9, 0.5, 0.3, 0.6],
+                ),
+                "school": MixingLocation(
+                    append=False, times=get_date_from_now([10, 20]), values=[1, 0]
+                ),
+            },
+            age_mixing=None,
             square_mobility_effect=False,
             npi_effectiveness={},
-            google_mobility_locations=google_mobility_locations,
+            google_mobility_locations={
+                "work": ["workplaces"],
+                "other_locations": [
+                    "retail_and_recreation",
+                    "grocery_and_pharmacy",
+                    "parks",
+                    "transit_stations",
+                ],
+            },
             smooth_google_data=True,
             microdistancing={},
-            microdistancing_locations=microdistancing_locations,
+            microdistancing_locations=["home", "other_locations", "school", "work"],
         ),
     )
     mm = mm_func(50)

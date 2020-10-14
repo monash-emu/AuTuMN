@@ -1,19 +1,19 @@
+from typing import Dict
+
 import numpy as np
 
 from autumn.curve import scale_up_function
 
-from apps.covid_19.model.parameters import Mobility, MixingType
+from apps.covid_19.model.parameters import TimeSeries
 
-from .adjust_base import BaseMixingAdjustment
+from .base_adjuster import BaseMixingAdjuster
 
 
-class AgeMixingAdjustment(BaseMixingAdjustment):
-    def __init__(self, mobility: Mobility):
+class AgeMixingAdjuster(BaseMixingAdjuster):
+    def __init__(self, age_mixing: Dict[str, TimeSeries]):
         """Build the time variant age adjustment functions"""
-        assert mobility.mixing_type == MixingType.age
         self.adjustment_funcs = {}
-        mixing = mobility.mixing
-        for age_idx, timeseries in mixing.items():
+        for age_idx, timeseries in age_mixing.items():
             func = scale_up_function(timeseries["times"], timeseries["values"], method=4)
             self.adjustment_funcs[str(age_idx)] = func
 

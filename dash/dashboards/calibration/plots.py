@@ -10,6 +10,7 @@ from autumn.plots.plotter import StreamlitPlotter
 from autumn.plots.calibration.plots import find_min_chain_length_from_mcmc_tables, get_posterior, get_epi_params
 from autumn import db, plots, inputs
 from apps.covid_19.model.preprocess.testing import find_cdr_function_from_test_data
+from apps.covid_19.mixing_optimisation.serosurvey_by_age.survey_data import get_serosurvey_data
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
 
 from dash.utils import create_downloadable_csv, round_sig_fig
@@ -590,12 +591,29 @@ def plot_seroprevalence_by_age(
     max_time = int(max(uncertainty_df["time"]))
     time = st.sidebar.slider("time", min_time, max_time, max_time)
 
-    plots.uncertainty.plots.plot_seroprevalence_by_age(
-        plotter,
-        uncertainty_df,
-        selected_scenario,
-        time
-    )
+    sero_data = get_serosurvey_data()
+    region = 'belgium'  # FIXME
+    if region in sero_data:
+        fetch_targets = st.sidebar.checkbox("for all available targets", value=False)
+        n_columns = st.sidebar.slider("Number of columns for multi-panel", 1, 5, 3)
+    else:
+        fetch_targets = False
+
+    if fetch_targets:
+        plots.uncertainty.plots.plot_seroprevalence_by_age_against_targets(
+            plotter,
+            uncertainty_df,
+            selected_scenario,
+            sero_data[region],
+            n_columns
+        )
+    else:
+        plots.uncertainty.plots.plot_seroprevalence_by_age(
+            plotter,
+            uncertainty_df,
+            selected_scenario,
+            time
+        )
 
 
 PLOT_FUNCS["Seroprevalence by age"] = plot_seroprevalence_by_age

@@ -1,4 +1,3 @@
-from apps.covid_19.model.preprocess.mixing_matrix.mixing_adjusters import age_adjuster
 from typing import Callable
 
 import numpy as np

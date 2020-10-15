@@ -1,6 +1,7 @@
 import numpy as np
 from numpy.testing import assert_allclose
 
+from apps.covid_19.model.parameters import TimeSeries
 from apps.covid_19.model.preprocess.mixing_matrix.mixing_adjusters import AgeMixingAdjuster
 
 
@@ -15,14 +16,14 @@ def test_age_adjuster__with_empty_mixing_data():
 
 def test_age_adjuster__with_mixing_data():
     age_mixing = {
-        "0": {
-            "times": [0, 1, 2, 3],
-            "values": [2, 2, 2, 2],
-        },
-        "5": {
-            "times": [0, 1, 2, 3],
-            "values": [3, 3, 3, 3],
-        },
+        "0": TimeSeries(
+            times=[0, 1, 2, 3],
+            values=[2, 2, 2, 2],
+        ),
+        "5": TimeSeries(
+            times=[0, 1, 2, 3],
+            values=[3, 3, 3, 3],
+        ),
     }
     adjuster = AgeMixingAdjuster(age_mixing)
     assert set(adjuster.adjustment_funcs.keys()) == {"0", "5"}

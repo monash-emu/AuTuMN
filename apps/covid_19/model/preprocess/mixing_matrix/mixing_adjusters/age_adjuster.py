@@ -19,7 +19,7 @@ class AgeMixingAdjuster(BaseMixingAdjuster):
         """Build the time variant age adjustment functions"""
         self.adjustment_funcs = {}
         for age_idx, timeseries in age_mixing.items():
-            func = scale_up_function(timeseries["times"], timeseries["values"], method=4)
+            func = scale_up_function(timeseries.times, timeseries.values, method=4)
             self.adjustment_funcs[str(age_idx)] = func
 
     def get_adjustment(self, time: float, mixing_matrix: np.ndarray) -> np.ndarray:

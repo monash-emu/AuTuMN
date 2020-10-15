@@ -1,5 +1,14 @@
 from autumn.constants import Region
 
+# Please keep this code in place
+OPTI_REGIONS = [
+    Region.BELGIUM,
+    Region.FRANCE,
+    Region.ITALY,
+    Region.SPAIN,
+    Region.SWEDEN,
+    Region.UNITED_KINGDOM,
+]
 
 OPTI_ISO3S = [
     "BEL",

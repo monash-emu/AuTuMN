@@ -18,10 +18,12 @@ from autumn.plots.utils import get_plot_text_dict
 
 logger = logging.getLogger(__name__)
 
-ALPHAS = (1.0, 0.6)
+ALPHAS = (1.0, 0.6, 0.4, 0.3)
 COLORS = (
     ["lightsteelblue", "cornflowerblue", "royalblue", "navy"],
-    ["plum", "mediumorchid", "darkviolet", "black"],
+    ["plum", "mediumorchid", "darkviolet", "rebeccapurple"],
+    ["lightgrey", "grey", "dimgrey", "black"],
+    ["forestgreen", "forestgreen", "forestgreen", "darkgreen"],
 )
 
 
@@ -42,7 +44,8 @@ def plot_timeseries_with_uncertainty(
         title_font_size=12,
         label_font_size=10,
         dpi_request=300,
-        capitalise_first_letter=False
+        capitalise_first_letter=False,
+        legend=False,
 ):
     """
     Plots the uncertainty timeseries for one or more scenarios.
@@ -51,15 +54,18 @@ def plot_timeseries_with_uncertainty(
     single_panel = axis is None
     if single_panel:
         fig, axis, _, _, _, _ = plotter.get_figure()
-    colors = _apply_transparency(COLORS, ALPHAS)
+    colors = _apply_transparency(COLORS[:len(scenario_idxs)], ALPHAS[:len(scenario_idxs)])
 
     # Plot each scenario on a single axis.
     for scenario_idx in scenario_idxs:
-        color_idx = min(scenario_idx, 1)
+        import streamlit as st
+        st.write(scenario_idx)
+        color_idx = scenario_idx
         scenario_colors = colors[color_idx]
         _plot_uncertainty(
             axis, uncertainty_df, output_name, scenario_idx, x_up, x_low, scenario_colors,
-            overlay_uncertainty=overlay_uncertainty
+            overlay_uncertainty=overlay_uncertainty,
+            start_quantile=1,
         )
 
     # Add plot targets
@@ -84,10 +90,13 @@ def plot_timeseries_with_uncertainty(
     elif not (output_name.startswith('rel_diff') or output_name.startswith('abs_diff')):
         axis.set_ylim(ymin=0)
 
+    if legend:
+        pyplot.legend(labels=scenario_idxs)
+
     if single_panel:
         idx_str = "-".join(map(str, scenario_idxs))
         filename = f"uncertainty-{output_name}-{idx_str}"
-        plotter.save_figure(fig, filename=filename)
+        plotter.save_figure(fig, filename=filename, dpi_request=dpi_request)
 
 
 def _plot_uncertainty(
@@ -99,8 +108,11 @@ def _plot_uncertainty(
         x_low: float,
         colors: List[str],
         overlay_uncertainty=True,
+        start_quantile=0,
 ):
     """Plots the uncertainty values in the provided dataframe to an axis"""
+    import streamlit as st
+    st.write("hello")
     mask = (
         (uncertainty_df["type"] == output_name)
         & (uncertainty_df["scenario"] == scenario_idx)
@@ -118,7 +130,7 @@ def _plot_uncertainty(
     num_quantiles = len(q_keys)
     half_length = num_quantiles // 2
     if overlay_uncertainty:
-        for i in range(half_length):
+        for i in range(start_quantile, half_length):
             color = colors[i]
             start_key = q_keys[i]
             end_key = q_keys[-(i + 1)]
@@ -268,6 +280,7 @@ def plot_seroprevalence_by_age_against_targets(
                 i_col = 0
     
         plotter.save_figure(fig, filename='multi_sero_by_age', subdir="outputs", title_text='')
+
 
 def _get_target_values(targets: dict, output_name: str):
     """Pulls out values for a given target"""

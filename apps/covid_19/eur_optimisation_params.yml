@@ -6,6 +6,7 @@ time:
   end: 274.  # 30 Sep 2020
 
 infectious_seed: 200
+haario_scaling_factor: 2.7 # Greater values increase jumping step size and reduce the acceptance ratio (baseline 2.4)
 
 clinical_stratification:
   props:
@@ -79,3 +80,10 @@ mobility:
         c: 90.
         sigma: 0.
         upper_asymptote: .4
+    behaviour_adjuster:
+      function_type: tanh
+      parameters:
+        b: -0.05
+        c: 200.
+        sigma: 0.6
+        upper_asymptote: 1.

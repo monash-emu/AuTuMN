@@ -10,12 +10,16 @@ from autumn.db import Database
 from autumn.calibration import Calibration, CalibrationMode
 from autumn.calibration.utils import sample_starting_params_from_lhs, specify_missing_prior_params
 
-from .utils import get_mock_model
+from tests.utils import get_mock_model
 
 
 def test_sample_starting_params_from_lhs__with_lognormal_prior_and_one_sample():
     priors = [
-        {"param_name": "ice_cream_sales", "distribution": "lognormal", "distri_params": [-1, 1],}
+        {
+            "param_name": "ice_cream_sales",
+            "distribution": "lognormal",
+            "distri_params": [-1, 1],
+        }
     ]
     specify_missing_prior_params(priors)
     params = sample_starting_params_from_lhs(priors, n_samples=1)
@@ -111,7 +115,11 @@ def _prepare_params(l):
 def test_calibrate_autumn_mcmc(temp_data_dir):
     # Import autumn stuff inside function so we can mock out the database.
     priors = [
-        {"param_name": "ice_cream_sales", "distribution": "uniform", "distri_params": [1, 5],}
+        {
+            "param_name": "ice_cream_sales",
+            "distribution": "uniform",
+            "distri_params": [1, 5],
+        }
     ]
     target_outputs = [
         {
@@ -125,7 +133,15 @@ def test_calibrate_autumn_mcmc(temp_data_dir):
         "default": {"time": {"start": 2000}},
         "scenarios": {},
     }
-    calib = Calibration("sharks", _build_mock_model, params, priors, target_outputs, 1, 1,)
+    calib = Calibration(
+        "sharks",
+        _build_mock_model,
+        params,
+        priors,
+        target_outputs,
+        1,
+        1,
+    )
     calib.run_fitting_algorithm(
         run_mode=CalibrationMode.AUTUMN_MCMC,
         n_iterations=50,
@@ -157,7 +173,7 @@ def test_calibrate_autumn_mcmc(temp_data_dir):
 
 def _build_mock_model(params):
     """
-    Fake model building function where derived output "shark_attacks" 
+    Fake model building function where derived output "shark_attacks"
     is influenced by the ice_cream_sales input parameter.
     """
     ice_cream_sales = params["ice_cream_sales"]
@@ -172,6 +188,8 @@ def _build_mock_model(params):
             [201.0, 300.0, 201.0, 132.0, 33.0, 132.0, 39.0, 139.0],
             [182.0, 300.0, 182.0, 151.0, 33.0, 151.0, 39.0, 159.0],
         ],
-        derived_outputs={"shark_attacks": np.array([ice_cream_sales * i for i in vals]),},
+        derived_outputs={
+            "shark_attacks": np.array([ice_cream_sales * i for i in vals]),
+        },
     )
     return mock_model

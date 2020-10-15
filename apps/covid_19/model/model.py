@@ -134,8 +134,12 @@ def build_model(params: dict) -> StratifiedModel:
     """
     Dynamic heterogeneous mixing by age
     """
-    static_mixing_matrix = preprocess.mixing_matrix.build_static(country.iso3)
-    dynamic_mixing_matrix = preprocess.mixing_matrix.build_dynamic(country, params.mobility)
+    static_mixing_matrix = inputs.get_country_mixing_matrix("all_locations", country.iso3)
+    dynamic_mixing_matrix = preprocess.mixing_matrix.build_dynamic_mixing_matrix(
+        static_mixing_matrix,
+        params.mobility,
+        country,
+    )
     model.set_dynamic_mixing_matrix(dynamic_mixing_matrix)
 
     """
@@ -182,7 +186,6 @@ def build_model(params: dict) -> StratifiedModel:
         # Use state denominator for testing rates for the Victorian health cluster models
         testing_region = "Victoria" if country.iso3 == "AUS" else pop.region
         testing_year = 2020 if country.iso3 == "AUS" else params.population.year
-        print(agegroup_strata)
         testing_pops = inputs.get_population_by_agegroup(
             agegroup_strata, country.iso3, testing_region, year=testing_year
         )
@@ -613,10 +616,12 @@ def build_model(params: dict) -> StratifiedModel:
         func_outputs["accum_years_of_life_lost"] = outputs.calculate_cum_years_of_life_lost
         for agegroup in agegroup_strata:
             age_key = f"agegroup_{agegroup}"
-            func_outputs[f"proportion_seropositiveX{age_key}"] = outputs.make_age_specific_seroprevalence_output(
+            func_outputs[
+                f"proportion_seropositiveX{age_key}"
+            ] = outputs.make_age_specific_seroprevalence_output(agegroup)
+            func_outputs[f"accum_deathsX{age_key}"] = outputs.make_agespecific_cum_deaths_func(
                 agegroup
             )
-            func_outputs[f"accum_deathsX{age_key}"] = outputs.make_agespecific_cum_deaths_func(agegroup)
 
     model.add_function_derived_outputs(func_outputs)
     return model

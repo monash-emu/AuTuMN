@@ -10,21 +10,13 @@ from math import ceil
 
 from autumn.plots.plotter import Plotter
 from autumn.plots.calibration.plots import _plot_targets_to_axis
-from matplotlib import colors, pyplot
+from matplotlib import pyplot
 import matplotlib.ticker as mtick
 from autumn.plots.utils import change_xaxis_to_date
 from numpy import mean
-from autumn.plots.utils import get_plot_text_dict
+from autumn.plots.utils import get_plot_text_dict, _apply_transparency, COLORS, ALPHAS, REF_DATE
 
 logger = logging.getLogger(__name__)
-
-ALPHAS = (1.0, 0.6, 0.4, 0.3)
-COLORS = (
-    ["lightsteelblue", "cornflowerblue", "royalblue", "navy"],
-    ["plum", "mediumorchid", "darkviolet", "rebeccapurple"],
-    ["lightgrey", "grey", "dimgrey", "black"],
-    ["forestgreen", "forestgreen", "forestgreen", "darkgreen"],
-)
 
 
 def plot_timeseries_with_uncertainty(
@@ -38,7 +30,7 @@ def plot_timeseries_with_uncertainty(
         x_up=1e6,
         axis=None,
         n_xticks=None,
-        ref_date=datetime.date(2019, 12, 31),
+        ref_date=REF_DATE,
         add_targets=True,
         overlay_uncertainty=True,
         title_font_size=12,
@@ -51,6 +43,7 @@ def plot_timeseries_with_uncertainty(
     Plots the uncertainty timeseries for one or more scenarios.
     Also plots any calibration targets that are provided.
     """
+
     single_panel = axis is None
     if single_panel:
         fig, axis, _, _, _, _ = plotter.get_figure()
@@ -58,10 +51,7 @@ def plot_timeseries_with_uncertainty(
 
     # Plot each scenario on a single axis.
     for scenario_idx in scenario_idxs:
-        import streamlit as st
-        st.write(scenario_idx)
-        color_idx = scenario_idx
-        scenario_colors = colors[color_idx]
+        scenario_colors = colors[scenario_idx]
         _plot_uncertainty(
             axis, uncertainty_df, output_name, scenario_idx, x_up, x_low, scenario_colors,
             overlay_uncertainty=overlay_uncertainty,
@@ -189,7 +179,7 @@ def plot_seroprevalence_by_age(
     uncertainty_df: pd.DataFrame,
     scenario_id: int,
     time: float,
-    ref_date=datetime.date(2019, 12, 31),
+    ref_date=REF_DATE,
     axis=None
 ):
     single_panel = axis is None
@@ -292,12 +282,3 @@ def _get_target_values(targets: dict, output_name: str):
     values = output_config["values"]
     times = output_config["times"]
     return values, times
-
-
-def _apply_transparency(color_list: List[str], alphas: List[str]):
-    """Make a list of colours transparent, based on a list of alphas"""
-    for i in range(len(color_list)):
-        for j in range(len(color_list[i])):
-            rgb_color = list(colors.colorConverter.to_rgb(color_list[i][j]))
-            color_list[i][j] = rgb_color + [alphas[i]]
-    return color_list

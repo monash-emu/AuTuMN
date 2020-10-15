@@ -182,6 +182,7 @@ def plot_timeseries_with_uncertainty(
     selected_scenarios = st.multiselect("Select scenarios", available_scenarios)
 
     is_logscale = st.sidebar.checkbox("Log scale")
+    is_targets = st.sidebar.checkbox("Show targets")
     plots.uncertainty.plots.plot_timeseries_with_uncertainty(
         plotter,
         uncertainty_df,
@@ -191,6 +192,7 @@ def plot_timeseries_with_uncertainty(
         is_logscale,
         x_low,
         x_up,
+        add_targets=is_targets,
     )
 
 

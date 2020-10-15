@@ -37,6 +37,7 @@ def plot_timeseries_with_uncertainty(
         axis=None,
         n_xticks=None,
         ref_date=datetime.date(2019, 12, 31),
+        add_targets=True,
 ):
     """
     Plots the uncertainty timeseries for one or more scenarios.
@@ -56,8 +57,9 @@ def plot_timeseries_with_uncertainty(
         )
 
     # Add plot targets
-    values, times = _get_target_values(targets, output_name)
-    _plot_targets_to_axis(axis, values, times, on_uncertainty_plot=True)
+    if add_targets:
+        values, times = _get_target_values(targets, output_name)
+        _plot_targets_to_axis(axis, values, times, on_uncertainty_plot=True)
 
     # Sort out x-axis
     change_xaxis_to_date(axis, ref_date, rotation=0)

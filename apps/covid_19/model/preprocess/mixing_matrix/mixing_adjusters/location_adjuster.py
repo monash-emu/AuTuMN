@@ -11,6 +11,10 @@ LOCATIONS = ["home", "other_locations", "school", "work"]
 
 
 class LocationMixingAdjuster(BaseMixingAdjuster):
+    """
+    Applies location based mixing adjustments (micro and macro) to a mixing matrix.
+    """
+
     def __init__(
         self,
         country: Country,
@@ -18,12 +22,10 @@ class LocationMixingAdjuster(BaseMixingAdjuster):
         microdistancing_funcs: Dict[str, Callable[[float], float]],
     ):
         """Build the time variant location adjustment functions"""
-
         self.mobility_funcs = mobility_funcs
-        # Apply the microdistancing function
         self.microdistancing_funcs = microdistancing_funcs
 
-        # Load all location-specific mixing info.
+        # Load all the location-specific mixing matrices.
         self.matrix_components = {}
         for sheet_type in LOCATIONS:
             # Loads a 16x16 ndarray
@@ -49,7 +51,6 @@ class LocationMixingAdjuster(BaseMixingAdjuster):
                 loc_adjustment *= microdistancing_func(time)
 
             # Apply adjustment by subtracting the contacts that need to come off
-            loc_adjustment_matrix = (loc_adjustment - 1) * self.matrix_components[loc_key]
-            mixing_matrix = np.add(mixing_matrix, loc_adjustment_matrix)
+            mixing_matrix += (loc_adjustment - 1) * self.matrix_components[loc_key]
 
         return mixing_matrix

@@ -10,6 +10,11 @@ from .base_adjuster import BaseMixingAdjuster
 
 
 class AgeMixingAdjuster(BaseMixingAdjuster):
+    """
+    Applies age-based mixing adjustments to a mixing matrix.
+    The mixing matrix is assumed to be 16x16.
+    """
+
     def __init__(self, age_mixing: Dict[str, TimeSeries]):
         """Build the time variant age adjustment functions"""
         self.adjustment_funcs = {}

@@ -21,6 +21,7 @@ PLOT_FUNCS = {}
 
 def write_mcmc_centiles(
         mcmc_params,
+        mcmc_tables,
         burn_in,
         sig_figs,
         centiles,
@@ -37,7 +38,7 @@ def write_mcmc_centiles(
 
     # Populate with data
     for param_name in parameters:
-        param_values = get_posterior(mcmc_params, param_name, burn_in)
+        param_values = get_posterior(mcmc_params, mcmc_tables, param_name, burn_in)
         centile_values = np.percentile(param_values, centiles)
         rounded_centile_values = [round_sig_fig(i_value, sig_figs) for i_value in centile_values]
         params_df.loc[param_name] = rounded_centile_values
@@ -430,7 +431,7 @@ def plot_posterior(
     chain_length = find_min_chain_length(mcmc_tables)
     burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
     num_bins = st.sidebar.slider("Number of bins", 1, 50, 16)
-    plots.calibration.plots.plot_posterior(plotter, mcmc_params, burn_in, chosen_param, num_bins)
+    plots.calibration.plots.plot_posterior(plotter, mcmc_params, mcmc_tables, burn_in, chosen_param, num_bins)
 
 
 PLOT_FUNCS["Posterior distributions"] = plot_posterior
@@ -459,6 +460,7 @@ def plot_all_posteriors(
     plots.calibration.plots.plot_multiple_posteriors(
         plotter,
         mcmc_params,
+        mcmc_tables,
         burn_in,
         num_bins,
         title_font_size,
@@ -467,7 +469,7 @@ def plot_all_posteriors(
         dpi_request,
     )
 
-    write_mcmc_centiles(mcmc_params, burn_in, sig_figs, [2.5, 50, 97.5])
+    write_mcmc_centiles(mcmc_params, mcmc_tables, burn_in, sig_figs, [2.5, 50, 97.5])
 
 
 PLOT_FUNCS["All posteriors"] = plot_all_posteriors

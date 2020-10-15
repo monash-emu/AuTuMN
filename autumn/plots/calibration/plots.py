@@ -336,21 +336,23 @@ def plot_burn_in(plotter: Plotter, num_iters: int, burn_in: int):
     plotter.save_figure(fig, filename="burn-in", title_text="burn-in")
 
 
-def get_posterior(mcmc_params, param_name, burn_in=0):
-    vals_df = None
-    for table_df in mcmc_params:
+def get_posterior(mcmc_params, mcmc_tables, param_name, burn_in=0):
+    weighted_vals = []
+    for param_df, run_df in zip(mcmc_params, mcmc_tables):
+        table_df = param_df.merge(run_df, on=["run", "chain"])
         param_mask = (table_df["name"] == param_name) & (table_df["run"] > burn_in)
-        table_vals = table_df[param_mask].value
-        if vals_df is not None:
-            vals_df = vals_df.append(table_vals)
-        else:
-            vals_df = table_vals
-    return vals_df
+        unweighted_vals = table_df[param_mask].value
+        weights = table_df[param_mask].weight
+        for v, w in zip(unweighted_vals, weights):
+            weighted_vals += [v] * w
+
+    return pd.DataFrame(weighted_vals, columns=[param_name])
 
 
 def plot_posterior(
         plotter: Plotter,
         mcmc_params: List[pd.DataFrame],
+        mcmc_tables: List[pd.DataFrame],
         burn_in: int,
         param_name: str,
         num_bins: int
@@ -358,7 +360,7 @@ def plot_posterior(
     """
     Plots the posterior distribution of a given parameter in a histogram.
     """
-    vals_df = get_posterior(mcmc_params, param_name, burn_in)
+    vals_df = get_posterior(mcmc_params, mcmc_tables, param_name, burn_in)
     fig, axis, _, _, _, _ = plotter.get_figure()
     vals_df.hist(bins=num_bins, ax=axis)
     plotter.save_figure(
@@ -369,6 +371,7 @@ def plot_posterior(
 def plot_multiple_posteriors(
         plotter: Plotter,
         mcmc_params: List[pd.DataFrame],
+        mcmc_tables: List[pd.DataFrame],
         burn_in: int,
         num_bins: int,
         title_font_size: int,
@@ -389,7 +392,7 @@ def plot_multiple_posteriors(
 
         if i < len(parameters):
             param_name = parameters[i]
-            vals_df = get_posterior(mcmc_params, param_name, burn_in)
+            vals_df = get_posterior(mcmc_params, mcmc_tables, param_name, burn_in)
 
             # Plot histograms
             vals_df.hist(bins=num_bins, ax=axis)

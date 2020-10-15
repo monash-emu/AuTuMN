@@ -266,9 +266,18 @@ def plot_loglikelihood_trace(plotter: Plotter, mcmc_tables: List[pd.DataFrame], 
     """
     fig, axis, _, _, _, _ = plotter.get_figure()
 
-    for idx, table_df in enumerate(mcmc_tables):
+    if len(mcmc_tables) == 1:  # there may be multiple chains within a single dataframe
+        table_df = mcmc_tables[0]
         accept_mask = table_df["accept"] == 1
-        table_df[accept_mask].loglikelihood.plot.line(ax=axis, alpha=0.8, linewidth=0.7)
+        chain_idx = list(table_df["chain"].unique())
+        for chain_id in chain_idx:
+            chain_mask = table_df["chain"] == chain_id
+            masked_df = table_df[accept_mask][chain_mask]
+            axis.plot(masked_df["run"], masked_df["loglikelihood"], alpha=0.8, linewidth=0.7)
+    else:  # there is one chain per dataframe
+        for idx, table_df in enumerate(mcmc_tables):
+            accept_mask = table_df["accept"] == 1
+            table_df[accept_mask].loglikelihood.plot.line(ax=axis, alpha=0.8, linewidth=0.7)
 
     axis.set_ylabel("Loglikelihood")
     axis.set_xlabel("MCMC iterations")

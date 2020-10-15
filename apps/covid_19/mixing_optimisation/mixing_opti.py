@@ -69,8 +69,10 @@ def build_params_for_phases_2_and_3(
     scenario_params = {}
 
     # Set start and end times.
-    scenario_params["time"]["start"] = PHASE_2_START_TIME - 1
-    scenario_params["time"]["end"] = PHASE_2_START_TIME + DURATION_PHASES_2_AND_3
+    scenario_params["time"] = {
+        "start": PHASE_2_START_TIME - 1,
+        "end": PHASE_2_START_TIME + DURATION_PHASES_2_AND_3,
+    }
 
     # Convert time integers to dates.
     phase_2_end_days = phase_2_end[config]
@@ -80,11 +82,11 @@ def build_params_for_phases_2_and_3(
     phase_3_first_day = phase_2_end_date + timedelta(days=1)
 
     # Apply social mixing adjustments
-    scenario_params["mobility"] = {"mixing": {}}
+    scenario_params["mobility"] = {"mixing": {}, "age_mixing": {}}
     if mode == AGE_MODE:
         # Age based mixing optimisation.
         for age_group in AGE_GROUPS:
-            scenario_params["mobility"]["mixing"][age_group] = {
+            scenario_params["mobility"]["age_mixing"][age_group] = {
                 "times": [phase_1_end_date, phase_2_first_day, phase_2_end_date, phase_3_first_day],
                 "values": [
                     1.0,
@@ -92,14 +94,13 @@ def build_params_for_phases_2_and_3(
                     decision_variables[age_group],
                     final_mixing,
                 ],
-                "append": False,
             }
 
         # Set location-specific mixing back to pre-COVID rates on 1st of July.
-        # ie. use pre-covid contact matrices.
-        scenario_params["mixing"] = {}
+        # ie. Use the pre-COVID contact matrices.
+        scenario_params["mobility"]["mixing"] = {}
         for loc in MIXING_LOCS:
-            scenario_params["mixing"][loc] = {
+            scenario_params["mobility"]["mixing"][loc] = {
                 "times": [phase_1_end_date, phase_2_end_date, phase_3_first_day],
                 "values": [1.0, 1.0, 1.0],
                 "append": False,
@@ -107,16 +108,21 @@ def build_params_for_phases_2_and_3(
 
     elif mode == LOCATION_MODE:
         # Set location-specific mixing to  use the opti decision variable.
-        scenario_params["mixing"] = {}
+        scenario_params["mobility"]["mixing"] = {}
         for loc in MIXING_LOCS:
             # Use optimisation decision variables
-            scenario_params["mixing"][loc] = {
+            scenario_params["mobility"]["mixing"][loc] = {
                 "times": [phase_1_end_date, phase_2_end_date, phase_3_first_day],
                 "values": [decision_variables[loc], decision_variables[loc], final_mixing],
                 "append": False,
             }
     else:
         raise ValueError("The requested mode is not supported")
+
+    # Add optmisized microdistancing params to the scenario.
+    microdistancing_opti_params = opti_params["configurations"][config].get("microdistancing")
+    if microdistancing_opti_params:
+        scenario_params["mobility"]["microdistancing"] = microdistancing_opti_params
 
     # Seed a new wave of infections with some importations.
     # This tests whether herd immunity has actually been reached.
@@ -129,15 +135,6 @@ def build_params_for_phases_2_and_3(
             "values": [0, 5, 5, 0],
         },
     }
-
-    # Add optmisized microdistancing params to the scenario.
-    microdistancing_opti_params = opti_params["configurations"][config].get("microdistancing")
-    microdistancing_scenario_params = scenario_params.get("microdistancing")
-    if microdistancing_opti_params:
-        if microdistancing_scenario_params:
-            scenario_params["microdistancing"].update(microdistancing_opti_params)
-        else:
-            scenario_params["microdistancing"] = microdistancing_opti_params
 
     return scenario_params
 

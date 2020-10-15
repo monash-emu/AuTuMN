@@ -39,6 +39,10 @@ def plot_timeseries_with_uncertainty(
         ref_date=datetime.date(2019, 12, 31),
         add_targets=True,
         overlay_uncertainty=True,
+        title_font_size=12,
+        label_font_size=10,
+        dpi_request=300,
+        capitalise_first_letter=False
 ):
     """
     Plots the uncertainty timeseries for one or more scenarios.
@@ -65,8 +69,6 @@ def plot_timeseries_with_uncertainty(
 
     # Sort out x-axis
     change_xaxis_to_date(axis, ref_date, rotation=0)
-    label_font_size = 12
-    title_font_size = 15
     axis.tick_params(axis="x", labelsize=label_font_size)
     axis.tick_params(axis="y", labelsize=label_font_size)
 

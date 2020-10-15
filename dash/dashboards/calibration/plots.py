@@ -181,6 +181,13 @@ def plot_timeseries_with_uncertainty(
     available_scenarios = uncertainty_df["scenario"].unique()
     selected_scenarios = st.multiselect("Select scenarios", available_scenarios)
 
+    (
+        title_font_size,
+        label_font_size,
+        dpi_request,
+        capitalise_first_letter,
+    ) = \
+        selectors.create_standard_plotting_sidebar()
     is_logscale = st.sidebar.checkbox("Log scale")
     is_targets = st.sidebar.checkbox("Show targets")
     is_overlay_unceratinty = st.sidebar.checkbox("Overlay uncertainty")
@@ -195,6 +202,10 @@ def plot_timeseries_with_uncertainty(
         x_up,
         add_targets=is_targets,
         overlay_uncertainty=is_overlay_unceratinty,
+        title_font_size=title_font_size,
+        label_font_size=label_font_size,
+        dpi_request=dpi_request,
+        capitalise_first_letter=capitalise_first_letter
     )
 
 

@@ -473,6 +473,21 @@ def plot_loglikelihood_trace(
 PLOT_FUNCS["Loglikelihood trace"] = plot_loglikelihood_trace
 
 
+def compare_loglikelihood_between_chains(
+        plotter: StreamlitPlotter,
+        calib_dir_path: str,
+        mcmc_tables: List[pd.DataFrame],
+        mcmc_params: List[pd.DataFrame],
+        targets: dict,
+        app_name: str,
+        region: str,
+):
+    plots.calibration.plots.plot_loglikelihood_boxplots(plotter, mcmc_tables)
+
+
+PLOT_FUNCS["Compare loglikelihood between chains"] = compare_loglikelihood_between_chains
+
+
 def plot_param_matrix_by_chain(
         plotter: StreamlitPlotter,
         calib_dir_path: str,

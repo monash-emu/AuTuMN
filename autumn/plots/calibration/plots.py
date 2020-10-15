@@ -15,48 +15,13 @@ from matplotlib import pyplot
 from scipy import stats
 import plotly.express as px
 
+from autumn.plots.utils import get_plot_text_dict
 from autumn import db
 from autumn.calibration.utils import calculate_prior, raise_error_unsupported_prior
 from autumn.plots.plotter import Plotter, COLOR_THEME
 from autumn.plots.utils import change_xaxis_to_date
 
 logger = logging.getLogger(__name__)
-
-PLOT_TEXT_DICT = {
-    "contact_rate": "infection risk per contact",
-    "compartment_periods_calculated.exposed.total_period": "incubation period",
-    "compartment_periods_calculated.active.total_period": "duration active",
-    "hospital_props_multiplier": "hospital risk multiplier",
-    "compartment_periods.icu_early": "pre-ICU period",
-    "icu_prop": "ICU proportion",
-    "testing_to_detection.assumed_cdr_parameter": "CDR at base testing rate",
-    "microdistancing.parameters.max_effect": "max effect microdistancing",
-    "infection_deaths": "mortality",
-    "icu_occupancy": "ICU occupancy",
-    # TB model parameters
-    "start_population_size": "initial population size",
-    "late_reactivation_multiplier": "late reactivation multiplier",
-    "time_variant_tb_screening_rate.maximum_gradient": "screening profile (shape)",
-    "time_variant_tb_screening_rate.max_change_time": "screening profile (inflection)",
-    "time_variant_tb_screening_rate.end_value": "screening profile (final rate)",
-    "user_defined_stratifications.location.adjustments.detection_rate.ebeye": "rel. screening rate (Ebeye)",
-    "user_defined_stratifications.location.adjustments.detection_rate.other": "rel. screening rate (Other Isl.)",
-    "extra_params.rr_progression_diabetes": "rel. progression rate (diabetes)",
-    "rr_infection_recovered": "RR infection (recovered)",
-    "pt_efficacy": "PT efficacy",
-    "infect_death_rate_dict.smear_positive": "TB mortality (smear-pos)",
-    "infect_death_rate_dict.smear_negative": "TB mortality (smear-neg)",
-    "self_recovery_rate_dict.smear_positive": "Self cure rate (smear-pos)",
-    "self_recovery_rate_dict.smear_negative": "Self cure rate (smear-neg)",
-    "proportion_seropositive": "seropositive proportion",
-}
-
-
-def get_plot_text_dict(param_string, capitalise_first_letter=False):
-    text = PLOT_TEXT_DICT[param_string] if param_string in PLOT_TEXT_DICT else param_string
-    if capitalise_first_letter:
-        text = text[0].upper() + text[1:]
-    return text
 
 
 def get_epi_params(mcmc_params):

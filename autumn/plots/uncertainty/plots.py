@@ -11,8 +11,10 @@ from math import ceil
 from autumn.plots.plotter import Plotter
 from autumn.plots.calibration.plots import _plot_targets_to_axis
 from matplotlib import colors, pyplot
+import matplotlib.ticker as mtick
 from autumn.plots.utils import change_xaxis_to_date
 from numpy import mean
+from autumn.plots.utils import get_plot_text_dict
 
 logger = logging.getLogger(__name__)
 
@@ -58,27 +60,29 @@ def plot_timeseries_with_uncertainty(
     _plot_targets_to_axis(axis, values, times, on_uncertainty_plot=True)
 
     # Sort out x-axis
-    change_xaxis_to_date(axis, ref_date)
+    change_xaxis_to_date(axis, ref_date, rotation=0)
+    label_font_size = 15
+    title_font_size = 20
+    axis.tick_params(axis="x", labelsize=label_font_size)
+    axis.tick_params(axis="y", labelsize=label_font_size)
+
+    if output_name == "proportion_seropositive":
+        axis.yaxis.set_major_formatter(mtick.PercentFormatter(1, symbol=""))
+
+    axis.set_title(get_plot_text_dict(output_name), fontsize=title_font_size)
+
     if n_xticks is not None:
         pyplot.locator_params(axis='x', nbins=n_xticks)
 
-    output_title = plotter.get_plot_title(output_name)
-    axis.set_ylabel(output_title)
     if is_logscale:
         axis.set_yscale("log")
     elif not (output_name.startswith('rel_diff') or output_name.startswith('abs_diff')):
         axis.set_ylim(ymin=0)
 
-    if scenario_idxs == [0]:
-        title = f"{output_title} for baseline scenario"
-    else:
-        scenarios_string = ", ".join(map(str, scenario_idxs))
-        title = f"{output_title} for scenarios {scenarios_string}"
-
     if single_panel:
         idx_str = "-".join(map(str, scenario_idxs))
         filename = f"uncertainty-{output_name}-{idx_str}"
-        plotter.save_figure(fig, filename=filename, title_text=title)
+        plotter.save_figure(fig, filename=filename)
 
 
 def _plot_uncertainty(

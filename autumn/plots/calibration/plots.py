@@ -48,16 +48,10 @@ def get_epi_params(mcmc_params):
 
 
 def find_min_chain_length(mcmc_tables):
-    """
-    Find the length of the shortest chain out of all that were run in the MCMC.
-    """
-    chain_lengths = []
-    for i_chain in range(max(mcmc_tables[0]["chain"])):
-        chain_mask = \
-            mcmc_tables[0]["chain"] == i_chain
-        chain_lengths.append(
-            max(mcmc_tables[0]["run"][chain_mask])
-        )
+    chain_lengths = [
+        mcmc_tables[i_chain]["run"].tolist()[-1] for
+        i_chain in range(len(mcmc_tables))
+    ]
     return min(chain_lengths)
 
 

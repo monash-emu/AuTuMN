@@ -9,10 +9,10 @@ from autumn.tool_kit.params import load_params
 from autumn import plots
 from autumn.inputs import get_mobility_data
 
-from apps.covid_19.model.preprocess.mixing_matrix.adjust_location import (
-    LocationMixingAdjustment,
-    LOCATIONS,
-)
+# from apps.covid_19.model.preprocess.mixing_matrix.adjust_location import (
+#     LocationMixingAdjustment,
+#     LOCATIONS,
+# )
 
 BASE_DATE = datetime(2020, 1, 1, 0, 0, 0)
 PLOT_FUNCS = {}

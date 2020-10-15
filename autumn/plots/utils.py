@@ -1,5 +1,7 @@
 import matplotlib.ticker as ticker
+from matplotlib import colors
 import datetime
+from typing import List
 
 
 PLOT_TEXT_DICT = {
@@ -39,9 +41,25 @@ PLOT_TEXT_DICT = {
     "sojourn.compartment_periods.icu_early": "ICU duration",
 }
 
+ALPHAS = (1.0, 0.6, 0.4, 0.3)
+COLORS = (
+    ["lightsteelblue", "cornflowerblue", "royalblue", "navy"],
+    ["plum", "mediumorchid", "darkviolet", "rebeccapurple"],
+    ["lightgrey", "grey", "dimgrey", "black"],
+    ["forestgreen", "forestgreen", "forestgreen", "darkgreen"],
+)
+REF_DATE = datetime.date(2019, 12, 31)
+
 
 def get_plot_text_dict(param_string, capitalise_first_letter=False):
-    text = PLOT_TEXT_DICT[param_string] if param_string in PLOT_TEXT_DICT else param_string
+    """
+    Get standard text for use in plotting as title, y-label, etc.
+    """
+
+    text = \
+        PLOT_TEXT_DICT[param_string] if \
+            param_string in PLOT_TEXT_DICT else \
+            param_string
     if capitalise_first_letter:
         text = text[0].upper() + text[1:]
     return text
@@ -59,3 +77,30 @@ def change_xaxis_to_date(axis, ref_date, date_str_format="%#d-%b", rotation=30):
     date_format = ticker.FuncFormatter(to_date)
     axis.xaxis.set_major_formatter(date_format)
     axis.xaxis.set_tick_params(rotation=rotation)
+
+
+def _apply_transparency(color_list: List[str], alphas: List[str]):
+    """Make a list of colours transparent, based on a list of alphas"""
+    for i in range(len(color_list)):
+        for j in range(len(color_list[i])):
+            rgb_color = list(colors.colorConverter.to_rgb(color_list[i][j]))
+            color_list[i][j] = rgb_color + [alphas[i]]
+    return color_list
+
+
+def _plot_targets_to_axis(axis, values: List[float], times: List[int], on_uncertainty_plot=False):
+    """
+    Plot output value calibration targets as points on the axis.
+    # TODO: add back ability to plot confidence interval
+    x_vals = [time, time]
+    axis.plot(x_vals, values[1:], "m", linewidth=1, color="red")
+    axis.scatter(time, values[0], marker="o", color="red", s=30)
+    axis.scatter(time, values[0], marker="o", color="white", s=10)
+    """
+    assert len(times) == len(values), "Targets have inconsistent length"
+    # Plot a single point estimate
+    if on_uncertainty_plot:
+        axis.scatter(times, values, marker="o", color="black", s=10)
+    else:
+        axis.scatter(times, values, marker="o", color="red", s=30, zorder=999)
+        axis.scatter(times, values, marker="o", color="white", s=10, zorder=999)

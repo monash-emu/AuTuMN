@@ -7,7 +7,7 @@ import os
 
 from autumn.tool_kit.params import load_params
 from autumn.plots.plotter import StreamlitPlotter
-from autumn.plots.calibration.plots import find_min_chain_length_from_mcmc_tables, get_posterior, get_epi_params
+from autumn.plots.calibration.plots import find_min_chain_length, get_posterior, get_epi_params
 from autumn import db, plots, inputs
 from apps.covid_19.model.preprocess.testing import find_cdr_function_from_test_data
 from apps.covid_19.mixing_optimisation.serosurvey_by_age.survey_data import get_serosurvey_data
@@ -75,8 +75,7 @@ def plot_acceptance_ratio(
         region: str,
 ):
     label_font_size = st.sidebar.slider("Label font size", 1, 15, 10)
-    chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
-    burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
+    burn_in = st.sidebar.slider("Burn in", 0, find_min_chain_length(mcmc_tables), 0)
     dpi_request = st.sidebar.slider("DPI", 50, 2000, 300)
     plots.calibration.plots.plot_acceptance_ratio(
         plotter, mcmc_tables, burn_in, label_font_size=label_font_size, dpi_request=dpi_request
@@ -113,7 +112,7 @@ def plot_cdr_curves(
     agegroup_params = default_params["age_stratification"]
     time_params = default_params["time"]
 
-    # Manually input some parameters - need to change this
+    # Derive times and age group breaks as the model does
     times = \
         get_model_times_from_inputs(time_params["start"], time_params["end"], time_params["step"])
     agegroup_strata = \
@@ -264,7 +263,7 @@ def plot_calibration_fit(
     region: str,
 ):
     available_outputs = [o["output_key"] for o in targets.values()]
-    chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
+    chain_length = find_min_chain_length(mcmc_tables)
     burn_in = st.sidebar.slider("Burn in (select 0 for default behaviour of discarding first half)", 0, chain_length, 0)
     chosen_output = st.sidebar.selectbox("Select calibration target", available_outputs)
     derived_output_tables = db.load.load_derived_output_tables(calib_dir_path, column=chosen_output)
@@ -297,7 +296,7 @@ def plot_multi_output_fit(
         capitalise_first_letter,
     ) = selectors.create_standard_plotting_sidebar()
     is_logscale = st.sidebar.checkbox("Log scale")
-    chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
+    chain_length = find_min_chain_length(mcmc_tables)
     burn_in = st.sidebar.slider("Burn in (select 0 for default behaviour of discarding first half)", 0, chain_length, 0)
 
     outputs = {}
@@ -332,7 +331,7 @@ def plot_mcmc_parameter_trace(
     region: str,
 ):
     chosen_param = selectors.parameter(mcmc_params[0])
-    chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
+    chain_length = find_min_chain_length(mcmc_tables)
     burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
     plots.calibration.plots.plot_mcmc_parameter_trace(plotter, mcmc_params, burn_in, chosen_param)
 
@@ -356,7 +355,7 @@ def plot_all_param_traces(
         dpi_request,
         capitalise_first_letter,
     ) = selectors.create_standard_plotting_sidebar()
-    chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
+    chain_length = find_min_chain_length(mcmc_tables)
     burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
     plots.calibration.plots.plot_multiple_param_traces(
         plotter, mcmc_params, burn_in, title_font_size, label_font_size, capitalise_first_letter, dpi_request
@@ -376,7 +375,7 @@ def plot_loglikelihood_vs_parameter(
     region: str,
 ):
     chosen_param = selectors.parameter(mcmc_params[0])
-    chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
+    chain_length = find_min_chain_length(mcmc_tables)
     burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
     plots.calibration.plots.plot_single_param_loglike(
         plotter, mcmc_tables, mcmc_params, burn_in, chosen_param
@@ -401,7 +400,7 @@ def plot_loglike_vs_all_params(
         dpi_request,
         capitalise_first_letter,
     ) = selectors.create_standard_plotting_sidebar()
-    chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
+    chain_length = find_min_chain_length(mcmc_tables)
     burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
     plots.calibration.plots.plot_all_params_vs_loglike(
         plotter,
@@ -428,7 +427,7 @@ def plot_posterior(
     region: str,
 ):
     chosen_param = selectors.parameter(mcmc_params[0])
-    chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
+    chain_length = find_min_chain_length(mcmc_tables)
     burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
     num_bins = st.sidebar.slider("Number of bins", 1, 50, 16)
     plots.calibration.plots.plot_posterior(plotter, mcmc_params, burn_in, chosen_param, num_bins)
@@ -453,7 +452,7 @@ def plot_all_posteriors(
         dpi_request,
         capitalise_first_letter,
     ) = selectors.create_standard_plotting_sidebar()
-    chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
+    chain_length = find_min_chain_length(mcmc_tables)
     burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
     num_bins = st.sidebar.slider("Number of bins", 1, 50, 16)
     sig_figs = st.sidebar.slider("Significant figures", 0, 6, 3)
@@ -537,7 +536,7 @@ def plot_param_matrix(
         region: str,
 ):
     parameters = mcmc_params[0]["name"].unique().tolist()
-    chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
+    chain_length = find_min_chain_length(mcmc_tables)
     burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
     label_font_size = st.sidebar.slider("Label font size", 1, 15, 8)
     label_chars = st.sidebar.slider("Label characters", 1, 10, 2)

@@ -6,7 +6,6 @@ import logging
 from math import log
 from typing import List
 from random import choices
-import datetime
 
 import pandas as pd
 import seaborn as sns
@@ -20,24 +19,45 @@ from autumn.plots.utils import get_plot_text_dict
 from autumn import db
 from autumn.calibration.utils import calculate_prior, raise_error_unsupported_prior
 from autumn.plots.plotter import Plotter, COLOR_THEME
-from autumn.plots.utils import change_xaxis_to_date
+from autumn.plots.utils import change_xaxis_to_date, _plot_targets_to_axis, REF_DATE
 
 logger = logging.getLogger(__name__)
 
 
+def collate_acceptance_ratios(mcmc_df):
+    count, n_total, ratios = 0, 0, []
+    for n_accept in mcmc_df["accept"]:
+        n_total += 1
+        if n_accept:
+            count += 1
+        ratios.append(count / n_total)
+    return ratios
+
+
 def get_epi_params(mcmc_params):
-    return [param for param in mcmc_params[0].loc[:, "name"].unique().tolist() if "dispersion_param" not in param]
+    """
+    Extract only the epidemiological parameters, ignoring the ones that were only used to tune proposal distributions,
+    which end in dispersion_param
+    """
+    return [
+        param for
+        param in mcmc_params[0].loc[:, "name"].unique().tolist() if
+        "dispersion_param" not in
+        param
+    ]
 
-# def find_max_burn_in(mcmc_params):
-#     chain_length = 0
-#     for i_chain in range(len(mcmc_params)):
-#         parameters = mcmc_params[i_chain]["name"].unique().tolist()
-#         chain_length = max(int(len(mcmc_params[0]) / len(parameters)), chain_length)
-#     return chain_length
 
-
-def find_min_chain_length_from_mcmc_tables(mcmc_tables):
-    chain_lengths = [mcmc_tables[i_chain]["run"].tolist()[-1] for i_chain in range(len(mcmc_tables))]
+def find_min_chain_length(mcmc_tables):
+    """
+    Find the length of the shortest chain out of all that were run in the MCMC.
+    """
+    chain_lengths = []
+    for i_chain in range(max(mcmc_tables[0]["chain"])):
+        chain_mask = \
+            mcmc_tables[0]["chain"] == i_chain
+        chain_lengths.append(
+            max(mcmc_tables[0]["run"][chain_mask])
+        )
     return min(chain_lengths)
 
 
@@ -56,19 +76,14 @@ def plot_acceptance_ratio(
     """
     Plot the progressive acceptance ratio over iterations.
     """
-    fig, axis, _, _, _, _ = plotter.get_figure()
-    mcmc_df = db.process.append_tables(mcmc_tables)
-    chains = mcmc_df["chain"].unique().tolist()
-    for chain in chains:
-        df = mcmc_df[mcmc_df["chain"] == chain]
 
-        # Collate acceptances and ratio
-        count, total, ratios = 0, 0, []
-        for accept in df["accept"]:
-            total += 1
-            if accept:
-                count += 1
-            ratios.append(count / total)
+    fig, axis, _, _, _, _ = plotter.get_figure()
+    full_df = db.process.append_tables(mcmc_tables)
+    n_chains = max(full_df["chain"])
+    for chain in range(n_chains):
+        chain_mask = full_df["chain"] == chain
+        chain_df = full_df[chain_mask]
+        ratios = collate_acceptance_ratios(chain_df)
 
         # Plot
         axis.plot(ratios, alpha=0.8, linewidth=0.7)
@@ -77,13 +92,13 @@ def plot_acceptance_ratio(
         if burn_in > 0:
             axis.axvline(x=burn_in, color=COLOR_THEME[1], linestyle="dotted")
 
-    axis.set_ylabel("Acceptance ratio", fontsize=label_font_size)
+    axis.set_title("acceptance ratio", fontsize=label_font_size)
+    axis.set_xlabel("iterations", fontsize=label_font_size)
     axis.set_ylim(bottom=0.)
-    axis.set_xlabel("Iterations", fontsize=label_font_size)
     pyplot.setp(axis.get_yticklabels(), fontsize=label_font_size)
     pyplot.setp(axis.get_xticklabels(), fontsize=label_font_size)
     plotter.save_figure(
-        fig, filename=f"acceptance_ratio", title_text=f"Acceptance Ratio", dpi_request=dpi_request
+        fig, filename=f"acceptance_ratio", dpi_request=dpi_request
     )
 
 
@@ -716,7 +731,7 @@ def sample_outputs_for_calibration_fit(
     return outputs
 
 
-def plot_calibration(axis, output, outputs, targets, is_logscale, ref_date=datetime.date(2019, 12, 31)):
+def plot_calibration(axis, output, outputs, targets, is_logscale, ref_date=REF_DATE):
     # Track the maximum value being plotted
     label_font_size = 8
 
@@ -801,7 +816,7 @@ def plot_cdr_curves(
         )
 
     # Tidy
-    change_xaxis_to_date(axis, ref_date=datetime.date(2019, 12, 31), rotation=rotation)
+    change_xaxis_to_date(axis, ref_date=REF_DATE, rotation=rotation)
     axis.set_xlim(right=end_date)
     axis.set_ylabel("proportion symptomatic cases detected")
     axis.set_ylim([0., 1.])
@@ -822,7 +837,7 @@ def plot_multi_fit(
             axis = plot_calibration(
                 axes[indices[i_output][0], indices[i_output][1]], output, outputs[output], targets, is_logscale
             )
-            change_xaxis_to_date(axis, datetime.date(2019, 12, 31), rotation=0)
+            change_xaxis_to_date(axis, REF_DATE, rotation=0)
             axis.set_title(
                 get_plot_text_dict(
                     output, capitalise_first_letter=capitalise_first_letter
@@ -848,16 +863,3 @@ def _overwrite_non_accepted_mcmc_runs(mcmc_tables: List[pd.DataFrame], column_na
                 prev_val = table_df.at[idx, column_name]
             else:
                 table_df.at[idx, column_name] = prev_val
-
-
-def _plot_targets_to_axis(axis, values: List[float], times: List[int], on_uncertainty_plot=False):
-    """
-    Plot output value calibration targets as points on the axis.
-    """
-    assert len(times) == len(values), "Targets have inconsistent length"
-    # Plot a single point estimate
-    if on_uncertainty_plot:
-        axis.scatter(times, values, marker="o", color="black", s=10, zorder=999)
-    else:
-        axis.scatter(times, values, marker="o", color="red", s=30, zorder=999)
-        axis.scatter(times, values, marker="o", color="white", s=10, zorder=999)

@@ -6,14 +6,12 @@ import logging
 from typing import List, Callable
 
 import numpy as np
-import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot
-import matplotlib.gridspec as gridspec
 from math import ceil
 
 from autumn.tool_kit.scenarios import Scenario
-
+from autumn.plots.utils import _plot_targets_to_axis
 
 from autumn.plots.plotter import Plotter, COLOR_THEME
 
@@ -182,24 +180,6 @@ def _plot_outputs_to_axis(axis, scenario: Scenario, name: str, color_idx=0, alph
     plot_values = model.derived_outputs[name]
     # Plot the values as a line.
     axis.plot(model.times, plot_values, color=COLOR_THEME[color_idx], alpha=alpha)
-
-
-def _plot_targets_to_axis(axis, values: List[float], times: List[int], on_uncertainty_plot=False):
-    """
-    Plot output value calibration targets as points on the axis.
-    # TODO: add back ability to plot confidence interval
-    x_vals = [time, time]
-    axis.plot(x_vals, values[1:], "m", linewidth=1, color="red")
-    axis.scatter(time, values[0], marker="o", color="red", s=30)
-    axis.scatter(time, values[0], marker="o", color="white", s=10)
-    """
-    assert len(times) == len(values), "Targets have inconsistent length"
-    # Plot a single point estimate
-    if on_uncertainty_plot:
-        axis.scatter(times, values, marker="o", color="black", s=10)
-    else:
-        axis.scatter(times, values, marker="o", color="red", s=30, zorder=999)
-        axis.scatter(times, values, marker="o", color="white", s=10, zorder=999)
 
 
 def plot_time_varying_input(

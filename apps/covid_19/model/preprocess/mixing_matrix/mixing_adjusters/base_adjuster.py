@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 
-class BaseMixingAdjustment(ABC):
+class BaseMixingAdjuster(ABC):
     """
     A class used to build a time varying mixing matrix adjustment
     """

@@ -5,11 +5,11 @@ import pickle
 
 import pytest
 import numpy as np
-from numpy.testing import assert_array_equal, assert_allclose
+from numpy.testing import assert_allclose
 
 
-from autumn.db import database
 from autumn import constants
+from autumn.db import database
 from autumn.calibration import calibration
 
 from .utils import in_memory_db_factory, get_deterministic_random_seed

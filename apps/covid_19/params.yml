@@ -73,8 +73,8 @@ sojourn:
 # Parameters relating to adjusting the mixing matrix to reflect interventions
 mobility:
   region: null
-  mixing_type: location
   mixing: {}
+  age_mixing: null
   npi_effectiveness: {}
   # Mapping of Google mobility locations to Prem-specific locations
   google_mobility_locations:

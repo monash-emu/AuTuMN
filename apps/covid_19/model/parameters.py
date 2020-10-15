@@ -1,7 +1,7 @@
 """
 Type definition for model parameters
 """
-from enum import Enum
+from datetime import date
 from typing import List, Optional, Dict, Any, Union
 from pydantic import BaseModel, validator, root_validator
 from pydantic.dataclasses import dataclass
@@ -26,6 +26,16 @@ class TimeSeries(BaseModel):
 
     times: List[float]
     values: List[float]
+
+    @root_validator(pre=True, allow_reuse=True)
+    def check_lengths(cls, values):
+        vs, ts = values.get("values"), values.get("times")
+        assert len(ts) == len(vs), f"TimeSeries length mismatch."
+        return values
+
+    @validator("times", pre=True, allow_reuse=True)
+    def parse_dates_to_days(dates):
+        return [(d - BASE_DATE).days if type(d) is date else d for d in dates]
 
 
 class Country(BaseModel):
@@ -54,7 +64,7 @@ class Sojourn(BaseModel):
     compartment_periods_calculated: Dict[str, CalcPeriod]
 
 
-class MixingCategory(BaseModel):
+class MixingLocation(BaseModel):
     # Whether to append or overwrite times / values
     append: bool
     # Times for dynamic mixing func.
@@ -69,8 +79,8 @@ class MixingCategory(BaseModel):
         return values
 
     @validator("times", pre=True, allow_reuse=True)
-    def parse_dates_to_days(cls, dates):
-        return [(d - BASE_DATE).days for d in dates]
+    def parse_dates_to_days(dates):
+        return [(d - BASE_DATE).days if type(d) is date else d for d in dates]
 
 
 class EmpiricMicrodistancingParams(BaseModel):
@@ -91,17 +101,12 @@ class MicroDistancingFunc(BaseModel):
     parameters: Union[EmpiricMicrodistancingParams, TanhMicrodistancingParams]
 
 
-class MixingType(str, Enum):
-    age = "age"
-    location = "location"
-
-
 class Mobility(BaseModel):
     """Google mobility params"""
 
     region: Optional[str]  # None/null means default to parent country
-    mixing_type: MixingType
-    mixing: Dict[str, MixingCategory]
+    mixing: Dict[str, MixingLocation]
+    age_mixing: Optional[Dict[str, TimeSeries]]
     microdistancing: Dict[str, MicroDistancingFunc]
     microdistancing_locations: List[str]
     smooth_google_data: bool

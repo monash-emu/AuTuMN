@@ -12,9 +12,9 @@ from datetime import date, timedelta
 
 from apps import covid_19
 from apps.covid_19.mixing_optimisation.constants import PHASE_2_START_TIME, DURATION_PHASES_2_AND_3
-from apps.covid_19.model.preprocess.mixing_matrix.dynamic import build_dynamic
 from autumn.inputs.demography.queries import get_iso3_from_country_name
-from apps.covid_19.model.preprocess.mixing_matrix.adjust_age import AGE_GROUPS
+from apps.covid_19.model.preprocess.mixing_matrix.mixing_matrix import build_dynamic_mixing_matrix
+from apps.covid_19.model.preprocess.mixing_matrix.mixing_adjusters.age_adjuster import AGE_GROUPS
 
 
 REF_DATE = date(2019, 12, 31)
@@ -745,7 +745,7 @@ def get_mixing_matrices(
         sc_1_params["mixing_age_adjust"] = {}
 
     # FIXME: this is probably broken!
-    mixing_func = build_dynamic(
+    mixing_func = build_dynamic_mixing_matrix(
         iso_3,
         country,
         mixing=sc_1_params["mixing"],

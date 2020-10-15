@@ -282,6 +282,18 @@ def plot_loglikelihood_trace(plotter: Plotter, mcmc_tables: List[pd.DataFrame], 
     plotter.save_figure(fig, filename="loglikelihood-traces", title_text="loglikelihood-traces")
 
 
+def plot_loglikelihood_boxplots(plotter: Plotter, mcmc_tables: List[pd.DataFrame]):
+    fig, axis, _, _, _, _ = plotter.get_figure()
+    if len(mcmc_tables) > 1:
+        df = pd.concat(mcmc_tables)
+    else:
+        df = mcmc_tables[0]
+
+    df["-log(-loglikelihood)"] = [-log(-v) for v in df["loglikelihood"]]
+    df.boxplot(column=["-log(-loglikelihood)"], by="chain", ax=axis)
+    plotter.save_figure(fig, filename="loglikelihood-boxplots", title_text="")
+
+
 def plot_burn_in(plotter: Plotter, num_iters: int, burn_in: int):
     """
     Plot the trade off been num iters and burn-in for MCMC runs.

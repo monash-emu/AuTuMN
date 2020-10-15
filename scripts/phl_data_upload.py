@@ -12,8 +12,8 @@ from google_drive_downloader import GoogleDriveDownloader as gdd
 import json
 
 # shareable google drive links
-PHL_doh_link = '1IYGvsdQ-OGJ6bPMfTR3PXU7IPuIeyPVW'
-PHL_fassster_link = '1aiOzOcKbSwUxVYVW8w1SytYu-42GkXum'
+PHL_doh_link = '1DmQAxAYKIvfEWF_PCDHGcZeSpsv03RCp'
+PHL_fassster_link = '1RKRRYIXSqcZPevw5a85ZMv3kSAF1GJ9k'
 
 # destination folders filepaths
 base_dir = os.path.dirname(os.path.abspath(os.curdir)) 
@@ -60,10 +60,10 @@ def process_phl_data():
     fassster_data = fassster_data[fassster_data['Region'].isin(regions)]
     ## most recent ICU data
     doh_data.loc[:,'reportdate'] = pd.to_datetime(doh_data['reportdate'])
-    doh_data['times'] = doh_data.reportdate - COVID_BASE_DATETIME
+    doh_data['times'] = doh_data.reportdate- COVID_BASE_DATETIME
     doh_data['times'] = doh_data['times'] / np.timedelta64(1, 'D')
-    icu_occ_at_maxDate =  doh_data.groupby(['region'], as_index = False)[['times', 'icu_o']].max()
-    icu_occ_at_maxDate.to_csv(icu_dest)
+    icu_occ = doh_data.groupby(['region', 'times'], as_index = False).sum(min_count=1)[['region', 'times', 'icu_o']]
+    icu_occ.to_csv(icu_dest)
     ## accumulated deaths
     fassster_data_deaths = fassster_data[fassster_data['Date_Died'].notna()]
     fassster_data_deaths.loc[:,'Date_Died'] = pd.to_datetime(fassster_data_deaths['Date_Died'])

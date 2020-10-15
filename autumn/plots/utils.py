@@ -86,3 +86,21 @@ def _apply_transparency(color_list: List[str], alphas: List[str]):
             rgb_color = list(colors.colorConverter.to_rgb(color_list[i][j]))
             color_list[i][j] = rgb_color + [alphas[i]]
     return color_list
+
+
+def _plot_targets_to_axis(axis, values: List[float], times: List[int], on_uncertainty_plot=False):
+    """
+    Plot output value calibration targets as points on the axis.
+    # TODO: add back ability to plot confidence interval
+    x_vals = [time, time]
+    axis.plot(x_vals, values[1:], "m", linewidth=1, color="red")
+    axis.scatter(time, values[0], marker="o", color="red", s=30)
+    axis.scatter(time, values[0], marker="o", color="white", s=10)
+    """
+    assert len(times) == len(values), "Targets have inconsistent length"
+    # Plot a single point estimate
+    if on_uncertainty_plot:
+        axis.scatter(times, values, marker="o", color="black", s=10)
+    else:
+        axis.scatter(times, values, marker="o", color="red", s=30, zorder=999)
+        axis.scatter(times, values, marker="o", color="white", s=10, zorder=999)

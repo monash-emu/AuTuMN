@@ -9,7 +9,7 @@ import pandas as pd
 from math import ceil
 
 from autumn.plots.plotter import Plotter
-from autumn.plots.calibration.plots import _plot_targets_to_axis
+from autumn.plots.utils import _plot_targets_to_axis
 from matplotlib import pyplot
 import matplotlib.ticker as mtick
 from autumn.plots.utils import change_xaxis_to_date

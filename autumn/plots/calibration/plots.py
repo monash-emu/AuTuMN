@@ -20,20 +20,22 @@ from autumn.plots.utils import get_plot_text_dict
 from autumn import db
 from autumn.calibration.utils import calculate_prior, raise_error_unsupported_prior
 from autumn.plots.plotter import Plotter, COLOR_THEME
-from autumn.plots.utils import change_xaxis_to_date
+from autumn.plots.utils import change_xaxis_to_date, _plot_targets_to_axis
 
 logger = logging.getLogger(__name__)
 
 
 def get_epi_params(mcmc_params):
-    return [param for param in mcmc_params[0].loc[:, "name"].unique().tolist() if "dispersion_param" not in param]
-
-# def find_max_burn_in(mcmc_params):
-#     chain_length = 0
-#     for i_chain in range(len(mcmc_params)):
-#         parameters = mcmc_params[i_chain]["name"].unique().tolist()
-#         chain_length = max(int(len(mcmc_params[0]) / len(parameters)), chain_length)
-#     return chain_length
+    """
+    Extract only the epidemiological parameters, ignoring the ones that were only used to tune proposal distributions,
+    which end in dispersion_param
+    """
+    return [
+        param for
+        param in mcmc_params[0].loc[:, "name"].unique().tolist() if
+        "dispersion_param" not in
+        param
+    ]
 
 
 def find_min_chain_length_from_mcmc_tables(mcmc_tables):
@@ -848,16 +850,3 @@ def _overwrite_non_accepted_mcmc_runs(mcmc_tables: List[pd.DataFrame], column_na
                 prev_val = table_df.at[idx, column_name]
             else:
                 table_df.at[idx, column_name] = prev_val
-
-
-def _plot_targets_to_axis(axis, values: List[float], times: List[int], on_uncertainty_plot=False):
-    """
-    Plot output value calibration targets as points on the axis.
-    """
-    assert len(times) == len(values), "Targets have inconsistent length"
-    # Plot a single point estimate
-    if on_uncertainty_plot:
-        axis.scatter(times, values, marker="o", color="black", s=10, zorder=999)
-    else:
-        axis.scatter(times, values, marker="o", color="red", s=30, zorder=999)
-        axis.scatter(times, values, marker="o", color="white", s=10, zorder=999)

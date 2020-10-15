@@ -183,6 +183,7 @@ def plot_timeseries_with_uncertainty(
 
     is_logscale = st.sidebar.checkbox("Log scale")
     is_targets = st.sidebar.checkbox("Show targets")
+    is_overlay_unceratinty = st.sidebar.checkbox("Overlay uncertainty")
     plots.uncertainty.plots.plot_timeseries_with_uncertainty(
         plotter,
         uncertainty_df,
@@ -193,6 +194,7 @@ def plot_timeseries_with_uncertainty(
         x_low,
         x_up,
         add_targets=is_targets,
+        overlay_uncertainty=is_overlay_unceratinty,
     )
 
 

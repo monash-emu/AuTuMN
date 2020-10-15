@@ -38,6 +38,7 @@ def plot_timeseries_with_uncertainty(
         n_xticks=None,
         ref_date=datetime.date(2019, 12, 31),
         add_targets=True,
+        overlay_uncertainty=True,
 ):
     """
     Plots the uncertainty timeseries for one or more scenarios.
@@ -53,7 +54,8 @@ def plot_timeseries_with_uncertainty(
         color_idx = min(scenario_idx, 1)
         scenario_colors = colors[color_idx]
         _plot_uncertainty(
-            axis, uncertainty_df, output_name, scenario_idx, x_up, x_low, scenario_colors
+            axis, uncertainty_df, output_name, scenario_idx, x_up, x_low, scenario_colors,
+            overlay_uncertainty=overlay_uncertainty
         )
 
     # Add plot targets
@@ -63,14 +65,13 @@ def plot_timeseries_with_uncertainty(
 
     # Sort out x-axis
     change_xaxis_to_date(axis, ref_date, rotation=0)
-    label_font_size = 15
-    title_font_size = 20
+    label_font_size = 12
+    title_font_size = 15
     axis.tick_params(axis="x", labelsize=label_font_size)
     axis.tick_params(axis="y", labelsize=label_font_size)
 
     if output_name == "proportion_seropositive":
         axis.yaxis.set_major_formatter(mtick.PercentFormatter(1, symbol=""))
-
     axis.set_title(get_plot_text_dict(output_name), fontsize=title_font_size)
 
     if n_xticks is not None:
@@ -88,13 +89,14 @@ def plot_timeseries_with_uncertainty(
 
 
 def _plot_uncertainty(
-    axis,
-    uncertainty_df: pd.DataFrame,
-    output_name: str,
-    scenario_idx: int,
-    x_up: float,
-    x_low: float,
-    colors: List[str],
+        axis,
+        uncertainty_df: pd.DataFrame,
+        output_name: str,
+        scenario_idx: int,
+        x_up: float,
+        x_low: float,
+        colors: List[str],
+        overlay_uncertainty=True,
 ):
     """Plots the uncertainty values in the provided dataframe to an axis"""
     mask = (
@@ -113,11 +115,12 @@ def _plot_uncertainty(
     q_keys = sorted([float(k) for k in quantiles.keys()])
     num_quantiles = len(q_keys)
     half_length = num_quantiles // 2
-    for i in range(half_length):
-        color = colors[i]
-        start_key = q_keys[i]
-        end_key = q_keys[-(i + 1)]
-        axis.fill_between(times, quantiles[start_key], quantiles[end_key], facecolor=color)
+    if overlay_uncertainty:
+        for i in range(half_length):
+            color = colors[i]
+            start_key = q_keys[i]
+            end_key = q_keys[-(i + 1)]
+            axis.fill_between(times, quantiles[start_key], quantiles[end_key], facecolor=color)
 
     if num_quantiles % 2:
         q_key = q_keys[half_length]

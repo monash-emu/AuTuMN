@@ -25,7 +25,7 @@ jobs:
         env:
           AUTUMN_PASSWORD: ${{ secrets.AUTUMN_PASSWORD }}
       - name: Test with pytest
-        run: pytest -W ignore -vv -m "not run_models and not calibrate_models and not mixing_optimisation"
+        run: pytest --workers 2 -W ignore -vv -m "not run_models and not calibrate_models and not mixing_optimisation"
   test_runs:
     runs-on: ubuntu-latest
     steps:
@@ -43,7 +43,7 @@ jobs:
         env:
           AUTUMN_PASSWORD: ${{ secrets.AUTUMN_PASSWORD }}
       - name: Test with pytest
-        run: pytest -W ignore -vv -m run_models
+        run: pytest --workers 2 -W ignore -vv -m run_models
   test_calibrations:
     runs-on: ubuntu-latest
     steps:
@@ -61,7 +61,7 @@ jobs:
         env:
           AUTUMN_PASSWORD: ${{ secrets.AUTUMN_PASSWORD }}
       - name: Test with pytest
-        run: pytest -W ignore -vv -m calibrate_models
+        run: pytest --workers 2 -W ignore -vv -m calibrate_models
   test_mixing_optimisation:
     runs-on: ubuntu-latest
     steps:
@@ -79,4 +79,4 @@ jobs:
         env:
           AUTUMN_PASSWORD: ${{ secrets.AUTUMN_PASSWORD }}
       - name: Test with pytest
-        run: pytest -W ignore -vv -m mixing_optimisation
+        run: pytest --workers 2 -W ignore -vv -m mixing_optimisation

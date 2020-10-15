@@ -1,20 +1,35 @@
 Belgium
 https://datastudio.google.com/embed/u/0/reporting/c14a5cfc-cab7-4812-848c-0369173148ab/page/tpRKB
+https://epistat.sciensano.be/Data/COVID19BE_HOSP.csv
+
 
 France
 https://www.data.gouv.fr/fr/datasets/donnees-hospitalieres-relatives-a-lepidemie-de-covid-19/
+Copy the two links and replace the URLs in hospital_data.py -> get_france() accordingly. 
+
 
 Italy
 Github 
 https://github.com/pcm-dpc/COVID-19/tree/master/dati-andamento-nazionale
 file: dpc-covid19-ita-andamento-nazionale.csv
+https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-andamento-nazionale/dpc-covid19-ita-andamento-nazionale.csv
+
+
 
 Spain
 MoH report (PDF file)
+https://cnecovid.isciii.es/
+
 
 Sweden
 https://www.icuregswe.org/globalassets/supportfiler/corona/covid-vecko-202007270849.pdf
+Download the excel files from the details section in each URL and replace the file with the matching suffix.
+https://portal.icuregswe.org/siri/report/corona.covid-dagligen?filter=ba70d808-89b2-db55-52b2-69fcee1d601e -ICU prev
+https://portal.icuregswe.org/siri/report/corona.vtfstart?filter=ba70d808-08d4-05fb-52b2-69fcee1d6020 - ICU incid
 
 UK
 From the beta website:
 https://coronavirus-staging.data.gov.uk/healthcare
+https://api.coronavirus.data.gov.uk/v1/data?
+Replace the 'endpoint' API query in hospital_data with the required fields.
+

@@ -12,6 +12,7 @@ import pandas as pd
 import seaborn as sns
 import numpy as np
 from matplotlib import pyplot
+import matplotlib.ticker as mtick
 from scipy import stats
 import plotly.express as px
 
@@ -408,7 +409,7 @@ def plot_parallel_coordinates(
     h = 800
     labels = {}
     for param in parameters:
-        labels[param] = PLOT_TEXT_DICT[param] if param in PLOT_TEXT_DICT else param
+        labels[param] = get_plot_text_dict(param)
     figure = px.parallel_coordinates(
         combined_mcmc_df,
         color='fitness',
@@ -465,7 +466,6 @@ def plot_loglikelihood_surface(
     fig = px.scatter_3d(combined_mcmc_df, x=param_1, y=param_2, z='fitness',
               color='chain')
     fig.show()
-
 
 
 def plot_single_param_loglike(
@@ -695,10 +695,11 @@ def sample_outputs_for_calibration_fit(
     return outputs
 
 
-def plot_calibration(axis, output, outputs, targets, is_logscale):
+def plot_calibration(axis, output, outputs, targets, is_logscale, ref_date=datetime.date(2019, 12, 31)):
     # Track the maximum value being plotted
-    max_value = 0.0
+    label_font_size = 8
 
+    max_value = 0.0
     for times, values in outputs:
         axis.plot(times, values)
         max_value = max(values) if max(values) > max_value else max_value
@@ -731,6 +732,13 @@ def plot_calibration(axis, output, outputs, targets, is_logscale):
     else:
         axis.set_ylim([0.0, upper_ylim])
 
+    # Sort out x-axis
+    if output == "proportion_seropositive":
+        axis.yaxis.set_major_formatter(mtick.PercentFormatter(1, symbol="", decimals=2))
+    axis.tick_params(axis="x", labelsize=label_font_size)
+    axis.tick_params(axis="y", labelsize=label_font_size)
+    change_xaxis_to_date(axis, ref_date, rotation=0)
+
     return axis
 
 
@@ -741,8 +749,6 @@ def plot_calibration_fit(
     plot_calibration(
         axis, output_name, outputs, targets, is_logscale
     )
-    ref_date = datetime.date(2019, 12, 31)
-    change_xaxis_to_date(axis, ref_date)
     if is_logscale:
         filename = f"calibration-fit-{output_name}-logscale"
         title_text = f"Calibration fit for {output_name} (logscale)"
@@ -795,7 +801,7 @@ def plot_multi_fit(
             axis = plot_calibration(
                 axes[indices[i_output][0], indices[i_output][1]], output, outputs[output], targets, is_logscale
             )
-            change_xaxis_to_date(axis, datetime.date(2019, 12, 31))
+            change_xaxis_to_date(axis, datetime.date(2019, 12, 31), rotation=0)
             axis.set_title(
                 get_plot_text_dict(
                     output, capitalise_first_letter=capitalise_first_letter

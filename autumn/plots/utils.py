@@ -4,11 +4,8 @@ import datetime
 
 PLOT_TEXT_DICT = {
     "contact_rate": "infection risk per contact",
-    "compartment_periods_calculated.exposed.total_period": "incubation period",
-    "compartment_periods_calculated.active.total_period": "duration active",
     "hospital_props_multiplier": "hospital risk multiplier",
     "compartment_periods.icu_early": "pre-ICU period",
-    "icu_prop": "ICU proportion",
     "testing_to_detection.assumed_cdr_parameter": "CDR at base testing rate",
     "microdistancing.parameters.max_effect": "max effect microdistancing",
     "icu_occupancy": "ICU occupancy",
@@ -31,6 +28,15 @@ PLOT_TEXT_DICT = {
     "infection_deaths": "deaths per day",
     "notifications": "notifications per day",
     "incidence": "incident episodes per day",
+    "sojourn.compartment_periods_calculated.exposed.total_period": "incubation period",
+    "sojourn.compartment_periods_calculated.active.total_period": "duration active",
+    "seasonal_force": "seasonal forcing",
+    "mobility.microdistancing.behaviour.parameters.max_effect": "max effect microdistancing",
+    "mobility.microdistancing.behaviour_adjuster.parameters.sigma": "microdist max wane",
+    "mobility.microdistancing.behaviour_adjuster.parameters.c": "microdist wane time",
+    "clinical_stratification.props.hospital.multiplier": "hospitalisation multiplier",
+    "clinical_stratification.icu_prop": "ICU proportion",
+    "sojourn.compartment_periods.icu_early": "ICU duration",
 }
 
 

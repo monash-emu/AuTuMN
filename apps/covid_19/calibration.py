@@ -394,8 +394,13 @@ European countries for the optimisation project
 
 def get_targets_and_priors_for_opti(country):
     targets = load_targets("covid_19", country)
+
+    hospital_targets = [t for t in list(targets.keys()) if 'hospital' in t or 'icu' in t]
+    assert len(hospital_targets) == 1
+
     notifications = targets["notifications"]
     deaths = targets["infection_deaths"]
+    hospitalisations = targets[hospital_targets[0]]
 
     par_priors = get_prior_distributions_for_opti()
 
@@ -410,6 +415,12 @@ def get_targets_and_priors_for_opti(country):
             "output_key": "infection_deaths",
             "years": deaths["times"],
             "values": deaths["values"],
+            "loglikelihood_distri": "normal",
+        },
+        {
+            "output_key": hospital_targets[0],
+            "years": hospitalisations["times"],
+            "values": hospitalisations["values"],
             "loglikelihood_distri": "normal",
         },
     ]

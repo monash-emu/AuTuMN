@@ -76,6 +76,7 @@ def plot_acceptance_ratio(
 ):
     label_font_size = st.sidebar.slider("Label font size", 1, 15, 10)
     chain_length = find_min_chain_length_from_mcmc_tables(mcmc_tables)
+    st.write(chain_length)
     burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
     dpi_request = st.sidebar.slider("DPI", 50, 2000, 300)
     plots.calibration.plots.plot_acceptance_ratio(

@@ -191,6 +191,7 @@ def plot_timeseries_with_uncertainty(
     is_logscale = st.sidebar.checkbox("Log scale")
     is_targets = st.sidebar.checkbox("Show targets")
     is_overlay_unceratinty = st.sidebar.checkbox("Overlay uncertainty")
+    is_legend = st.sidebar.checkbox("Add legend")
     plots.uncertainty.plots.plot_timeseries_with_uncertainty(
         plotter,
         uncertainty_df,
@@ -205,7 +206,8 @@ def plot_timeseries_with_uncertainty(
         title_font_size=title_font_size,
         label_font_size=label_font_size,
         dpi_request=dpi_request,
-        capitalise_first_letter=capitalise_first_letter
+        capitalise_first_letter=capitalise_first_letter,
+        legend=is_legend,
     )
 
 

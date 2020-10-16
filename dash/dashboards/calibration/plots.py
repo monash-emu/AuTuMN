@@ -60,6 +60,7 @@ def print_mle_parameters(
     df = db.process.append_tables(mcmc_tables)
     param_df = db.process.append_tables(mcmc_params)
     params = db.process.find_mle_params(df, param_df)
+    create_downloadable_csv(pd.Series(params), "mle_parameters")
     st.write(params)
 
 

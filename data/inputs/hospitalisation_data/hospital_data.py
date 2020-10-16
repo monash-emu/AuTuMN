@@ -62,6 +62,7 @@ def get_france():
 
     france_df.rename(
         columns={
+            "incid_hosp": "fra_incid_hosp",
             "incid_rea": "fra_incid_icu",
             "incid_dc": "fra_daily_death",
             "incid_rad": "fra_daily_return_home",
@@ -81,6 +82,17 @@ def get_belgium():
         belgium_df["DATE"], errors="coerce", format="%Y-%m-%d", infer_datetime_format=False
     )
     belgium_df.drop(columns=["NR_REPORTING"], inplace=True)
+    belgium_df.rename(
+        columns={
+            "TOTAL_IN": "bel_prev_hops",
+            "TOTAL_IN_ICU": "bel_prev_icu",
+            "TOTAL_IN_RESP": "bel_prev_resp",
+            "TOTAL_IN_ECMO": "bel_prev_ecmo",
+            "NEW_IN": "bel_incid_hosp_in",
+            "NEW_OUT": "bel_incid_hosp_out",
+        },
+        inplace=True,
+    )
     belgium_df = belgium_df.groupby(["DATE"]).sum()
     belgium_df.index.name = "date"
 
@@ -162,7 +174,7 @@ def main():
     uk_df = get_uk()
     european_data = pd.concat([france_df, belgium_df, italy_df, sweden_df, uk_df])
     european_data = european_data.groupby("date").sum()
-    european_data.to_csv(os.path.join(HOSPITAL_DIRPATH,"european_data.csv"))
+    european_data.to_csv(os.path.join(HOSPITAL_DIRPATH, "european_data.csv"))
 
 
 if __name__ == "__main__":

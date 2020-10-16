@@ -48,6 +48,23 @@ def write_mcmc_centiles(
     st.write(params_df)
 
 
+def get_uncertainty_df(calib_dir_path, mcmc_tables, targets):
+
+    try:  # if PBI processing has been performed already
+        uncertainty_df = db.load.load_uncertainty_table(calib_dir_path)
+    except:  # calculates percentiles
+        derived_output_tables = db.load.load_derived_output_tables(calib_dir_path)
+        mcmc_all_df = db.process.append_tables(mcmc_tables)
+        do_all_df = db.process.append_tables(derived_output_tables)
+
+        # Determine max chain length, throw away first half of that
+        max_run = mcmc_all_df["run"].max()
+        half_max = max_run // 2
+        mcmc_all_df = mcmc_all_df[mcmc_all_df["run"] >= half_max]
+        uncertainty_df = db.uncertainty.calculate_mcmc_uncertainty(mcmc_all_df, do_all_df, targets)
+    return uncertainty_df
+
+
 def print_mle_parameters(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
@@ -128,7 +145,7 @@ def plot_cdr_curves(
         testing_to_detection_values += \
             mcmc_params[i_chain]["value"][param_mask].tolist()
 
-    # Get CDR function
+    # Get CDR function - needs to be done outside of autumn, because it is importing from the apps
     testing_pops = inputs.get_population_by_agegroup(
         agegroup_strata, iso3, None, year=testing_year
     )
@@ -162,18 +179,7 @@ def plot_timeseries_with_uncertainty(
     chosen_output = st.sidebar.selectbox("Select calibration target", available_outputs)
     targets = {k: v for k, v in targets.items() if v["output_key"] == chosen_output}
 
-    try:  # if PBI processing has been performed already
-        uncertainty_df = db.load.load_uncertainty_table(calib_dir_path)
-    except:  # calculates percentiles
-        derived_output_tables = db.load.load_derived_output_tables(calib_dir_path)
-        mcmc_all_df = db.process.append_tables(mcmc_tables)
-        do_all_df = db.process.append_tables(derived_output_tables)
-
-        # Determine max chain length, throw away first half of that
-        max_run = mcmc_all_df["run"].max()
-        half_max = max_run // 2
-        mcmc_all_df = mcmc_all_df[mcmc_all_df["run"] >= half_max]
-        uncertainty_df = db.uncertainty.calculate_mcmc_uncertainty(mcmc_all_df, do_all_df, targets)
+    uncertainty_df = get_uncertainty_df(calib_dir_path, mcmc_tables, targets)
 
     x_min = round(min(uncertainty_df["time"]))
     x_max = round(max(uncertainty_df["time"]))
@@ -226,18 +232,8 @@ def plot_multiple_timeseries_with_uncertainty(
 ):
     available_outputs = [o["output_key"] for o in targets.values()]
     chosen_outputs = st.multiselect('Select outputs', available_outputs)
-    try:  # if PBI processing has been performed already
-        uncertainty_df = db.load.load_uncertainty_table(calib_dir_path)
-    except:  # calculates percentiles
-        derived_output_tables = db.load.load_derived_output_tables(calib_dir_path)
-        mcmc_all_df = db.process.append_tables(mcmc_tables)
-        do_all_df = db.process.append_tables(derived_output_tables)
 
-        # Determine max chain length, throw away first half of that
-        max_run = mcmc_all_df["run"].max()
-        half_max = max_run // 2
-        mcmc_all_df = mcmc_all_df[mcmc_all_df["run"] >= half_max]
-        uncertainty_df = db.uncertainty.calculate_mcmc_uncertainty(mcmc_all_df, do_all_df, targets)
+    uncertainty_df = get_uncertainty_df(calib_dir_path, mcmc_tables, targets)
 
     x_min = round(min(uncertainty_df['time']))
     x_max = round(max(uncertainty_df['time']))

@@ -19,6 +19,17 @@ OPTI_ISO3S = [
     "ESP",
 ]
 
+
+COUNTRY_TITLES = {
+    Region.BELGIUM: 'Belgium',
+    Region.FRANCE: 'France',
+    Region.ITALY: 'Italy',
+    Region.SPAIN: 'Spain',
+    Region.SWEDEN: 'Sweden',
+    Region.UNITED_KINGDOM: 'United Kingdom',
+}
+
+
 #  Definitions if the three phases
 PHASE_2_START_TIME = 214
 DURATION_PHASES_2_AND_3 = 365 + 90

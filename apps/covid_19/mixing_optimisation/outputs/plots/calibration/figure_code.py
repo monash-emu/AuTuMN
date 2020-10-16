@@ -2,8 +2,9 @@ from autumn.tool_kit.params import load_targets
 from autumn import db
 from autumn.plots.calibration.plots import get_posterior
 from autumn.curve import tanh_based_scaleup
+from autumn.plots.uncertainty.plots import plot_timeseries_with_uncertainty
 
-from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
+from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS, COUNTRY_TITLES
 import matplotlib.pyplot as plt
 from numpy import mean, quantile
 import numpy as np
@@ -226,5 +227,48 @@ def plot_posterior_detection():
 
 
 # --------------  Make figure with fits to data
-def make_calibration_fits_figure(calibration_outputs, targets):
-    pass
+def make_calibration_fits_figure(calibration_outputs):
+    n_target_outputs = 3
+    target_outputs = {}
+    for country in OPTI_REGIONS:
+        targets = get_targets(country)
+        target_outputs[country] = ["notifications", "infection_deaths"]
+        hospital_target = [t for t in list(targets.keys()) if 'hospital' in t or 'icu' in t][0]
+        target_outputs[country].append(hospital_target)
+    heights = [1, 6, 1, 6, 1, 6]
+    fig = plt.figure(constrained_layout=True, figsize=(30, 15))  # (w, h)
+    widths = [5] * (2 * n_target_outputs)
+    spec = fig.add_gridspec(ncols=2 * n_target_outputs, nrows=len(heights), width_ratios=widths,
+                            height_ratios=heights)
+
+    text_size = 23
+    i_row = 1
+    i_col = 0
+    for country in OPTI_REGIONS:
+        # write country name
+        ax = fig.add_subplot(spec[i_row-1, i_col: i_col + 3])
+        ax.text(0.5, 0.2, COUNTRY_TITLES[country], fontsize=text_size, horizontalalignment='center',
+                verticalalignment='center')
+        ax.axis("off")
+        for output in target_outputs[country]:
+            ax = fig.add_subplot(spec[i_row, i_col])
+            country_targets = get_targets(country)
+            targets = {k: v for k, v in country_targets.items() if v["output_key"] == output}
+            plot_timeseries_with_uncertainty(
+                None, calibration_outputs[country]["uncertainty_df"], output, [0], targets,
+                False, 30, 300, ax, n_xticks=None, title_font_size=16, label_font_size=13,
+                requested_x_ticks=[61, 122, 183, 245]
+            )
+
+            i_col += 1
+            if i_col == 2 * n_target_outputs:
+                i_col = 0
+                i_row += 2
+
+    # Add vertical separator line
+    line = plt.Line2D((.5, .5), (-.1, 1.9), color="grey", linewidth=1)
+    fig.add_artist(line)
+
+    filename = "figures/model_fits"
+    plt.savefig(filename + ".pdf")
+

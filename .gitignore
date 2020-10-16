@@ -556,3 +556,11 @@ data/scenario_outputs_waning_immunity/by_age_3_yoll_pessimistic/united-kingdom/2
 apps/pycharm.py
 apps/tuberculosis/regions/marshall_islands/figures/calibration_targets/targets.pdf
 apps/tuberculosis/regions/marshall_islands/figures/main_outputs/main_outputs.pdf
+apps/covid_19/mixing_optimisation/outputs/plots/calibration/dumped_files/dumped_detection_percentiles_france.npy
+apps/covid_19/mixing_optimisation/outputs/plots/calibration/dumped_files/dumped_detection_percentiles_belgium.npy
+apps/covid_19/mixing_optimisation/outputs/plots/calibration/dumped_files/dumped_detection_percentiles_italy.npy
+apps/covid_19/mixing_optimisation/outputs/plots/calibration/dumped_files/dumped_detection_percentiles_spain.npy
+apps/covid_19/mixing_optimisation/outputs/plots/calibration/dumped_files/dumped_detection_percentiles_sweden.npy
+apps/covid_19/mixing_optimisation/outputs/plots/calibration/dumped_files/dumped_detection_percentiles_united-kingdom.npy
+apps/covid_19/mixing_optimisation/outputs/plots/calibration/figures/detection_posteriors.pdf
+apps/covid_19/mixing_optimisation/outputs/plots/calibration/figures/param_posteriors.pdf

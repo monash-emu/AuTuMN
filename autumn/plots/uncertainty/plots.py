@@ -38,6 +38,7 @@ def plot_timeseries_with_uncertainty(
         dpi_request=300,
         capitalise_first_letter=False,
         legend=False,
+        requested_x_ticks=None,
 ):
     """
     Plots the uncertainty timeseries for one or more scenarios.
@@ -55,7 +56,7 @@ def plot_timeseries_with_uncertainty(
         _plot_uncertainty(
             axis, uncertainty_df, output_name, scenario_idx, x_up, x_low, scenario_colors,
             overlay_uncertainty=overlay_uncertainty,
-            start_quantile=1,
+            start_quantile=0,
         )
 
     # Add plot targets
@@ -72,7 +73,9 @@ def plot_timeseries_with_uncertainty(
         axis.yaxis.set_major_formatter(mtick.PercentFormatter(1, symbol=""))
     axis.set_title(get_plot_text_dict(output_name), fontsize=title_font_size)
 
-    if n_xticks is not None:
+    if requested_x_ticks is not None:
+        pyplot.xticks(requested_x_ticks)
+    elif n_xticks is not None:
         pyplot.locator_params(axis='x', nbins=n_xticks)
 
     if is_logscale:

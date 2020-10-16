@@ -30,6 +30,9 @@ PLOT_TEXT_DICT = {
     "infection_deaths": "deaths per day",
     "notifications": "notifications per day",
     "incidence": "incident episodes per day",
+    "new_hospital_admissions": "new hospitalisations per day",
+    "new_icu_admissions": "new ICU admissions per day",
+    "hospital_occupancy": "Hospital occupancy",
     "sojourn.compartment_periods_calculated.exposed.total_period": "incubation period",
     "sojourn.compartment_periods_calculated.active.total_period": "duration active",
     "seasonal_force": "seasonal forcing",
@@ -71,7 +74,7 @@ def change_xaxis_to_date(axis, ref_date, date_str_format="%#d-%b", rotation=30):
     """
 
     def to_date(x_value, pos):
-        date = ref_date + datetime.timedelta(days=x_value)
+        date = ref_date + datetime.timedelta(days=int(x_value))
         return date.strftime(date_str_format)
 
     date_format = ticker.FuncFormatter(to_date)

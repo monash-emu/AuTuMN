@@ -93,11 +93,11 @@ def get_prior_distributions_for_opti():
         #     "distri_params": [9.0, 13.0],
         # },
         # vary symptomatic and hospitalised proportions
-        # {
-        #     "param_name": "clinical_stratification.props.symptomatic.multiplier",
-        #     "distribution": "uniform",
-        #     "distri_params": [0.75, 1.25],
-        # },
+        {
+            "param_name": "clinical_stratification.props.symptomatic.multiplier",
+            "distribution": "uniform",
+            "distri_params": [0.75, 1.25],
+        },
         {
             "param_name": "clinical_stratification.props.hospital.multiplier",
             "distribution": "uniform",

@@ -47,7 +47,7 @@ def get_epi_params(mcmc_params):
     ]
 
 
-def find_min_chain_length(mcmc_tables):
+def find_shortest_chain_length(mcmc_tables):
     """
     Find the length of the shortest chain from the MCMC tables.
     """

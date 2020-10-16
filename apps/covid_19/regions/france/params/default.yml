@@ -18,3 +18,37 @@ mobility:
         - 0.1
         - 0.1
         - 1.0
+  microdistancing:
+    behaviour:
+      parameters:
+        c: 100.12022203842538
+        upper_asymptote: 0.4  #.4 # 0.26336342663608436
+    behaviour_adjuster:
+      parameters:
+        c: 140  #162.4634977460602
+        sigma: .45  # 0.6803887036954349
+        
+contact_rate: 0.051 # 0.04255790724328976
+time:
+  start: 22.
+sojourn:
+  compartment_periods_calculated:
+    exposed:
+      total_period: 3.3841618113050393
+    active:
+      total_period: 5.
+infection_fatality:
+  multiplier: 1.  # 1.1237742950595295
+case_detection:
+  start_value: 0.04   #5336652959294613
+  maximum_gradient: 0.07635802155605956
+  max_change_time: 220. # 139.17375606334187
+  end_value: .99  # 0.3631805036151643
+
+clinical_stratification:
+  props:
+    hospital:
+      multiplier: .6  #1.238788799383136
+    symptomatic:
+      multiplier: .75
+

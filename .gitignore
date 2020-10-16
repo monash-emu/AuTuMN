@@ -565,3 +565,4 @@ apps/covid_19/mixing_optimisation/outputs/plots/calibration/dumped_files/dumped_
 apps/covid_19/mixing_optimisation/outputs/plots/calibration/figures/detection_posteriors.pdf
 apps/covid_19/mixing_optimisation/outputs/plots/calibration/figures/param_posteriors.pdf
 apps/covid_19/mixing_optimisation/outputs/plots/calibration/figures/model_fits.pdf
+apps/covid_19/mixing_optimisation/outputs/plots/calibration/figures/model_fits_seroprevalence.pdf

@@ -162,7 +162,7 @@ def main():
     uk_df = get_uk()
     european_data = pd.concat([france_df, belgium_df, italy_df, sweden_df, uk_df])
     european_data = european_data.groupby("date").sum()
-    european_data.to_csv("european_data.csv")
+    european_data.to_csv(os.path.join(HOSPITAL_DIRPATH,"european_data.csv"))
 
 
 if __name__ == "__main__":

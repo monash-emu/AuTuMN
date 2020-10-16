@@ -240,6 +240,19 @@
       0.975
     ]
   },
+  "proportion_seropositive": {
+    "output_key": "proportion_seropositive",
+    "title": "Proportion seropositive",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
   "proportion_seropositiveXagegroup_0": {
     "output_key": "proportion_seropositiveXagegroup_0",
     "title": "seropositive prop (age 0)",

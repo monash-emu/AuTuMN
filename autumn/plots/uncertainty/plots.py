@@ -39,6 +39,8 @@ def plot_timeseries_with_uncertainty(
         capitalise_first_letter=False,
         legend=False,
         requested_x_ticks=None,
+        show_title=True,
+        show_ylab=True
 ):
     """
     Plots the uncertainty timeseries for one or more scenarios.
@@ -71,7 +73,8 @@ def plot_timeseries_with_uncertainty(
 
     if output_name == "proportion_seropositive":
         axis.yaxis.set_major_formatter(mtick.PercentFormatter(1, symbol=""))
-    axis.set_title(get_plot_text_dict(output_name), fontsize=title_font_size)
+    if show_title:
+        axis.set_title(get_plot_text_dict(output_name), fontsize=title_font_size)
 
     if requested_x_ticks is not None:
         pyplot.xticks(requested_x_ticks)
@@ -82,6 +85,9 @@ def plot_timeseries_with_uncertainty(
         axis.set_yscale("log")
     elif not (output_name.startswith('rel_diff') or output_name.startswith('abs_diff')):
         axis.set_ylim(ymin=0)
+
+    if show_ylab:
+        axis.set_ylabel(get_plot_text_dict(output_name), fontsize=label_font_size)
 
     if legend:
         pyplot.legend(labels=scenario_idxs)

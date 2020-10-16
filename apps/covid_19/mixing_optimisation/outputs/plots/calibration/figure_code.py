@@ -5,7 +5,10 @@ from autumn.curve import tanh_based_scaleup
 from autumn.plots.uncertainty.plots import plot_timeseries_with_uncertainty
 
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS, COUNTRY_TITLES
+
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
+
 from numpy import mean, quantile
 import numpy as np
 import os
@@ -227,18 +230,65 @@ def plot_posterior_detection():
 
 
 # --------------  Make figure with fits to data
-def make_calibration_fits_figure(calibration_outputs):
-    n_target_outputs = 3
-    target_outputs = {}
-    for country in OPTI_REGIONS:
-        targets = get_targets(country)
-        target_outputs[country] = ["notifications", "infection_deaths"]
-        hospital_target = [t for t in list(targets.keys()) if 'hospital' in t or 'icu' in t][0]
-        target_outputs[country].append(hospital_target)
-    heights = [1, 6, 1, 6, 1, 6]
-    fig = plt.figure(constrained_layout=True, figsize=(30, 15))  # (w, h)
-    widths = [5] * (2 * n_target_outputs)
-    spec = fig.add_gridspec(ncols=2 * n_target_outputs, nrows=len(heights), width_ratios=widths,
+SEROSURVEYS = {
+    'belgium': [
+        {'time_window': [90., 96], 'value': .029, 'ci': [.023, .034]},  # 30 mar  5 Apr
+        {'time_window': [111, 117], 'value': .06, 'ci': [.051, .071]},  # 20 -26 Apr
+        {'time_window': [139, 146], 'value': .069, 'ci': [.059, .080]},  # 18 -25 May
+        {'time_window': [160, 165], 'value': .055, 'ci': [.047, .065]},  # 8 - 13 jun
+        {'time_window': [181, 185], 'value': .045, 'ci': [.037, .054]},  # 29 Jun -3 Jul
+    ],
+    'france': [
+        {'time_window': [85., 98], 'value': .0271},
+    ],
+    'italy': [
+        {'time_window': [146., 197], 'value': .0250},  # 25 may 15 jul
+    ],
+    'spain': [
+        {'time_window': [118, 132], 'value': .05, 'ci': [0.047, 0.054]},
+        {'time_window': [139, 153], 'value': .052, 'ci': [0.049, 0.055]},
+        {'time_window': [160, 174], 'value': .052, 'ci': [0.049, 0.055]},
+    ],
+    'sweden': [
+        {'time_window': [122, 152], 'value': .108, 'ci': [0.079, 0.137]},
+    ],
+    'united-kingdom': [
+        {'time_window': [118, 124], 'value': .0710},
+        {'time_window': [172, 195], 'value': .06, 'ci': [.058, .061]},
+    ]
+}
+
+
+def make_calibration_fits_figure(calibration_outputs, seroprevalence=False):
+
+    if not seroprevalence:
+        countries_per_row = 2
+        n_target_outputs = 3
+        show_title = True
+        lab_fontsize = 13
+        target_outputs = {}
+        for country in OPTI_REGIONS:
+            targets = get_targets(country)
+            target_outputs[country] = ["notifications", "infection_deaths"]
+            hospital_target = [t for t in list(targets.keys()) if 'hospital' in t or 'icu' in t][0]
+            target_outputs[country].append(hospital_target)
+    else:
+        show_title = False
+        lab_fontsize = 15
+        countries_per_row = 3
+        n_target_outputs = 1
+        target_outputs = {}
+        for country in OPTI_REGIONS:
+            target_outputs[country] = ["proportion_seropositive"]
+
+    n_countries_per_col = int(6 / countries_per_row)
+
+    width = n_target_outputs * countries_per_row * 5
+    height = n_countries_per_col * 5
+    fig = plt.figure(constrained_layout=True, figsize=(width, height))  # (w, h)
+    widths = [5] * (countries_per_row * n_target_outputs)
+    heights = [1, 6] * n_countries_per_col
+    spec = fig.add_gridspec(ncols=countries_per_row * n_target_outputs, nrows=len(heights), width_ratios=widths,
                             height_ratios=heights)
 
     text_size = 23
@@ -246,29 +296,45 @@ def make_calibration_fits_figure(calibration_outputs):
     i_col = 0
     for country in OPTI_REGIONS:
         # write country name
-        ax = fig.add_subplot(spec[i_row-1, i_col: i_col + 3])
+        ax = fig.add_subplot(spec[i_row-1, i_col: i_col + n_target_outputs])
         ax.text(0.5, 0.2, COUNTRY_TITLES[country], fontsize=text_size, horizontalalignment='center',
                 verticalalignment='center')
         ax.axis("off")
         for output in target_outputs[country]:
+            show_ylab = (i_col == 0) and seroprevalence
+
             ax = fig.add_subplot(spec[i_row, i_col])
             country_targets = get_targets(country)
             targets = {k: v for k, v in country_targets.items() if v["output_key"] == output}
             plot_timeseries_with_uncertainty(
                 None, calibration_outputs[country]["uncertainty_df"], output, [0], targets,
-                False, 30, 300, ax, n_xticks=None, title_font_size=16, label_font_size=13,
-                requested_x_ticks=[61, 122, 183, 245]
+                False, 30, 300, ax, n_xticks=None, title_font_size=16, label_font_size=lab_fontsize,
+                requested_x_ticks=[61, 122, 183, 245], show_title=show_title, show_ylab=show_ylab,
+                add_targets=(not seroprevalence)
             )
+            for s in SEROSURVEYS[country]:
+                if "ci" in s:
+                    rect = patches.Rectangle((s['time_window'][0], s['ci'][0]),
+                                             s['time_window'][1] - s['time_window'][0],
+                                             s['ci'][1] - s['ci'][0],
+                                             linewidth=0, facecolor='gold', alpha=.4)
+                    rect.set_zorder(1)
+                    ax.add_patch(rect)
+                ax.plot(s['time_window'], [s['value']] * 2, linewidth=1.5, color='black')
+
+
 
             i_col += 1
-            if i_col == 2 * n_target_outputs:
+            if i_col == countries_per_row * n_target_outputs:
                 i_col = 0
                 i_row += 2
 
     # Add vertical separator line
-    line = plt.Line2D((.5, .5), (-.1, 1.9), color="grey", linewidth=1)
-    fig.add_artist(line)
+    if not seroprevalence:
+        line = plt.Line2D((.5, .5), (-.1, 1.9), color="grey", linewidth=1)
+        fig.add_artist(line)
 
     filename = "figures/model_fits"
+    if seroprevalence:
+        filename += "_seroprevalence"
     plt.savefig(filename + ".pdf")
-

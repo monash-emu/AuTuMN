@@ -172,3 +172,15 @@ def _update_params(params: dict, update_key: str, update_val) -> dict:
         ps[key] = update_val
 
     return ps
+
+
+def read_param_value_from_string(params: dict, update_key: str):
+    keys = update_key.split(".")
+    current_key, nested_keys = keys[0], keys[1:]
+    is_arr_update = re.match(ARRAY_REQUEST_REGEX, current_key)
+    assert not is_arr_update, "array items not supported by this function"  # FIXME only supports nested dictionaries for for the moment
+    param_value = params[current_key]
+    for nested_key in nested_keys:
+        param_value = param_value[nested_key]
+
+    return param_value

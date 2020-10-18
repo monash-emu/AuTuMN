@@ -813,9 +813,8 @@ def plot_cdr_curves(
         axis.plot(
             times,
             [detected_proportion[i_curve](i_time) for i_time in times],
-            alpha=alpha,
             color="k",
-            linewidth=2.
+            linewidth=0.7
         )
 
     # Tidy

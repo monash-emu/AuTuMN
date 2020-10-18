@@ -10,8 +10,8 @@ from apps import covid_19, sir_example, tuberculosis
 os.chdir("..")  # Make repo root the current directory
 
 # Run a COVID model manually.
-# app_region = covid_19.app.get_region(Region.NORTH_METRO)
-# app_region.run_model(run_scenarios=False)
+app_region = covid_19.app.get_region(Region.FRANCE)
+app_region.run_model(run_scenarios=False)
 
 # Simple SIR model for demonstration
 # app_region = sir_example.app.get_region(Region.AUSTRALIA)
@@ -29,6 +29,6 @@ os.chdir("..")  # Make repo root the current directory
 
 
 # Used by Romain, please do not delete
-for region in ['belgium', 'france', 'italy', 'spain', 'united-kingdom']:
-    app_region = covid_19.app.get_region(region)
-    app_region.calibrate_model(max_seconds=5, run_id=1, num_chains=1)
+# for region in ['belgium', 'france', 'italy', 'spain', 'united-kingdom']:
+#     app_region = covid_19.app.get_region(region)
+#     app_region.calibrate_model(max_seconds=5, run_id=1, num_chains=1)

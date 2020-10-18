@@ -14,33 +14,27 @@ from .plots import PLOT_FUNCS
 
 
 def run_dashboard():
-    app_name, app_dirpath = selectors.app_name(run_type="run")
+    app_name, app_dirpath = selectors.app_name(run_type="calibrate")
     if not app_name:
-        st.write("No applications have been run yet")
+        st.write("No calibrations have been run yet")
         return
 
     region_name, region_dirpath = selectors.output_region_name(app_dirpath)
     if not region_name:
-        st.write("No parameter set folder found")
+        st.write("No region folder found")
         return
 
-    run_datestr, run_dirpath = selectors.model_run(region_dirpath)
-    if not run_datestr:
+    calib_name, calib_dirpath = selectors.calibration_run(region_dirpath)
+    if not calib_name:
         st.write("No model run folder found")
         return
 
-    # Import the app so we can re-build the model if we need to
-    app_module = import_module(f"apps.{app_name}")
-    app_region = app_module.app.get_region(region_name)
+    # Load MCMC tables
+    mcmc_tables = db.load.load_mcmc_tables(calib_dirpath)
+    mcmc_params = db.load.load_mcmc_params_tables(calib_dirpath)
+    # targets = load_targets(app_name, region_name)
 
-    # Get database from model data dir.
-    db_path = os.path.join(run_dirpath, "outputs.db")
-    scenarios = db.load.load_model_scenarios(db_path, app_region.params)
-
-    # Create plotter which will write to streamlit UI.
-    plotter = StreamlitPlotter(app_region.targets)
-
-    # Get user to select plot type / scenario
+    # plotter = StreamlitPlotter(targets)
     plot_type = st.sidebar.selectbox("Select plot type", list(PLOT_FUNCS.keys()))
     plot_func = PLOT_FUNCS[plot_type]
-    plot_func(plotter, app_region, scenarios)
+    # plot_func(plotter, calib_dirpath, mcmc_tables, mcmc_params, targets, app_name, region_name)

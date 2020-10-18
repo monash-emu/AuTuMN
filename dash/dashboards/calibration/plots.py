@@ -3,7 +3,7 @@ from typing import List
 import numpy as np
 import pandas as pd
 import streamlit as st
-import os
+import random
 
 from autumn.tool_kit.params import load_params
 from autumn.plots.plotter import StreamlitPlotter
@@ -126,6 +126,7 @@ def plot_cdr_curves(
     region_name = region.replace("-", "_")
     end_date = st.sidebar.slider("End date", 1, 365, 275)
     alpha = st.sidebar.slider("Alpha/darkness", 0.0, 0.5, 0.2, step=0.005)
+    samples = st.sidebar.slider("Samples", 1, 200, 10)
     label_rotation = st.sidebar.slider("Label rotation", 0, 90, 0)
 
     # Extract parameters relevant to this function
@@ -153,12 +154,14 @@ def plot_cdr_curves(
         testing_to_detection_values += \
             mcmc_params[i_chain]["value"][param_mask].tolist()
 
+    sampled_test_to_detect_vals = random.sample(testing_to_detection_values, samples)
+
     # Get CDR function - needs to be done outside of autumn, because it is importing from the apps
     testing_pops = inputs.get_population_by_agegroup(
         agegroup_strata, iso3, None, year=testing_year
     )
     detected_proportion = []
-    for assumed_cdr_parameter in testing_to_detection_values:
+    for assumed_cdr_parameter in sampled_test_to_detect_vals:
         detected_proportion.append(
             find_cdr_function_from_test_data(
                 assumed_tests_parameter,

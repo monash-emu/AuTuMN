@@ -2,6 +2,7 @@ import numpy as np
 from autumn.inputs.owid.queries import get_international_testing_numbers
 from autumn.curve import scale_up_function
 from autumn import inputs
+from autumn.tool_kit.utils import apply_moving_average
 
 
 def create_cdr_function(assumed_tests: int, assumed_cdr: float):
@@ -29,7 +30,7 @@ def create_cdr_function(assumed_tests: int, assumed_cdr: float):
 
 
 def find_cdr_function_from_test_data(
-    assumed_tests_parameter, assumed_cdr_parameter, country_iso3, total_pops,
+    assumed_tests_parameter, assumed_cdr_parameter, smoothing_period, country_iso3, total_pops,
 ):
     # Tests data
     test_dates, test_values = (
@@ -39,13 +40,19 @@ def find_cdr_function_from_test_data(
     )
 
     # Convert test numbers to per capita testing rates
-    per_capita_tests = [i_tests / sum(total_pops) for i_tests in test_values]
+    per_capita_tests = [
+        i_tests / sum(total_pops) for i_tests in test_values
+    ]
+
+    # Smooth the testing data if requested
+    smoothed_per_capita_tests = \
+        apply_moving_average(per_capita_tests, smoothing_period) if smoothing_period > 1 else per_capita_tests
 
     # Calculate CDRs and the resulting CDR function over time
     cdr_from_tests_func = create_cdr_function(assumed_tests_parameter, assumed_cdr_parameter)
     return scale_up_function(
         test_dates,
-        [cdr_from_tests_func(i_test_rate) for i_test_rate in per_capita_tests],
+        [cdr_from_tests_func(i_test_rate) for i_test_rate in smoothed_per_capita_tests],
         smoothness=0.2,
         method=4,
         bound_low=0.0,

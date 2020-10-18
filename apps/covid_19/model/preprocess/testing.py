@@ -45,9 +45,8 @@ def find_cdr_function_from_test_data(
     ]
 
     # Smooth the testing data if requested
-    test_smoothing_period = 1
     smoothed_per_capita_tests = \
-        apply_moving_average(per_capita_tests, 7) if test_smoothing_period > 1 else per_capita_tests
+        apply_moving_average(per_capita_tests, smoothing_period) if smoothing_period > 1 else per_capita_tests
 
     # Calculate CDRs and the resulting CDR function over time
     cdr_from_tests_func = create_cdr_function(assumed_tests_parameter, assumed_cdr_parameter)

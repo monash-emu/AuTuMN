@@ -135,6 +135,7 @@ def plot_cdr_curves(
     iso3 = default_params["country"]["iso3"]
     testing_year = default_params["population"]["year"]
     assumed_tests_parameter = default_params["testing_to_detection"]["assumed_tests_parameter"]
+    smoothing_period = default_params["testing_to_detection"]["smoothing_period"]
     agegroup_params = default_params["age_stratification"]
     time_params = default_params["time"]
 
@@ -162,6 +163,7 @@ def plot_cdr_curves(
             find_cdr_function_from_test_data(
                 assumed_tests_parameter,
                 assumed_cdr_parameter,
+                smoothing_period,
                 iso3,
                 testing_pops,
             )

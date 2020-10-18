@@ -171,6 +171,7 @@ class TestingToDetection(BaseModel):
 
     assumed_tests_parameter: float
     assumed_cdr_parameter: float
+    smoothing_period: int
 
 
 class SusceptibilityHeterogeneity(BaseModel):

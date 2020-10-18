@@ -182,6 +182,7 @@ def build_model(params: dict) -> StratifiedModel:
         testing_to_detection = params.testing_to_detection
         assumed_tests_parameter = testing_to_detection.assumed_tests_parameter
         assumed_cdr_parameter = testing_to_detection.assumed_cdr_parameter
+        smoothing_period = testing_to_detection.smoothing_period
 
         # Use state denominator for testing rates for the Victorian health cluster models
         testing_region = "Victoria" if country.iso3 == "AUS" else pop.region
@@ -192,6 +193,7 @@ def build_model(params: dict) -> StratifiedModel:
         detected_proportion = find_cdr_function_from_test_data(
             assumed_tests_parameter,
             assumed_cdr_parameter,
+            smoothing_period,
             country.iso3,
             testing_pops,
         )

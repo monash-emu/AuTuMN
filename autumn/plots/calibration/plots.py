@@ -24,9 +24,14 @@ from autumn.plots.utils import change_xaxis_to_date, _plot_targets_to_axis, REF_
 logger = logging.getLogger(__name__)
 
 
-def collate_acceptance_ratios(mcmc_df):
+# FIXME: Should really have some tests around it
+def collate_acceptance_ratios(acceptance_list):
+    """
+    Collate the running proportion of all runs that have been accepted from an MCMC chain.
+    """
+
     count, n_total, ratios = 0, 0, []
-    for n_accept in mcmc_df["accept"]:
+    for n_accept in acceptance_list:
         n_total += 1
         if n_accept:
             count += 1
@@ -37,8 +42,9 @@ def collate_acceptance_ratios(mcmc_df):
 def get_epi_params(mcmc_params):
     """
     Extract only the epidemiological parameters, ignoring the ones that were only used to tune proposal distributions,
-    which end in dispersion_param
+    which end in dispersion_param.
     """
+
     return [
         param for
         param in mcmc_params[0].loc[:, "name"].unique().tolist() if
@@ -77,7 +83,7 @@ def plot_acceptance_ratio(
     for chain in range(n_chains):
         chain_mask = full_df["chain"] == chain
         chain_df = full_df[chain_mask]
-        ratios = collate_acceptance_ratios(chain_df)
+        ratios = collate_acceptance_ratios(chain_df["accept"])
 
         # Plot
         axis.plot(ratios, alpha=0.8, linewidth=0.7)

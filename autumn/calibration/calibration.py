@@ -17,14 +17,13 @@ from summer.model import StratifiedModel
 from autumn import constants
 from autumn import db, plots
 from autumn.tool_kit.scenarios import Scenario
-from autumn.tool_kit.params import update_params
+from autumn.tool_kit.params import update_params, read_param_value_from_string
 from autumn.tool_kit.utils import (
     get_git_branch,
     get_git_hash,
     get_data_hash,
 )
 from .utils import (
-    find_decent_starting_point,
     calculate_prior,
     specify_missing_prior_params,
     raise_error_unsupported_prior,
@@ -46,6 +45,13 @@ class CalibrationMode:
     LEAST_SQUARES = "lsm"
     GRID_BASED = "grid_based"
     MODES = [AUTUMN_MCMC, LEAST_SQUARES, GRID_BASED]
+
+
+class InitialisationTypes:
+    """Different ways to set the intial point for the MCMC."""
+
+    LHS = 'lhs'
+    CURRENT_PARAMS = 'current_params'
 
 
 def get_parameter_bounds_from_priors(prior_dict):
@@ -72,6 +78,35 @@ def get_parameter_bounds_from_priors(prior_dict):
     return lower_bound, upper_bound
 
 
+def set_initial_point(priors, model_parameters, chain_index, total_nb_chains, initialisation_type):
+    """
+    Determine the starting point of the MCMC.
+    """
+    if initialisation_type == InitialisationTypes.LHS:
+        # draw samples using LHS based on the prior distributions
+        np.random.seed(0)  # Set deterministic random seed for Latin Hypercube Sampling
+        starting_points = sample_starting_params_from_lhs(priors, total_nb_chains)
+
+        return starting_points[chain_index - 1]
+    elif initialisation_type == InitialisationTypes.CURRENT_PARAMS:
+        # use the current parameter values from the yaml files
+        starting_points = {}
+        for param_dict in priors:
+            if param_dict['param_name'].endswith("dispersion_param"):
+                assert param_dict['distribution'] == 'uniform'
+                starting_points[param_dict['param_name']] = np.mean(param_dict['distri_params'])
+            else:
+                starting_points[param_dict['param_name']] = read_param_value_from_string(
+                    model_parameters['default'], param_dict['param_name']
+                )
+
+        np.random.seed(chain_index)  # make sure we will generate different sequences for each chain
+
+        return starting_points
+    else:
+        raise ValueError(F"{initialisation_type} is not a supported Initialisation Type")
+
+
 class Calibration:
     """
     This class handles model calibration using a Bayesian algorithm if sampling from the posterior distribution is
@@ -91,6 +126,7 @@ class Calibration:
         total_nb_chains: int,
         param_set_name: str = "main",
         adaptive_proposal: bool = True,
+        initialisation_type: str = InitialisationTypes.LHS
     ):
         self.model_name = model_name
         self.model_builder = model_builder  # a function that builds a new model without running it
@@ -126,11 +162,13 @@ class Calibration:
 
         self.chain_index = chain_index
 
-        # Select starting params
+        # work out missing distribution params for priors
         specify_missing_prior_params(self.priors)
-        np.random.seed(0)  # Set deterministic random seed for Latin Hypercube Sampling
-        starting_points = sample_starting_params_from_lhs(self.priors, total_nb_chains)
-        self.starting_point = starting_points[chain_index - 1]
+
+        # Select starting params
+        self.starting_point = set_initial_point(
+            self.priors, model_parameters, chain_index, total_nb_chains, initialisation_type
+        )
 
         # Setup output directory
         project_dir = os.path.join(

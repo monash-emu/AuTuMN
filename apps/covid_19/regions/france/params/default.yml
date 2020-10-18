@@ -43,7 +43,7 @@ case_detection:
   start_value: 0.04   #5336652959294613
   maximum_gradient: 0.07635802155605956
   max_change_time: 220. # 139.17375606334187
-  end_value: .99  # 0.3631805036151643
+  end_value: .9  # 0.3631805036151643
 
 clinical_stratification:
   props:

@@ -205,6 +205,7 @@ class Parameters:
     seasonal_force: Optional[float]  # Seasonal forcing factor
     waning_immunity_duration: Optional[float]
     haario_scaling_factor: float
+    metropolis_initialisation_type: str
     # Modular parameters.
     time: Time
     country: Country

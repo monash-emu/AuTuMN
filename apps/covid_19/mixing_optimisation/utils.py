@@ -96,12 +96,12 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "clinical_stratification.props.symptomatic.multiplier",
             "distribution": "uniform",
-            "distri_params": [0.75, 1.25],
+            "distri_params": [0.6, 1.4],
         },
         {
             "param_name": "clinical_stratification.props.hospital.multiplier",
             "distribution": "uniform",
-            "distri_params": [0.75, 1.25],
+            "distri_params": [0.6, 1.4],
         },
         # Micro-distancing
         {

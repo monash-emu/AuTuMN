@@ -105,6 +105,7 @@ def run_calibration_chain(
         num_chains,
         param_set_name=region,
         adaptive_proposal=adaptive_proposal,
+        initialisation_type=params['default']['metropolis_initialisation_type']
     )
     logger.info("Starting calibration.")
     calib.run_fitting_algorithm(
@@ -393,6 +394,7 @@ European countries for the optimisation project
 
 
 def get_targets_and_priors_for_opti(country):
+    targets = load_targets("covid_19", country)
     targets = load_targets("covid_19", country)
 
     hospital_targets = [t for t in list(targets.keys()) if 'hospital' in t or 'icu' in t]

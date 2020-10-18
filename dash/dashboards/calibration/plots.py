@@ -125,7 +125,6 @@ def plot_cdr_curves(
     param_name = "testing_to_detection.assumed_cdr_parameter"
     region_name = region.replace("-", "_")
     end_date = st.sidebar.slider("End date", 1, 365, 275)
-    alpha = st.sidebar.slider("Alpha/darkness", 0.0, 0.5, 0.2, step=0.005)
     samples = st.sidebar.slider("Samples", 1, 200, 10)
     label_rotation = st.sidebar.slider("Label rotation", 0, 90, 0)
 
@@ -172,7 +171,7 @@ def plot_cdr_curves(
             )
         )
 
-    plots.calibration.plots.plot_cdr_curves(plotter, times, detected_proportion, end_date, alpha, label_rotation)
+    plots.calibration.plots.plot_cdr_curves(plotter, times, detected_proportion, end_date, label_rotation)
 
 
 PLOT_FUNCS["CDR curves"] = plot_cdr_curves

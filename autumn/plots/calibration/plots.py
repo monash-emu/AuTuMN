@@ -802,7 +802,6 @@ def plot_cdr_curves(
         times,
         detected_proportion,
         end_date,
-        alpha,
         rotation,
 ):
     # Get basic plotting structures

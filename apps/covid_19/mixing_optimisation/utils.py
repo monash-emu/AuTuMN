@@ -99,7 +99,7 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.sigma",
             "distribution": "uniform",
-            "distri_params": [.5, 1.],
+            "distri_params": [.4, 1.],
         },
     ]
     return prior_list

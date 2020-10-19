@@ -308,7 +308,7 @@ def make_calibration_fits_figure(calibration_outputs, seroprevalence=False):
             targets = {k: v for k, v in country_targets.items() if v["output_key"] == output}
             plot_timeseries_with_uncertainty(
                 None, calibration_outputs[country]["uncertainty_df"], output, [0], targets,
-                False, 30, 300, ax, n_xticks=None, title_font_size=16, label_font_size=lab_fontsize,
+                False, 40, 276, ax, n_xticks=None, title_font_size=16, label_font_size=lab_fontsize,
                 requested_x_ticks=[61, 122, 183, 245], show_title=show_title, show_ylab=show_ylab,
                 add_targets=(not seroprevalence)
             )

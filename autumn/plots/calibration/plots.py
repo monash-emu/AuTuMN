@@ -741,7 +741,8 @@ def plot_calibration(axis, output, outputs, targets, is_logscale, ref_date=REF_D
     max_value = 0.0
     for times, values in outputs:
         axis.plot(times, values)
-        max_value = max(values) if max(values) > max_value else max_value
+        if len(values) > 0:
+            max_value = max(values) if max(values) > max_value else max_value
 
     # Mark the MLE run with a dotted line
     axis.plot(outputs[-1][0], outputs[-1][1], linestyle=(0, (1, 3)), color="black", linewidth=3)

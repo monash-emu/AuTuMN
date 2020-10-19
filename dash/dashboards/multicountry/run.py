@@ -19,10 +19,11 @@ def run_dashboard():
         st.write("No calibrations have been run yet")
         return
 
-    region_names = {}
-    region_dirpaths = {}
+    n_countries = st.sidebar.slider("Number of countries", 1, 5, 2)
 
-    for i_region in range(1, 3):
+    region_names, region_dirpaths = {}, {}
+
+    for i_region in range(1, n_countries + 1):
         region_names[i_region], region_dirpaths[i_region] = \
             selectors.output_region_name(app_dirpath, f"Select region #{str(i_region)}")
         if not region_names[i_region]:

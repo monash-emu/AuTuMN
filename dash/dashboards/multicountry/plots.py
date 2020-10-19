@@ -36,6 +36,7 @@ def multi_country_fit(plotter, calib_dir_path, mcmc_tables, mcmc_params, targets
                 targets[i_region],
                 False
             )
+            axis.set_title(region_name[i_region], fontsize=10)
 
         else:
             axis.axis("off")

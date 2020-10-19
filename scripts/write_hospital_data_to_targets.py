@@ -12,7 +12,7 @@ HOSP_DATA_FILE = os.path.join(base_dir, "data", "inputs", "hospitalisation_data"
 country_targets = {
     Region.BELGIUM: ['bel_incid_hosp_in', 'new_hospital_admissions'],
     Region.FRANCE: ['fra_incid_hosp', 'new_hospital_admissions'],
-    Region.ITALY: ['ita_incid_hosp', 'new_hospital_admissions'],
+    Region.ITALY: ['ita_prev_hosp', 'hospital_occupancy'],
     Region.SPAIN: ['esp_incid_hosp', 'new_hospital_admissions'],
     Region.SWEDEN: ['swe_incid_icu', 'new_icu_admissions'],
     Region.UNITED_KINGDOM: ['uk_incid_hosp', 'new_hospital_admissions'],

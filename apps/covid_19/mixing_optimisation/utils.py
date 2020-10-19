@@ -51,7 +51,7 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "case_detection.end_value",
             "distribution": "uniform",
-            "distri_params": [0.10, 0.80],
+            "distri_params": [0.10, 0.90],
         },
         # {
         #     "param_name": "clinical_stratification.icu_prop",

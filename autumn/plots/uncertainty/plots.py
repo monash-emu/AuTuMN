@@ -64,7 +64,9 @@ def plot_timeseries_with_uncertainty(
     # Add plot targets
     if add_targets:
         values, times = _get_target_values(targets, output_name)
-        _plot_targets_to_axis(axis, values, times, on_uncertainty_plot=True)
+        trunc_values = [v for (v, t) in zip(values, times) if x_low <= t <= x_up]
+        trunc_times = [t for (v, t) in zip(values, times) if x_low <= t <= x_up]
+        _plot_targets_to_axis(axis, trunc_values, trunc_times, on_uncertainty_plot=True)
 
     # Sort out x-axis
     change_xaxis_to_date(axis, ref_date, rotation=0)

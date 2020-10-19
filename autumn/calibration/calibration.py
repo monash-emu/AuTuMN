@@ -679,6 +679,7 @@ class Calibration:
             prev_params = []
             for prior_dict in self.priors:
                 prev_params.append(self.starting_point[prior_dict["param_name"]])
+            return prev_params
 
         new_params = []
         use_adaptive_proposal = (

@@ -40,14 +40,16 @@ mobility:
     school:
       append: false
       times:
-        - 2020-03-16 # All schools close
+        - 2020-03-16  # All schools close
         - 2020-03-17
-        - 2020-06-24 # Secondary exam years
+        - 2020-06-24  # Secondary exam years
         - 2020-06-25
-        - 2020-07-15 # Primary exam years
+        - 2020-07-15  # Primary exam years
         - 2020-07-16
-        - 2020-07-22 # Schools reopen
+        - 2020-07-22  # Schools reopen
         - 2020-07-23
+        - 2020-10-13  # Schools partially close again
+        - 2020-10-14
       values:
         - 1.
         - 0.
@@ -57,6 +59,8 @@ mobility:
         - 0.35
         - 0.35
         - 1.
+        - 1.
+        - 0.64
 
 importation:
   props_by_age: null

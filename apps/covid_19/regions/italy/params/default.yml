@@ -11,8 +11,10 @@ mobility:
       times:
         - 2020-03-09
         - 2020-03-10
-        - 2020-08-25 # google mobility data update, pls review
+        - 2020-09-13
+        - 2020-09-15
       values:
         - 1.0
         - 0.1
         - 0.1
+        - 1.

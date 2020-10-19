@@ -11,10 +11,10 @@ mobility:
       times:
         - 2020-03-12
         - 2020-03-13
-        - 2020-07-30
-        - 2020-08-25 # If Google mobility passes this point, please update to one week in the future
+        - 2020-09-01
+        - 2020-09-03
       values:
         - 1.0
         - 0.1
         - 0.1
-        - 0.1 # Included as part of google mobility update, please review.
+        - 1.

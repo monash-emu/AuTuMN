@@ -14,29 +14,6 @@ HOSPITAL_DATA_DIR = os.path.join("hospitalisation_data")
 country_mapping = {"united-kingdom": "The United Kingdom"}
 
 
-def read_hospital_data_from_csv(variable="hospital_occupancy", country="belgium", data_start_time=61, data_end_time=152):
-    """
-    Read hospital data from file 'hospital_data_europe.csv'
-    :param variable: one of 'hospital_occupancy', 'hospital_admission', 'icu_occupancy', 'icu_admission'
-    :param country: country
-    """
-    # FIXME
-    return [50., 51., 52., 53., 54., 55., 56., 57.], [1.] * 8
-    filename = f"hospital_data_europe.xlsx"
-    path = os.path.join(HOSPITAL_DATA_DIR, filename)
-    data = pd.read_excel(path, sep=',')
-
-    column_name = country + "_" + variable
-    mask_1 = data['time'] >= data_start_time
-    mask_2 = data['time'] <= data_end_time
-    mask_3 = pd.notnull(data[column_name])
-    mask = [m_1 and m_2 and m_3 for (m_1, m_2, m_3) in zip(mask_1, mask_2, mask_3)]
-    times = [float(t) for t in data[mask]['time']]
-    values = [float(v) for v in data[mask][column_name]]
-
-    return times, values
-
-
 def get_prior_distributions_for_opti():
     prior_list = [
         {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.02, 0.06],},
@@ -126,49 +103,6 @@ def get_prior_distributions_for_opti():
         },
     ]
     return prior_list
-
-
-def get_hospital_targets_for_opti(country, data_start_time=22, data_end_time=152):
-
-    output = {
-        "belgium": "hospital_admission",
-        "france": "hospital_admission",
-        "united-kingdom": "hospital_admission",
-        "spain": "hospital_admission",
-        "italy": "hospital_occupancy",
-        "sweden": "icu_admission",
-    }
-    if country not in output:
-        print("Warning: hospital output not specifoed for " + country)
-        return []
-    output_mapping = {
-        "hospital_occupancy": "hospital_occupancy",
-        "icu_occupancy": "icu_occupancy",
-        "hospital_admission": "new_hospital_admissions",
-        "icu_admission": "new_icu_admissions",
-    }
-    times, data = read_hospital_data_from_csv(
-        output[country], country, data_start_time, data_end_time
-    )
-
-    # Ignore negative values found in the dataset
-    censored_data_indices = []
-    for i, d in enumerate(data):
-        if d < 0:
-            censored_data_indices.append(i)
-    data = [d for i, d in enumerate(data) if i not in censored_data_indices]
-    times = [t for i, t in enumerate(times) if i not in censored_data_indices]
-
-    target_outputs = [
-        {
-            "output_key": output_mapping[output[country]],
-            "years": times,
-            "values": data,
-            "loglikelihood_distri": "normal",
-        }
-    ]
-
-    return target_outputs
 
 
 def get_weekly_summed_targets(times, values):

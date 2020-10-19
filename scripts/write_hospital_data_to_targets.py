@@ -13,11 +13,10 @@ country_targets = {
     Region.BELGIUM: ['bel_incid_hosp_in', 'new_hospital_admissions'],
     Region.FRANCE: ['fra_incid_hosp', 'new_hospital_admissions'],
     Region.ITALY: ['ita_incid_hosp', 'new_hospital_admissions'],
-    Region.SPAIN: [''],
+    Region.SPAIN: ['esp_incid_hosp', 'new_hospital_admissions'],
     Region.SWEDEN: ['swe_incid_icu', 'new_icu_admissions'],
     Region.UNITED_KINGDOM: ['uk_incid_hosp', 'new_hospital_admissions'],
 }
-
 
 
 def read_hospital_data(country, data_start_time=0, data_end_time=365):
@@ -28,7 +27,7 @@ def read_hospital_data(country, data_start_time=0, data_end_time=365):
     mask = pd.notnull(data[country_targets[country][0]])
     dates = list(data[mask]['date'])
     values = [float(v) for v in data[mask][country_targets[country][0]]]
-    times = [(datetime.datetime.strptime(d, "%Y-%m-%d") - date_ref).days for d in dates]
+    times = [(datetime.datetime.strptime(d, "%d/%m/%Y") - date_ref).days for d in dates]
 
     min_hosp_time = min(times)
     data_start_time = max(min_hosp_time, data_start_time)
@@ -62,6 +61,4 @@ def write_hospital_data_to_targets(country, data_start_time=0, data_end_time=365
 
 if __name__ == "__main__":
     for country in Region.MIXING_OPTI_REGIONS:
-        if country == Region.SPAIN:  # FIXME
-            continue
         write_hospital_data_to_targets(country, data_end_time=275)  # t_max=275 is 1st October 2020

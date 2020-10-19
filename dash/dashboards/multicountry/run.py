@@ -20,9 +20,9 @@ def run_dashboard():
 
     # Prelims
     n_countries = \
-        st.sidebar.slider("Number of countries", 1, 5, 2)
-    region_names, region_dirpaths, calib_names, calib_dirpaths, mcmc_tables, mcmc_params, targets, plotters = \
-        {}, {}, {}, {}, {}, {}, {}, {}
+        st.sidebar.slider("Number of countries", 3, 6, 3)
+    region_names, region_dirpaths, calib_names, calib_dirpaths, mcmc_tables, mcmc_params, targets = \
+        {}, {}, {}, {}, {}, {}, {}
 
     for i_region in range(n_countries):
 
@@ -48,7 +48,8 @@ def run_dashboard():
         targets[i_region] = \
             load_targets(app_name, region_names[i_region])
 
-        plotters[i_region] = StreamlitPlotter(targets[i_region])
-        plot_type = "Test only"
+        plot_type = "Multi-country fit"
         plot_func = PLOT_FUNCS[plot_type]
-    plot_func(plotters, calib_dirpaths, mcmc_tables, mcmc_params, targets, app_name, region_names)
+
+    plotter = StreamlitPlotter(targets[0])
+    plot_func(plotter, calib_dirpaths, mcmc_tables, mcmc_params, targets, app_name, region_names)

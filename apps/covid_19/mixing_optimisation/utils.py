@@ -59,16 +59,16 @@ def get_prior_distributions_for_opti():
         #     "distri_params": [0.15, 0.20],
         # },
         # vary hospital durations
-        # {
-        #     "param_name": "sojourn.compartment_periods.hospital_late",
-        #     "distribution": "uniform",
-        #     "distri_params": [17.7, 20.4],
-        # },
-        # {
-        #     "param_name": "sojourn.compartment_periods.icu_late",
-        #     "distribution": "uniform",
-        #     "distri_params": [9.0, 13.0],
-        # },
+        {
+            "param_name": "sojourn.compartment_periods.hospital_late",
+            "distribution": "uniform",
+            "distri_params": [17.7, 20.4],
+        },
+        {
+            "param_name": "sojourn.compartment_periods.icu_late",
+            "distribution": "uniform",
+            "distri_params": [9.0, 13.0],
+        },
         # vary symptomatic and hospitalised proportions
         {
             "param_name": "clinical_stratification.props.symptomatic.multiplier",

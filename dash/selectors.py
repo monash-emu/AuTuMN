@@ -165,7 +165,7 @@ def scenarios(scenarios: List[Scenario], include_all=True) -> List[Scenario]:
         return [scenarios[idx]]
 
 
-def calibration_run(param_set_dirpath: str) -> str:
+def calibration_run(param_set_dirpath: str, name: str) -> str:
     """
     Allows a user to select what model run they want, given an app 
     Returns the directory name selected.
@@ -193,7 +193,7 @@ def calibration_run(param_set_dirpath: str) -> str:
         model_run_dir_lookup[label] = dirname
         labels.append(label)
 
-    label = st.sidebar.selectbox("Select app calibration run", labels)
+    label = st.sidebar.selectbox(name, labels)
     if not label:
         return None, None
     else:

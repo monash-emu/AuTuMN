@@ -189,9 +189,6 @@
     "output_key": "new_hospital_admissions",
     "title": "new_hospital_admissions",
     "times": [
-      58.0,
-      65.0,
-      72.0,
       79.0,
       86.0,
       93.0,
@@ -223,9 +220,6 @@
       274.0
     ],
     "values": [
-      0.0,
-      0.0,
-      0.0,
       937.0,
       2861.5714285714284,
       3394.285714285714,

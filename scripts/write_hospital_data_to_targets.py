@@ -18,6 +18,11 @@ country_targets = {
     Region.UNITED_KINGDOM: ['uk_incid_hosp', 'new_hospital_admissions'],
 }
 
+start_reporting = {
+    Region.FRANCE:  79,
+    Region.UNITED_KINGDOM: 83,
+}
+
 
 def read_hospital_data(country, data_start_time=0, data_end_time=365):
     path = HOSP_DATA_FILE
@@ -50,6 +55,12 @@ def write_hospital_data_to_targets(country, data_start_time=0, data_end_time=365
     times, values = read_hospital_data(country, data_start_time, data_end_time)
     if weekly_average:
         times, values = get_weekly_summed_targets(times, values)
+
+    if country in list(start_reporting.keys()):
+        min_time = start_reporting[country]
+        first_idx_to_keep = next(x[0] for x in enumerate(times) if x[1] >= min_time)
+        times = times[first_idx_to_keep:]
+        values = values[first_idx_to_keep:]
 
     with open(target_path, mode="r") as f:
         targets = json.load(f)

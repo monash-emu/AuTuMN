@@ -7,7 +7,7 @@ import matplotlib.pyplot as pyplot
 PLOT_FUNCS = {}
 
 
-def test_only(plotter, calib_dir_path, mcmc_tables, mcmc_params, targets, app_name, region_name):
+def multi_country_fit(plotter, calib_dir_path, mcmc_tables, mcmc_params, targets, app_name, region_name):
     """
     Code taken directly from the fit calibration file at this stage.
     """
@@ -24,9 +24,9 @@ def test_only(plotter, calib_dir_path, mcmc_tables, mcmc_params, targets, app_na
     for i_region in range(n_rows * n_cols):
         if i_region < len(region_name):
 
-            i_targets = targets[i_region + 1]
-            i_mcmc_tables = mcmc_tables[i_region + 1]
-            i_calib_dir_path = calib_dir_path[i_region + 1]
+            i_targets = targets[i_region]
+            i_mcmc_tables = mcmc_tables[i_region]
+            i_calib_dir_path = calib_dir_path[i_region]
 
             # Get data for plotting
             outputs = get_uncertainty_data(i_calib_dir_path, i_mcmc_tables, chosen_output, 0)
@@ -48,4 +48,4 @@ def test_only(plotter, calib_dir_path, mcmc_tables, mcmc_params, targets, app_na
 
 
 
-PLOT_FUNCS["Test only"] = test_only
+PLOT_FUNCS["Test only"] = multi_country_fit

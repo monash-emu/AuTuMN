@@ -24,7 +24,7 @@ def run_dashboard():
     region_names, region_dirpaths, calib_names, calib_dirpaths, mcmc_tables, mcmc_params, targets, plotters = \
         {}, {}, {}, {}, {}, {}, {}, {}
 
-    for i_region in range(1, n_countries + 1):
+    for i_region in range(n_countries):
 
         # Get regions for comparison
         region_names[i_region], region_dirpaths[i_region] = \

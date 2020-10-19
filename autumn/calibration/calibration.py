@@ -760,4 +760,4 @@ def get_random_seed(chain_index: int):
     Get a random seed for the calibration.
     Mocked out by unit tests.
     """
-    return chain_index + 1000 * int(time())
+    return chain_index * 1000 + int(time())

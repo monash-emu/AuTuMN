@@ -18,8 +18,10 @@ https://raw.githubusercontent.com/pcm-dpc/COVID-19/master/dati-andamento-naziona
 
 Spain
 MoH report (PDF file)
-https://cnecovid.isciii.es/
-
+https://cnecovid.isciii.es/ and 
+https://www.isciii.es/QueHacemos/Servicios/VigilanciaSaludPublicaRENAVE/EnfermedadesTransmisibles/Paginas/InformesCOVID-19.aspx
+provides daily reports and on page 11 figure 3 the hospital incidence is shown.
+Use https://apps.automeris.io/wpd/ to digitise the image and save the date to /data/inputs/hospitalisation/spain_incid_hosp.csv
 
 Sweden
 https://www.icuregswe.org/globalassets/supportfiler/corona/covid-vecko-202007270849.pdf

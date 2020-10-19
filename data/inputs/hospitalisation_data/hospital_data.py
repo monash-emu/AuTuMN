@@ -12,6 +12,7 @@ SWEDEN_ICU_INCID = os.path.join(
     HOSPITAL_DIRPATH, "Antal nyinskrivna vårdtillfällen med Coronavirus - ICU INCIDENCE.xlsx"
 )
 
+SPAIN_HOSP = os.path.join(HOSPITAL_DIRPATH, "spain_incid_hosp.csv")
 
 endpoint = (
     "https://api.coronavirus.data.gov.uk/v1/data?"
@@ -166,13 +167,23 @@ def get_uk():
     return uk_df.groupby(["date"]).sum()
 
 
+def get_spain():
+
+    spain_df = pd.read_csv(SPAIN_HOSP, names=["date", "esp_incid_hosp"])
+    spain_df["date"] = pd.to_datetime(
+        spain_df["date"], errors="coerce", format="%Y-%m-%d", infer_datetime_format=False
+    )
+    return spain_df.groupby(["date"]).sum()
+
+
 def main():
     france_df = get_france()
     belgium_df = get_belgium()
     italy_df = get_italy()
     sweden_df = get_sweden()
     uk_df = get_uk()
-    european_data = pd.concat([france_df, belgium_df, italy_df, sweden_df, uk_df])
+    spain_df = get_spain()
+    european_data = pd.concat([france_df, belgium_df, italy_df, sweden_df, uk_df, spain_df])
     european_data = european_data.groupby("date").sum()
     european_data.to_csv(os.path.join(HOSPITAL_DIRPATH, "european_data.csv"))
 

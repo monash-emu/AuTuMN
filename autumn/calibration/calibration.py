@@ -100,8 +100,6 @@ def set_initial_point(priors, model_parameters, chain_index, total_nb_chains, in
                     model_parameters['default'], param_dict['param_name']
                 )
 
-        np.random.seed(chain_index)  # make sure we will generate different sequences for each chain
-
         return starting_points
     else:
         raise ValueError(F"{initialisation_type} is not a supported Initialisation Type")
@@ -762,4 +760,4 @@ def get_random_seed(chain_index: int):
     Get a random seed for the calibration.
     Mocked out by unit tests.
     """
-    return chain_index + int(time())
+    return chain_index + 1000 * int(time())

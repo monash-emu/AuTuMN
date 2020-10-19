@@ -3,7 +3,6 @@ Streamlit web UI for plotting model outputs
 """
 
 import streamlit as st
-import os
 
 from autumn import db
 from autumn.tool_kit.params import load_targets
@@ -20,7 +19,8 @@ def run_dashboard():
         return
 
     # Prelims
-    n_countries = st.sidebar.slider("Number of countries", 1, 5, 2)
+    n_countries = \
+        st.sidebar.slider("Number of countries", 1, 5, 2)
     region_names, region_dirpaths, calib_names, calib_dirpaths, mcmc_tables, mcmc_params, targets = \
         {}, {}, {}, {}, {}, {}, {}
 
@@ -41,11 +41,14 @@ def run_dashboard():
             return
 
         # Load MCMC tables
-        mcmc_tables[i_region] = db.load.load_mcmc_tables(calib_dirpaths[i_region])
-        mcmc_params[i_region] = db.load.load_mcmc_params_tables(calib_dirpaths[i_region])
-        targets[i_region] = load_targets(app_name, region_names[i_region])
+        mcmc_tables[i_region] = \
+            db.load.load_mcmc_tables(calib_dirpaths[i_region])
+        mcmc_params[i_region] = \
+            db.load.load_mcmc_params_tables(calib_dirpaths[i_region])
+        targets[i_region] = \
+            load_targets(app_name, region_names[i_region])
 
-    plotter = StreamlitPlotter(targets[1])
-    plot_type = st.sidebar.selectbox("Select plot type", list(PLOT_FUNCS.keys()))
-    plot_func = PLOT_FUNCS[plot_type]
-    plot_func(plotter, calib_dirpaths[1], mcmc_tables, mcmc_params, targets, app_name, region_names[1])
+        plotter = StreamlitPlotter(targets[i_region])
+        plot_type = "Test only"
+        plot_func = PLOT_FUNCS[plot_type]
+    plot_func(plotter, calib_dirpaths, mcmc_tables, mcmc_params, targets, app_name, region_names)

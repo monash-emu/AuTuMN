@@ -2,10 +2,12 @@ from unittest import mock
 from datetime import date
 
 import pytest
+import numpy as np
 
 from autumn.constants import Region
 from summer.model import StratifiedModel
 from apps.covid_19.mixing_optimisation import mixing_opti as opti
+from apps.covid_19.mixing_optimisation.constants import PHASE_2_START_TIME
 
 
 @pytest.mark.local_only
@@ -56,26 +58,21 @@ AVAILABLE_MODES = [
 ]
 AVAILABLE_CONFIGS = range(4)
 DECISION_VARS = {
-    "by_age": {ag: 1 for ag in AGE_GROUPS},
-    "by_location": {
-        "work": 1.0,
-        "school": 1.0,
-        "other_locations": 1.0,
-    },
+    "by_age": [1 for _ in range(len(AGE_GROUPS))],
+    "by_location": [1, 1, 1],
 }
 
 
-@pytest.mark.skip
 @pytest.mark.mixing_optimisation
 @pytest.mark.github_only
-def test_full_optimisation_iteration_for_uk():
+@pytest.mark.parametrize("config", AVAILABLE_CONFIGS)
+@pytest.mark.parametrize("mode", AVAILABLE_MODES)
+def test_full_optimisation_iteration_for_uk(mode, config):
     country = Region.UNITED_KINGDOM
     root_model = opti.run_root_model(country, {})
-    for mode in AVAILABLE_MODES:
-        for config in AVAILABLE_CONFIGS:
-            h, d, yoll, p_immune, m = opti.objective_function(
-                DECISION_VARS[mode], root_model, mode, country, config
-            )
+    h, d, yoll, p_immune, m = opti.objective_function(
+        DECISION_VARS[mode], root_model, mode, country, config
+    )
 
 
 @pytest.mark.parametrize("config", AVAILABLE_CONFIGS)
@@ -84,13 +81,64 @@ def test_build_params_for_phases_2_and_3__smoke_test(mode, config):
     opti.build_params_for_phases_2_and_3(DECISION_VARS[mode], config=config, mode=mode)
 
 
+@mock.patch("apps.covid_19.mixing_optimisation.mixing_opti.Scenario")
+def test_objective_function_calculations(mock_scenario_cls):
+    root_model = mock.Mock()
+    sc_model = mock.Mock()
+    mock_scenario_cls.return_value.model = sc_model
+    phase_2_days = 183
+    phase_3_days = 14 + 10
+    num_timesteps = PHASE_2_START_TIME + phase_2_days + phase_3_days
+    sc_model.times = np.array(range(num_timesteps))
+    sc_model.derived_outputs = {
+        # Expect 55 deaths as sum of vals.
+        "infection_deaths": np.concatenate(
+            [np.zeros(PHASE_2_START_TIME), np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])],
+        ),
+        # Expect 108 yoll as sum of vals.
+        "years_of_life_lost": np.concatenate(
+            [np.zeros(PHASE_2_START_TIME), np.array([1, 3, 5, 7, 9, 11, 13, 17, 19, 23])],
+        ),
+        # Expect immunity because incidence decreasing
+        "incidence": np.concatenate(
+            [
+                np.zeros(PHASE_2_START_TIME + phase_2_days + 14),
+                np.array([10, 9, 8, 7, 6, 5, 4, 3, 2, 1]),
+            ],
+        ),
+    }
+    # Expect 10% immune.
+    sc_model.compartment_names = ["a", "b_recovered", "c_recovered"]
+    sc_model.outputs = np.zeros([num_timesteps, 3])
+    sc_model.outputs[PHASE_2_START_TIME + phase_2_days, 0] = 90
+    sc_model.outputs[PHASE_2_START_TIME + phase_2_days, 1] = 3
+    sc_model.outputs[PHASE_2_START_TIME + phase_2_days, 2] = 7
+
+    decision_variables = [1 for _ in range(len(AGE_GROUPS))]
+    (
+        herd_immunity,
+        total_nb_deaths,
+        years_of_life_lost,
+        prop_immune,
+        models,
+    ) = opti.objective_function(
+        decision_variables,
+        root_model,
+        mode="by_age",
+        country="france",
+        config=0,
+        calibrated_params={},
+    )
+    assert herd_immunity
+    assert total_nb_deaths == 55
+    assert years_of_life_lost == 108
+    assert prop_immune == 0.1
+    assert models == [root_model, sc_model]
+
+
 def test_build_params_for_phases_2_and_3__with_location_mode_and_microdistancing():
     scenario_params = opti.build_params_for_phases_2_and_3(
-        decision_variables={
-            "other_locations": 2,
-            "school": 3,
-            "work": 5,
-        },
+        decision_variables=[2, 3, 5],
         config=2,
         mode="by_location",
     )
@@ -136,7 +184,7 @@ def test_build_params_for_phases_2_and_3__with_location_mode_and_microdistancing
 
 def test_build_params_for_phases_2_and_3__with_age_mode():
     scenario_params = opti.build_params_for_phases_2_and_3(
-        decision_variables={ag: i for i, ag in enumerate(AGE_GROUPS)}, config=0, mode="by_age"
+        decision_variables=[i for i in range(16)], config=0, mode="by_age"
     )
     age_dates = [date(2020, 7, 31), date(2020, 8, 1), date(2021, 1, 31), date(2021, 2, 1)]
     loc_dates = [date(2020, 7, 31), date(2021, 1, 31), date(2021, 2, 1)]

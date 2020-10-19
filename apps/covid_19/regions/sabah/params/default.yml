@@ -7,6 +7,10 @@ contact_rate: 0.02
 country:
   iso3: MYS
 
+population:
+  region: Sabah
+  year: 2019
+
 time:
   start: 60.
 
@@ -16,6 +20,7 @@ testing_to_detection:
   smoothing_period: 14
 
 mobility:
+  region: Sabah
   microdistancing:
     behaviour:
       function_type: empiric

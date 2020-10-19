@@ -1,4 +1,4 @@
-# SCENARIO DESCRIPTION: Scenario 3, 10% work
+# SCENARIO DESCRIPTION: Scenario 4, hard lockdown
 ---
 parent: apps/covid_19/regions/malaysia/params/default.yml
 
@@ -8,6 +8,12 @@ time:
 mobility:
   mixing:
     work:
+      append: true
+      times:
+        - 2020-10-26
+      values:
+        - 0.1
+    other_locations:
       append: true
       times:
         - 2020-10-26

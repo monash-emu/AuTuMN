@@ -88,7 +88,7 @@ mobility:
   #  home:
   #    - residential
   smooth_google_data: false # whether to apply a 7-day moving average
-  square_mobility_effect: false
+  square_mobility_effect: true
   microdistancing: {}
   microdistancing_locations:
     - other_locations

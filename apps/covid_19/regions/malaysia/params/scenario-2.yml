@@ -1,4 +1,4 @@
-# SCENARIO DESCRIPTION: Scenario 2, Back to work
+# SCENARIO DESCRIPTION: Scenario 2, 50% work
 ---
 parent: apps/covid_19/regions/malaysia/params/default.yml
 
@@ -10,6 +10,6 @@ mobility:
     work:
       append: true
       times:
-        - 2020-09-14
+        - 2020-10-26
       values:
-        - 1.
+        - 0.5

@@ -10,7 +10,7 @@ from apps.covid_19.mixing_optimisation import mixing_opti as opti
 
 @pytest.mark.local_only
 @pytest.mark.parametrize("region", Region.MIXING_OPTI_REGIONS)
-@mock.patch("apps.covid_19.mixing_optimisation.mixing_opti.PHASE_2_START_TIME", 10)
+@mock.patch("apps.covid_19.mixing_optimisation.mixing_opti.PHASE_2_START_TIME", 30)
 def test_run_root_models_partial(region):
     """
     Smoke test: ensure we can build and run each root model with nothing crashing.

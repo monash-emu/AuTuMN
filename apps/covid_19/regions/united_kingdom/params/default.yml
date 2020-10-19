@@ -22,7 +22,7 @@ mobility:
     behaviour:
       parameters:
         c: 101.44496709763824
-        upper_asymptote: 0.
+        upper_asymptote: .25
     behaviour_adjuster:
       parameters:
         c: 160.062674872607

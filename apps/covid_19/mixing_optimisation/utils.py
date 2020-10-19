@@ -36,7 +36,7 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "case_detection.start_value",
             "distribution": "uniform",
-            "distri_params": [0.0, 0.10],
+            "distri_params": [0.0, 0.20],
         },
         {
             "param_name": "case_detection.maximum_gradient",
@@ -89,7 +89,7 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "mobility.microdistancing.behaviour.parameters.upper_asymptote",
             "distribution": "uniform",
-            "distri_params": [.25, .60],
+            "distri_params": [.25, .70],
         },
         {
             "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.c",

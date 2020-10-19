@@ -112,7 +112,7 @@ def app_name(run_type) -> Tuple[str, str]:
         return chosen_dirname, os.path.join(run_outputs_path, chosen_dirname)
 
 
-def output_region_name(app_output_path: str) -> Tuple[str, str]:
+def output_region_name(app_output_path: str, name: str) -> Tuple[str, str]:
     """
     Selector for users to choose which parameter set they want to select
     for a given application
@@ -122,7 +122,7 @@ def output_region_name(app_output_path: str) -> Tuple[str, str]:
     if not param_sets:
         return None, None
 
-    chosen_param_set = st.sidebar.selectbox("Select app region", param_sets)
+    chosen_param_set = st.sidebar.selectbox(name, param_sets)
     return chosen_param_set, os.path.join(app_output_path, chosen_param_set)
 
 

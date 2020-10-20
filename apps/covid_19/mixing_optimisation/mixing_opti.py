@@ -73,14 +73,14 @@ def objective_function(
     params = copy.deepcopy(app_region.params)
 
     # Rebuild the default parameters
-    params["default"] = merge_dicts(params["default"], opti_params["default"])
+    params["default"] = merge_dicts(opti_params["default"], params["default"])
     params["default"] = update_params(params["default"], calibrated_params)
     for scenario in params["scenarios"].values():
         scenario["time"]["start"] = PHASE_2_START_TIME - 1
 
     # Create and run scenario 1
     sc_1_params_update = build_params_for_phases_2_and_3(decision_variables, config, mode)
-    sc_1_params = update_params(params["default"], sc_1_params_update)
+    sc_1_params = merge_dicts(sc_1_params_update, params["default"])
     params["scenarios"][1] = sc_1_params
     scenario_1 = Scenario(build_model, idx=1, params=params)
     scenario_1.run(base_model=root_model)
@@ -97,7 +97,7 @@ def objective_function(
 
     # Determine the proportion immune at end of Phase 2.
     comp_names = sc_1_model.compartment_names
-    recovered_indices = [i for i in range(len(comp_names)) if "recovered" in comp_names[i]]
+    recovered_indices = [i for i in range(len(comp_names)) if "recovered" in str(comp_names[i])]
     nb_reco = sum([sc_1_model.outputs[phase_2_end_idx, i] for i in recovered_indices])
     total_pop = sum([sc_1_model.outputs[phase_2_end_idx, i] for i in range(len(comp_names))])
     prop_immune = nb_reco / total_pop

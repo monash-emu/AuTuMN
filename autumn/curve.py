@@ -267,6 +267,12 @@ def scale_up_function(
         interpolation function
     """
     assert len(x) == len(y), "x and y must have the same length"
+    if len(x) == 0:
+        # Handle case where both times and values are empty.
+        raise ValueError(
+            "Cannot run scale_up_function on an empty sequence: times and values are empty lists."
+        )
+
     x = [float(i) for i in x]
     y = [float(i) for i in y]
 
@@ -291,7 +297,9 @@ def scale_up_function(
         else:
             t_intervention_start = max(x)
         curve_intervention = scale_up_function(
-            x=[t_intervention_start, intervention_end[0]], y=[y[-1], intervention_end[1]], method=4,
+            x=[t_intervention_start, intervention_end[0]],
+            y=[y[-1], intervention_end[1]],
+            method=4,
         )
 
     if (len(x) == 1) or (max(y) - min(y) == 0):

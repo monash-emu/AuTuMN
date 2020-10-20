@@ -1,10 +1,11 @@
 from autumn.tool_kit.params import load_targets
-from autumn import db
+from autumn import db, plots
 from autumn.plots.calibration.plots import get_posterior
 from autumn.curve import tanh_based_scaleup
 from autumn.plots.uncertainty.plots import plot_timeseries_with_uncertainty
 
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS, COUNTRY_TITLES
+from apps.covid_19.mixing_optimisation.serosurvey_by_age.survey_data import get_serosurvey_data
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -138,7 +139,6 @@ def make_posterior_ranges_figure(param_values):
 # --------------  Make figure with posterior time-variant detection
 def get_all_posterior_detection_percentiles(param_values):
     for country in OPTI_REGIONS:
-        print(country)
         country_perc = get_country_posterior_detection_percentiles(param_values[country])
         file_path_ = os.path.join('dumped_files', 'dumped_detection_percentiles_' + country + '.npy')
         with open(file_path_, "wb") as f:
@@ -229,7 +229,7 @@ def plot_posterior_detection():
     plt.savefig("figures/detection_posteriors.pdf")
 
 
-# --------------  Make figure with fits to data
+# --------------  Make figure with fits to population-level data
 SEROSURVEYS = {
     'belgium': [
         {'time_window': [90., 96], 'value': .029, 'ci': [.023, .034]},  # 30 mar  5 Apr
@@ -338,3 +338,28 @@ def make_calibration_fits_figure(calibration_outputs, seroprevalence=False):
     if seroprevalence:
         filename += "_seroprevalence"
     plt.savefig(filename + ".pdf")
+
+
+# --------------  Make figure with fits to age-specific seroprevalence
+def make_all_sero_by_age_fits_figures(calibration_outputs):
+    # get all age-specific targets
+    sero_data = get_serosurvey_data()
+    country_list = [c for c in OPTI_REGIONS if c in sero_data]
+
+    for region in country_list:
+        make_sero_by_age_fits_figure(calibration_outputs[region]['uncertainty_df'], region, sero_data[region])
+
+
+def make_sero_by_age_fits_figure(uncertainty_df, region, sero_data_by_age):
+
+    fig = plots.uncertainty.plots.plot_seroprevalence_by_age_against_targets(
+        None,
+        uncertainty_df,
+        0,
+        sero_data_by_age,
+        2
+    )
+    plt.savefig(f"figures/seroprevalence_by_age/sero_by_age_{region}.pdf")
+
+
+

@@ -221,21 +221,22 @@ def plot_seroprevalence_by_age(
         num_quantiles = len(q_keys)
         half_length = num_quantiles // 2
 
-        for age in list(seroprevalence_by_age.keys()):
+        for i, age in enumerate(list(seroprevalence_by_age.keys())):
             x_pos = 2.5 + float(age)
             axis.plot([x_pos, x_pos], [seroprevalence_by_age[age][q_keys[0]], seroprevalence_by_age[age][q_keys[-1]]],
-                      "-", color='black', lw=.7)
+                      "-", color='black', lw=1.)
 
             if num_quantiles % 2:
                 q_key = q_keys[half_length]
-                axis.plot(x_pos, seroprevalence_by_age[age][q_key], 'o', color='black', markersize=2)
+                label = None if i > 0 else 'model'
+                axis.plot(x_pos, seroprevalence_by_age[age][q_key], 'o', color='black', markersize=4, label=label)
 
-        axis.set_xlabel('age (years)', fontsize=10)
-        axis.set_ylabel('% seropositive', fontsize=10)
+        axis.set_xlabel('age (years)', fontsize=13)
+        axis.set_ylabel('% seropositive', fontsize=13)
 
         _date = ref_date + datetime.timedelta(days=time)
 
-        axis.set_title(f'seroprevalence on {_date}', fontsize=12)
+        axis.set_title(f'seroprevalence on {_date.strftime("%d/%m/%Y")}', fontsize=15)
 
     if single_panel:
         plotter.save_figure(fig, filename='sero_by_age', subdir="outputs", title_text='')
@@ -251,7 +252,7 @@ def plot_seroprevalence_by_age_against_targets(
     n_surveys = len(serosurvey_data)
     n_rows = ceil(n_surveys / n_columns)
 
-    with pyplot.style.context('default'):
+    with pyplot.style.context('ggplot'):
         fig = pyplot.figure(constrained_layout=True, figsize=(n_columns * 7, n_rows * 5))  # (w, h)
         spec = fig.add_gridspec(ncols=n_columns, nrows=n_rows)
 
@@ -270,19 +271,27 @@ def plot_seroprevalence_by_age_against_targets(
             )
 
             # add data
-            for measure in survey["measures"]:
+            shift = .5
+            for i, measure in enumerate(survey["measures"]):
                 mid_age = mean(measure["age_range"])
-                ax.plot([mid_age, mid_age], [measure["ci"][0], measure["ci"][1]],
-                          "-", color='red', lw=.7)
-                ax.plot(mid_age, measure["central"], "o", color="red", ms=2)
-                ax.axvline(x=measure["age_range"][0], linestyle="--", color='grey', lw=.5)
+                ax.plot([mid_age + shift, mid_age + shift], [measure["ci"][0], measure["ci"][1]],
+                          "-", color='red', lw=1.)
+                label = None if i > 0 else 'data'
+                ax.plot(mid_age + shift, measure["central"], "o", color="red", ms=4, label=label)
+                # ax.axvline(x=measure["age_range"][0], linestyle="--", color='grey', lw=.5)
+
+            if i_col + i_row == 0:
+                ax.legend(loc='upper right', fontsize=12, facecolor='white')
 
             i_col += 1
             if i_col == n_columns:
                 i_row += 1
                 i_col = 0
-    
-        plotter.save_figure(fig, filename='multi_sero_by_age', subdir="outputs", title_text='')
+
+        if plotter is not None:
+            plotter.save_figure(fig, filename='multi_sero_by_age', subdir="outputs", title_text='')
+        else:
+            return fig
 
 
 def _get_target_values(targets: dict, output_name: str):

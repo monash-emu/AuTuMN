@@ -6,8 +6,7 @@ import numpy as np
 from numpy.testing import assert_array_equal, assert_allclose
 
 from summer.model import StratifiedModel
-from summer.constants import Flow, BirthApproach
-from summer.compartment import Compartment
+from summer.constants import BirthApproach
 
 MODEL_KWARGS = {
     "times": np.array([0.0, 1, 2, 3, 4, 5]),

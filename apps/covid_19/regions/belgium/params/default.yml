@@ -44,11 +44,11 @@ clinical_stratification:
 contact_rate: 0.047
 
 infection_fatality:
-  multiplier: 3.
+  multiplier: 1.2
 
 sojourn:
   compartment_periods:
-    hospital_late: 17
+    hospital_late: 18
     icu_late: 9.
   compartment_periods_calculated:
     active:

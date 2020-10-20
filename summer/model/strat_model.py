@@ -22,7 +22,7 @@ from summer.stratification import (
 
 class StratifiedModel(EpiModel):
     """
-    Stratified compartmental model. 
+    Stratified compartmental model.
     """
 
     def __init__(
@@ -94,9 +94,7 @@ class StratifiedModel(EpiModel):
         strata_names: The names of the strata to apply
         compartments_to_stratify: The compartments that will have the stratification applied. Falsey args interpreted as "all".
         comp_split_props: Request to split existing population in the compartments according to specific proportions
-        flow_adjustments: TODO
-        infectiousness_adjustments: TODO
-        mixing_matrix: TODO
+        # TODO: Only allow mixing matrix to be supplied if there is a complete stratification.
         """
         validate_stratify(
             self,
@@ -155,7 +153,35 @@ class StratifiedModel(EpiModel):
 
     def prepare_force_of_infection(self):
         """
-        Pre-run calculations to help determine force of infection multiplier at runtime. 
+        Pre-run calculations to help determine force of infection multiplier at runtime.
+
+        We start with a set of "mixing categories". These categories describe groups of compartments.
+        For example, we might have the stratifications age {child, adult} and location {work, home}.
+        In this case, the mixing categories would be {child x home, child x work, adult x home, adult x work}.
+        Mixing categories are only created when a mixing matrix is supplied during stratification.
+
+        There is a mapping from every compartment to a mixing category.
+        This is only true if mixing matrices are supplied only for complete stratifications.
+        There are `num_cats` categories and `num_comps` compartments.
+        The category matrix is a (num_cats x num_comps) matrix of 0s and 1s, with a 1 when the compartment is in a given category.
+        We expect only one category per compartment, but there may be many compartments per category.
+
+        We can multiply the category matrix by the vector of compartment sizes to get the total number of people
+        in each mixing category.
+
+        We also create a vector of values in [0, inf) which describes how infectious each compartment is: infectiousness_multipliers
+        We can use this vector plus the compartment sizes to get the 'effective' number of infectious people per compartment.
+
+        We can use the 'effective infectious' compartment sizes, plus the mixing category matrix
+        to get the infected population per mixing category.
+
+        Now that we know:
+            - the total population per category
+            - the infected population per category
+            - the inter-category mixing coefficients (mixing matrix)
+
+        We can calculate the infection density or frequency per category.
+        Finally, at runtime, we can lookup which category a given compartment is in and look up its infectious multiplier (density or frequency).
         """
         # Figure out which compartments should be infectious
         infectious_mask = np.array(

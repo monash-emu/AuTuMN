@@ -5,6 +5,7 @@ import numpy as np
 from summer.constants import FlowAdjustment
 from summer.compartment import Compartment
 
+STRAIN_STRATA_NAME = "strain"
 AGE_STRATA_NAME = "age"
 OVERWRITE_CHARACTER = "W"
 
@@ -31,6 +32,9 @@ class Stratification:
     def is_ageing(self) -> bool:
         return self.name == AGE_STRATA_NAME
 
+    def is_strain(self) -> bool:
+        return self.name == STRAIN_STRATA_NAME
+
     def get_flow_adjustment(self, comp: Compartment, stratum: str, param_name: str):
         """
         Returns an adjustment tuple or None
@@ -55,7 +59,7 @@ class Stratification:
         self, old_mixing_categories: List[Dict[str, str]]
     ) -> List[Dict[str, str]]:
         """
-        Returns a new list of mixing categories, with this stratification included.      
+        Returns a new list of mixing categories, with this stratification included.
         """
         new_mc = []
         for mc in old_mixing_categories:
@@ -70,7 +74,7 @@ def parse_flow_adjustments(flow_adjustments: Dict[str, Dict[str, float]]):
     INPUT
     {
         "to_infectiousXagegroup_50": {
-            <empty>: just use the non-adjusted version with the old name 
+            <empty>: just use the non-adjusted version with the old name
             "non_symptW": 0.51, # Overwrite to get stratified verion
             "clinical": 0.51, # Multiply to get stratified verion
             "icu": "prop_sympt_non_hospital_50", # Apply a function to previous parameter to get stratified verion
@@ -142,7 +146,8 @@ def get_all_proportions(strata_names: List[str], strata_proportions: Dict[str, f
 
 
 def get_stratified_compartment_names(
-    strat: Stratification, comp_names: List[Compartment],
+    strat: Stratification,
+    comp_names: List[Compartment],
 ) -> List[Compartment]:
     """
     Stratify the model compartments into sub-compartments, based on the strata names provided,
@@ -163,7 +168,9 @@ def get_stratified_compartment_names(
 
 
 def get_stratified_compartment_values(
-    strat: Stratification, comp_names: List[Compartment], comp_values: np.ndarray,
+    strat: Stratification,
+    comp_names: List[Compartment],
+    comp_values: np.ndarray,
 ) -> np.ndarray:
     """
     Stratify the model compartments into sub-compartments, based on the strata names provided,

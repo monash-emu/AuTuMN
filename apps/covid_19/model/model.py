@@ -446,9 +446,14 @@ def build_model(params: dict) -> StratifiedModel:
 
         # Create scale-up function for quarantine
         quarantine_timeseries = importation.quarantine_timeseries
-        quarantine_func = scale_up_function(
-            quarantine_timeseries.times, quarantine_timeseries.values, method=4
-        )
+        if quarantine_timeseries.times:
+            # Construct a quarantine function from timeseries.
+            quarantine_func = scale_up_function(
+                quarantine_timeseries.times, quarantine_timeseries.values, method=4
+            )
+        else:
+            # Default to no quarantine if not values are available.
+            quarantine_func = lambda _: 0
 
         # Loop through age groups and set the appropriate clinical proportions
         for agegroup in agegroup_strata:

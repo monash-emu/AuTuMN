@@ -1,4 +1,4 @@
-# SCENARIO DESCRIPTION: Scenario 1, end micro-distancing
+# SCENARIO DESCRIPTION: Scenario 1, close schools
 ---
 parent: apps/covid_19/regions/malaysia/params/default.yml
 
@@ -6,10 +6,32 @@ time:
   start: 257.
 
 mobility:
-  microdistancing:
-    behaviour:
-      parameters:
-        times:
-          - 258
-        values:
-          - 0.
+  mixing:
+    school:
+      append: false
+      times:
+        - 2020-03-16  # All schools close
+        - 2020-03-17
+        - 2020-06-24  # Secondary exam years
+        - 2020-06-25
+        - 2020-07-15  # Primary exam years
+        - 2020-07-16
+        - 2020-07-22  # Schools reopen
+        - 2020-07-23
+        - 2020-10-13  # Schools partially close again
+        - 2020-10-14
+        - 2020-10-25
+        - 2020-10-26
+      values:
+        - 1.
+        - 0.
+        - 0.
+        - 0.2
+        - 0.2
+        - 0.35
+        - 0.35
+        - 1.
+        - 1.
+        - 0.64
+        - 0.64
+        - 0.

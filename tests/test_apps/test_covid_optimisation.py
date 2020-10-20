@@ -73,6 +73,13 @@ def test_full_optimisation_iteration_for_uk(mode, config):
     h, d, yoll, p_immune, m = opti.objective_function(
         DECISION_VARS[mode], root_model, mode, country, config
     )
+    assert h in (True, False)
+    assert d >= 0
+    assert yoll >= 0
+    assert 0 <= p_immune <= 1
+    assert len(m) == 2
+    assert type(m[0]) is StratifiedModel
+    assert type(m[1]) is StratifiedModel
 
 
 @pytest.mark.parametrize("config", AVAILABLE_CONFIGS)

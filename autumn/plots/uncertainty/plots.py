@@ -50,10 +50,12 @@ def plot_timeseries_with_uncertainty(
     single_panel = axis is None
     if single_panel:
         fig, axis, _, _, _, _ = plotter.get_figure()
-    colors = _apply_transparency(COLORS[:len(scenario_idxs)], ALPHAS[:len(scenario_idxs)])
+
+    n_scenarios_to_plot = min([len(scenario_idxs), len(COLORS)])
+    colors = _apply_transparency(COLORS[:n_scenarios_to_plot], ALPHAS[:n_scenarios_to_plot])
 
     # Plot each scenario on a single axis.
-    for scenario_idx in scenario_idxs:
+    for scenario_idx in scenario_idxs[:n_scenarios_to_plot]:
         scenario_colors = colors[scenario_idx]
         _plot_uncertainty(
             axis, uncertainty_df, output_name, scenario_idx, x_up, x_low, scenario_colors,

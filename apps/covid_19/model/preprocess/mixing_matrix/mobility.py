@@ -201,10 +201,16 @@ def scale_prev_up_to_1(prev_vals: List[float], fraction: float):
         return val
 
 
+def close_gap_to_1(prev_vals: List[float], fraction: float):
+    prev_val = prev_vals[-1]
+    return (1. - prev_val) * fraction + prev_val
+
+
 PARSE_FUNCS = {
     "repeat_prev": repeat_prev,
     "add_to_prev": add_to_prev,
     "add_to_prev_up_to_1": add_to_prev_up_to_1,
     "scale_prev": scale_prev,
     "scale_prev_up_to_1": scale_prev_up_to_1,
+    "close_gap_to_1": close_gap_to_1,
 }

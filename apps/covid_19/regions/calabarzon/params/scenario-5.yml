@@ -1,0 +1,14 @@
+# SCENARIO DESCRIPTION: 50% of workers return onsite
+parent: apps/covid_19/regions/calabarzon/params/default.yml
+
+time:
+  start: 300
+
+mobility:
+  mixing:
+    work:
+      append: true
+      times:
+        - 2020-10-26
+      values:
+        - ["close_gap_to_1", 0.5]

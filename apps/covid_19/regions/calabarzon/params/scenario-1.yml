@@ -2,13 +2,13 @@
 parent: apps/covid_19/regions/calabarzon/params/default.yml
 
 time:
-  start: 279
+  start: 300
 
 mobility:
   microdistancing:
     behaviour:
       parameters:
         times:
-          - 288
+          - 300
         values:
           - 0.5

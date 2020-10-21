@@ -5,10 +5,10 @@ time:
   start: 300
 
 mobility:
-  microdistancing:
-    behaviour:
-      parameters:
-        times:
-          - 288
-        values:
-          - 0.5
+  mixing:
+    school:
+      append: false
+      times:
+        - 2020-10-26
+      values:
+        - 1.

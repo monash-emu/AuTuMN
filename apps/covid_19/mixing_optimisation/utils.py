@@ -31,7 +31,7 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "infection_fatality.multiplier",
             "distribution": "uniform",
-            "distri_params": [.8, 1.2],
+            "distri_params": [.5, 3.8],  # 3.8 to match the highest value found in Levin et al.
         },
         {
             "param_name": "case_detection.start_value",

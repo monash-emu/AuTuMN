@@ -46,7 +46,7 @@ infection_fatality:
 
 sojourn:
   compartment_periods:
-    hospital_late: 17
+    hospital_late: 18
     icu_late: 11.862212101331629
   compartment_periods_calculated:
     active:

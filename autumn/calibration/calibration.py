@@ -30,6 +30,12 @@ from .utils import (
     sample_starting_params_from_lhs,
 )
 
+from .transformations import(
+    make_transform_func_with_lower_bound,
+    make_transform_func_with_upper_bound,
+    make_transform_func_with_two_bounds,
+)
+
 from .constants import ADAPTIVE_METROPOLIS
 
 BEST_LL = "best_ll"
@@ -205,6 +211,9 @@ class Calibration:
         self.workout_unspecified_jumping_sds()  # for proposal function definition
 
         self.param_bounds = self.get_parameter_bounds()
+
+        self.transform = {}
+        self.build_transformations()
 
         self.iter_num = 0
         self.last_accepted_run = 0
@@ -566,11 +575,14 @@ class Calibration:
         self.mcmc_trace_matrix = None  # will store param trace and loglikelihood evolution
 
         last_accepted_params = None
+        last_accepted_params_trans = None
         last_acceptance_quantity = None  # acceptance quantity is defined as loglike + logprior
         for i_run in range(int(n_iterations + n_burned)):
             # Propose new paramameter set.
-            proposed_params = self.propose_new_params(last_accepted_params, haario_scaling_factor)
-            is_within_prior_support = self.test_in_prior_support(proposed_params)
+            proposed_params_trans = self.propose_new_params_trans(last_accepted_params_trans, haario_scaling_factor)
+            proposed_params = self.get_original_params(proposed_params_trans)
+
+            is_within_prior_support = self.test_in_prior_support(proposed_params)  # should always be true with transformed params
 
             if is_within_prior_support:
                 # Evaluate log-likelihood.
@@ -579,8 +591,15 @@ class Calibration:
                 # Evaluate log-prior.
                 proposed_logprior = self.logprior(proposed_params)
 
-                # Decide acceptance.
-                proposed_acceptance_quantity = proposed_loglike + proposed_logprior
+                # posterior distribution
+                proposed_log_posterior = proposed_loglike + proposed_logprior
+
+                # transform the density
+                proposed_acceptance_quantity = proposed_log_posterior
+                for i, prior_dict in enumerate(self.priors): # multiply the density with the determinant of the Jacobian
+                    proposed_acceptance_quantity += \
+                        math.log(self.transform[prior_dict['param_name']]['inverse_derivative'](proposed_params_trans[i]))
+
                 is_auto_accept = (
                     last_acceptance_quantity is None
                     or proposed_acceptance_quantity >= last_acceptance_quantity
@@ -597,14 +616,15 @@ class Calibration:
 
             # Update stored quantities.
             if accept:
+                last_accepted_params_trans = proposed_params_trans
                 last_accepted_params = proposed_params
                 last_acceptance_quantity = proposed_acceptance_quantity
 
-            self.update_mcmc_trace(last_accepted_params)
+            self.update_mcmc_trace(last_accepted_params_trans)
 
             # Store model outputs
             self.store_mcmc_iteration_info(
-                proposed_params, proposed_loglike, proposed_acceptance_quantity, accept, i_run,
+                proposed_params, proposed_loglike, proposed_log_posterior, accept, i_run,
             )
             if accept:
                 self.store_model_outputs()
@@ -671,20 +691,88 @@ class Calibration:
                 )
         return param_bounds
 
-    def propose_new_params(self, prev_params, haario_scaling_factor=2.4):
+    def build_transformations(self):
+        """
+        Build transformation functions between the parameter space and R^n.
+        """
+        for i, prior_dict in enumerate(self.priors):
+            self.transform[prior_dict['param_name']] = {
+                "direct": None,  # param support to R
+                "inverse": None,  # R to param space
+                "inverse_derivative": None,  # R to R
+            }
+            lower_bound = self.param_bounds[i, 0]
+            upper_bound = self.param_bounds[i, 1]
+
+            original_sd = self.priors[i]["jumping_sd"]  # we will need to transform the jumping step
+
+            # trivial case of an unbounded parameter
+            if lower_bound == -float("inf") and upper_bound == float("inf"):
+                self.transform[prior_dict['param_name']]['direct'] = lambda x:  x
+                self.transform[prior_dict['param_name']]['inverse'] = lambda x:  x
+                self.transform[prior_dict['param_name']]['inverse_derivative'] = lambda x:  1.
+
+                representative_point = None
+            # case of a lower-bounded parameter with infinite support
+            elif upper_bound == float("inf"):
+                for func_type in ['direct', 'inverse', 'inverse_derivative']:
+                    self.transform[prior_dict['param_name']][func_type] = \
+                        make_transform_func_with_lower_bound(lower_bound, func_type)
+                representative_point = lower_bound + 10 * original_sd
+                if self.starting_point[prior_dict["param_name"]] == lower_bound:
+                    self.starting_point[prior_dict["param_name"]] += original_sd / 10
+
+            # case of an upper-bounded parameter with infinite support
+            elif lower_bound == -float("inf"):
+                for func_type in ['direct', 'inverse', 'inverse_derivative']:
+                    self.transform[prior_dict['param_name']][func_type] = \
+                        make_transform_func_with_upper_bound(upper_bound, func_type)
+
+                representative_point = upper_bound - 10 * original_sd
+                if self.starting_point[prior_dict["param_name"]] == upper_bound:
+                    self.starting_point[prior_dict["param_name"]] -= original_sd / 10
+            # case of a lower- and upper-bounded parameter
+            else:
+                for func_type in ['direct', 'inverse', 'inverse_derivative']:
+                    self.transform[prior_dict['param_name']][func_type] = \
+                        make_transform_func_with_two_bounds(lower_bound, upper_bound, func_type)
+
+                representative_point = .5 * (lower_bound + upper_bound)
+                if self.starting_point[prior_dict["param_name"]] == lower_bound:
+                    self.starting_point[prior_dict["param_name"]] += original_sd / 10
+                elif self.starting_point[prior_dict["param_name"]] == upper_bound:
+                    self.starting_point[prior_dict["param_name"]] -= original_sd / 10
+
+            if representative_point is not None:
+                transformed_low = self.transform[prior_dict['param_name']]['direct'](representative_point - original_sd / 2)
+                transformed_up = self.transform[prior_dict['param_name']]['direct'](representative_point + original_sd / 2)
+                self.priors[i]["jumping_sd"] = abs(transformed_up - transformed_low)
+
+    def get_original_params(self, transformed_params):
+        original_params = []
+        for i, prior_dict in enumerate(self.priors):
+            original_params.append(
+                self.transform[prior_dict['param_name']]['inverse'](transformed_params[i])
+            )
+        return original_params
+
+    def propose_new_params_trans(self, prev_params_trans, haario_scaling_factor=2.4):
         """
         calculated the joint log prior
         :param prev_params: last accepted parameter values as a list ordered using the order of self.priors
         :return: a new list of parameter values
         """
         # prev_params assumed to be the manually calibrated parameters for first step
-        if prev_params is None:
-            prev_params = []
+        if prev_params_trans is None:
+            prev_params_trans = []
             for prior_dict in self.priors:
-                prev_params.append(self.starting_point[prior_dict["param_name"]])
-            return prev_params
+                start_point = self.starting_point[prior_dict["param_name"]]
+                prev_params_trans.append(
+                    self.transform[prior_dict['param_name']]['direct'](start_point)
+                )
+            return prev_params_trans
 
-        new_params = []
+        new_params_trans = []
         use_adaptive_proposal = (
             self.adaptive_proposal and self.iter_num > ADAPTIVE_METROPOLIS["N_STEPS_FIXED_PROPOSAL"]
         )
@@ -696,16 +784,16 @@ class Calibration:
                     False  # we can't use the adaptive method for this step as the covariance is 0.
                 )
             else:
-                new_params = sample_from_adaptive_gaussian(prev_params, adaptive_cov_matrix)
+                new_params_trans = sample_from_adaptive_gaussian(prev_params_trans, adaptive_cov_matrix)
 
         if not use_adaptive_proposal:
             for i, prior_dict in enumerate(self.priors):
                 sample = np.random.normal(
-                        loc=prev_params[i], scale=prior_dict["jumping_sd"], size=1
+                        loc=prev_params_trans[i], scale=prior_dict["jumping_sd"], size=1
                     )[0]
-                new_params.append(sample)
+                new_params_trans.append(sample)
 
-        return new_params
+        return new_params_trans
 
     def logprior(self, params):
         """

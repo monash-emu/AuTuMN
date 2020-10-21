@@ -31,7 +31,6 @@ mobility:
     behaviour_adjuster:
       function_type: tanh
       parameters:
-        max_effect: 1. # FIXME: I don't think this is used at all.
         b: -0.05
         c: 275.
         sigma: 0.6

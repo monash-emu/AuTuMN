@@ -105,6 +105,10 @@ def set_initial_point(priors, model_parameters, chain_index, total_nb_chains, in
         raise ValueError(F"{initialisation_type} is not a supported Initialisation Type")
 
 
+def sample_from_adaptive_gaussian(prev_params, adaptive_cov_matrix):
+    return np.random.multivariate_normal(prev_params, adaptive_cov_matrix)
+
+
 class Calibration:
     """
     This class handles model calibration using a Bayesian algorithm if sampling from the posterior distribution is
@@ -538,6 +542,18 @@ class Calibration:
         logger.info("Best solution: %s", self.mle_estimates)
         # self.dump_mle_params_to_yaml_file()
 
+    def test_in_prior_support(self, params):
+        in_support = True
+        for i, prior_dict in enumerate(self.priors):
+            # Work out bounds for acceptable values, using the support of the prior distribution
+            lower_bound = self.param_bounds[i, 0]
+            upper_bound = self.param_bounds[i, 1]
+            if params[i] < lower_bound or params[i] > upper_bound:
+                in_support = False
+                break
+
+        return in_support
+
     def run_autumn_mcmc(self, n_iterations: int, n_burned: int, n_chains: int, available_time, haario_scaling_factor):
         """
         Run our hand-rolled MCMC algoruthm to calibrate model parameters.
@@ -551,35 +567,38 @@ class Calibration:
 
         last_accepted_params = None
         last_acceptance_quantity = None  # acceptance quantity is defined as loglike + logprior
-        last_acceptance_loglike = None
         for i_run in range(int(n_iterations + n_burned)):
             # Propose new paramameter set.
             proposed_params = self.propose_new_params(last_accepted_params, haario_scaling_factor)
+            is_within_prior_support = self.test_in_prior_support(proposed_params)
 
-            # Evaluate log-likelihood.
-            proposed_loglike = self.loglikelihood(proposed_params)
+            if is_within_prior_support:
+                # Evaluate log-likelihood.
+                proposed_loglike = self.loglikelihood(proposed_params)
 
-            # Evaluate log-prior.
-            proposed_logprior = self.logprior(proposed_params)
+                # Evaluate log-prior.
+                proposed_logprior = self.logprior(proposed_params)
 
-            # Decide acceptance.
-            proposed_acceptance_quantity = proposed_loglike + proposed_logprior
-            accept = False
-            is_auto_accept = (
-                last_acceptance_quantity is None
-                or proposed_acceptance_quantity >= last_acceptance_quantity
-            )
-            if is_auto_accept:
-                accept = True
+                # Decide acceptance.
+                proposed_acceptance_quantity = proposed_loglike + proposed_logprior
+                is_auto_accept = (
+                    last_acceptance_quantity is None
+                    or proposed_acceptance_quantity >= last_acceptance_quantity
+                )
+                if is_auto_accept:
+                    accept = True
+                else:
+                    accept_prob = np.exp(proposed_acceptance_quantity - last_acceptance_quantity)
+                    accept = np.random.binomial(n=1, p=accept_prob, size=1) > 0
             else:
-                accept_prob = np.exp(proposed_acceptance_quantity - last_acceptance_quantity)
-                accept = np.random.binomial(n=1, p=accept_prob, size=1) > 0
+                accept = False
+                proposed_loglike = None
+                proposed_acceptance_quantity = None
 
             # Update stored quantities.
             if accept:
                 last_accepted_params = proposed_params
                 last_acceptance_quantity = proposed_acceptance_quantity
-                last_acceptance_loglike = proposed_loglike
 
             self.update_mcmc_trace(last_accepted_params)
 
@@ -652,22 +671,6 @@ class Calibration:
                 )
         return param_bounds
 
-    def sample_from_adaptive_gaussian(self, prev_params, adaptive_cov_matrix):
-        lower_bounds = self.param_bounds[:, 0]
-        upper_bounds = self.param_bounds[:, 1]
-
-        new_params = copy.deepcopy(lower_bounds)
-        new_params[0] -= 10.0
-        n_attempts = 0
-        while any(lower_bounds > new_params) or any(upper_bounds < new_params):
-            new_params = np.random.multivariate_normal(prev_params, adaptive_cov_matrix)
-            n_attempts += 1
-            if n_attempts > 1.0e4:
-                raise ValueError(
-                    "Failed to draw an acceptable parameter set after 10,000 attempts."
-                )
-        return new_params
-
     def propose_new_params(self, prev_params, haario_scaling_factor=2.4):
         """
         calculated the joint log prior
@@ -693,28 +696,15 @@ class Calibration:
                     False  # we can't use the adaptive method for this step as the covariance is 0.
                 )
             else:
-                new_params = self.sample_from_adaptive_gaussian(prev_params, adaptive_cov_matrix)
+                new_params = sample_from_adaptive_gaussian(prev_params, adaptive_cov_matrix)
 
         if not use_adaptive_proposal:
             for i, prior_dict in enumerate(self.priors):
-                # Work out bounds for acceptable values, using the support of the prior distribution
-                lower_bound = self.param_bounds[i, 0]
-                upper_bound = self.param_bounds[i, 1]
-                sample = lower_bound - 10.0  # deliberately initialise out of parameter scope
-                n_attempts = 0
-                while not lower_bound <= sample <= upper_bound:
-                    sample = np.random.normal(
+                sample = np.random.normal(
                         loc=prev_params[i], scale=prior_dict["jumping_sd"], size=1
                     )[0]
-                    n_attempts += 1
-                    if n_attempts > 1.0e4:
-                        raise ValueError(
-                            "Failed to draw an acceptable value for "
-                            + prior_dict["param_name"]
-                            + "after 10,000 attempts. Check that its initial value is within the prior's support."
-                        )
-
                 new_params.append(sample)
+
         return new_params
 
     def logprior(self, params):

@@ -6,7 +6,7 @@ from autumn.tool_kit.params import load_targets
 
 targets = load_targets("covid_19", Region.SABAH)
 notifications = targets["notifications"]
-icu_occupancy = targets["icu_occupancy"]
+deaths = targets["infection_deaths"]
 
 TARGET_OUTPUTS = [
     {
@@ -15,15 +15,15 @@ TARGET_OUTPUTS = [
         "values": notifications["values"],
         "loglikelihood_distri": "normal",
     },
-    {
-        "output_key": "icu_occupancy",
-        "years": icu_occupancy["times"],
-        "values": icu_occupancy["values"],
-        "loglikelihood_distri": "normal",
-    },
+    # {
+    #     "output_key": "infection_deaths",
+    #     "years": deaths["times"],
+    #     "values": deaths["values"],
+    #     "loglikelihood_distri": "normal",
+    # }
 ]
 
-PAR_PRIORS = provide_default_calibration_params(excluded_params=("time.start",))
+PAR_PRIORS = provide_default_calibration_params(excluded_params=("time.start", "contact_rate"))
 PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS)
 
 PAR_PRIORS += [
@@ -47,13 +47,7 @@ PAR_PRIORS += [
     {
         "param_name": "testing_to_detection.assumed_cdr_parameter",
         "distribution": "uniform",
-        "distri_params": [0.2, 0.6],
-    },
-    # Microdistancing
-    {
-        "param_name": "mobility.microdistancing.behaviour.parameters.max_effect",
-        "distribution": "uniform",
-        "distri_params": [0.3, 0.9],
+        "distri_params": [0.05, 0.4],
     },
 ]
 

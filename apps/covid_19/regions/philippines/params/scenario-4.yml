@@ -1,0 +1,14 @@
+# SCENARIO DESCRIPTION: MHS compliance of 50% return
+parent: apps/covid_19/regions/philippines/params/default.yml
+
+time:
+  start: 300
+
+mobility:
+  mixing:
+    school:
+      append: false
+      times:
+        - 2020-10-26
+      values:
+        - 0.

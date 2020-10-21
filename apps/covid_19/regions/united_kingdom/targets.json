@@ -186,7 +186,7 @@
     ]
   },
   "new_hospital_admissions": {
-    "title": "New new_hospital_admissions",
+    "title": "new_hospital_admissions",
     "output_key": "new_hospital_admissions",
     "times": [
       86.0,

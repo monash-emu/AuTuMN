@@ -54,12 +54,6 @@ mobility:
         - 0.  # 9th July
         - 0.
         - 1.  # 12th October
-  # Metro Melbourne clusters macrodistancing function
-  microdistancing_locations:
-    - home
-    - other_locations
-    - school
-    - work
   microdistancing:
     behaviour:
       function_type: empiric

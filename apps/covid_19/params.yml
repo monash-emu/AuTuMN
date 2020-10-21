@@ -85,8 +85,8 @@ mobility:
       - grocery_and_pharmacy
       - parks
       - transit_stations
-  #  home:
-  #    - residential
+    home:
+      - residential
   smooth_google_data: false # whether to apply a 7-day moving average
   square_mobility_effect: true
   microdistancing: {}
@@ -94,6 +94,7 @@ mobility:
     - other_locations
     - school
     - work
+    - home
 
 clinical_stratification:
   icu_prop: 0.17 # Proportion of those hospitalised that are admitted to ICU

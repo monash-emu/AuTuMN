@@ -42,7 +42,8 @@ def get_mobility_data(country_iso_code: str, region: str, base_date: datetime, l
     )
 
     # Average out Google Mobility locations into Autumn-friendly locations
-    for new_loc, old_locs in location_map.items():
+    revised_location_map = {key: value for key, value in location_map.items() if value}
+    for new_loc, old_locs in revised_location_map.items():
         mob_df[new_loc] = 0
         for old_loc in old_locs:
             mob_df[new_loc] += mob_df[old_loc]
@@ -53,5 +54,5 @@ def get_mobility_data(country_iso_code: str, region: str, base_date: datetime, l
     mob_df = mob_df.sort_values(["date"])
     mob_df = mob_df[mob_df["date"] >= base_date]
     days = mob_df["date"].apply(lambda d: (d - base_date).days).tolist()
-    loc_mobility_values = {loc: mob_df[loc].tolist() for loc in location_map.keys()}
+    loc_mobility_values = {loc: mob_df[loc].tolist() for loc in revised_location_map.keys()}
     return loc_mobility_values, days

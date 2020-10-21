@@ -12,10 +12,16 @@ mobility:
       times:
         - 2020-10-26
       values:
-        - 0.1
+        - ["scale_prev", 0.1]
     other_locations:
       append: true
       times:
         - 2020-10-26
       values:
-        - 0.1
+        - ["scale_prev", 0.1]
+    school:
+      append: false
+      times:
+        - 2020-10-26
+      values:
+        - 0.

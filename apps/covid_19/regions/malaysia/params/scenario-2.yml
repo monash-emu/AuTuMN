@@ -1,9 +1,9 @@
-# SCENARIO DESCRIPTION: Scenario 2, 50% work
+# SCENARIO DESCRIPTION: Scenario 2, 50% of current workforce work from home
 ---
 parent: apps/covid_19/regions/malaysia/params/default.yml
 
 time:
-  start: 257.
+  start: 300.
 
 mobility:
   mixing:
@@ -12,4 +12,4 @@ mobility:
       times:
         - 2020-10-26
       values:
-        - 0.5
+        - ["scale_prev", 0.5]

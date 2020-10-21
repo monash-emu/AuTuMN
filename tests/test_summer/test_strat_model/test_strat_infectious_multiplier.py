@@ -31,14 +31,14 @@ def test_strat_basic_get_infection_multipier():
     model = StratifiedModel(**MODEL_KWARGS)
     assert model.mixing_categories == [{}]
 
-    # Do pre-run FoI calcs.
+    # Do pre-run force of infection calcs.
     model.prepare_to_run()
 
     assert_array_equal(model.compartment_infectiousness["default"], np.array([0.0, 1.0, 0.0]))
     assert_array_equal(model.category_matrix, np.array([[1.0, 1.0, 1.0]]))
     assert model.category_lookup == {0: 0, 1: 0, 2: 0}
 
-    # Do pre-iteration FoI calcs
+    # Do pre-iteration force of infection calcs
     model.prepare_time_step(0, model.compartment_values)
     assert_array_equal(model.category_populations, np.array([[1000]]))
     assert_array_equal(model.infection_density["default"], np.array([[10.0]]))
@@ -71,7 +71,7 @@ def test_strat_get_infection_multipier__with_age_strat_and_no_mixing():
     )
     assert model.mixing_categories == [{}]
 
-    # Do pre-run FoI calcs.
+    # Do pre-run force of infection calcs.
     model.prepare_to_run()
     assert_array_equal(
         model.compartment_infectiousness["default"], np.array([0.0, 0.0, 1.0, 1.0, 0.0, 0.0])
@@ -79,7 +79,7 @@ def test_strat_get_infection_multipier__with_age_strat_and_no_mixing():
     assert_array_equal(model.category_matrix, np.array([[1.0, 1.0, 1.0, 1.0, 1.0, 1.0]]))
     assert model.category_lookup == {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
 
-    # Do pre-iteration FoI calcs
+    # Do pre-iteration force of infection calcs
     model.prepare_time_step(0, model.compartment_values)
     assert_array_equal(model.category_populations, np.array([[1000]]))
     assert_array_equal(model.infection_density["default"], np.array([[10.0]]))
@@ -139,7 +139,7 @@ def test_strat_get_infection_multipier__with_age_strat_and_simple_mixing():
     ]
     assert_array_equal(model.compartment_values, np.array([495, 495, 5, 5, 0.0, 0.0]))
 
-    # Do pre-run FoI calcs.
+    # Do pre-run force of infection calcs.
     model.prepare_to_run()
     assert_array_equal(
         model.compartment_infectiousness["default"], np.array([0.0, 0.0, 1.0, 1.0, 0.0, 0.0])
@@ -150,7 +150,7 @@ def test_strat_get_infection_multipier__with_age_strat_and_simple_mixing():
     )
     assert model.category_lookup == {0: 0, 1: 1, 2: 0, 3: 1, 4: 0, 5: 1}
 
-    # Do pre-iteration FoI calcs
+    # Do pre-iteration force of infection calcs
     model.prepare_time_step(0, model.compartment_values)
     child_density = 5
     adult_density = 5
@@ -211,7 +211,7 @@ def test_strat_get_infection_multipier__with_age_split_and_simple_mixing():
     ]
     assert_array_equal(model.compartment_values, np.array([198.0, 792.0, 2.0, 8.0, 0.0, 0.0]))
 
-    # Do pre-run FoI calcs.
+    # Do pre-run force of infection calcs.
     model.prepare_to_run()
     assert_array_equal(
         model.compartment_infectiousness["default"], np.array([0.0, 0.0, 1.0, 1.0, 0.0, 0.0])
@@ -222,7 +222,7 @@ def test_strat_get_infection_multipier__with_age_split_and_simple_mixing():
     )
     assert model.category_lookup == {0: 0, 1: 1, 2: 0, 3: 1, 4: 0, 5: 1}
 
-    # Do pre-iteration FoI calcs
+    # Do pre-iteration force of infection calcs
     model.prepare_time_step(0, model.compartment_values)
     child_density = 5
     adult_density = 5
@@ -282,7 +282,7 @@ def test_strat_get_infection_multipier__with_age_strat_and_mixing():
     ]
     assert_array_equal(model.compartment_values, np.array([198.0, 792.0, 2.0, 8.0, 0.0, 0.0]))
 
-    # Do pre-run FoI calcs.
+    # Do pre-run force of infection calcs.
     model.prepare_to_run()
     assert_array_equal(
         model.compartment_infectiousness["default"], np.array([0.0, 0.0, 1.0, 1.0, 0.0, 0.0])
@@ -293,7 +293,7 @@ def test_strat_get_infection_multipier__with_age_strat_and_mixing():
     )
     assert model.category_lookup == {0: 0, 1: 1, 2: 0, 3: 1, 4: 0, 5: 1}
 
-    # Do pre-iteration FoI calcs
+    # Do pre-iteration force of infection calcs
     model.prepare_time_step(0, model.compartment_values)
     assert_array_equal(model.category_populations, np.array([[200.0], [800.0]]))
     child_density = 28
@@ -364,7 +364,7 @@ def test_strat_get_infection_multipier__with_double_strat_and_no_mixing():
     expected_comp_vals = np.array([247.5, 247.5, 247.5, 247.5, 2.5, 2.5, 2.5, 2.5, 0, 0, 0, 0])
     assert_array_equal(model.compartment_values, expected_comp_vals)
 
-    # Do pre-run FoI calcs.
+    # Do pre-run force of infection calcs.
     model.prepare_to_run()
     expected_compartment_infectiousness = np.array([0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0])
     expected_category_matrix = np.array([[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]])
@@ -375,7 +375,7 @@ def test_strat_get_infection_multipier__with_double_strat_and_no_mixing():
     assert_array_equal(model.category_matrix, expected_category_matrix)
     assert model.category_lookup == expected_lookup
 
-    # Do pre-iteration FoI calcs
+    # Do pre-iteration force of infection calcs
     model.prepare_time_step(0, model.compartment_values)
     assert_array_equal(model.category_populations, np.array([[1000]]))
     assert_array_equal(model.infection_density["default"], np.array([[10.0]]))
@@ -445,7 +445,7 @@ def test_strat_get_infection_multipier__with_double_strat_and_first_strat_mixing
     expected_comp_vals = np.array([148.5, 148.5, 346.5, 346.5, 1.5, 1.5, 3.5, 3.5, 0, 0, 0, 0])
     assert_array_equal(model.compartment_values, expected_comp_vals)
 
-    # Do pre-run FoI calcs.
+    # Do pre-run force of infection calcs.
     model.prepare_to_run()
     exp_lookup = {0: 0, 1: 0, 2: 1, 3: 1, 4: 0, 5: 0, 6: 1, 7: 1, 8: 0, 9: 0, 10: 1, 11: 1}
     exp_matrix = np.array(
@@ -456,7 +456,7 @@ def test_strat_get_infection_multipier__with_double_strat_and_first_strat_mixing
     assert_array_equal(model.category_matrix, exp_matrix)
     assert model.category_lookup == exp_lookup
 
-    # Do pre-iteration FoI calcs
+    # Do pre-iteration force of infection calcs
     model.prepare_time_step(0, model.compartment_values)
     assert_array_equal(model.category_populations, np.array([[300.0], [700.0]]))
     child_density = 27
@@ -536,7 +536,7 @@ def test_strat_get_infection_multipier__with_double_strat_and_second_strat_mixin
     expected_comp_vals = np.array([148.5, 148.5, 346.5, 346.5, 1.5, 1.5, 3.5, 3.5, 0, 0, 0, 0])
     assert_array_equal(model.compartment_values, expected_comp_vals)
 
-    # Do pre-run FoI calcs.
+    # Do pre-run force of infection calcs.
     model.prepare_to_run()
     exp_lookup = {0: 0, 1: 1, 2: 0, 3: 1, 4: 0, 5: 1, 6: 0, 7: 1, 8: 0, 9: 1, 10: 0, 11: 1}
     exp_matrix = np.array(
@@ -550,7 +550,7 @@ def test_strat_get_infection_multipier__with_double_strat_and_second_strat_mixin
     assert_array_equal(model.category_matrix, exp_matrix)
     assert model.category_lookup == exp_lookup
 
-    # Do pre-iteration FoI calcs
+    # Do pre-iteration force of infection calcs
     model.prepare_time_step(0, model.compartment_values)
     assert_array_equal(model.category_populations, np.array([[500.0], [500.0]]))
     work_density = 25
@@ -642,7 +642,7 @@ def test_strat_get_infection_multipier__with_double_strat_and_both_strats_mixing
     expected_comp_vals = np.array([148.5, 148.5, 346.5, 346.5, 1.5, 1.5, 3.5, 3.5, 0, 0, 0, 0])
     assert_array_equal(model.compartment_values, expected_comp_vals)
 
-    # Do pre-run FoI calcs.
+    # Do pre-run force of infection calcs.
     model.prepare_to_run()
     exp_lookup = {
         0: 0,  # SXagegroup_childXlocation_work -> children at work
@@ -671,7 +671,7 @@ def test_strat_get_infection_multipier__with_double_strat_and_both_strats_mixing
     assert_array_equal(model.category_matrix, exp_matrix)
     assert model.category_lookup == exp_lookup
 
-    # Do pre-iteration FoI calcs
+    # Do pre-iteration force of infection calcs
     model.prepare_time_step(0, model.compartment_values)
     exp_pops = np.array(
         [

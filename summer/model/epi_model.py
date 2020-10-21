@@ -36,7 +36,7 @@ OUTPUTS_NEGATIVE_TOLERANCE = -1e0
 
 class EpiModel:
     """
-    Constructs and runs compartment-based epidemiological models, 
+    Constructs and runs compartment-based epidemiological models,
     typically of infectious disease transmission.
 
     Compartment attributes
@@ -51,7 +51,7 @@ class EpiModel:
     parameters: Weights for each flow.
     time_variants: Time-varying flow weights.
     birth_approach: How we handle births.
-    
+
     Runtime attributes
     times: Time steps at which outputs are to be evaluated.
     outputs: All the evaluated compartment sizes over requested times.
@@ -156,17 +156,23 @@ class EpiModel:
                 )
             elif f_type == Flow.IMPORT:
                 flow = ImportFlow(
-                    dest=_entry_comp, param_name=f_param, param_func=self.get_parameter_value,
+                    dest=_entry_comp,
+                    param_name=f_param,
+                    param_func=self.get_parameter_value,
                 )
 
             if flow:
                 self.flows.append(flow)
 
         # Add birth flows.
-        if self.birth_approach == BirthApproach.ADD_CRUDE:
-            param_name = "crude_birth_rate"
+        if (
+            self.birth_approach == BirthApproach.ADD_CRUDE
+            and self.parameters["crude_birth_rate"] > 0
+        ):
             flow = CrudeBirthFlow(
-                dest=_entry_comp, param_name=param_name, param_func=self.get_parameter_value,
+                dest=_entry_comp,
+                param_name="crude_birth_rate",
+                param_func=self.get_parameter_value,
             )
             self.flows.append(flow)
         elif self.birth_approach == BirthApproach.REPLACE_DEATHS:
@@ -174,13 +180,15 @@ class EpiModel:
             flow = ReplacementBirthFlow(dest=_entry_comp, get_total_deaths=self.get_total_deaths)
             self.flows.append(flow)
 
-        # Add non-disease death flows
-        param_name = "universal_death_rate"
-        for compartment_name in self.compartment_names:
-            flow = UniversalDeathFlow(
-                source=compartment_name, param_name=param_name, param_func=self.get_parameter_value,
-            )
-            self.flows.append(flow)
+        # Add non-disease death flows if requested
+        if self.parameters["universal_death_rate"] > 0:
+            for compartment_name in self.compartment_names:
+                flow = UniversalDeathFlow(
+                    source=compartment_name,
+                    param_name="universal_death_rate",
+                    param_func=self.get_parameter_value,
+                )
+                self.flows.append(flow)
 
         # Create lookup table for quickly getting / setting compartments by name
         compartment_idx_lookup = {name: idx for idx, name in enumerate(self.compartment_names)}
@@ -227,7 +235,7 @@ class EpiModel:
 
     def prepare_force_of_infection(self):
         """
-        Pre-run calculations to help determine force of infection multiplier at runtime. 
+        Pre-run calculations to help determine force of infection multiplier at runtime.
         """
         # Figure out which compartments should be infectious
         self.infectious_mask = [

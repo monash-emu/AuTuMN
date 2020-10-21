@@ -14,6 +14,8 @@ param_values = fc.get_parameter_values(calibration_outputs)
 fc.make_posterior_ranges_figure(param_values)
 fc.get_all_posterior_detection_percentiles(param_values)   # Rerun this line to recalculate percentiles
 fc.plot_posterior_detection()
+fc.plot_parameter_traces(param_values)
+
 
 # output-related
 fc.make_calibration_fits_figure(calibration_outputs)  # uncertainty figure for all calibration targets

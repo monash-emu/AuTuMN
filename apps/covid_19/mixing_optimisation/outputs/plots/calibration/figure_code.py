@@ -357,7 +357,7 @@ def make_sero_by_age_fits_figure(uncertainty_df, region, sero_data_by_age):
         uncertainty_df,
         0,
         sero_data_by_age,
-        2
+        3
     )
     plt.savefig(f"figures/seroprevalence_by_age/sero_by_age_{region}.pdf")
 

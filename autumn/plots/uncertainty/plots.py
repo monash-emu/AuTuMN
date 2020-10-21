@@ -193,7 +193,8 @@ def plot_seroprevalence_by_age(
     scenario_id: int,
     time: float,
     ref_date=REF_DATE,
-    axis=None
+    axis=None,
+    name=''
 ):
     single_panel = axis is None
     if single_panel:
@@ -236,7 +237,7 @@ def plot_seroprevalence_by_age(
 
         _date = ref_date + datetime.timedelta(days=time)
 
-        axis.set_title(f'seroprevalence on {_date.strftime("%d/%m/%Y")}', fontsize=15)
+        axis.set_title(f'{name} {_date.strftime("%d/%m/%Y")}', fontsize=15)
 
     if single_panel:
         plotter.save_figure(fig, filename='sero_by_age', subdir="outputs", title_text='')
@@ -262,12 +263,14 @@ def plot_seroprevalence_by_age_against_targets(
             # plot model outputs
             midpoint_time = int(mean(survey["time_range"]))
             ax = fig.add_subplot(spec[i_row, i_col])
+            s_name = '' if not "survey_name" in survey else survey["survey_name"]
             plot_seroprevalence_by_age(
                 plotter,
                 uncertainty_df,
                 selected_scenario,
                 time=midpoint_time,
-                axis=ax
+                axis=ax,
+                name=s_name
             )
 
             # add data

@@ -50,10 +50,13 @@ def reformat_belgium_agegroup(string):
 
 def read_uk_data():
     """
-    From Ward et al. reporting on REACT2 study
-    :return:
+    Use two different sources of data:
+    - From Ward et al. reporting on REACT2 study
+    - From the Weekly Coronavirus Disease 2019 (COVID-19) surveillance report (Figure 46 weeks 16, 20, 24, 28, 32, 36)
+    :return: list of surveys
     """
-    survey = [
+    # Ward et al.
+    surveys = [
         {
             "time_range": [172, 195],  # 20 June to 13 July 2020
             "measures": [
@@ -64,11 +67,34 @@ def read_uk_data():
                 {"age_range": [55, 65], "central": 5.9, "ci": [5.5, 6.4]},
                 {"age_range": [65, 75], "central": 3.2, "ci": [2.8, 3.6]},
                 {"age_range": [75], "central": 3.3, "ci": [2.9, 3.8]},
-            ]
+            ],
+            "survey_name": "Ward et al. (REACT2)"
         }
     ]
 
-    return survey
+    # Surveillance data (Blood donors)
+    donors_data = pd.read_csv('UK_sero_data_weekly_report.csv')
+    age_points = [23, 35, 45, 55, 65, 77]
+    for index, r in donors_data.iterrows():
+        time_point = (r['week'] - 1) * 7
+        this_survey = {
+            "time_range": [time_point - 1, time_point + 1],
+            "measures": [],
+            "survey_name": "Blood donors (Surveillance report)"
+        }
+        for age_point in age_points:
+            if age_point > 65 and r['week'] < 28:
+                continue
+            this_survey['measures'].append(
+                {
+                    "age_range": [age_point],
+                    "central": r[f"age_{age_point}_med"],
+                    "ci": [r[f"age_{age_point}_low"], r[f"age_{age_point}_up"]]
+                }
+            )
+        surveys.append(this_survey)
+
+    return surveys
 
 
 def read_spain_data():

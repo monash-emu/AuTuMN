@@ -144,17 +144,25 @@ clinical_stratification:
 
 infection_fatality:
   multiplier: 1.
-  # Infection fatality proportions - now calculated using the Spanish serosurvey data by Pollan et al.
+  # Infection fatality proportions - now calculated using the Cauchemez estimates (Age-specific mortality and immunity patterns of SARS-CoV-2 infection in 45 countries)
   props:
-    - 1.35e-05 # 0-9
-    - 2.7e-05 # 10-19
-    - 9.5e-05 # 20-29
-    - 2.3e-04 # 30-39
-    - 5.6e-04 # 40-49
-    - 1.9e-03 # 50-59
-    - 7.7e-03 # 60-69
-    - 0.027 # 70-79
-    - 0.11 # 80+
+    - 0.00002  # 0-4
+    - 0.000005  # 5-9
+    - 0.000005  # 10-14
+    - 0.000015
+    - 0.00004
+    - 0.00009
+    - 0.00017
+    - 0.00029
+    - 0.00053
+    - 0.00086
+    - 0.00154
+    - 0.00241
+    - 0.00359
+    - 0.00642
+    - 0.01076
+    - 0.02276  # 75-79
+    - 0.07274  # 80+
 
 # Heterogeneity in susceptibility
 susceptibility_heterogeneity: null

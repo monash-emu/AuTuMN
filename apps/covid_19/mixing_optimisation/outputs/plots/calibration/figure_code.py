@@ -17,7 +17,7 @@ import numpy as np
 import os
 
 
-# --------------  Load outputs form databases
+# --------------  Load outputs from databases
 def get_calibration_outputs(country):
     calib_dirpath = f"../../pbi_databases/calibration/{country}/"
     mcmc_tables = db.load.load_mcmc_tables(calib_dirpath)
@@ -63,6 +63,8 @@ param_info = {
     'time.start': {'name': 'model start time', 'range': [0., 40.]},
     'sojourn.compartment_periods_calculated.exposed.total_period': {'name': 'incubation time', 'range': [3., 7.]},
     'sojourn.compartment_periods_calculated.active.total_period': {'name': 'time infectious', 'range': [4., 10.]},
+    'sojourn.compartment_periods.hospital_late': {'name': 'time in hospital (non-ICU)', 'range': [17.7, 20.4]},
+    'sojourn.compartment_periods.icu_late': {'name': 'time in ICU', 'range': [9.0, 13.0]},
     'infection_fatality.multiplier': {'name': 'IFR multiplier', 'range': [.8, 1.2]},
     'case_detection.maximum_gradient': {'name': 'detection (shape)', 'range': [.05, .1]},
     'case_detection.max_change_time': {'name': 'detection (inflection)', 'range': [100., 250.]},
@@ -71,8 +73,8 @@ param_info = {
     'icu_prop': {'name': 'prop ICU among hosp.', 'range': [.15, .20]},
     'compartment_periods.hospital_late': {'name': 'hopital duration', 'range': [17.7, 20.4]},
     'compartment_periods.icu_late': {'name': 'time in ICU', 'range': [9., 13.]},
-    'clinical_stratification.props.hospital.multiplier': {'name': 'hosp. prop. multiplier', 'range': [.75, 1.25]},
-    'symptomatic_props_multiplier': {'name': 'sympt. prop. multiplier', 'range': [.6, 1.4]},
+    'clinical_stratification.props.hospital.multiplier': {'name': 'hosp. prop. multiplier', 'range': [.6, 1.4]},
+    'clinical_stratification.props.symptomatic.multiplier': {'name': 'sympt. prop. multiplier', 'range': [.6, 1.4]},
     'mobility.microdistancing.behaviour.parameters.c': {'name': 'microdist. (inflection)', 'range': [80, 130]},
     'mobility.microdistancing.behaviour.parameters.upper_asymptote': {'name': 'microdist. (final)', 'range': [.25, .6]},
     'mobility.microdistancing.behaviour_adjuster.parameters.c': {'name': 'microdist. wane (inflection)', 'range': [150, 250]},
@@ -105,13 +107,14 @@ def make_posterior_ranges_figure(param_values):
         for country in country_list:
             h += 1
             # find mean and CI
-            values = param_values[country][param_name]
-            point_estimate = mean(values)
-            low_95, low_50, med, up_50, up_95 = quantile(values, q=(.025, .25, .5, .75, .975))
+            if param_name in param_values[country]:
+                values = param_values[country][param_name]
+                point_estimate = mean(values)
+                low_95, low_50, med, up_50, up_95 = quantile(values, q=(.025, .25, .5, .75, .975))
 
-            axs[i_row, i_col].plot([low_95, up_95], [h, h], linewidth=1, color='black')
-            axs[i_row, i_col].plot([low_50, up_50], [h, h], linewidth=3, color='steelblue')
-            axs[i_row, i_col].plot([point_estimate], [h], marker='o', color='crimson', markersize=5)
+                axs[i_row, i_col].plot([low_95, up_95], [h, h], linewidth=1, color='black')
+                axs[i_row, i_col].plot([low_50, up_50], [h, h], linewidth=3, color='steelblue')
+                axs[i_row, i_col].plot([point_estimate], [h], marker='o', color='crimson', markersize=5)
 
         axs[i_row, i_col].plot([0], [0])
         axs[i_row, i_col].set_ylim((0.5, 6.5))
@@ -148,6 +151,55 @@ def make_posterior_ranges_figure(param_values):
 
     plt.tight_layout()
     plt.savefig("figures/param_posteriors.pdf")
+
+
+def plot_parameter_traces(param_values):
+    param_names = list(param_values['belgium'].keys())
+    n_rows = len(param_names) + 1
+    n_cols = len(OPTI_REGIONS) + 1
+
+    w, h = 6, 2
+    title_w, title_h = 4, 2
+    fig = plt.figure(constrained_layout=True, figsize=(title_w + w * len(OPTI_REGIONS), title_h + h * len(param_names)))  # (w, h)
+    widths = [title_w] + [w] * len(OPTI_REGIONS)
+    heights = [title_h] + [h] * len(param_names)
+    spec = fig.add_gridspec(ncols=n_cols, nrows=n_rows, width_ratios=widths, height_ratios=heights)
+
+    # load priors to set y range
+    prior_list = get_prior_distributions_for_opti()
+    for i_country, country in enumerate(OPTI_REGIONS):
+        ax = fig.add_subplot(spec[0, i_country + 1])
+        ax.text(0.5, 0.2, COUNTRY_TITLES[country], fontsize=23, horizontalalignment='center',
+                verticalalignment='center')
+        ax.axis("off")
+        for i_param, param_name in enumerate(param_names):
+            if param_name in param_values[country]:
+
+                ax = fig.add_subplot(spec[i_param + 1, i_country + 1])
+
+                if i_param < len(param_names) - 1:
+                    ax.axes.get_xaxis().set_visible(False)
+                ax.plot(param_values[country][param_name], '-', color='royalblue')
+
+                ax.grid(False, axis='x')
+
+
+                y_range = param_info[param_name]['range']
+                _prior = [p for p in prior_list if p['param_name'] == param_name]
+                if len(_prior) > 0:
+                    prior = _prior[0]
+                    if prior["distribution"] == "uniform":
+                        y_range = prior['distri_params']
+
+                ax.set_ylim(y_range)
+
+            if i_country == 0:
+                ax = fig.add_subplot(spec[i_param + 1, 0])
+                ax.text(0.5, 0.2, param_info[param_name]['name'], fontsize=20, horizontalalignment='center', verticalalignment='center')
+                ax.axis("off")
+
+    plt.tight_layout()
+    plt.savefig("figures/param_traces.pdf")
 
 
 # --------------  Make figure with posterior time-variant detection

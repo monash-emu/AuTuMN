@@ -42,7 +42,10 @@ clinical_stratification:
     icu: 0.2
 
 mobility:
-  # Mapping of Google Mobility locations to Autumn-specific locations
+  microdistancing_locations:
+    - other_locations
+    - school
+    - work
   google_mobility_locations:
     work:
       - workplaces
@@ -51,6 +54,8 @@ mobility:
       - retail_and_recreation
       - grocery_and_pharmacy
       - transit_stations
+    # This is now needed because there is an entry in the master parameters file and dictionaries overwite recursively
+    home: []
   smooth_google_data: true
   square_mobility_effect: true
   microdistancing:   # increasing function, starting from sigma=0 (no microdistancing) ending at upper_asymptote

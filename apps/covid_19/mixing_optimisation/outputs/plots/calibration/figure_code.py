@@ -6,6 +6,8 @@ from autumn.plots.uncertainty.plots import plot_timeseries_with_uncertainty
 
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS, COUNTRY_TITLES
 from apps.covid_19.mixing_optimisation.serosurvey_by_age.survey_data import get_serosurvey_data
+from apps.covid_19.mixing_optimisation.utils import get_prior_distributions_for_opti
+
 
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -55,6 +57,7 @@ def get_parameter_values(calibration_outputs):
 
 # --------------  Make figure with posterior estimates
 
+# range is now automatically loaded
 param_info = {
     'contact_rate': {'name': 'transmission prob.', 'range': [0.02, 0.06]},
     'time.start': {'name': 'model start time', 'range': [0., 40.]},
@@ -88,6 +91,9 @@ def make_posterior_ranges_figure(param_values):
     fig, axs = plt.subplots(n_row, n_col, figsize=(11, 12))
     plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=.4)
 
+    # load priors to set x range
+    prior_list = get_prior_distributions_for_opti()
+
     i_col = -1
     i_row = 0
     for param_name in list(param_values['belgium'].keys()):
@@ -111,7 +117,15 @@ def make_posterior_ranges_figure(param_values):
         axs[i_row, i_col].set_ylim((0.5, 6.5))
 
         axs[i_row, i_col].set_title(param_info[param_name]['name'], fontsize=10.5)
-        axs[i_row, i_col].set_xlim(param_info[param_name]['range'])
+
+        x_range = param_info[param_name]['range']
+        _prior = [p for p in prior_list if p['param_name'] == param_name]
+        if len(_prior) > 0:
+            prior = _prior[0]
+            if prior["distribution"] == "uniform":
+                x_range = prior['distri_params']
+
+        axs[i_row, i_col].set_xlim(x_range)
 
         # Format x-ticks if requested
         if "xticks" in param_info[param_name]:

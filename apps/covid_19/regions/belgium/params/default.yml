@@ -22,29 +22,29 @@ mobility:
     behaviour:
       parameters:
         c: 90
-        upper_asymptote: .5
+        upper_asymptote: .6
     behaviour_adjuster:
       parameters:
-        c: 130
-        sigma: 0.45
+        c: 160
+        sigma: 0.4
 
 case_detection:
   end_value: 0.8
-  max_change_time: 120
+  max_change_time: 180
   maximum_gradient: 0.05
-  start_value: 0.20
+  start_value: 0.10
 
 clinical_stratification:
   props:
     hospital:
-      multiplier: 0.8
+      multiplier: 0.6
     symptomatic:
-      multiplier: 0.8
+      multiplier: 0.6
 
-contact_rate: 0.047
+contact_rate: 0.058
 
 infection_fatality:
-  multiplier: 1.2
+  multiplier: 3.
 
 sojourn:
   compartment_periods:
@@ -57,4 +57,4 @@ sojourn:
       total_period: 5.
 
 time:
-  start: 27
+  start: 33

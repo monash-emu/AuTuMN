@@ -1,4 +1,4 @@
-# SCENARIO DESCRIPTION: MHS compliance of 50% return
+# SCENARIO DESCRIPTION: 50% of workers return onsite
 parent: apps/covid_19/regions/manila/params/default.yml
 
 time:
@@ -6,9 +6,9 @@ time:
 
 mobility:
   mixing:
-    school:
-      append: false
+    work:
+      append: true
       times:
         - 2020-10-26
       values:
-        - 1.
+        - ["close_gap_to_1", 0.5]

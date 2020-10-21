@@ -5,22 +5,10 @@ time:
   start: 279
 
 mobility:
-  mixing:
-    work:
-      append: true
-      times:
-        - 2020-10-05
-      values:
-        - 0.50
-    school:
-      append: false
-      times:
-        - 2020-02-11
-        - 2020-03-16
-        - 2020-10-04
-        - 2020-10-05
-      values:
-        - 1.
-        - 0.
-        - 0.
-        - 0.25
+  microdistancing:
+    behaviour:
+      parameters:
+        times:
+          - 288
+        values:
+          - 0.5

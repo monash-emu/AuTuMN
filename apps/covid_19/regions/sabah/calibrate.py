@@ -27,6 +27,11 @@ PAR_PRIORS = provide_default_calibration_params(excluded_params=("time.start", "
 PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS)
 
 PAR_PRIORS += [
+    {
+        "param_name": "contact_rate",
+        "distribution": "uniform",
+        "distri_params": [0.08, 0.2],
+    },
     # Health system-related
     {
         "param_name": "clinical_stratification.props.hospital.multiplier",

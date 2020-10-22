@@ -73,7 +73,12 @@ def run_full_model(instance, run_id: str, burn_in: int, use_latest_code: bool, b
 
 
 def run_calibration(
-    instance, app_name: str, region_name: str, num_chains: int, runtime: int, branch: str,
+    instance,
+    app_name: str,
+    region_name: str,
+    num_chains: int,
+    runtime: int,
+    branch: str,
 ):
     """Run calibration job on the remote server"""
     msg = "Running calibration %s %s with %s chains for %s seconds on AWS instance %s."
@@ -160,8 +165,12 @@ def install_requirements(conn: Connection):
 
 def get_connection(instance):
     ip = instance["ip"]
-    key_filepath = os.path.expanduser(f"~/.ssh/{settings.EC2_KEYFILE}")
-    return Connection(host=ip, user="ubuntu", connect_kwargs={"key_filename": key_filepath},)
+    key_filepath = try_get_ssh_key_path()
+    return Connection(
+        host=ip,
+        user="ubuntu",
+        connect_kwargs={"key_filename": key_filepath},
+    )
 
 
 SSH_OPTIONS = {
@@ -171,14 +180,29 @@ SSH_OPTIONS = {
     "ServerAliveInterval": "30",
 }
 SSH_OPT_STR = " ".join([f"-o {k}={v}" for k, v in SSH_OPTIONS.items()])
-SSH_KEY_STR = f"-i ~/.ssh/{settings.EC2_KEYFILE}"
-SSH_ARGS = f"{SSH_OPT_STR} {SSH_KEY_STR}"
+SSH_KEYS_TO_TRY = ["buildkite", "id_rsa"]
 
 
 def ssh_interactive(instance):
     ip = instance["ip"]
     name = instance["name"]
     logger.info(f"Starting SSH session with instance {name}.")
-    cmd_str = f"ssh {SSH_ARGS} ubuntu@{ip}"
+    ssh_key_path = try_get_ssh_key_path()
+    cmd_str = f"ssh {SSH_OPT_STR} -i {ssh_key_path} ubuntu@{ip}"
     logger.info("Entering ssh session with: %s", cmd_str)
     subprocess.call(cmd_str, shell=True)
+
+
+def try_get_ssh_key_path():
+    keypath = None
+    for keyname in SSH_KEYS_TO_TRY:
+        keypath = os.path.expanduser(f"~/.ssh/{keyname}")
+        if os.path.exists(keypath):
+            break
+
+    if not keypath:
+        raise FileNotFoundError(
+            f"Could not find SSH key at {keypath} or for alternate names {SSH_KEYS_TO_TRY}."
+        )
+
+    return keypath

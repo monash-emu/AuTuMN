@@ -126,7 +126,7 @@ def run_instance(job_id: str, instance_type: str, is_spot: bool):
         "InstanceType": instance_type,
         "SecurityGroupIds": [settings.EC2_SECURITY_GROUP],
         "IamInstanceProfile": {"Name": settings.EC2_IAM_INSTANCE_PROFILE},
-        "KeyName": settings.EC2_KEYFILE.split(".")[0],
+        "KeyName": "autumn",
         "InstanceInitiatedShutdownBehavior": "terminate",
         "TagSpecifications": [
             {"ResourceType": "instance", "Tags": [{"Key": "Name", "Value": job_id}]}

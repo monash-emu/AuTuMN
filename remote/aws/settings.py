@@ -29,9 +29,8 @@ EC2_INSTANCE_SPECS = {
 
 AWS_PROFILE = "autumn"
 AWS_REGION = "ap-southeast-2"
-EC2_KEYFILE = "autumn.pem"
 EC2_SPOT_MAX_PRICE = "1.2"
-EC2_AMI = "ami-0f6510ae10501e327"
+EC2_AMI = "ami-0c02c3923f0e59693"
 EC2_SECURITY_GROUP = "sg-0b2fe230ac8853538"
 EC2_IAM_INSTANCE_PROFILE = "worker-profile"
 S3_BUCKET = "autumn-data"

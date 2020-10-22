@@ -40,9 +40,9 @@ clinical_stratification:
       multiplier: 0.7409334513510046
     symptomatic:
       multiplier: 0.6377371733195804
-contact_rate: .055
+contact_rate: .042
 infection_fatality:
-  multiplier: 3.
+  multiplier: 1.5
 
 sojourn:
   compartment_periods:
@@ -54,4 +54,4 @@ sojourn:
     exposed:
       total_period: 6.244480385522102
 time:
-  start: 9
+  start: 14

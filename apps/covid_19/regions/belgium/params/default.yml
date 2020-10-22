@@ -41,10 +41,10 @@ clinical_stratification:
     symptomatic:
       multiplier: 0.6
 
-contact_rate: 0.058
+contact_rate: 0.045
 
 infection_fatality:
-  multiplier: 3.
+  multiplier: 2.
 
 sojourn:
   compartment_periods:

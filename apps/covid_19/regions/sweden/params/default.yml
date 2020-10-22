@@ -26,7 +26,7 @@ case_detection:
   end_value: 0.9
   max_change_time: 150
   maximum_gradient: 0.09679427957269626
-  start_value: 0.10
+  start_value: 0.19
 
 time:
   start: 28
@@ -41,4 +41,4 @@ clinical_stratification:
     symptomatic:
       multiplier: 0.647974746625595
 
-contact_rate: .038
+contact_rate: .0275

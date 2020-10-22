@@ -41,7 +41,7 @@ clinical_stratification:
     symptomatic:
       multiplier: .9
 
-contact_rate: 0.058
+contact_rate: 0.044
 
 infection_fatality:
   multiplier: 1.2

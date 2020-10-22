@@ -127,6 +127,35 @@ def reformat_spain_agegroup(string):
         return [int(string.split("&&")[0]), int(string.split("&&")[1]) + 1]
 
 
+def read_france_data():
+    """
+    Preprint from Le Vue et al. https://doi.org/10.1101/2020.10.20.20213116
+    :return:
+    """
+    df = pd.read_csv('France.csv')
+    periods = [[69, 75], [97, 103], [132, 138]]
+    surveys = []
+    for i in range(3):
+        survey = {
+            "time_range": periods[i],  # 27Apr - 11May
+            "measures": []
+        }
+        for index, row in df.iterrows():
+            cell = row[f"period_{str(i)}"]
+            measure = {
+                "age_range": row["age"].split("-"),
+                "central": float(cell.split(" (")[0]),
+                "ci": [
+                    float(cell.split(" (")[1].split("-")[0]),
+                    float(cell.split("-")[1].split(")")[0])
+                ]
+            }
+            survey["measures"].append(measure)
+        surveys.append(survey)
+
+    return surveys
+
+
 def get_serosurvey_data():
     path = os.path.join(APPS_PATH, "covid_19", "mixing_optimisation", "serosurvey_by_age", "serosurvey_data.json")
     with open(path) as f:
@@ -139,6 +168,7 @@ if __name__ == "__main__":
         "belgium": read_belgium_data(),
         "united-kingdom": read_uk_data(),
         "spain": read_spain_data(),
+        "france": read_france_data()
     }
 
     with open('serosurvey_data.json', 'w') as json_file:

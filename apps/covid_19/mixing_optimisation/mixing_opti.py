@@ -21,6 +21,19 @@ OPTI_PARAMS_PATH = os.path.join(FILE_DIR, "opti_params.yml")
 
 AGE_MODE = "by_age"
 LOCATION_MODE = "by_location"
+MODES = [AGE_MODE, LOCATION_MODE]
+
+OBJECTIVE_DEATHS = "deaths"
+OBJECTIVE_YOLL = "yoll"
+OBJECTIVES = [OBJECTIVE_DEATHS, OBJECTIVE_YOLL]
+
+CONFIGS = [2, 3]
+
+N_DECISION_VARS = {
+    AGE_MODE: 16,
+    LOCATION_MODE: 3
+}
+
 MIXING_LOCS = ["other_locations", "school", "work"]
 AGE_GROUPS = [
     "0",

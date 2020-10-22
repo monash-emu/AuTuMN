@@ -719,8 +719,8 @@ class Calibration:
                     self.transform[prior_dict['param_name']][func_type] = \
                         make_transform_func_with_lower_bound(lower_bound, func_type)
                 representative_point = lower_bound + 10 * original_sd
-                if self.starting_point[prior_dict["param_name"]] == lower_bound:
-                    self.starting_point[prior_dict["param_name"]] += original_sd / 10
+                if self.starting_point[prior_dict["param_name"]] <= lower_bound:
+                    self.starting_point[prior_dict["param_name"]] = lower_bound + original_sd / 10
 
             # case of an upper-bounded parameter with infinite support
             elif lower_bound == -float("inf"):
@@ -729,8 +729,8 @@ class Calibration:
                         make_transform_func_with_upper_bound(upper_bound, func_type)
 
                 representative_point = upper_bound - 10 * original_sd
-                if self.starting_point[prior_dict["param_name"]] == upper_bound:
-                    self.starting_point[prior_dict["param_name"]] -= original_sd / 10
+                if self.starting_point[prior_dict["param_name"]] >= upper_bound:
+                    self.starting_point[prior_dict["param_name"]] = upper_bound - original_sd / 10
             # case of a lower- and upper-bounded parameter
             else:
                 for func_type in ['direct', 'inverse', 'inverse_derivative']:
@@ -738,10 +738,10 @@ class Calibration:
                         make_transform_func_with_two_bounds(lower_bound, upper_bound, func_type)
 
                 representative_point = .5 * (lower_bound + upper_bound)
-                if self.starting_point[prior_dict["param_name"]] == lower_bound:
-                    self.starting_point[prior_dict["param_name"]] += original_sd / 10
-                elif self.starting_point[prior_dict["param_name"]] == upper_bound:
-                    self.starting_point[prior_dict["param_name"]] -= original_sd / 10
+                if self.starting_point[prior_dict["param_name"]] <= lower_bound:
+                    self.starting_point[prior_dict["param_name"]] = lower_bound + original_sd / 10
+                elif self.starting_point[prior_dict["param_name"]] >= upper_bound:
+                    self.starting_point[prior_dict["param_name"]] = upper_bound - original_sd / 10
 
             if representative_point is not None:
                 transformed_low = self.transform[prior_dict['param_name']]['direct'](representative_point - original_sd / 2)

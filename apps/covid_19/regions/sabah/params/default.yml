@@ -11,7 +11,7 @@ population:
   year: 2019
 
 time:
-  start: 200
+  start: 50
   end: 300
 
 testing_to_detection:

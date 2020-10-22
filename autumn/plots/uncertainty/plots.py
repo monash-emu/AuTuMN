@@ -207,6 +207,8 @@ def plot_seroprevalence_by_age(
     quantile_vals = df["quantile"].unique().tolist()
     seroprevalence_by_age = {}
     sero_outputs = [output for output in df["type"].unique().tolist() if "proportion_seropositiveXagegroup_" in output]
+
+    max_value = -10.
     if len(sero_outputs) == 0:
         axis.text(0., .5, "Age-specific seroprevalence outputs are not available for this run")
     else:
@@ -226,6 +228,7 @@ def plot_seroprevalence_by_age(
             x_pos = 2.5 + float(age)
             axis.plot([x_pos, x_pos], [seroprevalence_by_age[age][q_keys[0]], seroprevalence_by_age[age][q_keys[-1]]],
                       "-", color='black', lw=1.)
+            max_value = max(max_value, seroprevalence_by_age[age][q_keys[-1]][0])
 
             if num_quantiles % 2:
                 q_key = q_keys[half_length]
@@ -241,6 +244,8 @@ def plot_seroprevalence_by_age(
 
     if single_panel:
         plotter.save_figure(fig, filename='sero_by_age', subdir="outputs", title_text='')
+
+    return max_value
 
 
 def plot_seroprevalence_by_age_against_targets(
@@ -264,7 +269,7 @@ def plot_seroprevalence_by_age_against_targets(
             midpoint_time = int(mean(survey["time_range"]))
             ax = fig.add_subplot(spec[i_row, i_col])
             s_name = '' if not "survey_name" in survey else survey["survey_name"]
-            plot_seroprevalence_by_age(
+            max_value = plot_seroprevalence_by_age(
                 plotter,
                 uncertainty_df,
                 selected_scenario,
@@ -275,6 +280,7 @@ def plot_seroprevalence_by_age_against_targets(
 
             # add data
             shift = .5
+            max_prev = -10.
             for i, measure in enumerate(survey["measures"]):
                 mid_age = mean(measure["age_range"])
                 ax.plot([mid_age + shift, mid_age + shift], [measure["ci"][0], measure["ci"][1]],
@@ -282,9 +288,12 @@ def plot_seroprevalence_by_age_against_targets(
                 label = None if i > 0 else 'data'
                 ax.plot(mid_age + shift, measure["central"], "o", color="red", ms=4, label=label)
                 # ax.axvline(x=measure["age_range"][0], linestyle="--", color='grey', lw=.5)
+                max_prev = max(max_prev, measure["ci"][1])
 
             if i_col + i_row == 0:
                 ax.legend(loc='upper right', fontsize=12, facecolor='white')
+
+            ax.set_ylim((0., max(max_prev * 1.3, max_value * 1.3)))
 
             i_col += 1
             if i_col == n_columns:

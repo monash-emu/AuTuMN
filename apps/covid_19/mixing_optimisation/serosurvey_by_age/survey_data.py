@@ -143,7 +143,7 @@ def read_france_data():
         for index, row in df.iterrows():
             cell = row[f"period_{str(i)}"]
             measure = {
-                "age_range": row["age"].split("-"),
+                "age_range": [float(a) for a in row["age"].split("-")],
                 "central": float(cell.split(" (")[0]),
                 "ci": [
                     float(cell.split(" (")[1].split("-")[0]),

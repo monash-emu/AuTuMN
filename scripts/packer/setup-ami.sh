@@ -18,6 +18,10 @@ echo ">>> Setting timezone to Melbourne"
 rm -f /etc/localtime
 ln -sf /usr/share/zoneinfo/Australia/Melbourne /etc/localtime
 
+# Setup public key for buildkite
+BUILDKITE_PUBKEY="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDCD/Li0eZR7WsrUWiolujjUEKcJgo5tErpcNAFcPxt0Ly7fLi5PGmx7RqP07W8myJPWMh/q4xFMBHqCCQrlqHvSOS+l8ExWYs6PzY/lCt721fFJRc16BbX3jJuvZlcYNK22IrMmjpvpKWS6kEqSWOufA4ZUEKpdSgSPZYVAQ9bivkQKS74uLdVmPVBdA56hzx2uo5UtrUqHnX1DFr40nmYEyGmZOUlUr3tp1quIXoapYNhfY0i3Xr4ivi8J3IaIqER93K8BTJh9+mjowh1TCBja9F8NwKD/AOQhMdIYtoj+QUGU8xfd0VsnFxLOl+LI7vYCqC1P7vQYpCBHqKcpOzN buildkite"
+echo "$BUILDKITE_PUBKEY" >> /home/ubuntu/.ssh/authorized_keys
+
 # Install basic requirements
 apt-get update
 apt-get install -y \

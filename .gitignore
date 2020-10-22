@@ -570,3 +570,5 @@ apps/covid_19/mixing_optimisation/outputs/plots/calibration/figures/seroprevalen
 apps/covid_19/mixing_optimisation/outputs/plots/calibration/figures/seroprevalence_by_age/sero_by_age_spain.pdf
 apps/covid_19/mixing_optimisation/outputs/plots/calibration/figures/seroprevalence_by_age/sero_by_age_united-kingdom.pdf
 apps/covid_19/mixing_optimisation/outputs/plots/calibration/figures/param_traces.pdf
+apps/covid_19/mixing_optimisation/outputs/plots/calibration/figures/seroprevalence_by_age/sero_by_age_france.pdf
+apps/covid_19/mixing_optimisation/outputs/plots/calibration/figures/seroprevalence_by_age/sero_by_age_sweden.pdf

@@ -137,7 +137,7 @@ def read_france_data():
     surveys = []
     for i in range(3):
         survey = {
-            "time_range": periods[i],  # 27Apr - 11May
+            "time_range": periods[i],
             "measures": []
         }
         for index, row in df.iterrows():
@@ -148,6 +148,34 @@ def read_france_data():
                 "ci": [
                     float(cell.split(" (")[1].split("-")[0]),
                     float(cell.split("-")[1].split(")")[0])
+                ]
+            }
+            survey["measures"].append(measure)
+        surveys.append(survey)
+
+    return surveys
+
+
+def read_sweden_data():
+    """
+    Preprint from Le Vue et al. https://doi.org/10.1101/2020.10.20.20213116
+    :return:
+    """
+    df = pd.read_csv('Sweden.csv')
+    periods = [[(w - 1) * 7, w * 7] for w in range(17, 25)]
+    surveys = []
+    for i in range(len(periods)):
+        survey = {
+            "time_range": periods[i],
+            "measures": []
+        }
+        for index, row in df.iterrows():
+            measure = {
+                "age_range": [float(a) for a in row["age"].split("-")],
+                "central": float(row[f'period_{str(i)}']),
+                "ci": [
+                    float(row[f'period_{str(i)}_low']),
+                    float(row[f'period_{str(i)}_up'])
                 ]
             }
             survey["measures"].append(measure)
@@ -168,7 +196,8 @@ if __name__ == "__main__":
         "belgium": read_belgium_data(),
         "united-kingdom": read_uk_data(),
         "spain": read_spain_data(),
-        "france": read_france_data()
+        "france": read_france_data(),
+        "sweden": read_sweden_data(),
     }
 
     with open('serosurvey_data.json', 'w') as json_file:

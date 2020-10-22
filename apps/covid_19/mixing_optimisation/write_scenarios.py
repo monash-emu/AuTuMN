@@ -6,7 +6,7 @@ from apps.covid_19.mixing_optimisation.mixing_opti import (
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
 
 """
-Create scenarios for each combination of mode, config and objective
+Define scenarios for each combination of mode, config and objective, plus the unmitigated scenario (9 scenarios)
 """
 SCENARIO_MAPPING = {
 }
@@ -54,13 +54,15 @@ def drop_yml_scenario_file(country, sc_idx, decision_vars, final_mixing=1.):
         config = CONFIGS[0]  # does not matter but needs to be defined
         mode = MODES[0]
     else:  # this is an optimised scenario
-        config = SCENARIO_MAPPING[_sc_idx]['config']
-        mode = SCENARIO_MAPPING[_sc_idx]['mode']
+        config = SCENARIO_MAPPING[sc_idx]['config']
+        mode = SCENARIO_MAPPING[sc_idx]['mode']
 
     sc_params = build_params_for_phases_2_and_3(decision_vars, config, mode, final_mixing)
     sc_params['parent'] = f"apps/covid_19/regions/{country_folder_name}/params/default.yml"
 
-    param_file_path = f"../params/regions/{country_folder_name}/params/scenario-{sc_idx}.yml"
+    del sc_params['importation']  # Importation was used for testing during optimisation. We must remove it.
+
+    param_file_path = f"../regions/{country_folder_name}/params/scenario-{sc_idx}.yml"
     with open(param_file_path, "w") as f:
         yaml.dump(sc_params, f)
 
@@ -79,3 +81,8 @@ def write_all_scenario_yml_files_from_outputs():
             drop_yml_scenario_file(country, sc_idx, decision_vars)
 
 
+if __name__ == "__main__":
+    drop_yml_scenario_file('france', 1, [1.] * 16)
+    # FIXME 1: need to ask Matt how to test this type of function when it is expected to create new files
+    # FIXME 2: need to fix the issue with the format of the dumped times: "- *id001"
+    # FIXME 3: this code will need to run for different immunity assumptions

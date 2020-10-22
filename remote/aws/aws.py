@@ -133,6 +133,7 @@ def run_instance(job_id: str, instance_type: str, is_spot: bool):
         ],
     }
     if is_spot:
+        logger.info(f"Using a spot EC2 instance. ")
         kwargs["InstanceMarketOptions"] = {
             "MarketType": "spot",
             "SpotOptions": {
@@ -140,6 +141,8 @@ def run_instance(job_id: str, instance_type: str, is_spot: bool):
                 "SpotInstanceType": "one-time",
             },
         }
+    else:
+        logger.info(f"Not using a spot EC2 instance. ")
 
     client.run_instances(**kwargs)
     logger.info("Create request sent.")

@@ -215,12 +215,10 @@ def _run_job(job_id: str, instance_type: str, is_spot: bool, job_func):
         logging.info("Job %s succeeded.", job_id)
     except Exception:
         logger.error(f"Running job {job_id} failed")
-        logger.info("Skipping stop EC2 instance step - this box must be stopped manually.")
-        # aws.stop_job(job_id)
         raise
+    finally:
+        aws.stop_job(job_id)
 
-    logger.info("Stopping AWS EC2 instance since the job was successful.")
-    aws.stop_job(job_id)
     return return_value
 
 

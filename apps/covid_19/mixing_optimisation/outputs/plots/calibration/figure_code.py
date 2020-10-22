@@ -335,9 +335,10 @@ def make_calibration_fits_figure(calibration_outputs, seroprevalence=False):
         target_outputs = {}
         for country in OPTI_REGIONS:
             targets = get_targets(country)
-            target_outputs[country] = ["notifications", "infection_deaths"]
+            target_outputs[country] = ["notifications"]
             hospital_target = [t for t in list(targets.keys()) if 'hospital' in t or 'icu' in t][0]
             target_outputs[country].append(hospital_target)
+            target_outputs[country].append("infection_deaths")
     else:
         show_title = False
         lab_fontsize = 15

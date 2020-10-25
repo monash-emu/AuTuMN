@@ -20,7 +20,7 @@ DEFAULT_FLOWS = [
     },
     {
         "type": Flow.INFECTION_FREQUENCY,
-        "origin": Compartment.LATE_LATENT,
+        "origin": Compartment.RECOVERED,
         "to": Compartment.EARLY_LATENT,
         "parameter": "contact_rate_from_recovered",
     },

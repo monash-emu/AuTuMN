@@ -14,11 +14,6 @@ Force of infection:
 
 - we have multiple infectious populations (one for each strain)
 - people infected by a particular strain get that strain
-
-
-TODO
-    - flow adjustments
-    - with other stratifications
 """
 import numpy as np
 from numpy.testing import assert_array_equal, assert_allclose

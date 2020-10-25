@@ -451,13 +451,12 @@ def test_strain__with_infectious_multipliers_and_heterogeneous_mixing():
     assert freq(sus_adult, inf_adult_c) == 2 * ((4 / 400) * 1.5 + (6 / 600) * 0.5)
 
     # Get infection flow rates
-    sus_pop = 900
-    flow_to_inf_child_a = sus_pop * contact_rate * freq(sus_child, inf_child_a)
-    flow_to_inf_adult_a = sus_pop * contact_rate * freq(sus_adult, inf_adult_a)
-    flow_to_inf_child_b = sus_pop * contact_rate * freq(sus_child, inf_child_b)
-    flow_to_inf_adult_b = sus_pop * contact_rate * freq(sus_adult, inf_adult_b)
-    flow_to_inf_child_c = sus_pop * contact_rate * freq(sus_child, inf_child_c)
-    flow_to_inf_adult_c = sus_pop * contact_rate * freq(sus_adult, inf_adult_c)
+    flow_to_inf_child_a = 540 * contact_rate * freq(sus_child, inf_child_a)
+    flow_to_inf_adult_a = 360 * contact_rate * freq(sus_adult, inf_adult_a)
+    flow_to_inf_child_b = 540 * contact_rate * freq(sus_child, inf_child_b)
+    flow_to_inf_adult_b = 360 * contact_rate * freq(sus_adult, inf_adult_b)
+    flow_to_inf_child_c = 540 * contact_rate * freq(sus_child, inf_child_c)
+    flow_to_inf_adult_c = 360 * contact_rate * freq(sus_adult, inf_adult_c)
     expected_flow_rates = np.array(
         [
             -flow_to_inf_child_a - flow_to_inf_child_b - flow_to_inf_child_c,

@@ -320,10 +320,10 @@ class EpiModel:
     def get_total_deaths(self):
         return self.total_deaths
 
-    def get_infection_frequency_multipier(self, source: Compartment):
+    def get_infection_frequency_multipier(self, source: Compartment, dest: Compartment):
         return self.population_infectious / self.population_total
 
-    def get_infection_density_multipier(self, source: Compartment):
+    def get_infection_density_multipier(self, source: Compartment, dest: Compartment):
         return self.population_infectious
 
     def find_infectious_population(self, time: float, compartment_values: np.ndarray):

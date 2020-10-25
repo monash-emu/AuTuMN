@@ -88,8 +88,6 @@ def objective_function(
     # Rebuild the default parameters
     params["default"] = merge_dicts(opti_params["default"], params["default"])
     params["default"] = update_params(params["default"], calibrated_params)
-    for scenario in params["scenarios"].values():
-        scenario["time"]["start"] = PHASE_2_START_TIME - 1
 
     # Create and run scenario 1
     sc_1_params_update = build_params_for_phases_2_and_3(decision_variables, config, mode)

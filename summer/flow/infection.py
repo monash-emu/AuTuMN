@@ -26,7 +26,7 @@ class BaseInfectionFlow(BaseTransitionFlow):
         self.find_infectious_multiplier = find_infectious_multiplier
 
     def get_net_flow(self, compartment_values, time):
-        multiplier = self.find_infectious_multiplier(self.source)
+        multiplier = self.find_infectious_multiplier(self.source, self.dest)
         parameter_value = self.get_weight_value(time)
         population = compartment_values[self.source.idx]
         return parameter_value * population * multiplier

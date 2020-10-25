@@ -39,7 +39,7 @@ def test_infect_density_get_net_flow_with_adjust(FlowClass):
     assert net_flow == 2 * 5 * 7 * 13 * 23
 
 
-def find_infectious_multiplier(comp):
+def find_infectious_multiplier(src_comp, dest_conp):
     return 23
 
 

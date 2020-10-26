@@ -82,12 +82,7 @@ Model calibration outputs are written to `data/outputs/calibrate` and can be vie
 We use [Streamlit](https://www.streamlit.io/) to visualise the output of local model runs. You can run streamlit from the command line to view your model's outputs as follows:
 
 ```bash
-# View model inputs
 streamlit run plots.py
-# View calibration results
-streamlit run plots.py mcmc
-# View model run results
-streamlit run plots.py scenario
 ```
 
 ## Running the automated tests

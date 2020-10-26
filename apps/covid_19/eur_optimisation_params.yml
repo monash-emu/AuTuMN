@@ -7,7 +7,7 @@ time:
 
 infectious_seed: 200
 
-haario_scaling_factor: 2.4 # Greater values increase jumping step size and reduce the acceptance ratio (baseline 2.4)
+haario_scaling_factor: 3. # Greater values increase jumping step size and reduce the acceptance ratio (baseline 2.4)
 metropolis_initialisation_type: 'current_params'
 
 clinical_stratification:

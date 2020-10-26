@@ -140,7 +140,6 @@ def build_model(params: dict) -> StratifiedModel:
         params.mobility,
         country,
     )
-    model.set_dynamic_mixing_matrix(dynamic_mixing_matrix)
 
     """
     Age stratification
@@ -171,7 +170,7 @@ def build_model(params: dict) -> StratifiedModel:
         compartments_to_stratify=COMPARTMENTS,
         comp_split_props=comp_split_props,
         flow_adjustments=flow_adjustments,
-        mixing_matrix=static_mixing_matrix,
+        mixing_matrix=dynamic_mixing_matrix,
     )
 
     """

@@ -1,6 +1,6 @@
 import copy
 import itertools
-from typing import List, Dict, Callable, Optional
+from typing import List, Dict, Callable, Optional, Union
 
 import numpy as np
 
@@ -26,6 +26,7 @@ class StratifiedModel(EpiModel):
     """
 
     DEFAULT_DISEASE_STRAIN = "default"
+    DEFAULT_MIXING_MATRIX = np.array([[1]])
 
     def __init__(
         self,
@@ -52,6 +53,7 @@ class StratifiedModel(EpiModel):
         )
         # Keeps track of Stratifications that have been applied.
         self.stratifications = []
+
         # Keeps track of original, pre-stratified compartment names.
         self.original_compartment_names = [Compartment.deserialize(n) for n in compartment_names]
 
@@ -60,26 +62,15 @@ class StratifiedModel(EpiModel):
 
         # Strata-based multipliers for compartmental infectiousness levels.
         self.infectiousness_levels = {}
+
         # Compartment-based overwrite values for compartmental infectiousness levels.
         self.individual_infectiousness_adjustments = []
 
-        # Mixing matrix, NxN array used to calculate force of infection.
-        # Columns are the strata who are infectors.
-        # Rows are the strata who are infected.
-        # This matrix can be stratified multiple times.
-        self._static_mixing_matrix = np.array([[1]])
-        # A time-based function that can replace the mixing matrix.
-        # This cannot be automatically stratified.
-        self._dynamic_mixing_matrix = None
+        # Mixing matrices a list of NxN arrays used to calculate force of infection.
+        self.mixing_matrices = []
+
         # A list of dicts that has the strata required to match a row in the mixing matrix.
         self.mixing_categories = [{}]
-
-    def set_dynamic_mixing_matrix(self, matrix_func: Callable[[float], np.ndarray]):
-        """
-        Set model to use a time-varying mixing matrix.
-        FIXME: This API is very very unintuitive. It's not obvious which mixing matrix gets used by the model.
-        """
-        self._dynamic_mixing_matrix = matrix_func
 
     def stratify(
         self,
@@ -89,7 +80,7 @@ class StratifiedModel(EpiModel):
         comp_split_props: Dict[str, float] = {},
         flow_adjustments: Dict[str, Dict[str, float]] = {},
         infectiousness_adjustments: Dict[str, float] = {},
-        mixing_matrix: np.ndarray = None,
+        mixing_matrix: Union[np.ndarray, Callable[[float], np.ndarray]] = None,
     ):
         """
         Apply a stratification to the model's compartments.
@@ -98,7 +89,6 @@ class StratifiedModel(EpiModel):
         strata_names: The names of the strata to apply
         compartments_to_stratify: The compartments that will have the stratification applied. Falsey args interpreted as "all".
         comp_split_props: Request to split existing population in the compartments according to specific proportions
-        # TODO: Only allow mixing matrix to be supplied if there is a complete stratification.
         """
         validate_stratify(
             self,
@@ -119,11 +109,14 @@ class StratifiedModel(EpiModel):
         )
         self.stratifications.append(strat)
 
-        # Stratify the mixing matrix if a new one is provided.
+        # Add this stratification's mixing matrix if a new one is provided.
         if mixing_matrix is not None:
             assert not strat.is_strain(), "Strains cannot have a mixing matrix."
-            # Use Kronecker product of old and new mixing matrices.
-            self._static_mixing_matrix = np.kron(self._static_mixing_matrix, mixing_matrix)
+            # Only allow mixing matrix to be supplied if there is a complete stratification.
+            assert (
+                compartments_to_stratify == self.original_compartment_names
+            ), "Mixing matrices only allowed for full stratification."
+            self.mixing_matrices.append(mixing_matrix)
             self.mixing_categories = strat.update_mixing_categories(self.mixing_categories)
 
         # Prepare infectiousness levels for force of infection adjustments.
@@ -159,6 +152,19 @@ class StratifiedModel(EpiModel):
         compartment_idx_lookup = {name: idx for idx, name in enumerate(self.compartment_names)}
         for flow in self.flows:
             flow.update_compartment_indices(compartment_idx_lookup)
+
+    def get_mixing_matrix(self, time: float) -> np.ndarray:
+        """
+        Returns the final mixing matrix for a given time.
+        """
+        mixing_matrix = self.DEFAULT_MIXING_MATRIX
+        for mm_func in self.mixing_matrices:
+            # Assume each mixing matrix is either an np.ndarray or a function of time that returns one.
+            mm = mm_func(time) if callable(mm_func) else mm_func
+            # Get Kronecker product of old and new mixing matrices.
+            mixing_matrix = np.kron(mixing_matrix, mm)
+
+        return mixing_matrix
 
     def prepare_force_of_infection(self):
         """
@@ -248,7 +254,7 @@ class StratifiedModel(EpiModel):
 
                 compartment_infectiousness[idx] = value
 
-        if not strain == self.DEFAULT_DISEASE_STRAIN:
+        if strain != self.DEFAULT_DISEASE_STRAIN:
             # Filter out all values that are not in the given strain.
             strain_mask = np.zeros(self.compartment_values.shape)
             for idx, compartment in enumerate(self.compartment_names):
@@ -269,10 +275,7 @@ class StratifiedModel(EpiModel):
         """
         Finds the effective infectious population.
         """
-        if self._dynamic_mixing_matrix:
-            mixing_matrix = self._dynamic_mixing_matrix(time)
-        else:
-            mixing_matrix = self._static_mixing_matrix
+        mixing_matrix = self.get_mixing_matrix(time)
 
         # Calculate total number of people per category.
         # A vector with size (num_cats x 1).

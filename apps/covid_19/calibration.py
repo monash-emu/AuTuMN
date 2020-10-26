@@ -427,6 +427,8 @@ def get_targets_and_priors_for_opti(country, likelihood_type="negative_binomial"
     ]
 
     par_priors = add_dispersion_param_prior_for_gaussian(par_priors, target_outputs)
+    for output_name in ["notifications", "infection_deaths", hospital_targets[0]]:
+        par_priors = add_standard_dispersion_parameter(par_priors, target_outputs, output_name)
     target_outputs = remove_early_points_to_prevent_crash(target_outputs, par_priors)
 
     return target_outputs, par_priors

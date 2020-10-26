@@ -20,13 +20,15 @@ def get_prior_distributions_for_opti():
         {"param_name": "time.start", "distribution": "uniform", "distri_params": [0.0, 40.0],},
         {
             "param_name": "sojourn.compartment_periods_calculated.exposed.total_period",
-            "distribution": "uniform",
-            "distri_params": [3, 7],
+            "distribution": "trunc_normal",
+            "distri_params": [5.5, 0.97],
+            "trunc_range": [1.0, np.inf],
         },
         {
             "param_name": "sojourn.compartment_periods_calculated.active.total_period",
-            "distribution": "uniform",
-            "distri_params": [4, 10],
+            "distribution": "trunc_normal",
+            "distri_params": [6.5, 0.77],
+            "trunc_range": [1.0, np.inf],
         },
         {
             "param_name": "infection_fatality.multiplier",
@@ -61,13 +63,15 @@ def get_prior_distributions_for_opti():
         # vary hospital durations
         {
             "param_name": "sojourn.compartment_periods.hospital_late",
-            "distribution": "uniform",
-            "distri_params": [17.7, 20.4],
+            "distribution": "trunc_normal",
+            "distri_params": [18.4, 4.0],
+            "trunc_range": [3.0, np.inf],
         },
         {
             "param_name": "sojourn.compartment_periods.icu_late",
-            "distribution": "uniform",
-            "distri_params": [9.0, 13.0],
+            "distribution": "trunc_normal",
+            "distri_params": [10.8, 4.0],
+            "trunc_range": [3.0, np.inf],
         },
         # vary symptomatic and hospitalised proportions
         {

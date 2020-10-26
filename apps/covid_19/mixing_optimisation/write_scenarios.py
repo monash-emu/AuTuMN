@@ -97,6 +97,8 @@ Automatically write yml files for the different scenarios and the different regi
 
 
 def drop_all_yml_scenario_files(all_sc_params):
+    yaml.Dumper.ignore_aliases = lambda *args : True
+
     for country, country_sc_params in all_sc_params.items():
         for sc_idx, sc_params in country_sc_params.items():
             country_folder_name = country.replace("-", "_")

@@ -2,28 +2,28 @@ import pandas as pd
 import os
 import yaml
 from apps.covid_19.mixing_optimisation.mixing_opti import (
-    MODES, CONFIGS, OBJECTIVES, N_DECISION_VARS, build_params_for_phases_2_and_3
+    MODES, DURATIONS, OBJECTIVES, N_DECISION_VARS, build_params_for_phases_2_and_3
 )
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
 from autumn.constants import BASE_PATH
 
 
 """
-Define scenarios for each combination of mode, config and objective, plus the unmitigated scenario (9 scenarios)
+Define scenarios for each combination of mode, duration and objective, plus the unmitigated scenario (9 scenarios)
 """
 SCENARIO_MAPPING = {
 }
 _sc_idx = 1
 for _mode in MODES:
-    for _config in CONFIGS:
+    for _duration in DURATIONS:
         for _objective in OBJECTIVES:
             SCENARIO_MAPPING[_sc_idx] = {
                 'mode': _mode,
-                'config': _config,
+                'duration': _duration,
                 'objective': _objective,
             }
             _sc_idx += 1
-SCENARIO_MAPPING[_sc_idx] = {'mode': None, 'config': None, 'objective': None}  # extra scenario for unmitigated
+SCENARIO_MAPPING[_sc_idx] = {'mode': None, 'duration': None, 'objective': None}  # extra scenario for unmitigated
 
 """
 Reading optimisation outputs from csv file
@@ -38,10 +38,10 @@ def read_opti_outputs(output_filename):
     return df
 
 
-def read_decision_vars(opti_outputs_df, country, mode, config, objective):
+def read_decision_vars(opti_outputs_df, country, mode, duration, objective):
     mask = (opti_outputs_df['country'] == country) &\
            (opti_outputs_df['mode'] == mode) &\
-           (opti_outputs_df['config'] == int(config)) &\
+           (opti_outputs_df['duration'] == duration) &\
            (opti_outputs_df['objective'] == objective)
     df = opti_outputs_df[mask]
 
@@ -59,13 +59,13 @@ Create dictionaries to define the optimised scenarios
 def build_optimised_scenario_dictionary(country, sc_idx, decision_vars, final_mixing=1.):
     # read settings associated with scenario sc_idx
     if sc_idx == max(list(SCENARIO_MAPPING.keys())):  # this is the unmitigated scenario
-        config = CONFIGS[0]  # does not matter but needs to be defined
+        duration = DURATIONS[0]  # does not matter but needs to be defined
         mode = MODES[0]
     else:  # this is an optimised scenario
-        config = SCENARIO_MAPPING[sc_idx]['config']
+        duration = SCENARIO_MAPPING[sc_idx]['duration']
         mode = SCENARIO_MAPPING[sc_idx]['mode']
 
-    sc_params = build_params_for_phases_2_and_3(decision_vars, config, mode, final_mixing)
+    sc_params = build_params_for_phases_2_and_3(decision_vars, duration, mode, final_mixing)
     country_folder_name = country.replace("-", "_")
     sc_params['parent'] = f"apps/covid_19/regions/{country_folder_name}/params/default.yml"
     del sc_params['importation']  # Importation was used for testing during optimisation. We must remove it.
@@ -84,7 +84,7 @@ def build_all_scenario_dicts_from_outputs(output_filename='dummy_vars_for_test.c
                 decision_vars = [1.] * N_DECISION_VARS[MODES[0]]
             else:  # this is an optimised scenario
                 decision_vars = read_decision_vars(
-                    opti_outputs_df, country, settings['mode'], settings['config'], settings['objective']
+                    opti_outputs_df, country, settings['mode'], settings['duration'], settings['objective']
                 )
             if decision_vars is not None:
                 all_sc_params[country][sc_idx] = build_optimised_scenario_dictionary(country, sc_idx, decision_vars)

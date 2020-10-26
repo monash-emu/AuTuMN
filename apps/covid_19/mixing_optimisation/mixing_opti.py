@@ -2,8 +2,6 @@ import os
 import copy
 from typing import List
 
-import yaml
-
 from summer.model import StratifiedModel
 from autumn.constants import Region
 from autumn.tool_kit.scenarios import Scenario
@@ -11,13 +9,13 @@ from autumn.tool_kit.params import update_params, merge_dicts
 from datetime import date, timedelta
 
 from apps import covid_19
-from apps.covid_19.mixing_optimisation.constants import PHASE_2_START_TIME, DURATION_PHASES_2_AND_3
-
+from apps.covid_19.mixing_optimisation.constants import (
+    PHASE_2_START_TIME, DURATION_PHASES_2_AND_3, PHASE_2_DURATION,
+    MICRODISTANCING_OPTI_PARAMS, MIXING_FACTOR_BOUNDS
+)
 
 REF_DATE = date(2019, 12, 31)
 FILE_DIR = os.path.dirname(os.path.abspath(__file__))
-OPTI_PARAMS_PATH = os.path.join(FILE_DIR, "opti_params.yml")
-
 
 AGE_MODE = "by_age"
 LOCATION_MODE = "by_location"
@@ -27,7 +25,9 @@ OBJECTIVE_DEATHS = "deaths"
 OBJECTIVE_YOLL = "yoll"
 OBJECTIVES = [OBJECTIVE_DEATHS, OBJECTIVE_YOLL]
 
-CONFIGS = [2, 3]
+DURATION_SIX_MONTHS = 'six_months'
+DURATION_TWELVE_MONTHS = 'twelve_months'
+DURATIONS = [DURATION_SIX_MONTHS, DURATION_TWELVE_MONTHS]
 
 N_DECISION_VARS = {
     AGE_MODE: 16,
@@ -54,13 +54,9 @@ AGE_GROUPS = [
     "75",
 ]
 
-with open(OPTI_PARAMS_PATH, "r") as yaml_file:
-    opti_params = yaml.safe_load(yaml_file)
-
-
-phase_2_end_times = [
-    PHASE_2_START_TIME + config["phase_two_duration"] for config in opti_params["configurations"]
-]
+phase_2_end_times = {}
+for _duration in DURATIONS:
+    phase_2_end_times[_duration] = PHASE_2_START_TIME + PHASE_2_DURATION[_duration]
 
 
 def objective_function(
@@ -68,7 +64,7 @@ def objective_function(
     root_model: StratifiedModel,
     mode: str = AGE_MODE,
     country: str = Region.UNITED_KINGDOM,
-    config: int = 0,
+    duration: str = DURATION_SIX_MONTHS,
     calibrated_params: dict = {},
 ):
     """
@@ -78,45 +74,38 @@ def objective_function(
     :param root_model: integrated model supposed to model the past epidemic
     :param mode: either "by_age" or "by_location"
     :param country: the country name
-    :param config: the id of the configuration being considered
+    :param duration: string defining the duration of the optimised phase
     :param calibrated_params: a dictionary containing a set of calibrated parameters
     """
+    assert all([MIXING_FACTOR_BOUNDS[0] <= d <= MIXING_FACTOR_BOUNDS[1] for d in decision_variables])
+
     app_region = covid_19.app.get_region(country)
     build_model = app_region.build_model
     params = copy.deepcopy(app_region.params)
 
     # Rebuild the default parameters
-    params["default"] = merge_dicts(opti_params["default"], params["default"])
     params["default"] = update_params(params["default"], calibrated_params)
 
     # Create and run scenario 1
-    sc_1_params_update = build_params_for_phases_2_and_3(decision_variables, config, mode)
+    sc_1_params_update = build_params_for_phases_2_and_3(decision_variables, duration, mode)
     sc_1_params = merge_dicts(sc_1_params_update, params["default"])
     params["scenarios"][1] = sc_1_params
     scenario_1 = Scenario(build_model, idx=1, params=params)
     scenario_1.run(base_model=root_model)
     sc_1_model = scenario_1.model
-    models = [root_model, sc_1_model]
 
     # Perform diagnostics.
     phase_2_start_idx = list(sc_1_model.times).index(PHASE_2_START_TIME)
-    phase_2_end_idx = list(sc_1_model.times).index(phase_2_end_times[config])
+    phase_2_end_idx = list(sc_1_model.times).index(phase_2_end_times[duration])
 
     # Determine number of deaths and years of life lost during Phase 2 and 3.
     total_nb_deaths = sum(sc_1_model.derived_outputs["infection_deaths"][phase_2_start_idx:])
     years_of_life_lost = sum(sc_1_model.derived_outputs["years_of_life_lost"][phase_2_start_idx:])
 
-    # Determine the proportion immune at end of Phase 2.
-    comp_names = sc_1_model.compartment_names
-    recovered_indices = [i for i in range(len(comp_names)) if "recovered" in str(comp_names[i])]
-    nb_reco = sum([sc_1_model.outputs[phase_2_end_idx, i] for i in recovered_indices])
-    total_pop = sum([sc_1_model.outputs[phase_2_end_idx, i] for i in range(len(comp_names))])
-    prop_immune = nb_reco / total_pop
-
     # Has herd immunity been reached?
     herd_immunity = has_immunity_been_reached(sc_1_model, phase_2_end_idx)
 
-    return herd_immunity, total_nb_deaths, years_of_life_lost, prop_immune, models
+    return herd_immunity, total_nb_deaths, years_of_life_lost
 
 
 def has_immunity_been_reached(model: StratifiedModel, phase_2_end_index: int) -> bool:
@@ -140,16 +129,11 @@ def run_root_model(region: str, calibrated_params: dict = {}):
     app_region = covid_19.app.get_region(region)
     params = copy.deepcopy(app_region.params)
 
-    # Update params with optimisation default config.
-    params["default"] = merge_dicts(opti_params["default"], params["default"])
-
     # Update params with calibrated parameters
     params["default"] = update_params(params["default"], calibrated_params)
 
-    # Set start/end time.
+    # Set end time.
     params["default"]["time"]["end"] = PHASE_2_START_TIME
-    for scenario in params["scenarios"].values():
-        scenario["time"]["start"] = PHASE_2_START_TIME - 1
 
     base_scenario = Scenario(app_region.build_model, idx=0, params=params)
     base_scenario.run()
@@ -158,7 +142,7 @@ def run_root_model(region: str, calibrated_params: dict = {}):
 
 def build_params_for_phases_2_and_3(
     decision_variables: List[float],
-    config: int = 0,
+    duration: str = DURATION_SIX_MONTHS,
     mode: str = AGE_MODE,
     final_mixing: float = 1.0,
 ):
@@ -174,7 +158,7 @@ def build_params_for_phases_2_and_3(
     }
 
     # Convert time integers to dates.
-    phase_2_end_days = phase_2_end_times[config]
+    phase_2_end_days = phase_2_end_times[duration]
     phase_2_first_day = REF_DATE + timedelta(days=PHASE_2_START_TIME)
     phase_1_end_date = phase_2_first_day + timedelta(days=-1)
     phase_2_end_date = REF_DATE + timedelta(days=phase_2_end_days)
@@ -227,10 +211,8 @@ def build_params_for_phases_2_and_3(
     else:
         raise ValueError("The requested mode is not supported")
 
-    # Add optmisized microdistancing params to the scenario.
-    microdistancing_opti_params = opti_params["configurations"][config].get("microdistancing")
-    if microdistancing_opti_params:
-        scenario_params["mobility"]["microdistancing"] = microdistancing_opti_params
+    # Add microdistancing params to the scenario.
+    scenario_params["mobility"]["microdistancing"] = MICRODISTANCING_OPTI_PARAMS
 
     # Seed a new wave of infections with some importations.
     # This tests whether herd immunity has actually been reached.

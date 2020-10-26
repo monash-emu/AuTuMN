@@ -30,6 +30,32 @@ COUNTRY_TITLES = {
 }
 
 
-#  Definitions if the three phases
-PHASE_2_START_TIME = 214
+#  Definitions of the three phases
+PHASE_2_START_TIME = 275  # start on 1 October
 DURATION_PHASES_2_AND_3 = 365 + 90
+
+PHASE_2_DURATION = {
+    'six_months': 183,
+    'twelve_months': 365,
+}
+
+# Mixing factor bounds
+MIXING_FACTOR_BOUNDS = [.1, 1.]
+
+# Microdistancing
+MICRODISTANCING_OPTI_PARAMS = {
+    # apply mild microdistancing
+    'behaviour': {
+        'parameters': {
+            'sigma': 0.10,
+            'upper_asymptote': 0.10,
+        }
+    },
+    # remove the behaviour adjuster's effect
+    'behaviour_adjuster': {
+        'parameters': {
+            'sigma': 1.0,
+            'upper_asymptote': 1.0
+        }
+    }
+}

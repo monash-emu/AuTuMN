@@ -20,15 +20,15 @@ for _mode in MODES:
                 'objective': _objective,
             }
             _sc_idx += 1
-SCENARIO_MAPPING[_sc_idx + 1] = {'mode': None, 'config': None, 'objective': None}  # extra scenario for unmitigated
+SCENARIO_MAPPING[_sc_idx] = {'mode': None, 'config': None, 'objective': None}  # extra scenario for unmitigated
 
 """
 Reading optimisation outputs from csv file
 """
 
 
-def read_opti_outputs():
-    df = pd.read_csv("opti_outputs.csv")
+def read_opti_outputs(output_filename):
+    df = pd.read_csv(output_filename)
     return df
 
 
@@ -39,16 +39,18 @@ def read_decision_vars(opti_outputs_df, country, mode, config, objective):
            (opti_outputs_df['objective'] == objective)
     df = opti_outputs_df[mask]
 
-    return [float(df[f"best_x{i}"]) for i in range(N_DECISION_VARS[mode])]
+    if df.empty:
+        return None
+    else:
+        return [float(df[f"best_x{i}"]) for i in range(N_DECISION_VARS[mode])]
 
 
 """
-Automatically write yml files for scenarios
+Create dictionaries to define the optimised scenarios
 """
 
 
-def drop_yml_scenario_file(country, sc_idx, decision_vars, final_mixing=1.):
-    country_folder_name = country.replace("-", "_")
+def build_optimised_scenario_dictionary(country, sc_idx, decision_vars, final_mixing=1.):
     # read settings associated with scenario sc_idx
     if sc_idx == max(list(SCENARIO_MAPPING.keys())):  # this is the unmitigated scenario
         config = CONFIGS[0]  # does not matter but needs to be defined
@@ -58,19 +60,19 @@ def drop_yml_scenario_file(country, sc_idx, decision_vars, final_mixing=1.):
         mode = SCENARIO_MAPPING[sc_idx]['mode']
 
     sc_params = build_params_for_phases_2_and_3(decision_vars, config, mode, final_mixing)
+    country_folder_name = country.replace("-", "_")
     sc_params['parent'] = f"apps/covid_19/regions/{country_folder_name}/params/default.yml"
-
     del sc_params['importation']  # Importation was used for testing during optimisation. We must remove it.
 
-    param_file_path = f"../regions/{country_folder_name}/params/scenario-{sc_idx}.yml"
-    with open(param_file_path, "w") as f:
-        yaml.dump(sc_params, f)
+    return sc_params
 
 
-def write_all_scenario_yml_files_from_outputs():
-    opti_outputs_df = read_opti_outputs()
+def build_all_scenario_dicts_from_outputs(output_filename='opti_outputs.csv'):
+    opti_outputs_df = read_opti_outputs(output_filename)
 
+    all_sc_params = {}
     for country in OPTI_REGIONS:
+        all_sc_params[country] = {}
         for sc_idx, settings in SCENARIO_MAPPING.items():
             if sc_idx == max(list(SCENARIO_MAPPING.keys())):  # this is the unmitigated scenario
                 decision_vars = [1.] * N_DECISION_VARS[MODES[0]]
@@ -78,11 +80,29 @@ def write_all_scenario_yml_files_from_outputs():
                 decision_vars = read_decision_vars(
                     opti_outputs_df, country, settings['mode'], settings['config'], settings['objective']
                 )
-            drop_yml_scenario_file(country, sc_idx, decision_vars)
+            if decision_vars is not None:
+                all_sc_params[country][sc_idx] = build_optimised_scenario_dictionary(country, sc_idx, decision_vars)
+    return all_sc_params
+
+
+"""
+Automatically write yml files for the different scenarios and the different regions
+"""
+
+
+def drop_all_yml_scenario_files(all_sc_params):
+    for country, country_sc_params in all_sc_params.items():
+        for sc_idx, sc_params in country_sc_params.items():
+            country_folder_name = country.replace("-", "_")
+            param_file_path = f"../regions/{country_folder_name}/params/scenario-{sc_idx}.yml"
+            with open(param_file_path, "w") as f:
+                yaml.dump(sc_params, f)
 
 
 if __name__ == "__main__":
-    drop_yml_scenario_file('france', 1, [1.] * 16)
+    all_sc_params = build_all_scenario_dicts_from_outputs()
+    drop_all_yml_scenario_files(all_sc_params)
+
     # FIXME 1: need to ask Matt how to test this type of function when it is expected to create new files
     # FIXME 2: need to fix the issue with the format of the dumped times: "- *id001"
     # FIXME 3: this code will need to run for different immunity assumptions

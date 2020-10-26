@@ -9,6 +9,6 @@ mobility:
     work:
       append: true
       times:
-        - 2020-10-26
+        - 2020-10-27
       values:
         - ["close_gap_to_1", 0.5]

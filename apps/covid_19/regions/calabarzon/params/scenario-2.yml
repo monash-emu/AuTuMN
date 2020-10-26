@@ -9,6 +9,8 @@ mobility:
     behaviour:
       parameters:
         times:
-          - 288
+          - 300
+          - 315
         values:
+          - 1.
           - 0.3

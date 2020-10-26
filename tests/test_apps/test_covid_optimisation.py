@@ -7,8 +7,8 @@ import numpy as np
 from autumn.constants import Region
 from summer.model import StratifiedModel
 from apps.covid_19.mixing_optimisation import mixing_opti as opti
-from apps.covid_19.mixing_optimisation.constants import PHASE_2_START_TIME
-
+from apps.covid_19.mixing_optimisation.constants import PHASE_2_START_TIME, OPTI_REGIONS
+from apps.covid_19.mixing_optimisation import write_scenarios
 
 @pytest.mark.local_only
 @pytest.mark.parametrize("region", Region.MIXING_OPTI_REGIONS)
@@ -248,3 +248,28 @@ def test_build_params_for_phases_2_and_3__with_age_mode():
             },
         },
     }
+
+
+"""
+Test write_scenarios module
+"""
+
+
+@pytest.mark.mixing_optimisation
+def test_read_optimised_variables():
+    test_file = "dummy_vars_for_test.csv"
+    df = write_scenarios.read_opti_outputs(test_file)
+    decision_vars = write_scenarios.read_decision_vars(df, 'france', 'by_age', '2', 'deaths')
+    assert decision_vars == [.99] * 16
+
+
+@pytest.mark.mixing_optimisation
+def test_build_all_scenarios():
+    test_file = "dummy_vars_for_test.csv"
+    all_sc_params = write_scenarios.build_all_scenario_dicts_from_outputs(test_file)
+
+    assert set(list(all_sc_params.keys())) == set(OPTI_REGIONS)
+
+    assert list(all_sc_params['france'].keys()) == [1, 9]
+
+    assert list(all_sc_params['france'][1].keys()) == ['time', 'mobility', 'parent']

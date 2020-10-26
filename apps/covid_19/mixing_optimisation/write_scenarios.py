@@ -1,9 +1,12 @@
 import pandas as pd
+import os
 import yaml
 from apps.covid_19.mixing_optimisation.mixing_opti import (
     MODES, CONFIGS, OBJECTIVES, N_DECISION_VARS, build_params_for_phases_2_and_3
 )
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
+from autumn.constants import BASE_PATH
+
 
 """
 Define scenarios for each combination of mode, config and objective, plus the unmitigated scenario (9 scenarios)
@@ -28,14 +31,17 @@ Reading optimisation outputs from csv file
 
 
 def read_opti_outputs(output_filename):
-    df = pd.read_csv(f"optimised_variables/{output_filename}")
+    file_path = os.path.join(
+        BASE_PATH, "apps", "covid_19", "mixing_optimisation", "optimised_variables", output_filename
+    )
+    df = pd.read_csv(file_path, sep=',')
     return df
 
 
 def read_decision_vars(opti_outputs_df, country, mode, config, objective):
     mask = (opti_outputs_df['country'] == country) &\
            (opti_outputs_df['mode'] == mode) &\
-           (opti_outputs_df['config'] == config) &\
+           (opti_outputs_df['config'] == int(config)) &\
            (opti_outputs_df['objective'] == objective)
     df = opti_outputs_df[mask]
 
@@ -103,6 +109,5 @@ if __name__ == "__main__":
     all_sc_params = build_all_scenario_dicts_from_outputs()
     drop_all_yml_scenario_files(all_sc_params)
 
-    # FIXME 1: need to ask Matt how to test this type of function when it is expected to create new files
     # FIXME 2: need to fix the issue with the format of the dumped times: "- *id001"
     # FIXME 3: this code will need to run for different immunity assumptions

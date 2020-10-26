@@ -18,17 +18,11 @@ If not, install project requirements
 Run from a command line shell (with env active) using
 
     streamlit run plots.py
-    streamlit run plots.py mcmc
-    streamlit run plots.py scenario
-    streamlit run plots.py dhhs
-    streamlit run plots.py ensemble
-
 
 Website: https://www.streamlit.io/
 Docs: https://docs.streamlit.io/
 """
-
-import sys
+import streamlit as st
 
 from dash.dashboards.model.run import run_dashboard as run_model_dashboard
 from dash.dashboards.calibration.run import run_dashboard as run_calibration_dashboard
@@ -37,15 +31,32 @@ from dash.dashboards.dhhs import run_dashboard as run_dhhs_dashboard
 from dash.dashboards.ensemble import run_dashboard as run_ensemble_dashboard
 from dash.dashboards.multicountry import run_dashboard as run_multicountry_dashboard
 
-if len(sys.argv) > 1 and sys.argv[1] == "mcmc":
-    run_calibration_dashboard()
-elif len(sys.argv) > 1 and sys.argv[1] == "scenario":
-    run_scenario_dashboard()
-elif len(sys.argv) > 1 and sys.argv[1] == "dhhs":
-    run_dhhs_dashboard()
-elif len(sys.argv) > 1 and sys.argv[1] == "ensemble":
-    run_ensemble_dashboard()
-elif len(sys.argv) > 1 and sys.argv[1] == "multicountry":
-    run_multicountry_dashboard()
+DASHBOARDS = {
+    "Home": None,
+    "Model internals": run_model_dashboard,
+    "Calibration results": run_calibration_dashboard,
+    "Model results": run_scenario_dashboard,
+    "Multi-country": run_multicountry_dashboard,
+    "DHHS results": run_dhhs_dashboard,
+    "Ensemble results": run_ensemble_dashboard,
+}
+
+
+dashboards_options = list(DASHBOARDS.keys())
+dashboard_key = st.sidebar.selectbox("Select a dashboard", dashboards_options)
+dashboard_func = DASHBOARDS[dashboard_key]
+if dashboard_func:
+    dashboard_func()
 else:
-    run_model_dashboard()
+    st.title("Autumn dashboards")
+    st.write("Select a dashboard from the sidebar. Your options are:")
+    st.markdown(
+        """
+    - **Model internals**: Inspect the values inside a model
+    - **Calibration results**: Inspect the results of a calibration
+    - **Model results**: Inspect the model outputs
+    - **Multi-country**: Multi-country plots
+    - **DHHS results**: Inspect results which will be sent to DHHS
+    - **Ensemble results**: Inspect results which will be sent to ensemble forecasting
+    """
+    )

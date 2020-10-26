@@ -10,8 +10,6 @@ import json
 import types
 from datetime import date
 
-from summer.model import find_name_components
-
 
 def get_data_hash(*args):
     """
@@ -152,31 +150,6 @@ def add_w_to_param_names(parameter_dict):
     return {str(age_group) + "W": value for age_group, value in parameter_dict.items()}
 
 
-def find_stratum_index_from_string(compartment, stratification, remove_stratification_name=True):
-    """
-    finds the stratum which the compartment (or parameter) name falls in when provided with the compartment name and the
-        name of the stratification of interest
-    for example, if the compartment name was infectiousXhiv_positiveXdiabetes_none and the stratification of interest
-        provided through the stratification argument was hiv, then
-    :param compartment: str
-        name of the compartment or parameter to be interrogated
-    :param stratification: str
-        the stratification of interest
-    :param remove_stratification_name: bool
-        whether to remove the stratification name and its trailing _ from the string to return
-    :return: str
-        the name of the stratum within which the compartment falls
-    """
-    stratum_name = [
-        name
-        for n_name, name in enumerate(find_name_components(compartment))
-        if stratification in name
-    ][0]
-    return (
-        stratum_name[stratum_name.find("_") + 1 :] if remove_stratification_name else stratum_name
-    )
-
-
 def find_first_list_element_above(list, value):
     """
     Simple method to return the index of the first element of a list that is greater than a specified value.
@@ -291,8 +264,9 @@ def element_wise_list_division(numerator, denominator, must_be_prop=False):
     Simple function to find the quotients of two lists.
     """
     if must_be_prop:
-        assert all([num <= 1.01 * den for num, den in zip(numerator, denominator)]), \
-            f"Numerators: {numerator} \n Denominators: {denominator}"
+        assert all(
+            [num <= 1.01 * den for num, den in zip(numerator, denominator)]
+        ), f"Numerators: {numerator} \n Denominators: {denominator}"
     return [num / den for num, den in zip(numerator, denominator)]
 
 

@@ -2,7 +2,6 @@
 FIXME: These all need tests.
 """
 from summer.model import StratifiedModel
-from summer.model.utils.string import find_name_components
 from apps.covid_19.constants import Compartment as CompartmentType, ClinicalStratum
 from typing import List, Dict
 from datetime import date
@@ -30,7 +29,8 @@ HOSPITAL_STRATUM = [
 
 
 def get_calc_notifications_covid(
-    include_importation, prop_detected_func,
+    include_importation,
+    prop_detected_func,
 ):
     def calculate_notifications_covid(
         time_idx: int,
@@ -68,7 +68,9 @@ def calculate_new_hospital_admissions_covid(
 ):
     hosp_admissions = 0.0
     for output_name, output_values in derived_outputs.items():
-        if "progressX" in output_name and any([stratum in output_name for stratum in HOSPITAL_STRATUM]):
+        if "progressX" in output_name and any(
+            [stratum in output_name for stratum in HOSPITAL_STRATUM]
+        ):
             hosp_admissions += output_values[time_idx]
 
     return hosp_admissions
@@ -96,7 +98,10 @@ def get_calculate_hospital_occupancy(icu_early_period, hospital_early_period):
         derived_outputs: Dict[str, np.ndarray],
     ):
         hospital_prev = 0.0
-        period_icu_patients_in_hospital = max(icu_early_period - hospital_early_period, 0.0,)
+        period_icu_patients_in_hospital = max(
+            icu_early_period - hospital_early_period,
+            0.0,
+        )
         proportion_icu_patients_in_hospital = period_icu_patients_in_hospital / icu_early_period
         for i, comp in enumerate(model.compartment_names):
             is_late_active = comp.has_name(CompartmentType.LATE_ACTIVE)
@@ -191,11 +196,10 @@ def get_notifications_at_sympt_onset(
 ):
     notifications_sympt_onset = 0.0
     for output_name, output_values in derived_outputs.items():
-        parts = find_name_components(output_name)
-        if "incidence" in parts and (
-            f"clinical_{ClinicalStratum.SYMPT_ISOLATE}" in parts
-            or f"clinical_{ClinicalStratum.HOSPITAL_NON_ICU}" in parts
-            or f"clinical_{ClinicalStratum.ICU}" in parts
+        if "incidence" in output_name and (
+            f"clinical_{ClinicalStratum.SYMPT_ISOLATE}" in output_name
+            or f"clinical_{ClinicalStratum.HOSPITAL_NON_ICU}" in output_name
+            or f"clinical_{ClinicalStratum.ICU}" in output_name
         ):
             notifications_sympt_onset += output_values[time_idx]
     return notifications_sympt_onset
@@ -272,7 +276,10 @@ def _get_transition_flow_connections(
 ):
     connections = {}
     connections[output_name] = TransitionFlowOutput(
-        source=source, dest=dest, source_strata={}, dest_strata={},
+        source=source,
+        dest=dest,
+        source_strata={},
+        dest_strata={},
     )
     for comp in comps:
         if not comp.has_name(dest):
@@ -286,7 +293,10 @@ def _get_transition_flow_connections(
                 k: v for k, v in comp._strat_values.items() if f"{k}_{v}" in strata_used
             }
             connections[output_key] = TransitionFlowOutput(
-                source=source, dest=dest, source_strata={}, dest_strata=strat_vals_used,
+                source=source,
+                dest=dest,
+                source_strata={},
+                dest_strata=strat_vals_used,
             )
 
     return connections
@@ -306,7 +316,8 @@ def get_infection_death_connections(compartments: List[Compartment]):
 
         output_key = "X".join(["infection_deaths", *comp.get_strata()])
         connections[output_key] = InfectionDeathFlowOutput(
-            source=CompartmentType.LATE_ACTIVE, source_strata=comp._strat_values,
+            source=CompartmentType.LATE_ACTIVE,
+            source_strata=comp._strat_values,
         )
 
     return connections

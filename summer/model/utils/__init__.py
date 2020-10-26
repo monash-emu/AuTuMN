@@ -12,21 +12,11 @@ from .data_structures import (
     normalise_dict,
     order_dict_by_keys,
 )
-from .flowchart import create_flowchart
 from .stratification_funcs import (
     create_additive_function,
     create_function_of_function,
     create_multiplicative_function,
     create_sloping_step_function,
     create_time_variant_multiplicative_function,
-)
-from .string import (
-    create_stratified_name,
-    create_stratum_name,
-    extract_reversed_x_positions,
-    extract_x_positions,
-    find_name_components,
-    find_stem,
-    find_stratum_index_from_string,
 )
 from .validation import validate_stratify, validate_model

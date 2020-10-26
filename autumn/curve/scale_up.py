@@ -40,6 +40,7 @@ def make_sigmoidal_curve(y_low=0, y_high=1.0, x_start=0, x_inflect=0.5, multipli
         # check for large values that will blow out exp
         if arg > 10.0:
             return y_low
+
         return amplitude / (1.0 + exp(arg)) + y_low
 
     return curve
@@ -394,10 +395,6 @@ def scale_up_function(
             [] for j in range(len(x))[0:-1]
         ]  # Initialises an empty list to store functions
         for i in range(len(x))[0:-1]:
-            y_high = y[i + 1]
-            y_low = y[i]
-            x_start = x[i]
-            x_inflect = 0.5 * (x[i] + x[i + 1])
             func = make_sigmoidal_curve(
                 y_high=y[i + 1],
                 y_low=y[i],
@@ -407,10 +404,13 @@ def scale_up_function(
             )
             functions[i] = func
 
+        x_min = x.min()
+        x_max = x.max()
+
         def curve(t):
-            if t <= x.min():  # t is before the range defined by x -> takes the initial value
+            if t <= x_min:  # t is before the range defined by x -> takes the initial value
                 return y[0]
-            elif t >= x.max():  # t is after the range defined by x -> takes the last value
+            elif t >= x_max:  # t is after the range defined by x -> takes the last value
                 if intervention_end is not None:
                     if t >= t_intervention_start:
                         return curve_intervention(t)

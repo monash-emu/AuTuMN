@@ -618,7 +618,7 @@ def test_strat_get_infection_multipier__with_double_strat_and_both_strats_mixing
             [5 * 17, 5 * 19, 7 * 17, 7 * 19],
         ]
     )
-    assert_array_equal(model._static_mixing_matrix, expected_mixing)
+    assert_array_equal(model.get_mixing_matrix(0), expected_mixing)
     assert model.mixing_categories == [
         {"agegroup": "child", "location": "work"},
         {"agegroup": "child", "location": "home"},

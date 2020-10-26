@@ -53,7 +53,10 @@ def get_stratify_schema(model, stratification_name, strata_names, compartments_t
     strata_names_strs = [str(s) for s in strata_names]
     is_full_stratified = compartments_to_stratify == model.original_compartment_names
     return {
-        "stratification_name": {"type": "string", "forbidden": prev_strat_names,},
+        "stratification_name": {
+            "type": "string",
+            "forbidden": prev_strat_names,
+        },
         "strata_request": {
             "type": "list",
             "check_with": check_strata_request(
@@ -150,11 +153,20 @@ def check_mixing_matrix(strata_names: List[str], is_full_stratified: bool):
     def _check(field, value, error):
         if value is None:
             return  # This is fine
+
         if not is_full_stratified:
             error(field, "Mixing matrix can only be applied to full stratifications.")
-        elif not type(value) is np.ndarray:
+
+        if callable(value):
+            # Dynamic mixing matrix
+            mm = value(0)
+        else:
+            # Static mixing matrix
+            mm = value
+
+        if not type(mm) is np.ndarray:
             error(field, "Mixing matrix must be Numpy array (or None)")
-        elif value.shape != (num_strata, num_strata):
+        elif mm.shape != (num_strata, num_strata):
             error(field, f"Mixing matrix must have shape ({num_strata}, {num_strata})")
 
     return _check
@@ -258,7 +270,8 @@ def check_initial_conditions(starting_population, compartment_names):
             is_pop_too_small = sum(value.values()) > starting_population
             if is_pop_too_small:
                 error(
-                    field, "Initial condition population exceeds total starting population.",
+                    field,
+                    "Initial condition population exceeds total starting population.",
                 )
 
             if not all([c in compartment_names for c in value.keys()]):

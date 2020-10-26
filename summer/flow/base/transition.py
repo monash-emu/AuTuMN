@@ -41,16 +41,28 @@ class BaseTransitionFlow(BaseFlow):
             else:
                 new_dest = self.dest
 
-            # Find flow adjustments
-            # Try find an adjustment for the source compartment.
+            # Find flow adjustments to apply to the new stratified flows.
+            # First, we try to find an adjustment for the source compartment.
+            # This is for when the source has the required stratifications and the destination does not.
+            # For example - people recovering from I -> R with multiple I strata, all with different recovery rates.
             adjustment = strat.get_flow_adjustment(self.source, stratum, self.param_name)
             if not adjustment:
                 # Otherwise, try find an adjustment for the destination compartment.
+                # This is for when the destination has the required stratifications and the source does not.
+                # For example - people recovering from I -> R with multiple R strata, with different recovery proportions.
                 adjustment = strat.get_flow_adjustment(self.dest, stratum, self.param_name)
 
-            if not adjustment and (is_dest_strat and not is_source_strat):
+            # Should we apply an adjustment to conserve the number of people?
+            should_apply_conservation_split = (
+                (not strat.is_strain())
+                and (not adjustment)
+                and (is_dest_strat and not is_source_strat)
+            )
+            if should_apply_conservation_split:
                 # If the source is stratified but not the destination, then we need to account
                 # for the resulting fan-out of flows by reducing the flow rate.
+                # We don't do this for strains because this effect is already
+                # captured by the infecitousness multiplier.
                 num_strata = len(strat.strata)
                 entry_fraction = 1.0 / num_strata
                 adjustment = (FlowAdjustment.MULTIPLY, entry_fraction)

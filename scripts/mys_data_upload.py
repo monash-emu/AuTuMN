@@ -14,19 +14,20 @@ from datetime import datetime
 from google_drive_downloader import GoogleDriveDownloader as gdd
 from autumn import constants
 import pandas as pd
+import regex as re
 
 
 # From WHO google drive folder
 CASE_DATA_URL = "1mnZcmj2jfmrap1ytyg_ErD1DZ7zDptyJ"  # shareable link
 
 COVID_MYS_DIRPATH = os.path.join(constants.INPUT_DATA_PATH, "covid_mys")
-COVID_MYS_CASE_PATH = os.path.join(COVID_MYS_DIRPATH, "COVID_MYS_CASE.xlsx")
-COVID_MYS_DEATH_PATH = os.path.join(COVID_MYS_DIRPATH, "COVID_MYS_DEATH.csv")
+COVID_MYS_CASE_XLSX = os.path.join(COVID_MYS_DIRPATH, "COVID_MYS_CASE.xlsx")
+COVID_MYS_DEATH_CSV = os.path.join(COVID_MYS_DIRPATH, "COVID_MYS_DEATH.csv")
 COVID_SABAH_CSV = os.path.join(COVID_MYS_DIRPATH, "COVID_REGIONAL.csv")
 
 
 gdd.download_file_from_google_drive(
-    file_id=CASE_DATA_URL, dest_path=COVID_MYS_CASE_PATH, overwrite=True
+    file_id=CASE_DATA_URL, dest_path=COVID_MYS_CASE_XLSX, overwrite=True
 )
 
 COVID_BASE_DATE = pd.datetime(2019, 12, 31)
@@ -41,9 +42,7 @@ TARGETS_MYS = {
 }
 
 
-TARGETS_SABAH = {
-    "notifications": "local_cases",
-}
+TARGETS_SABAH = {"notifications": "local_cases", "infection_deaths": "sabah_death"}
 
 
 def main():
@@ -98,8 +97,8 @@ def update_mys_calibration():
 
 def load_mys_data():
 
-    case_df = pd.read_excel(COVID_MYS_CASE_PATH)
-    death_df = pd.read_csv(COVID_MYS_DEATH_PATH)
+    case_df = pd.read_excel(COVID_MYS_CASE_XLSX)
+    death_df = get_death()
 
     case_df.Date = pd.to_datetime(
         case_df["Date"], errors="coerce", format="%Y-%m-%d %H:%M:%S", infer_datetime_format=True,
@@ -124,20 +123,36 @@ def load_mys_data():
         inplace=True,
     )
 
+    df = pd.merge(case_df, death_df, how="left", left_on=["date_index"], right_on=["date_index"])
+
+    return df
+
+
+def get_death():
+    death_df = pd.read_csv(COVID_MYS_DEATH_CSV)
     for column in death_df.columns:
-        if column not in {"Date", "Death per day"}:
+        if column not in {"Date", "Death per day", "state"}:
             death_df.drop(columns=[column], inplace=True)
     death_df.Date = death_df.Date.str[:] + "-2020"
     death_df.Date = pd.to_datetime(
-        death_df["Date"], errors="coerce", format="%d-%b-%Y", infer_datetime_format=True
+        death_df["Date"], errors="coerce", format="%d-%b-%Y", infer_datetime_format=False
     )
     death_df["date_index"] = (death_df.Date - COVID_BASE_DATE).dt.days
     death_df = death_df[death_df.Date.notnull() & death_df["Death per day"].notnull()]
+    death_df.loc[death_df.state.isna(), "state"] = ""
 
-    df = pd.merge(case_df, death_df, how="left", left_on=["date_index"], right_on=["date_index"])
-    df.drop(columns=["Date_y"], inplace=True)
+    def fix_regex(each_row):
 
-    return df
+        x = re.findall(r"Sabah=(\d+),", each_row)
+        if len(x) > 0:
+            return int(x[0])
+        else:
+            return 0
+
+    death_df["sabah_death"] = [fix_regex(each) for each in death_df.state]
+
+    death_df.loc[death_df.state == "Sabah", "sabah_death"] = death_df["Death per day"]
+    return death_df[["date_index", "Death per day", "state", "sabah_death"]]
 
 
 def update_sabah_calibration():
@@ -152,6 +167,11 @@ def update_sabah_calibration():
     )
     df["date_index"] = (df.date - COVID_BASE_DATE).dt.days
     df.sort_values(by=["date"], inplace=True)
+
+    death_data = get_death()
+    death_data = death_data[["sabah_death", "date_index"]]
+
+    df = pd.merge(df, death_data, how="left", left_on=["date_index"], right_on=["date_index"])
 
     file_path = os.path.join(REGION_SABAH, "targets.json")
     with open(file_path, mode="r") as f:

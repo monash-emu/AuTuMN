@@ -1,23 +1,10 @@
 """
 Sigmoidal and spline functions to generate cost coverage curves and historical input curves.
 """
-from math import exp, tanh
+from math import exp
 
 import numpy as np
 from scipy.interpolate import UnivariateSpline
-from scipy.integrate import quad
-
-
-def numerical_integration(func, lower, upper):
-    """
-    Computes the numerical integration of a function on a segment.
-    :param func: callable
-    :param lower: lower bound of the requested integral
-    :param upper: upper bound of the requested integral
-    :return:
-    """
-    integral = quad(func, lower, upper)[0]
-    return integral
 
 
 def make_sigmoidal_curve(y_low=0, y_high=1.0, x_start=0, x_inflect=0.5, multiplier=1.0):
@@ -53,75 +40,10 @@ def make_sigmoidal_curve(y_low=0, y_high=1.0, x_start=0, x_inflect=0.5, multipli
         # check for large values that will blow out exp
         if arg > 10.0:
             return y_low
+
         return amplitude / (1.0 + exp(arg)) + y_low
 
     return curve
-
-
-def make_two_step_curve(y_low, y_med, y_high, x_start, x_med, x_end):
-    """
-    The following function should no longer be relevant as scale_up_function with argument method=4 is equivalent.
-    """
-
-    curve1 = make_sigmoidal_curve(
-        y_high=y_med,
-        y_low=y_low,
-        x_start=x_start,
-        x_inflect=(x_med - x_start) * 0.5 + x_start,
-        multiplier=4,
-    )
-
-    curve2 = make_sigmoidal_curve(
-        y_high=y_high,
-        y_low=y_med,
-        x_start=x_med,
-        x_inflect=(x_end - x_med) * 0.5 + x_med,
-        multiplier=4,
-    )
-
-    def curve(x):
-        if x < x_start:
-            return y_low
-        if x < x_med:
-            return curve1(x)
-        if x < x_end:
-            return curve2(x)
-        return y_high
-
-    return curve
-
-
-# def tanh_based_scaleup(b, c, sigma, lower_asymptote=0., upper_asymptote=1.):
-#     """
-#     return the function t: (1 - sigma) / 2 * tanh(b * (a - c)) + (1 + sigma) / 2
-#     :param b: shape parameter
-#     :param c: inflection point
-#     :param sigma: lowest asymptotic value
-#     :return: a function
-#     """
-#
-#     def tanh_scaleup(t):
-#         return \
-#             lower_asymptote + \
-#             ((1 - sigma) / 2 * tanh(b * (t - c)) + (1 + sigma) / 2) * (upper_asymptote - lower_asymptote)
-#
-#     return tanh_scaleup
-
-
-def tanh_based_scaleup(b, c, sigma, upper_asymptote=1.0):
-    """
-    return the function t: (1 - sigma) / 2 * tanh(b * (a - c)) + (1 + sigma) / 2
-    :param b: shape parameter
-    :param c: inflection point
-    :param sigma: lowest asymptotic value
-    :param upper_asymptote: highest asymptotic value
-    :return: a function
-    """
-
-    def tanh_scaleup(t):
-        return (tanh(b * (t - c)) / 2.0 + 0.5) * (upper_asymptote - sigma) + sigma
-
-    return tanh_scaleup
 
 
 """ the functions test_a and get_spare_fit are only used inside of scale_up_function when method=5 """
@@ -220,6 +142,27 @@ def get_spare_fit(
     return {"a": a, "cpt": cpt}
 
 
+def derivatives(x: np.ndarray, y: np.ndarray) -> np.ndarray:
+
+    """
+    Defines the slopes at each data point
+    Should be 0 for the first and last points (x_0 and x_n)
+    Should be 0 when the variation is changing (U or n shapes), i.e. when(y_i - y_(i-1))*(y_i - y_(i+1)) > 0
+    If the variation is not changing, the slope is defined by a linear combination of the two slopes measured
+    between the point and its two neighbours. This combination is weighted according to the distance with the
+    neighbours.
+    This is only relevant when method=1
+    """
+    v = np.zeros_like(x)  # Initialises all zeros
+    for i in range(len(x))[1:-1]:  # For each interior point
+        if (y[i] - y[i - 1]) * (y[i] - y[i + 1]) < 0:  # Not changing variation
+            slope_left = (y[i] - y[i - 1]) / (x[i] - x[i - 1])
+            slope_right = (y[i + 1] - y[i]) / (x[i + 1] - x[i])
+            w = (x[i] - x[i - 1]) / (x[i + 1] - x[i - 1])
+            v[i] = w * slope_right + (1 - w) * slope_left
+    return v
+
+
 def scale_up_function(
     x,
     y,
@@ -231,7 +174,6 @@ def scale_up_function(
     intervention_end=None,
     intervention_start_date=None,
 ):
-
     """
     Given a set of points defined by x and y,
     this function fits a cubic spline and returns the interpolated function
@@ -269,20 +211,16 @@ def scale_up_function(
     assert len(x) == len(y), "x and y must have the same length"
     if len(x) == 0:
         # Handle case where both times and values are empty.
-        raise ValueError(
-            "Cannot run scale_up_function on an empty sequence: times and values are empty lists."
-        )
+        msg = "Cannot run scale_up_function on an empty sequence: x and y are empty lists."
+        raise ValueError(msg)
 
-    x = [float(i) for i in x]
-    y = [float(i) for i in y]
-
-    x = np.array(x)
-    y = np.array(y)
-
-    # Check that every x_i is unique
+    # Ensure that every element of x is unique.
     assert len(x) == len(set(x)), "There are duplicate values in x."
 
-    # Make sure the arrays are ordered
+    x = np.array(x, dtype=np.float)
+    y = np.array(y, dtype=np.float)
+
+    # Ensure that the arrays are ordered
     order = x.argsort()
     x = x[order]
     y = y[order]
@@ -314,26 +252,6 @@ def scale_up_function(
                 return y[-1]
 
         return curve
-
-    def derivatives(x, y):
-
-        """
-        Defines the slopes at each data point
-        Should be 0 for the first and last points (x_0 and x_n)
-        Should be 0 when the variation is changing (U or n shapes), i.e. when(y_i - y_(i-1))*(y_i - y_(i+1)) > 0
-        If the variation is not changing, the slope is defined by a linear combination of the two slopes measured
-        between the point and its two neighbours. This combination is weighted according to the distance with the
-        neighbours.
-        This is only relevant when method=1
-        """
-        v = np.zeros(len(x))  # Initialises all zeros
-        for i in range(len(x))[1:-1]:  # For each interior point
-            if (y[i] - y[i - 1]) * (y[i] - y[i + 1]) < 0:  # Not changing variation
-                slope_left = (y[i] - y[i - 1]) / (x[i] - x[i - 1])
-                slope_right = (y[i + 1] - y[i]) / (x[i + 1] - x[i])
-                w = (x[i] - x[i - 1]) / (x[i + 1] - x[i - 1])
-                v[i] = w * slope_right + (1 - w) * slope_left
-        return v
 
     if method in (1, 2, 3):
         # Normalise x to avoid too big or too small numbers when taking x**3
@@ -477,10 +395,6 @@ def scale_up_function(
             [] for j in range(len(x))[0:-1]
         ]  # Initialises an empty list to store functions
         for i in range(len(x))[0:-1]:
-            y_high = y[i + 1]
-            y_low = y[i]
-            x_start = x[i]
-            x_inflect = 0.5 * (x[i] + x[i + 1])
             func = make_sigmoidal_curve(
                 y_high=y[i + 1],
                 y_low=y[i],
@@ -490,10 +404,13 @@ def scale_up_function(
             )
             functions[i] = func
 
+        x_min = x.min()
+        x_max = x.max()
+
         def curve(t):
-            if t <= min(x):  # t is before the range defined by x -> takes the initial value
+            if t <= x_min:  # t is before the range defined by x -> takes the initial value
                 return y[0]
-            elif t >= max(x):  # t is after the range defined by x -> takes the last value
+            elif t >= x_max:  # t is after the range defined by x -> takes the last value
                 if intervention_end is not None:
                     if t >= t_intervention_start:
                         return curve_intervention(t)
@@ -593,13 +510,13 @@ def scale_up_function(
         # We have to make sure that the obtained fits do not go over/under the bounds
         cut_off_dict = {}
 
-        amplitude = auto_bound * (max(y) - min(y))
+        amplitude = auto_bound * (y.max() - y.min())
         if bound_low is None:
             if auto_bound is not None:
-                bound_low = 0.5 * (max(y) + min(y)) - 0.5 * amplitude
+                bound_low = 0.5 * (y.max() + y.min()) - 0.5 * amplitude
         if bound_up is None:
             if auto_bound is not None:
-                bound_up = 0.5 * (max(y) + min(y)) + 0.5 * amplitude
+                bound_up = 0.5 * (y.max() + y.min()) + 0.5 * amplitude
 
         if (bound_low is not None) or (bound_up is not None):
             # We adjust the data so that no values go over/under the bounds
@@ -849,23 +766,3 @@ def scale_up_function(
             return float(y_t)
 
     return curve
-
-
-def freeze_curve(curve, freeze_time):
-    def frozen_curve(t):
-        return curve(min(t, freeze_time))
-
-    return frozen_curve
-
-
-if __name__ == "__main__":
-
-    import pylab
-
-    #
-    # x_vals = np.linspace(1950, 2050, 150)
-    # curve = make_sigmoidal_curve(y_high=2, y_low=0, x_start=1950, x_inflect=1970)
-    # pylab.plot(x_vals, map(curve, x_vals))
-    # pylab.xlim(1950, 2020)
-    # pylab.ylim(0, 5)
-    # pylab.show()

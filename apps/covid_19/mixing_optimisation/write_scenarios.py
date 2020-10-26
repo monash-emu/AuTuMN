@@ -28,7 +28,7 @@ Reading optimisation outputs from csv file
 
 
 def read_opti_outputs(output_filename):
-    df = pd.read_csv(output_filename)
+    df = pd.read_csv(f"optimised_variables/{output_filename}")
     return df
 
 
@@ -67,7 +67,7 @@ def build_optimised_scenario_dictionary(country, sc_idx, decision_vars, final_mi
     return sc_params
 
 
-def build_all_scenario_dicts_from_outputs(output_filename='opti_outputs.csv'):
+def build_all_scenario_dicts_from_outputs(output_filename='dummy_vars_for_test.csv'):
     opti_outputs_df = read_opti_outputs(output_filename)
 
     all_sc_params = {}

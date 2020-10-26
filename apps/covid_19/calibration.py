@@ -393,7 +393,7 @@ European countries for the optimisation project
 """
 
 
-def get_targets_and_priors_for_opti(country, likelihood_type="negative_binomial"):
+def get_targets_and_priors_for_opti(country, likelihood_type="normal"):
     targets = load_targets("covid_19", country)
 
     hospital_targets = [t for t in list(targets.keys()) if 'hospital' in t or 'icu' in t]

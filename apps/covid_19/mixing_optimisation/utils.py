@@ -43,7 +43,7 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "case_detection.maximum_gradient",
             "distribution": "uniform",
-            "distri_params": [0.05, 0.1],
+            "distri_params": [0.03, 0.1],
         },
         {
             "param_name": "case_detection.max_change_time",

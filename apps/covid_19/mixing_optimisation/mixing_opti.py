@@ -65,7 +65,6 @@ def objective_function(
     mode: str = AGE_MODE,
     country: str = Region.UNITED_KINGDOM,
     duration: str = DURATION_SIX_MONTHS,
-    calibrated_params: dict = {},
 ):
     """
     :param decision_variables: A list containing
@@ -75,16 +74,12 @@ def objective_function(
     :param mode: either "by_age" or "by_location"
     :param country: the country name
     :param duration: string defining the duration of the optimised phase
-    :param calibrated_params: a dictionary containing a set of calibrated parameters
     """
     assert all([MIXING_FACTOR_BOUNDS[0] <= d <= MIXING_FACTOR_BOUNDS[1] for d in decision_variables])
 
     app_region = covid_19.app.get_region(country)
     build_model = app_region.build_model
     params = copy.deepcopy(app_region.params)
-
-    # Rebuild the default parameters
-    params["default"] = update_params(params["default"], calibrated_params)
 
     # Create and run scenario 1
     sc_1_params_update = build_params_for_phases_2_and_3(decision_variables, duration, mode)
@@ -121,16 +116,13 @@ def has_immunity_been_reached(model: StratifiedModel, phase_2_end_index: int) ->
     return max(incidence_vals) == incidence_vals[0]
 
 
-def run_root_model(region: str, calibrated_params: dict = {}):
+def run_root_model(region: str):
     """
-    Runs a model to simulate the past epidemic (up until 1/7/2020) using  a given calibrated parameter set.
+    Runs a model to simulate the past epidemic (up until 1/10/2020).
     Returns a the model which has been run.
     """
     app_region = covid_19.app.get_region(region)
     params = copy.deepcopy(app_region.params)
-
-    # Update params with calibrated parameters
-    params["default"] = update_params(params["default"], calibrated_params)
 
     # Set end time.
     params["default"]["time"]["end"] = PHASE_2_START_TIME

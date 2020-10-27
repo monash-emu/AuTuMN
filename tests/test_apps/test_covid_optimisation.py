@@ -17,7 +17,7 @@ def test_run_root_models_partial(region):
     """
     Smoke test: ensure we can build and run each root model with nothing crashing.
     """
-    model = opti.run_root_model(region, {})
+    model = opti.run_root_model(region)
     assert type(model) is StratifiedModel
     assert model.outputs is not None
 
@@ -29,7 +29,7 @@ def test_run_root_models_full(region):
     """
     Smoke test: ensure we can build and run each root model with nothing crashing.
     """
-    model = opti.run_root_model(region, {})
+    model = opti.run_root_model(region)
     assert type(model) is StratifiedModel
     assert model.outputs is not None
 
@@ -69,7 +69,7 @@ DECISION_VARS = {
 @pytest.mark.parametrize("mode", AVAILABLE_MODES)
 def test_full_optimisation_iteration_for_uk(mode, duration):
     country = Region.UNITED_KINGDOM
-    root_model = opti.run_root_model(country, {})
+    root_model = opti.run_root_model(country)
     h, d, yoll= opti.objective_function(
         DECISION_VARS[mode], root_model, mode, country, duration
     )
@@ -128,7 +128,6 @@ def test_objective_function_calculations(mock_scenario_cls):
         mode="by_age",
         country="france",
         duration='six_months',
-        calibrated_params={},
     )
     assert herd_immunity
     assert total_nb_deaths == 55

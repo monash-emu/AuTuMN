@@ -1,16 +1,20 @@
 """
 Used to load model parameters from file
 """
+from logging import log
 import os
 import re
 import yaml
 import json
 from copy import deepcopy
 from os import path
+import logging
 
 from autumn.constants import APPS_PATH, BASE_PATH
 from autumn.tool_kit.utils import merge_dicts
 from autumn.secrets import check_hash
+
+logger = logging.getLogger(__name__)
 
 
 def load_targets(app_name: str, region_name: str):
@@ -68,7 +72,6 @@ def load_params(app_name: str, region_name: str):
     param_filepaths = get_param_filepaths(app_name, region_name)
     params = {"scenarios": {}}
     is_name_correct = lambda n: re.match(r"^(default)|(mle-params)|(scenario-\d+)$", n)
-    mle_params = None
     for param_filepath in param_filepaths:
         name = param_filepath.replace("\\", "/").split("/")[-1].split(".")[0]
         if not is_name_correct(name):
@@ -77,18 +80,12 @@ def load_params(app_name: str, region_name: str):
         if name == "default":
             params["default"] = load_param_file(param_filepath)
         elif name == "mle-params":
-            mle_params = read_yaml_file(param_filepath)
+            continue  # Ignore this file - it is used in `load_param_file`
         else:
             scenario_idx = int(name.split("-")[-1])
             params["scenarios"][scenario_idx] = load_param_file(param_filepath)
 
     assert "default" in params, "Region must have a 'default.yml' parameter file."
-
-    if mle_params:
-        # If maximum likelihood params from a calibration are present, then insert
-        # them into the default parameters automatically.
-        params["default"] = update_params(params["default"], mle_params)
-
     return params
 
 
@@ -96,6 +93,19 @@ def load_param_file(path: str):
     data = read_yaml_file(path)
     parent_path = data["parent"]
     del data["parent"]
+
+    # If we're looking at a `default.yml` file and there is a sibling file called `mle-params.yml`,
+    # then merge that file into the contents of `default.yml`
+    if path.endswith("default.yml"):
+        dirname = os.path.dirname(path)
+        mle_path = os.path.join(dirname, "mle-params.yml")
+        if os.path.exists(mle_path):
+            # If maximum likelihood params from a calibration are present, then insert
+            # them into the default parameters automatically.
+            mle_params = read_yaml_file(mle_path)
+            logger.info("Inserting MLE params into region defaults: %s", mle_params)
+            data = update_params(data, mle_params)
+
     if not parent_path:
         return data
     else:

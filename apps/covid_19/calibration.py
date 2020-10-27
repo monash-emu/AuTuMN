@@ -397,7 +397,8 @@ def get_targets_and_priors_for_opti(country, likelihood_type="normal"):
     targets = load_targets("covid_19", country)
 
     hospital_targets = [t for t in list(targets.keys()) if 'hospital' in t or 'icu' in t]
-    assert len(hospital_targets) == 1
+    if len(hospital_targets) > 1:
+        hospital_targets = [t for t in list(targets.keys()) if 'new_' in t]
 
     notifications = targets["notifications"]
     deaths = targets["infection_deaths"]

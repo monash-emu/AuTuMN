@@ -8,6 +8,9 @@ from apps.tuberculosis.model import build_model
 
 targets = load_targets("tuberculosis", Region.PHILIPPINES)
 prevalence_infectious = targets["prevalence_infectious"]
+mortality = targets["mortality"]
+incidence = targets["incidence"]
+notifications = targets["notifications"]
 
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
@@ -43,5 +46,26 @@ TARGET_OUTPUTS = [
         "values": prevalence_infectious["values"],
         "loglikelihood_distri": "normal",
         "time_weights": list(range(1, len(prevalence_infectious["times"]) + 1)),
+    },
+    {
+        "output_key": mortality["output_key"],
+        "years": mortality["times"],
+        "values": mortality["values"],
+        "loglikelihood_distri": "normal",
+        "time_weights": list(range(1, len(mortality["times"]) + 1)),
+    },
+    {
+        "output_key": incidence["output_key"],
+        "years": incidence["times"],
+        "values": incidence["values"],
+        "loglikelihood_distri": "normal",
+        "time_weights": list(range(1, len(incidence["times"]) + 1)),
+    },
+    {
+        "output_key": notifications["output_key"],
+        "years": notifications["times"],
+        "values": notifications["values"],
+        "loglikelihood_distri": "normal",
+        "time_weights": list(range(1, len(notifications["times"]) + 1)),
     },
 ]

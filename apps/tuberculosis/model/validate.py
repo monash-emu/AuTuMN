@@ -17,6 +17,7 @@ validate_params = sb.build_validator(
     # demographics
     start_population_size=float,
     universal_death_rate=float,
+    crude_birth_rate=float,
     # base disease model
     contact_rate=float,
     age_specific_latency=dict,

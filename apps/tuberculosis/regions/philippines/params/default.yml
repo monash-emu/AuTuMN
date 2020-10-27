@@ -2,10 +2,69 @@
 parent: apps/tuberculosis/params.yml
 iso3: "PHL"
 
-# FIXME: These numbers are made up to prevent the region model from crashing.
+start_population_size: 25000000
+
+crude_birth_rate: -5.0
+
+stratify_by: ["age", "organ"]
+age_breakpoints: [0, 5, 15, 35, 50]
+
+# BCG coverage
+time_variant_bcg_perc:
+  1930: 0.
+  1990: 49.
+  1991: 71.
+  1992: 72.
+  1993: 88.
+  1994: 96.
+  1995: 71.
+  1996: 98.
+  1997: 94.
+  1998: 81.
+  1999: 81.
+  2000: 89.
+  2001: 99.
+  2002: 90.
+  2003: 93.
+  2004: 91.
+  2005: 93.
+  2006: 92.
+  2007: 92.
+  2008: 95.
+  2009: 98.
+  2010: 99.
+  2011: 80.
+  2012: 97.
+  2013: 93.
+  2014: 89.
+  2015: 99.
+  2016: 94.
+  2017: 92.
+  2018: 98.
+  2019: 89.
+
+
 time_variant_tsr: # should always be > 0
-  1995: 0.5
-  2017.: 0.5
+  1995: .25
+  2017.: 0.8
+
+time_variant_tb_screening_rate:
+  maximum_gradient: .1 # The shape parameter to the tanh-based curve
+  max_change_time: 1990. # Point at which curve inflects
+  start_value: 0. # Starting value - lower asymptote
+  end_value: 0.4057634920539735
+
+
+# calibrated parameters
+contact_rate: 4.0
+late_reactivation_multiplier: 0.7117191601170418
+
+
+time:
+  start: 1900.
+  end: 2030.
+  step: 1
+  critical_ranges: []
 
 calculated_outputs:
   [

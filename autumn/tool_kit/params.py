@@ -67,7 +67,8 @@ def load_params(app_name: str, region_name: str):
     region_name = region_name.replace("-", "_")
     param_filepaths = get_param_filepaths(app_name, region_name)
     params = {"scenarios": {}}
-    is_name_correct = lambda n: re.match(r"^(default)|(scenario-\d+)$", n)
+    is_name_correct = lambda n: re.match(r"^(default)|(mle-params)|(scenario-\d+)$", n)
+    mle_params = None
     for param_filepath in param_filepaths:
         name = param_filepath.replace("\\", "/").split("/")[-1].split(".")[0]
         if not is_name_correct(name):
@@ -75,11 +76,19 @@ def load_params(app_name: str, region_name: str):
 
         if name == "default":
             params["default"] = load_param_file(param_filepath)
+        elif name == "mle-params":
+            mle_params = read_yaml_file(param_filepath)
         else:
             scenario_idx = int(name.split("-")[-1])
             params["scenarios"][scenario_idx] = load_param_file(param_filepath)
 
     assert "default" in params, "Region must have a 'default.yml' parameter file."
+
+    if mle_params:
+        # If maximum likelihood params from a calibration are present, then insert
+        # them into the default parameters automatically.
+        params["default"] = update_params(params["default"], mle_params)
+
     return params
 
 
@@ -178,7 +187,9 @@ def read_param_value_from_string(params: dict, update_key: str):
     keys = update_key.split(".")
     current_key, nested_keys = keys[0], keys[1:]
     is_arr_update = re.match(ARRAY_REQUEST_REGEX, current_key)
-    assert not is_arr_update, "array items not supported by this function"  # FIXME only supports nested dictionaries for for the moment
+    assert (
+        not is_arr_update
+    ), "array items not supported by this function"  # FIXME only supports nested dictionaries for for the moment
     param_value = params[current_key]
     for nested_key in nested_keys:
         param_value = param_value[nested_key]

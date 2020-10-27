@@ -267,8 +267,8 @@
   "proportion_seropositive": {
     "output_key": "proportion_seropositive",
     "title": "Proportion seropositive",
-    "times": [],
-    "values": [],
+    "times": [129],
+    "values": [0.052],
     "quantiles": [
       0.025,
       0.25,

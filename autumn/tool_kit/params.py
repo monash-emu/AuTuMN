@@ -94,6 +94,11 @@ def load_param_file(path: str):
     parent_path = data["parent"]
     del data["parent"]
 
+    if parent_path:
+        abs_parent_path = os.path.join(BASE_PATH, parent_path)
+        parent_data = load_param_file(abs_parent_path)
+        data = merge_dicts(data, parent_data)
+
     # If we're looking at a `default.yml` file and there is a sibling file called `mle-params.yml`,
     # then merge that file into the contents of `default.yml`
     if path.endswith("default.yml"):
@@ -106,12 +111,7 @@ def load_param_file(path: str):
             logger.info("Inserting MLE params into region defaults: %s", mle_params)
             data = update_params(data, mle_params)
 
-    if not parent_path:
-        return data
-    else:
-        abs_parent_path = os.path.join(BASE_PATH, parent_path)
-        parent_data = load_param_file(abs_parent_path)
-        return merge_dicts(data, parent_data)
+    return data
 
 
 def read_yaml_file(path: str):

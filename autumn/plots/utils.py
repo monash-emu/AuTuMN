@@ -44,11 +44,12 @@ PLOT_TEXT_DICT = {
     "sojourn.compartment_periods.icu_early": "ICU duration",
 }
 
-ALPHAS = (1.0, 0.6, 0.4, 0.3)
+ALPHAS = (1.0, 0.6, 0.4, 0.3, 0.2)
 COLORS = (
     ["lightsteelblue", "cornflowerblue", "royalblue", "navy"],
     ["plum", "mediumorchid", "darkviolet", "rebeccapurple"],
     ["lightgrey", "grey", "dimgrey", "black"],
+    ["forestgreen", "forestgreen", "forestgreen", "darkgreen"],
     ["forestgreen", "forestgreen", "forestgreen", "darkgreen"],
 )
 REF_DATE = datetime.date(2019, 12, 31)

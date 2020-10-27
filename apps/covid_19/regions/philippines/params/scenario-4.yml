@@ -1,4 +1,4 @@
-# SCENARIO DESCRIPTION: MHS compliance of 50% return
+# SCENARIO DESCRIPTION: Re-open schools
 parent: apps/covid_19/regions/philippines/params/default.yml
 
 time:

@@ -33,17 +33,17 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "infection_fatality.multiplier",
             "distribution": "uniform",
-            "distri_params": [.5, 3.],  # 3.8 to match the highest value found in Levin et al.
+            "distri_params": [.5, 3.8],  # 3.8 to match the highest value found in Levin et al.
         },
         {
             "param_name": "case_detection.start_value",
             "distribution": "uniform",
-            "distri_params": [0.0, 0.20],
+            "distri_params": [0.0, 0.30],
         },
         {
             "param_name": "case_detection.maximum_gradient",
             "distribution": "uniform",
-            "distri_params": [0.03, 0.1],
+            "distri_params": [0.03, 0.15],
         },
         {
             "param_name": "case_detection.max_change_time",
@@ -53,7 +53,7 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "case_detection.end_value",
             "distribution": "uniform",
-            "distri_params": [0.10, 0.90],
+            "distri_params": [0.10, 0.99],
         },
         # {
         #     "param_name": "clinical_stratification.icu_prop",
@@ -82,18 +82,18 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "clinical_stratification.props.hospital.multiplier",
             "distribution": "uniform",
-            "distri_params": [0.6, 1.4],
+            "distri_params": [0.5, 1.5],
         },
         # Micro-distancing
         {
             "param_name": "mobility.microdistancing.behaviour.parameters.c",
             "distribution": "uniform",
-            "distri_params": [80, 130],
+            "distri_params": [60, 130],
         },
         {
             "param_name": "mobility.microdistancing.behaviour.parameters.upper_asymptote",
             "distribution": "uniform",
-            "distri_params": [.25, .70],
+            "distri_params": [.25, .80],
         },
         {
             "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.c",

@@ -426,6 +426,20 @@ def get_targets_and_priors_for_opti(country, likelihood_type="normal"):
         },
     ]
 
+    # Add seroprevalence data except for Italy where the survey occurred a long time after the peak and
+    # where there is a high risk of participation bias (individuals in isolation if had a positive antibody test).
+    if country != "italy":
+        prop_seropositive = targets["proportion_seropositive"]
+        target_outputs.append(
+            {
+                "output_key": "proportion_seropositive",
+                "years": prop_seropositive["times"],
+                "values": prop_seropositive["values"],
+                "loglikelihood_distri": 'normal',
+                "sd": .01
+            }
+        )
+
     if likelihood_type == 'normal':
         par_priors = add_dispersion_param_prior_for_gaussian(par_priors, target_outputs)
     else:

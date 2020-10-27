@@ -134,6 +134,8 @@ def build_model(params: dict) -> StratifiedModel:
     """
     Dynamic heterogeneous mixing by age
     """
+    if params.elderly_mixing_reduction is not None:
+        params = preprocess.elderly_protection.apply_elderly_protection(params)
     static_mixing_matrix = inputs.get_country_mixing_matrix("all_locations", country.iso3)
     dynamic_mixing_matrix = preprocess.mixing_matrix.build_dynamic_mixing_matrix(
         static_mixing_matrix,

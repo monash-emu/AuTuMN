@@ -97,6 +97,7 @@ mobility:
     - work
     - home
 
+elderly_mixing_reduction: null
 clinical_stratification:
   icu_prop: 0.17 # Proportion of those hospitalised that are admitted to ICU
   icu_mortality_prop: 0.5 # Death proportion ceiling for ICU mortality

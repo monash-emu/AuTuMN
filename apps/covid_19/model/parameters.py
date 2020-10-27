@@ -203,6 +203,7 @@ class Parameters:
     universal_death_rate: float
     infectious_seed: float
     seasonal_force: Optional[float]  # Seasonal forcing factor
+    elderly_mixing_reduction: Optional[dict]
     waning_immunity_duration: Optional[float]
     haario_scaling_factor: float
     metropolis_initialisation_type: str

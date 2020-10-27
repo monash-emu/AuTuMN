@@ -60,7 +60,10 @@ def test_get_weight_value__with_compose_adjustment():
     weight = flow.get_weight_value(3)
     assert weight == 2 * 3 * 3 * 13
     mock_func.assert_has_calls(
-        [mock.call("foo", 3), mock.call("bar", 3),]
+        [
+            mock.call("foo", 3),
+            mock.call("bar", 3),
+        ]
     )
 
 
@@ -75,7 +78,10 @@ def test_get_weight_value__with_many_adjustments():
     weight = flow.get_weight_value(3)
     assert weight == 2 * 3 * 3 * 13 * 17
     mock_func.assert_has_calls(
-        [mock.call("foo", 3), mock.call("bar", 3),]
+        [
+            mock.call("foo", 3),
+            mock.call("bar", 3),
+        ]
     )
 
 
@@ -92,7 +98,10 @@ def test_get_weight_value__with_many_adjustments__and_overwrite():
     weight = flow.get_weight_value(3)
     assert weight == 23 * 3 * 13
     mock_func.assert_has_calls(
-        [mock.call("foo", 3), mock.call("bar", 3),]
+        [
+            mock.call("foo", 3),
+            mock.call("bar", 3),
+        ]
     )
 
 
@@ -120,7 +129,11 @@ class FlowMixin:
 
 class EntryFlow(FlowMixin, BaseEntryFlow):
     def __init__(
-        self, dest, param_name, param_func, adjustments,
+        self,
+        dest,
+        param_name,
+        param_func,
+        adjustments,
     ):
         self.adjustments = adjustments
         self.dest = dest
@@ -130,7 +143,11 @@ class EntryFlow(FlowMixin, BaseEntryFlow):
 
 class ExitFlow(FlowMixin, BaseExitFlow):
     def __init__(
-        self, source, param_name, param_func, adjustments,
+        self,
+        source,
+        param_name,
+        param_func,
+        adjustments,
     ):
         self.adjustments = adjustments
         self.source = source
@@ -140,7 +157,12 @@ class ExitFlow(FlowMixin, BaseExitFlow):
 
 class TransitionFlow(FlowMixin, BaseTransitionFlow):
     def __init__(
-        self, source, dest, param_name, param_func, adjustments,
+        self,
+        source,
+        dest,
+        param_name,
+        param_func,
+        adjustments,
     ):
         self.adjustments = adjustments
         self.source = source

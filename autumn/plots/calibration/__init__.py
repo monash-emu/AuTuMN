@@ -43,7 +43,7 @@ def plot_post_calibration(targets: dict, mcmc_dir: str, plot_dir: str):
     for target in targets.values():
         output_name = target["output_key"]
         # need to bypass the differential output targets because these outputs are not computed yet.
-        if output_name.startswith('rel_diff') or output_name.startswith('abs_diff'):
+        if output_name.startswith("rel_diff") or output_name.startswith("abs_diff"):
             continue
         logger.info("Plotting calibration fit for output %s", output_name)
         outputs = plots.sample_outputs_for_calibration_fit(
@@ -83,4 +83,3 @@ def _get_sub_plotter(plot_dir: str, subplot_dirname: str):
     subplot_dir = os.path.join(plot_dir, subplot_dirname)
     os.makedirs(subplot_dir, exist_ok=True)
     return FilePlotter(subplot_dir, {})
-

@@ -62,11 +62,16 @@ def sample_starting_params_from_lhs(par_priors: List[Dict[str, Any]], n_samples:
                 )
             elif prior_dict["distribution"] == "beta":
                 quantile = stats.beta.ppf(
-                    prop, prior_dict["distri_params"][0], prior_dict["distri_params"][1],
+                    prop,
+                    prior_dict["distri_params"][0],
+                    prior_dict["distri_params"][1],
                 )[0]
             elif prior_dict["distribution"] == "gamma":
                 quantile = stats.gamma.ppf(
-                    prop, prior_dict["distri_params"][0], 0.0, prior_dict["distri_params"][1],
+                    prop,
+                    prior_dict["distri_params"][0],
+                    0.0,
+                    prior_dict["distri_params"][1],
                 )[0]
             else:
                 raise_error_unsupported_prior(prior_dict["distribution"])
@@ -78,10 +83,10 @@ def sample_starting_params_from_lhs(par_priors: List[Dict[str, Any]], n_samples:
 
 def find_decent_starting_point(prior_dict):
     """
-        Find an MCMC parameter initial value, using the mean of the specified prior
-        :param prior_dict:
-        :return: float (starting point)
-        """
+    Find an MCMC parameter initial value, using the mean of the specified prior
+    :param prior_dict:
+    :return: float (starting point)
+    """
     if prior_dict["distribution"] == "uniform":
         x = np.mean(prior_dict["distri_params"])
     elif prior_dict["distribution"] == "beta":
@@ -276,7 +281,9 @@ def specify_missing_prior_params(priors: dict):
                 )
             else:
                 distri_params = find_distribution_params_from_mean_and_ci(
-                    p_dict["distribution"], p_dict["distri_mean"], p_dict["distri_ci"],
+                    p_dict["distribution"],
+                    p_dict["distri_mean"],
+                    p_dict["distri_ci"],
                 )
             if p_dict["distribution"] == "beta":
                 priors[i]["distri_params"] = [

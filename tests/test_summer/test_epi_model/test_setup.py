@@ -98,7 +98,11 @@ def test_model_flow_setup(ModelClass):
     }
     requested_flows = [
         # Try some death flows
-        {"type": Flow.DEATH, "parameter": "infect_death", "origin": Compartment.EARLY_INFECTIOUS,},
+        {
+            "type": Flow.DEATH,
+            "parameter": "infect_death",
+            "origin": Compartment.EARLY_INFECTIOUS,
+        },
         {
             "type": Flow.DEATH,
             "parameter": "slip_on_banana_peel_rate",
@@ -115,7 +119,10 @@ def test_model_flow_setup(ModelClass):
     model = ModelClass(
         times=_get_integration_times(2000, 2005, 1),
         compartment_names=[Compartment.SUSCEPTIBLE, Compartment.EARLY_INFECTIOUS],
-        initial_conditions={Compartment.SUSCEPTIBLE: 10, Compartment.EARLY_INFECTIOUS: 20,},
+        initial_conditions={
+            Compartment.SUSCEPTIBLE: 10,
+            Compartment.EARLY_INFECTIOUS: 20,
+        },
         parameters=parameters,
         requested_flows=requested_flows,
         birth_approach=BirthApproach.NO_BIRTH,
@@ -189,15 +196,24 @@ def test_model_compartment_init__with_remainder__expect_correct_allocation_to_al
 
 
 @pytest.mark.parametrize("ModelClass", [EpiModel, StratifiedModel])
-def test_model_compartment_init__with_no_remainder__expect_correct_allocation(ModelClass,):
+def test_model_compartment_init__with_no_remainder__expect_correct_allocation(
+    ModelClass,
+):
     """
     Ensure model compartments are set up correctly when there are no left over people
     in the population from the intitial conditions setup.
     """
     model = ModelClass(
         times=_get_integration_times(2000, 2005, 1),
-        compartment_names=[Compartment.SUSCEPTIBLE, Compartment.EARLY_INFECTIOUS, "empty",],
-        initial_conditions={Compartment.SUSCEPTIBLE: 30, Compartment.EARLY_INFECTIOUS: 70,},
+        compartment_names=[
+            Compartment.SUSCEPTIBLE,
+            Compartment.EARLY_INFECTIOUS,
+            "empty",
+        ],
+        initial_conditions={
+            Compartment.SUSCEPTIBLE: 30,
+            Compartment.EARLY_INFECTIOUS: 70,
+        },
         parameters={},
         requested_flows=[],
         birth_approach=BirthApproach.NO_BIRTH,
@@ -221,7 +237,10 @@ bad_inputs = [
         "initial_conditions": {"this is wrong": 20},
     },
     # Initial condition population exceeds starting pop.
-    {"initial_conditions": {Compartment.SUSCEPTIBLE: 99999}, "starting_population": 100,},
+    {
+        "initial_conditions": {Compartment.SUSCEPTIBLE: 99999},
+        "starting_population": 100,
+    },
 ]
 test_params = []
 for bad_input in bad_inputs:

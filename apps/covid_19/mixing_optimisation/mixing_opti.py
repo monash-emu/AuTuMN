@@ -10,8 +10,11 @@ from datetime import date, timedelta
 
 from apps import covid_19
 from apps.covid_19.mixing_optimisation.constants import (
-    PHASE_2_START_TIME, DURATION_PHASES_2_AND_3, PHASE_2_DURATION,
-    MICRODISTANCING_OPTI_PARAMS, MIXING_FACTOR_BOUNDS
+    PHASE_2_START_TIME,
+    DURATION_PHASES_2_AND_3,
+    PHASE_2_DURATION,
+    MICRODISTANCING_OPTI_PARAMS,
+    MIXING_FACTOR_BOUNDS,
 )
 
 REF_DATE = date(2019, 12, 31)
@@ -25,14 +28,11 @@ OBJECTIVE_DEATHS = "deaths"
 OBJECTIVE_YOLL = "yoll"
 OBJECTIVES = [OBJECTIVE_DEATHS, OBJECTIVE_YOLL]
 
-DURATION_SIX_MONTHS = 'six_months'
-DURATION_TWELVE_MONTHS = 'twelve_months'
+DURATION_SIX_MONTHS = "six_months"
+DURATION_TWELVE_MONTHS = "twelve_months"
 DURATIONS = [DURATION_SIX_MONTHS, DURATION_TWELVE_MONTHS]
 
-N_DECISION_VARS = {
-    AGE_MODE: 16,
-    LOCATION_MODE: 3
-}
+N_DECISION_VARS = {AGE_MODE: 16, LOCATION_MODE: 3}
 
 MIXING_LOCS = ["other_locations", "school", "work"]
 AGE_GROUPS = [
@@ -75,7 +75,9 @@ def objective_function(
     :param country: the country name
     :param duration: string defining the duration of the optimised phase
     """
-    assert all([MIXING_FACTOR_BOUNDS[0] <= d <= MIXING_FACTOR_BOUNDS[1] for d in decision_variables])
+    assert all(
+        [MIXING_FACTOR_BOUNDS[0] <= d <= MIXING_FACTOR_BOUNDS[1] for d in decision_variables]
+    )
 
     app_region = covid_19.app.get_region(country)
     build_model = app_region.build_model

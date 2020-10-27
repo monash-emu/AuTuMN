@@ -32,7 +32,9 @@ def test_crude_birth_flow_get_net_flow_with_adjust():
 
 def test_replace_deaths_birth_flow_get_net_flow():
     flow = ReplacementBirthFlow(
-        dest=Compartment("susceptible"), get_total_deaths=_get_total_deaths, adjustments=[],
+        dest=Compartment("susceptible"),
+        get_total_deaths=_get_total_deaths,
+        adjustments=[],
     )
     vals = np.array([1, 3, 5])
     net_flow = flow.get_net_flow(vals, 7)

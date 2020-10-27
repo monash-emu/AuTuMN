@@ -27,7 +27,12 @@ EXPECTED_SCHEMA = {
     },
     "outputs_to_plot": {
         "type": "list",
-        "schema": {"type": "dict", "schema": {"name": {"type": "string"},},},
+        "schema": {
+            "type": "dict",
+            "schema": {
+                "name": {"type": "string"},
+            },
+        },
     },
     "pop_distribution_strata": {"type": "list", "schema": {"type": "string"}},
     "prevalence_combos": {

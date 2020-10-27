@@ -52,7 +52,10 @@ fields = [
 input_step = InputStep(
     key="full-model-run-settings", run_condition='build.env("SKIP_INPUT") == null', fields=fields
 )
-full_model_run_step = CommandStep(key="run-full", command="./scripts/buildkite.sh full",)
+full_model_run_step = CommandStep(
+    key="run-full",
+    command="./scripts/buildkite.sh full",
+)
 website_step = CommandStep(
     key="update-website",
     command="./scripts/website/deploy.sh",

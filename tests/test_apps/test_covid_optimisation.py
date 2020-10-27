@@ -10,6 +10,7 @@ from apps.covid_19.mixing_optimisation import mixing_opti as opti
 from apps.covid_19.mixing_optimisation.constants import PHASE_2_START_TIME, OPTI_REGIONS
 from apps.covid_19.mixing_optimisation import write_scenarios
 
+
 @pytest.mark.local_only
 @pytest.mark.parametrize("region", Region.MIXING_OPTI_REGIONS)
 @mock.patch("apps.covid_19.mixing_optimisation.mixing_opti.PHASE_2_START_TIME", 100)
@@ -56,7 +57,7 @@ AVAILABLE_MODES = [
     "by_age",
     "by_location",
 ]
-AVAILABLE_DURATIONS = ['six_months', 'twelve_months']
+AVAILABLE_DURATIONS = ["six_months", "twelve_months"]
 DECISION_VARS = {
     "by_age": [1 for _ in range(len(AGE_GROUPS))],
     "by_location": [1, 1, 1],
@@ -70,9 +71,7 @@ DECISION_VARS = {
 def test_full_optimisation_iteration_for_uk(mode, duration):
     country = Region.UNITED_KINGDOM
     root_model = opti.run_root_model(country)
-    h, d, yoll= opti.objective_function(
-        DECISION_VARS[mode], root_model, mode, country, duration
-    )
+    h, d, yoll = opti.objective_function(DECISION_VARS[mode], root_model, mode, country, duration)
     assert h in (True, False)
     assert d >= 0
     assert yoll >= 0
@@ -118,16 +117,12 @@ def test_objective_function_calculations(mock_scenario_cls):
     sc_model.outputs[PHASE_2_START_TIME + phase_2_days, 2] = 7
 
     decision_variables = [1 for _ in range(len(AGE_GROUPS))]
-    (
-        herd_immunity,
-        total_nb_deaths,
-        years_of_life_lost,
-    ) = opti.objective_function(
+    (herd_immunity, total_nb_deaths, years_of_life_lost,) = opti.objective_function(
         decision_variables,
         root_model,
         mode="by_age",
         country="france",
-        duration='six_months',
+        duration="six_months",
     )
     assert herd_immunity
     assert total_nb_deaths == 55
@@ -138,7 +133,7 @@ def test_objective_function_calculations(mock_scenario_cls):
 def test_build_params_for_phases_2_and_3__with_location_mode_and_microdistancing():
     scenario_params = opti.build_params_for_phases_2_and_3(
         decision_variables=[2, 3, 5],
-        duration='six_months',
+        duration="six_months",
         mode="by_location",
     )
     loc_dates = [date(2020, 7, 31), date(2021, 1, 31), date(2021, 2, 1)]
@@ -184,7 +179,7 @@ def test_build_params_for_phases_2_and_3__with_location_mode_and_microdistancing
 @pytest.mark.xfail
 def test_build_params_for_phases_2_and_3__with_age_mode():
     scenario_params = opti.build_params_for_phases_2_and_3(
-        decision_variables=[i for i in range(16)], duration='six_months', mode="by_age"
+        decision_variables=[i for i in range(16)], duration="six_months", mode="by_age"
     )
     age_dates = [date(2020, 7, 31), date(2020, 8, 1), date(2021, 1, 31), date(2021, 2, 1)]
     loc_dates = [date(2020, 7, 31), date(2021, 1, 31), date(2021, 2, 1)]
@@ -252,8 +247,10 @@ Test write_scenarios module
 def test_read_optimised_variables():
     test_file = "dummy_vars_for_test.csv"
     df = write_scenarios.read_opti_outputs(test_file)
-    decision_vars = write_scenarios.read_decision_vars(df, 'france', 'by_age', 'six_months', 'deaths')
-    assert decision_vars == [.99] * 16
+    decision_vars = write_scenarios.read_decision_vars(
+        df, "france", "by_age", "six_months", "deaths"
+    )
+    assert decision_vars == [0.99] * 16
 
 
 @pytest.mark.mixing_optimisation
@@ -263,6 +260,6 @@ def test_build_all_scenarios():
 
     assert set(list(all_sc_params.keys())) == set(OPTI_REGIONS)
 
-    assert list(all_sc_params['france'].keys()) == [1, 9]
+    assert list(all_sc_params["france"].keys()) == [1, 9]
 
-    assert list(all_sc_params['france'][1].keys()) == ['time', 'mobility', 'parent']
+    assert list(all_sc_params["france"][1].keys()) == ["time", "mobility", "parent"]

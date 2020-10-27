@@ -8,7 +8,7 @@ from autumn.inputs.database import get_input_db
 def get_mobility_data(country_iso_code: str, region: str, base_date: datetime, location_map: dict):
     """
     Get daily Google mobility data for locations, for a given country.
-    Times are in days since a given base date. 
+    Times are in days since a given base date.
 
     The location map parameter transforms Google Mobility locations
     into Autumn-friendly locations.

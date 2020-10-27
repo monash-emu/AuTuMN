@@ -23,9 +23,9 @@ class Adjustment:
         include: a list of existing strata to explicitly include when applying adjustments.
         exclude: a list of exiting strata to explicitly exclude when applying adjustments.
         adjustments: the adjustments to apply to the new strata
-         
+
         Example: Set varying values based on age for people at home or work
-                
+
             Adjustment(
                 include = [{"location": "home"}, {"location": "work"}],
                 adjustments = [

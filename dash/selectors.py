@@ -167,7 +167,7 @@ def scenarios(scenarios: List[Scenario], include_all=True) -> List[Scenario]:
 
 def calibration_run(param_set_dirpath: str, name: str) -> str:
     """
-    Allows a user to select what model run they want, given an app 
+    Allows a user to select what model run they want, given an app
     Returns the directory name selected.
     """
     # Read model runs from filesystem
@@ -204,7 +204,7 @@ def calibration_run(param_set_dirpath: str, name: str) -> str:
 
 def model_run(param_set_dirpath: str) -> Tuple[str, str]:
     """
-    Allows a user to select what model run they want, given an app 
+    Allows a user to select what model run they want, given an app
     Returns the directory name selected.
     """
     # Read model runs from filesystem

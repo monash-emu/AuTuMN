@@ -70,4 +70,3 @@ def unpivot(src_db_path, dest_db_path):
     """
     assert os.path.isfile(src_db_path), f"{src_db_path} must be a file"
     autumn_db.process.unpivot(src_db_path, dest_db_path)
-

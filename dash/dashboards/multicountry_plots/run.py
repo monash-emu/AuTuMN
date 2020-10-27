@@ -19,34 +19,39 @@ def run_dashboard():
         return
 
     # Prelims
-    n_countries = \
-        st.sidebar.slider("Number of countries", 3, 6, 3)
-    region_names, region_dirpaths, calib_names, calib_dirpaths, mcmc_tables, mcmc_params, targets = \
-        {}, {}, {}, {}, {}, {}, {}
+    n_countries = st.sidebar.slider("Number of countries", 3, 6, 3)
+    (
+        region_names,
+        region_dirpaths,
+        calib_names,
+        calib_dirpaths,
+        mcmc_tables,
+        mcmc_params,
+        targets,
+    ) = ({}, {}, {}, {}, {}, {}, {})
 
     for i_region in range(n_countries):
 
         # Get regions for comparison
-        region_names[i_region], region_dirpaths[i_region] = \
-            selectors.output_region_name(app_dirpath, f"Select region #{str(i_region)}")
+        region_names[i_region], region_dirpaths[i_region] = selectors.output_region_name(
+            app_dirpath, f"Select region #{str(i_region)}"
+        )
         if not region_names[i_region]:
             st.write("No region folder found")
             return
 
         # Specific calibration run name and path
-        calib_names[i_region], calib_dirpaths[i_region] = \
-            selectors.calibration_run(region_dirpaths[i_region], f"Select region #{str(i_region)}")
+        calib_names[i_region], calib_dirpaths[i_region] = selectors.calibration_run(
+            region_dirpaths[i_region], f"Select region #{str(i_region)}"
+        )
         if not calib_names[i_region]:
             st.write("No model run folder found")
             return
 
         # Load MCMC tables
-        mcmc_tables[i_region] = \
-            db.load.load_mcmc_tables(calib_dirpaths[i_region])
-        mcmc_params[i_region] = \
-            db.load.load_mcmc_params_tables(calib_dirpaths[i_region])
-        targets[i_region] = \
-            load_targets(app_name, region_names[i_region])
+        mcmc_tables[i_region] = db.load.load_mcmc_tables(calib_dirpaths[i_region])
+        mcmc_params[i_region] = db.load.load_mcmc_params_tables(calib_dirpaths[i_region])
+        targets[i_region] = load_targets(app_name, region_names[i_region])
 
         plot_type = "Multi-country fit"
         plot_func = PLOT_FUNCS[plot_type]

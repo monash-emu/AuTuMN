@@ -188,7 +188,12 @@ def build_model(params: dict) -> StratifiedModel:
 
     # add ACF flow
     tb_model.add_transition_flow(
-        {"type": Flow.STANDARD, "parameter": "acf_rate", "origin": "infectious", "to": "recovered",}
+        {
+            "type": Flow.STANDARD,
+            "parameter": "acf_rate",
+            "origin": "infectious",
+            "to": "recovered",
+        }
     )
 
     # load time-variant case detection rate
@@ -415,7 +420,11 @@ def build_model(params: dict) -> StratifiedModel:
             "organ",
             ["smearpos", "smearneg", "extrapul"],
             ["infectious"],
-            infectiousness_adjustments={"smearpos": 1.0, "smearneg": 0.25, "extrapul": 0.0,},
+            infectiousness_adjustments={
+                "smearpos": 1.0,
+                "smearneg": 0.25,
+                "extrapul": 0.0,
+            },
             requested_proportions=props_smear,
             adjustment_requests={
                 "recovery": recovery_adjustments,
@@ -496,7 +505,7 @@ def build_model(params: dict) -> StratifiedModel:
 
         def notification_function_builder(stratum):
             """
-                example of stratum: "Xage_0Xstrain_mdr"
+            example of stratum: "Xage_0Xstrain_mdr"
             """
 
             def calculate_notifications(model, time):
@@ -572,7 +581,7 @@ def build_model(params: dict) -> StratifiedModel:
         # nb of detected individuals by strain:
         def detected_popsize_function_builder(tag):
             """
-                example of tag: "starin_mdr" or "organ_smearpos"
+            example of tag: "starin_mdr" or "organ_smearpos"
             """
 
             def calculate_nb_detected(model, time):
@@ -624,7 +633,10 @@ def build_mongolia_timevariant_cdr(cdr_multiplier):
         2015: 0.33,
     }
     return scale_up_function(
-        cdr.keys(), [c * cdr_multiplier for c in list(cdr.values())], smoothness=0.2, method=5,
+        cdr.keys(),
+        [c * cdr_multiplier for c in list(cdr.values())],
+        smoothness=0.2,
+        method=5,
     )
 
 

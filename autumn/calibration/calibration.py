@@ -30,7 +30,7 @@ from .utils import (
     sample_starting_params_from_lhs,
 )
 
-from .transformations import(
+from .transformations import (
     make_transform_func_with_lower_bound,
     make_transform_func_with_upper_bound,
     make_transform_func_with_two_bounds,
@@ -56,8 +56,8 @@ class CalibrationMode:
 class InitialisationTypes:
     """Different ways to set the intial point for the MCMC."""
 
-    LHS = 'lhs'
-    CURRENT_PARAMS = 'current_params'
+    LHS = "lhs"
+    CURRENT_PARAMS = "current_params"
 
 
 def get_parameter_bounds_from_priors(prior_dict):
@@ -98,17 +98,17 @@ def set_initial_point(priors, model_parameters, chain_index, total_nb_chains, in
         # use the current parameter values from the yaml files
         starting_points = {}
         for param_dict in priors:
-            if param_dict['param_name'].endswith("dispersion_param"):
-                assert param_dict['distribution'] == 'uniform'
-                starting_points[param_dict['param_name']] = np.mean(param_dict['distri_params'])
+            if param_dict["param_name"].endswith("dispersion_param"):
+                assert param_dict["distribution"] == "uniform"
+                starting_points[param_dict["param_name"]] = np.mean(param_dict["distri_params"])
             else:
-                starting_points[param_dict['param_name']] = read_param_value_from_string(
-                    model_parameters['default'], param_dict['param_name']
+                starting_points[param_dict["param_name"]] = read_param_value_from_string(
+                    model_parameters["default"], param_dict["param_name"]
                 )
 
         return starting_points
     else:
-        raise ValueError(F"{initialisation_type} is not a supported Initialisation Type")
+        raise ValueError(f"{initialisation_type} is not a supported Initialisation Type")
 
 
 def sample_from_adaptive_gaussian(prev_params, adaptive_cov_matrix):
@@ -134,7 +134,7 @@ class Calibration:
         total_nb_chains: int,
         param_set_name: str = "main",
         adaptive_proposal: bool = True,
-        initialisation_type: str = InitialisationTypes.LHS
+        initialisation_type: str = InitialisationTypes.LHS,
     ):
         self.model_name = model_name
         self.model_builder = model_builder  # a function that builds a new model without running it
@@ -464,18 +464,28 @@ class Calibration:
                     prior_width = quantile_97_5 - quantile_2_5
                 elif prior_dict["distribution"] == "beta":
                     quantile_2_5 = stats.beta.ppf(
-                        0.025, prior_dict["distri_params"][0], prior_dict["distri_params"][1],
+                        0.025,
+                        prior_dict["distri_params"][0],
+                        prior_dict["distri_params"][1],
                     )
                     quantile_97_5 = stats.beta.ppf(
-                        0.975, prior_dict["distri_params"][0], prior_dict["distri_params"][1],
+                        0.975,
+                        prior_dict["distri_params"][0],
+                        prior_dict["distri_params"][1],
                     )
                     prior_width = quantile_97_5 - quantile_2_5
                 elif prior_dict["distribution"] == "gamma":
                     quantile_2_5 = stats.gamma.ppf(
-                        0.025, prior_dict["distri_params"][0], 0.0, prior_dict["distri_params"][1],
+                        0.025,
+                        prior_dict["distri_params"][0],
+                        0.0,
+                        prior_dict["distri_params"][1],
                     )
                     quantile_97_5 = stats.gamma.ppf(
-                        0.975, prior_dict["distri_params"][0], 0.0, prior_dict["distri_params"][1],
+                        0.975,
+                        prior_dict["distri_params"][0],
+                        0.0,
+                        prior_dict["distri_params"][1],
                     )
                     prior_width = quantile_97_5 - quantile_2_5
                 else:
@@ -517,7 +527,9 @@ class Calibration:
 
         # Run the selected fitting algorithm.
         if run_mode == CalibrationMode.AUTUMN_MCMC:
-            self.run_autumn_mcmc(n_iterations, n_burned, n_chains, available_time, haario_scaling_factor)
+            self.run_autumn_mcmc(
+                n_iterations, n_burned, n_chains, available_time, haario_scaling_factor
+            )
         elif run_mode == CalibrationMode.LEAST_SQUARES:
             self.run_least_squares()
         elif run_mode == CalibrationMode.GRID_BASED:
@@ -563,7 +575,9 @@ class Calibration:
 
         return in_support
 
-    def run_autumn_mcmc(self, n_iterations: int, n_burned: int, n_chains: int, available_time, haario_scaling_factor):
+    def run_autumn_mcmc(
+        self, n_iterations: int, n_burned: int, n_chains: int, available_time, haario_scaling_factor
+    ):
         """
         Run our hand-rolled MCMC algoruthm to calibrate model parameters.
         """
@@ -579,10 +593,14 @@ class Calibration:
         last_acceptance_quantity = None  # acceptance quantity is defined as loglike + logprior
         for i_run in range(int(n_iterations + n_burned)):
             # Propose new paramameter set.
-            proposed_params_trans = self.propose_new_params_trans(last_accepted_params_trans, haario_scaling_factor)
+            proposed_params_trans = self.propose_new_params_trans(
+                last_accepted_params_trans, haario_scaling_factor
+            )
             proposed_params = self.get_original_params(proposed_params_trans)
 
-            is_within_prior_support = self.test_in_prior_support(proposed_params)  # should always be true with transformed params
+            is_within_prior_support = self.test_in_prior_support(
+                proposed_params
+            )  # should always be true with transformed params
 
             if is_within_prior_support:
                 # Evaluate log-likelihood.
@@ -596,9 +614,14 @@ class Calibration:
 
                 # transform the density
                 proposed_acceptance_quantity = proposed_log_posterior
-                for i, prior_dict in enumerate(self.priors): # multiply the density with the determinant of the Jacobian
-                    proposed_acceptance_quantity += \
-                        math.log(self.transform[prior_dict['param_name']]['inverse_derivative'](proposed_params_trans[i]))
+                for i, prior_dict in enumerate(
+                    self.priors
+                ):  # multiply the density with the determinant of the Jacobian
+                    proposed_acceptance_quantity += math.log(
+                        self.transform[prior_dict["param_name"]]["inverse_derivative"](
+                            proposed_params_trans[i]
+                        )
+                    )
 
                 is_auto_accept = (
                     last_acceptance_quantity is None
@@ -624,7 +647,11 @@ class Calibration:
 
             # Store model outputs
             self.store_mcmc_iteration_info(
-                proposed_params, proposed_loglike, proposed_log_posterior, accept, i_run,
+                proposed_params,
+                proposed_loglike,
+                proposed_log_posterior,
+                accept,
+                i_run,
             )
             if accept:
                 self.store_model_outputs()
@@ -696,7 +723,7 @@ class Calibration:
         Build transformation functions between the parameter space and R^n.
         """
         for i, prior_dict in enumerate(self.priors):
-            self.transform[prior_dict['param_name']] = {
+            self.transform[prior_dict["param_name"]] = {
                 "direct": None,  # param support to R
                 "inverse": None,  # R to param space
                 "inverse_derivative": None,  # R to R
@@ -708,51 +735,58 @@ class Calibration:
 
             # trivial case of an unbounded parameter
             if lower_bound == -float("inf") and upper_bound == float("inf"):
-                self.transform[prior_dict['param_name']]['direct'] = lambda x:  x
-                self.transform[prior_dict['param_name']]['inverse'] = lambda x:  x
-                self.transform[prior_dict['param_name']]['inverse_derivative'] = lambda x:  1.
+                self.transform[prior_dict["param_name"]]["direct"] = lambda x: x
+                self.transform[prior_dict["param_name"]]["inverse"] = lambda x: x
+                self.transform[prior_dict["param_name"]]["inverse_derivative"] = lambda x: 1.0
 
                 representative_point = None
             # case of a lower-bounded parameter with infinite support
             elif upper_bound == float("inf"):
-                for func_type in ['direct', 'inverse', 'inverse_derivative']:
-                    self.transform[prior_dict['param_name']][func_type] = \
-                        make_transform_func_with_lower_bound(lower_bound, func_type)
+                for func_type in ["direct", "inverse", "inverse_derivative"]:
+                    self.transform[prior_dict["param_name"]][
+                        func_type
+                    ] = make_transform_func_with_lower_bound(lower_bound, func_type)
                 representative_point = lower_bound + 10 * original_sd
                 if self.starting_point[prior_dict["param_name"]] <= lower_bound:
                     self.starting_point[prior_dict["param_name"]] = lower_bound + original_sd / 10
 
             # case of an upper-bounded parameter with infinite support
             elif lower_bound == -float("inf"):
-                for func_type in ['direct', 'inverse', 'inverse_derivative']:
-                    self.transform[prior_dict['param_name']][func_type] = \
-                        make_transform_func_with_upper_bound(upper_bound, func_type)
+                for func_type in ["direct", "inverse", "inverse_derivative"]:
+                    self.transform[prior_dict["param_name"]][
+                        func_type
+                    ] = make_transform_func_with_upper_bound(upper_bound, func_type)
 
                 representative_point = upper_bound - 10 * original_sd
                 if self.starting_point[prior_dict["param_name"]] >= upper_bound:
                     self.starting_point[prior_dict["param_name"]] = upper_bound - original_sd / 10
             # case of a lower- and upper-bounded parameter
             else:
-                for func_type in ['direct', 'inverse', 'inverse_derivative']:
-                    self.transform[prior_dict['param_name']][func_type] = \
-                        make_transform_func_with_two_bounds(lower_bound, upper_bound, func_type)
+                for func_type in ["direct", "inverse", "inverse_derivative"]:
+                    self.transform[prior_dict["param_name"]][
+                        func_type
+                    ] = make_transform_func_with_two_bounds(lower_bound, upper_bound, func_type)
 
-                representative_point = .5 * (lower_bound + upper_bound)
+                representative_point = 0.5 * (lower_bound + upper_bound)
                 if self.starting_point[prior_dict["param_name"]] <= lower_bound:
                     self.starting_point[prior_dict["param_name"]] = lower_bound + original_sd / 10
                 elif self.starting_point[prior_dict["param_name"]] >= upper_bound:
                     self.starting_point[prior_dict["param_name"]] = upper_bound - original_sd / 10
 
             if representative_point is not None:
-                transformed_low = self.transform[prior_dict['param_name']]['direct'](representative_point - original_sd / 2)
-                transformed_up = self.transform[prior_dict['param_name']]['direct'](representative_point + original_sd / 2)
+                transformed_low = self.transform[prior_dict["param_name"]]["direct"](
+                    representative_point - original_sd / 2
+                )
+                transformed_up = self.transform[prior_dict["param_name"]]["direct"](
+                    representative_point + original_sd / 2
+                )
                 self.priors[i]["jumping_sd"] = abs(transformed_up - transformed_low)
 
     def get_original_params(self, transformed_params):
         original_params = []
         for i, prior_dict in enumerate(self.priors):
             original_params.append(
-                self.transform[prior_dict['param_name']]['inverse'](transformed_params[i])
+                self.transform[prior_dict["param_name"]]["inverse"](transformed_params[i])
             )
         return original_params
 
@@ -768,7 +802,7 @@ class Calibration:
             for prior_dict in self.priors:
                 start_point = self.starting_point[prior_dict["param_name"]]
                 prev_params_trans.append(
-                    self.transform[prior_dict['param_name']]['direct'](start_point)
+                    self.transform[prior_dict["param_name"]]["direct"](start_point)
                 )
             return prev_params_trans
 
@@ -784,13 +818,15 @@ class Calibration:
                     False  # we can't use the adaptive method for this step as the covariance is 0.
                 )
             else:
-                new_params_trans = sample_from_adaptive_gaussian(prev_params_trans, adaptive_cov_matrix)
+                new_params_trans = sample_from_adaptive_gaussian(
+                    prev_params_trans, adaptive_cov_matrix
+                )
 
         if not use_adaptive_proposal:
             for i, prior_dict in enumerate(self.priors):
                 sample = np.random.normal(
-                        loc=prev_params_trans[i], scale=prior_dict["jumping_sd"], size=1
-                    )[0]
+                    loc=prev_params_trans[i], scale=prior_dict["jumping_sd"], size=1
+                )[0]
                 new_params_trans.append(sample)
 
         return new_params_trans

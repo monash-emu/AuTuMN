@@ -21,9 +21,16 @@ def _get_death_rates(country_iso_code: str):
     if country_iso_code in MAPPING_ISO_CODE:
         country_iso_code = MAPPING_ISO_CODE[country_iso_code]
     input_db = get_input_db()
-    death_df = input_db.query("deaths", conditions=[f"iso3='{country_iso_code}'"],)
+    death_df = input_db.query(
+        "deaths",
+        conditions=[f"iso3='{country_iso_code}'"],
+    )
     pop_df = input_db.query(
-        "population", conditions=[f"iso3='{country_iso_code}'", "region IS NULL",],
+        "population",
+        conditions=[
+            f"iso3='{country_iso_code}'",
+            "region IS NULL",
+        ],
     )
 
     # Calculate mean year and time period
@@ -49,7 +56,10 @@ def _get_death_rates(country_iso_code: str):
 
 def _get_life_expectancy(country_iso_code: str):
     input_db = get_input_db()
-    expectancy_df = input_db.query("life_expectancy", conditions=[f"iso3='{country_iso_code}'"],)
+    expectancy_df = input_db.query(
+        "life_expectancy",
+        conditions=[f"iso3='{country_iso_code}'"],
+    )
 
     # Calculate mean year
     expectancy_df["mean_year"] = (expectancy_df["start_year"] + expectancy_df["end_year"]) / 2
@@ -207,7 +217,7 @@ def downsample_quantity(orig_vals: List[float], orig_bins: List[float], new_bins
 
 def get_bin_weights(orig_bins: List[float], new_bins: List[float]):
     """
-    Gets 2D weight matrix for moving from orig bins to new bins. 
+    Gets 2D weight matrix for moving from orig bins to new bins.
     """
     num_orig_bins = len(orig_bins)
     num_new_bins = len(new_bins)

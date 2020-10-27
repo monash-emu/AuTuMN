@@ -216,4 +216,3 @@ def sample_runs(mcmc_df: pd.DataFrame, num_samples: int):
     chosen_idxs = np.random.choice(idxs, size=num_samples, replace=False, p=sample_pr)
     chosen_runs = [run_choices[i] for i in chosen_idxs]
     return chosen_runs
-

@@ -19,7 +19,10 @@ def test_database__with_conditions__expect_filtered_df():
     """
     Ensure we can read a filtered table from the input db as a dataframe.
     """
-    result_df = db.query(table_name="countries", conditions=['"country"="Ethiopia"'],)
+    result_df = db.query(
+        table_name="countries",
+        conditions=['"country"="Ethiopia"'],
+    )
     assert len(result_df) == 1  # Number of rows
     assert len(result_df.columns) == 3  # Number of columns
     assert result_df["iso3"].iloc[0] == "ETH"
@@ -30,7 +33,9 @@ def test_database__with_conditions_and_column__expect_filtered_df():
     Ensure we can read a single column from a filtered table from the input db as a dataframe.
     """
     result_df = db.query(
-        table_name="countries", column='"iso3"', conditions=['"country"="Ethiopia"'],
+        table_name="countries",
+        column='"iso3"',
+        conditions=['"country"="Ethiopia"'],
     )
     assert len(result_df) == 1  # Number of rows
     assert len(result_df.columns) == 1  # Number of columns

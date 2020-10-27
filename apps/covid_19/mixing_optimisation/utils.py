@@ -16,8 +16,16 @@ country_mapping = {"united-kingdom": "The United Kingdom"}
 
 def get_prior_distributions_for_opti():
     prior_list = [
-        {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.02, 0.06],},
-        {"param_name": "time.start", "distribution": "uniform", "distri_params": [0.0, 40.0],},
+        {
+            "param_name": "contact_rate",
+            "distribution": "uniform",
+            "distri_params": [0.02, 0.06],
+        },
+        {
+            "param_name": "time.start",
+            "distribution": "uniform",
+            "distri_params": [0.0, 40.0],
+        },
         {
             "param_name": "sojourn.compartment_periods_calculated.exposed.total_period",
             "distribution": "trunc_normal",
@@ -33,7 +41,7 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "infection_fatality.multiplier",
             "distribution": "uniform",
-            "distri_params": [.5, 3.8],  # 3.8 to match the highest value found in Levin et al.
+            "distri_params": [0.5, 3.8],  # 3.8 to match the highest value found in Levin et al.
         },
         {
             "param_name": "case_detection.start_value",
@@ -93,7 +101,7 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "mobility.microdistancing.behaviour.parameters.upper_asymptote",
             "distribution": "uniform",
-            "distri_params": [.25, .80],
+            "distri_params": [0.25, 0.80],
         },
         {
             "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.c",
@@ -103,7 +111,7 @@ def get_prior_distributions_for_opti():
         {
             "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.sigma",
             "distribution": "uniform",
-            "distri_params": [.4, 1.],
+            "distri_params": [0.4, 1.0],
         },
     ]
     return prior_list
@@ -180,7 +188,9 @@ def prepare_table_of_param_sets(calibration_output_path, country_name, n_samples
 
 
 ############# To create main table outputs
-def read_percentile_from_pbi_table(calibration_output_path, scenario=0, quantile=0.5, time=0., type='notifications'):
+def read_percentile_from_pbi_table(
+    calibration_output_path, scenario=0, quantile=0.5, time=0.0, type="notifications"
+):
     db_path = [
         os.path.join(calibration_output_path, f)
         for f in os.listdir(calibration_output_path)
@@ -194,14 +204,18 @@ def read_percentile_from_pbi_table(calibration_output_path, scenario=0, quantile
     mask_2 = unc_table["quantile"] == quantile
     mask_3 = unc_table["time"] == time
     mask_4 = unc_table["type"] == type
-    mask = [m_1 and m_2 and m_3 and m_4 for (m_1, m_2, m_3, m_4) in zip(mask_1, mask_2, mask_3, mask_4)]
+    mask = [
+        m_1 and m_2 and m_3 and m_4 for (m_1, m_2, m_3, m_4) in zip(mask_1, mask_2, mask_3, mask_4)
+    ]
     value = float(unc_table[mask]["value"])
 
     return value
 
 
 # FIXME: load_derived_output_tables is broken or not found
-def read_cumulative_output_from_output_table(calibration_output_path, scenario, time_range, model_output):
+def read_cumulative_output_from_output_table(
+    calibration_output_path, scenario, time_range, model_output
+):
     derived_output_tables = load_derived_output_tables(calibration_output_path)
 
     cumulative_values = []
@@ -214,7 +228,7 @@ def read_cumulative_output_from_output_table(calibration_output_path, scenario, 
             mask_3 = d_t["times"] <= time_range[1]
             mask = [m_1 and m_2 and m_3 for (m_1, m_2, m_3) in zip(mask_1, mask_2, mask_3)]
         d_t = d_t[mask]  # a 2d array
-        sum_by_run = d_t.groupby(['idx'])[model_output].sum()
+        sum_by_run = d_t.groupby(["idx"])[model_output].sum()
         cumulative_values += list(sum_by_run)
 
     return cumulative_values
@@ -224,13 +238,13 @@ def get_uncertainty_cell_value(uncertainty_df, output, config, mode):
     # output is in ["deaths_before", "deaths_unmitigated", "deaths_opti_deaths", "deaths_opti_yoll",
     #                "yoll_before", "yoll_unmitigated", "yoll_opti_deaths", "yoll_opti_yoll"]
 
-    if mode == 'by_location' and "unmitigated" in output:
+    if mode == "by_location" and "unmitigated" in output:
         return ""
 
-    if 'deaths_' in output:
-        type = 'accum_deaths'
+    if "deaths_" in output:
+        type = "accum_deaths"
     else:
-        type = 'accum_years_of_life_lost'
+        type = "accum_years_of_life_lost"
     mask_output = uncertainty_df["type"] == type
     output_df = uncertainty_df[mask_output]
 
@@ -258,21 +272,15 @@ def get_uncertainty_cell_value(uncertainty_df, output, config, mode):
     mask_scenario = output_df["Scenario"] == "S_" + str(scenario)
     output_df = output_df[mask_scenario]
 
-    mask_time = output_df["time"] == max(output_df['time'])
+    mask_time = output_df["time"] == max(output_df["time"])
     output_df = output_df[mask_time]
 
     mask_025 = output_df["quantile"] == 0.025
     mask_50 = output_df["quantile"] == 0.5
     mask_975 = output_df["quantile"] == 0.975
 
-    multiplier = {
-        "accum_deaths": 1. / 1000.,
-        "accum_years_of_life_lost": 1. / 1000.
-    }
-    rounding = {
-        "accum_deaths": 1,
-        "accum_years_of_life_lost": 0
-    }
+    multiplier = {"accum_deaths": 1.0 / 1000.0, "accum_years_of_life_lost": 1.0 / 1000.0}
+    rounding = {"accum_deaths": 1, "accum_years_of_life_lost": 0}
 
     # read the percentile
     median = round(multiplier[type] * float(output_df[mask_50]["value"]), rounding[type])
@@ -285,16 +293,23 @@ def get_uncertainty_cell_value(uncertainty_df, output, config, mode):
 
 
 def make_main_outputs_tables(mode):
-    countries = ['belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']
+    countries = ["belgium", "france", "italy", "spain", "sweden", "united-kingdom"]
     country_names = [c.title() for c in countries]
     country_names[-1] = "United Kingdom"
 
-    column_names = ["country",
-                    "deaths_before", "deaths_unmitigated", "deaths_opti_deaths", "deaths_opti_yoll",
-                     "yoll_before", "yoll_unmitigated", "yoll_opti_deaths", "yoll_opti_yoll"
-                    ]
+    column_names = [
+        "country",
+        "deaths_before",
+        "deaths_unmitigated",
+        "deaths_opti_deaths",
+        "deaths_opti_yoll",
+        "yoll_before",
+        "yoll_unmitigated",
+        "yoll_opti_deaths",
+        "yoll_opti_yoll",
+    ]
 
-    for immunity in ["fully_immune"]: # , "partial_immune"]:
+    for immunity in ["fully_immune"]:  # , "partial_immune"]:
         table = pd.DataFrame(columns=column_names)
         i_row = -1
         for i, country in enumerate(countries):
@@ -319,8 +334,17 @@ def make_main_outputs_tables(mode):
 
                 table.loc[i_row] = row_as_list
 
-        table.to_csv("../../../data/pbi_outputs_for_opti/" + mode + "/" + immunity + "/output_table_" + immunity + "_" +
-                     mode + ".csv")
+        table.to_csv(
+            "../../../data/pbi_outputs_for_opti/"
+            + mode
+            + "/"
+            + immunity
+            + "/output_table_"
+            + immunity
+            + "_"
+            + mode
+            + ".csv"
+        )
 
 
 ###########################################
@@ -429,7 +453,9 @@ def get_posterior_percentiles_time_variant_profile(
         i = 0
         for index, row in combined_burned_samples.iterrows():
             my_func = tanh_based_scaleup(
-                row["case_detection.maximum_gradient"], row["case_detection.max_change_time"], 0.0,
+                row["case_detection.maximum_gradient"],
+                row["case_detection.max_change_time"],
+                0.0,
             )
             detect_vals = [row["case_detection.end_value"] * my_func(t) for t in calculated_times]
             store_matrix[:, i] = detect_vals

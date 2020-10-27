@@ -32,8 +32,16 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
 
 
 PRIORS = [
-    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.025, 0.05],},
-    {"param_name": "recovery_rate", "distribution": "uniform", "distri_params": [0.9, 1.2],},
+    {
+        "param_name": "contact_rate",
+        "distribution": "uniform",
+        "distri_params": [0.025, 0.05],
+    },
+    {
+        "param_name": "recovery_rate",
+        "distribution": "uniform",
+        "distri_params": [0.9, 1.2],
+    },
 ]
 
 TARGET_OUTPUTS = [

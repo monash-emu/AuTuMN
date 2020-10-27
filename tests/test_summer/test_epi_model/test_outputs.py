@@ -494,7 +494,11 @@ def test_epi_model__with_complex_dynamics__expect_correct_outputs(ModelClass):
             "to": Compartment.EARLY_INFECTIOUS,
         },
         # Infected people dying.
-        {"type": Flow.DEATH, "parameter": "infect_death", "origin": Compartment.EARLY_INFECTIOUS,},
+        {
+            "type": Flow.DEATH,
+            "parameter": "infect_death",
+            "origin": Compartment.EARLY_INFECTIOUS,
+        },
         # Infected people recovering naturally.
         {
             "type": Flow.STANDARD,

@@ -79,7 +79,10 @@ fields = [
 input_step = InputStep(
     key="calibration-settings", run_condition='build.env("SKIP_INPUT") == null', fields=fields
 )
-calibrate_step = CommandStep(key="run-calibration", command="./scripts/buildkite.sh calibrate",)
+calibrate_step = CommandStep(
+    key="run-calibration",
+    command="./scripts/buildkite.sh calibrate",
+)
 website_step = CommandStep(
     key="update-website",
     command="./scripts/website/deploy.sh",

@@ -24,8 +24,17 @@ def test_stratify_flows_partial():
             "origin": "sus",
             "to": "inf",
         },
-        {"type": Flow.STANDARD, "parameter": "recovery_rate", "origin": "inf", "to": "sus",},
-        {"type": Flow.DEATH, "parameter": "infect_death", "origin": "inf",},
+        {
+            "type": Flow.STANDARD,
+            "parameter": "recovery_rate",
+            "origin": "inf",
+            "to": "sus",
+        },
+        {
+            "type": Flow.DEATH,
+            "parameter": "infect_death",
+            "origin": "inf",
+        },
     ]
     parameters = {
         "contact_rate": 1000,
@@ -97,9 +106,21 @@ def test_stratify_flows_partial():
             "to": "sus",
             "type": Flow.STANDARD,
         },
-        {"origin": "infXlocation_home", "parameter": "infect_death", "type": Flow.DEATH,},
-        {"origin": "infXlocation_work", "parameter": "infect_death", "type": Flow.DEATH,},
-        {"origin": "infXlocation_other", "parameter": "infect_death", "type": Flow.DEATH,},
+        {
+            "origin": "infXlocation_home",
+            "parameter": "infect_death",
+            "type": Flow.DEATH,
+        },
+        {
+            "origin": "infXlocation_work",
+            "parameter": "infect_death",
+            "type": Flow.DEATH,
+        },
+        {
+            "origin": "infXlocation_other",
+            "parameter": "infect_death",
+            "type": Flow.DEATH,
+        },
     ]
     assert model.parameters["infect_death"] == 10
     assert model.parameters["contact_rate"] == 1000
@@ -138,8 +159,17 @@ def test_stratify_flows_full():
             "origin": "sus",
             "to": "inf",
         },
-        {"type": Flow.STANDARD, "parameter": "recovery_rate", "origin": "inf", "to": "sus",},
-        {"type": Flow.DEATH, "parameter": "infect_death", "origin": "inf",},
+        {
+            "type": Flow.STANDARD,
+            "parameter": "recovery_rate",
+            "origin": "inf",
+            "to": "sus",
+        },
+        {
+            "type": Flow.DEATH,
+            "parameter": "infect_death",
+            "origin": "inf",
+        },
     ]
     parameters = {
         "contact_rate": 1000,
@@ -211,9 +241,21 @@ def test_stratify_flows_full():
             "to": "susXlocation_other",
             "type": Flow.STANDARD,
         },
-        {"origin": "infXlocation_home", "parameter": "infect_death", "type": Flow.DEATH,},
-        {"origin": "infXlocation_work", "parameter": "infect_death", "type": Flow.DEATH,},
-        {"origin": "infXlocation_other", "parameter": "infect_death", "type": Flow.DEATH,},
+        {
+            "origin": "infXlocation_home",
+            "parameter": "infect_death",
+            "type": Flow.DEATH,
+        },
+        {
+            "origin": "infXlocation_work",
+            "parameter": "infect_death",
+            "type": Flow.DEATH,
+        },
+        {
+            "origin": "infXlocation_other",
+            "parameter": "infect_death",
+            "type": Flow.DEATH,
+        },
     ]
     assert model.parameters["contact_rate"] == 1000
     assert model.parameters["infect_death"] == 10
@@ -225,9 +267,18 @@ def test_stratify_flows_full():
 def test_stratify_flows_full__with_adjustment_requests():
     """Ensure flows get stratified properly in full strat"""
     adjustment_requests = {
-        "contact_rate": {"home": "home_contact_rate", "work": 0.5,},
-        "recovery_rate": {"home": 1, "work": 2,},
-        "infect_death": {"home": 1, "work": 2,},
+        "contact_rate": {
+            "home": "home_contact_rate",
+            "work": 0.5,
+        },
+        "recovery_rate": {
+            "home": 1,
+            "work": 2,
+        },
+        "infect_death": {
+            "home": 1,
+            "work": 2,
+        },
     }
     requested_flows = [
         {
@@ -236,8 +287,17 @@ def test_stratify_flows_full__with_adjustment_requests():
             "origin": "sus",
             "to": "inf",
         },
-        {"type": Flow.STANDARD, "parameter": "recovery_rate", "origin": "inf", "to": "sus",},
-        {"type": Flow.DEATH, "parameter": "infect_death", "origin": "inf",},
+        {
+            "type": Flow.STANDARD,
+            "parameter": "recovery_rate",
+            "origin": "inf",
+            "to": "sus",
+        },
+        {
+            "type": Flow.DEATH,
+            "parameter": "infect_death",
+            "origin": "inf",
+        },
     ]
     parameters = {
         "contact_rate": 1000,

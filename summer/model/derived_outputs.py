@@ -8,7 +8,7 @@ from summer.constants import Flow
 class DerivedOutputCalculator:
     def __init__(self):
         """
-        Calculates derived outputs from a set of outputs 
+        Calculates derived outputs from a set of outputs
         """
         self._flow_outputs = {}
         self._function_outputs = {}
@@ -62,7 +62,9 @@ class InfectionDeathFlowOutput:
     """
 
     def __init__(
-        self, source: str, source_strata: Dict[str, str],
+        self,
+        source: str,
+        source_strata: Dict[str, str],
     ):
         self.source = source
         self.source_strata = source_strata
@@ -95,7 +97,11 @@ class TransitionFlowOutput:
     """
 
     def __init__(
-        self, source: str, dest: str, source_strata: Dict[str, str], dest_strata: Dict[str, str],
+        self,
+        source: str,
+        dest: str,
+        source_strata: Dict[str, str],
+        dest_strata: Dict[str, str],
     ):
         self.source = source
         self.dest = dest

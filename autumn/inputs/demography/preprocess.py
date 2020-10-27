@@ -64,7 +64,8 @@ def read_life_expectancy_df(loc_df: pd.DataFrame):
         return [age, age + 4]
 
     ages_df = pd.DataFrame(
-        [label_ages(age_str) for age_str in expect_df.variable], columns=("start_age", "end_age"),
+        [label_ages(age_str) for age_str in expect_df.variable],
+        columns=("start_age", "end_age"),
     )
     expect_df = expect_df.join(ages_df)
     expect_df = expect_df.drop(columns="variable")
@@ -116,7 +117,8 @@ def read_death_df(loc_df: pd.DataFrame):
             return [int(s) for s in age_str.split("-")]
 
     ages_df = pd.DataFrame(
-        [label_ages(age_str) for age_str in death_df.variable], columns=("start_age", "end_age"),
+        [label_ages(age_str) for age_str in death_df.variable],
+        columns=("start_age", "end_age"),
     )
     death_df = death_df.join(ages_df)
     death_df = death_df.drop(columns="variable")
@@ -230,7 +232,8 @@ def read_population_df(loc_df: pd.DataFrame):
             return [int(s) for s in age_str.split("-")]
 
     ages_df = pd.DataFrame(
-        [label_ages(age_str) for age_str in pop_df.variable], columns=("start_age", "end_age"),
+        [label_ages(age_str) for age_str in pop_df.variable],
+        columns=("start_age", "end_age"),
     )
     pop_df = pop_df.join(ages_df)
     pop_df = pop_df.drop(columns="variable")
@@ -252,7 +255,10 @@ def read_location_df():
     """
     location_path = os.path.join(POP_DIRPATH, "WPP2019_F01_LOCATIONS.xlsx")
     loc_df = pd.read_excel(
-        pd.ExcelFile(location_path), header=16, index_col=0, sheet_name="Location",
+        pd.ExcelFile(location_path),
+        header=16,
+        index_col=0,
+        sheet_name="Location",
     )
     rename_cols = {
         "Region, subregion, country or area*": "country",

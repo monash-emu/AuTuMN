@@ -23,7 +23,10 @@ X_MAX = None
 
 
 def plot_agg_compartments_multi_scenario(
-    plotter: Plotter, scenarios: List[Scenario], compartment_names: List[str], is_logscale=False,
+    plotter: Plotter,
+    scenarios: List[Scenario],
+    compartment_names: List[str],
+    is_logscale=False,
 ):
     """
     Plot multiple compartments with values aggregated for a multiple scenarios.
@@ -48,7 +51,10 @@ def plot_agg_compartments_multi_scenario(
 
 
 def plot_single_compartment_multi_scenario(
-    plotter: Plotter, scenarios: List[Scenario], compartment_name: str, is_logscale=False,
+    plotter: Plotter,
+    scenarios: List[Scenario],
+    compartment_name: str,
+    is_logscale=False,
 ):
     """
     Plot the selected output compartment for a multiple scenarios.
@@ -121,7 +127,12 @@ def plot_outputs_multi(
 
 
 def plot_outputs_single(
-    plotter: Plotter, scenario: Scenario, output_config: dict, is_logscale=False, axis=None, single_panel=True
+    plotter: Plotter,
+    scenario: Scenario,
+    output_config: dict,
+    is_logscale=False,
+    axis=None,
+    single_panel=True,
 ):
     """
     Plot the model derived/generated outputs requested by the user for a single scenario.
@@ -164,12 +175,12 @@ def plot_multi_targets(
     for output_config in output_configs:
         ax = fig.add_subplot(spec[i_row, i_col])
         plot_outputs_single(plotter, scenario, output_config, is_logscale, ax, single_panel=False)
-        ax.set_title(output_config['title'])
+        ax.set_title(output_config["title"])
         i_col += 1
         if i_col == max_n_col:
             i_col = 0
             i_row += 1
-    plotter.save_figure(fig, filename='multi_targets', subdir="outputs", title_text='')
+    plotter.save_figure(fig, filename="multi_targets", subdir="outputs", title_text="")
 
 
 def _plot_outputs_to_axis(axis, scenario: Scenario, name: str, color_idx=0, alpha=1):
@@ -478,4 +489,3 @@ def _plot_hospital_occupancy(all_scenarios, country, mode, objective, ax, title)
 
     for tick in ax.yaxis.get_major_ticks():
         tick.label.set_fontsize(12)
-

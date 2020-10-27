@@ -32,7 +32,7 @@ def build_input_database(force: bool = False, rebuild: bool = False):
     """
     Builds the input database from scratch.
     If force is True, build the database from scratch and ignore any previous hashes.
-    If force is False, do not build if it already exists, 
+    If force is False, do not build if it already exists,
     and crash if the built database hash does not match.
 
     If rebuild is True, then we force rebuild the database, but we don't write a new hash.

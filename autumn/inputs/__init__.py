@@ -20,6 +20,7 @@ from .john_hopkins.queries import get_john_hopkins_data
 from .covid_au.queries import get_vic_testing_numbers
 from .covid_phl.queries import get_phl_testing_numbers
 
+
 def fetch_input_data():
     """
     Fetch input data from external sources,

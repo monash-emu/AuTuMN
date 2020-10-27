@@ -488,5 +488,18 @@
       0.75,
       0.975
     ]
+  },
+  "hospital_occupancy": {
+    "output_key": "hospital_occupancy",
+    "title": "hospital_occupancy",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
   }
 }

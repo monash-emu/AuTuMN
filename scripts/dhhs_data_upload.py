@@ -50,55 +50,55 @@ CHRIS_HOSPITAL = "Confirmed COVID ‘+’ cases admitted to your hospital"
 CHRIS_ICU = "Confirmed COVID ‘+’ cases in your ICU/HDU(s)"
 
 CHRIS_MAP = {
-    'Royal Childrens Hospital [Parkville]':'WEST_METRO',
-    'Alfred- The [Prahran]':'SOUTH_METRO',
-    'Cabrini Malvern':'SOUTH_METRO',
-    'Ballarat Health Services [Base Campus]':'GRAMPIANS',
-    'Albury Wodonga Health - Albury':'HUME',
-    'Epworth Freemasons':'WEST_METRO',
-    'Sunshine Hospital':'WEST_METRO',
-    'Western Hospital [Footscray]':'WEST_METRO',
-    'St Vincents Hospital':'NORTH_METRO',
-    'Bendigo Hospital- The':'LODDON_MALLEE',
-    'Bays Hospital- The [Mornington]':'SOUTH_METRO',
-    'Latrobe Regional Hospital [Traralgon]':'GIPPSLAND',
-    'Peninsula Private Hospital [Frankston]':'SOUTH_METRO',
-    'Royal Melbourne Hospital - City Campus':'WEST_METRO',
-    'Melbourne Private Hospital- The [Parkville]':'WEST_METRO',
-    'St John of God Geelong Hospital':'BARWON_SOUTH_WEST',
-    'Maroondah Hospital [East Ringwood]':'SOUTH_EAST_METRO',
-    'Frankston Hospital':'SOUTH_METRO',
-    'St Vincents Private Hospital Fitzroy':'NORTH_METRO',
-    'New Mildura Base Hospital':'LODDON_MALLEE',
-    'Box Hill Hospital':'SOUTH_EAST_METRO',
-    'Austin Hospital':'NORTH_METRO',
-    'Angliss Hospital':'SOUTH_EAST_METRO',
-    'Geelong Hospital':'BARWON_SOUTH_WEST',
-    'Monash Medical Centre [Clayton]':'SOUTH_EAST_METRO',
-    'Goulburn Valley Health [Shepparton]':'HUME',
-    'Warringal Private Hospital [Heidelberg]':'NORTH_METRO',
-    'St John of God Ballarat Hospital':'GRAMPIANS',
-    'Epworth Eastern Hospital':'SOUTH_EAST_METRO',
-    'South West Healthcare [Warrnambool]':'BARWON_SOUTH_WEST',
-    'Northeast Health Wangaratta':'HUME',
-    'Mercy Public Hospitals Inc [Werribee]':'WEST_METRO',
-    'Epworth Hospital [Richmond]':'WEST_METRO',
-    'Holmesglen Private Hospital ':'SOUTH_METRO',
-    'Knox Private Hospital [Wantirna]':'SOUTH_EAST_METRO',
-    'St John of God Bendigo Hospital':'LODDON_MALLEE',
-    'Wimmera Base Hospital [Horsham]':'GRAMPIANS',
-    'Valley Private Hospital- The [Mulgrave]':'SOUTH_EAST_METRO',
-    'John Fawkner - Moreland Private Hospital':'WEST_METRO',
-    'Epworth Geelong':'BARWON_SOUTH_WEST',
-    "Monash Children's Hospital":'SOUTH_EAST_METRO',
-    'Central Gippsland Health Service [Sale]':'GIPPSLAND',
-    'Northern Hospital- The [Epping]':'NORTH_METRO',
-    'Dandenong Campus':'SOUTH_EAST_METRO',
-    'Hamilton Base Hospital':'BARWON_SOUTH_WEST',
-    'St John of God Berwick Hospital':'SOUTH_EAST_METRO',
-    'Casey Hospital':'SOUTH_EAST_METRO',
-    'Mildura Base Public Hospital':'LODDON_MALLEE'
-    }
+    "Royal Childrens Hospital [Parkville]": "WEST_METRO",
+    "Alfred- The [Prahran]": "SOUTH_METRO",
+    "Cabrini Malvern": "SOUTH_METRO",
+    "Ballarat Health Services [Base Campus]": "GRAMPIANS",
+    "Albury Wodonga Health - Albury": "HUME",
+    "Epworth Freemasons": "WEST_METRO",
+    "Sunshine Hospital": "WEST_METRO",
+    "Western Hospital [Footscray]": "WEST_METRO",
+    "St Vincents Hospital": "NORTH_METRO",
+    "Bendigo Hospital- The": "LODDON_MALLEE",
+    "Bays Hospital- The [Mornington]": "SOUTH_METRO",
+    "Latrobe Regional Hospital [Traralgon]": "GIPPSLAND",
+    "Peninsula Private Hospital [Frankston]": "SOUTH_METRO",
+    "Royal Melbourne Hospital - City Campus": "WEST_METRO",
+    "Melbourne Private Hospital- The [Parkville]": "WEST_METRO",
+    "St John of God Geelong Hospital": "BARWON_SOUTH_WEST",
+    "Maroondah Hospital [East Ringwood]": "SOUTH_EAST_METRO",
+    "Frankston Hospital": "SOUTH_METRO",
+    "St Vincents Private Hospital Fitzroy": "NORTH_METRO",
+    "New Mildura Base Hospital": "LODDON_MALLEE",
+    "Box Hill Hospital": "SOUTH_EAST_METRO",
+    "Austin Hospital": "NORTH_METRO",
+    "Angliss Hospital": "SOUTH_EAST_METRO",
+    "Geelong Hospital": "BARWON_SOUTH_WEST",
+    "Monash Medical Centre [Clayton]": "SOUTH_EAST_METRO",
+    "Goulburn Valley Health [Shepparton]": "HUME",
+    "Warringal Private Hospital [Heidelberg]": "NORTH_METRO",
+    "St John of God Ballarat Hospital": "GRAMPIANS",
+    "Epworth Eastern Hospital": "SOUTH_EAST_METRO",
+    "South West Healthcare [Warrnambool]": "BARWON_SOUTH_WEST",
+    "Northeast Health Wangaratta": "HUME",
+    "Mercy Public Hospitals Inc [Werribee]": "WEST_METRO",
+    "Epworth Hospital [Richmond]": "WEST_METRO",
+    "Holmesglen Private Hospital ": "SOUTH_METRO",
+    "Knox Private Hospital [Wantirna]": "SOUTH_EAST_METRO",
+    "St John of God Bendigo Hospital": "LODDON_MALLEE",
+    "Wimmera Base Hospital [Horsham]": "GRAMPIANS",
+    "Valley Private Hospital- The [Mulgrave]": "SOUTH_EAST_METRO",
+    "John Fawkner - Moreland Private Hospital": "WEST_METRO",
+    "Epworth Geelong": "BARWON_SOUTH_WEST",
+    "Monash Children's Hospital": "SOUTH_EAST_METRO",
+    "Central Gippsland Health Service [Sale]": "GIPPSLAND",
+    "Northern Hospital- The [Epping]": "NORTH_METRO",
+    "Dandenong Campus": "SOUTH_EAST_METRO",
+    "Hamilton Base Hospital": "BARWON_SOUTH_WEST",
+    "St John of God Berwick Hospital": "SOUTH_EAST_METRO",
+    "Casey Hospital": "SOUTH_EAST_METRO",
+    "Mildura Base Public Hospital": "LODDON_MALLEE",
+}
 
 
 def main():
@@ -119,7 +119,13 @@ def update_calibration(password: str):
     chris_df = load_chris_df(CHRIS_ICU)
 
     # Replace DHHS icu occupancy with CHRIS data
-    cal_df = pd.merge(cal_df, chris_df, how="left", left_on=["cluster_name","date_index"], right_on=["cluster_name","date_index"])
+    cal_df = pd.merge(
+        cal_df,
+        chris_df,
+        how="left",
+        left_on=["cluster_name", "date_index"],
+        right_on=["cluster_name", "date_index"],
+    )
     cal_df.icu = cal_df.value
 
     for region in CLUSTER_MAP.keys():
@@ -131,7 +137,7 @@ def update_calibration(password: str):
 
         for key, val in TARGETS_MAP.items():
             # Drop the NaN value rows from CHRIS data.
-            temp_df = update_df[["date_index",val]].dropna(0, subset=[val])
+            temp_df = update_df[["date_index", val]].dropna(0, subset=[val])
 
             targets[key]["times"] = list(temp_df["date_index"])
             targets[key]["values"] = list(temp_df[val])
@@ -144,7 +150,7 @@ def update_calibration(password: str):
 
 def update_importation(password: str):
     """
-    Update Victorian importation targets. 
+    Update Victorian importation targets.
     """
     # Load imported cases
     imp_df = load_dhhs_df(ACQUIRED_OVERSEAS)
@@ -171,7 +177,7 @@ def get_region_name(cluster_name: str):
 
 
 def load_dhhs_df(acquired: int):
-    
+
     df = pd.read_csv(DHHS_CSV)
     df.date = pd.to_datetime(df["date"], infer_datetime_format=True)
     df = df[df.acquired == acquired][
@@ -184,32 +190,44 @@ def load_dhhs_df(acquired: int):
 
     # Remove last date due to poor accuracy of data.
     df = df[df.date_index != df.date_index.max()]
-         
+
     return df
 
-def load_chris_df(load:str):
+
+def load_chris_df(load: str):
     """
     Load data from CSV downloaded from CHRIS website
     """
     df = pd.read_csv(CHRIS_CSV)
-    df.rename(columns={'Campus Name':'cluster_name', ' Jurisdiction ':'state', 'Field Name':"type", 'Field Value':"value",
-       'Effective From':"E_F", 'Effective To':"E_T"}, inplace=True)
+    df.rename(
+        columns={
+            "Campus Name": "cluster_name",
+            " Jurisdiction ": "state",
+            "Field Name": "type",
+            "Field Value": "value",
+            "Effective From": "E_F",
+            "Effective To": "E_T",
+        },
+        inplace=True,
+    )
 
-    df = df[df.type==load][["cluster_name","state","value","E_F"]]
-    df["E_F"] = pd.to_datetime(df["E_F"], format='%d/%m/%Y %H:%M:%S', infer_datetime_format=True)
+    df = df[df.type == load][["cluster_name", "state", "value", "E_F"]]
+    df["E_F"] = pd.to_datetime(df["E_F"], format="%d/%m/%Y %H:%M:%S", infer_datetime_format=True)
     df["date_index"] = (df["E_F"] - pd.datetime(2019, 12, 31)).dt.days
-    df = df.astype({"value":int})
-    df = df[["cluster_name","date_index","value"]]
-    
+    df = df.astype({"value": int})
+    df = df[["cluster_name", "date_index", "value"]]
 
-    # Sort and remove duplicates to obtain max for a given date. 
-    df.sort_values(by=["cluster_name","date_index","value"], ascending=[True,True,False], inplace =True)
-    df.drop_duplicates(["cluster_name","date_index"],keep='first',inplace=True)
+    # Sort and remove duplicates to obtain max for a given date.
+    df.sort_values(
+        by=["cluster_name", "date_index", "value"], ascending=[True, True, False], inplace=True
+    )
+    df.drop_duplicates(["cluster_name", "date_index"], keep="first", inplace=True)
     df["cluster_name"] = df.cluster_name.replace(CHRIS_MAP).str.lower()
 
-    df = df.groupby(["date_index","cluster_name"]).sum().reset_index()
-    
+    df = df.groupby(["date_index", "cluster_name"]).sum().reset_index()
+
     return df
-    
+
+
 if __name__ == "__main__":
     main()

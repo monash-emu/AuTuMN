@@ -51,7 +51,7 @@ def get_coverage_from_cost(
         alpha: Steepness parameter determining the curve's shape
     Returns:
         The proportional coverage of the intervention given the spending
-   """
+    """
 
     # if cost is smaller thar c_inflection_cost, then the starting cost necessary to get coverage has not been reached
     if popsize == 0.0 or unit_cost == 0.0 or spending == 0.0 or spending <= inflection_cost:

@@ -101,7 +101,10 @@ def load_mys_data():
     death_df = get_death()
 
     case_df.Date = pd.to_datetime(
-        case_df["Date"], errors="coerce", format="%Y-%m-%d %H:%M:%S", infer_datetime_format=True,
+        case_df["Date"],
+        errors="coerce",
+        format="%Y-%m-%d %H:%M:%S",
+        infer_datetime_format=True,
     )
     case_df = case_df[(case_df.Date > "2020-03-02") & (case_df.Date < "2020-12-31")]
     case_df["date_index"] = (case_df.Date - COVID_BASE_DATE).dt.days

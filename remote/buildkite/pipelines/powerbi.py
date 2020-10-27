@@ -27,7 +27,10 @@ input_step = InputStep(
     run_condition='build.env("SKIP_INPUT") == null',
     fields=fields,
 )
-powerbi_step = CommandStep(key="run-powerbi", command="./scripts/buildkite.sh powerbi",)
+powerbi_step = CommandStep(
+    key="run-powerbi",
+    command="./scripts/buildkite.sh powerbi",
+)
 website_step = CommandStep(
     key="update-website",
     command="./scripts/website/deploy.sh",

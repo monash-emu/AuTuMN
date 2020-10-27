@@ -21,12 +21,12 @@ OPTI_ISO3S = [
 
 
 COUNTRY_TITLES = {
-    Region.BELGIUM: 'Belgium',
-    Region.FRANCE: 'France',
-    Region.ITALY: 'Italy',
-    Region.SPAIN: 'Spain',
-    Region.SWEDEN: 'Sweden',
-    Region.UNITED_KINGDOM: 'United Kingdom',
+    Region.BELGIUM: "Belgium",
+    Region.FRANCE: "France",
+    Region.ITALY: "Italy",
+    Region.SPAIN: "Spain",
+    Region.SWEDEN: "Sweden",
+    Region.UNITED_KINGDOM: "United Kingdom",
 }
 
 
@@ -35,27 +35,22 @@ PHASE_2_START_TIME = 275  # start on 1 October
 DURATION_PHASES_2_AND_3 = 365 + 90
 
 PHASE_2_DURATION = {
-    'six_months': 183,
-    'twelve_months': 365,
+    "six_months": 183,
+    "twelve_months": 365,
 }
 
 # Mixing factor bounds
-MIXING_FACTOR_BOUNDS = [.1, 1.]
+MIXING_FACTOR_BOUNDS = [0.1, 1.0]
 
 # Microdistancing
 MICRODISTANCING_OPTI_PARAMS = {
     # apply mild microdistancing
-    'behaviour': {
-        'parameters': {
-            'sigma': 0.10,
-            'upper_asymptote': 0.10,
+    "behaviour": {
+        "parameters": {
+            "sigma": 0.10,
+            "upper_asymptote": 0.10,
         }
     },
     # remove the behaviour adjuster's effect
-    'behaviour_adjuster': {
-        'parameters': {
-            'sigma': 1.0,
-            'upper_asymptote': 1.0
-        }
-    }
+    "behaviour_adjuster": {"parameters": {"sigma": 1.0, "upper_asymptote": 1.0}},
 }

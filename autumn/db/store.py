@@ -16,7 +16,9 @@ logger = logging.getLogger(__name__)
 
 
 def increment_mcmc_weight(
-    database_path: str, run_id: int, chain_id: int,
+    database_path: str,
+    run_id: int,
+    chain_id: int,
 ):
     logger.info("Incrementing %s %s", run_id, chain_id)
     db = Database(database_path)

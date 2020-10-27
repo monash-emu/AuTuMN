@@ -169,8 +169,8 @@ def get_iso3(country_name: str, country_df):
 def reshape_to_clusters(gm_df):
     """
     Takes the google mobility data frame and creates new DHHS health cluster mobility values.
-    
-    Input: Pandas data frame google mobility 
+
+    Input: Pandas data frame google mobility
     Output: Pandas data frame of DHHS health clusters and VIC
     """
 

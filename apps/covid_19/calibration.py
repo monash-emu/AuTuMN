@@ -27,9 +27,17 @@ Base parameters
 
 BASE_CALIBRATION_PARAMS = [
     # Arbitrary, but always required and this range should span the range of values that would be needed
-    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.015, 0.07],},
+    {
+        "param_name": "contact_rate",
+        "distribution": "uniform",
+        "distri_params": [0.015, 0.07],
+    },
     # Arbitrary, but useful to allow epidemic to take off from a flexible time
-    {"param_name": "time.start", "distribution": "uniform", "distri_params": [0.0, 40.0],},
+    {
+        "param_name": "time.start",
+        "distribution": "uniform",
+        "distri_params": [0.0, 40.0],
+    },
     # Rationale for the following two parameters described in parameters table of the methods Gdoc at:
     # https://docs.google.com/document/d/1Uhzqm1CbIlNXjowbpTlJpIphxOm34pbx8au2PeqpRXs/edit#
     {
@@ -57,9 +65,7 @@ def provide_default_calibration_params(excluded_params=(), override_params=[]):
     :return: list
         calibration parameters
     """
-    params_to_skip = [
-        prior_dict["param_name"] for prior_dict in override_params
-    ]
+    params_to_skip = [prior_dict["param_name"] for prior_dict in override_params]
     params_to_skip += list(excluded_params)
     priors = [
         BASE_CALIBRATION_PARAMS[param]
@@ -105,7 +111,7 @@ def run_calibration_chain(
         num_chains,
         param_set_name=region,
         adaptive_proposal=adaptive_proposal,
-        initialisation_type=params['default']['metropolis_initialisation_type']
+        initialisation_type=params["default"]["metropolis_initialisation_type"],
     )
     logger.info("Starting calibration.")
     calib.run_fitting_algorithm(
@@ -114,7 +120,7 @@ def run_calibration_chain(
         n_burned=N_BURNED,
         n_chains=N_CHAINS,
         available_time=max_seconds,
-        haario_scaling_factor=params['default']['haario_scaling_factor']
+        haario_scaling_factor=params["default"]["haario_scaling_factor"],
     )
     logger.info(f"Finished calibration for run {run_id}.")
 
@@ -157,7 +163,9 @@ def remove_early_points_to_prevent_crash(target_outputs, priors):
     if idx is not None:
         latest_start_time = priors[idx]["distri_params"][1]
         for target in target_outputs:
-            first_idx_to_keep = next(x[0] for x in enumerate(target["years"]) if x[1] > latest_start_time)
+            first_idx_to_keep = next(
+                x[0] for x in enumerate(target["years"]) if x[1] > latest_start_time
+            )
             target["years"] = target["years"][first_idx_to_keep:]
             target["values"] = target["values"][first_idx_to_keep:]
 
@@ -203,8 +211,8 @@ def add_standard_philippines_params(params, region):
             "distri_params": [0.25, 0.75],
         },
         {
-            "param_name": "infectious_seed", 
-            "distribution": "uniform", 
+            "param_name": "infectious_seed",
+            "distribution": "uniform",
             "distri_params": [10.0, 100.0],
         },
     ]
@@ -396,9 +404,9 @@ European countries for the optimisation project
 def get_targets_and_priors_for_opti(country, likelihood_type="normal"):
     targets = load_targets("covid_19", country)
 
-    hospital_targets = [t for t in list(targets.keys()) if 'hospital' in t or 'icu' in t]
+    hospital_targets = [t for t in list(targets.keys()) if "hospital" in t or "icu" in t]
     if len(hospital_targets) > 1:
-        hospital_targets = [t for t in list(targets.keys()) if 'new_' in t]
+        hospital_targets = [t for t in list(targets.keys()) if "new_" in t]
 
     notifications = targets["notifications"]
     deaths = targets["infection_deaths"]
@@ -436,12 +444,12 @@ def get_targets_and_priors_for_opti(country, likelihood_type="normal"):
                 "output_key": "proportion_seropositive",
                 "years": prop_seropositive["times"],
                 "values": prop_seropositive["values"],
-                "loglikelihood_distri": 'normal',
-                "sd": .02
+                "loglikelihood_distri": "normal",
+                "sd": 0.02,
             }
         )
 
-    if likelihood_type == 'normal':
+    if likelihood_type == "normal":
         par_priors = add_dispersion_param_prior_for_gaussian(par_priors, target_outputs)
     else:
         for output_name in ["notifications", "infection_deaths", hospital_targets[0]]:

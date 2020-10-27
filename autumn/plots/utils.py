@@ -45,12 +45,24 @@ PLOT_TEXT_DICT = {
 }
 
 ALPHAS = (1.0, 0.6, 0.4, 0.3, 0.2)
+# https://matplotlib.org/3.1.0/gallery/color/named_colors.html
 COLORS = (
+    # Blues
     ["lightsteelblue", "cornflowerblue", "royalblue", "navy"],
+    # Purples
     ["plum", "mediumorchid", "darkviolet", "rebeccapurple"],
-    ["lightgrey", "grey", "dimgrey", "black"],
-    ["forestgreen", "forestgreen", "forestgreen", "darkgreen"],
-    ["forestgreen", "forestgreen", "forestgreen", "darkgreen"],
+    # Greens
+    ["palegreen", "mediumspringgreen", "mediumseagreen", "darkgreen"],
+    # Yellows
+    ["lightgoldenrodyellow", "palegoldenrod", "gold", "darkgoldenrod"],
+    # Orangey-browns
+    ["papayawhip", "navajowhite", "burlywood", "saddlebrown"],
+    # Cyans
+    ["lightcyan", "paleturquoise", "darkcyan", "darkslategrey"],
+    # Greys
+    ["lightgrey", "darkgrey", "dimgrey", "black"],
+    # Reds
+    ["lightsalmon", "darksalmon", "tomato", "darkred"],
 )
 REF_DATE = datetime.date(2019, 12, 31)
 
@@ -60,10 +72,7 @@ def get_plot_text_dict(param_string, capitalise_first_letter=False):
     Get standard text for use in plotting as title, y-label, etc.
     """
 
-    text = \
-        PLOT_TEXT_DICT[param_string] if \
-            param_string in PLOT_TEXT_DICT else \
-            param_string
+    text = PLOT_TEXT_DICT[param_string] if param_string in PLOT_TEXT_DICT else param_string
     if capitalise_first_letter:
         text = text[0].upper() + text[1:]
     return text

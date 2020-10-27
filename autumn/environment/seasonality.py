@@ -40,4 +40,3 @@ if __name__ == "__main__":
     forcing_function = get_seasonal_forcing(period, shift, amplitude, average)
     for i in x_values:
         print(f"date: {i}, \t value: {forcing_function(i)}")
-

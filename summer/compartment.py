@@ -8,7 +8,10 @@ class Compartment:
     """
 
     def __init__(
-        self, name: str, strat_names: List[str] = [], strat_values: Dict[str, str] = {},
+        self,
+        name: str,
+        strat_names: List[str] = [],
+        strat_values: Dict[str, str] = {},
     ):
         assert set(strat_names) == set(strat_values.keys()), "Mismatch in Compartment strat values."
         assert type(name) is str, "Name must be a string, not %s." % type(name)
@@ -49,7 +52,9 @@ class Compartment:
         new_strat_names = [*self._strat_names, stratify_name]
         new_strat_values = {**self._strat_values, stratify_name: stratum_name}
         return Compartment(
-            name=self._name, strat_names=new_strat_names, strat_values=new_strat_values,
+            name=self._name,
+            strat_names=new_strat_names,
+            strat_values=new_strat_values,
         )
 
     @staticmethod

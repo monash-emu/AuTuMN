@@ -1,6 +1,11 @@
 from apps.covid_19.mixing_optimisation.mixing_opti import (
-    run_root_model, objective_function,
-    MODES, DURATIONS, OBJECTIVES, AGE_MODE, LOCATION_MODE
+    run_root_model,
+    objective_function,
+    MODES,
+    DURATIONS,
+    OBJECTIVES,
+    AGE_MODE,
+    LOCATION_MODE,
 )
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
 
@@ -16,9 +21,9 @@ for country in OPTI_REGIONS:
 
                 # use some example decision variables (size 16 or 3 depending on the mode)
                 if mode == AGE_MODE:
-                    decision_vars = [1.] * 16
+                    decision_vars = [1.0] * 16
                 elif mode == LOCATION_MODE:
-                    decision_vars = [1.] * 3
+                    decision_vars = [1.0] * 3
 
                 # The decision variables must now have a lower bound of 0.1  and upper bound of 1
 

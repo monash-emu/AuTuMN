@@ -22,7 +22,8 @@ def add_uncertainty_quantiles(database_path: str, targets: dict):
     db = Database(database_path)
     if "uncertainty" in db.table_names():
         logger.info(
-            "Deleting existing uncertainty table in %s", database_path,
+            "Deleting existing uncertainty table in %s",
+            database_path,
         )
         db.engine.execute(f"DELETE FROM uncertainty")
 

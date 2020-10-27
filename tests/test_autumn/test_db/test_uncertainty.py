@@ -58,4 +58,3 @@ def _linear_func(t):
 def _quadratic_func(t):
     # Quadratic func + [0, 1] from uniform distribution
     return t ** 2 + random.random()
-

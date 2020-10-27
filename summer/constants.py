@@ -77,4 +77,3 @@ class IntegrationType:
     SOLVE_IVP = "solve_ivp"
     EULER = "euler"
     RUNGE_KUTTA = "rk4"
-

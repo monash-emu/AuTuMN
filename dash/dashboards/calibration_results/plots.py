@@ -20,11 +20,11 @@ PLOT_FUNCS = {}
 
 
 def write_mcmc_centiles(
-        mcmc_params,
-        mcmc_tables,
-        burn_in,
-        sig_figs,
-        centiles,
+    mcmc_params,
+    mcmc_tables,
+    burn_in,
+    sig_figs,
+    centiles,
 ):
     """
     Write a table of parameter centiles from the MCMC chain outputs.
@@ -92,13 +92,13 @@ PLOT_FUNCS["Print MLE parameters"] = print_mle_parameters
 
 
 def plot_acceptance_ratio(
-        plotter: StreamlitPlotter,
-        calib_dir_path: str,
-        mcmc_tables: List[pd.DataFrame],
-        mcmc_params: List[pd.DataFrame],
-        targets: dict,
-        app_name: str,
-        region: str,
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+    app_name: str,
+    region: str,
 ):
     label_font_size = st.sidebar.slider("Label font size", 1, 15, 10)
     burn_in = st.sidebar.slider("Burn in", 0, find_shortest_chain_length(mcmc_tables), 0)
@@ -112,13 +112,13 @@ PLOT_FUNCS["Acceptance ratio"] = plot_acceptance_ratio
 
 
 def plot_cdr_curves(
-        plotter: StreamlitPlotter,
-        calib_dir_path: str,
-        mcmc_tables: List[pd.DataFrame],
-        mcmc_params: List[pd.DataFrame],
-        targets: dict,
-        app_name: str,
-        region: str,
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+    app_name: str,
+    region: str,
 ):
 
     # This should remain fixed, because it is only relevant to this particular function
@@ -140,25 +140,23 @@ def plot_cdr_curves(
     time_params = default_params["time"]
 
     # Derive times and age group breaks as the model does
-    times = \
-        get_model_times_from_inputs(time_params["start"], time_params["end"], time_params["step"])
-    agegroup_strata = \
-        [str(s) for s in range(0, agegroup_params["max_age"], agegroup_params["age_step_size"])]
+    times = get_model_times_from_inputs(
+        time_params["start"], time_params["end"], time_params["step"]
+    )
+    agegroup_strata = [
+        str(s) for s in range(0, agegroup_params["max_age"], agegroup_params["age_step_size"])
+    ]
 
     # Collate parameters into one structure
     testing_to_detection_values = []
     for i_chain in range(len(mcmc_params)):
-        param_mask = \
-            mcmc_params[i_chain]["name"] == param_name
-        testing_to_detection_values += \
-            mcmc_params[i_chain]["value"][param_mask].tolist()
+        param_mask = mcmc_params[i_chain]["name"] == param_name
+        testing_to_detection_values += mcmc_params[i_chain]["value"][param_mask].tolist()
 
     sampled_test_to_detect_vals = random.sample(testing_to_detection_values, samples)
 
     # Get CDR function - needs to be done outside of autumn, because it is importing from the apps
-    testing_pops = inputs.get_population_by_agegroup(
-        agegroup_strata, iso3, None, year=testing_year
-    )
+    testing_pops = inputs.get_population_by_agegroup(agegroup_strata, iso3, None, year=testing_year)
     detected_proportion = []
     for assumed_cdr_parameter in sampled_test_to_detect_vals:
         detected_proportion.append(
@@ -171,7 +169,9 @@ def plot_cdr_curves(
             )
         )
 
-    plots.calibration.plots.plot_cdr_curves(plotter, times, detected_proportion, end_date, label_rotation)
+    plots.calibration.plots.plot_cdr_curves(
+        plotter, times, detected_proportion, end_date, label_rotation
+    )
 
 
 PLOT_FUNCS["CDR curves"] = plot_cdr_curves
@@ -204,8 +204,7 @@ def plot_timeseries_with_uncertainty(
         label_font_size,
         dpi_request,
         capitalise_first_letter,
-    ) = \
-        selectors.create_standard_plotting_sidebar()
+    ) = selectors.create_standard_plotting_sidebar()
     is_logscale = st.sidebar.checkbox("Log scale")
     is_targets = st.sidebar.checkbox("Show targets")
     is_overlay_unceratinty = st.sidebar.checkbox("Overlay uncertainty")
@@ -242,20 +241,28 @@ def plot_multiple_timeseries_with_uncertainty(
     region: str,
 ):
     available_outputs = [o["output_key"] for o in targets.values()]
-    chosen_outputs = st.multiselect('Select outputs', available_outputs)
+    chosen_outputs = st.multiselect("Select outputs", available_outputs)
 
     uncertainty_df = get_uncertainty_df(calib_dir_path, mcmc_tables, targets)
 
-    x_min = round(min(uncertainty_df['time']))
-    x_max = round(max(uncertainty_df['time']))
+    x_min = round(min(uncertainty_df["time"]))
+    x_max = round(max(uncertainty_df["time"]))
     x_low, x_up = selectors.create_xrange_selector(x_min, x_max)
 
-    available_scenarios = uncertainty_df['scenario'].unique()
+    available_scenarios = uncertainty_df["scenario"].unique()
     selected_scenarios = st.multiselect("Select scenarios", available_scenarios)
     is_logscale = st.sidebar.checkbox("Log scale")
     n_xticks = st.sidebar.slider("Number of x ticks", 1, 10, 6)
     plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(
-        plotter, uncertainty_df, chosen_outputs, selected_scenarios, targets, is_logscale, x_low, x_up, n_xticks
+        plotter,
+        uncertainty_df,
+        chosen_outputs,
+        selected_scenarios,
+        targets,
+        is_logscale,
+        x_low,
+        x_up,
+        n_xticks,
     )
 
 
@@ -275,7 +282,9 @@ def plot_calibration_fit(
     # Set up interface
     available_outputs = [o["output_key"] for o in targets.values()]
     chain_length = find_shortest_chain_length(mcmc_tables)
-    burn_in = st.sidebar.slider("Burn in (select 0 for default behaviour of discarding first half)", 0, chain_length, 0)
+    burn_in = st.sidebar.slider(
+        "Burn in (select 0 for default behaviour of discarding first half)", 0, chain_length, 0
+    )
     chosen_output = st.sidebar.selectbox("Select calibration target", available_outputs)
     is_logscale = st.sidebar.checkbox("Log scale")
 
@@ -284,11 +293,7 @@ def plot_calibration_fit(
 
     # Call main plotting function
     plots.calibration.plots.plot_calibration_fit(
-        plotter,
-        chosen_output,
-        outputs,
-        targets,
-        is_logscale
+        plotter, chosen_output, outputs, targets, is_logscale
     )
 
 
@@ -315,11 +320,14 @@ def plot_multi_output_fit(
     ) = selectors.create_standard_plotting_sidebar()
     is_logscale = st.sidebar.checkbox("Log scale")
     chain_length = find_shortest_chain_length(mcmc_tables)
-    burn_in = st.sidebar.slider("Burn in (select 0 for default behaviour of discarding first half)", 0, chain_length, 0)
+    burn_in = st.sidebar.slider(
+        "Burn in (select 0 for default behaviour of discarding first half)", 0, chain_length, 0
+    )
 
     # Get data for plotting
     outputs = {
-        output: get_uncertainty_data(calib_dir_path, mcmc_tables, output, burn_in) for output in available_outputs
+        output: get_uncertainty_data(calib_dir_path, mcmc_tables, output, burn_in)
+        for output in available_outputs
     }
 
     # Call main plotting function
@@ -376,7 +384,13 @@ def plot_all_param_traces(
     chain_length = find_shortest_chain_length(mcmc_tables)
     burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
     plots.calibration.plots.plot_multiple_param_traces(
-        plotter, mcmc_params, burn_in, title_font_size, label_font_size, capitalise_first_letter, dpi_request
+        plotter,
+        mcmc_params,
+        burn_in,
+        title_font_size,
+        label_font_size,
+        capitalise_first_letter,
+        dpi_request,
     )
 
 
@@ -448,7 +462,9 @@ def plot_posterior(
     chain_length = find_shortest_chain_length(mcmc_tables)
     burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
     num_bins = st.sidebar.slider("Number of bins", 1, 50, 16)
-    plots.calibration.plots.plot_posterior(plotter, mcmc_params, mcmc_tables, burn_in, chosen_param, num_bins)
+    plots.calibration.plots.plot_posterior(
+        plotter, mcmc_params, mcmc_tables, burn_in, chosen_param, num_bins
+    )
 
 
 PLOT_FUNCS["Posterior distributions"] = plot_posterior
@@ -493,13 +509,13 @@ PLOT_FUNCS["All posteriors"] = plot_all_posteriors
 
 
 def plot_loglikelihood_trace(
-        plotter: StreamlitPlotter,
-        calib_dir_path: str,
-        mcmc_tables: List[pd.DataFrame],
-        mcmc_params: List[pd.DataFrame],
-        targets: dict,
-        app_name: str,
-        region: str,
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+    app_name: str,
+    region: str,
 ):
     burn_in = selectors.burn_in(mcmc_tables)
     plots.calibration.plots.plot_loglikelihood_trace(plotter, mcmc_tables, burn_in)
@@ -509,13 +525,13 @@ PLOT_FUNCS["Loglikelihood trace"] = plot_loglikelihood_trace
 
 
 def compare_loglikelihood_between_chains(
-        plotter: StreamlitPlotter,
-        calib_dir_path: str,
-        mcmc_tables: List[pd.DataFrame],
-        mcmc_params: List[pd.DataFrame],
-        targets: dict,
-        app_name: str,
-        region: str,
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+    app_name: str,
+    region: str,
 ):
     plots.calibration.plots.plot_loglikelihood_boxplots(plotter, mcmc_tables)
 
@@ -524,13 +540,13 @@ PLOT_FUNCS["Compare loglikelihood between chains"] = compare_loglikelihood_betwe
 
 
 def plot_param_matrix_by_chain(
-        plotter: StreamlitPlotter,
-        calib_dir_path: str,
-        mcmc_tables: List[pd.DataFrame],
-        mcmc_params: List[pd.DataFrame],
-        targets: dict,
-        app_name: str,
-        region: str,
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+    app_name: str,
+    region: str,
 ):
     """
     Now unused because I prefer the version that isn't by chain.
@@ -546,13 +562,13 @@ def plot_param_matrix_by_chain(
 
 
 def plot_param_matrix(
-        plotter: StreamlitPlotter,
-        calib_dir_path: str,
-        mcmc_tables: List[pd.DataFrame],
-        mcmc_params: List[pd.DataFrame],
-        targets: dict,
-        app_name: str,
-        region: str,
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+    app_name: str,
+    region: str,
 ):
     parameters = mcmc_params[0]["name"].unique().tolist()
     chain_length = find_shortest_chain_length(mcmc_tables)
@@ -563,7 +579,15 @@ def plot_param_matrix(
     style = st.sidebar.selectbox("Style", ["Shade", "Scatter", "KDE"])
     dpi_request = st.sidebar.slider("DPI", 50, 2000, 300)
     plots.calibration.plots.plot_param_vs_param(
-        plotter, mcmc_params, parameters, burn_in, style, bins, label_font_size, label_chars, dpi_request
+        plotter,
+        mcmc_params,
+        parameters,
+        burn_in,
+        style,
+        bins,
+        label_font_size,
+        label_chars,
+        dpi_request,
     )
     st.write(parameters)
 
@@ -572,13 +596,13 @@ PLOT_FUNCS["Param versus param"] = plot_param_matrix
 
 
 def plot_parallel_coordinates(
-        plotter: StreamlitPlotter,
-        calib_dir_path: str,
-        mcmc_tables: List[pd.DataFrame],
-        mcmc_params: List[pd.DataFrame],
-        targets: dict,
-        app_name: str,
-        region: str,
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+    app_name: str,
+    region: str,
 ):
     plots.calibration.plots.plot_parallel_coordinates(
         plotter,
@@ -591,13 +615,13 @@ PLOT_FUNCS["Parallel Coordinates"] = plot_parallel_coordinates
 
 
 def plot_loglikelihood_surface(
-        plotter: StreamlitPlotter,
-        calib_dir_path: str,
-        mcmc_tables: List[pd.DataFrame],
-        mcmc_params: List[pd.DataFrame],
-        targets: dict,
-        app_name: str,
-        region: str,
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+    app_name: str,
+    region: str,
 ):
     options = mcmc_params[0]["name"].unique().tolist()
     param_1 = st.sidebar.selectbox("Select parameter 1", options)
@@ -616,13 +640,13 @@ PLOT_FUNCS["Loglikelihood 3d scatter"] = plot_loglikelihood_surface
 
 
 def plot_seroprevalence_by_age(
-        plotter: StreamlitPlotter,
-        calib_dir_path: str,
-        mcmc_tables: List[pd.DataFrame],
-        mcmc_params: List[pd.DataFrame],
-        targets: dict,
-        app_name: str,
-        region: str,
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+    app_name: str,
+    region: str,
 ):
 
     try:  # if PBI processing has been performed already
@@ -645,7 +669,7 @@ def plot_seroprevalence_by_age(
     time = st.sidebar.slider("time", min_time, max_time, max_time)
 
     sero_data = get_serosurvey_data()
-    region = 'belgium'  # FIXME
+    region = "belgium"  # FIXME
     if region in sero_data:
         fetch_targets = st.sidebar.checkbox("for all available targets", value=False)
         n_columns = st.sidebar.slider("Number of columns for multi-panel", 1, 5, 3)
@@ -654,18 +678,11 @@ def plot_seroprevalence_by_age(
 
     if fetch_targets:
         plots.uncertainty.plots.plot_seroprevalence_by_age_against_targets(
-            plotter,
-            uncertainty_df,
-            selected_scenario,
-            sero_data[region],
-            n_columns
+            plotter, uncertainty_df, selected_scenario, sero_data[region], n_columns
         )
     else:
         plots.uncertainty.plots.plot_seroprevalence_by_age(
-            plotter,
-            uncertainty_df,
-            selected_scenario,
-            time
+            plotter, uncertainty_df, selected_scenario, time
         )
 
 

@@ -6,7 +6,8 @@ from requests import get
 
 HOSPITAL_DIRPATH = os.path.join(constants.INPUT_DATA_PATH, "hospitalisation_data")
 SWEDEN_ICU_PREV = os.path.join(
-    HOSPITAL_DIRPATH, "Antal som intensivvårdas med Covid-19 per dag - ICU PREVALENCE.xlsx",
+    HOSPITAL_DIRPATH,
+    "Antal som intensivvårdas med Covid-19 per dag - ICU PREVALENCE.xlsx",
 )
 SWEDEN_ICU_INCID = os.path.join(
     HOSPITAL_DIRPATH, "Antal nyinskrivna vårdtillfällen med Coronavirus - ICU INCIDENCE.xlsx"
@@ -124,8 +125,14 @@ def get_italy():
 
 
 def get_sweden():
-    sweden_icu_incid = pd.read_excel(SWEDEN_ICU_INCID, header=1,)
-    sweden_icu_prev = pd.read_excel(SWEDEN_ICU_PREV, header=1,)
+    sweden_icu_incid = pd.read_excel(
+        SWEDEN_ICU_INCID,
+        header=1,
+    )
+    sweden_icu_prev = pd.read_excel(
+        SWEDEN_ICU_PREV,
+        header=1,
+    )
 
     sweden_icu_incid["Datum"] = pd.to_datetime(
         sweden_icu_incid["Datum"], errors="coerce", format="%Y-%m-%d", infer_datetime_format=False

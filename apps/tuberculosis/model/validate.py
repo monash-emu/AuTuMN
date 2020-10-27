@@ -5,7 +5,12 @@ validate_params = sb.build_validator(
     iso3=str,
     region=sb.Nullable(str),
     # Running time.
-    time=sb.Dict(start=float, end=float, step=float, critical_ranges=list,),
+    time=sb.Dict(
+        start=float,
+        end=float,
+        step=float,
+        critical_ranges=list,
+    ),
     # output requests
     calculated_outputs=list,
     outputs_stratification=dict,

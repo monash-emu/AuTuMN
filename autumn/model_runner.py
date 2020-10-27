@@ -20,7 +20,10 @@ logger = logging.getLogger(__name__)
 
 
 def build_model_runner(
-    model_name: str, param_set_name: str, build_model, params: dict,
+    model_name: str,
+    param_set_name: str,
+    build_model,
+    params: dict,
 ):
     """
     Factory function that returns a 'run_model' function.

@@ -12,7 +12,11 @@ class ExitFlow(BaseExitFlow):
     type = "exit"
 
     def __init__(
-        self, source, param_name, param_func, adjustments=[],
+        self,
+        source,
+        param_name,
+        param_func,
+        adjustments=[],
     ):
         self.source = source
         self.param_name = param_name
@@ -42,7 +46,10 @@ def test_exit_flow_stratify__when_no_compartment_match():
         flow_adjustments={},
     )
     flow = ExitFlow(
-        source=Compartment("infect"), param_name="foo", param_func=_get_param_value, adjustments=[],
+        source=Compartment("infect"),
+        param_name="foo",
+        param_func=_get_param_value,
+        adjustments=[],
     )
     new_flows = flow.stratify(strat)
     assert new_flows == [flow]
@@ -57,7 +64,10 @@ def test_exit_flow_stratify__with_no_flow_adjustments():
         flow_adjustments={},
     )
     flow = ExitFlow(
-        source=Compartment("infect"), param_name="foo", param_func=_get_param_value, adjustments=[],
+        source=Compartment("infect"),
+        param_name="foo",
+        param_func=_get_param_value,
+        adjustments=[],
     )
     new_flows = flow.stratify(strat)
     assert len(new_flows) == 2

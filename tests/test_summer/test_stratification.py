@@ -290,7 +290,12 @@ def test_get_stratified_compartment_values__with_extisting_strat():
             Compartment("S", strat_names=["age"], strat_values={"age": "20"}),
             (FlowAdjustment.COMPOSE, "some_function"),
         ],
-        ["infect_death", "2", Compartment("S"), (FlowAdjustment.MULTIPLY, 0.5),],
+        [
+            "infect_death",
+            "2",
+            Compartment("S"),
+            (FlowAdjustment.MULTIPLY, 0.5),
+        ],
         [
             "infect_death",
             "1",

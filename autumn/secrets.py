@@ -63,7 +63,7 @@ def check_password(password: str):
 
 def set_hash(file_path: str):
     """
-    Check that a secret file is the latest version. 
+    Check that a secret file is the latest version.
     """
     assert (
         ".secret." in file_path
@@ -82,7 +82,7 @@ def set_hash(file_path: str):
 
 def check_hash(file_path: str):
     """
-    Check that a secret file is the latest version. 
+    Check that a secret file is the latest version.
     """
     assert (
         ".secret." in file_path

@@ -12,7 +12,12 @@ class TransitionFlow(BaseTransitionFlow):
     type = "transition"
 
     def __init__(
-        self, source, dest, param_name, param_func, adjustments=[],
+        self,
+        source,
+        dest,
+        param_name,
+        param_func,
+        adjustments=[],
     ):
         self.source = source
         self.dest = dest

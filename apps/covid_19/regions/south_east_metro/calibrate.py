@@ -18,5 +18,10 @@ PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS)
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
     base.run_calibration_chain(
-        max_seconds, run_id, num_chains, Region.SOUTH_EAST_METRO, PAR_PRIORS, TARGET_OUTPUTS,
+        max_seconds,
+        run_id,
+        num_chains,
+        Region.SOUTH_EAST_METRO,
+        PAR_PRIORS,
+        TARGET_OUTPUTS,
     )

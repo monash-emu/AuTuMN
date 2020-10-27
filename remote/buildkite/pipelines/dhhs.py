@@ -23,7 +23,10 @@ spot_field = BooleanInputField(
 )
 fields = [commit_field, spot_field]
 input_step = InputStep(key="dhhs-settings", run_condition=None, fields=fields)
-dhhs_step = CommandStep(key="run-dhhs", command="./scripts/buildkite.sh dhhs",)
+dhhs_step = CommandStep(
+    key="run-dhhs",
+    command="./scripts/buildkite.sh dhhs",
+)
 website_step = CommandStep(
     key="update-website",
     command="./scripts/website/deploy.sh",

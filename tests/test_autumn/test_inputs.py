@@ -19,6 +19,7 @@ from autumn.inputs import (
 )
 from scripts.read_who_covid_data import read_who_data_from_csv
 
+
 @pytest.mark.github_only
 def test_build_input_database():
     """

@@ -11,27 +11,27 @@ haario_scaling_factor: 3. # Greater values increase jumping step size and reduce
 metropolis_initialisation_type: 'current_params'
 
 clinical_stratification:
-  props:
-    hospital:
-      # Proportion of symptomatic persons that are hospitalised - Verity paper
-      multiplier: 1. # Multiplier to the above age-stratified parameters
-      props:
-        - 0.001 # 0-4
-        - 0.001 # 5-9
-        - 0.003 # 10-14
-        - 0.003 # 15-19
-        - 0.012 # 20-24
-        - 0.012 # 25-29
-        - 0.032 # 30-34
-        - 0.032 # 35-39
-        - 0.049 # 40-44
-        - 0.049 # 45-49
-        - 0.102 # 50-54
-        - 0.102 # 55-59
-        - 0.166 # 60-64
-        - 0.166 # 65-69
-        - 0.243 # 70-74
-        - 0.273 # 75+
+#  props:
+#    hospital:
+#      # Proportion of symptomatic persons that are hospitalised - Verity paper
+#      multiplier: 1. # Multiplier to the above age-stratified parameters
+#      props:
+#        - 0.001 # 0-4
+#        - 0.001 # 5-9
+#        - 0.003 # 10-14
+#        - 0.003 # 15-19
+#        - 0.012 # 20-24
+#        - 0.012 # 25-29
+#        - 0.032 # 30-34
+#        - 0.032 # 35-39
+#        - 0.049 # 40-44
+#        - 0.049 # 45-49
+#        - 0.102 # 50-54
+#        - 0.102 # 55-59
+#        - 0.166 # 60-64
+#        - 0.166 # 65-69
+#        - 0.243 # 70-74
+#        - 0.273 # 75+
 
   # Infectiousness adjustments, including the effect of isolation following detection
   late_exposed_infect_multiplier: .7
@@ -40,6 +40,17 @@ clinical_stratification:
     sympt_isolate: 0.2
     hospital_non_icu: 0.2
     icu: 0.2
+
+sojourn:
+  # Mean time in days spent in each compartment
+  # Note that the early period is intended to represent the pre-hospitalisations period, whereas the late period is
+  # intended to represent the time in hospital or ICU (as applicable)
+  # data form ISARIC report 4Oct2020
+  compartment_periods:
+    hospital_early: 7.7
+    hospital_late: 12.8
+    icu_early: 10.5  # 7.7 + 2.8 (time from symptom to Hosp admission + time from Hosp admission to ICU)
+    icu_late: 13.3
 
 mobility:
   microdistancing_locations:

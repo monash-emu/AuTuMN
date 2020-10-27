@@ -47,9 +47,6 @@ infection_fatality:
   multiplier: 1.2
 
 sojourn:
-  compartment_periods:
-    hospital_late: 18.33298147577315
-    icu_late: 10.377090661954272
   compartment_periods_calculated:
     active:
       total_period: 4.902827138779301

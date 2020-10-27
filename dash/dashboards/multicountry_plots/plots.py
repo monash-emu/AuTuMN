@@ -1,13 +1,15 @@
 import streamlit as st
 from autumn import plots
-from dash.dashboards.calibration.plots import get_uncertainty_data
+from dash.dashboards.calibration_results.plots import get_uncertainty_data
 from math import ceil
 import matplotlib.pyplot as pyplot
 
 PLOT_FUNCS = {}
 
 
-def multi_country_fit(plotter, calib_dir_path, mcmc_tables, mcmc_params, targets, app_name, region_name):
+def multi_country_fit(
+    plotter, calib_dir_path, mcmc_tables, mcmc_params, targets, app_name, region_name
+):
     """
     Code taken directly from the fit calibration file at this stage.
     """
@@ -17,8 +19,7 @@ def multi_country_fit(plotter, calib_dir_path, mcmc_tables, mcmc_params, targets
     chosen_output = st.sidebar.selectbox("Select calibration target", available_outputs)
     outputs = []
 
-    fig, axes, _, n_rows, n_cols, indices = \
-        plotter.get_figure(len(region_name), share_xaxis=True)
+    fig, axes, _, n_rows, n_cols, indices = plotter.get_figure(len(region_name), share_xaxis=True)
 
     # Get data for plotting
     for i_region in range(len(region_name)):
@@ -27,17 +28,12 @@ def multi_country_fit(plotter, calib_dir_path, mcmc_tables, mcmc_params, targets
         )
 
     for i_region in range(n_rows * n_cols):
-        axis = \
-            axes[indices[i_region][0], indices[i_region][1]]
+        axis = axes[indices[i_region][0], indices[i_region][1]]
 
         if i_region < len(region_name):
             # Call main plotting function
             plots.calibration.plots.plot_calibration(
-                axis,
-                chosen_output,
-                outputs[i_region],
-                targets[i_region],
-                False
+                axis, chosen_output, outputs[i_region], targets[i_region], False
             )
             axis.set_title(region_name[i_region], fontsize=10)
 

@@ -24,19 +24,23 @@ Docs: https://docs.streamlit.io/
 """
 import streamlit as st
 
-from dash.dashboards.model.run import run_dashboard as run_model_dashboard
-from dash.dashboards.calibration.run import run_dashboard as run_calibration_dashboard
-from dash.dashboards.scenario.run import run_dashboard as run_scenario_dashboard
+from dash.dashboards.inspect_model.run import run_dashboard as inspect_model_dashboard
+from dash.dashboards.calibration_results.run import run_dashboard as calibration_results_dashboard
+from dash.dashboards.model_results.run import run_dashboard as run_scenario_dashboard
 from dash.dashboards.dhhs import run_dashboard as run_dhhs_dashboard
 from dash.dashboards.ensemble import run_dashboard as run_ensemble_dashboard
-from dash.dashboards.multicountry import run_dashboard as run_multicountry_dashboard
+from dash.dashboards.multicountry_plots import run_dashboard as run_multicountry_dashboard
+from dash.dashboards.run_model import run_dashboard as run_model_dashboard
+from dash.dashboards.run_calibrate import run_dashboard as run_calibrate_dashboard
 
 DASHBOARDS = {
     "Home": None,
-    "Model internals": run_model_dashboard,
-    "Calibration results": run_calibration_dashboard,
+    "Model internals": inspect_model_dashboard,
+    "Run a model": run_model_dashboard,
     "Model results": run_scenario_dashboard,
-    "Multi-country": run_multicountry_dashboard,
+    "Calibrate a model": run_calibrate_dashboard,
+    "Calibration results": calibration_results_dashboard,
+    "Multi-country plots": run_multicountry_dashboard,
     "DHHS results": run_dhhs_dashboard,
     "Ensemble results": run_ensemble_dashboard,
 }
@@ -52,9 +56,11 @@ else:
     st.write("Select a dashboard from the sidebar. Your options are:")
     st.markdown(
         """
-    - **Model internals**: Inspect the values inside a model
-    - **Calibration results**: Inspect the results of a calibration
-    - **Model results**: Inspect the model outputs
+    - **Model internals**: Inspect the values inside a model before it is run
+    - **Run**: Run a model
+    - **Model results**: Inspect the model outputs after it has been run
+    - **Calibrate**: Calibrate a model
+    - **Calibration results**: Inspect the outputs of a model calibration
     - **Multi-country**: Multi-country plots
     - **DHHS results**: Inspect results which will be sent to DHHS
     - **Ensemble results**: Inspect results which will be sent to ensemble forecasting

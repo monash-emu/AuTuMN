@@ -445,7 +445,7 @@ def get_targets_and_priors_for_opti(country, likelihood_type="normal"):
                 "years": prop_seropositive["times"],
                 "values": prop_seropositive["values"],
                 "loglikelihood_distri": "normal",
-                "sd": 0.02,
+                "sd": 0.04,
             }
         )
 

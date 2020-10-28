@@ -113,6 +113,11 @@ def get_prior_distributions_for_opti():
             "distribution": "uniform",
             "distri_params": [0.4, 1.0],
         },
+        {
+            "param_name": "elderly_mixing_reduction.relative_reduction",
+            "distribution": "uniform",
+            "distri_params": [0., 0.5],
+        }
     ]
     return prior_list
 

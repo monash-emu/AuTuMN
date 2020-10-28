@@ -1,27 +1,19 @@
-case_detection.end_value: 0.5
-case_detection.max_change_time: 150
-case_detection.maximum_gradient: 0.1
-case_detection.start_value: 0.15
-
-clinical_stratification.props.hospital.multiplier: 1.3
-clinical_stratification.props.symptomatic.multiplier: 1.3 #  0.8843387250911597
-
-contact_rate: 0.051
-infection_deaths_dispersion_param: 89.24920557739162
-
-
-infection_fatality.multiplier: 1.
-
-mobility.microdistancing.behaviour.parameters.c: 80
-mobility.microdistancing.behaviour.parameters.upper_asymptote: .7
-
-mobility.microdistancing.behaviour_adjuster.parameters.c: 120  #223.84171384024438
-mobility.microdistancing.behaviour_adjuster.parameters.sigma: 0.4
-
-
-new_hospital_admissions_dispersion_param: 493.7884506409731
-notifications_dispersion_param: 1191.9531727706394
-sojourn.compartment_periods_calculated.active.total_period: 4.
-sojourn.compartment_periods_calculated.exposed.total_period: 4.8
-time.start: 33
-elderly_mixing_reduction.relative_reduction: 0.5
+case_detection.end_value: 0.6216028290941178
+case_detection.max_change_time: 137.3871936521399
+case_detection.maximum_gradient: 0.12236386903249119
+case_detection.start_value: 0.18946403430895248
+clinical_stratification.props.hospital.multiplier: 1.266735585680096
+clinical_stratification.props.symptomatic.multiplier: 0.9125354961549196
+contact_rate: 0.04630671574781281
+elderly_mixing_reduction.relative_reduction: 0.4619719984952281
+infection_deaths_dispersion_param: 89.61815832871298
+infection_fatality.multiplier: 0.8436288148893442
+mobility.microdistancing.behaviour.parameters.c: 88.79730120886396
+mobility.microdistancing.behaviour.parameters.upper_asymptote: 0.656462905860161
+mobility.microdistancing.behaviour_adjuster.parameters.c: 130.64661700426814
+mobility.microdistancing.behaviour_adjuster.parameters.sigma: 0.4337204470214945
+new_hospital_admissions_dispersion_param: 579.5354345642268
+notifications_dispersion_param: 1227.0577392208234
+sojourn.compartment_periods_calculated.active.total_period: 5.787008122838531
+sojourn.compartment_periods_calculated.exposed.total_period: 3.136353957206371
+time.start: 39.05145100241553

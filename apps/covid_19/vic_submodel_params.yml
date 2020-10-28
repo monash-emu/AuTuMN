@@ -82,6 +82,8 @@ mobility:
           - 257 # 13th September, expanded social interaction
           - 270
           - 271 # 27th September, social bubbles, phased return of some workforces and education
+          - 301
+          - 302  # 28th October, step 3 out of lockdown
         values:
           - 0.4
           - 0.15 # 12th May
@@ -97,13 +99,15 @@ mobility:
           - 0.65 # 9th July
           - 0.65 # 10th July
           - 0.65
-          - 0.65 # 23rd July
+          - 0.8 # 23rd July
           - 0.8
           - 1. # 2nd August
-          - 0.9
+          - 1.
           - 0.9 # 13th September
-          - 0.8
+          - 0.9
           - 0.7 # 27th September
+          - 0.7
+          - 0.4 # 28th October
 
 importation:
   movement_prop: 0.3

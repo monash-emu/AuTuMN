@@ -3,7 +3,7 @@
 parent: apps/covid_19/regions/malaysia/params/default.yml
 
 time:
-  start: 257.
+  start: 307.
 
 mobility:
   mixing:

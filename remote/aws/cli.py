@@ -36,7 +36,12 @@ def start(job_id, instance_type):
     aws.run_job(job_id, instance_type)
 
 
-PROTECTED_INSTANCES = ["buildkite"]
+PROTECTED_INSTANCES = [
+    "buildkite",
+    "buildkite-1",
+    "buildkite-2",
+    "buildkite-3",
+]
 
 
 @aws_cli.command()

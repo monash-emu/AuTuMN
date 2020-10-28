@@ -187,22 +187,23 @@ def ssh_interactive(instance):
     ip = instance["ip"]
     name = instance["name"]
     logger.info(f"Starting SSH session with instance {name}.")
-    ssh_key_path = try_get_ssh_key_path()
+    ssh_key_path = try_get_ssh_key_path(name)
     cmd_str = f"ssh {SSH_OPT_STR} -i {ssh_key_path} ubuntu@{ip}"
     logger.info("Entering ssh session with: %s", cmd_str)
     subprocess.call(cmd_str, shell=True)
 
 
-def try_get_ssh_key_path():
+def try_get_ssh_key_path(name=None):
     keypath = None
-    for keyname in SSH_KEYS_TO_TRY:
+    keys_to_try = ["autumn.pem"] if name.startswith("buildkite") else SSH_KEYS_TO_TRY
+    for keyname in keys_to_try:
         keypath = os.path.expanduser(f"~/.ssh/{keyname}")
         if os.path.exists(keypath):
             break
 
     if not keypath:
         raise FileNotFoundError(
-            f"Could not find SSH key at {keypath} or for alternate names {SSH_KEYS_TO_TRY}."
+            f"Could not find SSH key at {keypath} or for alternate names {keys_to_try}."
         )
 
     return keypath

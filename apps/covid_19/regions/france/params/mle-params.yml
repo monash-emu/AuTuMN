@@ -1,0 +1,26 @@
+case_detection.end_value: 0.5 #6833196942658724
+case_detection.max_change_time: 180
+case_detection.maximum_gradient: 0.1330843633001002
+case_detection.start_value: 0.1
+
+clinical_stratification.props.hospital.multiplier: 1.
+clinical_stratification.props.symptomatic.multiplier: 1.
+
+contact_rate: 0.043
+infection_deaths_dispersion_param: 102.8824180799681
+
+infection_fatality.multiplier: 1.5
+
+mobility.microdistancing.behaviour.parameters.c: 90.09643238419255
+mobility.microdistancing.behaviour.parameters.upper_asymptote: 0.6
+
+mobility.microdistancing.behaviour_adjuster.parameters.c: 160
+mobility.microdistancing.behaviour_adjuster.parameters.sigma: 0.45
+
+new_hospital_admissions_dispersion_param: 213.56290466903675
+notifications_dispersion_param: 938.4575409218496
+sojourn.compartment_periods_calculated.active.total_period: 5.174933309235708
+sojourn.compartment_periods_calculated.exposed.total_period: 4.8
+time.start: 27
+
+elderly_mixing_reduction.relative_reduction: .5

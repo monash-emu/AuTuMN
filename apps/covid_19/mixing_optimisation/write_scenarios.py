@@ -135,6 +135,3 @@ def drop_all_yml_scenario_files(all_sc_params):
 if __name__ == "__main__":
     all_sc_params = build_all_scenario_dicts_from_outputs()
     drop_all_yml_scenario_files(all_sc_params)
-
-    # FIXME 2: need to fix the issue with the format of the dumped times: "- *id001"
-    # FIXME 3: this code will need to run for different immunity assumptions

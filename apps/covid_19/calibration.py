@@ -280,7 +280,7 @@ def add_standard_victoria_params(params, region):
         {
             "param_name": "seasonal_force",
             "distribution": "uniform",
-            "distri_params": [0.0, 0.3],
+            "distri_params": [0.0, 0.25],
         },
         {
             "param_name": "clinical_stratification.props.symptomatic.multiplier",
@@ -320,7 +320,7 @@ def add_standard_victoria_params(params, region):
             "param_name": "sojourn.compartment_periods.icu_late",
             "distribution": "trunc_normal",
             "distri_params": [10.8, 4.0],
-            "trunc_range": [3.0, np.inf],
+            "trunc_range": [6.0, np.inf],
         },
         {
             "param_name": "mobility.microdistancing.behaviour.parameters.max_effect",

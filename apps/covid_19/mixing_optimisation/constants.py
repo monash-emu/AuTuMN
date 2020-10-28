@@ -19,7 +19,6 @@ OPTI_ISO3S = [
     "ESP",
 ]
 
-
 COUNTRY_TITLES = {
     Region.BELGIUM: "Belgium",
     Region.FRANCE: "France",

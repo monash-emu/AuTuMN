@@ -50,11 +50,12 @@ sojourn:
   # Mean time in days spent in each compartment
   # Note that the early period is intended to represent the pre-hospitalisations period, whereas the late period is
   # intended to represent the time in hospital or ICU (as applicable)
+  # data form ISARIC report 4Oct2020
   compartment_periods:
-    hospital_early: 8.1
-    hospital_late: 18.4
-    icu_early: 12.7
-    icu_late: 10.8
+    hospital_early: 7.7
+    hospital_late: 12.8
+    icu_early: 10.5  # 7.7 + 2.8 (time from symptom to Hosp admission + time from Hosp admission to ICU)
+    icu_late: 13.3
 
   # Mean time spent in each compartment, defined via proportions
   compartment_periods_calculated:

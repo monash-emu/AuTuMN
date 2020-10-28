@@ -355,6 +355,25 @@ def get_posterior(mcmc_params, mcmc_tables, param_name, burn_in=0):
     return pd.DataFrame(weighted_vals, columns=[param_name])
 
 
+def get_posterior_best_chain(mcmc_params, mcmc_tables, param_name, burn_in=0):
+
+    weighted_vals = []
+    for param_df, run_df in zip(mcmc_params, mcmc_tables):
+        table_df = param_df.merge(run_df, on=["run", "chain"])
+        param_mask = (table_df["name"] == param_name) & (table_df["run"] > burn_in)
+        table_df = table_df[param_mask]
+        best_chain = int(table_df.loc[table_df['loglikelihood'].idxmax()]['chain'])
+        mask = table_df["chain"] == best_chain
+        weighted_vals = []
+        unweighted_vals = table_df[mask].value
+        weights = table_df[mask].weight
+        for v, w in zip(unweighted_vals, weights):
+            weighted_vals += [v] * w
+
+    return pd.DataFrame(weighted_vals, columns=[param_name])
+
+
+
 def plot_posterior(
     plotter: Plotter,
     mcmc_params: List[pd.DataFrame],

@@ -1,8 +1,9 @@
 from autumn.tool_kit.params import load_targets
 from autumn import db, plots
-from autumn.plots.calibration.plots import get_posterior
+from autumn.plots.calibration.plots import get_posterior, get_posterior_best_chain
 from autumn.curve import tanh_based_scaleup
 from autumn.plots.uncertainty.plots import plot_timeseries_with_uncertainty
+import pandas as pd
 
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS, COUNTRY_TITLES
 from apps.covid_19.mixing_optimisation.serosurvey_by_age.survey_data import get_serosurvey_data
@@ -44,7 +45,7 @@ def get_targets(region_name):
     return load_targets("covid_19", region_name)
 
 
-def get_parameter_values(calibration_outputs):
+def get_parameter_values(calibration_outputs, best_chain_only=False):
     param_values = {}
     for country, outputs in calibration_outputs.items():
         if len(outputs["mcmc_params"]) == 0:
@@ -56,9 +57,14 @@ def get_parameter_values(calibration_outputs):
             if "dispersion_param" not in p
         ]
         for param_name in all_param_names:
-            param_values[country][param_name] = get_posterior(
-                outputs["mcmc_params"], outputs["mcmc_tables"], param_name, 0
-            )[param_name].tolist()
+            if best_chain_only:
+                param_values[country][param_name] = get_posterior_best_chain(
+                    outputs["mcmc_params"], outputs["mcmc_tables"], param_name, 0
+                )[param_name].tolist()
+            else:
+                param_values[country][param_name] = get_posterior(
+                    outputs["mcmc_params"], outputs["mcmc_tables"], param_name, 0
+                )[param_name].tolist()
     return param_values
 
 
@@ -113,6 +119,10 @@ param_info = {
         "name": "microdist. wane (final)",
         "range": [0.5, 1],
     },
+    "elderly_mixing_reduction.relative_reduction": {
+        "name": "Elderly mixing reduction",
+        "range": [0, 0.5],
+    }
 }
 
 
@@ -193,8 +203,8 @@ def make_posterior_ranges_figure(param_values):
     plt.savefig("figures/param_posteriors.pdf")
 
 
-def plot_parameter_traces(param_values):
-    param_names = list(param_values["belgium"].keys())
+def plot_parameter_traces(param_values_by_chain):
+    param_names = list(param_values_by_chain["belgium"].keys())
     n_rows = len(param_names) + 1
     n_cols = len(OPTI_REGIONS) + 1
 
@@ -222,13 +232,16 @@ def plot_parameter_traces(param_values):
         )
         ax.axis("off")
         for i_param, param_name in enumerate(param_names):
-            if param_name in param_values[country]:
+            if param_name in param_values_by_chain[country]:
 
                 ax = fig.add_subplot(spec[i_param + 1, i_country + 1])
 
                 if i_param < len(param_names) - 1:
                     ax.axes.get_xaxis().set_visible(False)
-                ax.plot(param_values[country][param_name], "-", color="royalblue")
+
+                param_values = param_values_by_chain[country][param_name]
+                iterations = range(len(param_values))
+                ax.plot(iterations, param_values, "-", color="royalblue")
 
                 ax.grid(False, axis="x")
 

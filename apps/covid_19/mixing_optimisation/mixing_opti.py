@@ -84,7 +84,9 @@ def objective_function(
     params = copy.deepcopy(app_region.params)
 
     # Create and run scenario 1
-    sc_1_params_update = build_params_for_phases_2_and_3(decision_variables, duration, mode)
+    sc_1_params_update = build_params_for_phases_2_and_3(
+        decision_variables, params["default"]['elderly_mixing_reduction'], duration, mode
+    )
     sc_1_params = merge_dicts(sc_1_params_update, params["default"])
     params["scenarios"][1] = sc_1_params
     scenario_1 = Scenario(build_model, idx=1, params=params)
@@ -136,6 +138,7 @@ def run_root_model(region: str):
 
 def build_params_for_phases_2_and_3(
     decision_variables: List[float],
+    elderly_mixing_reduction,
     duration: str = DURATION_SIX_MONTHS,
     mode: str = AGE_MODE,
     final_mixing: float = 1.0,
@@ -165,13 +168,21 @@ def build_params_for_phases_2_and_3(
         for age_idx in range(len(AGE_GROUPS)):
             age_group = AGE_GROUPS[age_idx]
             age_mixing = decision_variables[age_idx]
+            final_mixing_value = final_mixing
+            # need to reset elderly protection if it was previously in place during Phase 1
+            if elderly_mixing_reduction is not None:
+                if age_group in elderly_mixing_reduction['age_categories']:
+                    final_mixing_value = min(
+                        1 - elderly_mixing_reduction['relative_reduction'],
+                        final_mixing_value
+                    )
             scenario_params["mobility"]["age_mixing"][age_group] = {
                 "times": [phase_1_end_date, phase_2_first_day, phase_2_end_date, phase_3_first_day],
                 "values": [
                     1.0,
                     age_mixing,
                     age_mixing,
-                    final_mixing,
+                    final_mixing_value,
                 ],
             }
 

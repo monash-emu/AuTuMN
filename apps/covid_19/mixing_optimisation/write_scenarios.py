@@ -1,6 +1,8 @@
 import pandas as pd
 import os
 import yaml
+
+from apps import covid_19
 from apps.covid_19.mixing_optimisation.mixing_opti import (
     MODES,
     DURATIONS,
@@ -74,7 +76,13 @@ def build_optimised_scenario_dictionary(country, sc_idx, decision_vars, final_mi
         duration = SCENARIO_MAPPING[sc_idx]["duration"]
         mode = SCENARIO_MAPPING[sc_idx]["mode"]
 
-    sc_params = build_params_for_phases_2_and_3(decision_vars, duration, mode, final_mixing)
+    # need to fetch elderly mixing reduction parameter
+    app_region = covid_19.app.get_region(country)
+    elderly_mixing_reduction = app_region.params['default']['elderly_mixing_reduction']
+
+    sc_params = build_params_for_phases_2_and_3(
+        decision_vars, elderly_mixing_reduction, duration, mode, final_mixing
+    )
     country_folder_name = country.replace("-", "_")
     sc_params["parent"] = f"apps/covid_19/regions/{country_folder_name}/params/default.yml"
     del sc_params[

@@ -80,7 +80,9 @@ def test_full_optimisation_iteration_for_uk(mode, duration):
 @pytest.mark.parametrize("duration", AVAILABLE_DURATIONS)
 @pytest.mark.parametrize("mode", AVAILABLE_MODES)
 def test_build_params_for_phases_2_and_3__smoke_test(mode, duration):
-    opti.build_params_for_phases_2_and_3(DECISION_VARS[mode], duration=duration, mode=mode)
+    opti.build_params_for_phases_2_and_3(
+        DECISION_VARS[mode], elderly_mixing_reduction=None, duration=duration, mode=mode
+    )
 
 
 @mock.patch("apps.covid_19.mixing_optimisation.mixing_opti.Scenario")
@@ -133,6 +135,7 @@ def test_objective_function_calculations(mock_scenario_cls):
 def test_build_params_for_phases_2_and_3__with_location_mode_and_microdistancing():
     scenario_params = opti.build_params_for_phases_2_and_3(
         decision_variables=[2, 3, 5],
+        elderly_mixing_reduction=None,
         duration="six_months",
         mode="by_location",
     )
@@ -179,7 +182,7 @@ def test_build_params_for_phases_2_and_3__with_location_mode_and_microdistancing
 @pytest.mark.xfail
 def test_build_params_for_phases_2_and_3__with_age_mode():
     scenario_params = opti.build_params_for_phases_2_and_3(
-        decision_variables=[i for i in range(16)], duration="six_months", mode="by_age"
+        decision_variables=[i for i in range(16)], elderly_mixing_reduction=None, duration="six_months", mode="by_age"
     )
     age_dates = [date(2020, 7, 31), date(2020, 8, 1), date(2021, 1, 31), date(2021, 2, 1)]
     loc_dates = [date(2020, 7, 31), date(2021, 1, 31), date(2021, 2, 1)]

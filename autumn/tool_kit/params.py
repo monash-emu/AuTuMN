@@ -108,7 +108,6 @@ def load_param_file(path: str):
             # If maximum likelihood params from a calibration are present, then insert
             # them into the default parameters automatically.
             mle_params = read_yaml_file(mle_path)
-            logger.info("Inserting MLE params into region defaults: %s", mle_params)
             data = update_params(data, mle_params)
 
     return data

@@ -32,7 +32,6 @@ for country in OPTI_REGIONS:
                     decision_vars, root_model, mode, country, duration
                 )
 
-                exit()
                 # ----------  objective to minimise ----------
                 #   - total_nb_deaths if objective == 'deaths'
                 #   - years_of_life_lost if objective == 'yoll'

@@ -48,45 +48,54 @@ class Scenario:
         If a base model is provided, then run the scenario from the scenario start time.
         If a parameter update function is provided, it will be used to update params before the model is run.
         """
-        with Timer(f"Running scenario: {self.name}"):
-            params = None
-            if not base_model:
-                # This model is the baseline model
-                assert self.is_baseline, "Can only run base model if Scenario idx is 0"
-                params = self.params["default"]
-                if update_func:
-                    # Apply extra parameter updates
-                    params = update_func(params)
+        params = None
+        if not base_model:
+            # This model is the baseline model
+            assert self.is_baseline, "Can only run base model if Scenario idx is 0"
+            params = self.params["default"]
+            if update_func:
+                # Apply extra parameter updates
+                params = update_func(params)
 
-                self.model = self.model_builder(params)
-            else:
-                # This is a scenario model, based off the baseline model
-                assert not self.is_baseline, "Can only run scenario model if Scenario idx is > 0"
+            self.model = self.model_builder(params)
+        else:
+            # This is a scenario model, based off the baseline model
+            assert not self.is_baseline, "Can only run scenario model if Scenario idx is > 0"
 
-                # Construct scenario params by merging scenario-specific params into default params
-                params = self.params["scenarios"][self.idx]
-                start_time = params["time"]["start"]
-                if update_func:
-                    # Apply extra parameter updates
-                    params = update_func(params)
+            # Construct scenario params by merging scenario-specific params into default params
+            params = self.params["scenarios"][self.idx]
+            start_time = params["time"]["start"]
+            if update_func:
+                # Apply extra parameter updates
+                params = update_func(params)
 
-                # Ensure start time cannot be overwritten for a scenario
-                params["time"]["start"] = start_time
+            # Ensure start time cannot be overwritten for a scenario
+            params["time"]["start"] = start_time
 
-                base_times = base_model.times
-                base_outputs = base_model.outputs
+            base_times = base_model.times
+            base_outputs = base_model.outputs
 
-                # Find the time step from which we will start the scenario
-                start_index = get_scenario_start_index(base_times, params["time"]["start"])
-                start_time = base_times[start_index]
-                init_compartments = base_outputs[start_index, :]
+            # Find the time step from which we will start the scenario
+            start_index = get_scenario_start_index(base_times, params["time"]["start"])
+            start_time = base_times[start_index]
+            init_compartments = base_outputs[start_index, :]
 
-                # Create the new scenario model using the scenario-specific params,
-                # ensuring the initial conditions are the same for the given start time.
-                self.model = self.model_builder(params)
-                self.model.compartment_values = init_compartments
+            # Create the new scenario model using the scenario-specific params,
+            # ensuring the initial conditions are the same for the given start time.
+            self.model = self.model_builder(params)
+            self.model.compartment_values = init_compartments
 
-            self.model.run_model(IntegrationType.SOLVE_IVP)
+        # Remove derived outputs that are not required for the optimisations
+        new_flow_outputs = {}
+        flow_outputs_to_keep = ["incidence"]
+        flow_outputs_to_keep += [
+            o for o in list(self.model._derived_calc._flow_outputs.keys()) if "infection_deaths" in o
+        ]
+        for output in flow_outputs_to_keep:
+            new_flow_outputs[output] = self.model._derived_calc._flow_outputs[output]
+        self.model._derived_calc._flow_outputs = new_flow_outputs
+        self.model._derived_calc._function_outputs = {"years_of_life_lost": self.model._derived_calc._function_outputs["years_of_life_lost"]}
+        self.model.run_model(IntegrationType.SOLVE_IVP)
 
     @property
     def is_baseline(self):

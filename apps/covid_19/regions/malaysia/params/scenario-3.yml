@@ -12,4 +12,4 @@ mobility:
       times:
         - 2020-10-26
       values:
-        - ["scale_prev", 0.5]
+        - ["scale_prev", 0.1]

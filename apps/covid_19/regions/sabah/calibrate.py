@@ -1,7 +1,7 @@
 from autumn.constants import Region
 from apps.covid_19 import calibration as base
 from apps.covid_19.calibration import provide_default_calibration_params
-from apps.covid_19.mixing_optimisation.utils import add_dispersion_param_prior_for_gaussian
+from autumn.calibration.utils import add_dispersion_param_prior_for_gaussian
 from autumn.tool_kit.params import load_targets
 
 targets = load_targets("covid_19", Region.SABAH)

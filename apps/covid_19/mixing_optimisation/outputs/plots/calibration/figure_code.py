@@ -76,7 +76,7 @@ param_info = {
     "time.start": {"name": "model start time", "range": [0.0, 40.0]},
     "sojourn.compartment_periods_calculated.exposed.total_period": {
         "name": "incubation time",
-        "range": [3.0, 7.0],
+        "range": [2.5, 7.0],
     },
     "sojourn.compartment_periods_calculated.active.total_period": {
         "name": "time infectious",
@@ -120,7 +120,7 @@ param_info = {
         "range": [0.5, 1],
     },
     "elderly_mixing_reduction.relative_reduction": {
-        "name": "Elderly mixing reduction",
+        "name": "elderly mixing reduction",
         "range": [0, 0.5],
     }
 }
@@ -175,6 +175,9 @@ def make_posterior_ranges_figure(param_values):
             prior = _prior[0]
             if prior["distribution"] == "uniform":
                 x_range = prior["distri_params"]
+        range_w = x_range[1] - x_range[0]
+        buffer = .1 * range_w
+        x_range = [x_range[0] - buffer, x_range[1] + buffer]
 
         axs[i_row, i_col].set_xlim(x_range)
 
@@ -195,6 +198,8 @@ def make_posterior_ranges_figure(param_values):
         else:
             axs[i_row, i_col].set_yticks([])
 
+        axs[i_row, i_col].grid(False, axis="y")
+
     # Leave blank axis for remaining panels
     for i_col_blank in range(i_col + 1, n_col):
         axs[i_row, i_col_blank].axis("off")
@@ -203,7 +208,7 @@ def make_posterior_ranges_figure(param_values):
     plt.savefig("figures/param_posteriors.pdf")
 
 
-def plot_parameter_traces(param_values_by_chain):
+def plot_parameter_traces(param_values_by_chain, max_n_iter=2500):
     param_names = list(param_values_by_chain["belgium"].keys())
     n_rows = len(param_names) + 1
     n_cols = len(OPTI_REGIONS) + 1
@@ -240,8 +245,10 @@ def plot_parameter_traces(param_values_by_chain):
                     ax.axes.get_xaxis().set_visible(False)
 
                 param_values = param_values_by_chain[country][param_name]
-                iterations = range(len(param_values))
-                ax.plot(iterations, param_values, "-", color="royalblue")
+                n_iterations = min(max_n_iter, len(param_values))
+                param_values = param_values[:n_iterations]
+
+                ax.plot(range(n_iterations), param_values, "-", color="royalblue")
 
                 ax.grid(False, axis="x")
 
@@ -251,6 +258,10 @@ def plot_parameter_traces(param_values_by_chain):
                     prior = _prior[0]
                     if prior["distribution"] == "uniform":
                         y_range = prior["distri_params"]
+
+                range_w = y_range[1] - y_range[0]
+                buffer = .1 * range_w
+                y_range = [y_range[0] - buffer, y_range[1] + buffer]
 
                 ax.set_ylim(y_range)
 

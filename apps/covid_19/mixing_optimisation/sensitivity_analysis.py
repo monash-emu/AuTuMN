@@ -7,120 +7,39 @@ import pandas as pd
 from .mixing_opti import run_root_model, objective_function
 
 from apps.covid_19.mixing_optimisation.utils import prepare_table_of_param_sets
-from apps.covid_19.mixing_optimisation.mixing_opti import run_sensitivity_perturbations
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
+from apps.covid_19.mixing_optimisation.mixing_opti import MODES, DURATIONS, OBJECTIVES
 
+from apps.covid_19.mixing_optimisation.write_scenarios import read_opti_outputs, read_decision_vars
 
 def main():
-    common_folder_name = "Final-2020-08-04"
-    burnin = {
-        "france": 0,
-        "belgium": 0,
-        "spain": 0,
-        "italy": 0,
-        "sweden": 0,
-        "united-kingdom": 0,
-    }
-
-    # for country in OPTI_REGIONS:
-    #     path = "../../../data/outputs/calibrate/covid_19/" + country + "/" + common_folder_name
-    #
-    #     prepare_table_of_param_sets(path,
-    #                                 country,
-    #                                 n_samples=2,
-    #                                 burn_in=burnin[country])
-
-    direction = "up"  # FIXME
+    opti_output_filename = "dummy_vars_for_test.csv"
+    opti_outputs_df = read_opti_outputs(opti_output_filename)
     target_objective = {
         "deaths": 20,
         "yoll": 1000,
     }
 
-    for country in burnin:
-        for objective in ["deaths", "yoll"]:
-            for mode in ["by_age", "by_location"]:
-                for config in [2, 3]:
-                    print()
-                    print()
-                    print(
-                        country + " " + objective + " " + mode + " " + str(config) + " " + direction
-                    )
-                    run_sensitivity_perturbations(
-                        "optimisation_outputs/6Aug2020/",
-                        country,
-                        config,
-                        mode,
-                        objective,
-                        target_objective_per_million=target_objective[objective],
-                        tol=0.02,
-                        direction=direction,
-                    )
-
-
-def read_csv_output_file(
-    output_dir, country, config=2, mode="by_age", objective="deaths", from_streamlit=False
-):
-    path_to_input_csv = os.path.join("calibrated_param_sets", country + "_calibrated_params.csv")
-    if from_streamlit:
-        path_to_input_csv = os.path.join(
-            "apps", "covid_19", "mixing_optimisation", path_to_input_csv
-        )
-    input_table = pd.read_csv(path_to_input_csv)
-
-    col_names = [
-        c
-        for c in input_table.columns
-        if c not in ["loglikelihood", "idx"] and "dispersion_param" not in c
-    ]
-
-    if mode == "by_location":
-        removed_columns = ["best_x" + str(i) for i in range(3, 16)]
-        col_names = [c for c in col_names if c not in removed_columns]
-
-    output_file_name = (
-        output_dir
-        + "results_"
-        + country
-        + "_"
-        + mode
-        + "_"
-        + str(config)
-        + "_"
-        + objective
-        + ".csv"
-    )
-    out_table = pd.read_csv(output_file_name, sep=" ", header=None)
-    out_table.columns = col_names
-    out_table["loglikelihood"] = input_table["loglikelihood"]
-
-    return out_table
-
-
-def get_mle_params_and_vars(
-    output_dir, country, config=2, mode="by_age", objective="deaths", from_streamlit=False
-):
-
-    out_table = read_csv_output_file(output_dir, country, config, mode, objective, from_streamlit)
-    n_vars = {"by_age": 16, "by_location": 3}
-
-    mle_rows = out_table[
-        out_table["loglikelihood"] == out_table.loc[len(out_table) - 1, "loglikelihood"]
-    ]
-    mle_rows = mle_rows.sort_values(by="best_" + objective)
-
-    decision_vars = [
-        float(mle_rows.loc[mle_rows.index[0], "best_x" + str(i)]) for i in range(n_vars[mode])
-    ]
-
-    params = {}
-    for c in out_table.columns:
-        if c in ["idx", "loglikelihood"]:
-            continue
-        elif "best_" in c:
-            break
-        params[c] = float(mle_rows.loc[mle_rows.index[0], c])
-
-    return params, decision_vars
+    for direction in ["up", "down"]:
+        for country in OPTI_REGIONS:
+            for mode in MODES:
+                for duration in DURATIONS:
+                    for objective in OBJECTIVES:
+                        print()
+                        print()
+                        print(
+                            country + " " + objective + " " + mode + " " + str(duration) + " " + direction
+                        )
+                        run_sensitivity_perturbations(
+                            opti_outputs_df,
+                            country,
+                            duration,
+                            mode,
+                            objective,
+                            target_objective_per_million=target_objective[objective],
+                            tol=0.02,
+                            direction=direction,
+                        )
 
 
 def evaluate_extra_deaths(
@@ -156,9 +75,9 @@ def evaluate_extra_deaths(
 
 
 def run_sensitivity_perturbations(
-    output_dir,
+    opti_outputs_df,
     country,
-    config=2,
+    duration="six_months",
     mode="by_age",
     objective="deaths",
     target_objective_per_million=20,
@@ -166,20 +85,19 @@ def run_sensitivity_perturbations(
     direction="up",
 ):
     # target_deaths is a number of deaths per million people
-    mle_params, decision_vars = get_mle_params_and_vars(
-        output_dir, country, config, mode, objective
-    )
-    root_model = run_root_model(country, mle_params)
+    decision_vars = read_decision_vars(opti_outputs_df, country, mode, duration, objective)
 
-    h, best_d, best_yoll, p_immune, m = objective_function(
-        decision_vars, root_model, mode, country, config, mle_params
+    root_model = run_root_model(country)
+
+    h, best_d, best_yoll = objective_function(
+        decision_vars, root_model, mode, country, duration
     )
     best_objective = {
         "deaths": best_d,
         "yoll": best_yoll,
     }
 
-    delta_contributions = []
+    delta_contributions = []  # FIXME
     for i in range(len(decision_vars)):
         print("Age group " + str(i))
         extra_contribution_lower = 0.0

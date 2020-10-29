@@ -438,7 +438,9 @@ def make_calibration_fits_figure(calibration_outputs, seroprevalence=False):
     text_size = 23
     i_row = 1
     i_col = 0
-    for country in OPTI_REGIONS:
+
+    ordered_countries = ['italy', 'france', 'belgium', 'spain', 'sweden', 'united-kingdom']
+    for country in ordered_countries:
         # write country name
         ax = fig.add_subplot(spec[i_row - 1, i_col : i_col + n_target_outputs])
         ax.text(

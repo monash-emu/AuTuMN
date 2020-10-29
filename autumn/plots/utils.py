@@ -32,7 +32,7 @@ PLOT_TEXT_DICT = {
     "incidence": "incident episodes per day",
     "new_hospital_admissions": "new hospitalisations per day",
     "new_icu_admissions": "new ICU admissions per day",
-    "hospital_occupancy": "Hospital occupancy",
+    "hospital_occupancy": "hospital occupancy",
     "sojourn.compartment_periods_calculated.exposed.total_period": "incubation period",
     "sojourn.compartment_periods_calculated.active.total_period": "duration active",
     "seasonal_force": "seasonal forcing",

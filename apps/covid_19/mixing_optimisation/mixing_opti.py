@@ -65,6 +65,7 @@ def objective_function(
     mode: str = AGE_MODE,
     country: str = Region.UNITED_KINGDOM,
     duration: str = DURATION_SIX_MONTHS,
+    called_from_sensitivity_analysis: bool = False
 ):
     """
     :param decision_variables: A list containing
@@ -74,10 +75,12 @@ def objective_function(
     :param mode: either "by_age" or "by_location"
     :param country: the country name
     :param duration: string defining the duration of the optimised phase
+    :param called_from_sensitivity_analysis: whether called from main optimisation or from sensitivity analysis
     """
-    assert all(
-        [MIXING_FACTOR_BOUNDS[0] <= d <= MIXING_FACTOR_BOUNDS[1] for d in decision_variables]
-    )
+    if not called_from_sensitivity_analysis:
+        assert all(
+            [MIXING_FACTOR_BOUNDS[0] <= d <= MIXING_FACTOR_BOUNDS[1] for d in decision_variables]
+        )
 
     app_region = covid_19.app.get_region(country)
     build_model = app_region.build_model

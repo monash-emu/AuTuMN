@@ -2,15 +2,13 @@ import os
 import copy
 
 import yaml
-import pandas as pd
 
-from .mixing_opti import run_root_model, objective_function
-
-from apps.covid_19.mixing_optimisation.utils import prepare_table_of_param_sets
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
-from apps.covid_19.mixing_optimisation.mixing_opti import MODES, DURATIONS, OBJECTIVES
+from apps.covid_19.mixing_optimisation.mixing_opti import MODES, DURATIONS, OBJECTIVES, run_root_model, objective_function
 
 from apps.covid_19.mixing_optimisation.write_scenarios import read_opti_outputs, read_decision_vars
+from autumn.constants import BASE_PATH
+
 
 def main():
     opti_output_filename = "dummy_vars_for_test.csv"
@@ -49,8 +47,7 @@ def evaluate_extra_deaths(
     root_model,
     mode,
     country,
-    config,
-    mle_params,
+    duration,
     best_objective,
     objective,
     direction="up",
@@ -60,15 +57,15 @@ def evaluate_extra_deaths(
         tested_decision_vars[i] += extra_contribution
     else:
         tested_decision_vars[i] -= extra_contribution
-    h, this_d, this_yoll, p_immune, m = objective_function(
-        tested_decision_vars, root_model, mode, country, config, mle_params
+    h, this_d, this_yoll = objective_function(
+        tested_decision_vars, root_model, mode, country, duration, called_from_sensitivity_analysis=True
     )
     this_objective = {"deaths": this_d, "yoll": this_yoll}
 
     if not h:
         delta_deaths_per_million = 1.0e6
     else:
-        population = sum(m[0].compartment_values)
+        population = sum(m[0].compartment_values)  # FIXME 
         delta_deaths_per_million = (this_objective[objective] - best_objective) / population * 1.0e6
 
     return delta_deaths_per_million
@@ -87,17 +84,20 @@ def run_sensitivity_perturbations(
     # target_deaths is a number of deaths per million people
     decision_vars = read_decision_vars(opti_outputs_df, country, mode, duration, objective)
 
+    if decision_vars is None:
+        return
+
     root_model = run_root_model(country)
 
     h, best_d, best_yoll = objective_function(
-        decision_vars, root_model, mode, country, duration
+        decision_vars, root_model, mode, country, duration, called_from_sensitivity_analysis=True
     )
     best_objective = {
         "deaths": best_d,
         "yoll": best_yoll,
     }
 
-    delta_contributions = []  # FIXME
+    delta_contributions = []
     for i in range(len(decision_vars)):
         print("Age group " + str(i))
         extra_contribution_lower = 0.0
@@ -117,8 +117,7 @@ def run_sensitivity_perturbations(
                 root_model,
                 mode,
                 country,
-                config,
-                mle_params,
+                duration,
                 best_objective[objective],
                 objective,
                 direction,
@@ -136,8 +135,7 @@ def run_sensitivity_perturbations(
                         root_model,
                         mode,
                         country,
-                        config,
-                        mle_params,
+                        duration,
                         best_objective[objective],
                         objective,
                         direction,
@@ -161,10 +159,11 @@ def run_sensitivity_perturbations(
         delta_contributions.append(best_solution)
 
         print(best_solution)
+
     output_file_path = os.path.join(
-        "optimisation_outputs",
-        "sensitivity",
-        country + "_" + mode + "_" + str(config) + "_" + objective + "_" + direction + ".yml",
+        BASE_PATH, "apps", "covid_19", "mixing_optimisation", "optimised_variables",
+        "optimal_plan_sensitivity",
+        country + "_" + mode + "_" + duration + "_" + objective + "_" + direction + ".yml",
     )
 
     with open(output_file_path, "w") as f:

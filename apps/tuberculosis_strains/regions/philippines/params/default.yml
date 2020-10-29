@@ -2,10 +2,6 @@
 parent: apps/tuberculosis_strains/params.yml
 iso3: "PHL"
 
-# FIXME: These numbers are made up to prevent the region model from crashing.
-time_variant_tsr: # should always be > 0
-  1995: 0.5
-  2017.: 0.5
 
 calculated_outputs:
   [

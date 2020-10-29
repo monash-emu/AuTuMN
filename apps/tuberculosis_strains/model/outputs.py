@@ -88,9 +88,9 @@ def get_notifications_connections(comps: List[Compartment], source_stratum=None)
 
 def get_incidence_early_connections(comps: List[Compartment], source_stratum=None):
     """
-    Track "notifications": flow from infectious to treatment compartment.
+    Track "early activation": flow from early latent to infectious compartment.
     """
-    output_name = "incidence_early"
+    output_name = "early_activation"
     if source_stratum:
         output_name += "X" + source_stratum[0] + "_" + source_stratum[1]
         source_strata = {source_stratum[0]: source_stratum[1]}
@@ -107,9 +107,9 @@ def get_incidence_early_connections(comps: List[Compartment], source_stratum=Non
 
 def get_incidence_late_connections(comps: List[Compartment], source_stratum=None):
     """
-    Track "notifications": flow from infectious to treatment compartment.
+    Track "late activation": flow from late latent to active compartment.
     """
-    output_name = "incidence_late"
+    output_name = "late_activation"
     if source_stratum:
         output_name += "X" + source_stratum[0] + "_" + source_stratum[1]
         source_strata = {source_stratum[0]: source_stratum[1]}
@@ -151,7 +151,7 @@ def get_mortality_flow_on_treatment(comps: List[Compartment]):
 
 
 def calculate_incidence(time_idx, model, compartment_values, derived_outputs):
-    return (derived_outputs['incidence_early'][time_idx] + derived_outputs['incidence_late'][time_idx]) /\
+    return (derived_outputs['early_activation'][time_idx] + derived_outputs['late_activation'][time_idx]) /\
            sum(compartment_values) * 1.e5
 
 
@@ -168,7 +168,7 @@ def make_cumulative_output_func(output, start_time_cumul):
     :return: a derived output function
     """
     base_derived_outputs = {
-        'cumulative_diseased': ['incidence_early', 'incidence_late'],
+        'cumulative_diseased': ['early_activation', 'late_activation'],
         'cumulative_deaths': ['mortality_infectious', 'mortality_on_treatment'],
     }
 
@@ -244,8 +244,8 @@ def get_all_derived_output_functions(calculated_outputs, outputs_stratification,
     }
     flow_functions = {
         "notifications": get_notifications_connections,
-        "incidence_early": get_incidence_early_connections,
-        "incidence_late": get_incidence_late_connections,
+        "early_activation": get_incidence_early_connections,
+        "late_activation": get_incidence_late_connections,
         "mortality_infectious": get_mortality_flow_infectious,
         "mortality_on_treatment": get_mortality_flow_on_treatment,
     }
@@ -255,7 +255,7 @@ def get_all_derived_output_functions(calculated_outputs, outputs_stratification,
     }
     # need to add two intermediate derived outputs to capture mortality flows
     if "incidence" in calculated_outputs:
-        calculated_outputs = ["incidence_early", "incidence_late"] + calculated_outputs
+        calculated_outputs = ["early_activation", "late_activation"] + calculated_outputs
 
     # need to add two intermediate derived outputs to capture mortality flows
     if "mortality" in calculated_outputs:

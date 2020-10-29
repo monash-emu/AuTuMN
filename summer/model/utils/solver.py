@@ -59,7 +59,9 @@ def solve_with_ivp(ode_func: Callable, values: List[float], times: List[float], 
 
     _get_stopping_conditions.terminal = True
     t_span = (times[0], times[-1])
-    results = solve_ivp(_ode_func, t_span, values, t_eval=times, events=_get_stopping_conditions)
+    results = solve_ivp(_ode_func, t_span, values, t_eval=times)
+    # FIXME: the command below would make the optimisation analyses crash because of the stopping conditions
+    # results = solve_ivp(_ode_func, t_span, values, t_eval=times, events=_get_stopping_conditions)
     return results["y"].transpose()
 
 

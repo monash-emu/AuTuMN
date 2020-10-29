@@ -96,8 +96,8 @@ def cleanup_instances():
     instances = describe_instances()
     stop_instance_ids = []
     for i in instances:
-        if i["name"] == "buildkite":
-            # Don't kill buildkite server
+        if i["name"].startswith("buildkite"):
+            # Don't kill buildkite server(s)
             continue
 
         launched_time = i["LaunchTime"]

@@ -65,8 +65,8 @@ def cleanup():
     """
     Cleanup dangling AWS bits.
     """
-    aws.cleanup_volumes()
     aws.cleanup_instances()
+    aws.cleanup_volumes()
 
 
 @aws_cli.command()

@@ -3,12 +3,11 @@ import numpy as np
 
 from autumn.calibration import Calibration
 from autumn.tool_kit.params import load_params
-from autumn.calibration.utils import ignore_calibration_target_before_date
+from autumn.calibration.utils import ignore_calibration_target_before_date, add_dispersion_param_prior_for_gaussian
 from autumn.constants import Region
 
 from apps.covid_19.mixing_optimisation.utils import (
-    get_prior_distributions_for_opti,
-    add_dispersion_param_prior_for_gaussian,
+    get_prior_distributions_for_opti
 )
 from autumn.tool_kit.params import load_targets
 

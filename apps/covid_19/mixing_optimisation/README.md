@@ -5,7 +5,7 @@ The configurations will be all combinations of the following options:
   belgium, united-kingdom, spain, italy, sweden, france.
 
 - 2 durations for the phase during which herd immunity is being built:
-  6 months and 12 months  (config=2, config=3)
+  6 months and 12 months
 
 - 2 objectives to minimise
   Deaths and Years of life lost, minimised separately (mono-objective optimisation). 

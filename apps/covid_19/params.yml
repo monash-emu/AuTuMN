@@ -2,14 +2,12 @@
 # Parameters used to build a general model of COVID-19 disease
 parent: null
 
-seasonal_force: null
-waning_immunity_duration: null
-# Compulsory parameter that is completely overwritten in stratification, rather than being modified
-infect_death: 0.
-# Compulsory parameter for all models, even though there are no population-wide deaths
-universal_death_rate: 0.
-infectious_seed: 10 # Initial condition
-contact_rate: 0.03 # Routinely calibrated, see respective calibration files
+seasonal_force: null  # Extent of seasonal forcing
+waning_immunity_duration: null  # Note that the amplitude is the total variation in transmission from trough to peak
+infect_death: 0.  # Compulsory parameter that is completely overwritten in stratification, rather than being modified
+universal_death_rate: 0.  # Compulsory parameter for all models, even though there are no population-wide deaths
+infectious_seed: 10  # Initial condition for infectious
+contact_rate: 0.03  # Routinely calibrated, see respective calibration files
 
 time:
   start: 40.
@@ -21,13 +19,14 @@ country:
 
 population:
   region: null
-  year: 2020
+  year: 2020  # For extraction from database
 
 age_stratification:
-  max_age: 80
-  age_step_size: 5
+  max_age: 80  # One bracket more than the highest age bracket (for use in range command)
+  age_step_size: 5  # Difference between subsequent age brackets
+
   # Age-based susceptibility from Zhang et al. The reported ORs were converted to RRs using Tables S14 and S15.
-  # DOI: 10.1126/science.abb8001
+  # DOI: 10.1126/science.abb8001 (Mendeley citation key Zhang2020a)
   susceptibility:
     "0": 0.36 # 0-4
     "5": 0.36 # 5-9
@@ -50,7 +49,7 @@ sojourn:
   # Mean time in days spent in each compartment
   # Note that the early period is intended to represent the pre-hospitalisations period, whereas the late period is
   # intended to represent the time in hospital or ICU (as applicable)
-  # data form ISARIC report 4Oct2020
+  # data form ISARIC report 4th Oct 2020 (Mendeley citation key Pritchard2020}
   compartment_periods:
     hospital_early: 7.7
     hospital_late: 12.8
@@ -60,48 +59,21 @@ sojourn:
   # Mean time spent in each compartment, defined via proportions
   compartment_periods_calculated:
     exposed:
-      total_period: 5.5 # Routinely calibrated, see calibration file
+      total_period: 5.5  # Routinely calibrated, see calibration file
       proportions:
         early: 0.5 # Proportion of the exposed period spent infectious - i.e. "presymptomatic"
         late: 0.5
 
     active:
-      total_period: 8. # Routinely calibrated, see calibration file
+      total_period: 8.  # Routinely calibrated, see calibration file
       proportions:
-        # Proportion of the infectious period spent in the early compartment (i.e. can't be isolated for symptoms)
-        early: 0.333
+        early: 0.333  # Proportion of active period spent in the early compartment (can't be isolated, not in hospital)
         late: 0.667
-
-# Parameters relating to adjusting the mixing matrix to reflect interventions
-mobility:
-  region: null
-  mixing: {}
-  age_mixing: null
-  npi_effectiveness: {}
-  # Mapping of Google mobility locations to Prem-specific locations
-  google_mobility_locations:
-    work:
-      - workplaces
-    other_locations:
-      - retail_and_recreation
-      - grocery_and_pharmacy
-      - parks
-      - transit_stations
-    home:
-      - residential
-  smooth_google_data: false # whether to apply a 7-day moving average
-  square_mobility_effect: true
-  microdistancing: {}
-  microdistancing_locations:
-    - other_locations
-    - school
-    - work
-    - home
 
 elderly_mixing_reduction: null
 clinical_stratification:
-  icu_prop: 0.17 # Proportion of those hospitalised that are admitted to ICU
-  icu_mortality_prop: 0.5 # Death proportion ceiling for ICU mortality
+  icu_prop: 0.17  # Proportion of those hospitalised that are admitted to ICU
+  icu_mortality_prop: 0.5  # Death proportion ceiling for ICU mortality
   props:
     symptomatic:
       # Infectiousness progression adjustments - in ten year brackets that need to be adapted to model strata later
@@ -170,6 +142,32 @@ infection_fatality:
 
 # Heterogeneity in susceptibility
 susceptibility_heterogeneity: null
+
+# Parameters relating to adjusting the mixing matrix to reflect interventions
+mobility:
+  region: null
+  mixing: {}
+  age_mixing: null
+  npi_effectiveness: {}
+  # Mapping of Google mobility locations to Prem-specific locations
+  google_mobility_locations:
+    work:
+      - workplaces
+    other_locations:
+      - retail_and_recreation
+      - grocery_and_pharmacy
+      - parks
+      - transit_stations
+    home:
+      - residential
+  smooth_google_data: false # whether to apply a 7-day moving average
+  square_mobility_effect: true
+  microdistancing: {}
+  microdistancing_locations:
+    - other_locations
+    - school
+    - work
+    - home
 
 # Parameters of tanh-based scale-up function used to define time-variant detection, if that approach selected
 case_detection:

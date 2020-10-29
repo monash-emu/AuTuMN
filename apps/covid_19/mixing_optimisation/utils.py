@@ -1,4 +1,4 @@
-from autumn import db
+from autumn import db, inputs
 from autumn.plots.calibration.plots import _overwrite_non_accepted_mcmc_runs
 from autumn.calibration.utils import add_dispersion_param_prior_for_gaussian
 
@@ -190,6 +190,14 @@ def prepare_table_of_param_sets(calibration_output_path, country_name, n_samples
         "calibrated_param_sets", country_name + "_calibrated_params" + ".csv"
     )
     samples.to_csv(output_file, index=False)
+
+
+###
+def get_country_population_size(country):
+    iso_3 = inputs.demography.queries.get_iso3_from_country_name(country)
+    return sum(inputs.get_population_by_agegroup(
+            ["0"], iso_3, None, year=2020
+        ))
 
 
 ############# To create main table outputs

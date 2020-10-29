@@ -5,7 +5,7 @@ import yaml
 
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
 from apps.covid_19.mixing_optimisation.mixing_opti import MODES, DURATIONS, OBJECTIVES, run_root_model, objective_function
-
+from apps.covid_19.mixing_optimisation.utils import get_country_population_size
 from apps.covid_19.mixing_optimisation.write_scenarios import read_opti_outputs, read_decision_vars
 from autumn.constants import BASE_PATH
 
@@ -65,7 +65,8 @@ def evaluate_extra_deaths(
     if not h:
         delta_deaths_per_million = 1.0e6
     else:
-        population = sum(m[0].compartment_values)  # FIXME 
+        country_name = country.title() if country != "united-kingdom" else "United Kingdom"
+        population = get_country_population_size(country_name)
         delta_deaths_per_million = (this_objective[objective] - best_objective) / population * 1.0e6
 
     return delta_deaths_per_million

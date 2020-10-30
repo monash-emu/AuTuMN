@@ -6,34 +6,18 @@ from apps import covid_19
 from apps.covid_19.mixing_optimisation.mixing_opti import (
     MODES,
     DURATIONS,
-    OBJECTIVES,
     N_DECISION_VARS,
     build_params_for_phases_2_and_3,
 )
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
+from apps.covid_19.mixing_optimisation.utils import get_scenario_mapping
 from autumn.constants import BASE_PATH
 
 
 """
 Define scenarios for each combination of mode, duration and objective, plus the unmitigated scenario (9 scenarios)
 """
-SCENARIO_MAPPING = {}
-_sc_idx = 1
-for _mode in MODES:
-    for _duration in DURATIONS:
-        for _objective in OBJECTIVES:
-            SCENARIO_MAPPING[_sc_idx] = {
-                "mode": _mode,
-                "duration": _duration,
-                "objective": _objective,
-            }
-            _sc_idx += 1
-SCENARIO_MAPPING[_sc_idx] = {
-    "mode": None,
-    "duration": None,
-    "objective": None,
-}  # extra scenario for unmitigated
-
+SCENARIO_MAPPING = get_scenario_mapping()
 """
 Reading optimisation outputs from csv file
 """

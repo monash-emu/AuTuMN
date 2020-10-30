@@ -9,7 +9,8 @@ from autumn.constants import BASE_PATH
 
 
 def main():
-    run_sensitivity_minimum_mixing()
+    opti_output_filename = "dummy_vars_for_test.csv"
+    run_sensitivity_minimum_mixing(opti_output_filename)
 
 
 def read_sensitivity_min_mix_res():

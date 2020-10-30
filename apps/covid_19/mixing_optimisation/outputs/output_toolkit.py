@@ -67,7 +67,7 @@ def get_uncertainty_cell_value(uncertainty_df, output, mode, duration, opti_obje
 
     print("!!!!!   Need to check the code below this point  !!!!!!!!")
     exit()
-    
+
     if "_yoll" in output:
         objective = "yoll"
     else:

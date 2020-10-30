@@ -575,3 +575,4 @@ apps/covid_19/mixing_optimisation/outputs/plots/calibration/figures/seroprevalen
 apps/covid_19/mixing_optimisation/outputs/plots/outputs/figures/optimal_plan/optimal_plan_by_age.pdf
 apps/covid_19/mixing_optimisation/outputs/plots/outputs/figures/optimal_plan/optimal_plan_by_location.pdf
 apps/covid_19/mixing_optimisation/sensitivity_analyses/min_mixing_results.yml
+apps/covid_19/mixing_optimisation/outputs/plots/input_plots/figures/mobility_inputs.pdf

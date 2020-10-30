@@ -2,6 +2,7 @@ from matplotlib import pyplot
 import matplotlib.patches as patches
 import os
 import yaml
+import matplotlib as mpl
 
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
 from apps.covid_19.mixing_optimisation.mixing_opti import MODES, DURATIONS, OBJECTIVES, run_root_model, objective_function
@@ -14,6 +15,9 @@ FIGURE_PATH = os.path.join(BASE_PATH, "apps", "covid_19", "mixing_optimisation",
 
 
 def main():
+    # Reset pyplot style
+    mpl.rcParams.update(mpl.rcParamsDefault)
+    mpl.pyplot.style.use("ggplot")
     opti_output_filename = "dummy_vars_for_test.csv"
     opti_outputs_df = read_opti_outputs(opti_output_filename)
     all_results = {}

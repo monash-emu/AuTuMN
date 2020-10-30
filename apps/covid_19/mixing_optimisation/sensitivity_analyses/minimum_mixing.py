@@ -27,31 +27,31 @@ def read_sensitivity_min_mix_res():
 def run_sensitivity_minimum_mixing(opti_output_filename="dummy_vars_for_test.csv"):
     opti_outputs_df = read_opti_outputs(opti_output_filename)
     results = {}
+
+    mode = MODES[0]
+    objective = OBJECTIVES[1]
+
     for country in OPTI_REGIONS:
         results[country] = {}
         root_model = run_root_model(country)
-        for mode in MODES:
-            results[country][mode] = {}
-            for duration in DURATIONS:
-                results[country][mode][duration] = {}
-                for objective in OBJECTIVES:
-                    results[country][mode][duration][objective] = {}
-                    decision_vars = read_decision_vars(opti_outputs_df, country, mode, duration, objective)
-                    if decision_vars is None:
-                        continue
-                    for min_mixing in [0.10, 0.20, 0.30, 0.40, 0.50]:
-                        modified_vars = copy.deepcopy(decision_vars)
-                        modified_vars = [max([v, min_mixing]) for v in modified_vars]
-                        print(f"evaluate objective for {country} | {mode} | {duration} | {objective}: min_mixing={min_mixing}")
-                        h, d, yoll = objective_function(
-                            modified_vars, root_model, mode, country, duration
-                        )
-                        res_dict = {
-                            "h": bool(h),
-                            "d": float(d),
-                            "yoll": float(yoll),
-                        }
-                        results[country][mode][duration][objective][min_mixing] = res_dict
+        for duration in DURATIONS:
+            results[country][duration] = {}
+            decision_vars = read_decision_vars(opti_outputs_df, country, mode, duration, objective)
+            if decision_vars is None:
+                continue
+            for min_mixing in [0.10, 0.20, 0.30, 0.40, 0.50]:
+                modified_vars = copy.deepcopy(decision_vars)
+                modified_vars = [max([v, min_mixing]) for v in modified_vars]
+                print(f"evaluate objective for {country} | {duration} | {objective}: min_mixing={min_mixing}")
+                h, d, yoll = objective_function(
+                    modified_vars, root_model, mode, country, duration
+                )
+                res_dict = {
+                    "h": bool(h),
+                    "d": float(d),
+                    "yoll": float(yoll),
+                }
+                results[country][duration][min_mixing] = res_dict
     file_path = os.path.join(
         BASE_PATH, "apps", "covid_19", "mixing_optimisation", "sensitivity_analyses", "min_mixing_results.yml"
     )

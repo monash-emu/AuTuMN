@@ -5,6 +5,10 @@ import seaborn as sns
 
 from autumn.constants import BASE_PATH
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
+from apps import covid_19
+from apps.covid_19.model.preprocess.mixing_matrix.mobility import get_mobility_funcs
+from apps.covid_19.model.parameters import Parameters
+
 
 FIGURE_PATH = os.path.join(BASE_PATH, "apps", "covid_19", "mixing_optimisation",
                            "outputs", "plots", "input_plots", "figures")
@@ -22,16 +26,29 @@ def main():
 def get_mobility_data():
     mobility_data_functions = {}
     for country in OPTI_REGIONS:
+        app_region = covid_19.app.get_region(country)
+        params = app_region.params['default']
+        params = Parameters(**params)
+        mobility_funcs = get_mobility_funcs(
+            params.country,
+            params.mobility.region,
+            params.mobility.mixing,
+            params.mobility.google_mobility_locations,
+            params.mobility.npi_effectiveness,
+            False,  # turn-off squaring to visualise the raw effect
+            params.mobility.smooth_google_data,
+        )
+
         mobility_data_functions[country] = {}
         for loc_key in ("other_locations", "school", "work"):
-            mobility_func = lambda t: .5  # FIXME: need to load the time-variant function here
-            mobility_data_functions[country][loc_key] = mobility_func
+
+            mobility_data_functions[country][loc_key] = mobility_funcs[loc_key]
 
     return mobility_data_functions
 
 
 def plot_mobility(mobility_data_functions, country, loc_key, axis):
-    t_max = 300
+    t_max = 275
 
     times = list(range(t_max))
     values = [mobility_data_functions[country][loc_key](t) for t in times]

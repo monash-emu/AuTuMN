@@ -2,11 +2,15 @@ from matplotlib import pyplot
 import os
 import matplotlib as mpl
 import numpy as np
+import copy
 
+from apps import covid_19
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS, PHASE_2_START_TIME
 from apps.covid_19.mixing_optimisation.mixing_opti import MODES, DURATIONS, OBJECTIVES, build_params_for_phases_2_and_3
 from apps.covid_19.mixing_optimisation.write_scenarios import read_opti_outputs, read_decision_vars
 from autumn.constants import BASE_PATH
+from autumn.tool_kit.params import merge_dicts
+from autumn.tool_kit.scenarios import Scenario
 
 FIGURE_PATH = os.path.join(BASE_PATH, "apps", "covid_19", "mixing_optimisation",
                            "outputs", "plots", "outputs", "figures", "optimised_matrices")
@@ -20,16 +24,20 @@ def main():
     opti_outputs_df = read_opti_outputs(opti_output_filename)
 
     for mode in MODES:
+        print(mode)
         optimised_matrices = {}
         original_matrices = {}
         for country in OPTI_REGIONS:
+            print(country)
             original_matrices[country] = get_optimised_mixing_matrix(
                 country, [1] * 16, MODES[0], DURATIONS[0]
             )
             optimised_matrices[country] = {}
             for duration in DURATIONS:
+                print(duration)
                 optimised_matrices[country][duration] = {}
                 for objective in OBJECTIVES:
+                    print(objective)
                     decision_vars = read_decision_vars(opti_outputs_df, country, mode, duration, objective)
                     optimised_matrices[country][duration][objective] = get_optimised_mixing_matrix(
                         country, decision_vars, mode, duration
@@ -39,13 +47,28 @@ def main():
 
 
 def get_optimised_mixing_matrix(country, decision_vars, mode, duration):
+    if decision_vars is None:
+        return np.ones((16, 16))
 
-    # scenario_params = build_params_for_phases_2_and_3(decision_vars, None, duration, mode)
-    # time_matrix_called = PHASE_2_START_TIME + 30  # could be any time during Phase 2
+    app_region = covid_19.app.get_region(country)
+    build_model = app_region.build_model
+    params = copy.deepcopy(app_region.params)
 
-    scenario_matrix = np.ones((16, 16))  # FIXME: need to load adjusted age-specific matrix at time t=time_matrix_called
+    # Create and run scenario 1
+    sc_1_params_update = build_params_for_phases_2_and_3(
+        decision_vars, params["default"]['elderly_mixing_reduction'], duration, mode
+    )
+    sc_1_params = merge_dicts(sc_1_params_update, params["default"])
+    params["scenarios"][1] = sc_1_params
+    scenario_1 = Scenario(build_model, idx=0, params=params)
 
-    return scenario_matrix
+    print("WARNING: Make sure to comment the line of code where integration is called in scenairos.py !!!!!!!!!!!!!!")
+    scenario_1.run()
+
+    sc_1_model = scenario_1.model
+    time_matrix_called = PHASE_2_START_TIME + 30  # could be any time during Phase 2
+
+    return sc_1_model.get_mixing_matrix(time_matrix_called)
 
 
 def plot_mixing_matrix_opti(matrix, axis, fig, vmax, include_legend):

@@ -14,6 +14,7 @@ from autumn.tool_kit.scenarios import Scenario
 from autumn.plots.utils import _plot_targets_to_axis
 
 from autumn.plots.plotter import Plotter, COLOR_THEME
+from autumn.inputs.social_mixing.queries import get_country_mixing_matrix
 
 logger = logging.getLogger(__name__)
 
@@ -22,11 +23,17 @@ X_MIN = None
 X_MAX = None
 
 
+def plot_mixing_matrix(plotter: Plotter, location: str, iso3: str):
+    fig, axis, _, _, _, _ = plotter.get_figure()
+    legend = []
+
+    mixing_matrix = get_country_mixing_matrix(location, iso3)
+    pyplot.imshow(mixing_matrix, cmap="hot", interpolation="none", extent=[0, 80, 80, 0])
+    plotter.save_figure(fig, filename="mixing-matrix", title_text="Mixing matrix")
+
+
 def plot_agg_compartments_multi_scenario(
-    plotter: Plotter,
-    scenarios: List[Scenario],
-    compartment_names: List[str],
-    is_logscale=False,
+    plotter: Plotter, scenarios: List[Scenario], compartment_names: List[str], is_logscale=False,
 ):
     """
     Plot multiple compartments with values aggregated for a multiple scenarios.
@@ -51,10 +58,7 @@ def plot_agg_compartments_multi_scenario(
 
 
 def plot_single_compartment_multi_scenario(
-    plotter: Plotter,
-    scenarios: List[Scenario],
-    compartment_name: str,
-    is_logscale=False,
+    plotter: Plotter, scenarios: List[Scenario], compartment_name: str, is_logscale=False,
 ):
     """
     Plot the selected output compartment for a multiple scenarios.

@@ -612,3 +612,7 @@ apps/covid_19/mixing_optimisation/outputs/pbi_databases/manual_runs_full_immunit
 apps/covid_19/mixing_optimisation/outputs/pbi_databases/manual_runs_full_immunity/sweden/2020-11-02--20-22-42/params.yml
 apps/covid_19/mixing_optimisation/outputs/pbi_databases/manual_runs_full_immunity/united-kingdom/2020-11-02--20-24-05/meta.yml
 apps/covid_19/mixing_optimisation/outputs/pbi_databases/manual_runs_full_immunity/united-kingdom/2020-11-02--20-24-05/params.yml
+apps/covid_19/mixing_optimisation/outputs/plots/outputs/figures/hospital_uncertainty/hospital_occupancy_uncertainty_by_age.pdf
+apps/covid_19/mixing_optimisation/outputs/plots/outputs/figures/hospital_uncertainty/hospital_occupancy_uncertainty_by_location.pdf
+apps/covid_19/mixing_optimisation/outputs/plots/outputs/figures/hospital_uncertainty/proportion_seropositive_uncertainty_by_age.pdf
+apps/covid_19/mixing_optimisation/outputs/plots/outputs/figures/hospital_uncertainty/proportion_seropositive_uncertainty_by_location.pdf

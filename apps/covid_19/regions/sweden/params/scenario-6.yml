@@ -1,0 +1,46 @@
+mobility:
+  age_mixing: {}
+  microdistancing:
+    behaviour:
+      parameters:
+        sigma: 0.1
+        upper_asymptote: 0.1
+    behaviour_adjuster:
+      parameters:
+        sigma: 1.0
+        upper_asymptote: 1.0
+  mixing:
+    other_locations:
+      append: false
+      times:
+      - 2020-09-30
+      - 2021-04-02
+      - 2021-04-03
+      values:
+      - 0.100014121
+      - 0.100014121
+      - 1.0
+    school:
+      append: false
+      times:
+      - 2020-09-30
+      - 2021-04-02
+      - 2021-04-03
+      values:
+      - 0.930387118
+      - 0.930387118
+      - 1.0
+    work:
+      append: false
+      times:
+      - 2020-09-30
+      - 2021-04-02
+      - 2021-04-03
+      values:
+      - 0.825016443
+      - 0.825016443
+      - 1.0
+parent: apps/covid_19/regions/sweden/params/default.yml
+time:
+  end: 730
+  start: 274

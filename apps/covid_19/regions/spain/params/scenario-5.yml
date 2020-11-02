@@ -1,0 +1,46 @@
+mobility:
+  age_mixing: {}
+  microdistancing:
+    behaviour:
+      parameters:
+        sigma: 0.1
+        upper_asymptote: 0.1
+    behaviour_adjuster:
+      parameters:
+        sigma: 1.0
+        upper_asymptote: 1.0
+  mixing:
+    other_locations:
+      append: false
+      times:
+      - 2020-09-30
+      - 2021-04-02
+      - 2021-04-03
+      values:
+      - 0.110775217
+      - 0.110775217
+      - 1.0
+    school:
+      append: false
+      times:
+      - 2020-09-30
+      - 2021-04-02
+      - 2021-04-03
+      values:
+      - 0.688649092
+      - 0.688649092
+      - 1.0
+    work:
+      append: false
+      times:
+      - 2020-09-30
+      - 2021-04-02
+      - 2021-04-03
+      values:
+      - 0.9661316809999999
+      - 0.9661316809999999
+      - 1.0
+parent: apps/covid_19/regions/spain/params/default.yml
+time:
+  end: 730
+  start: 274

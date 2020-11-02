@@ -580,3 +580,15 @@ apps/covid_19/mixing_optimisation/outputs/plots/outputs/figures/optimised_matric
 apps/covid_19/mixing_optimisation/outputs/plots/outputs/figures/optimised_matrices/optimal_matrices_by_location.pdf
 apps/covid_19/mixing_optimisation/outputs/plots/outputs/figures/rainbows/rainbow_by_age_six_months_deaths.pdf
 apps/covid_19/mixing_optimisation/outputs/plots/outputs/figures/rainbows/rainbow_by_age_six_months_yoll.pdf
+apps/covid_19/mixing_optimisation/outputs/pbi_databases/manual_runs_full_immunity/belgium/2020-11-02--11-21-32/meta.yml
+apps/covid_19/mixing_optimisation/outputs/pbi_databases/manual_runs_full_immunity/belgium/2020-11-02--11-21-32/params.yml
+apps/covid_19/mixing_optimisation/outputs/pbi_databases/manual_runs_full_immunity/france/2020-11-02--11-22-52/meta.yml
+apps/covid_19/mixing_optimisation/outputs/pbi_databases/manual_runs_full_immunity/france/2020-11-02--11-22-52/params.yml
+apps/covid_19/mixing_optimisation/outputs/pbi_databases/manual_runs_full_immunity/italy/2020-11-02--11-24-03/meta.yml
+apps/covid_19/mixing_optimisation/outputs/pbi_databases/manual_runs_full_immunity/italy/2020-11-02--11-24-03/params.yml
+apps/covid_19/mixing_optimisation/outputs/pbi_databases/manual_runs_full_immunity/spain/2020-11-02--11-25-13/meta.yml
+apps/covid_19/mixing_optimisation/outputs/pbi_databases/manual_runs_full_immunity/spain/2020-11-02--11-25-13/params.yml
+apps/covid_19/mixing_optimisation/outputs/pbi_databases/manual_runs_full_immunity/sweden/2020-11-02--11-28-58/meta.yml
+apps/covid_19/mixing_optimisation/outputs/pbi_databases/manual_runs_full_immunity/sweden/2020-11-02--11-28-58/params.yml
+apps/covid_19/mixing_optimisation/outputs/pbi_databases/manual_runs_full_immunity/united-kingdom/2020-11-02--11-26-23/meta.yml
+apps/covid_19/mixing_optimisation/outputs/pbi_databases/manual_runs_full_immunity/united-kingdom/2020-11-02--11-26-23/params.yml

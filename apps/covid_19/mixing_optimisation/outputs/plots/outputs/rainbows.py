@@ -6,31 +6,77 @@ import matplotlib as mpl
 import seaborn as sns
 import numpy as np
 
-from apps.covid_19.mixing_optimisation.constants import PHASE_2_START_TIME, PHASE_2_DURATION, DURATION_PHASES_2_AND_3
+from apps.covid_19.mixing_optimisation.constants import PHASE_2_START_TIME, PHASE_2_DURATION, DURATION_PHASES_2_AND_3, OPTI_REGIONS
 from apps.covid_19.mixing_optimisation.mixing_opti import MODES, DURATIONS, OBJECTIVES
+from apps.covid_19.mixing_optimisation.utils import get_scenario_mapping_reverse
 from autumn.constants import BASE_PATH
-
+from autumn.db.load import load_derived_output_tables, _find_db_paths
+from autumn.db import Database
 
 FIGURE_PATH = os.path.join(BASE_PATH, "apps", "covid_19", "mixing_optimisation",
                            "outputs", "plots", "outputs", "figures", "rainbows")
 
+DATA_PATH = os.path.join(BASE_PATH, "apps", "covid_19", "mixing_optimisation",
+                           "outputs", "pbi_databases", "manual_runs_full_immunity")
+
 
 def main():
+    all_derived_outputs, all_outputs = get_output_data()
 
     for mode in MODES:
         for duration in DURATIONS:
             for objective in OBJECTIVES:
-                country_scenarios = None
-                plot_multicountry_rainbow(country_scenarios, mode, duration, objective, include_config=False)
+                plot_multicountry_rainbow(all_derived_outputs, all_outputs, mode, duration, objective, include_config=False)
 
 
-def plot_stacked_compartments_by_stratum(scenarios, compartment_name: str,
-                                         stratify_by: str, multicountry=False, axis=None, duration=DURATIONS[0]):
-    models = [sc.model for sc in scenarios]
-    times = (models[0].times[:-1] + models[1].times)
+def get_output_data():
+    all_derived_outputs = {}
+    all_outputs = {}
+    for country in OPTI_REGIONS:
+        country_dir_path = os.path.join(
+            DATA_PATH,
+            country
+        )
+        db_path = [x[0] for x in os.walk(country_dir_path)][1]
+        all_derived_outputs[country] = load_derived_output_tables(db_path)[0]
+        all_outputs[country] = load_output_tables(db_path)[0]
+
+    return all_derived_outputs, all_outputs
+
+
+def load_output_tables(calib_dirpath: str):
+    output_tables = []
+    for db_path in _find_db_paths(calib_dirpath):
+        db = Database(db_path)
+        df = db.query("outputs")
+        output_tables.append(df)
+
+    return output_tables
+
+
+def apply_scenario_mask(derived_output_df, mode, duration, objective):
+    if mode is None:  # this is the baseline scenario
+        sc_idx = 0
+    else:
+        sc_idx = get_scenario_mapping_reverse(mode, duration, objective)
+    mask = derived_output_df['scenario'] == sc_idx
+    return derived_output_df[mask]
+
+
+def plot_stacked_outputs_by_stratum(base_output_df, sc_output_df,
+                                    output_name: str,
+                                    stratify_by: str, axis=None, duration=DURATIONS[0]):
+
+    base_last_time = list(base_output_df.times).index(PHASE_2_START_TIME)
+    times_base = list(base_output_df.times)[:base_last_time - 1]
+    times_sc = list(sc_output_df.times)
+    times = times_base + times_sc
+
+    if output_name == "recovered":
+        base_compartments_df = base_output_df.drop(['chain', 'run', 'scenario', 'times'], axis=1)
+        sc_compartments_df = sc_output_df.drop(['chain', 'run', 'scenario', 'times'], axis=1)
 
     legend = []
-    strata = models[0].all_stratifications[stratify_by]
 
     running_total = [0.] * len(times)
 
@@ -41,8 +87,9 @@ def plot_stacked_compartments_by_stratum(scenarios, compartment_name: str,
     purples[0] = 'pink'
 
     # mark Phase 2 in the background:
-    rect = patches.Rectangle((PHASE_2_START_TIME, 0), PHASE_2_DURATION[duration], 1.e9, linewidth=0,
-                              facecolor='gold', alpha=.2)
+    rect = patches.Rectangle(
+        (PHASE_2_START_TIME, 0), PHASE_2_DURATION[duration], 1.e9, linewidth=0, facecolor='gold', alpha=.2
+    )
     rect.set_zorder(1)
 
     # Add the patch to the Axes
@@ -50,6 +97,7 @@ def plot_stacked_compartments_by_stratum(scenarios, compartment_name: str,
 
     strata_colors = blues + reds + greens + purples
 
+    strata = [str(5 * i) for i in range(16)]
     for color_idx, s in enumerate(strata):
         group_name = str(int(5.*color_idx))
         if color_idx < 15:
@@ -58,30 +106,24 @@ def plot_stacked_compartments_by_stratum(scenarios, compartment_name: str,
             group_name += "+"
         stratum_name = stratify_by + "_" + s
 
-        if compartment_name in [c.split("X")[0] for c in models[0].compartment_names]:  # use outputs
-            comp_names = [c for c in models[0].compartment_names if stratum_name in c.split('X') and compartment_name in c]
-            comp_idx = [models[0].compartment_names.index(c) for c in comp_names]
-            relevant_outputs_0 = models[0].outputs[:, comp_idx]
-            values_0 = np.sum(relevant_outputs_0, axis=1)
+        if output_name == "infection_deaths":
+            relevant_output_names = [c for c in list(base_output_df.columns) if stratum_name in c.split('X') and output_name in c]
+        else:
+            relevant_output_names = [f"{output_name}X{stratum_name}"]
 
-            relevant_outputs_1 = models[1].outputs[:, comp_idx]
-            values_1 = np.sum(relevant_outputs_1, axis=1)
+        values_0 = [0] * len(times_base)
+        values_1 = [0] * len(times_sc)
+        for out in relevant_output_names:
+            values_0 = [v + d for (v, d) in zip(values_0, list(base_output_df[out])[:base_last_time - 1])]
+            values_1 = [v + d for (v, d) in zip(values_1, list(sc_output_df[out]))]
 
-            if compartment_name == 'recovered':
-                deno_0 = np.sum(models[0].outputs, axis=1)
-                values_0 = [100*v / d for (v, d) in zip(values_0, deno_0)]
-                deno_1 = np.sum(models[1].outputs, axis=1)
-                values_1 = [100*v / d for (v, d) in zip(values_1, deno_1)]
+        if output_name == 'recovered':
+            deno_0 = list(np.sum(base_compartments_df, axis=1))[:base_last_time - 1]
+            values_0 = [100*v / d for (v, d) in zip(values_0, deno_0)]
+            deno_1 = list(np.sum(sc_compartments_df, axis=1))
+            values_1 = [100*v / d for (v, d) in zip(values_1, deno_1)]
 
-        else:  # use derived outputs
-            relevant_output_names = [c for c in models[0].derived_outputs if stratum_name in c.split('X') and compartment_name in c]
-            values_0 = [0] * len(models[0].times)
-            values_1 = [0] * len(models[1].times)
-            for out in relevant_output_names:
-                values_0 = [v + d for (v, d) in zip(values_0, models[0].derived_outputs[out])]
-                values_1 = [v + d for (v, d) in zip(values_1, models[1].derived_outputs[out])]
-
-        new_running_total = [r + v for (r, v) in zip(running_total, list(values_0)[:-1] + list(values_1))]
+        new_running_total = [r + v for (r, v) in zip(running_total, list(values_0) + list(values_1))]
 
         axis.fill_between(times, running_total, new_running_total, color=strata_colors[color_idx], label=group_name,
                           zorder=2, alpha=1.)
@@ -94,10 +136,10 @@ def plot_stacked_compartments_by_stratum(scenarios, compartment_name: str,
     # axis.axvline(x=phase_2_start, linewidth=.8, dashes=[6, 4], color='black')
     # axis.axvline(x=phase_2_end[config],linewidth=.8, dashes=[6, 4], color='black')
 
-    xticks = [61, 214, 398, 366 + 214, 366 + 365]
-    xlabs = ["1 Mar 2020", "1 Aug 2020", "1 Feb 2021", "1 Aug 2021", "31 Dec 2021"]
+    xticks = [61, 214, 398, 366 + 214]
+    xlabs = ["1 Mar 2020", "1 Aug 2020", "1 Feb 2021", "1 Aug 2021"]
 
-    axis.set_xlim((30, PHASE_2_START_TIME + DURATION_PHASES_2_AND_3))
+    axis.set_xlim((30, PHASE_2_START_TIME + PHASE_2_DURATION[duration] + 90))
     axis.set_xticks(xticks)
     axis.set_xticklabels(xlabs, fontsize=12)
 
@@ -118,7 +160,7 @@ def plot_stacked_compartments_by_stratum(scenarios, compartment_name: str,
     return handles, labels
 
 
-def plot_multicountry_rainbow(country_scenarios, mode, duration, objective, include_config=False):
+def plot_multicountry_rainbow(all_derived_outputs, all_outputs, mode, duration, objective, include_config=False):
     fig_h = 20 if not include_config else 21
     heights = [1, 6, 6, 6, 6, 6, 6] if not include_config else [2, 1, 6, 6, 6, 6, 6, 6]
 
@@ -138,13 +180,26 @@ def plot_multicountry_rainbow(country_scenarios, mode, duration, objective, incl
     text_size = 23
 
     for i, country in enumerate(countries):
+        base_derived_output_df = apply_scenario_mask(all_derived_outputs[country], None, None, None)
+        sc_derived_output_df = apply_scenario_mask(all_derived_outputs[country], mode, duration, objective)
+        base_output_df = apply_scenario_mask(all_outputs[country], None, None, None)
+        sc_output_df = apply_scenario_mask(all_outputs[country], mode, duration, objective)
+
         i_grid = i + 2 if include_config else i+1
-        for j, output in enumerate(output_names):
+        for j, output_name in enumerate(output_names):
             ax = fig.add_subplot(spec[i_grid, j + 1])
-            h, l = plot_stacked_compartments_by_stratum(
-                None, country_scenarios[country][mode][duration][objective], output, "agegroup", multicountry=True,
-                axis=ax, duration=duration
-            )
+
+            if output_name == "recovered":
+                h, l = plot_stacked_outputs_by_stratum(
+                    base_output_df, sc_output_df,
+                    output_name, "agegroup", axis=ax, duration=duration
+                )
+            else:
+                h, l = plot_stacked_outputs_by_stratum(
+                    base_derived_output_df, sc_derived_output_df,
+                    output_name, "agegroup", axis=ax, duration=duration
+                )
+
             if i == 0:
                 i_grid_output_labs = 1 if include_config else 0
                 ax = fig.add_subplot(spec[i_grid_output_labs, j+1])

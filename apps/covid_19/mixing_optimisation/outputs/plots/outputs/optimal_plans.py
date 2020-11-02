@@ -18,7 +18,7 @@ def main():
     # Reset pyplot style
     mpl.rcParams.update(mpl.rcParamsDefault)
     mpl.pyplot.style.use("ggplot")
-    opti_output_filename = "dummy_vars_for_test.csv"
+    opti_output_filename = "opti_outputs.csv"
     opti_outputs_df = read_opti_outputs(opti_output_filename)
     all_results = {}
     for country in OPTI_REGIONS:

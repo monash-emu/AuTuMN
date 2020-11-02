@@ -11,7 +11,7 @@ from autumn.constants import BASE_PATH
 
 
 def main():
-    opti_output_filename = "dummy_vars_for_test.csv"
+    opti_output_filename = "opti_outputs.csv"
     opti_outputs_df = read_opti_outputs(opti_output_filename)
     target_objective = {
         "deaths": 20,

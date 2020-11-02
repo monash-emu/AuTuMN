@@ -117,5 +117,5 @@ def drop_all_yml_scenario_files(all_sc_params):
 
 
 if __name__ == "__main__":
-    all_sc_params = build_all_scenario_dicts_from_outputs()
+    all_sc_params = build_all_scenario_dicts_from_outputs("opti_outputs.csv")
     drop_all_yml_scenario_files(all_sc_params)

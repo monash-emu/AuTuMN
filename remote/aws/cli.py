@@ -173,7 +173,7 @@ def run_powerbi(job, run, branch, is_spot):
     Run the collate a PowerBI database from the full model run outputs.
     """
     job_id = f"powerbi-{job}"
-    instance_type = EC2InstanceType.r5_4xlarge
+    instance_type = EC2InstanceType.r5_8xlarge
     kwargs = {"run_id": run, "branch": branch}
     job_func = functools.partial(remote.run_powerbi, **kwargs)
     _run_job(job_id, instance_type, is_spot, job_func)

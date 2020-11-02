@@ -21,6 +21,9 @@ DATA_PATH = os.path.join(BASE_PATH, "apps", "covid_19", "mixing_optimisation",
 
 
 def main():
+    # Reset pyplot style
+    mpl.rcParams.update(mpl.rcParamsDefault)
+    mpl.pyplot.style.use("ggplot")
     all_derived_outputs, all_outputs = get_output_data()
 
     for mode in MODES:

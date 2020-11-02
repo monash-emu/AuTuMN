@@ -592,3 +592,5 @@ apps/covid_19/mixing_optimisation/outputs/pbi_databases/manual_runs_full_immunit
 apps/covid_19/mixing_optimisation/outputs/pbi_databases/manual_runs_full_immunity/sweden/2020-11-02--11-28-58/params.yml
 apps/covid_19/mixing_optimisation/outputs/pbi_databases/manual_runs_full_immunity/united-kingdom/2020-11-02--11-26-23/meta.yml
 apps/covid_19/mixing_optimisation/outputs/pbi_databases/manual_runs_full_immunity/united-kingdom/2020-11-02--11-26-23/params.yml
+apps/covid_19/mixing_optimisation/outputs/plots/outputs/figures/attack_rate_by_age/age_specific_attack_rates_by_age.pdf
+apps/covid_19/mixing_optimisation/outputs/plots/outputs/figures/attack_rate_by_age/age_specific_attack_rates_by_location.pdf

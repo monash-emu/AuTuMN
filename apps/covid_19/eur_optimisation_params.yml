@@ -18,6 +18,25 @@ clinical_stratification:
     sympt_isolate: 0.2
     hospital_non_icu: 0.2
     icu: 0.2
+  props:
+    hospital:
+      props:  # Earlier values from the 21st July Dutch GGD report
+        - 0.087  # 0-4
+        - 0.009  # 5-9
+        - 0.005  # 10-14
+        - 0.008  # 15-19
+        - 0.011  # 20-24
+        - 0.011  # 25-29
+        - 0.013  # 30-34
+        - 0.015  # 35-39
+        - 0.018  # 40-44
+        - 0.040  # 45-49
+        - 0.047  # 50-54
+        - 0.070  # 55-59
+        - 0.071  # 60-64
+        - 0.114  # 65-69
+        - 0.113  # 70-74
+        - 0.071  # 75+
 
 mobility:
   microdistancing_locations:

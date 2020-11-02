@@ -44,7 +44,7 @@ PLOT_TEXT_DICT = {
     "sojourn.compartment_periods.icu_early": "ICU duration",
 }
 
-ALPHAS = (1.0, 0.6, 0.4, 0.3, 0.2)
+ALPHAS = (1.0, 0.6, 0.4, 0.3, 0.2, 0.15, 0.1, 0.08)
 # https://matplotlib.org/3.1.0/gallery/color/named_colors.html
 COLORS = (
     # Blues

@@ -92,25 +92,25 @@ clinical_stratification:
         - 0.63  # 60-69
         - 0.69  # 70+
     hospital:
-      # Proportion of symptomatic persons that are hospitalised - Dutch GGD report
-      multiplier: 1. # Multiplier to the above age-stratified parameters
+      # Proportion of symptomatic persons that are hospitalised - Dutch GGD report from 4th August 2020, Table 3
+      multiplier: 1. # Multiplier to the below age-stratified parameters
       props:
-        - 0.087  # 0-4
-        - 0.009  # 5-9
-        - 0.005  # 10-14
-        - 0.008  # 15-19
-        - 0.011  # 20-24
-        - 0.011  # 25-29
-        - 0.013  # 30-34
-        - 0.015  # 35-39
-        - 0.018  # 40-44
-        - 0.040  # 45-49
-        - 0.047  # 50-54
-        - 0.070  # 55-59
-        - 0.071  # 60-64
-        - 0.114  # 65-69
-        - 0.113  # 70-74
-        - 0.071  # 75+
+        - 0.0777  # 0-4
+        - 0.0069  # 5-9
+        - 0.0034  # 10-14
+        - 0.0051  # 15-19
+        - 0.0068  # 20-24
+        - 0.0080  # 25-29
+        - 0.0124  # 30-34
+        - 0.0129  # 35-39
+        - 0.0190  # 40-44
+        - 0.0331  # 45-49
+        - 0.0383  # 50-54
+        - 0.0579  # 55-59
+        - 0.0617  # 60-64
+        - 0.1030  # 65-69
+        - 0.1072  # 70-74
+        - 0.0703  # 75+
 
   # Infectiousness adjustments, including the effect of isolation following detection
   late_exposed_infect_multiplier: 1.0

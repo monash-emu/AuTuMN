@@ -616,3 +616,5 @@ apps/covid_19/mixing_optimisation/outputs/plots/outputs/figures/hospital_uncerta
 apps/covid_19/mixing_optimisation/outputs/plots/outputs/figures/hospital_uncertainty/hospital_occupancy_uncertainty_by_location.pdf
 apps/covid_19/mixing_optimisation/outputs/plots/outputs/figures/hospital_uncertainty/proportion_seropositive_uncertainty_by_age.pdf
 apps/covid_19/mixing_optimisation/outputs/plots/outputs/figures/hospital_uncertainty/proportion_seropositive_uncertainty_by_location.pdf
+apps/covid_19/mixing_optimisation/outputs/plots/outputs/figures/tables/output_table_by_location.csv
+apps/covid_19/mixing_optimisation/outputs/plots/outputs/figures/tables/output_table_by_age.csv

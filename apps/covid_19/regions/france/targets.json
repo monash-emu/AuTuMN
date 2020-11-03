@@ -491,5 +491,31 @@
       0.75,
       0.975
     ]
+  },
+  "accum_deaths": {
+    "output_key": "accum_deaths",
+    "title": "accum_deaths",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
+  },
+  "accum_years_of_life_lost": {
+    "output_key": "accum_years_of_life_lost",
+    "title": "accum_years_of_life_lost",
+    "times": [],
+    "values": [],
+    "quantiles": [
+      0.025,
+      0.25,
+      0.5,
+      0.75,
+      0.975
+    ]
   }
 }

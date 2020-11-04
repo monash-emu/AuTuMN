@@ -49,7 +49,7 @@ BASE_CALIBRATION_PARAMS = [
         "param_name": "sojourn.compartment_periods_calculated.active.total_period",
         "distribution": "trunc_normal",
         "distri_params": [6.5, 0.77],
-        "trunc_range": [1.0, np.inf],
+        "trunc_range": [4.0, np.inf],
     },
 ]
 
@@ -274,7 +274,7 @@ def add_standard_victoria_params(params, region):
         {
             "param_name": "contact_rate",
             "distribution": "uniform",
-            "distri_params": [0.006 if region in Region.VICTORIA_RURAL else 0.012, 0.07],
+            "distri_params": [0.008 if region in Region.VICTORIA_RURAL else 0.02, 0.07],
         },
         {
             "param_name": "seasonal_force",
@@ -307,7 +307,7 @@ def add_standard_victoria_params(params, region):
             "param_name": "clinical_stratification.props.hospital.multiplier",
             "distribution": "trunc_normal",
             "distri_params": [1.0, 1.0],
-            "trunc_range": [0.2, np.inf],
+            "trunc_range": [0.6, np.inf],
         },
         {
             "param_name": "sojourn.compartment_periods.icu_early",
@@ -325,7 +325,7 @@ def add_standard_victoria_params(params, region):
             "param_name": "mobility.microdistancing.behaviour.parameters.max_effect",
             "distribution": "beta",
             "distri_mean": 0.8,
-            "distri_ci": [0.55, 0.9],
+            "distri_ci": [0.6, 0.9],
         },
     ]
 

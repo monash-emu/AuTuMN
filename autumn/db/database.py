@@ -1,5 +1,8 @@
 import os
 import logging
+from abc import abstractmethod, ABC
+from typing import List, Dict, Any
+
 import pandas as pd
 from sqlalchemy import create_engine
 from pandas.util import hash_pandas_object
@@ -7,7 +10,111 @@ from pandas.util import hash_pandas_object
 logger = logging.getLogger(__name__)
 
 
-class Database:
+class BaseDatabase(ABC):
+    """
+    Interface to access data stored somewhere.
+    """
+
+    @abstractmethod
+    def __init__(self, database_path: str):
+        """Sets up the database"""
+
+    @abstractmethod
+    @staticmethod
+    def is_compatible(database_path: str) -> bool:
+        """Returns True if the database is compatible with the given path"""
+
+    @abstractmethod
+    def table_names(self):
+        """Returns a list of table names"""
+
+    @abstractmethod
+    def delete_everything(self):
+        """Deletes and recreates the db."""
+
+    @abstractmethod
+    def dump_df(self, table_name: str, dataframe: pd.DataFrame):
+        """Writes a dataframe to a table. Appends if the table already exists."""
+
+    @abstractmethod
+    def query(
+        self, table_name: str, columns: List[str] = [], conditions: Dict[str, Any] = {}
+    ) -> pd.DataFrame:
+        """Returns a dataframe"""
+
+
+class FeatherDatabase(BaseDatabase):
+    """
+    Interface to access data stored in a Feather database.
+    https://arrow.apache.org/docs/python/feather.html
+    """
+
+    def __init__(self, database_path: str):
+        """Sets up the database"""
+        self.database_path = database_path
+        if not os.path.exists(database_path):
+            os.makedirs(database_path)
+        elif not os.path.isdir(database_path):
+            raise ValueError(f"FeatherDatabase requires a folder as a target: {database_path}")
+
+        feather_files = os.listdir(database_path)
+        if not all(f.endswith(".feather") for f in feather_files):
+            raise ValueError(
+                f"FeatherDatabase target must contain only .feather files, got: {feather_files}"
+            )
+
+    @staticmethod
+    def is_compatible(database_path: str) -> bool:
+        """Returns True if the database is compatible with the given path"""
+        if database_path.endswith(".db"):
+            return False
+        elif not os.path.exists(database_path):
+            return True
+        elif not os.path.isdir(database_path):
+            return False
+        elif not all(f.endswith(".feather") for f in os.listdir(database_path)):
+            return False
+        else:
+            return True
+
+    def table_names(self):
+        """Returns a list of table names"""
+        return [f.replace(".feather", "") for f in os.listdir(self.database_path)]
+
+    def delete_everything(self):
+        """Deletes and recreates the db."""
+        for fname in os.listdir(self.database_path):
+            fpath = os.path.join(self.database_path, fname)
+            os.remove(fpath)
+
+    def dump_df(self, table_name: str, df: pd.DataFrame):
+        """Writes a dataframe to a table. Appends if the table already exists."""
+        fpath = os.path.join(self.database_path, f"{table_name}.feather")
+        write_df = df
+        if os.path.exists(fpath):
+            # Read in existing dataframe and then append to the end of it.
+            # This could be slow so ideally don't do this.
+            orig_df = pd.read_feather(fpath)
+            write_df = orig_df.append(df)
+
+        write_df.write_feather(fpath)
+
+    def query(
+        self, table_name: str, columns: List[str] = [], conditions: Dict[str, Any] = {}
+    ) -> pd.DataFrame:
+        """Returns a dataframe"""
+        fpath = os.path.join(self.database_path, f"{table_name}.feather")
+        df = pd.read_feather(fpath)
+        if columns:
+            df = df[columns]
+
+        for k, v in conditions.items():
+            df = df[df[k] == v]
+
+        return df
+
+
+class Database(BaseDatabase):
     """
     Interface to access data stored in a SQLite database.
     """
@@ -16,15 +123,10 @@ class Database:
         self.database_path = database_path
         self.engine = get_sql_engine(database_path)
 
-    def get_size_mb(self):
-        """
-        Returns database size in MB.
-        """
-        query = (
-            "SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size();"
-        )
-        size_bytes = self.engine.execute(query).first()[0]
-        return size_bytes / 1024 / 1024
+    @staticmethod
+    def is_compatible(database_path: str) -> bool:
+        """Returns True if the database is compatible with the given path"""
+        return database_path.endswith(".db")
 
     def get_hash(self):
         """
@@ -53,33 +155,23 @@ class Database:
 
         self.engine = get_sql_engine(self.database_path)
 
-    def dump_df(self, table_name: str, dataframe: pd.DataFrame):
-        dataframe.to_sql(table_name, con=self.engine, if_exists="append", index=False)
+    def dump_df(self, table_name: str, df: pd.DataFrame):
+        df.to_sql(table_name, con=self.engine, if_exists="append", index=False)
 
-    def query(self, table_name, column="*", conditions=[]):
+    def query(
+        self, table_name: str, columns: List[str] = [], conditions: Dict[str, Any] = {}
+    ) -> pd.DataFrame:
         """
         method to query table_name
-
-        :param table_name: str
-            name of the database table to query from
-        :param conditions: str
-            list of SQL query conditions (e.g. ["Scenario='1'", "idx='run_0'"])
-        :param value: str
-            value of interest with filter column
-        :param column:
-
-        :return: pandas dataframe
-            output for user
         """
-        if type(column) is list:
-            column_str = ",".join(column)
-        else:
-            column_str = column
-
+        column_str = ",".join(columns) if columns else "*"
         query = f"SELECT {column_str} FROM {table_name}"
         if len(conditions) > 0:
-            condition_chain = " AND ".join(conditions)
+            condition_chain = " AND ".join(
+                [k + "=" + (f"'{v}'" if type(v) is str else v) for k, v in conditions.items()]
+            )
             query += f" WHERE {condition_chain}"
+
         query += ";"
         df = pd.read_sql_query(query, con=self.engine)
 
@@ -99,6 +191,25 @@ class Database:
             df.rename(columns=renames, inplace=True)
 
         return df
+
+
+DATABASE_TYPES = [Database, FeatherDatabase]
+
+
+def get_database(database_path: str) -> BaseDatabase:
+    """Returns the correct kind of BaseDatabase for a given database path"""
+    for db_type in DATABASE_TYPES:
+        if db_type.is_compatible(database_path):
+            return db_type(database_path)
+
+    raise ValueError(f"Could not find a database that works with path: {database_path}")
+
+
+def convert_database(orig_db: BaseDatabase, new_db_cls, new_db_path: str) -> BaseDatabase:
+    """Writes all data as a new_db_cls file, returning the new new_db_cls database"""
+    new_db = new_db_cls(new_db_path)
+    for table_name in orig_db.table_names():
+        new_db.dump_df(table_name, orig_db.query(table_name))
 
 
 def get_sql_engine(db_path: str):

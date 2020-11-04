@@ -8,7 +8,7 @@ import yaml
 import pandas as pd
 
 from summer.model import StratifiedModel
-from autumn.db.database import Database
+from autumn.db.database import get_database
 
 from . import process
 
@@ -21,7 +21,7 @@ def increment_mcmc_weight(
     chain_id: int,
 ):
     logger.info("Incrementing %s %s", run_id, chain_id)
-    db = Database(database_path)
+    db = get_database(database_path)
     sql = f"UPDATE mcmc_run SET weight = weight + 1 WHERE chain={chain_id} AND run={run_id}"
     db.engine.execute(sql)
 
@@ -30,7 +30,7 @@ def save_mle_params(database_path: str, target_path: str):
     """
     Saves the MCMC parameters for the MLE run as a YAML file in the target path.
     """
-    db = Database(database_path)
+    db = get_database(database_path)
     mcmc_df = db.query("mcmc_run")
     param_df = db.query("mcmc_params")
     mle_params = process.find_mle_params(mcmc_df, param_df)
@@ -48,7 +48,7 @@ def store_mcmc_run(
     accept: int,
     params: dict,
 ):
-    db = Database(database_path)
+    db = get_database(database_path)
     # Write run progress.
     columns = ["chain", "run", "loglikelihood", "ap_loglikelihood", "accept", "weight"]
     data = {
@@ -87,7 +87,9 @@ def store_run_models(models: List[StratifiedModel], database_path: str, run_id: 
     Store models in the database.
     Assume that models are sorted in an order such that their index is their scenario idx.
     """
-    db = Database(database_path)
+    db = get_database(database_path)
+    outputs_df = None
+    derived_outputs_df = None
     for idx, model in enumerate(models):
         # Save model outputs
         df = pd.DataFrame(model.outputs, columns=model.compartment_names)
@@ -95,7 +97,10 @@ def store_run_models(models: List[StratifiedModel], database_path: str, run_id: 
         df.insert(1, column="run", value=run_id)
         df.insert(2, column="scenario", value=idx)
         df.insert(3, column="times", value=model.times)
-        db.dump_df("outputs", df)
+        if outputs_df:
+            outputs_df.append(df, ignore_index=True)
+        else:
+            outputs_df = df
 
         # Save model derived outputs
         df = pd.DataFrame.from_dict(model.derived_outputs)
@@ -103,4 +108,10 @@ def store_run_models(models: List[StratifiedModel], database_path: str, run_id: 
         df.insert(1, column="run", value=run_id)
         df.insert(2, column="scenario", value=idx)
         df.insert(3, column="times", value=model.times)
-        db.dump_df("derived_outputs", df)
+        if derived_outputs_df:
+            derived_outputs_df.append(df, ignore_index=True)
+        else:
+            derived_outputs_df = df
+
+    db.dump_df("outputs", outputs_df)
+    db.dump_df("derived_outputs", derived_outputs_df)

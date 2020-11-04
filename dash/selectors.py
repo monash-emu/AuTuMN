@@ -176,10 +176,8 @@ def calibration_run(param_set_dirpath: str, name: str) -> str:
     # Parse model run folder names
     model_runs = []
     for dirname in model_run_dirs:
-        run_hash = dirname.split("-")[0]
-        datestr = "-".join(dirname.split("-")[1:])
-        run_datetime = datetime.strptime(datestr, "%Y-%m-%d")
-        model_runs.append([run_datetime, run_hash, dirname])
+        run_datetime = datetime.strptime(dirname, "%Y-%m-%d")
+        model_runs.append([run_datetime, dirname])
 
     # Sort model runs by date
     model_runs = reversed(sorted(model_runs, key=lambda i: i[0]))
@@ -187,11 +185,10 @@ def calibration_run(param_set_dirpath: str, name: str) -> str:
     # Create labels for the select box.
     labels = []
     model_run_dir_lookup = {}
-    for run_datetime, run_hash, dirname in model_runs:
+    for run_datetime, dirname in model_runs:
         run_datestr = run_datetime.strftime("%d %b at %I%p")
-        label = f"{run_datestr} with hash {run_hash}"
-        model_run_dir_lookup[label] = dirname
-        labels.append(label)
+        model_run_dir_lookup[run_datestr] = dirname
+        labels.append(run_datestr)
 
     label = st.sidebar.selectbox(name, labels)
     if not label:

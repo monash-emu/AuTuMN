@@ -49,11 +49,15 @@ def run_full_models_for_mcmc(burn_in: int, src_db_path: str, dest_db_path: str, 
             for scenario in scenarios[1:]:
                 scenario.run(base_model=baseline_model, update_func=update_func)
 
+        run_id = int(run_id)
+        chain_id = int(chain_id)
+
         with Timer("Saving model outputs to the database"):
             models = [s.model for s in scenarios]
             models = calculate_differential_outputs(models, app.targets)
-            db.store.store_run_models(
-                models, dest_db_path, run_id=int(run_id), chain_id=int(chain_id)
-            )
+            outputs_df = db.store.build_outputs_table(models, run_id, chain_id)
+            derived_outputs_df = db.store.build_derived_outputs_table(models, run_id, chain_id)
+            dest_db.dump_df(db.store.Table.OUTPUTS, outputs_df)
+            dest_db.dump_df(db.store.Table.DERIVED, derived_outputs_df)
 
     logger.info("Finished running full models for all accepted MCMC runs.")

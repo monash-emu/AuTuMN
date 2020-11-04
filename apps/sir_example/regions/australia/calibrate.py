@@ -20,7 +20,7 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
         TARGET_OUTPUTS,
         run_id,
         num_chains,
-        param_set_name=Region.AUSTRALIA,
+        region_name=Region.AUSTRALIA,
     )
     calib.run_fitting_algorithm(
         run_mode="autumn_mcmc",

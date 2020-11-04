@@ -1,6 +1,7 @@
 """
 A tool for application models to register themselves so that they serve a standard interface
 """
+from autumn.db.database import FeatherDatabase
 import os
 import logging
 import yaml
@@ -110,7 +111,11 @@ class AppRegion:
 
         with Timer("Saving model outputs to the database"):
             models = [s.model for s in scenarios]
-            db.store.store_run_models(models, output_db_path, run_id=0)
+            outputs_db = FeatherDatabase(output_db_path)
+            outputs_df = db.store.build_outputs_table(models, run_id=0)
+            derived_outputs_df = db.store.build_derived_outputs_table(models, run_id=0)
+            outputs_db.dump_df(db.store.Table.OUTPUTS, outputs_df)
+            outputs_db.dump_df(db.store.Table.DERIVED, derived_outputs_df)
 
 
 class App:

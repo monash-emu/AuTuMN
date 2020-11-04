@@ -2,9 +2,10 @@ import yaml
 import os
 import logging
 from time import time
-from itertools import chain, product
+from itertools import chain
 from datetime import datetime
-from typing import Dict, List, Callable
+from typing import List, Callable
+import shutil
 
 import math
 import pandas as pd
@@ -17,11 +18,11 @@ from summer.model import StratifiedModel
 from autumn import constants
 from autumn import db, plots
 from autumn.tool_kit.scenarios import Scenario
+from autumn.tool_kit import Timer
 from autumn.tool_kit.params import update_params, read_param_value_from_string
 from autumn.tool_kit.utils import (
     get_git_branch,
     get_git_hash,
-    get_data_hash,
 )
 from .utils import (
     calculate_prior,
@@ -49,8 +50,7 @@ class CalibrationMode:
 
     AUTUMN_MCMC = "autumn_mcmc"
     LEAST_SQUARES = "lsm"
-    GRID_BASED = "grid_based"
-    MODES = [AUTUMN_MCMC, LEAST_SQUARES, GRID_BASED]
+    MODES = [AUTUMN_MCMC, LEAST_SQUARES]
 
 
 class InitialisationTypes:
@@ -58,61 +58,6 @@ class InitialisationTypes:
 
     LHS = "lhs"
     CURRENT_PARAMS = "current_params"
-
-
-def get_parameter_bounds_from_priors(prior_dict):
-    """
-    Determine lower and upper bounds of a parameter by analysing its assigned prior distribution
-    :param prior_dict: dictionary defining a parameter's prior distribution
-    :return: lower_bound, upper_bound
-    """
-    if prior_dict["distribution"] == "uniform":
-        lower_bound = prior_dict["distri_params"][0]
-        upper_bound = prior_dict["distri_params"][1]
-    elif prior_dict["distribution"] in ["lognormal", "gamma", "weibull", "exponential"]:
-        lower_bound = 0.0
-        upper_bound = float("inf")
-    elif prior_dict["distribution"] == "trunc_normal":
-        lower_bound = prior_dict["trunc_range"][0]
-        upper_bound = prior_dict["trunc_range"][1]
-    elif prior_dict["distribution"] == "beta":
-        lower_bound = 0.0
-        upper_bound = 1.0
-    else:
-        raise ValueError("prior distribution bounds detection currently not handled.")
-
-    return lower_bound, upper_bound
-
-
-def set_initial_point(priors, model_parameters, chain_index, total_nb_chains, initialisation_type):
-    """
-    Determine the starting point of the MCMC.
-    """
-    if initialisation_type == InitialisationTypes.LHS:
-        # draw samples using LHS based on the prior distributions
-        np.random.seed(0)  # Set deterministic random seed for Latin Hypercube Sampling
-        starting_points = sample_starting_params_from_lhs(priors, total_nb_chains)
-
-        return starting_points[chain_index - 1]
-    elif initialisation_type == InitialisationTypes.CURRENT_PARAMS:
-        # use the current parameter values from the yaml files
-        starting_points = {}
-        for param_dict in priors:
-            if param_dict["param_name"].endswith("dispersion_param"):
-                assert param_dict["distribution"] == "uniform"
-                starting_points[param_dict["param_name"]] = np.mean(param_dict["distri_params"])
-            else:
-                starting_points[param_dict["param_name"]] = read_param_value_from_string(
-                    model_parameters["default"], param_dict["param_name"]
-                )
-
-        return starting_points
-    else:
-        raise ValueError(f"{initialisation_type} is not a supported Initialisation Type")
-
-
-def sample_from_adaptive_gaussian(prev_params, adaptive_cov_matrix):
-    return np.random.multivariate_normal(prev_params, adaptive_cov_matrix)
 
 
 class Calibration:
@@ -125,18 +70,18 @@ class Calibration:
 
     def __init__(
         self,
-        model_name: str,
+        app_name: str,
         model_builder: Callable[[dict], StratifiedModel],
         model_parameters: dict,
         priors: List[dict],
         targeted_outputs: List[dict],
         chain_index: int,
         total_nb_chains: int,
-        param_set_name: str = "main",
+        region_name: str = "main",
         adaptive_proposal: bool = True,
         initialisation_type: str = InitialisationTypes.LHS,
     ):
-        self.model_name = model_name
+        self.app_name = app_name
         self.model_builder = model_builder  # a function that builds a new model without running it
         self.model_parameters = model_parameters
         self.best_start_time = None
@@ -178,33 +123,21 @@ class Calibration:
             self.priors, model_parameters, chain_index, total_nb_chains, initialisation_type
         )
 
-        # Setup output directory
-        project_dir = os.path.join(
-            constants.OUTPUT_DATA_PATH, "calibrate", model_name, param_set_name
-        )
-        run_hash = get_data_hash(model_name, priors, targeted_outputs)
-        timestamp = datetime.now().strftime("%Y-%m-%d")
-        output_dir = os.path.join(project_dir, f"{run_hash}-{timestamp}")
-        os.makedirs(output_dir, exist_ok=True)
-
         # Save metadata output dir.
-        self.write_metadata(output_dir, f"params-{self.chain_index}.yml", model_parameters)
-        self.write_metadata(output_dir, f"priors-{self.chain_index}.yml", priors)
-        self.write_metadata(output_dir, f"targets-{self.chain_index}.yml", targeted_outputs)
+        self.output = CalibrationOutputs(chain_index, app_name, region_name)
         metadata = {
-            "model_name": model_name,
-            "param_set_name": param_set_name,
+            "app_name": app_name,
+            "region_name": region_name,
             "start_time": datetime.now().strftime("%Y-%m-%d--%H-%M-%S"),
             "git_branch": get_git_branch(),
             "git_commit": get_git_hash(),
         }
-        self.write_metadata(output_dir, f"meta-{self.chain_index}.yml", metadata)
-
-        db_name = f"outputs_calibration_chain_{self.chain_index}.db"
-        self.output_db_path = os.path.join(output_dir, db_name)
+        self.output.write_metadata(f"meta-{chain_index}.yml", metadata)
+        self.output.write_metadata(f"params-{chain_index}.yml", model_parameters)
+        self.output.write_metadata(f"priors-{chain_index}.yml", priors)
+        self.output.write_metadata(f"targets-{chain_index}.yml", targeted_outputs)
 
         self.data_as_array = None  # will contain all targeted data points in a single array
-
         self.format_data_as_array()
         self.workout_unspecified_target_sds()  # for likelihood definition
         self.workout_unspecified_time_weights()  # for likelihood weighting
@@ -216,7 +149,6 @@ class Calibration:
         self.build_transformations()
 
         self.iter_num = 0
-        self.last_accepted_run = 0
 
         self.latest_scenario = None
         self.run_mode = None
@@ -227,64 +159,7 @@ class Calibration:
         self.evaluated_params_ll = []  # list of tuples:  [(theta_0, ll_0), (theta_1, ll_1), ...]
 
         if self.chain_index == 0:
-            plots.calibration.plot_pre_calibration(self.priors, output_dir)
-
-    def write_metadata(self, output_dir, filename, data):
-        file_path = os.path.join(output_dir, filename)
-        with open(file_path, "w") as f:
-            yaml.dump(data, f)
-
-    def store_model_outputs(self):
-        """
-        Record the model outputs in the database
-        """
-        scenario = self.latest_scenario
-        assert scenario, "No model has been run"
-        model = scenario.model
-        db.store.store_run_models(
-            models=[model],
-            database_path=self.output_db_path,
-            run_id=self.iter_num,
-            chain_id=self.chain_index,
-        )
-
-    def store_mcmc_iteration_info(
-        self,
-        proposed_params: list,
-        proposed_loglike: float,
-        proposed_acceptance_quantity: float,
-        accept: bool,
-        i_run: int,
-    ):
-        """
-        Records the MCMC iteration details
-        :param proposed_params: the current parameter values
-        :param proposed_loglike: the current loglikelihood
-        :param accept: whether the iteration was accepted or not
-        :param i_run: the iteration number
-        """
-        if accept:
-            weight = 1
-            self.last_accepted_run = i_run
-        else:
-            weight = 0
-            db.store.increment_mcmc_weight(
-                database_path=self.output_db_path,
-                run_id=self.last_accepted_run,
-                chain_id=self.chain_index,
-            )
-
-        params = {k: v for k, v in zip(self.param_list, proposed_params)}
-        db.store.store_mcmc_run(
-            database_path=self.output_db_path,
-            run_id=i_run,
-            chain_id=self.chain_index,
-            weight=weight,
-            loglikelihood=proposed_loglike,
-            ap_loglikelihood=proposed_acceptance_quantity,
-            accept=1 if accept else 0,
-            params=params,
-        )
+            plots.calibration.plot_pre_calibration(self.priors, self.output.output_dir)
 
     def run_model_with_params(self, proposed_params: dict):
         """
@@ -504,7 +379,6 @@ class Calibration:
         n_burned=10,
         n_chains=1,
         available_time=None,
-        grid_info=None,
         haario_scaling_factor=2.4,
     ):
         """
@@ -525,15 +399,16 @@ class Calibration:
         # Initialise random seed differently for different chains
         np.random.seed(get_random_seed(self.chain_index))
 
-        # Run the selected fitting algorithm.
-        if run_mode == CalibrationMode.AUTUMN_MCMC:
-            self.run_autumn_mcmc(
-                n_iterations, n_burned, n_chains, available_time, haario_scaling_factor
-            )
-        elif run_mode == CalibrationMode.LEAST_SQUARES:
-            self.run_least_squares()
-        elif run_mode == CalibrationMode.GRID_BASED:
-            self.run_grid_based(grid_info)
+        try:
+            # Run the selected fitting algorithm.
+            if run_mode == CalibrationMode.AUTUMN_MCMC:
+                self.run_autumn_mcmc(
+                    n_iterations, n_burned, n_chains, available_time, haario_scaling_factor
+                )
+            elif run_mode == CalibrationMode.LEAST_SQUARES:
+                self.run_least_squares()
+        finally:
+            self.output.write_data_to_disk()
 
     def run_least_squares(self):
         """
@@ -559,9 +434,7 @@ class Calibration:
         sol = minimize(self.loglikelihood, x0, bounds=bounds)
         self.mle_estimates = sol.x
 
-        # FIXME: need to fix dump_mle_params_to_yaml_file
         logger.info("Best solution: %s", self.mle_estimates)
-        # self.dump_mle_params_to_yaml_file()
 
     def test_in_prior_support(self, params):
         in_support = True
@@ -631,7 +504,7 @@ class Calibration:
                     accept = True
                 else:
                     accept_prob = np.exp(proposed_acceptance_quantity - last_acceptance_quantity)
-                    accept = np.random.binomial(n=1, p=accept_prob, size=1) > 0
+                    accept = (np.random.binomial(n=1, p=accept_prob, size=1) > 0)[0]
             else:
                 accept = False
                 proposed_loglike = None
@@ -646,7 +519,8 @@ class Calibration:
             self.update_mcmc_trace(last_accepted_params_trans)
 
             # Store model outputs
-            self.store_mcmc_iteration_info(
+            self.output.store_mcmc_iteration(
+                self.param_list,
                 proposed_params,
                 proposed_loglike,
                 proposed_log_posterior,
@@ -654,7 +528,7 @@ class Calibration:
                 i_run,
             )
             if accept:
-                self.store_model_outputs()
+                self.output.store_model_outputs(self.latest_scenario, self.iter_num)
 
             self.iter_num += 1
             iters_completed = i_run + 1
@@ -667,35 +541,6 @@ class Calibration:
                     msg = f"Stopping MCMC simulation after {iters_completed} iterations because of {available_time}s time limit"
                     logger.info(msg)
                     break
-
-    def run_grid_based(self, grid_info):
-        """
-        Runs a grid-based calibration
-        :param grid_info: list of dictionaries
-            containing the list of parameters to vary, their range and the number of different values per parameter
-        """
-        new_param_list = [par_dict["param_name"] for par_dict in grid_info]
-        assert all([p in self.param_list for p in new_param_list])
-
-        self.param_list = new_param_list
-
-        param_values = []
-        for i, param_name in enumerate(self.param_list):
-            param_values.append(
-                list(np.linspace(grid_info[i]["lower"], grid_info[i]["upper"], grid_info[i]["n"]))
-            )
-
-        all_combinations = list(product(*param_values))
-        logger.info("Total number of iterations: " + str(len(all_combinations)))
-        for params in all_combinations:
-            loglike = self.loglikelihood(params)
-            logprior = self.logprior(params)
-            a_posteriori_logproba = loglike + logprior
-
-            self.store_mcmc_iteration_info(
-                params, a_posteriori_logproba, a_posteriori_logproba, False, self.iter_num
-            )
-            self.iter_num += 1
 
     def build_adaptive_covariance_matrix(self, haario_scaling_factor):
         scaling_factor = haario_scaling_factor ** 2 / len(self.priors)  # from Haario et al. 2001
@@ -857,17 +702,122 @@ class Calibration:
                 (self.mcmc_trace_matrix, np.array([params_to_store]))
             )
 
-    def dump_mle_params_to_yaml_file(self):
 
-        dict_to_dump = {}
-        for i, param_name in enumerate(self.param_list):
-            dict_to_dump[param_name] = float(self.mle_estimates[i])
-        if self.best_start_time is not None:
-            dict_to_dump["time.start"] = self.best_start_time
+class CalibrationOutputs:
+    """
+    Handles writing outputs for the calibration process
+    TODO: Add custom output dir so that we don't need to do silly things in Luigi tasks.
+    """
 
-        file_path = os.path.join(constants.DATA_PATH, self.model_name, "mle_params.yml")
-        with open(file_path, "w") as outfile:
-            yaml.dump(dict_to_dump, outfile, default_flow_style=False)
+    def __init__(self, chain_id: int, app_name: str, region_name: str):
+        self.chain_id = chain_id
+        # Track last accepted run for weight calculations.
+        self.last_accepted_run = 0
+        # List of dicts for tracking MCMC progress.
+        self.mcmc_runs = []
+        self.mcmc_params = []
+        # Model output data - list of DataFrames.
+        self.outputs = []
+        self.derived_outputs = []
+
+        # Setup output directory
+        project_dir = os.path.join(constants.OUTPUT_DATA_PATH, "calibrate", app_name, region_name)
+        timestamp = datetime.now().strftime("%Y-%m-%d")
+        self.output_dir = os.path.join(project_dir, timestamp)
+
+        db_name = f"calibration-{chain_id}"
+        self.output_db_path = os.path.join(self.output_dir, db_name)
+        if os.path.exists(self.output_db_path):
+            # Delete existing data.
+            logger.info("File found at %s, recreating %s", self.output_db_path, self.output_dir)
+            shutil.rmtree(self.output_dir)
+
+        logger.info("Created data directory at %s", self.output_dir)
+        os.makedirs(self.output_dir, exist_ok=True)
+
+    def write_metadata(self, filename, data):
+        file_path = os.path.join(self.output_dir, filename)
+        with open(file_path, "w") as f:
+            yaml.dump(data, f)
+
+    def store_model_outputs(self, scenario: Scenario, iter_num: int):
+        """
+        Record the model outputs for this iteration
+        """
+        assert scenario, "No model has been run"
+        model = scenario.model
+        outputs_df = db.store.build_outputs_table([model], run_id=iter_num, chain_id=self.chain_id)
+        derived_outputs_df = db.store.build_derived_outputs_table(
+            [model], run_id=iter_num, chain_id=self.chain_id
+        )
+        self.outputs.append(outputs_df)
+        self.derived_outputs.append(derived_outputs_df)
+
+    def store_mcmc_iteration(
+        self,
+        param_list: list,
+        proposed_params: list,
+        proposed_loglike: float,
+        proposed_acceptance_quantity: float,
+        accept: bool,
+        i_run: int,
+    ):
+        """
+        Records the MCMC iteration details
+        :param proposed_params: the current parameter values
+        :param proposed_loglike: the current loglikelihood
+        :param accept: whether the iteration was accepted or not
+        :param i_run: the iteration number
+        """
+        mcmc_run = {
+            "chain": self.chain_id,
+            "run": i_run,
+            "loglikelihood": proposed_loglike,
+            "ap_loglikelihood": proposed_acceptance_quantity,
+            "accept": 1 if accept else 0,
+            "weight": 0,  # Default to zero, re-calculate this later.
+        }
+        self.mcmc_runs.append(mcmc_run)
+        if accept:
+            # Write run parameters.
+            for name, value in zip(param_list, proposed_params):
+                mcmc_params = {
+                    "chain": self.chain_id,
+                    "run": i_run,
+                    "name": name,
+                    "value": value,
+                }
+                self.mcmc_params.append(mcmc_params)
+
+    def write_data_to_disk(self):
+        """
+        Write in-memory calibration data to disk
+        """
+        if not self.mcmc_runs:
+            logger.info("No data to write to disk")
+            return
+
+        with Timer("Writing calibration data to disk."):
+            # try:
+            outputs_db = db.FeatherDatabase(self.output_db_path)
+            # Consolidate outputs and write to disk
+            outputs_df = pd.concat(self.outputs, copy=False, ignore_index=True)
+            derived_outputs_df = pd.concat(self.derived_outputs, copy=False, ignore_index=True)
+            outputs_db.dump_df(db.store.Table.OUTPUTS, outputs_df)
+            outputs_db.dump_df(db.store.Table.DERIVED, derived_outputs_df)
+            # Write parameters
+            mcmc_params_df = pd.DataFrame.from_dict(self.mcmc_params)
+            outputs_db.dump_df(db.store.Table.PARAMS, mcmc_params_df)
+            # Calculate iterations weights, then write to disk
+            weight = 0
+            for mcmc_run in reversed(self.mcmc_runs):
+                weight += 1
+                if mcmc_run["accept"]:
+                    mcmc_run["weight"] = weight
+                    weight = 0
+
+            mcmc_runs_df = pd.DataFrame.from_dict(self.mcmc_runs)
+            outputs_db.dump_df(db.store.Table.MCMC, mcmc_runs_df)
 
 
 def get_random_seed(chain_index: int):
@@ -876,3 +826,58 @@ def get_random_seed(chain_index: int):
     Mocked out by unit tests.
     """
     return chain_index * 1000 + int(time())
+
+
+def get_parameter_bounds_from_priors(prior_dict):
+    """
+    Determine lower and upper bounds of a parameter by analysing its assigned prior distribution
+    :param prior_dict: dictionary defining a parameter's prior distribution
+    :return: lower_bound, upper_bound
+    """
+    if prior_dict["distribution"] == "uniform":
+        lower_bound = prior_dict["distri_params"][0]
+        upper_bound = prior_dict["distri_params"][1]
+    elif prior_dict["distribution"] in ["lognormal", "gamma", "weibull", "exponential"]:
+        lower_bound = 0.0
+        upper_bound = float("inf")
+    elif prior_dict["distribution"] == "trunc_normal":
+        lower_bound = prior_dict["trunc_range"][0]
+        upper_bound = prior_dict["trunc_range"][1]
+    elif prior_dict["distribution"] == "beta":
+        lower_bound = 0.0
+        upper_bound = 1.0
+    else:
+        raise ValueError("prior distribution bounds detection currently not handled.")
+
+    return lower_bound, upper_bound
+
+
+def set_initial_point(priors, model_parameters, chain_index, total_nb_chains, initialisation_type):
+    """
+    Determine the starting point of the MCMC.
+    """
+    if initialisation_type == InitialisationTypes.LHS:
+        # draw samples using LHS based on the prior distributions
+        np.random.seed(0)  # Set deterministic random seed for Latin Hypercube Sampling
+        starting_points = sample_starting_params_from_lhs(priors, total_nb_chains)
+
+        return starting_points[chain_index - 1]
+    elif initialisation_type == InitialisationTypes.CURRENT_PARAMS:
+        # use the current parameter values from the yaml files
+        starting_points = {}
+        for param_dict in priors:
+            if param_dict["param_name"].endswith("dispersion_param"):
+                assert param_dict["distribution"] == "uniform"
+                starting_points[param_dict["param_name"]] = np.mean(param_dict["distri_params"])
+            else:
+                starting_points[param_dict["param_name"]] = read_param_value_from_string(
+                    model_parameters["default"], param_dict["param_name"]
+                )
+
+        return starting_points
+    else:
+        raise ValueError(f"{initialisation_type} is not a supported Initialisation Type")
+
+
+def sample_from_adaptive_gaussian(prev_params, adaptive_cov_matrix):
+    return np.random.multivariate_normal(prev_params, adaptive_cov_matrix)

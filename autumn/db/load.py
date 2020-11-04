@@ -103,5 +103,10 @@ def load_derived_output_tables(calib_dirpath: str, column: str = None):
 
 
 def _find_db_paths(dirpath: str):
-    db_paths = [os.path.join(dirpath, f) for f in os.listdir(dirpath) if f.endswith(".db")]
+    db_paths = []
+    for fname in os.listdir(dirpath):
+        if fname.startswith("outputs") or fname.startswith("calibration"):
+            fpath = os.path.join(dirpath, fname)
+            db_paths.append(fpath)
+
     return sorted(db_paths)

@@ -51,14 +51,18 @@ Create dictionaries to define the optimised scenarios
 """
 
 
-def build_optimised_scenario_dictionary(country, sc_idx, decision_vars, final_mixing=1.0):
+def build_optimised_scenario_dictionary(country, sc_idx, decision_vars, scenario_mapping, final_mixing=1.0,
+                                        for_waning_immunity=False):
     # read settings associated with scenario sc_idx
-    if sc_idx == max(list(SCENARIO_MAPPING.keys())):  # this is the unmitigated scenario
+    if sc_idx == max(list(scenario_mapping.keys())):  # this is the unmitigated scenario
         duration = DURATIONS[0]  # does not matter but needs to be defined
         mode = MODES[0]
+    elif for_waning_immunity: # this is an optimised scenario for the waning immunity analyses
+        duration = scenario_mapping[sc_idx]["duration"]
+        mode = MODES[0]
     else:  # this is an optimised scenario
-        duration = SCENARIO_MAPPING[sc_idx]["duration"]
-        mode = SCENARIO_MAPPING[sc_idx]["mode"]
+        duration = scenario_mapping[sc_idx]["duration"]
+        mode = scenario_mapping[sc_idx]["mode"]
 
     # need to fetch elderly mixing reduction parameter
     app_region = covid_19.app.get_region(country)
@@ -95,7 +99,7 @@ def build_all_scenario_dicts_from_outputs(output_filename="dummy_vars_for_test.c
                 )
             if decision_vars is not None:
                 all_sc_params[country][sc_idx] = build_optimised_scenario_dictionary(
-                    country, sc_idx, decision_vars
+                    country, sc_idx, decision_vars, SCENARIO_MAPPING
                 )
     return all_sc_params
 
@@ -118,4 +122,4 @@ def drop_all_yml_scenario_files(all_sc_params):
 
 if __name__ == "__main__":
     all_sc_params = build_all_scenario_dicts_from_outputs("opti_outputs.csv")
-    drop_all_yml_scenario_files(all_sc_params)
+    # drop_all_yml_scenario_files(all_sc_params)

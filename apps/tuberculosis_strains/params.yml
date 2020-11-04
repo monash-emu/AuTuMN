@@ -4,7 +4,7 @@ parent: null
 
 # Parameters used to build a general model of tuberculosis
 time:
-  start: 1900.
+  start: 1850.
   end: 2020.
   step: 1
   critical_ranges: []
@@ -23,16 +23,16 @@ cumulative_output_start_time: 2020.
 # other stratifications can be requested as "user_defined_stratifications"
 
 # initial conditions
-initial_infectious_population: 100
+initial_infectious_population: 0
 
 # demographics
 start_population_size: 500
 universal_death_rate: .014
 
-crude_birth_rate: 5.0
+crude_birth_rate: 0.2
 
 # basic infection and disease parameters
-contact_rate: 1.4
+contact_rate: 14.0
 rr_infection_latent: 0.21
 rr_infection_recovered: 1.0
 
@@ -44,13 +44,13 @@ early_activation_rate: 1.1e-3
 
 # active-disease parameters
 self_recovery_rate: 0.2
-treatment_recovery_rate: 2.0
-relapse_rate: 0.1
+treatment_recovery_rate: 1.84
+relapse_rate: 0.11
 detection_rate: 5.0
 
 # death rates
 infect_death_rate: 0.2
-treatment_death_rate: 0.02
+treatment_death_rate: 0.05
 
 
 

@@ -623,3 +623,4 @@ apps/covid_19/mixing_optimisation/optimised_variables/optimal_plan_sensitivity/b
 apps/covid_19/mixing_optimisation/optimised_variables/optimal_plan_sensitivity/belgium_by_age_six_months_yoll_down.yml
 apps/covid_19/mixing_optimisation/optimised_variables/optimal_plan_sensitivity/belgium_by_age_six_months_deaths_down.yml
 debug.log
+apps/covid_19/mixing_optimisation/outputs/plots/outputs/figures/sensitivity_min_mixing/sensitivity_min_mixing.pdf

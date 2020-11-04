@@ -32,7 +32,7 @@ def plot_sensitivity_min_mixing(results, country, duration, axis):
 
     axis.set_ylabel('deaths', color=colors[0], fontsize=15)
     axis.tick_params(axis='y', labelcolor=colors[0])
-    axis.set_ylim([0., max(y_vals_deaths)*1.2])
+    axis.set_ylim([0., max(y_vals_deaths)*1.3])
     ax2.set_ylabel('years of life lost', color=colors[1], fontsize=15)
     ax2.tick_params(axis='y', labelcolor=colors[1])
     ax2.set_ylim([0., max(y_vals_yoll)*1.05])

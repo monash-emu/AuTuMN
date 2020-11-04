@@ -6,7 +6,7 @@ from apps.covid_19.mixing_optimisation.write_scenarios import (
     build_optimised_scenario_dictionary, read_opti_outputs, read_decision_vars, drop_all_yml_scenario_files
 )
 
-WI_SCENARIO_MAPPING = get_wi_scenario_mapping(vary_final_mixing=False)
+WI_SCENARIO_MAPPING = get_wi_scenario_mapping(vary_final_mixing=True)
 
 
 def build_all_wi_scenario_dicts_from_outputs(output_filename):

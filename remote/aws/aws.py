@@ -57,10 +57,6 @@ def download_s3(s3_key, dest):
     subprocess.run(args=[cmd], shell=True, check=True)
 
 
-class NoInstanceAvailable(Exception):
-    pass
-
-
 def run_job(job_id: str, instance_type=None, is_spot=False):
     if not instance_type:
         instance_type = settings.EC2InstanceType.m5_8xlarge
@@ -159,6 +155,7 @@ def start_instance(instance):
     name = instance["name"]
     logger.info(f"Starting EC2 instance {name}")
     response = client.start_instances(InstanceIds=[instance["InstanceId"]])
+    logger.info(response)
 
 
 def stop_instance(instance):

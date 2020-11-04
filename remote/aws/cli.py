@@ -250,6 +250,7 @@ def _run_job(job_id: str, instance_types: List[str], is_spot: bool, job_func):
             e.__class__.__name__,
             e,
         )
+        sys.exit(-1)
     except Exception as e:
         # Unknown error.
         logger.exception(f"Job {job_id} failed.")

@@ -197,8 +197,9 @@ def calculate_incidence(time_idx, model, compartment_values, derived_outputs):
 
 def calculate_tb_mortality(time_idx, model, compartment_values, derived_outputs):
     return (
-        derived_outputs["mortality_infectious"][time_idx]
-        + derived_outputs["mortality_on_treatment"][time_idx] / sum(compartment_values) * 1.0e5
+        (derived_outputs["mortality_infectious"][time_idx] + derived_outputs["mortality_on_treatment"][time_idx])
+        / sum(compartment_values)
+        * 1.0e5
     )
 
 

@@ -36,7 +36,7 @@ def main():
             plot_multicountry_multiscenario_uncertainty(uncertainty_dfs, output, mode)
 
 
-def plot_multiscenario_uncertainty(uncertainty_df, mode, axis, output):
+def plot_multiscenario_uncertainty(uncertainty_df, mode, axis, output, country):
     ylabs = {
         "infection_deathsXall": "daily number of deaths (weekly average)",
         "proportion_seropositive": "proportion recovered",
@@ -72,13 +72,16 @@ def plot_multiscenario_uncertainty(uncertainty_df, mode, axis, output):
         mask = output_df["scenario"] == sc_idx
         scenario_df = output_df[mask]
         times = list(scenario_df.time.unique())[1:]
-        if max_plotted_time in times:
+
+        max_sc_time = PHASE_2_START_TIME if sc_idx == 0 else max_plotted_time
+
+        if max_sc_time in times:
             cut_tail = True
         else:
             cut_tail = False
 
         if cut_tail:
-            max_time_index = times.index(max_plotted_time)
+            max_time_index = times.index(max_sc_time)
             times = times[:max_time_index + 1]
 
         quantiles = {}
@@ -91,18 +94,10 @@ def plot_multiscenario_uncertainty(uncertainty_df, mode, axis, output):
         data[sc_idx]['quantiles'] = quantiles
         data[sc_idx]['times'] = list(times)
 
-        if sc_idx > 0:
-            _duration = get_scenario_mapping(sc_idx)['duration']
-            time_end_phase_2 = PHASE_2_START_TIME + PHASE_2_DURATION[_duration]
-            time_index = times.index(time_end_phase_2)
-            print("Scenario " + str(sc_idx))
-            print(str(round(100*quantiles[.5][time_index], 1)) + " (" + str(round(100*quantiles[.025][time_index],1)) + " - " + str(round(100*quantiles[.975][time_index], 1)) + ")")
-            print()
-
     break_width = 13
     dates_to_tick = [
-        [214., "1 Aug 20"],
-        [366. + 32., "1 Feb 21"]
+        [275., "1 Oct 20"],
+        [366. + 91., "1 Apr 21"]
     ]
     x_ticks = [61]
     x_tick_labs = ['1 Mar 20']
@@ -187,7 +182,7 @@ def plot_multicountry_multiscenario_uncertainty(uncertainty_dfs, output, mode):
         ax.axis("off")
 
         ax = fig.add_subplot(spec[i+1, 1])
-        title_x, x_lim = plot_multiscenario_uncertainty(uncertainty_dfs[country], mode, ax, output)
+        title_x, x_lim = plot_multiscenario_uncertainty(uncertainty_dfs[country], mode, ax, output, country)
 
         if i == 0:
             ax = fig.add_subplot(spec[0, 1])
@@ -203,8 +198,8 @@ def plot_multicountry_multiscenario_uncertainty(uncertainty_dfs, output, mode):
             for sc in range(len(title_x)):
                 ax.text(title_x[sc], 0.3, titles_down[sc], fontsize=text_size, horizontalalignment='center', verticalalignment='center')
 
-            ax.axvline(x=213, color='black', ymin=.15, ymax=1.)
-            ax.axvline(x=1002, color='black', ymin=.15, ymax=1.)
+            ax.axvline(x=275, color='black', ymin=.15, ymax=1.)
+            ax.axvline(x=950, color='black', ymin=.15, ymax=1.)
 
             ax.set_xlim(x_lim)
             ax.axis("off")

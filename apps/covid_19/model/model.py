@@ -568,6 +568,53 @@ def build_model(params: dict) -> StratifiedModel:
         )
 
     """
+    Infection history stratification
+    """
+    if params.stratify_by_infection_history:
+        # waning immunity makes recovered individuals transition to the 'experienced' stratum
+        stratification_adjustments = {
+            "immunity_loss_rate": {'naive': 0., 'experienced': 1.}
+        }
+        # adjust parameters defining progression from early exposed to late exposed to obtain the requested proportion
+        for agegroup in agegroup_strata:  # e.g. '0'
+            # collect existing rates of progressions for symptomatic vs non-symptomatic
+            rate_non_sympt = early_exposed_adjs[f"within_early_exposedXagegroup_{agegroup}"]['non_sympt'] *\
+                             model.parameters["within_early_exposed"]
+            total_progression_rate = model.parameters['within_early_exposed']
+            rate_sympt = total_progression_rate - rate_non_sympt
+
+            # multiplier for symptomatic is rel_prop_symptomatic_experienced
+            sympt_multiplier = params.rel_prop_symptomatic_experienced
+            # multiplier for asymptomatic rate is 1 + rate_sympt / rate_non_sympt * (1 - sympt_multiplier)
+            # in order to preserve aggregated exit flow
+            non_sympt_multiplier = 1 + rate_sympt / rate_non_sympt * (1. - sympt_multiplier)
+
+            # create adjustment requests
+            for clinical_stratum in clinical_strata:
+                param_name = f"within_early_exposedXagegroup_{agegroup}Xclinical_" + clinical_stratum
+                if clinical_stratum == "non_sympt":
+                    stratification_adjustments[param_name] = {
+                        'naive': 1.,
+                        'experienced': non_sympt_multiplier
+                    }
+                else:
+                    stratification_adjustments[param_name] = {
+                        'naive': 1.,
+                        'experienced': sympt_multiplier
+                    }
+
+        # Stratify the model using the SUMMER stratification function
+        model.stratify(
+            "history",
+            ['naive', 'experienced'],
+            [Compartment.SUSCEPTIBLE, Compartment.EARLY_EXPOSED],
+            comp_split_props={
+                'naive': 1.0, 'experienced': 0.
+            },
+            flow_adjustments=stratification_adjustments,
+        )
+
+    """
     Set up and track derived output functions
     """
 

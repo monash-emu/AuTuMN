@@ -205,6 +205,8 @@ class Parameters:
     seasonal_force: Optional[float]  # Seasonal forcing factor
     elderly_mixing_reduction: Optional[dict]
     waning_immunity_duration: Optional[float]
+    stratify_by_infection_history: bool
+    rel_prop_symptomatic_experienced: Optional[float]
     haario_scaling_factor: float
     metropolis_initialisation_type: str
     # Modular parameters.

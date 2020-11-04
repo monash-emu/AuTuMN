@@ -3,12 +3,16 @@ parent: apps/covid_19/params.yml
 
 time:
   start: 0.
-  end: 300.  # 30 Sep 2020
+  end: 300.
 
 infectious_seed: 200
 
 haario_scaling_factor: 3. # Greater values increase jumping step size and reduce the acceptance ratio (baseline 2.4)
 metropolis_initialisation_type: 'current_params'
+
+#waning_immunity_duration: 180
+#stratify_by_infection_history: True
+#rel_prop_symptomatic_experienced: 0.
 
 clinical_stratification:
   # Infectiousness adjustments, including the effect of isolation following detection

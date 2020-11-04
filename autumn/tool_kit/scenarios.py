@@ -9,6 +9,7 @@ from summer.model import StratifiedModel
 
 from autumn.tool_kit import schema_builder as sb
 from autumn.tool_kit.timer import Timer
+from autumn.tool_kit.params import merge_dicts
 
 from ..constants import IntegrationType
 
@@ -42,7 +43,7 @@ class Scenario:
         scenario.model = model
         return scenario
 
-    def run(self, base_model=None, update_func=None):
+    def run(self, base_model=None, update_func=None, _hack_in_scenario_params: dict = None):
         """
         Run the scenario model simulation.
         If a base model is provided, then run the scenario from the scenario start time.
@@ -69,6 +70,11 @@ class Scenario:
                 if update_func:
                     # Apply extra parameter updates
                     params = update_func(params)
+
+                if _hack_in_scenario_params:
+                    # Hack in scenario params for mixing optimization project.
+                    # TODO: Refactor code so that scenario params are applied *after* calibration update.
+                    params = merge_dicts(_hack_in_scenario_params, params)
 
                 # Ensure start time cannot be overwritten for a scenario
                 params["time"]["start"] = start_time

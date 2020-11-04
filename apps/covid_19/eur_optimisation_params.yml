@@ -10,9 +10,9 @@ infectious_seed: 200
 haario_scaling_factor: 3. # Greater values increase jumping step size and reduce the acceptance ratio (baseline 2.4)
 metropolis_initialisation_type: 'current_params'
 
-#waning_immunity_duration: 180
-#stratify_by_infection_history: True
-#rel_prop_symptomatic_experienced: 0.
+waning_immunity_duration: 180
+stratify_by_infection_history: True
+rel_prop_symptomatic_experienced: 0.5
 
 clinical_stratification:
   # Infectiousness adjustments, including the effect of isolation following detection

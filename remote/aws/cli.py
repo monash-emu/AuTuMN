@@ -2,8 +2,12 @@ import time
 import os
 import sys
 import logging
-import click
 import functools
+from typing import List
+
+import click
+from botocore.exceptions import ClientError
+from invoke.exceptions import UnexpectedExit
 
 from . import aws
 from . import remote
@@ -129,7 +133,7 @@ def run_calibrate(job, app, region, chains, runtime, branch, is_spot, dry):
             "branch": branch,
         }
         job_func = functools.partial(remote.run_calibration, **kwargs)
-        return _run_job(job_id, instance_type, is_spot, job_func)
+        return _run_job(job_id, [instance_type], is_spot, job_func)
 
 
 @run.command("full")
@@ -156,7 +160,7 @@ def run_full_model(job, run, burn_in, latest_code, branch, is_spot):
         "branch": branch,
     }
     job_func = functools.partial(remote.run_full_model, **kwargs)
-    _run_job(job_id, instance_type, is_spot, job_func)
+    _run_job(job_id, [instance_type], is_spot, job_func)
 
 
 @run.command("powerbi")
@@ -173,10 +177,15 @@ def run_powerbi(job, run, branch, is_spot):
     Run the collate a PowerBI database from the full model run outputs.
     """
     job_id = f"powerbi-{job}"
-    instance_type = EC2InstanceType.r5_8xlarge
+    instance_types = [
+        EC2InstanceType.r5_8xlarge,
+        EC2InstanceType.r5d_8xlarge,
+        EC2InstanceType.r5a_8xlarge,
+        EC2InstanceType.r5a_16xlarge,
+    ]
     kwargs = {"run_id": run, "branch": branch}
     job_func = functools.partial(remote.run_powerbi, **kwargs)
-    _run_job(job_id, instance_type, is_spot, job_func)
+    _run_job(job_id, instance_types, is_spot, job_func)
 
 
 @run.command("dhhs")
@@ -196,32 +205,57 @@ def run_dhhs(job, commit, branch, is_spot):
     instance_type = EC2InstanceType.m5_16xlarge
     kwargs = {"commit": commit, "branch": branch}
     job_func = functools.partial(remote.run_dhhs, **kwargs)
-    _run_job(job_id, instance_type, is_spot, job_func)
+    _run_job(job_id, [instance_type], is_spot, job_func)
 
 
-def _run_job(job_id: str, instance_type: str, is_spot: bool, job_func):
+def _run_job(job_id: str, instance_types: List[str], is_spot: bool, job_func):
     """
     Run a job on a remote server
     """
-    try:
-        aws.run_job(job_id, instance_type, is_spot)
-    except aws.NoInstanceAvailable:
-        click.echo("Could not run job - no instances available")
-        sys.exit(-1)
+    aws_client_exc = None
+    for instance_type in instance_types:
+        aws_client_exc = None
+        try:
+            aws.run_job(job_id, instance_type, is_spot)
+            logger.info("Waiting 60s for %s server to boot... ", instance_type)
+            time.sleep(60)
+            logger.info("Server is hopefully ready.")
+            break
+        except ClientError as e:
+            # Issue starting the server, eg. insufficient spot capacity.
+            aws_client_exc = e
+            logger.error(
+                "Failed to start AWS %s job for instance type %s. %s: %s",
+                "spot" if is_spot else "non-spot",
+                instance_type,
+                e.__class__.__name__,
+                e,
+            )
 
-    logger.info("Waiting 60s for %s server to boot... ", instance_type)
-    time.sleep(60)
-    logger.info("Server is hopefully ready.")
+    if aws_client_exc:
+        raise aws_client_exc
+
     instance = aws.find_instance(job_id)
     return_value = None
     try:
         logger.info("Attempting to run job %s on instance %s", job_id, instance["InstanceId"])
         return_value = job_func(instance=instance)
         logging.info("Job %s succeeded.", job_id)
-    except Exception:
-        logger.error(f"Running job {job_id} failed")
-        raise
+    except UnexpectedExit as e:
+        # Invoke error - happened when commands running on remote machine.
+        # We will see a better stack trace from the SSH output, no need to print this.
+        logger.error(
+            "Job %s failed when running a command on the remote machine. %s: %s",
+            job_id,
+            e.__class__.__name__,
+            e,
+        )
+    except Exception as e:
+        # Unknown error.
+        logger.exception(f"Job {job_id} failed.")
+        raise e
     finally:
+        # Always stop the job to prevent dangling jobs.
         aws.stop_job(job_id)
 
     return return_value

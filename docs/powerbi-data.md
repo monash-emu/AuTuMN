@@ -25,6 +25,16 @@ This table contains additional values, calculated from the outputs of the MLE mo
 
 This table contains uncertainty estimates around some derived outputs, which are computed from all of the accepted MCMC iterations. See [here](./schemas/uncertainty.sql) for the table schema.
 
+### Build
 
+A simple table that stores the unique build key. See [here](./schemas/build.sql)  
 
+### Scenario
+
+This table contains metadata on the scenario. The description and start time.
+See [here](./schemas/scenario.sql) 
+
+### Calibration
+
+This table contains calibation targets used in the model. See [here](./schemas/calibration.sql) 
 

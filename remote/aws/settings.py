@@ -6,6 +6,9 @@ class EC2InstanceType:
     m5_2xlarge = "m5.2xlarge"
     r5_4xlarge = "r5.4xlarge"
     r5_8xlarge = "r5.8xlarge"
+    r5d_8xlarge = "r5d.8xlarge"
+    r5a_8xlarge = "r5a.8xlarge"
+    r5a_16xlarge = "r5a.16xlarge"
     m5_4xlarge = "m5.4xlarge"
     m5_8xlarge = "m5.8xlarge"
     c5_9xlarge = "c5.9xlarge"
@@ -20,6 +23,9 @@ EC2_INSTANCE_SPECS = {
     EC2InstanceType.m5_2xlarge: {"cores": 8, "ram": 32, "price": 15},
     EC2InstanceType.r5_4xlarge: {"cores": 16, "ram": 128, "price": 30},
     EC2InstanceType.r5_8xlarge: {"cores": 32, "ram": 256, "price": 60},
+    EC2InstanceType.r5d_8xlarge: {"cores": 32, "ram": 256, "price": 61},
+    EC2InstanceType.r5a_8xlarge: {"cores": 32, "ram": 256, "price": 61},
+    EC2InstanceType.r5a_16xlarge: {"cores": 32, "ram": 256, "price": 61},
     EC2InstanceType.m5_4xlarge: {"cores": 16, "ram": 64, "price": 30},
     EC2InstanceType.m5_8xlarge: {"cores": 32, "ram": 128, "price": 60},
     EC2InstanceType.c5_9xlarge: {"cores": 36, "ram": 72, "price": 61},
@@ -32,7 +38,7 @@ EC2_INSTANCE_SPECS = {
 AWS_PROFILE = "autumn"
 AWS_REGION = "ap-southeast-2"
 EC2_SPOT_MAX_PRICE = "1.2"
-EC2_AMI = "ami-0c02c3923f0e59693"
+EC2_AMI = "ami-04d5281fea14677c9"
 EC2_SECURITY_GROUP = "sg-0b2fe230ac8853538"
 EC2_IAM_INSTANCE_PROFILE = "worker-profile"
 S3_BUCKET = "autumn-data"

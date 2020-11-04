@@ -4,7 +4,7 @@ case_detection.maximum_gradient: 0.05780422946321441
 case_detection.start_value: 0.07574235312852536
 clinical_stratification.props.hospital.multiplier: 1.126425825803517
 clinical_stratification.props.symptomatic.multiplier: 0.9215050771112919
-contact_rate: 0.04218163909040723
+contact_rate: .0405  #0.04218163909040723
 elderly_mixing_reduction.relative_reduction: 0.315013314167891
 infection_deaths_dispersion_param: 29.35143548834563
 infection_fatality.multiplier: 3.7170610492900544
@@ -16,4 +16,4 @@ new_hospital_admissions_dispersion_param: 44.428423136941205
 notifications_dispersion_param: 200.49411058141476
 sojourn.compartment_periods_calculated.active.total_period: 4.8487088210098745
 sojourn.compartment_periods_calculated.exposed.total_period: 3.829784766734623
-time.start: 38.17766546422005
+time.start: 36 #  38.17766546422005

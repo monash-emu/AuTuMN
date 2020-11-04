@@ -49,6 +49,12 @@ class Scenario:
         If a base model is provided, then run the scenario from the scenario start time.
         If a parameter update function is provided, it will be used to update params before the model is run.
         """
+        _hack_in_scenario_params = {
+            'mobility.microdistancing.behaviour.parameters.sigma': 0.1,
+            'mobility.microdistancing.behaviour.parameters.upper_asymptote': 0.1,
+            'mobility.microdistancing.behaviour_adjuster.parameters.sigma': 1.,
+            'mobility.microdistancing.behaviour_adjuster.parameters.upper_asymptote': 1.
+        }
         with Timer(f"Running scenario: {self.name}"):
             params = None
             if not base_model:

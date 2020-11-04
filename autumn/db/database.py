@@ -45,7 +45,7 @@ class BaseDatabase(ABC):
 
 class FeatherDatabase(BaseDatabase):
     """
-    Interface to access data stored in a Feather database.
+    Interface to access data stored in a Feather "database".
     https://arrow.apache.org/docs/python/feather.html
     """
 
@@ -111,6 +111,9 @@ class FeatherDatabase(BaseDatabase):
 
         for k, v in conditions.items():
             df = df[df[k] == v]
+
+        if columns or conditions:
+            df = df.copy()
 
         return df
 

@@ -69,7 +69,7 @@ class AppRegion:
         os.makedirs(output_dir, exist_ok=True)
 
         # Determine where to save model outputs
-        output_db_path = os.path.join(output_dir, "outputs.db")
+        output_db_path = os.path.join(output_dir, "outputs")
 
         # Save model parameters to output dir.
         param_path = os.path.join(output_dir, "params.yml")

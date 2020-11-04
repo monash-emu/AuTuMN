@@ -1,11 +1,8 @@
-import os
 import numpy as np
-import pandas as pd
 from functools import lru_cache
 
 from autumn.inputs.database import get_input_db
-
-from autumn.inputs import get_population_by_agegroup
+from autumn.inputs.demography.queries import get_population_by_agegroup
 
 LOCATIONS = ("all_locations", "home", "other_locations", "school", "work")
 MAPPING_ISO_CODE = {
@@ -23,15 +20,15 @@ def get_country_mixing_matrix(mixing_location: str, country_iso_code: str):
     assert mixing_location in LOCATIONS, f"Invalid mixing location {mixing_location}"
     if country_iso_code in MAPPING_ISO_CODE:
         country_iso_code = MAPPING_ISO_CODE[country_iso_code]
+
     input_db = get_input_db()
-    cols = [f"X{n}" for n in range(1, 17)]
     mix_df = input_db.query(
         "social_mixing",
-        column=",".join(cols),
-        conditions=[
-            f"iso3='{country_iso_code}'",
-            f"location='{mixing_location}'",
-        ],
+        columns=[f"X{n}" for n in range(1, 17)],
+        conditions={
+            "iso3": country_iso_code,
+            "location": mixing_location,
+        },
     )
     matrix = np.array(mix_df)
     assert matrix.shape == (16, 16), "Mixing matrix is not 16x16"

@@ -6,7 +6,6 @@ import numpy as np
 from autumn.inputs.demography.queries import (
     downsample_quantity,
     downsample_rate,
-    _get_life_expectancy,
 )
 from autumn.inputs import (
     build_input_database,

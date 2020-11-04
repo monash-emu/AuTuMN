@@ -11,7 +11,7 @@ def get_international_testing_numbers(iso3):
     """
 
     input_db = get_input_db()
-    df = input_db.query("owid", column=["date", "new_tests"], conditions=[f"iso_code='{iso3}'"])
+    df = input_db.query("owid", columns=["date", "new_tests"], conditions={"iso_code": iso3})
     df_with_data = df.dropna()  # dropna default behaviour is to drop entire row if any nas
     date_str_to_int = lambda s: (datetime.strptime(s, "%d/%m/%Y") - COVID_BASE_DATETIME).days
     test_dates = list(df_with_data.date.apply(date_str_to_int).to_numpy())

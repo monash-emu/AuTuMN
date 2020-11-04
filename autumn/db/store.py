@@ -8,7 +8,7 @@ import yaml
 import pandas as pd
 
 from summer.model import StratifiedModel
-from autumn.db.database import get_database
+from autumn.db.database import FeatherDatabase, get_database, Database
 
 from . import process
 
@@ -87,7 +87,7 @@ def store_run_models(models: List[StratifiedModel], database_path: str, run_id: 
     Store models in the database.
     Assume that models are sorted in an order such that their index is their scenario idx.
     """
-    db = get_database(database_path)
+    db = FeatherDatabase(database_path)
     outputs_df = None
     derived_outputs_df = None
     for idx, model in enumerate(models):
@@ -97,7 +97,7 @@ def store_run_models(models: List[StratifiedModel], database_path: str, run_id: 
         df.insert(1, column="run", value=run_id)
         df.insert(2, column="scenario", value=idx)
         df.insert(3, column="times", value=model.times)
-        if outputs_df:
+        if outputs_df is not None:
             outputs_df.append(df, ignore_index=True)
         else:
             outputs_df = df
@@ -108,7 +108,7 @@ def store_run_models(models: List[StratifiedModel], database_path: str, run_id: 
         df.insert(1, column="run", value=run_id)
         df.insert(2, column="scenario", value=idx)
         df.insert(3, column="times", value=model.times)
-        if derived_outputs_df:
+        if derived_outputs_df is not None:
             derived_outputs_df.append(df, ignore_index=True)
         else:
             derived_outputs_df = df

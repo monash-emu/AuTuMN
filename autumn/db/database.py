@@ -19,8 +19,8 @@ class BaseDatabase(ABC):
     def __init__(self, database_path: str):
         """Sets up the database"""
 
-    @abstractmethod
     @staticmethod
+    @abstractmethod
     def is_compatible(database_path: str) -> bool:
         """Returns True if the database is compatible with the given path"""
 
@@ -97,7 +97,8 @@ class FeatherDatabase(BaseDatabase):
             orig_df = pd.read_feather(fpath)
             write_df = orig_df.append(df)
 
-        write_df.write_feather(fpath)
+        write_df.columns = write_df.columns.astype(str)
+        write_df.to_feather(fpath)
 
     def query(
         self, table_name: str, columns: List[str] = [], conditions: Dict[str, Any] = {}
@@ -167,9 +168,18 @@ class Database(BaseDatabase):
         column_str = ",".join(columns) if columns else "*"
         query = f"SELECT {column_str} FROM {table_name}"
         if len(conditions) > 0:
-            condition_chain = " AND ".join(
-                [k + "=" + (f"'{v}'" if type(v) is str else v) for k, v in conditions.items()]
-            )
+            c_exps = []
+            for k, v in conditions.items():
+                if v is None:
+                    c_exp = f"{k} IS NULL"
+                elif type(v) is str:
+                    c_exp = f"{k}='{v}'"
+                else:
+                    c_exp = f"{k}={v}"
+
+                c_exps.append(c_exp)
+
+            condition_chain = " AND ".join(c_exps)
             query += f" WHERE {condition_chain}"
 
         query += ";"

@@ -1,1 +1,1 @@
-from . import plots
+from autumn.plots.model import plots

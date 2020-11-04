@@ -13,12 +13,12 @@ from .plots import PLOT_FUNCS
 
 
 def run_dashboard():
-    app_name, app_dirpath = selectors.app_name(run_type="model")
+    app_name, _ = selectors.app_name(run_type="model")
     if not app_name:
         st.write("No application folder found")
         return
 
-    region_name, region_dirpath = selectors.app_region_name(app_name)
+    region_name, _ = selectors.app_region_name(app_name)
     if not region_name:
         st.write("No parameter set folder found")
         return

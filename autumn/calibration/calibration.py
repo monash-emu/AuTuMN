@@ -706,7 +706,6 @@ class Calibration:
 class CalibrationOutputs:
     """
     Handles writing outputs for the calibration process
-    TODO: Add custom output dir so that we don't need to do silly things in Luigi tasks.
     """
 
     def __init__(self, chain_id: int, app_name: str, region_name: str):
@@ -723,9 +722,11 @@ class CalibrationOutputs:
         # Setup output directory
         project_dir = os.path.join(constants.OUTPUT_DATA_PATH, "calibrate", app_name, region_name)
         timestamp = datetime.now().strftime("%Y-%m-%d")
-        self.output_dir = os.path.join(project_dir, timestamp)
-
-        db_name = f"calibration-{chain_id}"
+        # A bit of a hack to write to a different directory when running jobs in AWS.
+        self.output_dir = os.environ.get(
+            "AUTUMN_CALIBRATE_DIR", os.path.join(project_dir, timestamp)
+        )
+        db_name = f"chain-{chain_id}"
         self.output_db_path = os.path.join(self.output_dir, db_name)
         if os.path.exists(self.output_db_path):
             # Delete existing data.

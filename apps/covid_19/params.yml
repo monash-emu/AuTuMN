@@ -124,25 +124,25 @@ clinical_stratification:
 
 infection_fatality:
   multiplier: 1.
-  # Infection fatality proportions - last column of Table S4 (Mendeley citation key RibeiroDosSantos2020)
+  # Infection fatality proportions - last column of Table S3 (Mendeley citation key ODriscoll2020)
   props:
-    - 0.00002  # 0-4
-    - 0.000005  # 5-9
-    - 0.000005  # 10-14
-    - 0.000015  # 15-19
-    - 0.00004  # 20-24
-    - 0.00009  # 25-29
-    - 0.00017  # 30-34
-    - 0.00029  # 35-39
-    - 0.00053  # 40-44
-    - 0.00086  # 45-49
-    - 0.00154  # 50-54
-    - 0.00241  # 55-59
-    - 0.00359  # 60-64
-    - 0.00642  # 65-69
-    - 0.01076  # 70-74
-    - 0.02276  # 75-79
-    - 0.07274  # 80+
+    - 0.00003  # 0-4
+    - 0.00001  # 5-9
+    - 0.00001  # 10-14
+    - 0.00003  # 15-19
+    - 0.00006  # 20-24
+    - 0.00013  # 25-29
+    - 0.00024  # 30-34
+    - 0.00040  # 35-39
+    - 0.00075  # 40-44
+    - 0.00121  # 45-49
+    - 0.00207  # 50-54
+    - 0.00323  # 55-59
+    - 0.00456  # 60-64
+    - 0.01075  # 65-69
+    - 0.01674  # 70-74
+    - 0.03203  # 75-79
+    - 0.08292  # 80+
 
 # Heterogeneity in susceptibility
 susceptibility_heterogeneity: null

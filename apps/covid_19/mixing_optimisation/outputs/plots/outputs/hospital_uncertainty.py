@@ -1,9 +1,7 @@
 from matplotlib import pyplot
 import matplotlib.patches as patches
 import os
-import yaml
 import matplotlib as mpl
-import seaborn as sns
 import numpy as np
 
 from apps.covid_19.mixing_optimisation.constants import PHASE_2_START_TIME, PHASE_2_DURATION, DURATION_PHASES_2_AND_3, OPTI_REGIONS
@@ -11,7 +9,6 @@ from apps.covid_19.mixing_optimisation.mixing_opti import MODES, DURATIONS, OBJE
 from apps.covid_19.mixing_optimisation.utils import get_scenario_mapping_reverse, get_scenario_mapping
 from autumn.constants import BASE_PATH
 from autumn.db.load import load_uncertainty_table
-from autumn.db import Database
 
 
 FIGURE_PATH = os.path.join(BASE_PATH, "apps", "covid_19", "mixing_optimisation",
@@ -33,6 +30,7 @@ def main():
 
     for mode in MODES:
         for output in ["hospital_occupancy", "proportion_seropositive"]:
+            print(f"plotting {mode}, {output}")
             plot_multicountry_multiscenario_uncertainty(uncertainty_dfs, output, mode)
 
 

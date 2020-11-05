@@ -56,7 +56,10 @@ def plot_timeseries_with_uncertainty(
 
     # Plot each scenario on a single axis.
     for scenario_idx in scenario_idxs[:n_scenarios_to_plot]:
-        scenario_colors = colors[scenario_idx]
+        if scenario_idx < len(colors):
+            scenario_colors = colors[scenario_idx]
+        else:
+            scenario_colors = colors[-1]
         _plot_uncertainty(
             axis,
             uncertainty_df,

@@ -32,12 +32,12 @@ def main():
                 plot_multicountry_rainbow(all_derived_outputs, all_outputs, mode, duration, objective, include_config=False)
 
 
-def get_output_data():
+def get_output_data(data_path=DATA_PATH):
     all_derived_outputs = {}
     all_outputs = {}
     for country in OPTI_REGIONS:
         country_dir_path = os.path.join(
-            DATA_PATH,
+            data_path,
             country
         )
         db_path = [x[0] for x in os.walk(country_dir_path)][1]

@@ -103,10 +103,10 @@ def plot_multiscenario_uncertainty(uncertainty_df, mode, axis, output, country):
     x_tick_labs = ['1 Mar 20']
     last_t_plotted = 0
     title_x = []
-    for sc_idx in sc_idx_to_plot:
+    for i, sc_idx in enumerate(sc_idx_to_plot):
         if sc_idx > 0:
             t_shift = last_t_plotted - data[sc_idx]['times'][0]
-            if sc_idx >= 2:
+            if i >= 2:
                 t_shift += break_width
         else:
             t_shift = 0.

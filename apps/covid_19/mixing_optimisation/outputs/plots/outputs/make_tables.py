@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 
-from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
+from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS, PHASE_2_START_TIME
 from apps.covid_19.mixing_optimisation.mixing_opti import MODES, DURATIONS
 from apps.covid_19.mixing_optimisation.utils import get_scenario_mapping_reverse
 from autumn.constants import BASE_PATH
@@ -29,13 +29,10 @@ def get_uncertainty_cell_value(uncertainty_df, output, mode, duration):
     # output is in ["deaths_before", "deaths_unmitigated", "deaths_opti_deaths", "deaths_opti_yoll",
     #                "yoll_before", "yoll_unmitigated", "yoll_opti_deaths", "yoll_opti_yoll"]
 
-    if mode == "by_location" and "unmitigated" in output:
-        return ""
-
     if "deaths_" in output:
-        type = "proportion_seropositive"  # FIXME "accum_deaths"
+        type = "accum_deaths"
     elif "yoll_" in output:
-        type = "proportion_seropositive"  # FIXME  "accum_years_of_life_lost"
+        type = "accum_years_of_life_lost"
     else:
         type = "proportion_seropositive"
 
@@ -54,13 +51,12 @@ def get_uncertainty_cell_value(uncertainty_df, output, mode, duration):
     else:
         sc_idx = get_scenario_mapping_reverse(mode, duration, objective)
 
-    if sc_idx > 0:
-        return "not ready yet"
-
     mask_scenario = output_df["scenario"] == sc_idx
     output_df = output_df[mask_scenario]
 
-    mask_time = output_df["time"] == max(output_df["time"])
+    time_read = PHASE_2_START_TIME if sc_idx == 0 else max(output_df["time"])
+
+    mask_time = output_df["time"] == time_read
     output_df = output_df[mask_time]
 
     mask_025 = output_df["quantile"] == 0.025
@@ -99,13 +95,15 @@ def make_main_outputs_tables(mode, uncertainty_dfs):
         "yoll_unmitigated",
         "yoll_opti_deaths",
         "yoll_opti_yoll",
+        "sero_before",
+        "sero_unmitigated",
         "sero_opti_deaths",
         "sero_opti_yoll",
     ]
 
     table = pd.DataFrame(columns=column_names)
     i_row = -1
-    for i, country in enumerate(countries):
+    for i, country in enumerate(["sweden"]):  # enumerate(countries):
         uncertainty_df = uncertainty_dfs[country]
         for duration in DURATIONS:
             i_row += 1

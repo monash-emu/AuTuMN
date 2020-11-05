@@ -97,6 +97,7 @@ class FeatherDatabase(BaseDatabase):
             orig_df = pd.read_feather(fpath)
             write_df = orig_df.append(df)
 
+        write_df.reset_index(inplace=True)
         write_df.columns = write_df.columns.astype(str)
         write_df.to_feather(fpath)
 

@@ -82,10 +82,10 @@ class BuildEnsembleTask(utils.BaseTask):
                 continue
 
             region_dir = os.path.join(DHHS_DIR, "full", region)
-            mcmc_tables = db.process.append_tables(db.load.load_mcmc_tables(region_dir))
+            mcmc_tables = db.load.append_tables(db.load.load_mcmc_tables(region_dir))
             chosen_runs = db.process.sample_runs(mcmc_tables, ENSEMBLE_NUM_CHOSEN)
             do_tables = db.load.load_derived_output_tables(region_dir)
-            do_tables = db.process.append_tables(do_tables).set_index(["chain", "run"])
+            do_tables = db.load.append_tables(do_tables).set_index(["chain", "run"])
             for idx, (chain, run) in enumerate(chosen_runs):
                 run_start_t = do_tables.loc[(chain, run), "times"].iloc[0]
                 start_idx = int(start_t - run_start_t)
@@ -141,11 +141,11 @@ class BuildFinalCSVTask(utils.BaseTask):
                 continue
 
             region_dir = os.path.join(DHHS_DIR, "full", region)
-            mcmc_tables = db.process.append_tables(db.load.load_mcmc_tables(region_dir))
+            mcmc_tables = db.load.append_tables(db.load.load_mcmc_tables(region_dir))
             chosen_runs = db.process.sample_runs(mcmc_tables, DHHS_NUM_CHOSEN)
             mcmc_tables = mcmc_tables.set_index(["chain", "run"])
             do_tables = db.load.load_derived_output_tables(region_dir)
-            do_tables = db.process.append_tables(do_tables).set_index(["chain", "run"])
+            do_tables = db.load.append_tables(do_tables).set_index(["chain", "run"])
 
             for idx, (chain, run) in enumerate(chosen_runs):
                 mcmc_row = mcmc_tables.loc[(chain, run), :]

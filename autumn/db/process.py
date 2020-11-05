@@ -9,14 +9,13 @@ from typing import List
 import pandas as pd
 import numpy as np
 
-from ..db.database import Database
-from .load import append_tables
+from ..db.database import get_database, BaseDatabase
 
 
 logger = logging.getLogger(__name__)
 
 
-def apply_burn_in(src_db: Database, dest_db: Database, burn_in: int):
+def apply_burn_in(src_db: BaseDatabase, dest_db: BaseDatabase, burn_in: int):
     """
     Copy mcmc_run and mcmc_params table from src_db to dest_db with a burn in applied.
     """
@@ -48,10 +47,10 @@ def collate_databases(src_db_paths: List[str], target_db_path: str, tables=None)
     Run names are renamed to be ascending in the final database.
     """
     logger.info("Collating db outputs into %s", target_db_path)
-    target_db = Database(target_db_path)
+    target_db = get_database(target_db_path)
     for db_path in src_db_paths:
         logger.info("Reading data from %s", db_path)
-        source_db = Database(db_path)
+        source_db = get_database(db_path)
         for table_name in source_db.table_names():
             if tables and table_name not in tables:
                 logger.info("Skipping table %s", table_name)
@@ -89,8 +88,8 @@ def prune_chain(source_db_path: str, target_db_path: str):
     This is an operation applied to each chain's database.
     """
     logger.info("Pruning %s into %s", source_db_path, target_db_path)
-    source_db = Database(source_db_path)
-    target_db = Database(target_db_path)
+    source_db = get_database(source_db_path)
+    target_db = get_database(target_db_path)
 
     # Find the maximum accepted loglikelihood for all runs
     mcmc_run_df = source_db.query("mcmc_run")
@@ -121,8 +120,8 @@ def prune_final(source_db_path: str, target_db_path: str):
     This is the final pruning for the collated database.
     """
     logger.info("Pruning %s into %s", source_db_path, target_db_path)
-    source_db = Database(source_db_path)
-    target_db = Database(target_db_path)
+    source_db = get_database(source_db_path)
+    target_db = get_database(target_db_path)
 
     # Find the maximum accepted loglikelihood for all runs
     mcmc_run_df = source_db.query("mcmc_run")
@@ -159,8 +158,8 @@ def unpivot(source_db_path: str, target_db_path: str):
     that is readable by our PowerBI dashboard.
     Save the converted data into its own database.
     """
-    source_db = Database(source_db_path)
-    target_db = Database(target_db_path)
+    source_db = get_database(source_db_path)
+    target_db = get_database(target_db_path)
     tables_to_copy = [t for t in source_db.table_names() if t != "outputs"]
     for table_name in tables_to_copy:
         logger.info("Copying %s", table_name)

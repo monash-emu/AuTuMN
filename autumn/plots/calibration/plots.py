@@ -77,7 +77,7 @@ def plot_acceptance_ratio(
     """
 
     fig, axis, _, _, _, _ = plotter.get_figure()
-    full_df = db.process.append_tables(mcmc_tables)
+    full_df = db.load.append_tables(mcmc_tables)
     n_chains = max(full_df["chain"])
     for chain in range(n_chains):
         chain_mask = full_df["chain"] == chain
@@ -362,7 +362,7 @@ def get_posterior_best_chain(mcmc_params, mcmc_tables, param_name, burn_in=0):
         table_df = param_df.merge(run_df, on=["run", "chain"])
         param_mask = (table_df["name"] == param_name) & (table_df["run"] > burn_in)
         table_df = table_df[param_mask]
-        best_chain = int(table_df.loc[table_df['loglikelihood'].idxmax()]['chain'])
+        best_chain = int(table_df.loc[table_df["loglikelihood"].idxmax()]["chain"])
         mask = table_df["chain"] == best_chain
         weighted_vals = []
         unweighted_vals = table_df[mask].value
@@ -371,7 +371,6 @@ def get_posterior_best_chain(mcmc_params, mcmc_tables, param_name, burn_in=0):
             weighted_vals += [v] * w
 
     return pd.DataFrame(weighted_vals, columns=[param_name])
-
 
 
 def plot_posterior(
@@ -728,8 +727,8 @@ def sample_outputs_for_calibration_fit(
     burn_in: int,
 ):
     assert len(mcmc_tables) == len(do_tables)
-    mcmc_df = db.process.append_tables(mcmc_tables)
-    do_df = db.process.append_tables(do_tables)
+    mcmc_df = db.load.append_tables(mcmc_tables)
+    do_df = db.load.append_tables(do_tables)
 
     # Determine max chain length, throw away first half of that if no burn-in request
     discard_point = mcmc_df["run"].max() // 2 if burn_in == 0 else burn_in

@@ -103,7 +103,7 @@ def make_main_outputs_tables(mode, uncertainty_dfs):
 
     table = pd.DataFrame(columns=column_names)
     i_row = -1
-    for i, country in enumerate(["sweden"]):  # enumerate(countries):
+    for i, country in enumerate(countries):
         uncertainty_df = uncertainty_dfs[country]
         for duration in DURATIONS:
             i_row += 1

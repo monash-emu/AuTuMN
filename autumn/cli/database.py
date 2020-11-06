@@ -6,7 +6,6 @@ You can access this script from your CLI by running:
     python -m autumn db --help
 
 """
-from autumn.db.database import FeatherDatabase
 import click
 
 from autumn import db
@@ -45,5 +44,5 @@ def feather2sql(src_db_path, dest_db_path):
     assert db.FeatherDatabase.is_compatible(
         src_db_path
     ), "Source DB must be FeatherDatabase compatible"
-    src_db = FeatherDatabase(src_db_path)
+    src_db = db.FeatherDatabase(src_db_path)
     db.database.convert_database(src_db, db.database.Database, dest_db_path)

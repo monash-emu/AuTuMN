@@ -1,6 +1,7 @@
 import os
 import logging
 from abc import abstractmethod, ABC
+from os import write
 from typing import List, Dict, Any
 
 import pandas as pd
@@ -19,9 +20,9 @@ class BaseDatabase(ABC):
     def __init__(self, database_path: str):
         """Sets up the database"""
 
-    @staticmethod
+    @classmethod
     @abstractmethod
-    def is_compatible(database_path: str) -> bool:
+    def is_compatible(cls, database_path: str) -> bool:
         """Returns True if the database is compatible with the given path"""
 
     @abstractmethod
@@ -43,11 +44,12 @@ class BaseDatabase(ABC):
         """Returns a dataframe"""
 
 
-class FeatherDatabase(BaseDatabase):
+class FileDatabase(BaseDatabase, ABC):
     """
-    Interface to access data stored in a Feather "database".
-    https://arrow.apache.org/docs/python/feather.html
+    A database that uses one file per dataframe
     """
+
+    extension: str = None  # Eg. .feather
 
     def __init__(self, database_path: str):
         """Sets up the database"""
@@ -55,31 +57,29 @@ class FeatherDatabase(BaseDatabase):
         if not os.path.exists(database_path):
             os.makedirs(database_path)
         elif not os.path.isdir(database_path):
-            raise ValueError(f"FeatherDatabase requires a folder as a target: {database_path}")
+            raise ValueError(f"FileDatabase requires a folder as a target: {database_path}")
 
-        feather_files = os.listdir(database_path)
-        if not all(f.endswith(".feather") for f in feather_files):
+        files = os.listdir(database_path)
+        if not all(f.endswith(self.extension) for f in files):
             raise ValueError(
-                f"FeatherDatabase target must contain only .feather files, got: {feather_files}"
+                f"FileDatabase target must contain only {self.extension} files, got: {files}"
             )
 
-    @staticmethod
-    def is_compatible(database_path: str) -> bool:
+    @classmethod
+    def is_compatible(cls, database_path: str) -> bool:
         """Returns True if the database is compatible with the given path"""
-        if database_path.endswith(".db"):
-            return False
-        elif not os.path.exists(database_path):
+        if not os.path.exists(database_path):
             return True
         elif not os.path.isdir(database_path):
             return False
-        elif not all(f.endswith(".feather") for f in os.listdir(database_path)):
+        elif not all(f.endswith(cls.extension) for f in os.listdir(database_path)):
             return False
         else:
             return True
 
     def table_names(self):
         """Returns a list of table names"""
-        return [f.replace(".feather", "") for f in os.listdir(self.database_path)]
+        return [f.replace(self.extension, "") for f in os.listdir(self.database_path)]
 
     def delete_everything(self):
         """Deletes and recreates the db."""
@@ -89,12 +89,12 @@ class FeatherDatabase(BaseDatabase):
 
     def dump_df(self, table_name: str, df: pd.DataFrame):
         """Writes a dataframe to a table. Appends if the table already exists."""
-        fpath = os.path.join(self.database_path, f"{table_name}.feather")
+        fpath = os.path.join(self.database_path, f"{table_name}{self.extension}")
         write_df = df
         if os.path.exists(fpath):
             # Read in existing dataframe and then append to the end of it.
             # This could be slow so ideally don't do this.
-            orig_df = pd.read_feather(fpath)
+            orig_df = self.read_file(fpath)
             write_df = orig_df.append(df)
         try:
             write_df.reset_index(drop=True, inplace=True)
@@ -102,21 +102,14 @@ class FeatherDatabase(BaseDatabase):
             pass
 
         write_df.columns = write_df.columns.astype(str)
-
-        try:
-            write_df.to_feather(fpath)
-        except Exception as e:
-            import pdb
-
-            pdb.set_trace()
-            pass
+        self.write_file(fpath, write_df)
 
     def query(
         self, table_name: str, columns: List[str] = [], conditions: Dict[str, Any] = {}
     ) -> pd.DataFrame:
         """Returns a dataframe"""
-        fpath = os.path.join(self.database_path, f"{table_name}.feather")
-        df = pd.read_feather(fpath)
+        fpath = os.path.join(self.database_path, f"{table_name}{self.extension}")
+        df = self.read_file(fpath)
         if columns:
             df = df[columns]
 
@@ -128,6 +121,31 @@ class FeatherDatabase(BaseDatabase):
 
         return df
 
+    @abstractmethod
+    def read_file(self, path: str) -> pd.DataFrame:
+        """How to read a file from disk"""
+
+    @abstractmethod
+    def write_file(self, path: str, df: pd.DataFrame):
+        """How to write a file to disk"""
+
+
+class FeatherDatabase(FileDatabase):
+    """
+    Interface to access data stored in a Feather "database".
+    https://arrow.apache.org/docs/python/feather.html
+    """
+
+    extension = ".feather"
+
+    def read_file(self, path: str) -> pd.DataFrame:
+        """How to read a file from disk"""
+        return pd.read_feather(path)
+
+    def write_file(self, path: str, df: pd.DataFrame):
+        """How to write a file to disk"""
+        df.to_feather(path)
+
 
 class Database(BaseDatabase):
     """
@@ -138,8 +156,8 @@ class Database(BaseDatabase):
         self.database_path = database_path
         self.engine = get_sql_engine(database_path)
 
-    @staticmethod
-    def is_compatible(database_path: str) -> bool:
+    @classmethod
+    def is_compatible(cls, database_path: str) -> bool:
         """Returns True if the database is compatible with the given path"""
         return database_path.endswith(".db")
 

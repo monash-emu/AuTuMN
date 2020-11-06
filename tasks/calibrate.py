@@ -60,7 +60,7 @@ def calibrate_task(run_id: str, runtime: float, num_chains: int, quiet: bool):
 
     # Find the MLE parameter set from all the chains.
     with Timer(f"Finding max likelihood esitmate params"):
-        database_paths = db.load._find_db_paths(CALIBRATE_DATA_DIR)
+        database_paths = db.load.find_db_paths(CALIBRATE_DATA_DIR)
         with TemporaryDirectory() as tmp_dir_path:
             collated_db_path = os.path.join(tmp_dir_path, "collated.db")
             db.process.collate_databases(

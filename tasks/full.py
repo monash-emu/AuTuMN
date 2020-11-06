@@ -42,7 +42,7 @@ def full_model_run_task(run_id: str, burn_in: int, quiet: bool):
 
     # Run the models for the full time period plus all scenarios for each accepted parameter
     # set, while also applying burn-in.
-    db_paths = db.load._find_db_paths(CALIBRATE_DATA_DIR)
+    db_paths = db.load.find_db_paths(CALIBRATE_DATA_DIR)
     chain_ids = [int(p.split("/")[-1].split("-")[-1]) for p in db_paths]
     num_chains = len(chain_ids)
     with Timer(f"Running full models for {num_chains} chains: {chain_ids}"):
@@ -53,7 +53,7 @@ def full_model_run_task(run_id: str, burn_in: int, quiet: bool):
         chain_ids = utils.run_parallel_tasks(run_full_model_for_chain, args_list)
 
     # Upload the full model run outputs of AWS S3.
-    db_paths = db.load._find_db_paths(FULL_RUN_DATA_DIR)
+    db_paths = db.load.find_db_paths(FULL_RUN_DATA_DIR)
     with Timer(f"Uploading full model run data to AWS S3"):
         args_list = [(run_id, db_path, quiet) for db_path in db_paths]
         utils.run_parallel_tasks(utils.upload_to_run_s3, args_list)

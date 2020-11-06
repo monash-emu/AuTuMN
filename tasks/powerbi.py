@@ -41,14 +41,14 @@ def powerbi_task(run_id: str, quiet: bool):
         utils.run_parallel_tasks(utils.download_from_run_s3, args_list)
 
     # Remove unnecessary data from each full model run database.
-    full_db_paths = db.load._find_db_paths(FULL_RUN_DATA_DIR)
+    full_db_paths = db.load.find_db_paths(FULL_RUN_DATA_DIR)
     with Timer(f"Pruning chain databases"):
         get_dest_path = lambda p: os.path.join(POWERBI_PRUNED_DIR, os.path.basename(p))
         args_list = [(full_db_path, get_dest_path(full_db_path)) for full_db_path in full_db_paths]
         utils.run_parallel_tasks(db.process.prune_chain, args_list)
 
     # Collate data from each pruned full model run database into a single database.
-    pruned_db_paths = db.load._find_db_paths(POWERBI_PRUNED_DIR)
+    pruned_db_paths = db.load.find_db_paths(POWERBI_PRUNED_DIR)
     with Timer(f"Collating pruned databases"):
         db.process.collate_databases(pruned_db_paths, POWERBI_COLLATED_PATH)
 

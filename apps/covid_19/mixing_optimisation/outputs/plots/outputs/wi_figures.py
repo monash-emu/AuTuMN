@@ -6,23 +6,41 @@ import matplotlib as mpl
 import seaborn as sns
 import numpy as np
 
-from apps.covid_19.mixing_optimisation.constants import PHASE_2_START_TIME, PHASE_2_DURATION, DURATION_PHASES_2_AND_3, OPTI_REGIONS
+from apps.covid_19.mixing_optimisation.constants import (
+    PHASE_2_START_TIME,
+    PHASE_2_DURATION,
+    DURATION_PHASES_2_AND_3,
+    OPTI_REGIONS,
+)
 from apps.covid_19.mixing_optimisation.mixing_opti import MODES, DURATIONS, OBJECTIVES
 from apps.covid_19.mixing_optimisation.utils import get_wi_scenario_mapping_reverse
 
-from apps.covid_19.mixing_optimisation.outputs.plots.outputs.rainbows import get_output_data, apply_scenario_mask
+from apps.covid_19.mixing_optimisation.outputs.plots.outputs.rainbows import (
+    get_output_data,
+    apply_scenario_mask,
+)
 
 from autumn.constants import BASE_PATH
-from autumn.db.load import load_derived_output_tables, _find_db_paths
+from autumn.db.load import load_derived_output_tables, find_db_paths
 from autumn.db import Database
 
-FIGURE_PATH = os.path.join(BASE_PATH, "apps", "covid_19", "mixing_optimisation",
-                           "outputs", "plots", "outputs", "figures", "wi_figures")
+FIGURE_PATH = os.path.join(
+    BASE_PATH,
+    "apps",
+    "covid_19",
+    "mixing_optimisation",
+    "outputs",
+    "plots",
+    "outputs",
+    "figures",
+    "wi_figures",
+)
 
-DATA_PATH = os.path.join(BASE_PATH, "apps", "covid_19", "mixing_optimisation",
-                           "outputs", "pbi_databases", "manual_runs")
+DATA_PATH = os.path.join(
+    BASE_PATH, "apps", "covid_19", "mixing_optimisation", "outputs", "pbi_databases", "manual_runs"
+)
 
-IMMUNITY_MODES = ['full_immunity', 'short_severe', 'short_milder', 'long_severe', 'long_milder']
+IMMUNITY_MODES = ["full_immunity", "short_severe", "short_milder", "long_severe", "long_milder"]
 
 
 def main():
@@ -41,14 +59,20 @@ def main():
             for objective in OBJECTIVES:
                 print(f"Plot {pessimistic}, {duration}, {objective}")
                 plot_multicountry_waning_immunity(
-                    all_derived_outputs, duration, objective, include_config=False, pessimistic=pessimistic
+                    all_derived_outputs,
+                    duration,
+                    objective,
+                    include_config=False,
+                    pessimistic=pessimistic,
                 )
 
 
-def plot_waning_immunity_graph(all_derived_outputs, output, country, duration, objective, axis, pessimistic=False):
+def plot_waning_immunity_graph(
+    all_derived_outputs, output, country, duration, objective, axis, pessimistic=False
+):
     sc_info = {
-        'all_wi_scenarios': {
-            'sc_names': [
+        "all_wi_scenarios": {
+            "sc_names": [
                 "baseline",
                 "persistent immunity",
                 "6 months immunity",
@@ -56,82 +80,89 @@ def plot_waning_immunity_graph(all_derived_outputs, output, country, duration, o
                 "24 months immunity",
                 "24 months immunity and\n50% less symptomatic",
             ],
-            'sc_colors': ['black', 'black', 'mediumaquamarine', 'blue', 'lightcoral', 'crimson'],
-            'immunity_modes': [
-                'full_immunity',
-                'full_immunity',
-                'short_severe',
-                'short_milder',
-                'long_severe',
-                'long_milder',
+            "sc_colors": ["black", "black", "mediumaquamarine", "blue", "lightcoral", "crimson"],
+            "immunity_modes": [
+                "full_immunity",
+                "full_immunity",
+                "short_severe",
+                "short_milder",
+                "long_severe",
+                "long_milder",
             ],
-            'sc_order': [0, 2, 3, 4, 5, 1]
+            "sc_order": [0, 2, 3, 4, 5, 1],
         },
-        'pessimistic': {
-            'sc_names': [
+        "pessimistic": {
+            "sc_names": [
                 "baseline",
                 "70% mixing factor",
                 "80% mixing factor",
                 "90% mixing factor",
                 "no mixing reduction",
             ],
-            'sc_colors': ['black', 'black', 'blue', 'cornflowerblue', 'deepskyblue'],
-            'final_mixings': [1., .7, .8, .9, 1.],
-            'sc_order': [0, 4, 3, 2, 1]
-        }
-
+            "sc_colors": ["black", "black", "blue", "cornflowerblue", "deepskyblue"],
+            "final_mixings": [1.0, 0.7, 0.8, 0.9, 1.0],
+            "sc_order": [0, 4, 3, 2, 1],
+        },
     }
-    type_key = 'pessimistic' if pessimistic else 'all_wi_scenarios'
+    type_key = "pessimistic" if pessimistic else "all_wi_scenarios"
 
     phase_2_start = PHASE_2_START_TIME
 
     # mark Phase 2 in the background:
-    rect = patches.Rectangle((phase_2_start, -1000), PHASE_2_DURATION[duration], 2.e9, linewidth=0,
-                              facecolor='gold', alpha=.2)
+    rect = patches.Rectangle(
+        (phase_2_start, -1000),
+        PHASE_2_DURATION[duration],
+        2.0e9,
+        linewidth=0,
+        facecolor="gold",
+        alpha=0.2,
+    )
     rect.set_zorder(1)
     axis.add_patch(rect)
-    axis.axhline(y=0, linewidth=.5, color='grey')
+    axis.axhline(y=0, linewidth=0.5, color="grey")
 
-    y_max = 0.
-    for scenario in sc_info[type_key]['sc_order'][1:]:
+    y_max = 0.0
+    for scenario in sc_info[type_key]["sc_order"][1:]:
         if pessimistic:
-            final_mixing = sc_info[type_key]['final_mixings'][scenario]
-            immunity_mode = 'short_severe'
+            final_mixing = sc_info[type_key]["final_mixings"][scenario]
+            immunity_mode = "short_severe"
         else:
-            final_mixing = 1.
-            immunity_mode = sc_info[type_key]['immunity_modes'][scenario]
+            final_mixing = 1.0
+            immunity_mode = sc_info[type_key]["immunity_modes"][scenario]
 
         derived_output_df = all_derived_outputs[immunity_mode][country]
 
         if scenario == 0:
             run_sc_idx = 0
         else:
-            run_sc_idx = get_wi_scenario_mapping_reverse(
-                duration,
-                objective,
-                final_mixing
-            )
+            run_sc_idx = get_wi_scenario_mapping_reverse(duration, objective, final_mixing)
 
-        sc_mask = derived_output_df['scenario'] == run_sc_idx
+        sc_mask = derived_output_df["scenario"] == run_sc_idx
         df = derived_output_df[sc_mask]
 
         times = list(df.times)
         values = list(df[output])
 
         if scenario == 0:
-            axis.plot(times, values, linewidth=3., color=sc_info[type_key]['sc_colors'][scenario],
-                      zorder=2)
+            axis.plot(
+                times,
+                values,
+                linewidth=3.0,
+                color=sc_info[type_key]["sc_colors"][scenario],
+                zorder=2,
+            )
         else:
             axis.plot(
-                times, values, linewidth=3., label=sc_info[type_key]['sc_names'][scenario],
-                color=sc_info[type_key]['sc_colors'][scenario], zorder=2
+                times,
+                values,
+                linewidth=3.0,
+                label=sc_info[type_key]["sc_names"][scenario],
+                color=sc_info[type_key]["sc_colors"][scenario],
+                zorder=2,
             )
         y_max = max([y_max, max(values)])
 
-    phase_2_end_date = {
-        DURATIONS[0]: '1 Apr 21',
-        DURATIONS[1]: '1 Oct 21'
-    }
+    phase_2_end_date = {DURATIONS[0]: "1 Apr 21", DURATIONS[1]: "1 Oct 21"}
 
     xticks = [PHASE_2_START_TIME, PHASE_2_START_TIME + PHASE_2_DURATION[duration], 366 + 365]
     xlabs = ["1 Oct 20", phase_2_end_date[duration], "31 Dec 21"]
@@ -140,7 +171,7 @@ def plot_waning_immunity_graph(all_derived_outputs, output, country, duration, o
     axis.set_xticks(xticks)
     axis.set_xticklabels(xlabs, fontsize=12)
 
-    axis.set_ylim((-0.05*y_max, y_max*1.05))
+    axis.set_ylim((-0.05 * y_max, y_max * 1.05))
 
     for tick in axis.yaxis.get_major_ticks():
         tick.label.set_fontsize(12)
@@ -151,7 +182,9 @@ def plot_waning_immunity_graph(all_derived_outputs, output, country, duration, o
     return handles, labels
 
 
-def plot_multicountry_waning_immunity(all_derived_outputs, duration, objective, include_config=False, pessimistic=False):
+def plot_multicountry_waning_immunity(
+    all_derived_outputs, duration, objective, include_config=False, pessimistic=False
+):
     fig_h = 20 if not include_config else 21
     heights = [1, 6, 6, 6, 6, 6, 6] if not include_config else [2, 1, 6, 6, 6, 6, 6, 6]
     pyplot.rcParams["font.family"] = "Times New Roman"
@@ -159,50 +192,80 @@ def plot_multicountry_waning_immunity(all_derived_outputs, duration, objective, 
     fig = pyplot.figure(constrained_layout=True, figsize=(24, fig_h))  # (w, h)
 
     widths = [1, 6, 6, 6, 2]
-    spec = fig.add_gridspec(ncols=5, nrows=len(heights), width_ratios=widths,
-                            height_ratios=heights)
+    spec = fig.add_gridspec(ncols=5, nrows=len(heights), width_ratios=widths, height_ratios=heights)
 
     output_names = ["incidence", "infection_deaths", "hospital_occupancy"]
     output_titles = ["Daily disease incidence", "Daily deaths", "Hospital occupancy"]
 
-    countries = ['belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']
+    countries = ["belgium", "france", "italy", "spain", "sweden", "united-kingdom"]
     country_names = [c.title() for c in countries]
     country_names[-1] = "United Kingdom"
 
     text_size = 23
 
     for i, country in enumerate(countries):
-        i_grid = i + 2 if include_config else i+1
+        i_grid = i + 2 if include_config else i + 1
         for j, output in enumerate(output_names):
             ax = fig.add_subplot(spec[i_grid, j + 1])
             h, l = plot_waning_immunity_graph(
-                all_derived_outputs, output, country, duration=duration, objective=objective,
-                axis=ax, pessimistic=pessimistic
+                all_derived_outputs,
+                output,
+                country,
+                duration=duration,
+                objective=objective,
+                axis=ax,
+                pessimistic=pessimistic,
             )
             if i == 0:
                 i_grid_output_labs = 1 if include_config else 0
-                ax = fig.add_subplot(spec[i_grid_output_labs, j+1])
-                ax.text(0.5, 0.5, output_titles[j], fontsize=text_size, horizontalalignment='center', verticalalignment='center')
+                ax = fig.add_subplot(spec[i_grid_output_labs, j + 1])
+                ax.text(
+                    0.5,
+                    0.5,
+                    output_titles[j],
+                    fontsize=text_size,
+                    horizontalalignment="center",
+                    verticalalignment="center",
+                )
                 ax.axis("off")
 
         ax = fig.add_subplot(spec[i_grid, 0])
-        ax.text(0.5, 0.5, country_names[i], rotation=90, fontsize=text_size, horizontalalignment='center', verticalalignment='center')
+        ax.text(
+            0.5,
+            0.5,
+            country_names[i],
+            rotation=90,
+            fontsize=text_size,
+            horizontalalignment="center",
+            verticalalignment="center",
+        )
         ax.axis("off")
 
     if j == 2:
         ax = fig.add_subplot(spec[1:, 4])
-        leg = ax.legend(h, l, fontsize=15, labelspacing=1.0, loc='center')  # bbox_to_anchor=(1.4, 1.1),
+        leg = ax.legend(
+            h, l, fontsize=15, labelspacing=1.0, loc="center"
+        )  # bbox_to_anchor=(1.4, 1.1),
         for line in leg.get_lines():
             line.set_linewidth(5.0)
         ax.axis("off")
 
     if include_config:
         ax = fig.add_subplot(spec[0, :])
-        obj_name = 'deaths' if objective == 'deaths' else 'years of life lost'
-        config_name = '6-month' if duration == DURATIONS[0] else '12-month'
+        obj_name = "deaths" if objective == "deaths" else "years of life lost"
+        config_name = "6-month" if duration == DURATIONS[0] else "12-month"
 
-        config_label = "Optimisation by by age minimising " + obj_name + " with " + config_name + " mitigation"
-        ax.text(0., 0.5, config_label, fontsize=text_size, horizontalalignment='left', verticalalignment='center')
+        config_label = (
+            "Optimisation by by age minimising " + obj_name + " with " + config_name + " mitigation"
+        )
+        ax.text(
+            0.0,
+            0.5,
+            config_label,
+            fontsize=text_size,
+            horizontalalignment="left",
+            verticalalignment="center",
+        )
         ax.axis("off")
 
     filename = f"waning_immunity_by_age_{duration}_{objective}"

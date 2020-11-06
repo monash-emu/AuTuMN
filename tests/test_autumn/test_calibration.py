@@ -151,18 +151,15 @@ def test_calibrate_autumn_mcmc(temp_data_dir):
     )
     app_dir = os.path.join(temp_data_dir, "outputs", "calibrate", "sharks", "main")
     run_dir = os.path.join(app_dir, os.listdir(app_dir)[0])
-    db_fname = [fname for fname in os.listdir(run_dir) if fname.endswith(".db")][0]
-    out_db_path = os.path.join(run_dir, db_fname)
-    assert os.path.exists(out_db_path)
-
-    out_db = Database(out_db_path)
-    assert set(out_db.engine.table_names()) == {
+    db_paths = db.load.find_db_paths(run_dir)
+    assert len(db_paths) == 1
+    out_db = db.get_database(db_paths[0])
+    assert set(out_db.table_names()) == {
         "outputs",
         "derived_outputs",
         "mcmc_run",
         "mcmc_params",
     }
-
     mcmc_runs = out_db.query("mcmc_run")
     mcmc_params = out_db.query("mcmc_params")
     mle_params = db.process.find_mle_params(mcmc_runs, mcmc_params)

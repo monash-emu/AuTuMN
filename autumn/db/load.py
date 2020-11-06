@@ -52,7 +52,7 @@ def load_mcmc_params(db: BaseDatabase, run_id: int):
 
 def load_mcmc_params_tables(calib_dirpath: str):
     mcmc_tables = []
-    for db_path in _find_db_paths(calib_dirpath):
+    for db_path in find_db_paths(calib_dirpath):
         db = get_database(db_path)
         mcmc_tables.append(db.query("mcmc_params"))
 
@@ -61,7 +61,7 @@ def load_mcmc_params_tables(calib_dirpath: str):
 
 def load_mcmc_tables(calib_dirpath: str):
     mcmc_tables = []
-    for db_path in _find_db_paths(calib_dirpath):
+    for db_path in find_db_paths(calib_dirpath):
         db = get_database(db_path)
         mcmc_tables.append(db.query("mcmc_run"))
 
@@ -69,7 +69,7 @@ def load_mcmc_tables(calib_dirpath: str):
 
 
 def load_uncertainty_table(calib_dirpath: str):
-    db_path = _find_db_paths(calib_dirpath)[0]
+    db_path = find_db_paths(calib_dirpath)[0]
     db = get_database(db_path)
     return db.query("uncertainty")
 
@@ -89,7 +89,7 @@ def append_tables(tables: List[pd.DataFrame]):
 
 def load_derived_output_tables(calib_dirpath: str, column: str = None):
     derived_output_tables = []
-    for db_path in _find_db_paths(calib_dirpath):
+    for db_path in find_db_paths(calib_dirpath):
         db = get_database(db_path)
         if not column:
             df = db.query("derived_outputs")
@@ -102,7 +102,7 @@ def load_derived_output_tables(calib_dirpath: str, column: str = None):
     return derived_output_tables
 
 
-def _find_db_paths(dirpath: str):
+def find_db_paths(dirpath: str):
     db_paths = []
     for fname in os.listdir(dirpath):
         if fname.startswith("outputs") or fname.startswith("chain"):

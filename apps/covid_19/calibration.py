@@ -200,11 +200,6 @@ def add_standard_philippines_params(params, region):
             "distri_params": [0.02, 0.15],
         },
         {
-            "param_name": "time.start",
-            "distribution": "uniform",
-            "distri_params": [32.0, 61.0],  # 1st February to 1st March
-        },
-        {
             "param_name": "mobility.microdistancing.behaviour.parameters.max_effect",
             "distribution": "uniform",
             "distri_params": [0.1, 0.6],
@@ -213,6 +208,12 @@ def add_standard_philippines_params(params, region):
             "param_name": "infectious_seed",
             "distribution": "uniform",
             "distri_params": [10.0, 100.0],
+        },
+        {
+            "param_name": "clinical_stratification.props.symptomatic.multiplier",
+            "distribution": "trunc_normal",
+            "distri_params": [1.0, 0.2],
+            "trunc_range": [0.5, np.inf],
         },
     ]
 

@@ -202,12 +202,12 @@ def add_standard_philippines_params(params, region):
         {
             "param_name": "time.start",
             "distribution": "uniform",
-            "distri_params": [40.0, 60.0],
+            "distri_params": [32.0, 61.0],  # 1st February to 1st March
         },
         {
             "param_name": "mobility.microdistancing.behaviour.parameters.max_effect",
             "distribution": "uniform",
-            "distri_params": [0.25, 0.75],
+            "distri_params": [0.1, 0.6],
         },
         {
             "param_name": "infectious_seed",

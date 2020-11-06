@@ -1,20 +1,15 @@
-from genericpath import exists
 import os
 import glob
 import logging
 import sys
 import traceback
-from abc import ABC, abstractmethod
 from typing import Callable, List, Any
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import multiprocessing as mp
 
 import boto3
-import luigi
-import sentry_sdk
 from boto3.s3.transfer import TransferConfig
 from botocore.exceptions import ProfileNotFound
-from luigi.contrib.s3 import S3Target, S3Client
 
 from remote.aws.utils import read_run_id
 from . import settings
@@ -61,9 +56,6 @@ else:
 
 s3 = session.client("s3")
 
-luigi_s3_client = S3Client()
-luigi_s3_client.s3 = session.resource("s3")
-
 
 def get_app_region(run_id: str):
     app_name, region_name, _, _ = read_run_id(run_id)
@@ -73,7 +65,7 @@ def get_app_region(run_id: str):
 
 def run_parallel_tasks(func: Callable, arg_list: List[Any]):
     if len(arg_list) == 1:
-        return func(*arg_list[0])
+        return [func(*arg_list[0])]
 
     excecutor = ProcessPoolExecutor(max_workers=MAX_WORKERS)
     futures = [excecutor.submit(func, *args) for args in arg_list]
@@ -113,14 +105,20 @@ def download_from_run_s3(run_id: str, src_key: str, quiet: bool, retries=5):
     """
     Download file or folder from the run's AWS S3 directory
     """
-    if quiet:
-        logging.disable(logging.INFO)
 
     relpath = os.path.relpath(src_key, run_id)
     dest_path = os.path.join(settings.BASE_DIR, relpath)
     os.makedirs(os.path.dirname(dest_path), exist_ok=True)
     if os.path.exists(dest_path):
         os.remove(dest_path)
+
+    download_from_s3(src_key, dest_path, quiet, retries)
+    return src_key
+
+
+def download_from_s3(src_key: str, dest_path: str, quiet: bool, retries=5):
+    if quiet:
+        logging.disable(logging.INFO)
 
     retry_count = 0
     while True:
@@ -140,8 +138,6 @@ def download_from_run_s3(run_id: str, src_key: str, quiet: bool, retries=5):
     if quiet:
         logging.disable(logging.NOTSET)
 
-    return src_key
-
 
 def upload_to_run_s3(run_id: str, src_path: str, quiet: bool):
     """
@@ -158,192 +154,6 @@ def upload_to_run_s3(run_id: str, src_path: str, quiet: bool):
         logging.disable(logging.NOTSET)
 
     return src_path
-
-
-def get_calibration_db_filename(chain_id: int):
-    return f"outputs_calibration_chain_{chain_id}.db"
-
-
-def get_full_model_run_db_filename(chain_id: int):
-    return f"mcmc_chain_full_run_{chain_id}.db"
-
-
-class BaseTask(luigi.Task, ABC):
-    """Ensures errors are logged correctly."""
-
-    @abstractmethod
-    def safe_run(self):
-        pass
-
-    def run(self):
-        try:
-            self.safe_run()
-        except Exception as e:
-            logger.exception("Task failed")
-            if SENTRY_DSN:
-                sentry_sdk.capture_exception()
-
-            raise
-
-
-class ParallelLoggerTask(luigi.Task, ABC):
-    """
-    Mixin to allow parallel tasks to log to multiple files in parallel
-    """
-
-    run_id = luigi.Parameter()  # Unique run id string
-
-    @abstractmethod
-    def get_log_filename(self):
-        """Returns the name of the log file for this task"""
-        pass
-
-    @abstractmethod
-    def safe_run(self):
-        pass
-
-    def run(self):
-        self.setup_logging()
-        try:
-            self.safe_run()
-        except Exception as e:
-            logger.exception("Task failed: %s", self)
-            if SENTRY_DSN:
-                sentry_sdk.capture_exception()
-
-            self.teardown_logging()
-            raise
-
-        self.teardown_logging()
-
-    def setup_logging(self):
-        """Setup logging for this task, to be called in run()"""
-        logfile_path = os.path.join(settings.BASE_DIR, "logs", self.get_log_filename())
-        log_format = "%(asctime)s %(module)s:%(levelname)s: %(message)s"
-        formatter = logging.Formatter(log_format)
-        handler = logging.FileHandler(logfile_path)
-        handler.setFormatter(formatter)
-        logger_names = ["tasks", "apps", "autumn", "summer"]
-        for logger_name in logger_names:
-            _logger = logging.getLogger(logger_name)
-            _logger.propagate = False
-            _logger.handlers = []
-            _logger.addHandler(handler)
-            _logger.setLevel(logging.INFO)
-
-    def teardown_logging(self):
-        logger_names = ["tasks", "apps", "autumn", "summer"]
-        for logger_name in logger_names:
-            _logger = logging.getLogger(logger_name)
-            _logger.propagate = True
-            _logger.handlers = []
-
-    @staticmethod
-    def upload_chain_logs_on_success(task):
-        """Ensure log files are uploaded every time the task succeeds"""
-        logger.info("Task suceeded, uploading logs: %s", task)
-        filename = task.get_log_filename()
-        src_path = os.path.join(settings.BASE_DIR, "logs", filename)
-        dest_key = os.path.join(task.run_id, "logs", filename.replace(".log", ".success.log"))
-        upload_s3(src_path, dest_key)
-
-    @staticmethod
-    def upload_chain_logs_on_failure(task, exception):
-        """Ensure log files are uploaded even if the task fails"""
-        logger.info("Task failed, uploading logs: %s", task)
-        filename = task.get_log_filename()
-        src_path = os.path.join(settings.BASE_DIR, "logs", filename)
-        dest_key = os.path.join(task.run_id, "logs", filename.replace(".log", ".failure.log"))
-        upload_s3(src_path, dest_key)
-
-
-ParallelLoggerTask.event_handler(luigi.Event.SUCCESS)(
-    ParallelLoggerTask.upload_chain_logs_on_success
-)
-
-ParallelLoggerTask.event_handler(luigi.Event.FAILURE)(
-    ParallelLoggerTask.upload_chain_logs_on_failure
-)
-
-
-class BuildLocalDirectoryTask(BaseTask):
-    """
-    Creates an output directory with the specified name
-    """
-
-    dirname = luigi.Parameter()
-
-    def get_dirpath(self):
-        return os.path.join(settings.BASE_DIR, self.dirname)
-
-    def output(self):
-        return luigi.LocalTarget(self.get_dirpath())
-
-    def safe_run(self):
-        os.makedirs(self.get_dirpath(), exist_ok=True)
-
-
-class DownloadS3Task(BaseTask):
-    """
-    Downloads a S3 hosted file or folder to local filesystem
-    """
-
-    run_id = luigi.Parameter()  # Unique run id string
-    src_path = luigi.Parameter()
-
-    def output(self):
-        return luigi.LocalTarget(self.get_dest_path())
-
-    def safe_run(self):
-        dest_path = self.get_dest_path()
-        os.makedirs(os.path.dirname(dest_path), exist_ok=True)
-        retries = 0
-        try:
-            download_s3(self.get_src_key(), dest_path)
-        except Exception:
-            retries += 1
-            if retries < 3:
-                logger.exception(f"Download to {dest_path} failed, trying again.")
-            else:
-                logger.error(f"Download to {dest_path} failed, tried 3 times, still failing.")
-                raise
-
-    def get_dest_path(self):
-        return os.path.join(settings.BASE_DIR, self.src_path)
-
-    def get_src_key(self):
-        return os.path.join(self.run_id, self.src_path)
-
-    def get_s3_uri(self):
-        s3_uri = os.path.join(f"s3://{settings.S3_BUCKET}", self.get_src_key())
-        return s3_uri
-
-
-class UploadS3Task(BaseTask, ABC):
-    """
-    Uploads a local file or folder to S3
-    """
-
-    run_id = luigi.Parameter()  # Unique run id string
-
-    def output(self):
-        return S3Target(self.get_s3_uri(), client=luigi_s3_client)
-
-    def safe_run(self):
-        upload_s3(self.get_src_path(), self.get_dest_key())
-
-    @abstractmethod
-    def get_src_path(self):
-        """Returns the path of the file to upload"""
-        pass
-
-    def get_dest_key(self):
-        rel_path = os.path.relpath(self.get_src_path(), settings.BASE_DIR)
-        return os.path.join(self.run_id, rel_path)
-
-    def get_s3_uri(self):
-        s3_uri = os.path.join(f"s3://{settings.S3_BUCKET}", self.get_dest_key())
-        return s3_uri
 
 
 def list_s3(key_prefix: str, key_suffix: str):

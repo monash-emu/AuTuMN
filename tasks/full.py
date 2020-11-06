@@ -1,5 +1,6 @@
 import logging
 import os
+import shutil
 
 import pandas as pd
 
@@ -20,14 +21,27 @@ FULL_RUN_DATA_DIR = os.path.join(settings.BASE_DIR, "data", "full_model_runs")
 
 
 def full_model_run_task(run_id: str, burn_in: int, quiet: bool):
+    # Prepare inputs for running the model.
     build_input_database()
+
+    # Set up directories for output data.
+    with Timer(f"Creating calibration directories"):
+        if os.path.exists(FULL_RUN_DATA_DIR):
+            shutil.rmtree(FULL_RUN_DATA_DIR)
+
+        os.makedirs(FULL_RUN_DATA_DIR)
+
+    # Find the calibration chain databases in AWS S3.
     key_prefix = os.path.join(run_id, os.path.relpath(CALIBRATE_DATA_DIR, settings.BASE_DIR))
     chain_db_keys = utils.list_s3(key_prefix, key_suffix=".feather")
 
+    # Download the calibration chain databases.
     with Timer(f"Downloading calibration data"):
         args_list = [(run_id, src_key, quiet) for src_key in chain_db_keys]
         utils.run_parallel_tasks(utils.download_from_run_s3, args_list)
 
+    # Run the models for the full time period plus all scenarios for each accepted parameter
+    # set, while also applying burn-in.
     db_paths = db.load._find_db_paths(CALIBRATE_DATA_DIR)
     chain_ids = [int(p.split("/")[-1].split("-")[-1]) for p in db_paths]
     num_chains = len(chain_ids)
@@ -38,6 +52,7 @@ def full_model_run_task(run_id: str, burn_in: int, quiet: bool):
         ]
         chain_ids = utils.run_parallel_tasks(run_full_model_for_chain, args_list)
 
+    # Upload the full model run outputs of AWS S3.
     db_paths = db.load._find_db_paths(FULL_RUN_DATA_DIR)
     with Timer(f"Uploading full model run data to AWS S3"):
         args_list = [(run_id, db_path, quiet) for db_path in db_paths]

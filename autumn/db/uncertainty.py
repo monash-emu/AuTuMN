@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 
 
-from autumn.db.database import Database
+from autumn.db.database import get_database
 
 
 logger = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ def add_uncertainty_quantiles(database_path: str, targets: dict):
     The table will have columns scenario/type/time/quantile/value.
     """
     logger.info("Calculating uncertainty for %s", database_path)
-    db = Database(database_path)
+    db = get_database(database_path)
     if "uncertainty" in db.table_names():
         logger.info(
             "Deleting existing uncertainty table in %s",

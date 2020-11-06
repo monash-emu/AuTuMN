@@ -96,10 +96,20 @@ class FeatherDatabase(BaseDatabase):
             # This could be slow so ideally don't do this.
             orig_df = pd.read_feather(fpath)
             write_df = orig_df.append(df)
+        try:
+            write_df.reset_index(drop=True, inplace=True)
+        except ValueError:
+            pass
 
-        write_df.reset_index(inplace=True)
         write_df.columns = write_df.columns.astype(str)
-        write_df.to_feather(fpath)
+
+        try:
+            write_df.to_feather(fpath)
+        except Exception as e:
+            import pdb
+
+            pdb.set_trace()
+            pass
 
     def query(
         self, table_name: str, columns: List[str] = [], conditions: Dict[str, Any] = {}

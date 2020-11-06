@@ -1,14 +1,34 @@
 """
 A tool for application models to register themselves so that they serve a standard interface
 """
-from abc import ABC, abstractmethod
+import os
+import logging
+import yaml
+from datetime import datetime
 
-from autumn.model_runner import build_model_runner
-from autumn.constants import Region
+from autumn import constants
+from autumn import db
+from autumn.tool_kit.timer import Timer
+from autumn.tool_kit.scenarios import Scenario
 from autumn.tool_kit.params import load_params, load_targets
+from autumn.tool_kit.utils import (
+    get_git_branch,
+    get_git_hash,
+)
+
+
+logger = logging.getLogger(__name__)
 
 
 class AppRegion:
+    """
+    A region that is simulated by the app.
+    This class knows specificially how to apply the app to this particular region.
+
+    Eg. we could have a COVID-19 model, with an `app_name` of "covid_19" which simulates
+        the state of Victoria, which would have a `region_name` of "victoria".
+    """
+
     def __init__(self, app_name: str, region_name: str, build_model, calibrate_model):
         self.region_name = region_name
         self.app_name = app_name
@@ -17,29 +37,94 @@ class AppRegion:
 
     @property
     def params(self):
+        """Returns the model parameters for the given region"""
         return load_params(self.app_name, self.region_name)
 
     @property
     def targets(self):
+        """Returns the calibration targets for the given region"""
         return load_targets(self.app_name, self.region_name)
 
     def calibrate_model(self, max_seconds: int, run_id: int, num_chains: int):
+        """Runs a calibtation for the given region"""
         return self._calibrate_model(max_seconds, run_id, num_chains)
 
     def build_model(self, params: dict):
+        """Builds the SUMMER model for the given region"""
         return self._build_model(params)
 
-    def run_model(self, *args, **kwargs):
-        run_model = build_model_runner(
-            model_name=self.app_name,
-            param_set_name=self.region_name,
-            build_model=self._build_model,
-            params=self.params,
+    def run_model(self, run_scenarios=True):
+        """
+        Runs the SUMMER model for the given region, storing the outputs on disk.
+        """
+        logger.info(f"Running {self.app_name} {self.region_name}...")
+        params = self.params
+
+        # Ensure project folder exists.
+        project_dir = os.path.join(
+            constants.OUTPUT_DATA_PATH, "run", self.app_name, self.region_name
         )
-        return run_model(*args, **kwargs)
+        timestamp = datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
+        output_dir = os.path.join(project_dir, timestamp)
+        os.makedirs(output_dir, exist_ok=True)
+
+        # Determine where to save model outputs
+        output_db_path = os.path.join(output_dir, "outputs")
+
+        # Save model parameters to output dir.
+        param_path = os.path.join(output_dir, "params.yml")
+        with open(param_path, "w") as f:
+            yaml.dump(params, f)
+
+        # Save model run metadata to output dir.
+        meta_path = os.path.join(output_dir, "meta.yml")
+        metadata = {
+            "model_name": self.app_name,
+            "region_name": self.region_name,
+            "start_time": timestamp,
+            "git_branch": get_git_branch(),
+            "git_commit": get_git_hash(),
+        }
+        with open(meta_path, "w") as f:
+            yaml.dump(metadata, f)
+
+        with Timer("Running model scenarios"):
+            num_scenarios = 1 + len(params["scenarios"].keys())
+            scenarios = []
+            for scenario_idx in range(num_scenarios):
+                scenario = Scenario(self._build_model, scenario_idx, params)
+                scenarios.append(scenario)
+
+            # Run the baseline scenario.
+            baseline_scenario = scenarios[0]
+            baseline_scenario.run()
+            baseline_model = baseline_scenario.model
+
+            if not run_scenarios:
+                # Do not run non-baseline models
+                scenarios = scenarios[:1]
+
+            # Run all the other scenarios
+            for scenario in scenarios[1:]:
+                scenario.run(base_model=baseline_model)
+
+        with Timer("Saving model outputs to the database"):
+            models = [s.model for s in scenarios]
+            outputs_db = db.FeatherDatabase(output_db_path)
+            outputs_df = db.store.build_outputs_table(models, run_id=0)
+            derived_outputs_df = db.store.build_derived_outputs_table(models, run_id=0)
+            outputs_db.dump_df(db.store.Table.OUTPUTS, outputs_df)
+            outputs_db.dump_df(db.store.Table.DERIVED, derived_outputs_df)
 
 
 class App:
+    """
+    A disease model which may be applied to multiple regions.
+
+    Eg. we could have a COVID-19 model, with an `app_name` of "covid_19" which simulates
+        the state of Victoria, which would have a `region_name` of "victoria".
+    """
+
     def __init__(self, app_name):
         self.app_name = app_name
         self.region_names = []

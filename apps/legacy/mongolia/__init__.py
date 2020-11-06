@@ -26,5 +26,5 @@ params["default"] = merge_dicts(mle_params, params["default"])
 
 
 run_model = build_model_runner(
-    model_name="mongolia", param_set_name=None, build_model=build_model, params=params
+    model_name="mongolia", region_name=None, build_model=build_model, params=params
 )

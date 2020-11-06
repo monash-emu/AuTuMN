@@ -29,4 +29,3 @@ black
 
 # Cloud computing jobs
 sentry-sdk
-luigi==3.0.1

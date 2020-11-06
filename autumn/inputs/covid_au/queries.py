@@ -14,7 +14,7 @@ def get_vic_testing_numbers():
     Returns 7-day moving average of number of tests administered in Victoria.
     """
     input_db = get_input_db()
-    df = input_db.query("covid_au", column=["date", "tests"], conditions=[f"state_abbrev='VIC'"])
+    df = input_db.query("covid_au", columns=["date", "tests"], conditions={"state_abbrev": "VIC"})
     date_str_to_int = lambda s: (datetime.strptime(s, "%Y-%m-%d") - COVID_BASE_DATETIME).days
     test_dates = df.date.apply(date_str_to_int).to_numpy()
     test_values = df.tests.to_numpy()

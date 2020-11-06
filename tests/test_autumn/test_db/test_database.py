@@ -21,7 +21,7 @@ def test_database__with_conditions__expect_filtered_df():
     """
     result_df = db.query(
         table_name="countries",
-        conditions=['"country"="Ethiopia"'],
+        conditions={"country": "Ethiopia"},
     )
     assert len(result_df) == 1  # Number of rows
     assert len(result_df.columns) == 3  # Number of columns
@@ -34,8 +34,8 @@ def test_database__with_conditions_and_column__expect_filtered_df():
     """
     result_df = db.query(
         table_name="countries",
-        column='"iso3"',
-        conditions=['"country"="Ethiopia"'],
+        columns=["iso3"],
+        conditions={"country": "Ethiopia"},
     )
     assert len(result_df) == 1  # Number of rows
     assert len(result_df.columns) == 1  # Number of columns

@@ -3,12 +3,13 @@ import numpy as np
 
 from autumn.calibration import Calibration
 from autumn.tool_kit.params import load_params
-from autumn.calibration.utils import ignore_calibration_target_before_date, add_dispersion_param_prior_for_gaussian
+from autumn.calibration.utils import (
+    ignore_calibration_target_before_date,
+    add_dispersion_param_prior_for_gaussian,
+)
 from autumn.constants import Region
 
-from apps.covid_19.mixing_optimisation.utils import (
-    get_prior_distributions_for_opti
-)
+from apps.covid_19.mixing_optimisation.utils import get_prior_distributions_for_opti
 from autumn.tool_kit.params import load_targets
 
 from .model import build_model
@@ -108,7 +109,7 @@ def run_calibration_chain(
         target_outputs,
         run_id,
         num_chains,
-        param_set_name=region,
+        region_name=region,
         adaptive_proposal=adaptive_proposal,
         initialisation_type=params["default"]["metropolis_initialisation_type"],
     )

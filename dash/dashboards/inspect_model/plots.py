@@ -2,11 +2,10 @@ from datetime import datetime
 
 import streamlit as st
 
+from autumn import plots
 from autumn.plots.plotter import StreamlitPlotter
 from autumn.tool_kit.model_register import AppRegion
 from autumn.tool_kit.scenarios import Scenario, get_model_times_from_inputs
-from autumn.tool_kit.params import load_params
-from autumn import plots
 from autumn.inputs import get_mobility_data
 
 # from apps.covid_19.model.preprocess.mixing_matrix.adjust_location import (
@@ -19,22 +18,10 @@ PLOT_FUNCS = {}
 
 
 def plot_mixing_matrix(
-    plotter: StreamlitPlotter, app: AppRegion,
+    plotter: StreamlitPlotter,
+    app: AppRegion,
 ):
-    iso3_map = {
-        "belgium": "BEL",
-        "malaysia": "MYS",
-        "philippines": "PHL",
-        "australia": "AUS",
-        "italy": "ITA",
-        "france": "FRA",
-        "spain": "ESP",
-        "sweden": "SWE",
-        "united-kingdom": "GBR",
-    }
-
-    iso3 = iso3_map[app.region_name]
-
+    iso3 = app.params["default"]["country"]["iso3"]
     param_names = sorted(list(("all_locations", "home", "other_locations", "school", "work")))
     param_name = st.sidebar.selectbox("Select parameter", param_names)
     plots.model.plots.plot_mixing_matrix(plotter, param_name, iso3)
@@ -44,7 +31,8 @@ PLOT_FUNCS["Mixing matrix"] = plot_mixing_matrix
 
 
 def plot_flow_params(
-    plotter: StreamlitPlotter, app: AppRegion,
+    plotter: StreamlitPlotter,
+    app: AppRegion,
 ):
     # Assume a COVID model
     model = app.build_model(app.params["default"])
@@ -78,7 +66,8 @@ PLOT_FUNCS["Flow weights"] = plot_flow_params
 
 
 def plot_dynamic_inputs(
-    plotter: StreamlitPlotter, app: AppRegion,
+    plotter: StreamlitPlotter,
+    app: AppRegion,
 ):
     # Assume a COVID model
     model = app.build_model(app.params["default"])
@@ -108,7 +97,11 @@ def plot_location_mixing(plotter: StreamlitPlotter, app: AppRegion):
     start_time = params["time"]["start"]
     end_time = params["time"]["end"]
     time_step = params["time"]["step"]
-    times = get_model_times_from_inputs(round(start_time), end_time, time_step,)
+    times = get_model_times_from_inputs(
+        round(start_time),
+        end_time,
+        time_step,
+    )
 
     loc_key = st.sidebar.selectbox("Select location", LOCATIONS)
     is_logscale = st.sidebar.checkbox("Log scale")
@@ -144,13 +137,17 @@ PLOT_FUNCS["Dynamic location mixing"] = plot_location_mixing
 
 
 def plot_mobility_raw(
-    plotter: StreamlitPlotter, app: AppRegion,
+    plotter: StreamlitPlotter,
+    app: AppRegion,
 ):
     params = app.params["default"]
     values, days = get_mobility_data(
-        params["iso3"], params["mobility_region"], BASE_DATE, params["google_mobility_locations"],
+        params["country"]["iso3"],
+        params["mobility"]["region"],
+        BASE_DATE,
+        params["mobility"]["google_mobility_locations"],
     )
-    options = list(params["google_mobility_locations"].keys())
+    options = list(params["mobility"]["google_mobility_locations"].keys())
     loc_key = st.sidebar.selectbox("Select location", options)
     values_lookup = {days[i]: values[loc_key][i] for i in range(len(days))}
     loc_func = lambda t: values_lookup[t]
@@ -161,7 +158,8 @@ PLOT_FUNCS["Google Mobility Raw"] = plot_mobility_raw
 
 
 def plot_model_targets(
-    plotter: StreamlitPlotter, app: AppRegion,
+    plotter: StreamlitPlotter,
+    app: AppRegion,
 ):
     # Assume a COVID model
     scenario = Scenario(app.build_model, idx=0, params=app.params)
@@ -177,7 +175,8 @@ def plot_model_targets(
 
 
 def plot_model_multi_targets(
-    plotter: StreamlitPlotter, app: AppRegion,
+    plotter: StreamlitPlotter,
+    app: AppRegion,
 ):
     # Assume a COVID model
     scenario = Scenario(app.build_model, idx=0, params=app.params)

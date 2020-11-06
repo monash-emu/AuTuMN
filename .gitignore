@@ -16,8 +16,6 @@ condaenv/
 *.png
 
 # Data
-*.pkl
-*.pickle
 *.db
 logs/
 

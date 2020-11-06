@@ -54,8 +54,8 @@ def get_uncertainty_df(calib_dir_path, mcmc_tables, targets):
         uncertainty_df = db.load.load_uncertainty_table(calib_dir_path)
     except:  # calculates percentiles
         derived_output_tables = db.load.load_derived_output_tables(calib_dir_path)
-        mcmc_all_df = db.process.append_tables(mcmc_tables)
-        do_all_df = db.process.append_tables(derived_output_tables)
+        mcmc_all_df = db.load.append_tables(mcmc_tables)
+        do_all_df = db.load.append_tables(derived_output_tables)
 
         # Determine max chain length, throw away first half of that
         max_run = mcmc_all_df["run"].max()
@@ -81,8 +81,8 @@ def print_mle_parameters(
     app_name: str,
     region: str,
 ):
-    df = db.process.append_tables(mcmc_tables)
-    param_df = db.process.append_tables(mcmc_params)
+    df = db.load.append_tables(mcmc_tables)
+    param_df = db.load.append_tables(mcmc_params)
     params = db.process.find_mle_params(df, param_df)
     create_downloadable_csv(pd.Series(params), "mle_parameters")
     st.write(params)
@@ -653,8 +653,8 @@ def plot_seroprevalence_by_age(
         uncertainty_df = db.load.load_uncertainty_table(calib_dir_path)
     except:  # calculates percentiles
         derived_output_tables = db.load.load_derived_output_tables(calib_dir_path)
-        mcmc_all_df = db.process.append_tables(mcmc_tables)
-        do_all_df = db.process.append_tables(derived_output_tables)
+        mcmc_all_df = db.load.append_tables(mcmc_tables)
+        do_all_df = db.load.append_tables(derived_output_tables)
 
         # Determine max chain length, throw away first half of that
         max_run = mcmc_all_df["run"].max()

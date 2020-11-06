@@ -35,10 +35,10 @@ def get_mobility_data(country_iso_code: str, region: str, base_date: datetime, l
     input_db = get_input_db()
     mob_df = input_db.query(
         "mobility",
-        conditions=[
-            f"iso3='{country_iso_code}'",
-            f"region='{region}'" if region else "region IS NULL",
-        ],
+        conditions={
+            "iso3": country_iso_code,
+            "region": region or None,
+        },
     )
 
     # Average out Google Mobility locations into Autumn-friendly locations

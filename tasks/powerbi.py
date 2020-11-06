@@ -1,192 +1,80 @@
-import os
 import logging
+import os
+import shutil
 
-import luigi
-
-from autumn.tool_kit import Timer
-from autumn.inputs import build_input_database
-from autumn.inputs.database import input_db_path
-from autumn.constants import OUTPUT_DATA_PATH
 from autumn import db, plots
+from autumn.inputs import build_input_database
+from autumn.tool_kit import Timer
 
-from . import utils
-from . import settings
+from tasks import utils, settings
+from tasks.full import FULL_RUN_DATA_DIR
 
 logger = logging.getLogger(__name__)
 
-PRUNED_DIR = os.path.join(settings.BASE_DIR, "data/powerbi/pruned/")
-COLLATED_DB_PATH = os.path.join(settings.BASE_DIR, "data/powerbi/collated.db")
-COLLATED_PRUNED_DB_PATH = os.path.join(settings.BASE_DIR, "data/powerbi/collated-pruned.db")
+POWERBI_PLOT_DIR = os.path.join(settings.BASE_DIR, "plots", "uncertainty")
+POWERBI_DATA_DIR = os.path.join(settings.BASE_DIR, "data", "powerbi")
+POWERBI_DIRS = [POWERBI_DATA_DIR, POWERBI_PLOT_DIR]
+POWERBI_PRUNED_DIR = os.path.join(POWERBI_DATA_DIR, "pruned")
+POWERBI_COLLATED_PATH = os.path.join(POWERBI_DATA_DIR, "collated")
+POWERBI_COLLATED_PRUNED_PATH = os.path.join(POWERBI_DATA_DIR, "collated-pruned")
 
 
-def get_final_db_path(run_id: str):
+def powerbi_task(run_id: str, quiet: bool):
+    # Prepare inputs for running the model.
+    build_input_database()
+
+    # Set up directories for plots and output data.
+    with Timer(f"Creating PowerBI directories"):
+        for dirpath in POWERBI_DIRS:
+            if os.path.exists(dirpath):
+                shutil.rmtree(dirpath)
+
+            os.makedirs(dirpath)
+
+    # Find the full model run databases in AWS S3.
+    key_prefix = os.path.join(run_id, os.path.relpath(FULL_RUN_DATA_DIR, settings.BASE_DIR))
+    chain_db_keys = utils.list_s3(key_prefix, key_suffix=".feather")
+
+    # Download the full model run databases.
+    with Timer(f"Downloading full model run data"):
+        args_list = [(run_id, src_key, quiet) for src_key in chain_db_keys]
+        utils.run_parallel_tasks(utils.download_from_run_s3, args_list)
+
+    # Remove unnecessary data from each full model run database.
+    full_db_paths = db.load.find_db_paths(FULL_RUN_DATA_DIR)
+    with Timer(f"Pruning chain databases"):
+        get_dest_path = lambda p: os.path.join(POWERBI_PRUNED_DIR, os.path.basename(p))
+        args_list = [(full_db_path, get_dest_path(full_db_path)) for full_db_path in full_db_paths]
+        utils.run_parallel_tasks(db.process.prune_chain, args_list)
+
+    # Collate data from each pruned full model run database into a single database.
+    pruned_db_paths = db.load.find_db_paths(POWERBI_PRUNED_DIR)
+    with Timer(f"Collating pruned databases"):
+        db.process.collate_databases(pruned_db_paths, POWERBI_COLLATED_PATH)
+
+    # Calculate uncertainty for model outputs.
+    app_region = utils.get_app_region(run_id)
+    with Timer(f"Calculating uncertainty quartiles"):
+        db.uncertainty.add_uncertainty_quantiles(POWERBI_COLLATED_PATH, app_region.targets)
+
+    # Remove unnecessary data from the database.
+    with Timer(f"Pruning final database"):
+        db.process.prune_final(POWERBI_COLLATED_PATH, POWERBI_COLLATED_PRUNED_PATH)
+
+    # Unpivot database tables so that they're easier to process in PowerBI.
     run_slug = run_id.replace("/", "-")
-    return os.path.join(settings.BASE_DIR, "data", "powerbi", f"powerbi-{run_slug}.db")
+    dest_db_path = os.path.join(POWERBI_DATA_DIR, f"powerbi-{run_slug}.db")
+    with Timer(f"Unpivoting final database"):
+        db.process.unpivot(POWERBI_COLLATED_PRUNED_PATH, dest_db_path)
 
+    # Upload final database to AWS S3
+    with Timer(f"Uploading PowerBI data to AWS S3"):
+        utils.upload_to_run_s3(run_id, dest_db_path, quiet)
 
-class RunPowerBI(luigi.Task):
-    """Master task, requires all other tasks"""
+    # Create uncertainty plots
+    with Timer(f"Creating uncertainty plots"):
+        plots.uncertainty.plot_uncertainty(app_region.targets, dest_db_path, POWERBI_PLOT_DIR)
 
-    run_id = luigi.Parameter()  # Unique run id string
-
-    def requires(self):
-        return UploadPlotsTask(run_id=self.run_id)
-
-
-class BuildInputDatabaseTask(utils.BaseTask):
-    """Builds the input database"""
-
-    def output(self):
-        return luigi.LocalTarget(input_db_path)
-
-    def safe_run(self):
-        build_input_database()
-
-
-class PruneFullRunDatabaseTask(utils.ParallelLoggerTask):
-    """Prunes unneeded data for each full model run db"""
-
-    run_id = luigi.Parameter()  # Unique run id string
-    chain_id = luigi.IntParameter()  # Unique chain id
-
-    def requires(self):
-        src_filename = utils.get_full_model_run_db_filename(self.chain_id)
-        src_db_relpath = os.path.join("data", "full_model_runs", src_filename)
-        return [
-            BuildInputDatabaseTask(),
-            utils.DownloadS3Task(run_id=self.run_id, src_path=src_db_relpath),
-            utils.BuildLocalDirectoryTask(dirname="logs/powerbi"),
-            utils.BuildLocalDirectoryTask(dirname="data/powerbi/pruned"),
-        ]
-
-    def get_dest_path(self):
-        return os.path.join(PRUNED_DIR, f"pruned-{self.chain_id}.db")
-
-    def output(self):
-        return luigi.LocalTarget(self.get_dest_path())
-
-    def safe_run(self):
-        with Timer(f"Pruning database for chain {self.chain_id}"):
-            src_filename = utils.get_full_model_run_db_filename(self.chain_id)
-            src_db_path = os.path.join(settings.BASE_DIR, "data", "full_model_runs", src_filename)
-            dest_db_path = self.get_dest_path()
-            db.process.prune_chain(src_db_path, dest_db_path)
-
-    def get_log_filename(self):
-        return f"powerbi/prune-{self.chain_id}.log"
-
-
-class CollationTask(utils.BaseTask):
-    """Collates each full model run db into one."""
-
-    run_id = luigi.Parameter()  # Unique run id string
-
-    def requires(self):
-        key_prefix = os.path.join(self.run_id, "data/full_model_runs")
-        chain_db_keys = utils.list_s3(key_prefix, key_suffix=".db")
-        chain_db_idxs = [int(k.replace(".db", "").split("_")[-1]) for k in chain_db_keys]
-        return [PruneFullRunDatabaseTask(run_id=self.run_id, chain_id=i) for i in chain_db_idxs]
-
-    def output(self):
-        return luigi.LocalTarget(COLLATED_DB_PATH)
-
-    def safe_run(self):
-        with Timer(f"Collating databases"):
-            src_db_paths = [
-                os.path.join(PRUNED_DIR, fname)
-                for fname in os.listdir(PRUNED_DIR)
-                if fname.endswith(".db")
-            ]
-            db.process.collate_databases(src_db_paths, COLLATED_DB_PATH)
-
-
-class CalculateUncertaintyTask(utils.BaseTask):
-    """
-    Calculates uncertainty for model outputs and
-    prunes collated database and unpiovot data into PowerBI friendly form.
-    """
-
-    run_id = luigi.Parameter()  # Unique run id string
-
-    def requires(self):
-        return CollationTask(run_id=self.run_id)
-
-    def output(self):
-        return luigi.LocalTarget(COLLATED_PRUNED_DB_PATH)
-
-    def safe_run(self):
-        app_region = utils.get_app_region(self.run_id)
-        with Timer(f"Calculating uncertainty quartiles"):
-            db.uncertainty.add_uncertainty_quantiles(COLLATED_DB_PATH, app_region.targets)
-
-        with Timer(f"Pruning final database"):
-            db.process.prune_final(COLLATED_DB_PATH, COLLATED_PRUNED_DB_PATH)
-
-
-class UnpivotTask(utils.BaseTask):
-    """Unpiovots data into PowerBI friendly form."""
-
-    run_id = luigi.Parameter()  # Unique run id string
-
-    def requires(self):
-        return CalculateUncertaintyTask(run_id=self.run_id)
-
-    def output(self):
-        return luigi.LocalTarget(get_final_db_path(self.run_id))
-
-    def safe_run(self):
-        with Timer(f"Unpivoting final database"):
-            db.process.unpivot(COLLATED_PRUNED_DB_PATH, get_final_db_path(self.run_id))
-
-
-class UploadDatabaseTask(utils.UploadS3Task):
-
-    run_id = luigi.Parameter()  # Unique run id string
-
-    def requires(self):
-        return UnpivotTask(run_id=self.run_id)
-
-    def get_src_path(self):
-        return get_final_db_path(self.run_id)
-
-
-class PlotUncertaintyTask(utils.BaseTask):
-    """Plots the database output uncertainty"""
-
-    run_id = luigi.Parameter()
-
-    def requires(self):
-        return UploadDatabaseTask(run_id=self.run_id)
-
-    def output(self):
-        app_region = utils.get_app_region(self.run_id)
-        target_names = [t["output_key"] for t in app_region.targets.values() if t.get("quantiles")]
-        target_files = [
-            os.path.join(
-                settings.BASE_DIR,
-                "plots",
-                "uncertainty",
-                o,
-                f"uncertainty-{o}-0.png",
-            )
-            for o in target_names
-        ]
-        return [luigi.LocalTarget(f) for f in target_files]
-
-    def safe_run(self):
-        app_region = utils.get_app_region(self.run_id)
-        plot_dir = os.path.join(settings.BASE_DIR, "plots", "uncertainty")
-        db_path = get_final_db_path(self.run_id)
-        plots.uncertainty.plot_uncertainty(app_region.targets, db_path, plot_dir)
-
-
-class UploadPlotsTask(utils.UploadS3Task):
-    """Uploads uncertainty plots"""
-
-    run_id = luigi.Parameter()
-
-    def requires(self):
-        return PlotUncertaintyTask(run_id=self.run_id)
-
-    def get_src_path(self):
-        return os.path.join(settings.BASE_DIR, "plots", "uncertainty")
+    # Upload the plots to AWS S3.
+    with Timer(f"Uploading plots to AWS S3"):
+        utils.upload_to_run_s3(run_id, POWERBI_PLOT_DIR, quiet)

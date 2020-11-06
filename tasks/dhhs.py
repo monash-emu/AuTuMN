@@ -1,21 +1,27 @@
 import os
 import logging
 from datetime import datetime, timedelta
+import shutil
 
-import luigi
 import numpy as np
 
 from autumn import db
 from autumn.constants import Region
 from autumn.db.database import Database
 from autumn.tool_kit.params import load_targets
+from autumn.tool_kit import Timer
 import pandas as pd
 
 from . import utils
 from . import settings
 
-logger = logging.getLogger(__name__)
 
+DHHS_DATA_DIR = os.path.join(settings.BASE_DIR, "dhhs")
+DHHS_POWERBI_DATA_DIR = os.path.join(DHHS_DATA_DIR, "powerbi")
+DHHS_FULL_RUN_DATA_DIR = os.path.join(DHHS_DATA_DIR, "full")
+
+DATESTAMP = datetime.now().isoformat().split(".")[0].replace(":", "-")
+BASE_DATETIME = datetime(2019, 12, 31, 0, 0, 0)
 ENSEMBLE_OUTPUT = "notifications_at_sympt_onset"
 OUTPUTS = [
     "incidence",
@@ -29,96 +35,52 @@ OUTPUTS = [
 DHHS_NUM_CHOSEN = 800
 ENSEMBLE_NUM_CHOSEN = 1000
 
-
-DHHS_DIR = os.path.join(settings.BASE_DIR, "data", "outputs", "dhhs")
-DATESTAMP = datetime.now().isoformat().split(".")[0].replace(":", "-")
-BASE_DATETIME = datetime(2019, 12, 31, 0, 0, 0)
+logger = logging.getLogger(__name__)
 
 
-class RunDHHS(luigi.Task):
-    """DHHS post processing master task"""
+def dhhs_task(commit: str, quiet: bool):
+    with Timer(f"Fetching file info from AWS S3 for commit {commit}"):
+        vic_full_run_db_keys = get_vic_full_run_dbs_for_commit(commit)
+        vic_powerbi_db_keys = get_vic_powerbi_dbs_for_commit(commit)
 
-    commit = luigi.Parameter()
+    # Set up directories for output data.
+    with Timer(f"Creating directories"):
+        for dirpath in [DHHS_DATA_DIR, DHHS_POWERBI_DATA_DIR, DHHS_FULL_RUN_DATA_DIR]:
+            if os.path.exists(dirpath):
+                shutil.rmtree(dirpath)
 
-    def requires(self):
-        return [
-            BuildFinalCSVTask(commit=self.commit),
-            BuildEnsembleTask(commit=self.commit),
-        ]
+            os.makedirs(dirpath)
 
+    # Download all PowerBI databases.
+    with Timer(f"Downloading PowerBI databases"):
+        args_list = [(src_key, quiet) for src_key in vic_powerbi_db_keys]
+        utils.run_parallel_tasks(download_powerbi_db_from_s3, args_list)
 
-class BuildEnsembleTask(utils.BaseTask):
-    commit = luigi.Parameter()
+    # Download all full model run databases.
+    for region, keys in vic_full_run_db_keys.items():
+        with Timer(f"Downloading full model run databases for {region}"):
+            args_list = [(src_key, region, quiet) for src_key in keys]
+            utils.run_parallel_tasks(download_full_db_from_s3, args_list)
 
-    def output(self):
-        filename = f"vic-ensemble-{self.commit}-{DATESTAMP}.csv"
-        s3_uri = os.path.join(f"s3://{settings.S3_BUCKET}", f"ensemble/{filename}")
-        return utils.S3Target(s3_uri, client=utils.luigi_s3_client)
+    # Build Victorian regional CSV file
+    filename = f"vic-forecast-{commit}-{DATESTAMP}.csv"
+    csv_path = os.path.join(DHHS_DATA_DIR, filename)
+    with Timer(f"Building Victorian regional CSV file."):
+        for db_name in os.listdir(DHHS_POWERBI_DATA_DIR):
+            db_path = os.path.join(DHHS_POWERBI_DATA_DIR, db_name)
+            powerbi_db = Database(db_path)
+            df = powerbi_db.query("uncertainty", conditions={"scenario": 0})
+            df.drop(columns=["scenario"], inplace=True)
+            df.time = df.time.apply(lambda days: BASE_DATETIME + timedelta(days=days))
+            df["region"] = "_".join(db_name.split("-")[2:-2]).upper()
+            df = df[["region", "type", "time", "quantile", "value"]]
+            if os.path.exists(csv_path):
+                df.to_csv(csv_path, mode="a", header=False, index=False)
+            else:
+                df.to_csv(csv_path, mode="w", index=False)
 
-    def requires(self):
-        dbs = get_vic_full_run_dbs_for_commit(self.commit)
-        downloads = []
-        for region, s3_keys in dbs.items():
-            for s3_key in s3_keys:
-                task = DownloadFullModelRunTask(s3_key=s3_key, region=region)
-                downloads.append(task)
-
-        return downloads
-
-    def safe_run(self):
-        """
-        Build predections for non-vic ensemble reporting
-        """
-        filename = f"vic-ensemble-{self.commit}-{DATESTAMP}.csv"
-        csv_path = os.path.join(DHHS_DIR, filename)
-
-        # Get sample runs from all chains
-        start_t = (datetime.now() - BASE_DATETIME).days  # Now
-        end_t = min(start_t + 7 * 6 + 1, 365)  # 6 weeks from now
-        times = np.linspace(start_t, end_t - 1, end_t - start_t, dtype=np.int64)
-        samples = [np.zeros(end_t - start_t) for _ in range(ENSEMBLE_NUM_CHOSEN)]
-        for region in Region.VICTORIA_SUBREGIONS:
-            if region == Region.VICTORIA:
-                continue
-
-            region_dir = os.path.join(DHHS_DIR, "full", region)
-            mcmc_tables = db.process.append_tables(db.load.load_mcmc_tables(region_dir))
-            chosen_runs = db.process.sample_runs(mcmc_tables, ENSEMBLE_NUM_CHOSEN)
-            do_tables = db.load.load_derived_output_tables(region_dir)
-            do_tables = db.process.append_tables(do_tables).set_index(["chain", "run"])
-            for idx, (chain, run) in enumerate(chosen_runs):
-                run_start_t = do_tables.loc[(chain, run), "times"].iloc[0]
-                start_idx = int(start_t - run_start_t)
-                end_idx = int(end_t - run_start_t)
-                df = do_tables.loc[(chain, run)].iloc[start_idx:end_idx]
-                is_times_equal = (df["times"].to_numpy() == times).all()
-                assert is_times_equal, "All samples must have correct time range"
-                samples[idx] += df[ENSEMBLE_OUTPUT].to_numpy()
-
-        columns = ["run", "times", ENSEMBLE_OUTPUT]
-        data = {
-            "run": np.concatenate(
-                [idx * np.ones(len(times), dtype=np.int64) for idx in range(ENSEMBLE_NUM_CHOSEN)]
-            ),
-            "times": np.concatenate([times for _ in range(ENSEMBLE_NUM_CHOSEN)]),
-            ENSEMBLE_OUTPUT: np.concatenate(samples),
-        }
-        df = pd.DataFrame(data=data, columns=columns)
-        df["times"] = df["times"].apply(lambda days: BASE_DATETIME + timedelta(days=days))
-        df.to_csv(csv_path, index=False)
-
-        # Upload the CSV
-        s3_dest_key = f"ensemble/{filename}"
-        utils.upload_s3(csv_path, s3_dest_key)
-
-
-class BuildFinalCSVTask(utils.BaseTask):
-    commit = luigi.Parameter()
-
-    def safe_run(self):
-        filename = f"vic-forecast-{self.commit}-{DATESTAMP}.csv"
-        csv_path = os.path.join(DHHS_DIR, filename)
-
+    # Build the combined Victorian CSV file.
+    with Timer(f"Building Victorian whole-state CSV file."):
         targets = load_targets("covid_19", "hume")
         targets = {k: {**v, "times": [], "values": []} for k, v in targets.items()}
         outputs = [t["output_key"] for t in targets.values()]
@@ -140,18 +102,16 @@ class BuildFinalCSVTask(utils.BaseTask):
             if region == Region.VICTORIA:
                 continue
 
-            region_dir = os.path.join(DHHS_DIR, "full", region)
-            mcmc_tables = db.process.append_tables(db.load.load_mcmc_tables(region_dir))
+            region_dir = os.path.join(DHHS_FULL_RUN_DATA_DIR, region)
+            mcmc_tables = db.load.append_tables(db.load.load_mcmc_tables(region_dir))
             chosen_runs = db.process.sample_runs(mcmc_tables, DHHS_NUM_CHOSEN)
             mcmc_tables = mcmc_tables.set_index(["chain", "run"])
             do_tables = db.load.load_derived_output_tables(region_dir)
-            do_tables = db.process.append_tables(do_tables).set_index(["chain", "run"])
+            do_tables = db.load.append_tables(do_tables).set_index(["chain", "run"])
 
             for idx, (chain, run) in enumerate(chosen_runs):
-                mcmc_row = mcmc_tables.loc[(chain, run), :]
                 sample = samples[idx]
                 sample["weights"] += mcmc_tables.loc[(chain, run), "weight"]
-
                 run_start_t = do_tables.loc[(chain, run), "times"].iloc[0]
                 t_offset = int(run_start_t - start_t)
                 for o in outputs:
@@ -184,92 +144,68 @@ class BuildFinalCSVTask(utils.BaseTask):
         s3_dest_key = f"dhhs/{filename}"
         utils.upload_s3(csv_path, s3_dest_key)
 
-    def output(self):
-        filename = f"vic-forecast-{self.commit}-{DATESTAMP}.csv"
-        s3_uri = os.path.join(f"s3://{settings.S3_BUCKET}", f"dhhs/{filename}")
-        return utils.S3Target(s3_uri, client=utils.luigi_s3_client)
+    # Build the ensemble forecast CSV file.
+    with Timer(f"Building Victorian ensemble forecast CSV file."):
+        filename = f"vic-ensemble-{commit}-{DATESTAMP}.csv"
+        csv_path = os.path.join(DHHS_DATA_DIR, filename)
 
-    def requires(self):
-        dbs = get_vic_full_run_dbs_for_commit(self.commit)
-        downloads = []
-        for region, s3_keys in dbs.items():
-            for s3_key in s3_keys:
-                task = DownloadFullModelRunTask(s3_key=s3_key, region=region)
-                downloads.append(task)
+        # Get sample runs from all chains
+        start_t = (datetime.now() - BASE_DATETIME).days  # Now
+        end_t = min(start_t + 7 * 6 + 1, 365)  # 6 weeks from now
+        times = np.linspace(start_t, end_t - 1, end_t - start_t, dtype=np.int64)
+        samples = [np.zeros(end_t - start_t) for _ in range(ENSEMBLE_NUM_CHOSEN)]
+        for region in Region.VICTORIA_SUBREGIONS:
+            if region == Region.VICTORIA:
+                continue
 
-        return [BuildRegionCSVTask(commit=self.commit), *downloads]
+            region_dir = os.path.join(DHHS_FULL_RUN_DATA_DIR, region)
+            mcmc_tables = db.load.append_tables(db.load.load_mcmc_tables(region_dir))
+            chosen_runs = db.process.sample_runs(mcmc_tables, ENSEMBLE_NUM_CHOSEN)
+            do_tables = db.load.load_derived_output_tables(region_dir)
+            do_tables = db.load.append_tables(do_tables).set_index(["chain", "run"])
+            for idx, (chain, run) in enumerate(chosen_runs):
+                run_start_t = do_tables.loc[(chain, run), "times"].iloc[0]
+                start_idx = int(start_t - run_start_t)
+                end_idx = int(end_t - run_start_t)
+                df = do_tables.loc[(chain, run)].iloc[start_idx:end_idx]
+                is_times_equal = (df["times"].to_numpy() == times).all()
+                assert is_times_equal, "All samples must have correct time range"
+                samples[idx] += df[ENSEMBLE_OUTPUT].to_numpy()
 
+        columns = ["run", "times", ENSEMBLE_OUTPUT]
+        data = {
+            "run": np.concatenate(
+                [idx * np.ones(len(times), dtype=np.int64) for idx in range(ENSEMBLE_NUM_CHOSEN)]
+            ),
+            "times": np.concatenate([times for _ in range(ENSEMBLE_NUM_CHOSEN)]),
+            ENSEMBLE_OUTPUT: np.concatenate(samples),
+        }
+        df = pd.DataFrame(data=data, columns=columns)
+        df["times"] = df["times"].apply(lambda days: BASE_DATETIME + timedelta(days=days))
+        df.to_csv(csv_path, index=False)
 
-class BuildRegionCSVTask(utils.BaseTask):
-
-    commit = luigi.Parameter()
-
-    def safe_run(self):
-        filename = f"vic-forecast-{self.commit}-{DATESTAMP}.csv"
-        csv_path = os.path.join(DHHS_DIR, filename)
-        powerbi_path = os.path.join(DHHS_DIR, "powerbi")
-        for db_name in os.listdir(powerbi_path):
-            db_path = os.path.join(powerbi_path, db_name)
-            db = Database(db_path)
-            df = db.query("uncertainty", conditions=["scenario=0"])
-            df.drop(columns=["scenario"], inplace=True)
-            df.time = df.time.apply(lambda days: BASE_DATETIME + timedelta(days=days))
-            df["region"] = "_".join(db_name.split("-")[2:-2]).upper()
-            df = df[["region", "type", "time", "quantile", "value"]]
-            if os.path.exists(csv_path):
-                df.to_csv(csv_path, mode="a", header=False, index=False)
-            else:
-                df.to_csv(csv_path, mode="w", index=False)
-
-    def output(self):
-        filename = f"vic-forecast-{self.commit}-{DATESTAMP}.csv"
-        csv_path = os.path.join(DHHS_DIR, filename)
-        return luigi.LocalTarget(csv_path)
-
-    def requires(self):
-        s3_keys = get_vic_powerbi_dbs_for_commit(self.commit)
-        return [DownloadPowerBITask(s3_key=s3_key) for s3_key in s3_keys]
+        # Upload the CSV
+        s3_dest_key = f"ensemble/{filename}"
+        utils.upload_s3(csv_path, s3_dest_key)
 
 
-class DownloadFullModelRunTask(utils.BaseTask):
+def download_full_db_from_s3(src_key, region, quiet):
+    chain_path = src_key.split("/full_model_runs/")[-1]
+    dest_path = os.path.join(DHHS_FULL_RUN_DATA_DIR, region, chain_path)
+    if os.path.exists(dest_path):
+        os.remove(dest_path)
 
-    s3_key = luigi.Parameter()
-    region = luigi.Parameter()
-
-    def output(self):
-        return luigi.LocalTarget(self.get_dest_path())
-
-    def safe_run(self):
-        dest_path = self.get_dest_path()
-        os.makedirs(os.path.dirname(dest_path), exist_ok=True)
-        utils.download_s3(self.s3_key, dest_path)
-
-    def get_dest_path(self):
-        return os.path.join(DHHS_DIR, "full", self.region, self.filename)
-
-    @property
-    def filename(self):
-        return self.s3_key.split("/")[-1]
+    os.makedirs(os.path.dirname(dest_path), exist_ok=True)
+    utils.download_from_s3(src_key, dest_path, quiet)
 
 
-class DownloadPowerBITask(utils.BaseTask):
+def download_powerbi_db_from_s3(src_key, quiet):
+    filename = src_key.split("/")[-1]
+    dest_path = os.path.join(DHHS_POWERBI_DATA_DIR, filename)
+    if os.path.exists(dest_path):
+        os.remove(dest_path)
 
-    s3_key = luigi.Parameter()
-
-    def output(self):
-        return luigi.LocalTarget(self.get_dest_path())
-
-    def safe_run(self):
-        dest_path = self.get_dest_path()
-        os.makedirs(os.path.dirname(dest_path), exist_ok=True)
-        utils.download_s3(self.s3_key, dest_path)
-
-    def get_dest_path(self):
-        return os.path.join(DHHS_DIR, "powerbi", self.filename)
-
-    @property
-    def filename(self):
-        return self.s3_key.split("/")[-1]
+    utils.download_from_s3(src_key, dest_path, quiet)
 
 
 def get_vic_full_run_dbs_for_commit(commit: str):
@@ -278,10 +214,12 @@ def get_vic_full_run_dbs_for_commit(commit: str):
         if region == Region.VICTORIA:
             continue
 
-        prefix = f"covid_19/{region}"
-        region_db_keys = utils.list_s3(key_prefix=prefix, key_suffix=".db")
-        region_db_keys = [k for k in region_db_keys if commit in k and "mcmc_chain_full_run" in k]
-
+        key_prefix = os.path.join("covid_19", region)
+        region_db_keys = utils.list_s3(key_prefix, key_suffix=".feather")
+        filter_key = lambda k: (
+            commit in k and "full_model_runs" in k and ("derived_outputs" in k or "mcmc_run" in k)
+        )
+        region_db_keys = [k for k in region_db_keys if filter_key(k)]
         msg = f"There should exactly one set of full model run databases for {region} with commit {commit}: {region_db_keys}"
         filenames = [k.split("/")[-1] for k in region_db_keys]
         assert len(filenames) == len(set(filenames)), msg
@@ -299,7 +237,6 @@ def get_vic_powerbi_dbs_for_commit(commit: str):
         prefix = f"covid_19/{region}"
         region_db_keys = utils.list_s3(key_prefix=prefix, key_suffix=".db")
         region_db_keys = [k for k in region_db_keys if commit in k and "powerbi" in k]
-
         msg = f"There should exactly one PowerBI database for {region} with commit {commit}: {region_db_keys}"
         assert len(region_db_keys) == 1, msg
         keys.append(region_db_keys[0])

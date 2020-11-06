@@ -35,6 +35,9 @@ def run_dashboard():
 
     # Get database from model data dir.
     db_path = os.path.join(run_dirpath, "outputs.db")
+    if not os.path.exists(db_path):
+        db_path = os.path.join(run_dirpath, "outputs")
+
     scenarios = db.load.load_model_scenarios(db_path, app_region.params)
 
     # Create plotter which will write to streamlit UI.

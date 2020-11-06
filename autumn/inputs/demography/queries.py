@@ -23,16 +23,15 @@ def _get_death_rates(country_iso_code: str):
     input_db = get_input_db()
     death_df = input_db.query(
         "deaths",
-        conditions=[f"iso3='{country_iso_code}'"],
+        conditions={"iso3": country_iso_code},
     )
     pop_df = input_db.query(
         "population",
-        conditions=[
-            f"iso3='{country_iso_code}'",
-            "region IS NULL",
-        ],
+        conditions={
+            "iso3": country_iso_code,
+            "region": None,
+        },
     )
-
     # Calculate mean year and time period
     death_df["mean_year"] = (death_df["start_year"] + death_df["end_year"]) / 2
     death_df["period"] = death_df["end_year"] - death_df["start_year"]
@@ -56,10 +55,7 @@ def _get_death_rates(country_iso_code: str):
 
 def _get_life_expectancy(country_iso_code: str):
     input_db = get_input_db()
-    expectancy_df = input_db.query(
-        "life_expectancy",
-        conditions=[f"iso3='{country_iso_code}'"],
-    )
+    expectancy_df = input_db.query("life_expectancy", conditions={"iso3": country_iso_code})
 
     # Calculate mean year
     expectancy_df["mean_year"] = (expectancy_df["start_year"] + expectancy_df["end_year"]) / 2
@@ -124,7 +120,7 @@ def get_iso3_from_country_name(country_name: str):
     Return the iso3 code matching with a given country name.
     """
     input_db = get_input_db()
-    country_df = input_db.query("countries", conditions=[f"country='{country_name}'"])
+    country_df = input_db.query("countries", conditions={"country": country_name})
     results = country_df["iso3"].tolist()
     if results:
         return results[0]
@@ -140,7 +136,7 @@ def get_crude_birth_rate(country_iso_code: str):
     if country_iso_code in MAPPING_ISO_CODE:
         country_iso_code = MAPPING_ISO_CODE[country_iso_code]
     input_db = get_input_db()
-    birth_df = input_db.query("birth_rates", conditions=[f"iso3='{country_iso_code}'"])
+    birth_df = input_db.query("birth_rates", conditions={"iso3": country_iso_code})
     birth_df = birth_df.sort_values(["mean_year"])
     return birth_df["birth_rate"].tolist(), birth_df["mean_year"].tolist()
 
@@ -159,11 +155,11 @@ def get_population_by_agegroup(
     input_db = get_input_db()
     pop_df = input_db.query(
         "population",
-        conditions=[
-            f"iso3='{country_iso_code}'",
-            f"year={year}",
-            f"region='{region}'" if region else "region IS NULL",
-        ],
+        conditions={
+            "iso3": country_iso_code,
+            "year": year,
+            "region": region or None,
+        },
     )
     pop_df = pop_df.sort_values(["start_age"])
     pop_df_with_data = pop_df.dropna(subset=["population"])

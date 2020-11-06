@@ -5,12 +5,9 @@ import os
 import logging
 from typing import List
 
-import numpy
 import pandas as pd
 
-from summer.model import StratifiedModel
-
-from ..db.database import Database
+from ..db.database import get_database, BaseDatabase
 from autumn.tb_model.loaded_model import LoadedModel
 from autumn.tool_kit import Scenario
 
@@ -24,43 +21,39 @@ def load_model_scenarios(database_path: str, model_params: dict) -> List[Scenari
     Will apply post processing if the post processing config is supplied.
     Will store model params in the database if suppied.
     """
-    out_db = Database(database_path=database_path)
+    out_db = get_database(database_path=database_path)
     scenarios = []
-    # Load runs from the database
-    run_results = out_db.engine.execute("SELECT DISTINCT run FROM outputs;").fetchall()
-    run_names = sorted(([result[0] for result in run_results]))
+    out_df = out_db.query("outputs")
+    do_df = out_db.query("derived_outputs")
+    run_names = sorted(out_df["run"].unique().tolist())
     for run_name in run_names:
         # Load scenarios from the database for this run
-        scenario_results = out_db.engine.execute(
-            f"SELECT DISTINCT scenario FROM outputs WHERE run='{run_name}';"
-        ).fetchall()
-        scenario_names = sorted(([result[0] for result in scenario_results]))
+        run_mask = out_df["run"] == run_name
+        scenario_names = sorted(out_df[run_mask]["scenario"].unique().tolist())
         for scenario_name in scenario_names:
             # Load model outputs from database, build Scenario instance
-            conditions = [f"scenario='{scenario_name}'", f"run='{run_name}'"]
-            outputs = out_db.query("outputs", conditions=conditions)
-            derived_outputs = out_db.query("derived_outputs", conditions=conditions)
-            model = LoadedModel(
-                outputs=outputs.to_dict(), derived_outputs=derived_outputs.to_dict()
-            )
+            scenario_mask = (out_df["scenario"] == scenario_name) & run_mask
+            outputs = out_df[scenario_mask].to_dict()
+            derived_outputs = do_df[scenario_mask].to_dict()
+            model = LoadedModel(outputs=outputs, derived_outputs=derived_outputs)
             scenario = Scenario.load_from_db(scenario_name, model, params=model_params)
             scenarios.append(scenario)
 
     return scenarios
 
 
-def load_mcmc_params(db: Database, run_id: int):
+def load_mcmc_params(db: BaseDatabase, run_id: int):
     """
     Returns a dict of params
     """
-    params_df = db.query("mcmc_params", conditions=[f"run={run_id}"])
+    params_df = db.query("mcmc_params", conditions={"run": run_id})
     return {row["name"]: row["value"] for _, row in params_df.iterrows()}
 
 
 def load_mcmc_params_tables(calib_dirpath: str):
     mcmc_tables = []
-    for db_path in _find_db_paths(calib_dirpath):
-        db = Database(db_path)
+    for db_path in find_db_paths(calib_dirpath):
+        db = get_database(db_path)
         mcmc_tables.append(db.query("mcmc_params"))
 
     return mcmc_tables
@@ -68,16 +61,16 @@ def load_mcmc_params_tables(calib_dirpath: str):
 
 def load_mcmc_tables(calib_dirpath: str):
     mcmc_tables = []
-    for db_path in _find_db_paths(calib_dirpath):
-        db = Database(db_path)
+    for db_path in find_db_paths(calib_dirpath):
+        db = get_database(db_path)
         mcmc_tables.append(db.query("mcmc_run"))
 
     return mcmc_tables
 
 
 def load_uncertainty_table(calib_dirpath: str):
-    db_path = _find_db_paths(calib_dirpath)[0]
-    db = Database(db_path)
+    db_path = find_db_paths(calib_dirpath)[0]
+    db = get_database(db_path)
     return db.query("uncertainty")
 
 
@@ -96,23 +89,24 @@ def append_tables(tables: List[pd.DataFrame]):
 
 def load_derived_output_tables(calib_dirpath: str, column: str = None):
     derived_output_tables = []
-    for db_path in _find_db_paths(calib_dirpath):
-        db = Database(db_path)
+    for db_path in find_db_paths(calib_dirpath):
+        db = get_database(db_path)
         if not column:
             df = db.query("derived_outputs")
             derived_output_tables.append(df)
         else:
             cols = ["chain", "run", "scenario", "times", column]
-            df = db.query("derived_outputs", column=cols)
+            df = db.query("derived_outputs", columns=cols)
             derived_output_tables.append(df)
 
     return derived_output_tables
 
 
-def _find_db_paths(dirpath: str):
-    db_paths = [
-        os.path.join(dirpath, f)
-        for f in os.listdir(dirpath)
-        if f.endswith(".db") and not f.startswith("mcmc_percentiles")
-    ]
+def find_db_paths(dirpath: str):
+    db_paths = []
+    for fname in os.listdir(dirpath):
+        if fname.startswith("outputs") or fname.startswith("chain"):
+            fpath = os.path.join(dirpath, fname)
+            db_paths.append(fpath)
+
     return sorted(db_paths)

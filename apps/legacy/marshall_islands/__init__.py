@@ -19,7 +19,7 @@ with open(PARAMS_PATH, "r") as f:
 
 run_model = build_model_runner(
     model_name="marshall_islands",
-    param_set_name=None,
+    region_name=None,
     build_model=build_model,
     params=params,
 )

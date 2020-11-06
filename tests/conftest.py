@@ -16,7 +16,7 @@ from .utils import in_memory_db_factory, get_deterministic_random_seed
 
 get_in_memory_db = in_memory_db_factory()
 
-APPROVAL_DIR = os.path.join(constants.OUTPUT_DATA_PATH, "approvals")
+APPROVAL_DIR = os.path.join(constants.DATA_PATH, "approvals")
 IS_GITHUB_CI = os.environ.get("GITHUB_ACTION", False)
 
 

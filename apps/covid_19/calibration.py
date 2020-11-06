@@ -192,7 +192,7 @@ def add_standard_philippines_params(params, region):
         {
             "param_name": "infection_fatality.multiplier",
             "distribution": "uniform",
-            "distri_params": [1.8, 2.28],
+            "distri_params": [1.0, 2.0],
         },
         {
             "param_name": "testing_to_detection.assumed_cdr_parameter",

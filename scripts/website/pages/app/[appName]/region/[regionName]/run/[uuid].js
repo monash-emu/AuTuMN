@@ -115,18 +115,13 @@ const DataTab = ({ files }) => {
           <List.Icon name="folder" />
           <List.Content>
             <List.Header>{title}</List.Header>
-            <List.Description>
-              {desc} -{' '}
-              <a href="#" onClick={downloadAll(files)}>
-                download all
-              </a>
-            </List.Description>
+            <List.Description>{desc}</List.Description>
             <List.List>
-              {files.map(({ filename, url }) => (
+              {files.map(({ filename, path, url }) => (
                 <List.Item key={url}>
                   <List.Icon name="database" />
                   <List.Content>
-                    <a href={url}>{filename}</a>
+                    <a href={url}>{getFileName(filename, path)}</a>
                   </List.Content>
                 </List.Item>
               ))}
@@ -137,6 +132,21 @@ const DataTab = ({ files }) => {
     </List>
   )
 }
+
+const getFileName = (filename, path) => {
+  if (filename.endsWith('.feather')) {
+    let [chain, fname] = path.split('/').slice(-2)
+    chain = chain.replace('-', ' ')
+    return (
+      <span>
+        <strong>{chain}:</strong> {fname}
+      </span>
+    )
+  } else {
+    return <span>{filename}</span>
+  }
+}
+
 const PlotsTab = ({ files }) => {
   const [currentCat, setCat] = useState('loglikelihood')
   const plotFiles = files.filter((f) => f.path.startsWith('plots'))
@@ -192,21 +202,4 @@ const LogsTab = ({ files }) => {
       <a href={f.url}>{f.path}</a>
     </p>
   ))
-}
-
-const downloadAll = (files) => (e) => {
-  // FIXME: Broken
-  alert('This is broken, will fix later')
-  return
-  e.preventDefault()
-  const link = document.createElement('a')
-  link.style.display = 'none'
-  document.body.appendChild(link)
-  for (let { filename, url } of files) {
-    console.log('DOWNLOAD', filename, url)
-    link.setAttribute('download', filename)
-    link.setAttribute('href', url)
-    link.click()
-  }
-  document.body.removeChild(link)
 }

@@ -504,6 +504,7 @@ def make_calibration_fits_figure(calibration_outputs, seroprevalence=False):
 
             if output == "proportion_seropositive":
                 ax.set_ylim((0, 0.20))
+                ax.set_title("percentage ever infected")
 
             i_col += 1
             if i_col == countries_per_row * n_target_outputs:

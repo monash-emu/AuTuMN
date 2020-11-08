@@ -412,8 +412,8 @@ SEROSURVEYS = {
 def make_calibration_fits_figure(calibration_outputs, seroprevalence=False):
 
     if not seroprevalence:
-        countries_per_row = 2
-        n_target_outputs = 3
+        countries_per_row = 1
+        n_target_outputs = 4
         show_title = True
         lab_fontsize = 13
         target_outputs = {}
@@ -423,6 +423,7 @@ def make_calibration_fits_figure(calibration_outputs, seroprevalence=False):
             hospital_target = [t for t in list(targets.keys()) if "hospital" in t or "icu" in t][0]
             target_outputs[country].append(hospital_target)
             target_outputs[country].append("infection_deaths")
+            target_outputs[country].append("proportion_seropositive")
     else:
         show_title = False
         lab_fontsize = 15
@@ -434,7 +435,7 @@ def make_calibration_fits_figure(calibration_outputs, seroprevalence=False):
 
     n_countries_per_col = int(6 / countries_per_row)
 
-    width = n_target_outputs * countries_per_row * 5
+    width = n_target_outputs * countries_per_row * 5.2
     height = n_countries_per_col * 5
     fig = plt.figure(constrained_layout=True, figsize=(width, height))  # (w, h)
     widths = [5] * (countries_per_row * n_target_outputs)
@@ -487,19 +488,22 @@ def make_calibration_fits_figure(calibration_outputs, seroprevalence=False):
                 show_ylab=show_ylab,
                 add_targets=(not seroprevalence),
             )
-            for s in SEROSURVEYS[country]:
-                if "ci" in s:
-                    rect = patches.Rectangle(
-                        (s["time_window"][0], s["ci"][0]),
-                        s["time_window"][1] - s["time_window"][0],
-                        s["ci"][1] - s["ci"][0],
-                        linewidth=0,
-                        facecolor="gold",
-                        alpha=0.4,
-                    )
-                    rect.set_zorder(1)
-                    ax.add_patch(rect)
-                ax.plot(s["time_window"], [s["value"]] * 2, linewidth=1.5, color="black")
+            # for s in SEROSURVEYS[country]:
+            #     if "ci" in s:
+            #         rect = patches.Rectangle(
+            #             (s["time_window"][0], s["ci"][0]),
+            #             s["time_window"][1] - s["time_window"][0],
+            #             s["ci"][1] - s["ci"][0],
+            #             linewidth=0,
+            #             facecolor="gold",
+            #             alpha=0.4,
+            #         )
+            #         rect.set_zorder(1)
+            #         ax.add_patch(rect)
+            #     ax.plot(s["time_window"], [s["value"]] * 2, linewidth=1.5, color="black")
+
+            if output == "proportion_seropositive":
+                ax.set_ylim((0, 0.20))
 
             i_col += 1
             if i_col == countries_per_row * n_target_outputs:
@@ -507,7 +511,7 @@ def make_calibration_fits_figure(calibration_outputs, seroprevalence=False):
                 i_row += 2
 
     # Add vertical separator line
-    if not seroprevalence:
+    if not seroprevalence and countries_per_row == 2:
         line = plt.Line2D((0.5, 0.5), (-0.1, 1.9), color="grey", linewidth=1)
         fig.add_artist(line)
 

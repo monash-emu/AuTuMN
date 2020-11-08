@@ -8,10 +8,6 @@ from autumn.tool_kit.model_register import AppRegion
 from autumn.tool_kit.scenarios import Scenario, get_model_times_from_inputs
 from autumn.inputs import get_mobility_data
 
-# from apps.covid_19.model.preprocess.mixing_matrix.adjust_location import (
-#     LocationMixingAdjustment,
-#     LOCATIONS,
-# )
 
 BASE_DATE = datetime(2020, 1, 1, 0, 0, 0)
 PLOT_FUNCS = {}

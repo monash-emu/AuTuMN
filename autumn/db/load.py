@@ -105,7 +105,7 @@ def load_derived_output_tables(calib_dirpath: str, column: str = None):
 def find_db_paths(dirpath: str):
     db_paths = []
     for fname in os.listdir(dirpath):
-        if fname.startswith("outputs") or fname.startswith("chain"):
+        if fname.startswith("outputs") or fname.startswith("chain") or fname.startswith("powerbi"):
             fpath = os.path.join(dirpath, fname)
             db_paths.append(fpath)
 

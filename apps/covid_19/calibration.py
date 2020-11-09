@@ -198,7 +198,7 @@ def add_standard_philippines_params(params, region):
         {
             "param_name": "testing_to_detection.assumed_cdr_parameter",
             "distribution": "uniform",
-            "distri_params": [0.02, 0.15],
+            "distri_params": [0.02, 0.11],
         },
         {
             "param_name": "mobility.microdistancing.behaviour.parameters.max_effect",

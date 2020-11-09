@@ -1,15 +1,15 @@
 ---
 # Parameters used to build a general model of COVID-19 disease
-parent: null  # This file is the bottom of the parameter tree for the Covid app
+parent: null # This file is the bottom of the parameter tree for the Covid app
 
-seasonal_force: null  # Extent of seasonal forcing
-waning_immunity_duration: null  # Note that the amplitude is the total variation in transmission from trough to peak
+seasonal_force: null # Extent of seasonal forcing
+waning_immunity_duration: null # Note that the amplitude is the total variation in transmission from trough to peak
 stratify_by_infection_history: false # Note that the current code may not allocate imported cases to the right stratum
 rel_prop_symptomatic_experienced: null
-infect_death: 0.  # Compulsory parameter that is completely overwritten in stratification, rather than being modified
-universal_death_rate: 0.  # Compulsory parameter for all models, even though there are no population-wide deaths
-infectious_seed: 10  # Initial condition for infectious
-contact_rate: 0.03  # Routinely calibrated, see respective calibration files
+infect_death: 0. # Compulsory parameter that is completely overwritten in stratification, rather than being modified
+universal_death_rate: 0. # Compulsory parameter for all models, even though there are no population-wide deaths
+infectious_seed: 10 # Initial condition for infectious
+contact_rate: 0.03 # Routinely calibrated, see respective calibration files
 
 # Integration times
 time:
@@ -27,8 +27,8 @@ population:
 # Age-related parameters
 age_stratification:
   # Age groups match the Prem matrices
-  max_age: 80  # One bracket more than the highest age bracket (because of syntax of range command)
-  age_step_size: 5  # Difference between subsequent age brackets
+  max_age: 80 # One bracket more than the highest age bracket (because of syntax of range command)
+  age_step_size: 5 # Difference between subsequent age brackets
 
   # Age-based susceptibility from Zhang et al. The reported ORs were converted to RRs using Tables S14 and S15.
   # DOI: 10.1126/science.abb8001 (Mendeley citation key Zhang2020a)
@@ -58,26 +58,26 @@ sojourn:
   compartment_periods:
     hospital_early: 7.7
     hospital_late: 12.8
-    icu_early: 10.5  # 7.7 + 2.8 (time from symptom to Hosp admission + time from Hosp admission to ICU)
+    icu_early: 10.5 # 7.7 + 2.8 (time from symptom to Hosp admission + time from Hosp admission to ICU)
     icu_late: 13.3
 
   # Mean time spent in each compartment, defined via proportions
   compartment_periods_calculated:
     exposed:
-      total_period: 5.5  # Routinely calibrated, see calibration file
+      total_period: 5.5 # Routinely calibrated, see calibration file
       proportions:
-        early: 0.5  # Proportion of the exposed period spent infectious - i.e. "presymptomatic"
+        early: 0.5 # Proportion of the exposed period spent infectious - i.e. "presymptomatic"
         late: 0.5
 
     active:
-      total_period: 8.  # Routinely calibrated, see calibration file
+      total_period: 8. # Routinely calibrated, see calibration file
       proportions:
-        early: 0.333  # Proportion of active period spent in the early compartment (can't be isolated, not in hospital)
+        early: 0.333 # Proportion of active period spent in the early compartment (can't be isolated, not in hospital)
         late: 0.667
 
 clinical_stratification:
-  icu_prop: 0.17  # Proportion of those hospitalised that are admitted to ICU
-  icu_mortality_prop: 0.5  # Death proportion ceiling for ICU mortality
+  icu_prop: 0.17 # Proportion of those hospitalised that are admitted to ICU
+  icu_mortality_prop: 0.5 # Death proportion ceiling for ICU mortality
   props:
     symptomatic:
       # Infectiousness progression adjustments - in ten year brackets that need to be adapted to model strata later
@@ -85,34 +85,34 @@ clinical_stratification:
       # Mean estimated values used. a.k.a "clinical fraction".
       multiplier: 1.
       props:
-        - 0.29  # 0-9
-        - 0.21  # 10-19
-        - 0.27  # 20-29
-        - 0.33  # 30-39
-        - 0.40  # 40-49
-        - 0.49  # 50-59
-        - 0.63  # 60-69
-        - 0.69  # 70+
+        - 0.29 # 0-9
+        - 0.21 # 10-19
+        - 0.27 # 20-29
+        - 0.33 # 30-39
+        - 0.40 # 40-49
+        - 0.49 # 50-59
+        - 0.63 # 60-69
+        - 0.69 # 70+
     hospital:
       # Proportion of symptomatic persons that are hospitalised - Dutch GGD report from 4th August 2020, Table 3
       multiplier: 1. # Multiplier to the below age-stratified parameters
       props:
-        - 0.0777  # 0-4
-        - 0.0069  # 5-9
-        - 0.0034  # 10-14
-        - 0.0051  # 15-19
-        - 0.0068  # 20-24
-        - 0.0080  # 25-29
-        - 0.0124  # 30-34
-        - 0.0129  # 35-39
-        - 0.0190  # 40-44
-        - 0.0331  # 45-49
-        - 0.0383  # 50-54
-        - 0.0579  # 55-59
-        - 0.0617  # 60-64
-        - 0.1030  # 65-69
-        - 0.1072  # 70-74
-        - 0.0703  # 75+
+        - 0.0777 # 0-4
+        - 0.0069 # 5-9
+        - 0.0034 # 10-14
+        - 0.0051 # 15-19
+        - 0.0068 # 20-24
+        - 0.0080 # 25-29
+        - 0.0124 # 30-34
+        - 0.0129 # 35-39
+        - 0.0190 # 40-44
+        - 0.0331 # 45-49
+        - 0.0383 # 50-54
+        - 0.0579 # 55-59
+        - 0.0617 # 60-64
+        - 0.1030 # 65-69
+        - 0.1072 # 70-74
+        - 0.0703 # 75+
 
   # Infectiousness adjustments, including the effect of isolation following detection
   late_exposed_infect_multiplier: 1.0
@@ -126,23 +126,23 @@ infection_fatality:
   multiplier: 1.
   # Infection fatality proportions - last column of Table S3 (Mendeley citation key ODriscoll2020)
   props:
-    - 0.00003  # 0-4
-    - 0.00001  # 5-9
-    - 0.00001  # 10-14
-    - 0.00003  # 15-19
-    - 0.00006  # 20-24
-    - 0.00013  # 25-29
-    - 0.00024  # 30-34
-    - 0.00040  # 35-39
-    - 0.00075  # 40-44
-    - 0.00121  # 45-49
-    - 0.00207  # 50-54
-    - 0.00323  # 55-59
-    - 0.00456  # 60-64
-    - 0.01075  # 65-69
-    - 0.01674  # 70-74
-    - 0.03203  # 75-79
-    - 0.08292  # 80+
+    - 0.00003 # 0-4
+    - 0.00001 # 5-9
+    - 0.00001 # 10-14
+    - 0.00003 # 15-19
+    - 0.00006 # 20-24
+    - 0.00013 # 25-29
+    - 0.00024 # 30-34
+    - 0.00040 # 35-39
+    - 0.00075 # 40-44
+    - 0.00121 # 45-49
+    - 0.00207 # 50-54
+    - 0.00323 # 55-59
+    - 0.00456 # 60-64
+    - 0.01075 # 65-69
+    - 0.01674 # 70-74
+    - 0.03203 # 75-79
+    - 0.08292 # 80+
 
 # Heterogeneity in susceptibility
 susceptibility_heterogeneity: null
@@ -185,9 +185,11 @@ testing_to_detection: null
 
 importation: null
 
+victorian_clusters: null
+
 # Multiplier scaling the covariance matrix in the Haario Metropolis. 2.4 is the value recommended by Haario.
 haario_scaling_factor: 2.4 # Greater values increase jumping step size and reduce the acceptance ratio
-metropolis_initialisation_type: 'lhs'
+metropolis_initialisation_type: "lhs"
 
 # Fake parameters used in calibration for negative binomial (need to be listed for validation to pass)
 # Not used by model.

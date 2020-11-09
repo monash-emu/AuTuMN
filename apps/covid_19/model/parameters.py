@@ -189,6 +189,10 @@ class Importation(BaseModel):
     movement_prop: Optional[float]
 
 
+class VictorianClusterStratification(BaseModel):
+    contact_rate_multipliers: Optional[Dict[str, float]]
+
+
 class ParamConfig:
     """Config for parameter models"""
 
@@ -222,6 +226,7 @@ class Parameters:
     testing_to_detection: Optional[TestingToDetection]
     susceptibility_heterogeneity: Optional[SusceptibilityHeterogeneity]
     importation: Optional[Importation]
+    victorian_clusters: Optional[VictorianClusterStratification]
     # Dummy parameters - not used
     notifications_dispersion_param: float
     icu_occupancy_dispersion_param: float

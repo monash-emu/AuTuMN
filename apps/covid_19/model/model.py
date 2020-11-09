@@ -21,6 +21,7 @@ from apps.covid_19.model import outputs, preprocess
 from apps.covid_19.model.importation import get_all_vic_notifications
 from apps.covid_19.model.parameters import Parameters
 from apps.covid_19.model.preprocess.testing import find_cdr_function_from_test_data
+from apps.covid_19.model.victorian_mixing import build_victorian_mixing_matrix_func
 
 """
 Compartments
@@ -574,47 +575,93 @@ def build_model(params: dict) -> StratifiedModel:
     """
     if params.stratify_by_infection_history:
         # waning immunity makes recovered individuals transition to the 'experienced' stratum
-        stratification_adjustments = {
-            "immunity_loss_rate": {'naive': 0., 'experienced': 1.}
-        }
+        stratification_adjustments = {"immunity_loss_rate": {"naive": 0.0, "experienced": 1.0}}
         # adjust parameters defining progression from early exposed to late exposed to obtain the requested proportion
         for agegroup in agegroup_strata:  # e.g. '0'
             # collect existing rates of progressions for symptomatic vs non-symptomatic
-            rate_non_sympt = early_exposed_adjs[f"within_early_exposedXagegroup_{agegroup}"]['non_sympt'] *\
-                             model.parameters["within_early_exposed"]
-            total_progression_rate = model.parameters['within_early_exposed']
+            rate_non_sympt = (
+                early_exposed_adjs[f"within_early_exposedXagegroup_{agegroup}"]["non_sympt"]
+                * model.parameters["within_early_exposed"]
+            )
+            total_progression_rate = model.parameters["within_early_exposed"]
             rate_sympt = total_progression_rate - rate_non_sympt
 
             # multiplier for symptomatic is rel_prop_symptomatic_experienced
             sympt_multiplier = params.rel_prop_symptomatic_experienced
             # multiplier for asymptomatic rate is 1 + rate_sympt / rate_non_sympt * (1 - sympt_multiplier)
             # in order to preserve aggregated exit flow
-            non_sympt_multiplier = 1 + rate_sympt / rate_non_sympt * (1. - sympt_multiplier)
+            non_sympt_multiplier = 1 + rate_sympt / rate_non_sympt * (1.0 - sympt_multiplier)
 
             # create adjustment requests
             for clinical_stratum in clinical_strata:
-                param_name = f"within_early_exposedXagegroup_{agegroup}Xclinical_" + clinical_stratum
+                param_name = (
+                    f"within_early_exposedXagegroup_{agegroup}Xclinical_" + clinical_stratum
+                )
                 if clinical_stratum == "non_sympt":
                     stratification_adjustments[param_name] = {
-                        'naive': 1.,
-                        'experienced': non_sympt_multiplier
+                        "naive": 1.0,
+                        "experienced": non_sympt_multiplier,
                     }
                 else:
                     stratification_adjustments[param_name] = {
-                        'naive': 1.,
-                        'experienced': sympt_multiplier
+                        "naive": 1.0,
+                        "experienced": sympt_multiplier,
                     }
 
         # Stratify the model using the SUMMER stratification function
         model.stratify(
             "history",
-            ['naive', 'experienced'],
+            ["naive", "experienced"],
             [Compartment.SUSCEPTIBLE, Compartment.EARLY_EXPOSED],
-            comp_split_props={
-                'naive': 1.0, 'experienced': 0.
-            },
+            comp_split_props={"naive": 1.0, "experienced": 0.0},
             flow_adjustments=stratification_adjustments,
         )
+
+    """
+    Stratify model by Victorian subregion (used for Victorian cluster model).
+    """
+    if params.victorian_clusters:
+        vic = params.victorian_clusters
+        # Determine how to split up population by cluster
+        # There is -0.5% to +4% difference per age group between sum of region population in 2018 and total VIC population in 2020
+        cluster_strata = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS]
+        region_pops = {
+            region: sum(
+                inputs.get_population_by_agegroup(
+                    agegroup_strata, country.iso3, region.upper(), year=2018
+                )
+            )
+            for region in cluster_strata
+        }
+        sum_region_props = sum(region_pops.values())
+        cluster_split_props = {
+            region: pop / sum_region_props for region, pop in region_pops.items()
+        }
+
+        # Add in flow adjustments per-region so we can calibrate the contact rate for each region.
+        cluster_flow_adjustments = {}
+        for agegroup_stratum in agegroup_strata:
+            for clinical_stratum in clinical_strata:
+                param_name = f"contact_rateXagegroup_{agegroup_stratum}Xclinical_{clinical_stratum}"
+                cluster_flow_adjustments[param_name] = vic.contact_rate_multipliers
+
+        # Use an identity mixing matrix to declare no inter-cluster mixing
+        cluster_mixing_matrix = np.eye(len(cluster_strata))
+
+        model.stratify(
+            "cluster",
+            cluster_strata,
+            COMPARTMENTS,
+            comp_split_props=cluster_split_props,
+            flow_adjustments=cluster_flow_adjustments,
+            mixing_matrix=cluster_mixing_matrix,
+        )
+
+        """
+        Hack in a custom (144x144) mixing matrix where each region is adjusted individually
+        based on its time variant mobility data.
+        """
+        model.get_mixing_matrix = build_victorian_mixing_matrix_func()
 
     """
     Set up and track derived output functions

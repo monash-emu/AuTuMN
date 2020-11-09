@@ -188,7 +188,7 @@ def add_standard_philippines_params(params, region):
         {
             "param_name": "contact_rate",
             "distribution": "uniform",
-            "distri_params": [0.03, 0.05],
+            "distri_params": [0.02, 0.04],
         },
         {
             "param_name": "infection_fatality.multiplier",
@@ -198,7 +198,7 @@ def add_standard_philippines_params(params, region):
         {
             "param_name": "testing_to_detection.assumed_cdr_parameter",
             "distribution": "uniform",
-            "distri_params": [0.02, 0.15],
+            "distri_params": [0.02, 0.11],
         },
         {
             "param_name": "mobility.microdistancing.behaviour.parameters.max_effect",

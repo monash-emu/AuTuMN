@@ -15,12 +15,25 @@ from autumn.plots.utils import _plot_targets_to_axis
 
 from autumn.plots.plotter import Plotter, COLOR_THEME
 from autumn.inputs.social_mixing.queries import get_country_mixing_matrix
+from autumn.inputs.demography.queries import get_population_by_agegroup
 
 logger = logging.getLogger(__name__)
 
 
 X_MIN = None
 X_MAX = None
+
+
+def plot_age_distribution(plotter: Plotter, sub_region: str, iso3: str):
+    fig, axis, _, _, _, _ = plotter.get_figure()
+    legend = []
+
+    # Set age groups
+    agegroup_strata = [int(s) for s in range(0, 100, 5)]
+
+    age_distribution = get_population_by_agegroup(agegroup_strata, iso3, sub_region)
+    pyplot.bar(agegroup_strata, height=age_distribution, width=4, align="edge")
+    plotter.save_figure(fig, filename="age-distribution", title_text="Age distribution")
 
 
 def plot_mixing_matrix(plotter: Plotter, location: str, iso3: str):

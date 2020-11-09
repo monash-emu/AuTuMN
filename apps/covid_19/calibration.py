@@ -188,7 +188,7 @@ def add_standard_philippines_params(params, region):
         {
             "param_name": "contact_rate",
             "distribution": "uniform",
-            "distri_params": [0.03, 0.05],
+            "distri_params": [0.02, 0.04],
         },
         {
             "param_name": "infection_fatality.multiplier",

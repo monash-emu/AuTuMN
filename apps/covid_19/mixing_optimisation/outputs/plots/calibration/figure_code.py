@@ -451,7 +451,7 @@ def make_calibration_fits_figure(calibration_outputs, seroprevalence=False):
     i_row = 1
     i_col = 0
 
-    ordered_countries = ['italy', 'france', 'belgium', 'spain', 'sweden', 'united-kingdom']
+    ordered_countries = ['italy', 'united-kingdom', 'france', 'belgium', 'spain', 'sweden']
     for country in ordered_countries:
         # write country name
         ax = fig.add_subplot(spec[i_row - 1, i_col : i_col + n_target_outputs])

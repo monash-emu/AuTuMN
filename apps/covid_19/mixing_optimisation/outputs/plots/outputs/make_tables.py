@@ -6,6 +6,7 @@ from apps.covid_19.mixing_optimisation.mixing_opti import MODES, DURATIONS
 from apps.covid_19.mixing_optimisation.utils import get_scenario_mapping_reverse
 from autumn.constants import BASE_PATH
 from autumn.db.load import load_uncertainty_table
+from apps.covid_19.mixing_optimisation.utils import get_country_population_size
 
 
 FIGURE_PATH = os.path.join(BASE_PATH, "apps", "covid_19", "mixing_optimisation",
@@ -22,10 +23,10 @@ def main():
         uncertainty_dfs[country] = load_uncertainty_table(dir_path)
 
     for mode in MODES:
-        make_main_outputs_tables(mode, uncertainty_dfs)
+        make_main_outputs_tables(mode, uncertainty_dfs, per_capita=True)
 
 
-def get_uncertainty_cell_value(uncertainty_df, output, mode, duration):
+def get_uncertainty_cell_value(uncertainty_df, output, mode, duration, per_capita=False, population=None):
     # output is in ["deaths_before", "deaths_unmitigated", "deaths_opti_deaths", "deaths_opti_yoll",
     #                "yoll_before", "yoll_unmitigated", "yoll_opti_deaths", "yoll_opti_yoll"]
 
@@ -63,21 +64,32 @@ def get_uncertainty_cell_value(uncertainty_df, output, mode, duration):
     mask_50 = output_df["quantile"] == 0.5
     mask_975 = output_df["quantile"] == 0.975
 
-    multiplier = {"accum_deaths": 1.0 / 1000.0, "accum_years_of_life_lost": 1.0 / 1000.0,
-                  "proportion_seropositive": 100}
-    rounding = {"accum_deaths": 1, "accum_years_of_life_lost": 0,
-                "proportion_seropositive": 0}
+    if per_capita:
+        multiplier = {"accum_deaths": 1.e6 / population, "accum_years_of_life_lost": 1.e4 / population,
+                      "proportion_seropositive": 100}
+        rounding = {"accum_deaths": 0, "accum_years_of_life_lost": 0,
+                    "proportion_seropositive": 0}
+    if not per_capita:
+        multiplier = {"accum_deaths": 1.0 / 1000.0, "accum_years_of_life_lost": 1.0 / 1000.0,
+                      "proportion_seropositive": 100}
+        rounding = {"accum_deaths": 1, "accum_years_of_life_lost": 0,
+                    "proportion_seropositive": 0}
 
     # read the percentile
     median = round(multiplier[type] * float(output_df[mask_50]["value"]), rounding[type])
     lower = round(multiplier[type] * float(output_df[mask_025]["value"]), rounding[type])
     upper = round(multiplier[type] * float(output_df[mask_975]["value"]), rounding[type])
 
+    if rounding[type] == 0:
+        median = int(median)
+        lower = int(lower)
+        upper = int(upper)
+
     cell_content = f"{median} ({lower}-{upper})"
     return cell_content
 
 
-def make_main_outputs_tables(mode, uncertainty_dfs):
+def make_main_outputs_tables(mode, uncertainty_dfs, per_capita=False):
     """
     This now combines Table 1 and Table 2
     """
@@ -105,18 +117,20 @@ def make_main_outputs_tables(mode, uncertainty_dfs):
     i_row = -1
     for i, country in enumerate(countries):
         uncertainty_df = uncertainty_dfs[country]
+        country_name = country.title() if country != "united-kingdom" else "United Kingdom"
+        population = get_country_population_size(country_name) if per_capita else None
+
         for duration in DURATIONS:
             i_row += 1
             row_as_list = [country]
             for output in [c for c in column_names if c != "country"]:
                 print(output)
                 row_as_list.append(
-                    get_uncertainty_cell_value(uncertainty_df, output, mode, duration)
+                    get_uncertainty_cell_value(uncertainty_df, output, mode, duration, per_capita, population)
                 )
-
             table.loc[i_row] = row_as_list
 
-    filename = f"output_table_{mode}.csv"
+    filename = f"output_table_{mode}_per_capita.csv" if per_capita else f"output_table_{mode}.csv"
     file_path = os.path.join(FIGURE_PATH, filename)
     table.to_csv(file_path)
 

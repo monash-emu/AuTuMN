@@ -12,10 +12,67 @@ from autumn.inputs import get_mobility_data
 BASE_DATE = datetime(2020, 1, 1, 0, 0, 0)
 PLOT_FUNCS = {}
 
+iso3_map = {
+    "barwon-south-west": "AUS",
+    "belgium": "BEL",
+    "calabarzon": "PHL",
+    "central-visayas": "PHL",
+    "france": "FRA",
+    "gippsland": "AUS",
+    "grampians": "AUS",
+    "hume": "AUS",
+    "italy": "ITA",
+    "loddon-mallee": "AUS",
+    "malaysia": "MYS",
+    "manila": "AUS",
+    "north-metro": "AUS",
+    "philippines": "PHL",
+    "sabah": "MYS",
+    "south-east-metro": "AUS",
+    "south-metro": "AUS",
+    "spain": "ESP",
+    "sweden": "SWE",
+    "united-kingdom": "GBR",
+    "victoria": "AUS",
+    "west-metro": "AUS",
+}
+
+sub_region_map = {
+    "barwon-south-west": "BARWON_SOUTH_WEST",
+    "calabarzon": "Calabarzon",
+    "central-visayas": "Central Visayas",
+    "gippsland": "GIPPSLAND",
+    "grampians": "GRAMPIANS",
+    "hume": "HUME",
+    "loddon-mallee": "LODDON_MALLEE",
+    "manila": "Metro Manila",
+    "north-metro": "NORTH_METRO",
+    "sabah": "Sabah",
+    "south-east-metro": "SOUTH_METRO",
+    "south-metro": "SOUTH_METRO",
+    "victoria": "Victoria",
+    "west-metro": "WEST_METRO",
+}
+
+
+def plot_age_distribution(
+    plotter: StreamlitPlotter, app: AppRegion,
+):
+
+    iso3 = iso3_map[app.region_name]
+
+    if app.region_name in sub_region_map.keys():
+        sub_region = sub_region_map[app.region_name]
+    else:
+        sub_region = None
+    plots.model.plots.plot_age_distribution(plotter, sub_region, iso3)
+
+
+PLOT_FUNCS["Age distribution"] = plot_age_distribution
+
 
 def plot_mixing_matrix(
-    plotter: StreamlitPlotter,
-    app: AppRegion,
+    plotter: StreamlitPlotter, app: AppRegion,
 ):
     iso3 = app.params["default"]["country"]["iso3"]
     param_names = sorted(list(("all_locations", "home", "other_locations", "school", "work")))
@@ -27,8 +84,7 @@ PLOT_FUNCS["Mixing matrix"] = plot_mixing_matrix
 
 
 def plot_flow_params(
-    plotter: StreamlitPlotter,
-    app: AppRegion,
+    plotter: StreamlitPlotter, app: AppRegion,
 ):
     # Assume a COVID model
     model = app.build_model(app.params["default"])
@@ -62,8 +118,7 @@ PLOT_FUNCS["Flow weights"] = plot_flow_params
 
 
 def plot_dynamic_inputs(
-    plotter: StreamlitPlotter,
-    app: AppRegion,
+    plotter: StreamlitPlotter, app: AppRegion,
 ):
     # Assume a COVID model
     model = app.build_model(app.params["default"])
@@ -93,11 +148,7 @@ def plot_location_mixing(plotter: StreamlitPlotter, app: AppRegion):
     start_time = params["time"]["start"]
     end_time = params["time"]["end"]
     time_step = params["time"]["step"]
-    times = get_model_times_from_inputs(
-        round(start_time),
-        end_time,
-        time_step,
-    )
+    times = get_model_times_from_inputs(round(start_time), end_time, time_step,)
 
     loc_key = st.sidebar.selectbox("Select location", LOCATIONS)
     is_logscale = st.sidebar.checkbox("Log scale")
@@ -133,8 +184,7 @@ PLOT_FUNCS["Dynamic location mixing"] = plot_location_mixing
 
 
 def plot_mobility_raw(
-    plotter: StreamlitPlotter,
-    app: AppRegion,
+    plotter: StreamlitPlotter, app: AppRegion,
 ):
     params = app.params["default"]
     values, days = get_mobility_data(
@@ -154,8 +204,7 @@ PLOT_FUNCS["Google Mobility Raw"] = plot_mobility_raw
 
 
 def plot_model_targets(
-    plotter: StreamlitPlotter,
-    app: AppRegion,
+    plotter: StreamlitPlotter, app: AppRegion,
 ):
     # Assume a COVID model
     scenario = Scenario(app.build_model, idx=0, params=app.params)
@@ -171,8 +220,7 @@ def plot_model_targets(
 
 
 def plot_model_multi_targets(
-    plotter: StreamlitPlotter,
-    app: AppRegion,
+    plotter: StreamlitPlotter, app: AppRegion,
 ):
     # Assume a COVID model
     scenario = Scenario(app.build_model, idx=0, params=app.params)

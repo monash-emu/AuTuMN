@@ -1,16 +1,16 @@
-# SCENARIO DESCRIPTION: MHS compliance of 30% return
+# SCENARIO DESCRIPTION: MHS reduces contact by 50%
 parent: apps/covid_19/regions/manila/params/default.yml
 
 time:
-  start: 300
+  start: 315
 
 mobility:
   microdistancing:
     behaviour:
       parameters:
         times:
-          - 300
           - 315
+          - 330
         values:
           - 1.
           - 0.3

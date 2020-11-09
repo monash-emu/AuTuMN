@@ -12,8 +12,8 @@ from google_drive_downloader import GoogleDriveDownloader as gdd
 import json
 
 # shareable google drive links
-PHL_doh_link = "1D6sO0tNudLENeiMzKWt8Hsgvjw91Wm-Q"  # sheet 05 daily report
-PHL_fassster_link = "1MLCfYtzOSfareO7os1WMt16dCEmq7FLp"
+PHL_doh_link = "1hBpZmEm_yz6RgNdqAndrAtZGJRslgQx8"  # sheet 05 daily report
+PHL_fassster_link = "1oNnSOGuZx2RC6luzKrZMhkA3zwgifDxV"
 
 # destination folders filepaths
 base_dir = os.path.dirname(os.path.abspath(os.curdir))
@@ -86,16 +86,10 @@ def process_phl_data():
     fassster_data_deaths["times"] = fassster_data_deaths["times"] / np.timedelta64(
         1, "D"
     )  # warning
-    accum_deaths = fassster_data_deaths.groupby(["Region"]).size()
-    accum_deaths = accum_deaths.to_frame(name="accum_deaths").reset_index()
-    cumulative_deaths_max_date = (
-        fassster_data_deaths.groupby(["Region"], as_index=False)["times"]
-        .max()
-        .reset_index(0, drop=True)
-    )
-    cumulative_deaths = cumulative_deaths_max_date.join(
-        accum_deaths.set_index("Region"), on="Region"
-    )
+    accum_deaths = fassster_data_deaths.groupby(["Region", "times"]).size()
+    accum_deaths = accum_deaths.to_frame(name="daily_deaths").reset_index()
+    accum_deaths["accum_deaths"] = accum_deaths["daily_deaths"].cumsum()
+    cumulative_deaths = accum_deaths[["Region", "times", "accum_deaths"]]
     cumulative_deaths.to_csv(deaths_dest)
     ## notifications
     fassster_data_agg = fassster_data.groupby(["Region", "imputed_Date_Admitted"]).size()

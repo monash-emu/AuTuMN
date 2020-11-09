@@ -2,13 +2,13 @@
 parent: apps/covid_19/regions/manila/params/default.yml
 
 time:
-  start: 300
+  start: 315
 
 mobility:
   mixing:
     school:
       append: false
       times:
-        - 2020-10-27
+        - 2020-11-27
       values:
         - 1.

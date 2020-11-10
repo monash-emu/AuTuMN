@@ -1,4 +1,4 @@
-# SCENARIO DESCRIPTION: Scenario 3, 10% work
+# SCENARIO DESCRIPTION: Scenario 3, 90% of current workforce works from home
 ---
 parent: apps/covid_19/regions/malaysia/params/default.yml
 

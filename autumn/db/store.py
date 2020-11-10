@@ -44,7 +44,7 @@ def build_outputs_table(models: List[StratifiedModel], run_id: int, chain_id=Non
         df.insert(2, column="scenario", value=idx)
         df.insert(3, column="times", value=model.times)
         if outputs_df is not None:
-            outputs_df.append(df, ignore_index=True)
+            outputs_df = outputs_df.append(df, ignore_index=True)
         else:
             outputs_df = df
 
@@ -61,7 +61,7 @@ def build_derived_outputs_table(models: List[StratifiedModel], run_id: int, chai
         df.insert(2, column="scenario", value=idx)
         df.insert(3, column="times", value=model.times)
         if derived_outputs_df is not None:
-            derived_outputs_df.append(df, ignore_index=True)
+            derived_outputs_df = derived_outputs_df.append(df, ignore_index=True)
         else:
             derived_outputs_df = df
 

@@ -5,9 +5,10 @@ Script for loading DHHS data into calibration targets and import inputs.
 import os
 import sys
 import json
-from datetime import datetime
+from datetime import datetime, time
 from getpass import getpass
 
+import numpy as np
 import pandas as pd
 
 # Do some super sick path hacks to get script to work from command line.
@@ -107,7 +108,7 @@ def main():
         password = getpass(prompt="Enter the encryption password:")
 
     update_calibration(password)
-    update_importation(password)
+    # update_importation(password)
 
 
 def update_calibration(password: str):
@@ -128,6 +129,7 @@ def update_calibration(password: str):
     )
     cal_df.icu = cal_df.value
 
+    vic_targets = {}
     for region in CLUSTER_MAP.keys():
         current_cluster = CLUSTER_MAP[region].lower()
         update_df = cal_df[cal_df.cluster_name == current_cluster]
@@ -142,10 +144,56 @@ def update_calibration(password: str):
             targets[key]["times"] = list(temp_df["date_index"])
             targets[key]["values"] = list(temp_df[val])
 
-        with open(file_path, "w") as f:
-            json.dump(targets, f, indent=2)
+            # Add to VIC targets
+            cluster = current_cluster.lower()
+            vic_key = f"{key}Xcluster_{cluster}"
+            vic_targets[vic_key] = {
+                "title": f"{targets[key]['title']} ({cluster})",
+                "output_key": vic_key,
+                "times": targets[key]["times"],
+                "values": targets[key]["values"],
+                "quantiles": targets[key]["quantiles"],
+            }
 
-        secrets.write(file_path, password)
+        # with open(file_path, "w") as f:
+        #     json.dump(targets, f, indent=2)
+
+        # secrets.write(file_path, password)
+
+    # Calculate VIC aggregate targets
+    for key in TARGETS_MAP.keys():
+        cluster_keys = [k for k in vic_targets.keys() if k.startswith(key)]
+
+        times = set()
+        for cluster_key in cluster_keys:
+            cluster_times = vic_targets[cluster_key]["times"]
+            times = times.union(cluster_times)
+
+        min_time = min(times)
+        max_time = max(times)
+        times = [min_time + t for t in range(max_time - min_time + 1)]
+        values = [0] * len(times)
+        for cluster_key in cluster_keys:
+            cluster_times = vic_targets[cluster_key]["times"]
+            cluster_values = vic_targets[cluster_key]["values"]
+            cluster_lookup = {t: v for t, v in zip(cluster_times, cluster_values)}
+            for idx, t in enumerate(times):
+                values[idx] += cluster_lookup.get(t, 0)
+
+        # Re-use last targets from regional for loop
+        vic_targets[key] = {
+            "title": targets[key]["title"],
+            "output_key": key,
+            "times": times,
+            "values": list(values),
+            "quantiles": targets[key]["quantiles"],
+        }
+
+    file_path = os.path.join(REGION_DIR, "victoria", "targets.secret.json")
+    with open(file_path, "w") as f:
+        json.dump(vic_targets, f, indent=2)
+
+    # secrets.write(file_path, password)
 
 
 def update_importation(password: str):

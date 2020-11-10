@@ -1,4 +1,5 @@
 from copy import deepcopy
+from types import MethodType
 
 import numpy as np
 
@@ -661,7 +662,12 @@ def build_model(params: dict) -> StratifiedModel:
         Hack in a custom (144x144) mixing matrix where each region is adjusted individually
         based on its time variant mobility data.
         """
-        model.get_mixing_matrix = build_victorian_mixing_matrix_func()
+        get_mixing_matrix = build_victorian_mixing_matrix_func(
+            static_mixing_matrix,
+            params.mobility,
+            country,
+        )
+        setattr(model, "get_mixing_matrix", MethodType(get_mixing_matrix, model))
 
     """
     Set up and track derived output functions
@@ -728,6 +734,7 @@ def build_model(params: dict) -> StratifiedModel:
             )
 
     model.add_function_derived_outputs(func_outputs)
+
     return model
 
 

@@ -22,3 +22,8 @@ victorian_clusters:
     south_east_metro: 1
     south_metro: 1
     west_metro: 1
+
+importation:
+  case_timeseries:
+    times: [153, 154]
+    values: [100, 0]

@@ -51,8 +51,20 @@ DEFAULT_FLOWS = [
     {
         "type": Flow.STANDARD,
         "origin": Compartment.INFECTIOUS,
-        "to": Compartment.ON_TREATMENT,
+        "to": Compartment.DETECTED,
         "parameter": "detection_rate",
+    },
+    {
+        "type": Flow.STANDARD,
+        "origin": Compartment.DETECTED,
+        "to": Compartment.ON_TREATMENT,
+        "parameter": "treatment_commencement_rate",
+    },
+    {
+        "type": Flow.STANDARD,
+        "origin": Compartment.DETECTED,
+        "to": Compartment.INFECTIOUS,
+        "parameter": "missed_to_active_rate",
     },
     {
         "type": Flow.STANDARD,
@@ -68,5 +80,6 @@ DEFAULT_FLOWS = [
     },
     # Infection death
     {"type": Flow.DEATH, "parameter": "infect_death_rate", "origin": Compartment.INFECTIOUS},
+    {"type": Flow.DEATH, "parameter": "infect_death_rate", "origin": Compartment.DETECTED},
     {"type": Flow.DEATH, "parameter": "treatment_death_rate", "origin": Compartment.ON_TREATMENT},
 ]

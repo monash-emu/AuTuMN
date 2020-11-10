@@ -4,17 +4,20 @@ iso3: "PHL"
 
 
 time:
-  start: 1850.
+  start: 1950.
   end: 2020.
   step: 1
   critical_ranges: []
 
 
-start_population_size: 3.3e+6
+start_population_size: 2.1e+7
 
 crude_birth_rate: 0.035
 
-initial_infectious_population: 3.0e4
+initial_early_latent_population: 3000
+initial_late_latent_population: 5000000
+initial_infectious_population: 30000
+initial_on_treatment_population: 0
 
 calculated_outputs:
   [

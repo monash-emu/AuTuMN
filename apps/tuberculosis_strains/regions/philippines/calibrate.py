@@ -38,8 +38,8 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
 PRIORS = [
     #{"param_name": "start_population_size", "distribution": "uniform", "distri_params": [1.0e+6, 2.0e+7]},
     #{"param_name": "crude_birth_rate", "distribution": "uniform", "distri_params": [1.0e-2, 6.0e-2]},
-    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.025, 0.05]},
-    {"param_name": "initial_infectious_population", "distribution": "uniform", "distri_params": [1.0e4, 1.0e5]}
+    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.0, 5000.0]},
+    {"param_name": "initial_infectious_population", "distribution": "uniform", "distri_params": [1.0e4, 1.0e6]}
 ]
 
 TARGET_OUTPUTS = [

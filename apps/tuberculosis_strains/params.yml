@@ -24,6 +24,7 @@ cumulative_output_start_time: 2020.
 
 # initial conditions
 initial_infectious_population: 0
+initial_detected_population: 0
 
 # demographics
 start_population_size: 500

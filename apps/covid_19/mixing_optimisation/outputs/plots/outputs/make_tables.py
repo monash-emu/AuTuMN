@@ -135,5 +135,22 @@ def make_main_outputs_tables(mode, uncertainty_dfs, per_capita=False):
     table.to_csv(file_path)
 
 
+def print_who_deaths_per_capita():
+    deaths_thousands = {
+        'belgium': 10.2,
+        'france': 31.7,
+        'italy': 35.9,
+        'spain': 32.4,
+        'sweden': 5.9,
+        'united-kingdom': 42.1
+    }
+    for country in ["belgium", "france", "italy", "spain", "sweden", "united-kingdom"]:
+        country_name = country.title() if country != "united-kingdom" else "United Kingdom"
+        pop = get_country_population_size(country_name)
+        print(int(deaths_thousands[country]*1000/pop*1.e6))
+
+
 if __name__ == "__main__":
     main()
+
+    # print_who_deaths_per_capita()

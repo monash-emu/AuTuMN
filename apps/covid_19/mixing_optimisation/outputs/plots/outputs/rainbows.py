@@ -56,7 +56,7 @@ def main():
                     mode,
                     duration,
                     objective,
-                    include_config=False,
+                    include_config=True,
                 )
 
 
@@ -189,8 +189,11 @@ def plot_stacked_outputs_by_stratum(
     # axis.axvline(x=phase_2_start, linewidth=.8, dashes=[6, 4], color='black')
     # axis.axvline(x=phase_2_end[config],linewidth=.8, dashes=[6, 4], color='black')
 
-    xticks = [61, 214, 398, 366 + 214]
-    xlabs = ["1 Mar 2020", "1 Aug 2020", "1 Feb 2021", "1 Aug 2021"]
+    phase_2_end_date = {DURATIONS[0]: "1 Apr 21", DURATIONS[1]: "1 Oct 21"}
+
+    xticks = [61, PHASE_2_START_TIME, PHASE_2_START_TIME + PHASE_2_DURATION[duration],
+              PHASE_2_START_TIME + PHASE_2_DURATION[duration] + 90]
+    xlabs = ["1 Mar 2020", "1 Oct 20", phase_2_end_date[duration]]
 
     axis.set_xlim((30, PHASE_2_START_TIME + PHASE_2_DURATION[duration] + 90))
     axis.set_xticks(xticks)

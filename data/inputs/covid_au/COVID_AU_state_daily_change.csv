@@ -2233,22 +2233,22 @@
 2231,2020-10-29,Western Australia,WA,1,0,2767,1,2,0,0,0
 2232,2020-10-30,Australian Capital Territory,ACT,0,0,538,0,1,0,0,0
 2233,2020-10-30,New South Wales,NSW,6,0,12786,6,0,0,0,0
-2234,2020-10-30,Northern Territory,NT,0,0,367,0,0,0,0,0
-2235,2020-10-30,Queensland,QLD,1,0,4191,1,0,1,0,0
+2234,2020-10-30,Northern Territory,NT,0,0,367,0,0,1,0,0
+2235,2020-10-30,Queensland,QLD,1,0,4191,1,0,0,0,0
 2236,2020-10-30,South Australia,SA,1,0,3445,1,1,0,0,0
 2237,2020-10-30,Tasmania,TAS,0,0,672,0,0,0,0,0
 2238,2020-10-30,Victoria,VIC,3,0,23583,3,-1,0,0,0
 2239,2020-10-30,Western Australia,WA,1,0,1949,1,4,0,0,0
 2240,2020-10-31,Australian Capital Territory,ACT,0,0,261,0,0,0,0,0
-2241,2020-10-31,New South Wales,NSW,4,0,13134,4,0,0,0,0
+2241,2020-10-31,New South Wales,NSW,4,0,13134,4,0,-1,0,0
 2242,2020-10-31,Northern Territory,NT,0,0,437,0,0,0,0,0
-2243,2020-10-31,Queensland,QLD,-1,0,3611,-1,1,0,0,0
+2243,2020-10-31,Queensland,QLD,-1,0,3611,-1,1,1,0,0
 2244,2020-10-31,South Australia,SA,4,0,3124,4,0,0,0,0
 2245,2020-10-31,Tasmania,TAS,0,0,420,0,0,0,0,0
-2246,2020-10-31,Victoria,VIC,0,0,19850,0,76,0,0,0
+2246,2020-10-31,Victoria,VIC,0,0,19850,0,76,-3,0,0
 2247,2020-10-31,Western Australia,WA,1,0,0,1,3,0,0,0
 2248,2020-11-01,Australian Capital Territory,ACT,0,0,226,0,0,0,0,0
-2249,2020-11-01,New South Wales,NSW,4,0,14751,4,0,0,0,0
+2249,2020-11-01,New South Wales,NSW,4,0,14751,4,0,0,0,1
 2250,2020-11-01,Northern Territory,NT,0,0,201,0,0,0,0,0
 2251,2020-11-01,Queensland,QLD,1,0,2571,1,0,0,0,0
 2252,2020-11-01,South Australia,SA,0,0,1954,0,0,0,0,0
@@ -2258,16 +2258,72 @@
 2256,2020-11-02,Australian Capital Territory,ACT,0,0,282,0,0,0,0,0
 2257,2020-11-02,New South Wales,NSW,7,0,7431,7,0,0,0,0
 2258,2020-11-02,Northern Territory,NT,0,0,173,0,0,0,0,0
-2259,2020-11-02,Queensland,QLD,0,0,1712,0,3,0,0,0
+2259,2020-11-02,Queensland,QLD,0,0,1712,0,3,-1,0,0
 2260,2020-11-02,South Australia,SA,0,0,1839,0,2,0,0,0
 2261,2020-11-02,Tasmania,TAS,0,0,199,0,0,0,0,0
 2262,2020-11-02,Victoria,VIC,-1,0,12956,-1,11,0,0,0
 2263,2020-11-02,Western Australia,WA,1,0,5623,1,4,0,0,0
 2264,2020-11-03,Australian Capital Territory,ACT,0,0,673,0,0,0,0,0
-2265,2020-11-03,New South Wales,NSW,3,0,8550,3,0,0,0,0
+2265,2020-11-03,New South Wales,NSW,3,0,8550,3,0,-1,0,0
 2266,2020-11-03,Northern Territory,NT,0,0,388,0,0,0,0,0
 2267,2020-11-03,Queensland,QLD,3,0,3963,3,0,0,0,0
 2268,2020-11-03,South Australia,SA,2,0,2927,2,1,0,0,0
 2269,2020-11-03,Tasmania,TAS,0,0,109,0,0,0,0,0
 2270,2020-11-03,Victoria,VIC,0,0,12841,0,11,0,0,0
 2271,2020-11-03,Western Australia,WA,0,0,2319,0,16,0,0,0
+2272,2020-11-04,Australian Capital Territory,ACT,0,0,525,0,0,0,0,0
+2273,2020-11-04,New South Wales,NSW,8,0,17036,8,0,0,0,0
+2274,2020-11-04,Northern Territory,NT,0,0,453,0,0,0,0,0
+2275,2020-11-04,Queensland,QLD,2,0,5242,2,2,5,0,0
+2276,2020-11-04,South Australia,SA,1,0,3390,1,2,0,0,0
+2277,2020-11-04,Tasmania,TAS,0,0,377,0,0,0,0,0
+2278,2020-11-04,Victoria,VIC,0,0,17357,0,8,0,0,0
+2279,2020-11-04,Western Australia,WA,1,0,2012,1,10,0,0,0
+2280,2020-11-05,Australian Capital Territory,ACT,0,0,375,0,0,0,0,0
+2281,2020-11-05,New South Wales,NSW,2,0,18466,2,0,1,0,0
+2282,2020-11-05,Northern Territory,NT,1,0,493,1,0,0,0,0
+2283,2020-11-05,Queensland,QLD,0,0,5047,0,-2,0,0,0
+2284,2020-11-05,South Australia,SA,5,0,3444,5,1,0,0,0
+2285,2020-11-05,Tasmania,TAS,0,0,466,0,0,0,0,0
+2286,2020-11-05,Victoria,VIC,0,0,13479,0,10,0,0,0
+2287,2020-11-05,Western Australia,WA,4,0,1809,4,2,0,0,0
+2288,2020-11-06,Australian Capital Territory,ACT,0,0,475,0,0,0,0,0
+2289,2020-11-06,New South Wales,NSW,9,0,17492,9,0,-2,0,0
+2290,2020-11-06,Northern Territory,NT,0,0,295,0,0,1,0,0
+2291,2020-11-06,Queensland,QLD,0,0,4340,0,0,0,0,0
+2292,2020-11-06,South Australia,SA,1,0,2767,1,0,0,0,0
+2293,2020-11-06,Tasmania,TAS,0,0,756,0,0,0,0,0
+2294,2020-11-06,Victoria,VIC,0,0,18671,0,5,0,0,0
+2295,2020-11-06,Western Australia,WA,1,0,1675,1,1,0,0,0
+2296,2020-11-07,Australian Capital Territory,ACT,0,0,345,0,0,0,0,0
+2297,2020-11-07,New South Wales,NSW,5,0,14697,5,0,-1,0,0
+2298,2020-11-07,Northern Territory,NT,0,0,308,0,0,0,0,0
+2299,2020-11-07,Queensland,QLD,0,0,3567,0,0,0,0,0
+2300,2020-11-07,South Australia,SA,2,0,2552,2,1,0,0,0
+2301,2020-11-07,Tasmania,TAS,0,0,359,0,0,0,0,0
+2302,2020-11-07,Victoria,VIC,0,0,16914,0,7,0,0,0
+2303,2020-11-07,Western Australia,WA,0,0,0,0,4,0,0,0
+2304,2020-11-08,Australian Capital Territory,ACT,0,0,164,0,0,0,0,0
+2305,2020-11-08,New South Wales,NSW,3,0,13721,3,0,0,0,0
+2306,2020-11-08,Northern Territory,NT,0,0,172,0,0,0,0,0
+2307,2020-11-08,Queensland,QLD,0,0,2278,0,0,0,0,0
+2308,2020-11-08,South Australia,SA,3,0,1946,3,2,0,0,0
+2309,2020-11-08,Tasmania,TAS,0,0,313,0,0,0,0,0
+2310,2020-11-08,Victoria,VIC,0,0,16865,0,4,0,0,0
+2311,2020-11-08,Western Australia,WA,0,0,0,0,2,0,0,0
+2312,2020-11-09,Australian Capital Territory,ACT,0,0,233,0,0,0,0,0
+2313,2020-11-09,New South Wales,NSW,7,0,9499,7,0,0,0,0
+2314,2020-11-09,Northern Territory,NT,1,0,0,0,0,0,0,0
+2315,2020-11-09,Queensland,QLD,0,0,1677,0,0,0,0,0
+2316,2020-11-09,South Australia,SA,2,0,1497,2,3,0,0,0
+2317,2020-11-09,Tasmania,TAS,0,0,0,0,0,0,0,0
+2318,2020-11-09,Victoria,VIC,0,0,10653,0,0,0,0,0
+2319,2020-11-09,Western Australia,WA,0,0,4869,0,0,0,0,0
+2320,2020-11-10,Australian Capital Territory,ACT,0,0,0,0,0,0,0,0
+2321,2020-11-10,New South Wales,NSW,5,0,0,0,0,0,0,0
+2322,2020-11-10,Northern Territory,NT,1,0,0,0,0,0,0,0
+2323,2020-11-10,Queensland,QLD,1,0,0,0,0,0,0,0
+2324,2020-11-10,South Australia,SA,1,0,0,0,2,0,0,0
+2325,2020-11-10,Tasmania,TAS,0,0,0,0,0,0,0,0
+2326,2020-11-10,Victoria,VIC,0,0,0,0,0,0,0,0
+2327,2020-11-10,Western Australia,WA,2,0,0,0,0,0,0,0

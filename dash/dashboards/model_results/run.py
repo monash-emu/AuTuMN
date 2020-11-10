@@ -9,7 +9,7 @@ import streamlit as st
 from autumn import db
 from autumn.plots.plotter import StreamlitPlotter
 
-from dash import selectors
+import dash.selectors as selectors
 from .plots import PLOT_FUNCS
 
 

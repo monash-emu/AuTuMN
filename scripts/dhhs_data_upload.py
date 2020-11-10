@@ -146,7 +146,7 @@ def update_calibration(password: str):
 
             # Add to VIC targets
             cluster = current_cluster.lower()
-            vic_key = f"{key}Xcluster_{cluster}"
+            vic_key = f"{key}_for_cluster_{cluster}"
             vic_targets[vic_key] = {
                 "title": f"{targets[key]['title']} ({cluster})",
                 "output_key": vic_key,

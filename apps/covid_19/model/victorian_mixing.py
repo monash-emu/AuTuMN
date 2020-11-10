@@ -38,6 +38,7 @@ def build_victorian_mixing_matrix_func(
                     i = age_i * cluster_idx
                     j = age_j * cluster_idx
                     mm[i, j] = age_mm[age_i, age_j]
+
         return mm
 
     return get_mixing_matrix

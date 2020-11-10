@@ -23,6 +23,7 @@ from apps.covid_19.model.importation import get_all_vic_notifications
 from apps.covid_19.model.parameters import Parameters
 from apps.covid_19.model.preprocess.testing import find_cdr_function_from_test_data
 from apps.covid_19.model.victorian_mixing import build_victorian_mixing_matrix_func
+from apps.covid_19.model.victorian_outputs import add_victorian_derived_outputs
 
 """
 Compartments
@@ -642,9 +643,8 @@ def build_model(params: dict) -> StratifiedModel:
         # Add in flow adjustments per-region so we can calibrate the contact rate for each region.
         cluster_flow_adjustments = {}
         for agegroup_stratum in agegroup_strata:
-            for clinical_stratum in clinical_strata:
-                param_name = f"contact_rateXagegroup_{agegroup_stratum}Xclinical_{clinical_stratum}"
-                cluster_flow_adjustments[param_name] = vic.contact_rate_multipliers
+            param_name = f"contact_rateXagegroup_{agegroup_stratum}"
+            cluster_flow_adjustments[param_name] = vic.contact_rate_multipliers
 
         # Use an identity mixing matrix to declare no inter-cluster mixing
         cluster_mixing_matrix = np.eye(len(cluster_strata))
@@ -672,68 +672,70 @@ def build_model(params: dict) -> StratifiedModel:
     """
     Set up and track derived output functions
     """
+    if not params.victorian_clusters:
+        # Set up derived outputs
+        incidence_connections = outputs.get_incidence_connections(model.compartment_names)
+        progress_connections = outputs.get_progress_connections(model.compartment_names)
+        death_output_connections = outputs.get_infection_death_connections(model.compartment_names)
+        model.add_flow_derived_outputs(incidence_connections)
+        model.add_flow_derived_outputs(progress_connections)
+        model.add_flow_derived_outputs(death_output_connections)
 
-    # Set up derived outputs
-    incidence_connections = outputs.get_incidence_connections(model.compartment_names)
-    progress_connections = outputs.get_progress_connections(model.compartment_names)
-    death_output_connections = outputs.get_infection_death_connections(model.compartment_names)
-    model.add_flow_derived_outputs(incidence_connections)
-    model.add_flow_derived_outputs(progress_connections)
-    model.add_flow_derived_outputs(death_output_connections)
+        # Build notification derived output function
+        is_importation_active = params.importation is not None
+        notification_func = outputs.get_calc_notifications_covid(
+            is_importation_active,
+            modelled_abs_detection_proportion_imported,
+        )
+        local_notification_func = outputs.get_calc_notifications_covid(
+            False, modelled_abs_detection_proportion_imported
+        )
 
-    # Build notification derived output function
-    is_importation_active = params.importation is not None
-    notification_func = outputs.get_calc_notifications_covid(
-        is_importation_active,
-        modelled_abs_detection_proportion_imported,
-    )
-    local_notification_func = outputs.get_calc_notifications_covid(
-        False, modelled_abs_detection_proportion_imported
-    )
+        # Build life expectancy derived output function
+        life_expectancy = inputs.get_life_expectancy_by_agegroup(agegroup_strata, country.iso3)[0]
+        life_expectancy_latest = [life_expectancy[agegroup][-1] for agegroup in life_expectancy]
+        life_lost_func = outputs.get_calculate_years_of_life_lost(life_expectancy_latest)
 
-    # Build life expectancy derived output function
-    life_expectancy = inputs.get_life_expectancy_by_agegroup(agegroup_strata, country.iso3)[0]
-    life_expectancy_latest = [life_expectancy[agegroup][-1] for agegroup in life_expectancy]
-    life_lost_func = outputs.get_calculate_years_of_life_lost(life_expectancy_latest)
+        # Build hospital occupancy func
+        compartment_periods = params.sojourn.compartment_periods
+        icu_early_period = compartment_periods["icu_early"]
+        hospital_early_period = compartment_periods["hospital_early"]
+        calculate_hospital_occupancy = outputs.get_calculate_hospital_occupancy(
+            icu_early_period, hospital_early_period
+        )
 
-    # Build hospital occupancy func
-    compartment_periods = params.sojourn.compartment_periods
-    icu_early_period = compartment_periods["icu_early"]
-    hospital_early_period = compartment_periods["hospital_early"]
-    calculate_hospital_occupancy = outputs.get_calculate_hospital_occupancy(
-        icu_early_period, hospital_early_period
-    )
+        func_outputs = {
+            # Case-related
+            "notifications": notification_func,
+            "local_notifications": local_notification_func,
+            "notifications_at_sympt_onset": outputs.get_notifications_at_sympt_onset,
+            # Death-related
+            "years_of_life_lost": life_lost_func,
+            "accum_deaths": outputs.calculate_cum_deaths,
+            # Health care-related
+            "hospital_occupancy": calculate_hospital_occupancy,
+            "icu_occupancy": outputs.calculate_icu_occupancy,
+            "new_hospital_admissions": outputs.calculate_new_hospital_admissions_covid,
+            "new_icu_admissions": outputs.calculate_new_icu_admissions_covid,
+            # Other
+            "proportion_seropositive": outputs.calculate_proportion_seropositive,
+        }
 
-    func_outputs = {
-        # Case-related
-        "notifications": notification_func,
-        "local_notifications": local_notification_func,
-        "notifications_at_sympt_onset": outputs.get_notifications_at_sympt_onset,
-        # Death-related
-        "years_of_life_lost": life_lost_func,
-        "accum_deaths": outputs.calculate_cum_deaths,
-        # Health care-related
-        "hospital_occupancy": calculate_hospital_occupancy,
-        "icu_occupancy": outputs.calculate_icu_occupancy,
-        "new_hospital_admissions": outputs.calculate_new_hospital_admissions_covid,
-        "new_icu_admissions": outputs.calculate_new_icu_admissions_covid,
-        # Other
-        "proportion_seropositive": outputs.calculate_proportion_seropositive,
-    }
+        # Derived outputs for the optimization project.
+        if params.country.iso3 in OPTI_ISO3S:
+            func_outputs["accum_years_of_life_lost"] = outputs.calculate_cum_years_of_life_lost
+            for agegroup in agegroup_strata:
+                age_key = f"agegroup_{agegroup}"
+                func_outputs[
+                    f"proportion_seropositiveX{age_key}"
+                ] = outputs.make_age_specific_seroprevalence_output(agegroup)
+                func_outputs[f"accum_deathsX{age_key}"] = outputs.make_agespecific_cum_deaths_func(
+                    agegroup
+                )
 
-    # Derived outputs for the optimization project.
-    if params.country.iso3 in OPTI_ISO3S:
-        func_outputs["accum_years_of_life_lost"] = outputs.calculate_cum_years_of_life_lost
-        for agegroup in agegroup_strata:
-            age_key = f"agegroup_{agegroup}"
-            func_outputs[
-                f"proportion_seropositiveX{age_key}"
-            ] = outputs.make_age_specific_seroprevalence_output(agegroup)
-            func_outputs[f"accum_deathsX{age_key}"] = outputs.make_agespecific_cum_deaths_func(
-                agegroup
-            )
-
-    model.add_function_derived_outputs(func_outputs)
+        model.add_function_derived_outputs(func_outputs)
+    else:
+        add_victorian_derived_outputs(model)
 
     return model
 

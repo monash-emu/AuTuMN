@@ -1,4 +1,4 @@
-# SCENARIO DESCRIPTION: Scenario 4, hard lockdown
+# SCENARIO DESCRIPTION: Scenario 4, hard lockdown (90% workforce and other locations close)
 ---
 parent: apps/covid_19/regions/malaysia/params/default.yml
 

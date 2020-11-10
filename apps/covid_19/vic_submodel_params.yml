@@ -7,7 +7,7 @@ infectious_seed: 0
 
 time:
   start: 140 # 19th May
-  end: 365
+  end: 400
 
 country:
   iso3: AUS

@@ -28,6 +28,7 @@ class Compartment:
     LATE_INFECTIOUS = "late"
     ON_TREATMENT = "on_treatment"
     LTBI_TREATED = "ltbi_treated"
+    DETECTED = "detected"
 
 
 class Flow:

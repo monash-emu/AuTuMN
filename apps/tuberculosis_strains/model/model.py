@@ -25,11 +25,13 @@ def build_model(params: dict) -> StratifiedModel:
         Compartment.EARLY_LATENT,
         Compartment.LATE_LATENT,
         Compartment.INFECTIOUS,
+        Compartment.DETECTED,
         Compartment.ON_TREATMENT,
         Compartment.RECOVERED,
     ]
     infectious_comps = [
         Compartment.INFECTIOUS,
+        Compartment.DETECTED,
         Compartment.ON_TREATMENT,
     ]
 
@@ -38,6 +40,7 @@ def build_model(params: dict) -> StratifiedModel:
         Compartment.EARLY_LATENT: params["initial_early_latent_population"],
         Compartment.LATE_LATENT: params["initial_late_latent_population"],
         Compartment.INFECTIOUS: params["initial_infectious_population"],
+        Compartment.DETECTED: params["initial_detected_population"],
         Compartment.ON_TREATMENT: params["initial_on_treatment_population"],
     }
 

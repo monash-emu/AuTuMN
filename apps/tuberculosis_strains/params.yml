@@ -48,6 +48,9 @@ treatment_recovery_rate: 1.84
 relapse_rate: 0.11
 detection_rate: 5.0
 
+treatment_commencement_rate: 26
+missed_to_active_rate: 4
+
 # death rates
 infect_death_rate: 0.2
 treatment_death_rate: 0.05

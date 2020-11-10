@@ -30,13 +30,44 @@ def build_victorian_mixing_matrix_func(
         cluster_age_mm_funcs.append(cluster_age_mm_func)
 
     def get_mixing_matrix(self: StratifiedModel, time: float):
+        """
+        Construct a 144 x 144 matrix that is the same shape as the Kronecker product
+        of our age-based mixing matrix and the identity matrix *except*, we swap in
+        region specific values. The matrix should have shape (for ages a and clutsers c)
+
+        a00c0         a01c0
+         a00c1         a01c1
+          a00c2         a01c2
+            a00c3        a01c3
+             a00c4        a01c4      ... 16 times
+              a00c5        a01c5
+               a00c6        a01c6
+                a00c7        a01c7
+                 a00c8        a01c8
+        a10c0
+         a10c1         .
+          a10c2         .
+            a10c3        .
+             a10c4
+              a10c5
+               a10c6
+                a10c7
+                 a10c8
+            .
+            .
+            .
+            16 times
+
+        """
         mm = np.zeros([144, 144])
         cluster_age_mms = [f(time) for f in cluster_age_mm_funcs]
-        for cluster_idx, age_mm in enumerate(cluster_age_mms):
-            for age_i in range(16):
-                for age_j in range(16):
-                    i = age_i * cluster_idx
-                    j = age_j * cluster_idx
+        for age_i in range(16):
+            for age_j in range(16):
+                start_i = age_i * 9
+                start_j = age_j * 9
+                for cluster_idx, age_mm in enumerate(cluster_age_mms):
+                    i = start_i + cluster_idx
+                    j = start_j + cluster_idx
                     mm[i, j] = age_mm[age_i, age_j]
 
         return mm

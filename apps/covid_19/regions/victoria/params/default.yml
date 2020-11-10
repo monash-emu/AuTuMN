@@ -8,22 +8,24 @@ population:
 
 mobility:
   region: Victoria
+  smooth_google_data: true
 
 # Cluster stratification.
 victorian_clusters:
   # Allows us to adjust contact rate per-cluster when calibrating
   contact_rate_multipliers:
     barwon_south_west: 1
-    gippsland: 0
-    hume: 0
-    loddon_mallee: 0
-    grampians: 0
-    north_metro: 0
-    south_east_metro: 0
-    south_metro: 0
-    west_metro: 0
+    gippsland: 1
+    hume: 1
+    loddon_mallee: 1
+    grampians: 1
+    north_metro: 1
+    south_east_metro: 1
+    south_metro: 1
+    west_metro: 1
 
 importation:
+  # FIXME: This is made up.
   case_timeseries:
     times: [153, 154]
     values: [1, 0]

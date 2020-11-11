@@ -3,7 +3,7 @@ AuTuMN
 ======
 
 ![](https://github.com/monash-emu/AuTuMN/workflows/Continuous%20Integration/badge.svg)
-
+ 
 This project is a Python disease modelling framework used by the [AuTuMN tuberculosis modelling project](http://www.tb-modelling.com/index.php).
 It is currently being applied to COVID-19 as well. This project is used by the Monash Univeristy Epidemiological Modelling Unit.
 

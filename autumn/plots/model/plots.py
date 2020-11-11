@@ -32,6 +32,9 @@ def plot_age_distribution(plotter: Plotter, sub_region: str, iso3: str):
     agegroup_strata = [int(s) for s in range(0, 100, 5)]
 
     age_distribution = get_population_by_agegroup(agegroup_strata, iso3, sub_region)
+    age_distribution = [each / 10e5 for each in age_distribution]
+    axis.set_xlabel("Age", fontsize=10)
+    axis.set_ylabel("Millions", fontsize=10)
     pyplot.bar(agegroup_strata, height=age_distribution, width=4, align="edge")
     plotter.save_figure(fig, filename="age-distribution", title_text="Age distribution")
 

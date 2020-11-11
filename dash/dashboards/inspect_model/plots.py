@@ -24,7 +24,7 @@ iso3_map = {
     "italy": "ITA",
     "loddon-mallee": "AUS",
     "malaysia": "MYS",
-    "manila": "AUS",
+    "manila": "PHL",
     "north-metro": "AUS",
     "philippines": "PHL",
     "sabah": "MYS",

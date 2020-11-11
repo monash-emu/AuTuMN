@@ -236,3 +236,13 @@ class Parameters:
     new_icu_admissions_dispersion_param: float
     infection_deaths_dispersion_param: float
     accum_deaths_dispersion_param: float
+
+    notifications_for_cluster_barwon_south_west_dispersion_param: float
+    notifications_for_cluster_gippsland_dispersion_param: float
+    notifications_for_cluster_hume_dispersion_param: float
+    notifications_for_cluster_loddon_mallee_dispersion_param: float
+    notifications_for_cluster_grampians_dispersion_param: float
+    notifications_for_cluster_north_metro_dispersion_param: float
+    notifications_for_cluster_south_east_metro_dispersion_param: float
+    notifications_for_cluster_south_metro_dispersion_param: float
+    notifications_for_cluster_west_metro_dispersion_param: float

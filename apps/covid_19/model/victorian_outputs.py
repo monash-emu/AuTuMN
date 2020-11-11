@@ -15,9 +15,7 @@ from apps.covid_19.model.outputs import NOTIFICATION_STRATUM
 CLUSTERS = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS]
 
 
-def add_victorian_derived_outputs(
-    model: StratifiedModel, icu_early_period: float, hospital_early_period: float
-):
+def add_victorian_derived_outputs(model: StratifiedModel):
 
     # Track infection deaths
     inf_death_conns = {}

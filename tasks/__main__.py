@@ -22,8 +22,6 @@ SENTRY_DSN = os.environ.get("SENTRY_DSN")
 if SENTRY_DSN:
     sentry_sdk.init(SENTRY_DSN)
 
-# Configure command logging
-logging.basicConfig(format="%(asctime)s %(module)s:%(levelname)s: %(message)s", level=logging.INFO)
 
 # Configure logging for the Boto3 library
 logging.getLogger("boto3").setLevel(logging.WARNING)
@@ -36,8 +34,6 @@ from .full import full_model_run_task
 from .powerbi import powerbi_task
 from .dhhs import dhhs_task
 
-
-logger = logging.getLogger(__name__)
 
 os.makedirs(BASE_DIR, exist_ok=True)
 

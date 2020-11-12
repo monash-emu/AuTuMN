@@ -87,7 +87,7 @@ def dhhs_task(commit: str, quiet: bool):
 
         # Get sample runs from all chains
         start_t = 140
-        end_t = 365
+        end_t = 400
         times = np.linspace(start_t, end_t, end_t - start_t + 1)
         samples = []
         for _ in range(DHHS_NUM_CHOSEN):
@@ -151,7 +151,7 @@ def dhhs_task(commit: str, quiet: bool):
 
         # Get sample runs from all chains
         start_t = (datetime.now() - BASE_DATETIME).days  # Now
-        end_t = min(start_t + 7 * 6 + 1, 365)  # 6 weeks from now
+        end_t = min(start_t + 7 * 6 + 1, 400)  # 6 weeks from now
         times = np.linspace(start_t, end_t - 1, end_t - start_t, dtype=np.int64)
         samples = [np.zeros(end_t - start_t) for _ in range(ENSEMBLE_NUM_CHOSEN)]
         for region in Region.VICTORIA_SUBREGIONS:

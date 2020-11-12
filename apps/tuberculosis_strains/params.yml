@@ -21,6 +21,14 @@ cumulative_output_start_time: 2020.
 # model structure
 # stratifications by 'age' and by 'organ' are pre-defined but they must be requested to be activated
 # other stratifications can be requested as "user_defined_stratifications"
+age_breakpoints: ["0", "5", "15"]
+
+
+# vaccination
+bcg:
+  coverage: 0.95
+  start_time: 1980
+  rr_infection_vaccinated: 0.05
 
 # initial conditions
 initial_infectious_population: 0
@@ -41,9 +49,20 @@ rr_infection_recovered: 1.0
 # latency-related parameters
 stabilisation_rate: 1.0e-2
 late_activation_rate: 5.5e-6
-early_activation_rate: 1.1e-3
+early_activation_rate: 2.2e-3
 
 # active-disease parameters
+
+organ:
+  sp_prop: 0.55
+  sn_prop: 0.25
+  e_prop: 0.20
+
+  sp_foi: 1.0
+  sn_foi: 0.24
+  e_foi: 0.24
+
+
 self_recovery_rate: 0.2
 treatment_recovery_rate: 1.84
 relapse_rate: 0.11

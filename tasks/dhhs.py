@@ -221,7 +221,7 @@ def get_vic_full_run_dbs_for_commit(commit: str):
         )
         region_db_keys = [k for k in region_db_keys if filter_key(k)]
         msg = f"There should exactly one set of full model run databases for {region} with commit {commit}: {region_db_keys}"
-        filenames = [k.split("/")[-1] for k in region_db_keys]
+        filenames = ["/".join(k.split("/")[-2:]) for k in region_db_keys]
         assert len(filenames) == len(set(filenames)), msg
         keys[region] = region_db_keys
 

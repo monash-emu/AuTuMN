@@ -87,10 +87,17 @@ def build_model(params: dict) -> StratifiedModel:
 
     # apply age stratification
     age_stratification_name = "age"
+    age_flow_adjustments = {"stabilisation_rate": {"0": params["stabilisation_rate_stratified"]["age_0"],
+                                                   "5": params["stabilisation_rate_stratified"]["age_5"],
+                                                   "15": params["stabilisation_rate_stratified"]["age_15"]},
+                            "late_activation_rate": {"0": params["late_activation_rate_stratified"]["age"]["age_0"],
+                                                     "5": params["late_activation_rate_stratified"]["age"]["age_5"],
+                                                     "15": params["late_activation_rate_stratified"]["age"]["age_15"]}}
     tb_model.stratify(stratification_name=age_stratification_name,
                       strata_request=params["age_breakpoints"],
                       compartments_to_stratify=compartments,
                       comp_split_props=dict(zip(params["age_breakpoints"], [x / sum(pop) for x in pop])),
+                      flow_adjustments=age_flow_adjustments,
                       mixing_matrix=mixing_matrix)
 
     tb_model.time_variants["time_varying_vaccination_coverage"] = lambda t: params["bcg"]["coverage"] if t > params["bcg"]["start_time"] else 0.0
@@ -122,12 +129,26 @@ def build_model(params: dict) -> StratifiedModel:
     # apply organ stratification
     organ_stratification_name = "organ"
     organ_strata_requested = ["smear_positive", "smear_negative", "extra_pulmonary"]
-    organ_flow_adjustments = dict(zip(["early_activation_rate" + "X" + age_stratification_name + "_" + age_group
+    organ_flow_adjustments = dict()
+    organ_flow_adjustments.update(dict(zip(["early_activation_rate" + "X" + age_stratification_name + "_" + age_group
                                             for age_group in params["age_breakpoints"]],
                                       [{"smear_positive": params["organ"]["sp_prop"],
                                         "smear_negative": params["organ"]["sn_prop"],
                                         "extra_pulmonary": params["organ"]["e_prop"]} for _ in range(len(params["age_breakpoints"]))]))
+                                  )
+    organ_flow_adjustments.update(dict(zip(["late_activation_rate" + "X" + age_stratification_name + "_" + age_group
+                                            for age_group in params["age_breakpoints"]],
+                                      [{"smear_positive": params["organ"]["sp_prop"],
+                                        "smear_negative": params["organ"]["sn_prop"],
+                                        "extra_pulmonary": params["organ"]["e_prop"]} for _ in range(len(params["age_breakpoints"]))]))
+                                  )
 
+    organ_flow_adjustments.update(dict(zip(["detection_rate" + "X" + age_stratification_name + "_" + age_group
+                                            for age_group in params["age_breakpoints"]],
+                                      [{"smear_positive": params["detection_rate_stratified"]["organ"]["sp"],
+                                        "smear_negative": params["detection_rate_stratified"]["organ"]["sn"],
+                                        "extra_pulmonary": params["detection_rate_stratified"]["organ"]["e"]} for _ in range(len(params["age_breakpoints"]))]))
+                                  )
 
     tb_model.stratify(stratification_name=organ_stratification_name,
                       strata_request=organ_strata_requested,
@@ -141,14 +162,67 @@ def build_model(params: dict) -> StratifiedModel:
                       )
 
     # apply strain stratification
-    # tb_model.stratify(stratification_name="strain",
-    #                   strata_request=["ds", "mdr"],
-    #                   compartments_to_stratify=infected_comps,
-    #                   comp_split_props={"ds": 0.5, "mdr": 0.5},
+    strain_stratification_name = "strain"
+    strain_strata_requested = ["ds", "mdr"]
+    strain_flow_adjustments = dict()
+    strain_flow_adjustments.update(dict(zip(["treatment_commencement_rate" + "X" + age_stratification_name + "_" + age_group +
+                                                "X" + organ_stratification_name + "_" + organ
+                                            for age_group in params["age_breakpoints"]
+                                                for organ in organ_strata_requested],
+                                      [{"ds": params["treatment_commencement_rate_stratified"]["strain"]["ds"],
+                                        "mdr": params["treatment_commencement_rate_stratified"]["strain"]["mdr"]} for _ in range(len(params["age_breakpoints"]) * len(organ_strata_requested))]))
+                                  )
+
+    tb_model.stratify(stratification_name=strain_stratification_name,
+                      strata_request=strain_strata_requested,
+                      compartments_to_stratify=infected_comps,
+                      comp_split_props={"ds": 0.5, "mdr": 0.5},
+                      flow_adjustments=strain_flow_adjustments,
     #                   flow_adjustments={"infect_death_rate": {"ds": 1.0, "mdr": 2.0},
     #                                     "early_activation_rate": {"ds": 1.0, "mdr": 0.5}},
-    #                   infectiousness_adjustments={"ds": 1.0, "mdr": 0.8})
+                      infectiousness_adjustments={"ds": 1.0, "mdr": 0.8})
 
+
+    # apply classification stratification
+    # classification_stratification_name = "classified"
+    # classification_strata_requested = ["correctly", "incorrectly"]
+
+    # tb_model.stratify(stratification_name=classification_stratification_name,
+    #                   strata_request=classification_strata_requested,
+    #                   compartments_to_stratify=[Compartment.DETECTED, Compartment.ON_TREATMENT])
+
+
+    # apply retention stratification
+    retention_stratification_name = "retained"
+    retention_strata_requested = ["yes", "no"]
+
+    retention_flow_adjustments = dict()
+    retention_flow_adjustments.update(dict(zip(["detection_rate" + "X" + age_stratification_name + "_" + age_group +
+                                                "X" + organ_stratification_name + "_" + organ +
+                                                "X" + strain_stratification_name + "_" + strain
+                                            for age_group in params["age_breakpoints"]
+                                                for organ in organ_strata_requested
+                                                    for strain in strain_strata_requested],
+                                      [{"yes": params["retention_rate"],
+                                        "no": 1 - params["retention_rate"]} for _ in range(len(params["age_breakpoints"]) * len(organ_strata_requested) * len(strain_strata_requested))]))
+                                  )
+
+    retention_flow_adjustments.update(dict(zip(["missed_to_active_rate" + "X" + age_stratification_name + "_" + age_group +
+                                                "X" + organ_stratification_name + "_" + organ +
+                                                "X" + strain_stratification_name + "_" + strain
+                                                for age_group in params["age_breakpoints"]
+                                                for organ in organ_strata_requested
+                                                for strain in strain_strata_requested],
+                                               [{"yes": 0.0,
+                                                 "no": 1.0} for _ in range(
+                                                   len(params["age_breakpoints"]) * len(organ_strata_requested) * len(
+                                                       strain_strata_requested))]))
+                                      )
+
+    tb_model.stratify(stratification_name=retention_stratification_name,
+                      strata_request=retention_strata_requested,
+                      compartments_to_stratify=[Compartment.DETECTED],
+                      flow_adjustments=retention_flow_adjustments)
 
 
     # Register derived output functions, which are calculations based on the model's compartment values or flows.

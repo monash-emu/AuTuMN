@@ -42,13 +42,25 @@ crude_birth_rate: 0.2
 
 # basic infection and disease parameters
 contact_rate: 14.0
-rr_infection_latent: 0.21
+rr_infection_latent: 0.4
 rr_infection_recovered: 1.0
 
 
 # latency-related parameters
-stabilisation_rate: 1.0e-2
-late_activation_rate: 5.5e-6
+stabilisation_rate: 3.65
+stabilisation_rate_stratified:
+  age_0: 1.2
+  age_5: 1.2
+  age_15: 0.54
+late_activation_rate: 0.002
+late_activation_rate_stratified:
+  age:
+    age_0: 3.46e-6
+    age_5: 1.16
+    age_15: 0.6
+
+
+
 early_activation_rate: 2.2e-3
 
 # active-disease parameters
@@ -66,13 +78,43 @@ organ:
 self_recovery_rate: 0.2
 treatment_recovery_rate: 1.84
 relapse_rate: 0.11
-detection_rate: 5.0
+#detection_rate: 5.0
+
+case_detection_prop: 0.62
+case_detection_prop_sp: 0.85
+frontline_xpert_prop: 0.03
+
+
+detection_rate_stratified:
+  organ:
+    sp: 1.0
+
+retention_rate: 0.8
 
 treatment_commencement_rate: 26
+treatment_commencement_rate_stratified:
+  strain:
+    ds: 1.0
+    mdr: 0.5
+
 missed_to_active_rate: 4
 
 # death rates
-infect_death_rate: 0.2
+infect_death_rate: 0.7
+
+infect_death_rate_stratified:
+  organ:
+    sp: 1.0
+    sn: 0.414
+    e: 0.414
+
+natural_recovery_rate: 0.231
+natural_recovery_rate_stratified:
+  organ:
+    sp: 1.0
+    sn: 0.563
+    e: 0.563
+
 treatment_death_rate: 0.05
 
 

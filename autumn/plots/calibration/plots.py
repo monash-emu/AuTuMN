@@ -836,14 +836,8 @@ def plot_cdr_curves(
     # Get basic plotting structures
     fig, axis, _, _, _, _ = plotter.get_figure()
 
-    # Plot outputs
-    for i_curve in range(len(detected_proportion)):
-        axis.plot(
-            times,
-            [detected_proportion[i_curve](i_time) for i_time in times],
-            color="k",
-            linewidth=0.7,
-        )
+    # Plot
+    axis = plot_cdr_to_axis(axis, times, detected_proportion)
 
     # Tidy
     change_xaxis_to_date(axis, ref_date=REF_DATE, rotation=rotation)
@@ -864,18 +858,10 @@ def plot_multi_cdr_curves(
     # Get basic plotting structures
     fig, axes, _, n_rows, n_cols, indices = plotter.get_figure(n_panels=len(regions))
 
-    for i_output in range(n_rows * n_cols):
-        axis = axes[indices[i_output][0], indices[i_output][1]]
-        if i_output < len(regions):
-
-            # Plot outputs
-            for i_curve in range(len(detected_proportions[i_output])):
-                axis.plot(
-                    times,
-                    [detected_proportions[i_output][i_curve](i_time) for i_time in times],
-                    color="k",
-                    linewidth=0.7,
-                )
+    for i_region in range(n_rows * n_cols):
+        axis = axes[indices[i_region][0], indices[i_region][1]]
+        if i_region < len(regions):
+            axis = plot_cdr_to_axis(axis, times, detected_proportions[i_region])
 
             # Tidy
             change_xaxis_to_date(axis, ref_date=REF_DATE, rotation=rotation)
@@ -885,6 +871,17 @@ def plot_multi_cdr_curves(
             axis.axis("off")
 
     plotter.save_figure(fig, filename=f"cdr_curves")
+
+
+def plot_cdr_to_axis(axis, times, detected_proportions):
+    for i_curve in range(len(detected_proportions)):
+        axis.plot(
+            times,
+            [detected_proportions[i_curve](i_time) for i_time in times],
+            color="k",
+            linewidth=0.7,
+        )
+    return axis
 
 
 def plot_multi_fit(

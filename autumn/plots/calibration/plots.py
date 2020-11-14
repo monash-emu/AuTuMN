@@ -853,6 +853,40 @@ def plot_cdr_curves(
     plotter.save_figure(fig, filename=f"cdr_curves")
 
 
+def plot_multi_cdr_curves(
+    plotter: Plotter,
+    times,
+    detected_proportions,
+    end_date,
+    rotation,
+    regions
+):
+    # Get basic plotting structures
+    fig, axes, _, n_rows, n_cols, indices = plotter.get_figure(n_panels=len(regions))
+
+    for i_output in range(n_rows * n_cols):
+        axis = axes[indices[i_output][0], indices[i_output][1]]
+        if i_output < len(regions):
+
+            # Plot outputs
+            for i_curve in range(len(detected_proportions[i_output])):
+                axis.plot(
+                    times,
+                    [detected_proportions[i_output][i_curve](i_time) for i_time in times],
+                    color="k",
+                    linewidth=0.7,
+                )
+
+            # Tidy
+            change_xaxis_to_date(axis, ref_date=REF_DATE, rotation=rotation)
+            axis.set_xlim(right=end_date)
+            axis.set_ylim([0.0, 1.0])
+        else:
+            axis.axis("off")
+
+    plotter.save_figure(fig, filename=f"cdr_curves")
+
+
 def plot_multi_fit(
     plotter: Plotter,
     output_names: list,

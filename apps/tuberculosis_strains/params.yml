@@ -76,7 +76,50 @@ organ:
 
 
 self_recovery_rate: 0.2
-treatment_recovery_rate: 1.84
+
+treatment_duration: 0.5
+treatment_duration_stratified:
+  strain:
+    ds: 1.0
+    mdr: 1.5
+
+treatment_success_prop: 0.92
+treatment_success_prop_stratified:
+  strain:
+    ds: 1.0
+    mdr: 0.5435
+
+treatment_mortality_prop: 0.024
+treatment_mortality_prop_stratified:
+  strain:
+    ds: 1.0
+    mdr: 8.33
+
+treatment_default_prop: 0.056
+treatment_default_prop_stratified:
+  strain:
+    ds: 1.0
+    mdr: 5.357
+
+
+treatment_recovery_rate_stratified:
+  strain:
+    ds:
+    mdr:
+
+treatment_death_rate_stratified:
+  strain:
+    ds:
+    mdr:
+
+treatment_default_rate_stratified:
+  strain:
+    ds:
+    mdr:
+
+
+
+# treatment_recovery_rate: 1.84
 relapse_rate: 0.11
 #detection_rate: 5.0
 

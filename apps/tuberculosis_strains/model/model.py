@@ -172,6 +172,33 @@ def build_model(params: dict) -> StratifiedModel:
                                       [{"ds": params["treatment_commencement_rate_stratified"]["strain"]["ds"],
                                         "mdr": params["treatment_commencement_rate_stratified"]["strain"]["mdr"]} for _ in range(len(params["age_breakpoints"]) * len(organ_strata_requested))]))
                                   )
+    strain_flow_adjustments.update(
+        dict(zip(["treatment_recovery_rate" + "X" + age_stratification_name + "_" + age_group +
+                  "X" + organ_stratification_name + "_" + organ
+                  for age_group in params["age_breakpoints"]
+                  for organ in organ_strata_requested],
+                 [{"ds": params["treatment_recovery_rate_stratified"]["strain"]["ds"],
+                   "mdr": params["treatment_recovery_rate_stratified"]["strain"]["mdr"]} for _ in
+                  range(len(params["age_breakpoints"]) * len(organ_strata_requested))]))
+        )
+    strain_flow_adjustments.update(
+        dict(zip(["treatment_death_rate" + "X" + age_stratification_name + "_" + age_group +
+                  "X" + organ_stratification_name + "_" + organ
+                  for age_group in params["age_breakpoints"]
+                  for organ in organ_strata_requested],
+                 [{"ds": params["treatment_death_rate_stratified"]["strain"]["ds"],
+                   "mdr": params["treatment_death_rate_stratified"]["strain"]["mdr"]} for _ in
+                  range(len(params["age_breakpoints"]) * len(organ_strata_requested))]))
+    )
+    strain_flow_adjustments.update(
+        dict(zip(["treatment_default_rate" + "X" + age_stratification_name + "_" + age_group +
+                  "X" + organ_stratification_name + "_" + organ
+                  for age_group in params["age_breakpoints"]
+                  for organ in organ_strata_requested],
+                 [{"ds": params["treatment_default_rate_stratified"]["strain"]["ds"],
+                   "mdr": params["treatment_default_rate_stratified"]["strain"]["mdr"]} for _ in
+                  range(len(params["age_breakpoints"]) * len(organ_strata_requested))]))
+    )
 
     tb_model.stratify(stratification_name=strain_stratification_name,
                       strata_request=strain_strata_requested,

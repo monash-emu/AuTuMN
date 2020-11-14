@@ -21,7 +21,7 @@ def run_dashboard():
         "Calibration time (seconds)", min_value=30, max_value=3600, value=30, step=30
     )
     if st.button("Calibrate the model"):
-        with st.spinner(f"Calibratning the {app_key} model for {region}..."):
+        with st.spinner(f"Calibrating the {app_key} model for {region}..."):
             app_region.calibrate_model(max_seconds=time_seconds, run_id=1, num_chains=1)
 
         st.success(f"Finished calibrating the {app_key} model for {region}.")

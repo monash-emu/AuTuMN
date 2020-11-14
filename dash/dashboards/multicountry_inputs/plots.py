@@ -1,10 +1,8 @@
 import streamlit as st
-from autumn import plots
-from dash.dashboards.calibration_results.plots import get_uncertainty_data
-from math import ceil
-import matplotlib.pyplot as pyplot
 from autumn.tool_kit.params import load_params
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
+from autumn import db, plots, inputs
+from apps.covid_19.model.preprocess.testing import find_cdr_function_from_test_data
 
 PLOT_FUNCS = {}
 
@@ -48,8 +46,32 @@ def multi_country_cdr(
             str(s) for s in range(0, agegroup_params["max_age"], agegroup_params["age_step_size"])
         ]
 
-        st.write(times)
-        st.write(agegroup_strata)
+        # Collate parameters into one structure
+        testing_to_detection_values = []
+        # st.write(mcmc_params)
+        for i_chain in range(len(mcmc_params)):
+            param_mask = mcmc_params[i_chain][0]["name"] == param_name
+            testing_to_detection_values += mcmc_params[i_chain][0]["value"][param_mask].tolist()
+
+        import random
+        sampled_test_to_detect_vals = random.sample(testing_to_detection_values, samples)
+
+        # Get CDR function - needs to be done outside of autumn, because it is importing from the apps
+        testing_pops = inputs.get_population_by_agegroup(agegroup_strata, iso3, None, year=testing_year)
+        detected_proportion = []
+        for assumed_cdr_parameter in sampled_test_to_detect_vals:
+            detected_proportion.append(
+                find_cdr_function_from_test_data(
+                    assumed_tests_parameter,
+                    assumed_cdr_parameter,
+                    smoothing_period,
+                    iso3,
+                    testing_pops,
+                )
+            )
+        plots.calibration.plots.plot_cdr_curves(
+            plotter, times, detected_proportion, end_date, label_rotation
+        )
 
 
 PLOT_FUNCS["Multi-country CDR"] = multi_country_cdr

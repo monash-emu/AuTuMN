@@ -161,6 +161,8 @@ def plot_multi_output_timeseries_with_uncertainty(
     x_low=0.0,
     x_up=2000.0,
     n_xticks=None,
+    title_font_size=12,
+    label_font_size=10,
 ):
     if len(output_names) * len(scenarios) == 0:
         return
@@ -190,6 +192,8 @@ def plot_multi_output_timeseries_with_uncertainty(
             x_up,
             ax,
             n_xticks,
+            title_font_size=title_font_size,
+            label_font_size=label_font_size,
         )
         i_col += 1
         if i_col == max_n_col:

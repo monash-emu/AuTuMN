@@ -203,6 +203,27 @@ def plot_mobility_raw(
 PLOT_FUNCS["Google Mobility Raw"] = plot_mobility_raw
 
 
+def plot_mobility_raw_2(
+    plotter: StreamlitPlotter, app: AppRegion,
+):
+    params = app.params["default"]
+    values, days = get_mobility_data(
+        params["country"]["iso3"],
+        params["mobility"]["region"],
+        BASE_DATE,
+        params["mobility"]["google_mobility_locations"],
+    )
+    # st.write(type(values))
+    # options = list(params["mobility"]["google_mobility_locations"].keys())
+    # loc_key = st.sidebar.selectbox("Select location", options)
+    # values_lookup = {days[i]: values[loc_key][i] for i in range(len(days))}
+    # loc_func = lambda t: values_lookup[t]
+    plots.model.plots.plot_time_varying_input_2(plotter, values, days, is_logscale=False)
+
+
+PLOT_FUNCS["Google Mobility Raw_2"] = plot_mobility_raw_2
+
+
 def plot_model_targets(
     plotter: StreamlitPlotter, app: AppRegion,
 ):

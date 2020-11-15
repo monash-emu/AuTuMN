@@ -99,8 +99,8 @@ def plot_timeseries_with_uncertainty(
     elif not (output_name.startswith("rel_diff") or output_name.startswith("abs_diff")):
         axis.set_ylim(ymin=0)
 
-    if show_ylab:
-        axis.set_ylabel(get_plot_text_dict(output_name), fontsize=label_font_size)
+    # if show_ylab:
+    #     axis.set_ylabel(get_plot_text_dict(output_name), fontsize=label_font_size)
 
     if legend:
         pyplot.legend(labels=scenario_idxs)

@@ -111,6 +111,25 @@ def plot_acceptance_ratio(
 PLOT_FUNCS["Acceptance ratio"] = plot_acceptance_ratio
 
 
+def get_cdr_constants(default_params):
+    iso3 = default_params["country"]["iso3"]
+    testing_year = default_params["population"]["year"]
+    assumed_tests_parameter = default_params["testing_to_detection"]["assumed_tests_parameter"]
+    smoothing_period = default_params["testing_to_detection"]["smoothing_period"]
+    agegroup_params = default_params["age_stratification"]
+    time_params = default_params["time"]
+
+    # Derive times and age group breaks in the same way as the model does
+    times = get_model_times_from_inputs(
+        time_params["start"], time_params["end"], time_params["step"]
+    )
+    agegroup_strata = [
+        str(s) for s in range(0, agegroup_params["max_age"], agegroup_params["age_step_size"])
+    ]
+    return iso3, testing_year, assumed_tests_parameter, smoothing_period, agegroup_params, time_params, times, \
+           agegroup_strata
+
+
 def plot_cdr_curves(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
@@ -121,7 +140,6 @@ def plot_cdr_curves(
     region: str,
 ):
 
-    # This should remain fixed, because it is only relevant to this particular function
     param_name = "testing_to_detection.assumed_cdr_parameter"
     region_name = region.replace("-", "_")
     end_date = st.sidebar.slider("End date", 1, 365, 275)
@@ -130,22 +148,9 @@ def plot_cdr_curves(
 
     # Extract parameters relevant to this function
     params = load_params(app_name, region_name)
-    default_params = params["default"]
-
-    iso3 = default_params["country"]["iso3"]
-    testing_year = default_params["population"]["year"]
-    assumed_tests_parameter = default_params["testing_to_detection"]["assumed_tests_parameter"]
-    smoothing_period = default_params["testing_to_detection"]["smoothing_period"]
-    agegroup_params = default_params["age_stratification"]
-    time_params = default_params["time"]
-
-    # Derive times and age group breaks as the model does
-    times = get_model_times_from_inputs(
-        time_params["start"], time_params["end"], time_params["step"]
-    )
-    agegroup_strata = [
-        str(s) for s in range(0, agegroup_params["max_age"], agegroup_params["age_step_size"])
-    ]
+    iso3, testing_year, assumed_tests_parameter, smoothing_period, agegroup_params, time_params, times, \
+    agegroup_strata = \
+        get_cdr_constants(params["default"])
 
     # Collate parameters into one structure
     testing_to_detection_values = []
@@ -153,6 +158,10 @@ def plot_cdr_curves(
         param_mask = mcmc_params[i_chain]["name"] == param_name
         testing_to_detection_values += mcmc_params[i_chain]["value"][param_mask].tolist()
 
+    # Sample testing values from all the ones available, to avoid plotting too many curves
+    if samples > len(testing_to_detection_values):
+        st.write("Warning: Requested samples greater than detection values estimated")
+        samples = len(testing_to_detection_values)
     sampled_test_to_detect_vals = random.sample(testing_to_detection_values, samples)
 
     # Get CDR function - needs to be done outside of autumn, because it is importing from the apps

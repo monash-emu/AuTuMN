@@ -286,7 +286,7 @@ def plot_time_varying_input_2(
 
     # test.index = REF_DATE + pd.Timedelta(test.index, unit="days")
     axes.plot(test.index, test.values)
-    # change_xaxis_to_date(test.index, REF_DATE)
+    change_xaxis_to_date(axes, REF_DATE)
     pyplot.legend(loc="best")
     # if X_MIN is not None and X_MAX is not None:
     #     axes.set_xlim((X_MIN, X_MAX))

@@ -153,6 +153,10 @@ def plot_cdr_curves(
         param_mask = mcmc_params[i_chain]["name"] == param_name
         testing_to_detection_values += mcmc_params[i_chain]["value"][param_mask].tolist()
 
+    # Sample testing values from all the ones available, to avoid plotting too many curves
+    if samples > len(testing_to_detection_values):
+        st.write("Requested samples greater than detection values estimated")
+        samples = len(testing_to_detection_values)
     sampled_test_to_detect_vals = random.sample(testing_to_detection_values, samples)
 
     # Get CDR function - needs to be done outside of autumn, because it is importing from the apps

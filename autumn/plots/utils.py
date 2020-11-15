@@ -30,6 +30,7 @@ PLOT_TEXT_DICT = {
     "infection_deaths": "deaths per day",
     "notifications": "notifications per day",
     "incidence": "incident episodes per day",
+    "accum_deaths": "cumulative deaths",
     "new_hospital_admissions": "new hospitalisations per day",
     "new_icu_admissions": "new ICU admissions per day",
     "hospital_occupancy": "hospital occupancy",

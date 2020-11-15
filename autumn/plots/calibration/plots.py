@@ -826,54 +826,46 @@ def plot_calibration_fit(
     plotter.save_figure(fig, filename=filename, title_text=title_text)
 
 
-def plot_cdr_curves(
-    plotter: Plotter,
-    times,
-    detected_proportion,
-    end_date,
-    rotation,
-):
-    # Get basic plotting structures
+def plot_cdr_curves(plotter: Plotter, times, detected_proportion, end_date, rotation):
+    """
+    Plot a single set of CDR curves to a one-panel figure
+    """
     fig, axis, _, _, _, _ = plotter.get_figure()
-
-    # Plot
     axis = plot_cdr_to_axis(axis, times, detected_proportion)
-
-    # Tidy
-    change_xaxis_to_date(axis, ref_date=REF_DATE, rotation=rotation)
-    axis.set_xlim(right=end_date)
     axis.set_ylabel("proportion symptomatic cases detected")
-    axis.set_ylim([0.0, 1.0])
+    tidy_cdr_axis(axis, rotation, end_date)
     plotter.save_figure(fig, filename=f"cdr_curves")
 
 
-def plot_multi_cdr_curves(
-    plotter: Plotter,
-    times,
-    detected_proportions,
-    end_date,
-    rotation,
-    regions
-):
-    # Get basic plotting structures
+def plot_multi_cdr_curves(plotter: Plotter, times, detected_proportions, end_date, rotation, regions):
+    """
+    Plot multiple sets of CDR curves onto a multi-panel figure
+    """
     fig, axes, _, n_rows, n_cols, indices = plotter.get_figure(n_panels=len(regions))
 
+    # Loop over models and plot
     for i_region in range(n_rows * n_cols):
         axis = axes[indices[i_region][0], indices[i_region][1]]
         if i_region < len(regions):
-            axis = plot_cdr_to_axis(axis, times, detected_proportions[i_region])
-
-            # Tidy
-            change_xaxis_to_date(axis, ref_date=REF_DATE, rotation=rotation)
-            axis.set_xlim(right=end_date)
-            axis.set_ylim([0.0, 1.0])
+            axis = plot_cdr_to_axis(
+                axis, times, detected_proportions[i_region]
+            )
+            tidy_cdr_axis(
+                axis, rotation, end_date
+            )
+            axis.set_title(regions[i_region])
         else:
             axis.axis("off")
 
-    plotter.save_figure(fig, filename=f"cdr_curves")
+    fig.tight_layout()
+    plotter.save_figure(fig, filename=f"multi_cdr_curves")
 
 
 def plot_cdr_to_axis(axis, times, detected_proportions):
+    """
+    Plot a set of CDR curves to an axis
+    """
+
     for i_curve in range(len(detected_proportions)):
         axis.plot(
             times,
@@ -881,6 +873,16 @@ def plot_cdr_to_axis(axis, times, detected_proportions):
             color="k",
             linewidth=0.7,
         )
+    return axis
+
+
+def tidy_cdr_axis(axis, rotation, end_date):
+    """
+    Tidy up a plot axis in the same way for both the two previous figures
+    """
+    change_xaxis_to_date(axis, ref_date=REF_DATE, rotation=rotation)
+    axis.set_xlim(right=end_date)
+    axis.set_ylim([0.0, 1.0])
     return axis
 
 

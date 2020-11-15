@@ -3,6 +3,7 @@ from autumn.tool_kit.params import load_params
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
 from autumn import plots, inputs
 from apps.covid_19.model.preprocess.testing import find_cdr_function_from_test_data
+import random
 
 PLOT_FUNCS = {}
 
@@ -14,10 +15,8 @@ def multi_country_cdr(
     Code taken directly from the fit calibration file at this stage.
     """
 
-    # Set up interface
-    fig, axes, _, n_rows, n_cols, indices = plotter.get_figure(len(region_name), share_xaxis=True)
+    from dash.dashboards.calibration_results.plots import get_cdr_constants
 
-    # This should remain fixed
     param_name = "testing_to_detection.assumed_cdr_parameter"
     end_date = st.sidebar.slider("End date", 1, 365, 275)
     samples = st.sidebar.slider("Samples", 1, 200, 10)
@@ -26,34 +25,19 @@ def multi_country_cdr(
 
     # Get data for plotting
     for i_region in range(len(region_name)):
-        region = region_name[i_region].replace("-", "_")
 
         # Extract parameters relevant to this function
+        region = region_name[i_region].replace("-", "_")
         params = load_params(app_name, region)
-        default_params = params["default"]
-
-        iso3 = default_params["country"]["iso3"]
-        testing_year = default_params["population"]["year"]
-        assumed_tests_parameter = default_params["testing_to_detection"]["assumed_tests_parameter"]
-        smoothing_period = default_params["testing_to_detection"]["smoothing_period"]
-        agegroup_params = default_params["age_stratification"]
-        time_params = default_params["time"]
-
-        # Derive times and age group breaks as the model does
-        times = get_model_times_from_inputs(
-            time_params["start"], time_params["end"], time_params["step"]
-        )
-        agegroup_strata = [
-            str(s) for s in range(0, agegroup_params["max_age"], agegroup_params["age_step_size"])
-        ]
+        iso3, testing_year, assumed_tests_parameter, smoothing_period, agegroup_params, time_params, times, \
+        agegroup_strata = \
+            get_cdr_constants(params["default"])
 
         # Collate parameters into one structure
         testing_to_detection_values = []
         for i_chain in range(len(mcmc_params)):
             param_mask = mcmc_params[i_chain][0]["name"] == param_name
             testing_to_detection_values += mcmc_params[i_chain][0]["value"][param_mask].tolist()
-
-        import random
         sampled_test_to_detect_vals = random.sample(testing_to_detection_values, samples)
 
         # Get CDR function - needs to be done outside of autumn, because it is importing from the apps

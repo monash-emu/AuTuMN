@@ -277,13 +277,14 @@ def plot_time_varying_input_2(
 
     test = pd.DataFrame(tv_key)
     test.index = times
-    import streamlit as st
+    # import streamlit as st
 
-    st.write(test.values)
+    # st.write(test.index)
 
     # pyplot.figure()
     # test.plot()
-    test.index = REF_DATE + pd.Timedelta(test.index)
+
+    # test.index = REF_DATE + pd.Timedelta(test.index, unit="days")
     axes.plot(test.index, test.values)
     # change_xaxis_to_date(test.index, REF_DATE)
     pyplot.legend(loc="best")

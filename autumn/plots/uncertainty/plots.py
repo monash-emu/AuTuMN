@@ -207,6 +207,59 @@ def plot_multi_output_timeseries_with_uncertainty(
     # pyplot.savefig(filename + ".pdf")
 
 
+def plot_multi_output_timeseries_with_uncertainty_2(
+    plotter: Plotter,
+    uncertainty_df: pd.DataFrame,
+    output_name: str,
+    scenarios: list,
+    all_targets: dict,
+    is_logscale=False,
+    x_low=0.0,
+    x_up=2000.0,
+    n_xticks=None,
+    title_font_size=12,
+    label_font_size=10,
+    regions=["something", "something_else"],
+):
+    if len(regions) * len(scenarios) == 0:
+        return
+    # pyplot.rcParams.update({'font.size': 15})
+
+    max_n_col = 2
+    n_panels = len(regions)
+    n_cols = min(max_n_col, n_panels)
+    n_rows = ceil(n_panels / max_n_col)
+
+    fig = pyplot.figure(constrained_layout=True, figsize=(n_cols * 7, n_rows * 5))  # (w, h)
+    spec = fig.add_gridspec(ncols=n_cols, nrows=n_rows)
+
+    i_col = 0
+    i_row = 0
+    targets = {k: v for k, v in all_targets.items() if v["output_key"] == output_name}
+    for _ in regions:
+        ax = fig.add_subplot(spec[i_row, i_col])
+        plot_timeseries_with_uncertainty(
+            plotter,
+            uncertainty_df,
+            output_name,
+            scenarios,
+            targets,
+            is_logscale,
+            x_low,
+            x_up,
+            ax,
+            n_xticks,
+            title_font_size=title_font_size,
+            label_font_size=label_font_size,
+        )
+        i_col += 1
+        if i_col == max_n_col:
+            i_col = 0
+            i_row += 1
+
+    plotter.save_figure(fig, filename="multi_uncertainty", subdir="outputs", title_text="")
+
+
 def plot_seroprevalence_by_age(
     plotter: Plotter,
     uncertainty_df: pd.DataFrame,

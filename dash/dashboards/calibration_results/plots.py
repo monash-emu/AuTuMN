@@ -282,6 +282,49 @@ def plot_multiple_timeseries_with_uncertainty(
 PLOT_FUNCS["Multi-output uncertainty"] = plot_multiple_timeseries_with_uncertainty
 
 
+def plot_multiple_timeseries_with_uncertainty_2(
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+    app_name: str,
+    region: str,
+):
+
+    uncertainty_df = get_uncertainty_df(calib_dir_path, mcmc_tables, targets)
+
+    x_min = round(min(uncertainty_df["time"]))
+    x_max = round(max(uncertainty_df["time"]))
+    x_low, x_up = selectors.create_xrange_selector(x_min, x_max)
+
+    available_scenarios = uncertainty_df["scenario"].unique()
+    selected_scenarios = st.multiselect("Select scenarios", available_scenarios)
+    is_logscale = st.sidebar.checkbox("Log scale")
+    n_xticks = st.sidebar.slider("Number of x ticks", 1, 10, 6)
+    title_font_size = st.sidebar.slider("Title font size", 1, 30, 12)
+    label_font_size = st.sidebar.slider("Label font size", 1, 30, 10)
+
+    chosen_output = "incidence"
+
+    plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty_2(
+        plotter,
+        uncertainty_df,
+        chosen_output,
+        selected_scenarios,
+        targets,
+        is_logscale,
+        x_low,
+        x_up,
+        n_xticks,
+        title_font_size=title_font_size,
+        label_font_size=label_font_size,
+    )
+
+
+PLOT_FUNCS["Multi-output uncertainty 2"] = plot_multiple_timeseries_with_uncertainty_2
+
+
 def plot_calibration_fit(
     plotter: StreamlitPlotter,
     calib_dir_path: str,

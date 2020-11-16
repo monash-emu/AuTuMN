@@ -3,6 +3,7 @@ Plots for a model that has been run.
 """
 import os
 import logging
+import pandas as pd
 from typing import List, Callable
 
 import numpy as np
@@ -12,6 +13,7 @@ from math import ceil
 
 from autumn.tool_kit.scenarios import Scenario
 from autumn.plots.utils import _plot_targets_to_axis
+from autumn.plots.utils import change_xaxis_to_date, REF_DATE
 
 from autumn.plots.plotter import Plotter, COLOR_THEME
 from autumn.inputs.social_mixing.queries import get_country_mixing_matrix
@@ -121,22 +123,41 @@ def plot_multi_compartments_single_scenario(
 
 
 def plot_outputs_multi(
-    plotter: Plotter, scenarios: List[Scenario], output_config: dict, is_logscale=False
+    plotter: Plotter,
+    scenarios: List[Scenario],
+    output_config: dict,
+    is_logscale=False,
+    x_low=0.0,
+    x_up=1e6,
 ):
     """
     Plot the model derived/generated outputs requested by the user for multiple single scenarios, on one plot.
     """
     fig, axis, _, _, _, _ = plotter.get_figure()
     output_name = output_config["output_key"]
+    # mask = (output_config["times"] <= x_up) & (output_config["times"] >= x_low)
+
+    # output_config = output_config[mask]
     legend = []
+
     for idx, scenario in enumerate(reversed(scenarios)):
         color_idx = len(scenarios) - idx - 1
         _plot_outputs_to_axis(axis, scenario, output_name, color_idx=color_idx, alpha=0.7)
         legend.append(scenario.name)
 
     axis.legend(legend)
+
     values = output_config["values"]
     times = output_config["times"]
+
+    df = pd.DataFrame({"times": times, "values": values})
+
+    mask = (df["times"] <= x_up) & (df["times" >= x_low])
+
+    df = df[mask]
+    values = df["values"]
+    times = df["times"]
+    # import pdb; pdb.set_trace()
     _plot_targets_to_axis(axis, values, times)
     if is_logscale:
         axis.set_yscale("log")
@@ -241,6 +262,31 @@ def plot_time_varying_input(
         axes.set_xlim((X_MIN, X_MAX))
 
     plotter.save_figure(fig, filename=f"time-variant-{tv_key}", title_text=tv_key)
+
+
+def plot_time_varying_input_2(
+    plotter: Plotter, tv_key: str, times: List[float], is_logscale: bool,
+):
+    """
+    Plot single simple plot of a function over time
+    """
+    # Plot requested func names.
+    fig, axes, max_dims, n_rows, n_cols, _ = plotter.get_figure()
+    if is_logscale:
+        axes.set_yscale("log")
+
+    df = pd.DataFrame(tv_key)
+    df.index = times
+
+    axes.plot(df.index, df.values)
+    change_xaxis_to_date(axes, REF_DATE)
+    pyplot.legend(df.columns, loc="best")
+    if X_MIN is not None and X_MAX is not None:
+        axes.set_xlim((X_MIN, X_MAX))
+
+    plotter.save_figure(
+        fig, filename=f"time-variant-{'Google mobility'}", title_text="Google mobility"
+    )
 
 
 def plot_stacked_compartments_by_stratum(

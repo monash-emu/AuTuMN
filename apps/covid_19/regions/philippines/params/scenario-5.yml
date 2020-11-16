@@ -1,4 +1,4 @@
-# SCENARIO DESCRIPTION: 50% of workers return onsite
+# SCENARIO DESCRIPTION: 50% of home workers return onsite
 parent: apps/covid_19/regions/philippines/params/default.yml
 
 time:

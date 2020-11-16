@@ -1,4 +1,4 @@
-# SCENARIO DESCRIPTION: MHS reduces contact by 50%
+# SCENARIO DESCRIPTION: Reduction in MHS by 50%
 parent: apps/covid_19/regions/philippines/params/default.yml
 
 time:

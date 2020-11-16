@@ -33,6 +33,7 @@ from dash.dashboards.multicountry_plots import run_dashboard as run_multicountry
 from dash.dashboards.multicountry_inputs import run_dashboard as run_multicountry_inputs
 from dash.dashboards.run_model import run_dashboard as run_model_dashboard
 from dash.dashboards.run_calibrate import run_dashboard as run_calibrate_dashboard
+from dash.dashboards.multicountry_uncertainty import run_dashboard as run_multicountry_uncertainty
 
 DASHBOARDS = {
     "Home": None,
@@ -43,6 +44,7 @@ DASHBOARDS = {
     "Calibration results": calibration_results_dashboard,
     "Multi-country plots": run_multicountry_dashboard,
     "Multi-country inputs": run_multicountry_inputs,
+    "Multi-country uncertainty": run_multicountry_uncertainty,
     "DHHS results": run_dhhs_dashboard,
     "Ensemble results": run_ensemble_dashboard,
 }

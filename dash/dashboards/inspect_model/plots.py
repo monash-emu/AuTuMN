@@ -203,7 +203,7 @@ def plot_mobility_raw(
 PLOT_FUNCS["Google Mobility Raw"] = plot_mobility_raw
 
 
-def plot_mobility_raw_2(
+def plot_multilocation_mobility(
     plotter: StreamlitPlotter, app: AppRegion,
 ):
     params = app.params["default"]
@@ -218,10 +218,10 @@ def plot_mobility_raw_2(
     # loc_key = st.sidebar.selectbox("Select location", options)
     # values_lookup = {days[i]: values[loc_key][i] for i in range(len(days))}
     # loc_func = lambda t: values_lookup[t]
-    plots.model.plots.plot_time_varying_input_2(plotter, values, days, is_logscale=False)
+    plots.model.plots.plot_time_varying_multi_input(plotter, values, days, is_logscale=False)
 
 
-PLOT_FUNCS["Google Mobility Raw_2"] = plot_mobility_raw_2
+PLOT_FUNCS["Google Mobility multi-location"] = plot_multilocation_mobility
 
 
 def plot_model_targets(

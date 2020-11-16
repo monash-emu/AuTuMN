@@ -264,7 +264,7 @@ def plot_time_varying_input(
     plotter.save_figure(fig, filename=f"time-variant-{tv_key}", title_text=tv_key)
 
 
-def plot_time_varying_input_2(
+def plot_time_varying_multi_input(
     plotter: Plotter, tv_key: str, times: List[float], is_logscale: bool,
 ):
     """
@@ -283,6 +283,7 @@ def plot_time_varying_input_2(
     pyplot.legend(df.columns, loc="best")
     if X_MIN is not None and X_MAX is not None:
         axes.set_xlim((X_MIN, X_MAX))
+    axes.set_ylim(bottom=0.)
 
     plotter.save_figure(
         fig, filename=f"time-variant-{'Google mobility'}", title_text="Google mobility"

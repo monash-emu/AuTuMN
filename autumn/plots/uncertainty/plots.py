@@ -207,7 +207,7 @@ def plot_multi_output_timeseries_with_uncertainty(
     # pyplot.savefig(filename + ".pdf")
 
 
-def plot_multi_output_timeseries_with_uncertainty_2(
+def plot_multicountry_timeseries_with_uncertainty(
     plotter: Plotter,
     uncertainty_df: pd.DataFrame,
     output_name: str,
@@ -221,14 +221,13 @@ def plot_multi_output_timeseries_with_uncertainty_2(
     label_font_size=10,
     regions=["something", "something_else"],
 ):
-    if len(regions) * len(scenarios) == 0:
-        return
-    # pyplot.rcParams.update({'font.size': 15})
 
     max_n_col = 2
     n_panels = len(regions)
     n_cols = min(max_n_col, n_panels)
     n_rows = ceil(n_panels / max_n_col)
+
+    pyplot.style.use("ggplot")
 
     fig = pyplot.figure(constrained_layout=True, figsize=(n_cols * 7, n_rows * 5))  # (w, h)
     spec = fig.add_gridspec(ncols=n_cols, nrows=n_rows)

@@ -282,7 +282,7 @@ def plot_multiple_timeseries_with_uncertainty(
 PLOT_FUNCS["Multi-output uncertainty"] = plot_multiple_timeseries_with_uncertainty
 
 
-def plot_multiple_timeseries_with_uncertainty_2(
+def plot_multicountry_timeseries_with_uncertainty(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
     mcmc_tables: List[pd.DataFrame],
@@ -307,7 +307,7 @@ def plot_multiple_timeseries_with_uncertainty_2(
 
     chosen_output = "incidence"
 
-    plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty_2(
+    plots.uncertainty.plots.plot_multicountry_timeseries_with_uncertainty(
         plotter,
         uncertainty_df,
         chosen_output,
@@ -322,7 +322,7 @@ def plot_multiple_timeseries_with_uncertainty_2(
     )
 
 
-PLOT_FUNCS["Multi-output uncertainty 2"] = plot_multiple_timeseries_with_uncertainty_2
+PLOT_FUNCS["Multi-output uncertainty 2"] = plot_multicountry_timeseries_with_uncertainty
 
 
 def plot_calibration_fit(

@@ -292,21 +292,20 @@ def plot_multicountry_timeseries_with_uncertainty(
     region: str,
 ):
 
-    uncertainty_df = get_uncertainty_df(calib_dir_path, mcmc_tables, targets)
-
-    x_min = round(min(uncertainty_df["time"]))
-    x_max = round(max(uncertainty_df["time"]))
-    x_low, x_up = selectors.create_xrange_selector(x_min, x_max)
-
-    available_scenarios = uncertainty_df["scenario"].unique()
-    selected_scenarios = st.multiselect("Select scenarios", available_scenarios)
     is_logscale = st.sidebar.checkbox("Log scale")
     n_xticks = st.sidebar.slider("Number of x ticks", 1, 10, 6)
     title_font_size = st.sidebar.slider("Title font size", 1, 30, 12)
     label_font_size = st.sidebar.slider("Label font size", 1, 30, 10)
 
-    chosen_output = "incidence"
+    available_outputs = [o["output_key"] for o in targets.values()]
+    chosen_output = st.sidebar.selectbox("Select calibration target", available_outputs)
 
+    uncertainty_df = get_uncertainty_df(calib_dir_path, mcmc_tables, targets)
+    x_min = round(min(uncertainty_df["time"]))
+    x_max = round(max(uncertainty_df["time"]))
+    x_low, x_up = selectors.create_xrange_selector(x_min, x_max)
+    available_scenarios = uncertainty_df["scenario"].unique()
+    selected_scenarios = st.multiselect("Select scenarios", available_scenarios)
     plots.uncertainty.plots.plot_multicountry_timeseries_with_uncertainty(
         plotter,
         uncertainty_df,

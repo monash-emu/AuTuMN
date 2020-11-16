@@ -2,15 +2,15 @@
 parent: apps/covid_19/regions/philippines/params/default.yml
 
 time:
-  start: 315
+  start: 321
 
 mobility:
   microdistancing:
     behaviour:
       parameters:
         times:
-          - 315
-          - 330
+          - 321
+          - 336
         values:
           - 1.
           - 0.3

@@ -2,7 +2,7 @@
 parent: apps/covid_19/regions/central_visayas/params/default.yml
 
 time:
-  start: 315
+  start: 321
 
 mobility:
   mixing:

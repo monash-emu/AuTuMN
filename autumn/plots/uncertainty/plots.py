@@ -228,12 +228,10 @@ def plot_multicountry_timeseries_with_uncertainty(
     n_rows = ceil(n_panels / max_n_col)
 
     pyplot.style.use("ggplot")
-
     fig = pyplot.figure(constrained_layout=True, figsize=(n_cols * 7, n_rows * 5))  # (w, h)
     spec = fig.add_gridspec(ncols=n_cols, nrows=n_rows)
 
-    i_col = 0
-    i_row = 0
+    i_row, i_col = 0, 0
     targets = {k: v for k, v in all_targets.items() if v["output_key"] == output_name}
     for _ in regions:
         ax = fig.add_subplot(spec[i_row, i_col])

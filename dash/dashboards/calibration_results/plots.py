@@ -322,7 +322,7 @@ def plot_multicountry_timeseries_with_uncertainty(
     )
 
 
-PLOT_FUNCS["Multi-output uncertainty 2"] = plot_multicountry_timeseries_with_uncertainty
+PLOT_FUNCS["Multi-country uncertainty"] = plot_multicountry_timeseries_with_uncertainty
 
 
 def plot_calibration_fit(

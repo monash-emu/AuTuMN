@@ -209,36 +209,35 @@ def plot_multi_output_timeseries_with_uncertainty(
 
 def plot_multicountry_timeseries_with_uncertainty(
     plotter: Plotter,
-    uncertainty_df: pd.DataFrame,
+    uncertainty_df: list,
     output_name: str,
     scenarios: list,
     all_targets: dict,
+    regions: list,
     is_logscale=False,
     x_low=0.0,
     x_up=2000.0,
     n_xticks=None,
     title_font_size=12,
     label_font_size=10,
-    regions=["something", "something_else"],
 ):
 
+    pyplot.style.use("ggplot")
     max_n_col = 2
     n_panels = len(regions)
     n_cols = min(max_n_col, n_panels)
     n_rows = ceil(n_panels / max_n_col)
 
-    pyplot.style.use("ggplot")
-
     fig = pyplot.figure(constrained_layout=True, figsize=(n_cols * 7, n_rows * 5))  # (w, h)
     spec = fig.add_gridspec(ncols=n_cols, nrows=n_rows)
 
     i_row, i_col = 0, 0
-    targets = {k: v for k, v in all_targets.items() if v["output_key"] == output_name}
-    for _ in regions:
+    for i_region in range(len(regions)):
+        targets = {k: v for k, v in all_targets[i_region].items() if v["output_key"] == output_name}
         ax = fig.add_subplot(spec[i_row, i_col])
         plot_timeseries_with_uncertainty(
             plotter,
-            uncertainty_df,
+            uncertainty_df[i_region],
             output_name,
             scenarios,
             targets,

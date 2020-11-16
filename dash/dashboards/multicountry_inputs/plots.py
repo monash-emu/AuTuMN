@@ -32,6 +32,8 @@ def multi_country_cdr(
         iso3, testing_year, assumed_tests_parameter, smoothing_period, agegroup_params, time_params, times, \
         agegroup_strata = \
             get_cdr_constants(params["default"])
+        pop_region = params["default"]["population"]["region"]
+        pop_year = params["default"]["population"]["year"]
 
         # Collate parameters into one structure
         testing_to_detection_values = []
@@ -41,7 +43,12 @@ def multi_country_cdr(
         sampled_test_to_detect_vals = random.sample(testing_to_detection_values, samples)
 
         # Get CDR function - needs to be done outside of autumn, because it is importing from the apps
-        testing_pops = inputs.get_population_by_agegroup(agegroup_strata, iso3, None, year=testing_year)
+        testing_region = "Victoria" if iso3 == "AUS" else pop_region
+        testing_year = 2020 if iso3 == "AUS" else pop_year
+        testing_pops = inputs.get_population_by_agegroup(
+            agegroup_strata, iso3, testing_region, year=testing_year
+        )
+
         detected_proportions.append([])
         for assumed_cdr_parameter in sampled_test_to_detect_vals:
             detected_proportions[i_region].append(

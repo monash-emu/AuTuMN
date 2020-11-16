@@ -59,6 +59,9 @@ python -m apps run covid malaysia
 
 Model run outputs are written to `data/outputs/run` and can be viewed in Streamlit (see below).
 
+Run time depends on the complexity of the model, the simulated time window and the number of scenarios simulated. 
+For example, the run time of a COVID-19 model with simulation of a single scenario over a period of 12 months is around 4 seconds on a normal desktop computer.
+
 ## Running a calibration
 
 You can run a model MCMC calibration as follows

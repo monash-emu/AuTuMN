@@ -43,6 +43,7 @@ PLOT_TEXT_DICT = {
     "clinical_stratification.props.hospital.multiplier": "hospitalisation multiplier",
     "clinical_stratification.icu_prop": "ICU proportion",
     "sojourn.compartment_periods.icu_early": "ICU duration",
+    "other_locations": "other locations",
 }
 
 ALPHAS = (1.0, 0.6, 0.4, 0.3, 0.2, 0.15, 0.1, 0.08)

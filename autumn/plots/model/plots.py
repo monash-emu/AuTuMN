@@ -12,7 +12,7 @@ from matplotlib import pyplot
 from math import ceil
 
 from autumn.tool_kit.scenarios import Scenario
-from autumn.plots.utils import _plot_targets_to_axis
+from autumn.plots.utils import _plot_targets_to_axis, get_plot_text_dict
 from autumn.plots.utils import change_xaxis_to_date, REF_DATE
 
 from autumn.plots.plotter import Plotter, COLOR_THEME
@@ -280,7 +280,7 @@ def plot_time_varying_multi_input(
 
     axes.plot(df.index, df.values)
     change_xaxis_to_date(axes, REF_DATE)
-    pyplot.legend(df.columns, loc="best")
+    pyplot.legend(df.columns, loc="best", labels=[get_plot_text_dict(location) for location in df.columns])
     if X_MIN is not None and X_MAX is not None:
         axes.set_xlim((X_MIN, X_MAX))
     axes.set_ylim(bottom=0.)

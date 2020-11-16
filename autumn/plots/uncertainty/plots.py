@@ -213,7 +213,7 @@ def plot_multicountry_timeseries_with_uncertainty(
     output_name: str,
     scenarios: list,
     all_targets: dict,
-    regions: list,
+    regions: dict,
     is_logscale=False,
     x_low=0.0,
     x_up=2000.0,
@@ -232,7 +232,7 @@ def plot_multicountry_timeseries_with_uncertainty(
     spec = fig.add_gridspec(ncols=n_cols, nrows=n_rows)
 
     i_row, i_col = 0, 0
-    for i_region in range(len(regions)):
+    for i_region, region in regions.items():
         targets = {k: v for k, v in all_targets[i_region].items() if v["output_key"] == output_name}
         ax = fig.add_subplot(spec[i_row, i_col])
         plot_timeseries_with_uncertainty(
@@ -249,6 +249,7 @@ def plot_multicountry_timeseries_with_uncertainty(
             title_font_size=title_font_size,
             label_font_size=label_font_size,
         )
+        ax.set_title(region, fontsize=title_font_size)
         i_col += 1
         if i_col == max_n_col:
             i_col = 0

@@ -44,9 +44,9 @@ DASHBOARDS = {
     "Calibration results": calibration_results_dashboard,
     "Multi-country plots": run_multicountry_dashboard,
     "Multi-country inputs": run_multicountry_inputs,
+    "Multi-country uncertainty": run_multicountry_uncertainty,
     "DHHS results": run_dhhs_dashboard,
     "Ensemble results": run_ensemble_dashboard,
-    "Multi-country uncertainty": run_multicountry_uncertainty,
 }
 
 

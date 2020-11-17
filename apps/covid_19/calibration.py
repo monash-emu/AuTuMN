@@ -179,11 +179,6 @@ def add_standard_philippines_params(params, region):
             "distri_params": [0.02, 0.04],
         },
         {
-            "param_name": "infection_fatality.multiplier",
-            "distribution": "uniform",
-            "distri_params": [1.0, 2.0],
-        },
-        {
             "param_name": "testing_to_detection.assumed_cdr_parameter",
             "distribution": "uniform",
             "distri_params": [0.02, 0.11],
@@ -200,6 +195,18 @@ def add_standard_philippines_params(params, region):
         },
         {
             "param_name": "clinical_stratification.props.symptomatic.multiplier",
+            "distribution": "trunc_normal",
+            "distri_params": [1.0, 0.2],
+            "trunc_range": [0.5, np.inf],
+        },
+        {
+            "param_name": "clinical_stratification.props.hospital.multiplier",
+            "distribution": "trunc_normal",
+            "distri_params": [1.0, 0.2],
+            "trunc_range": [0.5, np.inf],
+        },
+        {
+            "param_name": "infection_fatality.multiplier",
             "distribution": "trunc_normal",
             "distri_params": [1.0, 0.2],
             "trunc_range": [0.5, np.inf],

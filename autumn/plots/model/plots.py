@@ -135,9 +135,9 @@ def plot_outputs_multi(
     """
     fig, axis, _, _, _, _ = plotter.get_figure()
     output_name = output_config["output_key"]
-    # mask = (output_config["times"] <= x_up) & (output_config["times"] >= x_low)
 
-    # output_config = output_config[mask]
+    import streamlit as st
+
     legend = []
 
     for idx, scenario in enumerate(reversed(scenarios)):
@@ -150,17 +150,12 @@ def plot_outputs_multi(
     values = output_config["values"]
     times = output_config["times"]
 
-    df = pd.DataFrame({"times": times, "values": values})
-
-    mask = (df["times"] <= x_up) & (df["times" >= x_low])
-
-    df = df[mask]
-    values = df["values"]
-    times = df["times"]
-    # import pdb; pdb.set_trace()
     _plot_targets_to_axis(axis, values, times)
     if is_logscale:
         axis.set_yscale("log")
+
+    X_MIN = x_low
+    X_MAX = x_up
 
     if X_MIN is not None and X_MAX is not None:
         axis.set_xlim((X_MIN, X_MAX))
@@ -280,10 +275,12 @@ def plot_time_varying_multi_input(
 
     axes.plot(df.index, df.values)
     change_xaxis_to_date(axes, REF_DATE)
-    pyplot.legend(df.columns, loc="best", labels=[get_plot_text_dict(location) for location in df.columns])
+    pyplot.legend(
+        df.columns, loc="best", labels=[get_plot_text_dict(location) for location in df.columns]
+    )
     if X_MIN is not None and X_MAX is not None:
         axes.set_xlim((X_MIN, X_MAX))
-    axes.set_ylim(bottom=0.)
+    axes.set_ylim(bottom=0.0)
 
     plotter.save_figure(
         fig, filename=f"time-variant-{'Google mobility'}", title_text="Google mobility"

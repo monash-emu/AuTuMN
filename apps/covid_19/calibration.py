@@ -26,18 +26,6 @@ Base parameters
 """
 
 BASE_CALIBRATION_PARAMS = [
-    # Arbitrary, but always required and this range should span the range of values that would be needed
-    {
-        "param_name": "contact_rate",
-        "distribution": "uniform",
-        "distri_params": [0.015, 0.07],
-    },
-    # Arbitrary, but useful to allow epidemic to take off from a flexible time
-    {
-        "param_name": "time.start",
-        "distribution": "uniform",
-        "distri_params": [0.0, 40.0],
-    },
     # Rationale for the following two parameters described in parameters table of the methods Gdoc at:
     # https://docs.google.com/document/d/1Uhzqm1CbIlNXjowbpTlJpIphxOm34pbx8au2PeqpRXs/edit#
     {
@@ -227,10 +215,9 @@ def add_standard_philippines_targets(targets):
     return [
         {
             "output_key": "notifications",
-            "years": notifications["times"],
-            "values": notifications["values"],
+            "years": notifications["times"][:-14],
+            "values": notifications["values"][:-14],
             "loglikelihood_distri": "normal",
-            "time_weights": assign_trailing_weights_to_halves(14, notifications["times"]),
         },
         {
             "output_key": "icu_occupancy",
@@ -245,24 +232,6 @@ def add_standard_philippines_targets(targets):
             "loglikelihood_distri": "negative_binomial",
         },
     ]
-
-
-def assign_trailing_weights_to_halves(end_weights, calibration_target):
-    """
-    Create a list of (float) halves and ones, of the length of the calibration target, with the last few values being
-    ones and the earlier values being halves.
-
-    :param end_weights: int
-        How many values at the end should be ones
-    :param calibration_target: list
-        List of calibration targets to determine the length of the weights to be returned
-    :return: list
-        List of the weights as described above
-    """
-
-    time_weights = [0.5] * (len(calibration_target) - end_weights)
-    time_weights += [1.0] * end_weights
-    return time_weights
 
 
 """

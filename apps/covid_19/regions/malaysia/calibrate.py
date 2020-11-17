@@ -23,15 +23,15 @@ TARGET_OUTPUTS = [
     },
 ]
 
-PAR_PRIORS = provide_default_calibration_params(
-    excluded_params=("time.start",),
-    override_params=[
-        {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.015, 0.04]},
-    ],
-)
+PAR_PRIORS = provide_default_calibration_params()
 PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS)
 
 PAR_PRIORS += [
+    {
+        "param_name": "contact_rate",
+        "distribution": "uniform",
+        "distri_params": [0.015, 0.04]
+    },
     {
         "param_name": "seasonal_force",
         "distribution": "uniform",

@@ -8,3 +8,4 @@ def set_model_time_variant_birth_rate(model, iso3):
     model.time_variants["crude_birth_rate"] = scale_up_function(
         years, birth_rates, smoothness=0.2, method=5
     )
+    model.parameters["crude_birth_rate"] = "crude_birth_rate"

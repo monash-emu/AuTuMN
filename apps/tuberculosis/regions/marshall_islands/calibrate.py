@@ -41,13 +41,13 @@ PRIORS = [
     {
         "param_name": "start_population_size",
         "distribution": "uniform",
-        "distri_params": [2000, 5000],
+        "distri_params": [200, 600],
     },
-    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [1.2, 2.0]},
+    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.2, 1.]},
     {
         "param_name": "late_reactivation_multiplier",
         "distribution": "uniform",
-        "distri_params": [0.5, 2.0],
+        "distri_params": [0.3, 3.0],
     },
     {
         "param_name": "time_variant_tb_screening_rate.max_change_time",
@@ -77,7 +77,7 @@ PRIORS = [
     {
         "param_name": "extra_params.rr_progression_diabetes",
         "distribution": "uniform",
-        "distri_params": [2.25, 4.0],  # 5.73],
+        "distri_params": [2., 5.],
     },
     {
         "param_name": "rr_infection_recovered",

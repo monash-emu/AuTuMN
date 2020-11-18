@@ -108,7 +108,7 @@ targets_to_use = [
 ]
 
 target_sds = {
-    "percentage_latentXlocation_majuro": 0.4,
+    "percentage_latentXlocation_majuro": 10,
     "prevalence_infectiousXlocation_majuro": 80.0,
     "prevalence_infectiousXlocation_ebeye": 120.0,
     "population_size": 2500.0,

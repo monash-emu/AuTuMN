@@ -42,6 +42,7 @@ def stratify_by_age(model, params, compartments):
             params["age_breakpoints"],
             params["extra_params"]["prop_diabetes"],
             params["extra_params"]["rr_progression_diabetes"],
+            params["extra_params"]["future_diabetes_multiplier"],
         )
 
     # age-specific infectiousness

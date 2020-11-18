@@ -4,7 +4,7 @@ from summer.model.utils.parameter_processing import (
 )
 
 from autumn.tool_kit import add_w_to_param_names, change_parameter_unit
-from autumn.curve import tanh_based_scaleup
+from autumn.curve import tanh_based_scaleup, make_linear_curve
 
 
 # get parameter values from Ragonnet et al., Epidemics 2017
@@ -41,9 +41,16 @@ def get_adapted_age_parameters(age_breakpoints, age_specific_latency):
 
 
 def edit_adjustments_for_diabetes(
-    model, adjustments, age_breakpoints, prop_diabetes, rr_progression_diabetes
+    model, adjustments, age_breakpoints, prop_diabetes, rr_progression_diabetes, future_diabetes_multiplier
 ):
     diabetes_scale_up = tanh_based_scaleup(b=0.05, c=1980, sigma=0.0, upper_asymptote=1.0)
+    future_diabetes_trend = make_linear_curve(x_0=2020, x_1=2050, y_0=1, y_1=future_diabetes_multiplier)
+
+    def combined_diabetes_scale_up(t):
+        multiplier = 1.
+        if t > 2020:
+            multiplier = future_diabetes_trend(t)
+        return multiplier * diabetes_scale_up(t)
 
     for i, age_breakpoint in enumerate(age_breakpoints):
         for stage in ["early", "late"]:
@@ -54,7 +61,7 @@ def edit_adjustments_for_diabetes(
             adjustments[param_name][str(age_breakpoint)] = function_name
             model.time_variants[function_name] = make_age_diabetes_scaleup_func(
                 prop_diabetes[age_breakpoint],
-                diabetes_scale_up,
+                combined_diabetes_scale_up,
                 rr_progression_diabetes,
                 unadjusted_progression_rate,
             )

@@ -46,6 +46,16 @@ def make_sigmoidal_curve(y_low=0, y_high=1.0, x_start=0, x_inflect=0.5, multipli
     return curve
 
 
+def make_linear_curve(x_0, x_1, y_0, y_1):
+    assert x_1 > x_0
+    slope = (y_1 - y_0) / (x_1 - x_0)
+
+    def curve(x):
+        return y_0 + slope * (x - x_0)
+
+    return curve
+
+
 """ the functions test_a and get_spare_fit are only used inside of scale_up_function when method=5 """
 
 

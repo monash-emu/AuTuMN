@@ -81,14 +81,18 @@ def stratify_by_age(model, params, compartments):
     bcg_coverage_func = scale_up_function(
         list(params["time_variant_bcg_perc"].keys()),
         list(params["time_variant_bcg_perc"].values()),
-        method=4,
+        method=5,
+        bound_low=0,
+        bound_up=100,
+        smoothness=1.5
     )
     for agegroup, multiplier in bcg_susceptibility_multilier_dict.items():
-        if multiplier < 1.0:
+        if multiplier <  1.0:
+            average_age = get_average_age_for_bcg(agegroup, params['age_breakpoints'])
             name = "contact_rate_" + agegroup
             bcg_susceptibility_multilier_dict[agegroup] = name
             model.time_variants[name] = make_bcg_multiplier_func(
-                bcg_coverage_func, multiplier, agegroup
+                bcg_coverage_func, multiplier, average_age
             )
             model.parameters[name] = name
     flow_adjustments.update({"contact_rate": bcg_susceptibility_multilier_dict})
@@ -308,9 +312,9 @@ def calculate_age_specific_infectiousness(age_breakpoints, age_infectiousness_sw
     return infectiousness_by_agegroup
 
 
-def make_bcg_multiplier_func(bcg_coverage_func, multiplier, agegroup):
+def make_bcg_multiplier_func(bcg_coverage_func, multiplier, average_age):
     def bcg_multiplier_func(t):
-        return 1.0 - bcg_coverage_func(t - float(agegroup)) / 100.0 * (1.0 - multiplier)
+        return 1.0 - bcg_coverage_func(t - average_age) / 100.0 * (1.0 - multiplier)
 
     return bcg_multiplier_func
 
@@ -391,3 +395,13 @@ def get_stratified_param_names(param_name, stratifications):
             strata_combo_string += "X" + strata
         stratified_param_names.append(param_name + strata_combo_string)
     return stratified_param_names
+
+
+def get_average_age_for_bcg(agegroup, age_breakpoints):
+    agegroup_idx = age_breakpoints.index(int(agegroup))
+    if agegroup_idx == len(age_breakpoints) - 1:
+        # We should normally never be in this situation because the last agegroup is not affected by BCG anyway.
+        print("Warning: the agegroup name is being used to represent the average age of the group")
+        return float(agegroup)
+    else:
+        return 0.5 * (age_breakpoints[agegroup_idx] + age_breakpoints[agegroup_idx + 1])

@@ -119,9 +119,11 @@ pt_destination_compartment: "recovered" # either 'recovered' or 'susceptible'
 
 extra_params: {} # used to add parameters used for specific applications
 
-
 # Multiplier scaling the covariance matrix in the Haario Metropolis. 2.4 is the value recommended by Haario.
 haario_scaling_factor: 2.4  # Greater values increase jumping step size and reduce the acceptance ratio
+# type of Metropolis initialisation: either 'lhs' or 'current_params'
+metropolis_initialisation: "current_params"
+
 
 # FIXME: the parameters below should disappear
 prevalence_infectiousXlocation_majuro_dispersion_param: 1.

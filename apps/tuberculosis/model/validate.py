@@ -58,6 +58,7 @@ validate_params = sb.build_validator(
     inflate_reactivation_for_diabetes=bool,
     extra_params=dict,
     haario_scaling_factor=float,
+    metropolis_initialisation=str,
     # dispersion parameters for MCMC calibration  # FIXME: we should avoid this
     prevalence_infectiousXlocation_majuro_dispersion_param=float,
     prevalence_infectiousXlocation_ebeye_dispersion_param=float,

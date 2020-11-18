@@ -26,6 +26,7 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
         run_id,
         num_chains,
         region_name=Region.MARSHALL_ISLANDS,
+        initialisation_type=params["default"]["metropolis_initialisation"]
     )
     calib.run_fitting_algorithm(
         run_mode="autumn_mcmc",

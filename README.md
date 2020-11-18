@@ -1,5 +1,5 @@
   
-AuTuMN
+AuTuMN 
 ======
 
 ![](https://github.com/monash-emu/AuTuMN/workflows/Continuous%20Integration/badge.svg)

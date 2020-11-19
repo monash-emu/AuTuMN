@@ -3,6 +3,7 @@ from autumn.inputs.owid.queries import get_international_testing_numbers
 from autumn.curve import scale_up_function
 from autumn import inputs
 from autumn.tool_kit.utils import apply_moving_average
+from autumn.inputs.covid_phl.queries import get_phl_subregion_testing_numbers
 
 
 def create_cdr_function(assumed_tests: int, assumed_cdr: float):
@@ -30,18 +31,23 @@ def create_cdr_function(assumed_tests: int, assumed_cdr: float):
 
 
 def find_cdr_function_from_test_data(
-    assumed_tests_parameter,
-    assumed_cdr_parameter,
-    smoothing_period,
-    country_iso3,
-    total_pops,
+        assumed_tests_parameter,
+        assumed_cdr_parameter,
+        smoothing_period,
+        country_iso3,
+        total_pops,
+        subregion=None,
 ):
-    # Tests data
-    test_dates, test_values = (
-        inputs.get_vic_testing_numbers()
-        if country_iso3 == "AUS"
-        else get_international_testing_numbers(country_iso3)
-    )
+
+    # Get the appropriate testing data
+    if country_iso3 == "AUS":
+        test_dates, test_values = inputs.get_vic_testing_numbers()
+    elif subregion == "Sabah":
+        test_dates, test_values = get_international_testing_numbers(country_iso3)
+    elif subregion:
+        test_dates, test_values = get_phl_subregion_testing_numbers(subregion)
+    else:
+        test_dates, test_values = get_international_testing_numbers(country_iso3)
 
     # Convert test numbers to per capita testing rates
     per_capita_tests = [i_tests / sum(total_pops) for i_tests in test_values]

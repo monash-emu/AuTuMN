@@ -187,12 +187,7 @@ def build_model(params: dict) -> StratifiedModel:
 
         # Use state denominator for testing rates for the Victorian health cluster models and temporarily use
         # Philippines regional pops for all the Philippines sub-regions
-        if country.iso3 == "AUS":
-            testing_region = "Victoria"
-        elif country.iso3 == "PHL":
-            testing_region = None
-        else:
-            testing_region = pop.region
+        testing_region = "Victoria" if country.iso3 == "AUS" else pop.region
         testing_year = 2020 if country.iso3 == "AUS" else params.population.year
         testing_pops = inputs.get_population_by_agegroup(
             agegroup_strata, country.iso3, testing_region, year=testing_year
@@ -203,6 +198,7 @@ def build_model(params: dict) -> StratifiedModel:
             smoothing_period,
             country.iso3,
             testing_pops,
+            subregion=testing_region
         )
     else:
         # Approach based on a hyperbolic tan function

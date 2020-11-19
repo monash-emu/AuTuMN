@@ -4,22 +4,17 @@ from autumn.inputs.database import get_input_db
 from autumn.tool_kit.utils import apply_moving_average
 
 
-def get_phl_testing_numbers(region):
+def get_phl_subregion_testing_numbers(region):
     """
     Returns 7-day moving average of number of tests administered in Philippines & sub regions.
     """
 
     input_db = get_input_db()
-    if region not in {"central visayas", "metro manila", "calabarzon"}:
-        df = input_db.query("covid_phl", columns=["date_index", "daily_output_unique_individuals"])
-        df = df.groupby(["date_index"]).sum().reset_index()
-    else:
-        df = input_db.query(
-            "covid_phl",
-            columns=["date_index", "daily_output_unique_individuals"],
-            conditions={"facility_name": region},
-        )
-
+    df = input_db.query(
+        "covid_phl",
+        columns=["date_index", "daily_output_unique_individuals"],
+        conditions={"facility_name": region.lower()},
+    )
     test_dates = df.date_index.to_numpy()
     test_values = df.daily_output_unique_individuals.to_numpy()
     epsilon = 1e-6  # A really tiny number to avoid having any zeros

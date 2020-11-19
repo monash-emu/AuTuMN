@@ -1,6 +1,4 @@
-# SCENARIO DESCRIPTION: The intervention implemented in the field, excluding the LTBI component
 parent: apps/tuberculosis/regions/marshall_islands/params/default.yml
 time:
   start: 2016
-
 time_variant_ltbi_screening: []

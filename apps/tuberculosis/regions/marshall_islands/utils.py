@@ -1,6 +1,11 @@
 import yaml
 
 
+INTERVENTION_RATE = {
+    'time_variant_acf': 2.74,
+    'time_variant_ltbi_screening': 2.74
+}
+
 def define_all_scenarios(periodic_frequencies=[2, 5]):
     scenario_details = {}
     sc_idx = 0
@@ -35,6 +40,7 @@ def define_all_scenarios(periodic_frequencies=[2, 5]):
     for frequency in periodic_frequencies:
         sc_idx += 1
         scenario_details[sc_idx] = {"sc_title": f"ACF every {frequency} years"}
+        scenario_details[sc_idx]["params"] = get_periodic_sc_params(frequency, type='ACF')
 
     """
     Periodic ACF + LTBI screening scenarios
@@ -42,6 +48,7 @@ def define_all_scenarios(periodic_frequencies=[2, 5]):
     for frequency in periodic_frequencies:
         sc_idx += 1
         scenario_details[sc_idx] = {"sc_title": f"ACF and LTBI every {frequency} years"}
+        scenario_details[sc_idx]["params"] = get_periodic_sc_params(frequency, type='ACF_LTBI')
 
     """
     Sensitivity analysis around future diabetes prevalence
@@ -53,8 +60,79 @@ def define_all_scenarios(periodic_frequencies=[2, 5]):
     for diabetes_sc in diabetes_scenarios:
         sc_idx += 1
         scenario_details[sc_idx] = {"sc_title": diabetes_sc[0]}
+        scenario_details[sc_idx]["params"] = {
+            "extra_params": {"future_diabetes_multiplier": diabetes_sc[1]}
+        }
 
     return scenario_details
+
+
+def get_periodic_sc_params(frequency, type='ACF'):
+    """
+    :param frequency: period at which interventions are implemented
+    :param type: one of ['ACF', 'ACF_LTBI']
+    :return:
+    """
+    params = {}
+
+    # include existing interventions
+    params['time_variant_acf'] = [
+        {
+            'stratum_filter': {"location": "ebeye"},
+            'time_variant_screening_rate': {
+                2000: 0., 2017: 0., 2017.5: 1.18, 2018: 0.
+            }
+        },
+        {
+            'stratum_filter': {"location": "majuro"},
+            'time_variant_screening_rate': {
+                2000: 0., 2018: 0., 2018.5: 2.74, 2019: 0.
+            }
+        }
+    ]
+    params['time_variant_ltbi_screening'] = [
+        {
+            'stratum_filter': {"location": "majuro"},
+            'time_variant_screening_rate': {
+                2000: 0., 2018: 0., 2018.5: 2.74, 2019: 0.
+            }
+        }
+    ]
+
+    interventions_to_add = ["time_variant_acf", "time_variant_ltbi_screening"] if type == 'ACF_LTBI' else\
+        ["time_variant_acf"]
+
+    for intervention in interventions_to_add:
+        for location in ["majuro", "ebeye", "other"]:
+            is_location_implemented = False
+            for local_intervention in params[intervention]:
+                if local_intervention['stratum_filter']['location'] == location:
+                    is_location_implemented = True
+                    local_intervention['time_variant_screening_rate'].update(
+                         make_periodic_time_series(INTERVENTION_RATE[intervention], frequency)
+                    )
+                    break
+            if not is_location_implemented:
+                params[intervention].append(
+                    {
+                        'stratum_filter': {"location": location},
+                        'time_variant_screening_rate': make_periodic_time_series(INTERVENTION_RATE[intervention], frequency)
+                    }
+                )
+
+    return params
+
+
+def make_periodic_time_series(rate, frequency):
+    time_series = {}
+    year = 2021
+    while year < 2050:
+        time_series[year] = 0.
+        time_series[year + 0.5] = rate
+        time_series[year + 1] = 0.
+        year += frequency
+
+    return time_series
 
 
 def drop_all_yml_scenario_files(all_sc_params):
@@ -75,3 +153,4 @@ def drop_all_yml_scenario_files(all_sc_params):
 if __name__ == "__main__":
     all_scenarios = define_all_scenarios(periodic_frequencies=[2, 5])
     drop_all_yml_scenario_files(all_scenarios)
+

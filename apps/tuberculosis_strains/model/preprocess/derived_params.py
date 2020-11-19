@@ -9,7 +9,7 @@ def get_derived_params(params):
 
     params["detection_rate"] = params["case_detection_prop_sp"] / (1 - params["case_detection_prop_sp"]) * (params["self_recovery_rate"] * params["self_recovery_rate_stratified"]["organ"]["sp"] + params["infect_death_rate"] * params["infect_death_rate_stratified"]["organ"]["sp"])
     params["detection_rate_stratified"]["organ"]["sp"] = 1.0
-    params["detection_rate_stratified"]["organ"]["e"] = params["case_detection_prop_sp"] / (10 - params["case_detection_prop_sp"]) * (params["infect_death_rate"] * params["infect_death_rate_stratified"]["organ"]["e"] + params["self_recovery_rate"] * params["self_recovery_rate_stratified"]["organ"]["e"]) / params["detection_rate"]
+    params["detection_rate_stratified"]["organ"]["e"] = params["case_detection_prop_sp"] / (2 - params["case_detection_prop_sp"]) * (params["infect_death_rate"] * params["infect_death_rate_stratified"]["organ"]["e"] + params["self_recovery_rate"] * params["self_recovery_rate_stratified"]["organ"]["e"]) / params["detection_rate"]
     params["detection_rate_stratified"]["organ"]["sn"] = 1 / params["detection_rate"] * (params["detection_rate"] * params["detection_rate_stratified"]["organ"]["e"] + (params["case_detection_prop"] - 0.1 * params["case_detection_prop_sp"]) * params["frontline_xpert_prop"] * (params["infect_death_rate"] * params["infect_death_rate_stratified"]["organ"]["sn"] + params["self_recovery_rate"] * params["self_recovery_rate_stratified"]["organ"]["sp"]))
 
     params["treatment_recovery_rate"] = params["treatment_success_prop"] / params["treatment_duration"]

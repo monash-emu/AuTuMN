@@ -247,16 +247,17 @@ def build_model(params: dict) -> StratifiedModel:
     classification_stratification_name = "classified"
     classification_strata_requested = ["correctly", "incorrectly"]
     classification_flow_adjustments = dict()
-    classification_flow_adjustments.update(dict(zip(["detection_rate" + "X" + age_stratification_name + "_" + age_group +
-                                                "X" + organ_stratification_name + "_" + organ +
-                                                "X" + strain_stratification_name + "_" + strain
-                                                for age_group in params["age_breakpoints"]
-                                                for organ in organ_strata_requested
-                                                for strain in strain_strata_requested],
-                                               [{"correctly": 1.0,
-                                                 "incorrectly": 0.0} for _ in range(
-                                                   len(params["age_breakpoints"]) * len(organ_strata_requested) * len(
-                                                       strain_strata_requested))]))
+    classification_flow_adjustments.update(
+        dict(zip(["detection_rate" + "X" + age_stratification_name + "_" + age_group +
+                  "X" + organ_stratification_name + "_" + organ +
+                  "X" + strain_stratification_name + "_" + strain
+                  for age_group in params["age_breakpoints"]
+                  for organ in organ_strata_requested
+                  for strain in strain_strata_requested],
+                 [{"correctly": 1.0,
+                   "incorrectly": 0.0} for _ in range(
+                     len(params["age_breakpoints"]) * len(organ_strata_requested) * len(
+                         strain_strata_requested))]))
                                       )
     classification_flow_adjustments.update(
         dict(zip(["spontaneous_recovery_rate" + "X" + age_stratification_name + "_" + age_group +
@@ -292,8 +293,8 @@ def build_model(params: dict) -> StratifiedModel:
                                                 for organ in organ_strata_requested
                                                     for strain in strain_strata_requested
                                                         for classification in classification_strata_requested],
-                                      [{"yes": params["retention_rate"],
-                                        "no": 1 - params["retention_rate"]} for _ in range(len(params["age_breakpoints"]) * len(organ_strata_requested) * len(strain_strata_requested) * len(classification_strata_requested))]))
+                                      [{"yes": params["retention_prop"],
+                                        "no": 1 - params["retention_prop"]} for _ in range(len(params["age_breakpoints"]) * len(organ_strata_requested) * len(strain_strata_requested) * len(classification_strata_requested))]))
                                   )
 
     retention_flow_adjustments.update(dict(zip(["missed_to_active_rate" + "X" + age_stratification_name + "_" + age_group +

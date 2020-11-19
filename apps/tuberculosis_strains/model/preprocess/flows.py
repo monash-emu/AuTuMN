@@ -84,7 +84,13 @@ DEFAULT_FLOWS = [
         "to": Compartment.INFECTIOUS,
         "parameter": "treatment_default_rate",
     },
-{
+    {
+        "type": Flow.STANDARD,
+        "origin": Compartment.ON_TREATMENT,
+        "to": Compartment.DETECTED,
+        "parameter": "failure_retreatment_rate",
+    },
+    {
         "type": Flow.STANDARD,
         "origin": Compartment.ON_TREATMENT,
         "to": Compartment.LATE_LATENT,

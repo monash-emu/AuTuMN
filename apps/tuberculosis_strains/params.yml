@@ -81,6 +81,8 @@ organ:
   sn_foi: 0.24
   e_foi: 0.24
 
+retention_prop: 0.8
+
 
 self_recovery_rate: 0.2
 self_recovery_rate_stratified:
@@ -138,20 +140,28 @@ spontaneous_recovery_rate_stratified:
     correctly: 0.0
     incorrectly: 1.0
 
+failure_retreatment_rate: 0.4
+failure_retreatment_rate_stratified:
+  strain:
+    ds: 0.0
+    mdr: 1.0
+  classified:
+    correctly: 0.0
+    incorrectly: 1.0
+
 # treatment_recovery_rate: 1.84
 relapse_rate: 0.11
 #detection_rate: 5.0
 
 case_detection_prop: 0.62
-case_detection_prop_sp: 0.85
-frontline_xpert_prop: 0.03
+case_detection_prop_sp: 0.62
+frontline_xpert_prop: 0.05
 
 
 detection_rate_stratified:
   organ:
     sp: 1.0
 
-retention_rate: 0.8
 
 treatment_commencement_rate: 26
 treatment_commencement_rate_stratified:

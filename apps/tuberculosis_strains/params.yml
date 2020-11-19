@@ -26,9 +26,9 @@ age_breakpoints: ["0", "5", "15"]
 
 # vaccination
 bcg:
-  coverage: 0.95
+  coverage: 0.99
   start_time: 1980
-  rr_infection_vaccinated: 0.05
+  rr_infection_vaccinated: 0.5
 
 # initial conditions
 initial_infectious_population: 0
@@ -41,34 +41,41 @@ universal_death_rate: .014
 crude_birth_rate: 0.2
 
 # basic infection and disease parameters
-contact_rate: 14.0
+contact_rate: 6.0
 rr_infection_latent: 0.4
-rr_infection_recovered: 1.0
+rr_infection_recovered: 0.3333
 
 
 # latency-related parameters
 stabilisation_rate: 3.65
 stabilisation_rate_stratified:
-  age_0: 1.2
-  age_5: 1.2
-  age_15: 0.54
-late_activation_rate: 0.002
+  age:
+    age_0: 1.2
+    age_5: 1.2
+    age_15: 0.54
+
+early_activation_rate: 0.402
+early_activation_rate_stratified:
+  age:
+    age_0: 6.0
+    age_5: 2.45
+    age_15: 0.246
+
+late_activation_rate: 0.0020075
 late_activation_rate_stratified:
   age:
-    age_0: 3.46e-6
-    age_5: 1.16
-    age_15: 0.6
+    age_0: 3.456912e-6
+    age_5: 1.164433
+    age_15: 0.600411
 
 
-
-early_activation_rate: 2.2e-3
 
 # active-disease parameters
 
 organ:
-  sp_prop: 0.55
-  sn_prop: 0.25
-  e_prop: 0.20
+  sp_prop: 0.52
+  sn_prop: 0.33
+  e_prop: 0.15
 
   sp_foi: 1.0
   sn_foi: 0.24
@@ -76,6 +83,11 @@ organ:
 
 
 self_recovery_rate: 0.2
+self_recovery_rate_stratified:
+  organ:
+    sp: 1.155
+    sn: 0.65
+    e: 0.65
 
 treatment_duration: 0.5
 treatment_duration_stratified:
@@ -144,12 +156,11 @@ missed_to_active_rate: 4
 
 # death rates
 infect_death_rate: 0.7
-
 infect_death_rate_stratified:
   organ:
     sp: 1.0
-    sn: 0.414
-    e: 0.414
+    sn: 0.4142857
+    e: 0.4142857
 
 natural_recovery_rate: 0.231
 natural_recovery_rate_stratified:

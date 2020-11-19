@@ -83,6 +83,16 @@ def plot_mixing_matrix(
 PLOT_FUNCS["Mixing matrix"] = plot_mixing_matrix
 
 
+def plot_all_mixing_matrices(
+    plotter: StreamlitPlotter, app: AppRegion,
+):
+    iso3 = app.params["default"]["country"]["iso3"]
+    plots.model.plots.plot_mixing_matrix_2(plotter, iso3)
+
+
+PLOT_FUNCS["All mixing matrices"] = plot_all_mixing_matrices
+
+
 def plot_flow_params(
     plotter: StreamlitPlotter, app: AppRegion,
 ):

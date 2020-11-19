@@ -50,6 +50,32 @@ def plot_mixing_matrix(plotter: Plotter, location: str, iso3: str):
     plotter.save_figure(fig, filename="mixing-matrix", title_text="Mixing matrix")
 
 
+def plot_mixing_matrix_2(plotter: Plotter, iso3: str):
+    fig, axes, _, n_rows, n_cols, _ = plotter.get_figure(n_panels=6)
+
+    positions = {
+        "all_locations": [0, 0],
+        "home": [0, 1],
+        "work": [0, 2],
+        "other_locations": [1, 1],
+        "school": [1, 2],
+        "none": [1, 0]
+    }
+
+    for location, position in positions.items():
+        axis = axes[position[0], position[1]]
+        if location != "none":
+            mixing_matrix = get_country_mixing_matrix(location, iso3)
+            axis.imshow(mixing_matrix, cmap="hot", interpolation="none", extent=[0, 80, 80, 0])
+            axis.set_title(get_plot_text_dict(location), fontsize=12)
+            axis.set_xticks([])
+            axis.set_yticks([])
+        else:
+            axis.axis("off")
+
+    plotter.save_figure(fig, filename="mixing-matrix", title_text="Mixing matrix")
+
+
 def plot_agg_compartments_multi_scenario(
     plotter: Plotter, scenarios: List[Scenario], compartment_names: List[str], is_logscale=False,
 ):

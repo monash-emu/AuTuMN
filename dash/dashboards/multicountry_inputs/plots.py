@@ -58,6 +58,7 @@ def multi_country_cdr(
                     smoothing_period,
                     iso3,
                     testing_pops,
+                    subregion=testing_region
                 )
             )
     plots.calibration.plots.plot_multi_cdr_curves(

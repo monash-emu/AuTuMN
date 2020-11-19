@@ -18,6 +18,7 @@ def multi_country_cdr(
     from dash.dashboards.calibration_results.plots import get_cdr_constants
 
     param_name = "testing_to_detection.assumed_cdr_parameter"
+    start_date = st.sidebar.slider("Start date", 1, 365, 1)
     end_date = st.sidebar.slider("End date", 1, 365, 275)
     samples = st.sidebar.slider("Samples", 1, 200, 10)
     label_rotation = st.sidebar.slider("Label rotation", 0, 90, 0)
@@ -62,7 +63,7 @@ def multi_country_cdr(
                 )
             )
     plots.calibration.plots.plot_multi_cdr_curves(
-        plotter, times, detected_proportions, end_date, label_rotation, region_name
+        plotter, times, detected_proportions, start_date, end_date, label_rotation, region_name
     )
 
 

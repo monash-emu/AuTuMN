@@ -821,11 +821,11 @@ def plot_cdr_curves(plotter: Plotter, times, detected_proportion, end_date, rota
     fig, axis, _, _, _, _ = plotter.get_figure()
     axis = plot_cdr_to_axis(axis, times, detected_proportion)
     axis.set_ylabel("proportion symptomatic cases detected")
-    tidy_cdr_axis(axis, rotation, end_date)
+    tidy_cdr_axis(axis, rotation, 1., end_date)
     plotter.save_figure(fig, filename=f"cdr_curves")
 
 
-def plot_multi_cdr_curves(plotter: Plotter, times, detected_proportions, end_date, rotation, regions):
+def plot_multi_cdr_curves(plotter: Plotter, times, detected_proportions, start_date, end_date, rotation, regions):
     """
     Plot multiple sets of CDR curves onto a multi-panel figure
     """
@@ -839,7 +839,7 @@ def plot_multi_cdr_curves(plotter: Plotter, times, detected_proportions, end_dat
                 axis, times, detected_proportions[i_region]
             )
             tidy_cdr_axis(
-                axis, rotation, end_date
+                axis, rotation, start_date, end_date
             )
             axis.set_title(regions[i_region])
         else:
@@ -864,12 +864,12 @@ def plot_cdr_to_axis(axis, times, detected_proportions):
     return axis
 
 
-def tidy_cdr_axis(axis, rotation, end_date):
+def tidy_cdr_axis(axis, rotation, start_date, end_date):
     """
     Tidy up a plot axis in the same way for both the two previous figures
     """
     change_xaxis_to_date(axis, ref_date=REF_DATE, rotation=rotation)
-    axis.set_xlim(right=end_date)
+    axis.set_xlim([start_date, end_date])
     axis.set_ylim([0.0, 1.0])
     return axis
 

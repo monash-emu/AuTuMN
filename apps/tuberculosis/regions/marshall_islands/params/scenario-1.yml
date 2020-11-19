@@ -1,7 +1,5 @@
-# SCENARIO DESCRIPTION: The situation if the interventions had not been implemented
 parent: apps/tuberculosis/regions/marshall_islands/params/default.yml
 time:
   start: 2016
-
 time_variant_acf: []
 time_variant_ltbi_screening: []

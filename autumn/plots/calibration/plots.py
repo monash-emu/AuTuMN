@@ -236,24 +236,12 @@ def plot_multiple_param_traces(
 
     for i in range(n_rows * n_cols):
         axis = axes[indices[i][0], indices[i][1]]
-
         if i < len(parameters):
             param_name = parameters[i]
-
-            vals_df = None
-            for table_df in mcmc_params:
-                param_mask = table_df["name"] == param_name
-                table_vals = table_df[param_mask].value
-                if vals_df is not None:
-                    vals_df = vals_df.append(table_vals)
-                else:
-                    vals_df = table_vals
-
-            for idx, table_df in enumerate(mcmc_params):
-                param_mask = table_df["name"] == param_name
-                param_df = table_df[param_mask]
-                axis.plot(param_df["run"], param_df["value"], alpha=0.8, linewidth=0.7)
-
+            for i_chain in range(mcmc_params[0]["chain"].iloc[-1]):
+                param_mask = (mcmc_params[0]["chain"] == i_chain) & (mcmc_params[0]["name"] == param_name)
+                param_values = mcmc_params[0][param_mask].values
+                axis.plot(param_values[:, 3], alpha=0.8, linewidth=0.7)
             axis.set_title(
                 get_plot_text_dict(param_name, capitalise_first_letter=capitalise_first_letter),
                 fontsize=title_font_size,

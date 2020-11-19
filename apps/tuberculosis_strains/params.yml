@@ -129,7 +129,14 @@ treatment_default_rate_stratified:
     ds:
     mdr:
 
-
+spontaneous_recovery_rate: 0.2
+spontaneous_recovery_rate_stratified:
+  strain:
+    ds: 0.0
+    mdr: 1.0
+  classified:
+    correctly: 0.0
+    incorrectly: 1.0
 
 # treatment_recovery_rate: 1.84
 relapse_rate: 0.11
@@ -170,6 +177,7 @@ natural_recovery_rate_stratified:
     e: 0.563
 
 treatment_death_rate: 0.05
+
 
 
 

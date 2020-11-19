@@ -68,6 +68,12 @@ DEFAULT_FLOWS = [
     },
     {
         "type": Flow.STANDARD,
+        "origin": Compartment.DETECTED,
+        "to": Compartment.LATE_LATENT,
+        "parameter": "self_recovery_rate",
+    },
+    {
+        "type": Flow.STANDARD,
         "origin": Compartment.ON_TREATMENT,
         "to": Compartment.RECOVERED,
         "parameter": "treatment_recovery_rate",
@@ -77,6 +83,12 @@ DEFAULT_FLOWS = [
         "origin": Compartment.ON_TREATMENT,
         "to": Compartment.INFECTIOUS,
         "parameter": "treatment_default_rate",
+    },
+{
+        "type": Flow.STANDARD,
+        "origin": Compartment.ON_TREATMENT,
+        "to": Compartment.LATE_LATENT,
+        "parameter": "spontaneous_recovery_rate",
     },
     # Infection death
     {"type": Flow.DEATH, "parameter": "infect_death_rate", "origin": Compartment.INFECTIOUS},

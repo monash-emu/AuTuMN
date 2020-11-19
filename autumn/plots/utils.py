@@ -44,6 +44,7 @@ PLOT_TEXT_DICT = {
     "clinical_stratification.icu_prop": "ICU proportion",
     "sojourn.compartment_periods.icu_early": "ICU duration",
     "other_locations": "other locations",
+    "clinical_stratification.props.symptomatic.multiplier": "symptomatic proportion multiplier",
 }
 
 ALPHAS = (1.0, 0.6, 0.4, 0.3, 0.2, 0.15, 0.1, 0.08)
@@ -69,7 +70,7 @@ COLORS = (
 REF_DATE = datetime.date(2019, 12, 31)
 
 
-def get_plot_text_dict(param_string, capitalise_first_letter=False):
+def get_plot_text_dict(param_string, capitalise_first_letter=False, remove_underscore=True, remove_dot=True):
     """
     Get standard text for use in plotting as title, y-label, etc.
     """
@@ -77,6 +78,10 @@ def get_plot_text_dict(param_string, capitalise_first_letter=False):
     text = PLOT_TEXT_DICT[param_string] if param_string in PLOT_TEXT_DICT else param_string
     if capitalise_first_letter:
         text = text[0].upper() + text[1:]
+    if remove_underscore:
+        text = text.replace("_", " ")
+    if remove_dot:
+        text = text.replace(".", " ")
     return text
 
 

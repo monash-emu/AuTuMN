@@ -19,7 +19,7 @@ def run_dashboard():
         return
 
     # Prelims
-    n_countries = st.sidebar.slider("Number of countries", 3, 6, 3)
+    n_countries = st.sidebar.slider("Number of countries", 2, 6, 3)
     (
         region_names,
         region_dirpaths,

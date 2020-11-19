@@ -10,7 +10,7 @@ def get_phl_testing_numbers(region):
     """
 
     input_db = get_input_db()
-    if region not in {"central visayas", "metro manila", "central visayas"}:
+    if region not in {"central visayas", "metro manila", "calabarzon"}:
         df = input_db.query("covid_phl", columns=["date_index", "daily_output_unique_individuals"])
         df = df.groupby(["date_index"]).sum().reset_index()
     else:

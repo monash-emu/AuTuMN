@@ -189,7 +189,7 @@ def build_model(params: dict) -> StratifiedModel:
         # Philippines regional pops for all the Philippines sub-regions
         if country.iso3 == "AUS":
             testing_region = "Victoria"
-        if country.iso3 == "PHL":
+        elif country.iso3 == "PHL":
             testing_region = None
         else:
             testing_region = pop.region

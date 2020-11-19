@@ -249,6 +249,12 @@ def plot_multicountry_timeseries_with_uncertainty(
             title_font_size=title_font_size,
             label_font_size=label_font_size,
         )
+
+        # Uncomment the following code for the custom titles for the Philippines application plot
+        # if i_region == 0:
+        #     ax.set_title("MHS incorporated", fontsize=title_font_size)
+        # elif i_region == 1:
+        #     ax.set_title("MHS not incorporated", fontsize=title_font_size)
         ax.set_title(region, fontsize=title_font_size)
         i_col += 1
         if i_col == max_n_col:

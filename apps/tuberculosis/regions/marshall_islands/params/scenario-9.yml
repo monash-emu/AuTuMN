@@ -6,4 +6,7 @@ hh_contacts_pt:
   start_time: 2020
 parent: apps/tuberculosis/regions/marshall_islands/params/default.yml
 time:
+  critical_ranges:
+  - - 2017.0
+    - 2049.0
   start: 2016

@@ -158,7 +158,7 @@ def drop_all_yml_scenario_files(all_sc_params):
 
         params_to_dump = sc_details['params']
         params_to_dump['parent'] = 'apps/tuberculosis/regions/marshall_islands/params/default.yml'
-        params_to_dump['time'] = {'start': 2016}
+        params_to_dump['time'] = {'start': 2016, 'critical_ranges': [[2017., 2049.]]}
 
         param_file_path = f"params/scenario-{sc_idx}.yml"
         with open(param_file_path, "w") as f:

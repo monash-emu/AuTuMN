@@ -26,6 +26,39 @@ X_MIN = None
 X_MAX = None
 
 
+def plot_multi_age_distribution(plotter: Plotter, sub_region: [str], iso3: str):
+    fig, axis, _, _, _, _ = plotter.get_figure()
+    legend = []
+
+    import streamlit as st
+
+    # Set age groups
+    agegroup_strata = [int(s) for s in range(0, 100, 5)]
+    if iso3 is "PHL":
+
+        multi, axes = pyplot.subplots(2, 2, figsize=(30, 30))
+
+        i = 0
+        for x in {0, 1}:
+            for y in {0, 1}:
+
+                age_distribution = get_population_by_agegroup(agegroup_strata, iso3, sub_region[i])
+                age_distribution = [each / 10e5 for each in age_distribution]
+                axes[y, x].bar(agegroup_strata, height=age_distribution, width=4, align="edge")
+                if i == 0:
+                    axes[y, x].set_title("Philippines").set_fontsize(30)
+                else:
+                    axes[y, x].set_title(sub_region[i]).set_fontsize(30)
+                axes[y, x].set_xlabel("Age").set_fontsize(20)
+                axes[y, x].set_ylabel("Millions").set_fontsize(20)
+                axes[y, x].set_ylim(0, 12)
+                axes[y, x].xaxis.set_tick_params(labelsize=20)
+                axes[y, x].yaxis.set_tick_params(labelsize=20)
+                i += 1
+
+    plotter.save_figure(multi, filename="age-distribution", title_text="Age distribution")
+
+
 def plot_age_distribution(plotter: Plotter, sub_region: str, iso3: str):
     fig, axis, _, _, _, _ = plotter.get_figure()
     legend = []
@@ -59,7 +92,7 @@ def plot_mixing_matrix_2(plotter: Plotter, iso3: str):
         "work": [0, 2],
         "other_locations": [1, 1],
         "school": [1, 2],
-        "none": [1, 0]
+        "none": [1, 0],
     }
 
     for location, position in positions.items():

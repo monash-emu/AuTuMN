@@ -841,7 +841,7 @@ def plot_multi_cdr_curves(plotter: Plotter, times, detected_proportions, start_d
             tidy_cdr_axis(
                 axis, rotation, start_date, end_date
             )
-            axis.set_title(regions[i_region])
+            axis.set_title(get_plot_text_dict(regions[i_region]))
         else:
             axis.axis("off")
 

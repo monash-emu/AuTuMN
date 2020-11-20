@@ -148,6 +148,9 @@ failure_retreatment_rate_stratified:
   classified:
     correctly: 0.0
     incorrectly: 1.0
+  retention:
+    yes: 1.0
+    no: 0.0
 
 # treatment_recovery_rate: 1.84
 relapse_rate: 0.11
@@ -161,6 +164,7 @@ frontline_xpert_prop: 0.05
 detection_rate_stratified:
   organ:
     sp: 1.0
+
 
 
 treatment_commencement_rate: 26

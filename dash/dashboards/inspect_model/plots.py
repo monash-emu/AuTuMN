@@ -54,6 +54,21 @@ sub_region_map = {
     "west-metro": "WEST_METRO",
 }
 
+def plot_multi_age_distribution(
+    plotter: StreamlitPlotter, app: AppRegion,
+):
+
+    iso3 = iso3_map[app.region_name]
+
+    if app.region_name is "philippines":
+        sub_region = [None, "Metro Manila", "Calabarzon", "Central Visayas"]
+        plots.model.plots.plot_multi_age_distribution(plotter, sub_region, iso3)
+    else:
+        st.write("This region has no sub  regions")
+
+
+PLOT_FUNCS["Multi age distribution"] = plot_multi_age_distribution
+
 
 def plot_age_distribution(
     plotter: StreamlitPlotter, app: AppRegion,

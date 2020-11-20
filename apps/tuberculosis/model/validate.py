@@ -54,6 +54,7 @@ validate_params = sb.build_validator(
     ltbi_screening_sensitivity=float,
     pt_efficacy=float,
     pt_destination_compartment=str,
+    hh_contacts_pt=dict,
     # other
     inflate_reactivation_for_diabetes=bool,
     extra_params=dict,

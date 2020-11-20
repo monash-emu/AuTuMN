@@ -189,6 +189,31 @@ def process_unstratified_parameter_values(params, implement_acf, implement_ltbi_
     if "age" in params["stratify_by"]:
         params["universal_death_rate"] = 1.0
 
+    # PT in household contacts
+    contact_rate_functions = {}
+    if params["hh_contacts_pt"]:
+        scaleup_screening_prop = scale_up_function(
+            x=[params["hh_contacts_pt"]["start_time"], params["hh_contacts_pt"]["start_time"] + 1],
+            y=[0, params["hh_contacts_pt"]["prop_hh_contacts_screened"]],
+            method=4
+        )
+
+        def make_contact_rate_func(raw_contact_rate_value):
+            def contact_rate_func(t):
+                rel_reduction = params["hh_contacts_pt"]["prop_smearpos_among_prev_tb"] *\
+                                params["hh_contacts_pt"]["prop_hh_transmission"] *\
+                                scaleup_screening_prop(t) *\
+                                params["ltbi_screening_sensitivity"] *\
+                                params["hh_contacts_pt"]["prop_pt_completion"]
+                return raw_contact_rate_value * (1 - rel_reduction)
+            return contact_rate_func
+
+        for suffix in ["", "_from_latent", "_from_recovered"]:
+            param_name = f"contact_rate{suffix}"
+            raw_value = params[param_name]
+            params[param_name] = param_name
+            contact_rate_functions[param_name] = make_contact_rate_func(raw_value)
+
     # ACF flow parameter
     acf_detection_func = None
     if implement_acf:
@@ -245,4 +270,5 @@ def process_unstratified_parameter_values(params, implement_acf, implement_ltbi_
         detection_rate_func,
         acf_detection_func,
         preventive_treatment_func,
+        contact_rate_functions,
     )

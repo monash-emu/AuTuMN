@@ -64,6 +64,21 @@ def define_all_scenarios(periodic_frequencies=[2, 5]):
             "extra_params": {"future_diabetes_multiplier": diabetes_sc[1]}
         }
 
+    """
+    Extremely high coverage and performance of PT in household contacts
+    """
+    sc_idx += 1
+    scenario_details[sc_idx] = {"sc_title": 'Intensive PT in household contacts'}
+    scenario_details[sc_idx]['params'] = {
+        "hh_contacts_pt": {
+            "start_time": 2020,
+            "prop_smearpos_among_prev_tb": 1.,
+            "prop_hh_transmission": .30,
+            "prop_hh_contacts_screened": 1.,
+            "prop_pt_completion": 1.,
+        }
+    }
+
     return scenario_details
 
 

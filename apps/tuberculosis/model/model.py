@@ -78,6 +78,7 @@ def build_model(params: dict) -> StratifiedModel:
         detection_rate_func,
         acf_detection_rate_func,
         preventive_treatment_func,
+        contact_rate_functions
     ) = preprocess.flows.process_unstratified_parameter_values(
         params, implement_acf, implement_ltbi_screening
     )
@@ -101,6 +102,9 @@ def build_model(params: dict) -> StratifiedModel:
     # register preventive_treatment_func
     if preventive_treatment_func is not None:
         tb_model.time_variants["preventive_treatment_rate"] = preventive_treatment_func
+    # register time-variant contact-rate functions:
+    for param_name, func in contact_rate_functions.items():
+        tb_model.time_variants[param_name] = func
 
     # Apply infectiousness adjustment for individuals on treatment
     tb_model.individual_infectiousness_adjustments = treatment_infectiousness_adjustment

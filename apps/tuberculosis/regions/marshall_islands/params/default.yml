@@ -135,3 +135,10 @@ time_variant_ltbi_screening:
       2018: 0.
       2018.5: 2.74
       2019: 0.
+
+hh_contacts_pt:
+  start_time: 2020
+  prop_smearpos_among_prev_tb: .40
+  prop_hh_transmission: .30
+  prop_hh_contacts_screened: .70
+  prop_pt_completion: .5

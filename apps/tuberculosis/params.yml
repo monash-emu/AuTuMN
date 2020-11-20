@@ -117,6 +117,10 @@ ltbi_screening_sensitivity: .75
 pt_efficacy: .7
 pt_destination_compartment: "recovered" # either 'recovered' or 'susceptible'
 
+
+# PT in household contacts
+hh_contacts_pt: {}
+
 extra_params: {} # used to add parameters used for specific applications
 
 # Multiplier scaling the covariance matrix in the Haario Metropolis. 2.4 is the value recommended by Haario.

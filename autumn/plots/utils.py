@@ -45,6 +45,7 @@ PLOT_TEXT_DICT = {
     "sojourn.compartment_periods.icu_early": "ICU duration",
     "other_locations": "other locations",
     "clinical_stratification.props.symptomatic.multiplier": "symptomatic proportion multiplier",
+    "manila": "national capital region",
 }
 
 ALPHAS = (1.0, 0.6, 0.4, 0.3, 0.2, 0.15, 0.1, 0.08)

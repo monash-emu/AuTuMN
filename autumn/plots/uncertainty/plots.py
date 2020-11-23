@@ -42,7 +42,8 @@ def plot_timeseries_with_uncertainty(
     show_title=True,
     ylab=None,
     x_axis_to_date=True,
-    start_quantile=0
+    start_quantile=0,
+    sc_colors=None
 ):
     """
     Plots the uncertainty timeseries for one or more scenarios.
@@ -53,15 +54,21 @@ def plot_timeseries_with_uncertainty(
     if single_panel:
         fig, axis, _, _, _, _ = plotter.get_figure()
 
-    n_scenarios_to_plot = min([len(scenario_idxs), len(COLORS)])
-    colors = _apply_transparency(COLORS[:n_scenarios_to_plot], ALPHAS[:n_scenarios_to_plot])
+    n_scenarios_to_plot = len(scenario_idxs)
+    if sc_colors is None:
+        n_scenarios_to_plot = min([len(scenario_idxs), len(COLORS)])
+        colors = _apply_transparency(COLORS[:n_scenarios_to_plot], ALPHAS[:n_scenarios_to_plot])
 
     # Plot each scenario on a single axis.
-    for scenario_idx in scenario_idxs[:n_scenarios_to_plot]:
-        if scenario_idx < len(colors):
-            scenario_colors = colors[scenario_idx]
+    for i, scenario_idx in enumerate(scenario_idxs[:n_scenarios_to_plot]):
+        if sc_colors is None:
+            if scenario_idx < len(colors):
+                scenario_colors = colors[scenario_idx]
+            else:
+                scenario_colors = colors[-1]
         else:
-            scenario_colors = colors[-1]
+            scenario_colors = sc_colors[i]
+
         _plot_uncertainty(
             axis,
             uncertainty_df,
@@ -72,6 +79,7 @@ def plot_timeseries_with_uncertainty(
             scenario_colors,
             overlay_uncertainty=overlay_uncertainty,
             start_quantile=start_quantile,
+            zorder=i+1
         )
 
     # Add plot targets
@@ -124,6 +132,7 @@ def _plot_uncertainty(
     colors: List[str],
     overlay_uncertainty=True,
     start_quantile=0,
+    zorder=1
 ):
     """Plots the uncertainty values in the provided dataframe to an axis"""
     mask = (
@@ -147,11 +156,11 @@ def _plot_uncertainty(
             color = colors[i - start_quantile]
             start_key = q_keys[i]
             end_key = q_keys[-(i + 1)]
-            axis.fill_between(times, quantiles[start_key], quantiles[end_key], facecolor=color)
+            axis.fill_between(times, quantiles[start_key], quantiles[end_key], facecolor=color, zorder=zorder)
 
     if num_quantiles % 2:
         q_key = q_keys[half_length]
-        axis.plot(times, quantiles[q_key], color=colors[3])
+        axis.plot(times, quantiles[q_key], color=colors[3], zorder=zorder)
 
 
 def plot_multi_output_timeseries_with_uncertainty(

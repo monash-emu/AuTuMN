@@ -14,6 +14,12 @@ REGION_TITLES = {
     "all": "National level",
 }
 
+INTERVENTION_TITLES = {
+    "ACF": "Community-wide ACF",
+    "ACF_LTBI": "Community-wide ACF and\npreventive treatment",
+    "hh_pt": "Preventive treatment\nfor all contacts"
+}
+
 
 def get_format():
     pyplot.style.use("ggplot")

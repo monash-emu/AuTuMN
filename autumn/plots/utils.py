@@ -66,7 +66,7 @@ COLORS = (
     # Greys
     ["lightgrey", "darkgrey", "dimgrey", "black"],
     # Reds
-    ["lightsalmon", "darksalmon", "tomato", "darkred"],
+    ["lightsalmon", "tomato", "indianred", "darkred"],
 )
 REF_DATE = datetime.date(2019, 12, 31)
 

@@ -68,9 +68,6 @@ def plot_counterfactual(uncertainty_df):
                 start_quantile=1
             )
 
-            ax = fig.add_subplot(spec[i + 1, j])
-            ax.text(0, 0, f"{region} {output}")
-
     save_figure("counterfactual", FIGURE_PATH)
 
 

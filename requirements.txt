@@ -21,6 +21,7 @@ pydantic
 streamlit==0.67.0
 pyAesCrypt==0.4.3
 googledrivedownloader >=0.4
+networkx==2.5
 
 # Testing
 pytest

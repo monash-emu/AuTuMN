@@ -24,6 +24,7 @@ Docs: https://docs.streamlit.io/
 """
 import streamlit as st
 
+
 from dash.dashboards.inspect_model.run import run_dashboard as inspect_model_dashboard
 from dash.dashboards.calibration_results.run import run_dashboard as calibration_results_dashboard
 from dash.dashboards.model_results.run import run_dashboard as run_scenario_dashboard
@@ -34,6 +35,7 @@ from dash.dashboards.multicountry_inputs import run_dashboard as run_multicountr
 from dash.dashboards.run_model import run_dashboard as run_model_dashboard
 from dash.dashboards.run_calibrate import run_dashboard as run_calibrate_dashboard
 from dash.dashboards.multicountry_uncertainty import run_dashboard as run_multicountry_uncertainty
+
 
 DASHBOARDS = {
     "Home": None,

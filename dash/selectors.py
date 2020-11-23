@@ -14,7 +14,7 @@ from summer.model import StratifiedModel
 
 
 def get_original_compartments(model: StratifiedModel) -> List[str]:
-    return list(set([c.split("X")[0] for c in model.compartment_names]))
+    return list(set([str(c).split("X")[0] for c in model.compartment_names]))
 
 
 def single_compartment(model: StratifiedModel) -> str:
@@ -60,7 +60,7 @@ def multi_compartment(model: StratifiedModel) -> List[str]:
     # Figure out which compartment names we just chose.
     chosen_compartment_names = []
     for compartment_name in model.compartment_names:
-        parts = compartment_name.split("X")
+        parts = str(compartment_name).split("X")
         compartment, strata_strs = parts[0], parts[1:]
         # Check that this compartment was selected
         if chosen_compartments == "All":

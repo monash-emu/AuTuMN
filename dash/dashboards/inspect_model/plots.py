@@ -1,13 +1,17 @@
 from datetime import datetime
 
+import networkx as nx
 import streamlit as st
 
+
+from summer.flow.base import BaseEntryFlow, BaseExitFlow, BaseTransitionFlow
 from autumn import plots
 from autumn.plots.plotter import StreamlitPlotter
 from autumn.tool_kit.model_register import AppRegion
 from autumn.tool_kit.scenarios import Scenario, get_model_times_from_inputs
 from autumn.inputs import get_mobility_data
 
+from dash.dashboards.inspect_model.flow_graph import plot_flow_graph
 
 BASE_DATE = datetime(2020, 1, 1, 0, 0, 0)
 PLOT_FUNCS = {}
@@ -54,9 +58,12 @@ sub_region_map = {
     "west-metro": "WEST_METRO",
 }
 
-def plot_multi_age_distribution(
-    plotter: StreamlitPlotter, app: AppRegion,
-):
+
+
+PLOT_FUNCS["Flow graph"] = plot_flow_graph
+
+
+def plot_multi_age_distribution(plotter: StreamlitPlotter, app: AppRegion):
 
     iso3 = iso3_map[app.region_name]
 
@@ -70,9 +77,7 @@ def plot_multi_age_distribution(
 PLOT_FUNCS["Multi age distribution"] = plot_multi_age_distribution
 
 
-def plot_age_distribution(
-    plotter: StreamlitPlotter, app: AppRegion,
-):
+def plot_age_distribution(plotter: StreamlitPlotter, app: AppRegion):
 
     iso3 = iso3_map[app.region_name]
 
@@ -86,9 +91,7 @@ def plot_age_distribution(
 PLOT_FUNCS["Age distribution"] = plot_age_distribution
 
 
-def plot_mixing_matrix(
-    plotter: StreamlitPlotter, app: AppRegion,
-):
+def plot_mixing_matrix(plotter: StreamlitPlotter, app: AppRegion):
     iso3 = app.params["default"]["country"]["iso3"]
     param_names = sorted(list(("all_locations", "home", "other_locations", "school", "work")))
     param_name = st.sidebar.selectbox("Select parameter", param_names)
@@ -98,9 +101,7 @@ def plot_mixing_matrix(
 PLOT_FUNCS["Mixing matrix"] = plot_mixing_matrix
 
 
-def plot_all_mixing_matrices(
-    plotter: StreamlitPlotter, app: AppRegion,
-):
+def plot_all_mixing_matrices(plotter: StreamlitPlotter, app: AppRegion):
     iso3 = app.params["default"]["country"]["iso3"]
     plots.model.plots.plot_mixing_matrix_2(plotter, iso3)
 
@@ -108,9 +109,7 @@ def plot_all_mixing_matrices(
 PLOT_FUNCS["All mixing matrices"] = plot_all_mixing_matrices
 
 
-def plot_flow_params(
-    plotter: StreamlitPlotter, app: AppRegion,
-):
+def plot_flow_params(plotter: StreamlitPlotter, app: AppRegion):
     # Assume a COVID model
     model = app.build_model(app.params["default"])
     param_names = sorted(list({f.param_name for f in model.flows}))
@@ -142,9 +141,7 @@ def plot_flow_params(
 PLOT_FUNCS["Flow weights"] = plot_flow_params
 
 
-def plot_dynamic_inputs(
-    plotter: StreamlitPlotter, app: AppRegion,
-):
+def plot_dynamic_inputs(plotter: StreamlitPlotter, app: AppRegion):
     # Assume a COVID model
     model = app.build_model(app.params["default"])
     tvs = model.time_variants
@@ -173,7 +170,11 @@ def plot_location_mixing(plotter: StreamlitPlotter, app: AppRegion):
     start_time = params["time"]["start"]
     end_time = params["time"]["end"]
     time_step = params["time"]["step"]
-    times = get_model_times_from_inputs(round(start_time), end_time, time_step,)
+    times = get_model_times_from_inputs(
+        round(start_time),
+        end_time,
+        time_step,
+    )
 
     loc_key = st.sidebar.selectbox("Select location", LOCATIONS)
     is_logscale = st.sidebar.checkbox("Log scale")
@@ -208,9 +209,7 @@ def plot_location_mixing(plotter: StreamlitPlotter, app: AppRegion):
 PLOT_FUNCS["Dynamic location mixing"] = plot_location_mixing
 
 
-def plot_mobility_raw(
-    plotter: StreamlitPlotter, app: AppRegion,
-):
+def plot_mobility_raw(plotter: StreamlitPlotter, app: AppRegion):
     params = app.params["default"]
     values, days = get_mobility_data(
         params["country"]["iso3"],
@@ -228,9 +227,7 @@ def plot_mobility_raw(
 PLOT_FUNCS["Google Mobility Raw"] = plot_mobility_raw
 
 
-def plot_multilocation_mobility(
-    plotter: StreamlitPlotter, app: AppRegion,
-):
+def plot_multilocation_mobility(plotter: StreamlitPlotter, app: AppRegion):
     params = app.params["default"]
     values, days = get_mobility_data(
         params["country"]["iso3"],
@@ -249,9 +246,7 @@ def plot_multilocation_mobility(
 PLOT_FUNCS["Google Mobility multi-location"] = plot_multilocation_mobility
 
 
-def plot_model_targets(
-    plotter: StreamlitPlotter, app: AppRegion,
-):
+def plot_model_targets(plotter: StreamlitPlotter, app: AppRegion):
     # Assume a COVID model
     scenario = Scenario(app.build_model, idx=0, params=app.params)
     with st.spinner("Running model..."):
@@ -265,9 +260,7 @@ def plot_model_targets(
     plots.model.plots.plot_outputs_single(plotter, scenario, target, is_logscale)
 
 
-def plot_model_multi_targets(
-    plotter: StreamlitPlotter, app: AppRegion,
-):
+def plot_model_multi_targets(plotter: StreamlitPlotter, app: AppRegion):
     # Assume a COVID model
     scenario = Scenario(app.build_model, idx=0, params=app.params)
 

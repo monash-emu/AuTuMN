@@ -171,18 +171,31 @@ def _get_transition_flow_connections(
     return connections
 
 
-def get_mortality_flow_infectious(comps: List[Compartment]):
+def get_mortality_flow_infectious(comps: List[Compartment], source_stratum=None):
+    output_name = 'mortality_infectious'
     connections = {}
-    connections["mortality_infectious"] = InfectionDeathFlowOutput(
-        source=Compartment.INFECTIOUS, source_strata={}
+    if source_stratum:
+        output_name += "X" + source_stratum[0] + "_" + source_stratum[1]
+        source_strata = {source_stratum[0]: source_stratum[1]}
+    else:
+        source_strata = {}
+    connections[output_name] = InfectionDeathFlowOutput(
+        source=Compartment.INFECTIOUS, source_strata=source_strata
     )
     return connections
 
 
-def get_mortality_flow_on_treatment(comps: List[Compartment]):
+def get_mortality_flow_on_treatment(comps: List[Compartment], source_stratum=None):
+    output_name = 'mortality_on_treatment'
     connections = {}
-    connections["mortality_on_treatment"] = InfectionDeathFlowOutput(
-        source=Compartment.ON_TREATMENT, source_strata={}
+    if source_stratum:
+        output_name += "X" + source_stratum[0] + "_" + source_stratum[1]
+        source_strata = {source_stratum[0]: source_stratum[1]}
+    else:
+        source_strata = {}
+
+    connections[output_name] = InfectionDeathFlowOutput(
+        source=Compartment.ON_TREATMENT, source_strata=source_strata
     )
     return connections
 
@@ -201,6 +214,25 @@ def calculate_tb_mortality(time_idx, model, compartment_values, derived_outputs)
         / sum(compartment_values)
         * 1.0e5
     )
+
+
+def make_stratified_output_func(output_type, source_stratum):
+    suffix = "X" + source_stratum[0] + "_" + source_stratum[1]
+    outputs_to_sum = {
+        "incidence": ["incidence_early", "incidence_late"],
+        "mortality": ["mortality_infectious", "mortality_on_treatment"]
+    }
+
+    def stratified_output_func(time_idx, model, compartment_values, derived_outputs):
+        total_flow = 0
+        for output in outputs_to_sum[output_type]:
+            total_flow += derived_outputs[output + suffix][time_idx]
+
+        popsize = calculate_stratum_population_size(compartment_values, model, [{"name": source_stratum[0], "value": source_stratum[1]}])
+
+        return total_flow / popsize * 1.e5
+
+    return stratified_output_func
 
 
 def make_cumulative_output_func(output, start_time_cumul):
@@ -302,10 +334,16 @@ def get_all_derived_output_functions(calculated_outputs, outputs_stratification,
     # need to add two intermediate derived outputs to capture mortality flows
     if "incidence" in calculated_outputs:
         calculated_outputs = ["incidence_early", "incidence_late"] + calculated_outputs
+        if "incidence" in outputs_stratification:
+            outputs_stratification["incidence_early"] = outputs_stratification["incidence"]
+            outputs_stratification["incidence_late"] = outputs_stratification["incidence"]
 
     # need to add two intermediate derived outputs to capture mortality flows
     if "mortality" in calculated_outputs:
         calculated_outputs = ["mortality_infectious", "mortality_on_treatment"] + calculated_outputs
+        if "mortality" in outputs_stratification:
+            outputs_stratification["mortality_infectious"] = outputs_stratification["mortality"]
+            outputs_stratification["mortality_on_treatment"] = outputs_stratification["mortality"]
 
     model_stratification_names = [s.name for s in model.stratifications]
     derived_output_functions = {}
@@ -355,5 +393,19 @@ def get_all_derived_output_functions(calculated_outputs, outputs_stratification,
                 requested_output
                 + " not among simple_functions, factory_functions or flow_functions"
             )
+
+    # stratified incidence and mortality
+    for output_type in ['incidence', 'mortality']:
+        if output_type in outputs_stratification:
+            for stratification_name in outputs_stratification[output_type]:
+                if stratification_name in model_stratification_names:
+                    stratification = [
+                        model.stratifications[i]
+                        for i, s in enumerate(model.stratifications)
+                        if s.name == stratification_name
+                    ][0]
+                    for stratum in stratification.strata:  # [stratification_name, stratum]
+                        derived_output_functions[f"{output_type}X{stratification_name}_{stratum}"] = \
+                            make_stratified_output_func(output_type, [stratification_name, stratum])
 
     model.add_function_derived_outputs(derived_output_functions)

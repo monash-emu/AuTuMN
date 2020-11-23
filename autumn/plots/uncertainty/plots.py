@@ -41,6 +41,7 @@ def plot_timeseries_with_uncertainty(
     requested_x_ticks=None,
     show_title=True,
     ylab=None,
+    x_axis_to_date=True
 ):
     """
     Plots the uncertainty timeseries for one or more scenarios.
@@ -80,7 +81,8 @@ def plot_timeseries_with_uncertainty(
         _plot_targets_to_axis(axis, trunc_values, trunc_times, on_uncertainty_plot=True)
 
     # Sort out x-axis
-    change_xaxis_to_date(axis, ref_date, rotation=0)
+    if x_axis_to_date:
+        change_xaxis_to_date(axis, ref_date, rotation=0)
     axis.tick_params(axis="x", labelsize=label_font_size)
     axis.tick_params(axis="y", labelsize=label_font_size)
 

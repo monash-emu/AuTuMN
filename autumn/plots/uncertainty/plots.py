@@ -41,7 +41,8 @@ def plot_timeseries_with_uncertainty(
     requested_x_ticks=None,
     show_title=True,
     ylab=None,
-    x_axis_to_date=True
+    x_axis_to_date=True,
+    start_quantile=0
 ):
     """
     Plots the uncertainty timeseries for one or more scenarios.
@@ -70,7 +71,7 @@ def plot_timeseries_with_uncertainty(
             x_low,
             scenario_colors,
             overlay_uncertainty=overlay_uncertainty,
-            start_quantile=0,
+            start_quantile=start_quantile,
         )
 
     # Add plot targets

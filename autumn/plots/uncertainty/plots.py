@@ -144,7 +144,7 @@ def _plot_uncertainty(
     half_length = num_quantiles // 2
     if overlay_uncertainty:
         for i in range(start_quantile, half_length):
-            color = colors[i]
+            color = colors[i - start_quantile]
             start_key = q_keys[i]
             end_key = q_keys[-(i + 1)]
             axis.fill_between(times, quantiles[start_key], quantiles[end_key], facecolor=color)

@@ -108,7 +108,7 @@ def main():
         password = getpass(prompt="Enter the encryption password:")
 
     update_calibration(password)
-    # update_importation(password)
+    update_importation(password)
 
 
 def update_calibration(password: str):
@@ -155,10 +155,10 @@ def update_calibration(password: str):
                 "quantiles": targets[key]["quantiles"],
             }
 
-        # with open(file_path, "w") as f:
-        #     json.dump(targets, f, indent=2)
+        with open(file_path, "w") as f:
+            json.dump(targets, f, indent=2)
 
-        # secrets.write(file_path, password)
+        secrets.write(file_path, password)
 
     # Calculate VIC aggregate targets
     for key in TARGETS_MAP.keys():
@@ -189,11 +189,12 @@ def update_calibration(password: str):
             "quantiles": targets[key]["quantiles"],
         }
 
+    # Write VIC aggregate secrets.
     file_path = os.path.join(REGION_DIR, "victoria", "targets.secret.json")
     with open(file_path, "w") as f:
         json.dump(vic_targets, f, indent=2)
 
-    # secrets.write(file_path, password)
+    secrets.write(file_path, password)
 
 
 def update_importation(password: str):

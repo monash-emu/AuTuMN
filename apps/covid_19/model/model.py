@@ -81,7 +81,8 @@ def build_model(params: dict) -> StratifiedModel:
 
     # Just set the importation flow without specifying its value, which is done later (if requested)
     # Entry compartment is set to LATE_ACTIVE in the model creation process, because the default would be susceptible
-    if params.importation is not None:
+    importation = params.importation
+    if importation:
         flows.append({"type": Flow.IMPORT, "parameter": "importation_rate"})
 
     """
@@ -127,7 +128,7 @@ def build_model(params: dict) -> StratifiedModel:
     """
     Seasonal forcing
     """
-    if params.seasonal_force is not None:
+    if params.seasonal_force:
         seasonal_func = get_seasonal_forcing(
             365.0, 173.0, params.seasonal_force, params.contact_rate
         )
@@ -136,7 +137,7 @@ def build_model(params: dict) -> StratifiedModel:
     """
     Dynamic heterogeneous mixing by age
     """
-    if params.elderly_mixing_reduction is not None:
+    if params.elderly_mixing_reduction:
         params = preprocess.elderly_protection.apply_elderly_protection(params)
     static_mixing_matrix = inputs.get_country_mixing_matrix("all_locations", country.iso3)
     dynamic_mixing_matrix = preprocess.mixing_matrix.build_dynamic_mixing_matrix(
@@ -154,17 +155,18 @@ def build_model(params: dict) -> StratifiedModel:
         agegroup: prop for agegroup, prop in zip(agegroup_strata, normalise_sequence(total_pops))
     }
 
-    importation = params.importation
-    if importation and importation.props_by_age:
-        importation_props_by_age = importation.props_by_age
-    else:
-        # This is the default behaviour, but must be specified to calculate the CDR for imported cases
-        importation_props_by_age = {s: 1.0 / len(agegroup_strata) for s in agegroup_strata}
-
     flow_adjustments = {
         "contact_rate": age_params.susceptibility,
-        "importation_rate": importation_props_by_age,
     }
+
+    # else statement is the default SUMMER behaviour, but must be specified to calculate the CDR for imported cases
+    importation_props_by_age = \
+        importation.props_by_age if \
+        importation and importation.props_by_age else \
+        {s: 1.0 / len(agegroup_strata) for s in agegroup_strata}
+
+    if importation:
+        flow_adjustments.update({"importation_rate": importation_props_by_age})
 
     # We use "agegroup" instead of "age" for this model, to avoid triggering automatic demography features
     # (which also works on the assumption that the time unit is years, so would be totally wrong)
@@ -239,7 +241,7 @@ def build_model(params: dict) -> StratifiedModel:
                 excluded_regions=(pop.region,)
             )
             movement_to_region = (
-                sum(total_pops) / sum(testing_pops) * params.importation.movement_prop
+                    sum(total_pops) / sum(testing_pops) * params.importation.movement_prop
             )
             import_cases = [i_cases * movement_to_region for i_cases in importation_data]
         else:
@@ -360,11 +362,11 @@ def build_model(params: dict) -> StratifiedModel:
     # We assume everyone who dies does so at the end of their time in the "late active" compartment.
     # We split the flow rate out of "late active" into a death or recovery flow, based on the relative death proportion.
     hospital_death_rates = (
-        relative_death_props[ClinicalStratum.HOSPITAL_NON_ICU]
-        * model.parameters[f"within_hospital_late"]
+            relative_death_props[ClinicalStratum.HOSPITAL_NON_ICU]
+            * model.parameters[f"within_hospital_late"]
     )
     icu_death_rates = (
-        relative_death_props[ClinicalStratum.ICU] * model.parameters[f"within_icu_late"]
+            relative_death_props[ClinicalStratum.ICU] * model.parameters[f"within_icu_late"]
     )
 
     # Apply adjusted infection death rates for hospital patients (ICU and non-ICU)
@@ -468,7 +470,7 @@ def build_model(params: dict) -> StratifiedModel:
             model.time_variants[
                 f"tv_prop_importedX{agegroup}X{ClinicalStratum.NON_SYMPT}"
             ] = lambda t: early_exposed_adjs[param_key][ClinicalStratum.NON_SYMPT] * (
-                1.0 - quarantine_func(t)
+                    1.0 - quarantine_func(t)
             )
 
             # Proportion ambulatory also reduced by quarantined proportion due to isolation
@@ -477,18 +479,18 @@ def build_model(params: dict) -> StratifiedModel:
             ] = lambda t: tvs[early_exposed_adjs[param_key][ClinicalStratum.SYMPT_NON_HOSPITAL]](
                 t
             ) * (
-                1.0 - quarantine_func(t)
-            )
+                                  1.0 - quarantine_func(t)
+                          )
 
             # Proportion isolated includes those that would have been detected anyway and the ones above quarantined
             model.time_variants[
                 f"tv_prop_importedX{agegroup}X{ClinicalStratum.SYMPT_ISOLATE}"
             ] = lambda t: quarantine_func(t) * (
-                tvs[early_exposed_adjs[param_key][ClinicalStratum.SYMPT_NON_HOSPITAL]](t)
-                + early_exposed_adjs[param_key][ClinicalStratum.NON_SYMPT]
+                    tvs[early_exposed_adjs[param_key][ClinicalStratum.SYMPT_NON_HOSPITAL]](t)
+                    + early_exposed_adjs[param_key][ClinicalStratum.NON_SYMPT]
             ) + tvs[
-                early_exposed_adjs[param_key][ClinicalStratum.SYMPT_ISOLATE]
-            ](
+                              early_exposed_adjs[param_key][ClinicalStratum.SYMPT_ISOLATE]
+                          ](
                 t
             )
 
@@ -541,8 +543,8 @@ def build_model(params: dict) -> StratifiedModel:
         for agegroup in agegroup_strata:  # e.g. '0'
             # collect existing rates of progressions for symptomatic vs non-symptomatic
             rate_non_sympt = (
-                early_exposed_adjs[f"within_early_exposedXagegroup_{agegroup}"]["non_sympt"]
-                * model.parameters["within_early_exposed"]
+                    early_exposed_adjs[f"within_early_exposedXagegroup_{agegroup}"]["non_sympt"]
+                    * model.parameters["within_early_exposed"]
             )
             total_progression_rate = model.parameters["within_early_exposed"]
             rate_sympt = total_progression_rate - rate_non_sympt
@@ -556,7 +558,7 @@ def build_model(params: dict) -> StratifiedModel:
             # create adjustment requests
             for clinical_stratum in clinical_strata:
                 param_name = (
-                    f"within_early_exposedXagegroup_{agegroup}Xclinical_" + clinical_stratum
+                        f"within_early_exposedXagegroup_{agegroup}Xclinical_" + clinical_stratum
                 )
                 if clinical_stratum == "non_sympt":
                     stratification_adjustments[param_name] = {

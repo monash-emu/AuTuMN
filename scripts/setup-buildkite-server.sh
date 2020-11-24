@@ -53,9 +53,3 @@ systemctl enable --now buildkite-agent@3
 systemctl enable --now buildkite-agent@4
 systemctl enable --now buildkite-agent@5
 systemctl enable --now buildkite-agent@6
-systemctl enable --now buildkite-agent@7
-systemctl enable --now buildkite-agent@8
-systemctl enable --now buildkite-agent@9
-systemctl enable --now buildkite-agent@10
-systemctl enable --now buildkite-agent@11
-systemctl enable --now buildkite-agent@12

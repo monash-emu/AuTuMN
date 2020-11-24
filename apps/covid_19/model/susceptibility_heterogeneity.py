@@ -1,10 +1,13 @@
-import scipy.special as special
-import scipy.integrate as integrate
 from scipy.stats import gamma as gamma_dist
 from scipy import optimize
 import numpy as np
 import matplotlib.pyplot as plt
 from math import sqrt
+
+"""
+Code not currently used in any application. Calls to these functions was deleted on 24/11/20 by JT because not in use.
+May come back to this if we want to consider this epidemiological issue.
+"""
 
 
 def get_gamma_data(tail_start_point, n_bins, coeff):

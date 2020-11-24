@@ -59,7 +59,6 @@ sub_region_map = {
 }
 
 
-
 PLOT_FUNCS["Flow graph"] = plot_flow_graph
 
 

@@ -354,7 +354,7 @@ class StratifiedModel(EpiModel):
             category_frequency = infectious_populations / self.category_populations
             self.infection_frequency[strain] = np.matmul(mixing_matrix, category_frequency)
 
-    def get_infection_frequency_multipier(self, source: Compartment, dest: Compartment):
+    def get_infection_frequency_multiplier(self, source: Compartment, dest: Compartment):
         """
         Get force of infection multiplier for a given compartment,
         using the 'infection frequency' calculation.
@@ -363,7 +363,7 @@ class StratifiedModel(EpiModel):
         strain = dest._strat_values.get("strain", self.DEFAULT_DISEASE_STRAIN)
         return self.infection_frequency[strain][idx][0]
 
-    def get_infection_density_multipier(self, source: Compartment, dest: Compartment):
+    def get_infection_density_multiplier(self, source: Compartment, dest: Compartment):
         """
         Get force of infection multiplier for a given compartment,
         using the 'infection density' calculation.

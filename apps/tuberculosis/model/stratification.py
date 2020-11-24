@@ -86,11 +86,11 @@ def stratify_by_age(model, params, compartments):
         method=5,
         bound_low=0,
         bound_up=100,
-        smoothness=1.5
+        smoothness=1.5,
     )
     for agegroup, multiplier in bcg_susceptibility_multilier_dict.items():
-        if multiplier <  1.0:
-            average_age = get_average_age_for_bcg(agegroup, params['age_breakpoints'])
+        if multiplier < 1.0:
+            average_age = get_average_age_for_bcg(agegroup, params["age_breakpoints"])
             name = "contact_rate_" + agegroup
             bcg_susceptibility_multilier_dict[agegroup] = name
             model.time_variants[name] = make_bcg_multiplier_func(

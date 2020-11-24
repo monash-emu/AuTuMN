@@ -2,8 +2,10 @@
 
 ![](https://github.com/monash-emu/AuTuMN/workflows/Continuous%20Integration/badge.svg)
 
-This project is a disease modelling framework, written in Python.
+This is a disease modelling project, written in Python.
 It is currently being applied to tuberculosis and COVID-19. This project is used and maintained by the Monash Univeristy Epidemiological Modelling Unit.
+
+AuTuMN uses the SUMMER disease modelling framework, which is [documented here](http://summerepi.com/) with examples and an API reference.
 
 See [this guide](./docs/setup.md) for information on how to set up this project.
 

@@ -184,8 +184,24 @@ def model_output_selector(scenarios, targets):
     output_names = [n for n in output_names if n not in ["chain", "run", "scenario"]]
 
     # Find the names of all the output types and get user to select one
-    output_base_names = list(set([n.split("X")[0] for n in output_names]))
-    output_name = st.sidebar.selectbox("Select output type", output_base_names)
+
+    if any("for_cluster" in o for o in output_names):
+        # Handle Victorian multi cluster model
+        cluster_options = ["All"] + sorted(
+            list(set([o.split("_for_cluster_")[-1] for o in output_names if "_for_cluster_" in o]))
+        )
+        cluster = st.sidebar.selectbox("Select cluster", cluster_options)
+        if cluster == "All":
+            output_base_names = sorted(list(o for o in output_names if "_for_cluster_" not in o))
+            output_name = st.sidebar.selectbox("Select output type", output_base_names)
+        else:
+            output_base_names = sorted(
+                list(o for o in output_names if f"_for_cluster_{cluster}" in o)
+            )
+            output_name = st.sidebar.selectbox("Select output type", output_base_names)
+    else:
+        output_base_names = sorted(list(set([n.split("X")[0] for n in output_names])))
+        output_name = st.sidebar.selectbox("Select output type", output_base_names)
 
     # Construct an output config for the plotting code.
     try:

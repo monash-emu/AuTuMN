@@ -189,6 +189,10 @@ class Importation(BaseModel):
     movement_prop: Optional[float]
 
 
+class VictorianClusterStratification(BaseModel):
+    contact_rate_multipliers: Optional[Dict[str, float]]
+
+
 class ParamConfig:
     """Config for parameter models"""
 
@@ -222,6 +226,7 @@ class Parameters:
     testing_to_detection: Optional[TestingToDetection]
     susceptibility_heterogeneity: Optional[SusceptibilityHeterogeneity]
     importation: Optional[Importation]
+    victorian_clusters: Optional[VictorianClusterStratification]
     # Dummy parameters - not used
     notifications_dispersion_param: float
     icu_occupancy_dispersion_param: float
@@ -231,3 +236,13 @@ class Parameters:
     new_icu_admissions_dispersion_param: float
     infection_deaths_dispersion_param: float
     accum_deaths_dispersion_param: float
+
+    notifications_for_cluster_barwon_south_west_dispersion_param: float
+    notifications_for_cluster_gippsland_dispersion_param: float
+    notifications_for_cluster_hume_dispersion_param: float
+    notifications_for_cluster_loddon_mallee_dispersion_param: float
+    notifications_for_cluster_grampians_dispersion_param: float
+    notifications_for_cluster_north_metro_dispersion_param: float
+    notifications_for_cluster_south_east_metro_dispersion_param: float
+    notifications_for_cluster_south_metro_dispersion_param: float
+    notifications_for_cluster_west_metro_dispersion_param: float

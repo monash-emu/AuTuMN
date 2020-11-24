@@ -21,7 +21,7 @@ from .regions.gippsland import gippsland_region
 from .regions.hume import hume_region
 from .regions.loddon_mallee import loddon_mallee_region
 from .regions.grampians import grampians_region
-
+from .regions.victoria import victoria_region
 
 # Used by each region to register its model.
 app = App("covid_19")
@@ -36,7 +36,7 @@ app.register(gippsland_region)
 app.register(hume_region)
 app.register(loddon_mallee_region)
 app.register(grampians_region)
-
+app.register(victoria_region)
 
 # Malaysia
 app.register(malaysia_region)

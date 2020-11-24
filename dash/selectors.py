@@ -205,16 +205,13 @@ def model_run(param_set_dirpath: str) -> Tuple[str, str]:
     Returns the directory name selected.
     """
     # Read model runs from filesystem
-    model_run_dirs = os.listdir(param_set_dirpath)
+    model_run_dirs = list(reversed(sorted(os.listdir(param_set_dirpath))))
 
     # Parse model run folder names
     model_runs = []
     for dirname in model_run_dirs:
         run_datetime = datetime.strptime(dirname, "%Y-%m-%d--%H-%M-%S")
         model_runs.append(run_datetime)
-
-    # Sort model runs by date
-    model_runs = reversed(sorted(model_runs))
 
     # Create labels for the select box.
     labels = []

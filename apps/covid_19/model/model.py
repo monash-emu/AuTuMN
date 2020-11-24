@@ -1,4 +1,5 @@
 from copy import deepcopy
+from types import MethodType
 
 import numpy as np
 
@@ -21,6 +22,8 @@ from apps.covid_19.model import outputs, preprocess
 from apps.covid_19.model.importation import get_all_vic_notifications
 from apps.covid_19.model.parameters import Parameters
 from apps.covid_19.model.preprocess.testing import find_cdr_function_from_test_data
+from apps.covid_19.model.victorian_mixing import build_victorian_mixing_matrix_func
+from apps.covid_19.model.victorian_outputs import add_victorian_derived_outputs
 
 """
 Compartments
@@ -574,113 +577,166 @@ def build_model(params: dict) -> StratifiedModel:
     """
     if params.stratify_by_infection_history:
         # waning immunity makes recovered individuals transition to the 'experienced' stratum
-        stratification_adjustments = {
-            "immunity_loss_rate": {'naive': 0., 'experienced': 1.}
-        }
+        stratification_adjustments = {"immunity_loss_rate": {"naive": 0.0, "experienced": 1.0}}
         # adjust parameters defining progression from early exposed to late exposed to obtain the requested proportion
         for agegroup in agegroup_strata:  # e.g. '0'
             # collect existing rates of progressions for symptomatic vs non-symptomatic
-            rate_non_sympt = early_exposed_adjs[f"within_early_exposedXagegroup_{agegroup}"]['non_sympt'] *\
-                             model.parameters["within_early_exposed"]
-            total_progression_rate = model.parameters['within_early_exposed']
+            rate_non_sympt = (
+                early_exposed_adjs[f"within_early_exposedXagegroup_{agegroup}"]["non_sympt"]
+                * model.parameters["within_early_exposed"]
+            )
+            total_progression_rate = model.parameters["within_early_exposed"]
             rate_sympt = total_progression_rate - rate_non_sympt
 
             # multiplier for symptomatic is rel_prop_symptomatic_experienced
             sympt_multiplier = params.rel_prop_symptomatic_experienced
             # multiplier for asymptomatic rate is 1 + rate_sympt / rate_non_sympt * (1 - sympt_multiplier)
             # in order to preserve aggregated exit flow
-            non_sympt_multiplier = 1 + rate_sympt / rate_non_sympt * (1. - sympt_multiplier)
+            non_sympt_multiplier = 1 + rate_sympt / rate_non_sympt * (1.0 - sympt_multiplier)
 
             # create adjustment requests
             for clinical_stratum in clinical_strata:
-                param_name = f"within_early_exposedXagegroup_{agegroup}Xclinical_" + clinical_stratum
+                param_name = (
+                    f"within_early_exposedXagegroup_{agegroup}Xclinical_" + clinical_stratum
+                )
                 if clinical_stratum == "non_sympt":
                     stratification_adjustments[param_name] = {
-                        'naive': 1.,
-                        'experienced': non_sympt_multiplier
+                        "naive": 1.0,
+                        "experienced": non_sympt_multiplier,
                     }
                 else:
                     stratification_adjustments[param_name] = {
-                        'naive': 1.,
-                        'experienced': sympt_multiplier
+                        "naive": 1.0,
+                        "experienced": sympt_multiplier,
                     }
 
         # Stratify the model using the SUMMER stratification function
         model.stratify(
             "history",
-            ['naive', 'experienced'],
+            ["naive", "experienced"],
             [Compartment.SUSCEPTIBLE, Compartment.EARLY_EXPOSED],
-            comp_split_props={
-                'naive': 1.0, 'experienced': 0.
-            },
+            comp_split_props={"naive": 1.0, "experienced": 0.0},
             flow_adjustments=stratification_adjustments,
         )
 
     """
+    Stratify model by Victorian subregion (used for Victorian cluster model).
+    """
+    if params.victorian_clusters:
+        vic = params.victorian_clusters
+        # Determine how to split up population by cluster
+        # There is -0.5% to +4% difference per age group between sum of region population in 2018 and total VIC population in 2020
+        cluster_strata = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS]
+        region_pops = {
+            region: sum(
+                inputs.get_population_by_agegroup(
+                    agegroup_strata, country.iso3, region.upper(), year=2018
+                )
+            )
+            for region in cluster_strata
+        }
+        sum_region_props = sum(region_pops.values())
+        cluster_split_props = {
+            region: pop / sum_region_props for region, pop in region_pops.items()
+        }
+
+        # Add in flow adjustments per-region so we can calibrate the contact rate for each region.
+        cluster_flow_adjustments = {}
+        for agegroup_stratum in agegroup_strata:
+            param_name = f"contact_rateXagegroup_{agegroup_stratum}"
+            cluster_flow_adjustments[param_name] = vic.contact_rate_multipliers
+
+        # Use an identity mixing matrix to declare no inter-cluster mixing
+        cluster_mixing_matrix = np.eye(len(cluster_strata))
+
+        model.stratify(
+            "cluster",
+            cluster_strata,
+            COMPARTMENTS,
+            comp_split_props=cluster_split_props,
+            flow_adjustments=cluster_flow_adjustments,
+            mixing_matrix=cluster_mixing_matrix,
+        )
+
+        """
+        Hack in a custom (144x144) mixing matrix where each region is adjusted individually
+        based on its time variant mobility data.
+        """
+        get_mixing_matrix = build_victorian_mixing_matrix_func(
+            static_mixing_matrix,
+            params.mobility,
+            country,
+        )
+        setattr(model, "get_mixing_matrix", MethodType(get_mixing_matrix, model))
+
+    """
     Set up and track derived output functions
     """
+    if not params.victorian_clusters:
+        # Set up derived outputs
+        incidence_connections = outputs.get_incidence_connections(model.compartment_names)
+        progress_connections = outputs.get_progress_connections(model.compartment_names)
+        death_output_connections = outputs.get_infection_death_connections(model.compartment_names)
+        model.add_flow_derived_outputs(incidence_connections)
+        model.add_flow_derived_outputs(progress_connections)
+        model.add_flow_derived_outputs(death_output_connections)
 
-    # Set up derived outputs
-    incidence_connections = outputs.get_incidence_connections(model.compartment_names)
-    progress_connections = outputs.get_progress_connections(model.compartment_names)
-    death_output_connections = outputs.get_infection_death_connections(model.compartment_names)
-    model.add_flow_derived_outputs(incidence_connections)
-    model.add_flow_derived_outputs(progress_connections)
-    model.add_flow_derived_outputs(death_output_connections)
+        # Build notification derived output function
+        is_importation_active = params.importation is not None
+        notification_func = outputs.get_calc_notifications_covid(
+            is_importation_active,
+            modelled_abs_detection_proportion_imported,
+        )
+        local_notification_func = outputs.get_calc_notifications_covid(
+            False, modelled_abs_detection_proportion_imported
+        )
 
-    # Build notification derived output function
-    is_importation_active = params.importation is not None
-    notification_func = outputs.get_calc_notifications_covid(
-        is_importation_active,
-        modelled_abs_detection_proportion_imported,
-    )
-    local_notification_func = outputs.get_calc_notifications_covid(
-        False, modelled_abs_detection_proportion_imported
-    )
+        # Build life expectancy derived output function
+        life_expectancy = inputs.get_life_expectancy_by_agegroup(agegroup_strata, country.iso3)[0]
+        life_expectancy_latest = [life_expectancy[agegroup][-1] for agegroup in life_expectancy]
+        life_lost_func = outputs.get_calculate_years_of_life_lost(life_expectancy_latest)
 
-    # Build life expectancy derived output function
-    life_expectancy = inputs.get_life_expectancy_by_agegroup(agegroup_strata, country.iso3)[0]
-    life_expectancy_latest = [life_expectancy[agegroup][-1] for agegroup in life_expectancy]
-    life_lost_func = outputs.get_calculate_years_of_life_lost(life_expectancy_latest)
+        # Build hospital occupancy func
+        compartment_periods = params.sojourn.compartment_periods
+        icu_early_period = compartment_periods["icu_early"]
+        hospital_early_period = compartment_periods["hospital_early"]
+        calculate_hospital_occupancy = outputs.get_calculate_hospital_occupancy(
+            icu_early_period, hospital_early_period
+        )
 
-    # Build hospital occupancy func
-    compartment_periods = params.sojourn.compartment_periods
-    icu_early_period = compartment_periods["icu_early"]
-    hospital_early_period = compartment_periods["hospital_early"]
-    calculate_hospital_occupancy = outputs.get_calculate_hospital_occupancy(
-        icu_early_period, hospital_early_period
-    )
+        func_outputs = {
+            # Case-related
+            "notifications": notification_func,
+            "local_notifications": local_notification_func,
+            "notifications_at_sympt_onset": outputs.get_notifications_at_sympt_onset,
+            # Death-related
+            "years_of_life_lost": life_lost_func,
+            "accum_deaths": outputs.calculate_cum_deaths,
+            # Health care-related
+            "hospital_occupancy": calculate_hospital_occupancy,
+            "icu_occupancy": outputs.calculate_icu_occupancy,
+            "new_hospital_admissions": outputs.calculate_new_hospital_admissions_covid,
+            "new_icu_admissions": outputs.calculate_new_icu_admissions_covid,
+            # Other
+            "proportion_seropositive": outputs.calculate_proportion_seropositive,
+        }
 
-    func_outputs = {
-        # Case-related
-        "notifications": notification_func,
-        "local_notifications": local_notification_func,
-        "notifications_at_sympt_onset": outputs.get_notifications_at_sympt_onset,
-        # Death-related
-        "years_of_life_lost": life_lost_func,
-        "accum_deaths": outputs.calculate_cum_deaths,
-        # Health care-related
-        "hospital_occupancy": calculate_hospital_occupancy,
-        "icu_occupancy": outputs.calculate_icu_occupancy,
-        "new_hospital_admissions": outputs.calculate_new_hospital_admissions_covid,
-        "new_icu_admissions": outputs.calculate_new_icu_admissions_covid,
-        # Other
-        "proportion_seropositive": outputs.calculate_proportion_seropositive,
-    }
+        # Derived outputs for the optimization project.
+        if params.country.iso3 in OPTI_ISO3S:
+            func_outputs["accum_years_of_life_lost"] = outputs.calculate_cum_years_of_life_lost
+            for agegroup in agegroup_strata:
+                age_key = f"agegroup_{agegroup}"
+                func_outputs[
+                    f"proportion_seropositiveX{age_key}"
+                ] = outputs.make_age_specific_seroprevalence_output(agegroup)
+                func_outputs[f"accum_deathsX{age_key}"] = outputs.make_agespecific_cum_deaths_func(
+                    agegroup
+                )
 
-    # Derived outputs for the optimization project.
-    if params.country.iso3 in OPTI_ISO3S:
-        func_outputs["accum_years_of_life_lost"] = outputs.calculate_cum_years_of_life_lost
-        for agegroup in agegroup_strata:
-            age_key = f"agegroup_{agegroup}"
-            func_outputs[
-                f"proportion_seropositiveX{age_key}"
-            ] = outputs.make_age_specific_seroprevalence_output(agegroup)
-            func_outputs[f"accum_deathsX{age_key}"] = outputs.make_agespecific_cum_deaths_func(
-                agegroup
-            )
+        model.add_function_derived_outputs(func_outputs)
+    else:
+        add_victorian_derived_outputs(model)
 
-    model.add_function_derived_outputs(func_outputs)
     return model
 
 

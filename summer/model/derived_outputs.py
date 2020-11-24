@@ -1,6 +1,7 @@
 from typing import List, Dict, Callable
 
 import numpy as np
+from numpy.lib.function_base import append
 
 from summer.constants import Flow
 
@@ -11,13 +12,14 @@ class DerivedOutputCalculator:
         Calculates derived outputs from a set of outputs
         """
         self._flow_outputs = {}
-        self._function_outputs = {}
+        self._function_outputs = []
 
     def add_flow_derived_outputs(self, flow_outputs: dict):
         self._flow_outputs.update(flow_outputs)
 
     def add_function_derived_outputs(self, func_outputs: dict):
-        self._function_outputs.update(func_outputs)
+        for k, v in func_outputs.items():
+            self._function_outputs.append([k, v])
 
     def calculate(self, model):
         """
@@ -35,7 +37,7 @@ class DerivedOutputCalculator:
             derived_outputs[output_name] = base_output.copy()
 
         # Initialize function outputs
-        for output in self._function_outputs:
+        for output, _ in self._function_outputs:
             derived_outputs[output] = base_output.copy()
 
         # Calculate derived outputs for all model time steps.
@@ -48,7 +50,7 @@ class DerivedOutputCalculator:
                     derived_outputs[output_name][time_idx] += net_flow
 
             # Calculate derived function outputs
-            for output_name, func in self._function_outputs.items():
+            for output_name, func in self._function_outputs:
                 derived_outputs[output_name][time_idx] = func(
                     time_idx, model, compartment_values, derived_outputs
                 )

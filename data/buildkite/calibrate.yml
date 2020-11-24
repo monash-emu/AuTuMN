@@ -22,6 +22,8 @@ steps:
       value: covid_19:loddon-mallee
     - label: Grampians (COVID)
       value: covid_19:grampians
+    - label: Victoria (COVID)
+      value: covid_19:victoria
     - label: Malaysia (COVID)
       value: covid_19:malaysia
     - label: Sabah (COVID)

@@ -22,6 +22,15 @@ class Compartment:
         self._str = self.serialize()
         self.idx = None
 
+    def is_match(self, name: str, strata: dict) -> bool:
+        """
+        Returns True if this compartment matches the supplied name and strata.
+        A partial strata match returns True.
+        """
+        is_name_match = name == self._name
+        is_strata_match = all([self.has_stratum(k, v) for k, v in strata.items()])
+        return is_name_match and is_strata_match
+
     def has_name(self, comp):
         """
         Returns True if this compartment has the same root name as another.

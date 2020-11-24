@@ -158,7 +158,7 @@ def build_model(params: dict) -> StratifiedModel:
     if importation and importation.props_by_age:
         importation_props_by_age = importation.props_by_age
     else:
-        # FIXME: Isn't this done by default?
+        # This is the default behaviour, but must be specified to calculate the CDR for imported cases
         importation_props_by_age = {s: 1.0 / len(agegroup_strata) for s in agegroup_strata}
 
     flow_adjustments = {

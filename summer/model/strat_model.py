@@ -153,6 +153,59 @@ class StratifiedModel(EpiModel):
         for flow in self.flows:
             flow.update_compartment_indices(compartment_idx_lookup)
 
+    def add_extra_flow(
+        self,
+        flow: dict,
+        source_strata: dict,
+        dest_strata: dict,
+        expected_flow_count: int = None,
+    ):
+        """
+        Add a new flow from a set of source compartments to a set of dest compartments.
+        This can be done before or after stratification(s).
+
+        The supplied strata will be used to find the source and destination compartments.
+        There must be an equal number of source and destination compartments.
+        Any unspecified strata will have flows created in parallel.
+
+        flow: The flow to add, same format as when construction the model.
+        source_strata: Source strata used to find source compartments.
+        dest_strata: Destination strata used to find destination compartments.
+        expected_count: (Optional) Expected number of flows to be created.
+        """
+        assert flow["type"] in Flow.TRANSITION_FLOWS, "Can only add extra transition flows."
+        flows_to_add = []
+        source_comps = [
+            comp for comp in self.compartment_names if comp.is_match(flow["origin"], source_strata)
+        ]
+        dest_comps = [
+            comp for comp in self.compartment_names if comp.is_match(flow["to"], dest_strata)
+        ]
+        count_dest_comps = len(dest_comps)
+        count_source_comps = len(source_comps)
+        msg = f"Expected equal number of source and dest compartmentss, but got {count_source_comps} source and {count_dest_comps} dest."
+        assert count_dest_comps == count_source_comps, msg
+        for source_comp, dest_comp in zip(source_comps, dest_comps):
+            flow_to_add = {
+                **flow,
+                "origin": source_comp.serialize(),
+                "to": dest_comp.serialize(),
+            }
+            flows_to_add.append(flow_to_add)
+
+        if expected_flow_count is not None:
+            # Check that we added the expected number of flows.
+            actual_flow_count = len(flows_to_add)
+            msg = f"Expected to add {expected_flow_count} flows but added {actual_flow_count}"
+            assert actual_flow_count == expected_flow_count, msg
+
+        # Add the new flows to the model
+        for flow_to_add in flows_to_add:
+            self._add_flow(flow_to_add)
+
+        # Update flow compartment idxs for faster lookups.
+        self._update_flow_compartment_indices()
+
     def get_mixing_matrix(self, time: float) -> np.ndarray:
         """
         Returns the final mixing matrix for a given time.

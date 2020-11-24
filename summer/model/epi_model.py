@@ -1,11 +1,8 @@
-import copy
 import logging
-from typing import List, Dict, Tuple, Callable
+from typing import List, Dict
 from functools import lru_cache
 
-import matplotlib.pyplot
 import numpy as np
-import pandas as pd
 
 from summer.constants import (
     Flow,
@@ -117,52 +114,10 @@ class EpiModel:
         self.parameters["universal_death_rate"] = self.parameters.get("universal_death_rate", 0)
 
         # Add user-specified flows
-        _entry_comp = Compartment.deserialize(entry_compartment)
+        self.entry_compartment = Compartment.deserialize(entry_compartment)
         self.flows = []
         for requested_flow in requested_flows:
-            flow = None
-            f_source = requested_flow.get("origin")
-            f_source = Compartment.deserialize(f_source) if f_source else None
-            f_dest = requested_flow.get("to")
-            f_dest = Compartment.deserialize(f_dest) if f_dest else None
-            f_param = requested_flow["parameter"]
-            f_type = requested_flow["type"]
-            if f_type == Flow.STANDARD:
-                flow = StandardFlow(
-                    source=f_source,
-                    dest=f_dest,
-                    param_name=f_param,
-                    param_func=self.get_parameter_value,
-                )
-            elif f_type == Flow.INFECTION_FREQUENCY:
-                flow = InfectionFrequencyFlow(
-                    source=f_source,
-                    dest=f_dest,
-                    param_name=f_param,
-                    param_func=self.get_parameter_value,
-                    find_infectious_multiplier=self.get_infection_frequency_multipier,
-                )
-            elif f_type == Flow.INFECTION_DENSITY:
-                flow = InfectionDensityFlow(
-                    source=f_source,
-                    dest=f_dest,
-                    param_name=f_param,
-                    param_func=self.get_parameter_value,
-                    find_infectious_multiplier=self.get_infection_density_multipier,
-                )
-            elif f_type == Flow.DEATH:
-                flow = InfectionDeathFlow(
-                    source=f_source, param_name=f_param, param_func=self.get_parameter_value
-                )
-            elif f_type == Flow.IMPORT:
-                flow = ImportFlow(
-                    dest=_entry_comp,
-                    param_name=f_param,
-                    param_func=self.get_parameter_value,
-                )
-
-            if flow:
-                self.flows.append(flow)
+            self._add_flow(requested_flow)
 
         # Add birth flows.
         if (
@@ -170,14 +125,16 @@ class EpiModel:
             and self.parameters["crude_birth_rate"] > 0
         ):
             flow = CrudeBirthFlow(
-                dest=_entry_comp,
+                dest=self.entry_compartment,
                 param_name="crude_birth_rate",
                 param_func=self.get_parameter_value,
             )
             self.flows.append(flow)
         elif self.birth_approach == BirthApproach.REPLACE_DEATHS:
             self.total_deaths = 0
-            flow = ReplacementBirthFlow(dest=_entry_comp, get_total_deaths=self.get_total_deaths)
+            flow = ReplacementBirthFlow(
+                dest=self.entry_compartment, get_total_deaths=self.get_total_deaths
+            )
             self.flows.append(flow)
 
         # Add non-disease death flows if requested
@@ -190,13 +147,65 @@ class EpiModel:
                 )
                 self.flows.append(flow)
 
-        # Create lookup table for quickly getting / setting compartments by name
+        # Update indices for quick lookups.
+        self._update_flow_compartment_indices()
+        for idx, c in enumerate(self.compartment_names):
+            c.idx = idx
+
+    def _update_flow_compartment_indices(self):
+        """
+        Create lookup table for quickly getting / setting compartments by name
+        """
         compartment_idx_lookup = {name: idx for idx, name in enumerate(self.compartment_names)}
         for flow in self.flows:
             flow.update_compartment_indices(compartment_idx_lookup)
 
-        for idx, c in enumerate(self.compartment_names):
-            c.idx = idx
+    def _add_flow(self, requested_flow):
+        flow = None
+        f_source = requested_flow.get("origin")
+        f_source = Compartment.deserialize(f_source) if f_source else None
+        f_dest = requested_flow.get("to")
+        f_dest = Compartment.deserialize(f_dest) if f_dest else None
+        f_param = requested_flow["parameter"]
+        f_type = requested_flow["type"]
+        if f_type == Flow.STANDARD:
+            flow = StandardFlow(
+                source=f_source,
+                dest=f_dest,
+                param_name=f_param,
+                param_func=self.get_parameter_value,
+            )
+        elif f_type == Flow.INFECTION_FREQUENCY:
+            flow = InfectionFrequencyFlow(
+                source=f_source,
+                dest=f_dest,
+                param_name=f_param,
+                param_func=self.get_parameter_value,
+                find_infectious_multiplier=self.get_infection_frequency_multipier,
+            )
+        elif f_type == Flow.INFECTION_DENSITY:
+            flow = InfectionDensityFlow(
+                source=f_source,
+                dest=f_dest,
+                param_name=f_param,
+                param_func=self.get_parameter_value,
+                find_infectious_multiplier=self.get_infection_density_multipier,
+            )
+        elif f_type == Flow.DEATH:
+            flow = InfectionDeathFlow(
+                source=f_source, param_name=f_param, param_func=self.get_parameter_value
+            )
+        elif f_type == Flow.IMPORT:
+            flow = ImportFlow(
+                dest=self.entry_compartment,
+                param_name=f_param,
+                param_func=self.get_parameter_value,
+            )
+
+        if flow:
+            self.flows.append(flow)
+
+        return flow
 
     # Cache return values to prevent re-computation. This will a little leak memory, which is fine.
     # Floating point return type is 8 bytes, meaning 2**17 values is ~1MB of memory.

@@ -1,14 +1,11 @@
 """
 End-to-end tests for the StratifiedModel - a disease agnostic compartmental model from SUMMER
 """
-import pytest
 import numpy as np
 from numpy.testing import assert_allclose
 
 from summer.model import StratifiedModel
 from summer.constants import (
-    Compartment,
-    Flow,
     BirthApproach,
     IntegrationType,
 )

@@ -9,7 +9,7 @@
       "Resource": "arn:aws:s3:::www.autumn-data.com/*",
       "Condition": {
         "IpAddress": {
-          "aws:SourceIp": "13.55.240.146"
+          "aws:SourceIp": "13.54.204.229"
         }
       }
     },
@@ -21,7 +21,7 @@
       "Resource": "arn:aws:s3:::www.autumn-data.com",
       "Condition": {
         "IpAddress": {
-          "aws:SourceIp": "13.55.240.146"
+          "aws:SourceIp": "13.54.204.229"
         }
       }
     }

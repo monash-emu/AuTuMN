@@ -195,7 +195,11 @@ def ssh_interactive(instance):
 
 def try_get_ssh_key_path(name=None):
     keypath = None
-    keys_to_try = ["autumn.pem"] if name and name.startswith("buildkite") else SSH_KEYS_TO_TRY
+    keys_to_try = (
+        ["autumn.pem"]
+        if name and (name.startswith("buildkite") or name == "website")
+        else SSH_KEYS_TO_TRY
+    )
     for keyname in keys_to_try:
         keypath = os.path.expanduser(f"~/.ssh/{keyname}")
         if os.path.exists(keypath):

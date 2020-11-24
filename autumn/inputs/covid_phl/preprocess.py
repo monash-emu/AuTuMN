@@ -68,17 +68,26 @@ def create_region_aggregates(df):
     creates aggregates for each regions and an additional 'undefined' for those not mapped.
     """
 
+    # Get data out for the three main sub-regions
     df.replace({"facility_name": FACILITY_MAP}, inplace=True)
     df.loc[
         ~df.facility_name.isin(["calabarzon", "metro manila", "central visayas"]), "facility_name"
     ] = "undefined"
     df.report_date = pd.to_datetime(df["report_date"], infer_datetime_format=True)
 
-    df = df.groupby(["report_date", "facility_name"]).sum().reset_index()
-    df["date_index"] = (df.report_date - COVID_BASE_DATE).dt.days
-    df.drop(["pct_positive_cumulative", "pct_negative_cumulative"], 1, inplace=True)
+    # Similarly for national testing numbers
+    phldf = df.groupby(["report_date"]).sum().reset_index()
+    phldf["date_index"] = (phldf.report_date - COVID_BASE_DATE).dt.days
+    phldf["facility_name"] = "philippines"
 
-    return df
+    # Collate together and tidy up
+    combined_df = df.append(phldf)
+    combined_df = combined_df[combined_df.facility_name != "undefined"]
+    combined_df = combined_df.groupby(["report_date", "facility_name"]).sum().reset_index()
+    combined_df["date_index"] = (combined_df.report_date - COVID_BASE_DATE).dt.days
+    combined_df.drop(["pct_positive_cumulative", "pct_negative_cumulative"], 1, inplace=True)
+
+    return combined_df
 
 
 def preprocess_covid_phl(input_db: Database):

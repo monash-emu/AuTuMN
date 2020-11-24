@@ -13,7 +13,7 @@ def get_phl_subregion_testing_numbers(region):
     df = input_db.query(
         "covid_phl",
         columns=["date_index", "daily_output_unique_individuals"],
-        conditions={"facility_name": region.lower()},
+        conditions={"facility_name": region},
     )
     test_dates = df.date_index.to_numpy()
     test_values = df.daily_output_unique_individuals.to_numpy()

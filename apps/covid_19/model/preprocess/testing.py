@@ -42,10 +42,11 @@ def find_cdr_function_from_test_data(
     # Get the appropriate testing data
     if country_iso3 == "AUS":
         test_dates, test_values = inputs.get_vic_testing_numbers()
+    elif country_iso3 == "PHL":
+        phl_region = subregion.lower() if subregion else "philippines"
+        test_dates, test_values = get_phl_subregion_testing_numbers(phl_region)
     elif subregion == "Sabah":
         test_dates, test_values = get_international_testing_numbers(country_iso3)
-    elif subregion:
-        test_dates, test_values = get_phl_subregion_testing_numbers(subregion)
     else:
         test_dates, test_values = get_international_testing_numbers(country_iso3)
 

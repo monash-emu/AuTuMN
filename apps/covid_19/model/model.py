@@ -9,7 +9,6 @@ from autumn.constants import Flow, BirthApproach
 from autumn.curve import tanh_based_scaleup, scale_up_function
 from autumn.environment.seasonality import get_seasonal_forcing
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
-from apps.covid_19.model.susceptibility_heterogeneity import get_gamma_data, check_modelled_susc_cv
 from autumn.tool_kit.utils import (
     normalise_sequence,
     repeat_list_elements,
@@ -531,46 +530,6 @@ def build_model(params: dict) -> StratifiedModel:
         infectiousness_adjustments=strata_infectiousness,
         flow_adjustments=flow_adjustments,
     )
-
-    """
-    Susceptibility stratification
-    """
-    if params.susceptibility_heterogeneity is not None:
-        tail_cut = params.susceptibility_heterogeneity.tail_cut
-        bins = params.susceptibility_heterogeneity.bins
-        coeff_var = params.susceptibility_heterogeneity.coeff_var
-
-        # Interpret data requests
-        _, _, susc_values, susc_pop_props, _ = get_gamma_data(tail_cut, bins, coeff_var)
-        check_modelled_susc_cv(susc_values, susc_pop_props, coeff_var)
-
-        # Define strata names
-        susc_strata_names = [f"suscept_{i_susc}" for i_susc in range(bins)]
-
-        # Assign susceptibility values
-        susc_adjustments = {
-            susc_name: susc_value for susc_name, susc_value in zip(susc_strata_names, susc_values)
-        }
-
-        # Assign proportions of the population
-        sus_pop_splits = {
-            susc_name: susc_prop for susc_name, susc_prop in zip(susc_strata_names, susc_pop_props)
-        }
-
-        # Apply to all age groups individually (given current SUMMER API)
-        susceptibility_adjustments = {
-            f"contact_rateXagegroup_{str(i_agegroup)}": susc_adjustments
-            for i_agegroup in agegroup_strata
-        }
-
-        # Stratify
-        model.stratify(
-            "suscept",
-            list(susc_adjustments.keys()),
-            [Compartment.SUSCEPTIBLE],
-            flow_adjustments=susceptibility_adjustments,
-            comp_split_props=sus_pop_splits,
-        )
 
     """
     Infection history stratification

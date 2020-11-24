@@ -144,9 +144,6 @@ infection_fatality:
     - 0.03203 # 75-79
     - 0.08292 # 80+
 
-# Heterogeneity in susceptibility
-susceptibility_heterogeneity: null
-
 # Parameters relating to adjusting the mixing matrix to reflect interventions
 elderly_mixing_reduction: null
 mobility:

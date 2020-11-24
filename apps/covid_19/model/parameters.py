@@ -224,7 +224,6 @@ class Parameters:
     clinical_stratification: ClinicalStratification
     case_detection: CaseDetection
     testing_to_detection: Optional[TestingToDetection]
-    susceptibility_heterogeneity: Optional[SusceptibilityHeterogeneity]
     importation: Optional[Importation]
     victorian_clusters: Optional[VictorianClusterStratification]
     # Dummy parameters - not used

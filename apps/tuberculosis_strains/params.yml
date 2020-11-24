@@ -47,6 +47,13 @@ rr_infection_recovered: 0.3333
 
 
 # latency-related parameters
+preventive_treatment_rate: 1.0
+preventive_treatment_rate_stratified:
+  strain:
+    ds: 1.0
+    mdr: 0.0
+
+
 stabilisation_rate: 3.65
 stabilisation_rate_stratified:
   age:
@@ -130,6 +137,8 @@ treatment_default_rate_stratified:
   strain:
     ds:
     mdr:
+
+amplification_prob: 0.04
 
 spontaneous_recovery_rate: 0.2
 spontaneous_recovery_rate_stratified:

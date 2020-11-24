@@ -21,9 +21,9 @@ def get_derived_params(params):
     params["treatment_death_rate_stratified"]["strain"]["mdr"] = ( params["treatment_mortality_prop"] * params["treatment_mortality_prop_stratified"]["strain"]["mdr"] / (params["treatment_duration"] * params["treatment_duration_stratified"]["strain"]["mdr"] ) ) / params["treatment_death_rate"]
 
     params["treatment_default_rate"] = params["treatment_default_prop"] / params["treatment_duration"]
-    params["treatment_default_rate_stratified"]["strain"]["ds"] = 1.0
+    params["treatment_default_rate_stratified"]["strain"]["ds"] = 0.0
     params["treatment_default_rate_stratified"]["strain"]["mdr"] = ( params["treatment_default_prop"] * params["treatment_default_prop_stratified"]["strain"]["mdr"] / (params["treatment_duration"] * params["treatment_duration_stratified"]["strain"]["mdr"] ) ) / params["treatment_default_rate"]
 
-
+    params["amplification_rate"] = params["treatment_default_rate"] * (1 - params["amplification_prob"])
 
     return params

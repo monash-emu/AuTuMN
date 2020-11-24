@@ -119,6 +119,10 @@ def build_model(params: dict) -> StratifiedModel:
     vaccination_flow_adjustments = dict(zip(["contact_rate" + "X" + age_stratification_name + "_" + age_group for age_group in params["age_breakpoints"]],
                                             [{"unvaccinated": 1.0, "vaccinated": params["bcg"]["rr_infection_vaccinated"]} for _ in range(len(params["age_breakpoints"]))]))
 
+    vaccination_flow_adjustments.update(dict(zip(["preventive_treatment_rate" + "X" + age_stratification_name + "_" + age_group for age_group in params["age_breakpoints"]],
+                                            [{"unvaccinated": 0.0, "vaccinated": 1.0} for _ in range(len(params["age_breakpoints"]))]))
+                                        )
+
     vaccination_flow_adjustments["crude_birth_rateXage_0"] = {"unvaccinated": "time_varying_unvaccinated_coverage", "vaccinated": "time_varying_vaccination_coverage"}
 
     tb_model.stratify(stratification_name=vac_stratification_name,
@@ -183,6 +187,13 @@ def build_model(params: dict) -> StratifiedModel:
                                         "mdr": params["treatment_commencement_rate_stratified"]["strain"]["mdr"]} for _ in range(len(params["age_breakpoints"]) * len(organ_strata_requested))]))
                                   )
     strain_flow_adjustments.update(
+        dict(zip(["preventive_treatment_rate" + "X" + age_stratification_name + "_" + age_group
+                  for age_group in params["age_breakpoints"]],
+                 [{"ds": params["preventive_treatment_rate_stratified"]["strain"]["ds"],
+                   "mdr": params["preventive_treatment_rate_stratified"]["strain"]["mdr"]} for _ in
+                  range(len(params["age_breakpoints"]) )]))
+        )
+    strain_flow_adjustments.update(
         dict(zip(["treatment_recovery_rate" + "X" + age_stratification_name + "_" + age_group +
                   "X" + organ_stratification_name + "_" + organ
                   for age_group in params["age_breakpoints"]
@@ -234,6 +245,18 @@ def build_model(params: dict) -> StratifiedModel:
                       comp_split_props={"ds": 0.5, "mdr": 0.5},
                       flow_adjustments=strain_flow_adjustments,
                       infectiousness_adjustments={"ds": 1.0, "mdr": 0.8})
+
+    tb_model.add_extra_flow(
+        flow={
+            "type": Flow.STANDARD,
+            "origin": Compartment.ON_TREATMENT,
+            "to": Compartment.ON_TREATMENT,
+            "parameter": "amplification_rate"
+        },
+        source_strata={"strain": "ds"},
+        dest_strata={"strain": "mdr"},
+        expected_flow_count=9,
+    )
 
     # # add in re-infection with alternate strain
     # # tb_model.flows.append([InfectionFrequencyFlow(source=tb_model.compartment_names[1],

@@ -26,6 +26,12 @@ DEFAULT_FLOWS = [
     {
         "type": Flow.STANDARD,
         "origin": Compartment.EARLY_LATENT,
+        "to": Compartment.SUSCEPTIBLE,
+        "parameter": "preventive_treatment_rate",
+    },
+    {
+        "type": Flow.STANDARD,
+        "origin": Compartment.EARLY_LATENT,
         "to": Compartment.LATE_LATENT,
         "parameter": "stabilisation_rate",
     },

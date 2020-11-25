@@ -5,7 +5,7 @@ from apps.tuberculosis.model.preprocess.latency import (
 )
 from autumn.inputs import get_death_rates_by_agegroup
 from autumn.inputs.social_mixing.queries import get_mixing_matrix_specific_agegroups
-from autumn.curve import scale_up_function, tanh_based_scaleup
+from autumn.curve import scale_up_function, tanh_based_scaleup, make_linear_curve
 from summer.model.utils.parameter_processing import get_parameter_dict_from_function
 from summer.model import create_sloping_step_function
 
@@ -248,6 +248,26 @@ def stratify_by_organ(model, params):
         params["time_variant_tb_screening_rate"]["start_value"],
         params["time_variant_tb_screening_rate"]["end_value"],
     )
+    if params["awareness_raising"]:
+        awaireness_linear_scaleup = make_linear_curve(
+            x_0=params["awareness_raising"]["scale_up_range"][0],
+            x_1=params["awareness_raising"]["scale_up_range"][1],
+            y_0=1,
+            y_1=params["awareness_raising"]["relative_screening_rate"]
+        )
+
+        def awaireness_multiplier(t):
+            if t <= params["awareness_raising"]["scale_up_range"][0]:
+                return 1.
+            elif t >= params["awareness_raising"]["scale_up_range"][1]:
+                return params["awareness_raising"]["relative_screening_rate"]
+            else:
+                return awaireness_linear_scaleup(t)
+    else:
+        awaireness_multiplier = lambda t: 1.
+
+    combined_screening_rate_func = lambda t: screening_rate_func(t) * awaireness_multiplier(t)
+
     stratified_param_names = get_stratified_param_names("detection_rate", model.stratifications)
     for stratified_param_name in stratified_param_names:
         flow_adjustments[stratified_param_name] = {}
@@ -256,7 +276,7 @@ def stratify_by_organ(model, params):
                 stratified_param_name + "_" + organ_stratum
             )
             model.time_variants[stratified_param_name + "_" + organ_stratum] = make_detection_func(
-                organ_stratum, params, screening_rate_func
+                organ_stratum, params, combined_screening_rate_func
             )
             model.parameters[stratified_param_name + "_" + organ_stratum] = (
                 stratified_param_name + "_" + organ_stratum

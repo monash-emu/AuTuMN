@@ -117,6 +117,7 @@ ltbi_screening_sensitivity: .75
 pt_efficacy: .7
 pt_destination_compartment: "recovered" # either 'recovered' or 'susceptible'
 
+awareness_raising: {}
 
 # PT in household contacts
 hh_contacts_pt: {}

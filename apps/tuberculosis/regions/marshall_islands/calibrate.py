@@ -90,6 +90,11 @@ PRIORS = [
         "distribution": "uniform",
         "distri_params": [0.8, 0.85],
     },
+    {
+        "param_name": "awareness_raising.relative_screening_rate",
+        "distribution": "uniform",
+        "distri_params": [1., 1.5],
+    }
 ]
 
 # Add uncertainty around natural history using our CID estimates

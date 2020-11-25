@@ -25,7 +25,8 @@ def make_infectious_prevalence_calculation_function(stratum_filters=[]):
         """
         prev_infectious = sum(
             [compartment_values[i] for i, compartment in enumerate(model.compartment_names) if
-             ((compartment.has_name(Compartment.INFECTIOUS) or compartment.has_name(Compartment.ON_TREATMENT)) and all(
+             ((compartment.has_name(Compartment.INFECTIOUS) or compartment.has_name(Compartment.ON_TREATMENT)  or compartment.has_name(Compartment.DETECTED))
+             and all(
                  [compartment.has_stratum(stratum['name'], stratum['value']) for stratum in stratum_filters]
                 )
               )
@@ -80,7 +81,7 @@ def get_notifications_connections(comps: List[Compartment], source_stratum=None)
     return _get_transition_flow_connections(
         output_name=output_name,
         source=Compartment.INFECTIOUS,
-        dest=Compartment.ON_TREATMENT,
+        dest=Compartment.DETECTED,
         comps=comps,
         source_strata=source_strata
     )
@@ -141,6 +142,12 @@ def get_mortality_flow_infectious(comps: List[Compartment]):
     )
     return connections
 
+def get_mortality_flow_detected(comps: List[Compartment]):
+    connections = {}
+    connections["mortality_detected"] = InfectionDeathFlowOutput(
+        source=Compartment.DETECTED, source_strata={}
+    )
+    return connections
 
 def get_mortality_flow_on_treatment(comps: List[Compartment]):
     connections = {}
@@ -156,7 +163,7 @@ def calculate_incidence(time_idx, model, compartment_values, derived_outputs):
 
 
 def calculate_tb_mortality(time_idx, model, compartment_values, derived_outputs):
-    return derived_outputs['mortality_infectious'][time_idx] + derived_outputs['mortality_on_treatment'][time_idx] /\
+    return derived_outputs['mortality_infectious'][time_idx] + derived_outputs['mortality_detected'] + derived_outputs['mortality_on_treatment'][time_idx] /\
            sum(compartment_values) * 1.e5
 
 
@@ -169,7 +176,7 @@ def make_cumulative_output_func(output, start_time_cumul):
     """
     base_derived_outputs = {
         'cumulative_diseased': ['early_activation', 'late_activation'],
-        'cumulative_deaths': ['mortality_infectious', 'mortality_on_treatment'],
+        'cumulative_deaths': ['mortality_infectious', 'mortality_detected', 'mortality_on_treatment'],
     }
 
     def calculate_cumulative_output(time_idx, model, compartment_values, derived_outputs):
@@ -247,6 +254,7 @@ def get_all_derived_output_functions(calculated_outputs, outputs_stratification,
         "early_activation": get_incidence_early_connections,
         "late_activation": get_incidence_late_connections,
         "mortality_infectious": get_mortality_flow_infectious,
+        "mortality_detected": get_mortality_flow_detected,
         "mortality_on_treatment": get_mortality_flow_on_treatment,
     }
     cumulative_functions = {
@@ -259,7 +267,7 @@ def get_all_derived_output_functions(calculated_outputs, outputs_stratification,
 
     # need to add two intermediate derived outputs to capture mortality flows
     if "mortality" in calculated_outputs:
-        calculated_outputs = ["mortality_infectious", "mortality_on_treatment"] + calculated_outputs
+        calculated_outputs = ["mortality_infectious", "mortality_detected", "mortality_on_treatment"] + calculated_outputs
 
     model_stratification_names = [s.name for s in model.stratifications]
     derived_output_functions = {}

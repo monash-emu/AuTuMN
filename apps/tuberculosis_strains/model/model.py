@@ -1,10 +1,8 @@
 from copy import deepcopy
 from summer.model import StratifiedModel
 from autumn.constants import Compartment, BirthApproach, Flow
-from summer.compartment import Compartment as SummerCompartment
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
 from autumn.tool_kit.demography import set_model_time_variant_birth_rate
-from summer.flow import StandardFlow, InfectionFrequencyFlow
 from autumn.inputs import get_population_by_agegroup
 from autumn.inputs.social_mixing.queries import get_mixing_matrix_specific_agegroups
 

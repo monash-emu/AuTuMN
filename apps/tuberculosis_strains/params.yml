@@ -5,11 +5,11 @@ parent: null
 # Parameters used to build a general model of tuberculosis
 time:
   start: 1850.
-  end: 2020.
+  end: 1851.
   step: 1
   critical_ranges: []
 
-# Country caracteristics
+# Country characteristics
 iso3: null
 region: null
 

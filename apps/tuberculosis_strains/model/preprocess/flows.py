@@ -26,13 +26,13 @@ DEFAULT_FLOWS = [
     {
         "type": Flow.STANDARD,
         "origin": Compartment.EARLY_LATENT,
-        "to": Compartment.SUSCEPTIBLE,
+        "to": Compartment.RECOVERED,
         "parameter": "preventive_treatment_rate",
     },
     {
         "type": Flow.STANDARD,
         "origin": Compartment.LATE_LATENT,
-        "to": Compartment.SUSCEPTIBLE,
+        "to": Compartment.RECOVERED,
         "parameter": "preventive_treatment_rate",
     },
     {

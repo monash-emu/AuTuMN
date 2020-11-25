@@ -41,9 +41,10 @@ universal_death_rate: .014
 crude_birth_rate: 0.2
 
 # basic infection and disease parameters
-contact_rate: 6.0
+contact_rate: 4.9
 rr_infection_latent: 0.4
-rr_infection_recovered: 0.3333
+rr_infection_recovered: 0.4
+
 
 
 # latency-related parameters
@@ -137,8 +138,13 @@ treatment_default_rate_stratified:
   strain:
     ds:
     mdr:
+  classified:
+    correctly:
+    incorrectly:
 
-amplification_prob: 0.04
+proportion_mdr_misdiagnosed_as_ds_transition_to_fail_lost: 0.1
+
+amplification_prob: 0.07
 
 spontaneous_recovery_rate: 0.2
 spontaneous_recovery_rate_stratified:
@@ -167,7 +173,7 @@ relapse_rate: 0.11
 
 case_detection_prop: 0.62
 case_detection_prop_sp: 0.62
-frontline_xpert_prop: 0.05
+frontline_xpert_prop: 0.07
 
 
 detection_rate_stratified:

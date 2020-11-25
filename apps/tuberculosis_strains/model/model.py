@@ -93,7 +93,7 @@ def build_model(params: dict) -> StratifiedModel:
                                                    "15": params["stabilisation_rate_stratified"]["age"]["age_15"]},
                             "early_activation_rate": {"0": params["early_activation_rate_stratified"]["age"]["age_0"],
                                                      "5": params["early_activation_rate_stratified"]["age"]["age_5"],
-                                                     "15": params["early_activation_rate_stratified"]["age"]["age_0"]},
+                                                     "15": params["early_activation_rate_stratified"]["age"]["age_15"]},
                             "late_activation_rate": {"0": params["late_activation_rate_stratified"]["age"]["age_0"],
                                                      "5": params["late_activation_rate_stratified"]["age"]["age_5"],
                                                      "15": params["late_activation_rate_stratified"]["age"]["age_15"]}}
@@ -246,6 +246,7 @@ def build_model(params: dict) -> StratifiedModel:
                       flow_adjustments=strain_flow_adjustments,
                       infectiousness_adjustments={"ds": 1.0, "mdr": 0.8})
 
+    # add amplification flow
     tb_model.add_extra_flow(
         flow={
             "type": Flow.STANDARD,
@@ -256,6 +257,55 @@ def build_model(params: dict) -> StratifiedModel:
         source_strata={"strain": "ds"},
         dest_strata={"strain": "mdr"},
         expected_flow_count=9,
+    )
+
+    # add cross-strain reinfection flows
+    tb_model.add_extra_flow(
+        flow={
+            "type": Flow.INFECTION_FREQUENCY,
+            "origin": Compartment.EARLY_LATENT,
+            "to": Compartment.EARLY_LATENT,
+            "parameter": "reinfection_rate"
+        },
+        source_strata={"strain": "ds"},
+        dest_strata={"strain": "mdr"},
+        expected_flow_count=3,
+    )
+
+    tb_model.add_extra_flow(
+        flow={
+            "type": Flow.INFECTION_FREQUENCY,
+            "origin": Compartment.EARLY_LATENT,
+            "to": Compartment.EARLY_LATENT,
+            "parameter": "reinfection_rate"
+        },
+        source_strata={"strain": "mdr"},
+        dest_strata={"strain": "ds"},
+        expected_flow_count=3,
+    )
+
+    tb_model.add_extra_flow(
+        flow={
+            "type": Flow.INFECTION_FREQUENCY,
+            "origin": Compartment.LATE_LATENT,
+            "to": Compartment.EARLY_LATENT,
+            "parameter": "reinfection_rate"
+        },
+        source_strata={"strain": "mdr"},
+        dest_strata={"strain": "ds"},
+        expected_flow_count=3,
+    )
+
+    tb_model.add_extra_flow(
+        flow={
+            "type": Flow.INFECTION_FREQUENCY,
+            "origin": Compartment.LATE_LATENT,
+            "to": Compartment.EARLY_LATENT,
+            "parameter": "reinfection_rate"
+        },
+        source_strata={"strain": "ds"},
+        dest_strata={"strain": "mdr"},
+        expected_flow_count=3,
     )
 
     # # add in re-infection with alternate strain
@@ -333,6 +383,18 @@ def build_model(params: dict) -> StratifiedModel:
                   for strain in strain_strata_requested],
                  [{"correctly": params["failure_retreatment_rate_stratified"]["classified"]["correctly"],
                    "incorrectly": params["failure_retreatment_rate_stratified"]["classified"]["incorrectly"]} for _ in
+                  range(
+                      len(params["age_breakpoints"]) * len(organ_strata_requested) * len(
+                          strain_strata_requested))]))
+    )
+    classification_flow_adjustments.update(
+        dict(zip(["treatment_default_rate" + "X" + age_stratification_name + "_" + age_group +
+                  "X" + organ_stratification_name + "_" + organ +
+                  "X" + strain_stratification_name + "_mdr"
+                  for age_group in params["age_breakpoints"]
+                  for organ in organ_strata_requested],
+                 [{"correctly": params["treatment_default_rate_stratified"]["classified"]["correctly"],
+                   "incorrectly": params["treatment_default_rate_stratified"]["classified"]["incorrectly"]} for _ in
                   range(
                       len(params["age_breakpoints"]) * len(organ_strata_requested) * len(
                           strain_strata_requested))]))

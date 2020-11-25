@@ -8,7 +8,7 @@ You can access this script from your CLI by running:
 """
 import click
 
-from apps import covid_19, sir_example, tuberculosis
+from apps import covid_19, sir_example, tuberculosis, tuberculosis_strains
 
 
 @click.group()
@@ -16,6 +16,17 @@ def calibrate():
     """
     Calibrate a model
     """
+
+
+@calibrate.command("tbs")
+@click.argument("region", type=click.Choice(tuberculosis_strains.app.region_names))
+@click.argument("max_seconds", type=int)
+@click.argument("run_id", type=int)
+@click.option("--num-chains", type=int, default=1)
+def run_tb_calibration(region, max_seconds, run_id, num_chains):
+    """Run tuberculosis model calibration"""
+    app_region = tuberculosis_strains.app.get_region(region)
+    app_region.calibrate_model(max_seconds, run_id, num_chains)
 
 
 @calibrate.command("tb")

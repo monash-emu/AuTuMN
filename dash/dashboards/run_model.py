@@ -1,6 +1,6 @@
 import streamlit as st
 
-from apps import covid_19, tuberculosis, sir_example
+from apps import covid_19, tuberculosis, sir_example, tuberculosis_strains
 
 
 def run_dashboard():
@@ -10,6 +10,7 @@ def run_dashboard():
         "COVID-19": covid_19.app,
         "Tuberculosis": tuberculosis.app,
         "Example": sir_example.app,
+        "TB_strains": tuberculosis_strains.app,
     }
     app_keys = list(apps.keys())
     app_key = st.selectbox("Select an app", app_keys)

@@ -132,7 +132,8 @@ def _plot_uncertainty(
     colors: List[str],
     overlay_uncertainty=True,
     start_quantile=0,
-    zorder=1
+    zorder=1,
+    linestyle='solid'
 ):
     """Plots the uncertainty values in the provided dataframe to an axis"""
     mask = (
@@ -160,7 +161,7 @@ def _plot_uncertainty(
 
     if num_quantiles % 2:
         q_key = q_keys[half_length]
-        axis.plot(times, quantiles[q_key], color=colors[3], zorder=zorder)
+        axis.plot(times, quantiles[q_key], color=colors[3], zorder=zorder, linestyle=linestyle)
 
 
 def plot_multi_output_timeseries_with_uncertainty(

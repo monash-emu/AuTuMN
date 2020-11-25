@@ -18,14 +18,29 @@ DATA_PATH = os.path.join(
     BASE_PATH, "apps", "tuberculosis", "regions", "marshall_islands", "outputs", "pbi_databases"
 )
 
+end_tb_targets = {
+    "mortality": {
+        2025: 42.5,  # 75% reduction compared to 2015 (170)
+        2035: 8.5   # 95% reduction compared to 2015 (170)
+    },
+    "incidence": {
+        2025: 275,  # 50% reduction compared to 2015 (550)
+        2035: 55  # 90% reduction compared to 2015 (550)
+    }
+}
+target_colours = {
+    2025: "limegreen",
+    2035: "green"
+}
 
 def main():
     get_format()
     uncertainty_df = load_uncertainty_table(DATA_PATH)
-    plot_elimination(uncertainty_df)
+    for is_logscale in [True, False]:
+        plot_elimination(uncertainty_df, is_logscale)
 
 
-def plot_elimination(uncertainty_df):
+def plot_elimination(uncertainty_df, is_logscale=False):
 
     interventions = ["ACF", "ACF_LTBI", "hh_pt"]
     scenario_idxs = {
@@ -44,7 +59,10 @@ def plot_elimination(uncertainty_df):
         "hh_pt": [1., .7]
     }
 
-    outputs = ["incidence", "notifications"]
+    if is_logscale:
+        outputs = ["incidence", "mortality"]
+    else:
+        outputs = ["incidence", "mortality", "notifications"]
     panel_h = 5
     panel_w = 7
 
@@ -78,16 +96,31 @@ def plot_elimination(uncertainty_df):
                     x_low,
                     sc_colors[k],
                     start_quantile=1,
-                    zorder=k+1
+                    zorder=k+1,
                 )
             if j == 0:
                 ax.set_ylabel(OUTPUT_TITLES[output], fontsize=20)
 
             ax.tick_params(axis="x", labelsize=18)
             ax.tick_params(axis="y", labelsize=18)
-            ax.set_ylim(ymin=0)
 
-    save_figure("elimination", FIGURE_PATH)
+            if output in ["incidence", "mortality"]:
+                for year, value in end_tb_targets[output].items():
+                    ax.plot(float(year), value, marker="o", color=target_colours[year])
+
+            if is_logscale:
+                ax.set_yscale("log")
+                ax.set_ylim((10**-3, 10**3))
+                if output == "incidence":
+                    ax.hlines(y=1, xmin=2015, xmax=2050, colors="black", linestyle="dashed")
+                    ax.text(2016, 0.6, "pre-elimination threshold", fontsize=12)
+            else:
+                ax.set_ylim(ymin=0)
+    filename = "elimination"
+    if is_logscale:
+        filename += "_logscale"
+
+    save_figure(filename, FIGURE_PATH)
 
 
 if __name__ == "__main__":

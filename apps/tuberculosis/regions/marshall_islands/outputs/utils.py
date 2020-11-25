@@ -6,6 +6,12 @@ OUTPUT_TITLES = {
     "notifications": "Number of TB notifications",
     "mortality": "TB mortality (/100,000/y)",
     "percentage_latent": "LTBI prevalence (%)",
+    "prevalence_infectiousXlocation_majuro": "TB prevalence in Majuro (/100,000/y)",
+    "prevalence_infectiousXlocation_ebeye": "TB prevalence in Ebeye (/100,000/y)",
+    "percentage_latentXlocation_majuro": "LTBI prevalence in Majuro (%)",
+    "notificationsXlocation_majuro": "Number of TB notifications in Majuro",
+    "notificationsXlocation_ebeye": "Number of TB notifications in Ebeye",
+    "population_size": "Population size",
 }
 
 REGION_TITLES = {

@@ -77,7 +77,7 @@ def plot_elimination(uncertainty_df):
                     2050,
                     x_low,
                     sc_colors[k],
-                    start_quantile=0,
+                    start_quantile=1,
                     zorder=k+1
                 )
             if j == 0:

@@ -160,10 +160,11 @@ def build_model(params: dict) -> StratifiedModel:
     }
 
     # else statement is the default SUMMER behaviour, but must be specified to calculate the CDR for imported cases
-    importation_props_by_age = \
-        importation.props_by_age if \
-        importation and importation.props_by_age else \
-        {s: 1.0 / len(agegroup_strata) for s in agegroup_strata}
+    importation_props_by_age = (
+        importation.props_by_age
+        if importation and importation.props_by_age
+        else {s: 1.0 / len(agegroup_strata) for s in agegroup_strata}
+    )
 
     if importation:
         flow_adjustments.update({"importation_rate": importation_props_by_age})
@@ -202,7 +203,7 @@ def build_model(params: dict) -> StratifiedModel:
             smoothing_period,
             country.iso3,
             testing_pops,
-            subregion=testing_region
+            subregion=testing_region,
         )
     else:
         # Approach based on a hyperbolic tan function
@@ -241,7 +242,7 @@ def build_model(params: dict) -> StratifiedModel:
                 excluded_regions=(pop.region,)
             )
             movement_to_region = (
-                    sum(total_pops) / sum(testing_pops) * params.importation.movement_prop
+                sum(total_pops) / sum(testing_pops) * params.importation.movement_prop
             )
             import_cases = [i_cases * movement_to_region for i_cases in importation_data]
         else:
@@ -362,11 +363,11 @@ def build_model(params: dict) -> StratifiedModel:
     # We assume everyone who dies does so at the end of their time in the "late active" compartment.
     # We split the flow rate out of "late active" into a death or recovery flow, based on the relative death proportion.
     hospital_death_rates = (
-            relative_death_props[ClinicalStratum.HOSPITAL_NON_ICU]
-            * model.parameters[f"within_hospital_late"]
+        relative_death_props[ClinicalStratum.HOSPITAL_NON_ICU]
+        * model.parameters[f"within_hospital_late"]
     )
     icu_death_rates = (
-            relative_death_props[ClinicalStratum.ICU] * model.parameters[f"within_icu_late"]
+        relative_death_props[ClinicalStratum.ICU] * model.parameters[f"within_icu_late"]
     )
 
     # Apply adjusted infection death rates for hospital patients (ICU and non-ICU)
@@ -470,7 +471,7 @@ def build_model(params: dict) -> StratifiedModel:
             model.time_variants[
                 f"tv_prop_importedX{agegroup}X{ClinicalStratum.NON_SYMPT}"
             ] = lambda t: early_exposed_adjs[param_key][ClinicalStratum.NON_SYMPT] * (
-                    1.0 - quarantine_func(t)
+                1.0 - quarantine_func(t)
             )
 
             # Proportion ambulatory also reduced by quarantined proportion due to isolation
@@ -479,18 +480,18 @@ def build_model(params: dict) -> StratifiedModel:
             ] = lambda t: tvs[early_exposed_adjs[param_key][ClinicalStratum.SYMPT_NON_HOSPITAL]](
                 t
             ) * (
-                                  1.0 - quarantine_func(t)
-                          )
+                1.0 - quarantine_func(t)
+            )
 
             # Proportion isolated includes those that would have been detected anyway and the ones above quarantined
             model.time_variants[
                 f"tv_prop_importedX{agegroup}X{ClinicalStratum.SYMPT_ISOLATE}"
             ] = lambda t: quarantine_func(t) * (
-                    tvs[early_exposed_adjs[param_key][ClinicalStratum.SYMPT_NON_HOSPITAL]](t)
-                    + early_exposed_adjs[param_key][ClinicalStratum.NON_SYMPT]
+                tvs[early_exposed_adjs[param_key][ClinicalStratum.SYMPT_NON_HOSPITAL]](t)
+                + early_exposed_adjs[param_key][ClinicalStratum.NON_SYMPT]
             ) + tvs[
-                              early_exposed_adjs[param_key][ClinicalStratum.SYMPT_ISOLATE]
-                          ](
+                early_exposed_adjs[param_key][ClinicalStratum.SYMPT_ISOLATE]
+            ](
                 t
             )
 
@@ -543,8 +544,8 @@ def build_model(params: dict) -> StratifiedModel:
         for agegroup in agegroup_strata:  # e.g. '0'
             # collect existing rates of progressions for symptomatic vs non-symptomatic
             rate_non_sympt = (
-                    early_exposed_adjs[f"within_early_exposedXagegroup_{agegroup}"]["non_sympt"]
-                    * model.parameters["within_early_exposed"]
+                early_exposed_adjs[f"within_early_exposedXagegroup_{agegroup}"]["non_sympt"]
+                * model.parameters["within_early_exposed"]
             )
             total_progression_rate = model.parameters["within_early_exposed"]
             rate_sympt = total_progression_rate - rate_non_sympt
@@ -558,7 +559,7 @@ def build_model(params: dict) -> StratifiedModel:
             # create adjustment requests
             for clinical_stratum in clinical_strata:
                 param_name = (
-                        f"within_early_exposedXagegroup_{agegroup}Xclinical_" + clinical_stratum
+                    f"within_early_exposedXagegroup_{agegroup}Xclinical_" + clinical_stratum
                 )
                 if clinical_stratum == "non_sympt":
                     stratification_adjustments[param_name] = {
@@ -604,13 +605,9 @@ def build_model(params: dict) -> StratifiedModel:
         # Adjust contact rate multipliers
         contact_rate_multipliers = {}
         for i_cluster in vic.metro.clusters:
-            contact_rate_multipliers.update(
-                {i_cluster: vic.metro.contact_rate_multiplier}
-            )
+            contact_rate_multipliers.update({i_cluster: vic.metro.contact_rate_multiplier})
         for i_cluster in vic.regional.clusters:
-            contact_rate_multipliers.update(
-                {i_cluster: vic.regional.contact_rate_multiplier}
-            )
+            contact_rate_multipliers.update({i_cluster: vic.regional.contact_rate_multiplier})
 
         # Add in flow adjustments per-region so we can calibrate the contact rate for each region.
         cluster_flow_adjustments = {}

@@ -1,5 +1,6 @@
 import os
 from matplotlib import pyplot
+from autumn.constants import BASE_PATH
 
 OUTPUT_TITLES = {
     "incidence": "TB incidence (/100,000/y)",
@@ -25,6 +26,15 @@ INTERVENTION_TITLES = {
     "ACF_LTBI": "Community-wide ACF and\npreventive treatment",
     "hh_pt": "Preventive treatment\nfor all contacts"
 }
+
+
+def make_output_directories(output_path):
+    base_figure_path = os.path.join(
+        BASE_PATH, "apps", "tuberculosis", "regions", "marshall_islands", "outputs", "figures"
+    )
+    for dir_path in [base_figure_path, output_path]:
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path)
 
 
 def get_format():

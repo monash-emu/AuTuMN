@@ -4,11 +4,12 @@ import os
 
 from autumn.constants import BASE_PATH
 from autumn.db.load import load_uncertainty_table
-from autumn.plots.uncertainty.plots import plot_timeseries_with_uncertainty, _plot_uncertainty
-from autumn.plots.utils import COLORS, ALPHAS, _apply_transparency
+from autumn.plots.uncertainty.plots import _plot_uncertainty
+from autumn.plots.utils import COLORS, _apply_transparency
 
 
-from apps.tuberculosis.regions.marshall_islands.outputs.utils import OUTPUT_TITLES, INTERVENTION_TITLES, save_figure, get_format
+
+from apps.tuberculosis.regions.marshall_islands.outputs.utils import OUTPUT_TITLES, INTERVENTION_TITLES, save_figure, get_format, make_output_directories
 
 FIGURE_PATH = os.path.join(
     BASE_PATH, "apps", "tuberculosis", "regions", "marshall_islands", "outputs", "figures", "elimination"
@@ -33,7 +34,9 @@ target_colours = {
     2035: "green"
 }
 
+
 def main():
+    make_output_directories(FIGURE_PATH)
     get_format()
     uncertainty_df = load_uncertainty_table(DATA_PATH)
     for is_logscale in [True, False]:

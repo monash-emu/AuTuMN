@@ -1,11 +1,17 @@
-# To generate all the figures for the manuscript
+# To generate all the figures and tables for the manuscript
+
+## Preliminary steps
 
 1. Put the PBI database containing all percentile outputs for all scenarios in "apps/tuberculosis/regions/marshall_islands/outputs/pbi_databases". 
-2. Run the following script: "apps/tuberculosis/regions/marshall_islands/outputs/main_script.py".
+2. Use Streamlit to create a raw csv file containing the posterior percentiles. 
+3. Put the csv file into "apps/tuberculosis/regions/marshall_islands/outputs/parameter_posteriors". 
 
-All the figures will be available from "apps/tuberculosis/regions/marshall_islands/outputs/figures". 
+
+## Generating the output files
+Run the following script: "apps/tuberculosis/regions/marshall_islands/outputs/main_script.py".
+
+All the figures and tables will be available from "apps/tuberculosis/regions/marshall_islands/outputs/figures". 
 
 
 # Scenario list
 The scenarios indexing should follow the definitions presented in ""apps/tuberculosis/regions/marshall_islands/README.md".
-

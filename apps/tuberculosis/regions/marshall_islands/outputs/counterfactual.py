@@ -6,7 +6,7 @@ from autumn.constants import BASE_PATH
 from autumn.db.load import load_uncertainty_table
 from autumn.plots.uncertainty.plots import plot_timeseries_with_uncertainty
 
-from apps.tuberculosis.regions.marshall_islands.outputs.utils import OUTPUT_TITLES, REGION_TITLES, save_figure, get_format
+from apps.tuberculosis.regions.marshall_islands.outputs.utils import OUTPUT_TITLES, REGION_TITLES, save_figure, get_format, make_output_directories
 
 FIGURE_PATH = os.path.join(
     BASE_PATH, "apps", "tuberculosis", "regions", "marshall_islands", "outputs", "figures", "counterfactual"
@@ -18,6 +18,8 @@ DATA_PATH = os.path.join(
 
 
 def main():
+    make_output_directories(FIGURE_PATH)
+
     get_format()
     uncertainty_df = load_uncertainty_table(DATA_PATH)
     plot_counterfactual(uncertainty_df)

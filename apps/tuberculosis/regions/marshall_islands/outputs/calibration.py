@@ -8,7 +8,7 @@ from autumn.plots.uncertainty.plots import _plot_uncertainty, _get_target_values
 from autumn.plots.utils import COLORS
 from autumn.tool_kit.params import load_targets
 
-from apps.tuberculosis.regions.marshall_islands.outputs.utils import OUTPUT_TITLES, save_figure, get_format
+from apps.tuberculosis.regions.marshall_islands.outputs.utils import OUTPUT_TITLES, save_figure, get_format, make_output_directories
 from apps.tuberculosis.regions.marshall_islands.calibrate import targets_to_use
 
 FIGURE_PATH = os.path.join(
@@ -21,6 +21,7 @@ DATA_PATH = os.path.join(
 
 
 def main():
+    make_output_directories(FIGURE_PATH)
     get_format()
     uncertainty_df = load_uncertainty_table(DATA_PATH)
     plot_model_fits(uncertainty_df)

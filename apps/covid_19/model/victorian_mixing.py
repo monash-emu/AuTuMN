@@ -59,16 +59,28 @@ def build_victorian_mixing_matrix_func(
             16 times
 
         """
-        mm = np.zeros([144, 144])
+
+        # Pre-allocate
+        combined_matrix_size = len(static_mixing_matrix) * len(MOB_REGIONS)
+        mm = np.zeros((combined_matrix_size, combined_matrix_size))
+
+        # Get the cluster mixing matrix
         cluster_age_mms = [f(time) for f in cluster_age_mm_funcs]
-        for age_i in range(16):
-            for age_j in range(16):
-                start_i = age_i * 9
-                start_j = age_j * 9
-                for cluster_idx, age_mm in enumerate(cluster_age_mms):
-                    i = start_i + cluster_idx
-                    j = start_j + cluster_idx
-                    mm[i, j] = age_mm[age_i, age_j]
+
+        # Loop over clusters
+        for cluster_idx, age_mm in enumerate(cluster_age_mms):
+
+            for age_i in range(len(static_mixing_matrix)):
+                for age_j in range(len(static_mixing_matrix)):
+
+                    # Find the starting points for the age-based mixing matrix
+                    start_i = age_i * len(MOB_REGIONS)
+                    start_j = age_j * len(MOB_REGIONS)
+
+                    # Populate out by cluster
+                    mm[start_i + cluster_idx,
+                       start_j + cluster_idx] = \
+                        age_mm[age_i, age_j]
 
         return mm
 

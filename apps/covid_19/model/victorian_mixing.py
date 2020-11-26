@@ -64,23 +64,31 @@ def build_victorian_mixing_matrix_func(
         combined_matrix_size = len(static_mixing_matrix) * len(MOB_REGIONS)
         mm = np.zeros((combined_matrix_size, combined_matrix_size))
 
-        # Get the cluster mixing matrix
+        # Get the individual cluster mixing matrix
         cluster_age_mms = [f(time) for f in cluster_age_mm_funcs]
 
-        # Loop over clusters
-        for cluster_idx, age_mm in enumerate(cluster_age_mms):
+        # Define inter-cluster mixing matrix
+        inter_cluster_mixing_matrix = np.ones([len(MOB_REGIONS), len(MOB_REGIONS)])
 
-            for age_i in range(len(static_mixing_matrix)):
-                for age_j in range(len(static_mixing_matrix)):
+        # Loop over clusters being infected
+        for infectee_cluster, age_mm in enumerate(cluster_age_mms):
 
-                    # Find the starting points for the age-based mixing matrix
+            # Populate out across the age group matrix by cluster
+            for infector_cluster in range(len(cluster_age_mms)):
+
+                # Find the starting points for the age-based mixing matrix
+                for age_i in range(len(static_mixing_matrix)):
                     start_i = age_i * len(MOB_REGIONS)
-                    start_j = age_j * len(MOB_REGIONS)
+                    for age_j in range(len(static_mixing_matrix)):
+                        start_j = age_j * len(MOB_REGIONS)
 
-                    # Populate out by cluster
-                    mm[start_i + cluster_idx,
-                       start_j + cluster_idx] = \
-                        age_mm[age_i, age_j]
+                        # Populate the final super-matrix
+                        mm[start_i + infectee_cluster,
+                           start_j + infector_cluster] = \
+                            age_mm[age_i, age_j] * \
+                            inter_cluster_mixing_matrix[infectee_cluster, infector_cluster]
+
+        print(mm)
 
         return mm
 

@@ -192,11 +192,13 @@ class Importation(BaseModel):
 class MetroClusterStratification(BaseModel):
     clusters: List
     contact_rate_multiplier: float
+    mobility: Mobility
 
 
 class RegionalClusterStratification(BaseModel):
     clusters: List
     contact_rate_multiplier: float
+    mobility: Mobility
 
 
 class VictorianClusterStratification(BaseModel):

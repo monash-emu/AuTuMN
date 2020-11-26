@@ -601,13 +601,24 @@ def build_model(params: dict) -> StratifiedModel:
             region: pop / sum_region_props for region, pop in region_pops.items()
         }
 
+        # Adjust contact rate multipliers
+        contact_rate_multipliers = {}
+        for i_cluster in vic.metro.clusters:
+            contact_rate_multipliers.update(
+                {i_cluster: vic.metro.contact_rate_multiplier}
+            )
+        for i_cluster in vic.regional.clusters:
+            contact_rate_multipliers.update(
+                {i_cluster: vic.regional.contact_rate_multiplier}
+            )
+
         # Add in flow adjustments per-region so we can calibrate the contact rate for each region.
         cluster_flow_adjustments = {}
         for agegroup_stratum in agegroup_strata:
             param_name = f"contact_rateXagegroup_{agegroup_stratum}"
-            cluster_flow_adjustments[param_name] = vic.contact_rate_multipliers
+            cluster_flow_adjustments[param_name] = contact_rate_multipliers
 
-        # Use an identity mixing matrix to declare no inter-cluster mixing
+        # Use an identity mixing matrix to temporarily declare no inter-cluster mixing, which will then be over-written
         cluster_mixing_matrix = np.eye(len(cluster_strata))
 
         model.stratify(

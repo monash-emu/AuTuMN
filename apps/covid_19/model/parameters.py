@@ -189,8 +189,19 @@ class Importation(BaseModel):
     movement_prop: Optional[float]
 
 
+class MetroClusterStratification(BaseModel):
+    clusters: List
+    contact_rate_multiplier: float
+
+
+class RegionalClusterStratification(BaseModel):
+    clusters: List
+    contact_rate_multiplier: float
+
+
 class VictorianClusterStratification(BaseModel):
-    contact_rate_multipliers: Optional[Dict[str, float]]
+    metro: MetroClusterStratification
+    regional: RegionalClusterStratification
 
 
 class ParamConfig:

@@ -2,6 +2,9 @@
 ---
 parent: apps/covid_19/vic_submodel_params.yml
 
+infectious_seed: 10.
+importation: null
+
 population:
   region: Victoria
   year: 2020
@@ -23,9 +26,3 @@ victorian_clusters:
     south_east_metro: 1
     south_metro: 1
     west_metro: 1
-
-importation:
-  # FIXME: This is made up.
-  case_timeseries:
-    times: [153, 154]
-    values: [1, 0]

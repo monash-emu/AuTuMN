@@ -662,3 +662,6 @@ apps/covid_19/mixing_optimisation/outputs/plots/outputs/figures/wi_figures/pessi
 apps/tuberculosis/regions/marshall_islands/outputs/figures/counterfactual/counterfactual.pdf
 apps/tuberculosis/regions/marshall_islands/outputs/desktop.ini
 apps/tuberculosis/regions/marshall_islands/outputs/figures/elimination/elimination.pdf
+apps/tuberculosis/regions/marshall_islands/outputs/figures/calibration/model_fits.pdf
+apps/tuberculosis/regions/marshall_islands/outputs/figures/diabetes/diabetes.pdf
+apps/tuberculosis/regions/marshall_islands/outputs/figures/elimination/elimination_logscale.pdf

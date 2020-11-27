@@ -7,6 +7,7 @@ import numpy as np
 from summer.model import StratifiedModel
 
 from autumn.constants import Region
+from autumn.mixing.mixing import create_assortative_matrix
 from apps.covid_19.model.preprocess.mixing_matrix import build_dynamic_mixing_matrix
 
 
@@ -23,8 +24,11 @@ def build_victorian_mixing_matrix_func(
         inter_cluster_mixing=0.01,
 ):
 
+    # Collate the cluster-specific mixing matrices
     cluster_age_mm_funcs = []
     for region in MOB_REGIONS:
+
+        # Get the mobility parameters out for the cluster of interest
         if region in metro_clusters:
             cluster_mobility = deepcopy(metro_mobility)
         elif region in regional_clusters:
@@ -32,6 +36,8 @@ def build_victorian_mixing_matrix_func(
         else:
             raise ValueError("Mobility region not found")
         cluster_mobility.region = region.upper()
+
+        # Build the cluster-specific dyanmic mixing matrix
         cluster_age_mm_func = build_dynamic_mixing_matrix(
             static_mixing_matrix,
             cluster_mobility,
@@ -43,16 +49,11 @@ def build_victorian_mixing_matrix_func(
         """
         """
 
-        # Create the inter-cluster mixing matrix
-        assert 0. < inter_cluster_mixing <= 1. / len(MOB_REGIONS)
+        # Get the inter-cluster mixing matrix
         inter_cluster_mixing_matrix = \
-            np.ones([len(MOB_REGIONS), len(MOB_REGIONS)]) * inter_cluster_mixing
-        within_cluster_matrix = \
-            np.eye(len(MOB_REGIONS)) * \
-            (1. - len(MOB_REGIONS) * inter_cluster_mixing)
-        inter_cluster_mixing_matrix = inter_cluster_mixing_matrix + within_cluster_matrix
+            create_assortative_matrix(inter_cluster_mixing, MOB_REGIONS)
 
-        # Get the individual cluster mixing matrix
+        # Get the within-cluster mixing matrix
         cluster_age_mms = [f(time) for f in cluster_age_mm_funcs]
 
         # Pre-allocate

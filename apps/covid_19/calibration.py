@@ -202,7 +202,7 @@ def add_standard_philippines_params(params, region):
         {
             "param_name": "clinical_stratification.props.hospital.multiplier",
             "distribution": "trunc_normal",
-            "distri_params": [1.0, 0.2],
+            "distri_params": [1.0, 0.4],
             "trunc_range": [0.5, np.inf],
         },
         {

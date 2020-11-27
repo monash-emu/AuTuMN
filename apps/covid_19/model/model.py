@@ -638,6 +638,7 @@ def build_model(params: dict) -> StratifiedModel:
             vic.metro.clusters,
             vic.regional.clusters,
             country,
+            inter_cluster_mixing=vic.intercluster_mixing
         )
         setattr(model, "get_mixing_matrix", MethodType(get_mixing_matrix, model))
 

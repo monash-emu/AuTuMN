@@ -34,6 +34,7 @@ testing_to_detection:
 
 # Cluster stratification.
 victorian_clusters:
+  intercluster_mixing: 0.01
   # Allows us to adjust contact rate per-cluster when calibrating
   metro:
     clusters:

@@ -202,6 +202,7 @@ class RegionalClusterStratification(BaseModel):
 
 
 class VictorianClusterStratification(BaseModel):
+    intercluster_mixing: float
     metro: MetroClusterStratification
     regional: RegionalClusterStratification
 

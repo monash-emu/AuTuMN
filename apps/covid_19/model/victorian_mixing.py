@@ -21,7 +21,7 @@ def build_victorian_mixing_matrix_func(
         metro_clusters,
         regional_clusters,
         country,
-        inter_cluster_mixing=0.01,
+        inter_cluster_mixing,
 ):
 
     # Collate the cluster-specific mixing matrices
@@ -58,26 +58,29 @@ def build_victorian_mixing_matrix_func(
 
         # Pre-allocate
         combined_matrix_size = len(static_mixing_matrix) * len(MOB_REGIONS)
-        mm = np.zeros((combined_matrix_size, combined_matrix_size))
+        super_matrix = np.zeros((combined_matrix_size, combined_matrix_size))
 
-        # Loop over clusters being infected
-        for infectee_cluster, age_mm in enumerate(cluster_age_mms):
+        # Find the starting points for the age-based mixing matrix
+        for age_i in range(len(static_mixing_matrix)):
+            start_i = age_i * len(MOB_REGIONS)
+            for age_j in range(len(static_mixing_matrix)):
+                start_j = age_j * len(MOB_REGIONS)
 
-            # Populate out across the age group matrix by cluster
-            for infector_cluster in range(len(cluster_age_mms)):
+                # Loop over clusters being infected
+                for infectee_cluster, age_mm in enumerate(cluster_age_mms):
+                    i_row = start_i + infectee_cluster
 
-                # Find the starting points for the age-based mixing matrix
-                for age_i in range(len(static_mixing_matrix)):
-                    start_i = age_i * len(MOB_REGIONS)
-                    for age_j in range(len(static_mixing_matrix)):
-                        start_j = age_j * len(MOB_REGIONS)
+                    # Populate out across the age group matrix by cluster
+                    for infector_cluster in range(len(cluster_age_mms)):
+                        i_col = start_j + infector_cluster
 
-                        # Populate the final super-matrix
-                        mm[start_i + infectee_cluster,
-                           start_j + infector_cluster] = \
-                            age_mm[age_i, age_j] * \
+                        intercluster_modifier = \
                             inter_cluster_mixing_matrix[infectee_cluster, infector_cluster]
 
-        return mm
+                        # Populate the final super-matrix
+                        super_matrix[i_row, i_col] = \
+                            age_mm[age_i, age_j] * intercluster_modifier
+
+        return super_matrix
 
     return get_mixing_matrix

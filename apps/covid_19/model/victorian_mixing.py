@@ -15,14 +15,22 @@ MOB_REGIONS = [Region.to_filename(r) for r in Region.VICTORIA_SUBREGIONS]
 
 def build_victorian_mixing_matrix_func(
         static_mixing_matrix,
-        mobility,
+        metro_mobility,
+        regional_mobility,
+        metro_clusters,
+        regional_clusters,
         country,
         inter_cluster_mixing=0.01,
 ):
 
     cluster_age_mm_funcs = []
     for region in MOB_REGIONS:
-        cluster_mobility = deepcopy(mobility)
+        if region in metro_clusters:
+            cluster_mobility = deepcopy(metro_mobility)
+        elif region in regional_clusters:
+            cluster_mobility = deepcopy(regional_mobility)
+        else:
+            raise ValueError("Mobility region not found")
         cluster_mobility.region = region.upper()
         cluster_age_mm_func = build_dynamic_mixing_matrix(
             static_mixing_matrix,

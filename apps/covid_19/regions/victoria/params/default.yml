@@ -9,10 +9,6 @@ population:
   region: Victoria
   year: 2020
 
-mobility:
-  region: Victoria
-  smooth_google_data: true
-
 # Cluster stratification.
 victorian_clusters:
   # Allows us to adjust contact rate per-cluster when calibrating

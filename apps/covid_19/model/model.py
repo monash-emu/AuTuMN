@@ -634,6 +634,9 @@ def build_model(params: dict) -> StratifiedModel:
         get_mixing_matrix = build_victorian_mixing_matrix_func(
             static_mixing_matrix,
             vic.metro.mobility,
+            vic.regional.mobility,
+            vic.metro.clusters,
+            vic.regional.clusters,
             country,
         )
         setattr(model, "get_mixing_matrix", MethodType(get_mixing_matrix, model))

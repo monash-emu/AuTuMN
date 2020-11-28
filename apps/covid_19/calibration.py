@@ -183,11 +183,11 @@ def add_standard_philippines_params(params, region):
             "distribution": "uniform",
             "distri_params": [0.02, 0.11],
         },
-        {
-            "param_name": "mobility.microdistancing.behaviour.parameters.max_effect",
-            "distribution": "uniform",
-            "distri_params": [0.1, 0.6],
-        },
+        # {
+        #     "param_name": "mobility.microdistancing.behaviour.parameters.max_effect",
+        #     "distribution": "uniform",
+        #     "distri_params": [0.1, 0.6],
+        # },
         {
             "param_name": "infectious_seed",
             "distribution": "uniform",
@@ -202,15 +202,15 @@ def add_standard_philippines_params(params, region):
         {
             "param_name": "clinical_stratification.props.hospital.multiplier",
             "distribution": "trunc_normal",
-            "distri_params": [1.0, 0.4],
-            "trunc_range": [0.5, np.inf],
-        },
-        {
-            "param_name": "infection_fatality.multiplier",
-            "distribution": "trunc_normal",
             "distri_params": [1.0, 0.2],
             "trunc_range": [0.5, np.inf],
         },
+        # {
+        #     "param_name": "infection_fatality.multiplier",
+        #     "distribution": "trunc_normal",
+        #     "distri_params": [1.0, 0.2],
+        #     "trunc_range": [0.5, np.inf],
+        # },
     ]
 
 

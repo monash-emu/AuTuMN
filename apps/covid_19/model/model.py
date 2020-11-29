@@ -607,10 +607,14 @@ def build_model(params: dict) -> StratifiedModel:
 
         # Adjust contact rate multipliers
         contact_rate_multipliers = {}
-        for i_cluster in vic.metro.clusters:
-            contact_rate_multipliers.update({i_cluster: vic.metro.contact_rate_multiplier})
-        for i_cluster in vic.regional.clusters:
-            contact_rate_multipliers.update({i_cluster: vic.regional.contact_rate_multiplier})
+        for i_cluster in Region.VICTORIA_METRO:
+            contact_rate_multipliers.update(
+                {i_cluster.replace("-", "_"): vic.metro.contact_rate_multiplier}
+            )
+        for i_cluster in Region.VICTORIA_RURAL:
+            contact_rate_multipliers.update(
+                {i_cluster.replace("-", "_"): vic.regional.contact_rate_multiplier}
+            )
 
         # Add in flow adjustments per-region so we can calibrate the contact rate for each region.
         cluster_flow_adjustments = {}
@@ -643,8 +647,6 @@ def build_model(params: dict) -> StratifiedModel:
             static_mixing_matrix,
             vic.metro.mobility,
             vic.regional.mobility,
-            vic.metro.clusters,
-            vic.regional.clusters,
             country,
             intercluster_mixing_matrix,
         )

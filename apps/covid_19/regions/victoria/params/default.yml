@@ -37,11 +37,6 @@ victorian_clusters:
   intercluster_mixing: 0.01
   # Allows us to adjust contact rate per-cluster when calibrating
   metro:
-    clusters:
-      - north_metro
-      - south_east_metro
-      - south_metro
-      - west_metro
     contact_rate_multiplier: 1.
     mobility:
       region: null
@@ -146,12 +141,6 @@ victorian_clusters:
               - 0.4 # 28th October
 
   regional:
-    clusters:
-      - barwon_south_west
-      - gippsland
-      - hume
-      - loddon_mallee
-      - grampians
     contact_rate_multiplier: 1.
     mobility:
       region: null

@@ -5,6 +5,7 @@ import numpy as np
 
 from summer.model import StratifiedModel
 from autumn import inputs
+from autumn.mixing.mixing import create_assortative_matrix
 from autumn.constants import Flow, BirthApproach
 from autumn.curve import tanh_based_scaleup, scale_up_function
 from autumn.environment.seasonality import get_seasonal_forcing
@@ -23,6 +24,8 @@ from apps.covid_19.model.parameters import Parameters
 from apps.covid_19.model.preprocess.testing import find_cdr_function_from_test_data
 from apps.covid_19.model.victorian_mixing import build_victorian_mixing_matrix_func
 from apps.covid_19.model.victorian_outputs import add_victorian_derived_outputs
+
+MOB_REGIONS = [Region.to_filename(r) for r in Region.VICTORIA_SUBREGIONS]
 
 """
 Compartments
@@ -631,6 +634,11 @@ def build_model(params: dict) -> StratifiedModel:
         Hack in a custom (144x144) mixing matrix where each region is adjusted individually
         based on its time variant mobility data.
         """
+
+        # Get the inter-cluster mixing matrix
+        intercluster_mixing_matrix = \
+            create_assortative_matrix(vic.intercluster_mixing, MOB_REGIONS)
+
         get_mixing_matrix = build_victorian_mixing_matrix_func(
             static_mixing_matrix,
             vic.metro.mobility,
@@ -638,7 +646,7 @@ def build_model(params: dict) -> StratifiedModel:
             vic.metro.clusters,
             vic.regional.clusters,
             country,
-            inter_cluster_mixing=vic.intercluster_mixing
+            intercluster_mixing_matrix,
         )
         setattr(model, "get_mixing_matrix", MethodType(get_mixing_matrix, model))
 

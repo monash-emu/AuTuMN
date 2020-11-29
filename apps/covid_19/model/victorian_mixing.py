@@ -7,7 +7,6 @@ import numpy as np
 from summer.model import StratifiedModel
 
 from autumn.constants import Region
-from autumn.mixing.mixing import create_assortative_matrix
 from apps.covid_19.model.preprocess.mixing_matrix import build_dynamic_mixing_matrix
 
 
@@ -21,7 +20,7 @@ def build_victorian_mixing_matrix_func(
         metro_clusters,
         regional_clusters,
         country,
-        inter_cluster_mixing,
+        intercluster_mixing_matrix,
 ):
 
     # Collate the cluster-specific mixing matrices
@@ -46,14 +45,8 @@ def build_victorian_mixing_matrix_func(
         cluster_age_mm_funcs.append(cluster_age_mm_func)
 
     def get_mixing_matrix(self: StratifiedModel, time: float):
-        """
-        """
 
-        # Get the inter-cluster mixing matrix
-        inter_cluster_mixing_matrix = \
-            create_assortative_matrix(inter_cluster_mixing, MOB_REGIONS)
-
-        # Get the within-cluster mixing matrix
+        # Collate the within-cluster mixing matrices
         cluster_age_mms = [f(time) for f in cluster_age_mm_funcs]
 
         # Pre-allocate
@@ -75,7 +68,7 @@ def build_victorian_mixing_matrix_func(
                         i_col = start_j + infector_cluster
 
                         intercluster_modifier = \
-                            inter_cluster_mixing_matrix[infectee_cluster, infector_cluster]
+                            intercluster_mixing_matrix[infectee_cluster, infector_cluster]
 
                         # Populate the final super-matrix
                         super_matrix[i_row, i_col] = \

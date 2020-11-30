@@ -12,8 +12,8 @@ from google_drive_downloader import GoogleDriveDownloader as gdd
 import json
 
 # shareable google drive links
-PHL_doh_link = "1GgPisCuIIF90FSFwRP4Sj6XalVVpbrUS"  # sheet 05 daily report
-PHL_fassster_link = "10g699QCkGvC2xSpenhqTiQklSolsLoAL"
+PHL_doh_link = "1Nu2rBzbKmFpnkFmv23NOWlTFzmFx1zVe"  # sheet 05 daily report
+PHL_fassster_link = "1vgflRFEj1oNTxLh7ww1GluUPEvvqatrI"
 
 # destination folders filepaths
 base_dir = os.path.dirname(os.path.abspath(os.curdir))

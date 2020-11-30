@@ -2,13 +2,13 @@
 parent: apps/covid_19/regions/philippines/params/default.yml
 
 time:
-  start: 319
+  start: 335
 
 mobility:
   mixing:
     work:
       append: true
       times:
-        - 2020-11-27
+        - 2020-12-01
       values:
         - ["close_gap_to_1", 0.5]

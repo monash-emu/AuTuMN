@@ -19,8 +19,14 @@ def plot_outputs_multi(plotter: StreamlitPlotter, app: AppRegion, scenarios: lis
     if chosen_scenarios:
         output_config = model_output_selector(chosen_scenarios, app.targets)
 
-        x_low, x_up = selectors.create_xrange_selector(0, 700)
         is_logscale = st.sidebar.checkbox("Log scale")
+        is_custom_xrange = st.sidebar.checkbox("Use custom x axis range.")
+        if is_custom_xrange:
+            x_low, x_up = selectors.create_xrange_selector(0, 700)
+        else:
+            x_low = min(scenarios[0].model.times)
+            x_up = max(scenarios[0].model.times)
+
         plots.model.plots.plot_outputs_multi(
             plotter, chosen_scenarios, output_config, is_logscale, x_low, x_up
         )

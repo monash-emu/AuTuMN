@@ -2,15 +2,15 @@
 parent: apps/covid_19/regions/manila/params/default.yml
 
 time:
-  start: 319
+  start: 335
 
-# mobility:
-#   microdistancing:
-#     behaviour:
-#       parameters:
-#         times:
-#           - 319
-#           - 333
-#         values:
-#           - 1.
-#           - 0.
+mobility:
+  microdistancing:
+    behaviour:
+      parameters:
+        times:
+          - 335
+          - 348
+        values:
+          - 1.
+          - 0.

@@ -13,7 +13,9 @@ contact_rate: 0.0309
 seasonal_force: 0.5
 
 time:
-  start: 140 # 19th May
+  # https://www.afr.com/policy/health-and-education/
+  # all-victoria-s-second-wave-covid-cases-came-from-overseas-travellers-20200817-p55me2
+  start: 146  # 25th May
   end: 400
 
 country:
@@ -34,15 +36,13 @@ testing_to_detection:
 
 # Cluster stratification.
 victorian_clusters:
-  intercluster_mixing: 0.01
-  # Allows us to adjust contact rate per-cluster when calibrating
+  intercluster_mixing: 0.01  # Off-diagonal mixing value for the inter-cluster matrix
   metro:
-    contact_rate_multiplier: 1.
+    contact_rate_multiplier: 1.  # Mostly intended for the regional clusters
     mobility:
       region: null
       age_mixing: null
       npi_effectiveness: {}
-      # Mapping of Google mobility locations to Prem-specific locations
       google_mobility_locations:
         work:
           - workplaces
@@ -53,7 +53,7 @@ victorian_clusters:
           - transit_stations
         home:
           - residential
-      smooth_google_data: false # whether to apply a 7-day moving average
+      smooth_google_data: false  # Whether to apply a 7-day moving average
       square_mobility_effect: true
       microdistancing_locations:
         - other_locations
@@ -91,7 +91,6 @@ victorian_clusters:
           parameters:
             max_effect: 0.65
             times:
-              # Note model currently starts at the start-time specified again (19th May for the first round of DHHS projections)
               - 137 # Coming in at stage 3 from 29th March, but beginning to release as May progresses
               - 138 # 12th May, increase in visitor allowance (partial release from stage 3)
               - 151
@@ -146,7 +145,6 @@ victorian_clusters:
       region: null
       age_mixing: null
       npi_effectiveness: {}
-      # Mapping of Google mobility locations to Prem-specific locations
       google_mobility_locations:
         work:
           - workplaces
@@ -157,7 +155,7 @@ victorian_clusters:
           - transit_stations
         home:
           - residential
-      smooth_google_data: false # whether to apply a 7-day moving average
+      smooth_google_data: false  # Whether to apply a 7-day moving average
       square_mobility_effect: true
       microdistancing_locations:
         - other_locations
@@ -189,14 +187,13 @@ victorian_clusters:
             - 0.  # 9th July
             - 0.
             - 1.  # 5th October
-      # Regional Victoria clusters macrodistancing function
+      # Regional Victoria clusters microdistancing function
       microdistancing:
         behaviour:
           function_type: empiric
           parameters:
             max_effect: 0.9
             times:
-              # Note model currently starts at the start-time specified above (19th May for the first round of DHHS projections)
               - 137 # Coming in at stage 3 from 29th March, but beginning to release as May progresses
               - 138 # 12th May, increase in visitor allowance (partial release from stage 3)
               - 151
@@ -226,4 +223,3 @@ victorian_clusters:
               - 0.5 # 13th September
               - 0.5
               - 0.4 # 16th September
-

@@ -75,9 +75,9 @@ def dhhs_task(commit: str, quiet: bool):
             df["region"] = "_".join(db_name.split("-")[2:-2]).upper()
             df = df[["region", "type", "time", "quantile", "value"]]
             if os.path.exists(csv_path):
-                df.to_csv(csv_path, mode="a", header=False, index=False)
+                df.to_csv(csv_path, float_format="%.8f", mode="a", header=False, index=False)
             else:
-                df.to_csv(csv_path, mode="w", index=False)
+                df.to_csv(csv_path, float_format="%.8f", mode="w", index=False)
 
     # Build the combined Victorian CSV file.
     with Timer(f"Building Victorian whole-state CSV file."):
@@ -138,7 +138,7 @@ def dhhs_task(commit: str, quiet: bool):
         )
         uncertainty_df["region"] = "VICTORIA"
         uncertainty_df = uncertainty_df[["region", "type", "time", "quantile", "value"]]
-        uncertainty_df.to_csv(csv_path, mode="a", header=False, index=False)
+        uncertainty_df.to_csv(csv_path, float_format="%.8f", mode="a", header=False, index=False)
 
         # Upload the CSV
         s3_dest_key = f"dhhs/{filename}"
@@ -182,7 +182,7 @@ def dhhs_task(commit: str, quiet: bool):
         }
         df = pd.DataFrame(data=data, columns=columns)
         df["times"] = df["times"].apply(lambda days: BASE_DATETIME + timedelta(days=days))
-        df.to_csv(csv_path, index=False)
+        df.to_csv(csv_path, float_format="%.8f", index=False)
 
         # Upload the CSV
         s3_dest_key = f"ensemble/{filename}"

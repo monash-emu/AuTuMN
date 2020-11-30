@@ -902,15 +902,39 @@ def build_model(params: dict) -> StratifiedModel:
     flow_outputs["progression_early"] = TransitionFlowOutput(
         source=Compartment.EARLY_LATENT,
         dest=Compartment.INFECTIOUS,
+        source_strata={},
+        dest_strata={},
     )
     flow_outputs["progression_late"] = TransitionFlowOutput(
         source=Compartment.LATE_LATENT,
         dest=Compartment.INFECTIOUS,
+        source_strata={},
+        dest_strata={},
+    )
+    flow_outputs["notifications"] = TransitionFlowOutput(
+        source=Compartment.INFECTIOUS,
+        dest=Compartment.DETECTED,
+        source_strata={},
+        dest_strata={},
+    )
+    flow_outputs["infectious_deaths"] = InfectionDeathFlowOutput(
+        source=Compartment.INFECTIOUS,
+        source_strata={},
+    )
+    flow_outputs["detected_deaths"] = InfectionDeathFlowOutput(
+        source=Compartment.DETECTED,
+        source_strata={},
+    )
+    flow_outputs["treatment_deaths"] = InfectionDeathFlowOutput(
+        source=Compartment.ON_TREATMENT,
+        source_strata={},
     )
     tb_model.add_flow_derived_outputs(flow_outputs)
 
     function_outputs = {}
     function_outputs["progression"] = calculate_progression
+    function_outputs["prevalence_infectious"] = calculate_prevalence_infectious
+    function_outputs["disease_deaths"] = calculate_disease_deaths
 
     tb_model.add_function_derived_outputs(function_outputs)
     return tb_model
@@ -926,3 +950,33 @@ def calculate_progression(
         derived_outputs["progression_early"][time_idx]
         + derived_outputs["progression_late"][time_idx]
     )
+
+def calculate_disease_deaths(
+    time_idx,
+    model,
+    compartment_values,
+    derived_outputs,
+):
+    return (
+        derived_outputs["infectious_deaths"][time_idx]
+        + derived_outputs["detected_deaths"][time_idx]
+        + derived_outputs["treatment_deaths"][time_idx]
+    )
+
+
+def calculate_prevalence_infectious(
+        time_idx,
+        model,
+        compartment_values,
+        derived_outputs,
+):
+    """
+    Calculate the total number of infectious people at each time-step.
+    """
+    prevalence_infectious = 0
+    for i, compartment in enumerate(model.compartment_names):
+        is_infectious = compartment.has_name_in_list([Compartment.INFECTIOUS, Compartment.DETECTED, Compartment.ON_TREATMENT])
+        if is_infectious:
+            prevalence_infectious += compartment_values[i]
+
+    return prevalence_infectious

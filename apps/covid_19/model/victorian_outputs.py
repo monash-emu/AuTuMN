@@ -17,28 +17,31 @@ CLUSTERS = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS]
 
 def add_victorian_derived_outputs(model: StratifiedModel):
 
-    # Track infection deaths
-    inf_death_conns = {}
-    inf_death_conns["infection_deaths"] = InfectionDeathFlowOutput(
-        source=CompartmentType.LATE_ACTIVE, source_strata={}
-    )
+    # Track infection deaths - overall and for each cluster
+    inf_death_conns = {
+        "infection_deaths":
+            InfectionDeathFlowOutput(
+                source=CompartmentType.LATE_ACTIVE,
+                source_strata={}
+            )
+    }
     for cluster in CLUSTERS:
         output_key = f"infection_deaths_for_cluster_{cluster}"
         inf_death_conns[output_key] = InfectionDeathFlowOutput(
             source=CompartmentType.LATE_ACTIVE,
             source_strata={"cluster": cluster},
         )
-
     model.add_flow_derived_outputs(inf_death_conns)
 
-    # Track incidence of disease: transition from exposed to active
-    incidence_conns = {}
-    incidence_conns["incidence"] = TransitionFlowOutput(
-        source=CompartmentType.LATE_EXPOSED,
-        dest=CompartmentType.EARLY_ACTIVE,
-        source_strata={},
-        dest_strata={},
-    )
+    # Track incidence of disease (transition from exposed to active) - overall and for each cluster
+    incidence_conns = {
+        "incidence": TransitionFlowOutput(
+            source=CompartmentType.LATE_EXPOSED,
+            dest=CompartmentType.EARLY_ACTIVE,
+            source_strata={},
+            dest_strata={},
+        )
+    }
     for cluster in CLUSTERS:
         output_key = f"incidence_for_cluster_{cluster}"
         incidence_conns[output_key] = TransitionFlowOutput(
@@ -47,29 +50,28 @@ def add_victorian_derived_outputs(model: StratifiedModel):
             source_strata={},
             dest_strata={"cluster": cluster},
         )
-
     model.add_flow_derived_outputs(incidence_conns)
 
-    # Track progress of disease: transition from early to late active
-    progress_conns = {}
-    progress_conns["progress"] = TransitionFlowOutput(
-        source=CompartmentType.EARLY_ACTIVE,
-        dest=CompartmentType.LATE_ACTIVE,
-        source_strata={},
-        dest_strata={},
-    )
+    # Track progress of disease (transition from early to late active) - overall and for each cluster
+    progress_conns = {
+        "progress": TransitionFlowOutput(
+            source=CompartmentType.EARLY_ACTIVE,
+            dest=CompartmentType.LATE_ACTIVE,
+            source_strata={},
+            dest_strata={},
+        )
+    }
     for cluster in CLUSTERS:
-        output_key = f"progress_for_cluster_{cluster}"
-        progress_conns[output_key] = TransitionFlowOutput(
+        progress_conns[f"progress_for_cluster_{cluster}"] = TransitionFlowOutput(
             source=CompartmentType.EARLY_ACTIVE,
             dest=CompartmentType.LATE_ACTIVE,
             source_strata={},
             dest_strata={"cluster": cluster},
         )
-
     model.add_flow_derived_outputs(progress_conns)
 
-    # Track notifications: when we know someone has progressed from early to late active
+    # Track notifications (transition from early to late active) - by clinical stratum and by both clinical stratum and
+    # cluster
     # This is defined as the person who transitions ending up in isolation or hospital.
     # We aggregate over each strata in a function later on.
     notification_conns = {}
@@ -88,28 +90,34 @@ def add_victorian_derived_outputs(model: StratifiedModel):
                 source_strata={},
                 dest_strata={"cluster": cluster, "clinical": clinical_stratum},
             )
-
     model.add_flow_derived_outputs(notification_conns)
 
     hospital_conns = {}
     for cluster in CLUSTERS:
-        output_key = f"non_icu_admissions_for_cluster_{cluster}"
-        hospital_conns[output_key] = TransitionFlowOutput(
-            source=CompartmentType.EARLY_ACTIVE,
-            dest=CompartmentType.LATE_ACTIVE,
-            source_strata={
-                "cluster": cluster,
-                "clinical": ClinicalStratum.HOSPITAL_NON_ICU,
-            },
-            dest_strata={
-                "cluster": cluster,
-                "clinical": ClinicalStratum.HOSPITAL_NON_ICU,
-            }
-        )
-
+        hospital_conns[f"non_icu_admissions_for_cluster_{cluster}"] = \
+            TransitionFlowOutput(
+                source=CompartmentType.EARLY_ACTIVE,
+                dest=CompartmentType.LATE_ACTIVE,
+                source_strata={
+                    "cluster": cluster,
+                    "clinical": ClinicalStratum.HOSPITAL_NON_ICU,
+                },
+                dest_strata={
+                    "cluster": cluster,
+                    "clinical": ClinicalStratum.HOSPITAL_NON_ICU,
+                }
+            )
     model.add_flow_derived_outputs(hospital_conns)
 
-    icu_conns = {}
+    icu_conns = {
+        f"icu_admissions":
+            TransitionFlowOutput(
+                source=CompartmentType.EARLY_ACTIVE,
+                dest=CompartmentType.LATE_ACTIVE,
+                source_strata={"clinical": ClinicalStratum.ICU},
+                dest_strata={"clinical": ClinicalStratum.ICU}
+            )
+    }
     for cluster in CLUSTERS:
         output_key = f"icu_admissions_for_cluster_{cluster}"
         icu_conns[output_key] = TransitionFlowOutput(
@@ -124,7 +132,6 @@ def add_victorian_derived_outputs(model: StratifiedModel):
                 "clinical": ClinicalStratum.ICU,
             }
         )
-
     model.add_flow_derived_outputs(icu_conns)
 
     model.add_function_derived_outputs(

@@ -91,15 +91,52 @@ def add_victorian_derived_outputs(model: StratifiedModel):
 
     model.add_flow_derived_outputs(notification_conns)
 
+    hospital_conns = {}
+    for cluster in CLUSTERS:
+        output_key = f"non_icu_admissions_for_cluster_{cluster}"
+        hospital_conns[output_key] = TransitionFlowOutput(
+            source=CompartmentType.EARLY_ACTIVE,
+            dest=CompartmentType.LATE_ACTIVE,
+            source_strata={
+                "cluster": cluster,
+                "clinical": ClinicalStratum.HOSPITAL_NON_ICU,
+            },
+            dest_strata={
+                "cluster": cluster,
+                "clinical": ClinicalStratum.HOSPITAL_NON_ICU,
+            }
+        )
+
+    model.add_flow_derived_outputs(hospital_conns)
+
+    icu_conns = {}
+    for cluster in CLUSTERS:
+        output_key = f"icu_admissions_for_cluster_{cluster}"
+        icu_conns[output_key] = TransitionFlowOutput(
+            source=CompartmentType.EARLY_ACTIVE,
+            dest=CompartmentType.LATE_ACTIVE,
+            source_strata={
+                "cluster": cluster,
+                "clinical": ClinicalStratum.ICU,
+            },
+            dest_strata={
+                "cluster": cluster,
+                "clinical": ClinicalStratum.ICU,
+            }
+        )
+
+    model.add_flow_derived_outputs(icu_conns)
+
+    model.add_function_derived_outputs(
+        {f"hospital_admissions_for_cluster_{c}": build_cluster_hospitalisation_func(c) for c in CLUSTERS}
+    )
+
     # Notification aggregation functions
     model.add_function_derived_outputs(
         {f"notifications_for_cluster_{c}": build_cluster_notification_func(c) for c in CLUSTERS}
     )
     model.add_function_derived_outputs({"notifications": total_notification_func})
 
-    # TODO?
-    # hospital_occupancy
-    # icu_occupancy
     # icu_admissions
     # hospital_admissions
 
@@ -120,10 +157,10 @@ def total_notification_func(
 
 def build_cluster_notification_func(cluster: str):
     def notification_func(
-        time_idx: int,
-        model: StratifiedModel,
-        compartment_values: np.ndarray,
-        derived_outputs: Dict[str, np.ndarray],
+            time_idx: int,
+            model: StratifiedModel,
+            compartment_values: np.ndarray,
+            derived_outputs: Dict[str, np.ndarray],
     ):
         count = 0.0
         for clinical_stratum in NOTIFICATION_STRATUM:
@@ -133,3 +170,18 @@ def build_cluster_notification_func(cluster: str):
         return count
 
     return notification_func
+
+
+def build_cluster_hospitalisation_func(cluster: str):
+    def hospitalisation_func(
+            time_idx: int,
+            model: StratifiedModel,
+            compartment_values: np.ndarray,
+            derived_outputs: Dict[str, np.ndarray],
+    ):
+        count = 0.0
+        count += derived_outputs[f"non_icu_admissions_for_cluster_{cluster}"][time_idx]
+        count += derived_outputs[f"icu_admissions_for_cluster_{cluster}"][time_idx]
+        return count
+
+    return hospitalisation_func

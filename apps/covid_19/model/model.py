@@ -708,6 +708,10 @@ def build_model(params: dict) -> StratifiedModel:
         # Derived outputs for the optimization project.
         if params.country.iso3 in OPTI_ISO3S:
             func_outputs["accum_years_of_life_lost"] = outputs.calculate_cum_years_of_life_lost
+
+        # Add age-specific proportion recovered for all applications except VIC clusters
+        is_region_vic = pop.region and Region.to_name(pop.region) in Region.VICTORIA_SUBREGIONS
+        if not is_region_vic:
             for agegroup in agegroup_strata:
                 age_key = f"agegroup_{agegroup}"
                 func_outputs[

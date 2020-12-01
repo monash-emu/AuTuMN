@@ -17,22 +17,6 @@ CLUSTERS = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS]
 
 def add_victorian_derived_outputs(model: StratifiedModel):
 
-    # Track infection deaths - overall and for each cluster
-    inf_death_conns = {
-        "infection_deaths":
-            InfectionDeathFlowOutput(
-                source=CompartmentType.LATE_ACTIVE,
-                source_strata={}
-            )
-    }
-    for cluster in CLUSTERS:
-        output_key = f"infection_deaths_for_cluster_{cluster}"
-        inf_death_conns[output_key] = InfectionDeathFlowOutput(
-            source=CompartmentType.LATE_ACTIVE,
-            source_strata={"cluster": cluster},
-        )
-    model.add_flow_derived_outputs(inf_death_conns)
-
     # Track incidence of disease (transition from exposed to active) - overall and for each cluster
     incidence_conns = {
         "incidence": TransitionFlowOutput(
@@ -154,22 +138,21 @@ def add_victorian_derived_outputs(model: StratifiedModel):
         {f"hospital_admissions_for_cluster_{c}": build_cluster_hospitalisation_func(c) for c in CLUSTERS}
     )
 
-    # icu_admissions
-    # hospital_admissions
-
-
-def total_notification_func(
-    time_idx: int,
-    model: StratifiedModel,
-    compartment_values: np.ndarray,
-    derived_outputs: Dict[str, np.ndarray],
-):
-    count = 0.0
+    # Track infection deaths - overall and for each cluster
+    inf_death_conns = {
+        "infection_deaths":
+            InfectionDeathFlowOutput(
+                source=CompartmentType.LATE_ACTIVE,
+                source_strata={}
+            )
+    }
     for cluster in CLUSTERS:
-        output_key = f"notifications_for_cluster_{cluster}"
-        count += derived_outputs[output_key][time_idx]
-
-    return count
+        output_key = f"infection_deaths_for_cluster_{cluster}"
+        inf_death_conns[output_key] = InfectionDeathFlowOutput(
+            source=CompartmentType.LATE_ACTIVE,
+            source_strata={"cluster": cluster},
+        )
+    model.add_flow_derived_outputs(inf_death_conns)
 
 
 def build_cluster_notification_func(cluster: str):
@@ -187,6 +170,20 @@ def build_cluster_notification_func(cluster: str):
         return count
 
     return notification_func
+
+
+def total_notification_func(
+    time_idx: int,
+    model: StratifiedModel,
+    compartment_values: np.ndarray,
+    derived_outputs: Dict[str, np.ndarray],
+):
+    count = 0.0
+    for cluster in CLUSTERS:
+        output_key = f"notifications_for_cluster_{cluster}"
+        count += derived_outputs[output_key][time_idx]
+
+    return count
 
 
 def build_hospitalisation_func():

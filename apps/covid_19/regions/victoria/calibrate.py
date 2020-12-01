@@ -39,10 +39,11 @@ def get_target_outputs():
 
     # Calibrate all Victoria sub-regions to notifications
     for cluster in CLUSTERS:
-        ignore_last = 2
         output_key = f"notifications_for_cluster_{cluster}"
-        notification_times = targets[output_key]["times"][:-ignore_last]
-        notification_values = targets[output_key]["values"][:-ignore_last]
+        final_date = 275
+        final_date_index = targets[output_key]["times"].index(final_date)
+        notification_times = targets[output_key]["times"][:final_date_index + 1]
+        notification_values = targets[output_key]["values"][:final_date_index + 1]
 
         target_outputs += [
             {
@@ -52,5 +53,43 @@ def get_target_outputs():
                 "loglikelihood_distri": "normal",
             }
         ]
+
+        if cluster.replace("_", "-") in Region.VICTORIA_METRO:
+            output_key = f"hospital_admissions_for_cluster_{cluster}"
+            final_date_index = targets[output_key]["times"].index(final_date)
+            hospital_admission_times = targets[output_key]["times"][:final_date_index + 1]
+            hospital_admission_values = targets[output_key]["values"][:final_date_index + 1]
+            target_outputs += [
+                {
+                    "output_key": targets[output_key]["output_key"],
+                    "years": hospital_admission_times,
+                    "values": hospital_admission_values,
+                    "loglikelihood_distri": "negative_binomial",
+                }
+            ]
+            # output_key = f"icu_admissions_for_cluster_{cluster}"
+            # final_date_index = targets[output_key]["times"].index(final_date)
+            # icu_admission_times = targets[output_key]["times"][:final_date_index + 1]
+            # icu_admission_values = targets[output_key]["values"][:final_date_index + 1]
+            # target_outputs += [
+            #     {
+            #         "output_key": targets[output_key]["output_key"],
+            #         "years": icu_admission_times,
+            #         "values": icu_admission_values,
+            #         "loglikelihood_distri": "negative_binomial",
+            #     }
+            # ]
+            # output_key = f"infection_deaths_for_cluster_{cluster}"
+            # final_date_index = targets[output_key]["times"].index(final_date)
+            # death_times = targets[output_key]["times"][:final_date_index + 1]
+            # death_values = targets[output_key]["values"][:final_date_index + 1]
+            # target_outputs += [
+            #     {
+            #         "output_key": targets[output_key]["output_key"],
+            #         "years": death_times,
+            #         "values": death_values,
+            #         "loglikelihood_distri": "negative_binomial",
+            #     }
+            # ]
 
     return target_outputs

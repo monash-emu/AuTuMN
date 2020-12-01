@@ -52,7 +52,8 @@ def add_victorian_derived_outputs(model: StratifiedModel):
         )
     model.add_flow_derived_outputs(incidence_conns)
 
-    # Track progress of disease (transition from early to late active) - overall and for each cluster
+    # Track progress of disease (transition from early to late active)
+    # - overall, by cluster, by clinical stratum and by both
     progress_conns = {
         "progress": TransitionFlowOutput(
             source=CompartmentType.EARLY_ACTIVE,
@@ -68,33 +69,43 @@ def add_victorian_derived_outputs(model: StratifiedModel):
             source_strata={},
             dest_strata={"cluster": cluster},
         )
-    model.add_flow_derived_outputs(progress_conns)
-
-    # Track notifications (transition from early to late active) - by clinical stratum and by both clinical stratum and
-    # cluster
-    # This is defined as the person who transitions ending up in isolation or hospital.
-    # We aggregate over each strata in a function later on.
-    notification_conns = {}
     for clinical_stratum in NOTIFICATION_STRATUM:
-        notification_conns[f"notificationsX{clinical_stratum}"] = TransitionFlowOutput(
+        progress_conns[f"progressX{clinical_stratum}"] = TransitionFlowOutput(
             source=CompartmentType.EARLY_ACTIVE,
             dest=CompartmentType.LATE_ACTIVE,
             source_strata={},
             dest_strata={"clinical": clinical_stratum},
         )
         for cluster in CLUSTERS:
-            output_key = f"notifications_for_cluster_{cluster}X{clinical_stratum}"
-            notification_conns[output_key] = TransitionFlowOutput(
+            output_key = f"progress_for_cluster_{cluster}X{clinical_stratum}"
+            progress_conns[output_key] = TransitionFlowOutput(
                 source=CompartmentType.EARLY_ACTIVE,
                 dest=CompartmentType.LATE_ACTIVE,
                 source_strata={},
                 dest_strata={"cluster": cluster, "clinical": clinical_stratum},
             )
-    model.add_flow_derived_outputs(notification_conns)
+    model.add_flow_derived_outputs(progress_conns)
 
-    hospital_conns = {}
+    # Notification aggregation functions
+    model.add_function_derived_outputs(
+        {f"notifications_for_cluster_{c}": build_cluster_notification_func(c) for c in CLUSTERS}
+    )
+    model.add_function_derived_outputs(
+        {"notifications": total_notification_func}
+    )
+
+    # Track non-ICU hospital admissions (transition from early to late active in hospital, non-ICU stratum)
+    non_icu_admit_conns = {
+        f"non_icu_admissions":
+            TransitionFlowOutput(
+                source=CompartmentType.EARLY_ACTIVE,
+                dest=CompartmentType.LATE_ACTIVE,
+                source_strata={"clinical": ClinicalStratum.HOSPITAL_NON_ICU},
+                dest_strata={"clinical": ClinicalStratum.HOSPITAL_NON_ICU}
+            )
+    }
     for cluster in CLUSTERS:
-        hospital_conns[f"non_icu_admissions_for_cluster_{cluster}"] = \
+        non_icu_admit_conns[f"non_icu_admissions_for_cluster_{cluster}"] = \
             TransitionFlowOutput(
                 source=CompartmentType.EARLY_ACTIVE,
                 dest=CompartmentType.LATE_ACTIVE,
@@ -107,8 +118,9 @@ def add_victorian_derived_outputs(model: StratifiedModel):
                     "clinical": ClinicalStratum.HOSPITAL_NON_ICU,
                 }
             )
-    model.add_flow_derived_outputs(hospital_conns)
+    model.add_flow_derived_outputs(non_icu_admit_conns)
 
+    # Track ICU admissions (transition from early to late active in ICU stratum)
     icu_conns = {
         f"icu_admissions":
             TransitionFlowOutput(
@@ -134,15 +146,13 @@ def add_victorian_derived_outputs(model: StratifiedModel):
         )
     model.add_flow_derived_outputs(icu_conns)
 
+    # Create hospitalisation functions as sum of hospital non-ICU and ICU
+    model.add_function_derived_outputs(
+        {f"hospital_admissions": build_hospitalisation_func()}
+    )
     model.add_function_derived_outputs(
         {f"hospital_admissions_for_cluster_{c}": build_cluster_hospitalisation_func(c) for c in CLUSTERS}
     )
-
-    # Notification aggregation functions
-    model.add_function_derived_outputs(
-        {f"notifications_for_cluster_{c}": build_cluster_notification_func(c) for c in CLUSTERS}
-    )
-    model.add_function_derived_outputs({"notifications": total_notification_func})
 
     # icu_admissions
     # hospital_admissions
@@ -171,12 +181,27 @@ def build_cluster_notification_func(cluster: str):
     ):
         count = 0.0
         for clinical_stratum in NOTIFICATION_STRATUM:
-            output_key = f"notifications_for_cluster_{cluster}X{clinical_stratum}"
+            output_key = f"progress_for_cluster_{cluster}X{clinical_stratum}"
             count += derived_outputs[output_key][time_idx]
 
         return count
 
     return notification_func
+
+
+def build_hospitalisation_func():
+    def hospitalisation_func(
+            time_idx: int,
+            model: StratifiedModel,
+            compartment_values: np.ndarray,
+            derived_outputs: Dict[str, np.ndarray],
+    ):
+        count = 0.0
+        count += derived_outputs[f"non_icu_admissions"][time_idx]
+        count += derived_outputs[f"icu_admissions"][time_idx]
+        return count
+
+    return hospitalisation_func
 
 
 def build_cluster_hospitalisation_func(cluster: str):

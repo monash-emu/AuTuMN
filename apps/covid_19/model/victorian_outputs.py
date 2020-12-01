@@ -1,7 +1,6 @@
 from typing import Dict
 import numpy as np
 
-from summer.model.strat_model import StratifiedModel
 from summer.model import StratifiedModel
 from summer.model.derived_outputs import (
     InfectionDeathFlowOutput,
@@ -10,6 +9,7 @@ from summer.model.derived_outputs import (
 from apps.covid_19.constants import Compartment as CompartmentType, ClinicalStratum
 from autumn.constants import Region
 from apps.covid_19.model.outputs import NOTIFICATION_STRATUM
+from apps.covid_19.model.outputs import calculate_icu_occupancy
 
 
 CLUSTERS = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS]
@@ -138,6 +138,17 @@ def add_victorian_derived_outputs(model: StratifiedModel):
         {f"hospital_admissions_for_cluster_{c}": build_cluster_hospitalisation_func(c) for c in CLUSTERS}
     )
 
+    # ICU occupancy
+    model.add_function_derived_outputs(
+        {"icu_occupancy": calculate_icu_occupancy}
+    )
+    model.add_function_derived_outputs(
+        {
+            f"icu_occupancy_for_cluster_{cluster}": calculate_cluster_icu_occupancy_factory(cluster) for
+            cluster in CLUSTERS
+        }
+    )
+
     # Track infection deaths - overall and for each cluster
     inf_death_conns = {
         "infection_deaths":
@@ -214,3 +225,22 @@ def build_cluster_hospitalisation_func(cluster: str):
         return count
 
     return hospitalisation_func
+
+
+def calculate_cluster_icu_occupancy_factory(cluster):
+    def calculate_cluster_icu_occupancy(
+            time_idx: int,
+            model: StratifiedModel,
+            compartment_values: np.ndarray,
+            derived_outputs: Dict[str, np.ndarray],
+    ):
+        icu_prev = 0
+        for i, comp in enumerate(model.compartment_names):
+            is_late_active = comp.has_name(CompartmentType.LATE_ACTIVE)
+            is_icu = comp.has_stratum("clinical", ClinicalStratum.ICU)
+            if is_late_active and is_icu:
+                icu_prev += compartment_values[i]
+
+        return icu_prev
+
+    return calculate_cluster_icu_occupancy

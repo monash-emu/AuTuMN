@@ -5,6 +5,7 @@ import numpy as np
 
 from summer.model import StratifiedModel
 from autumn import inputs
+from autumn.tool_kit.utils import apply_odds_ratio_to_proportion
 from autumn.mixing.mixing import create_assortative_matrix
 from autumn.constants import Flow, BirthApproach
 from autumn.curve import tanh_based_scaleup, scale_up_function
@@ -770,8 +771,14 @@ def get_absolute_strata_proportions(
     Each of these are stratified into 16 age groups 0-75+
     """
     # Apply multiplier to proportions
-    hospital_props = [min([p * hospital_props_multiplier, 1.0]) for p in hospital_props]
-    symptomatic_props = [min([p * symptomatic_props_multiplier, 1.0]) for p in symptomatic_props]
+    hospital_props = [
+        apply_odds_ratio_to_proportion(i_prop, hospital_props_multiplier) for
+        i_prop in hospital_props
+    ]
+    symptomatic_props = [
+        apply_odds_ratio_to_proportion(i_prop, symptomatic_props_multiplier) for
+        i_prop in symptomatic_props
+    ]
 
     # Find the absolute progression proportions.
     symptomatic_props_arr = np.array(symptomatic_props)
@@ -879,7 +886,10 @@ def get_infection_fatality_proportions(
     Returns the Proportion of people in age group who die, given the total number of people in that compartment.
     ie: dead / total infected
     """
-    if_props_10_year = infection_rate_multiplier * np.array(infection_fatality_props_10_year)
+    if_props_10_year = [
+        apply_odds_ratio_to_proportion(i_prop, infection_rate_multiplier) for
+        i_prop in infection_fatality_props_10_year
+    ]
     # Calculate the proportion of 80+ years old among the 75+ population
     elderly_populations = inputs.get_population_by_agegroup(
         [0, 75, 80], iso3, pop_region, year=pop_year

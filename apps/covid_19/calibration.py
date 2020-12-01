@@ -299,12 +299,12 @@ def add_standard_victoria_params(params, region):
             "distri_params": [10.8, 4.0],
             "trunc_range": [6.0, np.inf],
         },
-        {
-            "param_name": "mobility.microdistancing.behaviour.parameters.max_effect",
-            "distribution": "beta",
-            "distri_mean": 0.8,
-            "distri_ci": [0.6, 0.9],
-        },
+        # {
+        #     "param_name": "mobility.microdistancing.behaviour.parameters.max_effect",
+        #     "distribution": "beta",
+        #     "distri_mean": 0.8,
+        #     "distri_ci": [0.6, 0.9],
+        # },
     ]
 
 

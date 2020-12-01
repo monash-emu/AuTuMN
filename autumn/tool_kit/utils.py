@@ -310,3 +310,36 @@ def apply_moving_average(data, period):
         n_backwards_timepoints = period - 1 if i >= period - 1 else i
         smooth_data.append(float(numpy.mean(data[i - n_backwards_timepoints : i + 1])))
     return smooth_data
+
+
+def apply_odds_ratio_to_proportion(proportion, odds_ratio):
+    """
+    Use an odds ratio to adjust a proportion.
+
+    Starts from the premise that the odds associated with the original proportion (p1) = p1 / (1 - p1)
+    and similarly, that the odds associated with the adjusted proportion (p2) = p2 / (1 - p2)
+    We want to multiply the odds associated with p1 by a certain odds ratio.
+    That, is we need to solve the following equation for p2:
+        p1 / (1 - p1) * OR = p2 / (1 - p2)
+    By simple algebra, the solution to this is:
+        p2 = p1 * OR / (p1 * (OR - 1) + 1)
+
+    Args:
+        proportion: The original proportion (p1 in the description above)
+        odds_ratio: The odds ratio to adjust by
+    Returns:
+        The adjusted proportion
+    """
+
+    # Check inputs
+    assert 0. <= odds_ratio
+    assert 0. <= proportion <= 1.
+
+    # Transform
+    modified_proportion = \
+        proportion * odds_ratio / \
+        (proportion * (odds_ratio - 1.) + 1.)
+
+    # Check and return
+    assert 0. <= modified_proportion <= 1.
+    return modified_proportion

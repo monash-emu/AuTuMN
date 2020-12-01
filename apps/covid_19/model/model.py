@@ -719,7 +719,11 @@ def build_model(params: dict) -> StratifiedModel:
 
         model.add_function_derived_outputs(func_outputs)
     else:
-        add_victorian_derived_outputs(model)
+        add_victorian_derived_outputs(
+            model,
+            icu_early_period=compartment_periods["icu_early"],
+            hospital_early_period=compartment_periods["hospital_early"]
+        )
 
     return model
 

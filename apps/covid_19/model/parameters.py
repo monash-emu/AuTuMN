@@ -257,3 +257,18 @@ class Parameters:
     notifications_for_cluster_south_east_metro_dispersion_param: float
     notifications_for_cluster_south_metro_dispersion_param: float
     notifications_for_cluster_west_metro_dispersion_param: float
+
+    hospital_admissions_for_cluster_north_metro_dispersion_param: float
+    hospital_admissions_for_cluster_south_east_metro_dispersion_param: float
+    hospital_admissions_for_cluster_south_metro_dispersion_param: float
+    hospital_admissions_for_cluster_west_metro_dispersion_param: float
+
+    icu_admissions_for_cluster_north_metro_dispersion_param: float
+    icu_admissions_for_cluster_south_east_metro_dispersion_param: float
+    icu_admissions_for_cluster_south_metro_dispersion_param: float
+    icu_admissions_for_cluster_west_metro_dispersion_param: float
+
+    infection_deaths_for_cluster_north_metro_dispersion_param: float
+    infection_deaths_for_cluster_south_east_metro_dispersion_param: float
+    infection_deaths_for_cluster_south_metro_dispersion_param: float
+    infection_deaths_for_cluster_west_metro_dispersion_param: float

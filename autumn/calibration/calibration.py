@@ -233,6 +233,7 @@ class Calibration:
                                 - math.log(math.factorial(round(data[i])))
                             ) * time_weigths[i]
                     elif target["loglikelihood_distri"] == "negative_binomial":
+                        print(key + "_dispersion_param")
                         assert key + "_dispersion_param" in self.param_list
                         # the dispersion parameter varies during the MCMC. We need to retrieve its value
                         n = [

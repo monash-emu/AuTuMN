@@ -9,7 +9,7 @@ from summer.model.derived_outputs import (
 from apps.covid_19.constants import Compartment as CompartmentType, ClinicalStratum
 from autumn.constants import Region
 from apps.covid_19.model.outputs import NOTIFICATION_STRATUM
-from apps.covid_19.model.outputs import calculate_icu_occupancy
+from apps.covid_19.model.outputs import get_calculate_hospital_occupancy, calculate_icu_occupancy
 
 
 CLUSTERS = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS]
@@ -144,7 +144,7 @@ def add_victorian_derived_outputs(model: StratifiedModel):
     )
     model.add_function_derived_outputs(
         {
-            f"icu_occupancy_for_cluster_{cluster}": calculate_cluster_icu_occupancy_factory(cluster) for
+            f"icu_occupancy_for_cluster_{cluster}": get_calculate_cluster_icu_occupancy(cluster) for
             cluster in CLUSTERS
         }
     )
@@ -227,7 +227,7 @@ def build_cluster_hospitalisation_func(cluster: str):
     return hospitalisation_func
 
 
-def calculate_cluster_icu_occupancy_factory(cluster):
+def get_calculate_cluster_icu_occupancy(cluster):
     def calculate_cluster_icu_occupancy(
             time_idx: int,
             model: StratifiedModel,
@@ -238,7 +238,8 @@ def calculate_cluster_icu_occupancy_factory(cluster):
         for i, comp in enumerate(model.compartment_names):
             is_late_active = comp.has_name(CompartmentType.LATE_ACTIVE)
             is_icu = comp.has_stratum("clinical", ClinicalStratum.ICU)
-            if is_late_active and is_icu:
+            is_cluster = comp.has_stratum("cluster", cluster)
+            if is_late_active and is_icu and is_cluster:
                 icu_prev += compartment_values[i]
 
         return icu_prev

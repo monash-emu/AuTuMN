@@ -27,7 +27,7 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
 
 def get_priors(target_outputs: list):
     priors = provide_default_calibration_params(("time.start", "contact_rate"))
-    priors = add_standard_victoria_params(priors, Region.VICTORIA)
+    priors = add_standard_victoria_params(priors, Region.VICTORIA, include_micro=False)
     priors = add_dispersion_param_prior_for_gaussian(priors, target_outputs)
     priors = [p for p in priors if not p["param_name"] in IRRELEVANT_PRIORS]
     return priors

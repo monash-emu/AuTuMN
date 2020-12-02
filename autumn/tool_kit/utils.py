@@ -335,11 +335,9 @@ def apply_odds_ratio_to_proportion(proportion, odds_ratio):
     assert 0. <= odds_ratio
     assert 0. <= proportion <= 1.
 
-    # Transform
+    # Transform and return
     modified_proportion = \
         proportion * odds_ratio / \
         (proportion * (odds_ratio - 1.) + 1.)
 
-    # Check and return
-    assert 0. <= modified_proportion <= 1.
     return modified_proportion

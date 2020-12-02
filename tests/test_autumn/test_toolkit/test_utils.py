@@ -3,7 +3,7 @@ import numpy as np
 from autumn.tool_kit.utils import apply_odds_ratio_to_proportion
 
 
-def test_apply_odds_ratio_to_prop(n_props_to_test=100, n_ratios_to_test=100, error=1e6):
+def test_apply_odds_ratio_to_prop(n_props_to_test=100, n_ratios_to_test=100, error=1e-6):
     """
     Test that the results makes sense when we apply an odds ratio to a proportion.
     """

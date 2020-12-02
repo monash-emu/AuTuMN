@@ -37,6 +37,8 @@ testing_to_detection:
 # Cluster stratification.
 victorian_clusters:
   intercluster_mixing: 0.01  # Off-diagonal mixing value for the inter-cluster matrix
+
+  # *** METRO ***
   metro:
     contact_rate_multiplier: 1.  # Mostly intended for the regional clusters
     mobility:
@@ -93,7 +95,15 @@ victorian_clusters:
             c: 197.  # 15th July
             sigma: 0.
             upper_asymptote: 0.3
+        face_coverings:  # Mandatory face coverings
+          function_type: tanh
+          parameters:
+            b: 0.5
+            c: 205.  # 23rd July
+            sigma: 0.
+            upper_asymptote: 0.2
 
+  # *** REGIONAL ***
   regional:
     contact_rate_multiplier: 1.
     mobility:
@@ -151,3 +161,10 @@ victorian_clusters:
             c: 197.  # 15th July
             sigma: 0.
             upper_asymptote: 0.3
+        face_coverings:
+          function_type: tanh
+          parameters:
+            b: 0.5
+            c: 215.  # 2nd August
+            sigma: 0.
+            upper_asymptote: 0.2

@@ -14,18 +14,20 @@ def get_microdistancing_funcs(
     """
     Returns a dictionary of time-varying functions.
     Each key is a location and each function represents microdistancing effects at that location.
-    `params` can specify one or more microdistancing fucntions, which may also have an "adjuster" function.
+    `params` can specify one or more microdistancing functions, which may also have an "adjuster" function.
     """
+
+    # Supports any number of microdistancing functions, with any user-defined names
     microdist_component_funcs = []
     for key, func_params in params.items():
         if key.endswith(ADJUSTER_SUFFIX):
-            # Ignore 'adjuster' functions - we'll use these later.
+            # Ignore 'adjuster' functions - we'll use these later
             continue
 
-        # Build a microdistancing function.
+        # Build the raw function of time according to user requests
         microdist_func = get_microdist_func_component(func_params)
 
-        # Adjust an existing microdistancing function with another function if specified.
+        # Adjust an existing microdistancing function with another function if specified
         adjustment_key = f"{key}_adjuster"
         adjustment_func_params = params.get(adjustment_key)
         if adjustment_func_params:

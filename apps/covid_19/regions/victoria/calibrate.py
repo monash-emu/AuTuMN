@@ -1,6 +1,7 @@
+import numpy as np
+
 from apps.covid_19.model.victorian_outputs import CLUSTERS
 from apps.covid_19.calibration import (
-    add_standard_victoria_params,
     provide_default_calibration_params,
 )
 from autumn.constants import Region
@@ -8,7 +9,6 @@ from autumn.tool_kit.params import load_targets
 from autumn.calibration.utils import add_dispersion_param_prior_for_gaussian
 from apps.covid_19 import calibration as base
 
-IRRELEVANT_PRIORS = ["importation.movement_prop"]
 CLUSTERS = [Region.to_filename(r) for r in Region.VICTORIA_SUBREGIONS]
 
 
@@ -26,10 +26,87 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
 
 
 def get_priors(target_outputs: list):
-    priors = provide_default_calibration_params(("time.start", "contact_rate"))
-    priors = add_standard_victoria_params(priors, Region.VICTORIA, include_micro=False)
+    priors = provide_default_calibration_params()
+    priors += [
+        {
+            "param_name": "contact_rate",
+            "distribution": "uniform",
+            "distri_params": [0.015, 0.07],
+        },
+        {
+            "param_name": "seasonal_force",
+            "distribution": "uniform",
+            "distri_params": [0.0, 0.25],
+        },
+        {
+            "param_name": "clinical_stratification.props.symptomatic.multiplier",
+            "distribution": "trunc_normal",
+            "distri_params": [1.0, 0.1],
+            "trunc_range": [0.5, np.inf],
+        },
+        {
+            "param_name": "infection_fatality.multiplier",
+            "distribution": "trunc_normal",
+            "distri_params": [1.5, 0.5],
+            "trunc_range": [0.33, 3.0],
+        },
+        {
+            "param_name": "testing_to_detection.assumed_cdr_parameter",
+            "distribution": "uniform",
+            "distri_params": [0.2, 0.5],
+        },
+        {
+            "param_name": "clinical_stratification.props.hospital.multiplier",
+            "distribution": "trunc_normal",
+            "distri_params": [1.0, 1.0],
+            "trunc_range": [0.6, np.inf],
+        },
+        {
+            "param_name": "sojourn.compartment_periods.icu_early",
+            "distribution": "trunc_normal",
+            "distri_params": [12.7, 4.0],
+            "trunc_range": [3.0, np.inf],
+        },
+        {
+            "param_name": "sojourn.compartment_periods.icu_late",
+            "distribution": "trunc_normal",
+            "distri_params": [10.8, 4.0],
+            "trunc_range": [6.0, np.inf],
+        },
+        {
+            "param_name": "victorian_clusters.intercluster_mixing",
+            "distribution": "uniform",
+            "distri_params": [0.01, 0.03],
+        },
+        {
+            "param_name": "victorian_clusters.regional.contact_rate_multiplier",
+            "distribution": "trunc_normal",
+            "distri_params": [1., 0.3],
+            "trunc_range": [0.5, np.inf],
+        },
+        {
+            "param_name": "victorian_clusters.metro.mobility.microdistancing.behaviour.upper_asymptote",
+            "distribution": "uniform",
+            "distri_params": [0.1, 0.4],
+        },
+        {
+            "param_name": "victorian_clusters.regional.mobility.microdistancing.behaviour.upper_asymptote",
+            "distribution": "uniform",
+            "distri_params": [0.1, 0.4],
+        },
+        {
+            "param_name": "victorian_clusters.metro.mobility.microdistancing.face_coverings.upper_asymptote",
+            "distribution": "uniform",
+            "distri_params": [0.0, 0.4],
+        },
+        {
+            "param_name": "victorian_clusters.regional.mobility.microdistancing.face_coverings.upper_asymptote",
+            "distribution": "uniform",
+            "distri_params": [0.0, 0.4],
+        },
+    ]
+
     priors = add_dispersion_param_prior_for_gaussian(priors, target_outputs)
-    priors = [p for p in priors if not p["param_name"] in IRRELEVANT_PRIORS]
     return priors
 
 
@@ -40,7 +117,9 @@ def get_target_outputs():
     # Calibrate all Victoria sub-regions to notifications
     for cluster in CLUSTERS:
         output_key = f"notifications_for_cluster_{cluster}"
-        final_date = 275
+
+        # Currently set to end date anyway, but can reduce the amount of data calibrated to
+        final_date = 303
         final_date_index = targets[output_key]["times"].index(final_date)
         notification_times = targets[output_key]["times"][:final_date_index + 1]
         notification_values = targets[output_key]["values"][:final_date_index + 1]

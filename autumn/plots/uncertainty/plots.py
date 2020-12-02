@@ -341,7 +341,7 @@ def plot_seroprevalence_by_age(
                 )
 
         axis.set_xlabel("age (years)", fontsize=13)
-        axis.set_ylabel("% seropositive", fontsize=13)
+        axis.set_ylabel("% recovered", fontsize=13)
 
         _date = ref_date + datetime.timedelta(days=time)
 

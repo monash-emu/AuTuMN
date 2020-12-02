@@ -74,6 +74,17 @@ def cleanup():
 
 
 @aws_cli.command()
+def cleanup_builds():
+    """
+    Cleanup Buildkite builds.
+    """
+    for name in ["buildkite-1", "buildkite-1", "buildkite-3"]:
+        logging.info("Cleaning up builds for %s", name)
+        instance = aws.find_instance(name)
+        remote.cleanup_builds(instance)
+
+
+@aws_cli.command()
 @click.argument("run_name")
 def logs(run_name):
     """Get all logs for a given run"""

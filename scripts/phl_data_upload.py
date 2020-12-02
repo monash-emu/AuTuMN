@@ -13,7 +13,7 @@ import json
 
 # shareable google drive links
 PHL_doh_link = "1Nu2rBzbKmFpnkFmv23NOWlTFzmFx1zVe"  # sheet 05 daily report
-PHL_fassster_link = "1vgflRFEj1oNTxLh7ww1GluUPEvvqatrI"
+PHL_fassster_link = "18WNaXU_Zp5Xo6tBRh2hdA627Tzxx5LZH"
 
 # destination folders filepaths
 base_dir = os.path.dirname(os.path.abspath(os.curdir))
@@ -94,13 +94,13 @@ def process_accumulated_death_data(filePath):
     
 def process_notifications_data(filePath):
     df = pd.read_csv(filePath)
-    fassster_data_agg = df.groupby(["Region", "imputed_Date_Admitted"]).size()
+    fassster_data_agg = df.groupby(["Region", "Report_Date"]).size()
     fassster_data_agg = fassster_data_agg.to_frame(name="daily_notifications").reset_index()
-    fassster_data_agg["imputed_Date_Admitted"] = pd.to_datetime(
-        fassster_data_agg["imputed_Date_Admitted"]
+    fassster_data_agg["Report_Date"] = pd.to_datetime(
+        fassster_data_agg["Report_Date"]
     )
     # make sure all dates within range are included
-    fassster_data_agg["times"] = fassster_data_agg.imputed_Date_Admitted - COVID_BASE_DATETIME
+    fassster_data_agg["times"] = fassster_data_agg.Report_Date - COVID_BASE_DATETIME
     fassster_data_agg["times"] = fassster_data_agg["times"] / np.timedelta64(1, "D")
     timeIndex = np.arange(
         min(fassster_data_agg["times"]), max(fassster_data_agg["times"]), 1.0
@@ -130,7 +130,7 @@ def process_notifications_data(filePath):
     )
     fassster_data_final = fassster_agg_complete[fassster_agg_complete.times > 60]
     fassster_data_final = fassster_data_final[
-        fassster_data_final.times < max(fassster_data_final.times) - 9
+        fassster_data_final.times < max(fassster_data_final.times)
     ]
     fassster_data_final.to_csv(notifications_dest)    
     

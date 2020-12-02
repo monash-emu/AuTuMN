@@ -14,6 +14,11 @@ logger = logging.getLogger(__name__)
 CODE_PATH = "/home/ubuntu/code"
 
 
+def cleanup_builds(instance):
+    with get_connection(instance) as conn:
+        conn.run("sudo rm -rf /var/lib/buildkite-agent/builds/", echo=True)
+
+
 def run_dhhs(instance, commit: str, branch: str):
     """Run DHHS processing on the remote server"""
     msg = "Running DHHS processing for commit %s on AWS instance %s"
@@ -27,7 +32,7 @@ def run_dhhs(instance, commit: str, branch: str):
             "commit": commit,
             "workers": 60,
         }
-        run_luigi_pipeline(conn, pipeline_name, pipeline_args)
+        run_task_pipeline(conn, pipeline_name, pipeline_args)
         logger.info("DHHS processing completed for commit %s", commit)
 
 
@@ -45,7 +50,7 @@ def run_powerbi(instance, run_id: str, branch: str):
             "run": run_id,
             "workers": 7,
         }
-        run_luigi_pipeline(conn, pipeline_name, pipeline_args)
+        run_task_pipeline(conn, pipeline_name, pipeline_args)
         logger.info("PowerBI processing completed for %s", run_id)
 
 
@@ -68,7 +73,7 @@ def run_full_model(instance, run_id: str, burn_in: int, use_latest_code: bool, b
             "burn": burn_in,
             "workers": 7,
         }
-        run_luigi_pipeline(conn, pipeline_name, pipeline_args)
+        run_task_pipeline(conn, pipeline_name, pipeline_args)
         logger.info("Full model runs completed for %s", run_id)
 
 
@@ -96,21 +101,21 @@ def run_calibration(
             "runtime": runtime,
             "workers": num_chains,
         }
-        run_luigi_pipeline(conn, pipeline_name, pipeline_args)
+        run_task_pipeline(conn, pipeline_name, pipeline_args)
         logger.info("Calibration completed for %s", run_id)
 
     return run_id
 
 
-def run_luigi_pipeline(conn: Connection, pipeline_name: str, pipeline_args: dict):
-    """Run a Luigi pipeline on the remote machine"""
-    logger.info("Running Luigi pipleine %s", pipeline_name)
+def run_task_pipeline(conn: Connection, pipeline_name: str, pipeline_args: dict):
+    """Run a task pipeline on the remote machine"""
+    logger.info("Running task pipleine %s", pipeline_name)
     pipeline_args_str = " ".join([f"--{k} {v}" for k, v in pipeline_args.items()])
     cmd_str = f"./env/bin/python -m tasks {pipeline_name} {pipeline_args_str}"
     with conn.cd(CODE_PATH):
         conn.run(cmd_str, echo=True)
 
-    logger.info("Finished running Luigi pipleine %s", pipeline_name)
+    logger.info("Finished running task pipleine %s", pipeline_name)
 
 
 def set_run_id(conn: Connection, run_id: str):
@@ -165,7 +170,7 @@ def install_requirements(conn: Connection):
 
 def get_connection(instance):
     ip = instance["ip"]
-    key_filepath = try_get_ssh_key_path()
+    key_filepath = try_get_ssh_key_path(instance["name"])
     return Connection(
         host=ip,
         user="ubuntu",

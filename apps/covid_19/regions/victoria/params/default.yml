@@ -2,21 +2,16 @@
 ---
 parent: apps/covid_19/params.yml
 
-infectious_seed: 10.
-importation: null
-
 population:
   region: Victoria
-  year: 2020
 
-contact_rate: 0.0309
 seasonal_force: 0.5
 
 time:
-  # https://www.afr.com/policy/health-and-education/
+  # Genomic graph of clusters that Allen uses: https://www.afr.com/policy/health-and-education/
   # all-victoria-s-second-wave-covid-cases-came-from-overseas-travellers-20200817-p55me2
   start: 146  # 25th May
-  end: 400
+  end: 303
 
 country:
   iso3: AUS
@@ -32,7 +27,7 @@ infection_fatality:
 testing_to_detection:
   assumed_tests_parameter: 1.e-03
   assumed_cdr_parameter: 0.25
-  smoothing_period: 14
+  smoothing_period: 7
 
 # Cluster stratification.
 victorian_clusters:

@@ -95,13 +95,13 @@ def get_periodic_sc_params(frequency, type='ACF'):
         {
             'stratum_filter': {"location": "ebeye"},
             'time_variant_screening_rate': {
-                2000: 0., 2017: 0., 2017.5: 1.18, 2018: 0.
+                2017: 0., 2017.01: 1.18, 2017.5: 1.18, 2017.51: 0.
             }
         },
         {
             'stratum_filter': {"location": "majuro"},
             'time_variant_screening_rate': {
-                2000: 0., 2018: 0., 2018.5: 2.74, 2019: 0.
+                2018: 0., 2018.01: 2.74, 2018.5: 2.74, 2018.51: 0.
             }
         }
     ]
@@ -109,7 +109,7 @@ def get_periodic_sc_params(frequency, type='ACF'):
         {
             'stratum_filter': {"location": "majuro"},
             'time_variant_screening_rate': {
-                2000: 0., 2018: 0., 2018.5: 2.74, 2019: 0.
+                2018: 0., 2018.01: 2.74, 2018.5: 2.74, 2018.51: 0.
             }
         }
     ]
@@ -141,10 +141,11 @@ def get_periodic_sc_params(frequency, type='ACF'):
 def make_periodic_time_series(rate, frequency):
     time_series = {}
     year = 2021
-    while year < 2050:
+    while year < 2050:  # 2018: 0., 2018.01: 2.74, 2018.5: 2.74, 2018.51: 0.
         time_series[year] = 0.
-        time_series[year + 0.5] = rate
-        time_series[year + 1] = 0.
+        time_series[year + .01] = rate
+        time_series[year + .5] = rate
+        time_series[year + .51] = 0.
         year += frequency
 
     return time_series

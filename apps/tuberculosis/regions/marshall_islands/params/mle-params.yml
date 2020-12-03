@@ -1,4 +1,4 @@
-contact_rate:  .57
+contact_rate: .57
 extra_params.rr_progression_diabetes: 4.985930888563858
 infect_death_rate_dict.smear_negative: 0.017017657275730444
 infect_death_rate_dict.smear_positive: 0.3350578140434921

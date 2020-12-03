@@ -42,7 +42,7 @@ PRIORS = [
     {
         "param_name": "start_population_size",
         "distribution": "uniform",
-        "distri_params": [200, 600],
+        "distri_params": [200, 800],
     },
     {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.2, 1.]},
     {

@@ -161,6 +161,11 @@ class Calibration:
         if self.chain_index == 0:
             plots.calibration.plot_pre_calibration(self.priors, self.output.output_dir)
 
+        self.is_vic_super_model = False
+        if "victorian_clusters" in self.model_parameters['default']:
+            if self.model_parameters['default']['victorian_clusters']:
+                self.is_vic_super_model = True
+
     def run_model_with_params(self, proposed_params: dict):
         """
         Run the model with a set of params.
@@ -219,7 +224,7 @@ class Calibration:
                     if target["loglikelihood_distri"] == "normal":
                         if key + "_dispersion_param" in self.param_list:
                             normal_sd = params[self.param_list.index(key + "_dispersion_param")]
-                        elif self.model_parameters['default']['victorian_clusters']:
+                        elif self.is_vic_super_model:
                             output_name = target['output_key'].split("_for_cluster_")[0]
                             cluster = target['output_key'].split("_for_cluster_")[1]
                             if cluster.replace("_", "-") in constants.Region.VICTORIA_METRO:

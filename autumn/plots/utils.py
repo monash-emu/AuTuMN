@@ -13,7 +13,7 @@ PLOT_TEXT_DICT = {
     "icu_occupancy": "ICU occupancy",
     # TB model parameters
     "start_population_size": "initial population size",
-    "late_reactivation_multiplier": "late reactivation multiplier",
+    "progression_multiplier": "progression multiplier",
     "time_variant_tb_screening_rate.maximum_gradient": "screening profile (shape)",
     "time_variant_tb_screening_rate.max_change_time": "screening profile (inflection)",
     "time_variant_tb_screening_rate.end_value": "screening profile (final rate)",

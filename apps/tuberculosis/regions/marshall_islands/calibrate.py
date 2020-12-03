@@ -46,9 +46,9 @@ PRIORS = [
     },
     {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.2, 1.]},
     {
-        "param_name": "late_reactivation_multiplier",
+        "param_name": "progression_multiplier",
         "distribution": "uniform",
-        "distri_params": [0.3, 3.0],
+        "distri_params": [0.5, 2.0],
     },
     {
         "param_name": "time_variant_tb_screening_rate.max_change_time",

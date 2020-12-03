@@ -90,7 +90,7 @@ extra_params:
 
 # calibrated parameters
 contact_rate: 1.5
-late_reactivation_multiplier: 0.7117191601170418
+progression_multiplier: 0.7117191601170418
 
 # REQUESTED OUTPUTS
 calculated_outputs:

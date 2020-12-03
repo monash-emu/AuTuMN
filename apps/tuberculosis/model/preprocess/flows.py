@@ -168,10 +168,12 @@ def process_unstratified_parameter_values(params, implement_acf, implement_ltbi_
         params["relapse_rate"] = "relapse_rate"
 
     # adjust late reactivation parameters using multiplier
-    for key in params["age_specific_latency"]["late_activation_rate"]:
-        params["age_specific_latency"]["late_activation_rate"][key] *= params[
-            "late_reactivation_multiplier"
-        ]
+    for latency_stage in ["early", "late"]:
+        param_name = f"{latency_stage}_activation_rate"
+        for key in params["age_specific_latency"][param_name]:
+            params["age_specific_latency"][param_name][key] *= params[
+                "progression_multiplier"
+            ]
     # load unstratified latency parameters
     params = get_unstratified_parameter_values(params)
 

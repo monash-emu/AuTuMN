@@ -190,17 +190,24 @@ class Importation(BaseModel):
 
 
 class MetroClusterStratification(BaseModel):
-    contact_rate_multiplier: float
     mobility: Mobility
 
 
 class RegionalClusterStratification(BaseModel):
-    contact_rate_multiplier: float
     mobility: Mobility
 
 
 class VictorianClusterStratification(BaseModel):
     intercluster_mixing: float
+    contact_rate_multiplier_north_metro: float
+    contact_rate_multiplier_west_metro: float
+    contact_rate_multiplier_south_metro: float
+    contact_rate_multiplier_south_east_metro: float
+    contact_rate_multiplier_loddon_mallee: float
+    contact_rate_multiplier_barwon_south_west: float
+    contact_rate_multiplier_hume: float
+    contact_rate_multiplier_gippsland: float
+    contact_rate_multiplier_grampians: float
     metro: MetroClusterStratification
     regional: RegionalClusterStratification
 

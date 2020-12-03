@@ -18,7 +18,7 @@ def test_apply_odds_ratio_to_prop(n_props_to_test=100, n_ratios_to_test=100, err
             # Use the function
             result = apply_odds_ratio_to_proportion(i_prop, i_ratio)
 
-            # Make sure the result is a proportion
+            # Make sure the result is still a proportion
             assert 0. <= result <= 1.
 
             # Make sure it goes in the same direction as the odds ratio request

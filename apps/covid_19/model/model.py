@@ -591,7 +591,8 @@ def build_model(params: dict) -> StratifiedModel:
     if params.victorian_clusters:
         vic = params.victorian_clusters
         # Determine how to split up population by cluster
-        # There is -0.5% to +4% difference per age group between sum of region population in 2018 and total VIC population in 2020
+        # There is -0.5% to +4% difference per age group between sum of region population in 2018 and
+        # total VIC population in 2020
         cluster_strata = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS]
         region_pops = {
             region: sum(
@@ -644,6 +645,12 @@ def build_model(params: dict) -> StratifiedModel:
         intercluster_mixing_matrix = \
             create_assortative_matrix(vic.intercluster_mixing, MOB_REGIONS)
 
+        # Replace regional Victoria maximum effect calibration parameters with the metro values for consistency
+        for param_to_copy in ["face_coverings", "behaviour"]:
+            vic.regional.mobility.microdistancing[param_to_copy].parameters.upper_asymptote = \
+                vic.metro.mobility.microdistancing[param_to_copy].parameters.upper_asymptote
+
+        # Get new mixing matrix
         get_mixing_matrix = build_victorian_mixing_matrix_func(
             static_mixing_matrix,
             vic.metro.mobility,

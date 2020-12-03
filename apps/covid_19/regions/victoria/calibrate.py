@@ -90,17 +90,7 @@ def get_priors(target_outputs: list):
             "distri_params": [0.1, 0.4],
         },
         {
-            "param_name": "victorian_clusters.regional.mobility.microdistancing.behaviour.upper_asymptote",
-            "distribution": "uniform",
-            "distri_params": [0.1, 0.4],
-        },
-        {
             "param_name": "victorian_clusters.metro.mobility.microdistancing.face_coverings.upper_asymptote",
-            "distribution": "uniform",
-            "distri_params": [0.0, 0.4],
-        },
-        {
-            "param_name": "victorian_clusters.regional.mobility.microdistancing.face_coverings.upper_asymptote",
             "distribution": "uniform",
             "distri_params": [0.0, 0.4],
         },

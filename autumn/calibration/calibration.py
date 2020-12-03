@@ -219,6 +219,15 @@ class Calibration:
                     if target["loglikelihood_distri"] == "normal":
                         if key + "_dispersion_param" in self.param_list:
                             normal_sd = params[self.param_list.index(key + "_dispersion_param")]
+                        elif self.model_parameters['default']['victorian_clusters']:
+                            output_name = target['output_key'].split("_for_cluster_")[0]
+                            cluster = target['output_key'].split("_for_cluster_")[1]
+                            if cluster.replace("_", "-") in constants.Region.VICTORIA_METRO:
+                                cluster_group = 'metro'
+                            else:
+                                cluster_group = 'rural'
+                            param_name = f"{output_name}_{cluster_group}_dispersion_param"
+                            normal_sd = params[self.param_list.index(param_name)]
                         else:
                             normal_sd = target["sd"]
                         squared_distance = (data - model_output) ** 2

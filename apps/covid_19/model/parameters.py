@@ -272,3 +272,9 @@ class Parameters:
     infection_deaths_for_cluster_south_east_metro_dispersion_param: float
     infection_deaths_for_cluster_south_metro_dispersion_param: float
     infection_deaths_for_cluster_west_metro_dispersion_param: float
+
+    notifications_metro_dispersion_param: float
+    notifications_rural_dispersion_param: float
+    hospital_admissions_metro_dispersion_param: float
+    icu_admissions_metro_dispersion_param: float
+    infection_deaths_metro_dispersion_param: float

@@ -96,7 +96,49 @@ def get_priors(target_outputs: list):
         },
     ]
 
-    priors = add_dispersion_param_prior_for_gaussian(priors, target_outputs)
+    priors = add_vic_dispersion_param_priors(priors, target_outputs)
+    return priors
+
+
+def add_vic_dispersion_param_priors(priors, target_outputs):
+    target_groups = {
+        "notifications": ["metro", "rural"],
+        "hospital_admissions": ["metro"],
+        "icu_admissions": ["metro"],
+        "infection_deaths": ["metro"],
+    }
+    clusters_by_group = {
+        "metro": Region.VICTORIA_METRO,
+        "rural": Region.VICTORIA_RURAL,
+    }
+
+    for output, cluster_types in target_groups.items():
+        for cluster_type in cluster_types:
+            # read max value among all relevant targets
+            max_val = -1e6
+            for t in target_outputs:
+                region_name = t['output_key'].split("_for_cluster_")[1]
+                if t['output_key'].startswith(output) and region_name.replace("_", "-") in clusters_by_group[cluster_type]:
+                    assert t["loglikelihood_distri"] == "normal", \
+                        "The dispersion parameter is designed for a Gaussian likelihood"
+                    max_val = max(
+                        max_val,
+                        max(t["values"])
+                    )
+
+            # sd_ that would make the 95% gaussian CI cover half of the max value (4*sd = 95% width)
+            sd_ = 0.25 * max_val / 4.0
+            lower_sd = sd_ / 2.0
+            upper_sd = 2.0 * sd_
+
+            priors.append(
+                {
+                    "param_name": f"{output}_{cluster_type}_dispersion_param",
+                    "distribution": "uniform",
+                    "distri_params": [lower_sd, upper_sd],
+                },
+            )
+
     return priors
 
 

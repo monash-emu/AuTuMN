@@ -665,3 +665,5 @@ apps/tuberculosis/regions/marshall_islands/outputs/figures/elimination/eliminati
 apps/tuberculosis/regions/marshall_islands/outputs/figures/calibration/model_fits.pdf
 apps/tuberculosis/regions/marshall_islands/outputs/figures/diabetes/diabetes.pdf
 apps/tuberculosis/regions/marshall_islands/outputs/figures/elimination/elimination_logscale.pdf
+apps/tuberculosis/regions/marshall_islands/outputs/parameter_posteriors/posterior_centiles.csv
+apps/tuberculosis/regions/marshall_islands/outputs/figures/posterior_table/posterior_ranges.csv

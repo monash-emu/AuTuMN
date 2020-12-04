@@ -1,0 +1,4 @@
+# SCENARIO DESCRIPTION: Double birth rate arbitrarily
+---
+parent: apps/tuberculosis_strains/regions/philippines/params/default.yml
+crude_birth_rate: 0.07

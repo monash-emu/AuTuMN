@@ -11,9 +11,13 @@ from apps.covid_19 import calibration as base
 
 CLUSTERS = [Region.to_filename(r) for r in Region.VICTORIA_SUBREGIONS]
 
+# Just calibrate to June, July, August and September for now (but run for some lead in time at the start)
+TARGETS_START_TIME = 153  # 1st June
+TARGETS_END_TIME = 274  # 30th September
+
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
-    target_outputs = get_target_outputs(183, 244)
+    target_outputs = get_target_outputs(TARGETS_START_TIME, TARGETS_END_TIME)
     priors = get_priors(target_outputs)
     base.run_calibration_chain(
         max_seconds,

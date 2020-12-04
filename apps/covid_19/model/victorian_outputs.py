@@ -8,7 +8,7 @@ from summer.model.derived_outputs import (
 )
 from apps.covid_19.constants import Compartment as CompartmentType, ClinicalStratum
 from autumn.constants import Region
-from apps.covid_19.model.outputs import NOTIFICATION_STRATUM
+from apps.covid_19.model.outputs import NOTIFICATION_STRATUM, calculate_cum_deaths
 from apps.covid_19.model.outputs import get_calculate_hospital_occupancy, calculate_icu_occupancy
 
 
@@ -175,6 +175,26 @@ def add_victorian_derived_outputs(
             source_strata={"cluster": cluster},
         )
     model.add_flow_derived_outputs(inf_death_conns)
+
+    # # Track cluster deaths
+    # model.add_function_derived_outputs(
+    #     {"accum_deaths": calculate_cum_deaths}
+    # )
+    # for cluster in CLUSTERS:
+    #     model.add_function_derived_outputs(
+    #         {f"accum_deaths_for_cluster_{cluster}": calculate_cum_cluster_deaths(cluster)}
+    #     )
+
+
+def calculate_cum_cluster_deaths(cluster):
+    def cum_death_func(
+            time_idx: int,
+            model: StratifiedModel,
+            compartment_values: np.ndarray,
+            derived_outputs: Dict[str, np.ndarray],
+    ):
+        return derived_outputs[f"infection_deaths_for_cluster_{cluster}"][: (time_idx + 1)].sum()
+    return cum_death_func
 
 
 def build_cluster_notification_func(cluster: str):

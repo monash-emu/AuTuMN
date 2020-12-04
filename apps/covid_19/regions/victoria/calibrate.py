@@ -211,6 +211,8 @@ def get_target_outputs():
         ]
 
         if cluster.replace("_", "-") in Region.VICTORIA_METRO:
+
+            # Hospital admissions
             output_key = f"hospital_admissions_for_cluster_{cluster}"
             final_date_index = targets[output_key]["times"].index(final_date)
             hospital_admission_times = targets[output_key]["times"][:final_date_index + 1]
@@ -223,6 +225,8 @@ def get_target_outputs():
                     "loglikelihood_distri": "normal",
                 }
             ]
+
+            # ICU admissions
             output_key = f"icu_admissions_for_cluster_{cluster}"
             final_date_index = targets[output_key]["times"].index(final_date)
             icu_admission_times = targets[output_key]["times"][:final_date_index + 1]
@@ -235,17 +239,18 @@ def get_target_outputs():
                     "loglikelihood_distri": "normal",
                 }
             ]
-            output_key = f"infection_deaths_for_cluster_{cluster}"
-            final_date_index = targets[output_key]["times"].index(final_date)
-            death_times = targets[output_key]["times"][:final_date_index + 1]
-            death_values = targets[output_key]["values"][:final_date_index + 1]
-            target_outputs += [
-                {
-                    "output_key": targets[output_key]["output_key"],
-                    "years": death_times,
-                    "values": death_values,
-                    "loglikelihood_distri": "normal",
-                }
-            ]
+
+            # # Cumulative deaths
+            # output_key = f"accum_deaths_for_cluster_{cluster}"
+            # cumulative_death_time = [targets["infection_deaths"]["times"][-1]]
+            # cumulative_death_value = [sum(targets["infection_deaths"]["values"])]
+            # target_outputs += [
+            #     {
+            #         "output_key": output_key,
+            #         "years": cumulative_death_time,
+            #         "values": cumulative_death_value,
+            #         "loglikelihood_distri": "normal",
+            #     }
+            # ]
 
     return target_outputs

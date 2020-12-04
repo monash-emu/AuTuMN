@@ -934,6 +934,7 @@ def build_model(params: dict) -> StratifiedModel:
     function_outputs = {}
     function_outputs["progression"] = calculate_progression
     function_outputs["prevalence_infectious"] = calculate_prevalence_infectious
+    function_outputs["percentage_latent"] = calculate_ltbi_percentage
     function_outputs["disease_deaths"] = calculate_disease_deaths
     function_outputs["incidence"] = calculate_disease_incidence
 
@@ -984,6 +985,26 @@ def calculate_prevalence_infectious(
     pop_size = sum(compartment_values)
 
     return prevalence_infectious / pop_size * 1.e5
+
+
+def calculate_ltbi_percentage(
+        time_idx,
+        model,
+        compartment_values,
+        derived_outputs,
+):
+    """
+    Calculate the total number of infectious people at each time-step.
+    """
+    prevalence_latent = 0
+    for i, compartment in enumerate(model.compartment_names):
+        is_latent = compartment.has_name_in_list([Compartment.EARLY_LATENT, Compartment.LATE_LATENT])
+        if is_latent:
+            prevalence_latent += compartment_values[i]
+    pop_size = sum(compartment_values)
+
+    return prevalence_latent / pop_size * 100
+
 
 
 def calculate_disease_incidence(

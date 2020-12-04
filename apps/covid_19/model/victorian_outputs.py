@@ -176,14 +176,14 @@ def add_victorian_derived_outputs(
         )
     model.add_flow_derived_outputs(inf_death_conns)
 
-    # # Track cluster deaths
-    # model.add_function_derived_outputs(
-    #     {"accum_deaths": calculate_cum_deaths}
-    # )
-    # for cluster in CLUSTERS:
-    #     model.add_function_derived_outputs(
-    #         {f"accum_deaths_for_cluster_{cluster}": calculate_cum_cluster_deaths(cluster)}
-    #     )
+    # Track cluster deaths
+    model.add_function_derived_outputs(
+        {"accum_deaths": calculate_cum_deaths}
+    )
+    for cluster in CLUSTERS:
+        model.add_function_derived_outputs(
+            {f"accum_deaths_for_cluster_{cluster}": calculate_cum_cluster_deaths(cluster)}
+        )
 
 
 def calculate_cum_cluster_deaths(cluster):

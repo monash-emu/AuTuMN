@@ -150,7 +150,7 @@ def add_vic_dispersion_param_priors(priors, target_outputs):
         "notifications": ["metro", "rural"],
         "hospital_admissions": ["metro"],
         "icu_admissions": ["metro"],
-        "infection_deaths": ["metro"],
+        "accum_deaths": ["metro"],
     }
     clusters_by_group = {
         "metro": Region.VICTORIA_METRO,
@@ -240,17 +240,17 @@ def get_target_outputs():
                 }
             ]
 
-            # # Cumulative deaths
-            # output_key = f"accum_deaths_for_cluster_{cluster}"
-            # cumulative_death_time = [targets["infection_deaths"]["times"][-1]]
-            # cumulative_death_value = [sum(targets["infection_deaths"]["values"])]
-            # target_outputs += [
-            #     {
-            #         "output_key": output_key,
-            #         "years": cumulative_death_time,
-            #         "values": cumulative_death_value,
-            #         "loglikelihood_distri": "normal",
-            #     }
-            # ]
+            # Cumulative deaths
+            output_key = f"accum_deaths_for_cluster_{cluster}"
+            cumulative_death_time = targets["infection_deaths"]["times"][-1]
+            cumulative_death_value = sum(targets["infection_deaths"]["values"])
+            target_outputs += [
+                {
+                    "output_key": output_key,
+                    "years": [cumulative_death_time],
+                    "values": [cumulative_death_value],
+                    "loglikelihood_distri": "normal",
+                }
+            ]
 
     return target_outputs

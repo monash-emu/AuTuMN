@@ -935,6 +935,8 @@ def build_model(params: dict) -> StratifiedModel:
     function_outputs["progression"] = calculate_progression
     function_outputs["prevalence_infectious"] = calculate_prevalence_infectious
     function_outputs["disease_deaths"] = calculate_disease_deaths
+    function_outputs["incidence"] = calculate_disease_incidence
+
 
     tb_model.add_function_derived_outputs(function_outputs)
     return tb_model
@@ -950,6 +952,7 @@ def calculate_progression(
         derived_outputs["progression_early"][time_idx]
         + derived_outputs["progression_late"][time_idx]
     )
+
 
 def calculate_disease_deaths(
     time_idx,
@@ -978,5 +981,17 @@ def calculate_prevalence_infectious(
         is_infectious = compartment.has_name_in_list([Compartment.INFECTIOUS, Compartment.DETECTED, Compartment.ON_TREATMENT])
         if is_infectious:
             prevalence_infectious += compartment_values[i]
+    pop_size = sum(compartment_values)
 
-    return prevalence_infectious
+    return prevalence_infectious / pop_size * 1.e5
+
+
+def calculate_disease_incidence(
+        time_idx,
+        model,
+        compartment_values,
+        derived_outputs,
+):
+    abs_incidence = derived_outputs["progression_early"][time_idx] + derived_outputs["progression_late"][time_idx]
+    pop_size = sum(compartment_values)
+    return abs_incidence / pop_size * 1.e5

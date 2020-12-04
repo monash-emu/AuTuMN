@@ -123,22 +123,16 @@ def get_priors(target_outputs: list):
             "distribution": "uniform",
             "distri_params": [0.01, 0.03],
         },
-        {
-            "param_name": "victorian_clusters.regional.contact_rate_multiplier",
-            "distribution": "trunc_normal",
-            "distri_params": [1., 0.3],
-            "trunc_range": [0.5, np.inf],
-        },
-        {
-            "param_name": "victorian_clusters.metro.mobility.microdistancing.behaviour.upper_asymptote",
-            "distribution": "uniform",
-            "distri_params": [0.1, 0.4],
-        },
-        {
-            "param_name": "victorian_clusters.metro.mobility.microdistancing.face_coverings.upper_asymptote",
-            "distribution": "uniform",
-            "distri_params": [0.0, 0.4],
-        },
+        # {
+        #     "param_name": "victorian_clusters.metro.mobility.microdistancing.behaviour.upper_asymptote",
+        #     "distribution": "uniform",
+        #     "distri_params": [0.1, 0.4],
+        # },
+        # {
+        #     "param_name": "victorian_clusters.metro.mobility.microdistancing.face_coverings.upper_asymptote",
+        #     "distribution": "uniform",
+        #     "distri_params": [0.0, 0.4],
+        # },
     ]
 
     priors = add_vic_dispersion_param_priors(priors, target_outputs)

@@ -1,4 +1,4 @@
-# SCENARIO DESCRIPTION: MHS reduces contact by 50% & 25% increase in mobility
+# SCENARIO DESCRIPTION: MHS reduces contact by 50% & 75% increase in mobility
 parent: apps/covid_19/regions/calabarzon/params/default.yml
 
 time:
@@ -20,10 +20,10 @@ mobility:
       times:
         - 2020-12-10
       values:
-        - ["close_gap_to_1", 0.25]
+        - ["close_gap_to_1", 0.75]
     other_locations:
       append: true
       times:
         - 2020-12-10
       values:
-        - ["close_gap_to_1", 0.25]
+        - ["close_gap_to_1", 0.75]

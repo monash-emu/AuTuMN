@@ -1,5 +1,6 @@
-# SCENARIO DESCRIPTION: MHS reduces contact by 50% & 25% increase in mobility
-parent: apps/covid_19/regions/calabarzon/params/default.yml
+# SCENARIO DESCRIPTION: MHS reduces contact by 0% & 25% increase in mobility
+---
+parent: apps/covid_19/regions/philippines/params/default.yml
 
 time:
   start: 344
@@ -12,8 +13,8 @@ mobility:
           - 344
           - 358
         values:
-          - 1. 
-          - 0.5
+          - 1.
+          - 0.
   mixing:
     work:
       append: true

@@ -2,15 +2,15 @@
 parent: apps/covid_19/regions/central_visayas/params/default.yml
 
 time:
-  start: 335
+  start: 344
 
 mobility:
   microdistancing:
     behaviour:
       parameters:
         times:
-          - 335
-          - 348
+          - 344
+          - 358
         values:
           - 1.
           - 0.0

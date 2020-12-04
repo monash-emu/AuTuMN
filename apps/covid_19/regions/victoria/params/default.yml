@@ -13,7 +13,7 @@ time:
   # Genomic graph of clusters that Allen uses: https://www.afr.com/policy/health-and-education/
   # all-victoria-s-second-wave-covid-cases-came-from-overseas-travellers-20200817-p55me2
   start: 146  # 25th May
-  end: 303
+  end: 275
 
 country:
   iso3: AUS

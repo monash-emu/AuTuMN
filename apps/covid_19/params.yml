@@ -219,13 +219,13 @@ icu_admissions_for_cluster_south_east_metro_dispersion_param: 1.
 icu_admissions_for_cluster_south_metro_dispersion_param: 1.
 icu_admissions_for_cluster_west_metro_dispersion_param: 1.
 
-infection_deaths_for_cluster_north_metro_dispersion_param: 1.
-infection_deaths_for_cluster_south_east_metro_dispersion_param: 1.
-infection_deaths_for_cluster_south_metro_dispersion_param: 1.
-infection_deaths_for_cluster_west_metro_dispersion_param: 1.
+accum_deaths_for_cluster_north_metro_dispersion_param: 1.
+accum_deaths_for_cluster_south_east_metro_dispersion_param: 1.
+accum_deaths_for_cluster_south_metro_dispersion_param: 1.
+accum_deaths_for_cluster_west_metro_dispersion_param: 1.
 
 notifications_metro_dispersion_param: 1.
 notifications_rural_dispersion_param: 1.
 hospital_admissions_metro_dispersion_param: 1.
 icu_admissions_metro_dispersion_param: 1.
-infection_deaths_metro_dispersion_param: 1.
+accum_deaths_metro_dispersion_param: 1.

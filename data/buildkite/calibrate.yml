@@ -52,6 +52,8 @@ steps:
       value: tuberculosis:philippines
     - label: Marshall Islands (TB)
       value: tuberculosis:marshall-islands
+    - label: Philippines (TB strains)
+      value: tuberculosis_strains:philippines
     required: true
     select: Model Region
   - default: '7'

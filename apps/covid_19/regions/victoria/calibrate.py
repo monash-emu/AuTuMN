@@ -85,7 +85,7 @@ def get_priors(target_outputs: list):
         {
             "param_name": "seasonal_force",
             "distribution": "uniform",
-            "distri_params": [0.0, 0.25],
+            "distri_params": [0.0, 0.5],
         },
         {
             "param_name": "clinical_stratification.props.symptomatic.multiplier",
@@ -130,7 +130,7 @@ def get_priors(target_outputs: list):
         {
             "param_name": "victorian_clusters.metro.mobility.microdistancing.behaviour.parameters.upper_asymptote",
             "distribution": "uniform",
-            "distri_params": [0.1, 0.4],
+            "distri_params": [0.1, 0.5],
         },
         {
             "param_name": "victorian_clusters.metro.mobility.microdistancing.face_coverings.parameters.upper_asymptote",

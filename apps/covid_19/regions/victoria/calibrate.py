@@ -100,9 +100,8 @@ def get_priors(target_outputs: list):
         },
         {
             "param_name": "infection_fatality.multiplier",
-            "distribution": "trunc_normal",
-            "distri_params": [1.5, 0.5],
-            "trunc_range": [0.33, 3.0],
+            "distribution": "uniform",
+            "distri_params": [0.5, 4.],
         },
         {
             "param_name": "testing_to_detection.assumed_cdr_parameter",
@@ -111,9 +110,8 @@ def get_priors(target_outputs: list):
         },
         {
             "param_name": "clinical_stratification.props.hospital.multiplier",
-            "distribution": "trunc_normal",
-            "distri_params": [1.0, 1.0],
-            "trunc_range": [0.6, np.inf],
+            "distribution": "uniform",
+            "distri_params": [0.5, 3.0],
         },
         {
             "param_name": "sojourn.compartment_periods.icu_early",

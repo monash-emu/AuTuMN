@@ -26,6 +26,6 @@ calculated_outputs:
     "percentage_latent",
     "population_size",
     "notifications",
-    "mortality",
+#    "mortality",  # Was causing a bug, so have removed to get calibration running
     "incidence",
   ]

@@ -8,6 +8,7 @@ from autumn.inputs.social_mixing.queries import get_mixing_matrix_specific_agegr
 
 
 from apps.tuberculosis_strains.model import preprocess
+from apps.tuberculosis_strains.model import outputs
 from summer.model.derived_outputs import (
     InfectionDeathFlowOutput,
     TransitionFlowOutput,
@@ -894,9 +895,9 @@ def build_model(params: dict) -> StratifiedModel:
 
     # # Register derived output functions, which are calculations based on the model's compartment values or flows.
     # # These are calculated after the model is run.
-    # outputs.get_all_derived_output_functions(
-    #     params["calculated_outputs"], params["outputs_stratification"], tb_model
-    # )
+    outputs.get_all_derived_output_functions(
+        params["calculated_outputs"], params["outputs_stratification"], tb_model
+    )
 
     flow_outputs = {}
     flow_outputs["progression_early"] = TransitionFlowOutput(

@@ -38,6 +38,11 @@ def get_priors(target_outputs: list):
             "distri_params": [0.015, 0.07],
         },
         {
+            "param_name": "infectious_seed",
+            "distribution": "uniform",
+            "distri_params": [20., 50.],
+        },
+        {
             "param_name": "victorian_clusters.contact_rate_multiplier_north_metro",
             "distribution": "uniform",
             "distri_params": [0.3, 3.],

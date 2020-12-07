@@ -438,3 +438,10 @@ def get_targets_and_priors_for_opti(country, likelihood_type="normal"):
     target_outputs = remove_early_points_to_prevent_crash(target_outputs, par_priors)
 
     return target_outputs, par_priors
+
+
+def truncate_targets_from_time(target, time):
+    start_index = next(x[0] for x in enumerate(target["times"]) if x[1] > time)
+    target["times"] = target["times"][start_index:]
+    target["values"] = target["values"][start_index:]
+    return target

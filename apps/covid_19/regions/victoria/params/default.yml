@@ -13,7 +13,7 @@ contact_rate: 0.022
 time:
   # Genomic graph of clusters that Allen uses: https://www.afr.com/policy/health-and-education/
   # all-victoria-s-second-wave-covid-cases-came-from-overseas-travellers-20200817-p55me2
-  start: 135  # 25th May
+  start: 135  # No longer the 25th May, but earlier - to help with model calibration
   end: 275  # 1st October
 
 country:

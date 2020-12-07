@@ -383,7 +383,7 @@ class Calibration:
 
                 #  95% of the sampled values within [mu - 2*sd, mu + 2*sd], i.e. interval of witdth 4*sd
                 relative_prior_width = (
-                    0.25  # fraction of prior_width in which 95% of samples should fall
+                    0.1  # fraction of prior_width in which 95% of samples should fall
                 )
                 self.priors[i]["jumping_sd"] = relative_prior_width * prior_width / 4.0
 

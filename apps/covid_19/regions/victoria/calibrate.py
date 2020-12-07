@@ -142,7 +142,9 @@ def get_priors(target_outputs: list):
         },
     ]
 
-    priors = add_vic_dispersion_param_priors(priors, target_outputs)
+    priors = add_dispersion_param_prior_for_gaussian(priors, target_outputs)
+
+    # priors = add_vic_dispersion_param_priors(priors, target_outputs)
     return priors
 
 
@@ -204,61 +206,72 @@ def get_target_outputs(start_date, end_date):
     targets = load_targets("covid_19", Region.VICTORIA)
     target_outputs = []
 
-    # Calibrate all Victoria sub-regions to notifications
-    for cluster in CLUSTERS:
-        output_key = f"notifications_for_cluster_{cluster}"
+    notification_times, notification_values = \
+        get_specific_output(targets["notifications"], start_date, end_date)
+    target_outputs += [
+        {
+            "output_key": "notifications",
+            "years": notification_times,
+            "values": notification_values,
+            "loglikelihood_distri": "normal",
+        }
+    ]
 
-        # Currently set to end date anyway, but can reduce the amount of data calibrated to
-        notification_times, notification_values = \
-            get_specific_output(targets[output_key], start_date, end_date)
-        target_outputs += [
-            {
-                "output_key": output_key,
-                "years": notification_times,
-                "values": notification_values,
-                "loglikelihood_distri": "normal",
-            }
-        ]
-
-        if cluster.replace("_", "-") in Region.VICTORIA_METRO:
-
-            # Hospital admissions
-            output_key = f"hospital_admissions_for_cluster_{cluster}"
-            hospital_admission_times, hospital_admission_values = \
-                get_specific_output(targets[output_key], start_date, end_date)
-            target_outputs += [
-                {
-                    "output_key": output_key,
-                    "years": hospital_admission_times,
-                    "values": hospital_admission_values,
-                    "loglikelihood_distri": "normal",
-                }
-            ]
-
-            # ICU admissions
-            output_key = f"icu_admissions_for_cluster_{cluster}"
-            icu_admission_times, icu_admission_values = \
-                get_specific_output(targets[output_key], start_date, end_date)
-            target_outputs += [
-                {
-                    "output_key": output_key,
-                    "years": icu_admission_times,
-                    "values": icu_admission_values,
-                    "loglikelihood_distri": "normal",
-                }
-            ]
-
-            # Cumulative deaths
-            output_key = f"accum_deaths_for_cluster_{cluster}"
-            cumulative_death_time = targets["infection_deaths"]["times"][-1]
-            cumulative_death_value = sum(targets["infection_deaths"]["values"])
-            target_outputs += [
-                {
-                    "output_key": output_key,
-                    "years": [cumulative_death_time],
-                    "values": [cumulative_death_value],
-                    "loglikelihood_distri": "normal",
-                }
-            ]
+    # # Calibrate all Victoria sub-regions to notifications
+    # for cluster in CLUSTERS:
+    #     output_key = f"notifications_for_cluster_{cluster}"
+    #
+    #     # Currently set to end date anyway, but can reduce the amount of data calibrated to
+    #     notification_times, notification_values = \
+    #         get_specific_output(targets[output_key], start_date, end_date)
+    #     target_outputs += [
+    #         {
+    #             "output_key": output_key,
+    #             "years": notification_times,
+    #             "values": notification_values,
+    #             "loglikelihood_distri": "normal",
+    #         }
+    #     ]
+    #
+    #     if cluster.replace("_", "-") in Region.VICTORIA_METRO:
+    #
+    #         # Hospital admissions
+    #         output_key = f"hospital_admissions_for_cluster_{cluster}"
+    #         hospital_admission_times, hospital_admission_values = \
+    #             get_specific_output(targets[output_key], start_date, end_date)
+    #         target_outputs += [
+    #             {
+    #                 "output_key": output_key,
+    #                 "years": hospital_admission_times,
+    #                 "values": hospital_admission_values,
+    #                 "loglikelihood_distri": "normal",
+    #             }
+    #         ]
+    #
+    #         # ICU admissions
+    #         output_key = f"icu_admissions_for_cluster_{cluster}"
+    #         icu_admission_times, icu_admission_values = \
+    #             get_specific_output(targets[output_key], start_date, end_date)
+    #         target_outputs += [
+    #             {
+    #                 "output_key": output_key,
+    #                 "years": icu_admission_times,
+    #                 "values": icu_admission_values,
+    #                 "loglikelihood_distri": "normal",
+    #             }
+    #         ]
+    #
+    #         # Cumulative deaths
+    #         output_key = f"accum_deaths_for_cluster_{cluster}"
+    #         cumulative_death_time = targets["infection_deaths"]["times"][-1]
+    #         cumulative_death_value = sum(targets["infection_deaths"]["values"])
+    #         target_outputs += [
+    #             {
+    #                 "output_key": output_key,
+    #                 "years": [cumulative_death_time],
+    #                 "values": [cumulative_death_value],
+    #                 "loglikelihood_distri": "normal",
+    #             }
+    #         ]
 
     return target_outputs

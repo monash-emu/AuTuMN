@@ -90,31 +90,39 @@ def calculate_new_icu_admissions_covid(
     return icu_admissions
 
 
-def get_calculate_hospital_occupancy(icu_early_period, hospital_early_period):
+def get_calculate_hospital_occupancy(
+    model: StratifiedModel, icu_early_period, hospital_early_period
+):
+    period_icu_patients_in_hospital = max(
+        icu_early_period - hospital_early_period,
+        0.0,
+    )
+    proportion_icu_patients_in_hospital = period_icu_patients_in_hospital / icu_early_period
+    late_active_idxs = []
+    early_active_idxs = []
+    for i, comp in enumerate(model.compartment_names):
+        is_late_active = comp.has_name(CompartmentType.LATE_ACTIVE)
+        is_early_active = comp.has_name(CompartmentType.EARLY_ACTIVE)
+        is_icu = comp.has_stratum("clinical", ClinicalStratum.ICU)
+        is_hospital_non_icu = comp.has_stratum("clinical", ClinicalStratum.HOSPITAL_NON_ICU)
+        if is_late_active and (is_icu or is_hospital_non_icu):
+            # Both ICU and hospital late active compartments
+            late_active_idxs.append(i)
+        elif is_early_active and is_icu:
+            # A proportion of the early active ICU compartment
+            early_active_idxs.append(i)
+
     def calculate_hospital_occupancy(
         time_idx: int,
-        model: StratifiedModel,
+        _: StratifiedModel,
         compartment_values: np.ndarray,
         derived_outputs: Dict[str, np.ndarray],
     ):
         hospital_prev = 0.0
-        period_icu_patients_in_hospital = max(
-            icu_early_period - hospital_early_period,
-            0.0,
+        hospital_prev += np.sum(compartment_values[late_active_idxs])
+        hospital_prev += (
+            np.sum(compartment_values[early_active_idxs]) * proportion_icu_patients_in_hospital
         )
-        proportion_icu_patients_in_hospital = period_icu_patients_in_hospital / icu_early_period
-        for i, comp in enumerate(model.compartment_names):
-            is_late_active = comp.has_name(CompartmentType.LATE_ACTIVE)
-            is_early_active = comp.has_name(CompartmentType.EARLY_ACTIVE)
-            is_icu = comp.has_stratum("clinical", ClinicalStratum.ICU)
-            is_hospital_non_icu = comp.has_stratum("clinical", ClinicalStratum.HOSPITAL_NON_ICU)
-            if is_late_active and (is_icu or is_hospital_non_icu):
-                # Both ICU and hospital late active compartments
-                hospital_prev += compartment_values[i]
-            elif is_early_active and is_icu:
-                # A proportion of the early active ICU compartment
-                hospital_prev += compartment_values[i] * proportion_icu_patients_in_hospital
-
         return hospital_prev
 
     return calculate_hospital_occupancy

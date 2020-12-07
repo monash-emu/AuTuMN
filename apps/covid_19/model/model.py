@@ -648,13 +648,15 @@ def build_model(params: dict) -> StratifiedModel:
         """
 
         # Get the inter-cluster mixing matrix
-        intercluster_mixing_matrix = \
-            create_assortative_matrix(vic.intercluster_mixing, MOB_REGIONS)
+        intercluster_mixing_matrix = create_assortative_matrix(vic.intercluster_mixing, MOB_REGIONS)
 
         # Replace regional Victoria maximum effect calibration parameters with the metro values for consistency
         for param_to_copy in ["face_coverings", "behaviour"]:
-            vic.regional.mobility.microdistancing[param_to_copy].parameters.upper_asymptote = \
-                vic.metro.mobility.microdistancing[param_to_copy].parameters.upper_asymptote
+            vic.regional.mobility.microdistancing[
+                param_to_copy
+            ].parameters.upper_asymptote = vic.metro.mobility.microdistancing[
+                param_to_copy
+            ].parameters.upper_asymptote
 
         # Get new mixing matrix
         get_mixing_matrix = build_victorian_mixing_matrix_func(
@@ -698,7 +700,7 @@ def build_model(params: dict) -> StratifiedModel:
         icu_early_period = compartment_periods["icu_early"]
         hospital_early_period = compartment_periods["hospital_early"]
         calculate_hospital_occupancy = outputs.get_calculate_hospital_occupancy(
-            icu_early_period, hospital_early_period
+            model, icu_early_period, hospital_early_period
         )
 
         func_outputs = {
@@ -739,7 +741,7 @@ def build_model(params: dict) -> StratifiedModel:
         add_victorian_derived_outputs(
             model,
             icu_early_period=compartment_periods["icu_early"],
-            hospital_early_period=compartment_periods["hospital_early"]
+            hospital_early_period=compartment_periods["hospital_early"],
         )
 
     return model
@@ -793,12 +795,12 @@ def get_absolute_strata_proportions(
     """
     # Apply multiplier to proportions
     hospital_props = [
-        apply_odds_ratio_to_proportion(i_prop, hospital_props_multiplier) for
-        i_prop in hospital_props
+        apply_odds_ratio_to_proportion(i_prop, hospital_props_multiplier)
+        for i_prop in hospital_props
     ]
     symptomatic_props = [
-        apply_odds_ratio_to_proportion(i_prop, symptomatic_props_multiplier) for
-        i_prop in symptomatic_props
+        apply_odds_ratio_to_proportion(i_prop, symptomatic_props_multiplier)
+        for i_prop in symptomatic_props
     ]
 
     # Find the absolute progression proportions.
@@ -908,8 +910,8 @@ def get_infection_fatality_proportions(
     ie: dead / total infected
     """
     if_props_10_year = [
-        apply_odds_ratio_to_proportion(i_prop, infection_rate_multiplier) for
-        i_prop in infection_fatality_props_10_year
+        apply_odds_ratio_to_proportion(i_prop, infection_rate_multiplier)
+        for i_prop in infection_fatality_props_10_year
     ]
     # Calculate the proportion of 80+ years old among the 75+ population
     elderly_populations = inputs.get_population_by_agegroup(

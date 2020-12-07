@@ -3,9 +3,9 @@ from copy import deepcopy
 from summer.model import StratifiedModel
 from autumn.constants import Compartment, BirthApproach, Flow
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
-from autumn.inputs import get_population_by_agegroup
+from autumn.inputs import get_population_by_agegroup, get_death_rates_by_agegroup
 from autumn.inputs.social_mixing.queries import get_mixing_matrix_specific_agegroups
-
+from autumn.curve import scale_up_function
 
 from apps.tuberculosis_strains.model import preprocess
 from apps.tuberculosis_strains.model import outputs
@@ -106,6 +106,20 @@ def build_model(params: dict) -> StratifiedModel:
             "15": params["late_activation_rate_stratified"]["age"]["age_15"],
         },
     }
+
+    # age-specific all-causes mortality rate
+    death_rates_by_age, death_rate_years = get_death_rates_by_agegroup(
+        params["age_breakpoints"], params["iso3"]
+    )
+    age_flow_adjustments["universal_death_rate"] = {}
+    for age_group in params["age_breakpoints"]:
+        name = "universal_death_rate_" + str(age_group)
+        age_flow_adjustments["universal_death_rate"][f"{age_group}W"] = name
+        tb_model.time_variants[name] = scale_up_function(
+            death_rate_years, death_rates_by_age[int(age_group)], smoothness=0.2, method=5
+        )
+        tb_model.parameters[name] = name
+
     tb_model.stratify(
         stratification_name=age_stratification_name,
         strata_request=params["age_breakpoints"],

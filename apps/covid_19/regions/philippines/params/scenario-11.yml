@@ -1,4 +1,4 @@
-# SCENARIO DESCRIPTION: MHS reduces contact by 0% & 25% increase in mobility
+# SCENARIO DESCRIPTION: 25% increase in mobility
 ---
 parent: apps/covid_19/regions/philippines/params/default.yml
 
@@ -6,15 +6,6 @@ time:
   start: 344
 
 mobility:
-  microdistancing:
-    behaviour:
-      parameters:
-        times:
-          - 344
-          - 358
-        values:
-          - 1.
-          - 0.
   mixing:
     work:
       append: true

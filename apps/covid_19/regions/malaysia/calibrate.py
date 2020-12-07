@@ -30,7 +30,7 @@ PAR_PRIORS += [
     {
         "param_name": "contact_rate",
         "distribution": "uniform",
-        "distri_params": [0.015, 0.04]
+        "distri_params": [0.01, 0.03]
     },
     {
         "param_name": "seasonal_force",
@@ -45,19 +45,9 @@ PAR_PRIORS += [
     },
     # Microdistancing
     {
-        "param_name": "mobility.microdistancing.behaviour.parameters.max_effect",
+        "param_name": "mobility.microdistancing.behaviour.parameters.upper_asymptote",
         "distribution": "uniform",
-        "distri_params": [0.3, 0.9],
-    },
-    {
-        "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.sigma",
-        "distribution": "uniform",
-        "distri_params": [0.0, 0.5],
-    },
-    {
-        "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.c",
-        "distribution": "uniform",
-        "distri_params": [153.0, 275.0],  # 1st June to 1st October
+        "distri_params": [0.05, 0.25],
     },
     # Health system-related
     {

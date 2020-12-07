@@ -1,15 +1,15 @@
-# SCENARIO DESCRIPTION: Scenario 2, 50% of current workforce work from home
+# SCENARIO DESCRIPTION: Scenario 2, All current offsite workers return onsite
 ---
 parent: apps/covid_19/regions/malaysia/params/default.yml
 
 time:
-  start: 307.
+  start: 342.
 
 mobility:
   mixing:
     work:
       append: true
       times:
-        - 2020-10-26
+        - 2020-12-01
       values:
-        - ["scale_prev", 0.5]
+        - 1.

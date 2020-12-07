@@ -1,15 +1,15 @@
-# SCENARIO DESCRIPTION: Scenario 3, 90% of current workforce works from home
+# SCENARIO DESCRIPTION: Scenario 3, Other locations return
 ---
 parent: apps/covid_19/regions/malaysia/params/default.yml
 
 time:
-  start: 307.
+  start: 342.
 
 mobility:
   mixing:
-    work:
+    other_locations:
       append: true
       times:
-        - 2020-10-26
+        - 2020-12-01
       values:
-        - ["scale_prev", 0.1]
+        - 1.

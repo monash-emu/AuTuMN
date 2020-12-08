@@ -13,7 +13,7 @@ CLUSTERS = [Region.to_filename(r) for r in Region.VICTORIA_SUBREGIONS]
 
 # Just calibrate to June, July, August and September for now (but run for some lead in time at the start)
 TARGETS_START_TIME = 153  # 1st June
-TARGETS_END_TIME = 274  # 30th September
+TARGETS_END_TIME = 305  # 31st October
 
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):

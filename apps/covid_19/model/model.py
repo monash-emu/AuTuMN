@@ -614,15 +614,6 @@ def build_model(params: dict) -> StratifiedModel:
             contact_rate_multipliers.update(
                 {cluster_name: eval(f"vic.contact_rate_multiplier_{cluster_name}")}
             )
-        # Old code, which we might re-instate later - would need different parameters assigned
-        # for i_cluster in Region.VICTORIA_METRO:
-        #     contact_rate_multipliers.update(
-        #         {i_cluster.replace("-", "_"): vic.metro.contact_rate_multiplier}
-        #     )
-        # for i_cluster in Region.VICTORIA_RURAL:
-        #     contact_rate_multipliers.update(
-        #         {i_cluster.replace("-", "_"): vic.regional.contact_rate_multiplier}
-        #     )
 
         # Add in flow adjustments per-region so we can calibrate the contact rate for each region.
         cluster_flow_adjustments = {}
@@ -641,6 +632,14 @@ def build_model(params: dict) -> StratifiedModel:
             flow_adjustments=cluster_flow_adjustments,
             mixing_matrix=cluster_mixing_matrix,
         )
+
+        regional_clusters = [region.replace("-", "_") for region in Region.VICTORIA_RURAL]
+
+        # A bit of a hack - to get rid of all the infectious populations from the regional clusters
+        for i_comp, comp in enumerate(model.compartment_names):
+            if any([comp.has_stratum("cluster", cluster) for cluster in regional_clusters]) and \
+                    not comp.has_name(Compartment.SUSCEPTIBLE):
+                model.compartment_values[i_comp] = 0.
 
         """
         Hack in a custom (144x144) mixing matrix where each region is adjusted individually

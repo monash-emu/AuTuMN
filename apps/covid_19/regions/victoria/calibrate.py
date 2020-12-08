@@ -35,12 +35,12 @@ def get_priors(target_outputs: list):
         {
             "param_name": "contact_rate",
             "distribution": "uniform",
-            "distri_params": [0.015, 0.07],
+            "distri_params": [0.015, 0.06],
         },
         {
             "param_name": "infectious_seed",
             "distribution": "uniform",
-            "distri_params": [20., 50.],
+            "distri_params": [20., 60.],
         },
         {
             "param_name": "victorian_clusters.contact_rate_multiplier_regional",
@@ -50,55 +50,55 @@ def get_priors(target_outputs: list):
         {
             "param_name": "victorian_clusters.contact_rate_multiplier_north_metro",
             "distribution": "trunc_normal",
-            "distri_params": [1.0, 0.2],
+            "distri_params": [1.0, 0.4],
             "trunc_range": [0.5, np.inf],
         },
         {
             "param_name": "victorian_clusters.contact_rate_multiplier_west_metro",
             "distribution": "trunc_normal",
-            "distri_params": [1.0, 0.2],
+            "distri_params": [1.0, 0.4],
             "trunc_range": [0.5, np.inf],
         },
         {
             "param_name": "victorian_clusters.contact_rate_multiplier_south_metro",
             "distribution": "trunc_normal",
-            "distri_params": [1.0, 0.2],
+            "distri_params": [1.0, 0.4],
             "trunc_range": [0.5, np.inf],
         },
         {
             "param_name": "victorian_clusters.contact_rate_multiplier_south_east_metro",
             "distribution": "trunc_normal",
-            "distri_params": [1.0, 0.2],
+            "distri_params": [1.0, 0.4],
             "trunc_range": [0.5, np.inf],
         },
         {
             "param_name": "victorian_clusters.contact_rate_multiplier_loddon_mallee",
             "distribution": "trunc_normal",
-            "distri_params": [1.0, 0.2],
+            "distri_params": [1.0, 0.4],
             "trunc_range": [0.5, np.inf],
         },
         {
             "param_name": "victorian_clusters.contact_rate_multiplier_barwon_south_west",
             "distribution": "trunc_normal",
-            "distri_params": [1.0, 0.2],
+            "distri_params": [1.0, 0.4],
             "trunc_range": [0.5, np.inf],
         },
         {
             "param_name": "victorian_clusters.contact_rate_multiplier_hume",
             "distribution": "trunc_normal",
-            "distri_params": [1.0, 0.2],
+            "distri_params": [1.0, 0.4],
             "trunc_range": [0.5, np.inf],
         },
         {
             "param_name": "victorian_clusters.contact_rate_multiplier_gippsland",
             "distribution": "trunc_normal",
-            "distri_params": [1.0, 0.2],
+            "distri_params": [1.0, 0.4],
             "trunc_range": [0.5, np.inf],
         },
         {
             "param_name": "victorian_clusters.contact_rate_multiplier_grampians",
             "distribution": "trunc_normal",
-            "distri_params": [1.0, 0.2],
+            "distri_params": [1.0, 0.4],
             "trunc_range": [0.5, np.inf],
         },
         {
@@ -160,6 +160,68 @@ def get_priors(target_outputs: list):
     return priors
 
 
+def get_target_outputs(start_date, end_date):
+    targets = load_targets("covid_19", Region.VICTORIA)
+
+    # Total Victorian notifications for each time point
+    accum_notification_times, accum_notification_values = \
+        get_truncated_output(targets["notifications"], start_date, end_date)
+    target_outputs = [
+        {
+            "output_key": "notifications",
+            "years": accum_notification_times,
+            "values": accum_notification_values,
+            "loglikelihood_distri": "normal",
+        }
+    ]
+
+    accum_death_times, accum_death_values = \
+        get_truncated_output(targets["infection_deaths"], start_date, end_date)
+    target_outputs += [
+        {
+            "output_key": "infection_deaths",
+            "years": accum_death_times,
+            "values": accum_death_values,
+            "loglikelihood_distri": "normal",
+        }
+    ]
+
+    # Accumulated notifications at the end date for all clusters
+    for cluster in CLUSTERS:
+        targets.update(base.accumulate_target(targets, "notifications", category=f"_for_cluster_{cluster}"))
+        output_key = f"accum_notifications_for_cluster_{cluster}"
+        target_outputs += [
+            {
+                "output_key": output_key,
+                "years": [targets[output_key]["times"][-1]],
+                "values": [targets[output_key]["values"][-1]],
+                "loglikelihood_distri": "normal",
+            }
+        ]
+
+        # # Accumulated other indicators at the end date for Metro clusters only
+        # if cluster.replace("_", "-") in Region.VICTORIA_METRO:
+        #     for indicator in ("hospital_admissions", "icu_admissions"):
+        #         targets.update(base.accumulate_target(targets, indicator, category=f"_for_cluster_{cluster}"))
+        #
+        #         # To deal with "infection_deaths" needing to be changed to just "deaths" for the output
+        #         indicator_name = "deaths" if "deaths" in indicator else indicator
+        #         indicator_key = f"accum_{indicator_name}_for_cluster_{cluster}"
+        #
+        #         output_key = f"accum_{indicator}_for_cluster_{cluster}"
+        #         target_outputs += [
+        #             {
+        #                 "output_key": indicator_key,
+        #                 "years": [targets[output_key]["times"][-1]],
+        #                 "values": [targets[output_key]["values"][-1]],
+        #                 "loglikelihood_distri": "normal",
+        #             }
+        #         ]
+
+    return target_outputs
+
+
+
 # def add_vic_dispersion_param_priors(priors, target_outputs):
 #     target_groups = {
 #         "notifications": ["metro", "rural"],
@@ -200,52 +262,3 @@ def get_priors(target_outputs: list):
 #             )
 #
 #     return priors
-
-
-def get_target_outputs(start_date, end_date):
-    targets = load_targets("covid_19", Region.VICTORIA)
-
-    # Total Victorian notifications for each time point
-    accum_notification_times, accum_notification_values = get_truncated_output(targets["notifications"], start_date, end_date)
-    target_outputs = [
-        {
-            "output_key": "notifications",
-            "years": accum_notification_times,
-            "values": accum_notification_values,
-            "loglikelihood_distri": "normal",
-        }
-    ]
-
-    # Accumulated notifications at the end date for all clusters
-    for cluster in CLUSTERS:
-        targets.update(base.accumulate_target(targets, "notifications", category=f"_for_cluster_{cluster}"))
-        output_key = f"accum_notifications_for_cluster_{cluster}"
-        target_outputs += [
-            {
-                "output_key": output_key,
-                "years": [targets[output_key]["times"][-1]],
-                "values": [targets[output_key]["values"][-1]],
-                "loglikelihood_distri": "normal",
-            }
-        ]
-
-        # Accumulated other indicators at the end date for Metro clusters only
-        if cluster.replace("_", "-") in Region.VICTORIA_METRO:
-            for indicator in ("hospital_admissions", "icu_admissions", "infection_deaths"):
-                targets.update(base.accumulate_target(targets, indicator, category=f"_for_cluster_{cluster}"))
-
-                # To deal with "infection_deaths" needing to be changed to just "deaths" for the output
-                indicator_name = "deaths" if "deaths" in indicator else indicator
-                indicator_key = f"accum_{indicator_name}_for_cluster_{cluster}"
-
-                output_key = f"accum_{indicator}_for_cluster_{cluster}"
-                target_outputs += [
-                    {
-                        "output_key": indicator_key,
-                        "years": [targets[output_key]["times"][-1]],
-                        "values": [targets[output_key]["values"][-1]],
-                        "loglikelihood_distri": "normal",
-                    }
-                ]
-
-    return target_outputs

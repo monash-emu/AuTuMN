@@ -217,21 +217,42 @@ def get_target_outputs(start_date, end_date):
         }
     ]
 
+    for cluster in CLUSTERS:
+        targets = base.accumulate_target(targets, "notifications", category=f"_for_cluster_{cluster}")
+        output_key = f"accum_notifications_for_cluster_{cluster}"
+        notification_times, notification_values = \
+            get_specific_output(targets[output_key], start_date, end_date)
+        target_outputs += [
+            {
+                "output_key": output_key,
+                "years": notification_times,
+                "values": notification_values,
+                "loglikelihood_distri": "normal",
+            }
+        ]
+
+        if cluster.replace("_", "-") in Region.VICTORIA_METRO:
+
+            for indicator in ("hospital_admissions", "icu_admissions", "infection_deaths"):
+                indicator_times, indicator_values = \
+                    get_specific_output(targets[output_key], start_date, end_date)
+                targets = base.accumulate_target(targets, indicator, category=f"_for_cluster_{cluster}")
+
+                # To deal with "infection_deaths" needing to be changed to just "deaths" for the output
+                indicator = "deaths" if "deaths" in indicator else indicator
+
+                output_key = f"accum_{indicator}_for_cluster_{cluster}"
+                target_outputs += [
+                    {
+                        "output_key": output_key,
+                        "years": indicator_times,
+                        "values": indicator_values,
+                        "loglikelihood_distri": "normal",
+                    }
+                ]
+
     # # Calibrate all Victoria sub-regions to notifications
     # for cluster in CLUSTERS:
-    #     output_key = f"notifications_for_cluster_{cluster}"
-    #
-    #     # Currently set to end date anyway, but can reduce the amount of data calibrated to
-    #     notification_times, notification_values = \
-    #         get_specific_output(targets[output_key], start_date, end_date)
-    #     target_outputs += [
-    #         {
-    #             "output_key": output_key,
-    #             "years": notification_times,
-    #             "values": notification_values,
-    #             "loglikelihood_distri": "normal",
-    #         }
-    #     ]
     #
     #     if cluster.replace("_", "-") in Region.VICTORIA_METRO:
     #

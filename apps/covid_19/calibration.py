@@ -1,5 +1,6 @@
 import logging
 import numpy as np
+from itertools import accumulate
 
 from autumn.calibration import Calibration
 from autumn.tool_kit.params import load_params
@@ -165,6 +166,23 @@ Application-specific methods
 
 Philippines
 """
+
+
+def accumulate_target(targets, target_name, category=""):
+    """
+    Create a cumulative version of a target from the raw daily (annual) rates.
+    """
+
+    # Pull the times straight out
+    targets[f"accum_{target_name}{category}"] = {
+        "times": targets[f"{target_name}{category}"]["times"]
+    }
+
+    # Accumulate the values
+    targets[f"accum_{target_name}{category}"]["values"] = \
+        list(accumulate(targets[f"{target_name}{category}"]["values"]))
+
+    return targets
 
 
 def add_standard_philippines_params(params, region):

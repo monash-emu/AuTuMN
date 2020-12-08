@@ -181,21 +181,26 @@ def add_victorian_derived_outputs(
     # Track cluster deaths
     model.add_function_derived_outputs({"accum_deaths": calculate_cum_deaths})
     for cluster in CLUSTERS:
-        model.add_function_derived_outputs(
-            {f"accum_deaths_for_cluster_{cluster}": calculate_cum_cluster_deaths(cluster)}
-        )
+        for indicator in ("notifications", "hospital_admissions", "icu_admissions", "infection_deaths"):
+
+            # FIXME: Have left this this way because there are so many points where we are referring to deaths this way
+            indicator_string = "deaths" if indicator == "infection_deaths" else indicator
+            model.add_function_derived_outputs(
+                {f"accum_{indicator_string}_for_cluster_{cluster}":
+                     calculate_cum_cluster_indicator("infection_deaths", cluster)}
+            )
 
 
-def calculate_cum_cluster_deaths(cluster):
-    def cum_death_func(
+def calculate_cum_cluster_indicator(indicator, cluster):
+    def cumulative_func(
         time_idx: int,
         model: StratifiedModel,
         compartment_values: np.ndarray,
         derived_outputs: Dict[str, np.ndarray],
     ):
-        return derived_outputs[f"infection_deaths_for_cluster_{cluster}"][: (time_idx + 1)].sum()
+        return derived_outputs[f"{indicator}_for_cluster_{cluster}"][: (time_idx + 1)].sum()
 
-    return cum_death_func
+    return cumulative_func
 
 
 def build_cluster_notification_func(cluster: str):

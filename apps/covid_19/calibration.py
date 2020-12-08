@@ -186,19 +186,14 @@ def accumulate_target(existing_targets, target_name, category=""):
     """
 
     # Pull the times straight out
-    new_target = {}
-    new_target.update(
+    new_target = \
         {f"accum_{target_name}{category}":
              {"times": existing_targets[f"{target_name}{category}"]["times"]}
          }
-    )
 
     # Accumulate the values
-    new_target.update(
-        {f"accum_{target_name}{category}":
-             {"values": list(accumulate(existing_targets[f"{target_name}{category}"]["values"]))}
-         }
-    )
+    new_target[f"accum_{target_name}{category}"]["values"] = \
+        list(accumulate(existing_targets[f"{target_name}{category}"]["values"]))
 
     return new_target
 

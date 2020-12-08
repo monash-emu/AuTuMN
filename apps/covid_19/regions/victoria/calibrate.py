@@ -192,12 +192,12 @@ def get_target_outputs(start_date, end_date):
     targets = load_targets("covid_19", Region.VICTORIA)
 
     # Total Victorian notifications for each time point
-    notification_times, notification_values = get_truncated_output(targets["notifications"], start_date, end_date)
+    accum_notification_times, accum_notification_values = get_truncated_output(targets["notifications"], start_date, end_date)
     target_outputs = [
         {
             "output_key": "notifications",
-            "years": notification_times,
-            "values": notification_values,
+            "years": accum_notification_times,
+            "values": accum_notification_values,
             "loglikelihood_distri": "normal",
         }
     ]
@@ -206,13 +206,11 @@ def get_target_outputs(start_date, end_date):
     for cluster in CLUSTERS:
         targets.update(base.accumulate_target(targets, "notifications", category=f"_for_cluster_{cluster}"))
         output_key = f"accum_notifications_for_cluster_{cluster}"
-        notification_times, notification_values = \
-            get_truncated_output(targets[output_key], start_date, end_date)
         target_outputs += [
             {
                 "output_key": output_key,
-                "years": notification_times,
-                "values": notification_values,
+                "years": [targets[output_key]["times"][-1]],
+                "values": [targets[output_key]["values"][-1]],
                 "loglikelihood_distri": "normal",
             }
         ]
@@ -224,15 +222,14 @@ def get_target_outputs(start_date, end_date):
 
                 # To deal with "infection_deaths" needing to be changed to just "deaths" for the output
                 indicator_name = "deaths" if "deaths" in indicator else indicator
+                indicator_key = f"accum_{indicator_name}_for_cluster_{cluster}"
 
-                output_key = f"accum_{indicator_name}_for_cluster_{cluster}"
-                indicator_times, indicator_values = \
-                    get_truncated_output(targets[output_key], start_date, end_date)
+                output_key = f"accum_{indicator}_for_cluster_{cluster}"
                 target_outputs += [
                     {
-                        "output_key": output_key,
-                        "years": indicator_times,
-                        "values": indicator_values,
+                        "output_key": indicator_key,
+                        "years": [targets[output_key]["times"][-1]],
+                        "values": [targets[output_key]["values"][-1]],
                         "loglikelihood_distri": "normal",
                     }
                 ]

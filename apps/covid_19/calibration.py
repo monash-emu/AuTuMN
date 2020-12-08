@@ -224,7 +224,7 @@ def add_standard_philippines_targets(targets):
             "output_key": "notifications",
             "years": notifications["times"][:-14],
             "values": notifications["values"][:-14],
-            "loglikelihood_distri": "normal",
+            "loglikelihood_distri": "negative_binomial",
         },
         {
             "output_key": "icu_occupancy",

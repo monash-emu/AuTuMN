@@ -2,7 +2,7 @@ import numpy as np
 
 from apps.covid_19.model.victorian_outputs import CLUSTERS
 from apps.covid_19.calibration import (
-    provide_default_calibration_params,
+    provide_default_calibration_params, get_truncated_output
 )
 from autumn.constants import Region
 from autumn.tool_kit.params import load_targets
@@ -143,72 +143,57 @@ def get_priors(target_outputs: list):
     ]
 
     priors = add_dispersion_param_prior_for_gaussian(priors, target_outputs)
-
-    # priors = add_vic_dispersion_param_priors(priors, target_outputs)
     return priors
 
 
-def add_vic_dispersion_param_priors(priors, target_outputs):
-    target_groups = {
-        "notifications": ["metro", "rural"],
-        "hospital_admissions": ["metro"],
-        "icu_admissions": ["metro"],
-        "accum_deaths": ["metro"],
-    }
-    clusters_by_group = {
-        "metro": Region.VICTORIA_METRO,
-        "rural": Region.VICTORIA_RURAL,
-    }
-
-    for output, cluster_types in target_groups.items():
-        for cluster_type in cluster_types:
-            # read max value among all relevant targets
-            max_val = -1e6
-            for t in target_outputs:
-                region_name = t['output_key'].split("_for_cluster_")[1]
-                if t['output_key'].startswith(output) and region_name.replace("_", "-") in clusters_by_group[cluster_type]:
-                    assert t["loglikelihood_distri"] == "normal", \
-                        "The dispersion parameter is designed for a Gaussian likelihood"
-                    max_val = max(
-                        max_val,
-                        max(t["values"])
-                    )
-
-            # sd_ that would make the 95% gaussian CI cover half of the max value (4*sd = 95% width)
-            sd_ = 0.25 * max_val / 4.0
-            lower_sd = sd_ / 2.0
-            upper_sd = 2.0 * sd_
-
-            priors.append(
-                {
-                    "param_name": f"{output}_{cluster_type}_dispersion_param",
-                    "distribution": "uniform",
-                    "distri_params": [lower_sd, upper_sd],
-                },
-            )
-
-    return priors
-
-
-def get_specific_output(target_group, start, end):
-    """
-    Extract a specific output out of the relevant target
-    """
-
-    start_date_index = target_group["times"].index(start)
-    final_date_index = target_group["times"].index(end)
-    times = target_group["times"][start_date_index: final_date_index + 1]
-    values = target_group["values"][start_date_index: final_date_index + 1]
-    return times, values
+# def add_vic_dispersion_param_priors(priors, target_outputs):
+#     target_groups = {
+#         "notifications": ["metro", "rural"],
+#         "hospital_admissions": ["metro"],
+#         "icu_admissions": ["metro"],
+#         "accum_deaths": ["metro"],
+#     }
+#     clusters_by_group = {
+#         "metro": Region.VICTORIA_METRO,
+#         "rural": Region.VICTORIA_RURAL,
+#     }
+#
+#     for output, cluster_types in target_groups.items():
+#         for cluster_type in cluster_types:
+#             # read max value among all relevant targets
+#             max_val = -1e6
+#             for t in target_outputs:
+#                 region_name = t['output_key'].split("_for_cluster_")[1]
+#                 if t['output_key'].startswith(output) and region_name.replace("_", "-") in clusters_by_group[cluster_type]:
+#                     assert t["loglikelihood_distri"] == "normal", \
+#                         "The dispersion parameter is designed for a Gaussian likelihood"
+#                     max_val = max(
+#                         max_val,
+#                         max(t["values"])
+#                     )
+#
+#             # sd_ that would make the 95% gaussian CI cover half of the max value (4*sd = 95% width)
+#             sd_ = 0.25 * max_val / 4.0
+#             lower_sd = sd_ / 2.0
+#             upper_sd = 2.0 * sd_
+#
+#             priors.append(
+#                 {
+#                     "param_name": f"{output}_{cluster_type}_dispersion_param",
+#                     "distribution": "uniform",
+#                     "distri_params": [lower_sd, upper_sd],
+#                 },
+#             )
+#
+#     return priors
 
 
 def get_target_outputs(start_date, end_date):
     targets = load_targets("covid_19", Region.VICTORIA)
-    target_outputs = []
 
-    notification_times, notification_values = \
-        get_specific_output(targets["notifications"], start_date, end_date)
-    target_outputs += [
+    # Total Victorian notifications for each time point
+    notification_times, notification_values = get_truncated_output(targets["notifications"], start_date, end_date)
+    target_outputs = [
         {
             "output_key": "notifications",
             "years": notification_times,
@@ -217,61 +202,39 @@ def get_target_outputs(start_date, end_date):
         }
     ]
 
-    # # Calibrate all Victoria sub-regions to notifications
-    # for cluster in CLUSTERS:
-    #     output_key = f"notifications_for_cluster_{cluster}"
-    #
-    #     # Currently set to end date anyway, but can reduce the amount of data calibrated to
-    #     notification_times, notification_values = \
-    #         get_specific_output(targets[output_key], start_date, end_date)
-    #     target_outputs += [
-    #         {
-    #             "output_key": output_key,
-    #             "years": notification_times,
-    #             "values": notification_values,
-    #             "loglikelihood_distri": "normal",
-    #         }
-    #     ]
-    #
-    #     if cluster.replace("_", "-") in Region.VICTORIA_METRO:
-    #
-    #         # Hospital admissions
-    #         output_key = f"hospital_admissions_for_cluster_{cluster}"
-    #         hospital_admission_times, hospital_admission_values = \
-    #             get_specific_output(targets[output_key], start_date, end_date)
-    #         target_outputs += [
-    #             {
-    #                 "output_key": output_key,
-    #                 "years": hospital_admission_times,
-    #                 "values": hospital_admission_values,
-    #                 "loglikelihood_distri": "normal",
-    #             }
-    #         ]
-    #
-    #         # ICU admissions
-    #         output_key = f"icu_admissions_for_cluster_{cluster}"
-    #         icu_admission_times, icu_admission_values = \
-    #             get_specific_output(targets[output_key], start_date, end_date)
-    #         target_outputs += [
-    #             {
-    #                 "output_key": output_key,
-    #                 "years": icu_admission_times,
-    #                 "values": icu_admission_values,
-    #                 "loglikelihood_distri": "normal",
-    #             }
-    #         ]
-    #
-    #         # Cumulative deaths
-    #         output_key = f"accum_deaths_for_cluster_{cluster}"
-    #         cumulative_death_time = targets["infection_deaths"]["times"][-1]
-    #         cumulative_death_value = sum(targets["infection_deaths"]["values"])
-    #         target_outputs += [
-    #             {
-    #                 "output_key": output_key,
-    #                 "years": [cumulative_death_time],
-    #                 "values": [cumulative_death_value],
-    #                 "loglikelihood_distri": "normal",
-    #             }
-    #         ]
+    # Accumulated notifications at the end date for all clusters
+    for cluster in CLUSTERS:
+        targets.update(base.accumulate_target(targets, "notifications", category=f"_for_cluster_{cluster}"))
+        output_key = f"accum_notifications_for_cluster_{cluster}"
+        notification_times, notification_values = \
+            get_truncated_output(targets[output_key], start_date, end_date)
+        target_outputs += [
+            {
+                "output_key": output_key,
+                "years": notification_times,
+                "values": notification_values,
+                "loglikelihood_distri": "normal",
+            }
+        ]
+
+        # Accumulated other indicators at the end date for Metro clusters only
+        if cluster.replace("_", "-") in Region.VICTORIA_METRO:
+            for indicator in ("hospital_admissions", "icu_admissions", "infection_deaths"):
+                targets.update(base.accumulate_target(targets, indicator, category=f"_for_cluster_{cluster}"))
+
+                # To deal with "infection_deaths" needing to be changed to just "deaths" for the output
+                indicator_name = "deaths" if "deaths" in indicator else indicator
+
+                output_key = f"accum_{indicator_name}_for_cluster_{cluster}"
+                indicator_times, indicator_values = \
+                    get_truncated_output(targets[output_key], start_date, end_date)
+                target_outputs += [
+                    {
+                        "output_key": output_key,
+                        "years": indicator_times,
+                        "values": indicator_values,
+                        "loglikelihood_distri": "normal",
+                    }
+                ]
 
     return target_outputs

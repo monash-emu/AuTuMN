@@ -1,5 +1,6 @@
 import logging
 import numpy as np
+from itertools import accumulate
 
 from autumn.calibration import Calibration
 from autumn.tool_kit.params import load_params
@@ -160,11 +161,46 @@ def remove_early_points_to_prevent_crash(target_outputs, priors):
     return target_outputs
 
 
+def get_truncated_output(target_group, start, end):
+    """
+    Extract a specific output out of the relevant target
+    """
+
+    start_date_index = target_group["times"].index(start)
+    final_date_index = target_group["times"].index(end)
+    times = target_group["times"][start_date_index: final_date_index + 1]
+    values = target_group["values"][start_date_index: final_date_index + 1]
+    return times, values
+
+
 """
 Application-specific methods
 
 Philippines
 """
+
+
+def accumulate_target(existing_targets, target_name, category=""):
+    """
+    Create a cumulative version of a target from the raw daily (annual) rates.
+    """
+
+    # Pull the times straight out
+    new_target = {}
+    new_target.update(
+        {f"accum_{target_name}{category}":
+             {"times": existing_targets[f"{target_name}{category}"]["times"]}
+         }
+    )
+
+    # Accumulate the values
+    new_target.update(
+        {f"accum_{target_name}{category}":
+             {"values": list(accumulate(existing_targets[f"{target_name}{category}"]["values"]))}
+         }
+    )
+
+    return new_target
 
 
 def add_standard_philippines_params(params, region):

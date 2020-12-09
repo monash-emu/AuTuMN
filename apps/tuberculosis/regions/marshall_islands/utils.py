@@ -2,9 +2,10 @@ import yaml
 
 
 INTERVENTION_RATE = {
-    'time_variant_acf': 2.74,
-    'time_variant_ltbi_screening': 2.74
+    'time_variant_acf': 3.22,
+    'time_variant_ltbi_screening': 3.22
 }
+
 
 def define_all_scenarios(periodic_frequencies=[2, 5]):
     scenario_details = {}
@@ -95,13 +96,13 @@ def get_periodic_sc_params(frequency, type='ACF'):
         {
             'stratum_filter': {"location": "ebeye"},
             'time_variant_screening_rate': {
-                2017: 0., 2017.01: 1.18, 2017.5: 1.18, 2017.51: 0.
+                2017: 0., 2017.01: 3.79, 2017.5: 3.79, 2017.51: 0.
             }
         },
         {
             'stratum_filter': {"location": "majuro"},
             'time_variant_screening_rate': {
-                2018: 0., 2018.01: 2.74, 2018.5: 2.74, 2018.51: 0.
+                2018: 0., 2018.01: 3.22, 2018.5: 3.22, 2018.51: 0.
             }
         }
     ]
@@ -109,7 +110,7 @@ def get_periodic_sc_params(frequency, type='ACF'):
         {
             'stratum_filter': {"location": "majuro"},
             'time_variant_screening_rate': {
-                2018: 0., 2018.01: 2.74, 2018.5: 2.74, 2018.51: 0.
+                2018: 0., 2018.01: 3.22, 2018.5: 3.22, 2018.51: 0.
             }
         }
     ]
@@ -141,7 +142,7 @@ def get_periodic_sc_params(frequency, type='ACF'):
 def make_periodic_time_series(rate, frequency):
     time_series = {}
     year = 2021
-    while year < 2050:  # 2018: 0., 2018.01: 2.74, 2018.5: 2.74, 2018.51: 0.
+    while year < 2050:
         time_series[year] = 0.
         time_series[year + .01] = rate
         time_series[year + .5] = rate

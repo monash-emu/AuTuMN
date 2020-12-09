@@ -12,6 +12,7 @@ from summer.model import create_sloping_step_function
 from math import log, exp
 import numpy as np
 import itertools
+import copy
 
 
 def stratify_by_age(model, params, compartments):
@@ -169,8 +170,10 @@ def apply_user_defined_stratification(
     for int_type in ["acf", "ltbi_screening"]:
         if int_details[int_type]["implement_switch"]:
             int_adjustments = {}
+            exclude_age = {}
             for intervention in model.parameters["time_variant_" + int_type]:
                 if stratification_name in intervention["stratum_filter"]:
+                    stratum = intervention["stratum_filter"][stratification_name]
                     param_name = (
                         int_details[int_type]["parameter_name"]
                         + "X"
@@ -178,7 +181,6 @@ def apply_user_defined_stratification(
                         + "_"
                         + stratum
                     )
-                    stratum = intervention["stratum_filter"][stratification_name]
                     model.time_variants[param_name] = make_intervention_adjustment_func(
                         intervention["time_variant_screening_rate"],
                         int_details[int_type]["sensitivity"],
@@ -186,6 +188,8 @@ def apply_user_defined_stratification(
                     )
                     model.parameters[param_name] = param_name
                     int_adjustments[stratum] = param_name
+                    if "exclude_age" in intervention:
+                        exclude_age[stratum] = intervention["exclude_age"]
             if int_adjustments:
                 for stratum in stratification_details["strata"]:
                     if stratum not in int_adjustments:
@@ -194,7 +198,15 @@ def apply_user_defined_stratification(
                 int_details[int_type]["parameter_name"], model.stratifications
             )
             for stratified_param_name in stratified_param_names:
-                flow_adjustments[stratified_param_name] = int_adjustments
+                # update int_adjustments to account for potential age-specific restrictions
+                updated_int_adjustments = copy.deepcopy(int_adjustments)
+                if "Xage_" in stratified_param_name:
+                    age_group = stratified_param_name.split("Xage_")[1].split("X")[0]
+                    for stratum in updated_int_adjustments.keys():
+                        if stratum in exclude_age:
+                            if int(age_group) in exclude_age[stratum]:
+                                updated_int_adjustments[stratum] = 0.
+                flow_adjustments[stratified_param_name] = updated_int_adjustments
 
     # apply stratification
     model.stratify(

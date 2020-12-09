@@ -124,6 +124,7 @@ time_variant_acf:
       2017.01: 1.18
       2017.5: 1.18
       2017.51: 0.
+    exclude_age: [0, 5]
   - stratum_filter: { "location": "majuro" }
     time_variant_screening_rate:
       2018: 0.

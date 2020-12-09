@@ -83,7 +83,7 @@ PRIORS = [
     {
         "param_name": "rr_infection_recovered",
         "distribution": "uniform",
-        "distri_params": [0.5, 2.0],
+        "distri_params": [0.21, 1.0],
     },
     {
         "param_name": "pt_efficacy",

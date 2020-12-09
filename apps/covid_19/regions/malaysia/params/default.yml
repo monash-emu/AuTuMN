@@ -41,8 +41,8 @@ mobility:
         - 2020-07-23
         - 2020-10-13  # Schools partially close again
         - 2020-10-14
-        - 2020-11-08
-        - 2020-11-09  # Schools fully close again
+        - 2020-11-08  # Schools fully close again
+        - 2020-11-09
       values:
         - 1.
         - 0.

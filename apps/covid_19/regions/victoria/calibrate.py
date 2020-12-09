@@ -155,37 +155,37 @@ def get_target_outputs(start_date, end_date):
     targets = load_targets("covid_19", Region.VICTORIA)
 
     # Total Victorian notifications for each time point
-    accum_notification_times, accum_notification_values = \
+    notification_times, notification_values = \
         get_truncated_output(targets["notifications"], start_date, end_date)
     target_outputs = [
         {
             "output_key": "notifications",
-            "years": accum_notification_times,
-            "values": accum_notification_values,
+            "years": notification_times,
+            "values": notification_values,
             "loglikelihood_distri": "normal",
         }
     ]
 
-    accum_death_times, accum_death_values = \
+    death_times, death_values = \
         get_truncated_output(targets["infection_deaths"], start_date, end_date)
     target_outputs += [
         {
             "output_key": "infection_deaths",
-            "years": accum_death_times,
-            "values": accum_death_values,
+            "years": death_times,
+            "values": death_values,
             "loglikelihood_distri": "normal",
         }
     ]
 
     # Accumulated notifications at the end date for all clusters
     for cluster in CLUSTERS:
-        targets.update(base.accumulate_target(targets, "notifications", category=f"_for_cluster_{cluster}"))
-        output_key = f"accum_notifications_for_cluster_{cluster}"
+        output_key = f"notifications_for_cluster_{cluster}"
+        max_notifications_idx = targets[output_key]["values"].index(max(targets[output_key]["values"]))
         target_outputs += [
             {
                 "output_key": output_key,
-                "years": [targets[output_key]["times"][-1]],
-                "values": [targets[output_key]["values"][-1]],
+                "years": [targets[output_key]["times"][max_notifications_idx]],
+                "values": [targets[output_key]["values"][max_notifications_idx]],
                 "loglikelihood_distri": "normal",
             }
         ]

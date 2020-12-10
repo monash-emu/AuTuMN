@@ -227,6 +227,7 @@ class Calibration:
                         elif self.is_vic_super_model:
                             output_name = target['output_key'].split("_for_cluster_")[0]
                             cluster = target['output_key'].split("_for_cluster_")[1]
+
                             if cluster.replace("_", "-") in constants.Region.VICTORIA_METRO:
                                 cluster_group = 'metro'
                             else:
@@ -247,7 +248,6 @@ class Calibration:
                                 - math.log(math.factorial(round(data[i])))
                             ) * time_weigths[i]
                     elif target["loglikelihood_distri"] == "negative_binomial":
-                        print(key + "_dispersion_param")
                         assert key + "_dispersion_param" in self.param_list
                         # the dispersion parameter varies during the MCMC. We need to retrieve its value
                         n = [

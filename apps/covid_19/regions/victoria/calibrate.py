@@ -148,6 +148,8 @@ def get_priors(target_outputs: list):
     ]
 
     priors = add_dispersion_param_prior_for_gaussian(priors, target_outputs)
+    priors = group_dispersion_params(priors, target_outputs)
+
     return priors
 
 
@@ -212,44 +214,71 @@ def get_target_outputs(start_date, end_date):
     return target_outputs
 
 
+def group_dispersion_params(priors, target_outputs):
+    """
+    Reduce the number of fitted dispersion parameters. It will group all the dispersion parameters associated with a
+    given output (e.g. 'notifications') and a given cluster type ('metro' or 'rural')
+    :param priors: list of prior dictionaries
+    :param target_outputs: list or target dictionaries
+    :return: updated list of prior dictionaries
+    """
+    output_types = [
+        "notifications",
+        "hospital_admissions",
+        "icu_admissions",
+        "accum_deaths",
+        "accum_notifications",
+        "hospital_occupancy",
+        "icu_occupancy",
+    ]
 
-# def add_vic_dispersion_param_priors(priors, target_outputs):
-#     target_groups = {
-#         "notifications": ["metro", "rural"],
-#         "hospital_admissions": ["metro"],
-#         "icu_admissions": ["metro"],
-#         "accum_deaths": ["metro"],
-#     }
-#     clusters_by_group = {
-#         "metro": Region.VICTORIA_METRO,
-#         "rural": Region.VICTORIA_RURAL,
-#     }
-#
-#     for output, cluster_types in target_groups.items():
-#         for cluster_type in cluster_types:
-#             # read max value among all relevant targets
-#             max_val = -1e6
-#             for t in target_outputs:
-#                 region_name = t['output_key'].split("_for_cluster_")[1]
-#                 if t['output_key'].startswith(output) and region_name.replace("_", "-") in clusters_by_group[cluster_type]:
-#                     assert t["loglikelihood_distri"] == "normal", \
-#                         "The dispersion parameter is designed for a Gaussian likelihood"
-#                     max_val = max(
-#                         max_val,
-#                         max(t["values"])
-#                     )
-#
-#             # sd_ that would make the 95% gaussian CI cover half of the max value (4*sd = 95% width)
-#             sd_ = 0.25 * max_val / 4.0
-#             lower_sd = sd_ / 2.0
-#             upper_sd = 2.0 * sd_
-#
-#             priors.append(
-#                 {
-#                     "param_name": f"{output}_{cluster_type}_dispersion_param",
-#                     "distribution": "uniform",
-#                     "distri_params": [lower_sd, upper_sd],
-#                 },
-#             )
-#
-#     return priors
+    # remove all cluster-specific dispersion params that are no longer relevant
+    removed_prior_idx = []
+    for i, prior in enumerate(priors):
+        if prior["param_name"].endswith("_dispersion_param") and "_for_cluster_" in prior["param_name"]:
+            if prior["param_name"].split("_for_cluster_")[0] in output_types:
+                removed_prior_idx.append(i)
+    priors = [priors[j] for j in range(len(priors)) if j not in removed_prior_idx]
+
+    # loop through all potential combinations of output type and cluster type
+    clusters_by_group = {
+        "metro": Region.VICTORIA_METRO,
+        "rural": Region.VICTORIA_RURAL,
+    }
+    all_target_names = [t["output_key"] for t in target_outputs]
+    for output_type in output_types:
+        for cluster_type in ["metro", "rural"]:
+            # test if this type of output for this cluster type is among the targets
+            test_cluster = clusters_by_group[cluster_type][0].replace("-", "_")
+            test_output_name = f"{output_type}_for_cluster_{test_cluster}"
+            if test_output_name in all_target_names:
+
+                # We need to create a new group dispersion parameter
+                # First, we need to find the max value of the relevant targets to set an appropriate prior
+                max_val = -1e6
+                for t in target_outputs:
+                    if "_for_cluster_" in t["output_key"]:
+                        region_name = t['output_key'].split("_for_cluster_")[1]
+                        if t['output_key'].startswith(output_type) and region_name.replace("_", "-") in clusters_by_group[cluster_type]:
+                            assert t["loglikelihood_distri"] == "normal", \
+                                "The dispersion parameter is designed for a Gaussian likelihood"
+                            max_val = max(
+                                max_val,
+                                max(t["values"])
+                            )
+
+                # sd_ that would make the 95% gaussian CI cover half of the max value (4*sd = 95% width)
+                sd_ = 0.25 * max_val / 4.0
+                lower_sd = sd_ / 2.0
+                upper_sd = 2.0 * sd_
+
+                priors.append(
+                    {
+                        "param_name": f"{output_type}_{cluster_type}_dispersion_param",
+                        "distribution": "uniform",
+                        "distri_params": [lower_sd, upper_sd],
+                    },
+                )
+
+    return priors
+

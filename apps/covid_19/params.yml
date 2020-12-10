@@ -227,5 +227,14 @@ accum_deaths_for_cluster_west_metro_dispersion_param: 1.
 notifications_metro_dispersion_param: 1.
 notifications_rural_dispersion_param: 1.
 hospital_admissions_metro_dispersion_param: 1.
+hospital_admissions_rural_dispersion_param: 1.
 icu_admissions_metro_dispersion_param: 1.
+icu_admissions_rural_dispersion_param: 1.
 accum_deaths_metro_dispersion_param: 1.
+accum_deaths_rural_dispersion_param: 1.
+accum_notifications_metro_dispersion_param: 1.
+accum_notifications_rural_dispersion_param: 1.
+hospital_occupancy_metro_dispersion_param: 1.
+hospital_occupancy_rural_dispersion_param: 1.
+icu_occupancy_metro_dispersion_param: 1.
+icu_occupancy_rural_dispersion_param: 1.

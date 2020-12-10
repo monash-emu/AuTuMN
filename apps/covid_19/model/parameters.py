@@ -284,5 +284,14 @@ class Parameters:
     notifications_metro_dispersion_param: float
     notifications_rural_dispersion_param: float
     hospital_admissions_metro_dispersion_param: float
+    hospital_admissions_rural_dispersion_param: float
     icu_admissions_metro_dispersion_param: float
+    icu_admissions_rural_dispersion_param: float
     accum_deaths_metro_dispersion_param: float
+    accum_deaths_rural_dispersion_param: float
+    accum_notifications_metro_dispersion_param: float
+    accum_notifications_rural_dispersion_param: float
+    hospital_occupancy_metro_dispersion_param: float
+    hospital_occupancy_rural_dispersion_param: float
+    icu_occupancy_metro_dispersion_param: float
+    icu_occupancy_rural_dispersion_param: float

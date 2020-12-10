@@ -101,4 +101,14 @@ time_variant_ltbi_screening:
     2018: 0.0
     2018.01: 3.22
     2018.5: 3.22
-    2018.51: 0.0
+    2018.51: 0.02
+- stratum_filter:
+    location: ebeye
+  time_variant_screening_rate:
+    2018.01: 0.0
+    2018.5: 0.02
+- stratum_filter:
+    location: other
+  time_variant_screening_rate:
+    2018.01: 0.0
+    2018.5: 0.02

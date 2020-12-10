@@ -6,6 +6,11 @@ INTERVENTION_RATE = {
     'time_variant_ltbi_screening': 3.22
 }
 
+BASELINE_POST_INTERVENTION_RATE = {
+    'time_variant_acf': 0.,
+    'time_variant_ltbi_screening': 0.02
+}
+
 
 def define_all_scenarios(periodic_frequencies=[2, 5]):
     scenario_details = {}
@@ -110,9 +115,21 @@ def get_periodic_sc_params(frequency, type='ACF'):
         {
             'stratum_filter': {"location": "majuro"},
             'time_variant_screening_rate': {
-                2018: 0., 2018.01: 3.22, 2018.5: 3.22, 2018.51: 0.
+                2018: 0., 2018.01: 3.22, 2018.5: 3.22, 2018.51: BASELINE_POST_INTERVENTION_RATE['time_variant_ltbi_screening']
             }
-        }
+        },
+        {
+            'stratum_filter': {"location": "ebeye"},
+            'time_variant_screening_rate': {
+                2018.01: 0., 2018.5: BASELINE_POST_INTERVENTION_RATE['time_variant_ltbi_screening']
+            }
+        },
+        {
+            'stratum_filter': {"location": "other"},
+            'time_variant_screening_rate': {
+                2018.01: 0., 2018.5: BASELINE_POST_INTERVENTION_RATE['time_variant_ltbi_screening']
+            }
+        },
     ]
 
     interventions_to_add = ["time_variant_acf", "time_variant_ltbi_screening"] if type == 'ACF_LTBI' else\
@@ -125,28 +142,28 @@ def get_periodic_sc_params(frequency, type='ACF'):
                 if local_intervention['stratum_filter']['location'] == location:
                     is_location_implemented = True
                     local_intervention['time_variant_screening_rate'].update(
-                         make_periodic_time_series(INTERVENTION_RATE[intervention], frequency)
+                         make_periodic_time_series(INTERVENTION_RATE[intervention], frequency, BASELINE_POST_INTERVENTION_RATE[intervention])
                     )
                     break
             if not is_location_implemented:
                 params[intervention].append(
                     {
                         'stratum_filter': {"location": location},
-                        'time_variant_screening_rate': make_periodic_time_series(INTERVENTION_RATE[intervention], frequency)
+                        'time_variant_screening_rate': make_periodic_time_series(INTERVENTION_RATE[intervention], frequency, BASELINE_POST_INTERVENTION_RATE[intervention])
                     }
                 )
 
     return params
 
 
-def make_periodic_time_series(rate, frequency):
+def make_periodic_time_series(rate, frequency, baseline_rate=0.):
     time_series = {}
     year = 2021
     while year < 2050:
-        time_series[year] = 0.
+        time_series[year] = baseline_rate
         time_series[year + .01] = rate
         time_series[year + .5] = rate
-        time_series[year + .51] = 0.
+        time_series[year + .51] = baseline_rate
         year += frequency
 
     return time_series

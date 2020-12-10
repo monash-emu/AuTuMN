@@ -113,11 +113,7 @@ def plot_prior(i: int, prior_dict: dict, path: str):
 
     if "distri_mean" in prior_dict:
         pyplot.axvline(
-            x=prior_dict["distri_mean"],
-            ymin=0,
-            ymax=100 * max(y_values),
-            linewidth=1,
-            color="red",
+            x=prior_dict["distri_mean"], ymin=0, ymax=100 * max(y_values), linewidth=1, color="red",
         )
     if "distri_ci" in prior_dict:
         pyplot.axvline(
@@ -239,7 +235,9 @@ def plot_multiple_param_traces(
         if i < len(parameters):
             param_name = parameters[i]
             for i_chain in range(mcmc_params[0]["chain"].iloc[-1]):
-                param_mask = (mcmc_params[0]["chain"] == i_chain) & (mcmc_params[0]["name"] == param_name)
+                param_mask = (mcmc_params[0]["chain"] == i_chain) & (
+                    mcmc_params[0]["name"] == param_name
+                )
                 param_values = mcmc_params[0][param_mask].values
                 axis.plot(param_values[:, 3], alpha=0.8, linewidth=0.7)
             axis.set_title(
@@ -368,6 +366,7 @@ def plot_posterior(
     burn_in: int,
     param_name: str,
     num_bins: int,
+    prior,
 ):
     """
     Plots the posterior distribution of a given parameter in a histogram.
@@ -375,6 +374,14 @@ def plot_posterior(
     vals_df = get_posterior(mcmc_params, mcmc_tables, param_name, burn_in)
     fig, axis, _, _, _, _ = plotter.get_figure()
     vals_df.hist(bins=num_bins, ax=axis)
+
+    x_range = workout_plot_x_range(prior)
+    x_values = np.linspace(x_range[0], x_range[1], num=1000)
+    y_values = [calculate_prior(prior, x, log=False) for x in x_values]
+
+    # Plot the prior
+    axis.plot(x_values, y_values)
+
     plotter.save_figure(
         fig, filename=f"{param_name}-posterior", title_text=f"{param_name} posterior"
     )
@@ -390,6 +397,7 @@ def plot_multiple_posteriors(
     label_font_size: int,
     capitalise_first_letter: bool,
     dpi_request: int,
+    priors: list,
 ):
     """
     Plots the posterior distribution of a given parameter in a histogram.
@@ -406,8 +414,20 @@ def plot_multiple_posteriors(
             param_name = parameters[i]
             vals_df = get_posterior(mcmc_params, mcmc_tables, param_name, burn_in)
 
+            for i, prior in enumerate(priors):
+                if prior["param_name"] == param_name:
+                    prior = priors[i]
+                    break
+            x_range = workout_plot_x_range(prior)
+            x_values = np.linspace(x_range[0], x_range[1], num=1000)
+            y_values = [calculate_prior(prior, x, log=False) for x in x_values]
+
             # Plot histograms
             vals_df.hist(bins=num_bins, ax=axis)
+
+            # Plot the prior
+            axis.plot(x_values, y_values)
+
             axis.set_title(
                 get_plot_text_dict(param_name, capitalise_first_letter=capitalise_first_letter),
                 fontsize=title_font_size,
@@ -433,9 +453,7 @@ def plot_param_vs_loglike(mcmc_tables, mcmc_params, param_name, burn_in, axis):
 
 
 def plot_parallel_coordinates(
-    plotter: Plotter,
-    mcmc_tables: List[pd.DataFrame],
-    mcmc_params: List[pd.DataFrame],
+    plotter: Plotter, mcmc_tables: List[pd.DataFrame], mcmc_params: List[pd.DataFrame],
 ):
     parameters = [
         param
@@ -709,10 +727,7 @@ def plot_all_params_vs_loglike(
 
 
 def sample_outputs_for_calibration_fit(
-    output_name: str,
-    mcmc_tables: List[pd.DataFrame],
-    do_tables: List[pd.DataFrame],
-    burn_in: int,
+    output_name: str, mcmc_tables: List[pd.DataFrame], do_tables: List[pd.DataFrame], burn_in: int,
 ):
     assert len(mcmc_tables) == len(do_tables)
     mcmc_df = db.load.append_tables(mcmc_tables)
@@ -797,11 +812,7 @@ def plot_calibration(axis, output, outputs, targets, is_logscale, ref_date=REF_D
 
 
 def plot_calibration_fit(
-    plotter: Plotter,
-    output_name: str,
-    outputs: list,
-    targets,
-    is_logscale=False,
+    plotter: Plotter, output_name: str, outputs: list, targets, is_logscale=False,
 ):
     fig, axis, _, _, _, _ = plotter.get_figure()
     plot_calibration(axis, output_name, outputs, targets, is_logscale)
@@ -821,11 +832,13 @@ def plot_cdr_curves(plotter: Plotter, times, detected_proportion, end_date, rota
     fig, axis, _, _, _, _ = plotter.get_figure()
     axis = plot_cdr_to_axis(axis, times, detected_proportion)
     axis.set_ylabel("proportion symptomatic cases detected")
-    tidy_cdr_axis(axis, rotation, 1., end_date)
+    tidy_cdr_axis(axis, rotation, 1.0, end_date)
     plotter.save_figure(fig, filename=f"cdr_curves")
 
 
-def plot_multi_cdr_curves(plotter: Plotter, times, detected_proportions, start_date, end_date, rotation, regions):
+def plot_multi_cdr_curves(
+    plotter: Plotter, times, detected_proportions, start_date, end_date, rotation, regions
+):
     """
     Plot multiple sets of CDR curves onto a multi-panel figure
     """
@@ -835,12 +848,8 @@ def plot_multi_cdr_curves(plotter: Plotter, times, detected_proportions, start_d
     for i_region in range(n_rows * n_cols):
         axis = axes[indices[i_region][0], indices[i_region][1]]
         if i_region < len(regions):
-            axis = plot_cdr_to_axis(
-                axis, times, detected_proportions[i_region]
-            )
-            tidy_cdr_axis(
-                axis, rotation, start_date, end_date
-            )
+            axis = plot_cdr_to_axis(axis, times, detected_proportions[i_region])
+            tidy_cdr_axis(axis, rotation, start_date, end_date)
             axis.set_title(get_plot_text_dict(regions[i_region]))
         else:
             axis.axis("off")

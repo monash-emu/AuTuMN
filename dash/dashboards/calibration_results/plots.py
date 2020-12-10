@@ -20,11 +20,7 @@ PLOT_FUNCS = {}
 
 
 def write_mcmc_centiles(
-    mcmc_params,
-    mcmc_tables,
-    burn_in,
-    sig_figs,
-    centiles,
+    mcmc_params, mcmc_tables, burn_in, sig_figs, centiles,
 ):
     """
     Write a table of parameter centiles from the MCMC chain outputs.
@@ -80,6 +76,7 @@ def print_mle_parameters(
     targets: dict,
     app_name: str,
     region: str,
+    priors: list,
 ):
     df = db.load.append_tables(mcmc_tables)
     param_df = db.load.append_tables(mcmc_params)
@@ -99,6 +96,7 @@ def plot_acceptance_ratio(
     targets: dict,
     app_name: str,
     region: str,
+    priors: list,
 ):
     label_font_size = st.sidebar.slider("Label font size", 1, 15, 10)
     burn_in = st.sidebar.slider("Burn in", 0, find_shortest_chain_length(mcmc_tables), 0)
@@ -126,8 +124,16 @@ def get_cdr_constants(default_params):
     agegroup_strata = [
         str(s) for s in range(0, agegroup_params["max_age"], agegroup_params["age_step_size"])
     ]
-    return iso3, testing_year, assumed_tests_parameter, smoothing_period, agegroup_params, time_params, times, \
-           agegroup_strata
+    return (
+        iso3,
+        testing_year,
+        assumed_tests_parameter,
+        smoothing_period,
+        agegroup_params,
+        time_params,
+        times,
+        agegroup_strata,
+    )
 
 
 def plot_cdr_curves(
@@ -138,6 +144,7 @@ def plot_cdr_curves(
     targets: dict,
     app_name: str,
     region: str,
+    priors: list,
 ):
 
     param_name = "testing_to_detection.assumed_cdr_parameter"
@@ -148,9 +155,16 @@ def plot_cdr_curves(
 
     # Extract parameters relevant to this function
     params = load_params(app_name, region_name)
-    iso3, testing_year, assumed_tests_parameter, smoothing_period, agegroup_params, time_params, times, \
-    agegroup_strata = \
-        get_cdr_constants(params["default"])
+    (
+        iso3,
+        testing_year,
+        assumed_tests_parameter,
+        smoothing_period,
+        agegroup_params,
+        time_params,
+        times,
+        agegroup_strata,
+    ) = get_cdr_constants(params["default"])
 
     # Collate parameters into one structure
     testing_to_detection_values = []
@@ -194,6 +208,7 @@ def plot_timeseries_with_uncertainty(
     targets: dict,
     app_name: str,
     region: str,
+    priors: list,
 ):
     available_outputs = [o["output_key"] for o in targets.values()]
     chosen_output = st.sidebar.selectbox("Select calibration target", available_outputs)
@@ -248,6 +263,7 @@ def plot_multiple_timeseries_with_uncertainty(
     targets: dict,
     app_name: str,
     region: str,
+    priors: list,
 ):
     available_outputs = [o["output_key"] for o in targets.values()]
     chosen_outputs = st.multiselect("Select outputs", available_outputs)
@@ -290,6 +306,7 @@ def plot_calibration_fit(
     targets: dict,
     app_name: str,
     region: str,
+    priors: list,
 ):
 
     # Set up interface
@@ -321,6 +338,7 @@ def plot_multi_output_fit(
     targets: dict,
     app_name: str,
     region: str,
+    priors: list,
 ):
 
     # Set up interface
@@ -368,6 +386,7 @@ def plot_mcmc_parameter_trace(
     targets: dict,
     app_name: str,
     region: str,
+    priors: list,
 ):
     chosen_param = selectors.parameter(mcmc_params[0])
     chain_length = find_shortest_chain_length(mcmc_tables)
@@ -386,6 +405,7 @@ def plot_all_param_traces(
     targets: dict,
     app_name: str,
     region: str,
+    priors: list,
 ):
 
     (
@@ -418,6 +438,7 @@ def plot_loglikelihood_vs_parameter(
     targets: dict,
     app_name: str,
     region: str,
+    priors: list,
 ):
     chosen_param = selectors.parameter(mcmc_params[0])
     chain_length = find_shortest_chain_length(mcmc_tables)
@@ -438,6 +459,7 @@ def plot_loglike_vs_all_params(
     targets: dict,
     app_name: str,
     region: str,
+    priors: list,
 ):
     (
         title_font_size,
@@ -470,13 +492,21 @@ def plot_posterior(
     targets: dict,
     app_name: str,
     region: str,
+    priors: list,
 ):
+
     chosen_param = selectors.parameter(mcmc_params[0])
     chain_length = find_shortest_chain_length(mcmc_tables)
     burn_in = st.sidebar.slider("Burn in", 0, chain_length, 0)
     num_bins = st.sidebar.slider("Number of bins", 1, 50, 16)
+
+    for i, prior in enumerate(priors):
+        if prior["param_name"] == chosen_param:
+            prior = priors[i]
+            break
+
     plots.calibration.plots.plot_posterior(
-        plotter, mcmc_params, mcmc_tables, burn_in, chosen_param, num_bins
+        plotter, mcmc_params, mcmc_tables, burn_in, chosen_param, num_bins, prior
     )
 
 
@@ -491,6 +521,7 @@ def plot_all_posteriors(
     targets: dict,
     app_name: str,
     region: str,
+    priors: list,
 ):
 
     (
@@ -513,6 +544,7 @@ def plot_all_posteriors(
         label_font_size,
         capitalise_first_letter,
         dpi_request,
+        priors
     )
 
     write_mcmc_centiles(mcmc_params, mcmc_tables, burn_in, sig_figs, [2.5, 50, 97.5])
@@ -529,6 +561,7 @@ def plot_loglikelihood_trace(
     targets: dict,
     app_name: str,
     region: str,
+    priors: list,
 ):
     burn_in = selectors.burn_in(mcmc_tables)
     plots.calibration.plots.plot_loglikelihood_trace(plotter, mcmc_tables, burn_in)
@@ -545,6 +578,7 @@ def compare_loglikelihood_between_chains(
     targets: dict,
     app_name: str,
     region: str,
+    priors: list,
 ):
     plots.calibration.plots.plot_loglikelihood_boxplots(plotter, mcmc_tables)
 
@@ -560,6 +594,7 @@ def plot_param_matrix_by_chain(
     targets: dict,
     app_name: str,
     region: str,
+    priors: list,
 ):
     """
     Now unused because I prefer the version that isn't by chain.
@@ -582,6 +617,7 @@ def plot_param_matrix(
     targets: dict,
     app_name: str,
     region: str,
+    priors: list,
 ):
     parameters = mcmc_params[0]["name"].unique().tolist()
     chain_length = find_shortest_chain_length(mcmc_tables)
@@ -616,11 +652,10 @@ def plot_parallel_coordinates(
     targets: dict,
     app_name: str,
     region: str,
+    priors: list,
 ):
     plots.calibration.plots.plot_parallel_coordinates(
-        plotter,
-        mcmc_tables,
-        mcmc_params,
+        plotter, mcmc_tables, mcmc_params,
     )
 
 
@@ -635,17 +670,14 @@ def plot_loglikelihood_surface(
     targets: dict,
     app_name: str,
     region: str,
+    priors: list,
 ):
     options = mcmc_params[0]["name"].unique().tolist()
     param_1 = st.sidebar.selectbox("Select parameter 1", options)
     param_2 = st.sidebar.selectbox("Select parameter 2", options)
 
     plots.calibration.plots.plot_loglikelihood_surface(
-        plotter,
-        mcmc_tables,
-        mcmc_params,
-        param_1,
-        param_2,
+        plotter, mcmc_tables, mcmc_params, param_1, param_2,
     )
 
 
@@ -660,6 +692,7 @@ def plot_seroprevalence_by_age(
     targets: dict,
     app_name: str,
     region: str,
+    priors: list,
 ):
 
     try:  # if PBI processing has been performed already

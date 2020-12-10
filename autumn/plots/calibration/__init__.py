@@ -29,7 +29,7 @@ def plot_pre_calibration(priors: List[dict], directory: str):
         plots.plot_prior(i, prior_dict, path)
 
 
-def plot_post_calibration(targets: dict, mcmc_dir: str, plot_dir: str):
+def plot_post_calibration(targets: dict, mcmc_dir: str, plot_dir: str, priors: list):
     logger.info(f"Plotting {mcmc_dir} into {plot_dir}")
     plotter = FilePlotter(plot_dir, targets)
     mcmc_tables = db.load.load_mcmc_tables(mcmc_dir)
@@ -56,7 +56,9 @@ def plot_post_calibration(targets: dict, mcmc_dir: str, plot_dir: str):
     num_bins = 16
     subplotter = _get_sub_plotter(plot_dir, "posteriors")
     for chosen_param in param_options:
-        plots.plot_posterior(subplotter, mcmc_params, mcmc_tables, 0, chosen_param, num_bins)
+        plots.plot_posterior(
+            subplotter, mcmc_params, mcmc_tables, 0, chosen_param, num_bins, priors[0]
+        )
 
     logger.info("Plotting loglikelihood vs params")
     subplotter = _get_sub_plotter(plot_dir, "params-vs-loglikelihood")

@@ -31,6 +31,12 @@ def test_plot_post_calibration(tmp_path):
             "quantiles": [0.25, 0.5, 0.75],
         },
     }
+
+    # A dummy prior to pass postirior checks
+    priors = [
+        {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.01, 0.03]}
+    ]
+
     funcs = [lambda t: 2 * t + random.random(), lambda t: t ** 3 + random.random()]
     # Build data for plotting
     do_df, mcmc_df, params_df = build_synthetic_calibration(
@@ -46,7 +52,7 @@ def test_plot_post_calibration(tmp_path):
         db.dump_df("derived_outputs", do_df[do_df["chain"] == chain])
 
     # Create plots
-    plot_post_calibration(targets, mcmc_dir_path, plot_dir)
+    plot_post_calibration(targets, mcmc_dir_path, plot_dir, priors)
 
     # Check plots - do a super basic check
     expected_files = [

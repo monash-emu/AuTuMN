@@ -373,7 +373,7 @@ def plot_posterior(
     """
     vals_df = get_posterior(mcmc_params, mcmc_tables, param_name, burn_in)
     fig, axis, _, _, _, _ = plotter.get_figure()
-    vals_df.hist(bins=num_bins, ax=axis)
+    vals_df.hist(bins=num_bins, ax=axis, density=True)
 
     x_range = workout_plot_x_range(prior)
     x_values = np.linspace(x_range[0], x_range[1], num=1000)
@@ -423,7 +423,7 @@ def plot_multiple_posteriors(
             y_values = [calculate_prior(prior, x, log=False) for x in x_values]
 
             # Plot histograms
-            vals_df.hist(bins=num_bins, ax=axis)
+            vals_df.hist(bins=num_bins, ax=axis, density=True)
 
             # Plot the prior
             axis.plot(x_values, y_values)

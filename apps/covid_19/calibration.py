@@ -253,8 +253,8 @@ def add_standard_philippines_targets(targets):
     return [
         {
             "output_key": "notifications",
-            "years": notifications["times"][:-14],
-            "values": notifications["values"][:-14],
+            "years": notifications["times"],
+            "values": notifications["values"],
             "loglikelihood_distri": "negative_binomial",
         },
         {

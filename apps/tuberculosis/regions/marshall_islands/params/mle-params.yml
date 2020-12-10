@@ -1,4 +1,4 @@
-contact_rate: .57
+contact_rate: .5
 extra_params.rr_progression_diabetes: 4.985930888563858
 infect_death_rate_dict.smear_negative: 0.017017657275730444
 infect_death_rate_dict.smear_positive: 0.3350578140434921
@@ -6,10 +6,11 @@ progression_multiplier: 1.8
 notificationsXlocation_ebeye_dispersion_param: 6.60563599298462
 notificationsXlocation_majuro_dispersion_param: 14.103117821023472
 pt_efficacy: 0.8221640965157457
-rr_infection_recovered: 0.7430627658453937
+rr_infection_latent: .35  # NEW PARAM
+rr_infection_recovered: 0.6  #0.7430627658453937
 self_recovery_rate_dict.smear_negative: 0.07300972181832718
 self_recovery_rate_dict.smear_positive: 0.18010053134566398
-start_population_size: 450
+start_population_size: 400
 time_variant_tb_screening_rate.end_value: 0.5
 time_variant_tb_screening_rate.max_change_time: 2011.6220620830402
 time_variant_tb_screening_rate.maximum_gradient: 0.09497819494934702

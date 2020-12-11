@@ -232,6 +232,7 @@ class Parameters:
     stratify_by_infection_history: bool
     rel_prop_symptomatic_experienced: Optional[float]
     haario_scaling_factor: float
+    metropolis_init_rel_step_size: float
     metropolis_initialisation_type: str
     # Modular parameters.
     time: Time

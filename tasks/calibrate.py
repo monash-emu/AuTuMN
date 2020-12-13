@@ -51,7 +51,7 @@ def calibrate_task(run_id: str, runtime: float, num_chains: int, quiet: bool):
     with Timer(f"Creating post-calibration plots"):
         app_region = utils.get_app_region(run_id)
         plots.calibration.plot_post_calibration(
-            app_region.targets, CALIBRATE_DATA_DIR, CALIBRATE_PLOTS_DIR, priors=[None]
+            app_region.targets, CALIBRATE_DATA_DIR, CALIBRATE_PLOTS_DIR
         )
 
     # Upload the plots to AWS S3.

@@ -12,13 +12,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Setup Miniconda with Python 3.6
-        uses: conda-incubator/setup-miniconda@v2
+      - name: Set up Python 3.6
+        uses: actions/setup-python@v1
         with:
-          python-version: "3.6"
-      - name: Install Python dependencies
+          python-version: 3.6
+      - name: Install Pip package manager
+        run: python -m pip install --upgrade pip
+      - name: Install Python dependencies via Pip
         run: pip install -r requirements.txt
-      - name: Decrypt secrets
+      - name: Decrypt Autumn secrets
         run: python -m autumn secrets read
         env:
           AUTUMN_PASSWORD: ${{ secrets.AUTUMN_PASSWORD }}

@@ -7,8 +7,8 @@ plotly>=4.11.0
 numpy>=1.14.1
 pandas==0.24.2
 scipy==1.1.0
-xlrd>=1.2.0  # Reading Excel files via Pandas
-numba
+openpyxl  # Reading Excel files via Pandas
+numba==0.51.0
 pyDOE>=0.3.8
 
 # Database access

@@ -32,7 +32,7 @@ def preprocess_social_mixing(input_db: Database, country_df):
         for sheet_number, header_arg in SHEET_NUMBERS:
             sheet_name = f"MUestimates_{location}_{sheet_number}.xlsx"
             sheet_path = os.path.join(MIXING_DIRPATH, sheet_name)
-            xl = pd.ExcelFile(sheet_path)
+            xl = pd.ExcelFile(sheet_path, engine="openpyxl")
             sheet_names = xl.sheet_names
             iso3s = [get_iso3(n, country_df) for n in sheet_names]
             for idx, sheet_name in enumerate(sheet_names):

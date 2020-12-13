@@ -97,7 +97,7 @@ def update_mys_calibration():
 
 def load_mys_data():
 
-    case_df = pd.read_excel(COVID_MYS_CASE_XLSX, engine="openpyxl")
+    case_df = pd.read_excel(COVID_MYS_CASE_XLSX)
     death_df = get_death()
 
     case_df.Date = pd.to_datetime(

@@ -375,12 +375,13 @@ def plot_posterior(
     fig, axis, _, _, _, _ = plotter.get_figure()
     vals_df.hist(bins=num_bins, ax=axis, density=True)
 
-    x_range = workout_plot_x_range(prior)
-    x_values = np.linspace(x_range[0], x_range[1], num=1000)
-    y_values = [calculate_prior(prior, x, log=False) for x in x_values]
+    if prior:
+        x_range = workout_plot_x_range(prior)
+        x_values = np.linspace(x_range[0], x_range[1], num=1000)
+        y_values = [calculate_prior(prior, x, log=False) for x in x_values]
 
-    # Plot the prior
-    axis.plot(x_values, y_values)
+        # Plot the prior
+        axis.plot(x_values, y_values)
 
     plotter.save_figure(
         fig, filename=f"{param_name}-posterior", title_text=f"{param_name} posterior"

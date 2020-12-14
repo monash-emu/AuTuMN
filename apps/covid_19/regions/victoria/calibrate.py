@@ -188,7 +188,7 @@ def get_target_outputs(start_date, end_date):
                 "output_key": output_key,
                 "years": [targets[output_key]["times"][max_notifications_idx]],
                 "values": [targets[output_key]["values"][max_notifications_idx]],
-                "loglikelihood_distri": "negative_binomial",
+                "loglikelihood_distri": "normal",
             }
         ]
 

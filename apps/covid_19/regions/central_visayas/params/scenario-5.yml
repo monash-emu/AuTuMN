@@ -1,29 +1,14 @@
-# SCENARIO DESCRIPTION: MHS reduces contact by 50% & 25% increase in mobility
+# SCENARIO DESCRIPTION: 50% return to work
 parent: apps/covid_19/regions/central_visayas/params/default.yml
 
 time:
   start: 344
 
 mobility:
-  microdistancing:
-    behaviour:
-      parameters:
-        times:
-          - 344
-          - 358
-        values:
-          - 1. 
-          - 0.5
   mixing:
     work:
       append: true
       times:
         - 2020-12-10
       values:
-        - ["close_gap_to_1", 0.25]
-    other_locations:
-      append: true
-      times:
-        - 2020-12-10
-      values:
-        - ["close_gap_to_1", 0.25]
+        - ["close_gap_to_1", 0.50]

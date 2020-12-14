@@ -16,13 +16,5 @@ clinical_stratification:
   props:
     hospital:
       multiplier: 2.
-      
-mobility:
-  microdistancing:
-    behaviour:
-      function_type: empiric
-      parameters:
-        max_effect: 0.28
-        times: [75, 314]
-        values: [0., 1.]
+  
 

@@ -188,7 +188,7 @@ def get_target_outputs(start_date, end_date):
                 "output_key": output_key,
                 "years": [targets[output_key]["times"][max_notifications_idx]],
                 "values": [targets[output_key]["values"][max_notifications_idx]],
-                "loglikelihood_distri": "normal",
+                "loglikelihood_distri": "negative_binomial",
             }
         ]
 
@@ -266,9 +266,11 @@ def group_dispersion_params(priors, target_outputs):
                                 max_val,
                                 max(t["values"])
                             )
+                        elif t["loglikelihood_distri"] == "negative_binomial":
+                            continue
 
                 # sd_ that would make the 95% gaussian CI cover half of the max value (4*sd = 95% width)
-                sd_ = 0.25 * max_val / 4.0
+                sd_ = max_val / 4.0
                 lower_sd = sd_ / 2.0
                 upper_sd = 2.0 * sd_
 

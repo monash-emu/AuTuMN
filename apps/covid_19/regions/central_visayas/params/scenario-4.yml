@@ -9,6 +9,6 @@ mobility:
     school:
       append: false
       times:
-        - 2020-12-10
+        - 2021-01-10
       values:
         - 1.

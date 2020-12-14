@@ -612,8 +612,8 @@ def build_model(params: dict) -> StratifiedModel:
         for cluster in Region.VICTORIA_SUBREGIONS:
             cluster_name = cluster.replace("-", "_")
             adjustment = eval(f"vic.contact_rate_multiplier_{cluster_name}")
-            if cluster in Region.VICTORIA_RURAL:
-                adjustment *= vic.contact_rate_multiplier_regional
+            # if cluster in Region.VICTORIA_RURAL:
+            #     adjustment *= vic.contact_rate_multiplier_regional
             contact_rate_multipliers.update(
                 {cluster_name: adjustment}
             )

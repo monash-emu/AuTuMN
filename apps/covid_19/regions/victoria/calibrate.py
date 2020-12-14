@@ -47,51 +47,51 @@ def get_priors(target_outputs: list):
         #     "distribution": "uniform",
         #     "distri_params": [0.3, 3.],
         # },
-        {
-            "param_name": "victorian_clusters.contact_rate_multiplier_north_metro",
-            "distribution": "uniform",
-            "distri_params": [0.3, 3.],
-        },
-        {
-            "param_name": "victorian_clusters.contact_rate_multiplier_west_metro",
-            "distribution": "uniform",
-            "distri_params": [0.3, 3.],
-        },
-        {
-            "param_name": "victorian_clusters.contact_rate_multiplier_south_metro",
-            "distribution": "uniform",
-            "distri_params": [0.3, 3.],
-        },
-        {
-            "param_name": "victorian_clusters.contact_rate_multiplier_south_east_metro",
-            "distribution": "uniform",
-            "distri_params": [0.3, 3.],
-        },
-        {
-            "param_name": "victorian_clusters.contact_rate_multiplier_loddon_mallee",
-            "distribution": "uniform",
-            "distri_params": [0.3, 3.],
-        },
-        {
-            "param_name": "victorian_clusters.contact_rate_multiplier_barwon_south_west",
-            "distribution": "uniform",
-            "distri_params": [0.3, 3.],
-        },
-        {
-            "param_name": "victorian_clusters.contact_rate_multiplier_hume",
-            "distribution": "uniform",
-            "distri_params": [0.3, 3.],
-        },
-        {
-            "param_name": "victorian_clusters.contact_rate_multiplier_gippsland",
-            "distribution": "uniform",
-            "distri_params": [0.3, 3.],
-        },
-        {
-            "param_name": "victorian_clusters.contact_rate_multiplier_grampians",
-            "distribution": "uniform",
-            "distri_params": [0.3, 3.],
-        },
+        # {
+        #     "param_name": "victorian_clusters.contact_rate_multiplier_north_metro",
+        #     "distribution": "uniform",
+        #     "distri_params": [0.3, 3.],
+        # },
+        # {
+        #     "param_name": "victorian_clusters.contact_rate_multiplier_west_metro",
+        #     "distribution": "uniform",
+        #     "distri_params": [0.3, 3.],
+        # },
+        # {
+        #     "param_name": "victorian_clusters.contact_rate_multiplier_south_metro",
+        #     "distribution": "uniform",
+        #     "distri_params": [0.3, 3.],
+        # },
+        # {
+        #     "param_name": "victorian_clusters.contact_rate_multiplier_south_east_metro",
+        #     "distribution": "uniform",
+        #     "distri_params": [0.3, 3.],
+        # },
+        # {
+        #     "param_name": "victorian_clusters.contact_rate_multiplier_loddon_mallee",
+        #     "distribution": "uniform",
+        #     "distri_params": [0.3, 3.],
+        # },
+        # {
+        #     "param_name": "victorian_clusters.contact_rate_multiplier_barwon_south_west",
+        #     "distribution": "uniform",
+        #     "distri_params": [0.3, 3.],
+        # },
+        # {
+        #     "param_name": "victorian_clusters.contact_rate_multiplier_hume",
+        #     "distribution": "uniform",
+        #     "distri_params": [0.3, 3.],
+        # },
+        # {
+        #     "param_name": "victorian_clusters.contact_rate_multiplier_gippsland",
+        #     "distribution": "uniform",
+        #     "distri_params": [0.3, 3.],
+        # },
+        # {
+        #     "param_name": "victorian_clusters.contact_rate_multiplier_grampians",
+        #     "distribution": "uniform",
+        #     "distri_params": [0.3, 3.],
+        # },
         {
             "param_name": "seasonal_force",
             "distribution": "uniform",
@@ -179,18 +179,18 @@ def get_target_outputs(start_date, end_date):
     #     }
     # ]
 
-    # # Accumulated notifications at the end date for all clusters
-    # for cluster in CLUSTERS:
-    #     output_key = f"notifications_for_cluster_{cluster}"
-    #     max_notifications_idx = targets[output_key]["values"].index(max(targets[output_key]["values"]))
-    #     target_outputs += [
-    #         {
-    #             "output_key": output_key,
-    #             "years": [targets[output_key]["times"][max_notifications_idx]],
-    #             "values": [targets[output_key]["values"][max_notifications_idx]],
-    #             "loglikelihood_distri": "normal",
-    #         }
-    #     ]
+    # Accumulated notifications at the end date for all clusters
+    for cluster in CLUSTERS:
+        output_key = f"notifications_for_cluster_{cluster}"
+        max_notifications_idx = targets[output_key]["values"].index(max(targets[output_key]["values"]))
+        target_outputs += [
+            {
+                "output_key": output_key,
+                "years": [targets[output_key]["times"][max_notifications_idx]],
+                "values": [targets[output_key]["values"][max_notifications_idx]],
+                "loglikelihood_distri": "normal",
+            }
+        ]
 
         # # Accumulated other indicators at the end date for Metro clusters only
         # if cluster.replace("_", "-") in Region.VICTORIA_METRO:

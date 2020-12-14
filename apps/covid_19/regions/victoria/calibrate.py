@@ -47,51 +47,51 @@ def get_priors(target_outputs: list):
         #     "distribution": "uniform",
         #     "distri_params": [0.3, 3.],
         # },
-        # {
-        #     "param_name": "victorian_clusters.contact_rate_multiplier_north_metro",
-        #     "distribution": "uniform",
-        #     "distri_params": [0.3, 3.],
-        # },
-        # {
-        #     "param_name": "victorian_clusters.contact_rate_multiplier_west_metro",
-        #     "distribution": "uniform",
-        #     "distri_params": [0.3, 3.],
-        # },
-        # {
-        #     "param_name": "victorian_clusters.contact_rate_multiplier_south_metro",
-        #     "distribution": "uniform",
-        #     "distri_params": [0.3, 3.],
-        # },
-        # {
-        #     "param_name": "victorian_clusters.contact_rate_multiplier_south_east_metro",
-        #     "distribution": "uniform",
-        #     "distri_params": [0.3, 3.],
-        # },
-        # {
-        #     "param_name": "victorian_clusters.contact_rate_multiplier_loddon_mallee",
-        #     "distribution": "uniform",
-        #     "distri_params": [0.3, 3.],
-        # },
-        # {
-        #     "param_name": "victorian_clusters.contact_rate_multiplier_barwon_south_west",
-        #     "distribution": "uniform",
-        #     "distri_params": [0.3, 3.],
-        # },
-        # {
-        #     "param_name": "victorian_clusters.contact_rate_multiplier_hume",
-        #     "distribution": "uniform",
-        #     "distri_params": [0.3, 3.],
-        # },
-        # {
-        #     "param_name": "victorian_clusters.contact_rate_multiplier_gippsland",
-        #     "distribution": "uniform",
-        #     "distri_params": [0.3, 3.],
-        # },
-        # {
-        #     "param_name": "victorian_clusters.contact_rate_multiplier_grampians",
-        #     "distribution": "uniform",
-        #     "distri_params": [0.3, 3.],
-        # },
+        {
+            "param_name": "victorian_clusters.contact_rate_multiplier_north_metro",
+            "distribution": "uniform",
+            "distri_params": [0.3, 3.],
+        },
+        {
+            "param_name": "victorian_clusters.contact_rate_multiplier_west_metro",
+            "distribution": "uniform",
+            "distri_params": [0.3, 3.],
+        },
+        {
+            "param_name": "victorian_clusters.contact_rate_multiplier_south_metro",
+            "distribution": "uniform",
+            "distri_params": [0.3, 3.],
+        },
+        {
+            "param_name": "victorian_clusters.contact_rate_multiplier_south_east_metro",
+            "distribution": "uniform",
+            "distri_params": [0.3, 3.],
+        },
+        {
+            "param_name": "victorian_clusters.contact_rate_multiplier_loddon_mallee",
+            "distribution": "uniform",
+            "distri_params": [0.3, 3.],
+        },
+        {
+            "param_name": "victorian_clusters.contact_rate_multiplier_barwon_south_west",
+            "distribution": "uniform",
+            "distri_params": [0.3, 3.],
+        },
+        {
+            "param_name": "victorian_clusters.contact_rate_multiplier_hume",
+            "distribution": "uniform",
+            "distri_params": [0.3, 3.],
+        },
+        {
+            "param_name": "victorian_clusters.contact_rate_multiplier_gippsland",
+            "distribution": "uniform",
+            "distri_params": [0.3, 3.],
+        },
+        {
+            "param_name": "victorian_clusters.contact_rate_multiplier_grampians",
+            "distribution": "uniform",
+            "distri_params": [0.3, 3.],
+        },
         {
             "param_name": "seasonal_force",
             "distribution": "uniform",

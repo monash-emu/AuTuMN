@@ -80,6 +80,7 @@ class Calibration:
         region_name: str = "main",
         adaptive_proposal: bool = True,
         initialisation_type: str = InitialisationTypes.LHS,
+        metropolis_init_rel_step_size: float = 0.25,
     ):
         self.app_name = app_name
         self.model_builder = model_builder  # a function that builds a new model without running it
@@ -87,6 +88,7 @@ class Calibration:
         self.best_start_time = None
         self.priors = priors  # a list of dictionaries. Each dictionary describes the prior distribution for a parameter
         self.adaptive_proposal = adaptive_proposal
+        self.metropolis_init_rel_step_size = metropolis_init_rel_step_size
 
         self.param_list = [self.priors[i]["param_name"] for i in range(len(self.priors))]
         self.targeted_outputs = (
@@ -383,7 +385,7 @@ class Calibration:
 
                 #  95% of the sampled values within [mu - 2*sd, mu + 2*sd], i.e. interval of witdth 4*sd
                 relative_prior_width = (
-                    0.1  # fraction of prior_width in which 95% of samples should fall
+                    self.metropolis_init_rel_step_size  # fraction of prior_width in which 95% of samples should fall
                 )
                 self.priors[i]["jumping_sd"] = relative_prior_width * prior_width / 4.0
 

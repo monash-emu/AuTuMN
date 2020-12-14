@@ -125,14 +125,8 @@ def get_italy():
 
 
 def get_sweden():
-    sweden_icu_incid = pd.read_excel(
-        SWEDEN_ICU_INCID,
-        header=1,
-    )
-    sweden_icu_prev = pd.read_excel(
-        SWEDEN_ICU_PREV,
-        header=1,
-    )
+    sweden_icu_incid = pd.read_excel(SWEDEN_ICU_INCID, header=1)
+    sweden_icu_prev = pd.read_excel(SWEDEN_ICU_PREV, header=1)
 
     sweden_icu_incid["Datum"] = pd.to_datetime(
         sweden_icu_incid["Datum"], errors="coerce", format="%Y-%m-%d", infer_datetime_format=False

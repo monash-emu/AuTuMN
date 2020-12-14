@@ -3,6 +3,7 @@
 parent: apps/covid_19/params.yml
 
 metropolis_initialisation_type: 'current_params'
+metropolis_init_rel_step_size: 0.05
 
 population:
   region: Victoria

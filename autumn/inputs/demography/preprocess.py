@@ -33,7 +33,10 @@ def read_life_expectancy_df(loc_df: pd.DataFrame):
         POP_DIRPATH, "WPP2019_MORT_F16_1_LIFE_EXPECTANCY_BY_AGE_BOTH_SEXES.xlsx"
     )
     expect_df = pd.read_excel(
-        pd.ExcelFile(expect_path), header=16, index_col=0, sheet_name="ESTIMATES"
+        pd.ExcelFile(expect_path),
+        header=16,
+        index_col=0,
+        sheet_name="ESTIMATES",
     )
 
     # Rename columns to a simpler format
@@ -84,7 +87,10 @@ def read_death_df(loc_df: pd.DataFrame):
     """
     death_path = os.path.join(POP_DIRPATH, "WPP2019_MORT_F04_1_DEATHS_BY_AGE_BOTH_SEXES.xlsx")
     death_df = pd.read_excel(
-        pd.ExcelFile(death_path), header=16, index_col=0, sheet_name="ESTIMATES"
+        pd.ExcelFile(death_path),
+        header=16,
+        index_col=0,
+        sheet_name="ESTIMATES",
     )
 
     # Rename columns to a simpler format
@@ -140,7 +146,10 @@ def read_crude_birth_df(loc_df: pd.DataFrame):
     """
     birth_rate_path = os.path.join(POP_DIRPATH, "WPP2019_FERT_F03_CRUDE_BIRTH_RATE.xlsx")
     birth_df = pd.read_excel(
-        pd.ExcelFile(birth_rate_path), header=16, index_col=0, sheet_name="ESTIMATES"
+        pd.ExcelFile(birth_rate_path),
+        header=16,
+        index_col=0,
+        sheet_name="ESTIMATES",
     )
 
     # Rename columns to a simpler format
@@ -195,7 +204,10 @@ def read_population_df(loc_df: pd.DataFrame):
     )
     region_df = pd.read_csv(region_pop_path)
     pop_df = pd.read_excel(
-        pd.ExcelFile(country_pop_path), header=16, index_col=0, sheet_name="ESTIMATES"
+        pd.ExcelFile(country_pop_path),
+        header=16,
+        index_col=0,
+        sheet_name="ESTIMATES",
     )
 
     # Rename columns to a simpler format

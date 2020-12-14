@@ -101,6 +101,7 @@ def run_calibration_chain(
         region_name=region,
         adaptive_proposal=adaptive_proposal,
         initialisation_type=params["default"]["metropolis_initialisation_type"],
+        metropolis_init_rel_step_size=params["default"]["metropolis_init_rel_step_size"],
     )
     logger.info("Starting calibration.")
     calib.run_fitting_algorithm(

@@ -268,7 +268,7 @@ def group_dispersion_params(priors, target_outputs):
                             )
 
                 # sd_ that would make the 95% gaussian CI cover half of the max value (4*sd = 95% width)
-                sd_ = max_val / 2.0
+                sd_ = max_val
                 lower_sd = sd_ / 2.0
                 upper_sd = 2.0 * sd_
 

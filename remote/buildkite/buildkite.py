@@ -43,7 +43,9 @@ def _trigger_pipeline(pipeline_data: dict):
         logger.info("stderr for trigger pipeline: %s", stderr)
 
 
-def trigger_pipeline(label: str, target: str, msg: str, env: dict = {}, meta: dict = {}):
+def trigger_pipeline(label: str, target: str, msg: str, env: dict = None, meta: dict = None):
+    env = env or {}
+    meta = meta or {}
     pipeline_data = {
         "steps": [
             {

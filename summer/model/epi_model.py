@@ -181,7 +181,7 @@ class EpiModel:
                 dest=f_dest,
                 param_name=f_param,
                 param_func=self.get_parameter_value,
-                find_infectious_multiplier=self.get_infection_frequency_multipier,
+                find_infectious_multiplier=self.get_infection_frequency_multiplier,
             )
         elif f_type == Flow.INFECTION_DENSITY:
             flow = InfectionDensityFlow(
@@ -189,7 +189,7 @@ class EpiModel:
                 dest=f_dest,
                 param_name=f_param,
                 param_func=self.get_parameter_value,
-                find_infectious_multiplier=self.get_infection_density_multipier,
+                find_infectious_multiplier=self.get_infection_density_multiplier,
             )
         elif f_type == Flow.DEATH:
             flow = InfectionDeathFlow(
@@ -329,10 +329,10 @@ class EpiModel:
     def get_total_deaths(self):
         return self.total_deaths
 
-    def get_infection_frequency_multipier(self, source: Compartment, dest: Compartment):
+    def get_infection_frequency_multiplier(self, source: Compartment, dest: Compartment):
         return self.population_infectious / self.population_total
 
-    def get_infection_density_multipier(self, source: Compartment, dest: Compartment):
+    def get_infection_density_multiplier(self, source: Compartment, dest: Compartment):
         return self.population_infectious
 
     def find_infectious_population(self, time: float, compartment_values: np.ndarray):

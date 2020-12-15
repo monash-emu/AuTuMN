@@ -30,7 +30,23 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
 
 
 def get_priors(target_outputs: list):
+
+    # Get common parameters for all Covid applications
     priors = provide_default_calibration_params()
+
+    # Add multiplier for each Victorian cluster
+    for region in Region.VICTORIA_SUBREGIONS:
+        region_name = region.replace("-", "_")
+        priors += [
+            {
+                "param_name": f"victorian_clusters.contact_rate_multiplier_{region_name}",
+                "distribution": "trunc_normal",
+                "distri_params": [1., 0.5],  # Shouldn't be too peaked with these values
+                "trunc_range": [0.5, np.inf],
+            },
+        ]
+
+    # Add the other parameters we're interested in for Victoria
     priors += [
         {
             "param_name": "contact_rate",
@@ -41,56 +57,6 @@ def get_priors(target_outputs: list):
             "param_name": "infectious_seed",
             "distribution": "uniform",
             "distri_params": [20., 60.],
-        },
-        # {
-        #     "param_name": "victorian_clusters.contact_rate_multiplier_regional",
-        #     "distribution": "uniform",
-        #     "distri_params": [0.3, 3.],
-        # },
-        {
-            "param_name": "victorian_clusters.contact_rate_multiplier_north_metro",
-            "distribution": "uniform",
-            "distri_params": [0.3, 3.],
-        },
-        {
-            "param_name": "victorian_clusters.contact_rate_multiplier_west_metro",
-            "distribution": "uniform",
-            "distri_params": [0.3, 3.],
-        },
-        {
-            "param_name": "victorian_clusters.contact_rate_multiplier_south_metro",
-            "distribution": "uniform",
-            "distri_params": [0.3, 3.],
-        },
-        {
-            "param_name": "victorian_clusters.contact_rate_multiplier_south_east_metro",
-            "distribution": "uniform",
-            "distri_params": [0.3, 3.],
-        },
-        {
-            "param_name": "victorian_clusters.contact_rate_multiplier_loddon_mallee",
-            "distribution": "uniform",
-            "distri_params": [0.3, 3.],
-        },
-        {
-            "param_name": "victorian_clusters.contact_rate_multiplier_barwon_south_west",
-            "distribution": "uniform",
-            "distri_params": [0.3, 3.],
-        },
-        {
-            "param_name": "victorian_clusters.contact_rate_multiplier_hume",
-            "distribution": "uniform",
-            "distri_params": [0.3, 3.],
-        },
-        {
-            "param_name": "victorian_clusters.contact_rate_multiplier_gippsland",
-            "distribution": "uniform",
-            "distri_params": [0.3, 3.],
-        },
-        {
-            "param_name": "victorian_clusters.contact_rate_multiplier_grampians",
-            "distribution": "uniform",
-            "distri_params": [0.3, 3.],
         },
         {
             "param_name": "seasonal_force",
@@ -149,7 +115,6 @@ def get_priors(target_outputs: list):
 
     priors = add_dispersion_param_prior_for_gaussian(priors, target_outputs)
     priors = group_dispersion_params(priors, target_outputs)
-
     return priors
 
 
@@ -168,16 +133,16 @@ def get_target_outputs(start_date, end_date):
         }
     ]
 
-    death_times, death_values = \
-        get_truncated_output(targets["infection_deaths"], start_date, end_date)
-    target_outputs += [
-        {
-            "output_key": "infection_deaths",
-            "years": death_times,
-            "values": death_values,
-            "loglikelihood_distri": "normal",
-        }
-    ]
+    # death_times, death_values = \
+    #     get_truncated_output(targets["infection_deaths"], start_date, end_date)
+    # target_outputs += [
+    #     {
+    #         "output_key": "infection_deaths",
+    #         "years": death_times,
+    #         "values": death_values,
+    #         "loglikelihood_distri": "normal",
+    #     }
+    # ]
 
     # Accumulated notifications at the end date for all clusters
     for cluster in CLUSTERS:
@@ -258,8 +223,7 @@ def group_dispersion_params(priors, target_outputs):
                 for t in target_outputs:
                     if "_for_cluster_" in t["output_key"]:
                         region_name = t['output_key'].split("_for_cluster_")[1]
-                        if t['output_key'].startswith(output_type) and \
-                                region_name.replace("_", "-") in clusters_by_group[cluster_type]:
+                        if t['output_key'].startswith(output_type) and region_name.replace("_", "-") in clusters_by_group[cluster_type]:
                             assert t["loglikelihood_distri"] == "normal", \
                                 "The dispersion parameter is designed for a Gaussian likelihood"
                             max_val = max(

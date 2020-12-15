@@ -168,16 +168,16 @@ def get_target_outputs(start_date, end_date):
         }
     ]
 
-    # death_times, death_values = \
-    #     get_truncated_output(targets["infection_deaths"], start_date, end_date)
-    # target_outputs += [
-    #     {
-    #         "output_key": "infection_deaths",
-    #         "years": death_times,
-    #         "values": death_values,
-    #         "loglikelihood_distri": "normal",
-    #     }
-    # ]
+    death_times, death_values = \
+        get_truncated_output(targets["infection_deaths"], start_date, end_date)
+    target_outputs += [
+        {
+            "output_key": "infection_deaths",
+            "years": death_times,
+            "values": death_values,
+            "loglikelihood_distri": "normal",
+        }
+    ]
 
     # Accumulated notifications at the end date for all clusters
     for cluster in CLUSTERS:
@@ -258,7 +258,8 @@ def group_dispersion_params(priors, target_outputs):
                 for t in target_outputs:
                     if "_for_cluster_" in t["output_key"]:
                         region_name = t['output_key'].split("_for_cluster_")[1]
-                        if t['output_key'].startswith(output_type) and region_name.replace("_", "-") in clusters_by_group[cluster_type]:
+                        if t['output_key'].startswith(output_type) and \
+                                region_name.replace("_", "-") in clusters_by_group[cluster_type]:
                             assert t["loglikelihood_distri"] == "normal", \
                                 "The dispersion parameter is designed for a Gaussian likelihood"
                             max_val = max(

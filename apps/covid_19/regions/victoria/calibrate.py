@@ -182,12 +182,11 @@ def get_target_outputs(start_date, end_date):
     # Accumulated notifications at the end date for all clusters
     for cluster in CLUSTERS:
         output_key = f"notifications_for_cluster_{cluster}"
-        max_notifications_idx = targets[output_key]["values"].index(max(targets[output_key]["values"]))
         target_outputs += [
             {
                 "output_key": output_key,
-                "years": [targets[output_key]["times"][max_notifications_idx]],
-                "values": [targets[output_key]["values"][max_notifications_idx]],
+                "years": targets[output_key]["times"],
+                "values": targets[output_key]["values"],
                 "loglikelihood_distri": "normal",
             }
         ]
@@ -268,7 +267,7 @@ def group_dispersion_params(priors, target_outputs):
                             )
 
                 # sd_ that would make the 95% gaussian CI cover half of the max value (4*sd = 95% width)
-                sd_ = max_val
+                sd_ = max_val * 0.6
                 lower_sd = sd_ / 2.0
                 upper_sd = 2.0 * sd_
 

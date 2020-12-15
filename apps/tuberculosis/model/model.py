@@ -78,7 +78,7 @@ def build_model(params: dict) -> StratifiedModel:
         detection_rate_func,
         acf_detection_rate_func,
         preventive_treatment_func,
-        contact_rate_functions
+        contact_rate_functions,
     ) = preprocess.flows.process_unstratified_parameter_values(
         params, implement_acf, implement_ltbi_screening
     )

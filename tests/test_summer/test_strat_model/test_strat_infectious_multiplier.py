@@ -21,7 +21,7 @@ MODEL_KWARGS = {
 }
 
 
-def test_strat_basic_get_infection_multipier():
+def test_strat_basic_get_infection_multiplier():
     """
     Check basic case for force of infection (FoI).
     No stratifications / heterogeneous mixing.
@@ -47,13 +47,13 @@ def test_strat_basic_get_infection_multipier():
     # Get multipliers
     susceptible = model.compartment_names[0]
     infectious = model.compartment_names[1]
-    assert model.get_infection_density_multipier(susceptible, infectious) == 10.0
-    assert model.get_infection_frequency_multipier(susceptible, infectious) == 0.01
+    assert model.get_infection_density_multiplier(susceptible, infectious) == 10.0
+    assert model.get_infection_frequency_multiplier(susceptible, infectious) == 0.01
     # Santiy check frequency-dependent force of infection
     assert 1000.0 * 0.01 == 10
 
 
-def test_strat_get_infection_multipier__with_age_strat_and_no_mixing():
+def test_strat_get_infection_multiplier__with_age_strat_and_no_mixing():
     """
     Check FoI when a simple 2-strata stratification applied and no mixing matrix.
     Expect the same results as with the basic case.
@@ -91,15 +91,15 @@ def test_strat_get_infection_multipier__with_age_strat_and_no_mixing():
     i_child = model.compartment_names[2]
     i_adult = model.compartment_names[3]
 
-    assert model.get_infection_density_multipier(s_child, i_child) == 10.0
-    assert model.get_infection_density_multipier(s_adult, i_adult) == 10.0
-    assert model.get_infection_frequency_multipier(s_child, i_child) == 0.01
-    assert model.get_infection_frequency_multipier(s_adult, i_adult) == 0.01
+    assert model.get_infection_density_multiplier(s_child, i_child) == 10.0
+    assert model.get_infection_density_multiplier(s_adult, i_adult) == 10.0
+    assert model.get_infection_frequency_multiplier(s_child, i_child) == 0.01
+    assert model.get_infection_frequency_multiplier(s_adult, i_adult) == 0.01
     # Santiy check frequency-dependent force of infection
     assert 1000.0 * 0.01 == 10
 
 
-def test_strat_get_infection_multipier__with_age_strat_and_simple_mixing():
+def test_strat_get_infection_multiplier__with_age_strat_and_simple_mixing():
     """
     Check FoI when a simple 2-strata stratification applied AND heteregeneous mixing.
     Expect same frequency as before, different density.
@@ -170,15 +170,15 @@ def test_strat_get_infection_multipier__with_age_strat_and_simple_mixing():
     s_adult = model.compartment_names[1]
     i_child = model.compartment_names[2]
     i_adult = model.compartment_names[3]
-    assert model.get_infection_density_multipier(s_child, i_child) == child_density
-    assert model.get_infection_density_multipier(s_adult, i_adult) == adult_density
-    assert model.get_infection_frequency_multipier(s_child, i_child) == child_freq
-    assert model.get_infection_frequency_multipier(s_adult, i_adult) == adult_freq
+    assert model.get_infection_density_multiplier(s_child, i_child) == child_density
+    assert model.get_infection_density_multiplier(s_adult, i_adult) == adult_density
+    assert model.get_infection_frequency_multiplier(s_child, i_child) == child_freq
+    assert model.get_infection_frequency_multiplier(s_adult, i_adult) == adult_freq
     # Santiy check frequency-dependent force of infection
     assert 500.0 * child_freq + 500.0 * adult_freq == 10
 
 
-def test_strat_get_infection_multipier__with_age_split_and_simple_mixing():
+def test_strat_get_infection_multiplier__with_age_split_and_simple_mixing():
     """
     Check FoI when a simple 2-strata stratification applied AND heteregeneous mixing.
     Unequally split the children and adults.
@@ -243,15 +243,15 @@ def test_strat_get_infection_multipier__with_age_split_and_simple_mixing():
     i_child = model.compartment_names[2]
     i_adult = model.compartment_names[3]
 
-    assert model.get_infection_density_multipier(s_child, i_child) == child_density
-    assert model.get_infection_density_multipier(s_adult, i_adult) == adult_density
-    assert model.get_infection_frequency_multipier(s_child, i_child) == child_freq
-    assert model.get_infection_frequency_multipier(s_adult, i_adult) == adult_freq
+    assert model.get_infection_density_multiplier(s_child, i_child) == child_density
+    assert model.get_infection_density_multiplier(s_adult, i_adult) == adult_density
+    assert model.get_infection_frequency_multiplier(s_child, i_child) == child_freq
+    assert model.get_infection_frequency_multiplier(s_adult, i_adult) == adult_freq
     # Santiy check frequency-dependent force of infection
     assert 200.0 * child_freq + 800.0 * adult_freq == 10
 
 
-def test_strat_get_infection_multipier__with_age_strat_and_mixing():
+def test_strat_get_infection_multiplier__with_age_strat_and_mixing():
     """
     Check FoI when a simple 2-strata stratification applied AND heteregeneous mixing.
     Use a non-uniform mixing matrix
@@ -315,13 +315,13 @@ def test_strat_get_infection_multipier__with_age_strat_and_mixing():
     s_adult = model.compartment_names[1]
     i_child = model.compartment_names[2]
     i_adult = model.compartment_names[3]
-    assert model.get_infection_density_multipier(s_child, i_child) == child_density
-    assert model.get_infection_density_multipier(s_adult, i_adult) == adult_density
-    assert model.get_infection_frequency_multipier(s_child, i_child) == child_freq
-    assert model.get_infection_frequency_multipier(s_adult, i_adult) == adult_freq
+    assert model.get_infection_density_multiplier(s_child, i_child) == child_density
+    assert model.get_infection_density_multiplier(s_adult, i_adult) == adult_density
+    assert model.get_infection_frequency_multiplier(s_child, i_child) == child_freq
+    assert model.get_infection_frequency_multiplier(s_adult, i_adult) == adult_freq
 
 
-def test_strat_get_infection_multipier__with_double_strat_and_no_mixing():
+def test_strat_get_infection_multiplier__with_double_strat_and_no_mixing():
     """
     Check FoI when a two 2-strata stratificationz applied and no mixing matrix.
     Expect the same results as with the basic case.
@@ -389,17 +389,17 @@ def test_strat_get_infection_multipier__with_double_strat_and_no_mixing():
     i_adult_work = model.compartment_names[6]
     i_adult_home = model.compartment_names[7]
 
-    assert model.get_infection_density_multipier(s_child_work, i_child_work) == 10.0
-    assert model.get_infection_density_multipier(s_child_home, i_child_home) == 10.0
-    assert model.get_infection_density_multipier(s_adult_work, i_adult_work) == 10.0
-    assert model.get_infection_density_multipier(s_adult_home, i_adult_home) == 10.0
-    assert model.get_infection_frequency_multipier(s_child_work, i_child_work) == 0.01
-    assert model.get_infection_frequency_multipier(s_child_home, i_child_home) == 0.01
-    assert model.get_infection_frequency_multipier(s_adult_work, i_adult_work) == 0.01
-    assert model.get_infection_frequency_multipier(s_adult_home, i_adult_home) == 0.01
+    assert model.get_infection_density_multiplier(s_child_work, i_child_work) == 10.0
+    assert model.get_infection_density_multiplier(s_child_home, i_child_home) == 10.0
+    assert model.get_infection_density_multiplier(s_adult_work, i_adult_work) == 10.0
+    assert model.get_infection_density_multiplier(s_adult_home, i_adult_home) == 10.0
+    assert model.get_infection_frequency_multiplier(s_child_work, i_child_work) == 0.01
+    assert model.get_infection_frequency_multiplier(s_child_home, i_child_home) == 0.01
+    assert model.get_infection_frequency_multiplier(s_adult_work, i_adult_work) == 0.01
+    assert model.get_infection_frequency_multiplier(s_adult_home, i_adult_home) == 0.01
 
 
-def test_strat_get_infection_multipier__with_double_strat_and_first_strat_mixing():
+def test_strat_get_infection_multiplier__with_double_strat_and_first_strat_mixing():
     """
     Check FoI when a two 2-strata stratification applied and the first stratification has a mixing matrix.
     """
@@ -480,17 +480,17 @@ def test_strat_get_infection_multipier__with_double_strat_and_first_strat_mixing
     i_adult_work = model.compartment_names[6]
     i_adult_home = model.compartment_names[7]
 
-    assert model.get_infection_density_multipier(s_child_work, i_child_work) == child_density
-    assert model.get_infection_density_multipier(s_child_home, i_child_home) == child_density
-    assert model.get_infection_density_multipier(s_adult_work, i_adult_work) == adult_density
-    assert model.get_infection_density_multipier(s_adult_home, i_adult_home) == adult_density
-    assert model.get_infection_frequency_multipier(s_child_work, i_child_work) == child_freq
-    assert model.get_infection_frequency_multipier(s_child_home, i_child_home) == child_freq
-    assert model.get_infection_frequency_multipier(s_adult_work, i_adult_work) == adult_freq
-    assert model.get_infection_frequency_multipier(s_adult_home, i_adult_home) == adult_freq
+    assert model.get_infection_density_multiplier(s_child_work, i_child_work) == child_density
+    assert model.get_infection_density_multiplier(s_child_home, i_child_home) == child_density
+    assert model.get_infection_density_multiplier(s_adult_work, i_adult_work) == adult_density
+    assert model.get_infection_density_multiplier(s_adult_home, i_adult_home) == adult_density
+    assert model.get_infection_frequency_multiplier(s_child_work, i_child_work) == child_freq
+    assert model.get_infection_frequency_multiplier(s_child_home, i_child_home) == child_freq
+    assert model.get_infection_frequency_multiplier(s_adult_work, i_adult_work) == adult_freq
+    assert model.get_infection_frequency_multiplier(s_adult_home, i_adult_home) == adult_freq
 
 
-def test_strat_get_infection_multipier__with_double_strat_and_second_strat_mixing():
+def test_strat_get_infection_multiplier__with_double_strat_and_second_strat_mixing():
     """
     Check FoI when a two 2-strata stratification applied and the second stratification has a mixing matrix.
     """
@@ -574,17 +574,17 @@ def test_strat_get_infection_multipier__with_double_strat_and_second_strat_mixin
     i_adult_work = model.compartment_names[6]
     i_adult_home = model.compartment_names[7]
 
-    assert model.get_infection_density_multipier(s_child_work, i_child_work) == work_density
-    assert model.get_infection_density_multipier(s_child_home, i_child_home) == home_density
-    assert model.get_infection_density_multipier(s_adult_work, i_adult_work) == work_density
-    assert model.get_infection_density_multipier(s_adult_home, i_adult_home) == home_density
-    assert model.get_infection_frequency_multipier(s_child_work, i_child_work) == work_freq
-    assert model.get_infection_frequency_multipier(s_child_home, i_child_home) == home_freq
-    assert model.get_infection_frequency_multipier(s_adult_work, i_adult_work) == work_freq
-    assert model.get_infection_frequency_multipier(s_adult_home, i_adult_home) == home_freq
+    assert model.get_infection_density_multiplier(s_child_work, i_child_work) == work_density
+    assert model.get_infection_density_multiplier(s_child_home, i_child_home) == home_density
+    assert model.get_infection_density_multiplier(s_adult_work, i_adult_work) == work_density
+    assert model.get_infection_density_multiplier(s_adult_home, i_adult_home) == home_density
+    assert model.get_infection_frequency_multiplier(s_child_work, i_child_work) == work_freq
+    assert model.get_infection_frequency_multiplier(s_child_home, i_child_home) == home_freq
+    assert model.get_infection_frequency_multiplier(s_adult_work, i_adult_work) == work_freq
+    assert model.get_infection_frequency_multiplier(s_adult_home, i_adult_home) == home_freq
 
 
-def test_strat_get_infection_multipier__with_double_strat_and_both_strats_mixing():
+def test_strat_get_infection_multiplier__with_double_strat_and_both_strats_mixing():
     """
     Check FoI when a two 2-strata stratification applied and both stratifications have a mixing matrix.
     """
@@ -728,34 +728,34 @@ def test_strat_get_infection_multipier__with_double_strat_and_both_strats_mixing
     i_adult_home = model.compartment_names[7]
 
     assert (
-        abs(model.get_infection_density_multipier(s_child_work, i_child_work) - child_work_density)
+        abs(model.get_infection_density_multiplier(s_child_work, i_child_work) - child_work_density)
         <= 1e-9
     )
     assert (
-        abs(model.get_infection_density_multipier(s_child_home, i_child_home) - child_home_density)
+        abs(model.get_infection_density_multiplier(s_child_home, i_child_home) - child_home_density)
         <= 1e-9
     )
     assert (
-        abs(model.get_infection_density_multipier(s_adult_work, i_adult_work) - adult_work_density)
+        abs(model.get_infection_density_multiplier(s_adult_work, i_adult_work) - adult_work_density)
         <= 1e-9
     )
     assert (
-        abs(model.get_infection_density_multipier(s_adult_home, i_adult_home) - adult_home_density)
+        abs(model.get_infection_density_multiplier(s_adult_home, i_adult_home) - adult_home_density)
         <= 1e-9
     )
     assert (
-        abs(model.get_infection_frequency_multipier(s_child_work, i_child_work) - child_work_freq)
+        abs(model.get_infection_frequency_multiplier(s_child_work, i_child_work) - child_work_freq)
         <= 1e-9
     )
     assert (
-        abs(model.get_infection_frequency_multipier(s_child_home, i_child_home) - child_home_freq)
+        abs(model.get_infection_frequency_multiplier(s_child_home, i_child_home) - child_home_freq)
         <= 1e-9
     )
     assert (
-        abs(model.get_infection_frequency_multipier(s_adult_work, i_adult_work) - adult_work_freq)
+        abs(model.get_infection_frequency_multiplier(s_adult_work, i_adult_work) - adult_work_freq)
         <= 1e-9
     )
     assert (
-        abs(model.get_infection_frequency_multipier(s_adult_home, i_adult_home) - adult_home_freq)
+        abs(model.get_infection_frequency_multiplier(s_adult_home, i_adult_home) - adult_home_freq)
         <= 1e-9
     )

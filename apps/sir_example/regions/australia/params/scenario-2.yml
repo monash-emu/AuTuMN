@@ -1,4 +1,6 @@
 parent: apps/sir_example/regions/australia/params/default.yml
-start_time: 50
+time:
+  start: 50.
+
 contact_rate: 3.
 recovery_rate: 1.1

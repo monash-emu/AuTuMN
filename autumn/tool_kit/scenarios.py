@@ -5,7 +5,9 @@ import numpy as np
 from copy import deepcopy
 from typing import Callable, List
 
+
 from summer.model import StratifiedModel
+from summer2.model import CompartmentalModel
 
 from autumn.tool_kit import schema_builder as sb
 from autumn.tool_kit.timer import Timer
@@ -92,7 +94,10 @@ class Scenario:
                 self.model = self.model_builder(params)
                 self.model.compartment_values = init_compartments
 
-            self.model.run_model(IntegrationType.SOLVE_IVP)
+            if type(self.model) is CompartmentalModel:
+                self.model.run()
+            else:
+                self.model.run_model(IntegrationType.SOLVE_IVP)
 
     @property
     def is_baseline(self):

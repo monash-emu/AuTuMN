@@ -8,6 +8,7 @@ import yaml
 import pandas as pd
 
 from summer.model import StratifiedModel
+from summer2.model import CompartmentalModel
 from autumn.db.database import FeatherDatabase, get_database, Database
 
 from . import process
@@ -37,8 +38,13 @@ def save_mle_params(database_path: str, target_path: str):
 def build_outputs_table(models: List[StratifiedModel], run_id: int, chain_id=None):
     outputs_df = None
     for idx, model in enumerate(models):
+        if type(model) is CompartmentalModel:
+            names = model.compartments
+        else:
+            names = model.compartment_names
+
         # Save model outputs
-        df = pd.DataFrame(model.outputs, columns=model.compartment_names)
+        df = pd.DataFrame(model.outputs, columns=names)
         df.insert(0, column="chain", value=chain_id)
         df.insert(1, column="run", value=run_id)
         df.insert(2, column="scenario", value=idx)

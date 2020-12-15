@@ -1,5 +1,8 @@
+from summer.adjust import Multiply
+from summer.stratification import Stratification
 from apps.covid_19.model.model import INFECTIOUS_COMPARTMENTS
 from copy import deepcopy
+from summer2 import CompartmentalModel, AgeStratification, adjust
 from summer.model import StratifiedModel
 from autumn.constants import Compartment, BirthApproach, Flow
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
@@ -13,6 +16,306 @@ from summer.model.derived_outputs import (
     InfectionDeathFlowOutput,
     TransitionFlowOutput,
 )
+
+
+COMPARTMENTS = [
+    Compartment.SUSCEPTIBLE,
+    Compartment.EARLY_LATENT,
+    Compartment.LATE_LATENT,
+    Compartment.INFECTIOUS,
+    Compartment.DETECTED,
+    Compartment.ON_TREATMENT,
+    Compartment.RECOVERED,
+]
+INFECTIOUS_COMPS = [
+    Compartment.INFECTIOUS,
+    Compartment.DETECTED,
+    Compartment.ON_TREATMENT,
+]
+INFECTED_COMPS = [
+    Compartment.EARLY_LATENT,
+    Compartment.LATE_LATENT,
+    Compartment.INFECTIOUS,
+    Compartment.DETECTED,
+    Compartment.ON_TREATMENT,
+]
+
+
+def _build_model(params: dict) -> StratifiedModel:
+    time = params["time"]
+    model = CompartmentalModel(
+        times=[time["start"], time["end"]],
+        compartments=COMPARTMENTS,
+        infectious_compartments=INFECTIOUS_COMPS,
+        timestep=time["step"],
+    )
+
+    # Add initial population
+    init_pop = {
+        Compartment.EARLY_LATENT: params["initial_early_latent_population"],
+        Compartment.LATE_LATENT: params["initial_late_latent_population"],
+        Compartment.INFECTIOUS: params["initial_infectious_population"],
+        Compartment.DETECTED: params["initial_detected_population"],
+        Compartment.ON_TREATMENT: params["initial_on_treatment_population"],
+        Compartment.RECOVERED: 0,
+    }
+    sum_init_pop = sum(init_pop.values())
+    init_pop[Compartment.SUSCEPTIBLE] = params["start_population_size"] - sum_init_pop
+    model.set_initial_population(init_pop)
+
+    # Add inter-compartmental flows
+    params = preprocess.derived_params.get_derived_params(params)
+    # Entry flows
+    model.add_crude_birth_flow(
+        "birth",
+        params["crude_birth_rate"],
+        Compartment.SUSCEPTIBLE,
+    )
+    # Infection flows.
+    model.add_infection_frequency_flow(
+        "infection",
+        params["contact_rate"],
+        Compartment.SUSCEPTIBLE,
+        Compartment.EARLY_LATENT,
+    )
+    model.add_infection_frequency_flow(
+        "infection_from_latent",
+        params["contact_rate_from_latent"],
+        Compartment.LATE_LATENT,
+        Compartment.EARLY_LATENT,
+    )
+    model.add_infection_frequency_flow(
+        "infection_from_recovered",
+        params["contact_rate_from_recovered"],
+        Compartment.RECOVERED,
+        Compartment.EARLY_LATENT,
+    )
+
+    # Transition flows.
+    model.add_fractional_flow(
+        "treatment_early",
+        params["preventive_treatment_rate"],
+        Compartment.EARLY_LATENT,
+        Compartment.RECOVERED,
+    )
+    model.add_fractional_flow(
+        "treatment_late",
+        params["preventive_treatment_rate"],
+        Compartment.LATE_LATENT,
+        Compartment.RECOVERED,
+    )
+    model.add_fractional_flow(
+        "stabilisation",
+        params["stabilisation_rate"],
+        Compartment.EARLY_LATENT,
+        Compartment.LATE_LATENT,
+    )
+    model.add_fractional_flow(
+        "early_activation",
+        params["early_activation_rate"],
+        Compartment.EARLY_LATENT,
+        Compartment.INFECTIOUS,
+    )
+    model.add_fractional_flow(
+        "late_activation",
+        params["late_activation_rate"],
+        Compartment.LATE_LATENT,
+        Compartment.INFECTIOUS,
+    )
+
+    # Post-active-disease flows
+    model.add_fractional_flow(
+        "detection",
+        params["detection_rate"],
+        Compartment.INFECTIOUS,
+        Compartment.DETECTED,
+    )
+    model.add_fractional_flow(
+        "treatment_commencement",
+        params["treatment_commencement_rate"],
+        Compartment.DETECTED,
+        Compartment.ON_TREATMENT,
+    )
+    model.add_fractional_flow(
+        "missed_to_active",
+        params["missed_to_active_rate"],
+        Compartment.DETECTED,
+        Compartment.INFECTIOUS,
+    )
+    model.add_fractional_flow(
+        "self_recovery_infectious",
+        params["self_recovery_rate"],
+        Compartment.INFECTIOUS,
+        Compartment.LATE_LATENT,
+    )
+    model.add_fractional_flow(
+        "self_recovery_late",
+        params["self_recovery_detected"],
+        Compartment.DETECTED,
+        Compartment.LATE_LATENT,
+    )
+    model.add_fractional_flow(
+        "treatment_recovery",
+        params["treatment_recovery_rate"],
+        Compartment.ON_TREATMENT,
+        Compartment.RECOVERED,
+    )
+    model.add_fractional_flow(
+        "treatment_default",
+        params["treatment_default_rate"],
+        Compartment.ON_TREATMENT,
+        Compartment.INFECTIOUS,
+    )
+    model.add_fractional_flow(
+        "failure_retreatment",
+        params["failure_retreatment_rate"],
+        Compartment.ON_TREATMENT,
+        Compartment.DETECTED,
+    )
+    model.add_fractional_flow(
+        "spontaneous_recovery",
+        params["spontaneous_recovery_rate"],
+        Compartment.ON_TREATMENT,
+        Compartment.LATE_LATENT,
+    )
+
+    # Death flows
+    # Universal death rate to be overriden in age stratification.
+    uni_death_flow_names = model.add_universal_death_flows("universal_death", death_rate=0)
+    model.add_death_flow(
+        "infectious_death",
+        params["infect_death_rate"],
+        Compartment.INFECTIOUS,
+    )
+    model.add_death_flow(
+        "detected_death",
+        params["infect_death_rate"],
+        Compartment.DETECTED,
+    )
+    model.add_death_flow(
+        "treatment_death",
+        params["treatment_death_rate"],
+        Compartment.ON_TREATMENT,
+    )
+
+    # Apply age-stratification
+    age_strat = AgeStratification("age", params["age_breakpoints"], COMPARTMENTS)
+
+    # Set age demographics
+    pop = get_population_by_agegroup(
+        age_breakpoints=params["age_breakpoints"], country_iso_code=params["iso3"], year=2000
+    )
+    age_split_props = (dict(zip(params["age_breakpoints"], [x / sum(pop) for x in pop])),)
+    age_strat.set_population_split(age_split_props)
+
+    # Add age-based heterogeneous mixing
+    mixing_matrix = get_mixing_matrix_specific_agegroups(
+        country_iso_code=params["iso3"],
+        requested_age_breaks=list(map(int, params["age_breakpoints"])),
+        time_unit="years",
+    )
+    # FIXME: These values break the solver because they are very big.
+    # age_strat.set_mixing_matrix(mixing_matrix)
+
+    # Add age-based flow adjustments.
+    stabilisation_adjust = {
+        stratum: adjust.Multiply(val)
+        for stratum, val in params["stabilisation_rate_stratified"]["age"].items()
+    }
+    age_strat.add_flow_adjustments("stabilisation", stabilisation_adjust)
+    early_activation_adjust = {
+        stratum: adjust.Multiply(val)
+        for stratum, val in params["early_activation_rate_stratified"]["age"].items()
+    }
+    age_strat.add_flow_adjustments("early_activation", early_activation_adjust)
+    late_activation_adjust = {
+        stratum: adjust.Multiply(val)
+        for stratum, val in params["late_activation_rate_stratified"]["age"].items()
+    }
+    age_strat.add_flow_adjustments("late_activation", late_activation_adjust)
+
+    # Add age-specific all-causes mortality rate.
+    death_rates_by_age, death_rate_years = get_death_rates_by_agegroup(
+        params["age_breakpoints"], params["iso3"]
+    )
+    death_rates_by_age = {
+        age: scale_up_function(
+            death_rate_years, death_rates_by_age[int(age)], smoothness=0.2, method=5
+        )
+        for age in params["age_breakpoints"]
+    }
+    death_rates_by_age = {age: adjust.Multiply(f) for age, f in death_rates_by_age.items()}
+    for uni_death_flow_name in uni_death_flow_names:
+        age_strat.add_flow_adjustments(uni_death_flow_name, death_rates_by_age)
+
+    model.stratify_with(age_strat)
+
+    # Add vaccination stratification.
+    vac_strat = Stratification("vac", ["unvaccinated", "vaccinated"], [Compartment.SUSCEPTIBLE])
+    vac_strat.set_population_split({"unvaccinated": 1.0, "vaccinated": 0.0})
+
+    # Apply flow adjustments
+    vac_strat.add_flow_adjustments(
+        "infection",
+        {
+            "unvaccinated": adjust.Multiply(1.0),
+            "vaccinated": adjust.Multiply(params["bcg"]["rr_infection_vaccinated"]),
+        },
+    )
+    vac_strat.add_flow_adjustments(
+        "treatment_early",
+        {"unvaccinated": adjust.Multiply(0.0), "vaccinated": adjust.Multiply(1.0)},
+    )
+    vac_strat.add_flow_adjustments(
+        "treatment_late", {"unvaccinated": adjust.Multiply(0.0), "vaccinated": adjust.Multiply(1.0)}
+    )
+
+    def time_varying_vaccination_coverage(t):
+        return params["bcg"]["coverage"] if t > params["bcg"]["start_time"] else 0.0
+
+    def time_varying_unvaccinated_coverage(t):
+        return 1 - params["bcg"]["coverage"] if t > params["bcg"]["start_time"] else 1.0
+
+    vac_strat.add_flow_adjustments(
+        "birth",
+        {
+            "unvaccinated": adjust.Multiply(time_varying_unvaccinated_coverage),
+            "vaccinated": adjust.Multiply(time_varying_vaccination_coverage),
+        },
+    )
+    model.stratify_with(vac_strat)
+
+    # Apply organ stratification
+    organ_strat = Stratification(
+        "organ", ["smear_positive", "smear_negative", "extra_pulmonary"], INFECTIOUS_COMPS
+    )
+    organ_strat.set_population_split(params["organ"]["props"])
+    # Add infectiousness adjustments
+    for comp in INFECTIOUS_COMPS:
+        organ_strat.add_infectiousness_adjustments(
+            comp, {s: adjust.Multiply(v) for s, v in params["organ"]["foi"].items()}
+        )
+
+    organ_strat.add_flow_adjustments(
+        "early_activation", {s: adjust.Multiply(v) for s, v in params["organ"]["props"].items()}
+    )
+    organ_strat.add_flow_adjustments(
+        "late_activation", {s: adjust.Multiply(v) for s, v in params["organ"]["props"].items()}
+    )
+    organ_strat.add_flow_adjustments(
+        "detection",
+        {s: adjust.Multiply(v) for s, v in params["detection_rate_stratified"]["organ"].items()},
+    )
+    organ_strat.add_flow_adjustments(
+        "self_recovery",
+        {
+            s: adjust.Multiply(v)
+            for s, v in params["self_recovery_rate_stratified"]["organ"].items()
+        },
+    )
+    model.stratify_with(organ_strat)
+
+    return model
 
 
 def build_model(params: dict) -> StratifiedModel:
@@ -953,7 +1256,6 @@ def build_model(params: dict) -> StratifiedModel:
     function_outputs["disease_deaths"] = calculate_disease_deaths
     function_outputs["incidence"] = calculate_disease_incidence
 
-
     tb_model.add_function_derived_outputs(function_outputs)
     return tb_model
 
@@ -984,36 +1286,40 @@ def calculate_disease_deaths(
 
 
 def calculate_prevalence_infectious(
-        time_idx,
-        model,
-        compartment_values,
-        derived_outputs,
+    time_idx,
+    model,
+    compartment_values,
+    derived_outputs,
 ):
     """
     Calculate the total number of infectious people at each time-step.
     """
     prevalence_infectious = 0
     for i, compartment in enumerate(model.compartment_names):
-        is_infectious = compartment.has_name_in_list([Compartment.INFECTIOUS, Compartment.DETECTED, Compartment.ON_TREATMENT])
+        is_infectious = compartment.has_name_in_list(
+            [Compartment.INFECTIOUS, Compartment.DETECTED, Compartment.ON_TREATMENT]
+        )
         if is_infectious:
             prevalence_infectious += compartment_values[i]
     pop_size = sum(compartment_values)
 
-    return prevalence_infectious / pop_size * 1.e5
+    return prevalence_infectious / pop_size * 1.0e5
 
 
 def calculate_ltbi_percentage(
-        time_idx,
-        model,
-        compartment_values,
-        derived_outputs,
+    time_idx,
+    model,
+    compartment_values,
+    derived_outputs,
 ):
     """
     Calculate the total number of infectious people at each time-step.
     """
     prevalence_latent = 0
     for i, compartment in enumerate(model.compartment_names):
-        is_latent = compartment.has_name_in_list([Compartment.EARLY_LATENT, Compartment.LATE_LATENT])
+        is_latent = compartment.has_name_in_list(
+            [Compartment.EARLY_LATENT, Compartment.LATE_LATENT]
+        )
         if is_latent:
             prevalence_latent += compartment_values[i]
     pop_size = sum(compartment_values)
@@ -1021,13 +1327,15 @@ def calculate_ltbi_percentage(
     return prevalence_latent / pop_size * 100
 
 
-
 def calculate_disease_incidence(
-        time_idx,
-        model,
-        compartment_values,
-        derived_outputs,
+    time_idx,
+    model,
+    compartment_values,
+    derived_outputs,
 ):
-    abs_incidence = derived_outputs["progression_early"][time_idx] + derived_outputs["progression_late"][time_idx]
+    abs_incidence = (
+        derived_outputs["progression_early"][time_idx]
+        + derived_outputs["progression_late"][time_idx]
+    )
     pop_size = sum(compartment_values)
-    return abs_incidence / pop_size * 1.e5
+    return abs_incidence / pop_size * 1.0e5

@@ -275,6 +275,9 @@ class CompartmentalModel:
             base_name: The base name for each new flow.
             death_rate: The fractional death rate per timestep.
 
+        Returns:
+            List[str]: The names of the flows added.
+
         """
         # Only allow a single universal death flow with a given name to be added to the model.
         is_already_used = any([f.name.startswith(base_name) for f in self._flows])
@@ -282,15 +285,20 @@ class CompartmentalModel:
             msg = f"There is already a universal death flow called '{base_name}' in this model, cannot add a second."
             raise ValueError(msg)
 
+        flow_names = []
         for comp_name in self._original_compartment_names:
+            flow_name = f"{base_name}_for_{comp_name}"
+            flow_names.append(flow_name)
             self._add_exit_flow(
                 flows.DeathFlow,
-                f"{base_name}_for_{comp_name}",
+                flow_name,
                 death_rate,
                 comp_name,
                 source_strata={},
                 expected_flow_count=None,
             )
+
+        return flow_names
 
     def _add_exit_flow(
         self,

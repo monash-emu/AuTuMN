@@ -8,6 +8,7 @@ from autumn.constants import Region
 from autumn.tool_kit.params import load_targets
 from autumn.calibration.utils import add_dispersion_param_prior_for_gaussian
 from apps.covid_19 import calibration as base
+from autumn.tool_kit.utils import apply_moving_average
 
 CLUSTERS = [Region.to_filename(r) for r in Region.VICTORIA_SUBREGIONS]
 
@@ -151,7 +152,7 @@ def get_target_outputs(start_date, end_date):
             {
                 "output_key": output_key,
                 "years": targets[output_key]["times"],
-                "values": targets[output_key]["values"],
+                "values": apply_moving_average(targets[output_key]["values"], period=4),
                 "loglikelihood_distri": "normal",
             }
         ]

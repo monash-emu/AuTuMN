@@ -148,7 +148,7 @@ def get_target_outputs(start_date, end_date):
     ]
 
     hospitalisation_times, hospitalisation_values = \
-        get_truncated_output(targets["infection_deaths"], start_date, end_date)
+        get_truncated_output(targets["hospital_admissions"], start_date, end_date)
     target_outputs += [
         {
             "output_key": "hospital_admissions",

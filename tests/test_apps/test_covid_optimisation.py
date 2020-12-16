@@ -182,7 +182,10 @@ def test_build_params_for_phases_2_and_3__with_location_mode_and_microdistancing
 @pytest.mark.xfail
 def test_build_params_for_phases_2_and_3__with_age_mode():
     scenario_params = opti.build_params_for_phases_2_and_3(
-        decision_variables=[i for i in range(16)], elderly_mixing_reduction=None, duration="six_months", mode="by_age"
+        decision_variables=[i for i in range(16)],
+        elderly_mixing_reduction=None,
+        duration="six_months",
+        mode="by_age",
     )
     age_dates = [date(2020, 7, 31), date(2020, 8, 1), date(2021, 1, 31), date(2021, 2, 1)]
     loc_dates = [date(2020, 7, 31), date(2021, 1, 31), date(2021, 2, 1)]

@@ -67,8 +67,8 @@ def test_model__with_two_symmetric_stratifications():
     # Check infectiousness multipliers
     susceptible = model.compartment_names[0]
     infectious = model.compartment_names[1]
-    assert model.get_infection_density_multipier(susceptible, infectious) == 100.0
-    assert model.get_infection_frequency_multipier(susceptible, infectious) == 0.1
+    assert model.get_infection_density_multiplier(susceptible, infectious) == 100.0
+    assert model.get_infection_frequency_multiplier(susceptible, infectious) == 0.1
     model.run_model()
     # Create a stratified model where the two strains are symmetric
     strat_model = StratifiedModel(**kwargs)
@@ -123,8 +123,8 @@ def test_strains__with_two_symmetric_strains():
     # Check infectiousness multipliers
     susceptible = model.compartment_names[0]
     infectious = model.compartment_names[1]
-    assert model.get_infection_density_multipier(susceptible, infectious) == 100.0
-    assert model.get_infection_frequency_multipier(susceptible, infectious) == 0.1
+    assert model.get_infection_density_multiplier(susceptible, infectious) == 100.0
+    assert model.get_infection_frequency_multiplier(susceptible, infectious) == 0.1
     model.run_model()
     # Create a stratified model where the two strains are symmetric
     strain_model = StratifiedModel(**kwargs)
@@ -204,12 +204,12 @@ def test_strain__with_infectious_multipliers():
     infectious_a = model.compartment_names[1]
     infectious_b = model.compartment_names[2]
     infectious_c = model.compartment_names[3]
-    assert model.get_infection_density_multipier(susceptible, infectious_a) == 70 * 0.5
-    assert model.get_infection_density_multipier(susceptible, infectious_b) == 20 * 3
-    assert model.get_infection_density_multipier(susceptible, infectious_c) == 10 * 2
-    assert model.get_infection_frequency_multipier(susceptible, infectious_a) == 70 * 0.5 / 1000
-    assert model.get_infection_frequency_multipier(susceptible, infectious_b) == 20 * 3 / 1000
-    assert model.get_infection_frequency_multipier(susceptible, infectious_c) == 10 * 2 / 1000
+    assert model.get_infection_density_multiplier(susceptible, infectious_a) == 70 * 0.5
+    assert model.get_infection_density_multiplier(susceptible, infectious_b) == 20 * 3
+    assert model.get_infection_density_multiplier(susceptible, infectious_c) == 10 * 2
+    assert model.get_infection_frequency_multiplier(susceptible, infectious_a) == 70 * 0.5 / 1000
+    assert model.get_infection_frequency_multiplier(susceptible, infectious_b) == 20 * 3 / 1000
+    assert model.get_infection_frequency_multiplier(susceptible, infectious_c) == 10 * 2 / 1000
 
     # Get infection flow rates
     flow_rates = model.get_flow_rates(model.compartment_values, 0)
@@ -286,12 +286,12 @@ def test_strain__with_flow_adjustments():
     infectious_a = model.compartment_names[1]
     infectious_b = model.compartment_names[2]
     infectious_c = model.compartment_names[3]
-    assert model.get_infection_density_multipier(susceptible, infectious_a) == 70
-    assert model.get_infection_density_multipier(susceptible, infectious_b) == 20
-    assert model.get_infection_density_multipier(susceptible, infectious_c) == 10
-    assert model.get_infection_frequency_multipier(susceptible, infectious_a) == 70 / 1000
-    assert model.get_infection_frequency_multipier(susceptible, infectious_b) == 20 / 1000
-    assert model.get_infection_frequency_multipier(susceptible, infectious_c) == 10 / 1000
+    assert model.get_infection_density_multiplier(susceptible, infectious_a) == 70
+    assert model.get_infection_density_multiplier(susceptible, infectious_b) == 20
+    assert model.get_infection_density_multiplier(susceptible, infectious_c) == 10
+    assert model.get_infection_frequency_multiplier(susceptible, infectious_a) == 70 / 1000
+    assert model.get_infection_frequency_multiplier(susceptible, infectious_b) == 20 / 1000
+    assert model.get_infection_frequency_multiplier(susceptible, infectious_c) == 10 / 1000
 
     # Get infection flow rates
     flow_rates = model.get_flow_rates(model.compartment_values, 0)
@@ -430,8 +430,8 @@ def test_strain__with_infectious_multipliers_and_heterogeneous_mixing():
     inf_adult_a = model.compartment_names[5]
     inf_adult_b = model.compartment_names[6]
     inf_adult_c = model.compartment_names[7]
-    density = model.get_infection_density_multipier
-    freq = model.get_infection_frequency_multipier
+    density = model.get_infection_density_multiplier
+    freq = model.get_infection_frequency_multiplier
     assert density(sus_child, inf_child_a) == 0.5 * (42 * 1.5 + 28 * 0.5)
     assert density(sus_adult, inf_adult_a) == 0.5 * (42 * 0.5 + 28 * 1.5)
     assert density(sus_child, inf_child_b) == 3 * (12 * 1.5 + 8 * 0.5)

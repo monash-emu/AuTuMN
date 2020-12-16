@@ -19,25 +19,25 @@ MODEL_KWARGS = {
 }
 
 
-def test_get_infection_frequency_multipier():
+def test_get_infection_frequency_multiplier():
     model = EpiModel(**MODEL_KWARGS)
     model.prepare_to_run()
     model.prepare_time_step(0, model.compartment_values)
     c_src = Compartment("S")
     c_dst = Compartment("I")
-    multiplier = model.get_infection_frequency_multipier(c_src, c_dst)
+    multiplier = model.get_infection_frequency_multiplier(c_src, c_dst)
     assert model.population_infectious == 10
     assert model.population_total == 1000
     assert multiplier == 0.01
 
 
-def test_get_infection_density_multipier():
+def test_get_infection_density_multiplier():
     model = EpiModel(**MODEL_KWARGS)
     model.prepare_to_run()
     model.prepare_time_step(0, model.compartment_values)
     c_src = Compartment("S")
     c_dst = Compartment("I")
-    multiplier = model.get_infection_density_multipier(c_src, c_dst)
+    multiplier = model.get_infection_density_multiplier(c_src, c_dst)
     assert model.population_infectious == 10
     assert model.population_total == 1000
     assert multiplier == 10

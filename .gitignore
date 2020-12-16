@@ -7,6 +7,10 @@ condaenv/
 .pytest_cache
 *.cprof
 
+# Sphinx docs
+_build
+docs/examples
+
 # IDE stuff
 .idea
 .spyderworkspace

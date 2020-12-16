@@ -65,7 +65,7 @@ def objective_function(
     mode: str = AGE_MODE,
     country: str = Region.UNITED_KINGDOM,
     duration: str = DURATION_SIX_MONTHS,
-    called_from_sensitivity_analysis: bool = False
+    called_from_sensitivity_analysis: bool = False,
 ):
     """
     :param decision_variables: A list containing
@@ -88,7 +88,7 @@ def objective_function(
 
     # Create and run scenario 1
     sc_1_params_update = build_params_for_phases_2_and_3(
-        decision_variables, params["default"]['elderly_mixing_reduction'], duration, mode
+        decision_variables, params["default"]["elderly_mixing_reduction"], duration, mode
     )
     sc_1_params = merge_dicts(sc_1_params_update, params["default"])
     params["scenarios"][1] = sc_1_params
@@ -174,10 +174,9 @@ def build_params_for_phases_2_and_3(
             final_mixing_value = final_mixing
             # need to reset elderly protection if it was previously in place during Phase 1
             if elderly_mixing_reduction is not None:
-                if age_group in elderly_mixing_reduction['age_categories']:
+                if age_group in elderly_mixing_reduction["age_categories"]:
                     final_mixing_value = min(
-                        1 - elderly_mixing_reduction['relative_reduction'],
-                        final_mixing_value
+                        1 - elderly_mixing_reduction["relative_reduction"], final_mixing_value
                     )
             scenario_params["mobility"]["age_mixing"][age_group] = {
                 "times": [phase_1_end_date, phase_2_first_day, phase_2_end_date, phase_3_first_day],

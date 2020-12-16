@@ -22,16 +22,10 @@ MAX_WORKERS = mp.cpu_count() - 1
 # AWS S3 upload settings
 S3_UPLOAD_EXTRA_ARGS = {"ACL": "public-read"}
 S3_UPLOAD_CONFIG = TransferConfig(
-    multipart_threshold=1024 * 25,
-    max_concurrency=10,
-    multipart_chunksize=1024 * 25,
-    use_threads=True,
+    max_concurrency=2,
 )
 S3_DOWNLOAD_CONFIG = TransferConfig(
-    multipart_threshold=1024 * 25,
-    max_concurrency=10,
-    multipart_chunksize=1024 * 25,
-    use_threads=True,
+    max_concurrency=2,
     num_download_attempts=3,
 )
 

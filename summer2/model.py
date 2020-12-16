@@ -3,6 +3,7 @@ This module contains the main disease modelling class.
 """
 import copy
 from typing import Tuple, List, Dict, Callable, Optional
+from functools import lru_cache
 
 import networkx
 import numpy as np
@@ -540,8 +541,9 @@ class CompartmentalModel:
         """
         # Validate flow adjustments
         flow_names = [f.name for f in self._flows]
-        msg = "All stratification flow adjustments must refer to a flow that is present in model."
-        assert all([n in flow_names for n in strat.flow_adjustments.keys()]), msg
+        for n in strat.flow_adjustments.keys():
+            msg = f"Flow adjustment for '{n}' refers to a flow that is not present in the model."
+            assert n in flow_names, msg
 
         # Validate infectiousness adjustments.
         msg = "All stratification infectiousness adjustments must refer to a compartment that is present in model."
@@ -656,6 +658,34 @@ class CompartmentalModel:
         Pre-run setup.
         Here we do any calculations/preparation are possible to do before the model runs.
         """
+        # Functions will often be called multiple times per timestep, so we cache any time-varying functions.
+        # First we find all time varying functions.
+        funcs = set()
+        for flow in self._flows:
+            if callable(flow.param):
+                funcs.add(flow.param)
+            for adj in flow.adjustments:
+                if callable(adj.param):
+                    funcs.add(adj.param)
+
+        # Cache return values to prevent re-computation. This will a little leak memory, which is fine.
+        funcs_cached = {}
+        for func in funcs:
+            # Floating point return type is 8 bytes, meaning 2**17 values is ~1MB of memory.
+            funcs_cached[func] = lru_cache(maxsize=2 ** 17)(func)
+
+        # Finally, replace original functions with cached ones
+        for flow in self._flows:
+            if flow.param in funcs_cached:
+                flow.param = funcs_cached[flow.param]
+            for adj in flow.adjustments:
+                if adj.param in funcs_cached:
+                    adj.param = funcs_cached[adj.param]
+
+        # Optimize flow adjustments
+        for f in self._flows:
+            f.optimize_adjustments()
+
         # Split flows up into 3 groups: entry, exit and transition.
         self._entry_flows = [f for f in self._flows if issubclass(f.__class__, flows.BaseEntryFlow)]
         self._exit_flows = [f for f in self._flows if issubclass(f.__class__, flows.BaseExitFlow)]

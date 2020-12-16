@@ -185,16 +185,16 @@ missed_to_active_rate: 4
 infect_death_rate: 0.7
 infect_death_rate_stratified:
   organ:
-    sp: 1.0
-    sn: 0.4142857
-    e: 0.4142857
+    smear_positive: 1.0
+    smear_negative: 0.4142857
+    extra_pulmonary: 0.4142857
 
 natural_recovery_rate: 0.231
 natural_recovery_rate_stratified:
   organ:
-    sp: 1.0
-    sn: 0.563
-    e: 0.563
+    smear_positive: 1.0
+    smear_negative: 0.563
+    extra_pulmonary: 0.563
 
 treatment_death_rate: 0.05
 

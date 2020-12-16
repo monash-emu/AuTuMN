@@ -4,11 +4,10 @@ As a user of the framework you should not have to use these classes directly.
 """
 from abc import ABC, abstractmethod
 from typing import List, Dict, Callable
-
 import numpy as np
 from numba import jit
 
-from summer2.adjust import BaseAdjustment, FlowParam, Multiply
+from summer2.adjust import BaseAdjustment, FlowParam, Multiply, Overwrite
 from summer2.stratification import Stratification
 from summer2.compartment import Compartment
 
@@ -72,6 +71,36 @@ class BaseFlow(ABC):
             self.source.idx = mapping[self.source]
         if self.dest:
             self.dest.idx = mapping[self.dest]
+
+    def optimize_adjustments(self):
+        """
+        Rearrange adjustments so that they produce the same result but run faster.
+        This does not seem to actually impact runtime much.
+        """
+        # Start from the last Overwrite, no point calculating anything before that.
+        last_overwrite_idx = None
+        for idx in reversed(range(len(self.adjustments))):
+            adj = self.adjustments[idx]
+            if type(adj) is Overwrite:
+                last_overwrite_idx = idx
+                break
+
+        if last_overwrite_idx:
+            new_adjustments = self.adjustments[last_overwrite_idx:]
+        else:
+            new_adjustments = self.adjustments
+
+        # Combine all constant multiplications into one constant.
+        overwrites = [a for a in new_adjustments if type(a) is Overwrite]
+        consts = [a for a in new_adjustments if type(a) is Multiply and not callable(a.param)]
+        funcs = [a for a in new_adjustments if type(a) is Multiply and callable(a.param)]
+
+        if consts:
+            # Reduce multiple constants into one.
+            const = np.prod([a.param for a in consts])
+            consts = [Multiply(const)]
+
+        self.adjustments = overwrites + consts + funcs
 
     @abstractmethod
     def get_net_flow(self, compartment_values: np.ndarray, time: float) -> float:

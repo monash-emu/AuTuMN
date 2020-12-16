@@ -1,16 +1,15 @@
-from summer.adjust import Multiply
-from summer.stratification import Stratification
-from apps.covid_19.model.model import INFECTIOUS_COMPARTMENTS
-from copy import deepcopy
-from summer2 import CompartmentalModel, AgeStratification, adjust
-from summer.model import StratifiedModel
-from autumn.constants import Compartment, BirthApproach, Flow
-from autumn.tool_kit.scenarios import get_model_times_from_inputs
+from summer2 import (
+    CompartmentalModel,
+    AgeStratification,
+    StrainStratification,
+    Stratification,
+    adjust,
+)
+from autumn.constants import Compartment
 from autumn.inputs import get_population_by_agegroup, get_death_rates_by_agegroup
 from autumn.inputs.social_mixing.queries import get_mixing_matrix_specific_agegroups
 from autumn.curve import scale_up_function
 
-from apps.tuberculosis_strains.model import preprocess
 from apps.tuberculosis_strains.model import outputs
 from summer.model.derived_outputs import (
     InfectionDeathFlowOutput,
@@ -41,7 +40,7 @@ INFECTED_COMPS = [
 ]
 
 
-def _build_model(params: dict) -> StratifiedModel:
+def build_model(params: dict) -> CompartmentalModel:
     time = params["time"]
     model = CompartmentalModel(
         times=[time["start"], time["end"]],
@@ -64,7 +63,7 @@ def _build_model(params: dict) -> StratifiedModel:
     model.set_initial_population(init_pop)
 
     # Add inter-compartmental flows
-    params = preprocess.derived_params.get_derived_params(params)
+    params = _get_derived_params(params)
     # Entry flows
     model.add_crude_birth_flow(
         "birth",
@@ -149,8 +148,8 @@ def _build_model(params: dict) -> StratifiedModel:
         Compartment.LATE_LATENT,
     )
     model.add_fractional_flow(
-        "self_recovery_late",
-        params["self_recovery_detected"],
+        "self_recovery_detected",
+        params["self_recovery_rate"],
         Compartment.DETECTED,
         Compartment.LATE_LATENT,
     )
@@ -180,8 +179,8 @@ def _build_model(params: dict) -> StratifiedModel:
     )
 
     # Death flows
-    # Universal death rate to be overriden in age stratification.
-    uni_death_flow_names = model.add_universal_death_flows("universal_death", death_rate=0)
+    # Universal death rate to be overriden by a multiply in age stratification.
+    uni_death_flow_names = model.add_universal_death_flows("universal_death", death_rate=1)
     model.add_death_flow(
         "infectious_death",
         params["infect_death_rate"],
@@ -199,13 +198,144 @@ def _build_model(params: dict) -> StratifiedModel:
     )
 
     # Apply age-stratification
+    age_strat = _build_age_strat(params, uni_death_flow_names)
+    model.stratify_with(age_strat)
+
+    # Add vaccination stratification.
+    vac_strat = _build_vac_strat(params)
+    model.stratify_with(vac_strat)
+
+    # Apply organ stratification
+    organ_strat = _build_organ_strat(params)
+    model.stratify_with(organ_strat)
+
+    # Apply strain stratification
+    strain_strat = _build_strain_strat(params)
+    model.stratify_with(strain_strat)
+
+    # Add amplification flow
+    model.add_fractional_flow(
+        name="amplification",
+        fractional_rate=params["amplification_rate"],
+        source=Compartment.ON_TREATMENT,
+        dest=Compartment.ON_TREATMENT,
+        source_strata={"strain": "ds"},
+        dest_strata={"strain": "mdr"},
+        expected_flow_count=9,
+    )
+
+    # Add cross-strain reinfection flows
+    model.add_infection_frequency_flow(
+        name="reinfection_ds_to_mdr",
+        contact_rate=params["reinfection_rate"],
+        source=Compartment.EARLY_LATENT,
+        dest=Compartment.EARLY_LATENT,
+        source_strata={"strain": "ds"},
+        dest_strata={"strain": "mdr"},
+        expected_flow_count=3,
+    )
+    model.add_infection_frequency_flow(
+        name="reinfection_mdr_to_ds",
+        contact_rate=params["reinfection_rate"],
+        source=Compartment.EARLY_LATENT,
+        dest=Compartment.EARLY_LATENT,
+        source_strata={"strain": "mdr"},
+        dest_strata={"strain": "ds"},
+        expected_flow_count=3,
+    )
+
+    model.add_infection_frequency_flow(
+        name="reinfection_late_ds_to_mdr",
+        contact_rate=params["reinfection_rate"],
+        source=Compartment.LATE_LATENT,
+        dest=Compartment.EARLY_LATENT,
+        source_strata={"strain": "ds"},
+        dest_strata={"strain": "mdr"},
+        expected_flow_count=3,
+    )
+    model.add_infection_frequency_flow(
+        name="reinfection_late_mdr_to_ds",
+        contact_rate=params["reinfection_rate"],
+        source=Compartment.LATE_LATENT,
+        dest=Compartment.EARLY_LATENT,
+        source_strata={"strain": "mdr"},
+        dest_strata={"strain": "ds"},
+        expected_flow_count=3,
+    )
+
+    # Apply classification stratification
+    class_strat = _build_class_strat(params)
+    model.stratify_with(class_strat)
+
+    # Apply retention stratification
+    retention_strat = _build_retention_strat(params)
+    model.stratify_with(retention_strat)
+
+    # # # Register derived output functions, which are calculations based on the model's compartment values or flows.
+    # # # These are calculated after the model is run.
+    # outputs.get_all_derived_output_functions(
+    #     params["calculated_outputs"], params["outputs_stratification"], tb_model
+    # )
+
+    # flow_outputs = {}
+    # flow_outputs["progression_early"] = TransitionFlowOutput(
+    #     source=Compartment.EARLY_LATENT,
+    #     dest=Compartment.INFECTIOUS,
+    #     source_strata={},
+    #     dest_strata={},
+    # )
+    # flow_outputs["progression_late"] = TransitionFlowOutput(
+    #     source=Compartment.LATE_LATENT,
+    #     dest=Compartment.INFECTIOUS,
+    #     source_strata={},
+    #     dest_strata={},
+    # )
+    # flow_outputs["notifications"] = TransitionFlowOutput(
+    #     source=Compartment.INFECTIOUS,
+    #     dest=Compartment.DETECTED,
+    #     source_strata={},
+    #     dest_strata={},
+    # )
+    # flow_outputs["infectious_deaths"] = InfectionDeathFlowOutput(
+    #     source=Compartment.INFECTIOUS,
+    #     source_strata={},
+    # )
+    # flow_outputs["detected_deaths"] = InfectionDeathFlowOutput(
+    #     source=Compartment.DETECTED,
+    #     source_strata={},
+    # )
+    # flow_outputs["treatment_deaths"] = InfectionDeathFlowOutput(
+    #     source=Compartment.ON_TREATMENT,
+    #     source_strata={},
+    # )
+    # tb_model.add_flow_derived_outputs(flow_outputs)
+
+    # function_outputs = {}
+    # function_outputs["progression"] = calculate_progression
+    # function_outputs["prevalence_infectious"] = calculate_prevalence_infectious
+    # function_outputs["percentage_latent"] = calculate_ltbi_percentage
+    # function_outputs["disease_deaths"] = calculate_disease_deaths
+    # function_outputs["incidence"] = calculate_disease_incidence
+
+    # tb_model.add_function_derived_outputs(function_outputs)
+
+    # TODO: Double check all strats aren't filtering
+    return model
+
+
+def _adjust_all_multiply(items: dict):
+    return {s: adjust.Multiply(v) for s, v in items.items()}
+
+
+def _build_age_strat(params: dict, uni_death_flow_names: list):
+    # Apply age-stratification
     age_strat = AgeStratification("age", params["age_breakpoints"], COMPARTMENTS)
 
     # Set age demographics
     pop = get_population_by_agegroup(
         age_breakpoints=params["age_breakpoints"], country_iso_code=params["iso3"], year=2000
     )
-    age_split_props = (dict(zip(params["age_breakpoints"], [x / sum(pop) for x in pop])),)
+    age_split_props = dict(zip(params["age_breakpoints"], [x / sum(pop) for x in pop]))
     age_strat.set_population_split(age_split_props)
 
     # Add age-based heterogeneous mixing
@@ -218,39 +348,36 @@ def _build_model(params: dict) -> StratifiedModel:
     # age_strat.set_mixing_matrix(mixing_matrix)
 
     # Add age-based flow adjustments.
-    stabilisation_adjust = {
-        stratum: adjust.Multiply(val)
-        for stratum, val in params["stabilisation_rate_stratified"]["age"].items()
-    }
-    age_strat.add_flow_adjustments("stabilisation", stabilisation_adjust)
-    early_activation_adjust = {
-        stratum: adjust.Multiply(val)
-        for stratum, val in params["early_activation_rate_stratified"]["age"].items()
-    }
-    age_strat.add_flow_adjustments("early_activation", early_activation_adjust)
-    late_activation_adjust = {
-        stratum: adjust.Multiply(val)
-        for stratum, val in params["late_activation_rate_stratified"]["age"].items()
-    }
-    age_strat.add_flow_adjustments("late_activation", late_activation_adjust)
+    age_strat.add_flow_adjustments(
+        "stabilisation", _adjust_all_multiply(params["stabilisation_rate_stratified"]["age"])
+    )
+    age_strat.add_flow_adjustments(
+        "early_activation", _adjust_all_multiply(params["early_activation_rate_stratified"]["age"])
+    )
+    age_strat.add_flow_adjustments(
+        "late_activation", _adjust_all_multiply(params["late_activation_rate_stratified"]["age"])
+    )
 
     # Add age-specific all-causes mortality rate.
     death_rates_by_age, death_rate_years = get_death_rates_by_agegroup(
         params["age_breakpoints"], params["iso3"]
     )
+
     death_rates_by_age = {
         age: scale_up_function(
             death_rate_years, death_rates_by_age[int(age)], smoothness=0.2, method=5
         )
         for age in params["age_breakpoints"]
     }
-    death_rates_by_age = {age: adjust.Multiply(f) for age, f in death_rates_by_age.items()}
     for uni_death_flow_name in uni_death_flow_names:
-        age_strat.add_flow_adjustments(uni_death_flow_name, death_rates_by_age)
+        age_strat.add_flow_adjustments(
+            uni_death_flow_name, _adjust_all_multiply(death_rates_by_age)
+        )
 
-    model.stratify_with(age_strat)
+    return age_strat
 
-    # Add vaccination stratification.
+
+def _build_vac_strat(params):
     vac_strat = Stratification("vac", ["unvaccinated", "vaccinated"], [Compartment.SUSCEPTIBLE])
     vac_strat.set_population_split({"unvaccinated": 1.0, "vaccinated": 0.0})
 
@@ -283,9 +410,10 @@ def _build_model(params: dict) -> StratifiedModel:
             "vaccinated": adjust.Multiply(time_varying_vaccination_coverage),
         },
     )
-    model.stratify_with(vac_strat)
+    return vac_strat
 
-    # Apply organ stratification
+
+def _build_organ_strat(params):
     organ_strat = Stratification(
         "organ", ["smear_positive", "smear_negative", "extra_pulmonary"], INFECTIOUS_COMPS
     )
@@ -293,971 +421,387 @@ def _build_model(params: dict) -> StratifiedModel:
     # Add infectiousness adjustments
     for comp in INFECTIOUS_COMPS:
         organ_strat.add_infectiousness_adjustments(
-            comp, {s: adjust.Multiply(v) for s, v in params["organ"]["foi"].items()}
+            comp, _adjust_all_multiply(params["organ"]["foi"])
         )
 
     organ_strat.add_flow_adjustments(
-        "early_activation", {s: adjust.Multiply(v) for s, v in params["organ"]["props"].items()}
+        "early_activation", _adjust_all_multiply(params["organ"]["props"])
     )
     organ_strat.add_flow_adjustments(
-        "late_activation", {s: adjust.Multiply(v) for s, v in params["organ"]["props"].items()}
+        "late_activation", _adjust_all_multiply(params["organ"]["props"])
     )
     organ_strat.add_flow_adjustments(
         "detection",
-        {s: adjust.Multiply(v) for s, v in params["detection_rate_stratified"]["organ"].items()},
+        _adjust_all_multiply(params["detection_rate_stratified"]["organ"]),
     )
     organ_strat.add_flow_adjustments(
-        "self_recovery",
+        "self_recovery_infectious",
+        _adjust_all_multiply(params["self_recovery_rate_stratified"]["organ"]),
+    )
+    organ_strat.add_flow_adjustments(
+        "self_recovery_detected",
+        _adjust_all_multiply(params["self_recovery_rate_stratified"]["organ"]),
+    )
+    return organ_strat
+
+
+def _build_strain_strat(params):
+    strat = StrainStratification("strain", ["ds", "mdr"], INFECTED_COMPS)
+    strat.set_population_split({"ds": 0.5, "mdr": 0.5})
+    for c in INFECTED_COMPS:
+        strat.add_infectiousness_adjustments(
+            c, {"ds": adjust.Multiply(1.0), "mdr": adjust.Multiply(0.8)}
+        )
+
+    strat.add_flow_adjustments(
+        "treatment_commencement",
+        _adjust_all_multiply(params["treatment_commencement_rate_stratified"]["strain"]),
+    )
+    treatment_adjusts = _adjust_all_multiply(
+        params["preventive_treatment_rate_stratified"]["strain"]
+    )
+    strat.add_flow_adjustments("treatment_early", treatment_adjusts)
+    strat.add_flow_adjustments("treatment_late", treatment_adjusts)
+    strat.add_flow_adjustments(
+        "treatment_recovery",
+        _adjust_all_multiply(params["treatment_recovery_rate_stratified"]["strain"]),
+    )
+    strat.add_flow_adjustments(
+        "treatment_death", _adjust_all_multiply(params["treatment_death_rate_stratified"]["strain"])
+    )
+    strat.add_flow_adjustments(
+        "treatment_default",
+        _adjust_all_multiply(params["treatment_default_rate_stratified"]["strain"]),
+    )
+    strat.add_flow_adjustments(
+        "spontaneous_recovery",
+        _adjust_all_multiply(params["spontaneous_recovery_rate_stratified"]["strain"]),
+    )
+    strat.add_flow_adjustments(
+        "failure_retreatment",
+        _adjust_all_multiply(params["failure_retreatment_rate_stratified"]["strain"]),
+    )
+    return strat
+
+
+def _build_class_strat(params):
+    strat = Stratification(
+        "classified", ["correctly", "incorrectly"], [Compartment.DETECTED, Compartment.ON_TREATMENT]
+    )
+    # FIXME: Not sure how to represent these in SUMMERv2
+    # strat.add_flow_adjustments("detection", {"correctly": adjust.Multiply(1.0), "incorrectly": adjust.Multiply(0.0)})
+    # classification_flow_adjustments.update(
+    #     dict(
+    #         zip(
+    #             [
+    #                 "detection_rate"
+    #                 + "X"
+    #                 + age_stratification_name
+    #                 + "_"
+    #                 + age_group
+    #                 + "X"
+    #                 + organ_stratification_name
+    #                 + "_"
+    #                 + organ
+    #                 + "X"
+    #                 + strain_stratification_name
+    #                 + "_ds"
+    #                 for age_group in params["age_breakpoints"]
+    #                 for organ in organ_strata_requested
+    #             ],
+    #             [
+    #                 {"correctly": 1.0, "incorrectly": 0.0}
+    #                 for _ in range(len(params["age_breakpoints"] * len(organ_strata_requested)))
+    #             ],
+    #         )
+    #     )
+    # )
+    # classification_flow_adjustments.update(
+    #     dict(
+    #         zip(
+    #             [
+    #                 "detection_rate"
+    #                 + "X"
+    #                 + age_stratification_name
+    #                 + "_"
+    #                 + age_group
+    #                 + "X"
+    #                 + organ_stratification_name
+    #                 + "_"
+    #                 + organ
+    #                 + "X"
+    #                 + strain_stratification_name
+    #                 + "_mdr"
+    #                 for age_group in params["age_breakpoints"]
+    #                 for organ in organ_strata_requested
+    #             ],
+    #             [
+    #                 {
+    #                     "correctly": params["frontline_xpert_prop"],
+    #                     "incorrectly": 1.0 - params["frontline_xpert_prop"],
+    #                 }
+    #                 for _ in range(len(params["age_breakpoints"] * len(organ_strata_requested)))
+    #             ],
+    #         )
+    #     )
+    # )
+    # classification_flow_adjustments.update(
+    #     dict(
+    #         zip(
+    #             [
+    #                 "detection_rate"
+    #                 + "X"
+    #                 + age_stratification_name
+    #                 + "_"
+    #                 + age_group
+    #                 + "X"
+    #                 + organ_stratification_name
+    #                 + "_"
+    #                 + "extra_pulmonary"
+    #                 + "X"
+    #                 + strain_stratification_name
+    #                 + "_mdr"
+    #                 for age_group in params["age_breakpoints"]
+    #             ],
+    #             [
+    #                 {"correctly": 0.0, "incorrectly": 1.0}
+    #                 for _ in range(len(params["age_breakpoints"] * len(organ_strata_requested)))
+    #             ],
+    #         )
+    #     )
+    # )
+    # classification_flow_adjustments.update(
+    #     dict(
+    #         zip(
+    #             [
+    #                 "spontaneous_recovery_rate"
+    #                 + "X"
+    #                 + age_stratification_name
+    #                 + "_"
+    #                 + age_group
+    #                 + "X"
+    #                 + organ_stratification_name
+    #                 + "_"
+    #                 + organ
+    #                 + "X"
+    #                 + strain_stratification_name
+    #                 + "_"
+    #                 + strain
+    #                 for age_group in params["age_breakpoints"]
+    #                 for organ in organ_strata_requested
+    #                 for strain in strain_strata_requested
+    #             ],
+    #             [
+    #                 {
+    #                     "correctly": params["spontaneous_recovery_rate_stratified"]["classified"][
+    #                         "correctly"
+    #                     ],
+    #                     "incorrectly": params["spontaneous_recovery_rate_stratified"]["classified"][
+    #                         "incorrectly"
+    #                     ],
+    #                 }
+    #                 for _ in range(
+    #                     len(params["age_breakpoints"])
+    #                     * len(organ_strata_requested)
+    #                     * len(strain_strata_requested)
+    #                 )
+    #             ],
+    #         )
+    #     )
+    # )
+    # classification_flow_adjustments.update(
+    #     dict(
+    #         zip(
+    #             [
+    #                 "failure_retreatment_rate"
+    #                 + "X"
+    #                 + age_stratification_name
+    #                 + "_"
+    #                 + age_group
+    #                 + "X"
+    #                 + organ_stratification_name
+    #                 + "_"
+    #                 + organ
+    #                 + "X"
+    #                 + strain_stratification_name
+    #                 + "_"
+    #                 + strain
+    #                 for age_group in params["age_breakpoints"]
+    #                 for organ in organ_strata_requested
+    #                 for strain in strain_strata_requested
+    #             ],
+    #             [
+    #                 {
+    #                     "correctly": params["failure_retreatment_rate_stratified"]["classified"][
+    #                         "correctly"
+    #                     ],
+    #                     "incorrectly": params["failure_retreatment_rate_stratified"]["classified"][
+    #                         "incorrectly"
+    #                     ],
+    #                 }
+    #                 for _ in range(
+    #                     len(params["age_breakpoints"])
+    #                     * len(organ_strata_requested)
+    #                     * len(strain_strata_requested)
+    #                 )
+    #             ],
+    #         )
+    #     )
+    # )
+    # classification_flow_adjustments.update(
+    #     dict(
+    #         zip(
+    #             [
+    #                 "treatment_default_rate"
+    #                 + "X"
+    #                 + age_stratification_name
+    #                 + "_"
+    #                 + age_group
+    #                 + "X"
+    #                 + organ_stratification_name
+    #                 + "_"
+    #                 + organ
+    #                 + "X"
+    #                 + strain_stratification_name
+    #                 + "_mdr"
+    #                 for age_group in params["age_breakpoints"]
+    #                 for organ in organ_strata_requested
+    #             ],
+    #             [
+    #                 {
+    #                     "correctly": params["treatment_default_rate_stratified"]["classified"][
+    #                         "correctly"
+    #                     ],
+    #                     "incorrectly": params["treatment_default_rate_stratified"]["classified"][
+    #                         "incorrectly"
+    #                     ],
+    #                 }
+    #                 for _ in range(
+    #                     len(params["age_breakpoints"])
+    #                     * len(organ_strata_requested)
+    #                     * len(strain_strata_requested)
+    #                 )
+    #             ],
+    #         )
+    #     )
+    # )
+    return strat
+
+
+def _build_retention_strat(params):
+    strat = Stratification("retained", ["yes", "no"], [Compartment.DETECTED])
+    strat.add_flow_adjustments(
+        "detection",
         {
-            s: adjust.Multiply(v)
-            for s, v in params["self_recovery_rate_stratified"]["organ"].items()
+            "yes": adjust.Multiply(params["retention_prop"]),
+            "no": adjust.Multiply(1 - params["retention_prop"]),
         },
     )
-    model.stratify_with(organ_strat)
-
-    return model
-
-
-def build_model(params: dict) -> StratifiedModel:
-    """
-    Build the master function to run a tuberculosis model
-    """
-
-    # Define model times.
-    time = params["time"]
-    integration_times = get_model_times_from_inputs(
-        round(time["start"]), time["end"], time["step"], time["critical_ranges"]
+    strat.add_flow_adjustments(
+        "missed_to_active",
+        {"yes": adjust.Multiply(0), "no": adjust.Multiply(1)},
+    )
+    strat.add_flow_adjustments(
+        "treatment_commencement",
+        {"yes": adjust.Multiply(1), "no": adjust.Multiply(0)},
     )
 
-    # Define model compartments.
-    compartments = [
-        Compartment.SUSCEPTIBLE,
-        Compartment.EARLY_LATENT,
-        Compartment.LATE_LATENT,
-        Compartment.INFECTIOUS,
-        Compartment.DETECTED,
-        Compartment.ON_TREATMENT,
-        Compartment.RECOVERED,
-    ]
-    infectious_comps = [
-        Compartment.INFECTIOUS,
-        Compartment.DETECTED,
-        Compartment.ON_TREATMENT,
-    ]
-    infected_comps = [
-        Compartment.EARLY_LATENT,
-        Compartment.LATE_LATENT,
-        Compartment.INFECTIOUS,
-        Compartment.DETECTED,
-        Compartment.ON_TREATMENT,
-    ]
-
-    # Define initial conditions - 1 infectious person.
-    init_conditions = {
-        Compartment.EARLY_LATENT: params["initial_early_latent_population"],
-        Compartment.LATE_LATENT: params["initial_late_latent_population"],
-        Compartment.INFECTIOUS: params["initial_infectious_population"],
-        Compartment.DETECTED: params["initial_detected_population"],
-        Compartment.ON_TREATMENT: params["initial_on_treatment_population"],
-    }
-
-    # Generate derived parameters
-    params = preprocess.derived_params.get_derived_params(params)
-
-    # Define inter-compartmental flows.
-    flows = deepcopy(preprocess.flows.DEFAULT_FLOWS)
-
-    # Create the model.
-    tb_model = StratifiedModel(
-        times=integration_times,
-        compartment_names=compartments,
-        initial_conditions=init_conditions,
-        parameters=params,
-        requested_flows=flows,
-        infectious_compartments=infectious_comps,
-        birth_approach=BirthApproach.ADD_CRUDE,
-        entry_compartment=Compartment.SUSCEPTIBLE,
-        starting_population=int(params["start_population_size"]),
+    strat.add_flow_adjustments(
+        "failure_retreatment",
+        {"yes": adjust.Multiply(1), "no": adjust.Multiply(0)},
     )
+    return strat
 
-    pop = get_population_by_agegroup(
-        age_breakpoints=params["age_breakpoints"], country_iso_code=params["iso3"], year=2000
-    )
 
-    mixing_matrix = get_mixing_matrix_specific_agegroups(
-        country_iso_code=params["iso3"],
-        requested_age_breaks=list(map(int, params["age_breakpoints"])),
-        time_unit="years",
-    )
-
-    # apply age stratification
-    age_stratification_name = "age"
-    age_flow_adjustments = {
-        "stabilisation_rate": {
-            "0": params["stabilisation_rate_stratified"]["age"]["age_0"],
-            "5": params["stabilisation_rate_stratified"]["age"]["age_5"],
-            "15": params["stabilisation_rate_stratified"]["age"]["age_15"],
-        },
-        "early_activation_rate": {
-            "0": params["early_activation_rate_stratified"]["age"]["age_0"],
-            "5": params["early_activation_rate_stratified"]["age"]["age_5"],
-            "15": params["early_activation_rate_stratified"]["age"]["age_15"],
-        },
-        "late_activation_rate": {
-            "0": params["late_activation_rate_stratified"]["age"]["age_0"],
-            "5": params["late_activation_rate_stratified"]["age"]["age_5"],
-            "15": params["late_activation_rate_stratified"]["age"]["age_15"],
-        },
-    }
-
-    # age-specific all-causes mortality rate
-    death_rates_by_age, death_rate_years = get_death_rates_by_agegroup(
-        params["age_breakpoints"], params["iso3"]
-    )
-    age_flow_adjustments["universal_death_rate"] = {}
-    for age_group in params["age_breakpoints"]:
-        name = "universal_death_rate_" + str(age_group)
-        age_flow_adjustments["universal_death_rate"][f"{age_group}W"] = name
-        tb_model.time_variants[name] = scale_up_function(
-            death_rate_years, death_rates_by_age[int(age_group)], smoothness=0.2, method=5
+def _get_derived_params(params):
+    # set reinfection contact rate parameters
+    for state in ["latent", "recovered"]:
+        params["contact_rate_from_" + state] = (
+            params["contact_rate"] * params["rr_infection_" + state]
         )
-        tb_model.parameters[name] = name
 
-    tb_model.stratify(
-        stratification_name=age_stratification_name,
-        strata_request=params["age_breakpoints"],
-        compartments_to_stratify=compartments,
-        comp_split_props=dict(zip(params["age_breakpoints"], [x / sum(pop) for x in pop])),
-        flow_adjustments=age_flow_adjustments,
-        # FIXME: These values break the solver because they are very big.
-        # mixing_matrix=mixing_matrix,
-    )
-
-    tb_model.time_variants["time_varying_vaccination_coverage"] = (
-        lambda t: params["bcg"]["coverage"] if t > params["bcg"]["start_time"] else 0.0
-    )
-    tb_model.time_variants["time_varying_unvaccinated_coverage"] = (
-        lambda t: 1 - params["bcg"]["coverage"] if t > params["bcg"]["start_time"] else 1.0
-    )
-    #
-    # def new_time_varying_fcn(t):
-    #     return t**2
-    #
-    # tb_model.time_variants["death_rate"] = new_time_varying_fcn
-
-    # apply vaccination stratification
-    vac_stratification_name = "vac"
-    vac_strata_requested = ["unvaccinated", "vaccinated"]
-    vaccination_flow_adjustments = dict(
-        zip(
-            [
-                "contact_rate" + "X" + age_stratification_name + "_" + age_group
-                for age_group in params["age_breakpoints"]
-            ],
-            [
-                {"unvaccinated": 1.0, "vaccinated": params["bcg"]["rr_infection_vaccinated"]}
-                for _ in range(len(params["age_breakpoints"]))
-            ],
+    params["detection_rate"] = (
+        params["case_detection_prop_sp"]
+        / (1 - params["case_detection_prop_sp"])
+        * (
+            params["self_recovery_rate"]
+            * params["self_recovery_rate_stratified"]["organ"]["smear_positive"]
+            + params["infect_death_rate"]
+            * params["infect_death_rate_stratified"]["organ"]["smear_positive"]
         )
     )
-
-    vaccination_flow_adjustments.update(
-        dict(
-            zip(
-                [
-                    "preventive_treatment_rate" + "X" + age_stratification_name + "_" + age_group
-                    for age_group in params["age_breakpoints"]
-                ],
-                [
-                    {"unvaccinated": 0.0, "vaccinated": 1.0}
-                    for _ in range(len(params["age_breakpoints"]))
-                ],
+    params["detection_rate_stratified"]["organ"]["smear_positive"] = 1.0
+    params["detection_rate_stratified"]["organ"]["extra_pulmonary"] = (
+        params["case_detection_prop_sp"]
+        / (2 - params["case_detection_prop_sp"])
+        * (
+            params["infect_death_rate"]
+            * params["infect_death_rate_stratified"]["organ"]["extra_pulmonary"]
+            + params["self_recovery_rate"]
+            * params["self_recovery_rate_stratified"]["organ"]["extra_pulmonary"]
+        )
+        / params["detection_rate"]
+    )
+    params["detection_rate_stratified"]["organ"]["smear_negative"] = (
+        1
+        / params["detection_rate"]
+        * (
+            params["detection_rate"]
+            * params["detection_rate_stratified"]["organ"]["extra_pulmonary"]
+            + (params["case_detection_prop"] - 0.5 * params["case_detection_prop_sp"])
+            * params["frontline_xpert_prop"]
+            * (
+                params["infect_death_rate"]
+                * params["infect_death_rate_stratified"]["organ"]["smear_negative"]
+                + params["self_recovery_rate"]
+                * params["self_recovery_rate_stratified"]["organ"]["smear_positive"]
             )
         )
     )
 
-    vaccination_flow_adjustments["crude_birth_rateXage_0"] = {
-        "unvaccinated": "time_varying_unvaccinated_coverage",
-        "vaccinated": "time_varying_vaccination_coverage",
-    }
+    params["treatment_recovery_rate"] = (
+        params["treatment_success_prop"] / params["treatment_duration"]
+    )
+    params["treatment_recovery_rate_stratified"]["strain"]["ds"] = 1.0
+    params["treatment_recovery_rate_stratified"]["strain"]["mdr"] = (
+        params["treatment_success_prop"]
+        * params["treatment_success_prop_stratified"]["strain"]["mdr"]
+        / (params["treatment_duration"] * params["treatment_duration_stratified"]["strain"]["mdr"])
+    ) / params["treatment_recovery_rate"]
 
-    tb_model.stratify(
-        stratification_name=vac_stratification_name,
-        strata_request=vac_strata_requested,
-        compartments_to_stratify=[Compartment.SUSCEPTIBLE],
-        comp_split_props={"unvaccinated": 1.0, "vaccinated": 0.0},
-        flow_adjustments=vaccination_flow_adjustments,
+    params["treatment_death_rate"] = (
+        params["treatment_mortality_prop"] / params["treatment_duration"]
     )
+    params["treatment_death_rate_stratified"]["strain"]["ds"] = 1.0
+    params["treatment_death_rate_stratified"]["strain"]["mdr"] = (
+        params["treatment_mortality_prop"]
+        * params["treatment_mortality_prop_stratified"]["strain"]["mdr"]
+        / (params["treatment_duration"] * params["treatment_duration_stratified"]["strain"]["mdr"])
+    ) / params["treatment_death_rate"]
 
-    # apply organ stratification
-    organ_stratification_name = "organ"
-    organ_strata_requested = ["smear_positive", "smear_negative", "extra_pulmonary"]
-    organ_flow_adjustments = dict()
-    organ_flow_adjustments.update(
-        dict(
-            zip(
-                [
-                    "early_activation_rate" + "X" + age_stratification_name + "_" + age_group
-                    for age_group in params["age_breakpoints"]
-                ],
-                [
-                    {
-                        "smear_positive": params["organ"]["sp_prop"],
-                        "smear_negative": params["organ"]["sn_prop"],
-                        "extra_pulmonary": params["organ"]["e_prop"],
-                    }
-                    for _ in range(len(params["age_breakpoints"]))
-                ],
-            )
-        )
+    params["treatment_default_rate"] = (
+        params["treatment_default_prop"] / params["treatment_duration"]
     )
-    organ_flow_adjustments.update(
-        dict(
-            zip(
-                [
-                    "late_activation_rate" + "X" + age_stratification_name + "_" + age_group
-                    for age_group in params["age_breakpoints"]
-                ],
-                [
-                    {
-                        "smear_positive": params["organ"]["sp_prop"],
-                        "smear_negative": params["organ"]["sn_prop"],
-                        "extra_pulmonary": params["organ"]["e_prop"],
-                    }
-                    for _ in range(len(params["age_breakpoints"]))
-                ],
-            )
-        )
-    )
-    organ_flow_adjustments.update(
-        dict(
-            zip(
-                [
-                    "detection_rate" + "X" + age_stratification_name + "_" + age_group
-                    for age_group in params["age_breakpoints"]
-                ],
-                [
-                    {
-                        "smear_positive": params["detection_rate_stratified"]["organ"]["sp"],
-                        "smear_negative": params["detection_rate_stratified"]["organ"]["sn"],
-                        "extra_pulmonary": params["detection_rate_stratified"]["organ"]["e"],
-                    }
-                    for _ in range(len(params["age_breakpoints"]))
-                ],
-            )
-        )
-    )
-    organ_flow_adjustments.update(
-        dict(
-            zip(
-                [
-                    "self_recovery_rate" + "X" + age_stratification_name + "_" + age_group
-                    for age_group in params["age_breakpoints"]
-                ],
-                [
-                    {
-                        "smear_positive": params["self_recovery_rate_stratified"]["organ"]["sp"],
-                        "smear_negative": params["self_recovery_rate_stratified"]["organ"]["sn"],
-                        "extra_pulmonary": params["self_recovery_rate_stratified"]["organ"]["e"],
-                    }
-                    for _ in range(len(params["age_breakpoints"]))
-                ],
-            )
-        )
+    params["treatment_default_rate_stratified"]["strain"]["ds"] = 1 - params["amplification_prob"]
+    params["treatment_default_rate_stratified"]["strain"]["mdr"] = (
+        params["treatment_default_prop"]
+        * params["treatment_default_prop_stratified"]["strain"]["mdr"]
+        / (params["treatment_duration"] * params["treatment_duration_stratified"]["strain"]["mdr"])
+    ) / params["treatment_default_rate"]
+
+    params["treatment_default_rate_stratified"]["classified"]["correctly"] = 1.0
+    params["treatment_default_rate_stratified"]["classified"]["incorrectly"] = params[
+        "proportion_mdr_misdiagnosed_as_ds_transition_to_fail_lost"
+    ] / (
+        params["treatment_default_rate"]
+        * params["treatment_default_rate_stratified"]["strain"]["mdr"]
     )
 
-    tb_model.stratify(
-        stratification_name=organ_stratification_name,
-        strata_request=organ_strata_requested,
-        compartments_to_stratify=infectious_comps,
-        comp_split_props={
-            "smear_positive": params["organ"]["sp_prop"],
-            "smear_negative": params["organ"]["sn_prop"],
-            "extra_pulmonary": params["organ"]["e_prop"],
-        },
-        flow_adjustments=organ_flow_adjustments,
-        infectiousness_adjustments={
-            "smear_positive": params["organ"]["sp_foi"],
-            "smear_negative": params["organ"]["sn_foi"],
-            "extra_pulmonary": params["organ"]["e_foi"],
-        },
-    )
+    params["amplification_rate"] = params["treatment_default_rate"] * params["amplification_prob"]
 
-    # apply strain stratification
-    strain_stratification_name = "strain"
-    strain_strata_requested = ["ds", "mdr"]
-    strain_flow_adjustments = dict()
-    strain_flow_adjustments.update(
-        dict(
-            zip(
-                [
-                    "treatment_commencement_rate"
-                    + "X"
-                    + age_stratification_name
-                    + "_"
-                    + age_group
-                    + "X"
-                    + organ_stratification_name
-                    + "_"
-                    + organ
-                    for age_group in params["age_breakpoints"]
-                    for organ in organ_strata_requested
-                ],
-                [
-                    {
-                        "ds": params["treatment_commencement_rate_stratified"]["strain"]["ds"],
-                        "mdr": params["treatment_commencement_rate_stratified"]["strain"]["mdr"],
-                    }
-                    for _ in range(len(params["age_breakpoints"]) * len(organ_strata_requested))
-                ],
-            )
-        )
-    )
-    strain_flow_adjustments.update(
-        dict(
-            zip(
-                [
-                    "preventive_treatment_rate" + "X" + age_stratification_name + "_" + age_group
-                    for age_group in params["age_breakpoints"]
-                ],
-                [
-                    {
-                        "ds": params["preventive_treatment_rate_stratified"]["strain"]["ds"],
-                        "mdr": params["preventive_treatment_rate_stratified"]["strain"]["mdr"],
-                    }
-                    for _ in range(len(params["age_breakpoints"]))
-                ],
-            )
-        )
-    )
-    strain_flow_adjustments.update(
-        dict(
-            zip(
-                [
-                    "treatment_recovery_rate"
-                    + "X"
-                    + age_stratification_name
-                    + "_"
-                    + age_group
-                    + "X"
-                    + organ_stratification_name
-                    + "_"
-                    + organ
-                    for age_group in params["age_breakpoints"]
-                    for organ in organ_strata_requested
-                ],
-                [
-                    {
-                        "ds": params["treatment_recovery_rate_stratified"]["strain"]["ds"],
-                        "mdr": params["treatment_recovery_rate_stratified"]["strain"]["mdr"],
-                    }
-                    for _ in range(len(params["age_breakpoints"]) * len(organ_strata_requested))
-                ],
-            )
-        )
-    )
-    strain_flow_adjustments.update(
-        dict(
-            zip(
-                [
-                    "treatment_death_rate"
-                    + "X"
-                    + age_stratification_name
-                    + "_"
-                    + age_group
-                    + "X"
-                    + organ_stratification_name
-                    + "_"
-                    + organ
-                    for age_group in params["age_breakpoints"]
-                    for organ in organ_strata_requested
-                ],
-                [
-                    {
-                        "ds": params["treatment_death_rate_stratified"]["strain"]["ds"],
-                        "mdr": params["treatment_death_rate_stratified"]["strain"]["mdr"],
-                    }
-                    for _ in range(len(params["age_breakpoints"]) * len(organ_strata_requested))
-                ],
-            )
-        )
-    )
-    strain_flow_adjustments.update(
-        dict(
-            zip(
-                [
-                    f"treatment_default_rateX{age_stratification_name}_{age_group}X{organ_stratification_name}_{organ}"
-                    for age_group in params["age_breakpoints"]
-                    for organ in organ_strata_requested
-                ],
-                [
-                    {
-                        "ds": params["treatment_default_rate_stratified"]["strain"]["ds"],
-                        "mdr": params["treatment_default_rate_stratified"]["strain"]["mdr"],
-                    }
-                    for _ in range(len(params["age_breakpoints"]) * len(organ_strata_requested))
-                ],
-            )
-        )
-    )
-    strain_flow_adjustments.update(
-        dict(
-            zip(
-                [
-                    "spontaneous_recovery_rate"
-                    + "X"
-                    + age_stratification_name
-                    + "_"
-                    + age_group
-                    + "X"
-                    + organ_stratification_name
-                    + "_"
-                    + organ
-                    for age_group in params["age_breakpoints"]
-                    for organ in organ_strata_requested
-                ],
-                [
-                    {
-                        "ds": params["spontaneous_recovery_rate_stratified"]["strain"]["ds"],
-                        "mdr": params["spontaneous_recovery_rate_stratified"]["strain"]["mdr"],
-                    }
-                    for _ in range(len(params["age_breakpoints"]) * len(organ_strata_requested))
-                ],
-            )
-        )
-    )
-    strain_flow_adjustments.update(
-        dict(
-            zip(
-                [
-                    "failure_retreatment_rate"
-                    + "X"
-                    + age_stratification_name
-                    + "_"
-                    + age_group
-                    + "X"
-                    + organ_stratification_name
-                    + "_"
-                    + organ
-                    for age_group in params["age_breakpoints"]
-                    for organ in organ_strata_requested
-                ],
-                [
-                    {
-                        "ds": params["failure_retreatment_rate_stratified"]["strain"]["ds"],
-                        "mdr": params["failure_retreatment_rate_stratified"]["strain"]["mdr"],
-                    }
-                    for _ in range(len(params["age_breakpoints"]) * len(organ_strata_requested))
-                ],
-            )
-        )
-    )
+    params["reinfection_rate"] = params["contact_rate"] * params["rr_infection_latent"]
 
-    tb_model.stratify(
-        stratification_name=strain_stratification_name,
-        strata_request=strain_strata_requested,
-        compartments_to_stratify=infected_comps,
-        comp_split_props={"ds": 0.5, "mdr": 0.5},
-        flow_adjustments=strain_flow_adjustments,
-        infectiousness_adjustments={"ds": 1.0, "mdr": 0.8},
-    )
-
-    # add amplification flow
-    tb_model.add_extra_flow(
-        flow={
-            "type": Flow.STANDARD,
-            "origin": Compartment.ON_TREATMENT,
-            "to": Compartment.ON_TREATMENT,
-            "parameter": "amplification_rate",
-        },
-        source_strata={"strain": "ds"},
-        dest_strata={"strain": "mdr"},
-        expected_flow_count=9,
-    )
-
-    # add cross-strain reinfection flows
-    tb_model.add_extra_flow(
-        flow={
-            "type": Flow.INFECTION_FREQUENCY,
-            "origin": Compartment.EARLY_LATENT,
-            "to": Compartment.EARLY_LATENT,
-            "parameter": "reinfection_rate",
-        },
-        source_strata={"strain": "ds"},
-        dest_strata={"strain": "mdr"},
-        expected_flow_count=3,
-    )
-
-    tb_model.add_extra_flow(
-        flow={
-            "type": Flow.INFECTION_FREQUENCY,
-            "origin": Compartment.EARLY_LATENT,
-            "to": Compartment.EARLY_LATENT,
-            "parameter": "reinfection_rate",
-        },
-        source_strata={"strain": "mdr"},
-        dest_strata={"strain": "ds"},
-        expected_flow_count=3,
-    )
-
-    tb_model.add_extra_flow(
-        flow={
-            "type": Flow.INFECTION_FREQUENCY,
-            "origin": Compartment.LATE_LATENT,
-            "to": Compartment.EARLY_LATENT,
-            "parameter": "reinfection_rate",
-        },
-        source_strata={"strain": "mdr"},
-        dest_strata={"strain": "ds"},
-        expected_flow_count=3,
-    )
-
-    tb_model.add_extra_flow(
-        flow={
-            "type": Flow.INFECTION_FREQUENCY,
-            "origin": Compartment.LATE_LATENT,
-            "to": Compartment.EARLY_LATENT,
-            "parameter": "reinfection_rate",
-        },
-        source_strata={"strain": "ds"},
-        dest_strata={"strain": "mdr"},
-        expected_flow_count=3,
-    )
-
-    # # add in re-infection with alternate strain
-    # # tb_model.flows.append([InfectionFrequencyFlow(source=tb_model.compartment_names[1],
-    # #                                               dest=tb_model.compartment_names[2],
-    # #                                               param_name="contact_rate_from_recovered",
-    # #                                               param_func=tb_model.get_parameter_value,
-    # #                                               find_infectious_multiplier=[1.0]
-    # #
-    # #                        )])
-    #
-    # # Create lookup table for quickly getting / setting compartments by name
-    # # compartment_idx_lookup = {name: idx for idx, name in enumerate(self.compartment_names)}
-    # # for flow in self.flows:
-    # #     flow.update_compartment_indices(compartment_idx_lookup)
-    #
-    #
-
-    # apply classification stratification
-    classification_stratification_name = "classified"
-    classification_strata_requested = ["correctly", "incorrectly"]
-    classification_flow_adjustments = dict()
-
-    classification_flow_adjustments.update(
-        dict(
-            zip(
-                [
-                    "detection_rate"
-                    + "X"
-                    + age_stratification_name
-                    + "_"
-                    + age_group
-                    + "X"
-                    + organ_stratification_name
-                    + "_"
-                    + organ
-                    + "X"
-                    + strain_stratification_name
-                    + "_ds"
-                    for age_group in params["age_breakpoints"]
-                    for organ in organ_strata_requested
-                ],
-                [
-                    {"correctly": 1.0, "incorrectly": 0.0}
-                    for _ in range(len(params["age_breakpoints"] * len(organ_strata_requested)))
-                ],
-            )
-        )
-    )
-    classification_flow_adjustments.update(
-        dict(
-            zip(
-                [
-                    "detection_rate"
-                    + "X"
-                    + age_stratification_name
-                    + "_"
-                    + age_group
-                    + "X"
-                    + organ_stratification_name
-                    + "_"
-                    + organ
-                    + "X"
-                    + strain_stratification_name
-                    + "_mdr"
-                    for age_group in params["age_breakpoints"]
-                    for organ in organ_strata_requested
-                ],
-                [
-                    {
-                        "correctly": params["frontline_xpert_prop"],
-                        "incorrectly": 1.0 - params["frontline_xpert_prop"],
-                    }
-                    for _ in range(len(params["age_breakpoints"] * len(organ_strata_requested)))
-                ],
-            )
-        )
-    )
-    classification_flow_adjustments.update(
-        dict(
-            zip(
-                [
-                    "detection_rate"
-                    + "X"
-                    + age_stratification_name
-                    + "_"
-                    + age_group
-                    + "X"
-                    + organ_stratification_name
-                    + "_"
-                    + "extra_pulmonary"
-                    + "X"
-                    + strain_stratification_name
-                    + "_mdr"
-                    for age_group in params["age_breakpoints"]
-                ],
-                [
-                    {"correctly": 0.0, "incorrectly": 1.0}
-                    for _ in range(len(params["age_breakpoints"] * len(organ_strata_requested)))
-                ],
-            )
-        )
-    )
-    classification_flow_adjustments.update(
-        dict(
-            zip(
-                [
-                    "spontaneous_recovery_rate"
-                    + "X"
-                    + age_stratification_name
-                    + "_"
-                    + age_group
-                    + "X"
-                    + organ_stratification_name
-                    + "_"
-                    + organ
-                    + "X"
-                    + strain_stratification_name
-                    + "_"
-                    + strain
-                    for age_group in params["age_breakpoints"]
-                    for organ in organ_strata_requested
-                    for strain in strain_strata_requested
-                ],
-                [
-                    {
-                        "correctly": params["spontaneous_recovery_rate_stratified"]["classified"][
-                            "correctly"
-                        ],
-                        "incorrectly": params["spontaneous_recovery_rate_stratified"]["classified"][
-                            "incorrectly"
-                        ],
-                    }
-                    for _ in range(
-                        len(params["age_breakpoints"])
-                        * len(organ_strata_requested)
-                        * len(strain_strata_requested)
-                    )
-                ],
-            )
-        )
-    )
-    classification_flow_adjustments.update(
-        dict(
-            zip(
-                [
-                    "failure_retreatment_rate"
-                    + "X"
-                    + age_stratification_name
-                    + "_"
-                    + age_group
-                    + "X"
-                    + organ_stratification_name
-                    + "_"
-                    + organ
-                    + "X"
-                    + strain_stratification_name
-                    + "_"
-                    + strain
-                    for age_group in params["age_breakpoints"]
-                    for organ in organ_strata_requested
-                    for strain in strain_strata_requested
-                ],
-                [
-                    {
-                        "correctly": params["failure_retreatment_rate_stratified"]["classified"][
-                            "correctly"
-                        ],
-                        "incorrectly": params["failure_retreatment_rate_stratified"]["classified"][
-                            "incorrectly"
-                        ],
-                    }
-                    for _ in range(
-                        len(params["age_breakpoints"])
-                        * len(organ_strata_requested)
-                        * len(strain_strata_requested)
-                    )
-                ],
-            )
-        )
-    )
-    classification_flow_adjustments.update(
-        dict(
-            zip(
-                [
-                    "treatment_default_rate"
-                    + "X"
-                    + age_stratification_name
-                    + "_"
-                    + age_group
-                    + "X"
-                    + organ_stratification_name
-                    + "_"
-                    + organ
-                    + "X"
-                    + strain_stratification_name
-                    + "_mdr"
-                    for age_group in params["age_breakpoints"]
-                    for organ in organ_strata_requested
-                ],
-                [
-                    {
-                        "correctly": params["treatment_default_rate_stratified"]["classified"][
-                            "correctly"
-                        ],
-                        "incorrectly": params["treatment_default_rate_stratified"]["classified"][
-                            "incorrectly"
-                        ],
-                    }
-                    for _ in range(
-                        len(params["age_breakpoints"])
-                        * len(organ_strata_requested)
-                        * len(strain_strata_requested)
-                    )
-                ],
-            )
-        )
-    )
-
-    #
-    #
-    tb_model.stratify(
-        stratification_name=classification_stratification_name,
-        strata_request=classification_strata_requested,
-        compartments_to_stratify=[Compartment.DETECTED, Compartment.ON_TREATMENT],
-        flow_adjustments=classification_flow_adjustments,
-    )
-
-    # apply retention stratification
-    retention_stratification_name = "retained"
-    retention_strata_requested = ["yes", "no"]
-
-    retention_flow_adjustments = dict()
-    retention_flow_adjustments.update(
-        dict(
-            zip(
-                [
-                    "detection_rate"
-                    + "X"
-                    + age_stratification_name
-                    + "_"
-                    + age_group
-                    + "X"
-                    + organ_stratification_name
-                    + "_"
-                    + organ
-                    + "X"
-                    + strain_stratification_name
-                    + "_"
-                    + strain
-                    + "X"
-                    + classification_stratification_name
-                    + "_"
-                    + classification
-                    for age_group in params["age_breakpoints"]
-                    for organ in organ_strata_requested
-                    for strain in strain_strata_requested
-                    for classification in classification_strata_requested
-                ],
-                [
-                    {"yes": params["retention_prop"], "no": 1 - params["retention_prop"]}
-                    for _ in range(
-                        len(params["age_breakpoints"])
-                        * len(organ_strata_requested)
-                        * len(strain_strata_requested)
-                        * len(classification_strata_requested)
-                    )
-                ],
-            )
-        )
-    )
-
-    retention_flow_adjustments.update(
-        dict(
-            zip(
-                [
-                    "missed_to_active_rate"
-                    + "X"
-                    + age_stratification_name
-                    + "_"
-                    + age_group
-                    + "X"
-                    + organ_stratification_name
-                    + "_"
-                    + organ
-                    + "X"
-                    + strain_stratification_name
-                    + "_"
-                    + strain
-                    for age_group in params["age_breakpoints"]
-                    for organ in organ_strata_requested
-                    for strain in strain_strata_requested
-                ],
-                [
-                    {"yes": 0.0, "no": 1.0}
-                    for _ in range(
-                        len(params["age_breakpoints"])
-                        * len(organ_strata_requested)
-                        * len(strain_strata_requested)
-                    )
-                ],
-            )
-        )
-    )
-    retention_flow_adjustments.update(
-        dict(
-            zip(
-                [
-                    "treatment_commencement_rate"
-                    + "X"
-                    + age_stratification_name
-                    + "_"
-                    + age_group
-                    + "X"
-                    + organ_stratification_name
-                    + "_"
-                    + organ
-                    + "X"
-                    + strain_stratification_name
-                    + "_"
-                    + strain
-                    + "X"
-                    + classification_stratification_name
-                    + "_"
-                    + classification
-                    for age_group in params["age_breakpoints"]
-                    for organ in organ_strata_requested
-                    for strain in strain_strata_requested
-                    for classification in classification_strata_requested
-                ],
-                [
-                    {"yes": 1.0, "no": 0.0}
-                    for _ in range(
-                        len(params["age_breakpoints"])
-                        * len(organ_strata_requested)
-                        * len(strain_strata_requested)
-                        * len(classification_strata_requested)
-                    )
-                ],
-            )
-        )
-    )
-    retention_flow_adjustments.update(
-        dict(
-            zip(
-                [
-                    "failure_retreatment_rate"
-                    + "X"
-                    + age_stratification_name
-                    + "_"
-                    + age_group
-                    + "X"
-                    + organ_stratification_name
-                    + "_"
-                    + organ
-                    + "X"
-                    + strain_stratification_name
-                    + "_"
-                    + strain
-                    + "X"
-                    + classification_stratification_name
-                    + "_"
-                    + classification
-                    for age_group in params["age_breakpoints"]
-                    for organ in organ_strata_requested
-                    for strain in strain_strata_requested
-                    for classification in classification_strata_requested
-                ],
-                [
-                    {"yes": 1.0, "no": 0.0}
-                    for _ in range(
-                        len(params["age_breakpoints"])
-                        * len(organ_strata_requested)
-                        * len(strain_strata_requested)
-                        * len(classification_strata_requested)
-                    )
-                ],
-            )
-        )
-    )
-
-    tb_model.stratify(
-        stratification_name=retention_stratification_name,
-        strata_request=retention_strata_requested,
-        compartments_to_stratify=[Compartment.DETECTED],
-        flow_adjustments=retention_flow_adjustments,
-    )
-
-    # # Register derived output functions, which are calculations based on the model's compartment values or flows.
-    # # These are calculated after the model is run.
-    outputs.get_all_derived_output_functions(
-        params["calculated_outputs"], params["outputs_stratification"], tb_model
-    )
-
-    flow_outputs = {}
-    flow_outputs["progression_early"] = TransitionFlowOutput(
-        source=Compartment.EARLY_LATENT,
-        dest=Compartment.INFECTIOUS,
-        source_strata={},
-        dest_strata={},
-    )
-    flow_outputs["progression_late"] = TransitionFlowOutput(
-        source=Compartment.LATE_LATENT,
-        dest=Compartment.INFECTIOUS,
-        source_strata={},
-        dest_strata={},
-    )
-    flow_outputs["notifications"] = TransitionFlowOutput(
-        source=Compartment.INFECTIOUS,
-        dest=Compartment.DETECTED,
-        source_strata={},
-        dest_strata={},
-    )
-    flow_outputs["infectious_deaths"] = InfectionDeathFlowOutput(
-        source=Compartment.INFECTIOUS,
-        source_strata={},
-    )
-    flow_outputs["detected_deaths"] = InfectionDeathFlowOutput(
-        source=Compartment.DETECTED,
-        source_strata={},
-    )
-    flow_outputs["treatment_deaths"] = InfectionDeathFlowOutput(
-        source=Compartment.ON_TREATMENT,
-        source_strata={},
-    )
-    tb_model.add_flow_derived_outputs(flow_outputs)
-
-    function_outputs = {}
-    function_outputs["progression"] = calculate_progression
-    function_outputs["prevalence_infectious"] = calculate_prevalence_infectious
-    function_outputs["percentage_latent"] = calculate_ltbi_percentage
-    function_outputs["disease_deaths"] = calculate_disease_deaths
-    function_outputs["incidence"] = calculate_disease_incidence
-
-    tb_model.add_function_derived_outputs(function_outputs)
-    return tb_model
+    return params
 
 
 def calculate_progression(

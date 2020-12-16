@@ -1,0 +1,15 @@
+# SCENARIO DESCRIPTION: Counterfactual with no MHS
+---
+parent: apps/covid_19/regions/philippines/params/default.yml
+
+time:
+  start: 40
+
+mobility:
+  microdistancing:
+    behaviour:
+      parameters:
+        times:
+          - 40
+        values:
+          - 0.

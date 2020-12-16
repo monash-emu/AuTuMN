@@ -10,12 +10,6 @@ from autumn.inputs import get_population_by_agegroup, get_death_rates_by_agegrou
 from autumn.inputs.social_mixing.queries import get_mixing_matrix_specific_agegroups
 from autumn.curve import scale_up_function
 
-from apps.tuberculosis_strains.model import outputs
-from summer.model.derived_outputs import (
-    InfectionDeathFlowOutput,
-    TransitionFlowOutput,
-)
-
 
 COMPARTMENTS = [
     Compartment.SUSCEPTIBLE,
@@ -271,55 +265,53 @@ def build_model(params: dict) -> CompartmentalModel:
     retention_strat = _build_retention_strat(params)
     model.stratify_with(retention_strat)
 
-    # # # Register derived output functions, which are calculations based on the model's compartment values or flows.
-    # # # These are calculated after the model is run.
-    # outputs.get_all_derived_output_functions(
-    #     params["calculated_outputs"], params["outputs_stratification"], tb_model
-    # )
+    # Register derived output functions, which are calculations based on the model's compartment values or flows.
+    # These are calculated after the model is run.
+    model.request_output_for_flow("notifications", flow_name="detection")
+    model.request_output_for_flow("early_activation", flow_name="early_activation")
+    model.request_output_for_flow("late_activation", flow_name="late_activation")
+    model.request_output_for_flow("infectious_deaths", flow_name="infectious_death")
+    model.request_output_for_flow("detected_deaths", flow_name="detected_death")
+    model.request_output_for_flow("treatment_deaths", flow_name="treatment_death")
+    model.request_output_for_flow("progression_early", flow_name="early_activation")
+    model.request_output_for_flow("progression_late", flow_name="late_activation")
+    model.request_aggregate_output("progression", ["progression_early", "progression_late"])
+    model.request_output_for_compartments("population_size", COMPARTMENTS)
 
-    # flow_outputs = {}
-    # flow_outputs["progression_early"] = TransitionFlowOutput(
-    #     source=Compartment.EARLY_LATENT,
-    #     dest=Compartment.INFECTIOUS,
-    #     source_strata={},
-    #     dest_strata={},
-    # )
-    # flow_outputs["progression_late"] = TransitionFlowOutput(
-    #     source=Compartment.LATE_LATENT,
-    #     dest=Compartment.INFECTIOUS,
-    #     source_strata={},
-    #     dest_strata={},
-    # )
-    # flow_outputs["notifications"] = TransitionFlowOutput(
-    #     source=Compartment.INFECTIOUS,
-    #     dest=Compartment.DETECTED,
-    #     source_strata={},
-    #     dest_strata={},
-    # )
-    # flow_outputs["infectious_deaths"] = InfectionDeathFlowOutput(
-    #     source=Compartment.INFECTIOUS,
-    #     source_strata={},
-    # )
-    # flow_outputs["detected_deaths"] = InfectionDeathFlowOutput(
-    #     source=Compartment.DETECTED,
-    #     source_strata={},
-    # )
-    # flow_outputs["treatment_deaths"] = InfectionDeathFlowOutput(
-    #     source=Compartment.ON_TREATMENT,
-    #     source_strata={},
-    # )
-    # tb_model.add_flow_derived_outputs(flow_outputs)
+    model.request_aggregate_output(
+        "_incidence", sources=["early_activation", "late_activation"], save_results=False
+    )
+    model.request_function_output(
+        "incidence", sources=["_incidence", "population_size"], func=lambda i, p: 1e5 * i / p
+    )
 
-    # function_outputs = {}
-    # function_outputs["progression"] = calculate_progression
-    # function_outputs["prevalence_infectious"] = calculate_prevalence_infectious
-    # function_outputs["percentage_latent"] = calculate_ltbi_percentage
-    # function_outputs["disease_deaths"] = calculate_disease_deaths
-    # function_outputs["incidence"] = calculate_disease_incidence
+    model.request_aggregate_output(
+        "disease_deaths", sources=["infectious_deaths", "detected_deaths", "treatment_deaths"]
+    )
+    cum_start_time = params["cumulative_output_start_time"]
+    model.request_cumulative_output(
+        "cumulative_diseased", source="_incidence", start_time=cum_start_time
+    )
+    model.request_cumulative_output(
+        "cumulative_deaths", source="disease_deaths", start_time=cum_start_time
+    )
 
-    # tb_model.add_function_derived_outputs(function_outputs)
+    model.request_output_for_compartments("_count_infectious", INFECTIOUS_COMPS, save_results=False)
+    model.request_function_output(
+        "prevalence_infectious",
+        sources=["_count_infectious", "population_size"],
+        func=lambda c, p: 1e5 * c / p,
+    )
 
-    # TODO: Double check all strats aren't filtering
+    model.request_output_for_compartments(
+        "_count_latent", [Compartment.EARLY_LATENT, Compartment.LATE_LATENT], save_results=False
+    )
+    model.request_function_output(
+        "percentage_latent",
+        sources=["_count_latent", "population_size"],
+        func=lambda c, p: 100 * c / p,
+    )
+
     return model
 
 
@@ -802,84 +794,3 @@ def _get_derived_params(params):
     params["reinfection_rate"] = params["contact_rate"] * params["rr_infection_latent"]
 
     return params
-
-
-def calculate_progression(
-    time_idx,
-    model,
-    compartment_values,
-    derived_outputs,
-):
-    return (
-        derived_outputs["progression_early"][time_idx]
-        + derived_outputs["progression_late"][time_idx]
-    )
-
-
-def calculate_disease_deaths(
-    time_idx,
-    model,
-    compartment_values,
-    derived_outputs,
-):
-    return (
-        derived_outputs["infectious_deaths"][time_idx]
-        + derived_outputs["detected_deaths"][time_idx]
-        + derived_outputs["treatment_deaths"][time_idx]
-    )
-
-
-def calculate_prevalence_infectious(
-    time_idx,
-    model,
-    compartment_values,
-    derived_outputs,
-):
-    """
-    Calculate the total number of infectious people at each time-step.
-    """
-    prevalence_infectious = 0
-    for i, compartment in enumerate(model.compartment_names):
-        is_infectious = compartment.has_name_in_list(
-            [Compartment.INFECTIOUS, Compartment.DETECTED, Compartment.ON_TREATMENT]
-        )
-        if is_infectious:
-            prevalence_infectious += compartment_values[i]
-    pop_size = sum(compartment_values)
-
-    return prevalence_infectious / pop_size * 1.0e5
-
-
-def calculate_ltbi_percentage(
-    time_idx,
-    model,
-    compartment_values,
-    derived_outputs,
-):
-    """
-    Calculate the total number of infectious people at each time-step.
-    """
-    prevalence_latent = 0
-    for i, compartment in enumerate(model.compartment_names):
-        is_latent = compartment.has_name_in_list(
-            [Compartment.EARLY_LATENT, Compartment.LATE_LATENT]
-        )
-        if is_latent:
-            prevalence_latent += compartment_values[i]
-    pop_size = sum(compartment_values)
-
-    return prevalence_latent / pop_size * 100
-
-
-def calculate_disease_incidence(
-    time_idx,
-    model,
-    compartment_values,
-    derived_outputs,
-):
-    abs_incidence = (
-        derived_outputs["progression_early"][time_idx]
-        + derived_outputs["progression_late"][time_idx]
-    )
-    pop_size = sum(compartment_values)
-    return abs_incidence / pop_size * 1.0e5

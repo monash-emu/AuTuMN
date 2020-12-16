@@ -135,16 +135,13 @@ def get_target_outputs(start_date, end_date):
         }
     ]
 
-    targets["infection_deaths"]["times"], targets["infection_deaths"]["values"] = \
+    death_times, death_values = \
         get_truncated_output(targets["infection_deaths"], start_date, end_date)
-    targets.update(base.accumulate_target(targets, "infection_deaths"))
-    targets["accum_infection_deaths"]["values"] = \
-        [round(i_value) for i_value in targets["accum_infection_deaths"]["values"]]
     target_outputs += [
         {
-            "output_key": "accum_deaths",
-            "years": [targets["accum_infection_deaths"]["times"][-1]],
-            "values": [targets["accum_infection_deaths"]["values"][-1]],
+            "output_key": "infection_deaths",
+            "years": death_times,
+            "values": apply_moving_average(death_values, 7),
             "loglikelihood_distri": "poisson",
         }
     ]

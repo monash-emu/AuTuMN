@@ -131,7 +131,7 @@ def get_target_outputs(start_date, end_date):
             "output_key": "notifications",
             "years": notification_times,
             "values": notification_values,
-            "loglikelihood_distri": "negative_binomial",
+            "loglikelihood_distri": "poisson",
         }
     ]
 
@@ -142,7 +142,7 @@ def get_target_outputs(start_date, end_date):
             "output_key": "infection_deaths",
             "years": death_times,
             "values": apply_moving_average(death_values, 7),
-            "loglikelihood_distri": "negative_binomial",
+            "loglikelihood_distri": "poisson",
         }
     ]
 
@@ -153,7 +153,7 @@ def get_target_outputs(start_date, end_date):
             "output_key": "hospital_admissions",
             "years": hospitalisation_times,
             "values": hospitalisation_values,
-            "loglikelihood_distri": "negative_binomial",
+            "loglikelihood_distri": "poisson",
         }
     ]
 

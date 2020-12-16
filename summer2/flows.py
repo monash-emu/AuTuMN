@@ -4,6 +4,7 @@ As a user of the framework you should not have to use these classes directly.
 """
 from abc import ABC, abstractmethod
 from typing import List, Dict, Callable
+
 import numpy as np
 from numba import jit
 
@@ -161,7 +162,7 @@ class BaseEntryFlow(BaseFlow):
             return [self]
 
         new_flows = []
-        flow_adjustments = strat.flow_adjustments.get(self.name)
+        flow_adjustments = strat.get_flow_adjustment(self)
         is_birth_into_agegroup_flow = self._is_birth_flow and strat.is_ageing()
 
         msg = "Cannot adjust birth flows into age stratifications."
@@ -232,7 +233,7 @@ class BaseExitFlow(BaseFlow):
             # Flow source is not stratified, do not stratify this flow.
             return [self]
 
-        flow_adjustments = strat.flow_adjustments.get(self.name)
+        flow_adjustments = strat.get_flow_adjustment(self)
 
         msg = f"Flow {self.name} has missing adjustments for {strat.name} strat."
         assert not (flow_adjustments and set(flow_adjustments.keys()) != set(strat.strata)), msg
@@ -295,7 +296,7 @@ class BaseTransitionFlow(BaseFlow):
             return [self]
 
         new_flows = []
-        flow_adjustments = strat.flow_adjustments.get(self.name)
+        flow_adjustments = strat.get_flow_adjustment(self)
 
         msg = f"Flow {self.name} has missing adjustments for {strat.name} strat."
         assert not (flow_adjustments and set(flow_adjustments.keys()) != set(strat.strata)), msg

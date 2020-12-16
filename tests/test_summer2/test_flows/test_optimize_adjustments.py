@@ -1,4 +1,3 @@
-from apps.tuberculosis_strains.model.model import COMPARTMENTS
 import pytest
 
 from summer2.adjust import Overwrite, Multiply

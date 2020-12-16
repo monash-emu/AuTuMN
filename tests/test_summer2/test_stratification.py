@@ -12,6 +12,22 @@ from summer2 import (
     StrainStratification,
     Compartment,
 )
+from summer2.flows import BaseExitFlow, BaseEntryFlow, BaseTransitionFlow
+
+
+class TransitionFlow(BaseTransitionFlow):
+    def get_net_flow(self, compartment_values, time):
+        return 1
+
+
+class EntryFlow(BaseEntryFlow):
+    def get_net_flow(self, compartment_values, time):
+        return 1
+
+
+class ExitFlow(BaseExitFlow):
+    def get_net_flow(self, compartment_values, time):
+        return 1
 
 
 def test_create_stratification():
@@ -95,15 +111,30 @@ def test_create_stratification__with_flow_adjustments():
         flow_name="recovery",
         adjustments={"rural": adjust.Multiply(1.2), "urban": adjust.Multiply(0.8)},
     )
-    assert strat.flow_adjustments["recovery"]["rural"]._is_equal(adjust.Multiply(1.2))
-    assert strat.flow_adjustments["recovery"]["urban"]._is_equal(adjust.Multiply(0.8))
 
-    # Fail coz we just did this.
-    with pytest.raises(AssertionError):
-        strat.add_flow_adjustments(
-            flow_name="recovery",
-            adjustments={"rural": adjust.Multiply(1.2), "urban": adjust.Multiply(0.8)},
-        )
+    assert len(strat.flow_adjustments["recovery"]) == 1
+    adj, src, dst = strat.flow_adjustments["recovery"][0]
+    assert adj["rural"]._is_equal(adjust.Multiply(1.2))
+    assert adj["urban"]._is_equal(adjust.Multiply(0.8))
+    assert not (src or dst)
+
+    # Add another adjustment for the same flow.
+    strat.add_flow_adjustments(
+        flow_name="recovery",
+        adjustments={"rural": adjust.Multiply(1.3), "urban": adjust.Multiply(0.9)},
+        source_strata={"age": "10"},
+        dest_strata={"work": "office"},
+    )
+    assert len(strat.flow_adjustments["recovery"]) == 2
+    adj, src, dst = strat.flow_adjustments["recovery"][0]
+    assert adj["rural"]._is_equal(adjust.Multiply(1.2))
+    assert adj["urban"]._is_equal(adjust.Multiply(0.8))
+    assert not (src or dst)
+    adj, src, dst = strat.flow_adjustments["recovery"][1]
+    assert adj["rural"]._is_equal(adjust.Multiply(1.3))
+    assert adj["urban"]._is_equal(adjust.Multiply(0.9))
+    assert src == {"age": "10"}
+    assert dst == {"work": "office"}
 
     def urban_infection_adjustment(t):
         return 2 * t
@@ -115,10 +146,44 @@ def test_create_stratification__with_flow_adjustments():
             "urban": None,
         },
     )
-    assert strat.flow_adjustments["infection"]["rural"]._is_equal(
-        adjust.Multiply(urban_infection_adjustment)
-    )
-    assert strat.flow_adjustments["infection"]["urban"] is None
+    assert len(strat.flow_adjustments["infection"]) == 1
+    adj, src, dst = strat.flow_adjustments["infection"][0]
+    assert adj["rural"]._is_equal(adjust.Multiply(urban_infection_adjustment))
+    assert adj["urban"] is None
+    assert not (src or dst)
+
+
+def test_get_flow_adjustments__with_no_adjustments():
+    trans_flow = TransitionFlow("flow", Compartment("S"), Compartment("I"), 1)
+    entry_flow = EntryFlow("flow", Compartment("S"), 1)
+    exit_flow = ExitFlow("flow", Compartment("I"), 1)
+
+    strat = Stratification(name="location", strata=["rural", "urban"], compartments=["S", "I", "R"])
+
+    assert strat.get_flow_adjustment(trans_flow) is None
+    assert strat.get_flow_adjustment(entry_flow) is None
+    assert strat.get_flow_adjustment(exit_flow) is None
+
+
+def test_get_flow_adjustments__with_one_adjustment():
+    trans_flow = TransitionFlow("flow", Compartment("S"), Compartment("I"), 1)
+    entry_flow = EntryFlow("flow", Compartment("S"), 1)
+    exit_flow = ExitFlow("flow", Compartment("I"), 1)
+
+    strat = Stratification(name="location", strata=["rural", "urban"], compartments=["S", "I", "R"])
+    strat.add_flow_adjustments("flow", {"rural": adjust.Multiply(1), "urban": None})
+
+    assert strat.get_flow_adjustment(trans_flow) is None
+    assert strat.get_flow_adjustment(entry_flow) is None
+    assert strat.get_flow_adjustment(exit_flow) is None
+
+
+def test_get_flow_adjustments__with_multiple_adjustments():
+    pass
+
+
+def test_get_flow_adjustments__with_strata_whitelist():
+    pass
 
 
 def test_create_stratification__with_infectiousness_adjustments():

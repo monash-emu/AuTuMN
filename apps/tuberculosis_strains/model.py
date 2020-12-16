@@ -3,7 +3,7 @@ from summer2 import (
     AgeStratification,
     StrainStratification,
     Stratification,
-    adjust,
+    Multiply,
 )
 from autumn.constants import Compartment
 from autumn.inputs import get_population_by_agegroup, get_death_rates_by_agegroup
@@ -373,16 +373,16 @@ def _build_vac_strat(params):
     vac_strat.add_flow_adjustments(
         "infection",
         {
-            "unvaccinated": adjust.Multiply(1.0),
-            "vaccinated": adjust.Multiply(params["bcg"]["rr_infection_vaccinated"]),
+            "unvaccinated": Multiply(1.0),
+            "vaccinated": Multiply(params["bcg"]["rr_infection_vaccinated"]),
         },
     )
     vac_strat.add_flow_adjustments(
         "treatment_early",
-        {"unvaccinated": adjust.Multiply(0.0), "vaccinated": adjust.Multiply(1.0)},
+        {"unvaccinated": Multiply(0.0), "vaccinated": Multiply(1.0)},
     )
     vac_strat.add_flow_adjustments(
-        "treatment_late", {"unvaccinated": adjust.Multiply(0.0), "vaccinated": adjust.Multiply(1.0)}
+        "treatment_late", {"unvaccinated": Multiply(0.0), "vaccinated": Multiply(1.0)}
     )
 
     def time_varying_vaccination_coverage(t):
@@ -394,8 +394,8 @@ def _build_vac_strat(params):
     vac_strat.add_flow_adjustments(
         "birth",
         {
-            "unvaccinated": adjust.Multiply(time_varying_unvaccinated_coverage),
-            "vaccinated": adjust.Multiply(time_varying_vaccination_coverage),
+            "unvaccinated": Multiply(time_varying_unvaccinated_coverage),
+            "vaccinated": Multiply(time_varying_vaccination_coverage),
         },
     )
     return vac_strat
@@ -437,9 +437,7 @@ def _build_strain_strat(params):
     strat = StrainStratification("strain", ["ds", "mdr"], INFECTED_COMPS)
     strat.set_population_split({"ds": 0.5, "mdr": 0.5})
     for c in INFECTED_COMPS:
-        strat.add_infectiousness_adjustments(
-            c, {"ds": adjust.Multiply(1.0), "mdr": adjust.Multiply(0.8)}
-        )
+        strat.add_infectiousness_adjustments(c, {"ds": Multiply(1.0), "mdr": Multiply(0.8)})
 
     strat.add_flow_adjustments(
         "treatment_commencement",
@@ -476,24 +474,38 @@ def _build_class_strat(params):
     strat = Stratification(
         "classified", ["correctly", "incorrectly"], [Compartment.DETECTED, Compartment.ON_TREATMENT]
     )
+    # Apply only to ds flows
     strat.add_flow_adjustments(
         "detection",
-        {"correctly": adjust.Multiply(1.0), "incorrectly": adjust.Multiply(0.0)},
+        {"correctly": Multiply(1.0), "incorrectly": Multiply(0.0)},
         source_strata={"strain": "ds"},
     )
+
+    # Apply only to mdr flows
     strat.add_flow_adjustments(
         "detection",
         {
-            "correctly": adjust.Multiply(params["frontline_xpert_prop"]),
-            "incorrectly": adjust.Multiply(1.0 - params["frontline_xpert_prop"]),
+            "correctly": Multiply(params["frontline_xpert_prop"]),
+            "incorrectly": Multiply(1.0 - params["frontline_xpert_prop"]),
         },
         source_strata={"strain": "mdr"},
     )
+
+    # Apply only to mdr flows that have extra_pulmonary organ.
     strat.add_flow_adjustments(
         "detection",
-        {"correctly": adjust.Multiply(0), "incorrectly": adjust.Multiply(1)},
+        {"correctly": Multiply(0), "incorrectly": Multiply(1)},
         source_strata={"strain": "mdr", "organ": "extra_pulmonary"},
     )
+
+    # Counterexample: Apply only to mdr flows that have age 20.
+    # Who wins - order matters.
+    strat.add_flow_adjustments(
+        "detection",
+        {"correctly": Multiply(0), "incorrectly": Multiply(1)},
+        source_strata={"strain": "mdr", "age": "20"},
+    )
+
     strat.add_flow_adjustments(
         "treatment_default",
         _adjust_all_multiply(params["treatment_default_rate_stratified"]["classified"]),
@@ -516,22 +528,22 @@ def _build_retention_strat(params):
     strat.add_flow_adjustments(
         "detection",
         {
-            "yes": adjust.Multiply(params["retention_prop"]),
-            "no": adjust.Multiply(1 - params["retention_prop"]),
+            "yes": Multiply(params["retention_prop"]),
+            "no": Multiply(1 - params["retention_prop"]),
         },
     )
     strat.add_flow_adjustments(
         "missed_to_active",
-        {"yes": adjust.Multiply(0), "no": adjust.Multiply(1)},
+        {"yes": Multiply(0), "no": Multiply(1)},
     )
     strat.add_flow_adjustments(
         "treatment_commencement",
-        {"yes": adjust.Multiply(1), "no": adjust.Multiply(0)},
+        {"yes": Multiply(1), "no": Multiply(0)},
     )
 
     strat.add_flow_adjustments(
         "failure_retreatment",
-        {"yes": adjust.Multiply(1), "no": adjust.Multiply(0)},
+        {"yes": Multiply(1), "no": Multiply(0)},
     )
     return strat
 
@@ -628,4 +640,4 @@ def _get_derived_params(params):
 
 
 def _adjust_all_multiply(items: dict):
-    return {s: adjust.Multiply(v) for s, v in items.items()}
+    return {s: Multiply(v) for s, v in items.items()}

@@ -10,7 +10,6 @@ import numpy as np
 from scipy.interpolate import interp1d
 
 import summer2.flows as flows
-import summer2.adjust as adjust
 from summer2.compartment import Compartment
 from summer2.stratification import Stratification
 from summer2.solver import solve_ode, SolverType

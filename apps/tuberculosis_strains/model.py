@@ -315,10 +315,6 @@ def build_model(params: dict) -> CompartmentalModel:
     return model
 
 
-def _adjust_all_multiply(items: dict):
-    return {s: adjust.Multiply(v) for s, v in items.items()}
-
-
 def _build_age_strat(params: dict, uni_death_flow_names: list):
     # Apply age-stratification
     age_strat = AgeStratification("age", params["age_breakpoints"], COMPARTMENTS)
@@ -480,203 +476,38 @@ def _build_class_strat(params):
     strat = Stratification(
         "classified", ["correctly", "incorrectly"], [Compartment.DETECTED, Compartment.ON_TREATMENT]
     )
-    # FIXME: Not sure how to represent these in SUMMERv2
-    # strat.add_flow_adjustments("detection", {"correctly": adjust.Multiply(1.0), "incorrectly": adjust.Multiply(0.0)})
-    # classification_flow_adjustments.update(
-    #     dict(
-    #         zip(
-    #             [
-    #                 "detection_rate"
-    #                 + "X"
-    #                 + age_stratification_name
-    #                 + "_"
-    #                 + age_group
-    #                 + "X"
-    #                 + organ_stratification_name
-    #                 + "_"
-    #                 + organ
-    #                 + "X"
-    #                 + strain_stratification_name
-    #                 + "_ds"
-    #                 for age_group in params["age_breakpoints"]
-    #                 for organ in organ_strata_requested
-    #             ],
-    #             [
-    #                 {"correctly": 1.0, "incorrectly": 0.0}
-    #                 for _ in range(len(params["age_breakpoints"] * len(organ_strata_requested)))
-    #             ],
-    #         )
-    #     )
-    # )
-    # classification_flow_adjustments.update(
-    #     dict(
-    #         zip(
-    #             [
-    #                 "detection_rate"
-    #                 + "X"
-    #                 + age_stratification_name
-    #                 + "_"
-    #                 + age_group
-    #                 + "X"
-    #                 + organ_stratification_name
-    #                 + "_"
-    #                 + organ
-    #                 + "X"
-    #                 + strain_stratification_name
-    #                 + "_mdr"
-    #                 for age_group in params["age_breakpoints"]
-    #                 for organ in organ_strata_requested
-    #             ],
-    #             [
-    #                 {
-    #                     "correctly": params["frontline_xpert_prop"],
-    #                     "incorrectly": 1.0 - params["frontline_xpert_prop"],
-    #                 }
-    #                 for _ in range(len(params["age_breakpoints"] * len(organ_strata_requested)))
-    #             ],
-    #         )
-    #     )
-    # )
-    # classification_flow_adjustments.update(
-    #     dict(
-    #         zip(
-    #             [
-    #                 "detection_rate"
-    #                 + "X"
-    #                 + age_stratification_name
-    #                 + "_"
-    #                 + age_group
-    #                 + "X"
-    #                 + organ_stratification_name
-    #                 + "_"
-    #                 + "extra_pulmonary"
-    #                 + "X"
-    #                 + strain_stratification_name
-    #                 + "_mdr"
-    #                 for age_group in params["age_breakpoints"]
-    #             ],
-    #             [
-    #                 {"correctly": 0.0, "incorrectly": 1.0}
-    #                 for _ in range(len(params["age_breakpoints"] * len(organ_strata_requested)))
-    #             ],
-    #         )
-    #     )
-    # )
-    # classification_flow_adjustments.update(
-    #     dict(
-    #         zip(
-    #             [
-    #                 "spontaneous_recovery_rate"
-    #                 + "X"
-    #                 + age_stratification_name
-    #                 + "_"
-    #                 + age_group
-    #                 + "X"
-    #                 + organ_stratification_name
-    #                 + "_"
-    #                 + organ
-    #                 + "X"
-    #                 + strain_stratification_name
-    #                 + "_"
-    #                 + strain
-    #                 for age_group in params["age_breakpoints"]
-    #                 for organ in organ_strata_requested
-    #                 for strain in strain_strata_requested
-    #             ],
-    #             [
-    #                 {
-    #                     "correctly": params["spontaneous_recovery_rate_stratified"]["classified"][
-    #                         "correctly"
-    #                     ],
-    #                     "incorrectly": params["spontaneous_recovery_rate_stratified"]["classified"][
-    #                         "incorrectly"
-    #                     ],
-    #                 }
-    #                 for _ in range(
-    #                     len(params["age_breakpoints"])
-    #                     * len(organ_strata_requested)
-    #                     * len(strain_strata_requested)
-    #                 )
-    #             ],
-    #         )
-    #     )
-    # )
-    # classification_flow_adjustments.update(
-    #     dict(
-    #         zip(
-    #             [
-    #                 "failure_retreatment_rate"
-    #                 + "X"
-    #                 + age_stratification_name
-    #                 + "_"
-    #                 + age_group
-    #                 + "X"
-    #                 + organ_stratification_name
-    #                 + "_"
-    #                 + organ
-    #                 + "X"
-    #                 + strain_stratification_name
-    #                 + "_"
-    #                 + strain
-    #                 for age_group in params["age_breakpoints"]
-    #                 for organ in organ_strata_requested
-    #                 for strain in strain_strata_requested
-    #             ],
-    #             [
-    #                 {
-    #                     "correctly": params["failure_retreatment_rate_stratified"]["classified"][
-    #                         "correctly"
-    #                     ],
-    #                     "incorrectly": params["failure_retreatment_rate_stratified"]["classified"][
-    #                         "incorrectly"
-    #                     ],
-    #                 }
-    #                 for _ in range(
-    #                     len(params["age_breakpoints"])
-    #                     * len(organ_strata_requested)
-    #                     * len(strain_strata_requested)
-    #                 )
-    #             ],
-    #         )
-    #     )
-    # )
-    # classification_flow_adjustments.update(
-    #     dict(
-    #         zip(
-    #             [
-    #                 "treatment_default_rate"
-    #                 + "X"
-    #                 + age_stratification_name
-    #                 + "_"
-    #                 + age_group
-    #                 + "X"
-    #                 + organ_stratification_name
-    #                 + "_"
-    #                 + organ
-    #                 + "X"
-    #                 + strain_stratification_name
-    #                 + "_mdr"
-    #                 for age_group in params["age_breakpoints"]
-    #                 for organ in organ_strata_requested
-    #             ],
-    #             [
-    #                 {
-    #                     "correctly": params["treatment_default_rate_stratified"]["classified"][
-    #                         "correctly"
-    #                     ],
-    #                     "incorrectly": params["treatment_default_rate_stratified"]["classified"][
-    #                         "incorrectly"
-    #                     ],
-    #                 }
-    #                 for _ in range(
-    #                     len(params["age_breakpoints"])
-    #                     * len(organ_strata_requested)
-    #                     * len(strain_strata_requested)
-    #                 )
-    #             ],
-    #         )
-    #     )
-    # )
+    strat.add_flow_adjustments(
+        "detection",
+        {"correctly": adjust.Multiply(1.0), "incorrectly": adjust.Multiply(0.0)},
+        source_strata={"strain": "ds"},
+    )
+    strat.add_flow_adjustments(
+        "detection",
+        {
+            "correctly": adjust.Multiply(params["frontline_xpert_prop"]),
+            "incorrectly": adjust.Multiply(1.0 - params["frontline_xpert_prop"]),
+        },
+        source_strata={"strain": "mdr"},
+    )
+    strat.add_flow_adjustments(
+        "detection",
+        {"correctly": adjust.Multiply(0), "incorrectly": adjust.Multiply(1)},
+        source_strata={"strain": "mdr", "organ": "extra_pulmonary"},
+    )
+    strat.add_flow_adjustments(
+        "treatment_default",
+        _adjust_all_multiply(params["treatment_default_rate_stratified"]["classified"]),
+        source_strata={"strain": "mdr"},
+    )
+    strat.add_flow_adjustments(
+        "spontaneous_recovery",
+        _adjust_all_multiply(params["spontaneous_recovery_rate_stratified"]["classified"]),
+    )
+
+    strat.add_flow_adjustments(
+        "failure_retreatment",
+        _adjust_all_multiply(params["failure_retreatment_rate_stratified"]["classified"]),
+    )
     return strat
 
 
@@ -794,3 +625,7 @@ def _get_derived_params(params):
     params["reinfection_rate"] = params["contact_rate"] * params["rr_infection_latent"]
 
     return params
+
+
+def _adjust_all_multiply(items: dict):
+    return {s: adjust.Multiply(v) for s, v in items.items()}

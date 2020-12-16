@@ -134,16 +134,16 @@ def get_target_outputs(start_date, end_date):
         }
     ]
 
-    # death_times, death_values = \
-    #     get_truncated_output(targets["infection_deaths"], start_date, end_date)
-    # target_outputs += [
-    #     {
-    #         "output_key": "infection_deaths",
-    #         "years": death_times,
-    #         "values": death_values,
-    #         "loglikelihood_distri": "normal",
-    #     }
-    # ]
+    death_times, death_values = \
+        get_truncated_output(targets["infection_deaths"], start_date, end_date)
+    target_outputs += [
+        {
+            "output_key": "infection_deaths",
+            "years": death_times,
+            "values": death_values,
+            "loglikelihood_distri": "normal",
+        }
+    ]
 
     # Accumulated notifications at the end date for all clusters
     for cluster in CLUSTERS:
@@ -233,7 +233,7 @@ def group_dispersion_params(priors, target_outputs):
                             )
 
                 # sd_ that would make the 95% gaussian CI cover half of the max value (4*sd = 95% width)
-                sd_ = max_val * 0.6
+                sd_ = max_val * 0.25
                 lower_sd = sd_ / 2.0
                 upper_sd = 2.0 * sd_
 

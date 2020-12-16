@@ -23,6 +23,9 @@ class BaseAdjustment(ABC):
         # Used for testing.
         return type(self) is type(adj) and self.param == adj.param
 
+    def __repr__(self):
+        return f"<{self.__class__.__name__} '{self.param}'>"
+
 
 class Multiply(BaseAdjustment):
     """

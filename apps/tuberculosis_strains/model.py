@@ -277,14 +277,12 @@ def build_model(params: dict) -> CompartmentalModel:
     model.request_output_for_flow("progression_late", flow_name="late_activation")
     model.request_aggregate_output("progression", ["progression_early", "progression_late"])
     model.request_output_for_compartments("population_size", COMPARTMENTS)
-
     model.request_aggregate_output(
         "_incidence", sources=["early_activation", "late_activation"], save_results=False
     )
     model.request_function_output(
         "incidence", sources=["_incidence", "population_size"], func=lambda i, p: 1e5 * i / p
     )
-
     model.request_aggregate_output(
         "disease_deaths", sources=["infectious_deaths", "detected_deaths", "treatment_deaths"]
     )
@@ -295,14 +293,12 @@ def build_model(params: dict) -> CompartmentalModel:
     model.request_cumulative_output(
         "cumulative_deaths", source="disease_deaths", start_time=cum_start_time
     )
-
     model.request_output_for_compartments("_count_infectious", INFECTIOUS_COMPS, save_results=False)
     model.request_function_output(
         "prevalence_infectious",
         sources=["_count_infectious", "population_size"],
         func=lambda c, p: 1e5 * c / p,
     )
-
     model.request_output_for_compartments(
         "_count_latent", [Compartment.EARLY_LATENT, Compartment.LATE_LATENT], save_results=False
     )
@@ -311,7 +307,6 @@ def build_model(params: dict) -> CompartmentalModel:
         sources=["_count_latent", "population_size"],
         func=lambda c, p: 100 * c / p,
     )
-
     return model
 
 
@@ -496,14 +491,6 @@ def _build_class_strat(params):
         "detection",
         {"correctly": Multiply(0), "incorrectly": Multiply(1)},
         source_strata={"strain": "mdr", "organ": "extra_pulmonary"},
-    )
-
-    # Counterexample: Apply only to mdr flows that have age 20.
-    # Who wins - order matters.
-    strat.add_flow_adjustments(
-        "detection",
-        {"correctly": Multiply(0), "incorrectly": Multiply(1)},
-        source_strata={"strain": "mdr", "age": "20"},
     )
 
     strat.add_flow_adjustments(

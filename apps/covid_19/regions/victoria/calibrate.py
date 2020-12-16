@@ -100,17 +100,17 @@ def get_priors(target_outputs: list):
         {
             "param_name": "victorian_clusters.intercluster_mixing",
             "distribution": "uniform",
-            "distri_params": [0.01, 0.03],
+            "distri_params": [0.005, 0.05],
         },
         {
             "param_name": "victorian_clusters.metro.mobility.microdistancing.behaviour.parameters.upper_asymptote",
             "distribution": "uniform",
-            "distri_params": [0.1, 0.5],
+            "distri_params": [0., 0.5],
         },
         {
             "param_name": "victorian_clusters.metro.mobility.microdistancing.face_coverings.parameters.upper_asymptote",
             "distribution": "uniform",
-            "distri_params": [0.0, 0.4],
+            "distri_params": [0., 0.5],
         },
     ]
 
@@ -125,27 +125,40 @@ def get_target_outputs(start_date, end_date):
     # Total Victorian notifications for each time point
     notification_times, notification_values = \
         get_truncated_output(targets["notifications"], start_date, end_date)
+    notification_values = [round(value) for value in notification_values]
     target_outputs = [
         {
             "output_key": "notifications",
             "years": notification_times,
             "values": notification_values,
-            "loglikelihood_distri": "normal",
+            "loglikelihood_distri": "poisson",
         }
     ]
 
     death_times, death_values = \
         get_truncated_output(targets["infection_deaths"], start_date, end_date)
+    death_values = [round(value) for value in death_values]
     target_outputs += [
         {
             "output_key": "infection_deaths",
             "years": death_times,
             "values": death_values,
-            "loglikelihood_distri": "normal",
+            "loglikelihood_distri": "poisson",
         }
     ]
 
-    # Accumulated notifications at the end date for all clusters
+    hospitalisation_times, hospitalisation_values = \
+        get_truncated_output(targets["infection_deaths"], start_date, end_date)
+    target_outputs += [
+        {
+            "output_key": "hospital_admissions",
+            "years": hospitalisation_times,
+            "values": hospitalisation_values,
+            "loglikelihood_distri": "poisson",
+        }
+    ]
+
+    # Smoothed notifications for all clusters
     for cluster in CLUSTERS:
         output_key = f"notifications_for_cluster_{cluster}"
         target_outputs += [
@@ -156,25 +169,6 @@ def get_target_outputs(start_date, end_date):
                 "loglikelihood_distri": "normal",
             }
         ]
-
-        # # Accumulated other indicators at the end date for Metro clusters only
-        # if cluster.replace("_", "-") in Region.VICTORIA_METRO:
-        #     for indicator in ("hospital_admissions", "icu_admissions"):
-        #         targets.update(base.accumulate_target(targets, indicator, category=f"_for_cluster_{cluster}"))
-        #
-        #         # To deal with "infection_deaths" needing to be changed to just "deaths" for the output
-        #         indicator_name = "deaths" if "deaths" in indicator else indicator
-        #         indicator_key = f"accum_{indicator_name}_for_cluster_{cluster}"
-        #
-        #         output_key = f"accum_{indicator}_for_cluster_{cluster}"
-        #         target_outputs += [
-        #             {
-        #                 "output_key": indicator_key,
-        #                 "years": [targets[output_key]["times"][-1]],
-        #                 "values": [targets[output_key]["values"][-1]],
-        #                 "loglikelihood_distri": "normal",
-        #             }
-        #         ]
 
     return target_outputs
 

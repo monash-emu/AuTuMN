@@ -99,10 +99,13 @@ def plot_mixing_matrix_2(plotter: Plotter, iso3: str):
         axis = axes[position[0], position[1]]
         if location != "none":
             mixing_matrix = get_country_mixing_matrix(location, iso3)
-            axis.imshow(mixing_matrix, cmap="hot", interpolation="none", extent=[0, 80, 80, 0])
+            im = axis.imshow(mixing_matrix, cmap="hot", interpolation="none", extent=[0, 80, 80, 0])
             axis.set_title(get_plot_text_dict(location), fontsize=12)
-            axis.set_xticks([])
-            axis.set_yticks([])
+            axis.set_xticks([5, 25, 45, 65])
+            axis.set_yticks([5, 25, 45, 65])
+            axis.tick_params(top=True, bottom=False, labeltop=True, labelbottom=False)
+            cbar = axis.figure.colorbar(im, ax=axis, cmap="hot")
+
         else:
             axis.axis("off")
 

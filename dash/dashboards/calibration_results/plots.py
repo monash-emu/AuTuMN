@@ -183,6 +183,8 @@ def plot_cdr_curves(
 
     # Get CDR function - needs to be done outside of autumn, because it is importing from the apps
     testing_pops = inputs.get_population_by_agegroup(agegroup_strata, iso3, None, year=testing_year)
+    if iso3 == "AUS":
+        st.write("WARNING - testing populations are not correct for Victoria")
     detected_proportion = []
     for assumed_cdr_parameter in sampled_test_to_detect_vals:
         detected_proportion.append(

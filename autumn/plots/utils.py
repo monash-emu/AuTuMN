@@ -77,6 +77,12 @@ def get_plot_text_dict(param_string, capitalise_first_letter=False, remove_under
     """
 
     text = PLOT_TEXT_DICT[param_string] if param_string in PLOT_TEXT_DICT else param_string
+    if "victorian_clusters.contact_rate_multiplier_" in param_string:
+        text = text.replace("victorian_clusters.contact_rate_multiplier_", "")
+    if "victorian_clusters." in param_string:
+        text = text.replace("victorian_clusters.metro.mobility.microdistancing", "")
+    if "upper_asymptote" in param_string:
+        text = text.replace("parameters.upper_asymptote", "")
     if capitalise_first_letter:
         text = text[0].upper() + text[1:]
     if remove_underscore:

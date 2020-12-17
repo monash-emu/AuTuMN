@@ -8,6 +8,7 @@ from autumn.constants import Region
 from autumn.tool_kit.params import load_targets
 from autumn.calibration.utils import add_dispersion_param_prior_for_gaussian
 from apps.covid_19 import calibration as base
+from autumn.tool_kit.utils import apply_moving_average
 
 CLUSTERS = [Region.to_filename(r) for r in Region.VICTORIA_SUBREGIONS]
 
@@ -30,7 +31,23 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
 
 
 def get_priors(target_outputs: list):
+
+    # Get common parameters for all Covid applications
     priors = provide_default_calibration_params()
+
+    # Add multiplier for each Victorian cluster
+    for region in Region.VICTORIA_SUBREGIONS:
+        region_name = region.replace("-", "_")
+        priors += [
+            {
+                "param_name": f"victorian_clusters.contact_rate_multiplier_{region_name}",
+                "distribution": "trunc_normal",
+                "distri_params": [1., 0.5],  # Shouldn't be too peaked with these values
+                "trunc_range": [0.5, np.inf],
+            },
+        ]
+
+    # Add the other parameters we're interested in for Victoria
     priors += [
         {
             "param_name": "contact_rate",
@@ -41,56 +58,6 @@ def get_priors(target_outputs: list):
             "param_name": "infectious_seed",
             "distribution": "uniform",
             "distri_params": [20., 60.],
-        },
-        {
-            "param_name": "victorian_clusters.contact_rate_multiplier_regional",
-            "distribution": "uniform",
-            "distri_params": [0.3, 3.],
-        },
-        {
-            "param_name": "victorian_clusters.contact_rate_multiplier_north_metro",
-            "distribution": "uniform",
-            "distri_params": [0.3, 3.],
-        },
-        {
-            "param_name": "victorian_clusters.contact_rate_multiplier_west_metro",
-            "distribution": "uniform",
-            "distri_params": [0.3, 3.],
-        },
-        {
-            "param_name": "victorian_clusters.contact_rate_multiplier_south_metro",
-            "distribution": "uniform",
-            "distri_params": [0.3, 3.],
-        },
-        {
-            "param_name": "victorian_clusters.contact_rate_multiplier_south_east_metro",
-            "distribution": "uniform",
-            "distri_params": [0.3, 3.],
-        },
-        {
-            "param_name": "victorian_clusters.contact_rate_multiplier_loddon_mallee",
-            "distribution": "uniform",
-            "distri_params": [0.3, 3.],
-        },
-        {
-            "param_name": "victorian_clusters.contact_rate_multiplier_barwon_south_west",
-            "distribution": "uniform",
-            "distri_params": [0.3, 3.],
-        },
-        {
-            "param_name": "victorian_clusters.contact_rate_multiplier_hume",
-            "distribution": "uniform",
-            "distri_params": [0.3, 3.],
-        },
-        {
-            "param_name": "victorian_clusters.contact_rate_multiplier_gippsland",
-            "distribution": "uniform",
-            "distri_params": [0.3, 3.],
-        },
-        {
-            "param_name": "victorian_clusters.contact_rate_multiplier_grampians",
-            "distribution": "uniform",
-            "distri_params": [0.3, 3.],
         },
         {
             "param_name": "seasonal_force",
@@ -133,23 +100,22 @@ def get_priors(target_outputs: list):
         {
             "param_name": "victorian_clusters.intercluster_mixing",
             "distribution": "uniform",
-            "distri_params": [0.01, 0.03],
+            "distri_params": [0.005, 0.05],
         },
         {
             "param_name": "victorian_clusters.metro.mobility.microdistancing.behaviour.parameters.upper_asymptote",
             "distribution": "uniform",
-            "distri_params": [0.1, 0.5],
+            "distri_params": [0., 0.5],
         },
         {
             "param_name": "victorian_clusters.metro.mobility.microdistancing.face_coverings.parameters.upper_asymptote",
             "distribution": "uniform",
-            "distri_params": [0.0, 0.4],
+            "distri_params": [0., 0.5],
         },
     ]
 
     priors = add_dispersion_param_prior_for_gaussian(priors, target_outputs)
     priors = group_dispersion_params(priors, target_outputs)
-
     return priors
 
 
@@ -159,12 +125,13 @@ def get_target_outputs(start_date, end_date):
     # Total Victorian notifications for each time point
     notification_times, notification_values = \
         get_truncated_output(targets["notifications"], start_date, end_date)
+    notification_values = [round(value) for value in notification_values]
     target_outputs = [
         {
             "output_key": "notifications",
             "years": notification_times,
             "values": notification_values,
-            "loglikelihood_distri": "normal",
+            "loglikelihood_distri": "poisson",
         }
     ]
 
@@ -174,42 +141,33 @@ def get_target_outputs(start_date, end_date):
         {
             "output_key": "infection_deaths",
             "years": death_times,
-            "values": death_values,
-            "loglikelihood_distri": "normal",
+            "values": apply_moving_average(death_values, 7),
+            "loglikelihood_distri": "poisson",
         }
     ]
 
-    # Accumulated notifications at the end date for all clusters
+    hospitalisation_times, hospitalisation_values = \
+        get_truncated_output(targets["hospital_admissions"], start_date, end_date)
+    target_outputs += [
+        {
+            "output_key": "hospital_admissions",
+            "years": hospitalisation_times,
+            "values": hospitalisation_values,
+            "loglikelihood_distri": "poisson",
+        }
+    ]
+
+    # Smoothed notifications for all clusters
     for cluster in CLUSTERS:
         output_key = f"notifications_for_cluster_{cluster}"
-        max_notifications_idx = targets[output_key]["values"].index(max(targets[output_key]["values"]))
         target_outputs += [
             {
                 "output_key": output_key,
-                "years": [targets[output_key]["times"][max_notifications_idx]],
-                "values": [targets[output_key]["values"][max_notifications_idx]],
+                "years": targets[output_key]["times"],
+                "values": apply_moving_average(targets[output_key]["values"], period=4),
                 "loglikelihood_distri": "normal",
             }
         ]
-
-        # # Accumulated other indicators at the end date for Metro clusters only
-        # if cluster.replace("_", "-") in Region.VICTORIA_METRO:
-        #     for indicator in ("hospital_admissions", "icu_admissions"):
-        #         targets.update(base.accumulate_target(targets, indicator, category=f"_for_cluster_{cluster}"))
-        #
-        #         # To deal with "infection_deaths" needing to be changed to just "deaths" for the output
-        #         indicator_name = "deaths" if "deaths" in indicator else indicator
-        #         indicator_key = f"accum_{indicator_name}_for_cluster_{cluster}"
-        #
-        #         output_key = f"accum_{indicator}_for_cluster_{cluster}"
-        #         target_outputs += [
-        #             {
-        #                 "output_key": indicator_key,
-        #                 "years": [targets[output_key]["times"][-1]],
-        #                 "values": [targets[output_key]["values"][-1]],
-        #                 "loglikelihood_distri": "normal",
-        #             }
-        #         ]
 
     return target_outputs
 
@@ -268,7 +226,7 @@ def group_dispersion_params(priors, target_outputs):
                             )
 
                 # sd_ that would make the 95% gaussian CI cover half of the max value (4*sd = 95% width)
-                sd_ = 0.25 * max_val / 4.0
+                sd_ = max_val * 0.25
                 lower_sd = sd_ / 2.0
                 upper_sd = 2.0 * sd_
 

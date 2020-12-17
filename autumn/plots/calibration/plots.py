@@ -673,10 +673,10 @@ def plot_param_vs_param(
             # Axis labels
             if y_idx == 0:
                 axis.set_ylabel(
-                    x_param_name[:label_chars], rotation=0, fontsize=label_font_size, labelpad=10
+                    get_plot_text_dict(x_param_name), fontsize=label_font_size
                 )
             if x_idx == len(parameters) - 1:
-                axis.set_xlabel(y_param_name[:label_chars], fontsize=label_font_size, labelpad=3)
+                axis.set_xlabel(get_plot_text_dict(y_param_name), fontsize=label_font_size, labelpad=3)
 
     # Save
     plotter.save_figure(fig, filename="parameter_correlation_matrix", dpi_request=dpi_request)

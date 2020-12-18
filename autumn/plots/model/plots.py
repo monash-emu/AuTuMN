@@ -85,7 +85,7 @@ def plot_mixing_matrix(plotter: Plotter, location: str, iso3: str):
 
 def plot_mixing_matrix_2(plotter: Plotter, iso3: str):
     fig, axes, _, n_rows, n_cols, _ = plotter.get_figure(n_panels=6)
-
+    fig.tight_layout()
     positions = {
         "all_locations": [0, 0],
         "home": [0, 1],

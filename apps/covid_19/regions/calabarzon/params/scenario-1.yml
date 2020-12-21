@@ -1,16 +1,21 @@
-# SCENARIO DESCRIPTION: MHS reduces contact by 50%
+# SCENARIO DESCRIPTION: MHS reduces contact by 50% for Xmas
+---
 parent: apps/covid_19/regions/calabarzon/params/default.yml
 
 time:
-  start: 344
+  start: 330
 
 mobility:
   microdistancing:
     behaviour:
       parameters:
         times:
-          - 344
-          - 358
+          - 330
+          - 336
+          - 369
+          - 376
         values:
           - 1. 
           - 0.5
+          - 0.5
+          - 1.

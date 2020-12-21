@@ -12,8 +12,8 @@ from google_drive_downloader import GoogleDriveDownloader as gdd
 import json
 
 # shareable google drive links
-PHL_doh_link = "1uSNfZhRUbyd7yBnN-OekMZKcp5X1mDkt"  # sheet 05 daily report
-PHL_fassster_link = "1qn_ZKH5ygSLcEsEbvrt_2xQMiql3SgIi"
+PHL_doh_link = "1O5NDRnjznzD27VVOqZOgD8Q9LlQLSsYL"  # sheet 05 daily report
+PHL_fassster_link = "1tC3D1ruS8aqlE1YehZ3T-o9UJ-xvjFKN"
 
 # destination folders filepaths
 base_dir = os.path.dirname(os.path.abspath(os.curdir))
@@ -168,3 +168,17 @@ def remove_files(filePath1):
     os.remove(icu_dest)
     os.remove(deaths_dest)
     os.remove(notifications_dest)
+
+fetch_phl_data()
+fassster_filename = fassster_data_filepath()
+rename_regions(PHL_doh_dest, "region", "NATIONAL CAPITAL REGION (NCR)", "REGION IV-A (CALABAR ZON)", "REGION VII (CENTRAL VISAYAS)")
+rename_regions(fassster_filename, "Region", "NCR", "4A", "07")
+duplicate_data(PHL_doh_dest, "region")
+duplicate_data(fassster_filename, "Region")
+filter_df_by_regions(PHL_doh_dest, "region")
+filter_df_by_regions(fassster_filename, "Region")
+process_icu_data()
+process_accumulated_death_data(fassster_filename)
+process_notifications_data(fassster_filename)
+update_calibration_phl()
+remove_files(fassster_filename)

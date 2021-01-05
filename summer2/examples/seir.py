@@ -26,19 +26,18 @@ def build_model() -> CompartmentalModel:
     # Add flows between the compartments.
     # People are born susceptible.
     model.add_crude_birth_flow(name="crude_birth", birth_rate=0.03, dest="S")
-    # Susceptible people get infected and become exposed, where they are not infectious.
+    # Susceptible people get infected and become exposed, although they are not yet infectious.
     model.add_infection_frequency_flow(name="infection", contact_rate=2, source="S", dest="E")
-    # Exposed people take 4 years, on average, to become infectious
+    # Exposed people take 4 years, on average, to become infectious.
     model.add_sojourn_flow(name="progression", sojourn_time=2, source="E", dest="I")
     # Infectious people take 2 years, on average, to recover.
     model.add_sojourn_flow(name="recovery", sojourn_time=2, source="I", dest="R")
-    # Add a universal death flow, which is automatically applied to all compartments,
+    # Add a universal death flow, which is automatically applied to all compartments.
     model.add_universal_death_flows(base_name="universal_death", death_rate=0.02)
     # Add an infection-specific death flow to the I compartment.
     model.add_death_flow(name="infection_death", death_rate=0.05, source="I")
 
-    # Add derived output requests so that we can track flow rates
-    # and compartment sizes over time.
+    # Add derived output requests so that we can track flow rates and compartment sizes over time.
     model.request_output_for_flow(name="incidence", flow_name="infection")
     model.request_output_for_flow(name="progression", flow_name="progression")
     model.request_output_for_flow(name="recovery", flow_name="recovery")

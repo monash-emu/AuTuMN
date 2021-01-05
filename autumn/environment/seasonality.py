@@ -14,7 +14,6 @@ def get_seasonal_forcing(
     :param shift: float
         Time at which the peak value will be reached
     :param seasonal_force_magnitude: float
-        Amplitude of the forcing function relative to the average value
         Note that the amplitude is the total variation in transmission from trough to peak (consistent with the approach
             of others - e.g. Kissler et al. Science)
     :param average_value: float

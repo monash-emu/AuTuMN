@@ -4,8 +4,8 @@ parent: null
 
 # Parameters used to build a general model of tuberculosis
 time:
-  start: 1850.
-  end: 1851.
+  start: 1850
+  end: 1851
   step: 1
   critical_ranges: []
 
@@ -16,13 +16,12 @@ region: null
 # requested outputs
 calculated_outputs: ["prevalence_infectious"]
 outputs_stratification: {}
-cumulative_output_start_time: 2020.
+cumulative_output_start_time: 2020
 
 # model structure
 # stratifications by 'age' and by 'organ' are pre-defined but they must be requested to be activated
 # other stratifications can be requested as "user_defined_stratifications"
 age_breakpoints: ["0", "5", "15"]
-
 
 # vaccination
 bcg:
@@ -45,8 +44,6 @@ contact_rate: 35
 rr_infection_latent: 0.4
 rr_infection_recovered: 0.4
 
-
-
 # latency-related parameters
 preventive_treatment_rate: 1.0
 preventive_treatment_rate_stratified:
@@ -54,50 +51,48 @@ preventive_treatment_rate_stratified:
     ds: 1.0
     mdr: 0.0
 
-
 stabilisation_rate: 3.65
 stabilisation_rate_stratified:
   age:
-    age_0: 1.2
-    age_5: 1.2
-    age_15: 0.54
+    "0": 1.2
+    "5": 1.2
+    "15": 0.54
 
 early_activation_rate: 0.402
 early_activation_rate_stratified:
   age:
-    age_0: 6.0
-    age_5: 2.45
-    age_15: 0.246
+    "0": 6.0
+    "5": 2.45
+    "15": 0.246
 
 late_activation_rate: 0.0020075
 late_activation_rate_stratified:
   age:
-    age_0: 3.456912e-6
-    age_5: 1.164433
-    age_15: 0.600411
-
-
+    "0": 3.456912e-6
+    "5": 1.164433
+    "15": 0.600411
 
 # active-disease parameters
 
 organ:
-  sp_prop: 0.52
-  sn_prop: 0.33
-  e_prop: 0.15
+  props:
+    smear_positive: 0.52
+    smear_negative: 0.33
+    extra_pulmonary: 0.15
 
-  sp_foi: 1.0
-  sn_foi: 0.24
-  e_foi: 0.24
+  foi:
+    smear_positive: 1.0
+    smear_negative: 0.24
+    extra_pulmonary: 0.24
 
 retention_prop: 0.8
-
 
 self_recovery_rate: 0.2
 self_recovery_rate_stratified:
   organ:
-    sp: 1.155
-    sn: 0.65
-    e: 0.65
+    smear_positive: 1.155
+    smear_negative: 0.65
+    extra_pulmonary: 0.65
 
 treatment_duration: 0.5
 treatment_duration_stratified:
@@ -122,7 +117,6 @@ treatment_default_prop_stratified:
   strain:
     ds: 1.0
     mdr: 5.357
-
 
 treatment_recovery_rate_stratified:
   strain:
@@ -175,12 +169,9 @@ case_detection_prop: 0.62
 case_detection_prop_sp: 0.62
 frontline_xpert_prop: 0.07
 
-
 detection_rate_stratified:
   organ:
-    sp: 1.0
-
-
+    smear_positive: 1.0
 
 treatment_commencement_rate: 26
 treatment_commencement_rate_stratified:
@@ -194,25 +185,21 @@ missed_to_active_rate: 4
 infect_death_rate: 0.7
 infect_death_rate_stratified:
   organ:
-    sp: 1.0
-    sn: 0.4142857
-    e: 0.4142857
+    smear_positive: 1.0
+    smear_negative: 0.4142857
+    extra_pulmonary: 0.4142857
 
 natural_recovery_rate: 0.231
 natural_recovery_rate_stratified:
   organ:
-    sp: 1.0
-    sn: 0.563
-    e: 0.563
+    smear_positive: 1.0
+    smear_negative: 0.563
+    extra_pulmonary: 0.563
 
 treatment_death_rate: 0.05
 
-
-
-
 extra_params: {} # used to add parameters used for specific applications
 
-
 # Multiplier scaling the covariance matrix in the Haario Metropolis. 2.4 is the value recommended by Haario.
-haario_scaling_factor: 2.4  # Greater values increase jumping step size and reduce the acceptance ratio
+haario_scaling_factor: 2.4 # Greater values increase jumping step size and reduce the acceptance ratio
 

@@ -30,15 +30,19 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
         n_burned=0,
         n_chains=1,
         available_time=max_seconds,
-        haario_scaling_factor=params['default']['haario_scaling_factor'],
+        haario_scaling_factor=params["default"]["haario_scaling_factor"],
     )
 
 
 PRIORS = [
-    #{"param_name": "start_population_size", "distribution": "uniform", "distri_params": [1.0e+6, 2.0e+7]},
-    #{"param_name": "crude_birth_rate", "distribution": "uniform", "distri_params": [1.0e-2, 6.0e-2]},
-    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.0, 5000.0]},
-    {"param_name": "initial_infectious_population", "distribution": "uniform", "distri_params": [1.0e4, 1.0e6]}
+    # {"param_name": "start_population_size", "distribution": "uniform", "distri_params": [1.0e+6, 2.0e+7]},
+    # {"param_name": "crude_birth_rate", "distribution": "uniform", "distri_params": [1.0e-2, 6.0e-2]},
+    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.0, 200.0]},
+    {
+        "param_name": "initial_infectious_population",
+        "distribution": "uniform",
+        "distri_params": [1.0e4, 1.0e6],
+    },
 ]
 
 TARGET_OUTPUTS = [

@@ -1,7 +1,7 @@
 """
 Tools for solving compartmental ODEs
 """
-from typing import List, Callable, Dict
+from typing import Callable
 
 import numpy as np
 from scipy.integrate import odeint, solve_ivp

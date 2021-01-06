@@ -199,7 +199,6 @@ class RegionalClusterStratification(BaseModel):
 
 class VictorianClusterStratification(BaseModel):
     intercluster_mixing: float
-    contact_rate_multiplier_regional: float
     contact_rate_multiplier_north_metro: float
     contact_rate_multiplier_west_metro: float
     contact_rate_multiplier_south_metro: float

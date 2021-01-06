@@ -1,8 +1,7 @@
 """
 This module presents classes which are used to define stratifications, which can be applied to the model.
 """
-from summer.adjust import Adjustment, Multiply, Overwrite
-from typing import List, Dict, Callable, Union
+from typing import List, Dict, Callable, Union, Optional
 
 import numpy as np
 
@@ -79,14 +78,25 @@ class Stratification:
         assert abs(1 - sum(proportions.values())) < 1e2, msg
         self.population_split = proportions
 
-    def add_flow_adjustments(self, flow_name: str, adjustments: Dict[str, Adjustment]):
+    def add_flow_adjustments(
+        self,
+        flow_name: str,
+        adjustments: Dict[str, Adjustment],
+        source_strata: Optional[Dict[str, str]] = None,
+        dest_strata: Optional[Dict[str, str]] = None,
+    ):
         """
         Add an adjustment of a flow to the stratification.
         You can use time-varying functions for infectiousness adjustments.
 
+        It is possible to specify multiple conflicting flow adjustments for the same flow.
+        In this case, only the last-created applicable adjustment will be chosen.
+
         Args:
             flow_name: The name of the flow to adjust.
             adjustments: An dict of adjustments to apply to the flow.
+            source_strata (optional): A whitelist of strata to filter the target flow's source compartments.
+            dest_strata (optional): A whitelist of strata to filter the target flow's destination compartments.
 
         Example:
             Create an adjustment for the 'recovery' flow based on location::
@@ -97,13 +107,15 @@ class Stratification:
                     compartments=["S", "I", "R"]
                 )
                 strat.add_flow_adjustments("recovery", {
-                    "urban": adjust.Multiply(1.5),
-                    "rural": adjust.Multiply(0.8),
+                    "urban": Multiply(1.5),
+                    "rural": Multiply(0.8),
                     "alpine": None, # No adjustment
                 })
 
 
         """
+        source_strata = source_strata or {}
+        dest_strata = dest_strata or {}
         msg = "You must specify all strata when adding flow adjustments."
         assert set(adjustments.keys()) == set(self.strata), msg
 
@@ -111,9 +123,33 @@ class Stratification:
             [type(a) is Overwrite or type(a) is Multiply or a is None for a in adjustments.values()]
         ), "All flow adjustments must be Multiply, Overwrite or None."
 
-        msg = f"A flow adjustment for {flow_name} already exists for strat {self.name}"
-        assert flow_name not in self.flow_adjustments, msg
-        self.flow_adjustments[flow_name] = adjustments
+        if flow_name not in self.flow_adjustments:
+            self.flow_adjustments[flow_name] = []
+
+        self.flow_adjustments[flow_name].append((adjustments, source_strata, dest_strata))
+
+    def get_flow_adjustment(self, flow) -> dict:
+        """
+        Returns the most recently added flow adjustment that matches a given flow.
+        """
+        flow_adjustments = self.flow_adjustments.get(flow.name, [])
+        matching_adjustment = None
+        for adjustment, source_strata, dest_strata in flow_adjustments:
+            # Skip any adjustments that don't match the flow's source compartment strata.
+            msg = f"Source strata specified in flow adjustment of {self.name} but {flow.name} does not have a source"
+            assert not (source_strata and not flow.source), msg
+            if source_strata and flow.source and not flow.source.has_strata(source_strata):
+                continue
+
+            # Skip any adjustments that don't match the flow's dest compartment strata.
+            msg = f"Dest strata specified in flow adjustment of {self.name} but {flow.name} does not have a dest"
+            assert not (dest_strata and not flow.dest), msg
+            if dest_strata and flow.dest and not flow.dest.has_strata(dest_strata):
+                continue
+
+            matching_adjustment = adjustment
+
+        return matching_adjustment
 
     def add_infectiousness_adjustments(
         self, compartment_name: str, adjustments: Dict[str, Adjustment]

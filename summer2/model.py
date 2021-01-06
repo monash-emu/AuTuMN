@@ -1,19 +1,22 @@
 """
 This module contains the main disease modelling class.
 """
+import logging
 import copy
 from typing import Tuple, List, Dict, Callable, Optional
+from functools import lru_cache
 
 import networkx
 import numpy as np
 from scipy.interpolate import interp1d
 
 import summer2.flows as flows
-import summer2.adjust as adjust
 from summer2.compartment import Compartment
 from summer2.stratification import Stratification
 from summer2.solver import solve_ode, SolverType
 from summer2.adjust import FlowParam
+
+logger = logging.getLogger()
 
 
 class CompartmentalModel:
@@ -275,6 +278,9 @@ class CompartmentalModel:
             base_name: The base name for each new flow.
             death_rate: The fractional death rate per timestep.
 
+        Returns:
+            List[str]: The names of the flows added.
+
         """
         # Only allow a single universal death flow with a given name to be added to the model.
         is_already_used = any([f.name.startswith(base_name) for f in self._flows])
@@ -282,15 +288,20 @@ class CompartmentalModel:
             msg = f"There is already a universal death flow called '{base_name}' in this model, cannot add a second."
             raise ValueError(msg)
 
+        flow_names = []
         for comp_name in self._original_compartment_names:
+            flow_name = f"{base_name}_for_{comp_name}"
+            flow_names.append(flow_name)
             self._add_exit_flow(
                 flows.DeathFlow,
-                f"{base_name}_for_{comp_name}",
+                flow_name,
                 death_rate,
                 comp_name,
                 source_strata={},
                 expected_flow_count=None,
             )
+
+        return flow_names
 
     def _add_exit_flow(
         self,
@@ -532,8 +543,9 @@ class CompartmentalModel:
         """
         # Validate flow adjustments
         flow_names = [f.name for f in self._flows]
-        msg = "All stratification flow adjustments must refer to a flow that is present in model."
-        assert all([n in flow_names for n in strat.flow_adjustments.keys()]), msg
+        for n in strat.flow_adjustments.keys():
+            msg = f"Flow adjustment for '{n}' refers to a flow that is not present in the model."
+            assert n in flow_names, msg
 
         # Validate infectiousness adjustments.
         msg = "All stratification infectiousness adjustments must refer to a compartment that is present in model."
@@ -648,6 +660,34 @@ class CompartmentalModel:
         Pre-run setup.
         Here we do any calculations/preparation are possible to do before the model runs.
         """
+        # Functions will often be called multiple times per timestep, so we cache any time-varying functions.
+        # First we find all time varying functions.
+        funcs = set()
+        for flow in self._flows:
+            if callable(flow.param):
+                funcs.add(flow.param)
+            for adj in flow.adjustments:
+                if callable(adj.param):
+                    funcs.add(adj.param)
+
+        # Cache return values to prevent re-computation. This will a little leak memory, which is fine.
+        funcs_cached = {}
+        for func in funcs:
+            # Floating point return type is 8 bytes, meaning 2**17 values is ~1MB of memory.
+            funcs_cached[func] = lru_cache(maxsize=2 ** 17)(func)
+
+        # Finally, replace original functions with cached ones
+        for flow in self._flows:
+            if flow.param in funcs_cached:
+                flow.param = funcs_cached[flow.param]
+            for adj in flow.adjustments:
+                if adj.param in funcs_cached:
+                    adj.param = funcs_cached[adj.param]
+
+        # Optimize flow adjustments
+        for f in self._flows:
+            f.optimize_adjustments()
+
         # Split flows up into 3 groups: entry, exit and transition.
         self._entry_flows = [f for f in self._flows if issubclass(f.__class__, flows.BaseEntryFlow)]
         self._exit_flows = [f for f in self._flows if issubclass(f.__class__, flows.BaseExitFlow)]
@@ -1017,6 +1057,13 @@ class CompartmentalModel:
                 # User wants to track cumulative value of an output over time.
                 source_name = request["source"]
                 start_time = request["start_time"]
+                max_time = self.times.max()
+                if start_time and start_time > max_time:
+                    # Handle case where the derived output starts accumulating after the last model timestep.
+                    msg = f"Cumulative output '{name}' start time {start_time} is greater than max model time {max_time}, defaulting to {max_time}"
+                    logger.warn(msg)
+                    start_time = max_time
+
                 if start_time is None:
                     output = np.cumsum(derived_outputs[source_name])
                 else:

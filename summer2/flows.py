@@ -8,7 +8,7 @@ from typing import List, Dict, Callable
 import numpy as np
 from numba import jit
 
-from summer2.adjust import BaseAdjustment, FlowParam, Multiply
+from summer2.adjust import BaseAdjustment, FlowParam, Multiply, Overwrite
 from summer2.stratification import Stratification
 from summer2.compartment import Compartment
 
@@ -73,6 +73,36 @@ class BaseFlow(ABC):
         if self.dest:
             self.dest.idx = mapping[self.dest]
 
+    def optimize_adjustments(self):
+        """
+        Rearrange adjustments so that they produce the same result but run faster.
+        This does not seem to actually impact runtime much.
+        """
+        # Start from the last Overwrite, no point calculating anything before that.
+        last_overwrite_idx = None
+        for idx in reversed(range(len(self.adjustments))):
+            adj = self.adjustments[idx]
+            if type(adj) is Overwrite:
+                last_overwrite_idx = idx
+                break
+
+        if last_overwrite_idx:
+            new_adjustments = self.adjustments[last_overwrite_idx:]
+        else:
+            new_adjustments = self.adjustments
+
+        # Combine all constant multiplications into one constant.
+        overwrites = [a for a in new_adjustments if type(a) is Overwrite]
+        consts = [a for a in new_adjustments if type(a) is Multiply and not callable(a.param)]
+        funcs = [a for a in new_adjustments if type(a) is Multiply and callable(a.param)]
+
+        if consts:
+            # Reduce multiple constants into one.
+            const = np.prod([a.param for a in consts])
+            consts = [Multiply(const)]
+
+        self.adjustments = overwrites + consts + funcs
+
     @abstractmethod
     def get_net_flow(self, compartment_values: np.ndarray, time: float) -> float:
         """
@@ -132,7 +162,7 @@ class BaseEntryFlow(BaseFlow):
             return [self]
 
         new_flows = []
-        flow_adjustments = strat.flow_adjustments.get(self.name)
+        flow_adjustments = strat.get_flow_adjustment(self)
         is_birth_into_agegroup_flow = self._is_birth_flow and strat.is_ageing()
 
         msg = "Cannot adjust birth flows into age stratifications."
@@ -203,7 +233,7 @@ class BaseExitFlow(BaseFlow):
             # Flow source is not stratified, do not stratify this flow.
             return [self]
 
-        flow_adjustments = strat.flow_adjustments.get(self.name)
+        flow_adjustments = strat.get_flow_adjustment(self)
 
         msg = f"Flow {self.name} has missing adjustments for {strat.name} strat."
         assert not (flow_adjustments and set(flow_adjustments.keys()) != set(strat.strata)), msg
@@ -266,7 +296,7 @@ class BaseTransitionFlow(BaseFlow):
             return [self]
 
         new_flows = []
-        flow_adjustments = strat.flow_adjustments.get(self.name)
+        flow_adjustments = strat.get_flow_adjustment(self)
 
         msg = f"Flow {self.name} has missing adjustments for {strat.name} strat."
         assert not (flow_adjustments and set(flow_adjustments.keys()) != set(strat.strata)), msg

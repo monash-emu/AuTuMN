@@ -1,6 +1,7 @@
 """
 This module contains the main disease modelling class.
 """
+import logging
 import copy
 from typing import Tuple, List, Dict, Callable, Optional
 from functools import lru_cache
@@ -14,6 +15,8 @@ from summer2.compartment import Compartment
 from summer2.stratification import Stratification
 from summer2.solver import solve_ode, SolverType
 from summer2.adjust import FlowParam
+
+logger = logging.getLogger()
 
 
 class CompartmentalModel:
@@ -1054,6 +1057,13 @@ class CompartmentalModel:
                 # User wants to track cumulative value of an output over time.
                 source_name = request["source"]
                 start_time = request["start_time"]
+                max_time = self.times.max()
+                if start_time and start_time > max_time:
+                    # Handle case where the derived output starts accumulating after the last model timestep.
+                    msg = f"Cumulative output '{name}' start time {start_time} is greater than max model time {max_time}, defaulting to {max_time}"
+                    logger.warn(msg)
+                    start_time = max_time
+
                 if start_time is None:
                     output = np.cumsum(derived_outputs[source_name])
                 else:

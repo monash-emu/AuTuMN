@@ -271,7 +271,7 @@ def test_get_flow_adjustments__with_strata_whitelist():
         assert adj["rural"]._is_equal(Multiply(2))
         assert adj["urban"]._is_equal(Overwrite(1))
 
-    # The most stratified will win, also include both source and dest.
+    # The last created matching flow adjustment will win, also include both source and dest.
     strat = Stratification(name="location", strata=["rural", "urban"], compartments=["S", "I", "R"])
     strat.add_flow_adjustments("flow", {"rural": Multiply(1), "urban": None})
     strat.add_flow_adjustments(
@@ -305,14 +305,14 @@ def test_get_flow_adjustments__with_strata_whitelist():
         assert adj["rural"]._is_equal(Multiply(3))
         assert adj["urban"]._is_equal(Overwrite(2))
 
-    # Match
+    # Match to the last created stratification
     trans_flow_strat = TransitionFlow(
         "flow", Compartment("S", {"age": "20"}), Compartment("I", {"age": "30", "work": "home"}), 1
     )
     for flow in [trans_flow_strat]:
         adj = strat.get_flow_adjustment(flow)
-        assert adj["rural"]._is_equal(Multiply(5))
-        assert adj["urban"]._is_equal(Overwrite(7))
+        assert adj["rural"]._is_equal(Multiply(3))
+        assert adj["urban"]._is_equal(Overwrite(2))
 
 
 def test_create_stratification__with_infectiousness_adjustments():

@@ -5,8 +5,8 @@ iso3: "PHL"
 
 
 time:
-  start: 1950.
-  end: 2020.
+  start: 1950
+  end: 2025
   step: 1
   critical_ranges: []
 

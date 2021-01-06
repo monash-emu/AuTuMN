@@ -4,8 +4,8 @@ parent: null
 
 # Parameters used to build a general model of tuberculosis
 time:
-  start: 1850.
-  end: 1851.
+  start: 1850
+  end: 1851
   step: 1
   critical_ranges: []
 
@@ -16,7 +16,7 @@ region: null
 # requested outputs
 calculated_outputs: ["prevalence_infectious"]
 outputs_stratification: {}
-cumulative_output_start_time: 2020.
+cumulative_output_start_time: 2020
 
 # model structure
 # stratifications by 'age' and by 'organ' are pre-defined but they must be requested to be activated

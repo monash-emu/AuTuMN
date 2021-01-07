@@ -1,5 +1,5 @@
 CREATE TABLE "scenario" (
 	"scenario"	INTEGER,
-	"strat_time"	INTEGER,
+	"start_time"	INTEGER,
 	"description"	TEXT
 )

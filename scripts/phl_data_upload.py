@@ -12,8 +12,8 @@ from google_drive_downloader import GoogleDriveDownloader as gdd
 import json
 
 # shareable google drive links
-PHL_doh_link = "1O5NDRnjznzD27VVOqZOgD8Q9LlQLSsYL"  # sheet 05 daily report
-PHL_fassster_link = "1tC3D1ruS8aqlE1YehZ3T-o9UJ-xvjFKN"
+PHL_doh_link = "1tu83c4lhroHso3gd-fAvLYMcACv1J6UF"  # sheet 05 daily report
+PHL_fassster_link = "1X2luGuKy6ftPt-dAdbAVUhdOHBeDW8an"
 
 # destination folders filepaths
 base_dir = os.path.dirname(os.path.abspath(os.curdir))
@@ -145,7 +145,7 @@ def update_calibration_phl():
         deaths_tmp = deaths.loc[deaths["Region"] == region]
         notifications_tmp = notifications.loc[notifications["Region"] == region]
         file_path = os.path.join(
-            base_dir + "\\apps\\covid_19\\regions\\" + region + "\\targets.json"
+            base_dir + "\\AuTuMN\\apps\\covid_19\\regions\\" + region + "\\targets.json"
         )
 
         with open(file_path, mode="r") as f:

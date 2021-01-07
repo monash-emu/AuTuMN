@@ -12,6 +12,9 @@ The files are located in two folders, data/inputs/imports and apps/regions/<\reg
 Select the all the '<>.encrypted.json' file and  data/secret-hashes.json and push to GitHub.
 
 This readme documents the Philippines target calibration data update process.
+DoH data: https://ncovtracker.doh.gov.ph/ (click on box in top right labeled "Download COVID-19 COH Data Drop")
+For FASSSTER data use https://drive.google.com/drive/folders/1qnUsvq5SXxwdw9ttRtOojccVGHaYj6_k
+
 The functions in phl_data_upload.py do the following:
 1. Downloads data
 2. Formats and filters data by region (using a duplicated dataset for the national model)

@@ -10,10 +10,11 @@ import numpy as np
 import itertools
 from google_drive_downloader import GoogleDriveDownloader as gdd
 import json
+from autumn import constants
 
 # shareable google drive links
 PHL_doh_link = "1tu83c4lhroHso3gd-fAvLYMcACv1J6UF"  # sheet 05 daily report
-PHL_fassster_link = "1X2luGuKy6ftPt-dAdbAVUhdOHBeDW8an"
+PHL_fassster_link = "1sfwFryQP6lPutGxS62IIGUugDhRy_1h8"
 
 # destination folders filepaths
 base_dir = os.path.dirname(os.path.abspath(os.curdir))
@@ -34,6 +35,7 @@ def fetch_phl_data():
         file_id=PHL_fassster_link, dest_path=PHL_fassster_dest, unzip=True
     )
 
+
 def fassster_data_filepath():
     fassster_filename = [
         filename
@@ -42,29 +44,30 @@ def fassster_data_filepath():
     ]
     fassster_filename = targets_dir + str(fassster_filename[-1])
     return fassster_filename
- 
+
+
 def rename_regions(filePath, regionSpelling, ncrName, calName, cenVisName):
-        df = pd.read_csv(filePath)
-        df[regionSpelling] = df[regionSpelling].replace(
-            {ncrName: "manila",
-             calName: "calabarzon",
-             cenVisName: "central_visayas"
-            }
-        )
-        df.to_csv(filePath)
-    
+    df = pd.read_csv(filePath)
+    df[regionSpelling] = df[regionSpelling].replace(
+        {ncrName: "manila", calName: "calabarzon", cenVisName: "central_visayas"}
+    )
+    df.to_csv(filePath)
+
+
 def duplicate_data(filePath, regionSpelling):
     df = pd.read_csv(filePath)
     data_dup = df.copy()
     data_dup[regionSpelling] = "philippines"
     newdf = df.append(data_dup)
     newdf.to_csv(filePath)
-    
+
+
 def filter_df_by_regions(filePath, regionSpelling):
     df = pd.read_csv(filePath)
     regions = ["calabarzon", "central_visayas", "manila", "philippines"]
     df_regional = df[df[regionSpelling].isin(regions)]
     df_regional.to_csv(filePath)
+
 
 def process_icu_data():
     df = pd.read_csv(PHL_doh_dest)
@@ -75,6 +78,7 @@ def process_icu_data():
         ["region", "times", "icu_o"]
     ]
     icu_occ.to_csv(icu_dest)
+
 
 def process_accumulated_death_data(filePath):
     df = pd.read_csv(filePath)
@@ -88,17 +92,18 @@ def process_accumulated_death_data(filePath):
     )  # warning
     accum_deaths = fassster_data_deaths.groupby(["Region", "times"]).size()
     accum_deaths = accum_deaths.to_frame(name="daily_deaths").reset_index()
-    accum_deaths['accum_deaths'] = accum_deaths.groupby("Region")['daily_deaths'].transform(pd.Series.cumsum)
+    accum_deaths["accum_deaths"] = accum_deaths.groupby("Region")["daily_deaths"].transform(
+        pd.Series.cumsum
+    )
     cumulative_deaths = accum_deaths[["Region", "times", "accum_deaths"]]
     cumulative_deaths.to_csv(deaths_dest)
-    
+
+
 def process_notifications_data(filePath):
     df = pd.read_csv(filePath)
     fassster_data_agg = df.groupby(["Region", "Report_Date"]).size()
     fassster_data_agg = fassster_data_agg.to_frame(name="daily_notifications").reset_index()
-    fassster_data_agg["Report_Date"] = pd.to_datetime(
-        fassster_data_agg["Report_Date"]
-    )
+    fassster_data_agg["Report_Date"] = pd.to_datetime(fassster_data_agg["Report_Date"])
     # make sure all dates within range are included
     fassster_data_agg["times"] = fassster_data_agg.Report_Date - COVID_BASE_DATETIME
     fassster_data_agg["times"] = fassster_data_agg["times"] / np.timedelta64(1, "D")
@@ -132,8 +137,9 @@ def process_notifications_data(filePath):
     fassster_data_final = fassster_data_final[
         fassster_data_final.times < max(fassster_data_final.times)
     ]
-    fassster_data_final.to_csv(notifications_dest)    
-    
+    fassster_data_final.to_csv(notifications_dest)
+
+
 def update_calibration_phl():
     phl_regions = ["calabarzon", "central_visayas", "manila", "philippines"]
     # read in csvs
@@ -144,9 +150,7 @@ def update_calibration_phl():
         icu_tmp = icu.loc[icu["region"] == region]
         deaths_tmp = deaths.loc[deaths["Region"] == region]
         notifications_tmp = notifications.loc[notifications["Region"] == region]
-        file_path = os.path.join(
-            base_dir + "\\AuTuMN\\apps\\covid_19\\regions\\" + region + "\\targets.json"
-        )
+        file_path = os.path.join(constants.APPS_PATH, "covid_19", "regions", region, "targets.json")
 
         with open(file_path, mode="r") as f:
             targets = json.load(f)
@@ -161,6 +165,7 @@ def update_calibration_phl():
         with open(file_path, "w") as f:
             json.dump(targets, f, indent=2)
 
+
 def remove_files(filePath1):
     os.remove(filePath1)
     os.remove(PHL_fassster_dest)
@@ -169,9 +174,16 @@ def remove_files(filePath1):
     os.remove(deaths_dest)
     os.remove(notifications_dest)
 
+
 fetch_phl_data()
 fassster_filename = fassster_data_filepath()
-rename_regions(PHL_doh_dest, "region", "NATIONAL CAPITAL REGION (NCR)", "REGION IV-A (CALABAR ZON)", "REGION VII (CENTRAL VISAYAS)")
+rename_regions(
+    PHL_doh_dest,
+    "region",
+    "NATIONAL CAPITAL REGION (NCR)",
+    "REGION IV-A (CALABAR ZON)",
+    "REGION VII (CENTRAL VISAYAS)",
+)
 rename_regions(fassster_filename, "Region", "NCR", "4A", "07")
 duplicate_data(PHL_doh_dest, "region")
 duplicate_data(fassster_filename, "Region")

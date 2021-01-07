@@ -10,6 +10,7 @@ GOOGLE_MOBILITY_URL = "https://www.gstatic.com/covid19/mobility/Global_Mobility_
 MOBILITY_DIRPATH = os.path.join(constants.INPUT_DATA_PATH, "mobility")
 MOBILITY_CSV_PATH = os.path.join(MOBILITY_DIRPATH, "Google_Mobility_Report.csv")
 
+# Remove some countries due to large CSV filesize.
 COUNTRY_FILTER = {
     "BR",
     "US",
@@ -29,29 +30,11 @@ COUNTRY_FILTER = {
     "CZ",
     "SK",
     "CL",
+    "PT",
 }
 
 
 def fetch_mobility_data():
     df = pd.read_csv(GOOGLE_MOBILITY_URL)
-    df[
-        (df.country_region_code != "BR")
-        & (df.country_region_code != "US")
-        & (df.country_region_code != "AR")
-        & (df.country_region_code != "IN")
-        & (df.country_region_code != "CO")
-        & (df.country_region_code != "CA")
-        & (df.country_region_code != "EC")
-        & (df.country_region_code != "PL")
-        & (df.country_region_code != "TR")
-        & (df.country_region_code != "RO")
-        & (df.country_region_code != "NG")
-        & (df.country_region_code != "PE")
-        & (df.country_region_code != "BG")
-        & (df.country_region_code != "SL")
-        & (df.country_region_code != "GT")
-        & (df.country_region_code != "CZ")
-        & (df.country_region_code != "SK")
-        & (df.country_region_code != "CL")
-        & (df.country_region_code != "PT")
-    ].to_csv(MOBILITY_CSV_PATH)
+    df[~df.country_region_code.isin(COUNTRY_FILTER)].to_csv(MOBILITY_CSV_PATH)
+

@@ -93,7 +93,7 @@ PRIORS = [
     {
         "param_name": "pt_efficacy",
         "distribution": "uniform",
-        "distri_params": [0.8, 0.85],
+        "distri_params": [0.75, 0.85],
     },
     {
         "param_name": "awareness_raising.relative_screening_rate",

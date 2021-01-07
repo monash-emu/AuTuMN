@@ -1,10 +1,10 @@
 # To generate all the figures and tables for the manuscript
 
 ## Preliminary steps
-
 1. Put the PBI database containing all percentile outputs for all scenarios in "apps/tuberculosis/regions/marshall_islands/outputs/pbi_databases". 
-2. Use Streamlit to create a raw csv file containing the posterior percentiles. 
-3. Put the csv file into "apps/tuberculosis/regions/marshall_islands/outputs/parameter_posteriors". 
+2. Put a copy of the same PBI database in "data/outputs/calibrate/tuberculosis/marshall-islands/yyyy-mm-dd/" (to allow Step 3)
+3. Use Streamlit to create a raw csv file containing the posterior percentiles.
+4. Put the csv file into "apps/tuberculosis/regions/marshall_islands/outputs/parameter_posteriors".
 
 
 ## Generating the output files

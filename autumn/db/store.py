@@ -9,7 +9,7 @@ import pandas as pd
 
 from summer.model import StratifiedModel
 from summer2.model import CompartmentalModel
-from autumn.db.database import FeatherDatabase, get_database, Database
+from autumn.db.database import get_database
 
 from . import process
 

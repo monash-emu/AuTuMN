@@ -28,7 +28,8 @@ def define_all_scenarios(periodic_frequencies=[2, 5]):
     scenario_details[sc_idx] = {"sc_title": 'No interventions'}
     scenario_details[sc_idx]['params'] = {
         'time_variant_acf': [],
-        'time_variant_ltbi_screening': []
+        'time_variant_ltbi_screening': [],
+        'awareness_raising': {},
     }
 
     """

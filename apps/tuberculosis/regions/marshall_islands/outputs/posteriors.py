@@ -24,6 +24,8 @@ PARAMETER_NAMES_OVERRIDE = {
     "TB mortality (smear-neg)": "TB mortality (smear-negative)",
     "Self cure rate (smear-pos)": "Self-cure rate (smear-positive)",
     "Self cure rate (smear-neg)": "Self-cure rate (smear-negative)",
+    "rr_infection_latent": "relative risk of infection for individuals with latent infection (ref. infection-naive)",
+    "awareness_raising.relative_screening_rate": "relative screening rate following ACF interventions (ref. before intervention)",
 }
 
 

@@ -57,7 +57,7 @@ def get_priors(target_outputs: list):
         {
             "param_name": "infectious_seed",
             "distribution": "uniform",
-            "distri_params": [20., 60.],
+            "distri_params": [22.5, 67.5],  # Should be multiplied by 4/9 because seed is removed from regional clusters
         },
         {
             "param_name": "seasonal_force",
@@ -76,14 +76,14 @@ def get_priors(target_outputs: list):
             "distri_params": [0.5, 4.],
         },
         {
-            "param_name": "testing_to_detection.assumed_cdr_parameter",
-            "distribution": "uniform",
-            "distri_params": [0.2, 0.5],
-        },
-        {
             "param_name": "clinical_stratification.props.hospital.multiplier",
             "distribution": "uniform",
             "distri_params": [0.5, 3.0],
+        },
+        {
+            "param_name": "testing_to_detection.assumed_cdr_parameter",
+            "distribution": "uniform",
+            "distri_params": [0.2, 0.5],
         },
         {
             "param_name": "sojourn.compartment_periods.icu_early",

@@ -14,7 +14,7 @@ time:
   start: 135  # No longer the 25th May, but moved earlier (14th May) - to help with model calibration
   end: 275  # 1st October
 
-testing_to_detection:
+testing_to_detection:  # Need to mention these parameters in the Supplement somewhere
   assumed_tests_parameter: 1.e-03
   smoothing_period: 7
 
@@ -68,14 +68,14 @@ victorian_clusters:
             b: .05
             c: 197.  # 15th July
             sigma: 0.
-            upper_asymptote: 0.3
+            upper_asymptote: 0.3  # Not important as this is calibrated
         face_coverings:  # Mandatory face coverings
           function_type: tanh
           parameters:
             b: 0.5
             c: 205.  # 23rd July
             sigma: 0.
-            upper_asymptote: 0.2
+            upper_asymptote: 0.2  # Not important as this is calibrated
 
   # *** REGIONAL ***
   regional:
@@ -125,11 +125,11 @@ victorian_clusters:
             b: .05
             c: 197.  # 15th July
             sigma: 0.
-            upper_asymptote: 0.3
+            upper_asymptote: 0.3  # Not important as this is calibrated
         face_coverings:
           function_type: tanh
           parameters:
             b: 0.5
             c: 215.  # 2nd August
             sigma: 0.
-            upper_asymptote: 0.2
+            upper_asymptote: 0.2  # Not important as this is calibrated

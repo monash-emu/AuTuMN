@@ -1,4 +1,4 @@
-# SCENARIO DESCRIPTION: BASELINE
+description: BASELINE
 parent: apps/covid_19/eur_optimisation_params.yml
 
 country:

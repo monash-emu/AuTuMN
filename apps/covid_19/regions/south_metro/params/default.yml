@@ -1,11 +1,9 @@
-# SCENARIO DESCRIPTION: BASELINE
----
+description: BASELINE
 parent: apps/covid_19/vic_submodel_params.yml
 
 population:
   region: SOUTH_METRO
 mobility:
   region: SOUTH_METRO
-
 #time:
 #  start: 152.

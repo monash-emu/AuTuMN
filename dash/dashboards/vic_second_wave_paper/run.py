@@ -2,7 +2,6 @@
 Streamlit web UI for plotting MCMC outputs
 """
 import streamlit as st
-import os
 
 from autumn.tool_kit.params import load_targets
 from autumn import db
@@ -36,14 +35,14 @@ def run_dashboard():
 
     plotter = StreamlitPlotter(targets)
     plot_type = st.sidebar.selectbox("Select plot type", list(PLOT_FUNCS.keys()))
-    # plot_func = PLOT_FUNCS[plot_type]
+    plot_func = PLOT_FUNCS[plot_type]
 
-    # plot_func(
-    #     plotter,
-    #     calib_dirpath,
-    #     mcmc_tables,
-    #     mcmc_params,
-    #     targets,
-    #     app_name,
-    #     region_name,
-    # )
+    plot_func(
+        plotter,
+        calib_dirpath,
+        mcmc_tables,
+        mcmc_params,
+        targets,
+        app_name,
+        region_name,
+    )

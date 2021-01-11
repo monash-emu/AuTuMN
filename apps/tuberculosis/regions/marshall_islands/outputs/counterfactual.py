@@ -67,7 +67,7 @@ def plot_counterfactual(uncertainty_df):
                 show_title=False,
                 ylab=ylab,
                 x_axis_to_date=False,
-                start_quantile=1
+                start_quantile=0
             )
 
     save_figure("counterfactual", FIGURE_PATH)

@@ -55,6 +55,11 @@ def get_priors(target_outputs: list):
             "distri_params": [0.015, 0.06],
         },
         {
+            "param_name": "victorian_clusters.intercluster_mixing",
+            "distribution": "uniform",
+            "distri_params": [0.005, 0.05],
+        },
+        {
             "param_name": "infectious_seed",
             "distribution": "uniform",
             "distri_params": [22.5, 67.5],  # Should be multiplied by 4/9 because seed is removed from regional clusters
@@ -71,14 +76,19 @@ def get_priors(target_outputs: list):
             "trunc_range": [0.5, np.inf],
         },
         {
-            "param_name": "infection_fatality.multiplier",
+            "param_name": "clinical_stratification.non_sympt_infect_multiplier",
             "distribution": "uniform",
-            "distri_params": [0.5, 4.],
+            "distri_params": [0.3, 0.7],
         },
         {
             "param_name": "clinical_stratification.props.hospital.multiplier",
             "distribution": "uniform",
             "distri_params": [0.5, 3.0],
+        },
+        {
+            "param_name": "infection_fatality.multiplier",
+            "distribution": "uniform",
+            "distri_params": [0.5, 4.],
         },
         {
             "param_name": "testing_to_detection.assumed_cdr_parameter",
@@ -92,11 +102,6 @@ def get_priors(target_outputs: list):
             "trunc_range": [3.0, np.inf],
         },
         {
-            "param_name": "victorian_clusters.intercluster_mixing",
-            "distribution": "uniform",
-            "distri_params": [0.005, 0.05],
-        },
-        {
             "param_name": "victorian_clusters.metro.mobility.microdistancing.behaviour.parameters.upper_asymptote",
             "distribution": "uniform",
             "distri_params": [0., 0.5],
@@ -106,11 +111,6 @@ def get_priors(target_outputs: list):
             "distribution": "uniform",
             "distri_params": [0., 0.5],
         },
-        {
-            "param_name": "clinical_stratification.non_sympt_infect_multiplier",
-            "distribution": "uniform",
-            "distri_params": [0.3, 0.7],
-        }
     ]
 
     priors = add_dispersion_param_prior_for_gaussian(priors, target_outputs)

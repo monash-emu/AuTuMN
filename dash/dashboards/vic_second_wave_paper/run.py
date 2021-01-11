@@ -2,10 +2,11 @@
 Streamlit web UI for plotting MCMC outputs
 """
 import streamlit as st
+import os
 
 from autumn.tool_kit.params import load_targets
 from autumn import db
-from autumn.plots.plotter import StreamlitPlotter
+from autumn.plots.plotter import StreamlitPlotter, FilePlotter
 
 
 from dash import selectors
@@ -46,3 +47,15 @@ def run_dashboard():
         app_name,
         region_name,
     )
+
+    path_name = os.path.join(calib_dirpath, "saved_plots")
+    if not os.path.exists(path_name):
+        os.makedirs(path_name)
+    if st.button("Save plots"):
+        with st.spinner("Saving files..."):
+            file_plotter = FilePlotter(
+                path_name,
+                targets)
+            plot_func(
+                file_plotter, calib_dirpath, mcmc_tables, mcmc_params, targets, app_name, region_name
+            )

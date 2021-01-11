@@ -25,15 +25,9 @@ def plot_overall_notifications(
     targets = {k: v for k, v in targets.items() if v["output_key"] == chosen_output}
     uncertainty_df = get_uncertainty_df(calib_dir_path, mcmc_tables, targets)
     x_low, x_up = STANDARD_X_LIMITS
-    selected_scenarios = [0]
-
-    (
-        title_font_size,
-        label_font_size,
-        dpi_request,
-        capitalise_first_letter,
-    ) = selectors.create_standard_plotting_sidebar()
-    is_logscale, is_targets, is_overlay_uncertainty, is_legend = False, True, True, False
+    selected_scenarios, is_logscale, is_targets, is_overlay_uncertainty, is_legend, title_font_size, label_font_size, \
+    dpi_request, capitalise_first_letter = \
+        [0], False, True, True, False, 8, 8, 300, False
     plots.uncertainty.plots.plot_timeseries_with_uncertainty(
         plotter,
         uncertainty_df,

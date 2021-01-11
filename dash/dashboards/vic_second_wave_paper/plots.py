@@ -1,16 +1,24 @@
 from typing import List
 import pandas as pd
 import streamlit as st
+import os
+import yaml
 
 from autumn.plots.plotter import StreamlitPlotter
 from autumn import plots
-from dash.dashboards.calibration_results.plots import get_uncertainty_df
+from dash.dashboards.calibration_results.plots import get_uncertainty_df, write_mcmc_centiles
+from autumn.plots.calibration.plots import get_epi_params
 
 from autumn.constants import Region
 
 
 STANDARD_X_LIMITS = 153, 275
 PLOT_FUNCS = {}
+KEY_PARAMS = [
+    "seasonal_force",
+    "victorian_clusters.metro.mobility.microdistancing.behaviour.parameters.upper_asymptote",
+    "victorian_clusters.metro.mobility.microdistancing.face_coverings.parameters.upper_asymptote",
+]
 
 
 def plot_overall_output(plotter, calib_dir_path, mcmc_tables, targets, chosen_output):
@@ -169,3 +177,87 @@ def metro_icu_admissions(
 
 
 PLOT_FUNCS["Metro ICU admissions"] = metro_icu_admissions
+
+
+def plot_posteriors(
+        plotter: StreamlitPlotter,
+        calib_dir_path: str,
+        mcmc_tables: List[pd.DataFrame],
+        mcmc_params: List[pd.DataFrame],
+        params: List,
+):
+
+    st.write(params)
+    priors = []
+    try:
+        priors_path = os.path.join(calib_dir_path, "priors-1.yml")
+        with open(priors_path) as file:
+            priors = yaml.load(file, Loader=yaml.FullLoader)
+    except:
+        st.write("Check if priors-1.yml exists in the output folder")
+    burn_in, num_bins, sig_figs, title_font_size, label_font_size, dpi_request, capitalise_first_letter = \
+        0, 16, 3, 8, 8, 300, False
+    plots.calibration.plots.plot_multiple_posteriors(
+        plotter, mcmc_params, mcmc_tables, burn_in, num_bins, title_font_size, label_font_size, capitalise_first_letter,
+        dpi_request, priors, parameters=params,
+    )
+    write_mcmc_centiles(mcmc_params, mcmc_tables, burn_in, sig_figs, [2.5, 50, 97.5])
+
+
+def plot_epi_posteriors(
+        plotter: StreamlitPlotter,
+        calib_dir_path: str,
+        mcmc_tables: List[pd.DataFrame],
+        mcmc_params: List[pd.DataFrame],
+        targets: dict,
+        app_name: str,
+        region: str,
+):
+
+    strings_to_ignore = \
+        ["dispersion_param", "contact_rate_multiplier"] + \
+        KEY_PARAMS
+    params = get_epi_params(
+        mcmc_params,
+        strings_to_ignore=strings_to_ignore
+    )
+    plot_posteriors(plotter, calib_dir_path, mcmc_tables, mcmc_params, params)
+
+
+PLOT_FUNCS["Epi posteriors"] = plot_epi_posteriors
+
+
+def plot_contact_rate_modifiers(
+        plotter: StreamlitPlotter,
+        calib_dir_path: str,
+        mcmc_tables: List[pd.DataFrame],
+        mcmc_params: List[pd.DataFrame],
+        targets: dict,
+        app_name: str,
+        region: str,
+):
+    params = [
+        param for
+        param in mcmc_params[0].loc[:, "name"].unique().tolist() if
+        "contact_rate_multiplier" in param
+    ]
+    plot_posteriors(plotter, calib_dir_path, mcmc_tables, mcmc_params, params)
+
+
+PLOT_FUNCS["Contact rate modifiers"] = plot_contact_rate_modifiers
+
+
+def plot_key_params(
+        plotter: StreamlitPlotter,
+        calib_dir_path: str,
+        mcmc_tables: List[pd.DataFrame],
+        mcmc_params: List[pd.DataFrame],
+        targets: dict,
+        app_name: str,
+        region: str,
+):
+
+    plot_posteriors(plotter, calib_dir_path, mcmc_tables, mcmc_params, KEY_PARAMS)
+
+
+PLOT_FUNCS["Key parameters"] = plot_key_params

@@ -40,12 +40,15 @@ PLOT_TEXT_DICT = {
     "mobility.microdistancing.behaviour.parameters.max_effect": "max effect microdistancing",
     "mobility.microdistancing.behaviour_adjuster.parameters.sigma": "microdist max wane",
     "mobility.microdistancing.behaviour_adjuster.parameters.c": "microdist wane time",
-    "clinical_stratification.props.hospital.multiplier": "hospitalisation multiplier",
+    "clinical_stratification.props.hospital.multiplier": "hospitalisation adjuster",
     "clinical_stratification.icu_prop": "ICU proportion",
-    "sojourn.compartment_periods.icu_early": "ICU duration",
+    "sojourn.compartment_periods.icu_early": "pre-ICU period",
     "other_locations": "other locations",
-    "clinical_stratification.props.symptomatic.multiplier": "symptomatic proportion multiplier",
     "manila": "national capital region",
+    "victorian_clusters.intercluster_mixing": "inter-cluster mixing",
+    "clinical_stratification.props.symptomatic.multiplier": "sympt prop adjuster",
+    "clinical_stratification.non_sympt_infect_multiplier": "asympt infect multiplier",
+    "infection_fatality.multiplier": "IFR adjuster",
 }
 
 ALPHAS = (1.0, 0.6, 0.4, 0.3, 0.2, 0.15, 0.1, 0.08)

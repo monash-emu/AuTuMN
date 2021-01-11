@@ -39,16 +39,16 @@ def collate_acceptance_ratios(acceptance_list):
     return ratios
 
 
-def get_epi_params(mcmc_params):
+def get_epi_params(mcmc_params, strings_to_ignore=("dispersion_param",)):
     """
     Extract only the epidemiological parameters, ignoring the ones that were only used to tune proposal distributions,
     which end in dispersion_param.
     """
 
     return [
-        param
-        for param in mcmc_params[0].loc[:, "name"].unique().tolist()
-        if "dispersion_param" not in param
+        param for
+        param in mcmc_params[0].loc[:, "name"].unique().tolist() if not
+        any(string in param for string in strings_to_ignore)
     ]
 
 
@@ -389,23 +389,23 @@ def plot_posterior(
 
 
 def plot_multiple_posteriors(
-    plotter: Plotter,
-    mcmc_params: List[pd.DataFrame],
-    mcmc_tables: List[pd.DataFrame],
-    burn_in: int,
-    num_bins: int,
-    title_font_size: int,
-    label_font_size: int,
-    capitalise_first_letter: bool,
-    dpi_request: int,
-    priors: list,
+        plotter: Plotter,
+        mcmc_params: List[pd.DataFrame],
+        mcmc_tables: List[pd.DataFrame],
+        burn_in: int,
+        num_bins: int,
+        title_font_size: int,
+        label_font_size: int,
+        capitalise_first_letter: bool,
+        dpi_request: int,
+        priors: list,
+        parameters: list,
 ):
     """
     Plots the posterior distribution of a given parameter in a histogram.
     """
 
     # Except not the dispersion parameters - only the epidemiological ones
-    parameters = get_epi_params(mcmc_params)
     fig, axes, _, n_rows, n_cols, indices = plotter.get_figure(len(parameters))
 
     for i in range(n_rows * n_cols):

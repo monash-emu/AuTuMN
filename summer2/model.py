@@ -667,7 +667,7 @@ class CompartmentalModel:
             if callable(flow.param):
                 funcs.add(flow.param)
             for adj in flow.adjustments:
-                if callable(adj.param):
+                if adj and callable(adj.param):
                     funcs.add(adj.param)
 
         # Cache return values to prevent re-computation. This will a little leak memory, which is fine.
@@ -681,7 +681,7 @@ class CompartmentalModel:
             if flow.param in funcs_cached:
                 flow.param = funcs_cached[flow.param]
             for adj in flow.adjustments:
-                if adj.param in funcs_cached:
+                if adj and adj.param in funcs_cached:
                     adj.param = funcs_cached[adj.param]
 
         # Optimize flow adjustments

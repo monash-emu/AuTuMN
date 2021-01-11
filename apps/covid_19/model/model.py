@@ -106,28 +106,28 @@ def build_model(params: dict) -> CompartmentalModel:
         dest=Compartment.EARLY_EXPOSED,
     )
     # Infection progress flows.
-    model.add_sojourn_flow(
+    model.add_fractional_flow(
         name="infect_onset",
-        sojourn_time=compartment_periods[Compartment.EARLY_EXPOSED],
+        fractional_rate=1.0 / compartment_periods[Compartment.EARLY_EXPOSED],
         source=Compartment.EARLY_EXPOSED,
         dest=Compartment.LATE_EXPOSED,
     )
-    model.add_sojourn_flow(
+    model.add_fractional_flow(
         name="incidence",
-        sojourn_time=compartment_periods[Compartment.LATE_EXPOSED],
+        fractional_rate=1.0 / compartment_periods[Compartment.LATE_EXPOSED],
         source=Compartment.LATE_EXPOSED,
         dest=Compartment.EARLY_ACTIVE,
     )
-    model.add_sojourn_flow(
+    model.add_fractional_flow(
         name="progress",
-        sojourn_time=compartment_periods[Compartment.EARLY_ACTIVE],
+        fractional_rate=1.0 / compartment_periods[Compartment.EARLY_ACTIVE],
         source=Compartment.EARLY_ACTIVE,
         dest=Compartment.LATE_ACTIVE,
     )
     # Recovery flows
-    model.add_sojourn_flow(
+    model.add_fractional_flow(
         name="recovery",
-        sojourn_time=compartment_periods[Compartment.LATE_ACTIVE],
+        fractional_rate=1.0 / compartment_periods[Compartment.LATE_ACTIVE],
         source=Compartment.LATE_ACTIVE,
         dest=Compartment.RECOVERED,
     )
@@ -356,8 +356,9 @@ def build_model(params: dict) -> CompartmentalModel:
     # These flow rates are the death rates for hospitalised patients in ICU and non-ICU.
     # We assume everyone who dies does so at the end of their time in the "late active" compartment.
     # We split the flow rate out of "late active" into a death or recovery flow, based on the relative death proportion.
-    within_hospital_late = 1 / (params.sojourn.compartment_periods["hospital_late"])
-    within_icu_late = 1 / (params.sojourn.compartment_periods["icu_late"])
+    sojourn = params.sojourn
+    within_hospital_late = 1.0 / sojourn.compartment_periods["hospital_late"]
+    within_icu_late = 1.0 / sojourn.compartment_periods["icu_late"]
     hospital_death_rates = relative_death_props[Clinical.HOSPITAL_NON_ICU] * within_hospital_late
     icu_death_rates = relative_death_props[Clinical.ICU] * within_icu_late
 
@@ -388,30 +389,31 @@ def build_model(params: dict) -> CompartmentalModel:
         get_abs_prop_sympt_non_hospital = get_abs_prop_sympt_non_hospital_factory(
             age_idx, abs_props, get_abs_prop_isolated
         )
+        adjustments = {
+            Clinical.NON_SYMPT: Multiply(abs_props[Clinical.NON_SYMPT][age_idx]),
+            Clinical.ICU: Multiply(abs_props[Clinical.ICU][age_idx]),
+            Clinical.HOSPITAL_NON_ICU: Multiply(abs_props[Clinical.HOSPITAL_NON_ICU][age_idx]),
+            Clinical.SYMPT_NON_HOSPITAL: Multiply(get_abs_prop_sympt_non_hospital),
+            Clinical.SYMPT_ISOLATE: Multiply(get_abs_prop_isolated),
+        }
         clinical_strat.add_flow_adjustments(
             "infect_onset",
-            {
-                Clinical.NON_SYMPT: Multiply(abs_props[Clinical.NON_SYMPT][age_idx]),
-                Clinical.ICU: Multiply(abs_props[Clinical.ICU][age_idx]),
-                Clinical.HOSPITAL_NON_ICU: Multiply(abs_props[Clinical.HOSPITAL_NON_ICU][age_idx]),
-                Clinical.SYMPT_NON_HOSPITAL: Multiply(get_abs_prop_sympt_non_hospital),
-                Clinical.SYMPT_ISOLATE: Multiply(get_abs_prop_isolated),
-            },
+            adjustments,
             source_strata={"agegroup": agegroup},
         )
 
     """
     Adjust early active sojourn times.
     """
-    # Overwrite the progression sojourn time for early compartments for hospital and ICU.
-    sojourn = params.sojourn
+    within_hospital_early = 1.0 / sojourn.compartment_periods["hospital_early"]
+    within_icu_early = 1.0 / sojourn.compartment_periods["icu_early"]
     for agegroup in agegroup_strata:
         clinical_strat.add_flow_adjustments(
             "progress",
             {
                 Clinical.NON_SYMPT: None,
-                Clinical.ICU: Overwrite(sojourn.compartment_periods["icu_early"]),
-                Clinical.HOSPITAL_NON_ICU: Overwrite(sojourn.compartment_periods["hospital_early"]),
+                Clinical.ICU: Overwrite(within_icu_early),
+                Clinical.HOSPITAL_NON_ICU: Overwrite(within_hospital_early),
                 Clinical.SYMPT_NON_HOSPITAL: None,
                 Clinical.SYMPT_ISOLATE: None,
             },
@@ -423,15 +425,15 @@ def build_model(params: dict) -> CompartmentalModel:
     """
     hospital_survival_props = 1 - relative_death_props[Clinical.HOSPITAL_NON_ICU]
     icu_survival_props = 1 - relative_death_props[Clinical.ICU]
-    hospital_recovery_times = sojourn.compartment_periods["hospital_late"] / hospital_survival_props
-    icu_recovery_times = sojourn.compartment_periods["icu_late"] / icu_survival_props
+    hospital_survival_rates = within_hospital_late * hospital_survival_props
+    icu_survival_rates = within_icu_late * icu_survival_props
     for idx, agegroup in enumerate(agegroup_strata):
         clinical_strat.add_flow_adjustments(
             "recovery",
             {
                 Clinical.NON_SYMPT: None,
-                Clinical.ICU: Overwrite(icu_recovery_times[idx]),
-                Clinical.HOSPITAL_NON_ICU: Overwrite(hospital_recovery_times[idx]),
+                Clinical.ICU: Overwrite(icu_survival_rates[idx]),
+                Clinical.HOSPITAL_NON_ICU: Overwrite(hospital_survival_rates[idx]),
                 Clinical.SYMPT_NON_HOSPITAL: None,
                 Clinical.SYMPT_ISOLATE: None,
             },
@@ -493,7 +495,6 @@ def build_model(params: dict) -> CompartmentalModel:
             )
 
     model.stratify_with(clinical_strat)
-    return model
 
     """
     Infection history stratification
@@ -619,7 +620,6 @@ def build_model(params: dict) -> CompartmentalModel:
         setattr(model, "_get_mixing_matrix", MethodType(get_mixing_matrix, model))
 
     return model
-
     """
     Set up and track derived output functions
     """

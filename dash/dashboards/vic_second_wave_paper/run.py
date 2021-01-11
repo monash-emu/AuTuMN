@@ -14,12 +14,13 @@ from .plots import PLOT_FUNCS
 
 
 def run_dashboard():
-    app_name, app_dirpath = selectors.app_name(run_type="calibrate")
+    app_name, app_dirpath = "covid_19", os.path.join(os.getcwd(), "data\outputs\calibrate\covid_19")
     if not app_name:
         st.write("No calibrations have been run yet")
         return
 
-    region_name, region_dirpath = selectors.output_region_name(app_dirpath, app_name)
+    region_name = "victoria"
+    region_dirpath = os.path.join(app_dirpath, region_name)
     if not region_name:
         st.write("No region folder found")
         return

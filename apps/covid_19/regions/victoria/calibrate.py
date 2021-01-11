@@ -67,7 +67,7 @@ def get_priors(target_outputs: list):
         {
             "param_name": "clinical_stratification.props.symptomatic.multiplier",
             "distribution": "trunc_normal",
-            "distri_params": [1.0, 0.1],
+            "distri_params": [1.0, 0.2],
             "trunc_range": [0.5, np.inf],
         },
         {
@@ -92,12 +92,6 @@ def get_priors(target_outputs: list):
             "trunc_range": [3.0, np.inf],
         },
         {
-            "param_name": "sojourn.compartment_periods.icu_late",
-            "distribution": "trunc_normal",
-            "distri_params": [10.8, 4.0],
-            "trunc_range": [6.0, np.inf],
-        },
-        {
             "param_name": "victorian_clusters.intercluster_mixing",
             "distribution": "uniform",
             "distri_params": [0.005, 0.05],
@@ -112,6 +106,11 @@ def get_priors(target_outputs: list):
             "distribution": "uniform",
             "distri_params": [0., 0.5],
         },
+        {
+            "param_name": "clinical_stratification.non_sympt_infect_multiplier",
+            "distribution": "uniform",
+            "distri_params": [0.3, 0.7],
+        }
     ]
 
     priors = add_dispersion_param_prior_for_gaussian(priors, target_outputs)
@@ -153,6 +152,17 @@ def get_target_outputs(start_date, end_date):
             "output_key": "hospital_admissions",
             "years": hospitalisation_times,
             "values": hospitalisation_values,
+            "loglikelihood_distri": "poisson",
+        }
+    ]
+
+    icu_admission_times, icu_admission_values = \
+        get_truncated_output(targets["icu_admissions"], start_date, end_date)
+    target_outputs += [
+        {
+            "output_key": "icu_admissions",
+            "years": icu_admission_times,
+            "values": icu_admission_values,
             "loglikelihood_distri": "poisson",
         }
     ]

@@ -18,6 +18,14 @@ testing_to_detection:  # Need to mention these parameters in the Supplement some
   assumed_tests_parameter: 1.e-03
   smoothing_period: 7
 
+# VAHI, 1st July to 30th September
+clinical_stratification:
+  icu_prop: 0.089
+sojourn:
+  compartment_periods:
+    hospital_late: 11.2
+    icu_late: 7.4
+
 # Cluster stratification.
 victorian_clusters:
 

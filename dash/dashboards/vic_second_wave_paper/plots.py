@@ -33,10 +33,7 @@ def plot_overall_notifications(
         dpi_request,
         capitalise_first_letter,
     ) = selectors.create_standard_plotting_sidebar()
-    is_logscale = False
-    is_targets = True
-    is_overlay_unceratinty = True
-    is_legend = st.sidebar.checkbox("Add legend")
+    is_logscale, is_targets, is_overlay_uncertainty, is_legend = False, True, True, False
     plots.uncertainty.plots.plot_timeseries_with_uncertainty(
         plotter,
         uncertainty_df,
@@ -47,7 +44,7 @@ def plot_overall_notifications(
         x_low,
         x_up,
         add_targets=is_targets,
-        overlay_uncertainty=is_overlay_unceratinty,
+        overlay_uncertainty=is_overlay_uncertainty,
         title_font_size=title_font_size,
         label_font_size=label_font_size,
         dpi_request=dpi_request,

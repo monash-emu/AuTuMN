@@ -1,5 +1,4 @@
-# SCENARIO DESCRIPTION: BASELINE
----
+description: BASELINE
 parent: apps/covid_19/phl_submodel_params.yml
 
 mobility:

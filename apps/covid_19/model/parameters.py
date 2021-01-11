@@ -220,6 +220,7 @@ class ParamConfig:
 
 @dataclass(config=ParamConfig)
 class Parameters:
+    description: str  # Scenario description, used by PowerBI.
     contact_rate: float
     infect_death: float
     universal_death_rate: float

@@ -1,15 +1,15 @@
 """
 Processing data from the output database.
 """
-import os
 import logging
-import random
 from typing import List
 
 import pandas as pd
 import numpy as np
 
-from ..db.database import get_database, BaseDatabase
+from autumn.tool_kit.utils import read_run_id
+from autumn.tool_kit.params import load_targets, load_params
+from autumn.db.database import get_database, BaseDatabase
 
 
 logger = logging.getLogger(__name__)
@@ -152,7 +152,7 @@ def prune_final(source_db_path: str, target_db_path: str):
     logger.info("Finished pruning %s into %s", source_db_path, target_db_path)
 
 
-def unpivot(source_db_path: str, target_db_path: str):
+def powerbi_postprocess(source_db_path: str, target_db_path: str, run_id: str):
     """
     Read the model outputs from a database and then convert them into a form
     that is readable by our PowerBI dashboard.
@@ -164,7 +164,59 @@ def unpivot(source_db_path: str, target_db_path: str):
     for table_name in tables_to_copy:
         logger.info("Copying %s", table_name)
         table_df = source_db.query(table_name)
+        if table_name == "uncertainty":
+            # Rename "time" field to "times"
+            table_df.rename(columns={"time": "times"})
+
         target_db.dump_df(table_name, table_df)
+
+    app_name, region_name, timestamp, git_commit = read_run_id(run_id)
+
+    # Add build metadata table
+    build_key = f"{timestamp}-{git_commit}"
+    logger.info("Adding 'build' metadata table with key %s", build_key)
+    build_df = pd.DataFrame.from_dict(
+        {"build_key": [build_key], "app_name": [app_name], "region_name": [region_name]}
+    )
+    target_db.dump_df("build", build_df)
+
+    # Add scenario metadata table
+    logger.info("Adding 'scenario' metadata table")
+    params = load_params(app_name, region_name)
+    # Add default scenario
+    scenario_data = [
+        {
+            "scenario": 0,
+            "start_time": int(params["default"]["time"]["start"]),
+            "description": params["default"].get("description", ""),
+        }
+    ]
+    for sc_idx, sc_params in params["scenarios"].items():
+        sc_datum = {
+            "scenario": int(sc_idx),
+            "start_time": int(sc_params["time"]["start"]),
+            "description": sc_params.get("description", ""),
+        }
+        scenario_data.append(sc_datum)
+
+    scenario_df = pd.DataFrame(scenario_data)
+    target_db.dump_df("scenario", scenario_df)
+
+    # Add calibration targets
+    logger.info("Adding 'targets' table")
+    targets = load_targets(app_name, region_name)
+    targets_data = []
+    for target in targets.values():
+        for t, v in zip(target["times"], target["values"]):
+            t_datum = {
+                "key": target["output_key"],
+                "times": t,
+                "value": v,
+            }
+            targets_data.append(t_datum)
+
+    targets_df = pd.DataFrame(targets_data)
+    target_db.dump_df("targets", targets_df)
 
     logger.info("Converting outputs to PowerBI format")
     outputs_df = source_db.query("outputs")

@@ -2,13 +2,38 @@
 Miscellaneous utility functions.
 If several functions here develop a theme, consider reorganising them into a module.
 """
+import json, types, time, hashlib, itertools
 import subprocess as sp
-import numpy
-import itertools
-import hashlib
-import json
-import types
 from datetime import date
+
+import numpy
+
+
+def read_run_id(run_id: str):
+    """Read data from run id"""
+    parts = run_id.split("/")
+    if len(parts) < 2:
+        # It's an old style path
+        # central-visayas-1600644750-9fdd80c
+        parts = run_id.split("-")
+        git_commit = parts[-1]
+        timestamp = parts[-2]
+        region_name = "-".join(parts[:-2])
+        app_name = "covid_19"
+    else:
+        # It's an new style path
+        # covid_19/central-visayas/1600644750/9fdd80c
+        app_name = parts[0]
+        region_name = parts[1]
+        timestamp = parts[2]
+        git_commit = parts[3]
+
+    return app_name, region_name, timestamp, git_commit
+
+
+def build_run_id(app_name: str, region_name: str, git_commit: str):
+    timestamp = str(int(time.time()))
+    return "/".join([app_name, region_name, timestamp, git_commit])
 
 
 def get_data_hash(*args):
@@ -332,12 +357,10 @@ def apply_odds_ratio_to_proportion(proportion, odds_ratio):
     """
 
     # Check inputs
-    assert 0. <= odds_ratio
-    assert 0. <= proportion <= 1.
+    assert 0.0 <= odds_ratio
+    assert 0.0 <= proportion <= 1.0
 
     # Transform and return
-    modified_proportion = \
-        proportion * odds_ratio / \
-        (proportion * (odds_ratio - 1.) + 1.)
+    modified_proportion = proportion * odds_ratio / (proportion * (odds_ratio - 1.0) + 1.0)
 
     return modified_proportion

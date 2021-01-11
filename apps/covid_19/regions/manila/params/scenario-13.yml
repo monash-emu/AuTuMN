@@ -1,5 +1,4 @@
-# SCENARIO DESCRIPTION: 75% increase in mobility
----
+description: 75% increase in mobility
 parent: apps/covid_19/regions/manila/params/default.yml
 
 time:

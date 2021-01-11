@@ -64,8 +64,8 @@ def powerbi_task(run_id: str, quiet: bool):
     # Unpivot database tables so that they're easier to process in PowerBI.
     run_slug = run_id.replace("/", "-")
     dest_db_path = os.path.join(POWERBI_DATA_DIR, f"powerbi-{run_slug}.db")
-    with Timer(f"Unpivoting final database"):
-        db.process.unpivot(POWERBI_COLLATED_PRUNED_PATH, dest_db_path)
+    with Timer(f"Applying PowerBI specific post-processing final database"):
+        db.process.powerbi_postprocess(POWERBI_COLLATED_PRUNED_PATH, dest_db_path, run_id)
 
     # Upload final database to AWS S3
     with Timer(f"Uploading PowerBI data to AWS S3"):

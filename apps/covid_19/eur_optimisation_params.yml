@@ -16,7 +16,6 @@ metropolis_initialisation_type: 'current_params'
 
 clinical_stratification:
   # Infectiousness adjustments, including the effect of isolation following detection
-  late_exposed_infect_multiplier: .7
   non_sympt_infect_multiplier: .7
   late_infect_multiplier:
     sympt_isolate: 0.2

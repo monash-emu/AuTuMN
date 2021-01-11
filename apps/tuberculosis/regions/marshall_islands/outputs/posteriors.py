@@ -20,12 +20,13 @@ PARAMETER_NAMES_OVERRIDE = {
     "rel. progression rate (diabetes)": "relative rate of TB progression for diabetic individuals",
     "RR infection (recovered)": "relative risk of infection for individuals with history of infection (ref. infection-naive)",
     "PT efficacy": "efficacy of preventive treatment",
-    "TB mortality (smear-pos)": "TB mortality (smear-positive)",
-    "TB mortality (smear-neg)": "TB mortality (smear-negative)",
-    "Self cure rate (smear-pos)": "Self-cure rate (smear-positive)",
-    "Self cure rate (smear-neg)": "Self-cure rate (smear-negative)",
+    "TB mortality (smear-pos)": "TB mortality (smear-positive), per year",
+    "TB mortality (smear-neg)": "TB mortality (smear-negative), per year",
+    "Self cure rate (smear-pos)": "Self-cure rate (smear-positive), per year",
+    "Self cure rate (smear-neg)": "Self-cure rate (smear-negative), per year",
     "rr_infection_latent": "relative risk of infection for individuals with latent infection (ref. infection-naive)",
     "awareness_raising.relative_screening_rate": "relative screening rate following ACF interventions (ref. before intervention)",
+    "infection risk per contact": "transmission scaling factor"
 }
 
 

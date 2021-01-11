@@ -115,7 +115,6 @@ clinical_stratification:
         - 0.0703 # 75+
 
   # Infectiousness adjustments, including the effect of isolation following detection
-  late_exposed_infect_multiplier: 1.0
   non_sympt_infect_multiplier: 0.5
   late_infect_multiplier:
     sympt_isolate: 0.2

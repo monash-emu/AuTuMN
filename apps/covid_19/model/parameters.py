@@ -141,7 +141,6 @@ class ClinicalStratification(BaseModel):
     icu_prop: float  # Proportion of those hospitalised that are admitted to ICU
     icu_mortality_prop: float  # Death proportion ceiling for ICU mortality
     late_infect_multiplier: Dict[str, float]
-    late_exposed_infect_multiplier: float
     non_sympt_infect_multiplier: float
 
 

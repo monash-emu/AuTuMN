@@ -301,14 +301,7 @@ def build_model(params: dict) -> StratifiedModel:
     }
     # Overwrite adjustments
     # Make an infectiousness adjustment for isolation/quarantine
-    # Adjust infectiousness for pre-symptomatics so that they are less infectious.
-    clinical_inf_overwrites = [
-        {
-            "comp_name": Compartment.LATE_EXPOSED,
-            "comp_strata": {},
-            "value": clinical_params.late_exposed_infect_multiplier,
-        }
-    ]
+    clinical_inf_overwrites = []
     for stratum in clinical_strata:
         if stratum in clinical_params.late_infect_multiplier:
             adjustment = {

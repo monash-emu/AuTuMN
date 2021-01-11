@@ -1,5 +1,4 @@
-# SCENARIO DESCRIPTION: MHS reduces contact by 0% for Xmas
----
+description: MHS reduces contact by 0% for Xmas
 parent: apps/covid_19/regions/central_visayas/params/default.yml
 
 time:
@@ -15,7 +14,7 @@ mobility:
           - 369
           - 376
         values:
-          - 1. 
+          - 1.
           - 0.
           - 0.
           - 1.

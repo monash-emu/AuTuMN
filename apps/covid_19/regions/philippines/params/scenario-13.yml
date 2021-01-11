@@ -1,5 +1,4 @@
-# SCENARIO DESCRIPTION: 75% increase in mobility
----
+description: 75% increase in mobility
 parent: apps/covid_19/regions/philippines/params/default.yml
 
 time:
@@ -12,7 +11,7 @@ mobility:
       times:
         - 2020-12-01
       values:
-          - ["close_gap_to_1", 0.75]
+        - ["close_gap_to_1", 0.75]
     other_locations:
       append: true
       times:

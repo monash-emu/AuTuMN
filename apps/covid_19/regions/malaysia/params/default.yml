@@ -1,5 +1,4 @@
-# SCENARIO DESCRIPTION: BASELINE
----
+description: BASELINE
 parent: apps/covid_19/params.yml
 
 contact_rate: 0.0195
@@ -31,17 +30,17 @@ mobility:
     school:
       append: false
       times:
-        - 2020-03-16  # All schools close
+        - 2020-03-16 # All schools close
         - 2020-03-17
-        - 2020-06-24  # Secondary exam years
+        - 2020-06-24 # Secondary exam years
         - 2020-06-25
-        - 2020-07-15  # Primary exam years
+        - 2020-07-15 # Primary exam years
         - 2020-07-16
-        - 2020-07-22  # Schools reopen
+        - 2020-07-22 # Schools reopen
         - 2020-07-23
-        - 2020-10-13  # Schools partially close again
+        - 2020-10-13 # Schools partially close again
         - 2020-10-14
-        - 2020-11-08  # Schools fully close again
+        - 2020-11-08 # Schools fully close again
         - 2020-11-09
       values:
         - 1.

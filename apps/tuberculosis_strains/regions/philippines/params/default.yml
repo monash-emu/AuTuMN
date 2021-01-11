@@ -1,5 +1,4 @@
-# SCENARIO DESCRIPTION: BASELINE
----
+description: BASELINE
 parent: apps/tuberculosis_strains/params.yml
 iso3: "PHL"
 

@@ -1,5 +1,4 @@
-# SCENARIO DESCRIPTION: BASELINE
----
+description: BASELINE
 parent: apps/covid_19/vic_rural_submodel_params.yml
 population:
   region: HUME

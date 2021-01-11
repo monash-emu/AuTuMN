@@ -1,5 +1,4 @@
-# SCENARIO DESCRIPTION: Scenario 2, All current offsite workers return onsite
----
+description: Scenario 2, All current offsite workers return onsite
 parent: apps/covid_19/regions/malaysia/params/default.yml
 
 time:

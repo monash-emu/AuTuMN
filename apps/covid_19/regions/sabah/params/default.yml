@@ -1,5 +1,4 @@
-# SCENARIO DESCRIPTION: BASELINE
----
+description: BASELINE
 parent: apps/covid_19/regions/malaysia/params/default.yml
 
 importation: null
@@ -24,7 +23,7 @@ mobility:
       times:
         - 2020-07-22
         - 2020-07-23
-        - 2020-10-13  # Schools partially close again
+        - 2020-10-13 # Schools partially close again
         - 2020-10-14
       values:
         - 1.

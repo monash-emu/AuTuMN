@@ -1,5 +1,4 @@
-# SCENARIO DESCRIPTION: MHS reduces contact by 30% for Xmas & 50% increase in mobility
----
+description: MHS reduces contact by 30% for Xmas & 50% increase in mobility
 parent: apps/covid_19/regions/philippines/params/default.yml
 
 time:
@@ -15,7 +14,7 @@ mobility:
           - 369
           - 376
         values:
-          - 1. 
+          - 1.
           - 0.3
           - 0.3
           - 1.

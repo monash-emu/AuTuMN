@@ -12,12 +12,12 @@ python -m tasks
 ### Run a calibration
 
 ```bash
-RUN_ID="covid_19/manila/111111111/aaaaaaa"
+RUN_ID="covid_19/malaysia/111111111/aaaaaaa"
 RUN_ID="tuberculosis/marshall-islands/111111111/aaaaaaa"
 
 
 # Run a calibration
-python -m tasks calibrate --run  $RUN_ID --chains 1 --runtime 30
+python -m tasks calibrate --run  $RUN_ID --chains 1 --runtime 120 --verbose
 
 # Run full models
 python -m tasks full --run  $RUN_ID --burn 1 --verbose

@@ -175,7 +175,9 @@ def powerbi_postprocess(source_db_path: str, target_db_path: str, run_id: str):
     # Add build metadata table
     build_key = f"{timestamp}-{git_commit}"
     logger.info("Adding 'build' metadata table with key %s", build_key)
-    build_df = pd.DataFrame.from_dict({"build_key": [build_key]})
+    build_df = pd.DataFrame.from_dict(
+        {"build_key": [build_key], "app_name": [app_name], "region_name": [region_name]}
+    )
     target_db.dump_df("build", build_df)
 
     # Add scenario metadata table

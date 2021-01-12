@@ -39,16 +39,16 @@ def collate_acceptance_ratios(acceptance_list):
     return ratios
 
 
-def get_epi_params(mcmc_params):
+def get_epi_params(mcmc_params, strings_to_ignore=("dispersion_param",)):
     """
     Extract only the epidemiological parameters, ignoring the ones that were only used to tune proposal distributions,
     which end in dispersion_param.
     """
 
     return [
-        param
-        for param in mcmc_params[0].loc[:, "name"].unique().tolist()
-        if "dispersion_param" not in param
+        param for
+        param in mcmc_params[0].loc[:, "name"].unique().tolist() if not
+        any(string in param for string in strings_to_ignore)
     ]
 
 
@@ -389,23 +389,23 @@ def plot_posterior(
 
 
 def plot_multiple_posteriors(
-    plotter: Plotter,
-    mcmc_params: List[pd.DataFrame],
-    mcmc_tables: List[pd.DataFrame],
-    burn_in: int,
-    num_bins: int,
-    title_font_size: int,
-    label_font_size: int,
-    capitalise_first_letter: bool,
-    dpi_request: int,
-    priors: list,
+        plotter: Plotter,
+        mcmc_params: List[pd.DataFrame],
+        mcmc_tables: List[pd.DataFrame],
+        burn_in: int,
+        num_bins: int,
+        title_font_size: int,
+        label_font_size: int,
+        capitalise_first_letter: bool,
+        dpi_request: int,
+        priors: list,
+        parameters: list,
 ):
     """
     Plots the posterior distribution of a given parameter in a histogram.
     """
 
     # Except not the dispersion parameters - only the epidemiological ones
-    parameters = get_epi_params(mcmc_params)
     fig, axes, _, n_rows, n_cols, indices = plotter.get_figure(len(parameters))
 
     for i in range(n_rows * n_cols):
@@ -603,15 +603,16 @@ def plot_param_vs_param_by_chain(
 
 
 def plot_param_vs_param(
-    plotter: Plotter,
-    mcmc_params: List[pd.DataFrame],
-    parameters: list,
-    burn_in: int,
-    style: str,
-    bins: int,
-    label_font_size: int,
-    label_chars: int,
-    dpi_request: int,
+        plotter: Plotter,
+        mcmc_params: List[pd.DataFrame],
+        parameters: list,
+        burn_in: int,
+        style: str,
+        bins: int,
+        label_font_size: int,
+        label_chars: int,
+        dpi_request: int,
+        label_param_string=True,
 ):
     """
     Plot the parameter correlation matrices for each parameter combination.
@@ -670,13 +671,13 @@ def plot_param_vs_param(
             else:
                 axis.axis("off")
 
-            # Axis labels
-            if y_idx == 0:
-                axis.set_ylabel(
-                    get_plot_text_dict(x_param_name), fontsize=label_font_size
-                )
+            # Axis labels (these have to be reversed for some reason)
+            x_param_label = y_param_name if label_param_string else str(y_idx + 1)
+            y_param_label = x_param_name if label_param_string else str(x_idx + 1)
             if x_idx == len(parameters) - 1:
-                axis.set_xlabel(get_plot_text_dict(y_param_name), fontsize=label_font_size, labelpad=3)
+                axis.set_xlabel(get_plot_text_dict(x_param_label), fontsize=label_font_size, labelpad=3)
+            if y_idx == 0:
+                axis.set_ylabel(get_plot_text_dict(y_param_label), fontsize=label_font_size)
 
     # Save
     plotter.save_figure(fig, filename="parameter_correlation_matrix", dpi_request=dpi_request)

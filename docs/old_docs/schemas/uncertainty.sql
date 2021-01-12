@@ -4,8 +4,7 @@ CREATE TABLE uncertainty (
 	-- Model scenario
 	scenario BIGINT,
 	-- Time 
-	-- TODO: Change column name to 'times' 
-	time FLOAT, 
+	times FLOAT, 
 	-- Derived output name
 	type TEXT, 
 	-- Value of derived ouput quantile

@@ -2,13 +2,11 @@
 Miscellaneous utility functions.
 If several functions here develop a theme, consider reorganising them into a module.
 """
+import json, types, hashlib, itertools
 import subprocess as sp
-import numpy
-import itertools
-import hashlib
-import json
-import types
 from datetime import date
+
+import numpy
 
 
 def get_data_hash(*args):
@@ -332,12 +330,10 @@ def apply_odds_ratio_to_proportion(proportion, odds_ratio):
     """
 
     # Check inputs
-    assert 0. <= odds_ratio
-    assert 0. <= proportion <= 1.
+    assert 0.0 <= odds_ratio
+    assert 0.0 <= proportion <= 1.0
 
     # Transform and return
-    modified_proportion = \
-        proportion * odds_ratio / \
-        (proportion * (odds_ratio - 1.) + 1.)
+    modified_proportion = proportion * odds_ratio / (proportion * (odds_ratio - 1.0) + 1.0)
 
     return modified_proportion

@@ -1,5 +1,4 @@
-# SCENARIO DESCRIPTION: Scenario 4, Back to normal
----
+description: Scenario 4, Back to normal
 parent: apps/covid_19/regions/malaysia/params/default.yml
 
 time:

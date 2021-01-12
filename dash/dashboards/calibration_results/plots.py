@@ -557,6 +557,7 @@ def plot_all_posteriors(
         capitalise_first_letter,
         dpi_request,
         priors,
+        parameters=get_epi_params(mcmc_params)
     )
 
     write_mcmc_centiles(mcmc_params, mcmc_tables, burn_in, sig_figs, [2.5, 50, 97.5])

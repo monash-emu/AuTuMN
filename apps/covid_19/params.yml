@@ -188,7 +188,6 @@ haario_scaling_factor: 2.4 # Greater values increase jumping step size and reduc
 metropolis_init_rel_step_size: .25
 metropolis_initialisation_type: "lhs"
 
-
 # Fake parameters used in calibration for negative binomial (need to be listed for validation to pass)
 # Not used by model.
 notifications_dispersion_param: 1.

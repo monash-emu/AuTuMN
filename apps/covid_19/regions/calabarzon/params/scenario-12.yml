@@ -1,5 +1,4 @@
-# SCENARIO DESCRIPTION: 50% increase in mobility
----
+description: 50% increase in mobility
 parent: apps/covid_19/regions/calabarzon/params/default.yml
 
 time:

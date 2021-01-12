@@ -1,5 +1,4 @@
-# SCENARIO DESCRIPTION: Re-open schools
----
+description: Re-open schools
 parent: apps/covid_19/regions/philippines/params/default.yml
 
 time:

@@ -1,5 +1,6 @@
 clinical_stratification.props.hospital.multiplier: 2.0338299130963415
 clinical_stratification.props.symptomatic.multiplier: 0.844418925489229
+clinical_stratification.non_sympt_infect_multiplier: 0.5
 contact_rate: 0.02421897015764761
 infection_fatality.multiplier: 2.29765237744276
 infectious_seed: 30.80751623368626
@@ -7,7 +8,6 @@ notifications_metro_dispersion_param: 80.3356733223871
 notifications_rural_dispersion_param: 6.864966925935619
 seasonal_force: 0.17231362715564313
 sojourn.compartment_periods.icu_early: 9.82882163033196
-sojourn.compartment_periods.icu_late: 9.18274913618602
 sojourn.compartment_periods_calculated.active.total_period: 7.378026488532696
 sojourn.compartment_periods_calculated.exposed.total_period: 5.502327574310865
 testing_to_detection.assumed_cdr_parameter: 0.28741268772417666

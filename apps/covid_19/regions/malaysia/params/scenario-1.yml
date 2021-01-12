@@ -1,5 +1,4 @@
-# SCENARIO DESCRIPTION: Scenario 1, Re-open schools
----
+description: Scenario 1, Re-open schools
 parent: apps/covid_19/regions/malaysia/params/default.yml
 
 time:

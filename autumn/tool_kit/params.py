@@ -17,7 +17,7 @@ from autumn.secrets import check_hash
 logger = logging.getLogger(__name__)
 
 
-def load_targets(app_name: str, region_name: str):
+def load_targets(app_name: str, region_name: str) -> dict:
     """
     Load calibration targets from a YAML file
     TODO: Validate data structure on load:
@@ -60,7 +60,7 @@ Have you tried decrypting your data? Try running this from the command line:
     return targets
 
 
-def load_params(app_name: str, region_name: str):
+def load_params(app_name: str, region_name: str) -> dict:
     """
     Load  parameters for the requested app and region.
     This is for loading only, please do not put any pre-processing in here.

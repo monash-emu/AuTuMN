@@ -135,6 +135,7 @@ def add_victorian_derived_outputs(
             for cluster in CLUSTERS
         }
     )
+    # ======= DONE ================
 
     # Hospital occupancy
     model.add_function_derived_outputs(
@@ -181,13 +182,21 @@ def add_victorian_derived_outputs(
     # Track cluster deaths
     model.add_function_derived_outputs({"accum_deaths": calculate_cum_deaths})
     for cluster in CLUSTERS:
-        for indicator in ("notifications", "hospital_admissions", "icu_admissions", "infection_deaths"):
+        for indicator in (
+            "notifications",
+            "hospital_admissions",
+            "icu_admissions",
+            "infection_deaths",
+        ):
 
             # FIXME: Have left this this way because there are so many points where we are referring to deaths this way
             indicator_string = "deaths" if indicator == "infection_deaths" else indicator
             model.add_function_derived_outputs(
-                {f"accum_{indicator_string}_for_cluster_{cluster}":
-                     calculate_cum_cluster_indicator("infection_deaths", cluster)}
+                {
+                    f"accum_{indicator_string}_for_cluster_{cluster}": calculate_cum_cluster_indicator(
+                        "infection_deaths", cluster
+                    )
+                }
             )
 
 

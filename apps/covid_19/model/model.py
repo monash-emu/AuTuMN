@@ -587,11 +587,11 @@ def build_model(params: dict) -> CompartmentalModel:
         regional_clusters = [region.replace("-", "_") for region in Region.VICTORIA_RURAL]
 
         # A bit of a hack - to get rid of all the infectious populations from the regional clusters
-        for i_comp, comp in enumerate(model.compartment_names):
+        for i_comp, comp in enumerate(model.compartments):
             if any(
                 [comp.has_stratum("cluster", cluster) for cluster in regional_clusters]
             ) and not comp.has_name(Compartment.SUSCEPTIBLE):
-                model.compartment_values[i_comp] = 0.0
+                model.initial_population[i_comp] = 0.0
 
         """
         Hack in a custom (144x144) mixing matrix where each region is adjusted individually
@@ -622,14 +622,13 @@ def build_model(params: dict) -> CompartmentalModel:
     """
     Set up and track derived output functions
     """
+    notification_strata = [
+        Clinical.SYMPT_ISOLATE,
+        Clinical.HOSPITAL_NON_ICU,
+        Clinical.ICU,
+    ]
     if not params.victorian_clusters:
         is_region_vic = pop.region and Region.to_name(pop.region) in Region.VICTORIA_SUBREGIONS
-
-        notification_strata = [
-            Clinical.SYMPT_ISOLATE,
-            Clinical.HOSPITAL_NON_ICU,
-            Clinical.ICU,
-        ]
 
         # Disease incidence
         model.request_output_for_flow(name="incidence", flow_name="incidence")
@@ -819,11 +818,101 @@ def build_model(params: dict) -> CompartmentalModel:
                     func=lambda recovered, total: recovered / total,
                 )
     else:
-        add_victorian_derived_outputs(
-            model,
-            icu_early_period=compartment_periods["icu_early"],
-            hospital_early_period=compartment_periods["hospital_early"],
+        # Victorian cluster model outputs.
+        clusters = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS]
+        # Track incidence of disease (transition from exposed to active) - overall and for each cluster
+        model.request_output_for_flow(name="incidence", flow_name="incidence")
+        for cluster in clusters:
+            model.request_output_for_flow(
+                name=f"incidence_for_cluster_{cluster}",
+                flow_name="incidence",
+                dest_strata={"cluster": cluster},
+            )
+
+        # Track progress of disease (transition from early to late active)
+        # - overall, by cluster, by clinical stratum and by both
+        model.request_output_for_flow(name="progress", flow_name="progress")
+        for cluster in clusters:
+            model.request_output_for_flow(
+                name=f"progress_for_cluster_{cluster}",
+                flow_name="progress",
+                dest_strata={"cluster": cluster},
+            )
+
+        # Notifications.
+        notification_sources = []
+        for clinical in notification_strata:
+            name = f"progressX{clinical}"
+            notification_sources.append(name)
+            model.request_output_for_flow(
+                name=name,
+                flow_name="progress",
+                dest_strata={"clinical": clinical},
+                save_results=False,
+            )
+
+        model.request_aggregate_output(name="notifications", sources=notification_sources)
+        # Cluster-specific notifications.
+        for cluster in clusters:
+            cluster_notification_sources = []
+            for clinical in notification_strata:
+                name = f"progress_for_cluster_{cluster}X{clinical}"
+                cluster_notification_sources.append(name)
+                model.request_output_for_flow(
+                    name=name,
+                    flow_name="progress",
+                    dest_strata={"cluster": cluster, "clinical": clinical},
+                    save_results=False,
+                )
+
+            model.request_aggregate_output(
+                name=f"notifications_for_cluster_{cluster}", sources=cluster_notification_sources
+            )
+
+        # Track non-ICU hospital admissions (transition from early to late active in hospital, non-ICU stratum)
+        model.request_output_for_flow(
+            name="non_icu_admissions",
+            flow_name="progress",
+            source_strata={"clinical": Clinical.HOSPITAL_NON_ICU},
+            dest_strata={"clinical": Clinical.HOSPITAL_NON_ICU},
         )
+        for cluster in clusters:
+            model.request_output_for_flow(
+                name=f"non_icu_admissions_for_cluster_{cluster}",
+                flow_name="progress",
+                source_strata={"clinical": Clinical.HOSPITAL_NON_ICU, "cluster": cluster},
+                dest_strata={"clinical": Clinical.HOSPITAL_NON_ICU, "cluster": cluster},
+            )
+
+        # Track ICU admissions (transition from early to late active in ICU stratum)
+        model.request_output_for_flow(
+            name="icu_admissions",
+            flow_name="progress",
+            source_strata={"clinical": Clinical.ICU},
+            dest_strata={"clinical": Clinical.ICU},
+        )
+        for cluster in clusters:
+            model.request_output_for_flow(
+                name=f"icu_admissions_for_cluster_{cluster}",
+                flow_name="progress",
+                source_strata={"clinical": Clinical.ICU, "cluster": cluster},
+                dest_strata={"clinical": Clinical.ICU, "cluster": cluster},
+            )
+
+        # Create hospitalisation functions as sum of hospital non-ICU and ICU
+        model.request_aggregate_output(
+            "hospital_admissions", sources=["icu_admissions", "non_icu_admissions"]
+        )
+        for cluster in clusters:
+            model.request_aggregate_output(
+                f"hospital_admissions_for_cluster_{cluster}",
+                sources=[
+                    f"icu_admissions_for_cluster_{cluster}",
+                    f"non_icu_admissions_for_cluster_{cluster}",
+                ],
+            )
+
+        # Hospital occupancy
 
     return model
 

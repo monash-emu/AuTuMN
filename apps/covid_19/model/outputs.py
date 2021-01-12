@@ -28,38 +28,6 @@ HOSPITAL_STRATUM = [
 ]
 
 
-def get_calc_notifications_covid(
-    include_importation,
-    prop_detected_func,
-):
-    def calculate_notifications_covid(
-        time_idx: int,
-        model: StratifiedModel,
-        compartment_values: np.ndarray,
-        derived_outputs: Dict[str, np.ndarray],
-    ):
-        """
-        Returns the number of notifications for a given time.
-        The fully stratified incidence outputs must be available before calling this function
-        """
-        notifications_count = 0.0
-        for output_name, output_values in derived_outputs.items():
-            is_progress = "progressX" in output_name
-            is_notify_stratum = any([stratum in output_name for stratum in NOTIFICATION_STRATUM])
-            if is_progress and is_notify_stratum:
-                notifications_count += output_values[time_idx]
-
-        if include_importation:
-            time = model.times[time_idx]
-            notifications_count += prop_detected_func(time) * model.get_parameter_value(
-                "importation_rate", time
-            )
-
-        return notifications_count
-
-    return calculate_notifications_covid
-
-
 def calculate_new_hospital_admissions_covid(
     time_idx: int,
     model: StratifiedModel,
@@ -175,42 +143,6 @@ def make_age_specific_seroprevalence_output(agegroup):
         return n_seropositive / agegroup_population
 
     return calculate_proportion_seropositive_by_age
-
-
-def get_calculate_years_of_life_lost(life_expectancy_by_agegroup):
-    def calculate_years_of_life_lost(
-        time_idx: int,
-        model: StratifiedModel,
-        compartment_values: np.ndarray,
-        derived_outputs: Dict[str, np.ndarray],
-    ):
-        total_yoll = 0.0
-        age_strata = model.stratifications[0].strata
-        for i, agegroup in enumerate(age_strata):
-            for output_name, output_values in derived_outputs.items():
-                if f"infection_deathsXagegroup_{agegroup}" in output_name:
-                    total_yoll += output_values[time_idx] * life_expectancy_by_agegroup[i]
-
-        return total_yoll
-
-    return calculate_years_of_life_lost
-
-
-def get_notifications_at_sympt_onset(
-    time_idx: int,
-    model: StratifiedModel,
-    compartment_values: np.ndarray,
-    derived_outputs: Dict[str, np.ndarray],
-):
-    notifications_sympt_onset = 0.0
-    for output_name, output_values in derived_outputs.items():
-        if "incidence" in output_name and (
-            f"clinical_{ClinicalStratum.SYMPT_ISOLATE}" in output_name
-            or f"clinical_{ClinicalStratum.HOSPITAL_NON_ICU}" in output_name
-            or f"clinical_{ClinicalStratum.ICU}" in output_name
-        ):
-            notifications_sympt_onset += output_values[time_idx]
-    return notifications_sympt_onset
 
 
 def calculate_cum_deaths(

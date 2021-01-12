@@ -619,76 +619,205 @@ def build_model(params: dict) -> CompartmentalModel:
         )
         setattr(model, "_get_mixing_matrix", MethodType(get_mixing_matrix, model))
 
-    return model
     """
     Set up and track derived output functions
     """
     if not params.victorian_clusters:
-        # Set up derived outputs
-        incidence_connections = outputs.get_incidence_connections(model.compartment_names)
-        progress_connections = outputs.get_progress_connections(model.compartment_names)
-        death_output_connections = outputs.get_infection_death_connections(model.compartment_names)
-        model.add_flow_derived_outputs(incidence_connections)
-        model.add_flow_derived_outputs(progress_connections)
-        model.add_flow_derived_outputs(death_output_connections)
+        is_region_vic = pop.region and Region.to_name(pop.region) in Region.VICTORIA_SUBREGIONS
 
-        # Build notification derived output function
-        is_importation_active = params.importation is not None
-        notification_func = outputs.get_calc_notifications_covid(
-            is_importation_active,
-            modelled_abs_detection_proportion_imported,
-        )
-        local_notification_func = outputs.get_calc_notifications_covid(
-            False, modelled_abs_detection_proportion_imported
+        notification_strata = [
+            Clinical.SYMPT_ISOLATE,
+            Clinical.HOSPITAL_NON_ICU,
+            Clinical.ICU,
+        ]
+
+        # Disease incidence
+        model.request_output_for_flow(name="incidence", flow_name="incidence")
+        notification_at_sympt_onset_sources = []
+        for agegroup in agegroup_strata:
+            # Track incidence for each agegroup.
+            model.request_output_for_flow(
+                name=f"incidenceXagegroup_{agegroup}",
+                flow_name="incidence",
+                dest_strata={"agegroup": agegroup},
+            )
+            for clinical in clinical_strata:
+                # Track incidence for each agegroup and clinical status.
+                name = f"incidenceXagegroup_{agegroup}Xclinical_{clinical}"
+                model.request_output_for_flow(
+                    name=name,
+                    flow_name="incidence",
+                    dest_strata={"agegroup": agegroup, "clinical": clinical},
+                )
+                if clinical in notification_strata:
+                    notification_at_sympt_onset_sources.append(name)
+
+        # Notifications at symptom onset.
+        model.request_aggregate_output(
+            name="notifications_at_sympt_onset", sources=notification_at_sympt_onset_sources
         )
 
-        # Build life expectancy derived output function
+        # Disease progresssion
+        model.request_output_for_flow(name="progress", flow_name="progress")
+        for clinical in notification_strata:
+            model.request_output_for_flow(
+                name=f"progressXclinical_{clinical}",
+                flow_name="progress",
+                dest_strata={"clinical": clinical},
+            )
+
+        # New hospital admissions
+        model.request_aggregate_output(
+            name="new_hospital_admissions",
+            sources=[
+                f"progressXclinical_{Clinical.ICU}",
+                f"progressXclinical_{Clinical.HOSPITAL_NON_ICU}",
+            ],
+        )
+        model.request_aggregate_output(
+            name="new_icu_admissions", sources=[f"progressXclinical_{Clinical.ICU}"]
+        )
+
+        # Get notifications, which may included people detected in-country as they progress, or imported cases which are detected.
+        notification_sources = [f"progressXclinical_{c}" for c in notification_strata]
+        model.request_aggregate_output(name="local_notifications", sources=notification_sources)
+        if importation:
+            # Include *detected* imported cases in notifications.
+            model.request_output_for_flow(
+                name="_importation", flow_name="importation", save_results=False
+            )
+            props_imports_detected = np.array(
+                [modelled_abs_detection_proportion_imported(t) for t in model.times]
+            )
+            get_count_detected_imports = lambda imports: imports * props_imports_detected
+            notification_sources = [*notification_sources, "_importation_detected"]
+            model.request_function_output(
+                name="_importation_detected",
+                func=get_count_detected_imports,
+                sources=["_importation"],
+                save_results=False,
+            )
+
+        model.request_aggregate_output(name="notifications", sources=notification_sources)
+
+        # Infection deaths.
+        model.request_output_for_flow(name="infection_deaths", flow_name="infect_death")
+        for agegroup in agegroup_strata:
+            model.request_output_for_flow(
+                name=f"infection_deathsXagegroup_{agegroup}",
+                flow_name="infect_death",
+                dest_strata={"agegroup": agegroup},
+                save_results=False,
+            )
+            for clinical in clinical_strata:
+                model.request_output_for_flow(
+                    name=f"infection_deathsXagegroup_{agegroup}Xclinical_{clinical}",
+                    flow_name="infect_death",
+                    dest_strata={"agegroup": agegroup, "clinical": clinical},
+                )
+
+        model.request_cumulative_output(name="accum_deaths", source="infection_deaths")
+        if not is_region_vic:
+            for agegroup in agegroup_strata:
+                model.request_cumulative_output(
+                    name=f"accum_deathsXagegroup_{agegroup}",
+                    source=f"infection_deathsXagegroup_{agegroup}",
+                )
+
+        # Track years of life lost per year.
         life_expectancy = inputs.get_life_expectancy_by_agegroup(agegroup_strata, country.iso3)[0]
         life_expectancy_latest = [life_expectancy[agegroup][-1] for agegroup in life_expectancy]
-        life_lost_func = outputs.get_calculate_years_of_life_lost(life_expectancy_latest)
+        yoll_sources = []
+        for idx, agegroup in enumerate(agegroup_strata):
+            get_yoll = lambda deaths: deaths * life_expectancy_latest[idx]
+            yoll_source = f"_yoll_{agegroup}"
+            yoll_sources.append(yoll_source)
+            model.request_function_output(
+                name=yoll_source,
+                func=get_yoll,
+                sources=[f"infection_deathsXagegroup_{agegroup}"],
+                save_results=False,
+            )
 
-        # Build hospital occupancy func
+        model.request_aggregate_output(name="years_of_life_lost", sources=yoll_sources)
+        if params.country.iso3 in OPTI_ISO3S:
+            # Derived outputs for the optimization project.
+            model.request_cumulative_output(
+                name="accum_years_of_life_lost", source="years_of_life_lost"
+            )
+
+        # Track hospital occupancy.
+        # We count all ICU and hospital late active compartments and a proportion of early active ICU cases.
         compartment_periods = params.sojourn.compartment_periods
         icu_early_period = compartment_periods["icu_early"]
         hospital_early_period = compartment_periods["hospital_early"]
-        calculate_hospital_occupancy = outputs.get_calculate_hospital_occupancy(
-            model, icu_early_period, hospital_early_period
+        period_icu_patients_in_hospital = max(icu_early_period - hospital_early_period, 0.0)
+        proportion_icu_patients_in_hospital = period_icu_patients_in_hospital / icu_early_period
+        model.request_output_for_compartments(
+            "_late_active_hospital",
+            compartments=[Compartment.LATE_ACTIVE],
+            strata={"clinical": Clinical.HOSPITAL_NON_ICU},
+            save_results=False,
+        )
+        model.request_output_for_compartments(
+            "icu_occupancy",
+            compartments=[Compartment.LATE_ACTIVE],
+            strata={"clinical": Clinical.ICU},
+        )
+        model.request_output_for_compartments(
+            "_early_active_icu",
+            compartments=[Compartment.EARLY_ACTIVE],
+            strata={"clinical": Clinical.ICU},
+            save_results=False,
+        )
+        model.request_function_output(
+            name="_early_active_icu_proportion",
+            func=lambda patients: patients * proportion_icu_patients_in_hospital,
+            sources=["_early_active_icu"],
+            save_results=False,
+        )
+        model.request_aggregate_output(
+            name="hospital_occupancy",
+            sources=[
+                "_late_active_hospital",
+                "icu_occupancy",
+                "_early_active_icu_proportion",
+            ],
         )
 
-        func_outputs = {
-            # Case-related
-            "notifications": notification_func,
-            "local_notifications": local_notification_func,
-            "notifications_at_sympt_onset": outputs.get_notifications_at_sympt_onset,
-            # Death-related
-            "years_of_life_lost": life_lost_func,
-            "accum_deaths": outputs.calculate_cum_deaths,
-            # Health care-related
-            "hospital_occupancy": calculate_hospital_occupancy,
-            "icu_occupancy": outputs.calculate_icu_occupancy,
-            "new_hospital_admissions": outputs.calculate_new_hospital_admissions_covid,
-            "new_icu_admissions": outputs.calculate_new_icu_admissions_covid,
-            # Other
-            "proportion_seropositive": outputs.calculate_proportion_seropositive,
-        }
-
-        # Derived outputs for the optimization project.
-        if params.country.iso3 in OPTI_ISO3S:
-            func_outputs["accum_years_of_life_lost"] = outputs.calculate_cum_years_of_life_lost
-
-        # Add age-specific proportion recovered for all applications except VIC clusters
-        is_region_vic = pop.region and Region.to_name(pop.region) in Region.VICTORIA_SUBREGIONS
+        # Proprotion seropositive
+        model.request_output_for_compartments(
+            name="_total_population", compartments=COMPARTMENTS, save_results=False
+        )
+        model.request_output_for_compartments(
+            name="_recovered", compartments=[Compartment.RECOVERED], save_results=False
+        )
+        model.request_function_output(
+            name="proportion_seropositive",
+            sources=["_recovered", "_total_population"],
+            func=lambda recovered, total: recovered / total,
+        )
         if not is_region_vic:
             for agegroup in agegroup_strata:
-                age_key = f"agegroup_{agegroup}"
-                func_outputs[
-                    f"proportion_seropositiveX{age_key}"
-                ] = outputs.make_age_specific_seroprevalence_output(agegroup)
-                func_outputs[f"accum_deathsX{age_key}"] = outputs.make_agespecific_cum_deaths_func(
-                    agegroup
+                total_name = f"_total_populationXagegroup_{agegroup}"
+                recovered_name = f"_recoveredXagegroup_{agegroup}"
+                model.request_output_for_compartments(
+                    name=total_name,
+                    compartments=COMPARTMENTS,
+                    strata={"agegroup": agegroup},
+                    save_results=False,
                 )
-
-        model.add_function_derived_outputs(func_outputs)
+                model.request_output_for_compartments(
+                    name=recovered_name,
+                    compartments=[Compartment.RECOVERED],
+                    strata={"agegroup": agegroup},
+                    save_results=False,
+                )
+                model.request_function_output(
+                    name=f"proportion_seropositiveXagegroup_{agegroup}",
+                    sources=[recovered_name, total_name],
+                    func=lambda recovered, total: recovered / total,
+                )
     else:
         add_victorian_derived_outputs(
             model,

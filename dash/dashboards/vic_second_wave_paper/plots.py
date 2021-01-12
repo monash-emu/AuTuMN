@@ -8,6 +8,8 @@ from autumn.plots.plotter import StreamlitPlotter
 from autumn import plots
 from dash.dashboards.calibration_results.plots import get_uncertainty_df, write_mcmc_centiles
 from autumn.plots.calibration.plots import get_epi_params
+from dash.utils import create_downloadable_csv
+from autumn.plots.utils import get_plot_text_dict
 
 from autumn.constants import Region
 
@@ -179,6 +181,17 @@ def metro_icu_admissions(
 PLOT_FUNCS["Metro ICU admissions"] = metro_icu_admissions
 
 
+def get_vic_epi_params(mcmc_params):
+    strings_to_ignore = \
+        ["dispersion_param", "contact_rate_multiplier"] + \
+        KEY_PARAMS
+    params = get_epi_params(
+        mcmc_params,
+        strings_to_ignore=strings_to_ignore
+    )
+    return params
+
+
 def plot_posteriors(
         plotter: StreamlitPlotter,
         calib_dir_path: str,
@@ -214,14 +227,7 @@ def plot_epi_posteriors(
         region: str,
 ):
 
-    strings_to_ignore = \
-        ["dispersion_param", "contact_rate_multiplier"] + \
-        KEY_PARAMS
-    params = get_epi_params(
-        mcmc_params,
-        strings_to_ignore=strings_to_ignore
-    )
-    plot_posteriors(plotter, calib_dir_path, mcmc_tables, mcmc_params, params)
+    plot_posteriors(plotter, calib_dir_path, mcmc_tables, mcmc_params, get_vic_epi_params(mcmc_params))
 
 
 PLOT_FUNCS["Epi posteriors"] = plot_epi_posteriors
@@ -261,3 +267,69 @@ def plot_key_params(
 
 
 PLOT_FUNCS["Key parameters"] = plot_key_params
+
+
+def plot_param_matrix(
+        plotter: StreamlitPlotter,
+        mcmc_params: List[pd.DataFrame],
+        parameters: List,
+        label_param_string=False,
+):
+
+    burn_in, label_font_size, label_chars, bins, style, dpi_request = 0, 8, 2, 20, "Shade", 300
+    plots.calibration.plots.plot_param_vs_param(
+        plotter, mcmc_params, parameters, burn_in, style, bins, label_font_size, label_chars, dpi_request,
+        label_param_string=label_param_string
+    )
+    params_df = pd.DataFrame({"names": [get_plot_text_dict(param) for param in parameters]})
+    params_df["numbers"] = range(1, len(params_df) + 1)
+    create_downloadable_csv(params_df, "parameter_indices")
+    st.dataframe(params_df)
+
+
+def plot_all_param_matrix(
+        plotter: StreamlitPlotter,
+        calib_dir_path: str,
+        mcmc_tables: List[pd.DataFrame],
+        mcmc_params: List[pd.DataFrame],
+        targets: dict,
+        app_name: str,
+        region: str,
+):
+
+    plot_param_matrix(plotter, mcmc_params, mcmc_params[0]["name"].unique().tolist())
+
+
+PLOT_FUNCS["All params matrix"] = plot_all_param_matrix
+
+
+def plot_epi_param_matrix(
+        plotter: StreamlitPlotter,
+        calib_dir_path: str,
+        mcmc_tables: List[pd.DataFrame],
+        mcmc_params: List[pd.DataFrame],
+        targets: dict,
+        app_name: str,
+        region: str,
+):
+
+    plot_param_matrix(plotter, mcmc_params, get_vic_epi_params(mcmc_params))
+
+
+PLOT_FUNCS["Epi params matrix"] = plot_epi_param_matrix
+
+
+def plot_key_param_matrix(
+        plotter: StreamlitPlotter,
+        calib_dir_path: str,
+        mcmc_tables: List[pd.DataFrame],
+        mcmc_params: List[pd.DataFrame],
+        targets: dict,
+        app_name: str,
+        region: str,
+):
+
+    plot_param_matrix(plotter, mcmc_params, KEY_PARAMS, label_param_string=True)
+
+
+PLOT_FUNCS["Key params matrix"] = plot_key_param_matrix

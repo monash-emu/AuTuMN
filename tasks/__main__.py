@@ -10,6 +10,12 @@ import os
 import logging
 import warnings
 
+# Ensure NumPy only uses 1 thread for matrix multiplication,
+# because numpy is stupid and tries to use heaps of threads which is quite wasteful
+# and it makes our models run way more slowly.
+# https://stackoverflow.com/questions/30791550/limit-number-of-threads-in-numpy
+os.environ["OMP_NUM_THREADS"] = "1"
+
 import click
 import sentry_sdk
 import matplotlib
@@ -18,11 +24,6 @@ import matplotlib
 # https://stackoverflow.com/questions/27147300/matplotlib-tcl-asyncdelete-async-handler-deleted-by-the-wrong-thread/29172195#29172195
 matplotlib.use("Agg")
 
-# Ensure NumPy only uses 1 thread for matrix multiplication,
-# because numpy is stupid and tries to use heaps of threads which is quite wasteful
-# and it makes our models run way more slowly.
-# https://stackoverflow.com/questions/30791550/limit-number-of-threads-in-numpy
-os.environ["OMP_NUM_THREADS"] = "1"
 
 # Ignore noisy deprecation warnings.
 warnings.simplefilter(action="ignore", category=FutureWarning)

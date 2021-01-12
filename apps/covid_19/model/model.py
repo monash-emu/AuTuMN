@@ -17,7 +17,7 @@ from autumn.tool_kit.utils import (
 
 from apps.covid_19.constants import Compartment, ClinicalStratum as Clinical
 from apps.covid_19.mixing_optimisation.constants import OPTI_ISO3S, Region
-from apps.covid_19.model import outputs, preprocess
+from apps.covid_19.model import preprocess
 from apps.covid_19.model.importation import get_all_vic_notifications
 from apps.covid_19.model.parameters import Parameters
 from apps.covid_19.model.preprocess.case_detection import (
@@ -25,7 +25,6 @@ from apps.covid_19.model.preprocess.case_detection import (
     get_testing_pop,
 )
 from apps.covid_19.model.victorian_mixing import build_victorian_mixing_matrix_func
-from apps.covid_19.model.victorian_outputs import add_victorian_derived_outputs
 
 MOB_REGIONS = [Region.to_filename(r) for r in Region.VICTORIA_SUBREGIONS]
 

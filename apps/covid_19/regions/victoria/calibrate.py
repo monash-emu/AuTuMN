@@ -1,9 +1,6 @@
 import numpy as np
 
-from apps.covid_19.model.victorian_outputs import CLUSTERS
-from apps.covid_19.calibration import (
-    provide_default_calibration_params, get_truncated_output
-)
+from apps.covid_19.calibration import provide_default_calibration_params, get_truncated_output
 from autumn.constants import Region
 from autumn.tool_kit.params import load_targets
 from autumn.calibration.utils import add_dispersion_param_prior_for_gaussian
@@ -42,7 +39,7 @@ def get_priors(target_outputs: list):
             {
                 "param_name": f"victorian_clusters.contact_rate_multiplier_{region_name}",
                 "distribution": "trunc_normal",
-                "distri_params": [1., 0.5],  # Shouldn't be too peaked with these values
+                "distri_params": [1.0, 0.5],  # Shouldn't be too peaked with these values
                 "trunc_range": [0.5, np.inf],
             },
         ]
@@ -62,7 +59,11 @@ def get_priors(target_outputs: list):
         {
             "param_name": "infectious_seed",
             "distribution": "uniform",
+<<<<<<< HEAD
             "distri_params": [22.5, 67.5],  # Should be multiplied by 4/9 because seed is removed from regional clusters
+=======
+            "distri_params": [20.0, 60.0],
+>>>>>>> remove outputs
         },
         {
             "param_name": "seasonal_force",
@@ -88,7 +89,7 @@ def get_priors(target_outputs: list):
         {
             "param_name": "infection_fatality.multiplier",
             "distribution": "uniform",
-            "distri_params": [0.5, 4.],
+            "distri_params": [0.5, 4.0],
         },
         {
             "param_name": "testing_to_detection.assumed_cdr_parameter",
@@ -104,12 +105,12 @@ def get_priors(target_outputs: list):
         {
             "param_name": "victorian_clusters.metro.mobility.microdistancing.behaviour.parameters.upper_asymptote",
             "distribution": "uniform",
-            "distri_params": [0., 0.5],
+            "distri_params": [0.0, 0.5],
         },
         {
             "param_name": "victorian_clusters.metro.mobility.microdistancing.face_coverings.parameters.upper_asymptote",
             "distribution": "uniform",
-            "distri_params": [0., 0.5],
+            "distri_params": [0.0, 0.5],
         },
     ]
 
@@ -122,8 +123,9 @@ def get_target_outputs(start_date, end_date):
     targets = load_targets("covid_19", Region.VICTORIA)
 
     # Total Victorian notifications for each time point
-    notification_times, notification_values = \
-        get_truncated_output(targets["notifications"], start_date, end_date)
+    notification_times, notification_values = get_truncated_output(
+        targets["notifications"], start_date, end_date
+    )
     notification_values = [round(value) for value in notification_values]
     target_outputs = [
         {
@@ -134,8 +136,9 @@ def get_target_outputs(start_date, end_date):
         }
     ]
 
-    death_times, death_values = \
-        get_truncated_output(targets["infection_deaths"], start_date, end_date)
+    death_times, death_values = get_truncated_output(
+        targets["infection_deaths"], start_date, end_date
+    )
     target_outputs += [
         {
             "output_key": "infection_deaths",
@@ -145,8 +148,9 @@ def get_target_outputs(start_date, end_date):
         }
     ]
 
-    hospitalisation_times, hospitalisation_values = \
-        get_truncated_output(targets["hospital_admissions"], start_date, end_date)
+    hospitalisation_times, hospitalisation_values = get_truncated_output(
+        targets["hospital_admissions"], start_date, end_date
+    )
     target_outputs += [
         {
             "output_key": "hospital_admissions",
@@ -203,7 +207,10 @@ def group_dispersion_params(priors, target_outputs):
     # remove all cluster-specific dispersion params that are no longer relevant
     removed_prior_idx = []
     for i, prior in enumerate(priors):
-        if prior["param_name"].endswith("_dispersion_param") and "_for_cluster_" in prior["param_name"]:
+        if (
+            prior["param_name"].endswith("_dispersion_param")
+            and "_for_cluster_" in prior["param_name"]
+        ):
             if prior["param_name"].split("_for_cluster_")[0] in output_types:
                 removed_prior_idx.append(i)
     priors = [priors[j] for j in range(len(priors)) if j not in removed_prior_idx]
@@ -226,14 +233,15 @@ def group_dispersion_params(priors, target_outputs):
                 max_val = -1e6
                 for t in target_outputs:
                     if "_for_cluster_" in t["output_key"]:
-                        region_name = t['output_key'].split("_for_cluster_")[1]
-                        if t['output_key'].startswith(output_type) and region_name.replace("_", "-") in clusters_by_group[cluster_type]:
-                            assert t["loglikelihood_distri"] == "normal", \
-                                "The dispersion parameter is designed for a Gaussian likelihood"
-                            max_val = max(
-                                max_val,
-                                max(t["values"])
-                            )
+                        region_name = t["output_key"].split("_for_cluster_")[1]
+                        if (
+                            t["output_key"].startswith(output_type)
+                            and region_name.replace("_", "-") in clusters_by_group[cluster_type]
+                        ):
+                            assert (
+                                t["loglikelihood_distri"] == "normal"
+                            ), "The dispersion parameter is designed for a Gaussian likelihood"
+                            max_val = max(max_val, max(t["values"]))
 
                 # sd_ that would make the 95% gaussian CI cover half of the max value (4*sd = 95% width)
                 sd_ = max_val * 0.25
@@ -249,4 +257,3 @@ def group_dispersion_params(priors, target_outputs):
                 )
 
     return priors
-

@@ -671,3 +671,10 @@ apps/tuberculosis/regions/marshall_islands/outputs/figures/diabetes/diabetes.pdf
 apps/tuberculosis/regions/marshall_islands/outputs/figures/elimination/elimination_logscale.pdf
 apps/tuberculosis/regions/marshall_islands/outputs/parameter_posteriors/posterior_centiles.csv
 apps/tuberculosis/regions/marshall_islands/outputs/figures/posterior_table/posterior_ranges.csv
+apps/tuberculosis/regions/marshall_islands/outputs/old_figures/counterfactual/counterfactual.pdf
+apps/tuberculosis/regions/marshall_islands/outputs/figures/priors_table/priors.csv
+apps/tuberculosis/regions/marshall_islands/outputs/old_figures/calibration/model_fits.pdf
+apps/tuberculosis/regions/marshall_islands/outputs/old_figures/diabetes/diabetes.pdf
+apps/tuberculosis/regions/marshall_islands/outputs/old_figures/elimination/elimination.pdf
+apps/tuberculosis/regions/marshall_islands/outputs/old_figures/elimination/elimination_logscale.pdf
+apps/tuberculosis/regions/marshall_islands/outputs/old_figures/posterior_table/posterior_ranges.csv

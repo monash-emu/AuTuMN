@@ -7,9 +7,8 @@ from autumn.db.load import load_uncertainty_table
 from autumn.plots.uncertainty.plots import _plot_uncertainty
 from autumn.plots.utils import COLORS, _apply_transparency
 
-
-
 from apps.tuberculosis.regions.marshall_islands.outputs.utils import OUTPUT_TITLES, INTERVENTION_TITLES, save_figure, get_format, make_output_directories
+
 
 FIGURE_PATH = os.path.join(
     BASE_PATH, "apps", "tuberculosis", "regions", "marshall_islands", "outputs", "figures", "elimination"
@@ -21,12 +20,12 @@ DATA_PATH = os.path.join(
 
 end_tb_targets = {
     "mortality": {
-        2025: 42.5,  # 75% reduction compared to 2015 (170)
-        2035: 8.5   # 95% reduction compared to 2015 (170)
+        2025: 43.25,  # 75% reduction compared to 2015 (173)
+        2035: 8.65   # 95% reduction compared to 2015 (173)
     },
     "incidence": {
-        2025: 275,  # 50% reduction compared to 2015 (550)
-        2035: 55  # 90% reduction compared to 2015 (550)
+        2025: 253.5,  # 50% reduction compared to 2015 (507)
+        2035: 50.7  # 90% reduction compared to 2015 (507)
     }
 }
 target_colours = {

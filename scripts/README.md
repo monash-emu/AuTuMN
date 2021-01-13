@@ -22,7 +22,11 @@ Once in the google drive folder right-click file "DOH COVID Data Drop_ YYYYMMDD 
 e.g. https://drive.google.com/file/d/1GE-uO9kaFBgwreu7zFdXhYvG3U_9EY8C/view?usp=sharing
 Update \autumun\inputs\covid_phl\fetch.py DATA URL = '1GE-uO9kaFBgwreu7zFdXhYvG3U_9EY8C'
 
-2. Update scripts\phl_data_upload.py
+2. Now update inputs.db by executing the following at your python environment shell/conda prompt
+    python -m autumn db fetch
+    python -m autumn db build --force
+
+3. Update scripts\phl_data_upload.py
 
 From the same daily data link right-click file "DOH COVID Data Drop_ YYYYMMDD - 05 DOH Data Collect - Daily Report.csv" and copy the shareable link.
 Update scripts\phl_data_upload.py e.g. PHL_doh_link=1WxoFhzZzglkk1RbOQAWI2gHeKkqwkD9P

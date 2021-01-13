@@ -52,11 +52,10 @@ def run_dashboard():
     path_name = os.path.join(calib_dirpath, "saved_plots")
     if not os.path.exists(path_name):
         os.makedirs(path_name)
-    if st.button("Save plots"):
-        with st.spinner("Saving files..."):
-            file_plotter = FilePlotter(
-                path_name,
-                targets)
-            plot_func(
-                file_plotter, calib_dirpath, mcmc_tables, mcmc_params, targets, app_name, region_name
-            )
+    with st.spinner("Saving files..."):
+        file_plotter = FilePlotter(
+            path_name,
+            targets)
+        plot_func(
+            file_plotter, calib_dirpath, mcmc_tables, mcmc_params, targets, app_name, region_name
+        )

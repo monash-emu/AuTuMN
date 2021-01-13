@@ -17,7 +17,6 @@ PHL_doh_link = "1tu83c4lhroHso3gd-fAvLYMcACv1J6UF"  # sheet 05 daily report
 PHL_fassster_link = "1sfwFryQP6lPutGxS62IIGUugDhRy_1h8"
 
 # destination folders filepaths
-base_dir = os.path.dirname(os.path.abspath(os.curdir))
 PHL_doh_dest = "./data/targets/PHL_icu.csv"
 PHL_fassster_dest = "./data/targets/PHL_ConfirmedCases.zip"
 icu_dest = "./data/targets/PHL_icu_processed.csv"

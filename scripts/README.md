@@ -12,8 +12,24 @@ The files are located in two folders, data/inputs/imports and apps/regions/<\reg
 Select the all the '<>.encrypted.json' file and  data/secret-hashes.json and push to GitHub.
 
 This readme documents the Philippines target calibration data update process.
-DoH data: https://ncovtracker.doh.gov.ph/ (click on box in top right labeled "Download COVID-19 COH Data Drop")
+
+1. Update \autumun\inputs\covid_phl\fetch.py (Testing numbers - do this before a rebuild of inputs.db)
+The daily data link is available from https://drive.google.com/drive/folders/1ZPPcVU4M7T-dtRyUceb0pMAd8ickYf8o.
+On page 5 of the Readme there will be a link to the daily data folder e.g. Link to DOH Data Drop (09/08): https://bit.ly/2F8oypc.
+*alternate link DoH data: https://ncovtracker.doh.gov.ph/ (click on box in top right labeled "Download COVID-19 COH Data Drop")*
+
+Once in the google drive folder right-click file "DOH COVID Data Drop_ YYYYMMDD - 07 Testing Aggregates.csv" and copy the shareable link
+e.g. https://drive.google.com/file/d/1GE-uO9kaFBgwreu7zFdXhYvG3U_9EY8C/view?usp=sharing
+Update \autumun\inputs\covid_phl\fetch.py DATA URL = '1GE-uO9kaFBgwreu7zFdXhYvG3U_9EY8C'
+
+2. Update scripts\phl_data_upload.py
+
+From the same daily data link right-click file "DOH COVID Data Drop_ YYYYMMDD - 05 DOH Data Collect - Daily Report.csv" and copy the shareable link.
+Update scripts\phl_data_upload.py e.g. PHL_doh_link=1WxoFhzZzglkk1RbOQAWI2gHeKkqwkD9P
+
 For FASSSTER data use https://drive.google.com/drive/folders/1qnUsvq5SXxwdw9ttRtOojccVGHaYj6_k
+Locate the latest ConfirmedCases_Final_YYYY-MM-DD.zip file, copy the shareable link and update
+Update scripts\phl_data_upload.py e.g. PHL_fassster_link = "1sfwFryQP6lPutGxS62IIGUugDhRy_1h8"
 
 The functions in phl_data_upload.py do the following:
 1. Downloads data
@@ -22,17 +38,4 @@ The functions in phl_data_upload.py do the following:
 4. Dumps calibration data (step 3) into json files
 5. Deletes files 
 
-Run the following lines of code in order to update:
-fetch_phl_data()
-fassster_filename = fassster_data_filepath()
-rename_regions(PHL_doh_dest, "region", "NATIONAL CAPITAL REGION (NCR)", "REGION IV-A (CALABAR ZON)", "REGION VII (CENTRAL VISAYAS)")
-rename_regions(fassster_filename, "Region", "NCR", "4A", "07")
-duplicate_data(PHL_doh_dest, "region")
-duplicate_data(fassster_filename, "Region")
-filter_df_by_regions(PHL_doh_dest, "region")
-filter_df_by_regions(fassster_filename, "Region")
-process_icu_data()
-process_accumulated_death_data(fassster_filename)
-process_notifications_data(fassster_filename)
-update_calibration_phl()
-remove_files(fassster_filename)
+Run scripts\phl_data_upload.py in order to update.

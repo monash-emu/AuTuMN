@@ -2,9 +2,6 @@
 """
 Script for loading MYS data into calibration targets and default.yml
 
-Manually download file "Total Death Covid19 in Malaysia_updated ..."
-from https://drive.google.com/drive/u/1/folders/1C-OsJbjdhQmpmedBZ8XuM65ANBO22dXc
-to ./data/inputs/covid_mys/COVID_MYS_DEATH.csv for now!
 """
 import os
 import sys

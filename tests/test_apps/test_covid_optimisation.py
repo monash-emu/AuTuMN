@@ -5,7 +5,7 @@ import pytest
 import numpy as np
 
 from autumn.constants import Region
-from summer.model import StratifiedModel
+from summer2.model import CompartmentalModel
 from apps.covid_19.mixing_optimisation import mixing_opti as opti
 from apps.covid_19.mixing_optimisation.constants import PHASE_2_START_TIME, OPTI_REGIONS
 from apps.covid_19.mixing_optimisation import write_scenarios
@@ -19,7 +19,7 @@ def test_run_root_models_partial(region):
     Smoke test: ensure we can build and run each root model with nothing crashing.
     """
     model = opti.run_root_model(region)
-    assert type(model) is StratifiedModel
+    assert type(model) is CompartmentalModel
     assert model.outputs is not None
 
 
@@ -31,7 +31,7 @@ def test_run_root_models_full(region):
     Smoke test: ensure we can build and run each root model with nothing crashing.
     """
     model = opti.run_root_model(region)
-    assert type(model) is StratifiedModel
+    assert type(model) is CompartmentalModel
     assert model.outputs is not None
 
 

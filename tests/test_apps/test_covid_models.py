@@ -2,6 +2,7 @@ from copy import deepcopy
 
 import pytest
 from summer.model import StratifiedModel
+from summer2 import CompartmentalModel
 
 from apps import covid_19
 from autumn.tool_kit.utils import merge_dicts
@@ -19,7 +20,11 @@ def test_run_models_partial(region):
     # Only run model for ~10 epochs.
     ps["time"]["end"] = ps["time"]["start"] + 10
     model = region_app.build_model(ps)
-    model.run_model()
+
+    if type(model) is StratifiedModel:
+        model.run_model()
+    else:
+        model.run()
 
 
 @pytest.mark.local_only
@@ -33,7 +38,7 @@ def test_build_scenario_models(region):
         default_params = deepcopy(region_app.params["default"])
         params = merge_dicts(scenario_params, default_params)
         model = region_app.build_model(params)
-        assert type(model) is StratifiedModel
+        assert (type(model) is StratifiedModel) or (type(model) is CompartmentalModel)
 
 
 @pytest.mark.run_models
@@ -46,4 +51,7 @@ def test_run_models_full(region, verify):
     """
     region_app = covid_19.app.get_region(region)
     model = region_app.build_model(region_app.params["default"])
-    model.run_model()
+    if type(model) is StratifiedModel:
+        model.run_model()
+    else:
+        model.run()

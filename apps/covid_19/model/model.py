@@ -112,8 +112,6 @@ def build_model(params: dict) -> CompartmentalModel:
         )
 
     # Optionally add an importation flow, where we ship in infected people from overseas.
-    # Get proportion of importations by age. This is used to calculate case detection and used in age stratification.
-
     if params.importation:
         get_importation_rate = preprocess.importation.build_importation_rate_func(
             params, AGEGROUP_STRATA, total_pops
@@ -146,7 +144,7 @@ def build_model(params: dict) -> CompartmentalModel:
 
     # Set up derived output functions
     if not params.victorian_clusters:
-        request_standard_outputs(model, params, AGEGROUP_STRATA)
+        request_standard_outputs(model, params)
     else:
         request_victorian_outputs(model, params)
 

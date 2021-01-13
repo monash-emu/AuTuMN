@@ -9,13 +9,14 @@ from apps.covid_19.model.parameters import Parameters
 from apps.covid_19.constants import Compartment, Clinical, COMPARTMENTS, NOTIFICATION_STRATA
 from apps.covid_19.mixing_optimisation.constants import OPTI_ISO3S, Region
 from apps.covid_19.model.stratifications.clinical import CLINICAL_STRATA
+from apps.covid_19.model.stratifications.agegroup import AGEGROUP_STRATA
+
+from apps.covid_19.model.preprocess.importation import build_abs_detection_proportion_imported
 
 
 def request_standard_outputs(
     model: CompartmentalModel,
     params: Parameters,
-    agegroup_strata: List[str],
-    get_abs_detection_proportion_imported,
 ):
     country = params.country
     pop = params.population
@@ -24,7 +25,7 @@ def request_standard_outputs(
     # Disease incidence
     model.request_output_for_flow(name="incidence", flow_name="incidence")
     notification_at_sympt_onset_sources = []
-    for agegroup in agegroup_strata:
+    for agegroup in AGEGROUP_STRATA:
         # Track incidence for each agegroup.
         model.request_output_for_flow(
             name=f"incidenceXagegroup_{agegroup}",
@@ -76,6 +77,9 @@ def request_standard_outputs(
         model.request_output_for_flow(
             name="_importation", flow_name="importation", save_results=False
         )
+        get_abs_detection_proportion_imported = build_abs_detection_proportion_imported(
+            params, AGEGROUP_STRATA
+        )
         props_imports_detected = np.array(
             [get_abs_detection_proportion_imported(t) for t in model.times]
         )
@@ -92,7 +96,7 @@ def request_standard_outputs(
 
     # Infection deaths.
     model.request_output_for_flow(name="infection_deaths", flow_name="infect_death")
-    for agegroup in agegroup_strata:
+    for agegroup in AGEGROUP_STRATA:
         model.request_output_for_flow(
             name=f"infection_deathsXagegroup_{agegroup}",
             flow_name="infect_death",
@@ -108,17 +112,17 @@ def request_standard_outputs(
 
     model.request_cumulative_output(name="accum_deaths", source="infection_deaths")
     if not is_region_vic:
-        for agegroup in agegroup_strata:
+        for agegroup in AGEGROUP_STRATA:
             model.request_cumulative_output(
                 name=f"accum_deathsXagegroup_{agegroup}",
                 source=f"infection_deathsXagegroup_{agegroup}",
             )
 
     # Track years of life lost per year.
-    life_expectancy = inputs.get_life_expectancy_by_agegroup(agegroup_strata, country.iso3)[0]
+    life_expectancy = inputs.get_life_expectancy_by_agegroup(AGEGROUP_STRATA, country.iso3)[0]
     life_expectancy_latest = [life_expectancy[agegroup][-1] for agegroup in life_expectancy]
     yoll_sources = []
-    for idx, agegroup in enumerate(agegroup_strata):
+    for idx, agegroup in enumerate(AGEGROUP_STRATA):
         get_yoll = lambda deaths: deaths * life_expectancy_latest[idx]
         yoll_source = f"_yoll_{agegroup}"
         yoll_sources.append(yoll_source)
@@ -188,7 +192,7 @@ def request_standard_outputs(
         func=lambda recovered, total: recovered / total,
     )
     if not is_region_vic:
-        for agegroup in agegroup_strata:
+        for agegroup in AGEGROUP_STRATA:
             total_name = f"_total_populationXagegroup_{agegroup}"
             recovered_name = f"_recoveredXagegroup_{agegroup}"
             model.request_output_for_compartments(

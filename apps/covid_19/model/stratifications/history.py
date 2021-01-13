@@ -8,11 +8,14 @@ from apps.covid_19.constants import Compartment, Clinical
 from apps.covid_19.model.parameters import Parameters
 from apps.covid_19.model.stratifications.clinical import CLINICAL_STRATA
 from apps.covid_19.model.stratifications.agegroup import AGEGROUP_STRATA
+from apps.covid_19.model.preprocess.clinical import (
+    get_absolute_strata_proportions,
+    get_proportion_symptomatic,
+)
 
 
 def get_history_strat(
     params: Parameters,
-    abs_props: np.ndarray,
     compartment_periods: Dict[str, float],
 ) -> Stratification:
     """
@@ -28,6 +31,17 @@ def get_history_strat(
     # Waning immunity makes recovered individuals transition to the 'experienced' stratum
     history_strat.add_flow_adjustments(
         "warning_immunity", {"naive": Multiply(0.0), "experienced": Multiply(1.0)}
+    )
+
+    # Get the proportion of people in each clinical stratum, relative to total people in compartment.
+    clinical_params = params.clinical_stratification
+    symptomatic_props = get_proportion_symptomatic(params)
+    abs_props = get_absolute_strata_proportions(
+        symptomatic_props=symptomatic_props,
+        icu_props=clinical_params.icu_prop,
+        hospital_props=clinical_params.props.hospital.props,
+        symptomatic_props_multiplier=clinical_params.props.symptomatic.multiplier,
+        hospital_props_multiplier=clinical_params.props.hospital.multiplier,
     )
 
     # Adjust parameters defining progression from early exposed to late exposed to obtain the requested proportion

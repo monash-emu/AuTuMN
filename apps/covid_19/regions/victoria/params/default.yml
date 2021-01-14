@@ -18,8 +18,6 @@ testing_to_detection: # Need to mention these parameters in the Supplement somew
   smoothing_period: 7
 
 # VAHI, 1st July to 30th September
-clinical_stratification:
-  icu_prop: 0.089
 sojourn:
   compartment_periods:
     hospital_late: 11.6  # VAHI hospital mean duration, all COVID

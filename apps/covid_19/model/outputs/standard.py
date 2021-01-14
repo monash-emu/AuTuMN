@@ -101,7 +101,7 @@ def request_standard_outputs(
             name=f"infection_deathsXagegroup_{agegroup}",
             flow_name="infect_death",
             source_strata={"agegroup": agegroup},
-            save_results=False,
+            # save_results=False,
         )
         for clinical in CLINICAL_STRATA:
             model.request_output_for_flow(
@@ -130,7 +130,7 @@ def request_standard_outputs(
             name=yoll_source,
             func=get_yoll,
             sources=[f"infection_deathsXagegroup_{agegroup}"],
-            save_results=False,
+            # save_results=False,
         )
 
     model.request_aggregate_output(name="years_of_life_lost", sources=yoll_sources)

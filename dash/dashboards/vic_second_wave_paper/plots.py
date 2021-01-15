@@ -281,9 +281,14 @@ def plot_param_matrix(
         plotter, mcmc_params, parameters, burn_in, style, bins, label_font_size, label_chars, dpi_request,
         label_param_string=label_param_string
     )
-    params_df = pd.DataFrame({"names": [get_plot_text_dict(param) for param in parameters]})
+    param_names = [get_plot_text_dict(param) for param in parameters]
+    params_df = pd.DataFrame({"names": param_names})
     params_df["numbers"] = range(1, len(params_df) + 1)
     create_downloadable_csv(params_df, "parameter_indices")
+    key_string = ""
+    for i_param, param_name in enumerate(param_names):
+        key_string += str(i_param + 1) + ", " + param_name + "; "
+    st.write(key_string)
     st.dataframe(params_df)
 
 

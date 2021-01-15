@@ -1,20 +1,16 @@
-description: MHS reduces contact by 0% for Xmas
-parent: apps/covid_19/regions/central_visayas/params/default.yml
+description: Reduction in MHS by 30% from 20 Jan
+parent: apps/covid_19/regions/philippines/params/default.yml
 
 time:
-  start: 330
+  start: 397
 
 mobility:
   microdistancing:
     behaviour:
       parameters:
         times:
-          - 330
-          - 336
-          - 369
-          - 376
+          - 397
+          - 398          
         values:
           - 1.
-          - 0.
-          - 0.
-          - 1.
+          - 0.7

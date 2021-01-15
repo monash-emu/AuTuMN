@@ -1,20 +1,20 @@
-description: MHS reduces contact by 50% for Xmas
-parent: apps/covid_19/regions/central_visayas/params/default.yml
+description: 50% return to normal (work and other locations)
+parent: apps/covid_19/regions/philippines/params/default.yml
 
 time:
-  start: 330
+  start: 397
 
-mobility:
-  microdistancing:
-    behaviour:
-      parameters:
-        times:
-          - 330
-          - 336
-          - 369
-          - 376
-        values:
-          - 1.
-          - 0.3
-          - 0.3
-          - 1.
+mobility:  
+  mixing:
+    work:
+      append: true
+      times:
+        - 2021-02-01
+      values:
+        - ["close_gap_to_1", 0.5]
+    other_locations:
+      append: true
+      times:
+        - 2021-02-01
+      values:
+        - ["close_gap_to_1", 0.5]

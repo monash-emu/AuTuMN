@@ -1,14 +1,16 @@
-description: Re-open schools
-parent: apps/covid_19/regions/calabarzon/params/default.yml
+description: Reduction in MHS by 50% from 1 Feb
+parent: apps/covid_19/regions/philippines/params/default.yml
 
 time:
-  start: 330
+  start: 397
 
 mobility:
-  mixing:
-    school:
-      append: false
-      times:
-        - 2021-01-10
-      values:
-        - 1.
+  microdistancing:
+    behaviour:
+      parameters:
+        times:
+          - 397
+          - 398          
+        values:
+          - 1.
+          - 0.5

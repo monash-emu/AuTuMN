@@ -59,19 +59,6 @@ def get_clinical_strat(params: Parameters) -> Stratification:
     # These people are less infectious because of biology.
     non_sympt_adjust = Overwrite(clinical_params.non_sympt_infect_multiplier)
 
-    # Some euro models contain the assumption that late exposed people are less infectious.
-    # For most models this is a null-op with the infectiousness adjustment being 1.
-    late_exposed_adjust = Overwrite(clinical_params.late_exposed_infect_multiplier)
-    clinical_strat.add_infectiousness_adjustments(
-        Compartment.LATE_EXPOSED,
-        {
-            Clinical.NON_SYMPT: non_sympt_adjust,
-            Clinical.SYMPT_ISOLATE: late_exposed_adjust,
-            Clinical.SYMPT_NON_HOSPITAL: late_exposed_adjust,
-            Clinical.HOSPITAL_NON_ICU: late_exposed_adjust,
-            Clinical.ICU: late_exposed_adjust,
-        },
-    )
     clinical_strat.add_infectiousness_adjustments(
         Compartment.EARLY_ACTIVE,
         {

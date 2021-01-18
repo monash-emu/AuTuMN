@@ -59,11 +59,10 @@ def get_priors(target_outputs: list):
         {
             "param_name": "infectious_seed",
             "distribution": "uniform",
-<<<<<<< HEAD
-            "distri_params": [22.5, 67.5],  # Should be multiplied by 4/9 because seed is removed from regional clusters
-=======
-            "distri_params": [20.0, 60.0],
->>>>>>> remove outputs
+            "distri_params": [
+                22.5,
+                67.5,
+            ],  # Should be multiplied by 4/9 because seed is removed from regional clusters
         },
         {
             "param_name": "seasonal_force",
@@ -160,8 +159,9 @@ def get_target_outputs(start_date, end_date):
         }
     ]
 
-    icu_admission_times, icu_admission_values = \
-        get_truncated_output(targets["icu_admissions"], start_date, end_date)
+    icu_admission_times, icu_admission_values = get_truncated_output(
+        targets["icu_admissions"], start_date, end_date
+    )
     target_outputs += [
         {
             "output_key": "icu_admissions",

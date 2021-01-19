@@ -6,7 +6,7 @@ from summer2 import CompartmentalModel
 from autumn.constants import Region
 
 from apps.covid_19.model.parameters import Parameters
-from apps.covid_19.constants import Compartment, Clinical
+from apps.covid_19.constants import Compartment, Clinical, NOTIFICATION_STRATA
 from apps.covid_19.model.stratifications.clinical import CLINICAL_STRATA
 
 
@@ -34,7 +34,7 @@ def request_victorian_outputs(model: CompartmentalModel, params: Parameters):
 
     # Notifications.
     notification_sources = []
-    for clinical in CLINICAL_STRATA:
+    for clinical in NOTIFICATION_STRATA:
         name = f"progressX{clinical}"
         notification_sources.append(name)
         model.request_output_for_flow(
@@ -48,7 +48,7 @@ def request_victorian_outputs(model: CompartmentalModel, params: Parameters):
     # Cluster-specific notifications.
     for cluster in clusters:
         cluster_notification_sources = []
-        for clinical in CLINICAL_STRATA:
+        for clinical in NOTIFICATION_STRATA:
             name = f"progress_for_cluster_{cluster}X{clinical}"
             cluster_notification_sources.append(name)
             model.request_output_for_flow(

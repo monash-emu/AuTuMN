@@ -101,7 +101,7 @@ def request_standard_outputs(
             name=f"infection_deathsXagegroup_{agegroup}",
             flow_name="infect_death",
             source_strata={"agegroup": agegroup},
-            # save_results=False,
+            save_results=False,
         )
         for clinical in CLINICAL_STRATA:
             model.request_output_for_flow(
@@ -123,14 +123,19 @@ def request_standard_outputs(
     life_expectancy_latest = [life_expectancy[agegroup][-1] for agegroup in life_expectancy]
     yoll_sources = []
     for idx, agegroup in enumerate(AGEGROUP_STRATA):
-        get_yoll = lambda deaths: deaths * life_expectancy_latest[idx]
+        # Use default parameter to bind loop variable to function.
+        l = life_expectancy_latest[idx]
+
+        def get_yoll(deaths, life_exp=l):
+            return deaths * life_exp
+
         yoll_source = f"_yoll_{agegroup}"
         yoll_sources.append(yoll_source)
         model.request_function_output(
             name=yoll_source,
             func=get_yoll,
             sources=[f"infection_deathsXagegroup_{agegroup}"],
-            # save_results=False,
+            save_results=False,
         )
 
     model.request_aggregate_output(name="years_of_life_lost", sources=yoll_sources)

@@ -58,7 +58,16 @@ def get_clinical_strat(params: Parameters) -> Stratification:
     # Add infectiousness reduction multiplier for all non-symptomatic infectious people.
     # These people are less infectious because of biology.
     non_sympt_adjust = Overwrite(clinical_params.non_sympt_infect_multiplier)
-
+    clinical_strat.add_infectiousness_adjustments(
+        Compartment.LATE_EXPOSED,
+        {
+            Clinical.NON_SYMPT: non_sympt_adjust,
+            Clinical.SYMPT_NON_HOSPITAL: None,
+            Clinical.SYMPT_ISOLATE: None,
+            Clinical.HOSPITAL_NON_ICU: None,
+            Clinical.ICU: None,
+        },
+    )
     clinical_strat.add_infectiousness_adjustments(
         Compartment.EARLY_ACTIVE,
         {
@@ -138,16 +147,15 @@ def get_clinical_strat(params: Parameters) -> Stratification:
     # Apply adjusted infection death rates for hospital patients (ICU and non-ICU)
     # Death and non-death progression between infectious compartments towards the recovered compartment
     for idx, agegroup in enumerate(AGEGROUP_STRATA):
+        death_adjs = {
+            Clinical.NON_SYMPT: None,
+            Clinical.SYMPT_NON_HOSPITAL: None,
+            Clinical.SYMPT_ISOLATE: None,
+            Clinical.HOSPITAL_NON_ICU: Overwrite(hospital_death_rates[idx]),
+            Clinical.ICU: Overwrite(icu_death_rates[idx]),
+        }
         clinical_strat.add_flow_adjustments(
-            "infect_death",
-            {
-                Clinical.NON_SYMPT: None,
-                Clinical.SYMPT_NON_HOSPITAL: None,
-                Clinical.SYMPT_ISOLATE: None,
-                Clinical.HOSPITAL_NON_ICU: Overwrite(hospital_death_rates[idx]),
-                Clinical.ICU: Overwrite(icu_death_rates[idx]),
-            },
-            source_strata={"agegroup": agegroup},
+            "infect_death", death_adjs, source_strata={"agegroup": agegroup}
         )
 
     """
@@ -205,6 +213,7 @@ def get_clinical_strat(params: Parameters) -> Stratification:
     icu_survival_props = 1 - relative_death_props[Clinical.ICU]
     hospital_survival_rates = within_hospital_late * hospital_survival_props
     icu_survival_rates = within_icu_late * icu_survival_props
+
     for idx, agegroup in enumerate(AGEGROUP_STRATA):
         clinical_strat.add_flow_adjustments(
             "recovery",

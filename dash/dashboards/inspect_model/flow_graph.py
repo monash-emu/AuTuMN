@@ -2,23 +2,20 @@ import networkx as nx
 import streamlit as st
 from matplotlib import pyplot
 
-from summer.compartment import Compartment
-from summer.flow import (
-    BaseDeathFlow,
+from summer2.flows import (
+    DeathFlow,
     BaseEntryFlow,
     BaseExitFlow,
     BaseTransitionFlow,
     BaseInfectionFlow,
-    AgeingFlow,
 )
 from autumn.plots.plotter import StreamlitPlotter
 from autumn.tool_kit.model_register import AppRegion
-from dash import selectors
 
 MARKERS = ".spP*D^vxH"
 FLOW_STYLES = [
     {
-        "class": BaseDeathFlow,
+        "class": DeathFlow,
         "color": "#f5424e",
         "style": "dashed",
         "alpha": 0.4,
@@ -39,12 +36,6 @@ FLOW_STYLES = [
         "class": BaseInfectionFlow,
         "color": "#f5424e",
         "style": "solid",
-        "alpha": 0.8,
-    },
-    {
-        "class": AgeingFlow,
-        "color": "#e0d977",
-        "style": "dashed",
         "alpha": 0.8,
     },
 ]
@@ -73,13 +64,17 @@ def plot_flow_graph(plotter: StreamlitPlotter, app: AppRegion):
     include_connected_nodes = st.checkbox("Include connected nodes")
 
     # ADD compartment selector
-    orig_comps = ["All"] + model.original_compartment_names
+    original_compartment_names = model._original_compartment_names
+    stratifications = model._stratifications
+    compartment_names = model.compartments
+
+    orig_comps = ["All"] + original_compartment_names
     chosen_comp_names = st.multiselect("Compartments", orig_comps, default="All")
     if "All" in chosen_comp_names:
-        chosen_comp_names = model.original_compartment_names
+        chosen_comp_names = original_compartment_names
 
     chosen_strata = {}
-    for strat in model.stratifications:
+    for strat in stratifications:
         options = ["All"] + strat.strata
         choices = st.multiselect(strat.name, options, default=["All"])
         if "All" not in choices:
@@ -92,9 +87,9 @@ def plot_flow_graph(plotter: StreamlitPlotter, app: AppRegion):
     if "Exit" in flow_types:
         comps_to_graph.append("EXIT")
 
-    for comp in model.compartment_names:
+    for comp in compartment_names:
         is_selected = True
-        if not comp._name in chosen_comp_names:
+        if not comp.name in chosen_comp_names:
             is_selected = False
 
         for strat_name, strata in chosen_strata.items():
@@ -118,7 +113,7 @@ def plot_flow_graph(plotter: StreamlitPlotter, app: AppRegion):
         graph.add_node(comp)
 
     flow_lookup = {}
-    for flow in model.flows:
+    for flow in model._flows:
         if "Entry" in flow_types and is_flow_type(flow, BaseEntryFlow):
             edge = ("ENTRY", flow.dest)
         elif "Exit" in flow_types and is_flow_type(flow, BaseExitFlow):
@@ -204,8 +199,8 @@ def get_label(comp):
         return comp
 
     label = ""
-    label += comp._name.replace("_", " ")
-    for k, v in comp._strat_values.items():
+    label += comp.name.replace("_", " ")
+    for k, v in comp.strata.items():
         name = k.replace("_", " ")
         val = v.replace("_", " ")
         label += f"\n{name}: {val}"

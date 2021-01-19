@@ -111,13 +111,14 @@ PLOT_FUNCS["All mixing matrices"] = plot_all_mixing_matrices
 def plot_flow_params(plotter: StreamlitPlotter, app: AppRegion):
     # Assume a COVID model
     model = app.build_model(app.params["default"])
-    param_names = sorted(list({f.param_name for f in model.flows}))
-    param_name = st.sidebar.selectbox("Select parameter", param_names)
-    flows = [f for f in model.flows if f.param_name == param_name]
+    flow_names = sorted(list({f.name for f in model._flows}))
+
+    flow_name = st.sidebar.selectbox("Select flow", flow_names)
+    flows = [f for f in model._flows if f.name == flow_name]
     is_logscale = st.sidebar.checkbox("Log scale")
     flow_funcs = [f.get_weight_value for f in flows]
     plots.model.plots.plot_time_varying_input(
-        plotter, f"flow-params-{param_name}", flow_funcs, model.times, is_logscale
+        plotter, f"flow-weights-{flow_name}", flow_funcs, model.times, is_logscale
     )
 
     init_dict = {}

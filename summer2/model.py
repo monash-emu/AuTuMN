@@ -59,8 +59,8 @@ class CompartmentalModel:
         start_t, end_t = times
         assert start_t >= 0, "Start time must be >= 0"
         assert end_t > start_t, "End time must be greater than start time"
-        start_t = math.floor(start_t)
-        end_t = math.ceil(end_t)
+        start_t = round(start_t)
+        end_t = round(end_t)
         time_period = end_t - start_t + 1
         num_steps = time_period / timestep
         assert num_steps >= 1, "Time step should be less than time period."

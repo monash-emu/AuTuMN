@@ -52,6 +52,7 @@ def get_agegroup_strat(params: Parameters, total_pops: List[int]) -> Stratificat
         params.mobility,
         country,
     )
+
     age_strat.set_mixing_matrix(dynamic_mixing_matrix)
 
     # Set distribution of starting population

@@ -235,7 +235,9 @@ def get_clinical_strat(params: Parameters) -> Stratification:
     if importation:
         # Create scale-up function for quarantine. Default to no quarantine if not values are available.
         qts = importation.quarantine_timeseries
-        quarantine_func = scale_up_function(qts.times, qts.values, method=4) if qts else lambda _: 0
+        quarantine_func = (
+            scale_up_function(qts.times, qts.values, method=4) if qts and qts.times else lambda _: 0
+        )
 
         # Loop through age groups and set the appropriate clinical proportions
         for age_idx, agegroup in enumerate(AGEGROUP_STRATA):

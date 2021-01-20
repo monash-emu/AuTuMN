@@ -1,6 +1,7 @@
 """
 This module contains the main disease modelling class.
 """
+import math
 import logging
 import copy
 from typing import Tuple, List, Dict, Callable, Optional
@@ -58,6 +59,8 @@ class CompartmentalModel:
         start_t, end_t = times
         assert start_t >= 0, "Start time must be >= 0"
         assert end_t > start_t, "End time must be greater than start time"
+        start_t = round(start_t)
+        end_t = round(end_t)
         time_period = end_t - start_t + 1
         num_steps = time_period / timestep
         assert num_steps >= 1, "Time step should be less than time period."
@@ -667,7 +670,7 @@ class CompartmentalModel:
             if callable(flow.param):
                 funcs.add(flow.param)
             for adj in flow.adjustments:
-                if callable(adj.param):
+                if adj and callable(adj.param):
                     funcs.add(adj.param)
 
         # Cache return values to prevent re-computation. This will a little leak memory, which is fine.
@@ -681,7 +684,7 @@ class CompartmentalModel:
             if flow.param in funcs_cached:
                 flow.param = funcs_cached[flow.param]
             for adj in flow.adjustments:
-                if adj.param in funcs_cached:
+                if adj and adj.param in funcs_cached:
                     adj.param = funcs_cached[adj.param]
 
         # Optimize flow adjustments

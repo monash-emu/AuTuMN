@@ -18,10 +18,32 @@ class Compartment:
     RECOVERED = "recovered"
 
 
-class ClinicalStratum:
+"""
+Compartments
+"""
+# People who are infectious.
+INFECTIOUS_COMPARTMENTS = [
+    Compartment.LATE_EXPOSED,
+    Compartment.EARLY_ACTIVE,
+    Compartment.LATE_ACTIVE,
+]
+# People who are infected, but may or may not be infectuous.
+DISEASE_COMPARTMENTS = [Compartment.EARLY_EXPOSED, *INFECTIOUS_COMPARTMENTS]
+# All model compartments
+COMPARTMENTS = [Compartment.SUSCEPTIBLE, Compartment.RECOVERED, *DISEASE_COMPARTMENTS]
+
+
+class Clinical:
 
     NON_SYMPT = "non_sympt"
     SYMPT_NON_HOSPITAL = "sympt_non_hospital"
     SYMPT_ISOLATE = "sympt_isolate"
     HOSPITAL_NON_ICU = "hospital_non_icu"
     ICU = "icu"
+
+
+NOTIFICATION_STRATA = [
+    Clinical.SYMPT_ISOLATE,
+    Clinical.HOSPITAL_NON_ICU,
+    Clinical.ICU,
+]

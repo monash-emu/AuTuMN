@@ -149,7 +149,7 @@ class BaseEntryFlow(BaseFlow):
     ):
         assert type(dest) is Compartment
         self.name = name
-        self.adjustments = adjustments or []
+        self.adjustments = [a for a in (adjustments or []) if a and a.param is not None]
         self.dest = dest
         self.param = param
 
@@ -221,7 +221,7 @@ class BaseExitFlow(BaseFlow):
     ):
         assert type(source) is Compartment
         self.name = name
-        self.adjustments = adjustments or []
+        self.adjustments = [a for a in (adjustments or []) if a and a.param is not None]
         self.source = source
         self.param = param
 
@@ -280,7 +280,7 @@ class BaseTransitionFlow(BaseFlow):
         assert type(source) is Compartment
         assert type(dest) is Compartment
         self.name = name
-        self.adjustments = adjustments or []
+        self.adjustments = [a for a in (adjustments or []) if a and a.param is not None]
         self.source = source
         self.dest = dest
         self.param = param

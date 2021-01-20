@@ -118,8 +118,6 @@ class Mobility(BaseModel):
 class AgeStratification(BaseModel):
     """Parameters used in age based stratification"""
 
-    max_age: int  # Maximum age used for age strata.
-    age_step_size: int  # Step size used for age strata.
     # Susceptibility by age
     susceptibility: Dict[str, float]
 

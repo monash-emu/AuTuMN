@@ -26,10 +26,6 @@ population:
 
 # Age-related parameters
 age_stratification:
-  # Age groups match the Prem matrices
-  max_age: 80 # One bracket more than the highest age bracket (because of syntax of range command)
-  age_step_size: 5 # Difference between subsequent age brackets
-
   # Age-based susceptibility from Zhang et al. The reported ORs were converted to RRs using Tables S14 and S15.
   # DOI: 10.1126/science.abb8001 (Mendeley citation key Zhang2020a)
   susceptibility:

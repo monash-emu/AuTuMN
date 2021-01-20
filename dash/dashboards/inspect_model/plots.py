@@ -1,14 +1,12 @@
 from datetime import datetime
 
-import networkx as nx
 import streamlit as st
+from matplotlib import pyplot
 
-
-from summer.flow.base import BaseEntryFlow, BaseExitFlow, BaseTransitionFlow
 from autumn import plots
 from autumn.plots.plotter import StreamlitPlotter
 from autumn.tool_kit.model_register import AppRegion
-from autumn.tool_kit.scenarios import Scenario, get_model_times_from_inputs
+from autumn.tool_kit.scenarios import Scenario
 from autumn.inputs import get_mobility_data
 
 from dash.dashboards.inspect_model.flow_graph import plot_flow_graph
@@ -59,6 +57,39 @@ sub_region_map = {
 }
 
 
+def plot_flow_params(plotter: StreamlitPlotter, app: AppRegion):
+    # Assume a COVID model
+    model = app.build_model(app.params["default"])
+    flow_names = sorted(list({f.name for f in model._flows}))
+
+    flow_name = st.sidebar.selectbox("Select flow", flow_names)
+    flows = [f for f in model._flows if f.name == flow_name]
+    is_logscale = st.sidebar.checkbox("Log scale")
+    flow_funcs = [f.get_weight_value for f in flows]
+    plots.model.plots.plot_time_varying_input(
+        plotter, f"flow-weights-{flow_name}", flow_funcs, model.times, is_logscale
+    )
+    t = st.slider("Time", min_value=0, max_value=int(model.times[-1]))
+    init_dict = {}
+    for f in flows:
+        f_name = ""
+        src = getattr(f, "source", None)
+        dest = getattr(f, "dest", None)
+        if src:
+            f_name += f"from {src}"
+        if dest:
+            f_name += f" to {dest}"
+
+        f_name = f_name.strip()
+        init_dict[f_name] = f.get_weight_value(t)
+
+    st.write("Values at start time:")
+    st.write(init_dict)
+
+
+PLOT_FUNCS["Flow weights"] = plot_flow_params
+
+
 PLOT_FUNCS["Flow graph"] = plot_flow_graph
 
 
@@ -90,6 +121,19 @@ def plot_age_distribution(plotter: StreamlitPlotter, app: AppRegion):
 PLOT_FUNCS["Age distribution"] = plot_age_distribution
 
 
+def plot_dynamic_mixing_matrix(plotter: StreamlitPlotter, app: AppRegion):
+    model = app.build_model(app.params["default"])
+    t = st.slider("Time", min_value=0, max_value=int(model.times[-1]))
+    mixing_matrix = model._get_mixing_matrix(t)
+    fig, _, _, _, _, _ = plotter.get_figure()
+    pyplot.imshow(mixing_matrix, cmap="hot", interpolation="none", extent=[0, 80, 80, 0])
+    plotter.save_figure(fig, filename="mixing-matrix", title_text="Mixing matrix")
+    st.write(mixing_matrix)
+
+
+PLOT_FUNCS["Dynamic mixing matrix"] = plot_dynamic_mixing_matrix
+
+
 def plot_mixing_matrix(plotter: StreamlitPlotter, app: AppRegion):
     iso3 = app.params["default"]["country"]["iso3"]
     param_names = sorted(list(("all_locations", "home", "other_locations", "school", "work")))
@@ -97,7 +141,7 @@ def plot_mixing_matrix(plotter: StreamlitPlotter, app: AppRegion):
     plots.model.plots.plot_mixing_matrix(plotter, param_name, iso3)
 
 
-PLOT_FUNCS["Mixing matrix"] = plot_mixing_matrix
+PLOT_FUNCS["Static mixing matrix"] = plot_mixing_matrix
 
 
 def plot_all_mixing_matrices(plotter: StreamlitPlotter, app: AppRegion):
@@ -106,38 +150,6 @@ def plot_all_mixing_matrices(plotter: StreamlitPlotter, app: AppRegion):
 
 
 PLOT_FUNCS["All mixing matrices"] = plot_all_mixing_matrices
-
-
-def plot_flow_params(plotter: StreamlitPlotter, app: AppRegion):
-    # Assume a COVID model
-    model = app.build_model(app.params["default"])
-    param_names = sorted(list({f.param_name for f in model.flows}))
-    param_name = st.sidebar.selectbox("Select parameter", param_names)
-    flows = [f for f in model.flows if f.param_name == param_name]
-    is_logscale = st.sidebar.checkbox("Log scale")
-    flow_funcs = [f.get_weight_value for f in flows]
-    plots.model.plots.plot_time_varying_input(
-        plotter, f"flow-params-{param_name}", flow_funcs, model.times, is_logscale
-    )
-
-    init_dict = {}
-    for f in flows:
-        f_name = ""
-        src = getattr(f, "source", None)
-        dest = getattr(f, "dest", None)
-        if src:
-            f_name += f"from {src}"
-        if dest:
-            f_name += f" to {dest}"
-
-        f_name = f_name.strip()
-        init_dict[f_name] = f.get_weight_value(0)
-
-    st.write("Values at start time:")
-    st.write(init_dict)
-
-
-PLOT_FUNCS["Flow weights"] = plot_flow_params
 
 
 def plot_dynamic_inputs(plotter: StreamlitPlotter, app: AppRegion):
@@ -152,60 +164,6 @@ def plot_dynamic_inputs(plotter: StreamlitPlotter, app: AppRegion):
 
 
 PLOT_FUNCS["Time variant functions"] = plot_dynamic_inputs
-
-
-def plot_location_mixing(plotter: StreamlitPlotter, app: AppRegion):
-    if not app.app_name == "covid_19":
-        # Assume a COVID model
-        st.write("This only works for COVID-19 models :(")
-        return
-
-    params = app.params["default"]
-    mixing = params.get("mixing")
-    if not mixing:
-        st.write("This model does not have location based mixing")
-        return
-
-    start_time = params["time"]["start"]
-    end_time = params["time"]["end"]
-    time_step = params["time"]["step"]
-    times = get_model_times_from_inputs(
-        round(start_time),
-        end_time,
-        time_step,
-    )
-
-    loc_key = st.sidebar.selectbox("Select location", LOCATIONS)
-    is_logscale = st.sidebar.checkbox("Log scale")
-
-    country_iso3 = params["iso3"]
-    region = params["mobility_region"]
-    microdistancing = params["microdistancing"]
-    npi_effectiveness_params = params["npi_effectiveness"]
-    google_mobility_locations = params["google_mobility_locations"]
-    smooth_google_data = params.get("smooth_google_data")
-    microdistancing_locations = ["home", "other_locations", "school", "work"]
-    adjust = LocationMixingAdjustment(
-        country_iso3,
-        region,
-        mixing,
-        npi_effectiveness_params,
-        google_mobility_locations,
-        microdistancing,
-        smooth_google_data,
-        microdistancing_locations,
-    )
-    if adjust.microdistancing_function and loc_key in microdistancing_locations:
-        loc_func = lambda t: adjust.microdistancing_function(t) * adjust.loc_adj_funcs[loc_key](t)
-    elif loc_key in adjust.loc_adj_funcs:
-        loc_func = lambda t: adjust.loc_adj_funcs[loc_key](t)
-    else:
-        loc_func = lambda t: 1
-
-    plots.model.plots.plot_time_varying_input(plotter, loc_key, loc_func, times, is_logscale)
-
-
-PLOT_FUNCS["Dynamic location mixing"] = plot_location_mixing
 
 
 def plot_mobility_raw(plotter: StreamlitPlotter, app: AppRegion):
@@ -234,11 +192,6 @@ def plot_multilocation_mobility(plotter: StreamlitPlotter, app: AppRegion):
         BASE_DATE,
         params["mobility"]["google_mobility_locations"],
     )
-    # st.write(type(values))
-    # options = list(params["mobility"]["google_mobility_locations"].keys())
-    # loc_key = st.sidebar.selectbox("Select location", options)
-    # values_lookup = {days[i]: values[loc_key][i] for i in range(len(days))}
-    # loc_func = lambda t: values_lookup[t]
     plots.model.plots.plot_time_varying_multi_input(plotter, values, days, is_logscale=False)
 
 

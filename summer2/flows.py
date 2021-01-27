@@ -458,7 +458,6 @@ class FractionalFlow(BaseTransitionFlow):
     """
 
     def get_net_flow(self, compartment_values, time):
-        # parameter_value * custom_flow_func(self, n_flow, time, compartment_values)
         parameter_value = self.get_weight_value(time)
         population = compartment_values[self.source.idx]
         return parameter_value * population

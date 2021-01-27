@@ -521,6 +521,7 @@ class CompartmentalModel:
         source_strata = source_strata or {}
         dest_strata = dest_strata or {}
         if flow_cls is not flows.FunctionFlow:
+            # Non standard param for FunctionFlow so cannot use this validation method.
             self._validate_param(name, param)
 
         dest_comps = [c for c in self.compartments if c.is_match(dest, dest_strata)]

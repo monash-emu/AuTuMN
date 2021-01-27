@@ -58,11 +58,11 @@ class BaseFlow(ABC):
         Returns the flow's weight at a given time.
         Applies any stratification adjustments to the base parameter.
         """
-        value = self.param(time) if callable(self.param) else self.param
+        flow_rate = self.param(time) if callable(self.param) else self.param
         for adjustment in self.adjustments:
-            value = adjustment.get_new_value(value, time)
+            flow_rate = adjustment.get_new_value(flow_rate, time)
 
-        return value
+        return flow_rate
 
     def update_compartment_indices(self, mapping: Dict[str, float]):
         """
@@ -481,6 +481,34 @@ class SojournFlow(BaseTransitionFlow):
         parameter_value = self.get_weight_value(time)
         population = compartment_values[self.source.idx]
         return population / parameter_value
+
+
+class FunctionFlow(BaseTransitionFlow):
+    """
+    A flow that transfers people from a source to a destination based on a user-defined function.
+    This can be used to define more complex flows if requird.
+
+    Args:
+        name: The flow name.
+        source: The source compartment.
+        dest: The destination compartment.
+        param: A function that returns the flow rate, before adjustments. See `get_net_flow` for this function's arguments.
+        adjustments: Adjustments to the flow rate.
+
+    """
+
+    def get_net_flow(
+        self,
+        compartments: List[Compartment],
+        compartment_values: np.ndarray,
+        flow_rates: np.ndarray,
+        time: float,
+    ):
+        flow_rate = self.param(compartments, compartment_values, flow_rates, time)
+        for adjustment in self.adjustments:
+            flow_rate = adjustment.get_new_value(flow_rate, time)
+
+        return flow_rate
 
 
 class BaseInfectionFlow(BaseTransitionFlow):

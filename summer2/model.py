@@ -1,7 +1,6 @@
 """
 This module contains the main disease modelling class.
 """
-import math
 import logging
 import copy
 from typing import Tuple, List, Dict, Callable, Optional
@@ -18,6 +17,8 @@ from summer2.solver import solve_ode, SolverType
 from summer2.adjust import FlowParam
 
 logger = logging.getLogger()
+
+FlowRateFunction = Callable[[List[Compartment], np.ndarray, np.ndarray, float], np.ndarray]
 
 
 class CompartmentalModel:
@@ -470,6 +471,41 @@ class CompartmentalModel:
             expected_flow_count,
         )
 
+    def add_function_flow(
+        self,
+        name: str,
+        flow_rate_func: FlowRateFunction,
+        source: str,
+        dest: str,
+        source_strata: Optional[Dict[str, str]] = None,
+        dest_strata: Optional[Dict[str, str]] = None,
+        expected_flow_count: Optional[int] = None,
+    ):
+        """
+        A flow that transfers people from a source to a destination based on a user-defined function.
+        This can be used to define more complex flows if required. See `flows.FunctionFlow` for more details on the arguments to the function.
+
+        Args:
+            name: The name of the new flow.
+            flow_rate_func:  A function that returns the flow rate, before adjustments.
+            source: The name of the source compartment.
+            dest: The name of the destination compartment.
+            source_strata (optional): A whitelist of strata to filter the source compartments.
+            dest_strata (optional): A whitelist of strata to filter the destination compartments.
+            expected_flow_count (optional): Used to assert that a particular number of flows are created.
+
+        """
+        self._add_transition_flow(
+            flows.FunctionFlow,
+            name,
+            flow_rate_func,
+            source,
+            dest,
+            source_strata,
+            dest_strata,
+            expected_flow_count,
+        )
+
     def _add_transition_flow(
         self,
         flow_cls,
@@ -484,7 +520,9 @@ class CompartmentalModel:
     ):
         source_strata = source_strata or {}
         dest_strata = dest_strata or {}
-        self._validate_param(name, param)
+        if flow_cls is not flows.FunctionFlow:
+            self._validate_param(name, param)
+
         dest_comps = [c for c in self.compartments if c.is_match(dest, dest_strata)]
         source_comps = [c for c in self.compartments if c.is_match(source, source_strata)]
         num_dest = len(dest_comps)
@@ -667,7 +705,10 @@ class CompartmentalModel:
         # First we find all time varying functions.
         funcs = set()
         for flow in self._flows:
-            if callable(flow.param):
+            if isinstance(flow, flows.FunctionFlow):
+                # Don't cache these, the input arguments cannot be stored in a dict ("non hashable")
+                continue
+            elif callable(flow.param):
                 funcs.add(flow.param)
             for adj in flow.adjustments:
                 if adj and callable(adj.param):
@@ -694,13 +735,23 @@ class CompartmentalModel:
         # Split flows up into 3 groups: entry, exit and transition.
         self._entry_flows = [f for f in self._flows if issubclass(f.__class__, flows.BaseEntryFlow)]
         self._exit_flows = [f for f in self._flows if issubclass(f.__class__, flows.BaseExitFlow)]
+        self._function_flows = [f for f in self._flows if isinstance(f, flows.FunctionFlow)]
         self._transition_flows = [
-            f for f in self._flows if issubclass(f.__class__, flows.BaseTransitionFlow)
+            f
+            for f in self._flows
+            if issubclass(f.__class__, flows.BaseTransitionFlow)
+            and not isinstance(f, flows.FunctionFlow)
         ]
 
         # Check we didn't miss any flows
         num_split_flows = sum(
-            len(fs) for fs in [self._entry_flows, self._exit_flows, self._transition_flows]
+            len(fs)
+            for fs in [
+                self._entry_flows,
+                self._exit_flows,
+                self._transition_flows,
+                self._function_flows,
+            ]
         )
         assert len(self._flows) == num_split_flows
 
@@ -720,10 +771,12 @@ class CompartmentalModel:
         # each inner list contains references to the derived output values to track for that flow.
         # Eg. [[], [list], [list, list, list], [], ...]
         self._transition_flow_trackers = []
+        self._function_flow_trackers = []
         self._exit_flow_trackers = []
         self._entry_flow_trackers = []
         tracking_pairs = [
             [self._transition_flows, self._transition_flow_trackers],
+            [self._function_flows, self._function_flow_trackers],
             [self._exit_flows, self._exit_flow_trackers],
             [self._entry_flows, self._entry_flow_trackers],
         ]
@@ -951,6 +1004,17 @@ class CompartmentalModel:
 
             # Track net flow for derived outputs.
             for tracker in self._entry_flow_trackers[flow_idx]:
+                tracker[flow_tracker_idx] += net_flow
+
+        # Apply inter-compartmental function flows.
+        # These take the other flow rates as an input so they are executed last.
+        for flow_idx, flow in enumerate(self._function_flows):
+            net_flow = flow.get_net_flow(self.compartments, compartment_values, flow_rates, time)
+            flow_rates[flow.source.idx] -= net_flow
+            flow_rates[flow.dest.idx] += net_flow
+
+            # Track net flow for derived outputs.
+            for tracker in self._function_flow_trackers[flow_idx]:
                 tracker[flow_tracker_idx] += net_flow
 
         return flow_rates

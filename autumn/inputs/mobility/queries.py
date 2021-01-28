@@ -50,7 +50,7 @@ def get_mobility_data(country_iso_code: str, region: str, base_date: datetime, l
 
         mob_df[new_loc] = mob_df[new_loc] / len(old_locs)
 
-    mob_df["date"] = pd.to_datetime(mob_df["date"], format="%Y-%m-%d")
+    mob_df["date"] = pd.to_datetime(mob_df["date"], format="%d/%m/%Y")
     mob_df = mob_df.sort_values(["date"])
     mob_df = mob_df[mob_df["date"] >= base_date]
     days = mob_df["date"].apply(lambda d: (d - base_date).days).tolist()

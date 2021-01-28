@@ -24,7 +24,7 @@ os.chdir("..")  # Make repo root the current directory
 
 
 # # Run a calibration
-app_region = covid_19.app.get_region(Region.VICTORIA)
+app_region = covid_19.app.get_region(Region.PHILIPPINES)
 app_region.calibrate_model(max_seconds=60, run_id=1, num_chains=1)
 
 # # Run a calibration

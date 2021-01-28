@@ -13,8 +13,8 @@ import json
 from autumn import constants
 
 # shareable google drive links
-PHL_doh_link = "1VAp7ElxsQe4zgRpjmz53b9YcdwQcIlnN"  # sheet 05 daily report
-PHL_fassster_link = "12Sh0P6EYLfAo6kUV3WM10jeEetTPu1-T"
+PHL_doh_link = "1z40tsK2dqNDmAJ8OfmmbCtT2rXnMcCaN"  # sheet 05 daily report
+PHL_fassster_link = "1I5RPsrMXL3DDTWW4DSSzCHshtjLZOPiW"
 
 # destination folders filepaths
 PHL_doh_dest = "./data/targets/PHL_icu.csv"

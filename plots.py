@@ -36,6 +36,7 @@ from dash.dashboards.run_model import run_dashboard as run_model_dashboard
 from dash.dashboards.run_calibrate import run_dashboard as run_calibrate_dashboard
 from dash.dashboards.multicountry_uncertainty import run_dashboard as run_multicountry_uncertainty
 from dash.dashboards.vic_second_wave_paper import run_dashboard as run_vic_paper
+from dash.dashboards.philippines import run_dashboard as run_philippines
 
 
 DASHBOARDS = {
@@ -51,6 +52,7 @@ DASHBOARDS = {
     "DHHS results": run_dhhs_dashboard,
     "Ensemble results": run_ensemble_dashboard,
     "Vic 2nd wave paper": run_vic_paper,
+    "Philippines COVID": run_philippines,
 }
 
 
@@ -72,5 +74,7 @@ else:
     - **Multi-country**: Multi-country plots
     - **DHHS results**: Inspect results which will be sent to DHHS
     - **Ensemble results**: Inspect results which will be sent to ensemble forecasting
+    - **Vic 2nd wave paper**: Inspect results for Victoria application
+    - **Philippines**: Inspect results for Philippines covid application
     """
     )

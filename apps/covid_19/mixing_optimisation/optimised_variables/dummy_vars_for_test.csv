@@ -1,2 +1,3 @@
-country,mode,duration,objective,immunity,best_x0,best_x1,best_x2,best_x3,best_x4,best_x5,best_x6,best_x7,best_x8,best_x9,best_x10,best_x11,best_x12,best_x13,best_x14,best_x15
-france,by_age,six_months,deaths,permanent,0.99,0.99,0.99,0.99,0.99,0.99,0.99,0.99,0.99,0.99,0.99,0.99,0.99,0.99,0.99,0.99
+version https://git-lfs.github.com/spec/v1
+oid sha256:5b1567c0d66d5525f86ddaa0186d25e01c8df7ab734492e33f19e85b8e50198b
+size 297

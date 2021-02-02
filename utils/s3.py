@@ -49,7 +49,7 @@ def download_from_run_s3(run_id: str, src_key: str, quiet: bool, retries=5):
     """
 
     relpath = os.path.relpath(src_key, run_id)
-    dest_path = os.path.join(settings.BASE_DIR, relpath)
+    dest_path = os.path.join(settings.REMOTE_BASE_DIR, relpath)
     os.makedirs(os.path.dirname(dest_path), exist_ok=True)
     if os.path.exists(dest_path):
         os.remove(dest_path)
@@ -88,7 +88,7 @@ def upload_to_run_s3(run_id: str, src_path: str, quiet: bool):
     if quiet:
         logging.disable(logging.INFO)
 
-    relpath = os.path.relpath(src_path, settings.BASE_DIR)
+    relpath = os.path.relpath(src_path, settings.REMOTE_BASE_DIR)
     dest_key = os.path.join(run_id, relpath)
     upload_s3(src_path, dest_key)
 

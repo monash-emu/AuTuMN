@@ -3,7 +3,7 @@ Utilities for running multiple model scenarios
 """
 import numpy as np
 from copy import deepcopy
-from typing import Callable, List
+from typing import Callable, List, Optional
 
 
 from summer.model import StratifiedModel
@@ -45,7 +45,13 @@ class Scenario:
         scenario.model = model
         return scenario
 
-    def run(self, base_model=None, update_func=None, _hack_in_scenario_params: dict = None):
+    def run(
+        self,
+        base_model=None,
+        update_func=None,
+        _hack_in_scenario_params: dict = None,
+        derived_outputs_whitelist: Optional[List[str]] = None,
+    ):
         """
         Run the scenario model simulation.
         If a base model is provided, then run the scenario from the scenario start time.
@@ -95,6 +101,9 @@ class Scenario:
                 self.model.compartment_values = init_compartments
 
             if type(self.model) is CompartmentalModel:
+                if derived_outputs_whitelist:
+                    self.model.set_derived_outputs_whitelist(derived_outputs_whitelist)
+
                 self.model.run()
             else:
                 self.model.run_model(IntegrationType.SOLVE_IVP)

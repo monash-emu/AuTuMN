@@ -2,6 +2,8 @@
 parent: apps/tuberculosis/params.yml
 iso3: "MHL"
 
+metropolis_initialisation: "current_params"
+
 time:
   start: 1800.
   end: 2050.

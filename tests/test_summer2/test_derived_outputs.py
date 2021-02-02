@@ -201,3 +201,39 @@ def test_derived_outputs_with_no_save_results():
     assert "recovered" not in dos
     assert "recovered_cumulative" not in dos
     assert "some_aggregate" not in dos
+
+
+def test_derived_outputs_whitelist():
+    model = CompartmentalModel(
+        times=[0, 5], compartments=["S", "I", "R"], infectious_compartments=["I"]
+    )
+    model.set_initial_population(distribution={"S": 990, "I": 10})
+    model.outputs = np.array(
+        [
+            [990, 10, 0],
+            [980, 15, 5],
+            [970, 20, 10],
+            [960, 25, 15],
+            [950, 30, 20],
+            [940, 35, 25],
+        ]
+    )
+
+    model.request_output_for_compartments("recovered", ["R"])
+    model.request_output_for_compartments("not_infected", ["S", "R"])
+    model.request_output_for_compartments("infected", ["I"])
+    model.request_output_for_compartments("total_population", ["S", "I", "R"])
+    model.request_cumulative_output(name="accum_infected", source="infected")
+
+    model.set_derived_outputs_whitelist(["recovered", "accum_infected"])
+
+    dos = model._calculate_derived_outputs()
+    assert "recovered" in dos  # Included coz in whitelist (or dependency of)
+    assert "infected" in dos  # Included coz in whitelist (or dependency of)
+    assert "accum_infected" in dos  # Included coz in whitelist (or dependency of)
+    assert "not_infected" not in dos  # Excluded coz not in whitelist
+    assert "total_population" not in dos  # Excluded coz not in whitelist
+
+    assert_array_equal(dos["recovered"], np.array([0, 5, 10, 15, 20, 25]))
+    assert_array_equal(dos["infected"], np.array([10, 15, 20, 25, 30, 35]))
+    assert_array_equal(dos["accum_infected"], np.array([10, 25, 45, 70, 100, 135]))

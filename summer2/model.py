@@ -89,6 +89,8 @@ class CompartmentalModel:
         self._derived_output_requests = {}
         # Track derived output request dependencies in a directed acylic graph (DAG).
         self._derived_output_graph = networkx.DiGraph()
+        # Whitelist of derived outputs to evaluate
+        self._derived_outputs_whitelist = []
 
         # Mixing matrices a list of NxN arrays used to calculate force of infection.
         self._mixing_matrices = []
@@ -667,7 +669,6 @@ class CompartmentalModel:
         self,
         solver: str = SolverType.SOLVE_IVP,
         solver_args: Optional[dict] = None,
-        outputs_to_calculate: Optional[List[str]] = None,
     ):
         """
         Runs the model over the provided time span, calculating the outputs and the derived outputs.
@@ -680,7 +681,6 @@ class CompartmentalModel:
         Args:
             solver (optional): The ODE solver to use, defaults to SciPy's IVP solver.
             solver_args (optional): Extra arguments to supplied to the solver, see ``summer.solver`` for details.
-            outputs_to_calculate (optional): Whitelist of derived outputs to calculate - any other outputs will be ignored.
 
         """
         solver_args = solver_args or {}
@@ -695,7 +695,7 @@ class CompartmentalModel:
             solver_args,
         )
         # Calculate any requested derived outputs, based on the calculated compartment sizes.
-        self.derived_outputs = self._calculate_derived_outputs(outputs_to_calculate)
+        self.derived_outputs = self._calculate_derived_outputs()
 
     def _prepare_to_run(self):
         """
@@ -1042,7 +1042,18 @@ class CompartmentalModel:
     _CUMULATIVE_REQUEST = "cum"
     _FUNCTION_REQUEST = "func"
 
-    def _calculate_derived_outputs(self, outputs_to_calculate: Optional[List[str]] = None):
+    def set_derived_outputs_whitelist(self, whitelist: List[str]):
+        """
+        Request that we should only calculate a subset of the model's derived outputs.
+        This can be useful when you only care about some results and you want to cut down on runtime.
+
+        Args:
+            whitelist: A list of the derived output names to calculate, ignoring all others.
+
+        """
+        self._derived_outputs_whitelist = whitelist
+
+    def _calculate_derived_outputs(self):
         """
         Calculates all requested derived outputs from the calculated compartment sizes.
         """
@@ -1051,16 +1062,17 @@ class CompartmentalModel:
         assert networkx.is_directed_acyclic_graph(self._derived_output_graph), error_msg
         graph = self._derived_output_graph.copy()
 
-        if outputs_to_calculate is not None:
+        if self._derived_outputs_whitelist:
             # Only calculate the required outputs and their dependencies, ignore everything else.
             required_nodes = set()
-            for name in outputs_to_calculate:
+            for name in self._derived_outputs_whitelist:
                 # Find a list of the output required and its dependencies.
                 output_dependencies = networkx.dfs_tree(graph.reverse(), source=name).reverse()
                 required_nodes = required_nodes.union(output_dependencies.nodes)
 
             # Remove any nodes that aren't required from the graph.
-            for node in graph.nodes:
+            nodes = list(graph.nodes)
+            for node in nodes:
                 if not node in required_nodes:
                     graph.remove_node(node)
 

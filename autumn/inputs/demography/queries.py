@@ -1,7 +1,7 @@
 """
 Read demography data from input database.
 """
-from autumn.constants import Region
+from autumn.region import Region
 
 from typing import List
 from functools import lru_cache

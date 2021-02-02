@@ -15,10 +15,11 @@ from scipy.optimize import Bounds, minimize
 from scipy import stats, special
 
 from summer.model import StratifiedModel
-from autumn import constants
+from autumn.region import Region
 from autumn import db, plots
 from autumn.tool_kit.scenarios import Scenario
-from autumn.tool_kit import Timer
+from utils.timer import Timer
+import settings
 from autumn.tool_kit.params import update_params, read_param_value_from_string
 from autumn.tool_kit.utils import (
     get_git_branch,
@@ -164,8 +165,8 @@ class Calibration:
             plots.calibration.plot_pre_calibration(self.priors, self.output.output_dir)
 
         self.is_vic_super_model = False
-        if "victorian_clusters" in self.model_parameters['default']:
-            if self.model_parameters['default']['victorian_clusters']:
+        if "victorian_clusters" in self.model_parameters["default"]:
+            if self.model_parameters["default"]["victorian_clusters"]:
                 self.is_vic_super_model = True
 
     def run_model_with_params(self, proposed_params: dict):
@@ -227,13 +228,13 @@ class Calibration:
                         if key + "_dispersion_param" in self.param_list:
                             normal_sd = params[self.param_list.index(key + "_dispersion_param")]
                         elif self.is_vic_super_model:
-                            output_name = target['output_key'].split("_for_cluster_")[0]
-                            cluster = target['output_key'].split("_for_cluster_")[1]
+                            output_name = target["output_key"].split("_for_cluster_")[0]
+                            cluster = target["output_key"].split("_for_cluster_")[1]
 
-                            if cluster.replace("_", "-") in constants.Region.VICTORIA_METRO:
-                                cluster_group = 'metro'
+                            if cluster.replace("_", "-") in Region.VICTORIA_METRO:
+                                cluster_group = "metro"
                             else:
-                                cluster_group = 'rural'
+                                cluster_group = "rural"
                             param_name = f"{output_name}_{cluster_group}_dispersion_param"
                             normal_sd = params[self.param_list.index(param_name)]
                         else:
@@ -737,7 +738,7 @@ class CalibrationOutputs:
         self.derived_outputs = []
 
         # Setup output directory
-        project_dir = os.path.join(constants.OUTPUT_DATA_PATH, "calibrate", app_name, region_name)
+        project_dir = os.path.join(settings.OUTPUT_DATA_PATH, "calibrate", app_name, region_name)
         timestamp = datetime.now().strftime("%Y-%m-%d")
         # A bit of a hack to write to a different directory when running jobs in AWS.
         self.output_dir = os.environ.get(

@@ -8,7 +8,7 @@ from autumn.calibration.utils import (
     ignore_calibration_target_before_date,
     add_dispersion_param_prior_for_gaussian,
 )
-from autumn.constants import Region
+from autumn.region import Region
 
 from apps.covid_19.mixing_optimisation.utils import get_prior_distributions_for_opti
 from autumn.tool_kit.params import load_targets
@@ -169,8 +169,8 @@ def get_truncated_output(target_group, start, end):
 
     start_date_index = target_group["times"].index(start)
     final_date_index = target_group["times"].index(end)
-    times = target_group["times"][start_date_index: final_date_index + 1]
-    values = target_group["values"][start_date_index: final_date_index + 1]
+    times = target_group["times"][start_date_index : final_date_index + 1]
+    values = target_group["values"][start_date_index : final_date_index + 1]
     return times, values
 
 
@@ -187,14 +187,16 @@ def accumulate_target(existing_targets, target_name, category=""):
     """
 
     # Pull the times straight out
-    new_target = \
-        {f"accum_{target_name}{category}":
-             {"times": existing_targets[f"{target_name}{category}"]["times"]}
-         }
+    new_target = {
+        f"accum_{target_name}{category}": {
+            "times": existing_targets[f"{target_name}{category}"]["times"]
+        }
+    }
 
     # Accumulate the values
-    new_target[f"accum_{target_name}{category}"]["values"] = \
-        list(accumulate(existing_targets[f"{target_name}{category}"]["values"]))
+    new_target[f"accum_{target_name}{category}"]["values"] = list(
+        accumulate(existing_targets[f"{target_name}{category}"]["values"])
+    )
 
     return new_target
 

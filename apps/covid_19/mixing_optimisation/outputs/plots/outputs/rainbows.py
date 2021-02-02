@@ -14,7 +14,7 @@ from apps.covid_19.mixing_optimisation.constants import (
 )
 from apps.covid_19.mixing_optimisation.mixing_opti import MODES, DURATIONS, OBJECTIVES
 from apps.covid_19.mixing_optimisation.utils import get_scenario_mapping_reverse
-from autumn.constants import BASE_PATH
+from settings import BASE_PATH
 from autumn.db.load import load_derived_output_tables, find_db_paths
 from autumn.db import Database
 
@@ -191,8 +191,12 @@ def plot_stacked_outputs_by_stratum(
 
     phase_2_end_date = {DURATIONS[0]: "1 Apr 21", DURATIONS[1]: "1 Oct 21"}
 
-    xticks = [61, PHASE_2_START_TIME, PHASE_2_START_TIME + PHASE_2_DURATION[duration],
-              PHASE_2_START_TIME + PHASE_2_DURATION[duration] + 90]
+    xticks = [
+        61,
+        PHASE_2_START_TIME,
+        PHASE_2_START_TIME + PHASE_2_DURATION[duration],
+        PHASE_2_START_TIME + PHASE_2_DURATION[duration] + 90,
+    ]
     xlabs = ["1 Mar 2020", "1 Oct 20", phase_2_end_date[duration]]
 
     axis.set_xlim((30, PHASE_2_START_TIME + PHASE_2_DURATION[duration] + 90))

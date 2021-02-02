@@ -10,10 +10,10 @@ from summer.model import StratifiedModel
 from summer2.model import CompartmentalModel
 
 from autumn.tool_kit import schema_builder as sb
-from autumn.tool_kit.timer import Timer
+from utils.timer import Timer
 from autumn.tool_kit.params import update_params
 
-from ..constants import IntegrationType
+from summer.constants import IntegrationType
 
 validate_params = sb.build_validator(default=dict, scenarios=dict)
 

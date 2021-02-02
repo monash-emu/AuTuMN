@@ -6,11 +6,11 @@ import os
 import pandas as pd
 
 
-from autumn import constants
+from settings import INPUT_DATA_PATH
 from autumn.db import Database
 
 
-MIXING_DIRPATH = os.path.join(constants.INPUT_DATA_PATH, "social-mixing")
+MIXING_DIRPATH = os.path.join(INPUT_DATA_PATH, "social-mixing")
 LOCATIONS = ("all_locations", "home", "other_locations", "school", "work")
 SHEET_NUMBERS = [("1", 0), ("2", None)]
 

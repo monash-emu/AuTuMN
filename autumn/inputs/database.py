@@ -1,10 +1,9 @@
 import os
 import logging
 
-from autumn.tool_kit import Timer
+from settings import INPUT_DATA_PATH
+from utils.timer import Timer
 from autumn.db import Database
-from autumn import constants
-
 from .mobility.preprocess import preprocess_mobility
 from .social_mixing.preprocess import preprocess_social_mixing
 from .demography.preprocess import preprocess_demography
@@ -15,8 +14,8 @@ from .owid.preprocess import preprocess_our_world_in_data
 logger = logging.getLogger(__name__)
 
 _input_db = None
-input_db_hash_path = os.path.join(constants.INPUT_DATA_PATH, "inputs-hash.txt")
-input_db_path = os.path.join(constants.INPUT_DATA_PATH, "inputs.db")
+input_db_hash_path = os.path.join(INPUT_DATA_PATH, "inputs-hash.txt")
+input_db_path = os.path.join(INPUT_DATA_PATH, "inputs.db")
 
 
 def get_input_db():

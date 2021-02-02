@@ -1,7 +1,8 @@
 import os
 import json
 
-from autumn.constants import INPUT_DATA_PATH, Region
+from autumn.region import Region
+from settings import INPUT_DATA_PATH
 
 IMPORTS_FILE = os.path.join(INPUT_DATA_PATH, "imports", "imports.secret.json")
 

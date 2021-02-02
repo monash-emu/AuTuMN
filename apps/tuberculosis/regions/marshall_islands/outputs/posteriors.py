@@ -1,17 +1,30 @@
 import pandas as pd
 import os
-from autumn.constants import BASE_PATH
+from settings import BASE_PATH
 from autumn.plots.utils import PLOT_TEXT_DICT
 
 from apps.tuberculosis.regions.marshall_islands.outputs.utils import make_output_directories
 
 
 FIGURE_PATH = os.path.join(
-    BASE_PATH, "apps", "tuberculosis", "regions", "marshall_islands", "outputs", "figures", "posterior_table"
+    BASE_PATH,
+    "apps",
+    "tuberculosis",
+    "regions",
+    "marshall_islands",
+    "outputs",
+    "figures",
+    "posterior_table",
 )
 
 DATA_PATH = os.path.join(
-    BASE_PATH, "apps", "tuberculosis", "regions", "marshall_islands", "outputs", "parameter_posteriors"
+    BASE_PATH,
+    "apps",
+    "tuberculosis",
+    "regions",
+    "marshall_islands",
+    "outputs",
+    "parameter_posteriors",
 )
 
 PARAMETER_NAMES_OVERRIDE = {
@@ -26,7 +39,7 @@ PARAMETER_NAMES_OVERRIDE = {
     "Self cure rate (smear-neg)": "Self-cure rate (smear-negative), per year",
     "rr_infection_latent": "relative risk of infection for individuals with latent infection (ref. infection-naive)",
     "awareness_raising.relative_screening_rate": "relative screening rate following ACF interventions (ref. before intervention)",
-    "infection risk per contact": "transmission scaling factor"
+    "infection risk per contact": "transmission scaling factor",
 }
 
 
@@ -35,7 +48,12 @@ def main():
     file_path = os.path.join(DATA_PATH, "posterior_centiles.csv")
     posterior_df = pd.read_csv(file_path, sep=",")
     posterior_df = posterior_df.rename(
-        columns={'Unnamed: 0': "Parameter", '2.5': '2.5th percentile', '50.0': 'Median', '97.5': '97.5th percentile'}
+        columns={
+            "Unnamed: 0": "Parameter",
+            "2.5": "2.5th percentile",
+            "50.0": "Median",
+            "97.5": "97.5th percentile",
+        }
     )
     make_posterior_table(posterior_df)
 

@@ -14,7 +14,7 @@ import json
 #         ],
 # }
 import os
-from autumn.constants import APPS_PATH
+from settings import APPS_PATH
 
 
 def read_belgium_data():

@@ -2,14 +2,27 @@ from matplotlib import pyplot
 import os
 
 
-from autumn.constants import BASE_PATH
+from settings import BASE_PATH
 from autumn.db.load import load_uncertainty_table
 from autumn.plots.uncertainty.plots import plot_timeseries_with_uncertainty
 
-from apps.tuberculosis.regions.marshall_islands.outputs.utils import OUTPUT_TITLES, REGION_TITLES, save_figure, get_format, make_output_directories
+from apps.tuberculosis.regions.marshall_islands.outputs.utils import (
+    OUTPUT_TITLES,
+    REGION_TITLES,
+    save_figure,
+    get_format,
+    make_output_directories,
+)
 
 FIGURE_PATH = os.path.join(
-    BASE_PATH, "apps", "tuberculosis", "regions", "marshall_islands", "outputs", "figures", "counterfactual"
+    BASE_PATH,
+    "apps",
+    "tuberculosis",
+    "regions",
+    "marshall_islands",
+    "outputs",
+    "figures",
+    "counterfactual",
 )
 
 DATA_PATH = os.path.join(
@@ -35,19 +48,23 @@ def plot_counterfactual(uncertainty_df):
     widths = [panel_w] * 3
     heights = [0.5] + [panel_h] * 4
     fig = pyplot.figure(constrained_layout=True, figsize=(sum(widths), sum(heights)))  # (w, h)
-    spec = fig.add_gridspec(ncols=3, nrows=5, width_ratios=widths,
-                            height_ratios=heights)
+    spec = fig.add_gridspec(ncols=3, nrows=5, width_ratios=widths, height_ratios=heights)
 
     for j, region in enumerate(regions):
         ax = fig.add_subplot(spec[0, j])
         ax.text(
-            0.5, 0.5, REGION_TITLES[region],  horizontalalignment='center', verticalalignment='center', fontsize=20
+            0.5,
+            0.5,
+            REGION_TITLES[region],
+            horizontalalignment="center",
+            verticalalignment="center",
+            fontsize=20,
         )
         ax.set_xlim((0, 1))
         ax.set_ylim((0, 1))
         ax.axis("off")
         for i, output in enumerate(outputs):
-            ax = fig.add_subplot(spec[i+1, j])
+            ax = fig.add_subplot(spec[i + 1, j])
             ylab = OUTPUT_TITLES[output] if j == 0 else None
 
             output_name = output if region == "all" else f"{output}Xlocation_{region}"
@@ -67,7 +84,7 @@ def plot_counterfactual(uncertainty_df):
                 show_title=False,
                 ylab=ylab,
                 x_axis_to_date=False,
-                start_quantile=0
+                start_quantile=0,
             )
 
     save_figure("counterfactual", FIGURE_PATH)
@@ -75,4 +92,3 @@ def plot_counterfactual(uncertainty_df):
 
 if __name__ == "__main__":
     main()
-

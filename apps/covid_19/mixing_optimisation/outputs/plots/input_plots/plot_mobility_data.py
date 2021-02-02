@@ -3,15 +3,23 @@ from matplotlib import pyplot
 import matplotlib as mpl
 import seaborn as sns
 
-from autumn.constants import BASE_PATH
+from settings import BASE_PATH
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
 from apps import covid_19
 from apps.covid_19.model.preprocess.mixing_matrix.mobility import get_mobility_funcs
 from apps.covid_19.model.parameters import Parameters
 
 
-FIGURE_PATH = os.path.join(BASE_PATH, "apps", "covid_19", "mixing_optimisation",
-                           "outputs", "plots", "input_plots", "figures")
+FIGURE_PATH = os.path.join(
+    BASE_PATH,
+    "apps",
+    "covid_19",
+    "mixing_optimisation",
+    "outputs",
+    "plots",
+    "input_plots",
+    "figures",
+)
 
 
 def main():
@@ -27,7 +35,7 @@ def get_mobility_data():
     mobility_data_functions = {}
     for country in OPTI_REGIONS:
         app_region = covid_19.app.get_region(country)
-        params = app_region.params['default']
+        params = app_region.params["default"]
         params = Parameters(**params)
         mobility_funcs = get_mobility_funcs(
             params.country,
@@ -64,15 +72,14 @@ def plot_mobility(mobility_data_functions, country, loc_key, axis):
     axis.set_xticks(xticks)
     axis.set_xticklabels(xlabs, fontsize=12)
 
-    axis.set_ylim((0., 1.1))
+    axis.set_ylim((0.0, 1.1))
 
 
 def plot_multicountry_mobility(mobility_data_functions):
     fig = pyplot.figure(constrained_layout=True, figsize=(18, 20))  # (w, h)
     widths = [1, 6, 6, 6]
     heights = [1, 6, 6, 6, 6, 6, 6]
-    spec = fig.add_gridspec(ncols=4, nrows=7, width_ratios=widths,
-                            height_ratios=heights)
+    spec = fig.add_gridspec(ncols=4, nrows=7, width_ratios=widths, height_ratios=heights)
 
     location_names = {
         "other_locations": "other locations",
@@ -80,7 +87,7 @@ def plot_multicountry_mobility(mobility_data_functions):
         "work": "workplaces",
     }
 
-    countries = ['belgium', 'france', 'italy', 'spain', 'sweden', 'united-kingdom']
+    countries = ["belgium", "france", "italy", "spain", "sweden", "united-kingdom"]
     country_names = [c.title() for c in countries]
     country_names[-1] = "United Kingdom"
 
@@ -88,15 +95,30 @@ def plot_multicountry_mobility(mobility_data_functions):
 
     for i, country in enumerate(countries):
         for j, loc_key in enumerate(["other_locations", "work", "school"]):
-            ax = fig.add_subplot(spec[i+1, j + 1])
+            ax = fig.add_subplot(spec[i + 1, j + 1])
             plot_mobility(mobility_data_functions, country, loc_key, axis=ax)
             if i == 0:
-                ax = fig.add_subplot(spec[0, j+1])
-                ax.text(0.5, 0.5, location_names[loc_key], fontsize=text_size, horizontalalignment='center', verticalalignment='center')
+                ax = fig.add_subplot(spec[0, j + 1])
+                ax.text(
+                    0.5,
+                    0.5,
+                    location_names[loc_key],
+                    fontsize=text_size,
+                    horizontalalignment="center",
+                    verticalalignment="center",
+                )
                 ax.axis("off")
 
-        ax = fig.add_subplot(spec[i+1, 0])
-        ax.text(0.5, 0.5, country_names[i], rotation=90, fontsize=text_size, horizontalalignment='center', verticalalignment='center')
+        ax = fig.add_subplot(spec[i + 1, 0])
+        ax.text(
+            0.5,
+            0.5,
+            country_names[i],
+            rotation=90,
+            fontsize=text_size,
+            horizontalalignment="center",
+            verticalalignment="center",
+        )
         ax.axis("off")
 
     pyplot.rcParams["font.family"] = "Times New Roman"

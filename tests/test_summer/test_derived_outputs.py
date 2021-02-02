@@ -2,7 +2,7 @@ import numpy as np
 from numpy.testing import assert_array_equal
 
 from summer.model import StratifiedModel
-from autumn.constants import Flow, Compartment, BirthApproach
+from summer.constants import Flow, BirthApproach
 from summer.model.derived_outputs import (
     DerivedOutputCalculator,
     InfectionDeathFlowOutput,

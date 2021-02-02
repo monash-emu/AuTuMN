@@ -1,4 +1,4 @@
-from autumn.constants import Flow
+from summer.constants import Flow
 from apps.tuberculosis.constants import Compartment
 from .latency import get_unstratified_parameter_values
 from autumn.curve import scale_up_function, tanh_based_scaleup
@@ -171,9 +171,7 @@ def process_unstratified_parameter_values(params, implement_acf, implement_ltbi_
     for latency_stage in ["early", "late"]:
         param_name = f"{latency_stage}_activation_rate"
         for key in params["age_specific_latency"][param_name]:
-            params["age_specific_latency"][param_name][key] *= params[
-                "progression_multiplier"
-            ]
+            params["age_specific_latency"][param_name][key] *= params["progression_multiplier"]
     # load unstratified latency parameters
     params = get_unstratified_parameter_values(params)
 
@@ -197,17 +195,20 @@ def process_unstratified_parameter_values(params, implement_acf, implement_ltbi_
         scaleup_screening_prop = scale_up_function(
             x=[params["hh_contacts_pt"]["start_time"], params["hh_contacts_pt"]["start_time"] + 1],
             y=[0, params["hh_contacts_pt"]["prop_hh_contacts_screened"]],
-            method=4
+            method=4,
         )
 
         def make_contact_rate_func(raw_contact_rate_value):
             def contact_rate_func(t):
-                rel_reduction = params["hh_contacts_pt"]["prop_smearpos_among_prev_tb"] *\
-                                params["hh_contacts_pt"]["prop_hh_transmission"] *\
-                                scaleup_screening_prop(t) *\
-                                params["ltbi_screening_sensitivity"] *\
-                                params["hh_contacts_pt"]["prop_pt_completion"]
+                rel_reduction = (
+                    params["hh_contacts_pt"]["prop_smearpos_among_prev_tb"]
+                    * params["hh_contacts_pt"]["prop_hh_transmission"]
+                    * scaleup_screening_prop(t)
+                    * params["ltbi_screening_sensitivity"]
+                    * params["hh_contacts_pt"]["prop_pt_completion"]
+                )
                 return raw_contact_rate_value * (1 - rel_reduction)
+
             return contact_rate_func
 
         for suffix in ["", "_from_latent", "_from_recovered"]:

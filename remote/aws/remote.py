@@ -4,7 +4,7 @@ import logging
 
 from fabric import Connection
 
-from autumn.remote import read_run_id, build_run_id
+from utils.runs import read_run_id, build_run_id
 
 logger = logging.getLogger(__name__)
 

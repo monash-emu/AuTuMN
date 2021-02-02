@@ -14,7 +14,7 @@ from autumn.plots.calibration.plots import get_epi_params
 from dash.utils import create_downloadable_csv
 from autumn.plots.utils import get_plot_text_dict
 
-from autumn.constants import Region
+from autumn.region import Region
 
 
 STANDARD_X_LIMITS = 153, 275
@@ -28,7 +28,8 @@ def plot_seroprevalence_by_age(
     mcmc_params: List[pd.DataFrame],
     targets: dict,
     app_name: str,
-    region: str,):
+    region: str,
+):
 
     n_columns = 2
     n_rows = 2
@@ -38,7 +39,7 @@ def plot_seroprevalence_by_age(
     i_row = 0
     i_col = 0
     for region in Region.PHILIPPINES_REGIONS:
-        calib_dir_path = calib_dir_path.replace('philippines', region)
+        calib_dir_path = calib_dir_path.replace("philippines", region)
         uncertainty_df = get_uncertainty_df(calib_dir_path, mcmc_tables, targets)
         # available_scenarios = uncertainty_df["scenario"].unique()
         # selected_scenario = st.sidebar.selectbox("Select scenario", available_scenarios, key=str())

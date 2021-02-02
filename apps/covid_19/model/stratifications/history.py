@@ -1,6 +1,5 @@
-from typing import List, Dict
+from typing import Dict
 
-import numpy as np
 from summer2 import Stratification, Multiply
 
 

@@ -1,6 +1,6 @@
 import logging
 
-from autumn.constants import Region
+from autumn.region import Region
 from autumn.calibration import Calibration
 from autumn.tool_kit.params import load_params, load_targets
 

@@ -2,17 +2,33 @@ from matplotlib import pyplot
 import os
 
 
-from autumn.constants import BASE_PATH
+from settings import BASE_PATH
 from autumn.db.load import load_uncertainty_table
-from autumn.plots.uncertainty.plots import _plot_uncertainty, _get_target_values, _plot_targets_to_axis
+from autumn.plots.uncertainty.plots import (
+    _plot_uncertainty,
+    _get_target_values,
+    _plot_targets_to_axis,
+)
 from autumn.plots.utils import COLORS
 from autumn.tool_kit.params import load_targets
 
-from apps.tuberculosis.regions.marshall_islands.outputs.utils import OUTPUT_TITLES, save_figure, get_format, make_output_directories
+from apps.tuberculosis.regions.marshall_islands.outputs.utils import (
+    OUTPUT_TITLES,
+    save_figure,
+    get_format,
+    make_output_directories,
+)
 from apps.tuberculosis.regions.marshall_islands.calibrate import targets_to_use
 
 FIGURE_PATH = os.path.join(
-    BASE_PATH, "apps", "tuberculosis", "regions", "marshall_islands", "outputs", "figures", "calibration"
+    BASE_PATH,
+    "apps",
+    "tuberculosis",
+    "regions",
+    "marshall_islands",
+    "outputs",
+    "figures",
+    "calibration",
 )
 
 DATA_PATH = os.path.join(
@@ -38,11 +54,10 @@ def plot_model_fits(uncertainty_df):
     widths = [panel_w] * n_col
     heights = [panel_h] * n_row
     fig = pyplot.figure(constrained_layout=True, figsize=(sum(widths), sum(heights)))  # (w, h)
-    spec = fig.add_gridspec(ncols=n_col, nrows=n_row, width_ratios=widths,
-                            height_ratios=heights)
+    spec = fig.add_gridspec(ncols=n_col, nrows=n_row, width_ratios=widths, height_ratios=heights)
 
     # load targets
-    targets = load_targets('tuberculosis', 'marshall_islands')
+    targets = load_targets("tuberculosis", "marshall_islands")
 
     x_low = 2010
     x_up = 2020
@@ -91,4 +106,3 @@ def plot_model_fits(uncertainty_df):
 
 if __name__ == "__main__":
     main()
-

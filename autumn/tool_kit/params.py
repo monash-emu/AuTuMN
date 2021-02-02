@@ -10,7 +10,7 @@ from copy import deepcopy
 from os import path
 import logging
 
-from autumn.constants import APPS_PATH, BASE_PATH
+from settings import APPS_PATH, BASE_PATH
 from autumn.tool_kit.utils import merge_dicts
 from autumn.secrets import check_hash
 

@@ -1,12 +1,9 @@
 import os
-from copy import deepcopy
 
 
-import pytest
 import numpy as np
 
 from autumn import db
-from autumn.db import Database
 from autumn.calibration import Calibration, CalibrationMode
 from autumn.calibration.utils import sample_starting_params_from_lhs, specify_missing_prior_params
 

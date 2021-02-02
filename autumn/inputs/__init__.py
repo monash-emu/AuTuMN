@@ -1,4 +1,4 @@
-from autumn.tool_kit import Timer
+from utils.timer import Timer
 
 from autumn.inputs.database import build_input_database
 from autumn.inputs.mobility.fetch import fetch_mobility_data

@@ -3,9 +3,15 @@ import copy
 import yaml
 
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
-from apps.covid_19.mixing_optimisation.mixing_opti import MODES, DURATIONS, OBJECTIVES, run_root_model, objective_function
+from apps.covid_19.mixing_optimisation.mixing_opti import (
+    MODES,
+    DURATIONS,
+    OBJECTIVES,
+    run_root_model,
+    objective_function,
+)
 from apps.covid_19.mixing_optimisation.write_scenarios import read_opti_outputs, read_decision_vars
-from autumn.constants import BASE_PATH
+from settings import BASE_PATH
 
 
 def main():
@@ -15,7 +21,12 @@ def main():
 
 def read_sensitivity_min_mix_res():
     file_path = os.path.join(
-        BASE_PATH, "apps", "covid_19", "mixing_optimisation", "sensitivity_analyses", "min_mixing_results.yml"
+        BASE_PATH,
+        "apps",
+        "covid_19",
+        "mixing_optimisation",
+        "sensitivity_analyses",
+        "min_mixing_results.yml",
     )
 
     with open(file_path, "r") as yaml_file:
@@ -42,10 +53,10 @@ def run_sensitivity_minimum_mixing(opti_output_filename="dummy_vars_for_test.csv
             for min_mixing in [0.10, 0.20, 0.30, 0.40, 0.50]:
                 modified_vars = copy.deepcopy(decision_vars)
                 modified_vars = [max([v, min_mixing]) for v in modified_vars]
-                print(f"evaluate objective for {country} | {duration} | {objective}: min_mixing={min_mixing}")
-                h, d, yoll = objective_function(
-                    modified_vars, root_model, mode, country, duration
+                print(
+                    f"evaluate objective for {country} | {duration} | {objective}: min_mixing={min_mixing}"
                 )
+                h, d, yoll = objective_function(modified_vars, root_model, mode, country, duration)
                 res_dict = {
                     "h": bool(h),
                     "d": float(d),
@@ -53,7 +64,12 @@ def run_sensitivity_minimum_mixing(opti_output_filename="dummy_vars_for_test.csv
                 }
                 results[country][duration][min_mixing] = res_dict
     file_path = os.path.join(
-        BASE_PATH, "apps", "covid_19", "mixing_optimisation", "sensitivity_analyses", "min_mixing_results.yml"
+        BASE_PATH,
+        "apps",
+        "covid_19",
+        "mixing_optimisation",
+        "sensitivity_analyses",
+        "min_mixing_results.yml",
     )
     with open(file_path, "w") as f:
         yaml.dump(results, f)
@@ -62,4 +78,3 @@ def run_sensitivity_minimum_mixing(opti_output_filename="dummy_vars_for_test.csv
 
 if __name__ == "__main__":
     main()
-

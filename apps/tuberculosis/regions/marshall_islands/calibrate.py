@@ -1,6 +1,6 @@
 import logging
 
-from autumn.constants import Region
+from autumn.region import Region
 from autumn.calibration import Calibration
 from autumn.tool_kit.params import load_params, load_targets
 from autumn.calibration.utils import add_dispersion_param_prior_for_gaussian
@@ -8,7 +8,6 @@ from autumn.calibration.utils import add_dispersion_param_prior_for_gaussian
 
 from apps.tuberculosis.model import build_model
 from apps.tuberculosis.calibration_utils import (
-    get_latency_priors_from_epidemics,
     get_natural_history_priors_from_cid,
 )
 
@@ -26,7 +25,7 @@ def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
         run_id,
         num_chains,
         region_name=Region.MARSHALL_ISLANDS,
-        initialisation_type=params["default"]["metropolis_initialisation"]
+        initialisation_type=params["default"]["metropolis_initialisation"],
     )
     calib.run_fitting_algorithm(
         run_mode="autumn_mcmc",
@@ -44,7 +43,7 @@ PRIORS = [
         "distribution": "uniform",
         "distri_params": [200, 800],
     },
-    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.2, 1.]},
+    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.2, 1.0]},
     {
         "param_name": "progression_multiplier",
         "distribution": "uniform",
@@ -78,7 +77,7 @@ PRIORS = [
     {
         "param_name": "extra_params.rr_progression_diabetes",
         "distribution": "uniform",
-        "distri_params": [2., 5.],
+        "distri_params": [2.0, 5.0],
     },
     {
         "param_name": "rr_infection_latent",
@@ -98,8 +97,8 @@ PRIORS = [
     {
         "param_name": "awareness_raising.relative_screening_rate",
         "distribution": "uniform",
-        "distri_params": [1., 1.5],
-    }
+        "distri_params": [1.0, 1.5],
+    },
 ]
 
 # Add uncertainty around natural history using our CID estimates

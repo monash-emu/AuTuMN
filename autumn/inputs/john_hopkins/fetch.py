@@ -7,7 +7,7 @@ from urllib.parse import urljoin
 
 import pandas as pd
 
-from autumn.constants import INPUT_DATA_PATH
+from settings import INPUT_DATA_PATH
 
 JH_DATA_DIR = os.path.join(INPUT_DATA_PATH, "john-hopkins")
 GITHUB_BASE_URL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/"

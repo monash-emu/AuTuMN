@@ -7,7 +7,7 @@ from summer2 import CompartmentalModel, Stratification, Multiply
 
 from autumn import inputs
 from autumn.mixing.mixing import create_assortative_matrix
-from autumn.constants import Region
+from autumn.region import Region
 
 from apps.covid_19.constants import Compartment, COMPARTMENTS
 from apps.covid_19.model.parameters import Parameters

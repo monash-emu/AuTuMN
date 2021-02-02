@@ -1,6 +1,3 @@
-import secrets
-
-
 class EC2InstanceType:
     r5_2xlarge = "r5.2xlarge"
     m5_2xlarge = "m5.2xlarge"

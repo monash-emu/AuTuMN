@@ -3,7 +3,7 @@ import copy
 from typing import List
 
 from summer.model import StratifiedModel
-from autumn.constants import Region
+from autumn.region import Region
 from autumn.tool_kit.scenarios import Scenario
 from autumn.tool_kit.params import update_params, merge_dicts
 from datetime import date, timedelta

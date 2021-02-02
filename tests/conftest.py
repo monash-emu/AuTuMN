@@ -14,7 +14,7 @@ import numpy as np
 from numpy.testing import assert_allclose
 
 
-from autumn import constants
+import settings
 from autumn.db import database
 from autumn.calibration import calibration
 
@@ -22,7 +22,7 @@ from .utils import in_memory_db_factory, get_deterministic_random_seed
 
 get_in_memory_db = in_memory_db_factory()
 
-APPROVAL_DIR = os.path.join(constants.DATA_PATH, "approvals")
+APPROVAL_DIR = os.path.join(settings.DATA_PATH, "approvals")
 IS_GITHUB_CI = os.environ.get("GITHUB_ACTION", False)
 
 
@@ -71,8 +71,8 @@ def temp_data_dir(monkeypatch, tmp_path):
     Automatically run at the start of every test run.
     """
     path_str = tmp_path.as_posix()
-    monkeypatch.setattr(constants, "DATA_PATH", path_str)
-    monkeypatch.setattr(constants, "OUTPUT_DATA_PATH", os.path.join(path_str, "outputs"))
+    monkeypatch.setattr(settings, "DATA_PATH", path_str)
+    monkeypatch.setattr(settings, "OUTPUT_DATA_PATH", os.path.join(path_str, "outputs"))
     return path_str
 
 

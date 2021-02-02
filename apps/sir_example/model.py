@@ -1,5 +1,4 @@
 from summer2 import CompartmentalModel
-from autumn.constants import Compartment
 
 
 def build_model(params: dict) -> CompartmentalModel:
@@ -7,38 +6,26 @@ def build_model(params: dict) -> CompartmentalModel:
     Build the master function to run a simple SIR model
     """
     # Define model compartments.
-    compartments = [
-        Compartment.SUSCEPTIBLE,
-        Compartment.INFECTIOUS,
-        Compartment.RECOVERED,
-    ]
+    compartments = ["S", "I", "R"]
 
     time = params["time"]
     model = CompartmentalModel(
         times=[time["start"], time["end"]],
         compartments=compartments,
-        infectious_compartments=[Compartment.INFECTIOUS],
+        infectious_compartments=["I"],
         timestep=time["step"],
     )
     model.set_initial_population(
         {
-            Compartment.INFECTIOUS: 1,
-            Compartment.SUSCEPTIBLE: 999999,
+            "I": 1,
+            "S": 999999,
         }
     )
     # Add flows
-    model.add_infection_frequency_flow(
-        "infection", params["contact_rate"], Compartment.SUSCEPTIBLE, Compartment.INFECTIOUS
-    )
-    model.add_fractional_flow(
-        "recovery", params["recovery_rate"], Compartment.INFECTIOUS, Compartment.RECOVERED
-    )
+    model.add_infection_frequency_flow("infection", params["contact_rate"], "S", "I")
+    model.add_fractional_flow("recovery", params["recovery_rate"], "I", "R")
 
     # Request derived outputs
-    model.request_output_for_compartments(
-        "prevalence_susceptible", compartments=[Compartment.SUSCEPTIBLE]
-    )
-    model.request_output_for_compartments(
-        "prevalence_infectious", compartments=[Compartment.INFECTIOUS]
-    )
+    model.request_output_for_compartments("prevalence_susceptible", compartments=["S"])
+    model.request_output_for_compartments("prevalence_infectious", compartments=["I"])
     return model

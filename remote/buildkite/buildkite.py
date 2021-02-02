@@ -5,7 +5,7 @@ import subprocess as sp
 
 import yaml
 
-from autumn.constants import DATA_PATH
+from settings import DATA_PATH
 
 
 logger = logging.getLogger(__name__)

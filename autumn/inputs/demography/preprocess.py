@@ -5,10 +5,10 @@ import os
 
 import pandas as pd
 
-from autumn import constants
 from autumn.db import Database
+from settings import INPUT_DATA_PATH
 
-POP_DIRPATH = os.path.join(constants.INPUT_DATA_PATH, "world-population")
+POP_DIRPATH = os.path.join(INPUT_DATA_PATH, "world-population")
 
 
 def preprocess_demography(input_db: Database):

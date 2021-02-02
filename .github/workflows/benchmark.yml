@@ -23,7 +23,7 @@ jobs:
         env:
           AUTUMN_PASSWORD: ${{ secrets.AUTUMN_PASSWORD }}
       - name: Run benchmark tests
-        run: pytest --workers 2 -W ignore -vv -m benchmark --benchmark-json benchmark.json
+        run: pytest -W ignore -vv -m benchmark --benchmark-json benchmark.json
       - name: Store benchmark result
         uses: rhysd/github-action-benchmark@v1
         with:

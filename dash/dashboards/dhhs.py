@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from autumn import plots
-from autumn.constants import Region
+from autumn.region import Region
 from autumn.plots.plotter import StreamlitPlotter
 from apps import covid_19
 

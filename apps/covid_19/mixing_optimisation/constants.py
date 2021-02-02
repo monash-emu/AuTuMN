@@ -1,4 +1,4 @@
-from autumn.constants import Region
+from autumn.region import Region
 
 # Please keep this code in place
 OPTI_REGIONS = [

@@ -6,7 +6,7 @@ from typing import List, Optional, Dict, Any, Union
 from pydantic import BaseModel, validator, root_validator
 from pydantic.dataclasses import dataclass
 
-from apps.covid_19.constants import BASE_DATE, BASE_DATETIME
+from apps.covid_19.constants import BASE_DATE
 
 
 class Time(BaseModel):

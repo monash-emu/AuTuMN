@@ -1,6 +1,6 @@
 from copy import deepcopy
 from summer.model import StratifiedModel
-from autumn.constants import Compartment, BirthApproach, Flow
+from summer.constants import Compartment, BirthApproach
 from autumn.tool_kit.scenarios import get_model_times_from_inputs
 from autumn.tool_kit.demography import set_model_time_variant_birth_rate
 

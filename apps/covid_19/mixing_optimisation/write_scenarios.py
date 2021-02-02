@@ -11,7 +11,7 @@ from apps.covid_19.mixing_optimisation.mixing_opti import (
 )
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
 from apps.covid_19.mixing_optimisation.utils import get_scenario_mapping
-from autumn.constants import BASE_PATH
+from settings import BASE_PATH
 
 
 """
@@ -51,13 +51,14 @@ Create dictionaries to define the optimised scenarios
 """
 
 
-def build_optimised_scenario_dictionary(country, sc_idx, decision_vars, scenario_mapping, final_mixing=1.0,
-                                        for_waning_immunity=False):
+def build_optimised_scenario_dictionary(
+    country, sc_idx, decision_vars, scenario_mapping, final_mixing=1.0, for_waning_immunity=False
+):
     # read settings associated with scenario sc_idx
     if sc_idx == max(list(scenario_mapping.keys())):  # this is the unmitigated scenario
         duration = DURATIONS[0]  # does not matter but needs to be defined
         mode = MODES[0]
-    elif for_waning_immunity: # this is an optimised scenario for the waning immunity analyses
+    elif for_waning_immunity:  # this is an optimised scenario for the waning immunity analyses
         duration = scenario_mapping[sc_idx]["duration"]
         mode = MODES[0]
     else:  # this is an optimised scenario
@@ -66,7 +67,7 @@ def build_optimised_scenario_dictionary(country, sc_idx, decision_vars, scenario
 
     # need to fetch elderly mixing reduction parameter
     app_region = covid_19.app.get_region(country)
-    elderly_mixing_reduction = app_region.params['default']['elderly_mixing_reduction']
+    elderly_mixing_reduction = app_region.params["default"]["elderly_mixing_reduction"]
 
     sc_params = build_params_for_phases_2_and_3(
         decision_vars, elderly_mixing_reduction, duration, mode, final_mixing

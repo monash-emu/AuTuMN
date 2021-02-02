@@ -1,12 +1,19 @@
 import os
 
-from autumn.constants import BASE_PATH
+from settings import BASE_PATH
 from autumn.db.load import load_uncertainty_table
 
-from apps.tuberculosis.regions.marshall_islands.outputs.utils import OUTPUT_TITLES, REGION_TITLES, save_figure, get_format, make_output_directories
+from apps.tuberculosis.regions.marshall_islands.outputs.utils import make_output_directories
 
 FIGURE_PATH = os.path.join(
-    BASE_PATH, "apps", "tuberculosis", "regions", "marshall_islands", "outputs", "figures", "output_numbers"
+    BASE_PATH,
+    "apps",
+    "tuberculosis",
+    "regions",
+    "marshall_islands",
+    "outputs",
+    "figures",
+    "output_numbers",
 )
 
 DATA_PATH = os.path.join(
@@ -38,7 +45,7 @@ def main():
     print()
     print("Diabetes scenarios")
     for scenario in [7, 8]:
-        print_median_and_ci(uncertainty_df, 'incidence', 2050, scenario)
+        print_median_and_ci(uncertainty_df, "incidence", 2050, scenario)
 
     # PT in all contacts
     print()

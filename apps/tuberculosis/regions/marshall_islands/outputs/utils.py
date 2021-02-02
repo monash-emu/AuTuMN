@@ -1,6 +1,6 @@
 import os
 from matplotlib import pyplot
-from autumn.constants import BASE_PATH
+from settings import BASE_PATH
 
 OUTPUT_TITLES = {
     "incidence": "TB incidence (/100,000/y)",
@@ -24,7 +24,7 @@ REGION_TITLES = {
 INTERVENTION_TITLES = {
     "ACF": "Community-wide ACF",
     "ACF_LTBI": "Community-wide ACF and\npreventive treatment",
-    "hh_pt": "Preventive treatment\nfor all contacts"
+    "hh_pt": "Preventive treatment\nfor all contacts",
 }
 
 

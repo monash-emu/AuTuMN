@@ -1,14 +1,12 @@
 import os
-import sys
 import logging
-import subprocess as sp
 import pprint
 
 import click
 
-from autumn.constants import Region
+from autumn.region import Region
 from remote.aws import cli as aws
-from autumn.remote import read_run_id
+from utils.runs import read_run_id
 
 from .buildkite import trigger_pipeline
 from .pipelines import (

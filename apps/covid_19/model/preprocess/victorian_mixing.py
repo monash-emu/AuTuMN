@@ -10,7 +10,7 @@ from numba.typed import List as NumbaList
 import numpy as np
 from summer.model import StratifiedModel
 
-from autumn.constants import Region
+from autumn.region import Region
 from apps.covid_19.model.preprocess.mixing_matrix import build_dynamic_mixing_matrix
 
 

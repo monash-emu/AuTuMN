@@ -20,7 +20,7 @@ from apps.covid_19.mixing_optimisation.outputs.plots.outputs.rainbows import (
     apply_scenario_mask,
 )
 
-from autumn.constants import BASE_PATH
+from settings import BASE_PATH
 from autumn.db.load import load_derived_output_tables, find_db_paths
 from autumn.db import Database
 

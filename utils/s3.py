@@ -6,7 +6,7 @@ import boto3
 from boto3.s3.transfer import TransferConfig
 from botocore.exceptions import ProfileNotFound
 
-from . import settings
+import settings
 
 logger = logging.getLogger(__name__)
 

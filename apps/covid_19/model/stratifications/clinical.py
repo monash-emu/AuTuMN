@@ -1,5 +1,3 @@
-from typing import List
-
 import numpy as np
 
 from summer2 import Stratification, Multiply, Overwrite

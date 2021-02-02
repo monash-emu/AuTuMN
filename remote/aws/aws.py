@@ -9,7 +9,7 @@ from botocore.exceptions import ProfileNotFound
 import timeago
 from tabulate import tabulate
 
-from . import settings
+import settings
 
 logger = logging.getLogger(__name__)
 

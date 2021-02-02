@@ -3,7 +3,7 @@ import os
 import datetime
 import json
 
-from autumn.constants import Region
+from autumn.region import Region
 from apps.covid_19.mixing_optimisation.utils import get_weekly_summed_targets
 
 

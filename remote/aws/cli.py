@@ -11,7 +11,7 @@ from invoke.exceptions import UnexpectedExit
 
 from . import aws
 from . import remote
-from .settings import EC2InstanceType, EC2_INSTANCE_SPECS
+from settings import EC2InstanceType, EC2_INSTANCE_SPECS
 
 logger = logging.getLogger(__name__)
 

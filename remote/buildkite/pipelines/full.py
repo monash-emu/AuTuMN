@@ -4,7 +4,6 @@ from remote.buildkite.buildkite import (
     InputStep,
     TextInputField,
     BooleanInputField,
-    SelectInputField,
 )
 
 

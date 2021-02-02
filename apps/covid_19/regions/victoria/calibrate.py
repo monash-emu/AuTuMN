@@ -1,7 +1,7 @@
 import numpy as np
 
 from apps.covid_19.calibration import provide_default_calibration_params, get_truncated_output
-from autumn.constants import Region
+from autumn.region import Region
 from autumn.tool_kit.params import load_targets
 from autumn.calibration.utils import add_dispersion_param_prior_for_gaussian
 from apps.covid_19 import calibration as base

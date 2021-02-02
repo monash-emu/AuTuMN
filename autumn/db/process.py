@@ -7,7 +7,7 @@ from typing import List
 import pandas as pd
 import numpy as np
 
-from autumn.remote import read_run_id
+from utils.runs import read_run_id
 from autumn.tool_kit.params import load_targets, load_params
 from autumn.db.database import get_database, BaseDatabase
 

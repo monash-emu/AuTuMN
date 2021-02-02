@@ -2,8 +2,6 @@ from remote.buildkite.buildkite import (
     Pipeline,
     CommandStep,
     InputStep,
-    TextInputField,
-    SelectInputField,
 )
 
 from .calibrate import chains_field, branch_field, runtime_field, trigger_field, spot_field

@@ -4,20 +4,23 @@ import shutil
 
 import pandas as pd
 
-from autumn.inputs import build_input_database
-from autumn.tool_kit import Timer
 from autumn import db
+from autumn.inputs import build_input_database
 from autumn.db.database import get_database
 from autumn.tool_kit.params import update_params
 from autumn.tool_kit.scenarios import Scenario, calculate_differential_outputs
-
-from tasks import utils, settings
+from utils.s3 import list_s3, download_from_run_s3, upload_to_run_s3
+from utils.parallel import run_parallel_tasks
+from utils.timer import Timer
+from settings import REMOTE_BASE_DIR
+from tasks.utils import get_app_region
 from tasks.calibrate import CALIBRATE_DATA_DIR
+
 
 logger = logging.getLogger(__name__)
 
 
-FULL_RUN_DATA_DIR = os.path.join(settings.BASE_DIR, "data", "full_model_runs")
+FULL_RUN_DATA_DIR = os.path.join(REMOTE_BASE_DIR, "data", "full_model_runs")
 
 
 def full_model_run_task(run_id: str, burn_in: int, quiet: bool):
@@ -32,13 +35,13 @@ def full_model_run_task(run_id: str, burn_in: int, quiet: bool):
         os.makedirs(FULL_RUN_DATA_DIR)
 
     # Find the calibration chain databases in AWS S3.
-    key_prefix = os.path.join(run_id, os.path.relpath(CALIBRATE_DATA_DIR, settings.BASE_DIR))
-    chain_db_keys = utils.list_s3(key_prefix, key_suffix=".feather")
+    key_prefix = os.path.join(run_id, os.path.relpath(CALIBRATE_DATA_DIR, REMOTE_BASE_DIR))
+    chain_db_keys = list_s3(key_prefix, key_suffix=".feather")
 
     # Download the calibration chain databases.
     with Timer(f"Downloading calibration data"):
         args_list = [(run_id, src_key, quiet) for src_key in chain_db_keys]
-        utils.run_parallel_tasks(utils.download_from_run_s3, args_list)
+        run_parallel_tasks(download_from_run_s3, args_list)
 
     # Run the models for the full time period plus all scenarios for each accepted parameter
     # set, while also applying burn-in.
@@ -50,13 +53,13 @@ def full_model_run_task(run_id: str, burn_in: int, quiet: bool):
             (run_id, db_path, chain_id, burn_in, quiet)
             for chain_id, db_path in zip(chain_ids, db_paths)
         ]
-        chain_ids = utils.run_parallel_tasks(run_full_model_for_chain, args_list)
+        chain_ids = run_parallel_tasks(run_full_model_for_chain, args_list)
 
     # Upload the full model run outputs of AWS S3.
     db_paths = db.load.find_db_paths(FULL_RUN_DATA_DIR)
     with Timer(f"Uploading full model run data to AWS S3"):
         args_list = [(run_id, db_path, quiet) for db_path in db_paths]
-        utils.run_parallel_tasks(utils.upload_to_run_s3, args_list)
+        run_parallel_tasks(upload_to_run_s3, args_list)
 
 
 def run_full_model_for_chain(
@@ -65,7 +68,7 @@ def run_full_model_for_chain(
     if quiet:
         logging.disable(logging.INFO)
 
-    app_region = utils.get_app_region(run_id)
+    app_region = get_app_region(run_id)
     dest_db_path = os.path.join(FULL_RUN_DATA_DIR, f"chain-{chain_id}")
     logger.info(
         f"Running {app_region.app_name} {app_region.region_name} full model with burn-in of {burn_in}s"

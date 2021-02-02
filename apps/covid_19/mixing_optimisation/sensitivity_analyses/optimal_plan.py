@@ -4,10 +4,16 @@ import copy
 import yaml
 
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
-from apps.covid_19.mixing_optimisation.mixing_opti import MODES, DURATIONS, OBJECTIVES, run_root_model, objective_function
+from apps.covid_19.mixing_optimisation.mixing_opti import (
+    MODES,
+    DURATIONS,
+    OBJECTIVES,
+    run_root_model,
+    objective_function,
+)
 from apps.covid_19.mixing_optimisation.utils import get_country_population_size
 from apps.covid_19.mixing_optimisation.write_scenarios import read_opti_outputs, read_decision_vars
-from autumn.constants import BASE_PATH
+from settings import BASE_PATH
 
 
 def main():
@@ -26,7 +32,15 @@ def main():
                         print()
                         print()
                         print(
-                            country + " " + objective + " " + mode + " " + str(duration) + " " + direction
+                            country
+                            + " "
+                            + objective
+                            + " "
+                            + mode
+                            + " "
+                            + str(duration)
+                            + " "
+                            + direction
                         )
                         run_sensitivity_perturbations(
                             opti_outputs_df,
@@ -58,7 +72,12 @@ def evaluate_extra_deaths(
     else:
         tested_decision_vars[i] -= extra_contribution
     h, this_d, this_yoll = objective_function(
-        tested_decision_vars, root_model, mode, country, duration, called_from_sensitivity_analysis=True
+        tested_decision_vars,
+        root_model,
+        mode,
+        country,
+        duration,
+        called_from_sensitivity_analysis=True,
     )
     this_objective = {"deaths": this_d, "yoll": this_yoll}
 
@@ -162,7 +181,11 @@ def run_sensitivity_perturbations(
         print(best_solution)
 
     output_file_path = os.path.join(
-        BASE_PATH, "apps", "covid_19", "mixing_optimisation", "optimised_variables",
+        BASE_PATH,
+        "apps",
+        "covid_19",
+        "mixing_optimisation",
+        "optimised_variables",
         "optimal_plan_sensitivity",
         country + "_" + mode + "_" + duration + "_" + objective + "_" + direction + ".yml",
     )

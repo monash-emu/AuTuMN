@@ -3,11 +3,11 @@ import os
 from autumn.db import Database
 
 from .fetch import MOBILITY_CSV_PATH
-from autumn import constants
+from settings import INPUT_DATA_PATH
 
 NAN = float("nan")
 MOBILITY_SUFFIX = "_percent_change_from_baseline"
-MOBILITY_DIRPATH = os.path.join(constants.INPUT_DATA_PATH, "mobility")
+MOBILITY_DIRPATH = os.path.join(INPUT_DATA_PATH, "mobility")
 MOBILITY_LGA_PATH = os.path.join(
     MOBILITY_DIRPATH, "LGA to Cluster mapping dictionary with proportions.csv"
 )

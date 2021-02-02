@@ -40,14 +40,14 @@ logging.getLogger("boto3").setLevel(logging.WARNING)
 logging.getLogger("botocore").setLevel(logging.WARNING)
 logging.getLogger("nose").setLevel(logging.WARNING)
 
-from .settings import BASE_DIR
+from settings import REMOTE_BASE_DIR
 from .calibrate import calibrate_task
 from .full import full_model_run_task
 from .powerbi import powerbi_task
 from .dhhs import dhhs_task
 
-
-os.makedirs(BASE_DIR, exist_ok=True)
+# Side effects yay!
+os.makedirs(REMOTE_BASE_DIR, exist_ok=True)
 
 
 @click.group()

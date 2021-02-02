@@ -2,16 +2,29 @@ from matplotlib import pyplot
 import os
 
 
-from autumn.constants import BASE_PATH
+from settings import BASE_PATH
 from autumn.db.load import load_uncertainty_table
 from autumn.plots.uncertainty.plots import _plot_uncertainty
 from autumn.plots.utils import COLORS, _apply_transparency
 
-from apps.tuberculosis.regions.marshall_islands.outputs.utils import OUTPUT_TITLES, INTERVENTION_TITLES, save_figure, get_format, make_output_directories
+from apps.tuberculosis.regions.marshall_islands.outputs.utils import (
+    OUTPUT_TITLES,
+    INTERVENTION_TITLES,
+    save_figure,
+    get_format,
+    make_output_directories,
+)
 
 
 FIGURE_PATH = os.path.join(
-    BASE_PATH, "apps", "tuberculosis", "regions", "marshall_islands", "outputs", "figures", "elimination"
+    BASE_PATH,
+    "apps",
+    "tuberculosis",
+    "regions",
+    "marshall_islands",
+    "outputs",
+    "figures",
+    "elimination",
 )
 
 DATA_PATH = os.path.join(
@@ -21,17 +34,14 @@ DATA_PATH = os.path.join(
 end_tb_targets = {
     "mortality": {
         2025: 43.25,  # 75% reduction compared to 2015 (173)
-        2035: 8.65   # 95% reduction compared to 2015 (173)
+        2035: 8.65,  # 95% reduction compared to 2015 (173)
     },
     "incidence": {
         2025: 253.5,  # 50% reduction compared to 2015 (507)
-        2035: 50.7  # 90% reduction compared to 2015 (507)
-    }
+        2035: 50.7,  # 90% reduction compared to 2015 (507)
+    },
 }
-target_colours = {
-    2025: "limegreen",
-    2035: "green"
-}
+target_colours = {2025: "limegreen", 2035: "green"}
 
 
 def main():
@@ -45,21 +55,9 @@ def main():
 def plot_elimination(uncertainty_df, is_logscale=False):
 
     interventions = ["ACF", "ACF_LTBI", "hh_pt"]
-    scenario_idxs = {
-        "ACF": [0, 4, 3],
-        "ACF_LTBI": [0, 6, 5],
-        "hh_pt": [0, 9]
-    }
-    colors_idx = {
-        "ACF": [0, 7, 1],
-        "ACF_LTBI": [0, 7, 1],
-        "hh_pt": [0, 4]
-    }
-    alphas = {
-        "ACF": [1., .8, .7],
-        "ACF_LTBI": [1., .8, .7],
-        "hh_pt": [1., .7]
-    }
+    scenario_idxs = {"ACF": [0, 4, 3], "ACF_LTBI": [0, 6, 5], "hh_pt": [0, 9]}
+    colors_idx = {"ACF": [0, 7, 1], "ACF_LTBI": [0, 7, 1], "hh_pt": [0, 4]}
+    alphas = {"ACF": [1.0, 0.8, 0.7], "ACF_LTBI": [1.0, 0.8, 0.7], "hh_pt": [1.0, 0.7]}
 
     if is_logscale:
         outputs = ["incidence", "mortality"]
@@ -71,19 +69,25 @@ def plot_elimination(uncertainty_df, is_logscale=False):
     widths = [panel_w] * len(interventions)
     heights = [0.5] + [panel_h] * len(outputs)
     fig = pyplot.figure(constrained_layout=True, figsize=(sum(widths), sum(heights)))  # (w, h)
-    spec = fig.add_gridspec(ncols=len(interventions), nrows=len(outputs) + 1, width_ratios=widths,
-                            height_ratios=heights)
+    spec = fig.add_gridspec(
+        ncols=len(interventions), nrows=len(outputs) + 1, width_ratios=widths, height_ratios=heights
+    )
 
     for j, intervention in enumerate(interventions):
         ax = fig.add_subplot(spec[0, j])
         ax.text(
-            0.5, 0.5, INTERVENTION_TITLES[intervention],  horizontalalignment='center', verticalalignment='center', fontsize=20
+            0.5,
+            0.5,
+            INTERVENTION_TITLES[intervention],
+            horizontalalignment="center",
+            verticalalignment="center",
+            fontsize=20,
         )
         ax.set_xlim((0, 1))
         ax.set_ylim((0, 1))
         ax.axis("off")
         for i, output in enumerate(outputs):
-            ax = fig.add_subplot(spec[i+1, j])
+            ax = fig.add_subplot(spec[i + 1, j])
             sc_colors = [COLORS[h] for h in colors_idx[intervention]]
             sc_colors = _apply_transparency(sc_colors, alphas[intervention])
 
@@ -98,7 +102,7 @@ def plot_elimination(uncertainty_df, is_logscale=False):
                     x_low,
                     sc_colors[k],
                     start_quantile=1,
-                    zorder=k+1,
+                    zorder=k + 1,
                 )
             if j == 0:
                 ax.set_ylabel(OUTPUT_TITLES[output], fontsize=20)
@@ -112,7 +116,7 @@ def plot_elimination(uncertainty_df, is_logscale=False):
 
             if is_logscale:
                 ax.set_yscale("log")
-                ax.set_ylim((10**-3, 10**3))
+                ax.set_ylim((10 ** -3, 10 ** 3))
                 if output == "incidence":
                     ax.hlines(y=1, xmin=2015, xmax=2050, colors="black", linestyle="dashed")
                     ax.text(2016, 0.6, "pre-elimination threshold", fontsize=12)
@@ -127,4 +131,3 @@ def plot_elimination(uncertainty_df, is_logscale=False):
 
 if __name__ == "__main__":
     main()
-

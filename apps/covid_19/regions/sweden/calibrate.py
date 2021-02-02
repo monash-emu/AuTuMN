@@ -1,5 +1,5 @@
 from apps.covid_19 import calibration as base
-from autumn.constants import Region
+from autumn.region import Region
 
 country = Region.SWEDEN
 TARGET_OUTPUTS, PAR_PRIORS = base.get_targets_and_priors_for_opti(country)

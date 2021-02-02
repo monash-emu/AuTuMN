@@ -2,7 +2,6 @@ import numpy as np
 from autumn.inputs.owid.queries import get_international_testing_numbers
 from autumn.inputs.covid_au.queries import get_dhhs_testing_numbers
 from autumn.curve import scale_up_function
-from autumn import inputs
 from autumn.tool_kit.utils import apply_moving_average
 from autumn.inputs.covid_phl.queries import get_phl_subregion_testing_numbers
 
@@ -32,12 +31,12 @@ def create_cdr_function(assumed_tests: int, assumed_cdr: float):
 
 
 def find_cdr_function_from_test_data(
-        assumed_tests_parameter,
-        assumed_cdr_parameter,
-        smoothing_period,
-        country_iso3,
-        total_pops,
-        subregion=None,
+    assumed_tests_parameter,
+    assumed_cdr_parameter,
+    smoothing_period,
+    country_iso3,
+    total_pops,
+    subregion=None,
 ):
 
     # Get the appropriate testing data

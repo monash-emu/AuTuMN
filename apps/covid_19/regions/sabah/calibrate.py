@@ -1,4 +1,4 @@
-from autumn.constants import Region
+from autumn.region import Region
 from apps.covid_19 import calibration as base
 from apps.covid_19.calibration import provide_default_calibration_params
 from autumn.calibration.utils import add_dispersion_param_prior_for_gaussian

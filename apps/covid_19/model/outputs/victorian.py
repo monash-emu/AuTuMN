@@ -3,11 +3,10 @@ import numpy as np
 
 from summer2 import CompartmentalModel
 
-from autumn.constants import Region
+from autumn.region import Region
 
 from apps.covid_19.model.parameters import Parameters
 from apps.covid_19.constants import Compartment, Clinical, NOTIFICATION_STRATA
-from apps.covid_19.model.stratifications.clinical import CLINICAL_STRATA
 
 
 def request_victorian_outputs(model: CompartmentalModel, params: Parameters):

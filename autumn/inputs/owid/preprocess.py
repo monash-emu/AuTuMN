@@ -2,10 +2,10 @@ import pandas as pd
 import os
 import numpy as np
 
-from autumn import constants
+from settings import INPUT_DATA_PATH
 from autumn.db import Database
 
-OUR_WORLD_IN_DATA_DIRPATH = os.path.join(constants.INPUT_DATA_PATH, "owid")
+OUR_WORLD_IN_DATA_DIRPATH = os.path.join(INPUT_DATA_PATH, "owid")
 OUR_WORLD_IN_DATA_CSV_PATH = os.path.join(OUR_WORLD_IN_DATA_DIRPATH, "owid-covid-data.csv")
 
 

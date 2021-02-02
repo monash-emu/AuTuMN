@@ -6,9 +6,9 @@ import logging
 import yaml
 from datetime import datetime
 
-from autumn import constants
+from settings import OUTPUT_DATA_PATH
 from autumn import db
-from autumn.tool_kit.timer import Timer
+from utils.timer import Timer
 from autumn.tool_kit.scenarios import Scenario
 from autumn.tool_kit.params import load_params, load_targets
 from autumn.tool_kit.utils import (
@@ -61,9 +61,7 @@ class AppRegion:
         params = self.params
 
         # Ensure project folder exists.
-        project_dir = os.path.join(
-            constants.OUTPUT_DATA_PATH, "run", self.app_name, self.region_name
-        )
+        project_dir = os.path.join(OUTPUT_DATA_PATH, "run", self.app_name, self.region_name)
         timestamp = datetime.now().strftime("%Y-%m-%d--%H-%M-%S")
         output_dir = os.path.join(project_dir, timestamp)
         os.makedirs(output_dir, exist_ok=True)

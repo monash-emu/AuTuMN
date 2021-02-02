@@ -4,16 +4,33 @@ import pandas as pd
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS, PHASE_2_START_TIME
 from apps.covid_19.mixing_optimisation.mixing_opti import MODES, DURATIONS
 from apps.covid_19.mixing_optimisation.utils import get_scenario_mapping_reverse
-from autumn.constants import BASE_PATH
+from settings import BASE_PATH
 from autumn.db.load import load_uncertainty_table
 from apps.covid_19.mixing_optimisation.utils import get_country_population_size
 
 
-FIGURE_PATH = os.path.join(BASE_PATH, "apps", "covid_19", "mixing_optimisation",
-                           "outputs", "plots", "outputs", "figures", "tables")
+FIGURE_PATH = os.path.join(
+    BASE_PATH,
+    "apps",
+    "covid_19",
+    "mixing_optimisation",
+    "outputs",
+    "plots",
+    "outputs",
+    "figures",
+    "tables",
+)
 
-DATA_PATH = os.path.join(BASE_PATH, "apps", "covid_19", "mixing_optimisation",
-                         "outputs", "pbi_databases", "calibration_and_scenarios", "full_immunity")
+DATA_PATH = os.path.join(
+    BASE_PATH,
+    "apps",
+    "covid_19",
+    "mixing_optimisation",
+    "outputs",
+    "pbi_databases",
+    "calibration_and_scenarios",
+    "full_immunity",
+)
 
 
 who_deaths = {
@@ -62,6 +79,7 @@ def get_quantile(output_df, sc_idx, quantile):
 
 
 def get_uncertainty_cell_value(country, uncertainty_df, output, mode, duration, per_capita=False, population=None):
+
     # output is in ["deaths_before", "deaths_unmitigated", "deaths_opti_deaths", "deaths_opti_yoll",
     #                "yoll_before", "yoll_unmitigated", "yoll_opti_deaths", "yoll_opti_yoll"]
 
@@ -117,15 +135,19 @@ def get_uncertainty_cell_value(country, uncertainty_df, output, mode, duration, 
         val_975 += get_quantile(output_df, 0, 0.975)
 
     if per_capita:
-        multiplier = {"accum_deaths": 1.e6 / population, "accum_years_of_life_lost": 1.e4 / population,
-                      "proportion_seropositive": 100}
-        rounding = {"accum_deaths": 0, "accum_years_of_life_lost": 0,
-                    "proportion_seropositive": 0}
+        multiplier = {
+            "accum_deaths": 1.0e6 / population,
+            "accum_years_of_life_lost": 1.0e4 / population,
+            "proportion_seropositive": 100,
+        }
+        rounding = {"accum_deaths": 0, "accum_years_of_life_lost": 0, "proportion_seropositive": 0}
     if not per_capita:
-        multiplier = {"accum_deaths": 1.0 / 1000.0, "accum_years_of_life_lost": 1.0 / 1000.0,
-                      "proportion_seropositive": 100}
-        rounding = {"accum_deaths": 1, "accum_years_of_life_lost": 0,
-                    "proportion_seropositive": 0}
+        multiplier = {
+            "accum_deaths": 1.0 / 1000.0,
+            "accum_years_of_life_lost": 1.0 / 1000.0,
+            "proportion_seropositive": 100,
+        }
+        rounding = {"accum_deaths": 1, "accum_years_of_life_lost": 0, "proportion_seropositive": 0}
 
     # read the percentile
     median = round(multiplier[type] * val_50, rounding[type])
@@ -197,7 +219,7 @@ def print_who_deaths_per_capita(by="october"):
     for country in ["belgium", "france", "italy", "spain", "sweden", "united-kingdom"]:
         country_name = country.title() if country != "united-kingdom" else "United Kingdom"
         pop = get_country_population_size(country_name)
-        print(int(deaths_thousands[country]*1000/pop*1.e6))
+        print(int(deaths_thousands[country] * 1000 / pop * 1.0e6))
 
 
 def make_main_outputs_tables_new_messaging(uncertainty_dfs, per_capita=False):

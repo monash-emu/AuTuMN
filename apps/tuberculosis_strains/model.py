@@ -5,10 +5,10 @@ from summer2 import (
     Stratification,
     Multiply,
 )
-from autumn.constants import Compartment
 from autumn.inputs import get_population_by_agegroup, get_death_rates_by_agegroup
 from autumn.inputs.social_mixing.queries import get_mixing_matrix_specific_agegroups
 from autumn.curve import scale_up_function
+from .constants import Compartment
 
 
 COMPARTMENTS = [

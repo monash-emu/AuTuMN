@@ -4,19 +4,19 @@ from datetime import datetime, timedelta
 import shutil
 
 import numpy as np
-
-from autumn import db
-from autumn.constants import Region
-from autumn.db.database import Database
-from autumn.tool_kit.params import load_targets
-from autumn.tool_kit import Timer
 import pandas as pd
 
-from . import utils
-from . import settings
+from autumn import db
+from autumn.region import Region
+from autumn.db.database import Database
+from autumn.tool_kit.params import load_targets
+from utils.timer import Timer
+from utils.parallel import run_parallel_tasks
+from utils.s3 import list_s3, upload_s3, download_from_s3
+from settings import REMOTE_BASE_DIR
 
 
-DHHS_DATA_DIR = os.path.join(settings.BASE_DIR, "dhhs")
+DHHS_DATA_DIR = os.path.join(REMOTE_BASE_DIR, "dhhs")
 DHHS_POWERBI_DATA_DIR = os.path.join(DHHS_DATA_DIR, "powerbi")
 DHHS_FULL_RUN_DATA_DIR = os.path.join(DHHS_DATA_DIR, "full")
 
@@ -54,13 +54,13 @@ def dhhs_task(commit: str, quiet: bool):
     # Download all PowerBI databases.
     with Timer(f"Downloading PowerBI databases"):
         args_list = [(src_key, quiet) for src_key in vic_powerbi_db_keys]
-        utils.run_parallel_tasks(download_powerbi_db_from_s3, args_list)
+        run_parallel_tasks(download_powerbi_db_from_s3, args_list)
 
     # Download all full model run databases.
     for region, keys in vic_full_run_db_keys.items():
         with Timer(f"Downloading full model run databases for {region}"):
             args_list = [(src_key, region, quiet) for src_key in keys]
-            utils.run_parallel_tasks(download_full_db_from_s3, args_list)
+            run_parallel_tasks(download_full_db_from_s3, args_list)
 
     # Build Victorian regional CSV file
     filename = f"vic-forecast-{commit}-{DATESTAMP}.csv"
@@ -142,7 +142,7 @@ def dhhs_task(commit: str, quiet: bool):
 
         # Upload the CSV
         s3_dest_key = f"dhhs/{filename}"
-        utils.upload_s3(csv_path, s3_dest_key)
+        upload_s3(csv_path, s3_dest_key)
 
     # Build the ensemble forecast CSV file.
     with Timer(f"Building Victorian ensemble forecast CSV file."):
@@ -186,7 +186,7 @@ def dhhs_task(commit: str, quiet: bool):
 
         # Upload the CSV
         s3_dest_key = f"ensemble/{filename}"
-        utils.upload_s3(csv_path, s3_dest_key)
+        upload_s3(csv_path, s3_dest_key)
 
 
 def download_full_db_from_s3(src_key, region, quiet):
@@ -196,7 +196,7 @@ def download_full_db_from_s3(src_key, region, quiet):
         os.remove(dest_path)
 
     os.makedirs(os.path.dirname(dest_path), exist_ok=True)
-    utils.download_from_s3(src_key, dest_path, quiet)
+    download_from_s3(src_key, dest_path, quiet)
 
 
 def download_powerbi_db_from_s3(src_key, quiet):
@@ -205,7 +205,7 @@ def download_powerbi_db_from_s3(src_key, quiet):
     if os.path.exists(dest_path):
         os.remove(dest_path)
 
-    utils.download_from_s3(src_key, dest_path, quiet)
+    download_from_s3(src_key, dest_path, quiet)
 
 
 def get_vic_full_run_dbs_for_commit(commit: str):
@@ -215,7 +215,7 @@ def get_vic_full_run_dbs_for_commit(commit: str):
             continue
 
         key_prefix = os.path.join("covid_19", region)
-        region_db_keys = utils.list_s3(key_prefix, key_suffix=".feather")
+        region_db_keys = list_s3(key_prefix, key_suffix=".feather")
         filter_key = lambda k: (
             commit in k and "full_model_runs" in k and ("derived_outputs" in k or "mcmc_run" in k)
         )
@@ -235,7 +235,7 @@ def get_vic_powerbi_dbs_for_commit(commit: str):
             continue
 
         prefix = f"covid_19/{region}"
-        region_db_keys = utils.list_s3(key_prefix=prefix, key_suffix=".db")
+        region_db_keys = list_s3(key_prefix=prefix, key_suffix=".db")
         region_db_keys = [k for k in region_db_keys if commit in k and "powerbi" in k]
         msg = f"There should exactly one PowerBI database for {region} with commit {commit}: {region_db_keys}"
         assert len(region_db_keys) == 1, msg

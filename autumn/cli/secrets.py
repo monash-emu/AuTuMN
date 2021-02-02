@@ -4,7 +4,7 @@ from getpass import getpass
 import click
 
 from autumn import secrets as secrets_module
-from autumn.constants import PASSWORD_ENVAR
+from settings import PASSWORD_ENVAR
 
 
 @click.group()

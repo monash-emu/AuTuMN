@@ -1,6 +1,6 @@
 from typing import List
 from autumn.curve import scale_up_function
-from autumn.constants import Region
+from autumn.region import Region
 from autumn.tool_kit.params import load_targets
 
 from apps.covid_19.model.parameters import Parameters, Importation

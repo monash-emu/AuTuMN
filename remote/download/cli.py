@@ -10,8 +10,7 @@ import click
 from settings import OUTPUT_DATA_PATH
 from utils.s3 import download_from_s3, list_s3
 from utils.timer import Timer
-
-from autumn.db.process import read_run_id
+from utils.runs import read_run_id
 
 
 @click.group()

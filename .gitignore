@@ -11,6 +11,10 @@ condaenv/
 _build
 docs/examples
 
+# Benchmarking
+benchmark.json
+.benchmarks/
+
 # IDE stuff
 .idea
 .spyderworkspace

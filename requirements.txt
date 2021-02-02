@@ -27,6 +27,7 @@ networkx==2.5
 # Testing
 pytest
 pytest-parallel
+pytest-benchmark
 black
 
 # Cloud computing jobs

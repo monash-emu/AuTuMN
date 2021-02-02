@@ -9,6 +9,6 @@ mobility:
         values:
         - 1.0
         - 0.5
-parent: apps/covid_19/regions/central-visayas/params/default.yml
+parent: apps/covid_19/regions/central_visayas/params/default.yml
 time:
   start: 397

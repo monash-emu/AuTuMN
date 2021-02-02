@@ -37,7 +37,7 @@ def copy_scenarios_to_phl_regions():
 
         for filename, sc_dict in scenario_param_dicts.items():
             region_scenario_param = copy(sc_dict)
-            region_scenario_param['parent'] = sc_dict['parent'].replace("philippines", region)
+            region_scenario_param['parent'] = sc_dict['parent'].replace("philippines", dir_name)
 
             file_path = f"../{dir_name}/params/{filename}"
             with open(file_path, "w") as f:

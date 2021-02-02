@@ -12,7 +12,7 @@ BASELINE_POST_INTERVENTION_RATE = {
 }
 
 
-def define_all_scenarios(periodic_frequencies=[2, 5]):
+def define_all_scenarios(periodic_frequencies=[2, 5, 10]):
     scenario_details = {}
     sc_idx = 0
 
@@ -186,6 +186,6 @@ def drop_all_yml_scenario_files(all_sc_params):
 
 
 if __name__ == "__main__":
-    all_scenarios = define_all_scenarios(periodic_frequencies=[2, 5])
+    all_scenarios = define_all_scenarios(periodic_frequencies=[2, 5, 10])
     drop_all_yml_scenario_files(all_scenarios)
 

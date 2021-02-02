@@ -1,9 +1,8 @@
-awareness_raising: {}
+extra_params:
+  future_diabetes_multiplier: 1.2
 parent: apps/tuberculosis/regions/marshall_islands/params/default.yml
 time:
   critical_ranges:
   - - 2017.0
     - 2049.0
   start: 2016
-time_variant_acf: []
-time_variant_ltbi_screening: []

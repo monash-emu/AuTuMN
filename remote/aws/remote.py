@@ -1,12 +1,10 @@
 import os
-import sys
 import subprocess
 import logging
 
 from fabric import Connection
 
-from . import settings
-from .utils import build_run_id, read_run_id
+from autumn.remote import read_run_id, build_run_id
 
 logger = logging.getLogger(__name__)
 

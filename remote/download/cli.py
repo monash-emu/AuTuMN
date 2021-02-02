@@ -7,7 +7,7 @@ from shutil import rmtree
 
 import click
 
-from tasks.utils import download_from_s3, list_s3
+from tasks.s3 import download_from_s3, list_s3
 from autumn import constants
 from autumn.tool_kit import Timer
 

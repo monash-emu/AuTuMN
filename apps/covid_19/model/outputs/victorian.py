@@ -6,7 +6,8 @@ from summer2 import CompartmentalModel
 from autumn.region import Region
 
 from apps.covid_19.model.parameters import Parameters
-from apps.covid_19.constants import Compartment, Clinical, NOTIFICATION_STRATA
+from apps.covid_19.constants import Compartment, Clinical, NOTIFICATION_STRATA, COMPARTMENTS
+from apps.covid_19.model.stratifications.agegroup import AGEGROUP_STRATA
 
 
 def request_victorian_outputs(model: CompartmentalModel, params: Parameters):
@@ -198,4 +199,57 @@ def request_victorian_outputs(model: CompartmentalModel, params: Parameters):
         )
         model.request_cumulative_output(
             name=f"accum_infection_deaths_for_cluster_{cluster}", source="infection_deaths"
+        )
+
+    # Proportion seropositive
+    model.request_output_for_compartments(
+        name="_total_population", compartments=COMPARTMENTS, save_results=False
+    )
+    model.request_output_for_compartments(
+        name="_recovered", compartments=[Compartment.RECOVERED], save_results=False
+    )
+    model.request_function_output(
+        name="proportion_seropositive",
+        sources=["_recovered", "_total_population"],
+        func=lambda recovered, total: recovered / total,
+    )
+    for agegroup in AGEGROUP_STRATA:
+        total_name = f"_total_populationXagegroup_{agegroup}"
+        recovered_name = f"_recoveredXagegroup_{agegroup}"
+        model.request_output_for_compartments(
+            name=total_name,
+            compartments=COMPARTMENTS,
+            strata={"agegroup": agegroup},
+            save_results=False,
+        )
+        model.request_output_for_compartments(
+            name=recovered_name,
+            compartments=[Compartment.RECOVERED],
+            strata={"agegroup": agegroup},
+            save_results=False,
+        )
+        model.request_function_output(
+            name=f"proportion_seropositiveXagegroup_{agegroup}",
+            sources=[recovered_name, total_name],
+            func=lambda recovered, total: recovered / total,
+        )
+    for cluster in clusters:
+        total_name = f"_total_populationXcluster_{cluster}"
+        recovered_name = f"_recoveredXcluster_{cluster}"
+        model.request_output_for_compartments(
+            name=total_name,
+            compartments=COMPARTMENTS,
+            strata={"cluster": cluster},
+            save_results=False,
+        )
+        model.request_output_for_compartments(
+            name=recovered_name,
+            compartments=[Compartment.RECOVERED],
+            strata={"cluster": cluster},
+            save_results=False,
+        )
+        model.request_function_output(
+            name=f"proportion_seropositiveXcluster_{cluster}",
+            sources=[recovered_name, total_name],
+            func=lambda recovered, total: recovered / total,
         )

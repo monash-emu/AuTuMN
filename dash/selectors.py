@@ -8,7 +8,7 @@ from typing import List, Tuple
 import streamlit as st
 import pandas as pd
 
-from autumn import constants
+import settings
 from autumn.tool_kit import Scenario
 from summer.model import StratifiedModel
 
@@ -95,15 +95,15 @@ def app_name(run_type) -> Tuple[str, str]:
         apps = sorted(
             [
                 d
-                for d in os.listdir(constants.APPS_PATH)
-                if os.path.isdir(os.path.join(constants.APPS_PATH, d))
+                for d in os.listdir(settings.APPS_PATH)
+                if os.path.isdir(os.path.join(settings.APPS_PATH, d))
                 and d not in ["cli", "legacy", "__pycache__"]
             ]
         )
         chosen_dirname = st.sidebar.selectbox("Select app", apps)
-        return chosen_dirname, os.path.join(constants.APPS_PATH, chosen_dirname)
+        return chosen_dirname, os.path.join(settings.APPS_PATH, chosen_dirname)
     else:
-        run_outputs_path = os.path.join(constants.OUTPUT_DATA_PATH, run_type)
+        run_outputs_path = os.path.join(settings.OUTPUT_DATA_PATH, run_type)
         if not os.path.exists(run_outputs_path):
             return None, None
 
@@ -132,7 +132,7 @@ def app_region_name(app_name: str) -> Tuple[str, str]:
     for a given application
     Returns param set dir and path to param set dir
     """
-    region_path = os.path.join(constants.APPS_PATH, app_name, "regions")
+    region_path = os.path.join(settings.APPS_PATH, app_name, "regions")
     regions = [r.replace("_", "-") for r in os.listdir(region_path)]
     if not regions:
         return None, None

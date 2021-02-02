@@ -39,29 +39,29 @@ def plot_diabetes_graph(uncertainty_df):
 
     diabetes_colours = {
         0: COLORS[6],
-        7: COLORS[2],
-        8: COLORS[7]
+        9: COLORS[2],
+        10: COLORS[7]
     }
     alphas = {
         0: 1,
-        7: .6,
-        8: .4
+        9: .6,
+        10: .4
     }
     start_quantiles = {
         0: 2,
-        7: 1,
-        8: 1
+        9: 1,
+        10: 1
     }
     linestyles = {
         0: 'dashed',
-        7: 'solid',
-        8: 'solid'
+        9: 'solid',
+        10: 'solid'
     }
 
     for i, output in enumerate(outputs):
         ax = fig.add_subplot(spec[i, 0])
 
-        for k, sc_id in enumerate([0, 7, 8]):
+        for k, sc_id in enumerate([0, 9, 10]):
             sc_colors = _apply_transparency([diabetes_colours[sc_id]], [alphas[sc_id]])[0]
 
             _plot_uncertainty(
@@ -86,7 +86,7 @@ def plot_diabetes_graph(uncertainty_df):
         #     None,
         #     uncertainty_df,
         #     output,
-        #     scenario_idxs=[0, 7, 8],
+        #     scenario_idxs=[0, 9, 10],
         #     targets={},
         #     x_low=2020,
         #     x_up=2050,

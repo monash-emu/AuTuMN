@@ -51,29 +51,29 @@
   "notifications": {
     "title": "Notifications",
     "output_key": "notifications",
-    "times": [2012.0, 2013.0, 2014.0, 2015.0, 2016.0],
-    "values": [146, 153, 153, 136, 178],
+    "times": [2012.0, 2013.0, 2014.0, 2015.0, 2016.0, 2017.0, 2018.0, 2019.0, 2020.0],
+    "values": [146, 153, 153, 136, 178, 203, 410, 225, 150],
     "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "notificationsXlocation_majuro": {
     "title": "Notifications in Majuro",
     "output_key": "notificationsXlocation_majuro",
-    "times": [2012.0, 2013.0, 2014.0, 2015.0, 2016.0],
-    "values": [91, 116, 115, 90, 119],
+    "times": [2012.0, 2013.0, 2014.0, 2015.0, 2016.0, 2017.0, 2018.0, 2019.0, 2020.0],
+    "values": [91, 116, 115, 90, 119, 116, 376, 135, 96],
     "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "notificationsXlocation_ebeye": {
     "title": "Notifications in Ebeye",
     "output_key": "notificationsXlocation_ebeye",
-    "times": [2012.0, 2013.0, 2014.0, 2015.0, 2016.0],
-    "values": [44, 27, 30, 29, 53],
+    "times": [2012.0, 2013.0, 2014.0, 2015.0, 2016.0, 2017.0, 2018.0, 2019.0, 2020.0],
+    "values": [44, 27, 30, 29, 53, 80, 30, 45, 39],
     "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "notificationsXlocation_other": {
     "title": "Notifications in Other Islands",
     "output_key": "notificationsXlocation_other",
-    "times": [2012.0, 2013.0, 2014.0, 2015.0, 2016.0],
-    "values": [11, 10, 8, 17, 6],
+    "times": [2012.0, 2013.0, 2014.0, 2015.0, 2016.0, 2017.0, 2018.0, 2019.0, 2020.0],
+    "values": [11, 10, 8, 17, 6, 7, 4, 45, 15],
     "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   },
   "population_size": {

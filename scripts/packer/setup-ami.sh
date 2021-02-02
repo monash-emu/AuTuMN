@@ -30,6 +30,10 @@ apt-get install -y \
     virtualenv
 
 
+# Install Git Large File Storage
+curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
+apt install git-lfs
+
 # Get source code
 git clone https://github.com/monash-emu/AuTuMN.git code
 
@@ -39,3 +43,7 @@ virtualenv -p python3 env
 . ./env/bin/activate
 pip3 install -r requirements.txt
 pip3 install awscli
+
+# Give ownership of code folder to ubuntu user
+sudo chown -R ubuntu:ubuntu ~/code
+

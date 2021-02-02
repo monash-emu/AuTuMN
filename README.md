@@ -136,9 +136,11 @@ You can auto-format the code as follows, this will never break anything:
 black .
 ```
 
+sudo apt install git-lfs
+
 ## Input data
 
-Input data is stored in text format in the `data/inputs/` folder. All input data required to run the app should be stored in this folder, along with a README explaining its meaning and provenance. Input data is preprocessed into an SQLite database at runtime, inside the `autumn.inputs` module. A unique identified for the latest input data is stored in `data/inputs/input-hash.txt`. If you want to add new input data or modify existing data, then:
+Input data is stored in text format in the `data/inputs/` folder. All input data required to run the app should be stored in this folder, along with a README explaining its meaning and provenance. Input data is preprocessed into an SQLite database at runtime, inside the `autumn.inputs` module. A unique identifier for the latest input data is stored in `data/inputs/input-hash.txt`. If you want to add new input data or modify existing data, then:
 
 - add or update the source CSV/XLS files
 - adjust the preprocess functions in `autumn.inputs` as required
@@ -163,6 +165,8 @@ Once you are satisfied that all your models work again (run the tests), commit y
 - The updated CSV files
 - The updated `input-hash.txt` file
 - Any required changes to model parameters (eg. dynamic mixing dates)
+
+Note that all of our CSV and XLSX files are stored using [Git Large File Storage](https://docs.github.com/en/github/managing-large-files/versioning-large-files) in GitHub. You can install Git LFS [here](https://git-lfs.github.com/).
 
 ## AWS Calibration
 

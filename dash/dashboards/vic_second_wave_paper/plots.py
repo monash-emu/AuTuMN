@@ -23,76 +23,27 @@ KEY_PARAMS = [
 ]
 
 
-def plot_overall_output(plotter, calib_dir_path, mcmc_tables, targets, chosen_output):
-    targets = {k: v for k, v in targets.items() if v["output_key"] == chosen_output}
+def plot_multiple_timeseries_with_uncertainty(
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+    app_name: str,
+    region: str,
+):
+
     uncertainty_df = get_uncertainty_df(calib_dir_path, mcmc_tables, targets)
+    chosen_outputs = ["notifications", "hospital_admissions", "icu_admissions", "infection_deaths"]
     x_low, x_up = STANDARD_X_LIMITS
-    title_font_size, label_font_size, dpi_request = 8, 8, 300
-    plots.uncertainty.plots.plot_timeseries_with_uncertainty(
-        plotter, uncertainty_df, chosen_output, [0], targets, False, x_low, x_up, add_targets=True,
-        overlay_uncertainty=True, title_font_size=title_font_size, label_font_size=label_font_size,
-        dpi_request=dpi_request, capitalise_first_letter=False, legend=False,
+    selected_scenarios, is_logscale, n_xticks, title_font_size, label_font_size = [0], False, 6, 20, 15
+    plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(
+        plotter, uncertainty_df, chosen_outputs, selected_scenarios, targets, is_logscale, x_low, x_up, n_xticks,
+        title_font_size=title_font_size, label_font_size=label_font_size,
     )
 
 
-def plot_overall_notifications(
-    plotter: StreamlitPlotter,
-    calib_dir_path: str,
-    mcmc_tables: List[pd.DataFrame],
-    mcmc_params: List[pd.DataFrame],
-    targets: dict,
-    app_name: str,
-    region: str,
-):
-    plot_overall_output(plotter, calib_dir_path, mcmc_tables, targets, "notifications")
-
-
-PLOT_FUNCS["State-wide notifications"] = plot_overall_notifications
-
-
-def plot_overall_hospitalisations(
-    plotter: StreamlitPlotter,
-    calib_dir_path: str,
-    mcmc_tables: List[pd.DataFrame],
-    mcmc_params: List[pd.DataFrame],
-    targets: dict,
-    app_name: str,
-    region: str,
-):
-    plot_overall_output(plotter, calib_dir_path, mcmc_tables, targets, "hospital_admissions")
-
-
-PLOT_FUNCS["State-wide hospitalisations"] = plot_overall_hospitalisations
-
-
-def plot_overall_icu_admissions(
-    plotter: StreamlitPlotter,
-    calib_dir_path: str,
-    mcmc_tables: List[pd.DataFrame],
-    mcmc_params: List[pd.DataFrame],
-    targets: dict,
-    app_name: str,
-    region: str,
-):
-    plot_overall_output(plotter, calib_dir_path, mcmc_tables, targets, "icu_admissions")
-
-
-PLOT_FUNCS["State-wide ICU admissions"] = plot_overall_icu_admissions
-
-
-def plot_overall_deaths(
-    plotter: StreamlitPlotter,
-    calib_dir_path: str,
-    mcmc_tables: List[pd.DataFrame],
-    mcmc_params: List[pd.DataFrame],
-    targets: dict,
-    app_name: str,
-    region: str,
-):
-    plot_overall_output(plotter, calib_dir_path, mcmc_tables, targets, "infection_deaths")
-
-
-PLOT_FUNCS["State-wide deaths"] = plot_overall_deaths
+PLOT_FUNCS["Multi-output uncertainty"] = plot_multiple_timeseries_with_uncertainty
 
 
 def plot_regional_outputs(plotter, calib_dir_path, mcmc_tables, targets, regions, indicator):
@@ -338,3 +289,4 @@ def plot_key_param_matrix(
 
 
 PLOT_FUNCS["Key params matrix"] = plot_key_param_matrix
+

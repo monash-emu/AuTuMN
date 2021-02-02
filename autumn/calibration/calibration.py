@@ -92,9 +92,8 @@ class Calibration:
         self.metropolis_init_rel_step_size = metropolis_init_rel_step_size
 
         self.param_list = [self.priors[i]["param_name"] for i in range(len(self.priors))]
-        self.targeted_outputs = (
-            targeted_outputs  # a list of dictionaries. Each dictionary describes a target
-        )
+        # A list of dictionaries. Each dictionary describes a target
+        self.targeted_outputs = targeted_outputs
 
         # Validate target output start time.
         model_start = model_parameters["default"]["time"]["start"]
@@ -183,7 +182,8 @@ class Calibration:
         params = copy.deepcopy(self.model_parameters)
         update_func = lambda ps: update_params(ps, param_updates)
         scenario = Scenario(self.model_builder, 0, params)
-        scenario.run(update_func=update_func)
+        output_keys = [o["output_key"] for o in self.targeted_outputs]
+        scenario.run(update_func=update_func, derived_outputs_whitelist=output_keys)
         self.latest_scenario = scenario
         return scenario
 

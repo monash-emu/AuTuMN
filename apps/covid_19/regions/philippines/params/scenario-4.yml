@@ -1,4 +1,4 @@
-description: Reduction in MHS by 50% from 1 Feb
+description: Reduction in MHS by 50% from 8 Feb
 parent: apps/covid_19/regions/philippines/params/default.yml
 
 time:
@@ -9,8 +9,8 @@ mobility:
     behaviour:
       parameters:
         times:
-          - 397
-          - 398          
+          - 404
+          - 405
         values:
           - 1.
           - 0.5

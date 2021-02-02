@@ -1,16 +1,14 @@
-description: Reduction in MHS by 50% from 1 Feb
-parent: apps/covid_19/regions/philippines/params/default.yml
-
-time:
-  start: 397
-
+description: Reduction in MHS by 50% from 8 Feb
 mobility:
   microdistancing:
     behaviour:
       parameters:
         times:
-          - 397
-          - 398          
+        - 404
+        - 405
         values:
-          - 1.
-          - 0.5
+        - 1.0
+        - 0.5
+parent: apps/covid_19/regions/central-visayas/params/default.yml
+time:
+  start: 397

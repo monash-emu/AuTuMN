@@ -1,0 +1,16 @@
+description: 100% of schools reopen on 8 Feb
+parent: apps/covid_19/regions/philippines/params/default.yml
+
+time:
+  start: 397
+
+mobility:
+  mixing:
+    school:
+      append: true
+      times:
+        - 2021-02-06
+        - 2021-02-08
+      values:
+        - 0.
+        - 1.0

@@ -9,12 +9,12 @@ mobility:
     work:
       append: true
       times:
-        - 2021-02-01
+        - 2021-02-08
       values:
         - ["close_gap_to_1", 0.3]
     other_locations:
       append: true
       times:
-        - 2021-02-01
+        - 2021-02-08
       values:
         - ["close_gap_to_1", 0.3]

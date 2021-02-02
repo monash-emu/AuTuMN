@@ -41,11 +41,15 @@ python -m autumn --help
 ├── docs                    Documentation
 ├── remote                  Remote server orchestration tasks
 ├── scripts                 Utility scripts
-├── summer                  SUMMER framework module
+├── settings                Globally shared constants
+├── summer                  SUMMER framework module (v1)
+├── summer2                 SUMMER framework module (v2)
 ├── tasks                   Remote server pipeline tasks with Luigi
 ├── tests                   Automated tests
+├── utils                   Globally shared utilities
 ├── .gitignore              Files for Git to ignore
 ├── plots.py                Streamlit entrypoint
+├── pyproject.toml          Configuration for tools (eg. Black, pytest)
 └── requirements.txt        Python library dependencies
 ```
 

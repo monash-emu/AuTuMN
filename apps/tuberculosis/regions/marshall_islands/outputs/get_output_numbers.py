@@ -44,14 +44,14 @@ def main():
     # diabetes scenarios
     print()
     print("Diabetes scenarios")
-    for scenario in [7, 8]:
+    for scenario in [9, 10]:
         print_median_and_ci(uncertainty_df, "incidence", 2050, scenario)
 
     # PT in all contacts
     print()
     print("PT in all contacts")
     for output in ["incidence", "mortality"]:
-        print_median_and_ci(uncertainty_df, output, 2050, 9)
+        print_median_and_ci(uncertainty_df, output, 2050, 11)
 
 
 def get_output_number(uncertainty_df, output, time, scenario_idx, quantile=0.5):

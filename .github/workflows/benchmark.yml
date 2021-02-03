@@ -31,5 +31,5 @@ jobs:
           output-file-path: benchmark.json
           github-token: ${{ secrets.PAGES_GITHUB_TOKEN }}
           gh-pages-branch: benchmark-page
-          benchmark-data-dir-path: bench
+          benchmark-data-dir-path: "."
           auto-push: true

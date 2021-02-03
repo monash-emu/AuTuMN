@@ -9,7 +9,8 @@ import json
 import yaml
 from datetime import datetime
 from google_drive_downloader import GoogleDriveDownloader as gdd
-from autumn import constants
+import settings
+from autumn.region import Region
 import pandas as pd
 import regex as re
 
@@ -19,7 +20,7 @@ CASE_DATA_URL = "1mnZcmj2jfmrap1ytyg_ErD1DZ7zDptyJ"  # shareable link
 COVID_MYS_DEATH_URL = "https://docs.google.com/spreadsheets/d/1cQe1k7GQRKFzcfXXxdL7_pTNQUMpOAPX3PqhPsI4xt8/export?format=xlsx&id=1cQe1k7GQRKFzcfXXxdL7_pTNQUMpOAPX3PqhPsI4xt8"
 COVID_SABAH_URL = "https://docs.google.com/spreadsheets/d/1ouWp2ge5zrVh1gCDPONN-TMaf1b7TqRr4f07UZLWSdg/export?format=xlsx&id=1ouWp2ge5zrVh1gCDPONN-TMaf1b7TqRr4f07UZLWSdg"
 
-COVID_MYS_DIRPATH = os.path.join(constants.INPUT_DATA_PATH, "covid_mys")
+COVID_MYS_DIRPATH = os.path.join(settings.folders.INPUT_DATA_PATH, "covid_mys")
 COVID_MYS_CASE_XLSX = os.path.join(COVID_MYS_DIRPATH, "COVID_MYS_CASE.xlsx")
 COVID_MYS_DEATH_CSV = os.path.join(COVID_MYS_DIRPATH, "COVID_MYS_DEATH.csv")
 COVID_SABAH_CSV = os.path.join(COVID_MYS_DIRPATH, "COVID_REGIONAL.csv")
@@ -30,8 +31,8 @@ gdd.download_file_from_google_drive(
 )
 
 COVID_BASE_DATE = pd.datetime(2019, 12, 31)
-REGION_MYS = os.path.join(constants.APPS_PATH, "covid_19", "regions", "malaysia")
-REGION_SABAH = os.path.join(constants.APPS_PATH, "covid_19", "regions", "sabah")
+REGION_MYS = os.path.join(settings.folders.APPS_PATH, "covid_19", "regions", "malaysia")
+REGION_SABAH = os.path.join(settings.folders.APPS_PATH, "covid_19", "regions", "sabah")
 
 
 TARGETS_MYS = {
@@ -46,8 +47,8 @@ TARGETS_SABAH = {"notifications": "local_cases", "infection_deaths": "sabah_deat
 
 def main():
 
-    update_calibration(constants.Region.MALAYSIA)
-    update_calibration(constants.Region.SABAH)
+    update_calibration(Region.MALAYSIA)
+    update_calibration(Region.SABAH)
 
 
 def update_calibration(REGION: str):

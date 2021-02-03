@@ -7,7 +7,7 @@ time:
 mobility:
   mixing:
     school:
-      append: true
+      append: false
       times:
         - 2021-02-06
         - 2021-02-08

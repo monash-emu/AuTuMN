@@ -2,7 +2,7 @@ description: 50% of schools reopen on 8 Feb
 mobility:
   mixing:
     school:
-      append: true
+      append: false
       times:
       - 2021-02-06
       - 2021-02-08

@@ -753,6 +753,13 @@ class CompartmentalModel:
         self._flows = _exit_flows + _entry_flows + _transition_flows + _function_flows
         # Check we didn't miss any flows
         assert len(self._flows) == num_flows, "Some flows were lost when preparing to run."
+        # Save a tiny bit of tiny bit of time pre-sorting flows.
+        self._iter_function_flows = [
+            (i, f) for i, f in enumerate(self._flows) if isinstance(f, flows.FunctionFlow)
+        ]
+        self._iter_non_function_flows = [
+            (i, f) for i, f in enumerate(self._flows) if not isinstance(f, flows.FunctionFlow)
+        ]
 
         # Prepare to track flow rates for derived outputs
         # We track the times and values of the request flows while integrating, and then
@@ -937,58 +944,38 @@ class CompartmentalModel:
         comp_vals = compartment_values.copy()
         zero_mask = comp_vals < 0
         comp_vals[zero_mask] = 0
-        # Build a 3D matrix with dimensions (comps, flows), which completely
-        # describes the flow rates between each compartment, and the contributrion of each flow.
-        num_comps = len(comp_vals)
-        num_flows = len(self._flows)
-        flow_rates = np.zeros((num_flows, num_comps))
-        flow_rates_summed = np.zeros(num_comps)
-
         self._prepare_time_step(time, comp_vals)
         flow_tracker_idx = len(self._flow_tracker_times) - 1
+        # Track this flow's flow-rates at this point in time for derived outputs and function flows.
+        flow_rates = self._flow_tracker_values[flow_tracker_idx]
+        # Track the net flow rates between compartments for the ODE solver.
+        net_flow_rates = np.zeros(len(comp_vals))
 
         # Record the flow rate for each flow.
-        for flow_idx, flow in enumerate(self._flows):
-            if self._has_function_flows and type(flow) is flows.FunctionFlow:
-                # Evaluate function flows later.
-                continue
-
+        for flow_idx, flow in self._iter_non_function_flows:
+            # Evaluate all the flows that are not function flows.
             net_flow = flow.get_net_flow(compartment_values, time)
-
-            if self._has_function_flows and flow.source:
-                flow_rates[flow_idx][flow.source.idx] = -net_flow
-                flow_rates_summed[flow.source.idx] -= net_flow
-            elif flow.source:
-                flow_rates_summed[flow.source.idx] -= net_flow
-
-            if self._has_function_flows and flow.dest:
-                flow_rates[flow_idx][flow.dest.idx] = net_flow
-                flow_rates_summed[flow.dest.idx] += net_flow
-            elif flow.dest:
-                flow_rates_summed[flow.dest.idx] += net_flow
-
-            if type(flow) is flows.DeathFlow:
+            flow_rates[flow_idx] = net_flow
+            if flow.source:
+                net_flow_rates[flow.source.idx] -= net_flow
+            if flow.dest:
+                net_flow_rates[flow.dest.idx] += net_flow
+            if flow.is_death_flow:
                 # Track total deaths for any later birth replacement flows.
                 self._total_deaths += net_flow
 
-            # Track this flow's flow-rates at this point in time for derived outputs.
-            self._flow_tracker_values[flow_tracker_idx][flow_idx] = net_flow
+        if self._iter_function_flows:
+            original_flow_rates = flow_rates.copy()
+            for flow_idx, flow in self._iter_function_flows:
+                # Evaluate the function flows.
+                net_flow = flow.get_net_flow(
+                    self.compartments, compartment_values, self._flows, original_flow_rates, time
+                )
+                flow_rates[flow_idx] = net_flow
+                net_flow_rates[flow.source.idx] -= net_flow
+                net_flow_rates[flow.dest.idx] += net_flow
 
-        if self._has_function_flows:
-            for flow_idx, flow in enumerate(self._flows):
-                if type(flow) is not flows.FunctionFlow:
-                    # Only evaluate function flows here.
-                    continue
-
-            #     net_flow = flow.get_net_flow(
-            #         self.compartments, compartment_values, self._flows, flow_rates, time
-            #     )
-            #     flow_rates_summed[flow.source.idx] -= net_flow
-            #     flow_rates_summed[flow.dest.idx] += net_flow
-            #     # Track this flow's flow-rates at this point in time for derived outputs.
-            #     self._flow_tracker_values[flow_tracker_idx][flow_idx] = net_flow
-
-        return flow_rates_summed
+        return net_flow_rates
 
     def _get_mixing_matrix(self, time: float) -> np.ndarray:
         """

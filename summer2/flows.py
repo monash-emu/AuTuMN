@@ -25,6 +25,7 @@ class BaseFlow(ABC):
     dest = None
     param = None
     adjustments = None
+    is_death_flow = False
 
     def _is_equal(self, flow):
         """For testing"""
@@ -451,6 +452,8 @@ class DeathFlow(BaseExitFlow):
 
     """
 
+    is_death_flow = True
+
     def get_net_flow(
         self,
         compartment_values: np.ndarray,
@@ -526,13 +529,13 @@ class FunctionFlow(BaseTransitionFlow):
 
     def get_net_flow(
         self,
-        time: float,
         compartments: List[Compartment],
         compartment_values: np.ndarray,
         flows: List[BaseFlow],
         flow_rates: np.ndarray,
+        time: float,
     ) -> float:
-        flow_rate = self.param(time, compartments, compartment_values, flows, flow_rates)
+        flow_rate = self.param(self, compartments, compartment_values, flows, flow_rates, time)
         for adjustment in self.adjustments:
             flow_rate = adjustment.get_new_value(flow_rate, time)
 

@@ -749,6 +749,7 @@ class CompartmentalModel:
             and not isinstance(f, flows.FunctionFlow)
         ]
         _function_flows = [f for f in self._flows if isinstance(f, flows.FunctionFlow)]
+        self._has_function_flows = bool(_function_flows)
         self._flows = _exit_flows + _entry_flows + _transition_flows + _function_flows
         # Check we didn't miss any flows
         assert len(self._flows) == num_flows, "Some flows were lost when preparing to run."
@@ -948,38 +949,44 @@ class CompartmentalModel:
 
         # Record the flow rate for each flow.
         for flow_idx, flow in enumerate(self._flows):
-            # if isinstance(flow, flows.FunctionFlow):
-            # Evaluate function flows later.
-            # continue
+            if self._has_function_flows and type(flow) is flows.FunctionFlow:
+                # Evaluate function flows later.
+                continue
 
             net_flow = flow.get_net_flow(compartment_values, time)
-            if flow.source:
+
+            if self._has_function_flows and flow.source:
                 flow_rates[flow_idx][flow.source.idx] = -net_flow
                 flow_rates_summed[flow.source.idx] -= net_flow
+            elif flow.source:
+                flow_rates_summed[flow.source.idx] -= net_flow
 
-            if flow.dest:
+            if self._has_function_flows and flow.dest:
                 flow_rates[flow_idx][flow.dest.idx] = net_flow
                 flow_rates_summed[flow.dest.idx] += net_flow
+            elif flow.dest:
+                flow_rates_summed[flow.dest.idx] += net_flow
 
-            if isinstance(flow, flows.DeathFlow):
+            if type(flow) is flows.DeathFlow:
                 # Track total deaths for any later birth replacement flows.
                 self._total_deaths += net_flow
 
             # Track this flow's flow-rates at this point in time for derived outputs.
             self._flow_tracker_values[flow_tracker_idx][flow_idx] = net_flow
 
-        # for flow_idx, flow in enumerate(self._flows):
-        #     if not isinstance(flow, flows.FunctionFlow):
-        #         # Only evaluate function flows here.
-        #         continue
+        if self._has_function_flows:
+            for flow_idx, flow in enumerate(self._flows):
+                if type(flow) is not flows.FunctionFlow:
+                    # Only evaluate function flows here.
+                    continue
 
-        #     net_flow = flow.get_net_flow(
-        #         self.compartments, compartment_values, self._flows, flow_rates, time
-        #     )
-        #     flow_rates_summed[flow.source.idx] -= net_flow
-        #     flow_rates_summed[flow.dest.idx] += net_flow
-        #     # Track this flow's flow-rates at this point in time for derived outputs.
-        #     self._flow_tracker_values[flow_tracker_idx][flow_idx] = net_flow
+            #     net_flow = flow.get_net_flow(
+            #         self.compartments, compartment_values, self._flows, flow_rates, time
+            #     )
+            #     flow_rates_summed[flow.source.idx] -= net_flow
+            #     flow_rates_summed[flow.dest.idx] += net_flow
+            #     # Track this flow's flow-rates at this point in time for derived outputs.
+            #     self._flow_tracker_values[flow_tracker_idx][flow_idx] = net_flow
 
         return flow_rates_summed
 

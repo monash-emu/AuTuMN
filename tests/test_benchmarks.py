@@ -3,13 +3,9 @@ import pytest
 from apps import covid_19
 
 
-from utils.timer import Timer
-
-
 @pytest.mark.benchmark
 @pytest.mark.github_only
-# @pytest.mark.parametrize("region", covid_19.app.region_names)
-@pytest.mark.parametrize("region", ["malaysia"])
+@pytest.mark.parametrize("region", covid_19.app.region_names)
 def test_benchmark_covid_models(region, benchmark):
     """
     Performance benchmark: check how long our models take to run.

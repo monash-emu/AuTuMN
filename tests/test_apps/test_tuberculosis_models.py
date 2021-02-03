@@ -38,7 +38,8 @@ def test_tb_run_models_partial(region):
         model.run_model()
 
 
-@pytest.mark.local_only
+@pytest.mark.run_models
+@pytest.mark.github_only
 @pytest.mark.parametrize("region", tuberculosis.app.region_names)
 def test_tb_build_scenario_models(region):
     """

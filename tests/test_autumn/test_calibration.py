@@ -1,5 +1,5 @@
 import os
-
+from unittest.mock import patch
 
 import numpy as np
 
@@ -109,7 +109,8 @@ def _prepare_params(l):
     return set([tuple(sorted(ps.items())) for ps in l])
 
 
-def test_calibrate_autumn_mcmc(temp_data_dir):
+@patch("autumn.calibration.calibration.load_targets")
+def test_calibrate_autumn_mcmc(mock_load_targets, temp_data_dir):
     # Import autumn stuff inside function so we can mock out the database.
     priors = [
         {
@@ -118,6 +119,7 @@ def test_calibrate_autumn_mcmc(temp_data_dir):
             "distri_params": [1, 5],
         }
     ]
+    mock_load_targets.return_value = {"shark_attacks": {"output_key": "shark_attacks"}}
     target_outputs = [
         {
             "output_key": "shark_attacks",
@@ -126,18 +128,13 @@ def test_calibrate_autumn_mcmc(temp_data_dir):
             "loglikelihood_distri": "poisson",
         }
     ]
+
     params = {
         "default": {"time": {"start": 2000}},
         "scenarios": {},
     }
     calib = Calibration(
-        "sharks",
-        _build_mock_model,
-        params,
-        priors,
-        target_outputs,
-        1,
-        1,
+        "sharks", _build_mock_model, params, priors, target_outputs, 1, 1, region_name="hawaii"
     )
     calib.run_fitting_algorithm(
         run_mode=CalibrationMode.AUTUMN_MCMC,
@@ -146,7 +143,7 @@ def test_calibrate_autumn_mcmc(temp_data_dir):
         n_chains=1,
         available_time=1e6,
     )
-    app_dir = os.path.join(temp_data_dir, "outputs", "calibrate", "sharks", "main")
+    app_dir = os.path.join(temp_data_dir, "outputs", "calibrate", "sharks", "hawaii")
     run_dir = os.path.join(app_dir, os.listdir(app_dir)[0])
     db_paths = db.load.find_db_paths(run_dir)
     assert len(db_paths) == 1

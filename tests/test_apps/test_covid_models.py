@@ -27,6 +27,8 @@ def test_run_models_partial(region):
         model.run()
 
 
+@pytest.mark.run_models
+@pytest.mark.github_only
 @pytest.mark.parametrize("region", covid_19.app.region_names)
 def test_build_scenario_models(region):
     """

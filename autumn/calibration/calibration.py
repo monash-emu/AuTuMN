@@ -15,12 +15,12 @@ from scipy.optimize import Bounds, minimize
 from scipy import stats, special
 
 from summer.model import StratifiedModel
-from autumn.region import Region
 from autumn import db, plots
+from autumn.region import Region
 from autumn.tool_kit.scenarios import Scenario
 from utils.timer import Timer
 import settings
-from autumn.tool_kit.params import update_params, read_param_value_from_string
+from autumn.tool_kit.params import update_params, read_param_value_from_string, load_targets
 from autumn.tool_kit.utils import (
     get_git_branch,
     get_git_hash,
@@ -78,7 +78,7 @@ class Calibration:
         targeted_outputs: List[dict],
         chain_index: int,
         total_nb_chains: int,
-        region_name: str = "main",
+        region_name: str,
         adaptive_proposal: bool = True,
         initialisation_type: str = InitialisationTypes.LHS,
         metropolis_init_rel_step_size: float = 0.25,
@@ -94,6 +94,11 @@ class Calibration:
         self.param_list = [self.priors[i]["param_name"] for i in range(len(self.priors))]
         # A list of dictionaries. Each dictionary describes a target
         self.targeted_outputs = targeted_outputs
+
+        # All model derived outputs to plot, superset of targeted outputs.
+        self.derived_outputs_to_plot = [
+            t["output_key"] for t in load_targets(app_name, region_name).values()
+        ]
 
         # Validate target output start time.
         model_start = model_parameters["default"]["time"]["start"]
@@ -182,8 +187,9 @@ class Calibration:
         params = copy.deepcopy(self.model_parameters)
         update_func = lambda ps: update_params(ps, param_updates)
         scenario = Scenario(self.model_builder, 0, params)
-        output_keys = [o["output_key"] for o in self.targeted_outputs]
-        scenario.run(update_func=update_func, derived_outputs_whitelist=output_keys)
+        scenario.run(
+            update_func=update_func, derived_outputs_whitelist=self.derived_outputs_to_plot
+        )
         self.latest_scenario = scenario
         return scenario
 

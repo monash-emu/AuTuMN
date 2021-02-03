@@ -131,6 +131,10 @@ python -m autumn secrets write apps/foo/bar.secret.json
 
 A new file called `apps/foo/bar.encrypted.json` will be created. You can commit this to GitHub.
 
+## Benchmarking
+
+Automated benchmarks are run on every commit to master using the [github-action-benchmark](https://github.com/rhysd/github-action-benchmark) GitHub Action. These benchmarks are run inside of pytest via `pytest-benchmark` and can be found in `tests/test_benchmarks.py`. You can view the results at [monash-emu.github.io/AuTuMN](http://monash-emu.github.io/AuTuMN/)
+
 ## Formatting
 
 The codebase can be auto-formatted using [Black](https://github.com/psf/black).

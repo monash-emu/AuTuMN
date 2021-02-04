@@ -98,7 +98,10 @@ class Scenario:
                 # Create the new scenario model using the scenario-specific params,
                 # ensuring the initial conditions are the same for the given start time.
                 self.model = self.model_builder(params)
-                self.model.compartment_values = init_compartments
+                if type(self.model) is CompartmentalModel:
+                    self.model.initial_population = init_compartments
+                else:
+                    self.model.compartment_values = init_compartments
 
             if type(self.model) is CompartmentalModel:
                 if derived_outputs_whitelist:

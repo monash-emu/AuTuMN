@@ -806,6 +806,7 @@ def plot_calibration(axis, output, outputs, targets, is_logscale, ref_date=REF_D
     # Sort out x-axis
     if output == "proportion_seropositive":
         axis.yaxis.set_major_formatter(mtick.PercentFormatter(1, symbol="", decimals=2))
+        axis.set_ylabel("percentage", fontsize=label_font_size)
     axis.tick_params(axis="x", labelsize=label_font_size)
     axis.tick_params(axis="y", labelsize=label_font_size)
     change_xaxis_to_date(axis, ref_date, rotation=0)

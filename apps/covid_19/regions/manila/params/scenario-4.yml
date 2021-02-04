@@ -1,0 +1,14 @@
+description: Reduction in MHS by 50% from 8 Feb
+mobility:
+  microdistancing:
+    behaviour:
+      parameters:
+        times:
+        - 404
+        - 405
+        values:
+        - 1.0
+        - 0.5
+parent: apps/covid_19/regions/manila/params/default.yml
+time:
+  start: 397

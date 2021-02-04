@@ -35,6 +35,11 @@ PAR_PRIORS += [
         "distribution": "uniform",
         "distri_params": [0.01, 0.03]
     },
+    {
+        "param_name": "infectious_seed",
+        "distribution": "uniform",
+        "distri_params": [50., 200.],
+    },
     # Detection
     {
         "param_name": "testing_to_detection.assumed_cdr_parameter",

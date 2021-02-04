@@ -1,20 +1,20 @@
 description: BASELINE
 parent: apps/covid_19/params.yml
 
-contact_rate: 0.0195
-seasonal_force: -0.2
+contact_rate: 0.0225
+seasonal_force: 0.
 infectious_seed: 100.
 
 time:
   start: 210.
-  end: 400.
+  end: 500.
 
 country:
   iso3: MYS
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-04
-  assumed_cdr_parameter: 0.4
+  assumed_cdr_parameter: 0.06
   smoothing_period: 14
 
 mobility:
@@ -25,7 +25,7 @@ mobility:
         b: .05
         c: 300.
         sigma: 0.
-        upper_asymptote: 0.15
+        upper_asymptote: 0.1
   mixing:
     school:
       append: false

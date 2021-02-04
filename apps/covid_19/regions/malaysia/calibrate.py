@@ -20,8 +20,8 @@ TARGET_OUTPUTS = [
     },
     {
         "output_key": "icu_occupancy",
-        "years": icu_occupancy["times"],
-        "values": icu_occupancy["values"],
+        "years": [icu_occupancy["times"][-1]],
+        "values": [icu_occupancy["values"][-1]],
         "loglikelihood_distri": "normal",
     },
 ]
@@ -30,17 +30,16 @@ PAR_PRIORS = provide_default_calibration_params()
 PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS)
 
 PAR_PRIORS += [
-    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.01, 0.03]},
     {
-        "param_name": "seasonal_force",
+        "param_name": "contact_rate",
         "distribution": "uniform",
-        "distri_params": [-0.3, 0.0],
+        "distri_params": [0.01, 0.03]
     },
     # Detection
     {
         "param_name": "testing_to_detection.assumed_cdr_parameter",
         "distribution": "uniform",
-        "distri_params": [0.12, 0.5],
+        "distri_params": [0.025, 0.1],
     },
     # Microdistancing
     {
@@ -58,11 +57,6 @@ PAR_PRIORS += [
         "param_name": "clinical_stratification.icu_prop",
         "distribution": "uniform",
         "distri_params": [0.12, 0.25],
-    },
-    {
-        "param_name": "sojourn.compartment_periods.icu_early",
-        "distribution": "uniform",
-        "distri_params": [5.0, 25.0],
     },
 ]
 

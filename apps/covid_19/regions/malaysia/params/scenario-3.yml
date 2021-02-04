@@ -2,13 +2,13 @@ description: Scenario 3, Other locations return
 parent: apps/covid_19/regions/malaysia/params/default.yml
 
 time:
-  start: 342.
+  start: 407.
 
 mobility:
   mixing:
     other_locations:
       append: true
       times:
-        - 2020-12-01
+        - 2020-02-11
       values:
         - 1.

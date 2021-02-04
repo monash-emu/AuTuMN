@@ -2,13 +2,13 @@ description: Scenario 2, All current offsite workers return onsite
 parent: apps/covid_19/regions/malaysia/params/default.yml
 
 time:
-  start: 342.
+  start: 407.
 
 mobility:
   mixing:
     work:
       append: true
       times:
-        - 2020-12-01
+        - 2020-02-11
       values:
         - 1.

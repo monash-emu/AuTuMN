@@ -126,7 +126,7 @@ def get_cdr_constants(default_params):
         time_params["start"], time_params["end"], time_params["step"]
     )
     agegroup_strata = [
-        str(s) for s in range(0, agegroup_params["max_age"], agegroup_params["age_step_size"])
+        str(s) for s in range(0, 75, 5)
     ]
     return (
         iso3,

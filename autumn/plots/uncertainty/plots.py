@@ -157,11 +157,11 @@ def _plot_uncertainty(
             color = colors[i - start_quantile]
             start_key = q_keys[i]
             end_key = q_keys[-(i + 1)]
-            axis.fill_between(times, quantiles[start_key], quantiles[end_key], facecolor=color, zorder=zorder)
+            axis.fill_between(times[1:], quantiles[start_key][1:], quantiles[end_key][1:], facecolor=color, zorder=zorder)
 
     if num_quantiles % 2:
         q_key = q_keys[half_length]
-        axis.plot(times, quantiles[q_key], color=colors[3], zorder=zorder, linestyle=linestyle)
+        axis.plot(times[1:], quantiles[q_key][1:], color=colors[3], zorder=zorder, linestyle=linestyle)
 
 
 def plot_multi_output_timeseries_with_uncertainty(

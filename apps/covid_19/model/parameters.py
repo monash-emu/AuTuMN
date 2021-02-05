@@ -99,6 +99,7 @@ class TanhMicrodistancingParams(BaseModel):
 class MicroDistancingFunc(BaseModel):
     function_type: str
     parameters: Union[EmpiricMicrodistancingParams, TanhMicrodistancingParams]
+    locations: List
 
 
 class Mobility(BaseModel):

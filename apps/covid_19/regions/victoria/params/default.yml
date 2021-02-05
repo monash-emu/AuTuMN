@@ -77,6 +77,11 @@ victorian_clusters:
             c: 197. # 15th July
             sigma: 0.
             upper_asymptote: 0.3 # Not important as this is calibrated
+          locations:
+            - other_locations
+            - school
+            - work
+            - home
         face_coverings: # Mandatory face coverings
           function_type: tanh
           parameters:
@@ -84,6 +89,10 @@ victorian_clusters:
             c: 205. # 23rd July
             sigma: 0.
             upper_asymptote: 0.2 # Not important as this is calibrated
+          locations:
+            - other_locations
+            - school
+            - work
 
   # *** REGIONAL ***
   regional:
@@ -134,6 +143,11 @@ victorian_clusters:
             c: 197. # 15th July
             sigma: 0.
             upper_asymptote: 0.3 # Not important as this is calibrated
+          locations:
+            - other_locations
+            - school
+            - work
+            - home
         face_coverings:
           function_type: tanh
           parameters:
@@ -141,3 +155,7 @@ victorian_clusters:
             c: 215. # 2nd August
             sigma: 0.
             upper_asymptote: 0.2 # Not important as this is calibrated
+          locations:
+            - other_locations
+            - school
+            - work

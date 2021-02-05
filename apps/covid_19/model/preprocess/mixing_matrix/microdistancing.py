@@ -19,11 +19,12 @@ def get_microdistancing_funcs(
 
     # Supports any number of microdistancing functions, with any user-defined names
     microdist_component_funcs = []
-
     final_adjustments = {}
 
+    # For each Prem location ...
     for loc in locations:
 
+        # ... work through the microdistancing functions and apply them if relevant
         for key, func_params in params.items():
             if key.endswith(ADJUSTER_SUFFIX):
                 # Ignore 'adjuster' functions - we'll use these later
@@ -36,11 +37,11 @@ def get_microdistancing_funcs(
             adjustment_key = f"{key}_adjuster"
             adjustment_func_params = params.get(adjustment_key)
             if adjustment_func_params:
-                # An adjustment function is applied to the original function.
+                # An adjustment function is applied to the original function
                 waning_adjustment = get_microdist_func_component(adjustment_func_params)
                 microdistancing_func = lambda t: microdist_func(t) * waning_adjustment(t)
             else:
-                # Just use the original function.
+                # Just use the original function
                 microdistancing_func = microdist_func
 
             if loc in params[key].locations:
@@ -51,6 +52,7 @@ def get_microdistancing_funcs(
             power = 2 if square_mobility_effect else 1
             return np.product([(1.0 - func(time)) ** power for func in microdist_component_funcs])
 
+        # Get the final location-specific microdistancing functions
         final_adjustments[loc] = microdist_composite_func
 
     return final_adjustments

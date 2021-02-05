@@ -350,7 +350,7 @@ def plot_seroprevalence_by_age(
     if single_panel:
         plotter.save_figure(fig, filename="sero_by_age", subdir="outputs", title_text="")
 
-    return max_value
+    return max_value, seroprevalence_by_age
 
 
 def plot_seroprevalence_by_age_against_targets(
@@ -370,7 +370,7 @@ def plot_seroprevalence_by_age_against_targets(
             midpoint_time = int(mean(survey["time_range"]))
             ax = fig.add_subplot(spec[i_row, i_col])
             s_name = "" if not "survey_name" in survey else survey["survey_name"]
-            max_value = plot_seroprevalence_by_age(
+            max_value, _ = plot_seroprevalence_by_age(
                 plotter, uncertainty_df, selected_scenario, time=midpoint_time, axis=ax, name=s_name
             )
 

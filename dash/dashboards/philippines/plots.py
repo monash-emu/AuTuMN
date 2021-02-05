@@ -52,7 +52,7 @@ def plot_seroprevalence_by_age(
 
         with pyplot.style.context("ggplot"):
             ax = fig.add_subplot(spec[i_row, i_col])
-            plots.uncertainty.plots.plot_seroprevalence_by_age(
+            _, _ = plots.uncertainty.plots.plot_seroprevalence_by_age(
                 plotter, uncertainty_df, selected_scenario, time, axis=ax, name=region.title()
             )
 

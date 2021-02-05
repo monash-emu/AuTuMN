@@ -26,6 +26,11 @@ mobility:
         c: 300.
         sigma: 0.
         upper_asymptote: 0.1
+      locations:
+        - other_locations
+        - school
+        - work
+        - home
   mixing:
     school:
       append: false

@@ -18,7 +18,6 @@ def build_dynamic_mixing_matrix(
     """
     microdistancing_funcs = get_microdistancing_funcs(
         mobility.microdistancing,
-        mobility.microdistancing_locations,
         mobility.square_mobility_effect,
     )
     mobility_funcs = get_mobility_funcs(

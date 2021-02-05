@@ -27,4 +27,9 @@ mobility:
         max_effect: 0.28
         times: [75, 314]
         values: [0., 1.]
+      locations:
+        - other_locations
+        - school
+        - work
+        - home
 

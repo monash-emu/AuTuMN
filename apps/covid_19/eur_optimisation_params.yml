@@ -63,10 +63,6 @@ infection_fatality:
     - 0.07274  # 80+
 
 mobility:
-  microdistancing_locations:
-    - other_locations
-    - school
-    - work
   google_mobility_locations:
     work:
       - workplaces
@@ -87,6 +83,11 @@ mobility:
         c: 90.
         sigma: 0.
         upper_asymptote: .4
+      locations:
+        - other_locations
+        - school
+        - work
+        - home
     behaviour_adjuster:
       function_type: tanh
       parameters:

@@ -4,12 +4,13 @@ from typing import List, Callable, Dict
 
 from autumn.curve import scale_up_function, tanh_based_scaleup
 from apps.covid_19.model.parameters import MicroDistancingFunc
+from apps.covid_19.model.preprocess.mixing_matrix.mobility import LOCATIONS
 
 ADJUSTER_SUFFIX = "_adjuster"
 
 
 def get_microdistancing_funcs(
-    params: Dict[str, MicroDistancingFunc], locations: List[str], square_mobility_effect: bool
+    params: Dict[str, MicroDistancingFunc], square_mobility_effect: bool
 ) -> Dict[str, Callable[[float], float]]:
     """
     Returns a dictionary of time-varying functions.
@@ -22,7 +23,7 @@ def get_microdistancing_funcs(
     final_adjustments = {}
 
     # For each Prem location ...
-    for loc in locations:
+    for loc in LOCATIONS:
 
         # ... work through the microdistancing functions and apply them if relevant
         for key, func_params in params.items():

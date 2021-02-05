@@ -160,11 +160,6 @@ mobility:
   smooth_google_data: false # whether to apply a 7-day moving average
   square_mobility_effect: true
   microdistancing: {}
-  microdistancing_locations:
-    - other_locations
-    - school
-    - work
-    - home
 
 # Parameters of tanh-based scale-up function used to define time-variant detection, if that approach selected
 case_detection:

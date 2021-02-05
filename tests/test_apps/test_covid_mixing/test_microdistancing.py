@@ -7,7 +7,7 @@ LOCATIONS = ["work", "home"]
 
 
 def test_microdistancing__with_no_funcs():
-    funcs = get_microdistancing_funcs(params={}, locations=LOCATIONS, square_mobility_effect=False)
+    funcs = get_microdistancing_funcs(params={}, square_mobility_effect=False)
     assert funcs["work"](0) == 1
     assert funcs["home"](0) == 1
 
@@ -28,7 +28,7 @@ def test_microdistancing__with_tanh_func():
     expect_func = tanh_based_scaleup(**params["foo"]["parameters"])
     params = {k: MicroDistancingFunc(**v) for k, v in params.items()}
     funcs = get_microdistancing_funcs(
-        params=params, locations=LOCATIONS, square_mobility_effect=False
+        params=params, square_mobility_effect=False
     )
     assert funcs["work"](0) == 1 - expect_func(0)
     assert funcs["home"](0) == 1 - expect_func(0)
@@ -50,7 +50,7 @@ def test_microdistancing__with_empiric_func():
     expect_func = scale_up_function([0, 365], [0.6, 60], method=4)
     params = {k: MicroDistancingFunc(**v) for k, v in params.items()}
     funcs = get_microdistancing_funcs(
-        params=params, locations=LOCATIONS, square_mobility_effect=False
+        params=params, square_mobility_effect=False
     )
     assert funcs["work"](0) == 1 - expect_func(0)
     assert funcs["home"](0) == 1 - expect_func(0)
@@ -74,7 +74,7 @@ def test_microdistancing__with_tanh_func_and_square_mobility_effect():
     expect_func = tanh_based_scaleup(**params["foo"]["parameters"])
     params = {k: MicroDistancingFunc(**v) for k, v in params.items()}
     funcs = get_microdistancing_funcs(
-        params=params, locations=LOCATIONS, square_mobility_effect=True
+        params=params, square_mobility_effect=True
     )
     assert funcs["work"](0) == (1 - expect_func(0)) ** 2
     assert funcs["home"](0) == (1 - expect_func(0)) ** 2
@@ -106,7 +106,7 @@ def test_microdistancing__with_tanh_func_and_adjuster():
     expect_adj_func = scale_up_function([0, 365], [0.6, 60], method=4)
     params = {k: MicroDistancingFunc(**v) for k, v in params.items()}
     funcs = get_microdistancing_funcs(
-        params=params, locations=LOCATIONS, square_mobility_effect=False
+        params=params, square_mobility_effect=False
     )
     assert funcs["work"](0) == 1 - expect_func(0) * expect_adj_func(0)
     assert funcs["home"](0) == 1 - expect_func(0) * expect_adj_func(0)

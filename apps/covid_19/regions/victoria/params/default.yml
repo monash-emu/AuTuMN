@@ -47,11 +47,6 @@ victorian_clusters:
           - residential
       smooth_google_data: false # Whether to apply a 7-day moving average
       square_mobility_effect: true
-      microdistancing_locations:
-        - other_locations
-        - school
-        - work
-        - home
       mixing:
         school:
           append: false
@@ -112,11 +107,6 @@ victorian_clusters:
           - residential
       smooth_google_data: false # Whether to apply a 7-day moving average
       square_mobility_effect: true
-      microdistancing_locations:
-        - other_locations
-        - school
-        - work
-        - home
       mixing:
         school:
           append: false

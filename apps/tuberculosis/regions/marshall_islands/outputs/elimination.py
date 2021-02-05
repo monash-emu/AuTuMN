@@ -41,7 +41,8 @@ end_tb_targets = {
         2035: 50.7,  # 90% reduction compared to 2015 (507)
     },
 }
-target_colours = {2025: "limegreen", 2035: "green"}
+# target_colours = {2025: "limegreen", 2035: "green"}
+target_colours = {2025: "slategrey", 2035: "darkslategrey"}
 
 
 def main():
@@ -56,7 +57,7 @@ def plot_elimination(uncertainty_df, is_logscale=False):
 
     interventions = ["ACF", "ACF_LTBI", "hh_pt"]
     scenario_idxs = {"ACF": [0, 5, 4, 3], "ACF_LTBI": [0, 8, 7, 6], "hh_pt": [0, 9]}
-    colors_idx = {"ACF": [0, 2, 7, 1], "ACF_LTBI": [0, 2, 7, 1], "hh_pt": [0, 4]}
+    colors_idx = {"ACF": [0, 8, 7, 1], "ACF_LTBI": [0, 8, 7, 1], "hh_pt": [0, 4]}
     alphas = {"ACF": [1.0, 0.8, 0.8, 0.7], "ACF_LTBI": [1.0, 0.8, 0.8, 0.7], "hh_pt": [1.0, 0.7]}
 
     if is_logscale:
@@ -92,7 +93,7 @@ def plot_elimination(uncertainty_df, is_logscale=False):
             sc_colors = _apply_transparency(sc_colors, alphas[intervention])
 
             for k, scenario_idx in enumerate(scenario_idxs[intervention]):
-                x_low = 2015 if scenario_idx == 0 else 2020
+                x_low = 2019 if scenario_idx == 0 else 2020
                 _plot_uncertainty(
                     ax,
                     uncertainty_df,

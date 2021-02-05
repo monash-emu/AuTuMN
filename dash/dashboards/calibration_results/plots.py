@@ -753,7 +753,6 @@ def plot_seroprevalence_by_age(
     time = st.sidebar.slider("time", min_time, max_time, max_time)
 
     sero_data = get_serosurvey_data()
-    region = "belgium"  # FIXME
     if region in sero_data:
         fetch_targets = st.sidebar.checkbox("for all available targets", value=False)
         n_columns = st.sidebar.slider("Number of columns for multi-panel", 1, 5, 3)

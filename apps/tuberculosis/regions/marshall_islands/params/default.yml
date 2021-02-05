@@ -123,16 +123,16 @@ time_variant_acf:
   - stratum_filter: { "location": "ebeye" }
     time_variant_screening_rate:
       2017: 0.
-      2017.01: 3.79
-      2017.5: 3.79
-      2017.51: 0.
+      2017.01: 1.9
+      2018.: 1.9
+      2018.01: 0.
     exclude_age: [0, 5]
   - stratum_filter: { "location": "majuro" }
     time_variant_screening_rate:
       2018: 0.
-      2018.01: 3.22
-      2018.5: 3.22
-      2018.51: 0.
+      2018.01: 1.66
+      2019: 1.66
+      2019.01: 0.
 
 time_variant_ltbi_screening:
   - stratum_filter: { "location": "majuro" }

@@ -2,8 +2,8 @@ import yaml
 
 
 INTERVENTION_RATE = {
-    'time_variant_acf': 3.22,
-    'time_variant_ltbi_screening': 3.22
+    'time_variant_acf': 1.66,
+    'time_variant_ltbi_screening': 1.66
 }
 
 BASELINE_POST_INTERVENTION_RATE = {
@@ -102,13 +102,13 @@ def get_periodic_sc_params(frequency, type='ACF'):
         {
             'stratum_filter': {"location": "ebeye"},
             'time_variant_screening_rate': {
-                2017: 0., 2017.01: 3.79, 2017.5: 3.79, 2017.51: 0.
+                2017: 0., 2017.01: 1.9, 2018: 1.9, 2018.01: 0.
             }
         },
         {
             'stratum_filter': {"location": "majuro"},
             'time_variant_screening_rate': {
-                2018: 0., 2018.01: 3.22, 2018.5: 3.22, 2018.51: 0.
+                2018: 0., 2018.01: 1.66, 2019: 1.66, 2019.01: 0.
             }
         }
     ]
@@ -116,19 +116,19 @@ def get_periodic_sc_params(frequency, type='ACF'):
         {
             'stratum_filter': {"location": "majuro"},
             'time_variant_screening_rate': {
-                2018: 0., 2018.01: 3.22, 2018.5: 3.22, 2018.51: BASELINE_POST_INTERVENTION_RATE['time_variant_ltbi_screening']
+                2018: 0., 2018.01: 1.66, 2019: 1.66, 2019.01: BASELINE_POST_INTERVENTION_RATE['time_variant_ltbi_screening']
             }
         },
         {
             'stratum_filter': {"location": "ebeye"},
             'time_variant_screening_rate': {
-                2018.01: 0., 2018.5: BASELINE_POST_INTERVENTION_RATE['time_variant_ltbi_screening']
+                2018.01: 0., 2019: BASELINE_POST_INTERVENTION_RATE['time_variant_ltbi_screening']
             }
         },
         {
             'stratum_filter': {"location": "other"},
             'time_variant_screening_rate': {
-                2018.01: 0., 2018.5: BASELINE_POST_INTERVENTION_RATE['time_variant_ltbi_screening']
+                2018.01: 0., 2019: BASELINE_POST_INTERVENTION_RATE['time_variant_ltbi_screening']
             }
         },
     ]
@@ -163,8 +163,8 @@ def make_periodic_time_series(rate, frequency, baseline_rate=0.):
     while year < 2050:
         time_series[year] = baseline_rate
         time_series[year + .01] = rate
-        time_series[year + .5] = rate
-        time_series[year + .51] = baseline_rate
+        time_series[year + 1.] = rate
+        time_series[year + 1.01] = baseline_rate
         year += frequency
 
     return time_series

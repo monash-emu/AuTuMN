@@ -74,6 +74,23 @@ def get_uncertainty_data(calib_dir_path, mcmc_tables, output, burn_in):
     )
 
 
+def create_seroprev_csv(seroprev_by_age):
+    """
+    Create downloadable CSV from seroprevalence by age data as it is created in the seroprevalence plotting function.
+    """
+
+    # Hack to convert single-element lists from seroprevalence data to just single values
+    for age_group in seroprev_by_age.keys():
+        for centile in seroprev_by_age[age_group]:
+            if len(seroprev_by_age[age_group][centile]) == 1:
+                seroprev_by_age[age_group][centile] = seroprev_by_age[age_group][centile][0]
+            elif len(seroprev_by_age[age_group][centile]) == 0:
+                seroprev_by_age[age_group][centile] = "no estimate"
+
+    # Create the CSV
+    create_downloadable_csv(pd.DataFrame.from_dict(seroprev_by_age), "seroprev_by_age")
+
+
 def print_mle_parameters(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
@@ -739,9 +756,10 @@ def plot_seroprevalence_by_age(
             plotter, uncertainty_df, selected_scenario, sero_data[region], n_columns
         )
     else:
-        plots.uncertainty.plots.plot_seroprevalence_by_age(
+        _, seroprevalence_by_age = plots.uncertainty.plots.plot_seroprevalence_by_age(
             plotter, uncertainty_df, selected_scenario, time
         )
+        create_seroprev_csv(seroprevalence_by_age)
 
 
 PLOT_FUNCS["Seroprevalence by age"] = plot_seroprevalence_by_age

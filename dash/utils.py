@@ -3,11 +3,11 @@ import base64
 import numpy as np
 
 
-def create_downloadable_csv(data_frame_to_download, filename):
+def create_downloadable_csv(data_frame_to_download, filename, include_row=True):
     """
     Create a link for a downloadable CSV file available in the streamlit interface.
     """
-    csv_bytes = data_frame_to_download.to_csv().encode()
+    csv_bytes = data_frame_to_download.to_csv(index=include_row).encode()
     b64_str = base64.b64encode(csv_bytes).decode()
     text = "click here to download CSV containing the following data"
     html_str = f'<a download="{filename}.csv" href="data:file/csv;name={filename}.csv;base64,{b64_str}">{text}</a>'

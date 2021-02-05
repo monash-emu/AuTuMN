@@ -254,7 +254,7 @@ def plot_timeseries_with_uncertainty(
     is_targets = st.sidebar.checkbox("Show targets")
     is_overlay_unceratinty = st.sidebar.checkbox("Overlay uncertainty")
     is_legend = st.sidebar.checkbox("Add legend")
-    plots.uncertainty.plots.plot_timeseries_with_uncertainty(
+    quantiles = plots.uncertainty.plots.plot_timeseries_with_uncertainty(
         plotter,
         uncertainty_df,
         chosen_output,
@@ -270,6 +270,15 @@ def plot_timeseries_with_uncertainty(
         dpi_request=dpi_request,
         capitalise_first_letter=capitalise_first_letter,
         legend=is_legend,
+    )
+
+    # Provide outputs as CSV
+    scenario_for_csv = selected_scenarios[0]
+    st.write("The following downloadable CSV is for the first scenario selected in the select box above:")
+    create_downloadable_csv(
+        quantiles[scenario_for_csv],
+        f"output_quantiles_for_scenario_{scenario_for_csv}_for_indicator_{chosen_output}",
+        include_row=False
     )
 
 

@@ -35,7 +35,7 @@ def get_microdistancing_funcs(
             # Adjust an existing microdistancing function with another function if specified
             adjustment_key = f"{key}_adjuster"
             adjustment_func_params = params.get(adjustment_key)
-            if adjustment_func_params and loc in params[key].locations:
+            if adjustment_func_params:
                 # An adjustment function is applied to the original function.
                 waning_adjustment = get_microdist_func_component(adjustment_func_params)
                 microdistancing_func = lambda t: microdist_func(t) * waning_adjustment(t)
@@ -43,7 +43,8 @@ def get_microdistancing_funcs(
                 # Just use the original function.
                 microdistancing_func = microdist_func
 
-            microdist_component_funcs.append(microdistancing_func)
+            if loc in params[key].locations:
+                microdist_component_funcs.append(microdistancing_func)
 
         # Generate the overall composite contact adjustment function as the product of the reciprocal all the components
         def microdist_composite_func(time: float) -> float:

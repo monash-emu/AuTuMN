@@ -22,6 +22,8 @@ def test_microdistancing__with_tanh_func():
                 "sigma": 0.6,
                 "upper_asymptote": 1,
             },
+            "locations":
+                ["other_locations", "school", "work", "home"],
         }
     }
 
@@ -45,6 +47,8 @@ def test_microdistancing__with_empiric_func():
                 "times": [0, 365],
                 "values": [1, 100],
             },
+            "locations":
+                ["other_locations", "school", "work", "home"],
         }
     }
     expect_func = scale_up_function([0, 365], [0.6, 60], method=4)
@@ -68,6 +72,8 @@ def test_microdistancing__with_tanh_func_and_square_mobility_effect():
                 "sigma": 0.6,
                 "upper_asymptote": 1,
             },
+            "locations":
+                ["other_locations", "school", "work", "home"],
         }
     }
 

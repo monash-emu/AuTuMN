@@ -19,11 +19,12 @@ def get_microdistancing_funcs(
     """
 
     # Supports any number of microdistancing functions, with any user-defined names
-    microdist_component_funcs = []
     final_adjustments = {}
 
     # For each Prem location ...
     for loc in LOCATIONS:
+
+        microdist_component_funcs = []
 
         # ... work through the microdistancing functions and apply them if relevant
         for key, func_params in params.items():

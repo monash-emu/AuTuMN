@@ -23,7 +23,7 @@ def test_microdistancing__with_tanh_func():
                 "upper_asymptote": 1,
             },
             "locations":
-                ["other_locations", "school", "work", "home"],
+                ["work", "home"],
         }
     }
 
@@ -48,7 +48,7 @@ def test_microdistancing__with_empiric_func():
                 "values": [1, 100],
             },
             "locations":
-                ["other_locations", "school", "work", "home"],
+                ["work", "home"],
         }
     }
     expect_func = scale_up_function([0, 365], [0.6, 60], method=4)
@@ -73,7 +73,7 @@ def test_microdistancing__with_tanh_func_and_square_mobility_effect():
                 "upper_asymptote": 1,
             },
             "locations":
-                ["other_locations", "school", "work", "home"],
+                ["work", "home"],
         }
     }
 
@@ -98,6 +98,7 @@ def test_microdistancing__with_tanh_func_and_adjuster():
                 "sigma": 0.6,
                 "upper_asymptote": 1,
             },
+            "locations": ["work", "home"]
         },
         "foo_adjuster": {
             "function_type": "empiric",
@@ -106,6 +107,7 @@ def test_microdistancing__with_tanh_func_and_adjuster():
                 "times": [0, 365],
                 "values": [1, 100],
             },
+            "locations": ["work", "home"]
         },
     }
     expect_func = tanh_based_scaleup(**params["foo"]["parameters"])

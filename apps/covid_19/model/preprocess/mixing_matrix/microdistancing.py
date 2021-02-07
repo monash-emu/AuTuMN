@@ -38,6 +38,10 @@ def get_microdistancing_funcs(
             adjustment_key = f"{key}_adjuster"
             adjustment_func_params = params.get(adjustment_key)
             if adjustment_func_params:
+
+                # Ensure the adjuster applies to the same locations as the original
+                assert params[f"{key}_adjuster"].locations == params[f"{key}"].locations
+
                 # An adjustment function is applied to the original function
                 waning_adjustment = get_microdist_func_component(adjustment_func_params)
                 microdistancing_func = lambda t: microdist_func(t) * waning_adjustment(t)

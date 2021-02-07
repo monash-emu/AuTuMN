@@ -87,7 +87,6 @@ mobility:
         - other_locations
         - school
         - work
-        - home
     behaviour_adjuster:
       function_type: tanh
       parameters:
@@ -99,7 +98,6 @@ mobility:
         - other_locations
         - school
         - work
-        - home
 
 elderly_mixing_reduction:
   age_categories: ["60", "65", "70", "75"]

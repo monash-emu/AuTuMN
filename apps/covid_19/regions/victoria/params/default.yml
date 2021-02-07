@@ -88,6 +88,7 @@ victorian_clusters:
             - other_locations
             - school
             - work
+            - home
 
   # *** REGIONAL ***
   regional:
@@ -149,3 +150,4 @@ victorian_clusters:
             - other_locations
             - school
             - work
+            - home

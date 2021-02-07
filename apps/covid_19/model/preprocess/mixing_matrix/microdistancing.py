@@ -23,7 +23,6 @@ def get_microdistancing_funcs(
 
     # For each Prem location ...
     for loc in LOCATIONS:
-
         microdist_component_funcs = []
 
         # ... work through the microdistancing functions and apply them if relevant

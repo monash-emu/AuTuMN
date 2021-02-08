@@ -15,7 +15,6 @@ from apps.covid_19.model.preprocess.victorian_mixing import build_victorian_mixi
 from apps.covid_19.model.stratifications.agegroup import AGEGROUP_STRATA
 
 CLUSTER_STRATA = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS]
-MOB_REGIONS = [Region.to_filename(r) for r in Region.VICTORIA_SUBREGIONS]
 
 
 def get_cluster_strat(params: Parameters) -> Stratification:
@@ -73,7 +72,7 @@ def apply_post_cluster_strat_hacks(params: Parameters, model: CompartmentalModel
     """
 
     # Get the inter-cluster mixing matrix
-    intercluster_mixing_matrix = create_assortative_matrix(vic.intercluster_mixing, MOB_REGIONS)
+    intercluster_mixing_matrix = create_assortative_matrix(vic.intercluster_mixing, CLUSTER_STRATA)
 
     # Replace regional Victoria maximum effect calibration parameters with the metro values for consistency
     for param_to_copy in ["face_coverings", "behaviour"]:

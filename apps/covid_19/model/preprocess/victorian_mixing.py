@@ -2,11 +2,8 @@
 Builds a mixing matrix for the Victorian multi-cluster model.
 """
 from copy import deepcopy
-from typing import List
 
 from numba import jit
-from numba.typed import List as NumbaList
-
 import numpy as np
 from summer.model import StratifiedModel
 
@@ -21,10 +18,10 @@ def build_victorian_mixing_matrix_func(
     country,
     intercluster_mixing_matrix,
 ):
-
-    metro_clusters = [region.replace("-", "_") for region in Region.VICTORIA_METRO]
+    # Note that having consistentr ordering of clusters is very important.
+    metro_clusters = [r.replace("-", "_") for r in Region.VICTORIA_METRO]
     regional_clusters = [region.replace("-", "_") for region in Region.VICTORIA_RURAL]
-    all_clusters = metro_clusters + regional_clusters
+    all_clusters = [region.replace("-", "_") for region in Region.VICTORIA_SUBREGIONS]
 
     # Collate the cluster-specific mixing matrices
     cluster_age_mm_funcs = []
@@ -50,7 +47,9 @@ def build_victorian_mixing_matrix_func(
     def get_mixing_matrix(self: StratifiedModel, time: float):
 
         # Collate the within-cluster mixing matrices
-        cluster_age_mms = NumbaList([f(time) for f in cluster_age_mm_funcs])
+        cluster_age_mms = np.zeros((len(cluster_age_mm_funcs), *static_mixing_matrix.shape))
+        for idx, func in enumerate(cluster_age_mm_funcs):
+            cluster_age_mms[idx] = func(time)
 
         # Pre-allocate
         static_matrix_size = len(static_mixing_matrix)
@@ -75,7 +74,7 @@ def build_victorian_mixing_matrix_func(
 def _set_mixing_matrix(
     super_matrix: np.ndarray,
     intercluster_mixing_matrix: np.ndarray,
-    cluster_age_mms: List[np.ndarray],
+    cluster_age_mms: np.ndarray,
     static_matrix_size: int,
     num_clusters: int,
 ) -> np.ndarray:

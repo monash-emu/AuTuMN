@@ -1,14 +1,11 @@
 import logging
-
 from time import time
 
 logger = logging.getLogger(__name__)
 
 
 class Timer:
-    """
-    Prints the times that a block of code takes to run
-    """
+    """Prints the time that a block of code takes to run"""
 
     def __init__(self, message):
         self.message = message

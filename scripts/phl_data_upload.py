@@ -10,11 +10,11 @@ import numpy as np
 import itertools
 from google_drive_downloader import GoogleDriveDownloader as gdd
 import json
-from autumn import constants
+from settings import APPS_PATH
 
 # shareable google drive links
-PHL_doh_link = "1z40tsK2dqNDmAJ8OfmmbCtT2rXnMcCaN"  # sheet 05 daily report
-PHL_fassster_link = "1I5RPsrMXL3DDTWW4DSSzCHshtjLZOPiW"
+PHL_doh_link = "149vVh0p_YZNspdb753qWbt1lAO6W6fto"  # sheet 05 daily report
+PHL_fassster_link = "1_L0M6jlwgZVBLAD6uwHtpo-9dzpcbnFW"
 
 # destination folders filepaths
 PHL_doh_dest = "./data/targets/PHL_icu.csv"
@@ -149,7 +149,7 @@ def update_calibration_phl():
         icu_tmp = icu.loc[icu["region"] == region]
         deaths_tmp = deaths.loc[deaths["Region"] == region]
         notifications_tmp = notifications.loc[notifications["Region"] == region]
-        file_path = os.path.join(constants.APPS_PATH, "covid_19", "regions", region, "targets.json")
+        file_path = os.path.join(APPS_PATH, "covid_19", "regions", region, "targets.json")
 
         with open(file_path, mode="r") as f:
             targets = json.load(f)

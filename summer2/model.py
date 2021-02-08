@@ -753,7 +753,7 @@ class CompartmentalModel:
         self._flows = _exit_flows + _entry_flows + _transition_flows + _function_flows
         # Check we didn't miss any flows
         assert len(self._flows) == num_flows, "Some flows were lost when preparing to run."
-        # Save a tiny bit of tiny bit of time pre-sorting flows.
+        # Split flows into two groups for runtime.
         self._iter_function_flows = [
             (i, f) for i, f in enumerate(self._flows) if isinstance(f, flows.FunctionFlow)
         ]

@@ -64,9 +64,9 @@ def test_apply_flows__with_function_flow__expect_flows_applied(inf_pop, sus_pop,
     Expect a flow to occur proportional to the result of `get_flow_rate`.
     """
 
-    def get_flow_rate(comps, comp_vals, flow_rates, time):
+    def get_flow_rate(flow, comps, comp_vals, flows, flow_rates, time):
         _, i_pop, _ = comp_vals
-        _, i_flow, _ = flow_rates
+        i_flow, _ = flow_rates
         return i_pop + i_flow
 
     model = CompartmentalModel(

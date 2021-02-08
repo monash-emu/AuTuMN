@@ -22,6 +22,7 @@ def test_compartment_size_derived_outputs():
         times=[0, 5], compartments=["S", "I", "R"], infectious_compartments=["I"]
     )
     model.set_initial_population(distribution={"S": 990, "I": 10})
+    model.run()
     model.outputs = np.array(
         [
             [990, 10, 0],
@@ -46,6 +47,7 @@ def test_aggregate_derived_outputs():
         times=[0, 5], compartments=["S", "I", "R"], infectious_compartments=["I"]
     )
     model.set_initial_population(distribution={"S": 990, "I": 10})
+    model.run()
     model.outputs = np.array(
         [
             [990, 10, 0],
@@ -69,6 +71,7 @@ def test_cumulative_derived_outputs():
         times=[0, 5], compartments=["S", "I", "R"], infectious_compartments=["I"]
     )
     model.set_initial_population(distribution={"S": 990, "I": 10})
+    model.run()
     model.outputs = np.array(
         [
             [990, 10, 0],
@@ -137,6 +140,7 @@ def test_functional_derived_outputs():
         times=[0, 5], compartments=["S", "I", "R"], infectious_compartments=["I"]
     )
     model.set_initial_population(distribution={"S": 990, "I": 10})
+    model.run()
     model.outputs = np.array(
         [
             [990, 10, 0],
@@ -208,6 +212,7 @@ def test_derived_outputs_whitelist():
         times=[0, 5], compartments=["S", "I", "R"], infectious_compartments=["I"]
     )
     model.set_initial_population(distribution={"S": 990, "I": 10})
+    model.run()
     model.outputs = np.array(
         [
             [990, 10, 0],

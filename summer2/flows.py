@@ -107,11 +107,8 @@ class BaseFlow(ABC):
     @abstractmethod
     def get_net_flow(
         self,
-        time: float,
-        compartments: List[Compartment],
         compartment_values: np.ndarray,
-        flows: list,
-        flow_rates: np.ndarray,
+        time: float,
     ) -> float:
         """
         Returns the net flow value at a given time.

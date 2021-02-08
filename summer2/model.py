@@ -946,12 +946,12 @@ class CompartmentalModel:
         comp_vals[zero_mask] = 0
         self._prepare_time_step(time, comp_vals)
         flow_tracker_idx = len(self._flow_tracker_times) - 1
-        # Track this flow's flow-rates at this point in time for derived outputs and function flows.
+        # Track each flow's flow-rates at this point in time for derived outputs and function flows.
         flow_rates = self._flow_tracker_values[flow_tracker_idx]
         # Track the net flow rates between compartments for the ODE solver.
         net_flow_rates = np.zeros(len(comp_vals))
 
-        # Record the flow rate for each flow.
+        # Find the flow rate for each flow.
         for flow_idx, flow in self._iter_non_function_flows:
             # Evaluate all the flows that are not function flows.
             net_flow = flow.get_net_flow(compartment_values, time)
@@ -965,9 +965,9 @@ class CompartmentalModel:
                 self._total_deaths += net_flow
 
         if self._iter_function_flows:
+            # Evaluate the function flows.
             original_flow_rates = flow_rates.copy()
             for flow_idx, flow in self._iter_function_flows:
-                # Evaluate the function flows.
                 net_flow = flow.get_net_flow(
                     self.compartments, compartment_values, self._flows, original_flow_rates, time
                 )

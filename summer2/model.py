@@ -9,6 +9,7 @@ from functools import lru_cache
 import networkx
 import numpy as np
 from scipy.interpolate import interp1d
+from numba import jit
 
 import summer2.flows as flows
 from summer2.compartment import Compartment
@@ -733,70 +734,40 @@ class CompartmentalModel:
         for f in self._flows:
             f.optimize_adjustments()
 
-        # Split flows up into 3 groups: entry, exit and transition.
-        self._entry_flows = [f for f in self._flows if issubclass(f.__class__, flows.BaseEntryFlow)]
-        self._exit_flows = [f for f in self._flows if issubclass(f.__class__, flows.BaseExitFlow)]
-        self._function_flows = [f for f in self._flows if isinstance(f, flows.FunctionFlow)]
-        self._transition_flows = [
+        # Re-order flows so that they are executed in the correct order:
+        #   - exit flows
+        #   - entry flows (depends on exit flows for 'replace births' functionality)
+        #   - transition flows
+        #   - function flows (depend on all other prior flows, since they take flow rate as an input)
+        num_flows = len(self._flows)
+        _exit_flows = [f for f in self._flows if issubclass(f.__class__, flows.BaseExitFlow)]
+        _entry_flows = [f for f in self._flows if issubclass(f.__class__, flows.BaseEntryFlow)]
+        _transition_flows = [
             f
             for f in self._flows
             if issubclass(f.__class__, flows.BaseTransitionFlow)
             and not isinstance(f, flows.FunctionFlow)
         ]
-
+        _function_flows = [f for f in self._flows if isinstance(f, flows.FunctionFlow)]
+        self._has_function_flows = bool(_function_flows)
+        self._flows = _exit_flows + _entry_flows + _transition_flows + _function_flows
         # Check we didn't miss any flows
-        num_split_flows = sum(
-            len(fs)
-            for fs in [
-                self._entry_flows,
-                self._exit_flows,
-                self._transition_flows,
-                self._function_flows,
-            ]
-        )
-        assert len(self._flows) == num_split_flows
+        assert len(self._flows) == num_flows, "Some flows were lost when preparing to run."
+        # Split flows into two groups for runtime.
+        self._iter_function_flows = [
+            (i, f) for i, f in enumerate(self._flows) if isinstance(f, flows.FunctionFlow)
+        ]
+        self._iter_non_function_flows = [
+            (i, f) for i, f in enumerate(self._flows) if not isinstance(f, flows.FunctionFlow)
+        ]
 
         # Prepare to track flow rates for derived outputs
         # We track the times and values of the request flows while integrating, and then
         # interpolate the results to get our flow-based derived outputs.
-
         # An ordered list of the times that have been tracked.
         self._flow_tracker_times = []
-        # An ordered list of values for each derived output to track, corresponds to the list of times.
-        self._flow_trackers = {
-            k: []
-            for k, v in self._derived_output_requests.items()
-            if v["request_type"] == self._FLOW_REQUEST
-        }
-        # Build a list of lists, where each outer list represents a flow and
-        # each inner list contains references to the derived output values to track for that flow.
-        # Eg. [[], [list], [list, list, list], [], ...]
-        self._transition_flow_trackers = []
-        self._function_flow_trackers = []
-        self._exit_flow_trackers = []
-        self._entry_flow_trackers = []
-        tracking_pairs = [
-            [self._transition_flows, self._transition_flow_trackers],
-            [self._function_flows, self._function_flow_trackers],
-            [self._exit_flows, self._exit_flow_trackers],
-            [self._entry_flows, self._entry_flow_trackers],
-        ]
-        for _flows, trackers in tracking_pairs:
-            for flow in _flows:
-                values_to_track = []
-                trackers.append(values_to_track)
-                for output_name, values in self._flow_trackers.items():
-                    output_request = self._derived_output_requests[output_name]
-                    is_matching_flow = (
-                        flow.name == output_request["flow_name"]
-                        and (
-                            (not flow.source)
-                            or flow.source.has_strata(output_request["source_strata"])
-                        )
-                        and ((not flow.dest) or flow.dest.has_strata(output_request["dest_strata"]))
-                    )
-                    if is_matching_flow:
-                        values_to_track.append(values)
+        # An ordered list of values for each flow, these will contain an array of flow rates for each timestep.
+        self._flow_tracker_values = []
 
         """
         Pre-run calculations to help determine force of infection multiplier at runtime.
@@ -905,8 +876,7 @@ class CompartmentalModel:
 
         # Prepare derived output flow tracking for this timestep.
         self._flow_tracker_times.append(time)
-        for tracker in self._flow_trackers.values():
-            tracker.append(0)
+        self._flow_tracker_values.append(np.zeros(len(self._flows)))
 
         # Find the effective infectious population for the force of infection calculations.
         mixing_matrix = self._get_mixing_matrix(time)
@@ -968,57 +938,44 @@ class CompartmentalModel:
         Get net flows into, out of, and between all compartments.
         This function is passed to solve_ode func and defines the dynamics of the model.
         """
-        # Zero out compartment sizes to prevent negative values from messing up calcs.
+        # Zero out -ve compartment sizes in flow rate calculations,
+        # to prevent negative values from messing up the direction of flows.
+        # We don't expect large -ve values, but there can be small ones due to numerical errors.
         comp_vals = compartment_values.copy()
         zero_mask = comp_vals < 0
         comp_vals[zero_mask] = 0
-        flow_rates = np.zeros(comp_vals.shape)
         self._prepare_time_step(time, comp_vals)
         flow_tracker_idx = len(self._flow_tracker_times) - 1
+        # Track each flow's flow-rates at this point in time for derived outputs and function flows.
+        flow_rates = self._flow_tracker_values[flow_tracker_idx]
+        # Track the net flow rates between compartments for the ODE solver.
+        net_flow_rates = np.zeros(len(comp_vals))
 
-        # Apply inter-compartmental transition flows.
-        for flow_idx, flow in enumerate(self._transition_flows):
+        # Find the flow rate for each flow.
+        for flow_idx, flow in self._iter_non_function_flows:
+            # Evaluate all the flows that are not function flows.
             net_flow = flow.get_net_flow(compartment_values, time)
-            flow_rates[flow.source.idx] -= net_flow
-            flow_rates[flow.dest.idx] += net_flow
-
-            # Track net flow for derived outputs.
-            for tracker in self._transition_flow_trackers[flow_idx]:
-                tracker[flow_tracker_idx] += net_flow
-
-        # Apply exit flows: deaths, exports, etc.
-        # We apply deaths before births so that we can use 'total deaths' to calculate the birth rate, if required.
-        for flow_idx, flow in enumerate(self._exit_flows):
-            net_flow = flow.get_net_flow(compartment_values, time)
-            flow_rates[flow.source.idx] -= net_flow
-            if type(flow) is flows.DeathFlow:
+            flow_rates[flow_idx] = net_flow
+            if flow.source:
+                net_flow_rates[flow.source.idx] -= net_flow
+            if flow.dest:
+                net_flow_rates[flow.dest.idx] += net_flow
+            if flow.is_death_flow:
+                # Track total deaths for any later birth replacement flows.
                 self._total_deaths += net_flow
 
-            # Track net flow for derived outputs.
-            for tracker in self._exit_flow_trackers[flow_idx]:
-                tracker[flow_tracker_idx] += net_flow
+        if self._iter_function_flows:
+            # Evaluate the function flows.
+            original_flow_rates = flow_rates.copy()
+            for flow_idx, flow in self._iter_function_flows:
+                net_flow = flow.get_net_flow(
+                    self.compartments, compartment_values, self._flows, original_flow_rates, time
+                )
+                flow_rates[flow_idx] = net_flow
+                net_flow_rates[flow.source.idx] -= net_flow
+                net_flow_rates[flow.dest.idx] += net_flow
 
-        # Apply entry flows: births, imports, etc.
-        for flow_idx, flow in enumerate(self._entry_flows):
-            net_flow = flow.get_net_flow(compartment_values, time)
-            flow_rates[flow.dest.idx] += net_flow
-
-            # Track net flow for derived outputs.
-            for tracker in self._entry_flow_trackers[flow_idx]:
-                tracker[flow_tracker_idx] += net_flow
-
-        # Apply inter-compartmental function flows.
-        # These take the other flow rates as an input so they are executed last.
-        for flow_idx, flow in enumerate(self._function_flows):
-            net_flow = flow.get_net_flow(self.compartments, compartment_values, flow_rates, time)
-            flow_rates[flow.source.idx] -= net_flow
-            flow_rates[flow.dest.idx] += net_flow
-
-            # Track net flow for derived outputs.
-            for tracker in self._function_flow_trackers[flow_idx]:
-                tracker[flow_tracker_idx] += net_flow
-
-        return flow_rates
+        return net_flow_rates
 
     def _get_mixing_matrix(self, time: float) -> np.ndarray:
         """
@@ -1078,6 +1035,8 @@ class CompartmentalModel:
 
         derived_outputs = {}
         outputs_to_delete_after = []
+        # Convert tracked flow values into a matrix where the 1st dimension is flow type, 2nd is time
+        self._flow_tracker_values = np.array(self._flow_tracker_values).T
 
         # Calculate all the outputs in the correct order so that each output has its dependencies fulfilled.
         for name in networkx.topological_sort(graph):
@@ -1091,10 +1050,18 @@ class CompartmentalModel:
 
             if request_type == self._FLOW_REQUEST:
                 # User wants to track a set of flow rates over time.
-                times = self._flow_tracker_times
-                values = self._flow_trackers[name]
+                values = np.zeros(len(self._flow_tracker_times))
+                for flow_idx, flow in enumerate(self._flows):
+                    is_matching_flow = (
+                        flow.name == request["flow_name"]
+                        and ((not flow.source) or flow.source.has_strata(request["source_strata"]))
+                        and ((not flow.dest) or flow.dest.has_strata(request["dest_strata"]))
+                    )
+                    if is_matching_flow:
+                        values += self._flow_tracker_values[flow_idx]
+
                 # Build a function to produce interpolated results
-                solved_func = interp1d(times, values)
+                solved_func = interp1d(self._flow_tracker_times, values)
                 # Populate output array with interpolated results
                 num_times = len(self.times)
                 interpolated_output = np.zeros(self.times.shape)

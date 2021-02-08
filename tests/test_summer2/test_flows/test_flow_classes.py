@@ -16,7 +16,7 @@ from summer2.flows import (
 
 
 def test_function_flow_get_net_flow():
-    def get_flow_rate(comps, comp_vals, flow_rates, time):
+    def get_flow_rate(flow, comps, comp_vals, flows, flow_rates, time):
         i_pop = sum([comp_vals[c.idx] for c in comps if c.name == "I"])
         s_flows = sum([flow_rates[c.idx] for c in comps if c.name == "S"])
         return s_flows * i_pop * time
@@ -35,12 +35,12 @@ def test_function_flow_get_net_flow():
 
     compartment_values = np.array([1, 3, 5])
     flow_rates = np.array([2, 7, 13])
-    net_flow = flow.get_net_flow(compartments, compartment_values, flow_rates, 7)
+    net_flow = flow.get_net_flow(compartments, compartment_values, [flow], flow_rates, 7)
     assert net_flow == 2 * 3 * 7
 
 
 def test_function_flow_get_net_flow_with_adjust():
-    def get_flow_rate(comps, comp_vals, flow_rates, time):
+    def get_flow_rate(flow, comps, comp_vals, flows, flow_rates, time):
         i_pop = sum([comp_vals[c.idx] for c in comps if c.name == "I"])
         s_flows = sum([flow_rates[c.idx] for c in comps if c.name == "S"])
         return s_flows * i_pop * time
@@ -59,7 +59,7 @@ def test_function_flow_get_net_flow_with_adjust():
 
     compartment_values = np.array([1, 3, 5])
     flow_rates = np.array([2, 7, 13])
-    net_flow = flow.get_net_flow(compartments, compartment_values, flow_rates, 7)
+    net_flow = flow.get_net_flow(compartments, compartment_values, [flow], flow_rates, 7)
     assert net_flow == 2 * 3 * 7 * 13
 
 

@@ -1,4 +1,9 @@
+# Step 0: Install Git, Git Large File Storage
+
+Install Git [here](https://git-scm.com/downloads) and Git Large File Storage [here](https://git-lfs.github.com/).
+
 # Step 1: Install Anaconda
+
 Approximate install time: 10 minutes.
 
 ## Anaconda setup for Windows
@@ -52,6 +57,7 @@ pip install -r requirements.txt
 ```
 
 # Step 3: Install PyCharm
+
 Approximate install time: 5 minutes.
 
 Download and install Pycharm community edition [here](https://www.jetbrains.com/pycharm/download/#section=windows).

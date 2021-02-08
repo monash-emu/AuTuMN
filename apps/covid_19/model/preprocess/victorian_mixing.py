@@ -18,7 +18,8 @@ def build_victorian_mixing_matrix_func(
     country,
     intercluster_mixing_matrix,
 ):
-    # Note that having consistentr ordering of clusters is very important.
+    # Having a consistent ordering of cluster names when building the matrix is critical, or else
+    # we will mix up our clutsers and people in Gippsland will be telepathically infecting people in the Grampians.
     metro_clusters = [r.replace("-", "_") for r in Region.VICTORIA_METRO]
     regional_clusters = [region.replace("-", "_") for region in Region.VICTORIA_RURAL]
     all_clusters = [region.replace("-", "_") for region in Region.VICTORIA_SUBREGIONS]

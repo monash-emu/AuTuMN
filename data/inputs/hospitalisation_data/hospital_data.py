@@ -7,11 +7,9 @@ from requests import get
 HOSPITAL_DIRPATH = os.path.join(constants.INPUT_DATA_PATH, "hospitalisation_data")
 SWEDEN_ICU_PREV = os.path.join(
     HOSPITAL_DIRPATH,
-    "Antal som intensivvårdas med Covid-19 per dag - ICU PREVALENCE.xlsx",
+    "icu_prevalence.xlsx",
 )
-SWEDEN_ICU_INCID = os.path.join(
-    HOSPITAL_DIRPATH, "Antal nyinskrivna vårdtillfällen med Coronavirus - ICU INCIDENCE.xlsx"
-)
+SWEDEN_ICU_INCID = os.path.join(HOSPITAL_DIRPATH, "icu_incidence.xlsx")
 
 SPAIN_HOSP = os.path.join(HOSPITAL_DIRPATH, "spain_incid_hosp.csv")
 

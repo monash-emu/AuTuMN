@@ -61,34 +61,30 @@ def cli():
 @click.option("--run", type=str, required=True)
 @click.option("--chains", type=int, required=True)
 @click.option("--runtime", type=int, required=True)
-@click.option("--workers", type=int, required=False)  # Backwards compatibility.
 @click.option("--verbose", is_flag=True)
-def run_calibrate(run, chains, runtime, workers, verbose):
+def run_calibrate(run, chains, runtime, verbose):
     calibrate_task(run, runtime, chains, quiet=not verbose)
 
 
 @cli.command("full")
 @click.option("--run", type=str, required=True)
 @click.option("--burn", type=int, required=True)
-@click.option("--workers", type=int, required=False)  # Backwards compatibility.
 @click.option("--verbose", is_flag=True)
-def run_full_models(run, burn, workers, verbose):
+def run_full_models(run, burn, verbose):
     full_model_run_task(run, burn, quiet=not verbose)
 
 
 @cli.command("powerbi")
 @click.option("--run", type=str, required=True)
-@click.option("--workers", type=int, required=False)  # Backwards compatibility.
 @click.option("--verbose", is_flag=True)
-def run_powerbi(run, workers, verbose):
+def run_powerbi(run, verbose):
     powerbi_task(run, quiet=not verbose)
 
 
 @cli.command("dhhs")
 @click.option("--commit", type=str, required=True)
-@click.option("--workers", type=int, required=False)  # Backwards compatibility.
 @click.option("--verbose", is_flag=True)
-def run_dhhs(commit, workers, verbose):
+def run_dhhs(commit, verbose):
     dhhs_task(commit, quiet=not verbose)
 
 

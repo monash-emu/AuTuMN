@@ -4,12 +4,13 @@ from typing import List, Callable, Dict
 
 from autumn.curve import scale_up_function, tanh_based_scaleup
 from apps.covid_19.model.parameters import MicroDistancingFunc
+from apps.covid_19.model.preprocess.mixing_matrix.mobility import LOCATIONS
 
 ADJUSTER_SUFFIX = "_adjuster"
 
 
 def get_microdistancing_funcs(
-    params: Dict[str, MicroDistancingFunc], locations: List[str], square_mobility_effect: bool
+    params: Dict[str, MicroDistancingFunc], square_mobility_effect: bool
 ) -> Dict[str, Callable[[float], float]]:
     """
     Returns a dictionary of time-varying functions.
@@ -18,34 +19,52 @@ def get_microdistancing_funcs(
     """
 
     # Supports any number of microdistancing functions, with any user-defined names
-    microdist_component_funcs = []
-    for key, func_params in params.items():
-        if key.endswith(ADJUSTER_SUFFIX):
-            # Ignore 'adjuster' functions - we'll use these later
-            continue
+    final_adjustments = {}
 
-        # Build the raw function of time according to user requests
-        microdist_func = get_microdist_func_component(func_params)
+    # For each Prem location ...
+    for loc in LOCATIONS:
+        microdist_component_funcs = []
 
-        # Adjust an existing microdistancing function with another function if specified
-        adjustment_key = f"{key}_adjuster"
-        adjustment_func_params = params.get(adjustment_key)
-        if adjustment_func_params:
-            # An adjustment function is applied to the original function.
-            waning_adjustment = get_microdist_func_component(adjustment_func_params)
-            microdistancing_func = lambda t: microdist_func(t) * waning_adjustment(t)
+        # ... work through the microdistancing functions and apply them if relevant
+        for key, func_params in params.items():
+            if key.endswith(ADJUSTER_SUFFIX):
+                # Ignore 'adjuster' functions - we'll use these later
+                continue
+
+            # Build the raw function of time according to user requests
+            microdist_func = get_microdist_func_component(func_params)
+
+            # Adjust an existing microdistancing function with another function if specified
+            adjustment_key = f"{key}_adjuster"
+            adjustment_func_params = params.get(adjustment_key)
+            if adjustment_func_params:
+
+                # Ensure the adjuster applies to the same locations as the original
+                assert params[f"{key}_adjuster"].locations == params[f"{key}"].locations
+
+                # An adjustment function is applied to the original function
+                waning_adjustment = get_microdist_func_component(adjustment_func_params)
+                microdistancing_func = lambda t: microdist_func(t) * waning_adjustment(t)
+            else:
+                # Just use the original function
+                microdistancing_func = microdist_func
+
+            if loc in params[key].locations:
+                microdist_component_funcs.append(microdistancing_func)
+
+        # Generate the overall composite contact adjustment function as the product of the reciprocal all the components
+        if len(microdist_component_funcs) > 0:
+            def microdist_composite_func(time: float) -> float:
+                power = 2 if square_mobility_effect else 1
+                return np.product([(1.0 - func(time)) ** power for func in microdist_component_funcs])
         else:
-            # Just use the original function.
-            microdistancing_func = microdist_func
+            def microdist_composite_func(time: float) -> float:
+                return 1.
 
-        microdist_component_funcs.append(microdistancing_func)
+        # Get the final location-specific microdistancing functions
+        final_adjustments[loc] = microdist_composite_func
 
-    # Generate the overall composite contact adjustment function as the product of the reciprocal all the components
-    def microdist_composite_func(time: float) -> float:
-        power = 2 if square_mobility_effect else 1
-        return np.product([(1.0 - func(time)) ** power for func in microdist_component_funcs])
-
-    return {loc: microdist_composite_func for loc in locations}
+    return final_adjustments
 
 
 def get_microdist_func_component(func_params: MicroDistancingFunc):

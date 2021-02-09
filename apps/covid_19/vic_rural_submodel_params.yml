@@ -32,7 +32,7 @@ mobility:
         - 1.  # 5th October
 
 
-  # Regional Victoria clusters macrodistancing function
+  # Regional Victoria clusters microdistancing function
   microdistancing:
     behaviour:
       function_type: empiric
@@ -69,3 +69,8 @@ mobility:
           - 0.5 # 13th September
           - 0.5
           - 0.4 # 16th September
+      locations:
+        - other_locations
+        - school
+        - work
+        - home

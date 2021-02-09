@@ -47,11 +47,6 @@ victorian_clusters:
           - residential
       smooth_google_data: false # Whether to apply a 7-day moving average
       square_mobility_effect: true
-      microdistancing_locations:
-        - other_locations
-        - school
-        - work
-        - home
       mixing:
         school:
           append: false
@@ -77,6 +72,11 @@ victorian_clusters:
             c: 197. # 15th July
             sigma: 0.
             upper_asymptote: 0.3 # Not important as this is calibrated
+          locations:
+            - other_locations
+            - school
+            - work
+            - home
         face_coverings: # Mandatory face coverings
           function_type: tanh
           parameters:
@@ -84,6 +84,11 @@ victorian_clusters:
             c: 205. # 23rd July
             sigma: 0.
             upper_asymptote: 0.2 # Not important as this is calibrated
+          locations:
+            - other_locations
+            - school
+            - work
+            - home
 
   # *** REGIONAL ***
   regional:
@@ -103,11 +108,6 @@ victorian_clusters:
           - residential
       smooth_google_data: false # Whether to apply a 7-day moving average
       square_mobility_effect: true
-      microdistancing_locations:
-        - other_locations
-        - school
-        - work
-        - home
       mixing:
         school:
           append: false
@@ -134,6 +134,11 @@ victorian_clusters:
             c: 197. # 15th July
             sigma: 0.
             upper_asymptote: 0.3 # Not important as this is calibrated
+          locations:
+            - other_locations
+            - school
+            - work
+            - home
         face_coverings:
           function_type: tanh
           parameters:
@@ -141,3 +146,8 @@ victorian_clusters:
             c: 215. # 2nd August
             sigma: 0.
             upper_asymptote: 0.2 # Not important as this is calibrated
+          locations:
+            - other_locations
+            - school
+            - work
+            - home

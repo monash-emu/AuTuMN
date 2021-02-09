@@ -99,6 +99,7 @@ class TanhMicrodistancingParams(BaseModel):
 class MicroDistancingFunc(BaseModel):
     function_type: str
     parameters: Union[EmpiricMicrodistancingParams, TanhMicrodistancingParams]
+    locations: List[str]
 
 
 class Mobility(BaseModel):
@@ -108,7 +109,6 @@ class Mobility(BaseModel):
     mixing: Dict[str, MixingLocation]
     age_mixing: Optional[Dict[str, TimeSeries]]
     microdistancing: Dict[str, MicroDistancingFunc]
-    microdistancing_locations: List[str]
     smooth_google_data: bool
     square_mobility_effect: bool
     npi_effectiveness: Dict[str, float]

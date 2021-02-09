@@ -3,7 +3,6 @@ import os
 import shutil
 from tempfile import TemporaryDirectory
 
-from autumn.inputs import build_input_database
 from autumn import plots, db
 from utils.s3 import upload_to_run_s3
 from utils.parallel import run_parallel_tasks
@@ -24,8 +23,6 @@ MLE_PARAMS_PATH = os.path.join(CALIBRATE_DATA_DIR, "mle-params.yml")
 
 
 def calibrate_task(run_id: str, runtime: float, num_chains: int, quiet: bool):
-    # Prepare inputs for running the model
-    build_input_database()
 
     # Set up directories for plots and output data.
     with Timer(f"Creating calibration directories"):

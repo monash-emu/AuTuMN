@@ -15,6 +15,9 @@ logging.getLogger("boto3").setLevel(logging.WARNING)
 logging.getLogger("botocore").setLevel(logging.WARNING)
 logging.getLogger("nose").setLevel(logging.WARNING)
 
+logging.basicConfig(level=logging.INFO)
+
+
 from .aws.cli import aws_cli
 from .buildkite.cli import buildkite_cli
 from .download.cli import download_cli

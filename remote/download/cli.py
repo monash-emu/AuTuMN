@@ -39,7 +39,7 @@ def download_full_model(run_id: str):
 def _download_run(run_id: str, src_dir_key: str, dest_dir_key: str):
     msg = f'Could not read run ID {run_id}, use format "{{app}}/{{region}}/{{timestamp}}/{{commit}}" - exiting'
     assert len(run_id.split("/")) == 4, msg
-    key_prefix = os.path.join(run_id, src_dir_key)
+    key_prefix = os.path.join(run_id, src_dir_key).replace("\\", "/")
     with Timer(f"Finding data for run {run_id}"):
         chain_db_keys = list_s3(key_prefix, key_suffix=".feather")
 

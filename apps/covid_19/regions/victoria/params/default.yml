@@ -80,10 +80,10 @@ victorian_clusters:
         face_coverings: # Mandatory face coverings
           function_type: tanh
           parameters:
-            b: 0.5
+            b: 0.5261693
             c: 205.  # 23rd July
-            sigma: 0.
-            upper_asymptote: 0.2 # Not important as this is calibrated
+            sigma: 0.130469
+            upper_asymptote: 0.9143849
 
   # *** REGIONAL ***
   regional:
@@ -131,13 +131,13 @@ victorian_clusters:
           function_type: tanh
           parameters:
             b: 0.262764
-            c: 197. # 15th July
+            c: 197.  # 15th July
             sigma: 0.2803973
             upper_asymptote: 0.4421819
         face_coverings:
           function_type: tanh
           parameters:
-            b: 0.5
-            c: 215. # 2nd August
-            sigma: 0.
-            upper_asymptote: 0.2 # Not important as this is calibrated
+            b: 0.5261693
+            c: 215.  # 2nd August
+            sigma: 0.130469
+            upper_asymptote: 0.9143849

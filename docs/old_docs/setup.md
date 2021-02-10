@@ -148,3 +148,15 @@ If you have an issue with a SQLite DLL not found on Windows, try the following s
 - Visit the [SQLite website](https://www.sqlite.org/download.html)
 - Download the 64-bit DLL (Precompiled Binaries for Windows)
 - Place the DLL in your Anaconda environment's folder, in the "DLL" folder
+
+# Recreating Autumn conda environment
+
+To re-create your autumn conda environment from scratch:
+
+```powershell
+conda activate base
+conda env remove -n autumn -y
+conda create -n autumn python=3.6 -y
+conda activate autumn
+pip install -r requirements.txt
+```

@@ -273,13 +273,14 @@ def plot_timeseries_with_uncertainty(
     )
 
     # Provide outputs as CSV
-    scenario_for_csv = selected_scenarios[0]
-    st.write("The following downloadable CSV is for the first scenario selected in the select box above:")
-    create_downloadable_csv(
-        quantiles[scenario_for_csv],
-        f"output_quantiles_for_scenario_{scenario_for_csv}_for_indicator_{chosen_output}",
-        include_row=False
-    )
+    if selected_scenarios:
+        scenario_for_csv = selected_scenarios[0]
+        st.write("The following downloadable CSV is for the first scenario selected in the select box above:")
+        create_downloadable_csv(
+            quantiles[scenario_for_csv],
+            f"output_quantiles_for_scenario_{scenario_for_csv}_for_indicator_{chosen_output}",
+            include_row=False
+        )
 
 
 PLOT_FUNCS["Output uncertainty"] = plot_timeseries_with_uncertainty

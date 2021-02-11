@@ -50,27 +50,36 @@ def request_standard_outputs(
 
     # Disease progresssion
     model.request_output_for_flow(name="progress", flow_name="progress")
-    for clinical in NOTIFICATION_STRATA:
-        model.request_output_for_flow(
-            name=f"progressXclinical_{clinical}",
-            flow_name="progress",
-            dest_strata={"clinical": clinical},
-        )
+    for agegroup in AGEGROUP_STRATA:
+        for clinical in NOTIFICATION_STRATA:
+            model.request_output_for_flow(
+                name=f"progressXagegroup_{agegroup}Xclinical_{clinical}",
+                flow_name="progress",
+                dest_strata={"agegroup": agegroup, "clinical": clinical},
+            )
 
     # New hospital admissions
+    hospital_sources = []
+    icu_sources = []
+    for agegroup in AGEGROUP_STRATA:
+        icu_sources.append(
+            f"progressXagegroup_{agegroup}Xclinical_{Clinical.ICU}"
+        )
+        hospital_sources += [
+            f"progressXagegroup_{agegroup}Xclinical_{Clinical.ICU}",
+            f"progressXagegroup_{agegroup}Xclinical_{Clinical.HOSPITAL_NON_ICU}"
+        ]
+
     model.request_aggregate_output(
         name="new_hospital_admissions",
-        sources=[
-            f"progressXclinical_{Clinical.ICU}",
-            f"progressXclinical_{Clinical.HOSPITAL_NON_ICU}",
-        ],
+        sources=hospital_sources,
     )
     model.request_aggregate_output(
-        name="new_icu_admissions", sources=[f"progressXclinical_{Clinical.ICU}"]
+        name="new_icu_admissions", sources=icu_sources
     )
 
     # Get notifications, which may included people detected in-country as they progress, or imported cases which are detected.
-    notification_sources = [f"progressXclinical_{c}" for c in NOTIFICATION_STRATA]
+    notification_sources = [f"progressXagegroup_{a}Xclinical_{c}" for a in AGEGROUP_STRATA for c in NOTIFICATION_STRATA]
     model.request_aggregate_output(name="local_notifications", sources=notification_sources)
     if params.importation:
         # Include *detected* imported cases in notifications.

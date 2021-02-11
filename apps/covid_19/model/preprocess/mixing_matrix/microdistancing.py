@@ -60,3 +60,5 @@ def get_microdist_func_component(func_params: MicroDistancingFunc):
         multiplier = func_params.parameters.max_effect
         micro_vals = [multiplier * value for value in func_params.parameters.values]
         return scale_up_function(micro_times, micro_vals, method=4)
+    elif func_params.function_type == "constant":
+        return lambda time: func_params.parameters.effect

@@ -96,9 +96,13 @@ class TanhMicrodistancingParams(BaseModel):
     upper_asymptote: float
 
 
+class ConstantMicrodistancingParams(BaseModel):
+    effect: float
+
+
 class MicroDistancingFunc(BaseModel):
     function_type: str
-    parameters: Union[EmpiricMicrodistancingParams, TanhMicrodistancingParams]
+    parameters: Union[EmpiricMicrodistancingParams, TanhMicrodistancingParams, ConstantMicrodistancingParams]
 
 
 class Mobility(BaseModel):

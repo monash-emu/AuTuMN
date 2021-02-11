@@ -84,6 +84,10 @@ victorian_clusters:
             c: 205.  # 23rd July
             sigma: 0.130469
             upper_asymptote: 0.9143849
+        face_coverings_adjuster:
+          function_type: constant
+          parameters:
+            effect: 0.1
 
   # *** REGIONAL ***
   regional:
@@ -141,3 +145,7 @@ victorian_clusters:
             c: 215.  # 2nd August
             sigma: 0.130469
             upper_asymptote: 0.9143849
+        face_coverings_adjuster:
+          function_type: constant
+          parameters:
+            effect: 0.3

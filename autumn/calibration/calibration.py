@@ -40,9 +40,6 @@ from .transformations import (
 
 from .constants import ADAPTIVE_METROPOLIS
 
-BEST_LL = "best_ll"
-BEST_START = "best_start_time"
-
 logger = logging.getLogger(__name__)
 
 
@@ -86,7 +83,6 @@ class Calibration:
         self.app_name = app_name
         self.model_builder = model_builder  # a function that builds a new model without running it
         self.model_parameters = model_parameters
-        self.best_start_time = None
         self.priors = priors  # a list of dictionaries. Each dictionary describes the prior distribution for a parameter
         self.adaptive_proposal = adaptive_proposal
         self.metropolis_init_rel_step_size = metropolis_init_rel_step_size
@@ -193,107 +189,82 @@ class Calibration:
         self.latest_scenario = scenario
         return scenario
 
-    def loglikelihood(self, params, to_return=BEST_LL):
+    def loglikelihood(self, params):
         """
         Calculate the loglikelihood for a set of parameters
         """
         scenario = self.run_model_with_params(params)
         model = scenario.model
-        model_start_time = model.times[0]
-        considered_start_times = [model_start_time]
-        best_start_time = None
-        if self.run_mode == CalibrationMode.LEAST_SQUARES:
-            # Initial best loglikelihood is a very large +ve number.
-            best_ll = 1.0e60
-        else:
-            # Initial best loglikelihood is a very large -ve number.
-            best_ll = -1.0e60
 
-        for considered_start_time in considered_start_times:
-            time_shift = considered_start_time - model_start_time
-            ll = 0  # loglikelihood if using bayesian approach. Sum of squares if using lsm mode
-            for target in self.targeted_outputs:
-                key = target["output_key"]
-                data = np.array(target["values"])
-                time_weigths = target["time_weights"]
-                indices = []
-                for year in target["years"]:
-                    shifted_time = year - time_shift
-                    time_idxs = np.where(scenario.model.times == shifted_time)[0]
-                    time_idx = time_idxs[0]
-                    indices.append(time_idx)
+        ll = 0  # loglikelihood if using bayesian approach. Sum of squares if using lsm mode
+        for target in self.targeted_outputs:
+            key = target["output_key"]
+            data = np.array(target["values"])
+            time_weigths = target["time_weights"]
+            indices = []
+            for year in target["years"]:
+                time_idxs = np.where(scenario.model.times == year)[0]
+                time_idx = time_idxs[0]
+                indices.append(time_idx)
 
-                model_output = model.derived_outputs[key][indices]
-                if self.run_mode == CalibrationMode.LEAST_SQUARES:
-                    squared_distance = (data - model_output) ** 2
-                    ll += np.sum([w * d for (w, d) in zip(time_weigths, squared_distance)])
-                else:
-                    if "loglikelihood_distri" not in target:  # default distribution
-                        target["loglikelihood_distri"] = "normal"
-                    if target["loglikelihood_distri"] == "normal":
-                        if key + "_dispersion_param" in self.param_list:
-                            normal_sd = params[self.param_list.index(key + "_dispersion_param")]
-                        elif self.is_vic_super_model:
-                            output_name = target["output_key"].split("_for_cluster_")[0]
-                            cluster = target["output_key"].split("_for_cluster_")[1]
-
-                            if cluster.replace("_", "-") in Region.VICTORIA_METRO:
-                                cluster_group = "metro"
-                            else:
-                                cluster_group = "rural"
-                            param_name = f"{output_name}_{cluster_group}_dispersion_param"
-                            normal_sd = params[self.param_list.index(param_name)]
-                        else:
-                            normal_sd = target["sd"]
-                        squared_distance = (data - model_output) ** 2
-                        ll += -(0.5 / normal_sd ** 2) * np.sum(
-                            [w * d for (w, d) in zip(time_weigths, squared_distance)]
-                        )
-                    elif target["loglikelihood_distri"] == "poisson":
-                        for i in range(len(data)):
-                            ll += (
-                                round(data[i]) * math.log(abs(model_output[i]))
-                                - model_output[i]
-                                - math.log(math.factorial(round(data[i])))
-                            ) * time_weigths[i]
-                    elif target["loglikelihood_distri"] == "negative_binomial":
-                        assert key + "_dispersion_param" in self.param_list
-                        # the dispersion parameter varies during the MCMC. We need to retrieve its value
-                        n = [
-                            params[i]
-                            for i in range(len(params))
-                            if self.param_list[i] == key + "_dispersion_param"
-                        ][0]
-                        for i in range(len(data)):
-                            # We use the parameterisation based on mean and variance and assume define var=mean**delta
-                            mu = model_output[i]
-                            # work out parameter p to match the distribution mean with the model output
-                            p = mu / (mu + n)
-                            ll += stats.nbinom.logpmf(round(data[i]), n, 1.0 - p) * time_weigths[i]
-                    else:
-                        raise ValueError("Distribution not supported in loglikelihood_distri")
-
+            model_output = model.derived_outputs[key][indices]
             if self.run_mode == CalibrationMode.LEAST_SQUARES:
-                is_new_best_ll = ll < best_ll
+                squared_distance = (data - model_output) ** 2
+                ll += np.sum([w * d for (w, d) in zip(time_weigths, squared_distance)])
             else:
-                is_new_best_ll = ll > best_ll
+                if "loglikelihood_distri" not in target:  # default distribution
+                    target["loglikelihood_distri"] = "normal"
+                if target["loglikelihood_distri"] == "normal":
+                    if key + "_dispersion_param" in self.param_list:
+                        normal_sd = params[self.param_list.index(key + "_dispersion_param")]
+                    elif self.is_vic_super_model:
+                        output_name = target["output_key"].split("_for_cluster_")[0]
+                        cluster = target["output_key"].split("_for_cluster_")[1]
 
-            if is_new_best_ll:
-                best_ll, best_start_time = (ll, considered_start_time)
+                        if cluster.replace("_", "-") in Region.VICTORIA_METRO:
+                            cluster_group = "metro"
+                        else:
+                            cluster_group = "rural"
+                        param_name = f"{output_name}_{cluster_group}_dispersion_param"
+                        normal_sd = params[self.param_list.index(param_name)]
+                    else:
+                        normal_sd = target["sd"]
+                    squared_distance = (data - model_output) ** 2
+                    ll += -(0.5 / normal_sd ** 2) * np.sum(
+                        [w * d for (w, d) in zip(time_weigths, squared_distance)]
+                    )
+                elif target["loglikelihood_distri"] == "poisson":
+                    for i in range(len(data)):
+                        ll += (
+                            round(data[i]) * math.log(abs(model_output[i]))
+                            - model_output[i]
+                            - math.log(math.factorial(round(data[i])))
+                        ) * time_weigths[i]
+                elif target["loglikelihood_distri"] == "negative_binomial":
+                    assert key + "_dispersion_param" in self.param_list
+                    # the dispersion parameter varies during the MCMC. We need to retrieve its value
+                    n = [
+                        params[i]
+                        for i in range(len(params))
+                        if self.param_list[i] == key + "_dispersion_param"
+                    ][0]
+                    for i in range(len(data)):
+                        # We use the parameterisation based on mean and variance and assume define var=mean**delta
+                        mu = model_output[i]
+                        # work out parameter p to match the distribution mean with the model output
+                        p = mu / (mu + n)
+                        ll += stats.nbinom.logpmf(round(data[i]), n, 1.0 - p) * time_weigths[i]
+                else:
+                    raise ValueError("Distribution not supported in loglikelihood_distri")
 
         if self.run_mode == CalibrationMode.LEAST_SQUARES:
             # FIXME: Store a record of the MCMC run.
             logger.error("No data stored for least squares")
             pass
 
-        self.evaluated_params_ll.append((copy.copy(params), copy.copy(best_ll)))
+        self.evaluated_params_ll.append((copy.copy(params), copy.copy(ll)))
 
-        if to_return == BEST_LL:
-            return best_ll
-        elif to_return == BEST_START:
-            return best_start_time
-        else:
-            raise ValueError("to_return not recognised")
+        return ll
 
     def format_data_as_array(self):
         """
@@ -485,7 +456,6 @@ class Calibration:
 
         self.mcmc_trace_matrix = None  # will store param trace and loglikelihood evolution
 
-        last_accepted_params = None
         last_accepted_params_trans = None
         last_acceptance_quantity = None  # acceptance quantity is defined as loglike + logprior
         for i_run in range(int(n_iterations + n_burned)):
@@ -537,7 +507,6 @@ class Calibration:
             # Update stored quantities.
             if accept:
                 last_accepted_params_trans = proposed_params_trans
-                last_accepted_params = proposed_params
                 last_acceptance_quantity = proposed_acceptance_quantity
 
             self.update_mcmc_trace(last_accepted_params_trans)

@@ -103,7 +103,7 @@ class ConstantMicrodistancingParams(BaseModel):
 class MicroDistancingFunc(BaseModel):
     function_type: str
     parameters: Union[EmpiricMicrodistancingParams, TanhMicrodistancingParams, ConstantMicrodistancingParams]
-
+    locations: List[str]
 
 class Mobility(BaseModel):
     """Google mobility params"""

@@ -72,10 +72,20 @@ victorian_clusters:
             c: 197. # 15th July
             sigma: 0.2803973
             upper_asymptote: 0.4421819
+          locations:
+            - other_locations
+            - school
+            - work
+            - home
         behaviour_adjuster:
           function_type: constant
           parameters:
             effect: 0.3
+          locations:
+            - other_locations
+            - school
+            - work
+            - home
         face_coverings: # Mandatory face coverings
           function_type: tanh
           parameters:
@@ -83,10 +93,18 @@ victorian_clusters:
             c: 205.  # 23rd July
             sigma: 0.130469
             upper_asymptote: 0.9143849
+          locations:
+            - other_locations
+            - school
+            - work
         face_coverings_adjuster:
           function_type: constant
           parameters:
             effect: 0.3
+          locations:
+            - other_locations
+            - school
+            - work
 
   # *** REGIONAL ***
   regional:
@@ -132,10 +150,20 @@ victorian_clusters:
             c: 197.  # 15th July
             sigma: 0.2803973
             upper_asymptote: 0.4421819
+          locations:
+            - other_locations
+            - school
+            - work
+            - home
         behaviour_adjuster:
           function_type: constant
           parameters:
             effect: 0.
+          locations:
+            - other_locations
+            - school
+            - work
+            - home
         face_coverings:
           function_type: tanh
           parameters:
@@ -143,8 +171,16 @@ victorian_clusters:
             c: 215.  # 2nd August
             sigma: 0.130469
             upper_asymptote: 0.9143849
+          locations:
+            - other_locations
+            - school
+            - work
         face_coverings_adjuster:
           function_type: constant
           parameters:
             effect: 0.  # Doesn't matter because over-written by the metro value
+          locations:
+            - other_locations
+            - school
+            - work
 

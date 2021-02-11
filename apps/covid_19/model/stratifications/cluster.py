@@ -75,12 +75,9 @@ def apply_post_cluster_strat_hacks(params: Parameters, model: CompartmentalModel
     intercluster_mixing_matrix = create_assortative_matrix(vic.intercluster_mixing, CLUSTER_STRATA)
 
     # Replace regional Victoria maximum effect calibration parameters with the metro values for consistency
-    for param_to_copy in ["face_coverings", "behaviour"]:
-        vic.regional.mobility.microdistancing[
-            param_to_copy
-        ].parameters.upper_asymptote = vic.metro.mobility.microdistancing[
-            param_to_copy
-        ].parameters.upper_asymptote
+    for microdist_process in ["face_coverings", "behaviour"]:
+        vic.regional.mobility.microdistancing[f"{microdist_process}_adjuster"].parameters.effect = \
+            vic.metro.mobility.microdistancing[f"{microdist_process}_adjuster"].parameters.effect
 
     # Get new mixing matrix
     static_mixing_matrix = inputs.get_country_mixing_matrix("all_locations", country.iso3)

@@ -102,12 +102,12 @@ def get_priors(target_outputs: list):
             "trunc_range": [3.0, np.inf],
         },
         {
-            "param_name": "victorian_clusters.metro.mobility.microdistancing.behaviour.parameters.upper_asymptote",
+            "param_name": "victorian_clusters.metro.mobility.microdistancing.behaviour_adjuster.parameters.effect",
             "distribution": "uniform",
             "distri_params": [0.0, 0.5],
         },
         {
-            "param_name": "victorian_clusters.metro.mobility.microdistancing.face_coverings.parameters.upper_asymptote",
+            "param_name": "victorian_clusters.metro.mobility.microdistancing.face_coverings_adjuster.parameters.effect",
             "distribution": "uniform",
             "distri_params": [0.0, 0.5],
         },

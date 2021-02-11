@@ -91,7 +91,7 @@ victorian_clusters:
         face_coverings_adjuster:
           function_type: constant
           parameters:
-            effect: 0.1
+            effect: 0.3
 
   # *** REGIONAL ***
   regional:
@@ -145,7 +145,7 @@ victorian_clusters:
         behaviour_adjuster:
           function_type: constant
           parameters:
-            effect: 0.3
+            effect: 0.
         face_coverings:
           function_type: tanh
           parameters:
@@ -156,4 +156,4 @@ victorian_clusters:
         face_coverings_adjuster:
           function_type: constant
           parameters:
-            effect: 0.3
+            effect: 0.  # Doesn't matter because over-written by the metro value

@@ -26,6 +26,7 @@ class Region:
     GRAMPIANS = "grampians"
     MARSHALL_ISLANDS = "marshall-islands"
     SABAH = "sabah"
+    DAVAO_CITY = "davao-city"
 
     REGIONS = [
         AUSTRALIA,
@@ -55,6 +56,7 @@ class Region:
         GRAMPIANS,
         MARSHALL_ISLANDS,
         SABAH,
+        DAVAO_CITY,
     ]
 
     MIXING_OPTI_REGIONS = [

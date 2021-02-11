@@ -88,7 +88,11 @@ def create_seroprev_csv(seroprev_by_age):
                 seroprev_by_age[age_group][centile] = "no estimate"
 
     # Create the CSV
-    create_downloadable_csv(pd.DataFrame.from_dict(seroprev_by_age), "seroprev_by_age")
+    create_downloadable_csv(
+        pd.DataFrame.from_dict(seroprev_by_age),
+        "seroprev_by_age",
+        text="click to download age-specific seroprevalence values"
+    )
 
 
 def print_mle_parameters(
@@ -273,13 +277,14 @@ def plot_timeseries_with_uncertainty(
     )
 
     # Provide outputs as CSV
-    scenario_for_csv = selected_scenarios[0]
-    st.write("The following downloadable CSV is for the first scenario selected in the select box above:")
-    create_downloadable_csv(
-        quantiles[scenario_for_csv],
-        f"output_quantiles_for_scenario_{scenario_for_csv}_for_indicator_{chosen_output}",
-        include_row=False
-    )
+    if selected_scenarios:
+        scenario_for_csv = selected_scenarios[0]
+        st.write("The following downloadable CSV is for the first scenario selected in the select box above:")
+        create_downloadable_csv(
+            quantiles[scenario_for_csv],
+            f"output_quantiles_for_scenario_{scenario_for_csv}_for_indicator_{chosen_output}",
+            include_row=False
+        )
 
 
 PLOT_FUNCS["Output uncertainty"] = plot_timeseries_with_uncertainty
@@ -764,10 +769,11 @@ def plot_seroprevalence_by_age(
             plotter, uncertainty_df, selected_scenario, sero_data[region], n_columns
         )
     else:
-        _, seroprevalence_by_age = plots.uncertainty.plots.plot_seroprevalence_by_age(
+        _, seroprevalence_by_age, overall_seroprev = plots.uncertainty.plots.plot_seroprevalence_by_age(
             plotter, uncertainty_df, selected_scenario, time
         )
         create_seroprev_csv(seroprevalence_by_age)
+        st.write(overall_seroprev.to_dict())
 
 
 PLOT_FUNCS["Seroprevalence by age"] = plot_seroprevalence_by_age

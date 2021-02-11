@@ -40,7 +40,6 @@ def test_build_dynamic__with_no_changes(monkeypatch):
         "mixing": {},
         "age_mixing": None,
         "microdistancing": {},
-        "microdistancing_locations": ["home", "other_locations", "school", "work"],
         "square_mobility_effect": False,
         **UNTESTED_PARAMS,
     }
@@ -77,7 +76,6 @@ def test_build_dynamic__with_location_mobility_data(monkeypatch):
         },
         "age_mixing": None,
         "microdistancing": {},
-        "microdistancing_locations": [],
         "square_mobility_effect": False,
         **UNTESTED_PARAMS,
     }
@@ -113,7 +111,6 @@ def test_build_dynamic__with_age_mobility_data(monkeypatch):
             },
         },
         "microdistancing": {},
-        "microdistancing_locations": [],
         "square_mobility_effect": False,
         **UNTESTED_PARAMS,
     }
@@ -152,9 +149,10 @@ def test_build_dynamic__with_microdistancing(monkeypatch):
                     "times": [0, 365],
                     "values": [0, 0.1],
                 },
+                "locations":
+                    ["work"],
             }
         },
-        "microdistancing_locations": ["work"],
         "square_mobility_effect": False,
         **UNTESTED_PARAMS,
     }
@@ -213,9 +211,10 @@ def test_build_dynamic__with_everything(monkeypatch):
                     "times": [0, 1, 2, 3],
                     "values": [0, 0.1, 0.2, 0.3],
                 },
+                "locations":
+                    ["work"],
             }
         },
-        "microdistancing_locations": ["work"],
         "square_mobility_effect": True,
         **UNTESTED_PARAMS,
     }

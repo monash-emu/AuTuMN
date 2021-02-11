@@ -5,7 +5,6 @@ import shutil
 import pandas as pd
 
 from autumn import db
-from autumn.inputs import build_input_database
 from autumn.db.database import get_database
 from autumn.tool_kit.params import update_params
 from autumn.tool_kit.scenarios import Scenario, calculate_differential_outputs
@@ -24,8 +23,6 @@ FULL_RUN_DATA_DIR = os.path.join(REMOTE_BASE_DIR, "data", "full_model_runs")
 
 
 def full_model_run_task(run_id: str, burn_in: int, quiet: bool):
-    # Prepare inputs for running the model.
-    build_input_database()
 
     # Set up directories for output data.
     with Timer(f"Creating calibration directories"):

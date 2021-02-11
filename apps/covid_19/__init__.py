@@ -4,6 +4,7 @@ from .regions.philippines import philippines_region
 from .regions.manila import manila_region
 from .regions.calabarzon import calabarzon_region
 from .regions.central_visayas import central_visayas_region
+from .regions.davao_city import davao_city_region
 from .regions.malaysia import malaysia_region
 from .regions.sabah import sabah_region
 from .regions.united_kingdom import united_kingdom_region
@@ -47,6 +48,7 @@ app.register(philippines_region)
 app.register(manila_region)
 app.register(calabarzon_region)
 app.register(central_visayas_region)
+app.register(davao_city_region)
 
 # Mixing optimization regions
 app.register(belgium_region)

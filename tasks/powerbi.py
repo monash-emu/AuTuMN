@@ -3,7 +3,6 @@ import os
 import shutil
 
 from autumn import db, plots
-from autumn.inputs import build_input_database
 
 from tasks.full import FULL_RUN_DATA_DIR
 from tasks.utils import get_app_region
@@ -24,8 +23,6 @@ POWERBI_COLLATED_PRUNED_PATH = os.path.join(POWERBI_DATA_DIR, "collated-pruned")
 
 
 def powerbi_task(run_id: str, quiet: bool):
-    # Prepare inputs for running the model.
-    build_input_database()
 
     # Set up directories for plots and output data.
     with Timer(f"Creating PowerBI directories"):

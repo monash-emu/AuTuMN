@@ -25,10 +25,10 @@ def run_dhhs(instance, commit: str, branch: str):
         update_repo(conn, branch=branch)
         install_requirements(conn)
         read_secrets(conn)
+        build_input_db(conn)
         pipeline_name = "dhhs"
         pipeline_args = {
             "commit": commit,
-            "workers": 60,
         }
         run_task_pipeline(conn, pipeline_name, pipeline_args)
         logger.info("DHHS processing completed for commit %s", commit)
@@ -43,10 +43,10 @@ def run_powerbi(instance, run_id: str, branch: str):
         update_repo(conn, branch=branch)
         install_requirements(conn)
         read_secrets(conn)
+        build_input_db(conn)
         pipeline_name = "powerbi"
         pipeline_args = {
             "run": run_id,
-            "workers": 7,
         }
         run_task_pipeline(conn, pipeline_name, pipeline_args)
         logger.info("PowerBI processing completed for %s", run_id)
@@ -65,11 +65,11 @@ def run_full_model(instance, run_id: str, burn_in: int, use_latest_code: bool, b
 
         install_requirements(conn)
         read_secrets(conn)
+        build_input_db(conn)
         pipeline_name = "full"
         pipeline_args = {
             "run": run_id,
             "burn": burn_in,
-            "workers": 7,
         }
         run_task_pipeline(conn, pipeline_name, pipeline_args)
         logger.info("Full model runs completed for %s", run_id)
@@ -91,13 +91,13 @@ def run_calibration(
         update_repo(conn, branch=branch)
         install_requirements(conn)
         read_secrets(conn)
+        build_input_db(conn)
         run_id = get_run_id(conn, app_name, region_name)
         pipeline_name = "calibrate"
         pipeline_args = {
             "run": run_id,
             "chains": num_chains,
             "runtime": runtime,
-            "workers": num_chains,
         }
         run_task_pipeline(conn, pipeline_name, pipeline_args)
         logger.info("Calibration completed for %s", run_id)
@@ -156,6 +156,13 @@ def read_secrets(conn: Connection):
     logger.info("Decrypting Autumn secrets.")
     with conn.cd(CODE_PATH):
         conn.run("./env/bin/python -m autumn secrets read", echo=True)
+
+
+def build_input_db(conn: Connection):
+    """Builds autumn input database"""
+    logger.info("Building input database.")
+    with conn.cd(CODE_PATH):
+        conn.run("./env/bin/python -m autumn db build", echo=True)
 
 
 def install_requirements(conn: Connection):

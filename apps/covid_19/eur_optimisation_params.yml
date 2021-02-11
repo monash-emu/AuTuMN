@@ -63,10 +63,6 @@ infection_fatality:
     - 0.07274  # 80+
 
 mobility:
-  microdistancing_locations:
-    - other_locations
-    - school
-    - work
   google_mobility_locations:
     work:
       - workplaces
@@ -87,6 +83,10 @@ mobility:
         c: 90.
         sigma: 0.
         upper_asymptote: .4
+      locations:
+        - other_locations
+        - school
+        - work
     behaviour_adjuster:
       function_type: tanh
       parameters:
@@ -94,6 +94,10 @@ mobility:
         c: 200.
         sigma: 0.6
         upper_asymptote: 1.
+      locations:
+        - other_locations
+        - school
+        - work
 
 elderly_mixing_reduction:
   age_categories: ["60", "65", "70", "75"]

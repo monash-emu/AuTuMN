@@ -108,6 +108,12 @@ mobility:
           - 0.7 # 27th September
           - 0.7
           - 0.4 # 28th October
+      locations:
+        - other_locations
+        - school
+        - work
+        - home
+
 
 importation:
   movement_prop: 0.3

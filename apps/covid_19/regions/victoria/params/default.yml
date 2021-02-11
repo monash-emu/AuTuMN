@@ -68,10 +68,19 @@ victorian_clusters:
         behaviour:
           function_type: tanh
           parameters:
-            b: .05
+            b: 0.262764
             c: 197. # 15th July
-            sigma: 0.
-            upper_asymptote: 0.3 # Not important as this is calibrated
+            sigma: 0.2803973
+            upper_asymptote: 0.4421819
+          locations:
+            - other_locations
+            - school
+            - work
+            - home
+        behaviour_adjuster:
+          function_type: constant
+          parameters:
+            effect: 0.3
           locations:
             - other_locations
             - school
@@ -80,15 +89,22 @@ victorian_clusters:
         face_coverings: # Mandatory face coverings
           function_type: tanh
           parameters:
-            b: 0.5
-            c: 205. # 23rd July
-            sigma: 0.
-            upper_asymptote: 0.2 # Not important as this is calibrated
+            b: 0.5261693
+            c: 205.  # 23rd July
+            sigma: 0.130469
+            upper_asymptote: 0.9143849
           locations:
             - other_locations
             - school
             - work
-            - home
+        face_coverings_adjuster:
+          function_type: constant
+          parameters:
+            effect: 0.3
+          locations:
+            - other_locations
+            - school
+            - work
 
   # *** REGIONAL ***
   regional:
@@ -130,10 +146,19 @@ victorian_clusters:
         behaviour:
           function_type: tanh
           parameters:
-            b: .05
-            c: 197. # 15th July
-            sigma: 0.
-            upper_asymptote: 0.3 # Not important as this is calibrated
+            b: 0.262764
+            c: 197.  # 15th July
+            sigma: 0.2803973
+            upper_asymptote: 0.4421819
+          locations:
+            - other_locations
+            - school
+            - work
+            - home
+        behaviour_adjuster:
+          function_type: constant
+          parameters:
+            effect: 0.
           locations:
             - other_locations
             - school
@@ -142,12 +167,20 @@ victorian_clusters:
         face_coverings:
           function_type: tanh
           parameters:
-            b: 0.5
-            c: 215. # 2nd August
-            sigma: 0.
-            upper_asymptote: 0.2 # Not important as this is calibrated
+            b: 0.5261693
+            c: 215.  # 2nd August
+            sigma: 0.130469
+            upper_asymptote: 0.9143849
           locations:
             - other_locations
             - school
             - work
-            - home
+        face_coverings_adjuster:
+          function_type: constant
+          parameters:
+            effect: 0.  # Doesn't matter because over-written by the metro value
+          locations:
+            - other_locations
+            - school
+            - work
+

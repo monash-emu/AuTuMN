@@ -1,7 +1,7 @@
 clinical_stratification.non_sympt_infect_multiplier: 0.4661619370965096
 clinical_stratification.props.hospital.multiplier: 2.2896532504841067
 clinical_stratification.props.symptomatic.multiplier: 1.0888011189704048
-contact_rate: 0.02661552821012678
+contact_rate: 0.0318
 infection_fatality.multiplier: 3.4033480747659715
 infectious_seed: 32.779884205730845
 notifications_metro_dispersion_param: 82.02046494812582
@@ -21,5 +21,5 @@ victorian_clusters.contact_rate_multiplier_south_east_metro: 1.2002424270179965
 victorian_clusters.contact_rate_multiplier_south_metro: 1.0480118787630834
 victorian_clusters.contact_rate_multiplier_west_metro: 1.444082968746164
 victorian_clusters.intercluster_mixing: 0.011647111179472383
-victorian_clusters.metro.mobility.microdistancing.behaviour.parameters.upper_asymptote: 0.29888593640737776
-victorian_clusters.metro.mobility.microdistancing.face_coverings.parameters.upper_asymptote: 0.2601217107733173
+victorian_clusters.metro.mobility.microdistancing.behaviour_adjuster.parameters.effect: 0.3
+victorian_clusters.metro.mobility.microdistancing.face_coverings_adjuster.parameters.effect: 0.3

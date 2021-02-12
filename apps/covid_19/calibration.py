@@ -134,7 +134,7 @@ def add_standard_dispersion_parameter(params, target_outputs, output_name):
             {
                 "param_name": f"{output_name}_dispersion_param",
                 "distribution": "uniform",
-                "distri_params": [0.1, 5.0],
+                "distri_params": [15., 25.],
             },
         ]
     return params

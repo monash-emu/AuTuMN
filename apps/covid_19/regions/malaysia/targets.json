@@ -2000,7 +2000,7 @@
       0.975
     ]
   },
-    "proportion_seropositiveXagegroup_0": {
+  "proportion_seropositiveXagegroup_0": {
     "output_key": "proportion_seropositiveXagegroup_0",
     "title": "seropositive prop (age 0)",
     "times": [],

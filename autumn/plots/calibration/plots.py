@@ -617,6 +617,7 @@ def plot_param_vs_param(
         label_chars: int,
         dpi_request: int,
         label_param_string=True,
+        file_name="parameter_correlation_matrix"
 ):
     """
     Plot the parameter correlation matrices for each parameter combination.
@@ -684,7 +685,7 @@ def plot_param_vs_param(
                 axis.set_ylabel(get_plot_text_dict(y_param_label), fontsize=label_font_size)
 
     # Save
-    plotter.save_figure(fig, filename="parameter_correlation_matrix", dpi_request=dpi_request)
+    plotter.save_figure(fig, filename=file_name, dpi_request=dpi_request)
 
 
 def plot_all_params_vs_loglike(

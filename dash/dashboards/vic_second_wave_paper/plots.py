@@ -264,10 +264,11 @@ PLOT_FUNCS["Key parameters"] = plot_key_params
 
 
 def plot_param_matrix(
-    plotter: StreamlitPlotter,
-    mcmc_params: List[pd.DataFrame],
-    parameters: List,
-    label_param_string=False,
+        plotter: StreamlitPlotter,
+        mcmc_params: List[pd.DataFrame],
+        parameters: List,
+        label_param_string=False,
+        file_name=""
 ):
 
     burn_in, label_font_size, label_chars, bins, style, dpi_request = 0, 8, 2, 20, "Shade", 300
@@ -282,6 +283,7 @@ def plot_param_matrix(
         label_chars,
         dpi_request,
         label_param_string=label_param_string,
+        file_name=file_name
     )
     param_names = [get_plot_text_dict(param) for param in parameters]
     params_df = pd.DataFrame({"names": param_names})
@@ -304,7 +306,9 @@ def plot_all_param_matrix(
     region: str,
 ):
 
-    plot_param_matrix(plotter, mcmc_params, mcmc_params[0]["name"].unique().tolist())
+    plot_param_matrix(
+        plotter, mcmc_params, mcmc_params[0]["name"].unique().tolist(), file_name="all_params_matrix"
+    )
 
 
 PLOT_FUNCS["All params matrix"] = plot_all_param_matrix
@@ -320,7 +324,9 @@ def plot_epi_param_matrix(
     region: str,
 ):
 
-    plot_param_matrix(plotter, mcmc_params, get_vic_epi_params(mcmc_params))
+    plot_param_matrix(
+        plotter, mcmc_params, get_vic_epi_params(mcmc_params), file_name="epi_param_matrix"
+    )
 
 
 PLOT_FUNCS["Epi params matrix"] = plot_epi_param_matrix
@@ -336,7 +342,9 @@ def plot_key_param_matrix(
     region: str,
 ):
 
-    plot_param_matrix(plotter, mcmc_params, KEY_PARAMS, label_param_string=True)
+    plot_param_matrix(
+        plotter, mcmc_params, KEY_PARAMS, label_param_string=True, file_name="key_param_matrix"
+    )
 
 
 PLOT_FUNCS["Key params matrix"] = plot_key_param_matrix

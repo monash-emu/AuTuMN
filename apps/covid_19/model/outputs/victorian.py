@@ -249,7 +249,7 @@ def request_victorian_outputs(model: CompartmentalModel, params: Parameters):
             save_results=False,
         )
         model.request_function_output(
-            name=f"proportion_seropositiveX{cluster}",
+            name=f"proportion_seropositiveXcluster_{cluster}",
             sources=[recovered_name, total_name],
             func=lambda recovered, total: recovered / total,
         )

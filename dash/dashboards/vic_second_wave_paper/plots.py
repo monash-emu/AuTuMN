@@ -18,9 +18,17 @@ STANDARD_X_LIMITS = 153, 275
 PLOT_FUNCS = {}
 KEY_PARAMS = [
     "seasonal_force",
-    "victorian_clusters.metro.mobility.microdistancing.behaviour.parameters.upper_asymptote",
-    "victorian_clusters.metro.mobility.microdistancing.face_coverings.parameters.upper_asymptote",
+    "victorian_clusters.metro.mobility.microdistancing.behaviour_adjuster.parameters.effect",
+    "victorian_clusters.metro.mobility.microdistancing.face_coverings_adjuster.parameters.effect",
 ]
+
+
+def get_contact_rate_multipliers(mcmc_params):
+    return [
+        param
+        for param in mcmc_params[0].loc[:, "name"].unique().tolist()
+        if "contact_rate_multiplier" in param
+    ]
 
 
 def plot_multiple_timeseries_with_uncertainty(
@@ -220,11 +228,7 @@ def plot_contact_rate_modifiers(
     app_name: str,
     region: str,
 ):
-    params = [
-        param
-        for param in mcmc_params[0].loc[:, "name"].unique().tolist()
-        if "contact_rate_multiplier" in param
-    ]
+    params = get_contact_rate_multipliers(mcmc_params)
     plot_posteriors(plotter, calib_dir_path, mcmc_tables, mcmc_params, params)
 
 
@@ -326,7 +330,34 @@ def plot_key_param_matrix(
 PLOT_FUNCS["Key params matrix"] = plot_key_param_matrix
 
 
-def plot_all_param_traces(
+def plot_key_param_traces(
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+    app_name: str,
+    region: str,
+):
+
+    title_font_size, label_font_size, dpi_request, capitalise_first_letter, burn_in = \
+        8, 6, 300, False, 500
+    plots.calibration.plots.plot_multiple_param_traces(
+        plotter,
+        mcmc_params,
+        burn_in,
+        title_font_size,
+        label_font_size,
+        capitalise_first_letter,
+        dpi_request,
+        optional_param_request=KEY_PARAMS,
+    )
+
+
+PLOT_FUNCS["Key param traces"] = plot_key_param_traces
+
+
+def plot_epi_param_traces(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
     mcmc_tables: List[pd.DataFrame],
@@ -350,5 +381,31 @@ def plot_all_param_traces(
     )
 
 
-PLOT_FUNCS["Epi param traces"] = plot_all_param_traces
+PLOT_FUNCS["Epi param traces"] = plot_epi_param_traces
 
+
+def plot_contact_param_traces(
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+    app_name: str,
+    region: str,
+):
+
+    title_font_size, label_font_size, dpi_request, capitalise_first_letter, burn_in = \
+        8, 6, 300, False, 500
+    plots.calibration.plots.plot_multiple_param_traces(
+        plotter,
+        mcmc_params,
+        burn_in,
+        title_font_size,
+        label_font_size,
+        capitalise_first_letter,
+        dpi_request,
+        optional_param_request=get_contact_rate_multipliers(mcmc_params),
+    )
+
+
+PLOT_FUNCS["Contact rate modifier traces"] = plot_contact_param_traces

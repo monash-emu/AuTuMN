@@ -341,7 +341,7 @@ def plot_key_param_traces(
 ):
 
     title_font_size, label_font_size, dpi_request, capitalise_first_letter, burn_in = \
-        8, 6, 300, False, 500
+        8, 6, 300, False, 0
     plots.calibration.plots.plot_multiple_param_traces(
         plotter,
         mcmc_params,
@@ -368,7 +368,7 @@ def plot_epi_param_traces(
 ):
 
     title_font_size, label_font_size, dpi_request, capitalise_first_letter, burn_in = \
-        8, 6, 300, False, 500
+        8, 6, 300, False, 0
     plots.calibration.plots.plot_multiple_param_traces(
         plotter,
         mcmc_params,
@@ -395,7 +395,7 @@ def plot_contact_param_traces(
 ):
 
     title_font_size, label_font_size, dpi_request, capitalise_first_letter, burn_in = \
-        8, 6, 300, False, 500
+        8, 6, 300, False, 0
     plots.calibration.plots.plot_multiple_param_traces(
         plotter,
         mcmc_params,

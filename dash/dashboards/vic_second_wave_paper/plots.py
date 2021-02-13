@@ -48,13 +48,16 @@ def plot_multiple_timeseries_with_uncertainty(
     plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(
         plotter, uncertainty_df, chosen_outputs, selected_scenarios, targets, is_logscale, x_low, x_up, n_xticks,
         title_font_size=title_font_size, label_font_size=label_font_size,
+        file_name="multi_output"
     )
 
 
 PLOT_FUNCS["Multi-output uncertainty"] = plot_multiple_timeseries_with_uncertainty
 
 
-def plot_regional_outputs(plotter, calib_dir_path, mcmc_tables, targets, regions, indicator):
+def plot_regional_outputs(
+        plotter, calib_dir_path, mcmc_tables, targets, regions, indicator, file_name
+):
     chosen_outputs = [
         indicator + "_for_cluster_" + i_region.replace("-", "_") for i_region in regions
     ]
@@ -73,6 +76,7 @@ def plot_regional_outputs(plotter, calib_dir_path, mcmc_tables, targets, regions
         n_xticks,
         title_font_size=title_font_size,
         label_font_size=label_font_size,
+        file_name=file_name,
     )
 
 
@@ -86,7 +90,8 @@ def metro_notifications(
     region: str,
 ):
     plot_regional_outputs(
-        plotter, calib_dir_path, mcmc_tables, targets, Region.VICTORIA_METRO, "notifications"
+        plotter, calib_dir_path, mcmc_tables, targets, Region.VICTORIA_METRO, "notifications",
+        "metro_notifications"
     )
 
 
@@ -103,7 +108,8 @@ def regional_notifications(
     region: str,
 ):
     plot_regional_outputs(
-        plotter, calib_dir_path, mcmc_tables, targets, Region.VICTORIA_RURAL, "notifications"
+        plotter, calib_dir_path, mcmc_tables, targets, Region.VICTORIA_RURAL, "notifications",
+        "regional_notifications"
     )
 
 
@@ -120,7 +126,8 @@ def metro_hospitalisations(
     region: str,
 ):
     plot_regional_outputs(
-        plotter, calib_dir_path, mcmc_tables, targets, Region.VICTORIA_METRO, "hospital_admissions"
+        plotter, calib_dir_path, mcmc_tables, targets, Region.VICTORIA_METRO, "hospital_admissions",
+        "metro_hospital"
     )
 
 
@@ -137,7 +144,8 @@ def regional_hospitalisations(
     region: str,
 ):
     plot_regional_outputs(
-        plotter, calib_dir_path, mcmc_tables, targets, Region.VICTORIA_RURAL, "hospital_admissions"
+        plotter, calib_dir_path, mcmc_tables, targets, Region.VICTORIA_RURAL, "hospital_admissions",
+        "regional_hospital"
     )
 
 
@@ -154,7 +162,8 @@ def metro_icu_admissions(
     region: str,
 ):
     plot_regional_outputs(
-        plotter, calib_dir_path, mcmc_tables, targets, Region.VICTORIA_METRO, "icu_admissions"
+        plotter, calib_dir_path, mcmc_tables, targets, Region.VICTORIA_METRO, "icu_admissions",
+        "metro_icu"
     )
 
 
@@ -168,11 +177,12 @@ def get_vic_epi_params(mcmc_params):
 
 
 def plot_posteriors(
-    plotter: StreamlitPlotter,
-    calib_dir_path: str,
-    mcmc_tables: List[pd.DataFrame],
-    mcmc_params: List[pd.DataFrame],
-    params: List,
+        plotter: StreamlitPlotter,
+        calib_dir_path: str,
+        mcmc_tables: List[pd.DataFrame],
+        mcmc_params: List[pd.DataFrame],
+        params: List,
+        file_name: str
 ):
 
     st.write(params)
@@ -197,6 +207,7 @@ def plot_posteriors(
         dpi_request,
         priors,
         parameters=params,
+        file_name=file_name
     )
     write_mcmc_centiles(mcmc_params, mcmc_tables, burn_in, sig_figs, [2.5, 50, 97.5])
 
@@ -212,7 +223,8 @@ def plot_epi_posteriors(
 ):
 
     plot_posteriors(
-        plotter, calib_dir_path, mcmc_tables, mcmc_params, get_vic_epi_params(mcmc_params)
+        plotter, calib_dir_path, mcmc_tables, mcmc_params, get_vic_epi_params(mcmc_params),
+        "epi_posteriors"
     )
 
 
@@ -229,7 +241,7 @@ def plot_contact_rate_modifiers(
     region: str,
 ):
     params = get_contact_rate_multipliers(mcmc_params)
-    plot_posteriors(plotter, calib_dir_path, mcmc_tables, mcmc_params, params)
+    plot_posteriors(plotter, calib_dir_path, mcmc_tables, mcmc_params, params, "contact_posteriors")
 
 
 PLOT_FUNCS["Contact rate modifiers"] = plot_contact_rate_modifiers
@@ -245,7 +257,7 @@ def plot_key_params(
     region: str,
 ):
 
-    plot_posteriors(plotter, calib_dir_path, mcmc_tables, mcmc_params, KEY_PARAMS)
+    plot_posteriors(plotter, calib_dir_path, mcmc_tables, mcmc_params, KEY_PARAMS, "key_posteriors")
 
 
 PLOT_FUNCS["Key parameters"] = plot_key_params
@@ -351,6 +363,7 @@ def plot_key_param_traces(
         capitalise_first_letter,
         dpi_request,
         optional_param_request=KEY_PARAMS,
+        file_name="key_traces"
     )
 
 
@@ -378,6 +391,7 @@ def plot_epi_param_traces(
         capitalise_first_letter,
         dpi_request,
         optional_param_request=get_vic_epi_params(mcmc_params),
+        file_name="epi_traces"
     )
 
 
@@ -405,6 +419,7 @@ def plot_contact_param_traces(
         capitalise_first_letter,
         dpi_request,
         optional_param_request=get_contact_rate_multipliers(mcmc_params),
+        file_name="contact_traces"
     )
 
 

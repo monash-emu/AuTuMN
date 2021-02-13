@@ -175,17 +175,18 @@ def _plot_uncertainty(
 
 
 def plot_multi_output_timeseries_with_uncertainty(
-    plotter: Plotter,
-    uncertainty_df: pd.DataFrame,
-    output_names: str,
-    scenarios: list,
-    all_targets: dict,
-    is_logscale=False,
-    x_low=0.0,
-    x_up=2000.0,
-    n_xticks=None,
-    title_font_size=12,
-    label_font_size=10,
+        plotter: Plotter,
+        uncertainty_df: pd.DataFrame,
+        output_names: str,
+        scenarios: list,
+        all_targets: dict,
+        is_logscale=False,
+        x_low=0.0,
+        x_up=2000.0,
+        n_xticks=None,
+        title_font_size=12,
+        label_font_size=10,
+        file_name="multi_uncertainty",
 ):
     if len(output_names) * len(scenarios) == 0:
         return
@@ -223,7 +224,7 @@ def plot_multi_output_timeseries_with_uncertainty(
             i_col = 0
             i_row += 1
 
-    plotter.save_figure(fig, filename="multi_uncertainty", subdir="outputs", title_text="")
+    plotter.save_figure(fig, filename=file_name, title_text="")
 
     # out_dir = "apps/tuberculosis/regions/marshall_islands/figures/calibration_targets/"
     # filename = out_dir + "targets"

@@ -218,6 +218,7 @@ def plot_multiple_param_traces(
         capitalise_first_letter: bool,
         dpi_request: int,
         optional_param_request=None,
+        file_name="all_traces"
 ):
 
     # Except not the dispersion parameters - only the epidemiological ones
@@ -260,7 +261,7 @@ def plot_multiple_param_traces(
             axis.axis("off")
 
     fig.tight_layout()
-    plotter.save_figure(fig, filename=f"all_posteriors", dpi_request=dpi_request)
+    plotter.save_figure(fig, filename=file_name, dpi_request=dpi_request)
 
 
 def plot_loglikelihood_trace(plotter: Plotter, mcmc_tables: List[pd.DataFrame], burn_in=0):
@@ -402,6 +403,7 @@ def plot_multiple_posteriors(
         dpi_request: int,
         priors: list,
         parameters: list,
+        file_name="all_posteriors"
 ):
     """
     Plots the posterior distribution of a given parameter in a histogram.
@@ -442,7 +444,7 @@ def plot_multiple_posteriors(
             axis.axis("off")
 
     fig.tight_layout()
-    plotter.save_figure(fig, filename=f"all_posteriors", dpi_request=dpi_request)
+    plotter.save_figure(fig, filename=file_name, dpi_request=dpi_request)
 
 
 def plot_param_vs_loglike(mcmc_tables, mcmc_params, param_name, burn_in, axis):

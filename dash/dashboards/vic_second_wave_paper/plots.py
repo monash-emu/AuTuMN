@@ -175,15 +175,8 @@ def plot_posteriors(
             priors = yaml.load(file, Loader=yaml.FullLoader)
     except:
         st.write("Check if priors-1.yml exists in the output folder")
-    (
-        burn_in,
-        num_bins,
-        sig_figs,
-        title_font_size,
-        label_font_size,
-        dpi_request,
-        capitalise_first_letter,
-    ) = (0, 16, 3, 8, 8, 300, False)
+    burn_in, num_bins, sig_figs, title_font_size, label_font_size, dpi_request, capitalise_first_letter \
+        = 0, 16, 3, 8, 8, 300, False
     plots.calibration.plots.plot_multiple_posteriors(
         plotter,
         mcmc_params,
@@ -331,4 +324,31 @@ def plot_key_param_matrix(
 
 
 PLOT_FUNCS["Key params matrix"] = plot_key_param_matrix
+
+
+def plot_all_param_traces(
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+    app_name: str,
+    region: str,
+):
+
+    title_font_size, label_font_size, dpi_request, capitalise_first_letter, burn_in = \
+        8, 6, 300, False, 500
+    plots.calibration.plots.plot_multiple_param_traces(
+        plotter,
+        mcmc_params,
+        burn_in,
+        title_font_size,
+        label_font_size,
+        capitalise_first_letter,
+        dpi_request,
+        optional_param_request=get_vic_epi_params(mcmc_params),
+    )
+
+
+PLOT_FUNCS["Epi param traces"] = plot_all_param_traces
 

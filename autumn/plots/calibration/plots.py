@@ -210,13 +210,14 @@ def plot_mcmc_parameter_trace(
 
 
 def plot_multiple_param_traces(
-    plotter: Plotter,
-    mcmc_params: List[pd.DataFrame],
-    burn_in: int,
-    title_font_size: int,
-    label_font_size: int,
-    capitalise_first_letter: bool,
-    dpi_request: int,
+        plotter: Plotter,
+        mcmc_params: List[pd.DataFrame],
+        burn_in: int,
+        title_font_size: int,
+        label_font_size: int,
+        capitalise_first_letter: bool,
+        dpi_request: int,
+        optional_param_request=None,
 ):
 
     # Except not the dispersion parameters - only the epidemiological ones
@@ -225,15 +226,16 @@ def plot_multiple_param_traces(
         for param in mcmc_params[0].loc[:, "name"].unique().tolist()
         if "dispersion_param" not in param
     ]
+    params_to_plot = optional_param_request if optional_param_request else parameters
 
     fig, axes, _, n_rows, n_cols, indices = plotter.get_figure(
-        len(parameters), share_xaxis=True, share_yaxis=False
+        len(params_to_plot), share_xaxis=True, share_yaxis=False
     )
 
     for i in range(n_rows * n_cols):
         axis = axes[indices[i][0], indices[i][1]]
-        if i < len(parameters):
-            param_name = parameters[i]
+        if i < len(params_to_plot):
+            param_name = params_to_plot[i]
             for i_chain in range(mcmc_params[0]["chain"].iloc[-1]):
                 param_mask = (mcmc_params[0]["chain"] == i_chain) & (
                     mcmc_params[0]["name"] == param_name

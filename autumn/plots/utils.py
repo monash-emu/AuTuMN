@@ -50,7 +50,7 @@ PLOT_TEXT_DICT = {
     "clinical_stratification.non_sympt_infect_multiplier": "asympt infect multiplier",
     "infection_fatality.multiplier": "IFR adjuster",
     "victorian_clusters.metro.mobility.microdistancing.face_coverings_adjuster.parameters.effect": "face coverings",
-    "victorian_clusters.metro.mobility.microdistancing.behaviour_adjuster.parameters.effect": "behaviour"
+    "victorian_clusters.metro.mobility.microdistancing.behaviour_adjuster.parameters.effect": "distancing"
 }
 
 ALPHAS = (1.0, 0.6, 0.4, 0.3, 0.2, 0.15, 0.1, 0.08)

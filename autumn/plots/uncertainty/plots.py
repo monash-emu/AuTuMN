@@ -363,7 +363,10 @@ def plot_seroprevalence_by_age(
     if single_panel:
         plotter.save_figure(fig, filename="sero_by_age", subdir="outputs", title_text="")
 
-    return max_value, seroprevalence_by_age, df[df["type"] == "proportion_seropositive"][["quantile", "value"]].set_index("quantile")
+    overall_seropos_estimates = \
+        df[df["type"] == "proportion_seropositive"][["quantile", "value"]].set_index("quantile")
+
+    return max_value, seroprevalence_by_age, overall_seropos_estimates
 
 
 def plot_seroprevalence_by_age_against_targets(

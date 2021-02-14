@@ -728,15 +728,7 @@ def plot_loglikelihood_surface(
 PLOT_FUNCS["Loglikelihood 3d scatter"] = plot_loglikelihood_surface
 
 
-def plot_seroprevalence_by_age(
-    plotter: StreamlitPlotter,
-    calib_dir_path: str,
-    mcmc_tables: List[pd.DataFrame],
-    mcmc_params: List[pd.DataFrame],
-    targets: dict,
-    app_name: str,
-    region: str,
-):
+def get_uncertainty_db(mcmc_tables, targets, calib_dir_path):
 
     try:  # if PBI processing has been performed already
         uncertainty_df = db.load.load_uncertainty_table(calib_dir_path)
@@ -751,6 +743,19 @@ def plot_seroprevalence_by_age(
         mcmc_all_df = mcmc_all_df[mcmc_all_df["run"] >= half_max]
         uncertainty_df = db.uncertainty.calculate_mcmc_uncertainty(mcmc_all_df, do_all_df, targets)
 
+    return uncertainty_df
+
+def plot_seroprevalence_by_age(
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+    app_name: str,
+    region: str,
+):
+
+    uncertainty_df = get_uncertainty_db(mcmc_tables, targets, calib_dir_path)
     available_scenarios = uncertainty_df["scenario"].unique()
     selected_scenario = st.sidebar.selectbox("Select scenario", available_scenarios)
     min_time = int(min(uncertainty_df["time"]))

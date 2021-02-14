@@ -55,8 +55,8 @@ def full_model_run_task(run_id: str, burn_in: int, quiet: bool):
     # Upload the full model run outputs of AWS S3.
     db_paths = db.load.find_db_paths(FULL_RUN_DATA_DIR)
     with Timer(f"Uploading full model run data to AWS S3"):
-        args_list = [(run_id, db_path, quiet) for db_path in db_paths]
-        run_parallel_tasks(upload_to_run_s3, args_list)
+        for db_path in db_paths:
+            upload_to_run_s3(run_id, db_path, quiet)
 
 
 def run_full_model_for_chain(

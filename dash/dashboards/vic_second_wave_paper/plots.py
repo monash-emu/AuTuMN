@@ -470,3 +470,36 @@ def plot_seroprevalence_by_age(
 
 PLOT_FUNCS["Seroprevalence by age"] = plot_seroprevalence_by_age
 
+
+def plot_seroprevalence_by_cluster(
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+    app_name: str,
+    region: str,
+):
+
+    try:  # if PBI processing has been performed already
+        uncertainty_df = db.load.load_uncertainty_table(calib_dir_path)
+    except:  # calculates percentiles
+        derived_output_tables = db.load.load_derived_output_tables(calib_dir_path)
+        mcmc_all_df = db.load.append_tables(mcmc_tables)
+        do_all_df = db.load.append_tables(derived_output_tables)
+
+        # Determine max chain length, throw away first half of that
+        max_run = mcmc_all_df["run"].max()
+        half_max = max_run // 2
+        mcmc_all_df = mcmc_all_df[mcmc_all_df["run"] >= half_max]
+        uncertainty_df = db.uncertainty.calculate_mcmc_uncertainty(mcmc_all_df, do_all_df, targets)
+
+    selected_scenario, time = 0, 275
+    _, seroprevalence_by_age, overall_seroprev = plots.uncertainty.plots.plot_seroprevalence_by_cluster(
+        plotter, uncertainty_df, selected_scenario, time, requested_quantiles=[0.025, 0.25, 0.5, 0.75, 0.975]
+    )
+    create_seroprev_csv(seroprevalence_by_age)
+    st.write(overall_seroprev.to_dict())
+
+
+PLOT_FUNCS["Seroprevalence by cluster"] = plot_seroprevalence_by_cluster

@@ -5,11 +5,13 @@ import os
 import yaml
 
 from autumn.plots.plotter import StreamlitPlotter
-from autumn import plots
+from autumn import db, plots
 from dash.dashboards.calibration_results.plots import get_uncertainty_df, write_mcmc_centiles
 from autumn.plots.calibration.plots import get_epi_params
 from dash.utils import create_downloadable_csv
+from dash.dashboards.calibration_results.plots import create_seroprev_csv
 from autumn.plots.utils import get_plot_text_dict
+import matplotlib.pyplot as plt
 
 from autumn.region import Region
 
@@ -41,6 +43,7 @@ def plot_multiple_timeseries_with_uncertainty(
     region: str,
 ):
 
+    plt.style.use("ggplot")
     uncertainty_df = get_uncertainty_df(calib_dir_path, mcmc_tables, targets)
     chosen_outputs = ["notifications", "hospital_admissions", "icu_admissions", "infection_deaths"]
     x_low, x_up = STANDARD_X_LIMITS
@@ -432,3 +435,38 @@ def plot_contact_param_traces(
 
 
 PLOT_FUNCS["Contact rate modifier traces"] = plot_contact_param_traces
+
+
+def plot_seroprevalence_by_age(
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+    app_name: str,
+    region: str,
+):
+
+    try:  # if PBI processing has been performed already
+        uncertainty_df = db.load.load_uncertainty_table(calib_dir_path)
+    except:  # calculates percentiles
+        derived_output_tables = db.load.load_derived_output_tables(calib_dir_path)
+        mcmc_all_df = db.load.append_tables(mcmc_tables)
+        do_all_df = db.load.append_tables(derived_output_tables)
+
+        # Determine max chain length, throw away first half of that
+        max_run = mcmc_all_df["run"].max()
+        half_max = max_run // 2
+        mcmc_all_df = mcmc_all_df[mcmc_all_df["run"] >= half_max]
+        uncertainty_df = db.uncertainty.calculate_mcmc_uncertainty(mcmc_all_df, do_all_df, targets)
+
+    selected_scenario, time = 0, 275
+    _, seroprevalence_by_age, overall_seroprev = plots.uncertainty.plots.plot_seroprevalence_by_age(
+        plotter, uncertainty_df, selected_scenario, time, requested_quantiles=[0.025, 0.25, 0.5, 0.75, 0.975]
+    )
+    create_seroprev_csv(seroprevalence_by_age)
+    st.write(overall_seroprev.to_dict())
+
+
+PLOT_FUNCS["Seroprevalence by age"] = plot_seroprevalence_by_age
+

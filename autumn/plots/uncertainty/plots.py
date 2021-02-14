@@ -289,13 +289,14 @@ def plot_multicountry_timeseries_with_uncertainty(
 
 
 def plot_seroprevalence_by_age(
-    plotter: Plotter,
-    uncertainty_df: pd.DataFrame,
-    scenario_id: int,
-    time: float,
-    ref_date=REF_DATE,
-    axis=None,
-    name="",
+        plotter: Plotter,
+        uncertainty_df: pd.DataFrame,
+        scenario_id: int,
+        time: float,
+        ref_date=REF_DATE,
+        axis=None,
+        name="",
+        requested_quantiles=None
 ):
     single_panel = axis is None
     if single_panel:
@@ -324,7 +325,7 @@ def plot_seroprevalence_by_age(
                     100.0 * v for v in df[output_mask][q_mask]["value"].tolist()
                 ]
 
-        q_keys = sorted(quantile_vals)
+        q_keys = requested_quantiles if requested_quantiles else sorted(quantile_vals)
         num_quantiles = len(q_keys)
         half_length = num_quantiles // 2
 
@@ -352,6 +353,7 @@ def plot_seroprevalence_by_age(
                 )
 
         axis.set_xlabel("age (years)", fontsize=13)
+        axis.set_ylim(bottom=0.)
         axis.set_ylabel("% previously infected", fontsize=13)
 
         _date = ref_date + datetime.timedelta(days=time)

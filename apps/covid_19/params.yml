@@ -5,7 +5,6 @@ parent: null # This file is the bottom of the parameter tree for the Covid app
 seasonal_force: null # Extent of seasonal forcing
 waning_immunity_duration: null # Note that the amplitude is the total variation in transmission from trough to peak
 stratify_by_infection_history: false # Note that the current code may not allocate imported cases to the right stratum
-stratify_by_immunity: true
 rel_prop_symptomatic_experienced: null
 infect_death: 0. # Compulsory parameter that is completely overwritten in stratification, rather than being modified
 universal_death_rate: 0. # Compulsory parameter for all models, even though there are no population-wide deaths
@@ -174,6 +173,10 @@ testing_to_detection: null
 importation: null
 
 victorian_clusters: null
+
+# Vaccination-related
+stratify_by_immunity: true
+vaccine_efficacy: 0.5
 
 # Multiplier scaling the covariance matrix in the Haario Metropolis. 2.4 is the value recommended by Haario.
 haario_scaling_factor: 2.4 # Greater values increase jumping step size and reduce the acceptance ratio

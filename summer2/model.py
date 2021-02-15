@@ -65,6 +65,7 @@ class CompartmentalModel:
         end_t = round(end_t)
         time_period = end_t - start_t + 1
         num_steps = time_period / timestep
+        self.timestep = timestep
         assert num_steps >= 1, "Time step should be less than time period."
         assert num_steps % 1 == 0, "Time step should be a factor of time period"
         self.times = np.linspace(start_t, end_t, num=int(num_steps))
@@ -698,6 +699,80 @@ class CompartmentalModel:
         # Calculate any requested derived outputs, based on the calculated compartment sizes.
         self.derived_outputs = self._calculate_derived_outputs()
 
+    def run_stochastic(self):
+        """
+        Runs the model over the provided time span, calculating the outputs and the derived outputs.
+        Uses an stochastic interpretation of flow rates.
+        """
+        self._prepare_to_run()
+        self.outputs = np.zeros((len(self.times), len(self.initial_population)))
+        self.outputs[0] = self.initial_population
+
+        for time_idx, time in enumerate(self.times):
+            if time_idx == 0:
+                continue
+
+            # Zero out -ve compartment sizes in flow rate calculations,
+            # to prevent negative values from messing up the direction of flows.
+            # We don't expect large -ve values, but there can be small ones due to numerical errors.
+            comp_vals = self.outputs[time_idx - 1].copy()
+            zero_mask = comp_vals < 0
+            comp_vals[zero_mask] = 0
+            self._prepare_time_step(time, comp_vals)
+
+            # TODO: Flow rate tracker for derived outputs
+            # TODO: Handle function flows
+            # TODO: Calculate derived outputs
+            # TODO: Track total deaths
+
+            entry_flow_rates = np.zeros_like(comp_vals)
+            flow_rates = np.zeros((len(self._flows), len(comp_vals)))
+
+            for flow_idx, flow in enumerate(self._flows):
+                # Evaluate all the flows.
+                net_flow = flow.get_net_flow(comp_vals, time)
+                if flow.source:
+                    flow_rates[flow_idx][flow.source.idx] = net_flow
+                else:
+                    entry_flow_rates[flow.dest.idx] += net_flow
+
+            # Normalize flow rates by compartment size
+            flow_rates_normalized = np.true_divide(
+                flow_rates,
+                comp_vals,
+                out=np.zeros_like(flow_rates),
+                where=comp_vals != 0,
+            )
+            # Find sum of normalized flow weights per compartment
+            total_flows = flow_rates_normalized.sum(axis=0)
+            # Find the proportion of people who leave a given compartment via a given flow
+            prop_flow = np.true_divide(
+                flow_rates_normalized,
+                total_flows,
+                out=np.zeros_like(flow_rates_normalized),
+                where=total_flows != 0,
+            )
+            # Find probability of a single person leaving a given compartment
+            p_stay = np.exp(-1 * total_flows * self.timestep)
+            p_leave = 1 - p_stay
+            # Find the probability that a person leaves via a given flow
+            p_flow = p_leave * prop_flow
+
+            new_comp_vals = comp_vals.copy()
+            for c_idx, comp in enumerate(comp_vals):
+                comp_flow_prs = list(p_flow[:, c_idx]) + [p_stay[c_idx]]
+                comp_flows = np.random.multinomial(comp, comp_flow_prs)
+                for flow_idx, flow in enumerate(self._flows):
+                    if flow.source:
+                        new_comp_vals[flow.source.idx] -= comp_flows[flow_idx]
+                    if flow.dest:
+                        new_comp_vals[flow.dest.idx] += comp_flows[flow_idx]
+
+            # Sample entry flows using Possoin distribution
+            lambdas = entry_flow_rates * self.timestep
+            new_comp_vals += np.random.poisson(lam=lambdas)
+            self.outputs[time_idx] = new_comp_vals
+
     def _prepare_to_run(self):
         """
         Pre-run setup.
@@ -954,7 +1029,7 @@ class CompartmentalModel:
         # Find the flow rate for each flow.
         for flow_idx, flow in self._iter_non_function_flows:
             # Evaluate all the flows that are not function flows.
-            net_flow = flow.get_net_flow(compartment_values, time)
+            net_flow = flow.get_net_flow(comp_vals, time)
             flow_rates[flow_idx] = net_flow
             if flow.source:
                 net_flow_rates[flow.source.idx] -= net_flow
@@ -969,7 +1044,7 @@ class CompartmentalModel:
             original_flow_rates = flow_rates.copy()
             for flow_idx, flow in self._iter_function_flows:
                 net_flow = flow.get_net_flow(
-                    self.compartments, compartment_values, self._flows, original_flow_rates, time
+                    self.compartments, comp_vals, self._flows, original_flow_rates, time
                 )
                 flow_rates[flow_idx] = net_flow
                 net_flow_rates[flow.source.idx] -= net_flow

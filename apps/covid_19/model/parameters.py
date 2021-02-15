@@ -212,13 +212,6 @@ class VictorianClusterStratification(BaseModel):
     regional: RegionalClusterStratification
 
 
-class ParamConfig:
-    """Config for parameter models"""
-
-    anystr_strip_whitespace = True  # Strip whitespace
-    allow_mutation = False  # Params should be immutable
-
-
 class VaccCoveragePeriod(BaseModel):
     """
     Parameters to pass when desired behaviour is vaccinating a proportion of the population over a period of time
@@ -226,6 +219,13 @@ class VaccCoveragePeriod(BaseModel):
     coverage: float
     start_time: float
     end_time: float
+
+
+class ParamConfig:
+    """Config for parameter models"""
+
+    anystr_strip_whitespace = True  # Strip whitespace
+    allow_mutation = False  # Params should be immutable
 
 
 @dataclass(config=ParamConfig)

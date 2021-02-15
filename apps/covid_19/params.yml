@@ -175,7 +175,7 @@ importation: null
 victorian_clusters: null
 
 # Vaccination-related
-stratify_by_immunity: true
+stratify_by_immunity: false
 vaccine_efficacy: 0.5
 vaccination_rate:
   coverage: 0.5

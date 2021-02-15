@@ -17,6 +17,7 @@ from apps.covid_19.model.stratifications.cluster import (
     get_cluster_strat,
     apply_post_cluster_strat_hacks,
 )
+from apps.covid_19.model.stratifications.immunity import get_immunity_strat
 from apps.covid_19.model.stratifications.clinical import get_clinical_strat
 from apps.covid_19.model.outputs.standard import request_standard_outputs
 from apps.covid_19.model.outputs.victorian import request_victorian_outputs
@@ -130,6 +131,11 @@ def build_model(params: dict) -> CompartmentalModel:
     # Stratify the model by clinical status
     clinical_strat = get_clinical_strat(params)
     model.stratify_with(clinical_strat)
+
+    # Stratify by immunity - which will include vaccination and infection history
+    if params.stratify_by_immunity:
+        immunity_strat = get_immunity_strat(params)
+        model.stratify_with(immunity_strat)
 
     # Infection history stratification
     if params.stratify_by_infection_history:

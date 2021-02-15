@@ -12,4 +12,7 @@ IMMUNITY_STRATA = [
 def get_immunity_strat(params: Parameters) -> Stratification:
     immunity_strat = Stratification("immunity", IMMUNITY_STRATA, COMPARTMENTS)
 
+    # Everyone starts out unvaccinated
+    immunity_strat.set_population_split({"unvaccinated": 1.0, "vaccinated": 0.0})
+
     return immunity_strat

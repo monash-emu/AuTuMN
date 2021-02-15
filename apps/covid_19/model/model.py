@@ -140,9 +140,9 @@ def build_model(params: dict) -> CompartmentalModel:
         model.stratify_with(immunity_strat)
 
         # Get vaccination parameters
-        coverage = params.vaccination_rate.coverage
-        start_time = params.vaccination_rate.start_time
-        end_time = params.vaccination_rate.end_time
+        coverage = params.vaccination.roll_out_function.coverage
+        start_time = params.vaccination.roll_out_function.start_time
+        end_time = params.vaccination.roll_out_function.end_time
         duration = end_time - start_time
         assert end_time >= start_time
         assert 0. <= coverage <= 1.

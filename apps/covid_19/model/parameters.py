@@ -221,6 +221,11 @@ class VaccCoveragePeriod(BaseModel):
     end_time: float
 
 
+class Vaccination(BaseModel):
+    efficacy: float
+    roll_out_function: VaccCoveragePeriod
+
+
 class ParamConfig:
     """Config for parameter models"""
 
@@ -239,8 +244,7 @@ class Parameters:
     elderly_mixing_reduction: Optional[dict]
     waning_immunity_duration: Optional[float]
     stratify_by_immunity: bool
-    vaccine_efficacy: float
-    vaccination_rate: Optional[VaccCoveragePeriod]
+    vaccination: Optional[Vaccination]
     stratify_by_infection_history: bool
     rel_prop_symptomatic_experienced: Optional[float]
     haario_scaling_factor: float

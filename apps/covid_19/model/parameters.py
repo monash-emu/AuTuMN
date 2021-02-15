@@ -219,6 +219,15 @@ class ParamConfig:
     allow_mutation = False  # Params should be immutable
 
 
+class VaccCoveragePeriod(BaseModel):
+    """
+    Parameters to pass when desired behaviour is vaccinating a proportion of the population over a period of time
+    """
+    coverage: float
+    start_time: float
+    end_time: float
+
+
 @dataclass(config=ParamConfig)
 class Parameters:
     description: str  # Scenario description, used by PowerBI.
@@ -231,7 +240,7 @@ class Parameters:
     waning_immunity_duration: Optional[float]
     stratify_by_immunity: bool
     vaccine_efficacy: float
-    vaccination_rate: float
+    vaccination_rate: Optional[VaccCoveragePeriod]
     stratify_by_infection_history: bool
     rel_prop_symptomatic_experienced: Optional[float]
     haario_scaling_factor: float

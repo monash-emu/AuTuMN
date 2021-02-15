@@ -22,6 +22,8 @@ from apps.covid_19.model.stratifications.clinical import get_clinical_strat
 from apps.covid_19.model.outputs.standard import request_standard_outputs
 from apps.covid_19.model.outputs.victorian import request_victorian_outputs
 
+import numpy as np
+
 
 def build_model(params: dict) -> CompartmentalModel:
     """
@@ -136,10 +138,29 @@ def build_model(params: dict) -> CompartmentalModel:
     if params.stratify_by_immunity:
         immunity_strat = get_immunity_strat(params)
         model.stratify_with(immunity_strat)
+
+        # Get vaccination parameters
+        coverage = params.vaccination_rate.coverage
+        start_time = params.vaccination_rate.start_time
+        end_time = params.vaccination_rate.end_time
+        duration = end_time - start_time
+        assert end_time >= start_time
+        assert 0. <= coverage <= 1.
+
+        # Get the function to represent the vaccination program
+        def get_vaccination_rate(time):
+            if start_time < time < end_time:
+                vaccination_rate = \
+                    -np.log(1. - coverage) / \
+                    duration
+                return vaccination_rate
+            else:
+                return 0.
+
         for compartment in COMPARTMENTS:
             model.add_fractional_flow(
                 name="vaccination",
-                fractional_rate=params.vaccination_rate,
+                fractional_rate=get_vaccination_rate,
                 source=compartment,
                 dest=compartment,
                 source_strata={"immunity": "unvaccinated"},

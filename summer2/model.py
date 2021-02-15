@@ -9,7 +9,6 @@ from functools import lru_cache
 import networkx
 import numpy as np
 from scipy.interpolate import interp1d
-from numba import jit
 
 import summer2.flows as flows
 from summer2.compartment import Compartment
@@ -736,6 +735,8 @@ class CompartmentalModel:
                 else:
                     entry_flow_rates[flow.dest.idx] += net_flow
 
+            # ~3 seconds
+
             # Normalize flow rates by compartment size
             flow_rates_normalized = np.true_divide(
                 flow_rates,
@@ -758,6 +759,8 @@ class CompartmentalModel:
             # Find the probability that a person leaves via a given flow
             p_flow = p_leave * prop_flow
 
+            # ~3 seconds
+
             new_comp_vals = comp_vals.copy()
             for c_idx, comp in enumerate(comp_vals):
                 comp_flow_prs = list(p_flow[:, c_idx]) + [p_stay[c_idx]]
@@ -768,10 +771,14 @@ class CompartmentalModel:
                     if flow.dest:
                         new_comp_vals[flow.dest.idx] += comp_flows[flow_idx]
 
+            # ~35 seconds
+
             # Sample entry flows using Possoin distribution
             lambdas = entry_flow_rates * self.timestep
             new_comp_vals += np.random.poisson(lam=lambdas)
             self.outputs[time_idx] = new_comp_vals
+
+            # ~35 seconds
 
     def _prepare_to_run(self):
         """

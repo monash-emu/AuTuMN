@@ -96,6 +96,8 @@ class AppRegion:
             # Run the baseline scenario.
             baseline_scenario = scenarios[0]
             baseline_scenario.run()
+            return
+
             baseline_model = baseline_scenario.model
 
             if not run_scenarios:

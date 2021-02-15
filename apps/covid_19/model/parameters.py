@@ -231,6 +231,7 @@ class Parameters:
     waning_immunity_duration: Optional[float]
     stratify_by_immunity: bool
     vaccine_efficacy: float
+    vaccination_rate: float
     stratify_by_infection_history: bool
     rel_prop_symptomatic_experienced: Optional[float]
     haario_scaling_factor: float

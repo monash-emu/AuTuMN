@@ -136,6 +136,15 @@ def build_model(params: dict) -> CompartmentalModel:
     if params.stratify_by_immunity:
         immunity_strat = get_immunity_strat(params)
         model.stratify_with(immunity_strat)
+        for compartment in COMPARTMENTS:
+            model.add_fractional_flow(
+                name="vaccination",
+                fractional_rate=params.vaccination_rate,
+                source=compartment,
+                dest=compartment,
+                source_strata={"immunity": "unvaccinated"},
+                dest_strata={"immunity": "vaccinated"},
+            )
 
     # Infection history stratification
     if params.stratify_by_infection_history:

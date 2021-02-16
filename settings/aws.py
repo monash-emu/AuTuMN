@@ -39,4 +39,4 @@ EC2_AMI = "ami-056b71718e997179b"
 EC2_SECURITY_GROUP = "sg-0b2fe230ac8853538"
 EC2_IAM_INSTANCE_PROFILE = "worker-profile"
 S3_BUCKET = "autumn-data"
-EC2_MAX_HOURS = 8
+EC2_MAX_HOURS = 50  # TODO: Change this back to 8

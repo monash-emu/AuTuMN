@@ -60,6 +60,11 @@ FACILITY_MAP = {
     "UP Philippine Genome Center": "metro manila",
     "Veteran Memorial Medical Center": "metro manila",
     "Victoriano Luna - AFRIMS": "metro manila",
+    "Davao Doctors Hospital GeneXpert Laboratory": "davao city",
+    "Davao One World Diagnostic Center Incorporated": "davao city",
+    "Davao Regional Medical Center GeneXpert Laboratory": "davao city",
+    "Davao Regional Medical Center RT PCR": "davao city",
+
 }
 
 
@@ -71,7 +76,7 @@ def create_region_aggregates(df):
     # Get data out for the three main sub-regions and mark unmatched data
     df.replace({"facility_name": FACILITY_MAP}, inplace=True)
     df.loc[
-        ~df.facility_name.isin(["calabarzon", "metro manila", "central visayas"]), "facility_name"
+        ~df.facility_name.isin(["calabarzon", "metro manila", "central visayas","davao city"]), "facility_name"
     ] = "unmatched"
     df.report_date = pd.to_datetime(df["report_date"], infer_datetime_format=True)
 

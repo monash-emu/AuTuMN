@@ -26,6 +26,9 @@ and combined with 'LGA to Cluster mapping dictionary with proportions.csv' (.\da
 Malaysia regional population stats
 https://www.data.gov.my/data/dataset/ec71711f-9b1f-42cd-9229-0c3e1f0e1dbb/resource/423f8f8c-5b74-4b5b-9ba9-d67a5c80e22c/download/mid-year-population-estimates-by-age-group-sex-and-state-malaysia-2015-2019.csv
 
+Philippines sub region population numbers are provided by the FASSSTER team except for 
+Davao City population - https://www.citypopulation.de/en/philippines/mindanao/admin/davao_del_sur/112402__davao/
+
 
 ### [WPP2019_FERT_F03_CRUDE_BIRTH_RATE](<https://population.un.org/wpp/Download/Files/1_Indicators%20(Standard)/EXCEL_FILES/2_Fertility/WPP2019_FERT_F03_CRUDE_BIRTH_RATE.xlsx>)
 

@@ -707,6 +707,15 @@ class CompartmentalModel:
         self.outputs = np.zeros((len(self.times), len(self.initial_population)))
         self.outputs[0] = self.initial_population
 
+        rng = np.random.default_rng()
+
+        flow_map = np.zeros((len(self.initial_population), len(self._flows) + 1))
+        for flow_idx, flow in enumerate(self._flows):
+            if flow.source:
+                flow_map[flow.source.idx][flow_idx] = -1
+            if flow.dest:
+                flow_map[flow.dest.idx][flow_idx] = 1
+
         for time_idx, time in enumerate(self.times):
             if time_idx == 0:
                 continue
@@ -735,8 +744,6 @@ class CompartmentalModel:
                 else:
                     entry_flow_rates[flow.dest.idx] += net_flow
 
-            # ~3 seconds
-
             # Normalize flow rates by compartment size
             flow_rates_normalized = np.true_divide(
                 flow_rates,
@@ -756,29 +763,33 @@ class CompartmentalModel:
             # Find probability of a single person leaving a given compartment
             p_stay = np.exp(-1 * total_flows * self.timestep)
             p_leave = 1 - p_stay
-            # Find the probability that a person leaves via a given flow
-            p_flow = p_leave * prop_flow
 
-            # ~3 seconds
+            # Find the probability that a person leaves via a given flow (add stay probability as final row)
+            # This is a (F + 1) x C matrix where
+            #  - F is the number of flows
+            #  - C is the number of compartments
+            #  - each element is a probability of a person leaving via a given flow
+            p_flow = np.vstack((p_leave * prop_flow, p_stay))
 
-            new_comp_vals = comp_vals.copy()
+            # Sample the exit flows for each compartment using a multinomial.
+            # So that we know how many people exited the compartment for each flow.
+            flows = np.zeros_like(p_flow)
             for c_idx, comp in enumerate(comp_vals):
-                comp_flow_prs = list(p_flow[:, c_idx]) + [p_stay[c_idx]]
-                comp_flows = np.random.multinomial(comp, comp_flow_prs)
-                for flow_idx, flow in enumerate(self._flows):
-                    if flow.source:
-                        new_comp_vals[flow.source.idx] -= comp_flows[flow_idx]
-                    if flow.dest:
-                        new_comp_vals[flow.dest.idx] += comp_flows[flow_idx]
+                comp_flow_prs = p_flow[:, c_idx]
+                flows[:, c_idx] = rng.multinomial(comp, comp_flow_prs)
 
-            # ~35 seconds
+            # Map exit flows to their destinations and subtract exit flows from the sources.
+            # This will give us an array of changes in compartment sizes.
+            comp_changes = np.matmul(flow_map, flows).sum(axis=1)
 
-            # Sample entry flows using Possoin distribution
+            # Figure out changes in compartment sizes due to entry flows.
+            # Sample entry flows using Poisson distribution
             lambdas = entry_flow_rates * self.timestep
-            new_comp_vals += np.random.poisson(lam=lambdas)
-            self.outputs[time_idx] = new_comp_vals
+            comp_changes_entry = np.random.poisson(lam=lambdas)
 
-            # ~35 seconds
+            # Find final compartment sizes at this timestep.
+            new_comp_vals = comp_vals.copy() + comp_changes + comp_changes_entry
+            self.outputs[time_idx] = new_comp_vals
 
     def _prepare_to_run(self):
         """

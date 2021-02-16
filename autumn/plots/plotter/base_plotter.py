@@ -24,7 +24,7 @@ class BasePlotter(ABC):
         room_for_legend=False,
         requested_grid=None,
         share_xaxis=False,
-        share_yaxis="none",
+            share_yaxis="none",
     ):
         """
         Initialise the subplots (or single plot) according to the number of panels required.
@@ -47,7 +47,7 @@ class BasePlotter(ABC):
             fig = pyplot.figure()
             axes = fig.add_axes([horizontal_position_one_axis, 0.15, 0.69, 0.7])
         elif n_panels == 2:
-            fig, axes = pyplot.subplots(1, 2)
+            fig, axes = pyplot.subplots(1, 2, sharey=share_yaxis)
             fig.set_figheight(3.5)
             fig.subplots_adjust(bottom=0.15, top=0.85)
         else:

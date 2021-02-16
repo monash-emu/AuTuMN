@@ -437,7 +437,7 @@ def plot_contact_param_traces(
 PLOT_FUNCS["Contact rate modifier traces"] = plot_contact_param_traces
 
 
-def plot_seroprevalence_by_age(
+def plot_seroprev_age_and_cluster(
         plotter: StreamlitPlotter,
         calib_dir_path: str,
         mcmc_tables: List[pd.DataFrame],
@@ -449,33 +449,11 @@ def plot_seroprevalence_by_age(
 
     uncertainty_df = get_uncertainty_db(mcmc_tables, targets, calib_dir_path)
     selected_scenario, time = 0, 275
-    _, seroprevalence_by_age, overall_seroprev = plots.uncertainty.plots.plot_seroprevalence_by_age(
+    _, seroprevalence_by_age, overall_seroprev = plots.uncertainty.plots.plot_vic_seroprevalences(
         plotter, uncertainty_df, selected_scenario, time, requested_quantiles=[0.025, 0.25, 0.5, 0.75, 0.975]
     )
     create_seroprev_csv(seroprevalence_by_age)
     st.write(overall_seroprev.to_dict())
 
 
-PLOT_FUNCS["Seroprevalence by age"] = plot_seroprevalence_by_age
-
-
-def plot_seroprevalence_by_cluster(
-        plotter: StreamlitPlotter,
-        calib_dir_path: str,
-        mcmc_tables: List[pd.DataFrame],
-        mcmc_params: List[pd.DataFrame],
-        targets: dict,
-        app_name: str,
-        region: str,
-):
-
-    uncertainty_df = get_uncertainty_db(mcmc_tables, targets, calib_dir_path)
-    selected_scenario, time = 0, 275
-    _, seroprevalence_by_age, overall_seroprev = plots.uncertainty.plots.plot_seroprevalence_by_cluster(
-        plotter, uncertainty_df, selected_scenario, time, requested_quantiles=[0.025, 0.25, 0.5, 0.75, 0.975]
-    )
-    create_seroprev_csv(seroprevalence_by_age)
-    st.write(overall_seroprev.to_dict())
-
-
-PLOT_FUNCS["Seroprevalence by cluster"] = plot_seroprevalence_by_cluster
+PLOT_FUNCS["Seroprevalence by age and cluster"] = plot_seroprev_age_and_cluster

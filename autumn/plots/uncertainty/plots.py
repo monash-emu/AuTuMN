@@ -288,19 +288,19 @@ def plot_multicountry_timeseries_with_uncertainty(
     plotter.save_figure(fig, filename="multi_uncertainty", subdir="outputs", title_text="")
 
 
-def plot_seroprevalence_by_age(
-        plotter: Plotter,
-        uncertainty_df: pd.DataFrame,
-        scenario_id: int,
-        time: float,
-        ref_date=REF_DATE,
-        axis=None,
-        name="",
-        requested_quantiles=None
+def plot_age_seroprev_to_axis(
+        uncertainty_df,
+        scenario_id,
+        time,
+        axis,
+        requested_quantiles,
+        ref_date,
+        name,
+        add_date_as_title=True,
+        add_ylabel=True,
+        credible_range=95
 ):
-    single_panel = axis is None
-    if single_panel:
-        fig, axis, _, _, _, _ = plotter.get_figure()
+
     mask = (uncertainty_df["scenario"] == scenario_id) & (uncertainty_df["time"] == time)
     df = uncertainty_df[mask]
     quantile_vals = df["quantile"].unique().tolist()
@@ -329,22 +329,27 @@ def plot_seroprevalence_by_age(
         num_quantiles = len(q_keys)
         half_length = num_quantiles // 2
 
+        x_positions = [float(i) + 2.5 for i in seroprevalence_by_age.keys()]
+
+        lower_q_key = (100. - credible_range) / 100. / 2.
+        upper_q_key = 1. - lower_q_key
+
         for i, age in enumerate(list(seroprevalence_by_age.keys())):
-            x_pos = 2.5 + float(age)
+
             axis.plot(
-                [x_pos, x_pos],
-                [seroprevalence_by_age[age][q_keys[0]], seroprevalence_by_age[age][q_keys[-1]]],
+                [x_positions[i], x_positions[i]],
+                [seroprevalence_by_age[age][lower_q_key], seroprevalence_by_age[age][upper_q_key]],
                 "-",
                 color="black",
                 lw=1.0,
             )
-            max_value = max(max_value, seroprevalence_by_age[age][q_keys[-1]][0])
+            max_value = max(max_value, seroprevalence_by_age[age][upper_q_key][0])
 
             if num_quantiles % 2:
                 q_key = q_keys[half_length]
                 label = None if i > 0 else "model"
                 axis.plot(
-                    x_pos,
+                    x_positions[i],
                     seroprevalence_by_age[age][q_key],
                     "o",
                     color="black",
@@ -352,24 +357,21 @@ def plot_seroprevalence_by_age(
                     label=label,
                 )
 
+        axis.xaxis.set_ticks(x_positions)
+        axis.set_xticklabels([str(i) for i in range(0, 80, 5)], fontsize=10, rotation=90)
+
         axis.set_xlabel("age (years)", fontsize=13)
         axis.set_ylim(bottom=0.)
-        axis.set_ylabel("% previously infected", fontsize=13)
-
+        if add_ylabel:
+            axis.set_ylabel("% previously infected", fontsize=13)
         _date = ref_date + datetime.timedelta(days=time)
+        if add_date_as_title:
+            axis.set_title(f'{name} {_date.strftime("%d/%m/%Y")}', fontsize=15)
 
-        axis.set_title(f'{name} {_date.strftime("%d/%m/%Y")}', fontsize=15)
-
-    if single_panel:
-        plotter.save_figure(fig, filename="sero_by_age", subdir="outputs", title_text="")
-
-    overall_seropos_estimates = \
-        df[df["type"] == "proportion_seropositive"][["quantile", "value"]].set_index("quantile")
-
-    return max_value, seroprevalence_by_age, overall_seropos_estimates
+    return axis, max_value, df, seroprevalence_by_age
 
 
-def plot_seroprevalence_by_cluster(
+def plot_seroprevalence_by_age(
         plotter: Plotter,
         uncertainty_df: pd.DataFrame,
         scenario_id: int,
@@ -382,6 +384,33 @@ def plot_seroprevalence_by_cluster(
     single_panel = axis is None
     if single_panel:
         fig, axis, _, _, _, _ = plotter.get_figure()
+
+    axis, max_value, df, seroprevalence_by_age = \
+        plot_age_seroprev_to_axis(
+            uncertainty_df, scenario_id, time, axis, requested_quantiles, ref_date, name
+        )
+    if single_panel:
+        plotter.save_figure(fig, filename="sero_by_age", subdir="outputs", title_text="")
+
+    overall_seropos_estimates = \
+        df[df["type"] == "proportion_seropositive"][["quantile", "value"]].set_index("quantile")
+
+    return max_value, seroprevalence_by_age, overall_seropos_estimates
+
+
+def plot_vic_seroprevalences(
+        plotter: Plotter,
+        uncertainty_df: pd.DataFrame,
+        scenario_id: int,
+        time: float,
+        ref_date=REF_DATE,
+        name="",
+        requested_quantiles=None,
+        credible_range=50,
+):
+
+    fig, axes, _, _, _, _ = plotter.get_figure(n_panels=2, share_yaxis="all")
+    cluster_axis, age_axis = axes
     mask = (uncertainty_df["scenario"] == scenario_id) & (uncertainty_df["time"] == time)
     df = uncertainty_df[mask]
     quantile_vals = df["quantile"].unique().tolist()
@@ -394,7 +423,7 @@ def plot_seroprevalence_by_cluster(
 
     max_value = -10.0
     if len(sero_outputs) == 0:
-        axis.text(0.0, 0.5, "Cluster-specific seroprevalence outputs are not available for this run")
+        cluster_axis.text(0.0, 0.5, "Cluster-specific seroprevalence outputs are not available for this run")
     else:
         for output in sero_outputs:
             output_mask = df["type"] == output
@@ -415,22 +444,25 @@ def plot_seroprevalence_by_cluster(
             i in sero_outputs
         ]
 
+        lower_q_key = (100. - credible_range) / 100. / 2.
+        upper_q_key = 1. - lower_q_key
+
         for i, cluster in enumerate(list(seroprevalence_by_cluster.keys())):
             x_pos = float(i)
-            axis.plot(
+            cluster_axis.plot(
                 [x_pos, x_pos],
-                [seroprevalence_by_cluster[cluster][q_keys[0]], seroprevalence_by_cluster[cluster][q_keys[-1]]],
+                [seroprevalence_by_cluster[cluster][lower_q_key], seroprevalence_by_cluster[cluster][upper_q_key]],
                 "-",
                 color="black",
                 lw=1.0,
             )
-            axis.set_xticklabels(cluster_names, fontsize=10, rotation=90)
-            max_value = max(max_value, seroprevalence_by_cluster[cluster][q_keys[-1]][0])
+            cluster_axis.set_xticklabels(cluster_names, fontsize=10, rotation=90)
+            max_value = max(max_value, seroprevalence_by_cluster[cluster][upper_q_key][0])
 
             if num_quantiles % 2:
                 q_key = q_keys[half_length]
                 label = None if i > 0 else "model"
-                axis.plot(
+                cluster_axis.plot(
                     x_pos,
                     seroprevalence_by_cluster[cluster][q_key],
                     "o",
@@ -439,15 +471,17 @@ def plot_seroprevalence_by_cluster(
                     label=label,
                 )
 
-        axis.set_ylim(bottom=0.)
-        axis.set_ylabel("% previously infected", fontsize=13)
-
+        cluster_axis.set_ylim(bottom=0.)
+        cluster_axis.set_ylabel("% previously infected", fontsize=13)
         _date = ref_date + datetime.timedelta(days=time)
 
-        axis.set_title(f'{name} {_date.strftime("%d/%m/%Y")}', fontsize=15)
+    axis, max_value, df, seroprevalence_by_age = \
+        plot_age_seroprev_to_axis(
+            uncertainty_df, scenario_id, time, age_axis, requested_quantiles, ref_date, name,
+            add_date_as_title=False, add_ylabel=False
+        )
 
-    if single_panel:
-        plotter.save_figure(fig, filename="sero_by_cluster", subdir="outputs", title_text="")
+    plotter.save_figure(fig, filename="sero_by_cluster", subdir="outputs", title_text="")
 
     overall_seropos_estimates = \
         df[df["type"] == "proportion_seropositive"][["quantile", "value"]].set_index("quantile")

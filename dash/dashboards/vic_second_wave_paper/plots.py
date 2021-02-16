@@ -59,7 +59,7 @@ PLOT_FUNCS["Multi-output uncertainty"] = plot_multiple_timeseries_with_uncertain
 
 
 def plot_regional_outputs(
-        plotter, calib_dir_path, mcmc_tables, targets, regions, indicator, file_name
+        plotter, calib_dir_path, mcmc_tables, targets, regions, indicator, file_name, max_y_value=None
 ):
     chosen_outputs = [
         indicator + "_for_cluster_" + i_region.replace("-", "_") for i_region in regions
@@ -80,6 +80,8 @@ def plot_regional_outputs(
         title_font_size=title_font_size,
         label_font_size=label_font_size,
         file_name=file_name,
+        share_yaxis=True,
+        max_y_value=max_y_value,
     )
 
 
@@ -94,7 +96,7 @@ def metro_notifications(
 ):
     plot_regional_outputs(
         plotter, calib_dir_path, mcmc_tables, targets, Region.VICTORIA_METRO, "notifications",
-        "metro_notifications"
+        "metro_notifications", max_y_value=370.
     )
 
 
@@ -112,7 +114,7 @@ def regional_notifications(
 ):
     plot_regional_outputs(
         plotter, calib_dir_path, mcmc_tables, targets, Region.VICTORIA_RURAL, "notifications",
-        "regional_notifications"
+        "regional_notifications", max_y_value=55.
     )
 
 
@@ -130,7 +132,7 @@ def metro_hospitalisations(
 ):
     plot_regional_outputs(
         plotter, calib_dir_path, mcmc_tables, targets, Region.VICTORIA_METRO, "hospital_admissions",
-        "metro_hospital"
+        "metro_hospital", max_y_value=50.
     )
 
 
@@ -148,7 +150,7 @@ def regional_hospitalisations(
 ):
     plot_regional_outputs(
         plotter, calib_dir_path, mcmc_tables, targets, Region.VICTORIA_RURAL, "hospital_admissions",
-        "regional_hospital"
+        "regional_hospital", max_y_value=5.
     )
 
 
@@ -166,7 +168,7 @@ def metro_icu_admissions(
 ):
     plot_regional_outputs(
         plotter, calib_dir_path, mcmc_tables, targets, Region.VICTORIA_METRO, "icu_admissions",
-        "metro_icu"
+        "metro_icu", max_y_value=9.
     )
 
 

@@ -187,6 +187,8 @@ def plot_multi_output_timeseries_with_uncertainty(
         title_font_size=12,
         label_font_size=10,
         file_name="multi_uncertainty",
+        share_yaxis=False,
+        max_y_value=None,
 ):
     if len(output_names) * len(scenarios) == 0:
         return
@@ -197,14 +199,23 @@ def plot_multi_output_timeseries_with_uncertainty(
     n_cols = min(max_n_col, n_panels)
     n_rows = ceil(n_panels / max_n_col)
 
-    fig = pyplot.figure(constrained_layout=True, figsize=(n_cols * 7, n_rows * 5))  # (w, h)
+    fig = pyplot.figure(
+        constrained_layout=True,
+        figsize=(n_cols * 7, n_rows * 5),  # (w, h)
+    )
     spec = fig.add_gridspec(ncols=n_cols, nrows=n_rows)
 
     i_col = 0
     i_row = 0
-    for output_name in output_names:
+    axes = []
+    for i_out, output_name in enumerate(output_names):
         targets = {k: v for k, v in all_targets.items() if v["output_key"] == output_name}
-        ax = fig.add_subplot(spec[i_row, i_col])
+        if i_out == 0 or not share_yaxis:
+            axes.append(fig.add_subplot(spec[i_row, i_col]))
+            if max_y_value:
+                axes[0].set_ylim(top=max_y_value)
+        else:
+            axes.append(fig.add_subplot(spec[i_row, i_col], sharey=axes[0]))
         plot_timeseries_with_uncertainty(
             plotter,
             uncertainty_df,
@@ -214,7 +225,7 @@ def plot_multi_output_timeseries_with_uncertainty(
             is_logscale,
             x_low,
             x_up,
-            ax,
+            axes[i_out],
             n_xticks,
             title_font_size=title_font_size,
             label_font_size=label_font_size,
@@ -438,8 +449,7 @@ def plot_vic_seroprevalences(
         num_quantiles = len(q_keys)
         half_length = num_quantiles // 2
 
-        # For some reason another x-tick gets added on to the left of the actual data that is being plotted, hence ...
-        cluster_names = [""] + [
+        cluster_names = [
             get_plot_text_dict(i.split("proportion_seropositiveXcluster_")[1]) for
             i in sero_outputs
         ]
@@ -447,10 +457,11 @@ def plot_vic_seroprevalences(
         lower_q_key = (100. - credible_range) / 100. / 2.
         upper_q_key = 1. - lower_q_key
 
+        x_positions = range(len(seroprevalence_by_cluster))
+
         for i, cluster in enumerate(list(seroprevalence_by_cluster.keys())):
-            x_pos = float(i)
             cluster_axis.plot(
-                [x_pos, x_pos],
+                [x_positions[i], x_positions[i]],
                 [seroprevalence_by_cluster[cluster][lower_q_key], seroprevalence_by_cluster[cluster][upper_q_key]],
                 "-",
                 color="black",
@@ -463,13 +474,15 @@ def plot_vic_seroprevalences(
                 q_key = q_keys[half_length]
                 label = None if i > 0 else "model"
                 cluster_axis.plot(
-                    x_pos,
+                    x_positions[i],
                     seroprevalence_by_cluster[cluster][q_key],
                     "o",
                     color="black",
                     markersize=4,
                     label=label,
                 )
+
+        cluster_axis.xaxis.set_ticks(x_positions)
 
         cluster_axis.set_ylim(bottom=0.)
         cluster_axis.set_ylabel("% previously infected", fontsize=13)

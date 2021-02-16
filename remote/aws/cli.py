@@ -132,10 +132,7 @@ def run_calibrate(job, app, region, chains, runtime, branch, is_spot, dry):
     Run a MCMC calibration on an AWS server.
     """
     job_id = f"calibrate-{job}"
-    if region == "victoria" and app == "covid_19":
-        instance_type = aws.get_instance_type(2 * chains, 8)
-    else:
-        instance_type = aws.get_instance_type(chains, 8)
+    instance_type = aws.get_instance_type(2 * chains, 8)
 
     if dry:
         logger.info("Dry run, would have used instance type: %s", instance_type)

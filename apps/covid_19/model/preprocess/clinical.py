@@ -211,23 +211,22 @@ def subdivide_props(base_props: np.ndarray, split_props: np.ndarray):
     return split_arr, complement_arr
 
 
-def get_ifr_props(params):
+def get_ifr_props(params, adjuster):
 
     country = params.country
     pop = params.population
-    infection_fatality = params.infection_fatality
 
     # Proportion of people in age group who die, given the number infected: dead / total infected.
     return get_infection_fatality_proportions(
-        infection_fatality_props_10_year=infection_fatality.props,
-        infection_rate_multiplier=infection_fatality.multiplier,
+        infection_fatality_props_10_year=params.infection_fatality.props,
+        infection_rate_multiplier=adjuster,
         iso3=country.iso3,
         pop_region=pop.region,
         pop_year=pop.year,
     )
 
 
-def get_sympt_props(params):
+def get_sympt_props(params, symptomatic_adjuster, hospital_adjuster):
 
     clinical_params = params.clinical_stratification
 
@@ -237,8 +236,8 @@ def get_sympt_props(params):
         symptomatic_props=symptomatic_props,
         icu_props=clinical_params.icu_prop,
         hospital_props=clinical_params.props.hospital.props,
-        symptomatic_props_multiplier=clinical_params.props.symptomatic.multiplier,
-        hospital_props_multiplier=clinical_params.props.hospital.multiplier,
+        symptomatic_props_multiplier=symptomatic_adjuster,
+        hospital_props_multiplier=hospital_adjuster,
     )
 
 

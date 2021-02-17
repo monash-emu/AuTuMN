@@ -97,9 +97,16 @@ def get_clinical_strat(params: Parameters) -> Stratification:
     """
 
     infection_fatality_props = \
-        get_ifr_props(params)
+        get_ifr_props(
+            params,
+            params.infection_fatality.multiplier
+        )
     abs_props = \
-        get_sympt_props(params)
+        get_sympt_props(
+            params,
+            params.clinical_stratification.props.symptomatic.multiplier,
+            params.clinical_stratification.props.hospital.multiplier,
+        )
     abs_death_props = \
         get_absolute_death_proportions(abs_props, infection_fatality_props, clinical_params.icu_mortality_prop)
     relative_death_props = \

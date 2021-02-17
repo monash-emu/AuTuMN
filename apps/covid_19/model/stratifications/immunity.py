@@ -20,11 +20,12 @@ def get_immunity_strat(params: Parameters) -> Stratification:
         }
     )
 
-    immunity_strat.add_flow_adjustments(
-        "infection", {
-            "vaccinated": Multiply(1. - params.vaccination.efficacy),
-            "unvaccinated": None,
-        }
-    )
+    if params.vaccination:
+        immunity_strat.add_flow_adjustments(
+            "infection", {
+                "vaccinated": Multiply(1. - params.vaccination.efficacy),
+                "unvaccinated": None,
+            }
+        )
 
     return immunity_strat

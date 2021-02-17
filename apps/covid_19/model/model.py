@@ -24,6 +24,7 @@ from apps.covid_19.model.outputs.victorian import request_victorian_outputs
 
 from apps.covid_19.model.preprocess.vaccination import get_vacc_roll_out_function
 
+
 def build_model(params: dict) -> CompartmentalModel:
     """
     Build the compartmental model from the provided parameters.
@@ -138,17 +139,18 @@ def build_model(params: dict) -> CompartmentalModel:
         immunity_strat = get_immunity_strat(params)
         model.stratify_with(immunity_strat)
 
-        vaccination_roll_out_function = get_vacc_roll_out_function(params.vaccination.roll_out_function)
-
-        for compartment in COMPARTMENTS:
-            model.add_fractional_flow(
-                name="vaccination",
-                fractional_rate=vaccination_roll_out_function,
-                source=compartment,
-                dest=compartment,
-                source_strata={"immunity": "unvaccinated"},
-                dest_strata={"immunity": "vaccinated"},
-            )
+        if params.vaccination:
+            vaccination_roll_out_function = \
+                get_vacc_roll_out_function(params.vaccination.roll_out_function)
+            for compartment in COMPARTMENTS:
+                model.add_fractional_flow(
+                    name="vaccination",
+                    fractional_rate=vaccination_roll_out_function,
+                    source=compartment,
+                    dest=compartment,
+                    source_strata={"immunity": "unvaccinated"},
+                    dest_strata={"immunity": "vaccinated"},
+                )
 
     # Infection history stratification
     if params.stratify_by_infection_history:

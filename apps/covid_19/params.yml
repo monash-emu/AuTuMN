@@ -176,12 +176,7 @@ victorian_clusters: null
 
 # Vaccination-related
 stratify_by_immunity: false
-vaccination:
-  efficacy: 0.5
-  roll_out_function:
-    coverage: 0.5
-    start_time: 400.
-    end_time: 500.
+vaccination: null
 
 # Multiplier scaling the covariance matrix in the Haario Metropolis. 2.4 is the value recommended by Haario.
 haario_scaling_factor: 2.4 # Greater values increase jumping step size and reduce the acceptance ratio

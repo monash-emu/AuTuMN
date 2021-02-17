@@ -61,4 +61,4 @@ mobility:
         - 0.64
         - 0.
 
-importation: null
+stratify_by_immunity: true

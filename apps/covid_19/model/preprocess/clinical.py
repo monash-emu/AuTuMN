@@ -6,6 +6,8 @@ from autumn.tool_kit.utils import (
     repeat_list_elements,
     repeat_list_elements_average_last_two,
 )
+from apps.covid_19.model.stratifications.agegroup import AGEGROUP_STRATA
+from summer2 import Multiply, Overwrite
 
 from apps.covid_19.model.parameters import Parameters
 from apps.covid_19.constants import Clinical
@@ -207,3 +209,102 @@ def subdivide_props(base_props: np.ndarray, split_props: np.ndarray):
     split_arr = base_props * split_props
     complement_arr = base_props * (1 - split_props)
     return split_arr, complement_arr
+
+
+def get_ifr_props(params):
+
+    country = params.country
+    pop = params.population
+    infection_fatality = params.infection_fatality
+
+    # Proportion of people in age group who die, given the number infected: dead / total infected.
+    return get_infection_fatality_proportions(
+        infection_fatality_props_10_year=infection_fatality.props,
+        infection_rate_multiplier=infection_fatality.multiplier,
+        iso3=country.iso3,
+        pop_region=pop.region,
+        pop_year=pop.year,
+    )
+
+
+def get_sympt_props(params):
+
+    clinical_params = params.clinical_stratification
+
+    # Get the proportion of people in each clinical stratum, relative to total people in compartment.
+    symptomatic_props = get_proportion_symptomatic(params)
+    return get_absolute_strata_proportions(
+        symptomatic_props=symptomatic_props,
+        icu_props=clinical_params.icu_prop,
+        hospital_props=clinical_params.props.hospital.props,
+        symptomatic_props_multiplier=clinical_params.props.symptomatic.multiplier,
+        hospital_props_multiplier=clinical_params.props.hospital.multiplier,
+    )
+
+
+def get_relative_death_props(abs_props, abs_death_props):
+    # Calculate relative death proportions for each strata / agegroup.
+    # This is the number of people in strata / agegroup who die, given the total num people in that strata / agegroup.
+    return {
+        stratum: np.array(abs_death_props[stratum]) / np.array(abs_props[stratum])
+        for stratum in (
+            Clinical.HOSPITAL_NON_ICU,
+            Clinical.ICU,
+            Clinical.NON_SYMPT,
+        )
+    }
+
+
+def get_hosp_sojourns(sojourn):
+    # Now we want to convert these death proportions into flow rates
+    # These flow rates are the death rates for hospitalised patients in ICU and non-ICU
+    # We assume everyone who dies does so at the end of their time in the "late active" compartment
+    # We split the flow rate out of "late active" into a death or recovery flow, based on the relative death proportion
+    within_hospital_late = 1.0 / sojourn.compartment_periods["hospital_late"]
+    within_icu_late = 1.0 / sojourn.compartment_periods["icu_late"]
+
+    return within_hospital_late, within_icu_late
+
+
+def get_hosp_death_rates(relative_death_props, within_hospital_late, within_icu_late):
+    hospital_death_rates = relative_death_props[Clinical.HOSPITAL_NON_ICU] * within_hospital_late
+    icu_death_rates = relative_death_props[Clinical.ICU] * within_icu_late
+
+    return hospital_death_rates, icu_death_rates
+
+
+def apply_death_adjustments(hospital_death_rates, icu_death_rates):
+
+    # Apply adjusted infection death rates for hospital patients (ICU and non-ICU)
+    # Death and non-death progression between infectious compartments towards the recovered compartment
+    death_adjs = {}
+    for idx, age_group in enumerate(AGEGROUP_STRATA):
+        death_adjs[age_group] = {
+            Clinical.NON_SYMPT: None,
+            Clinical.SYMPT_NON_HOSPITAL: None,
+            Clinical.SYMPT_ISOLATE: None,
+            Clinical.HOSPITAL_NON_ICU: Overwrite(hospital_death_rates[idx]),
+            Clinical.ICU: Overwrite(icu_death_rates[idx]),
+        }
+    return death_adjs
+
+
+def get_entry_adjustments(abs_props, get_detected_proportion):
+
+    adjustments = {}
+    for age_idx, agegroup in enumerate(AGEGROUP_STRATA):
+        get_abs_prop_isolated = get_abs_prop_isolated_factory(
+            age_idx, abs_props, get_detected_proportion
+        )
+        get_abs_prop_sympt_non_hospital = get_abs_prop_sympt_non_hospital_factory(
+            age_idx, abs_props, get_abs_prop_isolated
+        )
+        adjustments[agegroup] = {
+            Clinical.NON_SYMPT: Multiply(abs_props[Clinical.NON_SYMPT][age_idx]),
+            Clinical.ICU: Multiply(abs_props[Clinical.ICU][age_idx]),
+            Clinical.HOSPITAL_NON_ICU: Multiply(abs_props[Clinical.HOSPITAL_NON_ICU][age_idx]),
+            Clinical.SYMPT_NON_HOSPITAL: Multiply(get_abs_prop_sympt_non_hospital),
+            Clinical.SYMPT_ISOLATE: Multiply(get_abs_prop_isolated),
+        }
+
+    return adjustments

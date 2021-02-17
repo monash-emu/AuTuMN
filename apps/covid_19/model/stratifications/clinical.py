@@ -1,5 +1,3 @@
-import numpy as np
-
 from summer2 import Stratification, Multiply, Overwrite
 from autumn.curve import scale_up_function
 from apps.covid_19.model.parameters import Parameters
@@ -11,12 +9,16 @@ from apps.covid_19.constants import (
     INFECTIOUS_COMPARTMENTS,
 )
 from apps.covid_19.model.preprocess.clinical import (
-    get_proportion_symptomatic,
     get_abs_prop_isolated_factory,
     get_abs_prop_sympt_non_hospital_factory,
-    get_absolute_strata_proportions,
     get_absolute_death_proportions,
-    get_infection_fatality_proportions,
+    get_ifr_props,
+    get_sympt_props,
+    get_relative_death_props,
+    get_hosp_sojourns,
+    get_hosp_death_rates,
+    apply_death_adjustments,
+    get_entry_adjustments
 )
 
 CLINICAL_STRATA = [
@@ -26,83 +28,6 @@ CLINICAL_STRATA = [
     Clinical.HOSPITAL_NON_ICU,
     Clinical.ICU,
 ]
-
-
-def get_ifr_props(params):
-
-    country = params.country
-    pop = params.population
-    infection_fatality = params.infection_fatality
-
-    # Proportion of people in age group who die, given the number infected: dead / total infected.
-    return get_infection_fatality_proportions(
-        infection_fatality_props_10_year=infection_fatality.props,
-        infection_rate_multiplier=infection_fatality.multiplier,
-        iso3=country.iso3,
-        pop_region=pop.region,
-        pop_year=pop.year,
-    )
-
-
-def get_sympt_props(params):
-
-    clinical_params = params.clinical_stratification
-
-    # Get the proportion of people in each clinical stratum, relative to total people in compartment.
-    symptomatic_props = get_proportion_symptomatic(params)
-    return get_absolute_strata_proportions(
-        symptomatic_props=symptomatic_props,
-        icu_props=clinical_params.icu_prop,
-        hospital_props=clinical_params.props.hospital.props,
-        symptomatic_props_multiplier=clinical_params.props.symptomatic.multiplier,
-        hospital_props_multiplier=clinical_params.props.hospital.multiplier,
-    )
-
-
-def get_relative_death_props(abs_props, abs_death_props):
-    # Calculate relative death proportions for each strata / agegroup.
-    # This is the number of people in strata / agegroup who die, given the total num people in that strata / agegroup.
-    return {
-        stratum: np.array(abs_death_props[stratum]) / np.array(abs_props[stratum])
-        for stratum in (
-            Clinical.HOSPITAL_NON_ICU,
-            Clinical.ICU,
-            Clinical.NON_SYMPT,
-        )
-    }
-
-
-def get_hosp_sojourns(sojourn):
-    # Now we want to convert these death proportions into flow rates
-    # These flow rates are the death rates for hospitalised patients in ICU and non-ICU
-    # We assume everyone who dies does so at the end of their time in the "late active" compartment
-    # We split the flow rate out of "late active" into a death or recovery flow, based on the relative death proportion
-    within_hospital_late = 1.0 / sojourn.compartment_periods["hospital_late"]
-    within_icu_late = 1.0 / sojourn.compartment_periods["icu_late"]
-
-    return within_hospital_late, within_icu_late
-
-
-def get_hosp_death_rates(relative_death_props, within_hospital_late, within_icu_late):
-    hospital_death_rates = relative_death_props[Clinical.HOSPITAL_NON_ICU] * within_hospital_late
-    icu_death_rates = relative_death_props[Clinical.ICU] * within_icu_late
-
-    return hospital_death_rates, icu_death_rates
-
-
-def apply_death_adjustments(hospital_death_rates, icu_death_rates):
-
-    # Apply adjusted infection death rates for hospital patients (ICU and non-ICU)
-    # Death and non-death progression between infectious compartments towards the recovered compartment
-    for idx in range(len(AGEGROUP_STRATA)):
-        death_adjs = {
-            Clinical.NON_SYMPT: None,
-            Clinical.SYMPT_NON_HOSPITAL: None,
-            Clinical.SYMPT_ISOLATE: None,
-            Clinical.HOSPITAL_NON_ICU: Overwrite(hospital_death_rates[idx]),
-            Clinical.ICU: Overwrite(icu_death_rates[idx]),
-        }
-    return death_adjs
 
 
 def get_clinical_strat(params: Parameters) -> Stratification:
@@ -128,7 +53,7 @@ def get_clinical_strat(params: Parameters) -> Stratification:
     pop = params.population
 
     """
-    Infectiousness adjustments for clinical strat
+    Infectiousness adjustments for clinical stratification
     """
     # Add infectiousness reduction multiplier for all non-symptomatic infectious people.
     # These people are less infectious because of biology.
@@ -171,65 +96,52 @@ def get_clinical_strat(params: Parameters) -> Stratification:
     Adjust infection death rates for hospital patients (ICU and non-ICU)
     """
 
-    # Get raw IFR and symptomatic proportions
-    infection_fatality_props = get_ifr_props(params)
-    abs_props = get_sympt_props(params)
-
-    # Get the proportion of people who die for each strata/agegroup, relative to total infected.
+    infection_fatality_props = \
+        get_ifr_props(params)
+    abs_props = \
+        get_sympt_props(params)
     abs_death_props = \
         get_absolute_death_proportions(abs_props, infection_fatality_props, clinical_params.icu_mortality_prop)
-
-    relative_death_props = get_relative_death_props(abs_props, abs_death_props)
-
-    sojourn = params.sojourn
-    within_hospital_late, within_icu_late = get_hosp_sojourns(sojourn)
-
+    relative_death_props = \
+        get_relative_death_props(abs_props, abs_death_props)
+    sojourn = \
+        params.sojourn
+    within_hospital_late, within_icu_late = \
+        get_hosp_sojourns(sojourn)
     hospital_death_rates, icu_death_rates = \
         get_hosp_death_rates(relative_death_props, within_hospital_late, within_icu_late)
-
-    death_adjs = apply_death_adjustments(hospital_death_rates, icu_death_rates)
-
-    for agegroup in AGEGROUP_STRATA:
-        clinical_strat.add_flow_adjustments(
-            "infect_death", death_adjs, source_strata={"agegroup": agegroup}
-        )
-
-    """
-    Adjust early exposed sojourn times.
-    """
-    # Progression rates into the infectious compartment(s)
-    # Define progression rates into non-symptomatic compartments using parameter adjustment.
-    # Get case detection rate function.
+    death_adjs = \
+        apply_death_adjustments(hospital_death_rates, icu_death_rates)
     get_detected_proportion = build_detected_proportion_func(
         AGEGROUP_STRATA, country, pop, params.testing_to_detection, params.case_detection
     )
+    entry_adjustments = \
+        get_entry_adjustments(abs_props, get_detected_proportion)
+    within_hospital_early = \
+        1. / sojourn.compartment_periods["hospital_early"]
+    within_icu_early = \
+        1. / sojourn.compartment_periods["icu_early"]
+    hospital_survival_props = \
+        1. - relative_death_props[Clinical.HOSPITAL_NON_ICU]
+    icu_survival_props = \
+        1. - relative_death_props[Clinical.ICU]
+    hospital_survival_rates = \
+        within_hospital_late * hospital_survival_props
+    icu_survival_rates = \
+        within_icu_late * icu_survival_props
 
-    for age_idx, agegroup in enumerate(AGEGROUP_STRATA):
-        get_abs_prop_isolated = get_abs_prop_isolated_factory(
-            age_idx, abs_props, get_detected_proportion
-        )
-        get_abs_prop_sympt_non_hospital = get_abs_prop_sympt_non_hospital_factory(
-            age_idx, abs_props, get_abs_prop_isolated
-        )
-        adjustments = {
-            Clinical.NON_SYMPT: Multiply(abs_props[Clinical.NON_SYMPT][age_idx]),
-            Clinical.ICU: Multiply(abs_props[Clinical.ICU][age_idx]),
-            Clinical.HOSPITAL_NON_ICU: Multiply(abs_props[Clinical.HOSPITAL_NON_ICU][age_idx]),
-            Clinical.SYMPT_NON_HOSPITAL: Multiply(get_abs_prop_sympt_non_hospital),
-            Clinical.SYMPT_ISOLATE: Multiply(get_abs_prop_isolated),
-        }
+    for idx, agegroup in enumerate(AGEGROUP_STRATA):
+        source = {"agegroup": agegroup}
         clinical_strat.add_flow_adjustments(
             "infect_onset",
-            adjustments,
-            source_strata={"agegroup": agegroup},
+            entry_adjustments[agegroup],
+            source_strata=source
         )
-
-    """
-    Adjust early active sojourn times.
-    """
-    within_hospital_early = 1.0 / sojourn.compartment_periods["hospital_early"]
-    within_icu_early = 1.0 / sojourn.compartment_periods["icu_early"]
-    for agegroup in AGEGROUP_STRATA:
+        clinical_strat.add_flow_adjustments(
+            "infect_death",
+            death_adjs[agegroup],
+            source_strata=source
+        )
         clinical_strat.add_flow_adjustments(
             "progress",
             {
@@ -239,18 +151,8 @@ def get_clinical_strat(params: Parameters) -> Stratification:
                 Clinical.SYMPT_NON_HOSPITAL: None,
                 Clinical.SYMPT_ISOLATE: None,
             },
-            source_strata={"agegroup": agegroup},
+            source_strata=source,
         )
-
-    """
-    Adjust late active sojourn times.
-    """
-    hospital_survival_props = 1 - relative_death_props[Clinical.HOSPITAL_NON_ICU]
-    icu_survival_props = 1 - relative_death_props[Clinical.ICU]
-    hospital_survival_rates = within_hospital_late * hospital_survival_props
-    icu_survival_rates = within_icu_late * icu_survival_props
-
-    for idx, agegroup in enumerate(AGEGROUP_STRATA):
         clinical_strat.add_flow_adjustments(
             "recovery",
             {
@@ -260,7 +162,7 @@ def get_clinical_strat(params: Parameters) -> Stratification:
                 Clinical.SYMPT_NON_HOSPITAL: None,
                 Clinical.SYMPT_ISOLATE: None,
             },
-            source_strata={"agegroup": agegroup},
+            source_strata=source,
         )
 
     """

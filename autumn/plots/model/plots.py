@@ -225,12 +225,13 @@ def plot_outputs_multi(
 
 
 def plot_outputs_single(
-    plotter: Plotter,
-    scenario: Scenario,
-    output_config: dict,
-    is_logscale=False,
-    axis=None,
-    single_panel=True,
+        plotter: Plotter,
+        scenario: Scenario,
+        output_config: dict,
+        is_logscale=False,
+        axis=None,
+        single_panel=True,
+        xaxis_date=False,
 ):
     """
     Plot the model derived/generated outputs requested by the user for a single scenario.
@@ -246,6 +247,9 @@ def plot_outputs_single(
     target_times = output_config["times"]
     _plot_outputs_to_axis(axis, scenario, output_name)
     _plot_targets_to_axis(axis, target_values, target_times)
+
+    if xaxis_date:
+        change_xaxis_to_date(axis, REF_DATE)
 
     if X_MIN is not None and X_MAX is not None:
         axis.set_xlim((X_MIN, X_MAX))

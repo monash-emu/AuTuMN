@@ -28,6 +28,8 @@ steps:
       value: covid_19:malaysia
     - label: Sabah (COVID)
       value: covid_19:sabah
+    - label: Selangor (COVID)
+      value: covid_19:selangor
     - label: Philippines (COVID)
       value: covid_19:philippines
     - label: Manila (COVID)
@@ -36,6 +38,8 @@ steps:
       value: covid_19:calabarzon
     - label: Central Visayas (COVID)
       value: covid_19:central-visayas
+    - label: Davao City (COVID)
+      value: covid_19:davao-city
     - label: Belgium (COVID)
       value: covid_19:belgium
     - label: United Kingdom (COVID)
@@ -52,10 +56,6 @@ steps:
       value: tuberculosis:philippines
     - label: Marshall Islands (TB)
       value: tuberculosis:marshall-islands
-    - label: Selangor (COVID)
-      value: covid_19:selangor
-    - label: Philippines (TB strains)
-      value: tuberculosis_strains:philippines
     required: true
     select: Model Region
   - default: '7'

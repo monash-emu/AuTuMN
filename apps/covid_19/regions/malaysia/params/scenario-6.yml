@@ -1,11 +1,11 @@
-description: Scenario 5, 70% efficacy 70% coverage vaccination
+description: Scenario 6, 90% efficacy 70% coverage vaccination
 parent: apps/covid_19/regions/malaysia/params/default.yml
 
 time:
   start: 418.
 
 vaccination:
-  efficacy: 0.7
+  efficacy: 0.9
 
   # Six months from Monday 22nd Feb 2021
   roll_out_function:

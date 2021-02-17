@@ -1,8 +1,7 @@
-from summer2 import Stratification, Multiply
+from summer2 import Stratification, Multiply, Overwrite
 from apps.covid_19.constants import COMPARTMENTS, Clinical
 from apps.covid_19.model.stratifications.agegroup import AGEGROUP_STRATA
 from apps.covid_19.model.parameters import Parameters
-
 from apps.covid_19.model.preprocess.clinical import \
     get_absolute_death_proportions, \
     get_hosp_sojourns, \
@@ -11,6 +10,15 @@ from apps.covid_19.model.preprocess.clinical import \
     get_entry_adjustments
 from apps.covid_19.model.stratifications.clinical import get_ifr_props, get_sympt_props, get_relative_death_props
 from apps.covid_19.model.preprocess.case_detection import build_detected_proportion_func
+
+
+CLINICAL_STRATA = [
+    Clinical.NON_SYMPT,
+    Clinical.SYMPT_NON_HOSPITAL,
+    Clinical.SYMPT_ISOLATE,
+    Clinical.HOSPITAL_NON_ICU,
+    Clinical.ICU,
+]
 
 IMMUNITY_STRATA = [
     "unvaccinated",
@@ -41,15 +49,15 @@ def get_immunity_strat(params: Parameters) -> Stratification:
     country = params.country
     pop = params.population
 
-    vaccine_adjuster = 0.5
+    vaccine_efficacy = 0.
     symptomatic_adjuster = \
-        vaccine_adjuster * \
+        (1. - vaccine_efficacy) * \
         params.clinical_stratification.props.symptomatic.multiplier
     hospital_adjuster = \
-        vaccine_adjuster * \
+        (1. - vaccine_efficacy) * \
         params.clinical_stratification.props.hospital.multiplier
     ifr_adjuster = \
-        vaccine_adjuster * \
+        (1. - vaccine_efficacy) * \
         params.infection_fatality.multiplier
 
     infection_fatality_props = \
@@ -92,5 +100,66 @@ def get_immunity_strat(params: Parameters) -> Stratification:
         within_hospital_late * hospital_survival_props
     icu_survival_rates = \
         within_icu_late * icu_survival_props
+
+    progress_adjs = {
+        Clinical.NON_SYMPT: None,
+        Clinical.ICU: Overwrite(within_icu_early),
+        Clinical.HOSPITAL_NON_ICU: Overwrite(within_hospital_early),
+        Clinical.SYMPT_NON_HOSPITAL: None,
+        Clinical.SYMPT_ISOLATE: None
+    }
+
+    for clinical_stratum in CLINICAL_STRATA:
+
+        immunity_strat.add_flow_adjustments(
+            "progress",
+            {
+                "unvaccinated": None,
+                "vaccinated": progress_adjs[clinical_stratum]
+            },
+            source_strata={"clinical": clinical_stratum},
+        )
+
+    for i_age, agegroup in enumerate(AGEGROUP_STRATA):
+
+        recovery_adjs = \
+            {
+                Clinical.NON_SYMPT: None,
+                Clinical.ICU: Overwrite(icu_survival_rates[i_age]),
+                Clinical.HOSPITAL_NON_ICU: Overwrite(hospital_survival_rates[i_age]),
+                Clinical.SYMPT_NON_HOSPITAL: None,
+                Clinical.SYMPT_ISOLATE: None
+            }
+
+        for clinical_stratum in CLINICAL_STRATA:
+
+            source = {
+                "agegroup": agegroup,
+                "clinical": clinical_stratum
+            }
+            immunity_strat.add_flow_adjustments(
+                "infect_onset",
+                {
+                    "unvaccinated": None,
+                    "vaccinated": entry_adjustments[agegroup][clinical_stratum]
+                },
+                source_strata=source,
+            )
+            immunity_strat.add_flow_adjustments(
+                "infect_death",
+                {
+                    "unvaccinated": None,
+                    "vaccinated": death_adjs[agegroup][clinical_stratum]
+                },
+                source_strata=source
+            )
+            immunity_strat.add_flow_adjustments(
+                "recovery",
+                {
+                    "unvaccinated": None,
+                    "vaccinated": recovery_adjs[clinical_stratum]
+                },
+                source_strata=source,
+            )
 
     return immunity_strat

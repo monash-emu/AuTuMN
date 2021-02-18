@@ -3,9 +3,10 @@ import pandas as pd
 import streamlit as st
 import os
 import yaml
+import random
 
 from autumn.plots.plotter import StreamlitPlotter
-from autumn import db, plots
+from autumn import plots
 from dash.dashboards.calibration_results.plots import get_uncertainty_df, write_mcmc_centiles
 from autumn.plots.calibration.plots import get_epi_params
 from dash.utils import create_downloadable_csv
@@ -13,8 +14,13 @@ from dash.dashboards.calibration_results.plots import create_seroprev_csv, get_u
 from autumn.plots.utils import get_plot_text_dict
 import matplotlib.pyplot as plt
 
-from autumn.region import Region
+from apps.covid_19.model.parameters import Population, Country
+from apps.covid_19.model.preprocess.case_detection import get_testing_pop
 
+from autumn.region import Region
+from apps.covid_19.model.preprocess.testing import find_cdr_function_from_test_data
+from autumn.tool_kit.params import load_params
+from dash.dashboards.calibration_results.plots import get_cdr_constants
 
 STANDARD_X_LIMITS = 153, 275
 PLOT_FUNCS = {}
@@ -459,3 +465,67 @@ def plot_seroprev_age_and_cluster(
 
 
 PLOT_FUNCS["Seroprevalence by age and cluster"] = plot_seroprev_age_and_cluster
+
+
+
+def plot_cdr_curves(
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+    app_name: str,
+    region: str,
+):
+
+    start_date, end_date = STANDARD_X_LIMITS
+    samples, label_rotation, region_name = 70, 90, "victoria"
+    params = load_params(app_name, region_name)
+    (
+        iso3,
+        testing_year,
+        assumed_tests_parameter,
+        smoothing_period,
+        agegroup_params,
+        time_params,
+        times,
+        agegroup_strata,
+    ) = get_cdr_constants(params["default"])
+
+    # Collate parameters into one structure
+    testing_to_detection_values = []
+    for i_chain in range(len(mcmc_params)):
+        param_mask = mcmc_params[i_chain]["name"] == "testing_to_detection.assumed_cdr_parameter"
+        testing_to_detection_values += mcmc_params[i_chain]["value"][param_mask].tolist()
+
+    # Sample testing values from all the ones available, to avoid plotting too many curves
+    if samples > len(testing_to_detection_values):
+        st.write("Warning: Requested samples greater than detection values estimated")
+        samples = len(testing_to_detection_values)
+    sampled_test_to_detect_vals = random.sample(testing_to_detection_values, samples)
+
+    pop = Population
+    country = Country
+    country.iso3 = "AUS"
+
+    testing_pop, testing_region = \
+        get_testing_pop(agegroup_strata, country, pop)
+
+    detected_proportion = []
+    for assumed_cdr_parameter in sampled_test_to_detect_vals:
+        detected_proportion.append(
+            find_cdr_function_from_test_data(
+                assumed_tests_parameter,
+                assumed_cdr_parameter,
+                smoothing_period,
+                iso3,
+                testing_pop,
+            )
+        )
+
+    plots.calibration.plots.plot_cdr_curves(
+        plotter, times, detected_proportion, end_date, label_rotation, start_date=start_date, alpha=0.1, line_width=1.5
+    )
+
+
+PLOT_FUNCS["CDR curves"] = plot_cdr_curves

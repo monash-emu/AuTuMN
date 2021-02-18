@@ -833,14 +833,16 @@ def plot_calibration_fit(
     plotter.save_figure(fig, filename=filename, title_text=title_text)
 
 
-def plot_cdr_curves(plotter: Plotter, times, detected_proportion, end_date, rotation):
+def plot_cdr_curves(
+        plotter: Plotter, times, detected_proportion, end_date, rotation, start_date=1., alpha=1., line_width=0.7
+):
     """
     Plot a single set of CDR curves to a one-panel figure
     """
     fig, axis, _, _, _, _ = plotter.get_figure()
-    axis = plot_cdr_to_axis(axis, times, detected_proportion)
+    axis = plot_cdr_to_axis(axis, times, detected_proportion, alpha=alpha, line_width=line_width)
     axis.set_ylabel("proportion symptomatic cases detected")
-    tidy_cdr_axis(axis, rotation, 1.0, end_date)
+    tidy_cdr_axis(axis, rotation, start_date, end_date)
     plotter.save_figure(fig, filename=f"cdr_curves")
 
 
@@ -866,7 +868,7 @@ def plot_multi_cdr_curves(
     plotter.save_figure(fig, filename=f"multi_cdr_curves")
 
 
-def plot_cdr_to_axis(axis, times, detected_proportions):
+def plot_cdr_to_axis(axis, times, detected_proportions, alpha=1., line_width=0.7):
     """
     Plot a set of CDR curves to an axis
     """
@@ -876,7 +878,8 @@ def plot_cdr_to_axis(axis, times, detected_proportions):
             times,
             [detected_proportions[i_curve](i_time) for i_time in times],
             color="k",
-            linewidth=0.7,
+            linewidth=line_width,
+            alpha=alpha,
         )
     return axis
 

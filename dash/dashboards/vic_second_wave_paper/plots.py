@@ -3,6 +3,7 @@ import pandas as pd
 import streamlit as st
 import os
 import yaml
+import matplotlib.pyplot as plt
 
 from autumn.plots.plotter import StreamlitPlotter
 from autumn import plots
@@ -18,8 +19,8 @@ STANDARD_X_LIMITS = 153, 275
 PLOT_FUNCS = {}
 KEY_PARAMS = [
     "seasonal_force",
-    "victorian_clusters.metro.mobility.microdistancing.behaviour.parameters.upper_asymptote",
-    "victorian_clusters.metro.mobility.microdistancing.face_coverings.parameters.upper_asymptote",
+    "victorian_clusters.metro.mobility.microdistancing.behaviour_adjuster.parameters.effect",
+    "victorian_clusters.metro.mobility.microdistancing.face_coverings_adjuster.parameters.effect",
 ]
 
 
@@ -33,6 +34,7 @@ def plot_multiple_timeseries_with_uncertainty(
     region: str,
 ):
 
+    plt.style.use("ggplot")
     uncertainty_df = get_uncertainty_df(calib_dir_path, mcmc_tables, targets)
     chosen_outputs = ["notifications", "hospital_admissions", "icu_admissions", "infection_deaths"]
     x_low, x_up = STANDARD_X_LIMITS
@@ -255,10 +257,11 @@ PLOT_FUNCS["Key parameters"] = plot_key_params
 
 
 def plot_param_matrix(
-    plotter: StreamlitPlotter,
-    mcmc_params: List[pd.DataFrame],
-    parameters: List,
-    label_param_string=False,
+        plotter: StreamlitPlotter,
+        mcmc_params: List[pd.DataFrame],
+        parameters: List,
+        label_param_string=False,
+        show_ticks=False,
 ):
 
     burn_in, label_font_size, label_chars, bins, style, dpi_request = 0, 8, 2, 20, "Shade", 300
@@ -273,6 +276,7 @@ def plot_param_matrix(
         label_chars,
         dpi_request,
         label_param_string=label_param_string,
+        show_ticks=show_ticks,
     )
     param_names = [get_plot_text_dict(param) for param in parameters]
     params_df = pd.DataFrame({"names": param_names})
@@ -327,7 +331,7 @@ def plot_key_param_matrix(
     region: str,
 ):
 
-    plot_param_matrix(plotter, mcmc_params, KEY_PARAMS, label_param_string=True)
+    plot_param_matrix(plotter, mcmc_params, KEY_PARAMS, label_param_string=True, show_ticks=True)
 
 
 PLOT_FUNCS["Key params matrix"] = plot_key_param_matrix

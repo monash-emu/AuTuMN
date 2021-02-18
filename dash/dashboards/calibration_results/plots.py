@@ -651,13 +651,14 @@ def plot_param_matrix_by_chain(
 
 
 def plot_param_matrix(
-    plotter: StreamlitPlotter,
-    calib_dir_path: str,
-    mcmc_tables: List[pd.DataFrame],
-    mcmc_params: List[pd.DataFrame],
-    targets: dict,
-    app_name: str,
-    region: str,
+        plotter: StreamlitPlotter,
+        calib_dir_path: str,
+        mcmc_tables: List[pd.DataFrame],
+        mcmc_params: List[pd.DataFrame],
+        targets: dict,
+        app_name: str,
+        region: str,
+        show_ticks=False
 ):
     parameters = mcmc_params[0]["name"].unique().tolist()
     chain_length = find_shortest_chain_length(mcmc_tables)
@@ -677,6 +678,7 @@ def plot_param_matrix(
         label_font_size,
         label_chars,
         dpi_request,
+        show_ticks=show_ticks,
     )
     st.write(parameters)
 

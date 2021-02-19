@@ -11,7 +11,7 @@ os.chdir("..")  # Make repo root the current directory
 
 # Run a COVID model manually.
 app_region = covid_19.app.get_region(Region.VICTORIA)
-app_region.run_model(run_scenarios=False)
+app_region.run_model(run_scenarios=True)
 
 # Simple SIR model for demonstration
 # app_region = sir_example.app.get_region(Region.AUSTRALIA)

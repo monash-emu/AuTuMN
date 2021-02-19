@@ -15,6 +15,6 @@ mobility:
       values:
       - - close_gap_to_1
         - 0.3
-parent: apps/covid_19/regions/philippines/params/default.yml
+parent: apps/covid_19/regions/davao_city/params/default.yml
 time:
   start: 424

@@ -1,4 +1,4 @@
-description: 50% of schools reopen
+description: 100% of schools reopen
 mobility:
   mixing:
     school:
@@ -8,7 +8,7 @@ mobility:
       - 426
       values:
       - 0.0
-      - 0.5
-parent: apps/covid_19/regions/philippines/params/default.yml
+      - 1.0
+parent: apps/covid_19/regions/davao_city/params/default.yml
 time:
   start: 424

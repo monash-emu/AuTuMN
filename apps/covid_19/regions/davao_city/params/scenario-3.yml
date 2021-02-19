@@ -9,6 +9,6 @@ mobility:
         values:
         - 1.0
         - 0.7
-parent: apps/covid_19/regions/philippines/params/default.yml
+parent: apps/covid_19/regions/davao_city/params/default.yml
 time:
   start: 424

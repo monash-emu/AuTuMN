@@ -1,4 +1,4 @@
-description: Reduction in MHS by 30%
+description: Reduction in MHS by 50%
 mobility:
   microdistancing:
     behaviour:
@@ -8,7 +8,7 @@ mobility:
         - 426
         values:
         - 1.0
-        - 0.7
-parent: apps/covid_19/regions/philippines/params/default.yml
+        - 0.5
+parent: apps/covid_19/regions/davao_city/params/default.yml
 time:
   start: 424

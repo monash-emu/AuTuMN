@@ -6,10 +6,10 @@ from autumn.tool_kit.params import load_targets
 from apps.covid_19.calibration import truncate_targets_from_time
 
 
-truncation_start_time = 210
 targets = load_targets("covid_19", Region.MALAYSIA)
-notifications = truncate_targets_from_time(targets["notifications"], truncation_start_time)
-icu_occupancy = truncate_targets_from_time(targets["icu_occupancy"], truncation_start_time)
+
+# Truncate notifications from 1st August 2020
+notifications = truncate_targets_from_time(targets["notifications"], 214)
 
 TARGET_OUTPUTS = [
     {
@@ -20,8 +20,8 @@ TARGET_OUTPUTS = [
     },
     {
         "output_key": "icu_occupancy",
-        "years": [icu_occupancy["times"][-1]],
-        "values": [icu_occupancy["values"][-1]],
+        "years": [targets["icu_occupancy"]["times"][-1]],
+        "values": [targets["icu_occupancy"]["values"][-1]],
         "loglikelihood_distri": "normal",
     },
 ]
@@ -33,7 +33,7 @@ PAR_PRIORS += [
     {
         "param_name": "contact_rate",
         "distribution": "uniform",
-        "distri_params": [0.01, 0.03]
+        "distri_params": [0.015, 0.03]
     },
     {
         "param_name": "infectious_seed",

@@ -26,6 +26,7 @@ class Region:
     GRAMPIANS = "grampians"
     MARSHALL_ISLANDS = "marshall-islands"
     SABAH = "sabah"
+    SELANGOR = "selangor"
     DAVAO_CITY = "davao-city"
 
     REGIONS = [
@@ -56,6 +57,7 @@ class Region:
         GRAMPIANS,
         MARSHALL_ISLANDS,
         SABAH,
+        SELANGOR,
         DAVAO_CITY,
     ]
 

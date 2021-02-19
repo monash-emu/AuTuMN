@@ -55,7 +55,8 @@ def run_dashboard():
     with st.spinner("Saving files..."):
         file_plotter = FilePlotter(
             path_name,
-            targets)
+            targets
+        )
         plot_func(
             file_plotter, calib_dirpath, mcmc_tables, mcmc_params, targets, app_name, region_name
         )

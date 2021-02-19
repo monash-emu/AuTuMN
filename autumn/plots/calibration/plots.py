@@ -210,13 +210,15 @@ def plot_mcmc_parameter_trace(
 
 
 def plot_multiple_param_traces(
-    plotter: Plotter,
-    mcmc_params: List[pd.DataFrame],
-    burn_in: int,
-    title_font_size: int,
-    label_font_size: int,
-    capitalise_first_letter: bool,
-    dpi_request: int,
+        plotter: Plotter,
+        mcmc_params: List[pd.DataFrame],
+        burn_in: int,
+        title_font_size: int,
+        label_font_size: int,
+        capitalise_first_letter: bool,
+        dpi_request: int,
+        optional_param_request=None,
+        file_name="all_traces"
 ):
 
     # Except not the dispersion parameters - only the epidemiological ones
@@ -225,15 +227,16 @@ def plot_multiple_param_traces(
         for param in mcmc_params[0].loc[:, "name"].unique().tolist()
         if "dispersion_param" not in param
     ]
+    params_to_plot = optional_param_request if optional_param_request else parameters
 
     fig, axes, _, n_rows, n_cols, indices = plotter.get_figure(
-        len(parameters), share_xaxis=True, share_yaxis=False
+        len(params_to_plot), share_xaxis=True, share_yaxis=False
     )
 
     for i in range(n_rows * n_cols):
         axis = axes[indices[i][0], indices[i][1]]
-        if i < len(parameters):
-            param_name = parameters[i]
+        if i < len(params_to_plot):
+            param_name = params_to_plot[i]
             for i_chain in range(mcmc_params[0]["chain"].iloc[-1]):
                 param_mask = (mcmc_params[0]["chain"] == i_chain) & (
                     mcmc_params[0]["name"] == param_name
@@ -258,7 +261,7 @@ def plot_multiple_param_traces(
             axis.axis("off")
 
     fig.tight_layout()
-    plotter.save_figure(fig, filename=f"all_posteriors", dpi_request=dpi_request)
+    plotter.save_figure(fig, filename=file_name, dpi_request=dpi_request)
 
 
 def plot_loglikelihood_trace(plotter: Plotter, mcmc_tables: List[pd.DataFrame], burn_in=0):
@@ -400,6 +403,7 @@ def plot_multiple_posteriors(
         dpi_request: int,
         priors: list,
         parameters: list,
+        file_name="all_posteriors"
 ):
     """
     Plots the posterior distribution of a given parameter in a histogram.
@@ -440,7 +444,7 @@ def plot_multiple_posteriors(
             axis.axis("off")
 
     fig.tight_layout()
-    plotter.save_figure(fig, filename=f"all_posteriors", dpi_request=dpi_request)
+    plotter.save_figure(fig, filename=file_name, dpi_request=dpi_request)
 
 
 def plot_param_vs_loglike(mcmc_tables, mcmc_params, param_name, burn_in, axis):
@@ -614,6 +618,7 @@ def plot_param_vs_param(
         dpi_request: int,
         label_param_string=True,
         show_ticks=False,
+        file_name="parameter_correlation_matrix"
 ):
     """
     Plot the parameter correlation matrices for each parameter combination.
@@ -686,7 +691,7 @@ def plot_param_vs_param(
                 axis.set_ylabel(get_plot_text_dict(y_param_label), fontsize=label_font_size)
 
     # Save
-    plotter.save_figure(fig, filename="parameter_correlation_matrix", dpi_request=dpi_request)
+    plotter.save_figure(fig, filename=file_name, dpi_request=dpi_request)
 
 
 def plot_all_params_vs_loglike(
@@ -834,14 +839,16 @@ def plot_calibration_fit(
     plotter.save_figure(fig, filename=filename, title_text=title_text)
 
 
-def plot_cdr_curves(plotter: Plotter, times, detected_proportion, end_date, rotation):
+def plot_cdr_curves(
+        plotter: Plotter, times, detected_proportion, end_date, rotation, start_date=1., alpha=1., line_width=0.7
+):
     """
     Plot a single set of CDR curves to a one-panel figure
     """
     fig, axis, _, _, _, _ = plotter.get_figure()
-    axis = plot_cdr_to_axis(axis, times, detected_proportion)
+    axis = plot_cdr_to_axis(axis, times, detected_proportion, alpha=alpha, line_width=line_width)
     axis.set_ylabel("proportion symptomatic cases detected")
-    tidy_cdr_axis(axis, rotation, 1.0, end_date)
+    tidy_cdr_axis(axis, rotation, start_date, end_date)
     plotter.save_figure(fig, filename=f"cdr_curves")
 
 
@@ -867,7 +874,7 @@ def plot_multi_cdr_curves(
     plotter.save_figure(fig, filename=f"multi_cdr_curves")
 
 
-def plot_cdr_to_axis(axis, times, detected_proportions):
+def plot_cdr_to_axis(axis, times, detected_proportions, alpha=1., line_width=0.7):
     """
     Plot a set of CDR curves to an axis
     """
@@ -877,7 +884,8 @@ def plot_cdr_to_axis(axis, times, detected_proportions):
             times,
             [detected_proportions[i_curve](i_time) for i_time in times],
             color="k",
-            linewidth=0.7,
+            linewidth=line_width,
+            alpha=alpha,
         )
     return axis
 

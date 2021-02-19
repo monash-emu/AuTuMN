@@ -209,7 +209,14 @@ def plot_model_targets(plotter: StreamlitPlotter, app: AppRegion):
     title = st.sidebar.selectbox("Select a target", title_options)
     target = target_name_lookup[title]
     is_logscale = st.sidebar.checkbox("Log scale")
-    plots.model.plots.plot_outputs_single(plotter, scenario, target, is_logscale)
+    xaxis_date = app.app_name == "covid_19"
+    plots.model.plots.plot_outputs_single(
+        plotter,
+        scenario,
+        target,
+        is_logscale,
+        xaxis_date=xaxis_date,
+    )
 
 
 def plot_model_multi_targets(plotter: StreamlitPlotter, app: AppRegion):

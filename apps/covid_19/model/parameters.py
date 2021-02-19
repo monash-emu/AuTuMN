@@ -212,6 +212,20 @@ class VictorianClusterStratification(BaseModel):
     regional: RegionalClusterStratification
 
 
+class VaccCoveragePeriod(BaseModel):
+    """
+    Parameters to pass when desired behaviour is vaccinating a proportion of the population over a period of time
+    """
+    coverage: float
+    start_time: float
+    end_time: float
+
+
+class Vaccination(BaseModel):
+    efficacy: float
+    roll_out_function: VaccCoveragePeriod
+
+
 class ParamConfig:
     """Config for parameter models"""
 
@@ -229,6 +243,8 @@ class Parameters:
     seasonal_force: Optional[float]  # Seasonal forcing factor
     elderly_mixing_reduction: Optional[dict]
     waning_immunity_duration: Optional[float]
+    stratify_by_immunity: bool
+    vaccination: Optional[Vaccination]
     stratify_by_infection_history: bool
     rel_prop_symptomatic_experienced: Optional[float]
     haario_scaling_factor: float

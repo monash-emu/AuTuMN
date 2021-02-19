@@ -7,7 +7,7 @@ It is currently being applied to tuberculosis and COVID-19. This project is used
 
 AuTuMN uses the SUMMER disease modelling framework, which is [documented here](http://summerepi.com/) with examples and an API reference.
 
-See [this guide](./docs/setup.md) for information on how to set up this project.
+See [this guide](./docs/old_docs/setup.md) for information on how to set up this project.
 
 ## Using the command line
 

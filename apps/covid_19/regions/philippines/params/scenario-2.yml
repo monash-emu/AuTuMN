@@ -1,20 +1,20 @@
 description: 50% return to normal (work and other locations)
-parent: apps/covid_19/regions/philippines/params/default.yml
-
-time:
-  start: 397
-
-mobility:  
+mobility:
   mixing:
-    work:
-      append: true
-      times:
-        - 2021-02-08
-      values:
-        - ["close_gap_to_1", 0.5]
     other_locations:
       append: true
       times:
-        - 2021-02-08
+      - 426
       values:
-        - ["close_gap_to_1", 0.5]
+      - - close_gap_to_1
+        - 0.5
+    work:
+      append: true
+      times:
+      - 426
+      values:
+      - - close_gap_to_1
+        - 0.5
+parent: apps/covid_19/regions/philippines/params/default.yml
+time:
+  start: 424

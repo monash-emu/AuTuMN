@@ -1,0 +1,14 @@
+description: 100% of schools reopen
+mobility:
+  mixing:
+    school:
+      append: false
+      times:
+      - 425
+      - 426
+      values:
+      - 0.0
+      - 1.0
+parent: apps/covid_19/regions/davao_city/params/default.yml
+time:
+  start: 424

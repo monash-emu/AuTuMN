@@ -1,14 +1,14 @@
-description: Reduction in MHS by 50% from 8 Feb
+description: Reduction in MHS by 50%
 mobility:
   microdistancing:
     behaviour:
       parameters:
         times:
-        - 404
-        - 405
+        - 425
+        - 426
         values:
         - 1.0
         - 0.5
 parent: apps/covid_19/regions/calabarzon/params/default.yml
 time:
-  start: 397
+  start: 424

@@ -2,10 +2,12 @@ description: BASELINE
 parent: apps/covid_19/phl_submodel_params.yml
 
 population:
-  region: Central Visayas
+  region: Davao City
+  year: 2015
+
 
 mobility:
-  region: Central Visayas
+  region: Davao City
   mixing:
     school:
       append: false

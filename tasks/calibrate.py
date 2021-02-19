@@ -41,11 +41,10 @@ def calibrate_task(run_id: str, runtime: float, num_chains: int, quiet: bool):
 
     # Upload the calibration outputs of AWS S3.
     with Timer(f"Uploading calibration data to AWS S3"):
-        args_list = [
-            (run_id, os.path.join(CALIBRATE_DATA_DIR, f"chain-{chain_id}"), quiet)
-            for chain_id in chain_ids
-        ]
-        run_parallel_tasks(upload_to_run_s3, args_list)
+        for chain_id in chain_ids:
+            with Timer(f"Uploading data for chain {chain_id} to AWS S3"):
+                src_dir = os.path.join(CALIBRATE_DATA_DIR, f"chain-{chain_id}")
+                upload_to_run_s3(run_id, src_dir, quiet)
 
     # Create plots from the calibration outputs.
     with Timer(f"Creating post-calibration plots"):

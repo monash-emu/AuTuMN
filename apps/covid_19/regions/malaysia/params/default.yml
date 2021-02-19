@@ -7,7 +7,7 @@ infectious_seed: 100.
 
 time:
   start: 210.
-  end: 500.
+  end: 546.
 
 country:
   iso3: MYS
@@ -61,4 +61,4 @@ mobility:
         - 0.64
         - 0.
 
-importation: null
+stratify_by_immunity: true

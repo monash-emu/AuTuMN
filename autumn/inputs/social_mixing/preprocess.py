@@ -46,6 +46,23 @@ def preprocess_social_mixing(input_db: Database, country_df):
                 mix_df.insert(0, "iso3", [iso3 for _ in range(len(mix_df))])
                 input_db.dump_df("social_mixing", mix_df)
 
+    # Next gen social mixing
+    df = pd.read_csv(os.path.join(MIXING_DIRPATH, "synthetic_contacts_2020.csv"))
+    df = df[df.setting == "overall"]
+    df.drop(columns="setting", inplace=True)
+    df = df.pivot_table(
+        index=["iso3c", "location_contact", "age_contactor"],
+        columns="age_cotactee",
+        values="mean_number_of_contacts",
+    )
+    df = df.reset_index()
+    cols = list(df.columns[3:])
+    new_col = ["X" + str(x) for x in range(1, len(cols) + 1)]
+    replace_col = dict(zip(cols, new_col))
+    df.rename(columns=replace_col, inplace=True)
+    df.rename(columns={"iso3c": "iso3", "location_contact": "location"}, inplace=True)
+    input_db.dump_df("social_mixing_2020", df)
+
 
 def get_iso3(sheet_name: str, country_df):
     try:

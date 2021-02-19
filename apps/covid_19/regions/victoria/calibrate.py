@@ -129,7 +129,7 @@ def get_priors(target_outputs: list):
     ]
 
     priors = add_dispersion_param_prior_for_gaussian(priors, target_outputs)
-    priors = group_dispersion_params(priors, target_outputs)
+    # priors = group_dispersion_params(priors, target_outputs)
     return priors
 
 

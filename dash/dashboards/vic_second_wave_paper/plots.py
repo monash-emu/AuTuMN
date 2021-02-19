@@ -3,6 +3,7 @@ import pandas as pd
 import streamlit as st
 import os
 import yaml
+import matplotlib.pyplot as plt
 import random
 
 from autumn.plots.plotter import StreamlitPlotter
@@ -279,6 +280,7 @@ def plot_param_matrix(
         mcmc_params: List[pd.DataFrame],
         parameters: List,
         label_param_string=False,
+        show_ticks=False,
         file_name=""
 ):
 
@@ -294,6 +296,7 @@ def plot_param_matrix(
         label_chars,
         dpi_request,
         label_param_string=label_param_string,
+        show_ticks=show_ticks,
         file_name=file_name
     )
     param_names = [get_plot_text_dict(param) for param in parameters]
@@ -354,7 +357,7 @@ def plot_key_param_matrix(
 ):
 
     plot_param_matrix(
-        plotter, mcmc_params, KEY_PARAMS, label_param_string=True, file_name="key_param_matrix"
+        plotter, mcmc_params, KEY_PARAMS, label_param_string=True, show_ticks=True, file_name="key_param_matrix"
     )
 
 

@@ -203,11 +203,8 @@ class VictorianClusterStratification(BaseModel):
     contact_rate_multiplier_west_metro: float
     contact_rate_multiplier_south_metro: float
     contact_rate_multiplier_south_east_metro: float
-    contact_rate_multiplier_loddon_mallee: float
     contact_rate_multiplier_barwon_south_west: float
-    contact_rate_multiplier_hume: float
-    contact_rate_multiplier_gippsland: float
-    contact_rate_multiplier_grampians: float
+    contact_rate_multiplier_regional: float
     metro: MetroClusterStratification
     regional: RegionalClusterStratification
 

@@ -617,6 +617,7 @@ def plot_param_vs_param(
         label_chars: int,
         dpi_request: int,
         label_param_string=True,
+        show_ticks=False,
         file_name="parameter_correlation_matrix"
 ):
     """
@@ -647,8 +648,11 @@ def plot_param_vs_param(
     for x_idx, x_param_name in enumerate(parameters):
         for y_idx, y_param_name in enumerate(parameters):
             axis = axes[x_idx, y_idx]
-            axis.xaxis.set_ticks([])
-            axis.yaxis.set_ticks([])
+            if not show_ticks:
+                axis.xaxis.set_ticks([])
+                axis.yaxis.set_ticks([])
+            else:
+                axis.tick_params(labelsize=4)
 
             # Plot
             if x_idx > y_idx:
@@ -673,6 +677,8 @@ def plot_param_vs_param(
                     color=[0.2, 0.2, 0.6] if style == "Shade" else "k",
                     bins=bins,
                 )
+                axis.xaxis.set_ticks([])
+                axis.yaxis.set_ticks([])
             else:
                 axis.axis("off")
 

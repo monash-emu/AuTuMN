@@ -22,6 +22,9 @@ def clear_all_scenarios(region):
 
 
 def write_all_phl_scenarios(scenario_start_time=SCENARIO_START_TIME):
+    clear_all_scenarios("philippines")
+    sleep(1.)
+
     sc_index = 0
     all_scenarios_dict = {}
 
@@ -163,8 +166,6 @@ def copy_scenarios_to_phl_regions():
 if __name__ == "__main__":
 
     # Update scenarios for the Philippines app
-    clear_all_scenarios("philippines")
-    sleep(1.)
     write_all_phl_scenarios()
 
     # Copy scenarios from philippines to sub-regions

@@ -2,7 +2,7 @@ description: no face coverings
 parent: apps/covid_19/regions/victoria/params/default.yml
 
 time:
-  start: 180
+  start: 189
 
 victorian_clusters:
   metro:

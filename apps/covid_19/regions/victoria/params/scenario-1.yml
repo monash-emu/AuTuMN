@@ -2,7 +2,7 @@ description: no physical distancing
 parent: apps/covid_19/regions/victoria/params/default.yml
 
 time:
-  start: 180
+  start: 189  # Day before stage 3 introduced in metro Melbourne and Mitchell (but after postcode restrictions)
 
 victorian_clusters:
   metro:

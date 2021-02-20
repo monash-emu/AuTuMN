@@ -33,7 +33,7 @@ def get_priors(target_outputs: list):
     priors = provide_default_calibration_params()
 
     # Add multiplier for each Victorian cluster
-    for region in Region.VICTORIA_SUBREGIONS:
+    for region in Region.VICTORIA_METRO:
         region_name = region.replace("-", "_")
         priors += [
             {
@@ -43,6 +43,21 @@ def get_priors(target_outputs: list):
                 "trunc_range": [0.5, np.inf],
             },
         ]
+
+    priors += [
+        {
+            "param_name": f"victorian_clusters.contact_rate_multiplier_barwon_south_west",
+            "distribution": "trunc_normal",
+            "distri_params": [1.0, 0.5],  # Shouldn't be too peaked with these values
+            "trunc_range": [0.5, np.inf],
+        },
+        {
+            "param_name": f"victorian_clusters.contact_rate_multiplier_regional",
+            "distribution": "trunc_normal",
+            "distri_params": [1.0, 0.5],  # Shouldn't be too peaked with these values
+            "trunc_range": [0.5, np.inf],
+        },
+    ]
 
     # Add the other parameters we're interested in for Victoria
     priors += [
@@ -114,7 +129,7 @@ def get_priors(target_outputs: list):
     ]
 
     priors = add_dispersion_param_prior_for_gaussian(priors, target_outputs)
-    priors = group_dispersion_params(priors, target_outputs)
+    # priors = group_dispersion_params(priors, target_outputs)
     return priors
 
 

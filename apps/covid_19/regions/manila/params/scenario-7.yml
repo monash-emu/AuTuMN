@@ -1,0 +1,10 @@
+description: Vaccination (50% coverage / 70% efficacy)
+parent: apps/covid_19/regions/manila/params/default.yml
+time:
+  start: 424
+vaccination:
+  efficacy: 0.7
+  roll_out_function:
+    coverage: 0.5
+    end_time: 606
+    start_time: 426

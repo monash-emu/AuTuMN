@@ -9,6 +9,10 @@ SCENARIO_START_TIME = 426  # 1 Mar 2021
 BACK_TO_NORMAL_FRACTIONS = [.3, .5]
 MHS_REDUCTION_FRACTIONS = [.3, .5]
 SCHOOL_REOPEN_FRACTIONS = [.5, 1.]
+VACCINE_SCENARIOS = {
+    "efficacy": [.7, .9],
+    "coverage": [.5, .7]
+}
 
 
 def clear_all_scenarios(region):
@@ -42,6 +46,12 @@ def write_all_phl_scenarios(scenario_start_time=SCENARIO_START_TIME):
     for fraction in SCHOOL_REOPEN_FRACTIONS:
         sc_index += 1
         all_scenarios_dict[sc_index] = make_school_reopen_sc_dict(fraction, scenario_start_time)
+
+    # Vaccination
+    for coverage in VACCINE_SCENARIOS["coverage"]:
+        for efficacy in VACCINE_SCENARIOS["efficacy"]:
+            sc_index += 1
+            all_scenarios_dict[sc_index] = make_vaccination_sc_dict(coverage, efficacy, scenario_start_time)
 
     # dump scenario files
     for sc_i, scenario_dict in all_scenarios_dict.items():
@@ -114,6 +124,24 @@ def make_school_reopen_sc_dict(fraction, scenario_start_time):
                 "times": [scenario_start_time - 1, scenario_start_time],
                 "values": [0., fraction]
             },
+        }
+    }
+
+    return sc_dict
+
+
+def make_vaccination_sc_dict(coverage, efficacy, scenario_start_time):
+    sc_dict = initialise_sc_dict(scenario_start_time)
+    perc_coverage = int(100 * coverage)
+    perc_efficacy = int(100 * efficacy)
+    sc_dict['description'] = f"Vaccination ({perc_coverage}% coverage / {perc_efficacy}% efficacy)"
+
+    sc_dict['vaccination'] = {
+        "efficacy": efficacy,
+        "roll_out_function": {
+            "coverage": coverage,
+            "start_time": scenario_start_time,
+            "end_time": scenario_start_time + 180
         }
     }
 

@@ -78,7 +78,7 @@ def run_calibration_chain(
     par_priors,
     target_outputs,
     mode="autumn_mcmc",
-    adaptive_proposal=False,
+    adaptive_proposal=True,
 ):
     """
     Run a calibration chain for the covid model

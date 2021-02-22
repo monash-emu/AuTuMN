@@ -128,7 +128,7 @@ def get_priors(target_outputs: list):
         },
     ]
 
-    priors = add_dispersion_param_prior_for_gaussian(priors, target_outputs)
+    # priors = add_dispersion_param_prior_for_gaussian(priors, target_outputs)
     # priors = group_dispersion_params(priors, target_outputs)
     return priors
 
@@ -189,12 +189,18 @@ def get_target_outputs(start_date, end_date):
     # Smoothed notifications for all clusters
     for cluster in CLUSTERS:
         output_key = f"notifications_for_cluster_{cluster}"
+        cluster_notification_targets = apply_moving_average(targets[output_key]["values"], period=4)
+        dispersion_target_ratio = 0.15
+        dispersion_value = \
+            max(cluster_notification_targets) * \
+            dispersion_target_ratio
         target_outputs += [
             {
                 "output_key": output_key,
                 "years": targets[output_key]["times"],
-                "values": apply_moving_average(targets[output_key]["values"], period=4),
+                "values": cluster_notification_targets,
                 "loglikelihood_distri": "normal",
+                "sd": dispersion_value,
             }
         ]
 

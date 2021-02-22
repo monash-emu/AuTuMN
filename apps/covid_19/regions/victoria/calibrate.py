@@ -126,10 +126,12 @@ def get_priors(target_outputs: list):
             "distribution": "uniform",
             "distri_params": [0.0, 0.5],
         },
+        {
+            "param_name": "target_output_ratio",
+            "distribution": "uniform",
+            "distri_params": [0., 0.2],
+        }
     ]
-
-    # priors = add_dispersion_param_prior_for_gaussian(priors, target_outputs)
-    # priors = group_dispersion_params(priors, target_outputs)
     return priors
 
 

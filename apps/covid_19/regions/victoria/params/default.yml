@@ -8,6 +8,7 @@ country:
 
 metropolis_initialisation_type: "current_params"
 metropolis_init_rel_step_size: 0.05
+target_output_ratio: 0.2
 
 time:
   start: 135 # No longer the 25th May, but moved earlier (14th May) - to help with model calibration

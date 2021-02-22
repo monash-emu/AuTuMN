@@ -127,11 +127,11 @@ def get_priors(target_outputs: list):
             "distribution": "uniform",
             "distri_params": [0.0, 0.5],
         },
-        # {
-        #     "param_name": "target_output_ratio",
-        #     "distribution": "uniform",
-        #     "distri_params": [0., 0.2],
-        # },
+        {
+            "param_name": "target_output_ratio",
+            "distribution": "uniform",
+            "distri_params": [0.1, 0.4],
+        },
     ]
     return priors
 

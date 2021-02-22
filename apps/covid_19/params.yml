@@ -194,5 +194,4 @@ new_icu_admissions_dispersion_param: 1.
 infection_deaths_dispersion_param: 1.
 accum_deaths_dispersion_param: 1.
 
-target_output_ratio: 0.07
-
+target_output_ratio: null

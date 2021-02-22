@@ -12,6 +12,7 @@ CLUSTERS = [Region.to_filename(r) for r in Region.VICTORIA_SUBREGIONS]
 # Just calibrate to June, July, August and September for now (but run for some lead in time at the start)
 TARGETS_START_TIME = 153  # 1st June
 TARGETS_END_TIME = 305  # 31st October
+DISPERSION_TARGET_RATIO = 0.07
 
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
@@ -126,11 +127,11 @@ def get_priors(target_outputs: list):
             "distribution": "uniform",
             "distri_params": [0.0, 0.5],
         },
-        {
-            "param_name": "target_output_ratio",
-            "distribution": "uniform",
-            "distri_params": [0., 0.2],
-        }
+        # {
+        #     "param_name": "target_output_ratio",
+        #     "distribution": "uniform",
+        #     "distri_params": [0., 0.2],
+        # },
     ]
     return priors
 
@@ -192,10 +193,9 @@ def get_target_outputs(start_date, end_date):
     for cluster in CLUSTERS:
         output_key = f"notifications_for_cluster_{cluster}"
         cluster_notification_targets = apply_moving_average(targets[output_key]["values"], period=4)
-        dispersion_target_ratio = 0.15
         dispersion_value = \
             max(cluster_notification_targets) * \
-            dispersion_target_ratio
+            DISPERSION_TARGET_RATIO
         target_outputs += [
             {
                 "output_key": output_key,

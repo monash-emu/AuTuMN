@@ -269,4 +269,4 @@ class Parameters:
     new_icu_admissions_dispersion_param: float
     infection_deaths_dispersion_param: float
     accum_deaths_dispersion_param: float
-    target_output_ratio: float
+    target_output_ratio: Optional[float]

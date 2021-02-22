@@ -49,7 +49,7 @@ def get_immunity_strat(params: Parameters) -> Stratification:
     country = params.country
     pop = params.population
 
-    vaccine_efficacy = 0.
+    vaccine_efficacy = 0.8
     symptomatic_adjuster = \
         (1. - vaccine_efficacy) * \
         params.clinical_stratification.props.symptomatic.multiplier

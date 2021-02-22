@@ -36,7 +36,7 @@ def get_abs_prop_isolated_factory(age_idx, abs_props, prop_detect_among_sympt_fu
     return get_abs_prop_isolated
 
 
-def get_abs_prop_sympt_non_hospital_factory(age_idx, abs_props, get_abs_prop_isolated_func):
+def get_abs_prop_sympt_non_hospital_factory(age_idx, abs_props, get_abs_prop_isolated_func, early_exposed_period):
     def get_abs_prop_sympt_non_hospital(t):
         """
         Returns the absolute proportion of infected not entering the hospital.
@@ -47,7 +47,7 @@ def get_abs_prop_sympt_non_hospital_factory(age_idx, abs_props, get_abs_prop_iso
             abs_props["sympt"][age_idx]
             - abs_props["hospital"][age_idx]
             - get_abs_prop_isolated_func(t)
-        )
+        ) * early_exposed_period
 
     return get_abs_prop_sympt_non_hospital
 
@@ -288,7 +288,7 @@ def apply_death_adjustments(hospital_death_rates, icu_death_rates):
     return death_adjs
 
 
-def get_entry_adjustments(abs_props, get_detected_proportion):
+def get_entry_adjustments(abs_props, get_detected_proportion, early_exposed_period):
 
     adjustments = {}
     for age_idx, agegroup in enumerate(AGEGROUP_STRATA):
@@ -296,14 +296,14 @@ def get_entry_adjustments(abs_props, get_detected_proportion):
             age_idx, abs_props, get_detected_proportion
         )
         get_abs_prop_sympt_non_hospital = get_abs_prop_sympt_non_hospital_factory(
-            age_idx, abs_props, get_abs_prop_isolated
+            age_idx, abs_props, get_abs_prop_isolated, early_exposed_period
         )
         adjustments[agegroup] = {
-            Clinical.NON_SYMPT: Multiply(abs_props[Clinical.NON_SYMPT][age_idx]),
-            Clinical.ICU: Multiply(abs_props[Clinical.ICU][age_idx]),
-            Clinical.HOSPITAL_NON_ICU: Multiply(abs_props[Clinical.HOSPITAL_NON_ICU][age_idx]),
-            Clinical.SYMPT_NON_HOSPITAL: Multiply(get_abs_prop_sympt_non_hospital),
-            Clinical.SYMPT_ISOLATE: Multiply(get_abs_prop_isolated),
+            Clinical.NON_SYMPT: Overwrite(abs_props[Clinical.NON_SYMPT][age_idx]),
+            Clinical.ICU: Overwrite(abs_props[Clinical.ICU][age_idx]),
+            Clinical.HOSPITAL_NON_ICU: Overwrite(abs_props[Clinical.HOSPITAL_NON_ICU][age_idx]),
+            Clinical.SYMPT_NON_HOSPITAL: Overwrite(get_abs_prop_sympt_non_hospital),
+            Clinical.SYMPT_ISOLATE: Overwrite(get_abs_prop_isolated),
         }
 
     return adjustments

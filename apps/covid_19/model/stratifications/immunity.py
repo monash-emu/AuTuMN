@@ -50,27 +50,49 @@ def get_immunity_strat(params: Parameters) -> Stratification:
     pop = params.population
 
     vaccine_efficacy = 0.8
+    print("----------")
+    print(f"efficacy is {vaccine_efficacy}")
+
+
     symptomatic_adjuster = \
         (1. - vaccine_efficacy) * \
         params.clinical_stratification.props.symptomatic.multiplier
+
+    print(f"symptomatic proportions adjusted by {symptomatic_adjuster}")
+
     hospital_adjuster = \
         (1. - vaccine_efficacy) * \
         params.clinical_stratification.props.hospital.multiplier
+
+    print(f"hospitalisation proportions adjusted by {hospital_adjuster}")
+
     ifr_adjuster = \
         (1. - vaccine_efficacy) * \
         params.infection_fatality.multiplier
+
+    print(f"ifr adjusted by {ifr_adjuster}")
 
     infection_fatality_props = \
         get_ifr_props(
             params,
             ifr_adjuster
         )
+
+    print(f"unadjusted ifr >75 {get_ifr_props(params, 1.)[-1]}")
+    print(f"adjusted ifr >75 {infection_fatality_props[-1]}")
+
     abs_props = \
         get_sympt_props(
             params,
             symptomatic_adjuster,
             hospital_adjuster,
         )
+
+    print(f"unadjusted asympt prop >75 {get_sympt_props(params, 1., 1.)['non_sympt'][-1]}")
+    print(f"unadjusted sympt prop >75 {get_sympt_props(params, 1., 1.)['sympt'][-1]}")
+    print(f"adjusted asympt prop >75 {abs_props['non_sympt'][-1]}")
+    print(f"adjusted sympt prop >75 {abs_props['sympt'][-1]}")
+
     abs_death_props = \
         get_absolute_death_proportions(abs_props, infection_fatality_props, clinical_params.icu_mortality_prop)
     relative_death_props = \

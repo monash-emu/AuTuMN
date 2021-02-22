@@ -3,6 +3,7 @@ from autumn.curve import scale_up_function
 from apps.covid_19.model.parameters import Parameters
 from apps.covid_19.model.preprocess.case_detection import build_detected_proportion_func
 from apps.covid_19.model.stratifications.agegroup import AGEGROUP_STRATA
+from apps.covid_19.model import preprocess
 from apps.covid_19.constants import (
     Compartment,
     Clinical,
@@ -122,8 +123,10 @@ def get_clinical_strat(params: Parameters) -> Stratification:
     get_detected_proportion = build_detected_proportion_func(
         AGEGROUP_STRATA, country, pop, params.testing_to_detection, params.case_detection
     )
+    compartment_periods = preprocess.compartments.calc_compartment_periods(params.sojourn)
+
     entry_adjustments = \
-        get_entry_adjustments(abs_props, get_detected_proportion)
+        get_entry_adjustments(abs_props, get_detected_proportion, 1.0 / compartment_periods[Compartment.EARLY_EXPOSED])
     within_hospital_early = \
         1. / sojourn.compartment_periods["hospital_early"]
     within_icu_early = \
@@ -136,6 +139,9 @@ def get_clinical_strat(params: Parameters) -> Stratification:
         within_hospital_late * hospital_survival_props
     icu_survival_rates = \
         within_icu_late * icu_survival_props
+
+
+
 
     for idx, agegroup in enumerate(AGEGROUP_STRATA):
         source = {"agegroup": agegroup}

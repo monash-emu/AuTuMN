@@ -103,6 +103,18 @@ def request_standard_outputs(
 
     model.request_aggregate_output(name="notifications", sources=notification_sources)
 
+    # Notification by age group
+    for agegroup in AGEGROUP_STRATA:
+        sympt_isolate_name = f"progressXagegroup_{agegroup}Xclinical_sympt_isolate"
+        hospital_non_icu_name = f"progressXagegroup_{agegroup}Xclinical_hospital_non_icu"
+        icu_name = f"progressXagegroup_{agegroup}Xclinical_icu"
+
+        model.request_function_output(
+            name=f"notificationsXagegroup_{agegroup}",
+            sources=[sympt_isolate_name, hospital_non_icu_name, icu_name],
+            func=lambda sympt, hosp, icu: sympt + hosp + icu,
+        )
+
     # Infection deaths.
     model.request_output_for_flow(name="infection_deaths", flow_name="infect_death")
     for agegroup in AGEGROUP_STRATA:

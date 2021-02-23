@@ -1,14 +1,14 @@
-description: 50% of schools reopen
+description: Reduction in MHS by 70%
 mobility:
-  mixing:
-    school:
-      append: false
-      times:
-      - 425
-      - 426
-      values:
-      - 0.0
-      - 0.5
+  microdistancing:
+    behaviour:
+      parameters:
+        times:
+        - 425
+        - 426
+        values:
+        - 1.0
+        - 0.7
 parent: apps/covid_19/regions/philippines/params/default.yml
 time:
   start: 424

@@ -9,3 +9,5 @@ import os
 os.environ["OMP_NUM_THREADS"] = "1"
 
 from apps import cli
+
+cli()

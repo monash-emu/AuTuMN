@@ -20,4 +20,3 @@ def cli():
 
 cli.add_command(db)
 cli.add_command(secrets)
-cli()

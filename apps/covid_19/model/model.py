@@ -138,6 +138,8 @@ def build_model(params: dict) -> CompartmentalModel:
         immunity_strat = get_immunity_strat(params)
         model.stratify_with(immunity_strat)
 
+    print()
+
     if params.vaccination:
         vaccination_roll_out_function = \
             get_vacc_roll_out_function(params.vaccination.roll_out_function)

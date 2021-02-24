@@ -38,22 +38,22 @@ def get_immunity_strat(params: Parameters) -> Stratification:
         }
     )
 
-    if params.vaccination:
-        immunity_strat.add_flow_adjustments(
-            "infection", {
-                "vaccinated": Multiply(1. - params.vaccination.efficacy),
-                "unvaccinated": None,
-            }
-        )
+    # if params.vaccination:
+    #     immunity_strat.add_flow_adjustments(
+    #         "infection", {
+    #             "vaccinated": Multiply(1. - params.vaccination.efficacy),
+    #             "unvaccinated": None,
+    #         }
+    #     )
 
     clinical_params = params.clinical_stratification
     country = params.country
     pop = params.population
 
-    vaccine_efficacy = 0.
-    symptomatic_adjuster = \
-        (1. - vaccine_efficacy) * \
-        params.clinical_stratification.props.symptomatic.multiplier
+    vaccine_efficacy = 0.8
+    symptomatic_adjuster = 1.
+        # (1. - vaccine_efficacy) * \
+        # params.clinical_stratification.props.symptomatic.multiplier
     hospital_adjuster = \
         (1. - vaccine_efficacy) * \
         params.clinical_stratification.props.hospital.multiplier
@@ -116,7 +116,7 @@ def get_immunity_strat(params: Parameters) -> Stratification:
 
     for i_age, agegroup in enumerate(AGEGROUP_STRATA):
         for clinical_stratum in CLINICAL_STRATA:
-            source = {
+            relevant_strata = {
                 "agegroup": agegroup,
                 "clinical": clinical_stratum,
             }
@@ -126,7 +126,7 @@ def get_immunity_strat(params: Parameters) -> Stratification:
                     "unvaccinated": None,
                     "vaccinated": entry_adjustments[agegroup][clinical_stratum]
                 },
-                source_strata=source,
+                dest_strata=relevant_strata,  # Must be dest
             )
             immunity_strat.add_flow_adjustments(
                 "infect_death",
@@ -134,15 +134,16 @@ def get_immunity_strat(params: Parameters) -> Stratification:
                     "unvaccinated": None,
                     "vaccinated": death_adjs[agegroup][clinical_stratum]
                 },
-                source_strata=source
+                source_strata=relevant_strata,  # Must be source
             )
+
             immunity_strat.add_flow_adjustments(
                 "progress",
                 {
                     "unvaccinated": None,
                     "vaccinated": progress_adjs[clinical_stratum]
                 },
-                source_strata=source
+                source_strata=relevant_strata,  # Either source or dest or both
             )
             recovery_adjs = \
                 {
@@ -158,7 +159,7 @@ def get_immunity_strat(params: Parameters) -> Stratification:
                     "unvaccinated": None,
                     "vaccinated": recovery_adjs[clinical_stratum]
                 },
-                source_strata=source
+                source_strata=relevant_strata,  # Must be source
             )
 
     return immunity_strat

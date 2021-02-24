@@ -5,6 +5,7 @@ time:
   start: 418.
 
 vaccination:
+  severity_efficacy: 0.
   infection_efficacy: 0.7
 
   # Six months from Monday 22nd Feb 2021

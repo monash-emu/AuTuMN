@@ -1,9 +1,7 @@
 from summer2 import Stratification, Multiply, Overwrite
 from autumn.curve import scale_up_function
 from apps.covid_19.model.parameters import Parameters
-from apps.covid_19.model.preprocess.case_detection import build_detected_proportion_func
 from apps.covid_19.model.stratifications.agegroup import AGEGROUP_STRATA
-from apps.covid_19.model import preprocess
 from apps.covid_19.constants import (
     Compartment,
     Clinical,
@@ -12,14 +10,7 @@ from apps.covid_19.constants import (
 from apps.covid_19.model.preprocess.clinical import (
     get_abs_prop_isolated_factory,
     get_abs_prop_sympt_non_hospital_factory,
-    get_absolute_death_proportions,
-    get_ifr_props,
-    get_sympt_props,
-    get_relative_death_props,
-    get_hosp_sojourns,
-    get_hosp_death_rates,
-    apply_death_adjustments,
-    get_entry_adjustments
+    get_all_adjs
 )
 
 CLINICAL_STRATA = [
@@ -100,59 +91,20 @@ def get_clinical_strat(params: Parameters) -> Stratification:
     hospital_adjuster = params.clinical_stratification.props.hospital.multiplier
     ifr_adjuster = params.infection_fatality.multiplier
 
-    infection_fatality_props = \
-        get_ifr_props(
-            params,
-            ifr_adjuster
-        )
-    abs_props = \
-        get_sympt_props(
-            params,
+    # Get all the adjustments in the same way as we will do if the immunity stratification is implemented
+    entry_adjustments, death_adjs, progress_adjs, recovery_adjs, abs_props, get_detected_proportion = \
+        get_all_adjs(
+            clinical_params,
+            country,
+            pop,
+            params.infection_fatality.props,
+            params.sojourn,
+            params.testing_to_detection,
+            params.case_detection,
+            ifr_adjuster,
             symptomatic_adjuster,
             hospital_adjuster,
         )
-    abs_death_props = \
-        get_absolute_death_proportions(abs_props, infection_fatality_props, clinical_params.icu_mortality_prop)
-    relative_death_props = \
-        get_relative_death_props(abs_props, abs_death_props)
-    sojourn = \
-        params.sojourn
-    within_hospital_late, within_icu_late = \
-        get_hosp_sojourns(sojourn)
-    hospital_death_rates, icu_death_rates = \
-        get_hosp_death_rates(relative_death_props, within_hospital_late, within_icu_late)
-    death_adjs = \
-        apply_death_adjustments(hospital_death_rates, icu_death_rates)
-    get_detected_proportion = build_detected_proportion_func(
-        AGEGROUP_STRATA, country, pop, params.testing_to_detection, params.case_detection
-    )
-    compartment_periods = preprocess.compartments.calc_compartment_periods(params.sojourn)
-    entry_adjustments = \
-        get_entry_adjustments(
-            abs_props,
-            get_detected_proportion,
-            1. / compartment_periods[Compartment.EARLY_EXPOSED]
-        )
-    within_hospital_early = \
-        1. / sojourn.compartment_periods["hospital_early"]
-    within_icu_early = \
-        1. / sojourn.compartment_periods["icu_early"]
-    hospital_survival_props = \
-        1. - relative_death_props[Clinical.HOSPITAL_NON_ICU]
-    icu_survival_props = \
-        1. - relative_death_props[Clinical.ICU]
-    hospital_survival_rates = \
-        within_hospital_late * hospital_survival_props
-    icu_survival_rates = \
-        within_icu_late * icu_survival_props
-
-    progress_adjs = {
-        Clinical.NON_SYMPT: None,
-        Clinical.ICU: Overwrite(within_icu_early),
-        Clinical.HOSPITAL_NON_ICU: Overwrite(within_hospital_early),
-        Clinical.SYMPT_NON_HOSPITAL: None,
-        Clinical.SYMPT_ISOLATE: None,
-    }
 
     # Assign all the adjustments to the model
     for i_age, agegroup in enumerate(AGEGROUP_STRATA):
@@ -174,13 +126,7 @@ def get_clinical_strat(params: Parameters) -> Stratification:
         )
         clinical_strat.add_flow_adjustments(
             "recovery",
-            {
-                Clinical.NON_SYMPT: None,
-                Clinical.ICU: Overwrite(icu_survival_rates[i_age]),
-                Clinical.HOSPITAL_NON_ICU: Overwrite(hospital_survival_rates[i_age]),
-                Clinical.SYMPT_NON_HOSPITAL: None,
-                Clinical.SYMPT_ISOLATE: None,
-            },
+            recovery_adjs[agegroup],
             source_strata=source,
         )
 

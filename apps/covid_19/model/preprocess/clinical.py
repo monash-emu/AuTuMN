@@ -7,15 +7,17 @@ from autumn.tool_kit.utils import (
     repeat_list_elements_average_last_two,
 )
 from apps.covid_19.model.stratifications.agegroup import AGEGROUP_STRATA
-from summer2 import Multiply, Overwrite
+from summer2 import Overwrite
 
 from apps.covid_19.model.parameters import Parameters
-from apps.covid_19.constants import Clinical
+from apps.covid_19.constants import Clinical, Compartment
+from apps.covid_19.model.preprocess.case_detection import build_detected_proportion_func
+from apps.covid_19.model import preprocess
 
 
-def get_proportion_symptomatic(params: Parameters):
+def get_proportion_symptomatic(clinical_params):
     # This is defined 8x10 year bands, 0-70+, which we transform into 16x5 year bands 0-75+
-    return repeat_list_elements(2, params.clinical_stratification.props.symptomatic.props)
+    return repeat_list_elements(2, clinical_params.props.symptomatic.props)
 
 
 def get_abs_prop_isolated_factory(age_idx, abs_props, prop_detect_among_sympt_func):
@@ -211,14 +213,11 @@ def subdivide_props(base_props: np.ndarray, split_props: np.ndarray):
     return split_arr, complement_arr
 
 
-def get_ifr_props(params, adjuster):
-
-    country = params.country
-    pop = params.population
+def get_ifr_props(adjuster, country, pop, ifr_props):
 
     # Proportion of people in age group who die, given the number infected: dead / total infected.
     return get_infection_fatality_proportions(
-        infection_fatality_props_10_year=params.infection_fatality.props,
+        infection_fatality_props_10_year=ifr_props,
         infection_rate_multiplier=adjuster,
         iso3=country.iso3,
         pop_region=pop.region,
@@ -226,12 +225,10 @@ def get_ifr_props(params, adjuster):
     )
 
 
-def get_sympt_props(params, symptomatic_adjuster, hospital_adjuster):
-
-    clinical_params = params.clinical_stratification
+def get_sympt_props(symptomatic_adjuster, hospital_adjuster, clinical_params):
 
     # Get the proportion of people in each clinical stratum, relative to total people in compartment.
-    symptomatic_props = get_proportion_symptomatic(params)
+    symptomatic_props = get_proportion_symptomatic(clinical_params)
     return get_absolute_strata_proportions(
         symptomatic_props=symptomatic_props,
         icu_props=clinical_params.icu_prop,
@@ -332,3 +329,91 @@ def get_entry_adjustments(abs_props, get_detected_proportion, early_rate):
         }
 
     return adjustments
+
+
+def get_progress_adjs(within_hospital_early, within_icu_early):
+    return {
+        Clinical.NON_SYMPT: None,
+        Clinical.ICU: Overwrite(within_icu_early),
+        Clinical.HOSPITAL_NON_ICU: Overwrite(within_hospital_early),
+        Clinical.SYMPT_NON_HOSPITAL: None,
+        Clinical.SYMPT_ISOLATE: None
+    }
+
+
+def get_recovery_adjs(hospital_survival_rates, icu_survival_rates):
+    recovery_adjs = {}
+    for i_age, agegroup in enumerate(AGEGROUP_STRATA):
+        recovery_adjs[agegroup] = \
+            {
+                Clinical.NON_SYMPT: None,
+                Clinical.ICU: Overwrite(icu_survival_rates[i_age]),
+                Clinical.HOSPITAL_NON_ICU: Overwrite(hospital_survival_rates[i_age]),
+                Clinical.SYMPT_NON_HOSPITAL: None,
+                Clinical.SYMPT_ISOLATE: None
+            }
+    return recovery_adjs
+
+
+def get_all_adjs(
+        clinical_params,
+        country,
+        pop,
+        ifr_props,
+        sojourn,
+        testing_to_detection,
+        case_detection,
+        ifr_adjuster,
+        symptomatic_adjuster,
+        hospital_adjuster,
+):
+    infection_fatality_props = \
+        get_ifr_props(
+            ifr_adjuster,
+            country,
+            pop,
+            ifr_props
+        )
+    abs_props = \
+        get_sympt_props(
+            symptomatic_adjuster,
+            hospital_adjuster,
+            clinical_params,
+        )
+    abs_death_props = \
+        get_absolute_death_proportions(abs_props, infection_fatality_props, clinical_params.icu_mortality_prop)
+    relative_death_props = \
+        get_relative_death_props(abs_props, abs_death_props)
+    within_hospital_late, within_icu_late = \
+        get_hosp_sojourns(sojourn)
+    hospital_death_rates, icu_death_rates = \
+        get_hosp_death_rates(relative_death_props, within_hospital_late, within_icu_late)
+    death_adjs = \
+        apply_death_adjustments(hospital_death_rates, icu_death_rates)
+    get_detected_proportion = build_detected_proportion_func(
+        AGEGROUP_STRATA, country, pop, testing_to_detection, case_detection
+    )
+    compartment_periods = \
+        preprocess.compartments.calc_compartment_periods(sojourn)
+    entry_adjustments = \
+        get_entry_adjustments(
+            abs_props,
+            get_detected_proportion,
+            1. / compartment_periods[Compartment.EARLY_EXPOSED])
+    within_hospital_early = \
+        1. / sojourn.compartment_periods["hospital_early"]
+    within_icu_early = \
+        1. / sojourn.compartment_periods["icu_early"]
+    hospital_survival_props = \
+        1. - relative_death_props[Clinical.HOSPITAL_NON_ICU]
+    icu_survival_props = \
+        1. - relative_death_props[Clinical.ICU]
+    hospital_survival_rates = \
+        within_hospital_late * hospital_survival_props
+    icu_survival_rates = \
+        within_icu_late * icu_survival_props
+    progress_adjs = \
+        get_progress_adjs(within_hospital_early, within_icu_early)
+    recovery_adjs = \
+        get_recovery_adjs(hospital_survival_rates, icu_survival_rates)
+    return entry_adjustments, death_adjs, progress_adjs, recovery_adjs, abs_props, get_detected_proportion

@@ -51,12 +51,12 @@ def build_abs_detection_proportion_imported(params: Parameters, agegroup_strata:
     pop = params.population
     country = params.country
 
-    # Get case detection rate function.
+    # Get case detection rate function
     get_detected_proportion = build_detected_proportion_func(
         agegroup_strata, country, pop, params.testing_to_detection, params.case_detection
     )
     # Determine how many importations there are, including the undetected and asymptomatic importations
-    symptomatic_props = get_proportion_symptomatic(params)
+    symptomatic_props = get_proportion_symptomatic(params.clinical_stratification)
     importation_props_by_age = get_importation_props_by_age(params.importation, agegroup_strata)
     import_symptomatic_prop = sum(
         [
@@ -66,7 +66,7 @@ def build_abs_detection_proportion_imported(params: Parameters, agegroup_strata:
     )
 
     def get_abs_detection_proportion_imported(t):
-        # Returns absolute proprotion of imported people who are detected to be infectious.
+        # Returns absolute proportion of imported people who are detected to be infectious.
         return import_symptomatic_prop * get_detected_proportion(t)
 
     return get_abs_detection_proportion_imported

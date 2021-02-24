@@ -10,15 +10,20 @@ timeout 180 /bin/bash -c 'until stat /var/lib/cloud/instance/boot-finished 2>/de
 echo ">>> Setting global environment variables"
 echo "SENTRY_DSN=\"$SENTRY_DSN\"" >> /etc/environment
 echo "AUTUMN_PASSWORD=\"$AUTUMN_PASSWORD\"" >> /etc/environment
+echo "GCLOUD_API_KEY=\"$GCLOUD_API_KEY\"" >> /etc/environment
 echo "PYTHONUNBUFFERED=1" >> /etc/environment
 cat /etc/environment
+
+# Move uploaded files to the right place.
+mv /tmp/promtail.yml /etc/promtail.yml
+mv /tmp/promtail.service /etc/systemd/system/promtail.service
 
 # Set timezone to Melbourne
 echo ">>> Setting timezone to Melbourne"
 rm -f /etc/localtime
 ln -sf /usr/share/zoneinfo/Australia/Melbourne /etc/localtime
 
-# Setup public key for buildkite
+# Setup public key so the Buildkite agent can SSH in.
 BUILDKITE_PUBKEY="ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDCD/Li0eZR7WsrUWiolujjUEKcJgo5tErpcNAFcPxt0Ly7fLi5PGmx7RqP07W8myJPWMh/q4xFMBHqCCQrlqHvSOS+l8ExWYs6PzY/lCt721fFJRc16BbX3jJuvZlcYNK22IrMmjpvpKWS6kEqSWOufA4ZUEKpdSgSPZYVAQ9bivkQKS74uLdVmPVBdA56hzx2uo5UtrUqHnX1DFr40nmYEyGmZOUlUr3tp1quIXoapYNhfY0i3Xr4ivi8J3IaIqER93K8BTJh9+mjowh1TCBja9F8NwKD/AOQhMdIYtoj+QUGU8xfd0VsnFxLOl+LI7vYCqC1P7vQYpCBHqKcpOzN buildkite"
 echo "$BUILDKITE_PUBKEY" >> /home/ubuntu/.ssh/authorized_keys
 
@@ -27,12 +32,24 @@ apt-get update
 apt-get install -y \
     python3-pip \
     python3.6-dev \
-    virtualenv
+    virtualenv \
+    unzip
 
 # Install Git Large File Storage
 curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
 apt install git-lfs
 
+# Set up Grafana agent and Promtail log shipper
+export GCLOUD_STACK_ID="174686"
+GRAFANA_INSTALL_SCRIPT="https://raw.githubusercontent.com/grafana/agent/release/production/grafanacloud-install.sh"
+curl -fsSL $GRAFANA_INSTALL_SCRIPT | sh
+
+PROMTAIL_EXECUTABLE="https://github.com/grafana/loki/releases/download/v2.1.0/promtail-linux-amd64.zip"
+curl -O -L  $PROMTAIL_EXECUTABLE
+unzip promtail-linux-amd64.zip
+mv promtail-linux-amd64 /usr/local/bin/promtail
+chmod a+x /usr/local/bin/promtail
+systemctl enable promtail.service
 
 # Get source code
 git clone https://github.com/monash-emu/AuTuMN.git code

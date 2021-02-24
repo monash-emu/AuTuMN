@@ -300,7 +300,7 @@ def get_entry_adjustments(abs_props, get_detected_proportion, early_rate):
             age_idx, abs_props, get_detected_proportion
         )
 
-        def isolate_flow_rate(t, func=get_abs_prop_isolated):
+        def isolate_flow_rate(t, func=get_abs_prop_isolated):  # Function must be "bound" within loop
             return func(t) * early_rate
 
         # Get sympt non-hospital rate for overwriting
@@ -308,7 +308,7 @@ def get_entry_adjustments(abs_props, get_detected_proportion, early_rate):
             age_idx, abs_props, get_abs_prop_isolated
         )
 
-        def sympt_non_hosp_rate(t, func=get_abs_prop_sympt_non_hospital):
+        def sympt_non_hosp_rate(t, func=get_abs_prop_sympt_non_hospital):  # Function must be "bound" within loop
             return func(t) * early_rate
 
         # Constant flow rates

@@ -50,7 +50,7 @@ def get_immunity_strat(params: Parameters) -> Stratification:
     country = params.country
     pop = params.population
 
-    vaccine_efficacy = 0.8
+    vaccine_efficacy = 0.
     symptomatic_adjuster = \
         (1. - vaccine_efficacy) * \
         params.clinical_stratification.props.symptomatic.multiplier
@@ -114,33 +114,11 @@ def get_immunity_strat(params: Parameters) -> Stratification:
         Clinical.SYMPT_ISOLATE: None
     }
 
-    for clinical_stratum in CLINICAL_STRATA:
-
-        immunity_strat.add_flow_adjustments(
-            "progress",
-            {
-                "unvaccinated": None,
-                "vaccinated": progress_adjs[clinical_stratum]
-            },
-            source_strata={"clinical": clinical_stratum},
-        )
-
     for i_age, agegroup in enumerate(AGEGROUP_STRATA):
-
-        recovery_adjs = \
-            {
-                Clinical.NON_SYMPT: None,
-                Clinical.ICU: Overwrite(icu_survival_rates[i_age]),
-                Clinical.HOSPITAL_NON_ICU: Overwrite(hospital_survival_rates[i_age]),
-                Clinical.SYMPT_NON_HOSPITAL: None,
-                Clinical.SYMPT_ISOLATE: None
-            }
-
         for clinical_stratum in CLINICAL_STRATA:
-
             source = {
                 "agegroup": agegroup,
-                "clinical": clinical_stratum
+                "clinical": clinical_stratum,
             }
             immunity_strat.add_flow_adjustments(
                 "infect_onset",
@@ -159,12 +137,28 @@ def get_immunity_strat(params: Parameters) -> Stratification:
                 source_strata=source
             )
             immunity_strat.add_flow_adjustments(
+                "progress",
+                {
+                    "unvaccinated": None,
+                    "vaccinated": progress_adjs[clinical_stratum]
+                },
+                source_strata=source
+            )
+            recovery_adjs = \
+                {
+                    Clinical.NON_SYMPT: None,
+                    Clinical.ICU: Overwrite(icu_survival_rates[i_age]),
+                    Clinical.HOSPITAL_NON_ICU: Overwrite(hospital_survival_rates[i_age]),
+                    Clinical.SYMPT_NON_HOSPITAL: None,
+                    Clinical.SYMPT_ISOLATE: None
+                }
+            immunity_strat.add_flow_adjustments(
                 "recovery",
                 {
                     "unvaccinated": None,
                     "vaccinated": recovery_adjs[clinical_stratum]
                 },
-                source_strata=source,
+                source_strata=source
             )
 
     return immunity_strat

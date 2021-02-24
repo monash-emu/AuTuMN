@@ -80,7 +80,7 @@ def get_clinical_strat(params: Parameters) -> Stratification:
         },
     )
     # Add infectiousness reduction for people who are late active and in isolation or hospital/icu.
-    # These peoplee are less infectious because of physical distancing/isolation/PPE precautions.
+    # These people are less infectious because of physical distancing/isolation/PPE precautions.
     late_infect_multiplier = clinical_params.late_infect_multiplier
     clinical_strat.add_infectiousness_adjustments(
         Compartment.LATE_ACTIVE,
@@ -143,6 +143,14 @@ def get_clinical_strat(params: Parameters) -> Stratification:
     icu_survival_rates = \
         within_icu_late * icu_survival_props
 
+    progress_adjs = {
+        Clinical.NON_SYMPT: None,
+        Clinical.ICU: Overwrite(within_icu_early),
+        Clinical.HOSPITAL_NON_ICU: Overwrite(within_hospital_early),
+        Clinical.SYMPT_NON_HOSPITAL: None,
+        Clinical.SYMPT_ISOLATE: None,
+    }
+
     # Assign all the adjustments to the model
     for idx, agegroup in enumerate(AGEGROUP_STRATA):
         source = {"agegroup": agegroup}
@@ -158,13 +166,7 @@ def get_clinical_strat(params: Parameters) -> Stratification:
         )
         clinical_strat.add_flow_adjustments(
             "progress",
-            {
-                Clinical.NON_SYMPT: None,
-                Clinical.ICU: Overwrite(within_icu_early),
-                Clinical.HOSPITAL_NON_ICU: Overwrite(within_hospital_early),
-                Clinical.SYMPT_NON_HOSPITAL: None,
-                Clinical.SYMPT_ISOLATE: None,
-            },
+            progress_adjs,
             source_strata=source,
         )
         clinical_strat.add_flow_adjustments(

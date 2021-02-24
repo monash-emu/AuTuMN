@@ -38,11 +38,7 @@ def get_immunity_strat(params: Parameters) -> Stratification:
             }
         )
 
-    clinical_params = params.clinical_stratification
-    country = params.country
-    pop = params.population
-
-    vaccine_efficacy = 0.8  
+    vaccine_efficacy = 0.8
     symptomatic_adjuster = \
         (1. - vaccine_efficacy) * \
         params.clinical_stratification.props.symptomatic.multiplier
@@ -56,9 +52,9 @@ def get_immunity_strat(params: Parameters) -> Stratification:
     # Get all the adjustments in the same way as we did for the clinical stratification
     entry_adjustments, death_adjs, progress_adjs, recovery_adjs, _, _ = \
         get_all_adjs(
-            clinical_params,
-            country,
-            pop,
+            params.clinical_stratification,
+            params.country,
+            params.population,
             params.infection_fatality.props,
             params.sojourn,
             params.testing_to_detection,

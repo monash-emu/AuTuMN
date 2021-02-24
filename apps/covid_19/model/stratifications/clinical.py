@@ -96,17 +96,20 @@ def get_clinical_strat(params: Parameters) -> Stratification:
     """
     Adjust infection death rates for hospital patients (ICU and non-ICU)
     """
+    symptomatic_adjuster = params.clinical_stratification.props.symptomatic.multiplier
+    hospital_adjuster = params.clinical_stratification.props.hospital.multiplier
+    ifr_adjuster = params.infection_fatality.multiplier
 
     infection_fatality_props = \
         get_ifr_props(
             params,
-            params.infection_fatality.multiplier
+            ifr_adjuster
         )
     abs_props = \
         get_sympt_props(
             params,
-            params.clinical_stratification.props.symptomatic.multiplier,
-            params.clinical_stratification.props.hospital.multiplier,
+            symptomatic_adjuster,
+            hospital_adjuster,
         )
     abs_death_props = \
         get_absolute_death_proportions(abs_props, infection_fatality_props, clinical_params.icu_mortality_prop)
@@ -152,7 +155,7 @@ def get_clinical_strat(params: Parameters) -> Stratification:
     }
 
     # Assign all the adjustments to the model
-    for idx, agegroup in enumerate(AGEGROUP_STRATA):
+    for i_age, agegroup in enumerate(AGEGROUP_STRATA):
         source = {"agegroup": agegroup}
         clinical_strat.add_flow_adjustments(
             "infect_onset",
@@ -173,8 +176,8 @@ def get_clinical_strat(params: Parameters) -> Stratification:
             "recovery",
             {
                 Clinical.NON_SYMPT: None,
-                Clinical.ICU: Overwrite(icu_survival_rates[idx]),
-                Clinical.HOSPITAL_NON_ICU: Overwrite(hospital_survival_rates[idx]),
+                Clinical.ICU: Overwrite(icu_survival_rates[i_age]),
+                Clinical.HOSPITAL_NON_ICU: Overwrite(hospital_survival_rates[i_age]),
                 Clinical.SYMPT_NON_HOSPITAL: None,
                 Clinical.SYMPT_ISOLATE: None,
             },

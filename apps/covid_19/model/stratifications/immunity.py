@@ -38,28 +38,30 @@ def get_immunity_strat(params: Parameters) -> Stratification:
         }
     )
 
-    # if params.vaccination:
-    #     immunity_strat.add_flow_adjustments(
-    #         "infection", {
-    #             "vaccinated": Multiply(1. - params.vaccination.efficacy),
-    #             "unvaccinated": None,
-    #         }
-    #     )
+    if params.vaccination:
+        immunity_strat.add_flow_adjustments(
+            "infection", {
+                "vaccinated": Multiply(1. - params.vaccination.efficacy),
+                "unvaccinated": None,
+            }
+        )
 
     clinical_params = params.clinical_stratification
     country = params.country
     pop = params.population
 
     vaccine_efficacy = 0.8
-    symptomatic_adjuster = 1.
-        # (1. - vaccine_efficacy) * \
-        # params.clinical_stratification.props.symptomatic.multiplier
+    symptomatic_adjuster = \
+        (1. - vaccine_efficacy) * \
+        params.clinical_stratification.props.symptomatic.multiplier
     hospital_adjuster = \
         (1. - vaccine_efficacy) * \
         params.clinical_stratification.props.hospital.multiplier
     ifr_adjuster = \
         (1. - vaccine_efficacy) * \
         params.infection_fatality.multiplier
+
+
     infection_fatality_props = \
         get_ifr_props(
             params,

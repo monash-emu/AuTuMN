@@ -5,7 +5,6 @@ contact_rate: 0.0225
 seasonal_force: 0.
 infectious_seed: 100.
 
-
 vaccination:
   efficacy: 0.
 

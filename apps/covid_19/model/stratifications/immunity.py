@@ -1,7 +1,8 @@
 from summer2 import Stratification, Multiply, Overwrite
-from apps.covid_19.constants import COMPARTMENTS, Clinical
+from apps.covid_19.constants import COMPARTMENTS, Clinical, Compartment
 from apps.covid_19.model.stratifications.agegroup import AGEGROUP_STRATA
 from apps.covid_19.model.parameters import Parameters
+from apps.covid_19.model import preprocess
 from apps.covid_19.model.preprocess.clinical import \
     get_absolute_death_proportions, \
     get_hosp_sojourns, \
@@ -50,49 +51,26 @@ def get_immunity_strat(params: Parameters) -> Stratification:
     pop = params.population
 
     vaccine_efficacy = 0.8
-    print("----------")
-    print(f"efficacy is {vaccine_efficacy}")
-
-
     symptomatic_adjuster = \
         (1. - vaccine_efficacy) * \
         params.clinical_stratification.props.symptomatic.multiplier
-
-    print(f"symptomatic proportions adjusted by {symptomatic_adjuster}")
-
     hospital_adjuster = \
         (1. - vaccine_efficacy) * \
         params.clinical_stratification.props.hospital.multiplier
-
-    print(f"hospitalisation proportions adjusted by {hospital_adjuster}")
-
     ifr_adjuster = \
         (1. - vaccine_efficacy) * \
         params.infection_fatality.multiplier
-
-    print(f"ifr adjusted by {ifr_adjuster}")
-
     infection_fatality_props = \
         get_ifr_props(
             params,
             ifr_adjuster
         )
-
-    print(f"unadjusted ifr >75 {get_ifr_props(params, 1.)[-1]}")
-    print(f"adjusted ifr >75 {infection_fatality_props[-1]}")
-
     abs_props = \
         get_sympt_props(
             params,
             symptomatic_adjuster,
             hospital_adjuster,
         )
-
-    print(f"unadjusted asympt prop >75 {get_sympt_props(params, 1., 1.)['non_sympt'][-1]}")
-    print(f"unadjusted sympt prop >75 {get_sympt_props(params, 1., 1.)['sympt'][-1]}")
-    print(f"adjusted asympt prop >75 {abs_props['non_sympt'][-1]}")
-    print(f"adjusted sympt prop >75 {abs_props['sympt'][-1]}")
-
     abs_death_props = \
         get_absolute_death_proportions(abs_props, infection_fatality_props, clinical_params.icu_mortality_prop)
     relative_death_props = \
@@ -108,8 +86,13 @@ def get_immunity_strat(params: Parameters) -> Stratification:
     get_detected_proportion = build_detected_proportion_func(
         AGEGROUP_STRATA, country, pop, params.testing_to_detection, params.case_detection
     )
+    compartment_periods = \
+        preprocess.compartments.calc_compartment_periods(params.sojourn)
     entry_adjustments = \
-        get_entry_adjustments(abs_props, get_detected_proportion)
+        get_entry_adjustments(
+            abs_props,
+            get_detected_proportion,
+            1. / compartment_periods[Compartment.EARLY_EXPOSED])
     within_hospital_early = \
         1. / sojourn.compartment_periods["hospital_early"]
     within_icu_early = \

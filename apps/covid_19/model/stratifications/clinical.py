@@ -124,9 +124,12 @@ def get_clinical_strat(params: Parameters) -> Stratification:
         AGEGROUP_STRATA, country, pop, params.testing_to_detection, params.case_detection
     )
     compartment_periods = preprocess.compartments.calc_compartment_periods(params.sojourn)
-
     entry_adjustments = \
-        get_entry_adjustments(abs_props, get_detected_proportion, 1.0 / compartment_periods[Compartment.EARLY_EXPOSED])
+        get_entry_adjustments(
+            abs_props,
+            get_detected_proportion,
+            1. / compartment_periods[Compartment.EARLY_EXPOSED]
+        )
     within_hospital_early = \
         1. / sojourn.compartment_periods["hospital_early"]
     within_icu_early = \
@@ -140,9 +143,7 @@ def get_clinical_strat(params: Parameters) -> Stratification:
     icu_survival_rates = \
         within_icu_late * icu_survival_props
 
-
-
-
+    # Assign all the adjustments to the model
     for idx, agegroup in enumerate(AGEGROUP_STRATA):
         source = {"agegroup": agegroup}
         clinical_strat.add_flow_adjustments(

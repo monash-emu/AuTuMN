@@ -12,7 +12,6 @@ from apps.covid_19.constants import (
 from apps.covid_19.model import preprocess
 from apps.covid_19.model.parameters import Parameters
 from apps.covid_19.model.stratifications.agegroup import get_agegroup_strat, AGEGROUP_STRATA
-from apps.covid_19.model.stratifications.history import get_history_strat
 from apps.covid_19.model.stratifications.cluster import (
     get_cluster_strat,
     apply_post_cluster_strat_hacks,
@@ -139,23 +138,23 @@ def build_model(params: dict) -> CompartmentalModel:
         immunity_strat = get_immunity_strat(params)
         model.stratify_with(immunity_strat)
 
-        if params.vaccination:
-            vaccination_roll_out_function = \
-                get_vacc_roll_out_function(params.vaccination.roll_out_function)
-            for compartment in COMPARTMENTS:
-                model.add_fractional_flow(
-                    name="vaccination",
-                    fractional_rate=vaccination_roll_out_function,
-                    source=compartment,
-                    dest=compartment,
-                    source_strata={"immunity": "unvaccinated"},
-                    dest_strata={"immunity": "vaccinated"},
-                )
+    if params.vaccination:
+        vaccination_roll_out_function = \
+            get_vacc_roll_out_function(params.vaccination.roll_out_function)
+        for compartment in COMPARTMENTS:
+            model.add_fractional_flow(
+                name="vaccination",
+                fractional_rate=vaccination_roll_out_function,
+                source=compartment,
+                dest=compartment,
+                source_strata={"immunity": "unvaccinated"},
+                dest_strata={"immunity": "vaccinated"},
+            )
 
     # Infection history stratification
-    if params.stratify_by_infection_history:
-        history_strat = get_history_strat(params, compartment_periods)
-        model.stratify_with(history_strat)
+    # if params.stratify_by_infection_history:
+    # history_strat = get_history_strat(params, compartment_periods)
+    # model.stratify_with(history_strat)
 
     # Stratify model by Victorian subregion (used for Victorian cluster model).
     if params.victorian_clusters:

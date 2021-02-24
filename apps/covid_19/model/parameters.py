@@ -219,7 +219,8 @@ class VaccCoveragePeriod(BaseModel):
 
 
 class Vaccination(BaseModel):
-    efficacy: float
+    infection_efficacy: float
+    severity_efficacy: float
     roll_out_function: VaccCoveragePeriod
 
 

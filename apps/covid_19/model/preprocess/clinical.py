@@ -291,39 +291,44 @@ def apply_death_adjustments(hospital_death_rates, icu_death_rates):
 def get_entry_adjustments(abs_props, get_detected_proportion, early_rate):
 
     adjustments = {}
-
     for age_idx, agegroup in enumerate(AGEGROUP_STRATA):
+
+        # Function-based flow rates
+
+        # Get isolated rate for overwriting
         get_abs_prop_isolated = get_abs_prop_isolated_factory(
             age_idx, abs_props, get_detected_proportion
         )
 
-        temp_func = lambda t: get_abs_prop_isolated(t)
+        def isolate_flow_rate(t, func=get_abs_prop_isolated):
+            return func(t) * early_rate
 
+        # Get sympt non-hospital rate for overwriting
         get_abs_prop_sympt_non_hospital = get_abs_prop_sympt_non_hospital_factory(
             age_idx, abs_props, get_abs_prop_isolated
         )
 
-        # Previous code, which I presume is correct
+        def sympt_non_hosp_rate(t, func=get_abs_prop_sympt_non_hospital):
+            return func(t) * early_rate
+
+        # Constant flow rates
+        clinical_non_sympt_rate = \
+            abs_props[Clinical.NON_SYMPT][age_idx] * \
+            early_rate
+        clinical_icu_rate = \
+            abs_props[Clinical.ICU][age_idx] * \
+            early_rate
+        hospital_non_icu_rate = \
+            abs_props[Clinical.HOSPITAL_NON_ICU][age_idx] * \
+            early_rate
+
+        # Age-specific adjustments object
         adjustments[agegroup] = {
-            Clinical.NON_SYMPT: Multiply(abs_props[Clinical.NON_SYMPT][age_idx]),
-            Clinical.ICU: Multiply(abs_props[Clinical.ICU][age_idx]),
-            Clinical.HOSPITAL_NON_ICU: Multiply(abs_props[Clinical.HOSPITAL_NON_ICU][age_idx]),
-            Clinical.SYMPT_NON_HOSPITAL: Multiply(get_abs_prop_sympt_non_hospital),
-            Clinical.SYMPT_ISOLATE: Multiply(get_abs_prop_isolated),
+            Clinical.NON_SYMPT: Overwrite(clinical_non_sympt_rate),
+            Clinical.ICU: Overwrite(clinical_icu_rate),
+            Clinical.HOSPITAL_NON_ICU: Overwrite(hospital_non_icu_rate),
+            Clinical.SYMPT_NON_HOSPITAL: Overwrite(sympt_non_hosp_rate),
+            Clinical.SYMPT_ISOLATE: Overwrite(isolate_flow_rate),
         }
-
-        # When changed to this, gives different behaviour
-        # adjustments[agegroup] = {
-        #     Clinical.NON_SYMPT: Multiply(abs_props[Clinical.NON_SYMPT][age_idx]),
-        #     Clinical.ICU: Multiply(abs_props[Clinical.ICU][age_idx]),
-        #     Clinical.HOSPITAL_NON_ICU: Multiply(abs_props[Clinical.HOSPITAL_NON_ICU][age_idx]),
-        #     Clinical.SYMPT_NON_HOSPITAL: Multiply(get_abs_prop_sympt_non_hospital),
-        #     Clinical.SYMPT_ISOLATE: Multiply(temp_func),
-        # }
-
-        # In spite of the function apparently giving the same output
-        print("------")
-        print(temp_func(100))
-        print(get_abs_prop_isolated(100))
 
     return adjustments

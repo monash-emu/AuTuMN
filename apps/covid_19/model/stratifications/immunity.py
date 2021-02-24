@@ -40,17 +40,18 @@ def get_immunity_strat(params: Parameters) -> Stratification:
         )
 
     # Apply vaccination effect against severe disease given infection
-    vaccine_efficacy = \
-        params.vaccination.severity_efficacy
+    relative_severity_effect = \
+        1. - params.vaccination.severity_efficacy
+
     symptomatic_adjuster = \
-        (1. - vaccine_efficacy) * \
-        params.clinical_stratification.props.symptomatic.multiplier
+        params.clinical_stratification.props.symptomatic.multiplier * \
+        relative_severity_effect
     hospital_adjuster = \
-        (1. - vaccine_efficacy) * \
-        params.clinical_stratification.props.hospital.multiplier
+        params.clinical_stratification.props.hospital.multiplier * \
+        relative_severity_effect
     ifr_adjuster = \
-        (1. - vaccine_efficacy) * \
-        params.infection_fatality.multiplier
+        params.infection_fatality.multiplier * \
+        relative_severity_effect
 
     # Get all the adjustments in the same way as we did for the clinical stratification
     entry_adjustments, death_adjs, progress_adjs, recovery_adjs, _, _ = \

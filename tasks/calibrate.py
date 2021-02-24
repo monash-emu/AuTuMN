@@ -79,9 +79,13 @@ def run_calibration_chain(
     Run a single calibration chain.
     """
     set_logging_config(verbose, chain_id)
-    os.environ["AUTUMN_CALIBRATE_DIR"] = CALIBRATE_DATA_DIR
-    app_region = get_app_region(run_id)
-    app_region.calibrate_model(runtime, chain_id, num_chains)
-
     logging.info("Running calibration chain %s", chain_id)
+    os.environ["AUTUMN_CALIBRATE_DIR"] = CALIBRATE_DATA_DIR
+    try:
+        app_region = get_app_region(run_id)
+        app_region.calibrate_model(runtime, chain_id, num_chains)
+    except Exception:
+        logger.exception("Calibration chain %s failed", chain_id)
+        raise
+    logging.info("Finished running calibration chain %s", chain_id)
     return chain_id

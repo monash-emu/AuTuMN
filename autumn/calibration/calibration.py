@@ -174,7 +174,6 @@ class Calibration:
         Run the model with a set of params.
         """
         logger.info(f"Running iteration {self.iter_num}...")
-
         # Update default parameters to use calibration params.
         param_updates = {"time.end": self.end_time}
         for i, param_name in enumerate(self.param_list):
@@ -218,9 +217,9 @@ class Calibration:
                     if key + "_dispersion_param" in self.param_list:
                         normal_sd = params[self.param_list.index(key + "_dispersion_param")]
                     elif "target_output_ratio" in self.param_list:
-                        normal_sd = \
-                            params[self.param_list.index("target_output_ratio")] * \
-                            max(target["values"])
+                        normal_sd = params[self.param_list.index("target_output_ratio")] * max(
+                            target["values"]
+                        )
                     else:
                         normal_sd = target["sd"]
                     squared_distance = (data - model_output) ** 2

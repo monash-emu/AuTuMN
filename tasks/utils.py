@@ -1,4 +1,5 @@
 import logging
+import logging.config
 import socket
 
 from apps import covid_19, tuberculosis, tuberculosis_strains
@@ -20,6 +21,8 @@ def get_app_region(run_id: str):
 
 def set_logging_config(verbose: bool, chain="main"):
     old_factory = logging.getLogRecordFactory()
+    if chain != "main":
+        chain = f"chain-{chain}"
 
     def record_factory(*args, **kwargs):
         record = old_factory(*args, **kwargs)
@@ -29,10 +32,9 @@ def set_logging_config(verbose: bool, chain="main"):
 
     logging.setLogRecordFactory(record_factory)
 
-    log_format = (
-        "%(asctime)s %(host)s [%(chain)s] %(levelname)-8s (%(module)s.%(funcName)s) %(message)s"
-    )
+    log_format = "%(asctime)s %(host)s [%(chain)s] %(levelname)s %(message)s"
     logfile = f"log/task-{chain}.log"
+    root_logger = {"level": "INFO", "handlers": ["file"]}
     handlers = {
         "file": {
             "level": "INFO",
@@ -43,6 +45,7 @@ def set_logging_config(verbose: bool, chain="main"):
         }
     }
     if verbose:
+        root_logger["handlers"].append("stream")
         handlers["stream"] = {
             "level": "INFO",
             "class": "logging.StreamHandler",
@@ -53,7 +56,7 @@ def set_logging_config(verbose: bool, chain="main"):
         {
             "version": 1,
             "disable_existing_loggers": False,
-            "root": {"level": "INFO", "handlers": ["file", "stream"]},
+            "root": root_logger,
             "handlers": handlers,
             "formatters": {
                 "app": {

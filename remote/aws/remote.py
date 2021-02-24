@@ -22,6 +22,7 @@ def run_dhhs(instance, commit: str, branch: str):
     msg = "Running DHHS processing for commit %s on AWS instance %s"
     logger.info(msg, commit, instance["InstanceId"])
     with get_connection(instance) as conn:
+        print_hostname(conn)
         update_repo(conn, branch=branch)
         install_requirements(conn)
         read_secrets(conn)
@@ -40,6 +41,7 @@ def run_powerbi(instance, run_id: str, branch: str):
     msg = "Running PowerBI processing for run %s on AWS instance %s"
     logger.info(msg, run_id, instance["InstanceId"])
     with get_connection(instance) as conn:
+        print_hostname(conn)
         update_repo(conn, branch=branch)
         install_requirements(conn)
         read_secrets(conn)
@@ -58,6 +60,7 @@ def run_full_model(instance, run_id: str, burn_in: int, use_latest_code: bool, b
     msg = "Running full models for run %s burn-in %s on AWS instance %s"
     logger.info(msg, run_id, burn_in, instance["InstanceId"])
     with get_connection(instance) as conn:
+        print_hostname(conn)
         if use_latest_code:
             update_repo(conn, branch=branch)
         else:
@@ -88,6 +91,7 @@ def run_calibration(
     logger.info(msg, app_name, region_name, num_chains, runtime, instance["InstanceId"])
     run_id = None
     with get_connection(instance) as conn:
+        print_hostname(conn)
         update_repo(conn, branch=branch)
         install_requirements(conn)
         read_secrets(conn)
@@ -114,6 +118,10 @@ def run_task_pipeline(conn: Connection, pipeline_name: str, pipeline_args: dict)
         conn.run(cmd_str, echo=True)
 
     logger.info("Finished running task pipleine %s", pipeline_name)
+
+
+def print_hostname(conn: Connection):
+    conn.run('echo "Running on host $HOSTNAME"', echo=True)
 
 
 def set_run_id(conn: Connection, run_id: str):

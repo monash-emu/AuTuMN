@@ -28,6 +28,8 @@ benchmark.json
 # Data
 *.db
 logs/
+log/
+*.log
 
 # Website stuff
 node_modules/

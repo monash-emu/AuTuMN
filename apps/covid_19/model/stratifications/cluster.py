@@ -39,10 +39,15 @@ def get_cluster_strat(params: Parameters) -> Stratification:
 
     # Adjust contact rate multipliers
     contact_rate_adjustments = {}
-    for cluster in Region.VICTORIA_SUBREGIONS:
+    for cluster in Region.VICTORIA_METRO + [Region.BARWON_SOUTH_WEST]:
         cluster_name = cluster.replace("-", "_")
         contact_rate_multiplier = getattr(vic, f"contact_rate_multiplier_{cluster_name}")
         contact_rate_adjustments[cluster_name] = Multiply(contact_rate_multiplier)
+    for cluster in Region.VICTORIA_RURAL:
+        if cluster != Region.BARWON_SOUTH_WEST:
+            cluster_name = cluster.replace("-", "_")
+            contact_rate_multiplier = getattr(vic, "contact_rate_multiplier_regional")
+            contact_rate_adjustments[cluster_name] = Multiply(contact_rate_multiplier)
 
     # Add in flow adjustments per-region so we can calibrate the contact rate for each region.
     cluster_strat.add_flow_adjustments("infection", contact_rate_adjustments)

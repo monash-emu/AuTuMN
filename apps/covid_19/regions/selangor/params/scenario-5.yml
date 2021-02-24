@@ -1,4 +1,4 @@
-description: Scenario 5, 70% vaccination over six months
+description: Scenario 5, 70% efficacy 70% coverage vaccination
 parent: apps/covid_19/regions/malaysia/params/default.yml
 
 time:

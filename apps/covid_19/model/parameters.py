@@ -203,11 +203,8 @@ class VictorianClusterStratification(BaseModel):
     contact_rate_multiplier_west_metro: float
     contact_rate_multiplier_south_metro: float
     contact_rate_multiplier_south_east_metro: float
-    contact_rate_multiplier_loddon_mallee: float
     contact_rate_multiplier_barwon_south_west: float
-    contact_rate_multiplier_hume: float
-    contact_rate_multiplier_gippsland: float
-    contact_rate_multiplier_grampians: float
+    contact_rate_multiplier_regional: float
     metro: MetroClusterStratification
     regional: RegionalClusterStratification
 
@@ -273,43 +270,4 @@ class Parameters:
     new_icu_admissions_dispersion_param: float
     infection_deaths_dispersion_param: float
     accum_deaths_dispersion_param: float
-
-    notifications_for_cluster_barwon_south_west_dispersion_param: float
-    notifications_for_cluster_gippsland_dispersion_param: float
-    notifications_for_cluster_hume_dispersion_param: float
-    notifications_for_cluster_loddon_mallee_dispersion_param: float
-    notifications_for_cluster_grampians_dispersion_param: float
-    notifications_for_cluster_north_metro_dispersion_param: float
-    notifications_for_cluster_south_east_metro_dispersion_param: float
-    notifications_for_cluster_south_metro_dispersion_param: float
-    notifications_for_cluster_west_metro_dispersion_param: float
-
-    accum_hospital_admissions_for_cluster_north_metro_dispersion_param: float
-    accum_hospital_admissions_for_cluster_south_east_metro_dispersion_param: float
-    accum_hospital_admissions_for_cluster_south_metro_dispersion_param: float
-    accum_hospital_admissions_for_cluster_west_metro_dispersion_param: float
-
-    accum_icu_admissions_for_cluster_north_metro_dispersion_param: float
-    accum_icu_admissions_for_cluster_south_east_metro_dispersion_param: float
-    accum_icu_admissions_for_cluster_south_metro_dispersion_param: float
-    accum_icu_admissions_for_cluster_west_metro_dispersion_param: float
-
-    accum_deaths_for_cluster_north_metro_dispersion_param: float
-    accum_deaths_for_cluster_south_east_metro_dispersion_param: float
-    accum_deaths_for_cluster_south_metro_dispersion_param: float
-    accum_deaths_for_cluster_west_metro_dispersion_param: float
-
-    notifications_metro_dispersion_param: float
-    notifications_rural_dispersion_param: float
-    hospital_admissions_metro_dispersion_param: float
-    hospital_admissions_rural_dispersion_param: float
-    icu_admissions_metro_dispersion_param: float
-    icu_admissions_rural_dispersion_param: float
-    accum_deaths_metro_dispersion_param: float
-    accum_deaths_rural_dispersion_param: float
-    accum_notifications_metro_dispersion_param: float
-    accum_notifications_rural_dispersion_param: float
-    hospital_occupancy_metro_dispersion_param: float
-    hospital_occupancy_rural_dispersion_param: float
-    icu_occupancy_metro_dispersion_param: float
-    icu_occupancy_rural_dispersion_param: float
+    target_output_ratio: Optional[float]

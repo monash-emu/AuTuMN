@@ -6,6 +6,7 @@ env/
 condaenv/
 .pytest_cache
 *.cprof
+*.egg-info
 
 # Sphinx docs
 _build
@@ -27,6 +28,8 @@ benchmark.json
 # Data
 *.db
 logs/
+log/
+*.log
 
 # Website stuff
 node_modules/

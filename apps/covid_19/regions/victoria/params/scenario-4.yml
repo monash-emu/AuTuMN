@@ -1,0 +1,25 @@
+description: no face coverings
+parent: apps/covid_19/regions/victoria/params/default.yml
+
+time:
+  start: 189
+
+victorian_clusters:
+  metro:
+    mobility:
+      mixing:
+        work:
+          append: false
+          times:
+            - 2020-07-07
+          values:
+            - 1.
+  regional:
+    mobility:
+      mixing:
+        work:
+          append: false
+          times:
+            - 2020-07-07
+          values:
+            - 1.

@@ -1,4 +1,4 @@
-awareness_raising: {}
+awareness_raising: Null
 parent: apps/tuberculosis/regions/marshall_islands/params/default.yml
 time:
   critical_ranges:

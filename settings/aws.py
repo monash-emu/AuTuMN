@@ -1,3 +1,24 @@
+class EC2InstanceState:
+    pending = "pending"
+    running = "running"
+    stopping = "stopping"
+    stopped = "stopped"
+    terminated = "terminated"
+    shutting_down = "shutting-down"
+    rebooting = "rebooting"
+
+    LIVE_STATES = [pending, running, rebooting]
+    DEAD_STATES = [stopping, stopped, terminated, shutting_down]
+
+    @staticmethod
+    def is_dead(state):
+        return state in EC2InstanceState.DEAD_STATES
+
+    @staticmethod
+    def is_live(state):
+        return state in EC2InstanceState.LIVE_STATES
+
+
 class EC2InstanceType:
     r5_2xlarge = "r5.2xlarge"
     m5_2xlarge = "m5.2xlarge"
@@ -35,7 +56,7 @@ EC2_INSTANCE_SPECS = {
 AWS_PROFILE = "autumn"
 AWS_REGION = "ap-southeast-2"
 EC2_SPOT_MAX_PRICE = "1.2"
-EC2_AMI = "ami-056b71718e997179b"
+EC2_AMI = "ami-0d4bc11c854ab6cb9"
 EC2_SECURITY_GROUP = "sg-0b2fe230ac8853538"
 EC2_IAM_INSTANCE_PROFILE = "worker-profile"
 S3_BUCKET = "autumn-data"

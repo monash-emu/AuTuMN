@@ -12,6 +12,7 @@ CLUSTERS = [Region.to_filename(r) for r in Region.VICTORIA_SUBREGIONS]
 # Just calibrate to June, July, August and September for now (but run for some lead in time at the start)
 TARGETS_START_TIME = 153  # 1st June
 TARGETS_END_TIME = 305  # 31st October
+DISPERSION_TARGET_RATIO = 0.07
 
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):
@@ -33,7 +34,7 @@ def get_priors(target_outputs: list):
     priors = provide_default_calibration_params()
 
     # Add multiplier for each Victorian cluster
-    for region in Region.VICTORIA_SUBREGIONS:
+    for region in Region.VICTORIA_METRO:
         region_name = region.replace("-", "_")
         priors += [
             {
@@ -44,17 +45,32 @@ def get_priors(target_outputs: list):
             },
         ]
 
-    # Add the other parameters we're interested in for Victoria
     priors += [
+        {
+            "param_name": f"victorian_clusters.contact_rate_multiplier_barwon_south_west",
+            "distribution": "trunc_normal",
+            "distri_params": [1.0, 0.5],  # Shouldn't be too peaked with these values
+            "trunc_range": [0.5, np.inf],
+            "jumping_sd": 0.05
+        },
+        {
+            "param_name": f"victorian_clusters.contact_rate_multiplier_regional",
+            "distribution": "trunc_normal",
+            "distri_params": [1.0, 0.5],  # Shouldn't be too peaked with these values
+            "trunc_range": [0.5, np.inf],
+            "jumping_sd": 0.05,
+        },
         {
             "param_name": "contact_rate",
             "distribution": "uniform",
             "distri_params": [0.015, 0.06],
+            "jumping_sd": 0.002
         },
         {
             "param_name": "victorian_clusters.intercluster_mixing",
             "distribution": "uniform",
             "distri_params": [0.005, 0.05],
+            "jumping_sd": 0.001
         },
         {
             "param_name": "infectious_seed",
@@ -63,11 +79,13 @@ def get_priors(target_outputs: list):
                 22.5,
                 67.5,
             ],  # Should be multiplied by 4/9 because seed is removed from regional clusters
+            "jumping_sd": 2.
         },
         {
             "param_name": "seasonal_force",
             "distribution": "uniform",
             "distri_params": [0.0, 0.5],
+            "jumping_sd": 0.015
         },
         {
             "param_name": "clinical_stratification.props.symptomatic.multiplier",
@@ -79,42 +97,52 @@ def get_priors(target_outputs: list):
             "param_name": "clinical_stratification.non_sympt_infect_multiplier",
             "distribution": "uniform",
             "distri_params": [0.3, 0.7],
+            "jumping_sd": 0.01
         },
         {
             "param_name": "clinical_stratification.props.hospital.multiplier",
             "distribution": "uniform",
             "distri_params": [0.5, 3.0],
+            "jumping_sd": 0.1
         },
         {
             "param_name": "infection_fatality.multiplier",
             "distribution": "uniform",
             "distri_params": [0.5, 4.0],
+            "jumping_sd": 0.05
         },
         {
             "param_name": "testing_to_detection.assumed_cdr_parameter",
             "distribution": "uniform",
             "distri_params": [0.2, 0.5],
+            "jumping_sd": 0.01
         },
         {
             "param_name": "sojourn.compartment_periods.icu_early",
             "distribution": "trunc_normal",
             "distri_params": [12.7, 4.0],
             "trunc_range": [3.0, np.inf],
+            "jumping_sd": 2.
         },
         {
             "param_name": "victorian_clusters.metro.mobility.microdistancing.behaviour_adjuster.parameters.effect",
             "distribution": "uniform",
             "distri_params": [0.0, 0.5],
+            "jumping_sd": 0.005
         },
         {
             "param_name": "victorian_clusters.metro.mobility.microdistancing.face_coverings_adjuster.parameters.effect",
             "distribution": "uniform",
             "distri_params": [0.0, 0.5],
+            "jumping_sd": 0.005
+        },
+        {
+            "param_name": "target_output_ratio",
+            "distribution": "uniform",
+            "distri_params": [0.1, 0.4],
+            "jumping_sd": 0.005
         },
     ]
-
-    priors = add_dispersion_param_prior_for_gaussian(priors, target_outputs)
-    priors = group_dispersion_params(priors, target_outputs)
     return priors
 
 
@@ -174,12 +202,17 @@ def get_target_outputs(start_date, end_date):
     # Smoothed notifications for all clusters
     for cluster in CLUSTERS:
         output_key = f"notifications_for_cluster_{cluster}"
+        cluster_notification_targets = apply_moving_average(targets[output_key]["values"], period=4)
+        dispersion_value = \
+            max(cluster_notification_targets) * \
+            DISPERSION_TARGET_RATIO
         target_outputs += [
             {
                 "output_key": output_key,
                 "years": targets[output_key]["times"],
-                "values": apply_moving_average(targets[output_key]["values"], period=4),
+                "values": cluster_notification_targets,
                 "loglikelihood_distri": "normal",
+                "sd": dispersion_value,
             }
         ]
 

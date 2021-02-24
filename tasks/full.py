@@ -12,7 +12,7 @@ from utils.s3 import list_s3, download_from_run_s3, upload_to_run_s3
 from utils.parallel import run_parallel_tasks
 from utils.timer import Timer
 from settings import REMOTE_BASE_DIR
-from tasks.utils import get_app_region
+from tasks.utils import get_app_region, set_logging_config
 from tasks.calibrate import CALIBRATE_DATA_DIR
 
 
@@ -62,63 +62,66 @@ def full_model_run_task(run_id: str, burn_in: int, quiet: bool):
 def run_full_model_for_chain(
     run_id: str, src_db_path: str, chain_id: int, burn_in: int, quiet: bool
 ):
-    if quiet:
-        logging.disable(logging.INFO)
+    set_logging_config(not quiet, chain_id)
+    logger.info("Running full models for chain %s.", chain_id)
+    try:
+        app_region = get_app_region(run_id)
+        dest_db_path = os.path.join(FULL_RUN_DATA_DIR, f"chain-{chain_id}")
+        logger.info(
+            f"Running {app_region.app_name} {app_region.region_name} full model with burn-in of {burn_in}s"
+        )
+        src_db = get_database(src_db_path)
+        dest_db = get_database(dest_db_path)
+        db.process.apply_burn_in(src_db, dest_db, burn_in)
+        mcmc_run_df = dest_db.query("mcmc_run")
+        outputs = []
+        derived_outputs = []
 
-    app_region = get_app_region(run_id)
-    dest_db_path = os.path.join(FULL_RUN_DATA_DIR, f"chain-{chain_id}")
-    logger.info(
-        f"Running {app_region.app_name} {app_region.region_name} full model with burn-in of {burn_in}s"
-    )
-    src_db = get_database(src_db_path)
-    dest_db = get_database(dest_db_path)
-    db.process.apply_burn_in(src_db, dest_db, burn_in)
-    mcmc_run_df = dest_db.query("mcmc_run")
-    outputs = []
-    derived_outputs = []
+        for _, mcmc_run in mcmc_run_df.iterrows():
+            run_id = mcmc_run["run"]
+            chain_id = mcmc_run["chain"]
+            if not mcmc_run["accept"]:
+                logger.info("Ignoring non-accepted MCMC run %s", run_id)
+                continue
 
-    for _, mcmc_run in mcmc_run_df.iterrows():
-        run_id = mcmc_run["run"]
-        chain_id = mcmc_run["chain"]
-        if not mcmc_run["accept"]:
-            logger.info("Ignoring non-accepted MCMC run %s", run_id)
-            continue
+            logger.info("Running full model for MCMC run %s", run_id)
+            param_updates = db.load.load_mcmc_params(dest_db, run_id)
+            update_func = lambda ps: update_params(ps, param_updates)
+            with Timer("Running model scenarios"):
+                num_scenarios = 1 + len(app_region.params["scenarios"].keys())
+                scenarios = []
+                for scenario_idx in range(num_scenarios):
+                    scenario = Scenario(app_region.build_model, scenario_idx, app_region.params)
+                    scenarios.append(scenario)
 
-        logger.info("Running full model for MCMC run %s", run_id)
-        param_updates = db.load.load_mcmc_params(dest_db, run_id)
-        update_func = lambda ps: update_params(ps, param_updates)
-        with Timer("Running model scenarios"):
-            num_scenarios = 1 + len(app_region.params["scenarios"].keys())
-            scenarios = []
-            for scenario_idx in range(num_scenarios):
-                scenario = Scenario(app_region.build_model, scenario_idx, app_region.params)
-                scenarios.append(scenario)
+                # Run the baseline scenario.
+                baseline_scenario = scenarios[0]
+                baseline_scenario.run(update_func=update_func)
+                baseline_model = baseline_scenario.model
 
-            # Run the baseline scenario.
-            baseline_scenario = scenarios[0]
-            baseline_scenario.run(update_func=update_func)
-            baseline_model = baseline_scenario.model
+                # Run all the other scenarios
+                for scenario in scenarios[1:]:
+                    scenario.run(base_model=baseline_model, update_func=update_func)
 
-            # Run all the other scenarios
-            for scenario in scenarios[1:]:
-                scenario.run(base_model=baseline_model, update_func=update_func)
+            run_id = int(run_id)
+            chain_id = int(chain_id)
 
-        run_id = int(run_id)
-        chain_id = int(chain_id)
+            with Timer("Processing model outputs"):
+                models = [s.model for s in scenarios]
+                models = calculate_differential_outputs(models, app_region.targets)
+                outputs_df = db.store.build_outputs_table(models, run_id, chain_id)
+                derived_outputs_df = db.store.build_derived_outputs_table(models, run_id, chain_id)
+                outputs.append(outputs_df)
+                derived_outputs.append(derived_outputs_df)
 
-        with Timer("Processing model outputs"):
-            models = [s.model for s in scenarios]
-            models = calculate_differential_outputs(models, app_region.targets)
-            outputs_df = db.store.build_outputs_table(models, run_id, chain_id)
-            derived_outputs_df = db.store.build_derived_outputs_table(models, run_id, chain_id)
-            outputs.append(outputs_df)
-            derived_outputs.append(derived_outputs_df)
+        with Timer("Saving model outputs to the database"):
+            outputs_df = pd.concat(outputs, copy=False, ignore_index=True)
+            derived_outputs_df = pd.concat(derived_outputs, copy=False, ignore_index=True)
+            dest_db.dump_df(db.store.Table.OUTPUTS, outputs_df)
+            dest_db.dump_df(db.store.Table.DERIVED, derived_outputs_df)
+    except Exception:
+        logger.exception("Calibration chain %s failed", chain_id)
+        raise
 
-    with Timer("Saving model outputs to the database"):
-        outputs_df = pd.concat(outputs, copy=False, ignore_index=True)
-        derived_outputs_df = pd.concat(derived_outputs, copy=False, ignore_index=True)
-        dest_db.dump_df(db.store.Table.OUTPUTS, outputs_df)
-        dest_db.dump_df(db.store.Table.DERIVED, derived_outputs_df)
-
-    logger.info("Finished running full models for all accepted MCMC runs.")
+    logger.info("Finished running full models for chain %s.", chain_id)
     return chain_id

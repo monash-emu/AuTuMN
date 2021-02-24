@@ -174,7 +174,6 @@ class Calibration:
         Run the model with a set of params.
         """
         logger.info(f"Running iteration {self.iter_num}...")
-
         # Update default parameters to use calibration params.
         param_updates = {"time.end": self.end_time}
         for i, param_name in enumerate(self.param_list):
@@ -217,16 +216,10 @@ class Calibration:
                 if target["loglikelihood_distri"] == "normal":
                     if key + "_dispersion_param" in self.param_list:
                         normal_sd = params[self.param_list.index(key + "_dispersion_param")]
-                    elif self.is_vic_super_model:
-                        output_name = target["output_key"].split("_for_cluster_")[0]
-                        cluster = target["output_key"].split("_for_cluster_")[1]
-
-                        if cluster.replace("_", "-") in Region.VICTORIA_METRO:
-                            cluster_group = "metro"
-                        else:
-                            cluster_group = "rural"
-                        param_name = f"{output_name}_{cluster_group}_dispersion_param"
-                        normal_sd = params[self.param_list.index(param_name)]
+                    elif "target_output_ratio" in self.param_list:
+                        normal_sd = params[self.param_list.index("target_output_ratio")] * max(
+                            target["values"]
+                        )
                     else:
                         normal_sd = target["sd"]
                     squared_distance = (data - model_output) ** 2

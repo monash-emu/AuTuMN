@@ -11,7 +11,7 @@ iex ((New-Object System.Net.WebClient).DownloadString($url))
 
 # Step 2: Install Git, Git Large File Storage
 
-In a PowerShell admin prompt, install  [Git](https://git-scm.com) and [Git Large File Storage](https://git-lfs.github.com/) using Chocolatey.
+In a PowerShell admin prompt, install [Git](https://git-scm.com) and [Git Large File Storage](https://git-lfs.github.com/) using Chocolatey.
 
 ```powershell
 choco install git -y --force
@@ -28,7 +28,7 @@ In a PowerShell admin prompt, install [Anaconda](https://www.anaconda.com/) usin
 
 ```powershell
 # Use Chocolately to install Anaconda
-choco install anaconda3 -y --force 
+choco install anaconda3 -y --force
 
 # Update PATH environment variable so your computer knows where conda.exe is
 $RegistryLoc = "Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment"
@@ -90,6 +90,7 @@ python -m apps run covid malaysia --no-scenarios
 # View results in Streamlit
 streamlit run plots.py
 ```
+
 # Step 5: Install PyCharm (Optional)
 
 Approximate install time: 5 minutes.
@@ -138,7 +139,7 @@ python -m remote aws status
 # buildkite-1  t3.small  running   54.153.241.26   2 months ago
 # buildkite-2  t3.small  running   54.252.224.236  2 months ago
 # buildkite-3  t3.small  running   13.236.184.15   2 months ago
-# website      t2.nano   running   13.54.204.229   2 months ago 
+# website      t2.nano   running   13.54.204.229   2 months ago
 ```
 
 # Troubleshooting

@@ -19,4 +19,3 @@ def cli():
 
 cli.add_command(run)
 cli.add_command(calibrate)
-cli()

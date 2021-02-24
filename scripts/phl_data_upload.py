@@ -13,8 +13,8 @@ import json
 from settings import APPS_PATH
 
 # shareable google drive links
-PHL_doh_link = "1IzDpd40vWGy_UGJJUlhV-by2hLXlZXUn"  # sheet 05 daily report
-PHL_fassster_link = "1Rf_W7oH7bYWxnKUN4Iq1Qn-3Cjz5RwpY"
+PHL_doh_link = "1rT64KdWYjS2965x7wGbEq_raJ8WatHdT"  # sheet 05 daily report
+PHL_fassster_link = "18_dOHZlG_KRcOLUlTOoXvPjX5h5Uf95H"
 
 # destination folders filepaths
 PHL_doh_dest = "./data/targets/PHL_icu.csv"

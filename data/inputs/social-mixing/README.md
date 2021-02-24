@@ -13,3 +13,5 @@ The Prem paper provides mixing matrices for 5 location types:
 - all_locations
 
 The rows and columns indices of each matrix represent a 5 year age bracket from 0-80, giving us a 16x16 matrix.
+
+The latest version of social mixing is obtained from [kieshaprem/synthetic-contact-matrices](https://github.com/kieshaprem/synthetic-contact-matrices/blob/master/output/syntheticcontactmatrices2020/synthetic_contacts_2020.csv)

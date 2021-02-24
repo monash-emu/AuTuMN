@@ -11,7 +11,7 @@ from invoke.exceptions import UnexpectedExit
 
 from . import aws
 from . import remote
-from settings import EC2InstanceType, EC2_INSTANCE_SPECS
+from settings import EC2InstanceType, EC2_INSTANCE_SPECS, EC2InstanceState
 
 logger = logging.getLogger(__name__)
 
@@ -268,8 +268,17 @@ def _run_job(job_id: str, instance_types: List[str], is_spot: bool, job_func):
         logger.exception(f"Job {job_id} failed.")
         raise e
     finally:
-        # Always stop the job to prevent dangling jobs.
-        aws.stop_job(job_id)
+        instances = [i for i in aws.describe_instances() if i["name"] == job_id]
+        live = [i for i in instances if EC2InstanceState.is_live(i["State"]["Name"])]
+        dead = [i for i in instances if EC2InstanceState.is_dead(i["State"]["Name"])]
+        if live:
+            live_names = [i["name"] for i in live]
+            logger.info("Live jobs found, stopping: %s", live_names)
+            # Always stop the job to prevent dangling jobs.
+            aws.stop_job(job_id)
+        if dead:
+            dead_names = [(i["name"], i["State"]["Name"]) for i in dead]
+            logger.info("Jobs already dead, no need to stop: %s", dead_names)
 
     return return_value
 

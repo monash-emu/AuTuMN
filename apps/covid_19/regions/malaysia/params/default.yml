@@ -1,6 +1,7 @@
 description: BASELINE
 parent: apps/covid_19/params.yml
 
+importation: null
 contact_rate: 0.0225
 seasonal_force: 0.
 infectious_seed: 100.
@@ -72,3 +73,5 @@ mobility:
         - 0.
 
 stratify_by_immunity: true
+
+

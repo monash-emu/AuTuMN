@@ -30,15 +30,18 @@ def get_immunity_strat(params: Parameters) -> Stratification:
         }
     )
 
+    # Apply vaccination effect against infection/transmission
     if params.vaccination:
         immunity_strat.add_flow_adjustments(
             "infection", {
-                "vaccinated": Multiply(1. - params.vaccination.efficacy),
+                "vaccinated": Multiply(1. - params.vaccination.infection_efficacy),
                 "unvaccinated": None,
             }
         )
 
-    vaccine_efficacy = 0.8
+    # Apply vaccination effect against severe disease given infection
+    vaccine_efficacy = \
+        params.vaccination.severity_efficacy
     symptomatic_adjuster = \
         (1. - vaccine_efficacy) * \
         params.clinical_stratification.props.symptomatic.multiplier

@@ -6,7 +6,8 @@ seasonal_force: 0.
 infectious_seed: 100.
 
 vaccination:
-  efficacy: 0.
+  infection_efficacy: 0.
+  severity_efficacy: 0.
 
   # Six months from Monday 22nd Feb 2021
   roll_out_function:

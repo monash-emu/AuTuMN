@@ -11,14 +11,12 @@ def get_vacc_roll_out_function(params):
     assert end_time >= start_time
     assert 0. <= coverage <= 1.
 
-    # Get the function to represent the vaccination program
+    # Calculate the vaccination rate from the coverage and the duration of the program
+    vaccination_rate = \
+        -np.log(1. - coverage) / \
+        duration
+
     def get_vaccination_rate(time):
-        if start_time < time < end_time:
-            vaccination_rate = \
-                -np.log(1. - coverage) / \
-                duration
-            return vaccination_rate
-        else:
-            return 0.
+        return vaccination_rate if start_time < time < end_time else 0.
 
     return get_vaccination_rate

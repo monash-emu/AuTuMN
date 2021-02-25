@@ -1,5 +1,5 @@
 description: Scenario 2, All current offsite workers return onsite
-parent: apps/covid_19/regions/malaysia/params/default.yml
+parent: apps/covid_19/regions/selangor/params/default.yml
 
 time:
   start: 418.

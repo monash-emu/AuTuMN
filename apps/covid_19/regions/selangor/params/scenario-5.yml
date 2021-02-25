@@ -1,5 +1,5 @@
-description: Scenario 5, 70% efficacy 70% coverage vaccination
-parent: apps/covid_19/regions/malaysia/params/default.yml
+description: Scenario 5, 70% efficacy 70% coverage infection-preventing vaccine
+parent: apps/covid_19/regions/selangor/params/default.yml
 
 time:
   start: 418.

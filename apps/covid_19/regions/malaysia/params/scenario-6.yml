@@ -1,4 +1,4 @@
-description: Scenario 6, 90% efficacy 70% coverage vaccination
+description: Scenario 6, 90% efficacy 70% coverage infection-preventing vaccine
 parent: apps/covid_19/regions/malaysia/params/default.yml
 
 time:

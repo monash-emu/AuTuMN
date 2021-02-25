@@ -9,6 +9,8 @@ metropolis_initialisation_type: 'current_params'
 time:
   end: 731.
 
+stratify_by_immunity: true
+
 testing_to_detection:
   assumed_tests_parameter: 1.e-4
   assumed_cdr_parameter: 0.2

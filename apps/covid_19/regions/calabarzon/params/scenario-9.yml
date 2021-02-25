@@ -1,11 +1,11 @@
-description: Vaccination (70% coverage / 70% efficacy)
+description: 70% coverage / 70% efficacy / severity-preventing vaccine
 parent: apps/covid_19/regions/calabarzon/params/default.yml
 time:
   start: 424
 vaccination:
-  severity_efficacy: 0.
-  infection_efficacy: 0.7
+  infection_efficacy: 0.0
   roll_out_function:
     coverage: 0.7
     end_time: 606
     start_time: 426
+  severity_efficacy: 0.7

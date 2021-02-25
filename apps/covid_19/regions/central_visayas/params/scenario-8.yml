@@ -1,11 +1,11 @@
-description: Vaccination (50% coverage / 90% efficacy)
+description: 70% coverage / 90% efficacy / infection-preventing vaccine
 parent: apps/covid_19/regions/central_visayas/params/default.yml
 time:
   start: 424
 vaccination:
-  severity_efficacy: 0.
   infection_efficacy: 0.9
   roll_out_function:
-    coverage: 0.5
+    coverage: 0.7
     end_time: 606
     start_time: 426
+  severity_efficacy: 0.0

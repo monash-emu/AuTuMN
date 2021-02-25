@@ -10,8 +10,9 @@ BACK_TO_NORMAL_FRACTIONS = [.3, .5]
 MHS_REDUCTION_FRACTIONS = [.3, .5]
 SCHOOL_REOPEN_FRACTIONS = [.5, 1.]
 VACCINE_SCENARIOS = {
+    "mode": ["infection", "severity"],
     "efficacy": [.7, .9],
-    "coverage": [.5, .7]
+    "coverage": [.7]
 }
 
 
@@ -48,10 +49,11 @@ def write_all_phl_scenarios(scenario_start_time=SCENARIO_START_TIME):
         all_scenarios_dict[sc_index] = make_school_reopen_sc_dict(fraction, scenario_start_time)
 
     # Vaccination
-    for coverage in VACCINE_SCENARIOS["coverage"]:
-        for efficacy in VACCINE_SCENARIOS["efficacy"]:
-            sc_index += 1
-            all_scenarios_dict[sc_index] = make_vaccination_sc_dict(coverage, efficacy, scenario_start_time)
+    for mode in VACCINE_SCENARIOS["mode"]:
+        for coverage in VACCINE_SCENARIOS["coverage"]:
+            for efficacy in VACCINE_SCENARIOS["efficacy"]:
+                sc_index += 1
+                all_scenarios_dict[sc_index] = make_vaccination_sc_dict(mode, coverage, efficacy, scenario_start_time)
 
     # dump scenario files
     for sc_i, scenario_dict in all_scenarios_dict.items():
@@ -130,20 +132,22 @@ def make_school_reopen_sc_dict(fraction, scenario_start_time):
     return sc_dict
 
 
-def make_vaccination_sc_dict(coverage, efficacy, scenario_start_time):
+def make_vaccination_sc_dict(mode, coverage, efficacy, scenario_start_time):
     sc_dict = initialise_sc_dict(scenario_start_time)
     perc_coverage = int(100 * coverage)
     perc_efficacy = int(100 * efficacy)
-    sc_dict['description'] = f"Vaccination ({perc_coverage}% coverage / {perc_efficacy}% efficacy)"
+    sc_dict['description'] = f"{perc_coverage}% coverage / {perc_efficacy}% efficacy / {mode}-preventing vaccine"
 
     sc_dict['vaccination'] = {
-        "efficacy": efficacy,
+        "severity_efficacy": 0.,
+        "infection_efficacy": 0.,
         "roll_out_function": {
             "coverage": coverage,
             "start_time": scenario_start_time,
             "end_time": scenario_start_time + 180
         }
     }
+    sc_dict['vaccination'][f"{mode}_efficacy"] = efficacy
 
     return sc_dict
 

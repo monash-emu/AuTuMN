@@ -21,6 +21,7 @@ IMMUNITY_STRATA = [
 
 def get_immunity_strat(params: Parameters) -> Stratification:
     immunity_strat = Stratification("immunity", IMMUNITY_STRATA, COMPARTMENTS)
+    relative_severity_effect = 1.
 
     # Everyone starts out unvaccinated
     immunity_strat.set_population_split(
@@ -30,18 +31,19 @@ def get_immunity_strat(params: Parameters) -> Stratification:
         }
     )
 
-    # Apply vaccination effect against infection/transmission
     if params.vaccination:
+
+        # Apply vaccination effect against severe disease given infection
+        relative_severity_effect -= \
+            params.vaccination.severity_efficacy
+
+        # Apply vaccination effect against infection/transmission
         immunity_strat.add_flow_adjustments(
             "infection", {
                 "vaccinated": Multiply(1. - params.vaccination.infection_efficacy),
                 "unvaccinated": None,
             }
         )
-
-    # Apply vaccination effect against severe disease given infection
-    relative_severity_effect = \
-        1. - params.vaccination.severity_efficacy
 
     symptomatic_adjuster = \
         params.clinical_stratification.props.symptomatic.multiplier * \

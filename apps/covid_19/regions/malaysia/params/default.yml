@@ -6,15 +6,15 @@ contact_rate: 0.0225
 seasonal_force: 0.
 infectious_seed: 100.
 
-vaccination:
-  infection_efficacy: 0.
-  severity_efficacy: 0.
-
-  # Six months from Monday 22nd Feb 2021
-  roll_out_function:
-    coverage: 0.9
-    start_time: 300.
-    end_time: 400.
+vaccination: null
+#  infection_efficacy: 0.
+#  severity_efficacy: 0.
+#
+#  # Six months from Monday 22nd Feb 2021
+#  roll_out_function:
+#    coverage: 0.9
+#    start_time: 300.
+#    end_time: 400.
 
 time:
   start: 210.

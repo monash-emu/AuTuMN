@@ -57,6 +57,8 @@ def write_all_phl_scenarios(scenario_start_time=SCENARIO_START_TIME):
 
     # dump scenario files
     for sc_i, scenario_dict in all_scenarios_dict.items():
+        print(scenario_dict['description'])
+
         file_path = f"params/scenario-{sc_i}.yml"
         with open(file_path, "w") as f:
                 yaml.dump(scenario_dict, f)

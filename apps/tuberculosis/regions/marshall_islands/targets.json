@@ -169,5 +169,12 @@
     "times": [],
     "values": [],
     "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
+  },
+  "screening_rate": {
+    "title": "TB screening rate",
+    "output_key": "screening_rate",
+    "times": [],
+    "values": [],
+    "quantiles": [0.025, 0.25, 0.5, 0.75, 0.975]
   }
 }

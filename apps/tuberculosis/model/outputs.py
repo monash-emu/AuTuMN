@@ -8,7 +8,7 @@ from summer.model.derived_outputs import (
     TransitionFlowOutput,
 )
 import numpy as np
-
+from autumn.curve import tanh_based_scaleup
 
 def make_infectious_prevalence_calculation_function(stratum_filters=[]):
     """
@@ -271,6 +271,16 @@ def calculate_population_size(time_idx, model, compartment_values, derived_outpu
     return sum(compartment_values)
 
 
+def calculate_case_detection_rate(time_idx, model, compartment_values, derived_outputs):
+    screening_rate_func = tanh_based_scaleup(
+        model.parameters["time_variant_tb_screening_rate"]["maximum_gradient"],
+        model.parameters["time_variant_tb_screening_rate"]["max_change_time"],
+        model.parameters["time_variant_tb_screening_rate"]["start_value"],
+        model.parameters["time_variant_tb_screening_rate"]["end_value"],
+    )
+    return screening_rate_func(model.times[time_idx])
+
+
 def calculate_stratum_population_size(compartment_values, model, stratum_filters):
     """
     Calculate the population size of a given stratum.
@@ -320,6 +330,7 @@ def get_all_derived_output_functions(calculated_outputs, outputs_stratification,
         "population_size": calculate_population_size,
         "incidence": calculate_incidence,
         "mortality": calculate_tb_mortality,
+        "case_detection_rate": calculate_case_detection_rate,
     }
     factory_functions = {
         "prevalence_infectious": make_infectious_prevalence_calculation_function,

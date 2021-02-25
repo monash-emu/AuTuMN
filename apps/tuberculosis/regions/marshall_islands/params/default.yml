@@ -104,7 +104,8 @@ calculated_outputs:
     "mortality",
     "incidence",
     "cumulative_diseased",
-    "cumulative_deaths"
+    "cumulative_deaths",
+    "case_detection_rate"
   ]
 outputs_stratification:
   prevalence_infectious: ["location"]

@@ -1,4 +1,4 @@
-description: Scenario 5, 70% efficacy 70% coverage severity-preventing vaccine
+description: Scenario 7, 70% efficacy 70% coverage severity-preventing vaccine
 parent: apps/covid_19/regions/malaysia/params/default.yml
 
 time:

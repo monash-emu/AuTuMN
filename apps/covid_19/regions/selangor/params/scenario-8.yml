@@ -1,4 +1,4 @@
-description: Scenario 6, 90% efficacy 70% coverage severity-preventing vaccine
+description: Scenario 8, 90% efficacy 70% coverage severity-preventing vaccine
 parent: apps/covid_19/regions/selangor/params/default.yml
 
 time:

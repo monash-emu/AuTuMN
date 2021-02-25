@@ -1,4 +1,6 @@
-awareness_raising: Null
+awareness_raising:
+  relative_screening_rate: 1.
+  scale_up_range: [2018, 2019]
 parent: apps/tuberculosis/regions/marshall_islands/params/default.yml
 time:
   critical_ranges:

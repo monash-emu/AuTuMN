@@ -142,7 +142,7 @@ def get_crude_birth_rate(country_iso_code: str):
 
 
 def get_population_by_agegroup(
-    age_breakpoints: List[str], country_iso_code: str, region: str = None, year: int = 2020
+    age_breakpoints: List[int], country_iso_code: str, region: str = None, year: int = 2020
 ):
     """
     Find population for age bins.

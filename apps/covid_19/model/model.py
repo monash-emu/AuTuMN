@@ -141,7 +141,7 @@ def build_model(params: dict) -> CompartmentalModel:
     if params.vaccination:
         vaccination_roll_out_function = \
             get_vacc_roll_out_function(params.vaccination.roll_out_function)
-        for compartment in COMPARTMENTS:
+        for compartment in [Compartment.SUSCEPTIBLE, Compartment.RECOVERED]:
             model.add_fractional_flow(
                 name="vaccination",
                 fractional_rate=vaccination_roll_out_function,

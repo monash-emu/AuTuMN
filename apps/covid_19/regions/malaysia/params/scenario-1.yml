@@ -1,14 +1,15 @@
-description: Scenario 1, Re-open schools
+description: Scenario 5, 70% efficacy 70% coverage infection-preventing vaccine
 parent: apps/covid_19/regions/malaysia/params/default.yml
 
 time:
   start: 418.
 
-mobility:
-  mixing:
-    school:
-      append: false
-      times:
-        - 2020-02-22
-      values:
-        - 1.
+vaccination:
+  severity_efficacy: 0.
+  infection_efficacy: 0.7
+
+  # Six months from Monday 22nd Feb 2021
+  roll_out_function:
+    coverage: 0.7
+    start_time: 418.
+    end_time: 499.

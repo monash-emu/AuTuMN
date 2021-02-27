@@ -3,7 +3,7 @@ from summer.model.utils.parameter_processing import (
     get_parameter_dict_from_function,
 )
 
-from autumn.tool_kit import add_w_to_param_names, change_parameter_unit
+from autumn.tool_kit import change_parameter_unit
 from autumn.curve import tanh_based_scaleup, make_linear_curve
 
 
@@ -48,7 +48,12 @@ def edit_adjustments_for_diabetes(
     rr_progression_diabetes,
     future_diabetes_multiplier,
 ):
-    diabetes_scale_up = tanh_based_scaleup(b=0.05, c=1980, sigma=0.0, upper_asymptote=1.0)
+    diabetes_scale_up = tanh_based_scaleup(
+        max_gradient=0.05,
+        inflection_time=1980,
+        lower_asymptote=0.0,
+        upper_asymptote=1.0
+    )
     future_diabetes_trend = make_linear_curve(
         x_0=2020, x_1=2050, y_0=1, y_1=future_diabetes_multiplier
     )

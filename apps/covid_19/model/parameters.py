@@ -90,9 +90,9 @@ class EmpiricMicrodistancingParams(BaseModel):
 
 
 class TanhMicrodistancingParams(BaseModel):
-    b: float
-    c: float
-    sigma: float
+    max_gradient: float
+    inflection_time: float
+    lower_asymptote: float
     upper_asymptote: float
 
 
@@ -104,6 +104,7 @@ class MicroDistancingFunc(BaseModel):
     function_type: str
     parameters: Union[EmpiricMicrodistancingParams, TanhMicrodistancingParams, ConstantMicrodistancingParams]
     locations: List[str]
+
 
 class Mobility(BaseModel):
     """Google mobility params"""
@@ -157,10 +158,10 @@ class InfectionFatality(BaseModel):
 class CaseDetection(BaseModel):
     """Time variant detection of cases"""
 
-    maximum_gradient: float  # The shape parameter to the tanh-based curve
-    max_change_time: float  # Point at which curve inflects
-    start_value: float  # Starting value - lower asymptote for increasing function
-    end_value: float  # End value - upper asymptote for increasing function
+    max_gradient: float  # The shape parameter to the tanh-based curve
+    inflection_time: float  # Point at which curve inflects
+    lower_asymptote: float  # Starting value - lower asymptote for increasing function
+    upper_asymptote: float  # End value - upper asymptote for increasing function
 
 
 class TestingToDetection(BaseModel):

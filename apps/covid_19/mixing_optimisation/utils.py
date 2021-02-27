@@ -89,7 +89,7 @@ def get_prior_distributions_for_opti():
         },
         # Micro-distancing
         {
-            "param_name": "mobility.microdistancing.behaviour.parameters.c",
+            "param_name": "mobility.microdistancing.behaviour.parameters.inflection_time",
             "distribution": "uniform",
             "distri_params": [60, 130],
         },
@@ -99,12 +99,12 @@ def get_prior_distributions_for_opti():
             "distri_params": [0.25, 0.80],
         },
         {
-            "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.c",
+            "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.inflection_time",
             "distribution": "uniform",
             "distri_params": [130, 250],
         },
         {
-            "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.sigma",
+            "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.lower_asymptote",
             "distribution": "uniform",
             "distri_params": [0.4, 1.0],
         },

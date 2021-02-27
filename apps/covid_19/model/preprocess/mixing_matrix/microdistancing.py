@@ -1,6 +1,6 @@
 import numpy as np
 
-from typing import List, Callable, Dict
+from typing import Callable, Dict
 
 from autumn.curve import scale_up_function, tanh_based_scaleup
 from apps.covid_19.model.parameters import MicroDistancingFunc

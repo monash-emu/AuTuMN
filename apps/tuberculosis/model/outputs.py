@@ -10,6 +10,7 @@ from summer.model.derived_outputs import (
 import numpy as np
 from autumn.curve import tanh_based_scaleup
 
+
 def make_infectious_prevalence_calculation_function(stratum_filters=[]):
     """
     Make a derived output function that calculates TB prevalence, stratified or non-stratified depending on the
@@ -273,10 +274,10 @@ def calculate_population_size(time_idx, model, compartment_values, derived_outpu
 
 def calculate_screening_rate(time_idx, model, compartment_values, derived_outputs):
     screening_rate_func = tanh_based_scaleup(
-        model.parameters["time_variant_tb_screening_rate"]["maximum_gradient"],
-        model.parameters["time_variant_tb_screening_rate"]["max_change_time"],
-        model.parameters["time_variant_tb_screening_rate"]["start_value"],
-        model.parameters["time_variant_tb_screening_rate"]["end_value"],
+        model.parameters["time_variant_tb_screening_rate"]["max_gradient"],
+        model.parameters["time_variant_tb_screening_rate"]["inflection_time"],
+        model.parameters["time_variant_tb_screening_rate"]["lower_asymptote"],
+        model.parameters["time_variant_tb_screening_rate"]["upper_asymptote"],
     )
     return screening_rate_func(model.times[time_idx])
 

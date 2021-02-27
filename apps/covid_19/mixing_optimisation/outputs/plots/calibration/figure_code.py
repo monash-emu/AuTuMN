@@ -295,8 +295,8 @@ def get_country_posterior_detection_percentiles(country_param_values):
     store_matrix = np.zeros((len(calculated_times), len(country_param_values["time.start"])))
 
     for i in range(len(country_param_values["time.start"])):
-        if "case_detection.start_value" in country_param_values:
-            lower_asymptote = country_param_values["case_detection.start_value"][i]
+        if "case_detection.lower_asymptote" in country_param_values:
+            lower_asymptote = country_param_values["case_detection.lower_asymptote"][i]
         else:
             lower_asymptote = 0.0
         my_func = tanh_based_scaleup(

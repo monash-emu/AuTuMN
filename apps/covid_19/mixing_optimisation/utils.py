@@ -39,17 +39,17 @@ def get_prior_distributions_for_opti():
             "distri_params": [0.5, 3.8],  # 3.8 to match the highest value found in Levin et al.
         },
         {
-            "param_name": "case_detection.start_value",
+            "param_name": "case_detection.lower_asymptote",
             "distribution": "uniform",
             "distri_params": [0.0, 0.30],
         },
         {
-            "param_name": "case_detection.maximum_gradient",
+            "param_name": "case_detection.max_gradient",
             "distribution": "uniform",
             "distri_params": [0.03, 0.15],
         },
         {
-            "param_name": "case_detection.max_change_time",
+            "param_name": "case_detection.inflection_time",
             "distribution": "uniform",
             "distri_params": [100, 250],
         },

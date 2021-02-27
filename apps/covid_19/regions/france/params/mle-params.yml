@@ -1,7 +1,7 @@
-case_detection.end_value: 0.7462763289422714
-case_detection.max_change_time: 179.48633207043065
-case_detection.maximum_gradient: 0.09248939778003236
-case_detection.start_value: 0.06160722186482588
+case_detection.upper_asymptote: 0.7462763289422714
+case_detection.inflection_time: 179.48633207043065
+case_detection.max_gradient: 0.09248939778003236
+case_detection.lower_asymptote: 0.06160722186482588
 clinical_stratification.props.hospital.multiplier: 1.1581957683233726
 clinical_stratification.props.symptomatic.multiplier: 1.1286222116647457
 contact_rate: 0.03324981612328284

@@ -51,17 +51,17 @@ PRIORS = [
         "distri_params": [0.5, 2.0],
     },
     {
-        "param_name": "time_variant_tb_screening_rate.max_change_time",
+        "param_name": "time_variant_tb_screening_rate.inflection_time",
         "distribution": "uniform",
         "distri_params": [2000.0, 2020.0],
     },
     {
-        "param_name": "time_variant_tb_screening_rate.maximum_gradient",
+        "param_name": "time_variant_tb_screening_rate.max_gradient",
         "distribution": "uniform",
         "distri_params": [0.07, 0.1],
     },
     {
-        "param_name": "time_variant_tb_screening_rate.end_value",
+        "param_name": "time_variant_tb_screening_rate.upper_asymptote",
         "distribution": "uniform",
         "distri_params": [0.4, 0.55],
     },

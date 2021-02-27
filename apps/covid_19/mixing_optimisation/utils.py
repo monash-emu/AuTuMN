@@ -54,7 +54,7 @@ def get_prior_distributions_for_opti():
             "distri_params": [100, 250],
         },
         {
-            "param_name": "case_detection.end_value",
+            "param_name": "case_detection.upper_asymptote",
             "distribution": "uniform",
             "distri_params": [0.10, 0.99],
         },

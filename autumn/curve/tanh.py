@@ -10,8 +10,8 @@ def tanh_based_scaleup(max_gradient, inflection_time, lower_asymptote, upper_asy
     :param upper_asymptote: highest asymptotic value
     :return: a function
     """
-    assert upper_asymptote > lower_asymptote, "Lower asymptote is greater than upper asymptote"
     range = upper_asymptote - lower_asymptote
+    assert range >= 0., "Lower asymptote is greater than upper asymptote"
 
     def tanh_scaleup(t):
         return (tanh(max_gradient * (t - inflection_time)) / 2. + 0.5) * \

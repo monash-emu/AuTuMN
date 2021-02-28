@@ -78,7 +78,7 @@ class Calibration:
         region_name: str,
         adaptive_proposal: bool = True,
         initialisation_type: str = InitialisationTypes.LHS,
-        metropolis_init_rel_step_size: float = 0.25,
+        metropolis_init_rel_step_size: float = 0.1,
     ):
         self.app_name = app_name
         self.model_builder = model_builder  # a function that builds a new model without running it

@@ -247,6 +247,7 @@ class Parameters:
     rel_prop_symptomatic_experienced: Optional[float]
     haario_scaling_factor: float
     metropolis_init_rel_step_size: float
+    n_steps_fixed_proposal: int
     metropolis_initialisation_type: str
     # Modular parameters.
     time: Time

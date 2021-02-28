@@ -181,6 +181,7 @@ vaccination: null
 # Multiplier scaling the covariance matrix in the Haario Metropolis. 2.4 is the value recommended by Haario.
 haario_scaling_factor: 2.4 # Greater values increase jumping step size and reduce the acceptance ratio
 metropolis_init_rel_step_size: .1
+n_steps_fixed_proposal: 50
 metropolis_initialisation_type: "lhs"
 
 # Fake parameters used in calibration for negative binomial (need to be listed for validation to pass)

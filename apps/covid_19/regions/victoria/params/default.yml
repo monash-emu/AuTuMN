@@ -8,6 +8,7 @@ country:
 
 metropolis_initialisation_type: "current_params"
 metropolis_init_rel_step_size: 0.05
+n_steps_fixed_proposal: 250
 target_output_ratio: 0.2
 
 time:

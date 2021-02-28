@@ -79,6 +79,7 @@ class Calibration:
         adaptive_proposal: bool = True,
         initialisation_type: str = InitialisationTypes.LHS,
         metropolis_init_rel_step_size: float = 0.1,
+        n_steps_fixed_proposal: int = 50,
     ):
         self.app_name = app_name
         self.model_builder = model_builder  # a function that builds a new model without running it
@@ -86,6 +87,7 @@ class Calibration:
         self.priors = priors  # a list of dictionaries. Each dictionary describes the prior distribution for a parameter
         self.adaptive_proposal = adaptive_proposal
         self.metropolis_init_rel_step_size = metropolis_init_rel_step_size
+        self.n_steps_fixed_proposal = n_steps_fixed_proposal
 
         self.param_list = [self.priors[i]["param_name"] for i in range(len(self.priors))]
         # A list of dictionaries. Each dictionary describes a target
@@ -639,7 +641,7 @@ class Calibration:
 
         new_params_trans = []
         use_adaptive_proposal = (
-            self.adaptive_proposal and self.iter_num > ADAPTIVE_METROPOLIS["N_STEPS_FIXED_PROPOSAL"]
+            self.adaptive_proposal and self.iter_num > self.n_steps_fixed_proposal
         )
 
         if use_adaptive_proposal:

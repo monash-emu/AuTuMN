@@ -1,6 +1,6 @@
 case_detection.upper_asymptote: 0.7839711101737366
 case_detection.inflection_time: 180.8433366298104
-case_detection.max_gradient: 0.11520013041619553
+case_detection.shape: 0.11520013041619553
 case_detection.lower_asymptote: 0.18746431951538092
 clinical_stratification.props.hospital.multiplier: 1.317349184872076
 clinical_stratification.props.symptomatic.multiplier: 1.0447891396875093

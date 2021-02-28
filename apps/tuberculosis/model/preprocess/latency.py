@@ -49,7 +49,7 @@ def edit_adjustments_for_diabetes(
     future_diabetes_multiplier,
 ):
     diabetes_scale_up = tanh_based_scaleup(
-        max_gradient=0.05,
+        shape=0.05,
         inflection_time=1980,
         lower_asymptote=0.0,
         upper_asymptote=1.0

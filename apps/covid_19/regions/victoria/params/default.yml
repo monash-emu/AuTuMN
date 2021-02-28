@@ -69,7 +69,7 @@ victorian_clusters:
         behaviour:
           function_type: tanh
           parameters:
-            max_gradient: 0.262764
+            shape: 0.262764
             inflection_time: 197. # 15th July
             lower_asymptote: 0.2803973
             upper_asymptote: 0.4421819
@@ -90,7 +90,7 @@ victorian_clusters:
         face_coverings: # Mandatory face coverings
           function_type: tanh
           parameters:
-            max_gradient: 0.5261693
+            shape: 0.5261693
             inflection_time: 205.  # 23rd July
             lower_asymptote: 0.130469
             upper_asymptote: 0.9143849
@@ -147,7 +147,7 @@ victorian_clusters:
         behaviour:
           function_type: tanh
           parameters:
-            max_gradient: 0.262764
+            shape: 0.262764
             inflection_time: 197.  # 15th July
             lower_asymptote: 0.2803973
             upper_asymptote: 0.4421819
@@ -168,7 +168,7 @@ victorian_clusters:
         face_coverings:
           function_type: tanh
           parameters:
-            max_gradient: 0.5261693
+            shape: 0.5261693
             inflection_time: 215.  # 2nd August
             lower_asymptote: 0.130469
             upper_asymptote: 0.9143849

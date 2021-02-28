@@ -255,7 +255,7 @@ def stratify_by_organ(model, params):
 
     # define differential detection rates by organ status
     screening_rate_func = tanh_based_scaleup(
-        params["time_variant_tb_screening_rate"]["max_gradient"],
+        params["time_variant_tb_screening_rate"]["shape"],
         params["time_variant_tb_screening_rate"]["inflection_time"],
         params["time_variant_tb_screening_rate"]["lower_asymptote"],
         params["time_variant_tb_screening_rate"]["upper_asymptote"],

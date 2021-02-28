@@ -90,7 +90,7 @@ class EmpiricMicrodistancingParams(BaseModel):
 
 
 class TanhMicrodistancingParams(BaseModel):
-    max_gradient: float
+    shape: float
     inflection_time: float
     lower_asymptote: float
     upper_asymptote: float
@@ -158,7 +158,7 @@ class InfectionFatality(BaseModel):
 class CaseDetection(BaseModel):
     """Time variant detection of cases"""
 
-    max_gradient: float  # The shape parameter to the tanh-based curve
+    shape: float  # The shape parameter to the tanh-based curve
     inflection_time: float  # Point at which curve inflects
     lower_asymptote: float  # Starting value - lower asymptote for increasing function
     upper_asymptote: float  # End value - upper asymptote for increasing function

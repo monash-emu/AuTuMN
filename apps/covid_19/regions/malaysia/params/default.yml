@@ -25,7 +25,7 @@ mobility:
     behaviour:
       function_type: tanh
       parameters:
-        max_gradient: .05
+        shape: .05
         inflection_time: 300.
         lower_asymptote: 0.
         upper_asymptote: 0.1

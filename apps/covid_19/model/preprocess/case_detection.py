@@ -48,7 +48,7 @@ def build_detected_proportion_func(
     else:
         # Approach based on a hyperbolic tan function
         detected_proportion = tanh_based_scaleup(
-            case_detection.max_gradient,
+            case_detection.shape,
             case_detection.inflection_time,
             case_detection.lower_asymptote,
             case_detection.upper_asymptote,

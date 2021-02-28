@@ -37,7 +37,7 @@ def test_tanh_function():
                     # Get the function
                     tanh_function = \
                         tanh_based_scaleup(
-                            max_gradient=grad,
+                            shape=grad,
                             inflection_time=inflect_time,
                             lower_asymptote=lower_asymptote,
                             upper_asymptote=upper_asymptote,

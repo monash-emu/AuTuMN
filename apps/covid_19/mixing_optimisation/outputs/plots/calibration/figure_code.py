@@ -85,7 +85,7 @@ param_info = {
     },
     "sojourn.compartment_periods.icu_late": {"name": "time in ICU", "range": [9.0, 13.0]},
     "infection_fatality.multiplier": {"name": "IFR multiplier", "range": [0.8, 1.2]},
-    "case_detection.max_gradient": {"name": "detection (max gradient)", "range": [0.05, 0.1]},
+    "case_detection.shape": {"name": "detection (shape)", "range": [0.05, 0.1]},
     "case_detection.inflection_time": {"name": "detection (inflection)", "range": [100.0, 250.0]},
     "case_detection.upper_asymptote": {"name": "detection (prop_final)", "range": [0.10, 0.90]},
     "case_detection.lower_asymptote": {"name": "detection (prop_start)", "range": [0.0, 0.10]},
@@ -300,7 +300,7 @@ def get_country_posterior_detection_percentiles(country_param_values):
         else:
             lower_asymptote = 0.0
         my_func = tanh_based_scaleup(
-            country_param_values["case_detection.max_gradient"][i],
+            country_param_values["case_detection.shape"][i],
             country_param_values["case_detection.inflection_time"][i],
             lower_asymptote,
             country_param_values["case_detection.upper_asymptote"][i],

@@ -56,7 +56,7 @@ PRIORS = [
         "distri_params": [2000.0, 2020.0],
     },
     {
-        "param_name": "time_variant_tb_screening_rate.max_gradient",
+        "param_name": "time_variant_tb_screening_rate.shape",
         "distribution": "uniform",
         "distri_params": [0.07, 0.1],
     },

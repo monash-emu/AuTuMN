@@ -75,7 +75,7 @@ time_variant_tsr: # should always be > 0
   2017.: 0.8
 
 time_variant_tb_screening_rate:
-  max_gradient: .1 # The shape parameter to the tanh-based curve
+  shape: .1 # The shape parameter to the tanh-based curve
   inflection_time: 1990. # Point at which curve inflects
   lower_asymptote: 0. # Starting value - lower asymptote
   upper_asymptote: 0.4057634920539735

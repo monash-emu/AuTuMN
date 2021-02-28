@@ -14,7 +14,7 @@ PLOT_TEXT_DICT = {
     # TB model parameters
     "start_population_size": "initial population size",
     "progression_multiplier": "progression multiplier",
-    "time_variant_tb_screening_rate.max_gradient": "screening profile (max gradient)",
+    "time_variant_tb_screening_rate.shape": "screening profile (max gradient)",
     "time_variant_tb_screening_rate.inflection_time": "screening profile (inflection time), year",
     "time_variant_tb_screening_rate.upper_asymptote": "screening profile (final rate), per year",
     "user_defined_stratifications.location.adjustments.detection_rate.ebeye": "rel. screening rate (Ebeye)",

@@ -4,17 +4,17 @@ mobility:
     other_locations:
       append: true
       times:
-      - 426
+      - 433
       values:
       - - close_gap_to_1
         - 0.5
     work:
       append: true
       times:
-      - 426
+      - 433
       values:
       - - close_gap_to_1
         - 0.5
 parent: apps/covid_19/regions/davao_city/params/default.yml
 time:
-  start: 424
+  start: 431

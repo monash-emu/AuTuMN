@@ -4,11 +4,11 @@ mobility:
     behaviour:
       parameters:
         times:
-        - 425
-        - 426
+        - 432
+        - 433
         values:
         - 1.0
         - 0.5
 parent: apps/covid_19/regions/calabarzon/params/default.yml
 time:
-  start: 424
+  start: 431

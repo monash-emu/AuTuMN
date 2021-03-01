@@ -39,7 +39,7 @@ def build_outputs_table(models: List[StratifiedModel], run_id: int, chain_id=Non
     outputs_df = None
     for idx, model in enumerate(models):
         if type(model) is CompartmentalModel:
-            names = model.compartments
+            names = [str(c) for c in model.compartments]
         else:
             names = model.compartment_names
 

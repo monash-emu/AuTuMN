@@ -40,6 +40,7 @@ from .transformations import (
 
 from .constants import ADAPTIVE_METROPOLIS
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -440,7 +441,13 @@ class Calibration:
         return in_support
 
     def run_autumn_mcmc(
-        self, n_iterations: int, n_burned: int, n_chains: int, available_time, haario_scaling_factor, start_time=None
+        self,
+        n_iterations: int,
+        n_burned: int,
+        n_chains: int,
+        available_time,
+        haario_scaling_factor,
+        start_time=None,
     ):
         """
         Run our hand-rolled MCMC algoruthm to calibrate model parameters.
@@ -457,6 +464,7 @@ class Calibration:
         last_acceptance_quantity = None  # acceptance quantity is defined as loglike + logprior
         n_accepted = 0
         for i_run in range(int(n_iterations + n_burned)):
+
             # Propose new paramameter set.
             proposed_params_trans = self.propose_new_params_trans(
                 last_accepted_params_trans, haario_scaling_factor
@@ -542,15 +550,21 @@ class Calibration:
                     # Restart sampling from scratch
                     self.iter_num = 0
                     self.output.delete_stored_iterations()
-                    self.run_autumn_mcmc(n_iterations, n_burned, n_chains, available_time, haario_scaling_factor,
-                                         start_time)
+                    self.run_autumn_mcmc(
+                        n_iterations,
+                        n_burned,
+                        n_chains,
+                        available_time,
+                        haario_scaling_factor,
+                        start_time,
+                    )
 
     def reduce_proposal_step_size(self):
         """
         Halve the "jumping_sd" associated with each parameter during the pre-adaptive phase
         """
         for i in range(len(self.priors)):
-            self.priors[i]["jumping_sd"] /= 2.
+            self.priors[i]["jumping_sd"] /= 2.0
 
     def build_adaptive_covariance_matrix(self, haario_scaling_factor):
         scaling_factor = haario_scaling_factor ** 2 / len(self.priors)  # from Haario et al. 2001
@@ -722,9 +736,6 @@ class CalibrationOutputs:
         # List of dicts for tracking MCMC progress.
         self.mcmc_runs = []
         self.mcmc_params = []
-        # Model output data - list of DataFrames.
-        self.outputs = []
-        self.derived_outputs = []
 
         # Setup output directory
         project_dir = os.path.join(settings.OUTPUT_DATA_PATH, "calibrate", app_name, region_name)
@@ -742,6 +753,7 @@ class CalibrationOutputs:
 
         logger.info("Created data directory at %s", self.output_dir)
         os.makedirs(self.output_dir, exist_ok=True)
+        self.db = db.ParquetDatabase(self.output_db_path)
 
     def write_metadata(self, filename, data):
         file_path = os.path.join(self.output_dir, filename)
@@ -749,10 +761,10 @@ class CalibrationOutputs:
             yaml.dump(data, f)
 
     def delete_stored_iterations(self):
+        self.db.close()
+        self.db.delete_everything()
         self.mcmc_runs = []
         self.mcmc_params = []
-        self.outputs = []
-        self.derived_outputs = []
 
     def store_model_outputs(self, scenario: Scenario, iter_num: int):
         """
@@ -764,8 +776,8 @@ class CalibrationOutputs:
         derived_outputs_df = db.store.build_derived_outputs_table(
             [model], run_id=iter_num, chain_id=self.chain_id
         )
-        self.outputs.append(outputs_df)
-        self.derived_outputs.append(derived_outputs_df)
+        self.db.append_df(db.store.Table.OUTPUTS, outputs_df)
+        self.db.append_df(db.store.Table.DERIVED, derived_outputs_df)
 
     def store_mcmc_iteration(
         self,
@@ -811,17 +823,13 @@ class CalibrationOutputs:
             logger.info("No data to write to disk")
             return
 
+        # Close Parquet writer used to write data for outputs / derived outputs.
+        self.db.close()
+
         with Timer("Writing calibration data to disk."):
-            # try:
-            outputs_db = db.FeatherDatabase(self.output_db_path)
-            # Consolidate outputs and write to disk
-            outputs_df = pd.concat(self.outputs, copy=False, ignore_index=True)
-            derived_outputs_df = pd.concat(self.derived_outputs, copy=False, ignore_index=True)
-            outputs_db.dump_df(db.store.Table.OUTPUTS, outputs_df)
-            outputs_db.dump_df(db.store.Table.DERIVED, derived_outputs_df)
             # Write parameters
             mcmc_params_df = pd.DataFrame.from_dict(self.mcmc_params)
-            outputs_db.dump_df(db.store.Table.PARAMS, mcmc_params_df)
+            self.db.dump_df(db.store.Table.PARAMS, mcmc_params_df)
             # Calculate iterations weights, then write to disk
             weight = 0
             for mcmc_run in reversed(self.mcmc_runs):
@@ -831,7 +839,7 @@ class CalibrationOutputs:
                     weight = 0
 
             mcmc_runs_df = pd.DataFrame.from_dict(self.mcmc_runs)
-            outputs_db.dump_df(db.store.Table.MCMC, mcmc_runs_df)
+            self.db.dump_df(db.store.Table.MCMC, mcmc_runs_df)
 
 
 def get_random_seed(chain_index: int):

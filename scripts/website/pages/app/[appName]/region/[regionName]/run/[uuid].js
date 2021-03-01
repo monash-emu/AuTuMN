@@ -134,7 +134,7 @@ const DataTab = ({ files }) => {
 }
 
 const getFileName = (filename, path) => {
-  if (filename.endsWith('.feather')) {
+  if (filename.endsWith('.feather') || filename.endsWith('.parquet')) {
     let [chain, fname] = path.split('/').slice(-2)
     chain = chain.replace('-', ' ')
     return (

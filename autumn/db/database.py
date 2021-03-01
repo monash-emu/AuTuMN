@@ -3,6 +3,8 @@ import logging
 from abc import abstractmethod, ABC
 from typing import List, Dict, Any
 
+import pyarrow
+import pyarrow.parquet as parquet
 import pandas as pd
 from sqlalchemy import create_engine
 from pandas.util import hash_pandas_object
@@ -87,7 +89,10 @@ class FileDatabase(BaseDatabase, ABC):
             os.remove(fpath)
 
     def dump_df(self, table_name: str, df: pd.DataFrame):
-        """Writes a dataframe to a table. Appends if the table already exists."""
+        """
+        Writes a dataframe to a table. Appends if the table already exists.
+        It is much more memory efficient to use append_df if possible (eg. ParquetDatabase).
+        """
         fpath = os.path.join(self.database_path, f"{table_name}{self.extension}")
         write_df = df
         if os.path.exists(fpath):
@@ -108,20 +113,17 @@ class FileDatabase(BaseDatabase, ABC):
     ) -> pd.DataFrame:
         """Returns a dataframe"""
         fpath = os.path.join(self.database_path, f"{table_name}{self.extension}")
-        df = self.read_file(fpath)
-        if columns:
-            df = df[columns]
-
+        df = self.read_file(fpath, columns)
         for k, v in conditions.items():
             df = df[df[k] == v]
 
-        if columns or conditions:
+        if conditions:
             df = df.copy()
 
         return df
 
     @abstractmethod
-    def read_file(self, path: str) -> pd.DataFrame:
+    def read_file(self, path: str, columns: List[str]) -> pd.DataFrame:
         """How to read a file from disk"""
 
     @abstractmethod
@@ -137,13 +139,56 @@ class FeatherDatabase(FileDatabase):
 
     extension = ".feather"
 
-    def read_file(self, path: str) -> pd.DataFrame:
+    def read_file(self, path: str, columns: List[str]) -> pd.DataFrame:
         """How to read a file from disk"""
-        return pd.read_feather(path)
+        return pd.read_feather(path, columns=columns or None)
 
     def write_file(self, path: str, df: pd.DataFrame):
         """How to write a file to disk"""
         df.to_feather(path)
+
+
+class ParquetDatabase(FileDatabase):
+    """
+    Interface to access data stored in a Parquet "database".
+    https://arrow.apache.org/docs/python/feather.html
+    """
+
+    extension = ".parquet"
+
+    def __init__(self, database_path: str):
+        super().__init__(database_path)
+        self.writers = {}
+
+    def read_file(self, path: str, columns: List[str]) -> pd.DataFrame:
+        """How to read a file from disk"""
+        return pd.read_parquet(path, columns=columns or None)
+
+    def write_file(self, path: str, df: pd.DataFrame):
+        """How to write a file to disk"""
+        df.to_parquet(path)
+
+    def append_df(self, table_name: str, df: pd.DataFrame):
+        """
+        Writes a dataframe to a table. Appends if the table already exists.
+        This is more memory efficient than using FileDatabase.dump_df, but you must call
+        close() when you're done (probably).
+        """
+        table = pyarrow.Table.from_pandas(df)
+        fpath = os.path.join(self.database_path, f"{table_name}{self.extension}")
+        if not self.writers.get(table_name):
+            self.writers[table_name] = parquet.ParquetWriter(fpath, table.schema)
+
+        self.writers[table_name].write_table(table)
+
+    def close(self):
+        """
+        Close writers after appending.
+        """
+        for writer in self.writers.values():
+            writer.close()
+
+        self.writers = {}
 
 
 class Database(BaseDatabase):
@@ -234,7 +279,7 @@ class Database(BaseDatabase):
         return df
 
 
-DATABASE_TYPES = [Database, FeatherDatabase]
+DATABASE_TYPES = [Database, FeatherDatabase, ParquetDatabase]
 
 
 def get_database(database_path: str) -> BaseDatabase:

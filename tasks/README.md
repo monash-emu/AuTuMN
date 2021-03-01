@@ -12,7 +12,7 @@ python -m tasks
 ### Run a calibration
 
 ```bash
-RUN_ID="covid_19/malaysia/111111111/aaaaaaa"
+RUN_ID="covid_19/malaysia/111111111/bbbbbbb"
 RUN_ID="tuberculosis/marshall-islands/111111111/aaaaaaa"
 
 

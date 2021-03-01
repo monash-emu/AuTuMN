@@ -380,6 +380,7 @@ class Calibration:
         :param n_burned: number of burned iterations before effective sampling
         :param n_chains: number of chains to be run
         :param available_time: maximal simulation time allowed (in seconds)
+        :param haario_scaling_factor: multiplies the covariance matrix used during adaptive sampling
         """
         self.run_mode = run_mode
         if run_mode not in CalibrationMode.MODES:
@@ -439,12 +440,13 @@ class Calibration:
         return in_support
 
     def run_autumn_mcmc(
-        self, n_iterations: int, n_burned: int, n_chains: int, available_time, haario_scaling_factor
+        self, n_iterations: int, n_burned: int, n_chains: int, available_time, haario_scaling_factor, start_time=None
     ):
         """
         Run our hand-rolled MCMC algoruthm to calibrate model parameters.
         """
-        start_time = time()
+        if start_time is None:
+            start_time = time()
         if n_chains > 1:
             msg = "Autumn MCMC method does not support multiple-chain runs at the moment."
             raise ValueError(msg)
@@ -453,6 +455,7 @@ class Calibration:
 
         last_accepted_params_trans = None
         last_acceptance_quantity = None  # acceptance quantity is defined as loglike + logprior
+        n_accepted = 0
         for i_run in range(int(n_iterations + n_burned)):
             # Propose new paramameter set.
             proposed_params_trans = self.propose_new_params_trans(
@@ -503,6 +506,7 @@ class Calibration:
             if accept:
                 last_accepted_params_trans = proposed_params_trans
                 last_acceptance_quantity = proposed_acceptance_quantity
+                n_accepted += 1
 
             self.update_mcmc_trace(last_accepted_params_trans)
 
@@ -529,6 +533,24 @@ class Calibration:
                     msg = f"Stopping MCMC simulation after {iters_completed} iterations because of {available_time}s time limit"
                     logger.info(msg)
                     break
+
+            # check that the pre-adaptive phase ended with a decent acceptance ratio
+            if self.adaptive_proposal and self.iter_num == self.n_steps_fixed_proposal:
+                acceptance_ratio = n_accepted / self.iter_num
+                if acceptance_ratio < ADAPTIVE_METROPOLIS["MIN_ACCEPTANCE_RATIO"]:
+                    self.reduce_proposal_step_size()
+                    # Restart sampling from scratch
+                    self.iter_num = 0
+                    self.output.delete_stored_iterations()
+                    self.run_autumn_mcmc(n_iterations, n_burned, n_chains, available_time, haario_scaling_factor,
+                                         start_time)
+
+    def reduce_proposal_step_size(self):
+        """
+        Halve the "jumping_sd" associated with each parameter during the pre-adaptive phase
+        """
+        for i in range(len(self.priors)):
+            self.priors[i]["jumping_sd"] /= 2.
 
     def build_adaptive_covariance_matrix(self, haario_scaling_factor):
         scaling_factor = haario_scaling_factor ** 2 / len(self.priors)  # from Haario et al. 2001
@@ -654,8 +676,7 @@ class Calibration:
                 new_params_trans = sample_from_adaptive_gaussian(
                     prev_params_trans, adaptive_cov_matrix
                 )
-
-        if not use_adaptive_proposal:
+        else:
             for i, prior_dict in enumerate(self.priors):
                 sample = np.random.normal(
                     loc=prev_params_trans[i], scale=prior_dict["jumping_sd"], size=1
@@ -728,6 +749,13 @@ class CalibrationOutputs:
         file_path = os.path.join(self.output_dir, filename)
         with open(file_path, "w") as f:
             yaml.dump(data, f)
+
+    def delete_stored_iterations(self):
+        self.last_accepted_run = 0
+        self.mcmc_runs = []
+        self.mcmc_params = []
+        self.outputs = []
+        self.derived_outputs = []
 
     def store_model_outputs(self, scenario: Scenario, iter_num: int):
         """

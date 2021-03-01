@@ -719,8 +719,6 @@ class CalibrationOutputs:
 
     def __init__(self, chain_id: int, app_name: str, region_name: str):
         self.chain_id = chain_id
-        # Track last accepted run for weight calculations.
-        self.last_accepted_run = 0
         # List of dicts for tracking MCMC progress.
         self.mcmc_runs = []
         self.mcmc_params = []
@@ -751,7 +749,6 @@ class CalibrationOutputs:
             yaml.dump(data, f)
 
     def delete_stored_iterations(self):
-        self.last_accepted_run = 0
         self.mcmc_runs = []
         self.mcmc_params = []
         self.outputs = []

@@ -113,10 +113,10 @@ def process_unstratified_parameter_values(params, implement_acf, implement_ltbi_
         detection_rate_func = None
     else:
         screening_rate_func = tanh_based_scaleup(
-            params["time_variant_tb_screening_rate"]["maximum_gradient"],
-            params["time_variant_tb_screening_rate"]["max_change_time"],
-            params["time_variant_tb_screening_rate"]["start_value"],
-            params["time_variant_tb_screening_rate"]["end_value"],
+            params["time_variant_tb_screening_rate"]["shape"],
+            params["time_variant_tb_screening_rate"]["inflection_time"],
+            params["time_variant_tb_screening_rate"]["lower_asymptote"],
+            params["time_variant_tb_screening_rate"]["upper_asymptote"],
         )
 
         def detection_rate_func(t):

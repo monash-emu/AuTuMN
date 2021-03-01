@@ -17,9 +17,9 @@ def test_microdistancing__with_tanh_func():
         "foo": {
             "function_type": "tanh",
             "parameters": {
-                "b": -0.05,
-                "c": 275,
-                "sigma": 0.6,
+                "shape": -0.05,
+                "inflection_time": 275,
+                "lower_asymptote": 0.6,
                 "upper_asymptote": 1,
             },
             "locations": LOCATIONS,
@@ -65,9 +65,9 @@ def test_microdistancing__with_tanh_func_and_square_mobility_effect():
         "foo": {
             "function_type": "tanh",
             "parameters": {
-                "b": -0.05,
-                "c": 275,
-                "sigma": 0.6,
+                "shape": -0.05,
+                "inflection_time": 275,
+                "lower_asymptote": 0.6,
                 "upper_asymptote": 1,
             },
             "locations": LOCATIONS,
@@ -90,9 +90,9 @@ def test_microdistancing__with_tanh_func_and_adjuster():
         "foo": {
             "function_type": "tanh",
             "parameters": {
-                "b": -0.05,
-                "c": 275,
-                "sigma": 0.6,
+                "shape": -0.05,
+                "inflection_time": 275,
+                "lower_asymptote": 0.6,
                 "upper_asymptote": 1,
             },
             "locations": LOCATIONS,

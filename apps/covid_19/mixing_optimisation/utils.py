@@ -39,22 +39,22 @@ def get_prior_distributions_for_opti():
             "distri_params": [0.5, 3.8],  # 3.8 to match the highest value found in Levin et al.
         },
         {
-            "param_name": "case_detection.start_value",
+            "param_name": "case_detection.lower_asymptote",
             "distribution": "uniform",
             "distri_params": [0.0, 0.30],
         },
         {
-            "param_name": "case_detection.maximum_gradient",
+            "param_name": "case_detection.shape",
             "distribution": "uniform",
             "distri_params": [0.03, 0.15],
         },
         {
-            "param_name": "case_detection.max_change_time",
+            "param_name": "case_detection.inflection_time",
             "distribution": "uniform",
             "distri_params": [100, 250],
         },
         {
-            "param_name": "case_detection.end_value",
+            "param_name": "case_detection.upper_asymptote",
             "distribution": "uniform",
             "distri_params": [0.10, 0.99],
         },
@@ -89,7 +89,7 @@ def get_prior_distributions_for_opti():
         },
         # Micro-distancing
         {
-            "param_name": "mobility.microdistancing.behaviour.parameters.c",
+            "param_name": "mobility.microdistancing.behaviour.parameters.inflection_time",
             "distribution": "uniform",
             "distri_params": [60, 130],
         },
@@ -99,12 +99,12 @@ def get_prior_distributions_for_opti():
             "distri_params": [0.25, 0.80],
         },
         {
-            "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.c",
+            "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.inflection_time",
             "distribution": "uniform",
             "distri_params": [130, 250],
         },
         {
-            "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.sigma",
+            "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.lower_asymptote",
             "distribution": "uniform",
             "distri_params": [0.4, 1.0],
         },

@@ -25,9 +25,9 @@ mobility:
     behaviour:
       function_type: tanh
       parameters:
-        b: .05
-        c: 300.
-        sigma: 0.
+        shape: .05
+        inflection_time: 300.
+        lower_asymptote: 0.
         upper_asymptote: 0.1
       locations:
         - other_locations

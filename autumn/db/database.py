@@ -139,7 +139,7 @@ class FeatherDatabase(FileDatabase):
 
     extension = ".feather"
 
-    def read_file(self, path: str, columns: List[str]) -> pd.DataFrame:
+    def read_file(self, path: str, columns: List[str] = []) -> pd.DataFrame:
         """How to read a file from disk"""
         return pd.read_feather(path, columns=columns or None)
 
@@ -160,7 +160,7 @@ class ParquetDatabase(FileDatabase):
         super().__init__(database_path)
         self.writers = {}
 
-    def read_file(self, path: str, columns: List[str]) -> pd.DataFrame:
+    def read_file(self, path: str, columns: List[str] = []) -> pd.DataFrame:
         """How to read a file from disk"""
         return pd.read_parquet(path, columns=columns or None)
 

@@ -7,6 +7,7 @@ from autumn import plots, db
 from utils.s3 import upload_to_run_s3
 from utils.parallel import run_parallel_tasks
 from utils.timer import Timer
+from utils.fs import recreate_dir
 from settings import REMOTE_BASE_DIR
 from tasks.utils import get_app_region, set_logging_config
 
@@ -27,10 +28,7 @@ def calibrate_task(run_id: str, runtime: float, num_chains: int, verbose: bool):
     # Set up directories for plots and output data.
     with Timer(f"Creating calibration directories"):
         for dirpath in CALIBRATE_DIRS:
-            if os.path.exists(dirpath):
-                shutil.rmtree(dirpath)
-
-            os.makedirs(dirpath)
+            recreate_dir(dirpath)
 
     # Run the actual calibrations
     with Timer(f"Running {num_chains} calibration chains"):

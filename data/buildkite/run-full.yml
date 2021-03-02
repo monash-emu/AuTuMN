@@ -27,7 +27,7 @@ steps:
     required: true
     select: Use latest code for model run
   - default: 'yes'
-    hint: Should this task trigger a full model run when it is done?
+    hint: Should this task trigger a PowerBI post processing job when it is done?
     key: trigger-downstream
     options:
     - label: 'Yes'
@@ -35,7 +35,7 @@ steps:
     - label: 'No'
       value: 'no'
     required: true
-    select: Trigger full model run
+    select: Trigger PowerBI post processing job
   - default: 'yes'
     hint: Is 1/3 of the price but sometimes randomly fails.
     key: spot-instance

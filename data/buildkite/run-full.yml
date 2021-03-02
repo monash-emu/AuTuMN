@@ -10,6 +10,11 @@ steps:
     key: burn-in
     required: true
     text: Burn-in
+  - default: '200'
+    hint: How many accepted runs per chain should be sampled for uncertainty calcs?
+    key: sample-size
+    required: true
+    text: Sample size
   - default: 'no'
     hint: Should this task use the same Git commit as the calibration, or use the
       latest code instead?

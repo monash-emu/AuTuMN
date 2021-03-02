@@ -5,11 +5,14 @@ import apps.tuberculosis.regions.marshall_islands.outputs.posteriors as pos
 import apps.tuberculosis.regions.marshall_islands.outputs.counterfactual as ctf
 import apps.tuberculosis.regions.marshall_islands.outputs.elimination as elm
 import apps.tuberculosis.regions.marshall_islands.outputs.diabetes as dia
+import apps.tuberculosis.regions.marshall_islands.outputs.get_output_numbers as gon
 
 
 def make_all_rmi_plots():
-
     get_format()
+
+    # Print outputs as numbers
+    gon.main()
 
     # calibration outputs
     cal.main()

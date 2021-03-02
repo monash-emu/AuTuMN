@@ -8,6 +8,9 @@ from .regions.davao_city import davao_city_region
 from .regions.malaysia import malaysia_region
 from .regions.sabah import sabah_region
 from .regions.selangor import selangor_region
+from .regions.johor import johor_region
+from .regions.penang import penang_region
+from .regions.kuala_lumpur import kuala_lumpur_region
 from .regions.united_kingdom import united_kingdom_region
 from .regions.sweden import sweden_region
 from .regions.spain import spain_region
@@ -44,6 +47,9 @@ app.register(victoria_region)
 app.register(malaysia_region)
 app.register(sabah_region)
 app.register(selangor_region)
+app.register(johor_region)
+app.register(penang_region)
+app.register(kuala_lumpur_region)
 
 # Philippines regions
 app.register(philippines_region)

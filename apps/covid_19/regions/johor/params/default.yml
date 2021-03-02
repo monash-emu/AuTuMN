@@ -1,0 +1,18 @@
+description: BASELINE
+parent: apps/covid_19/regions/malaysia/params/default.yml
+
+importation: null
+contact_rate: 0.034
+
+time:
+  start: 264.
+
+population:
+  region: Selangor
+  year: 2019
+
+mobility:
+  microdistancing:
+    behaviour:
+      parameters:
+        upper_asymptote: 0.2

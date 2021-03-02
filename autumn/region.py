@@ -28,6 +28,9 @@ class Region:
     SABAH = "sabah"
     SELANGOR = "selangor"
     DAVAO_CITY = "davao-city"
+    JOHOR = "johor"
+    PENANG = "penang"
+    KUALA_LUMPUR = "kuala_lumpur"
 
     REGIONS = [
         AUSTRALIA,
@@ -58,6 +61,9 @@ class Region:
         MARSHALL_ISLANDS,
         SABAH,
         SELANGOR,
+        JOHOR,
+        PENANG,
+        KUALA_LUMPUR,
         DAVAO_CITY,
     ]
 

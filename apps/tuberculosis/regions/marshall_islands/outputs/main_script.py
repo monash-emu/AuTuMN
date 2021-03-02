@@ -7,22 +7,24 @@ import apps.tuberculosis.regions.marshall_islands.outputs.elimination as elm
 import apps.tuberculosis.regions.marshall_islands.outputs.diabetes as dia
 
 
-get_format()
+def make_all_rmi_plots():
 
-# calibration outputs
-cal.main()
+    get_format()
 
-# prior table
-pri.main()
+    # calibration outputs
+    cal.main()
 
-# posterior table
-pos.main()
+    # prior table
+    pri.main()
 
-# counterfactual outputs
-ctf.main()
+    # posterior table
+    pos.main()
 
-# elimination outputs
-elm.main()
+    # counterfactual outputs
+    ctf.main()
 
-# diabetes plot
-dia.main()
+    # elimination outputs
+    elm.main()
+
+    # diabetes plot
+    dia.main()

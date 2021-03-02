@@ -2,7 +2,7 @@ description: BASELINE
 parent: apps/covid_19/params.yml
 
 importation: null
-contact_rate: 0.0225
+contact_rate: 0.027
 seasonal_force: 0.
 infectious_seed: 100.
 
@@ -14,6 +14,12 @@ time:
 
 country:
   iso3: MYS
+
+clinical_stratification:
+  non_sympt_infect_multiplier: 0.25
+  props:
+    symptomatic:
+      multiplier: 1.5
 
 testing_to_detection:
   assumed_tests_parameter: 1.e-04

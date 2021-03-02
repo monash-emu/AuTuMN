@@ -25,7 +25,7 @@ PAR_PRIORS += [
     {
         "param_name": "contact_rate",
         "distribution": "uniform",
-        "distri_params": [0.03, 0.04],
+        "distri_params": [0.03, 0.05],
     },
     {
         "param_name": "infectious_seed",
@@ -36,7 +36,7 @@ PAR_PRIORS += [
     {
         "param_name": "testing_to_detection.assumed_cdr_parameter",
         "distribution": "uniform",
-        "distri_params": [0.025, 0.1],
+        "distri_params": [0.04, 0.12],
     },
     # Microdistancing
     {
@@ -54,6 +54,16 @@ PAR_PRIORS += [
         "param_name": "clinical_stratification.icu_prop",
         "distribution": "uniform",
         "distri_params": [0.12, 0.25],
+    },
+    {
+        "param_name": "clinical_stratification.non_sympt_infect_multiplier",
+        "distribution": "uniform",
+        "distri_params": [0.15, 0.4],
+    },
+    {
+        "param_name": "clinical_stratification.props.symptomatic.multiplier",
+        "distribution": "uniform",
+        "distri_params": [0.8, 2.],
     },
 ]
 

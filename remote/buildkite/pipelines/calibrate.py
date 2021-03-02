@@ -15,11 +15,11 @@ def get_region_options():
 
     covid_options = [
         {"label": n.replace("-", " ").title() + " (COVID)", "value": f"covid_19:{n}"}
-        for n in covid_19.app.region_names
+        for n in sorted(covid_19.app.region_names)
     ]
     tb_options = [
         {"label": n.replace("-", " ").title() + " (TB)", "value": f"tuberculosis:{n}"}
-        for n in tuberculosis.app.region_names
+        for n in sorted(tuberculosis.app.region_names)
     ]
     return covid_options + tb_options
 

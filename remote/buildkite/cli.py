@@ -89,7 +89,7 @@ def calibrate():
             meta={
                 fp.run_id_field.key: run_id,
                 fp.burn_in_field.key: burn_in,
-                fp.sample_size_field: sample_size,
+                fp.sample_size_field.key: sample_size,
                 fp.use_latest_code_field.key: fp.use_latest_code_field.default,
                 fp.trigger_field.key: fp.trigger_field.get_option(trigger_downstream),
                 fp.spot_field.key: fp.spot_field.get_option(is_spot),

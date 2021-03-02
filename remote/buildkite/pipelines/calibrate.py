@@ -6,7 +6,7 @@ from remote.buildkite.buildkite import (
     SelectInputField,
     BooleanInputField,
 )
-from .full import burn_in_field
+from .full import burn_in_field, sample_size_field
 
 
 def get_region_options():
@@ -15,11 +15,11 @@ def get_region_options():
 
     covid_options = [
         {"label": n.replace("-", " ").title() + " (COVID)", "value": f"covid_19:{n}"}
-        for n in covid_19.app.region_names
+        for n in sorted(covid_19.app.region_names)
     ]
     tb_options = [
         {"label": n.replace("-", " ").title() + " (TB)", "value": f"tuberculosis:{n}"}
-        for n in tuberculosis.app.region_names
+        for n in sorted(tuberculosis.app.region_names)
     ]
     return covid_options + tb_options
 
@@ -73,6 +73,7 @@ fields = [
     branch_field,
     runtime_field,
     burn_in_field,
+    sample_size_field,
     trigger_field,
     spot_field,
 ]

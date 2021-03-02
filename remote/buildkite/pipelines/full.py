@@ -20,6 +20,13 @@ burn_in_field = TextInputField(
     type=int,
     default=500,
 )
+sample_size_field = TextInputField(
+    key="sample-size",
+    title="Sample size",
+    hint="How many accepted runs per chain should be sampled for uncertainty calcs?",
+    type=int,
+    default=200,
+)
 use_latest_code_field = BooleanInputField(
     key="use-latest-code",
     title="Use latest code for model run",
@@ -29,8 +36,8 @@ use_latest_code_field = BooleanInputField(
 )
 trigger_field = BooleanInputField(
     key="trigger-downstream",
-    title="Trigger full model run",
-    hint="Should this task trigger a full model run when it is done?",
+    title="Trigger PowerBI post processing job",
+    hint="Should this task trigger a PowerBI post processing job when it is done?",
     type=bool,
     default="yes",
 )
@@ -44,6 +51,7 @@ spot_field = BooleanInputField(
 fields = [
     run_id_field,
     burn_in_field,
+    sample_size_field,
     use_latest_code_field,
     trigger_field,
     spot_field,

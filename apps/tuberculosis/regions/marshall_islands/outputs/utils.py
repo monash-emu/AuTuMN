@@ -44,6 +44,8 @@ def get_format():
 
 def save_figure(filename, figure_path):
     png_path = os.path.join(figure_path, f"{filename}.png")
+    png_path_lowres = os.path.join(figure_path, f"{filename}_low_res.png")
     pdf_path = os.path.join(figure_path, f"{filename}.pdf")
     pyplot.savefig(png_path, dpi=300)
+    pyplot.savefig(png_path_lowres, dpi=200)
     pyplot.savefig(pdf_path)

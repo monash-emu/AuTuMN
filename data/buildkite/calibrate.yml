@@ -4,58 +4,58 @@ steps:
   - hint: Which model do you want to run?
     key: model-name
     options:
-    - label: North Metro (COVID)
-      value: covid_19:north-metro
-    - label: South East Metro (COVID)
-      value: covid_19:south-east-metro
-    - label: South Metro (COVID)
-      value: covid_19:south-metro
-    - label: West Metro (COVID)
-      value: covid_19:west-metro
     - label: Barwon South West (COVID)
       value: covid_19:barwon-south-west
-    - label: Gippsland (COVID)
-      value: covid_19:gippsland
-    - label: Hume (COVID)
-      value: covid_19:hume
-    - label: Loddon Mallee (COVID)
-      value: covid_19:loddon-mallee
-    - label: Grampians (COVID)
-      value: covid_19:grampians
-    - label: Victoria (COVID)
-      value: covid_19:victoria
-    - label: Malaysia (COVID)
-      value: covid_19:malaysia
-    - label: Sabah (COVID)
-      value: covid_19:sabah
-    - label: Selangor (COVID)
-      value: covid_19:selangor
-    - label: Philippines (COVID)
-      value: covid_19:philippines
-    - label: Manila (COVID)
-      value: covid_19:manila
+    - label: Belgium (COVID)
+      value: covid_19:belgium
     - label: Calabarzon (COVID)
       value: covid_19:calabarzon
     - label: Central Visayas (COVID)
       value: covid_19:central-visayas
     - label: Davao City (COVID)
       value: covid_19:davao-city
-    - label: Belgium (COVID)
-      value: covid_19:belgium
-    - label: United Kingdom (COVID)
-      value: covid_19:united-kingdom
-    - label: Italy (COVID)
-      value: covid_19:italy
     - label: France (COVID)
       value: covid_19:france
-    - label: Sweden (COVID)
-      value: covid_19:sweden
+    - label: Gippsland (COVID)
+      value: covid_19:gippsland
+    - label: Grampians (COVID)
+      value: covid_19:grampians
+    - label: Hume (COVID)
+      value: covid_19:hume
+    - label: Italy (COVID)
+      value: covid_19:italy
+    - label: Loddon Mallee (COVID)
+      value: covid_19:loddon-mallee
+    - label: Malaysia (COVID)
+      value: covid_19:malaysia
+    - label: Manila (COVID)
+      value: covid_19:manila
+    - label: North Metro (COVID)
+      value: covid_19:north-metro
+    - label: Philippines (COVID)
+      value: covid_19:philippines
+    - label: Sabah (COVID)
+      value: covid_19:sabah
+    - label: Selangor (COVID)
+      value: covid_19:selangor
+    - label: South East Metro (COVID)
+      value: covid_19:south-east-metro
+    - label: South Metro (COVID)
+      value: covid_19:south-metro
     - label: Spain (COVID)
       value: covid_19:spain
-    - label: Philippines (TB)
-      value: tuberculosis:philippines
+    - label: Sweden (COVID)
+      value: covid_19:sweden
+    - label: United Kingdom (COVID)
+      value: covid_19:united-kingdom
+    - label: Victoria (COVID)
+      value: covid_19:victoria
+    - label: West Metro (COVID)
+      value: covid_19:west-metro
     - label: Marshall Islands (TB)
       value: tuberculosis:marshall-islands
+    - label: Philippines (TB)
+      value: tuberculosis:philippines
     required: true
     select: Model Region
   - default: '7'
@@ -78,6 +78,11 @@ steps:
     key: burn-in
     required: true
     text: Burn-in
+  - default: '200'
+    hint: How many accepted runs per chain should be sampled for uncertainty calcs?
+    key: sample-size
+    required: true
+    text: Sample size
   - default: 'yes'
     hint: Should this task trigger a full model run when it is done?
     key: trigger-downstream

@@ -152,14 +152,15 @@ def run_calibrate(job, app, region, chains, runtime, branch, is_spot, dry):
 @click.option("--job", type=str, required=True)
 @click.option("--run", type=str, required=True)
 @click.option("--burn-in", type=int, required=True)
+@click.option("--sample", type=int, required=True)
 @click.option("--latest-code", is_flag=True)
 @click.option("--branch", type=str, default="master")
 @click.option("--spot", is_flag=True)
-def run_full_model_cli(job, run, burn_in, latest_code, branch, spot):
-    run_full_model(job, run, burn_in, latest_code, branch, spot)
+def run_full_model_cli(job, run, burn_in, sample, latest_code, branch, spot):
+    run_full_model(job, run, burn_in, sample, latest_code, branch, spot)
 
 
-def run_full_model(job, run, burn_in, latest_code, branch, is_spot):
+def run_full_model(job, run, burn_in, sample, latest_code, branch, is_spot):
     """
     Run the full models based off an MCMC calibration on an AWS server.
     """
@@ -168,6 +169,7 @@ def run_full_model(job, run, burn_in, latest_code, branch, is_spot):
     kwargs = {
         "run_id": run,
         "burn_in": burn_in,
+        "sample": sample,
         "use_latest_code": latest_code,
         "branch": branch,
     }

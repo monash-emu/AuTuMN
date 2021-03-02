@@ -9,10 +9,9 @@
 
 
 ## Generating the output files
-Run the following script: "apps/tuberculosis/regions/marshall_islands/outputs/main_script.py".
+Run the following command from a prompt: python -m apps plotrmi
 
 All the figures and tables will be available from "apps/tuberculosis/regions/marshall_islands/outputs/figures". 
-
 
 # Scenario list
 The scenarios indexing should follow the definitions presented in ""apps/tuberculosis/regions/marshall_islands/README.md".

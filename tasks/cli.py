@@ -75,9 +75,10 @@ def run_calibrate(run, chains, runtime, verbose):
 @cli.command("full")
 @click.option("--run", type=str, required=True)
 @click.option("--burn", type=int, required=True)
+@click.option("--sample", type=int, required=True)
 @click.option("--verbose", is_flag=True)
-def run_full_models(run, burn, verbose):
-    full_model_run_task(run, burn, not verbose)
+def run_full_models(run, burn, sample, verbose):
+    full_model_run_task(run, burn, sample, not verbose)
 
 
 @cli.command("powerbi")

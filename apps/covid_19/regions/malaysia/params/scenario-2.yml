@@ -9,4 +9,4 @@ vaccination:
   roll_out_function:
     coverage: 0.7
     start_time: 432.
-    end_time: 499.
+    end_time: 513.

@@ -6,7 +6,7 @@ from remote.buildkite.buildkite import (
     SelectInputField,
     BooleanInputField,
 )
-from .full import burn_in_field
+from .full import burn_in_field, sample_size_field
 
 
 def get_region_options():
@@ -73,6 +73,7 @@ fields = [
     branch_field,
     runtime_field,
     burn_in_field,
+    sample_size_field,
     trigger_field,
     spot_field,
 ]

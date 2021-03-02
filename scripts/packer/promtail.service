@@ -7,7 +7,7 @@ After=network.target
 [Service]
 Type=simple
 User=root
-ExecStart=/usr/local/bin/promtail -config.file /etc/promtail.yml -config.expand-env
+ExecStart=/usr/local/bin/promtail -config.file /etc/promtail.yml
 
 [Install]
 WantedBy=multi-user.target

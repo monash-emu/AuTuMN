@@ -54,6 +54,7 @@ def calibrate():
     chains = calibrate_pipeline.chains_field.get_value()
     runtime = calibrate_pipeline.runtime_field.get_value()
     burn_in = calibrate_pipeline.burn_in_field.get_value()
+    sample_size = calibrate_pipeline.sample_size_field.get_value()
     branch = calibrate_pipeline.branch_field.get_value()
     trigger_downstream = calibrate_pipeline.trigger_field.get_value()
     is_spot = calibrate_pipeline.spot_field.get_value()
@@ -88,6 +89,7 @@ def calibrate():
             meta={
                 fp.run_id_field.key: run_id,
                 fp.burn_in_field.key: burn_in,
+                fp.sample_size_field: sample_size,
                 fp.use_latest_code_field.key: fp.use_latest_code_field.default,
                 fp.trigger_field.key: fp.trigger_field.get_option(trigger_downstream),
                 fp.spot_field.key: fp.spot_field.get_option(is_spot),
@@ -105,6 +107,7 @@ def full():
     build_number = os.environ["BUILDKITE_BUILD_NUMBER"]
     run_id = full_pipeline.run_id_field.get_value()
     burn_in = full_pipeline.burn_in_field.get_value()
+    sample_size = full_pipeline.sample_size_field.get_value()
     use_latest_code = full_pipeline.use_latest_code_field.get_value()
     trigger_downstream = full_pipeline.trigger_field.get_value()
     is_spot = full_pipeline.spot_field.get_value()
@@ -118,6 +121,7 @@ def full():
         job=job_name,
         run=run_id,
         burn_in=burn_in,
+        sample=sample_size,
         latest_code=use_latest_code,
         branch="master",
         is_spot=is_spot,

@@ -17,6 +17,8 @@ cat /etc/environment
 # Move uploaded files to the right place.
 mv /tmp/promtail.yml /etc/promtail.yml
 mv /tmp/promtail.service /etc/systemd/system/promtail.service
+# Insert envar into promtail config.
+sed -i "s/\${GCLOUD_API_KEY}/$GCLOUD_API_KEY/g" /etc/promtail.yml
 
 # Set timezone to Melbourne
 echo ">>> Setting timezone to Melbourne"
@@ -49,6 +51,7 @@ curl -O -L  $PROMTAIL_EXECUTABLE
 unzip promtail-linux-amd64.zip
 mv promtail-linux-amd64 /usr/local/bin/promtail
 chmod a+x /usr/local/bin/promtail
+
 systemctl enable promtail.service
 
 # Get source code

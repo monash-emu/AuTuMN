@@ -54,7 +54,9 @@ def run_powerbi(instance, run_id: str, branch: str):
         logger.info("PowerBI processing completed for %s", run_id)
 
 
-def run_full_model(instance, run_id: str, burn_in: int, use_latest_code: bool, branch: str):
+def run_full_model(
+    instance, run_id: str, burn_in: int, sample: int, use_latest_code: bool, branch: str
+):
     """Run full model job on the remote server"""
     run_id = run_id.lower()
     msg = "Running full models for run %s burn-in %s on AWS instance %s"
@@ -73,6 +75,7 @@ def run_full_model(instance, run_id: str, burn_in: int, use_latest_code: bool, b
         pipeline_args = {
             "run": run_id,
             "burn": burn_in,
+            "sample": sample,
         }
         run_task_pipeline(conn, pipeline_name, pipeline_args)
         logger.info("Full model runs completed for %s", run_id)

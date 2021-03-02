@@ -17,10 +17,10 @@ RUN_ID="tuberculosis/marshall-islands/111111111/aaaaaaa"
 
 
 # Run a calibration
-python -m tasks calibrate --run  $RUN_ID --chains 1 --runtime 30 --verbose
+python -m tasks calibrate --run  $RUN_ID --chains 1 --runtime 120 --verbose
 
 # Run full models
-python -m tasks full --run  $RUN_ID --burn 1 --verbose
+python -m tasks full --run  $RUN_ID --burn 1 --sample 10 --verbose
 
 # Run PowerBI processing
 python -m tasks powerbi --run $RUN_ID
@@ -43,7 +43,7 @@ aws --profile autumn s3 rm --quiet --recursive "s3://autumn-data/tuberculosis/ma
 
 The test run data can be viewed at
 
-- http://www.autumn-data.com/app/covid_19/region/manila/run/111111111-aaaaaaa.html
+- http://www.autumn-data.com/app/covid_19/region/malaysia/run/111111111-bbbbbbb.html
 - http://www.autumn-data.com/app/covid_19/region/marshall-islands/run/111111111-aaaaaaa.html
 
 But you may need to rebuild the website first:

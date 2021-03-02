@@ -2,13 +2,21 @@ description: Scenario 1, Re-open schools
 parent: apps/covid_19/regions/malaysia/params/default.yml
 
 time:
-  start: 418.
+  start: 432
 
 mobility:
   mixing:
-    school:
-      append: false
+    other_locations:
+      append: true
       times:
-        - 2020-02-22
+        - 2020-03-07
       values:
-        - 1.
+        - - max_last_period
+          - 180
+    work:
+      append: true
+      times:
+        - 2020-03-07
+      values:
+        - - max_last_period
+          - 180

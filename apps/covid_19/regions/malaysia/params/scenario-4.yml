@@ -1,26 +1,12 @@
-description: Scenario 4, Back to normal
-parent: apps/covid_19/regions/malaysia/params/default.yml
+description: Scenario 4, 70% efficacy 70% coverage severity-preventing vaccine
+parent: apps/covid_19/regions/malaysia/params/scenario-1.yml
 
-time:
-  start: 418.
+vaccination:
+  severity_efficacy: 0.7
+  infection_efficacy: 0.
 
-mobility:
-  mixing:
-    work:
-      append: true
-      times:
-        - 2020-02-22
-      values:
-        - 1.
-    other_locations:
-      append: true
-      times:
-        - 2020-02-22
-      values:
-        - 1.
-    school:
-      append: false
-      times:
-        - 2020-02-22
-      values:
-        - 1.
+  # Six months from Monday 22nd Feb 2021
+  roll_out_function:
+    coverage: 0.7
+    start_time: 418.
+    end_time: 499.

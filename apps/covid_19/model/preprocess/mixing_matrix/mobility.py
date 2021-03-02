@@ -206,6 +206,10 @@ def close_gap_to_1(prev_vals: List[float], fraction: float):
     return (1.0 - prev_val) * fraction + prev_val
 
 
+def max_last_period(prev_vals: List[float], period: int):
+    return max(prev_vals[-min(len(prev_vals), period):])
+
+
 PARSE_FUNCS = {
     "repeat_prev": repeat_prev,
     "add_to_prev": add_to_prev,
@@ -213,4 +217,5 @@ PARSE_FUNCS = {
     "scale_prev": scale_prev,
     "scale_prev_up_to_1": scale_prev_up_to_1,
     "close_gap_to_1": close_gap_to_1,
+    "max_last_period": max_last_period,
 }

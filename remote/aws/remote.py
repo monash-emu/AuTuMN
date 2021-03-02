@@ -179,7 +179,7 @@ def build_input_db(conn: Connection):
     """Builds autumn input database"""
     logger.info("Building input database.")
     with conn.cd(CODE_PATH):
-        conn.run("./env/bin/python -m autumn db build", echo=True)
+        conn.run("./env/bin/python -W ignore -m autumn db build", echo=True)
 
 
 def install_requirements(conn: Connection):

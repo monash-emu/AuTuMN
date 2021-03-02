@@ -36,8 +36,8 @@ use_latest_code_field = BooleanInputField(
 )
 trigger_field = BooleanInputField(
     key="trigger-downstream",
-    title="Trigger full model run",
-    hint="Should this task trigger a full model run when it is done?",
+    title="Trigger PowerBI post processing job",
+    hint="Should this task trigger a PowerBI post processing job when it is done?",
     type=bool,
     default="yes",
 )

@@ -30,7 +30,7 @@ def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool
 
     # Find the calibration chain databases in AWS S3.
     key_prefix = os.path.join(run_id, os.path.relpath(CALIBRATE_DATA_DIR, REMOTE_BASE_DIR))
-    chain_db_keys = list_s3(key_prefix, key_suffix=".feather")
+    chain_db_keys = list_s3(key_prefix, key_suffix=".parquet")
     chain_db_keys = [k for k in chain_db_keys if any([t in k for t in TABLES_TO_DOWNLOAD])]
 
     # Download the calibration chain databases.

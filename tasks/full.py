@@ -130,7 +130,13 @@ def run_full_model_for_chain(
         outputs = []
         derived_outputs = []
         for sampled_run_id in sampled_run_ids:
-            mcmc_run = mcmc_run_df.loc[mcmc_run_df["run"] == sampled_run_id].iloc[0]
+            try:
+                mcmc_run = mcmc_run_df.loc[mcmc_run_df["run"] == sampled_run_id].iloc[0]
+            except IndexError:
+                # This happens when we try to sample a parent run that has been burned, we log this and ignore it.
+                logger.warn("Skipping (probably) burned parent run id %s", sampled_run_id)
+                continue
+
             run_id = mcmc_run["run"]
             chain_id = mcmc_run["chain"]
             assert mcmc_run["accept"]

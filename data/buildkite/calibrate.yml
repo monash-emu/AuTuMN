@@ -24,6 +24,10 @@ steps:
       value: covid_19:hume
     - label: Italy (COVID)
       value: covid_19:italy
+    - label: Johor (COVID)
+      value: covid_19:johor
+    - label: Kuala Lumpur (COVID)
+      value: covid_19:kuala-lumpur
     - label: Loddon Mallee (COVID)
       value: covid_19:loddon-mallee
     - label: Malaysia (COVID)
@@ -32,6 +36,8 @@ steps:
       value: covid_19:manila
     - label: North Metro (COVID)
       value: covid_19:north-metro
+    - label: Penang (COVID)
+      value: covid_19:penang
     - label: Philippines (COVID)
       value: covid_19:philippines
     - label: Sabah (COVID)

@@ -205,7 +205,7 @@ def request_standard_outputs(
         ],
     )
 
-    # Proprotion seropositive
+    # Proportion seropositive
     model.request_output_for_compartments(
         name="_total_population", compartments=COMPARTMENTS, save_results=False
     )
@@ -238,3 +238,6 @@ def request_standard_outputs(
                 sources=[recovered_name, total_name],
                 func=lambda recovered, total: recovered / total,
             )
+
+    if params.stratify_by_immunity and params.vaccination:
+        model.request_output_for_flow(name="vaccination", flow_name="vaccination")

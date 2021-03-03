@@ -7,7 +7,7 @@ from apps.covid_19.calibration import truncate_targets_from_time
 
 
 targets = load_targets("covid_19", Region.PENANG)
-notifications = truncate_targets_from_time(targets["notifications"], 270.)
+notifications = truncate_targets_from_time(targets["notifications"], 280)
 
 TARGET_OUTPUTS = [
     {
@@ -25,7 +25,7 @@ PAR_PRIORS += [
     {
         "param_name": "contact_rate",
         "distribution": "uniform",
-        "distri_params": [0.03, 0.05],
+        "distri_params": [0.03, 0.055],
     },
     {
         "param_name": "infectious_seed",

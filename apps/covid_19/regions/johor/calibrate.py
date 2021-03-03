@@ -7,7 +7,7 @@ from apps.covid_19.calibration import truncate_targets_from_time
 
 
 targets = load_targets("covid_19", Region.JOHOR)
-notifications = truncate_targets_from_time(targets["notifications"], 270.)
+notifications = truncate_targets_from_time(targets["notifications"], 310)
 
 TARGET_OUTPUTS = [
     {
@@ -25,7 +25,7 @@ PAR_PRIORS += [
     {
         "param_name": "contact_rate",
         "distribution": "uniform",
-        "distri_params": [0.03, 0.05],
+        "distri_params": [0.03, 0.055],
     },
     {
         "param_name": "infectious_seed",
@@ -42,7 +42,7 @@ PAR_PRIORS += [
     {
         "param_name": "mobility.microdistancing.behaviour.parameters.upper_asymptote",
         "distribution": "uniform",
-        "distri_params": [0.1, 0.3],
+        "distri_params": [0.1, 0.4],
     },
     # Health system-related
     {

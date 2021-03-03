@@ -33,6 +33,11 @@ COVID_BASE_DATE = pd.datetime(2019, 12, 31)
 REGION_MYS = os.path.join(settings.folders.APPS_PATH, "covid_19", "regions", "malaysia")
 REGION_SABAH = os.path.join(settings.folders.APPS_PATH, "covid_19", "regions", "sabah")
 REGION_SELANGOR = os.path.join(settings.folders.APPS_PATH, "covid_19", "regions", "selangor")
+REGION_JOHOR = os.path.join(settings.folders.APPS_PATH, "covid_19", "regions", "johor")
+REGION_KUALA_LUMPUR = os.path.join(
+    settings.folders.APPS_PATH, "covid_19", "regions", "kuala_lumpur"
+)
+REGION_PENANG = os.path.join(settings.folders.APPS_PATH, "covid_19", "regions", "penang")
 
 TARGETS_MYS = {
     "notifications": "NC",
@@ -43,12 +48,20 @@ TARGETS_MYS = {
 
 TARGETS_SABAH = {"notifications": "local_cases", "infection_deaths": "sabah_death"}
 TARGETS_SELANGOR = {"notifications": "local_cases", "infection_deaths": "selangor_death"}
+TARGETS_JOHOR = {"notifications": "local_cases", "infection_deaths": "johor_death"}
+TARGETS_KUALA_LUMPUR = {"notifications": "local_cases", "infection_deaths": "kuala_lumpur_death"}
+TARGETS_PENANG = {"notifications": "local_cases", "infection_deaths": "penang_death"}
+
 
 def main():
 
     update_calibration(Region.MALAYSIA)
     update_calibration(Region.SABAH)
     update_calibration(Region.SELANGOR)
+    update_calibration(Region.JOHOR)
+    update_calibration(Region.PENANG)
+    update_calibration(Region.KUALA_LUMPUR)
+
 
 def update_calibration(REGION: str):
     """
@@ -70,6 +83,15 @@ def update_target(REGION, df):
     elif REGION == "selangor":
         TARGET = TARGETS_SELANGOR
         REGION = REGION_SELANGOR
+    elif REGION == "johor":
+        TARGET = TARGETS_JOHOR
+        REGION = REGION_JOHOR
+    elif REGION == "penang":
+        TARGET = TARGETS_PENANG
+        REGION = REGION_PENANG
+    elif REGION == "kuala_lumpur":
+        TARGET = TARGETS_KUALA_LUMPUR
+        REGION = REGION_KUALA_LUMPUR
 
     file_path = os.path.join(REGION, "targets.json")
     with open(file_path, mode="r") as f:
@@ -123,6 +145,15 @@ def load_data(REGION: str):
     elif REGION == "selangor":
         case_df = load_regional_cases("Selangor")
         death_df = death_df[["selangor_death", "date_index"]]
+    elif REGION == "johor":
+        case_df = load_regional_cases("Johor")
+        death_df = death_df[["johor_death", "date_index"]]
+    elif REGION == "penang":
+        case_df = load_regional_cases("Pulau Pinang")
+        death_df = death_df[["penang_death", "date_index"]]
+    elif REGION == "kuala_lumpur":
+        case_df = load_regional_cases("Kuala Lumpur")
+        death_df = death_df[["kuala_lumpur_death", "date_index"]]
 
     df = pd.merge(case_df, death_df, how="left", left_on=["date_index"], right_on=["date_index"])
 
@@ -145,7 +176,7 @@ def get_death():
 
     def fix_regex(each_row, state):
 
-        x = re.findall(state+r"=(\d+),", each_row)
+        x = re.findall(state + r"=(\d+),", each_row)
         if len(x) > 0:
             return int(x[0])
         else:
@@ -153,10 +184,27 @@ def get_death():
 
     death_df["sabah_death"] = [fix_regex(each, "Sabah") for each in death_df.state]
     death_df["selangor_death"] = [fix_regex(each, "Selangor") for each in death_df.state]
+    death_df["johor_death"] = [fix_regex(each, "Johor") for each in death_df.state]
+    death_df["penang_death"] = [fix_regex(each, "Penang") for each in death_df.state]
+    death_df["kuala_lumpur_death"] = [fix_regex(each, "Kuala Lumpur") for each in death_df.state]
 
     death_df.loc[death_df.state == "Sabah", "sabah_death"] = death_df["Death per day"]
     death_df.loc[death_df.state == "Selangor", "selangor_death"] = death_df["Death per day"]
-    return death_df[["date_index", "Death per day", "state", "sabah_death", "selangor_death"]]
+    death_df.loc[death_df.state == "Johor", "johor_death"] = death_df["Death per day"]
+    death_df.loc[death_df.state == "Penang", "penang_death"] = death_df["Death per day"]
+    death_df.loc[death_df.state == "Kuala Lumpur", "kuala_lumpur_death"] = death_df["Death per day"]
+    return death_df[
+        [
+            "date_index",
+            "Death per day",
+            "state",
+            "sabah_death",
+            "selangor_death",
+            "johor_death",
+            "penang_death",
+            "kuala_lumpur_death",
+        ]
+    ]
 
 
 def load_mys():
@@ -197,7 +245,6 @@ def load_regional_cases(state):
     df["date_index"] = (df.date - COVID_BASE_DATE).dt.days
     df.sort_values(by=["date"], inplace=True)
     return df
-
 
 
 if __name__ == "__main__":

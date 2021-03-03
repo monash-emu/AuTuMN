@@ -7,21 +7,13 @@ from apps.covid_19.calibration import truncate_targets_from_time
 
 
 targets = load_targets("covid_19", Region.KUALA_LUMPUR)
-
-# Truncate notifications from 1st August 2020
-notifications = truncate_targets_from_time(targets["notifications"], 214)
+notifications = truncate_targets_from_time(targets["notifications"], 270.)
 
 TARGET_OUTPUTS = [
     {
         "output_key": "notifications",
         "years": notifications["times"],
         "values": notifications["values"],
-        "loglikelihood_distri": "normal",
-    },
-    {
-        "output_key": "icu_occupancy",
-        "years": [targets["icu_occupancy"]["times"][-1]],
-        "values": [targets["icu_occupancy"]["values"][-1]],
         "loglikelihood_distri": "normal",
     },
 ]
@@ -33,7 +25,7 @@ PAR_PRIORS += [
     {
         "param_name": "contact_rate",
         "distribution": "uniform",
-        "distri_params": [0.015, 0.03]
+        "distri_params": [0.03, 0.05],
     },
     {
         "param_name": "infectious_seed",
@@ -44,13 +36,13 @@ PAR_PRIORS += [
     {
         "param_name": "testing_to_detection.assumed_cdr_parameter",
         "distribution": "uniform",
-        "distri_params": [0.025, 0.1],
+        "distri_params": [0.04, 0.12],
     },
     # Microdistancing
     {
         "param_name": "mobility.microdistancing.behaviour.parameters.upper_asymptote",
         "distribution": "uniform",
-        "distri_params": [0.05, 0.25],
+        "distri_params": [0.1, 0.3],
     },
     # Health system-related
     {
@@ -62,6 +54,16 @@ PAR_PRIORS += [
         "param_name": "clinical_stratification.icu_prop",
         "distribution": "uniform",
         "distri_params": [0.12, 0.25],
+    },
+    {
+        "param_name": "clinical_stratification.non_sympt_infect_multiplier",
+        "distribution": "uniform",
+        "distri_params": [0.15, 0.4],
+    },
+    {
+        "param_name": "clinical_stratification.props.symptomatic.multiplier",
+        "distribution": "uniform",
+        "distri_params": [0.8, 2.],
     },
 ]
 

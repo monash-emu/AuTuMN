@@ -30,7 +30,7 @@ class Region:
     DAVAO_CITY = "davao-city"
     JOHOR = "johor"
     PENANG = "penang"
-    KUALA_LUMPUR = "kuala_lumpur"
+    KUALA_LUMPUR = "kuala-lumpur"
 
     REGIONS = [
         AUSTRALIA,

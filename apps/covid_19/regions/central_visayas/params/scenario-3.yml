@@ -8,7 +8,7 @@ mobility:
         - 426
         values:
         - 1.0
-        - 0.7
+        - 0.3
 parent: apps/covid_19/regions/central_visayas/params/default.yml
 time:
   start: 424

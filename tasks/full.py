@@ -97,7 +97,8 @@ def run_full_model_for_chain(
 
         # Sampled column tells us whether a run will be sampled.
         sampled = []
-        sample_step = (num_runs - burn_in) // sample_size
+        sample_step = max(1, (num_runs - burn_in) // sample_size)
+        logger.info("Using a sample step of %s", sample_step)
         for idx, mcmc_run in mcmc_run_df.iterrows():
             should_sample = 1 if (num_runs - idx - 1) % sample_step == 0 else 0
             sampled.append(should_sample)
@@ -117,12 +118,24 @@ def run_full_model_for_chain(
         # Burn in MCMC run history.
         burn_mask = mcmc_run_df["run"] >= burn_in
         burned_runs_str = ", ".join([str(i) for i in mcmc_run_df[~burn_mask].run])
-        logger.info("Burned MCMC runs %s", burned_runs_str)
         mcmc_run_df = mcmc_run_df[burn_mask].copy()
+        num_remaining = len(mcmc_run_df)
+        logger.info(
+            "Burned %s of %s MCMC runs leaving %s remaining.", burn_in, num_runs, num_remaining
+        )
+
+        logger.info("Burned MCMC runs %s", burned_runs_str)
         dest_db.dump_df(Table.MCMC, mcmc_run_df)
 
         # Figure out which model runs to actually re-run.
         sampled_run_ids = mcmc_run_df[mcmc_run_df["sampled"] == 1].parent.unique().tolist()
+
+        # Also include the MLE
+        mle_df = db.process.find_mle_run(mcmc_run_df)
+        mle_run_id = mle_df["run"].iloc[0]
+        logger.info("Including MLE run %s", mle_run_id)
+        sampled_run_ids.append(mle_run_id)
+        sampled_run_ids = sorted(list(set(sampled_run_ids)))
         logger.info(
             "Running full model for %s sampled runs %s", len(sampled_run_ids), sampled_run_ids
         )

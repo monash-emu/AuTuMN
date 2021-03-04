@@ -20,7 +20,7 @@ RUN_ID="tuberculosis/marshall-islands/111111111/aaaaaaa"
 python -m tasks calibrate --run  $RUN_ID --chains 1 --runtime 120 --verbose
 
 # Run full models
-python -m tasks full --run  $RUN_ID --burn 1 --sample 10 --verbose
+python -m tasks full --run  $RUN_ID --burn 30 --sample 16 --verbose
 
 # Run PowerBI processing
 python -m tasks powerbi --run $RUN_ID

@@ -6,7 +6,6 @@ from autumn import db, plots
 
 from tasks.full import FULL_RUN_DATA_DIR
 from tasks.utils import get_app_region
-from utils.parallel import run_parallel_tasks
 from utils.timer import Timer
 from utils.s3 import list_s3, download_from_run_s3, upload_to_run_s3
 from settings import REMOTE_BASE_DIR
@@ -38,15 +37,15 @@ def powerbi_task(run_id: str, quiet: bool):
 
     # Download the full model run databases.
     with Timer(f"Downloading full model run data"):
-        args_list = [(run_id, src_key, quiet) for src_key in chain_db_keys]
-        run_parallel_tasks(download_from_run_s3, args_list)
+        for src_key in chain_db_keys:
+            download_from_run_s3(run_id, src_key, quiet)
 
     # Remove unnecessary data from each full model run database.
     full_db_paths = db.load.find_db_paths(FULL_RUN_DATA_DIR)
     with Timer(f"Pruning chain databases"):
         get_dest_path = lambda p: os.path.join(POWERBI_PRUNED_DIR, os.path.basename(p))
-        args_list = [(full_db_path, get_dest_path(full_db_path)) for full_db_path in full_db_paths]
-        run_parallel_tasks(db.process.prune_chain, args_list)
+        for full_db_path in full_db_paths:
+            db.process.prune_chain(full_db_path, get_dest_path(full_db_path))
 
     # Collate data from each pruned full model run database into a single database.
     pruned_db_paths = db.load.find_db_paths(POWERBI_PRUNED_DIR)

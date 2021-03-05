@@ -1,4 +1,4 @@
-description: Scenario 8, 90% efficacy 50% coverage severity-preventing vaccine
+description: Scenario 5, 90% efficacy 50% coverage severity-preventing vaccine
 parent: apps/covid_19/regions/johor/params/scenario-1.yml
 
 vaccination:

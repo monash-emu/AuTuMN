@@ -89,7 +89,7 @@ def update_target(REGION, df):
     elif REGION == "penang":
         TARGET = TARGETS_PENANG
         REGION = REGION_PENANG
-    elif REGION == "kuala_lumpur":
+    elif REGION == "kuala-lumpur":
         TARGET = TARGETS_KUALA_LUMPUR
         REGION = REGION_KUALA_LUMPUR
 
@@ -151,7 +151,7 @@ def load_data(REGION: str):
     elif REGION == "penang":
         case_df = load_regional_cases("Pulau Pinang")
         death_df = death_df[["penang_death", "date_index"]]
-    elif REGION == "kuala_lumpur":
+    elif REGION == "kuala-lumpur":
         case_df = load_regional_cases("Kuala Lumpur")
         death_df = death_df[["kuala_lumpur_death", "date_index"]]
 

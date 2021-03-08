@@ -13,6 +13,7 @@ OUTPUT_TITLES = {
     "notificationsXlocation_majuro": "Number of TB notifications in Majuro",
     "notificationsXlocation_ebeye": "Number of TB notifications in Ebeye",
     "population_size": "Population size",
+    "screening_rate": "Rate of passive TB screening (/year)",
 }
 
 REGION_TITLES = {

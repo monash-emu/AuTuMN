@@ -113,7 +113,7 @@ def plot_elimination(uncertainty_df, is_logscale=False):
 
             if output in ["incidence", "mortality"]:
                 for year, value in end_tb_targets[output].items():
-                    ax.plot(float(year), value, marker="o", color=target_colours[year])
+                    ax.plot(float(year), value, marker="o", color=target_colours[year], zorder=10)
 
             if is_logscale:
                 ax.set_yscale("log")

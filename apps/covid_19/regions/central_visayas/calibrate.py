@@ -15,7 +15,7 @@ PAR_PRIORS = add_standard_philippines_params(PAR_PRIORS, Region.CENTRAL_VISAYAS)
 
 PAR_PRIORS.append(
     {
-        "param_name": "params.voc_emmergence.final_proportion",
+        "param_name": "voc_emmergence.final_proportion",
         "distribution": "uniform",
         "distri_params": [0.3, 0.7],
     },

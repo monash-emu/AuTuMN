@@ -1,14 +1,14 @@
-description: Reduction in MHS by 50%
+description: 100% of schools reopen
 mobility:
-  microdistancing:
-    behaviour:
-      parameters:
-        times:
-        - 432
-        - 433
-        values:
-        - 1.0
-        - 0.5
+  mixing:
+    school:
+      append: false
+      times:
+      - 439
+      - 440
+      values:
+      - 0.0
+      - 1.0
 parent: apps/covid_19/regions/central_visayas/params/default.yml
 time:
-  start: 431
+  start: 438

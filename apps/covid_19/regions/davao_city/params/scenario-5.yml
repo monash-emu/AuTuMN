@@ -1,14 +1,11 @@
-description: 50% of schools reopen
-mobility:
-  mixing:
-    school:
-      append: false
-      times:
-      - 432
-      - 433
-      values:
-      - 0.0
-      - 0.5
+description: 13% coverage / 70% efficacy / infection-preventing vaccine
 parent: apps/covid_19/regions/davao_city/params/default.yml
 time:
-  start: 431
+  start: 438
+vaccination:
+  infection_efficacy: 0.7
+  roll_out_function:
+    coverage: 0.13
+    end_time: 710
+    start_time: 440
+  severity_efficacy: 0.0

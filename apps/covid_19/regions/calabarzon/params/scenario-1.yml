@@ -1,20 +1,20 @@
-description: 30% return to normal (work and other locations)
+description: 50% return to normal (work and other locations)
 mobility:
   mixing:
     other_locations:
       append: true
       times:
-      - 433
+      - 440
       values:
       - - close_gap_to_1
-        - 0.3
+        - 0.5
     work:
       append: true
       times:
-      - 433
+      - 440
       values:
       - - close_gap_to_1
-        - 0.3
+        - 0.5
 parent: apps/covid_19/regions/calabarzon/params/default.yml
 time:
-  start: 431
+  start: 438

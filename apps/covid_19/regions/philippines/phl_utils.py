@@ -4,15 +4,15 @@ from copy import copy
 from autumn.region import Region
 from time import sleep
 
-SCENARIO_START_TIME = 433  # 8 Mar 2021
+SCENARIO_START_TIME = 440  # 15 Mar 2021
 
-BACK_TO_NORMAL_FRACTIONS = [.3, .5]
-MHS_REDUCTION_FRACTIONS = [.3, .5]
+BACK_TO_NORMAL_FRACTIONS = [.5]
+MHS_REDUCTION_FRACTIONS = [.5]
 SCHOOL_REOPEN_FRACTIONS = [.5, 1.]
 VACCINE_SCENARIOS = {
     "mode": ["infection", "severity"],
-    "efficacy": [.7, .9],
-    "coverage": [.7]
+    "efficacy": [.7],
+    "coverage": [.13, .65]
 }
 
 
@@ -146,7 +146,7 @@ def make_vaccination_sc_dict(mode, coverage, efficacy, scenario_start_time):
         "roll_out_function": {
             "coverage": coverage,
             "start_time": scenario_start_time,
-            "end_time": scenario_start_time + 180
+            "end_time": scenario_start_time + 270  # 9-month roll-out
         }
     }
     sc_dict['vaccination'][f"{mode}_efficacy"] = efficacy

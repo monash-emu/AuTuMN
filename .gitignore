@@ -686,3 +686,5 @@ apps/tuberculosis/regions/marshall_islands/outputs/old_figures/diabetes/diabetes
 apps/tuberculosis/regions/marshall_islands/outputs/old_figures/elimination/elimination.pdf
 apps/tuberculosis/regions/marshall_islands/outputs/old_figures/elimination/elimination_logscale.pdf
 apps/tuberculosis/regions/marshall_islands/outputs/old_figures/posterior_table/posterior_ranges.csv
+apps/tuberculosis/regions/marshall_islands/outputs/figures/output_numbers.txt
+apps/tuberculosis/regions/marshall_islands/outputs/figures/calibration/screening_rate.pdf

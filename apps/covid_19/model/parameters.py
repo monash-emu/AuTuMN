@@ -219,6 +219,16 @@ class VaccCoveragePeriod(BaseModel):
     end_time: float
 
 
+class VocEmmergence(BaseModel):
+    """
+    Parameters defining the emergence profile of Variants of Concerns
+    """
+    final_proportion: float
+    start_time: float
+    end_time: float
+    contact_rate_multiplier: float
+
+
 class Vaccination(BaseModel):
     infection_efficacy: float
     severity_efficacy: float
@@ -240,6 +250,7 @@ class Parameters:
     universal_death_rate: float
     infectious_seed: float
     seasonal_force: Optional[float]  # Seasonal forcing factor
+    voc_emmergence: Optional[VocEmmergence]
     elderly_mixing_reduction: Optional[dict]
     waning_immunity_duration: Optional[float]
     stratify_by_immunity: bool

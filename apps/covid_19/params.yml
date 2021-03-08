@@ -3,6 +3,7 @@
 parent: null # This file is the bottom of the parameter tree for the Covid app
 
 seasonal_force: null # Extent of seasonal forcing
+voc_emmergence: null # Emergence of Variants of Concern
 waning_immunity_duration: null # Note that the amplitude is the total variation in transmission from trough to peak
 stratify_by_infection_history: false # Note that the current code may not allocate imported cases to the right stratum
 rel_prop_symptomatic_experienced: null

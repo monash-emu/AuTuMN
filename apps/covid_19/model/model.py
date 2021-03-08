@@ -1,7 +1,10 @@
 from summer2 import CompartmentalModel
 
 from autumn import inputs
+from autumn.curve.scale_up import scale_up_function
 from autumn.environment.seasonality import get_seasonal_forcing
+
+from copy import copy
 
 from apps.covid_19.constants import (
     Compartment,
@@ -79,6 +82,21 @@ def build_model(params: dict) -> CompartmentalModel:
     else:
         # Use a static contact rate.
         contact_rate = params.contact_rate
+
+    # Adjust contact rate for Variant of Concerns
+    if params.voc_emmergence:
+        voc_multiplier = scale_up_function(
+            x=[params.voc_emmergence.start_time, params.voc_emmergence.end_time],
+            y=[1., 1. + params.voc_emmergence.final_proportion * (params.voc_emmergence.contact_rate_multiplier - 1.)],
+            method=4
+        )
+        raw_contact_rate = contact_rate
+        if isinstance(contact_rate, float):
+            def contact_rate(t):
+                return raw_contact_rate * voc_multiplier(t)
+        else:
+            def contact_rate(t):
+                return raw_contact_rate(t) * voc_multiplier(t)
 
     model.add_infection_frequency_flow(
         name="infection",

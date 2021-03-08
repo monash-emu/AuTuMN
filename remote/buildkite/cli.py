@@ -222,6 +222,7 @@ def _trigger_models(regions, p):
     chains = p.chains_field.get_value()
     runtime = p.runtime_field.get_value()
     burn_in = p.burn_in_field.get_value()
+    sample_size = p.sample_size_field.get_value()
     branch = p.branch_field.get_value()
     is_spot = p.spot_field.get_value()
     trigger_downstream = p.trigger_field.get_value()
@@ -244,6 +245,7 @@ def _trigger_models(regions, p):
                 cp.branch_field.key: branch,
                 cp.runtime_field.key: runtime / 3600.0,
                 cp.burn_in_field.key: burn_in,
+                cp.sample_size_field.key: sample_size,
                 cp.trigger_field.key: cp.trigger_field.get_option(trigger_downstream),
                 cp.spot_field.key: cp.spot_field.get_option(is_spot),
             },

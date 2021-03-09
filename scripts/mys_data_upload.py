@@ -16,18 +16,16 @@ import regex as re
 
 
 # From WHO google drive folder
-CASE_DATA_URL = "1mnZcmj2jfmrap1ytyg_ErD1DZ7zDptyJ"  # shareable link
+CASE_DATA_URL = "https://docs.google.com/spreadsheets/d/1FbYG8szgbvw3pjULWEHDZ8uhu5BooV_-cygLn7iLaxA/export?format=xlsx&id=1FbYG8szgbvw3pjULWEHDZ8uhu5BooV_-cygLn7iLaxA"  # shareable link
 COVID_MYS_DEATH_URL = "https://docs.google.com/spreadsheets/d/1cQe1k7GQRKFzcfXXxdL7_pTNQUMpOAPX3PqhPsI4xt8/export?format=xlsx&id=1cQe1k7GQRKFzcfXXxdL7_pTNQUMpOAPX3PqhPsI4xt8"
 COVID_REGIONAL_URL = "https://docs.google.com/spreadsheets/d/1ouWp2ge5zrVh1gCDPONN-TMaf1b7TqRr4f07UZLWSdg/export?format=xlsx&id=1ouWp2ge5zrVh1gCDPONN-TMaf1b7TqRr4f07UZLWSdg"
 
 COVID_MYS_DIRPATH = os.path.join(settings.folders.INPUT_DATA_PATH, "covid_mys")
-COVID_MYS_CASE_XLSX = os.path.join(COVID_MYS_DIRPATH, "COVID_MYS_CASE.xlsx")
+COVID_MYS_CASE_CSV = os.path.join(COVID_MYS_DIRPATH, "COVID_MYS_CASE.csv")
 COVID_MYS_DEATH_CSV = os.path.join(COVID_MYS_DIRPATH, "COVID_MYS_DEATH.csv")
 COVID_REGIONAL_CSV = os.path.join(COVID_MYS_DIRPATH, "COVID_REGIONAL.csv")
 
-gdd.download_file_from_google_drive(
-    file_id=CASE_DATA_URL, dest_path=COVID_MYS_CASE_XLSX, overwrite=True
-)
+
 
 COVID_BASE_DATE = pd.datetime(2019, 12, 31)
 REGION_MYS = os.path.join(settings.folders.APPS_PATH, "covid_19", "regions", "malaysia")
@@ -208,7 +206,8 @@ def get_death():
 
 
 def load_mys():
-    case_df = pd.read_excel(COVID_MYS_CASE_XLSX)
+    case_df = pd.read_excel(CASE_DATA_URL)
+    case_df.to_csv(COVID_MYS_CASE_CSV)
 
     case_df.Date = pd.to_datetime(
         case_df["Date"], errors="coerce", format="%Y-%m-%d %H:%M:%S", infer_datetime_format=True,

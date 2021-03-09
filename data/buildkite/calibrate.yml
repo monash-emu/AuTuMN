@@ -84,7 +84,7 @@ steps:
     key: burn-in
     required: true
     text: Burn-in
-  - default: '200'
+  - default: '100'
     hint: How many accepted runs per chain should be sampled for uncertainty calcs?
     key: sample-size
     required: true

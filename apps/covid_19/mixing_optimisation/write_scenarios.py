@@ -74,9 +74,9 @@ def build_optimised_scenario_dictionary(
     )
     country_folder_name = country.replace("-", "_")
     sc_params["parent"] = f"apps/covid_19/regions/{country_folder_name}/params/default.yml"
-    del sc_params[
-        "importation"
-    ]  # Importation was used for testing during optimisation. We must remove it.
+    # del sc_params[
+    #     "importation"
+    # ]  # Importation was used for testing during optimisation. We must remove it.
 
     return sc_params
 

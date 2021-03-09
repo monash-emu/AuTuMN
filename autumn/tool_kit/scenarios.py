@@ -107,9 +107,7 @@ class Scenario:
                 if derived_outputs_whitelist:
                     self.model.set_derived_outputs_whitelist(derived_outputs_whitelist)
 
-                # self.model.run()
-                self.model.run_stochastic()
-
+                self.model.run()
             else:
                 self.model.run_model(IntegrationType.SOLVE_IVP)
 

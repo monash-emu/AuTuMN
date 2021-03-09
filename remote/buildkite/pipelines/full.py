@@ -25,7 +25,7 @@ sample_size_field = TextInputField(
     title="Sample size",
     hint="How many accepted runs per chain should be sampled for uncertainty calcs?",
     type=int,
-    default=200,
+    default=100,
 )
 use_latest_code_field = BooleanInputField(
     key="use-latest-code",

@@ -222,15 +222,17 @@ def build_params_for_phases_2_and_3(
     scenario_params["mobility"]["microdistancing"] = MICRODISTANCING_OPTI_PARAMS
 
     # Seed a new wave of infections with some importations.
-    # This tests whether herd immunity has actually been reached.
-    scenario_params["importation"] = {
-        "props_by_age": None,
-        "movement_prop": None,
-        "quarantine_timeseries": {"times": [], "values": []},
-        "case_timeseries": {
-            "times": [phase_2_end_days + i for i in range(4)],
-            "values": [0, 5, 5, 0],
-        },
-    }
+    # # This tests whether herd immunity has actually been reached.
+    
+    # FIXME: Importation is no longer available so we need to find another way to test herd immunity
+    # scenario_params["importation"] = {
+    #     "props_by_age": None,
+    #     "movement_prop": None,
+    #     "quarantine_timeseries": {"times": [], "values": []},
+    #     "case_timeseries": {
+    #         "times": [phase_2_end_days + i for i in range(4)],
+    #         "values": [0, 5, 5, 0],
+    #     },
+    # }
 
     return scenario_params

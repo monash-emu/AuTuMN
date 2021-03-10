@@ -49,10 +49,7 @@ def edit_adjustments_for_diabetes(
     future_diabetes_multiplier,
 ):
     diabetes_scale_up = tanh_based_scaleup(
-        shape=0.05,
-        inflection_time=1980,
-        lower_asymptote=0.0,
-        upper_asymptote=1.0
+        shape=0.05, inflection_time=1980, lower_asymptote=0.0, upper_asymptote=1.0
     )
     future_diabetes_trend = make_linear_curve(
         x_0=2020, x_1=2050, y_0=1, y_1=future_diabetes_multiplier

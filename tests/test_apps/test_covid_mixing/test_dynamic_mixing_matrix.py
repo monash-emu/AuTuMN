@@ -149,8 +149,7 @@ def test_build_dynamic__with_microdistancing(monkeypatch):
                     "times": [0, 365],
                     "values": [0, 0.1],
                 },
-                "locations":
-                    ["work"],
+                "locations": ["work"],
             }
         },
         "square_mobility_effect": False,
@@ -211,8 +210,7 @@ def test_build_dynamic__with_everything(monkeypatch):
                     "times": [0, 1, 2, 3],
                     "values": [0, 0.1, 0.2, 0.3],
                 },
-                "locations":
-                    ["work"],
+                "locations": ["work"],
             }
         },
         "square_mobility_effect": True,

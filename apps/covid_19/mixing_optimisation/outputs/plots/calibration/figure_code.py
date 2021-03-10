@@ -119,7 +119,7 @@ param_info = {
     "elderly_mixing_reduction.relative_reduction": {
         "name": "elderly mixing reduction",
         "range": [0, 0.5],
-    }
+    },
 }
 
 
@@ -173,7 +173,7 @@ def make_posterior_ranges_figure(param_values):
             if prior["distribution"] == "uniform":
                 x_range = prior["distri_params"]
         range_w = x_range[1] - x_range[0]
-        buffer = .1 * range_w
+        buffer = 0.1 * range_w
         x_range = [x_range[0] - buffer, x_range[1] + buffer]
 
         axs[i_row, i_col].set_xlim(x_range)
@@ -257,7 +257,7 @@ def plot_parameter_traces(param_values_by_chain, max_n_iter=2500):
                         y_range = prior["distri_params"]
 
                 range_w = y_range[1] - y_range[0]
-                buffer = .1 * range_w
+                buffer = 0.1 * range_w
                 y_range = [y_range[0] - buffer, y_range[1] + buffer]
 
                 ax.set_ylim(y_range)
@@ -448,7 +448,7 @@ def make_calibration_fits_figure(calibration_outputs, seroprevalence=False):
     i_row = 1
     i_col = 0
 
-    ordered_countries = ['italy', 'united-kingdom', 'france', 'belgium', 'spain', 'sweden']
+    ordered_countries = ["italy", "united-kingdom", "france", "belgium", "spain", "sweden"]
     for country in ordered_countries:
         # write country name
         ax = fig.add_subplot(spec[i_row - 1, i_col : i_col + n_target_outputs])

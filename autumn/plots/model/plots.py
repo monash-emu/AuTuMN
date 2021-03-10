@@ -113,7 +113,10 @@ def plot_mixing_matrix_2(plotter: Plotter, iso3: str):
 
 
 def plot_agg_compartments_multi_scenario(
-    plotter: Plotter, scenarios: List[Scenario], compartment_names: List[str], is_logscale=False,
+    plotter: Plotter,
+    scenarios: List[Scenario],
+    compartment_names: List[str],
+    is_logscale=False,
 ):
     """
     Plot multiple compartments with values aggregated for a multiple scenarios.
@@ -138,7 +141,10 @@ def plot_agg_compartments_multi_scenario(
 
 
 def plot_single_compartment_multi_scenario(
-    plotter: Plotter, scenarios: List[Scenario], compartment_name: str, is_logscale=False,
+    plotter: Plotter,
+    scenarios: List[Scenario],
+    compartment_name: str,
+    is_logscale=False,
 ):
     """
     Plot the selected output compartment for a multiple scenarios.
@@ -225,13 +231,13 @@ def plot_outputs_multi(
 
 
 def plot_outputs_single(
-        plotter: Plotter,
-        scenario: Scenario,
-        output_config: dict,
-        is_logscale=False,
-        axis=None,
-        single_panel=True,
-        xaxis_date=False,
+    plotter: Plotter,
+    scenario: Scenario,
+    output_config: dict,
+    is_logscale=False,
+    axis=None,
+    single_panel=True,
+    xaxis_date=False,
 ):
     """
     Plot the model derived/generated outputs requested by the user for a single scenario.
@@ -326,7 +332,10 @@ def plot_time_varying_input(
 
 
 def plot_time_varying_multi_input(
-    plotter: Plotter, tv_key: str, times: List[float], is_logscale: bool,
+    plotter: Plotter,
+    tv_key: str,
+    times: List[float],
+    is_logscale: bool,
 ):
     """
     Plot single simple plot of a function over time

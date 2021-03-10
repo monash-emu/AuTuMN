@@ -40,8 +40,12 @@ def make_microdistancing_plot(params=PARAMS):
 
     micro_wane_func = tanh_based_scaleup(
         shape=-0.05,
-        inflection_time=params["mobility.microdistancing.behaviour_adjuster.parameters.inflection_time"],
-        lower_asymptote=params["mobility.microdistancing.behaviour_adjuster.parameters.lower_asymptote"],
+        inflection_time=params[
+            "mobility.microdistancing.behaviour_adjuster.parameters.inflection_time"
+        ],
+        lower_asymptote=params[
+            "mobility.microdistancing.behaviour_adjuster.parameters.lower_asymptote"
+        ],
         upper_asymptote=1,
     )
 

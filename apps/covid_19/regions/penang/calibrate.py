@@ -30,7 +30,7 @@ PAR_PRIORS += [
     {
         "param_name": "infectious_seed",
         "distribution": "uniform",
-        "distri_params": [50., 200.],
+        "distri_params": [50.0, 200.0],
     },
     # Detection
     {
@@ -63,7 +63,7 @@ PAR_PRIORS += [
     {
         "param_name": "clinical_stratification.props.symptomatic.multiplier",
         "distribution": "uniform",
-        "distri_params": [0.8, 2.],
+        "distri_params": [0.8, 2.0],
     },
 ]
 

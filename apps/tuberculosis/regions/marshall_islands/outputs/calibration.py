@@ -128,7 +128,7 @@ def plot_model_fits(uncertainty_df):
 
     plotted_scenario_ranges = {
         0: [x_low, x_up],
-#        1: [2016, x_up],
+        #        1: [2016, x_up],
     }
 
     for output in outputs:
@@ -141,7 +141,7 @@ def plot_model_fits(uncertainty_df):
                 output,
                 sc_idx,
                 sc_range[1],
-                2009,  #sc_range[0],
+                2009,  # sc_range[0],
                 COLORS[0],
                 start_quantile=0,
             )

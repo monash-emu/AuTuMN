@@ -53,10 +53,7 @@ def run_dashboard():
     if not os.path.exists(path_name):
         os.makedirs(path_name)
     with st.spinner("Saving files..."):
-        file_plotter = FilePlotter(
-            path_name,
-            targets
-        )
+        file_plotter = FilePlotter(path_name, targets)
         plot_func(
             file_plotter, calib_dirpath, mcmc_tables, mcmc_params, targets, app_name, region_name
         )

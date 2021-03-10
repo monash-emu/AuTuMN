@@ -129,7 +129,9 @@ def preprocess_mobility(input_db: Database, country_df):
     # These two regions are the same
     mob_df.loc[(mob_df.sub_region_1 == "National Capital Region"), "sub_region_1"] = "Metro Manila"
     mob_df.loc[(mob_df.metro_area == "Davao City Metropolitan Area"), "sub_region_1"] = "Davao City"
-    mob_df.loc[(mob_df.sub_region_1 == "Federal Territory of Kuala Lumpur"), "sub_region_1"] = "Kuala Lumpur"
+    mob_df.loc[
+        (mob_df.sub_region_1 == "Federal Territory of Kuala Lumpur"), "sub_region_1"
+    ] = "Kuala Lumpur"
 
     mob_df = mob_df.append(dhhs_cluster_mobility)
 

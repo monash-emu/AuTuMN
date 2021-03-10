@@ -26,7 +26,6 @@ COVID_MYS_DEATH_CSV = os.path.join(COVID_MYS_DIRPATH, "COVID_MYS_DEATH.csv")
 COVID_REGIONAL_CSV = os.path.join(COVID_MYS_DIRPATH, "COVID_REGIONAL.csv")
 
 
-
 COVID_BASE_DATE = pd.datetime(2019, 12, 31)
 REGION_MYS = os.path.join(settings.folders.APPS_PATH, "covid_19", "regions", "malaysia")
 REGION_SABAH = os.path.join(settings.folders.APPS_PATH, "covid_19", "regions", "sabah")
@@ -210,7 +209,10 @@ def load_mys():
     case_df.to_csv(COVID_MYS_CASE_CSV)
 
     case_df.Date = pd.to_datetime(
-        case_df["Date"], errors="coerce", format="%Y-%m-%d %H:%M:%S", infer_datetime_format=True,
+        case_df["Date"],
+        errors="coerce",
+        format="%Y-%m-%d %H:%M:%S",
+        infer_datetime_format=True,
     )
     case_df = case_df[(case_df.Date > "2020-03-02") & (case_df.Date < "2021-12-31")]
     case_df["date_index"] = (case_df.Date - COVID_BASE_DATE).dt.days

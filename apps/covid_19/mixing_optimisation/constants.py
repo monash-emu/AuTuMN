@@ -51,10 +51,5 @@ MICRODISTANCING_OPTI_PARAMS = {
         }
     },
     # remove the behaviour adjuster's effect
-    "behaviour_adjuster": {
-        "parameters": {
-            "lower_asymptote": 1.0,
-            "upper_asymptote": 1.0
-        }
-    },
+    "behaviour_adjuster": {"parameters": {"lower_asymptote": 1.0, "upper_asymptote": 1.0}},
 }

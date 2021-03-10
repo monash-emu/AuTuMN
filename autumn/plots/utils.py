@@ -50,7 +50,7 @@ PLOT_TEXT_DICT = {
     "clinical_stratification.non_sympt_infect_multiplier": "asympt infect multiplier",
     "infection_fatality.multiplier": "IFR adjuster",
     "victorian_clusters.metro.mobility.microdistancing.behaviour_adjuster.parameters.effect": "physical distancing",
-    "victorian_clusters.metro.mobility.microdistancing.face_coverings_adjuster.parameters.effect": "face coverings"
+    "victorian_clusters.metro.mobility.microdistancing.face_coverings_adjuster.parameters.effect": "face coverings",
 }
 
 ALPHAS = (1.0, 0.6, 0.4, 0.3, 0.2, 0.15, 0.1, 0.08)
@@ -78,7 +78,9 @@ COLORS = (
 REF_DATE = datetime.date(2019, 12, 31)
 
 
-def get_plot_text_dict(param_string, capitalise_first_letter=False, remove_underscore=True, remove_dot=True):
+def get_plot_text_dict(
+    param_string, capitalise_first_letter=False, remove_underscore=True, remove_dot=True
+):
     """
     Get standard text for use in plotting as title, y-label, etc.
     """

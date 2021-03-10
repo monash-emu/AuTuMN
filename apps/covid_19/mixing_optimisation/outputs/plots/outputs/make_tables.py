@@ -35,21 +35,21 @@ DATA_PATH = os.path.join(
 
 who_deaths = {
     "by_october": {
-        'belgium': 10.2,
-        'france': 31.7,
-        'italy': 35.9,
-        'spain': 32.4,
-        'sweden': 5.9,
-        'united-kingdom': 42.1
+        "belgium": 10.2,
+        "france": 31.7,
+        "italy": 35.9,
+        "spain": 32.4,
+        "sweden": 5.9,
+        "united-kingdom": 42.1,
     },
     "by_january": {
-        'belgium': 19.6,
-        'france': 64.3,
-        'italy': 74.2,
-        'spain': 51.4,
-        'sweden': 9.7,
-        'united-kingdom': 73.5
-    }
+        "belgium": 19.6,
+        "france": 64.3,
+        "italy": 74.2,
+        "spain": 51.4,
+        "sweden": 9.7,
+        "united-kingdom": 73.5,
+    },
 }
 
 
@@ -78,7 +78,9 @@ def get_quantile(output_df, sc_idx, quantile):
     return float(masked_output_df[mask_quantile]["value"])
 
 
-def get_uncertainty_cell_value(country, uncertainty_df, output, mode, duration, per_capita=False, population=None):
+def get_uncertainty_cell_value(
+    country, uncertainty_df, output, mode, duration, per_capita=False, population=None
+):
 
     # output is in ["deaths_before", "deaths_unmitigated", "deaths_opti_deaths", "deaths_opti_yoll",
     #                "yoll_before", "yoll_unmitigated", "yoll_opti_deaths", "yoll_opti_yoll"]
@@ -98,7 +100,7 @@ def get_uncertainty_cell_value(country, uncertainty_df, output, mode, duration, 
         if per_capita:
             country_name = country.title() if country != "united-kingdom" else "United Kingdom"
             pop = get_country_population_size(country_name)
-            value *= 1000 / pop * 1.e6
+            value *= 1000 / pop * 1.0e6
             value = int(value)
 
         return value
@@ -174,8 +176,7 @@ def make_main_outputs_tables(uncertainty_dfs, per_capita=False):
     column_names = [
         "country",
         "deaths_before",
-        "who_before"
-        "deaths_unmitigated",
+        "who_before" "deaths_unmitigated",
         "deaths_opti_deaths",
         "deaths_opti_yoll",
         "who_by_jan",
@@ -203,7 +204,9 @@ def make_main_outputs_tables(uncertainty_dfs, per_capita=False):
                 for output in [c for c in column_names if c != "country"]:
                     print(output)
                     row_as_list.append(
-                        get_uncertainty_cell_value(country, uncertainty_df, output, mode, duration, per_capita, population)
+                        get_uncertainty_cell_value(
+                            country, uncertainty_df, output, mode, duration, per_capita, population
+                        )
                     )
                 table.loc[i_row] = row_as_list
 
@@ -262,11 +265,17 @@ def make_main_outputs_tables_new_messaging(uncertainty_dfs, per_capita=False):
                 for output in [c for c in column_names if c != "country"]:
                     print(output)
                     row_as_list.append(
-                        get_uncertainty_cell_value(country, uncertainty_df, output, mode, duration, per_capita, population)
+                        get_uncertainty_cell_value(
+                            country, uncertainty_df, output, mode, duration, per_capita, population
+                        )
                     )
                 table.loc[i_row] = row_as_list
 
-    filename = f"output_table_per_capita_new_messaging.csv" if per_capita else f"output_table_new_messaging.csv"
+    filename = (
+        f"output_table_per_capita_new_messaging.csv"
+        if per_capita
+        else f"output_table_new_messaging.csv"
+    )
     file_path = os.path.join(FIGURE_PATH, filename)
     table.to_csv(file_path)
 

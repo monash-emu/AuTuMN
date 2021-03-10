@@ -223,7 +223,7 @@ def build_params_for_phases_2_and_3(
 
     # Seed a new wave of infections with some importations.
     # # This tests whether herd immunity has actually been reached.
-    
+
     # FIXME: Importation is no longer available so we need to find another way to test herd immunity
     # scenario_params["importation"] = {
     #     "props_by_age": None,

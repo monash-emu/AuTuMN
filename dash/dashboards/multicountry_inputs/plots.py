@@ -29,9 +29,16 @@ def multi_country_cdr(
         # Extract parameters relevant to this function
         region = region_name[i_region].replace("-", "_")
         params = load_params(app_name, region)
-        iso3, testing_year, assumed_tests_parameter, smoothing_period, agegroup_params, time_params, times, \
-        agegroup_strata = \
-            get_cdr_constants(params["default"])
+        (
+            iso3,
+            testing_year,
+            assumed_tests_parameter,
+            smoothing_period,
+            agegroup_params,
+            time_params,
+            times,
+            agegroup_strata,
+        ) = get_cdr_constants(params["default"])
         pop_region = params["default"]["population"]["region"]
         pop_year = params["default"]["population"]["year"]
 
@@ -58,7 +65,7 @@ def multi_country_cdr(
                     smoothing_period,
                     iso3,
                     testing_pops,
-                    subregion=testing_region
+                    subregion=testing_region,
                 )
             )
     plots.calibration.plots.plot_multi_cdr_curves(

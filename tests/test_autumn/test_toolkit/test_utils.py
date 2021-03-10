@@ -19,12 +19,12 @@ def test_apply_odds_ratio_to_prop(n_props_to_test=100, n_ratios_to_test=100, err
             result = apply_odds_ratio_to_proportion(i_prop, i_ratio)
 
             # Make sure the result is still a proportion
-            assert 0. <= result <= 1.
+            assert 0.0 <= result <= 1.0
 
             # Make sure it goes in the same direction as the odds ratio request
-            if i_ratio > 1.:
+            if i_ratio > 1.0:
                 assert result > i_prop
-            elif i_ratio == 1.:
+            elif i_ratio == 1.0:
                 assert abs(result - i_prop) < error
-            elif i_ratio < 1.:
+            elif i_ratio < 1.0:
                 assert result < i_prop

@@ -54,12 +54,17 @@ def get_microdistancing_funcs(
 
         # Generate the overall composite contact adjustment function as the product of the reciprocal all the components
         if len(microdist_component_funcs) > 0:
+
             def microdist_composite_func(time: float) -> float:
                 power = 2 if square_mobility_effect else 1
-                return np.product([(1.0 - func(time)) ** power for func in microdist_component_funcs])
+                return np.product(
+                    [(1.0 - func(time)) ** power for func in microdist_component_funcs]
+                )
+
         else:
+
             def microdist_composite_func(time: float) -> float:
-                return 1.
+                return 1.0
 
         # Get the final location-specific microdistancing functions
         final_adjustments[loc] = microdist_composite_func

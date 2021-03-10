@@ -91,7 +91,7 @@ def create_seroprev_csv(seroprev_by_age):
     create_downloadable_csv(
         pd.DataFrame.from_dict(seroprev_by_age),
         "seroprev_by_age",
-        text="click to download age-specific seroprevalence values"
+        text="click to download age-specific seroprevalence values",
     )
 
 
@@ -146,9 +146,7 @@ def get_cdr_constants(default_params):
     times = get_model_times_from_inputs(
         time_params["start"], time_params["end"], time_params["step"]
     )
-    agegroup_strata = [
-        str(s) for s in range(0, 75, 5)
-    ]
+    agegroup_strata = [str(s) for s in range(0, 75, 5)]
     return (
         iso3,
         testing_year,
@@ -279,11 +277,13 @@ def plot_timeseries_with_uncertainty(
     # Provide outputs as CSV
     if selected_scenarios:
         scenario_for_csv = selected_scenarios[0]
-        st.write("The following downloadable CSV is for the first scenario selected in the select box above:")
+        st.write(
+            "The following downloadable CSV is for the first scenario selected in the select box above:"
+        )
         create_downloadable_csv(
             quantiles[scenario_for_csv],
             f"output_quantiles_for_scenario_{scenario_for_csv}_for_indicator_{chosen_output}",
-            include_row=False
+            include_row=False,
         )
 
 
@@ -588,7 +588,7 @@ def plot_all_posteriors(
         capitalise_first_letter,
         dpi_request,
         priors,
-        parameters=get_epi_params(mcmc_params)
+        parameters=get_epi_params(mcmc_params),
     )
 
     write_mcmc_centiles(mcmc_params, mcmc_tables, burn_in, sig_figs, [2.5, 50, 97.5])
@@ -651,14 +651,14 @@ def plot_param_matrix_by_chain(
 
 
 def plot_param_matrix(
-        plotter: StreamlitPlotter,
-        calib_dir_path: str,
-        mcmc_tables: List[pd.DataFrame],
-        mcmc_params: List[pd.DataFrame],
-        targets: dict,
-        app_name: str,
-        region: str,
-        show_ticks=False
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+    app_name: str,
+    region: str,
+    show_ticks=False,
 ):
     parameters = mcmc_params[0]["name"].unique().tolist()
     chain_length = find_shortest_chain_length(mcmc_tables)
@@ -747,6 +747,7 @@ def get_uncertainty_db(mcmc_tables, targets, calib_dir_path):
 
     return uncertainty_df
 
+
 def plot_seroprevalence_by_age(
     plotter: StreamlitPlotter,
     calib_dir_path: str,
@@ -776,7 +777,11 @@ def plot_seroprevalence_by_age(
             plotter, uncertainty_df, selected_scenario, sero_data[region], n_columns
         )
     else:
-        _, seroprevalence_by_age, overall_seroprev = plots.uncertainty.plots.plot_seroprevalence_by_age(
+        (
+            _,
+            seroprevalence_by_age,
+            overall_seroprev,
+        ) = plots.uncertainty.plots.plot_seroprevalence_by_age(
             plotter, uncertainty_df, selected_scenario, time
         )
         create_seroprev_csv(seroprevalence_by_age)

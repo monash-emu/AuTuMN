@@ -3,4 +3,3 @@ from apps.covid_19.mixing_optimisation.outputs.plots.outputs import hospital_unc
 
 make_tables.main()
 hospital_uncertainty.main()
-

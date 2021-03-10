@@ -1,4 +1,4 @@
-description: schools re-open
+description: other locations back to baseline
 parent: apps/covid_19/regions/victoria/params/default.yml
 
 time:
@@ -8,7 +8,8 @@ victorian_clusters:
   metro:
     mobility:
       mixing:
-        school:
+        other_locations:
+          append: false
           times:
             - 2020-07-07
           values:
@@ -16,7 +17,8 @@ victorian_clusters:
   regional:
     mobility:
       mixing:
-        school:
+        other_locations:
+          append: false
           times:
             - 2020-07-07
           values:

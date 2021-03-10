@@ -1,3 +1,8 @@
+# Legacy Victorian COVID-19 Clusters
+
+This branch contains code for the 9 Victorian cluster models (eg north metro, hume, grampians, etc) and the processing jobs that prepare reports for DHHS.
+These apps were worked on in late 2020 and early 2021.
+
 # AuTuMN
 
 ![](https://github.com/monash-emu/AuTuMN/workflows/Continuous%20Integration/badge.svg)

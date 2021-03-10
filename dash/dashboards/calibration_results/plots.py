@@ -7,13 +7,13 @@ import streamlit as st
 import random
 import yaml
 
-from autumn.tool_kit.params import load_params
+from autumn.utils.params import load_params
 from autumn.plots.plotter import StreamlitPlotter
 from autumn.plots.calibration.plots import find_shortest_chain_length, get_posterior, get_epi_params
 from autumn import db, plots, inputs
 from apps.covid_19.model.preprocess.testing import find_cdr_function_from_test_data
 from apps.covid_19.mixing_optimisation.serosurvey_by_age.survey_data import get_serosurvey_data
-from autumn.tool_kit.scenarios import get_model_times_from_inputs
+from autumn.utils.scenarios import get_model_times_from_inputs
 
 from dash.utils import create_downloadable_csv, round_sig_fig
 from dash import selectors

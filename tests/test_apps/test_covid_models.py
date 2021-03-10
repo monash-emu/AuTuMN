@@ -5,7 +5,7 @@ from summer.model import StratifiedModel
 from summer2 import CompartmentalModel
 
 from apps import covid_19
-from autumn.tool_kit.utils import merge_dicts
+from autumn.utils.utils import merge_dicts
 
 
 @pytest.mark.local_only

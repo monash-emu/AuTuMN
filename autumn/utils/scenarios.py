@@ -9,9 +9,9 @@ from typing import Callable, List, Optional
 from summer.model import StratifiedModel
 from summer2.model import CompartmentalModel
 
-from autumn.tool_kit import schema_builder as sb
+from autumn.utils import schema_builder as sb
 from utils.timer import Timer
-from autumn.tool_kit.params import update_params
+from autumn.utils.params import update_params
 
 from summer.constants import IntegrationType
 

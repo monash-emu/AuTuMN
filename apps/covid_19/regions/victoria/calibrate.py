@@ -2,10 +2,10 @@ import numpy as np
 
 from apps.covid_19.calibration import provide_default_calibration_params, get_truncated_output
 from autumn.region import Region
-from autumn.tool_kit.params import load_targets
+from autumn.utils.params import load_targets
 from autumn.calibration.utils import add_dispersion_param_prior_for_gaussian
 from apps.covid_19 import calibration as base
-from autumn.tool_kit.utils import apply_moving_average
+from autumn.utils.utils import apply_moving_average
 
 CLUSTERS = [Region.to_filename(r) for r in Region.VICTORIA_SUBREGIONS]
 

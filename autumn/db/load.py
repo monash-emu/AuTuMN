@@ -9,7 +9,7 @@ import pandas as pd
 import numpy
 
 from ..db.database import get_database, BaseDatabase
-from autumn.tool_kit import Scenario
+from autumn.utils import Scenario
 
 
 logger = logging.getLogger(__name__)

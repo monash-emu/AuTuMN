@@ -6,7 +6,7 @@ import yaml
 import logging
 from typing import List
 
-from autumn.tool_kit.params import load_targets
+from autumn.utils.params import load_targets
 from autumn import db
 from autumn.plots.plotter import FilePlotter
 

@@ -17,11 +17,11 @@ from scipy import stats, special
 from summer.model import StratifiedModel
 from autumn import db, plots
 from autumn.region import Region
-from autumn.tool_kit.scenarios import Scenario
+from autumn.utils.scenarios import Scenario
 from utils.timer import Timer
 import settings
-from autumn.tool_kit.params import update_params, read_param_value_from_string, load_targets
-from autumn.tool_kit.utils import (
+from autumn.utils.params import update_params, read_param_value_from_string, load_targets
+from autumn.utils.utils import (
     get_git_branch,
     get_git_hash,
 )

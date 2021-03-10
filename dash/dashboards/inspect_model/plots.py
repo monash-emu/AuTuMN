@@ -5,8 +5,8 @@ from matplotlib import pyplot
 
 from autumn import plots
 from autumn.plots.plotter import StreamlitPlotter
-from autumn.tool_kit.model_register import AppRegion
-from autumn.tool_kit.scenarios import Scenario
+from autumn.utils.model_register import AppRegion
+from autumn.utils.scenarios import Scenario
 from autumn.inputs import get_mobility_data
 
 from dash.dashboards.inspect_model.flow_graph import plot_flow_graph

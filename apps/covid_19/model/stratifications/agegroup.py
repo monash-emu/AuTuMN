@@ -3,7 +3,7 @@ from typing import List
 from summer2 import Stratification, Multiply
 
 from autumn import inputs
-from autumn.tool_kit.utils import normalise_sequence
+from autumn.utils.utils import normalise_sequence
 
 from apps.covid_19.constants import COMPARTMENTS
 from apps.covid_19.model import preprocess

@@ -6,8 +6,8 @@ import pandas as pd
 from autumn import db
 from autumn.db.store import Table
 from autumn.db.database import get_database
-from autumn.tool_kit.params import update_params
-from autumn.tool_kit.scenarios import Scenario, calculate_differential_outputs
+from autumn.utils.params import update_params
+from autumn.utils.scenarios import Scenario, calculate_differential_outputs
 from utils.s3 import list_s3, download_from_run_s3, upload_to_run_s3
 from utils.parallel import run_parallel_tasks
 from utils.timer import Timer

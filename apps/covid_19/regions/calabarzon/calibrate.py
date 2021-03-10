@@ -6,7 +6,7 @@ from apps.covid_19.calibration import (
     add_standard_philippines_targets,
     add_standard_dispersion_parameter,
 )
-from autumn.tool_kit.params import load_targets
+from autumn.utils.params import load_targets
 
 targets = load_targets("covid_19", Region.CALABARZON)
 TARGET_OUTPUTS = add_standard_philippines_targets(targets)

@@ -6,7 +6,7 @@ import os
 import streamlit as st
 
 from autumn import plots, db
-from autumn.tool_kit.model_register import AppRegion
+from autumn.utils.model_register import AppRegion
 from autumn.plots.plotter import StreamlitPlotter
 
 from dash import selectors

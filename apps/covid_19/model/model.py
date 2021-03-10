@@ -2,7 +2,6 @@ from summer2 import CompartmentalModel
 
 from autumn import inputs
 from autumn.curve.scale_up import scale_up_function
-from autumn.environment.seasonality import get_seasonal_forcing
 from apps.covid_19.constants import (
     Compartment,
     COMPARTMENTS,
@@ -22,6 +21,7 @@ from apps.covid_19.model.stratifications.history import get_history_strat
 from apps.covid_19.model.outputs.standard import request_standard_outputs
 from apps.covid_19.model.outputs.victorian import request_victorian_outputs
 
+from apps.covid_19.model.preprocess.seasonality import get_seasonal_forcing
 from apps.covid_19.model.preprocess.vaccination import get_vacc_roll_out_function
 
 

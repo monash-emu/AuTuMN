@@ -8,7 +8,7 @@ import pandas as pd
 import numpy as np
 
 from utils.runs import read_run_id
-from autumn.tool_kit.params import load_targets, load_params
+from autumn.utils.params import load_targets, load_params
 from autumn.db.database import get_database, BaseDatabase
 
 

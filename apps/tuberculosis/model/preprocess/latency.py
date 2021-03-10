@@ -3,7 +3,7 @@ from summer.model.utils.parameter_processing import (
     get_parameter_dict_from_function,
 )
 
-from autumn.tool_kit import change_parameter_unit
+from autumn.utils import change_parameter_unit
 from autumn.curve import tanh_based_scaleup, make_linear_curve
 
 

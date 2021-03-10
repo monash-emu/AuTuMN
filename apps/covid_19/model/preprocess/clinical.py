@@ -1,7 +1,7 @@
 import numpy as np
 
 from autumn import inputs
-from autumn.tool_kit.utils import (
+from autumn.utils.utils import (
     apply_odds_ratio_to_proportion,
     repeat_list_elements,
     repeat_list_elements_average_last_two,

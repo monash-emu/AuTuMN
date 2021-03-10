@@ -1,4 +1,4 @@
-from autumn.tool_kit import schema_builder as sb
+from autumn.utils import schema_builder as sb
 
 validate_params = sb.build_validator(
     # Country info

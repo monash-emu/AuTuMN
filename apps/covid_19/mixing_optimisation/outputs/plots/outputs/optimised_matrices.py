@@ -14,8 +14,8 @@ from apps.covid_19.mixing_optimisation.mixing_opti import (
 )
 from apps.covid_19.mixing_optimisation.write_scenarios import read_opti_outputs, read_decision_vars
 from settings import BASE_PATH
-from autumn.tool_kit.params import merge_dicts
-from autumn.tool_kit.scenarios import Scenario
+from autumn.utils.params import merge_dicts
+from autumn.utils.scenarios import Scenario
 
 FIGURE_PATH = os.path.join(
     BASE_PATH,

@@ -1,9 +1,10 @@
 from copy import deepcopy
+
 from summer.model import StratifiedModel
 from summer.constants import Compartment, BirthApproach
-from autumn.tool_kit.scenarios import get_model_times_from_inputs
-from autumn.tool_kit.demography import set_model_time_variant_birth_rate
-
+from autumn.utils.scenarios import get_model_times_from_inputs
+from autumn import inputs
+from autumn.curve import scale_up_function
 from apps.tuberculosis.model import preprocess, outputs
 from apps.tuberculosis.model.validate import validate_params, check_param_values
 from apps.tuberculosis.model.stratification import (
@@ -119,7 +120,12 @@ def build_model(params: dict) -> StratifiedModel:
         tb_model.time_variants["relapse_rate"] = relapse_func
 
     # Load time-variant birth rates
-    set_model_time_variant_birth_rate(tb_model, params["iso3"])
+    birth_rates, years = inputs.get_crude_birth_rate(params["iso3"])
+    birth_rates = [b / 1000.0 for b in birth_rates]  # birth rates are provided / 1000 population
+    tb_model.time_variants["crude_birth_rate"] = scale_up_function(
+        years, birth_rates, smoothness=0.2, method=5
+    )
+    tb_model.parameters["crude_birth_rate"] = "crude_birth_rate"
 
     # apply user-defined stratifications
     user_defined_stratifications = [

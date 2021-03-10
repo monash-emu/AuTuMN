@@ -1,5 +1,5 @@
 import streamlit as st
-from autumn.tool_kit.params import load_params
+from autumn.utils.params import load_params
 from autumn import plots, inputs
 from apps.covid_19.model.preprocess.testing import find_cdr_function_from_test_data
 import random

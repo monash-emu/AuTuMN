@@ -11,7 +11,7 @@ import seaborn as sns
 from matplotlib import pyplot
 from math import ceil
 
-from autumn.tool_kit.scenarios import Scenario
+from autumn.utils.scenarios import Scenario
 from autumn.plots.utils import _plot_targets_to_axis, get_plot_text_dict
 from autumn.plots.utils import change_xaxis_to_date, REF_DATE
 

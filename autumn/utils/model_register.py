@@ -9,9 +9,9 @@ from datetime import datetime
 from settings import OUTPUT_DATA_PATH
 from autumn import db
 from utils.timer import Timer
-from autumn.tool_kit.scenarios import Scenario
-from autumn.tool_kit.params import load_params, load_targets
-from autumn.tool_kit.utils import (
+from autumn.utils.scenarios import Scenario
+from autumn.utils.params import load_params, load_targets
+from autumn.utils.utils import (
     get_git_branch,
     get_git_hash,
 )

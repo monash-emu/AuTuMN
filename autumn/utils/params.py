@@ -11,7 +11,7 @@ from os import path
 import logging
 
 from settings import APPS_PATH, BASE_PATH
-from autumn.tool_kit.utils import merge_dicts
+from autumn.utils.utils import merge_dicts
 from autumn.secrets import check_hash
 
 logger = logging.getLogger(__name__)

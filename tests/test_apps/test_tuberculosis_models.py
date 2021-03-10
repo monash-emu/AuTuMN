@@ -5,7 +5,7 @@ from summer.model import StratifiedModel
 from summer.constants import Flow, IntegrationType
 
 from apps import tuberculosis
-from autumn.tool_kit.utils import merge_dicts
+from autumn.utils.utils import merge_dicts
 from itertools import chain, combinations
 
 

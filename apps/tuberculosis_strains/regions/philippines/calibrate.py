@@ -2,7 +2,7 @@ import logging
 
 from autumn.region import Region
 from autumn.calibration import Calibration
-from autumn.tool_kit.params import load_params, load_targets
+from autumn.utils.params import load_params, load_targets
 
 from apps.tuberculosis_strains.model import build_model
 

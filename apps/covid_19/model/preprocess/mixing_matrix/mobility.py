@@ -2,7 +2,7 @@ from typing import Callable, Dict, List
 
 from autumn.curve import scale_up_function
 from autumn.inputs import get_mobility_data
-from autumn.tool_kit.utils import apply_moving_average
+from autumn.utils.utils import apply_moving_average
 from apps.covid_19.model.parameters import Country, MixingLocation
 
 from apps.covid_19.constants import BASE_DATETIME

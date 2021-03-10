@@ -1,4 +1,4 @@
-from autumn.tool_kit.model_register import App
+from autumn.utils.model_register import App
 
 from .regions.philippines import philippines_region
 from .regions.manila import manila_region

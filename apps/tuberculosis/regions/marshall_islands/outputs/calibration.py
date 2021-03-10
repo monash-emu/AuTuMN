@@ -10,7 +10,7 @@ from autumn.plots.uncertainty.plots import (
     _plot_targets_to_axis,
 )
 from autumn.plots.utils import COLORS
-from autumn.tool_kit.params import load_targets
+from autumn.utils.params import load_targets
 
 from apps.tuberculosis.regions.marshall_islands.outputs.utils import (
     OUTPUT_TITLES,

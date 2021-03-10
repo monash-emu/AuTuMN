@@ -20,7 +20,7 @@ from apps.covid_19.model.preprocess.case_detection import get_testing_pop
 
 from autumn.region import Region
 from apps.covid_19.model.preprocess.testing import find_cdr_function_from_test_data
-from autumn.tool_kit.params import load_params
+from autumn.utils.params import load_params
 from dash.dashboards.calibration_results.plots import get_cdr_constants
 
 STANDARD_X_LIMITS = 153, 275

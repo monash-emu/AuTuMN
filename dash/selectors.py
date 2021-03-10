@@ -9,7 +9,7 @@ import streamlit as st
 import pandas as pd
 
 import settings
-from autumn.tool_kit import Scenario
+from autumn.utils import Scenario
 from summer.model import StratifiedModel
 
 

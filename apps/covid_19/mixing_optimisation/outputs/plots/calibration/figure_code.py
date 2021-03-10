@@ -1,4 +1,4 @@
-from autumn.tool_kit.params import load_targets
+from autumn.utils.params import load_targets
 from autumn import db, plots
 from autumn.plots.calibration.plots import get_posterior, get_posterior_best_chain
 from autumn.curve import tanh_based_scaleup

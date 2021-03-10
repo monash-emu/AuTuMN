@@ -10,7 +10,7 @@ from summer2.flows import (
     BaseInfectionFlow,
 )
 from autumn.plots.plotter import StreamlitPlotter
-from autumn.tool_kit.model_register import AppRegion
+from autumn.utils.model_register import AppRegion
 
 MARKERS = ".spP*D^vxH"
 FLOW_STYLES = [

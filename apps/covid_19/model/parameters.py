@@ -102,7 +102,9 @@ class ConstantMicrodistancingParams(BaseModel):
 
 class MicroDistancingFunc(BaseModel):
     function_type: str
-    parameters: Union[EmpiricMicrodistancingParams, TanhMicrodistancingParams, ConstantMicrodistancingParams]
+    parameters: Union[
+        EmpiricMicrodistancingParams, TanhMicrodistancingParams, ConstantMicrodistancingParams
+    ]
     locations: List[str]
 
 
@@ -183,13 +185,6 @@ class SusceptibilityHeterogeneity(BaseModel):
     coeff_var: float
 
 
-class Importation(BaseModel):
-    case_timeseries: TimeSeries
-    quarantine_timeseries: TimeSeries
-    props_by_age: Optional[Dict[str, float]]
-    movement_prop: Optional[float]
-
-
 class MetroClusterStratification(BaseModel):
     mobility: Mobility
 
@@ -214,6 +209,7 @@ class VaccCoveragePeriod(BaseModel):
     """
     Parameters to pass when desired behaviour is vaccinating a proportion of the population over a period of time
     """
+
     coverage: float
     start_time: float
     end_time: float
@@ -223,6 +219,7 @@ class VocEmmergence(BaseModel):
     """
     Parameters defining the emergence profile of Variants of Concerns
     """
+
     final_proportion: float
     start_time: float
     end_time: float
@@ -272,7 +269,6 @@ class Parameters:
     clinical_stratification: ClinicalStratification
     case_detection: CaseDetection
     testing_to_detection: Optional[TestingToDetection]
-    importation: Optional[Importation]
     victorian_clusters: Optional[VictorianClusterStratification]
     # Dummy parameters - not used
     notifications_dispersion_param: float

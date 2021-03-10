@@ -65,12 +65,4 @@ def get_agegroup_strat(params: Parameters, total_pops: List[int]) -> Stratificat
     age_strat.add_flow_adjustments(
         "infection", {s: Multiply(v) for s, v in params.age_stratification.susceptibility.items()}
     )
-    if params.importation:
-        importation_props_by_age = preprocess.importation.get_importation_props_by_age(
-            params.importation, AGEGROUP_STRATA
-        )
-        age_strat.add_flow_adjustments(
-            "importation", {s: Multiply(v) for s, v in importation_props_by_age.items()}
-        )
-
     return age_strat

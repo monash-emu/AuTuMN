@@ -1,6 +1,3 @@
-from typing import List
-import numpy as np
-
 from summer2 import CompartmentalModel
 
 from autumn.region import Region

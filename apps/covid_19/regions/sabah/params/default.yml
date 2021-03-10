@@ -1,7 +1,6 @@
 description: BASELINE
 parent: apps/covid_19/regions/malaysia/params/default.yml
 
-importation: null
 infectious_seed: 200
 contact_rate: 0.13
 

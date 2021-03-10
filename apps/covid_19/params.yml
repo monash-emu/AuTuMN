@@ -55,26 +55,26 @@ sojourn:
   compartment_periods:
     hospital_early: 7.7
     hospital_late: 12.8
-    icu_early: 10.5  # 7.7 + 2.8 (time from symptom to Hosp admission + time from Hosp admission to ICU)
+    icu_early: 10.5 # 7.7 + 2.8 (time from symptom to Hosp admission + time from Hosp admission to ICU)
     icu_late: 13.3
 
   # Mean time spent in each compartment, defined via proportions
   compartment_periods_calculated:
     exposed:
-      total_period: 5.5  # Routinely calibrated, see calibration file
+      total_period: 5.5 # Routinely calibrated, see calibration file
       proportions:
-        early: 0.5  # Proportion of the exposed period spent infectious - i.e. "presymptomatic"
+        early: 0.5 # Proportion of the exposed period spent infectious - i.e. "presymptomatic"
         late: 0.5
 
     active:
-      total_period: 8.  # Routinely calibrated, see calibration file
+      total_period: 8. # Routinely calibrated, see calibration file
       proportions:
-        early: 0.333  # Proportion of active period spent in the early compartment (can't be isolated, not in hospital)
+        early: 0.333 # Proportion of active period spent in the early compartment (can't be isolated, not in hospital)
         late: 0.667
 
 clinical_stratification:
-  icu_prop: 0.17  # Proportion of those hospitalised that are admitted to ICU
-  icu_mortality_prop: 0.5  # Death proportion ceiling for ICU mortality
+  icu_prop: 0.17 # Proportion of those hospitalised that are admitted to ICU
+  icu_mortality_prop: 0.5 # Death proportion ceiling for ICU mortality
   props:
     symptomatic:
       # Infectiousness progression adjustments - in ten year brackets that need to be adapted to model strata later
@@ -170,8 +170,6 @@ case_detection:
   upper_asymptote: 0.6 # End value - upper asymptote for increasing function
 
 testing_to_detection: null
-
-importation: null
 
 victorian_clusters: null
 

@@ -1,5 +1,4 @@
 from types import MethodType
-from typing import List
 
 import numpy as np
 

@@ -18,6 +18,7 @@ from apps.covid_19.model.stratifications.cluster import (
 )
 from apps.covid_19.model.stratifications.immunity import get_immunity_strat
 from apps.covid_19.model.stratifications.clinical import get_clinical_strat
+from apps.covid_19.model.stratifications.history import get_history_strat
 from apps.covid_19.model.outputs.standard import request_standard_outputs
 from apps.covid_19.model.outputs.victorian import request_victorian_outputs
 
@@ -136,18 +137,6 @@ def build_model(params: dict) -> CompartmentalModel:
             dest=Compartment.SUSCEPTIBLE,
         )
 
-    # Optionally add an importation flow, where we ship in infected people from overseas.
-    if params.importation:
-        get_importation_rate = preprocess.importation.build_importation_rate_func(
-            params, AGEGROUP_STRATA, total_pops
-        )
-        # Imported people are infectious (ie. late active).
-        model.add_importation_flow(
-            name="importation",
-            num_imported=get_importation_rate,
-            dest=Compartment.LATE_ACTIVE,
-        )
-
     # Stratify the model by age group.
     age_strat = get_agegroup_strat(params, total_pops)
     model.stratify_with(age_strat)
@@ -176,9 +165,9 @@ def build_model(params: dict) -> CompartmentalModel:
                 )
 
     # Infection history stratification
-    # if params.stratify_by_infection_history:
-    #     history_strat = get_history_strat(params, compartment_periods)
-    #     model.stratify_with(history_strat)
+    if params.stratify_by_infection_history:
+        history_strat = get_history_strat(params, compartment_periods)
+        model.stratify_with(history_strat)
 
     # Stratify model by Victorian subregion (used for Victorian cluster model).
     if params.victorian_clusters:

@@ -1,1 +1,1 @@
-from . import compartments, mixing_matrix, importation, elderly_protection
+from . import compartments, mixing_matrix, elderly_protection

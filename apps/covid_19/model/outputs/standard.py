@@ -11,8 +11,6 @@ from apps.covid_19.mixing_optimisation.constants import OPTI_ISO3S, Region
 from apps.covid_19.model.stratifications.clinical import CLINICAL_STRATA
 from apps.covid_19.model.stratifications.agegroup import AGEGROUP_STRATA
 
-from apps.covid_19.model.preprocess.importation import build_abs_detection_proportion_imported
-
 
 def request_standard_outputs(
     model: CompartmentalModel,
@@ -62,46 +60,26 @@ def request_standard_outputs(
     hospital_sources = []
     icu_sources = []
     for agegroup in AGEGROUP_STRATA:
-        icu_sources.append(
-            f"progressXagegroup_{agegroup}Xclinical_{Clinical.ICU}"
-        )
+        icu_sources.append(f"progressXagegroup_{agegroup}Xclinical_{Clinical.ICU}")
         hospital_sources += [
             f"progressXagegroup_{agegroup}Xclinical_{Clinical.ICU}",
-            f"progressXagegroup_{agegroup}Xclinical_{Clinical.HOSPITAL_NON_ICU}"
+            f"progressXagegroup_{agegroup}Xclinical_{Clinical.HOSPITAL_NON_ICU}",
         ]
 
     model.request_aggregate_output(
         name="new_hospital_admissions",
         sources=hospital_sources,
     )
-    model.request_aggregate_output(
-        name="new_icu_admissions", sources=icu_sources
-    )
+    model.request_aggregate_output(name="new_icu_admissions", sources=icu_sources)
 
     # Get notifications, which may included people detected in-country as they progress, or imported cases which are detected.
-    notification_sources = [f"progressXagegroup_{a}Xclinical_{c}" for a in AGEGROUP_STRATA for c in NOTIFICATION_STRATA]
+    notification_sources = [
+        f"progressXagegroup_{a}Xclinical_{c}" for a in AGEGROUP_STRATA for c in NOTIFICATION_STRATA
+    ]
     model.request_aggregate_output(name="local_notifications", sources=notification_sources)
-    if params.importation:
-        # Include *detected* imported cases in notifications.
-        model.request_output_for_flow(
-            name="_importation", flow_name="importation", save_results=False
-        )
-        get_abs_detection_proportion_imported = build_abs_detection_proportion_imported(
-            params, AGEGROUP_STRATA
-        )
-        props_imports_detected = np.array(
-            [get_abs_detection_proportion_imported(t) for t in model.times]
-        )
-        get_count_detected_imports = lambda imports: imports * props_imports_detected
-        notification_sources = [*notification_sources, "_importation_detected"]
-        model.request_function_output(
-            name="_importation_detected",
-            func=get_count_detected_imports,
-            sources=["_importation"],
-            save_results=False,
-        )
-
-    model.request_aggregate_output(name="notifications", sources=notification_sources)
+    model.request_aggregate_output(
+        name="notifications", sources=notification_sources
+    )  # Used to be different coz we had imports.
 
     # Notification by age group
     for agegroup in AGEGROUP_STRATA:
@@ -114,7 +92,7 @@ def request_standard_outputs(
             sources=[sympt_isolate_name, hospital_non_icu_name, icu_name],
             func=lambda sympt, hosp, icu: sympt + hosp + icu,
         )
-        
+
     # Infection deaths.
     model.request_output_for_flow(name="infection_deaths", flow_name="infect_death")
     for agegroup in AGEGROUP_STRATA:

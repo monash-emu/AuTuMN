@@ -1,5 +1,4 @@
-from summer2 import Stratification, Multiply, Overwrite
-from autumn.curve import scale_up_function
+from summer2 import Stratification, Overwrite
 from apps.covid_19.model.parameters import Parameters
 from apps.covid_19.model.stratifications.agegroup import AGEGROUP_STRATA
 from apps.covid_19.constants import (
@@ -7,11 +6,7 @@ from apps.covid_19.constants import (
     Clinical,
     INFECTIOUS_COMPARTMENTS,
 )
-from apps.covid_19.model.preprocess.clinical import (
-    get_abs_prop_isolated_factory,
-    get_abs_prop_sympt_non_hospital_factory,
-    get_all_adjs
-)
+from apps.covid_19.model.preprocess.clinical import get_all_adjs
 
 CLINICAL_STRATA = [
     Clinical.NON_SYMPT,
@@ -92,32 +87,27 @@ def get_clinical_strat(params: Parameters) -> Stratification:
     ifr_adjuster = params.infection_fatality.multiplier
 
     # Get all the adjustments in the same way as we will do if the immunity stratification is implemented
-    entry_adjustments, death_adjs, progress_adjs, recovery_adjs, abs_props, get_detected_proportion = \
-        get_all_adjs(
-            clinical_params,
-            country,
-            pop,
-            params.infection_fatality.props,
-            params.sojourn,
-            params.testing_to_detection,
-            params.case_detection,
-            ifr_adjuster,
-            symptomatic_adjuster,
-            hospital_adjuster,
-        )
+    entry_adjustments, death_adjs, progress_adjs, recovery_adjs, _, _ = get_all_adjs(
+        clinical_params,
+        country,
+        pop,
+        params.infection_fatality.props,
+        params.sojourn,
+        params.testing_to_detection,
+        params.case_detection,
+        ifr_adjuster,
+        symptomatic_adjuster,
+        hospital_adjuster,
+    )
 
     # Assign all the adjustments to the model
-    for i_age, agegroup in enumerate(AGEGROUP_STRATA):
+    for agegroup in AGEGROUP_STRATA:
         source = {"agegroup": agegroup}
         clinical_strat.add_flow_adjustments(
-            "infect_onset",
-            entry_adjustments[agegroup],
-            source_strata=source
+            "infect_onset", entry_adjustments[agegroup], source_strata=source
         )
         clinical_strat.add_flow_adjustments(
-            "infect_death",
-            death_adjs[agegroup],
-            source_strata=source
+            "infect_death", death_adjs[agegroup], source_strata=source
         )
         clinical_strat.add_flow_adjustments(
             "progress",
@@ -129,62 +119,5 @@ def get_clinical_strat(params: Parameters) -> Stratification:
             recovery_adjs[agegroup],
             source_strata=source,
         )
-
-    """
-    Clinical proportions for imported cases.
-    """
-    # Work out time-variant clinical proportions for imported cases accounting for quarantine
-    importation = params.importation
-    if importation:
-        # Create scale-up function for quarantine. Default to no quarantine if not values are available.
-        qts = importation.quarantine_timeseries
-        quarantine_func = (
-            scale_up_function(qts.times, qts.values, method=4) if qts and qts.times else lambda _: 0
-        )
-
-        # Loop through age groups and set the appropriate clinical proportions
-        for age_idx, agegroup in enumerate(AGEGROUP_STRATA):
-            # Proportion entering non-symptomatic stratum reduced by the quarantined (and so isolated) proportion
-            def get_prop_imported_to_nonsympt(t):
-                prop_not_quarantined = 1.0 - quarantine_func(t)
-                abs_prop_nonsympt = abs_props[Clinical.NON_SYMPT][age_idx]
-                return abs_prop_nonsympt * prop_not_quarantined
-
-            get_abs_prop_isolated = get_abs_prop_isolated_factory(
-                age_idx, abs_props, get_detected_proportion
-            )
-            get_abs_prop_sympt_non_hospital = get_abs_prop_sympt_non_hospital_factory(
-                age_idx, abs_props, get_abs_prop_isolated
-            )
-
-            # Proportion ambulatory also reduced by quarantined proportion due to isolation
-            def get_prop_imported_to_sympt_non_hospital(t):
-                prop_not_quarantined = 1.0 - quarantine_func(t)
-                abs_prop_sympt_non_hospital = get_abs_prop_sympt_non_hospital(t)
-                return abs_prop_sympt_non_hospital * prop_not_quarantined
-
-            # Proportion isolated includes those that would have been detected anyway and the ones above quarantined
-            def get_prop_imported_to_sympt_isolate(t):
-                abs_prop_isolated = get_abs_prop_isolated(t)
-                prop_quarantined = quarantine_func(t)
-                abs_prop_sympt_non_hospital = get_abs_prop_sympt_non_hospital(t)
-                abs_prop_nonsympt = abs_props[Clinical.NON_SYMPT][age_idx]
-                return abs_prop_isolated + prop_quarantined * (
-                    abs_prop_sympt_non_hospital + abs_prop_nonsympt
-                )
-
-            clinical_strat.add_flow_adjustments(
-                "importation",
-                {
-                    Clinical.NON_SYMPT: Multiply(get_prop_imported_to_nonsympt),
-                    Clinical.ICU: Multiply(abs_props[Clinical.ICU][age_idx]),
-                    Clinical.HOSPITAL_NON_ICU: Multiply(
-                        abs_props[Clinical.HOSPITAL_NON_ICU][age_idx]
-                    ),
-                    Clinical.SYMPT_NON_HOSPITAL: Multiply(get_prop_imported_to_sympt_non_hospital),
-                    Clinical.SYMPT_ISOLATE: Multiply(get_prop_imported_to_sympt_isolate),
-                },
-                dest_strata={"agegroup": agegroup},
-            )
 
     return clinical_strat

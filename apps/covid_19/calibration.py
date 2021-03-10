@@ -102,7 +102,7 @@ def run_calibration_chain(
         adaptive_proposal=adaptive_proposal,
         initialisation_type=params["default"]["metropolis_initialisation_type"],
         metropolis_init_rel_step_size=params["default"]["metropolis_init_rel_step_size"],
-        n_steps_fixed_proposal=params["default"]["n_steps_fixed_proposal"]
+        n_steps_fixed_proposal=params["default"]["n_steps_fixed_proposal"],
     )
     logger.info("Starting calibration.")
     calib.run_fitting_algorithm(
@@ -310,11 +310,6 @@ def add_standard_victoria_params(params, region, include_micro=True):
             "param_name": "testing_to_detection.assumed_cdr_parameter",
             "distribution": "uniform",
             "distri_params": [0.2, 0.5],
-        },
-        {
-            "param_name": "importation.movement_prop",
-            "distribution": "uniform",
-            "distri_params": [0.05, 0.4],
         },
         {
             "param_name": "clinical_stratification.props.hospital.multiplier",

@@ -50,7 +50,6 @@ os.makedirs(LOGGING_DIR, exist_ok=True)
 from .calibrate import calibrate_task
 from .full import full_model_run_task
 from .powerbi import powerbi_task
-from .dhhs import dhhs_task
 from .utils import set_logging_config
 
 set_logging_config(verbose=True)
@@ -86,13 +85,6 @@ def run_full_models(run, burn, sample, verbose):
 @click.option("--verbose", is_flag=True)
 def run_powerbi(run, verbose):
     powerbi_task(run, not verbose)
-
-
-@cli.command("dhhs")
-@click.option("--commit", type=str, required=True)
-@click.option("--verbose", is_flag=True)
-def run_dhhs(commit, verbose):
-    dhhs_task(commit, not verbose)
 
 
 cli()

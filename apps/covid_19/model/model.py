@@ -3,9 +3,6 @@ from summer2 import CompartmentalModel
 from autumn import inputs
 from autumn.curve.scale_up import scale_up_function
 from autumn.environment.seasonality import get_seasonal_forcing
-
-from copy import copy
-
 from apps.covid_19.constants import (
     Compartment,
     COMPARTMENTS,
@@ -25,21 +22,6 @@ from apps.covid_19.model.outputs.standard import request_standard_outputs
 from apps.covid_19.model.outputs.victorian import request_victorian_outputs
 
 from apps.covid_19.model.preprocess.vaccination import get_vacc_roll_out_function
-
-
-def apply_vaccination(model, vacc_params):
-    vaccination_roll_out_function = \
-        get_vacc_roll_out_function(vacc_params.roll_out_function)
-    for compartment in [Compartment.SUSCEPTIBLE, Compartment.RECOVERED]:
-        model.add_fractional_flow(
-            name="vaccination",
-            fractional_rate=vaccination_roll_out_function,
-            source=compartment,
-            dest=compartment,
-            source_strata={"immunity": "unvaccinated"},
-            dest_strata={"immunity": "vaccinated"},
-        )
-    return model
 
 
 def build_model(params: dict) -> CompartmentalModel:
@@ -87,14 +69,22 @@ def build_model(params: dict) -> CompartmentalModel:
     if params.voc_emmergence:
         voc_multiplier = scale_up_function(
             x=[params.voc_emmergence.start_time, params.voc_emmergence.end_time],
-            y=[1., 1. + params.voc_emmergence.final_proportion * (params.voc_emmergence.contact_rate_multiplier - 1.)],
-            method=4
+            y=[
+                1.0,
+                1.0
+                + params.voc_emmergence.final_proportion
+                * (params.voc_emmergence.contact_rate_multiplier - 1.0),
+            ],
+            method=4,
         )
         raw_contact_rate = contact_rate
         if isinstance(contact_rate, float):
+
             def contact_rate(t):
                 return raw_contact_rate * voc_multiplier(t)
+
         else:
+
             def contact_rate(t):
                 return raw_contact_rate(t) * voc_multiplier(t)
 
@@ -171,12 +161,24 @@ def build_model(params: dict) -> CompartmentalModel:
         immunity_strat = get_immunity_strat(params)
         model.stratify_with(immunity_strat)
         if params.vaccination:
-            model = apply_vaccination(model, params.vaccination)
+            vacc_params = params.vaccination
+            vaccination_roll_out_function = get_vacc_roll_out_function(
+                vacc_params.roll_out_function
+            )
+            for compartment in [Compartment.SUSCEPTIBLE, Compartment.RECOVERED]:
+                model.add_fractional_flow(
+                    name="vaccination",
+                    fractional_rate=vaccination_roll_out_function,
+                    source=compartment,
+                    dest=compartment,
+                    source_strata={"immunity": "unvaccinated"},
+                    dest_strata={"immunity": "vaccinated"},
+                )
 
     # Infection history stratification
     # if params.stratify_by_infection_history:
-    # history_strat = get_history_strat(params, compartment_periods)
-    # model.stratify_with(history_strat)
+    #     history_strat = get_history_strat(params, compartment_periods)
+    #     model.stratify_with(history_strat)
 
     # Stratify model by Victorian subregion (used for Victorian cluster model).
     if params.victorian_clusters:

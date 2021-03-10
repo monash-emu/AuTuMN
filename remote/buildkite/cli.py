@@ -16,7 +16,6 @@ from .pipelines import (
     trigger_philippines as trigger_philippines_pipeline,
     trigger_victoria as trigger_victoria_pipeline,
     trigger_europe as trigger_europe_pipeline,
-    dhhs as dhhs_pipeline,
 )
 
 logger = logging.getLogger(__name__)
@@ -38,7 +37,6 @@ def update():
         powerbi_pipeline.pipeline,
         trigger_philippines_pipeline.pipeline,
         trigger_victoria_pipeline.pipeline,
-        dhhs_pipeline.pipeline,
         trigger_europe_pipeline.pipeline,
     ]
     for pipeline in pipelines:
@@ -161,18 +159,6 @@ def powerbi():
     aws.run_powerbi(job=job_name, run=run_id, branch="master", is_spot=is_spot)
     logger.info("\n=====\nRun ID: %s\n=====\n", run_id)
     logger.info("Results available at %s", get_run_url(run_id))
-
-
-@buildkite_cli.command()
-def dhhs():
-    """Run a DHHS post-processing job in Buildkite"""
-    logger.info("Gathering data for DHHS post processing.")
-    build_number = os.environ["BUILDKITE_BUILD_NUMBER"]
-    git_commit = dhhs_pipeline.commit_field.get_value()
-    is_spot = dhhs_pipeline.spot_field.get_value()
-    params_str = pprint.pformat({f.key: f.get_value() for f in dhhs_pipeline.fields}, indent=2)
-    logger.info("Running DHHS post processing job %s with params:\n%s\n", build_number, params_str)
-    aws.run_dhhs(job=build_number, commit=git_commit, branch="master", is_spot=is_spot)
 
 
 def get_run_url(run_id: str):

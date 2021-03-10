@@ -17,24 +17,6 @@ def cleanup_builds(instance):
         conn.run("sudo rm -rf /var/lib/buildkite-agent/builds/", echo=True)
 
 
-def run_dhhs(instance, commit: str, branch: str):
-    """Run DHHS processing on the remote server"""
-    msg = "Running DHHS processing for commit %s on AWS instance %s"
-    logger.info(msg, commit, instance["InstanceId"])
-    with get_connection(instance) as conn:
-        print_hostname(conn)
-        update_repo(conn, branch=branch)
-        install_requirements(conn)
-        read_secrets(conn)
-        build_input_db(conn)
-        pipeline_name = "dhhs"
-        pipeline_args = {
-            "commit": commit,
-        }
-        run_task_pipeline(conn, pipeline_name, pipeline_args)
-        logger.info("DHHS processing completed for commit %s", commit)
-
-
 def run_powerbi(instance, run_id: str, branch: str):
     """Run PowerBI processing on the remote server"""
     run_id = run_id.lower()

@@ -1,6 +1,0 @@
-description: BASELINE
-parent: apps/covid_19/vic_submodel_params.yml
-
-population:
-  region: WEST_METRO
-  mobility:

@@ -1,3 +1,9 @@
+# Legacy Tuberculosis
+
+This branch contains the code for the old Marshall Islands and Mongolia TB apps that were worked on in early 2020.
+
+You can find the relevant code in `apps/legacy`
+
 # AuTuMN
 
 ![](https://github.com/monash-emu/AuTuMN/workflows/Continuous%20Integration/badge.svg)

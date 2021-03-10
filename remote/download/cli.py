@@ -41,7 +41,9 @@ def _download_run(run_id: str, src_dir_key: str, dest_dir_key: str):
     assert len(run_id.split("/")) == 4, msg
     key_prefix = os.path.join(run_id, src_dir_key).replace("\\", "/")
     with Timer(f"Finding data for run {run_id}"):
-        chain_db_keys = list_s3(key_prefix, key_suffix=".feather")
+        chain_db_keys_feather = list_s3(key_prefix, key_suffix=".feather")
+        chain_db_keys_parquet = list_s3(key_prefix, key_suffix=".parquet")
+        chain_db_keys = chain_db_keys_feather + chain_db_keys_parquet
 
     app_name, region_name, timestamp, _ = read_run_id(run_id)
     datestamp = datetime.fromtimestamp(int(timestamp)).strftime("%Y-%m-%d")

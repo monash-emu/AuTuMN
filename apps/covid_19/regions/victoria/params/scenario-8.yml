@@ -1,0 +1,55 @@
+description: all macrodistancing and microdistancing back to normal except face coverings
+parent: apps/covid_19/regions/victoria/params/default.yml
+
+time:
+  start: 189
+
+victorian_clusters:
+  metro:
+    mobility:
+      microdistancing:
+        behaviour:
+          parameters:
+            upper_asymptote: 0.2803973
+      mixing:
+        work:
+          append: false
+          times:
+            - 2020-07-07
+          values:
+            - 1.
+        other_locations:
+          append: false
+          times:
+            - 2020-07-07
+          values:
+            - 1.
+        school:
+          times:
+            - 2020-07-07
+          values:
+            - 1.
+  regional:
+    mobility:
+      microdistancing:
+        behaviour:
+          parameters:
+            upper_asymptote: 0.2803973
+      mixing:
+        work:
+          append: false
+          times:
+            - 2020-07-07
+          values:
+            - 1.
+        other_locations:
+          append: false
+          times:
+            - 2020-07-07
+          values:
+            - 1.
+        school:
+          times:
+            - 2020-07-07
+          values:
+            - 1.

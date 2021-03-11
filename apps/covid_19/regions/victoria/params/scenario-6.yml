@@ -1,4 +1,4 @@
-description: work back to baseline
+description: work and other locations back to normal
 parent: apps/covid_19/regions/victoria/params/default.yml
 
 time:
@@ -14,10 +14,23 @@ victorian_clusters:
             - 2020-07-07
           values:
             - 1.
+        other_locations:
+          append: false
+          times:
+            - 2020-07-07
+          values:
+            - 1.
+
   regional:
     mobility:
       mixing:
         work:
+          append: false
+          times:
+            - 2020-07-07
+          values:
+            - 1.
+        other_locations:
           append: false
           times:
             - 2020-07-07

@@ -1,4 +1,4 @@
-description: all macrodistancing back to normal
+description: all macrodistancing and microdistancing back to normal except face coverings
 parent: apps/covid_19/regions/victoria/params/default.yml
 
 time:

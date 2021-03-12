@@ -214,15 +214,16 @@ def plot_mcmc_parameter_trace(
 
 
 def plot_multiple_param_traces(
-    plotter: Plotter,
-    mcmc_params: List[pd.DataFrame],
-    burn_in: int,
-    title_font_size: int,
-    label_font_size: int,
-    capitalise_first_letter: bool,
-    dpi_request: int,
-    optional_param_request=None,
-    file_name="all_traces",
+        plotter: Plotter,
+        mcmc_params: List[pd.DataFrame],
+        burn_in: int,
+        title_font_size: int,
+        label_font_size: int,
+        capitalise_first_letter: bool,
+        dpi_request: int,
+        optional_param_request=None,
+        file_name="all_traces",
+        x_ticks_on=True,
 ):
 
     # Except not the dispersion parameters - only the epidemiological ones
@@ -252,7 +253,9 @@ def plot_multiple_param_traces(
                 fontsize=title_font_size,
             )
 
-            if indices[i][0] == n_rows - 1:
+            if not x_ticks_on:
+                axis.set_xticks([])
+            elif indices[i][0] == n_rows - 1:
                 x_label = "Iterations" if capitalise_first_letter else "iterations"
                 axis.set_xlabel(x_label, fontsize=label_font_size)
             pyplot.setp(axis.get_yticklabels(), fontsize=label_font_size)

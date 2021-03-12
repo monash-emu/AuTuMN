@@ -30,6 +30,10 @@ KEY_PARAMS = [
     "victorian_clusters.metro.mobility.microdistancing.behaviour_adjuster.parameters.effect",
     "victorian_clusters.metro.mobility.microdistancing.face_coverings_adjuster.parameters.effect",
 ]
+STATEWIDE_OUTPUTS = ["notifications", "hospital_admissions", "icu_admissions", "infection_deaths"]
+STANDARD_TITLE_FONTSIZE = 20
+STANDARD_LABEL_FONTSIZE = 14
+STANDARD_N_TICKS = 10
 
 
 def get_contact_rate_multipliers(mcmc_params):
@@ -52,27 +56,20 @@ def plot_multiple_timeseries_with_uncertainty(
 
     plt.style.use("ggplot")
     uncertainty_df = get_uncertainty_df(calib_dir_path, mcmc_tables, targets)
-    chosen_outputs = ["notifications", "hospital_admissions", "icu_admissions", "infection_deaths"]
+    chosen_outputs = STATEWIDE_OUTPUTS
     x_low, x_up = STANDARD_X_LIMITS
-    selected_scenarios, is_logscale, n_xticks, title_font_size, label_font_size = (
-        [0],
-        False,
-        6,
-        20,
-        15,
-    )
     plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(
         plotter,
         uncertainty_df,
         chosen_outputs,
-        selected_scenarios,
+        [0],
         targets,
-        is_logscale,
+        False,
         x_low,
         x_up,
-        n_xticks,
-        title_font_size=title_font_size,
-        label_font_size=label_font_size,
+        STANDARD_N_TICKS,
+        title_font_size=STANDARD_TITLE_FONTSIZE,
+        label_font_size=STANDARD_LABEL_FONTSIZE,
         file_name="multi_output",
     )
 
@@ -88,7 +85,6 @@ def plot_regional_outputs(
     ]
     uncertainty_df = get_uncertainty_df(calib_dir_path, mcmc_tables, targets)
     x_low, x_up = STANDARD_X_LIMITS
-    title_font_size, label_font_size, n_xticks = 12, 10, 6
     plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(
         plotter,
         uncertainty_df,
@@ -98,9 +94,9 @@ def plot_regional_outputs(
         False,
         x_low,
         x_up,
-        n_xticks,
-        title_font_size=title_font_size,
-        label_font_size=label_font_size,
+        STANDARD_N_TICKS,
+        title_font_size=STANDARD_TITLE_FONTSIZE,
+        label_font_size=STANDARD_LABEL_FONTSIZE,
         file_name=file_name,
         share_yaxis=True,
         max_y_value=max_y_value,
@@ -655,3 +651,33 @@ def plot_scenarios(
 
 
 PLOT_FUNCS["Scenarios"] = plot_scenarios
+
+
+def plot_scenarios_multioutput(
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+    app_name: str,
+    region: str,
+):
+    uncertainty_df = get_uncertainty_df(calib_dir_path, mcmc_tables, targets)
+    dpi_request, capitalise_first_letter, is_logscale, is_targets, \
+        is_overlay_uncertainty, is_legend = \
+        300, False, False, True, True, True
+    plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(
+        plotter,
+        uncertainty_df,
+        STATEWIDE_OUTPUTS,
+        uncertainty_df["scenario"].unique(),
+        targets,
+        is_logscale,
+        STANDARD_X_LIMITS[0],
+        426,
+        title_font_size=STANDARD_TITLE_FONTSIZE,
+        label_font_size=STANDARD_LABEL_FONTSIZE,
+    )
+
+
+PLOT_FUNCS["Multi-output scenarios"] = plot_scenarios_multioutput

@@ -1,23 +1,47 @@
-description: schools re-open
+description: work and other locations back to normal, including 60% face coverings
 parent: apps/covid_19/regions/victoria/params/default.yml
 
 time:
   start: 189
+  end: 426
 
 victorian_clusters:
   metro:
     mobility:
       mixing:
-        school:
+        work:
+          append: false
           times:
             - 2020-07-07
           values:
             - 1.
+        other_locations:
+          append: false
+          times:
+            - 2020-07-07
+          values:
+            - 1.
+      microdistancing:
+        face_coverings:
+          parameters:
+            upper_asymptote: 0.6
+
   regional:
     mobility:
       mixing:
-        school:
+        work:
+          append: false
           times:
             - 2020-07-07
           values:
             - 1.
+        other_locations:
+          append: false
+          times:
+            - 2020-07-07
+          values:
+            - 1.
+      microdistancing:
+        face_coverings:
+          parameters:
+            upper_asymptote: 0.6

@@ -12,8 +12,8 @@ n_steps_fixed_proposal: 250
 target_output_ratio: 0.2
 
 time:
-  start: 135 # No longer the 25th May, but moved earlier (14th May) - to help with model calibration
-  end: 240 # 1st October
+  start: 135  # No longer the 25th May, but moved earlier (14th May) - to help with model calibration
+  end: 275  # 1st October
 
 testing_to_detection: # Need to mention these parameters in the Supplement somewhere
   assumed_tests_parameter: 1.e-03

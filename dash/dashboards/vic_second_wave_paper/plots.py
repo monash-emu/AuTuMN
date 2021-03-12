@@ -620,3 +620,41 @@ def plot_cdr_curves(
 
 
 PLOT_FUNCS["CDR curves"] = plot_cdr_curves
+
+
+def plot_scenarios(
+    plotter: StreamlitPlotter,
+    calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+    app_name: str,
+    region: str,
+):
+    chosen_output = "notifications"
+    targets = {k: v for k, v in targets.items() if v["output_key"] == chosen_output}
+    uncertainty_df = get_uncertainty_df(calib_dir_path, mcmc_tables, targets)
+    selected_scenarios = uncertainty_df["scenario"].unique()
+    title_font_size, label_font_size, dpi_request, capitalise_first_letter, is_logscale, is_targets, \
+        is_overlay_uncertainty, is_legend = \
+        8, 8, 300, False, False, True, True, True
+    plots.uncertainty.plots.plot_timeseries_with_uncertainty(
+        plotter,
+        uncertainty_df,
+        chosen_output,
+        selected_scenarios,
+        targets,
+        is_logscale,
+        STANDARD_X_LIMITS[0],
+        426,
+        add_targets=is_targets,
+        overlay_uncertainty=is_overlay_uncertainty,
+        title_font_size=title_font_size,
+        label_font_size=label_font_size,
+        dpi_request=dpi_request,
+        capitalise_first_letter=capitalise_first_letter,
+        legend=is_legend,
+    )
+
+
+PLOT_FUNCS["Scenarios"] = plot_scenarios

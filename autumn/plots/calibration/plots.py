@@ -635,28 +635,29 @@ def plot_param_vs_param(
 
     # Prelims
     fig, axes, _, _, _, _ = plotter.get_figure(n_panels=len(parameters) ** 2)
-    x_data, y_data = {}, {}
+    row_data, col_data = {}, {}
 
     # Get x and y data separately and collate up over the chains
-    for x_idx, x_param_name in enumerate(parameters):
-        x_data[x_param_name] = []
+    for row_idx, row_param_name in enumerate(parameters):
+        row_data[row_param_name] = []
         for chain in range(len(mcmc_params)):
-            x_param_mask = (mcmc_params[chain]["name"] == x_param_name) & (
+            x_param_mask = (mcmc_params[chain]["name"] == row_param_name) & (
                 mcmc_params[chain]["run"] > burn_in
             )
-            x_data[x_param_name] += mcmc_params[chain][x_param_mask]["value"].to_list()
-    for y_idx, y_param_name in enumerate(parameters):
-        y_data[y_param_name] = []
+            row_data[row_param_name] += mcmc_params[chain][x_param_mask]["value"].to_list()
+    for col_idx, col_param_name in enumerate(parameters):
+        col_data[col_param_name] = []
         for chain in range(len(mcmc_params)):
-            y_param_mask = (mcmc_params[chain]["name"] == y_param_name) & (
+            y_param_mask = (mcmc_params[chain]["name"] == col_param_name) & (
                 mcmc_params[chain]["run"] > burn_in
             )
-            y_data[y_param_name] += mcmc_params[chain][y_param_mask]["value"].to_list()
+            col_data[col_param_name] += mcmc_params[chain][y_param_mask]["value"].to_list()
 
     # Loop over parameter combinations
-    for x_idx, x_param_name in enumerate(parameters):
-        for y_idx, y_param_name in enumerate(parameters):
-            axis = axes[x_idx, y_idx]
+    for row_idx, row_param_name in enumerate(parameters):
+        for col_idx, col_param_name in enumerate(parameters):
+
+            axis = axes[row_idx, col_idx]
             if not show_ticks:
                 axis.xaxis.set_ticks([])
                 axis.yaxis.set_ticks([])
@@ -664,41 +665,38 @@ def plot_param_vs_param(
                 axis.tick_params(labelsize=4)
 
             # Plot
-            if x_idx > y_idx:
+            if row_idx > col_idx:
                 if style == "Scatter":
                     axis.scatter(
-                        x_data[x_param_name], y_data[y_param_name], alpha=0.5, s=0.1, color="k"
+                        col_data[col_param_name],
+                        row_data[row_param_name],
+                        alpha=0.5, s=0.1, color="k"
                     )
                 elif style == "KDE":
                     sns.kdeplot(
-                        x_data[x_param_name],
-                        y_data[y_param_name],
-                        ax=axis,
-                        shade=True,
-                        levels=5,
-                        lw=1.0,
+                        col_data[col_param_name],
+                        row_data[row_param_name],
+                        ax=axis, shade=True, levels=5, lw=1.0,
                     )
                 else:
-                    axis.hist2d(x_data[x_param_name], y_data[y_param_name], bins=bins)
-            elif x_idx == y_idx:
+                    axis.hist2d(col_data[col_param_name], row_data[row_param_name], bins=bins)
+            elif row_idx == col_idx:
                 axis.hist(
-                    x_data[x_param_name],
-                    color=[0.2, 0.2, 0.6] if style == "Shade" else "k",
-                    bins=bins,
+                    row_data[row_param_name],
+                    color=[0.2, 0.2, 0.6] if style == "Shade" else "k", bins=bins,
                 )
-                axis.xaxis.set_ticks([])
                 axis.yaxis.set_ticks([])
             else:
                 axis.axis("off")
 
             # Axis labels (these have to be reversed for some reason)
-            x_param_label = y_param_name if label_param_string else str(y_idx + 1)
-            y_param_label = x_param_name if label_param_string else str(x_idx + 1)
-            if x_idx == len(parameters) - 1:
+            x_param_label = col_param_name if label_param_string else str(col_idx + 1)
+            y_param_label = row_param_name if label_param_string else str(row_idx + 1)
+            if row_idx == len(parameters) - 1:
                 axis.set_xlabel(
                     get_plot_text_dict(x_param_label), fontsize=label_font_size, labelpad=3
                 )
-            if y_idx == 0:
+            if col_idx == 0:
                 axis.set_ylabel(get_plot_text_dict(y_param_label), fontsize=label_font_size)
 
     # Save

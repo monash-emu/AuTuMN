@@ -1,6 +1,6 @@
 from typing import Dict
 
-from summer2 import Stratification, Multiply
+from summer import Stratification, Multiply
 
 
 from apps.covid_19.constants import Compartment, Clinical

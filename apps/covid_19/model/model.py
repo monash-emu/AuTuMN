@@ -1,4 +1,4 @@
-from summer2 import CompartmentalModel
+from summer import CompartmentalModel
 
 from autumn import inputs
 from autumn.curve.scale_up import scale_up_function

@@ -7,7 +7,7 @@ from autumn.utils.utils import (
     repeat_list_elements_average_last_two,
 )
 from apps.covid_19.model.stratifications.agegroup import AGEGROUP_STRATA
-from summer2 import Overwrite
+from summer import Overwrite
 
 from apps.covid_19.constants import Clinical, Compartment
 from apps.covid_19.model.preprocess.case_detection import build_detected_proportion_func

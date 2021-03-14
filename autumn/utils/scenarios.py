@@ -6,14 +6,14 @@ from copy import deepcopy
 from typing import Callable, List, Optional
 
 
-from summer.model import StratifiedModel
-from summer2.model import CompartmentalModel
+from summer.legacy.model import StratifiedModel
+from summer.model import CompartmentalModel
 
 from autumn.utils import schema_builder as sb
 from utils.timer import Timer
 from autumn.utils.params import update_params
 
-from summer.constants import IntegrationType
+from summer.legacy.constants import IntegrationType
 
 validate_params = sb.build_validator(default=dict, scenarios=dict)
 

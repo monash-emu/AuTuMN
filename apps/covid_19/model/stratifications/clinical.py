@@ -1,4 +1,4 @@
-from summer2 import Stratification, Overwrite
+from summer import Stratification, Overwrite
 from apps.covid_19.model.parameters import Parameters
 from apps.covid_19.model.stratifications.agegroup import AGEGROUP_STRATA
 from apps.covid_19.constants import (

@@ -10,7 +10,7 @@ import pandas as pd
 
 import settings
 from autumn.utils import Scenario
-from summer.model import StratifiedModel
+from summer.legacy.model import StratifiedModel
 
 
 def get_original_compartments(model: StratifiedModel) -> List[str]:

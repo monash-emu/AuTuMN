@@ -2,7 +2,7 @@ from types import MethodType
 
 import numpy as np
 
-from summer2 import CompartmentalModel, Stratification, Multiply
+from summer import CompartmentalModel, Stratification, Multiply
 
 from autumn import inputs
 from autumn.region import Region
@@ -72,7 +72,7 @@ def apply_post_cluster_strat_hacks(params: Parameters, model: CompartmentalModel
         elif any(
             [comp.has_stratum("cluster", cluster) for cluster in metro_clusters]
         ) and not comp.has_name(Compartment.SUSCEPTIBLE):
-            model.initial_population[i_comp] *= 9. / 4.
+            model.initial_population[i_comp] *= 9.0 / 4.0
 
     """
     Hack in a custom (144x144) mixing matrix where each region is adjusted individually

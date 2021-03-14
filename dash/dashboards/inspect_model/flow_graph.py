@@ -2,7 +2,7 @@ import networkx as nx
 import streamlit as st
 from matplotlib import pyplot
 
-from summer2.flows import (
+from summer.flows import (
     DeathFlow,
     BaseEntryFlow,
     BaseExitFlow,

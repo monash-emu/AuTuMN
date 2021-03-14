@@ -7,8 +7,8 @@ from typing import List
 import yaml
 import pandas as pd
 
-from summer.model import StratifiedModel
-from summer2.model import CompartmentalModel
+from summer.legacy.model import StratifiedModel
+from summer.model import CompartmentalModel
 from autumn.db.database import get_database
 
 from . import process

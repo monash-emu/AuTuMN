@@ -1,6 +1,6 @@
 from typing import List
 
-from summer2 import Stratification, Multiply
+from summer import Stratification, Multiply
 
 from autumn import inputs
 from autumn.utils.utils import normalise_sequence

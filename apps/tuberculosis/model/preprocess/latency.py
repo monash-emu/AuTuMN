@@ -1,4 +1,4 @@
-from summer.model.utils.parameter_processing import (
+from summer.legacy.model.utils.parameter_processing import (
     create_step_function_from_dict,
     get_parameter_dict_from_function,
 )

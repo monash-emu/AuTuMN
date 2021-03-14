@@ -1,8 +1,8 @@
 from copy import deepcopy
 
 import pytest
-from summer.model import StratifiedModel
-from summer.constants import Flow, IntegrationType
+from summer.legacy.model import StratifiedModel
+from summer.legacy.constants import Flow, IntegrationType
 
 from apps import tuberculosis
 from autumn.utils.utils import merge_dicts

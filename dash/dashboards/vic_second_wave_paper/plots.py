@@ -100,6 +100,8 @@ def plot_regional_outputs(
         file_name=file_name,
         share_yaxis=True,
         max_y_value=max_y_value,
+        custom_titles=[i_region.replace("-", " ") for i_region in regions],
+        custom_sup_title=indicator.replace("_", " "),
     )
 
 
@@ -514,6 +516,7 @@ def plot_contact_param_traces(
         dpi_request,
         optional_param_request=get_contact_rate_multipliers(mcmc_params),
         file_name="contact_traces",
+        x_ticks_on=False,
     )
 
 

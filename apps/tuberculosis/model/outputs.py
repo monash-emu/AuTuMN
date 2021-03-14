@@ -2,8 +2,8 @@
 FIXME: These all need tests.
 """
 from typing import List
-from summer.constants import Compartment
-from summer.model.derived_outputs import (
+from summer.legacy.constants import Compartment
+from summer.legacy.model.derived_outputs import (
     InfectionDeathFlowOutput,
     TransitionFlowOutput,
 )

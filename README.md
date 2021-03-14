@@ -5,9 +5,9 @@
 This is a disease modelling project, written in Python.
 It is currently being applied to tuberculosis and COVID-19. This project is used and maintained by the Monash Univeristy Epidemiological Modelling Unit.
 
-AuTuMN uses the SUMMER disease modelling framework, which is [documented here](http://summerepi.com/) with examples and an API reference.
+AuTuMN uses the SUMMER disease modelling framework, with code [here](https://github.com/monash-emu/summer) which is [documented here](http://summerepi.com/) with examples and an API reference.
 
-See [this guide](./docs/old_docs/setup.md) for information on how to set up this project.
+See [this guide](./docs/setup.md) for information on how to set up this project.
 
 ## Using the command line
 
@@ -42,8 +42,6 @@ python -m autumn --help
 ├── remote                  Remote server orchestration tasks
 ├── scripts                 Utility scripts
 ├── settings                Globally shared constants
-├── summer                  SUMMER framework module (v1)
-├── summer2                 SUMMER framework module (v2)
 ├── tasks                   Remote server pipeline tasks with Luigi
 ├── tests                   Automated tests
 ├── utils                   Globally shared utilities

@@ -2,7 +2,7 @@ import os
 import copy
 from typing import List
 
-from summer.model import StratifiedModel
+from summer.legacy.model import StratifiedModel
 from autumn.region import Region
 from autumn.utils.scenarios import Scenario
 from autumn.utils.params import update_params, merge_dicts

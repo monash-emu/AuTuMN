@@ -1,4 +1,4 @@
-from summer2 import CompartmentalModel
+from summer import CompartmentalModel
 
 from autumn.region import Region
 

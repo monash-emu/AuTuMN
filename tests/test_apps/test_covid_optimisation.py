@@ -5,7 +5,7 @@ import pytest
 import numpy as np
 
 from autumn.region import Region
-from summer2.model import CompartmentalModel
+from summer.model import CompartmentalModel
 from apps.covid_19.mixing_optimisation import mixing_opti as opti
 from apps.covid_19.mixing_optimisation.constants import PHASE_2_START_TIME, OPTI_REGIONS
 from apps.covid_19.mixing_optimisation import write_scenarios

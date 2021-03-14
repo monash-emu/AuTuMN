@@ -1,7 +1,7 @@
 from typing import List
 import numpy as np
 
-from summer2 import CompartmentalModel
+from summer import CompartmentalModel
 
 from autumn import inputs
 

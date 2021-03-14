@@ -1,4 +1,4 @@
-from summer2 import (
+from summer import (
     CompartmentalModel,
     AgeStratification,
     StrainStratification,

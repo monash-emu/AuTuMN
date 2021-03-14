@@ -1,4 +1,4 @@
-from summer2 import CompartmentalModel
+from summer import CompartmentalModel
 
 
 def build_model(params: dict) -> CompartmentalModel:

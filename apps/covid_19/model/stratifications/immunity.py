@@ -1,4 +1,4 @@
-from summer2 import Stratification, Multiply
+from summer import Stratification, Multiply
 from apps.covid_19.constants import COMPARTMENTS, Clinical
 from apps.covid_19.model.stratifications.agegroup import AGEGROUP_STRATA
 from apps.covid_19.model.parameters import Parameters

@@ -14,7 +14,7 @@ import copy
 from scipy.optimize import Bounds, minimize
 from scipy import stats, special
 
-from summer.model import StratifiedModel
+from summer.legacy.model import StratifiedModel
 from autumn import db, plots
 from autumn.region import Region
 from autumn.utils.scenarios import Scenario

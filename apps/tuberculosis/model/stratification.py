@@ -6,8 +6,8 @@ from apps.tuberculosis.model.preprocess.latency import (
 from autumn.inputs import get_death_rates_by_agegroup
 from autumn.inputs.social_mixing.queries import get_mixing_matrix_specific_agegroups
 from autumn.curve import scale_up_function, tanh_based_scaleup, make_linear_curve
-from summer.model.utils.parameter_processing import get_parameter_dict_from_function
-from summer.model import create_sloping_step_function
+from summer.legacy.model.utils.parameter_processing import get_parameter_dict_from_function
+from summer.legacy.model import create_sloping_step_function
 
 from math import log, exp
 import numpy as np

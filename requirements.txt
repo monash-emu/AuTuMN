@@ -1,14 +1,21 @@
+# Summer compartmental modelling
+# https://github.com/monash-emu/summer
+# will also include
+# - numba
+# - numpy
+# - networkx
+# - scipy
+# https://github.com/monash-emu/summer/blob/master/pyproject.toml#L21
+summerepi==1.0.1
+
 # Data visualization
 matplotlib>=1.4.2
 seaborn==0.9.0
 plotly>=4.11.0
 
 # Numerical computing
-numpy>=1.14.1
 pandas==0.24.2
-scipy==1.1.0
 xlrd==1.2.0  # Remove this when we have pandas 1.2.0, switch to openpyxl
-numba==0.51.0
 pyDOE>=0.3.8
 
 # Database access
@@ -21,8 +28,6 @@ pydantic
 streamlit==0.67.0
 pyAesCrypt==0.4.3
 googledrivedownloader >=0.4
-networkx==2.5
-
 
 # Testing
 pytest

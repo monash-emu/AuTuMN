@@ -1,7 +1,7 @@
 from copy import deepcopy
 
-from summer.model import StratifiedModel
-from summer.constants import Compartment, BirthApproach
+from summer.legacy.model import StratifiedModel
+from summer.legacy.constants import Compartment, BirthApproach
 from autumn.utils.scenarios import get_model_times_from_inputs
 from autumn import inputs
 from autumn.curve import scale_up_function

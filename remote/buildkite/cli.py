@@ -197,8 +197,7 @@ def trigger_philippines():
     Trigger all Philippines models
     """
     logger.info("Triggering all Philippines regional calibrations.")
-    triggered_regions = [r for r in Region.PHILIPPINES_REGIONS if r != "davao-city"]
-    _trigger_models(triggered_regions, trigger_philippines_pipeline)
+    _trigger_models(Region.PHILIPPINES_REGIONS, trigger_philippines_pipeline)
 
 
 def _trigger_models(regions, p):

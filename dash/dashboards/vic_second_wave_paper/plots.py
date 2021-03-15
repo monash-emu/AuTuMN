@@ -669,10 +669,12 @@ def plot_scenarios_multioutput(
     dpi_request, capitalise_first_letter, is_logscale, is_targets, \
         is_overlay_uncertainty, is_legend = \
         300, False, False, True, True, True
+
+    scenario_outputs = ["notifications", "infection_deaths", "icu_occupancy", "hospital_occupancy"]
     plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(
         plotter,
         uncertainty_df,
-        STATEWIDE_OUTPUTS,
+        scenario_outputs,
         uncertainty_df["scenario"].unique(),
         targets,
         is_logscale,

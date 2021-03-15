@@ -10,7 +10,7 @@ PLOT_TEXT_DICT = {
     "compartment_periods.icu_early": "pre-ICU period",
     "testing_to_detection.assumed_cdr_parameter": "CDR at base testing rate",
     "microdistancing.parameters.max_effect": "max effect microdistancing",
-    "icu_occupancy": "ICU occupancy",
+    "icu_occupancy": "ICU beds occupied",
     # TB model parameters
     "start_population_size": "initial population size",
     "progression_multiplier": "progression multiplier",
@@ -32,7 +32,7 @@ PLOT_TEXT_DICT = {
     "accum_deaths": "cumulative deaths",
     "new_hospital_admissions": "new hospitalisations per day",
     "new_icu_admissions": "new ICU admissions per day",
-    "hospital_occupancy": "hospital occupancy",
+    "hospital_occupancy": "hospital beds occupied",
     "sojourn.compartment_periods_calculated.exposed.total_period": "incubation period",
     "sojourn.compartment_periods_calculated.active.total_period": "duration active",
     "seasonal_force": "seasonal forcing",

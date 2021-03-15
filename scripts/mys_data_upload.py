@@ -17,7 +17,7 @@ import regex as re
 
 # From WHO google drive folder
 CASE_DATA_URL = "https://docs.google.com/spreadsheets/d/1FbYG8szgbvw3pjULWEHDZ8uhu5BooV_-cygLn7iLaxA/export?format=xlsx&id=1FbYG8szgbvw3pjULWEHDZ8uhu5BooV_-cygLn7iLaxA"  # shareable link
-COVID_MYS_DEATH_URL = "https://docs.google.com/spreadsheets/d/1cQe1k7GQRKFzcfXXxdL7_pTNQUMpOAPX3PqhPsI4xt8/export?format=xlsx&id=1cQe1k7GQRKFzcfXXxdL7_pTNQUMpOAPX3PqhPsI4xt8"
+COVID_MYS_DEATH_URL = "https://docs.google.com/spreadsheets/d/1iv0veITNSKxpoVvY2WDOePgPC0LvFmOSjsYEq-5BsMM/export?format=xlsx&id=1iv0veITNSKxpoVvY2WDOePgPC0LvFmOSjsYEq-5BsMM"
 COVID_REGIONAL_URL = "https://docs.google.com/spreadsheets/d/1ouWp2ge5zrVh1gCDPONN-TMaf1b7TqRr4f07UZLWSdg/export?format=xlsx&id=1ouWp2ge5zrVh1gCDPONN-TMaf1b7TqRr4f07UZLWSdg"
 
 COVID_MYS_DIRPATH = os.path.join(settings.folders.INPUT_DATA_PATH, "covid_mys")
@@ -105,7 +105,7 @@ def update_target(REGION, df):
     with open(REGION + "\\params\\default.yml", "r") as f:
         tmp = yaml.load(f, Loader=yaml.FullLoader)
 
-    if tmp["importation"] is not None:
+    if tmp.get("Importation") is not None:
 
         tmp = {key: val for key, val in tmp.items() if key == "importation"}
 

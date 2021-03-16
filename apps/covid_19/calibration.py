@@ -246,6 +246,11 @@ def add_standard_philippines_params(params, region):
             "distri_params": [1.0, 0.2],
             "trunc_range": [0.5, np.inf],
         },
+        {
+            "param_name": "voc_emmergence.final_proportion",
+            "distribution": "uniform",
+            "distri_params": [0., 0.7],
+        },
     ]
 
 

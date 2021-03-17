@@ -226,7 +226,7 @@ def add_standard_philippines_params(params, region):
         {
             "param_name": "infectious_seed",
             "distribution": "uniform",
-            "distri_params": [10.0, 100.0],
+            "distri_params": [1.0, 100.0],
         },
         {
             "param_name": "clinical_stratification.props.symptomatic.multiplier",

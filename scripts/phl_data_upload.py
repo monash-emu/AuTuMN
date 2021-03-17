@@ -45,10 +45,10 @@ def fassster_data_filepath():
     return fassster_filename
 
 
-def rename_regions(filePath, regionSpelling, ncrName, calName, cenVisName):
+def rename_regions(filePath, regionSpelling, ncrName, calName, cenVisName, davName):
     df = pd.read_csv(filePath)
     df[regionSpelling] = df[regionSpelling].replace(
-        {ncrName: "manila", calName: "calabarzon", cenVisName: "central_visayas"}
+        {ncrName: "manila", calName: "calabarzon", cenVisName: "central_visayas", davName: "davao_city"}
     )
     df.to_csv(filePath)
 
@@ -63,7 +63,7 @@ def duplicate_data(filePath, regionSpelling):
 
 def filter_df_by_regions(filePath, regionSpelling):
     df = pd.read_csv(filePath)
-    regions = ["calabarzon", "central_visayas", "manila", "philippines"]
+    regions = ["calabarzon", "central_visayas", "manila","davao_city", "philippines"]
     df_regional = df[df[regionSpelling].isin(regions)]
     df_regional.to_csv(filePath)
 
@@ -109,7 +109,7 @@ def process_notifications_data(filePath):
     timeIndex = np.arange(
         min(fassster_data_agg["times"]), max(fassster_data_agg["times"]), 1.0
     ).tolist()
-    regions = ["calabarzon", "central_visayas", "manila", "philippines"]
+    regions = ["calabarzon", "central_visayas", "manila","davao_city", "philippines"]
     all_regions_x_times = pd.DataFrame(
         list(itertools.product(regions, timeIndex)), columns=["Region", "times"]
     )
@@ -140,7 +140,7 @@ def process_notifications_data(filePath):
 
 
 def update_calibration_phl():
-    phl_regions = ["calabarzon", "central_visayas", "manila", "philippines"]
+    phl_regions = ["calabarzon", "central_visayas", "manila","davao_city", "philippines"]
     # read in csvs
     icu = pd.read_csv(icu_dest)
     deaths = pd.read_csv(deaths_dest)
@@ -182,8 +182,9 @@ rename_regions(
     "NATIONAL CAPITAL REGION (NCR)",
     "REGION IV-A (CALABAR ZON)",
     "REGION VII (CENTRAL VISAYAS)",
+    "REGION XI (DAVAO REGION)"
 )
-rename_regions(fassster_filename, "Region", "NCR", "4A", "07")
+rename_regions(fassster_filename, "Region", "NCR", "4A", "07","11")
 duplicate_data(PHL_doh_dest, "region")
 duplicate_data(fassster_filename, "Region")
 filter_df_by_regions(PHL_doh_dest, "region")

@@ -173,7 +173,7 @@ def get_death():
 
     def fix_regex(each_row, state):
 
-        x = re.findall(state + r"=(\d+),", each_row)
+        x = re.findall(state + r"=(\d+)", each_row)
         if len(x) > 0:
             return int(x[0])
         else:
@@ -182,8 +182,8 @@ def get_death():
     death_df["sabah_death"] = [fix_regex(each, "Sabah") for each in death_df.state]
     death_df["selangor_death"] = [fix_regex(each, "Selangor") for each in death_df.state]
     death_df["johor_death"] = [fix_regex(each, "Johor") for each in death_df.state]
-    death_df["penang_death"] = [fix_regex(each, "Penang") for each in death_df.state]
-    death_df["kuala_lumpur_death"] = [fix_regex(each, "Kuala Lumpur") for each in death_df.state]
+    death_df["penang_death"] = [fix_regex(each, "Pulau Pinang") for each in death_df.state]
+    death_df["kuala_lumpur_death"] = [fix_regex(each, "KL") for each in death_df.state]
 
     death_df.loc[death_df.state == "Sabah", "sabah_death"] = death_df["Death per day"]
     death_df.loc[death_df.state == "Selangor", "selangor_death"] = death_df["Death per day"]

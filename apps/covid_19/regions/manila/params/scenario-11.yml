@@ -1,0 +1,18 @@
+description: 25% MHS increase from 22/3-31/5
+mobility:
+  microdistancing:
+    behaviour:
+      parameters:
+        times:
+        - 446
+        - 447
+        - 517
+        - 518
+        values:
+        - 1.0
+        - 1.25
+        - 1.25
+        - 1.0
+parent: apps/covid_19/regions/manila/params/default.yml
+time:
+  start: 438

@@ -1,0 +1,32 @@
+description: 2-week MECQ from 22/3
+mobility:
+  mixing:
+    other_locations:
+      append: true
+      times:
+      - 446
+      - 447
+      - 461
+      - 462
+      values:
+      - 0.6275
+      - 0.4
+      - 0.4
+      - 0.6275
+    work:
+      append: true
+      times:
+      - 446
+      - 447
+      - 461
+      - 462
+      values:
+      - 0.6
+      - 0.4
+      - 0.4
+      - 0.6
+
+
+parent: apps/covid_19/regions/manila/params/default.yml
+time:
+  start: 438

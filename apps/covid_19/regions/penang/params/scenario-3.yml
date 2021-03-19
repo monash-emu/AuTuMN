@@ -1,6 +1,9 @@
 description: Scenario 3, 90% efficacy 50% coverage infection-preventing vaccine
 parent: apps/covid_19/regions/penang/params/default.yml
 
+time:
+  start: 447
+
 vaccination:
   severity_efficacy: 0.
   infection_efficacy: 0.9
@@ -8,5 +11,5 @@ vaccination:
   # Six months from Monday 22nd Feb 2021
   roll_out_function:
     coverage: 0.5
-    start_time: 432.
+    start_time: 447.
     end_time: 797.

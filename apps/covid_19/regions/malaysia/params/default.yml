@@ -1,14 +1,14 @@
 description: BASELINE
 parent: apps/covid_19/params.yml
 
-contact_rate: 0.027
+contact_rate: 0.0231
 seasonal_force: 0.
 infectious_seed: 100.
 
 vaccination: null
 
 time:
-  start: 210.
+  start: 180.
   end: 546.
 
 country:
@@ -30,10 +30,10 @@ mobility:
     behaviour:
       function_type: tanh
       parameters:
-        shape: .05
-        inflection_time: 300.
+        shape: .1
+        inflection_time: 400.  # Start of March 2021
         lower_asymptote: 0.
-        upper_asymptote: 0.1
+        upper_asymptote: 0.11
       locations:
         - other_locations
         - school

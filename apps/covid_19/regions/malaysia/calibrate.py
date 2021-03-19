@@ -30,7 +30,7 @@ PAR_PRIORS = provide_default_calibration_params()
 PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS)
 
 PAR_PRIORS += [
-    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.02, 0.04]},
+    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.015, 0.03]},
     {
         "param_name": "infectious_seed",
         "distribution": "uniform",
@@ -40,13 +40,13 @@ PAR_PRIORS += [
     {
         "param_name": "testing_to_detection.assumed_cdr_parameter",
         "distribution": "uniform",
-        "distri_params": [0.04, 0.12],
+        "distri_params": [0.03, 0.12],
     },
     # Microdistancing
     {
         "param_name": "mobility.microdistancing.behaviour.parameters.upper_asymptote",
         "distribution": "uniform",
-        "distri_params": [0.05, 0.25],
+        "distri_params": [0.05, 0.22],
     },
     # Health system-related
     {

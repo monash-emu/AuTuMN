@@ -25,7 +25,7 @@ PAR_PRIORS += [
     {
         "param_name": "contact_rate",
         "distribution": "uniform",
-        "distri_params": [0.03, 0.05],
+        "distri_params": [0.02, 0.04],
     },
     {
         "param_name": "infectious_seed",
@@ -36,13 +36,13 @@ PAR_PRIORS += [
     {
         "param_name": "testing_to_detection.assumed_cdr_parameter",
         "distribution": "uniform",
-        "distri_params": [0.04, 0.12],
+        "distri_params": [0.03, 0.12],
     },
     # Microdistancing
     {
         "param_name": "mobility.microdistancing.behaviour.parameters.upper_asymptote",
         "distribution": "uniform",
-        "distri_params": [0.1, 0.3],
+        "distri_params": [0.1, 0.32],
     },
     # Health system-related
     {

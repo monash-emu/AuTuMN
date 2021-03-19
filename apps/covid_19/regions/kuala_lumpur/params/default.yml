@@ -1,10 +1,10 @@
 description: BASELINE
 parent: apps/covid_19/regions/malaysia/params/default.yml
 
-contact_rate: 0.045
+contact_rate: 0.0365
 
 time:
-  start: 300
+  start: 290
 
 population:
   region: Kuala Lumpur
@@ -14,5 +14,4 @@ mobility:
   microdistancing:
     behaviour:
       parameters:
-        upper_asymptote: 0.3
-        inflection_time: 365.
+        upper_asymptote: 0.32

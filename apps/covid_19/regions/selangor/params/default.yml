@@ -1,10 +1,10 @@
 description: BASELINE
 parent: apps/covid_19/regions/malaysia/params/default.yml
 
-contact_rate: 0.043
+contact_rate: 0.0302
 
 time:
-  start: 264.
+  start: 250
 
 population:
   region: Selangor

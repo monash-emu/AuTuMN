@@ -1,10 +1,10 @@
 description: BASELINE
 parent: apps/covid_19/regions/malaysia/params/default.yml
 
-contact_rate: 0.0435
+contact_rate: 0.033
 
 time:
-  start: 280
+  start: 290
 
 population:
   region: Penang

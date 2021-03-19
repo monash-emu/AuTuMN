@@ -9,7 +9,7 @@ from apps.covid_19.calibration import truncate_targets_from_time
 targets = load_targets("covid_19", Region.MALAYSIA)
 
 # Truncate notifications from 1st August 2020
-notifications = truncate_targets_from_time(targets["notifications"], 214)
+notifications = truncate_targets_from_time(targets["notifications"], 210)
 
 TARGET_OUTPUTS = [
     {

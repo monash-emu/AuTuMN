@@ -1,6 +1,9 @@
 description: Scenario 5, 90% efficacy 50% coverage severity-preventing vaccine
 parent: apps/covid_19/regions/malaysia/params/default.yml
 
+time:
+  start: 447
+
 vaccination:
   severity_efficacy: 0.9
   infection_efficacy: 0.

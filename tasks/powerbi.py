@@ -3,13 +3,11 @@ import os
 import shutil
 
 from autumn import db, plots
-
+from settings import REMOTE_BASE_DIR
 from tasks.full import FULL_RUN_DATA_DIR
 from tasks.utils import get_app_region
+from utils.s3 import download_from_run_s3, list_s3, upload_to_run_s3
 from utils.timer import Timer
-from utils.s3 import list_s3, download_from_run_s3, upload_to_run_s3
-from settings import REMOTE_BASE_DIR
-
 
 logger = logging.getLogger(__name__)
 

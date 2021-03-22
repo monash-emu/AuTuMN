@@ -1,9 +1,9 @@
 import os
+
 import numpy as np
 
+from apps.covid_19.mixing_optimisation.mixing_opti import DURATIONS, MODES, OBJECTIVES
 from autumn import inputs
-from apps.covid_19.mixing_optimisation.mixing_opti import MODES, DURATIONS, OBJECTIVES
-
 
 HOSPITAL_DATA_DIR = os.path.join("hospitalisation_data")
 country_mapping = {"united-kingdom": "The United Kingdom"}

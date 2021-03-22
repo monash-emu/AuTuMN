@@ -1,2 +1,2 @@
-from autumn.plots.plotter import FilePlotter, StreamlitPlotter, Plotter
-from autumn.plots import model, calibration, uncertainty
+from autumn.plots import calibration, model, uncertainty
+from autumn.plots.plotter import FilePlotter, Plotter, StreamlitPlotter

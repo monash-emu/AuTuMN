@@ -1,19 +1,17 @@
 """
 Utilities for running multiple model scenarios
 """
-import numpy as np
 from copy import deepcopy
 from typing import Callable, List, Optional
 
-
+import numpy as np
+from summer.legacy.constants import IntegrationType
 from summer.legacy.model import StratifiedModel
 from summer.model import CompartmentalModel
 
 from autumn.utils import schema_builder as sb
-from utils.timer import Timer
 from autumn.utils.params import update_params
-
-from summer.legacy.constants import IntegrationType
+from utils.timer import Timer
 
 validate_params = sb.build_validator(default=dict, scenarios=dict)
 

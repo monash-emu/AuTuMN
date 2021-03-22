@@ -1,14 +1,11 @@
-import os
 import logging
+import os
 from typing import List
-
 
 import numpy as np
 import pandas as pd
 
-
 from autumn.db.database import get_database
-
 
 logger = logging.getLogger(__name__)
 

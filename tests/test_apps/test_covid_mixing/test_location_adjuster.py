@@ -2,9 +2,10 @@ import numpy as np
 from numpy.testing import assert_allclose
 
 from apps.covid_19.model.parameters import Country
-from apps.covid_19.model.preprocess.mixing_matrix.mixing_adjusters import LocationMixingAdjuster
-from apps.covid_19.model.preprocess.mixing_matrix.mixing_adjusters import location_adjuster
-
+from apps.covid_19.model.preprocess.mixing_matrix.mixing_adjusters import (
+    LocationMixingAdjuster,
+    location_adjuster,
+)
 
 MM = np.ones([16, 16])
 HOME_MM = MM * 0.1

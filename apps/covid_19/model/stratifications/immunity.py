@@ -1,9 +1,9 @@
-from summer import Stratification, Multiply
+from summer import Multiply, Stratification
+
 from apps.covid_19.constants import COMPARTMENTS, Clinical
-from apps.covid_19.model.stratifications.agegroup import AGEGROUP_STRATA
 from apps.covid_19.model.parameters import Parameters
 from apps.covid_19.model.preprocess.clinical import get_all_adjs
-
+from apps.covid_19.model.stratifications.agegroup import AGEGROUP_STRATA
 
 CLINICAL_STRATA = [
     Clinical.NON_SYMPT,

@@ -1,9 +1,11 @@
-import pandas as pd
 import os
+
+import pandas as pd
+
 from autumn.db import Database
+from settings import INPUT_DATA_PATH
 
 from .fetch import MOBILITY_CSV_PATH
-from settings import INPUT_DATA_PATH
 
 NAN = float("nan")
 MOBILITY_SUFFIX = "_percent_change_from_baseline"

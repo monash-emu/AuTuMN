@@ -3,17 +3,18 @@
 Script for loading MYS data into calibration targets and default.yml
 
 """
+import json
 import os
 import sys
-import json
-import yaml
 from datetime import datetime
-from google_drive_downloader import GoogleDriveDownloader as gdd
-import settings
-from autumn.region import Region
+
 import pandas as pd
 import regex as re
+import yaml
+from google_drive_downloader import GoogleDriveDownloader as gdd
 
+import settings
+from autumn.region import Region
 
 # From WHO google drive folder
 CASE_DATA_URL = "https://docs.google.com/spreadsheets/d/1FbYG8szgbvw3pjULWEHDZ8uhu5BooV_-cygLn7iLaxA/export?format=xlsx&id=1FbYG8szgbvw3pjULWEHDZ8uhu5BooV_-cygLn7iLaxA"  # shareable link

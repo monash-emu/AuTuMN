@@ -6,8 +6,8 @@ You can access this script from your CLI by running:
     python -m tasks --help
 
 """
-import os
 import logging
+import os
 import warnings
 
 # Ensure NumPy only uses 1 thread for matrix multiplication,
@@ -17,10 +17,10 @@ import warnings
 os.environ["OMP_NUM_THREADS"] = "1"
 
 import click
-import sentry_sdk
 import matplotlib
+import sentry_sdk
 
-from settings import REMOTE_BASE_DIR, LOGGING_DIR
+from settings import LOGGING_DIR, REMOTE_BASE_DIR
 
 # Use non-TK matplotlib backend to avoid issues with pseudo-windows or something.
 # https://stackoverflow.com/questions/27147300/matplotlib-tcl-asyncdelete-async-handler-deleted-by-the-wrong-thread/29172195#29172195

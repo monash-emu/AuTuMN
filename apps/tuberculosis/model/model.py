@@ -1,17 +1,18 @@
 from copy import deepcopy
 
+from summer.legacy.constants import BirthApproach, Compartment
 from summer.legacy.model import StratifiedModel
-from summer.legacy.constants import Compartment, BirthApproach
-from autumn.utils.scenarios import get_model_times_from_inputs
+
+from apps.tuberculosis.model import outputs, preprocess
+from apps.tuberculosis.model.stratification import (
+    apply_user_defined_stratification,
+    stratify_by_age,
+    stratify_by_organ,
+)
+from apps.tuberculosis.model.validate import check_param_values, validate_params
 from autumn import inputs
 from autumn.curve import scale_up_function
-from apps.tuberculosis.model import preprocess, outputs
-from apps.tuberculosis.model.validate import validate_params, check_param_values
-from apps.tuberculosis.model.stratification import (
-    stratify_by_organ,
-    stratify_by_age,
-    apply_user_defined_stratification,
-)
+from autumn.utils.scenarios import get_model_times_from_inputs
 
 
 def build_model(params: dict) -> StratifiedModel:

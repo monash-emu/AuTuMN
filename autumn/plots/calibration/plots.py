@@ -1,25 +1,29 @@
 """
 Calibration plots
 """
-import os
 import logging
+import os
 from math import log
-from typing import List
 from random import choices
+from typing import List
 
-import pandas as pd
-import seaborn as sns
-import numpy as np
-from matplotlib import pyplot
 import matplotlib.ticker as mtick
-from scipy import stats
+import numpy as np
+import pandas as pd
 import plotly.express as px
+import seaborn as sns
+from matplotlib import pyplot
+from scipy import stats
 
-from autumn.plots.utils import get_plot_text_dict
 from autumn import db
 from autumn.calibration.utils import calculate_prior, raise_error_unsupported_prior
-from autumn.plots.plotter import Plotter, COLOR_THEME
-from autumn.plots.utils import change_xaxis_to_date, _plot_targets_to_axis, REF_DATE
+from autumn.plots.plotter import COLOR_THEME, Plotter
+from autumn.plots.utils import (
+    REF_DATE,
+    _plot_targets_to_axis,
+    change_xaxis_to_date,
+    get_plot_text_dict,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -214,16 +218,16 @@ def plot_mcmc_parameter_trace(
 
 
 def plot_multiple_param_traces(
-        plotter: Plotter,
-        mcmc_params: List[pd.DataFrame],
-        burn_in: int,
-        title_font_size: int,
-        label_font_size: int,
-        capitalise_first_letter: bool,
-        dpi_request: int,
-        optional_param_request=None,
-        file_name="all_traces",
-        x_ticks_on=True,
+    plotter: Plotter,
+    mcmc_params: List[pd.DataFrame],
+    burn_in: int,
+    title_font_size: int,
+    label_font_size: int,
+    capitalise_first_letter: bool,
+    dpi_request: int,
+    optional_param_request=None,
+    file_name="all_traces",
+    x_ticks_on=True,
 ):
 
     # Except not the dispersion parameters - only the epidemiological ones
@@ -670,20 +674,26 @@ def plot_param_vs_param(
                     axis.scatter(
                         col_data[col_param_name],
                         row_data[row_param_name],
-                        alpha=0.5, s=0.1, color="k"
+                        alpha=0.5,
+                        s=0.1,
+                        color="k",
                     )
                 elif style == "KDE":
                     sns.kdeplot(
                         col_data[col_param_name],
                         row_data[row_param_name],
-                        ax=axis, shade=True, levels=5, lw=1.0,
+                        ax=axis,
+                        shade=True,
+                        levels=5,
+                        lw=1.0,
                     )
                 else:
                     axis.hist2d(col_data[col_param_name], row_data[row_param_name], bins=bins)
             elif row_idx == col_idx:
                 axis.hist(
                     row_data[row_param_name],
-                    color=[0.2, 0.2, 0.6] if style == "Shade" else "k", bins=bins,
+                    color=[0.2, 0.2, 0.6] if style == "Shade" else "k",
+                    bins=bins,
                 )
                 axis.yaxis.set_ticks([])
             else:

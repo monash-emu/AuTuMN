@@ -1,45 +1,44 @@
-import yaml
-import os
-import logging
-from time import time
-from itertools import chain
-from datetime import datetime
-from typing import List, Callable
-import shutil
-
-import math
-import pandas as pd
-import numpy as np
 import copy
-from scipy.optimize import Bounds, minimize
-from scipy import stats, special
+import logging
+import math
+import os
+import shutil
+from datetime import datetime
+from itertools import chain
+from time import time
+from typing import Callable, List
 
+import numpy as np
+import pandas as pd
+import yaml
+from scipy import special, stats
+from scipy.optimize import Bounds, minimize
 from summer.legacy.model import StratifiedModel
+
+import settings
 from autumn import db, plots
 from autumn.region import Region
+from autumn.utils.params import (
+    load_targets,
+    read_param_value_from_string,
+    update_params,
+)
 from autumn.utils.scenarios import Scenario
+from autumn.utils.utils import get_git_branch, get_git_hash
 from utils.timer import Timer
-import settings
-from autumn.utils.params import update_params, read_param_value_from_string, load_targets
-from autumn.utils.utils import (
-    get_git_branch,
-    get_git_hash,
+
+from .constants import ADAPTIVE_METROPOLIS
+from .transformations import (
+    make_transform_func_with_lower_bound,
+    make_transform_func_with_two_bounds,
+    make_transform_func_with_upper_bound,
 )
 from .utils import (
     calculate_prior,
-    specify_missing_prior_params,
     raise_error_unsupported_prior,
     sample_starting_params_from_lhs,
+    specify_missing_prior_params,
 )
-
-from .transformations import (
-    make_transform_func_with_lower_bound,
-    make_transform_func_with_upper_bound,
-    make_transform_func_with_two_bounds,
-)
-
-from .constants import ADAPTIVE_METROPOLIS
-
 
 logger = logging.getLogger(__name__)
 

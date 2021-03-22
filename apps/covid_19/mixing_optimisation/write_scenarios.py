@@ -1,18 +1,18 @@
-import pandas as pd
 import os
+
+import pandas as pd
 import yaml
 
 from apps import covid_19
+from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
 from apps.covid_19.mixing_optimisation.mixing_opti import (
-    MODES,
     DURATIONS,
+    MODES,
     N_DECISION_VARS,
     build_params_for_phases_2_and_3,
 )
-from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
 from apps.covid_19.mixing_optimisation.utils import get_scenario_mapping
 from settings import BASE_PATH
-
 
 """
 Define scenarios for each combination of mode, duration and objective, plus the unmitigated scenario (9 scenarios)

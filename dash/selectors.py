@@ -5,12 +5,12 @@ import os
 from datetime import datetime
 from typing import List, Tuple
 
-import streamlit as st
 import pandas as pd
+import streamlit as st
+from summer.legacy.model import StratifiedModel
 
 import settings
 from autumn.utils import Scenario
-from summer.legacy.model import StratifiedModel
 
 
 def get_original_compartments(model: StratifiedModel) -> List[str]:

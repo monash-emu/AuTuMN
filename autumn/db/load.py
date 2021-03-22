@@ -1,16 +1,16 @@
 """
 Loading data from the output database.
 """
-import os
 import logging
+import os
 from typing import List
 
-import pandas as pd
 import numpy
+import pandas as pd
 
-from ..db.database import get_database, BaseDatabase
 from autumn.utils import Scenario
 
+from ..db.database import BaseDatabase, get_database
 
 logger = logging.getLogger(__name__)
 

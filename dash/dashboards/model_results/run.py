@@ -6,10 +6,10 @@ from importlib import import_module
 
 import streamlit as st
 
+import dash.selectors as selectors
 from autumn import db
 from autumn.plots.plotter import StreamlitPlotter
 
-import dash.selectors as selectors
 from .plots import PLOT_FUNCS
 
 

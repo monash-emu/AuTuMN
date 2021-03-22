@@ -1,18 +1,17 @@
-from matplotlib import pyplot
 import os
 
-
-from settings import BASE_PATH
-from autumn.db.load import load_uncertainty_table
-from autumn.plots.uncertainty.plots import _plot_uncertainty
-from autumn.plots.utils import COLORS, _apply_transparency
+from matplotlib import pyplot
 
 from apps.tuberculosis.regions.marshall_islands.outputs.utils import (
     OUTPUT_TITLES,
-    save_figure,
     get_format,
     make_output_directories,
+    save_figure,
 )
+from autumn.db.load import load_uncertainty_table
+from autumn.plots.uncertainty.plots import _plot_uncertainty
+from autumn.plots.utils import COLORS, _apply_transparency
+from settings import BASE_PATH
 
 FIGURE_PATH = os.path.join(
     BASE_PATH,

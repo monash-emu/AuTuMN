@@ -1,16 +1,15 @@
 from typing import Dict
 
-from summer import Stratification, Multiply
+from summer import Multiply, Stratification
 
-
-from apps.covid_19.constants import Compartment, Clinical
+from apps.covid_19.constants import Clinical, Compartment
 from apps.covid_19.model.parameters import Parameters
-from apps.covid_19.model.stratifications.clinical import CLINICAL_STRATA
-from apps.covid_19.model.stratifications.agegroup import AGEGROUP_STRATA
 from apps.covid_19.model.preprocess.clinical import (
     get_absolute_strata_proportions,
     get_proportion_symptomatic,
 )
+from apps.covid_19.model.stratifications.agegroup import AGEGROUP_STRATA
+from apps.covid_19.model.stratifications.clinical import CLINICAL_STRATA
 
 
 def get_history_strat(

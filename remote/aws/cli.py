@@ -1,17 +1,17 @@
-import time
+import functools
+import logging
 import os
 import sys
-import logging
-import functools
+import time
 from typing import List
 
 import click
 from botocore.exceptions import ClientError
 from invoke.exceptions import UnexpectedExit
 
-from . import aws
-from . import remote
-from settings import EC2InstanceType, EC2_INSTANCE_SPECS, EC2InstanceState
+from settings import EC2_INSTANCE_SPECS, EC2InstanceState, EC2InstanceType
+
+from . import aws, remote
 
 logger = logging.getLogger(__name__)
 

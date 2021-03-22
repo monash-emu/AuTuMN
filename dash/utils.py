@@ -1,6 +1,7 @@
-import streamlit as st
 import base64
+
 import numpy as np
+import streamlit as st
 
 
 def create_downloadable_csv(

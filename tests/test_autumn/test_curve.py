@@ -1,5 +1,5 @@
-import pytest
 import numpy as np
+import pytest
 
 from autumn.curve import scale_up_function, tanh_based_scaleup
 

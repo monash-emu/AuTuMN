@@ -1,16 +1,16 @@
 from types import MethodType
 
 import numpy as np
+from summer import CompartmentalModel, Multiply, Stratification
 
-from summer import CompartmentalModel, Stratification, Multiply
-
+from apps.covid_19.constants import COMPARTMENTS, Compartment
+from apps.covid_19.model.parameters import Parameters
+from apps.covid_19.model.preprocess.victorian_mixing import (
+    build_victorian_mixing_matrix_func,
+)
+from apps.covid_19.model.stratifications.agegroup import AGEGROUP_STRATA
 from autumn import inputs
 from autumn.region import Region
-
-from apps.covid_19.constants import Compartment, COMPARTMENTS
-from apps.covid_19.model.parameters import Parameters
-from apps.covid_19.model.preprocess.victorian_mixing import build_victorian_mixing_matrix_func
-from apps.covid_19.model.stratifications.agegroup import AGEGROUP_STRATA
 
 CLUSTER_STRATA = [Region.to_filename(region) for region in Region.VICTORIA_SUBREGIONS]
 

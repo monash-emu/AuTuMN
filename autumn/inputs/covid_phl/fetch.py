@@ -3,6 +3,7 @@ This file imports testing data from google drive and saves it to disk as a CSV.
 See Readme.md \data\inputs\covid_phl on how to update DATA_URL
 """
 import os
+
 from google_drive_downloader import GoogleDriveDownloader as gdd
 
 from settings import INPUT_DATA_PATH

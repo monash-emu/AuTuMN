@@ -1,21 +1,25 @@
-from matplotlib import pyplot
+import copy
 import os
+
 import matplotlib as mpl
 import numpy as np
-import copy
+from matplotlib import pyplot
 
 from apps import covid_19
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS, PHASE_2_START_TIME
 from apps.covid_19.mixing_optimisation.mixing_opti import (
-    MODES,
     DURATIONS,
+    MODES,
     OBJECTIVES,
     build_params_for_phases_2_and_3,
 )
-from apps.covid_19.mixing_optimisation.write_scenarios import read_opti_outputs, read_decision_vars
-from settings import BASE_PATH
+from apps.covid_19.mixing_optimisation.write_scenarios import (
+    read_decision_vars,
+    read_opti_outputs,
+)
 from autumn.utils.params import merge_dicts
 from autumn.utils.scenarios import Scenario
+from settings import BASE_PATH
 
 FIGURE_PATH = os.path.join(
     BASE_PATH,

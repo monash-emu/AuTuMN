@@ -1,10 +1,10 @@
-import streamlit as st
 import pandas as pd
-from autumn import plots
-from autumn.region import Region
-from autumn.plots.plotter import StreamlitPlotter
-from apps import covid_19
+import streamlit as st
 
+from apps import covid_19
+from autumn import plots
+from autumn.plots.plotter import StreamlitPlotter
+from autumn.region import Region
 
 BASE_DATE = pd.datetime(2019, 12, 31)
 

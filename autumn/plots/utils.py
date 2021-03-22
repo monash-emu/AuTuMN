@@ -1,8 +1,8 @@
-import matplotlib.ticker as ticker
-from matplotlib import colors
 import datetime
 from typing import List
 
+import matplotlib.ticker as ticker
+from matplotlib import colors
 
 PLOT_TEXT_DICT = {
     "contact_rate": "infection risk per contact",

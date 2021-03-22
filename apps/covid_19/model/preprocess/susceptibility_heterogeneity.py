@@ -1,8 +1,9 @@
-from scipy.stats import gamma as gamma_dist
-from scipy import optimize
-import numpy as np
-import matplotlib.pyplot as plt
 from math import sqrt
+
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy import optimize
+from scipy.stats import gamma as gamma_dist
 
 """
 Code not currently used in any application. Calls to these functions was deleted on 24/11/20 by JT because not in use.

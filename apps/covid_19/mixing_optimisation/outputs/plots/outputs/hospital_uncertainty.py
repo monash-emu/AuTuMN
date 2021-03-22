@@ -1,23 +1,23 @@
-from matplotlib import pyplot
-import matplotlib.patches as patches
 import os
+
 import matplotlib as mpl
+import matplotlib.patches as patches
 import numpy as np
+from matplotlib import pyplot
 
 from apps.covid_19.mixing_optimisation.constants import (
-    PHASE_2_START_TIME,
-    PHASE_2_DURATION,
     DURATION_PHASES_2_AND_3,
     OPTI_REGIONS,
+    PHASE_2_DURATION,
+    PHASE_2_START_TIME,
 )
-from apps.covid_19.mixing_optimisation.mixing_opti import MODES, DURATIONS, OBJECTIVES
+from apps.covid_19.mixing_optimisation.mixing_opti import DURATIONS, MODES, OBJECTIVES
 from apps.covid_19.mixing_optimisation.utils import (
-    get_scenario_mapping_reverse,
     get_scenario_mapping,
+    get_scenario_mapping_reverse,
 )
-from settings import BASE_PATH
 from autumn.db.load import load_uncertainty_table
-
+from settings import BASE_PATH
 
 FIGURE_PATH = os.path.join(
     BASE_PATH,

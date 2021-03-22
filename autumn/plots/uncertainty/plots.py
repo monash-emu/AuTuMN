@@ -1,50 +1,56 @@
 """
 Plotting projection uncertainty.
 """
-from typing import List
-import logging
 import datetime
-
-import pandas as pd
+import logging
 from math import ceil
+from typing import List
+
+import matplotlib.ticker as mtick
+import pandas as pd
+from matplotlib import pyplot
+from numpy import mean
 
 from autumn.plots.plotter import Plotter
-from autumn.plots.utils import _plot_targets_to_axis
-from matplotlib import pyplot
-import matplotlib.ticker as mtick
-from autumn.plots.utils import change_xaxis_to_date
-from numpy import mean
-from autumn.plots.utils import get_plot_text_dict, _apply_transparency, COLORS, ALPHAS, REF_DATE
+from autumn.plots.utils import (
+    ALPHAS,
+    COLORS,
+    REF_DATE,
+    _apply_transparency,
+    _plot_targets_to_axis,
+    change_xaxis_to_date,
+    get_plot_text_dict,
+)
 
 logger = logging.getLogger(__name__)
 
 
 def plot_timeseries_with_uncertainty(
-        plotter: Plotter,
-        uncertainty_df: pd.DataFrame,
-        output_name: str,
-        scenario_idxs: List[int],
-        targets: dict,
-        is_logscale=False,
-        x_low=0.0,
-        x_up=1e6,
-        axis=None,
-        n_xticks=None,
-        ref_date=REF_DATE,
-        add_targets=True,
-        overlay_uncertainty=True,
-        title_font_size=12,
-        label_font_size=10,
-        dpi_request=300,
-        capitalise_first_letter=False,
-        legend=False,
-        requested_x_ticks=None,
-        show_title=True,
-        ylab=None,
-        x_axis_to_date=True,
-        start_quantile=0,
-        sc_colors=None,
-        custom_title=None,
+    plotter: Plotter,
+    uncertainty_df: pd.DataFrame,
+    output_name: str,
+    scenario_idxs: List[int],
+    targets: dict,
+    is_logscale=False,
+    x_low=0.0,
+    x_up=1e6,
+    axis=None,
+    n_xticks=None,
+    ref_date=REF_DATE,
+    add_targets=True,
+    overlay_uncertainty=True,
+    title_font_size=12,
+    label_font_size=10,
+    dpi_request=300,
+    capitalise_first_letter=False,
+    legend=False,
+    requested_x_ticks=None,
+    show_title=True,
+    ylab=None,
+    x_axis_to_date=True,
+    start_quantile=0,
+    sc_colors=None,
+    custom_title=None,
 ):
     """
     Plots the uncertainty timeseries for one or more scenarios.
@@ -177,22 +183,22 @@ def _plot_uncertainty(
 
 
 def plot_multi_output_timeseries_with_uncertainty(
-        plotter: Plotter,
-        uncertainty_df: pd.DataFrame,
-        output_names: str,
-        scenarios: list,
-        all_targets: dict,
-        is_logscale=False,
-        x_low=0.0,
-        x_up=2000.0,
-        n_xticks=None,
-        title_font_size=12,
-        label_font_size=10,
-        file_name="multi_uncertainty",
-        share_yaxis=False,
-        max_y_value=None,
-        custom_titles=None,
-        custom_sup_title=None,
+    plotter: Plotter,
+    uncertainty_df: pd.DataFrame,
+    output_names: str,
+    scenarios: list,
+    all_targets: dict,
+    is_logscale=False,
+    x_low=0.0,
+    x_up=2000.0,
+    n_xticks=None,
+    title_font_size=12,
+    label_font_size=10,
+    file_name="multi_uncertainty",
+    share_yaxis=False,
+    max_y_value=None,
+    custom_titles=None,
+    custom_sup_title=None,
 ):
     if len(output_names) * len(scenarios) == 0:
         return

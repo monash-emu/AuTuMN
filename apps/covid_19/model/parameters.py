@@ -2,8 +2,9 @@
 Type definition for model parameters
 """
 from datetime import date
-from typing import List, Optional, Dict, Any, Union
-from pydantic import BaseModel, validator, root_validator
+from typing import Any, Dict, List, Optional, Union
+
+from pydantic import BaseModel, root_validator, validator
 from pydantic.dataclasses import dataclass
 
 from apps.covid_19.constants import BASE_DATE

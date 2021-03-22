@@ -1,17 +1,16 @@
 import logging
-import numpy as np
 from itertools import accumulate
 
-from autumn.calibration import Calibration
-from autumn.utils.params import load_params
-from autumn.calibration.utils import (
-    ignore_calibration_target_before_date,
-    add_dispersion_param_prior_for_gaussian,
-)
-from autumn.region import Region
+import numpy as np
 
 from apps.covid_19.mixing_optimisation.utils import get_prior_distributions_for_opti
-from autumn.utils.params import load_targets
+from autumn.calibration import Calibration
+from autumn.calibration.utils import (
+    add_dispersion_param_prior_for_gaussian,
+    ignore_calibration_target_before_date,
+)
+from autumn.region import Region
+from autumn.utils.params import load_params, load_targets
 
 from .model import build_model
 
@@ -249,7 +248,7 @@ def add_standard_philippines_params(params, region):
         {
             "param_name": "voc_emmergence.final_proportion",
             "distribution": "uniform",
-            "distri_params": [0., 0.7],
+            "distri_params": [0.0, 0.7],
         },
     ]
 

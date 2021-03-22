@@ -1,4 +1,5 @@
 from typing import Dict
+
 from apps.covid_19.model.parameters import Sojourn
 
 

@@ -1,10 +1,10 @@
+import logging
 import os
 import subprocess
-import logging
 
 from fabric import Connection
 
-from utils.runs import read_run_id, build_run_id
+from utils.runs import build_run_id, read_run_id
 
 logger = logging.getLogger(__name__)
 

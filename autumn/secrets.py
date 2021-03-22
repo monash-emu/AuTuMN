@@ -1,15 +1,15 @@
 """
 Utilities for managing secret data that is kept under source control.
 """
-import os
+import glob
+import hashlib
 import json
 import logging
-import hashlib
-import glob
+import os
 
 import pyAesCrypt
 
-from settings import DATA_PATH, APPS_PATH
+from settings import APPS_PATH, DATA_PATH
 
 SALT = "ElvHoxZ83kAUgqy9x2KqM"
 BUFFER_SIZE = 64 * 1024

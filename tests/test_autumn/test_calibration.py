@@ -5,8 +5,10 @@ import numpy as np
 
 from autumn import db
 from autumn.calibration import Calibration, CalibrationMode
-from autumn.calibration.utils import sample_starting_params_from_lhs, specify_missing_prior_params
-
+from autumn.calibration.utils import (
+    sample_starting_params_from_lhs,
+    specify_missing_prior_params,
+)
 from tests.utils import get_mock_model
 
 

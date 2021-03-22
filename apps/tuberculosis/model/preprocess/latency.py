@@ -3,8 +3,8 @@ from summer.legacy.model.utils.parameter_processing import (
     get_parameter_dict_from_function,
 )
 
+from autumn.curve import make_linear_curve, tanh_based_scaleup
 from autumn.utils import change_parameter_unit
-from autumn.curve import tanh_based_scaleup, make_linear_curve
 
 
 # get parameter values from Ragonnet et al., Epidemics 2017

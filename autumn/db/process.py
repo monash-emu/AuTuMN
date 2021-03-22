@@ -4,13 +4,12 @@ Processing data from the output database.
 import logging
 from typing import List
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
+from autumn.db.database import BaseDatabase, get_database
+from autumn.utils.params import load_params, load_targets
 from utils.runs import read_run_id
-from autumn.utils.params import load_targets, load_params
-from autumn.db.database import get_database, BaseDatabase
-
 
 logger = logging.getLogger(__name__)
 

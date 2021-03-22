@@ -1,16 +1,20 @@
-import os
 import copy
+import os
+
 import yaml
 
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
 from apps.covid_19.mixing_optimisation.mixing_opti import (
-    MODES,
     DURATIONS,
+    MODES,
     OBJECTIVES,
-    run_root_model,
     objective_function,
+    run_root_model,
 )
-from apps.covid_19.mixing_optimisation.write_scenarios import read_opti_outputs, read_decision_vars
+from apps.covid_19.mixing_optimisation.write_scenarios import (
+    read_decision_vars,
+    read_opti_outputs,
+)
 from settings import BASE_PATH
 
 

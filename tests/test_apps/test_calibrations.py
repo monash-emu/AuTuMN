@@ -1,6 +1,6 @@
-import autumn
 import pytest
 
+import autumn
 from apps import covid_19, tuberculosis
 
 

@@ -1,8 +1,10 @@
+from math import ceil
+
+import matplotlib.pyplot as pyplot
 import streamlit as st
+
 from autumn import plots
 from dash.dashboards.calibration_results.plots import get_uncertainty_data
-from math import ceil
-import matplotlib.pyplot as pyplot
 
 PLOT_FUNCS = {}
 

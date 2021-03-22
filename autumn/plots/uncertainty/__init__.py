@@ -1,8 +1,8 @@
-import os
 import logging
+import os
 
-from autumn.plots.plotter import FilePlotter
 from autumn.db import Database
+from autumn.plots.plotter import FilePlotter
 
 from . import plots
 

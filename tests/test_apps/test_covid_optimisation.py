@@ -1,14 +1,14 @@
-from unittest import mock
 from datetime import date
+from unittest import mock
 
-import pytest
 import numpy as np
-
-from autumn.region import Region
+import pytest
 from summer.model import CompartmentalModel
+
 from apps.covid_19.mixing_optimisation import mixing_opti as opti
-from apps.covid_19.mixing_optimisation.constants import PHASE_2_START_TIME, OPTI_REGIONS
 from apps.covid_19.mixing_optimisation import write_scenarios
+from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS, PHASE_2_START_TIME
+from autumn.region import Region
 
 
 @pytest.mark.local_only

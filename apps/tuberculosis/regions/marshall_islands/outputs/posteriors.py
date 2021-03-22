@@ -1,10 +1,12 @@
-import pandas as pd
 import os
-from settings import BASE_PATH
+
+import pandas as pd
+
+from apps.tuberculosis.regions.marshall_islands.outputs.utils import (
+    make_output_directories,
+)
 from autumn.plots.utils import PLOT_TEXT_DICT
-
-from apps.tuberculosis.regions.marshall_islands.outputs.utils import make_output_directories
-
+from settings import BASE_PATH
 
 FIGURE_PATH = os.path.join(
     BASE_PATH,

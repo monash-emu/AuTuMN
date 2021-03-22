@@ -1,7 +1,7 @@
-import streamlit as st
 import pandas as pd
-from autumn.plots.plotter import StreamlitPlotter
+import streamlit as st
 
+from autumn.plots.plotter import StreamlitPlotter
 
 BASE_DATE = pd.datetime(2019, 12, 31)
 

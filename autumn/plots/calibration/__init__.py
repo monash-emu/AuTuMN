@@ -1,17 +1,17 @@
 """
 Utilities to plot data from existing databases.
 """
-import os
-import yaml
 import logging
+import os
 from typing import List
 
-from autumn.utils.params import load_targets
+import yaml
+
 from autumn import db
 from autumn.plots.plotter import FilePlotter
+from autumn.utils.params import load_targets
 
 from . import plots
-
 
 logger = logging.getLogger(__name__)
 

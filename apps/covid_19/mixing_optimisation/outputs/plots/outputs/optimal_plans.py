@@ -1,20 +1,23 @@
-from matplotlib import pyplot
-import matplotlib.patches as patches
 import os
-import yaml
+
 import matplotlib as mpl
+import matplotlib.patches as patches
+import yaml
+from matplotlib import pyplot
 
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
 from apps.covid_19.mixing_optimisation.mixing_opti import (
-    MODES,
     DURATIONS,
+    MODES,
     OBJECTIVES,
-    run_root_model,
     objective_function,
+    run_root_model,
 )
-from apps.covid_19.mixing_optimisation.write_scenarios import read_opti_outputs, read_decision_vars
+from apps.covid_19.mixing_optimisation.write_scenarios import (
+    read_decision_vars,
+    read_opti_outputs,
+)
 from settings import BASE_PATH
-
 
 FIGURE_PATH = os.path.join(
     BASE_PATH,

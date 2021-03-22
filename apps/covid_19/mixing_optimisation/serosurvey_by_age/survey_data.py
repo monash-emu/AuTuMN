@@ -1,4 +1,3 @@
-import pandas as pd
 import json
 
 # format:
@@ -14,6 +13,9 @@ import json
 #         ],
 # }
 import os
+
+import pandas as pd
+
 from settings import APPS_PATH
 
 

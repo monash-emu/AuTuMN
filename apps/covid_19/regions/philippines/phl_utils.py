@@ -1,8 +1,10 @@
-import yaml
 import os
 from copy import copy
-from autumn.region import Region
 from time import sleep
+
+import yaml
+
+from autumn.region import Region
 
 SCENARIO_START_TIME = 454  # 29 Mar 2021
 

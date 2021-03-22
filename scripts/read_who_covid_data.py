@@ -1,11 +1,11 @@
-import pandas as pd
-import os
 import datetime
 import json
+import os
 
-from autumn.region import Region
+import pandas as pd
+
 from apps.covid_19.mixing_optimisation.utils import get_weekly_summed_targets
-
+from autumn.region import Region
 
 base_dir = os.path.dirname(os.path.abspath(os.curdir))
 WHO_DATA_FILE = os.path.join(base_dir, "data", "who_covid", "WHO-COVID-19-global-data.csv")

@@ -1,28 +1,30 @@
 from summer import CompartmentalModel
 
-from autumn import inputs
-from autumn.curve.scale_up import scale_up_function
 from apps.covid_19.constants import (
-    Compartment,
     COMPARTMENTS,
-    INFECTIOUS_COMPARTMENTS,
     DISEASE_COMPARTMENTS,
+    INFECTIOUS_COMPARTMENTS,
+    Compartment,
 )
 from apps.covid_19.model import preprocess
-from apps.covid_19.model.parameters import Parameters
-from apps.covid_19.model.stratifications.agegroup import get_agegroup_strat, AGEGROUP_STRATA
-from apps.covid_19.model.stratifications.cluster import (
-    get_cluster_strat,
-    apply_post_cluster_strat_hacks,
-)
-from apps.covid_19.model.stratifications.immunity import get_immunity_strat
-from apps.covid_19.model.stratifications.clinical import get_clinical_strat
-from apps.covid_19.model.stratifications.history import get_history_strat
 from apps.covid_19.model.outputs.standard import request_standard_outputs
 from apps.covid_19.model.outputs.victorian import request_victorian_outputs
-
+from apps.covid_19.model.parameters import Parameters
 from apps.covid_19.model.preprocess.seasonality import get_seasonal_forcing
 from apps.covid_19.model.preprocess.vaccination import get_vacc_roll_out_function
+from apps.covid_19.model.stratifications.agegroup import (
+    AGEGROUP_STRATA,
+    get_agegroup_strat,
+)
+from apps.covid_19.model.stratifications.clinical import get_clinical_strat
+from apps.covid_19.model.stratifications.cluster import (
+    apply_post_cluster_strat_hacks,
+    get_cluster_strat,
+)
+from apps.covid_19.model.stratifications.history import get_history_strat
+from apps.covid_19.model.stratifications.immunity import get_immunity_strat
+from autumn import inputs
+from autumn.curve.scale_up import scale_up_function
 
 
 def build_model(params: dict) -> CompartmentalModel:

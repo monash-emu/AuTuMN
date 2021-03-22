@@ -3,8 +3,8 @@ Entry point for PyCharm users to run an application
 """
 import os
 
-from autumn.region import Region
 from apps import covid_19, sir_example, tuberculosis, tuberculosis_strains
+from autumn.region import Region
 
 # from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
 os.chdir("..")  # Make repo root the current directory

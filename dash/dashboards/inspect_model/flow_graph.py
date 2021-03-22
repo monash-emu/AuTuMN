@@ -1,14 +1,14 @@
 import networkx as nx
 import streamlit as st
 from matplotlib import pyplot
-
 from summer.flows import (
-    DeathFlow,
     BaseEntryFlow,
     BaseExitFlow,
-    BaseTransitionFlow,
     BaseInfectionFlow,
+    BaseTransitionFlow,
+    DeathFlow,
 )
+
 from autumn.plots.plotter import StreamlitPlotter
 from autumn.utils.model_register import AppRegion
 

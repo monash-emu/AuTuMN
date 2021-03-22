@@ -1,5 +1,6 @@
-import apps.covid_19.mixing_optimisation.outputs.plots.calibration.figure_code as fc
 import matplotlib as mpl
+
+import apps.covid_19.mixing_optimisation.outputs.plots.calibration.figure_code as fc
 
 
 def main():

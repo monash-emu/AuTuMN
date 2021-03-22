@@ -1,10 +1,12 @@
-from remote.buildkite.buildkite import (
-    Pipeline,
-    CommandStep,
-    InputStep,
-)
+from remote.buildkite.buildkite import CommandStep, InputStep, Pipeline
 
-from .calibrate import chains_field, branch_field, runtime_field, trigger_field, spot_field
+from .calibrate import (
+    branch_field,
+    chains_field,
+    runtime_field,
+    spot_field,
+    trigger_field,
+)
 from .full import burn_in_field, sample_size_field
 
 fields = [

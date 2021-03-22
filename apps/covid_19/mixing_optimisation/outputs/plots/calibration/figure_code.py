@@ -1,18 +1,19 @@
-from autumn.utils.params import load_targets
-from autumn import db, plots
-from autumn.plots.calibration.plots import get_posterior, get_posterior_best_chain
-from autumn.curve import tanh_based_scaleup
-from autumn.plots.uncertainty.plots import plot_timeseries_with_uncertainty
-
-from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS, COUNTRY_TITLES
-from apps.covid_19.mixing_optimisation.serosurvey_by_age.survey_data import get_serosurvey_data
-from apps.covid_19.mixing_optimisation.utils import get_prior_distributions_for_opti
+import os
 
 import matplotlib.pyplot as plt
-
-from numpy import mean, quantile
 import numpy as np
-import os
+from numpy import mean, quantile
+
+from apps.covid_19.mixing_optimisation.constants import COUNTRY_TITLES, OPTI_REGIONS
+from apps.covid_19.mixing_optimisation.serosurvey_by_age.survey_data import (
+    get_serosurvey_data,
+)
+from apps.covid_19.mixing_optimisation.utils import get_prior_distributions_for_opti
+from autumn import db, plots
+from autumn.curve import tanh_based_scaleup
+from autumn.plots.calibration.plots import get_posterior, get_posterior_best_chain
+from autumn.plots.uncertainty.plots import plot_timeseries_with_uncertainty
+from autumn.utils.params import load_targets
 
 
 # --------------  Load outputs from databases

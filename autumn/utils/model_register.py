@@ -1,21 +1,18 @@
 """
 A tool for application models to register themselves so that they serve a standard interface
 """
-import os
 import logging
-import yaml
+import os
 from datetime import datetime
 
-from settings import OUTPUT_DATA_PATH
-from autumn import db
-from utils.timer import Timer
-from autumn.utils.scenarios import Scenario
-from autumn.utils.params import load_params, load_targets
-from autumn.utils.utils import (
-    get_git_branch,
-    get_git_hash,
-)
+import yaml
 
+from autumn import db
+from autumn.utils.params import load_params, load_targets
+from autumn.utils.scenarios import Scenario
+from autumn.utils.utils import get_git_branch, get_git_hash
+from settings import OUTPUT_DATA_PATH
+from utils.timer import Timer
 
 logger = logging.getLogger(__name__)
 

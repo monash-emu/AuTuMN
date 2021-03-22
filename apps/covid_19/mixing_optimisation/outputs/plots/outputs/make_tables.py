@@ -1,13 +1,15 @@
 import os
+
 import pandas as pd
 
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS, PHASE_2_START_TIME
-from apps.covid_19.mixing_optimisation.mixing_opti import MODES, DURATIONS
-from apps.covid_19.mixing_optimisation.utils import get_scenario_mapping_reverse
-from settings import BASE_PATH
+from apps.covid_19.mixing_optimisation.mixing_opti import DURATIONS, MODES
+from apps.covid_19.mixing_optimisation.utils import (
+    get_country_population_size,
+    get_scenario_mapping_reverse,
+)
 from autumn.db.load import load_uncertainty_table
-from apps.covid_19.mixing_optimisation.utils import get_country_population_size
-
+from settings import BASE_PATH
 
 FIGURE_PATH = os.path.join(
     BASE_PATH,

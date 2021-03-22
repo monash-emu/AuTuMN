@@ -4,11 +4,10 @@ import streamlit as st
 from matplotlib import pyplot
 
 from autumn import plots
+from autumn.inputs import get_mobility_data
 from autumn.plots.plotter import StreamlitPlotter
 from autumn.utils.model_register import AppRegion
 from autumn.utils.scenarios import Scenario
-from autumn.inputs import get_mobility_data
-
 from dash.dashboards.inspect_model.flow_graph import plot_flow_graph
 
 BASE_DATE = datetime(2020, 1, 1, 0, 0, 0)

@@ -1,5 +1,6 @@
-import numpy as np
 from functools import lru_cache
+
+import numpy as np
 
 from autumn.inputs.database import get_input_db
 from autumn.inputs.demography.queries import get_population_by_agegroup

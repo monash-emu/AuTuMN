@@ -1,12 +1,11 @@
 import logging
-import pprint
 import os
+import pprint
 import subprocess as sp
 
 import yaml
 
 from settings import DATA_PATH
-
 
 logger = logging.getLogger(__name__)
 

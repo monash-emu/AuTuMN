@@ -1,12 +1,12 @@
+import logging
 import os
 import subprocess
 from datetime import datetime
-from dateutil.tz import tzutc
-import logging
 
 import boto3
-from botocore.exceptions import ProfileNotFound
 import timeago
+from botocore.exceptions import ProfileNotFound
+from dateutil.tz import tzutc
 from tabulate import tabulate
 
 import settings

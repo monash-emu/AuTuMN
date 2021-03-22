@@ -5,7 +5,6 @@ import socket
 from apps import covid_19, tuberculosis, tuberculosis_strains
 from utils.runs import read_run_id
 
-
 APP_MAP = {
     "covid_19": covid_19,
     "tuberculosis": tuberculosis,

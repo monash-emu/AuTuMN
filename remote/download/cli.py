@@ -8,9 +8,9 @@ from shutil import rmtree
 import click
 
 from settings import OUTPUT_DATA_PATH
+from utils.runs import read_run_id
 from utils.s3 import download_from_s3, list_s3
 from utils.timer import Timer
-from utils.runs import read_run_id
 
 
 @click.group()

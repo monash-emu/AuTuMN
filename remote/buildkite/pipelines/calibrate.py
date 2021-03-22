@@ -1,11 +1,12 @@
 from remote.buildkite.buildkite import (
-    Pipeline,
+    BooleanInputField,
     CommandStep,
     InputStep,
-    TextInputField,
+    Pipeline,
     SelectInputField,
-    BooleanInputField,
+    TextInputField,
 )
+
 from .full import burn_in_field, sample_size_field
 
 

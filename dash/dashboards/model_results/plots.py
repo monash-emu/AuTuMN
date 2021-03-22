@@ -5,10 +5,9 @@ import os
 
 import streamlit as st
 
-from autumn import plots, db
-from autumn.utils.model_register import AppRegion
+from autumn import db, plots
 from autumn.plots.plotter import StreamlitPlotter
-
+from autumn.utils.model_register import AppRegion
 from dash import selectors
 
 PLOT_FUNCS = {}

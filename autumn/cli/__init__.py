@@ -8,7 +8,6 @@ You can access this script from your CLI by running:
 """
 import click
 
-
 from .database import db
 from .secrets import secrets
 

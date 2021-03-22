@@ -1,13 +1,13 @@
-from apps.covid_19.mixing_optimisation.mixing_opti import (
-    run_root_model,
-    objective_function,
-    MODES,
-    DURATIONS,
-    OBJECTIVES,
-    AGE_MODE,
-    LOCATION_MODE,
-)
 from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
+from apps.covid_19.mixing_optimisation.mixing_opti import (
+    AGE_MODE,
+    DURATIONS,
+    LOCATION_MODE,
+    MODES,
+    OBJECTIVES,
+    objective_function,
+    run_root_model,
+)
 
 """
 Sample code for Guillaume. Please do not delete.

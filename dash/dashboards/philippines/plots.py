@@ -1,21 +1,22 @@
+import os
 from typing import List
+
 import pandas as pd
 import streamlit as st
-import os
 import yaml
-
 from matplotlib import pyplot
 from numpy import random
 
-from autumn.plots.plotter import StreamlitPlotter
 from autumn import plots
-from dash.dashboards.calibration_results.plots import get_uncertainty_df, write_mcmc_centiles
 from autumn.plots.calibration.plots import get_epi_params
-from dash.utils import create_downloadable_csv
+from autumn.plots.plotter import StreamlitPlotter
 from autumn.plots.utils import get_plot_text_dict
-
 from autumn.region import Region
-
+from dash.dashboards.calibration_results.plots import (
+    get_uncertainty_df,
+    write_mcmc_centiles,
+)
+from dash.utils import create_downloadable_csv
 
 STANDARD_X_LIMITS = 153, 275
 PLOT_FUNCS = {}

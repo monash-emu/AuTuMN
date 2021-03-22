@@ -2,7 +2,9 @@ import numpy as np
 from numpy.testing import assert_allclose
 
 from apps.covid_19.model.parameters import TimeSeries
-from apps.covid_19.model.preprocess.mixing_matrix.mixing_adjusters import AgeMixingAdjuster
+from apps.covid_19.model.preprocess.mixing_matrix.mixing_adjusters import (
+    AgeMixingAdjuster,
+)
 
 
 def test_age_adjuster__with_empty_mixing_data():

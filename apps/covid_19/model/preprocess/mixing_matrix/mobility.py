@@ -1,11 +1,10 @@
 from typing import Callable, Dict, List
 
+from apps.covid_19.constants import BASE_DATETIME
+from apps.covid_19.model.parameters import Country, MixingLocation
 from autumn.curve import scale_up_function
 from autumn.inputs import get_mobility_data
 from autumn.utils.utils import apply_moving_average
-from apps.covid_19.model.parameters import Country, MixingLocation
-
-from apps.covid_19.constants import BASE_DATETIME
 
 LOCATIONS = ["home", "other_locations", "school", "work"]
 

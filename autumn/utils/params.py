@@ -1,18 +1,19 @@
 """
 Used to load model parameters from file
 """
-from logging import log
+import json
+import logging
 import os
 import re
-import yaml
-import json
 from copy import deepcopy
+from logging import log
 from os import path
-import logging
 
-from settings import APPS_PATH, BASE_PATH
-from autumn.utils.utils import merge_dicts
+import yaml
+
 from autumn.secrets import check_hash
+from autumn.utils.utils import merge_dicts
+from settings import APPS_PATH, BASE_PATH
 
 logger = logging.getLogger(__name__)
 

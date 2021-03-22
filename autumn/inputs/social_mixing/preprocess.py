@@ -5,10 +5,8 @@ import os
 
 import pandas as pd
 
-
-from settings import INPUT_DATA_PATH
 from autumn.db import Database
-
+from settings import INPUT_DATA_PATH
 
 MIXING_DIRPATH = os.path.join(INPUT_DATA_PATH, "social-mixing")
 LOCATIONS = ("all_locations", "home", "other_locations", "school", "work")

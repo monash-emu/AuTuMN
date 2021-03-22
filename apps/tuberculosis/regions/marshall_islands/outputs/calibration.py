@@ -1,24 +1,23 @@
-from matplotlib import pyplot
 import os
 
+from matplotlib import pyplot
 
-from settings import BASE_PATH
+from apps.tuberculosis.regions.marshall_islands.calibrate import targets_to_use
+from apps.tuberculosis.regions.marshall_islands.outputs.utils import (
+    OUTPUT_TITLES,
+    get_format,
+    make_output_directories,
+    save_figure,
+)
 from autumn.db.load import load_uncertainty_table
 from autumn.plots.uncertainty.plots import (
-    _plot_uncertainty,
     _get_target_values,
     _plot_targets_to_axis,
+    _plot_uncertainty,
 )
 from autumn.plots.utils import COLORS
 from autumn.utils.params import load_targets
-
-from apps.tuberculosis.regions.marshall_islands.outputs.utils import (
-    OUTPUT_TITLES,
-    save_figure,
-    get_format,
-    make_output_directories,
-)
-from apps.tuberculosis.regions.marshall_islands.calibrate import targets_to_use
+from settings import BASE_PATH
 
 FIGURE_PATH = os.path.join(
     BASE_PATH,

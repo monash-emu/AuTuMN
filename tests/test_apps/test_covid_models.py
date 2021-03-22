@@ -1,8 +1,8 @@
 from copy import deepcopy
 
 import pytest
-from summer.legacy.model import StratifiedModel
 from summer import CompartmentalModel
+from summer.legacy.model import StratifiedModel
 
 from apps import covid_19
 from autumn.utils.utils import merge_dicts

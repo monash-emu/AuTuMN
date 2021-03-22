@@ -2,10 +2,10 @@ from typing import Callable
 
 import numpy as np
 
-from apps.covid_19.model.parameters import Mobility, Country
+from apps.covid_19.model.parameters import Country, Mobility
 
-from .mixing_adjusters import AgeMixingAdjuster, LocationMixingAdjuster
 from .microdistancing import get_microdistancing_funcs
+from .mixing_adjusters import AgeMixingAdjuster, LocationMixingAdjuster
 from .mobility import get_mobility_funcs
 
 

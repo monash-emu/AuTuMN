@@ -2,12 +2,14 @@
 FIXME: These all need tests.
 """
 from typing import List
+
+import numpy as np
 from summer.legacy.constants import Compartment
 from summer.legacy.model.derived_outputs import (
     InfectionDeathFlowOutput,
     TransitionFlowOutput,
 )
-import numpy as np
+
 from autumn.curve import tanh_based_scaleup
 
 

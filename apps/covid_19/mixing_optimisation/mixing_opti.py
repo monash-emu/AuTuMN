@@ -1,21 +1,21 @@
-import os
 import copy
+import os
+from datetime import date, timedelta
 from typing import List
 
 from summer.legacy.model import StratifiedModel
-from autumn.region import Region
-from autumn.utils.scenarios import Scenario
-from autumn.utils.params import update_params, merge_dicts
-from datetime import date, timedelta
 
 from apps import covid_19
 from apps.covid_19.mixing_optimisation.constants import (
-    PHASE_2_START_TIME,
     DURATION_PHASES_2_AND_3,
-    PHASE_2_DURATION,
     MICRODISTANCING_OPTI_PARAMS,
     MIXING_FACTOR_BOUNDS,
+    PHASE_2_DURATION,
+    PHASE_2_START_TIME,
 )
+from autumn.region import Region
+from autumn.utils.params import merge_dicts, update_params
+from autumn.utils.scenarios import Scenario
 
 REF_DATE = date(2019, 12, 31)
 FILE_DIR = os.path.dirname(os.path.abspath(__file__))

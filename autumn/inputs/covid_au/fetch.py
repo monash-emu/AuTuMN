@@ -2,6 +2,7 @@
 This file imports Google mobility data and saves it to disk as a CSV.
 """
 import os
+
 import pandas as pd
 
 from settings import INPUT_DATA_PATH

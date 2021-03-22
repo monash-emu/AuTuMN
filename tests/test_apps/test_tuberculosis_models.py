@@ -1,12 +1,12 @@
 from copy import deepcopy
+from itertools import chain, combinations
 
 import pytest
-from summer.legacy.model import StratifiedModel
 from summer.legacy.constants import Flow, IntegrationType
+from summer.legacy.model import StratifiedModel
 
 from apps import tuberculosis
 from autumn.utils.utils import merge_dicts
-from itertools import chain, combinations
 
 
 def powerset(iterable):

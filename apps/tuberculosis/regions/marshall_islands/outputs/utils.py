@@ -1,5 +1,7 @@
 import os
+
 from matplotlib import pyplot
+
 from settings import BASE_PATH
 
 OUTPUT_TITLES = {

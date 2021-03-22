@@ -4,18 +4,17 @@ import os
 import pandas as pd
 
 from autumn import db
-from autumn.db.store import Table
 from autumn.db.database import get_database
+from autumn.db.store import Table
 from autumn.utils.params import update_params
 from autumn.utils.scenarios import Scenario, calculate_differential_outputs
-from utils.s3 import list_s3, download_from_run_s3, upload_to_run_s3
-from utils.parallel import run_parallel_tasks
-from utils.timer import Timer
-from utils.fs import recreate_dir
-from tasks.utils import get_app_region, set_logging_config
-from tasks.calibrate import CALIBRATE_DATA_DIR
 from settings import REMOTE_BASE_DIR
-
+from tasks.calibrate import CALIBRATE_DATA_DIR
+from tasks.utils import get_app_region, set_logging_config
+from utils.fs import recreate_dir
+from utils.parallel import run_parallel_tasks
+from utils.s3 import download_from_run_s3, list_s3, upload_to_run_s3
+from utils.timer import Timer
 
 logger = logging.getLogger(__name__)
 

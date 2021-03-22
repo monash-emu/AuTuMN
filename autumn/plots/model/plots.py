@@ -1,23 +1,26 @@
 """
 Plots for a model that has been run.
 """
-import os
 import logging
-import pandas as pd
-from typing import List, Callable
+import os
+from math import ceil
+from typing import Callable, List
 
 import numpy as np
+import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot
-from math import ceil
 
-from autumn.utils.scenarios import Scenario
-from autumn.plots.utils import _plot_targets_to_axis, get_plot_text_dict
-from autumn.plots.utils import change_xaxis_to_date, REF_DATE
-
-from autumn.plots.plotter import Plotter, COLOR_THEME
-from autumn.inputs.social_mixing.queries import get_country_mixing_matrix
 from autumn.inputs.demography.queries import get_population_by_agegroup
+from autumn.inputs.social_mixing.queries import get_country_mixing_matrix
+from autumn.plots.plotter import COLOR_THEME, Plotter
+from autumn.plots.utils import (
+    REF_DATE,
+    _plot_targets_to_axis,
+    change_xaxis_to_date,
+    get_plot_text_dict,
+)
+from autumn.utils.scenarios import Scenario
 
 logger = logging.getLogger(__name__)
 

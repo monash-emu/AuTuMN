@@ -1,15 +1,15 @@
-import os
 import math
-from typing import List, Dict, Any
-import pandas as pd
+import os
+from typing import Any, Dict, List
 
 import numpy as np
+import pandas as pd
+import yaml
 from pyDOE import lhs
-from scipy import stats, special
+from scipy import special, stats
 from scipy.optimize import minimize
 
 from autumn.db import Database
-import yaml
 
 
 def add_dispersion_param_prior_for_gaussian(par_priors, target_outputs):

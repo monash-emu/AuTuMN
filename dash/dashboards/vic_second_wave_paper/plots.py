@@ -1,27 +1,29 @@
+import os
+import random
 from typing import List
+
+import matplotlib.pyplot as plt
 import pandas as pd
 import streamlit as st
-import os
 import yaml
-import matplotlib.pyplot as plt
-import random
 
-from autumn.plots.plotter import StreamlitPlotter
-from autumn import plots
-from dash.dashboards.calibration_results.plots import get_uncertainty_df, write_mcmc_centiles
-from autumn.plots.calibration.plots import get_epi_params
-from dash.utils import create_downloadable_csv
-from dash.dashboards.calibration_results.plots import create_seroprev_csv, get_uncertainty_db
-from autumn.plots.utils import get_plot_text_dict
-import matplotlib.pyplot as plt
-
-from apps.covid_19.model.parameters import Population, Country
+from apps.covid_19.model.parameters import Country, Population
 from apps.covid_19.model.preprocess.case_detection import get_testing_pop
-
-from autumn.region import Region
 from apps.covid_19.model.preprocess.testing import find_cdr_function_from_test_data
+from autumn import plots
+from autumn.plots.calibration.plots import get_epi_params
+from autumn.plots.plotter import StreamlitPlotter
+from autumn.plots.utils import get_plot_text_dict
+from autumn.region import Region
 from autumn.utils.params import load_params
-from dash.dashboards.calibration_results.plots import get_cdr_constants
+from dash.dashboards.calibration_results.plots import (
+    create_seroprev_csv,
+    get_cdr_constants,
+    get_uncertainty_db,
+    get_uncertainty_df,
+    write_mcmc_centiles,
+)
+from dash.utils import create_downloadable_csv
 
 STANDARD_X_LIMITS = 153, 275
 PLOT_FUNCS = {}
@@ -453,7 +455,7 @@ def plot_key_param_traces(
         dpi_request,
         optional_param_request=KEY_PARAMS,
         file_name="key_traces",
-        x_ticks_on=False
+        x_ticks_on=False,
     )
 
 
@@ -470,8 +472,13 @@ def plot_epi_param_traces(
     region: str,
 ):
 
-    title_font_size, label_font_size, dpi_request, capitalise_first_letter, burn_in = \
-        8, 6, 300, False, 0
+    title_font_size, label_font_size, dpi_request, capitalise_first_letter, burn_in = (
+        8,
+        6,
+        300,
+        False,
+        0,
+    )
     plots.calibration.plots.plot_multiple_param_traces(
         plotter,
         mcmc_params,
@@ -482,7 +489,7 @@ def plot_epi_param_traces(
         dpi_request,
         optional_param_request=get_vic_epi_params(mcmc_params),
         file_name="epi_traces",
-        x_ticks_on=False
+        x_ticks_on=False,
     )
 
 
@@ -631,9 +638,16 @@ def plot_scenarios(
     targets = {k: v for k, v in targets.items() if v["output_key"] == chosen_output}
     uncertainty_df = get_uncertainty_df(calib_dir_path, mcmc_tables, targets)
     selected_scenarios = uncertainty_df["scenario"].unique()
-    title_font_size, label_font_size, dpi_request, capitalise_first_letter, is_logscale, is_targets, \
-        is_overlay_uncertainty, is_legend = \
-        8, 8, 300, False, False, True, True, True
+    (
+        title_font_size,
+        label_font_size,
+        dpi_request,
+        capitalise_first_letter,
+        is_logscale,
+        is_targets,
+        is_overlay_uncertainty,
+        is_legend,
+    ) = (8, 8, 300, False, False, True, True, True)
     plots.uncertainty.plots.plot_timeseries_with_uncertainty(
         plotter,
         uncertainty_df,
@@ -666,9 +680,14 @@ def plot_scenarios_multioutput(
     region: str,
 ):
     uncertainty_df = get_uncertainty_df(calib_dir_path, mcmc_tables, targets)
-    dpi_request, capitalise_first_letter, is_logscale, is_targets, \
-        is_overlay_uncertainty, is_legend = \
-        300, False, False, True, True, True
+    (
+        dpi_request,
+        capitalise_first_letter,
+        is_logscale,
+        is_targets,
+        is_overlay_uncertainty,
+        is_legend,
+    ) = (300, False, False, True, True, True)
 
     scenario_outputs = ["notifications", "infection_deaths", "icu_occupancy", "hospital_occupancy"]
     plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(

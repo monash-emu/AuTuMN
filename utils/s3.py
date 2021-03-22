@@ -1,6 +1,6 @@
-import os
 import glob
 import logging
+import os
 
 import boto3
 from boto3.s3.transfer import TransferConfig

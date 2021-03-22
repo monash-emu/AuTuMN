@@ -1,8 +1,9 @@
 from summer.legacy.constants import Flow
+
 from apps.tuberculosis.constants import Compartment
-from .latency import get_unstratified_parameter_values
 from autumn.curve import scale_up_function, tanh_based_scaleup
 
+from .latency import get_unstratified_parameter_values
 
 DEFAULT_FLOWS = [
     # Infection flows.

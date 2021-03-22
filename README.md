@@ -135,11 +135,12 @@ Automated benchmarks are run on every commit to master using the [github-action-
 
 ## Formatting
 
-The codebase can be auto-formatted using [Black](https://github.com/psf/black).
-You can auto-format the code as follows, this will never break anything:
+The codebase can be auto-formatted using [Black](https://github.com/psf/black) and [isort](https://pycqa.github.io/isort/).
+You can auto-format the code as follows, this will (probably) never break anything:
 
 ```
 black .
+isort . --profile black
 ```
 
 ## Input data

@@ -1,9 +1,10 @@
 import os
 
-from settings import BASE_PATH
+from apps.tuberculosis.regions.marshall_islands.outputs.utils import (
+    make_output_directories,
+)
 from autumn.db.load import load_uncertainty_table
-
-from apps.tuberculosis.regions.marshall_islands.outputs.utils import make_output_directories
+from settings import BASE_PATH
 
 FIGURE_PATH = os.path.join(
     BASE_PATH,

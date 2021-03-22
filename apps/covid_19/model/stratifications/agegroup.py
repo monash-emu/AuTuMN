@@ -1,13 +1,12 @@
 from typing import List
 
-from summer import Stratification, Multiply
-
-from autumn import inputs
-from autumn.utils.utils import normalise_sequence
+from summer import Multiply, Stratification
 
 from apps.covid_19.constants import COMPARTMENTS
 from apps.covid_19.model import preprocess
 from apps.covid_19.model.parameters import Parameters
+from autumn import inputs
+from autumn.utils.utils import normalise_sequence
 
 # Age groups match the Prem matrices
 AGEGROUP_STRATA = [

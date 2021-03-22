@@ -1,15 +1,14 @@
 """
 Read demography data from input database.
 """
-from autumn.region import Region
-
-from typing import List
 from functools import lru_cache
+from typing import List
 
 import numpy as np
 import pandas as pd
 
 from autumn.inputs.database import get_input_db
+from autumn.region import Region
 
 INF = float("inf")
 MAPPING_ISO_CODE = {

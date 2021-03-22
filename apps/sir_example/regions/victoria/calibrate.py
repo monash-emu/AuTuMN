@@ -1,10 +1,9 @@
 import logging
 
-from autumn.region import Region
-from autumn.calibration import Calibration
-from autumn.utils.params import load_params, load_targets
-
 from apps.sir_example.model import build_model
+from autumn.calibration import Calibration
+from autumn.region import Region
+from autumn.utils.params import load_params, load_targets
 
 
 def run_calibration_chain(max_seconds: int, run_id: int, num_chains: int):

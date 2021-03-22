@@ -1,12 +1,9 @@
-from summer import Stratification, Overwrite
+from summer import Overwrite, Stratification
+
+from apps.covid_19.constants import INFECTIOUS_COMPARTMENTS, Clinical, Compartment
 from apps.covid_19.model.parameters import Parameters
-from apps.covid_19.model.stratifications.agegroup import AGEGROUP_STRATA
-from apps.covid_19.constants import (
-    Compartment,
-    Clinical,
-    INFECTIOUS_COMPARTMENTS,
-)
 from apps.covid_19.model.preprocess.clinical import get_all_adjs
+from apps.covid_19.model.stratifications.agegroup import AGEGROUP_STRATA
 
 CLINICAL_STRATA = [
     Clinical.NON_SYMPT,

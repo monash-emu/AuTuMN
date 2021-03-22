@@ -1,17 +1,16 @@
 import numpy as np
+from summer import Overwrite
 
+from apps.covid_19.constants import Clinical, Compartment
+from apps.covid_19.model import preprocess
+from apps.covid_19.model.preprocess.case_detection import build_detected_proportion_func
+from apps.covid_19.model.stratifications.agegroup import AGEGROUP_STRATA
 from autumn import inputs
 from autumn.utils.utils import (
     apply_odds_ratio_to_proportion,
     repeat_list_elements,
     repeat_list_elements_average_last_two,
 )
-from apps.covid_19.model.stratifications.agegroup import AGEGROUP_STRATA
-from summer import Overwrite
-
-from apps.covid_19.constants import Clinical, Compartment
-from apps.covid_19.model.preprocess.case_detection import build_detected_proportion_func
-from apps.covid_19.model import preprocess
 
 
 def get_proportion_symptomatic(clinical_params):

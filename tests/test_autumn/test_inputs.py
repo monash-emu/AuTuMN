@@ -1,21 +1,18 @@
 from datetime import datetime
 
-import pytest
 import numpy as np
+import pytest
 
-from autumn.inputs.demography.queries import (
-    downsample_quantity,
-    downsample_rate,
-)
 from autumn.inputs import (
     build_input_database,
-    get_population_by_agegroup,
+    get_country_mixing_matrix,
     get_crude_birth_rate,
     get_death_rates_by_agegroup,
     get_life_expectancy_by_agegroup,
-    get_country_mixing_matrix,
     get_mobility_data,
+    get_population_by_agegroup,
 )
+from autumn.inputs.demography.queries import downsample_quantity, downsample_rate
 from scripts.read_who_covid_data import read_who_data_from_csv
 
 

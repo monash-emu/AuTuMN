@@ -2,9 +2,7 @@ import pandas as pd
 
 from autumn.db import Database
 
-from .fetch import COVID_AU_CSV_PATH
-from .fetch import COVID_LGA_CSV_PATH
-from .fetch import MOBILITY_LGA_PATH
+from .fetch import COVID_AU_CSV_PATH, COVID_LGA_CSV_PATH, MOBILITY_LGA_PATH
 
 
 def preprocess_covid_au(input_db: Database):

@@ -1,14 +1,14 @@
 import os
-from matplotlib import pyplot
+
 import matplotlib as mpl
 import seaborn as sns
+from matplotlib import pyplot
 
-from settings import BASE_PATH
-from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
 from apps import covid_19
-from apps.covid_19.model.preprocess.mixing_matrix.mobility import get_mobility_funcs
+from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS
 from apps.covid_19.model.parameters import Parameters
-
+from apps.covid_19.model.preprocess.mixing_matrix.mobility import get_mobility_funcs
+from settings import BASE_PATH
 
 FIGURE_PATH = os.path.join(
     BASE_PATH,

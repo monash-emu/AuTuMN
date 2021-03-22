@@ -1,15 +1,11 @@
 import logging
 
-from autumn.region import Region
-from autumn.calibration import Calibration
-from autumn.utils.params import load_params, load_targets
-from autumn.calibration.utils import add_dispersion_param_prior_for_gaussian
-
-
+from apps.tuberculosis.calibration_utils import get_natural_history_priors_from_cid
 from apps.tuberculosis.model import build_model
-from apps.tuberculosis.calibration_utils import (
-    get_natural_history_priors_from_cid,
-)
+from autumn.calibration import Calibration
+from autumn.calibration.utils import add_dispersion_param_prior_for_gaussian
+from autumn.region import Region
+from autumn.utils.params import load_params, load_targets
 
 targets = load_targets("tuberculosis", Region.MARSHALL_ISLANDS)
 

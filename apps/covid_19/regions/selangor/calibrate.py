@@ -1,10 +1,11 @@
-from autumn.region import Region
 from apps.covid_19 import calibration as base
-from apps.covid_19.calibration import provide_default_calibration_params
+from apps.covid_19.calibration import (
+    provide_default_calibration_params,
+    truncate_targets_from_time,
+)
 from autumn.calibration.utils import add_dispersion_param_prior_for_gaussian
+from autumn.region import Region
 from autumn.utils.params import load_targets
-from apps.covid_19.calibration import truncate_targets_from_time
-
 
 targets = load_targets("covid_19", Region.SELANGOR)
 notifications = truncate_targets_from_time(targets["notifications"], 270.0)

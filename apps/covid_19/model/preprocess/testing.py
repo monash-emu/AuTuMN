@@ -1,9 +1,10 @@
 import numpy as np
-from autumn.inputs.owid.queries import get_international_testing_numbers
-from autumn.inputs.covid_au.queries import get_dhhs_testing_numbers
+
 from autumn.curve import scale_up_function
-from autumn.utils.utils import apply_moving_average
+from autumn.inputs.covid_au.queries import get_dhhs_testing_numbers
 from autumn.inputs.covid_phl.queries import get_phl_subregion_testing_numbers
+from autumn.inputs.owid.queries import get_international_testing_numbers
+from autumn.utils.utils import apply_moving_average
 
 
 def create_cdr_function(assumed_tests: int, assumed_cdr: float):

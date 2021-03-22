@@ -1,7 +1,6 @@
+from apps.tuberculosis_strains.model import build_model
 from autumn.region import Region
 from autumn.utils.model_register import AppRegion
-
-from apps.tuberculosis_strains.model import build_model
 
 from .calibrate import run_calibration_chain
 

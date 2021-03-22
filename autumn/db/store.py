@@ -4,11 +4,11 @@ Storing model data in the database
 import logging
 from typing import List
 
-import yaml
 import pandas as pd
-
+import yaml
 from summer.legacy.model import StratifiedModel
 from summer.model import CompartmentalModel
+
 from autumn.db.database import get_database
 
 from . import process

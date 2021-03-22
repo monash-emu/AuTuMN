@@ -7,9 +7,13 @@ You can access this script from your CLI by running:
 
 """
 import click
-from apps.tuberculosis.regions.marshall_islands.outputs.main_script import make_all_rmi_plots
-from .run import run
+
+from apps.tuberculosis.regions.marshall_islands.outputs.main_script import (
+    make_all_rmi_plots,
+)
+
 from .calibrate import calibrate
+from .run import run
 
 
 @click.group()

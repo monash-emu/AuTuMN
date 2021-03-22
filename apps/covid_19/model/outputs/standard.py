@@ -1,15 +1,19 @@
 from typing import List
-import numpy as np
 
+import numpy as np
 from summer import CompartmentalModel
 
-from autumn import inputs
-
-from apps.covid_19.model.parameters import Parameters
-from apps.covid_19.constants import Compartment, Clinical, COMPARTMENTS, NOTIFICATION_STRATA
+from apps.covid_19.constants import (
+    COMPARTMENTS,
+    NOTIFICATION_STRATA,
+    Clinical,
+    Compartment,
+)
 from apps.covid_19.mixing_optimisation.constants import OPTI_ISO3S, Region
-from apps.covid_19.model.stratifications.clinical import CLINICAL_STRATA
+from apps.covid_19.model.parameters import Parameters
 from apps.covid_19.model.stratifications.agegroup import AGEGROUP_STRATA
+from apps.covid_19.model.stratifications.clinical import CLINICAL_STRATA
+from autumn import inputs
 
 
 def request_standard_outputs(

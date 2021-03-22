@@ -1,6 +1,6 @@
 import streamlit as st
 
-from apps import covid_19, tuberculosis, sir_example, tuberculosis_strains
+from apps import covid_19, sir_example, tuberculosis, tuberculosis_strains
 
 
 def run_dashboard():

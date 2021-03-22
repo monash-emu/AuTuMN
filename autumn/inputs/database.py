@@ -1,15 +1,16 @@
-import os
 import logging
+import os
 
+from autumn.db import Database
 from settings import INPUT_DATA_PATH
 from utils.timer import Timer
-from autumn.db import Database
-from .mobility.preprocess import preprocess_mobility
-from .social_mixing.preprocess import preprocess_social_mixing
-from .demography.preprocess import preprocess_demography
+
 from .covid_au.preprocess import preprocess_covid_au
 from .covid_phl.preprocess import preprocess_covid_phl
+from .demography.preprocess import preprocess_demography
+from .mobility.preprocess import preprocess_mobility
 from .owid.preprocess import preprocess_our_world_in_data
+from .social_mixing.preprocess import preprocess_social_mixing
 
 logger = logging.getLogger(__name__)
 

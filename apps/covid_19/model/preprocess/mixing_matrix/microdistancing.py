@@ -1,10 +1,10 @@
-import numpy as np
-
 from typing import Callable, Dict
 
-from autumn.curve import scale_up_function, tanh_based_scaleup
+import numpy as np
+
 from apps.covid_19.model.parameters import MicroDistancingFunc
 from apps.covid_19.model.preprocess.mixing_matrix.mobility import LOCATIONS
+from autumn.curve import scale_up_function, tanh_based_scaleup
 
 ADJUSTER_SUFFIX = "_adjuster"
 

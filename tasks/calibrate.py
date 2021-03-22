@@ -3,14 +3,13 @@ import os
 import shutil
 from tempfile import TemporaryDirectory
 
-from autumn import plots, db
-from utils.s3 import upload_to_run_s3
-from utils.parallel import run_parallel_tasks
-from utils.timer import Timer
-from utils.fs import recreate_dir
+from autumn import db, plots
 from settings import REMOTE_BASE_DIR
 from tasks.utils import get_app_region, set_logging_config
-
+from utils.fs import recreate_dir
+from utils.parallel import run_parallel_tasks
+from utils.s3 import upload_to_run_s3
+from utils.timer import Timer
 
 logger = logging.getLogger(__name__)
 

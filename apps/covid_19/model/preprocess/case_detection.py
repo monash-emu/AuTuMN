@@ -1,9 +1,14 @@
 from typing import List
 
+from apps.covid_19.model.parameters import (
+    CaseDetection,
+    Country,
+    Population,
+    TestingToDetection,
+)
+from apps.covid_19.model.preprocess.testing import find_cdr_function_from_test_data
 from autumn import inputs
 from autumn.curve import tanh_based_scaleup
-from apps.covid_19.model.parameters import TestingToDetection, CaseDetection, Country, Population
-from apps.covid_19.model.preprocess.testing import find_cdr_function_from_test_data
 
 
 def get_testing_pop(agegroup_strata: List[str], country: Country, pop: Population):

@@ -251,6 +251,17 @@ def add_standard_philippines_params(params, region):
             "distribution": "uniform",
             "distri_params": [0., 0.7],
         },
+        {
+            "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.lower_asymptote",
+            "distribution": "uniform",
+            "distri_params": [0.8, 1.],
+        },
+        {
+            "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.inflection_time",
+            "distribution": "uniform",
+            "distri_params": [367, 425],  # 1 Jan - 28 Feb
+        },
+
     ]
 
 

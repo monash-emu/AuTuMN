@@ -34,6 +34,18 @@ mobility:
         - school
         - work
         - home
+    behaviour_adjuster:
+      function_type: tanh
+      parameters:
+        shape: -0.05
+        inflection_time: 400.
+        lower_asymptote: 1.
+        upper_asymptote: 1.
+      locations:
+        - other_locations
+        - school
+        - work
+        - home
 
 voc_emmergence:
   final_proportion: 0.1

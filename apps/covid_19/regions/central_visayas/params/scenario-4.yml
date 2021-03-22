@@ -4,11 +4,11 @@ mobility:
     school:
       append: false
       times:
-      - 439
-      - 440
+      - 453
+      - 454
       values:
       - 0.0
       - 1.0
 parent: apps/covid_19/regions/central_visayas/params/default.yml
 time:
-  start: 438
+  start: 452

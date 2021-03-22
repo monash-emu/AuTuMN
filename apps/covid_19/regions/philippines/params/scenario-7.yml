@@ -1,11 +1,11 @@
 description: 13% coverage / 70% efficacy / severity-preventing vaccine
 parent: apps/covid_19/regions/philippines/params/default.yml
 time:
-  start: 438
+  start: 452
 vaccination:
   infection_efficacy: 0.0
   roll_out_function:
     coverage: 0.13
-    end_time: 710
-    start_time: 440
+    end_time: 724
+    start_time: 454
   severity_efficacy: 0.7

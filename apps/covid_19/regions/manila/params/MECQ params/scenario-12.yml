@@ -1,14 +1,18 @@
-description: Reduction in MHS by 50%
+description: 40% MHS increase from 22/3
 mobility:
   microdistancing:
     behaviour:
       parameters:
         times:
-        - 453
-        - 454
+        - 446
+        - 447
+        - 517
+        - 518
         values:
         - 1.0
-        - 0.5
+        - 1.4
+        - 1.4
+        - 1.0
 parent: apps/covid_19/regions/manila/params/default.yml
 time:
-  start: 452
+  start: 438

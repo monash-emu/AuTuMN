@@ -4,11 +4,11 @@ mobility:
     behaviour:
       parameters:
         times:
-        - 439
-        - 440
+        - 453
+        - 454
         values:
         - 1.0
         - 0.5
 parent: apps/covid_19/regions/philippines/params/default.yml
 time:
-  start: 438
+  start: 452

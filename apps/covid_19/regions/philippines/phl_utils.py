@@ -4,7 +4,7 @@ from copy import copy
 from autumn.region import Region
 from time import sleep
 
-SCENARIO_START_TIME = 440  # 15 Mar 2021
+SCENARIO_START_TIME = 454  # 29 Mar 2021
 
 BACK_TO_NORMAL_FRACTIONS = [0.5]
 MHS_REDUCTION_FRACTIONS = [0.5]

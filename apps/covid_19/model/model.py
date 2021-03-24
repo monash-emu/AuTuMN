@@ -11,7 +11,11 @@ from apps.covid_19.model.outputs.standard import request_standard_outputs
 from apps.covid_19.model.outputs.victorian import request_victorian_outputs
 from apps.covid_19.model.parameters import Parameters
 from apps.covid_19.model.preprocess.seasonality import get_seasonal_forcing
-from apps.covid_19.model.preprocess.vaccination import get_vacc_roll_out_function
+from apps.covid_19.model.preprocess.vaccination import (
+    check_vaccination_params,
+    get_eligible_age_groups,
+    add_vaccination_flows,
+)
 from apps.covid_19.model.stratifications.agegroup import (
     AGEGROUP_STRATA,
     get_agegroup_strat,
@@ -153,18 +157,9 @@ def build_model(params: dict) -> CompartmentalModel:
         model.stratify_with(immunity_strat)
         if params.vaccination:
             vacc_params = params.vaccination
-            vaccination_roll_out_function = get_vacc_roll_out_function(
-                vacc_params.roll_out_function
-            )
-            for compartment in [Compartment.SUSCEPTIBLE, Compartment.RECOVERED]:
-                model.add_fractional_flow(
-                    name="vaccination",
-                    fractional_rate=vaccination_roll_out_function,
-                    source=compartment,
-                    dest=compartment,
-                    source_strata={"immunity": "unvaccinated"},
-                    dest_strata={"immunity": "vaccinated"},
-                )
+            check_vaccination_params(vacc_params)
+            for roll_out_component in vacc_params.roll_out_components:
+                add_vaccination_flows(model, roll_out_component, age_strat.strata)
 
     # Infection history stratification
     if params.stratify_by_infection_history:

@@ -4,16 +4,15 @@ from apps.covid_19.constants import Compartment, VACCINE_ELIGIBLE_COMPARTMENTS
 from autumn.curve.scale_up import scale_up_function
 
 
-def check_vaccination_params(vacc_params):
-    pass  # FIXME: Would be good to check a few things here
-
-
-def get_vacc_roll_out_function_from_coverage(params):
-
+def get_vacc_roll_out_function_from_coverage(supply_params):
+    """
+    Work out the time-variant vaccination rate based on a requested coverage and roll-out window.
+    Return a function of time.
+    """
     # Get vaccination parameters
-    coverage = params.coverage
-    start_time = params.start_time
-    end_time = params.end_time
+    coverage = supply_params.coverage
+    start_time = supply_params.start_time
+    end_time = supply_params.end_time
     duration = end_time - start_time
     assert end_time >= start_time
     assert 0.0 <= coverage <= 1.0
@@ -33,9 +32,15 @@ def get_vacc_roll_out_function_from_doses(
         eligible_age_group,
         eligible_age_groups
 ):
+    """
+    Work out the number of vaccinated individuals for a given agegroup and compartment name.
+    Return a time-variant function in a format that can be used to inform a functional flow.
+    """
+
     def net_flow_func(model, compartments, compartment_values, flows, flow_rates, time):
         # work out the proportion of the eligible population that is in the relevant compartment
-
+        # FIXME: we should be able to cache the two lists below. They depend on compartment_name, eligible_age_group
+        #  and eligible_age_groups but not on time!
         num_indices = []
         deno_indices = []
         for i, compartment in enumerate(compartments):
@@ -46,19 +51,16 @@ def get_vacc_roll_out_function_from_doses(
 
         compartment_size = sum([compartment_values[i] for i in num_indices])
         total_eligible_pop_size = sum([compartment_values[i] for i in deno_indices])
-        rel_prop = compartment_size / total_eligible_pop_size
+        nb_vaccinated = compartment_size / total_eligible_pop_size * time_variant_supply(time)
 
-        nb_vaccinated = rel_prop * time_variant_supply(time)
-        nb_vaccinated = min(nb_vaccinated, compartment_size)
-
-        return nb_vaccinated
+        return min(nb_vaccinated, compartment_size)
 
     return net_flow_func
 
 
 def get_eligible_age_groups(roll_out_component, age_strata):
     """
-    return a list with the age groups that are relevant to the requested roll_out_component
+    return a list with the model's age groups that are relevant to the requested roll_out_component
     """
     eligible_age_groups = age_strata
     if roll_out_component.age_min:
@@ -73,9 +75,11 @@ def get_eligible_age_groups(roll_out_component, age_strata):
 
 
 def add_vaccination_flows(model, roll_out_component, age_strata):
+    """
+    Add the vaccination flows associated with a vaccine roll-out component (i.e. a given age-range and supply function)
+    """
     # Is vaccine supply informed by final coverage or daily doses available
     is_coverage = "coverage" in list(roll_out_component.supply.fields.keys())
-
     if is_coverage:
         vaccination_roll_out_function = get_vacc_roll_out_function_from_coverage(roll_out_component.supply)
     else:
@@ -93,6 +97,7 @@ def add_vaccination_flows(model, roll_out_component, age_strata):
         _dest_strata = {"immunity": "vaccinated", "agegroup": eligible_age_group}
         for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
             if is_coverage:
+                # the roll-out function is applied as a rate that multiplies the source compartments
                 model.add_fractional_flow(
                     name="vaccination",
                     fractional_rate=vaccination_roll_out_function,
@@ -102,7 +107,7 @@ def add_vaccination_flows(model, roll_out_component, age_strata):
                     dest_strata=_dest_strata,
                 )
             else:
-                # we first need to work out the number of vaccinated people from this particular compartment and this age
+                # we need to create a functional flow, which depends on the agegroup and the compartment considered
                 vaccination_roll_out_function = get_vacc_roll_out_function_from_doses(
                     time_variant_supply,
                     compartment,

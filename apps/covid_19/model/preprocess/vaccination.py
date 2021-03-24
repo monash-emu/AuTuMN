@@ -33,9 +33,9 @@ def get_vacc_roll_out_function_from_doses(
         eligible_age_group,
         eligible_age_groups
 ):
-
     def net_flow_func(model, compartments, compartment_values, flows, flow_rates, time):
         # work out the proportion of the eligible population that is in the relevant compartment
+
         num_indices = []
         deno_indices = []
         for i, compartment in enumerate(compartments):
@@ -86,19 +86,11 @@ def add_vaccination_flows(model, roll_out_component, age_strata):
         )
 
     # work out eligible model age_groups
-    if roll_out_component.age_min or roll_out_component.age_max:
-        eligible_age_groups = get_eligible_age_groups(roll_out_component, age_strata)
-    else:
-        eligible_age_groups = ["all"]
+    eligible_age_groups = get_eligible_age_groups(roll_out_component, age_strata)
 
     for eligible_age_group in eligible_age_groups:
-        if eligible_age_group == "all":
-            _source_strata = {"immunity": "unvaccinated"}
-            _dest_strata = {"immunity": "vaccinated"}
-        else:
-            _source_strata = {"immunity": "unvaccinated", "agegroup": eligible_age_group}
-            _dest_strata = {"immunity": "vaccinated", "agegroup": eligible_age_group}
-
+        _source_strata = {"immunity": "unvaccinated", "agegroup": eligible_age_group}
+        _dest_strata = {"immunity": "vaccinated", "agegroup": eligible_age_group}
         for compartment in VACCINE_ELIGIBLE_COMPARTMENTS:
             if is_coverage:
                 model.add_fractional_flow(

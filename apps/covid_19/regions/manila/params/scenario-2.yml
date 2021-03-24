@@ -11,4 +11,4 @@ mobility:
         - 0.5
 parent: apps/covid_19/regions/manila/params/default.yml
 time:
-  start: 452
+  start: 438

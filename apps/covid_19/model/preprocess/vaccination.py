@@ -34,7 +34,7 @@ def get_vacc_roll_out_function_from_doses(
         eligible_age_groups
 ):
 
-    def net_flow_func(compartments, compartment_values, flows, flow_rates, time):
+    def net_flow_func(model, compartments, compartment_values, flows, flow_rates, time):
         # work out the proportion of the eligible population that is in the relevant compartment
         num_indices = []
         deno_indices = []

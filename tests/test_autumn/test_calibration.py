@@ -140,10 +140,8 @@ def test_calibrate_autumn_mcmc(mock_load_targets, temp_data_dir):
     )
     calib.run_fitting_algorithm(
         run_mode=CalibrationMode.AUTUMN_MCMC,
-        n_iterations=50,
-        n_burned=10,
         n_chains=1,
-        available_time=1e6,
+        available_time=1,
     )
     app_dir = os.path.join(temp_data_dir, "outputs", "calibrate", "sharks", "hawaii")
     run_dir = os.path.join(app_dir, os.listdir(app_dir)[0])

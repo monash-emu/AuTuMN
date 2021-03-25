@@ -153,8 +153,6 @@ class Calibration:
         self.transform = {}
         self.build_transformations()
 
-        self.iter_num = 0
-
         self.latest_scenario = None
         self.run_mode = None
         self.main_table = {}
@@ -175,7 +173,7 @@ class Calibration:
         """
         Run the model with a set of params.
         """
-        logger.info(f"Running iteration {self.iter_num}...")
+        logger.info(f"Running iteration {self.run_num}...")
         # Update default parameters to use calibration params.
         param_updates = {"time.end": self.end_time}
         for i, param_name in enumerate(self.param_list):
@@ -364,9 +362,7 @@ class Calibration:
 
     def run_fitting_algorithm(
         self,
-        run_mode=CalibrationMode.AUTUMN_MCMC,
-        n_iterations=100,
-        n_burned=10,
+        run_mode: str,
         n_chains=1,
         available_time=None,
         haario_scaling_factor=2.4,
@@ -376,8 +372,6 @@ class Calibration:
 
         :param run_mode: string
             either 'autumn_mcmc' or 'lsm' (for least square minimisation using scipy.minimize function)
-        :param n_iterations: number of iterations requested for sampling (excluding burn-in phase)
-        :param n_burned: number of burned iterations before effective sampling
         :param n_chains: number of chains to be run
         :param available_time: maximal simulation time allowed (in seconds)
         :param haario_scaling_factor: multiplies the covariance matrix used during adaptive sampling
@@ -393,9 +387,7 @@ class Calibration:
         try:
             # Run the selected fitting algorithm.
             if run_mode == CalibrationMode.AUTUMN_MCMC:
-                self.run_autumn_mcmc(
-                    n_iterations, n_burned, n_chains, available_time, haario_scaling_factor
-                )
+                self.run_autumn_mcmc(n_chains, available_time, haario_scaling_factor)
             elif run_mode == CalibrationMode.LEAST_SQUARES:
                 self.run_least_squares()
         finally:
@@ -441,8 +433,6 @@ class Calibration:
 
     def run_autumn_mcmc(
         self,
-        n_iterations: int,
-        n_burned: int,
         n_chains: int,
         available_time,
         haario_scaling_factor,
@@ -462,8 +452,10 @@ class Calibration:
         last_accepted_params_trans = None
         last_acceptance_quantity = None  # acceptance quantity is defined as loglike + logprior
         n_accepted = 0
-        for i_run in range(int(n_iterations + n_burned)):
-
+        n_iters_real = 0  # Actual number of iterations completed, as opposed to run_num.
+        self.run_num = 0  # Canonical id of the MCMC run, will be the same as iters until reset by adaptive algo.
+        while True:
+            logging.info("Running MCMC iteration %s, run %s", n_iters_real, self.run_num)
             # Propose new paramameter set.
             proposed_params_trans = self.propose_new_params_trans(
                 last_accepted_params_trans, haario_scaling_factor
@@ -524,39 +516,38 @@ class Calibration:
                 proposed_loglike,
                 proposed_log_posterior,
                 accept,
-                i_run,
+                self.run_num,
             )
             if accept:
-                self.output.store_model_outputs(self.latest_scenario, self.iter_num)
+                self.output.store_model_outputs(self.latest_scenario, self.run_num)
 
-            self.iter_num += 1
-            iters_completed = i_run + 1
-            logger.info(f"{iters_completed} MCMC iterations completed.")
-
+            logging.info("Finished MCMC iteration %s, run %s", n_iters_real, self.run_num)
+            self.run_num += 1
+            n_iters_real += 1
             if available_time:
                 # Stop iterating if we have run out of time.
                 elapsed_time = time() - start_time
                 if elapsed_time > available_time:
-                    msg = f"Stopping MCMC simulation after {iters_completed} iterations because of {available_time}s time limit"
+                    msg = f"Stopping MCMC simulation after {n_iters_real} iterations because of {available_time}s time limit"
                     logger.info(msg)
                     break
 
-            # check that the pre-adaptive phase ended with a decent acceptance ratio
-            if self.adaptive_proposal and self.iter_num == self.n_steps_fixed_proposal:
-                acceptance_ratio = n_accepted / self.iter_num
+            # Check that the pre-adaptive phase ended with a decent acceptance ratio
+            if self.adaptive_proposal and self.run_num == self.n_steps_fixed_proposal:
+                acceptance_ratio = n_accepted / self.run_num
+                logger.info(
+                    "Pre-adaptive phase completed at %s iterations after %s runs with an acceptance ratio of %s.",
+                    n_iters_real,
+                    self.run_num,
+                    acceptance_ratio,
+                )
                 if acceptance_ratio < ADAPTIVE_METROPOLIS["MIN_ACCEPTANCE_RATIO"]:
+                    logger.info("Acceptance ratio too low, restart sampling from scratch.")
+                    self.run_num = 0
                     self.reduce_proposal_step_size()
-                    # Restart sampling from scratch
-                    self.iter_num = 0
                     self.output.delete_stored_iterations()
-                    self.run_autumn_mcmc(
-                        n_iterations,
-                        n_burned,
-                        n_chains,
-                        available_time,
-                        haario_scaling_factor,
-                        start_time,
-                    )
+                else:
+                    logger.info("Acceptance ratio acceptable, continue sampling.")
 
     def reduce_proposal_step_size(self):
         """
@@ -676,7 +667,7 @@ class Calibration:
 
         new_params_trans = []
         use_adaptive_proposal = (
-            self.adaptive_proposal and self.iter_num > self.n_steps_fixed_proposal
+            self.adaptive_proposal and self.run_num > self.n_steps_fixed_proposal
         )
 
         if use_adaptive_proposal:

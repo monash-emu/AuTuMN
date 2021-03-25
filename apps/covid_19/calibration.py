@@ -15,7 +15,6 @@ from autumn.utils.params import load_params, load_targets
 from .model import build_model
 
 N_ITERS = 100000
-N_BURNED = 0
 N_CHAINS = 1
 
 logger = logging.getLogger(__name__)
@@ -106,8 +105,6 @@ def run_calibration_chain(
     logger.info("Starting calibration.")
     calib.run_fitting_algorithm(
         run_mode=mode,
-        n_iterations=N_ITERS,
-        n_burned=N_BURNED,
         n_chains=N_CHAINS,
         available_time=max_seconds,
         haario_scaling_factor=params["default"]["haario_scaling_factor"],
@@ -253,14 +250,13 @@ def add_standard_philippines_params(params, region):
         {
             "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.lower_asymptote",
             "distribution": "uniform",
-            "distri_params": [0.8, 1.],
+            "distri_params": [0.8, 1.0],
         },
         {
             "param_name": "mobility.microdistancing.behaviour_adjuster.parameters.inflection_time",
             "distribution": "uniform",
             "distri_params": [367, 425],  # 1 Jan - 28 Feb
         },
-
     ]
 
 

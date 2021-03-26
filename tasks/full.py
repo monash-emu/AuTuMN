@@ -106,11 +106,13 @@ def run_full_model_for_chain(
 
         # Parent column tells us which accepted run precedes this run
         parents = []
+        i_row = 0  # FIXME: This is a temporary patch.
         for _, mcmc_run in mcmc_run_df.iterrows():
-            if mcmc_run["accept"]:
+            if mcmc_run["accept"] or i_row == 0:
                 parent = int(mcmc_run["run"])
 
             parents.append(parent)
+            i_row += 1
 
         mcmc_run_df["parent"] = parents
 

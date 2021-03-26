@@ -701,6 +701,7 @@ def plot_scenarios_multioutput(
         426,
         title_font_size=STANDARD_TITLE_FONTSIZE,
         label_font_size=STANDARD_LABEL_FONTSIZE,
+        file_name="multi_scenario"
     )
 
 

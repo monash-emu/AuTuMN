@@ -51,7 +51,7 @@ def plot_timeseries_with_uncertainty(
         start_quantile=0,
         sc_colors=None,
         custom_title=None,
-        vline=None,
+        vlines={},
 ):
     """
     Plots the uncertainty timeseries for one or more scenarios.
@@ -107,8 +107,10 @@ def plot_timeseries_with_uncertainty(
     axis.tick_params(axis="x", labelsize=label_font_size)
     axis.tick_params(axis="y", labelsize=label_font_size)
 
-    if vline:
-        axis.axvline(x=vline)
+    # Add any vertical lines requested
+    for text, position in vlines.items():
+        axis.axvline(x=position, linestyle="--", alpha=0.7)
+        axis.text(x=position, y=50, s=text)
 
     if output_name == "proportion_seropositive":
         axis.yaxis.set_major_formatter(mtick.PercentFormatter(1, symbol=""))
@@ -203,7 +205,7 @@ def plot_multi_output_timeseries_with_uncertainty(
         max_y_value=None,
         custom_titles=None,
         custom_sup_title=None,
-        vlines=(),
+        multi_panel_vlines=(),
 ):
     if len(output_names) * len(scenarios) == 0:
         return
@@ -231,6 +233,12 @@ def plot_multi_output_timeseries_with_uncertainty(
         else:
             axes.append(fig.add_subplot(spec[i_row, i_col], sharey=axes[0]))
         custom_title = custom_titles[i_out] if custom_titles else None
+        if multi_panel_vlines:
+            assert len(multi_panel_vlines) == len(output_names), \
+                "Wrong number of vertical line groups submitted for requested panels/outputs"
+            vlines = multi_panel_vlines[i_out]
+        else:
+            vlines = ()
         plot_timeseries_with_uncertainty(
             plotter,
             uncertainty_df,
@@ -245,7 +253,7 @@ def plot_multi_output_timeseries_with_uncertainty(
             title_font_size=title_font_size,
             label_font_size=label_font_size,
             custom_title=custom_title,
-            vline=vlines[i_out],
+            vlines=vlines,
         )
         i_col += 1
         if i_col == max_n_col:

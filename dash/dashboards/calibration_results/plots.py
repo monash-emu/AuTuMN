@@ -7,9 +7,9 @@ import pandas as pd
 import streamlit as st
 import yaml
 
-from apps.covid_19.mixing_optimisation.serosurvey_by_age.survey_data import (
-    get_serosurvey_data,
-)
+# from apps.covid_19.mixing_optimisation.serosurvey_by_age.survey_data import (
+#     get_serosurvey_data,
+# )
 from apps.covid_19.model.preprocess.testing import find_cdr_function_from_test_data
 from autumn import db, inputs, plots
 from autumn.plots.calibration.plots import (

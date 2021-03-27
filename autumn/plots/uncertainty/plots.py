@@ -26,31 +26,32 @@ logger = logging.getLogger(__name__)
 
 
 def plot_timeseries_with_uncertainty(
-    plotter: Plotter,
-    uncertainty_df: pd.DataFrame,
-    output_name: str,
-    scenario_idxs: List[int],
-    targets: dict,
-    is_logscale=False,
-    x_low=0.0,
-    x_up=1e6,
-    axis=None,
-    n_xticks=None,
-    ref_date=REF_DATE,
-    add_targets=True,
-    overlay_uncertainty=True,
-    title_font_size=12,
-    label_font_size=10,
-    dpi_request=300,
-    capitalise_first_letter=False,
-    legend=False,
-    requested_x_ticks=None,
-    show_title=True,
-    ylab=None,
-    x_axis_to_date=True,
-    start_quantile=0,
-    sc_colors=None,
-    custom_title=None,
+        plotter: Plotter,
+        uncertainty_df: pd.DataFrame,
+        output_name: str,
+        scenario_idxs: List[int],
+        targets: dict,
+        is_logscale=False,
+        x_low=0.0,
+        x_up=1e6,
+        axis=None,
+        n_xticks=None,
+        ref_date=REF_DATE,
+        add_targets=True,
+        overlay_uncertainty=True,
+        title_font_size=12,
+        label_font_size=10,
+        dpi_request=300,
+        capitalise_first_letter=False,
+        legend=False,
+        requested_x_ticks=None,
+        show_title=True,
+        ylab=None,
+        x_axis_to_date=True,
+        start_quantile=0,
+        sc_colors=None,
+        custom_title=None,
+        vline=None,
 ):
     """
     Plots the uncertainty timeseries for one or more scenarios.
@@ -105,6 +106,9 @@ def plot_timeseries_with_uncertainty(
         change_xaxis_to_date(axis, ref_date, rotation=0)
     axis.tick_params(axis="x", labelsize=label_font_size)
     axis.tick_params(axis="y", labelsize=label_font_size)
+
+    if vline:
+        axis.axvline(x=vline)
 
     if output_name == "proportion_seropositive":
         axis.yaxis.set_major_formatter(mtick.PercentFormatter(1, symbol=""))
@@ -183,22 +187,23 @@ def _plot_uncertainty(
 
 
 def plot_multi_output_timeseries_with_uncertainty(
-    plotter: Plotter,
-    uncertainty_df: pd.DataFrame,
-    output_names: str,
-    scenarios: list,
-    all_targets: dict,
-    is_logscale=False,
-    x_low=0.0,
-    x_up=2000.0,
-    n_xticks=None,
-    title_font_size=12,
-    label_font_size=10,
-    file_name="multi_uncertainty",
-    share_yaxis=False,
-    max_y_value=None,
-    custom_titles=None,
-    custom_sup_title=None,
+        plotter: Plotter,
+        uncertainty_df: pd.DataFrame,
+        output_names: str,
+        scenarios: list,
+        all_targets: dict,
+        is_logscale=False,
+        x_low=0.0,
+        x_up=2000.0,
+        n_xticks=None,
+        title_font_size=12,
+        label_font_size=10,
+        file_name="multi_uncertainty",
+        share_yaxis=False,
+        max_y_value=None,
+        custom_titles=None,
+        custom_sup_title=None,
+        vlines=(),
 ):
     if len(output_names) * len(scenarios) == 0:
         return
@@ -215,9 +220,8 @@ def plot_multi_output_timeseries_with_uncertainty(
     )
     spec = fig.add_gridspec(ncols=n_cols, nrows=n_rows)
 
-    i_col = 0
-    i_row = 0
-    axes = []
+    i_col, i_row, axes = \
+        0, 0, []
     for i_out, output_name in enumerate(output_names):
         targets = {k: v for k, v in all_targets.items() if v["output_key"] == output_name}
         if i_out == 0 or not share_yaxis:
@@ -241,6 +245,7 @@ def plot_multi_output_timeseries_with_uncertainty(
             title_font_size=title_font_size,
             label_font_size=label_font_size,
             custom_title=custom_title,
+            vline=vlines[i_out],
         )
         i_col += 1
         if i_col == max_n_col:

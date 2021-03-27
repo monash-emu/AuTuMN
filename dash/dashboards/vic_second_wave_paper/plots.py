@@ -56,6 +56,7 @@ def plot_multiple_timeseries_with_uncertainty(
     region: str,
 ):
 
+    vlines = [150, None, None, None]
     plt.style.use("ggplot")
     uncertainty_df = get_uncertainty_df(calib_dir_path, mcmc_tables, targets)
     chosen_outputs = STATEWIDE_OUTPUTS
@@ -73,6 +74,7 @@ def plot_multiple_timeseries_with_uncertainty(
         title_font_size=STANDARD_TITLE_FONTSIZE,
         label_font_size=STANDARD_LABEL_FONTSIZE,
         file_name="multi_output",
+        vlines=vlines,
     )
 
 

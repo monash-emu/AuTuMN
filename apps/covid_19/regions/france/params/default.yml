@@ -26,12 +26,12 @@ vaccination:
   severity_efficacy: 0.
   roll_out_components:
     - age_min: 70
-      supply:
+      supply_period_coverage:
         coverage: 0.9
         start_time: 100
         end_time: 200
     - age_min: 50
       age_max: 69
-      supply:
+      supply_timeseries:
         times: [199, 200, 300, 301]
         values: [0, 100000, 100000, 0]

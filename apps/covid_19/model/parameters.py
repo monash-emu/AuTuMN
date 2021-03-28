@@ -233,6 +233,20 @@ class RollOutFunc(BaseModel):
     supply: Union[VaccCoveragePeriod, TimeSeries]
 
 
+class RollOutFunc(BaseModel):
+    age_min: Optional[float]
+    age_max: Optional[float]
+    supply_period_coverage: Optional[VaccCoveragePeriod]
+    supply_timeseries: Optional[TimeSeries]
+
+    @root_validator(pre=True, allow_reuse=True)
+    def check_suppy(cls, values):
+        p, ts = values.get("supply_period_coverage"), values.get("supply_timeseries")
+        has_supply = bool(p) != bool(ts)
+        assert has_supply, "Roll out function must have a period or timeseries for supply."
+        return values
+
+
 class Vaccination(BaseModel):
     infection_efficacy: float
     severity_efficacy: float

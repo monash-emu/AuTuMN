@@ -146,7 +146,7 @@ def make_vaccination_sc_dict(mode, coverage, efficacy, scenario_start_time):
         "infection_efficacy": 0.0,
         "roll_out_components": [
             {
-                "supply": {
+                "supply_period_coverage": {
                     "coverage": coverage,
                     "start_time": scenario_start_time,
                     "end_time": scenario_start_time + 270,  # 9-month roll-out

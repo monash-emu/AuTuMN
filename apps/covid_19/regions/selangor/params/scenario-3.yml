@@ -10,7 +10,7 @@ vaccination:
 
   # Six months from Monday 22nd Feb 2021
   roll_out_components:
-  - supply:
+  - supply_period_coverage:
       coverage: 0.5
       start_time: 447.
       end_time: 797.

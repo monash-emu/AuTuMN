@@ -79,13 +79,13 @@ def add_vaccination_flows(model, roll_out_component, age_strata):
     Add the vaccination flows associated with a vaccine roll-out component (i.e. a given age-range and supply function)
     """
     # Is vaccine supply informed by final coverage or daily doses available
-    is_coverage = "coverage" in list(roll_out_component.supply.fields.keys())
+    is_coverage = bool(roll_out_component.supply_period_coverage)
     if is_coverage:
-        vaccination_roll_out_function = get_vacc_roll_out_function_from_coverage(roll_out_component.supply)
+        vaccination_roll_out_function = get_vacc_roll_out_function_from_coverage(roll_out_component.supply_period_coverage)
     else:
         time_variant_supply = scale_up_function(
-            roll_out_component.supply.times,
-            roll_out_component.supply.values,
+            roll_out_component.supply_timeseries.times,
+            roll_out_component.supply_timeseries.values,
             method=4
         )
 

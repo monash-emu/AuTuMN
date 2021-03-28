@@ -5,7 +5,7 @@ time:
 vaccination:
   infection_efficacy: 0.7
   roll_out_components:
-  - supply:
+  - supply_period_coverage:
       coverage: 0.13
       end_time: 724
       start_time: 454

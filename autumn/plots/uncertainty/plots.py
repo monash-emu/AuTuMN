@@ -110,7 +110,7 @@ def plot_timeseries_with_uncertainty(
     # Add any vertical lines requested
     for text, position in vlines.items():
         axis.axvline(x=position, linestyle="--", alpha=0.7)
-        axis.text(x=position, y=50, s=text)
+        axis.text(x=position, y=500, s=text, rotation=90)
 
     if output_name == "proportion_seropositive":
         axis.yaxis.set_major_formatter(mtick.PercentFormatter(1, symbol=""))

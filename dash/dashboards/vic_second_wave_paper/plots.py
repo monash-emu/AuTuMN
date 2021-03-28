@@ -56,16 +56,12 @@ def plot_multiple_timeseries_with_uncertainty(
     region: str,
 ):
 
-    multi_panel_vlines = \
-        [
-            {"stage 3": 188, "face coverings": 205, "stage 4": 215},
-            {},
-            {},
-            {}
-        ]
     plt.style.use("ggplot")
     uncertainty_df = get_uncertainty_df(calib_dir_path, mcmc_tables, targets)
     chosen_outputs = STATEWIDE_OUTPUTS
+    multi_panel_vlines = [{}] * len(chosen_outputs)
+    multi_panel_vlines[0] = \
+        {"stage 3": 188, "face coverings": 205, "stage 4": 215}
     x_low, x_up = STANDARD_X_LIMITS
     plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(
         plotter,

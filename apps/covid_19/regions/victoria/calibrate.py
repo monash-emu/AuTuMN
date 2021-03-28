@@ -99,7 +99,7 @@ def get_priors(target_outputs: list):
         {
             "param_name": "clinical_stratification.non_sympt_infect_multiplier",
             "distribution": "uniform",
-            "distri_params": [0.3, 0.7],
+            "distri_params": [0.15, 0.7],
             "jumping_sd": 0.01,
         },
         {

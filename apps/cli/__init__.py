@@ -12,7 +12,9 @@ from apps.tuberculosis.regions.marshall_islands.outputs.main_script import (
     make_all_rmi_plots,
 )
 
-from apps.covid_19.mixing_optimisation.sample_code import run_sample_code
+from apps.covid_19.mixing_optimisation.sample_code import run_sample_code as run_sample_code_mixing
+from apps.covid_19.vaccine_optimisation.sample_code import run_sample_code as run_sample_code_vacc
+
 
 from .calibrate import calibrate
 from .run import run
@@ -32,7 +34,13 @@ def plotting_cli():
 @cli.command("runsampleopti")
 def run_sample():
     """Run sample code for optimisation"""
-    run_sample_code()
+    run_sample_code_mixing()
+
+
+@cli.command("runsamplevaccopti")
+def run_sample():
+    """Run sample code for optimisation"""
+    run_sample_code_vacc()
 
 
 cli.add_command(run)

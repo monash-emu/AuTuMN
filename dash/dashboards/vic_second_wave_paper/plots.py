@@ -59,9 +59,18 @@ def plot_multiple_timeseries_with_uncertainty(
     plt.style.use("ggplot")
     uncertainty_df = get_uncertainty_df(calib_dir_path, mcmc_tables, targets)
     chosen_outputs = STATEWIDE_OUTPUTS
-    multi_panel_vlines = [{}] * len(chosen_outputs)
+
+    # Add vertical lines for the dates of specific policy interventions to the first panel
+    multi_panel_vlines = \
+        [{}] * len(chosen_outputs)
     multi_panel_vlines[0] = \
-        {"stage 3": 188, "face coverings": 205, "stage 4": 215}
+        {
+            "postcodes": 184,  # 2nd July (11:59pm 1st)
+            "stage 3": 191,  # 9th July (11:59pm 8th)
+            "face coverings": 205,  # 23rd July (11:59pm 22nd)
+            "stage 4": 215.75  # 6pm 2nd August
+        }
+
     x_low, x_up = STANDARD_X_LIMITS
     plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(
         plotter,

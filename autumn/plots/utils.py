@@ -1,5 +1,5 @@
 import datetime
-from typing import List
+from typing import List, Dict
 
 import matplotlib.ticker as ticker
 from matplotlib import colors
@@ -112,6 +112,33 @@ def change_xaxis_to_date(axis, ref_date, date_str_format="%#d-%b", rotation=30):
     date_format = ticker.FuncFormatter(to_date)
     axis.xaxis.set_major_formatter(date_format)
     axis.xaxis.set_tick_params(rotation=rotation)
+
+
+def add_vertical_lines_to_plot(axis, lines: Dict):
+    """
+    Add labelled vertical lines to the plot axis according to a dictionary with standard attributes.
+    All attributes of the line and text are currently hard-coded.
+    """
+
+    for text, position in lines.items():
+
+        # Add the line itself
+        axis.axvline(
+            x=position,
+            linestyle="--",
+            alpha=0.7
+        )
+
+        # Add the text to accompany it
+        upper_ylim = axis.get_ylim()[1]
+        axis.text(
+            x=position,
+            y=upper_ylim * 0.97,
+            s=text,
+            rotation=90,
+            ha="right",
+            va="top"
+        )
 
 
 def _apply_transparency(color_list: List[str], alphas: List[str]):

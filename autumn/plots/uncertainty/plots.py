@@ -20,6 +20,7 @@ from autumn.plots.utils import (
     _plot_targets_to_axis,
     change_xaxis_to_date,
     get_plot_text_dict,
+    add_vertical_lines_to_plot,
 )
 
 logger = logging.getLogger(__name__)
@@ -107,10 +108,8 @@ def plot_timeseries_with_uncertainty(
     axis.tick_params(axis="x", labelsize=label_font_size)
     axis.tick_params(axis="y", labelsize=label_font_size)
 
-    # Add any vertical lines requested
-    for text, position in vlines.items():
-        axis.axvline(x=position, linestyle="--", alpha=0.7)
-        axis.text(x=position, y=500, s=text, rotation=90)
+    # Add vertical lines with marking text to plots
+    add_vertical_lines_to_plot(axis, vlines)
 
     if output_name == "proportion_seropositive":
         axis.yaxis.set_major_formatter(mtick.PercentFormatter(1, symbol=""))

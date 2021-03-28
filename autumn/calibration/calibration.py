@@ -543,7 +543,7 @@ class Calibration:
                 )
                 if acceptance_ratio < ADAPTIVE_METROPOLIS["MIN_ACCEPTANCE_RATIO"]:
                     logger.info("Acceptance ratio too low, restart sampling from scratch.")
-                    self.run_num = 0
+                    self.run_num, n_accepted, last_accepted_params_trans, last_acceptance_quantity = 0, 0, None, None
                     self.reduce_proposal_step_size()
                     self.output.delete_stored_iterations()
                 else:

@@ -141,6 +141,32 @@ def add_vertical_lines_to_plot(axis, lines: Dict):
         )
 
 
+def add_horizontal_lines_to_plot(axis, lines: Dict):
+    """
+    Add labelled horizontal lines to the plot axis according to a dictionary with standard attributes.
+    All attributes of the line and text are currently hard-coded.
+    """
+
+    for text, position in lines.items():
+
+        # Add the line itself
+        axis.axhline(
+            y=position,
+            linestyle="--",
+            alpha=0.7
+        )
+
+        # Add the text to accompany it
+        lower_xlim = axis.get_xlim()[0]
+        axis.text(
+            x=lower_xlim,
+            y=position,
+            s=text,
+            ha="left",
+            va="bottom"
+        )
+
+
 def _apply_transparency(color_list: List[str], alphas: List[str]):
     """Make a list of colours transparent, based on a list of alphas"""
     for i in range(len(color_list)):

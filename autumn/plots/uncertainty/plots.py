@@ -21,6 +21,7 @@ from autumn.plots.utils import (
     change_xaxis_to_date,
     get_plot_text_dict,
     add_vertical_lines_to_plot,
+    add_horizontal_lines_to_plot,
 )
 
 logger = logging.getLogger(__name__)
@@ -53,6 +54,7 @@ def plot_timeseries_with_uncertainty(
         sc_colors=None,
         custom_title=None,
         vlines={},
+        hlines={}
 ):
     """
     Plots the uncertainty timeseries for one or more scenarios.
@@ -108,8 +110,9 @@ def plot_timeseries_with_uncertainty(
     axis.tick_params(axis="x", labelsize=label_font_size)
     axis.tick_params(axis="y", labelsize=label_font_size)
 
-    # Add vertical lines with marking text to plots
+    # Add lines with marking text to plots
     add_vertical_lines_to_plot(axis, vlines)
+    add_horizontal_lines_to_plot(axis, hlines)
 
     if output_name == "proportion_seropositive":
         axis.yaxis.set_major_formatter(mtick.PercentFormatter(1, symbol=""))
@@ -205,6 +208,7 @@ def plot_multi_output_timeseries_with_uncertainty(
         custom_titles=None,
         custom_sup_title=None,
         multi_panel_vlines=(),
+        multi_panel_hlines=(),
 ):
     if len(output_names) * len(scenarios) == 0:
         return
@@ -237,7 +241,15 @@ def plot_multi_output_timeseries_with_uncertainty(
                 "Wrong number of vertical line groups submitted for requested panels/outputs"
             vlines = multi_panel_vlines[i_out]
         else:
-            vlines = ()
+            vlines = {}
+
+        if multi_panel_hlines:
+            assert len(multi_panel_hlines) == len(output_names), \
+                "Wrong number of horizontal line groups submitted for requested panels/outputs"
+            hlines = multi_panel_hlines[i_out]
+        else:
+            hlines = {}
+
         plot_timeseries_with_uncertainty(
             plotter,
             uncertainty_df,
@@ -253,6 +265,7 @@ def plot_multi_output_timeseries_with_uncertainty(
             label_font_size=label_font_size,
             custom_title=custom_title,
             vlines=vlines,
+            hlines=hlines,
         )
         i_col += 1
         if i_col == max_n_col:

@@ -703,6 +703,15 @@ def plot_scenarios_multioutput(
     ) = (300, False, False, True, True, True)
 
     scenario_outputs = ["notifications", "infection_deaths", "icu_occupancy", "hospital_occupancy"]
+
+    # From Litton et al.
+    icu_capacities = [{}] * len(scenario_outputs)
+    icu_capacities[2] = \
+        {
+            "base": 499,
+            "surge": 1665,
+        }
+
     plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(
         plotter,
         uncertainty_df,
@@ -714,7 +723,8 @@ def plot_scenarios_multioutput(
         426,
         title_font_size=STANDARD_TITLE_FONTSIZE,
         label_font_size=STANDARD_LABEL_FONTSIZE,
-        file_name="multi_scenario"
+        file_name="multi_scenario",
+        multi_panel_hlines=icu_capacities,
     )
 
 

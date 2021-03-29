@@ -5,9 +5,9 @@ import numpy as np
 import pytest
 from summer.model import CompartmentalModel
 
-from apps.covid_19.mixing_optimisation import mixing_opti as opti
-from apps.covid_19.mixing_optimisation import write_scenarios
-from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS, PHASE_2_START_TIME
+# from apps.covid_19.mixing_optimisation import mixing_opti as opti
+# from apps.covid_19.mixing_optimisation import write_scenarios
+# from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS, PHASE_2_START_TIME
 from autumn.region import Region
 #
 #
@@ -248,24 +248,24 @@ from autumn.region import Region
 Test write_scenarios module
 """
 
-
-@pytest.mark.mixing_optimisation
-def test_read_optimised_variables():
-    test_file = "dummy_vars_for_test.csv"
-    df = write_scenarios.read_opti_outputs(test_file)
-    decision_vars = write_scenarios.read_decision_vars(
-        df, "france", "by_age", "six_months", "deaths"
-    )
-    assert decision_vars == [0.99] * 16
-
-
-@pytest.mark.mixing_optimisation
-def test_build_all_scenarios():
-    test_file = "dummy_vars_for_test.csv"
-    all_sc_params = write_scenarios.build_all_scenario_dicts_from_outputs(test_file)
-
-    assert set(list(all_sc_params.keys())) == set(OPTI_REGIONS)
-
-    assert list(all_sc_params["france"].keys()) == [1, 9]
-
-    assert list(all_sc_params["france"][1].keys()) == ["time", "mobility", "parent"]
+#
+# @pytest.mark.mixing_optimisation
+# def test_read_optimised_variables():
+#     test_file = "dummy_vars_for_test.csv"
+#     df = write_scenarios.read_opti_outputs(test_file)
+#     decision_vars = write_scenarios.read_decision_vars(
+#         df, "france", "by_age", "six_months", "deaths"
+#     )
+#     assert decision_vars == [0.99] * 16
+#
+#
+# @pytest.mark.mixing_optimisation
+# def test_build_all_scenarios():
+#     test_file = "dummy_vars_for_test.csv"
+#     all_sc_params = write_scenarios.build_all_scenario_dicts_from_outputs(test_file)
+#
+#     assert set(list(all_sc_params.keys())) == set(OPTI_REGIONS)
+#
+#     assert list(all_sc_params["france"].keys()) == [1, 9]
+#
+#     assert list(all_sc_params["france"][1].keys()) == ["time", "mobility", "parent"]

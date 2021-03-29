@@ -9,6 +9,11 @@ from summer.model import CompartmentalModel
 # from apps.covid_19.mixing_optimisation import write_scenarios
 # from apps.covid_19.mixing_optimisation.constants import OPTI_REGIONS, PHASE_2_START_TIME
 from autumn.region import Region
+
+
+def test_dummy_placeholder():
+    pass
+
 #
 #
 # @pytest.mark.local_only

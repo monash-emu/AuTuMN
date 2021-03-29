@@ -206,16 +206,6 @@ class VictorianClusterStratification(BaseModel):
     regional: RegionalClusterStratification
 
 
-class VaccCoveragePeriod(BaseModel):
-    """
-    Parameters to pass when desired behaviour is vaccinating a proportion of the population over a period of time
-    """
-
-    coverage: float
-    start_time: float
-    end_time: float
-
-
 class VocEmmergence(BaseModel):
     """
     Parameters defining the emergence profile of Variants of Concerns
@@ -227,10 +217,40 @@ class VocEmmergence(BaseModel):
     contact_rate_multiplier: float
 
 
+class VaccCoveragePeriod(BaseModel):
+    """
+    Parameters to pass when desired behaviour is vaccinating a proportion of the population over a period of time
+    """
+
+    coverage: float
+    start_time: float
+    end_time: float
+
+
+class RollOutFunc(BaseModel):
+    age_min: Optional[float]
+    age_max: Optional[float]
+    supply: Union[VaccCoveragePeriod, TimeSeries]
+
+
+class RollOutFunc(BaseModel):
+    age_min: Optional[float]
+    age_max: Optional[float]
+    supply_period_coverage: Optional[VaccCoveragePeriod]
+    supply_timeseries: Optional[TimeSeries]
+
+    @root_validator(pre=True, allow_reuse=True)
+    def check_suppy(cls, values):
+        p, ts = values.get("supply_period_coverage"), values.get("supply_timeseries")
+        has_supply = bool(p) != bool(ts)
+        assert has_supply, "Roll out function must have a period or timeseries for supply."
+        return values
+
+
 class Vaccination(BaseModel):
     infection_efficacy: float
     severity_efficacy: float
-    roll_out_function: VaccCoveragePeriod
+    roll_out_components: List[RollOutFunc]
 
 
 class ParamConfig:

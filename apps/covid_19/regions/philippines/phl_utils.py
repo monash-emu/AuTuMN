@@ -21,7 +21,9 @@ def clear_all_scenarios(region):
     scenario_files = os.listdir(file_path)
     for filename in scenario_files:
         if filename.startswith("scenario-"):
-            os.remove(f"../{dir_name}/params/{filename}")
+            sc_number = float(filename.split("-")[1].split(".yml")[0])
+            if sc_number < 9:
+                os.remove(f"../{dir_name}/params/{filename}")
 
 
 def write_all_phl_scenarios(scenario_start_time=SCENARIO_START_TIME):
@@ -142,11 +144,15 @@ def make_vaccination_sc_dict(mode, coverage, efficacy, scenario_start_time):
     sc_dict["vaccination"] = {
         "severity_efficacy": 0.0,
         "infection_efficacy": 0.0,
-        "roll_out_function": {
-            "coverage": coverage,
-            "start_time": scenario_start_time,
-            "end_time": scenario_start_time + 270,  # 9-month roll-out
-        },
+        "roll_out_components": [
+            {
+                "supply_period_coverage": {
+                    "coverage": coverage,
+                    "start_time": scenario_start_time,
+                    "end_time": scenario_start_time + 270,  # 9-month roll-out
+                }
+            }
+        ],
     }
     sc_dict["vaccination"][f"{mode}_efficacy"] = efficacy
 

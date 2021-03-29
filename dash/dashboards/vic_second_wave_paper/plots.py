@@ -37,6 +37,10 @@ STANDARD_TITLE_FONTSIZE = 20
 STANDARD_LABEL_FONTSIZE = 14
 STANDARD_N_TICKS = 10
 
+# This has to be specified here, and we would generally want it to be the same as what you requested when asking for the
+# full model runs to be triggered in BuildKite, but doesn't have to be.
+BURN_INS = 2000
+
 
 def get_contact_rate_multipliers(mcmc_params):
     return [
@@ -241,7 +245,7 @@ PLOT_FUNCS["Metro ICU admissions"] = metro_icu_admissions
 
 
 def get_vic_epi_params(mcmc_params):
-    strings_to_ignore = ["dispersion_param", "contact_rate_multiplier"] + KEY_PARAMS
+    strings_to_ignore = ["dispersion_param", "contact_rate_multiplier", "target_output_ratio"] + KEY_PARAMS
     params = get_epi_params(mcmc_params, strings_to_ignore=strings_to_ignore)
     return params
 
@@ -271,7 +275,7 @@ def plot_posteriors(
         label_font_size,
         dpi_request,
         capitalise_first_letter,
-    ) = (0, 16, 3, 8, 8, 300, False)
+    ) = (BURN_INS, 16, 3, 8, 8, 300, False)
     plots.calibration.plots.plot_multiple_posteriors(
         plotter,
         mcmc_params,
@@ -353,7 +357,7 @@ def plot_param_matrix(
     file_name="",
 ):
 
-    burn_in, label_font_size, label_chars, bins, style, dpi_request = 0, 8, 2, 20, "Shade", 300
+    burn_in, label_font_size, label_chars, bins, style, dpi_request = BURN_INS, 8, 2, 20, "Shade", 300
     plots.calibration.plots.plot_param_vs_param(
         plotter,
         mcmc_params,
@@ -456,7 +460,7 @@ def plot_key_param_traces(
         6,
         300,
         False,
-        0,
+        BURN_INS,
     )
     plots.calibration.plots.plot_multiple_param_traces(
         plotter,
@@ -524,7 +528,7 @@ def plot_contact_param_traces(
         6,
         300,
         False,
-        0,
+        BURN_INS,
     )
     plots.calibration.plots.plot_multiple_param_traces(
         plotter,

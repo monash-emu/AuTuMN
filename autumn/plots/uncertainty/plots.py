@@ -203,8 +203,7 @@ def plot_multi_output_timeseries_with_uncertainty(
         title_font_size=12,
         label_font_size=10,
         file_name="multi_uncertainty",
-        share_yaxis=False,
-        max_y_value=None,
+        max_y_values=(),
         custom_titles=None,
         custom_sup_title=None,
         multi_panel_vlines=(),
@@ -229,12 +228,13 @@ def plot_multi_output_timeseries_with_uncertainty(
         0, 0, []
     for i_out, output_name in enumerate(output_names):
         targets = {k: v for k, v in all_targets.items() if v["output_key"] == output_name}
-        if i_out == 0 or not share_yaxis:
-            axes.append(fig.add_subplot(spec[i_row, i_col]))
-            if max_y_value:
-                axes[0].set_ylim(top=max_y_value)
-        else:
-            axes.append(fig.add_subplot(spec[i_row, i_col], sharey=axes[0]))
+
+        axes.append(fig.add_subplot(spec[i_row, i_col]))
+
+        assert len(max_y_values) in (0, len(output_names)), "Wrong number of y-values submitted"
+        if max_y_values:
+            axes[i_out].set_ylim(top=max_y_values[i_out])
+
         custom_title = custom_titles[i_out] if custom_titles else None
         if multi_panel_vlines:
             assert len(multi_panel_vlines) == len(output_names), \

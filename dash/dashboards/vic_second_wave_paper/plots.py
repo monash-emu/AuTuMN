@@ -97,7 +97,7 @@ PLOT_FUNCS["Multi-output uncertainty"] = plot_multiple_timeseries_with_uncertain
 
 
 def plot_regional_outputs(
-    plotter, calib_dir_path, mcmc_tables, targets, regions, indicator, file_name, max_y_value=None
+    plotter, calib_dir_path, mcmc_tables, targets, regions, indicator, file_name, max_y_values=(),
 ):
     chosen_outputs = [
         indicator + "_for_cluster_" + i_region.replace("-", "_") for i_region in regions
@@ -117,8 +117,7 @@ def plot_regional_outputs(
         title_font_size=STANDARD_TITLE_FONTSIZE,
         label_font_size=STANDARD_LABEL_FONTSIZE,
         file_name=file_name,
-        share_yaxis=True,
-        max_y_value=max_y_value,
+        max_y_values=max_y_values,
         custom_titles=[i_region.replace("-", " ") for i_region in regions],
         custom_sup_title=indicator.replace("_", " "),
     )
@@ -133,6 +132,8 @@ def metro_notifications(
     app_name: str,
     region: str,
 ):
+
+    max_y_value = 370.
     plot_regional_outputs(
         plotter,
         calib_dir_path,
@@ -141,7 +142,7 @@ def metro_notifications(
         Region.VICTORIA_METRO,
         "notifications",
         "metro_notifications",
-        max_y_value=370.0,
+        max_y_values=(max_y_value,) * len(Region.VICTORIA_METRO),
     )
 
 
@@ -157,6 +158,8 @@ def regional_notifications(
     app_name: str,
     region: str,
 ):
+
+    max_y_value = 40.
     plot_regional_outputs(
         plotter,
         calib_dir_path,
@@ -165,7 +168,7 @@ def regional_notifications(
         Region.VICTORIA_RURAL,
         "notifications",
         "regional_notifications",
-        max_y_value=55.0,
+        max_y_values=(max_y_value,) * len(Region.VICTORIA_RURAL),
     )
 
 
@@ -181,6 +184,8 @@ def metro_hospitalisations(
     app_name: str,
     region: str,
 ):
+
+    max_y_value = 50.
     plot_regional_outputs(
         plotter,
         calib_dir_path,
@@ -189,7 +194,7 @@ def metro_hospitalisations(
         Region.VICTORIA_METRO,
         "hospital_admissions",
         "metro_hospital",
-        max_y_value=50.0,
+        max_y_values=(max_y_value,) * len(Region.VICTORIA_METRO),
     )
 
 
@@ -205,6 +210,8 @@ def regional_hospitalisations(
     app_name: str,
     region: str,
 ):
+
+    max_y_value = 5.
     plot_regional_outputs(
         plotter,
         calib_dir_path,
@@ -213,7 +220,7 @@ def regional_hospitalisations(
         Region.VICTORIA_RURAL,
         "hospital_admissions",
         "regional_hospital",
-        max_y_value=5.0,
+        max_y_values=(max_y_value,) * len(Region.VICTORIA_RURAL),
     )
 
 
@@ -229,6 +236,8 @@ def metro_icu_admissions(
     app_name: str,
     region: str,
 ):
+
+    max_y_value = 9.
     plot_regional_outputs(
         plotter,
         calib_dir_path,
@@ -237,7 +246,7 @@ def metro_icu_admissions(
         Region.VICTORIA_METRO,
         "icu_admissions",
         "metro_icu",
-        max_y_value=9.0,
+        max_y_values=(max_y_value,) * len(Region.VICTORIA_METRO),
     )
 
 
@@ -710,11 +719,11 @@ def plot_scenarios_multioutput(
 
     # From Litton et al.
     icu_capacities = [{}] * len(scenario_outputs)
-    # icu_capacities[2] = \
-    #     {
-    #         "base": 499,
-    #         "surge": 1665,
-    #     }
+    icu_capacities[2] = \
+        {
+            "base": 499,
+            "surge": 1665,
+        }
 
     plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(
         plotter,
@@ -729,6 +738,7 @@ def plot_scenarios_multioutput(
         label_font_size=STANDARD_LABEL_FONTSIZE,
         file_name="multi_scenario",
         multi_panel_hlines=icu_capacities,
+        max_y_values=(24e3, 750, 3e3, 3e4),
     )
 
 

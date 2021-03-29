@@ -11,6 +11,7 @@ from summer.model import CompartmentalModel
 from autumn.region import Region
 
 
+@pytest.mark.mixing_optimisation
 def test_dummy_placeholder():
     pass
 

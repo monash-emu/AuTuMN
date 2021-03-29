@@ -1,5 +1,5 @@
 from apps.covid_19.vaccine_optimisation.constants import (
-    SCENARIO_START_TIME, OPTIMISED_PHASE_DURATION, SEVERITY_EFFICACY, INFECTION_EFFICACY
+    SCENARIO_START_TIME, OPTIMISED_PHASE_DURATION, SEVERITY_EFFICACY, INFECTION_EFFICACY, TOTAL_DAILY_DOSES
 )
 
 APP_NAME = "covid_19"
@@ -16,15 +16,25 @@ ROOT_MODEL_PARAMS = {
 def get_vacc_roll_out_func(decision_vars):
     """
     Build the vaccine roll-out components based on the decision variables
-    :param decision_vars:
-    :return:
+    :param decision_vars: list of 16 floats representing the age-specific allocation proportions
+    :return: list of vaccine roll-out components
     """
-    roll_out_function = {
-        "coverage": sum(decision_vars),
-        "start_time": 447.,
-        "end_time": 797.
-    }
-    return roll_out_function
+    roll_out_components = []
+
+    for i, allocation_prop in enumerate(decision_vars):
+        daily_doses = allocation_prop * TOTAL_DAILY_DOSES
+        component = {
+            "age_min": i * 5,
+            "supply_timeseries": {
+                "times": [SCENARIO_START_TIME - 1, SCENARIO_START_TIME, OPTIMISED_PHASE_END, OPTIMISED_PHASE_END + 1],
+                "values": [0., daily_doses, daily_doses, 0.]
+            }
+        }
+        if i < 15:
+            component["age_max"] = i * 5 + 4
+        roll_out_components.append(component)
+
+    return roll_out_components
 
 
 def make_scenario_func(root_params):
@@ -44,7 +54,7 @@ def make_scenario_func(root_params):
             "vaccination": {
                 "severity_efficacy": SEVERITY_EFFICACY,
                 "infection_efficacy": INFECTION_EFFICACY,
-                "roll_out_function": get_vacc_roll_out_func(decision_vars)
+                "roll_out_components": get_vacc_roll_out_func(decision_vars)
             },
             # Prepare placeholder for mobility
             "mobility": {

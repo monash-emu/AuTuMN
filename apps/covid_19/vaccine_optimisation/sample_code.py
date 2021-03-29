@@ -17,10 +17,10 @@ def run_sample_code():
     opti_object.objective_func = make_objective_func()
 
     # Evaluation of the objective function
-    decision_vars = [.1, .1, .1]
+    decision_vars = [1/16 for _ in range(16)]
     [objective] = opti_object.evaluate_objective(decision_vars)
     print(objective)
 
-    decision_vars = [.2, .2, .2]
+    decision_vars = [1/10 for _ in range(10)] + [1/6 for _ in range(6)]
     [objective] = opti_object.evaluate_objective(decision_vars)
     print(objective)

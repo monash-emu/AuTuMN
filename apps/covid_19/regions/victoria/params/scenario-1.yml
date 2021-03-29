@@ -11,7 +11,7 @@ victorian_clusters:
       mixing:
         school:
           times:
-            - 2020-07-07
+            - 2020-07-09
           values:
             - 1.
   regional:
@@ -19,6 +19,6 @@ victorian_clusters:
       mixing:
         school:
           times:
-            - 2020-07-07
+            - 2020-07-09
           values:
             - 1.

@@ -45,8 +45,6 @@ victorian_clusters:
           - grocery_and_pharmacy
           - parks
           - transit_stations
-#        home:
-#          - residential
       smooth_google_data: false # Whether to apply a 7-day moving average
       square_mobility_effect: true
       mixing:
@@ -120,8 +118,6 @@ victorian_clusters:
           - grocery_and_pharmacy
           - parks
           - transit_stations
-#        home:
-#          - residential
       smooth_google_data: false # Whether to apply a 7-day moving average
       square_mobility_effect: true
       mixing:

@@ -460,7 +460,7 @@ def plot_key_param_traces(
         6,
         300,
         False,
-        BURN_INS,
+        0,
     )
     plots.calibration.plots.plot_multiple_param_traces(
         plotter,
@@ -528,7 +528,7 @@ def plot_contact_param_traces(
         6,
         300,
         False,
-        BURN_INS,
+        0,
     )
     plots.calibration.plots.plot_multiple_param_traces(
         plotter,
@@ -710,11 +710,11 @@ def plot_scenarios_multioutput(
 
     # From Litton et al.
     icu_capacities = [{}] * len(scenario_outputs)
-    icu_capacities[2] = \
-        {
-            "base": 499,
-            "surge": 1665,
-        }
+    # icu_capacities[2] = \
+    #     {
+    #         "base": 499,
+    #         "surge": 1665,
+    #     }
 
     plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(
         plotter,

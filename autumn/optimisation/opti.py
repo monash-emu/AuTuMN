@@ -65,6 +65,7 @@ class Opti:
 
         build_model = app_region.build_model
         params = copy.deepcopy(app_region.params)
+        params["default"] = merge_dicts(self.root_model_params, params["default"])
 
         # Create and run the optimisation scenario
         params["scenarios"][1] = merge_dicts(sc_dict, params["default"])

@@ -6,7 +6,7 @@ from apps.covid_19.vaccine_optimisation.vaccine_opti import (
     make_scenario_func,
 )
 
-COUNTRY = "malaysia"
+COUNTRY = "victoria"
 
 
 def run_sample_code():
@@ -17,7 +17,7 @@ def run_sample_code():
     opti_object.objective_func = make_objective_func()
 
     # Evaluation of the objective function
-    decision_vars = [1/16 for _ in range(16)]
+    decision_vars = [1/10 for _ in range(10)] + [1/6 for _ in range(6)]
     [objective] = opti_object.evaluate_objective(decision_vars)
     print(objective)
 

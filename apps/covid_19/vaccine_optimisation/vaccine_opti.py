@@ -9,7 +9,7 @@ ROOT_MODEL_PARAMS = {
     "time": {
         "end": SCENARIO_START_TIME + 1
     },
-    "stratify_by_immunity": True
+    "stratify_by_immunity": True,
 }
 
 
@@ -63,8 +63,12 @@ def make_scenario_func(root_params):
         }
 
         # LIFTING RESTRICTIONS
-        last_value = {"work": ['repeat_prev'], "other_locations": ['repeat_prev'],
-                      "school": root_params["default"]["mobility"]["mixing"]["school"]["values"][-1]}
+        last_value = {"work": ['repeat_prev'], "other_locations": ['repeat_prev']}
+        if "school" in root_params["default"]["mobility"]["mixing"]:
+            last_school_value = root_params["default"]["mobility"]["mixing"]["school"]["values"][-1]
+        else:
+            last_school_value = 1.
+        last_value["school"] = last_school_value
         should_append = {"work": True, "other_locations": True, "school": False}
         for location in ["work", "other_locations", "school"]:
             sc_dict["mobility"]["mixing"][location] = {

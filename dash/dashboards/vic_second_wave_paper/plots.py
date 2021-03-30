@@ -721,8 +721,9 @@ def plot_scenarios_multioutput(
     icu_capacities = [{}] * len(scenario_outputs)
     icu_capacities[2] = \
         {
-            "base": 499,
-            "surge": 1665,
+            "base ICU beds": 499,
+            "max physical ICU beds": 1092,
+            "max surge ICU capacity": 1665,
         }
 
     plots.uncertainty.plots.plot_multi_output_timeseries_with_uncertainty(

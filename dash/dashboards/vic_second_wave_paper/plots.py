@@ -7,13 +7,14 @@ import pandas as pd
 import streamlit as st
 import yaml
 
+from apps import covid_19
 from apps.covid_19.model.parameters import Country, Population
 from apps.covid_19.model.preprocess.case_detection import get_testing_pop
 from apps.covid_19.model.preprocess.testing import find_cdr_function_from_test_data
 from autumn import plots
 from autumn.plots.calibration.plots import get_epi_params
 from autumn.plots.plotter import StreamlitPlotter
-from autumn.plots.utils import get_plot_text_dict
+from autumn.plots.utils import get_plot_text_dict, REF_DATE, change_xaxis_to_date
 from autumn.region import Region
 from autumn.utils.params import load_params
 from dash.dashboards.calibration_results.plots import (
@@ -24,6 +25,10 @@ from dash.dashboards.calibration_results.plots import (
     write_mcmc_centiles,
 )
 from dash.utils import create_downloadable_csv
+from dash.dashboards.inspect_model.plots import BASE_DATE
+from autumn.utils.utils import apply_moving_average
+from autumn.inputs import get_mobility_data
+
 
 STANDARD_X_LIMITS = 153, 275
 PLOT_FUNCS = {}
@@ -744,3 +749,62 @@ def plot_scenarios_multioutput(
 
 
 PLOT_FUNCS["Multi-output scenarios"] = plot_scenarios_multioutput
+
+
+def plot_multicluster_mobility(
+        plotter: StreamlitPlotter,
+        calib_dir_path: str,
+        mcmc_tables: List[pd.DataFrame],
+        mcmc_params: List[pd.DataFrame],
+        targets: dict,
+        app_name: str,
+        region: str,
+):
+
+    app = covid_19.app.get_region("victoria")
+    params = app.params["default"]
+
+    all_cluster_mobility_values = {}
+    fig, axes, max_dims, n_rows, n_cols, _ = plotter.get_figure()
+
+    for i_region in Region.VICTORIA_METRO + Region.VICTORIA_RURAL:
+        google_mobility_values, google_mobility_days = get_mobility_data(
+            params["country"]["iso3"],
+            i_region.replace("-", "_").upper(),
+            BASE_DATE,
+            params["mobility"]["google_mobility_locations"]
+        )
+
+        all_cluster_mobility_values[i_region] = google_mobility_values
+    for i_region in Region.VICTORIA_METRO:
+        axes.plot(
+            google_mobility_days,
+            apply_moving_average(all_cluster_mobility_values[i_region]["work"], 7),
+            color="k", alpha=0.5
+        )
+        axes.plot(
+            google_mobility_days,
+            apply_moving_average(all_cluster_mobility_values[i_region]["other_locations"], 7),
+            color="g", alpha=0.5
+        )
+    for i_region in Region.VICTORIA_RURAL:
+        axes.plot(
+            google_mobility_days,
+            apply_moving_average(all_cluster_mobility_values[i_region]["work"], 7),
+            color="b", alpha=0.5
+        )
+        axes.plot(
+            google_mobility_days,
+            apply_moving_average(all_cluster_mobility_values[i_region]["other_locations"], 7),
+            color="brown", alpha=0.5
+        )
+    axes.set_xlim(left=STANDARD_X_LIMITS[0], right=STANDARD_X_LIMITS[1])
+    axes.set_ylim(top=1.)
+    change_xaxis_to_date(axes, REF_DATE, rotation=0)
+
+    plotter.save_figure(
+        fig, filename=f"multi_cluster_mobility", title_text="Google mobility"
+    )
+
+
+PLOT_FUNCS["Mobility by cluster"] = plot_multicluster_mobility

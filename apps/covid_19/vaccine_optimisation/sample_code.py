@@ -5,7 +5,7 @@ from apps.covid_19.vaccine_optimisation.vaccine_opti import (
 
 import numpy as np
 
-COUNTRY = "malaysia"
+COUNTRY = "malaysia"  # should use "malaysia" or "philippines"
 
 
 def run_sample_code():
@@ -16,8 +16,8 @@ def run_sample_code():
     decision_vars = []
     for phase_number in range(2):
         sample = list(np.random.uniform(low=0., high=1., size=(8,)))
-        sum = np.sum(sample)
-        decision_vars += [s/sum for s in sample]
+        _sum = sum(sample)
+        decision_vars += [s/_sum for s in sample]
     decision_vars.append(np.random.uniform(low=0., high=1.))
 
     # Evaluate objective function

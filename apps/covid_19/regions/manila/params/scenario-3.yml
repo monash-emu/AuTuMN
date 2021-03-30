@@ -1,14 +1,12 @@
-description: 50% of schools reopen
-mobility:
-  mixing:
-    school:
-      append: false
-      times:
-      - 453
-      - 454
-      values:
-      - 0.0
-      - 0.5
+description: 13% coverage / 70% efficacy / severity-preventing vaccine
 parent: apps/covid_19/regions/manila/params/default.yml
 time:
   start: 438
+vaccination:
+  infection_efficacy: 0.0
+  roll_out_components:
+  - supply_period_coverage:
+      coverage: 0.13
+      end_time: 710
+      start_time: 440
+  severity_efficacy: 0.7

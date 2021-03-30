@@ -1,12 +1,48 @@
-description: 13% coverage / 70% efficacy / infection-preventing vaccine
+description: Current plan (1-w MECQ from 22/3 1-w ECQ from 29/3)
+mobility:
+  mixing:
+    other_locations:
+      append: true
+      times:
+      - 446 # 21/3
+      - 447 # MECQ starts 22/3
+      - 453 # MECQ ends 28/3
+      - 454 # ECQ starts 29/3
+      - 460 # ECQ ends 4/4
+      - 461 # back to pre-22 March from 5/4
+      values:
+      - 0.6275
+      - 0.5
+      - 0.5
+      - 0.4
+      - 0.4
+      - 0.6275
+    work:
+      append: true
+      times:
+      - 446 # 21/3
+      - 447 # MECQ starts 22/3
+      - 453 # MECQ ends 28/3
+      - 454 # ECQ starts 29/3
+      - 460 # ECQ ends 4/4
+      - 461 # back to pre-22 March from 5/4
+      values:
+      - 0.6
+      - 0.5
+      - 0.5
+      - 0.4
+      - 0.4
+      - 0.6
+  microdistancing:
+    behaviour:
+      parameters:
+        times:
+        - 446 # 21/3
+        - 447 # 22/3
+        values:
+        - 1.0
+        - 1.3
+
 parent: apps/covid_19/regions/manila/params/default.yml
 time:
-  start: 438
-vaccination:
-  infection_efficacy: 0.7
-  roll_out_components:
-  - supply_period_coverage:
-      coverage: 0.13
-      end_time: 724
-      start_time: 454
-  severity_efficacy: 0.0
+  start: 440

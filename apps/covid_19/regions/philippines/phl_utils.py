@@ -6,11 +6,11 @@ import yaml
 
 from autumn.region import Region
 
-SCENARIO_START_TIME = 454  # 29 Mar 2021
+SCENARIO_START_TIME = 440  # 15 Mar 2021
 
-BACK_TO_NORMAL_FRACTIONS = [0.5]
-MHS_REDUCTION_FRACTIONS = [0.5]
-SCHOOL_REOPEN_FRACTIONS = [0.5, 1.0]
+BACK_TO_NORMAL_FRACTIONS = []
+MHS_REDUCTION_FRACTIONS = []
+SCHOOL_REOPEN_FRACTIONS = []
 VACCINE_SCENARIOS = {"mode": ["infection", "severity"], "efficacy": [0.7], "coverage": [0.13, 0.65]}
 
 
@@ -21,9 +21,17 @@ def clear_all_scenarios(region):
     scenario_files = os.listdir(file_path)
     for filename in scenario_files:
         if filename.startswith("scenario-"):
-            sc_number = float(filename.split("-")[1].split(".yml")[0])
-            if sc_number < 9:
-                os.remove(f"../{dir_name}/params/{filename}")
+            os.remove(f"../{dir_name}/params/{filename}")
+
+
+def get_greater_scenario_number(region):
+    dir_name = region.replace("-", "_")
+    file_path = f"../{dir_name}/params/"
+
+    scenario_files = os.listdir(file_path)
+    sc_numbers = [float(filename.split("-")[1].split(".yml")[0]) for filename in scenario_files if filename.startswith("scenario-")]
+
+    return int(max(sc_numbers))
 
 
 def write_all_phl_scenarios(scenario_start_time=SCENARIO_START_TIME):

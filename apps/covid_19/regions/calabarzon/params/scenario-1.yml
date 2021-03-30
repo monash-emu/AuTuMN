@@ -1,20 +1,12 @@
-description: 50% return to normal (work and other locations)
-mobility:
-  mixing:
-    other_locations:
-      append: true
-      times:
-      - 454
-      values:
-      - - close_gap_to_1
-        - 0.5
-    work:
-      append: true
-      times:
-      - 454
-      values:
-      - - close_gap_to_1
-        - 0.5
+description: 13% coverage / 70% efficacy / infection-preventing vaccine
 parent: apps/covid_19/regions/calabarzon/params/default.yml
 time:
-  start: 452
+  start: 438
+vaccination:
+  infection_efficacy: 0.7
+  roll_out_components:
+  - supply_period_coverage:
+      coverage: 0.13
+      end_time: 710
+      start_time: 440
+  severity_efficacy: 0.0

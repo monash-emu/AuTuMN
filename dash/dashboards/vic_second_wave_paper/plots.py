@@ -753,21 +753,22 @@ PLOT_FUNCS["Multi-output scenarios"] = plot_scenarios_multioutput
 def plot_multilocation_mobility(
         plotter: StreamlitPlotter,
         calib_dir_path: str,
-    mcmc_tables: List[pd.DataFrame],
-    mcmc_params: List[pd.DataFrame],
-    targets: dict,
-    app_name: str,
-    region: str,
-
+        mcmc_tables: List[pd.DataFrame],
+        mcmc_params: List[pd.DataFrame],
+        targets: dict,
+        app_name: str,
+        region: str,
 ):
 
     app = covid_19.app.get_region(region)
     params = app.params["default"]
+    non_home_locations = [i for i in params["mobility"]["google_mobility_locations"].keys() if i != "home"]
+    non_home_mobility = {i: params["mobility"]["google_mobility_locations"][i] for i in non_home_locations}
     values, days = get_mobility_data(
         params["country"]["iso3"],
         params["mobility"]["region"],
         BASE_DATE,
-        params["mobility"]["google_mobility_locations"],
+        non_home_mobility,
     )
     plots.model.plots.plot_time_varying_multi_input(plotter, values, days, is_logscale=False)
 

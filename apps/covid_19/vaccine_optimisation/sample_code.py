@@ -1,26 +1,33 @@
-from autumn.optimisation.opti import Opti
 from apps.covid_19.vaccine_optimisation.vaccine_opti import (
-    APP_NAME,
-    ROOT_MODEL_PARAMS,
-    make_objective_func,
-    make_scenario_func,
+    get_decision_vars_names,
+    initialise_opti_object
 )
 
-COUNTRY = "victoria"
+import numpy as np
+
+COUNTRY = "malaysia"
 
 
 def run_sample_code():
     # Initialisation of the optimisation object. This needs to be run once before optimising.
-    opti_object = Opti(APP_NAME, COUNTRY, root_model_params=ROOT_MODEL_PARAMS)
-    root_params = opti_object.run_root_model()  # run the baseline
-    opti_object.scenario_func = make_scenario_func(root_params)
-    opti_object.objective_func = make_objective_func()
+    opti_object = initialise_opti_object(COUNTRY)
 
-    # Evaluation of the objective function
-    decision_vars = [1/10 for _ in range(10)] + [1/6 for _ in range(6)]
-    [objective] = opti_object.evaluate_objective(decision_vars)
-    print(objective)
+    # Create decision variables for random allocations and random relaxation
+    decision_vars = []
+    for phase_number in range(2):
+        sample = list(np.random.uniform(low=0., high=1., size=(8,)))
+        sum = np.sum(sample)
+        decision_vars += [s/sum for s in sample]
+    decision_vars.append(np.random.uniform(low=0., high=1.))
 
-    decision_vars = [1/10 for _ in range(10)] + [1/6 for _ in range(6)]
-    [objective] = opti_object.evaluate_objective(decision_vars)
-    print(objective)
+    # Evaluate objective function
+    [total_deaths, max_hospital, relaxation] = opti_object.evaluate_objective(decision_vars)
+
+    # Print decision vars and outputs
+    print(get_decision_vars_names())
+    print(f"Decision variables: {decision_vars}")
+    print(f"N deaths: {total_deaths} / Max hospital: {max_hospital} / Relaxation: {relaxation}")
+
+
+# This can be run using:
+# python -m apps runsamplevaccopti

@@ -7,6 +7,7 @@ import pandas as pd
 import streamlit as st
 import yaml
 
+from apps import covid_19
 from apps.covid_19.model.parameters import Country, Population
 from apps.covid_19.model.preprocess.case_detection import get_testing_pop
 from apps.covid_19.model.preprocess.testing import find_cdr_function_from_test_data
@@ -24,6 +25,10 @@ from dash.dashboards.calibration_results.plots import (
     write_mcmc_centiles,
 )
 from dash.utils import create_downloadable_csv
+from dash.dashboards.inspect_model.plots import BASE_DATE
+from autumn.utils.model_register import AppRegion
+from autumn.inputs import get_mobility_data
+
 
 STANDARD_X_LIMITS = 153, 275
 PLOT_FUNCS = {}
@@ -743,3 +748,28 @@ def plot_scenarios_multioutput(
 
 
 PLOT_FUNCS["Multi-output scenarios"] = plot_scenarios_multioutput
+
+
+def plot_multilocation_mobility(
+        plotter: StreamlitPlotter,
+        calib_dir_path: str,
+    mcmc_tables: List[pd.DataFrame],
+    mcmc_params: List[pd.DataFrame],
+    targets: dict,
+    app_name: str,
+    region: str,
+
+):
+
+    app = covid_19.app.get_region(region)
+    params = app.params["default"]
+    values, days = get_mobility_data(
+        params["country"]["iso3"],
+        params["mobility"]["region"],
+        BASE_DATE,
+        params["mobility"]["google_mobility_locations"],
+    )
+    plots.model.plots.plot_time_varying_multi_input(plotter, values, days, is_logscale=False)
+
+
+PLOT_FUNCS["Google Mobility multi-location"] = plot_multilocation_mobility

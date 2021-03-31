@@ -69,13 +69,13 @@ For example, the run time of a COVID-19 model with simulation of a single scenar
 You can run a model MCMC calibration as follows
 
 ```bash
-python -m apps calibrate MODEL_NAME MAX_SECONDS RUN_ID
+python -m apps calibrate MODEL_NAME REGION_NAME MAX_SECONDS RUN_ID
 ```
 
 For example, to calibrate the malaysia COVID model for 30 seconds you can run:
 
 ```bash
-python -m apps calibrate malaysia 30 0
+python -m apps calibrate covid malaysia 30 0
 ```
 
 The RUN_ID argument can always be "0" for local use, it doesn't really matter.

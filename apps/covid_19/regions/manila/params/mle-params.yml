@@ -1,13 +1,13 @@
 accum_deaths_dispersion_param: 4.226623920913285
 clinical_stratification.props.hospital.multiplier: 1.45382591251649
 clinical_stratification.props.symptomatic.multiplier: 1.4430062338383378
-contact_rate: 0.03339736424032862
+contact_rate: 0.034 # 0.03339736424032862
 icu_occupancy_dispersion_param: 3.7909728259949063
 infection_fatality.multiplier: 1.032711034008674
 infectious_seed: 82.74023942683762
-mobility.microdistancing.behaviour.parameters.max_effect: 0.12424450369919315
+mobility.microdistancing.behaviour.parameters.max_effect: 0.15 # 0.12424450369919315
 notifications_dispersion_param: 3.851732729286038
 sojourn.compartment_periods_calculated.active.total_period: 5.220215005495406
 sojourn.compartment_periods_calculated.exposed.total_period: 7.522624208931408
 testing_to_detection.assumed_cdr_parameter: 0.04274767447834525
-voc_emmergence.final_proportion: 0.3
+voc_emmergence.final_proportion: 0.5

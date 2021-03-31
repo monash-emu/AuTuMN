@@ -4,10 +4,10 @@ mobility:
     other_locations:
       append: true
       times:
-      - 2020-04-04
-      - 2020-04-05
-      - 2020-04-18
-      - 2020-04-19
+      - 2021-04-04
+      - 2021-04-05
+      - 2021-04-18
+      - 2021-04-19
       values:
       - 0.2  # ECQ Other Locations mobility based on April 2020
       - 0.4  # MECQ Other Locations mobility based on Aug 4-18 2020
@@ -16,10 +16,10 @@ mobility:
     work:
       append: true
       times:
-      - 2020-04-04
-      - 2020-04-05
-      - 2020-04-18
-      - 2020-04-19
+      - 2021-04-04
+      - 2021-04-05
+      - 2021-04-18
+      - 2021-04-19
       values:
       - 0.2  # ECQ Work mobility based on April 2020
       - 0.4  # MECQ Work mobility based on Aug 4-18 2020
@@ -29,10 +29,22 @@ mobility:
     behaviour:
       parameters:
         times:
-        - 461
-        - 462
+        - 75  # copy default values
+        - 314 # copy default values
+        - 446 # 21/3
+        - 447 # 22/3 GCQ+ starts
+        - 453 # 28/3 GCQ+ ends
+        - 454 # ECQ starts 29/3
+        - 474 # ECQ ends
+        - 475 #
         values:
-        - 2.  # assumed ECQ MHS compliance
+        - 0.
+        - 1.
+        - 1.0
+        - 1.3
+        - 1.3
+        - 2.
+        - 2.
         - 1.3
 
 parent: apps/covid_19/regions/manila/params/default.yml

@@ -26,7 +26,7 @@ mobility:
       - 0.52
       - 0.2
       - 0.2
-      - 0.52
+      - 0.6  #0.52
     work:
       append: true
       times:
@@ -38,11 +38,13 @@ mobility:
       - 0.55
       - 0.2
       - 0.2
-      - 0.55
+      - 0.6  #0.55
   microdistancing:
     behaviour:
       parameters:
         times:
+        - 75  # copy default values
+        - 314 # copy default values
         - 446 # 21/3
         - 447 # 22/3 GCQ+ starts
         - 453 # 28/3 GCQ+ ends
@@ -50,6 +52,8 @@ mobility:
         - 460 # ECQ ends 4/4
         - 461 # 5/4
         values:
+        - 0.
+        - 1.
         - 1.0
         - 1.3
         - 1.3

@@ -153,7 +153,7 @@ def load_data(REGION: str):
         case_df = load_regional_cases("Kuala Lumpur")
         death_df = death_df[["kuala_lumpur_death", "date_index"]]
 
-    df = pd.merge(case_df, death_df, how="left", left_on=["date_index"], right_on=["date_index"])
+    df = pd.merge(case_df, death_df, how="outer", left_on=["date_index"], right_on=["date_index"])
 
     return df
 

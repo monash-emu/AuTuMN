@@ -175,7 +175,7 @@ def has_immunity_been_reached(run_model, phase_2_end_index: int) -> bool:
 
 def make_objective_func(duration):
 
-    def objective_func(run_model):
+    def objective_func(run_model, decision_vars):
         # Perform diagnostics.
         phase_2_start_idx = list(run_model.times).index(PHASE_2_START_TIME)
         phase_2_end_idx = list(run_model.times).index(phase_2_end_times[duration])

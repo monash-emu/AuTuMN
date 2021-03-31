@@ -51,7 +51,7 @@ class Opti:
 
         sc_dict = self.scenario_func(decision_vars)
         sc_model = self.run_scenario(sc_dict)
-        objective = self.objective_func(sc_model)
+        objective = self.objective_func(sc_model, decision_vars)
 
         return objective
 

@@ -1,12 +1,52 @@
-description: 65% coverage / 70% efficacy / severity-preventing vaccine
+description: 2-week ECQ from 29 March
+mobility:
+  mixing:
+    other_locations:
+      append: true
+      times:
+      - 2021-03-28
+      - 2021-03-29
+      - 2021-04-10
+      - 2021-04-15
+      values:
+      - 0.52
+      - 0.2  # ECQ Other Locations mobility based on Aug 4-18 2020
+      - 0.2
+      - 0.52  # back to 26/3 mobility
+    work:
+      append: true
+      times:
+      - 2021-03-28
+      - 2021-03-29
+      - 2021-04-10
+      - 2021-04-15
+      values:
+      - 0.55
+      - 0.2
+      - 0.2  # ECQ Work mobility based on Aug 4-18 2020
+      - 0.55  # back to 26/3 mobility
+  microdistancing:
+    behaviour:
+      parameters:
+        times:
+        - 75  # copy default values
+        - 314 # copy default values
+        - 446 # 21/3
+        - 447 # 22/3 GCQ+ starts
+        - 453 # 28/3 GCQ+ ends
+        - 454 # ECQ starts 29/3
+        - 467 # ECQ ends 4 Apr
+        - 472 # 5 Apr
+        values:
+        - 0.
+        - 1.
+        - 1.0
+        - 1.3
+        - 1.3
+        - 2.
+        - 2.
+        - 1.5
+
 parent: apps/covid_19/regions/manila/params/default.yml
 time:
-  start: 438
-vaccination:
-  infection_efficacy: 0.0
-  roll_out_components:
-  - supply_period_coverage:
-      coverage: 0.65
-      end_time: 710
-      start_time: 440
-  severity_efficacy: 0.7
+  start: 453

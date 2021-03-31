@@ -26,6 +26,8 @@ def request_standard_outputs(
 
     # Disease incidence
     model.request_output_for_flow(name="incidence", flow_name="incidence")
+    model.request_cumulative_output(name="accum_incidence", source="incidence", start_time=454)
+
     notification_at_sympt_onset_sources = []
     for agegroup in AGEGROUP_STRATA:
         # Track incidence for each agegroup.
@@ -113,7 +115,7 @@ def request_standard_outputs(
                 source_strata={"agegroup": agegroup, "clinical": clinical},
             )
 
-    model.request_cumulative_output(name="accum_deaths", source="infection_deaths")
+    model.request_cumulative_output(name="accum_deaths", source="infection_deaths", start_time=454)
     if not is_region_vic:
         for agegroup in AGEGROUP_STRATA:
             model.request_cumulative_output(

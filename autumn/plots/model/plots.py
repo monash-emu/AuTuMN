@@ -228,8 +228,22 @@ def plot_outputs_multi(
     X_MIN = x_low
     X_MAX = x_up
 
+    title_ = {
+        "accum_incidence": "Cumulative infections (from 29/3/21)",
+        "accum_deaths": "Cumulative deaths (from 29/3/21)",
+        "hospital_occupancy": "Hospital occupancy",
+        "icu_occupancy": "ICU occupancy"
+    }
+    if output_name in title_:
+        axis.set_title(title_[output_name])
+
     if X_MIN is not None and X_MAX is not None:
         axis.set_xlim((X_MIN, X_MAX))
+
+    if output_name == "accum_deaths":
+        axis.set_ylim((0, 720))
+
+
     plotter.save_figure(fig, filename=output_name, title_text=output_name)
 
 
@@ -301,6 +315,7 @@ def _plot_outputs_to_axis(axis, scenario: Scenario, name: str, color_idx=0, alph
     model = scenario.model
     plot_values = model.derived_outputs[name]
     # Plot the values as a line.
+    change_xaxis_to_date(axis, REF_DATE)
     axis.plot(model.times, plot_values, color=COLOR_THEME[color_idx], alpha=alpha)
 
 

@@ -1,7 +1,7 @@
 description: BASELINE
 parent: apps/covid_19/regions/malaysia/params/default.yml
 
-contact_rate: 0.0302
+contact_rate: 0.027
 
 time:
   start: 250

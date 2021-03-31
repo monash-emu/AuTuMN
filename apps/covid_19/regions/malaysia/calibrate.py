@@ -31,7 +31,11 @@ PAR_PRIORS = provide_default_calibration_params()
 PAR_PRIORS = add_dispersion_param_prior_for_gaussian(PAR_PRIORS, TARGET_OUTPUTS)
 
 PAR_PRIORS += [
-    {"param_name": "contact_rate", "distribution": "uniform", "distri_params": [0.015, 0.03]},
+    {
+        "param_name": "contact_rate",
+        "distribution": "uniform",
+        "distri_params": [0.015, 0.03]
+    },
     {
         "param_name": "infectious_seed",
         "distribution": "uniform",

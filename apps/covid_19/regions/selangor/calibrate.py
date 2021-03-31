@@ -26,7 +26,7 @@ PAR_PRIORS += [
     {
         "param_name": "contact_rate",
         "distribution": "uniform",
-        "distri_params": [0.02, 0.04],
+        "distri_params": [0.018, 0.04],
     },
     {
         "param_name": "infectious_seed",

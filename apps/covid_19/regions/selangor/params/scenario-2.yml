@@ -2,7 +2,7 @@ description: Scenario 2, 70% efficacy 50% coverage infection-preventing vaccine
 parent: apps/covid_19/regions/selangor/params/default.yml
 
 time:
-  start: 447
+  start: 457
 
 vaccination:
   severity_efficacy: 0.

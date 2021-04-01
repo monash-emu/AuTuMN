@@ -9,7 +9,7 @@ vaccination: null
 
 time:
   start: 180
-  end: 546
+  end: 822
 
 country:
   iso3: MYS

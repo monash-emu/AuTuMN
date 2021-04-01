@@ -9,14 +9,14 @@ mobility:
     other_locations:
       append: true
       times:
-        - 2020-03-22
+        - 2020-04-01
       values:
         - - max_last_period
           - 180
     work:
       append: true
       times:
-        - 2020-03-22
+        - 2020-04-01
       values:
         - - max_last_period
           - 180

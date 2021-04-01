@@ -1,16 +1,33 @@
-description: Scenario 5, 90% efficacy 50% coverage severity-preventing vaccine
+description: Scenario 5, max mobility six months + 80% vaccine roll-out
 parent: apps/covid_19/regions/selangor/params/default.yml
 
 time:
   start: 457
 
 vaccination:
-  severity_efficacy: 0.9
-  infection_efficacy: 0.
+  infection_efficacy: 0.75
+  severity_efficacy: 0.
 
-  # Six months from Monday 22nd Feb 2021
+  # Eleven months from 1st April 2021
   roll_out_components:
   - supply_period_coverage:
-      coverage: 0.5
-      start_time: 447.
-      end_time: 797.
+      coverage: 0.8
+      start_time: 457.
+      end_time: 791.
+
+mobility:
+  mixing:
+    other_locations:
+      append: true
+      times:
+        - 2020-03-07
+      values:
+        - - max_last_period
+          - 180
+    work:
+      append: true
+      times:
+        - 2020-03-07
+      values:
+        - - max_last_period
+          - 180

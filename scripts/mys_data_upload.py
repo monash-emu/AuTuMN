@@ -154,7 +154,7 @@ def load_data(REGION: str):
         death_df = death_df[["kuala_lumpur_death", "date_index"]]
 
     df = pd.merge(case_df, death_df, how="outer", left_on=["date_index"], right_on=["date_index"])
-
+    df.sort_values(by="date_index", inplace=True)
     return df
 
 

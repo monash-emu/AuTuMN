@@ -1,6 +1,7 @@
 import glob
 import logging
 import os
+from pathlib import PurePath
 
 import boto3
 from boto3.s3.transfer import TransferConfig
@@ -100,7 +101,13 @@ def upload_to_run_s3(run_id: str, src_path: str, quiet: bool):
 
 def list_s3(key_prefix: str, key_suffix: str):
     """Returns the item keys in a path in AWS S3"""
+
+    key_prefix = PurePath(key_prefix).as_posix()
+
     response = s3.list_objects_v2(Bucket=settings.S3_BUCKET, Prefix=key_prefix)
+    
+    # FIXME
+    # Invalid prefix will return a valid response, but will not have a 'Contents' field
     objs = response["Contents"]
     is_truncated = response["IsTruncated"]
     while is_truncated:

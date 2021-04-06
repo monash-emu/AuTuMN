@@ -1,5 +1,8 @@
 """
 Storing model data in the database
+
+FIXME: Most of this has nothing to do with database storage, but rather manipulating
+pandas DataFrames.  Move/rename so as not to imply anything I/O related
 """
 import logging
 from typing import List
@@ -9,7 +12,7 @@ import yaml
 from summer.legacy.model import StratifiedModel
 from summer.model import CompartmentalModel
 
-from autumn.db.database import get_database
+from autumn.db.database import get_database, BaseDatabase
 
 from . import process
 
@@ -33,6 +36,23 @@ def save_mle_params(database_path: str, target_path: str):
     mle_params = process.find_mle_params(mcmc_df, param_df)
     with open(target_path, "w") as f:
         yaml.dump(mle_params, f)
+
+
+def save_model_outputs(dest_db: BaseDatabase, **kwargs):
+    """
+    Convenience wrapper to save a set of model outputs (DataFrames) to a database store
+    Usually use by dumping a dictionary to kwargs
+
+    Args:
+        dest_db: The target database in which to store the specified outputs
+        **kwargs: Argument pairs of the form TableName=DataFrame
+
+        Examples:
+            >>> save_model_outputs(outputs_db, **collated_output_dict) 
+    """
+
+    for table_name, df in kwargs.items():
+        dest_db.dump_df(table_name, df)
 
 
 def build_outputs_table(models: List[StratifiedModel], run_id: int, chain_id=None):

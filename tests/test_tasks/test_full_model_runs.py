@@ -102,7 +102,7 @@ def test_full_model_run_task(monkeypatch, tmpdir):
 
     full_db_path = os.path.join(test_full_data_dir, "chain-0")
     full_db = FeatherDatabase(full_db_path)
-    assert full_db.table_names() == ["outputs", "mcmc_run", "derived_outputs", "mcmc_params"]
+    assert set(full_db.table_names()) == {"outputs", "mcmc_run", "derived_outputs", "mcmc_params"}
 
     # Expect MCMC params table to be unchanged, other than 1st 2 runs burned in.
     full_mcmc_params_df = full_db.query("mcmc_params")

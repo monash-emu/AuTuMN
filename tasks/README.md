@@ -24,9 +24,6 @@ python -m tasks full --run  $RUN_ID --burn 30 --sample 16 --verbose
 
 # Run PowerBI processing
 python -m tasks powerbi --run $RUN_ID
-
-# Run DHHS processing
-python -m tasks dhhs --commit bbbbbbb
 ```
 
 ### Clean up test task

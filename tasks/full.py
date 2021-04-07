@@ -7,7 +7,7 @@ from autumn import db
 from autumn.db.database import get_database
 from autumn.db.store import Table
 from autumn.utils.params import update_params
-from autumn.utils.scenarios import Scenario, calculate_differential_outputs
+from autumn.utils.scenarios import Scenario
 from settings import REMOTE_BASE_DIR
 from tasks.calibrate import CALIBRATE_DATA_DIR
 from tasks.utils import get_app_region, set_logging_config
@@ -158,38 +158,23 @@ def run_full_model_for_chain(
             param_updates = db.load.load_mcmc_params(dest_db, run_id)
             update_func = lambda ps: update_params(ps, param_updates)
             with Timer("Running model scenarios"):
-                num_scenarios = 1 + len(app_region.params["scenarios"].keys())
-                scenarios = []
-                for scenario_idx in range(num_scenarios):
-                    scenario = Scenario(app_region.build_model, scenario_idx, app_region.params)
-                    scenarios.append(scenario)
-
-                # Run the baseline scenario.
-                baseline_scenario = scenarios[0]
-                baseline_scenario.run(update_func=update_func)
-                baseline_model = baseline_scenario.model
-
-                # Run all the other scenarios
-                for scenario in scenarios[1:]:
-                    scenario.run(base_model=baseline_model, update_func=update_func)
+                app_region.build_and_run_scenarios(update_func=update_func)
 
             run_id = int(run_id)
             chain_id = int(chain_id)
 
             with Timer("Processing model outputs"):
-                models = [s.model for s in scenarios]
-                models = calculate_differential_outputs(models, app_region.targets)
-                outputs_df = db.store.build_outputs_table(models, run_id, chain_id)
-                derived_outputs_df = db.store.build_derived_outputs_table(models, run_id, chain_id)
-                outputs.append(outputs_df)
-                derived_outputs.append(derived_outputs_df)
+                processed_outputs = app_region.process_scenario_outputs(scenarios, run_id, chain_id)
+                outputs.append(processed_outputs[Table.OUTPUTS])
+                derived_outputs.append(processed_outputs[Table.DERIVED])
 
         with Timer("Saving model outputs to the database"):
-            outputs_df = pd.concat(outputs, copy=False, ignore_index=True)
-            derived_outputs_df = pd.concat(derived_outputs, copy=False, ignore_index=True)
-            dest_db.dump_df(Table.OUTPUTS, outputs_df)
-            dest_db.dump_df(Table.DERIVED, derived_outputs_df)
-            dest_db.dump_df(Table.MCMC, mcmc_run_df)
+            final_outputs = {}
+            final_outputs[Table.OUTPUTS] = pd.concat(outputs, copy=False, ignore_index=True)
+            final_outputs[Table.DERIVED] = pd.concat(derived_outputs, copy=False, ignore_index=True)
+            final_outputs[Table.MCMC] = mcmc_run_df
+
+            db.store.save_model_outputs(outputs_db, **final_outputs)
 
     except Exception:
         logger.exception("Full model run for chain %s failed", chain_id)

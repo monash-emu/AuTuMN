@@ -101,7 +101,11 @@ def test_full_model_run_task(monkeypatch, tmpdir):
     full_db = FeatherDatabase(full_db_path)
     assert full_db.table_names() == ["outputs", "mcmc_run", "derived_outputs", "mcmc_params"]
 
-    # Expect some table names to be unchanged
+    # Expect MCMC params table to be unchanged, other than 1st 2 runs burned in.
+    full_mcmc_params_df = full_db.query("mcmc_params")
+    assert_frame_equal(full_mcmc_params_df, mcmc_param_df[2:].reset_index(drop=True))
+
+    # Expect MCMC run table to now include 'sampled' and 'parent' columns.
     full_mcmc_run_df = full_db.query("mcmc_run")
     full_mcmc_run_columns = [
         "accept",

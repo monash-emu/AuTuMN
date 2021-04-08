@@ -76,6 +76,7 @@ def select_pruning_candidates(src_db_path: str, n_candidates: int) -> pd.DataFra
     # Could possibly use selection routine from sample_outputs_for_calibration_fit
 
     # Load all MCMC run data to select from
+
     all_mcmc_df = pd.concat(load_mcmc_tables(src_db_path), ignore_index=True)
 
     all_accepted = all_mcmc_df[all_mcmc_df["accept"]==1]
@@ -91,6 +92,7 @@ def select_pruning_candidates(src_db_path: str, n_candidates: int) -> pd.DataFra
     candidates = random.sample(possible_candidates, k = n_candidates-1)
 
     # Ensure we have the max likelihood candidate
+
     candidates.append(max_ll_candidate)
 
     candidates_df = all_accepted.loc[candidates]

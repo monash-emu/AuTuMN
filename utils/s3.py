@@ -44,7 +44,7 @@ def get_s3_client():
     return session.client("s3")
 
 
-def download_from_run_s3(s3, run_id: str, src_key: str, quiet: bool, retries=5):
+def download_from_run_s3(client, run_id: str, src_key: str, quiet: bool, retries=5):
     """
     Download file or folder from the run's AWS S3 directory
     """
@@ -55,18 +55,18 @@ def download_from_run_s3(s3, run_id: str, src_key: str, quiet: bool, retries=5):
     if os.path.exists(dest_path):
         os.remove(dest_path)
 
-    download_from_s3(s3, src_key, dest_path, quiet, retries)
+    download_from_s3(client, src_key, dest_path, quiet, retries)
     return src_key
 
 
-def download_from_s3(s3, src_key: str, dest_path: str, quiet: bool, retries=5):
+def download_from_s3(client, src_key: str, dest_path: str, quiet: bool, retries=5):
     if quiet:
         logging.disable(logging.INFO)
 
     retry_count = 0
     while True:
         try:
-            download_s3(s3, src_key, dest_path)
+            download_s3(client, src_key, dest_path)
             break
         except Exception:
             retry_count += 1
@@ -82,7 +82,7 @@ def download_from_s3(s3, src_key: str, dest_path: str, quiet: bool, retries=5):
         logging.disable(logging.NOTSET)
 
 
-def upload_to_run_s3(s3, run_id: str, src_path: str, quiet: bool):
+def upload_to_run_s3(client, run_id: str, src_path: str, quiet: bool):
     """
     Upload file or folder to the run's AWS S3 directory
     """
@@ -91,7 +91,7 @@ def upload_to_run_s3(s3, run_id: str, src_path: str, quiet: bool):
 
     relpath = os.path.relpath(src_path, settings.REMOTE_BASE_DIR)
     dest_key = os.path.join(run_id, relpath)
-    upload_s3(s3, src_path, dest_key)
+    upload_s3(client, src_path, dest_key)
 
     if quiet:
         logging.disable(logging.NOTSET)
@@ -99,14 +99,14 @@ def upload_to_run_s3(s3, run_id: str, src_path: str, quiet: bool):
     return src_path
 
 
-def list_s3(s3, key_prefix: str, key_suffix: str):
+def list_s3(client, key_prefix: str, key_suffix: str):
     """Returns the item keys in a path in AWS S3"""
-    response = s3.list_objects_v2(Bucket=settings.S3_BUCKET, Prefix=key_prefix)
+    response = client.list_objects_v2(Bucket=settings.S3_BUCKET, Prefix=key_prefix)
     objs = response["Contents"]
     is_truncated = response["IsTruncated"]
     while is_truncated:
         token = response["NextContinuationToken"]
-        response = s3.list_objects_v2(
+        response = client.list_objects_v2(
             Bucket=settings.S3_BUCKET, Prefix=key_prefix, ContinuationToken=token
         )
         objs += response["Contents"]
@@ -115,23 +115,23 @@ def list_s3(s3, key_prefix: str, key_suffix: str):
     return [o["Key"] for o in objs if o["Key"].endswith(key_suffix)]
 
 
-def download_s3(s3, src_key, dest_path):
+def download_s3(client, src_key, dest_path):
     """Downloads a file from AWS S3"""
     logger.info("Downloading from %s to %s", src_key, dest_path)
-    s3.download_file(settings.S3_BUCKET, src_key, dest_path, Config=S3_DOWNLOAD_CONFIG)
+    client.download_file(settings.S3_BUCKET, src_key, dest_path, Config=S3_DOWNLOAD_CONFIG)
 
 
-def upload_s3(s3, src_path, dest_key):
+def upload_s3(client, src_path, dest_key):
     """Upload a file or folder to S3"""
     if os.path.isfile(src_path):
-        upload_file_s3(s3, src_path, dest_key)
+        upload_file_s3(client, src_path, dest_key)
     elif os.path.isdir(src_path):
-        upload_folder_s3(s3, src_path, dest_key)
+        upload_folder_s3(client, src_path, dest_key)
     else:
         raise ValueError(f"Path is not a file or folder {src_path}")
 
 
-def upload_folder_s3(s3, folder_path, dest_folder_key):
+def upload_folder_s3(client, folder_path, dest_folder_key):
     """Upload a folder to S3"""
     nodes = glob.glob(os.path.join(folder_path, "**", "*"), recursive=True)
     files = [f for f in nodes if os.path.isfile(f)]
@@ -139,13 +139,13 @@ def upload_folder_s3(s3, folder_path, dest_folder_key):
     for rel_filepath in rel_files:
         src_path = os.path.join(folder_path, rel_filepath)
         dest_key = os.path.join(dest_folder_key, rel_filepath)
-        upload_file_s3(s3, src_path, dest_key)
+        upload_file_s3(client, src_path, dest_key)
 
 
-def upload_file_s3(s3, src_path, dest_key):
+def upload_file_s3(client, src_path, dest_key):
     """Upload a file to S3"""
     logger.info("Uploading from %s to %s", src_path, dest_key)
-    s3.upload_file(
+    client.upload_file(
         src_path,
         settings.S3_BUCKET,
         dest_key,

@@ -26,17 +26,17 @@ def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool
     # Set up directories for output data.
     recreate_dir(FULL_RUN_DATA_DIR)
 
-    s3 = get_s3_client()
+    s3_client = get_s3_client()
 
     # Find the calibration chain databases in AWS S3.
     key_prefix = os.path.join(run_id, os.path.relpath(CALIBRATE_DATA_DIR, REMOTE_BASE_DIR))
-    chain_db_keys = list_s3(s3, key_prefix, key_suffix=".parquet")
+    chain_db_keys = list_s3(s3_client, key_prefix, key_suffix=".parquet")
     chain_db_keys = [k for k in chain_db_keys if any([t in k for t in TABLES_TO_DOWNLOAD])]
 
     # Download the calibration chain databases.
     with Timer(f"Downloading calibration data"):
         for src_key in chain_db_keys:
-            download_from_run_s3(s3, run_id, src_key, quiet)
+            download_from_run_s3(s3_client, run_id, src_key, quiet)
 
     # Run the models for the full time period plus all scenarios.
     db_paths = db.load.find_db_paths(CALIBRATE_DATA_DIR)
@@ -53,7 +53,7 @@ def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool
     db_paths = db.load.find_db_paths(FULL_RUN_DATA_DIR)
     with Timer(f"Uploading full model run data to AWS S3"):
         for db_path in db_paths:
-            upload_to_run_s3(s3, run_id, db_path, quiet)
+            upload_to_run_s3(s3_client, run_id, db_path, quiet)
 
 
 def run_full_model_for_chain(

@@ -6,6 +6,7 @@ from typing import List
 
 import numpy as np
 import pandas as pd
+import random
 
 from autumn.db.database import BaseDatabase, get_database
 from autumn.utils.params import load_params, load_targets
@@ -55,6 +56,42 @@ def find_mle_params(mcmc_df: pd.DataFrame, param_df: pd.DataFrame) -> dict:
     return params
 
 
+def select_pruning_candidates(src_db_path: str, n_candidates: int) -> pd.DataFrame:
+    """Select a random set of 'good enough' candidates for manual inspection
+    The output set will be guaranteed to contain the highest
+    MLE run from all the chains, in addition to randomly selected candidates
+
+    Args:
+        src_db_path (str): Base path of calibration run (containing subdirectories for each chain)
+        n_candidates (int): Number of candidates to select
+
+    Returns:
+        candidates (pd.DataFrame): DataFrame containing unique identifiers (chain_id, run_id) of all candidates
+
+    """
+
+    #+++ FIXME/TODO
+    # We just use a naive random selection, disregarding burn-in etc
+    # Could possibly use selection routine from sample_outputs_for_calibration_fit
+
+    # Load all MCMC run data to select from
+    all_mcmc_df = pd.concat(db.load.load_mcmc_tables(src_db_path), ignore_index=True)
+
+    all_accepted = all_mcmc_df[all_mcmc_df["accept"]==1]
+
+    # Sample random candidates
+    candidates = random.sample(list(all_accepted.index), k = n_candidates-1)
+
+    # Find and append the MLE candidate
+    max_ll = all_accepted["loglikelihood"].max()
+    max_ll_candidate = all_accepted[all_accepted["loglikelihood"] == max_ll].iloc[0].name
+    candidates.append(max_ll_candidate)
+
+    candidates_df = all_accepted.loc[candidates]
+
+    return candidates_df
+
+
 def prune_chain(source_db_path: str, target_db_path: str):
     """
     Read the model outputs from a database and removes output data that is not MLE.
@@ -81,6 +118,7 @@ def prune_chain(source_db_path: str, target_db_path: str):
             target_db.dump_df(table_name, max_ll_table_df)
         elif table_name:
             # Copy table over (mcmc_run, mcmc_params, derived_outputs)
+            # We need to keep derived outputs here to be used by uncertainty calculations
             logger.info("Copying %s", table_name)
             target_db.dump_df(table_name, table_df)
 

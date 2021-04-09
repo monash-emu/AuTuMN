@@ -35,6 +35,8 @@ pytest-parallel
 pytest-benchmark
 black
 isort
+moto[s3]  # Mock out AWS S3 storage
+
 
 # Cloud computing jobs
 sentry-sdk

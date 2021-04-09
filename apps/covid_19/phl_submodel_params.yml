@@ -46,6 +46,15 @@ mobility:
         - school
         - work
         - home
+  mixing:
+    school:
+      append: false
+      times:
+        - 2020-03-15
+        - 2020-03-16
+      values:
+        - 1.
+        - 0.
 
 voc_emmergence:
   final_proportion: 0.1

@@ -7,14 +7,6 @@ population:
 mobility:
   region: Metro Manila
   mixing:
-    school:
-      append: false
-      times:
-        - 2020-02-11
-        - 2020-03-16
-      values:
-        - 1.
-        - 0.
     other_locations:
       append: true
       times:

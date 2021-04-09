@@ -210,6 +210,15 @@ def max_last_period(prev_vals: List[float], period: int):
     return max(prev_vals[-last_n_values:])
 
 
+def prop_return_max_last_period(prev_vals: List[float], period: int, return_prop: float):
+    last_n_values = min(len(prev_vals), period)
+    max_last_period = max(prev_vals[-last_n_values:])
+    last_value = prev_vals[-1]
+    return \
+        last_value + \
+        (max_last_period - last_value) * return_prop
+
+
 PARSE_FUNCS = {
     "repeat_prev": repeat_prev,
     "add_to_prev": add_to_prev,
@@ -218,4 +227,5 @@ PARSE_FUNCS = {
     "scale_prev_up_to_1": scale_prev_up_to_1,
     "close_gap_to_1": close_gap_to_1,
     "max_last_period": max_last_period,
+    "prop_return_max_last_period": prop_return_max_last_period,
 }

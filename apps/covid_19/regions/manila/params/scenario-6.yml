@@ -1,30 +1,21 @@
-description: 2-week MECQ from 5-18 Apr
+description: return to GCQ (11/4/21)
+
 mobility:
   mixing:
     other_locations:
       append: true
       times:
-      - 2021-04-04
-      - 2021-04-05
-      - 2021-04-18
-      - 2021-04-19
+        - 2021-04-11
       values:
-      - 0.2  # ECQ Other Locations mobility based on April 2020
-      - 0.4  # MECQ Other Locations mobility based on Aug 4-18 2020
-      - 0.4
-      - 0.52  # back to 26/3 mobility
+        - - max_last_period
+          - 90
     work:
       append: true
       times:
-      - 2021-04-04
-      - 2021-04-05
-      - 2021-04-18
-      - 2021-04-19
+        - 2021-04-11
       values:
-      - 0.2  # ECQ Work mobility based on April 2020
-      - 0.4  # MECQ Work mobility based on Aug 4-18 2020
-      - 0.4
-      - 0.55  # back to 26/3 mobility
+        - - max_last_period
+          - 90
   microdistancing:
     behaviour:
       parameters:
@@ -35,8 +26,8 @@ mobility:
         - 447 # 22/3 GCQ+ starts
         - 453 # 28/3 GCQ+ ends
         - 454 # ECQ starts 29/3
-        - 474 # ECQ ends
-        - 475 #
+        - 466 # ECQ ends
+        - 467 # GCQ starts
         values:
         - 0.
         - 1.
@@ -49,4 +40,4 @@ mobility:
 
 parent: apps/covid_19/regions/manila/params/default.yml
 time:
-  start: 438
+  start: 460

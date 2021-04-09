@@ -1,30 +1,23 @@
 description: 2-week ECQ extension until 18 Apr
+
 mobility:
   mixing:
     other_locations:
       append: true
       times:
-      - 2021-03-28
-      - 2021-03-29
-      - 2021-04-18
-      - 2021-04-19
+        - 2021-04-11
       values:
-      - 0.52
-      - 0.2  # ECQ Other Locations mobility based on April 2020
-      - 0.2
-      - 0.52  # back to 26/3 mobility
+        - - prop_return_max_last_period
+          - 90
+          - 0.5
     work:
       append: true
       times:
-      - 2021-03-28
-      - 2021-03-29
-      - 2021-04-18
-      - 2021-04-19
+        - 2021-04-11
       values:
-      - 0.55
-      - 0.2
-      - 0.2  # ECQ Work mobility based on April 2020
-      - 0.55  # back to 26/3 mobility
+        - - prop_return_max_last_period
+          - 90
+          - 0.5
   microdistancing:
     behaviour:
       parameters:
@@ -35,8 +28,8 @@ mobility:
         - 447 # 22/3 GCQ+ starts
         - 453 # 28/3 GCQ+ ends
         - 454 # ECQ starts 29/3
-        - 474 # ECQ ends
-        - 475
+        - 466 # ECQ ends
+        - 467 # GCQ starts
         values:
         - 0.
         - 1.
@@ -49,4 +42,5 @@ mobility:
 
 parent: apps/covid_19/regions/manila/params/default.yml
 time:
-  start: 438
+  start: 460
+

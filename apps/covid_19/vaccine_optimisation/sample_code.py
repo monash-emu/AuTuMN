@@ -1,6 +1,7 @@
 from apps.covid_19.vaccine_optimisation.vaccine_opti import (
     get_decision_vars_names,
-    initialise_opti_object
+    initialise_opti_object,
+    create_scenario_yml_file
 )
 
 import numpy as np
@@ -20,6 +21,8 @@ def run_sample_code():
         _sum = sum(sample)
         decision_vars += [s/_sum for s in sample]
     decision_vars.append(np.random.uniform(low=0., high=1.))
+
+    # create_scenario_yml_file(COUNTRY, decision_vars, sc_index=6)
 
     # Evaluate objective function
     [total_deaths, max_hospital, relaxation] = opti_object.evaluate_objective(decision_vars)

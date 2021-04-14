@@ -7,10 +7,11 @@ from datetime import datetime
 from typing import Callable, Dict, List
 
 import yaml
+from summer.derived_outputs import DerivedOutputRequest
 
 from autumn import db
 from autumn.utils.params import load_params, load_targets
-from autumn.utils.scenarios import Scenario, calculate_differential_outputs
+from autumn.utils.scenarios import Scenario, calculate_differential_outputs, get_scenario_start_index
 from autumn.utils.utils import get_git_branch, get_git_hash
 from settings import OUTPUT_DATA_PATH
 from utils.timer import Timer
@@ -146,6 +147,20 @@ class AppRegion:
 
         models = [s.model for s in scenarios]
         calculate_differential_outputs(models, self.targets)
+
+        # Adjust cumulative outputs to start at baseline value rather than 0
+        baseline = scenarios[0]
+        # FIXME: Accessing private member of model class; prefer not to modify summer code just for this
+        cum_out_keys = [k for k, req in baseline.model._derived_output_requests.items() if req['request_type'] == DerivedOutputRequest.CUMULATIVE]
+
+        for scenario in scenarios[1:]:
+            baseline_start_index = get_scenario_start_index(baseline.model.times, scenario.model.times[0])
+
+            for output_key in cum_out_keys:
+                baseline_offset = baseline.model.derived_outputs[output_key][baseline_start_index]
+                scenario.model.derived_outputs[output_key] += baseline_offset
+
+        #Build and store outputs
         outputs_df = db.store.build_outputs_table(models, run_id=run_id, chain_id=chain_id)
         derived_outputs_df = db.store.build_derived_outputs_table(models, run_id=run_id, chain_id=chain_id)
 

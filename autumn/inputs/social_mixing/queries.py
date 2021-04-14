@@ -12,7 +12,9 @@ MAPPING_ISO_CODE = {
 
 # Cache result beecause this gets called 1000s of times during calibration.
 @lru_cache(maxsize=None)
-def get_country_mixing_matrix(mixing_location: str, country_iso_code: str):
+def get_country_mixing_matrix(
+    mixing_location: str, country_iso_code: str, mix_matrix="social_mixing"
+):
     """
     Load a mixing matrix for a given country and mixing location.
     The rows and columns indices of each matrix represent a 5 year age bracket from 0-80,
@@ -24,7 +26,7 @@ def get_country_mixing_matrix(mixing_location: str, country_iso_code: str):
 
     input_db = get_input_db()
     mix_df = input_db.query(
-        "social_mixing",
+        mix_matrix,
         columns=[f"X{n}" for n in range(1, 17)],
         conditions={
             "iso3": country_iso_code,
@@ -37,7 +39,10 @@ def get_country_mixing_matrix(mixing_location: str, country_iso_code: str):
 
 
 def get_mixing_matrix_specific_agegroups(
-    country_iso_code: str, requested_age_breaks: list, time_unit="days"
+    country_iso_code: str,
+    requested_age_breaks: list,
+    time_unit="days",
+    mix_matrix="social_mixing",
 ):
     """
     Build an age-specific mixing matrix using any age categories
@@ -53,7 +58,7 @@ def get_mixing_matrix_specific_agegroups(
         "days",
         "years",
     ], "The requested time-unit must be either 'days' or 'years'"
-    original_matrix = get_country_mixing_matrix("all_locations", country_iso_code)
+    original_matrix = get_country_mixing_matrix("all_locations", country_iso_code, mix_matrix)
     original_age_breaks = [i * 5.0 for i in range(16)]
     original_populations = get_population_by_agegroup(
         original_age_breaks, country_iso_code, year=2015  # 2015 to match Prem estimates

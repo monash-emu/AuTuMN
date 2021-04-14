@@ -1,13 +1,15 @@
-accum_deaths_dispersion_param: 3.039270959785619
-clinical_stratification.props.hospital.multiplier: 1.023501337630998
-clinical_stratification.props.symptomatic.multiplier: 1.3174070585519764
-contact_rate: 0.031
-icu_occupancy_dispersion_param: 3.6908646972259604
-infection_fatality.multiplier: 1.5
-infectious_seed: 1 #85.76319032102633
-mobility.microdistancing.behaviour.parameters.max_effect: 0.1 # .16 #0.14712169960180452
-notifications_dispersion_param: 2.4140586612550354
-sojourn.compartment_periods_calculated.active.total_period: 6.2387198384197085
-sojourn.compartment_periods_calculated.exposed.total_period: 3.4695437547804238
-testing_to_detection.assumed_cdr_parameter: .02  #0.10954463222840684
-voc_emmergence.final_proportion: 0.0
+accum_deaths_dispersion_param: 3.8773605018783823
+clinical_stratification.props.hospital.multiplier: 0.9338872610266398
+clinical_stratification.props.symptomatic.multiplier: 1.3462690354467315
+contact_rate: 0.022739500009201784
+icu_occupancy_dispersion_param: 2.8877465051889613
+infection_fatality.multiplier: 1.4211991699810722
+infectious_seed: 46.31844655681356
+mobility.microdistancing.behaviour.parameters.max_effect: 0.10295540440156241
+mobility.microdistancing.behaviour_adjuster.parameters.inflection_time: 424.9835673607258
+mobility.microdistancing.behaviour_adjuster.parameters.lower_asymptote: 0.9711363935676619
+notifications_dispersion_param: 3.419752158273172
+sojourn.compartment_periods_calculated.active.total_period: 7.591200841295983
+sojourn.compartment_periods_calculated.exposed.total_period: 6.95162056202483
+testing_to_detection.assumed_cdr_parameter: 0.025789103149374812
+voc_emmergence.end_time: 731

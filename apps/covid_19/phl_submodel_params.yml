@@ -46,9 +46,18 @@ mobility:
         - school
         - work
         - home
+  mixing:
+    school:
+      append: false
+      times:
+        - 2020-03-15
+        - 2020-03-16
+      values:
+        - 1.
+        - 0.
 
 voc_emmergence:
-  final_proportion: 0.1
+  final_proportion: 1.
   start_time: 336  # 1 Dec 2020
   end_time: 397  # 31 Jan 2021
   contact_rate_multiplier: 1.56  # LSHTM's estimate

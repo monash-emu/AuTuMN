@@ -6,7 +6,7 @@ from autumn import db, plots
 from settings import REMOTE_BASE_DIR
 from tasks.full import FULL_RUN_DATA_DIR
 from tasks.utils import get_app_region
-from utils.s3 import download_from_run_s3, list_s3, upload_to_run_s3
+from utils.s3 import download_from_run_s3, list_s3, upload_to_run_s3, get_s3_client
 from utils.timer import Timer
 
 logger = logging.getLogger(__name__)
@@ -20,6 +20,7 @@ POWERBI_COLLATED_PRUNED_PATH = os.path.join(POWERBI_DATA_DIR, "collated-pruned")
 
 
 def powerbi_task(run_id: str, quiet: bool):
+    s3_client = get_s3_client()
 
     # Set up directories for plots and output data.
     with Timer(f"Creating PowerBI directories"):
@@ -31,12 +32,12 @@ def powerbi_task(run_id: str, quiet: bool):
 
     # Find the full model run databases in AWS S3.
     key_prefix = os.path.join(run_id, os.path.relpath(FULL_RUN_DATA_DIR, REMOTE_BASE_DIR))
-    chain_db_keys = list_s3(key_prefix, key_suffix=".feather")
+    chain_db_keys = list_s3(s3_client, key_prefix, key_suffix=".feather")
 
     # Download the full model run databases.
     with Timer(f"Downloading full model run data"):
         for src_key in chain_db_keys:
-            download_from_run_s3(run_id, src_key, quiet)
+            download_from_run_s3(s3_client, run_id, src_key, quiet)
 
     # Remove unnecessary data from each full model run database.
     full_db_paths = db.load.find_db_paths(FULL_RUN_DATA_DIR)
@@ -67,7 +68,7 @@ def powerbi_task(run_id: str, quiet: bool):
 
     # Upload final database to AWS S3
     with Timer(f"Uploading PowerBI data to AWS S3"):
-        upload_to_run_s3(run_id, dest_db_path, quiet)
+        upload_to_run_s3(s3_client, run_id, dest_db_path, quiet)
 
     # Create uncertainty plots
     with Timer(f"Creating uncertainty plots"):
@@ -75,4 +76,4 @@ def powerbi_task(run_id: str, quiet: bool):
 
     # Upload the plots to AWS S3.
     with Timer(f"Uploading plots to AWS S3"):
-        upload_to_run_s3(run_id, POWERBI_PLOT_DIR, quiet)
+        upload_to_run_s3(s3_client, run_id, POWERBI_PLOT_DIR, quiet)

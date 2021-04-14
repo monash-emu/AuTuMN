@@ -77,4 +77,4 @@ def drop_who_data_to_targets(
 
 if __name__ == "__main__":
     for country in Region.MIXING_OPTI_REGIONS:
-        drop_who_data_to_targets(country, data_end_time=275)  # t_max=275 is 1st October 2020
+        drop_who_data_to_targets(country, data_end_time=470)  # t_max=275 is 1st October 2020

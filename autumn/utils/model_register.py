@@ -4,12 +4,13 @@ A tool for application models to register themselves so that they serve a standa
 import logging
 import os
 from datetime import datetime
+from typing import Callable, Dict, List
 
 import yaml
 
 from autumn import db
 from autumn.utils.params import load_params, load_targets
-from autumn.utils.scenarios import Scenario
+from autumn.utils.scenarios import Scenario, calculate_differential_outputs
 from autumn.utils.utils import get_git_branch, get_git_hash
 from settings import OUTPUT_DATA_PATH
 from utils.timer import Timer
@@ -53,6 +54,8 @@ class AppRegion:
     def run_model(self, run_scenarios=True):
         """
         Runs the SUMMER model for the given region, storing the outputs on disk.
+        This is the primary entry point for the App code; clients should use
+        build_and_run_scenarios directly if they have special I/O requirements
         """
         logger.info(f"Running {self.app_name} {self.region_name}...")
         params = self.params
@@ -84,32 +87,74 @@ class AppRegion:
             yaml.dump(metadata, f)
 
         with Timer("Running model scenarios"):
-            num_scenarios = 1 + len(params["scenarios"].keys())
-            scenarios = []
-            for scenario_idx in range(num_scenarios):
-                scenario = Scenario(self._build_model, scenario_idx, params)
-                scenarios.append(scenario)
-
-            # Run the baseline scenario.
-            baseline_scenario = scenarios[0]
-            baseline_scenario.run()
-            baseline_model = baseline_scenario.model
-
-            if not run_scenarios:
-                # Do not run non-baseline models
-                scenarios = scenarios[:1]
-
-            # Run all the other scenarios
-            for scenario in scenarios[1:]:
-                scenario.run(base_model=baseline_model)
+            scenarios = self.build_and_run_scenarios(run_scenarios)
 
         with Timer("Saving model outputs to the database"):
-            models = [s.model for s in scenarios]
             outputs_db = db.FeatherDatabase(output_db_path)
-            outputs_df = db.store.build_outputs_table(models, run_id=0)
-            derived_outputs_df = db.store.build_derived_outputs_table(models, run_id=0)
-            outputs_db.dump_df(db.store.Table.OUTPUTS, outputs_df)
-            outputs_db.dump_df(db.store.Table.DERIVED, derived_outputs_df)
+            all_outputs = self.process_scenario_outputs(scenarios)
+            db.store.save_model_outputs(outputs_db, **all_outputs)
+
+    def build_and_run_scenarios(self, run_scenarios=True, update_func: Callable[[dict], dict]=None) -> List[Scenario]:
+        """
+        Construct and run the scenarios (as specified in self.params["scenarios"]), and return
+        the list of Scenario objects on completion
+
+        Args:
+            run_scenarios: Switch specifying whether to run all scenarios (or if False, only the baseline)
+            update_func: Optional function to update the parameter set for each run
+
+        Returns:
+            List of constructed scenarios, whose .model members will contain the output data of the run
+
+        """
+
+        params = self.params
+
+        num_scenarios = 1 + len(params["scenarios"].keys())
+        scenarios = []
+        for scenario_idx in range(num_scenarios):
+            scenario = Scenario(self._build_model, scenario_idx, params)
+            scenarios.append(scenario)
+
+        # Run the baseline scenario.
+        baseline_scenario = scenarios[0]
+        baseline_scenario.run(update_func=update_func)
+        baseline_model = baseline_scenario.model
+
+        if not run_scenarios:
+            # Do not run non-baseline models
+            scenarios = scenarios[:1]
+
+        # Run all the other scenarios
+        for scenario in scenarios[1:]:
+            scenario.run(base_model=baseline_model, update_func=update_func)
+
+        return scenarios
+
+    def process_scenario_outputs(self, scenarios: List[Scenario], run_id: int=0, chain_id: int=None) -> dict:
+        """Do any required postprocessing of scenario outputs (particularly those that require comparison
+        to baseline)
+        
+        Args:
+            scenarios (List[Scenario]): List of (run) scenarios, as returned from build_and_run_scenarios
+            run_id (int, optional): Required for multiple (usually remote) runs, not required for single local runs
+            chain_id (int, optional): Used by MCMC runs, not required for single runs
+        
+        Returns:
+            dict: Dict whose keys are our expected table names, and values are the (processed) DataFrames
+        """
+
+        models = [s.model for s in scenarios]
+        calculate_differential_outputs(models, self.targets)
+        outputs_df = db.store.build_outputs_table(models, run_id=run_id, chain_id=chain_id)
+        derived_outputs_df = db.store.build_derived_outputs_table(models, run_id=run_id, chain_id=chain_id)
+
+        processed_out = {
+            db.store.Table.OUTPUTS: outputs_df,
+            db.store.Table.DERIVED: derived_outputs_df
+        }
+
+        return processed_out
 
 
 class App:

@@ -2,21 +2,21 @@ description: Scenario 1, max mobility last 6 months
 parent: apps/covid_19/regions/penang/params/default.yml
 
 time:
-  start: 447
+  start: 457
 
 mobility:
   mixing:
     other_locations:
       append: true
       times:
-        - 2020-03-22
+        - 2020-04-01
       values:
         - - max_last_period
           - 180
     work:
       append: true
       times:
-        - 2020-03-22
+        - 2020-04-01
       values:
         - - max_last_period
           - 180

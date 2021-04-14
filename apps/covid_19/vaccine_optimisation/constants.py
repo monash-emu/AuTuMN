@@ -1,6 +1,6 @@
 SCENARIO_START_TIME = 457
 PHASE_2_DURATION = 3 * 30
-PHASE_3_DURATION = 24 * 30  # can be adjusted but please keep this >= 12 * 30
+PHASE_3_DURATION = 24 * 30  # can be adjusted but please keep this >= 9 * 30
 SEVERITY_EFFICACY = 0.
 INFECTION_EFFICACY = 0.7
 TOTAL_DAILY_DOSES = {

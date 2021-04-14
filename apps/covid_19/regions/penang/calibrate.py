@@ -8,7 +8,7 @@ from autumn.region import Region
 from autumn.utils.params import load_targets
 
 targets = load_targets("covid_19", Region.PENANG)
-notifications = truncate_targets_from_time(targets["notifications"], 291)
+notifications = truncate_targets_from_time(targets["notifications"], 290)
 
 TARGET_OUTPUTS = [
     {
@@ -26,7 +26,7 @@ PAR_PRIORS += [
     {
         "param_name": "contact_rate",
         "distribution": "uniform",
-        "distri_params": [0.025, 0.042],
+        "distri_params": [0.02, 0.05],
     },
     {
         "param_name": "infectious_seed",

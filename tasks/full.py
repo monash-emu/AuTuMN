@@ -7,13 +7,12 @@ from autumn import db
 from autumn.db.database import get_database
 from autumn.db.store import Table
 from autumn.utils.params import update_params
-from autumn.utils.scenarios import Scenario, calculate_differential_outputs
 from settings import REMOTE_BASE_DIR
 from tasks.calibrate import CALIBRATE_DATA_DIR
 from tasks.utils import get_app_region, set_logging_config
 from utils.fs import recreate_dir
 from utils.parallel import run_parallel_tasks
-from utils.s3 import download_from_run_s3, list_s3, upload_to_run_s3
+from utils.s3 import download_from_run_s3, list_s3, upload_to_run_s3, get_s3_client
 from utils.timer import Timer
 
 logger = logging.getLogger(__name__)
@@ -27,15 +26,17 @@ def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool
     # Set up directories for output data.
     recreate_dir(FULL_RUN_DATA_DIR)
 
+    s3_client = get_s3_client()
+
     # Find the calibration chain databases in AWS S3.
     key_prefix = os.path.join(run_id, os.path.relpath(CALIBRATE_DATA_DIR, REMOTE_BASE_DIR))
-    chain_db_keys = list_s3(key_prefix, key_suffix=".parquet")
+    chain_db_keys = list_s3(s3_client, key_prefix, key_suffix=".parquet")
     chain_db_keys = [k for k in chain_db_keys if any([t in k for t in TABLES_TO_DOWNLOAD])]
 
     # Download the calibration chain databases.
     with Timer(f"Downloading calibration data"):
         for src_key in chain_db_keys:
-            download_from_run_s3(run_id, src_key, quiet)
+            download_from_run_s3(s3_client, run_id, src_key, quiet)
 
     # Run the models for the full time period plus all scenarios.
     db_paths = db.load.find_db_paths(CALIBRATE_DATA_DIR)
@@ -52,7 +53,7 @@ def full_model_run_task(run_id: str, burn_in: int, sample_size: int, quiet: bool
     db_paths = db.load.find_db_paths(FULL_RUN_DATA_DIR)
     with Timer(f"Uploading full model run data to AWS S3"):
         for db_path in db_paths:
-            upload_to_run_s3(run_id, db_path, quiet)
+            upload_to_run_s3(s3_client, run_id, db_path, quiet)
 
 
 def run_full_model_for_chain(
@@ -158,38 +159,21 @@ def run_full_model_for_chain(
             param_updates = db.load.load_mcmc_params(dest_db, run_id)
             update_func = lambda ps: update_params(ps, param_updates)
             with Timer("Running model scenarios"):
-                num_scenarios = 1 + len(app_region.params["scenarios"].keys())
-                scenarios = []
-                for scenario_idx in range(num_scenarios):
-                    scenario = Scenario(app_region.build_model, scenario_idx, app_region.params)
-                    scenarios.append(scenario)
-
-                # Run the baseline scenario.
-                baseline_scenario = scenarios[0]
-                baseline_scenario.run(update_func=update_func)
-                baseline_model = baseline_scenario.model
-
-                # Run all the other scenarios
-                for scenario in scenarios[1:]:
-                    scenario.run(base_model=baseline_model, update_func=update_func)
+                scenarios = app_region.build_and_run_scenarios(update_func=update_func)
 
             run_id = int(run_id)
             chain_id = int(chain_id)
 
             with Timer("Processing model outputs"):
-                models = [s.model for s in scenarios]
-                models = calculate_differential_outputs(models, app_region.targets)
-                outputs_df = db.store.build_outputs_table(models, run_id, chain_id)
-                derived_outputs_df = db.store.build_derived_outputs_table(models, run_id, chain_id)
-                outputs.append(outputs_df)
-                derived_outputs.append(derived_outputs_df)
+                processed_outputs = app_region.process_scenario_outputs(scenarios, run_id, chain_id)
+                outputs.append(processed_outputs[Table.OUTPUTS])
+                derived_outputs.append(processed_outputs[Table.DERIVED])
 
         with Timer("Saving model outputs to the database"):
-            outputs_df = pd.concat(outputs, copy=False, ignore_index=True)
-            derived_outputs_df = pd.concat(derived_outputs, copy=False, ignore_index=True)
-            dest_db.dump_df(Table.OUTPUTS, outputs_df)
-            dest_db.dump_df(Table.DERIVED, derived_outputs_df)
-            dest_db.dump_df(Table.MCMC, mcmc_run_df)
+            final_outputs = {}
+            final_outputs[Table.OUTPUTS] = pd.concat(outputs, copy=False, ignore_index=True)
+            final_outputs[Table.DERIVED] = pd.concat(derived_outputs, copy=False, ignore_index=True)
+            db.store.save_model_outputs(dest_db, **final_outputs)
 
     except Exception:
         logger.exception("Full model run for chain %s failed", chain_id)

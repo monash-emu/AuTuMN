@@ -1,7 +1,6 @@
 import glob
 import logging
 import os
-from pathlib import PurePath
 
 import boto3
 from boto3.s3.transfer import TransferConfig
@@ -102,8 +101,6 @@ def upload_to_run_s3(client, run_id: str, src_path: str, quiet: bool):
 
 def list_s3(client, key_prefix: str, key_suffix: str):
     """Returns the item keys in a path in AWS S3"""
-
-    key_prefix = PurePath(key_prefix).as_posix()
     response = client.list_objects_v2(Bucket=settings.S3_BUCKET, Prefix=key_prefix)
     objs = response["Contents"]
     is_truncated = response["IsTruncated"]

@@ -43,9 +43,7 @@ def get_immunity_strat(params: Parameters) -> Stratification:
         symptomatic_adjuster = (
             params.clinical_stratification.props.symptomatic.multiplier * relative_severity_effect
         )
-        hospital_adjuster = (
-            params.clinical_stratification.props.hospital.multiplier * relative_severity_effect
-        )
+        hospital_adjuster = params.clinical_stratification.props.hospital.multiplier
         ifr_adjuster = params.infection_fatality.multiplier * relative_severity_effect
 
         # Get all the adjustments in the same way as we did for the clinical stratification

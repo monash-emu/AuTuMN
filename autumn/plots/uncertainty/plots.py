@@ -209,6 +209,7 @@ def plot_multi_output_timeseries_with_uncertainty(
         multi_panel_vlines=(),
         multi_panel_hlines=(),
 ):
+    pyplot.style.use("ggplot")
     if len(output_names) * len(scenarios) == 0:
         return
     # pyplot.rcParams.update({'font.size': 15})

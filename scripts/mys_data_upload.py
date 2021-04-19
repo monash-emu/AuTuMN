@@ -227,7 +227,7 @@ def load_mys():
     )
     case_df.drop(
         columns=[
-            "Active cases (hospitalised) including ICU (C)",
+            "Active cases including ICU (C)",
             "Active cases exclude ICU (D = C - E)",
             "Ventilator Usage (F)",
             "percentage ICU usage",

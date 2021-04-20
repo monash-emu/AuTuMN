@@ -51,9 +51,12 @@ def get_vacc_roll_out_function_from_doses(
 
         compartment_size = sum([compartment_values[i] for i in num_indices])
         total_eligible_pop_size = sum([compartment_values[i] for i in deno_indices])
-        nb_vaccinated = compartment_size / total_eligible_pop_size * time_variant_supply(time)
+        if total_eligible_pop_size > .1:
+            nb_vaccinated = compartment_size / total_eligible_pop_size * time_variant_supply(time)
+        else:
+            nb_vaccinated = 0.
 
-        return min(nb_vaccinated, compartment_size)
+        return max(0, min(nb_vaccinated, compartment_size))
 
     return net_flow_func
 

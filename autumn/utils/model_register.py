@@ -148,14 +148,16 @@ class AppRegion:
         models = [s.model for s in scenarios]
         calculate_differential_outputs(models, self.targets)
 
-        # Adjust cumulative outputs to start at baseline value rather than 0
+        # Adjustments for scenario outputs to align with baseline
         baseline = scenarios[0]
         # FIXME: Accessing private member of model class; prefer not to modify summer code just for this
-        cum_out_keys = [k for k, req in baseline.model._derived_output_requests.items() if req['request_type'] == DerivedOutputRequest.CUMULATIVE]
+        cum_out_keys = [k for k, req in baseline.model._derived_output_requests.items() \
+            if req['request_type'] == DerivedOutputRequest.CUMULATIVE and req['save_results'] == True]
 
         for scenario in scenarios[1:]:
             baseline_start_index = get_scenario_start_index(baseline.model.times, scenario.model.times[0])
 
+            # Adjust cumulative outputs to start at baseline value rather than 0
             for output_key in cum_out_keys:
                 baseline_offset = baseline.model.derived_outputs[output_key][baseline_start_index]
                 scenario.model.derived_outputs[output_key] += baseline_offset

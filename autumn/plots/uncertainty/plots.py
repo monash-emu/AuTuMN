@@ -69,17 +69,41 @@ def plot_timeseries_with_uncertainty(
     if sc_colors is None:
         n_scenarios_to_plot = min([len(scenario_idxs), len(COLORS)])
         colors = _apply_transparency(COLORS[:n_scenarios_to_plot], ALPHAS[:n_scenarios_to_plot])
+    else:
+        colors = sc_colors
+
+    # If we can map particular scenario IDs to particular colours, we should try to do so
+    #use_index_color_map = True
+
+    #max_sc_idx = max(scenario_idxs[:n_scenarios_to_plot])
+    #if max_sc_idx >= len(colors):
+    #    use_index_color_map = False
 
     # Plot each scenario on a single axis
     data_to_return = {}
     for i, scenario_idx in enumerate(scenario_idxs[:n_scenarios_to_plot]):
-        if sc_colors is None:
-            if scenario_idx < len(colors):
-                scenario_colors = colors[scenario_idx]
-            else:
-                scenario_colors = colors[-1]
-        else:
-            scenario_colors = sc_colors[i]
+
+        #+++
+        # Retain these commented blocks just so we can see the original intentions
+        # when we come to refactor...
+        #if sc_colors is None:
+        #    if scenario_idx < len(colors):
+        #        scenario_colors = colors[scenario_idx]
+        #    else:
+        #        scenario_colors = colors[-1]
+        #else:
+        #    scenario_colors = sc_colors[i]
+
+        #if use_index_color_map:
+        #    scenerio_colors = colors[scenario_idx]
+        #else:
+        #    scenario_colors = colors[i]
+
+        #FIXME:
+        #This basically ignores all the other colour mapping functionality, but
+        #works reliably; this module really requires a refactor, so it's not worth
+        #trying to fix the other bits right now...
+        scenario_colors = colors[i]
 
         times, quantiles = _plot_uncertainty(
             axis,

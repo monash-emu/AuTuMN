@@ -52,7 +52,7 @@ PLOT_TEXT_DICT = {
     "victorian_clusters.metro.mobility.microdistancing.face_coverings_adjuster.parameters.effect": "face coverings",
 }
 
-ALPHAS = (1.0, 0.6, 0.4, 0.3, 0.2, 0.15, 0.1, 0.08)
+ALPHAS = (1.0, 0.6, 0.4, 0.3, 0.2, 0.15, 0.1, 0.08, 0.05)
 # https://matplotlib.org/3.1.0/gallery/color/named_colors.html
 COLORS = (
     # Blues
@@ -169,11 +169,20 @@ def add_horizontal_lines_to_plot(axis, lines: Dict):
 
 def _apply_transparency(color_list: List[str], alphas: List[str]):
     """Make a list of colours transparent, based on a list of alphas"""
+
+    #+++FIXME
+    #This will fail if len(color_list) > len(alphas)
+    #Should move to generative colours rather than fixed lists
+
+    out_colors = []
+
     for i in range(len(color_list)):
+        out_colors.append([])
         for j in range(len(color_list[i])):
             rgb_color = list(colors.colorConverter.to_rgb(color_list[i][j]))
-            color_list[i][j] = rgb_color + [alphas[i]]
-    return color_list
+            out_colors[i].append(rgb_color + [alphas[i]])
+    
+    return out_colors
 
 
 def _plot_targets_to_axis(axis, values: List[float], times: List[int], on_uncertainty_plot=False):

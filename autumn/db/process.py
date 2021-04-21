@@ -79,12 +79,17 @@ def select_pruning_candidates(src_db_path: str, n_candidates: int) -> pd.DataFra
 
     all_accepted = all_mcmc_df[all_mcmc_df["accept"]==1]
 
-    # Sample random candidates
-    candidates = random.sample(list(all_accepted.index), k = n_candidates-1)
-
-    # Find and append the MLE candidate
+    # Find the MLE candidate
     max_ll = all_accepted["loglikelihood"].max()
     max_ll_candidate = all_accepted[all_accepted["loglikelihood"] == max_ll].iloc[0].name
+
+    # Sample random candidates
+    possible_candidates = list(all_accepted.index)
+    possible_candidates.remove(max_ll_candidate)
+
+    candidates = random.sample(possible_candidates, k = n_candidates-1)
+
+    # Ensure we have the max likelihood candidate
     candidates.append(max_ll_candidate)
 
     candidates_df = all_accepted.loc[candidates]

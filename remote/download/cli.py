@@ -9,7 +9,7 @@ import click
 
 from settings import OUTPUT_DATA_PATH
 from utils.runs import read_run_id
-from utils.s3 import download_from_s3, list_s3
+from utils.s3 import download_from_s3, list_s3, get_s3_client
 from utils.timer import Timer
 
 
@@ -39,10 +39,11 @@ def download_full_model(run_id: str):
 def _download_run(run_id: str, src_dir_key: str, dest_dir_key: str):
     msg = f'Could not read run ID {run_id}, use format "{{app}}/{{region}}/{{timestamp}}/{{commit}}" - exiting'
     assert len(run_id.split("/")) == 4, msg
+    s3_client = get_s3_client()
     key_prefix = os.path.join(run_id, src_dir_key).replace("\\", "/")
     with Timer(f"Finding data for run {run_id}"):
-        chain_db_keys_feather = list_s3(key_prefix, key_suffix=".feather")
-        chain_db_keys_parquet = list_s3(key_prefix, key_suffix=".parquet")
+        chain_db_keys_feather = list_s3(s3_client, key_prefix, key_suffix=".feather")
+        chain_db_keys_parquet = list_s3(s3_client, key_prefix, key_suffix=".parquet")
         chain_db_keys = chain_db_keys_feather + chain_db_keys_parquet
 
     app_name, region_name, timestamp, _ = read_run_id(run_id)
@@ -60,4 +61,4 @@ def _download_run(run_id: str, src_dir_key: str, dest_dir_key: str):
             os.makedirs(dest_dir, exist_ok=True)
             dest_path = os.path.join(dest_dir, file_name)
             with Timer(f"Downloading {chain_name} table {file_name}"):
-                download_from_s3(key, dest_path, quiet=True)
+                download_from_s3(s3_client, key, dest_path, quiet=True)

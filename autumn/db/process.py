@@ -9,6 +9,7 @@ import pandas as pd
 import random
 
 from autumn.db.database import BaseDatabase, get_database
+from autumn.db.load import load_mcmc_tables
 from autumn.utils.params import load_params, load_targets
 from utils.runs import read_run_id
 
@@ -75,7 +76,7 @@ def select_pruning_candidates(src_db_path: str, n_candidates: int) -> pd.DataFra
     # Could possibly use selection routine from sample_outputs_for_calibration_fit
 
     # Load all MCMC run data to select from
-    all_mcmc_df = pd.concat(db.load.load_mcmc_tables(src_db_path), ignore_index=True)
+    all_mcmc_df = pd.concat(load_mcmc_tables(src_db_path), ignore_index=True)
 
     all_accepted = all_mcmc_df[all_mcmc_df["accept"]==1]
 

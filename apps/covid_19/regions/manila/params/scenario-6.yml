@@ -1,52 +1,38 @@
-description: 2-week MECQ from 5-18 Apr
+description: MECQ extension until 16 May, then GCQ
 mobility:
   mixing:
     other_locations:
-      append: true
+      append: false
       times:
-      - 2021-04-04
-      - 2021-04-05
-      - 2021-04-18
-      - 2021-04-19
+      - 2020-04-30
+      - 2020-05-16
+      - 2020-06-20
       values:
-      - 0.2  # ECQ Other Locations mobility based on April 2020
-      - 0.4  # MECQ Other Locations mobility based on Aug 4-18 2020
+      - 0.4  # MECQ
       - 0.4
-      - 0.52  # back to 26/3 mobility
+      - 0.55  # back to GCQ
     work:
-      append: true
+      append: false
       times:
-      - 2021-04-04
-      - 2021-04-05
-      - 2021-04-18
-      - 2021-04-19
+      - 2020-04-30
+      - 2020-05-16
+      - 2020-06-20
       values:
-      - 0.2  # ECQ Work mobility based on April 2020
-      - 0.4  # MECQ Work mobility based on Aug 4-18 2020
+      - 0.4  # ECQ Work mobility based on April 2020
       - 0.4
-      - 0.55  # back to 26/3 mobility
+      - 0.6  # back to GCQ+
   microdistancing:
     behaviour:
       parameters:
         times:
-        - 75  # copy default values
-        - 314 # copy default values
-        - 446 # 21/3
-        - 447 # 22/3 GCQ+ starts
-        - 453 # 28/3 GCQ+ ends
-        - 454 # ECQ starts 29/3
-        - 474 # ECQ ends
-        - 475 #
+        - 490  # Overwrite baseline change that ended MECQ
+        - 502  # MECQ ends 16 May
+        - 506  # GCQ
         values:
-        - 0.
-        - 1.
-        - 1.0
-        - 1.3
-        - 1.3
-        - 2.
+        - 2.  # assumed MECQ MHS compliance
         - 2.
         - 1.3
 
 parent: apps/covid_19/regions/manila/params/default.yml
 time:
-  start: 438
+  start: 486

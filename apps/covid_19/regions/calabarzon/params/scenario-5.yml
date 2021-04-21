@@ -33,6 +33,6 @@ mobility:
         - 2.
         - 1.3
 
-parent: apps/covid_19/regions/manila/params/default.yml
+parent: apps/covid_19/regions/calabarzon/params/default.yml
 time:
   start: 486

@@ -1,12 +1,12 @@
 description: 65% coverage / 70% efficacy / infection-preventing vaccine
 parent: apps/covid_19/regions/calabarzon/params/default.yml
 time:
-  start: 438
+  start: 486
 vaccination:
   infection_efficacy: 0.7
   roll_out_components:
   - supply_period_coverage:
       coverage: 0.65
-      end_time: 710
-      start_time: 440
+      end_time: 756
+      start_time: 486
   severity_efficacy: 0.0

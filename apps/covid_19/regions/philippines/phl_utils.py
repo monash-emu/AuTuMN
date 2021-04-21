@@ -6,7 +6,7 @@ import yaml
 
 from autumn.region import Region
 
-SCENARIO_START_TIME = 440  # 15 Mar 2021
+SCENARIO_START_TIME = 486  # 30 Apr 2021
 
 BACK_TO_NORMAL_FRACTIONS = []
 MHS_REDUCTION_FRACTIONS = []
@@ -77,7 +77,7 @@ def write_all_phl_scenarios(scenario_start_time=SCENARIO_START_TIME):
 def initialise_sc_dict(scenario_start_time):
     return {
         "parent": "apps/covid_19/regions/philippines/params/default.yml",
-        "time": {"start": scenario_start_time - 2},
+        "time": {"start": scenario_start_time},
     }
 
 

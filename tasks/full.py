@@ -127,15 +127,19 @@ def run_full_model_for_chain(
         )
 
         logger.info("Burned MCMC runs %s", burned_runs_str)
-        dest_db.dump_df(Table.MCMC, mcmc_run_df)
 
         # Figure out which model runs to actually re-run.
         sampled_run_ids = mcmc_run_df[mcmc_run_df["sampled"] == 1].parent.unique().tolist()
 
         # Also include the MLE
+        logger.info("Including MLE run %s", mle_run_id)
         mle_df = db.process.find_mle_run(mcmc_run_df)
         mle_run_id = mle_df["run"].iloc[0]
-        logger.info("Including MLE run %s", mle_run_id)
+
+        #Update sampled column to reflect inclusion of MLE run
+        mle_run_loc = mcmc_run_df.index[mcmc_run_df["run"]==mle_run_id][0]
+        mcmc_run_df.loc[mle_run_loc, "sampled"] = 1
+
         sampled_run_ids.append(mle_run_id)
         sampled_run_ids = sorted(list(set(sampled_run_ids)))
         logger.info(
@@ -173,6 +177,7 @@ def run_full_model_for_chain(
             final_outputs = {}
             final_outputs[Table.OUTPUTS] = pd.concat(outputs, copy=False, ignore_index=True)
             final_outputs[Table.DERIVED] = pd.concat(derived_outputs, copy=False, ignore_index=True)
+            final_outputs[Table.MCMC] = mcmc_run_df
             db.store.save_model_outputs(dest_db, **final_outputs)
 
     except Exception:

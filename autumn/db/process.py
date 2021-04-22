@@ -130,7 +130,7 @@ def prune_chain(source_db_path: str, target_db_path: str, chain_candidates: pd.D
         table_df = source_db.query(table_name)
         if table_name == "outputs":
             # Drop everything except the MLE run
-            logger.info("Pruning outputs so that it only contains max likelihood runs")
+            logger.info("Pruning outputs so that it only contains candidate runs")
             candidate_mask = table_df["run"].isin(chain_candidates["run"])
             candidate_table_df = table_df[candidate_mask]
             target_db.dump_df(table_name, candidate_table_df)

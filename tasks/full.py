@@ -132,9 +132,10 @@ def run_full_model_for_chain(
         sampled_run_ids = mcmc_run_df[mcmc_run_df["sampled"] == 1].parent.unique().tolist()
 
         # Also include the MLE
-        logger.info("Including MLE run %s", mle_run_id)
         mle_df = db.process.find_mle_run(mcmc_run_df)
         mle_run_id = mle_df["run"].iloc[0]
+
+        logger.info("Including MLE run %s", mle_run_id)
 
         #Update sampled column to reflect inclusion of MLE run
         mle_run_loc = mcmc_run_df.index[mcmc_run_df["run"]==mle_run_id][0]

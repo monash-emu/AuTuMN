@@ -41,7 +41,7 @@ def powerbi_task(run_id: str, quiet: bool):
 
     # Select candidates for display in final db
     n_candidates = 10
-    candidates_df = db.process.select_pruning_candidates(db_path, n_candidates)
+    candidates_df = db.process.select_pruning_candidates(FULL_RUN_DATA_DIR, n_candidates)
 
     # Remove unnecessary data from each full model run database.
     full_db_paths = db.load.find_db_paths(FULL_RUN_DATA_DIR)

@@ -39,12 +39,18 @@ def powerbi_task(run_id: str, quiet: bool):
         for src_key in chain_db_keys:
             download_from_run_s3(s3_client, run_id, src_key, quiet)
 
+    # Select candidates for display in final db
+    n_candidates = 10
+    candidates_df = db.process.select_pruning_candidates(db_path, n_candidates)
+
     # Remove unnecessary data from each full model run database.
     full_db_paths = db.load.find_db_paths(FULL_RUN_DATA_DIR)
     with Timer(f"Pruning chain databases"):
         get_dest_path = lambda p: os.path.join(POWERBI_PRUNED_DIR, os.path.basename(p))
         for full_db_path in full_db_paths:
-            db.process.prune_chain(full_db_path, get_dest_path(full_db_path))
+            chain_id = int(full_db_path.split('-')[-1])
+            chain_candidates = candidates_df[candidates_df["chain"] == chain_id]
+            db.process.prune_chain(full_db_path, get_dest_path(full_db_path), chain_candidates)
 
     # Collate data from each pruned full model run database into a single database.
     pruned_db_paths = db.load.find_db_paths(POWERBI_PRUNED_DIR)
@@ -58,7 +64,7 @@ def powerbi_task(run_id: str, quiet: bool):
 
     # Remove unnecessary data from the database.
     with Timer(f"Pruning final database"):
-        db.process.prune_final(POWERBI_COLLATED_PATH, POWERBI_COLLATED_PRUNED_PATH)
+        db.process.prune_final(POWERBI_COLLATED_PATH, POWERBI_COLLATED_PRUNED_PATH, candidates_df)
 
     # Unpivot database tables so that they're easier to process in PowerBI.
     run_slug = run_id.replace("/", "-")

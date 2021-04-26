@@ -15,7 +15,7 @@ mobility:
       append: false
       times:
       - 2020-04-30
-      - 2020-05-3
+      - 2020-05-03
       values:
       - 0.4  # MECQ Work mobility based on April 2020
       - 0.6

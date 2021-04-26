@@ -265,12 +265,16 @@ def add_standard_philippines_targets(targets):
     # Ignore notification values before day 100
     notifications = ignore_calibration_target_before_date(targets["notifications"], 100)
 
+    n = len(notifications["times"])
+    notification_weights = [1. for _ in range(n - 60)] + [5. for _ in range(60)]  # last 60 days are weighted
+
     return [
         {
             "output_key": "notifications",
             "years": notifications["times"],
             "values": notifications["values"],
             "loglikelihood_distri": "negative_binomial",
+            "time_weights": notification_weights
         },
         {
             "output_key": "icu_occupancy",

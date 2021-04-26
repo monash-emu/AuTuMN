@@ -15,6 +15,7 @@ from .pipelines import powerbi as powerbi_pipeline
 from .pipelines import trigger_europe as trigger_europe_pipeline
 from .pipelines import trigger_philippines as trigger_philippines_pipeline
 from .pipelines import trigger_victoria as trigger_victoria_pipeline
+from .pipelines import trigger_malaysia as trigger_malaysia_pipeline
 
 logger = logging.getLogger(__name__)
 
@@ -36,6 +37,7 @@ def update():
         trigger_philippines_pipeline.pipeline,
         trigger_victoria_pipeline.pipeline,
         trigger_europe_pipeline.pipeline,
+        trigger_malaysia_pipeline.pipeline
     ]
     for pipeline in pipelines:
         pipeline.save()
@@ -196,6 +198,16 @@ def trigger_philippines():
     """
     logger.info("Triggering all Philippines regional calibrations.")
     _trigger_models(Region.PHILIPPINES_REGIONS, trigger_philippines_pipeline)
+
+
+@trigger.command("malaysia")
+def trigger_malaysia():
+    """
+    Trigger all Malaysia models
+    """
+    logger.info("Triggering all Malaysia regional calibrations.")
+    _trigger_models(Region.MALAYSIA_REGIONS, trigger_malaysia_pipeline)
+
 
 
 def _trigger_models(regions, p):

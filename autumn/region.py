@@ -61,7 +61,6 @@ class Region:
 
     MALAYSIA_REGIONS = [
         MALAYSIA,
-        SABAH,
         SELANGOR,
         JOHOR,
         PENANG,

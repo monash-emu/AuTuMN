@@ -1,4 +1,4 @@
-description: MECQ extension until 16 May, then GCQ
+description: MECQ extension until 16 May, then GCQ (70% onsite work)
 mobility:
   mixing:
     other_locations:
@@ -15,12 +15,10 @@ mobility:
       append: false
       times:
       - 2020-04-30
-      - 2020-05-16
-      - 2020-06-20
+      - 2020-05-3
       values:
-      - 0.4  # ECQ Work mobility based on April 2020
-      - 0.4
-      - 0.6  # back to GCQ+
+      - 0.4  # MECQ Work mobility based on April 2020
+      - 0.7
   microdistancing:
     behaviour:
       parameters:

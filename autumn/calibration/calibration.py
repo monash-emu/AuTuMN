@@ -213,7 +213,8 @@ class Calibration:
             else:
                 if "loglikelihood_distri" not in target:  # default distribution
                     target["loglikelihood_distri"] = "normal"
-                if target["loglikelihood_distri"] == "normal":
+                if target["loglikelihood_distri"] in ["normal", "trunc_normal"]:
+                    # Retrieve the value of the standard deviation
                     if key + "_dispersion_param" in self.param_list:
                         normal_sd = params[self.param_list.index(key + "_dispersion_param")]
                     elif "target_output_ratio" in self.param_list:
@@ -222,10 +223,21 @@ class Calibration:
                         )
                     else:
                         normal_sd = target["sd"]
-                    squared_distance = (data - model_output) ** 2
-                    ll += -(0.5 / normal_sd ** 2) * np.sum(
-                        [w * d for (w, d) in zip(time_weigths, squared_distance)]
-                    )
+
+                    if target["loglikelihood_distri"] == "normal":
+                        squared_distance = (data - model_output) ** 2
+                        ll += -(0.5 / normal_sd ** 2) * np.sum(
+                            [w * d for (w, d) in zip(time_weigths, squared_distance)]
+                        )
+                    else:  # this is a truncated normal likelihood
+                        for i in range(len(data)):
+                            ll += stats.truncnorm.logpdf(
+                                x=data[i],
+                                a=target["trunc_range"][0],
+                                b=target["trunc_range"][1],
+                                loc=model_output[i],
+                                scale=normal_sd
+                            ) * time_weigths[i]
                 elif target["loglikelihood_distri"] == "poisson":
                     for i in range(len(data)):
                         ll += (

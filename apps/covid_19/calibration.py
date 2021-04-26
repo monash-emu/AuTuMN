@@ -423,16 +423,16 @@ European countries for the optimisation project
 """
 
 
-def get_targets_and_priors_for_opti(country, likelihood_type="normal"):
+def get_targets_and_priors_for_opti(country, likelihood_type="trunc_normal", latest_calibration_time=366):
     targets = load_targets("covid_19", country)
 
     hospital_targets = [t for t in list(targets.keys()) if "hospital" in t or "icu" in t]
     if len(hospital_targets) > 1:
         hospital_targets = [t for t in list(targets.keys()) if "new_" in t]
 
-    notifications = targets["notifications"]
-    deaths = targets["infection_deaths"]
-    hospitalisations = targets[hospital_targets[0]]
+    notifications = truncate_targets_before_time(targets["notifications"], latest_calibration_time)
+    deaths = truncate_targets_before_time(targets["infection_deaths"], latest_calibration_time)
+    hospitalisations = truncate_targets_before_time(targets[hospital_targets[0]], latest_calibration_time)
 
     par_priors = get_prior_distributions_for_opti()
 
@@ -457,6 +457,10 @@ def get_targets_and_priors_for_opti(country, likelihood_type="normal"):
         },
     ]
 
+    if likelihood_type == "trunc_normal":
+        for target in target_outputs:
+            target["trunc_range"] = [0, np.inf]
+
     # Add seroprevalence data except for Italy where the survey occurred a long time after the peak and
     # where there is a high risk of participation bias (individuals in isolation if had a positive antibody test).
     if country != "italy":
@@ -466,12 +470,13 @@ def get_targets_and_priors_for_opti(country, likelihood_type="normal"):
                 "output_key": "proportion_seropositive",
                 "years": prop_seropositive["times"],
                 "values": prop_seropositive["values"],
-                "loglikelihood_distri": "normal",
+                "loglikelihood_distri": "trunc_normal",
+                "trunc_range": [0., 1.],
                 "sd": 0.04,
             }
         )
 
-    if likelihood_type == "normal":
+    if likelihood_type == "trunc_normal":
         par_priors = add_dispersion_param_prior_for_gaussian(par_priors, target_outputs)
     else:
         for output_name in ["notifications", "infection_deaths", hospital_targets[0]]:
@@ -485,4 +490,14 @@ def truncate_targets_from_time(target, time):
     start_index = next(x[0] for x in enumerate(target["times"]) if x[1] > time)
     target["times"] = target["times"][start_index:]
     target["values"] = target["values"][start_index:]
+    return target
+
+
+def truncate_targets_before_time(target, time):
+    if time is None:
+        return target
+    elif time < max(target["times"]):
+        end_index = next(x[0] for x in enumerate(target["times"]) if x[1] > time)
+        target["times"] = target["times"][:end_index]
+        target["values"] = target["values"][:end_index]
     return target

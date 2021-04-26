@@ -33,7 +33,7 @@ def get_history_strat(
 
     # Get the proportion of people in each clinical stratum, relative to total people in compartment.
     clinical_params = params.clinical_stratification
-    symptomatic_props = get_proportion_symptomatic(params)
+    symptomatic_props = get_proportion_symptomatic(clinical_params)
     abs_props = get_absolute_strata_proportions(
         symptomatic_props=symptomatic_props,
         icu_props=clinical_params.icu_prop,

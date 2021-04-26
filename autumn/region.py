@@ -59,6 +59,14 @@ class Region:
         DAVAO_CITY,
     ]
 
+    MALAYSIA_REGIONS = [
+        MALAYSIA,
+        SELANGOR,
+        JOHOR,
+        PENANG,
+        KUALA_LUMPUR,
+    ]
+
     MIXING_OPTI_REGIONS = [
         UNITED_KINGDOM,
         BELGIUM,

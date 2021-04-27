@@ -234,7 +234,7 @@ def plot_autocorrelation(
         if idx == 0:
             axis.set_title(param_name)
         break
-    plotter.save_figure(fig, filename=f"{param_name}-autocorrelation", title_text=f"{param_name}-autocorrelation")
+    plotter.save_figure(fig, filename=f"{param_name}-autocorrelation", title_text="")
 
 
 def plot_multiple_param_traces(
@@ -418,7 +418,7 @@ def plot_posterior(
         axis.plot(x_values, y_values)
 
     plotter.save_figure(
-        fig, filename=f"{param_name}-posterior", title_text=f"{param_name} posterior"
+        fig, filename=f"{param_name}-posterior", title_text=""
     )
 
 

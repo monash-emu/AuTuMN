@@ -70,7 +70,6 @@ def plot_post_calibration(targets: dict, mcmc_dir: str, plot_dir: str, priors: l
     for chosen_param in param_options:
         plots.plot_mcmc_parameter_trace(subplotter, mcmc_params, 0, chosen_param)
 
-
     logger.info("Plotting autocorrelations")
     subplotter = _get_sub_plotter(plot_dir, "autocorrelations")
     for chosen_param in param_options:

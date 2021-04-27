@@ -16,7 +16,7 @@ dict_of_files = {each: os.path.join(DATA_PATH, dict_of_files[each]) for each in 
 df = pd.DataFrame()
 for region in dict_of_files:
     conn = sqlite3.connect(dict_of_files[region])
-    query = "SELECT scenario,times,notifications,incidence,icu_occupancy FROM derived_outputs;"
+    query = "SELECT scenario,times,notifications,incidence,icu_occupancy,hospital_occupancy FROM derived_outputs;"
     if df.empty:
         df = pd.read_sql_query(query, conn)
         df["Region"] = region

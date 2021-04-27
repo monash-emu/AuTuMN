@@ -217,6 +217,26 @@ def plot_mcmc_parameter_trace(
     plotter.save_figure(fig, filename=f"{param_name}-traces", title_text=f"{param_name}-traces")
 
 
+def plot_autocorrelation(
+    plotter: Plotter, mcmc_params: List[pd.DataFrame], burn_in: int, param_name: str
+):
+    """
+    Plot the prameter traces for each MCMC run.
+    """
+    fig, axes, _, n_rows, n_cols, indices = plotter.get_figure(n_panels=len(mcmc_params))
+
+    for idx, table_df in enumerate(mcmc_params):
+        axis = axes[indices[idx][0], indices[idx][1]]
+        param_mask = table_df["name"] == param_name
+        param_df = table_df[param_mask]
+        pd.plotting.autocorrelation_plot(param_df["value"], ax=axis)
+        axis.set_ylabel(f"autocorrelation chain {idx}")
+        axis.set_xlabel("lag")
+        if idx == 0:
+            axis.set_title(param_name)
+    plotter.save_figure(fig, filename=f"{param_name}-autocorrelation", title_text=f"{param_name}-autocorrelation")
+
+
 def plot_multiple_param_traces(
     plotter: Plotter,
     mcmc_params: List[pd.DataFrame],

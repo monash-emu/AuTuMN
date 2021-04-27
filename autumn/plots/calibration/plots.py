@@ -225,8 +225,12 @@ def plot_autocorrelation(
     """
     fig, axes, _, n_rows, n_cols, indices = plotter.get_figure(n_panels=len(mcmc_params))
 
+    i_row, i_col = 0, 0
     for idx, table_df in enumerate(mcmc_params):
-        axis = axes[indices[idx][0], indices[idx][1]]
+        if i_col == n_cols:
+            i_row += 1
+            i_col = 0
+        axis = axes[i_row, i_col]
         param_mask = table_df["name"] == param_name
         param_df = table_df[param_mask]
         pd.plotting.autocorrelation_plot(param_df["value"], ax=axis)
@@ -234,6 +238,8 @@ def plot_autocorrelation(
         axis.set_xlabel("lag")
         if idx == 0:
             axis.set_title(param_name)
+        i_col += 1
+        i_row += 1
     plotter.save_figure(fig, filename=f"{param_name}-autocorrelation", title_text=f"{param_name}-autocorrelation")
 
 

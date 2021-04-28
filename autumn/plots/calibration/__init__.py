@@ -73,7 +73,7 @@ def plot_post_calibration(targets: dict, mcmc_dir: str, plot_dir: str, priors: l
     logger.info("Plotting autocorrelations")
     subplotter = _get_sub_plotter(plot_dir, "autocorrelations")
     for chosen_param in param_options:
-        plots.plot_autocorrelation(subplotter, mcmc_params, 0, chosen_param)
+        plots.plot_autocorrelation(subplotter, mcmc_params, mcmc_tables, 0, chosen_param)
 
     logger.info("Plotting acceptance ratios")
     plots.plot_acceptance_ratio(plotter, mcmc_tables, 0)

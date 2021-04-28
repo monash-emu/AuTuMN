@@ -218,22 +218,25 @@ def plot_mcmc_parameter_trace(
 
 
 def plot_autocorrelation(
-    plotter: Plotter, mcmc_params: List[pd.DataFrame], burn_in: int, param_name: str
+    plotter: Plotter, mcmc_params: List[pd.DataFrame], mcmc_tables: List[pd.DataFrame], burn_in: int, param_name: str
 ):
     """
-    Plot the prameter traces for each MCMC run.
+    Plot each chain's autocorrelogram.
     """
     fig, axis, _, n_rows, n_cols, indices = plotter.get_figure()
 
     for idx, table_df in enumerate(mcmc_params):
-        param_mask = table_df["name"] == param_name
-        param_df = table_df[param_mask]
-        pd.plotting.autocorrelation_plot(param_df["value"], ax=axis)
-        axis.set_ylabel(f"autocorrelation chain {idx}")
-        axis.set_xlabel("lag")
-        if idx == 0:
-            axis.set_title(param_name)
-        break
+        # Retrieve the full chain's posterior distribution
+        posterior_chain = get_posterior([table_df], [mcmc_tables[idx]], param_name, burn_in)
+        # Plot autocorrelogram
+        pd.plotting.autocorrelation_plot(posterior_chain, ax=axis)
+
+    # Plot details
+    axis.set_ylabel(f"autocorrelation")
+    axis.set_xlabel("lag")
+    axis.set_title(param_name)
+
+    # Save figure
     plotter.save_figure(fig, filename=f"{param_name}-autocorrelation", title_text="")
 
 

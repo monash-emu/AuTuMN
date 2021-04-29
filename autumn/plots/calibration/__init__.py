@@ -57,7 +57,7 @@ def plot_post_calibration(targets: dict, mcmc_dir: str, plot_dir: str, priors: l
     subplotter = _get_sub_plotter(plot_dir, "posteriors")
     for chosen_param in param_options:
         plots.plot_posterior(
-            subplotter, mcmc_params, mcmc_tables, 0, chosen_param, num_bins, priors[0]
+            subplotter, mcmc_params, mcmc_tables, 0, chosen_param, num_bins, priors
         )
 
     logger.info("Plotting loglikelihood vs params")
@@ -82,6 +82,9 @@ def plot_post_calibration(targets: dict, mcmc_dir: str, plot_dir: str, priors: l
     num_iters = len(mcmc_tables[0])
     plots.plot_burn_in(plotter, num_iters, PLOT_BURN_IN)
     plots.plot_loglikelihood_trace(plotter, mcmc_tables, PLOT_BURN_IN)
+
+    for mle_only in [True, False]:
+        plots.plot_parallel_coordinates_flat(plotter, mcmc_params, mcmc_tables, priors, mle_only)
 
     logger.info("MCMC plots complete")
 

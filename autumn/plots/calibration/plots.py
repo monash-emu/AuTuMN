@@ -240,6 +240,68 @@ def plot_autocorrelation(
     plotter.save_figure(fig, filename=f"{param_name}-autocorrelation", title_text="")
 
 
+def plot_parallel_coordinates_flat(
+    plotter: Plotter,
+    mcmc_params: List[pd.DataFrame],
+    mcmc_tables: List[pd.DataFrame],
+    priors,
+    map_only=False
+):
+
+    fig, axis, _, n_rows, n_cols, indices = plotter.get_figure()
+
+    # select parameter values for all chains
+    parameters = [
+        param
+        for param in mcmc_params[0].loc[:, "name"].unique().tolist()
+        if "dispersion_param" not in param
+    ]
+    combined_mcmc_df = merge_and_pivot_mcmc_parameters_loglike(
+        mcmc_tables, mcmc_params, parameters, n_samples_per_chain=10, map_only=map_only
+    )
+    labels = {}
+    for param in parameters:
+        labels[param] = get_plot_text_dict(param)
+
+    # drop some columns
+    combined_mcmc_df = combined_mcmc_df[
+        parameters + ["fitness", "chain"]
+    ]
+
+    # rescale the parameters
+    for var in parameters + ["fitness"]:
+        prior = [p for p in priors if p["param_name"] == var]
+        if len(prior) > 0:
+            prior = prior[0]
+            x_range = workout_plot_x_range(prior)
+            a = x_range[0]
+            b = x_range[1]
+        else:
+            a = min(combined_mcmc_df[var])
+            b = max(combined_mcmc_df[var])
+
+        if b > a:
+            combined_mcmc_df[var] = (combined_mcmc_df[var] - a) / (b - a)
+
+    # set chain colours
+    chain_ids = combined_mcmc_df["chain"].unique()
+    colours = [COLOR_THEME[i + 1] for i in chain_ids]
+
+    # main plot
+    _lw = 1. if map_only else .4
+    pd.plotting.parallel_coordinates(combined_mcmc_df, 'chain', ax=axis, color=colours, lw=_lw)
+    axis.set_ylabel("normalised value (rel. to prior range)")
+
+    # figure width
+    w = len(parameters) * 2
+    fig.set_figwidth(w)
+
+    if map_only:
+        plotter.save_figure(fig, filename="parallel_map", title_text="MAP per chain")
+    else:
+        plotter.save_figure(fig, filename="parallel_coord", title_text="parallel coordinates")
+
+
 def plot_multiple_param_traces(
     plotter: Plotter,
     mcmc_params: List[pd.DataFrame],
@@ -403,7 +465,7 @@ def plot_posterior(
     burn_in: int,
     param_name: str,
     num_bins: int,
-    prior,
+    priors,
 ):
     """
     Plots the posterior distribution of a given parameter in a histogram.
@@ -412,13 +474,16 @@ def plot_posterior(
     fig, axis, _, _, _, _ = plotter.get_figure()
     vals_df.hist(bins=num_bins, ax=axis, density=True)
 
-    if prior:
-        x_range = workout_plot_x_range(prior)
-        x_values = np.linspace(x_range[0], x_range[1], num=1000)
-        y_values = [calculate_prior(prior, x, log=False) for x in x_values]
+    if priors:
+        prior = [p for p in priors if p["param_name"] == param_name]
+        if len(prior) > 0:
+            prior = prior[0]
+            x_range = workout_plot_x_range(prior)
+            x_values = np.linspace(x_range[0], x_range[1], num=1000)
+            y_values = [calculate_prior(prior, x, log=False) for x in x_values]
 
-        # Plot the prior
-        axis.plot(x_values, y_values)
+            # Plot the prior
+            axis.plot(x_values, y_values)
 
     plotter.save_figure(
         fig, filename=f"{param_name}-posterior", title_text=""
@@ -525,19 +590,22 @@ def plot_parallel_coordinates(
 
 
 def merge_and_pivot_mcmc_parameters_loglike(
-    mcmc_tables, mcmc_params, parameters, n_samples_per_chain=None
+    mcmc_tables, mcmc_params, parameters, n_samples_per_chain=None, map_only=False
 ):
 
     combined_mcmc_df = None
     for mcmc_df, param_df in zip(mcmc_tables, mcmc_params):
         mask = mcmc_df["accept"] == 1
         mcmc_df = mcmc_df[mask]
-        n_iter = (
-            len(mcmc_df.index)
-            if n_samples_per_chain is None
-            else min(n_samples_per_chain, len(mcmc_df.index))
-        )
-        mcmc_df = mcmc_df.iloc[-n_iter:]
+        if not map_only:
+            n_iter = (
+                len(mcmc_df.index)
+                if n_samples_per_chain is None
+                else min(n_samples_per_chain, len(mcmc_df.index))
+            )
+            mcmc_df = mcmc_df.iloc[-n_iter:]
+        else:
+            mcmc_df = mcmc_df[mcmc_df.ap_loglikelihood == max(mcmc_df.ap_loglikelihood)]
         for param in parameters:
             param_vals = []
             for c, r in zip(mcmc_df["chain"], mcmc_df["run"]):

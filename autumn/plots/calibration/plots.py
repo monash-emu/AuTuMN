@@ -270,15 +270,16 @@ def plot_parallel_coordinates_flat(
 
     # rescale the parameters
     for var in parameters + ["fitness"]:
-        prior = [p for p in priors if p["param_name"] == var]
-        if len(prior) > 0:
-            prior = prior[0]
-            x_range = workout_plot_x_range(prior)
-            a = x_range[0]
-            b = x_range[1]
-        else:
-            a = min(combined_mcmc_df[var])
-            b = max(combined_mcmc_df[var])
+        a = min(combined_mcmc_df[var])
+        b = max(combined_mcmc_df[var])
+        if priors:
+            if priors != [None]:
+                prior = [p for p in priors if p["param_name"] == var]
+                if len(prior) > 0:
+                    prior = prior[0]
+                    x_range = workout_plot_x_range(prior)
+                    a = x_range[0]
+                    b = x_range[1]
 
         if b > a:
             combined_mcmc_df[var] = (combined_mcmc_df[var] - a) / (b - a)
@@ -475,15 +476,16 @@ def plot_posterior(
     vals_df.hist(bins=num_bins, ax=axis, density=True)
 
     if priors:
-        prior = [p for p in priors if p["param_name"] == param_name]
-        if len(prior) > 0:
-            prior = prior[0]
-            x_range = workout_plot_x_range(prior)
-            x_values = np.linspace(x_range[0], x_range[1], num=1000)
-            y_values = [calculate_prior(prior, x, log=False) for x in x_values]
+        if priors != [None]:
+            prior = [p for p in priors if p["param_name"] == param_name]
+            if len(prior) > 0:
+                prior = prior[0]
+                x_range = workout_plot_x_range(prior)
+                x_values = np.linspace(x_range[0], x_range[1], num=1000)
+                y_values = [calculate_prior(prior, x, log=False) for x in x_values]
 
-            # Plot the prior
-            axis.plot(x_values, y_values)
+                # Plot the prior
+                axis.plot(x_values, y_values)
 
     plotter.save_figure(
         fig, filename=f"{param_name}-posterior", title_text=""

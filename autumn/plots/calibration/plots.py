@@ -292,6 +292,7 @@ def plot_parallel_coordinates_flat(
     _lw = 1. if map_only else .4
     pd.plotting.parallel_coordinates(combined_mcmc_df, 'chain', ax=axis, color=colours, lw=_lw)
     axis.set_ylabel("normalised value (rel. to prior range)")
+    axis.tick_params(axis='x', labelrotation=20)
 
     # figure width
     w = len(parameters) * 2

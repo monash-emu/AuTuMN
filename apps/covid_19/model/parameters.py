@@ -230,12 +230,6 @@ class VaccCoveragePeriod(BaseModel):
 class RollOutFunc(BaseModel):
     age_min: Optional[float]
     age_max: Optional[float]
-    supply: Union[VaccCoveragePeriod, TimeSeries]
-
-
-class RollOutFunc(BaseModel):
-    age_min: Optional[float]
-    age_max: Optional[float]
     supply_period_coverage: Optional[VaccCoveragePeriod]
     supply_timeseries: Optional[TimeSeries]
 

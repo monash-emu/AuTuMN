@@ -7,16 +7,17 @@ import boto3
 COVID_BASE_DATE = pd.datetime(2019, 12, 31)
 DATA_PATH = "M:\Documents\@Projects\Covid_consolidate\output"
 phl = ["calabarzon", "central-visayas", "davao-city", "manila", "philippines"]
+mys = ["selangor", "penang", "malaysia", "kuala-lumpur", "johor"]
 os.chdir(DATA_PATH)
 
 list_of_files = os.listdir(DATA_PATH)
-dict_of_files = {city: each for each in list_of_files for city in phl if city in each}
+dict_of_files = {city: each  for city in phl + mys for each in list_of_files if city in each}
 dict_of_files = {each: os.path.join(DATA_PATH, dict_of_files[each]) for each in dict_of_files}
 
 df_mle = pd.DataFrame()
 df_un = pd.DataFrame()
 query_do = "SELECT scenario,times,notifications,incidence,icu_occupancy,hospital_occupancy FROM derived_outputs;"
-query_un = "SELECT scenario,time,type, value FROM uncertainty WHERE quantile=0.5 AND type in ('incidence','notifications','icu_occupancy','accum_deaths');"
+query_un = "SELECT scenario,time,type, value FROM uncertainty WHERE quantile=0.5 AND type in ('incidence','notifications','icu_occupancy','accum_deaths', 'infection_deaths');"
 for region in dict_of_files:
     conn = sqlite3.connect(dict_of_files[region])
     if df_mle.empty:
@@ -45,38 +46,49 @@ df = df_mle.merge(
     right_on=["Region", "scenario", "time"],
 )
 
+col_dict = {
+    "hospital_occupancy": "mle_hospital_occupancy",
+    "notifications_x": "mle_notifications",
+    "incidence_x": "mle_incidence",
+    "icu_occupancy_x": "mle_icu_occupancy",
+    "accum_deaths": "median__accum_deaths",
+    "icu_occupancy_y": "median__icu_occupancy",
+    "incidence_y": "median__incidence",
+    "notifications_y": "median__notifications",
+    "infection_deaths": "median_infection_deaths",
+}
 
 df["Date"] = pd.to_timedelta(df.times, unit="days") + (COVID_BASE_DATE)
+
+df.rename(
+    columns=col_dict,
+    inplace=True,
+)
+
+
 df = df[
     [
         "Region",
         "Date",
         "times",
         "scenario",
-        "notifications_x",
-        "incidence_x",
-        "icu_occupancy_x",
-        "accum_deaths",
-        "icu_occupancy_y",
-        "incidence_y",
-        "notifications_y",
+        "mle_notifications",
+        "mle_incidence",
+        "mle_icu_occupancy",
+        "mle_hospital_occupancy",
+        "median__accum_deaths",
+        "median__icu_occupancy",
+        "median__incidence",
+        "median_infection_deaths",
+        "median__notifications",
     ]
 ]
-df.rename(
-    columns={
-        "notifications_x": "mle_notifications_x",
-        "incidence_x": "mle_incidence",
-        "icu_occupancy_x": "mle_icu_occupancy",
-        "accum_deaths": "un_accum_deaths",
-        "icu_occupancy_y": "un_icu_occupancy",
-        "incidence_y": "un_incidence",
-        "notifications_y": "un_notifications",
-    },
-    inplace=True,
-)
-df.to_csv("phl_data.csv")
-
 
 s3 = boto3.client("s3")
-s3.upload_file("phl_data.csv", "autumn-files", "phl_data.csv", ExtraArgs={"ACL": "public-read"})
-os.remove("phl_data.csv")
+for  k,v in {'mys': mys, 'phl': phl}.items():
+    
+    df[df.Region.isin(v)].to_csv(f"{k}_data.csv")
+    s3.upload_file(f"{k}_data.csv", "autumn-files", f"{k}_data.csv", ExtraArgs={"ACL": "public-read"})
+    os.remove(f"{k}_data.csv")
+
+

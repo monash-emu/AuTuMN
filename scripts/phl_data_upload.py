@@ -47,14 +47,13 @@ def fassster_data_filepath():
     return fassster_filename
 
 
-def rename_regions(filePath, regionSpelling, ncrName, calName, cenVisName, davName):
+def rename_regions(filePath, regionSpelling, ncrName, calName, cenVisName):
     df = pd.read_csv(filePath)
     df[regionSpelling] = df[regionSpelling].replace(
         {
             ncrName: "manila",
             calName: "calabarzon",
-            cenVisName: "central_visayas",
-            davName: "davao_city",
+            cenVisName: "central_visayas"
         }
     )
     df.to_csv(filePath)
@@ -180,18 +179,32 @@ def remove_files(filePath1):
     os.remove(deaths_dest)
     os.remove(notifications_dest)
 
+def copy_davao_city_to_region(filePath):
+    df = pd.read_csv(filePath)
+    if filePath is PHL_doh_dest:
+        df.loc[df.city_mun == 'DAVAO CITY',['region']] =  'davao_city'
+    elif filePath is fassster_filename:
+        df.loc[df.CityMunicipality == 'DAVAO CITY', ['Region']] = 'davao_city'
+    else:
+        return 0
+    df.to_csv(filePath)
+
 
 fetch_phl_data()
 fassster_filename = fassster_data_filepath()
+
+copy_davao_city_to_region(PHL_doh_dest)
+copy_davao_city_to_region(fassster_filename)
+
+
 rename_regions(
     PHL_doh_dest,
     "region",
     "NATIONAL CAPITAL REGION (NCR)",
     "REGION IV-A (CALABAR ZON)",
-    "REGION VII (CENTRAL VISAYAS)",
-    "REGION XI (DAVAO REGION)",
+    "REGION VII (CENTRAL VISAYAS)"
 )
-rename_regions(fassster_filename, "Region", "NCR", "4A", "07", "11")
+rename_regions(fassster_filename, "Region", "NCR", "4A", "07")
 duplicate_data(PHL_doh_dest, "region")
 duplicate_data(fassster_filename, "Region")
 filter_df_by_regions(PHL_doh_dest, "region")

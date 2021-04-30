@@ -86,31 +86,31 @@ def build_model(params: dict) -> CompartmentalModel:
     )
 
     # Transition flows.
-    model.add_fractional_flow(
+    model.add_transition_flow(
         "treatment_early",
         params["preventive_treatment_rate"],
         Compartment.EARLY_LATENT,
         Compartment.RECOVERED,
     )
-    model.add_fractional_flow(
+    model.add_transition_flow(
         "treatment_late",
         params["preventive_treatment_rate"],
         Compartment.LATE_LATENT,
         Compartment.RECOVERED,
     )
-    model.add_fractional_flow(
+    model.add_transition_flow(
         "stabilisation",
         params["stabilisation_rate"],
         Compartment.EARLY_LATENT,
         Compartment.LATE_LATENT,
     )
-    model.add_fractional_flow(
+    model.add_transition_flow(
         "early_activation",
         params["early_activation_rate"],
         Compartment.EARLY_LATENT,
         Compartment.INFECTIOUS,
     )
-    model.add_fractional_flow(
+    model.add_transition_flow(
         "late_activation",
         params["late_activation_rate"],
         Compartment.LATE_LATENT,
@@ -118,55 +118,55 @@ def build_model(params: dict) -> CompartmentalModel:
     )
 
     # Post-active-disease flows
-    model.add_fractional_flow(
+    model.add_transition_flow(
         "detection",
         params["detection_rate"],
         Compartment.INFECTIOUS,
         Compartment.DETECTED,
     )
-    model.add_fractional_flow(
+    model.add_transition_flow(
         "treatment_commencement",
         params["treatment_commencement_rate"],
         Compartment.DETECTED,
         Compartment.ON_TREATMENT,
     )
-    model.add_fractional_flow(
+    model.add_transition_flow(
         "missed_to_active",
         params["missed_to_active_rate"],
         Compartment.DETECTED,
         Compartment.INFECTIOUS,
     )
-    model.add_fractional_flow(
+    model.add_transition_flow(
         "self_recovery_infectious",
         params["self_recovery_rate"],
         Compartment.INFECTIOUS,
         Compartment.LATE_LATENT,
     )
-    model.add_fractional_flow(
+    model.add_transition_flow(
         "self_recovery_detected",
         params["self_recovery_rate"],
         Compartment.DETECTED,
         Compartment.LATE_LATENT,
     )
-    model.add_fractional_flow(
+    model.add_transition_flow(
         "treatment_recovery",
         params["treatment_recovery_rate"],
         Compartment.ON_TREATMENT,
         Compartment.RECOVERED,
     )
-    model.add_fractional_flow(
+    model.add_transition_flow(
         "treatment_default",
         params["treatment_default_rate"],
         Compartment.ON_TREATMENT,
         Compartment.INFECTIOUS,
     )
-    model.add_fractional_flow(
+    model.add_transition_flow(
         "failure_retreatment",
         params["failure_retreatment_rate"],
         Compartment.ON_TREATMENT,
         Compartment.DETECTED,
     )
-    model.add_fractional_flow(
+    model.add_transition_flow(
         "spontaneous_recovery",
         params["spontaneous_recovery_rate"],
         Compartment.ON_TREATMENT,
@@ -209,7 +209,7 @@ def build_model(params: dict) -> CompartmentalModel:
     model.stratify_with(strain_strat)
 
     # Add amplification flow
-    model.add_fractional_flow(
+    model.add_transition_flow(
         name="amplification",
         fractional_rate=params["amplification_rate"],
         source=Compartment.ON_TREATMENT,
